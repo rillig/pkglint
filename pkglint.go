@@ -3,31 +3,11 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
-	"strconv"
-	"strings"
 )
-
-const confMake = "@BMAKE@"
-const confDatadir = "@DATADIR@"
-const confVersion = "@VERSION@"
-
-func intMax(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-func ifelseStr(cond bool, a, b string) string {
-	if cond {
-		return a
-	}
-	return b
-}
 
 type QuotingResult struct{ name string }
 
@@ -37,117 +17,6 @@ var (
 	QR_DONT_KNOW     = QuotingResult{"don’t know"}
 	QR_DOESNT_MATTER = QuotingResult{"doesn’t matter"}
 )
-
-const NO_FILE string = ""
-const NO_LINES string = ""
-
-type GlobalVarsType struct {
-	errors          int
-	warnings        int
-	gccOutputFormat bool
-	explainFlag     bool
-	showSourceFlag  bool
-	quiet           bool
-	optWarnExtra    bool
-	cwdPkgsrcdir    *string // The pkgsrc directory, relative to the current working directory of pkglint.
-	curPkgsrcdir    *string // The pkgsrc directory, relative to the directory that is currently checked.
-	opts            *CmdOpts
-
-	currentDir string // The currently checked directory.
-	isWip      bool   // Is the current directory from pkgsrc-wip?
-	isInternal bool   // Is the currently checked item from the pkgsrc infrastructure?
-
-	ipcDistinfo                map[string]string // Maps "alg:fname" => "checksum".
-	ipcUsedLicenses            map[string]bool
-	ipcCheckingRootRecursively bool // Only in this case is ipcUsedLicenses filled.
-  todo []string // The list of directory entries that still need to be checked. Mostly relevant with --recursive.
-}
-
-var GlobalVars = GlobalVarsType{}
-
-type LogLevel struct{ traditionalName, gccName string }
-
-var (
-	LL_FATAL = LogLevel{"FATAL", "fatal"}
-	LL_ERROR = LogLevel{"ERROR", "error"}
-	LL_WARN  = LogLevel{"WARN", "warning"}
-	LL_NOTE  = LogLevel{"NOTE", "note"}
-	LL_DEBUG = LogLevel{"DEBUG", "debug"}
-)
-
-func logMessage(level LogLevel, fname, lineno, message string) {
-	if fname != NO_FILE {
-		fname = path.Clean(fname)
-	}
-
-	text, sep := "", ""
-	if !GlobalVars.gccOutputFormat {
-		text += sep + level.traditionalName + ":"
-		sep = " "
-	}
-	if fname != NO_FILE {
-		text += sep + fname
-		sep = ": "
-		if lineno != NO_LINES {
-			text += ":" + lineno
-		}
-	}
-	if GlobalVars.gccOutputFormat {
-		text += sep + level.gccName + ":"
-		sep = " "
-	}
-	text += sep + message + "\n"
-	if level == LL_FATAL {
-		io.WriteString(os.Stderr, text)
-	} else {
-		io.WriteString(os.Stdout, text)
-	}
-}
-
-func logFatal(fname, lineno, message string) {
-	logMessage(LL_FATAL, fname, lineno, message)
-	os.Exit(1)
-}
-func logError(fname, lineno, message string) {
-	logMessage(LL_ERROR, fname, lineno, message)
-	GlobalVars.errors++
-}
-func logWarning(fname, lineno, message string) {
-	logMessage(LL_WARN, fname, lineno, message)
-	GlobalVars.warnings++
-}
-func logNote(fname, lineno, message string) {
-	logMessage(LL_NOTE, fname, lineno, message)
-}
-func logDebug(fname, lineno, message string) {
-	logMessage(LL_DEBUG, fname, lineno, message)
-}
-
-func explain(level LogLevel, fname, lineno string, explanation []string) {
-	if GlobalVars.explainFlag {
-		out := os.Stdout
-		if level == LL_FATAL {
-			out = os.Stderr
-		}
-		for _, explanationLine := range explanation {
-			io.WriteString(out, "\t"+explanationLine+"\n")
-		}
-	}
-}
-
-func printSummary() {
-	if !GlobalVars.quiet {
-		if GlobalVars.errors != 0 && GlobalVars.warnings != 0 {
-			fmt.Printf("%d errors and %d warnings found.", GlobalVars.errors, GlobalVars.warnings)
-			if !GlobalVars.explainFlag {
-				fmt.Printf("(Use -e for more details.)")
-			}
-			fmt.Printf("\n")
-		} else {
-			fmt.Printf("looks fine.\n")
-		}
-	}
-}
 
 // A SimpleMatch is the result of applying a regular expression to a Perl
 // scalar value. It can return the range and the text of the captured
@@ -169,241 +38,6 @@ func (self *SimpleMatch) has(i int) bool {
 func (self *SimpleMatch) text(i int) string {
 	start, end := self.starts[i], self.ends[i]
 	return self.str[start : end-start]
-}
-
-// When files are read in by pkglint, they are interpreted in terms of
-// lines. For Makefiles, line continuations are handled properly, allowing
-// multiple physical lines to end in a single logical line. For other files
-// there is a 1:1 translation.
-//
-// A difference between the physical and the logical lines is that the
-// physical lines include the line end sequence, whereas the logical lines
-// do not.
-//
-// A logical line is a class having the read-only fields C<file>,
-// C<lines>, C<text>, C<physlines> and C<is_changed>, as well as some
-// methods for printing diagnostics easily.
-//
-// Some other methods allow modification of the physical lines, but leave
-// the logical line (the C<text>) untouched. These methods are used in the
-// --autofix mode.
-//
-// A line can have some "extra" fields that allow the results of parsing to
-// be saved under a name.
-//
-type PhysLine struct {
-	lineno int
-	textnl string
-}
-
-type Line struct {
-	fname     string
-	lines     string
-	text      string
-	physlines []PhysLine
-	changed   bool
-	before    []PhysLine
-	after     []PhysLine
-	extra     map[string]string
-}
-
-func NewLine(fname, linenos, text string, physlines []PhysLine) *Line {
-	return &Line{fname, linenos, text, physlines, false, []PhysLine{}, []PhysLine{}, make(map[string]string, 1)}
-}
-func (self *Line) physicalLines() []PhysLine {
-	return append(self.before, append(self.physlines, self.after...)...)
-}
-func (self *Line) printSource(out io.Writer) {
-	if GlobalVars.showSourceFlag {
-		io.WriteString(out, "\n")
-		for _, physline := range self.physicalLines() {
-			fmt.Fprintf(out, "> %s", physline.textnl)
-		}
-	}
-}
-func (self *Line) logFatal(msg string) {
-	self.printSource(os.Stderr)
-	logFatal(self.fname, self.lines, msg)
-}
-func (self *Line) logError(msg string) {
-	self.printSource(os.Stdout)
-	logError(self.fname, self.lines, msg)
-}
-func (self *Line) logWarning(msg string) {
-	self.printSource(os.Stdout)
-	logWarning(self.fname, self.lines, msg)
-}
-func (self *Line) logNote(msg string) {
-	self.printSource(os.Stdout)
-	logNote(self.fname, self.lines, msg)
-}
-func (self *Line) logDebug(msg string) {
-	self.printSource(os.Stdout)
-	logDebug(self.fname, self.lines, msg)
-}
-func (self *Line) explainError(explanation ...string) {
-	explain(LL_ERROR, self.fname, self.lines, explanation)
-}
-func (self *Line) explainWarning(explanation ...string) {
-	explain(LL_WARN, self.fname, self.lines, explanation)
-}
-func (self *Line) explainNote(explanation ...string) {
-	explain(LL_NOTE, self.fname, self.lines, explanation)
-}
-func (self *Line) String() string {
-	return self.fname + ":" + self.lines + ": " + self.text
-}
-func (self *Line) prependBefore(line string) {
-	self.before = append([]PhysLine{{0, line + "\n"}}, self.before...)
-	self.changed = true
-}
-func (self *Line) appendBefore(line string) {
-	self.before = append(self.before, PhysLine{0, line + "\n"})
-	self.changed = true
-}
-func (self *Line) prependAfter(line string) {
-	self.after = append([]PhysLine{{0, line + "\n"}}, self.after...)
-	self.changed = true
-}
-func (self *Line) appendAfter(line string) {
-	self.after = append(self.after, PhysLine{0, line + "\n"})
-	self.changed = true
-}
-func (self *Line) delete() {
-	self.physlines = []PhysLine{}
-	self.changed = true
-}
-func (self *Line) replace(from, to string) {
-	for _, physline := range self.physlines {
-		if physline.lineno != 0 {
-			if replaced := strings.Replace(physline.textnl, from, to, 1); replaced != physline.textnl {
-				physline.textnl = replaced
-				self.changed = true
-			}
-		}
-	}
-}
-func (self *Line) replaceRegex(from, to string) {
-	for _, physline := range self.physlines {
-		if physline.lineno != 0 {
-			if replaced := regexp.MustCompile(from).ReplaceAllString(physline.textnl, to); replaced != physline.textnl {
-				physline.textnl = replaced
-				self.changed = true
-			}
-		}
-	}
-}
-func (line *Line) setText(text string) {
-	line.physlines = []PhysLine{{0, text + "\n"}}
-	line.changed = true
-}
-
-func loadRawLines(fname string) ([]PhysLine, error) {
-	physlines := make([]PhysLine, 50)
-	rawtext, err := ioutil.ReadFile(fname)
-	if err != nil {
-		logError(fname, NO_LINES, "Cannot be read")
-		return nil, err
-	}
-	for lineno, physline := range strings.SplitAfter(string(rawtext), "\n") {
-		physlines = append(physlines, PhysLine{lineno, physline})
-	}
-	return physlines, nil
-}
-
-func getLogicalLine(fname string, physlines []PhysLine, pLineno *int) *Line {
-	value := ""
-	first := true
-	lineno := *pLineno
-	firstlineno := physlines[lineno].lineno
-	lphyslines := make([]PhysLine, 1)
-
-	for _, physline := range physlines {
-		m := regexp.MustCompile(`^([ \t]*)(.*?)([ \t]*)(\\?)\n?$`).FindStringSubmatch(physline.textnl)
-		indent, text, outdent, cont := m[1], m[2], m[3], m[4]
-
-		if first {
-			value += indent
-			first = false
-		}
-
-		value += text
-		lphyslines = append(lphyslines, physline)
-
-		if cont == "\\" {
-			value += " "
-		} else {
-			value += outdent
-			break
-		}
-	}
-
-	if lineno >= len(physlines) { // The last line in the file is a continuation line
-		lineno--
-	}
-	lastlineno := physlines[lineno].lineno
-	*pLineno = lineno + 1
-
-	slineno := ifelseStr(firstlineno == lastlineno, fmt.Sprintf("%d", firstlineno), fmt.Sprintf("%d–%d", firstlineno, lastlineno))
-	return NewLine(fname, slineno, value, physlines)
-}
-
-func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
-	physlines, err := loadRawLines(fname)
-	if err != nil {
-		return nil, err
-	}
-	return convertToLogicalLines(fname, physlines, joinContinuationLines)
-}
-
-func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationLines bool) ([]*Line, error) {
-	loglines := make([]*Line, 0, len(physlines))
-	if joinContinuationLines {
-		for lineno := 0; lineno < len(physlines); {
-			loglines = append(loglines, getLogicalLine(fname, physlines, &lineno))
-		}
-	} else {
-		for _, physline := range physlines {
-			loglines = append(loglines, NewLine(fname, strconv.Itoa(physline.lineno), strings.TrimSuffix(physline.textnl, "\n"), []PhysLine{physline}))
-		}
-	}
-
-	if 0 < len(physlines) && !strings.HasSuffix(physlines[len(physlines)-1].textnl, "\n") {
-		logError(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
-	}
-
-	return loglines, nil
-}
-
-func saveAutofixChanges(lines []Line) {
-	changes := make(map[string][]PhysLine)
-	changed := make(map[string]bool)
-	for _, line := range lines {
-		if line.changed {
-			changed[line.fname] = true
-		}
-		changes[line.fname] = append(changes[line.fname], line.physicalLines()...)
-	}
-
-	for fname := range changed {
-		physlines := changes[fname]
-		tmpname := fname + ".pkglint.tmp"
-		text := ""
-		for _, physline := range physlines {
-			text += physline.textnl
-		}
-		err := ioutil.WriteFile(tmpname, []byte(text), 0777)
-		if err != nil {
-			logError(tmpname, NO_LINES, "Cannot write.")
-			continue
-		}
-		err = os.Rename(tmpname, fname)
-		if err != nil {
-			logError(fname, NO_LINES, "Cannot overwrite with auto-fixed content.")
-			continue
-		}
-		logNote(fname, NO_LINES, "Has been auto-fixed. Please re-run pkglint.")
-	}
 }
 
 func TestPrintTable() {
@@ -440,19 +74,19 @@ var GUESSED = Guessed{"guessed"}
 var NOT_GUESSED = Guessed{"not guessed"}
 
 type AclEntry struct {
-	subjectPattern regexp.Regexp
-	permissions    string
+	glob        string
+	permissions string
 }
 type Type struct {
 	kindOfList KindOfList
 	basicType  string
 	aclEntries []AclEntry
-	guessed    bool
+	guessed    Guessed
 }
 
 func (self *Type) effectivePermissions(fname string) string {
 	for _, aclEntry := range self.aclEntries {
-		if aclEntry.subjectPattern.MatchString(fname) {
+		if m, _ := path.Match(aclEntry.glob, fname); m {
 			return aclEntry.permissions
 		}
 	}
@@ -503,6 +137,7 @@ func (self *Type) String() string {
 		return "List of " + self.basicType
 	default:
 		panic("")
+		return ""
 	}
 }
 
@@ -556,127 +191,6 @@ func (self *VarUseContext) String() string {
 		[]string{"unknown", "full", "word", "word-part"}[self.extent])
 }
 
-// Records the state of a block of variable assignments that make up a SUBST
-// class (see mk/subst.mk).
-type SubstContext struct {
-	id        *string
-	class     *string
-	stage     *string
-	message   *string
-	files     []string
-	sed       []string
-	vars      []string
-	filterCmd *string
-}
-
-func (self *SubstContext) isComplete() bool {
-	return self.id != nil && self.class != nil && len(self.files) != 0 && (len(self.sed) != 0 || len(self.vars) != 0 || self.filterCmd != nil)
-}
-func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) {
-	if !GlobalVars.optWarnExtra {
-		return
-	}
-
-	if varname == "SUBST_CLASSES" {
-		classes := regexp.MustCompile(`\s+`).Split(value, -1)
-		if len(classes) > 1 {
-			line.logWarning("Please add only one class at a time to SUBST_CLASSES.")
-		}
-		if self.class != nil {
-			line.logWarning("SUBST_CLASSES should only appear once in a SUBST block.")
-		}
-		self.id = &classes[0]
-		self.class = &classes[0]
-		return
-	}
-
-	var varbase, varparam string
-	if m := regexp.MustCompile(`^(SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD))\.([\-\w_]+)$`).FindStringSubmatch(varname); m != nil {
-		varbase, varparam = m[1], m[2]
-		if self.id == nil {
-			line.logWarning("SUBST_CLASSES should precede the definition of " + varname + ".")
-			self.id = &varparam
-		}
-	} else if self.id != nil {
-		line.logWarning("Foreign variable in SUBST block.")
-	}
-
-	if varparam != *self.id {
-		if self.isComplete() {
-			// XXX: This code sometimes produces weird warnings. See
-			// meta-pkgs/xorg/Makefile.common 1.41 for an example.
-			self.finish(line)
-
-			// The following assignment prevents an additional warning,
-			// but from a technically viewpoint, it is incorrect.
-			self.class = &varparam
-			self.id = &varparam
-		} else {
-			line.logWarning(fmt.Sprintf("Variable parameter \"%s\" does not match SUBST class \"%s\".", varparam, self.id))
-		}
-		return
-	}
-
-	switch varbase {
-	case "SUBST_STAGE":
-		if self.stage != nil {
-			line.logWarning("Duplicate definition of " + varname + ".")
-		}
-		self.stage = &value
-	case "SUBST_MESSAGE":
-		if self.message != nil {
-			line.logWarning("Duplicate definition of " + varname + ".")
-		}
-		self.message = &value
-	case "SUBST_FILES":
-		if len(self.files) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_FILES line should use the \"+=\" operator.")
-		}
-		self.files = append(self.files, value)
-	case "SUBST_SED":
-		if len(self.sed) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_SED line should use the \"+=\" operator.")
-		}
-		self.sed = append(self.sed, value)
-	case "SUBST_FILTER_CMD":
-		if self.filterCmd != nil {
-			line.logWarning("Duplicate definition of " + varname + ".")
-		}
-		self.filterCmd = &value
-	case "SUBST_VARS":
-		if len(self.vars) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_VARS line should use the \"+=\" operator.")
-		}
-		self.vars = append(self.vars, value)
-	default:
-		line.logWarning("Foreign variable in SUBST block.")
-	}
-}
-func (self *SubstContext) finish(line *Line) {
-	if self.id == nil || !GlobalVars.optWarnExtra {
-		return
-	}
-	if self.class == nil {
-		line.logWarning("Incomplete SUBST block: SUBST_CLASSES missing.")
-	}
-	if self.stage == nil {
-		line.logWarning("Incomplete SUBST block: SUBST_STAGE missing.")
-	}
-	if len(self.files) == 0 {
-		line.logWarning("Incomplete SUBST block: SUBST_FILES missing.")
-	}
-	if len(self.sed) == 0 && len(self.vars) == 0 && self.filterCmd == nil {
-		line.logWarning("Incomplete SUBST block: SUBST_SED, SUBST_VARS or SUBST_FILTER_CMD missing.")
-	}
-	self.id = nil
-	self.class = nil
-	self.stage = nil
-	self.message = nil
-	self.files = self.files[:0]
-	self.sed = self.sed[:0]
-	self.vars = self.vars[:0]
-	self.filterCmd = nil
-}
 
 type CvsEntry struct {
 	fname    string
@@ -685,17 +199,7 @@ type CvsEntry struct {
 	tag      string
 }
 
-// A change entry from doc/CHANGES-*
-type Change struct {
-	line    *Line
-	action  string
-	pkgpath string
-	version string
-	author  string
-	date    string
-}
-
-func match(re string, s string) []string {
+func match(s, re string) []string {
 	return regexp.MustCompile(re).FindStringSubmatch(s)
 }
 
@@ -743,10 +247,10 @@ const (
 	|	[^\(\)'\"\\\s;&\|<>` + "`" + `\$] # non-special character
 	|	\$\{[^\s\"'` + "`" + `]+		# HACK: nested make(1) variables
 	)+ | ;;? | &&? | \|\|? | \( | \) | >& | <<? | >>? | \#.*)`
-	reVarname    = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
-	rePkgbase    = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
-	rePkgversion = `\d(?:\w|\.\d)*`
-  reVarnamePlural = `(?x:
+	reVarname       = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
+	rePkgbase       = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
+	rePkgversion    = `\d(?:\w|\.\d)*`
+	reVarnamePlural = `(?x:
 		| .*S
 		| .*LIST
 		| .*_AWK
@@ -762,8 +266,8 @@ const (
 		| PLIST_CAT
 		| PLIST_PRE
 		| PREPEND_PATH
-    
-    # Existing plural variables whose name doesn’t indicate plural
+
+	# Existing plural variables whose name doesn’t indicate plural
 		| .*_OVERRIDE
 		| .*_PREREQ
 		| .*_SRC
@@ -810,51 +314,69 @@ func explanationRelativeDirs() []string {
 		"main pkgsrc repository."}
 }
 
-func help(out io.Writer, _ int, _ int) {
+func checkItem(fname string) {
+	st, err := os.Stat(fname)
+	if err != nil || (!st.Mode().IsDir() && !st.Mode().IsRegular()) {
+		logError(fname, NO_LINES, "No such file or directory.")
+		return
+	}
+
+	currentDir := fname
+	if st.Mode().IsRegular() {
+		currentDir = path.Dir(fname)
+	}
+	abs, err := filepath.Abs(currentDir)
+	if err != nil {
+		logFatal(currentDir, NO_LINES, "Cannot determine absolute path.")
+	}
+	absCurrentDir := filepath.ToSlash(abs)
+	GlobalVars.isWip = !GlobalVars.opts.optImport && match(absCurrentDir, `/wip/|/wip$`) != nil
+	GlobalVars.isInternal = match(absCurrentDir, `/mk/|/mk$`) != nil
+
 	panic("not implemented")
 }
 
-// Context of the package that is currently checked.
-type PkgContext struct {
-	pkgpath                *string // The relative path to the package within PKGSRC
-	pkgdir                 *string // PKGDIR from the package Makefile
-	filesdir               *string // FILESDIR from the package Makefile
-	patchdir               *string // PATCHDIR from the package Makefile
-	distinfo_file          *string // DISTINFO_FILE from the package Makefile
-	effective_pkgname      *string // PKGNAME or DISTNAME from the package Makefile
-	effective_pkgbase      *string // The effective PKGNAME without the version
-	effective_pkgversion   *string // The version part of the effective PKGNAME
-	effective_pkgname_line *string // The origin of the three effective_* values
-	seen_bsd_prefs_mk      bool    // Has bsd.prefs.mk already been included?
-
-	vardef             map[string]*Line // varname => line
-	varuse             map[string]*Line // varname => line
-	bl3                map[string]*Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
-	plistSubstCond     map[string]bool  // varname => true; list of all variables that are used as conditionals (@comment or nothing) in PLISTs.
-	included           map[string]*Line // fname => line
-	seenMakefileCommon bool             // Does the package have any .includes?
+func checkUnusedLicenses() {
+	panic("not implemented")
 }
 
-// Context of the Makefile that is currently checked.
-type MkContext struct {
-	forVars     map[string]bool  // The variables currently used in .for loops
-	indentation []int            // Indentation depth of preprocessing directives
-	target      string           // Current make(1) target
-	vardef      map[string]*Line // varname => line; for all variables that are defined in the current file
-	varuse      map[string]*Line // varname => line; for all variables that are used in the current file
-	buildDefs   map[string]bool  // Variables that are registered in BUILD_DEFS, to assure that all user-defined variables are added to it.
-	plistVars   map[string]bool  // Variables that are registered in PLIST_VARS, to assure that all user-defined variables are added to it.
-	tools       map[string]bool  // Set of tools that are declared to be used.
+func findPkgsrcTopdir() string {
+	return "C:/Users/rillig/Desktop/pkgsrc/pkgsrc"
 }
 
 func main() {
+	pkgsrcdir := findPkgsrcTopdir()
 	GlobalVars.opts = ParseCommandLine(os.Args)
+	GlobalVars.globalData.Initialize(pkgsrcdir)
+	initacls()
 	if GlobalVars.opts.optPrintHelp {
-		help(os.Stdout, 0, 1)
+		GlobalVars.opts.Help()
+		return
 	}
 	if GlobalVars.opts.optPrintVersion {
 		fmt.Printf("%s\n", confVersion)
 		os.Exit(0)
 	}
-	fmt.Printf("%#v\n", GlobalVars.opts)
+
+	GlobalVars.todo = append(GlobalVars.todo, GlobalVars.opts.args...)
+	if len(GlobalVars.todo) == 0 {
+		GlobalVars.todo = append(GlobalVars.todo, ".")
+	}
+
+	for len(GlobalVars.todo) != 0 {
+		item := GlobalVars.todo[0]
+		GlobalVars.todo = GlobalVars.todo[1:]
+		checkItem(item)
+	}
+	if GlobalVars.ipcCheckingRootRecursively {
+		checkUnusedLicenses()
+	}
+	printSummary()
+	if GlobalVars.errors != 0 {
+		os.Exit(1)
+	}
+}
+
+func panic(msg string) {
+	print(msg + "\n")
 }

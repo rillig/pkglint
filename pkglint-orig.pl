@@ -1,3 +1,591 @@
+#! @PERL@
+# $NetBSD: pkglint.pl,v 1.893 2015/10/15 03:00:56 rillig Exp $
+#
+
+# pkglint - static analyzer and checker for pkgsrc packages
+#
+# Written by:
+#	Roland Illig <rillig@NetBSD.org>
+#
+# Based on work by:
+#	Hubert Feyrer <hubertf@NetBSD.org>
+#	Thorsten Frueauf <frueauf@NetBSD.org>
+#	Thomas Klausner <wiz@NetBSD.org>
+#	and others.
+#
+# Based on FreeBSD's portlint by:
+#	Jun-ichiro itojun Hagino <itojun@itojun.org>
+#	Yoshishige Arai <ryo2@on.rim.or.jp>
+#
+#	FreeBSD Id: portlint.pl,v 1.64 1998/02/28 02:34:05 itojun Exp
+#	Copyright(c) 1997 by Jun-ichiro Hagino <itojun@itojun.org>.
+#	All rights reserved.
+#	Freely redistributable.  Absolutely no warranty.
+
+# To get an overview of the code, run:
+#    sed -n -e 's,^\(sub .*\) {.*,  \1,p' -e '/^package/p' pkglint.pl
+
+#==========================================================================
+# Note: The @EXPORT clauses in the packages must be in a BEGIN block,
+# because otherwise the names starting with an uppercase letter are not
+# recognized as subroutines but as file handles.
+#==========================================================================
+
+use v5.12;
+use warnings;
+
+#include PkgLint/Util.pm
+#include PkgLint/Logging.pm
+#include PkgLint/SimpleMatch.pm
+#include PkgLint/Line.pm
+#include PkgLint/FileUtil.pm
+#include PkgLint/Type.pm
+#include PkgLint/VarUseContext.pm
+#include PkgLint/SubstContext.pm
+#include PkgLint/CVS_Entry.pm
+#include PkgLint/Change.pm
+
+package pkglint;
+#==========================================================================
+# This package contains the application-specific code of pkglint.
+# Most subroutines in this package follow a strict naming convention:
+#
+# The get_*() functions provide easy access to important non-trivial data
+# structures that are loaded from external files and are therefore cached.
+#
+# The is_*() functions return a boolean value and have no side effects.
+#
+# The checkline_*() procedures check a single line for compliance with some
+# rules.
+#
+# The checklines_*() procedures check an array of lines for compliance.
+# Usually they make use of several checkline_*() procedures.
+#
+# The checkfile_*() procedures load a file and check the lines of that
+# file. Usually they make use of several checklines_*() and checkline_*()
+# procedures.
+#
+# The checkdir_*() procedures check the files of a directory and call
+# checkfile_*() on them.
+#
+# Note: I have tried to order the subroutines so that there are no
+# back-references, that is, if you start reading the code from the top to
+# the bottom you should not find a call to a subroutine you haven't yet
+# seen.
+#==========================================================================
+use strict;
+use warnings;
+
+use Data::Dumper;
+use Digest::SHA1;
+use Getopt::Long qw(:config no_ignore_case bundling require_order);
+use Fcntl qw(:mode);
+use File::Basename;
+use File::stat;
+use Cwd;
+use pkgsrc::Dewey;
+
+BEGIN {
+	import PkgLint::Util qw(
+		array_to_hash assert
+		false true dont_know doesnt_matter
+		normalize_pathname
+	);
+	import PkgLint::Logging qw(
+		NO_FILE NO_LINE_NUMBER NO_LINES
+		log_fatal log_error log_warning log_note log_debug
+		explain_error explain_warning explain_info
+	);
+	import PkgLint::FileUtil qw(
+		load_file load_lines
+		save_autofix_changes
+	);
+	import PkgLint::Type qw(
+		LK_NONE LK_INTERNAL LK_EXTERNAL
+		GUESSED NOT_GUESSED
+	);
+	import PkgLint::VarUseContext qw(
+		VUC_TIME_UNKNOWN VUC_TIME_LOAD VUC_TIME_RUN
+		VUC_TYPE_UNKNOWN
+		VUC_SHELLWORD_UNKNOWN VUC_SHELLWORD_PLAIN VUC_SHELLWORD_DQUOT
+		  VUC_SHELLWORD_SQUOT VUC_SHELLWORD_BACKT VUC_SHELLWORD_FOR
+		VUC_EXTENT_UNKNOWN VUC_EXTENT_FULL VUC_EXTENT_WORD
+		  VUC_EXTENT_WORD_PART
+	);
+}
+
+#
+# Buildtime configuration
+#
+
+use constant conf_distver	=> '@DISTVER@';
+use constant conf_make		=> '@MAKE@';
+use constant conf_datadir	=> '@DATADIR@';
+
+#
+# Global variables that can be modified via command line options.
+#
+
+# The pkgsrc directory, relative to the current working directory of
+# pkglint.
+my $cwd_pkgsrcdir	= undef;
+
+# The pkgsrc directory, relative to the directory that is currently
+# checked.
+my $cur_pkgsrcdir	= undef;
+
+#
+# Command Line Options
+#
+
+my $opt_check_ALTERNATIVES = true;
+my $opt_check_bl3	= true;
+my $opt_check_DESCR	= true;
+my $opt_check_distinfo	= true;
+my $opt_check_extra	= false;
+my $opt_check_global	= false;
+my $opt_check_INSTALL	= true;
+my $opt_check_Makefile	= true;
+my $opt_check_MESSAGE	= true;
+my $opt_check_mk	= true;
+my $opt_check_patches	= true;
+my $opt_check_PLIST	= true;
+my (%checks) = (
+	"ALTERNATIVES"	=> [\$opt_check_ALTERNATIVES, "check ALTERNATIVES files"],
+	"bl3"		=> [\$opt_check_bl3, "check buildlink3 files"],
+	"DESCR"		=> [\$opt_check_DESCR, "check DESCR file"],
+	"distinfo"	=> [\$opt_check_distinfo, "check distinfo file"],
+	"extra"		=> [\$opt_check_extra, "check various additional files"],
+	"global"	=> [\$opt_check_global, "inter-package checks"],
+	"INSTALL"	=> [\$opt_check_INSTALL, "check INSTALL and DEINSTALL scripts"],
+	"Makefile"	=> [\$opt_check_Makefile, "check Makefiles"],
+	"MESSAGE"	=> [\$opt_check_MESSAGE, "check MESSAGE files"],
+	"mk"		=> [\$opt_check_mk, "check other .mk files"],
+	"patches"	=> [\$opt_check_patches, "check patches"],
+	"PLIST"		=> [\$opt_check_PLIST, "check PLIST files"],
+);
+
+my $opt_debug_include	= false;
+my $opt_debug_misc	= false;
+my $opt_debug_patches	= false;
+my $opt_debug_quoting	= false;
+my $opt_debug_shell	= false;
+my $opt_debug_tools	= false;
+my $opt_debug_trace	= false;
+my $opt_debug_unchecked	= false;
+my $opt_debug_unused	= false;
+my $opt_debug_vartypes	= false;
+my $opt_debug_varuse	= false;
+my (%debug) = (
+	"include"	=> [\$opt_debug_include, "included files"],
+	"misc"		=> [\$opt_debug_misc, "all things that didn't fit elsewhere"],
+	"patches"	=> [\$opt_debug_patches, "the states of the patch parser"],
+	"quoting"	=> [\$opt_debug_quoting, "additional information about quoting"],
+	"shell"		=> [\$opt_debug_shell, "the parsers for shell words and shell commands"],
+	"tools"		=> [\$opt_debug_tools, "the tools framework"],
+	"trace"		=> [\$opt_debug_trace, "follow subroutine calls"],
+	"unchecked"	=> [\$opt_debug_unchecked, "show the current limitations of pkglint"],
+	"unused"	=> [\$opt_debug_unused, "unused variables"],
+	"vartypes"	=> [\$opt_debug_vartypes, "additional type information"],
+	"varuse"	=> [\$opt_debug_varuse, "contexts where variables are used"],
+);
+
+my $opt_warn_absname	= true;
+my $opt_warn_directcmd	= true;
+our $opt_warn_extra	= false;	# used by PkgLint::SubstContext
+my $opt_warn_order	= true;
+my $opt_warn_perm	= false;
+my $opt_warn_plist_depr	= false;
+my $opt_warn_plist_sort	= false;
+my $opt_warn_quoting	= false;
+my $opt_warn_space	= false;
+my $opt_warn_style	= false;
+my $opt_warn_types	= true;
+my $opt_warn_varorder	= false;
+my (%warnings) = (
+	"absname"	=> [\$opt_warn_absname, "warn about use of absolute file names"],
+	"directcmd"	=> [\$opt_warn_directcmd, "warn about use of direct command names instead of Make variables"],
+	"extra"		=> [\$opt_warn_extra, "enable some extra warnings"],
+	"order"		=> [\$opt_warn_order, "warn if Makefile entries are unordered"],
+	"perm"		=> [\$opt_warn_perm, "warn about unforeseen variable definition and use"],
+	"plist-depr"	=> [\$opt_warn_plist_depr, "warn about deprecated paths in PLISTs"],
+	"plist-sort"	=> [\$opt_warn_plist_sort, "warn about unsorted entries in PLISTs"],
+	"quoting"	=> [\$opt_warn_quoting, "warn about quoting issues"],
+	"space"		=> [\$opt_warn_space, "warn about inconsistent use of white-space"],
+	"style"		=> [\$opt_warn_style, "warn about stylistic issues"],
+	"types"		=> [\$opt_warn_types, "do some simple type checking in Makefiles"],
+	"varorder"	=> [\$opt_warn_varorder, "warn about the ordering of variables"],
+);
+
+my $opt_autofix		= false;
+my $opt_dumpmakefile	= false;
+my $opt_import		= false;
+my $opt_quiet		= false;
+my $opt_recursive	= false;
+my $opt_rcsidstring	= "NetBSD";
+my (@options) = (
+	# [ usage-opt, usage-message, getopt-opt, getopt-action ]
+	[ "-C{check,...}", "Enable or disable specific checks",
+	  "check|C=s",
+	  sub {
+		my ($opt, $val) = @_;
+		parse_multioption($val, \%checks);
+	  } ],
+	[ "-D{debug,...}", "Enable or disable debugging categories",
+	  "debugging|D=s",
+	  sub ($$) {
+		my ($opt, $val) = @_;
+		parse_multioption($val, \%debug);
+	  } ],
+	[ "-F|--autofix", "Try to automatically fix some errors (experimental)",
+	  "autofix|F", \$opt_autofix ],
+	[ "-I|--dumpmakefile", "Dump the Makefile after parsing",
+	  "dumpmakefile|I", \$opt_dumpmakefile ],
+	[ "-R|--rcsidstring", "Set the allowed RCS Id strings",
+	  "rcsidstring|R=s", \$opt_rcsidstring ],
+	[ "-V|--version", "print the version number of pkglint",
+	  "version|V",
+	  sub {
+		print(conf_distver . "\n");
+		exit(0);
+	  } ],
+	[ "-W{warn,...}", "enable or disable specific warnings",
+	  "warning|W=s",
+	  sub {
+		my ($opt, $val) = @_;
+		parse_multioption($val, \%warnings);
+	  } ],
+	[ "-e|--explain", "Explain the diagnostics or give further help",
+	  "explain|e", sub {
+		PkgLint::Logging::set_explain();
+	  } ],
+	[ "-g|--gcc-output-format", "Mimic the gcc output format",
+	  "gcc-output-format|g",
+	  sub {
+		PkgLint::Logging::set_gcc_output_format();
+	  } ],
+	[ "-h|--help", "print a detailed help message",
+	  "help|h",
+	  sub {
+		help(*STDOUT, 0, 1);
+	  } ],
+	[ "-i|--import", "Prepare the import of a wip package",
+	  "import|i", \$opt_import ],
+	# Note: This is intentionally undocumented.
+	[ "--pkgsrcdir", "Set the root directory of pkgsrc explicitly.",
+	  "pkgsrcdir=s", \$cwd_pkgsrcdir ],
+	[ "-q|--quiet", "Don't print a summary line when finishing",
+	  "quiet|q", \$opt_quiet ],
+	[ "-r|--recursive", "Recursive---check subdirectories, too",
+	  "recursive|r", \$opt_recursive ],
+	[ "-s|--source", "Show the source lines together with diagnostics",
+	  "source|s",
+	  sub {
+		PkgLint::Logging::set_show_source_flag();
+	  } ],
+);
+
+our $program		= $0;
+
+#
+# Commonly used regular expressions.
+#
+
+use constant regex_dependency_lge => qr"^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$";
+use constant regex_dependency_wildcard
+				=> qr"^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$";
+use constant regex_gnu_configure_volatile_vars
+				=> qr"^(?:.*_)?(?:CFLAGS||CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$";
+use constant regex_mk_comment	=> qr"^ *\s*#(.*)$";
+use constant regex_mk_cond	=> qr"^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s+([^\s#][^#]*?))?\s*(?:#.*)?$";
+use constant regex_mk_dependency=> qr"^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$";
+use constant regex_mk_include	=> qr"^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$";
+use constant regex_mk_sysinclude=> qr"^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$";
+use constant regex_mk_shellvaruse => qr"(?:^|[^\$])\$\$\{?(\w+)\}?"; # XXX: not perfect
+use constant regex_pkgname	=> qr"^([\w\-.+]+)-(\d(?:\w|\.\d)*)$";
+use constant regex_mk_shellcmd	=> qr"^\t(.*)$";
+use constant regex_rcs_conflict	=> qr"^(<<<<<<<|=======|>>>>>>>)";
+use constant regex_unresolved	=> qr"\$\{";
+use constant regex_validchars	=> qr"[\011\040-\176]";
+# Note: the following regular expression looks more complicated than
+# necessary to avoid a stack overflow in the Perl interpreter.
+# The leading white-space may only consist of \040 characters, otherwise
+# the order of regex_varassign and regex_mk_shellcmd becomes important.
+use constant regex_varassign	=> qr"^ *([-*+A-Z_a-z0-9.\${}\[]+?)\s*(=|\?=|\+=|:=|!=)\s*((?:[^\\#\s]+|\s+?|(?:\\#)+|\\)*?)(?:\s*(#.*))?$";
+use constant regex_sh_varassign	=> qr"^([A-Z_a-z][0-9A-Z_a-z]*)=";
+
+# The following "constants" are often used in contexts where
+# interpolation comes handy, so they are variables. Nevertheless they
+# are not modified.
+
+# This regular expression cannot parse all kinds of shell programs, but
+# it will catch almost all shell programs that are portable enough to be
+# used in pkgsrc.
+my $regex_shellword		=  qr"\s*(
+	\#.*				# shell comment
+	|
+	(?:	'[^']*'			# single quoted string
+	|	\"(?:\\.|[^\"\\])*\"	# double quoted string
+	|	\`[^\`]*\`		# backticks string
+	|	\\\$\$			# an escaped dollar sign
+	|	\\[^\$]			# other escaped characters
+	|	\$[\w_]			# one-character make(1) variable
+	|	\$\{[^{}]+\}		# make(1) variable
+	|	\$\([^()]+\)		# make(1) variable, $(...)
+	|	\$[/\@<^]		# special make(1) variables
+	|	\$\$[0-9A-Z_a-z]+	# shell variable
+	|	\$\$[\#?@]		# special shell variables
+	|	\$\$\$\$		# the special pid shell variable
+	|	\$\$\{[0-9A-Z_a-z]+\}	# shell variable in braces
+	|	\$\$\(			# POSIX-style backticks replacement
+	|	[^\(\)'\"\\\s;&\|<>\`\$] # non-special character
+	|	\$\{[^\s\"'`]+		# HACK: nested make(1) variables
+	)+ | ;;? | &&? | \|\|? | \( | \) | >& | <<? | >>? | \#.*)"sx;
+my $regex_varname		= qr"(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+";
+my $regex_pkgbase		= qr"(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+";
+my $regex_pkgversion		= qr"\d(?:\w|\.\d)*";
+
+#
+# Commonly used explanations for diagnostics.
+#
+
+use constant expl_relative_dirs	=> (
+	"Directories in the form \"../../category/package\" make it easier to",
+	"move a package around in pkgsrc, for example from pkgsrc-wip to the",
+	"main pkgsrc repository.");
+
+#
+# Global variables.
+#
+
+my $current_dir;		# The currently checked directory.
+my $is_wip;			# Is the current directory from pkgsrc-wip?
+my $is_internal;		# Is the current item from the infrastructure?
+
+#
+# Variables for inter-package checks.
+#
+
+my $ipc_distinfo;		# Maps "$alg:$fname" => "checksum".
+my %ipc_used_licenses;		# { license name => true }
+my $ipc_checking_root_recursively; # For checking unused licenses
+
+# Context of the package that is currently checked.
+my $pkgpath;			# The relative path to the package within PKGSRC
+my $pkgdir;			# PKGDIR from the package Makefile
+my $filesdir;			# FILESDIR from the package Makefile
+my $patchdir;			# PATCHDIR from the package Makefile
+my $distinfo_file;		# DISTINFO_FILE from the package Makefile
+my $effective_pkgname;		# PKGNAME or DISTNAME from the package Makefile
+my $effective_pkgbase;		# The effective PKGNAME without the version
+my $effective_pkgversion;	# The version part of the effective PKGNAME
+my $effective_pkgname_line;	# The origin of the three effective_* values
+my $seen_bsd_prefs_mk;		# Has bsd.prefs.mk already been included?
+
+my $pkgctx_vardef;		# { varname => line }
+my $pkgctx_varuse;		# { varname => line }
+my $pkgctx_bl3;			# { buildlink3.mk name => line } (contains
+				# only buildlink3.mk files that are directly
+				# included)
+my $pkgctx_plist_subst_cond;	# { varname => 1 } list of all variables
+				# that are used as conditionals (@comment
+				# or nothing) in PLISTs.
+my $pkgctx_included;		# { fname => line }
+my $seen_Makefile_common;	# Does the package have any .includes?
+
+# Context of the Makefile that is currently checked.
+my $mkctx_for_variables;	# The variables currently used in .for loops
+my $mkctx_indentations;		# Indentation depth of preprocessing directives
+my $mkctx_target;		# Current make(1) target
+my $mkctx_vardef;		# { varname => line } for all variables that
+				# are defined in the current file
+my $mkctx_varuse;		# { varname => line } for all variables
+				# that are used in the current file
+my $mkctx_build_defs;		# Set of variables that are registered in
+				# BUILD_DEFS, to assure that all user-defined
+				# variables are added to it.
+my $mkctx_plist_vars;		# The same for PLIST_VARS.
+my $mkctx_tools;		# Set of tools that are declared to be used.
+
+my @todo_items;			# The list of directory entries that still need
+				# to be checked. Mostly relevant with
+				# --recursive.
+
+#
+# Command line parsing and handling.
+#
+
+sub help($$$) {
+	my ($out, $exitval, $show_all) = @_;
+	my ($prog) = (basename($program, '.pl'));
+	print $out ("usage: $prog [options] [package_directory]\n\n");
+
+	my (@option_table) = ();
+	foreach my $opt (@options) {
+		push(@option_table, ["  ", $opt->[0], $opt->[1]]);
+	}
+	print $out ("options:\n");
+	PkgLint::Util::print_table($out, \@option_table);
+	print $out ("\n");
+
+	if (!$show_all) {
+		exit($exitval);
+	}
+
+	my $categories = [
+		# options, leading text, 
+		[ \%checks, "checks", "check" ],
+		[ \%debug, "debugging options", "debug" ],
+		[ \%warnings, "warnings", "warning" ],
+	];
+	foreach my $category (@{$categories}) {
+		my ($options, $leading, $name) = (@{$category});
+		my $table = [
+			["  ", "all", "", "enable all ".$category->[1]],
+			["  ", "none", "", "disable all ".$category->[1]],
+		];
+
+		foreach my $opt (sort keys %{$options}) {
+			push(@{$table}, [ "  ", $opt,
+				(${$options->{$opt}->[0]} ? "(enabled)" : "(disabled)"),
+				$options->{$opt}->[1]]);
+		}
+
+		print $out ("${leading}: (use \"${name}\" to enable, \"no-${name}\" to disable)\n");
+		PkgLint::Util::print_table($out, $table);
+		print $out ("\n");
+	}
+
+	exit($exitval);
+}
+
+sub parse_multioption($$) {
+	my ($value, $optdefs) = @_;
+	foreach my $opt (split(qr",", $value)) {
+		if ($opt eq "none") {
+			foreach my $key (keys %{$optdefs}) {
+				${$optdefs->{$key}->[0]} = false;
+			}
+
+		} elsif ($opt eq "all") {
+			foreach my $key (keys %{$optdefs}) {
+				${$optdefs->{$key}->[0]} = true;
+			}
+
+		} else {
+			my ($value) = (($opt =~ s/^no-//) ? false : true);
+			if (exists($optdefs->{$opt})) {
+				${$optdefs->{$opt}->[0]} = $value;
+			} else {
+				print STDERR ("Invalid option: ${opt}\n");
+				help(*STDERR, 1, 0);
+			}
+		}
+	}
+}
+
+sub parse_command_line() {
+	my (%options);
+
+	foreach my $opt (@options) {
+		$options{$opt->[2]} = $opt->[3];
+	}
+
+	{
+		local $SIG{__WARN__} = sub {};
+		if (!GetOptions(%options)) {
+			help(*STDERR, 1, false);
+		}
+	}
+}
+
+#
+# Caching subroutines.
+#
+
+# The get_regex_plurals() function returns a regular expression that
+# matches for all make(1) variable names that are considered lists
+# of something.
+#
+# Rationale:
+#
+# The pkglint author thinks that variables containing lists of things
+# should have a name indicating some plural form. Sadly, there are other
+# reasons like backwards compatibility and other developer's
+# expectations that make changes to most of the following variables
+# highly unlikely.
+sub get_regex_plurals() {
+	state $result = undef;
+	return $result if defined($result);
+
+	my @plurals_ok = qw(
+		.*S
+		.*LIST
+		.*_AWK
+		.*_ENV
+		.*_REQD
+		.*_SED
+		.*_SKIP
+		BUILDLINK_LDADD
+		COMMENT
+		EXTRACT_ONLY
+		FETCH_MESSAGE
+		GENERATE_PLIST
+		PLIST_CAT
+		PLIST_PRE
+		PREPEND_PATH
+	);
+	my @plurals_missing_an_s = qw(
+		.*_OVERRIDE
+		.*_PREREQ
+		.*_SRC
+		.*_SUBST
+		.*_TARGET
+		.*_TMPL
+		BROKEN_EXCEPT_ON_PLATFORM
+		BROKEN_ON_PLATFORM
+		BUILDLINK_DEPMETHOD
+		BUILDLINK_TRANSFORM
+		EVAL_PREFIX
+		INTERACTIVE_STAGE
+		LICENSE
+		MASTER_SITE_.*
+		MASTER_SORT_REGEX
+		NOT_FOR_COMPILER
+		NOT_FOR_PLATFORM
+		ONLY_FOR_COMPILER
+		ONLY_FOR_PLATFORM
+		PERL5_PACKLIST
+		PKG_FAIL_REASON
+		PKG_SKIP_REASON
+	);
+	my @plurals_reluctantly_accepted = qw(
+		CRYPTO
+		DEINSTALL_TEMPLATE
+		FIX_RPATH
+		INSTALL_TEMPLATE
+		PYTHON_VERSIONS_INCOMPATIBLE
+		REPLACE_INTERPRETER
+		REPLACE_PERL
+		REPLACE_RUBY
+		RESTRICTED
+		SITES_.*
+		TOOLS_ALIASES\.*
+		TOOLS_BROKEN
+		TOOLS_CREATE
+		TOOLS_GNU_MISSING
+		TOOLS_NOOP
+	);
+	my $plurals = join("|",
+		@plurals_ok,
+		@plurals_missing_an_s,
+		@plurals_reluctantly_accepted
+	);
+
+	$result = qr"^(?:${plurals})$";
+	return $result;
+}
+
 #
 # Loading pkglint-specific data from files.
 #
@@ -1416,7 +2004,7 @@ sub parse_mk_cond($$) {
 			return ["empty", $1];
 		} elsif ($cond =~ s/^empty\((${re_simple_varname}):M([^\$:{})]+)\)$//) {
 			return ["empty", ["match", $1, $2]];
-		} elsif ($cond =~ s/^\$\{(${re_simple_varname})\}\s+(==|!=)\s+"([^"\$\\]*)"$//) { #"
+		} elsif ($cond =~ s/^\$\{(${re_simple_varname})\}\s+(==|!=)\s+"([^"\$\\]*)"$//) {
 			return [$2, ["var", $1], ["string", $3]];
 		} else {
 			$opt_debug_unchecked and $line->log_debug("parse_mk_cond: ${cond}");
@@ -2198,714 +2786,7 @@ sub checkline_mk_text($$) {
 
 }
 
-# $NetBSD: Shell.pm,v 1.1 2015/10/15 02:09:49 rillig Exp $
-#
-# Parsing and checking shell commands embedded in Makefiles
-#
-
-sub checkline_mk_shellword($$$) {
-	my ($line, $shellword, $check_quoting) = @_;
-	my ($rest, $state, $value);
-
-	$opt_debug_trace and $line->log_debug("checkline_mk_shellword(\"${shellword}\", ${check_quoting}).");
-	use constant shellcommand_context_type => PkgLint::Type->new(
-		LK_NONE, "ShellCommand", [[ qr".*", "adsu" ]], NOT_GUESSED
-	);
-	use constant shellword_vuc => PkgLint::VarUseContext->new(
-		VUC_TIME_UNKNOWN,
-		shellcommand_context_type,
-		VUC_SHELLWORD_PLAIN,
-		VUC_EXTENT_WORD
-	);
-
-	if ($shellword =~ m"^\$\{(${regex_varname})(:[^{}]+)?\}$") {
-		my ($varname, $mod) = ($1, $2);
-
-		checkline_mk_varuse($line, $varname, defined($mod) ? $mod : "", shellword_vuc);
-		return;
-	}
-
-	if ($shellword =~ m"\$\{PREFIX\}/man(?:$|/)") {
-		$line->log_warning("Please use \${PKGMANDIR} instead of \"man\".");
-	}
-
-	if ($shellword =~ m"etc/rc\.d") {
-		$line->log_warning("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to \${RCD_SCRIPTS_EXAMPLEDIR}.");
-	}
-
-	# Note: SWST means [S]hell[W]ord [ST]ate
-	use enum qw(:SWST_ PLAIN SQUOT DQUOT DQUOT_BACKT BACKT);
-	use constant statename		=> [
-		"SWST_PLAIN", "SWST_SQUOT", "SWST_DQUOT",
-		"SWST_DQUOT_BACKT", "SWST_BACKT",
-	];
-	use constant user_statename	=> [
-		"unquoted string", "single quoted string",
-		"double quoted string", "backticks inside double quoted string",
-		"backticks",
-	];
-
-	$rest = ($shellword =~ m"^#") ? "" : $shellword;
-	$state = SWST_PLAIN;
-	while ($rest ne "") {
-
-		$opt_debug_shell and $line->log_debug(statename->[$state] . ": ${rest}");
-
-		# When we are parsing inside backticks, it is more
-		# reasonable to check the whole shell command
-		# recursively, instead of splitting off the first
-		# make(1) variable (see the elsif below).
-		if ($state == SWST_BACKT || $state == SWST_DQUOT_BACKT) {
-
-			# Scan for the end of the backticks, checking
-			# for single backslashes and removing one level
-			# of backslashes. Backslashes are only removed
-			# before a dollar, a backslash or a backtick.
-			#
-			# References:
-			# * http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-			my $stripped = "";
-			while ($rest ne "") {
-				if ($rest =~ s/^\`//) { #`
-					$state = ($state == SWST_BACKT) ? SWST_PLAIN : SWST_DQUOT;
-					goto end_of_backquotes;
-				} elsif ($rest =~ s/^\\([\\\`\$])//) { #`
-					$stripped .= $1;
-				} elsif ($rest =~ s/^(\\)//) {
-					$line->log_warning("Backslashes should be doubled inside backticks.");
-					$stripped .= $1;
-				} elsif ($state == SWST_DQUOT_BACKT && $rest =~ s/^"//) { #"
-					$line->log_warning("Double quotes inside backticks inside double quotes are error prone.");
-					$line->explain_warning(
-"According to the SUSv3, they produce undefined results.",
-"",
-"See the paragraph starting \"Within the backquoted ...\" in",
-"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html");
-				} elsif ($rest =~ s/^([^\\\`]+)//) { #`
-					$stripped .= $1;
-				} else {
-					assert(false, "rest=$rest");
-				}
-			}
-			$line->log_error("Unfinished backquotes: rest=$rest");
-
-		end_of_backquotes:
-			# Check the resulting command.
-			checkline_mk_shelltext($line, $stripped);
-
-		# make(1) variables have the same syntax, no matter in
-		# which state we are currently.
-		} elsif ($rest =~ s/^\$\{(${regex_varname}|[\@])(:[^\{]+)?\}//
-		||  $rest =~ s/^\$\((${regex_varname}|[\@])(:[^\)]+)?\)//
-		||  $rest =~ s/^\$([\w\@])//) {
-			my ($varname, $mod) = ($1, $2);
-
-			if ($varname eq "\@") {
-				$line->log_warning("Please use \"\${.TARGET}\" instead of \"\$\@\".");
-				$line->explain_warning(
-"The variable \$\@ can easily be confused with the shell variable of the",
-"same name, which has a completely different meaning.");
-				$varname = ".TARGET";
-			}
-
-			if ($state == SWST_PLAIN && defined($mod) && $mod =~ m":Q$") {
-				# Fine.
-
-			} elsif ($state == SWST_BACKT) {
-				# Don't check here, to avoid false positives
-				# for tool names.
-
-			} elsif (($state == SWST_SQUOT || $state == SWST_DQUOT) && $varname =~ m"^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$") {
-				# This is ok if we don't allow these
-				# variables to have embedded [\$\\\"\'\`].
-
-			} elsif ($state == SWST_DQUOT && defined($mod) && $mod =~ m":Q$") {
-				$line->log_warning("Please don't use the :Q operator in double quotes.");
-				$line->explain_warning(
-"Either remove the :Q or the double quotes. In most cases, it is more",
-"appropriate to remove the double quotes.");
-
-			}
-
-			my $ctx = PkgLint::VarUseContext->new_from_pool(
-				VUC_TIME_UNKNOWN,
-				shellcommand_context_type,
-				  ($state == SWST_PLAIN) ? VUC_SHELLWORD_PLAIN
-				: ($state == SWST_DQUOT) ? VUC_SHELLWORD_DQUOT
-				: ($state == SWST_SQUOT) ? VUC_SHELLWORD_SQUOT
-				: ($state == SWST_BACKT) ? VUC_SHELLWORD_BACKT
-				: VUC_SHELLWORD_UNKNOWN,
-				VUC_EXTENT_WORD_PART
-			);
-			if ($varname ne "\@") {
-				checkline_mk_varuse($line, $varname, defined($mod) ? $mod : "", $ctx);
-			}
-
-		# The syntax of the variable modifiers can get quite
-		# hairy. In lack of motivation, we just skip anything
-		# complicated, hoping that at least the braces are
-		# balanced.
-		} elsif ($rest =~ s/^\$\{//) {
-			my $braces = 1;
-			while ($rest ne "" && $braces > 0) {
-				if ($rest =~ s/^\}//) {
-					$braces--;
-				} elsif ($rest =~ s/^\{//) {
-					$braces++;
-				} elsif ($rest =~ s/^[^{}]+//) {
-					# Nothing to do here.
-				} else {
-					last;
-				}
-			}
-
-		} elsif ($state == SWST_PLAIN) {
-
-			# XXX: This is only true for the "first" word in a
-			# shell command, not for every word. For example,
-			# FOO_ENV+= VAR=`command` may be underquoted.
-			if (false && $rest =~ m"([\w_]+)=\"\`") {
-				$line->log_note("In the assignment to \"$1\", you don't need double quotes around backticks.");
-				$line->explain_note(
-"Assignments are a special context, where no double quotes are needed",
-"around backticks. In other contexts, the double quotes are necessary.");
-			}
-
-			if ($rest =~ s/^[!#\%&\(\)*+,\-.\/0-9:;<=>?\@A-Z\[\]^_a-z{|}~]+//) {
-			} elsif ($rest =~ s/^\'//) {
-				$state = SWST_SQUOT;
-			} elsif ($rest =~ s/^\"//) {
-				$state = SWST_DQUOT;
-			} elsif ($rest =~ s/^\`//) { #`
-				$state = SWST_BACKT;
-			} elsif ($rest =~ s/^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)//) {
-			} elsif ($rest =~ s/^\$\$([0-9A-Z_a-z]+|\#)//
-			    || $rest =~ s/^\$\$\{([0-9A-Z_a-z]+|\#)\}//
-			    || $rest =~ s/^\$\$(\$)\$//) {
-				my ($shvarname) = ($1);
-				if ($opt_warn_quoting && $check_quoting) {
-					$line->log_warning("Unquoted shell variable \"${shvarname}\".");
-					$line->explain_warning(
-"When a shell variable contains white-space, it is expanded (split into", 
-"multiple words) when it is written as \$variable in a shell script.",
-"If that is not intended, you should add quotation marks around it,",
-"like \"\$variable\". Then, the variable will always expand to a single",
-"word, preserving all white-space and other special characters.",
-"",
-"Example:",
-"\tfname=\"Curriculum vitae.doc\"",
-"\tcp \$fname /tmp",
-"\t# tries to copy the two files \"Curriculum\" and \"Vitae.doc\"",
-"\tcp \"\$fname\" /tmp",
-"\t# copies one file, as intended");
-				}
-
-			} elsif ($rest =~ s/^\$\@//) {
-				$line->log_warning("Please use \"\${.TARGET}\" instead of \"\$@\".");
-				$line->explain_warning(
-"It is more readable and prevents confusion with the shell variable of",
-"the same name.");
-
-			} elsif ($rest =~ s/^\$\$\@//) {
-				$line->log_warning("The \$@ shell variable should only be used in double quotes.");
-
-			} elsif ($rest =~ s/^\$\$\?//) {
-				$line->log_warning("The \$? shell variable is often not available in \"set -e\" mode.");
-
-			} elsif ($rest =~ s/^\$\$\(/(/) {
-				$line->log_warning("Invoking subshells via \$(...) is not portable enough.");
-				$line->explain_warning(
-"The Solaris /bin/sh does not know this way to execute a command in a",
-"subshell. Please use backticks (\`...\`) as a replacement.");
-
-			} else {
-				last;
-			}
-
-		} elsif ($state == SWST_SQUOT) {
-			if ($rest =~ s/^\'//) {
-				$state = SWST_PLAIN;
-			} elsif ($rest =~ s/^[^\$\']+//) { #'
-			} elsif ($rest =~ s/^\$\$//) {
-			} else {
-				last;
-			}
-
-		} elsif ($state == SWST_DQUOT) {
-			if ($rest =~ s/^\"//) {
-				$state = SWST_PLAIN;
-			} elsif ($rest =~ s/^\`//) { #`
-				$state = SWST_DQUOT_BACKT;
-			} elsif ($rest =~ s/^[^\$"\\\`]+//) { #`
-			} elsif ($rest =~ s/^\\(?:[\\\"\`]|\$\$)//) { #`
-			} elsif ($rest =~ s/^\$\$\{([0-9A-Za-z_]+)\}//
-			    || $rest =~ s/^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)//) {
-				my ($shvarname) = ($1);
-				$opt_debug_shell and $line->log_debug("[checkline_mk_shellword] Found double-quoted variable ${shvarname}.");
-			} elsif ($rest =~ s/^\$\$//) {
-				$line->log_warning("Unquoted \$ or strange shell variable found.");
-			} elsif ($rest =~ s/^\\(.)//) {
-				my ($char) = ($1);
-				$line->log_warning("Please use \"\\\\${char}\" instead of \"\\${char}\".");
-				$line->explain_warning(
-"Although the current code may work, it is not good style to rely on",
-"the shell passing \"\\${char}\" exactly as is, and not discarding the",
-"backslash. Alternatively you can use single quotes instead of double",
-"quotes.");
-			} else {
-				last;
-			}
-
-		} else {
-			last;
-		}
-	}
-	if ($rest !~ m"^\s*$") {
-		$line->log_error("Internal pkglint error: " . statename->[$state] . ": rest=${rest}");
-	}
-}
-
-# Some shell commands should not be used in the install phase.
-#
-sub checkline_mk_shellcmd_use($$) {
-	my ($line, $shellcmd) = @_;
-
-	use constant allowed_install_commands => array_to_hash(qw(
-		${INSTALL}
-		${INSTALL_DATA} ${INSTALL_DATA_DIR}
-		${INSTALL_LIB} ${INSTALL_LIB_DIR}
-		${INSTALL_MAN} ${INSTALL_MAN_DIR}
-		${INSTALL_PROGRAM} ${INSTALL_PROGRAM_DIR}
-		${INSTALL_SCRIPT}
-		${LIBTOOL}
-		${LN}
-		${PAX}
-	));
-	use constant discouraged_install_commands => array_to_hash(qw(
-		sed ${SED}
-		tr ${TR}
-	));
-
-	if (defined($mkctx_target) && $mkctx_target =~ m"^(?:pre|do|post)-install") {
-
-		if (exists(allowed_install_commands->{$shellcmd})) {
-			# Fine.
-
-		} elsif (exists(discouraged_install_commands->{$shellcmd})) {
-			$line->log_warning("The shell command \"${shellcmd}\" should not be used in the install phase.");
-			$line->explain_warning(
-"In the install phase, the only thing that should be done is to install",
-"the prepared files to their final location. The file's contents should",
-"not be changed anymore.");
-
-		} elsif ($shellcmd eq "\${CP}") {
-			$line->log_warning("\${CP} should not be used to install files.");
-			$line->explain_warning(
-"The \${CP} command is highly platform dependent and cannot overwrite",
-"files that don't have write permission. Please use \${PAX} instead.",
-"",
-"For example, instead of",
-"\t\${CP} -R \${WRKSRC}/* \${PREFIX}/foodir",
-"you should use",
-"\tcd \${WRKSRC} && \${PAX} -wr * \${PREFIX}/foodir");
-
-		} else {
-			$opt_debug_misc and $line->log_debug("May \"${shellcmd}\" be used in the install phase?");
-		}
-	}
-}
-
-sub checkline_mk_shelltext($$) {
-	my ($line, $text) = @_;
-	my ($vartools, $state, $rest, $set_e_mode);
-
-	$opt_debug_trace and $line->log_debug("checkline_mk_shelltext(\"$text\")");
-
-	# Note: SCST is the abbreviation for [S]hell [C]ommand [ST]ate.
-	use constant scst => qw(
-		START CONT
-		INSTALL INSTALL_D
-		MKDIR
-		PAX PAX_S
-		SED SED_E
-		SET SET_CONT
-		COND COND_CONT
-		CASE CASE_IN CASE_LABEL CASE_LABEL_CONT CASE_PAREN
-		FOR FOR_IN FOR_CONT
-		ECHO
-		INSTALL_DIR INSTALL_DIR2
-	);
-	use enum (":SCST_", scst);
-	use constant scst_statename => [ map { "SCST_$_" } scst ];
-
-	use constant forbidden_commands => array_to_hash(qw(
-		ktrace
-		mktexlsr
-		strace
-		texconfig truss
-	));
-
-	if ($text =~ m"\$\{SED\}" && $text =~ m"\$\{MV\}") {
-		$line->log_note("Please use the SUBST framework instead of \${SED} and \${MV}.");
-		$line->explain_note(
-"When converting things, pay attention to \"#\" characters. In shell",
-"commands make(1) does not interpret them as comment character, but",
-"in other lines it does. Therefore, instead of the shell command",
-"",
-"\tsed -e 's,#define foo,,'",
-"",
-"you need to write",
-"",
-"\tSUBST_SED.foo+=\t's,\\#define foo,,'");
-	}
-
-	if ($text =~ m"^\@*-(.*(MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)") {
-		my ($mkdir_cmd) = ($1);
-
-		$line->log_note("You don't need to use \"-\" before ${mkdir_cmd}.");
-	}
-
-	$vartools = get_vartool_names();
-	$rest = $text;
-
-	use constant hidden_shell_commands => array_to_hash(qw(
-		${DELAYED_ERROR_MSG} ${DELAYED_WARNING_MSG}
-		${DO_NADA}
-		${ECHO} ${ECHO_MSG} ${ECHO_N} ${ERROR_CAT} ${ERROR_MSG}
-		${FAIL_MSG}
-		${PHASE_MSG} ${PRINTF}
-		${SHCOMMENT} ${STEP_MSG}
-		${WARNING_CAT} ${WARNING_MSG}
-	));
-
-	$set_e_mode = false;
-
-	if ($rest =~ s/^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)//) {
-		my ($hidden, $macro) = ($1, $2);
-
-		if ($hidden !~ m"\@") {
-			# Nothing is hidden at all.
-
-		} elsif (defined($mkctx_target) && $mkctx_target =~ m"^(?:show-.*|.*-message)$") {
-			# In some targets commands may be hidden.
-
-		} elsif ($rest =~ m"^#") {
-			# Shell comments may be hidden, as they have no side effects
-
-		} elsif ($rest =~ $regex_shellword) {
-			my ($cmd) = ($1);
-
-			if (!exists(hidden_shell_commands->{$cmd})) {
-				$line->log_warning("The shell command \"${cmd}\" should not be hidden.");
-				$line->explain_warning(
-"Hidden shell commands do not appear on the terminal or in the log file",
-"when they are executed. When they fail, the error message cannot be",
-"assigned to the command, which is very difficult to debug.");
-			}
-		}
-
-		if ($hidden =~ m"-") {
-			$line->log_warning("The use of a leading \"-\" to suppress errors is deprecated.");
-			$line->explain_warning(
-"If you really want to ignore any errors from this command (including",
-"all errors you never thought of), append \"|| \${TRUE}\" to the",
-"command.");
-		}
-
-		if ($macro eq "\${RUN}") {
-			$set_e_mode = true;
-		}
-	}
-
-	$state = SCST_START;
-	while ($rest =~ s/^$regex_shellword//) {
-		my ($shellword) = ($1);
-
-		$opt_debug_shell and $line->log_debug(scst_statename->[$state] . ": ${shellword}");
-
-		checkline_mk_shellword($line, $shellword, !(
-		       $state == SCST_CASE
-		    || $state == SCST_FOR_CONT
-		    || $state == SCST_SET_CONT
-		    || ($state == SCST_START && $shellword =~ regex_sh_varassign)));
-
-		#
-		# Actions associated with the current state
-		# and the symbol on the "input tape".
-		#
-
-		if ($state == SCST_START || $state == SCST_COND) {
-			my ($type);
-
-			if ($shellword eq "\${RUN}") {
-				# Just skip this one.
-
-			} elsif (exists(forbidden_commands->{basename($shellword)})) {
-				$line->log_error("${shellword} must not be used in Makefiles.");
-				$line->explain_error(
-"This command must appear in INSTALL scripts, not in the package",
-"Makefile, so that the package also works if it is installed as a binary",
-"package via pkg_add.");
-
-			} elsif (exists(get_tool_names()->{$shellword})) {
-				if (!exists($mkctx_tools->{$shellword}) && !exists($mkctx_tools->{"g$shellword"})) {
-					$line->log_warning("The \"${shellword}\" tool is used but not added to USE_TOOLS.");
-				}
-
-				if (exists(get_required_vartools()->{$shellword})) {
-					$line->log_warning("Please use \"\${" . get_vartool_names()->{$shellword} . "}\" instead of \"${shellword}\".");
-				}
-
-				checkline_mk_shellcmd_use($line, $shellword);
-
-			} elsif ($shellword =~ m"^\$\{([\w_]+)\}$" && exists(get_varname_to_toolname()->{$1})) {
-				my ($vartool) = ($1);
-				my $plain_tool = get_varname_to_toolname()->{$vartool};
-
-				if (!exists($mkctx_tools->{$plain_tool})) {
-					$line->log_warning("The \"${plain_tool}\" tool is used but not added to USE_TOOLS.");
-				}
-
-				# Deactivated to allow package developers to write
-				# consistent code that uses ${TOOL} in all places.
-				if (false && defined($mkctx_target) && $mkctx_target =~ m"^(?:pre|do|post)-(?:extract|patch|wrapper|configure|build|install|package|clean)$") {
-					if (!exists(get_required_vartool_varnames()->{$vartool})) {
-						$opt_warn_extra and $line->log_note("You can write \"${plain_tool}\" instead of \"${shellword}\".");
-						$opt_warn_extra and $line->explain_note(
-"The wrapper framework from pkgsrc takes care that a sufficiently",
-"capable implementation of that tool will be selected.",
-"",
-"Calling the commands by their plain name instead of the macros is",
-"only available in the {pre,do,post}-* targets. For all other targets,",
-"you should still use the macros.");
-					}
-				}
-
-				checkline_mk_shellcmd_use($line, $shellword);
-
-			} elsif ($shellword =~ m"^\$\{([\w_]+)\}$" && defined($type = get_variable_type($line, $1)) && $type->basic_type eq "ShellCommand") {
-				checkline_mk_shellcmd_use($line, $shellword);
-
-			} elsif ($shellword =~ m"^\$\{(\w+)\}$" && defined($pkgctx_vardef) && exists($pkgctx_vardef->{$1})) {
-				# When the package author has explicitly
-				# defined a command variable, assume it
-				# to be valid.
-
-			} elsif ($shellword =~ m"^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$") {
-				# Shell builtins are fine.
-
-			} elsif ($shellword =~ m"^[\w_]+=.*$") {
-				# Variable assignment.
-
-			} elsif ($shellword =~ m"^\./.*$") {
-				# All commands from the current directory are fine.
-
-			} elsif ($shellword =~ m"^#") {
-				my $semicolon = ($shellword =~ m";");
-				my $multiline = ($line->lines =~ m"--");
-
-				if ($semicolon) {
-					$line->log_warning("A shell comment should not contain semicolons.");
-				}
-				if ($multiline) {
-					$line->log_warning("A shell comment does not stop at the end of line.");
-				}
-
-				if ($semicolon || $multiline) {
-					$line->explain_warning(
-"When you split a shell command into multiple lines that are continued",
-"with a backslash, they will nevertheless be converted to a single line",
-"before the shell sees them. That means that even if it _looks_ like that",
-"the comment only spans one line in the Makefile, in fact it spans until",
-"the end of the whole shell command. To insert a comment into shell code,",
-"you can pass it as an argument to the \${SHCOMMENT} macro, which expands",
-"to a command doing nothing. Note that any special characters are",
-"nevertheless interpreted by the shell.");
-				}
-
-			} else {
-				$opt_warn_extra and $line->log_warning("Unknown shell command \"${shellword}\".");
-				$opt_warn_extra and $line->explain_warning(
-"If you want your package to be portable to all platforms that pkgsrc",
-"supports, you should only use shell commands that are covered by the",
-"tools framework.");
-
-			}
-		}
-
-		if ($state == SCST_COND && $shellword eq "cd") {
-			$line->log_error("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.");
-			$line->explain_error(
-"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
-"shell will exit, no matter if it is protected by an \"if\" or the",
-"\"||\" operator.");
-		}
-
-		if (($state != SCST_PAX_S && $state != SCST_SED_E && $state != SCST_CASE_LABEL)) {
-			checkline_mk_absolute_pathname($line, $shellword);
-		}
-
-		if (($state == SCST_INSTALL_D || $state == SCST_MKDIR) && $shellword =~ m"^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/") {
-			$line->log_warning("Please use AUTO_MKDIRS instead of "
-				. (($state == SCST_MKDIR) ? "\${MKDIR}" : "\${INSTALL} -d")
-				. ".");
-			$line->explain_warning(
-"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
-"mentioned in the PLIST. If you need additional directories, specify",
-"them in INSTALLATION_DIRS, which is a list of directories relative to",
-"\${PREFIX}.");
-		}
-
-		if (($state == SCST_INSTALL_DIR || $state == SCST_INSTALL_DIR2) && $shellword !~ regex_mk_shellvaruse && $shellword =~ m"^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)") {
-			my ($dirname) = ($1);
-
-			$line->log_note("You can use AUTO_MKDIRS=yes or INSTALLATION_DIRS+= ${dirname} instead of this command.");
-			$line->explain_note(
-"This saves you some typing. You also don't have to think about which of",
-"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
-"takes care of that.",
-"",
-"Note that you should only do this if the package creates _all_",
-"directories it needs before trying to install files into them.",
-"",
-"Many packages include a list of all needed directories in their PLIST",
-"file. In that case, you can just set AUTO_MKDIRS=yes and be done.");
-		}
-
-		if ($state == SCST_INSTALL_DIR2 && $shellword =~ m"^\$") {
-			$line->log_warning("The INSTALL_*_DIR commands can only handle one directory at a time.");
-			$line->explain_warning(
-"Many implementations of install(1) can handle more, but pkgsrc aims at",
-"maximum portability.");
-		}
-
-		if ($state == SCST_PAX && $shellword eq "-pe") {
-			$line->log_warning("Please use the -pp option to pax(1) instead of -pe.");
-			$line->explain_warning(
-"The -pe option tells pax to preserve the ownership of the files, which",
-"means that the installed files will belong to the user that has built",
-"the package. That's a Bad Thing.");
-		}
-
-		if ($state == SCST_PAX_S || $state == SCST_SED_E) {
-			if (false && $shellword !~ m"^[\"\'].*[\"\']$") {
-				$line->log_warning("Substitution commands like \"${shellword}\" should always be quoted.");
-				$line->explain_warning(
-"Usually these substitution commands contain characters like '*' or",
-"other shell metacharacters that might lead to lookup of matching",
-"filenames and then expand to more than one word.");
-			}
-		}
-
-		if ($state == SCST_ECHO && $shellword eq "-n") {
-			$line->log_warning("Please use \${ECHO_N} instead of \"echo -n\".");
-		}
-
-		if ($opt_warn_extra && $state != SCST_CASE_LABEL_CONT && $shellword eq "|") {
-			$line->log_warning("The exitcode of the left-hand-side command of the pipe operator is ignored.");
-			$line->explain_warning(
-"If you need to detect the failure of the left-hand-side command, use",
-"temporary files to save the output of the command.");
-		}
-
-		if ($opt_warn_extra && $shellword eq ";" && $state != SCST_COND_CONT && $state != SCST_FOR_CONT && !$set_e_mode) {
-			$line->log_warning("Please switch to \"set -e\" mode before using a semicolon to separate commands.");
-			$line->explain_warning(
-"Older versions of the NetBSD make(1) had run the shell commands using",
-"the \"-e\" option of /bin/sh. In 2004, this behavior has been changed to",
-"follow the POSIX conventions, which is to not use the \"-e\" option.",
-"The consequence of this change is that shell programs don't terminate",
-"as soon as an error occurs, but try to continue with the next command.",
-"Imagine what would happen for these commands:",
-"    cd \"\$HOME\"; cd /nonexistent; rm -rf *",
-"To fix this warning, either insert \"set -e\" at the beginning of this",
-"line or use the \"&&\" operator instead of the semicolon.");
-		}
-
-		#
-		# State transition.
-		#
-
-		if ($state == SCST_SET && $shellword =~ m"^-.*e") {
-			$set_e_mode = true;
-		}
-		if ($state == SCST_START && $shellword eq "\${RUN}") {
-			$set_e_mode = true;
-		}
-
-		$state =  ($shellword eq ";;") ? SCST_CASE_LABEL
-			# Note: The order of the following two lines is important.
-			: ($state == SCST_CASE_LABEL_CONT && $shellword eq "|") ? SCST_CASE_LABEL
-			: ($shellword =~ m"^[;&\|]+$") ? SCST_START
-			: ($state == SCST_START) ? (
-				  ($shellword eq "\${INSTALL}") ? SCST_INSTALL
-				: ($shellword eq "\${MKDIR}") ? SCST_MKDIR
-				: ($shellword eq "\${PAX}") ? SCST_PAX
-				: ($shellword eq "\${SED}") ? SCST_SED
-				: ($shellword eq "\${ECHO}") ? SCST_ECHO
-				: ($shellword eq "\${RUN}") ? SCST_START
-				: ($shellword eq "echo") ? SCST_ECHO
-				: ($shellword eq "set") ? SCST_SET
-				: ($shellword =~ m"^(?:if|elif|while)$") ? SCST_COND
-				: ($shellword =~ m"^(?:then|else|do)$") ? SCST_START
-				: ($shellword eq "case") ? SCST_CASE
-				: ($shellword eq "for") ? SCST_FOR
-				: ($shellword eq "(") ? SCST_START
-				: ($shellword =~ m"^\$\{INSTALL_[A-Z]+_DIR\}$") ? SCST_INSTALL_DIR
-				: ($shellword =~ regex_sh_varassign) ? SCST_START
-				: SCST_CONT)
-			: ($state == SCST_MKDIR) ? SCST_MKDIR
-			: ($state == SCST_INSTALL && $shellword eq "-d") ? SCST_INSTALL_D
-			: ($state == SCST_INSTALL || $state == SCST_INSTALL_D) ? (
-				  ($shellword =~ m"^-[ogm]$") ? SCST_CONT
-				: $state)
-			: ($state == SCST_INSTALL_DIR) ? (
-				  ($shellword =~ m"^-") ? SCST_CONT
-				: ($shellword =~ m"^\$") ? SCST_INSTALL_DIR2
-				: $state)
-			: ($state == SCST_INSTALL_DIR2) ? $state
-			: ($state == SCST_PAX) ? (
-				  ($shellword eq "-s") ? SCST_PAX_S
-				: ($shellword =~ m"^-") ? SCST_PAX
-				: SCST_CONT)
-			: ($state == SCST_PAX_S) ? SCST_PAX
-			: ($state == SCST_SED) ? (
-				  ($shellword eq "-e") ? SCST_SED_E
-				: ($shellword =~ m"^-") ? SCST_SED
-				: SCST_CONT)
-			: ($state == SCST_SED_E) ? SCST_SED
-			: ($state == SCST_SET) ? SCST_SET_CONT
-			: ($state == SCST_SET_CONT) ? SCST_SET_CONT
-			: ($state == SCST_CASE) ? SCST_CASE_IN
-			: ($state == SCST_CASE_IN && $shellword eq "in") ? SCST_CASE_LABEL
-			: ($state == SCST_CASE_LABEL && $shellword eq "esac") ? SCST_CONT
-			: ($state == SCST_CASE_LABEL) ? SCST_CASE_LABEL_CONT
-			: ($state == SCST_CASE_LABEL_CONT && $shellword eq ")") ? SCST_START
-			: ($state == SCST_CONT) ? SCST_CONT
-			: ($state == SCST_COND) ? SCST_COND_CONT
-			: ($state == SCST_COND_CONT) ? SCST_COND_CONT
-			: ($state == SCST_FOR) ? SCST_FOR_IN
-			: ($state == SCST_FOR_IN && $shellword eq "in") ? SCST_FOR_CONT
-			: ($state == SCST_FOR_CONT) ? SCST_FOR_CONT
-			: ($state == SCST_ECHO) ? SCST_CONT
-			: do {
-				$line->log_warning("[" . scst_statename->[$state] . " ${shellword}] Keeping the current state.");
-				$state;
-			};
-	}
-
-	if ($rest !~ m"^\s*$") {
-		$line->log_error("Internal pkglint error: " . scst_statename->[$state] . ": rest=${rest}");
-	}
-}
-
-sub checkline_mk_shellcmd($$) {
-	my ($line, $shellcmd) = @_;
-
-	checkline_mk_text($line, $shellcmd);
-	checkline_mk_shelltext($line, $shellcmd);
-}
-
+#include PkgLint/Shell.pm
 
 sub expand_permission($) {
     my ($perm) = @_;
@@ -5216,646 +5097,7 @@ sub checkfile_package_Makefile($$) {
 	autofix($lines);
 }
 
-# $NetBSD: Patches.pm,v 1.3 2015/10/11 21:23:34 rillig Exp $
-#
-# Everything concerning checks for patch files.
-#
-
-use strict;
-use warnings;
-
-# Guess the type of file based on the filename. This is used to select
-# the proper subroutine for detecting absolute pathnames.
-#
-# Returns one of "source", "shell", "make", "text", "configure",
-# "ignore", "unknown".
-#
-sub get_filetype($$) {
-	my ($line, $fname) = @_;
-	my $basename = basename($fname);
-
-	# The trailig .in part is not needed, since it does not
-	# influence the type of contents.
-	$basename =~ s,\.in$,,;
-
-	# Let's assume that everything else that looks like a Makefile
-	# is indeed a Makefile.
-	if ($basename =~ m"^I?[Mm]akefile(?:\..*|)?|.*\.ma?k$") {
-		return "make";
-	}
-
-	# Too many false positives for shell scripts, so configure
-	# scripts get their own category.
-	if ($basename =~ m"^configure(?:|\.ac)$") {
-		$opt_debug_unchecked and $line->log_debug("Skipped check for absolute pathnames.");
-		return "configure";
-	}
-
-	if ($basename =~ m"\.(?:sh|m4)$"i) {
-		return "shell";
-	}
-
-	if ($basename =~ m"\.(?:cc?|cpp|cxx|el|hh?|hpp|l|pl|pm|py|s|t|y)$"i) {
-		return "source";
-	}
-
-	if ($basename =~ m"^.+\.(?:\d+|conf|html|info|man|po|tex|texi|texinfo|txt|xml)$"i) {
-		return "text";
-	}
-
-	# Filenames without extension are hard to guess right. :(
-	if ($basename !~ m"\.") {
-		return "unknown";
-	}
-
-	$opt_debug_misc and $line->log_debug("Don't know the file type of ${fname}.");
-
-	return "unknown";
-}
-
-sub checkline_cpp_macro_names($$) {
-	my ($line, $text) = @_;
-	my ($rest);
-
-	use constant good_macros => PkgLint::Util::array_to_hash(qw(
-		__STDC__
-
-		__GNUC__ __GNUC_MINOR__
-		__SUNPRO_C
-
-		__i386
-		__mips
-		__sparc
-
-		__APPLE__
-		__bsdi__
-		__CYGWIN__
-		__DragonFly__
-		__FreeBSD__ __FreeBSD_version
-		__INTERIX
-		__linux__
-		__MINGW32__
-		__NetBSD__ __NetBSD_Version__
-		__OpenBSD__
-		__SVR4
-		__sgi
-		__sun
-
-		__GLIBC__
-	));
-	use constant bad_macros  => {
-		"__sgi__" => "__sgi",
-		"__sparc__" => "__sparc",
-		"__sparc_v9__" => "__sparcv9",
-		"__sun__" => "__sun",
-		"__svr4__" => "__SVR4",
-	};
-
-	$rest = $text;
-	while ($rest =~ s/defined\((__[\w_]+)\)// || $rest =~ s/\b(_\w+)\(//) {
-		my ($macro) = ($1);
-
-		if (exists(good_macros->{$macro})) {
-			$opt_debug_misc and $line->log_debug("Found good macro \"${macro}\".");
-		} elsif (exists(bad_macros->{$macro})) {
-			$line->log_warning("The macro \"${macro}\" is not portable enough. Please use \"".bad_macros->{$macro}."\" instead.");
-			$line->explain_warning("See the pkgsrc guide, section \"CPP defines\" for details.");
-
-		} elsif ($macro eq "__NetBSD_Prereq__") {
-			$line->log_warning("Please use __NetBSD_Version__ instead of __NetBSD_Prereq__.");
-			$line->explain_warning(
-"The __NetBSD_Prereq__ macro is pretty new. It was born in NetBSD",
-"4.99.3, and maybe it won't survive for long. A better (and compatible)",
-"way is to compare __NetBSD_Version__ directly to the required version",
-"number.");
-
-		} elsif ($macro =~ m"^_+NetBSD_+Version_+$"i && $macro ne "__NetBSD_Version__") {
-			$line->log_warning("Misspelled variant \"${macro}\" of \"__NetBSD_Version__\".");
-
-		} else {
-			$opt_debug_unchecked and $line->log_debug("Unchecked macro \"${macro}\".");
-		}
-	}
-}
-
-# Checks whether the line contains text that looks like absolute
-# pathnames, assuming that the file uses the common syntax with
-# single or double quotes to represent strings.
-#
-sub checkline_source_absolute_pathname($$) {
-	my ($line, $text) = @_;
-	my ($abspath);
-
-	$opt_debug_trace and $line->log_debug("checkline_source_absolute_pathname(${text})");
-
-	if ($text =~ m"(.*)([\"'])(/[^\"']*)\2") {
-		my ($before, $delim, $string) = ($1, $2, $3);
-
-		$opt_debug_misc and $line->log_debug("checkline_source_absolute_pathname(before=${before}, string=${string})");
-		if ($before =~ m"[A-Z_]+\s*$") {
-			# allowed: PREFIX "/bin/foo"
-
-		} elsif ($string =~ m"^/[*/]") {
-			# This is more likely to be a C or C++ comment.
-
-		} elsif ($string !~ m"^/\w") {
-			# Assume that pathnames start with a letter or digit.
-
-		} elsif ($before =~ m"\+\s*$") {
-			# Something like foodir + '/lib'
-
-		} else {
-			$abspath = $string;
-		}
-	}
-
-	if (defined($abspath)) {
-		checkword_absolute_pathname($line, $abspath);
-	}
-}
-
-# Last resort if the file does not look like a Makefile or typical
-# source code. All strings that look like pathnames and start with
-# one of the typical Unix prefixes are found.
-#
-sub checkline_other_absolute_pathname($$) {
-	my ($line, $text) = @_;
-
-	$opt_debug_trace and $line->log_debug("checkline_other_absolute_pathname(\"${text}\")");
-
-	if ($text =~ m"^#[^!]") {
-		# Don't warn for absolute pathnames in comments,
-		# except for shell interpreters.
-
-	} elsif ($text =~ m"^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$") {
-		my ($before, $path, $after) = ($1, $2, $3);
-
-		if ($before =~ m"\@$") {
-			# Something like @PREFIX@/bin
-
-		} elsif ($before =~ m"[)}]$") {
-			# Something like ${prefix}/bin or $(PREFIX)/bin
-
-		} elsif ($before =~ m"\+\s*[\"']$") {
-			# Something like foodir + '/lib'
-
-		} elsif ($before =~ m"\w$") {
-			# Something like $dir/lib
-
-		} elsif ($before =~ m"\.$") {
-			# ../foo is not an absolute pathname.
-
-		} else {
-			$opt_debug_misc and $line->log_debug("before=${before}");
-			checkword_absolute_pathname($line, $path);
-		}
-	}
-}
-
-sub checkfile_patch($) {
-	my ($fname) = @_;
-	my ($lines);
-	my ($state, $redostate, $nextstate, $dellines, $addlines, $hunks);
-	my ($seen_comment, $current_fname, $current_ftype, $patched_files);
-	my ($leading_context_lines, $trailing_context_lines, $context_scanning_leading);
-
-	# Abbreviations used:
-	# style: [c] = context diff, [u] = unified diff
-	# scope: [f] = file, [h] = hunk, [l] = line
-	# action: [d] = delete, [m] = modify, [a] = add, [c] = context
-	use constant re_patch_rcsid	=> qr"^\$.*\$$";
-	use constant re_patch_text	=> qr"^(.+)$";
-	use constant re_patch_empty	=> qr"^$";
-	use constant re_patch_cfd	=> qr"^\*\*\*\s(\S+)(.*)$";
-	use constant re_patch_cfa	=> qr"^---\s(\S+)(.*)$";
-	use constant re_patch_ch	=> qr"^\*{15}(.*)$";
-	use constant re_patch_chd	=> qr"^\*{3}\s(\d+)(?:,(\d+))?\s\*{4}$";
-	use constant re_patch_cha	=> qr"^-{3}\s(\d+)(?:,(\d+))?\s-{4}$";
-	use constant re_patch_cld	=> qr"^(?:-\s(.*))?$";
-	use constant re_patch_clm	=> qr"^(?:!\s(.*))?$";
-	use constant re_patch_cla	=> qr"^(?:\+\s(.*))?$";
-	use constant re_patch_clc	=> qr"^(?:\s\s(.*))?$";
-	use constant re_patch_ufd	=> qr"^---\s(\S+)(?:\s+(.*))?$";
-	use constant re_patch_ufa	=> qr"^\+{3}\s(\S+)(?:\s+(.*))?$";
-	use constant re_patch_uh	=> qr"^\@\@\s-(?:(\d+),)?(\d+)\s\+(?:(\d+),)?(\d+)\s\@\@(.*)$";
-	use constant re_patch_uld	=> qr"^-(.*)$";
-	use constant re_patch_ula	=> qr"^\+(.*)$";
-	use constant re_patch_ulc	=> qr"^\s(.*)$";
-	use constant re_patch_ulnonl	=> qr"^\\ No newline at end of file$";
-
-	use enum qw(:PST_
-		START CENTER TEXT
-		CFA CH CHD CLD0 CLD CLA0 CLA
-		UFA UH UL
-	);
-
-	my @comment_explanation = (
-"Each patch must document why it is necessary. If it has been applied",
-"because of a security issue, a reference to the CVE should be mentioned",
-"as well.",
-"",
-"Since it is our goal to have as few patches as possible, all patches",
-"should be sent to the upstream maintainers of the package. After you",
-"have done so, you should add a reference to the bug report containing",
-"the patch.");
-
-	my ($line, $m);
-
-	my $check_text = sub($) {
-		my ($text) = @_;
-
-		if ($text =~ m"(\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|$opt_rcsidstring)(?::[^\$]*)?\$)") {
-			my ($tag) = ($2);
-
-			if ($text =~ re_patch_uh) {
-				$line->log_warning("Found RCS tag \"\$${tag}\$\". Please remove it.");
-				$line->set_text($1);
-			} else {
-				$line->log_warning("Found RCS tag \"\$${tag}\$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".");
-			}
-		}
-	};
-
-	my $check_contents = sub() {
-
-		if ($m->has(1)) {
-			$check_text->($m->text(1));
-		}
-	};
-
-	my $check_added_contents = sub() {
-		my $text;
-
-		return unless $m->has(1);
-		$text = $m->text(1);
-		checkline_cpp_macro_names($line, $text);
-		checkline_spellcheck($line);
-
-		# XXX: This check is not as accurate as the similar one in
-		# checkline_mk_shelltext().
-		if (defined($current_fname)) {
-			if ($current_ftype eq "shell" || $current_ftype eq "make") {
-				my ($mm, $rest) = match_all($text, $regex_shellword);
-
-				foreach my $m (@{$mm}) {
-					my $shellword = $m->text(1);
-
-					if ($shellword =~ m"^#") {
-						last;
-					}
-					checkline_mk_absolute_pathname($line, $shellword);
-				}
-
-			} elsif ($current_ftype eq "source") {
-				checkline_source_absolute_pathname($line, $text);
-
-			} elsif ($current_ftype eq "configure") {
-				if ($text =~ m": Avoid regenerating within pkgsrc$") {
-					$line->log_error("This code must not be included in patches.");
-					$line->explain_error(
-"It is generated automatically by pkgsrc after the patch phase.",
-"",
-"For more details, look for \"configure-scripts-override\" in",
-"mk/configure/gnu-configure.mk.");
-				}
-
-			} elsif ($current_ftype eq "ignore") {
-				# Ignore it.
-
-			} else {
-				checkline_other_absolute_pathname($line, $text);
-			}
-		}
-	};
-
-	my $check_hunk_end = sub($$$) {
-		my ($deldelta, $adddelta, $newstate) = @_;
-
-		if ($deldelta > 0 && $dellines == 0) {
-			$redostate = $newstate;
-			if (defined($addlines) && $addlines > 0) {
-				$line->log_error("Expected ${addlines} more lines to be added.");
-			}
-		} elsif ($adddelta > 0 && $addlines == 0) {
-			$redostate = $newstate;
-			if (defined($dellines) && $dellines > 0) {
-				$line->log_error("Expected ${dellines} more lines to be deleted.");
-			}
-		} else {
-			if (defined($context_scanning_leading)) {
-				if ($deldelta != 0 && $adddelta != 0) {
-					if ($context_scanning_leading) {
-						$leading_context_lines++;
-					} else {
-						$trailing_context_lines++;
-					}
-				} else {
-					if ($context_scanning_leading) {
-						$context_scanning_leading = false;
-					} else {
-						$trailing_context_lines = 0;
-					}
-				}
-			}
-
-			if ($deldelta != 0) {
-				$dellines -= $deldelta;
-			}
-			if ($adddelta != 0) {
-				$addlines -= $adddelta;
-			}
-			if (!((defined($dellines) && $dellines > 0) ||
-			      (defined($addlines) && $addlines > 0))) {
-				if (defined($context_scanning_leading)) {
-					if ($leading_context_lines != $trailing_context_lines) {
-						$opt_debug_patches and $line->log_warning("The hunk that ends here does not have as many leading (${leading_context_lines}) as trailing (${trailing_context_lines}) lines of context.");
-					}
-				}
-				$nextstate = $newstate;
-			}
-		}
-	};
-
-	# @param deldelta
-	#	The number of lines that are deleted from the patched file.
-	# @param adddelta
-	#	The number of lines that are added to the patched file.
-	# @param newstate
-	#	The follow-up state when this line is the last line to be
-	#	added in this hunk of the patch.
-	#
-	my $check_hunk_line = sub($$$) {
-		my ($deldelta, $adddelta, $newstate) = @_;
-
-		$check_contents->();
-		$check_hunk_end->($deldelta, $adddelta, $newstate);
-
-		# If -Wextra is given, the context lines are checked for
-		# absolute paths and similar things. If it is not given,
-		# only those lines that really add something to the patched
-		# file are checked.
-		if ($adddelta != 0 && ($deldelta == 0 || $opt_warn_extra)) {
-			$check_added_contents->();
-		}
-	};
-
-	# [ regex, to state, action ]
-	my $transitions = {
-		PST_START() =>
-		[   [re_patch_rcsid, PST_CENTER, sub() {
-			checkline_rcsid($line, "");
-		}], [undef, PST_CENTER, sub() {
-			checkline_rcsid($line, "");
-		}]],
-		PST_CENTER() =>
-		[   [re_patch_empty, PST_TEXT, sub() {
-			#
-		}], [re_patch_cfd, PST_CFA, sub() {
-			if ($seen_comment) {
-				$opt_warn_space and $line->log_note("Empty line expected.");
-			} else {
-				$line->log_error("Comment expected.");
-				$line->explain_error(@comment_explanation);
-			}
-			$line->log_warning("Please use unified diffs (diff -u) for patches.");
-		}], [re_patch_ufd, PST_UFA, sub() {
-			if ($seen_comment) {
-				$opt_warn_space and $line->log_note("Empty line expected.");
-			} else {
-				$line->log_error("Comment expected.");
-				$line->explain_error(@comment_explanation);
-			}
-		}], [undef, PST_TEXT, sub() {
-			$opt_warn_space and $line->log_note("Empty line expected.");
-		}]],
-		PST_TEXT() =>
-		[   [re_patch_cfd, PST_CFA, sub() {
-			if (!$seen_comment) {
-				$line->log_error("Comment expected.");
-				$line->explain_error(@comment_explanation);
-			}
-			$line->log_warning("Please use unified diffs (diff -u) for patches.");
-		}], [re_patch_ufd, PST_UFA, sub() {
-			if (!$seen_comment) {
-				$line->log_error("Comment expected.");
-				$line->explain_error(@comment_explanation);
-			}
-		}], [re_patch_text, PST_TEXT, sub() {
-			$seen_comment = true;
-		}], [re_patch_empty, PST_TEXT, sub() {
-			#
-		}], [undef, PST_TEXT, sub() {
-			#
-		}]],
-		PST_CFA() =>
-		[   [re_patch_cfa, PST_CH, sub() {
-			$current_fname = $m->text(1);
-			$current_ftype = get_filetype($line, $current_fname);
-			$opt_debug_patches and $line->log_debug("fname=$current_fname ftype=$current_ftype");
-			$patched_files++;
-			$hunks = 0;
-		}]],
-		PST_CH() =>
-		[   [re_patch_ch, PST_CHD, sub() {
-			$hunks++;
-		}]],
-		PST_CHD() =>
-		[   [re_patch_chd, PST_CLD0, sub() {
-			$dellines = ($m->has(2))
-			    ? (1 + $m->text(2) - $m->text(1))
-			    : ($m->text(1));
-		}]],
-		PST_CLD0() =>
-		[   [re_patch_clc, PST_CLD, sub() {
-			$check_hunk_line->(1, 0, PST_CLD0);
-		}], [re_patch_cld, PST_CLD, sub() {
-			$check_hunk_line->(1, 0, PST_CLD0);
-		}], [re_patch_clm, PST_CLD, sub() {
-			$check_hunk_line->(1, 0, PST_CLD0);
-		}], [re_patch_cha, PST_CLA0, sub() {
-			$dellines = undef;
-			$addlines = ($m->has(2))
-			    ? (1 + $m->text(2) - $m->text(1))
-			    : ($m->text(1));
-		}]],
-		PST_CLD() =>
-		[   [re_patch_clc, PST_CLD, sub() {
-			$check_hunk_line->(1, 0, PST_CLD0);
-		}], [re_patch_cld, PST_CLD, sub() {
-			$check_hunk_line->(1, 0, PST_CLD0);
-		}], [re_patch_clm, PST_CLD, sub() {
-			$check_hunk_line->(1, 0, PST_CLD0);
-		}], [undef, PST_CLD0, sub() {
-			if ($dellines != 0) {
-				$line->log_warning("Invalid number of deleted lines (${dellines} missing).");
-			}
-		}]],
-		PST_CLA0() =>
-		[   [re_patch_clc, PST_CLA, sub() {
-			$check_hunk_line->(0, 1, PST_CH);
-		}], [re_patch_clm, PST_CLA, sub() {
-			$check_hunk_line->(0, 1, PST_CH);
-		}], [re_patch_cla, PST_CLA, sub() {
-			$check_hunk_line->(0, 1, PST_CH);
-		}], [undef, PST_CH, sub() {
-			#
-		}]],
-		PST_CLA() =>
-		[   [re_patch_clc, PST_CLA, sub() {
-			$check_hunk_line->(0, 1, PST_CH);
-		}], [re_patch_clm, PST_CLA, sub() {
-			$check_hunk_line->(0, 1, PST_CH);
-		}], [re_patch_cla, PST_CLA, sub() {
-			$check_hunk_line->(0, 1, PST_CH);
-		}], [undef, PST_CLA0, sub() {
-			if ($addlines != 0) {
-				$line->log_warning("Invalid number of added lines (${addlines} missing).");
-			}
-		}]],
-		PST_CH() =>
-		[   [undef, PST_TEXT, sub() {
-			#
-		}]],
-		PST_UFA() =>
-		[   [re_patch_ufa, PST_UH, sub() {
-			$current_fname = $m->text(1);
-			$current_ftype = get_filetype($line, $current_fname);
-			$opt_debug_patches and $line->log_debug("fname=$current_fname ftype=$current_ftype");
-			$patched_files++;
-			$hunks = 0;
-		}]],
-		PST_UH() =>
-		[   [re_patch_uh, PST_UL, sub() {
-			$dellines = ($m->has(1) ? $m->text(2) : 1);
-			$addlines = ($m->has(3) ? $m->text(4) : 1);
-			$check_text->($line->text);
-			if ($line->text =~ m"\r$") {
-				$line->log_error("The hunk header must not end with a CR character.");
-				$line->explain_error(
-"The MacOS X patch utility cannot handle these.");
-			}
-			$hunks++;
-			$context_scanning_leading = (($m->has(1) && $m->text(1) ne "1") ? true : undef);
-			$leading_context_lines = 0;
-			$trailing_context_lines = 0;
-		}], [undef, PST_TEXT, sub() {
-			($hunks != 0) || $line->log_warning("No hunks for file ${current_fname}.");
-		}]],
-		PST_UL() =>
-		[   [re_patch_uld, PST_UL, sub() {
-			$check_hunk_line->(1, 0, PST_UH);
-		}], [re_patch_ula, PST_UL, sub() {
-			$check_hunk_line->(0, 1, PST_UH);
-		}], [re_patch_ulc, PST_UL, sub() {
-			$check_hunk_line->(1, 1, PST_UH);
-		}], [re_patch_ulnonl, PST_UL, sub() {
-			#
-		}], [re_patch_empty, PST_UL, sub() {
-			$opt_warn_space and $line->log_note("Leading white-space missing in hunk.");
-			$check_hunk_line->(1, 1, PST_UH);
-		}], [undef, PST_UH, sub() {
-			if ($dellines != 0 || $addlines != 0) {
-				$line->log_warning("Unexpected end of hunk (-${dellines},+${addlines} expected).");
-			}
-		}]]};
-
-	$opt_debug_trace and log_debug($fname, NO_LINES, "checkfile_patch()");
-
-	checkperms($fname);
-	if (!($lines = load_lines($fname, false))) {
-		log_error($fname, NO_LINE_NUMBER, "Could not be read.");
-		return;
-	}
-	if (@{$lines} == 0) {
-		log_error($fname, NO_LINE_NUMBER, "Must not be empty.");
-		return;
-	}
-
-	$state = PST_START;
-	$dellines = undef;
-	$addlines = undef;
-	$patched_files = 0;
-	$seen_comment = false;
-	$current_fname = undef;
-	$current_ftype = undef;
-	$hunks = undef;
-
-	for (my $lineno = 0; $lineno <= $#{$lines}; ) {
-		$line = $lines->[$lineno];
-		my $text = $line->text;
-
-		$opt_debug_patches and $line->log_debug("[${state} ${patched_files}/".($hunks||0)."/-".($dellines||0)."+".($addlines||0)."] $text");
-
-		my $found = false;
-		foreach my $t (@{$transitions->{$state}}) {
-				if (!defined($t->[0])) {
-					$m = undef;
-				} elsif ($text =~ $t->[0]) {
-					$opt_debug_patches and $line->log_debug($t->[0]);
-					$m = PkgLint::SimpleMatch->new($text, \@-, \@+);
-				} else {
-					next;
-				}
-				$redostate = undef;
-				$nextstate = $t->[1];
-				$t->[2]->();
-				if (defined($redostate)) {
-					$state = $redostate;
-				} else {
-					$state = $nextstate;
-					if (defined($t->[0])) {
-						$lineno++;
-					}
-				}
-				$found = true;
-				last;
-		}
-
-		if (!$found) {
-			$line->log_error("Parse error: state=${state}");
-			$state = PST_TEXT;
-			$lineno++;
-		}
-	}
-
-	while ($state != PST_TEXT) {
-		$opt_debug_patches and log_debug($fname, "EOF", "[${state} ${patched_files}/".($hunks||0)."/-".($dellines||0)."+".($addlines||0)."]");
-
-		my $found = false;
-		foreach my $t (@{$transitions->{$state}}) {
-			if (!defined($t->[0])) {
-				my $newstate;
-
-				$m = undef;
-				$redostate = undef;
-				$nextstate = $t->[1];
-				$t->[2]->();
-				$newstate = (defined($redostate)) ? $redostate : $nextstate;
-				if ($newstate == $state) {
-					log_fatal($fname, "EOF", "Internal error in the patch transition table.");
-				}
-				$state = $newstate;
-				$found = true;
-				last;
-			}
-		}
-
-		if (!$found) {
-			log_error($fname, "EOF", "Parse error: state=${state}");
-			$state = PST_TEXT;
-		}
-	}
-
-	if ($patched_files > 1) {
-		log_warning($fname, NO_LINE_NUMBER, "Contains patches for $patched_files files, should be only one.");
-
-	} elsif ($patched_files == 0) {
-		log_error($fname, NO_LINE_NUMBER, "Contains no patch.");
-	}
-
-	checklines_trailing_empty_lines($lines);
-}
-
+#include PkgLint/Patches.pm
 
 sub checkfile_PLIST($) {
 	my ($fname) = @_;

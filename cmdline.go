@@ -1,7 +1,7 @@
 package main
 
 import (
-  "os"
+	"os"
 )
 
 type CmdOpts struct {
@@ -118,9 +118,9 @@ func ParseCommandLine(args []string) *CmdOpts {
 	warn.AddFlagVar("varorder", &result.optWarnVarorder, false, "warn about the ordering of variables")
 
 	opts.Parse(args)
-  if result.optPrintHelp {
-    opts.Help("pkglint [options] dir...")
-    os.Exit(0)
-  }
+	if result.optPrintHelp {
+		opts.Help("pkglint [options] dir...")
+		os.Exit(0)
+	}
 	return result
 }

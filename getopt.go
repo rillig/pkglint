@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-  "io"
-  "os"
+	"io"
+	"os"
 	"strings"
 )
 
@@ -53,10 +53,10 @@ func (self *Options) parseLongOption(args []string, i int, arg string) int {
 				opt.flagGroup.parse(args[i+1])
 				return 1
 			}
-      if opt.flag != nil {
-        **opt.flag = true
-        return 0
-      }
+			if opt.flag != nil {
+				**opt.flag = true
+				return 0
+			}
 			panic("not implemented: " + opt.longName)
 		} else if prefix := opt.longName + "="; strings.HasPrefix(arg, prefix) {
 			if opt.flagGroup != nil {
@@ -67,6 +67,7 @@ func (self *Options) parseLongOption(args []string, i int, arg string) int {
 		}
 	}
 	panic("not implemented: " + arg)
+	return 0
 }
 
 func (self *Options) parseShortOptions(args []string, i int, arg string) int {
@@ -102,43 +103,43 @@ func (self *Options) parseShortOptions(args []string, i int, arg string) int {
 
 func (self *Options) Help(generalUsage string) {
 	fmt.Printf("usage: %s\n", generalUsage)
-  fmt.Printf("\n")
+	fmt.Printf("\n")
 
-  tbl := make([][]string, 0)
+	tbl := make([][]string, 0)
 	for _, opt := range self.options {
 		if opt.argDescription == "" {
-      row := fmt.Sprintf("\t-%c, --%s\t %s",
-        opt.shortName, opt.longName, opt.description)
-      tbl = append(tbl, strings.Split(row, "\t"))
+			row := fmt.Sprintf("\t-%c, --%s\t %s",
+				opt.shortName, opt.longName, opt.description)
+			tbl = append(tbl, strings.Split(row, "\t"))
 		} else {
-      row := fmt.Sprintf("\t-%c, --%s=%s\t %s",
+			row := fmt.Sprintf("\t-%c, --%s=%s\t %s",
 				opt.shortName, opt.longName, opt.argDescription, opt.description)
-      tbl = append(tbl, strings.Split(row, "\t"))
+			tbl = append(tbl, strings.Split(row, "\t"))
 		}
 	}
-  printTable(os.Stdout, tbl)
+	printTable(os.Stdout, tbl)
 
-  hasFlagGroups := false
+	hasFlagGroups := false
 	for _, opt := range self.options {
 		if opt.flagGroup != nil {
-      hasFlagGroups = true
-      tbl := tbl[:0]
+			hasFlagGroups = true
+			tbl := tbl[:0]
 			tbl = append(tbl, []string{"", "", "all", " all of the following"})
 			tbl = append(tbl, []string{"", "", "none", " none of the following"})
 			for _, flag := range opt.flagGroup.flags {
 				row := fmt.Sprintf("\t\t%s\t %s (%v)", flag.name, flag.help, *flag.value)
-        tbl = append(tbl, strings.Split(row, "\t"))
+				tbl = append(tbl, strings.Split(row, "\t"))
 			}
 
-      fmt.Printf("\n")
+			fmt.Printf("\n")
 			fmt.Printf("  Flags for -%c, --%s:\n", opt.shortName, opt.longName)
-      printTable(os.Stdout, tbl)
+			printTable(os.Stdout, tbl)
 		}
 	}
-  if hasFlagGroups {
-    fmt.Printf("\n")
-    fmt.Printf("  (Prefix a flag with \"no-\" to disable it.)\n")
-  }
+	if hasFlagGroups {
+		fmt.Printf("\n")
+		fmt.Printf("  (Prefix a flag with \"no-\" to disable it.)\n")
+	}
 }
 
 type Option struct {
