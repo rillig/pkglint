@@ -186,7 +186,6 @@ func (self *VarUseContext) String() string {
 		[]string{"unknown", "full", "word", "word-part"}[self.extent])
 }
 
-
 type CvsEntry struct {
 	fname    string
 	revision string
@@ -331,11 +330,11 @@ func checkItem(fname string) {
 	GlobalVars.isInternal = match(absCurrentDir, `/mk/|/mk$`) != nil
 	GlobalVars.curPkgsrcdir = nil
 	GlobalVars.pkgContext.pkgpath = nil
-	for _, dir := range []string{".","..","../..","../../.."} {
+	for _, dir := range []string{".", "..", "../..", "../../.."} {
 		fname := currentDir + "/" + dir + "/mk/bsd.pkg.mk"
 		if fst, err := os.Stat(fname); err == nil && fst.Mode().IsRegular() {
 			*GlobalVars.curPkgsrcdir = dir
-			*GlobalVars.pkgContext.pkgpath, err = filepath.Rel(currentDir, currentDir + "/" + dir)
+			*GlobalVars.pkgContext.pkgpath, err = filepath.Rel(currentDir, currentDir+"/"+dir)
 			if err != nil {
 				logFatal(currentDir, NO_LINES, "Cannot determine relative dir.")
 			}

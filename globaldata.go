@@ -152,7 +152,7 @@ func (self *GlobalData) loadTools() {
 					if GlobalVars.opts.optDebugTools {
 						line.logDebug(fmt.Sprintf("[condDepth=%d] %s", condDepth, value))
 					}
-					if condDepth==0 {
+					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
 							if match(tool, reUnresolvedVar) == nil && tools[tool] {
 								predefinedTools[tool] = true
@@ -171,9 +171,13 @@ func (self *GlobalData) loadTools() {
 				cond := m[2]
 
 				switch cond {
-					case "if": case "ifdef": case "ifndef": case "for":
+				case "if":
+				case "ifdef":
+				case "ifndef":
+				case "for":
 					condDepth++
-					case "endif": case "endfor":
+				case "endif":
+				case "endfor":
 					condDepth--
 				}
 			}

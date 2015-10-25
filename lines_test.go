@@ -7,6 +7,7 @@ import (
 type Asserter struct {
 	t *testing.T
 }
+
 func (a *Asserter) assertStringEqual(expected, actual string) {
 	if actual != expected {
 		a.t.Fatalf("Expected %#v, got %#v", expected, actual)
@@ -31,7 +32,7 @@ func TestConvertToLogicalLines_nocont(t *testing.T) {
 }
 
 func TestConvertToLogicalLines_contInLastLine(t *testing.T) {
-		GlobalVars.opts = &CmdOpts{}
+	GlobalVars.opts = &CmdOpts{}
 
 	a := Asserter{t}
 	physlines := []PhysLine{
