@@ -52,11 +52,6 @@ func TestGetLogicalLine() {
 	fmt.Printf("%v\n", getLogicalLine("fname", physlines, &lineno))
 	fmt.Printf("%#v\n", getLogicalLine("fname", physlines, &lineno))
 }
-func TestConvertToLogicalLines() {
-	var physlines = []PhysLine{{1, "continuation in last line\\"}}
-	lines, _ := convertToLogicalLines("fname", physlines, true)
-	fmt.Printf("%s\n", lines)
-}
 
 // A Type in pkglint is a combination of a data type and a permission
 // specification. Further details can be found in the chapter ``The pkglint
@@ -320,9 +315,11 @@ func checkItem(fname string) {
 		logError(fname, NO_LINES, "No such file or directory.")
 		return
 	}
+	isDir := st.Mode().IsDir()
+	isReg := st.Mode().IsRegular()
 
 	currentDir := fname
-	if st.Mode().IsRegular() {
+	if isReg {
 		currentDir = path.Dir(fname)
 	}
 	abs, err := filepath.Abs(currentDir)
@@ -332,7 +329,63 @@ func checkItem(fname string) {
 	absCurrentDir := filepath.ToSlash(abs)
 	GlobalVars.isWip = !GlobalVars.opts.optImport && match(absCurrentDir, `/wip/|/wip$`) != nil
 	GlobalVars.isInternal = match(absCurrentDir, `/mk/|/mk$`) != nil
+	GlobalVars.curPkgsrcdir = nil
+	GlobalVars.pkgContext.pkgpath = nil
+	for _, dir := range []string{".","..","../..","../../.."} {
+		fname := currentDir + "/" + dir + "/mk/bsd.pkg.mk"
+		if fst, err := os.Stat(fname); err == nil && fst.Mode().IsRegular() {
+			*GlobalVars.curPkgsrcdir = dir
+			*GlobalVars.pkgContext.pkgpath, err = filepath.Rel(currentDir, currentDir + "/" + dir)
+			if err != nil {
+				logFatal(currentDir, NO_LINES, "Cannot determine relative dir.")
+			}
+		}
+	}
+	if *GlobalVars.cwdPkgsrcdir == "" && *GlobalVars.curPkgsrcdir != "" {
+		*GlobalVars.cwdPkgsrcdir = currentDir + "/" + *GlobalVars.curPkgsrcdir
+	}
 
+	if *GlobalVars.cwdPkgsrcdir == "" {
+		logError(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
+		return
+	}
+
+	if isDir && isEmptyDir(fname) {
+		return
+	}
+
+	if isDir {
+		checkdirCvs(fname)
+	}
+
+	if isReg {
+		checkfile(fname)
+	} else if *GlobalVars.curPkgsrcdir == "" {
+		logError(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
+	} else if *GlobalVars.curPkgsrcdir == "../.." {
+		checkdirPackage()
+	} else if *GlobalVars.curPkgsrcdir == ".." {
+		checkdirCategory()
+	} else if *GlobalVars.curPkgsrcdir == "." {
+		checkdirToplevel()
+	} else {
+		logError(fname, NO_LINES, "Don't know how to check this directory.")
+	}
+}
+
+func checkdirCvs(fname string) {
+	panic("not implemented")
+}
+func checkfile(fname string) {
+	panic("not implemented")
+}
+func checkdirPackage() {
+	panic("not implemented")
+}
+func checkdirCategory() {
+	panic("not implemented")
+}
+func checkdirToplevel() {
 	panic("not implemented")
 }
 

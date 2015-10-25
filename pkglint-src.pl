@@ -7,29 +7,6 @@ sub load_tool_names() {
 	my ($tools, $vartools, $predefined_tools, $varname_to_toolname, @tool_files);
 	my ($system_build_defs);
 
-	#
-	# Get the list of files that define the tools from bsd.tools.mk.
-	#
-
-	@tool_files = ("defaults.mk");
-	{
-		my $fname = "${cwd_pkgsrcdir}/mk/tools/bsd.tools.mk";
-		my $lines = load_existing_lines($fname, true);
-		foreach my $line (@{$lines}) {
-			if ($line->text =~ regex_mk_include) {
-				my (undef, $includefile) = ($1, $2);
-				if ($includefile =~ m"^(?:\$\{PKGSRCDIR\}/mk/tools/)?([^/]+)$") {
-					push(@tool_files, $1);
-				}
-			}
-		}
-	}
-	assert(scalar(@tool_files) > 1, "Too few tool files. Maybe the files have been renamed again?");
-
-	#
-	# Scan the tool files for the actual definitions of the tools.
-	#
-
 	$tools = {};
 	$vartools = {};
 	$predefined_tools = {};
@@ -44,15 +21,15 @@ sub load_tool_names() {
 				if ($varname eq "TOOLS_CREATE" && $value =~ m"^([-\w.]+|\[)$") {
 					$tools->{$value} = true;
 
-				} elsif ($varname =~ m"^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$") {
+				} elsif ($varname =~ m"") {
 					$tools->{$1} = true;
 					$vartools->{$1} = $value;
 					$varname_to_toolname->{$value} = $1;
 
-				} elsif ($varname =~ m"^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$") {
+				} elsif ($varname =~ m"") {
 					$tools->{$1} = true;
 
-				} elsif ($varname =~ m"^_TOOLS\.(.*)") {
+				} elsif ($varname =~ m"^") {
 					$tools->{$1} = true;
 					foreach my $tool (split(qr"\s+", $value)) {
 						$tools->{$tool} = true;
@@ -309,8 +286,8 @@ sub get_doc_CHANGES($) {
 sub get_suggested_package_updates() {
 
 	return ($is_wip)
-	    ? get_wip_TODO_updates()
-	    : get_doc_TODO_updates();
+		? get_wip_TODO_updates()
+		: get_doc_TODO_updates();
 }
 
 # Load all variables from mk/defaults/mk.conf. Since pkglint does not
@@ -1096,7 +1073,7 @@ sub readmakefile($$$$) {
 				$line->explain_warning(expl_relative_dirs);
 			}
 			if ($includefile =~ m"(?:^|/)Makefile.common$"
-			    || ($includefile =~ m"^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$"
+				|| ($includefile =~ m"^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$"
 				&& (!defined($1) || $1 ne "../mk")
 				&& $2 ne "buildlink3.mk"
 				&& $2 ne "options.mk")) {
@@ -1689,9 +1666,9 @@ sub checkline_mk_text($$) {
 		my $varname = $varbase . (defined($varext) ? $varext : "");
 		my $varcanon = varname_canon($varname);
 		my $instead =
-		      (exists($depr_map->{$varname})) ? $depr_map->{$varname}
-		    : (exists($depr_map->{$varcanon})) ? $depr_map->{$varcanon}
-		    : undef;
+			(exists($depr_map->{$varname})) ? $depr_map->{$varname}
+			: (exists($depr_map->{$varcanon})) ? $depr_map->{$varcanon}
+			: undef;
 
 		if (defined($instead)) {
 			$line->log_warning("Use of ${varname} is deprecated. ${instead}");
@@ -1840,7 +1817,7 @@ sub checkline_mk_shellword($$$) {
 			my $ctx = PkgLint::VarUseContext->new_from_pool(
 				VUC_TIME_UNKNOWN,
 				shellcommand_context_type,
-				  ($state == SWST_PLAIN) ? VUC_SHELLWORD_PLAIN
+				($state == SWST_PLAIN) ? VUC_SHELLWORD_PLAIN
 				: ($state == SWST_DQUOT) ? VUC_SHELLWORD_DQUOT
 				: ($state == SWST_SQUOT) ? VUC_SHELLWORD_SQUOT
 				: ($state == SWST_BACKT) ? VUC_SHELLWORD_BACKT
@@ -1890,13 +1867,13 @@ sub checkline_mk_shellword($$$) {
 				$state = SWST_BACKT;
 			} elsif ($rest =~ s/^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)//) {
 			} elsif ($rest =~ s/^\$\$([0-9A-Z_a-z]+|\#)//
-			    || $rest =~ s/^\$\$\{([0-9A-Z_a-z]+|\#)\}//
-			    || $rest =~ s/^\$\$(\$)\$//) {
+				|| $rest =~ s/^\$\$\{([0-9A-Z_a-z]+|\#)\}//
+				|| $rest =~ s/^\$\$(\$)\$//) {
 				my ($shvarname) = ($1);
 				if ($opt_warn_quoting && $check_quoting) {
 					$line->log_warning("Unquoted shell variable \"${shvarname}\".");
 					$line->explain_warning(
-"When a shell variable contains white-space, it is expanded (split into", 
+"When a shell variable contains white-space, it is expanded (split into",
 "multiple words) when it is written as \$variable in a shell script.",
 "If that is not intended, you should add quotation marks around it,",
 "like \"\$variable\". Then, the variable will always expand to a single",
@@ -1949,7 +1926,7 @@ sub checkline_mk_shellword($$$) {
 			} elsif ($rest =~ s/^[^\$"\\\`]+//) { #`
 			} elsif ($rest =~ s/^\\(?:[\\\"\`]|\$\$)//) { #`
 			} elsif ($rest =~ s/^\$\$\{([0-9A-Za-z_]+)\}//
-			    || $rest =~ s/^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)//) {
+				|| $rest =~ s/^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)//) {
 				my ($shvarname) = ($1);
 				$opt_debug_shell and $line->log_debug("[checkline_mk_shellword] Found double-quoted variable ${shvarname}.");
 			} elsif ($rest =~ s/^\$\$//) {
@@ -2134,10 +2111,10 @@ sub checkline_mk_shelltext($$) {
 		$opt_debug_shell and $line->log_debug(scst_statename->[$state] . ": ${shellword}");
 
 		checkline_mk_shellword($line, $shellword, !(
-		       $state == SCST_CASE
-		    || $state == SCST_FOR_CONT
-		    || $state == SCST_SET_CONT
-		    || ($state == SCST_START && $shellword =~ regex_sh_varassign)));
+			$state == SCST_CASE
+			|| $state == SCST_FOR_CONT
+			|| $state == SCST_SET_CONT
+			|| ($state == SCST_START && $shellword =~ regex_sh_varassign)));
 
 		#
 		# Actions associated with the current state
@@ -2348,7 +2325,7 @@ sub checkline_mk_shelltext($$) {
 			: ($state == SCST_CASE_LABEL_CONT && $shellword eq "|") ? SCST_CASE_LABEL
 			: ($shellword =~ m"^[;&\|]+$") ? SCST_START
 			: ($state == SCST_START) ? (
-				  ($shellword eq "\${INSTALL}") ? SCST_INSTALL
+				($shellword eq "\${INSTALL}") ? SCST_INSTALL
 				: ($shellword eq "\${MKDIR}") ? SCST_MKDIR
 				: ($shellword eq "\${PAX}") ? SCST_PAX
 				: ($shellword eq "\${SED}") ? SCST_SED
@@ -2367,20 +2344,20 @@ sub checkline_mk_shelltext($$) {
 			: ($state == SCST_MKDIR) ? SCST_MKDIR
 			: ($state == SCST_INSTALL && $shellword eq "-d") ? SCST_INSTALL_D
 			: ($state == SCST_INSTALL || $state == SCST_INSTALL_D) ? (
-				  ($shellword =~ m"^-[ogm]$") ? SCST_CONT
+				($shellword =~ m"^-[ogm]$") ? SCST_CONT
 				: $state)
 			: ($state == SCST_INSTALL_DIR) ? (
-				  ($shellword =~ m"^-") ? SCST_CONT
+				($shellword =~ m"^-") ? SCST_CONT
 				: ($shellword =~ m"^\$") ? SCST_INSTALL_DIR2
 				: $state)
 			: ($state == SCST_INSTALL_DIR2) ? $state
 			: ($state == SCST_PAX) ? (
-				  ($shellword eq "-s") ? SCST_PAX_S
+				($shellword eq "-s") ? SCST_PAX_S
 				: ($shellword =~ m"^-") ? SCST_PAX
 				: SCST_CONT)
 			: ($state == SCST_PAX_S) ? SCST_PAX
 			: ($state == SCST_SED) ? (
-				  ($shellword eq "-e") ? SCST_SED_E
+				($shellword eq "-e") ? SCST_SED_E
 				: ($shellword =~ m"^-") ? SCST_SED
 				: SCST_CONT)
 			: ($state == SCST_SED_E) ? SCST_SED
@@ -2418,12 +2395,12 @@ sub checkline_mk_shellcmd($$) {
 
 
 sub expand_permission($) {
-    my ($perm) = @_;
-    my %fullperm = ( "a" => "append", "d" => "default", "p" => "preprocess", "s" => "set", "u" => "runtime", "?" => "unknown" );
-    my $result = join(", ", map { $fullperm{$_} } split //, $perm);
-    $result =~ s/, $//g;
+	my ($perm) = @_;
+	my %fullperm = ( "a" => "append", "d" => "default", "p" => "preprocess", "s" => "set", "u" => "runtime", "?" => "unknown" );
+	my $result = join(", ", map { $fullperm{$_} } split //, $perm);
+	$result =~ s/, $//g;
 
-    return $result;
+	return $result;
 }
 
 sub checkline_mk_vardef($$$) {
@@ -2476,7 +2453,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 	my ($value_novar);
 
 	$opt_debug_trace and $line->log_debug(sprintf("checkline_mk_vartype_basic(%s, %s, %s, %s, %s, %s, %s)",
-	    $varname, $type, $op, $value, defined($comment) ? $comment : "<undef>", $list_context, $is_guessed));
+		$varname, $type, $op, $value, defined($comment) ? $comment : "<undef>", $list_context, $is_guessed));
 
 	$value_novar = $value;
 	while ($value_novar =~ s/\$\{([^{}]*)\}//g) {
@@ -2518,8 +2495,8 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 		BuildlinkDepth => sub {
 			if (!($op eq "use" && $value eq "+")
-			    && $value ne "\${BUILDLINK_DEPTH}+"
-			    && $value ne "\${BUILDLINK_DEPTH:S/+\$//}") {
+				&& $value ne "\${BUILDLINK_DEPTH}+"
+				&& $value ne "\${BUILDLINK_DEPTH:S/+\$//}") {
 				$line->log_warning("Invalid value for ${varname}.");
 			}
 		},
@@ -2529,8 +2506,8 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			my $re_add = qr"(?:[+\-.0-9A-Z_a-z]|\$\{[^\}]+\})+";
 
 			if (($op eq ":=" && $value =~ m"^${re_del}$") ||
-			    ($op eq ":=" && $value =~ m"^${re_del}\s+${re_add}$") ||
-			    ($op eq "+=" && $value =~ m"^${re_add}$")) {
+				($op eq ":=" && $value =~ m"^${re_del}\s+${re_add}$") ||
+				($op eq "+=" && $value =~ m"^${re_add}$")) {
 				# Fine.
 
 			} else {
@@ -3418,8 +3395,8 @@ sub checkline_mk_varassign($$$$$) {
 
 	if ($op eq "?=" && defined($seen_bsd_prefs_mk) && !$seen_bsd_prefs_mk) {
 		if ($varbase eq "BUILDLINK_PKGSRCDIR"
-		    || $varbase eq "BUILDLINK_DEPMETHOD"
-		    || $varbase eq "BUILDLINK_ABI_DEPENDS") {
+			|| $varbase eq "BUILDLINK_DEPMETHOD"
+			|| $varbase eq "BUILDLINK_ABI_DEPENDS") {
 			# FIXME: What about these ones? They occur quite often.
 		} else {
 			$opt_warn_extra and $line->log_warning("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".");
@@ -3555,7 +3532,7 @@ sub checkline_mk_varassign($$$$$) {
 		"+="	=> VUC_TIME_RUN,
 		"?="	=> VUC_TIME_RUN
 	};
-	
+
 	$used_vars = extract_used_variables($line, $value);
 	my $vuc = PkgLint::VarUseContext->new(
 		op_to_use_time->{$op},
@@ -4596,11 +4573,11 @@ sub checkfile_package_Makefile($$) {
 	checkperms($fname);
 
 	if (!exists($pkgctx_vardef->{"PLIST_SRC"})
-	    && !exists($pkgctx_vardef->{"GENERATE_PLIST"})
-	    && !exists($pkgctx_vardef->{"META_PACKAGE"})
-	    && defined($pkgdir)
-	    && !-f "${current_dir}/$pkgdir/PLIST"
-	    && !-f "${current_dir}/$pkgdir/PLIST.common") {
+		&& !exists($pkgctx_vardef->{"GENERATE_PLIST"})
+		&& !exists($pkgctx_vardef->{"META_PACKAGE"})
+		&& defined($pkgdir)
+		&& !-f "${current_dir}/$pkgdir/PLIST"
+		&& !-f "${current_dir}/$pkgdir/PLIST.common") {
 		log_warning($fname, NO_LINE_NUMBER, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?");
 	}
 
@@ -5075,7 +5052,7 @@ sub checkfile_patch($) {
 				$addlines -= $adddelta;
 			}
 			if (!((defined($dellines) && $dellines > 0) ||
-			      (defined($addlines) && $addlines > 0))) {
+				(defined($addlines) && $addlines > 0))) {
 				if (defined($context_scanning_leading)) {
 					if ($leading_context_lines != $trailing_context_lines) {
 						$opt_debug_patches and $line->log_warning("The hunk that ends here does not have as many leading (${leading_context_lines}) as trailing (${trailing_context_lines}) lines of context.");
@@ -5172,8 +5149,8 @@ sub checkfile_patch($) {
 		PST_CHD() =>
 		[   [re_patch_chd, PST_CLD0, sub() {
 			$dellines = ($m->has(2))
-			    ? (1 + $m->text(2) - $m->text(1))
-			    : ($m->text(1));
+				? (1 + $m->text(2) - $m->text(1))
+				: ($m->text(1));
 		}]],
 		PST_CLD0() =>
 		[   [re_patch_clc, PST_CLD, sub() {
@@ -5185,8 +5162,8 @@ sub checkfile_patch($) {
 		}], [re_patch_cha, PST_CLA0, sub() {
 			$dellines = undef;
 			$addlines = ($m->has(2))
-			    ? (1 + $m->text(2) - $m->text(1))
-			    : ($m->text(1));
+				? (1 + $m->text(2) - $m->text(1))
+				: ($m->text(1));
 		}]],
 		PST_CLD() =>
 		[   [re_patch_clc, PST_CLD, sub() {
@@ -6158,49 +6135,4 @@ cleanup:
 	$pkgctx_plist_subst_cond = undef;
 	$pkgctx_included = undef;
 	$seen_Makefile_common = undef;
-}
-
-	$cur_pkgsrcdir = undef;
-	$pkgpath = undef;
-	foreach my $d (".", "..", "../..", "../../..") {
-		if (-f "${current_dir}/${d}/mk/bsd.pkg.mk") {
-			$cur_pkgsrcdir = $d;
-			$pkgpath = relative_path("${current_dir}/${d}", $current_dir);
-		}
-	}
-	if (!defined($cwd_pkgsrcdir) && defined($cur_pkgsrcdir)) {
-		$cwd_pkgsrcdir = "${current_dir}/${cur_pkgsrcdir}";
-	}
-
-	if (!defined($cwd_pkgsrcdir)) {
-		log_error($item, NO_LINE_NUMBER, "Cannot determine the pkgsrc root directory.");
-		return;
-	}
-
-	check_pkglint_version();	# (needs $cwd_pkgsrcdir)
-
-	return if $is_dir && is_emptydir($item);
-
-	if ($is_dir) {
-		checkdir_CVS($item);
-	}
-
-	if ($is_reg) {
-		checkfile($item);
-
-	} elsif (!defined($cur_pkgsrcdir)) {
-		log_error($item, NO_LINES, "Cannot check directories outside a pkgsrc tree.");
-
-	} elsif ($cur_pkgsrcdir eq "../..") {
-		checkdir_package();
-
-	} elsif ($cur_pkgsrcdir eq "..") {
-		checkdir_category();
-
-	} elsif ($cur_pkgsrcdir eq ".") {
-		checkdir_root();
-
-	} else {
-		log_error($item, NO_LINE_NUMBER, "Don't know how to check this directory.");
-	}
 }

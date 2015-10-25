@@ -56,7 +56,7 @@ func (self *Line) printSource(out io.Writer) {
 	if GlobalVars.opts.optPrintSource {
 		io.WriteString(out, "\n")
 		for _, physline := range self.physicalLines() {
-			fmt.Fprintf(out, "> %s", physline.textnl)
+			fmt.Fprintf(out, "> %s\n", physline.textnl)
 		}
 	}
 }
@@ -194,10 +194,10 @@ func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 	if err != nil {
 		return nil, err
 	}
-	return convertToLogicalLines(fname, physlines, joinContinuationLines)
+	return convertToLogicalLines(fname, physlines, joinContinuationLines), nil
 }
 
-func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationLines bool) ([]*Line, error) {
+func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationLines bool) []*Line {
 	loglines := make([]*Line, 0, len(physlines))
 	if joinContinuationLines {
 		for lineno := 0; lineno < len(physlines); {
@@ -213,7 +213,7 @@ func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationL
 		logError(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
 	}
 
-	return loglines, nil
+	return loglines
 }
 
 func saveAutofixChanges(lines []Line) {

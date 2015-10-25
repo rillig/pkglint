@@ -173,3 +173,7 @@ func isVarUsed(varname string) bool {
 	pkg := GlobalVars.pkgContext
 	return pkg != nil && (pkg.varuse[varname] != nil || pkg.varuse[varcanon] != nil)
 }
+
+func splitOnSpace(s string) []string {
+	return regexp.MustCompile(`\s+`).Split(s, -1)
+}
