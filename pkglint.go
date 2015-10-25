@@ -347,16 +347,13 @@ func findPkgsrcTopdir() string {
 func main() {
 	pkgsrcdir := findPkgsrcTopdir()
 	GlobalVars.opts = ParseCommandLine(os.Args)
-	GlobalVars.globalData.Initialize(pkgsrcdir)
-	initacls()
-	if GlobalVars.opts.optPrintHelp {
-		GlobalVars.opts.Help()
-		return
-	}
 	if GlobalVars.opts.optPrintVersion {
 		fmt.Printf("%s\n", confVersion)
 		os.Exit(0)
 	}
+
+	GlobalVars.globalData.Initialize(pkgsrcdir)
+	initacls()
 
 	GlobalVars.todo = append(GlobalVars.todo, GlobalVars.opts.args...)
 	if len(GlobalVars.todo) == 0 {

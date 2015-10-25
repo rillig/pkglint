@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+	"regexp"
+)
 // Records the state of a block of variable assignments that make up a SUBST
 // class (see mk/subst.mk).
 type SubstContext struct {
