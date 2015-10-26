@@ -2,15 +2,25 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
 // Constant data that is loaded once.
 type GlobalData struct {
-	pkgsrcdir      string // Relative to the current working directory.
-	masterSiteUrls map[string]string
-	masterSiteVars map[string]bool
-	pkgOptions     map[string]string
+	pkgsrcdir           string // Relative to the current working directory.
+	masterSiteUrls      map[string]string
+	masterSiteVars      map[string]bool
+	pkgOptions          map[string]string
+	tools               map[string]bool   // Known tool names, e.g. "sed" and "gm4".
+	vartools            map[string]string // Maps tool names to their respective variable, e.g. "sed" => "SED", "gzip" => "GZIP_CMD".
+	predefinedTools     map[string]bool   // Tools that a package does not need to add to USE_TOOLS explicitly because they are used by the pkgsrc infrastructure, too.
+	varnameToToolname   map[string]string // Maps the tool variable names to the tool name they use, e.g. "GZIP_CMD" => "gzip" and "SED" => "sed".
+	systemBuildDefs     map[string]bool   // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
+	varRequiredTools    map[string]bool   // Tool variable names that may not be converted to their "direct" form, that is: ${CP} => cp.
+	suggestedUpdates    []SuggestedUpdate
+	suggestedWipUpdates []SuggestedUpdate
+	changes             []Change
 }
 
 // A change entry from doc/CHANGES-*
@@ -21,6 +31,13 @@ type Change struct {
 	version string
 	author  string
 	date    string
+}
+
+type SuggestedUpdate struct {
+	line    *Line
+	pkgname string
+	version string
+	comment string
 }
 
 func (self *GlobalData) Initialize(pkgsrcdir string) {
@@ -192,5 +209,110 @@ func (self *GlobalData) loadTools() {
 	}
 	if GlobalVars.opts.optDebugMisc {
 		logDebug(NO_FILE, NO_LINES, fmt.Sprintf("systemBuildDefs: %v", systemBuildDefs))
+	}
+
+	// Some user-defined variables do not influence the binary
+	// package at all and therefore do not have to be added to
+	// BUILD_DEFS; therefore they are marked as “already added”.
+	systemBuildDefs["DISTDIR"] = true
+	systemBuildDefs["FETCH_CMD"] = true
+	systemBuildDefs["FETCH_OUTPUT_ARGS"] = true
+	systemBuildDefs["GAMES_USER"] = true
+	systemBuildDefs["GAMES_GROUP"] = true
+	systemBuildDefs["GAMEDATAMODE"] = true
+	systemBuildDefs["GAMEDIRMODE"] = true
+	systemBuildDefs["GAMEMODE"] = true
+	systemBuildDefs["GAMEOWN"] = true
+	systemBuildDefs["GAMEGRP"] = true
+
+	self.tools = tools
+	self.vartools = vartools
+	self.predefinedTools = predefinedTools
+	self.varnameToToolname = varnameToToolname
+	self.systemBuildDefs = systemBuildDefs
+	self.varRequiredTools = map[string]bool{
+		"ECHO":   true,
+		"ECHO_N": true,
+		"FALSE":  true,
+		"TEST":   true,
+		"TRUE":   true,
+	}
+}
+
+func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
+	lines := loadExistingLines(fname, false)
+
+	updates := make([]SuggestedUpdate, 0)
+	state := 0
+	for _, line := range lines {
+		text := line.text
+
+		if state == 0 && text == "Suggested package updates" {
+			state = 1
+		} else if state == 1 && text == "" {
+			state = 2
+		} else if state == 2 {
+			state = 3
+		} else if state == 3 && text == "" {
+			state = 4
+		}
+
+		if state == 3 {
+			if m := match(text, `\to\s(\S+)(?:\s*(.+))?$`); m != nil {
+				pkgname, comment := m[1], m[2]
+				if m = match(pkgname, rePkgname); m != nil {
+					updates = append(updates, SuggestedUpdate{line, m[1], m[2], comment})
+				} else {
+					line.logWarning("Invalid package name " + pkgname)
+				}
+			} else {
+				line.logWarning("Invalid line format " + text)
+			}
+		}
+	}
+	return updates
+}
+
+func (self *GlobalData) loadSuggestedUpdates() {
+	self.suggestedUpdates = loadSuggestedUpdatesFile(*GlobalVars.cwdPkgsrcdir + "/doc/TODO")
+	wipFilename := *GlobalVars.cwdPkgsrcdir + "/wip/TODO"
+	if _, err := os.Stat(wipFilename); err != nil {
+		self.suggestedWipUpdates = loadSuggestedUpdatesFile(wipFilename)
+	}
+}
+
+func loadChangesFromFile(fname string) []Change {
+	lines := loadExistingLines(fname, false)
+
+	changes := make([]Change, 0)
+	for _, line := range lines {
+		text := line.text
+		if match(text, `^\t[A-Z]`) == nil {
+			continue
+		}
+
+		if m := match(text, `^\t(Updated) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
+			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
+		} else if m := match(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
+			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
+		} else if m := match(text, `^\t(Removed) (\S+) (?:successor (\S+) )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
+			changes = append(changes, Change{line, m[1], m[2], nil, m[3], m[4]})
+		} else if m := match(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
+			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
+		} else if m := match(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
+			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
+		} else {
+			line.logWarning("Unknown doc/CHANGES line: " + text)
+			line.explainWarning("See mk/misc/developer.mk for the rules.")
+		}
+	}
+	return changes
+}
+
+func (self *GlobalData) getSuggestedPackageUpdates() []Change {
+	if GlobalVars.isWip {
+		return self.suggestedWipUpdates
+	} else {
+		return self.suggestedUpdates
 	}
 }
