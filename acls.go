@@ -784,7 +784,4 @@ func initacls() {
 	sys("X11_PKGSRCDIR.*", "Pathname")
 	usr("XAW_TYPE", "{ 3d neXtaw standard xpm }")
 	acl("XMKMF_FLAGS", "List of ShellWord")
-
-	/*
-	 */
 }

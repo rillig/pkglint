@@ -42,9 +42,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line, seenMakefil
 					bl3File := m[1]
 
 					GlobalVars.pkgContext.bl3[bl3File] = line
-					if GlobalVars.opts.optDebugMisc {
-						line.logDebug("Buildlink3 file in package: " + bl3File)
-					}
+					_ = GlobalVars.opts.optDebugMisc && line.logDebug("Buildlink3 file in package: "+bl3File)
 				}
 			}
 		}
@@ -57,14 +55,12 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line, seenMakefil
 				line.explainWarning(explanationRelativeDirs()...)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
-				if GlobalVars.opts.optDebugInclude {
-					line.logDebug("Including \"" + includeFile + "\" sets seenMakefileCommon.")
-				}
+				_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including \""+includeFile+"\" sets seenMakefileCommon.")
 				GlobalVars.pkgContext.seenMakefileCommon = true
 			}
 			if m := match(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m != nil {
 				if m[2] != "buildlink3.mk" && m[2] != "options.mk" {
-					_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including \"" + includeFile + "\" sets seenMakefileCommon.")
+					_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including \""+includeFile+"\" sets seenMakefileCommon.")
 					GlobalVars.pkgContext.seenMakefileCommon = true
 				}
 			}
@@ -105,10 +101,8 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line, seenMakefil
 			varname, op, value := line.get("varname"), line.get("op"), line.get("value")
 
 			if op != "?=" || GlobalVars.pkgContext.vardef[varname] == nil {
-				if GlobalVars.opts.optDebugMisc {
-					line.logDebug(fmt.Sprintf("varassign(%s, %s, %s)", varname, op, value))
-					GlobalVars.pkgContext.vardef[varname] = line
-				}
+				_ = GlobalVars.opts.optDebugMisc && line.logDebug(fmt.Sprintf("varassign(%s, %s, %s)", varname, op, value))
+				GlobalVars.pkgContext.vardef[varname] = line
 			}
 		}
 	}

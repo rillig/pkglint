@@ -80,9 +80,7 @@ func (self *GlobalData) loadDistSites() {
 	names["MASTER_SITE_SUSE_UPD"] = true
 	names["MASTER_SITE_LOCAL"] = true
 
-	if GlobalVars.opts.optDebugMisc {
-		logDebug(fname, NO_LINES, fmt.Sprintf("Loaded %d MASTER_SITE_* definitions.", len(url2name)))
-	}
+	_ = GlobalVars.opts.optDebugMisc && logDebug(fname, NO_LINES, fmt.Sprintf("Loaded %d MASTER_SITE_* definitions.", len(url2name)))
 	self.masterSiteUrls = url2name
 	self.masterSiteVars = names
 }
@@ -166,9 +164,7 @@ func (self *GlobalData) loadTools() {
 				varname, value := m[1], m[3]
 
 				if varname == "USE_TOOLS" {
-					if GlobalVars.opts.optDebugTools {
-						line.logDebug(fmt.Sprintf("[condDepth=%d] %s", condDepth, value))
-					}
+					_ = GlobalVars.opts.optDebugTools && line.logDebug(fmt.Sprintf("[condDepth=%d] %s", condDepth, value))
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
 							if match(tool, reUnresolvedVar) == nil && tools[tool] {
@@ -207,9 +203,7 @@ func (self *GlobalData) loadTools() {
 		logDebug(NO_FILE, NO_LINES, fmt.Sprintf("predefinedTools: %v", predefinedTools))
 		logDebug(NO_FILE, NO_LINES, fmt.Sprintf("varnameToToolname: %v", varnameToToolname))
 	}
-	if GlobalVars.opts.optDebugMisc {
-		logDebug(NO_FILE, NO_LINES, fmt.Sprintf("systemBuildDefs: %v", systemBuildDefs))
-	}
+	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, fmt.Sprintf("systemBuildDefs: %v", systemBuildDefs))
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
