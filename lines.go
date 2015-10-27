@@ -263,3 +263,9 @@ func loadExistingLines(fname string, foldBackslashLines bool) []*Line {
 	}
 	return lines
 }
+
+func autofix(lines []*Line) {
+	if GlobalVars.opts.optAutofix {
+		saveAutofixChanges(lines)
+	}
+}

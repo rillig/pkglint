@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 func readMakefile(fname string, mainLines []*Line, allLines []*Line, seenMakefileInclude *map[string]bool) bool {
@@ -147,7 +148,29 @@ documenting its interface.`)
 func parselinesMk(lines []*Line) {
 	panic("not implemented")
 }
+
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
-	panic("not implemented")
-	return ""
+
+	tmp := relpath
+	tmp = strings.Replace(tmp, "${PKGSRCDIR}", *GlobalVars.curPkgsrcdir, -1)
+	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
+	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
+	tmp = strings.Replace(tmp, "${LUA_PKGSRCDIR}", "../../lang/lua52", -1)
+	tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", "../../lang/php54", -1)
+	tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", "suse100", -1)
+	tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", "../../lang/python27", -1)
+	if GlobalVars.pkgContext.filesdir != nil {
+		tmp = strings.Replace(tmp, "${FILESDIR}", *GlobalVars.pkgContext.filesdir, -1)
+	}
+	if adjustDepth {
+		if m := match(tmp, `^\.\./\.\./([^.].*)$`); m != nil {
+			tmp = *GlobalVars.curPkgsrcdir + "/" + m[1]
+		}
+	}
+	if GlobalVars.pkgContext.pkgdir != nil {
+		tmp = strings.Replace(tmp, "${PKGDIR}", *GlobalVars.pkgContext.pkgdir, -1)
+	}
+
+	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "resolveVarsInRelativePath: "+relpath+" => "+tmp)
+	return tmp
 }

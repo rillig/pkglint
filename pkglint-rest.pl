@@ -1665,34 +1665,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			}
 		},
 
-		License => sub {
-
-			use constant deprecated_licenses => array_to_hash(qw(
-				fee-based-commercial-use
-				no-commercial-use no-profit no-redistribution
-				shareware
-			));
-
-			my $licenses = parse_licenses($value);
-			foreach my $license (@$licenses) {
-				my $license_file = "${cwd_pkgsrcdir}/licenses/${license}";
-				if (defined($pkgctx_vardef) && exists($pkgctx_vardef->{"LICENSE_FILE"})) {
-					my $license_file_line = $pkgctx_vardef->{"LICENSE_FILE"};
-
-					$license_file = "${current_dir}/" . resolve_relative_path($license_file_line->get("value"), false);
-				} else {
-					$ipc_used_licenses{$license} = true;
-				}
-
-				if (!-f $license_file) {
-					$line->log_warning("License file ".normalize_pathname($license_file)." does not exist.");
-				}
-
-				if (exists(deprecated_licenses->{$license})) {
-					$line->log_warning("License ${license} is deprecated.");
-				}
-			}
-		},
+		License => CheckvartypeLicense,
 
 		Mail_Address => sub {
 			if ($value =~ m"^([+\-.0-9A-Z_a-z]+)\@([-\w\d.]+)$") {

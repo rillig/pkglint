@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -20,7 +22,8 @@ type GlobalData struct {
 	varRequiredTools    map[string]bool   // Tool variable names that may not be converted to their "direct" form, that is: ${CP} => cp.
 	suggestedUpdates    []SuggestedUpdate
 	suggestedWipUpdates []SuggestedUpdate
-	changes             []Change
+	lastChange          map[string]Change
+	userDefinedVars     map[string]*Line
 }
 
 // A change entry from doc/CHANGES-*
@@ -44,6 +47,8 @@ func (self *GlobalData) Initialize(pkgsrcdir string) {
 	self.pkgsrcdir = pkgsrcdir
 	self.loadDistSites()
 	self.loadPkgOptions()
+	self.loadDocChanges()
+	self.loadUserDefinedVars()
 }
 
 func (self *GlobalData) loadDistSites() {
@@ -275,7 +280,7 @@ func (self *GlobalData) loadSuggestedUpdates() {
 	}
 }
 
-func loadChangesFromFile(fname string) []Change {
+func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 	lines := loadExistingLines(fname, false)
 
 	changes := make([]Change, 0)
@@ -308,5 +313,39 @@ func (self *GlobalData) getSuggestedPackageUpdates() []SuggestedUpdate {
 		return self.suggestedWipUpdates
 	} else {
 		return self.suggestedUpdates
+	}
+}
+
+func (self *GlobalData) loadDocChanges() {
+	docdir := *GlobalVars.cwdPkgsrcdir + "/doc"
+	files, err := ioutil.ReadDir(docdir)
+	if err != nil {
+		logFatal(docdir, NO_LINES, "Cannot be read.")
+	}
+
+	fnames := make([]string, 0)
+	for _, file := range files {
+		fname := file.Name()
+		if match(fname, `^CHANGES-(20\d\d)$`) != nil && fname >= "CHANGES-2011" {
+			fnames = append(fnames, fname)
+		}
+	}
+
+	sort.Strings(fnames)
+	for _, fname := range fnames {
+		changes := self.loadDocChangesFromFile(fname)
+		for _, change := range changes {
+			self.lastChange[change.pkgpath] = change
+		}
+	}
+}
+
+func (self *GlobalData) loadUserDefinedVars() {
+	lines := loadExistingLines(*GlobalVars.cwdPkgsrcdir+"/mk/defaults/mk.conf", true)
+
+	for _, line := range lines {
+		if m := match(line.text, reVarassign); m != nil {
+			self.userDefinedVars[m[1]] = line
+		}
 	}
 }
