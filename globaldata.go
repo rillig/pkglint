@@ -296,7 +296,7 @@ func loadChangesFromFile(fname string) []Change {
 		} else if m := match(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
 			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
 		} else if m := match(text, `^\t(Removed) (\S+) (?:successor (\S+) )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
-			changes = append(changes, Change{line, m[1], m[2], nil, m[3], m[4]})
+			changes = append(changes, Change{line, m[1], m[2], "", m[3], m[4]})
 		} else if m := match(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
 			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
 		} else if m := match(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
@@ -309,7 +309,7 @@ func loadChangesFromFile(fname string) []Change {
 	return changes
 }
 
-func (self *GlobalData) getSuggestedPackageUpdates() []Change {
+func (self *GlobalData) getSuggestedPackageUpdates() []SuggestedUpdate {
 	if GlobalVars.isWip {
 		return self.suggestedWipUpdates
 	} else {

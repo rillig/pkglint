@@ -177,3 +177,8 @@ func isVarUsed(varname string) bool {
 func splitOnSpace(s string) []string {
 	return regexp.MustCompile(`\s+`).Split(s, -1)
 }
+
+func fileExists(fname string) bool {
+	st, err := os.Stat(fname)
+	return err == nil && st.Mode().IsRegular()
+}

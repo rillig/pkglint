@@ -60,25 +60,25 @@ func (self *Line) printSource(out io.Writer) {
 		}
 	}
 }
-func (self *Line) logFatal(msg string) {
+func (self *Line) logFatal(msg string) bool {
 	self.printSource(os.Stderr)
-	logFatal(self.fname, self.lines, msg)
+	return logFatal(self.fname, self.lines, msg)
 }
-func (self *Line) logError(msg string) {
+func (self *Line) logError(msg string) bool {
 	self.printSource(os.Stdout)
-	logError(self.fname, self.lines, msg)
+	return logError(self.fname, self.lines, msg)
 }
-func (self *Line) logWarning(msg string) {
+func (self *Line) logWarning(msg string) bool {
 	self.printSource(os.Stdout)
-	logWarning(self.fname, self.lines, msg)
+	return logWarning(self.fname, self.lines, msg)
 }
-func (self *Line) logNote(msg string) {
+func (self *Line) logNote(msg string) bool {
 	self.printSource(os.Stdout)
-	logNote(self.fname, self.lines, msg)
+	return logNote(self.fname, self.lines, msg)
 }
-func (self *Line) logDebug(msg string) {
+func (self *Line) logDebug(msg string) bool {
 	self.printSource(os.Stdout)
-	logDebug(self.fname, self.lines, msg)
+	return logDebug(self.fname, self.lines, msg)
 }
 func (self *Line) explainError(explanation ...string) {
 	explain(LL_ERROR, self.fname, self.lines, explanation)
@@ -135,6 +135,15 @@ func (self *Line) replaceRegex(from, to string) {
 func (line *Line) setText(text string) {
 	line.physlines = []PhysLine{{0, text + "\n"}}
 	line.changed = true
+}
+
+func (line *Line) has(property string) bool {
+	panic("not implemented")
+	return false
+}
+func (line *Line) get(property string) string {
+	panic("not implemented")
+	return ""
 }
 
 func loadRawLines(fname string) ([]PhysLine, error) {
@@ -216,7 +225,7 @@ func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationL
 	return loglines
 }
 
-func saveAutofixChanges(lines []Line) {
+func saveAutofixChanges(lines []*Line) {
 	changes := make(map[string][]PhysLine)
 	changed := make(map[string]bool)
 	for _, line := range lines {

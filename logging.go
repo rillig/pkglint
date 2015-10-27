@@ -49,23 +49,28 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 	}
 }
 
-func logFatal(fname, lineno, message string) {
+func logFatal(fname, lineno, message string) bool {
 	logMessage(LL_FATAL, fname, lineno, message)
 	os.Exit(1)
+	return false
 }
-func logError(fname, lineno, message string) {
+func logError(fname, lineno, message string) bool {
 	logMessage(LL_ERROR, fname, lineno, message)
 	GlobalVars.errors++
+	return true
 }
-func logWarning(fname, lineno, message string) {
+func logWarning(fname, lineno, message string) bool {
 	logMessage(LL_WARN, fname, lineno, message)
 	GlobalVars.warnings++
+	return true
 }
-func logNote(fname, lineno, message string) {
+func logNote(fname, lineno, message string) bool {
 	logMessage(LL_NOTE, fname, lineno, message)
+	return true
 }
-func logDebug(fname, lineno, message string) {
+func logDebug(fname, lineno, message string) bool {
 	logMessage(LL_DEBUG, fname, lineno, message)
+	return true
 }
 
 func explain(level LogLevel, fname, lineno string, explanation []string) {
