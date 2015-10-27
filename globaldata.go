@@ -96,6 +96,7 @@ func (self *GlobalData) loadPkgOptions() {
 
 	options := make(map[string]string)
 	for _, line := range lines {
+		fmt.Printf("line=%#v\n", line)
 		if m := match(line.text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m != nil {
 			optname, optdescr := m[1], m[2]
 			options[optname] = optdescr

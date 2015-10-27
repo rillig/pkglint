@@ -150,7 +150,7 @@ func (line *Line) get(property string) string {
 }
 
 func loadRawLines(fname string) ([]PhysLine, error) {
-	physlines := make([]PhysLine, 50)
+	physlines := make([]PhysLine, 0)
 	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
 		logError(fname, NO_LINES, "Cannot be read")
@@ -158,7 +158,7 @@ func loadRawLines(fname string) ([]PhysLine, error) {
 	}
 	for lineno, physline := range strings.SplitAfter(string(rawtext), "\n") {
 		if physline != "" {
-			physlines = append(physlines, PhysLine{lineno, physline})
+			physlines = append(physlines, PhysLine{1+lineno, physline})
 		}
 	}
 	return physlines, nil
