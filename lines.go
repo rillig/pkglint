@@ -47,7 +47,7 @@ type Line struct {
 }
 
 func NewLine(fname, linenos, text string, physlines []PhysLine) *Line {
-	return &Line{fname, linenos, text, physlines, false, []PhysLine{}, []PhysLine{}, make(map[string]string, 1)}
+	return &Line{fname, linenos, text, physlines, false, []PhysLine{}, []PhysLine{}, make(map[string]string)}
 }
 func (self *Line) physicalLines() []PhysLine {
 	return append(self.before, append(self.physlines, self.after...)...)
@@ -169,7 +169,7 @@ func getLogicalLine(fname string, physlines []PhysLine, pLineno *int) *Line {
 	first := true
 	lineno := *pLineno
 	firstlineno := physlines[lineno].lineno
-	lphyslines := make([]PhysLine, 1)
+	lphyslines := make([]PhysLine, 0)
 
 	for _, physline := range physlines {
 		m := regexp.MustCompile(`^([ \t]*)(.*?)([ \t]*)(\\?)\n?$`).FindStringSubmatch(physline.textnl)
@@ -210,7 +210,7 @@ func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 }
 
 func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationLines bool) []*Line {
-	loglines := make([]*Line, 0, len(physlines))
+	loglines := make([]*Line, 0)
 	if joinContinuationLines {
 		for lineno := 0; lineno < len(physlines); {
 			loglines = append(loglines, getLogicalLine(fname, physlines, &lineno))

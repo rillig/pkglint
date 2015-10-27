@@ -56,9 +56,9 @@ func (self *GlobalData) loadDistSites() {
 	lines := loadExistingLines(fname, true)
 
 	varname := ""
-	names := make(map[string]bool, 0)
+	names := make(map[string]bool)
 	ignoring := false
-	url2name := make(map[string]string, 0)
+	url2name := make(map[string]string)
 	for _, line := range lines {
 		text := line.text
 		if m := match(text, `^(MASTER_SITE_\w+)\+=\s*\\$`); m != nil {
@@ -125,11 +125,11 @@ func (self *GlobalData) loadTools() {
 		logFatal(toolFiles[0], NO_LINES, "Too few tool files files.")
 	}
 
-	tools := make(map[string]bool, 0)
-	vartools := make(map[string]string, 0)
-	predefinedTools := make(map[string]bool, 0)
-	varnameToToolname := make(map[string]string, 0)
-	systemBuildDefs := make(map[string]bool, 0)
+	tools := make(map[string]bool)
+	vartools := make(map[string]string)
+	predefinedTools := make(map[string]bool)
+	varnameToToolname := make(map[string]string)
+	systemBuildDefs := make(map[string]bool)
 
 	for _, basename := range toolFiles {
 		fname := *GlobalVars.cwdPkgsrcdir + "/mk/tools/" + basename

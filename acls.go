@@ -19,7 +19,7 @@ import "strings"
 //
 // Last synced with mk/defaults/mk.conf revision 1.118
 
-var vartypes = make(map[string]*Type, 0)
+var vartypes = make(map[string]*Type)
 
 func getBasicType(typename string) *Type {
 	panic("not implemented")
