@@ -21,9 +21,9 @@ func getVariableType(line *Line, varname string) *Type {
 }
 func parseLicenses(licensesSpec string) []string {
 	logError(NO_FILE, NO_LINES, "not implemented")
-	return make([]string,0)
+	return make([]string, 0)
 }
 func normalizePathname(fname string) string {
 	logError(NO_FILE, NO_LINES, "not implemented")
-return fname
+	return fname
 }

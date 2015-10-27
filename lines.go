@@ -72,6 +72,9 @@ func (self *Line) logWarning(msg string) bool {
 	self.printSource(os.Stdout)
 	return logWarning(self.fname, self.lines, msg)
 }
+func (self *Line) logWarningF(format string, arg ...interface{}) bool {
+	return self.logWarning(fmt.Sprintf(format, arg...))
+}
 func (self *Line) logNote(msg string) bool {
 	self.printSource(os.Stdout)
 	return logNote(self.fname, self.lines, msg)

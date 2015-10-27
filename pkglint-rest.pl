@@ -1667,60 +1667,11 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 		License => CheckvartypeLicense,
 
-		Mail_Address => sub {
-			if ($value =~ m"^([+\-.0-9A-Z_a-z]+)\@([-\w\d.]+)$") {
-				my ($localpart, $domain) = ($1, $2);
-				if ($domain =~ m"^NetBSD.org"i && $domain ne "NetBSD.org") {
-					$line->log_warning("Please write NetBSD.org instead of ${domain}.");
-				}
-				if ("${localpart}\@${domain}" =~ m"^(tech-pkg|packages)\@NetBSD\.org$"i) {
-					$line->log_warning("${localpart}\@${domain} is deprecated. Use pkgsrc-users\@NetBSD.org instead.");
-				}
+		Mail_Address => CheckvartypeMailAddress,
 
-			} else {
-				$line->log_warning("\"${value}\" is not a valid mail address.");
-			}
-		},
+		Message => CheckvartypeMessage,
 
-		Message => sub {
-			if ($value =~ m"^[\"'].*[\"']$") {
-				$line->log_warning("${varname} should not be quoted.");
-				$line->explain_warning(
-"The quoting is only needed for variables which are interpreted as",
-"multiple words (or, generally speaking, a list of something). A single",
-"text message does not belong to this class, since it is only printed",
-"as a whole.",
-"",
-"On the other hand, PKG_FAIL_REASON is a _list_ of text messages, so in",
-"that case, the quoting has to be done.");
-			}
-		},
-
-		Option => sub {
-			if ($value ne $value_novar) {
-				$opt_debug_unchecked and $line->log_debug("Unchecked option name \"${value}\".");
-
-			} elsif ($value_novar =~ m"^-?([a-z][-0-9a-z\+]*)$") {
-				my ($optname) = ($1);
-
-				if (!exists(get_pkg_options()->{$optname})) {
-					$line->log_warning("Unknown option \"${value}\".");
-					$line->explain_warning(
-"This option is not documented in the mk/defaults/options.description",
-"file. If this is not a typo, please think of a brief but precise",
-"description and either update that file yourself or ask on the",
-"tech-pkg\@NetBSD.org mailing list.");
-				}
-
-			} elsif ($value_novar =~ m"^-?([a-z][-0-9a-z_\+]*)$") {
-				my ($optname) = ($1);
-
-				$line->log_warning("Use of the underscore character in option names is deprecated.");
-
-			} else {
-				$line->log_error("\"${value}\" is not a valid option name.");
-			}
-		},
+		Option => CheckvartypeOption,
 
 		Pathlist => sub {
 
