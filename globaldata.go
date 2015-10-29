@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -96,7 +97,6 @@ func (self *GlobalData) loadPkgOptions() {
 
 	options := make(map[string]string)
 	for _, line := range lines {
-		fmt.Printf("line=%#v\n", line)
 		if m := match(line.text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m != nil {
 			optname, optdescr := m[1], m[2]
 			options[optname] = optdescr
@@ -333,8 +333,9 @@ func (self *GlobalData) loadDocChanges() {
 	}
 
 	sort.Strings(fnames)
+	self.lastChange = make(map[string]Change)
 	for _, fname := range fnames {
-		changes := self.loadDocChangesFromFile(fname)
+		changes := self.loadDocChangesFromFile(filepath.Join(docdir, fname))
 		for _, change := range changes {
 			self.lastChange[change.pkgpath] = change
 		}
