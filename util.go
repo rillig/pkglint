@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -191,8 +192,14 @@ func stringset(s string) map[string]bool {
 	return result
 }
 
+var res = make(map[string]*regexp.Regexp)
 func match(s, re string) []string {
-	return regexp.MustCompile(re).FindStringSubmatch(s)
+	cre := res[re]
+	if cre == nil {
+		cre = regexp.MustCompile(re)
+		res[re] = cre
+	}
+	return cre.FindStringSubmatch(s)
 }
 
 func match3(s, re string) (bool, string, string, string) {
@@ -208,4 +215,12 @@ func nilToZero(pi *int) int {
 		return *pi
 	}
 	return 0
+}
+
+func toInt(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		logFatalF(NO_FILE, NO_LINES, "Internal error: %q", err)
+	}
+	return n
 }

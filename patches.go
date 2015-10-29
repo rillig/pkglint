@@ -195,6 +195,241 @@ const (
 	PST_UNI_LINE
 )
 
+func ptNop(ctx *CheckPatchContext) {}
+
+type transition struct {
+	re     string
+	next   State
+	action func(*CheckPatchContext)
+}
+
+var patchTransitions = map[State][]transition{
+	PST_START: []transition{
+		{rePatchRcsid, PST_CENTER, func(ctx *CheckPatchContext) {
+			checklineRcsid(ctx.line, "")
+		}},
+		{"", PST_CENTER, func(ctx *CheckPatchContext) {
+			checklineRcsid(ctx.line, "")
+		}},
+	},
+
+	PST_CENTER: []transition{
+		{rePatchEmpty, PST_TEXT, func(ctx *CheckPatchContext) {
+			//
+		}},
+		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
+			if ctx.seenComment {
+				ctx.expectEmptyLine()
+			} else {
+				ctx.expectComment()
+			}
+			ctx.line.logWarning("Please use unified diffs (diff -u) for patches.")
+		}},
+		{rePatchUniFileDel, PST_UNI_FILE_ADD, func(ctx *CheckPatchContext) {
+			if ctx.seenComment {
+				ctx.expectEmptyLine()
+			} else {
+				ctx.expectComment()
+			}
+		}},
+		{"", PST_TEXT, func(ctx *CheckPatchContext) {
+			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
+		}},
+	},
+
+	PST_TEXT: []transition{
+		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
+			if !ctx.seenComment {
+				ctx.expectComment()
+			}
+			ctx.useUnifiedDiffs()
+		}},
+		{rePatchUniFileDel, PST_UNI_FILE_ADD, func(ctx *CheckPatchContext) {
+			if !ctx.seenComment {
+				ctx.expectComment()
+			}
+		}},
+		{rePatchText, PST_TEXT, func(ctx *CheckPatchContext) {
+			ctx.seenComment = true
+		}},
+		{"", PST_TEXT, func(ctx *CheckPatchContext) {
+		}},
+	},
+
+	PST_CTX_FILE_ADD: []transition{
+		{rePatchCtxFileAdd, PST_CTX_HUNK, func(ctx *CheckPatchContext) {
+			ctx.currentFilename = &ctx.m[1]
+			ctx.currentFiletype = new(FileType)
+			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
+			_ = GlobalVars.opts.optDebugPatches && ctx.line.logDebugF("filename=%q filetype=%q", *ctx.currentFilename, *ctx.currentFiletype)
+			ctx.patchedFiles++
+			ctx.hunks = 0
+		}},
+	},
+
+	PST_CTX_HUNK: []transition{
+		{rePatchCtxHunk, PST_CTX_HUNK_DEL, func(ctx *CheckPatchContext) {
+			ctx.hunks++
+		}},
+		{"", PST_TEXT, func(ctx *CheckPatchContext) {
+		}},
+	},
+
+	PST_CTX_HUNK_DEL: []transition{
+		{rePatchCtxHunkDel, PST_CTX_LINE_DEL0, func(ctx *CheckPatchContext) {
+			ctx.dellines = new(int)
+			if ctx.m[2] != "" {
+				*ctx.dellines = (1 + toInt(ctx.m[2]) - toInt(ctx.m[1]))
+			} else {
+				*ctx.dellines = toInt(ctx.m[1])
+			}
+		}},
+	},
+
+	PST_CTX_LINE_DEL0: []transition{
+		{rePatchCtxLineContext, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
+		}},
+		{rePatchCtxLineDel, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
+		}},
+		{rePatchCtxLineMod, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
+		}},
+		{rePatchCtxHunkAdd, PST_CTX_LINE_ADD0, func(ctx *CheckPatchContext) {
+			ctx.dellines = nil
+			ctx.addlines = new(int)
+			if 2 < len(ctx.m) {
+				*ctx.addlines = 1 + toInt(ctx.m[2]) - toInt(ctx.m[1])
+			} else {
+				*ctx.addlines = toInt(ctx.m[1])
+			}
+		}},
+	},
+
+	PST_CTX_LINE_DEL: []transition{
+		{rePatchCtxLineContext, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
+		}},
+		{rePatchCtxLineDel, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
+		}},
+		{rePatchCtxLineMod, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
+		}},
+		{"", PST_CTX_LINE_DEL0, func(ctx *CheckPatchContext) {
+			if nilToZero(ctx.dellines) != 0 {
+				ctx.line.logWarningF("Invalid number of deleted lines (%d missing).", ctx.dellines)
+			}
+		}},
+	},
+
+	PST_CTX_LINE_ADD0: []transition{
+		{rePatchCtxLineContext, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
+		}},
+		{rePatchCtxLineMod, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
+		}},
+		{rePatchCtxLineAdd, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
+
+		}},
+		{"", PST_CTX_HUNK, func(ctx *CheckPatchContext) {
+		}},
+	},
+
+	PST_CTX_LINE_ADD: []transition{
+		{rePatchCtxLineContext, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
+		}},
+		{rePatchCtxLineMod, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
+		}},
+		{rePatchCtxLineAdd, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
+		}},
+		{"", PST_CTX_LINE_ADD0, func(ctx *CheckPatchContext) {
+			if nilToZero(ctx.addlines) != 0 {
+				ctx.line.logWarningF("Invalid number of added lines (%d missing).", ctx.addlines)
+			}
+		}},
+	},
+
+	PST_UNI_FILE_ADD: []transition{
+		{rePatchUniFileAdd, PST_UNI_HUNK, func(ctx *CheckPatchContext) {
+			ctx.currentFilename = new(string)
+			*ctx.currentFilename = ctx.m[1]
+			ctx.currentFiletype = new(FileType)
+			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
+			_ = GlobalVars.opts.optDebugPatches && ctx.line.logDebugF("filename=%q filetype=%q", ctx.currentFilename, ctx.currentFiletype)
+			ctx.patchedFiles++
+			ctx.hunks = 0
+		}},
+	},
+
+	PST_UNI_HUNK: []transition{
+		{rePatchUniHunk, PST_UNI_LINE, func(ctx *CheckPatchContext) {
+			m := ctx.m
+			ctx.dellines = new(int)
+			if m[1] != "" {
+				*ctx.dellines = toInt(m[2])
+			} else {
+				*ctx.dellines = 1
+			}
+			ctx.addlines = new(int)
+			if m[3] != "" {
+				*ctx.addlines = toInt(m[4])
+			} else {
+				*ctx.addlines = 1
+			}
+			ctx.checkText(ctx.line.text)
+			if strings.HasSuffix(ctx.line.text, "\r") {
+				ctx.line.logError("The hunk header must not end with a CR character.")
+				ctx.line.explainError(
+					"The MacOS X patch utility cannot handle these.")
+			}
+			ctx.hunks++
+			if m[1] != "" && m[1] != "1" {
+				ctx.contextScanningLeading = new(bool)
+				*ctx.contextScanningLeading = true
+			} else {
+				ctx.contextScanningLeading = nil
+			}
+			ctx.leadingContextLines = 0
+			ctx.trailingContextLines = 0
+		}},
+		{"", PST_TEXT, func(ctx *CheckPatchContext) {
+			if ctx.hunks == 0 {
+				ctx.line.logWarningF("No hunks for file %q.", ctx.currentFilename)
+			}
+		}},
+	},
+
+	PST_UNI_LINE: []transition{
+		{rePatchUniLineDel, PST_UNI_LINE, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 0, PST_UNI_HUNK)
+		}},
+		{rePatchUniLineAdd, PST_UNI_LINE, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(0, 1, PST_UNI_HUNK)
+		}},
+		{rePatchUniLineContext, PST_UNI_LINE, func(ctx *CheckPatchContext) {
+			ctx.checkHunkLine(1, 1, PST_UNI_HUNK)
+		}},
+		{rePatchUniLineNoNewline, PST_UNI_LINE, func(ctx *CheckPatchContext) {
+		}},
+		{rePatchEmpty, PST_UNI_LINE, func(ctx *CheckPatchContext) {
+			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Leading white-space missing in hunk.")
+			ctx.checkHunkLine(1, 1, PST_UNI_HUNK)
+		}},
+		{"", PST_UNI_HUNK, func(ctx *CheckPatchContext) {
+			if nilToZero(ctx.dellines) != 0 || nilToZero(ctx.addlines) != 0 {
+				ctx.line.logWarningF("Unexpected end of hunk (-%d,+%d expected).", nilToZero(ctx.dellines), nilToZero(ctx.addlines))
+			}
+		}},
+	},
+}
+
 func checklinesPatch(lines []*Line) {
 	ctx := CheckPatchContext{state: PST_START}
 	for lineno := 0; lineno < len(lines); {
@@ -202,14 +437,74 @@ func checklinesPatch(lines []*Line) {
 		text := line.text
 
 		_ = GlobalVars.opts.optDebugPatches &&
-			line.logDebugF("state %s hunks %d del %d add %d %s",
+			line.logDebugF("state %s hunks %d del %d add %d text %s",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines, text)
 
-		lines[0].logErrorF("not implemented")
+		found := false
+		for _, t := range patchTransitions[ctx.state] {
+			if t.re == "" {
+				ctx.m = ctx.m[:0]
+			} else if ctx.m = match(text, t.re); ctx.m == nil {
+				continue
+			}
 
+			ctx.redostate = nil
+			ctx.nextstate = t.next
+			t.action(&ctx)
+			if ctx.redostate != nil {
+				ctx.state = *ctx.redostate
+			} else {
+				ctx.state = ctx.nextstate
+				if t.re != "" {
+					lineno++
+				}
+			}
+			found = true
+			break
+		}
+
+		if !found {
+			line.logErrorF("Internal error: state=%q", ctx.state)
+			ctx.state = PST_TEXT
+			lineno++
+		}
 	}
 
-	lines[0].logErrorF("not implemented")
+	fname := lines[0].fname
+	for ctx.state != PST_TEXT {
+		_ = GlobalVars.opts.optDebugPatches &&
+			logDebugF(fname, "EOF", "state %s hunks %d del %d add %d",
+				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
+
+			found := false
+			for _, t := range patchTransitions[ctx.state] {
+				if t.re == "" {
+					ctx.m = ctx.m[:0]
+					ctx.redostate=nil
+					ctx.nextstate=t.next
+					t.action(&ctx)
+					if ctx.redostate!=nil {
+						ctx.state = *ctx.redostate
+					} else {
+						ctx.state = ctx.nextstate
+					}
+					found = true
+				}
+			}
+
+			if !found {
+				logErrorF(fname, "EOF", "Internal error: state=%q", ctx.state)
+				break
+			}
+	}
+
+	if ctx.patchedFiles > 1 {
+		logWarningF(fname, NO_LINES, "Contains patches for %d files, should be only one.", ctx.patchedFiles)
+	} else if ctx.patchedFiles == 0 {
+		logErrorF(fname, NO_LINES, "Contains no patch.")
+	}
+
+	checklinesTrailingEmptyLines(lines)
 }
 
 type CheckPatchContext struct {
@@ -221,7 +516,7 @@ type CheckPatchContext struct {
 	hunks                  int
 	seenComment            bool
 	currentFilename        *string
-	currentFiletype        *string
+	currentFiletype        *FileType
 	patchedFiles           int
 	leadingContextLines    int
 	trailingContextLines   int
@@ -230,7 +525,11 @@ type CheckPatchContext struct {
 	m                      []string
 }
 
-func (ctx *CheckPatchContext) logErrorCommentExpected() {
+func (ctx *CheckPatchContext) expectEmptyLine() {
+	_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
+}
+
+func (ctx *CheckPatchContext) expectComment() {
 	ctx.line.logError("Comment expected.")
 	ctx.line.explainError(
 		"Each patch must document why it is necessary. If it has been applied",
@@ -241,6 +540,10 @@ func (ctx *CheckPatchContext) logErrorCommentExpected() {
 		"should be sent to the upstream maintainers of the package. After you",
 		"have done so, you should add a reference to the bug report containing",
 		"the patch.")
+}
+
+func (ctx *CheckPatchContext) useUnifiedDiffs() {
+	ctx.line.logWarningF("Please use unified diffs (diff -u) for patches.")
 }
 
 func (ctx *CheckPatchContext) checkText(text string) {
@@ -272,17 +575,17 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	checklineCppMacroNames(line, addedText)
 
 	switch *ctx.currentFiletype {
-	case "shell":
-	case "make":
+	case FT_SHELL:
+	case FT_MAKE:
 		// This check is not as accurate as the similar one in checklineMkShelltext.
 		for _, shellword := range regexp.MustCompile(reShellword).FindAllString(addedText, -1) {
 			if !strings.HasPrefix(shellword, "#") {
 				checklineMkAbsolutePathname(line, shellword)
 			}
 		}
-	case "source":
+	case FT_SOURCE:
 		checklineSourceAbsolutePathname(line, addedText)
-	case "configure":
+	case FT_CONFIGURE:
 		if match(addedText, `: Avoid regenerating within pkgsrc$`) != nil {
 			line.logErrorF("This code must not be included in patches.")
 			line.explainError(
@@ -291,7 +594,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 				"For more details, look for \"configure-scripts-override\" in",
 				"mk/configure/gnu-configure.mk.")
 		}
-	case "ignore":
+	case FT_IGNORE:
 		break
 	default:
 		checklineOtherAbsolutePathname(line, addedText)

@@ -30,3 +30,6 @@ func normalizePathname(fname string) string {
 func checklineMkAbsolutePathname(line *Line, text string) {
 	line.logError("not implemented")
 }
+func checklineRcsid(line *Line, something string) {
+	line.logErrorF("not implemented")
+}

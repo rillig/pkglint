@@ -54,6 +54,9 @@ func logFatal(fname, lineno, message string) bool {
 	os.Exit(1)
 	return false
 }
+func logFatalF(fname, lineno, format string, args ...interface{}) bool {
+	return logFatal(fname, lineno, fmt.Sprintf(format, args...))
+}
 func logError(fname, lineno, message string) bool {
 	logMessage(LL_ERROR, fname, lineno, message)
 	GlobalVars.errors++
