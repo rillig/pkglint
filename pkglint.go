@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 )
 
 type QuotingResult struct{ name string }
@@ -191,10 +190,6 @@ type CvsEntry struct {
 	revision string
 	mtime    string
 	tag      string
-}
-
-func match(s, re string) []string {
-	return regexp.MustCompile(re).FindStringSubmatch(s)
 }
 
 const (
@@ -426,6 +421,6 @@ func main() {
 	}
 }
 
-func panic(msg string) {
-	print(msg + "\n")
+func checkwordAbsolutePathname(line *Line, pathname string) {
+	panic("not implemented")
 }

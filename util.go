@@ -182,3 +182,30 @@ func fileExists(fname string) bool {
 	st, err := os.Stat(fname)
 	return err == nil && st.Mode().IsRegular()
 }
+
+func stringset(s string) map[string]bool {
+	result := make(map[string]bool)
+	for _, m := range regexp.MustCompile(`\S+`).FindAllString(s, -1) {
+		result[m] = true
+	}
+	return result
+}
+
+func match(s, re string) []string {
+	return regexp.MustCompile(re).FindStringSubmatch(s)
+}
+
+func match3(s, re string) (bool, string, string, string) {
+	if m := match(s, re); m != nil {
+		return true, m[1], m[2], m[3]
+	} else {
+		return false, "", "", ""
+	}
+}
+
+func nilToZero(pi *int) int {
+	if pi != nil {
+		return *pi
+	}
+	return 0
+}

@@ -64,9 +64,15 @@ func (self *Line) logFatal(msg string) bool {
 	self.printSource(os.Stderr)
 	return logFatal(self.fname, self.lines, msg)
 }
+func (self *Line) logFatalF(format string, arg ...interface{}) bool {
+	return self.logFatal(fmt.Sprintf(format, arg...))
+}
 func (self *Line) logError(msg string) bool {
 	self.printSource(os.Stdout)
 	return logError(self.fname, self.lines, msg)
+}
+func (self *Line) logErrorF(format string, arg ...interface{}) bool {
+	return self.logError(fmt.Sprintf(format, arg...))
 }
 func (self *Line) logWarning(msg string) bool {
 	self.printSource(os.Stdout)
@@ -82,6 +88,9 @@ func (self *Line) logNote(msg string) bool {
 func (self *Line) logDebug(msg string) bool {
 	self.printSource(os.Stdout)
 	return logDebug(self.fname, self.lines, msg)
+}
+func (self *Line) logDebugF(format string, arg ...interface{}) bool {
+	return self.logDebug(fmt.Sprintf(format, arg...))
 }
 func (self *Line) explainError(explanation ...string) {
 	explain(LL_ERROR, self.fname, self.lines, explanation)
@@ -158,7 +167,7 @@ func loadRawLines(fname string) ([]PhysLine, error) {
 	}
 	for lineno, physline := range strings.SplitAfter(string(rawtext), "\n") {
 		if physline != "" {
-			physlines = append(physlines, PhysLine{1+lineno, physline})
+			physlines = append(physlines, PhysLine{1 + lineno, physline})
 		}
 	}
 	return physlines, nil

@@ -27,3 +27,6 @@ func normalizePathname(fname string) string {
 	logError(NO_FILE, NO_LINES, "not implemented")
 	return fname
 }
+func checklineMkAbsolutePathname(line *Line, text string) {
+	line.logError("not implemented")
+}
