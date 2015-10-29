@@ -160,15 +160,6 @@ sub checkfile_patch($) {
 			}
 		}]]};
 
-	$state = PST_START;
-	$dellines = undef;
-	$addlines = undef;
-	$patched_files = 0;
-	$seen_comment = false;
-	$current_fname = undef;
-	$current_ftype = undef;
-	$hunks = undef;
-
 	for (my $lineno = 0; $lineno <= $#{$lines}; ) {
 		$line = $lines->[$lineno];
 		my $text = $line->text;
