@@ -33,3 +33,34 @@ func checklineMkAbsolutePathname(line *Line, text string) {
 func checklineRcsid(line *Line, something string) {
 	line.logErrorF("not implemented")
 }
+
+func checkdirCvs(fname string) {
+	panic("not implemented")
+}
+func checkfile(fname string) {
+	panic("not implemented")
+}
+func checkdirPackage() {
+	panic("not implemented")
+}
+func checkdirCategory() {
+	panic("not implemented")
+}
+func checkdirToplevel() {
+	panic("not implemented")
+}
+
+func checkUnusedLicenses() {
+	panic("not implemented")
+}
+func expandVariableDef(varname string, defval string) *string {
+	panic("not implemented")
+	return &defval
+}
+func determineUsedVariables(lines []*Line) {
+	panic("not implemented")
+}
+func varIsDefined(varname string) bool {
+	panic("not implemented")
+	return false
+}

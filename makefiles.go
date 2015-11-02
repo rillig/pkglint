@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func readMakefile(fname string, mainLines []*Line, allLines []*Line, seenMakefileInclude *map[string]bool) bool {
+func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 	lines, err := loadLines(fname, true)
 	if err != nil {
 		return false
@@ -48,8 +48,8 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line, seenMakefil
 			}
 		}
 
-		if isIncludeLine && !(*seenMakefileInclude)[includeFile] {
-			(*seenMakefileInclude)[includeFile] = true
+		if isIncludeLine && GlobalVars.pkgContext.included[includeFile] == nil {
+			GlobalVars.pkgContext.included[includeFile] = line
 
 			if match(includeFile, `^\.\./[^./][^/]*/[^/]+`) != nil {
 				line.logWarning("References to other packages should look like \"../../category/package\", not \"../package\".")
@@ -81,7 +81,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line, seenMakefil
 				} else {
 					_ = GlobalVars.opts.optDebugInclude && line.logDebug(fmt.Sprintf("Including \"%s/%s\".", dirname, includeFile))
 					lengthBeforeInclude := len(allLines)
-					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines, seenMakefileInclude) {
+					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
 						return false
 					}
 

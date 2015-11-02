@@ -367,24 +367,46 @@ func checkItem(fname string) {
 	}
 }
 
-func checkdirCvs(fname string) {
-	panic("not implemented")
-}
-func checkfile(fname string) {
-	panic("not implemented")
-}
-func checkdirPackage() {
-	panic("not implemented")
-}
-func checkdirCategory() {
-	panic("not implemented")
-}
-func checkdirToplevel() {
-	panic("not implemented")
-}
+func loadPackageMakefile(fname string) (bool, []*Line) {
+	lines := make([]*Line, 0)
+	allLines := make([]*Line, 0)
+	GlobalVars.pkgContext.included = make(map[string]*Line)
 
-func checkUnusedLicenses() {
-	panic("not implemented")
+	if !readMakefile(fname, lines, allLines) {
+		logErrorF(fname, NO_LINES, "Cannot be read.")
+		return false, nil
+	}
+
+	if GlobalVars.opts.optDumpMakefile {
+		logDebug(NO_FILE, NO_LINES, "Whole Makefile (with all included files) follows:")
+		for _, line := range lines {
+			fmt.Printf("%s\n", line.String())
+		}
+	}
+
+	determineUsedVariables(allLines)
+
+	GlobalVars.pkgContext.pkgdir = expandVariableDef("PKGDIR", ".")
+	GlobalVars.pkgContext.distinfo_file = expandVariableDef("DISTINFO_FILE","distinfo")
+	GlobalVars.pkgContext.filesdir = expandVariableDef("FILESDIR", "files")
+	GlobalVars.pkgContext.patchdir = expandVariableDef("PATCHDIR", "patches")
+
+	if varIsDefined("PHPEXT_MK") {
+		if !varIsDefined("USE_PHP_EXT_PATCHES") {
+			GlobalVars.pkgContext.patchdir = newStr("patches")
+		}
+		if varIsDefined("PECL_VERSION") {
+			GlobalVars.pkgContext.distinfo_file = newStr("distinfo")
+		}
+	}
+
+	_=GlobalVars.opts.optDebugMisc &&
+	logDebugF(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *GlobalVars.pkgContext.distinfo_file) &&
+	logDebugF(NO_FILE, NO_LINES, "FILESDIR=%s", *GlobalVars.pkgContext.filesdir) &&
+	logDebugF(NO_FILE, NO_LINES, "PATCHDIR=%s", *GlobalVars.pkgContext.patchdir) &&
+	logDebugF(NO_FILE, NO_LINES, "PKGDIR=%s", *GlobalVars.pkgContext.pkgdir)
+
+	return true, lines
 }
 
 func findPkgsrcTopdir() string {

@@ -224,3 +224,11 @@ func toInt(s string) int {
 	}
 	return n
 }
+
+func newInt(i int) *int {
+	return &i
+}
+
+func newStr(s string) *string {
+	return &s
+}
