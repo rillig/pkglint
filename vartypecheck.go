@@ -17,7 +17,7 @@ func CheckvartypeLicense(line *Line, varname, value string) {
 	for _, license := range licenses {
 		licenseFile := *GlobalVars.cwdPkgsrcdir + "/licenses/" + license
 		if licenseFileLine := GlobalVars.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
-			licenseFile = GlobalVars.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.get("value"), false)
+			licenseFile = GlobalVars.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.extra["value"].(string), false)
 		} else {
 			GlobalVars.ipcUsedLicenses[license] = true
 		}

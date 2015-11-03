@@ -43,11 +43,11 @@ type Line struct {
 	changed   bool
 	before    []PhysLine
 	after     []PhysLine
-	extra     map[string]string
+	extra     map[string]interface{}
 }
 
 func NewLine(fname, linenos, text string, physlines []PhysLine) *Line {
-	return &Line{fname, linenos, text, physlines, false, []PhysLine{}, []PhysLine{}, make(map[string]string)}
+	return &Line{fname, linenos, text, physlines, false, []PhysLine{}, []PhysLine{}, make(map[string]interface{})}
 }
 func (self *Line) physicalLines() []PhysLine {
 	return append(self.before, append(self.physlines, self.after...)...)
@@ -147,15 +147,6 @@ func (self *Line) replaceRegex(from, to string) {
 func (line *Line) setText(text string) {
 	line.physlines = []PhysLine{{0, text + "\n"}}
 	line.changed = true
-}
-
-func (line *Line) has(property string) bool {
-	panic("not implemented")
-	return false
-}
-func (line *Line) get(property string) string {
-	panic("not implemented")
-	return ""
 }
 
 func loadRawLines(fname string) ([]PhysLine, error) {

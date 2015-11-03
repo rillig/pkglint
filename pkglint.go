@@ -455,7 +455,7 @@ func extractUsedVariables(line *Line, text string) []string {
 func getNbpart() string {
 	line := GlobalVars.pkgContext.vardef["PKGREVISION"]
 	if line != nil {
-		pkgrevision, err := strconv.Atoi(line.get("value"))
+		pkgrevision, err := strconv.Atoi(line.extra["value"].(string))
 		if err != nil && pkgrevision != 0 {
 			return fmt.Sprintf("nb%d", pkgrevision)
 		}

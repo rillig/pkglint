@@ -98,8 +98,8 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 			}
 		}
 
-		if line.has("is_varassign") {
-			varname, op, value := line.get("varname"), line.get("op"), line.get("value")
+		if line.extra["is_varassign"] != nil {
+			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
 
 			if op != "?=" || GlobalVars.pkgContext.vardef[varname] == nil {
 				_ = GlobalVars.opts.optDebugMisc && line.logDebug(fmt.Sprintf("varassign(%s, %s, %s)", varname, op, value))
