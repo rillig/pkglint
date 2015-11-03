@@ -245,6 +245,14 @@ func replace(s, re, replacement string) ([]string, string) {
 	}
 	return nil, s
 }
+func replacestart(ps *string, pm *[]string, re string) bool {
+	if m := reCompile(re).FindStringSubmatch(*ps); m != nil {
+		*ps = (*ps)[len(m[0]):]
+		*pm = m
+		return true
+	}
+	return false
+}
 
 func nilToZero(pi *int) int {
 	if pi != nil {

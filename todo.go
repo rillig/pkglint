@@ -63,3 +63,6 @@ func pkgverCmp(left, op, right string) bool {
 	notImplemented()
 	return false
 }
+func checklineMkVaruse(line *Line, varname, mod string, vuctx *VarUseContext) {
+	notImplemented()
+}
