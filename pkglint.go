@@ -77,6 +77,7 @@ type AclEntry struct {
 type Type struct {
 	kindOfList KindOfList
 	basicType  string
+	enumValues []string
 	aclEntries []AclEntry
 	guessed    Guessed
 }
@@ -473,11 +474,11 @@ func getVariableType(line *Line, varname string) *Type {
 	}
 
 	if GlobalVars.globalData.varnameToToolname[varname] != "" {
-		return &Type{LK_NONE, "ShellCommand", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+		return &Type{LK_NONE, "ShellCommand", nil, []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
 	if m := match(varname, `^TOOLS_(.*)`); m != nil && GlobalVars.globalData.varnameToToolname[m[1]] != "" {
-		return &Type{LK_NONE, "Pathname", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+		return &Type{LK_NONE, "Pathname", nil, []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
 	allowAll := []AclEntry{{"*", "adpsu"}}
@@ -489,34 +490,34 @@ func getVariableType(line *Line, varname string) *Type {
 		suffix := m[1]
 		switch suffix {
 		case "DIRS":
-			gtype = &Type{LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED}
+			gtype = &Type{LK_EXTERNAL, "Pathmask", nil, allowRuntime, GUESSED}
 		case "DIR", "_HOME":
-			gtype = &Type{LK_NONE, "Pathname", allowRuntime, GUESSED}
+			gtype = &Type{LK_NONE, "Pathname", nil, allowRuntime, GUESSED}
 		case "FILES":
-			gtype = &Type{LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED}
+			gtype = &Type{LK_EXTERNAL, "Pathmask", nil, allowRuntime, GUESSED}
 		case "FILE":
-			gtype = &Type{LK_NONE, "Pathname", allowRuntime, GUESSED}
+			gtype = &Type{LK_NONE, "Pathname", nil, allowRuntime, GUESSED}
 		case "PATH":
-			gtype = &Type{LK_NONE, "Pathlist", allowRuntime, GUESSED}
+			gtype = &Type{LK_NONE, "Pathlist", nil, allowRuntime, GUESSED}
 		case "PATHS":
-			gtype = &Type{LK_EXTERNAL, "Pathname", allowRuntime, GUESSED}
+			gtype = &Type{LK_EXTERNAL, "Pathname", nil, allowRuntime, GUESSED}
 		case "_USER":
-			gtype = &Type{LK_NONE, "UserGroupName", allowAll, GUESSED}
+			gtype = &Type{LK_NONE, "UserGroupName", nil, allowAll, GUESSED}
 		case "_GROUP":
-			gtype = &Type{LK_NONE, "UserGroupName", allowAll, GUESSED}
+			gtype = &Type{LK_NONE, "UserGroupName", nil, allowAll, GUESSED}
 		case "_ENV":
-			gtype = &Type{LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED}
+			gtype = &Type{LK_EXTERNAL, "ShellWord", nil, allowRuntime, GUESSED}
 		case "_CMD":
-			gtype = &Type{LK_NONE, "ShellCommand", allowRuntime, GUESSED}
+			gtype = &Type{LK_NONE, "ShellCommand", nil, allowRuntime, GUESSED}
 		case "_ARGS":
-			gtype = &Type{LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED}
+			gtype = &Type{LK_EXTERNAL, "ShellWord", nil, allowRuntime, GUESSED}
 		case "_CFLAGS", "_CPPFLAGS", "_CXXFLAGS", "_LDFLAGS":
-			gtype = &Type{LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED}
+			gtype = &Type{LK_EXTERNAL, "ShellWord", nil, allowRuntime, GUESSED}
 		case "_MK":
-			gtype = &Type{LK_NONE, "Unchecked", allowAll, GUESSED}
+			gtype = &Type{LK_NONE, "Unchecked", nil, allowAll, GUESSED}
 		}
 	} else if strings.HasPrefix(varname, "PLIST.") {
-		gtype = &Type{LK_NONE, "Yes", allowAll, GUESSED}
+		gtype = &Type{LK_NONE, "Yes", nil, allowAll, GUESSED}
 	}
 
 	if gtype != nil {

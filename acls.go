@@ -50,7 +50,7 @@ func acl(varname string, vartype string, aclentries ...string) {
 		enumValues = nil
 	}
 
-	vtype := &Type{kindOfList, basicType, parseAclEntries(aclentries), NOT_GUESSED}
+	vtype := &Type{kindOfList, basicType, enumValues, parseAclEntries(aclentries), NOT_GUESSED}
 	if varparam == "" || varparam == "*" {
 		vartypes[varbase] = vtype
 	}
