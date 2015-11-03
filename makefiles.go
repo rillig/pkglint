@@ -145,10 +145,6 @@ documenting its interface.`)
 	}
 }
 
-func parselinesMk(lines []*Line) {
-	panic("not implemented")
-}
-
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	tmp := relpath
@@ -173,4 +169,95 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "resolveVarsInRelativePath: "+relpath+" => "+tmp)
 	return tmp
+}
+
+func parselineMk(line *Line) {
+	text := line.text
+
+	if m, varname, op, value, comment := match4(text, reVarassign); m {
+
+		// In variable assignments, a '#' character is preceded
+		// by a backslash. In shell commands, it is interpreted
+		// literally.
+		value = strings.Replace(value, "\\#", "#", -1)
+		varparam := varnameParam(varname)
+
+		line.extra["is_varassign"] = true
+		line.extra["varname"] = varname
+		line.extra["varcanon"] = varnameCanon(varname)
+		line.extra["varparam"] = varparam
+		line.extra["op"] = op
+		line.extra["value"] = value
+		line.extra["comment"] = comment
+		return
+	}
+
+	if m, shellcmd := match1(text, reMkShellcmd); m {
+		line.extra["is_shellcmd"] = true
+		line.extra["shellcmd"] = shellcmd
+
+		shellwords, rest := matchAll(shellcmd, reShellword)
+		line.extra["shellwords"] = shellwords
+		if match(rest, `^\s*$`) == nil {
+			line.extra["shellwords_rest"] = rest
+		}
+		return
+	}
+
+	if m, comment := match1(text, reMkComment); m {
+		line.extra["is_comment"] = true
+		line.extra["comment"] = comment
+		return
+	}
+
+	if m := match(text, `^\s*$`); m != nil {
+		line.extra["is_empty"] = true
+		return
+	}
+
+	if m, indent, directive, args, comment := match4(text, reMkCond); m {
+		line.extra["is_cond"] = true
+		line.extra["indent"] = indent
+		line.extra["directive"] = directive
+		line.extra["args"] = args
+		line.extra["comment"] = comment
+		return
+	}
+
+	if m, _, includefile, comment := match3(text, reMkInclude); m {
+		line.extra["is_include"] = true
+		line.extra["includefile"] = includefile
+		line.extra["comment"] = comment
+		return
+	}
+
+	if m, includefile, comment := match2(text, reMkSysinclude); m {
+		line.extra["is_sysinclude"] = true
+		line.extra["includefile"] = includefile
+		line.extra["comment"] = comment
+		return
+	}
+
+	if m, targets, whitespace, sources, comment := match4(text, reMkDependency); m {
+		line.extra["is_dependency"] = true
+		line.extra["targets"] = targets
+		line.extra["sources"] = sources
+		line.extra["comment"] = comment
+		if whitespace != "" {
+			line.logWarningF("Space before colon in dependency line.")
+		}
+		return
+	}
+
+	if match(text, reConflict) != nil {
+		return
+	}
+
+	line.logFatalF("Unknown Makefile line format.")
+}
+
+func parselinesMk(lines []*Line) {
+	for _, line := range lines {
+		parselineMk(line)
+	}
 }

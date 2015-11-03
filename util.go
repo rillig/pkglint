@@ -203,11 +203,32 @@ func match(s, re string) []string {
 	return cre.FindStringSubmatch(s)
 }
 
+func match1(s, re string) (bool, string) {
+	if m := match(s, re); m != nil {
+		return true, m[1]
+	} else {
+		return false, ""
+	}
+}
+func match2(s, re string) (bool, string, string) {
+	if m := match(s, re); m != nil {
+		return true, m[1], m[2]
+	} else {
+		return false, "", ""
+	}
+}
 func match3(s, re string) (bool, string, string, string) {
 	if m := match(s, re); m != nil {
 		return true, m[1], m[2], m[3]
 	} else {
 		return false, "", "", ""
+	}
+}
+func match4(s, re string) (bool, string, string, string, string) {
+	if m := match(s, re); m != nil {
+		return true, m[1], m[2], m[3], m[4]
+	} else {
+		return false, "", "", "", ""
 	}
 }
 
@@ -232,4 +253,9 @@ func newInt(i int) *int {
 
 func newStr(s string) *string {
 	return &s
+}
+
+func matchAll(s, re string) ([]string, string) {
+	logErrorF(NO_FILE, NO_LINES, "matchAll: not implemented")
+	return make([]string, 0), ""
 }
