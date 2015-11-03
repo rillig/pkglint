@@ -129,62 +129,6 @@ sub expect_re($$$) {
 	return $rv;
 }
 
-# Returns an object of type Pkglint::Type that represents the type of
-# the variable (maybe guessed based on the variable name), or undef if
-# the type cannot even be guessed.
-#
-sub get_variable_type($$) {
-	my ($line, $varname) = @_;
-	my ($type);
-
-	assert(defined($varname), "The varname parameter must be defined.");
-
-	if (exists(get_vartypes_map()->{$varname})) {
-		return get_vartypes_map()->{$varname};
-	}
-
-	my $varcanon = varname_canon($varname);
-	if (exists(get_vartypes_map()->{$varcanon})) {
-		return get_vartypes_map()->{$varcanon};
-	}
-
-	if (exists(get_varname_to_toolname()->{$varname})) {
-		return PkgLint::Type->new(LK_NONE, "ShellCommand", [[ qr".*", "u" ]], NOT_GUESSED);
-	}
-
-	if ($varname =~ m"^TOOLS_(.*)" && exists(get_varname_to_toolname()->{$1})) {
-		return PkgLint::Type->new(LK_NONE, "Pathname", [[ qr".*", "u" ]], NOT_GUESSED);
-	}
-
-	use constant allow_all => [[ qr".*", "adpsu" ]];
-	use constant allow_runtime => [[ qr".*", "adsu" ]];
-
-	# Guess the datatype of the variable based on
-	# naming conventions.
-	$type =	  ($varname =~ m"DIRS$") ? PkgLint::Type->new(LK_EXTERNAL, "Pathmask", allow_runtime, GUESSED)
-		: ($varname =~ m"(?:DIR|_HOME)$") ? PkgLint::Type->new(LK_NONE, "Pathname", allow_runtime, GUESSED)
-		: ($varname =~ m"FILES$") ? PkgLint::Type->new(LK_EXTERNAL, "Pathmask", allow_runtime, GUESSED)
-		: ($varname =~ m"FILE$") ? PkgLint::Type->new(LK_NONE, "Pathname", allow_runtime, GUESSED)
-		: ($varname =~ m"PATH$") ? PkgLint::Type->new(LK_NONE, "Pathlist", allow_runtime, GUESSED)
-		: ($varname =~ m"PATHS$") ? PkgLint::Type->new(LK_EXTERNAL, "Pathname", allow_runtime, GUESSED)
-		: ($varname =~ m"_USER$") ? PkgLint::Type->new(LK_NONE, "UserGroupName", allow_all, GUESSED)
-		: ($varname =~ m"_GROUP$") ? PkgLint::Type->new(LK_NONE, "UserGroupName", allow_all, GUESSED)
-		: ($varname =~ m"_ENV$") ? PkgLint::Type->new(LK_EXTERNAL, "ShellWord", allow_runtime, GUESSED)
-		: ($varname =~ m"_CMD$") ? PkgLint::Type->new(LK_NONE, "ShellCommand", allow_runtime, GUESSED)
-		: ($varname =~ m"_ARGS$") ? PkgLint::Type->new(LK_EXTERNAL, "ShellWord", allow_runtime, GUESSED)
-		: ($varname =~ m"_(?:C|CPP|CXX|LD|)FLAGS$") ? PkgLint::Type->new(LK_EXTERNAL, "ShellWord", allow_runtime, GUESSED)
-		: ($varname =~ m"_MK$") ? PkgLint::Type->new(LK_NONE, "Unchecked", allow_all, GUESSED)
-		: ($varname =~ m"^PLIST.") ? PkgLint::Type->new(LK_NONE, "Yes", allow_all, GUESSED)
-		: undef;
-
-	if (defined($type)) {
-		$opt_debug_vartypes and $line->log_debug("The guessed type of ${varname} is \"" . $type->to_string . "\".");
-		return $type;
-	}
-
-	$opt_debug_vartypes and $line->log_debug("No type definition found for ${varcanon}.");
-	return undef;
-}
 
 sub get_variable_perms($$) {
 	my ($line, $varname) = @_;

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type QuotingResult struct{ name string }
@@ -460,4 +461,68 @@ func getNbpart() string {
 		}
 	}
 	return ""
+}
+
+// Returns the type of the variable (maybe guessed based on the variable name),
+// or nil if the type cannot even be guessed.
+func getVariableType(line *Line, varname string) *Type {
+
+	vartype := GlobalVars.globalData.vartypes[varname]
+	if vartype == nil {
+		vartype = GlobalVars.globalData.vartypes[varnameCanon(varname)]
+	}
+
+	if GlobalVars.globalData.varnameToToolname[varname] != "" {
+		return &Type{LK_NONE, "ShellCommand", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+	}
+
+	if m := match(varname, `^TOOLS_(.*)`); m != nil && GlobalVars.globalData.varnameToToolname[m[1]] != "" {
+		return &Type{LK_NONE, "Pathname", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+	}
+
+	allowAll := []AclEntry{{"*", "adpsu"}}
+	allowRuntime := []AclEntry{{"*", "adsu"}}
+
+	// Guess the datatype of the variable based on naming conventions.
+	var gtype *Type
+	if m := match(varname, `(DIRS|DIR|FILES|FILE|PATH|PATHS|_USER|_GROUP|_ENV|_CMD|_ARGS|_CFLAGS|_CPPFLAGS|_CXXFLAGS|_LDFLAGS|_MK)$`); m != nil {
+		suffix := m[1]
+		switch suffix {
+		case "DIRS":
+			gtype = &Type{LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED}
+		case "DIR", "_HOME":
+			gtype = &Type{LK_NONE, "Pathname", allowRuntime, GUESSED}
+		case "FILES":
+			gtype = &Type{LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED}
+		case "FILE":
+			gtype = &Type{LK_NONE, "Pathname", allowRuntime, GUESSED}
+		case "PATH":
+			gtype = &Type{LK_NONE, "Pathlist", allowRuntime, GUESSED}
+		case "PATHS":
+			gtype = &Type{LK_EXTERNAL, "Pathname", allowRuntime, GUESSED}
+		case "_USER":
+			gtype = &Type{LK_NONE, "UserGroupName", allowAll, GUESSED}
+		case "_GROUP":
+			gtype = &Type{LK_NONE, "UserGroupName", allowAll, GUESSED}
+		case "_ENV":
+			gtype = &Type{LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED}
+		case "_CMD":
+			gtype = &Type{LK_NONE, "ShellCommand", allowRuntime, GUESSED}
+		case "_ARGS":
+			gtype = &Type{LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED}
+		case "_CFLAGS", "_CPPFLAGS", "_CXXFLAGS", "_LDFLAGS":
+			gtype = &Type{LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED}
+		case "_MK":
+			gtype = &Type{LK_NONE, "Unchecked", allowAll, GUESSED}
+		}
+	} else if strings.HasPrefix(varname, "PLIST.") {
+		gtype = &Type{LK_NONE, "Yes", allowAll, GUESSED}
+	}
+
+	if gtype != nil {
+		_ = GlobalVars.opts.optDebugVartypes && line.logDebugF("The guessed type of %v is %v.", varname, gtype)
+	} else {
+		_ = GlobalVars.opts.optDebugVartypes && line.logDebugF("No type definition found for %v.", varname)
+	}
+	return gtype
 }

@@ -15,10 +15,6 @@ func checklineValidCharacters(line *Line, re string) {
 func checklinesTrailingEmptyLines(lines []*Line) {
 	logError(NO_FILE, NO_LINES, "not implemented")
 }
-func getVariableType(line *Line, varname string) *Type {
-	logError(NO_FILE, NO_LINES, "not implemented")
-	return nil
-}
 func parseLicenses(licensesSpec string) []string {
 	logError(NO_FILE, NO_LINES, "not implemented")
 	return make([]string, 0)
