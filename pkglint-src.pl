@@ -63,50 +63,6 @@ sub shell_split($) {
 	return (($text =~ m"^\s*$") ? $words : false);
 }
 
-sub determine_used_variables($) {
-	my ($lines) = @_;
-	my ($rest);
-
-	foreach my $line (@{$lines}) {
-		$rest = $line->text;
-		while ($rest =~ s///) {
-			my ($varname) = ($1);
-			use_var($line, $varname);
-			$opt_debug_unused and $line->log_debug("Variable ${varname} is used.");
-		}
-	}
-}
-
-sub extract_used_variables($$) {
-	my ($line, $text) = @_;
-	my ($rest, $result);
-
-	$rest = $text;
-	$result = [];
-	while ($rest =~ s/^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})//) {
-		my ($varname) = ($1);
-
-		if (defined($varname)) {
-			push(@{$result}, $varname);
-		}
-	}
-
-	if ($rest ne "") {
-		$opt_debug_misc and $line->log_warning("Could not extract variables: ${rest}");
-	}
-
-	return $result;
-}
-
-sub get_nbpart() {
-	my $line = $pkgctx_vardef->{"PKGREVISION"};
-	return "" unless defined($line);
-	my $pkgrevision = $line->get("value");
-	return "" unless $pkgrevision =~ m"^\d+$";
-	return "" unless $pkgrevision + 0 != 0;
-	return "nb$pkgrevision";
-}
-
 # When processing a file using the expect* subroutines below, it may
 # happen that $lineno points past the end of the file. In that case,
 # print the warning without associated source code.

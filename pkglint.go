@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 )
 
 type QuotingResult struct{ name string }
@@ -424,9 +425,39 @@ func determineUsedVariables(lines []*Line) {
 				break
 			}
 			varname := rest[m[2]:m[3]]
-			line.logDebugF("useVar %s", varname)
 			useVar(line, varname)
 			rest = rest[:m[0]] + rest[m[1]:]
 		}
 	}
+}
+
+func extractUsedVariables(line *Line, text string) []string {
+	re := regexp.MustCompile(`^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
+	rest := text
+	result := make([]string, 0)
+	for {
+		m := re.FindStringSubmatchIndex(rest)
+		if m == nil {
+			break
+		}
+		varname := rest[m[2]:m[3]]
+		rest = rest[:m[0]] + rest[m[1]:]
+		result = append(result, varname)
+	}
+
+	if rest != "" {
+		_ = GlobalVars.opts.optDebugMisc && line.logDebugF("extractUsedVariables: rest=%v", rest)
+	}
+	return result
+}
+
+func getNbpart() string {
+	line := GlobalVars.pkgContext.vardef["PKGREVISION"]
+	if line != nil {
+		pkgrevision, err := strconv.Atoi(line.get("value"))
+		if err != nil && pkgrevision != 0 {
+			return fmt.Sprintf("nb%d", pkgrevision)
+		}
+	}
+	return ""
 }
