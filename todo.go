@@ -1,62 +1,65 @@
 package main
 
+func notImplemented() {
+	logErrorF(NO_FILE, NO_LINES, "not implemented")
+}
+
 func checkperms(fname string) {
-	logError(NO_FILE, NO_LINES, "not implemented")
+	notImplemented()
 }
 func checklineLength(line *Line, maxchars int) {
-	line.logError("not implemented")
+	notImplemented()
 }
 func checklineTrailingWhitespace(line *Line) {
-	line.logError("not implemented")
+	notImplemented()
 }
 func checklineValidCharacters(line *Line, re string) {
-	line.logError("not implemented")
+	notImplemented()
 }
 func checklinesTrailingEmptyLines(lines []*Line) {
-	logError(NO_FILE, NO_LINES, "not implemented")
+	notImplemented()
 }
 func parseLicenses(licensesSpec string) []string {
-	logError(NO_FILE, NO_LINES, "not implemented")
+	notImplemented()
 	return make([]string, 0)
 }
 func normalizePathname(fname string) string {
-	logError(NO_FILE, NO_LINES, "not implemented")
+	notImplemented()
 	return fname
 }
 func checklineMkAbsolutePathname(line *Line, text string) {
-	line.logError("not implemented")
+	notImplemented()
 }
 func checklineRcsid(line *Line, something string) {
-	line.logErrorF("not implemented")
+	notImplemented()
 }
-
 func checkdirCvs(fname string) {
-	panic("not implemented")
+	notImplemented()
 }
 func checkfile(fname string) {
-	panic("not implemented")
+	notImplemented()
 }
 func checkdirPackage() {
-	panic("not implemented")
+	notImplemented()
 }
 func checkdirCategory() {
-	panic("not implemented")
+	notImplemented()
 }
 func checkdirToplevel() {
-	panic("not implemented")
+	notImplemented()
 }
-
 func checkUnusedLicenses() {
-	panic("not implemented")
+	notImplemented()
 }
 func expandVariableDef(varname string, defval string) *string {
-	panic("not implemented")
+	notImplemented()
 	return &defval
 }
 func varIsDefined(varname string) bool {
-	panic("not implemented")
+	notImplemented()
 	return false
 }
 func pkgverCmp(left, op, right string) bool {
-	panic("not implemented")
+	notImplemented()
+	return false
 }

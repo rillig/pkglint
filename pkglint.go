@@ -46,7 +46,7 @@ func TestPrintTable() {
 	printTable(os.Stdout, [][]string{{"hello", "world"}, {"how", "are", "you?"}})
 }
 func TestLogFatal() {
-	(&Line{fname: "fname", lines: "13"}).logFatal("msg")
+	(&Line{fname: "fname", lines: "13"}).logFatalF("msg")
 }
 func TestGetLogicalLine() {
 	var physlines = []PhysLine{{1, "first\\"}, {2, "second"}, {3, "third"}}
@@ -309,7 +309,7 @@ func explanationRelativeDirs() []string {
 func checkItem(fname string) {
 	st, err := os.Stat(fname)
 	if err != nil || (!st.Mode().IsDir() && !st.Mode().IsRegular()) {
-		logError(fname, NO_LINES, "No such file or directory.")
+		logErrorF(fname, NO_LINES, "No such file or directory.")
 		return
 	}
 	isDir := st.Mode().IsDir()
@@ -321,7 +321,7 @@ func checkItem(fname string) {
 	}
 	abs, err := filepath.Abs(currentDir)
 	if err != nil {
-		logFatal(currentDir, NO_LINES, "Cannot determine absolute path.")
+		logFatalF(currentDir, NO_LINES, "Cannot determine absolute path.")
 	}
 	absCurrentDir := filepath.ToSlash(abs)
 	GlobalVars.isWip = !GlobalVars.opts.optImport && match(absCurrentDir, `/wip/|/wip$`) != nil
@@ -334,7 +334,7 @@ func checkItem(fname string) {
 			*GlobalVars.curPkgsrcdir = dir
 			*GlobalVars.pkgContext.pkgpath, err = filepath.Rel(currentDir, currentDir+"/"+dir)
 			if err != nil {
-				logFatal(currentDir, NO_LINES, "Cannot determine relative dir.")
+				logFatalF(currentDir, NO_LINES, "Cannot determine relative dir.")
 			}
 		}
 	}
@@ -343,7 +343,7 @@ func checkItem(fname string) {
 	}
 
 	if *GlobalVars.cwdPkgsrcdir == "" {
-		logError(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
+		logErrorF(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
 		return
 	}
 
@@ -358,7 +358,7 @@ func checkItem(fname string) {
 	if isReg {
 		checkfile(fname)
 	} else if *GlobalVars.curPkgsrcdir == "" {
-		logError(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
+		logErrorF(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
 	} else if *GlobalVars.curPkgsrcdir == "../.." {
 		checkdirPackage()
 	} else if *GlobalVars.curPkgsrcdir == ".." {
@@ -366,7 +366,7 @@ func checkItem(fname string) {
 	} else if *GlobalVars.curPkgsrcdir == "." {
 		checkdirToplevel()
 	} else {
-		logError(fname, NO_LINES, "Don't know how to check this directory.")
+		logErrorF(fname, NO_LINES, "Don't know how to check this directory.")
 	}
 }
 
@@ -381,7 +381,7 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 	}
 
 	if GlobalVars.opts.optDumpMakefile {
-		logDebug(NO_FILE, NO_LINES, "Whole Makefile (with all included files) follows:")
+		logDebugF(NO_FILE, NO_LINES, "Whole Makefile (with all included files) follows:")
 		for _, line := range lines {
 			fmt.Printf("%s\n", line.String())
 		}

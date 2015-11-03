@@ -44,7 +44,7 @@ func guessFileType(line *Line, fname string) FileType {
 		return FT_UNKNOWN
 	}
 
-	_ = GlobalVars.opts.optDebugMisc && line.logDebug("Unknown file type.")
+	_ = GlobalVars.opts.optDebugMisc && line.logDebugF("Unknown file type.")
 	return FT_UNKNOWN
 }
 
@@ -246,7 +246,7 @@ var patchTransitions = map[State][]transition{
 			} else {
 				ctx.expectComment()
 			}
-			ctx.line.logWarning("Please use unified diffs (diff -u) for patches.")
+			ctx.line.logWarningF("Please use unified diffs (diff -u) for patches.")
 		}},
 		{rePatchUniFileDel, PST_UNI_FILE_ADD, func(ctx *CheckPatchContext) {
 			if ctx.seenComment {
@@ -256,7 +256,7 @@ var patchTransitions = map[State][]transition{
 			}
 		}},
 		{"", PST_TEXT, func(ctx *CheckPatchContext) {
-			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
+			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNoteF("Empty line expected.")
 		}},
 	},
 
@@ -408,7 +408,7 @@ var patchTransitions = map[State][]transition{
 			}
 			ctx.checkText(ctx.line.text)
 			if strings.HasSuffix(ctx.line.text, "\r") {
-				ctx.line.logError("The hunk header must not end with a CR character.")
+				ctx.line.logErrorF("The hunk header must not end with a CR character.")
 				ctx.line.explainError(
 					"The MacOS X patch utility cannot handle these.")
 			}
@@ -442,7 +442,7 @@ var patchTransitions = map[State][]transition{
 		{rePatchUniLineNoNewline, PST_UNI_LINE, func(ctx *CheckPatchContext) {
 		}},
 		{rePatchEmpty, PST_UNI_LINE, func(ctx *CheckPatchContext) {
-			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Leading white-space missing in hunk.")
+			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNoteF("Leading white-space missing in hunk.")
 			ctx.checkHunkLine(1, 1, PST_UNI_HUNK)
 		}},
 		{"", PST_UNI_HUNK, func(ctx *CheckPatchContext) {
@@ -549,11 +549,11 @@ type CheckPatchContext struct {
 }
 
 func (ctx *CheckPatchContext) expectEmptyLine() {
-	_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
+	_ = GlobalVars.opts.optWarnSpace && ctx.line.logNoteF("Empty line expected.")
 }
 
 func (ctx *CheckPatchContext) expectComment() {
-	ctx.line.logError("Comment expected.")
+	ctx.line.logErrorF("Comment expected.")
 	ctx.line.explainError(
 		"Each patch must document why it is necessary. If it has been applied",
 		"because of a security issue, a reference to the CVE should be mentioned",

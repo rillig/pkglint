@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"regexp"
 )
 
@@ -29,10 +28,10 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	if varname == "SUBST_CLASSES" {
 		classes := regexp.MustCompile(`\s+`).Split(value, -1)
 		if len(classes) > 1 {
-			line.logWarning("Please add only one class at a time to SUBST_CLASSES.")
+			line.logWarningF("Please add only one class at a time to SUBST_CLASSES.")
 		}
 		if self.class != nil {
-			line.logWarning("SUBST_CLASSES should only appear once in a SUBST block.")
+			line.logWarningF("SUBST_CLASSES should only appear once in a SUBST block.")
 		}
 		self.id = &classes[0]
 		self.class = &classes[0]
@@ -43,11 +42,11 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	if m := regexp.MustCompile(`^(SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD))\.([\-\w_]+)$`).FindStringSubmatch(varname); m != nil {
 		varbase, varparam = m[1], m[2]
 		if self.id == nil {
-			line.logWarning("SUBST_CLASSES should precede the definition of " + varname + ".")
+			line.logWarningF("SUBST_CLASSES should precede the definition of %q.", varname)
 			self.id = &varparam
 		}
 	} else if self.id != nil {
-		line.logWarning("Foreign variable in SUBST block.")
+		line.logWarningF("Foreign variable in SUBST block.")
 	}
 
 	if varparam != *self.id {
@@ -61,7 +60,7 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 			self.class = &varparam
 			self.id = &varparam
 		} else {
-			line.logWarning(fmt.Sprintf("Variable parameter \"%s\" does not match SUBST class \"%s\".", varparam, self.id))
+			line.logWarningF("Variable parameter %q does not match SUBST class %q.", varparam, self.id)
 		}
 		return
 	}
@@ -69,36 +68,36 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	switch varbase {
 	case "SUBST_STAGE":
 		if self.stage != nil {
-			line.logWarning("Duplicate definition of " + varname + ".")
+			line.logWarningF("Duplicate definition of %q.", varname)
 		}
 		self.stage = &value
 	case "SUBST_MESSAGE":
 		if self.message != nil {
-			line.logWarning("Duplicate definition of " + varname + ".")
+			line.logWarningF("Duplicate definition of %q.", varname)
 		}
 		self.message = &value
 	case "SUBST_FILES":
 		if len(self.files) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_FILES line should use the \"+=\" operator.")
+			line.logWarningF("All but the first SUBST_FILES line should use the \"+=\" operator.")
 		}
 		self.files = append(self.files, value)
 	case "SUBST_SED":
 		if len(self.sed) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_SED line should use the \"+=\" operator.")
+			line.logWarningF("All but the first SUBST_SED line should use the \"+=\" operator.")
 		}
 		self.sed = append(self.sed, value)
 	case "SUBST_FILTER_CMD":
 		if self.filterCmd != nil {
-			line.logWarning("Duplicate definition of " + varname + ".")
+			line.logWarningF("Duplicate definition of %q.", varname)
 		}
 		self.filterCmd = &value
 	case "SUBST_VARS":
 		if len(self.vars) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_VARS line should use the \"+=\" operator.")
+			line.logWarningF("All but the first SUBST_VARS line should use the \"+=\" operator.")
 		}
 		self.vars = append(self.vars, value)
 	default:
-		line.logWarning("Foreign variable in SUBST block.")
+		line.logWarningF("Foreign variable in SUBST block.")
 	}
 }
 func (self *SubstContext) finish(line *Line) {
@@ -106,16 +105,16 @@ func (self *SubstContext) finish(line *Line) {
 		return
 	}
 	if self.class == nil {
-		line.logWarning("Incomplete SUBST block: SUBST_CLASSES missing.")
+		line.logWarningF("Incomplete SUBST block: SUBST_CLASSES missing.")
 	}
 	if self.stage == nil {
-		line.logWarning("Incomplete SUBST block: SUBST_STAGE missing.")
+		line.logWarningF("Incomplete SUBST block: SUBST_STAGE missing.")
 	}
 	if len(self.files) == 0 {
-		line.logWarning("Incomplete SUBST block: SUBST_FILES missing.")
+		line.logWarningF("Incomplete SUBST block: SUBST_FILES missing.")
 	}
 	if len(self.sed) == 0 && len(self.vars) == 0 && self.filterCmd == nil {
-		line.logWarning("Incomplete SUBST block: SUBST_SED, SUBST_VARS or SUBST_FILTER_CMD missing.")
+		line.logWarningF("Incomplete SUBST block: SUBST_SED, SUBST_VARS or SUBST_FILTER_CMD missing.")
 	}
 	self.id = nil
 	self.class = nil

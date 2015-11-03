@@ -35,7 +35,7 @@ func mustMatch(pattern string, s string) []string {
 func isEmptyDir(fname string) bool {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		logFatal(fname, NO_LINES, "Cannot be read.")
+		logFatalF(fname, NO_LINES, "Cannot be read.")
 	}
 	for _, dirent := range dirents {
 		name := dirent.Name()
@@ -53,7 +53,7 @@ func isEmptyDir(fname string) bool {
 func getSubdirs(fname string) []string {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		logFatal(fname, NO_LINES, "Cannot be read.")
+		logFatalF(fname, NO_LINES, "Cannot be read.")
 	}
 
 	subdirs := make([]string, 0)
@@ -88,7 +88,7 @@ func isCommitted(fname string) bool {
 func checkPermissions(fname string) {
 	st, err := os.Stat(fname)
 	if err != nil && st.Mode().IsRegular() && st.Mode()&0111 != 0 {
-		logWarning(fname, NO_LINES, "Should no be executable.")
+		logWarningF(fname, NO_LINES, "Should not be executable.")
 	}
 }
 

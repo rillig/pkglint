@@ -37,10 +37,10 @@ func CheckvartypeMailAddress(line *Line, value string) {
 		_, domain := m[1], m[2]
 
 		if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
-			line.logWarning("Please write NetBSD.org instead of ${domain}.")
+			line.logWarningF("Please write NetBSD.org instead of %q.", domain)
 		}
 		if match(value, `(?i)^(tech-pkg|packages)\@NetBSD\.org$`) != nil {
-			line.logError("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
+			line.logErrorF("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 		}
 
 	} else {
@@ -64,7 +64,7 @@ func CheckvartypeMessage(line *Line, varname, value string) {
 
 func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
 	if varvalue != varvalueNovar {
-		_ = GlobalVars.opts.optDebugUnchecked && line.logDebug("Unchecked option name: "+varvalue)
+		_ = GlobalVars.opts.optDebugUnchecked && line.logDebugF("Unchecked option name: %q", varvalue)
 		return
 	}
 
@@ -83,11 +83,11 @@ func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
 	}
 
 	if match(varvalue, `^-?([a-z][-0-9a-z_\+]*)$`) != nil {
-		line.logWarning("Use of the underscore character in option names is deprecated.")
+		line.logWarningF("Use of the underscore character in option names is deprecated.")
 		return
 	}
 
-	line.logError("Invalid option name.")
+	line.logErrorF("Invalid option name.")
 }
 
 func CheckvartypePrefixPathname(line *Line, value string) {

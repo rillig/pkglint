@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
@@ -30,7 +29,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 			includeFile = resolveVarsInRelativePath(m[1], true)
 			if match(includeFile, reUnresolvedVar) != nil {
 				if match(fname, `/mk/`) == nil {
-					line.logNote("Skipping include file \"" + includeFile + "\". This may result in false warnings.")
+					line.logNoteF("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
 			} else {
 				isIncludeLine = true
@@ -43,7 +42,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 					bl3File := m[1]
 
 					GlobalVars.pkgContext.bl3[bl3File] = line
-					_ = GlobalVars.opts.optDebugMisc && line.logDebug("Buildlink3 file in package: "+bl3File)
+					_ = GlobalVars.opts.optDebugMisc && line.logDebugF("Buildlink3 file in package: %v", bl3File)
 				}
 			}
 		}
@@ -52,16 +51,16 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 			GlobalVars.pkgContext.included[includeFile] = line
 
 			if match(includeFile, `^\.\./[^./][^/]*/[^/]+`) != nil {
-				line.logWarning("References to other packages should look like \"../../category/package\", not \"../package\".")
+				line.logWarningF("References to other packages should look like \"../../category/package\", not \"../package\".")
 				line.explainWarning(explanationRelativeDirs()...)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
-				_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including \""+includeFile+"\" sets seenMakefileCommon.")
+				_ = GlobalVars.opts.optDebugInclude && line.logDebugF("Including %q sets seenMakefileCommon.", includeFile)
 				GlobalVars.pkgContext.seenMakefileCommon = true
 			}
 			if m := match(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m != nil {
 				if m[2] != "buildlink3.mk" && m[2] != "options.mk" {
-					_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including \""+includeFile+"\" sets seenMakefileCommon.")
+					_ = GlobalVars.opts.optDebugInclude && line.logDebugF("Including %q sets seenMakefileCommon.", includeFile)
 					GlobalVars.pkgContext.seenMakefileCommon = true
 				}
 			}
@@ -76,10 +75,10 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 					dirname = GlobalVars.currentDir
 				}
 				if !fileExists(dirname + "/" + includeFile) {
-					line.logError("Cannot read " + dirname + "/" + includeFile + ".")
+					line.logErrorF("Cannot read %q.", dirname+"/"+includeFile)
 					return false
 				} else {
-					_ = GlobalVars.opts.optDebugInclude && line.logDebug(fmt.Sprintf("Including \"%s/%s\".", dirname, includeFile))
+					_ = GlobalVars.opts.optDebugInclude && line.logDebugF("Including %q.", dirname+"/"+includeFile)
 					lengthBeforeInclude := len(allLines)
 					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
 						return false
@@ -89,7 +88,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 						makefileCommonLines := allLines[lengthBeforeInclude:]
 						relpath, err := filepath.Rel(*GlobalVars.cwdPkgsrcdir, fname)
 						if err != nil {
-							line.logError("Cannot determine relative path.")
+							line.logErrorF("Cannot determine relative path.")
 							return false
 						}
 						checkForUsedComment(makefileCommonLines, relpath)
@@ -102,7 +101,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
 
 			if op != "?=" || GlobalVars.pkgContext.vardef[varname] == nil {
-				_ = GlobalVars.opts.optDebugMisc && line.logDebug(fmt.Sprintf("varassign(%s, %s, %s)", varname, op, value))
+				_ = GlobalVars.opts.optDebugMisc && line.logDebugF("varassign(%q, %q, %q)", varname, op, value)
 				GlobalVars.pkgContext.vardef[varname] = line
 			}
 		}
@@ -129,7 +128,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 	}
 
 	insertLine := lines[lastCommentLine+1]
-	insertLine.logWarning("Please add a line \"" + expected + "\" here.")
+	insertLine.logWarningF("Please add a line %q here.", expected)
 	insertLine.explainWarning(
 		`Since Makefile.common files usually don't have any comments and
 therefore not a clearly defined interface, they should at least contain
@@ -167,7 +166,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		tmp = strings.Replace(tmp, "${PKGDIR}", *GlobalVars.pkgContext.pkgdir, -1)
 	}
 
-	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "resolveVarsInRelativePath: "+relpath+" => "+tmp)
+	_ = GlobalVars.opts.optDebugMisc && logDebugF(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	return tmp
 }
 

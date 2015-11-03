@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 func parseAclEntries(args []string) []AclEntry {
 	result := make([]AclEntry, 0)
 	for _, arg := range args {
@@ -28,7 +24,7 @@ const (
 )
 
 func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) NeedsQuoting {
-	_ = GlobalVars.opts.optDebugTrace && line.logDebug(fmt.Sprintf("variableNeedsQuoting: %s, %#v", varname, context))
+	_ = GlobalVars.opts.optDebugTrace && line.logDebugF("variableNeedsQuoting: %s, %#v", varname, context)
 
 	vartype := getVariableType(line, varname)
 	if vartype == nil || context.vartype == nil {
