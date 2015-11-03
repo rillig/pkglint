@@ -18,36 +18,6 @@ sub warn_about_PLIST_imake_mannewsuffix($) {
 # Subroutines to check part of a single line.
 #
 
-sub checkword_absolute_pathname($$) {
-	my ($line, $word) = @_;
-
-	$opt_debug_trace and $line->log_debug("checkword_absolute_pathname(\"${word}\")");
-
-	if ($word =~ m"^/dev/(?:null|tty|zero)$") {
-		# These are defined by POSIX.
-
-	} elsif ($word eq "/bin/sh") {
-		# This is usually correct, although on Solaris, it's pretty
-		# feature-crippled.
-
-	} elsif ($word !~ m"/(?:[a-z]|\$[({])") {
-		# Assume that all pathnames start with a lowercase letter.
-
-	} else {
-		$line->log_warning("Found absolute pathname: ${word}");
-		$line->explain_warning(
-"Absolute pathnames are often an indicator for unportable code. As",
-"pkgsrc aims to be a portable system, absolute pathnames should be",
-"avoided whenever possible.",
-"",
-"A special variable in this context is \${DESTDIR}, which is used in GNU",
-"projects to specify a different directory for installation than what",
-"the programs see later when they are executed. Usually it is empty, so",
-"if anything after that variable starts with a slash, it is considered",
-"an absolute pathname.");
-	}
-}
-
 sub check_unused_licenses() {
 
 	for my $licensefile (glob("${cwd_pkgsrcdir}/licenses/*")) {

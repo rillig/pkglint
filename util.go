@@ -193,6 +193,7 @@ func stringset(s string) map[string]bool {
 }
 
 var res = make(map[string]*regexp.Regexp)
+
 func match(s, re string) []string {
 	cre := res[re]
 	if cre == nil {

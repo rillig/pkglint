@@ -387,7 +387,7 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 	determineUsedVariables(allLines)
 
 	GlobalVars.pkgContext.pkgdir = expandVariableDef("PKGDIR", ".")
-	GlobalVars.pkgContext.distinfo_file = expandVariableDef("DISTINFO_FILE","distinfo")
+	GlobalVars.pkgContext.distinfo_file = expandVariableDef("DISTINFO_FILE", "distinfo")
 	GlobalVars.pkgContext.filesdir = expandVariableDef("FILESDIR", "files")
 	GlobalVars.pkgContext.patchdir = expandVariableDef("PATCHDIR", "patches")
 
@@ -400,19 +400,15 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 		}
 	}
 
-	_=GlobalVars.opts.optDebugMisc &&
-	logDebugF(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *GlobalVars.pkgContext.distinfo_file) &&
-	logDebugF(NO_FILE, NO_LINES, "FILESDIR=%s", *GlobalVars.pkgContext.filesdir) &&
-	logDebugF(NO_FILE, NO_LINES, "PATCHDIR=%s", *GlobalVars.pkgContext.patchdir) &&
-	logDebugF(NO_FILE, NO_LINES, "PKGDIR=%s", *GlobalVars.pkgContext.pkgdir)
+	_ = GlobalVars.opts.optDebugMisc &&
+		logDebugF(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *GlobalVars.pkgContext.distinfo_file) &&
+		logDebugF(NO_FILE, NO_LINES, "FILESDIR=%s", *GlobalVars.pkgContext.filesdir) &&
+		logDebugF(NO_FILE, NO_LINES, "PATCHDIR=%s", *GlobalVars.pkgContext.patchdir) &&
+		logDebugF(NO_FILE, NO_LINES, "PKGDIR=%s", *GlobalVars.pkgContext.pkgdir)
 
 	return true, lines
 }
 
 func findPkgsrcTopdir() string {
 	return "C:/Users/rillig/Desktop/pkgsrc/pkgsrc"
-}
-
-func checkwordAbsolutePathname(line *Line, pathname string) {
-	panic("not implemented")
 }

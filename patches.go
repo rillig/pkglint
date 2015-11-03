@@ -97,6 +97,29 @@ func checklineCppMacroNames(line *Line, text string) {
 	}
 }
 
+func checkwordAbsolutePathname(line *Line, word string) {
+	switch {
+	case match(word, `^/dev/(?:null|tty|zero)$`) != nil:
+		// These are defined by POSIX.
+	case word == "/bin/sh":
+		// This is usually correct, although on Solaris, it's pretty feature-crippled.
+	case match(word, `/(?:[a-z]|\$[({])`) == nil:
+		// Assume that all pathnames start with a lowercase letter.
+	default:
+		line.logWarningF("Found absolute pathname: %s", word)
+		line.explainWarning(
+			"Absolute pathnames are often an indicator for unportable code. As",
+			"pkgsrc aims to be a portable system, absolute pathnames should be",
+			"avoided whenever possible.",
+			"",
+			"A special variable in this context is ${DESTDIR}, which is used in GNU",
+			"projects to specify a different directory for installation than what",
+			"the programs see later when they are executed. Usually it is empty, so",
+			"if anything after that variable starts with a slash, it is considered",
+			"an absolute pathname.")
+	}
+}
+
 // Looks for strings like "/dev/cd0" appearing in source code
 func checklineSourceAbsolutePathname(line *Line, text string) {
 	if matched, before, _, str := match3(text, `(.*)([\"'])(/\w[^\"']*)\2`); matched {
@@ -476,26 +499,26 @@ func checklinesPatch(lines []*Line) {
 			logDebugF(fname, "EOF", "state %s hunks %d del %d add %d",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
 
-			found := false
-			for _, t := range patchTransitions[ctx.state] {
-				if t.re == "" {
-					ctx.m = ctx.m[:0]
-					ctx.redostate=nil
-					ctx.nextstate=t.next
-					t.action(&ctx)
-					if ctx.redostate!=nil {
-						ctx.state = *ctx.redostate
-					} else {
-						ctx.state = ctx.nextstate
-					}
-					found = true
+		found := false
+		for _, t := range patchTransitions[ctx.state] {
+			if t.re == "" {
+				ctx.m = ctx.m[:0]
+				ctx.redostate = nil
+				ctx.nextstate = t.next
+				t.action(&ctx)
+				if ctx.redostate != nil {
+					ctx.state = *ctx.redostate
+				} else {
+					ctx.state = ctx.nextstate
 				}
+				found = true
 			}
+		}
 
-			if !found {
-				logErrorF(fname, "EOF", "Internal error: state=%q", ctx.state)
-				break
-			}
+		if !found {
+			logErrorF(fname, "EOF", "Internal error: state=%q", ctx.state)
+			break
+		}
 	}
 
 	if ctx.patchedFiles > 1 {
