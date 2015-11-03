@@ -260,3 +260,45 @@ func parselinesMk(lines []*Line) {
 		parselineMk(line)
 	}
 }
+
+func checklineMkText(line *Line, text string) {
+	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
+		line.logWarningF("$$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.",varname,varname,varname)
+	}
+
+	if line.lines == "1" {
+		checklineRcsid(line, "# ")
+	}
+
+	if strings.Contains(text, "${WRKSRC}/../") {
+		line.logWarningF("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
+		line.explainWarning(
+"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
+"and INSTALL_DIRS are subdirectories of it.")
+	}
+
+	// Note: A simple -R is not detected, as the rate of false positives is too high.
+	if m, flag := match1(text, `\b(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R)\b`); m {
+		line.logWarningF("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+	}
+
+	rest := text
+	for {
+		m, r := replace(rest, `(?:^|[^\$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
+		if m == nil {
+			break
+		}
+		rest = r
+
+		varbase, varext := m[1], m[2]
+		varname := varbase + varext
+		varcanon := varnameCanon(varname)
+		instead := deprecatedVars[varname]
+		if instead == "" {
+			instead = deprecatedVars[varcanon]
+		}
+		if instead != "" {
+			line.logWarningF("Use of %q is deprecated. %s", varname, instead)
+		}
+	}
+}

@@ -194,15 +194,18 @@ func stringset(s string) map[string]bool {
 
 var res = make(map[string]*regexp.Regexp)
 
-func match(s, re string) []string {
+func reCompile(re string) *regexp.Regexp {
 	cre := res[re]
 	if cre == nil {
 		cre = regexp.MustCompile(re)
 		res[re] = cre
 	}
-	return cre.FindStringSubmatch(s)
+	return cre
 }
 
+func match(s, re string) []string {
+	return reCompile(re).FindStringSubmatch(s)
+}
 func match1(s, re string) (bool, string) {
 	if m := match(s, re); m != nil {
 		return true, m[1]
@@ -230,6 +233,17 @@ func match4(s, re string) (bool, string, string, string, string) {
 	} else {
 		return false, "", "", "", ""
 	}
+}
+func replace(s, re, replacement string) ([]string, string) {
+	if m := reCompile(re).FindStringSubmatchIndex(s); m != nil {
+		replaced := s[:m[0]] + replacement + s[m[1]:]
+		mm := make([]string,len(m)/2)
+		for i := 0; i < len(m); i+=2 {
+			mm[i/2] = s[m[i]:m[i+1]]
+		}
+		return mm, replaced
+	}
+	return nil, s
 }
 
 func nilToZero(pi *int) int {
