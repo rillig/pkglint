@@ -57,9 +57,6 @@ func expandVariableDef(varname string, defval string) *string {
 	panic("not implemented")
 	return &defval
 }
-func determineUsedVariables(lines []*Line) {
-	panic("not implemented")
-}
 func varIsDefined(varname string) bool {
 	panic("not implemented")
 	return false

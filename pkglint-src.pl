@@ -69,7 +69,7 @@ sub determine_used_variables($) {
 
 	foreach my $line (@{$lines}) {
 		$rest = $line->text;
-		while ($rest =~ s/(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]//) {
+		while ($rest =~ s///) {
 			my ($varname) = ($1);
 			use_var($line, $varname);
 			$opt_debug_unused and $line->log_debug("Variable ${varname} is used.");

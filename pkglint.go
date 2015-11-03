@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 )
 
 type QuotingResult struct{ name string }
@@ -411,4 +412,21 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 
 func findPkgsrcTopdir() string {
 	return "C:/Users/rillig/Desktop/pkgsrc/pkgsrc"
+}
+
+func determineUsedVariables(lines []*Line) {
+	re := regexp.MustCompile(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
+	for _, line := range lines {
+		rest := line.text
+		for {
+			m := re.FindStringSubmatchIndex(rest)
+			if m == nil {
+				break
+			}
+			varname := rest[m[2]:m[3]]
+			line.logDebugF("useVar %s", varname)
+			useVar(line, varname)
+			rest = rest[:m[0]] + rest[m[1]:]
+		}
+	}
 }
