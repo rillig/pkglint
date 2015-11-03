@@ -57,3 +57,6 @@ func varIsDefined(varname string) bool {
 	panic("not implemented")
 	return false
 }
+func pkgverCmp(left, op, right string) bool {
+	panic("not implemented")
+}

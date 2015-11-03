@@ -15,47 +15,6 @@ sub warn_about_PLIST_imake_mannewsuffix($) {
 }
 
 #
-# Subroutines to check part of a single line.
-#
-
-sub check_unused_licenses() {
-
-	for my $licensefile (glob("${cwd_pkgsrcdir}/licenses/*")) {
-		if (-f $licensefile) {
-			my $licensename = basename($licensefile);
-			if (!exists($ipc_used_licenses{$licensename})) {
-				log_warning($licensefile, NO_LINES, "This license seems to be unused.");
-			}
-		}
-	}
-}
-
-sub checkpackage_possible_downgrade() {
-
-	$opt_debug_trace and log_debug(NO_FILE, NO_LINES, "checkpackage_possible_downgrade");
-
-	return unless defined $effective_pkgname;
-	return unless $effective_pkgname =~ regex_pkgname;
-	my ($pkgbase, $pkgversion) = ($1, $2);
-	my $line = $effective_pkgname_line;
-
-	my @changes = get_doc_CHANGES($pkgpath);
-	if (@changes == 0) {
-		$opt_debug_misc and $line->log_debug("No changes have been recorded for package $pkgpath.");
-		return;
-	}
-
-	my $last_change = $changes[-1];
-	return unless $last_change->action eq "Updated";
-
-	my $last_version = $last_change->version;
-
-	if (dewey_cmp($pkgversion, "<", $last_version)) {
-		$line->log_warning("The package is being downgraded from $last_version to $pkgversion.");
-	}
-}
-
-#
 # Subroutines to check a single line.
 #
 

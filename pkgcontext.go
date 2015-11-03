@@ -10,7 +10,7 @@ type PkgContext struct {
 	effective_pkgname      *string // PKGNAME or DISTNAME from the package Makefile
 	effective_pkgbase      *string // The effective PKGNAME without the version
 	effective_pkgversion   *string // The version part of the effective PKGNAME
-	effective_pkgname_line *string // The origin of the three effective_* values
+	effective_pkgname_line *Line   // The origin of the three effective_* values
 	seen_bsd_prefs_mk      bool    // Has bsd.prefs.mk already been included?
 
 	vardef             map[string]*Line // varname => line

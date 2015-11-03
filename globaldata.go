@@ -23,7 +23,7 @@ type GlobalData struct {
 	varRequiredTools    map[string]bool   // Tool variable names that may not be converted to their "direct" form, that is: ${CP} => cp.
 	suggestedUpdates    []SuggestedUpdate
 	suggestedWipUpdates []SuggestedUpdate
-	lastChange          map[string]Change
+	lastChange          map[string]*Change
 	userDefinedVars     map[string]*Line
 	vartypes            map[string]*Type
 }
@@ -334,11 +334,12 @@ func (self *GlobalData) loadDocChanges() {
 	}
 
 	sort.Strings(fnames)
-	self.lastChange = make(map[string]Change)
+	self.lastChange = make(map[string]*Change)
 	for _, fname := range fnames {
 		changes := self.loadDocChangesFromFile(filepath.Join(docdir, fname))
 		for _, change := range changes {
-			self.lastChange[change.pkgpath] = change
+			c := change
+			self.lastChange[change.pkgpath] = &c
 		}
 	}
 }
