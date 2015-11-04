@@ -263,7 +263,7 @@ func parselinesMk(lines []*Line) {
 
 func checklineMkText(line *Line, text string) {
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
-		line.logWarningF("$$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.",varname,varname,varname)
+		line.logWarningF("$$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}
 
 	if line.lines == "1" {
@@ -273,8 +273,8 @@ func checklineMkText(line *Line, text string) {
 	if strings.Contains(text, "${WRKSRC}/../") {
 		line.logWarningF("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
 		line.explainWarning(
-"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
-"and INSTALL_DIRS are subdirectories of it.")
+			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
+			"and INSTALL_DIRS are subdirectories of it.")
 	}
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.

@@ -237,8 +237,8 @@ func match4(s, re string) (bool, string, string, string, string) {
 func replace(s, re, replacement string) ([]string, string) {
 	if m := reCompile(re).FindStringSubmatchIndex(s); m != nil {
 		replaced := s[:m[0]] + replacement + s[m[1]:]
-		mm := make([]string,len(m)/2)
-		for i := 0; i < len(m); i+=2 {
+		mm := make([]string, len(m)/2)
+		for i := 0; i < len(m); i += 2 {
 			mm[i/2] = s[m[i]:m[i+1]]
 		}
 		return mm, replaced

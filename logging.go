@@ -56,26 +56,27 @@ func logFatalF(fname, lineno, format string, args ...interface{}) bool {
 	return false
 }
 func logErrorF(fname, lineno, format string, args ...interface{}) bool {
-	message:= fmt.Sprintf(format, args...)
+	message := fmt.Sprintf(format, args...)
 	logMessage(LL_ERROR, fname, lineno, message)
 	GlobalVars.errors++
 	return true
 }
 func logWarningF(fname, lineno, format string, args ...interface{}) bool {
-	message:= fmt.Sprintf(format, args...)
+	message := fmt.Sprintf(format, args...)
 	logMessage(LL_WARN, fname, lineno, message)
 	GlobalVars.warnings++
 	return true
 }
 func logNoteF(fname, lineno, format string, args ...interface{}) bool {
-	message:= fmt.Sprintf(format, args...)
+	message := fmt.Sprintf(format, args...)
 	logMessage(LL_NOTE, fname, lineno, message)
 	return true
 }
 func logDebugF(fname, lineno, format string, args ...interface{}) bool {
-	message:= fmt.Sprintf(format, args...)
+	message := fmt.Sprintf(format, args...)
 	logMessage(LL_DEBUG, fname, lineno, message)
-	return true}
+	return true
+}
 
 func explain(level LogLevel, fname, lineno string, explanation []string) {
 	if GlobalVars.opts.optExplain {
