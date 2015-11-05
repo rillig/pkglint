@@ -3,6 +3,7 @@ package main
 // Parsing and checking shell commands embedded in Makefiles
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -48,7 +49,7 @@ outer:
 		// When parsing inside backticks, it is more
 		// reasonable to check the whole shell command
 		// recursively, instead of splitting off the first
-		// make(1) variable (see the elsif below).
+		// make(1) variable.
 		case state == SWST_BACKT || state == SWST_DQUOT_BACKT:
 			// Scan for the end of the backticks, checking
 			// for single backslashes and removing one level
@@ -59,44 +60,41 @@ outer:
 			// * http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
 			stripped := ""
 			for rest != "" {
-				notImplemented()
+				if replacestart(&rest, &m, "^`") {
+					if state == SWST_BACKT {
+						state = SWST_PLAIN
+					} else {
+						state = SWST_DQUOT
+					}
+					goto endOfBackticks
+				}
+				if replacestart(&rest, &m, "^\\\\([\\\\`$])") {
+					stripped += m[1]
+				} else if replacestart(&rest, &m, `^(\\)`) {
+					line.logWarningF("Backslashes should be doubled inside backticks.")
+					stripped += m[1]
+				} else if state == SWST_DQUOT_BACKT && replacestart(&rest, &m, `^"`) {
+					line.logWarningF("Double quotes inside backticks inside double quotes are error prone.")
+					line.explainWarning(
+						"According to the SUSv3, they produce undefined results.",
+						"",
+						"See the paragraph starting \"Within the backquoted ...\" in",
+						"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
+				} else if replacestart(&rest, &m, "^([^\\\\`]+)") {
+					stripped += m[1]
+				} else {
+					panic(fmt.Sprintf("rest=%v", rest))
+				}
 			}
-			notImplemented()
-			_ = stripped // XXX
-			/*-
-			  				if ($rest =~ s/^\`//) {
-			  					$state = ($state == SWST_BACKT) ? SWST_PLAIN : SWST_DQUOT;
-			  					goto end_of_backquotes;
-			  				} elsif ($rest =~ s/^\\([\\\`\$])//) {
-			  					$stripped .= $1;
-			  				} elsif ($rest =~ s/^(\\)//) {
-			  					$line->log_warning("Backslashes should be doubled inside backticks.");
-			  					$stripped .= $1;
-			  				} elsif ($state == SWST_DQUOT_BACKT && $rest =~ s/^"//) {
-			  					$line->log_warning("Double quotes inside backticks inside double quotes are error prone.");
-			  					$line->explain_warning(
-			  "According to the SUSv3, they produce undefined results.",
-			  "",
-			  "See the paragraph starting \"Within the backquoted ...\" in",
-			  "http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html");
-			  				} elsif ($rest =~ s/^([^\\\`]+)//) {
-			  					$stripped .= $1;
-			  				} else {
-			  					assert(false, "rest=$rest");
-			  				}
+			line.logErrorF("Unfinished backquotes: rest=%v", rest)
 
-			  			}
-			  			$line->log_error("Unfinished backquotes: rest=$rest");
-
-			  		end_of_backquotes:
-			  			# Check the resulting command.
-			  			checkline_mk_shelltext($line, $stripped);
-			  -*/
+		endOfBackticks:
+			checklineMkShelltext(line, stripped)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
-		case replacestart(&rest, &m, `^\$\{(${regex_varname}|[\@])(:[^\{]+)?\}`),
-			replacestart(&rest, &m, `^\$\((${regex_varname}|[\@])(:[^\)]+)?\)`),
-			replacestart(&rest, &m, `^\$([\w\@])()`):
+		case replacestart(&rest, &m, `^\$\{(`+reVarname+`|@)(:[^\{]+)?\}`),
+			replacestart(&rest, &m, `^\$\((`+reVarname+`|@])(:[^\)]+)?\)`),
+			replacestart(&rest, &m, `^\$([\w@])()`):
 			varname, mod := m[1], m[2]
 
 			if varname == "@" {
@@ -248,7 +246,7 @@ outer:
 			}
 		}
 	}
-	
+
 	if match(rest, `^\s*$`) == nil {
 		line.logErrorF("Internal pkglint error: %q: rest=%q", state, rest)
 	}
