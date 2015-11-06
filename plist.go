@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+type PlistContext struct {
+	allFiles  map[string]*Line
+	allDirs   map[string]*Line
+	lastFname string
+}
+
 func checkfilePlist(fname string) {
 	_ = GlobalVars.opts.optDebugTrace && logDebugF(fname, NO_LINES, "checkfilePlist")
 
@@ -36,8 +42,10 @@ func checkfilePlist(fname string) {
 			"Meta packages also don't need a PLIST file.")
 	}
 
-	allFiles := make(map[string]*Line)
-	allDirs := make(map[string]*Line)
+	pctx := &PlistContext{}
+	pctx.allFiles = make(map[string]*Line)
+	pctx.allDirs = make(map[string]*Line)
+
 	extraLines := make([]*Line, 0)
 	if path.Base(fname) == "PLIST.common_end" {
 		commonLines, err := loadLines(path.Dir(fname)+"/PLIST.common", false)
@@ -60,34 +68,35 @@ func checkfilePlist(fname string) {
 		}
 
 		if match(text, `^[\w$]`) != nil {
-			allFiles[text] = line
+			pctx.allFiles[text] = line
 			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
-				allDirs[dir] = line
+				pctx.allDirs[dir] = line
 			}
 		}
 
 		if strings.HasPrefix(text, "@") {
 			if m, dirname := match1(text, `^\@exec \$\{MKDIR\} %D/(.*)$`); m {
 				for dir := dirname; dir != "."; dir = path.Dir(dir) {
-					allDirs[dir] = line
+					pctx.allDirs[dir] = line
 				}
 			}
 		}
 	}
 
 	for _, line := range lines {
+		text := line.text
 		pline := &PlistLine{line}
 		pline.checkTrailingWhitespace()
 
 		if m, cmd, arg := match2(text, `^(?:\$\{[\w_]+\})?\@([a-z-]+)\s+(.*)`); m {
 			pline.checkDirective(cmd, arg)
 		} else if m, dirname, basename := match2(text, `^([A-Za-z0-9\$].*)/([^/]+)$`); m {
-			pline.checkPathname(dirname, basename)
+			pline.checkPathname(pctx, dirname, basename)
 		} else if match0(text, `^\$\{[\w_]+\}$`) {
 			// A variable on its own line.
-		}		else {
+		} else {
 			line.logWarningF("Unknown line type.")
-		}	
+		}
 	}
 
 	checklinesTrailingEmptyLines(lines)
@@ -110,7 +119,6 @@ func (pline *PlistLine) checkTrailingWhitespace() {
 
 func (pline *PlistLine) checkDirective(cmd, arg string) {
 	line := pline.line
-	text := line.text
 
 	if cmd == "unexec" {
 		if m, arg := match1(arg, `^(?:rmdir|\$\{RMDIR\} \%D/)(.*)`); m {
@@ -158,56 +166,57 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 	}
 }
 
-func (pline *PlistLine) checkPathname(dirname, basename string, lastFileSeen *string) {
+func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename string) {
 	line := pline.line
 	text := line.text
-	
+
 	if GlobalVars.opts.optWarnPlistSort && match0(text, `^\w`) && !match0(text, reUnresolvedVar) {
-		if lastFileSeen != "" {
-			if *lastFileSeen > text {
-				line.logWarningF("%q should be sorted before %q.", text, lastFileSeen)
+		if pctx.lastFname != "" {
+			if pctx.lastFname > text {
+				line.logWarningF("%q should be sorted before %q.", text, pctx.lastFname)
 				line.explainWarning(
 					"For aesthetic reasons, the files in the PLIST should be sorted",
-"alphabetically.")
-			} else if *lastFileSeen == text {
-				line.logError("Duplicate filename.")
-			}	
+					"alphabetically.")
+			} else if pctx.lastFname == text {
+				line.logErrorF("Duplicate filename.")
+			}
 		}
-		*lastFileSeen = text
+		pctx.lastFname = text
 	}
 
 	if strings.Contains(basename, "${IMAKE_MANNEWSUFFIX}") {
 		pline.warnAboutPlistImakeMannewsuffix()
 	}
 
-	switch {	
+	switch {
 	case strings.HasPrefix(dirname, "bin/"):
 		line.logWarningF("The bin/ directory should not have subdirectories.")
 
 	case dirname == "bin":
 		switch {
-		case allFiles["man/man1/" + basename + ".1"] != nil:
-		case allFiles["man/man6/" + basename + ".6"] != nil:
-		case allFiles["${IMAKE_MAN_DIR}/" + basename + ".${IMAKE_MANNEWSUFFIX}"}] != nil:
+		case pctx.allFiles["man/man1/"+basename+".1"] != nil:
+		case pctx.allFiles["man/man6/"+basename+".6"] != nil:
+		case pctx.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] != nil:
 		default:
 			if GlobalVars.opts.optWarnExtra {
 				line.logWarningF("Manual page missing for bin/${basename}.")
 				line.explainWarning(
-"All programs that can be run directly by the user should have a manual",
-"page for quick reference. The programs in the bin/ directory should have",
-"corresponding manual pages in section 1 (filename program.1), not in",
-"section 8.")
+					"All programs that can be run directly by the user should have a manual",
+					"page for quick reference. The programs in the bin/ directory should have",
+					"corresponding manual pages in section 1 (filename program.1), not in",
+					"section 8.")
+			}
 		}
-	
+
 	case strings.HasPrefix(text, "doc/"):
 		line.logErrorF("Documentation must be installed under share/doc, not doc.")
 
-	case strings.HasPrefix(text, "etc/rc.d/":
+	case strings.HasPrefix(text, "etc/rc.d/"):
 		line.logErrorF("RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.")
 
-	case strings.HasPrefix(text, "etc/":
+	case strings.HasPrefix(text, "etc/"):
 		f := "mk/pkginstall/bsd.pkginstall.mk"
-		line.logErrorF("Configuration files must not be registered in the PLIST. " +
+		line.logErrorF("Configuration files must not be registered in the PLIST. "+
 			"Please use the CONF_FILES framework, which is described in %s.", f)
 
 	case strings.HasPrefix(text, "include/") && match0(text, `^include/.*\.(?:h|hpp)$`):
@@ -216,15 +225,15 @@ func (pline *PlistLine) checkPathname(dirname, basename string, lastFileSeen *st
 	case text == "info/dir":
 		line.logErrorF("\"info/dir\" must not be listed. Use install-info to add/remove an entry.")
 
-	case strings.HasPrefix(text, "info/" && length($text) > 5:
+	case strings.HasPrefix(text, "info/"):
 		if GlobalVars.pkgContext.vardef["INFO_FILES"] == nil {
 			line.logWarningF("Packages that install info files should set INFO_FILES.")
 		}
-		
-	case GlobalVars.pkgContext.effective_pkgbase != nil && strings.HasPrefix(text, "lib/" + GlobalVars.pkgContext.effective_pkgbase + "/") {
+
+	case G.pkgContext.effective_pkgbase != nil && strings.HasPrefix(text, "lib/"+*G.pkgContext.effective_pkgbase+"/"):
 		// Fine.
 
-	case strings.HasPrefix(text, "lib/locale/":
+	case strings.HasPrefix(text, "lib/locale/"):
 		line.logErrorF("\"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 
 	case strings.HasPrefix(text, "lib/"):
@@ -232,141 +241,135 @@ func (pline *PlistLine) checkPathname(dirname, basename string, lastFileSeen *st
 			if dir == "lib/" && !strings.HasPrefix(lib, "lib") {
 				_ = GlobalVars.opts.optWarnExtra && line.logWarningF("Library filename does not start with \"lib\".")
 			}
-			if ext=="la"{
+			if ext == "la" {
 				if GlobalVars.pkgContext.vardef["USE_LIBTOOL"] == nil {
 					line.logWarningF("Packages that install libtool libraries should define USE_LIBTOOL.")
 				}
-}
 			}
-		
+		}
+
 	case strings.HasPrefix(text, "man/"):
-		if m, catOrMan, section, manpage, ext, gz := match5(text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`) {
+		if m, catOrMan, section, manpage, ext, gz := match5(text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`); m {
 
-				if (!match0(section, `^[\dln]$`) {
-					line.logWarningF("Unknown section %q for manual page.", section)
+			if !match0(section, `^[\dln]$`) {
+				line.logWarningF("Unknown section %q for manual page.", section)
+			}
+
+			if catOrMan == "cat" && pctx.allFiles["man/man"+section+"/"+manpage+"."+section] == nil {
+				line.logWarningF("Preformatted manual page without unformatted one.")
+			}
+
+			if catOrMan == "cat" {
+				if ext != "0" {
+					line.logWarningF("Preformatted manual pages should end in \".0\".")
 				}
-
-				if (catOrMan == "cat" CONT_HERE && !exists($all_files->{"man/man${section}/${manpage}.${section}"})) {
-					line.logWarningF("Preformatted manual page without unformatted one.");
-				}
-
-				if ($cat_or_man eq "cat") {
-					if ($ext ne "0") {
-						line.logWarningF("Preformatted manual pages should end in \".0\".");
-					}
-				} else {
-					if ($section ne $ext) {
-						line.logWarningF("Mismatch between the section (${section}) and extension (${ext}) of the manual page.");
-					}
-				}
-
-				if (defined($gz)) {
-					$line->log_note("The .gz extension is unnecessary for manual pages.");
-					$line->explain_note(
-"Whether the manual pages are installed in compressed form or not is",
-"configured by the pkgsrc user. Compression and decompression takes place",
-"automatically, no matter if the .gz extension is mentioned in the PLIST",
-"or not.");
-				}
-
-			} elsif (substr($text, 0, 7) eq "man/cat") {
-				line.logWarningF("Invalid filename \"${text}\" for preformatted manual page.");
-
-			} elsif (substr($text, 0, 7) eq "man/man") {
-				line.logWarningF("Invalid filename \"${text}\" for unformatted manual page.");
-
-			} elsif (substr($text, 0, 5) eq "sbin/") {
-				my $binname = substr($text, 5);
-
-				if (!exists($all_files->{"man/man8/${binname}.8"})) {
-					$opt_warn_extra and line.logWarningF("Manual page missing for sbin/${binname}.");
-					$opt_warn_extra and $line->explain_warning(
-"All programs that can be run directly by the user should have a manual",
-"page for quick reference. The programs in the sbin/ directory should have",
-"corresponding manual pages in section 8 (filename program.8), not in",
-"section 1.");
-				}
-
-			} elsif (substr($text, 0, 6) eq "share/" && $text =~ m"^share/applications/.*\.desktop$") {
-				my $f = "../../sysutils/desktop-file-utils/desktopdb.mk";
-				if (defined($pkgctx_included) && !exists($pkgctx_included->{$f})) {
-					line.logWarningF("Packages that install a .desktop entry may .include \"$f\".");
-					$line->explain_warning(
-"If *.desktop files contain MimeType keys, global MIME Type registory DB",
-"must be updated by desktop-file-utils.",
-"Otherwise, this warning is harmless.");
-				}
-
-			} elsif (substr($text, 0, 6) eq "share/" && $pkgpath ne "graphics/hicolor-icon-theme" && $text =~ m"^share/icons/hicolor(?:$|/)") {
-				my $f = "../../graphics/hicolor-icon-theme/buildlink3.mk";
-				if (defined($pkgctx_included) && !exists($pkgctx_included->{$f})) {
-					$line->log_error("Please .include \"$f\" in the Makefile");
-					$line->explain_error(
-"If hicolor icon themes are installed, icon theme cache must be",
-"maintained. The hicolor-icon-theme package takes care of that.");
-				}
-
-			} elsif (substr($text, 0, 6) eq "share/" && $pkgpath ne "graphics/gnome-icon-theme" && $text =~ m"^share/icons/gnome(?:$|/)") {
-				my $f = "../../graphics/gnome-icon-theme/buildlink3.mk";
-				if (defined($pkgctx_included) && !exists($pkgctx_included->{$f})) {
-					$line->log_error("Please .include \"$f\"");
-					$line->explain_error(
-"If Gnome icon themes are installed, icon theme cache must be maintained.");
-				}
-			} elsif ($dirname eq "share/aclocal" && $basename =~ m"\.m4$") {
-				# Fine.
-
-			} elsif (substr($text, 0, 15) eq "share/doc/html/") {
-				$opt_warn_plist_depr and line.logWarningF("Use of \"share/doc/html\" is deprecated. Use \"share/doc/\${PKGBASE}\" instead.");
-
-			} elsif (defined($effective_pkgbase) && $text =~ m"^share/(?:doc/|examples/|)\Q${effective_pkgbase}\E/") {
-				# Fine.
-
-			} elsif ($pkgpath ne "graphics/hicolor-icon-theme" && $text =~ m"^share/icons/hicolor/icon-theme\.cache") {
-				$line->log_error("Please .include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" and remove this line.");
-
-			} elsif (substr($text, 0, 11) eq "share/info/") {
-				line.logWarningF("Info pages should be installed into info/, not share/info/.");
-				$line->explain_warning(
-"To fix this, you should add INFO_FILES=yes to the package Makefile.");
-
-			} elsif (substr($text, -3) eq ".mo" && $text =~ m"^share/locale/[\w\@_]+/LC_MESSAGES/[^/]+\.mo$") {
-				# Fine.
-
-			} elsif (substr($text, 0, 10) eq "share/man/") {
-				line.logWarningF("Man pages should be installed into man/, not share/man/.");
-
 			} else {
-				$opt_debug_unchecked and $line->log_debug("Unchecked pathname \"${text}\".");
-			}
-
-			if ($text =~ /\$\{PKGLOCALEDIR}/ && defined($pkgctx_vardef) && !exists($pkgctx_vardef->{"USE_PKGLOCALEDIR"})) {
-				line.logWarningF("PLIST contains \${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.");
-			}
-
-			if (index($text, "/CVS/") != -1) {
-				line.logWarningF("CVS files should not be in the PLIST.");
-			}
-			if (substr($text, -5) eq ".orig") {
-				line.logWarningF(".orig files should not be in the PLIST.");
-			}
-			if (substr($text, -14) eq "/perllocal.pod") {
-				line.logWarningF("perllocal.pod files should not be in the PLIST.");
-				$line->explain_warning(
-"This file is handled automatically by the INSTALL/DEINSTALL scripts,",
-"since its contents changes frequently.");
-			}
-
-			if ($text =~ m"^(.*)(\.a|\.so[0-9.]*)$") {
-				my ($basename, $ext) = ($1, $2);
-
-				if (exists($all_files->{"${basename}.la"})) {
-					line.logWarningF("Redundant library found. The libtool library is in line " . $all_files->{"${basename}.la"}->lines . ".");
+				if section != ext {
+					line.logWarningF("Mismatch between the section (%s) and extension (%s) of the manual page.", section, ext)
 				}
 			}
 
--------------	
-	
+			if gz != "" {
+				line.logNoteF("The .gz extension is unnecessary for manual pages.")
+				line.explainNote(
+					"Whether the manual pages are installed in compressed form or not is",
+					"configured by the pkgsrc user. Compression and decompression takes place",
+					"automatically, no matter if the .gz extension is mentioned in the PLIST",
+					"or not.")
+			}
+		} else {
+			line.logWarningF("Invalid filename %q for manual page.", text)
+		}
+
+	case strings.HasPrefix(text, "sbin/"):
+		binname := text[5:]
+
+		if pctx.allFiles["man/man8/"+binname+".8"] == nil && GlobalVars.opts.optWarnExtra {
+			line.logWarningF("Manual page missing for sbin/${binname}.")
+			line.explainWarning(
+				"All programs that can be run directly by the user should have a manual",
+				"page for quick reference. The programs in the sbin/ directory should have",
+				"corresponding manual pages in section 8 (filename program.8), not in",
+				"section 1.")
+		}
+
+	case strings.HasPrefix(text, "share/applications/") && strings.HasSuffix(text, ".desktop"):
+		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
+		if G.pkgContext.included[f] == nil {
+			line.logWarningF("Packages that install a .desktop entry should .include %q.", f)
+			line.explainWarning(
+				"If *.desktop files contain MimeType keys, the global MIME type registry",
+				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
+		}
+
+	case strings.HasPrefix(text, "share/icons/hicolor/") && *G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
+		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
+		if G.pkgContext.included[f] == nil {
+			line.logErrorF("Packages that install hicolor icons must include %q in the Makefile.", f)
+		}
+
+	case strings.HasPrefix(text, "share/icons/gnome") && *G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
+		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
+		if G.pkgContext.included[f] == nil {
+			line.logErrorF("The package Makefile must include %q.", f)
+			line.explainError(
+				"Packages that install GNOME icons must maintain the icon theme cache.")
+		}
+
+	case dirname == "share/aclocal" && strings.HasSuffix(basename, ".m4"):
+		// Fine.
+
+	case strings.HasPrefix(text, "share/doc/html/"):
+		_ = G.opts.optWarnPlistDepr && line.logWarningF("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
+
+	case G.pkgContext.effective_pkgbase != nil && (strings.HasPrefix(text, "share/doc/"+*G.pkgContext.effective_pkgbase+"/") ||
+		strings.HasPrefix(text, "share/examples/"+*G.pkgContext.effective_pkgbase+"/")):
+		// Fine.
+
+	case text == "share/icons/hicolor/icon-theme.cache" && *G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
+		line.logErrorF("This file must not appear in any PLIST file.")
+		line.explainError(
+			"Remove this line and add the following line to the package Makefile.",
+			"",
+			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
+
+	case strings.HasPrefix(text, "share/info/"):
+		line.logWarningF("Info pages should be installed into info/, not share/info/.")
+		line.explainWarning(
+			"To fix this, you should add INFO_FILES=yes to the package Makefile.")
+
+	case strings.HasPrefix(text, "share/locale/") && strings.HasSuffix(text, ".mo"):
+		// Fine.
+
+	case strings.HasPrefix(text, "share/man/"):
+		line.logWarningF("Man pages should be installed into man/, not share/man/.")
+
+	default:
+		_ = G.opts.optDebugUnchecked && line.logDebugF("Unchecked pathname %q.", text)
+	}
+
+	if strings.Contains(text, "${PKGLOCALEDIR}") && G.pkgContext.vardef["USE_PKGLOCALEDIR"] == nil {
+		line.logWarningF("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
+	}
+
+	if strings.Contains(text, "/CVS/") {
+		line.logWarningF("CVS files should not be in the PLIST.")
+	}
+	if strings.HasSuffix(text, ".orig") {
+		line.logWarningF(".orig files should not be in the PLIST.")
+	}
+	if strings.HasSuffix(text, "/perllocal.pod") {
+		line.logWarningF("perllocal.pod files should not be in the PLIST.")
+		line.explainWarning(
+			"This file is handled automatically by the INSTALL/DEINSTALL scripts,",
+			"since its contents changes frequently.")
+	}
+
+	if m, basename, _ := match2(text, `^(.*)(\.a|\.so[0-9.]*)$`); m {
+		if laLine := pctx.allFiles[basename+".la"]; laLine != nil {
+			line.logWarningF("Redundant library found. The libtool library is in line %s.", laLine)
+		}
+	}
 }
 
 func (pline *PlistLine) warnAboutPlistImakeMannewsuffix() {

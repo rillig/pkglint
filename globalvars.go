@@ -21,6 +21,7 @@ type GlobalVarsType struct {
 }
 
 var GlobalVars = GlobalVarsType{}
+var G = &GlobalVars
 
 const confMake = "@BMAKE@"
 const confDatadir = "@DATADIR@"

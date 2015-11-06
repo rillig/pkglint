@@ -237,6 +237,13 @@ func match4(s, re string) (bool, string, string, string, string) {
 		return false, "", "", "", ""
 	}
 }
+func match5(s, re string) (bool, string, string, string, string, string) {
+	if m := match(s, re); m != nil {
+		return true, m[1], m[2], m[3], m[4], m[5]
+	} else {
+		return false, "", "", "", "", ""
+	}
+}
 func replace(s, re, replacement string) ([]string, string) {
 	if m := reCompile(re).FindStringSubmatchIndex(s); m != nil {
 		replaced := s[:m[0]] + replacement + s[m[1]:]
