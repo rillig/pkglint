@@ -4,10 +4,16 @@ package main
 
 import (
 	"fmt"
+	"path"
 	"strings"
 )
 
-func checklineMkShellword(line *Line, shellword string, checkQuoting bool) {
+type MkShellLine struct {
+	line *Line
+}
+
+func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting bool) {
+	line := msline.line
 	_ = GlobalVars.opts.optDebugTrace && line.logDebugF("checklineMkShellword(%q, %q)", shellword, checkQuoting)
 
 	if shellword == "" {
@@ -89,7 +95,7 @@ outer:
 			line.logErrorF("Unfinished backquotes: rest=%v", rest)
 
 		endOfBackticks:
-			checklineMkShelltext(line, stripped)
+			msline.checklineMkShelltext(line, stripped)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case replacestart(&rest, &m, `^\$\{(`+reVarname+`|@)(:[^\{]+)?\}`),
@@ -250,4 +256,253 @@ outer:
 	if match(rest, `^\s*$`) == nil {
 		line.logErrorF("Internal pkglint error: %q: rest=%q", state, rest)
 	}
+}
+
+func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
+	_ = GlobalVars.opts.optDebugTrace && line.logDebugF("checklineMkShelltext: %v", shelltext)
+
+	type State string
+	const (
+		S_START           State = "start"
+		S_CONT            State = "continuation"
+		S_INSTALL         State = "install"
+		S_INSTALL_D       State = "install -d"
+		S_MKDIR           State = "mkdir"
+		S_PAX             State = "pax"
+		S_PAX_S           State = "pax -s"
+		S_SED             State = "sed"
+		S_SED_E           State = "sed -e"
+		S_SET             State = "set"
+		S_SET_CONT        State = "set-continuation"
+		S_COND            State = "cond"
+		S_COND_CONT       State = "cond-continuation"
+		S_CASE            State = "case"
+		S_CASE_IN         State = "case in"
+		S_CASE_LABEL      State = "case label"
+		S_CASE_LABEL_CONT State = "case-label-continuation"
+		S_CASE_PAREN      State = "case-paren"
+		S_FOR             State = "for"
+		S_FOR_IN          State = "for-in"
+		S_FOR_CONT        State = "for-continuation"
+		S_ECHO            State = "echo"
+		S_INSTALL_DIR     State = "install-dir"
+		S_INSTALL_DIR2    State = "install-dir2"
+	)
+
+	if strings.Contains(shelltext, "${SED}") || strings.Contains(shelltext, "${MV}") {
+		line.logNoteF("Please use the SUBST framework instead of ${SED} and ${MV}.")
+		line.explainNote(
+			"When converting things, pay attention to \"#\" characters. In shell",
+			"commands make(1) does not interpret them as comment character, but",
+			"in other lines it does. Therefore, instead of the shell command",
+			"",
+			"\tsed -e 's,#define foo,,'",
+			"",
+			"you need to write",
+			"",
+			"\tSUBST_SED.foo+=\t's,\\#define foo,,'")
+	}
+
+	if m := match(shelltext, `^@*-(.*MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m != nil {
+		line.logNoteF("You don't need to use \"-\" before %v.", m[1])
+	}
+
+	rest := shelltext
+
+	eflagMode := false
+	var m []string
+	if replacestart(&rest, &m, `^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
+		hidden, macro := m[1], m[2]
+		msline.checkLineStart(hidden, macro, rest, &eflagMode)
+	}
+
+	state := S_START
+	for replacestart(&rest, &m, reShellword) {
+		shellword := m[1]
+
+		_ = GlobalVars.opts.optDebugShell && line.logDebugF("checklineMkShelltext state=%v shellword=%v", state, shellword)
+
+		msline.checklineMkShellword(shellword, !(state == S_CASE ||
+			state == S_FOR_CONT ||
+			state == S_SET_CONT ||
+			(state == S_START && match(shellword, reShVarassign) != nil)))
+
+		if state == S_START || state == S_COND {
+			msline.checkCommandStart(shellword)
+		}
+
+		if state == S_COND && shellword == "cd" {
+			line.logErrorF("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+			line.explainError(
+				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
+				"shell will exit, no matter if it is protected by an \"if\" or the",
+				"\"||\" operator.")
+		}
+
+		if state != S_PAX_S && state != S_SED_E && state != S_CASE_LABEL {
+			checklineMkAbsolutePathname(line, shellword)
+		}
+
+		if (state == S_INSTALL_D || state == S_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
+			line.logWarningF("Please use AUTO_MKDIRS instead of %q.",
+				ifelseStr(state == S_MKDIR, "${MKDIR}", "${INSTALL} -d"))
+			line.explainWarning(
+				"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
+				"mentioned in the PLIST. If you need additional directories, specify",
+				"them in INSTALLATION_DIRS, which is a list of directories relative to",
+				"${PREFIX}.")
+		}
+
+		if (state == S_INSTALL_DIR || state == S_INSTALL_DIR2) && match(shellword, reMkShellvaruse) == nil {
+			if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
+				line.logNoteF("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
+				line.explainNote(
+					"This saves you some typing. You also don't have to think about which of",
+					"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
+					"takes care of that.",
+					"",
+					"Note that you should only do this if the package creates _all_",
+					"directories it needs before trying to install files into them.",
+					"",
+					"Many packages include a list of all needed directories in their PLIST",
+					"file. In that case, you can just set AUTO_MKDIRS=yes and be done.")
+			}
+		}
+	}
+}
+
+func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
+	line := msline.line
+
+	switch {
+	case !strings.Contains(hidden, "@"):
+		// Nothing is hidden at all.
+
+	case strings.HasPrefix(GlobalVars.mkContext.target, "show-") || strings.HasSuffix(GlobalVars.mkContext.target, "-message"):
+		// In these targets commands may be hidden.
+
+	case strings.HasPrefix(rest, "#"):
+		// Shell comments may be hidden, since they cannot have side effects.
+
+	default:
+		if m, cmd := match1(rest, reShellword); m {
+			switch cmd {
+			case "${DELAYED_ERROR_MSG}", "${DELAYED_WARNING_MSG}",
+				"${DO_NADA}",
+				"${ECHO}", "${ECHO_MSG}", "${ECHO_N}", "${ERROR_CAT}", "${ERROR_MSG}",
+				"${FAIL_MSG}",
+				"${PHASE_MSG}", "${PRINTF}",
+				"${SHCOMMENT}", "${STEP_MSG}",
+				"${WARNING_CAT}", "${WARNING_MSG}":
+			default:
+				line.logWarningF("The shell command %q should not be hidden.", cmd)
+				line.explainWarning(
+					"Hidden shell commands do not appear on the terminal or in the log file",
+					"when they are executed. When they fail, the error message cannot be",
+					"assigned to the command, which is very difficult to debug.")
+			}
+		}
+	}
+
+	if strings.Contains(hidden, "-") {
+		line.logWarningF("The use of a leading \"-\" to suppress errors is deprecated.")
+		line.explainWarning(
+			"If you really want to ignore any errors from this command (including",
+			"all errors you never thought of), append \"|| ${TRUE}\" to the",
+			"command.")
+	}
+
+	if macro == "${RUN}" {
+		*eflag = true
+	}
+}
+
+func (msline *MkShellLine) checkCommandStart(shellword string) {
+	line := msline.line
+
+	switch {
+	case shellword == "${RUN}":
+		// Just skip this one.
+
+	case msline.isForbiddenShellCommand(shellword):
+		line.logErrorF("%q must not be used in Makefiles.", shellword)
+		line.explainError(
+			"This command must appear in INSTALL scripts, not in the package",
+			"Makefile, so that the package also works if it is installed as a binary",
+			"package via pkg_add.")
+
+	case GlobalVars.globalData.tools[shellword]:
+		if !GlobalVars.mkContext.tools[shellword] && !GlobalVars.mkContext.tools["g"+shellword] {
+			line.logWarningF("The %q tool is used but not added to USE_TOOLS.", shellword)
+		}
+
+		if GlobalVars.globalData.varRequiredTools[shellword] {
+			line.logWarningF("Please use ${%s} instead of %q.", GlobalVars.globalData.vartools[shellword], shellword)
+		}
+
+		checklineMkShellcmdUse(line, shellword)
+
+	case match(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`) != nil:
+		// Shell builtins are fine.
+
+	case match(shellword, `^[\w_]+=.*$`) != nil:
+		// Variable assignment
+
+	case match(shellword, `^\./`) != nil:
+		// All commands from the current directory are fine.
+
+	case strings.HasPrefix(shellword, "#"):
+		semicolon := strings.Contains(shellword, ";")
+		multiline := strings.Contains(line.lines, "--")
+
+		if semicolon {
+			line.logWarningF("A shell comment should not contain semicolons.")
+		}
+		if multiline {
+			line.logWarningF("A shell comment does not stop at the end of line.")
+		}
+
+		if semicolon || multiline {
+			line.explainWarning(
+				"When you split a shell command into multiple lines that are continued",
+				"with a backslash, they will nevertheless be converted to a single line",
+				"before the shell sees them. That means that even if it _looks_ like that",
+				"the comment only spans one line in the Makefile, in fact it spans until",
+				"the end of the whole shell command. To insert a comment into shell code,",
+				"you can pass it as an argument to the ${SHCOMMENT} macro, which expands",
+				"to a command doing nothing. Note that any special characters are",
+				"nevertheless interpreted by the shell.")
+		}
+
+	default:
+		if m, vartool := match1(shellword, `^\$\{([\w_]+)\}$`); m {
+			plainTool := GlobalVars.globalData.varnameToToolname[vartool]
+			vartype := GlobalVars.globalData.vartypes[vartool]
+			switch {
+			case plainTool != "" && GlobalVars.mkContext.tools[plainTool]:
+				line.logWarningF("The %q tool is used but not added to USE_TOOLS.", plainTool)
+			case vartype.basicType == "ShellCommand":
+				checklineMkShellcmdUse(line, shellword)
+			case GlobalVars.pkgContext.vardef[vartool] != nil:
+				// This command has been explicitly defined in the package; assume it to be valid.
+			default:
+				if GlobalVars.opts.optWarnExtra {
+					line.logWarningF("Unknown shell command %q.", shellword)
+					line.explainWarning(
+						"If you want your package to be portable to all platforms that pkgsrc",
+						"supports, you should only use shell commands that are covered by the",
+						"tools framework.")
+				}
+				checklineMkShellcmdUse(line, shellword)
+			}
+		}
+	}
+}
+
+func (msline *MkShellLine) isForbiddenShellCommand(cmd string) bool {
+	switch path.Base(cmd) {
+	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
+		return true
+	}
+	return false
 }

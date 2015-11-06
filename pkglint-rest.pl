@@ -644,98 +644,9 @@ sub checkline_mk_shelltext($$) {
 	my ($line, $text) = @_;
 	my ($vartools, $state, $rest, $set_e_mode);
 
-	$opt_debug_trace and $line->log_debug("checkline_mk_shelltext(\"$text\")");
-
-	# Note: SCST is the abbreviation for [S]hell [C]ommand [ST]ate.
-	use constant scst => qw(
-		START CONT
-		INSTALL INSTALL_D
-		MKDIR
-		PAX PAX_S
-		SED SED_E
-		SET SET_CONT
-		COND COND_CONT
-		CASE CASE_IN CASE_LABEL CASE_LABEL_CONT CASE_PAREN
-		FOR FOR_IN FOR_CONT
-		ECHO
-		INSTALL_DIR INSTALL_DIR2
-	);
-	use enum (":SCST_", scst);
-	use constant scst_statename => [ map { "SCST_$_" } scst ];
-
-	use constant forbidden_commands => array_to_hash(qw(
-		ktrace
-		mktexlsr
-		strace
-		texconfig truss
-	));
-
-	if ($text =~ m"\$\{SED\}" && $text =~ m"\$\{MV\}") {
-		$line->log_note("Please use the SUBST framework instead of \${SED} and \${MV}.");
-		$line->explain_note(
-"When converting things, pay attention to \"#\" characters. In shell",
-"commands make(1) does not interpret them as comment character, but",
-"in other lines it does. Therefore, instead of the shell command",
-"",
-"\tsed -e 's,#define foo,,'",
-"",
-"you need to write",
-"",
-"\tSUBST_SED.foo+=\t's,\\#define foo,,'");
-	}
-
-	if ($text =~ m"^\@*-(.*(MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)") {
-		my ($mkdir_cmd) = ($1);
-
-		$line->log_note("You don't need to use \"-\" before ${mkdir_cmd}.");
-	}
-
-	$vartools = get_vartool_names();
-	$rest = $text;
-
-	use constant hidden_shell_commands => array_to_hash(qw(
-		${DELAYED_ERROR_MSG} ${DELAYED_WARNING_MSG}
-		${DO_NADA}
-		${ECHO} ${ECHO_MSG} ${ECHO_N} ${ERROR_CAT} ${ERROR_MSG}
-		${FAIL_MSG}
-		${PHASE_MSG} ${PRINTF}
-		${SHCOMMENT} ${STEP_MSG}
-		${WARNING_CAT} ${WARNING_MSG}
-	));
-
-	$set_e_mode = false;
-
-	if ($rest =~ s/^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)//) {
+	if ($rest =~ s///) {
 		my ($hidden, $macro) = ($1, $2);
 
-		if ($hidden !~ m"\@") {
-			# Nothing is hidden at all.
-
-		} elsif (defined($mkctx_target) && $mkctx_target =~ m"^(?:show-.*|.*-message)$") {
-			# In some targets commands may be hidden.
-
-		} elsif ($rest =~ m"^#") {
-			# Shell comments may be hidden, as they have no side effects
-
-		} elsif ($rest =~ $regex_shellword) {
-			my ($cmd) = ($1);
-
-			if (!exists(hidden_shell_commands->{$cmd})) {
-				$line->log_warning("The shell command \"${cmd}\" should not be hidden.");
-				$line->explain_warning(
-"Hidden shell commands do not appear on the terminal or in the log file",
-"when they are executed. When they fail, the error message cannot be",
-"assigned to the command, which is very difficult to debug.");
-			}
-		}
-
-		if ($hidden =~ m"-") {
-			$line->log_warning("The use of a leading \"-\" to suppress errors is deprecated.");
-			$line->explain_warning(
-"If you really want to ignore any errors from this command (including",
-"all errors you never thought of), append \"|| \${TRUE}\" to the",
-"command.");
-		}
 
 		if ($macro eq "\${RUN}") {
 			$set_e_mode = true;
@@ -760,141 +671,23 @@ sub checkline_mk_shelltext($$) {
 		#
 
 		if ($state == SCST_START || $state == SCST_COND) {
-			my ($type);
-
-			if ($shellword eq "\${RUN}") {
-				# Just skip this one.
-
-			} elsif (exists(forbidden_commands->{basename($shellword)})) {
-				$line->log_error("${shellword} must not be used in Makefiles.");
-				$line->explain_error(
-"This command must appear in INSTALL scripts, not in the package",
-"Makefile, so that the package also works if it is installed as a binary",
-"package via pkg_add.");
-
-			} elsif (exists(get_tool_names()->{$shellword})) {
-				if (!exists($mkctx_tools->{$shellword}) && !exists($mkctx_tools->{"g$shellword"})) {
-					$line->log_warning("The \"${shellword}\" tool is used but not added to USE_TOOLS.");
-				}
-
-				if (exists(get_required_vartools()->{$shellword})) {
-					$line->log_warning("Please use \"\${" . get_vartool_names()->{$shellword} . "}\" instead of \"${shellword}\".");
-				}
-
-				checkline_mk_shellcmd_use($line, $shellword);
-
-			} elsif ($shellword =~ m"^\$\{([\w_]+)\}$" && exists(get_varname_to_toolname()->{$1})) {
-				my ($vartool) = ($1);
-				my $plain_tool = get_varname_to_toolname()->{$vartool};
-
-				if (!exists($mkctx_tools->{$plain_tool})) {
-					$line->log_warning("The \"${plain_tool}\" tool is used but not added to USE_TOOLS.");
-				}
-
-				# Deactivated to allow package developers to write
-				# consistent code that uses ${TOOL} in all places.
-				if (false && defined($mkctx_target) && $mkctx_target =~ m"^(?:pre|do|post)-(?:extract|patch|wrapper|configure|build|install|package|clean)$") {
-					if (!exists(get_required_vartool_varnames()->{$vartool})) {
-						$opt_warn_extra and $line->log_note("You can write \"${plain_tool}\" instead of \"${shellword}\".");
-						$opt_warn_extra and $line->explain_note(
-"The wrapper framework from pkgsrc takes care that a sufficiently",
-"capable implementation of that tool will be selected.",
-"",
-"Calling the commands by their plain name instead of the macros is",
-"only available in the {pre,do,post}-* targets. For all other targets,",
-"you should still use the macros.");
-					}
-				}
-
-				checkline_mk_shellcmd_use($line, $shellword);
-
-			} elsif ($shellword =~ m"^\$\{([\w_]+)\}$" && defined($type = get_variable_type($line, $1)) && $type->basic_type eq "ShellCommand") {
-				checkline_mk_shellcmd_use($line, $shellword);
-
-			} elsif ($shellword =~ m"^\$\{(\w+)\}$" && defined($pkgctx_vardef) && exists($pkgctx_vardef->{$1})) {
-				# When the package author has explicitly
-				# defined a command variable, assume it
-				# to be valid.
-
-			} elsif ($shellword =~ m"^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$") {
-				# Shell builtins are fine.
-
-			} elsif ($shellword =~ m"^[\w_]+=.*$") {
-				# Variable assignment.
-
-			} elsif ($shellword =~ m"^\./.*$") {
-				# All commands from the current directory are fine.
-
-			} elsif ($shellword =~ m"^#") {
-				my $semicolon = ($shellword =~ m";");
-				my $multiline = ($line->lines =~ m"--");
-
-				if ($semicolon) {
-					$line->log_warning("A shell comment should not contain semicolons.");
-				}
-				if ($multiline) {
-					$line->log_warning("A shell comment does not stop at the end of line.");
-				}
-
-				if ($semicolon || $multiline) {
-					$line->explain_warning(
-"When you split a shell command into multiple lines that are continued",
-"with a backslash, they will nevertheless be converted to a single line",
-"before the shell sees them. That means that even if it _looks_ like that",
-"the comment only spans one line in the Makefile, in fact it spans until",
-"the end of the whole shell command. To insert a comment into shell code,",
-"you can pass it as an argument to the \${SHCOMMENT} macro, which expands",
-"to a command doing nothing. Note that any special characters are",
-"nevertheless interpreted by the shell.");
-				}
-
-			} else {
-				$opt_warn_extra and $line->log_warning("Unknown shell command \"${shellword}\".");
-				$opt_warn_extra and $line->explain_warning(
-"If you want your package to be portable to all platforms that pkgsrc",
-"supports, you should only use shell commands that are covered by the",
-"tools framework.");
-
-			}
+			...
 		}
 
 		if ($state == SCST_COND && $shellword eq "cd") {
-			$line->log_error("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.");
-			$line->explain_error(
-"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
-"shell will exit, no matter if it is protected by an \"if\" or the",
-"\"||\" operator.");
+			...
 		}
 
 		if (($state != SCST_PAX_S && $state != SCST_SED_E && $state != SCST_CASE_LABEL)) {
-			checkline_mk_absolute_pathname($line, $shellword);
+			...
 		}
 
 		if (($state == SCST_INSTALL_D || $state == SCST_MKDIR) && $shellword =~ m"^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/") {
-			$line->log_warning("Please use AUTO_MKDIRS instead of "
-				. (($state == SCST_MKDIR) ? "\${MKDIR}" : "\${INSTALL} -d")
-				. ".");
-			$line->explain_warning(
-"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
-"mentioned in the PLIST. If you need additional directories, specify",
-"them in INSTALLATION_DIRS, which is a list of directories relative to",
-"\${PREFIX}.");
+			...
 		}
 
-		if (($state == SCST_INSTALL_DIR || $state == SCST_INSTALL_DIR2) && $shellword !~ regex_mk_shellvaruse && $shellword =~ m"^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)") {
-			my ($dirname) = ($1);
-
-			$line->log_note("You can use AUTO_MKDIRS=yes or INSTALLATION_DIRS+= ${dirname} instead of this command.");
-			$line->explain_note(
-"This saves you some typing. You also don't have to think about which of",
-"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
-"takes care of that.",
-"",
-"Note that you should only do this if the package creates _all_",
-"directories it needs before trying to install files into them.",
-"",
-"Many packages include a list of all needed directories in their PLIST",
-"file. In that case, you can just set AUTO_MKDIRS=yes and be done.");
+		if (($state == SCST_INSTALL_DIR || $state == SCST_INSTALL_DIR2) && $shellword !~ regex_mk_shellvaruse && $shellword =~ m"") {
+			...
 		}
 
 		if ($state == SCST_INSTALL_DIR2 && $shellword =~ m"^\$") {
@@ -909,7 +702,7 @@ sub checkline_mk_shelltext($$) {
 			$line->explain_warning(
 "The -pe option tells pax to preserve the ownership of the files, which",
 "means that the installed files will belong to the user that has built",
-"the package. That's a Bad Thing.");
+"the package.");
 		}
 
 		if ($state == SCST_PAX_S || $state == SCST_SED_E) {
