@@ -206,6 +206,9 @@ func reCompile(re string) *regexp.Regexp {
 func match(s, re string) []string {
 	return reCompile(re).FindStringSubmatch(s)
 }
+func match0(s, re string) bool {
+	return match(s, re) != nil
+}
 func match1(s, re string) (bool, string) {
 	if m := match(s, re); m != nil {
 		return true, m[1]
