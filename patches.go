@@ -227,7 +227,7 @@ type transition struct {
 }
 
 var patchTransitions = map[State][]transition{
-	PST_START: []transition{
+	PST_START: {
 		{rePatchRcsid, PST_CENTER, func(ctx *CheckPatchContext) {
 			checklineRcsid(ctx.line, ``, "")
 		}},
@@ -236,7 +236,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CENTER: []transition{
+	PST_CENTER: {
 		{rePatchEmpty, PST_TEXT, func(ctx *CheckPatchContext) {
 			//
 		}},
@@ -260,7 +260,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_TEXT: []transition{
+	PST_TEXT: {
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
 			if !ctx.seenComment {
 				ctx.expectComment()
@@ -279,7 +279,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CTX_FILE_ADD: []transition{
+	PST_CTX_FILE_ADD: {
 		{rePatchCtxFileAdd, PST_CTX_HUNK, func(ctx *CheckPatchContext) {
 			ctx.currentFilename = &ctx.m[1]
 			ctx.currentFiletype = new(FileType)
@@ -290,7 +290,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CTX_HUNK: []transition{
+	PST_CTX_HUNK: {
 		{rePatchCtxHunk, PST_CTX_HUNK_DEL, func(ctx *CheckPatchContext) {
 			ctx.hunks++
 		}},
@@ -298,7 +298,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CTX_HUNK_DEL: []transition{
+	PST_CTX_HUNK_DEL: {
 		{rePatchCtxHunkDel, PST_CTX_LINE_DEL0, func(ctx *CheckPatchContext) {
 			ctx.dellines = new(int)
 			if ctx.m[2] != "" {
@@ -309,7 +309,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CTX_LINE_DEL0: []transition{
+	PST_CTX_LINE_DEL0: {
 		{rePatchCtxLineContext, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
 			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
 		}},
@@ -330,7 +330,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CTX_LINE_DEL: []transition{
+	PST_CTX_LINE_DEL: {
 		{rePatchCtxLineContext, PST_CTX_LINE_DEL, func(ctx *CheckPatchContext) {
 			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
 		}},
@@ -347,7 +347,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CTX_LINE_ADD0: []transition{
+	PST_CTX_LINE_ADD0: {
 		{rePatchCtxLineContext, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
 			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
 		}},
@@ -362,7 +362,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_CTX_LINE_ADD: []transition{
+	PST_CTX_LINE_ADD: {
 		{rePatchCtxLineContext, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
 			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
 		}},
@@ -379,7 +379,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_UNI_FILE_ADD: []transition{
+	PST_UNI_FILE_ADD: {
 		{rePatchUniFileAdd, PST_UNI_HUNK, func(ctx *CheckPatchContext) {
 			ctx.currentFilename = new(string)
 			*ctx.currentFilename = ctx.m[1]
@@ -391,7 +391,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_UNI_HUNK: []transition{
+	PST_UNI_HUNK: {
 		{rePatchUniHunk, PST_UNI_LINE, func(ctx *CheckPatchContext) {
 			m := ctx.m
 			ctx.dellines = new(int)
@@ -429,7 +429,7 @@ var patchTransitions = map[State][]transition{
 		}},
 	},
 
-	PST_UNI_LINE: []transition{
+	PST_UNI_LINE: {
 		{rePatchUniLineDel, PST_UNI_LINE, func(ctx *CheckPatchContext) {
 			ctx.checkHunkLine(1, 0, PST_UNI_HUNK)
 		}},
