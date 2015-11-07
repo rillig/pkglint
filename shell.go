@@ -365,7 +365,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 
 		state = nextState(line, state, shellword)
 	}
-	
+
 	if !match0(rest, `^\s*$`) {
 		line.logError("Internal pkglint error: state=%v, rest=%v", state, rest)
 	}

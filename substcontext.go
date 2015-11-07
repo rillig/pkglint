@@ -39,7 +39,7 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	}
 
 	var varbase, varparam string
-	if m,  varparam := match1(varname, `^SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD)\.([\-\w_]+)$`); m {
+	if m, varparam := match1(varname, `^SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD)\.([\-\w_]+)$`); m {
 		if self.id == nil {
 			line.logWarning("SUBST_CLASSES should come before the definition of %q.", varname)
 			self.id = &varparam

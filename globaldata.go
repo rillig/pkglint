@@ -250,7 +250,7 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 
 		if state == 3 {
 			if m, pkgname, comment := match2(text, `\to\s(\S+)(?:\s*(.+))?$`); m {
-				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m  {
+				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
 					line.logWarning("Invalid package name %v", pkgname)
@@ -282,19 +282,19 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 		}
 
 		if m, action, pkgpath, version, author, date := match5(text, `^\t(Updated) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
-			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+			changes = append(changes, Change{line, action, pkgpath, version, author, date})
 
-		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
-			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
+			changes = append(changes, Change{line, action, pkgpath, version, author, date})
 
-		} else if m, action, pkgpath, author, date := match4(text, `^\t(Removed) (\S+) (?:successor (\S+) )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
-			changes = append(changes, Change{line, action, pkgpath,"",author,date})
+		} else if m, action, pkgpath, author, date := match4(text, `^\t(Removed) (\S+) (?:successor (\S+) )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
+			changes = append(changes, Change{line, action, pkgpath, "", author, date})
 
-		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
-			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
+			changes = append(changes, Change{line, action, pkgpath, version, author, date})
 
-		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
-			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
+			changes = append(changes, Change{line, action, pkgpath, version, author, date})
 
 		} else {
 			line.logWarning("Unknown doc/CHANGES line: %v", text)

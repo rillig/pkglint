@@ -15,7 +15,7 @@ func (ctx *ExpectContext) currentLine() *Line {
 
 func (ctx *ExpectContext) advanceIfMatches(re string) []string {
 	if ctx.index < len(ctx.lines) {
-		if m := match(ctx.lines[ctx.index].text, re);m!=nil {
+		if m := match(ctx.lines[ctx.index].text, re); m != nil {
 			ctx.index++
 			return m
 		}
