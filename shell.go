@@ -359,16 +359,17 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		st.checkPipeExitcode()
 		st.checkSetE(setE)
 
-		//AAAAAASDFDHFJDFSDGSDGSDGSD
-
-		if state == SCST_SET && match0(shellword, `^-.*e`) {
-			setE = true
-		}
-		if state == SCST_START && shellword == "${RUN}" {
+		if (state == SCST_SET && match0(shellword, `^-.*e`)) || (state == SCST_START && shellword == "${RUN}") {
 			setE = true
 		}
 
+		state = nextState(line, state, shellword)
 	}
+	
+	if !match0(rest, `^\s*$`) {
+		line.logError("Internal pkglint error: state=%v, rest=%v", state, rest)
+	}
+
 }
 
 func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
@@ -680,5 +681,110 @@ func (msline *MkShellLine) checkCommandUse(shellcmd string) {
 			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
 			"you should use",
 			"\tcd ${WRKSRC} && ${PAX} -wr * ${PREFIX}/foodir")
+	}
+}
+
+func nextState(line *Line, state ShellCommandState, shellword string) ShellCommandState {
+	switch {
+	case shellword == ";;":
+		return SCST_CASE_LABEL
+	case state == SCST_CASE_LABEL_CONT && shellword == "|":
+		return SCST_CASE_LABEL
+	case match0(shellword, `^[;&\|]+$`):
+		return SCST_START
+	case state == SCST_START:
+		switch shellword {
+		case "${INSTALL}":
+			return SCST_INSTALL
+		case "${MKDIR}":
+			return SCST_MKDIR
+		case "${PAX}":
+			return SCST_PAX
+		case "${SED}":
+			return SCST_SED
+		case "${ECHO}", "echo":
+			return SCST_ECHO
+		case "${RUN}", "then", "else", "do", "(":
+			return SCST_START
+		case "set":
+			return SCST_SET
+		case "if", "elif", "while":
+			return SCST_COND
+		case "case":
+			return SCST_CASE
+		case "for":
+			return SCST_FOR
+		default:
+			switch {
+			case match0(shellword, `^\$\{INSTALL_[A-Z]+_DIR\}$`):
+				return SCST_INSTALL_DIR
+			case match0(shellword, reShVarassign):
+				return SCST_START
+			default:
+				return SCST_CONT
+			}
+		}
+	case state == SCST_MKDIR:
+		return SCST_MKDIR
+	case state == SCST_INSTALL && shellword == "-d":
+		return SCST_INSTALL_D
+	case state == SCST_INSTALL, state == SCST_INSTALL_D:
+		if match0(shellword, `^-[ogm]$`) {
+			return SCST_CONT // XXX: why not state?
+		}
+		return state
+	case state == SCST_INSTALL_DIR && strings.HasPrefix(shellword, "-"):
+		return SCST_CONT
+	case state == SCST_INSTALL_DIR && strings.HasPrefix(shellword, "$"):
+		return SCST_INSTALL_DIR2
+	case state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2:
+		return state
+	case state == SCST_PAX && shellword == "-s":
+		return SCST_PAX_S
+	case state == SCST_PAX && match0(shellword, `^-`):
+		return SCST_PAX
+	case state == SCST_PAX:
+		return SCST_CONT
+	case state == SCST_PAX_S:
+		return SCST_PAX
+	case state == SCST_SED && shellword == "-e":
+		return SCST_SED_E
+	case state == SCST_SED && match0(shellword, `^-`):
+		return SCST_SED
+	case state == SCST_SED:
+		return SCST_CONT
+	case state == SCST_SED_E:
+		return SCST_SED
+	case state == SCST_SET:
+		return SCST_SET_CONT
+	case state == SCST_SET_CONT:
+		return SCST_SET_CONT
+	case state == SCST_CASE:
+		return SCST_CASE_IN
+	case state == SCST_CASE_IN && shellword == "in":
+		return SCST_CASE_LABEL
+	case state == SCST_CASE_LABEL && shellword == "esac":
+		return SCST_CONT
+	case state == SCST_CASE_LABEL:
+		return SCST_CASE_LABEL_CONT
+	case state == SCST_CASE_LABEL_CONT && shellword == ")":
+		return SCST_START
+	case state == SCST_CONT:
+		return SCST_CONT
+	case state == SCST_COND:
+		return SCST_COND_CONT
+	case state == SCST_COND_CONT:
+		return SCST_COND_CONT
+	case state == SCST_FOR:
+		return SCST_FOR_IN
+	case state == SCST_FOR_IN && shellword == "in":
+		return SCST_FOR_CONT
+	case state == SCST_FOR_CONT:
+		return SCST_FOR_CONT
+	case state == SCST_ECHO:
+		return SCST_CONT
+	default:
+		line.logWarning("Internal pkglint error: state=%q, shellword=%q", state, shellword)
+		return state
 	}
 }
