@@ -1,31 +1,3 @@
-sub resolve_variable_rec1($$)
-sub resolve_variable_rec2($$)
-
-sub resolve_variable_rec1($$) {
-	my (varname, visited) = @_
-	opt_debug_trace and logDebug(NO_FILE, NO_LINES, "resolve_variable_rec1(varname)")
-
-	if (!exists(visited.{varname})) {
-		visited.{varname} = true
-		if (defined(pkgctx_vardef) && exists(pkgctx_vardef.{varname})) {
-			return resolve_variable_rec2(pkgctx_vardef.{varname}.get("value"), visited)
-		}
-		if (defined(mkctx_vardef) && exists(mkctx_vardef.{varname})) {
-			return resolve_variable_rec2(mkctx_vardef.{varname}.get("value"), visited)
-		}
-	}
-	return "\${varname}"
-}
-
-sub resolve_variable_rec2($$) {
-	my (string, visited) = @_
-	opt_debug_trace and logDebug(NO_FILE, NO_LINES, "resolve_variable_rec2(\"string\")")
-
-	my expanded = string
-	expanded =~ s/\$\{(\w+)\}/resolve_variable_rec1(1, visited)/eg
-	return expanded
-}
-
 sub expand_variable($) {
 	my (varname) = @_
 

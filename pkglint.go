@@ -527,3 +527,27 @@ func getVariableType(line *Line, varname string) *Type {
 	}
 	return gtype
 }
+
+func resolveVariableRefs(text string) string {
+	visited := make(map[string]bool) // To prevent endless loops
+
+	str := text
+	re := regexp.MustCompile(`\$\{(\w+)\}`)
+	for {
+		replaced := re.ReplaceAllStringFunc(str, func(varname string) string {
+			if !visited[varname] {
+				visited[varname] = true
+				if G.pkgContext != nil && G.pkgContext.vardef[varname] != nil {
+					return G.pkgContext.vardef[varname].extra["value"].(string)
+				}
+				if G.mkContext != nil && G.mkContext.vardef[varname] != nil {
+					return G.mkContext.vardef[varname].extra["value"].(string)
+				}
+			}
+			return fmt.Sprintf("${%s}", varname)
+		})
+		if replaced == str {
+			return replaced
+		}
+	}
+}
