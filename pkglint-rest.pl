@@ -106,19 +106,6 @@ sub checkline_mk_cond($$) {
 	// of tree_match.
 }
 
-sub checkfile_mk($) {
-	my (fname) = @_
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile_mk()")
-
-	checkperms(fname)
-	my lines = load_lines(fname, true) or return logError(fname, NO_LINE_NUMBER, "Cannot be read.")
-
-	parselines_mk(lines)
-	checklines_mk(lines)
-	autofix(lines)
-}
-
 sub checkfile_package_Makefile($$) {
 	my (fname, lines) = @_
 

@@ -763,3 +763,17 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 			"For example, \"../../misc/screen\" is a valid relative pathname.")
 	}
 }
+
+func checkfileMk(fname string) {
+	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileMk()")
+
+	checkperms(fname)
+	lines := loadNonemptyLines(fname,true)
+	if lines == nil {
+		return
+		}
+
+	parselinesMk(lines)
+	checklinesMk(lines)
+	autofix(lines)
+}
