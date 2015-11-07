@@ -10,17 +10,17 @@ func checkfileDescr(fname string) {
 		maxlines = 24
 	)
 
-	_ = GlobalVars.opts.optDebugTrace && logDebugF(fname, NO_LINES, "checkfile_DESCR()")
+	_ = GlobalVars.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfile_DESCR()")
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)
 	if err != nil {
-		logErrorF(NO_FILE, NO_LINES, "Cannot be read.")
+		logError(NO_FILE, NO_LINES, "Cannot be read.")
 		return
 	}
 
 	if len(lines) == 0 {
-		logErrorF(NO_FILE, NO_LINES, "Must not be empty.")
+		logError(NO_FILE, NO_LINES, "Must not be empty.")
 		return
 	}
 
@@ -29,7 +29,7 @@ func checkfileDescr(fname string) {
 		checklineTrailingWhitespace(line)
 		checklineValidCharacters(line, reValidchars)
 		if strings.Contains(line.text, "${") {
-			line.logWarningF("Variables are not expanded in the DESCR file.")
+			line.logWarning("Variables are not expanded in the DESCR file.")
 		}
 	}
 	checklinesTrailingEmptyLines(lines)
@@ -37,7 +37,7 @@ func checkfileDescr(fname string) {
 	if len(lines) > maxlines {
 		line := lines[maxlines]
 
-		line.logWarningF("File too long (should be no more than %d lines).", maxlines)
+		line.logWarning("File too long (should be no more than %d lines).", maxlines)
 		line.explainWarning(
 			`A common terminal size is 80x25 characters. The DESCR file should
 fit on one screen. It is also intended to give a _brief_ summary

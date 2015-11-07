@@ -12,7 +12,7 @@ func checkglobalUnusedLicenses() {
 		licensepath := licensedir + "/" + licensename
 		if fileExists(licensepath) {
 			if !GlobalVars.ipcUsedLicenses[licensename] {
-				logWarningF(licensepath, NO_LINES, "This license seems to be unused.")
+				logWarning(licensepath, NO_LINES, "This license seems to be unused.")
 			}
 		}
 	}

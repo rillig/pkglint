@@ -35,7 +35,7 @@ func mustMatch(pattern string, s string) []string {
 func isEmptyDir(fname string) bool {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		logFatalF(fname, NO_LINES, "Cannot be read.")
+		logFatal(fname, NO_LINES, "Cannot be read.")
 	}
 	for _, dirent := range dirents {
 		name := dirent.Name()
@@ -53,7 +53,7 @@ func isEmptyDir(fname string) bool {
 func getSubdirs(fname string) []string {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		logFatalF(fname, NO_LINES, "Cannot be read.")
+		logFatal(fname, NO_LINES, "Cannot be read.")
 	}
 
 	subdirs := make([]string, 0)
@@ -88,7 +88,7 @@ func isCommitted(fname string) bool {
 func checkPermissions(fname string) {
 	st, err := os.Stat(fname)
 	if err != nil && st.Mode().IsRegular() && st.Mode()&0111 != 0 {
-		logWarningF(fname, NO_LINES, "Should not be executable.")
+		logWarning(fname, NO_LINES, "Should not be executable.")
 	}
 }
 
@@ -274,7 +274,7 @@ func nilToZero(pi *int) int {
 func toInt(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
-		logFatalF(NO_FILE, NO_LINES, "Internal error: %q", err)
+		logFatal(NO_FILE, NO_LINES, "Internal error: %q", err)
 	}
 	return n
 }
@@ -288,6 +288,6 @@ func newStr(s string) *string {
 }
 
 func matchAll(s, re string) ([]string, string) {
-	logErrorF(NO_FILE, NO_LINES, "matchAll: not implemented")
+	logError(NO_FILE, NO_LINES, "matchAll: not implemented")
 	return make([]string, 0), ""
 }

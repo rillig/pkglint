@@ -23,11 +23,11 @@ func CheckvartypeLicense(line *Line, varname, value string) {
 		}
 
 		if !fileExists(licenseFile) {
-			line.logWarningF("License file %s does not exist.", normalizePathname(licenseFile))
+			line.logWarning("License file %s does not exist.", normalizePathname(licenseFile))
 		}
 
 		if deprecatedLicenses[license] {
-			line.logWarningF("License %s is deprecated.", license)
+			line.logWarning("License %s is deprecated.", license)
 		}
 	}
 }
@@ -37,20 +37,20 @@ func CheckvartypeMailAddress(line *Line, value string) {
 		_, domain := m[1], m[2]
 
 		if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
-			line.logWarningF("Please write NetBSD.org instead of %q.", domain)
+			line.logWarning("Please write NetBSD.org instead of %q.", domain)
 		}
 		if match(value, `(?i)^(tech-pkg|packages)\@NetBSD\.org$`) != nil {
-			line.logErrorF("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
+			line.logError("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 		}
 
 	} else {
-		line.logWarningF("\"%s\" is not a valid mail address.", value)
+		line.logWarning("\"%s\" is not a valid mail address.", value)
 	}
 }
 
 func CheckvartypeMessage(line *Line, varname, value string) {
 	if match(value, `^[\"'].*[\"']$`) != nil {
-		line.logWarningF("%s should not be quoted.", varname)
+		line.logWarning("%s should not be quoted.", varname)
 		line.explainWarning(
 			"The quoting is only needed for variables which are interpreted as",
 			"multiple words (or, generally speaking, a list of something). A single",
@@ -64,7 +64,7 @@ func CheckvartypeMessage(line *Line, varname, value string) {
 
 func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
 	if varvalue != varvalueNovar {
-		_ = GlobalVars.opts.optDebugUnchecked && line.logDebugF("Unchecked option name: %q", varvalue)
+		_ = GlobalVars.opts.optDebugUnchecked && line.logDebug("Unchecked option name: %q", varvalue)
 		return
 	}
 
@@ -72,7 +72,7 @@ func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
 		optname := m[1]
 
 		if GlobalVars.globalData.pkgOptions[optname] == "" {
-			line.logWarningF("Unknown option \"%s\".", optname)
+			line.logWarning("Unknown option \"%s\".", optname)
 			line.explainWarning(
 				"This option is not documented in the mk/defaults/options.description",
 				"file. If this is not a typo, please think of a brief but precise",
@@ -83,15 +83,15 @@ func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
 	}
 
 	if match(varvalue, `^-?([a-z][-0-9a-z_\+]*)$`) != nil {
-		line.logWarningF("Use of the underscore character in option names is deprecated.")
+		line.logWarning("Use of the underscore character in option names is deprecated.")
 		return
 	}
 
-	line.logErrorF("Invalid option name.")
+	line.logError("Invalid option name.")
 }
 
 func CheckvartypePrefixPathname(line *Line, value string) {
 	if m := match(value, `^man/(.*)`); m != nil {
-		line.logWarningF("Please use \"${PKGMANDIR}/%s\" instead of \"%s\".", m[1], value)
+		line.logWarning("Please use \"${PKGMANDIR}/%s\" instead of \"%s\".", m[1], value)
 	}
 }

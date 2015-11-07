@@ -73,12 +73,12 @@ func (self *GlobalData) loadDistSites() {
 				if varname != "" {
 					url2name[m[1]] = varname
 				} else {
-					line.logErrorF("Lonely URL found.")
+					line.logError("Lonely URL found.")
 				}
 			}
 		} else if match(text, `^(?:#.*|\s*)$`) != nil || strings.Contains(text, "BSD_SITES_MK") {
 		} else {
-			line.logFatalF("Unknown line type.")
+			line.logFatal("Unknown line type.")
 		}
 	}
 
@@ -86,7 +86,7 @@ func (self *GlobalData) loadDistSites() {
 	names["MASTER_SITE_SUSE_UPD"] = true
 	names["MASTER_SITE_LOCAL"] = true
 
-	_ = GlobalVars.opts.optDebugMisc && logDebugF(fname, NO_LINES, "Loaded %d MASTER_SITE_* definitions.", len(url2name))
+	_ = GlobalVars.opts.optDebugMisc && logDebug(fname, NO_LINES, "Loaded %d MASTER_SITE_* definitions.", len(url2name))
 	self.masterSiteUrls = url2name
 	self.masterSiteVars = names
 }
@@ -101,7 +101,7 @@ func (self *GlobalData) loadPkgOptions() {
 			optname, optdescr := m[1], m[2]
 			options[optname] = optdescr
 		} else {
-			line.logFatalF("Unknown line format.")
+			line.logFatal("Unknown line format.")
 		}
 	}
 	self.pkgOptions = options
@@ -122,7 +122,7 @@ func (self *GlobalData) loadTools() {
 		}
 	}
 	if len(toolFiles) <= 1 {
-		logFatalF(toolFiles[0], NO_LINES, "Too few tool files files.")
+		logFatal(toolFiles[0], NO_LINES, "Too few tool files files.")
 	}
 
 	tools := make(map[string]bool)
@@ -170,7 +170,7 @@ func (self *GlobalData) loadTools() {
 				varname, value := m[1], m[3]
 
 				if varname == "USE_TOOLS" {
-					_ = GlobalVars.opts.optDebugTools && line.logDebugF("[condDepth=%d] %s", condDepth, value)
+					_ = GlobalVars.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
 							if match(tool, reUnresolvedVar) == nil && tools[tool] {
@@ -204,12 +204,12 @@ func (self *GlobalData) loadTools() {
 	}
 
 	if GlobalVars.opts.optDebugTools {
-		logDebugF(NO_FILE, NO_LINES, "tools: %v", tools)
-		logDebugF(NO_FILE, NO_LINES, "vartools: %v", vartools)
-		logDebugF(NO_FILE, NO_LINES, "predefinedTools: %v", predefinedTools)
-		logDebugF(NO_FILE, NO_LINES, "varnameToToolname: %v", varnameToToolname)
+		logDebug(NO_FILE, NO_LINES, "tools: %v", tools)
+		logDebug(NO_FILE, NO_LINES, "vartools: %v", vartools)
+		logDebug(NO_FILE, NO_LINES, "predefinedTools: %v", predefinedTools)
+		logDebug(NO_FILE, NO_LINES, "varnameToToolname: %v", varnameToToolname)
 	}
-	_ = GlobalVars.opts.optDebugMisc && logDebugF(NO_FILE, NO_LINES, "systemBuildDefs: %v", systemBuildDefs)
+	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "systemBuildDefs: %v", systemBuildDefs)
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
@@ -263,10 +263,10 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 				if m = match(pkgname, rePkgname); m != nil {
 					updates = append(updates, SuggestedUpdate{line, m[1], m[2], comment})
 				} else {
-					line.logWarningF("Invalid package name %v", pkgname)
+					line.logWarning("Invalid package name %v", pkgname)
 				}
 			} else {
-				line.logWarningF("Invalid line format %v", text)
+				line.logWarning("Invalid line format %v", text)
 			}
 		}
 	}
@@ -302,7 +302,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 		} else if m := match(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
 			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
 		} else {
-			line.logWarningF("Unknown doc/CHANGES line: %v", text)
+			line.logWarning("Unknown doc/CHANGES line: %v", text)
 			line.explainWarning("See mk/misc/developer.mk for the rules.")
 		}
 	}
@@ -321,7 +321,7 @@ func (self *GlobalData) loadDocChanges() {
 	docdir := *GlobalVars.cwdPkgsrcdir + "/doc"
 	files, err := ioutil.ReadDir(docdir)
 	if err != nil {
-		logFatalF(docdir, NO_LINES, "Cannot be read.")
+		logFatal(docdir, NO_LINES, "Cannot be read.")
 	}
 
 	fnames := make([]string, 0)

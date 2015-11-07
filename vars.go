@@ -24,7 +24,7 @@ const (
 )
 
 func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) NeedsQuoting {
-	_ = GlobalVars.opts.optDebugTrace && line.logDebugF("variableNeedsQuoting: %s, %#v", varname, context)
+	_ = GlobalVars.opts.optDebugTrace && line.logDebug("variableNeedsQuoting: %s, %#v", varname, context)
 
 	vartype := getVariableType(line, varname)
 	if vartype == nil || context.vartype == nil {
@@ -61,7 +61,7 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 	wantList := context.vartype.isConsideredList() && (context.shellword == VUC_SHW_BACKT || context.extent != VUC_EXT_WORDPART)
 	haveList := vartype.isConsideredList()
 
-	_ = GlobalVars.opts.optDebugQuoting && line.logDebugF(
+	_ = GlobalVars.opts.optDebugQuoting && line.logDebug(
 		"variableNeedsQuoting: varname=%v, context=%v, type=%v, wantList=%v, haveList=%v",
 		varname, context, vartype, wantList, haveList)
 
@@ -105,6 +105,6 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 		return NQ_YES
 	}
 
-	_ = GlobalVars.opts.optDebugQuoting && line.logDebugF("Don't know whether :Q is needed for %v", varname)
+	_ = GlobalVars.opts.optDebugQuoting && line.logDebug("Don't know whether :Q is needed for %v", varname)
 	return NQ_DONT_KNOW
 }

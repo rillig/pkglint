@@ -1,7 +1,7 @@
 package main
 
 func notImplemented() {
-	logErrorF(NO_FILE, NO_LINES, "not implemented")
+	logError(NO_FILE, NO_LINES, "not implemented")
 }
 
 func checkperms(fname string) {

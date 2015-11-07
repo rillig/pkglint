@@ -22,7 +22,7 @@ import "strings"
 var vartypes = make(map[string]*Type)
 
 func getBasicType(typename string) *Type {
-	logErrorF(NO_FILE, NO_LINES, "getBasicType(%q): not implemented", typename)
+	logError(NO_FILE, NO_LINES, "getBasicType(%q): not implemented", typename)
 	return nil
 }
 

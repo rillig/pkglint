@@ -14,7 +14,7 @@ type MkShellLine struct {
 
 func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting bool) {
 	line := msline.line
-	_ = GlobalVars.opts.optDebugTrace && line.logDebugF("checklineMkShellword(%q, %q)", shellword, checkQuoting)
+	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShellword(%q, %q)", shellword, checkQuoting)
 
 	if shellword == "" {
 		return
@@ -29,10 +29,10 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 	}
 
 	if match(shellword, `\$\{PREFIX\}/man(?:$|/)`) != nil {
-		line.logWarningF("Please use ${PKGMANDIR} instead of \"man\".")
+		line.logWarning("Please use ${PKGMANDIR} instead of \"man\".")
 	}
 	if strings.Contains(shellword, "etc/rc.d") {
-		line.logWarningF("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
+		line.logWarning("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
 	type ShellwordState string
@@ -48,7 +48,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 	state := SWST_PLAIN
 outer:
 	for rest != "" {
-		_ = GlobalVars.opts.optDebugShell && line.logDebugF("shell state %s: %q", state, rest)
+		_ = GlobalVars.opts.optDebugShell && line.logDebug("shell state %s: %q", state, rest)
 
 		var m []string
 		switch {
@@ -77,10 +77,10 @@ outer:
 				if replacestart(&rest, &m, "^\\\\([\\\\`$])") {
 					stripped += m[1]
 				} else if replacestart(&rest, &m, `^(\\)`) {
-					line.logWarningF("Backslashes should be doubled inside backticks.")
+					line.logWarning("Backslashes should be doubled inside backticks.")
 					stripped += m[1]
 				} else if state == SWST_DQUOT_BACKT && replacestart(&rest, &m, `^"`) {
-					line.logWarningF("Double quotes inside backticks inside double quotes are error prone.")
+					line.logWarning("Double quotes inside backticks inside double quotes are error prone.")
 					line.explainWarning(
 						"According to the SUSv3, they produce undefined results.",
 						"",
@@ -92,7 +92,7 @@ outer:
 					panic(fmt.Sprintf("rest=%v", rest))
 				}
 			}
-			line.logErrorF("Unfinished backquotes: rest=%v", rest)
+			line.logError("Unfinished backquotes: rest=%v", rest)
 
 		endOfBackticks:
 			msline.checklineMkShelltext(line, stripped)
@@ -104,7 +104,7 @@ outer:
 			varname, mod := m[1], m[2]
 
 			if varname == "@" {
-				line.logWarningF("Please use \"${.TARGET}\" instead of \"$@\".")
+				line.logWarning("Please use \"${.TARGET}\" instead of \"$@\".")
 				line.explainWarning(
 					"The variable $@ can easily be confused with the shell variable of the",
 					"same name, which has a completely different meaning.")
@@ -119,7 +119,7 @@ outer:
 			case (state == SWST_SQUOT || state == SWST_DQUOT) && match(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`) != nil:
 				// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
 			case state == SWST_DQUOT && strings.HasSuffix(mod, ":Q"):
-				line.logWarningF("Please don't use the :Q operator in double quotes.")
+				line.logWarning("Please don't use the :Q operator in double quotes.")
 				line.explainWarning(
 					"Either remove the :Q or the double quotes. In most cases, it is more",
 					"appropriate to remove the double quotes.")
@@ -175,7 +175,7 @@ outer:
 				replacestart(&rest, &m, `^\$\$(\$)\$`):
 				shvarname := m[1]
 				if GlobalVars.opts.optWarnQuoting && checkQuoting {
-					line.logWarningF("Unquoted shell variable %q.", shvarname)
+					line.logWarning("Unquoted shell variable %q.", shvarname)
 					line.explainWarning(
 						"When a shell variable contains white-space, it is expanded (split into",
 						"multiple words) when it is written as $variable in a shell script.",
@@ -191,19 +191,19 @@ outer:
 						"\t# copies one file, as intended")
 				}
 			case replacestart(&rest, &m, `^\$\@`):
-				line.logWarningF("Please use %q instead of %q.", "${.TARGET}", "$@")
+				line.logWarning("Please use %q instead of %q.", "${.TARGET}", "$@")
 				line.explainWarning(
 					"It is more readable and prevents confusion with the shell variable of",
 					"the same name.")
 
 			case replacestart(&rest, &m, `^\$\$@`):
-				line.logWarningF("The $@ shell variable should only be used in double quotes.")
+				line.logWarning("The $@ shell variable should only be used in double quotes.")
 
 			case replacestart(&rest, &m, `^\$\$\?`):
-				line.logWarningF("The $? shell variable is often not available in \"set -e\" mode.")
+				line.logWarning("The $? shell variable is often not available in \"set -e\" mode.")
 
 			case replacestart(&rest, &m, `^\$\$\(`):
-				line.logWarningF("Invoking subshells via $(...) is not portable enough.")
+				line.logWarning("Invoking subshells via $(...) is not portable enough.")
 				line.explainWarning(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell. Please use backticks (`...`) as a replacement.")
@@ -236,12 +236,12 @@ outer:
 			case replacestart(&rest, &m, `^\$\$\{([0-9A-Za-z_]+)\}`),
 				replacestart(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)`):
 				shvarname := m[1]
-				_ = GlobalVars.opts.optDebugShell && line.logDebugF("checklineMkShellword: found double-quoted variable %q.", shvarname)
+				_ = GlobalVars.opts.optDebugShell && line.logDebug("checklineMkShellword: found double-quoted variable %q.", shvarname)
 			case replacestart(&rest, &m, `^\$\$`):
-				line.logWarningF("Unquoted $ or strange shell variable found.")
+				line.logWarning("Unquoted $ or strange shell variable found.")
 			case replacestart(&rest, &m, `^\\(.)`):
 				char := m[1]
-				line.logWarningF("Please use %q instead of %q.", "\\\\"+char, "\\"+char)
+				line.logWarning("Please use %q instead of %q.", "\\\\"+char, "\\"+char)
 				line.explainWarning(
 					"Although the current code may work, it is not good style to rely on",
 					"the shell passing \"\\${char}\" exactly as is, and not discarding the",
@@ -254,12 +254,12 @@ outer:
 	}
 
 	if match(rest, `^\s*$`) == nil {
-		line.logErrorF("Internal pkglint error: %q: rest=%q", state, rest)
+		line.logError("Internal pkglint error: %q: rest=%q", state, rest)
 	}
 }
 
 func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
-	_ = GlobalVars.opts.optDebugTrace && line.logDebugF("checklineMkShelltext: %v", shelltext)
+	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
 
 	type State string
 	const (
@@ -290,7 +290,7 @@ func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
 	)
 
 	if strings.Contains(shelltext, "${SED}") || strings.Contains(shelltext, "${MV}") {
-		line.logNoteF("Please use the SUBST framework instead of ${SED} and ${MV}.")
+		line.logNote("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		line.explainNote(
 			"When converting things, pay attention to \"#\" characters. In shell",
 			"commands make(1) does not interpret them as comment character, but",
@@ -304,7 +304,7 @@ func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
 	}
 
 	if m := match(shelltext, `^@*-(.*MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m != nil {
-		line.logNoteF("You don't need to use \"-\" before %v.", m[1])
+		line.logNote("You don't need to use \"-\" before %v.", m[1])
 	}
 
 	rest := shelltext
@@ -320,7 +320,7 @@ func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
 	for replacestart(&rest, &m, reShellword) {
 		shellword := m[1]
 
-		_ = GlobalVars.opts.optDebugShell && line.logDebugF("checklineMkShelltext state=%v shellword=%v", state, shellword)
+		_ = GlobalVars.opts.optDebugShell && line.logDebug("checklineMkShelltext state=%v shellword=%v", state, shellword)
 
 		msline.checklineMkShellword(shellword, !(state == S_CASE ||
 			state == S_FOR_CONT ||
@@ -332,7 +332,7 @@ func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
 		}
 
 		if state == S_COND && shellword == "cd" {
-			line.logErrorF("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+			line.logError("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 			line.explainError(
 				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 				"shell will exit, no matter if it is protected by an \"if\" or the",
@@ -344,7 +344,7 @@ func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
 		}
 
 		if (state == S_INSTALL_D || state == S_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
-			line.logWarningF("Please use AUTO_MKDIRS instead of %q.",
+			line.logWarning("Please use AUTO_MKDIRS instead of %q.",
 				ifelseStr(state == S_MKDIR, "${MKDIR}", "${INSTALL} -d"))
 			line.explainWarning(
 				"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
@@ -355,7 +355,7 @@ func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
 
 		if (state == S_INSTALL_DIR || state == S_INSTALL_DIR2) && match(shellword, reMkShellvaruse) == nil {
 			if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
-				line.logNoteF("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
+				line.logNote("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
 				line.explainNote(
 					"This saves you some typing. You also don't have to think about which of",
 					"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
@@ -395,7 +395,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 				"${SHCOMMENT}", "${STEP_MSG}",
 				"${WARNING_CAT}", "${WARNING_MSG}":
 			default:
-				line.logWarningF("The shell command %q should not be hidden.", cmd)
+				line.logWarning("The shell command %q should not be hidden.", cmd)
 				line.explainWarning(
 					"Hidden shell commands do not appear on the terminal or in the log file",
 					"when they are executed. When they fail, the error message cannot be",
@@ -405,7 +405,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	}
 
 	if strings.Contains(hidden, "-") {
-		line.logWarningF("The use of a leading \"-\" to suppress errors is deprecated.")
+		line.logWarning("The use of a leading \"-\" to suppress errors is deprecated.")
 		line.explainWarning(
 			"If you really want to ignore any errors from this command (including",
 			"all errors you never thought of), append \"|| ${TRUE}\" to the",
@@ -425,7 +425,7 @@ func (msline *MkShellLine) checkCommandStart(shellword string) {
 		// Just skip this one.
 
 	case msline.isForbiddenShellCommand(shellword):
-		line.logErrorF("%q must not be used in Makefiles.", shellword)
+		line.logError("%q must not be used in Makefiles.", shellword)
 		line.explainError(
 			"This command must appear in INSTALL scripts, not in the package",
 			"Makefile, so that the package also works if it is installed as a binary",
@@ -433,11 +433,11 @@ func (msline *MkShellLine) checkCommandStart(shellword string) {
 
 	case GlobalVars.globalData.tools[shellword]:
 		if !GlobalVars.mkContext.tools[shellword] && !GlobalVars.mkContext.tools["g"+shellword] {
-			line.logWarningF("The %q tool is used but not added to USE_TOOLS.", shellword)
+			line.logWarning("The %q tool is used but not added to USE_TOOLS.", shellword)
 		}
 
 		if GlobalVars.globalData.varRequiredTools[shellword] {
-			line.logWarningF("Please use ${%s} instead of %q.", GlobalVars.globalData.vartools[shellword], shellword)
+			line.logWarning("Please use ${%s} instead of %q.", GlobalVars.globalData.vartools[shellword], shellword)
 		}
 
 		checklineMkShellcmdUse(line, shellword)
@@ -456,10 +456,10 @@ func (msline *MkShellLine) checkCommandStart(shellword string) {
 		multiline := strings.Contains(line.lines, "--")
 
 		if semicolon {
-			line.logWarningF("A shell comment should not contain semicolons.")
+			line.logWarning("A shell comment should not contain semicolons.")
 		}
 		if multiline {
-			line.logWarningF("A shell comment does not stop at the end of line.")
+			line.logWarning("A shell comment does not stop at the end of line.")
 		}
 
 		if semicolon || multiline {
@@ -480,14 +480,14 @@ func (msline *MkShellLine) checkCommandStart(shellword string) {
 			vartype := GlobalVars.globalData.vartypes[vartool]
 			switch {
 			case plainTool != "" && GlobalVars.mkContext.tools[plainTool]:
-				line.logWarningF("The %q tool is used but not added to USE_TOOLS.", plainTool)
+				line.logWarning("The %q tool is used but not added to USE_TOOLS.", plainTool)
 			case vartype.basicType == "ShellCommand":
 				checklineMkShellcmdUse(line, shellword)
 			case GlobalVars.pkgContext.vardef[vartool] != nil:
 				// This command has been explicitly defined in the package; assume it to be valid.
 			default:
 				if GlobalVars.opts.optWarnExtra {
-					line.logWarningF("Unknown shell command %q.", shellword)
+					line.logWarning("Unknown shell command %q.", shellword)
 					line.explainWarning(
 						"If you want your package to be portable to all platforms that pkgsrc",
 						"supports, you should only use shell commands that are covered by the",

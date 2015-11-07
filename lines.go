@@ -60,25 +60,25 @@ func (self *Line) printSource(out io.Writer) {
 		}
 	}
 }
-func (self *Line) logFatalF(format string, args ...interface{}) bool {
+func (self *Line) logFatal(format string, args ...interface{}) bool {
 	self.printSource(os.Stderr)
-	return logFatalF(self.fname, self.lines, format, args...)
+	return logFatal(self.fname, self.lines, format, args...)
 }
-func (self *Line) logErrorF(format string, args ...interface{}) bool {
+func (self *Line) logError(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logErrorF(self.fname, self.lines, format, args...)
+	return logError(self.fname, self.lines, format, args...)
 }
-func (self *Line) logWarningF(format string, args ...interface{}) bool {
+func (self *Line) logWarning(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logWarningF(self.fname, self.lines, format, args...)
+	return logWarning(self.fname, self.lines, format, args...)
 }
-func (self *Line) logNoteF(format string, args ...interface{}) bool {
+func (self *Line) logNote(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logNoteF(self.fname, self.lines, format, args)
+	return logNote(self.fname, self.lines, format, args)
 }
-func (self *Line) logDebugF(format string, args ...interface{}) bool {
+func (self *Line) logDebug(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logDebugF(self.fname, self.lines, format, args...)
+	return logDebug(self.fname, self.lines, format, args...)
 }
 func (self *Line) explainError(explanation ...string) {
 	explain(LL_ERROR, self.fname, self.lines, explanation)
@@ -141,7 +141,7 @@ func loadRawLines(fname string) ([]PhysLine, error) {
 	physlines := make([]PhysLine, 0)
 	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
-		logErrorF(fname, NO_LINES, "Cannot be read")
+		logError(fname, NO_LINES, "Cannot be read")
 		return nil, err
 	}
 	for lineno, physline := range strings.SplitAfter(string(rawtext), "\n") {
@@ -210,7 +210,7 @@ func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationL
 	}
 
 	if 0 < len(physlines) && !strings.HasSuffix(physlines[len(physlines)-1].textnl, "\n") {
-		logErrorF(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
+		logError(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
 	}
 
 	return loglines
@@ -235,22 +235,22 @@ func saveAutofixChanges(lines []*Line) {
 		}
 		err := ioutil.WriteFile(tmpname, []byte(text), 0777)
 		if err != nil {
-			logErrorF(tmpname, NO_LINES, "Cannot write.")
+			logError(tmpname, NO_LINES, "Cannot write.")
 			continue
 		}
 		err = os.Rename(tmpname, fname)
 		if err != nil {
-			logErrorF(fname, NO_LINES, "Cannot overwrite with auto-fixed content.")
+			logError(fname, NO_LINES, "Cannot overwrite with auto-fixed content.")
 			continue
 		}
-		logNoteF(fname, NO_LINES, "Has been auto-fixed. Please re-run pkglint.")
+		logNote(fname, NO_LINES, "Has been auto-fixed. Please re-run pkglint.")
 	}
 }
 
 func loadExistingLines(fname string, foldBackslashLines bool) []*Line {
 	lines, err := loadLines(fname, foldBackslashLines)
 	if lines == nil || err != nil {
-		logFatalF(fname, NO_LINES, "Cannot be read.")
+		logFatal(fname, NO_LINES, "Cannot be read.")
 	}
 	return lines
 }

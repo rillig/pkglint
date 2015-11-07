@@ -46,7 +46,7 @@ func TestPrintTable() {
 	printTable(os.Stdout, [][]string{{"hello", "world"}, {"how", "are", "you?"}})
 }
 func TestLogFatal() {
-	(&Line{fname: "fname", lines: "13"}).logFatalF("msg")
+	(&Line{fname: "fname", lines: "13"}).logFatal("msg")
 }
 func TestGetLogicalLine() {
 	var physlines = []PhysLine{{1, "first\\"}, {2, "second"}, {3, "third"}}
@@ -310,7 +310,7 @@ func explanationRelativeDirs() []string {
 func checkItem(fname string) {
 	st, err := os.Stat(fname)
 	if err != nil || (!st.Mode().IsDir() && !st.Mode().IsRegular()) {
-		logErrorF(fname, NO_LINES, "No such file or directory.")
+		logError(fname, NO_LINES, "No such file or directory.")
 		return
 	}
 	isDir := st.Mode().IsDir()
@@ -322,7 +322,7 @@ func checkItem(fname string) {
 	}
 	abs, err := filepath.Abs(currentDir)
 	if err != nil {
-		logFatalF(currentDir, NO_LINES, "Cannot determine absolute path.")
+		logFatal(currentDir, NO_LINES, "Cannot determine absolute path.")
 	}
 	absCurrentDir := filepath.ToSlash(abs)
 	GlobalVars.isWip = !GlobalVars.opts.optImport && match(absCurrentDir, `/wip/|/wip$`) != nil
@@ -335,7 +335,7 @@ func checkItem(fname string) {
 			*GlobalVars.curPkgsrcdir = dir
 			*GlobalVars.pkgContext.pkgpath, err = filepath.Rel(currentDir, currentDir+"/"+dir)
 			if err != nil {
-				logFatalF(currentDir, NO_LINES, "Cannot determine relative dir.")
+				logFatal(currentDir, NO_LINES, "Cannot determine relative dir.")
 			}
 		}
 	}
@@ -344,7 +344,7 @@ func checkItem(fname string) {
 	}
 
 	if *GlobalVars.cwdPkgsrcdir == "" {
-		logErrorF(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
+		logError(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
 		return
 	}
 
@@ -359,7 +359,7 @@ func checkItem(fname string) {
 	if isReg {
 		checkfile(fname)
 	} else if *GlobalVars.curPkgsrcdir == "" {
-		logErrorF(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
+		logError(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
 	} else if *GlobalVars.curPkgsrcdir == "../.." {
 		checkdirPackage()
 	} else if *GlobalVars.curPkgsrcdir == ".." {
@@ -367,7 +367,7 @@ func checkItem(fname string) {
 	} else if *GlobalVars.curPkgsrcdir == "." {
 		checkdirToplevel()
 	} else {
-		logErrorF(fname, NO_LINES, "Don't know how to check this directory.")
+		logError(fname, NO_LINES, "Don't know how to check this directory.")
 	}
 }
 
@@ -377,12 +377,12 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 	GlobalVars.pkgContext.included = make(map[string]*Line)
 
 	if !readMakefile(fname, lines, allLines) {
-		logErrorF(fname, NO_LINES, "Cannot be read.")
+		logError(fname, NO_LINES, "Cannot be read.")
 		return false, nil
 	}
 
 	if GlobalVars.opts.optDumpMakefile {
-		logDebugF(NO_FILE, NO_LINES, "Whole Makefile (with all included files) follows:")
+		logDebug(NO_FILE, NO_LINES, "Whole Makefile (with all included files) follows:")
 		for _, line := range lines {
 			fmt.Printf("%s\n", line.String())
 		}
@@ -405,10 +405,10 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 	}
 
 	_ = GlobalVars.opts.optDebugMisc &&
-		logDebugF(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *GlobalVars.pkgContext.distinfo_file) &&
-		logDebugF(NO_FILE, NO_LINES, "FILESDIR=%s", *GlobalVars.pkgContext.filesdir) &&
-		logDebugF(NO_FILE, NO_LINES, "PATCHDIR=%s", *GlobalVars.pkgContext.patchdir) &&
-		logDebugF(NO_FILE, NO_LINES, "PKGDIR=%s", *GlobalVars.pkgContext.pkgdir)
+		logDebug(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *GlobalVars.pkgContext.distinfo_file) &&
+		logDebug(NO_FILE, NO_LINES, "FILESDIR=%s", *GlobalVars.pkgContext.filesdir) &&
+		logDebug(NO_FILE, NO_LINES, "PATCHDIR=%s", *GlobalVars.pkgContext.patchdir) &&
+		logDebug(NO_FILE, NO_LINES, "PKGDIR=%s", *GlobalVars.pkgContext.pkgdir)
 
 	return true, lines
 }
@@ -448,7 +448,7 @@ func extractUsedVariables(line *Line, text string) []string {
 	}
 
 	if rest != "" {
-		_ = GlobalVars.opts.optDebugMisc && line.logDebugF("extractUsedVariables: rest=%v", rest)
+		_ = GlobalVars.opts.optDebugMisc && line.logDebug("extractUsedVariables: rest=%v", rest)
 	}
 	return result
 }
@@ -521,9 +521,9 @@ func getVariableType(line *Line, varname string) *Type {
 	}
 
 	if gtype != nil {
-		_ = GlobalVars.opts.optDebugVartypes && line.logDebugF("The guessed type of %v is %v.", varname, gtype)
+		_ = GlobalVars.opts.optDebugVartypes && line.logDebug("The guessed type of %v is %v.", varname, gtype)
 	} else {
-		_ = GlobalVars.opts.optDebugVartypes && line.logDebugF("No type definition found for %v.", varname)
+		_ = GlobalVars.opts.optDebugVartypes && line.logDebug("No type definition found for %v.", varname)
 	}
 	return gtype
 }

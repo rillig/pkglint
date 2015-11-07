@@ -29,7 +29,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 			includeFile = resolveVarsInRelativePath(m[1], true)
 			if match(includeFile, reUnresolvedVar) != nil {
 				if match(fname, `/mk/`) == nil {
-					line.logNoteF("Skipping include file %q. This may result in false warnings.", includeFile)
+					line.logNote("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
 			} else {
 				isIncludeLine = true
@@ -42,7 +42,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 					bl3File := m[1]
 
 					GlobalVars.pkgContext.bl3[bl3File] = line
-					_ = GlobalVars.opts.optDebugMisc && line.logDebugF("Buildlink3 file in package: %v", bl3File)
+					_ = GlobalVars.opts.optDebugMisc && line.logDebug("Buildlink3 file in package: %v", bl3File)
 				}
 			}
 		}
@@ -51,16 +51,16 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 			GlobalVars.pkgContext.included[includeFile] = line
 
 			if match(includeFile, `^\.\./[^./][^/]*/[^/]+`) != nil {
-				line.logWarningF("References to other packages should look like \"../../category/package\", not \"../package\".")
+				line.logWarning("References to other packages should look like \"../../category/package\", not \"../package\".")
 				line.explainWarning(explanationRelativeDirs()...)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
-				_ = GlobalVars.opts.optDebugInclude && line.logDebugF("Including %q sets seenMakefileCommon.", includeFile)
+				_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
 				GlobalVars.pkgContext.seenMakefileCommon = true
 			}
 			if m := match(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m != nil {
 				if m[2] != "buildlink3.mk" && m[2] != "options.mk" {
-					_ = GlobalVars.opts.optDebugInclude && line.logDebugF("Including %q sets seenMakefileCommon.", includeFile)
+					_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
 					GlobalVars.pkgContext.seenMakefileCommon = true
 				}
 			}
@@ -75,10 +75,10 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 					dirname = GlobalVars.currentDir
 				}
 				if !fileExists(dirname + "/" + includeFile) {
-					line.logErrorF("Cannot read %q.", dirname+"/"+includeFile)
+					line.logError("Cannot read %q.", dirname+"/"+includeFile)
 					return false
 				} else {
-					_ = GlobalVars.opts.optDebugInclude && line.logDebugF("Including %q.", dirname+"/"+includeFile)
+					_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including %q.", dirname+"/"+includeFile)
 					lengthBeforeInclude := len(allLines)
 					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
 						return false
@@ -88,7 +88,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 						makefileCommonLines := allLines[lengthBeforeInclude:]
 						relpath, err := filepath.Rel(*GlobalVars.cwdPkgsrcdir, fname)
 						if err != nil {
-							line.logErrorF("Cannot determine relative path.")
+							line.logError("Cannot determine relative path.")
 							return false
 						}
 						checkForUsedComment(makefileCommonLines, relpath)
@@ -101,7 +101,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
 
 			if op != "?=" || GlobalVars.pkgContext.vardef[varname] == nil {
-				_ = GlobalVars.opts.optDebugMisc && line.logDebugF("varassign(%q, %q, %q)", varname, op, value)
+				_ = GlobalVars.opts.optDebugMisc && line.logDebug("varassign(%q, %q, %q)", varname, op, value)
 				GlobalVars.pkgContext.vardef[varname] = line
 			}
 		}
@@ -128,7 +128,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 	}
 
 	insertLine := lines[lastCommentLine+1]
-	insertLine.logWarningF("Please add a line %q here.", expected)
+	insertLine.logWarning("Please add a line %q here.", expected)
 	insertLine.explainWarning(
 		`Since Makefile.common files usually don't have any comments and
 therefore not a clearly defined interface, they should at least contain
@@ -166,7 +166,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		tmp = strings.Replace(tmp, "${PKGDIR}", *GlobalVars.pkgContext.pkgdir, -1)
 	}
 
-	_ = GlobalVars.opts.optDebugMisc && logDebugF(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	return tmp
 }
 
@@ -243,7 +243,7 @@ func parselineMk(line *Line) {
 		line.extra["sources"] = sources
 		line.extra["comment"] = comment
 		if whitespace != "" {
-			line.logWarningF("Space before colon in dependency line.")
+			line.logWarning("Space before colon in dependency line.")
 		}
 		return
 	}
@@ -252,7 +252,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	line.logFatalF("Unknown Makefile line format.")
+	line.logFatal("Unknown Makefile line format.")
 }
 
 func parselinesMk(lines []*Line) {
@@ -263,7 +263,7 @@ func parselinesMk(lines []*Line) {
 
 func checklineMkText(line *Line, text string) {
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
-		line.logWarningF("$$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
+		line.logWarning("$$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}
 
 	if line.lines == "1" {
@@ -271,7 +271,7 @@ func checklineMkText(line *Line, text string) {
 	}
 
 	if strings.Contains(text, "${WRKSRC}/../") {
-		line.logWarningF("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
+		line.logWarning("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
 		line.explainWarning(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
 			"and INSTALL_DIRS are subdirectories of it.")
@@ -279,7 +279,7 @@ func checklineMkText(line *Line, text string) {
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.
 	if m, flag := match1(text, `\b(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R)\b`); m {
-		line.logWarningF("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+		line.logWarning("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
 	}
 
 	rest := text
@@ -298,7 +298,7 @@ func checklineMkText(line *Line, text string) {
 			instead = deprecatedVars[varcanon]
 		}
 		if instead != "" {
-			line.logWarningF("Use of %q is deprecated. %s", varname, instead)
+			line.logWarning("Use of %q is deprecated. %s", varname, instead)
 		}
 	}
 }

@@ -49,30 +49,30 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 	}
 }
 
-func logFatalF(fname, lineno, format string, args ...interface{}) bool {
+func logFatal(fname, lineno, format string, args ...interface{}) bool {
 	message := fmt.Sprintf(format, args...)
 	logMessage(LL_FATAL, fname, lineno, message)
 	os.Exit(1)
 	return false
 }
-func logErrorF(fname, lineno, format string, args ...interface{}) bool {
+func logError(fname, lineno, format string, args ...interface{}) bool {
 	message := fmt.Sprintf(format, args...)
 	logMessage(LL_ERROR, fname, lineno, message)
 	GlobalVars.errors++
 	return true
 }
-func logWarningF(fname, lineno, format string, args ...interface{}) bool {
+func logWarning(fname, lineno, format string, args ...interface{}) bool {
 	message := fmt.Sprintf(format, args...)
 	logMessage(LL_WARN, fname, lineno, message)
 	GlobalVars.warnings++
 	return true
 }
-func logNoteF(fname, lineno, format string, args ...interface{}) bool {
+func logNote(fname, lineno, format string, args ...interface{}) bool {
 	message := fmt.Sprintf(format, args...)
 	logMessage(LL_NOTE, fname, lineno, message)
 	return true
 }
-func logDebugF(fname, lineno, format string, args ...interface{}) bool {
+func logDebug(fname, lineno, format string, args ...interface{}) bool {
 	message := fmt.Sprintf(format, args...)
 	logMessage(LL_DEBUG, fname, lineno, message)
 	return true
