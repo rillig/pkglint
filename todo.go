@@ -54,6 +54,3 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 func checklineMkVartypeBasic(line *Line, varname, basicType, op, value, comment string, listContext, guessed bool) {
 	notImplemented()
 }
-func checklineRelativePath(line *Line, path string, _ bool) {
-	notImplemented()
-}

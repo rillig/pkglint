@@ -74,29 +74,6 @@ sub parse_licenses($) {
 // Subroutines to check a single line.
 //
 
-sub checkline_relative_path($$$) {
-	my (line, path, must_exist) = @_
-	my (res_path)
-
-	if (!is_wip && path =~ `/wip/`) {
-		line.logError("A pkgsrc package must not depend on any outside package.")
-	}
-	res_path = resolve_relative_path(path, true)
-	if (res_path =~ regex_unresolved) {
-		opt_debug_unchecked and line.logDebug("Unchecked path: \"${path}\".")
-	} else if (!-e (((res_path =~ `^/`) ? "" : "${current_dir}/") . res_path)) {
-		must_exist and line.logError("\"${res_path}\" does not exist.")
-	} else if (path =~ `^\.\./\.\./([^/]+)/([^/]+)(.*)`) {
-		my (cat, pkg, rest) = (1, 2, 3)
-	} else if (path =~ `^\.\./\.\./mk/`) {
-		// There need not be two directory levels for mk/ files.
-	} else if (path =~ `^\.\./mk/` && cur_pkgsrcdir == "..") {
-		// That's fine for category Makefiles.
-	} else if (path =~ `^\.\.`) {
-		line.logWarning("Invalid relative path \"${path}\".")
-	}
-}
-
 sub checkline_relative_pkgdir($$) {
 	my (line, path) = @_
 

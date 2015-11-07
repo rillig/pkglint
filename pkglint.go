@@ -641,9 +641,38 @@ func checklineMkAbsolutePathname(line *Line, text string) {
 	//
 	// Another context where absolute pathnames usually appear is in
 	// assignments like "bindir=/bin".
-	if m, path := match1(text, `(?:^|\$[({]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[\w/*]|\"[\w/*]*\"|'[\w/*]*')*)`);m {
+	if m, path := match1(text, `(?:^|\$[({]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[\w/*]|\"[\w/*]*\"|'[\w/*]*')*)`); m {
 		if match0(path, `^/\w`) {
 			checkwordAbsolutePathname(line, path)
 		}
+	}
+}
+
+func checklineRelativePath(line *Line, path string, mustExist bool) {
+	if !G.isWip && strstr(path, "/wip/") {
+		line.logError("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+	}
+
+	resolvedPath := resolveVarsInRelativePath(path, true)
+	if match0(resolvedPath, reUnresolvedVar) {
+		return
+	}
+
+	abs := ifelseStr(strings.HasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
+	if _, err := os.Stat(abs); err != nil {
+		if mustExist {
+			line.logError("%v does not exist.", resolvedPath)
+		}
+		return
+	}
+
+	switch {
+	case match0(path, `^\.\./\.\./[^/]+/[^/]`):
+	case strings.HasPrefix(path, "../../mk/"):
+		// There need not be two directory levels for mk/ files.
+	case match0(path, `^\.\./mk/`) && *G.curPkgsrcdir == "..":
+		// That's fine for category Makefiles.
+	case match0(path, `^\.\.`):
+		line.logWarning("Invalid relative path %q.", path)
 	}
 }
