@@ -79,7 +79,7 @@ sub checkline_length($$) {
 
 	if (length(line.text) > maxlength) {
 		line.logWarning("Line too long (should be no more than maxlength characters).")
-		line.explain_warning(
+		line.explainWarning(
 "Back in the old time, terminals with 80x25 characters were common.",
 "And this is still the default size of many terminal emulators.",
 "Moderately short lines also make reading easier.")
@@ -215,7 +215,7 @@ sub checkline_relative_pkgdir($$) {
 
 	} else {
 		line.logWarning("\"${path}\" is not a valid relative package directory.")
-		line.explain_warning(
+		line.explainWarning(
 "A relative pathname always starts with \"../../\", followed",
 "by a category, a slash and a the directory name of the package.",
 "For example, \"../../misc/screen\" is a valid relative pathname.")
@@ -250,14 +250,14 @@ sub checkline_mk_shellcmd_use($$) {
 
 		} elsif (exists(discouraged_install_commands.{shellcmd})) {
 			line.logWarning("The shell command \"${shellcmd}\" should not be used in the install phase.")
-			line.explain_warning(
+			line.explainWarning(
 "In the install phase, the only thing that should be done is to install",
 "the prepared files to their final location. The file's contents should",
 "not be changed anymore.")
 
 		} elsif (shellcmd eq "\${CP}") {
 			line.logWarning("\${CP} should not be used to install files.")
-			line.explain_warning(
+			line.explainWarning(
 "The \${CP} command is highly platform dependent and cannot overwrite",
 "files that don't have write permission. Please use \${PAX} instead.",
 "",
@@ -324,14 +324,14 @@ sub checkline_mk_shelltext($$) {
 
 		if (state == SCST_INSTALL_DIR2 && shellword =~ m"^\$") {
 			line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
-			line.explain_warning(
+			line.explainWarning(
 "Many implementations of install(1) can handle more, but pkgsrc aims at",
 "maximum portability.")
 		}
 
 		if (state == SCST_PAX && shellword eq "-pe") {
 			line.logWarning("Please use the -pp option to pax(1) instead of -pe.")
-			line.explain_warning(
+			line.explainWarning(
 "The -pe option tells pax to preserve the ownership of the files, which",
 "means that the installed files will belong to the user that has built",
 "the package.")
@@ -340,7 +340,7 @@ sub checkline_mk_shelltext($$) {
 		if (state == SCST_PAX_S || state == SCST_SED_E) {
 			if (false && shellword !~ m"^[\"\'].*[\"\']$") {
 				line.logWarning("Substitution commands like \"${shellword}\" should always be quoted.")
-				line.explain_warning(
+				line.explainWarning(
 "Usually these substitution commands contain characters like '*' or",
 "other shell metacharacters that might lead to lookup of matching",
 "filenames and then expand to more than one word.")
@@ -353,14 +353,14 @@ sub checkline_mk_shelltext($$) {
 
 		if (opt_warn_extra && state != SCST_CASE_LABEL_CONT && shellword eq "|") {
 			line.logWarning("The exitcode of the left-hand-side command of the pipe operator is ignored.")
-			line.explain_warning(
+			line.explainWarning(
 "If you need to detect the failure of the left-hand-side command, use",
 "temporary files to save the output of the command.")
 		}
 
 		if (opt_warn_extra && shellword eq ";" && state != SCST_COND_CONT && state != SCST_FOR_CONT && !set_e_mode) {
 			line.logWarning("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
-			line.explain_warning(
+			line.explainWarning(
 "Older versions of the NetBSD make(1) had run the shell commands using",
 "the \"-e\" option of /bin/sh. In 2004, this behavior has been changed to",
 "follow the POSIX conventions, which is to not use the \"-e\" option.",
@@ -488,7 +488,7 @@ sub checkline_mk_vardef($$$) {
 	my needed = { "=" => "s", "!=" => "s", "?=" => "d", "+=" => "a", ":=" => "s" }.{op}
 	if (index(perms, needed) == -1) {
 		line.logWarning("Permission [" . expand_permission(needed) . "] requested for ${varname}, but only [" . expand_permission(perms) . "] is allowed.")
-		line.explain_warning(
+		line.explainWarning(
 "The available permissions are:",
 "\tappend\t\tappend something using +=",
 "\tdefault\t\tset a default value using ?=",
@@ -527,81 +527,6 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 	}
 
 	my %type_dispatch = (
-		AwkCommand => AwkCommand,
-		BrokenIn => BrokenIn,
-		BuildlinkDepmethod => BuildlinkDepmethod,
-		BuildlinkDepth => BuildlinkDepth,
-		Category => Category,
-		CFlag => CFlag,
-
-		Comment => sub {
-			if (value eq "SHORT_DESCRIPTION_OF_THE_PACKAGE") {
-				line.logError("COMMENT must be set.")
-			}
-			if (value =~ m"^(a|an)\s+"i) {
-				line.logWarning("COMMENT should not begin with '1'.")
-			}
-			if (value =~ m"^[a-z]") {
-				line.logWarning("COMMENT should start with a capital letter.")
-			}
-			if (value =~ m"\.$") {
-				line.logWarning("COMMENT should not end with a period.")
-			}
-			if (length(value) > 70) {
-				line.logWarning("COMMENT should not be longer than 70 characters.")
-			}
-		},
-
-		Dependency => sub {
-			if (value =~ m"^(${regex_pkgbase})(<|=|>|<=|>=|!=|-)(${regex_pkgversion})$") {
-				my (depbase, depop, depversion) = (1, 2, 3)
-
-			} elsif (value =~ m"^(${regex_pkgbase})-(?:\[(.*)\]\*|(\d+(?:\.\d+)*(?:\.\*)?)(\{,nb\*\}|\*|)|(.*))?$") {
-				my (depbase, bracket, version, version_wildcard, other) = (1, 2, 3, 4, 5)
-
-				if (defined(bracket)) {
-					if (bracket ne "0-9") {
-						line.logWarning("Only [0-9]* is allowed in the numeric part of a dependency.")
-					}
-
-				} elsif (defined(version) && defined(version_wildcard) && version_wildcard ne "") {
-					// Great.
-
-				} elsif (defined(version)) {
-					line.logWarning("Please append {,nb*} to the version number of this dependency.")
-					line.explain_warning(
-"Usually, a dependency should stay valid when the PKGREVISION is",
-"increased, since those changes are most often editorial. In the",
-"current form, the dependency only matches if the PKGREVISION is",
-"undefined.")
-
-				} elsif (other eq "*") {
-					line.logWarning("Please use ${depbase}-[0-9]* instead of ${depbase}-*.")
-					line.explain_warning(
-"If you use a * alone, the package specification may match other",
-"packages that have the same prefix, but a longer name. For example,",
-"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
-
-				} else {
-					line.logError("Unknown dependency pattern \"${value}\".")
-				}
-
-			} elsif (value =~ m"\{") {
-				// Dependency patterns containing alternatives
-				// are just too hard to check.
-				opt_debug_unchecked and line.logDebug("Unchecked dependency pattern: ${value}")
-
-			} elsif (value ne value_novar) {
-				opt_debug_unchecked and line.logDebug("Unchecked dependency: ${value}")
-
-			} else {
-				line.logWarning("Unknown dependency format: ${value}")
-				line.explain_warning(
-"Typical dependencies have the form \"package>=2.5\", \"package-[0-9]*\"",
-"or \"package-3.141\".")
-			}
-		},
-
 		DependencyWithPath => sub {
 			if (value =~ regex_unresolved) {
 				// don't even try to check anything
@@ -631,11 +556,11 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 			} elsif (value =~ m":\.\./[^/]+$") {
 				line.logWarning("Dependencies should have the form \"../../category/package\".")
-				line.explain_warning(expl_relative_dirs)
+				line.explainWarning(expl_relative_dirs)
 
 			} else {
 				line.logWarning("Unknown dependency format.")
-				line.explain_warning(
+				line.explainWarning(
 "Examples for valid dependencies are:",
 "  package-[0-9]*:../../category/package",
 "  package>=3.41:../../category/package",
@@ -663,7 +588,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 			} else {
 				line.logWarning("\"${value}\" is not a valid emulation platform.")
-				line.explain_warning(
+				line.explainWarning(
 "An emulation platform has the form <OPSYS>-<MACHINE_ARCH>.",
 "OPSYS is the lower-case name of the operating system, and MACHINE_ARCH",
 "is the hardware architecture.",
@@ -867,7 +792,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 			} else {
 				line.logWarning("\"${value}\" is not a valid platform triple.")
-				line.explain_warning(
+				line.explainWarning(
 "A platform triple has the form <OPSYS>-<OS_VERSION>-<MACHINE_ARCH>.",
 "Each of these components may be a shell globbing expression.",
 "Examples: NetBSD-*-i386, *-*-*, Linux-*-*.")
@@ -888,7 +813,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			}
 			if (value_novar !~ m"^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$") {
 				line.logWarning("Invalid Python dependency \"${value}\".")
-				line.explain_warning(
+				line.explainWarning(
 "Python dependencies must be an identifier for a package, as specified",
 "in lang/python/versioned_dependencies.mk. This identifier may be",
 "followed by :build for a build-time only dependency, or by :link for",
@@ -907,7 +832,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 		Restricted => sub {
 			if (value ne "\${RESTRICTED}") {
 				line.logWarning("The only valid value for ${varname} is \${RESTRICTED}.")
-				line.explain_warning(
+				line.explainWarning(
 "These variables are used to control which files may be mirrored on FTP",
 "servers or CD-ROM collections. They are not intended to mark packages",
 "whose only MASTER_SITES are on ftp.NetBSD.org.")
@@ -942,7 +867,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 							ncommands++
 							if (ncommands > 1) {
 								line.logWarning("Each sed command should appear in an assignment of its own.")
-								line.explain_warning(
+								line.explainWarning(
 "For example, instead of",
 "    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
 "use",
@@ -1134,7 +1059,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 		Yes => sub {
 			if (value !~ m"^(?:YES|yes)(?:\s+#.*)?$") {
 				line.logWarning("${varname} should be set to YES or yes.")
-				line.explain_warning(
+				line.explainWarning(
 "This variable means \"yes\" if it is defined, and \"no\" if it is",
 "undefined. Even when it has the value \"no\", this means \"yes\".",
 "Therefore when it is defined, its value should correspond to its",
@@ -1194,7 +1119,7 @@ sub checkline_decreasing_order($$$) {
 
 		if (nextver >= ver) {
 			line.logWarning("The values for ${varname} should be in decreasing order.")
-			line.explain_warning(
+			line.explainWarning(
 "If they aren't, it may be possible that needless versions of packages",
 "are installed.")
 		}
@@ -1279,7 +1204,7 @@ sub checkline_mk_varassign($$$$$) {
 			// FIXME: What about these ones? They occur quite often.
 		} else {
 			opt_warn_extra and line.logWarning("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
-			opt_warn_extra and line.explain_warning(
+			opt_warn_extra and line.explainWarning(
 "The ?= operator is used to provide a default value to a variable. In",
 "pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
 "file. This file must be included explicitly. If a ?= operator appears",
@@ -1385,7 +1310,7 @@ sub checkline_mk_varassign($$$$$) {
 
 	if (value =~ m"^[^=]\@comment") {
 		line.logWarning("Please don't use \@comment in ${varname}.")
-		line.explain_warning(
+		line.explainWarning(
 "Here you are defining a variable containing \@comment. As this value",
 "typically includes a space as the last character you probably also used",
 "quotes around the variable. This can lead to confusion when adding this",
@@ -1605,7 +1530,7 @@ sub checklines_mk($) {
 
 			if (includefile =~ m"../Makefile$") {
 				line.logError("Other Makefiles must not be included directly.")
-				line.explain_warning(
+				line.explainWarning(
 "If you want to include portions of another Makefile, extract",
 "the common parts and put them into a Makefile.common. After",
 "that, both this one and the other package should include the",
@@ -1769,7 +1694,7 @@ sub checklines_mk($) {
 
 				} elsif (!exists(allowed_targets.{target})) {
 					line.logWarning("Unusual target \"${target}\".")
-					line.explain_warning(
+					line.explainWarning(
 "If you really want to define your own targets, you can \"declare\"",
 "them by inserting a \".PHONY: my-target\" line before this line. This",
 "will tell make(1) to not interpret this target's name as a filename.")
@@ -1783,7 +1708,7 @@ sub checklines_mk($) {
 
 		} elsif (text =~ m"^ ") {
 			line.logWarning("Makefile lines should not start with space characters.")
-			line.explain_warning(
+			line.explainWarning(
 "If you want this line to contain a shell program, use a tab",
 "character for indentation. Otherwise please remove the leading",
 "white-space.")
@@ -2077,7 +2002,7 @@ sub checkfile_DESCR($) {
 		my line = lines.[maxlines]
 
 		line.logWarning("File too long (should be no more than maxlines lines).")
-		line.explain_warning(
+		line.explainWarning(
 "A common terminal size is 80x25 characters. The DESCR file should",
 "fit on one screen. It is also intended to give a _brief_ summary",
 "about the package's contents.")
@@ -2189,7 +2114,7 @@ sub checkfile_distinfo($) {
 				}
 			} else {
 				line.logWarning("${chksum_fname} does not exist.")
-				line.explain_warning(
+				line.explainWarning(
 "All patches that are mentioned in a distinfo file should actually exist.",
 "What's the use of a checksum if there is no file to check?")
 			}
@@ -2245,12 +2170,12 @@ sub checkfile_MESSAGE($) {
 
 	if (@{lines} < 3) {
 		logWarning(fname, NO_LINE_NUMBER, "File too short.")
-		explain_warning(fname, NO_LINE_NUMBER, @explanation)
+		explainWarning(fname, NO_LINE_NUMBER, @explanation)
 		return
 	}
 	if (lines.[0].text ne "=" x 75) {
 		lines.[0].logWarning("Expected a line of exactly 75 \"=\" characters.")
-		explain_warning(fname, NO_LINE_NUMBER, @explanation)
+		explainWarning(fname, NO_LINE_NUMBER, @explanation)
 	}
 	checkline_rcsid(lines.[1], "")
 	foreach my line (@{lines}) {
@@ -2261,7 +2186,7 @@ sub checkfile_MESSAGE($) {
 	}
 	if (lines.[-1].text ne "=" x 75) {
 		lines.[-1].logWarning("Expected a line of exactly 75 \"=\" characters.")
-		explain_warning(fname, NO_LINE_NUMBER, @explanation)
+		explainWarning(fname, NO_LINE_NUMBER, @explanation)
 	}
 	checklines_trailing_empty_lines(lines)
 }
@@ -2399,7 +2324,7 @@ sub checkfile_package_Makefile($$) {
 
 			if (dewey_cmp(effective_pkgversion, "<", suggver)) {
 				effective_pkgname_line.logWarning("This package should be updated to ${suggver}${comment}.")
-				effective_pkgname_line.explain_warning(
+				effective_pkgname_line.explainWarning(
 "The wishlist for package updates in doc/TODO mentions that a newer",
 "version of this package is available.")
 			}
