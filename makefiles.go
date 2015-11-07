@@ -300,3 +300,295 @@ func checklineMkText(line *Line, text string) {
 		}
 	}
 }
+
+func checklinesMk(lines []*Line) {
+	allowedTargets := make(map[string]bool)
+	substcontext := &SubstContext{}
+
+	_ = G.opts.optDebugTrace && logDebug(lines[0].fname, NO_LINES, "checklinesMk()")
+
+	ctx := newMkContext()
+	G.mkContext = ctx
+
+	determineUsedVariables(lines)
+
+	prefixes := strings.Split("pre do post", " ")
+	actions := strings.Split("fetch extract patch tools wrapper configure build test install package clean", " ")
+	for _, prefix := range prefixes {
+		for _, action := range actions {
+			allowedTargets[prefix+"-"+action] = true
+		}
+	}
+
+	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
+	// are collected to make the order of the definitions irrelevant.
+
+	for _, line := range lines {
+		if line.extra["is_varassign"] == nil {
+			continue
+		}
+		varcanon := line.extra["varcanon"].(string)
+
+		if varcanon == "BUILD_DEFS" || varcanon == "PKG_GROUPS_VARS" || varcanon == "PKG_USERS_VARS" {
+			for _, varname := range splitOnSpace(line.extra["value"].(string)) {
+				G.mkContext.buildDefs[varname] = true
+				_ = G.opts.optDebugMisc && line.logDebug("%q is added to BUILD_DEFS.", varname)
+			}
+
+		} else if varcanon == "PLIST_VARS" {
+			for _, id := range splitOnSpace(line.extra["value"].(string)) {
+				G.mkContext.plistVars["PLIST."+id] = true
+				_ = G.opts.optDebugMisc && line.logDebug("PLIST.%s is added to PLIST_VARS.", id)
+				useVar(line, "PLIST."+id)
+			}
+
+		} else if varcanon == "USE_TOOLS" {
+			for _, tool := range splitOnSpace(line.extra["value"].(string)) {
+				tool = strings.Split(tool, ":")[0]
+				G.mkContext.tools[tool] = true
+				_ = G.opts.optDebugMisc && line.logDebug("%s is added to USE_TOOLS.", tool)
+			}
+
+		} else if varcanon == "SUBST_VARS.*" {
+			for _, svar := range splitOnSpace(line.extra["value"].(string)) {
+				useVar(line, varnameCanon(svar))
+				_ = G.opts.optDebugMisc && line.logDebug("varuse %s", svar)
+			}
+
+		} else if varcanon == "OPSYSVARS" {
+			for _, osvar := range splitOnSpace(line.extra["value"].(string)) {
+				useVar(line, osvar+".*")
+				defineVar(line, osvar)
+			}
+		}
+	}
+
+	// In the second pass, the actual checks are done.
+
+	checklineRcsid(lines[0], `^#\s+`, "# ")
+
+	for _, line := range lines {
+		text := line.text
+
+		checklineTrailingWhitespace(line)
+
+		if line.extra["is_empty"] != nil {
+			substcontext.finish(line)
+
+		} else if line.extra["is_comment"] != nil {
+			// No further checks.
+
+		} else if m := reCompile(reVarassign).FindStringSubmatchIndex(text); m != nil {
+			varname := text[m[2]:m[3]]
+			space1 := text[m[3]:m[4]]
+			op := text[m[4]:m[5]]
+			align := text[m[5]:m[6]]
+			value := line.extra["value"].(string)
+			comment := text[m[8]:m[9]]
+
+			if !match0(align, `^(\t*|[ ])$`) {
+				_ = G.opts.optWarnSpace && line.logNote("Alignment of variable values should be done with tabs, not spaces.")
+				prefix := varname + space1 + op
+				alignedLen := tabLength(prefix + align)
+				if alignedLen%8 == 0 {
+					tabalign := strings.Repeat("\t", ((alignedLen - tabLength(prefix) + 7) / 8))
+					line.replace(prefix+align, prefix+tabalign)
+				}
+			}
+			checklineMkVarassign(line, varname, op, value, comment)
+			substcontext.checkVarassign(line, varname, op, value)
+
+		} else if m, shellcmd := match1(text, reMkShellcmd); m {
+			checklineMkShellcmd(line, shellcmd)
+
+		} else if m, include, includefile := match2(text, reMkInclude); m {
+			_ = G.opts.optDebugInclude && line.logDebug("includefile=%s", includefile)
+			checklineRelativePath(line, includefile, include == "include")
+
+			if strings.HasSuffix(includefile, "../Makefile") {
+				line.logError("Other Makefiles must not be included directly.")
+				line.explainError(
+					"If you want to include portions of another Makefile, extract",
+					"the common parts and put them into a Makefile.common. After",
+					"that, both this one and the other package should include the",
+					"Makefile.common.")
+			}
+
+			if includefile == "../../mk/bsd.prefs.mk" {
+				if path.Base(line.fname) == "buildlink3.mk" {
+					line.logNote("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+				}
+				G.pkgContext.seen_bsd_prefs_mk = true
+			} else if includefile == "../../mk/bsd.fast.prefs.mk" {
+				G.pkgContext.seen_bsd_prefs_mk = true
+			}
+
+			if match0(includefile, `/x11-links/buildlink3\.mk$`) {
+				line.logError("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
+			}
+			if match0(includefile, `/jpeg/buildlink3\.mk$`) {
+				line.logError("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
+			}
+			if match0(includefile, `/intltool/buildlink3\.mk$`) {
+				line.logWarning("Please write \"USE_TOOLS+= intltool\" instead of this line.")
+			}
+			if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
+				line.logError("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
+			}
+
+		} else if match0(text, reMkSysinclude) {
+
+		} else if m, indent, directive, args, _ := match4(text, reMkCond); m {
+			regex_directives_with_args := `^(?:if|ifdef|ifndef|elif|for|undef)$`
+
+			if match0(directive, `^(?:endif|endfor|elif|else)$`) {
+				if len(ctx.indentation) > 1 {
+					ctx.popIndent()
+				} else {
+					line.logError("Unmatched .%s.", directive)
+				}
+			}
+
+			// Check the indentation
+			if indent != strings.Repeat(" ", ctx.indentDepth()) {
+				_ = G.opts.optWarnSpace && line.logNote("This directive should be indented by %d spaces.", ctx.indentDepth())
+			}
+
+			if directive == "if" && match0(args, `^!defined\([\w]+_MK\)$`) {
+				ctx.pushIndent(ctx.indentDepth())
+
+			} else if match0(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
+				ctx.pushIndent(ctx.indentDepth() + 2)
+			}
+
+			if match0(directive, regex_directives_with_args) && args == "" {
+				line.logError("\".%s\" requires arguments.", directive)
+
+			} else if !match0(directive, regex_directives_with_args) && args != "" {
+				line.logError("\".%s\" does not take arguments.", directive)
+
+				if directive == "else" {
+					line.logNote("If you meant \"else if\", use \".elif\".")
+				}
+
+			} else if directive == "if" || directive == "elif" {
+				checklineMkCond(line, args)
+
+			} else if directive == "ifdef" || directive == "ifndef" {
+				if match0(args, `\s`) {
+					line.logError("The \".%s\" directive can only handle _one_ argument.", directive)
+				} else {
+					line.logWarning("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
+						directive, ifelseStr(directive == "ifdef", "", "!"), args)
+				}
+
+			} else if directive == "for" {
+				if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
+					for _, forvar := range splitOnSpace(vars) {
+						if !G.isInternal && strings.HasPrefix(forvar, "_") {
+							line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
+						}
+
+						if match0(forvar, `^[_a-z][_a-z0-9]*$`) {
+							// Fine.
+						} else if match0(forvar, `[A-Z]`) {
+							line.logWarning(".for variable names should not contain uppercase letters.")
+						} else {
+							line.logError("Invalid variable name \"${var}\".")
+						}
+
+						ctx.forVars[forvar] = true
+					}
+
+					// Check if any of the value's types is not guessed.
+					guessed := GUESSED
+					for _, value := range splitOnSpace(values) {
+						if m, vname := match1(value, `^\$\{(.*)\}`); m {
+							vartype := getVariableType(line, vname)
+							if vartype != nil && !vartype.isGuessed() {
+								guessed = NOT_GUESSED
+							}
+						}
+					}
+
+					forLoopType := &Type{
+						LK_INTERNAL,
+						"Unchecked",
+						nil,
+						"",
+						[]AclEntry{{"*", "pu"}},
+						guessed,
+					}
+					forLoopContext := &VarUseContext{
+						VUC_TIME_LOAD,
+						forLoopType,
+						VUC_SHW_FOR,
+						VUC_EXT_WORD,
+					}
+					for _, fvar := range extractUsedVariables(line, values) {
+						checklineMkVaruse(line, fvar, "", forLoopContext)
+					}
+				}
+
+			} else if directive == "undef" && args != "" {
+				for _, uvar := range splitOnSpace(args) {
+					if ctx.forVars[uvar] {
+						line.logNote("Using \".undef\" after a \".for\" loop is unnecessary.")
+					}
+				}
+			}
+
+		} else if m, targets, _, dependencies, _ := match4(text, reMkDependency); m {
+			_ = G.opts.optDebugMisc && line.logDebug("targets=%v, dependencies=%v", targets, dependencies)
+			ctx.target = targets
+
+			for _, source := range splitOnSpace(dependencies) {
+				if source == ".PHONY" {
+					for _, target := range splitOnSpace(targets) {
+						allowedTargets[target] = true
+					}
+				}
+			}
+
+			for _, target := range splitOnSpace(targets) {
+				if target == ".PHONY" {
+					for _, dep := range splitOnSpace(dependencies) {
+						allowedTargets[dep] = true
+					}
+
+				} else if target == ".ORDER" {
+					// TODO: Check for spelling mistakes.
+
+				} else if !allowedTargets[target] {
+					line.logWarning("Unusual target %q.", target)
+					line.explainWarning(
+						"If you really want to define your own targets, you can \"declare\"",
+						"them by inserting a \".PHONY: my-target\" line before this line. This",
+						"will tell make(1) to not interpret this target's name as a filename.")
+				}
+			}
+
+		} else if m, directive := match1(text, `^\.\s*(\S*)`); m {
+			line.logError("Unknown directive \".%s\".", directive)
+
+		} else if strings.HasPrefix(text, " ") {
+			line.logWarning("Makefile lines should not start with space characters.")
+			line.explainWarning(
+				"If you want this line to contain a shell program, use a tab",
+				"character for indentation. Otherwise please remove the leading",
+				"white-space.")
+
+		} else {
+			line.logError("[Internal] Unknown line format: %s", text)
+		}
+	}
+	substcontext.finish(lines[len(lines)-1])
+
+	checklinesTrailingEmptyLines(lines)
+
+	if len(ctx.indentation) != 1 {
+		lines[len(lines)-1].logError("Directive indentation is not 0, but %d.", ctx.indentDepth())
+	}
+
+	G.mkContext = nil
+}

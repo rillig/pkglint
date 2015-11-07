@@ -11,3 +11,26 @@ type MkContext struct {
 	plistVars   map[string]bool  // Variables that are registered in PLIST_VARS, to ensure that all user-defined variables are added to it.
 	tools       map[string]bool  // Set of tools that are declared to be used.
 }
+
+func newMkContext() *MkContext {
+	forVars := make(map[string]bool)
+	indentation := make([]int, 1)
+	vardef := make(map[string]*Line)
+	varuse := make(map[string]*Line)
+	buildDefs := make(map[string]bool)
+	plistVars := make(map[string]bool)
+	tools := make(map[string]bool)
+	for tool := range G.globalData.predefinedTools {
+		tools[tool] = true
+	}
+	return &MkContext{forVars, indentation, "", vardef, varuse, buildDefs, plistVars, tools}
+}
+func (ctx *MkContext) indentDepth() int {
+	return ctx.indentation[len(ctx.indentation)-1]
+}
+func (ctx *MkContext) popIndent() {
+	ctx.indentation = ctx.indentation[:len(ctx.indentation)-1]
+}
+func (ctx *MkContext) pushIndent(indent int) {
+	ctx.indentation = append(ctx.indentation, indent)
+}

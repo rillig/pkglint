@@ -41,13 +41,16 @@ func pkgverCmp(left, op, right string) bool {
 	notImplemented()
 	return false
 }
-func checklinesMk(lines []*Line) {
-	notImplemented()
-}
 func varIsUsed(varname string) bool {
 	notImplemented()
 	return false
 }
 func checklineRelativePkgdir(line *Line, pkgdir string) {
+	notImplemented()
+}
+func checklineMkVarassign(line *Line, varname, op, value, comment string) {
+	notImplemented()
+}
+func checklineMkCond(line *Line, args string) {
 	notImplemented()
 }
