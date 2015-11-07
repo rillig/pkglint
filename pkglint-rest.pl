@@ -401,51 +401,6 @@ sub checkline_mk_cond($$) {
 // Procedures to check a single file.
 //
 
-sub checkfile_buildlink3_mk($) {
-	my (fname) = @_
-	my (lines, lineno, m)
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile_buildlink3_mk()")
-
-	checkperms(fname)
-	if (!(lines = load_lines(fname, true))) {
-		logError(fname, NO_LINE_NUMBER, "Cannot be read.")
-		return
-	}
-	if (@{lines} == 0) {
-		logError(fname, NO_LINES, "Must not be empty.")
-		return
-	}
-
-	parselines_mk(lines)
-	checklines_mk(lines)
-
-	lineno = 0
-
-	// Header comments
-	while (lineno <= $#{lines} && (my text = lines.[lineno].text) =~ `^#`) {
-		if (text =~ `^# XXX`) {
-			lines.[lineno].logNote("Please read this comment and remove it if appropriate.")
-		}
-		lineno++
-	}
-	expect_empty_line(lines, \lineno)
-
-	if (expect(lines, \lineno, qr"^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$")) {
-		lines.[lineno - 1].logWarning("This line belongs inside the .ifdef block.")
-		while (lines.[lineno].text == "") {
-			lineno++
-		}
-	}
-
-	if (!(m = expect(lines, \lineno, qr"^BUILDLINK_TREE\+=\s*(\S+)$"))) {
-		lines.[lineno].logWarning("Expected a BUILDLINK_TREE line.")
-		return
-	}
-
-	checklines_buildlink3_mk(lines, lineno, m.text(1))
-}
-
 sub checklines_buildlink3_mk($$$) {
 	my (lines, lineno, pkgid) = @_
 	my (m)
