@@ -244,6 +244,7 @@ func match5(s, re string) (bool, string, string, string, string, string) {
 		return false, "", "", "", "", ""
 	}
 }
+
 func replaceFirst(s, re, replacement string) ([]string, string) {
 	if m := reCompile(re).FindStringSubmatchIndex(s); m != nil {
 		replaced := s[:m[0]] + replacement + s[m[1]:]

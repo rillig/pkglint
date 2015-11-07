@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+func basicCheck(basicType string) func(*CheckVartype) {
+	notImplemented()
+	return nil
+}
+
 type CheckVartype struct {
 	line        *Line
 	varname     string
@@ -228,7 +233,7 @@ func (cv *CheckVartype) EmulPlatform() {
 }
 
 func (cv *CheckVartype) FetchURL() {
-	checklineMkVartypeBasic(cv.line, cv.varname, "URL", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	checklineMkVartypeSimple(cv.line, cv.varname, "URL", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	for siteUrl, siteName := range G.globalData.masterSiteUrls {
 		if strings.HasPrefix(cv.value, siteUrl) {
@@ -391,7 +396,7 @@ func (cv *CheckVartype) Option() {
 
 func (cv *CheckVartype) Pathlist() {
 	if !strstr(cv.value, ":") && cv.guessed {
-		checklineMkVartypeBasic(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+		checklineMkVartypeSimple(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
@@ -439,7 +444,7 @@ func (cv *CheckVartype) PkgPath() {
 }
 
 func (cv *CheckVartype) PkgOptionsVar() {
-	checklineMkVartypeBasic(cv.line, cv.varname, "Varname", cv.op, cv.value, cv.comment, false, cv.guessed)
+	checklineMkVartypeSimple(cv.line, cv.varname, "Varname", cv.op, cv.value, cv.comment, false, cv.guessed)
 	if !match0(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.logError("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		cv.line.explainError(
@@ -564,7 +569,7 @@ func (cv *CheckVartype) SedCommands() {
 					}
 					checklineMkShellword(line, words[i-1], true)
 					checklineMkShellword(line, words[i], true)
-					checklineMkVartypeBasic(line, cv.varname, "SedCommand", cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
+					checklineMkVartypeSimple(line, cv.varname, "SedCommand", cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 				} else {
 					line.logError("The -e option to sed requires an argument.")
 				}
@@ -704,7 +709,7 @@ func (cv *CheckVartype) WrapperTransform() {
 }
 
 func (cv *CheckVartype) WrkdirSubdirectory() {
-	checklineMkVartypeBasic(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	checklineMkVartypeSimple(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 }
 
 func (cv *CheckVartype) WrksrcSubdirectory() {

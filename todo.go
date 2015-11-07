@@ -51,6 +51,3 @@ func varIsUsed(varname string) bool {
 func checklineRelativePkgdir(line *Line, pkgdir string) {
 	notImplemented()
 }
-func checklineMkVartypeBasic(line *Line, varname, basicType, op, value, comment string, listContext, guessed bool) {
-	notImplemented()
-}

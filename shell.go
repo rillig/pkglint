@@ -60,7 +60,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 		return
 	}
 
-	shellcommandContextType := &Type{LK_NONE, "ShellCommand", nil, []AclEntry{{"*", "adsu"}}, NOT_GUESSED}
+	shellcommandContextType := &Type{LK_NONE, "ShellCommand", nil, "", []AclEntry{{"*", "adsu"}}, NOT_GUESSED}
 	shellwordVuc := &VarUseContext{VUC_TIME_UNKNOWN, shellcommandContextType, VUC_SHW_PLAIN, VUC_EXT_WORD}
 
 	if m, varname, mod := match2(shellword, `^\$\{(${regex_varname})(:[^{}]+)?\}$`); m {

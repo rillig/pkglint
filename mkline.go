@@ -268,3 +268,43 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Type, vuc *
 		}
 	}
 }
+
+// @param op
+//	The operator that is used for reading or writing to the variable.
+//	One of: "=", "+=", ":=", "!=", "?=", "use", "pp-use", "".
+//	For some variables (like BuildlinkDepth or BuildlinkPackages), the
+//	operator influences the valid values.
+// @param comment
+//	In assignments, a part of the line may be commented out. If there
+//	is no comment, pass C<undef>.
+//
+func checklineMkVartypeSimple(line *Line, varname string, basicType string, op, value, comment string, listContext, guessed bool) {
+
+	_ = G.opts.optDebugTrace && line.logDebug("checklineMkVartypeBasic(%v, %v, %v, %v, %v, %v, %v)",
+		varname, basicType, op, value, comment, listContext, guessed)
+
+	valueNovar := value
+	for {
+		var m []string
+		if m, valueNovar = replaceFirst(valueNovar, `\$\{([^{}]*)\}`, ""); m != nil {
+			varuse := m[1]
+			if !listContext && strings.HasSuffix(varuse, ":Q") {
+				line.logWarning("The :Q operator should only be used in lists and shell commands.")
+			}
+		} else {
+			break
+		}
+	}
+
+	notImplemented()
+	_ = valueNovar
+	// fn := basicCheck(vartype.basicType)
+	// TODO: basic check(vartype)
+	// fn()
+}
+
+func checklineMkVartypeEnum(line *Line, varname string, enumValues map[string]bool, enumValuesStr, op, value, comment string, listContext, guessed bool) {
+	if !enumValues[value] {
+		line.logWarning("%q is not valid for %s. Use one of { %s } instead.", value, varname, enumValuesStr)
+	}
+}

@@ -46,11 +46,16 @@ func acl(varname string, vartype string, aclentries ...string) {
 	if basicType != "" && getBasicType(basicType) == nil {
 		panic("unknown basicType: " + basicType)
 	}
-	if len(enumValues) == 0 {
-		enumValues = nil
+	enumset := make(map[string]bool)
+	if len(enumValues) > 0 {
+		for _, val := range enumValues {
+			enumset[val] = true
+		}
+	} else {
+		enumset = nil
 	}
 
-	vtype := &Type{kindOfList, basicType, enumValues, parseAclEntries(aclentries), NOT_GUESSED}
+	vtype := &Type{kindOfList, basicType, enumset, "", parseAclEntries(aclentries), NOT_GUESSED}
 	if varparam == "" || varparam == "*" {
 		vartypes[varbase] = vtype
 	}

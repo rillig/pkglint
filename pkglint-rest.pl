@@ -95,46 +95,6 @@ sub checkline_relative_pkgdir($$) {
 	}
 }
 
-// @param op
-//	The operator that is used for reading or writing to the variable.
-//	One of: "=", "+=", ":=", "!=", "?=", "use", "pp-use", "".
-//	For some variables (like BuildlinkDepth or BuildlinkPackages), the
-//	operator influences the valid values.
-// @param comment
-//	In assignments, a part of the line may be commented out. If there
-//	is no comment, pass C<undef>.
-//
-sub checkline_mk_vartype_basic($$$$$$$$)
-sub checkline_mk_vartype_basic($$$$$$$$) {
-	my (line, varname, type, op, value, comment, list_context, is_guessed) = @_
-	my (value_novar)
-
-	opt_debug_trace and line.logDebug(sprintf("checkline_mk_vartype_basic(%s, %s, %s, %s, %s, %s, %s)",
-		varname, type, op, value, defined(comment) ? comment : "<undef>", list_context, is_guessed))
-
-	value_novar = value
-	while (value_novar =~ s/\$\{([^{}]*)\}//g) {
-		my (varuse) = (1)
-		if (!list_context && varuse =~ `:Q$`) {
-			line.logWarning("The :Q operator should only be used in lists and shell commands.")
-		}
-	}
-
-	my %type_dispatch = (
-	)
-
-	if (ref(type) == "HASH") {
-		if (!exists(type.{value})) {
-			line.logWarning("\"${value}\" is not valid for ${varname}. Use one of { ".join(" ", sort(keys(%{type})))." } instead.")
-		}
-
-	} else if (defined type_dispatch{type}) {
-		type_dispatch{type}.()
-
-	} else {
-		line.log_fatal("Type ${type} unknown.")
-	}
-}
 
 // Checks whether the list of version numbers that are given as the
 // C<value> of the variable C<varname> are in decreasing order.
