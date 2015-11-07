@@ -74,36 +74,6 @@ sub parse_licenses($) {
 // Subroutines to check a single line.
 //
 
-sub checkline_valid_characters_in_variable($$) {
-	my (line, re_validchars) = @_
-	my (varname, rest)
-
-	varname = line.get("varname")
-	rest = line.get("value")
-
-	rest =~ s/re_validchars//g
-	if (rest != "") {
-		my @chars = map { sprintf("0x%02x", ord(_)); } split(//, rest)
-		line.logWarning("${varname} contains invalid characters (" . join(", ", @chars) . ").")
-	}
-}
-
-sub checkline_trailing_whitespace($) {
-	my (line) = @_
-
-	opt_debug_trace and line.logDebug("checkline_trailing_whitespace()")
-
-	if (line.text =~ /\s+$/) {
-		line.logNote("Trailing white-space.")
-		line.explain_note(
-"When a line ends with some white-space, that space is in most cases",
-"irrelevant and can be removed, leading to a \"normal form\" syntax.",
-"",
-"Note: This is mostly for aesthetic reasons.")
-		line.replace_regex(qr"\s+\n$", "\n")
-	}
-}
-
 sub checkline_rcsid_regex($$$) {
 	my (line, prefix_regex, prefix) = @_
 	my (id) = (opt_rcsidstring . (is_wip ? "|Id" : ""))

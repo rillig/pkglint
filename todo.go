@@ -7,9 +7,6 @@ func notImplemented() {
 func checkperms(fname string) {
 	notImplemented()
 }
-func checklineTrailingWhitespace(line *Line) {
-	notImplemented()
-}
 func checklinesTrailingEmptyLines(lines []*Line) {
 	notImplemented()
 }

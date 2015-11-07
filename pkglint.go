@@ -588,13 +588,23 @@ func checklineLength(line *Line, maxlength int) {
 	}
 }
 
-func checklineValidCharacters(line *Line, reValidchars string) {
+func checklineValidCharacters(line *Line, subject, reValidchars string) {
 	rest := reCompile(reValidchars).ReplaceAllString(line.text, "")
 	if (rest != "") {
 		uni := ""
 		for _, c := range rest {
 			uni += fmt.Sprintf(" %U", c)
 		}
-		line.logWarning("Line contains invalid characters (%s).", uni[1:])
+		line.logWarning("%s contains invalid characters (%s).", subject, uni[1:])
+	}
+}
+
+func checklineTrailingWhitespace(line *Line) {
+	if match0(line.text, `\s$`) {
+		line.logNote("Trailing white-space.")
+		line.explainNote(
+"When a line ends with some white-space, that space is in most cases",
+"irrelevant and can be removed, leading to a \"normal form\" syntax.")
+		line.replaceRegex(`\s+\n$`, "\n")
 	}
 }
