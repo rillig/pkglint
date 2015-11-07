@@ -397,16 +397,6 @@ sub checkline_mk_cond($$) {
 	// of tree_match.
 }
 
-sub checkfile_extra($) {
-	my (fname) = @_
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile_extra()")
-
-	my lines = load_file(fname) or return logError(fname, NO_LINE_NUMBER, "Could not be read.")
-	checklines_trailing_empty_lines(lines)
-	checkperms(fname)
-}
-
 sub checkfile_INSTALL($) {
 	my (fname) = @_
 

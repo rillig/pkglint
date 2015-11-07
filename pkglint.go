@@ -686,3 +686,14 @@ func checkfileAlternatives(fname string) {
 		logError(fname, NO_LINES, "Cannot be read.")
 	}
 }
+
+func checkfileExtra(fname string) {
+	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileExtra()")
+
+	checkperms(fname)
+	lines := loadNonemptyLines(fname,false)
+	if lines == nil {
+		return
+		}
+	checklinesTrailingEmptyLines(lines)
+}
