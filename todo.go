@@ -30,7 +30,7 @@ func normalizePathname(fname string) string {
 func checklineMkAbsolutePathname(line *Line, text string) {
 	notImplemented()
 }
-func checklineRcsid(line *Line, something string) {
+func checklineRcsid(line *Line, re, suggestedText string) {
 	notImplemented()
 }
 func checkdirCvs(fname string) {
@@ -43,9 +43,6 @@ func checkdirPackage() {
 	notImplemented()
 }
 func checkdirCategory() {
-	notImplemented()
-}
-func checkdirToplevel() {
 	notImplemented()
 }
 func checkUnusedLicenses() {
@@ -63,5 +60,8 @@ func checklineMkVaruse(line *Line, varname, mod string, vuctx *VarUseContext) {
 	notImplemented()
 }
 func checklineMkShellcmdUse(line *Line, shellword string) {
+	notImplemented()
+}
+func checklinesMk(lines []*Line) {
 	notImplemented()
 }

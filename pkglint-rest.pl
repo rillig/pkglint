@@ -2858,64 +2858,6 @@ sub checkdir_CVS($) {
 // Procedures to check a directory including the files in it.
 //
 
-sub checkdir_root() {
-	my (fname) = "${current_dir}/Makefile"
-	my (lines, prev_subdir, @subdirs)
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkdir_root()")
-
-	if (!(lines = load_lines(fname, true))) {
-		logError(fname, NO_LINE_NUMBER, "Cannot be read.")
-		return
-	}
-
-	parselines_mk(lines)
-	if (0 <= $#{lines}) {
-		checkline_rcsid_regex(lines.[0], qr"#\s+", "# ")
-	}
-
-	foreach my line (@{lines}) {
-		if (line.text =~ m"^(#?)SUBDIR\s*\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$") {
-			my (comment_flag, indentation, subdir, comment) = (1, 2, 3, 4)
-
-			if (comment_flag eq "#" && (!defined(comment) || comment eq "")) {
-				line.logWarning("${subdir} commented out without giving a reason.")
-			}
-
-			if (indentation ne "\t") {
-				line.logWarning("Indentation should be a single tab character.")
-			}
-
-			if (subdir =~ m"\$" || !-f "${current_dir}/${subdir}/Makefile") {
-				next
-			}
-
-			if (!defined(prev_subdir) || subdir gt prev_subdir) {
-				# correctly ordered
-			} elsif (subdir eq prev_subdir) {
-				line.logError("${subdir} must only appear once.")
-			} elsif (prev_subdir eq "x11" && subdir eq "archivers") {
-				# ignore that one, since it is documented in the top-level Makefile
-			} else {
-				line.logWarning("${subdir} should come before ${prev_subdir}.")
-			}
-
-			prev_subdir = subdir
-
-			if (comment_flag eq "") {
-				push(@subdirs, "${current_dir}/${subdir}")
-			}
-		}
-	}
-
-	checklines_mk(lines)
-
-	if (opt_recursive) {
-		ipc_checking_root_recursively = true
-		push(@todo_items, @subdirs)
-	}
-}
-
 sub checkdir_category() {
 	my fname = "${current_dir}/Makefile"
 	my (lines, lineno)
