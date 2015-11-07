@@ -590,7 +590,7 @@ func checklineLength(line *Line, maxlength int) {
 
 func checklineValidCharacters(line *Line, subject, reValidchars string) {
 	rest := reCompile(reValidchars).ReplaceAllString(line.text, "")
-	if (rest != "") {
+	if rest != "" {
 		uni := ""
 		for _, c := range rest {
 			uni += fmt.Sprintf(" %U", c)
@@ -603,8 +603,8 @@ func checklineTrailingWhitespace(line *Line) {
 	if match0(line.text, `\s$`) {
 		line.logNote("Trailing white-space.")
 		line.explainNote(
-"When a line ends with some white-space, that space is in most cases",
-"irrelevant and can be removed, leading to a \"normal form\" syntax.")
+			"When a line ends with some white-space, that space is in most cases",
+			"irrelevant and can be removed, leading to a \"normal form\" syntax.")
 		line.replaceRegex(`\s+\n$`, "\n")
 	}
 }
@@ -617,15 +617,15 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 
 	_ = G.opts.optDebugTrace && line.logDebug("checkline_rcsid_regex(%v, %v)", prefixRe, suggestedPrefix)
 
-	if !match0(line.text, `^` +prefixRe + `$(` + id + `)(?::[^\$]+|)\$$`) {
-		line.logError("Expected %s.", suggestedPrefix + "$" + G.opts.optRcsIds + "$")
+	if !match0(line.text, `^`+prefixRe+`$(`+id+`)(?::[^\$]+|)\$$`) {
+		line.logError("Expected %s.", suggestedPrefix+"$"+G.opts.optRcsIds+"$")
 		line.explainError(
-"Several files in pkgsrc must contain the CVS Id, so that their current",
-"version can be traced back later from a binary package. This is to",
-"ensure reproducible builds, for example for finding bugs.",
-"",
-"Please insert the text from the above error message (without the quotes)",
-"at this position in the file.")
+			"Several files in pkgsrc must contain the CVS Id, so that their current",
+			"version can be traced back later from a binary package. This is to",
+			"ensure reproducible builds, for example for finding bugs.",
+			"",
+			"Please insert the text from the above error message (without the quotes)",
+			"at this position in the file.")
 		return false
 	}
 	return true
