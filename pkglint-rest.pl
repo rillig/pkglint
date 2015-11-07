@@ -46,13 +46,13 @@ sub parse_mk_cond($$) {
 	while (cond ne "") {
 		if (cond =~ s/^!//) {
 			return ["not", parse_mk_cond(line, cond)]
-		} elsif (cond =~ s/^defined\((${re_simple_varname})\)$//) {
+		} else if (cond =~ s/^defined\((${re_simple_varname})\)$//) {
 			return ["defined", 1]
-		} elsif (cond =~ s/^empty\((${re_simple_varname})\)$//) {
+		} else if (cond =~ s/^empty\((${re_simple_varname})\)$//) {
 			return ["empty", 1]
-		} elsif (cond =~ s/^empty\((${re_simple_varname}):M([^\$:{})]+)\)$//) {
+		} else if (cond =~ s/^empty\((${re_simple_varname}):M([^\$:{})]+)\)$//) {
 			return ["empty", ["match", 1, 2]]
-		} elsif (cond =~ s/^\$\{(${re_simple_varname})\}\s+(==|!=)\s+"([^"\$\\]*)"$//) { #"
+		} else if (cond =~ s/^\$\{(${re_simple_varname})\}\s+(==|!=)\s+"([^"\$\\]*)"$//) { #"
 			return [2, ["var", 1], ["string", 3]]
 		} else {
 			opt_debug_unchecked and line.logDebug("parse_mk_cond: ${cond}")
@@ -188,15 +188,15 @@ sub checkline_relative_path($$$) {
 	res_path = resolve_relative_path(path, true)
 	if (res_path =~ regex_unresolved) {
 		opt_debug_unchecked and line.logDebug("Unchecked path: \"${path}\".")
-	} elsif (!-e (((res_path =~ m"^/") ? "" : "${current_dir}/") . res_path)) {
+	} else if (!-e (((res_path =~ m"^/") ? "" : "${current_dir}/") . res_path)) {
 		must_exist and line.logError("\"${res_path}\" does not exist.")
-	} elsif (path =~ m"^\.\./\.\./([^/]+)/([^/]+)(.*)") {
+	} else if (path =~ m"^\.\./\.\./([^/]+)/([^/]+)(.*)") {
 		my (cat, pkg, rest) = (1, 2, 3)
-	} elsif (path =~ m"^\.\./\.\./mk/") {
+	} else if (path =~ m"^\.\./\.\./mk/") {
 		// There need not be two directory levels for mk/ files.
-	} elsif (path =~ m"^\.\./mk/" && cur_pkgsrcdir eq "..") {
+	} else if (path =~ m"^\.\./mk/" && cur_pkgsrcdir eq "..") {
 		// That's fine for category Makefiles.
-	} elsif (path =~ m"^\.\.") {
+	} else if (path =~ m"^\.\.") {
 		line.logWarning("Invalid relative path \"${path}\".")
 	}
 }
@@ -248,14 +248,14 @@ sub checkline_mk_shellcmd_use($$) {
 		if (exists(allowed_install_commands.{shellcmd})) {
 			// Fine.
 
-		} elsif (exists(discouraged_install_commands.{shellcmd})) {
+		} else if (exists(discouraged_install_commands.{shellcmd})) {
 			line.logWarning("The shell command \"${shellcmd}\" should not be used in the install phase.")
 			line.explainWarning(
 "In the install phase, the only thing that should be done is to install",
 "the prepared files to their final location. The file's contents should",
 "not be changed anymore.")
 
-		} elsif (shellcmd eq "\${CP}") {
+		} else if (shellcmd eq "\${CP}") {
 			line.logWarning("\${CP} should not be used to install files.")
 			line.explainWarning(
 "The \${CP} command is highly platform dependent and cannot overwrite",
@@ -527,12 +527,6 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 	}
 
 	my %type_dispatch = (
-		DistSuffix => sub {
-			if (value eq ".tar.gz") {
-				line.logNote("${varname} is \".tar.gz\" by default, so this definition may be redundant.")
-			}
-		},
-
 		EmulPlatform => sub {
 			if (value =~ m"^(\w+)-(\w+)$") {
 				my (opsys, arch) = (1, 2)
@@ -580,7 +574,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			if (value_novar =~ m"/") {
 				line.logWarning("A filename should not contain a slash.")
 
-			} elsif (value_novar !~ m"^[-0-9\@A-Za-z.,_~+%]*$") {
+			} else if (value_novar !~ m"^[-0-9\@A-Za-z.,_~+%]*$") {
 				line.logWarning("\"${value}\" is not a valid filename.")
 			}
 		},
@@ -594,7 +588,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 		FileMode => sub {
 			if (value ne "" && value_novar eq "") {
 				// Fine.
-			} elsif (value =~ m"^[0-7]{3,4}") {
+			} else if (value =~ m"^[0-7]{3,4}") {
 				// Fine.
 			} else {
 				line.logWarning("Invalid file mode ${value}.")
@@ -607,7 +601,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			}
 			if (value_novar =~ m"^[+\-.0-9A-Z_a-z]+$") {
 				// Fine.
-			} elsif (value ne "" && value_novar eq "") {
+			} else if (value ne "" && value_novar eq "") {
 				// Don't warn here.
 			} else {
 				line.logWarning("Invalid identifier \"${value}\".")
@@ -626,22 +620,22 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 
 				opt_debug_unchecked and line.logDebug("Unchecked directory ${dirname} in ${varname}.")
 
-			} elsif (value =~ m"^-l(.*)") {
+			} else if (value =~ m"^-l(.*)") {
 				my (libname) = (1)
 
 				opt_debug_unchecked and line.logDebug("Unchecked library name ${libname} in ${varname}.")
 
-			} elsif (value =~ m"^(?:-static)$") {
+			} else if (value =~ m"^(?:-static)$") {
 				// Assume that the wrapper framework catches these.
 
-			} elsif (value =~ m"^(-Wl,(?:-R|-rpath|--rpath))") {
+			} else if (value =~ m"^(-Wl,(?:-R|-rpath|--rpath))") {
 				my (rpath_flag) = (1)
 				line.logWarning("Please use \${COMPILER_RPATH_FLAG} instead of ${rpath_flag}.")
 
-			} elsif (value =~ m"^-.*") {
+			} else if (value =~ m"^-.*") {
 				line.logWarning("Unknown linker flag \"${value}\".")
 
-			} elsif (value =~ regex_unresolved) {
+			} else if (value =~ regex_unresolved) {
 				opt_debug_unchecked and line.logDebug("Unchecked LDFLAG: ${value}")
 
 			} else {
@@ -841,13 +835,13 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 						} else {
 							line.logError("The -e option to sed requires an argument.")
 						}
-					} elsif (word eq "-E") {
+					} else if (word eq "-E") {
 						// Switch to extended regular expressions mode.
 
-					} elsif (word eq "-n") {
+					} else if (word eq "-n") {
 						// Don't print lines per default.
 
-					} elsif (i == 0 && word =~ m"^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$") {
+					} else if (i == 0 && word =~ m"^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$") {
 						line.logWarning("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 					} else {
@@ -881,7 +875,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			if (varname eq "TOOLS_NOOP" && op eq "+=") {
 				// no warning for package-defined tool definitions
 
-			} elsif (value =~ m"^([-\w]+|\[)(?::(\w+))?$") {
+			} else if (value =~ m"^([-\w]+|\[)(?::(\w+))?$") {
 				my (toolname, tooldep) = (1, 2)
 				if (!exists(get_tool_names().{toolname})) {
 					line.logError("Unknown tool \"${toolname}\".")
@@ -902,7 +896,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			if (value eq "" && defined(comment) && comment =~ m"^#") {
 				// Ok
 
-			} elsif (value =~ m"\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$") {
+			} else if (value =~ m"\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$") {
 				my (name, subdir) = (1, 2)
 
 				if (!exists(get_dist_sites_names().{name})) {
@@ -912,23 +906,23 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 					line.logError("The subdirectory in ${name} must end with a slash.")
 				}
 
-			} elsif (value =~ regex_unresolved) {
+			} else if (value =~ regex_unresolved) {
 				// No further checks
 
-			} elsif (value =~ m"^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?\@A-Z_a-z~]|#)*$") {
+			} else if (value =~ m"^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?\@A-Z_a-z~]|#)*$") {
 				my (proto, host, port, path) = (1, 2, 3, 4)
 
 				if (host =~ m"\.NetBSD\.org$"i && host !~ m"\.NetBSD\.org$") {
 					line.logWarning("Please write NetBSD.org instead of ${host}.")
 				}
 
-			} elsif (value =~ m"^([0-9A-Za-z]+)://([^/]+)(.*)$") {
+			} else if (value =~ m"^([0-9A-Za-z]+)://([^/]+)(.*)$") {
 				my (scheme, host, abs_path) = (1, 2, 3)
 
 				if (scheme ne "ftp" && scheme ne "http" && scheme ne "https" && scheme ne "gopher") {
 					line.logWarning("\"${value}\" is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.")
 
-				} elsif (abs_path eq "") {
+				} else if (abs_path eq "") {
 					line.logNote("For consistency, please add a trailing slash to \"${value}\".")
 
 				} else {
@@ -943,7 +937,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 		UserGroupName => sub {
 			if (value ne value_novar) {
 				// No checks for now.
-			} elsif (value !~ m"^[0-9_a-z]+$") {
+			} else if (value !~ m"^[0-9_a-z]+$") {
 				line.logWarning("Invalid user or group name \"${value}\".")
 			}
 		},
@@ -952,7 +946,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			if (value ne "" && value_novar eq "") {
 				// The value of another variable
 
-			} elsif (value_novar !~ m"^[A-Z_][0-9A-Z_]*(?:[.].*)?$") {
+			} else if (value_novar !~ m"^[A-Z_][0-9A-Z_]*(?:[.].*)?$") {
 				line.logWarning("\"${value}\" is not a valid variable name.")
 			}
 		},
@@ -976,15 +970,15 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			if (value =~ m"^rm:(?:-[DILOUWflm].*|-std=.*)$") {
 				// Fine.
 
-			} elsif (value =~ m"^l:([^:]+):(.+)$") {
+			} else if (value =~ m"^l:([^:]+):(.+)$") {
 				my (lib, replacement_libs) = (1, 2)
 				// Fine.
 
-			} elsif (value =~ m"^'?(?:opt|rename|rm-optarg|rmdir):.*$") {
+			} else if (value =~ m"^'?(?:opt|rename|rm-optarg|rmdir):.*$") {
 				// FIXME: This is cheated.
 				// Fine.
 
-			} elsif (value eq "-e" || value =~ m"^\"?'?s[|:,]") {
+			} else if (value eq "-e" || value =~ m"^\"?'?s[|:,]") {
 				// FIXME: This is cheated.
 				// Fine.
 
@@ -1007,10 +1001,10 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 				my (prefix, rest) = (1, 2)
 				line.logNote("You can use \"" . (defined(rest) ? rest : ".") . "\" instead of \"${value}\".")
 
-			} elsif (value ne "" && value_novar eq "") {
+			} else if (value ne "" && value_novar eq "") {
 				// The value of another variable
 
-			} elsif (value_novar !~ m"^(?:\.|[0-9A-Za-z_\@][-0-9A-Za-z_\@./+]*)$") {
+			} else if (value_novar !~ m"^(?:\.|[0-9A-Za-z_\@][-0-9A-Za-z_\@./+]*)$") {
 				line.logWarning("\"${value}\" is not a valid subdirectory of \${WRKSRC}.")
 			}
 		},
@@ -1044,7 +1038,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 			line.logWarning("\"${value}\" is not valid for ${varname}. Use one of { ".join(" ", sort(keys(%{type})))." } instead.")
 		}
 
-	} elsif (defined type_dispatch{type}) {
+	} else if (defined type_dispatch{type}) {
 		type_dispatch{type}.()
 
 	} else {
@@ -1102,7 +1096,7 @@ sub checkline_mk_vartype($$$$$) {
 			if (!type.may_use_plus_eq()) {
 				line.logWarning("The \"+=\" operator should only be used with lists.")
 			}
-		} elsif (varbase !~ m"^_" && varbase !~ get_regex_plurals()) {
+		} else if (varbase !~ m"^_" && varbase !~ get_regex_plurals()) {
 			line.logWarning("As ${varname} is modified using \"+=\", its name should indicate plural.")
 		}
 	}
@@ -1111,10 +1105,10 @@ sub checkline_mk_vartype($$$$$) {
 		// Cannot check anything if the type is not known.
 		opt_debug_unchecked and line.logDebug("Unchecked variable assignment for ${varname}.")
 
-	} elsif (op eq "!=") {
+	} else if (op eq "!=") {
 		opt_debug_misc and line.logDebug("Use of !=: ${value}")
 
-	} elsif (type.kind_of_list != LK_NONE) {
+	} else if (type.kind_of_list != LK_NONE) {
 		my (@words, rest)
 
 		if (type.kind_of_list == LK_INTERNAL) {
@@ -1183,13 +1177,13 @@ sub checkline_mk_varassign($$$$$) {
 		opt_debug_unchecked and line.logDebug("${varname} might be unused unless it is an argument to a procedure file.")
 		// TODO: check varname against the list of "procedure files".
 
-	} elsif (!var_is_used(varname)) {
+	} else if (!var_is_used(varname)) {
 		my vartypes = get_vartypes_map()
 		my deprecated = get_deprecated_map()
 
 		if (exists(vartypes.{varname}) || exists(vartypes.{varcanon})) {
 			// Ok
-		} elsif (exists(deprecated.{varname}) || exists(deprecated.{varcanon})) {
+		} else if (exists(deprecated.{varname}) || exists(deprecated.{varcanon})) {
 			// Ok
 		} else {
 			line.logWarning("${varname} is defined but not used. Spelling mistake?")
@@ -1250,7 +1244,7 @@ sub checkline_mk_varassign($$$$$) {
 		my (pkgvarname) = (1)
 		if (varname =~ m"^PKG_.*_REASON$") {
 			// ok
-		} elsif (varname =~ m"^(?:DIST_SUBDIR|WRKSRC)$") {
+		} else if (varname =~ m"^(?:DIST_SUBDIR|WRKSRC)$") {
 			line.logWarning("${pkgvarname} should not be used in ${varname}, as it sometimes includes the PKGREVISION. Please use ${pkgvarname}_NOREV instead.")
 		} else {
 			opt_debug_misc and line.logDebug("Use of PKGNAME in ${varname}.")
@@ -1259,7 +1253,7 @@ sub checkline_mk_varassign($$$$$) {
 
 	if (exists(get_deprecated_map().{varname})) {
 		line.logWarning("Definition of ${varname} is deprecated. ".get_deprecated_map().{varname})
-	} elsif (exists(get_deprecated_map().{varcanon})) {
+	} else if (exists(get_deprecated_map().{varcanon})) {
 		line.logWarning("Definition of ${varname} is deprecated. ".get_deprecated_map().{varcanon})
 	}
 
@@ -1343,7 +1337,7 @@ sub checkline_mk_cond($$) {
 		// or some other database. If we could confine all option
 		// definitions to options.mk, this would become easier.
 
-	} elsif (tree_match(tree, [\op, ["var", \varname], ["string", \value]])) {
+	} else if (tree_match(tree, [\op, ["var", \varname], ["string", \value]])) {
 		checkline_mk_vartype(line, varname, "use", value, undef)
 
 	}
@@ -1411,27 +1405,27 @@ sub checklines_mk($) {
 				opt_debug_misc and line.logDebug("${varname} is added to BUILD_DEFS.")
 			}
 
-		} elsif (varcanon eq "PLIST_VARS") {
+		} else if (varcanon eq "PLIST_VARS") {
 			foreach my id (split(qr"\s+", line.get("value"))) {
 				mkctx_plist_vars.{"PLIST.id"} = true
 				opt_debug_misc and line.logDebug("PLIST.${id} is added to PLIST_VARS.")
 				use_var(line, "PLIST.id")
 			}
 
-		} elsif (varcanon eq "USE_TOOLS") {
+		} else if (varcanon eq "USE_TOOLS") {
 			foreach my tool (split(qr"\s+", line.get("value"))) {
 				tool =~ s/:(build|run)//
 				mkctx_tools.{tool} = true
 				opt_debug_misc and line.logDebug("${tool} is added to USE_TOOLS.")
 			}
 
-		} elsif (varcanon eq "SUBST_VARS.*") {
+		} else if (varcanon eq "SUBST_VARS.*") {
 			foreach my svar (split(/\s+/, line.get("value"))) {
 				use_var(svar, varname_canon(svar))
 				opt_debug_misc and line.logDebug("varuse svar")
 			}
 
-		} elsif (varcanon eq "OPSYSVARS") {
+		} else if (varcanon eq "OPSYSVARS") {
 			foreach my osvar (split(/\s+/, line.get("value"))) {
 				use_var(line, "osvar.*")
 				def_var(line, osvar)
@@ -1456,10 +1450,10 @@ sub checklines_mk($) {
 		if (line.has("is_empty")) {
 			substcontext.check_end(line)
 
-		} elsif (line.has("is_comment")) {
+		} else if (line.has("is_comment")) {
 			// No further checks.
 
-		} elsif (text =~ regex_varassign) {
+		} else if (text =~ regex_varassign) {
 			my (varname, op, undef, comment) = (1, 2, 3, 4)
 			my space1 = substr(text, $+[1], $-[2] - $+[1])
 			my align = substr(text, $+[2], $-[3] - $+[2])
@@ -1477,11 +1471,11 @@ sub checklines_mk($) {
 			checkline_mk_varassign(line, varname, op, value, comment)
 			substcontext.check_varassign(line, varname, op, value)
 
-		} elsif (text =~ regex_mk_shellcmd) {
+		} else if (text =~ regex_mk_shellcmd) {
 			my (shellcmd) = (1)
 			checkline_mk_shellcmd(line, shellcmd)
 
-		} elsif (text =~ regex_mk_include) {
+		} else if (text =~ regex_mk_include) {
 			my (include, includefile) = (1, 2)
 
 			opt_debug_include and line.logDebug("includefile=${includefile}")
@@ -1501,7 +1495,7 @@ sub checklines_mk($) {
 					line.logNote("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 				}
 				seen_bsd_prefs_mk = true
-			} elsif (includefile eq "../../mk/bsd.fast.prefs.mk") {
+			} else if (includefile eq "../../mk/bsd.fast.prefs.mk") {
 				seen_bsd_prefs_mk = true
 			}
 
@@ -1519,12 +1513,12 @@ sub checklines_mk($) {
 				line.logError("${includefile} must not be included directly. Include \"${dir}/buildlink3.mk\" instead.")
 			}
 
-		} elsif (text =~ regex_mk_sysinclude) {
+		} else if (text =~ regex_mk_sysinclude) {
 			my (includefile, comment) = (1, 2)
 
 			// No further action.
 
-		} elsif (text =~ regex_mk_cond) {
+		} else if (text =~ regex_mk_cond) {
 			my (indent, directive, args, comment) = (1, 2, 3, 4)
 
 			use constant regex_directives_with_args => qr"^(?:if|ifdef|ifndef|elif|for|undef)$"
@@ -1545,24 +1539,24 @@ sub checklines_mk($) {
 			if (directive eq "if" && args =~ m"^!defined\([\w]+_MK\)$") {
 				push(@{mkctx_indentations}, mkctx_indentations.[-1])
 
-			} elsif (directive =~ m"^(?:if|ifdef|ifndef|for|elif|else)$") {
+			} else if (directive =~ m"^(?:if|ifdef|ifndef|for|elif|else)$") {
 				push(@{mkctx_indentations}, mkctx_indentations.[-1] + 2)
 			}
 
 			if (directive =~ regex_directives_with_args && !defined(args)) {
 				line.logError("\".${directive}\" must be given some arguments.")
 
-			} elsif (directive !~ regex_directives_with_args && defined(args)) {
+			} else if (directive !~ regex_directives_with_args && defined(args)) {
 				line.logError("\".${directive}\" does not take arguments.")
 
 				if (directive eq "else") {
 					line.logNote("If you meant \"else if\", use \".elif\".")
 				}
 
-			} elsif (directive eq "if" || directive eq "elif") {
+			} else if (directive eq "if" || directive eq "elif") {
 				checkline_mk_cond(line, args)
 
-			} elsif (directive eq "ifdef" || directive eq "ifndef") {
+			} else if (directive eq "ifdef" || directive eq "ifndef") {
 				if (args =~ m"\s") {
 					line.logError("The \".${directive}\" directive can only handle _one_ argument.")
 				} else {
@@ -1571,7 +1565,7 @@ sub checklines_mk($) {
 						. "defined(${args})\" instead.")
 				}
 
-			} elsif (directive eq "for") {
+			} else if (directive eq "for") {
 				if (args =~ m"^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$") {
 					my (vars, values) = (1, 2)
 
@@ -1582,7 +1576,7 @@ sub checklines_mk($) {
 
 						if (var =~ m"^[_a-z][_a-z0-9]*$") {
 							// Fine.
-						} elsif (var =~ m"[A-Z]") {
+						} else if (var =~ m"[A-Z]") {
 							line.logWarning(".for variable names should not contain uppercase letters.")
 						} else {
 							line.logError("Invalid variable name \"${var}\".")
@@ -1620,7 +1614,7 @@ sub checklines_mk($) {
 
 				}
 
-			} elsif (directive eq "undef" && defined(args)) {
+			} else if (directive eq "undef" && defined(args)) {
 				foreach my var (split(qr"\s+", args)) {
 					if (exists(mkctx_for_variables.{var})) {
 						line.logNote("Using \".undef\" after a \".for\" loop is unnecessary.")
@@ -1628,7 +1622,7 @@ sub checklines_mk($) {
 				}
 			}
 
-		} elsif (text =~ regex_mk_dependency) {
+		} else if (text =~ regex_mk_dependency) {
 			my (targets, whitespace, dependencies, comment) = (1, 2, 3, 4)
 
 			opt_debug_misc and line.logDebug("targets=${targets}, dependencies=${dependencies}")
@@ -1648,10 +1642,10 @@ sub checklines_mk($) {
 						allowed_targets.{dep} = true
 					}
 
-				} elsif (target eq ".ORDER") {
+				} else if (target eq ".ORDER") {
 					// TODO: Check for spelling mistakes.
 
-				} elsif (!exists(allowed_targets.{target})) {
+				} else if (!exists(allowed_targets.{target})) {
 					line.logWarning("Unusual target \"${target}\".")
 					line.explainWarning(
 "If you really want to define your own targets, you can \"declare\"",
@@ -1660,12 +1654,12 @@ sub checklines_mk($) {
 				}
 			}
 
-		} elsif (text =~ m"^\.\s*(\S*)") {
+		} else if (text =~ m"^\.\s*(\S*)") {
 			my (directive) = (1)
 
 			line.logError("Unknown directive \".${directive}\".")
 
-		} elsif (text =~ m"^ ") {
+		} else if (text =~ m"^ ") {
 			line.logWarning("Makefile lines should not start with space characters.")
 			line.explainWarning(
 "If you want this line to contain a shell program, use a tab",
@@ -1850,7 +1844,7 @@ sub checklines_buildlink3_mk($$$) {
 				abi_line = line
 				if (value =~ regex_dependency_lge) {
 					(abi_pkg, abi_version) = (1, 2)
-				} elsif (value =~ regex_dependency_wildcard) {
+				} else if (value =~ regex_dependency_wildcard) {
 					(abi_pkg) = (1)
 				} else {
 					opt_debug_unchecked and line.logDebug("Unchecked dependency pattern \"${value}\".")
@@ -1861,7 +1855,7 @@ sub checklines_buildlink3_mk($$$) {
 				api_line = line
 				if (value =~ regex_dependency_lge) {
 					(api_pkg, api_version) = (1, 2)
-				} elsif (value =~ regex_dependency_wildcard) {
+				} else if (value =~ regex_dependency_wildcard) {
 					(api_pkg) = (1)
 				} else {
 					opt_debug_unchecked and line.logDebug("Unchecked dependency pattern \"${value}\".")
@@ -1895,17 +1889,17 @@ sub checklines_buildlink3_mk($$$) {
 
 			// TODO: More checks.
 
-		} elsif (expect(lines, \lineno, qr"^(?:#.*)?$")) {
+		} else if (expect(lines, \lineno, qr"^(?:#.*)?$")) {
 			// Comments and empty lines are fine here.
 
-		} elsif (expect(lines, \lineno, qr"^\.\s*include \"\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk\"$")
+		} else if (expect(lines, \lineno, qr"^\.\s*include \"\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk\"$")
 			|| expect(lines, \lineno, qr"^\.\s*include \"\.\./\.\./mk/(\S+)\.buildlink3\.mk\"$")) {
 			// TODO: Maybe check dependency lines.
 
-		} elsif (expect(lines, \lineno, qr"^\.if\s")) {
+		} else if (expect(lines, \lineno, qr"^\.if\s")) {
 			if_level++
 
-		} elsif (expect(lines, \lineno, qr"^\.endif.*$")) {
+		} else if (expect(lines, \lineno, qr"^\.endif.*$")) {
 			if_level--
 			last if if_level == 0
 
@@ -2207,7 +2201,7 @@ sub checkfile_package_Makefile($$) {
 			// probably contains a statement that C is
 			// really not needed.
 
-		} elsif (value !~ m"(?:^|\s+)(?:c|c99|objc)(?:\s+|$)") {
+		} else if (value !~ m"(?:^|\s+)(?:c|c99|objc)(?:\s+|$)") {
 			pkgctx_vardef.{"GNU_CONFIGURE"}.logWarning("GNU_CONFIGURE almost always needs a C compiler, ...")
 			languages_line.logWarning("... but \"c\" is not added to USE_LANGUAGES.")
 		}
@@ -2323,64 +2317,64 @@ sub checkfile($) {
 	if (S_ISDIR(st.mode)) {
 		if (basename eq "files" || basename eq "patches" || basename eq "CVS") {
 			// Ok
-		} elsif (fname =~ m"(?:^|/)files/[^/]*$") {
+		} else if (fname =~ m"(?:^|/)files/[^/]*$") {
 			// Ok
 
-		} elsif (!is_emptydir(fname)) {
+		} else if (!is_emptydir(fname)) {
 			logWarning(fname, NO_LINE_NUMBER, "Unknown directory name.")
 		}
 
-	} elsif (S_ISLNK(st.mode)) {
+	} else if (S_ISLNK(st.mode)) {
 		if (basename !~ m"^work") {
 			logWarning(fname, NO_LINE_NUMBER, "Unknown symlink name.")
 		}
 
-	} elsif (!S_ISREG(st.mode)) {
+	} else if (!S_ISREG(st.mode)) {
 		logError(fname, NO_LINE_NUMBER, "Only files and directories are allowed in pkgsrc.")
 
-	} elsif (basename eq "ALTERNATIVES") {
+	} else if (basename eq "ALTERNATIVES") {
 		opt_check_ALTERNATIVES and checkfile_ALTERNATIVES(fname)
 
-	} elsif (basename eq "buildlink3.mk") {
+	} else if (basename eq "buildlink3.mk") {
 		opt_check_bl3 and checkfile_buildlink3_mk(fname)
 
-	} elsif (basename =~ m"^DESCR") {
+	} else if (basename =~ m"^DESCR") {
 		opt_check_DESCR and checkfile_DESCR(fname)
 
-	} elsif (basename =~ m"^distinfo") {
+	} else if (basename =~ m"^distinfo") {
 		opt_check_distinfo and checkfile_distinfo(fname)
 
-	} elsif (basename eq "DEINSTALL" || basename eq "INSTALL") {
+	} else if (basename eq "DEINSTALL" || basename eq "INSTALL") {
 		opt_check_INSTALL and checkfile_INSTALL(fname)
 
-	} elsif (basename =~ m"^MESSAGE") {
+	} else if (basename =~ m"^MESSAGE") {
 		opt_check_MESSAGE and checkfile_MESSAGE(fname)
 
-	} elsif (basename =~ m"^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$") {
+	} else if (basename =~ m"^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$") {
 		opt_check_patches and checkfile_patch(fname)
 
-	} elsif (fname =~ m"(?:^|/)patches/manual[^/]*$") {
+	} else if (fname =~ m"(?:^|/)patches/manual[^/]*$") {
 		opt_debug_unchecked and logDebug(fname, NO_LINE_NUMBER, "Unchecked file \"${fname}\".")
 
-	} elsif (fname =~ m"(?:^|/)patches/[^/]*$") {
+	} else if (fname =~ m"(?:^|/)patches/[^/]*$") {
 		logWarning(fname, NO_LINE_NUMBER, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
-	} elsif (basename =~ m"^(?:.*\.mk|Makefile.*)$" and not fname =~ m,files/, and not fname =~ m,patches/,) {
+	} else if (basename =~ m"^(?:.*\.mk|Makefile.*)$" and not fname =~ m,files/, and not fname =~ m,patches/,) {
 		opt_check_mk and checkfile_mk(fname)
 
-	} elsif (basename =~ m"^PLIST") {
+	} else if (basename =~ m"^PLIST") {
 		opt_check_PLIST and checkfile_PLIST(fname)
 
-	} elsif (basename eq "TODO" || basename eq "README") {
+	} else if (basename eq "TODO" || basename eq "README") {
 		// Ok
 
-	} elsif (basename =~ m"^CHANGES-.*") {
+	} else if (basename =~ m"^CHANGES-.*") {
 		load_doc_CHANGES(fname)
 
-	} elsif (!-T fname) {
+	} else if (!-T fname) {
 		logWarning(fname, NO_LINE_NUMBER, "Unexpectedly found a binary file.")
 
-	} elsif (fname =~ m"(?:^|/)files/[^/]*$") {
+	} else if (fname =~ m"(?:^|/)files/[^/]*$") {
 		// Ok
 	} else {
 		logWarning(fname, NO_LINE_NUMBER, "Unexpected file found.")
@@ -2495,7 +2489,7 @@ sub checkdir_category() {
 
 			if (defined(prev_subdir) && subdir eq prev_subdir) {
 				line.logError("${subdir} must only appear once.")
-			} elsif (defined(prev_subdir) && subdir lt prev_subdir) {
+			} else if (defined(prev_subdir) && subdir lt prev_subdir) {
 				line.logWarning("${subdir} should come before ${prev_subdir}.")
 			} else {
 				// correctly ordered
@@ -2558,7 +2552,7 @@ sub checkdir_category() {
 			}
 			f_neednext = true
 
-		} elsif (!m_atend && (f_atend || m_current lt f_current)) {
+		} else if (!m_atend && (f_atend || m_current lt f_current)) {
 			if (!exists(f_check{m_current})) {
 				line.logError("${m_current} exists in the Makefile, but not in the file system.")
 				line.delete()
@@ -2663,7 +2657,7 @@ sub checkdir_package() {
 		}
 		if (fname =~ m"/patches/patch-*$") {
 			have_patches = true
-		} elsif (fname =~ m"/distinfo$") {
+		} else if (fname =~ m"/distinfo$") {
 			have_distinfo = true
 		}
 	}
