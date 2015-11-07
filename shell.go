@@ -376,6 +376,17 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 					"file. In that case, you can just set AUTO_MKDIRS=yes and be done.")
 			}
 		}
+		
+		if state == S_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
+			line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
+			line.explainWarning(
+"Many implementations of install(1) can handle more, but pkgsrc aims at",
+"maximum portability.")
+					}
+		
+		
+		//AAAAAASDFDHFJDFSDGSDGSDGSD
+		
 	}
 }
 

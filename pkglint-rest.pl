@@ -241,43 +241,7 @@ sub checkline_mk_shelltext($$) {
 
 		opt_debug_shell and line.logDebug(scst_statename.[state] . ": ${shellword}")
 
-		checkline_mk_shellword(line, shellword, !(
-			state == SCST_CASE
-			|| state == SCST_FOR_CONT
-			|| state == SCST_SET_CONT
-			|| (state == SCST_START && shellword =~ regex_sh_varassign)))
-
-		//
-		// Actions associated with the current state
-		// and the symbol on the "input tape".
-		//
-
-		if (state == SCST_START || state == SCST_COND) {
-			...
-		}
-
-		if (state == SCST_COND && shellword == "cd") {
-			...
-		}
-
-		if ((state != SCST_PAX_S && state != SCST_SED_E && state != SCST_CASE_LABEL)) {
-			...
-		}
-
-		if ((state == SCST_INSTALL_D || state == SCST_MKDIR) && shellword =~ m"^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/") {
-			...
-		}
-
-		if ((state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && shellword !~ regex_mk_shellvaruse && shellword =~ m"") {
-			...
-		}
-
-		if (state == SCST_INSTALL_DIR2 && shellword =~ m"^\$") {
-			line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
-			line.explainWarning(
-"Many implementations of install(1) can handle more, but pkgsrc aims at",
-"maximum portability.")
-		}
+AAAAAASDFDHFJDFSDGSDGSDGSD
 
 		if (state == SCST_PAX && shellword == "-pe") {
 			line.logWarning("Please use the -pp option to pax(1) instead of -pe.")
