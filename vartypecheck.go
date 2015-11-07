@@ -5,16 +5,15 @@ import (
 )
 
 type CheckVartype struct {
-	line       *Line
-	varname    string
-	op         string
-	value      string
-	valueNovar string
-	 comment string
-	 listContext bool
-	 guessed bool
+	line        *Line
+	varname     string
+	op          string
+	value       string
+	valueNovar  string
+	comment     string
+	listContext bool
+	guessed     bool
 }
-
 
 func (cv *CheckVartype) AwkCommand() {
 	_ = G.opts.optDebugUnchecked && cv.line.logDebug("Unchecked AWK command: %q", cv.value)
@@ -206,7 +205,7 @@ func (cv *CheckVartype) DistSuffix() {
 }
 
 func (cv *CheckVartype) EmulPlatform() {
-	
+
 	if m, opsys, arch := match2(cv.value, `^(\w+)-(\w+)$`); m {
 		if !match0(opsys, `^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$`) {
 			cv.line.logWarning("Unknown operating system: %s", opsys)
@@ -219,11 +218,11 @@ func (cv *CheckVartype) EmulPlatform() {
 	} else {
 		cv.line.logWarning("%q is not a valid emulation platform.", cv.value)
 		cv.line.explainWarning(
-"An emulation platform has the form <OPSYS>-<MACHINE_ARCH>.",
-"OPSYS is the lower-case name of the operating system, and MACHINE_ARCH",
-"is the hardware architecture.",
-"",
-"Examples: linux-i386, irix-mipsel.")
+			"An emulation platform has the form <OPSYS>-<MACHINE_ARCH>.",
+			"OPSYS is the lower-case name of the operating system, and MACHINE_ARCH",
+			"is the hardware architecture.",
+			"",
+			"Examples: linux-i386, irix-mipsel.")
 	}
 }
 
@@ -234,11 +233,11 @@ func (cv *CheckVartype) FetchURL() {
 		if strings.HasPrefix(cv.value, siteUrl) {
 			subdir := cv.value[len(siteUrl):]
 			isGithub := strings.HasPrefix(cv.value, "https://github.com/")
-			if (isGithub) {
+			if isGithub {
 				subdir = strings.Split(subdir, "/")[0]
 			}
 			cv.line.logWarning("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.value)
-			if (isGithub) {
+			if isGithub {
 				cv.line.logWarning("Run \"%s help topic=github\" for further tips.", confMake)
 			}
 			return
@@ -272,12 +271,12 @@ func (cv *CheckVartype) FileMode() {
 }
 
 func (cv *CheckVartype) Identifier() {
-	if (cv.value != cv.valueNovar) {
+	if cv.value != cv.valueNovar {
 		//line.logWarning("Identifiers should be given directly.")
 	}
 	if match0(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+$`) {
 		// Fine.
-	} else if (cv.value != "" && cv.valueNovar == "") {
+	} else if cv.value != "" && cv.valueNovar == "" {
 		// Don't warn here.
 	} else {
 		cv.line.logWarning("Invalid identifier %q.", cv.value)
@@ -299,7 +298,7 @@ func (cv *CheckVartype) LdFlag() {
 	} else if strings.HasPrefix(cv.value, "-") {
 		cv.line.logWarning("Unknown linker flag %q.", cv.value)
 
-	} else if (cv.value == cv.valueNovar) {
+	} else if cv.value == cv.valueNovar {
 		cv.line.logWarning("Linker flag %q does not start with a dash.", cv.value)
 	}
 }
@@ -403,8 +402,8 @@ func (cv *CheckVartype) Pathlist() {
 	if !strstr(cv.value, ":") && cv.guessed {
 		checklineMkVartypeBasic(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
-	} 
-	
+	}
+
 	for _, path := range strings.Split(cv.value, ":") {
 		pathNovar := removeVariableReferences(path)
 
@@ -419,7 +418,7 @@ func (cv *CheckVartype) Pathlist() {
 }
 func (cv *CheckVartype) Pathmask() {
 	if !match0(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
-		cv.line.logWarning("%q is not a valid pathname mask.",cv.value)
+		cv.line.logWarning("%q is not a valid pathname mask.", cv.value)
 	}
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
@@ -430,7 +429,7 @@ func (cv *CheckVartype) Pathname() {
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
 func (cv *CheckVartype) Perl5Packlist() {
-	if (cv.value != cv.valueNovar) {
+	if cv.value != cv.valueNovar {
 		cv.line.logWarning("%s should not depend on other variables.", cv.varname)
 	}
 }
