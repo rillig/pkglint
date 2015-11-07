@@ -397,51 +397,6 @@ sub checkline_mk_cond($$) {
 	// of tree_match.
 }
 
-//
-// Procedures to check a single file.
-//
-
-
-sub checkfile_DESCR($) {
-	my (fname) = @_
-	my (maxchars, maxlines) = (80, 24)
-	my (lines)
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile_DESCR()")
-
-	checkperms(fname)
-	if (!(lines = load_file(fname))) {
-		logError(fname, NO_LINE_NUMBER, "Cannot be read.")
-		return
-	}
-	if (@{lines} == 0) {
-		logError(fname, NO_LINE_NUMBER, "Must not be empty.")
-		return
-	}
-
-	foreach my line (@{lines}) {
-		checkline_length(line, maxchars)
-		checkline_trailing_whitespace(line)
-		checkline_valid_characters(line, regex_validchars)
-		checkline_spellcheck(line)
-		if (line.text =~ `\$\{`) {
-			line.logWarning("Variables are not expanded in the DESCR file.")
-		}
-	}
-	checklines_trailing_empty_lines(lines)
-
-	if (@{lines} > maxlines) {
-		my line = lines.[maxlines]
-
-		line.logWarning("File too long (should be no more than maxlines lines).")
-		line.explainWarning(
-"A common terminal size is 80x25 characters. The DESCR file should",
-"fit on one screen. It is also intended to give a _brief_ summary",
-"about the package's contents.")
-	}
-	autofix(lines)
-}
-
 sub checkfile_distinfo($) {
 	my (fname) = @_
 	my (lines, %in_distinfo, patches_dir, di_is_committed, current_fname, is_patch, @seen_algs)
