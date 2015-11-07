@@ -133,7 +133,7 @@ sub checkline_rcsid_regex($$$) {
 
 	opt_debug_trace and line.logDebug("checkline_rcsid_regex(${prefix_regex}, ${prefix})")
 
-	if (line.text !~ m"^${prefix_regex}\$(${id})(?::[^\$]+|)\$$") {
+	if (line.text !~ `^${prefix_regex}\$(${id})(?::[^\$]+|)\$$`) {
 		line.logError("\"${prefix}\$${opt_rcsidstring}\$\" expected.")
 		line.explain_error(
 "Several files in pkgsrc must contain the CVS Id, so that their current",
@@ -165,10 +165,10 @@ sub checkline_mk_absolute_pathname($$) {
 	// everything following it is considered an absolute pathname.
 	// Another commonly used context is in assignments like
 	// "bindir=/bin".
-	if (text =~ m"(?:^|\$\{DESTDIR\}|\$\(DESTDIR\)|[\w_]+\s*=\s*)(/(?:[^\"'\`\s]|\"[^\"*]\"|'[^']*'|\`[^\`]*\`)*)") {
+	if (text =~ `(?:^|\$\{DESTDIR\}|\$\(DESTDIR\)|[\w_]+\s*=\s*)(/(?:[^\`'\`\s]|\"[^\"*]\"|'[^']*'|\`[^\`]*\`)*)") {
 		my path = 1
 
-		if (path =~ m"^/\w") {
+		if (path =~ `^/\w`) {
 			abspath = path
 		}
 	}
@@ -182,21 +182,21 @@ sub checkline_relative_path($$$) {
 	my (line, path, must_exist) = @_
 	my (res_path)
 
-	if (!is_wip && path =~ m"/wip/") {
+	if (!is_wip && path =~ `/wip/`) {
 		line.logError("A pkgsrc package must not depend on any outside package.")
 	}
 	res_path = resolve_relative_path(path, true)
 	if (res_path =~ regex_unresolved) {
 		opt_debug_unchecked and line.logDebug("Unchecked path: \"${path}\".")
-	} else if (!-e (((res_path =~ m"^/") ? "" : "${current_dir}/") . res_path)) {
+	} else if (!-e (((res_path =~ `^/`) ? "" : "${current_dir}/") . res_path)) {
 		must_exist and line.logError("\"${res_path}\" does not exist.")
-	} else if (path =~ m"^\.\./\.\./([^/]+)/([^/]+)(.*)") {
+	} else if (path =~ `^\.\./\.\./([^/]+)/([^/]+)(.*)`) {
 		my (cat, pkg, rest) = (1, 2, 3)
-	} else if (path =~ m"^\.\./\.\./mk/") {
+	} else if (path =~ `^\.\./\.\./mk/`) {
 		// There need not be two directory levels for mk/ files.
-	} else if (path =~ m"^\.\./mk/" && cur_pkgsrcdir == "..") {
+	} else if (path =~ `^\.\./mk/` && cur_pkgsrcdir == "..") {
 		// That's fine for category Makefiles.
-	} else if (path =~ m"^\.\.") {
+	} else if (path =~ `^\.\.`) {
 		line.logWarning("Invalid relative path \"${path}\".")
 	}
 }
@@ -207,7 +207,7 @@ sub checkline_relative_pkgdir($$) {
 	checkline_relative_path(line, path, true)
 	path = resolve_relative_path(path, false)
 
-	if (path =~ m"^(?:\./)?\.\./\.\./([^/]+/[^/]+)$") {
+	if (path =~ `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`) {
 		my otherpkgpath = 1
 		if (! -f "cwd_pkgsrcdir/otherpkgpath/Makefile") {
 			line.logError("There is no package in otherpkgpath.")
@@ -253,7 +253,7 @@ AAAAAASDFDHFJDFSDGSDGSDGSD
 		state =  (shellword == ";;") ? SCST_CASE_LABEL
 			// Note: The order of the following two lines is important.
 			: (state == SCST_CASE_LABEL_CONT && shellword == "|") ? SCST_CASE_LABEL
-			: (shellword =~ m"^[;&\|]+$") ? SCST_START
+			: (shellword =~ `^[;&\|]+$`) ? SCST_START
 			: (state == SCST_START) ? (
 				(shellword == "\${INSTALL}") ? SCST_INSTALL
 				: (shellword == "\${MKDIR}") ? SCST_MKDIR
@@ -263,32 +263,32 @@ AAAAAASDFDHFJDFSDGSDGSDGSD
 				: (shellword == "\${RUN}") ? SCST_START
 				: (shellword == "echo") ? SCST_ECHO
 				: (shellword == "set") ? SCST_SET
-				: (shellword =~ m"^(?:if|elif|while)$") ? SCST_COND
-				: (shellword =~ m"^(?:then|else|do)$") ? SCST_START
+				: (shellword =~ `^(?:if|elif|while)$`) ? SCST_COND
+				: (shellword =~ `^(?:then|else|do)$`) ? SCST_START
 				: (shellword == "case") ? SCST_CASE
 				: (shellword == "for") ? SCST_FOR
 				: (shellword == "(") ? SCST_START
-				: (shellword =~ m"^\$\{INSTALL_[A-Z]+_DIR\}$") ? SCST_INSTALL_DIR
+				: (shellword =~ `^\$\{INSTALL_[A-Z]+_DIR\}$`) ? SCST_INSTALL_DIR
 				: (shellword =~ regex_sh_varassign) ? SCST_START
 				: SCST_CONT)
 			: (state == SCST_MKDIR) ? SCST_MKDIR
 			: (state == SCST_INSTALL && shellword == "-d") ? SCST_INSTALL_D
 			: (state == SCST_INSTALL || state == SCST_INSTALL_D) ? (
-				(shellword =~ m"^-[ogm]$") ? SCST_CONT
+				(shellword =~ `^-[ogm]$`) ? SCST_CONT
 				: state)
 			: (state == SCST_INSTALL_DIR) ? (
-				(shellword =~ m"^-") ? SCST_CONT
-				: (shellword =~ m"^\$") ? SCST_INSTALL_DIR2
+				(shellword =~ `^-`) ? SCST_CONT
+				: (shellword =~ `^\$`) ? SCST_INSTALL_DIR2
 				: state)
 			: (state == SCST_INSTALL_DIR2) ? state
 			: (state == SCST_PAX) ? (
 				(shellword == "-s") ? SCST_PAX_S
-				: (shellword =~ m"^-") ? SCST_PAX
+				: (shellword =~ `^-`) ? SCST_PAX
 				: SCST_CONT)
 			: (state == SCST_PAX_S) ? SCST_PAX
 			: (state == SCST_SED) ? (
 				(shellword == "-e") ? SCST_SED_E
-				: (shellword =~ m"^-") ? SCST_SED
+				: (shellword =~ `^-`) ? SCST_SED
 				: SCST_CONT)
 			: (state == SCST_SED_E) ? SCST_SED
 			: (state == SCST_SET) ? SCST_SET_CONT
@@ -311,7 +311,7 @@ AAAAAASDFDHFJDFSDGSDGSDGSD
 			}
 	}
 
-	if (rest !~ m"^\s*$") {
+	if (rest !~ `^\s*$`) {
 		line.logError("Internal pkglint error: " . scst_statename.[state] . ": rest=${rest}")
 	}
 }
@@ -388,7 +388,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 	value_novar = value
 	while (value_novar =~ s/\$\{([^{}]*)\}//g) {
 		my (varuse) = (1)
-		if (!list_context && varuse =~ m":Q$") {
+		if (!list_context && varuse =~ `:Q$`) {
 			line.logWarning("The :Q operator should only be used in lists and shell commands.")
 		}
 	}
@@ -421,14 +421,14 @@ sub checkline_decreasing_order($$$) {
 	}
 
 	my ver = shift(@pyver)
-	if (ver !~ m"^\d+$") {
+	if (ver !~ `^\d+$`) {
 		line.logError("All values for ${varname} must be numeric.")
 		return
 	}
 
 	while (@pyver) {
 		my nextver = shift(@pyver)
-		if (nextver !~ m"^\d+$") {
+		if (nextver !~ `^\d+$`) {
 			line.logError("All values for ${varname} must be numeric.")
 			return
 		}
@@ -459,7 +459,7 @@ sub checkline_mk_vartype($$$$$) {
 			if (!type.may_use_plus_eq()) {
 				line.logWarning("The \"+=\" operator should only be used with lists.")
 			}
-		} else if (varbase !~ m"^_" && varbase !~ get_regex_plurals()) {
+		} else if (varbase !~ `^_` && varbase !~ get_regex_plurals()) {
 			line.logWarning("As ${varname} is modified using \"+=\", its name should indicate plural.")
 		}
 	}
@@ -482,7 +482,7 @@ sub checkline_mk_vartype($$$$$) {
 			rest = value
 			while (rest =~ s/^regex_shellword//) {
 				my (word) = (1)
-				last if (word =~ m"^#")
+				last if (word =~ `^#`)
 				push(@words, 1)
 			}
 		}
@@ -494,7 +494,7 @@ sub checkline_mk_vartype($$$$$) {
 			}
 		}
 
-		if (rest !~ m"^\s*$") {
+		if (rest !~ `^\s*$`) {
 			line.logError("Internal pkglint error: rest=${rest}")
 		}
 
@@ -553,15 +553,15 @@ sub checkline_mk_varassign($$$$$) {
 		}
 	}
 
-	if (value =~ m"/etc/rc\.d") {
+	if (value =~ `/etc/rc\.d`) {
 		line.logWarning("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to \${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	if (!is_internal && varname =~ m"^_") {
+	if (!is_internal && varname =~ `^_`) {
 		line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 	}
 
-	if (varname == "PERL5_PACKLIST" && defined(effective_pkgbase) && effective_pkgbase =~ m"^p5-(.*)") {
+	if (varname == "PERL5_PACKLIST" && defined(effective_pkgbase) && effective_pkgbase =~ `^p5-(.*)`) {
 		my (guess) = (1)
 		guess =~ s/-/\//g
 		guess = "auto/${guess}/.packlist"
@@ -572,7 +572,7 @@ sub checkline_mk_varassign($$$$$) {
 		}
 	}
 
-	if (varname == "CONFIGURE_ARGS" && value =~ m"=\$\{PREFIX\}/share/kde") {
+	if (varname == "CONFIGURE_ARGS" && value =~ `=\$\{PREFIX\}/share/kde`) {
 		line.logNote("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
 		line.explain_note(
 "That file probably does many things automatically and consistently that",
@@ -580,7 +580,7 @@ sub checkline_mk_varassign($$$$$) {
 "out some explicit dependencies.")
 	}
 
-	if (varname == "EVAL_PREFIX" && value =~ m"^([\w_]+)=") {
+	if (varname == "EVAL_PREFIX" && value =~ `^([\w_]+)=`) {
 		my (eval_varname) = (1)
 
 		// The variables mentioned in EVAL_PREFIX will later be
@@ -593,7 +593,7 @@ sub checkline_mk_varassign($$$$$) {
 		checkline_decreasing_order(line, varname, value)
 	}
 
-	if (defined(comment) && comment == "# defined" && varname !~ m".*(?:_MK|_COMMON)$") {
+	if (defined(comment) && comment == "# defined" && varname !~ `.*(?:_MK|_COMMON)$`) {
 		line.logNote("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
 		line.explain_note(
 "The value #defined says something about the state of the variable, but",
@@ -603,11 +603,11 @@ sub checkline_mk_varassign($$$$$) {
 "It is this meaning that should be described.")
 	}
 
-	if (value =~ m"\$\{(PKGNAME|PKGVERSION)[:\}]") {
+	if (value =~ `\$\{(PKGNAME|PKGVERSION)[:\}]`) {
 		my (pkgvarname) = (1)
-		if (varname =~ m"^PKG_.*_REASON$") {
+		if (varname =~ `^PKG_.*_REASON$`) {
 			// ok
-		} else if (varname =~ m"^(?:DIST_SUBDIR|WRKSRC)$") {
+		} else if (varname =~ `^(?:DIST_SUBDIR|WRKSRC)$`) {
 			line.logWarning("${pkgvarname} should not be used in ${varname}, as it sometimes includes the PKGREVISION. Please use ${pkgvarname}_NOREV instead.")
 		} else {
 			opt_debug_misc and line.logDebug("Use of PKGNAME in ${varname}.")
@@ -620,11 +620,11 @@ sub checkline_mk_varassign($$$$$) {
 		line.logWarning("Definition of ${varname} is deprecated. ".get_deprecated_map().{varcanon})
 	}
 
-	if (varname =~ m"^SITES_") {
+	if (varname =~ `^SITES_`) {
 		line.logWarning("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
-	if (value =~ m"^[^=]\@comment") {
+	if (value =~ `^[^=]\@comment`) {
 		line.logWarning("Please don't use \@comment in ${varname}.")
 		line.explainWarning(
 "Here you are defining a variable containing \@comment. As this value",
@@ -641,7 +641,7 @@ sub checkline_mk_varassign($$$$$) {
 
 	// Mark the variable as PLIST condition. This is later used in
 	// checkfile_PLIST.
-	if (defined(pkgctx_plist_subst_cond) && value =~ m"(.+)=.*\@comment.*") {
+	if (defined(pkgctx_plist_subst_cond) && value =~ `(.+)=.*\@comment.*`) {
 		pkgctx_plist_subst_cond.{1}++
 	}
 
@@ -680,7 +680,7 @@ sub checkline_mk_cond($$) {
 		my type = get_variable_type(line, varname)
 		my btype = defined(type) ? type.basic_type : undef
 		if (defined(btype) && ref(type.basic_type) == "HASH") {
-			if (match !~ m"[\$\[*]" && !exists(btype.{match})) {
+			if (match !~ `[\$\[*]` && !exists(btype.{match})) {
 				line.logWarning("Invalid :M value \"match\". Only { " . join(" ", sort keys %btype) . " } are allowed.")
 			}
 		}
@@ -690,7 +690,7 @@ sub checkline_mk_cond($$) {
 		if (false && varname == "PKG_OPTIONS" && defined(pkgctx_vardef) && exists(pkgctx_vardef.{"PKG_SUPPORTED_OPTIONS"})) {
 			my options = pkgctx_vardef.{"PKG_SUPPORTED_OPTIONS"}.get("value")
 
-			if (match !~ m"[\$\[*]" && index(" options ", " match ") == -1) {
+			if (match !~ `[\$\[*]` && index(" options ", " match ") == -1) {
 				line.logWarning("Invalid option \"match\". Only { options } are allowed.")
 			}
 		}
@@ -822,7 +822,7 @@ sub checklines_mk($) {
 			my align = substr(text, $+[2], $-[3] - $+[2])
 			my value = line.get("value")
 
-			if (align !~ m"^(\t*|[ ])$") {
+			if (align !~ `^(\t*|[ ])$`) {
 				opt_warn_space && line.logNote("Alignment of variable values should be done with tabs, not spaces.")
 				my prefix = "${varname}${space1}${op}"
 				my aligned_len = tablen("${prefix}${align}")
@@ -844,7 +844,7 @@ sub checklines_mk($) {
 			opt_debug_include and line.logDebug("includefile=${includefile}")
 			checkline_relative_path(line, includefile, include == "include")
 
-			if (includefile =~ m"../Makefile$") {
+			if (includefile =~ `../Makefile$`) {
 				line.logError("Other Makefiles must not be included directly.")
 				line.explainWarning(
 "If you want to include portions of another Makefile, extract",
@@ -854,7 +854,7 @@ sub checklines_mk($) {
 			}
 
 			if (includefile == "../../mk/bsd.prefs.mk") {
-				if (line.fname =~ m"buildlink3\.mk$") {
+				if (line.fname =~ `buildlink3\.mk$`) {
 					line.logNote("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 				}
 				seen_bsd_prefs_mk = true
@@ -862,16 +862,16 @@ sub checklines_mk($) {
 				seen_bsd_prefs_mk = true
 			}
 
-			if (includefile =~ m"/x11-links/buildlink3\.mk$") {
+			if (includefile =~ `/x11-links/buildlink3\.mk$`) {
 				line.logError("${includefile} must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.")
 			}
-			if (includefile =~ m"/jpeg/buildlink3\.mk$") {
+			if (includefile =~ `/jpeg/buildlink3\.mk$`) {
 				line.logError("${includefile} must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.")
 			}
-			if (includefile =~ m"/intltool/buildlink3\.mk$") {
+			if (includefile =~ `/intltool/buildlink3\.mk$`) {
 				line.logWarning("Please say \"USE_TOOLS+= intltool\" instead of this line.")
 			}
-			if (includefile =~ m"(.*)/builtin\.mk$") {
+			if (includefile =~ `(.*)/builtin\.mk$`) {
 				my (dir) = (1)
 				line.logError("${includefile} must not be included directly. Include \"${dir}/buildlink3.mk\" instead.")
 			}
@@ -886,7 +886,7 @@ sub checklines_mk($) {
 
 			use constant regex_directives_with_args => qr"^(?:if|ifdef|ifndef|elif|for|undef)$"
 
-			if (directive =~ m"^(?:endif|endfor|elif|else)$") {
+			if (directive =~ `^(?:endif|endfor|elif|else)$`) {
 				if ($#{mkctx_indentations} >= 1) {
 					pop(@{mkctx_indentations})
 				} else {
@@ -899,10 +899,10 @@ sub checklines_mk($) {
 				opt_warn_space and line.logNote("This directive should be indented by ".mkctx_indentations.[-1]." spaces.")
 			}
 
-			if (directive == "if" && args =~ m"^!defined\([\w]+_MK\)$") {
+			if (directive == "if" && args =~ `^!defined\([\w]+_MK\)$`) {
 				push(@{mkctx_indentations}, mkctx_indentations.[-1])
 
-			} else if (directive =~ m"^(?:if|ifdef|ifndef|for|elif|else)$") {
+			} else if (directive =~ `^(?:if|ifdef|ifndef|for|elif|else)$`) {
 				push(@{mkctx_indentations}, mkctx_indentations.[-1] + 2)
 			}
 
@@ -920,7 +920,7 @@ sub checklines_mk($) {
 				checkline_mk_cond(line, args)
 
 			} else if (directive == "ifdef" || directive == "ifndef") {
-				if (args =~ m"\s") {
+				if (args =~ `\s`) {
 					line.logError("The \".${directive}\" directive can only handle _one_ argument.")
 				} else {
 					line.logWarning("The \".${directive}\" directive is deprecated. Please use \".if "
@@ -929,17 +929,17 @@ sub checklines_mk($) {
 				}
 
 			} else if (directive == "for") {
-				if (args =~ m"^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$") {
+				if (args =~ `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`) {
 					my (vars, values) = (1, 2)
 
 					foreach my var (split(qr"\s+", vars)) {
-						if (!is_internal && var =~ m"^_") {
+						if (!is_internal && var =~ `^_`) {
 							line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 						}
 
-						if (var =~ m"^[_a-z][_a-z0-9]*$") {
+						if (var =~ `^[_a-z][_a-z0-9]*$`) {
 							// Fine.
-						} else if (var =~ m"[A-Z]") {
+						} else if (var =~ `[A-Z]`) {
 							line.logWarning(".for variable names should not contain uppercase letters.")
 						} else {
 							line.logError("Invalid variable name \"${var}\".")
@@ -951,7 +951,7 @@ sub checklines_mk($) {
 					// Check if any of the value's types is not guessed.
 					my guessed = true
 					foreach my value (split(qr"\s+", values)) { # XXX: too simple
-						if (value =~ m"^\$\{(.*)\}") {
+						if (value =~ `^\$\{(.*)\}`) {
 							my type = get_variable_type(line, 1)
 							if (defined(type) && !type.is_guessed()) {
 								guessed = false
@@ -1017,12 +1017,12 @@ sub checklines_mk($) {
 				}
 			}
 
-		} else if (text =~ m"^\.\s*(\S*)") {
+		} else if (text =~ `^\.\s*(\S*)`) {
 			my (directive) = (1)
 
 			line.logError("Unknown directive \".${directive}\".")
 
-		} else if (text =~ m"^ ") {
+		} else if (text =~ `^ `) {
 			line.logWarning("Makefile lines should not start with space characters.")
 			line.explainWarning(
 "If you want this line to contain a shell program, use a tab",
@@ -1071,7 +1071,7 @@ sub checklines_buildlink3_inclusion($) {
 		if (line.text =~ regex_mk_include) {
 			my (undef, file, comment) = (1, 2, 3)
 
-			if (file =~ m"^\.\./\.\./(.*)/buildlink3\.mk") {
+			if (file =~ `^\.\./\.\./(.*)/buildlink3\.mk`) {
 				my (bl3) = (1)
 
 				included_files.{bl3} = line
@@ -1130,8 +1130,8 @@ sub checkfile_buildlink3_mk($) {
 	lineno = 0
 
 	// Header comments
-	while (lineno <= $#{lines} && (my text = lines.[lineno].text) =~ m"^#") {
-		if (text =~ m"^# XXX") {
+	while (lineno <= $#{lines} && (my text = lines.[lineno].text) =~ `^#`) {
+		if (text =~ `^# XXX`) {
 			lines.[lineno].logNote("Please read this comment and remove it if appropriate.")
 		}
 		lineno++
@@ -1238,7 +1238,7 @@ sub checklines_buildlink3_mk($$$) {
 				}
 			}
 
-			if (varname =~ m"^BUILDLINK_[\w_]+\.(.*)$") {
+			if (varname =~ `^BUILDLINK_[\w_]+\.(.*)$`) {
 				my (varparam) = (1)
 
 				if (varparam != bl_pkgbase) {
@@ -1308,7 +1308,7 @@ sub checkfile_DESCR($) {
 		checkline_trailing_whitespace(line)
 		checkline_valid_characters(line, regex_validchars)
 		checkline_spellcheck(line)
-		if (line.text =~ m"\$\{") {
+		if (line.text =~ `\$\{`) {
 			line.logWarning("Variables are not expanded in the DESCR file.")
 		}
 	}
@@ -1373,13 +1373,13 @@ sub checkfile_distinfo($) {
 			}
 		}
 
-		is_patch = defined(new_fname) && new_fname =~ m"^patch-.+$" ? true : false
+		is_patch = defined(new_fname) && new_fname =~ `^patch-.+$` ? true : false
 		current_fname = new_fname
 		@seen_algs = ()
 	}
 
 	foreach my line (@{lines}[2..$#{lines}]) {
-		if (line.text !~ m"^(\w+) \(([^)]+)\) = (.*)(?: bytes)?$") {
+		if (line.text !~ `^(\w+) \(([^)]+)\) = (.*)(?: bytes)?$`) {
 			line.logError("Unknown line type.")
 			next
 		}
@@ -1389,7 +1389,7 @@ sub checkfile_distinfo($) {
 			on_filename_change.(line, chksum_fname)
 		}
 
-		if (chksum_fname !~ m"^\w") {
+		if (chksum_fname !~ `^\w`) {
 			line.logError("All file names should start with a letter.")
 		}
 
@@ -1421,7 +1421,7 @@ sub checkfile_distinfo($) {
 			if (open(my patchfile, "<", fname)) {
 				my sha1 = Digest::SHA1.new()
 				while (defined(my patchline = <patchfile>)) {
-					sha1.add(patchline) unless patchline =~ m"\$[N]etBSD"
+					sha1.add(patchline) unless patchline =~ `\$[N]etBSD`
 				}
 				close(patchfile)
 				my chksum = sha1.hexdigest()
@@ -1559,12 +1559,12 @@ sub checkfile_package_Makefile($$) {
 		my languages_line = pkgctx_vardef.{"USE_LANGUAGES"}
 		my value = languages_line.get("value")
 
-		if (languages_line.has("comment") && languages_line.get("comment") =~ m"\b(?:c|empty|none)\b"i) {
+		if (languages_line.has("comment") && languages_line.get("comment") =~ `\b(?:c|empty|none)\b`i) {
 			// Don't emit a warning, since the comment
 			// probably contains a statement that C is
 			// really not needed.
 
-		} else if (value !~ m"(?:^|\s+)(?:c|c99|objc)(?:\s+|$)") {
+		} else if (value !~ `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
 			pkgctx_vardef.{"GNU_CONFIGURE"}.logWarning("GNU_CONFIGURE almost always needs a C compiler, ...")
 			languages_line.logWarning("... but \"c\" is not added to USE_LANGUAGES.")
 		}
@@ -1582,7 +1582,7 @@ sub checkfile_package_Makefile($$) {
 	if (defined(distname) && defined(pkgname)) {
 		pkgname =~ s/\$\{DISTNAME\}/distname/
 
-		if (pkgname =~ m"^(.*)\$\{DISTNAME:S(.)([^:]*)\2([^:]*)\2(g?)\}(.*)$") {
+		if (pkgname =~ `^(.*)\$\{DISTNAME:S(.)([^:]*)\2([^:]*)\2(g?)\}(.*)$`) {
 			my (before, separator, old, new, mod, after) = (1, 2, 3, 4, 5, 6)
 			my newname = distname
 			old = quotemeta(old)
@@ -1614,7 +1614,7 @@ sub checkfile_package_Makefile($$) {
 	if (defined(effective_pkgname_line)) {
 		opt_debug_misc and effective_pkgname_line.logDebug("Effective name=${effective_pkgname} base=${effective_pkgbase} version=${effective_pkgversion}.")
 		// XXX: too many false positives
-		if (false && pkgpath =~ m"/([^/]+)$" && effective_pkgbase != 1) {
+		if (false && pkgpath =~ `/([^/]+)$` && effective_pkgbase != 1) {
 			effective_pkgname_line.logWarning("Mismatch between PKGNAME (effective_pkgname) and package directory (1).")
 		}
 	}
@@ -1666,7 +1666,7 @@ sub checkfile($) {
 	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile()")
 
 	basename = basename(fname)
-	if (basename =~ m"^(?:work.*|.*~|.*\.orig|.*\.rej)$") {
+	if (basename =~ `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {
 		if (opt_import) {
 			logError(fname, NO_LINE_NUMBER, "Must be cleaned up before committing the package.")
 		}
@@ -1680,7 +1680,7 @@ sub checkfile($) {
 	if (S_ISDIR(st.mode)) {
 		if (basename == "files" || basename == "patches" || basename == "CVS") {
 			// Ok
-		} else if (fname =~ m"(?:^|/)files/[^/]*$") {
+		} else if (fname =~ `(?:^|/)files/[^/]*$`) {
 			// Ok
 
 		} else if (!is_emptydir(fname)) {
@@ -1688,7 +1688,7 @@ sub checkfile($) {
 		}
 
 	} else if (S_ISLNK(st.mode)) {
-		if (basename !~ m"^work") {
+		if (basename !~ `^work`) {
 			logWarning(fname, NO_LINE_NUMBER, "Unknown symlink name.")
 		}
 
@@ -1701,43 +1701,43 @@ sub checkfile($) {
 	} else if (basename == "buildlink3.mk") {
 		opt_check_bl3 and checkfile_buildlink3_mk(fname)
 
-	} else if (basename =~ m"^DESCR") {
+	} else if (basename =~ `^DESCR`) {
 		opt_check_DESCR and checkfile_DESCR(fname)
 
-	} else if (basename =~ m"^distinfo") {
+	} else if (basename =~ `^distinfo`) {
 		opt_check_distinfo and checkfile_distinfo(fname)
 
 	} else if (basename == "DEINSTALL" || basename == "INSTALL") {
 		opt_check_INSTALL and checkfile_INSTALL(fname)
 
-	} else if (basename =~ m"^MESSAGE") {
+	} else if (basename =~ `^MESSAGE`) {
 		opt_check_MESSAGE and checkfile_MESSAGE(fname)
 
-	} else if (basename =~ m"^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$") {
+	} else if (basename =~ `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`) {
 		opt_check_patches and checkfile_patch(fname)
 
-	} else if (fname =~ m"(?:^|/)patches/manual[^/]*$") {
+	} else if (fname =~ `(?:^|/)patches/manual[^/]*$`) {
 		opt_debug_unchecked and logDebug(fname, NO_LINE_NUMBER, "Unchecked file \"${fname}\".")
 
-	} else if (fname =~ m"(?:^|/)patches/[^/]*$") {
+	} else if (fname =~ `(?:^|/)patches/[^/]*$`) {
 		logWarning(fname, NO_LINE_NUMBER, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
-	} else if (basename =~ m"^(?:.*\.mk|Makefile.*)$" and not fname =~ m,files/, and not fname =~ m,patches/,) {
+	} else if (basename =~ `^(?:.*\.mk|Makefile.*)$` and not fname =~ m,files/, and not fname =~ m,patches/,) {
 		opt_check_mk and checkfile_mk(fname)
 
-	} else if (basename =~ m"^PLIST") {
+	} else if (basename =~ `^PLIST`) {
 		opt_check_PLIST and checkfile_PLIST(fname)
 
 	} else if (basename == "TODO" || basename == "README") {
 		// Ok
 
-	} else if (basename =~ m"^CHANGES-.*") {
+	} else if (basename =~ `^CHANGES-.*`) {
 		load_doc_CHANGES(fname)
 
 	} else if (!-T fname) {
 		logWarning(fname, NO_LINE_NUMBER, "Unexpectedly found a binary file.")
 
-	} else if (fname =~ m"(?:^|/)files/[^/]*$") {
+	} else if (fname =~ `(?:^|/)files/[^/]*$`) {
 		// Ok
 	} else {
 		logWarning(fname, NO_LINE_NUMBER, "Unexpected file found.")
@@ -1807,7 +1807,7 @@ sub checkdir_category() {
 	}
 
 	// Then, arbitrary comments may follow
-	while (lineno <= $#{lines} && lines.[lineno].text =~ m"^#") {
+	while (lineno <= $#{lines} && lines.[lineno].text =~ `^#`) {
 		lineno++
 	}
 
@@ -1815,7 +1815,7 @@ sub checkdir_category() {
 	expect_empty_line(lines, \lineno)
 
 	// Then comes the COMMENT line
-	if (lineno <= $#{lines} && lines.[lineno].text =~ m"^COMMENT=\t*(.*)") {
+	if (lineno <= $#{lines} && lines.[lineno].text =~ `^COMMENT=\t*(.*)`) {
 		my (comment) = (1)
 
 		checkline_valid_characters_in_variable(lines.[lineno], qr"[-\040'(),/0-9A-Za-z]")
@@ -1839,7 +1839,7 @@ sub checkdir_category() {
 	while (lineno <= $#{lines}) {
 		my line = lines.[lineno]
 
-		if (line.text =~ m"^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$") {
+		if (line.text =~ `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`) {
 			my (comment_flag, indentation, subdir, comment) = (1, 2, 3, 4)
 
 			if (comment_flag == "#" && (!defined(comment) || comment == "")) {
@@ -1993,7 +1993,7 @@ sub checkdir_package() {
 		push(@files, glob("${current_dir}/${filesdir}/*"))
 	}
 	push(@files, glob("${current_dir}/${patchdir}/*"))
-	if (distinfo_file !~ m"^(?:\./)?distinfo$") {
+	if (distinfo_file !~ `^(?:\./)?distinfo$`) {
 		push(@files, "${current_dir}/${distinfo_file}")
 	}
 	have_distinfo = false
@@ -2002,10 +2002,10 @@ sub checkdir_package() {
 	// Determine the used variables before checking any of the
 	// Makefile fragments.
 	foreach my fname (@files) {
-		if ((fname =~ m"^((?:.*/)?Makefile\..*|.*\.mk)$")
-		&& (not fname =~ m"patch-")
-		&& (not fname =~ m"${pkgdir}/")
-		&& (not fname =~ m"${filesdir}/")
+		if ((fname =~ `^((?:.*/)?Makefile\..*|.*\.mk)$`)
+		&& (not fname =~ `patch-`)
+		&& (not fname =~ `${pkgdir}/`)
+		&& (not fname =~ `${filesdir}/`)
 		&& (defined(my lines = load_lines(fname, true)))) {
 			parselines_mk(lines)
 			determine_used_variables(lines)
@@ -2018,9 +2018,9 @@ sub checkdir_package() {
 		} else {
 			checkfile(fname)
 		}
-		if (fname =~ m"/patches/patch-*$") {
+		if (fname =~ `/patches/patch-*$`) {
 			have_patches = true
-		} else if (fname =~ m"/distinfo$") {
+		} else if (fname =~ `/distinfo$`) {
 			have_distinfo = true
 		}
 	}
