@@ -291,3 +291,5 @@ func matchAll(s, re string) ([]string, string) {
 	logError(NO_FILE, NO_LINES, "matchAll: not implemented")
 	return make([]string, 0), ""
 }
+
+var strstr = strings.Contains

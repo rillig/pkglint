@@ -138,6 +138,9 @@ func (self *Type) String() string {
 		return ""
 	}
 }
+func (t *Type) isGuessed() bool {
+	return t.guessed == GUESSED
+}
 
 // The various contexts in which make(1) variables can appear in pkgsrc.
 // Further details can be found in the chapter “The pkglint type system”
