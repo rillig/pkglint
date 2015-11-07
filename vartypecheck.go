@@ -5,11 +5,6 @@ import (
 	"strings"
 )
 
-func basicCheck(basicType string) func(*CheckVartype) {
-	notImplemented()
-	return nil
-}
-
 type CheckVartype struct {
 	line        *Line
 	varname     string
