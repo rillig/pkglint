@@ -26,7 +26,7 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 	}
 
 	text, sep := "", ""
-	if !GlobalVars.opts.optGccOutput {
+	if !G.opts.optGccOutput {
 		text += sep + level.traditionalName + ":"
 		sep = " "
 	}
@@ -37,7 +37,7 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 			text += ":" + lineno
 		}
 	}
-	if GlobalVars.opts.optGccOutput {
+	if G.opts.optGccOutput {
 		text += sep + level.gccName + ":"
 		sep = " "
 	}
@@ -58,13 +58,13 @@ func logFatal(fname, lineno, format string, args ...interface{}) bool {
 func logError(fname, lineno, format string, args ...interface{}) bool {
 	message := fmt.Sprintf(format, args...)
 	logMessage(LL_ERROR, fname, lineno, message)
-	GlobalVars.errors++
+	G.errors++
 	return true
 }
 func logWarning(fname, lineno, format string, args ...interface{}) bool {
 	message := fmt.Sprintf(format, args...)
 	logMessage(LL_WARN, fname, lineno, message)
-	GlobalVars.warnings++
+	G.warnings++
 	return true
 }
 func logNote(fname, lineno, format string, args ...interface{}) bool {
@@ -79,7 +79,7 @@ func logDebug(fname, lineno, format string, args ...interface{}) bool {
 }
 
 func explain(level LogLevel, fname, lineno string, explanation []string) {
-	if GlobalVars.opts.optExplain {
+	if G.opts.optExplain {
 		out := os.Stdout
 		if level == LL_FATAL {
 			out = os.Stderr
@@ -91,10 +91,10 @@ func explain(level LogLevel, fname, lineno string, explanation []string) {
 }
 
 func printSummary() {
-	if !GlobalVars.opts.optQuiet {
-		if GlobalVars.errors != 0 && GlobalVars.warnings != 0 {
-			fmt.Printf("%d errors and %d warnings found.", GlobalVars.errors, GlobalVars.warnings)
-			if !GlobalVars.opts.optExplain {
+	if !G.opts.optQuiet {
+		if G.errors != 0 && G.warnings != 0 {
+			fmt.Printf("%d errors and %d warnings found.", G.errors, G.warnings)
+			if !G.opts.optExplain {
 				fmt.Printf("(Use -e for more details.)")
 			}
 			fmt.Printf("\n")

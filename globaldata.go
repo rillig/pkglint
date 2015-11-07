@@ -86,7 +86,7 @@ func (self *GlobalData) loadDistSites() {
 	names["MASTER_SITE_SUSE_UPD"] = true
 	names["MASTER_SITE_LOCAL"] = true
 
-	_ = GlobalVars.opts.optDebugMisc && logDebug(fname, NO_LINES, "Loaded %d MASTER_SITE_* definitions.", len(url2name))
+	_ = G.opts.optDebugMisc && logDebug(fname, NO_LINES, "Loaded %d MASTER_SITE_* definitions.", len(url2name))
 	self.masterSiteUrls = url2name
 	self.masterSiteVars = names
 }
@@ -110,7 +110,7 @@ func (self *GlobalData) loadPkgOptions() {
 func (self *GlobalData) loadTools() {
 	toolFiles := []string{"defaults.mk"}
 	{
-		fname := *GlobalVars.cwdPkgsrcdir + "/mk/tools/bsd.tools.mk"
+		fname := *G.cwdPkgsrcdir + "/mk/tools/bsd.tools.mk"
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
 			if m := match(line.text, reMkInclude); m != nil {
@@ -132,7 +132,7 @@ func (self *GlobalData) loadTools() {
 	systemBuildDefs := make(map[string]bool)
 
 	for _, basename := range toolFiles {
-		fname := *GlobalVars.cwdPkgsrcdir + "/mk/tools/" + basename
+		fname := *G.cwdPkgsrcdir + "/mk/tools/" + basename
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
 			if m := match(line.text, reVarassign); m != nil {
@@ -159,7 +159,7 @@ func (self *GlobalData) loadTools() {
 
 	{
 		basename := "bsd.pkg.mk"
-		fname := *GlobalVars.cwdPkgsrcdir + "/mk/" + basename
+		fname := *G.cwdPkgsrcdir + "/mk/" + basename
 		condDepth := 0
 
 		lines := loadExistingLines(fname, true)
@@ -170,7 +170,7 @@ func (self *GlobalData) loadTools() {
 				varname, value := m[1], m[3]
 
 				if varname == "USE_TOOLS" {
-					_ = GlobalVars.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
+					_ = G.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
 							if match(tool, reUnresolvedVar) == nil && tools[tool] {
@@ -203,13 +203,13 @@ func (self *GlobalData) loadTools() {
 		}
 	}
 
-	if GlobalVars.opts.optDebugTools {
+	if G.opts.optDebugTools {
 		logDebug(NO_FILE, NO_LINES, "tools: %v", tools)
 		logDebug(NO_FILE, NO_LINES, "vartools: %v", vartools)
 		logDebug(NO_FILE, NO_LINES, "predefinedTools: %v", predefinedTools)
 		logDebug(NO_FILE, NO_LINES, "varnameToToolname: %v", varnameToToolname)
 	}
-	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "systemBuildDefs: %v", systemBuildDefs)
+	_ = G.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "systemBuildDefs: %v", systemBuildDefs)
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
@@ -274,8 +274,8 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 }
 
 func (self *GlobalData) loadSuggestedUpdates() {
-	self.suggestedUpdates = loadSuggestedUpdatesFile(*GlobalVars.cwdPkgsrcdir + "/doc/TODO")
-	wipFilename := *GlobalVars.cwdPkgsrcdir + "/wip/TODO"
+	self.suggestedUpdates = loadSuggestedUpdatesFile(*G.cwdPkgsrcdir + "/doc/TODO")
+	wipFilename := *G.cwdPkgsrcdir + "/wip/TODO"
 	if _, err := os.Stat(wipFilename); err != nil {
 		self.suggestedWipUpdates = loadSuggestedUpdatesFile(wipFilename)
 	}
@@ -310,7 +310,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 }
 
 func (self *GlobalData) getSuggestedPackageUpdates() []SuggestedUpdate {
-	if GlobalVars.isWip {
+	if G.isWip {
 		return self.suggestedWipUpdates
 	} else {
 		return self.suggestedUpdates
@@ -318,7 +318,7 @@ func (self *GlobalData) getSuggestedPackageUpdates() []SuggestedUpdate {
 }
 
 func (self *GlobalData) loadDocChanges() {
-	docdir := *GlobalVars.cwdPkgsrcdir + "/doc"
+	docdir := *G.cwdPkgsrcdir + "/doc"
 	files, err := ioutil.ReadDir(docdir)
 	if err != nil {
 		logFatal(docdir, NO_LINES, "Cannot be read.")
@@ -344,7 +344,7 @@ func (self *GlobalData) loadDocChanges() {
 }
 
 func (self *GlobalData) loadUserDefinedVars() {
-	lines := loadExistingLines(*GlobalVars.cwdPkgsrcdir+"/mk/defaults/mk.conf", true)
+	lines := loadExistingLines(*G.cwdPkgsrcdir+"/mk/defaults/mk.conf", true)
 
 	for _, line := range lines {
 		if m := match(line.text, reVarassign); m != nil {

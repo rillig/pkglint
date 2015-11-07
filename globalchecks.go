@@ -5,13 +5,13 @@ import (
 )
 
 func checkglobalUnusedLicenses() {
-	licensedir := *GlobalVars.cwdPkgsrcdir + "/licenses"
+	licensedir := *G.cwdPkgsrcdir + "/licenses"
 	files, _ := ioutil.ReadDir(licensedir)
 	for _, licensefile := range files {
 		licensename := licensefile.Name()
 		licensepath := licensedir + "/" + licensename
 		if fileExists(licensepath) {
-			if !GlobalVars.ipcUsedLicenses[licensename] {
+			if !G.ipcUsedLicenses[licensename] {
 				logWarning(licensepath, NO_LINES, "This license seems to be unused.")
 			}
 		}

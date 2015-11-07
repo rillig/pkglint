@@ -131,12 +131,12 @@ func varnameParam(varname string) string {
 
 func defineVar(line *Line, varname string) {
 	varcanon := varnameCanon(varname)
-	mk := GlobalVars.mkContext
+	mk := G.mkContext
 	if mk != nil {
 		mk.vardef[varname] = line
 		mk.vardef[varcanon] = line
 	}
-	pkg := GlobalVars.pkgContext
+	pkg := G.pkgContext
 	if pkg != nil {
 		pkg.vardef[varname] = line
 		pkg.vardef[varcanon] = line
@@ -144,21 +144,21 @@ func defineVar(line *Line, varname string) {
 }
 func isVarDefined(varname string) bool {
 	varcanon := varnameCanon(varname)
-	mk := GlobalVars.mkContext
+	mk := G.mkContext
 	if mk != nil && (mk.vardef[varname] != nil || mk.vardef[varcanon] != nil) {
 		return true
 	}
-	pkg := GlobalVars.pkgContext
+	pkg := G.pkgContext
 	return pkg != nil && (pkg.vardef[varname] != nil || pkg.vardef[varcanon] != nil)
 }
 func useVar(line *Line, varname string) {
 	varcanon := varnameCanon(varname)
-	mk := GlobalVars.mkContext
+	mk := G.mkContext
 	if mk != nil {
 		mk.varuse[varname] = line
 		mk.varuse[varcanon] = line
 	}
-	pkg := GlobalVars.pkgContext
+	pkg := G.pkgContext
 	if pkg != nil {
 		pkg.varuse[varname] = line
 		pkg.varuse[varcanon] = line
@@ -167,11 +167,11 @@ func useVar(line *Line, varname string) {
 
 func isVarUsed(varname string) bool {
 	varcanon := varnameCanon(varname)
-	mk := GlobalVars.mkContext
+	mk := G.mkContext
 	if mk != nil && (mk.varuse[varname] != nil || mk.varuse[varcanon] != nil) {
 		return true
 	}
-	pkg := GlobalVars.pkgContext
+	pkg := G.pkgContext
 	return pkg != nil && (pkg.varuse[varname] != nil || pkg.varuse[varcanon] != nil)
 }
 

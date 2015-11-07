@@ -20,8 +20,7 @@ type GlobalVarsType struct {
 	todo                       []string          // The list of directory entries that still need to be checked. Mostly relevant with --recursive.
 }
 
-var GlobalVars = GlobalVarsType{}
-var G = &GlobalVars
+var G = &GlobalVarsType{}
 
 const confMake = "@BMAKE@"
 const confDatadir = "@DATADIR@"

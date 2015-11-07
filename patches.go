@@ -44,7 +44,7 @@ func guessFileType(line *Line, fname string) FileType {
 		return FT_UNKNOWN
 	}
 
-	_ = GlobalVars.opts.optDebugMisc && line.logDebug("Unknown file type.")
+	_ = G.opts.optDebugMisc && line.logDebug("Unknown file type.")
 	return FT_UNKNOWN
 }
 
@@ -123,7 +123,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 // Looks for strings like "/dev/cd0" appearing in source code
 func checklineSourceAbsolutePathname(line *Line, text string) {
 	if matched, before, _, str := match3(text, `(.*)([\"'])(/\w[^\"']*)\2`); matched {
-		_ = GlobalVars.opts.optDebugMisc && line.logDebug("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+		_ = G.opts.optDebugMisc && line.logDebug("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
 		if match(before, `[A-Z_]+\s*$`) != nil {
 			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
@@ -136,7 +136,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 }
 
 func checklineOtherAbsolutePathname(line *Line, text string) {
-	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineOtherAbsolutePathname %q", text)
+	_ = G.opts.optDebugTrace && line.logDebug("checklineOtherAbsolutePathname %q", text)
 
 	if match(text, `^#[^!]`) != nil {
 		// Don't warn for absolute pathnames in comments, except for shell interpreters.
@@ -155,14 +155,14 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 			// ok; shell example: libdir=$prefix/lib
 
 		} else {
-			_ = GlobalVars.opts.optDebugMisc && line.logDebug("before=%q", before)
+			_ = G.opts.optDebugMisc && line.logDebug("before=%q", before)
 			checkwordAbsolutePathname(line, path)
 		}
 	}
 }
 
 func checkfilePatch(fname string) {
-	_ = GlobalVars.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfilePatch()")
+	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfilePatch()")
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)
@@ -256,7 +256,7 @@ var patchTransitions = map[State][]transition{
 			}
 		}},
 		{"", PST_TEXT, func(ctx *CheckPatchContext) {
-			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
+			_ = G.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
 		}},
 	},
 
@@ -284,7 +284,7 @@ var patchTransitions = map[State][]transition{
 			ctx.currentFilename = &ctx.m[1]
 			ctx.currentFiletype = new(FileType)
 			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
-			_ = GlobalVars.opts.optDebugPatches && ctx.line.logDebug("filename=%q filetype=%q", *ctx.currentFilename, *ctx.currentFiletype)
+			_ = G.opts.optDebugPatches && ctx.line.logDebug("filename=%q filetype=%q", *ctx.currentFilename, *ctx.currentFiletype)
 			ctx.patchedFiles++
 			ctx.hunks = 0
 		}},
@@ -385,7 +385,7 @@ var patchTransitions = map[State][]transition{
 			*ctx.currentFilename = ctx.m[1]
 			ctx.currentFiletype = new(FileType)
 			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
-			_ = GlobalVars.opts.optDebugPatches && ctx.line.logDebug("filename=%q filetype=%q", ctx.currentFilename, ctx.currentFiletype)
+			_ = G.opts.optDebugPatches && ctx.line.logDebug("filename=%q filetype=%q", ctx.currentFilename, ctx.currentFiletype)
 			ctx.patchedFiles++
 			ctx.hunks = 0
 		}},
@@ -442,7 +442,7 @@ var patchTransitions = map[State][]transition{
 		{rePatchUniLineNoNewline, PST_UNI_LINE, func(ctx *CheckPatchContext) {
 		}},
 		{rePatchEmpty, PST_UNI_LINE, func(ctx *CheckPatchContext) {
-			_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Leading white-space missing in hunk.")
+			_ = G.opts.optWarnSpace && ctx.line.logNote("Leading white-space missing in hunk.")
 			ctx.checkHunkLine(1, 1, PST_UNI_HUNK)
 		}},
 		{"", PST_UNI_HUNK, func(ctx *CheckPatchContext) {
@@ -459,7 +459,7 @@ func checklinesPatch(lines []*Line) {
 		line := lines[lineno]
 		text := line.text
 
-		_ = GlobalVars.opts.optDebugPatches &&
+		_ = G.opts.optDebugPatches &&
 			line.logDebug("state %s hunks %d del %d add %d text %s",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines, text)
 
@@ -495,7 +495,7 @@ func checklinesPatch(lines []*Line) {
 
 	fname := lines[0].fname
 	for ctx.state != PST_TEXT {
-		_ = GlobalVars.opts.optDebugPatches &&
+		_ = G.opts.optDebugPatches &&
 			logDebug(fname, "EOF", "state %s hunks %d del %d add %d",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
 
@@ -549,7 +549,7 @@ type CheckPatchContext struct {
 }
 
 func (ctx *CheckPatchContext) expectEmptyLine() {
-	_ = GlobalVars.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
+	_ = G.opts.optWarnSpace && ctx.line.logNote("Empty line expected.")
 }
 
 func (ctx *CheckPatchContext) expectComment() {
@@ -570,7 +570,7 @@ func (ctx *CheckPatchContext) useUnifiedDiffs() {
 }
 
 func (ctx *CheckPatchContext) checkText(text string) {
-	if m := match(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|`+GlobalVars.opts.optRcsIds+`)(?::[^\$]*)?\$`); m != nil {
+	if m := match(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|`+G.opts.optRcsIds+`)(?::[^\$]*)?\$`); m != nil {
 		tagname := m[1]
 
 		if match(text, rePatchUniHunk) != nil {
@@ -667,7 +667,7 @@ func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate Stat
 	if nilToZero(ctx.dellines) == 0 && nilToZero(ctx.addlines) == 0 {
 		if ctx.contextScanningLeading != nil {
 			if ctx.leadingContextLines != ctx.trailingContextLines {
-				_ = GlobalVars.opts.optDebugPatches && ctx.line.logWarning(
+				_ = G.opts.optDebugPatches && ctx.line.logWarning(
 					"The hunk that ends here does not have as many leading (%d) as trailing (%d) lines of context.",
 					ctx.leadingContextLines, ctx.trailingContextLines)
 			}
@@ -684,7 +684,7 @@ func (ctx *CheckPatchContext) checkHunkLine(deldelta, adddelta int, newstate Sta
 	// absolute paths and similar things. If it is not given,
 	// only those lines that really add something to the patched
 	// file are checked.
-	if adddelta > 0 && (deldelta == 0 || GlobalVars.opts.optWarnExtra) {
+	if adddelta > 0 && (deldelta == 0 || G.opts.optWarnExtra) {
 		ctx.checkAddedContents()
 	}
 }

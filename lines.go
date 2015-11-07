@@ -53,7 +53,7 @@ func (self *Line) physicalLines() []PhysLine {
 	return append(self.before, append(self.physlines, self.after...)...)
 }
 func (self *Line) printSource(out io.Writer) {
-	if GlobalVars.opts.optPrintSource {
+	if G.opts.optPrintSource {
 		io.WriteString(out, "\n")
 		for _, physline := range self.physicalLines() {
 			fmt.Fprintf(out, "> %s\n", physline.textnl)
@@ -256,7 +256,7 @@ func loadExistingLines(fname string, foldBackslashLines bool) []*Line {
 }
 
 func autofix(lines []*Line) {
-	if GlobalVars.opts.optAutofix {
+	if G.opts.optAutofix {
 		saveAutofixChanges(lines)
 	}
 }

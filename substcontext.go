@@ -21,7 +21,7 @@ func (self *SubstContext) isComplete() bool {
 	return self.id != nil && self.class != nil && len(self.files) != 0 && (len(self.sed) != 0 || len(self.vars) != 0 || self.filterCmd != nil)
 }
 func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) {
-	if !GlobalVars.opts.optWarnExtra {
+	if !G.opts.optWarnExtra {
 		return
 	}
 
@@ -101,7 +101,7 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	}
 }
 func (self *SubstContext) finish(line *Line) {
-	if self.id == nil || !GlobalVars.opts.optWarnExtra {
+	if self.id == nil || !G.opts.optWarnExtra {
 		return
 	}
 	if self.class == nil {

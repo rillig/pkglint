@@ -1,18 +1,18 @@
 package main
 
 func checkpackagePossibleDowngrade() {
-	_ = GlobalVars.opts.optDebugTrace && logDebug(NO_FILE, NO_LINES, "checkpackagePossibleDowngrade")
+	_ = G.opts.optDebugTrace && logDebug(NO_FILE, NO_LINES, "checkpackagePossibleDowngrade")
 
-	m, _, pkgversion := match2(*GlobalVars.pkgContext.effective_pkgname, rePkgname)
+	m, _, pkgversion := match2(*G.pkgContext.effective_pkgname, rePkgname)
 	if !m {
 		return
 	}
 
-	line := *GlobalVars.pkgContext.effective_pkgname_line
+	line := *G.pkgContext.effective_pkgname_line
 
-	change := GlobalVars.globalData.lastChange[*GlobalVars.pkgContext.pkgpath]
+	change := G.globalData.lastChange[*G.pkgContext.pkgpath]
 	if change == nil {
-		_ = GlobalVars.opts.optDebugMisc && line.logDebug("No change log for package %v", GlobalVars.pkgContext.pkgpath)
+		_ = G.opts.optDebugMisc && line.logDebug("No change log for package %v", G.pkgContext.pkgpath)
 		return
 	}
 

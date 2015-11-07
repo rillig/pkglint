@@ -50,7 +50,7 @@ type MkShellLine struct {
 
 func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting bool) {
 	line := msline.line
-	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShellword(%q, %q)", shellword, checkQuoting)
+	_ = G.opts.optDebugTrace && line.logDebug("checklineMkShellword(%q, %q)", shellword, checkQuoting)
 
 	if shellword == "" {
 		return
@@ -84,7 +84,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 	state := SWST_PLAIN
 outer:
 	for rest != "" {
-		_ = GlobalVars.opts.optDebugShell && line.logDebug("shell state %s: %q", state, rest)
+		_ = G.opts.optDebugShell && line.logDebug("shell state %s: %q", state, rest)
 
 		var m []string
 		switch {
@@ -210,7 +210,7 @@ outer:
 				replacestart(&rest, &m, `^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
 				replacestart(&rest, &m, `^\$\$(\$)\$`):
 				shvarname := m[1]
-				if GlobalVars.opts.optWarnQuoting && checkQuoting {
+				if G.opts.optWarnQuoting && checkQuoting {
 					line.logWarning("Unquoted shell variable %q.", shvarname)
 					line.explainWarning(
 						"When a shell variable contains white-space, it is expanded (split into",
@@ -272,7 +272,7 @@ outer:
 			case replacestart(&rest, &m, `^\$\$\{([0-9A-Za-z_]+)\}`),
 				replacestart(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)`):
 				shvarname := m[1]
-				_ = GlobalVars.opts.optDebugShell && line.logDebug("checklineMkShellword: found double-quoted variable %q.", shvarname)
+				_ = G.opts.optDebugShell && line.logDebug("checklineMkShellword: found double-quoted variable %q.", shvarname)
 			case replacestart(&rest, &m, `^\$\$`):
 				line.logWarning("Unquoted $ or strange shell variable found.")
 			case replacestart(&rest, &m, `^\\(.)`):
@@ -302,7 +302,7 @@ type ShelltextContext struct {
 
 func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	line := msline.line
-	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
+	_ = G.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
 
 	if strings.Contains(shelltext, "${SED}") || strings.Contains(shelltext, "${MV}") {
 		line.logNote("Please use the SUBST framework instead of ${SED} and ${MV}.")
@@ -336,7 +336,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		shellword := m[1]
 		st := &ShelltextContext{line, state, shellword}
 
-		_ = GlobalVars.opts.optDebugShell && line.logDebug("checklineMkShelltext state=%v shellword=%v", state, shellword)
+		_ = G.opts.optDebugShell && line.logDebug("checklineMkShelltext state=%v shellword=%v", state, shellword)
 
 		{
 			quotingNecessary := state != SCST_CASE &&
@@ -379,7 +379,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	case !strings.Contains(hidden, "@"):
 		// Nothing is hidden at all.
 
-	case strings.HasPrefix(GlobalVars.mkContext.target, "show-") || strings.HasSuffix(GlobalVars.mkContext.target, "-message"):
+	case strings.HasPrefix(G.mkContext.target, "show-") || strings.HasSuffix(G.mkContext.target, "-message"):
 		// In these targets commands may be hidden.
 
 	case strings.HasPrefix(rest, "#"):
@@ -436,13 +436,13 @@ func (ctx *ShelltextContext) checkCommandStart() {
 			"Makefile, so that the package also works if it is installed as a binary",
 			"package via pkg_add.")
 
-	case GlobalVars.globalData.tools[shellword]:
-		if !GlobalVars.mkContext.tools[shellword] && !GlobalVars.mkContext.tools["g"+shellword] {
+	case G.globalData.tools[shellword]:
+		if !G.mkContext.tools[shellword] && !G.mkContext.tools["g"+shellword] {
 			line.logWarning("The %q tool is used but not added to USE_TOOLS.", shellword)
 		}
 
-		if GlobalVars.globalData.varRequiredTools[shellword] {
-			line.logWarning("Please use ${%s} instead of %q.", GlobalVars.globalData.vartools[shellword], shellword)
+		if G.globalData.varRequiredTools[shellword] {
+			line.logWarning("Please use ${%s} instead of %q.", G.globalData.vartools[shellword], shellword)
 		}
 
 		checklineMkShellcmdUse(line, shellword)
@@ -481,17 +481,17 @@ func (ctx *ShelltextContext) checkCommandStart() {
 
 	default:
 		if m, vartool := match1(shellword, `^\$\{([\w_]+)\}$`); m {
-			plainTool := GlobalVars.globalData.varnameToToolname[vartool]
-			vartype := GlobalVars.globalData.vartypes[vartool]
+			plainTool := G.globalData.varnameToToolname[vartool]
+			vartype := G.globalData.vartypes[vartool]
 			switch {
-			case plainTool != "" && GlobalVars.mkContext.tools[plainTool]:
+			case plainTool != "" && G.mkContext.tools[plainTool]:
 				line.logWarning("The %q tool is used but not added to USE_TOOLS.", plainTool)
 			case vartype.basicType == "ShellCommand":
 				checklineMkShellcmdUse(line, shellword)
-			case GlobalVars.pkgContext.vardef[vartool] != nil:
+			case G.pkgContext.vardef[vartool] != nil:
 				// This command has been explicitly defined in the package; assume it to be valid.
 			default:
-				if GlobalVars.opts.optWarnExtra {
+				if G.opts.optWarnExtra {
 					line.logWarning("Unknown shell command %q.", shellword)
 					line.explainWarning(
 						"If you want your package to be portable to all platforms that pkgsrc",

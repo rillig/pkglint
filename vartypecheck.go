@@ -307,11 +307,11 @@ func (cv *CheckVartype) LdFlag() {
 func (cv *CheckVartype) License() {
 	licenses := parseLicenses(cv.value)
 	for _, license := range licenses {
-		licenseFile := *GlobalVars.cwdPkgsrcdir + "/licenses/" + license
-		if licenseFileLine := GlobalVars.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
-			licenseFile = GlobalVars.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.extra["value"].(string), false)
+		licenseFile := *G.cwdPkgsrcdir + "/licenses/" + license
+		if licenseFileLine := G.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
+			licenseFile = G.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.extra["value"].(string), false)
 		} else {
-			GlobalVars.ipcUsedLicenses[license] = true
+			G.ipcUsedLicenses[license] = true
 		}
 
 		if !fileExists(licenseFile) {
@@ -367,14 +367,14 @@ func (cv *CheckVartype) Option() {
 	line, value, valueNovar := cv.line, cv.value, cv.valueNovar
 
 	if value != valueNovar {
-		_ = GlobalVars.opts.optDebugUnchecked && line.logDebug("Unchecked option name: %q", value)
+		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked option name: %q", value)
 		return
 	}
 
 	if m := match(value, `^-?([a-z][-0-9a-z\+]*)$`); m != nil {
 		optname := m[1]
 
-		if GlobalVars.globalData.pkgOptions[optname] == "" {
+		if G.globalData.pkgOptions[optname] == "" {
 			line.logWarning("Unknown option \"%s\".", optname)
 			line.explainWarning(
 				"This option is not documented in the mk/defaults/options.description",

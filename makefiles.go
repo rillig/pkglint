@@ -41,27 +41,27 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 				if m := match(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m != nil {
 					bl3File := m[1]
 
-					GlobalVars.pkgContext.bl3[bl3File] = line
-					_ = GlobalVars.opts.optDebugMisc && line.logDebug("Buildlink3 file in package: %v", bl3File)
+					G.pkgContext.bl3[bl3File] = line
+					_ = G.opts.optDebugMisc && line.logDebug("Buildlink3 file in package: %v", bl3File)
 				}
 			}
 		}
 
-		if isIncludeLine && GlobalVars.pkgContext.included[includeFile] == nil {
-			GlobalVars.pkgContext.included[includeFile] = line
+		if isIncludeLine && G.pkgContext.included[includeFile] == nil {
+			G.pkgContext.included[includeFile] = line
 
 			if match(includeFile, `^\.\./[^./][^/]*/[^/]+`) != nil {
 				line.logWarning("References to other packages should look like \"../../category/package\", not \"../package\".")
 				line.explainWarning(explanationRelativeDirs()...)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
-				_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
-				GlobalVars.pkgContext.seenMakefileCommon = true
+				_ = G.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
+				G.pkgContext.seenMakefileCommon = true
 			}
 			if m := match(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m != nil {
 				if m[2] != "buildlink3.mk" && m[2] != "options.mk" {
-					_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
-					GlobalVars.pkgContext.seenMakefileCommon = true
+					_ = G.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
+					G.pkgContext.seenMakefileCommon = true
 				}
 			}
 
@@ -72,13 +72,13 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 				// current file and in the current working directory.
 				// We don't have an include dir list, like make(1) does.
 				if !fileExists(dirname + "/" + includeFile) {
-					dirname = GlobalVars.currentDir
+					dirname = G.currentDir
 				}
 				if !fileExists(dirname + "/" + includeFile) {
 					line.logError("Cannot read %q.", dirname+"/"+includeFile)
 					return false
 				} else {
-					_ = GlobalVars.opts.optDebugInclude && line.logDebug("Including %q.", dirname+"/"+includeFile)
+					_ = G.opts.optDebugInclude && line.logDebug("Including %q.", dirname+"/"+includeFile)
 					lengthBeforeInclude := len(allLines)
 					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
 						return false
@@ -86,7 +86,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 
 					if path.Base(includeFile) == "Makefile.common" {
 						makefileCommonLines := allLines[lengthBeforeInclude:]
-						relpath, err := filepath.Rel(*GlobalVars.cwdPkgsrcdir, fname)
+						relpath, err := filepath.Rel(*G.cwdPkgsrcdir, fname)
 						if err != nil {
 							line.logError("Cannot determine relative path.")
 							return false
@@ -100,9 +100,9 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 		if line.extra["is_varassign"] != nil {
 			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
 
-			if op != "?=" || GlobalVars.pkgContext.vardef[varname] == nil {
-				_ = GlobalVars.opts.optDebugMisc && line.logDebug("varassign(%q, %q, %q)", varname, op, value)
-				GlobalVars.pkgContext.vardef[varname] = line
+			if op != "?=" || G.pkgContext.vardef[varname] == nil {
+				_ = G.opts.optDebugMisc && line.logDebug("varassign(%q, %q, %q)", varname, op, value)
+				G.pkgContext.vardef[varname] = line
 			}
 		}
 	}
@@ -139,7 +139,7 @@ If there are more than five packages that use a Makefile.common,
 you should think about giving it a proper name (maybe plugin.mk) and
 documenting its interface.`)
 	insertLine.appendBefore(expected)
-	if GlobalVars.opts.optAutofix {
+	if G.opts.optAutofix {
 		saveAutofixChanges(lines)
 	}
 }
@@ -147,26 +147,26 @@ documenting its interface.`)
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	tmp := relpath
-	tmp = strings.Replace(tmp, "${PKGSRCDIR}", *GlobalVars.curPkgsrcdir, -1)
+	tmp = strings.Replace(tmp, "${PKGSRCDIR}", *G.curPkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${LUA_PKGSRCDIR}", "../../lang/lua52", -1)
 	tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", "../../lang/php54", -1)
 	tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", "suse100", -1)
 	tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", "../../lang/python27", -1)
-	if GlobalVars.pkgContext.filesdir != nil {
-		tmp = strings.Replace(tmp, "${FILESDIR}", *GlobalVars.pkgContext.filesdir, -1)
+	if G.pkgContext.filesdir != nil {
+		tmp = strings.Replace(tmp, "${FILESDIR}", *G.pkgContext.filesdir, -1)
 	}
 	if adjustDepth {
 		if m := match(tmp, `^\.\./\.\./([^.].*)$`); m != nil {
-			tmp = *GlobalVars.curPkgsrcdir + "/" + m[1]
+			tmp = *G.curPkgsrcdir + "/" + m[1]
 		}
 	}
-	if GlobalVars.pkgContext.pkgdir != nil {
-		tmp = strings.Replace(tmp, "${PKGDIR}", *GlobalVars.pkgContext.pkgdir, -1)
+	if G.pkgContext.pkgdir != nil {
+		tmp = strings.Replace(tmp, "${PKGDIR}", *G.pkgContext.pkgdir, -1)
 	}
 
-	_ = GlobalVars.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	_ = G.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	return tmp
 }
 
