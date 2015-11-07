@@ -691,9 +691,51 @@ func checkfileExtra(fname string) {
 	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileExtra()")
 
 	checkperms(fname)
-	lines := loadNonemptyLines(fname,false)
+	lines := loadNonemptyLines(fname, false)
 	if lines == nil {
 		return
-		}
+	}
+	checklinesTrailingEmptyLines(lines)
+}
+
+var checkfileInstall = checkfileExtra
+
+func checkfileMessage(fname string) {
+	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileMessage()")
+
+	explanation := []string{
+		"A MESSAGE file should consist of a header line, having 75 \"=\"",
+		"characters, followed by a line containing only the RCS Id, then an",
+		"empty line, your text and finally the footer line, which is the",
+		"same as the header line."}
+
+	checkperms(fname)
+	lines := loadNonemptyLines(fname, false)
+	if lines == nil {
+		return
+	}
+
+	if len(lines) < 3 {
+		lastLine := lines[len(lines)-1]
+		lastLine.logWarning("File too short.")
+		lastLine.explainWarning(explanation...)
+		return
+	}
+
+	hline := strings.Repeat("=", 75)
+	if line := lines[0]; line.text != hline {
+		line.logWarning("Expected a line of exactly 75 \"=\" characters.")
+		line.explainWarning(explanation...)
+	}
+	checklineRcsid(lines[1], ``, "")
+	for _, line := range lines {
+		checklineLength(line, 80)
+		checklineTrailingWhitespace(line)
+		checklineValidCharacters(line, "Line", reValidchars)
+	}
+	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
+		lastLine.logWarning("Expected a line of exactly 75 \"=\" characters.")
+		lastLine.explainWarning(explanation...)
+	}
 	checklinesTrailingEmptyLines(lines)
 }

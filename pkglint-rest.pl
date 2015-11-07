@@ -397,52 +397,6 @@ sub checkline_mk_cond($$) {
 	// of tree_match.
 }
 
-sub checkfile_INSTALL($) {
-	my (fname) = @_
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile_INSTALL()")
-
-	checkperms(fname)
-	my lines = load_file(fname) or return logError(fname, NO_LINE_NUMBER, "Cannot be read.")
-}
-
-sub checkfile_MESSAGE($) {
-	my (fname) = @_
-
-	my @explanation = (
-		"A MESSAGE file should consist of a header line, having 75 \"=\"",
-		"characters, followed by a line containing only the RCS Id, then an",
-		"empty line, your text and finally the footer line, which is the",
-		"same as the header line.")
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile_MESSAGE()")
-
-	checkperms(fname)
-	my lines = load_file(fname) or return logError(fname, NO_LINE_NUMBER, "Cannot be read.")
-
-	if (@{lines} < 3) {
-		logWarning(fname, NO_LINE_NUMBER, "File too short.")
-		explainWarning(fname, NO_LINE_NUMBER, @explanation)
-		return
-	}
-	if (lines.[0].text != "=" x 75) {
-		lines.[0].logWarning("Expected a line of exactly 75 \"=\" characters.")
-		explainWarning(fname, NO_LINE_NUMBER, @explanation)
-	}
-	checkline_rcsid(lines.[1], "")
-	foreach my line (@{lines}) {
-		checkline_length(line, 80)
-		checkline_trailing_whitespace(line)
-		checkline_valid_characters(line, regex_validchars)
-		checkline_spellcheck(line)
-	}
-	if (lines.[-1].text != "=" x 75) {
-		lines.[-1].logWarning("Expected a line of exactly 75 \"=\" characters.")
-		explainWarning(fname, NO_LINE_NUMBER, @explanation)
-	}
-	checklines_trailing_empty_lines(lines)
-}
-
 sub checkfile_mk($) {
 	my (fname) = @_
 
