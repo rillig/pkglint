@@ -51,10 +51,6 @@ func checkdirToplevel() {
 func checkUnusedLicenses() {
 	notImplemented()
 }
-func expandVariableDef(varname string, defval string) *string {
-	notImplemented()
-	return &defval
-}
 func varIsDefined(varname string) bool {
 	notImplemented()
 	return false

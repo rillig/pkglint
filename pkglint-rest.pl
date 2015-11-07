@@ -1,29 +1,3 @@
-sub expand_variable($) {
-	my (varname) = @_
-
-	return unless exists(pkgctx_vardef.{varname})
-	my line = pkgctx_vardef.{varname}
-	my value = line.get("value")
-
-	value = resolve_relative_path(value, true)
-	if (value =~ regex_unresolved) {
-		opt_debug_misc and logDebug(NO_FILE, NO_LINES, "[expand_variable] Trying harder to resolve variable references in ${varname}=\"${value}\".")
-		value = resolve_variable_rec2(value, {})
-		if (value =~ regex_unresolved) {
-			opt_debug_misc and logDebug(NO_FILE, NO_LINES, "[expand_variable] Failed to resolve ${varname}=\"${value}\".")
-		}
-	}
-	return value
-}
-
-sub set_default_value($$) {
-	my (varref, value) = @_
-
-	if (!defined(${varref}) || ${varref} =~ regex_unresolved) {
-		${varref} = value
-	}
-}
-
 sub shell_split($) {
 	my (text) = @_
 	my (words)

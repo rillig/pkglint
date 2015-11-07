@@ -390,10 +390,10 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 
 	determineUsedVariables(allLines)
 
-	GlobalVars.pkgContext.pkgdir = expandVariableDef("PKGDIR", ".")
-	GlobalVars.pkgContext.distinfo_file = expandVariableDef("DISTINFO_FILE", "distinfo")
-	GlobalVars.pkgContext.filesdir = expandVariableDef("FILESDIR", "files")
-	GlobalVars.pkgContext.patchdir = expandVariableDef("PATCHDIR", "patches")
+	GlobalVars.pkgContext.pkgdir = newStr(expandVariableWithDefault("PKGDIR", "."))
+	GlobalVars.pkgContext.distinfo_file = newStr(expandVariableWithDefault("DISTINFO_FILE", "distinfo"))
+	GlobalVars.pkgContext.filesdir = newStr(expandVariableWithDefault("FILESDIR", "files"))
+	GlobalVars.pkgContext.patchdir = newStr(expandVariableWithDefault("PATCHDIR", "patches"))
 
 	if varIsDefined("PHPEXT_MK") {
 		if !varIsDefined("USE_PHP_EXT_PATCHES") {
@@ -550,4 +550,19 @@ func resolveVariableRefs(text string) string {
 			return replaced
 		}
 	}
+}
+
+func expandVariableWithDefault(varname, defaultValue string) string {
+	line := G.pkgContext.vardef[varname]
+	if line == nil {
+		return defaultValue
+	}
+	
+	value := line.extra["value"].(string)
+	value = resolveVarsInRelativePath(value, true)
+	if match0(value, reUnresolvedVar) {
+		value = resolveVariableRefs(value)
+		_ = G.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "expandVariableWithDefault: failed varname=%q value=%q", varname, value)
+	}
+	return value
 }
