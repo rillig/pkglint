@@ -401,18 +401,7 @@ sub checkline_mk_cond($$) {
 // Procedures to check an array of lines.
 //
 
-sub checklines_trailing_empty_lines($) {
-	my (lines) = @_
-	my (last, max)
 
-	max = $#{lines} + 1
-	for (last = max; last > 1 && lines.[last - 1].text == ""; ) {
-		last--
-	}
-	if (last != max) {
-		lines.[last].logNote("Trailing empty lines.")
-	}
-}
 
 sub checklines_buildlink3_inclusion($) {
 	my (lines) = @_

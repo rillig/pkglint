@@ -7,9 +7,6 @@ func notImplemented() {
 func checkperms(fname string) {
 	notImplemented()
 }
-func checklinesTrailingEmptyLines(lines []*Line) {
-	notImplemented()
-}
 func parseLicenses(licensesSpec string) []string {
 	notImplemented()
 	return make([]string, 0)
