@@ -39,9 +39,6 @@ func checklineMkCond(line *Line, args string) {
 func checklinesBuildlink3Mk(lines []*Line, index int, pkgbase string) {
 	notImplemented()
 }
-func checklineMkVartype(line *Line, varname, op, value, comment string) {
-	notImplemented()
-}
 func checkfilePackageMakefile(fname string, lines []*Line) bool {
 	notImplemented()
 	return false

@@ -485,3 +485,71 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		checklineMkVaruse(line, usedVar, "", vuc)
 	}
 }
+
+func checklineMkVartype(line *Line, varname, op, value, comment string) {
+	if !G.opts.optWarnTypes {
+		return
+	}
+
+	varbase := varnameBase(varname)
+	vartype := getVariableType(line, varname)
+
+	if op == "+=" {
+		if vartype != nil {
+			if !vartype.mayBeAppendedTo() {
+				line.logWarning("The \"+=\" operator should only be used with lists.")
+			}
+		} else if !match0(varbase, `^_`) && !match0(varbase, reVarnamePlural) {
+			line.logWarning("As ${varname} is modified using \"+=\", its name should indicate plural.")
+		}
+	}
+
+	if vartype == nil {
+		// Cannot check anything if the type is not known.
+		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked variable assignment for %s.", varname)
+
+	} else if op == "!=" {
+		_ = G.opts.optDebugMisc && line.logDebug("Use of !=: %q", value)
+
+	} else if vartype.kindOfList != LK_NONE {
+		words := make([]string, 0)
+		rest := ""
+
+		if vartype.kindOfList == LK_INTERNAL {
+			words = splitOnSpace(value)
+		} else {
+			rest = value
+			for {
+				m, r := replaceFirst(rest, reShellword, "")
+				if m == nil {
+					break
+				}
+				rest = r
+
+				word := m[1]
+				if match0(word, `^#`) {
+					break
+				}
+				words = append(words, word)
+			}
+		}
+
+		for _, word := range words {
+			checklineMkVartypeBasic(line, varname, vartype, op, word, comment, true, vartype.isGuessed())
+			if vartype.kindOfList != LK_INTERNAL {
+				checklineMkShellword(line, word, true)
+			}
+		}
+
+		if !match0(rest, `^\s*$`) {
+			line.logError("Internal pkglint error: rest=%q", rest)
+		}
+
+	} else {
+		checklineMkVartypeBasic(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.isGuessed())
+	}
+}
+
+func checklineMkVartypeBasic(line *Line, varname string, vartype *Type, op, value, comment string, isList, isGuessed bool) {
+	notImplemented()
+}

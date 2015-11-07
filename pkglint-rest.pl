@@ -61,66 +61,6 @@ sub parse_mk_cond($$) {
 	}
 }
 
-sub checkline_mk_vartype($$$$$) {
-	my (line, varname, op, value, comment) = @_
-
-	return unless opt_warn_types
-
-	my vartypes = get_vartypes_map()
-	my varbase = varname_base(varname)
-	my varcanon = varname_canon(varname)
-
-	my type = get_variable_type(line, varname)
-
-	if (op == "+=") {
-		if (defined(type)) {
-			if (!type.may_use_plus_eq()) {
-				line.logWarning("The \"+=\" operator should only be used with lists.")
-			}
-		} else if (varbase !~ `^_` && varbase !~ get_regex_plurals()) {
-			line.logWarning("As ${varname} is modified using \"+=\", its name should indicate plural.")
-		}
-	}
-
-	if (!defined(type)) {
-		// Cannot check anything if the type is not known.
-		opt_debug_unchecked and line.logDebug("Unchecked variable assignment for ${varname}.")
-
-	} else if (op == "!=") {
-		opt_debug_misc and line.logDebug("Use of !=: ${value}")
-
-	} else if (type.kind_of_list != LK_NONE) {
-		my (@words, rest)
-
-		if (type.kind_of_list == LK_INTERNAL) {
-			@words = split(qr"\s+", value)
-			rest = ""
-		} else {
-			@words = ()
-			rest = value
-			while (rest =~ s/^regex_shellword//) {
-				my (word) = (1)
-				last if (word =~ `^#`)
-				push(@words, 1)
-			}
-		}
-
-		foreach my word (@words) {
-			checkline_mk_vartype_basic(line, varname, type.basic_type, op, word, comment, true, type.is_guessed)
-			if (type.kind_of_list != LK_INTERNAL) {
-				checkline_mk_shellword(line, word, true)
-			}
-		}
-
-		if (rest !~ `^\s*$`) {
-			line.logError("Internal pkglint error: rest=${rest}")
-		}
-
-	} else {
-		checkline_mk_vartype_basic(line, varname, type.basic_type, op, value, comment, type.is_practically_a_list(), type.is_guessed)
-	}
-}
-
 // The bmake parser is way too sloppy about syntax, so we need to check
 // that here.
 //
