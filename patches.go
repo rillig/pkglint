@@ -570,9 +570,7 @@ func (ctx *CheckPatchContext) useUnifiedDiffs() {
 }
 
 func (ctx *CheckPatchContext) checkText(text string) {
-	if m := match(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|`+G.opts.optRcsIds+`)(?::[^\$]*)?\$`); m != nil {
-		tagname := m[1]
-
+	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|`+G.opts.optRcsIds+`)(?::[^\$]*)?\$`); m {
 		if match(text, rePatchUniHunk) != nil {
 			ctx.line.logWarning("Found RCS tag \"$%s$\". Please remove it.", tagname)
 		} else {

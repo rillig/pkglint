@@ -156,8 +156,8 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Type, vuc *
 		(G.pkgContext == nil || G.pkgContext.vardef["GNU_CONFIGURE"] != nil)
 
 	strippedMod := mod
-	if m := match(mod, `(.*?)(?::M\*)?(?::Q)?$`); m != nil {
-		strippedMod = m[1]
+	if m, stripped := match1(mod, `(.*?)(?::M\*)?(?::Q)?$`); m {
+		strippedMod = stripped
 	}
 	correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 

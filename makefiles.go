@@ -25,8 +25,8 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 
 		isIncludeLine := false
 		includeFile := ""
-		if m := match(text, `^\.\s*include\s+\"(.*)\"$`); m != nil {
-			includeFile = resolveVarsInRelativePath(m[1], true)
+		if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
+			includeFile = resolveVarsInRelativePath(inc, true)
 			if match(includeFile, reUnresolvedVar) != nil {
 				if match(fname, `/mk/`) == nil {
 					line.logNote("Skipping include file %q. This may result in false warnings.", includeFile)
@@ -38,9 +38,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 
 		if isIncludeLine {
 			if path.Base(fname) == "buildlink3.mk" {
-				if m := match(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m != nil {
-					bl3File := m[1]
-
+				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkgContext.bl3[bl3File] = line
 					_ = G.opts.optDebugMisc && line.logDebug("Buildlink3 file in package: %v", bl3File)
 				}
@@ -58,8 +56,8 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 				_ = G.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkgContext.seenMakefileCommon = true
 			}
-			if m := match(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m != nil {
-				if m[2] != "buildlink3.mk" && m[2] != "options.mk" {
+			if m, _, mkfile := match2(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m {
+				if mkfile != "buildlink3.mk" && mkfile != "options.mk" {
 					_ = G.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
 					G.pkgContext.seenMakefileCommon = true
 				}
@@ -158,8 +156,8 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		tmp = strings.Replace(tmp, "${FILESDIR}", *G.pkgContext.filesdir, -1)
 	}
 	if adjustDepth {
-		if m := match(tmp, `^\.\./\.\./([^.].*)$`); m != nil {
-			tmp = *G.curPkgsrcdir + "/" + m[1]
+		if m, pkgpath := match1(tmp, `^\.\./\.\./([^.].*)$`); m {
+			tmp = *G.curPkgsrcdir + "/" + pkgpath
 		}
 	}
 	if G.pkgContext.pkgdir != nil {
@@ -209,7 +207,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if m := match(text, `^\s*$`); m != nil {
+	if match0(text, `^\s*$`) {
 		line.extra["is_empty"] = true
 		return
 	}

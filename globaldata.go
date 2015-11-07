@@ -56,22 +56,20 @@ func (self *GlobalData) loadDistSites() {
 	fname := self.pkgsrcdir + "/mk/fetch/sites.mk"
 	lines := loadExistingLines(fname, true)
 
-	varname := ""
 	names := make(map[string]bool)
 	ignoring := false
 	url2name := make(map[string]string)
 	for _, line := range lines {
 		text := line.text
-		if m := match(text, `^(MASTER_SITE_\w+)\+=\s*\\$`); m != nil {
-			varname = m[1]
+		if m, varname := match1(text, `^(MASTER_SITE_\w+)\+=\s*\\$`); m {
 			names[varname] = true
 			ignoring = false
 		} else if text == "MASTER_SITE_BACKUP?=\t\\" {
 			ignoring = true
-		} else if m := match(text, `^\t((?:http://|https://|ftp://)\S+/)(?:|\s*\\)$`); m != nil {
+		} else if m, url := match1(text, `^\t((?:http://|https://|ftp://)\S+/)(?:|\s*\\)$`); m {
 			if !ignoring {
 				if varname != "" {
-					url2name[m[1]] = varname
+					url2name[url] = varname
 				} else {
 					line.logError("Lonely URL found.")
 				}
@@ -97,8 +95,7 @@ func (self *GlobalData) loadPkgOptions() {
 
 	options := make(map[string]string)
 	for _, line := range lines {
-		if m := match(line.text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m != nil {
-			optname, optdescr := m[1], m[2]
+		if m, optname, optdescr := match2(line.text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
 			options[optname] = optdescr
 		} else {
 			line.logFatal("Unknown line format.")
@@ -113,10 +110,9 @@ func (self *GlobalData) loadTools() {
 		fname := *G.cwdPkgsrcdir + "/mk/tools/bsd.tools.mk"
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
-			if m := match(line.text, reMkInclude); m != nil {
-				includefile := m[2]
-				if m2 := match(includefile, `^(?:\$\{PKGSRCDIR\}/mk/tools/)?([^/]+)$`); m2 != nil {
-					toolFiles = append(toolFiles, m2[1])
+			if m, _, includefile := match2(line.text, reMkInclude); m {
+				if m, toolfile := match1(includefile, `^(?:\$\{PKGSRCDIR\}/mk/tools/)?([^/]+)$`); m {
+					toolFiles = append(toolFiles, toolfile)
 				}
 			}
 		}
@@ -135,20 +131,19 @@ func (self *GlobalData) loadTools() {
 		fname := *G.cwdPkgsrcdir + "/mk/tools/" + basename
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
-			if m := match(line.text, reVarassign); m != nil {
-				varname, value := m[1], m[3]
+			if m, varname, _, value := match3(line.text, reVarassign); m {
 				if varname == "TOOLS_CREATE" && match(value, `^([-\w.]+|\[)$`) != nil {
 					tools[value] = true
-				} else if mm := match(varname, `^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$`); mm != nil {
-					tools[mm[1]] = true
-					vartools[mm[1]] = value
-					varnameToToolname[value] = mm[1]
+				} else if m, toolname := match1(varname, `^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$`); m {
+					tools[toolname] = true
+					vartools[toolname] = value
+					varnameToToolname[value] = toolname
 
-				} else if mm := match(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); mm != nil {
-					tools[mm[1]] = true
+				} else if m, toolname := match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
+					tools[toolname] = true
 
-				} else if mm := match(varname, `_TOOLS\.(.*)`); mm != nil {
-					tools[mm[1]] = true
+				} else if m, toolname := match1(varname, `_TOOLS\.(.*)`); m {
+					tools[toolname] = true
 					for _, tool := range splitOnSpace(value) {
 						tools[tool] = true
 					}
@@ -166,9 +161,7 @@ func (self *GlobalData) loadTools() {
 		for _, line := range lines {
 			text := line.text
 
-			if m := match(text, reVarassign); m != nil {
-				varname, value := m[1], m[3]
-
+			if m, varname, _, value := match3(text, reVarassign); m {
 				if varname == "USE_TOOLS" {
 					_ = G.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
@@ -186,9 +179,7 @@ func (self *GlobalData) loadTools() {
 					}
 				}
 
-			} else if m := match(text, reMkCond); m != nil {
-				cond := m[2]
-
+			} else if m, _, cond := match2(text, reMkCond); m {
 				switch cond {
 				case "if":
 				case "ifdef":
@@ -258,10 +249,9 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 		}
 
 		if state == 3 {
-			if m := match(text, `\to\s(\S+)(?:\s*(.+))?$`); m != nil {
-				pkgname, comment := m[1], m[2]
-				if m = match(pkgname, rePkgname); m != nil {
-					updates = append(updates, SuggestedUpdate{line, m[1], m[2], comment})
+			if m, pkgname, comment := match2(text, `\to\s(\S+)(?:\s*(.+))?$`); m {
+				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m  {
+					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
 					line.logWarning("Invalid package name %v", pkgname)
 				}
@@ -291,16 +281,21 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 			continue
 		}
 
-		if m := match(text, `^\t(Updated) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
-			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
-		} else if m := match(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
-			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
-		} else if m := match(text, `^\t(Removed) (\S+) (?:successor (\S+) )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
-			changes = append(changes, Change{line, m[1], m[2], "", m[3], m[4]})
-		} else if m := match(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
-			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
-		} else if m := match(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m != nil {
-			changes = append(changes, Change{line, m[1], m[2], m[3], m[4], m[5]})
+		if m, action, pkgpath, version, author, date := match5(text, `^\t(Updated) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
+			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+
+		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
+			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+
+		} else if m, action, pkgpath, author, date := match4(text, `^\t(Removed) (\S+) (?:successor (\S+) )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
+			changes = append(changes, Change{line, action, pkgpath,"",author,date})
+
+		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
+			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+
+		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m  {
+			changes = append(changes, Change{line, action, pkgpath,version,author,date})
+
 		} else {
 			line.logWarning("Unknown doc/CHANGES line: %v", text)
 			line.explainWarning("See mk/misc/developer.mk for the rules.")

@@ -332,9 +332,7 @@ func (cv *CheckVartype) License() {
 func (cv *CheckVartype) MailAddress() {
 	line, value := cv.line, cv.value
 
-	if m := match(value, `^([+\-.0-9A-Z_a-z]+)\@([-\w\d.]+)$`); m != nil {
-		_, domain := m[1], m[2]
-
+	if m, _, domain := match2(value, `^([+\-.0-9A-Z_a-z]+)\@([-\w\d.]+)$`); m {
 		if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
 			line.logWarning("Please write NetBSD.org instead of %q.", domain)
 		}
@@ -371,9 +369,7 @@ func (cv *CheckVartype) Option() {
 		return
 	}
 
-	if m := match(value, `^-?([a-z][-0-9a-z\+]*)$`); m != nil {
-		optname := m[1]
-
+	if m, optname := match1(value, `^-?([a-z][-0-9a-z\+]*)$`); m {
 		if G.globalData.pkgOptions[optname] == "" {
 			line.logWarning("Unknown option \"%s\".", optname)
 			line.explainWarning(

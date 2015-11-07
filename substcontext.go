@@ -39,10 +39,9 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	}
 
 	var varbase, varparam string
-	if m := regexp.MustCompile(`^(SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD))\.([\-\w_]+)$`).FindStringSubmatch(varname); m != nil {
-		varbase, varparam = m[1], m[2]
+	if m,  varparam := match1(varname, `^SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD)\.([\-\w_]+)$`); m {
 		if self.id == nil {
-			line.logWarning("SUBST_CLASSES should precede the definition of %q.", varname)
+			line.logWarning("SUBST_CLASSES should come before the definition of %q.", varname)
 			self.id = &varparam
 		}
 	} else if self.id != nil {

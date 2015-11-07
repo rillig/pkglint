@@ -480,7 +480,7 @@ func getVariableType(line *Line, varname string) *Type {
 		return &Type{LK_NONE, "ShellCommand", nil, []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
-	if m := match(varname, `^TOOLS_(.*)`); m != nil && G.globalData.varnameToToolname[m[1]] != "" {
+	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
 		return &Type{LK_NONE, "Pathname", nil, []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
@@ -489,8 +489,7 @@ func getVariableType(line *Line, varname string) *Type {
 
 	// Guess the datatype of the variable based on naming conventions.
 	var gtype *Type
-	if m := match(varname, `(DIRS|DIR|FILES|FILE|PATH|PATHS|_USER|_GROUP|_ENV|_CMD|_ARGS|_CFLAGS|_CPPFLAGS|_CXXFLAGS|_LDFLAGS|_MK)$`); m != nil {
-		suffix := m[1]
+	if m, suffix := match1(varname, `(DIRS|DIR|FILES|FILE|PATH|PATHS|_USER|_GROUP|_ENV|_CMD|_ARGS|_CFLAGS|_CPPFLAGS|_CXXFLAGS|_LDFLAGS|_MK)$`); m {
 		switch suffix {
 		case "DIRS":
 			gtype = &Type{LK_EXTERNAL, "Pathmask", nil, allowRuntime, GUESSED}

@@ -318,8 +318,8 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 			"\tSUBST_SED.foo+=\t's,\\#define foo,,'")
 	}
 
-	if m := match(shelltext, `^@*-(.*MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m != nil {
-		line.logNote("You don't need to use \"-\" before %v.", m[1])
+	if m, cmd := match1(shelltext, `^@*-(.*MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m {
+		line.logNote("You don't need to use \"-\" before %v.", cmd)
 	}
 
 	rest := shelltext
