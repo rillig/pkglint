@@ -157,3 +157,21 @@ func (cv *CheckVartype) Category() {
 		cv.line.logError("Invalid category %q.", cv.value)
 	}
 }
+
+func (cv *CheckVartype) CFlag() {
+	line, value := cv.line, cv.value
+
+	if match0(value, `^(-[DILOUWfgm].|-std=`) {
+		return
+	}
+	if value == "-c99" {
+		return // Only useful for the IRIX C compiler
+	}
+	if strings.HasPrefix(value, "-") {
+		line.logWarning("Unknown compiler flag %q.", value)
+		return
+	}
+	if !match0(value, reUnresolvedVar) {
+		line.logWarning("Compiler flag %q should start with a hyphen.")
+	}
+}

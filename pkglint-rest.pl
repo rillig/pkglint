@@ -532,26 +532,7 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 		BuildlinkDepmethod => BuildlinkDepmethod,
 		BuildlinkDepth => BuildlinkDepth,
 		Category => Category,
-
-		CFlag => sub {
-			if (value =~ m"") {
-			} elsif (value eq "-c99") {
-				// Only works on IRIX, but is usually enclosed with
-				// the proper preprocessor conditional.
-
-			} elsif (value =~ m"^-[OWfgm]|^-std=.*") {
-				opt_debug_unchecked and line.logDebug("Unchecked compiler flag ${value} in ${varname}.")
-
-			} elsif (value =~ m"^-.*") {
-				line.logWarning("Unknown compiler flag \"${value}\".")
-
-			} elsif (value =~ regex_unresolved) {
-				opt_debug_unchecked and line.logDebug("Unchecked CFLAG: ${value}")
-
-			} else {
-				line.logWarning("Compiler flag \"${value}\" does not start with a dash.")
-			}
-		},
+		CFlag => CFlag,
 
 		Comment => sub {
 			if (value eq "SHORT_DESCRIPTION_OF_THE_PACKAGE") {
