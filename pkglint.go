@@ -587,3 +587,14 @@ func checklineLength(line *Line, maxlength int) {
 			"Moderately short lines also make reading easier.")
 	}
 }
+
+func checklineValidCharacters(line *Line, reValidchars string) {
+	rest := reCompile(reValidchars).ReplaceAllString(line.text, "")
+	if (rest != "") {
+		uni := ""
+		for _, c := range rest {
+			uni += fmt.Sprintf(" %U", c)
+		}
+		line.logWarning("Line contains invalid characters (%s).", uni[1:])
+	}
+}

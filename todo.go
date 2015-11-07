@@ -10,9 +10,6 @@ func checkperms(fname string) {
 func checklineTrailingWhitespace(line *Line) {
 	notImplemented()
 }
-func checklineValidCharacters(line *Line, re string) {
-	notImplemented()
-}
 func checklinesTrailingEmptyLines(lines []*Line) {
 	notImplemented()
 }

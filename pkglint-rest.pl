@@ -74,17 +74,6 @@ sub parse_licenses($) {
 // Subroutines to check a single line.
 //
 
-sub checkline_valid_characters($$) {
-	my (line, re_validchars) = @_
-	my (rest)
-
-	(rest = line.text) =~ s/re_validchars//g
-	if (rest != "") {
-		my @chars = map { sprintf("0x%02x", ord(_)); } split(//, rest)
-		line.logWarning("Line contains invalid characters (" . join(", ", @chars) . ").")
-	}
-}
-
 sub checkline_valid_characters_in_variable($$) {
 	my (line, re_validchars) = @_
 	my (varname, rest)
