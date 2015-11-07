@@ -8,6 +8,13 @@ import (
 	"strings"
 )
 
+func checklineMkShellword(line *Line, word string, checkQuoting bool) {
+	(&MkShellLine{line}).checklineMkShellword(word, checkQuoting)
+}
+func checklineMkShellcmdUse(line *Line, shellcmd string) {
+	(&MkShellLine{line}).checkCommandUse(shellcmd)
+}
+
 type MkShellLine struct {
 	line *Line
 }
@@ -520,5 +527,46 @@ func shellSplit(text string) []string {
 		return words
 	} else {
 		return nil
+	}
+}
+
+// Some shell commands should not be used in the install phase.
+func (msline *MkShellLine) checkCommandUse(shellcmd string) {
+	line := msline.line
+
+	if G.mkContext == nil || !match0(G.mkContext.target, `^(?:pre|do|post)-install$`) {
+		return
+	}
+
+	switch shellcmd {
+	case "${INSTALL}",
+		"${INSTALL_DATA}", "${INSTALL_DATA_DIR}",
+		"${INSTALL_LIB}", "${INSTALL_LIB_DIR}",
+		"${INSTALL_MAN}", "${INSTALL_MAN_DIR}",
+		"${INSTALL_PROGRAM}", "${INSTALL_PROGRAM_DIR}",
+		"${INSTALL_SCRIPT}",
+		"${LIBTOOL}",
+		"${LN}",
+		"${PAX}":
+		return
+
+	case "sed", "${SED}",
+		"tr", "${TR}":
+		line.logWarning("The shell command %q should not be used in the install phase.", shellcmd)
+		line.explainWarning(
+			"In the install phase, the only thing that should be done is to install",
+			"the prepared files to their final location. The file's contents should",
+			"not be changed anymore.")
+
+	case "cp", "${CP}":
+		line.logWarning("${CP} should not be used to install files.")
+		line.explainWarning(
+			"The ${CP} command is highly platform dependent and cannot overwrite",
+			"files that don't have write permission. Please use ${PAX} instead.",
+			"",
+			"For example, instead of",
+			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
+			"you should use",
+			"\tcd ${WRKSRC} && ${PAX} -wr * ${PREFIX}/foodir")
 	}
 }

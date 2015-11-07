@@ -222,56 +222,6 @@ sub checkline_relative_pkgdir($$) {
 	}
 }
 
-// Some shell commands should not be used in the install phase.
-//
-sub checkline_mk_shellcmd_use($$) {
-	my (line, shellcmd) = @_
-
-	use constant allowed_install_commands => array_to_hash(qw(
-		${INSTALL}
-		${INSTALL_DATA} ${INSTALL_DATA_DIR}
-		${INSTALL_LIB} ${INSTALL_LIB_DIR}
-		${INSTALL_MAN} ${INSTALL_MAN_DIR}
-		${INSTALL_PROGRAM} ${INSTALL_PROGRAM_DIR}
-		${INSTALL_SCRIPT}
-		${LIBTOOL}
-		${LN}
-		${PAX}
-	))
-	use constant discouraged_install_commands => array_to_hash(qw(
-		sed ${SED}
-		tr ${TR}
-	))
-
-	if (defined(mkctx_target) && mkctx_target =~ m"^(?:pre|do|post)-install") {
-
-		if (exists(allowed_install_commands.{shellcmd})) {
-			// Fine.
-
-		} else if (exists(discouraged_install_commands.{shellcmd})) {
-			line.logWarning("The shell command \"${shellcmd}\" should not be used in the install phase.")
-			line.explainWarning(
-"In the install phase, the only thing that should be done is to install",
-"the prepared files to their final location. The file's contents should",
-"not be changed anymore.")
-
-		} else if (shellcmd == "\${CP}") {
-			line.logWarning("\${CP} should not be used to install files.")
-			line.explainWarning(
-"The \${CP} command is highly platform dependent and cannot overwrite",
-"files that don't have write permission. Please use \${PAX} instead.",
-"",
-"For example, instead of",
-"\t\${CP} -R \${WRKSRC}/* \${PREFIX}/foodir",
-"you should use",
-"\tcd \${WRKSRC} && \${PAX} -wr * \${PREFIX}/foodir")
-
-		} else {
-			opt_debug_misc and line.logDebug("May \"${shellcmd}\" be used in the install phase?")
-		}
-	}
-}
-
 sub checkline_mk_shelltext($$) {
 	my (line, text) = @_
 	my (vartools, state, rest, set_e_mode)

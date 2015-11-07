@@ -56,9 +56,6 @@ func pkgverCmp(left, op, right string) bool {
 	notImplemented()
 	return false
 }
-func checklineMkShellcmdUse(line *Line, shellword string) {
-	notImplemented()
-}
 func checklinesMk(lines []*Line) {
 	notImplemented()
 }
@@ -70,9 +67,6 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 	notImplemented()
 }
 func checklineMkVartypeBasic(line *Line, varname, basicType, op, value, comment string, listContext, guessed bool) {
-	notImplemented()
-}
-func checklineMkShellword(line *Line, word string, _ bool) {
 	notImplemented()
 }
 func checklineRelativePath(line *Line, path string, _ bool) {
