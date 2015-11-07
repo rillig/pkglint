@@ -1,6 +1,7 @@
 package main
 
 import (
+	"path"
 	"strings"
 )
 
@@ -392,11 +393,6 @@ func (cv *CheckVartype) Option() {
 	line.logError("Invalid option name.")
 }
 
-func (cv *CheckVartype) PrefixPathname() {
-	if m := match(cv.value, `^man/(.*)`); m != nil {
-		cv.line.logWarning("Please use \"${PKGMANDIR}/%s\" instead of \"%s\".", m[1], cv.value)
-	}
-}
 
 func (cv *CheckVartype) Pathlist() {
 	if !strstr(cv.value, ":") && cv.guessed {
@@ -445,4 +441,309 @@ func (cv *CheckVartype) PkgName() {
 
 func (cv *CheckVartype) PkgPath() {
 	checklineRelativePkgdir(cv.line, *G.curPkgsrcdir+"/"+cv.value)
+}
+
+func (cv *CheckVartype) PkgOptionsVar() {
+	checklineMkVartypeBasic(cv.line, cv.varname, "Varname", cv.op, cv.value, cv.comment, false, cv.guessed)
+	if !match0(cv.value, `\$\{PKGBASE[:\}]`) {
+		cv.line.logError("PKGBASE must not be used in PKG_OPTIONS_VAR.")
+		cv.line.explainError(
+"PKGBASE is defined in bsd.pkg.mk, which is included as the",
+"very last file, but PKG_OPTIONS_VAR is evaluated earlier.",
+"Use ${PKGNAME:C/-[0-9].*//} instead.")
+	}
+}
+
+func (cv *CheckVartype) PkgRevision() {
+	if !match0(cv.value, `^[1-9]\d*$`) {
+		cv.line.logWarning("%s must be a positive integer number.",cv.varname)
+	}
+	if path.Base(cv.line.fname) != "Makefile" {
+cv.		line.logError("%s only makes sense directly in the package Makefile.", cv.varname)
+	cv.	line.explainError(
+"Usually, different packages using the same Makefile.common have",
+"different dependencies and will be bumped at different times (e.g. for",
+"shlib major bumps) and thus the PKGREVISIONs must be in the separate",
+"Makefiles. There is no practical way of having this information in a",
+"commonly used Makefile.")
+	}
+}
+
+func (cv *CheckVartype) PlatformTriple() {
+	rePart := `(?:\[[^\]]+\]|[^-\[])+`
+	reTriple := `^(`+rePart+`)-(`+rePart+`)-(`+rePart+`)$`
+	if m, opsys, _, arch := match3(cv.value, reTriple); m {
+		if !match0(opsys, `^(\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|QNX|SunOS)$`) {
+cv.			line.logWarning("Unknown operating system: %s", opsys)
+		}
+		// no check for os_version
+		if !match0(arch, `^(\*|i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
+	cv.		line.logWarning("Unknown hardware architecture: %s", arch)
+		}
+
+	} else {
+cv.		line.logWarning("%q is not a valid platform triple.", cv.value)
+		cv.line.explainWarning(
+"A platform triple has the form <OPSYS>-<OS_VERSION>-<MACHINE_ARCH>.",
+"Each of these components may be a shell globbing expression.",
+"Examples: NetBSD-*-i386, *-*-*, Linux-*-*.")
+	}
+}
+
+func (cv *CheckVartype) PrefixPathname() {
+	if m, mansubdir := match1(cv.value, `^man/(.+)`); m {
+		cv.line.logWarning("Please use \"${PKGMANDIR}/%s\" instead of %q.", mansubdir, cv.value)
+	}
+}
+
+func (cv *CheckVartype) PythonDependency() {
+	if (cv.value != cv.valueNovar) {
+cv.		line.logWarning("Python dependencies should not contain variables.")
+	}
+	if !match0(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$`) {
+		cv.line.logWarning("Invalid Python dependency %q.", cv.value)
+		cv.line.explainWarning(
+"Python dependencies must be an identifier for a package, as specified",
+"in lang/python/versioned_dependencies.mk. This identifier may be",
+"followed by :build for a build-time only dependency, or by :link for",
+"a run-time only dependency.")
+	}
+}
+
+func (cv *CheckVartype) RelativePkgDir() {
+	checklineRelativePkgdir(cv.line, cv.value)
+}
+
+func (cv *CheckVartype) RelativePkgPath() {
+	checklineRelativePath(cv.line, cv.value, true)
+}
+
+func (cv *CheckVartype) Restricted() {
+	if (cv.value != "${RESTRICTED}") {
+		cv.line.logWarning("The only valid value for ${varname} is ${RESTRICTED}.")
+		cv.line.explainWarning(
+"These variables are used to control which files may be mirrored on FTP",
+"servers or CD-ROM collections. They are not intended to mark packages",
+"whose only MASTER_SITES are on ftp.NetBSD.org.")
+	}
+}
+
+func (cv *CheckVartype) SedCommand() {
+}
+
+func (cv *CheckVartype) SedCommands() {
+	line := cv.line
+	
+	words := shellSplit(cv.value)
+	if (words==nil) {
+		line.logError("Invalid shell words in sed commands.")
+		line.explainError(
+"If your sed commands have embedded \"#\" characters, you need to escape",
+"them with a backslash, otherwise make(1) will interpret them as a",
+"comment, no matter if they occur in single or double quotes or",
+"whatever.")
+
+	} else {
+		nwords := len(words)
+		ncommands := 0
+
+		for i := 0; i < nwords; i++ {
+			word := words[i]
+			checklineMkShellword(cv.line, word, true)
+
+			if (word == "-e") {
+				if (i + 1 < nwords) {
+					// Check the real sed command here.
+					i++
+					ncommands++
+					if (ncommands > 1) {
+						line.logWarning("Each sed command should appear in an assignment of its own.")
+						line.explainWarning(
+"For example, instead of",
+"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
+"use",
+"    SUBST_SED.foo+=        -e s,command1,,",
+"    SUBST_SED.foo+=        -e s,command2,,",
+"",
+"This way, short sed commands cannot be hidden at the end of a line.")
+					}
+					checklineMkShellword(line, words[i - 1], true)
+					checklineMkShellword(line, words[i], true)
+					checklineMkVartypeBasic(line, cv.varname, "SedCommand", cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
+				} else {
+					line.logError("The -e option to sed requires an argument.")
+				}
+			} else if (word == "-E") {
+				// Switch to extended regular expressions mode.
+
+			} else if (word == "-n") {
+				// Don't print lines per default.
+
+			} else if i == 0 && match0(word , `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`) {
+				line.logWarning("Please always use \"-e\" in sed commands, even if there is only one substitution.")
+
+			} else {
+				line.logWarning("Unknown sed command %q.", word)
+			}
+		}
+	}
+}
+
+func (cv *CheckVartype) ShellCommand() {
+	(&MkShellLine{cv.line}).checklineMkShelltext(cv.value)
+}
+
+func (cv *CheckVartype) ShellWord() {
+	if (!cv.listContext) {
+		checklineMkShellword(cv.line, cv.value, true)
+	}
+}
+
+func (cv *CheckVartype) Stage() {
+	if !match0(cv.value ,`^(?:pre|do|post)-(?:extract|patch|configure|build|install)`) {
+		cv.line.logWarning("Invalid stage name. Use one of {pre,do,post}-{extract,patch,configure,build,install}.")
+	}
+}
+
+func (cv *CheckVartype) String() {
+	// No further checks possible.
+}
+
+func (cv *CheckVartype) Tool() {
+	if (cv.varname == "TOOLS_NOOP" && cv.op == "+=") {
+		// no warning for package-defined tool definitions
+
+	} else if m, toolname, tooldep := match2(cv.value, `^([-\w]+|\[)(?::(\w+))?$`) ;m{
+		if !G.globalData.tools[toolname] {
+			cv.line.logError("Unknown tool %q.", toolname)
+		}
+		if tooldep != "" && !match0(tooldep , `^(bootstrap|build|pkgsrc|run)`) {
+			cv.line.logError("Unknown tool dependency %q. Use one of \"build\", \"pkgsrc\" or \"run\".", tooldep)
+		}
+	} else {
+		cv.line.logError("Invalid tool syntax: %q.", cv.value)
+	}
+}
+
+func (cv *CheckVartype) Unchecked() {
+	// Do nothing, as the name says.
+}
+
+func (cv *CheckVartype) URL() {
+	line, value := cv.line,cv.value
+	
+	if value == "" && strings.HasPrefix(cv.comment,"#") {
+		// Ok
+
+	} else if m, name, subdir := match2(value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`);m {
+		if !G.globalData.masterSiteVars[name] {
+			line.logError("%s does not exist.",name)
+		}
+		if !strings.HasSuffix(subdir, "/") {
+			line.logError("The subdirectory in %s must end with a slash.", name)
+		}
+
+	} else if match0(value , reUnresolvedVar) {
+		// No further checks
+
+	} else if m, _, host, _, _ := match4(value , `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?\@A-Z_a-z~]|#)*$`) ;m{
+		if match0(host, `(?i)\.NetBSD\.org$`) && !match0(host, `\.NetBSD\.org$`) {
+			line.logWarning("Please write NetBSD.org instead of %s.", host)
+		}
+
+	} else if m, scheme, _, absPath := match3(value, `^([0-9A-Za-z]+)://([^/]+)(.*)$`) ;m{
+		if (scheme != "ftp" && scheme != "http" && scheme != "https" && scheme != "gopher") {
+			line.logWarning("%q is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.",value)
+
+		} else if (absPath == "") {
+			line.logNote("For consistency, please add a trailing slash to %q.", value)
+
+		} else {
+			line.logWarning("%q is not a valid URL.",value)
+		}
+
+	} else {
+		line.logWarning("%q is not a valid URL.",value)
+	}
+}
+
+func (cv *CheckVartype) UserGroupName() {
+	if (cv.value != cv.valueNovar) {
+		// No checks for now.
+	} else if !match0(cv.value ,`^[0-9_a-z]+$`) {
+		cv.line.logWarning("Invalid user or group name %q.", cv.value)
+	}
+}
+
+func (cv *CheckVartype) Varname() {
+	if (cv.value != "" && cv.valueNovar == "") {
+		// The value of another variable
+
+	} else if !match0(cv.valueNovar , `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
+		cv.line.logWarning("\"${value}\" is not a valid variable name.")
+	}
+}
+
+func (cv *CheckVartype) Version() {
+	if !match0(cv.value,`^([\d.])+$`) {
+		cv.line.logWarning("Invalid version number %q.",cv.value)
+	}
+}
+
+func (cv *CheckVartype) WrapperReorder() {
+	if !match0(cv.value ,`^reorder:l:([\w\-]+):([\w\-]+)$`) {
+		cv.line.logWarning("Unknown wrapper reorder command %q.", cv.value)
+	}
+}
+
+func (cv *CheckVartype) WrapperTransform() {
+	switch {
+	case match0(cv.value, `^rm:(?:-[DILOUWflm].*|-std=.*)$`):
+	case match0(cv.value ,`^l:([^:]+):(.+)$`):
+	case match0(cv.value ,`^'?(?:opt|rename|rm-optarg|rmdir):.*$`):
+	case cv.value == "-e":
+	case match0(cv.value ,`^\"?'?s[|:,]`):
+	default:
+		cv.line.logWarning("Unknown wrapper transform command %q.",cv.value)
+	}
+}
+
+func (cv *CheckVartype) WrkdirSubdirectory() {
+	checklineMkVartypeBasic(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+}
+
+func (cv *CheckVartype) WrksrcSubdirectory() {
+	if m, _, rest := match2(cv.value ,`^(\$\{WRKSRC\})(?:/(.*))?`);m {
+		if rest == "" { rest = "." }
+		cv.line.logNote("You can use %q instead of %q.", rest, cv.value)
+
+	} else if (cv.value != "" && cv.valueNovar == "") {
+		// The value of another variable
+
+	} else if !match0(cv.valueNovar ,`^(?:\.|[0-9A-Za-z_\@][-0-9A-Za-z_\@./+]*)$`) {
+		cv.line.logWarning("%q is not a valid subdirectory of ${WRKSRC}.",cv.value)
+	}
+}
+
+func (cv *CheckVartype) Yes() {
+	if !match0(cv.value ,`^(?:YES|yes)(?:\s+#.*)?$`) {
+cv.		line.logWarning("%s should be set to YES or yes.",cv.varname)
+	cv.	line.explainWarning(
+"This variable means \"yes\" if it is defined, and \"no\" if it is",
+"undefined. Even when it has the value \"no\", this means \"yes\".",
+"Therefore when it is defined, its value should correspond to its",
+"meaning.")
+	}
+}
+
+func (cv *CheckVartype) YesNo() {
+	if !match0(cv.value ,`^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
+		cv.line.logWarning("%s should be set to YES, yes, NO, or no.",cv.varname)
+	}
+}
+
+func (cv *CheckVartype) YesNo_Indirectly() {
+	if cv.valueNovar != "" && !match0(cv.value ,`^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
+		cv.line.logWarning("%s should be set to YES, yes, NO, or no.",cv.varname)
+	}
 }

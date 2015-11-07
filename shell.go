@@ -95,7 +95,7 @@ outer:
 			line.logError("Unfinished backquotes: rest=%v", rest)
 
 		endOfBackticks:
-			msline.checklineMkShelltext(line, stripped)
+			msline.checklineMkShelltext(stripped)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case replacestart(&rest, &m, `^\$\{(`+reVarname+`|@)(:[^\{]+)?\}`),
@@ -258,7 +258,8 @@ outer:
 	}
 }
 
-func (msline *MkShellLine) checklineMkShelltext(line *Line, shelltext string) {
+func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
+	line := msline.line
 	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
 
 	type State string
