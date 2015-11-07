@@ -15,6 +15,35 @@ func checklineMkShellcmdUse(line *Line, shellcmd string) {
 	(&MkShellLine{line}).checkCommandUse(shellcmd)
 }
 
+type ShellCommandState string
+
+const (
+	SCST_START           ShellCommandState = "start"
+	SCST_CONT            ShellCommandState = "continuation"
+	SCST_INSTALL         ShellCommandState = "install"
+	SCST_INSTALL_D       ShellCommandState = "install -d"
+	SCST_MKDIR           ShellCommandState = "mkdir"
+	SCST_PAX             ShellCommandState = "pax"
+	SCST_PAX_S           ShellCommandState = "pax -s"
+	SCST_SED             ShellCommandState = "sed"
+	SCST_SED_E           ShellCommandState = "sed -e"
+	SCST_SET             ShellCommandState = "set"
+	SCST_SET_CONT        ShellCommandState = "set-continuation"
+	SCST_COND            ShellCommandState = "cond"
+	SCST_COND_CONT       ShellCommandState = "cond-continuation"
+	SCST_CASE            ShellCommandState = "case"
+	SCST_CASE_IN         ShellCommandState = "case in"
+	SCST_CASE_LABEL      ShellCommandState = "case label"
+	SCST_CASE_LABEL_CONT ShellCommandState = "case-label-continuation"
+	SCST_CASE_PAREN      ShellCommandState = "case-paren"
+	SCST_FOR             ShellCommandState = "for"
+	SCST_FOR_IN          ShellCommandState = "for-in"
+	SCST_FOR_CONT        ShellCommandState = "for-continuation"
+	SCST_ECHO            ShellCommandState = "echo"
+	SCST_INSTALL_DIR     ShellCommandState = "install-dir"
+	SCST_INSTALL_DIR2    ShellCommandState = "install-dir2"
+)
+
 type MkShellLine struct {
 	line *Line
 }
@@ -269,34 +298,6 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	line := msline.line
 	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
 
-	type ShellCommandState string
-	const (
-		SCST_START           ShellCommandState = "start"
-		SCST_CONT            ShellCommandState = "continuation"
-		SCST_INSTALL         ShellCommandState = "install"
-		SCST_INSTALL_D       ShellCommandState = "install -d"
-		SCST_MKDIR           ShellCommandState = "mkdir"
-		SCST_PAX             ShellCommandState = "pax"
-		SCST_PAX_S           ShellCommandState = "pax -s"
-		SCST_SED             ShellCommandState = "sed"
-		SCST_SED_E           ShellCommandState = "sed -e"
-		SCST_SET             ShellCommandState = "set"
-		SCST_SET_CONT        ShellCommandState = "set-continuation"
-		SCST_COND            ShellCommandState = "cond"
-		SCST_COND_CONT       ShellCommandState = "cond-continuation"
-		SCST_CASE            ShellCommandState = "case"
-		SCST_CASE_IN         ShellCommandState = "case in"
-		SCST_CASE_LABEL      ShellCommandState = "case label"
-		SCST_CASE_LABEL_CONT ShellCommandState = "case-label-continuation"
-		SCST_CASE_PAREN      ShellCommandState = "case-paren"
-		SCST_FOR             ShellCommandState = "for"
-		SCST_FOR_IN          ShellCommandState = "for-in"
-		SCST_FOR_CONT        ShellCommandState = "for-continuation"
-		SCST_ECHO            ShellCommandState = "echo"
-		SCST_INSTALL_DIR     ShellCommandState = "install-dir"
-		SCST_INSTALL_DIR2    ShellCommandState = "install-dir2"
-	)
-
 	if strings.Contains(shelltext, "${SED}") || strings.Contains(shelltext, "${MV}") {
 		line.logNote("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		line.explainNote(
@@ -376,17 +377,16 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 					"file. In that case, you can just set AUTO_MKDIRS=yes and be done.")
 			}
 		}
-		
+
 		if state == SCST_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
 			line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
 			line.explainWarning(
-"Many implementations of install(1) can handle more, but pkgsrc aims at",
-"maximum portability.")
-					}
-		
-		
+				"Many implementations of install(1) can handle more, but pkgsrc aims at",
+				"maximum portability.")
+		}
+
 		//AAAAAASDFDHFJDFSDGSDGSDGSD
-		
+
 	}
 }
 
