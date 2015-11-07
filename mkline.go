@@ -4,6 +4,73 @@ import (
 	"strings"
 )
 
+func checklineMkVardef(line *Line, varname, op string) {
+	_ = G.opts.optDebugTrace && line.logDebug("checkline_mk_vardef(%v, %v)", varname, op)
+
+	if G.pkgContext != nil && G.pkgContext.vardef[varname] == nil {
+		G.pkgContext.vardef[varname] = line
+	}
+
+	if G.mkContext.vardef[varname] == nil {
+		G.mkContext.vardef[varname] = line
+	}
+
+	if !G.opts.optWarnPerm {
+		return
+	}
+
+	perms := getVariablePermissions(line, varname)
+	var needed string
+	switch op {
+	case "=":
+		needed = "s"
+	case "!=":
+		needed = "s"
+	case "?=":
+		needed = "d"
+	case "+=":
+		needed = "a"
+	case ":=":
+		needed = "s"
+	}
+
+	if !strstr(perms, needed) {
+		expandPermission := func(perm string) string {
+			result := ""
+			for _, c := range perm {
+				switch c {
+				case 'a':
+					result += "append, "
+				case 'd':
+					result += "default, "
+				case 'p':
+					result += "preprocess, "
+				case 's':
+					result += "set, "
+				case 'u':
+					result += "runtime-use, "
+				case '?':
+					result += "unknown, "
+				}
+			}
+			return strings.TrimRight(result, ", ")
+		}
+
+		line.logWarning("Permission [%s] requested for %s but only [%s] is allowed.",
+			expandPermission(needed), varname, expandPermission(perms))
+		line.explainWarning(
+			"The available permissions are:",
+			"\tappend\t\tappend something using +=",
+			"\tdefault\t\tset a default value using ?=",
+			"\tpreprocess\tuse a variable during preprocessing",
+			"\truntime\t\tuse a variable at runtime",
+			"\tset\t\tset a variable using :=, =, !=",
+			"",
+			"A \"?\" means that pkglint doesn't know which permissions are allowed",
+			"and which are not.")
+	}
+}
+
 func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContext) {
 	_ = G.opts.optDebugTrace && line.logDebug("checklineMkVaruse(%q, %q, %q)", varname, mod, *vuc)
 

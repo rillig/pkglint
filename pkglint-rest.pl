@@ -95,50 +95,6 @@ sub checkline_relative_pkgdir($$) {
 	}
 }
 
-sub expand_permission($) {
-	my (perm) = @_
-	my %fullperm = ( "a" => "append", "d" => "default", "p" => "preprocess", "s" => "set", "u" => "runtime", "?" => "unknown" )
-	my result = join(", ", map { fullperm{_} } split //, perm)
-	result =~ s/, $//g
-
-	return result
-}
-
-sub checkline_mk_vardef($$$) {
-	my (line, varname, op) = @_
-
-	opt_debug_trace and line.logDebug("checkline_mk_vardef(${varname}, ${op})")
-
-	// If we are checking a whole package, add it to the package-wide
-	// list of defined variables.
-	if (defined(pkgctx_vardef) && !exists(pkgctx_vardef.{varname})) {
-		pkgctx_vardef.{varname} = line
-	}
-
-	// Add it to the file-wide list of defined variables.
-	if (!exists(mkctx_vardef.{varname})) {
-		mkctx_vardef.{varname} = line
-	}
-
-	return unless opt_warn_perm
-
-	my perms = get_variable_perms(line, varname)
-	my needed = { "=" => "s", "!=" => "s", "?=" => "d", "+=" => "a", ":=" => "s" }.{op}
-	if (index(perms, needed) == -1) {
-		line.logWarning("Permission [" . expand_permission(needed) . "] requested for ${varname}, but only [" . expand_permission(perms) . "] is allowed.")
-		line.explainWarning(
-"The available permissions are:",
-"\tappend\t\tappend something using +=",
-"\tdefault\t\tset a default value using ?=",
-"\tpreprocess\tuse a variable during preprocessing",
-"\truntime\t\tuse a variable at runtime",
-"\tset\t\tset a variable using :=, =, !=",
-"",
-"A \"?\" means that it is not yet clear which permissions are allowed",
-"and which aren't.")
-	}
-}
-
 // @param op
 //	The operator that is used for reading or writing to the variable.
 //	One of: "=", "+=", ":=", "!=", "?=", "use", "pp-use", "".
