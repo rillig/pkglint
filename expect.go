@@ -12,8 +12,16 @@ func (ctx *ExpectContext) currentLine() *Line {
 
 	return NewLine(ctx.lines[0].fname, "EOF", "", nil) // dummy
 }
+
 func (ctx *ExpectContext) previousLine() *Line {
 	return ctx.lines[ctx.index-1]
+}
+
+func (ctx *ExpectContext) eof() bool {
+	return !(ctx.index < len(ctx.lines))
+}
+func (ctx *ExpectContext) advance() {
+	ctx.index++
 }
 
 func (ctx *ExpectContext) advanceIfMatches(re string) []string {
