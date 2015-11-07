@@ -61,28 +61,6 @@ sub parse_mk_cond($$) {
 	}
 }
 
-sub checkline_relative_pkgdir($$) {
-	my (line, path) = @_
-
-	checkline_relative_path(line, path, true)
-	path = resolve_relative_path(path, false)
-
-	if (path =~ `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`) {
-		my otherpkgpath = 1
-		if (! -f "cwd_pkgsrcdir/otherpkgpath/Makefile") {
-			line.logError("There is no package in otherpkgpath.")
-		}
-
-	} else {
-		line.logWarning("\"${path}\" is not a valid relative package directory.")
-		line.explainWarning(
-"A relative pathname always starts with \"../../\", followed",
-"by a category, a slash and a the directory name of the package.",
-"For example, \"../../misc/screen\" is a valid relative pathname.")
-	}
-}
-
-
 sub checkline_mk_vartype($$$$$) {
 	my (line, varname, op, value, comment) = @_
 

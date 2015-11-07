@@ -741,7 +741,25 @@ func checkfileMessage(fname string) {
 }
 
 func parseLicenses(licenses string) []string {
-	noPerl := strings.Replace(licenses,"${PERL5_LICENSE}",  "gnu-gpl-v2 OR artistic",-1)
+	noPerl := strings.Replace(licenses, "${PERL5_LICENSE}", "gnu-gpl-v2 OR artistic", -1)
 	noOps := reCompile(`[()]|AND|OR`).ReplaceAllString(noPerl, "") // cheated
 	return splitOnSpace(noOps)
+}
+
+func checklineRelativePkgdir(line *Line, pkgdir string) {
+	checklineRelativePath(line, pkgdir, true)
+	pkgdir = resolveVarsInRelativePath(pkgdir, false)
+
+	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
+		if !fileExists(*G.cwdPkgsrcdir + "/" + otherpkgpath + "/Makefile") {
+			line.logError("There is no package in otherpkgpath.")
+		}
+
+	} else {
+		line.logWarning("%q is not a valid relative package directory.", pkgdir)
+		line.explainWarning(
+			"A relative pathname always starts with \"../../\", followed",
+			"by a category, a slash and a the directory name of the package.",
+			"For example, \"../../misc/screen\" is a valid relative pathname.")
+	}
 }
