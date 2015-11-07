@@ -251,3 +251,41 @@ func (cv *CheckVartype) Dependency() {
 			"* package-3.141")
 	}
 }
+
+func (cv *CheckVartype) DependencyWithPath() {
+	line, value := cv.line, cv.value
+	if value != cv.valueNovar {
+		return // It's probably not worth checking this.
+	}
+
+	if m, pattern, relpath, _, pkg := match4(value, `(.*):(\.\./\.\./([^/]+)/([^/]+))$`); m {
+		checklineRelativePkgdir(line, relpath)
+
+		if pkg == "msgfmt" || pkg == "gettext" {
+			line.logWarning("Please use USE_TOOLS+=msgfmt instead of this dependency.")
+		} else if pkg == "perl5" {
+			line.logWarning("Please use USE_TOOLS+=perl:run instead of this dependency.")
+
+		} else if pkg == "gmake" {
+			line.logWarning("Please use USE_TOOLS+=gmake instead of this dependency.")
+		}
+
+		if !match0(pattern, reDependencyCmp) && !match0(pattern, reDependencyWildcard) {
+			line.logError("Unknown dependency pattern %q.", pattern)
+		}
+		return
+	}
+
+	if match0(value, `:\.\./[^/]+$`) {
+		line.logWarning("Dependencies should have the form \"../../category/package\".")
+		line.explainWarning(explanationRelativeDirs()...)
+		return
+	}
+
+	line.logWarning("Unknown dependency format.")
+	line.explainWarning(
+		"Examples for valid dependencies are:",
+		"  package-[0-9]*:../../category/package",
+		"  package>=3.41:../../category/package",
+		"  package-2.718:../../category/package")
+}

@@ -527,47 +527,6 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 	}
 
 	my %type_dispatch = (
-		DependencyWithPath => sub {
-			if (value =~ regex_unresolved) {
-				// don't even try to check anything
-			} elsif (value =~ m"(.*):(\.\./\.\./([^/]+)/([^/]+))$") {
-				my (pattern, relpath, cat, pkg) = (1, 2, 3, 4)
-
-				checkline_relative_pkgdir(line, relpath)
-
-				if (pkg eq "msgfmt" || pkg eq "gettext") {
-					line.logWarning("Please use USE_TOOLS+=msgfmt instead of this dependency.")
-
-				} elsif (pkg =~ m"^perl\d+") {
-					line.logWarning("Please use USE_TOOLS+=perl:run instead of this dependency.")
-
-				} elsif (pkg eq "gmake") {
-					line.logWarning("Please use USE_TOOLS+=gmake instead of this dependency.")
-
-				}
-
-				if (pattern =~ regex_dependency_lge) {
-//				(abi_pkg, abi_version) = (1, 2)
-				} elsif (pattern =~ regex_dependency_wildcard) {
-//				(abi_pkg) = (1)
-				} else {
-					line.logError("Unknown dependency pattern \"${pattern}\".")
-				}
-
-			} elsif (value =~ m":\.\./[^/]+$") {
-				line.logWarning("Dependencies should have the form \"../../category/package\".")
-				line.explainWarning(expl_relative_dirs)
-
-			} else {
-				line.logWarning("Unknown dependency format.")
-				line.explainWarning(
-"Examples for valid dependencies are:",
-"  package-[0-9]*:../../category/package",
-"  package>=3.41:../../category/package",
-"  package-2.718:../../category/package")
-			}
-		},
-
 		DistSuffix => sub {
 			if (value eq ".tar.gz") {
 				line.logNote("${varname} is \".tar.gz\" by default, so this definition may be redundant.")

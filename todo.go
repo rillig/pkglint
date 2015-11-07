@@ -66,3 +66,6 @@ func varIsUsed(varname string) bool {
 	notImplemented()
 	return false
 }
+func checklineRelativePkgdir(line *Line, pkgdir string) {
+	notImplemented()
+}
