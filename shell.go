@@ -269,32 +269,32 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	line := msline.line
 	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
 
-	type State string
+	type ShellCommandState string
 	const (
-		S_START           State = "start"
-		S_CONT            State = "continuation"
-		S_INSTALL         State = "install"
-		S_INSTALL_D       State = "install -d"
-		S_MKDIR           State = "mkdir"
-		S_PAX             State = "pax"
-		S_PAX_S           State = "pax -s"
-		S_SED             State = "sed"
-		S_SED_E           State = "sed -e"
-		S_SET             State = "set"
-		S_SET_CONT        State = "set-continuation"
-		S_COND            State = "cond"
-		S_COND_CONT       State = "cond-continuation"
-		S_CASE            State = "case"
-		S_CASE_IN         State = "case in"
-		S_CASE_LABEL      State = "case label"
-		S_CASE_LABEL_CONT State = "case-label-continuation"
-		S_CASE_PAREN      State = "case-paren"
-		S_FOR             State = "for"
-		S_FOR_IN          State = "for-in"
-		S_FOR_CONT        State = "for-continuation"
-		S_ECHO            State = "echo"
-		S_INSTALL_DIR     State = "install-dir"
-		S_INSTALL_DIR2    State = "install-dir2"
+		SCST_START           ShellCommandState = "start"
+		SCST_CONT            ShellCommandState = "continuation"
+		SCST_INSTALL         ShellCommandState = "install"
+		SCST_INSTALL_D       ShellCommandState = "install -d"
+		SCST_MKDIR           ShellCommandState = "mkdir"
+		SCST_PAX             ShellCommandState = "pax"
+		SCST_PAX_S           ShellCommandState = "pax -s"
+		SCST_SED             ShellCommandState = "sed"
+		SCST_SED_E           ShellCommandState = "sed -e"
+		SCST_SET             ShellCommandState = "set"
+		SCST_SET_CONT        ShellCommandState = "set-continuation"
+		SCST_COND            ShellCommandState = "cond"
+		SCST_COND_CONT       ShellCommandState = "cond-continuation"
+		SCST_CASE            ShellCommandState = "case"
+		SCST_CASE_IN         ShellCommandState = "case in"
+		SCST_CASE_LABEL      ShellCommandState = "case label"
+		SCST_CASE_LABEL_CONT ShellCommandState = "case-label-continuation"
+		SCST_CASE_PAREN      ShellCommandState = "case-paren"
+		SCST_FOR             ShellCommandState = "for"
+		SCST_FOR_IN          ShellCommandState = "for-in"
+		SCST_FOR_CONT        ShellCommandState = "for-continuation"
+		SCST_ECHO            ShellCommandState = "echo"
+		SCST_INSTALL_DIR     ShellCommandState = "install-dir"
+		SCST_INSTALL_DIR2    ShellCommandState = "install-dir2"
 	)
 
 	if strings.Contains(shelltext, "${SED}") || strings.Contains(shelltext, "${MV}") {
@@ -324,22 +324,22 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		msline.checkLineStart(hidden, macro, rest, &eflagMode)
 	}
 
-	state := S_START
+	state := SCST_START
 	for replacestart(&rest, &m, reShellword) {
 		shellword := m[1]
 
 		_ = GlobalVars.opts.optDebugShell && line.logDebug("checklineMkShelltext state=%v shellword=%v", state, shellword)
 
-		msline.checklineMkShellword(shellword, !(state == S_CASE ||
-			state == S_FOR_CONT ||
-			state == S_SET_CONT ||
-			(state == S_START && match(shellword, reShVarassign) != nil)))
+		msline.checklineMkShellword(shellword, !(state == SCST_CASE ||
+			state == SCST_FOR_CONT ||
+			state == SCST_SET_CONT ||
+			(state == SCST_START && match(shellword, reShVarassign) != nil)))
 
-		if state == S_START || state == S_COND {
+		if state == SCST_START || state == SCST_COND {
 			msline.checkCommandStart(shellword)
 		}
 
-		if state == S_COND && shellword == "cd" {
+		if state == SCST_COND && shellword == "cd" {
 			line.logError("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 			line.explainError(
 				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
@@ -347,13 +347,13 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 				"\"||\" operator.")
 		}
 
-		if state != S_PAX_S && state != S_SED_E && state != S_CASE_LABEL {
+		if state != SCST_PAX_S && state != SCST_SED_E && state != SCST_CASE_LABEL {
 			checklineMkAbsolutePathname(line, shellword)
 		}
 
-		if (state == S_INSTALL_D || state == S_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
+		if (state == SCST_INSTALL_D || state == SCST_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
 			line.logWarning("Please use AUTO_MKDIRS instead of %q.",
-				ifelseStr(state == S_MKDIR, "${MKDIR}", "${INSTALL} -d"))
+				ifelseStr(state == SCST_MKDIR, "${MKDIR}", "${INSTALL} -d"))
 			line.explainWarning(
 				"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
 				"mentioned in the PLIST. If you need additional directories, specify",
@@ -361,7 +361,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 				"${PREFIX}.")
 		}
 
-		if (state == S_INSTALL_DIR || state == S_INSTALL_DIR2) && match(shellword, reMkShellvaruse) == nil {
+		if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && match(shellword, reMkShellvaruse) == nil {
 			if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
 				line.logNote("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
 				line.explainNote(
@@ -377,7 +377,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 			}
 		}
 		
-		if state == S_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
+		if state == SCST_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
 			line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
 			line.explainWarning(
 "Many implementations of install(1) can handle more, but pkgsrc aims at",
