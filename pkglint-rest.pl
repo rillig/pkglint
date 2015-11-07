@@ -96,40 +96,6 @@ sub checkline_relative_pkgdir($$) {
 }
 
 
-// Checks whether the list of version numbers that are given as the
-// C<value> of the variable C<varname> are in decreasing order.
-sub checkline_decreasing_order($$$) {
-	my (line, varname, value) = @_
-
-	my @pyver = split(qr"\s+", value)
-	if (!@pyver) {
-		line.logError("There must be at least one value for ${varname}.")
-		return
-	}
-
-	my ver = shift(@pyver)
-	if (ver !~ `^\d+$`) {
-		line.logError("All values for ${varname} must be numeric.")
-		return
-	}
-
-	while (@pyver) {
-		my nextver = shift(@pyver)
-		if (nextver !~ `^\d+$`) {
-			line.logError("All values for ${varname} must be numeric.")
-			return
-		}
-
-		if (nextver >= ver) {
-			line.logWarning("The values for ${varname} should be in decreasing order.")
-			line.explainWarning(
-"If they aren't, it may be possible that needless versions of packages",
-"are installed.")
-		}
-		ver = nextver
-	}
-}
-
 sub checkline_mk_vartype($$$$$) {
 	my (line, varname, op, value, comment) = @_
 
@@ -277,7 +243,7 @@ sub checkline_mk_varassign($$$$$) {
 	}
 
 	if (varname == "PYTHON_VERSIONS_ACCEPTED") {
-		checkline_decreasing_order(line, varname, value)
+		checklineMkDecreasingOrder(line, varname, value)
 	}
 
 	if (defined(comment) && comment == "# defined" && varname !~ `.*(?:_MK|_COMMON)$`) {

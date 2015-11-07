@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -306,5 +307,27 @@ func checklineMkVartypeSimple(line *Line, varname string, basicType string, op, 
 func checklineMkVartypeEnum(line *Line, varname string, enumValues map[string]bool, enumValuesStr, op, value, comment string, listContext, guessed bool) {
 	if !enumValues[value] {
 		line.logWarning("%q is not valid for %s. Use one of { %s } instead.", value, varname, enumValuesStr)
+	}
+}
+
+func checklineMkDecreasingOrder(line *Line, varname, value string) {
+	strversions := splitOnSpace(value)
+	intversions := make([]int, len(strversions))
+	for i, strversion := range strversions {
+		iver, err := strconv.Atoi(strversion)
+		if err != nil || !(iver > 0) {
+			line.logError("All values for %s must be positive integers.", varname)
+			return
+		}
+		intversions[i] = iver
+	}
+
+	for i, ver := range intversions[1:] {
+		if ver >= intversions[i-1] {
+			line.logWarning("The values for %s should be in decreasing order.", varname)
+			line.explainWarning(
+				"If they aren't, it may be possible that needless versions of packages",
+				"are installed.")
+		}
 	}
 }
