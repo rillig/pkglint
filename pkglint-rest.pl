@@ -74,18 +74,6 @@ sub parse_licenses($) {
 // Subroutines to check a single line.
 //
 
-sub checkline_length($$) {
-	my (line, maxlength) = @_
-
-	if (length(line.text) > maxlength) {
-		line.logWarning("Line too long (should be no more than maxlength characters).")
-		line.explainWarning(
-"Back in the old time, terminals with 80x25 characters were common.",
-"And this is still the default size of many terminal emulators.",
-"Moderately short lines also make reading easier.")
-	}
-}
-
 sub checkline_valid_characters($$) {
 	my (line, re_validchars) = @_
 	my (rest)

@@ -577,3 +577,13 @@ func getVariablePermissions(line *Line, varname string) string {
 	}
 	return vartype.effectivePermissions(line.fname)
 }
+
+func checklineLength(line *Line, maxlength int) {
+	if len(line.text) > maxlength {
+		line.logWarning("Line too long (should be no more than maxlength characters).")
+		line.explainWarning(
+			"Back in the old time, terminals with 80x25 characters were common.",
+			"And this is still the default size of many terminal emulators.",
+			"Moderately short lines also make reading easier.")
+	}
+}
