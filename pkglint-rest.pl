@@ -74,31 +74,6 @@ sub parse_licenses($) {
 // Subroutines to check a single line.
 //
 
-sub checkline_mk_absolute_pathname($$) {
-	my (line, text) = @_
-	my abspath
-
-	opt_debug_trace and line.logDebug("checkline_mk_absolute_pathname(${text})")
-
-	// In the GNU coding standards, DESTDIR is defined as a (usually
-	// empty) prefix that can be used to install files to a different
-	// location from what they have been built for. Therefore
-	// everything following it is considered an absolute pathname.
-	// Another commonly used context is in assignments like
-	// "bindir=/bin".
-	if (text =~ `(?:^|\$\{DESTDIR\}|\$\(DESTDIR\)|[\w_]+\s*=\s*)(/(?:[^\`'\`\s]|\"[^\"*]\"|'[^']*'|\`[^\`]*\`)*)") {
-		my path = 1
-
-		if (path =~ `^/\w`) {
-			abspath = path
-		}
-	}
-
-	if (defined(abspath)) {
-		checkword_absolute_pathname(line, abspath)
-	}
-}
-
 sub checkline_relative_path($$$) {
 	my (line, path, must_exist) = @_
 	my (res_path)

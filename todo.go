@@ -18,9 +18,6 @@ func normalizePathname(fname string) string {
 	notImplemented()
 	return fname
 }
-func checklineMkAbsolutePathname(line *Line, text string) {
-	notImplemented()
-}
 func checkdirCvs(fname string) {
 	notImplemented()
 }
