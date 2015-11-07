@@ -566,3 +566,12 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	}
 	return value
 }
+
+func getVariablePermissions(line *Line, varname string) string {
+	vartype := getVariableType(line, varname)
+	if vartype == nil {
+		_ = G.opts.optDebugMisc && line.logDebug("No type definition found for %q.", varname)
+		return "adpsu"
+	}
+	return vartype.effectivePermissions(line.fname)
+}

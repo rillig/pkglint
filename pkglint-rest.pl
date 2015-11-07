@@ -1,20 +1,3 @@
-sub get_variable_perms($$) {
-	my (line, varname) = @_
-
-	my type = get_variable_type(line, varname)
-	if (!defined(type)) {
-		opt_debug_misc and line.logDebug("No type definition found for ${varname}.")
-		return "adpsu"
-	}
-
-	my perms = type.perms(line.fname, varname)
-	if (!defined(perms)) {
-		opt_debug_misc and line.logDebug("No permissions specified for ${varname}.")
-		return "?"
-	}
-	return perms
-}
-
 #
 # Parsing.
 #
