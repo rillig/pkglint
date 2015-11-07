@@ -336,54 +336,13 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 			state == SCST_SET_CONT ||
 			(state == SCST_START && match(shellword, reShVarassign) != nil)))
 
-		if state == SCST_START || state == SCST_COND {
-			msline.checkCommandStart(shellword)
-		}
-
-		if state == SCST_COND && shellword == "cd" {
-			line.logError("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
-			line.explainError(
-				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
-				"shell will exit, no matter if it is protected by an \"if\" or the",
-				"\"||\" operator.")
-		}
-
+		msline.checkCommandStart(state, shellword)
+		msline.checkConditionalCd(state, shellword)
 		if state != SCST_PAX_S && state != SCST_SED_E && state != SCST_CASE_LABEL {
 			checklineMkAbsolutePathname(line, shellword)
 		}
-
-		if (state == SCST_INSTALL_D || state == SCST_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
-			line.logWarning("Please use AUTO_MKDIRS instead of %q.",
-				ifelseStr(state == SCST_MKDIR, "${MKDIR}", "${INSTALL} -d"))
-			line.explainWarning(
-				"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
-				"mentioned in the PLIST. If you need additional directories, specify",
-				"them in INSTALLATION_DIRS, which is a list of directories relative to",
-				"${PREFIX}.")
-		}
-
-		if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && match(shellword, reMkShellvaruse) == nil {
-			if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
-				line.logNote("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
-				line.explainNote(
-					"This saves you some typing. You also don't have to think about which of",
-					"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
-					"takes care of that.",
-					"",
-					"Note that you should only do this if the package creates _all_",
-					"directories it needs before trying to install files into them.",
-					"",
-					"Many packages include a list of all needed directories in their PLIST",
-					"file. In that case, you can just set AUTO_MKDIRS=yes and be done.")
-			}
-		}
-
-		if state == SCST_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
-			line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
-			line.explainWarning(
-				"Many implementations of install(1) can handle more, but pkgsrc aims at",
-				"maximum portability.")
-		}
+		msline.checkAutoMkdirs(state, shellword)
+		msline.checkInstallMulti(state, shellword)
 
 		//AAAAAASDFDHFJDFSDGSDGSDGSD
 
@@ -436,7 +395,11 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	}
 }
 
-func (msline *MkShellLine) checkCommandStart(shellword string) {
+func (msline *MkShellLine) checkCommandStart(state ShellCommandState, shellword string) {
+	if state != SCST_START && state == SCST_COND {
+		return
+	}
+
 	line := msline.line
 
 	switch {
@@ -515,6 +478,57 @@ func (msline *MkShellLine) checkCommandStart(shellword string) {
 				checklineMkShellcmdUse(line, shellword)
 			}
 		}
+	}
+}
+
+func (msline *MkShellLine) checkConditionalCd(state ShellCommandState, shellword string) {
+	if state == SCST_COND && shellword == "cd" {
+		msline.line.logError("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+		msline.line.explainError(
+			"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
+			"shell will exit, no matter if it is protected by an \"if\" or the",
+			"\"||\" operator.")
+	}
+}
+
+func (msline *MkShellLine) checkAutoMkdirs(state ShellCommandState, shellword string) {
+	line := msline.line
+
+	if (state == SCST_INSTALL_D || state == SCST_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
+		line.logWarning("Please use AUTO_MKDIRS instead of %q.",
+			ifelseStr(state == SCST_MKDIR, "${MKDIR}", "${INSTALL} -d"))
+		line.explainWarning(
+			"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
+			"mentioned in the PLIST. If you need additional directories, specify",
+			"them in INSTALLATION_DIRS, which is a list of directories relative to",
+			"${PREFIX}.")
+	}
+
+	if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && match(shellword, reMkShellvaruse) == nil {
+		if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
+			line.logNote("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
+			line.explainNote(
+				"This saves you some typing. You also don't have to think about which of",
+				"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
+				"takes care of that.",
+				"",
+				"Note that you should only do this if the package creates _all_",
+				"directories it needs before trying to install files into them.",
+				"",
+				"Many packages include a list of all needed directories in their PLIST",
+				"file. In that case, you can just set AUTO_MKDIRS=yes and be done.")
+		}
+	}
+}
+
+func (msline *MkShellLine) checkInstallMulti(state ShellCommandState, shellword string) {
+	line := msline.line
+
+	if state == SCST_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
+		line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
+		line.explainWarning(
+			"Many implementations of install(1) can handle more, but pkgsrc aims at",
+			"maximum portability.")
 	}
 }
 
