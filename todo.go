@@ -45,12 +45,12 @@ func varIsUsed(varname string) bool {
 func checklineRelativePkgdir(line *Line, pkgdir string) {
 	notImplemented()
 }
-func checklineMkVarassign(line *Line, varname, op, value, comment string) {
-	notImplemented()
-}
 func checklineMkCond(line *Line, args string) {
 	notImplemented()
 }
 func checklinesBuildlink3Mk(lines []*Line, index int, pkgbase string) {
+	notImplemented()
+}
+func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	notImplemented()
 }
