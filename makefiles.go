@@ -561,7 +561,7 @@ func checklinesMk(lines []*Line) {
 				} else if !allowedTargets[target] {
 					line.logWarning("Unusual target %q.", target)
 					line.explainWarning(
-						"If you really want to define your own targets, you can \"declare\"",
+						"If you want to define your own targets, you can \"declare\"",
 						"them by inserting a \".PHONY: my-target\" line before this line. This",
 						"will tell make(1) to not interpret this target's name as a filename.")
 				}

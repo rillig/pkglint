@@ -375,7 +375,7 @@ func checkItem(fname string) {
 	}
 }
 
-func loadPackageMakefile(fname string)  []*Line {
+func loadPackageMakefile(fname string) []*Line {
 	lines := make([]*Line, 0)
 	allLines := make([]*Line, 0)
 	G.pkgContext.included = make(map[string]*Line)
@@ -414,7 +414,7 @@ func loadPackageMakefile(fname string)  []*Line {
 		logDebug(NO_FILE, NO_LINES, "PATCHDIR=%s", G.pkgContext.patchdir) &&
 		logDebug(NO_FILE, NO_LINES, "PKGDIR=%s", *G.pkgContext.pkgdir)
 
-	return  lines
+	return lines
 }
 
 func findPkgsrcTopdir() string {

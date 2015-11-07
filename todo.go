@@ -21,9 +21,6 @@ func checkdirCvs(fname string) {
 func checkfile(fname string) {
 	notImplemented()
 }
-func checkdirCategory() {
-	notImplemented()
-}
 func checkUnusedLicenses() {
 	notImplemented()
 }
