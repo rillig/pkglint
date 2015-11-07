@@ -26,7 +26,7 @@ func checkfilePlist(fname string) {
 		logError(fname, NO_LINES, "Must not be empty.")
 		return
 	}
-	checklineRcsid(lines[0], "@comment ")
+	checklineRcsid(lines[0], `@comment `, "@comment ")
 
 	if len(lines) == 1 {
 		lines[0].logWarning("PLIST files shouldn't be empty.")

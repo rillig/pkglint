@@ -229,10 +229,10 @@ type transition struct {
 var patchTransitions = map[State][]transition{
 	PST_START: []transition{
 		{rePatchRcsid, PST_CENTER, func(ctx *CheckPatchContext) {
-			checklineRcsid(ctx.line, "")
+			checklineRcsid(ctx.line, ``, "")
 		}},
 		{"", PST_CENTER, func(ctx *CheckPatchContext) {
-			checklineRcsid(ctx.line, "")
+			checklineRcsid(ctx.line, ``, "")
 		}},
 	},
 

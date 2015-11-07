@@ -263,11 +263,11 @@ func parselinesMk(lines []*Line) {
 
 func checklineMkText(line *Line, text string) {
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
-		line.logWarning("$$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
+		line.logWarning("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}
 
 	if line.lines == "1" {
-		checklineRcsid(line, "# ")
+		checklineRcsid(line, `# `, "# ")
 	}
 
 	if strings.Contains(text, "${WRKSRC}/../") {
