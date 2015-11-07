@@ -152,9 +152,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", "../../lang/php54", -1)
 	tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", "suse100", -1)
 	tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", "../../lang/python27", -1)
-	if G.pkgContext.filesdir != nil {
-		tmp = strings.Replace(tmp, "${FILESDIR}", *G.pkgContext.filesdir, -1)
-	}
+	tmp = strings.Replace(tmp, "${FILESDIR}", G.pkgContext.filesdir, -1)
 	if adjustDepth {
 		if m, pkgpath := match1(tmp, `^\.\./\.\./([^.].*)$`); m {
 			tmp = *G.curPkgsrcdir + "/" + pkgpath
@@ -309,6 +307,7 @@ func checklinesMk(lines []*Line) {
 
 	ctx := newMkContext()
 	G.mkContext = ctx
+	defer func() { G.mkContext = nil }()
 
 	determineUsedVariables(lines)
 

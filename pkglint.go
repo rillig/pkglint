@@ -375,14 +375,14 @@ func checkItem(fname string) {
 	}
 }
 
-func loadPackageMakefile(fname string) (bool, []*Line) {
+func loadPackageMakefile(fname string)  []*Line {
 	lines := make([]*Line, 0)
 	allLines := make([]*Line, 0)
 	G.pkgContext.included = make(map[string]*Line)
 
 	if !readMakefile(fname, lines, allLines) {
 		logError(fname, NO_LINES, "Cannot be read.")
-		return false, nil
+		return nil
 	}
 
 	if G.opts.optDumpMakefile {
@@ -395,26 +395,26 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 	determineUsedVariables(allLines)
 
 	G.pkgContext.pkgdir = newStr(expandVariableWithDefault("PKGDIR", "."))
-	G.pkgContext.distinfoFile = newStr(expandVariableWithDefault("DISTINFO_FILE", "distinfo"))
-	G.pkgContext.filesdir = newStr(expandVariableWithDefault("FILESDIR", "files"))
-	G.pkgContext.patchdir = newStr(expandVariableWithDefault("PATCHDIR", "patches"))
+	G.pkgContext.distinfoFile = (expandVariableWithDefault("DISTINFO_FILE", "distinfo"))
+	G.pkgContext.filesdir = (expandVariableWithDefault("FILESDIR", "files"))
+	G.pkgContext.patchdir = (expandVariableWithDefault("PATCHDIR", "patches"))
 
 	if varIsDefined("PHPEXT_MK") {
 		if !varIsDefined("USE_PHP_EXT_PATCHES") {
-			G.pkgContext.patchdir = newStr("patches")
+			G.pkgContext.patchdir = ("patches")
 		}
 		if varIsDefined("PECL_VERSION") {
-			G.pkgContext.distinfoFile = newStr("distinfo")
+			G.pkgContext.distinfoFile = ("distinfo")
 		}
 	}
 
 	_ = G.opts.optDebugMisc &&
-		logDebug(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *G.pkgContext.distinfoFile) &&
-		logDebug(NO_FILE, NO_LINES, "FILESDIR=%s", *G.pkgContext.filesdir) &&
-		logDebug(NO_FILE, NO_LINES, "PATCHDIR=%s", *G.pkgContext.patchdir) &&
+		logDebug(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
+		logDebug(NO_FILE, NO_LINES, "FILESDIR=%s", G.pkgContext.filesdir) &&
+		logDebug(NO_FILE, NO_LINES, "PATCHDIR=%s", G.pkgContext.patchdir) &&
 		logDebug(NO_FILE, NO_LINES, "PKGDIR=%s", *G.pkgContext.pkgdir)
 
-	return true, lines
+	return  lines
 }
 
 func findPkgsrcTopdir() string {

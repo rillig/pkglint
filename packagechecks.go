@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strings"
+)
+
 func checkpackagePossibleDowngrade() {
 	_ = G.opts.optDebugTrace && logDebug(NO_FILE, NO_LINES, "checkpackagePossibleDowngrade")
 
@@ -49,5 +53,91 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 		if includedFiles[packageBl3] == nil {
 			_ = G.opts.optDebugMisc && line.logDebug("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 		}
+	}
+}
+
+func checkdirPackage() {
+
+	ctx  := &PkgContext{
+		nil,
+		nil,
+		"files",
+		"patches",
+		"distinfo",
+		nil,
+		nil,
+		nil,
+		nil,
+		false,
+		make(map[string]*Line),
+		make(map[string]*Line),
+		make(map[string]*Line),
+		make(map[string]bool),
+		make(map[string]*Line),
+		false,
+		false}
+	for varname, line := range G.globalData.userDefinedVars {
+		ctx.vardef[varname]=line
+	}
+	
+	G.pkgContext = ctx
+	defer func() { G.pkgContext = nil }()
+
+	// we need to handle the Makefile first to get some variables
+	lines := loadPackageMakefile(G.currentDir+"/Makefile")
+	if lines == nil {
+		logError(G.currentDir+"/Makefile", NO_LINES, "Cannot be read.")
+		G.pkgContext = nil
+		return
+	}
+
+	files := dirglob(G.currentDir)
+	if (*ctx.pkgdir != ".") {
+		files = append(files, dirglob(G.currentDir+"/"+*ctx.pkgdir)...)
+	}
+	if (G.opts.optCheckExtra) {
+		files = append(files, dirglob(G.currentDir+"/"+ctx.filesdir)...)
+	}
+	files = append(files, dirglob(G.currentDir+"/"+ctx.patchdir)...)
+	if ctx.distinfoFile != "distinfo" && ctx.distinfoFile != "./distinfo" {
+		files = append(files, G.currentDir+"/" + ctx.distinfoFile)
+	}
+	haveDistinfo := false
+	havePatches := false
+
+	// Determine the used variables before checking any of the Makefile fragments.
+	for _, fname := range files {
+		if match0(fname , `^((?:.*/)?Makefile\..*|.*\.mk)$`) &&
+		 !match0(fname , `patch-`) &&
+		 !match0(fname , `${pkgdir}/`) &&
+		 !match0(fname , `${filesdir}/`) {
+		 	if lines, err := loadLines(fname, true); err == nil && lines != nil {
+				parselinesMk(lines)
+				determineUsedVariables(lines)
+			}	
+		}
+	}
+
+	for _, fname := range files {
+		if (fname == G.currentDir+"/Makefile") {
+			_ = G.opts.optCheckMakefile && checkfilePackageMakefile(fname, lines)
+		} else {
+			checkfile(fname)
+		}
+		if match0(fname , `/patches/patch-*$`) {
+			havePatches = true
+		} else if strings.HasSuffix(fname, "/distinfo") {
+			haveDistinfo = true
+		}
+	}
+
+	if (G.opts.optCheckDistinfo && G.opts.optCheckPatches) {
+		if (havePatches && ! haveDistinfo) {
+			logWarning(G.currentDir+"/"+ctx.distinfoFile, NO_LINES, "File not found. Please run \"%s makepatchsum\".",confMake)
+		}
+	}
+
+	if (!isEmptyDir(G.currentDir+"/scripts")) {
+		logWarning(G.currentDir+"/scripts", NO_LINES, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
 	}
 }

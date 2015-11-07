@@ -4,9 +4,9 @@ package main
 type PkgContext struct {
 	pkgpath                *string // The relative path to the package within PKGSRC
 	pkgdir                 *string // PKGDIR from the package Makefile
-	filesdir               *string // FILESDIR from the package Makefile
-	patchdir               *string // PATCHDIR from the package Makefile
-	distinfoFile           *string // DISTINFO_FILE from the package Makefile
+	filesdir               string // FILESDIR from the package Makefile
+	patchdir               string // PATCHDIR from the package Makefile
+	distinfoFile           string // DISTINFO_FILE from the package Makefile
 	effective_pkgname      *string // PKGNAME or DISTNAME from the package Makefile
 	effective_pkgbase      *string // The effective PKGNAME without the version
 	effective_pkgversion   *string // The version part of the effective PKGNAME

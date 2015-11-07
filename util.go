@@ -299,3 +299,15 @@ func matchAll(s, re string) ([]string, string) {
 }
 
 var strstr = strings.Contains
+
+func dirglob(dirname string) []string {
+	fis, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		return make([]string,0)
+	}
+	fnames := make([]string,len(fis))
+	for i, fi := range fis {
+		fnames[i] = dirname + "/" + fi.Name()
+	}
+	return fnames
+}

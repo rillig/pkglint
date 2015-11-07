@@ -31,7 +31,7 @@ func checkfileDistinfo(fname string) {
 		lines[1].logNote("Empty line expected.")
 	}
 
-	patchesDir := *G.pkgContext.patchdir
+	patchesDir := G.pkgContext.patchdir
 	if patchesDir == "" && dirExists(G.currentDir+"/patches") {
 		patchesDir = "patches"
 	}
@@ -68,7 +68,7 @@ func checkfileDistinfo(fname string) {
 
 		ctx.seenAlgorithms = append(ctx.seenAlgorithms, alg)
 
-		if ctx.isPatch && *G.pkgContext.distinfoFile != "./../../lang/php5/distinfo" {
+		if ctx.isPatch && G.pkgContext.distinfoFile != "./../../lang/php5/distinfo" {
 			fname := G.currentDir + "/" + patchesDir + "/" + fname
 			if distinfoIsCommitted && !isCommitted(fname) {
 				line.logWarning("${patches_dir}/${chksum_fname} is registered in distinfo but not added to CVS.")

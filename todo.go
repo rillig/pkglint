@@ -21,9 +21,6 @@ func checkdirCvs(fname string) {
 func checkfile(fname string) {
 	notImplemented()
 }
-func checkdirPackage() {
-	notImplemented()
-}
 func checkdirCategory() {
 	notImplemented()
 }
@@ -53,4 +50,8 @@ func checklinesBuildlink3Mk(lines []*Line, index int, pkgbase string) {
 }
 func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	notImplemented()
+}
+func checkfilePackageMakefile(fname string, lines []*Line) bool {
+	notImplemented()
+	return false
 }
