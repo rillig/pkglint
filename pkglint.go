@@ -677,3 +677,12 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 		line.logWarning("Invalid relative path %q.", path)
 	}
 }
+
+func checkfileAlternatives(fname string) {
+	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileAlternatives()")
+
+	checkperms(fname)
+	if _, err := loadLines(fname, false); err != nil {
+		logError(fname, NO_LINES, "Cannot be read.")
+	}
+}

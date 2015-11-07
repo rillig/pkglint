@@ -401,19 +401,6 @@ sub checkline_mk_cond($$) {
 // Procedures to check a single file.
 //
 
-sub checkfile_ALTERNATIVES($) {
-	my (fname) = @_
-	my (lines)
-
-	opt_debug_trace and logDebug(fname, NO_LINES, "checkfile_ALTERNATIVES()")
-
-	checkperms(fname)
-	if (!(lines = load_file(fname))) {
-		logError(fname, NO_LINE_NUMBER, "Cannot be read.")
-		return
-	}
-}
-
 sub checkfile_buildlink3_mk($) {
 	my (fname) = @_
 	my (lines, lineno, m)
