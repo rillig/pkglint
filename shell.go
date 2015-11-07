@@ -506,3 +506,18 @@ func (msline *MkShellLine) isForbiddenShellCommand(cmd string) bool {
 	}
 	return false
 }
+
+func shellSplit(text string) []string {
+	words := make([]string, 0)
+
+	rest := text
+	var m []string	
+	for replacestart(&rest, &m, reShellword) {
+		words = append(words, m[1])
+	}
+	if match0(rest, `^\s*$`) {
+		return words
+	} else {
+		return nil
+	}
+}
