@@ -55,7 +55,7 @@ func TestGetLogicalLine() {
 	fmt.Printf("%#v\n", getLogicalLine("fname", physlines, &lineno))
 }
 
-// A Type in pkglint is a combination of a data type and a permission
+// A Vartype in pkglint is a combination of a data type and a permission
 // specification. Further details can be found in the chapter ``The pkglint
 // type system'' of the pkglint book.
 
@@ -74,7 +74,7 @@ type AclEntry struct {
 	glob        string
 	permissions string
 }
-type Type struct {
+type Vartype struct {
 	kindOfList    KindOfList
 	basicType     string
 	enumValues    map[string]bool
@@ -83,7 +83,7 @@ type Type struct {
 	guessed       Guessed
 }
 
-func (self *Type) effectivePermissions(fname string) string {
+func (self *Vartype) effectivePermissions(fname string) string {
 	for _, aclEntry := range self.aclEntries {
 		if m, _ := path.Match(aclEntry.glob, fname); m {
 			return aclEntry.permissions
@@ -95,7 +95,7 @@ func (self *Type) effectivePermissions(fname string) string {
 // Returns the union of all possible permissions. This can be used to
 // check whether a variable may be defined or used at all, or if it is
 // read-only.
-func (self *Type) union() (perms string) {
+func (self *Vartype) union() (perms string) {
 	for _, aclEntry := range self.aclEntries {
 		perms += aclEntry.permissions
 	}
@@ -104,7 +104,7 @@ func (self *Type) union() (perms string) {
 
 // This distinction between “real lists” and “considered a list” makes
 // the implementation of checklineMkVartype easier.
-func (self *Type) isConsideredList() bool {
+func (self *Vartype) isConsideredList() bool {
 	switch {
 	case self.kindOfList == LK_EXTERNAL:
 		return true
@@ -120,13 +120,13 @@ func (self *Type) isConsideredList() bool {
 		return false
 	}
 }
-func (self *Type) mayBeAppendedTo() bool {
+func (self *Vartype) mayBeAppendedTo() bool {
 	return self.kindOfList != LK_NONE ||
 		self.basicType == "AwkCommand" ||
 		self.basicType == "BuildlinkPackages" ||
 		self.basicType == "SedCommands"
 }
-func (self *Type) String() string {
+func (self *Vartype) String() string {
 	switch self.kindOfList {
 	case LK_NONE:
 		return self.basicType
@@ -139,7 +139,7 @@ func (self *Type) String() string {
 		return ""
 	}
 }
-func (t *Type) isGuessed() bool {
+func (t *Vartype) isGuessed() bool {
 	return t.guessed == GUESSED
 }
 
@@ -176,7 +176,7 @@ const (
 
 type VarUseContext struct {
 	time      VarUseContextTime
-	vartype   *Type
+	vartype   *Vartype
 	shellword VarUseContextShellword
 	extent    VarUseContextExtent
 }
@@ -466,7 +466,7 @@ func getNbpart() string {
 
 // Returns the type of the variable (maybe guessed based on the variable name),
 // or nil if the type cannot even be guessed.
-func getVariableType(line *Line, varname string) *Type {
+func getVariableType(line *Line, varname string) *Vartype {
 
 	vartype := G.globalData.vartypes[varname]
 	if vartype == nil {
@@ -474,49 +474,49 @@ func getVariableType(line *Line, varname string) *Type {
 	}
 
 	if G.globalData.varnameToToolname[varname] != "" {
-		return &Type{LK_NONE, "ShellCommand", nil, "", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+		return &Vartype{LK_NONE, "ShellCommand", nil, "", []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
 	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
-		return &Type{LK_NONE, "Pathname", nil, "", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+		return &Vartype{LK_NONE, "Pathname", nil, "", []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
 	allowAll := []AclEntry{{"*", "adpsu"}}
 	allowRuntime := []AclEntry{{"*", "adsu"}}
 
 	// Guess the datatype of the variable based on naming conventions.
-	var gtype *Type
+	var gtype *Vartype
 	if m, suffix := match1(varname, `(DIRS|DIR|FILES|FILE|PATH|PATHS|_USER|_GROUP|_ENV|_CMD|_ARGS|_CFLAGS|_CPPFLAGS|_CXXFLAGS|_LDFLAGS|_MK)$`); m {
 		switch suffix {
 		case "DIRS":
-			gtype = &Type{LK_EXTERNAL, "Pathmask", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_EXTERNAL, "Pathmask", nil, "", allowRuntime, GUESSED}
 		case "DIR", "_HOME":
-			gtype = &Type{LK_NONE, "Pathname", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_NONE, "Pathname", nil, "", allowRuntime, GUESSED}
 		case "FILES":
-			gtype = &Type{LK_EXTERNAL, "Pathmask", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_EXTERNAL, "Pathmask", nil, "", allowRuntime, GUESSED}
 		case "FILE":
-			gtype = &Type{LK_NONE, "Pathname", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_NONE, "Pathname", nil, "", allowRuntime, GUESSED}
 		case "PATH":
-			gtype = &Type{LK_NONE, "Pathlist", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_NONE, "Pathlist", nil, "", allowRuntime, GUESSED}
 		case "PATHS":
-			gtype = &Type{LK_EXTERNAL, "Pathname", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_EXTERNAL, "Pathname", nil, "", allowRuntime, GUESSED}
 		case "_USER":
-			gtype = &Type{LK_NONE, "UserGroupName", nil, "", allowAll, GUESSED}
+			gtype = &Vartype{LK_NONE, "UserGroupName", nil, "", allowAll, GUESSED}
 		case "_GROUP":
-			gtype = &Type{LK_NONE, "UserGroupName", nil, "", allowAll, GUESSED}
+			gtype = &Vartype{LK_NONE, "UserGroupName", nil, "", allowAll, GUESSED}
 		case "_ENV":
-			gtype = &Type{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
 		case "_CMD":
-			gtype = &Type{LK_NONE, "ShellCommand", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_NONE, "ShellCommand", nil, "", allowRuntime, GUESSED}
 		case "_ARGS":
-			gtype = &Type{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
 		case "_CFLAGS", "_CPPFLAGS", "_CXXFLAGS", "_LDFLAGS":
-			gtype = &Type{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
+			gtype = &Vartype{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
 		case "_MK":
-			gtype = &Type{LK_NONE, "Unchecked", nil, "", allowAll, GUESSED}
+			gtype = &Vartype{LK_NONE, "Unchecked", nil, "", allowAll, GUESSED}
 		}
 	} else if strings.HasPrefix(varname, "PLIST.") {
-		gtype = &Type{LK_NONE, "Yes", nil, "", allowAll, GUESSED}
+		gtype = &Vartype{LK_NONE, "Yes", nil, "", allowAll, GUESSED}
 	}
 
 	if gtype != nil {

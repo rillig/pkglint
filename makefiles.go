@@ -510,7 +510,7 @@ func checklinesMk(lines []*Line) {
 						}
 					}
 
-					forLoopType := &Type{
+					forLoopType := &Vartype{
 						LK_INTERNAL,
 						"Unchecked",
 						nil,

@@ -19,9 +19,9 @@ import "strings"
 //
 // Last synced with mk/defaults/mk.conf revision 1.118
 
-var vartypes = make(map[string]*Type)
+var vartypes = make(map[string]*Vartype)
 
-func getBasicType(typename string) *Type {
+func getBasicType(typename string) *Vartype {
 	logError(NO_FILE, NO_LINES, "getBasicType(%q): not implemented", typename)
 	return nil
 }
@@ -55,7 +55,7 @@ func acl(varname string, vartype string, aclentries ...string) {
 		enumset = nil
 	}
 
-	vtype := &Type{kindOfList, basicType, enumset, "", parseAclEntries(aclentries), NOT_GUESSED}
+	vtype := &Vartype{kindOfList, basicType, enumset, "", parseAclEntries(aclentries), NOT_GUESSED}
 	if varparam == "" || varparam == "*" {
 		vartypes[varbase] = vtype
 	}

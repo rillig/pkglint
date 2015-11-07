@@ -24,7 +24,7 @@ type GlobalData struct {
 	suggestedWipUpdates []SuggestedUpdate
 	lastChange          map[string]*Change
 	userDefinedVars     map[string]*Line
-	vartypes            map[string]*Type
+	vartypes            map[string]*Vartype
 }
 
 // A change entry from doc/CHANGES-*

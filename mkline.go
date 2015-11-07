@@ -192,7 +192,7 @@ func checklineMkVaruseLocalbase(line *Line) {
 		"	CONFIGURE_ENV+= --with-datafiles=${PREFIX}/share/battalion")
 }
 
-func checklineMkVaruseFor(line *Line, varname string, vartype *Type, needsQuoting NeedsQuoting) {
+func checklineMkVaruseFor(line *Line, varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
 	switch {
 	case vartype == nil:
 		// Cannot check anything here.
@@ -213,7 +213,7 @@ func checklineMkVaruseFor(line *Line, varname string, vartype *Type, needsQuotin
 	}
 }
 
-func checklineMkVaruseShellword(line *Line, varname string, vartype *Type, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
+func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
 
 	// In GNU configure scripts, a few variables need to be
 	// passed through the :M* operator before they reach the
@@ -550,6 +550,6 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	}
 }
 
-func checklineMkVartypeBasic(line *Line, varname string, vartype *Type, op, value, comment string, isList, isGuessed bool) {
+func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, value, comment string, isList, isGuessed bool) {
 	notImplemented()
 }
