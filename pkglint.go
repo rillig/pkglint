@@ -608,3 +608,25 @@ func checklineTrailingWhitespace(line *Line) {
 		line.replaceRegex(`\s+\n$`, "\n")
 	}
 }
+
+func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
+	id := G.opts.optRcsIds
+	if G.isWip {
+		id += "|Id"
+	}
+
+	_ = G.opts.optDebugTrace && line.logDebug("checkline_rcsid_regex(%v, %v)", prefixRe, suggestedPrefix)
+
+	if !match0(line.text, `^` +prefixRe + `$(` + id + `)(?::[^\$]+|)\$$`) {
+		line.logError("Expected %s.", suggestedPrefix + "$" + G.opts.optRcsIds + "$")
+		line.explainError(
+"Several files in pkgsrc must contain the CVS Id, so that their current",
+"version can be traced back later from a binary package. This is to",
+"ensure reproducible builds, for example for finding bugs.",
+"",
+"Please insert the text from the above error message (without the quotes)",
+"at this position in the file.")
+		return false
+	}
+	return true
+}

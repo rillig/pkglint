@@ -21,9 +21,6 @@ func normalizePathname(fname string) string {
 func checklineMkAbsolutePathname(line *Line, text string) {
 	notImplemented()
 }
-func checklineRcsid(line *Line, re, suggestedText string) {
-	notImplemented()
-}
 func checkdirCvs(fname string) {
 	notImplemented()
 }

@@ -74,32 +74,6 @@ sub parse_licenses($) {
 // Subroutines to check a single line.
 //
 
-sub checkline_rcsid_regex($$$) {
-	my (line, prefix_regex, prefix) = @_
-	my (id) = (opt_rcsidstring . (is_wip ? "|Id" : ""))
-
-	opt_debug_trace and line.logDebug("checkline_rcsid_regex(${prefix_regex}, ${prefix})")
-
-	if (line.text !~ `^${prefix_regex}\$(${id})(?::[^\$]+|)\$$`) {
-		line.logError("\"${prefix}\$${opt_rcsidstring}\$\" expected.")
-		line.explain_error(
-"Several files in pkgsrc must contain the CVS Id, so that their current",
-"version can be traced back later from a binary package. This is to",
-"ensure reproducible builds, for example for finding bugs.",
-"",
-"Please insert the text from the above error message (without the quotes)",
-"at this position in the file.")
-		return false
-	}
-	return true
-}
-
-sub checkline_rcsid($$) {
-	my (line, prefix) = @_
-
-	checkline_rcsid_regex(line, quotemeta(prefix), prefix)
-}
-
 sub checkline_mk_absolute_pathname($$) {
 	my (line, text) = @_
 	my abspath
