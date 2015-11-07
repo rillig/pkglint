@@ -398,49 +398,6 @@ sub checkline_mk_cond($$) {
 }
 
 //
-// Procedures to check an array of lines.
-//
-
-
-
-sub checklines_buildlink3_inclusion($) {
-	my (lines) = @_
-	my (included_files)
-
-	assert(@{lines} != 0, "The lines array must be non-empty.")
-	opt_debug_trace and logDebug(lines.[0].fname, NO_LINES, "checklines_buildlink3_inclusion()")
-
-	if (!defined(pkgctx_bl3)) {
-		return
-	}
-
-	// Collect all the included buildlink3.mk files from the file.
-	included_files = {}
-	foreach my line (@{lines}) {
-		if (line.text =~ regex_mk_include) {
-			my (undef, file, comment) = (1, 2, 3)
-
-			if (file =~ `^\.\./\.\./(.*)/buildlink3\.mk`) {
-				my (bl3) = (1)
-
-				included_files.{bl3} = line
-				if (!exists(pkgctx_bl3.{bl3})) {
-					line.logWarning("${bl3}/buildlink3.mk is included by this file but not by the package.")
-				}
-			}
-		}
-	}
-
-	// Print debugging messages for all buildlink3.mk files that are
-	// included by the package but not by this buildlink3.mk file.
-	foreach my package_bl3 (sort(keys(%{pkgctx_bl3}))) {
-		if (!exists(included_files.{package_bl3})) {
-			opt_debug_misc and pkgctx_bl3.{package_bl3}.logDebug("${package_bl3}/buildlink3.mk is included by the package but not by the buildlink3.mk file.")
-		}
-	}
-}
-
-//
 // Procedures to check a single file.
 //
 
