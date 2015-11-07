@@ -9,7 +9,7 @@ func (ctx *ExpectContext) currentLine() *Line {
 	if ctx.index < len(ctx.lines) {
 		return ctx.lines[ctx.index]
 	}
-	
+
 	return NewLine(ctx.lines[0].fname, "EOF", "", nil) // dummy
 }
 
@@ -27,7 +27,7 @@ func (ctx *ExpectContext) expectEmptyLine() bool {
 	if ctx.advanceIfMatches(`^$`) != nil {
 		return true
 	}
-	
+
 	_ = G.opts.optWarnSpace && ctx.currentLine().logNote("Empty line expected.")
 	return false
 }
@@ -37,7 +37,7 @@ func (ctx *ExpectContext) expectText(text string) bool {
 		ctx.index++
 		return true
 	}
-	
+
 	ctx.currentLine().logWarning("This line should contain the following text: %s", text)
 	return false
 }

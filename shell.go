@@ -511,7 +511,7 @@ func shellSplit(text string) []string {
 	words := make([]string, 0)
 
 	rest := text
-	var m []string	
+	var m []string
 	for replacestart(&rest, &m, reShellword) {
 		words = append(words, m[1])
 	}

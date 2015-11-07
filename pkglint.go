@@ -557,7 +557,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	if line == nil {
 		return defaultValue
 	}
-	
+
 	value := line.extra["value"].(string)
 	value = resolveVarsInRelativePath(value, true)
 	if match0(value, reUnresolvedVar) {
