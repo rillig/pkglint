@@ -1,11 +1,11 @@
-#
-# Parsing.
-#
+//
+// Parsing.
+//
 
-# Checks whether tree matches pattern, and if so, instanciates the
-# variables in pattern. If they don't match, some variables may be
-# instanciated nevertheless, but the exact behavior is unspecified.
-#
+// Checks whether tree matches pattern, and if so, instanciates the
+// variables in pattern. If they don't match, some variables may be
+// instanciated nevertheless, but the exact behavior is unspecified.
+//
 sub tree_match($$)
 sub tree_match($$) {
 	my (tree, pattern) = @_
@@ -35,7 +35,7 @@ sub tree_match($$) {
 	return false
 }
 
-# TODO: Needs to be redesigned to handle more complex expressions.
+// TODO: Needs to be redesigned to handle more complex expressions.
 sub parse_mk_cond($$)
 sub parse_mk_cond($$) {
 	my (line, cond) = @_
@@ -70,9 +70,9 @@ sub parse_licenses($) {
 	return \@licenses
 }
 
-#
-# Subroutines to check a single line.
-#
+//
+// Subroutines to check a single line.
+//
 
 sub checkline_length($$) {
 	my (line, maxlength) = @_
@@ -307,7 +307,7 @@ sub checkline_mk_varuse($$$$) {
 	if (varname eq "LOCALBASE" && !is_internal) {
 		line.logWarning("The LOCALBASE variable should not be used by packages.")
 		line.explain_warning(
-# from jlam via private mail.
+// from jlam via private mail.
 "Currently, LOCALBASE is typically used in these cases:",
 "",
 "(1) To locate a file or directory from another package.",
@@ -426,8 +426,8 @@ sub checkline_mk_varuse($$$$) {
 	}
 }
 
-# Some shell commands should not be used in the install phase.
-#
+// Some shell commands should not be used in the install phase.
+//
 sub checkline_mk_shellcmd_use($$) {
 	my (line, shellcmd) = @_
 
@@ -705,15 +705,15 @@ sub checkline_mk_vardef($$$) {
 	}
 }
 
-# @param op
-#	The operator that is used for reading or writing to the variable.
-#	One of: "=", "+=", ":=", "!=", "?=", "use", "pp-use", "".
-#	For some variables (like BuildlinkDepth or BuildlinkPackages), the
-#	operator influences the valid values.
-# @param comment
-#	In assignments, a part of the line may be commented out. If there
-#	is no comment, pass C<undef>.
-#
+// @param op
+//	The operator that is used for reading or writing to the variable.
+//	One of: "=", "+=", ":=", "!=", "?=", "use", "pp-use", "".
+//	For some variables (like BuildlinkDepth or BuildlinkPackages), the
+//	operator influences the valid values.
+// @param comment
+//	In assignments, a part of the line may be commented out. If there
+//	is no comment, pass C<undef>.
+//
 sub checkline_mk_vartype_basic($$$$$$$$)
 sub checkline_mk_vartype_basic($$$$$$$$) {
 	my (line, varname, type, op, value, comment, list_context, is_guessed) = @_
@@ -934,9 +934,9 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 				}
 
 				if (pattern =~ regex_dependency_lge) {
-#				(abi_pkg, abi_version) = (1, 2)
+//				(abi_pkg, abi_version) = (1, 2)
 				} elsif (pattern =~ regex_dependency_wildcard) {
-#				(abi_pkg) = (1)
+//				(abi_pkg) = (1)
 				} else {
 					line.logError("Unknown dependency pattern \"${pattern}\".")
 				}
@@ -1480,8 +1480,8 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 	}
 }
 
-# Checks whether the list of version numbers that are given as the
-# C<value> of the variable C<varname> are in decreasing order.
+// Checks whether the list of version numbers that are given as the
+// C<value> of the variable C<varname> are in decreasing order.
 sub checkline_decreasing_order($$$) {
 	my (line, varname, value) = @_
 
@@ -1736,9 +1736,9 @@ sub checkline_mk_varassign($$$$$) {
 	}
 }
 
-# The bmake parser is way too sloppy about syntax, so we need to check
-# that here.
-#
+// The bmake parser is way too sloppy about syntax, so we need to check
+// that here.
+//
 sub checkline_mk_cond($$) {
 	my (line, cond) = @_
 	my (op, varname, match, value)
@@ -1781,9 +1781,9 @@ sub checkline_mk_cond($$) {
 	# of tree_match.
 }
 
-#
-# Procedures to check an array of lines.
-#
+//
+// Procedures to check an array of lines.
+//
 
 sub checklines_trailing_empty_lines($) {
 	my (lines) = @_
@@ -2162,9 +2162,9 @@ sub checklines_buildlink3_inclusion($) {
 	}
 }
 
-#
-# Procedures to check a single file.
-#
+//
+// Procedures to check a single file.
+//
 
 sub checkfile_ALTERNATIVES($) {
 	my (fname) = @_
@@ -2831,8 +2831,8 @@ sub my_split($$) {
 	return @result
 }
 
-# Checks that the files in the directory are in sync with CVS's status.
-#
+// Checks that the files in the directory are in sync with CVS's status.
+//
 sub checkdir_CVS($) {
 	my (fname) = @_
 
@@ -2854,9 +2854,9 @@ sub checkdir_CVS($) {
 	}
 }
 
-#
-# Procedures to check a directory including the files in it.
-#
+//
+// Procedures to check a directory including the files in it.
+//
 
 sub checkdir_root() {
 	my (fname) = "${current_dir}/Makefile"
