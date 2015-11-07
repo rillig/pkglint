@@ -61,19 +61,6 @@ sub parse_mk_cond($$) {
 	}
 }
 
-sub parse_licenses($) {
-	my (licenses) = @_
-
-	licenses =~ s,\$\{PERL5_LICENSE},gnu-gpl-v2 OR artistic,g
-	licenses =~ s,[()]|AND|OR,,g; # XXX: treats OR like AND
-	my @licenses = split(/\s+/, licenses)
-	return \@licenses
-}
-
-//
-// Subroutines to check a single line.
-//
-
 sub checkline_relative_pkgdir($$) {
 	my (line, path) = @_
 

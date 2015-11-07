@@ -7,10 +7,6 @@ func notImplemented() {
 func checkperms(fname string) {
 	notImplemented()
 }
-func parseLicenses(licensesSpec string) []string {
-	notImplemented()
-	return make([]string, 0)
-}
 func normalizePathname(fname string) string {
 	notImplemented()
 	return fname
