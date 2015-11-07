@@ -14,6 +14,10 @@ func checklineMkShellword(line *Line, word string, checkQuoting bool) {
 func checklineMkShellcmdUse(line *Line, shellcmd string) {
 	(&MkShellLine{line}).checkCommandUse(shellcmd)
 }
+func checklineMkShellcmd(line *Line, shellcmd string) {
+	checklineMkText(line, shellcmd)
+	(&MkShellLine{line}).checklineMkShelltext(shellcmd)
+}
 
 type ShellCommandState string
 

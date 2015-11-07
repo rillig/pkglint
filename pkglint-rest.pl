@@ -95,14 +95,6 @@ sub checkline_relative_pkgdir($$) {
 	}
 }
 
-sub checkline_mk_shellcmd($$) {
-	my (line, shellcmd) = @_
-
-	checkline_mk_text(line, shellcmd)
-	checkline_mk_shelltext(line, shellcmd)
-}
-
-
 sub expand_permission($) {
 	my (perm) = @_
 	my %fullperm = ( "a" => "append", "d" => "default", "p" => "preprocess", "s" => "set", "u" => "runtime", "?" => "unknown" )
