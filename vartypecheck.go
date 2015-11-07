@@ -4,14 +4,6 @@ import (
 	"strings"
 )
 
-var deprecatedLicenses = map[string]bool{
-	"fee-based-commercial-use": true,
-	"no-commercial-use":        true,
-	"no-profit":                true,
-	"no-redistribution":        true,
-	"shareware":                true,
-}
-
 func CheckvartypeLicense(line *Line, varname, value string) {
 	licenses := parseLicenses(value)
 	for _, license := range licenses {
@@ -26,7 +18,12 @@ func CheckvartypeLicense(line *Line, varname, value string) {
 			line.logWarning("License file %s does not exist.", normalizePathname(licenseFile))
 		}
 
-		if deprecatedLicenses[license] {
+		switch license {
+		case "fee-based-commercial-use",
+			"no-commercial-use",
+			"no-profit",
+			"no-redistribution",
+			"shareware":
 			line.logWarning("License %s is deprecated.", license)
 		}
 	}
