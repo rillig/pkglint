@@ -416,23 +416,27 @@ func (cv *CheckVartype) Pathlist() {
 		}
 	}
 }
+
 func (cv *CheckVartype) Pathmask() {
 	if !match0(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
 		cv.line.logWarning("%q is not a valid pathname mask.", cv.value)
 	}
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
+
 func (cv *CheckVartype) Pathname() {
 	if !match0(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.line.logWarning("%q is not a valid pathname.", cv.value)
 	}
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
+
 func (cv *CheckVartype) Perl5Packlist() {
 	if cv.value != cv.valueNovar {
 		cv.line.logWarning("%s should not depend on other variables.", cv.varname)
 	}
 }
+
 func (cv *CheckVartype) PkgName() {
 	if cv.value == cv.valueNovar && !match0(cv.value, rePkgname) {
 		cv.line.logWarning("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
