@@ -282,7 +282,7 @@ func checklineMkText(line *Line, text string) {
 
 	rest := text
 	for {
-		m, r := replace(rest, `(?:^|[^\$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
+		m, r := replaceFirst(rest, `(?:^|[^\$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
 		if m == nil {
 			break
 		}
