@@ -527,84 +527,11 @@ sub checkline_mk_vartype_basic($$$$$$$$) {
 	}
 
 	my %type_dispatch = (
-		AwkCommand => sub {
-			opt_debug_unchecked and line.logDebug("Unchecked AWK command: ${value}")
-		},
-
-		BrokenIn => sub {
-			if (value ne value_novar) {
-				line.logError("${varname} must not refer to other variables.")
-
-			} elsif (value =~ m"^pkgsrc-(\d\d\d\d)Q(\d)$") {
-				my (year, quarter) = (1, 2)
-
-				# Fine.
-
-			} else {
-				line.logWarning("Invalid value \"${value}\" for ${varname}.")
-			}
-			line.logNote("Please remove this line if the package builds for you.")
-		},
-
-		BuildlinkDepmethod => sub {
-			# Note: this cannot be replaced with { build full } because
-			# enumerations may not contain references to other variables.
-			if (value ne value_novar) {
-				# No checks yet.
-			} elsif (value ne "build" && value ne "full") {
-				line.logWarning("Invalid dependency method \"${value}\". Valid methods are \"build\" or \"full\".")
-			}
-		},
-
-		BuildlinkDepth => sub {
-			if (!(op eq "use" && value eq "+")
-				&& value ne "\${BUILDLINK_DEPTH}+"
-				&& value ne "\${BUILDLINK_DEPTH:S/+\$//}") {
-				line.logWarning("Invalid value for ${varname}.")
-			}
-		},
-
-		BuildlinkPackages => sub {
-			my re_del = qr"\$\{BUILDLINK_PACKAGES:N(?:[+\-.0-9A-Z_a-z]|\$\{[^\}]+\})+\}"
-			my re_add = qr"(?:[+\-.0-9A-Z_a-z]|\$\{[^\}]+\})+"
-
-			if ((op eq ":=" && value =~ m"^${re_del}$") ||
-				(op eq ":=" && value =~ m"^${re_del}\s+${re_add}$") ||
-				(op eq "+=" && value =~ m"^${re_add}$")) {
-				# Fine.
-
-			} else {
-				line.logWarning("Invalid value for ${varname}.")
-			}
-		},
-
-		Category => sub {
-			my allowed_categories = join("|", qw(
-				archivers audio
-				benchmarks biology
-				cad chat chinese comms converters cross crosspkgtools
-				databases devel
-				editors emulators
-				filesystems finance fonts
-				games geography gnome gnustep graphics
-				ham
-				inputmethod
-				japanese java
-				kde korean
-				lang linux local
-				mail math mbone meta-pkgs misc multimedia
-				net news
-				packages parallel perl5 pkgtools plan9 print python
-				ruby
-				scm security shells sysutils
-				tcl textproc time tk
-				windowmaker wm www
-				x11 xmms
-			))
-			if (value !~ m"^(?:${allowed_categories})$") {
-				line.logError("Invalid category \"${value}\".")
-			}
-		},
+		AwkCommand => AwkCommand,
+		BrokenIn => BrokenIn,
+		BuildlinkDepmethod => BuildlinkDepmethod,
+		BuildlinkDepth => BuildlinkDepth,
+		Category => Category,
 
 		CFlag => sub {
 			if (value =~ m"^-D([0-9A-Z_a-z]+)=(.*)") {

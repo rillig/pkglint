@@ -4,8 +4,16 @@ import (
 	"strings"
 )
 
-func CheckvartypeLicense(line *Line, varname, value string) {
-	licenses := parseLicenses(value)
+type CheckVartype struct {
+	line       *Line
+	varname    string
+	op         string
+	value      string
+	valueNovar string
+}
+
+func (cv *CheckVartype) License() {
+	licenses := parseLicenses(cv.value)
 	for _, license := range licenses {
 		licenseFile := *GlobalVars.cwdPkgsrcdir + "/licenses/" + license
 		if licenseFileLine := GlobalVars.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
@@ -15,7 +23,7 @@ func CheckvartypeLicense(line *Line, varname, value string) {
 		}
 
 		if !fileExists(licenseFile) {
-			line.logWarning("License file %s does not exist.", normalizePathname(licenseFile))
+			cv.line.logWarning("License file %s does not exist.", normalizePathname(licenseFile))
 		}
 
 		switch license {
@@ -24,12 +32,14 @@ func CheckvartypeLicense(line *Line, varname, value string) {
 			"no-profit",
 			"no-redistribution",
 			"shareware":
-			line.logWarning("License %s is deprecated.", license)
+			cv.line.logWarning("License %s is deprecated.", license)
 		}
 	}
 }
 
-func CheckvartypeMailAddress(line *Line, value string) {
+func (cv *CheckVartype) MailAddress() {
+	line, value := cv.line, cv.value
+
 	if m := match(value, `^([+\-.0-9A-Z_a-z]+)\@([-\w\d.]+)$`); m != nil {
 		_, domain := m[1], m[2]
 
@@ -45,7 +55,9 @@ func CheckvartypeMailAddress(line *Line, value string) {
 	}
 }
 
-func CheckvartypeMessage(line *Line, varname, value string) {
+func (cv *CheckVartype) Message() {
+	line, varname, value := cv.line, cv.varname, cv.value
+
 	if match(value, `^[\"'].*[\"']$`) != nil {
 		line.logWarning("%s should not be quoted.", varname)
 		line.explainWarning(
@@ -59,13 +71,15 @@ func CheckvartypeMessage(line *Line, varname, value string) {
 	}
 }
 
-func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
-	if varvalue != varvalueNovar {
-		_ = GlobalVars.opts.optDebugUnchecked && line.logDebug("Unchecked option name: %q", varvalue)
+func (cv *CheckVartype) Option() {
+	line, value, valueNovar := cv.line, cv.value, cv.valueNovar
+
+	if value != valueNovar {
+		_ = GlobalVars.opts.optDebugUnchecked && line.logDebug("Unchecked option name: %q", value)
 		return
 	}
 
-	if m := match(varvalue, `^-?([a-z][-0-9a-z\+]*)$`); m != nil {
+	if m := match(value, `^-?([a-z][-0-9a-z\+]*)$`); m != nil {
 		optname := m[1]
 
 		if GlobalVars.globalData.pkgOptions[optname] == "" {
@@ -79,7 +93,7 @@ func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
 		return
 	}
 
-	if match(varvalue, `^-?([a-z][-0-9a-z_\+]*)$`) != nil {
+	if match(value, `^-?([a-z][-0-9a-z_\+]*)$`) != nil {
 		line.logWarning("Use of the underscore character in option names is deprecated.")
 		return
 	}
@@ -87,8 +101,59 @@ func CheckvartypeOption(line *Line, varvalue string, varvalueNovar string) {
 	line.logError("Invalid option name.")
 }
 
-func CheckvartypePrefixPathname(line *Line, value string) {
-	if m := match(value, `^man/(.*)`); m != nil {
-		line.logWarning("Please use \"${PKGMANDIR}/%s\" instead of \"%s\".", m[1], value)
+func (cv *CheckVartype) PrefixPathname() {
+	if m := match(cv.value, `^man/(.*)`); m != nil {
+		cv.line.logWarning("Please use \"${PKGMANDIR}/%s\" instead of \"%s\".", m[1], cv.value)
+	}
+}
+
+func (cv *CheckVartype) AwkCommand() {
+	_ = G.opts.optDebugUnchecked && cv.line.logDebug("Unchecked AWK command: %q", cv.value)
+}
+
+func (cv *CheckVartype) BrokenIn() {
+	if !match0(cv.value, `^pkgsrc-20\d\d\dQ[1234]$`) {
+		cv.line.logWarning("Invalid value %q for %s.", cv.value, cv.varname)
+	}
+}
+
+func (cv *CheckVartype) BuildlinkDepmethod() {
+	if !match0(cv.value, reUnresolvedVar) && cv.value != "build" && cv.value != "full" {
+		cv.line.logWarning("Invalid dependency method %q. Valid methods are \"build\" or \"full\".", cv.value)
+	}
+}
+
+func (cv *CheckVartype) BuildlinkDepth() {
+	if (cv.op != "use" || cv.value != "+") &&
+		cv.value != "${BUILDLINK_DEPTH}+" &&
+		cv.value != "${BUILDLINK_DEPTH:S/+$//}" {
+		cv.line.logWarning("Invalid value.")
+	}
+}
+
+func (cv *CheckVartype) Category() {
+	switch cv.value {
+	case "archivers", "audio",
+		"benchmarks", "biology",
+		"cad", "chat", "chinese", "comms", "converters", "cross", "crosspkgtools",
+		"databases", "devel",
+		"editors", "emulators",
+		"filesystems", "finance", "fonts",
+		"games", "geography", "gnome", "gnustep", "graphics",
+		"ham",
+		"inputmethod",
+		"japanese", "java",
+		"kde", "korean",
+		"lang", "linux", "local",
+		"mail", "math", "mbone", "meta-pkgs", "misc", "multimedia",
+		"net", "news",
+		"packages", "parallel", "perl5", "pkgtools", "plan9", "print", "python",
+		"ruby",
+		"scm", "security", "shells", "sysutils",
+		"tcl", "textproc", "time", "tk",
+		"windowmaker", "wm", "www",
+		"x11", "xmms":
+	default:
+		cv.line.logError("Invalid category %q.", cv.value)
 	}
 }
