@@ -11,12 +11,6 @@ func normalizePathname(fname string) string {
 	notImplemented()
 	return fname
 }
-func checkdirCvs(fname string) {
-	notImplemented()
-}
-func checkfile(fname string) {
-	notImplemented()
-}
 func checkUnusedLicenses() {
 	notImplemented()
 }
@@ -42,4 +36,7 @@ func checklinesBuildlink3Mk(lines []*Line, index int, pkgbase string) {
 func checkfilePackageMakefile(fname string, lines []*Line) bool {
 	notImplemented()
 	return false
+}
+func loadDocChanges(fname string) {
+	notImplemented()
 }

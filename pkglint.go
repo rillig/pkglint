@@ -356,10 +356,6 @@ func checkItem(fname string) {
 		return
 	}
 
-	if isDir {
-		checkdirCvs(fname)
-	}
-
 	if isReg {
 		checkfile(fname)
 	} else if *G.curPkgsrcdir == "" {
@@ -768,12 +764,116 @@ func checkfileMk(fname string) {
 	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileMk()")
 
 	checkperms(fname)
-	lines := loadNonemptyLines(fname,true)
+	lines := loadNonemptyLines(fname, true)
 	if lines == nil {
 		return
-		}
+	}
 
 	parselinesMk(lines)
 	checklinesMk(lines)
 	autofix(lines)
+}
+
+func checkfile(fname string) {
+
+	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfile()")
+
+	basename := path.Base(fname)
+	if match0(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {
+		if G.opts.optImport {
+			logError(fname, NO_LINES, "Must be cleaned up before committing the package.")
+		}
+		return
+	}
+
+	st, err := os.Lstat(fname)
+	if err != nil {
+		logError(fname, NO_LINES, "%s", err)
+		return
+	}
+
+	switch {
+	case st.Mode().IsDir():
+		if basename == "files" || basename == "patches" || basename == "CVS" {
+			// Ok
+		} else if match0(fname, `(?:^|/)files/[^/]*$`) {
+			// Ok
+
+		} else if !isEmptyDir(fname) {
+			logWarning(fname, NO_LINES, "Unknown directory name.")
+		}
+
+	case (st.Mode() & os.ModeSymlink) != 0:
+		if !match0(basename, `^work`) {
+			logWarning(fname, NO_LINES, "Unknown symlink name.")
+		}
+
+	case (!st.Mode().IsRegular()):
+		logError(fname, NO_LINES, "Only files and directories are allowed in pkgsrc.")
+
+	case (basename == "ALTERNATIVES"):
+		if G.opts.optCheckAlternatives {
+			checkfileAlternatives(fname)
+		}
+	case (basename == "buildlink3.mk"):
+		if G.opts.optCheckBuildlink3 {
+			checkfileBuildlink3Mk(fname)
+		}
+	case strings.HasPrefix(basename, "DESCR"):
+		if G.opts.optCheckDescr {
+			checkfileDescr(fname)
+		}
+
+	case match0(basename, `^distinfo`):
+		if G.opts.optCheckDistinfo {
+			checkfileDistinfo(fname)
+		}
+
+	case (basename == "DEINSTALL" || basename == "INSTALL"):
+		if G.opts.optCheckInstall {
+			checkfileInstall(fname)
+		}
+
+	case match0(basename, `^MESSAGE`):
+		if G.opts.optCheckMessage {
+			checkfileMessage(fname)
+		}
+
+	case match0(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
+		if G.opts.optCheckPatches {
+			checkfilePatch(fname)
+		}
+
+	case match0(fname, `(?:^|/)patches/manual[^/]*$`):
+		if G.opts.optDebugUnchecked {
+			logDebug(fname, NO_LINES, "Unchecked file %q.", fname)
+		}
+
+	case match0(fname, `(?:^|/)patches/[^/]*$`):
+		logWarning(fname, NO_LINES, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
+
+	case match0(basename, `^(?:.*\.mk|Makefile.*)$`) && !match0(fname, `files/`) && !match0(fname, `patches/`):
+		if G.opts.optCheckMk {
+			checkfileMk(fname)
+		}
+
+	case match0(basename, `^PLIST`):
+		if G.opts.optCheckPlist {
+			checkfilePlist(fname)
+		}
+
+	case (basename == "TODO" || basename == "README"):
+		// Ok
+
+	case match0(basename, `^CHANGES-.*`):
+		loadDocChanges(fname)
+
+	case match0(fname, `(?:^|/)files/[^/]*$`):
+		// Ok
+	default:
+		logWarning(fname, NO_LINES, "Unexpected file found.")
+		if G.opts.optCheckExtra {
+			checkfileExtra(fname)
+		}
+	}
 }
