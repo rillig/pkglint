@@ -31,9 +31,9 @@ func checkdirToplevel() {
 			ctx.checkSubdir(line, commentedOut == "#", indentation, subdir, comment)
 		}
 	}
-	
+
 	checklinesMk(lines)
-	
+
 	if G.opts.optRecursive {
 		G.ipcCheckingRootRecursively = true
 		G.todo = append(G.todo, ctx.subdirs...)
