@@ -15,7 +15,7 @@ func (a *Asserter) assertEqual(expected, actual interface{}) {
 }
 
 func TestConvertToLogicalLines_nocont(t *testing.T) {
-	GlobalVars.opts = &CmdOpts{}
+	G.opts = &CmdOpts{}
 
 	a := Asserter{t}
 	phys := []PhysLine{
@@ -32,7 +32,7 @@ func TestConvertToLogicalLines_nocont(t *testing.T) {
 }
 
 func TestConvertToLogicalLines_contInLastLine(t *testing.T) {
-	GlobalVars.opts = &CmdOpts{}
+	G.opts = &CmdOpts{}
 
 	a := Asserter{t}
 	physlines := []PhysLine{
