@@ -395,7 +395,7 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 	determineUsedVariables(allLines)
 
 	G.pkgContext.pkgdir = newStr(expandVariableWithDefault("PKGDIR", "."))
-	G.pkgContext.distinfo_file = newStr(expandVariableWithDefault("DISTINFO_FILE", "distinfo"))
+	G.pkgContext.distinfoFile = newStr(expandVariableWithDefault("DISTINFO_FILE", "distinfo"))
 	G.pkgContext.filesdir = newStr(expandVariableWithDefault("FILESDIR", "files"))
 	G.pkgContext.patchdir = newStr(expandVariableWithDefault("PATCHDIR", "patches"))
 
@@ -404,12 +404,12 @@ func loadPackageMakefile(fname string) (bool, []*Line) {
 			G.pkgContext.patchdir = newStr("patches")
 		}
 		if varIsDefined("PECL_VERSION") {
-			G.pkgContext.distinfo_file = newStr("distinfo")
+			G.pkgContext.distinfoFile = newStr("distinfo")
 		}
 	}
 
 	_ = G.opts.optDebugMisc &&
-		logDebug(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *G.pkgContext.distinfo_file) &&
+		logDebug(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", *G.pkgContext.distinfoFile) &&
 		logDebug(NO_FILE, NO_LINES, "FILESDIR=%s", *G.pkgContext.filesdir) &&
 		logDebug(NO_FILE, NO_LINES, "PATCHDIR=%s", *G.pkgContext.patchdir) &&
 		logDebug(NO_FILE, NO_LINES, "PKGDIR=%s", *G.pkgContext.pkgdir)

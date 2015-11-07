@@ -184,6 +184,11 @@ func fileExists(fname string) bool {
 	return err == nil && st.Mode().IsRegular()
 }
 
+func dirExists(fname string) bool {
+	st, err := os.Stat(fname)
+	return err == nil && st.Mode().IsDir()
+}
+
 func stringset(s string) map[string]bool {
 	result := make(map[string]bool)
 	for _, m := range regexp.MustCompile(`\S+`).FindAllString(s, -1) {

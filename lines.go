@@ -69,6 +69,20 @@ func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 	return convertToLogicalLines(fname, physlines, joinContinuationLines), nil
 }
 
+func loadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
+	checkperms(fname)
+	lines, err := loadLines(fname, joinContinuationLines)
+	if err != nil {
+		logError(fname, NO_LINES, "Cannot be read.")
+		return nil
+	}
+	if len(lines) == 0 {
+		logError(fname, NO_LINES, "Must not be empty.")
+		return nil
+	}
+	return lines
+}
+
 func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationLines bool) []*Line {
 	loglines := make([]*Line, 0)
 	if joinContinuationLines {
