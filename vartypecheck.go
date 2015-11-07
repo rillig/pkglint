@@ -10,6 +10,9 @@ type CheckVartype struct {
 	op         string
 	value      string
 	valueNovar string
+	 comment string
+	 listContext bool
+	 guessed bool
 }
 
 
@@ -198,118 +201,107 @@ func (cv *CheckVartype) DependencyWithPath() {
 
 func (cv *CheckVartype) DistSuffix() {
 	if cv.value == ".tar.gz" {
-		line.logNote("%s is \".tar.gz\" by default, so this definition may be redundant.",cv.varname)
+		cv.line.logNote("%s is \".tar.gz\" by default, so this definition may be redundant.", cv.varname)
 	}
 }
 
 func (cv *CheckVartype) EmulPlatform() {
 	
-			if (value =~ m"^(\w+)-(\w+)$") {
-				my (opsys, arch) = (1, 2)
+	if m, opsys, arch := match2(cv.value, `^(\w+)-(\w+)$`); m {
+		if !match0(opsys, `^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$`) {
+			cv.line.logWarning("Unknown operating system: %s", opsys)
+		}
+		// no check for os_version
+		if !match0(arch, `^(?:i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)"`) {
+			cv.line.logWarning("Unknown hardware architecture: %s", arch)
+		}
 
-				if (opsys !~ m"^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$") {
-					line.logWarning("Unknown operating system: ${opsys}")
-				}
-				// no check for os_version
-				if (arch !~ m"^(?:i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$") {
-					line.logWarning("Unknown hardware architecture: ${arch}")
-				}
-
-			} else {
-				line.logWarning("\"${value}\" is not a valid emulation platform.")
-				line.explainWarning(
+	} else {
+		cv.line.logWarning("%q is not a valid emulation platform.", cv.value)
+		cv.line.explainWarning(
 "An emulation platform has the form <OPSYS>-<MACHINE_ARCH>.",
 "OPSYS is the lower-case name of the operating system, and MACHINE_ARCH",
 "is the hardware architecture.",
 "",
 "Examples: linux-i386, irix-mipsel.")
-			}
+	}
 }
+
 func (cv *CheckVartype) FetchURL() {
-			checkline_mk_vartype_basic(line, varname, "URL", op, value, comment, list_context, is_guessed)
+	checklineMkVartypeBasic(cv.line, cv.varname, "URL", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
-			my sites = get_dist_sites()
-			foreach my site (keys(%{sites})) {
-				if (index(value, site) == 0) {
-					my subdir = substr(value, length(site))
-					my is_github = value =~ m"^https://github\.com/"
-					if (is_github) {
-						subdir =~ s|/.*|/|
-					}
-					line.logWarning(sprintf("Please use \${%s:=%s} instead of \"%s\".", sites.{site}, subdir, value))
-					if (is_github) {
-						line.logWarning("Run \"".conf_make." help topic=github\" for further tips.")
-					}
-					last
-				}
+	for siteUrl, siteName := range G.globalData.masterSiteUrls {
+		if strings.HasPrefix(cv.value, siteUrl) {
+			subdir := cv.value[len(siteUrl):]
+			isGithub := strings.HasPrefix(cv.value, "https://github.com/")
+			if (isGithub) {
+				subdir = strings.Split(subdir, "/")[0]
 			}
+			cv.line.logWarning("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.value)
+			if (isGithub) {
+				cv.line.logWarning("Run \"%s help topic=github\" for further tips.", confMake)
+			}
+			return
+		}
+	}
 }
+
 func (cv *CheckVartype) Filename() {
-			if (value_novar =~ m"/") {
-				line.logWarning("A filename should not contain a slash.")
+	if strstr(cv.valueNovar, "/") {
+		cv.line.logWarning("A filename should not contain a slash.")
 
-			} else if (value_novar !~ m"^[-0-9\@A-Za-z.,_~+%]*$") {
-				line.logWarning("\"${value}\" is not a valid filename.")
-			}
+	} else if !match0(cv.valueNovar, `^[-0-9\@A-Za-z.,_~+%]*$`) {
+		cv.line.logWarning("%q is not a valid filename.", cv.value)
+	}
 }
+
 func (cv *CheckVartype) Filemask() {
-			if (value_novar !~ m"^[-0-9A-Za-z._~+%*?]*$") {
-				line.logWarning("\"${value}\" is not a valid filename mask.")
-			}
+	if !match0(cv.valueNovar, `^[-0-9A-Za-z._~+%*?]*$`) {
+		cv.line.logWarning("%q is not a valid filename mask.", cv.value)
+	}
 }
+
 func (cv *CheckVartype) FileMode() {
-			if (value ne "" && value_novar eq "") {
-				// Fine.
-			} else if (value =~ m"^[0-7]{3,4}") {
-				// Fine.
-			} else {
-				line.logWarning("Invalid file mode ${value}.")
-			}
+	if cv.value != "" && cv.valueNovar == "" {
+		// Fine.
+	} else if match0(cv.value, `^[0-7]{3,4}`) {
+		// Fine.
+	} else {
+		cv.line.logWarning("Invalid file mode %q.", cv.value)
+	}
 }
+
 func (cv *CheckVartype) Identifier() {
-			if (value ne value_novar) {
-				//line.logWarning("Identifiers should be given directly.")
-			}
-			if (value_novar =~ m"^[+\-.0-9A-Z_a-z]+$") {
-				// Fine.
-			} else if (value ne "" && value_novar eq "") {
-				// Don't warn here.
-			} else {
-				line.logWarning("Invalid identifier \"${value}\".")
-			}
+	if (cv.value != cv.valueNovar) {
+		//line.logWarning("Identifiers should be given directly.")
+	}
+	if match0(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+$`) {
+		// Fine.
+	} else if (cv.value != "" && cv.valueNovar == "") {
+		// Don't warn here.
+	} else {
+		cv.line.logWarning("Invalid identifier %q.", cv.value)
+	}
 }
+
 func (cv *CheckVartype) Integer() {
-			if (value !~ m"^\d+$") {
-				line.logWarning("${varname} must be a valid integer.")
-			}
+	if !match0(cv.value, `^\d+$`) {
+		cv.line.logWarning("Invalid integer %q.")
+	}
 }
+
 func (cv *CheckVartype) LdFlag() {
-			if (value =~ m"^-L(.*)") {
-				my (dirname) = (1)
+	if match0(cv.value, `^-[Ll]`) || cv.value == "-static" {
+		return
+	} else if m, rpathFlag := match1(cv.value, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
+		cv.line.logWarning("Please use ${COMPILER_RPATH_FLAG} instead of %s.", rpathFlag)
 
-				opt_debug_unchecked and line.logDebug("Unchecked directory ${dirname} in ${varname}.")
+	} else if strings.HasPrefix(cv.value, "-") {
+		cv.line.logWarning("Unknown linker flag %q.", cv.value)
 
-			} else if (value =~ m"^-l(.*)") {
-				my (libname) = (1)
-
-				opt_debug_unchecked and line.logDebug("Unchecked library name ${libname} in ${varname}.")
-
-			} else if (value =~ m"^(?:-static)$") {
-				// Assume that the wrapper framework catches these.
-
-			} else if (value =~ m"^(-Wl,(?:-R|-rpath|--rpath))") {
-				my (rpath_flag) = (1)
-				line.logWarning("Please use \${COMPILER_RPATH_FLAG} instead of ${rpath_flag}.")
-
-			} else if (value =~ m"^-.*") {
-				line.logWarning("Unknown linker flag \"${value}\".")
-
-			} else if (value =~ regex_unresolved) {
-				opt_debug_unchecked and line.logDebug("Unchecked LDFLAG: ${value}")
-
-			} else {
-				line.logWarning("Linker flag \"${value}\" does not start with a dash.")
-			}
+	} else if (cv.value == cv.valueNovar) {
+		cv.line.logWarning("Linker flag %q does not start with a dash.", cv.value)
+	}
 }
 
 func (cv *CheckVartype) License() {
@@ -408,47 +400,46 @@ func (cv *CheckVartype) PrefixPathname() {
 }
 
 func (cv *CheckVartype) Pathlist() {
-			if (value !~ m":" && is_guessed) {
-				checkline_mk_vartype_basic(line, varname, "Pathname", op, value, comment, list_context, is_guessed)
+	if !strstr(cv.value, ":") && cv.guessed {
+		checklineMkVartypeBasic(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+		return
+	} 
+	
+	for _, path := range strings.Split(cv.value, ":") {
+		pathNovar := removeVariableReferences(path)
 
-			} else {
+		if !match0(pathNovar, `^[-0-9A-Za-z._~+%/]*$`) {
+			cv.line.logWarning("%q is not a valid pathname.", path)
+		}
 
-				// XXX: The splitting will fail if value contains any
-				// variables with modifiers, for example :Q or :S/././.
-				foreach my p (split(qr":", value)) {
-					my p_novar = remove_variables(p)
-
-					if (p_novar !~ m"^[-0-9A-Za-z._~+%/]*$") {
-						line.logWarning("\"${p}\" is not a valid pathname.")
-					}
-
-					if (p !~ m"^[\$/]") {
-						line.logWarning("All components of ${varname} (in this case \"${p}\") should be an absolute path.")
-					}
-				}
-			}
+		if !match0(path, `^[$/]`) {
+			cv.line.logWarning("All components of %q (in this case %q) should be an absolute path.", cv.value, path)
+		}
+	}
 }
 func (cv *CheckVartype) Pathmask() {
-			if (value_novar !~ m"^[#\-0-9A-Za-z._~+%*?/\[\]]*$") {
-				line.logWarning("\"${value}\" is not a valid pathname mask.")
-			}
-			checkline_mk_absolute_pathname(line, value)
+	if !match0(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
+		cv.line.logWarning("%q is not a valid pathname mask.",cv.value)
+	}
+	checklineMkAbsolutePathname(cv.line, cv.value)
 }
 func (cv *CheckVartype) Pathname() {
-			if (value_novar !~ m"^[#\-0-9A-Za-z._~+%/]*$") {
-				line.logWarning("\"${value}\" is not a valid pathname.")
-			}
-			checkline_mk_absolute_pathname(line, value)
+	if !match0(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
+		cv.line.logWarning("%q is not a valid pathname.", cv.value)
+	}
+	checklineMkAbsolutePathname(cv.line, cv.value)
 }
 func (cv *CheckVartype) Perl5Packlist() {
-			if (value ne value_novar) {
-				line.logWarning("${varname} should not depend on other variables.")
-			}
+	if (cv.value != cv.valueNovar) {
+		cv.line.logWarning("%s should not depend on other variables.", cv.varname)
+	}
 }
-func (cv *CheckVartype) PkgName() {if (value eq value_novar && value !~ regex_pkgname) {
-				line.logWarning("\"${value}\" is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.")
-			}
+func (cv *CheckVartype) PkgName() {
+	if cv.value == cv.valueNovar && !match0(cv.value, rePkgname) {
+		cv.line.logWarning("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
+	}
 }
+
 func (cv *CheckVartype) PkgPath() {
-			checkline_relative_pkgdir(line, "cur_pkgsrcdir/value")
+	checklineRelativePkgdir(cv.line, *G.curPkgsrcdir+"/"+cv.value)
 }
