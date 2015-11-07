@@ -175,3 +175,79 @@ func (cv *CheckVartype) CFlag() {
 		line.logWarning("Compiler flag %q should start with a hyphen.")
 	}
 }
+
+func (cv *CheckVartype) Comment() {
+	line, value := cv.line, cv.value
+
+	if value == "SHORT_DESCRIPTION_OF_THE_PACKAGE" {
+		line.logError("COMMENT must be set.")
+	}
+	if m, first := match1(value, `^(?i)(a|an)\s`); m {
+		line.logWarning("COMMENT should not begin with %q.", first)
+	}
+	if match0(value, `^[a-z]`) {
+		line.logWarning("COMMENT should start with a capital letter.")
+	}
+	if strings.HasSuffix(value, ".") {
+		line.logWarning("COMMENT should not end with a period.")
+	}
+	if len(value) > 70 {
+		line.logWarning("COMMENT should not be longer than 70 characters.")
+	}
+}
+
+func (cv *CheckVartype) Dependency() {
+	line, value := cv.line, cv.value
+
+	if m, depbase, depop, depversion := match3(value, `^(`+rePkgbase+`)(<|=|>|<=|>=|!=|-)(`+rePkgversion+`)$`); m {
+		_, _, _ = depbase, depop, depversion
+		return
+	}
+
+	if m, depbase, bracket, version, versionWildcard, other := match5(value, `^(`+rePkgbase+`)-(?:\[(.*)\]\*|(\d+(?:\.\d+)*(?:\.\*)?)(\{,nb\*\}|\*|)|(.*))?$`); m {
+		if bracket != "" {
+			if bracket != "0-9" {
+				line.logWarning("Only [0-9]* is allowed in the numeric part of a dependency.")
+			}
+
+		} else if version != "" && versionWildcard != "" {
+			// Fine.
+
+		} else if version != "" {
+			line.logWarning("Please append \"{,nb*}\" to the version number of this dependency.")
+			line.explainWarning(
+				"Usually, a dependency should stay valid when the PKGREVISION is",
+				"increased, since those changes are most often editorial. In the",
+				"current form, the dependency only matches if the PKGREVISION is",
+				"undefined.")
+
+		} else if other == "*" {
+			line.logWarning("Please use %s-[0-9]* instead of %s-*.", depbase, depbase)
+			line.explainWarning(
+				"If you use a * alone, the package specification may match other",
+				"packages that have the same prefix, but a longer name. For example,",
+				"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
+
+		} else {
+			line.logError("Unknown dependency pattern %q.", value)
+		}
+		return
+	}
+
+	if strings.Contains(value, "{") {
+		// No check yet for alternative dependency patterns.
+		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked alternative dependency pattern: %s", value)
+
+	} else if value != cv.valueNovar {
+		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked dependency: %s", value)
+
+	} else {
+		line.logWarning("Unknown dependency format: %s", value)
+		line.explainWarning(
+			"Typical dependencies have the following forms:",
+			"",
+			"* package>=2.5",
+			"* package-[0-9]*",
+			"* package-3.141")
+	}
+}
