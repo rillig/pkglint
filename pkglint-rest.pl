@@ -243,59 +243,12 @@ sub checkline_mk_shelltext($$) {
 
 AAAAAASDFDHFJDFSDGSDGSDGSD
 
-		if (state == SCST_PAX && shellword == "-pe") {
-			line.logWarning("Please use the -pp option to pax(1) instead of -pe.")
-			line.explainWarning(
-"The -pe option tells pax to preserve the ownership of the files, which",
-"means that the installed files will belong to the user that has built",
-"the package.")
-		}
 
-		if (state == SCST_PAX_S || state == SCST_SED_E) {
-			if (false && shellword !~ m"^[\"\'].*[\"\']$") {
-				line.logWarning("Substitution commands like \"${shellword}\" should always be quoted.")
-				line.explainWarning(
-"Usually these substitution commands contain characters like '*' or",
-"other shell metacharacters that might lead to lookup of matching",
-"filenames and then expand to more than one word.")
-			}
-		}
-
-		if (state == SCST_ECHO && shellword == "-n") {
-			line.logWarning("Please use \${ECHO_N} instead of \"echo -n\".")
-		}
-
-		if (opt_warn_extra && state != SCST_CASE_LABEL_CONT && shellword == "|") {
-			line.logWarning("The exitcode of the left-hand-side command of the pipe operator is ignored.")
-			line.explainWarning(
-"If you need to detect the failure of the left-hand-side command, use",
-"temporary files to save the output of the command.")
-		}
-
-		if (opt_warn_extra && shellword == ";" && state != SCST_COND_CONT && state != SCST_FOR_CONT && !set_e_mode) {
-			line.logWarning("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
-			line.explainWarning(
-"Older versions of the NetBSD make(1) had run the shell commands using",
-"the \"-e\" option of /bin/sh. In 2004, this behavior has been changed to",
-"follow the POSIX conventions, which is to not use the \"-e\" option.",
-"The consequence of this change is that shell programs don't terminate",
-"as soon as an error occurs, but try to continue with the next command.",
-"Imagine what would happen for these commands:",
-"    cd \"\HOME\"; cd /nonexistent; rm -rf *",
-"To fix this warning, either insert \"set -e\" at the beginning of this",
-"line or use the \"&&\" operator instead of the semicolon.")
-		}
 
 		//
 		// State transition.
 		//
 
-		if (state == SCST_SET && shellword =~ m"^-.*e") {
-			set_e_mode = true
-		}
-		if (state == SCST_START && shellword == "\${RUN}") {
-			set_e_mode = true
-		}
 
 		state =  (shellword == ";;") ? SCST_CASE_LABEL
 			// Note: The order of the following two lines is important.

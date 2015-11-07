@@ -294,6 +294,12 @@ outer:
 	}
 }
 
+type ShelltextContext struct {
+	line      *Line
+	state     ShellCommandState
+	shellword string
+}
+
 func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	line := msline.line
 	_ = GlobalVars.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
@@ -318,33 +324,49 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 
 	rest := shelltext
 
-	eflagMode := false
+	setE := false
 	var m []string
 	if replacestart(&rest, &m, `^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
 		hidden, macro := m[1], m[2]
-		msline.checkLineStart(hidden, macro, rest, &eflagMode)
+		msline.checkLineStart(hidden, macro, rest, &setE)
 	}
 
 	state := SCST_START
 	for replacestart(&rest, &m, reShellword) {
 		shellword := m[1]
+		st := &ShelltextContext{line, state, shellword}
 
 		_ = GlobalVars.opts.optDebugShell && line.logDebug("checklineMkShelltext state=%v shellword=%v", state, shellword)
 
-		msline.checklineMkShellword(shellword, !(state == SCST_CASE ||
-			state == SCST_FOR_CONT ||
-			state == SCST_SET_CONT ||
-			(state == SCST_START && match(shellword, reShVarassign) != nil)))
+		{
+			quotingNecessary := state != SCST_CASE &&
+				state != SCST_FOR_CONT &&
+				state != SCST_SET_CONT &&
+				!(state == SCST_START && match0(shellword, reShVarassign))
+			msline.checklineMkShellword(shellword, quotingNecessary)
+		}
 
-		msline.checkCommandStart(state, shellword)
-		msline.checkConditionalCd(state, shellword)
+		st.checkCommandStart()
+		st.checkConditionalCd()
 		if state != SCST_PAX_S && state != SCST_SED_E && state != SCST_CASE_LABEL {
 			checklineMkAbsolutePathname(line, shellword)
 		}
-		msline.checkAutoMkdirs(state, shellword)
-		msline.checkInstallMulti(state, shellword)
+		st.checkAutoMkdirs()
+		st.checkInstallMulti()
+		st.checkPaxPe()
+		st.checkQuoteSubstitution()
+		st.checkEchoN()
+		st.checkPipeExitcode()
+		st.checkSetE(setE)
 
 		//AAAAAASDFDHFJDFSDGSDGSDGSD
+
+		if state == SCST_SET && match0(shellword, `^-.*e`) {
+			setE = true
+		}
+		if state == SCST_START && shellword == "${RUN}" {
+			setE = true
+		}
 
 	}
 }
@@ -395,18 +417,18 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	}
 }
 
-func (msline *MkShellLine) checkCommandStart(state ShellCommandState, shellword string) {
+func (ctx *ShelltextContext) checkCommandStart() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
+
 	if state != SCST_START && state == SCST_COND {
 		return
 	}
-
-	line := msline.line
 
 	switch {
 	case shellword == "${RUN}":
 		// Just skip this one.
 
-	case msline.isForbiddenShellCommand(shellword):
+	case isForbiddenShellCommand(shellword):
 		line.logError("%q must not be used in Makefiles.", shellword)
 		line.explainError(
 			"This command must appear in INSTALL scripts, not in the package",
@@ -481,18 +503,20 @@ func (msline *MkShellLine) checkCommandStart(state ShellCommandState, shellword 
 	}
 }
 
-func (msline *MkShellLine) checkConditionalCd(state ShellCommandState, shellword string) {
+func (ctx *ShelltextContext) checkConditionalCd() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
+
 	if state == SCST_COND && shellword == "cd" {
-		msline.line.logError("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
-		msline.line.explainError(
+		line.logError("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+		line.explainError(
 			"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 			"shell will exit, no matter if it is protected by an \"if\" or the",
 			"\"||\" operator.")
 	}
 }
 
-func (msline *MkShellLine) checkAutoMkdirs(state ShellCommandState, shellword string) {
-	line := msline.line
+func (ctx *ShelltextContext) checkAutoMkdirs() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
 	if (state == SCST_INSTALL_D || state == SCST_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
 		line.logWarning("Please use AUTO_MKDIRS instead of %q.",
@@ -521,8 +545,8 @@ func (msline *MkShellLine) checkAutoMkdirs(state ShellCommandState, shellword st
 	}
 }
 
-func (msline *MkShellLine) checkInstallMulti(state ShellCommandState, shellword string) {
-	line := msline.line
+func (ctx *ShelltextContext) checkInstallMulti() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
 	if state == SCST_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
 		line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
@@ -532,7 +556,70 @@ func (msline *MkShellLine) checkInstallMulti(state ShellCommandState, shellword 
 	}
 }
 
-func (msline *MkShellLine) isForbiddenShellCommand(cmd string) bool {
+func (ctx *ShelltextContext) checkPaxPe() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
+
+	if state == SCST_PAX && shellword == "-pe" {
+		line.logWarning("Please use the -pp option to pax(1) instead of -pe.")
+		line.explainWarning(
+			"The -pe option tells pax to preserve the ownership of the files, which",
+			"means that the installed files will belong to the user that has built",
+			"the package.")
+	}
+}
+
+func (ctx *ShelltextContext) checkQuoteSubstitution() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
+
+	if state == SCST_PAX_S || state == SCST_SED_E {
+		if false && !match0(shellword, `"^[\"\'].*[\"\']$`) {
+			line.logWarning("Substitution commands like %q should always be quoted.", shellword)
+			line.explainWarning(
+				"Usually these substitution commands contain characters like '*' or",
+				"other shell metacharacters that might lead to lookup of matching",
+				"filenames and then expand to more than one word.")
+		}
+	}
+}
+
+func (ctx *ShelltextContext) checkEchoN() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
+
+	if state == SCST_ECHO && shellword == "-n" {
+		line.logWarning("Please use ${ECHO_N} instead of \"echo -n\".")
+	}
+}
+
+func (ctx *ShelltextContext) checkPipeExitcode() {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
+
+	if G.opts.optWarnExtra && state != SCST_CASE_LABEL_CONT && shellword == "|" {
+		line.logWarning("The exitcode of the left-hand-side command of the pipe operator is ignored.")
+		line.explainWarning(
+			"If you need to detect the failure of the left-hand-side command, use",
+			"temporary files to save the output of the command.")
+	}
+}
+
+func (ctx *ShelltextContext) checkSetE(eflag bool) {
+	line, state, shellword := ctx.line, ctx.state, ctx.shellword
+
+	if G.opts.optWarnExtra && shellword == ";" && state != SCST_COND_CONT && state != SCST_FOR_CONT && !eflag {
+		line.logWarning("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
+		line.explainWarning(
+			"Older versions of the NetBSD make(1) had run the shell commands using",
+			"the \"-e\" option of /bin/sh. In 2004, this behavior has been changed to",
+			"follow the POSIX conventions, which is to not use the \"-e\" option.",
+			"The consequence of this change is that shell programs don't terminate",
+			"as soon as an error occurs, but try to continue with the next command.",
+			"Imagine what would happen for these commands:",
+			"    cd \"HOME\"; cd /nonexistent; rm -rf *",
+			"To fix this warning, either insert \"set -e\" at the beginning of this",
+			"line or use the \"&&\" operator instead of the semicolon.")
+	}
+}
+
+func isForbiddenShellCommand(cmd string) bool {
 	switch path.Base(cmd) {
 	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
 		return true
