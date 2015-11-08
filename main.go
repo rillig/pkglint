@@ -6,6 +6,9 @@ import (
 )
 
 func main() {
+	G = &GlobalVarsType{}
+	defer func() { G = nil }()
+
 	pkgsrcdir := findPkgsrcTopdir()
 	G.opts = ParseCommandLine(os.Args)
 	if G.opts.optPrintVersion {
