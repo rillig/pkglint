@@ -516,7 +516,7 @@ func checklineTrailingWhitespace(line *Line) {
 
 func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	line.trace("checklineRcsid", prefixRe, suggestedPrefix)
-	
+
 	id := G.opts.optRcsIds
 	if G.isWip {
 		id += "|Id"
@@ -592,7 +592,7 @@ func checkfileAlternatives(fname string) {
 }
 
 func checkfileExtra(fname string) {
-	trace("checkfileExtra",fname)
+	trace("checkfileExtra", fname)
 
 	checkperms(fname)
 	lines := loadNonemptyLines(fname, false)
@@ -669,7 +669,7 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 }
 
 func checkfileMk(fname string) {
-	trace("checkfileMk",fname)
+	trace("checkfileMk", fname)
 
 	checkperms(fname)
 	lines := loadNonemptyLines(fname, true)

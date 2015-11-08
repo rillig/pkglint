@@ -118,7 +118,7 @@ func ParseCommandLine(args []string) CmdOpts {
 	warn.AddFlagVar("varorder", &result.optWarnVarorder, false, "warn about the ordering of variables")
 
 	result.args, _ = opts.Parse(args)
-	
+
 	if result.optPrintHelp {
 		opts.Help("pkglint [options] dir...")
 		os.Exit(0)
