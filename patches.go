@@ -40,7 +40,7 @@ func guessFileType(line *Line, fname string) FileType {
 	if match(basename, `.+\.(?:\d+|conf|html|info|man|po|tex|texi|texinfo|txt|xml)$`) != nil {
 		return FT_TEXT
 	}
-	if !strings.Contains(basename, ".") {
+	if !contains(basename, ".") {
 		return FT_UNKNOWN
 	}
 

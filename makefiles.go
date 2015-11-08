@@ -266,7 +266,7 @@ func checklineMkText(line *Line, text string) {
 		checklineRcsid(line, `# `, "# ")
 	}
 
-	if strings.Contains(text, "${WRKSRC}/../") {
+	if contains(text, "${WRKSRC}/../") {
 		line.logWarning("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
 		line.explainWarning(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",

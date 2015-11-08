@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strings"
-)
-
 func checkfileDescr(fname string) {
 	const (
 		maxchars = 80
@@ -28,7 +24,7 @@ func checkfileDescr(fname string) {
 		checklineLength(line, maxchars)
 		checklineTrailingWhitespace(line)
 		checklineValidCharacters(line, "Line", reValidchars)
-		if strings.Contains(line.text, "${") {
+		if contains(line.text, "${") {
 			line.logWarning("Variables are not expanded in the DESCR file.")
 		}
 	}

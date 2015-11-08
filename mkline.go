@@ -125,10 +125,10 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 	case vuc.vartype != nil && vuc.vartype.isGuessed():
 		// Don't warn about unknown variables.
 
-	case vuc.time == VUC_TIME_LOAD && !strings.Contains(perms, "p"):
+	case vuc.time == VUC_TIME_LOAD && !contains(perms, "p"):
 		isLoadTime = true
 
-	case vuc.vartype != nil && strings.Contains(vuc.vartype.union(), "p") && !strings.Contains(perms, "p"):
+	case vuc.vartype != nil && contains(vuc.vartype.union(), "p") && !contains(perms, "p"):
 		isLoadTime = true
 		isIndirect = true
 	}

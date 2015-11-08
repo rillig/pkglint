@@ -3,7 +3,6 @@ package main
 import (
 	"path"
 	"regexp"
-	"strings"
 )
 
 type PlistContext struct {
@@ -122,7 +121,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 
 	if cmd == "unexec" {
 		if m, arg := match1(arg, `^(?:rmdir|\$\{RMDIR\} \%D/)(.*)`); m {
-			if !strings.Contains(arg, "true") && !strings.Contains(arg, "${TRUE}") {
+			if !contains(arg, "true") && !contains(arg, "${TRUE}") {
 				line.logWarning("Please remove this line. It is no longer necessary.")
 			}
 		}
@@ -131,10 +130,10 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 	switch cmd {
 	case "exec", "unexec":
 		switch {
-		case strings.Contains(arg, "install-info"),
-			strings.Contains(arg, "${INSTALL_INFO}"):
+		case contains(arg, "install-info"),
+			contains(arg, "${INSTALL_INFO}"):
 			line.logWarning("@exec/unexec install-info is deprecated.")
-		case strings.Contains(arg, "ldconfig") && !strings.Contains(arg, "/usr/bin/true"):
+		case contains(arg, "ldconfig") && !contains(arg, "/usr/bin/true"):
 			line.logError("ldconfig must be used with \"||/usr/bin/true\".")
 		}
 
@@ -184,7 +183,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		pctx.lastFname = text
 	}
 
-	if strings.Contains(basename, "${IMAKE_MANNEWSUFFIX}") {
+	if contains(basename, "${IMAKE_MANNEWSUFFIX}") {
 		pline.warnAboutPlistImakeMannewsuffix()
 	}
 
@@ -348,11 +347,11 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked pathname %q.", text)
 	}
 
-	if strings.Contains(text, "${PKGLOCALEDIR}") && G.pkgContext.vardef["USE_PKGLOCALEDIR"] == nil {
+	if contains(text, "${PKGLOCALEDIR}") && G.pkgContext.vardef["USE_PKGLOCALEDIR"] == nil {
 		line.logWarning("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
 	}
 
-	if strings.Contains(text, "/CVS/") {
+	if contains(text, "/CVS/") {
 		line.logWarning("CVS files should not be in the PLIST.")
 	}
 	if hasSuffix(text, ".orig") {

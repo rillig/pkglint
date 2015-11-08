@@ -143,7 +143,7 @@ func (cv *CheckVartype) Dependency() {
 		return
 	}
 
-	if strings.Contains(value, "{") {
+	if contains(value, "{") {
 		// No check yet for alternative dependency patterns.
 		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked alternative dependency pattern: %s", value)
 

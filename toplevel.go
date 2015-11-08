@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strings"
-)
-
 type Toplevel struct {
 	previousSubdir string
 	subdirs        []string
@@ -49,7 +45,7 @@ func (ctx *Toplevel) checkSubdir(line *Line, commentedOut bool, indentation, sub
 		line.logWarning("Indentation should be a single tab character.")
 	}
 
-	if strings.Contains(subdir, "$") || !fileExists(G.currentDir+"/"+subdir+"/Makefile") {
+	if contains(subdir, "$") || !fileExists(G.currentDir+"/"+subdir+"/Makefile") {
 		return
 	}
 

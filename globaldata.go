@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
 
 // Constant data that is loaded once.
@@ -74,7 +73,7 @@ func (self *GlobalData) loadDistSites() {
 					line.logError("Lonely URL found.")
 				}
 			}
-		} else if match(text, `^(?:#.*|\s*)$`) != nil || strings.Contains(text, "BSD_SITES_MK") {
+		} else if match(text, `^(?:#.*|\s*)$`) != nil || contains(text, "BSD_SITES_MK") {
 		} else {
 			line.logFatal("Unknown line type.")
 		}

@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 	"path"
-	"strings"
 )
 
 func checklineMkShellword(line *Line, word string, checkQuoting bool) {
@@ -71,7 +70,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 	if match(shellword, `\$\{PREFIX\}/man(?:$|/)`) != nil {
 		line.logWarning("Please use ${PKGMANDIR} instead of \"man\".")
 	}
-	if strings.Contains(shellword, "etc/rc.d") {
+	if contains(shellword, "etc/rc.d") {
 		line.logWarning("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
@@ -308,7 +307,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	line := msline.line
 	_ = G.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
 
-	if strings.Contains(shelltext, "${SED}") || strings.Contains(shelltext, "${MV}") {
+	if contains(shelltext, "${SED}") || contains(shelltext, "${MV}") {
 		line.logNote("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		line.explainNote(
 			"When converting things, pay attention to \"#\" characters. In shell",
@@ -380,7 +379,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	line := msline.line
 
 	switch {
-	case !strings.Contains(hidden, "@"):
+	case !contains(hidden, "@"):
 		// Nothing is hidden at all.
 
 	case hasPrefix(G.mkContext.target, "show-") || hasSuffix(G.mkContext.target, "-message"):
@@ -409,7 +408,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 		}
 	}
 
-	if strings.Contains(hidden, "-") {
+	if contains(hidden, "-") {
 		line.logWarning("The use of a leading \"-\" to suppress errors is deprecated.")
 		line.explainWarning(
 			"If you really want to ignore any errors from this command (including",
@@ -461,8 +460,8 @@ func (ctx *ShelltextContext) checkCommandStart() {
 		// All commands from the current directory are fine.
 
 	case hasPrefix(shellword, "#"):
-		semicolon := strings.Contains(shellword, ";")
-		multiline := strings.Contains(line.lines, "--")
+		semicolon := contains(shellword, ";")
+		multiline := contains(line.lines, "--")
 
 		if semicolon {
 			line.logWarning("A shell comment should not contain semicolons.")
