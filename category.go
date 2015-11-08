@@ -45,9 +45,8 @@ func checkdirCategory() {
 	mSubdirs := make([]Subdir, 0)
 
 	prevSubdir := ""
-	lineno := 0
-	for lineno < len(lines) {
-		line := lines[lineno]
+	for !exp.eof() {
+		line := exp.currentLine()
 		text := line.text
 
 		if m, commentFlag, indentation, subdir, comment := match4(text, `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
@@ -70,7 +69,7 @@ func checkdirCategory() {
 
 			mSubdirs = append(mSubdirs, Subdir{subdir, line, !commentedOut})
 			prevSubdir = subdir
-			lineno++
+			exp.advance()
 
 		} else {
 			if line.text != "" {
@@ -105,7 +104,7 @@ func checkdirCategory() {
 			m_neednext = false
 			if m_index >= len(mSubdirs) {
 				m_atend = true
-				line = lines[lineno]
+				line = exp.currentLine()
 				continue
 			} else {
 				m_current = mSubdirs[m_index].subdir
@@ -149,19 +148,17 @@ func checkdirCategory() {
 		}
 	}
 
-	// the wip category Makefile may have its own targets for generating
-	// indexes and READMEs. Just skip them.
+	// the pkgsrc-wip category Makefile defines its own targets for
+	// generating indexes and READMEs. Just skip them.
 	if G.isWip {
-		for lineno < len(lines)-2 {
-			lineno++
-		}
+		exp.index = len(exp.lines) - 2
 	}
 
 	exp.expectEmptyLine()
 
-	// And, last but not least, the .include line
-	finalLine := ".include \"../mk/bsd.pkg.subdir.mk\""
-	if exp.advanceIfMatches(`\Q`+finalLine+`\E`) == nil {
+	if exp.currentLine().text == ".include \"../mk/bsd.pkg.subdir.mk\"" {
+		exp.advance()
+	} else {
 		exp.expectText(".include \"../mk/misc/category.mk\"")
 	}
 
