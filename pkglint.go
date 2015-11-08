@@ -372,7 +372,7 @@ func getNbpart() string {
 	if line != nil {
 		pkgrevision, err := strconv.Atoi(line.extra["value"].(string))
 		if err != nil && pkgrevision != 0 {
-			return fmt.Sprintf("nb%d", pkgrevision)
+			return sprintf("nb%d", pkgrevision)
 		}
 	}
 	return ""
@@ -457,7 +457,7 @@ func resolveVariableRefs(text string) string {
 					return G.mkContext.vardef[varname].extra["value"].(string)
 				}
 			}
-			return fmt.Sprintf("${%s}", varname)
+			return sprintf("${%s}", varname)
 		})
 		if replaced == str {
 			return replaced
@@ -504,7 +504,7 @@ func checklineValidCharacters(line *Line, subject, reValidchars string) {
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
-			uni += fmt.Sprintf(" %U", c)
+			uni += sprintf(" %U", c)
 		}
 		line.logWarning("%s contains invalid characters (%s).", subject, uni[1:])
 	}

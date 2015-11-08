@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -57,7 +56,7 @@ func getLogicalLine(fname string, physlines []PhysLine, pLineno *int) *Line {
 	lastlineno := physlines[lineno].lineno
 	*pLineno = lineno + 1
 
-	slineno := ifelseStr(firstlineno == lastlineno, fmt.Sprintf("%d", firstlineno), fmt.Sprintf("%d–%d", firstlineno, lastlineno))
+	slineno := ifelseStr(firstlineno == lastlineno, sprintf("%d", firstlineno), sprintf("%d–%d", firstlineno, lastlineno))
 	return NewLine(fname, slineno, value, physlines)
 }
 

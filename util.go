@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -28,7 +27,7 @@ func mustMatch(pattern string, s string) []string {
 	if m := regexp.MustCompile(pattern).FindStringSubmatch(s); m != nil {
 		return m
 	}
-	panic(fmt.Sprintf("mustMatch %#v %#v", pattern, s))
+	panic(sprintf("mustMatch %#v %#v", pattern, s))
 	return nil
 }
 

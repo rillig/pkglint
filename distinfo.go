@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"crypto/sha1"
-	"fmt"
 	"io/ioutil"
 	"strings"
 )
@@ -126,7 +125,7 @@ func (ctx *DistinfoContext) checkPatchSha1(line *Line, fname, distinfoSha1Hex st
 			h.Write(patchLine)
 		}
 	}
-	fileSha1Hex := fmt.Sprintf("%x", h.Sum(nil))
+	fileSha1Hex := sprintf("%x", h.Sum(nil))
 	if distinfoSha1Hex != fileSha1Hex {
 		line.logError("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", fname, distinfoSha1Hex, fileSha1Hex, confMake)
 	}

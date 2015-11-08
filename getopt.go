@@ -77,7 +77,7 @@ func (self *Options) parseShortOptions(args []string, i int, arg string) int {
 				if opt.flag != nil {
 					**opt.flag = true
 				} else if opt.str != nil {
-					argarg := strings.TrimPrefix(arg, fmt.Sprintf("%s%c", arg[:ai], optchar))
+					argarg := strings.TrimPrefix(arg, sprintf("%s%c", arg[:ai], optchar))
 					if argarg != "" {
 						**opt.str = argarg
 						return 0
@@ -85,7 +85,7 @@ func (self *Options) parseShortOptions(args []string, i int, arg string) int {
 					**opt.str = args[i+1]
 					return 1
 				} else if opt.flagGroup != nil {
-					argarg := strings.TrimPrefix(arg, fmt.Sprintf("%s%c", arg[:ai], optchar))
+					argarg := strings.TrimPrefix(arg, sprintf("%s%c", arg[:ai], optchar))
 					if argarg != "" {
 						opt.flagGroup.parse(argarg)
 						return 0
@@ -108,11 +108,11 @@ func (self *Options) Help(generalUsage string) {
 	tbl := make([][]string, 0)
 	for _, opt := range self.options {
 		if opt.argDescription == "" {
-			row := fmt.Sprintf("\t-%c, --%s\t %s",
+			row := sprintf("\t-%c, --%s\t %s",
 				opt.shortName, opt.longName, opt.description)
 			tbl = append(tbl, strings.Split(row, "\t"))
 		} else {
-			row := fmt.Sprintf("\t-%c, --%s=%s\t %s",
+			row := sprintf("\t-%c, --%s=%s\t %s",
 				opt.shortName, opt.longName, opt.argDescription, opt.description)
 			tbl = append(tbl, strings.Split(row, "\t"))
 		}
@@ -127,7 +127,7 @@ func (self *Options) Help(generalUsage string) {
 			tbl = append(tbl, []string{"", "", "all", " all of the following"})
 			tbl = append(tbl, []string{"", "", "none", " none of the following"})
 			for _, flag := range opt.flagGroup.flags {
-				row := fmt.Sprintf("\t\t%s\t %s (%v)", flag.name, flag.help, *flag.value)
+				row := sprintf("\t\t%s\t %s (%v)", flag.name, flag.help, *flag.value)
 				tbl = append(tbl, strings.Split(row, "\t"))
 			}
 
@@ -206,7 +206,7 @@ func printTable(out io.Writer, table [][]string) {
 			}
 			io.WriteString(out, cell)
 			if colno != len(row)-1 {
-				io.WriteString(out, fmt.Sprintf("%*s", width[colno]-len(cell), ""))
+				io.WriteString(out, sprintf("%*s", width[colno]-len(cell), ""))
 			}
 		}
 		io.WriteString(out, "\n")

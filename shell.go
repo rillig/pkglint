@@ -3,7 +3,6 @@ package main
 // Parsing and checking shell commands embedded in Makefiles
 
 import (
-	"fmt"
 	"path"
 )
 
@@ -128,7 +127,7 @@ outer:
 				} else if replacestart(&rest, &m, "^([^\\\\`]+)") {
 					stripped += m[1]
 				} else {
-					panic(fmt.Sprintf("rest=%v", rest))
+					panic(sprintf("rest=%v", rest))
 				}
 			}
 			line.logError("Unfinished backquotes: rest=%v", rest)

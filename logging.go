@@ -50,30 +50,30 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 }
 
 func logFatal(fname, lineno, format string, args ...interface{}) bool {
-	message := fmt.Sprintf(format, args...)
+	message := sprintf(format, args...)
 	logMessage(LL_FATAL, fname, lineno, message)
 	os.Exit(1)
 	return false
 }
 func logError(fname, lineno, format string, args ...interface{}) bool {
-	message := fmt.Sprintf(format, args...)
+	message := sprintf(format, args...)
 	logMessage(LL_ERROR, fname, lineno, message)
 	G.errors++
 	return true
 }
 func logWarning(fname, lineno, format string, args ...interface{}) bool {
-	message := fmt.Sprintf(format, args...)
+	message := sprintf(format, args...)
 	logMessage(LL_WARN, fname, lineno, message)
 	G.warnings++
 	return true
 }
 func logNote(fname, lineno, format string, args ...interface{}) bool {
-	message := fmt.Sprintf(format, args...)
+	message := sprintf(format, args...)
 	logMessage(LL_NOTE, fname, lineno, message)
 	return true
 }
 func logDebug(fname, lineno, format string, args ...interface{}) bool {
-	message := fmt.Sprintf(format, args...)
+	message := sprintf(format, args...)
 	logMessage(LL_DEBUG, fname, lineno, message)
 	return true
 }
