@@ -152,13 +152,13 @@ outer:
 			}
 
 			switch {
-			case state == SWST_PLAIN && strings.HasSuffix(mod, ":Q"):
+			case state == SWST_PLAIN && hasSuffix(mod, ":Q"):
 				// Fine.
 			case state == SWST_BACKT:
 				// Don't check anything here, to avoid false positives for tool names.
 			case (state == SWST_SQUOT || state == SWST_DQUOT) && match(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`) != nil:
 				// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
-			case state == SWST_DQUOT && strings.HasSuffix(mod, ":Q"):
+			case state == SWST_DQUOT && hasSuffix(mod, ":Q"):
 				line.logWarning("Please don't use the :Q operator in double quotes.")
 				line.explainWarning(
 					"Either remove the :Q or the double quotes. In most cases, it is more",
@@ -383,10 +383,10 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	case !strings.Contains(hidden, "@"):
 		// Nothing is hidden at all.
 
-	case strings.HasPrefix(G.mkContext.target, "show-") || strings.HasSuffix(G.mkContext.target, "-message"):
+	case hasPrefix(G.mkContext.target, "show-") || hasSuffix(G.mkContext.target, "-message"):
 		// In these targets commands may be hidden.
 
-	case strings.HasPrefix(rest, "#"):
+	case hasPrefix(rest, "#"):
 		// Shell comments may be hidden, since they cannot have side effects.
 
 	default:
@@ -460,7 +460,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	case match(shellword, `^\./`) != nil:
 		// All commands from the current directory are fine.
 
-	case strings.HasPrefix(shellword, "#"):
+	case hasPrefix(shellword, "#"):
 		semicolon := strings.Contains(shellword, ";")
 		multiline := strings.Contains(line.lines, "--")
 
@@ -553,7 +553,7 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 func (ctx *ShelltextContext) checkInstallMulti() {
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
-	if state == SCST_INSTALL_DIR2 && strings.HasPrefix(shellword, "$") {
+	if state == SCST_INSTALL_DIR2 && hasPrefix(shellword, "$") {
 		line.logWarning("The INSTALL_*_DIR commands can only handle one directory at a time.")
 		line.explainWarning(
 			"Many implementations of install(1) can handle more, but pkgsrc aims at",
@@ -737,9 +737,9 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 			return SCST_CONT // XXX: why not state?
 		}
 		return state
-	case state == SCST_INSTALL_DIR && strings.HasPrefix(shellword, "-"):
+	case state == SCST_INSTALL_DIR && hasPrefix(shellword, "-"):
 		return SCST_CONT
-	case state == SCST_INSTALL_DIR && strings.HasPrefix(shellword, "$"):
+	case state == SCST_INSTALL_DIR && hasPrefix(shellword, "$"):
 		return SCST_INSTALL_DIR2
 	case state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2:
 		return state

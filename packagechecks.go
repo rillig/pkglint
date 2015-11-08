@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strings"
-)
-
 func checkpackagePossibleDowngrade() {
 	_ = G.opts.optDebugTrace && logDebug(NO_FILE, NO_LINES, "checkpackagePossibleDowngrade")
 
@@ -126,7 +122,7 @@ func checkdirPackage() {
 		}
 		if match0(fname, `/patches/patch-*$`) {
 			havePatches = true
-		} else if strings.HasSuffix(fname, "/distinfo") {
+		} else if hasSuffix(fname, "/distinfo") {
 			haveDistinfo = true
 		}
 	}

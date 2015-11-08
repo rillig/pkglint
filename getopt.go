@@ -35,9 +35,9 @@ func (self *Options) Parse(args []string) ([]string, error) {
 		arg := args[i]
 		if arg == "--" {
 			return args[i+1:], nil
-		} else if strings.HasPrefix(arg, "--") {
+		} else if hasPrefix(arg, "--") {
 			i += self.parseLongOption(args, i, arg[2:])
-		} else if strings.HasPrefix(arg, "-") {
+		} else if hasPrefix(arg, "-") {
 			i += self.parseShortOptions(args, i, arg[1:])
 		} else {
 			return args[i:], nil
@@ -58,7 +58,7 @@ func (self *Options) parseLongOption(args []string, i int, arg string) int {
 				return 0
 			}
 			panic("not implemented: " + opt.longName)
-		} else if prefix := opt.longName + "="; strings.HasPrefix(arg, prefix) {
+		} else if prefix := opt.longName + "="; hasPrefix(arg, prefix) {
 			if opt.flagGroup != nil {
 				opt.flagGroup.parse(arg[len(prefix):])
 				return 0

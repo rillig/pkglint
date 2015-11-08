@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strings"
-)
-
 func checklinesPackageMakefileVarorder(lines []*Line) {
 	if !G.opts.optWarnOrder {
 		return
@@ -132,7 +128,7 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 		}
 
 		switch {
-		case strings.HasPrefix(text, "#"):
+		case hasPrefix(text, "#"):
 			lineno++
 
 		case line.extra["varcanon"] != nil:

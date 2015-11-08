@@ -142,7 +142,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		// Don't warn for absolute pathnames in comments, except for shell interpreters.
 
 	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
-		if strings.HasSuffix(before, "@") {
+		if hasSuffix(before, "@") {
 			// ok; autotools example: @PREFIX@/bin
 
 		} else if match(before, `[)}]`) != nil {
@@ -407,7 +407,7 @@ var patchTransitions = map[State][]transition{
 				*ctx.addlines = 1
 			}
 			ctx.checkText(ctx.line.text)
-			if strings.HasSuffix(ctx.line.text, "\r") {
+			if hasSuffix(ctx.line.text, "\r") {
 				ctx.line.logError("The hunk header must not end with a CR character.")
 				ctx.line.explainError(
 					"The MacOS X patch utility cannot handle these.")
@@ -600,7 +600,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	case FT_MAKE:
 		// This check is not as accurate as the similar one in checklineMkShelltext.
 		for _, shellword := range regexp.MustCompile(reShellword).FindAllString(addedText, -1) {
-			if !strings.HasPrefix(shellword, "#") {
+			if !hasPrefix(shellword, "#") {
 				checklineMkAbsolutePathname(line, shellword)
 			}
 		}

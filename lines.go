@@ -95,7 +95,7 @@ func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationL
 		}
 	}
 
-	if 0 < len(physlines) && !strings.HasSuffix(physlines[len(physlines)-1].textnl, "\n") {
+	if 0 < len(physlines) && !hasSuffix(physlines[len(physlines)-1].textnl, "\n") {
 		logError(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
 	}
 

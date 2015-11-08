@@ -58,7 +58,7 @@ func checkfilePlist(fname string) {
 	for _, line := range append(extraLines, lines...) {
 		text := line.text
 
-		if strings.HasPrefix(text, "${") {
+		if hasPrefix(text, "${") {
 			if m, varname, rest := match2(text, `^\$\{([\w_]+)\}(.*)`); m {
 				if G.pkgContext.plistSubstCond[varname] {
 					_ = G.opts.optDebugMisc && line.logDebug("Removed PLIST_SUBST conditional %q.", varname)
@@ -74,7 +74,7 @@ func checkfilePlist(fname string) {
 			}
 		}
 
-		if strings.HasPrefix(text, "@") {
+		if hasPrefix(text, "@") {
 			if m, dirname := match1(text, `^\@exec \$\{MKDIR\} %D/(.*)$`); m {
 				for dir := dirname; dir != "."; dir = path.Dir(dir) {
 					pctx.allDirs[dir] = line
@@ -189,7 +189,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	}
 
 	switch {
-	case strings.HasPrefix(dirname, "bin/"):
+	case hasPrefix(dirname, "bin/"):
 		line.logWarning("The bin/ directory should not have subdirectories.")
 
 	case dirname == "bin":
@@ -208,37 +208,37 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 			}
 		}
 
-	case strings.HasPrefix(text, "doc/"):
+	case hasPrefix(text, "doc/"):
 		line.logError("Documentation must be installed under share/doc, not doc.")
 
-	case strings.HasPrefix(text, "etc/rc.d/"):
+	case hasPrefix(text, "etc/rc.d/"):
 		line.logError("RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.")
 
-	case strings.HasPrefix(text, "etc/"):
+	case hasPrefix(text, "etc/"):
 		f := "mk/pkginstall/bsd.pkginstall.mk"
 		line.logError("Configuration files must not be registered in the PLIST. "+
 			"Please use the CONF_FILES framework, which is described in %s.", f)
 
-	case strings.HasPrefix(text, "include/") && match0(text, `^include/.*\.(?:h|hpp)$`):
+	case hasPrefix(text, "include/") && match0(text, `^include/.*\.(?:h|hpp)$`):
 		// Fine.
 
 	case text == "info/dir":
 		line.logError("\"info/dir\" must not be listed. Use install-info to add/remove an entry.")
 
-	case strings.HasPrefix(text, "info/"):
+	case hasPrefix(text, "info/"):
 		if G.pkgContext.vardef["INFO_FILES"] == nil {
 			line.logWarning("Packages that install info files should set INFO_FILES.")
 		}
 
-	case G.pkgContext.effective_pkgbase != nil && strings.HasPrefix(text, "lib/"+*G.pkgContext.effective_pkgbase+"/"):
+	case G.pkgContext.effective_pkgbase != nil && hasPrefix(text, "lib/"+*G.pkgContext.effective_pkgbase+"/"):
 		// Fine.
 
-	case strings.HasPrefix(text, "lib/locale/"):
+	case hasPrefix(text, "lib/locale/"):
 		line.logError("\"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 
-	case strings.HasPrefix(text, "lib/"):
+	case hasPrefix(text, "lib/"):
 		if m, dir, lib, ext := match3(text, `^(lib/(?:.*/)*)([^/]+)\.(so|a|la)$`); m {
-			if dir == "lib/" && !strings.HasPrefix(lib, "lib") {
+			if dir == "lib/" && !hasPrefix(lib, "lib") {
 				_ = G.opts.optWarnExtra && line.logWarning("Library filename does not start with \"lib\".")
 			}
 			if ext == "la" {
@@ -248,7 +248,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 			}
 		}
 
-	case strings.HasPrefix(text, "man/"):
+	case hasPrefix(text, "man/"):
 		if m, catOrMan, section, manpage, ext, gz := match5(text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`); m {
 
 			if !match0(section, `^[\dln]$`) {
@@ -281,7 +281,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 			line.logWarning("Invalid filename %q for manual page.", text)
 		}
 
-	case strings.HasPrefix(text, "sbin/"):
+	case hasPrefix(text, "sbin/"):
 		binname := text[5:]
 
 		if pctx.allFiles["man/man8/"+binname+".8"] == nil && G.opts.optWarnExtra {
@@ -293,7 +293,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 				"section 1.")
 		}
 
-	case strings.HasPrefix(text, "share/applications/") && strings.HasSuffix(text, ".desktop"):
+	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
 		if G.pkgContext.included[f] == nil {
 			line.logWarning("Packages that install a .desktop entry should .include %q.", f)
@@ -302,13 +302,13 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
 		}
 
-	case strings.HasPrefix(text, "share/icons/hicolor/") && *G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
+	case hasPrefix(text, "share/icons/hicolor/") && *G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
 			line.logError("Packages that install hicolor icons must include %q in the Makefile.", f)
 		}
 
-	case strings.HasPrefix(text, "share/icons/gnome") && *G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
+	case hasPrefix(text, "share/icons/gnome") && *G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
 			line.logError("The package Makefile must include %q.", f)
@@ -316,14 +316,14 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 				"Packages that install GNOME icons must maintain the icon theme cache.")
 		}
 
-	case dirname == "share/aclocal" && strings.HasSuffix(basename, ".m4"):
+	case dirname == "share/aclocal" && hasSuffix(basename, ".m4"):
 		// Fine.
 
-	case strings.HasPrefix(text, "share/doc/html/"):
+	case hasPrefix(text, "share/doc/html/"):
 		_ = G.opts.optWarnPlistDepr && line.logWarning("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
-	case G.pkgContext.effective_pkgbase != nil && (strings.HasPrefix(text, "share/doc/"+*G.pkgContext.effective_pkgbase+"/") ||
-		strings.HasPrefix(text, "share/examples/"+*G.pkgContext.effective_pkgbase+"/")):
+	case G.pkgContext.effective_pkgbase != nil && (hasPrefix(text, "share/doc/"+*G.pkgContext.effective_pkgbase+"/") ||
+		hasPrefix(text, "share/examples/"+*G.pkgContext.effective_pkgbase+"/")):
 		// Fine.
 
 	case text == "share/icons/hicolor/icon-theme.cache" && *G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
@@ -333,15 +333,15 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 			"",
 			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
 
-	case strings.HasPrefix(text, "share/info/"):
+	case hasPrefix(text, "share/info/"):
 		line.logWarning("Info pages should be installed into info/, not share/info/.")
 		line.explainWarning(
 			"To fix this, you should add INFO_FILES=yes to the package Makefile.")
 
-	case strings.HasPrefix(text, "share/locale/") && strings.HasSuffix(text, ".mo"):
+	case hasPrefix(text, "share/locale/") && hasSuffix(text, ".mo"):
 		// Fine.
 
-	case strings.HasPrefix(text, "share/man/"):
+	case hasPrefix(text, "share/man/"):
 		line.logWarning("Man pages should be installed into man/, not share/man/.")
 
 	default:
@@ -355,10 +355,10 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	if strings.Contains(text, "/CVS/") {
 		line.logWarning("CVS files should not be in the PLIST.")
 	}
-	if strings.HasSuffix(text, ".orig") {
+	if hasSuffix(text, ".orig") {
 		line.logWarning(".orig files should not be in the PLIST.")
 	}
-	if strings.HasSuffix(text, "/perllocal.pod") {
+	if hasSuffix(text, "/perllocal.pod") {
 		line.logWarning("perllocal.pod files should not be in the PLIST.")
 		line.explainWarning(
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts,",

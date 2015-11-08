@@ -404,7 +404,7 @@ func checklinesMk(lines []*Line) {
 			_ = G.opts.optDebugInclude && line.logDebug("includefile=%s", includefile)
 			checklineRelativePath(line, includefile, include == "include")
 
-			if strings.HasSuffix(includefile, "../Makefile") {
+			if hasSuffix(includefile, "../Makefile") {
 				line.logError("Other Makefiles must not be included directly.")
 				line.explainError(
 					"If you want to include portions of another Makefile, extract",
@@ -484,7 +484,7 @@ func checklinesMk(lines []*Line) {
 			} else if directive == "for" {
 				if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 					for _, forvar := range splitOnSpace(vars) {
-						if !G.isInternal && strings.HasPrefix(forvar, "_") {
+						if !G.isInternal && hasPrefix(forvar, "_") {
 							line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 						}
 
@@ -563,7 +563,7 @@ func checklinesMk(lines []*Line) {
 		} else if m, directive := match1(text, `^\.\s*(\S*)`); m {
 			line.logError("Unknown directive \".%s\".", directive)
 
-		} else if strings.HasPrefix(text, " ") {
+		} else if hasPrefix(text, " ") {
 			line.logWarning("Makefile lines should not start with space characters.")
 			line.explainWarning(
 				"If you want this line to contain a shell program, use a tab",

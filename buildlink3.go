@@ -27,7 +27,7 @@ func checkfileBuildlink3Mk(fname string) {
 
 x:
 	if m := exp.advanceIfMatches(`^#`); m != nil {
-		if strings.HasPrefix(m[0], "# XXX") {
+		if hasPrefix(m[0], "# XXX") {
 			exp.previousLine().logNote("Please read this comment and remove it if appropriate.")
 		}
 		goto x

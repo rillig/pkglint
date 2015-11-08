@@ -429,7 +429,7 @@ func getVariableType(line *Line, varname string) *Vartype {
 		case "_MK":
 			gtype = newBasicVartype(LK_NONE, "Unchecked",  allowAll, GUESSED)
 		}
-	} else if strings.HasPrefix(varname, "PLIST.") {
+	} else if hasPrefix(varname, "PLIST.") {
 		gtype = newBasicVartype(LK_NONE, "Yes",  allowAll, GUESSED)
 	}
 
@@ -569,7 +569,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 		return
 	}
 
-	abs := ifelseStr(strings.HasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
+	abs := ifelseStr(hasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
 			line.logError("%v does not exist.", resolvedPath)
@@ -579,7 +579,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 
 	switch {
 	case match0(path, `^\.\./\.\./[^/]+/[^/]`):
-	case strings.HasPrefix(path, "../../mk/"):
+	case hasPrefix(path, "../../mk/"):
 		// There need not be two directory levels for mk/ files.
 	case match0(path, `^\.\./mk/`) && *G.curPkgsrcdir == "..":
 		// That's fine for category Makefiles.
@@ -733,7 +733,7 @@ func checkfile(fname string) {
 		if G.opts.optCheckBuildlink3 {
 			checkfileBuildlink3Mk(fname)
 		}
-	case strings.HasPrefix(basename, "DESCR"):
+	case hasPrefix(basename, "DESCR"):
 		if G.opts.optCheckDescr {
 			checkfileDescr(fname)
 		}

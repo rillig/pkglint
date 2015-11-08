@@ -242,7 +242,7 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 			"See the pkgsrc guide, section \"quoting guideline\", for details.")
 	}
 
-	if strings.HasSuffix(mod, ":Q") {
+	if hasSuffix(mod, ":Q") {
 		expl := []string{
 			"Many variables in pkgsrc do not need the :Q operator, since they",
 			"are not expected to contain white-space or other special characters.",
@@ -289,7 +289,7 @@ func checklineMkVartypeSimple(line *Line, varname string, basicType string, op, 
 		var m []string
 		if m, valueNovar = replaceFirst(valueNovar, `\$\{([^{}]*)\}`, ""); m != nil {
 			varuse := m[1]
-			if !listContext && strings.HasSuffix(varuse, ":Q") {
+			if !listContext && hasSuffix(varuse, ":Q") {
 				line.logWarning("The :Q operator should only be used in lists and shell commands.")
 			}
 		} else {
@@ -379,7 +379,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		line.logWarning("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	if strings.HasPrefix(varname, "_") && !G.isInternal {
+	if hasPrefix(varname, "_") && !G.isInternal {
 		line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 	}
 
@@ -442,7 +442,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		line.logWarning("Definition of %s is deprecated. %s", varname, fix)
 	}
 
-	if strings.HasPrefix(varname, "SITES_") {
+	if hasPrefix(varname, "SITES_") {
 		line.logWarning("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 

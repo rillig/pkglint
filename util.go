@@ -74,7 +74,7 @@ func isCommitted(fname string) bool {
 		return false
 	}
 	for _, line := range lines {
-		if strings.HasPrefix(line.text, "/"+basename+"/") {
+		if hasPrefix(line.text, "/"+basename+"/") {
 			return true
 		}
 	}
@@ -299,7 +299,8 @@ func matchAll(s, re string) ([]string, string) {
 }
 
 var contains = strings.Contains
-
+var hasPrefix = strings.HasPrefix
+var hasSuffix = strings.HasSuffix
 
 func dirglob(dirname string) []string {
 	fis, err := ioutil.ReadDir(dirname)

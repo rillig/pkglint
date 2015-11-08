@@ -76,7 +76,7 @@ func (cv *CheckVartype) CFlag() {
 	if value == "-c99" {
 		return // Only useful for the IRIX C compiler
 	}
-	if strings.HasPrefix(value, "-") {
+	if hasPrefix(value, "-") {
 		line.logWarning("Unknown compiler flag %q.", value)
 		return
 	}
@@ -97,7 +97,7 @@ func (cv *CheckVartype) Comment() {
 	if match0(value, `^[a-z]`) {
 		line.logWarning("COMMENT should start with a capital letter.")
 	}
-	if strings.HasSuffix(value, ".") {
+	if hasSuffix(value, ".") {
 		line.logWarning("COMMENT should not end with a period.")
 	}
 	if len(value) > 70 {
@@ -231,9 +231,9 @@ func (cv *CheckVartype) FetchURL() {
 	checklineMkVartypeSimple(cv.line, cv.varname, "URL", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	for siteUrl, siteName := range G.globalData.masterSiteUrls {
-		if strings.HasPrefix(cv.value, siteUrl) {
+		if hasPrefix(cv.value, siteUrl) {
 			subdir := cv.value[len(siteUrl):]
-			isGithub := strings.HasPrefix(cv.value, "https://github.com/")
+			isGithub := hasPrefix(cv.value, "https://github.com/")
 			if isGithub {
 				subdir = strings.Split(subdir, "/")[0]
 			}
@@ -296,7 +296,7 @@ func (cv *CheckVartype) LdFlag() {
 	} else if m, rpathFlag := match1(cv.value, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
 		cv.line.logWarning("Please use ${COMPILER_RPATH_FLAG} instead of %s.", rpathFlag)
 
-	} else if strings.HasPrefix(cv.value, "-") {
+	} else if hasPrefix(cv.value, "-") {
 		cv.line.logWarning("Unknown linker flag %q.", cv.value)
 
 	} else if cv.value == cv.valueNovar {
@@ -627,14 +627,14 @@ func (cv *CheckVartype) Unchecked() {
 func (cv *CheckVartype) URL() {
 	line, value := cv.line, cv.value
 
-	if value == "" && strings.HasPrefix(cv.comment, "#") {
+	if value == "" && hasPrefix(cv.comment, "#") {
 		// Ok
 
 	} else if m, name, subdir := match2(value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
 		if !G.globalData.masterSiteVars[name] {
 			line.logError("%s does not exist.", name)
 		}
-		if !strings.HasSuffix(subdir, "/") {
+		if !hasSuffix(subdir, "/") {
 			line.logError("The subdirectory in %s must end with a slash.", name)
 		}
 
