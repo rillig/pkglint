@@ -1,7 +1,14 @@
 package main
 
+import (
+	"runtime/debug"
+)
+
 func notImplemented() {
 	logError(NO_FILE, NO_LINES, "not implemented")
+	if G.opts.optDebugUnchecked {
+		debug.PrintStack()
+	}
 }
 
 func checkperms(fname string) {
