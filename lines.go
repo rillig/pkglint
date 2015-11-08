@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -23,41 +22,39 @@ func loadRawLines(fname string) ([]PhysLine, error) {
 	return physlines, nil
 }
 
-func getLogicalLine(fname string, physlines []PhysLine, pLineno *int) *Line {
-	value := ""
-	first := true
-	lineno := *pLineno
-	firstlineno := physlines[lineno].lineno
+func getLogicalLine(fname string, physlines []PhysLine, pindex *int) *Line {
+	trace("getLogicalLine", fname, *pindex)
+	text := ""
+	index := *pindex
+	firstlineno := physlines[index].lineno
 	lphyslines := make([]PhysLine, 0)
+	interestingPhyslines := physlines[index:]
 
-	for _, physline := range physlines {
-		m := regexp.MustCompile(`^([ \t]*)(.*?)([ \t]*)(\\?)\n?$`).FindStringSubmatch(physline.textnl)
-		indent, text, outdent, cont := m[1], m[2], m[3], m[4]
+	for i, physline := range interestingPhyslines {
+		_, indent, phystext, outdent, cont := match4(physline.textnl, `^([ \t]*)(.*?)([ \t]*)(\\?)\n?$`)
 
-		if first {
-			value += indent
-			first = false
+		if text == "" {
+			text += indent
 		}
-
-		value += text
+		text += phystext
 		lphyslines = append(lphyslines, physline)
 
-		if cont == "\\" {
-			value += " "
+		if cont == "\\" && i != len(interestingPhyslines)-1 {
+			text += " "
+			index++
 		} else {
-			value += outdent
+			text += outdent + cont
 			break
 		}
 	}
 
-	if lineno >= len(physlines) { // The last line in the file is a continuation line
-		lineno--
-	}
-	lastlineno := physlines[lineno].lineno
-	*pLineno = lineno + 1
+	lastlineno := physlines[index].lineno
+	*pindex = index + 1
 
-	slineno := ifelseStr(firstlineno == lastlineno, sprintf("%d", firstlineno), sprintf("%d–%d", firstlineno, lastlineno))
-	return NewLine(fname, slineno, value, physlines)
+	slineno := ifelseStr(firstlineno == lastlineno,
+		sprintf("%d", firstlineno),
+		sprintf("%d--%d", firstlineno, lastlineno))
+	return NewLine(fname, slineno, text, lphyslines)
 }
 
 func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
