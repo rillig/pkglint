@@ -89,7 +89,7 @@ func (self *Line) String() string {
 }
 
 func (line *Line) trace(funcname string, args ...interface{}) {
-	line.logDebug("%s(%s)", funcname, argsStr(args))
+	line.logDebug("%s(%s)", funcname, argsStr(args...))
 }
 
 func (self *Line) prependBefore(line string) {

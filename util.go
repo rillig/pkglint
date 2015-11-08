@@ -315,11 +315,7 @@ func argsStr(args ...interface{}) string {
 		if i != 0 {
 			argsStr += ", "
 		}
-		if s, ok := arg.(string); ok {
-			argsStr += sprintf("%q", s)
-		} else {
-			argsStr += sprintf("%v", arg)
-		}
+		argsStr += sprintf("%#v", arg)
 	}
 	return argsStr
 }
