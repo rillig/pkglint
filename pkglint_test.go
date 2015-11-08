@@ -8,9 +8,8 @@ func TestDetermineUsedVariables(t *testing.T) {
 	a := Asserter{t}
 
 	G = &GlobalVarsType{}
-	G.opts = &CmdOpts{}
-	G.mkContext = &MkContext{}
-	G.mkContext.varuse = make(map[string]*Line)
+	defer func() { G = nil }()
+	G.mkContext = newMkContext()
 
 	line := NewLine("fname", "1", "${VAR}", nil)
 	lines := make([]*Line, 1)
