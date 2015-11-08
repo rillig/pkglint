@@ -459,9 +459,8 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 			"append that variable with PLIST_SUBST+= ${MY_PLIST_SUBST}.")
 	}
 
-	// Mark the variable as PLIST condition. This is later used in
-	// checkfile_PLIST.
-	if G.pkgContext.plistSubstCond != nil {
+	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
+	if G.pkgContext != nil && G.pkgContext.plistSubstCond != nil {
 		if m, plistVarname := match1(value, `(.+)=.*\@comment.*`); m {
 			G.pkgContext.plistSubstCond[plistVarname] = true
 		}
