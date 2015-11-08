@@ -95,7 +95,7 @@ func printSummary() {
 		if G.errors != 0 && G.warnings != 0 {
 			fmt.Printf("%d errors and %d warnings found.", G.errors, G.warnings)
 			if !G.opts.optExplain {
-				fmt.Printf("(Use -e for more details.)")
+				fmt.Printf(" (Use -e for more details.)")
 			}
 			fmt.Printf("\n")
 		} else {
