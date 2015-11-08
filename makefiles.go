@@ -289,9 +289,9 @@ func checklineMkText(line *Line, text string) {
 		varbase, varext := m[1], m[2]
 		varname := varbase + varext
 		varcanon := varnameCanon(varname)
-		instead := deprecatedVars[varname]
+		instead := G.globalData.deprecated[varname]
 		if instead == "" {
-			instead = deprecatedVars[varcanon]
+			instead = G.globalData.deprecated[varcanon]
 		}
 		if instead != "" {
 			line.logWarning("Use of %q is deprecated. %s", varname, instead)

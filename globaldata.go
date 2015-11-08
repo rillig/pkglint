@@ -24,6 +24,7 @@ type GlobalData struct {
 	lastChange          map[string]*Change
 	userDefinedVars     map[string]*Line
 	vartypes            map[string]*Vartype
+	deprecated          map[string]string
 }
 
 // A change entry from doc/CHANGES-*
@@ -49,6 +50,7 @@ func (self *GlobalData) Initialize(pkgsrcdir string) {
 	self.loadPkgOptions()
 	self.loadDocChanges()
 	self.loadUserDefinedVars()
+	self.deprecated = getDeprecatedVars()
 }
 
 func (self *GlobalData) loadDistSites() {

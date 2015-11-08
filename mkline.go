@@ -368,7 +368,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 	} else if !varIsUsed(varname) {
 		if vartypes := G.globalData.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
 			// Ok
-		} else if deprecated := deprecatedVars; deprecated[varname] != "" || deprecated[varcanon] != "" {
+		} else if deprecated := G.globalData.deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
 		} else {
 			line.logWarning("%s is defined but not used. Spelling mistake?", varname)
@@ -436,9 +436,9 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		}
 	}
 
-	if fix := deprecatedVars[varname]; fix != "" {
+	if fix := G.globalData.deprecated[varname]; fix != "" {
 		line.logWarning("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix := deprecatedVars[varcanon]; fix != "" {
+	} else if fix := G.globalData.deprecated[varcanon]; fix != "" {
 		line.logWarning("Definition of %s is deprecated. %s", varname, fix)
 	}
 
