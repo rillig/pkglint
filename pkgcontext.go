@@ -21,3 +21,28 @@ type PkgContext struct {
 	seenMakefileCommon bool             // Does the package have any .includes?
 	isWip              bool             // Is the current to-be-checked item from pkgsrc-wip?
 }
+
+func newPkgContext(pkgpath string) *PkgContext {
+	ctx := &PkgContext{
+		pkgpath,
+		nil,
+		"files",
+		"patches",
+		"distinfo",
+		nil,
+		nil,
+		nil,
+		nil,
+		false,
+		make(map[string]*Line),
+		make(map[string]*Line),
+		make(map[string]*Line),
+		make(map[string]bool),
+		make(map[string]*Line),
+		false,
+		false}
+	for varname, line := range G.globalData.userDefinedVars {
+		ctx.vardef[varname] = line
+	}
+	return ctx
+}

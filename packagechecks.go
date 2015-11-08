@@ -53,29 +53,7 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 }
 
 func checkdirPackage(pkgpath string) {
-
-	ctx := &PkgContext{
-		pkgpath,
-		nil,
-		"files",
-		"patches",
-		"distinfo",
-		nil,
-		nil,
-		nil,
-		nil,
-		false,
-		make(map[string]*Line),
-		make(map[string]*Line),
-		make(map[string]*Line),
-		make(map[string]bool),
-		make(map[string]*Line),
-		false,
-		false}
-	for varname, line := range G.globalData.userDefinedVars {
-		ctx.vardef[varname] = line
-	}
-
+	ctx := newPkgContext(pkgpath)
 	G.pkgContext = ctx
 	defer func() { G.pkgContext = nil }()
 
