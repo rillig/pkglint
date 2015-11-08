@@ -300,10 +300,10 @@ func checklineMkText(line *Line, text string) {
 }
 
 func checklinesMk(lines []*Line) {
+	trace("checklinesMk", lines[0].fname)
+
 	allowedTargets := make(map[string]bool)
 	substcontext := &SubstContext{}
-
-	_ = G.opts.optDebugTrace && logDebug(lines[0].fname, NO_LINES, "checklinesMk()")
 
 	ctx := newMkContext()
 	G.mkContext = ctx

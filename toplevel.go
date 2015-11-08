@@ -6,6 +6,8 @@ type Toplevel struct {
 }
 
 func checkdirToplevel() {
+	trace("checkdirToplevel", G.currentDir)
+
 	ctx := &Toplevel{}
 	ctx.subdirs = make([]string, 0)
 

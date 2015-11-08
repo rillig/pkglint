@@ -6,7 +6,7 @@ func checkfileDescr(fname string) {
 		maxlines = 24
 	)
 
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfile_DESCR()")
+	trace("checkfileDescr", fname)
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)

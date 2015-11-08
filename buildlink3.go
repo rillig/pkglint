@@ -6,7 +6,7 @@ import (
 )
 
 func checkfileBuildlink3Mk(fname string) {
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileBuildlink3Mk()")
+	trace("checkfileBuildlink3Mk", fname)
 
 	checkperms(fname)
 

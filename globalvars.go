@@ -4,7 +4,7 @@ type GlobalVarsType struct {
 	errors       int
 	warnings     int
 	curPkgsrcdir *string // The pkgsrc directory, relative to the directory that is currently checked.
-	opts         *CmdOpts
+	opts         CmdOpts
 	globalData   GlobalData
 	pkgContext   *PkgContext
 	mkContext    *MkContext

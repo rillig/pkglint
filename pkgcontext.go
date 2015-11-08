@@ -2,7 +2,7 @@ package main
 
 // Context of the package that is currently checked.
 type PkgContext struct {
-	pkgpath                string // e.g. "category/pkgdir"
+	pkgpath                string  // e.g. "category/pkgdir"
 	pkgdir                 *string // PKGDIR from the package Makefile
 	filesdir               string  // FILESDIR from the package Makefile
 	patchdir               string  // PATCHDIR from the package Makefile

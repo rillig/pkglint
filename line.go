@@ -87,6 +87,11 @@ func (self *Line) explainNote(explanation ...string) {
 func (self *Line) String() string {
 	return self.fname + ":" + self.lines + ": " + self.text
 }
+
+func (line *Line) trace(funcname string, args ...interface{}) {
+	line.logDebug("%s(%s)", funcname, argsStr(args))
+}
+
 func (self *Line) prependBefore(line string) {
 	self.before = append([]PhysLine{{0, line + "\n"}}, self.before...)
 	self.changed = true

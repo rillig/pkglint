@@ -14,9 +14,7 @@ type DistinfoContext struct {
 }
 
 func checkfileDistinfo(fname string) {
-	//my (lines, %in_distinfo, patches_dir, di_is_committed
-
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileDistinfo()")
+	trace("checkfileDistinfo", fname)
 
 	lines := loadNonemptyLines(fname, false)
 	if lines == nil {

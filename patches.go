@@ -98,6 +98,8 @@ func checklineCppMacroNames(line *Line, text string) {
 }
 
 func checkwordAbsolutePathname(line *Line, word string) {
+	line.trace("checkwordAbsolutePathname", word)
+
 	switch {
 	case match(word, `^/dev/(?:null|tty|zero)$`) != nil:
 		// These are defined by POSIX.
@@ -136,7 +138,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 }
 
 func checklineOtherAbsolutePathname(line *Line, text string) {
-	_ = G.opts.optDebugTrace && line.logDebug("checklineOtherAbsolutePathname %q", text)
+	line.trace("checklineOtherAbsolutePathname", text)
 
 	if match(text, `^#[^!]`) != nil {
 		// Don't warn for absolute pathnames in comments, except for shell interpreters.

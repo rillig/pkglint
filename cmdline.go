@@ -59,8 +59,8 @@ type CmdOpts struct {
 	args []string
 }
 
-func ParseCommandLine(args []string) *CmdOpts {
-	result := &CmdOpts{}
+func ParseCommandLine(args []string) CmdOpts {
+	result := CmdOpts{}
 	opts := &Options{}
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "Enable or disable specific checks")

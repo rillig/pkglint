@@ -1,7 +1,7 @@
 package main
 
 func checkpackagePossibleDowngrade() {
-	_ = G.opts.optDebugTrace && logDebug(NO_FILE, NO_LINES, "checkpackagePossibleDowngrade")
+	trace("checkpackagePossibleDowngrade")
 
 	m, _, pkgversion := match2(*G.pkgContext.effective_pkgname, rePkgname)
 	if !m {
@@ -24,7 +24,7 @@ func checkpackagePossibleDowngrade() {
 }
 
 func checklinesBuildlink3Inclusion(lines []*Line) {
-	_ = G.opts.optDebugTrace && logDebug(lines[0].fname, NO_LINES, "checklinesBuildlink3Inclusion()")
+	lines[0].trace("checklinesbuildlink3Inclusion")
 
 	if G.pkgContext == nil {
 		return

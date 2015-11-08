@@ -11,9 +11,9 @@ type Subdir struct {
 }
 
 func checkdirCategory() {
-	fname := G.currentDir + "/Makefile"
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkdirCategory()")
+	trace("checkdirCategory", G.currentDir)
 
+	fname := G.currentDir + "/Makefile"
 	lines := loadNonemptyLines(fname, true)
 	if lines == nil {
 		return

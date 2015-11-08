@@ -308,3 +308,24 @@ func dirglob(dirname string) []string {
 	}
 	return fnames
 }
+
+func argsStr(args ...interface{}) string {
+	argsStr := ""
+	for i, arg := range args {
+		if i != 0 {
+			argsStr += ", "
+		}
+		if s, ok := arg.(string); ok {
+			argsStr += sprintf("%q", s)
+		} else {
+			argsStr += sprintf("%v", arg)
+		}
+	}
+	return argsStr
+}
+
+func trace(funcname string, args ...interface{}) {
+	if G.opts.optDebugTrace {
+		logDebug(NO_FILE, NO_LINES, "%s(%s)", funcname, argsStr(args...))
+	}
+}

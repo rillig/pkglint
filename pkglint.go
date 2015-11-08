@@ -225,6 +225,8 @@ func explanationRelativeDirs() []string {
 }
 
 func checkItem(fname string) {
+	trace("checkItem", fname)
+
 	st, err := os.Stat(fname)
 	if err != nil || (!st.Mode().IsDir() && !st.Mode().IsRegular()) {
 		logError(fname, NO_LINES, "No such file or directory.")
@@ -248,7 +250,7 @@ func checkItem(fname string) {
 	pkgpath := ""
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
 		if fileExists(currentDir + "/" + dir + "/mk/bsd.pkg.mk") {
-			*G.curPkgsrcdir = dir
+			G.curPkgsrcdir = newStr(dir)
 			rel, err := filepath.Rel(currentDir, currentDir+"/"+dir)
 			if err != nil {
 				logFatal(currentDir, NO_LINES, "Cannot determine relative dir.")
