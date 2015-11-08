@@ -25,12 +25,10 @@ func checkfileBuildlink3Mk(fname string) {
 
 	exp := &ExpectContext{lines, 0}
 
-x:
-	if m := exp.advanceIfMatches(`^#`); m != nil {
-		if hasPrefix(m[0], "# XXX") {
+	for exp.advanceIfMatches(`^#`) != nil {
+		if hasPrefix(exp.previousLine().text, "# XXX") {
 			exp.previousLine().logNote("Please read this comment and remove it if appropriate.")
 		}
-		goto x
 	}
 
 	exp.expectEmptyLine()
