@@ -1,6 +1,6 @@
 package main
 
-import(
+import (
 	"path"
 )
 
@@ -14,15 +14,15 @@ type Vartype struct {
 }
 
 func newBasicVartype(kindOfList KindOfList, basicType string, aclEntries []AclEntry, guessed Guessed) *Vartype {
-	return &Vartype{kindOfList,basicType,nil,"",aclEntries,guessed}
+	return &Vartype{kindOfList, basicType, nil, "", aclEntries, guessed}
 }
 
-func newEnumVartype(kindOfList KindOfList,enumValues string, aclEntries[]AclEntry,guessed Guessed) *Vartype {
+func newEnumVartype(kindOfList KindOfList, enumValues string, aclEntries []AclEntry, guessed Guessed) *Vartype {
 	emap := make(map[string]bool)
 	for _, evalue := range splitOnSpace(enumValues) {
-		emap[evalue]=true
+		emap[evalue] = true
 	}
-	return &Vartype{kindOfList,"",emap,enumValues,aclEntries,guessed}
+	return &Vartype{kindOfList, "", emap, enumValues, aclEntries, guessed}
 }
 
 func (self *Vartype) effectivePermissions(fname string) string {

@@ -25,8 +25,4 @@ type Hash struct {
 	line *Line
 }
 
-var G = &GlobalVarsType{}
-
-const confMake = "@BMAKE@"
-const confDatadir = "@DATADIR@"
-const confVersion = "@VERSION@"
+var G *GlobalVarsType

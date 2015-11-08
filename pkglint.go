@@ -75,7 +75,6 @@ type AclEntry struct {
 	permissions string
 }
 
-
 // The various contexts in which make(1) variables can appear in pkgsrc.
 // Further details can be found in the chapter “The pkglint type system”
 // of the pkglint book.
@@ -327,10 +326,6 @@ func loadPackageMakefile(fname string) []*Line {
 	return lines
 }
 
-func findPkgsrcTopdir() string {
-	return "C:/Users/rillig/Desktop/pkgsrc/pkgsrc"
-}
-
 func determineUsedVariables(lines []*Line) {
 	re := regexp.MustCompile(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
 	for _, line := range lines {
@@ -405,32 +400,32 @@ func getVariableType(line *Line, varname string) *Vartype {
 		case "DIRS":
 			gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
 		case "DIR", "_HOME":
-			gtype = newBasicVartype(LK_NONE, "Pathname",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
 		case "FILES":
-			gtype = newBasicVartype(LK_EXTERNAL, "Pathmask",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
 		case "FILE":
-			gtype = newBasicVartype(LK_NONE, "Pathname",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
 		case "PATH":
-			gtype = newBasicVartype(LK_NONE, "Pathlist",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_NONE, "Pathlist", allowRuntime, GUESSED)
 		case "PATHS":
-			gtype = newBasicVartype(LK_EXTERNAL, "Pathname",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_EXTERNAL, "Pathname", allowRuntime, GUESSED)
 		case "_USER":
-			gtype = newBasicVartype(LK_NONE, "UserGroupName",  allowAll, GUESSED)
+			gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
 		case "_GROUP":
-			gtype = newBasicVartype(LK_NONE, "UserGroupName",  allowAll, GUESSED)
+			gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
 		case "_ENV":
-			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
 		case "_CMD":
-			gtype = newBasicVartype(LK_NONE, "ShellCommand",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_NONE, "ShellCommand", allowRuntime, GUESSED)
 		case "_ARGS":
-			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
 		case "_CFLAGS", "_CPPFLAGS", "_CXXFLAGS", "_LDFLAGS":
-			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord",  allowRuntime, GUESSED)
+			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
 		case "_MK":
-			gtype = newBasicVartype(LK_NONE, "Unchecked",  allowAll, GUESSED)
+			gtype = newBasicVartype(LK_NONE, "Unchecked", allowAll, GUESSED)
 		}
 	} else if hasPrefix(varname, "PLIST.") {
-		gtype = newBasicVartype(LK_NONE, "Yes",  allowAll, GUESSED)
+		gtype = newBasicVartype(LK_NONE, "Yes", allowAll, GUESSED)
 	}
 
 	if gtype != nil {

@@ -44,9 +44,9 @@ func acl(varname string, vartype string, aclentries ...string) {
 
 	var vtype *Vartype
 	if basicType != "" {
-		vtype = newBasicVartype(kindOfList,basicType,parseAclEntries(aclentries),NOT_GUESSED)
+		vtype = newBasicVartype(kindOfList, basicType, parseAclEntries(aclentries), NOT_GUESSED)
 	} else {
-		vtype = newEnumVartype(kindOfList,enumValues,parseAclEntries(aclentries),NOT_GUESSED)
+		vtype = newEnumVartype(kindOfList, enumValues, parseAclEntries(aclentries), NOT_GUESSED)
 	}
 
 	if varparam == "" || varparam == "*" {
