@@ -364,7 +364,7 @@ func checklinesMk(lines []*Line) {
 
 	// In the second pass, the actual checks are done.
 
-	checklineRcsid(lines[0], `^#\s+`, "# ")
+	checklineRcsid(lines[0], `#\s+`, "# ")
 
 	for _, line := range lines {
 		text := line.text

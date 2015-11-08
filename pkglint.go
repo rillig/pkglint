@@ -522,7 +522,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 		id += "|Id"
 	}
 
-	if !match0(line.text, `^`+prefixRe+`$(`+id+`)(?::[^\$]+|)\$$`) {
+	if !match0(line.text, `^`+prefixRe+`\$(`+id+`)(:[^\$]+)?\$$`) {
 		line.logError("Expected %s.", suggestedPrefix+"$"+G.opts.optRcsIds+"$")
 		line.explainError(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
