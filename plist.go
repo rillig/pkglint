@@ -301,13 +301,13 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
 		}
 
-	case hasPrefix(text, "share/icons/hicolor/") && *G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
+	case hasPrefix(text, "share/icons/hicolor/") && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
 			line.logError("Packages that install hicolor icons must include %q in the Makefile.", f)
 		}
 
-	case hasPrefix(text, "share/icons/gnome") && *G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
+	case hasPrefix(text, "share/icons/gnome") && G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
 			line.logError("The package Makefile must include %q.", f)
@@ -325,7 +325,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		hasPrefix(text, "share/examples/"+*G.pkgContext.effective_pkgbase+"/")):
 		// Fine.
 
-	case text == "share/icons/hicolor/icon-theme.cache" && *G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
+	case text == "share/icons/hicolor/icon-theme.cache" && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
 		line.logError("This file must not appear in any PLIST file.")
 		line.explainError(
 			"Remove this line and add the following line to the package Makefile.",

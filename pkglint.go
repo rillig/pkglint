@@ -245,19 +245,19 @@ func checkItem(fname string) {
 	G.isWip = !G.opts.optImport && match(absCurrentDir, `/wip/|/wip$`) != nil
 	G.isInternal = match(absCurrentDir, `/mk/|/mk$`) != nil
 	G.curPkgsrcdir = nil
-	G.pkgContext.pkgpath = nil
+	pkgpath := ""
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
-		fname := currentDir + "/" + dir + "/mk/bsd.pkg.mk"
-		if fst, err := os.Stat(fname); err == nil && fst.Mode().IsRegular() {
+		if fileExists(currentDir + "/" + dir + "/mk/bsd.pkg.mk") {
 			*G.curPkgsrcdir = dir
-			*G.pkgContext.pkgpath, err = filepath.Rel(currentDir, currentDir+"/"+dir)
+			rel, err := filepath.Rel(currentDir, currentDir+"/"+dir)
 			if err != nil {
 				logFatal(currentDir, NO_LINES, "Cannot determine relative dir.")
 			}
+			pkgpath = rel
 		}
 	}
 
-	if G.globalData.pkgsrcdir == "" {
+	if pkgpath == "" {
 		logError(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
 		return
 	}
@@ -271,7 +271,7 @@ func checkItem(fname string) {
 	} else if *G.curPkgsrcdir == "" {
 		logError(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
 	} else if *G.curPkgsrcdir == "../.." {
-		checkdirPackage()
+		checkdirPackage(pkgpath)
 	} else if *G.curPkgsrcdir == ".." {
 		checkdirCategory()
 	} else if *G.curPkgsrcdir == "." {

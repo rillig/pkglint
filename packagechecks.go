@@ -10,7 +10,7 @@ func checkpackagePossibleDowngrade() {
 
 	line := *G.pkgContext.effective_pkgname_line
 
-	change := G.globalData.lastChange[*G.pkgContext.pkgpath]
+	change := G.globalData.lastChange[G.pkgContext.pkgpath]
 	if change == nil {
 		_ = G.opts.optDebugMisc && line.logDebug("No change log for package %v", G.pkgContext.pkgpath)
 		return
@@ -52,10 +52,10 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 	}
 }
 
-func checkdirPackage() {
+func checkdirPackage(pkgpath string) {
 
 	ctx := &PkgContext{
-		nil,
+		pkgpath,
 		nil,
 		"files",
 		"patches",
