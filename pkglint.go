@@ -349,9 +349,11 @@ func extractUsedVariables(line *Line, text string) []string {
 		if m == nil {
 			break
 		}
-		varname := rest[m[2]:m[3]]
+		varname := rest[negToZero(m[2]):negToZero(m[3])]
 		rest = rest[:m[0]] + rest[m[1]:]
-		result = append(result, varname)
+		if varname != "" {
+			result = append(result, varname)
+		}
 	}
 
 	if rest != "" {
