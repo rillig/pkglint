@@ -494,14 +494,27 @@ func checklineLength(line *Line, maxlength int) {
 	}
 }
 
-func checklineValidCharacters(line *Line, subject, reValidchars string) {
+func checklineValidCharacters(line *Line, reValidchars string) {
 	rest := reCompile(reValidchars).ReplaceAllString(line.text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
 			uni += sprintf(" %U", c)
 		}
-		line.logWarning("%s contains invalid characters (%s).", subject, uni[1:])
+		line.logWarning("Line contains invalid characters (%s).", uni[1:])
+	}
+}
+
+func checklineValidCharactersInValue(line *Line, reValidchars string) {
+	varname := line.extra["varname"].(string)
+	value := line.extra["value"].(string)
+	rest := reCompile(reValidchars).ReplaceAllString(value, "")
+	if rest != "" {
+		uni := ""
+		for _, c := range rest {
+			uni += sprintf(" %U", c)
+		}
+		line.logWarning("%s contains invalid characters (%s).", varname, uni[1:])
 	}
 }
 
@@ -636,7 +649,7 @@ func checkfileMessage(fname string) {
 	for _, line := range lines {
 		checklineLength(line, 80)
 		checklineTrailingWhitespace(line)
-		checklineValidCharacters(line, "Line", reValidchars)
+		checklineValidCharacters(line, reValidchars)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
 		lastLine.logWarning("Expected a line of exactly 75 \"=\" characters.")
