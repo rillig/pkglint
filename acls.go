@@ -1,7 +1,5 @@
 package main
 
-import "strings"
-
 // This file defines the specific type of some variables, according to
 // their current use in pkgsrc.
 //
@@ -30,7 +28,7 @@ func acl(varname string, vartype string, aclentries ...string) {
 	m := mustMatch(`^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`, varname)
 	varbase, varparam := m[1], m[2]
 	m = mustMatch(`^(InternalList of |List of |)(?:([\w\d_]+)|\{\s*([\w\d_+,\-.\s]+?)\s*\})$`, vartype)
-	list, basicType, enumValues := m[1], m[2], strings.Split(m[3], " ")
+	list, basicType, enumValues := m[1], m[2], m[3]
 
 	var kindOfList KindOfList
 	switch list {
@@ -43,19 +41,14 @@ func acl(varname string, vartype string, aclentries ...string) {
 	default:
 		panic(list)
 	}
-	if basicType != "" && getBasicType(basicType) == nil {
-		panic("unknown basicType: " + basicType)
-	}
-	enumset := make(map[string]bool)
-	if len(enumValues) > 0 {
-		for _, val := range enumValues {
-			enumset[val] = true
-		}
+
+	var vtype *Vartype
+	if basicType != "" {
+		vtype = newBasicVartype(kindOfList,basicType,parseAclEntries(aclentries),NOT_GUESSED)
 	} else {
-		enumset = nil
+		vtype = newEnumVartype(kindOfList,enumValues,parseAclEntries(aclentries),NOT_GUESSED)
 	}
 
-	vtype := &Vartype{kindOfList, basicType, enumset, "", parseAclEntries(aclentries), NOT_GUESSED}
 	if varparam == "" || varparam == "*" {
 		vartypes[varbase] = vtype
 	}

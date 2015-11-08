@@ -74,74 +74,7 @@ type AclEntry struct {
 	glob        string
 	permissions string
 }
-type Vartype struct {
-	kindOfList    KindOfList
-	basicType     string
-	enumValues    map[string]bool
-	enumValuesStr string
-	aclEntries    []AclEntry
-	guessed       Guessed
-}
 
-func (self *Vartype) effectivePermissions(fname string) string {
-	for _, aclEntry := range self.aclEntries {
-		if m, _ := path.Match(aclEntry.glob, fname); m {
-			return aclEntry.permissions
-		}
-	}
-	return ""
-}
-
-// Returns the union of all possible permissions. This can be used to
-// check whether a variable may be defined or used at all, or if it is
-// read-only.
-func (self *Vartype) union() (perms string) {
-	for _, aclEntry := range self.aclEntries {
-		perms += aclEntry.permissions
-	}
-	return
-}
-
-// This distinction between “real lists” and “considered a list” makes
-// the implementation of checklineMkVartype easier.
-func (self *Vartype) isConsideredList() bool {
-	switch {
-	case self.kindOfList == LK_EXTERNAL:
-		return true
-	case self.kindOfList == LK_INTERNAL:
-		return false
-	case self.basicType == "BuildlinkPackages":
-		return true
-	case self.basicType == "SedCommands":
-		return true
-	case self.basicType == "ShellCommand":
-		return true
-	default:
-		return false
-	}
-}
-func (self *Vartype) mayBeAppendedTo() bool {
-	return self.kindOfList != LK_NONE ||
-		self.basicType == "AwkCommand" ||
-		self.basicType == "BuildlinkPackages" ||
-		self.basicType == "SedCommands"
-}
-func (self *Vartype) String() string {
-	switch self.kindOfList {
-	case LK_NONE:
-		return self.basicType
-	case LK_INTERNAL:
-		return "InternalList of " + self.basicType
-	case LK_EXTERNAL:
-		return "List of " + self.basicType
-	default:
-		panic("")
-		return ""
-	}
-}
-func (t *Vartype) isGuessed() bool {
-	return t.guessed == GUESSED
-}
 
 // The various contexts in which make(1) variables can appear in pkgsrc.
 // Further details can be found in the chapter “The pkglint type system”
@@ -173,25 +106,6 @@ const (
 	VUC_EXT_WORD
 	VUC_EXT_WORDPART
 )
-
-type VarUseContext struct {
-	time      VarUseContextTime
-	vartype   *Vartype
-	shellword VarUseContextShellword
-	extent    VarUseContextExtent
-}
-
-func (self *VarUseContext) String() string {
-	typename := "no-type"
-	if self.vartype != nil {
-		typename = self.vartype.String()
-	}
-	return fmt.Sprintf("(%s %s %s %s)",
-		[]string{"unknown-time", "load-time", "run-time"}[self.time],
-		typename,
-		[]string{"none", "plain", "dquot", "squot", "backt", "for"}[self.shellword],
-		[]string{"unknown", "full", "word", "word-part"}[self.extent])
-}
 
 type CvsEntry struct {
 	fname    string
@@ -474,11 +388,11 @@ func getVariableType(line *Line, varname string) *Vartype {
 	}
 
 	if G.globalData.varnameToToolname[varname] != "" {
-		return &Vartype{LK_NONE, "ShellCommand", nil, "", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+		return newBasicVartype(LK_NONE, "ShellCommand", []AclEntry{{"*", "u"}}, NOT_GUESSED)
 	}
 
 	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
-		return &Vartype{LK_NONE, "Pathname", nil, "", []AclEntry{{"*", "u"}}, NOT_GUESSED}
+		return newBasicVartype(LK_NONE, "Pathname", []AclEntry{{"*", "u"}}, NOT_GUESSED)
 	}
 
 	allowAll := []AclEntry{{"*", "adpsu"}}
@@ -489,34 +403,34 @@ func getVariableType(line *Line, varname string) *Vartype {
 	if m, suffix := match1(varname, `(DIRS|DIR|FILES|FILE|PATH|PATHS|_USER|_GROUP|_ENV|_CMD|_ARGS|_CFLAGS|_CPPFLAGS|_CXXFLAGS|_LDFLAGS|_MK)$`); m {
 		switch suffix {
 		case "DIRS":
-			gtype = &Vartype{LK_EXTERNAL, "Pathmask", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
 		case "DIR", "_HOME":
-			gtype = &Vartype{LK_NONE, "Pathname", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_NONE, "Pathname",  allowRuntime, GUESSED)
 		case "FILES":
-			gtype = &Vartype{LK_EXTERNAL, "Pathmask", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_EXTERNAL, "Pathmask",  allowRuntime, GUESSED)
 		case "FILE":
-			gtype = &Vartype{LK_NONE, "Pathname", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_NONE, "Pathname",  allowRuntime, GUESSED)
 		case "PATH":
-			gtype = &Vartype{LK_NONE, "Pathlist", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_NONE, "Pathlist",  allowRuntime, GUESSED)
 		case "PATHS":
-			gtype = &Vartype{LK_EXTERNAL, "Pathname", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_EXTERNAL, "Pathname",  allowRuntime, GUESSED)
 		case "_USER":
-			gtype = &Vartype{LK_NONE, "UserGroupName", nil, "", allowAll, GUESSED}
+			gtype = newBasicVartype(LK_NONE, "UserGroupName",  allowAll, GUESSED)
 		case "_GROUP":
-			gtype = &Vartype{LK_NONE, "UserGroupName", nil, "", allowAll, GUESSED}
+			gtype = newBasicVartype(LK_NONE, "UserGroupName",  allowAll, GUESSED)
 		case "_ENV":
-			gtype = &Vartype{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord",  allowRuntime, GUESSED)
 		case "_CMD":
-			gtype = &Vartype{LK_NONE, "ShellCommand", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_NONE, "ShellCommand",  allowRuntime, GUESSED)
 		case "_ARGS":
-			gtype = &Vartype{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord",  allowRuntime, GUESSED)
 		case "_CFLAGS", "_CPPFLAGS", "_CXXFLAGS", "_LDFLAGS":
-			gtype = &Vartype{LK_EXTERNAL, "ShellWord", nil, "", allowRuntime, GUESSED}
+			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord",  allowRuntime, GUESSED)
 		case "_MK":
-			gtype = &Vartype{LK_NONE, "Unchecked", nil, "", allowAll, GUESSED}
+			gtype = newBasicVartype(LK_NONE, "Unchecked",  allowAll, GUESSED)
 		}
 	} else if strings.HasPrefix(varname, "PLIST.") {
-		gtype = &Vartype{LK_NONE, "Yes", nil, "", allowAll, GUESSED}
+		gtype = newBasicVartype(LK_NONE, "Yes",  allowAll, GUESSED)
 	}
 
 	if gtype != nil {
