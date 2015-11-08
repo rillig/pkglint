@@ -2,7 +2,6 @@ package main
 
 import (
 	"path"
-	"regexp"
 )
 
 type PlistContext struct {
@@ -148,7 +147,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 			"command in the PLIST")
 
 	case "imake-man":
-		args := regexp.MustCompile(`\s+`).Split(arg, -1)
+		args := splitOnSpace(arg)
 		if len(args) != 3 {
 			line.logWarning("Invalid number of arguments for imake-man.")
 		} else {

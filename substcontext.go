@@ -1,9 +1,5 @@
 package main
 
-import (
-	"regexp"
-)
-
 // Records the state of a block of variable assignments that make up a SUBST
 // class (see mk/subst.mk).
 type SubstContext struct {
@@ -26,7 +22,7 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	}
 
 	if varname == "SUBST_CLASSES" {
-		classes := regexp.MustCompile(`\s+`).Split(value, -1)
+		classes := splitOnSpace(value)
 		if len(classes) > 1 {
 			line.logWarning("Please add only one class at a time to SUBST_CLASSES.")
 		}

@@ -4,7 +4,6 @@ package main
 
 import (
 	"path"
-	"regexp"
 	"strings"
 )
 
@@ -83,7 +82,7 @@ var badCppMacros = map[string]string{
 }
 
 func checklineCppMacroNames(line *Line, text string) {
-	for _, m := range regexp.MustCompile(`defined\((__[\w_]+)\)|\b(_\w+)\(`).FindAllStringSubmatch(text, -1) {
+	for _, m := range reCompile(`defined\((__[\w_]+)\)|\b(_\w+)\(`).FindAllStringSubmatch(text, -1) {
 		macro := m[1] + m[2]
 
 		if goodCppMacros[macro] {
@@ -601,7 +600,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	case FT_SHELL:
 	case FT_MAKE:
 		// This check is not as accurate as the similar one in checklineMkShelltext.
-		for _, shellword := range regexp.MustCompile(reShellword).FindAllString(addedText, -1) {
+		for _, shellword := range reCompile(reShellword).FindAllString(addedText, -1) {
 			if !hasPrefix(shellword, "#") {
 				checklineMkAbsolutePathname(line, shellword)
 			}

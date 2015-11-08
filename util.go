@@ -24,7 +24,7 @@ func ifelseStr(cond bool, a, b string) string {
 }
 
 func mustMatch(pattern string, s string) []string {
-	if m := regexp.MustCompile(pattern).FindStringSubmatch(s); m != nil {
+	if m := reCompile(pattern).FindStringSubmatch(s); m != nil {
 		return m
 	}
 	panic(sprintf("mustMatch %#v %#v", pattern, s))
@@ -92,7 +92,7 @@ func checkPermissions(fname string) {
 }
 
 func removeVariableReferences(expr string) string {
-	replaced := regexp.MustCompile(`\$\{([^{}]*)\}`).ReplaceAllString(expr, "")
+	replaced := reCompile(`\$\{([^{}]*)\}`).ReplaceAllString(expr, "")
 	if replaced != expr {
 		return removeVariableReferences(replaced)
 	}
@@ -175,7 +175,7 @@ func isVarUsed(varname string) bool {
 }
 
 func splitOnSpace(s string) []string {
-	return regexp.MustCompile(`\s+`).Split(s, -1)
+	return reCompile(`\s+`).Split(s, -1)
 }
 
 func fileExists(fname string) bool {
@@ -190,7 +190,7 @@ func dirExists(fname string) bool {
 
 func stringset(s string) map[string]bool {
 	result := make(map[string]bool)
-	for _, m := range regexp.MustCompile(`\S+`).FindAllString(s, -1) {
+	for _, m := range reCompile(`\S+`).FindAllString(s, -1) {
 		result[m] = true
 	}
 	return result

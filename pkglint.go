@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -439,7 +438,7 @@ func resolveVariableRefs(text string) string {
 	visited := make(map[string]bool) // To prevent endless loops
 
 	str := text
-	re := regexp.MustCompile(`\$\{(\w+)\}`)
+	re := reCompile(`\$\{(\w+)\}`)
 	for {
 		replaced := re.ReplaceAllStringFunc(str, func(varname string) string {
 			if !visited[varname] {
