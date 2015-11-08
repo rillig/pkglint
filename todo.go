@@ -1,13 +1,18 @@
 package main
 
 import (
-	"runtime/debug"
+	"os"
+	"runtime"
 )
 
 func notImplemented() {
 	logError(NO_FILE, NO_LINES, "not implemented")
 	if G.opts.optDebugUnchecked {
-		debug.PrintStack()
+		bytes := make([]byte, 4096)
+		if n := runtime.Stack(bytes, false); n < len(bytes) {
+			os.Stdout.Write(bytes[:n])
+		}
+		os.Stdout.Write([]byte("\n"))
 	}
 }
 
