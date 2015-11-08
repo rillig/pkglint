@@ -51,7 +51,7 @@ func (self *Line) printSource(out io.Writer) {
 	if G.opts.optPrintSource {
 		io.WriteString(out, "\n")
 		for _, physline := range self.physicalLines() {
-			fmt.Fprintf(out, "> %s\n", physline.textnl)
+			fmt.Fprintf(out, "> %s", physline.textnl)
 		}
 	}
 }
