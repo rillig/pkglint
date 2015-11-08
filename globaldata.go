@@ -59,26 +59,19 @@ func (self *GlobalData) loadDistSites() {
 	lines := loadExistingLines(fname, true)
 
 	names := make(map[string]bool)
-	ignoring := false
 	url2name := make(map[string]string)
 	for _, line := range lines {
+		line.trace("loadDistSites", line.text)
 		text := line.text
-		if m, varname := match1(text, `^(MASTER_SITE_\w+)\+=\s*\\$`); m {
-			names[varname] = true
-			ignoring = false
-		} else if text == "MASTER_SITE_BACKUP?=\t\\" {
-			ignoring = true
-		} else if m, url := match1(text, `^\t((?:http://|https://|ftp://)\S+/)(?:|\s*\\)$`); m {
-			if !ignoring {
-				if varname != "" {
-					url2name[url] = varname
-				} else {
-					line.logError("Lonely URL found.")
+		if m, varname, _, urls := match3(text, reVarassign); m {
+			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
+				names[varname] = true
+				for _, url := range splitOnSpace(urls) {
+					if match0(url, `^(?:http://|https://|ftp://).+/`) {
+						url2name[url] = varname
+					}
 				}
 			}
-		} else if match(text, `^(?:#.*|\s*)$`) != nil || contains(text, "BSD_SITES_MK") {
-		} else {
-			line.logFatal("Unknown line type.")
 		}
 	}
 
@@ -343,6 +336,7 @@ func (self *GlobalData) loadDocChanges() {
 func (self *GlobalData) loadUserDefinedVars() {
 	lines := loadExistingLines(G.globalData.pkgsrcdir+"/mk/defaults/mk.conf", true)
 
+	self.userDefinedVars = make(map[string]*Line)
 	for _, line := range lines {
 		if m := match(line.text, reVarassign); m != nil {
 			self.userDefinedVars[m[1]] = line
