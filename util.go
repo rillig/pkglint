@@ -298,7 +298,8 @@ func matchAll(s, re string) ([]string, string) {
 	return make([]string, 0), ""
 }
 
-var strstr = strings.Contains
+var contains = strings.Contains
+
 
 func dirglob(dirname string) []string {
 	fis, err := ioutil.ReadDir(dirname)

@@ -247,7 +247,7 @@ func (cv *CheckVartype) FetchURL() {
 }
 
 func (cv *CheckVartype) Filename() {
-	if strstr(cv.valueNovar, "/") {
+	if contains(cv.valueNovar, "/") {
 		cv.line.logWarning("A filename should not contain a slash.")
 
 	} else if !match0(cv.valueNovar, `^[-0-9\@A-Za-z.,_~+%]*$`) {
@@ -390,7 +390,7 @@ func (cv *CheckVartype) Option() {
 }
 
 func (cv *CheckVartype) Pathlist() {
-	if !strstr(cv.value, ":") && cv.guessed {
+	if !contains(cv.value, ":") && cv.guessed {
 		checklineMkVartypeSimple(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}

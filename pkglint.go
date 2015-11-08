@@ -560,7 +560,7 @@ func checklineMkAbsolutePathname(line *Line, text string) {
 }
 
 func checklineRelativePath(line *Line, path string, mustExist bool) {
-	if !G.isWip && strstr(path, "/wip/") {
+	if !G.isWip && contains(path, "/wip/") {
 		line.logError("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 

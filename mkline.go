@@ -35,7 +35,7 @@ func checklineMkVardef(line *Line, varname, op string) {
 		needed = "s"
 	}
 
-	if !strstr(perms, needed) {
+	if !contains(perms, needed) {
 		expandPermission := func(perm string) string {
 			result := ""
 			for _, c := range perm {
@@ -156,7 +156,7 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 			"properly defined.")
 	}
 
-	if !strstr(perms, "p") && !strstr(perms, "u") {
+	if !contains(perms, "p") && !contains(perms, "u") {
 		line.logWarning("%s must not be used in this file.")
 	}
 }
