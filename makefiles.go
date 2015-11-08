@@ -27,8 +27,8 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 		includeFile := ""
 		if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
 			includeFile = resolveVarsInRelativePath(inc, true)
-			if match(includeFile, reUnresolvedVar) != nil {
-				if match(fname, `/mk/`) == nil {
+			if match0(includeFile, reUnresolvedVar) {
+				if !contains(fname, "/mk/") {
 					line.logNote("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
 			} else {
@@ -48,7 +48,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 		if isIncludeLine && G.pkgContext.included[includeFile] == nil {
 			G.pkgContext.included[includeFile] = line
 
-			if match(includeFile, `^\.\./[^./][^/]*/[^/]+`) != nil {
+			if match0(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				line.logWarning("References to other packages should look like \"../../category/package\", not \"../package\".")
 				line.explainWarning(explanationRelativeDirs()...)
 			}
@@ -63,7 +63,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 				}
 			}
 
-			if match(includeFile, `/mk/`) == nil {
+			if !contains(includeFile, "/mk/") {
 				dirname := path.Dir(fname)
 
 				// Only look in the directory relative to the
@@ -119,7 +119,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 
 	lastCommentLine := 0
 	for i, line := range lines {
-		if match(line.text, reMkComment) == nil {
+		if !match0(line.text, reMkComment) {
 			break
 		}
 		lastCommentLine = i
@@ -196,7 +196,7 @@ func parselineMk(line *Line) {
 
 		shellwords, rest := matchAll(shellcmd, reShellword)
 		line.extra["shellwords"] = shellwords
-		if match(rest, `^\s*$`) == nil {
+		if match0(rest, `\S`) {
 			line.extra["shellwords_rest"] = rest
 		}
 		return
@@ -246,7 +246,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if match(text, reConflict) != nil {
+	if match0(text, reConflict) {
 		return
 	}
 

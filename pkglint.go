@@ -243,8 +243,8 @@ func checkItem(fname string) {
 		logFatal(G.currentDir, NO_LINES, "Cannot determine absolute path.")
 	}
 	absCurrentDir := filepath.ToSlash(abs)
-	G.isWip = !G.opts.optImport && match(absCurrentDir, `/wip/|/wip$`) != nil
-	G.isInternal = match(absCurrentDir, `/mk/|/mk$`) != nil
+	G.isWip = !G.opts.optImport && match0(absCurrentDir, `/wip/|/wip$`) 
+	G.isInternal = match0(absCurrentDir, `/mk/|/mk$`)
 	G.curPkgsrcdir = nil
 	pkgpath := ""
 	for _, dir := range []string{".", "..", "../..", "../../.."} {

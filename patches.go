@@ -24,26 +24,26 @@ func guessFileType(line *Line, fname string) FileType {
 	basename := path.Base(fname)
 	basename = strings.TrimSuffix(basename, ".in") // doesn’t influence the content type
 
-	if match(basename, `^I?[Mm]akefile(\..*)?|\.ma?k$`) != nil {
+	if match0(basename, `^I?[Mm]akefile(\..*)?|\.ma?k$`) {
 		return FT_MAKE
 	}
 	if basename == "configure" || basename == "configure.ac" {
 		return FT_CONFIGURE
 	}
-	if match(basename, `\.(?:m4|sh)$`) != nil {
+	if match0(basename, `\.(?:m4|sh)$`) {
 		return FT_SHELL
 	}
-	if match(basename, `\.(?:cc?|cpp|cxx|el|hh?|hpp|l|pl|pm|py|s|t|y)$`) != nil {
+	if match0(basename, `\.(?:cc?|cpp|cxx|el|hh?|hpp|l|pl|pm|py|s|t|y)$`) {
 		return FT_SOURCE
 	}
-	if match(basename, `.+\.(?:\d+|conf|html|info|man|po|tex|texi|texinfo|txt|xml)$`) != nil {
+	if match0(basename, `.+\.(?:\d+|conf|html|info|man|po|tex|texi|texinfo|txt|xml)$`) {
 		return FT_TEXT
 	}
 	if !contains(basename, ".") {
 		return FT_UNKNOWN
 	}
 
-	_ = G.opts.optDebugMisc && line.logDebug("Unknown file type.")
+	_ = G.opts.optDebugMisc && line.logDebug("Unknown file type for %q", fname)
 	return FT_UNKNOWN
 }
 
@@ -90,7 +90,7 @@ func checklineCppMacroNames(line *Line, text string) {
 		} else if better := badCppMacros[macro]; better != "" {
 			line.logWarning("The macro %q is not portable enough. Please use %q instead", macro, better)
 			line.explainWarning("See the pkgsrc guide, section \"CPP defines\" for details.")
-		} else if match(macro, `(?i)^_+NetBSD_+Version_+$`) != nil && macro != "__NetBSD_Version__" {
+		} else if match0(macro, `(?i)^_+NetBSD_+Version_+$`) && macro != "__NetBSD_Version__" {
 			line.logWarning("Misspelled variant %q of %q.", macro, "__NetBSD_Version__")
 		}
 	}
@@ -100,11 +100,11 @@ func checkwordAbsolutePathname(line *Line, word string) {
 	line.trace("checkwordAbsolutePathname", word)
 
 	switch {
-	case match(word, `^/dev/(?:null|tty|zero)$`) != nil:
+	case match0(word, `^/dev/(?:null|tty|zero)$`):
 		// These are defined by POSIX.
 	case word == "/bin/sh":
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
-	case match(word, `/(?:[a-z]|\$[({])`) == nil:
+	case !match0(word, `/(?:[a-z]|\$[({])`):
 		// Assume that all pathnames start with a lowercase letter.
 	default:
 		line.logWarning("Found absolute pathname: %s", word)
@@ -126,9 +126,9 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 	if matched, before, _, str := match3(text, `(.*)([\"'])(/\w[^\"']*)\2`); matched {
 		_ = G.opts.optDebugMisc && line.logDebug("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
-		if match(before, `[A-Z_]+\s*$`) != nil {
+		if match0(before, `[A-Z_]+\s*$`) {
 			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
-		} else if match(before, `\+\s*$`) != nil {
+		} else if match0(before, `\+\s*$`) {
 			// ok; Python example: libdir = prefix + '/lib'
 		} else {
 			checkwordAbsolutePathname(line, str)
@@ -139,20 +139,20 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 func checklineOtherAbsolutePathname(line *Line, text string) {
 	line.trace("checklineOtherAbsolutePathname", text)
 
-	if match(text, `^#[^!]`) != nil {
+	if hasPrefix(text, "#") && !hasPrefix(text, "#!") {
 		// Don't warn for absolute pathnames in comments, except for shell interpreters.
 
 	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
 		if hasSuffix(before, "@") {
 			// ok; autotools example: @PREFIX@/bin
 
-		} else if match(before, `[)}]`) != nil {
+		} else if match0(before, `[)}]`) {
 			// ok; autotools example: ${prefix}/bin
 
-		} else if match(before, `\+\s*["']$`) != nil {
+		} else if match0(before, `\+\s*["']$`) {
 			// ok; Python example: prefix + '/lib'
 
-		} else if match(before, `\w$`) != nil {
+		} else if match0(before, `\w$`) {
 			// ok; shell example: libdir=$prefix/lib
 
 		} else {
@@ -572,7 +572,7 @@ func (ctx *CheckPatchContext) useUnifiedDiffs() {
 
 func (ctx *CheckPatchContext) checkText(text string) {
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|`+G.opts.optRcsIds+`)(?::[^\$]*)?\$`); m {
-		if match(text, rePatchUniHunk) != nil {
+		if match0(text, rePatchUniHunk) {
 			ctx.line.logWarning("Found RCS tag \"$%s$\". Please remove it.", tagname)
 		} else {
 			ctx.line.logWarning("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
@@ -608,7 +608,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	case FT_SOURCE:
 		checklineSourceAbsolutePathname(line, addedText)
 	case FT_CONFIGURE:
-		if match(addedText, `: Avoid regenerating within pkgsrc$`) != nil {
+		if match0(addedText, `: Avoid regenerating within pkgsrc$`) {
 			line.logError("This code must not be included in patches.")
 			line.explainError(
 				"It is generated automatically by pkgsrc after the patch phase.",

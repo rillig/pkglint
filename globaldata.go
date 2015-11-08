@@ -127,7 +127,7 @@ func (self *GlobalData) loadTools() {
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
 			if m, varname, _, value := match3(line.text, reVarassign); m {
-				if varname == "TOOLS_CREATE" && match(value, `^([-\w.]+|\[)$`) != nil {
+				if varname == "TOOLS_CREATE" && match0(value, `^([-\w.]+|\[)$`) {
 					tools[value] = true
 				} else if m, toolname := match1(varname, `^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$`); m {
 					tools[toolname] = true
@@ -161,7 +161,7 @@ func (self *GlobalData) loadTools() {
 					_ = G.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
-							if match(tool, reUnresolvedVar) == nil && tools[tool] {
+							if !match0(tool, reUnresolvedVar) && tools[tool] {
 								predefinedTools[tool] = true
 								predefinedTools["TOOLS_"+tool] = true
 							}
@@ -272,7 +272,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 	changes := make([]Change, 0)
 	for _, line := range lines {
 		text := line.text
-		if match(text, `^\t[A-Z]`) == nil {
+		if !match0(text, `^\t[A-Z]`) {
 			continue
 		}
 
@@ -317,7 +317,7 @@ func (self *GlobalData) loadDocChanges() {
 	fnames := make([]string, 0)
 	for _, file := range files {
 		fname := file.Name()
-		if match(fname, `^CHANGES-(20\d\d)$`) != nil && fname >= "CHANGES-2011" {
+		if match0(fname, `^CHANGES-(20\d\d)$`) && fname >= "CHANGES-2011" {
 			fnames = append(fnames, fname)
 		}
 	}
@@ -338,8 +338,8 @@ func (self *GlobalData) loadUserDefinedVars() {
 
 	self.userDefinedVars = make(map[string]*Line)
 	for _, line := range lines {
-		if m := match(line.text, reVarassign); m != nil {
-			self.userDefinedVars[m[1]] = line
+		if m, varname := match1(line.text, reVarassign); m {
+			self.userDefinedVars[varname] = line
 		}
 	}
 }

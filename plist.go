@@ -65,7 +65,7 @@ func checkfilePlist(fname string) {
 			}
 		}
 
-		if match(text, `^[\w$]`) != nil {
+		if match0(text, `^[\w$]`) {
 			pctx.allFiles[text] = line
 			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
 				pctx.allDirs[dir] = line
@@ -108,7 +108,7 @@ type PlistLine struct {
 func (pline *PlistLine) checkTrailingWhitespace() {
 	line := pline.line
 
-	if match(line.text, `\s$`) != nil {
+	if match0(line.text, `\s$`) {
 		line.logError("pkgsrc does not support filenames ending in white-space.")
 		line.explainError(
 			"Each character in the PLIST is relevant, even trailing white-space.")

@@ -336,7 +336,7 @@ func (cv *CheckVartype) MailAddress() {
 		if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
 			line.logWarning("Please write NetBSD.org instead of %q.", domain)
 		}
-		if match(value, `(?i)^(tech-pkg|packages)\@NetBSD\.org$`) != nil {
+		if match0(value, `(?i)^(tech-pkg|packages)\@NetBSD\.org$`) {
 			line.logError("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 		}
 
@@ -348,7 +348,7 @@ func (cv *CheckVartype) MailAddress() {
 func (cv *CheckVartype) Message() {
 	line, varname, value := cv.line, cv.varname, cv.value
 
-	if match(value, `^[\"'].*[\"']$`) != nil {
+	if match0(value, `^[\"'].*[\"']$`) {
 		line.logWarning("%s should not be quoted.", varname)
 		line.explainWarning(
 			"The quoting is only needed for variables which are interpreted as",
@@ -381,7 +381,7 @@ func (cv *CheckVartype) Option() {
 		return
 	}
 
-	if match(value, `^-?([a-z][-0-9a-z_\+]*)$`) != nil {
+	if match0(value, `^-?([a-z][-0-9a-z_\+]*)$`) {
 		line.logWarning("Use of the underscore character in option names is deprecated.")
 		return
 	}

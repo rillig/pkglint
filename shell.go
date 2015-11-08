@@ -4,6 +4,7 @@ package main
 
 import (
 	"path"
+	"strings"
 )
 
 func checklineMkShellword(line *Line, word string, checkQuoting bool) {
@@ -66,7 +67,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 		return
 	}
 
-	if match(shellword, `\$\{PREFIX\}/man(?:$|/)`) != nil {
+	if match0(shellword, `\$\{PREFIX\}/man(?:$|/)`) {
 		line.logWarning("Please use ${PKGMANDIR} instead of \"man\".")
 	}
 	if contains(shellword, "etc/rc.d") {
@@ -154,7 +155,7 @@ outer:
 				// Fine.
 			case state == SWST_BACKT:
 				// Don't check anything here, to avoid false positives for tool names.
-			case (state == SWST_SQUOT || state == SWST_DQUOT) && match(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`) != nil:
+			case (state == SWST_SQUOT || state == SWST_DQUOT) && match0(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
 				// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
 			case state == SWST_DQUOT && hasSuffix(mod, ":Q"):
 				line.logWarning("Please don't use the :Q operator in double quotes.")
@@ -291,7 +292,7 @@ outer:
 		}
 	}
 
-	if match(rest, `^\s*$`) == nil {
+	if strings.TrimSpace(rest) != "" {
 		line.logError("Internal pkglint error: %q: rest=%q", state, rest)
 	}
 }
@@ -449,13 +450,13 @@ func (ctx *ShelltextContext) checkCommandStart() {
 
 		checklineMkShellcmdUse(line, shellword)
 
-	case match(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`) != nil:
+	case match0(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
 		// Shell builtins are fine.
 
-	case match(shellword, `^[\w_]+=.*$`) != nil:
+	case match0(shellword, `^[\w_]+=.*$`):
 		// Variable assignment
 
-	case match(shellword, `^\./`) != nil:
+	case hasPrefix(shellword, "./"):
 		// All commands from the current directory are fine.
 
 	case hasPrefix(shellword, "#"):
@@ -521,7 +522,7 @@ func (ctx *ShelltextContext) checkConditionalCd() {
 func (ctx *ShelltextContext) checkAutoMkdirs() {
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
-	if (state == SCST_INSTALL_D || state == SCST_MKDIR) && match(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) != nil {
+	if (state == SCST_INSTALL_D || state == SCST_MKDIR) && match0(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) {
 		line.logWarning("Please use AUTO_MKDIRS instead of %q.",
 			ifelseStr(state == SCST_MKDIR, "${MKDIR}", "${INSTALL} -d"))
 		line.explainWarning(
@@ -531,7 +532,7 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 			"${PREFIX}.")
 	}
 
-	if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && match(shellword, reMkShellvaruse) == nil {
+	if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && !match0(shellword, reMkShellvaruse) {
 		if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
 			line.logNote("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
 			line.explainNote(
