@@ -84,7 +84,7 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 
 					if path.Base(includeFile) == "Makefile.common" {
 						makefileCommonLines := allLines[lengthBeforeInclude:]
-						relpath, err := filepath.Rel(*G.cwdPkgsrcdir, fname)
+						relpath, err := filepath.Rel(G.globalData.pkgsrcdir, fname)
 						if err != nil {
 							line.logError("Cannot determine relative path.")
 							return false

@@ -307,7 +307,7 @@ func (cv *CheckVartype) LdFlag() {
 func (cv *CheckVartype) License() {
 	licenses := parseLicenses(cv.value)
 	for _, license := range licenses {
-		licenseFile := *G.cwdPkgsrcdir + "/licenses/" + license
+		licenseFile := G.globalData.pkgsrcdir + "/licenses/" + license
 		if licenseFileLine := G.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
 			licenseFile = G.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.extra["value"].(string), false)
 		} else {

@@ -256,11 +256,8 @@ func checkItem(fname string) {
 			}
 		}
 	}
-	if *G.cwdPkgsrcdir == "" && *G.curPkgsrcdir != "" {
-		*G.cwdPkgsrcdir = currentDir + "/" + *G.curPkgsrcdir
-	}
 
-	if *G.cwdPkgsrcdir == "" {
+	if G.globalData.pkgsrcdir == "" {
 		logError(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
 		return
 	}
@@ -656,7 +653,7 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 	pkgdir = resolveVarsInRelativePath(pkgdir, false)
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
-		if !fileExists(*G.cwdPkgsrcdir + "/" + otherpkgpath + "/Makefile") {
+		if !fileExists(G.globalData.pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
 			line.logError("There is no package in otherpkgpath.")
 		}
 

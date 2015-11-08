@@ -46,6 +46,7 @@ type SuggestedUpdate struct {
 
 func (self *GlobalData) Initialize(pkgsrcdir string) {
 	self.pkgsrcdir = pkgsrcdir
+	initacls()
 	self.loadDistSites()
 	self.loadPkgOptions()
 	self.loadDocChanges()
@@ -108,7 +109,7 @@ func (self *GlobalData) loadPkgOptions() {
 func (self *GlobalData) loadTools() {
 	toolFiles := []string{"defaults.mk"}
 	{
-		fname := *G.cwdPkgsrcdir + "/mk/tools/bsd.tools.mk"
+		fname := G.globalData.pkgsrcdir + "/mk/tools/bsd.tools.mk"
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
 			if m, _, includefile := match2(line.text, reMkInclude); m {
@@ -129,7 +130,7 @@ func (self *GlobalData) loadTools() {
 	systemBuildDefs := make(map[string]bool)
 
 	for _, basename := range toolFiles {
-		fname := *G.cwdPkgsrcdir + "/mk/tools/" + basename
+		fname := G.globalData.pkgsrcdir + "/mk/tools/" + basename
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
 			if m, varname, _, value := match3(line.text, reVarassign); m {
@@ -155,7 +156,7 @@ func (self *GlobalData) loadTools() {
 
 	{
 		basename := "bsd.pkg.mk"
-		fname := *G.cwdPkgsrcdir + "/mk/" + basename
+		fname := G.globalData.pkgsrcdir + "/mk/" + basename
 		condDepth := 0
 
 		lines := loadExistingLines(fname, true)
@@ -265,8 +266,8 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 }
 
 func (self *GlobalData) loadSuggestedUpdates() {
-	self.suggestedUpdates = loadSuggestedUpdatesFile(*G.cwdPkgsrcdir + "/doc/TODO")
-	wipFilename := *G.cwdPkgsrcdir + "/wip/TODO"
+	self.suggestedUpdates = loadSuggestedUpdatesFile(G.globalData.pkgsrcdir + "/doc/TODO")
+	wipFilename := G.globalData.pkgsrcdir + "/wip/TODO"
 	if _, err := os.Stat(wipFilename); err != nil {
 		self.suggestedWipUpdates = loadSuggestedUpdatesFile(wipFilename)
 	}
@@ -314,7 +315,7 @@ func (self *GlobalData) getSuggestedPackageUpdates() []SuggestedUpdate {
 }
 
 func (self *GlobalData) loadDocChanges() {
-	docdir := *G.cwdPkgsrcdir + "/doc"
+	docdir := G.globalData.pkgsrcdir + "/doc"
 	files, err := ioutil.ReadDir(docdir)
 	if err != nil {
 		logFatal(docdir, NO_LINES, "Cannot be read.")
@@ -340,7 +341,7 @@ func (self *GlobalData) loadDocChanges() {
 }
 
 func (self *GlobalData) loadUserDefinedVars() {
-	lines := loadExistingLines(*G.cwdPkgsrcdir+"/mk/defaults/mk.conf", true)
+	lines := loadExistingLines(G.globalData.pkgsrcdir+"/mk/defaults/mk.conf", true)
 
 	for _, line := range lines {
 		if m := match(line.text, reVarassign); m != nil {

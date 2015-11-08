@@ -5,7 +5,7 @@ import (
 )
 
 func checkglobalUnusedLicenses() {
-	licensedir := *G.cwdPkgsrcdir + "/licenses"
+	licensedir := G.globalData.pkgsrcdir + "/licenses"
 	files, _ := ioutil.ReadDir(licensedir)
 	for _, licensefile := range files {
 		licensename := licensefile.Name()

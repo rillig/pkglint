@@ -9,16 +9,13 @@ func main() {
 	G = &GlobalVarsType{}
 	defer func() { G = nil }()
 
-	pkgsrcdir := findPkgsrcTopdir()
 	G.opts = ParseCommandLine(os.Args)
 	if G.opts.optPrintVersion {
 		fmt.Printf("%s\n", confVersion)
 		os.Exit(0)
 	}
 
-	G.cwdPkgsrcdir = &pkgsrcdir
-	G.globalData.Initialize(pkgsrcdir)
-	initacls()
+	G.globalData.Initialize(findPkgsrcTopdir())
 
 	G.todo = append(G.todo, G.opts.args...)
 	if len(G.todo) == 0 {

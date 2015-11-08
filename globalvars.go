@@ -3,7 +3,6 @@ package main
 type GlobalVarsType struct {
 	errors       int
 	warnings     int
-	cwdPkgsrcdir *string // The pkgsrc directory, relative to the current working directory of pkglint.
 	curPkgsrcdir *string // The pkgsrc directory, relative to the directory that is currently checked.
 	opts         *CmdOpts
 	globalData   GlobalData
