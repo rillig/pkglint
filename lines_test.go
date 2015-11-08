@@ -18,7 +18,7 @@ func TestConvertToLogicalLines_nocont(t *testing.T) {
 	a := Asserter{t}
 
 	G = &GlobalVarsType{}
-	defer func() { G = nil }()
+	defer cleanup()
 
 	phys := []PhysLine{
 		{1, "first line\n"},
@@ -39,7 +39,7 @@ func TestConvertToLogicalLines_cont(t *testing.T) {
 	a := Asserter{t}
 
 	G = &GlobalVarsType{}
-	defer func() { G = nil }()
+	defer cleanup()
 
 	phys := []PhysLine{
 		{1, "first line \\\n"},
@@ -60,7 +60,7 @@ func TestConvertToLogicalLines_contInLastLine(t *testing.T) {
 	a := Asserter{t}
 
 	G = &GlobalVarsType{}
-	defer func() { G = nil }()
+	defer cleanup()
 
 	physlines := []PhysLine{
 		{1, "last line\\"},
