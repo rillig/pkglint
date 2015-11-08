@@ -33,7 +33,7 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 	// Collect all the included buildlink3.mk files from the file.
 	includedFiles := make(map[string]*Line)
 	for _, line := range lines {
-		if m, _, file, _ := match3(line.text, reMkInclude); m {
+		if m, _, file := match2(line.text, reMkInclude); m {
 			if m, bl3 := match1(file, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
 				includedFiles[bl3] = line
 				if G.pkgContext.bl3[bl3] == nil {

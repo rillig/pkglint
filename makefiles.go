@@ -219,10 +219,9 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if m, _, includefile, comment := match3(text, reMkInclude); m {
+	if m, _, includefile := match2(text, reMkInclude); m {
 		line.extra["is_include"] = true
 		line.extra["includefile"] = includefile
-		line.extra["comment"] = comment
 		return
 	}
 
