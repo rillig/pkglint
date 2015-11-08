@@ -524,7 +524,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 				rest = r
 
 				word := m[1]
-				if match0(word, `^#`) {
+				if hasPrefix(word, "#") {
 					break
 				}
 				words = append(words, word)
