@@ -326,7 +326,7 @@ func loadPackageMakefile(fname string) []*Line {
 }
 
 func determineUsedVariables(lines []*Line) {
-	re := regexp.MustCompile(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
+	re := reCompile(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
 	for _, line := range lines {
 		rest := line.text
 		for {
@@ -342,7 +342,7 @@ func determineUsedVariables(lines []*Line) {
 }
 
 func extractUsedVariables(line *Line, text string) []string {
-	re := regexp.MustCompile(`^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
+	re := reCompile(`^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
 	result := make([]string, 0)
 	for {

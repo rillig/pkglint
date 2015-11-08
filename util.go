@@ -276,6 +276,14 @@ func nilToZero(pi *int) int {
 	return 0
 }
 
+// Useful in combination with regex.Find*Index
+func negToZero(i int) int {
+	if i >= 0 {
+		return i
+	}
+	return 0
+}
+
 func toInt(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {

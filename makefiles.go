@@ -382,7 +382,7 @@ func checklinesMk(lines []*Line) {
 			op := text[m[4]:m[5]]
 			align := text[m[5]:m[6]]
 			value := line.extra["value"].(string)
-			comment := text[m[8]:m[9]]
+			comment := text[negToZero(m[8]):negToZero(m[9])]
 
 			if !match0(align, `^(\t*|[ ])$`) {
 				_ = G.opts.optWarnSpace && line.logNote("Alignment of variable values should be done with tabs, not spaces.")
