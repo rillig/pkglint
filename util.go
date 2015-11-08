@@ -298,11 +298,6 @@ func matchAll(s, re string) ([]string, string) {
 	return make([]string, 0), ""
 }
 
-var contains = strings.Contains
-var hasPrefix = strings.HasPrefix
-var hasSuffix = strings.HasSuffix
-var sprintf = fmt.Sprintf
-
 func dirglob(dirname string) []string {
 	fis, err := ioutil.ReadDir(dirname)
 	if err != nil {
