@@ -235,13 +235,13 @@ func checkItem(fname string) {
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	currentDir := fname
+	G.currentDir = fname
 	if isReg {
-		currentDir = path.Dir(fname)
+		G.currentDir = path.Dir(fname)
 	}
-	abs, err := filepath.Abs(currentDir)
+	abs, err := filepath.Abs(G.currentDir)
 	if err != nil {
-		logFatal(currentDir, NO_LINES, "Cannot determine absolute path.")
+		logFatal(G.currentDir, NO_LINES, "Cannot determine absolute path.")
 	}
 	absCurrentDir := filepath.ToSlash(abs)
 	G.isWip = !G.opts.optImport && match(absCurrentDir, `/wip/|/wip$`) != nil
@@ -249,11 +249,11 @@ func checkItem(fname string) {
 	G.curPkgsrcdir = nil
 	pkgpath := ""
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
-		if fileExists(currentDir + "/" + dir + "/mk/bsd.pkg.mk") {
+		if fileExists(G.currentDir + "/" + dir + "/mk/bsd.pkg.mk") {
 			G.curPkgsrcdir = newStr(dir)
-			rel, err := filepath.Rel(currentDir, currentDir+"/"+dir)
+			rel, err := filepath.Rel(G.currentDir, G.currentDir+"/"+dir)
 			if err != nil {
-				logFatal(currentDir, NO_LINES, "Cannot determine relative dir.")
+				logFatal(G.currentDir, NO_LINES, "Cannot determine relative dir.")
 			}
 			pkgpath = rel
 		}
@@ -515,12 +515,12 @@ func checklineTrailingWhitespace(line *Line) {
 }
 
 func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
+	line.trace("checklineRcsid", prefixRe, suggestedPrefix)
+	
 	id := G.opts.optRcsIds
 	if G.isWip {
 		id += "|Id"
 	}
-
-	_ = G.opts.optDebugTrace && line.logDebug("checkline_rcsid_regex(%v, %v)", prefixRe, suggestedPrefix)
 
 	if !match0(line.text, `^`+prefixRe+`$(`+id+`)(?::[^\$]+|)\$$`) {
 		line.logError("Expected %s.", suggestedPrefix+"$"+G.opts.optRcsIds+"$")
@@ -537,7 +537,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 }
 
 func checklineMkAbsolutePathname(line *Line, text string) {
-	_ = G.opts.optDebugTrace && line.logDebug("checkline_mk_absolute_pathname(%v)", text)
+	line.trace("checklineMkAbsolutePathname", text)
 
 	// In the GNU coding standards, DESTDIR is defined as a (usually
 	// empty) prefix that can be used to install files to a different
@@ -583,7 +583,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 }
 
 func checkfileAlternatives(fname string) {
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileAlternatives()")
+	trace("checkfileAlternatives", fname)
 
 	checkperms(fname)
 	if _, err := loadLines(fname, false); err != nil {
@@ -592,7 +592,7 @@ func checkfileAlternatives(fname string) {
 }
 
 func checkfileExtra(fname string) {
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileExtra()")
+	trace("checkfileExtra",fname)
 
 	checkperms(fname)
 	lines := loadNonemptyLines(fname, false)
@@ -605,7 +605,7 @@ func checkfileExtra(fname string) {
 var checkfileInstall = checkfileExtra
 
 func checkfileMessage(fname string) {
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileMessage()")
+	trace("checkfileMessage", fname)
 
 	explanation := []string{
 		"A MESSAGE file should consist of a header line, having 75 \"=\"",
@@ -669,7 +669,7 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 }
 
 func checkfileMk(fname string) {
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfileMk()")
+	trace("checkfileMk",fname)
 
 	checkperms(fname)
 	lines := loadNonemptyLines(fname, true)
@@ -683,8 +683,7 @@ func checkfileMk(fname string) {
 }
 
 func checkfile(fname string) {
-
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfile()")
+	trace("checkfile", fname)
 
 	basename := path.Base(fname)
 	if match0(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {

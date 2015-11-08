@@ -12,7 +12,7 @@ type PlistContext struct {
 }
 
 func checkfilePlist(fname string) {
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfilePlist")
+	trace("checkfilePlist", fname)
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)

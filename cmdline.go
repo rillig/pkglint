@@ -117,7 +117,8 @@ func ParseCommandLine(args []string) CmdOpts {
 	warn.AddFlagVar("types", &result.optWarnTypes, true, "do some simple type checking in Makefiles")
 	warn.AddFlagVar("varorder", &result.optWarnVarorder, false, "warn about the ordering of variables")
 
-	opts.Parse(args)
+	result.args, _ = opts.Parse(args)
+	
 	if result.optPrintHelp {
 		opts.Help("pkglint [options] dir...")
 		os.Exit(0)

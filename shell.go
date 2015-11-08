@@ -52,7 +52,7 @@ type MkShellLine struct {
 
 func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting bool) {
 	line := msline.line
-	_ = G.opts.optDebugTrace && line.logDebug("checklineMkShellword(%q, %q)", shellword, checkQuoting)
+	line.trace("checklineMkShellword", shellword, checkQuoting)
 
 	if shellword == "" {
 		return
@@ -304,7 +304,7 @@ type ShelltextContext struct {
 
 func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	line := msline.line
-	_ = G.opts.optDebugTrace && line.logDebug("checklineMkShelltext: %v", shelltext)
+	line.trace("checklineMkShelltext", shelltext)
 
 	if contains(shelltext, "${SED}") || contains(shelltext, "${MV}") {
 		line.logNote("Please use the SUBST framework instead of ${SED} and ${MV}.")

@@ -164,7 +164,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 }
 
 func checkfilePatch(fname string) {
-	_ = G.opts.optDebugTrace && logDebug(fname, NO_LINES, "checkfilePatch()")
+	trace("checkfilePatch", fname)
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)
