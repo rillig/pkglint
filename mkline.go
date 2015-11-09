@@ -381,8 +381,8 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 	}
 
-	if varname == "PERL5_PACKLIST" && G.pkgContext.effective_pkgbase != nil {
-		if m, p5pkgname := match1(*G.pkgContext.effective_pkgbase, `^p5-(.*)`); m {
+	if varname == "PERL5_PACKLIST" && G.pkgContext.effectivePkgbase != nil {
+		if m, p5pkgname := match1(*G.pkgContext.effectivePkgbase, `^p5-(.*)`); m {
 			guess := "auto/" + strings.Replace(p5pkgname, "-", "/", -1) + "/.packlist"
 
 			ucvalue, ucguess := strings.ToUpper(value), strings.ToUpper(guess)

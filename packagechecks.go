@@ -2,17 +2,18 @@ package main
 
 import (
 	"path"
+	"strings"
 )
 
 func checkpackagePossibleDowngrade() {
 	trace("checkpackagePossibleDowngrade")
 
-	m, _, pkgversion := match2(*G.pkgContext.effective_pkgname, rePkgname)
+	m, _, pkgversion := match2(*G.pkgContext.effectivePkgname, rePkgname)
 	if !m {
 		return
 	}
 
-	line := *G.pkgContext.effective_pkgname_line
+	line := *G.pkgContext.effectivePkgnameLine
 
 	change := G.globalData.lastChange[G.pkgContext.pkgpath]
 	if change == nil {
@@ -98,7 +99,9 @@ func checkdirPackage(pkgpath string) {
 
 	for _, fname := range files {
 		if fname == G.currentDir+"/Makefile" {
-			_ = G.opts.optCheckMakefile && checkfilePackageMakefile(fname, lines)
+			if G.opts.optCheckMakefile {
+				checkfilePackageMakefile(fname, lines)
+			}
 		} else {
 			checkfile(fname)
 		}
@@ -117,5 +120,132 @@ func checkdirPackage(pkgpath string) {
 
 	if !isEmptyDir(G.currentDir + "/scripts") {
 		logWarning(G.currentDir+"/scripts", NO_LINES, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
+	}
+}
+
+func checkfilePackageMakefile(fname string, lines []*Line) {
+	trace("checkfilePackageMakefile", fname, len(lines))
+
+	checkperms(fname)
+
+	vardef := G.pkgContext.vardef
+	if vardef["PLIST_SRC"] == nil &&
+		vardef["GENERATE_PLIST"] == nil &&
+		vardef["META_PACKAGE"] == nil &&
+		G.pkgContext.pkgdir != nil {
+		if dir := G.currentDir + "/" + *G.pkgContext.pkgdir; !fileExists(dir+"/PLIST") && !fileExists(dir+"/PLIST.common") {
+			logWarning(fname, NO_LINES, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
+		}
+
+		if (vardef["NO_CHECKSUM"] != nil || vardef["META_PACKAGE"] != nil) && isEmptyDir(G.currentDir+"/"+G.pkgContext.patchdir) {
+			if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; fileExists(distinfoFile) {
+				logWarning(distinfoFile, NO_LINES, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
+			}
+		} else {
+			if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; !fileExists(distinfoFile) {
+				logWarning(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
+			}
+		}
+
+		if vardef["REPLACE_PERL"] != nil && vardef["NO_CONFIGURE"] != nil {
+			vardef["REPLACE_PERL"].logWarning("REPLACE_PERL is ignored when ...")
+			vardef["NO_CONFIGURE"].logWarning("... NO_CONFIGURE is set.")
+		}
+
+		if vardef["LICENSE"] == nil {
+			logError(fname, NO_LINES, "Each package must define its LICENSE.")
+		}
+
+		if vardef["GNU_CONFIGURE"] != nil && vardef["USE_LANGUAGES"] != nil {
+			languagesLine := vardef["USE_LANGUAGES"]
+			value := languagesLine.extra["value"].(string)
+
+			if languagesLine.extra["comment"] != nil && match0(languagesLine.extra["comment"].(string), `(?-i)\b(?:c|empty|none)\b`) {
+				// Don't emit a warning, since the comment
+				// probably contains a statement that C is
+				// really not needed.
+
+			} else if !match0(value, `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
+				vardef["GNU_CONFIGURE"].logWarning("GNU_CONFIGURE almost always needs a C compiler, ...")
+				languagesLine.logWarning("... but \"c\" is not added to USE_LANGUAGES.")
+			}
+		}
+
+		distnameLine := vardef["DISTNAME"]
+		pkgnameLine := vardef["PKGNAME"]
+
+		distname := ""
+		if distnameLine != nil {
+			distname = distnameLine.extra["value"].(string)
+		}
+		pkgname := ""
+		if pkgnameLine != nil {
+			pkgname = pkgnameLine.extra["value"].(string)
+		}
+
+		if distname != "" && pkgname != "" {
+			pkgname = strings.Replace(pkgname, "${DISTNAME}", distname, -1)
+
+			if m := match(pkgname, `^(.*)\$\{DISTNAME:S(.)(\\^?)([^:]*)(\\$?)\2([^:]*)\2(g?)\}(.*)$`); m != nil {
+				before, _, left, from, right, to, mod, after := m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]
+				newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
+				_ = G.opts.optDebugMisc && pkgnameLine.logDebug("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+				pkgname = newPkgname
+			}
+		}
+
+		if pkgname != "" && pkgname == distname {
+			pkgnameLine.logNote("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+		}
+
+		if pkgname == "" && distname != "" && !match0(distname, reUnresolvedVar) && !match0(distname, rePkgname) {
+			distnameLine.logWarning("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
+		}
+
+		if G.pkgContext.effectivePkgnameLine != nil {
+			_ = G.opts.optDebugMisc && G.pkgContext.effectivePkgnameLine.logDebug("Effective name=%q base=%q version=%q",
+				G.pkgContext.effectivePkgname, G.pkgContext.effectivePkgbase, G.pkgContext.effectivePkgversion)
+		}
+
+		checkpackagePossibleDowngrade()
+
+		if vardef["COMMENT"] == nil {
+			logWarning(fname, NO_LINES, "No COMMENT given.")
+		}
+
+		if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
+			vardef["USE_IMAKE"].logNote("USE_IMAKE makes ...")
+			vardef["USE_X11"].logNote("... USE_X11 superfluous.")
+		}
+
+		if *G.pkgContext.effectivePkgbase != "" {
+			for _, sugg := range G.globalData.suggestedUpdates {
+				if *G.pkgContext.effectivePkgbase != sugg.pkgname {
+					continue
+				}
+
+				suggver, comment := sugg.version, sugg.comment
+				if comment != "" {
+					comment = " (" + comment + ")"
+				}
+
+				if pkgverCmp(*G.pkgContext.effectivePkgversion, "<", suggver) {
+					G.pkgContext.effectivePkgnameLine.logWarning("This package should be updated to %s%s", sugg.version, comment)
+					G.pkgContext.effectivePkgnameLine.explainWarning(
+						"The wishlist for package updates in doc/TODO mentions that a newer",
+						"version of this package is available.")
+				}
+				if pkgverCmp(*G.pkgContext.effectivePkgversion, "==", suggver) {
+					G.pkgContext.effectivePkgnameLine.logNote("The update request to ${suggver} from doc/TODO${comment} has been done.")
+				}
+				if pkgverCmp(*G.pkgContext.effectivePkgversion, ">", suggver) {
+					G.pkgContext.effectivePkgnameLine.logNote("This package is newer than the update request to ${suggver}${comment}.")
+				}
+			}
+		}
+
+		checklinesMk(lines)
+		checklinesPackageMakefileVarorder(lines)
+		autofix(lines)
 	}
 }

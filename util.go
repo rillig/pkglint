@@ -343,3 +343,15 @@ func trace(funcname string, args ...interface{}) {
 		logDebug(NO_FILE, NO_LINES, "%s(%s)", funcname, argsStr(args...))
 	}
 }
+
+func mkopSubst(s string, left bool, from string, right bool, to string, all bool) string {
+	re := ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", "")
+	done := false
+	return reCompile(re).ReplaceAllStringFunc(s, func(match string) string {
+		if all || !done {
+			done = !all
+			return to
+		}
+		return match
+	})
+}

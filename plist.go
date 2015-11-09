@@ -228,7 +228,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 			line.logWarning("Packages that install info files should set INFO_FILES.")
 		}
 
-	case G.pkgContext.effective_pkgbase != nil && hasPrefix(text, "lib/"+*G.pkgContext.effective_pkgbase+"/"):
+	case G.pkgContext.effectivePkgbase != nil && hasPrefix(text, "lib/"+*G.pkgContext.effectivePkgbase+"/"):
 		// Fine.
 
 	case hasPrefix(text, "lib/locale/"):
@@ -320,8 +320,8 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "share/doc/html/"):
 		_ = G.opts.optWarnPlistDepr && line.logWarning("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
-	case G.pkgContext.effective_pkgbase != nil && (hasPrefix(text, "share/doc/"+*G.pkgContext.effective_pkgbase+"/") ||
-		hasPrefix(text, "share/examples/"+*G.pkgContext.effective_pkgbase+"/")):
+	case G.pkgContext.effectivePkgbase != nil && (hasPrefix(text, "share/doc/"+*G.pkgContext.effectivePkgbase+"/") ||
+		hasPrefix(text, "share/examples/"+*G.pkgContext.effectivePkgbase+"/")):
 		// Fine.
 
 	case text == "share/icons/hicolor/icon-theme.cache" && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
