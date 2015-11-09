@@ -1,44 +1,29 @@
 package main
 
 import (
-	"testing"
+	check "gopkg.in/check.v1"
 )
 
-func cleanup() {
-	G = nil
-}
-
-func TestDetermineUsedVariables_simple(t *testing.T) {
-	a := Asserter{t}
-
-	G = &GlobalVarsType{}
-	defer cleanup()
+func (s *Suite) TestDetermineUsedVariables_simple(c *check.C) {
 	G.mkContext = newMkContext()
-
 	line := NewLine("fname", "1", "${VAR}", nil)
-	lines := make([]*Line, 1)
-	lines[0] = line
+	lines := []*Line{line}
 
 	determineUsedVariables(lines)
 
-	a.assertEqual(1, len(G.mkContext.varuse))
-	a.assertEqual(line, G.mkContext.varuse["VAR"])
+	c.Assert(len(G.mkContext.varuse), equals, 1)
+	c.Assert(G.mkContext.varuse["VAR"], equals, line)
 }
 
-func TestDetermineUsedVariables_nested(t *testing.T) {
-	a := Asserter{t}
-
-	G = &GlobalVarsType{}
-	defer cleanup()
+func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 	G.mkContext = newMkContext()
-
-	line = NewLine("fname", "2", "${outer.${inner}}", nil)
-	lines[0] = line
+	line := NewLine("fname", "2", "${outer.${inner}}", nil)
+	lines := []*Line{line}
 
 	determineUsedVariables(lines)
 
-	a.assertEqual(3, len(G.mkContext.varuse))
-	a.assertEqual(line, G.mkContext.varuse["inner"])
-	a.assertEqual(line, G.mkContext.varuse["outer."])
-	a.assertEqual(line, G.mkContext.varuse["outer.*"])
+	c.Assert(len(G.mkContext.varuse), equals, 3)
+	c.Assert(G.mkContext.varuse["inner"], equals, line)
+	c.Assert(G.mkContext.varuse["outer."], equals, line)
+	c.Assert(G.mkContext.varuse["outer.*"], equals, line)
 }
