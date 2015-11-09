@@ -67,7 +67,6 @@ func (self *Options) parseLongOption(args []string, i int, arg string) int {
 		}
 	}
 	panic("not implemented: " + arg)
-	return 0
 }
 
 func (self *Options) parseShortOptions(args []string, i int, arg string) int {

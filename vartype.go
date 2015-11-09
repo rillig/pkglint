@@ -80,7 +80,6 @@ func (self *Vartype) String() string {
 		return "List of " + self.basicType
 	default:
 		panic("")
-		return ""
 	}
 }
 

@@ -28,7 +28,6 @@ func mustMatch(pattern string, s string) []string {
 		return m
 	}
 	panic(sprintf("mustMatch %#v %#v", pattern, s))
-	return nil
 }
 
 func isEmptyDir(fname string) bool {
