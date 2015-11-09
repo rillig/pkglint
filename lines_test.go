@@ -13,12 +13,8 @@ func (s *Suite) TestConvertToLogicalLines_nocont(c *check.C) {
 	lines := convertToLogicalLines("fname", phys, false)
 
 	c.Assert(lines, check.HasLen, 2)
-	c.Assert("fname", equals, lines[0].fname)
-	c.Assert("1", equals, lines[0].lines)
-	c.Assert("first line", equals, lines[0].text)
-	c.Assert("fname", equals, lines[1].fname)
-	c.Assert("2", equals, lines[1].lines)
-	c.Assert("second line", equals, lines[1].text)
+	c.Assert(lines[0].String(), equals, "fname:1: first line")
+	c.Assert(lines[1].String(), equals, "fname:2: second line")
 }
 
 func (s *Suite) TestConvertToLogicalLines_cont(c *check.C) {
@@ -31,10 +27,8 @@ func (s *Suite) TestConvertToLogicalLines_cont(c *check.C) {
 	lines := convertToLogicalLines("fname", phys, true)
 
 	c.Assert(lines, check.HasLen, 2)
-	c.Assert(lines[0].lines, equals, "1--2")
-	c.Assert("first line second line", equals, lines[0].text)
-	c.Assert("3", equals, lines[1].lines)
-	c.Assert("third", equals, lines[1].text)
+	c.Assert(lines[0].String(), equals, "fname:1--2: first line second line")
+	c.Assert(lines[1].String(), equals, "fname:3: third")
 }
 
 func (s *Suite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
@@ -45,7 +39,5 @@ func (s *Suite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
 	lines := convertToLogicalLines("fname", physlines, true)
 
 	c.Assert(lines, check.HasLen, 1)
-	c.Assert(lines[0].fname, equals, "fname")
-	c.Assert(lines[0].lines, equals, "1")
-	c.Assert(lines[0].text, equals, "last line\\")
+	c.Assert(lines[0].String(), equals, "fname:1: last line\\")
 }
