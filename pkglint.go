@@ -64,11 +64,6 @@ var LK_NONE = KindOfList{"none"}
 var LK_INTERNAL = KindOfList{"internal"}
 var LK_EXTERNAL = KindOfList{"external"}
 
-type Guessed struct{ name string }
-
-var GUESSED = Guessed{"guessed"}
-var NOT_GUESSED = Guessed{"not guessed"}
-
 type AclEntry struct {
 	glob        string
 	permissions string

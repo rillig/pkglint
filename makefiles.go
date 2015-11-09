@@ -503,7 +503,7 @@ func checklinesMk(lines []*Line) {
 					for _, value := range splitOnSpace(values) {
 						if m, vname := match1(value, `^\$\{(.*)\}`); m {
 							vartype := getVariableType(line, vname)
-							if vartype != nil && !vartype.isGuessed() {
+							if vartype != nil && !vartype.guessed {
 								guessed = NOT_GUESSED
 							}
 						}

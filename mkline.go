@@ -122,7 +122,7 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 	isIndirect := false
 
 	switch {
-	case vuc.vartype != nil && vuc.vartype.isGuessed():
+	case vuc.vartype != nil && vuc.vartype.guessed == GUESSED:
 		// Don't warn about unknown variables.
 
 	case vuc.time == VUC_TIME_LOAD && !contains(perms, "p"):
@@ -587,7 +587,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		}
 
 		for _, word := range words {
-			checklineMkVartypeBasic(line, varname, vartype, op, word, comment, true, vartype.isGuessed())
+			checklineMkVartypeBasic(line, varname, vartype, op, word, comment, true, vartype.guessed)
 			if vartype.kindOfList != LK_INTERNAL {
 				checklineMkShellword(line, word, true)
 			}
@@ -598,10 +598,10 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		}
 
 	} else {
-		checklineMkVartypeBasic(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.isGuessed())
+		checklineMkVartypeBasic(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 	}
 }
 
-func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, value, comment string, isList, isGuessed bool) {
+func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
 	notImplemented()
 }

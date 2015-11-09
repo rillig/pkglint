@@ -13,6 +13,12 @@ type Vartype struct {
 	guessed       Guessed
 }
 
+type Guessed bool
+const (
+	GUESSED Guessed = false
+	NOT_GUESSED Guessed = true
+)
+
 func newBasicVartype(kindOfList KindOfList, basicType string, aclEntries []AclEntry, guessed Guessed) *Vartype {
 	return &Vartype{kindOfList, basicType, nil, "", aclEntries, guessed}
 }
@@ -81,8 +87,4 @@ func (self *Vartype) String() string {
 	default:
 		panic("")
 	}
-}
-
-func (t *Vartype) isGuessed() bool {
-	return t.guessed == GUESSED
 }
