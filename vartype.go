@@ -14,8 +14,9 @@ type Vartype struct {
 }
 
 type Guessed bool
+
 const (
-	GUESSED Guessed = false
+	GUESSED     Guessed = false
 	NOT_GUESSED Guessed = true
 )
 
