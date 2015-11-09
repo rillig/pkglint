@@ -1,5 +1,9 @@
 package main
 
+import (
+	"path"
+)
+
 func checkpackagePossibleDowngrade() {
 	trace("checkpackagePossibleDowngrade")
 
@@ -81,7 +85,7 @@ func checkdirPackage(pkgpath string) {
 
 	// Determine the used variables before checking any of the Makefile fragments.
 	for _, fname := range files {
-		if match0(fname, `^((?:.*/)?Makefile\..*|.*\.mk)$`) &&
+		if (hasPrefix(path.Base(fname), "Makefile.") || hasSuffix(fname, ".mk")) &&
 			!match0(fname, `patch-`) &&
 			!match0(fname, `${pkgdir}/`) &&
 			!match0(fname, `${filesdir}/`) {

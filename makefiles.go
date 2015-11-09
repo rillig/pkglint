@@ -213,12 +213,11 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if m, indent, directive, args, comment := match4(text, reMkCond); m {
+	if m, indent, directive, args := match3(text, reMkCond); m {
 		line.extra["is_cond"] = true
 		line.extra["indent"] = indent
 		line.extra["directive"] = directive
 		line.extra["args"] = args
-		line.extra["comment"] = comment
 		return
 	}
 
@@ -235,11 +234,10 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if m, targets, whitespace, sources, comment := match4(text, reMkDependency); m {
+	if m, targets, whitespace, sources := match3(text, reMkDependency); m {
 		line.extra["is_dependency"] = true
 		line.extra["targets"] = targets
 		line.extra["sources"] = sources
-		line.extra["comment"] = comment
 		if whitespace != "" {
 			line.logWarning("Space before colon in dependency line.")
 		}
@@ -282,7 +280,7 @@ func checklineMkText(line *Line, text string) {
 
 	rest := text
 	for {
-		m, r := replaceFirst(rest, `(?:^|[^\$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
+		m, r := replaceFirst(rest, `(?:^|[^$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
 		if m == nil {
 			break
 		}
@@ -387,7 +385,7 @@ func checklinesMk(lines []*Line) {
 			value := line.extra["value"].(string)
 			comment := text[negToZero(m[8]):negToZero(m[9])]
 
-			if !match0(align, `^(\t*|[ ])$`) {
+			if align != " " && !match0(align, `^\t*$`) {
 				_ = G.opts.optWarnSpace && line.logNote("Alignment of variable values should be done with tabs, not spaces.")
 				prefix := varname + space1 + op
 				alignedLen := tabLength(prefix + align)
@@ -439,9 +437,7 @@ func checklinesMk(lines []*Line) {
 
 		} else if match0(text, reMkSysinclude) {
 
-		} else if m, indent, directive, args, _ := match4(text, reMkCond); m {
-			regex_directives_with_args := `^(?:if|ifdef|ifndef|elif|for|undef)$`
-
+		} else if m, indent, directive, args := match3(text, reMkCond); m {
 			if match0(directive, `^(?:endif|endfor|elif|else)$`) {
 				if len(ctx.indentation) > 1 {
 					ctx.popIndent()
@@ -462,10 +458,11 @@ func checklinesMk(lines []*Line) {
 				ctx.pushIndent(ctx.indentDepth() + 2)
 			}
 
-			if match0(directive, regex_directives_with_args) && args == "" {
+			reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
+			if match0(directive, reDirectivesWithArgs) && args == "" {
 				line.logError("\".%s\" requires arguments.", directive)
 
-			} else if !match0(directive, regex_directives_with_args) && args != "" {
+			} else if !match0(directive, reDirectivesWithArgs) && args != "" {
 				line.logError("\".%s\" does not take arguments.", directive)
 
 				if directive == "else" {

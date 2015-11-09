@@ -483,6 +483,61 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 	}
 }
 
+var reVarnamePlural string = "^(?:" +
+	".*S" +
+	"|.*LIST" +
+	"|.*_AWK" +
+	"|.*_ENV" +
+	"|.*_REQD" +
+	"|.*_SED" +
+	"|.*_SKIP" +
+	"|BUILDLINK_LDADD" +
+	"|COMMENT" +
+	"|EXTRACT_ONLY" +
+	"|FETCH_MESSAGE" +
+	"|GENERATE_PLIST" +
+	"|PLIST_CAT" +
+	"|PLIST_PRE" +
+	"|PREPEND_PATH" +
+
+	"|.*_OVERRIDE" +
+	"|.*_PREREQ" +
+	"|.*_SRC" +
+	"|.*_SUBST" +
+	"|.*_TARGET" +
+	"|.*_TMPL" +
+	"|BROKEN_EXCEPT_ON_PLATFORM" +
+	"|BROKEN_ON_PLATFORM" +
+	"|BUILDLINK_DEPMETHOD" +
+	"|BUILDLINK_TRANSFORM" +
+	"|EVAL_PREFIX" +
+	"|INTERACTIVE_STAGE" +
+	"|LICENSE" +
+	"|MASTER_SITE_.*" +
+	"|MASTER_SORT_REGEX" +
+	"|NOT_FOR_COMPILER" +
+	"|NOT_FOR_PLATFORM" +
+	"|ONLY_FOR_COMPILER" +
+	"|ONLY_FOR_PLATFORM" +
+	"|PERL5_PACKLIST" +
+	"|PKG_FAIL_REASON" +
+	"|PKG_SKIP_REASON" +
+	"|CRYPTO" +
+	"|DEINSTALL_TEMPLATE" +
+	"|FIX_RPATH" +
+	"|INSTALL_TEMPLATE" +
+	"|PYTHON_VERSIONS_INCOMPATIBLE" +
+	"|REPLACE_INTERPRETER" +
+	"|REPLACE_PERL" +
+	"|REPLACE_RUBY" +
+	"|RESTRICTED" +
+	"|SITES_.*" +
+	"|TOOLS_ALIASES\\.*" +
+	"|TOOLS_BROKEN" +
+	"|TOOLS_CREATE" +
+	"|TOOLS_GNU_MISSING" +
+	"|TOOLS_NOOP)$"
+
 func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	if !G.opts.optWarnTypes {
 		return
@@ -497,7 +552,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 				line.logWarning("The \"+=\" operator should only be used with lists.")
 			}
 		} else if !match0(varbase, `^_`) && !match0(varbase, reVarnamePlural) {
-			line.logWarning("As ${varname} is modified using \"+=\", its name should indicate plural.")
+			line.logWarning("As %s is modified using \"+=\", its name should indicate plural.", varname)
 		}
 	}
 

@@ -72,9 +72,11 @@ func checkfileBuildlink3Mk(fname string) {
 		pkgbaseLine.logError("Package name mismatch between %q ...", pkgbase)
 		pkgidLine.logError("... and %q.", pkgid)
 	}
-	if mkbase := *G.pkgContext.effective_pkgbase; mkbase != "" && mkbase != pkgid {
-		pkgidLine.logError("Package name mismatch between %q ...", pkgid)
-		G.pkgContext.effective_pkgname_line.logError("... and %q.", mkbase)
+	if G.pkgContext != nil && G.pkgContext.effective_pkgbase != nil {
+		if mkbase := *G.pkgContext.effective_pkgbase; mkbase != "" && mkbase != pkgid {
+			pkgidLine.logError("Package name mismatch between %q ...", pkgid)
+			G.pkgContext.effective_pkgname_line.logError("... and %q.", mkbase)
+		}
 	}
 
 	// Third paragraph: Package information.

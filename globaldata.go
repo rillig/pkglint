@@ -63,7 +63,7 @@ func (self *GlobalData) loadDistSites() {
 	for _, line := range lines {
 		line.trace("loadDistSites", line.text)
 		text := line.text
-		if m, varname, _, urls := match3(text, reVarassign); m {
+		if m, varname, _, urls, _ := match4(text, reVarassign); m {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
 				names[varname] = true
 				for _, url := range splitOnSpace(urls) {
@@ -282,7 +282,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
 			changes = append(changes, Change{line, action, pkgpath, version, author, date})
 
-		} else if m, action, pkgpath, author, date := match4(text, `^\t(Removed) (\S+) (?:successor (\S+) )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
+		} else if m, action, pkgpath, author, date := match4(text, `^\t(Removed) (\S+) (?:successor \S+ )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
 			changes = append(changes, Change{line, action, pkgpath, "", author, date})
 
 		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
@@ -317,7 +317,7 @@ func (self *GlobalData) loadDocChanges() {
 	fnames := make([]string, 0)
 	for _, file := range files {
 		fname := file.Name()
-		if match0(fname, `^CHANGES-(20\d\d)$`) && fname >= "CHANGES-2011" {
+		if match0(fname, `^CHANGES-20\d\d$`) && fname >= "CHANGES-2011" {
 			fnames = append(fnames, fname)
 		}
 	}
@@ -338,7 +338,7 @@ func (self *GlobalData) loadUserDefinedVars() {
 
 	self.userDefinedVars = make(map[string]*Line)
 	for _, line := range lines {
-		if m, varname := match1(line.text, reVarassign); m {
+		if m, varname, _, _, _ := match4(line.text, reVarassign); m {
 			self.userDefinedVars[varname] = line
 		}
 	}

@@ -127,12 +127,8 @@ const (
 	reConflict                 = `^(<<<<<<<|=======|>>>>>>>)`
 	reUnresolvedVar            = `\$\{`
 	reValidchars               = `[\011\040-\176]`
-	// Note: the following regular expression looks more complicated than
-	// necessary to avoid a stack overflow in the Perl interpreter.
-	// The leading white-space may only consist of \040 characters, otherwise
-	// the order of regex_varassign and regex_mk_shellcmd becomes important.
-	reVarassign   = `^ *([-*+A-Z_a-z0-9.\${}\[]+?)\s*(=|\?=|\+=|:=|!=)\s*((?:[^\\#\s]+|\s+?|(?:\\#)+|\\)*?)(?:\s*(#.*))?$`
-	reShVarassign = `^([A-Z_a-z][0-9A-Z_a-z]*)=`
+	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*(.*?)(?:\s*(#.*))?$`
+	reShVarassign              = `^([A-Z_a-z][0-9A-Z_a-z]*)=`
 	// This regular expression cannot parse all kinds of shell programs, but
 	// it will catch almost all shell programs that are portable enough to be
 	// used in pkgsrc.
@@ -156,64 +152,9 @@ const (
 	|	[^\(\)'\"\\\s;&\|<>` + "`" + `\$] # non-special character
 	|	\$\{[^\s\"'` + "`" + `]+		# HACK: nested make(1) variables
 	)+ | ;;? | &&? | \|\|? | \( | \) | >& | <<? | >>? | \#.*)`
-	reVarname       = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
-	rePkgbase       = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
-	rePkgversion    = `\d(?:\w|\.\d)*`
-	reVarnamePlural = `(?x:
-		| .*S
-		| .*LIST
-		| .*_AWK
-		| .*_ENV
-		| .*_REQD
-		| .*_SED
-		| .*_SKIP
-		| BUILDLINK_LDADD
-		| COMMENT
-		| EXTRACT_ONLY
-		| FETCH_MESSAGE
-		| GENERATE_PLIST
-		| PLIST_CAT
-		| PLIST_PRE
-		| PREPEND_PATH
-
-	# Existing plural variables whose name doesn’t indicate plural
-		| .*_OVERRIDE
-		| .*_PREREQ
-		| .*_SRC
-		| .*_SUBST
-		| .*_TARGET
-		| .*_TMPL
-		| BROKEN_EXCEPT_ON_PLATFORM
-		| BROKEN_ON_PLATFORM
-		| BUILDLINK_DEPMETHOD
-		| BUILDLINK_TRANSFORM
-		| EVAL_PREFIX
-		| INTERACTIVE_STAGE
-		| LICENSE
-		| MASTER_SITE_.*
-		| MASTER_SORT_REGEX
-		| NOT_FOR_COMPILER
-		| NOT_FOR_PLATFORM
-		| ONLY_FOR_COMPILER
-		| ONLY_FOR_PLATFORM
-		| PERL5_PACKLIST
-		| PKG_FAIL_REASON
-		| PKG_SKIP_REASON
-		| CRYPTO
-		| DEINSTALL_TEMPLATE
-		| FIX_RPATH
-		| INSTALL_TEMPLATE
-		| PYTHON_VERSIONS_INCOMPATIBLE
-		| REPLACE_INTERPRETER
-		| REPLACE_PERL
-		| REPLACE_RUBY
-		| RESTRICTED
-		| SITES_.*
-		| TOOLS_ALIASES\.*
-		| TOOLS_BROKEN
-		| TOOLS_CREATE
-		| TOOLS_GNU_MISSING
-		| TOOLS_NOOP)`
+	reVarname    = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
+	rePkgbase    = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
+	rePkgversion = `\d(?:\w|\.\d)*`
 )
 
 func explanationRelativeDirs() []string {
@@ -536,7 +477,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 		id += "|Id"
 	}
 
-	if !match0(line.text, `^`+prefixRe+`\$(`+id+`)(:[^\$]+)?\$$`) {
+	if !match0(line.text, `^`+prefixRe+`\$(?:`+id+`)(?::[^\$]+)?\$$`) {
 		line.logError("Expected %s.", suggestedPrefix+"$"+G.opts.optRcsIds+"$")
 		line.explainError(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",

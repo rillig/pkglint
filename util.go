@@ -210,39 +210,49 @@ func reCompile(re string) *regexp.Regexp {
 func match(s, re string) []string {
 	return reCompile(re).FindStringSubmatch(s)
 }
+func matchn(s, re string, n int) []string {
+	if m := match(s, re); m != nil {
+		if len(m) != 1+n {
+			panic(sprintf("expected match%d, got match%d for %q", len(m)-1, n, re))
+		}
+		return m
+	}
+	return nil
+}
+
 func match0(s, re string) bool {
-	return match(s, re) != nil
+	return matchn(s, re, 0) != nil
 }
 func match1(s, re string) (bool, string) {
-	if m := match(s, re); m != nil {
+	if m := matchn(s, re, 1); m != nil {
 		return true, m[1]
 	} else {
 		return false, ""
 	}
 }
 func match2(s, re string) (bool, string, string) {
-	if m := match(s, re); m != nil {
+	if m := matchn(s, re, 2); m != nil {
 		return true, m[1], m[2]
 	} else {
 		return false, "", ""
 	}
 }
 func match3(s, re string) (bool, string, string, string) {
-	if m := match(s, re); m != nil {
+	if m := matchn(s, re, 3); m != nil {
 		return true, m[1], m[2], m[3]
 	} else {
 		return false, "", "", ""
 	}
 }
 func match4(s, re string) (bool, string, string, string, string) {
-	if m := match(s, re); m != nil {
+	if m := matchn(s, re, 4); m != nil {
 		return true, m[1], m[2], m[3], m[4]
 	} else {
 		return false, "", "", "", ""
 	}
 }
 func match5(s, re string) (bool, string, string, string, string, string) {
-	if m := match(s, re); m != nil {
+	if m := matchn(s, re, 5); m != nil {
 		return true, m[1], m[2], m[3], m[4], m[5]
 	} else {
 		return false, "", "", "", "", ""
@@ -254,7 +264,7 @@ func replaceFirst(s, re, replacement string) ([]string, string) {
 		replaced := s[:m[0]] + replacement + s[m[1]:]
 		mm := make([]string, len(m)/2)
 		for i := 0; i < len(m); i += 2 {
-			mm[i/2] = s[m[i]:m[i+1]]
+			mm[i/2] = s[negToZero(m[i]):negToZero(m[i+1])]
 		}
 		return mm, replaced
 	}
