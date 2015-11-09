@@ -593,7 +593,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 			}
 		}
 
-		if !match0(rest, `^\s*$`) {
+		if match0(rest, `\S`) {
 			line.logError("Internal pkglint error: rest=%q", rest)
 		}
 
