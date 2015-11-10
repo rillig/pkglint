@@ -140,7 +140,7 @@ func defineVar(line *Line, varname string) {
 		pkg.vardef[varcanon] = line
 	}
 }
-func isVarDefined(varname string) bool {
+func varIsDefined(varname string) bool {
 	varcanon := varnameCanon(varname)
 	mk := G.mkContext
 	if mk != nil && (mk.vardef[varname] != nil || mk.vardef[varcanon] != nil) {
@@ -163,7 +163,7 @@ func useVar(line *Line, varname string) {
 	}
 }
 
-func isVarUsed(varname string) bool {
+func varIsUsed(varname string) bool {
 	varcanon := varnameCanon(varname)
 	mk := G.mkContext
 	if mk != nil && (mk.varuse[varname] != nil || mk.varuse[varcanon] != nil) {

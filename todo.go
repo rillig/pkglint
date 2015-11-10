@@ -16,15 +16,6 @@ func notImplemented() {
 	}
 }
 
-func varIsDefined(varname string) bool {
-	notImplemented()
-	return false
-}
-func varIsUsed(varname string) bool {
-	notImplemented()
-	return false
-}
-
 func checklineMkCond(line *Line, args string) {
 	notImplemented()
 }
