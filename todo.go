@@ -16,9 +16,6 @@ func notImplemented() {
 	}
 }
 
-func checkUnusedLicenses() {
-	notImplemented()
-}
 func varIsDefined(varname string) bool {
 	notImplemented()
 	return false

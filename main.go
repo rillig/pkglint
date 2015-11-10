@@ -27,7 +27,7 @@ func main() {
 		checkItem(item)
 	}
 	if G.ipcCheckingRootRecursively {
-		checkUnusedLicenses()
+		checktoplevelUnusedLicenses()
 	}
 	printSummary()
 	if G.errors != 0 {

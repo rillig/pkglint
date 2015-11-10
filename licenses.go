@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 )
 
-func checkglobalUnusedLicenses() {
+func checktoplevelUnusedLicenses() {
 	licensedir := G.globalData.pkgsrcdir + "/licenses"
 	files, _ := ioutil.ReadDir(licensedir)
 	for _, licensefile := range files {
