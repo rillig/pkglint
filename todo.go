@@ -19,9 +19,6 @@ func notImplemented() {
 func checklineMkCond(line *Line, args string) {
 	notImplemented()
 }
-func checklinesBuildlink3Mk(lines []*Line, index int, pkgbase string) {
-	notImplemented()
-}
 func loadDocChanges(fname string) {
 	notImplemented()
 }
