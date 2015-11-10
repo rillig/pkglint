@@ -145,7 +145,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		if hasSuffix(before, "@") {
 			// ok; autotools example: @PREFIX@/bin
 
-		} else if match0(before, `[)}]`) {
+		} else if match0(before, `[)}]$`) {
 			// ok; autotools example: ${prefix}/bin
 
 		} else if match0(before, `\+\s*["']$`) {
