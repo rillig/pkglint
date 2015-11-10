@@ -20,7 +20,7 @@ package main
 var vartypes = make(map[string]*Vartype)
 
 func getBasicType(typename string) *Vartype {
-	logError(NO_FILE, NO_LINES, "getBasicType(%q): not implemented", typename)
+	notImplemented("getBasicType")
 	return nil
 }
 

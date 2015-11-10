@@ -11,7 +11,7 @@ func parseAclEntries(args []string) []AclEntry {
 }
 
 func loadVartypesBasictypes() {
-	panic("not implemented; don’t use self-grep")
+	notImplemented("loadVartypesBasicTypes: don’t use self-grep")
 }
 
 type NeedsQuoting int
