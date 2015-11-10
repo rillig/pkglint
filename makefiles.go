@@ -311,8 +311,8 @@ func checklinesMk(lines []*Line) {
 
 	determineUsedVariables(lines)
 
-	prefixes := strings.Split("pre do post", " ")
-	actions := strings.Split("fetch extract patch tools wrapper configure build test install package clean", " ")
+	prefixes := splitOnSpace("pre do post")
+	actions := splitOnSpace("fetch extract patch tools wrapper configure build test install package clean")
 	for _, prefix := range prefixes {
 		for _, action := range actions {
 			allowedTargets[prefix+"-"+action] = true

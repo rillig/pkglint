@@ -1,5 +1,7 @@
 package main
 
+// Self-written getopt to support multi-argument options.
+
 import (
 	"fmt"
 	"io"

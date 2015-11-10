@@ -37,6 +37,7 @@ type Change struct {
 	date    string
 }
 
+// From the doc/TODO file.
 type SuggestedUpdate struct {
 	line    *Line
 	pkgname string

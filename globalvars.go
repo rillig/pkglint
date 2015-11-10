@@ -1,6 +1,6 @@
 package main
 
-type GlobalVarsType struct {
+type GlobalVars struct {
 	errors       int
 	warnings     int
 	curPkgsrcdir *string // The pkgsrc directory, relative to the directory that is currently checked.
@@ -24,4 +24,4 @@ type Hash struct {
 	line *Line
 }
 
-var G *GlobalVarsType
+var G *GlobalVars

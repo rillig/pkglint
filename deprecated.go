@@ -1,7 +1,7 @@
 package main
 
 // This file contains names of Makefile variables and a short explanation
-// what to do to make the warning disappear. Lines should only be removed
+// what to do to make the warning disappear. Entries should only be removed
 // if the explanation changes, in which case the new explanation should
 // be added to the current date.
 

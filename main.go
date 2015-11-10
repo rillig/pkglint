@@ -6,13 +6,12 @@ import (
 )
 
 func main() {
-	G = &GlobalVarsType{}
-	defer func() { G = nil }()
+	G = &GlobalVars{}
 
 	G.opts = ParseCommandLine(os.Args)
 	if G.opts.optPrintVersion {
 		fmt.Printf("%s\n", confVersion)
-		os.Exit(0)
+		return
 	}
 
 	G.globalData.Initialize(findPkgsrcTopdir())

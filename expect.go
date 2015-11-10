@@ -1,5 +1,6 @@
 package main
 
+// High-level iterating through lines and checking them.
 type ExpectContext struct {
 	lines []*Line
 	index int

@@ -1,6 +1,6 @@
 package main
 
-// Checks for patch files
+// Checks for patch files.
 
 import (
 	"path"
@@ -23,23 +23,22 @@ const (
 func guessFileType(line *Line, fname string) FileType {
 	basename := path.Base(fname)
 	basename = strings.TrimSuffix(basename, ".in") // doesn’t influence the content type
+	ext := strings.TrimLeft(path.Ext(basename), ".")
 
-	if match0(basename, `^I?[Mm]akefile(\..*)?|\.ma?k$`) {
+	if match0(basename, `^I?[Mm]akefile|\.ma?k$`) {
 		return FT_MAKE
 	}
 	if basename == "configure" || basename == "configure.ac" {
 		return FT_CONFIGURE
 	}
-	if match0(basename, `\.(?:m4|sh)$`) {
+	switch ext {
+	case "m4", "sh":
 		return FT_SHELL
-	}
-	if match0(basename, `\.(?:cc?|cpp|cxx|el|hh?|hpp|l|pl|pm|py|s|t|y)$`) {
+	case "c", "cc", "cpp", "cxx", "el", "h", "hh", "hpp", "l", "pl", "pm", "py", "s", "t", "y":
 		return FT_SOURCE
-	}
-	if match0(basename, `.+\.(?:\d+|conf|html|info|man|po|tex|texi|texinfo|txt|xml)$`) {
+	case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "conf", "html", "info", "man", "po", "tex", "texi", "texinfo", "txt", "xml":
 		return FT_TEXT
-	}
-	if !contains(basename, ".") {
+	case "":
 		return FT_UNKNOWN
 	}
 

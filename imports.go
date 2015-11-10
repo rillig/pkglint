@@ -1,5 +1,7 @@
 package main
 
+// Short names for commonly used functions.
+
 import (
 	"fmt"
 	"strings"

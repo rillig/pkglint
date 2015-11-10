@@ -1,5 +1,7 @@
 package main
 
+// Checks concerning single lines in Makefiles.
+
 import (
 	"strconv"
 	"strings"
