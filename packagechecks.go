@@ -22,7 +22,7 @@ func checkpackagePossibleDowngrade() {
 	}
 
 	if change.action == "Updated" {
-		if pkgverCmp(pkgversion, "<", change.version) {
+		if pkgverCmp(pkgversion, change.version) < 0 {
 			line.logWarning("The package is being downgraded from %v to %v", change.version, pkgversion)
 		}
 	}
@@ -229,17 +229,18 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 					comment = " (" + comment + ")"
 				}
 
-				if pkgverCmp(*G.pkgContext.effectivePkgversion, "<", suggver) {
-					G.pkgContext.effectivePkgnameLine.logWarning("This package should be updated to %s%s", sugg.version, comment)
-					G.pkgContext.effectivePkgnameLine.explainWarning(
+				pkgnameLine := G.pkgContext.effectivePkgnameLine
+				cmp := pkgverCmp(*G.pkgContext.effectivePkgversion, suggver)
+				switch {
+				case cmp < 0:
+					pkgnameLine.logWarning("This package should be updated to %s%s", sugg.version, comment)
+					pkgnameLine.explainWarning(
 						"The wishlist for package updates in doc/TODO mentions that a newer",
 						"version of this package is available.")
-				}
-				if pkgverCmp(*G.pkgContext.effectivePkgversion, "==", suggver) {
-					G.pkgContext.effectivePkgnameLine.logNote("The update request to ${suggver} from doc/TODO${comment} has been done.")
-				}
-				if pkgverCmp(*G.pkgContext.effectivePkgversion, ">", suggver) {
-					G.pkgContext.effectivePkgnameLine.logNote("This package is newer than the update request to ${suggver}${comment}.")
+				case cmp > 0:
+					pkgnameLine.logNote("This package is newer than the update request to ${suggver}${comment}.")
+				default:
+					pkgnameLine.logNote("The update request to ${suggver} from doc/TODO${comment} has been done.")
 				}
 			}
 		}

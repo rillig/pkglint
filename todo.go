@@ -20,10 +20,6 @@ func varIsDefined(varname string) bool {
 	notImplemented()
 	return false
 }
-func pkgverCmp(left, op, right string) bool {
-	notImplemented()
-	return false
-}
 func varIsUsed(varname string) bool {
 	notImplemented()
 	return false

@@ -119,7 +119,7 @@ func checkfileBuildlink3Mk(fname string) {
 				abiLine.logWarning("Package name mismatch between %q ...", abiPkg)
 				apiLine.logWarning("... and %q.", apiPkg)
 			}
-			if doCheck && abiVersion != "" && apiVersion != "" && !pkgverCmp(abiVersion, ">=", apiVersion) {
+			if doCheck && abiVersion != "" && apiVersion != "" && pkgverCmp(abiVersion, apiVersion) < 0 {
 				abiLine.logWarning("ABI version (%s) should be at least ...", abiVersion)
 				apiLine.logWarning("... API version (%s).", apiVersion)
 			}
