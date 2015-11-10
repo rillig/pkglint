@@ -5,8 +5,8 @@ import (
 	"runtime"
 )
 
-func notImplemented() {
-	logError(NO_FILE, NO_LINES, "not implemented")
+func notImplemented(funcname string) {
+	logError(NO_FILE, NO_LINES, "not implemented: %s", funcname)
 	if G.opts.optDebugUnchecked {
 		bytes := make([]byte, 4096)
 		if n := runtime.Stack(bytes, false); n < len(bytes) {
@@ -17,8 +17,8 @@ func notImplemented() {
 }
 
 func checklineMkCond(line *Line, args string) {
-	notImplemented()
+	notImplemented("checklineMkCond")
 }
 func loadDocChanges(fname string) {
-	notImplemented()
+	notImplemented("loadDocChanges")
 }

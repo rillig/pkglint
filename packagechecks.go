@@ -2,6 +2,7 @@ package main
 
 import (
 	"path"
+	"regexp"
 	"strings"
 )
 
@@ -184,14 +185,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		}
 
 		if distname != "" && pkgname != "" {
-			pkgname = strings.Replace(pkgname, "${DISTNAME}", distname, -1)
-
-			if m := match(pkgname, `^(.*)\$\{DISTNAME:S(.)(\\^?)([^:]*)(\\$?)\2([^:]*)\2(g?)\}(.*)$`); m != nil {
-				before, _, left, from, right, to, mod, after := m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]
-				newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
-				_ = G.opts.optDebugMisc && pkgnameLine.logDebug("pkgnameFromDistname %q => %q", pkgname, newPkgname)
-				pkgname = newPkgname
-			}
+			pkgname = pkgnameFromDistname(pkgname, distname)
 		}
 
 		if pkgname != "" && pkgname == distname {
@@ -249,4 +243,18 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		checklinesPackageMakefileVarorder(lines)
 		autofix(lines)
 	}
+}
+
+func pkgnameFromDistname(pkgname, distname string) string {
+	pkgname = strings.Replace(pkgname, "${DISTNAME}", distname, -1)
+
+	if m, before, sep, subst, after := match4(pkgname, `^(.*)\$\{DISTNAME:S(.)([^\\}:]+)\}(.*)$`); m {
+		qsep := regexp.QuoteMeta(sep)
+		if m, left, from, right, to, mod := match5(subst, `^(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`(g?)$`); m {
+			newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
+			_ = G.opts.optDebugMisc && G.pkgContext.vardef["PKGNAME"].logDebug("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+			pkgname = newPkgname
+		}
+	}
+	return pkgname
 }

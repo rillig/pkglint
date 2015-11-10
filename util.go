@@ -310,7 +310,7 @@ func newStr(s string) *string {
 }
 
 func matchAll(s, re string) ([]string, string) {
-	logError(NO_FILE, NO_LINES, "matchAll: not implemented")
+	notImplemented("matchAll")
 	return make([]string, 0), ""
 }
 

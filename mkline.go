@@ -297,7 +297,7 @@ func checklineMkVartypeSimple(line *Line, varname string, basicType string, op, 
 		}
 	}
 
-	notImplemented()
+	notImplemented("checklineMkVartypeSimple")
 	_ = valueNovar
 	// fn := basicCheck(vartype.basicType)
 	// TODO: basic check(vartype)
@@ -605,5 +605,5 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 }
 
 func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
-	notImplemented()
+	notImplemented("checklineMkVartypeBasic")
 }
