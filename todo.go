@@ -16,9 +16,6 @@ func notImplemented() {
 	}
 }
 
-func checkperms(fname string) {
-	notImplemented()
-}
 func normalizePathname(fname string) string {
 	notImplemented()
 	return fname
