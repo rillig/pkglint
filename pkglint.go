@@ -582,12 +582,6 @@ func checkfileMessage(fname string) {
 	checklinesTrailingEmptyLines(lines)
 }
 
-func parseLicenses(licenses string) []string {
-	noPerl := strings.Replace(licenses, "${PERL5_LICENSE}", "gnu-gpl-v2 OR artistic", -1)
-	noOps := reCompile(`[()]|AND|OR`).ReplaceAllString(noPerl, "") // cheated
-	return splitOnSpace(noOps)
-}
-
 func checklineRelativePkgdir(line *Line, pkgdir string) {
 	checklineRelativePath(line, pkgdir, true)
 	pkgdir = resolveVarsInRelativePath(pkgdir, false)

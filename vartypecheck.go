@@ -305,28 +305,7 @@ func (cv *CheckVartype) LdFlag() {
 }
 
 func (cv *CheckVartype) License() {
-	licenses := parseLicenses(cv.value)
-	for _, license := range licenses {
-		licenseFile := G.globalData.pkgsrcdir + "/licenses/" + license
-		if licenseFileLine := G.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
-			licenseFile = G.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.extra["value"].(string), false)
-		} else {
-			G.ipcUsedLicenses[license] = true
-		}
-
-		if !fileExists(licenseFile) {
-			cv.line.logWarning("License file %s does not exist.", path.Clean(licenseFile))
-		}
-
-		switch license {
-		case "fee-based-commercial-use",
-			"no-commercial-use",
-			"no-profit",
-			"no-redistribution",
-			"shareware":
-			cv.line.logWarning("License %s is deprecated.", license)
-		}
-	}
+	checklineLicense(cv.line, cv.value)
 }
 
 func (cv *CheckVartype) MailAddress() {
