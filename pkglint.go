@@ -734,3 +734,14 @@ func checkfile(fname string) {
 		}
 	}
 }
+
+func checklinesTrailingEmptyLines(lines []*Line) {
+	max := len(lines)
+	last := max
+	for last > 1 && lines[last-1].text == "" {
+		last--
+	}
+	if last != max {
+		lines[last].logNote("Trailing empty lines.")
+	}
+}
