@@ -7,10 +7,13 @@ import (
 	"path"
 )
 
-const NO_FILE string = ""
-const NO_LINES string = ""
+const NO_FILE = ""
+const NO_LINES = ""
 
-type LogLevel struct{ traditionalName, gccName string }
+type LogLevel struct {
+	traditionalName string
+	gccName         string
+}
 
 var (
 	LL_FATAL = LogLevel{"FATAL", "fatal"}

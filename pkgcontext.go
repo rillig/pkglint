@@ -19,7 +19,6 @@ type PkgContext struct {
 	plistSubstCond     map[string]bool  // varname => true; list of all variables that are used as conditionals (@comment or nothing) in PLISTs.
 	included           map[string]*Line // fname => line
 	seenMakefileCommon bool             // Does the package have any .includes?
-	isWip              bool             // Is the current to-be-checked item from pkgsrc-wip?
 }
 
 func newPkgContext(pkgpath string) *PkgContext {
@@ -39,7 +38,6 @@ func newPkgContext(pkgpath string) *PkgContext {
 		make(map[string]*Line),
 		make(map[string]bool),
 		make(map[string]*Line),
-		false,
 		false}
 	for varname, line := range G.globalData.userDefinedVars {
 		ctx.vardef[varname] = line

@@ -18,7 +18,7 @@ func main() {
 
 	G.todo = append(G.todo, G.opts.args...)
 	if len(G.todo) == 0 {
-		G.todo = append(G.todo, ".")
+		G.todo = []string{"."}
 	}
 
 	for len(G.todo) != 0 {
