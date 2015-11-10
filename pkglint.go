@@ -1,5 +1,6 @@
-// based on NetBSD: pkglint.pl,v 1.893 2015/10/15 03:00:56 rillig Exp $
 package main
+
+// based on NetBSD: pkglint.pl,v 1.893 2015/10/15 03:00:56 rillig Exp $
 
 import (
 	"fmt"
@@ -10,13 +11,13 @@ import (
 	"strings"
 )
 
-type QuotingResult struct{ name string }
+type QuotingResult string
 
-var (
-	QR_FALSE         = QuotingResult{"false"}
-	QR_TRUE          = QuotingResult{"true"}
-	QR_DONT_KNOW     = QuotingResult{"don’t know"}
-	QR_DOESNT_MATTER = QuotingResult{"doesn’t matter"}
+const (
+	QR_FALSE         QuotingResult = "false"
+	QR_TRUE          QuotingResult = "true"
+	QR_DONT_KNOW     QuotingResult = "don’t know"
+	QR_DOESNT_MATTER QuotingResult = "doesn’t matter"
 )
 
 // A SimpleMatch is the result of applying a regular expression to a Perl
@@ -39,19 +40,6 @@ func (self *SimpleMatch) has(i int) bool {
 func (self *SimpleMatch) text(i int) string {
 	start, end := self.starts[i], self.ends[i]
 	return self.str[start : end-start]
-}
-
-func TestPrintTable() {
-	printTable(os.Stdout, [][]string{{"hello", "world"}, {"how", "are", "you?"}})
-}
-func TestLogFatal() {
-	(&Line{fname: "fname", lines: "13"}).logFatal("msg")
-}
-func TestGetLogicalLine() {
-	var physlines = []PhysLine{{1, "first\\"}, {2, "second"}, {3, "third"}}
-	var lineno int = 1
-	fmt.Printf("%v\n", getLogicalLine("fname", physlines, &lineno))
-	fmt.Printf("%#v\n", getLogicalLine("fname", physlines, &lineno))
 }
 
 // A Vartype in pkglint is a combination of a data type and a permission
