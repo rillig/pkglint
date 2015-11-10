@@ -16,10 +16,6 @@ func notImplemented() {
 	}
 }
 
-func normalizePathname(fname string) string {
-	notImplemented()
-	return fname
-}
 func checkUnusedLicenses() {
 	notImplemented()
 }

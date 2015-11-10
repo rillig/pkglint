@@ -315,7 +315,7 @@ func (cv *CheckVartype) License() {
 		}
 
 		if !fileExists(licenseFile) {
-			cv.line.logWarning("License file %s does not exist.", normalizePathname(licenseFile))
+			cv.line.logWarning("License file %s does not exist.", path.Clean(licenseFile))
 		}
 
 		switch license {
