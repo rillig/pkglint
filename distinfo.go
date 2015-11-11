@@ -68,7 +68,7 @@ func checkfileDistinfo(fname string) {
 		if ctx.isPatch && G.pkgContext.distinfoFile != "./../../lang/php5/distinfo" {
 			fname := G.currentDir + "/" + patchesDir + "/" + fname
 			if distinfoIsCommitted && !isCommitted(fname) {
-				line.logWarning("${patches_dir}/${chksum_fname} is registered in distinfo but not added to CVS.")
+				line.logWarning("%s/%s is registered in distinfo but not added to CVS.", patchesDir, fname)
 			}
 			ctx.checkPatchSha1(line, fname, hash)
 		}

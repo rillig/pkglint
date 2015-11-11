@@ -310,9 +310,9 @@ func getNbpart() string {
 // or nil if the type cannot even be guessed.
 func getVariableType(line *Line, varname string) *Vartype {
 
-	vartype := G.globalData.vartypes[varname]
+	vartype := G.globalData.getVartypes()[varname]
 	if vartype == nil {
-		vartype = G.globalData.vartypes[varnameCanon(varname)]
+		vartype = G.globalData.getVartypes()[varnameCanon(varname)]
 	}
 
 	if G.globalData.varnameToToolname[varname] != "" {

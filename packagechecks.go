@@ -92,8 +92,8 @@ func checkdirPackage(pkgpath string) {
 	for _, fname := range files {
 		if (hasPrefix(path.Base(fname), "Makefile.") || hasSuffix(fname, ".mk")) &&
 			!match0(fname, `patch-`) &&
-			!match0(fname, `${pkgdir}/`) &&
-			!match0(fname, `${filesdir}/`) {
+			!contains(fname, *G.pkgContext.pkgdir+"/") &&
+			!contains(fname, G.pkgContext.filesdir+"/") {
 			if lines, err := loadLines(fname, true); err == nil && lines != nil {
 				parselinesMk(lines)
 				determineUsedVariables(lines)
@@ -234,9 +234,9 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 						"The wishlist for package updates in doc/TODO mentions that a newer",
 						"version of this package is available.")
 				case cmp > 0:
-					pkgnameLine.logNote("This package is newer than the update request to ${suggver}${comment}.")
+					pkgnameLine.logNote("This package is newer than the update request to %s%s.", suggver, comment)
 				default:
-					pkgnameLine.logNote("The update request to ${suggver} from doc/TODO${comment} has been done.")
+					pkgnameLine.logNote("The update request to %s from doc/TODO%s has been done.", suggver, comment)
 				}
 			}
 		}

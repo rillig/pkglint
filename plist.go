@@ -197,7 +197,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		case pctx.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] != nil:
 		default:
 			if G.opts.optWarnExtra {
-				line.logWarning("Manual page missing for bin/${basename}.")
+				line.logWarning("Manual page missing for bin/%s.", basename)
 				line.explainWarning(
 					"All programs that can be run directly by the user should have a manual",
 					"page for quick reference. The programs in the bin/ directory should have",
@@ -283,7 +283,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		binname := text[5:]
 
 		if pctx.allFiles["man/man8/"+binname+".8"] == nil && G.opts.optWarnExtra {
-			line.logWarning("Manual page missing for sbin/${binname}.")
+			line.logWarning("Manual page missing for sbin/%s.", binname)
 			line.explainWarning(
 				"All programs that can be run directly by the user should have a manual",
 				"page for quick reference. The programs in the sbin/ directory should have",

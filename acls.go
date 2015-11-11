@@ -17,7 +17,7 @@ package main
 //
 // Last synced with mk/defaults/mk.conf revision 1.118
 
-var vartypes = make(map[string]*Vartype)
+var aclVartypes = make(map[string]*Vartype)
 
 func getBasicType(typename string) *Vartype {
 	notImplemented("getBasicType")
@@ -50,10 +50,10 @@ func acl(varname string, vartype string, aclentries ...string) {
 	}
 
 	if varparam == "" || varparam == "*" {
-		vartypes[varbase] = vtype
+		aclVartypes[varbase] = vtype
 	}
 	if varparam == "*" || varparam == ".*" {
-		vartypes[varbase+".*"] = vtype
+		aclVartypes[varbase+".*"] = vtype
 	}
 }
 

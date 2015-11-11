@@ -23,8 +23,11 @@ type GlobalData struct {
 	suggestedWipUpdates []SuggestedUpdate
 	lastChange          map[string]*Change
 	userDefinedVars     map[string]*Line
-	vartypes            map[string]*Vartype
 	deprecated          map[string]string
+}
+
+func (gd *GlobalData) getVartypes() map[string]*Vartype {
+	return aclVartypes
 }
 
 // A change entry from doc/CHANGES-*

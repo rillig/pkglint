@@ -62,7 +62,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 	shellcommandContextType := newBasicVartype(LK_NONE, "ShellCommand", []AclEntry{{"*", "adsu"}}, NOT_GUESSED)
 	shellwordVuc := &VarUseContext{VUC_TIME_UNKNOWN, shellcommandContextType, VUC_SHW_PLAIN, VUC_EXT_WORD}
 
-	if m, varname, mod := match2(shellword, `^\$\{(${regex_varname})(:[^{}]+)?\}$`); m {
+	if m, varname, mod := match2(shellword, `^\$\{(`+reVarname+`)(:[^{}]+)?\}$`); m {
 		checklineMkVaruse(line, varname, mod, shellwordVuc)
 		return
 	}
@@ -283,9 +283,9 @@ outer:
 				line.logWarning("Please use %q instead of %q.", "\\\\"+char, "\\"+char)
 				line.explainWarning(
 					"Although the current code may work, it is not good style to rely on",
-					"the shell passing \"\\${char}\" exactly as is, and not discarding the",
-					"backslash. Alternatively you can use single quotes instead of double",
-					"quotes.")
+					"the shell passing this escape sequence exactly as is, and not",
+					"discarding the backslash. Alternatively you can use single quotes",
+					"instead of double quotes.")
 			default:
 				break outer
 			}
@@ -485,7 +485,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	default:
 		if m, vartool := match1(shellword, `^\$\{([\w_]+)\}$`); m {
 			plainTool := G.globalData.varnameToToolname[vartool]
-			vartype := G.globalData.vartypes[vartool]
+			vartype := G.globalData.getVartypes()[vartool]
 			switch {
 			case plainTool != "" && G.mkContext.tools[plainTool]:
 				line.logWarning("The %q tool is used but not added to USE_TOOLS.", plainTool)

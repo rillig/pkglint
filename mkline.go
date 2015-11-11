@@ -104,7 +104,7 @@ func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContex
 	}
 
 	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mkContext.buildDefs[varname] {
-		line.logWarning("The user-defined variable ${varname} is used but not added to BUILD_DEFS.")
+		line.logWarning("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		line.explainWarning(
 			"When a pkgsrc package is built, many things can be configured by the",
 			"pkgsrc user in the mk.conf file. All these configurations should be",
@@ -366,7 +366,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		_ = G.opts.optDebugUnchecked && line.logDebug("%s might be unused unless it is an argument to a procedure file.", varname)
 
 	} else if !varIsUsed(varname) {
-		if vartypes := G.globalData.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
+		if vartypes := G.globalData.getVartypes(); vartypes[varname] != nil || vartypes[varcanon] != nil {
 			// Ok
 		} else if deprecated := G.globalData.deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
@@ -455,10 +455,11 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 			"variable to PLIST_SUBST, as all other variables are quoted using the :Q",
 			"operator when they are appended. As it is hard to check whether a",
 			"variable that is appended to PLIST_SUBST is already quoted or not, you",
-			"should not have pre-quoted variables at all. To solve this, you should",
-			"directly use PLIST_SUBST+= ${varname}=${value} or use any other",
-			"variable for collecting the list of PLIST substitutions and later",
-			"append that variable with PLIST_SUBST+= ${MY_PLIST_SUBST}.")
+			"should not have pre-quoted variables at all.",
+			"",
+			"To solve this, you should directly use PLIST_SUBST+= ${varname}=${value}",
+			"or use any other variable for collecting the list of PLIST substitutions",
+			"and later append that variable with PLIST_SUBST+= ${MY_PLIST_SUBST}.")
 	}
 
 	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.

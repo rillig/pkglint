@@ -494,7 +494,7 @@ func (cv *CheckVartype) RelativePkgPath() {
 
 func (cv *CheckVartype) Restricted() {
 	if cv.value != "${RESTRICTED}" {
-		cv.line.logWarning("The only valid value for ${varname} is ${RESTRICTED}.")
+		cv.line.logWarning("The only valid value for %s is ${RESTRICTED}.", cv.varname)
 		cv.line.explainWarning(
 			"These variables are used to control which files may be mirrored on FTP",
 			"servers or CD-ROM collections. They are not intended to mark packages",
@@ -654,7 +654,7 @@ func (cv *CheckVartype) Varname() {
 		// The value of another variable
 
 	} else if !match0(cv.valueNovar, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
-		cv.line.logWarning("\"${value}\" is not a valid variable name.")
+		cv.line.logWarning("%q is not a valid variable name.", cv.value)
 	}
 }
 

@@ -486,7 +486,7 @@ func checklinesMk(lines []*Line) {
 						} else if match0(forvar, `[A-Z]`) {
 							line.logWarning(".for variable names should not contain uppercase letters.")
 						} else {
-							line.logError("Invalid variable name \"${var}\".")
+							line.logError("Invalid variable name %q.", forvar)
 						}
 
 						ctx.forVars[forvar] = true
