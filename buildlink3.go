@@ -6,7 +6,7 @@ import (
 )
 
 func checkfileBuildlink3Mk(fname string) {
-	trace("checkfileBuildlink3Mk", fname)
+	defer tracecall("checkfileBuildlink3Mk", fname)()
 
 	checkperms(fname)
 

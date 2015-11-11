@@ -115,26 +115,35 @@ const (
 	// This regular expression cannot parse all kinds of shell programs, but
 	// it will catch almost all shell programs that are portable enough to be
 	// used in pkgsrc.
-	reShellword = `(?sx)\s*(
-	\#.*				# shell comment
-	|
-	(?:	'[^']*'			# single quoted string
-	|	\"(?:\\.|[^\"\\])*\"	# double quoted string
-	` + "|	`[^`]*`" + `		# backticks string
-	|	\\\$\$			# an escaped dollar sign
-	|	\\[^\$]			# other escaped characters
-	|	\$[\w_]			# one-character make(1) variable
-	|	\$\{[^{}]+\}		# make(1) variable
-	|	\$\([^()]+\)		# make(1) variable, $(...)
-	|	\$[/\@<^]		# special make(1) variables
-	|	\$\$[0-9A-Z_a-z]+	# shell variable
-	|	\$\$[\#?@]		# special shell variables
-	|	\$\$\$\$		# the special pid shell variable
-	|	\$\$\{[0-9A-Z_a-z]+\}	# shell variable in braces
-	|	\$\$\(			# POSIX-style backticks replacement
-	|	[^\(\)'\"\\\s;&\|<>` + "`" + `\$] # non-special character
-	|	\$\{[^\s\"'` + "`" + `]+		# HACK: nested make(1) variables
-	)+ | ;;? | &&? | \|\|? | \( | \) | >& | <<? | >>? | \#.*)`
+	reShellword = `\s*(` +
+		`#.*` + // shell comment
+		`|(?:` +
+		`'[^']*'` + // single quoted string
+		`|"(?:\\.|[^"\\])*"` + // double quoted string
+		"`[^`]*`" + // backticks command execution
+		`|\\\$\$` + // a shell-escaped dollar sign
+		`|\\[^\$]` + // other escaped characters
+		`|\$[\w_]` + // one-character make(1) variable
+		`|\$\{[^{}]+\}` + // make(1) variable, ${...}
+		`|\$\([^()]+\)` + // make(1) variable, $(...)
+		`|\$[/\@<^]` + // special make(1) variables
+		`|\$\$[0-9A-Z_a-z]+` + // shell variable
+		`|\$\$[#?@]` + // special shell variables
+		`|\$\$\$\$` + // the special pid shell variable
+		`|\$\$\{[0-9A-Z_a-z]+\}` + // shell variable in braces
+		`|\$\$\(` + // POSIX-style backticks replacement
+		`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
+		`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
+		`)+` +
+		`|;;?` +
+		`|&&?` +
+		`|\|\|?` +
+		`|\(` +
+		`|\)` +
+		`|>&` +
+		`|<<?` +
+		`|>>?` +
+		`|#.*)`
 	reVarname    = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
 	rePkgbase    = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
 	rePkgversion = `\d(?:\w|\.\d)*`
@@ -148,7 +157,7 @@ func explanationRelativeDirs() []string {
 }
 
 func checkItem(fname string) {
-	trace("checkItem", fname)
+	defer tracecall("checkItem", fname)()
 
 	st, err := os.Stat(fname)
 	if err != nil || (!st.Mode().IsDir() && !st.Mode().IsRegular()) {
@@ -207,18 +216,18 @@ func checkItem(fname string) {
 }
 
 func loadPackageMakefile(fname string) []*Line {
-	lines := make([]*Line, 0)
-	allLines := make([]*Line, 0)
 	G.pkgContext.included = make(map[string]*Line)
 
-	if !readMakefile(fname, lines, allLines) {
+	mainLines := make([]*Line, 0)
+	allLines := make([]*Line, 0)
+	if !readMakefile(fname, &mainLines, &allLines) {
 		logError(fname, NO_LINES, "Cannot be read.")
 		return nil
 	}
 
 	if G.opts.optDumpMakefile {
-		logDebug(NO_FILE, NO_LINES, "Whole Makefile (with all included files) follows:")
-		for _, line := range lines {
+		logDebug(G.currentDir, NO_LINES, "Whole Makefile (with all included files) follows:")
+		for _, line := range allLines {
 			fmt.Printf("%s\n", line.String())
 		}
 	}
@@ -226,9 +235,9 @@ func loadPackageMakefile(fname string) []*Line {
 	determineUsedVariables(allLines)
 
 	G.pkgContext.pkgdir = newStr(expandVariableWithDefault("PKGDIR", "."))
-	G.pkgContext.distinfoFile = (expandVariableWithDefault("DISTINFO_FILE", "distinfo"))
-	G.pkgContext.filesdir = (expandVariableWithDefault("FILESDIR", "files"))
-	G.pkgContext.patchdir = (expandVariableWithDefault("PATCHDIR", "patches"))
+	G.pkgContext.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
+	G.pkgContext.filesdir = expandVariableWithDefault("FILESDIR", "files")
+	G.pkgContext.patchdir = expandVariableWithDefault("PATCHDIR", "patches")
 
 	if varIsDefined("PHPEXT_MK") {
 		if !varIsDefined("USE_PHP_EXT_PATCHES") {
@@ -245,7 +254,7 @@ func loadPackageMakefile(fname string) []*Line {
 		logDebug(NO_FILE, NO_LINES, "PATCHDIR=%s", G.pkgContext.patchdir) &&
 		logDebug(NO_FILE, NO_LINES, "PKGDIR=%s", *G.pkgContext.pkgdir)
 
-	return lines
+	return mainLines
 }
 
 func determineUsedVariables(lines []*Line) {
@@ -475,7 +484,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 }
 
 func checklineMkAbsolutePathname(line *Line, text string) {
-	line.trace("checklineMkAbsolutePathname", text)
+	defer line.tracecall("checklineMkAbsolutePathname", text)()
 
 	// In the GNU coding standards, DESTDIR is defined as a (usually
 	// empty) prefix that can be used to install files to a different
@@ -520,15 +529,6 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	}
 }
 
-func checkfileAlternatives(fname string) {
-	trace("checkfileAlternatives", fname)
-
-	checkperms(fname)
-	if _, err := loadLines(fname, false); err != nil {
-		logError(fname, NO_LINES, "Cannot be read.")
-	}
-}
-
 func checkfileExtra(fname string) {
 	trace("checkfileExtra", fname)
 
@@ -539,8 +539,6 @@ func checkfileExtra(fname string) {
 	}
 	checklinesTrailingEmptyLines(lines)
 }
-
-var checkfileInstall = checkfileExtra
 
 func checkfileMessage(fname string) {
 	trace("checkfileMessage", fname)
@@ -647,14 +645,14 @@ func checkfile(fname string) {
 			logWarning(fname, NO_LINES, "Unknown symlink name.")
 		}
 
-	case (!st.Mode().IsRegular()):
+	case !st.Mode().IsRegular():
 		logError(fname, NO_LINES, "Only files and directories are allowed in pkgsrc.")
 
-	case (basename == "ALTERNATIVES"):
+	case basename == "ALTERNATIVES":
 		if G.opts.optCheckAlternatives {
-			checkfileAlternatives(fname)
+			checkfileExtra(fname)
 		}
-	case (basename == "buildlink3.mk"):
+	case basename == "buildlink3.mk":
 		if G.opts.optCheckBuildlink3 {
 			checkfileBuildlink3Mk(fname)
 		}
@@ -668,9 +666,9 @@ func checkfile(fname string) {
 			checkfileDistinfo(fname)
 		}
 
-	case (basename == "DEINSTALL" || basename == "INSTALL"):
+	case basename == "DEINSTALL" || basename == "INSTALL":
 		if G.opts.optCheckInstall {
-			checkfileInstall(fname)
+			checkfileExtra(fname)
 		}
 
 	case match0(basename, `^MESSAGE`):

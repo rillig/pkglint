@@ -36,7 +36,6 @@ func loadRawLines(fname string) ([]PhysLine, error) {
 }
 
 func getLogicalLine(fname string, physlines []PhysLine, pindex *int) *Line {
-	trace("getLogicalLine", fname, *pindex)
 	text := ""
 	index := *pindex
 	firstlineno := physlines[index].lineno

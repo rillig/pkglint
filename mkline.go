@@ -75,7 +75,7 @@ func checklineMkVardef(line *Line, varname, op string) {
 }
 
 func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContext) {
-	trace("checklineMkVaruse", line, varname, mod, *vuc)
+	defer tracecall("checklineMkVaruse", line, varname, mod, *vuc)()
 
 	vartype := getVariableType(line, varname)
 	if G.opts.optWarnExtra &&
@@ -282,7 +282,7 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 //	is no comment, pass C<undef>.
 //
 func checklineMkVartypeSimple(line *Line, varname string, basicType string, op, value, comment string, listContext, guessed bool) {
-	trace("checklineMkVartypeSimple", line, varname, basicType, op, value, comment, listContext, guessed)
+	defer tracecall("checklineMkVartypeSimple", line, varname, basicType, op, value, comment, listContext, guessed)()
 
 	valueNovar := value
 	for {
@@ -333,7 +333,7 @@ func checklineMkDecreasingOrder(line *Line, varname, value string) {
 }
 
 func checklineMkVarassign(line *Line, varname, op, value, comment string) {
-	trace("checklineMkVarassign", varname, op, value)
+	defer tracecall("checklineMkVarassign", varname, op, value)()
 
 	varbase := varnameBase(varname)
 	varcanon := varnameCanon(varname)

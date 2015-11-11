@@ -33,7 +33,7 @@ func mustMatch(pattern string, s string) []string {
 func isEmptyDir(fname string) bool {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		logFatal(fname, NO_LINES, "Cannot be read.")
+		return true
 	}
 	for _, dirent := range dirents {
 		name := dirent.Name()
@@ -165,12 +165,13 @@ func useVar(line *Line, varname string) {
 
 func varIsUsed(varname string) bool {
 	varcanon := varnameCanon(varname)
-	mk := G.mkContext
-	if mk != nil && (mk.varuse[varname] != nil || mk.varuse[varcanon] != nil) {
+	if mk := G.mkContext; mk != nil && (mk.varuse[varname] != nil || mk.varuse[varcanon] != nil) {
 		return true
 	}
-	pkg := G.pkgContext
-	return pkg != nil && (pkg.varuse[varname] != nil || pkg.varuse[varcanon] != nil)
+	if pkg := G.pkgContext; pkg != nil && (pkg.varuse[varname] != nil || pkg.varuse[varcanon] != nil) {
+		return true
+	}
+	return false
 }
 
 func splitOnSpace(s string) []string {
@@ -309,11 +310,6 @@ func newStr(s string) *string {
 	return &s
 }
 
-func matchAll(s, re string) ([]string, string) {
-	notImplemented("matchAll")
-	return make([]string, 0), ""
-}
-
 func dirglob(dirname string) []string {
 	fis, err := ioutil.ReadDir(dirname)
 	if err != nil {
@@ -340,6 +336,16 @@ func argsStr(args ...interface{}) string {
 func trace(funcname string, args ...interface{}) {
 	if G.opts.optDebugTrace {
 		logDebug(NO_FILE, NO_LINES, "%s(%s)", funcname, argsStr(args...))
+	}
+}
+func tracecall(funcname string, args ...interface{}) func() {
+	if G.opts.optDebugTrace {
+		trace("enter "+funcname, args...)
+		return func() {
+			trace("leave "+funcname, args...)
+		}
+	} else {
+		return func() {}
 	}
 }
 

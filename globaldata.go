@@ -62,7 +62,6 @@ func (self *GlobalData) loadDistSites() {
 	names := make(map[string]bool)
 	url2name := make(map[string]string)
 	for _, line := range lines {
-		line.trace("loadDistSites", line.text)
 		text := line.text
 		if m, varname, _, urls, _ := match4(text, reVarassign); m {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
@@ -80,7 +79,7 @@ func (self *GlobalData) loadDistSites() {
 	names["MASTER_SITE_SUSE_UPD"] = true
 	names["MASTER_SITE_LOCAL"] = true
 
-	_ = G.opts.optDebugMisc && logDebug(fname, NO_LINES, "Loaded %d MASTER_SITE_* definitions.", len(url2name))
+	_ = G.opts.optDebugMisc && logDebug(fname, NO_LINES, "Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	self.masterSiteUrls = url2name
 	self.masterSiteVars = names
 }

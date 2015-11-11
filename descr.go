@@ -1,12 +1,12 @@
 package main
 
 func checkfileDescr(fname string) {
+	defer tracecall("checkfileDescr", fname)()
+
 	const (
 		maxchars = 80
 		maxlines = 24
 	)
-
-	trace("checkfileDescr", fname)
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)

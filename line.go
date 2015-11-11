@@ -93,6 +93,16 @@ func (line *Line) trace(funcname string, args ...interface{}) {
 		line.logDebug("%s(%s)", funcname, argsStr(args...))
 	}
 }
+func (line *Line) tracecall(funcname string, args ...interface{}) func() {
+	if G.opts.optDebugTrace {
+		line.logDebug("enter %s(%s)", funcname, argsStr(args...))
+		return func() {
+			line.logDebug("leave %s(%s)", funcname, argsStr(args...))
+		}
+	} else {
+		return func() {}
+	}
+}
 
 func (self *Line) prependBefore(line string) {
 	self.before = append([]PhysLine{{0, line + "\n"}}, self.before...)

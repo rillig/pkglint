@@ -321,7 +321,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 			"\tSUBST_SED.foo+=\t's,\\#define foo,,'")
 	}
 
-	if m, cmd := match1(shelltext, `^@*-(.*MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m {
+	if m, cmd := match1(shelltext, `^@*-(.*(?:MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m {
 		line.logNote("You don't need to use \"-\" before %v.", cmd)
 	}
 
@@ -489,7 +489,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 			switch {
 			case plainTool != "" && G.mkContext.tools[plainTool]:
 				line.logWarning("The %q tool is used but not added to USE_TOOLS.", plainTool)
-			case vartype.basicType == "ShellCommand":
+			case vartype != nil && vartype.basicType == "ShellCommand":
 				checklineMkShellcmdUse(line, shellword)
 			case G.pkgContext.vardef[vartool] != nil:
 				// This command has been explicitly defined in the package; assume it to be valid.

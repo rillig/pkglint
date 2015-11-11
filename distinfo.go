@@ -14,7 +14,7 @@ type DistinfoContext struct {
 }
 
 func checkfileDistinfo(fname string) {
-	trace("checkfileDistinfo", fname)
+	defer tracecall("checkfileDistinfo", fname)()
 
 	lines := loadNonemptyLines(fname, false)
 	if lines == nil {

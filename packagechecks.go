@@ -7,8 +7,11 @@ import (
 )
 
 func checkpackagePossibleDowngrade() {
-	trace("checkpackagePossibleDowngrade")
+	defer tracecall("checkpackagePossibleDowngrade")()
 
+	if G.pkgContext.effectivePkgname == nil {
+		return
+	}
 	m, _, pkgversion := match2(*G.pkgContext.effectivePkgname, rePkgname)
 	if !m {
 		return
@@ -30,7 +33,7 @@ func checkpackagePossibleDowngrade() {
 }
 
 func checklinesBuildlink3Inclusion(lines []*Line) {
-	lines[0].trace("checklinesbuildlink3Inclusion")
+	defer lines[0].tracecall("checklinesbuildlink3Inclusion")()
 
 	if G.pkgContext == nil {
 		return
@@ -61,13 +64,13 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 func checkdirPackage(pkgpath string) {
 	ctx := newPkgContext(pkgpath)
 	G.pkgContext = ctx
-	defer func() { G.pkgContext = nil }()
+	trace("G.pkgContext set")
+	defer func() { G.pkgContext = nil; trace("G.pkgContext unset") }()
 
 	// we need to handle the Makefile first to get some variables
 	lines := loadPackageMakefile(G.currentDir + "/Makefile")
 	if lines == nil {
 		logError(G.currentDir+"/Makefile", NO_LINES, "Cannot be read.")
-		G.pkgContext = nil
 		return
 	}
 
@@ -101,6 +104,7 @@ func checkdirPackage(pkgpath string) {
 	for _, fname := range files {
 		if fname == G.currentDir+"/Makefile" {
 			if G.opts.optCheckMakefile {
+				checkperms(fname)
 				checkfilePackageMakefile(fname, lines)
 			}
 		} else {
@@ -125,9 +129,7 @@ func checkdirPackage(pkgpath string) {
 }
 
 func checkfilePackageMakefile(fname string, lines []*Line) {
-	trace("checkfilePackageMakefile", fname, len(lines))
-
-	checkperms(fname)
+	defer tracecall("checkfilePackageMakefile", fname, len(lines))()
 
 	vardef := G.pkgContext.vardef
 	if vardef["PLIST_SRC"] == nil &&
@@ -212,7 +214,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 			vardef["USE_X11"].logNote("... USE_X11 superfluous.")
 		}
 
-		if *G.pkgContext.effectivePkgbase != "" {
+		if G.pkgContext.effectivePkgbase != nil {
 			for _, sugg := range G.globalData.suggestedUpdates {
 				if *G.pkgContext.effectivePkgbase != sugg.pkgname {
 					continue

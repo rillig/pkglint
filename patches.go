@@ -162,7 +162,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 }
 
 func checkfilePatch(fname string) {
-	trace("checkfilePatch", fname)
+	defer tracecall("checkfilePatch", fname)()
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)

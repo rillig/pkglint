@@ -6,22 +6,22 @@ import (
 	"strings"
 )
 
-func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
-	lines, err := loadLines(fname, true)
+func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
+	fileLines, err := loadLines(fname, true)
 	if err != nil {
 		return false
 	}
 
-	parselinesMk(lines)
-	isMainMakefile := len(mainLines) == 0
+	parselinesMk(fileLines)
+	isMainMakefile := len(*mainLines) == 0
 
-	for _, line := range lines {
+	for _, line := range fileLines {
 		text := line.text
 
 		if isMainMakefile {
-			mainLines = append(mainLines, line)
+			*mainLines = append(*mainLines, line)
 		}
-		allLines = append(allLines, line)
+		*allLines = append(*allLines, line)
 
 		isIncludeLine := false
 		includeFile := ""
@@ -77,13 +77,13 @@ func readMakefile(fname string, mainLines []*Line, allLines []*Line) bool {
 					return false
 				} else {
 					_ = G.opts.optDebugInclude && line.logDebug("Including %q.", dirname+"/"+includeFile)
-					lengthBeforeInclude := len(allLines)
+					lengthBeforeInclude := len(*allLines)
 					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
 						return false
 					}
 
 					if path.Base(includeFile) == "Makefile.common" {
-						makefileCommonLines := allLines[lengthBeforeInclude:]
+						makefileCommonLines := (*allLines)[lengthBeforeInclude:]
 						relpath, err := filepath.Rel(G.globalData.pkgsrcdir, fname)
 						if err != nil {
 							line.logError("Cannot determine relative path.")
@@ -193,12 +193,6 @@ func parselineMk(line *Line) {
 	if m, shellcmd := match1(text, reMkShellcmd); m {
 		line.extra["is_shellcmd"] = true
 		line.extra["shellcmd"] = shellcmd
-
-		shellwords, rest := matchAll(shellcmd, reShellword)
-		line.extra["shellwords"] = shellwords
-		if match0(rest, `\S`) {
-			line.extra["shellwords_rest"] = rest
-		}
 		return
 	}
 
@@ -300,7 +294,7 @@ func checklineMkText(line *Line, text string) {
 }
 
 func checklinesMk(lines []*Line) {
-	trace("checklinesMk", lines[0].fname)
+	defer tracecall("checklinesMk", lines[0].fname)()
 
 	allowedTargets := make(map[string]bool)
 	substcontext := &SubstContext{}
@@ -529,7 +523,7 @@ func checklinesMk(lines []*Line) {
 				}
 			}
 
-		} else if m, targets, _, dependencies, _ := match4(text, reMkDependency); m {
+		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
 			_ = G.opts.optDebugMisc && line.logDebug("targets=%v, dependencies=%v", targets, dependencies)
 			ctx.target = targets
 
