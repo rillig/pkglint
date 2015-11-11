@@ -462,7 +462,7 @@ func checklineTrailingWhitespace(line *Line) {
 }
 
 func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
-	line.trace("checklineRcsid", prefixRe, suggestedPrefix)
+	defer tracecall("checklineRcsid", prefixRe, suggestedPrefix)()
 
 	id := G.opts.optRcsIds
 	if G.isWip {
@@ -484,7 +484,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 }
 
 func checklineMkAbsolutePathname(line *Line, text string) {
-	defer line.tracecall("checklineMkAbsolutePathname", text)()
+	defer tracecall("checklineMkAbsolutePathname", text)()
 
 	// In the GNU coding standards, DESTDIR is defined as a (usually
 	// empty) prefix that can be used to install files to a different
@@ -530,7 +530,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 }
 
 func checkfileExtra(fname string) {
-	trace("checkfileExtra", fname)
+	defer tracecall("checkfileExtra", fname)()
 
 	checkperms(fname)
 	lines := loadNonemptyLines(fname, false)
@@ -541,7 +541,7 @@ func checkfileExtra(fname string) {
 }
 
 func checkfileMessage(fname string) {
-	trace("checkfileMessage", fname)
+	defer tracecall("checkfileMessage", fname)()
 
 	explanation := []string{
 		"A MESSAGE file should consist of a header line, having 75 \"=\"",
@@ -599,7 +599,7 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 }
 
 func checkfileMk(fname string) {
-	trace("checkfileMk", fname)
+	defer tracecall("checkfileMk", fname)()
 
 	checkperms(fname)
 	lines := loadNonemptyLines(fname, true)
@@ -613,7 +613,7 @@ func checkfileMk(fname string) {
 }
 
 func checkfile(fname string) {
-	trace("checkfile", fname)
+	defer tracecall("checkfile", fname)()
 
 	basename := path.Base(fname)
 	if match0(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {

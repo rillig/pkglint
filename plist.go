@@ -11,7 +11,7 @@ type PlistContext struct {
 }
 
 func checkfilePlist(fname string) {
-	trace("checkfilePlist", fname)
+	defer tracecall("checkfilePlist", fname)()
 
 	checkperms(fname)
 	lines, err := loadLines(fname, false)

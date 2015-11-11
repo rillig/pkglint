@@ -3,6 +3,7 @@ package main
 type GlobalVars struct {
 	errors       int
 	warnings     int
+	traceDepth   int
 	curPkgsrcdir *string // The pkgsrc directory, relative to the directory that is currently checked.
 	opts         CmdOpts
 	globalData   GlobalData

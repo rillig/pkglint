@@ -8,7 +8,7 @@ import (
 )
 
 func checklineMkVardef(line *Line, varname, op string) {
-	line.trace("checklineMkVardef", varname, op)
+	defer tracecall("checklineMkVardef", varname, op)()
 
 	if G.pkgContext != nil && G.pkgContext.vardef[varname] == nil {
 		G.pkgContext.vardef[varname] = line

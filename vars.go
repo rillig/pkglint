@@ -24,7 +24,7 @@ const (
 )
 
 func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) NeedsQuoting {
-	line.trace("variableNeedsQuoting", varname, context)
+	defer tracecall("variableNeedsQuoting", varname, context)()
 
 	vartype := getVariableType(line, varname)
 	if vartype == nil || context.vartype == nil {

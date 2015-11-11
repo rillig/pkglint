@@ -33,7 +33,7 @@ func checkpackagePossibleDowngrade() {
 }
 
 func checklinesBuildlink3Inclusion(lines []*Line) {
-	defer lines[0].tracecall("checklinesbuildlink3Inclusion")()
+	defer tracecall("checklinesbuildlink3Inclusion")()
 
 	if G.pkgContext == nil {
 		return
@@ -62,10 +62,10 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 }
 
 func checkdirPackage(pkgpath string) {
+	defer tracecall("checkdirPackage", pkgpath)()
 	ctx := newPkgContext(pkgpath)
 	G.pkgContext = ctx
-	trace("G.pkgContext set")
-	defer func() { G.pkgContext = nil; trace("G.pkgContext unset") }()
+	defer func() { G.pkgContext = nil }()
 
 	// we need to handle the Makefile first to get some variables
 	lines := loadPackageMakefile(G.currentDir + "/Makefile")

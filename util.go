@@ -333,16 +333,18 @@ func argsStr(args ...interface{}) string {
 	return argsStr
 }
 
-func trace(funcname string, args ...interface{}) {
+func trace(action, funcname string, args ...interface{}) {
 	if G.opts.optDebugTrace {
-		logDebug(NO_FILE, NO_LINES, "%s(%s)", funcname, argsStr(args...))
+		logDebug(NO_FILE, NO_LINES, "%s%s%s(%s)", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...))
 	}
 }
 func tracecall(funcname string, args ...interface{}) func() {
 	if G.opts.optDebugTrace {
-		trace("enter "+funcname, args...)
+		trace("+ ", funcname, args...)
+		G.traceDepth++
 		return func() {
-			trace("leave "+funcname, args...)
+			G.traceDepth--
+			trace("- ", funcname, args...)
 		}
 	} else {
 		return func() {}
