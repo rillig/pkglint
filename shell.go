@@ -487,7 +487,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 			plainTool := G.globalData.varnameToToolname[vartool]
 			vartype := G.globalData.getVartypes()[vartool]
 			switch {
-			case plainTool != "" && G.mkContext.tools[plainTool]:
+			case plainTool != "" && !G.mkContext.tools[plainTool]:
 				line.logWarning("The %q tool is used but not added to USE_TOOLS.", plainTool)
 			case vartype != nil && vartype.basicType == "ShellCommand":
 				checklineMkShellcmdUse(line, shellword)

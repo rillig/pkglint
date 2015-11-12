@@ -55,6 +55,7 @@ func (self *GlobalData) Initialize(pkgsrcdir string) {
 	self.loadPkgOptions()
 	self.loadDocChanges()
 	self.loadUserDefinedVars()
+	self.loadTools()
 	self.deprecated = getDeprecatedVars()
 }
 
@@ -129,8 +130,8 @@ func (self *GlobalData) loadTools() {
 		fname := G.globalData.pkgsrcdir + "/mk/tools/" + basename
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
-			if m, varname, _, value := match3(line.text, reVarassign); m {
-				if varname == "TOOLS_CREATE" && match0(value, `^([-\w.]+|\[)$`) {
+			if m, varname, _, value, _ := match4(line.text, reVarassign); m {
+				if varname == "TOOLS_CREATE" && (value == "[" || match0(value, `^?[-\w.]+$`)) {
 					tools[value] = true
 				} else if m, toolname := match1(varname, `^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$`); m {
 					tools[toolname] = true
@@ -159,7 +160,7 @@ func (self *GlobalData) loadTools() {
 		for _, line := range lines {
 			text := line.text
 
-			if m, varname, _, value := match3(text, reVarassign); m {
+			if m, varname, _, value, _ := match4(text, reVarassign); m {
 				if varname == "USE_TOOLS" {
 					_ = G.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
@@ -177,7 +178,7 @@ func (self *GlobalData) loadTools() {
 					}
 				}
 
-			} else if m, _, cond := match2(text, reMkCond); m {
+			} else if m, _, cond, _ := match3(text, reMkCond); m {
 				switch cond {
 				case "if":
 				case "ifdef":
