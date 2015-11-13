@@ -280,7 +280,7 @@ outer:
 				line.logWarning("Unquoted $ or strange shell variable found.")
 			case replacestart(&rest, &m, `^\\(.)`):
 				char := m[1]
-				line.logWarning("Please use %q instead of %q.", "\\\\"+char, "\\"+char)
+				line.logWarning("Please use \"%s\" instead of \"%s\".", "\\\\"+char, "\\"+char)
 				line.explainWarning(
 					"Although the current code may work, it is not good style to rely on",
 					"the shell passing this escape sequence exactly as is, and not",

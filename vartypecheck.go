@@ -179,7 +179,7 @@ func (cv *CheckVartype) DependencyWithPath() {
 			line.logWarning("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		if !match0(pattern, reDependencyCmp) && !match0(pattern, reDependencyWildcard) {
+		if match(pattern, reDependencyCmp) == nil && match(pattern, reDependencyWildcard) == nil {
 			line.logError("Unknown dependency pattern %q.", pattern)
 		}
 		return
