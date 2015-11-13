@@ -53,8 +53,7 @@ type CmdOpts struct {
 	optRecursive,
 	optPrintSource,
 	optPrintVersion bool
-	optPkgsrcdir,
-	optRcsIds string
+	optPkgsrcdir string
 
 	args []string
 }
@@ -98,7 +97,6 @@ func ParseCommandLine(args []string) CmdOpts {
 	opts.AddFlagVar('i', "import", &result.optImport, false, "Prepare the import of a wip package")
 	opts.AddStrVar('p', "pkgsrcdir", &result.optPkgsrcdir, "", "Set the root directory of pkgsrc explicitly")
 	opts.AddFlagVar('q', "quiet", &result.optQuiet, false, "Don't print a summary line when finishing")
-	opts.AddStrVar('R', "rcsidstring", &result.optRcsIds, "NetBSD", "Set the allowed RCS Id strings")
 	opts.AddFlagVar('r', "recursive", &result.optRecursive, false, "Recursive---check subdirectories, too")
 	opts.AddFlagVar('s', "source", &result.optPrintSource, false, "Show the source lines together with diagnostics")
 	opts.AddFlagVar('V', "version", &result.optPrintVersion, false, "print the version number of pkglint")
