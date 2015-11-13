@@ -261,6 +261,8 @@ func match5(s, re string) (bool, string, string, string, string, string) {
 }
 
 func replaceFirst(s, re, replacement string) ([]string, string) {
+	defer tracecall("replaceFirst", s, re, replacement)()
+
 	if m := reCompile(re).FindStringSubmatchIndex(s); m != nil {
 		replaced := s[:m[0]] + replacement + s[m[1]:]
 		mm := make([]string, len(m)/2)
@@ -352,6 +354,7 @@ func tracecall(funcname string, args ...interface{}) func() {
 	}
 }
 
+// Emulates make(1)’s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, all bool) string {
 	re := ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", "")
 	done := false

@@ -30,3 +30,11 @@ func (s *Suite) TestMkopSubst_all(c *check.C) {
 	c.Check(mkopSubst("aaaaa", false, "a", true, "b", true), equals, "aaaab")
 	c.Check(mkopSubst("aaaaa", true, "a", true, "b", true), equals, "aaaaa")
 }
+
+func (s *Suite) TestReplaceFirst(c *check.C) {
+	m, rest := replaceFirst("a+b+c+d", `(\w)(.)(\w)`, "X")
+
+	c.Assert(m, check.NotNil)
+	c.Check(m, check.DeepEquals, []string{"a+b", "a", "+", "b"})
+	c.Check(rest, equals, "X+c+d")
+}

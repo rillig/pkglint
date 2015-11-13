@@ -38,3 +38,45 @@ func (s *Suite) TestPrintTable(c *check.C) {
 		"hello  world\n"+
 		"how    are    you?\n")
 }
+
+func (s *Suite) TestReShellword(c *check.C) {
+	re := `^(?:` + reShellword + `)$`
+	matches := check.NotNil
+	doesntMatch := check.IsNil
+
+	c.Check(match("", re), doesntMatch)
+	c.Check(match("$var", re), matches)
+	c.Check(match("$var$var", re), matches)
+	c.Check(match("$var;;", re), doesntMatch) // More than one shellword
+	c.Check(match("'single-quoted'", re), matches)
+	c.Check(match("\"", re), doesntMatch)       // Incomplete string
+	c.Check(match("'...'\"...\"", re), matches) // Mixed strings
+	c.Check(match("\"...\"", re), matches)
+	c.Check(match("`cat file`", re), matches)
+}
+
+func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
+	line := NewLine("fname", "1", "dummy", nil)
+	line.extra["value"] = "${GCC_VERSION}"
+	G.pkgContext = newPkgContext(".")
+	G.pkgContext.vardef["GCC_VERSION"] = line // circular reference
+
+	resolved := resolveVariableRefs("gcc-${GCC_VERSION}")
+	c.Check(resolved, equals, "gcc-${GCC_VERSION}")
+}
+
+func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
+	line1 := NewLine("fname", "dummy", "dummy", nil)
+	line1.extra["value"] = "${SECOND}"
+	line2 := NewLine("fname", "dummy", "dummy", nil)
+	line2.extra["value"] = "${THIRD}"
+	line3 := NewLine("fname", "dummy", "dummy", nil)
+	line3.extra["value"] = "got it"
+	G.pkgContext = newPkgContext(".")
+	G.pkgContext.vardef["FIRST"] = line1
+	G.pkgContext.vardef["SECOND"] = line2
+	G.pkgContext.vardef["THIRD"] = line3
+
+	resolved := resolveVariableRefs("you ${FIRST}")
+	c.Check(resolved, equals, "you got it")
+}

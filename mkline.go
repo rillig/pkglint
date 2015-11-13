@@ -542,6 +542,8 @@ var reVarnamePlural string = "^(?:" +
 	"|TOOLS_NOOP)$"
 
 func checklineMkVartype(line *Line, varname, op, value, comment string) {
+	defer tracecall("checklineMkVartype", varname, op, value, comment)()
+
 	if !G.opts.optWarnTypes {
 		return
 	}
@@ -575,11 +577,11 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		} else {
 			rest = value
 			for {
-				m, r := replaceFirst(rest, reShellword, "")
+				var m []string
+				m, rest = replaceFirst(rest, reShellword, "")
 				if m == nil {
 					break
 				}
-				rest = r
 
 				word := m[1]
 				if hasPrefix(word, "#") {
@@ -606,6 +608,8 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 }
 
 func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
+	defer tracecall("checklineMkVartypeBasic", varname, vartype.basicType, op, value, comment, isList, guessed)()
+
 	ctx := &CheckVartype{line, varname, op, value, "", comment, isList, guessed == GUESSED}
 	ctx.valueNovar = resolveVariableRefs(value)
 	switch vartype.basicType {

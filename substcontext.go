@@ -44,7 +44,7 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 		line.logWarning("Foreign variable in SUBST block.")
 	}
 
-	if varparam != *self.id {
+	if self.id != nil && varparam != *self.id {
 		if self.isComplete() {
 			// XXX: This code sometimes produces weird warnings. See
 			// meta-pkgs/xorg/Makefile.common 1.41 for an example.

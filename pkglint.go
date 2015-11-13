@@ -120,7 +120,7 @@ const (
 		`|(?:` +
 		`'[^']*'` + // single quoted string
 		`|"(?:\\.|[^"\\])*"` + // double quoted string
-		"`[^`]*`" + // backticks command execution
+		"|`[^`]*`" + // backticks command execution
 		`|\\\$\$` + // a shell-escaped dollar sign
 		`|\\[^\$]` + // other escaped characters
 		`|\$[\w_]` + // one-character make(1) variable
@@ -134,7 +134,7 @@ const (
 		`|\$\$\(` + // POSIX-style backticks replacement
 		`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
 		`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
-		`)+` +
+		`)+` + // any of the above may be repeated
 		`|;;?` +
 		`|&&?` +
 		`|\|\|?` +
@@ -366,14 +366,18 @@ func getVariableType(line *Line, varname string) *Vartype {
 }
 
 func resolveVariableRefs(text string) string {
+	defer tracecall("resolveVariableRefs", text)()
+
 	visited := make(map[string]bool) // To prevent endless loops
 
 	str := text
 	re := reCompile(`\$\{(\w+)\}`)
 	for {
-		replaced := re.ReplaceAllStringFunc(str, func(varname string) string {
+		replaced := re.ReplaceAllStringFunc(str, func(m string) string {
+			varname := m[2 : len(m)-1]
 			if !visited[varname] {
 				visited[varname] = true
+				trace("", "resolve.visit", varname)
 				if G.pkgContext != nil && G.pkgContext.vardef[varname] != nil {
 					return G.pkgContext.vardef[varname].extra["value"].(string)
 				}
@@ -383,9 +387,11 @@ func resolveVariableRefs(text string) string {
 			}
 			return sprintf("${%s}", varname)
 		})
+		trace("", "resolveStep", str, replaced)
 		if replaced == str {
 			return replaced
 		}
+		str = replaced
 	}
 }
 

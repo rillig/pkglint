@@ -246,6 +246,8 @@ func parselinesMk(lines []*Line) {
 }
 
 func checklineMkText(line *Line, text string) {
+	defer tracecall("checklineMkText", text)()
+
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
 		line.logWarning("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}

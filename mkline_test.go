@@ -25,3 +25,10 @@ func (s *CaptureOutputSuite) TestChecklineMkVartype_SimpleType(c *check.C) {
 
 	c.Check(s.Stdout(), equals, "WARN: fname:1: COMMENT should not begin with \"A\".\n")
 }
+
+func (s *CaptureOutputSuite) TestChecklineMkVartype(c *check.C) {
+	line := NewLine("fname", "1", "dummy", nil)
+	initacls()
+
+	checklineMkVartype(line, "DISTNAME", "=", "gcc-${GCC_VERSION}", "")
+}
