@@ -371,5 +371,5 @@ func relpath(from, to string) string {
 	if err1 != nil || err2 != nil || err3 != nil {
 		internalError("relpath", from, to, err1, err2, err3)
 	}
-	return rel
+	return filepath.ToSlash(rel)
 }

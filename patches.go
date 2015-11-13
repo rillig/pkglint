@@ -122,7 +122,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 
 // Looks for strings like "/dev/cd0" appearing in source code
 func checklineSourceAbsolutePathname(line *Line, text string) {
-	if matched, before, _, str := match3(text, `(.*)([\"'])(/\w[^\"']*)\2`); matched {
+	if matched, before, _, str := match3(text, `(.*)(["'])(/\w[^"']*)["']`); matched {
 		_ = G.opts.optDebugMisc && line.logDebug("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
 		if match0(before, `[A-Z_]+\s*$`) {
@@ -180,7 +180,7 @@ func checkfilePatch(fname string) {
 
 const (
 	rePatchRcsid            = `^\$.*\$$`
-	rePatchText             = `^(.+)$`
+	rePatchNonempty         = `^(.+)$`
 	rePatchEmpty            = `^$`
 	rePatchCtxFileDel       = `^\*\*\*\s(\S+)(.*)$`
 	rePatchCtxFileAdd       = `^---\s(\S+)(.*)$`
@@ -200,22 +200,22 @@ const (
 	rePatchUniLineNoNewline = `^\\ No newline at end of file$`
 )
 
-type State int
+type State string
 
 const (
-	PST_START State = iota
-	PST_CENTER
-	PST_TEXT
-	PST_CTX_FILE_ADD
-	PST_CTX_HUNK
-	PST_CTX_HUNK_DEL
-	PST_CTX_LINE_DEL0
-	PST_CTX_LINE_DEL
-	PST_CTX_LINE_ADD0
-	PST_CTX_LINE_ADD
-	PST_UNI_FILE_ADD
-	PST_UNI_HUNK
-	PST_UNI_LINE
+	PST_START         State = "start"
+	PST_CENTER        State = "center"
+	PST_TEXT          State = "text"
+	PST_CTX_FILE_ADD  State = "ctxFileAdd"
+	PST_CTX_HUNK      State = "ctxHunk"
+	PST_CTX_HUNK_DEL  State = "ctxHunkDel"
+	PST_CTX_LINE_DEL0 State = "ctxLineDel0"
+	PST_CTX_LINE_DEL  State = "ctxLineDel"
+	PST_CTX_LINE_ADD0 State = "ctxLineAdd0"
+	PST_CTX_LINE_ADD  State = "ctxLineAdd"
+	PST_UNI_FILE_ADD  State = "uniFileAdd"
+	PST_UNI_HUNK      State = "uniHunk"
+	PST_UNI_LINE      State = "uniLine"
 )
 
 func ptNop(ctx *CheckPatchContext) {}
@@ -237,9 +237,7 @@ var patchTransitions = map[State][]transition{
 	},
 
 	PST_CENTER: {
-		{rePatchEmpty, PST_TEXT, func(ctx *CheckPatchContext) {
-			//
-		}},
+		{rePatchEmpty, PST_TEXT, ptNop},
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
 			if ctx.seenComment {
 				ctx.expectEmptyLine()
@@ -272,11 +270,10 @@ var patchTransitions = map[State][]transition{
 				ctx.expectComment()
 			}
 		}},
-		{rePatchText, PST_TEXT, func(ctx *CheckPatchContext) {
+		{rePatchNonempty, PST_TEXT, func(ctx *CheckPatchContext) {
 			ctx.seenComment = true
 		}},
-		{"", PST_TEXT, func(ctx *CheckPatchContext) {
-		}},
+		{rePatchEmpty, PST_TEXT, ptNop},
 	},
 
 	PST_CTX_FILE_ADD: {
@@ -294,8 +291,7 @@ var patchTransitions = map[State][]transition{
 		{rePatchCtxHunk, PST_CTX_HUNK_DEL, func(ctx *CheckPatchContext) {
 			ctx.hunks++
 		}},
-		{"", PST_TEXT, func(ctx *CheckPatchContext) {
-		}},
+		{"", PST_TEXT, ptNop},
 	},
 
 	PST_CTX_HUNK_DEL: {
@@ -356,10 +352,8 @@ var patchTransitions = map[State][]transition{
 		}},
 		{rePatchCtxLineAdd, PST_CTX_LINE_ADD, func(ctx *CheckPatchContext) {
 			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
-
 		}},
-		{"", PST_CTX_HUNK, func(ctx *CheckPatchContext) {
-		}},
+		{"", PST_CTX_HUNK, ptNop},
 	},
 
 	PST_CTX_LINE_ADD: {
@@ -458,9 +452,10 @@ func checklinesPatch(lines []*Line) {
 	for lineno := 0; lineno < len(lines); {
 		line := lines[lineno]
 		text := line.text
+		ctx.line = line
 
 		_ = G.opts.optDebugPatches &&
-			line.logDebug("state %s hunks %d del %d add %d text %s",
+			line.logDebug("state=%s hunks=%d del=%d add=%d text=%s",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines, text)
 
 		found := false
@@ -487,7 +482,7 @@ func checklinesPatch(lines []*Line) {
 		}
 
 		if !found {
-			line.logError("Internal error: state=%q", ctx.state)
+			internalError("checklinesPatch", ctx.line.fname, ctx.line.lines, ctx.state)
 			ctx.state = PST_TEXT
 			lineno++
 		}
@@ -496,7 +491,7 @@ func checklinesPatch(lines []*Line) {
 	fname := lines[0].fname
 	for ctx.state != PST_TEXT {
 		_ = G.opts.optDebugPatches &&
-			logDebug(fname, "EOF", "state %s hunks %d del %d add %d",
+			logDebug(fname, "EOF", "state=%s hunks=%d del=%d add=%d",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
 
 		found := false
@@ -516,7 +511,7 @@ func checklinesPatch(lines []*Line) {
 		}
 
 		if !found {
-			logError(fname, "EOF", "Internal error: state=%q", ctx.state)
+			internalError("checklinesPatch", "EOF", ctx.state)
 			break
 		}
 	}
