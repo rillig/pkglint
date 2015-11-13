@@ -183,11 +183,7 @@ func checkItem(fname string) {
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
 		if fileExists(G.currentDir + "/" + dir + "/mk/bsd.pkg.mk") {
 			G.curPkgsrcdir = newStr(dir)
-			rel, err := filepath.Rel(G.currentDir, G.currentDir+"/"+dir)
-			if err != nil {
-				logFatal(G.currentDir, NO_LINES, "Cannot determine relative dir.")
-			}
-			pkgpath = rel
+			pkgpath = relpath(G.currentDir, G.currentDir+"/"+dir)
 		}
 	}
 
