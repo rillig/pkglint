@@ -791,3 +791,27 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 		return state
 	}
 }
+
+func splitIntoShellwords(text string) []string {
+	words := make([]string, 0)
+	rest := text
+	for {
+		var m []string
+		m, rest = replaceFirst(rest, reShellword, "")
+		if m == nil {
+			break
+		}
+
+		word := m[1]
+		if hasPrefix(word, "#") {
+			break
+		}
+		words = append(words, word)
+	}
+
+	if match0(rest, `\S`) {
+		internalError("splitIntoShellwords", text, rest)
+	}
+
+	return words
+}

@@ -447,11 +447,11 @@ func (cv *CheckVartype) PlatformTriple() {
 	rePart := `(?:\[[^\]]+\]|[^-\[])+`
 	reTriple := `^(` + rePart + `)-(` + rePart + `)-(` + rePart + `)$`
 	if m, opsys, _, arch := match3(cv.value, reTriple); m {
-		if !match0(opsys, `^(\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|QNX|SunOS)$`) {
+		if !match0(opsys, `^(?:\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|QNX|SunOS)$`) {
 			cv.line.logWarning("Unknown operating system: %s", opsys)
 		}
 		// no check for os_version
-		if !match0(arch, `^(\*|i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
+		if !match0(arch, `^(?:\*|i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
 			cv.line.logWarning("Unknown hardware architecture: %s", arch)
 		}
 

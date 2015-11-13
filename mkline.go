@@ -304,12 +304,6 @@ func checklineMkVartypeSimple(line *Line, varname string, basicType string, op, 
 	// fn()
 }
 
-func checklineMkVartypeEnum(line *Line, varname string, enumValues map[string]bool, enumValuesStr, op, value, comment string, listContext, guessed bool) {
-	if !enumValues[value] {
-		line.logWarning("%q is not valid for %s. Use one of { %s } instead.", value, varname, enumValuesStr)
-	}
-}
-
 func checklineMkDecreasingOrder(line *Line, varname, value string) {
 	strversions := splitOnSpace(value)
 	intversions := make([]int, len(strversions))
@@ -568,51 +562,42 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	} else if op == "!=" {
 		_ = G.opts.optDebugMisc && line.logDebug("Use of !=: %q", value)
 
-	} else if vartype.kindOfList != LK_NONE {
-		words := make([]string, 0)
-		rest := ""
+	} else if vartype.kindOfList == LK_NONE {
+		checklineMkVartypeNolist(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 
+	} else {
+		var words []string
 		if vartype.kindOfList == LK_INTERNAL {
 			words = splitOnSpace(value)
 		} else {
-			rest = value
-			for {
-				var m []string
-				m, rest = replaceFirst(rest, reShellword, "")
-				if m == nil {
-					break
-				}
-
-				word := m[1]
-				if hasPrefix(word, "#") {
-					break
-				}
-				words = append(words, word)
-			}
+			words = splitIntoShellwords(value)
 		}
 
 		for _, word := range words {
-			checklineMkVartypeBasic(line, varname, vartype, op, word, comment, true, vartype.guessed)
+			checklineMkVartypeNolist(line, varname, vartype, op, word, comment, true, vartype.guessed)
 			if vartype.kindOfList != LK_INTERNAL {
 				checklineMkShellword(line, word, true)
 			}
 		}
-
-		if match0(rest, `\S`) {
-			internalError("checklineVartype", rest)
-		}
-
-	} else {
-		checklineMkVartypeBasic(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 	}
 }
 
-func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
-	defer tracecall("checklineMkVartypeBasic", varname, vartype.basicType, op, value, comment, isList, guessed)()
+func checklineMkVartypeNolist(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
+	if len(vartype.enumValues) != 0 {
+		if !vartype.enumValues[value] {
+			line.logWarning("%q is not valid for %s. Use one of { %s } instead.", value, varname, vartype.enumValuesStr)
+		}
+	} else {
+		checklineMkVartypePrimitive(line, varname, vartype.basicType, op, value, comment, isList, guessed)
+	}
+}
+
+func checklineMkVartypePrimitive(line *Line, varname string, primitiveType string, op, value, comment string, isList bool, guessed Guessed) {
+	defer tracecall("checklineMkVartypePrimitive", varname, primitiveType, op, value, comment, isList, guessed)()
 
 	ctx := &CheckVartype{line, varname, op, value, "", comment, isList, guessed == GUESSED}
 	ctx.valueNovar = resolveVariableRefs(value)
-	switch vartype.basicType {
+	switch primitiveType {
 	case "AwkCommand":
 		ctx.AwkCommand()
 	case "BrokenIn":
@@ -724,6 +709,6 @@ func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, v
 	case "YesNo_Indirectly":
 		ctx.YesNo_Indirectly()
 	default:
-		internalError("checklineMkVartypeBasic", vartype.basicType)
+		internalError("checklineMkVartypePrimitive", primitiveType)
 	}
 }
