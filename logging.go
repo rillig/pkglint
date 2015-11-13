@@ -106,3 +106,7 @@ func printSummary() {
 		}
 	}
 }
+
+func internalError(args ...interface{}) {
+	logFatal(NO_FILE, NO_LINES, argsStr(args))
+}

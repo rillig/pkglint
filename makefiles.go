@@ -2,7 +2,6 @@ package main
 
 import (
 	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -84,12 +83,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 					if path.Base(includeFile) == "Makefile.common" {
 						makefileCommonLines := (*allLines)[lengthBeforeInclude:]
-						relpath, err := filepath.Rel(G.globalData.pkgsrcdir, fname)
-						if err != nil {
-							line.logError("Cannot determine relative path.")
-							return false
-						}
-						checkForUsedComment(makefileCommonLines, relpath)
+						checkForUsedComment(makefileCommonLines, relpath(G.globalData.pkgsrcdir, fname))
 					}
 				}
 			}
@@ -119,7 +113,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 
 	lastCommentLine := 0
 	for i, line := range lines {
-		if !match0(line.text, reMkComment) {
+		if m, _ := match1(line.text, reMkComment); m {
 			break
 		}
 		lastCommentLine = i

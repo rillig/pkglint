@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -361,4 +362,14 @@ func mkopSubst(s string, left bool, from string, right bool, to string, all bool
 		}
 		return match
 	})
+}
+
+func relpath(from, to string) string {
+	absFrom, err1 := filepath.Abs(from)
+	absTo, err2 := filepath.Abs(to)
+	rel, err3 := filepath.Rel(absFrom, absTo)
+	if err1 != nil || err2 != nil || err3 != nil {
+		internalError("relpath", from, to, err1, err2, err3)
+	}
+	return rel
 }
