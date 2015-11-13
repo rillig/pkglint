@@ -606,5 +606,120 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 }
 
 func checklineMkVartypeBasic(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
-	notImplemented("checklineMkVartypeBasic")
+	ctx := &CheckVartype{line, varname, op, value, "", comment, isList, guessed == GUESSED}
+	ctx.valueNovar = resolveVariableRefs(value)
+	switch vartype.basicType {
+	case "AwkCommand":
+		ctx.AwkCommand()
+	case "BrokenIn":
+		ctx.BrokenIn()
+	case "BuildlinkDepmethod":
+		ctx.BuildlinkDepmethod()
+	case "BuildlinkDepth":
+		ctx.BuildlinkDepth()
+	case "Category":
+		ctx.Category()
+	case "CFlag":
+		ctx.CFlag()
+	case "Comment":
+		ctx.Comment()
+	case "Dependency":
+		ctx.Dependency()
+	case "DependencyWithPath":
+		ctx.DependencyWithPath()
+	case "DistSuffix":
+		ctx.DistSuffix()
+	case "EmulPlatform":
+		ctx.EmulPlatform()
+	case "FetchURL":
+		ctx.FetchURL()
+	case "Filename":
+		ctx.Filename()
+	case "Filemask":
+		ctx.Filemask()
+	case "FileMode":
+		ctx.FileMode()
+	case "Identifier":
+		ctx.Identifier()
+	case "Integer":
+		ctx.Integer()
+	case "LdFlag":
+		ctx.LdFlag()
+	case "License":
+		ctx.License()
+	case "MailAddress":
+		ctx.MailAddress()
+	case "Message":
+		ctx.Message()
+	case "Option":
+		ctx.Option()
+	case "Pathlist":
+		ctx.Pathlist()
+	case "Pathmask":
+		ctx.Pathmask()
+	case "Pathname":
+		ctx.Pathname()
+	case "Perl5Packlist":
+		ctx.Perl5Packlist()
+	case "PkgName":
+		ctx.PkgName()
+	case "PkgPath":
+		ctx.PkgPath()
+	case "PkgOptionsVar":
+		ctx.PkgOptionsVar()
+	case "PkgRevision":
+		ctx.PkgRevision()
+	case "PlatformTriple":
+		ctx.PlatformTriple()
+	case "PrefixPathname":
+		ctx.PrefixPathname()
+	case "PythonDependency":
+		ctx.PythonDependency()
+	case "RelativePkgDir":
+		ctx.RelativePkgDir()
+	case "RelativePkgPath":
+		ctx.RelativePkgPath()
+	case "Restricted":
+		ctx.Restricted()
+	case "SedCommand":
+		ctx.SedCommand()
+	case "SedCommands":
+		ctx.SedCommands()
+	case "ShellCommand":
+		ctx.ShellCommand()
+	case "ShellWord":
+		ctx.ShellWord()
+	case "Stage":
+		ctx.Stage()
+	case "String":
+		ctx.String()
+	case "Tool":
+		ctx.Tool()
+	case "Unchecked":
+		ctx.Unchecked()
+	case "URL":
+		ctx.URL()
+	case "UserGroupName":
+		ctx.UserGroupName()
+	case "Varname":
+		ctx.Varname()
+	case "Version":
+		ctx.Version()
+	case "WrapperReorder":
+		ctx.WrapperReorder()
+	case "WrapperTransform":
+		ctx.WrapperTransform()
+	case "WrkdirSubdirectory":
+		ctx.WrkdirSubdirectory()
+	case "WrksrcSubdirectory":
+		ctx.WrksrcSubdirectory()
+	case "Yes":
+		ctx.Yes()
+	case "YesNo":
+		ctx.YesNo()
+	case "YesNo_Indirectly":
+		ctx.YesNo_Indirectly()
+	default:
+		internalError("checklineMkVartypeBasic", vartype.basicType)
+	}
 }

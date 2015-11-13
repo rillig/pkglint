@@ -39,7 +39,7 @@ func (s *CaptureOutputSuite) TestChecklinesPatch_WithoutComment(c *check.C) {
 
 	checklinesPatch(lines)
 
-	c.Check(G.errors, equals, 1) 
+	c.Check(G.errors, equals, 1)
 	c.Check(G.warnings, equals, 0)
 	c.Check(s.Stdout(), equals, "ERROR: patch-as:3: Comment expected.\n")
 }

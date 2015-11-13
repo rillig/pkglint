@@ -306,9 +306,11 @@ func getNbpart() string {
 // or nil if the type cannot even be guessed.
 func getVariableType(line *Line, varname string) *Vartype {
 
-	vartype := G.globalData.getVartypes()[varname]
-	if vartype == nil {
-		vartype = G.globalData.getVartypes()[varnameCanon(varname)]
+	if vartype := G.globalData.getVartypes()[varname]; vartype != nil {
+		return vartype
+	}
+	if vartype := G.globalData.getVartypes()[varnameCanon(varname)]; vartype != nil {
+		return vartype
 	}
 
 	if G.globalData.varnameToToolname[varname] != "" {
@@ -324,36 +326,34 @@ func getVariableType(line *Line, varname string) *Vartype {
 
 	// Guess the datatype of the variable based on naming conventions.
 	var gtype *Vartype
-	if m, suffix := match1(varname, `(DIRS|DIR|FILES|FILE|PATH|PATHS|_USER|_GROUP|_ENV|_CMD|_ARGS|_CFLAGS|_CPPFLAGS|_CXXFLAGS|_LDFLAGS|_MK)$`); m {
-		switch suffix {
-		case "DIRS":
-			gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
-		case "DIR", "_HOME":
-			gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
-		case "FILES":
-			gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
-		case "FILE":
-			gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
-		case "PATH":
-			gtype = newBasicVartype(LK_NONE, "Pathlist", allowRuntime, GUESSED)
-		case "PATHS":
-			gtype = newBasicVartype(LK_EXTERNAL, "Pathname", allowRuntime, GUESSED)
-		case "_USER":
-			gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
-		case "_GROUP":
-			gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
-		case "_ENV":
-			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
-		case "_CMD":
-			gtype = newBasicVartype(LK_NONE, "ShellCommand", allowRuntime, GUESSED)
-		case "_ARGS":
-			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
-		case "_CFLAGS", "_CPPFLAGS", "_CXXFLAGS", "_LDFLAGS":
-			gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
-		case "_MK":
-			gtype = newBasicVartype(LK_NONE, "Unchecked", allowAll, GUESSED)
-		}
-	} else if hasPrefix(varname, "PLIST.") {
+	switch {
+	case hasSuffix(varname, "DIRS"):
+		gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
+	case hasSuffix(varname, "DIR"), hasSuffix(varname, "_HOME"):
+		gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
+	case hasSuffix(varname, "FILES"):
+		gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
+	case hasSuffix(varname, "FILE"):
+		gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
+	case hasSuffix(varname, "PATH"):
+		gtype = newBasicVartype(LK_NONE, "Pathlist", allowRuntime, GUESSED)
+	case hasSuffix(varname, "PATHS"):
+		gtype = newBasicVartype(LK_EXTERNAL, "Pathname", allowRuntime, GUESSED)
+	case hasSuffix(varname, "_USER"):
+		gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
+	case hasSuffix(varname, "_GROUP"):
+		gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
+	case hasSuffix(varname, "_ENV"):
+		gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
+	case hasSuffix(varname, "_CMD"):
+		gtype = newBasicVartype(LK_NONE, "ShellCommand", allowRuntime, GUESSED)
+	case hasSuffix(varname, "_ARGS"):
+		gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
+	case hasSuffix(varname, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"), hasSuffix(varname, "_LDFLAGS"):
+		gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
+	case hasSuffix(varname, "_MK"):
+		gtype = newBasicVartype(LK_NONE, "Unchecked", allowAll, GUESSED)
+	case hasPrefix(varname, "PLIST."):
 		gtype = newBasicVartype(LK_NONE, "Yes", allowAll, GUESSED)
 	}
 

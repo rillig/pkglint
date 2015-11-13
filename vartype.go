@@ -16,8 +16,8 @@ type Vartype struct {
 type Guessed bool
 
 const (
-	GUESSED     Guessed = false
-	NOT_GUESSED Guessed = true
+	NOT_GUESSED Guessed = false
+	GUESSED     Guessed = true
 )
 
 func newBasicVartype(kindOfList KindOfList, basicType string, aclEntries []AclEntry, guessed Guessed) *Vartype {
