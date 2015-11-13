@@ -25,7 +25,7 @@ func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
 	c.Check(G.warnings, equals, 0)
 }
 
-func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
+func (s *CaptureOutputSuite) TestChecklinesPatch_WithoutComment(c *check.C) {
 	lines := mklines("patch-as",
 		"$"+"NetBSD$",
 		"",
@@ -39,6 +39,7 @@ func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
 
 	checklinesPatch(lines)
 
-	c.Check(G.errors, equals, 1) // patch-as:3: Comment expected
+	c.Check(G.errors, equals, 1) 
 	c.Check(G.warnings, equals, 0)
+	c.Check(s.Stdout(), equals, "ERROR: patch-as:3: Comment expected.\n")
 }

@@ -1,9 +1,10 @@
 package main
 
+import (
+	"io"
+)
+
 type GlobalVars struct {
-	errors       int
-	warnings     int
-	traceDepth   int
 	curPkgsrcdir *string // The pkgsrc directory, relative to the directory that is currently checked.
 	opts         CmdOpts
 	globalData   GlobalData
@@ -18,6 +19,12 @@ type GlobalVars struct {
 	ipcUsedLicenses            map[string]bool  // asdf
 	ipcCheckingRootRecursively bool             // Only in this case is ipcUsedLicenses filled.
 	todo                       []string         // The list of directory entries that still need to be checked. Mostly relevant with --recursive.
+
+	errors     int
+	warnings   int
+	traceDepth int
+	logOut     io.Writer
+	logErr     io.Writer
 }
 
 type Hash struct {
