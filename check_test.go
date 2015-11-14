@@ -36,6 +36,15 @@ func (s *CaptureOutputSuite) Stderr() string {
 	return s.stderr.String()
 }
 
+func (s *CaptureOutputSuite) Output() string {
+	return s.Stdout() + s.Stderr()
+}
+
+func (s *CaptureOutputSuite) ResetOutput() {
+	s.stdout.Reset()
+	s.stderr.Reset()
+}
+
 func (s *CaptureOutputSuite) SetUpTest(c *check.C) {
 	G = &GlobalVars{}
 	G.logOut = &s.stdout
@@ -44,8 +53,7 @@ func (s *CaptureOutputSuite) SetUpTest(c *check.C) {
 
 func (s *CaptureOutputSuite) TearDownTest(c *check.C) {
 	G = nil
-	s.stdout.Reset()
-	s.stderr.Reset()
+	s.ResetOutput()
 }
 
 var _ = check.Suite(&CaptureOutputSuite{})

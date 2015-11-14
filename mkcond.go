@@ -24,7 +24,35 @@ func parseMkCond(line *Line, cond string) *Tree {
 		return NewTree("empty", NewTree("match", m[1], m[2]))
 	}
 	if m, _ := replaceFirst(cond, reCompare, ""); m != nil {
-		return NewTree(m[2], NewTree("var", m[1]), NewTree("string", m[3]))
+		return NewTree("compareVarStr", m[1], m[2], m[3])
 	}
 	return NewTree("unknown", cond)
+}
+
+func checklineMkCondition(line *Line, condition string) {
+	defer tracecall("checklineMkCond", condition)()
+
+	tree := parseMkCond(line, condition)
+
+	{
+		var pvarname, pmatch *string
+		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &pmatch)))) {
+			varname, match := *pvarname, *pmatch
+			vartype := getVariableType(line, varname)
+			if vartype.enumValues != nil {
+				if !matches(match, `[\$\[*]`) && !vartype.enumValues[match] {
+					line.logWarning("Invalid :M value %q. Only { %s } are allowed.", match, vartype.enumValuesStr)
+				}
+			}
+			return
+		}
+	}
+
+	{
+		var pop, pvarname, pvalue *string
+		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
+			varname, _, value := *pvarname, *pop, *pvalue
+			checklineMkVartype(line, varname, "use", value, "")
+		}
+	}
 }

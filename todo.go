@@ -16,9 +16,6 @@ func notImplemented(funcname string) {
 	}
 }
 
-func checklineMkCond(line *Line, args string) {
-	notImplemented("checklineMkCond")
-}
 func loadDocChanges(fname string) {
 	notImplemented("loadDocChanges")
 }
