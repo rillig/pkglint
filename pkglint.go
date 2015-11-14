@@ -674,7 +674,7 @@ func checkfile(fname string) {
 
 	case matches(basename, `^distinfo`):
 		if G.opts.optCheckDistinfo {
-			checkfileDistinfo(fname)
+			CheckfileDistinfo(fname)
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
