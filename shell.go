@@ -63,7 +63,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 		return
 	}
 
-	shellcommandContextType := newBasicVartype(LK_NONE, "ShellCommand", []AclEntry{{"*", "adsu"}}, NOT_GUESSED)
+	shellcommandContextType := &Vartype{LK_NONE, CheckvarShellCommand, []AclEntry{{"*", "adsu"}}, NOT_GUESSED}
 	shellwordVuc := &VarUseContext{VUC_TIME_UNKNOWN, shellcommandContextType, VUC_SHW_PLAIN, VUC_EXT_WORD}
 
 	line := msline.line
@@ -500,7 +500,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 			switch {
 			case plainTool != "" && !G.mkContext.tools[plainTool]:
 				line.warnf("The %q tool is used but not added to USE_TOOLS.", plainTool)
-			case vartype != nil && vartype.basicType == "ShellCommand":
+			case vartype != nil && vartype.checker == CheckvarShellCommand:
 				checklineMkShellcmdUse(line, shellword)
 			case G.pkgContext.vardef[vartool] != nil:
 				// This command has been explicitly defined in the package; assume it to be valid.

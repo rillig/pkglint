@@ -554,25 +554,19 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 }
 
 func checklineMkVartypeNolist(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
-	if len(vartype.enumValues) != 0 {
-		if !vartype.enumValues[value] {
-			line.warnf("%q is not valid for %s. Use one of { %s } instead.", value, varname, vartype.enumValuesStr)
-		}
-	} else {
-		checklineMkVartypePrimitive(line, varname, vartype.basicType, op, value, comment, isList, guessed)
-	}
+	checklineMkVartypePrimitive(line, varname, vartype.checker, op, value, comment, isList, guessed)
 }
 
 // The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
 // For some variables (like BuildlinkDepth or BuildlinkPackages), the operator influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func checklineMkVartypePrimitive(line *Line, varname string, primitiveType string, op, value, comment string, isList bool, guessed Guessed) {
-	defer tracecall("checklineMkVartypePrimitive", varname, primitiveType, op, value, comment, isList, guessed)()
+func checklineMkVartypePrimitive(line *Line, varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
+	defer tracecall("checklineMkVartypePrimitive", varname, op, value, comment, isList, guessed)()
 
 	ctx := &CheckVartype{line, varname, op, value, "", comment, isList, guessed == GUESSED}
 	ctx.valueNovar = withoutMakeVariables(line, value, isList)
 
-	lookupPrimitiveCheck(primitiveType)(ctx)
+	checker.checker(ctx)
 }
 
 func withoutMakeVariables(line *Line, value string, qModifierAllowed bool) string {

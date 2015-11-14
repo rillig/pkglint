@@ -10,7 +10,7 @@ func (s *Suite) TestVartypeEffectivePermissions(c *check.C) {
 	{
 		t := aclVartypes["PREFIX"]
 
-		c.Check(t.basicType, equals, "Pathname")
+		c.Check(t.checker.name, equals, "Pathname")
 		c.Check(t.aclEntries, check.DeepEquals, []AclEntry{{glob: "*", permissions: "u"}})
 		c.Check(t.effectivePermissions("Makefile"), equals, "u")
 	}
@@ -18,7 +18,7 @@ func (s *Suite) TestVartypeEffectivePermissions(c *check.C) {
 	{
 		t := aclVartypes["EXTRACT_OPTS"]
 
-		c.Check(t.basicType, equals, "ShellWord")
+		c.Check(t.checker.name, equals, "ShellWord")
 		c.Check(t.effectivePermissions("Makefile"), equals, "as")
 		c.Check(t.effectivePermissions("../Makefile"), equals, "as")
 		c.Check(t.effectivePermissions("options.mk"), equals, "")

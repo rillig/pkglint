@@ -27,9 +27,9 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 		return NQ_DONT_KNOW
 	}
 
-	switch vartype.basicType {
+	cond := vartype.checker.IsEnum()
+	switch vartype.checker.name {
 	case "DistSuffix",
-		"enum",
 		"FileMode", "Filename",
 		"Identifier",
 		"Option",
@@ -38,6 +38,9 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 		"UserGroupName",
 		"Varname", "Version",
 		"WrkdirSubdirectory":
+		cond = true
+	}
+	if cond {
 		if vartype.kindOfList == LK_NONE {
 			return NQ_DOESNT_MATTER
 		}
@@ -63,7 +66,7 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if context.extent == VUC_EXT_WORDPART && context.shellword == VUC_SHW_PLAIN {
-		if vartype.kindOfList == LK_NONE && vartype.basicType == "ShellWord" {
+		if vartype.kindOfList == LK_NONE && vartype.checker.name == "ShellWord" {
 			return NQ_NO
 		}
 	}

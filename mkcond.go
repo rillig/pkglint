@@ -39,9 +39,9 @@ func checklineMkCondition(line *Line, condition string) {
 		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &pmatch)))) {
 			varname, match := *pvarname, *pmatch
 			vartype := getVariableType(line, varname)
-			if vartype != nil && vartype.enumValues != nil {
-				if !matches(match, `[\$\[*]`) && !vartype.enumValues[match] {
-					line.warnf("Invalid :M value %q. Only { %s } are allowed.", match, vartype.enumValuesStr)
+			if vartype != nil && vartype.checker.IsEnum() {
+				if !matches(match, `[\$\[*]`) && !vartype.checker.HasEnum(match) {
+					line.warnf("Invalid :M value %q. Only { %s } are allowed.", match, vartype.checker.AllowedEnums())
 				}
 			}
 			return

@@ -319,11 +319,11 @@ func getVariableType(line *Line, varname string) *Vartype {
 	}
 
 	if G.globalData.varnameToToolname[varname] != "" {
-		return newBasicVartype(LK_NONE, "ShellCommand", []AclEntry{{"*", "u"}}, NOT_GUESSED)
+		return &Vartype{LK_NONE, CheckvarShellCommand, []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
 	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
-		return newBasicVartype(LK_NONE, "Pathname", []AclEntry{{"*", "u"}}, NOT_GUESSED)
+		return &Vartype{LK_NONE, CheckvarPathname, []AclEntry{{"*", "u"}}, NOT_GUESSED}
 	}
 
 	allowAll := []AclEntry{{"*", "adpsu"}}
@@ -333,33 +333,33 @@ func getVariableType(line *Line, varname string) *Vartype {
 	var gtype *Vartype
 	switch {
 	case hasSuffix(varname, "DIRS"):
-		gtype = newBasicVartype(LK_SHELL, "Pathmask", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_SHELL, CheckvarPathmask, allowRuntime, GUESSED}
 	case hasSuffix(varname, "DIR"), hasSuffix(varname, "_HOME"):
-		gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarPathname, allowRuntime, GUESSED}
 	case hasSuffix(varname, "FILES"):
-		gtype = newBasicVartype(LK_SHELL, "Pathmask", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_SHELL, CheckvarPathmask, allowRuntime, GUESSED}
 	case hasSuffix(varname, "FILE"):
-		gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarPathname, allowRuntime, GUESSED}
 	case hasSuffix(varname, "PATH"):
-		gtype = newBasicVartype(LK_NONE, "Pathlist", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarPathlist, allowRuntime, GUESSED}
 	case hasSuffix(varname, "PATHS"):
-		gtype = newBasicVartype(LK_SHELL, "Pathname", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_SHELL, CheckvarPathname, allowRuntime, GUESSED}
 	case hasSuffix(varname, "_USER"):
-		gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarUserGroupName, allowAll, GUESSED}
 	case hasSuffix(varname, "_GROUP"):
-		gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarUserGroupName, allowAll, GUESSED}
 	case hasSuffix(varname, "_ENV"):
-		gtype = newBasicVartype(LK_SHELL, "ShellWord", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_SHELL, CheckvarShellWord, allowRuntime, GUESSED}
 	case hasSuffix(varname, "_CMD"):
-		gtype = newBasicVartype(LK_NONE, "ShellCommand", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarShellCommand, allowRuntime, GUESSED}
 	case hasSuffix(varname, "_ARGS"):
-		gtype = newBasicVartype(LK_SHELL, "ShellWord", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_SHELL, CheckvarShellWord, allowRuntime, GUESSED}
 	case hasSuffix(varname, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"), hasSuffix(varname, "_LDFLAGS"):
-		gtype = newBasicVartype(LK_SHELL, "ShellWord", allowRuntime, GUESSED)
+		gtype = &Vartype{LK_SHELL, CheckvarShellWord, allowRuntime, GUESSED}
 	case hasSuffix(varname, "_MK"):
-		gtype = newBasicVartype(LK_NONE, "Unchecked", allowAll, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarUnchecked, allowAll, GUESSED}
 	case hasPrefix(varname, "PLIST."):
-		gtype = newBasicVartype(LK_NONE, "Yes", allowAll, GUESSED)
+		gtype = &Vartype{LK_NONE, CheckvarYes, allowAll, GUESSED}
 	}
 
 	if gtype != nil {

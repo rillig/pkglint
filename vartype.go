@@ -5,12 +5,10 @@ import (
 )
 
 type Vartype struct {
-	kindOfList    KindOfList
-	basicType     string
-	enumValues    map[string]bool
-	enumValuesStr string
-	aclEntries    []AclEntry
-	guessed       Guessed
+	kindOfList KindOfList
+	checker    *VarChecker
+	aclEntries []AclEntry
+	guessed    Guessed
 }
 
 type Guessed bool
@@ -19,18 +17,6 @@ const (
 	NOT_GUESSED Guessed = false
 	GUESSED     Guessed = true
 )
-
-func newBasicVartype(kindOfList KindOfList, basicType string, aclEntries []AclEntry, guessed Guessed) *Vartype {
-	return &Vartype{kindOfList, basicType, nil, "", aclEntries, guessed}
-}
-
-func newEnumVartype(kindOfList KindOfList, enumValues string, aclEntries []AclEntry, guessed Guessed) *Vartype {
-	emap := make(map[string]bool)
-	for _, evalue := range splitOnSpace(enumValues) {
-		emap[evalue] = true
-	}
-	return &Vartype{kindOfList, "", emap, enumValues, aclEntries, guessed}
-}
 
 func (self *Vartype) effectivePermissions(fname string) string {
 	for _, aclEntry := range self.aclEntries {
@@ -59,11 +45,11 @@ func (self *Vartype) isConsideredList() bool {
 		return true
 	case self.kindOfList == LK_SPACE:
 		return false
-	case self.basicType == "BuildlinkPackages":
+	case self.checker.name == "BuildlinkPackages":
 		return true
-	case self.basicType == "SedCommands":
+	case self.checker.name == "SedCommands":
 		return true
-	case self.basicType == "ShellCommand":
+	case self.checker.name == "ShellCommand":
 		return true
 	default:
 		return false
@@ -72,19 +58,19 @@ func (self *Vartype) isConsideredList() bool {
 
 func (self *Vartype) mayBeAppendedTo() bool {
 	return self.kindOfList != LK_NONE ||
-		self.basicType == "AwkCommand" ||
-		self.basicType == "BuildlinkPackages" ||
-		self.basicType == "SedCommands"
+		self.checker.name == "AwkCommand" ||
+		self.checker.name == "BuildlinkPackages" ||
+		self.checker.name == "SedCommands"
 }
 
 func (self *Vartype) String() string {
 	switch self.kindOfList {
 	case LK_NONE:
-		return self.basicType
+		return self.checker.name
 	case LK_SPACE:
-		return "SpaceList of " + self.basicType
+		return "SpaceList of " + self.checker.name
 	case LK_SHELL:
-		return "ShellList of " + self.basicType
+		return "ShellList of " + self.checker.name
 	default:
 		panic("")
 	}
