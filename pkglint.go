@@ -11,13 +11,6 @@ import (
 	"strings"
 )
 
-type CvsEntry struct {
-	fname    string
-	revision string
-	mtime    string
-	tag      string
-}
-
 const (
 	reDependencyCmp            = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$`
 	reDependencyWildcard       = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
