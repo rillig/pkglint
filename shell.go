@@ -5,6 +5,7 @@ package main
 import (
 	"path"
 	"strings"
+	"unicode"
 )
 
 func checklineMkShellword(line *Line, word string, checkQuoting bool) {
@@ -791,8 +792,9 @@ func splitIntoShellwords(line *Line, text string) ([]string, string) {
 	for replacestart(&rest, &m, reShellword) {
 		words = append(words, m[1])
 	}
-	rest = strings.TrimSpace(rest)
-	if rest != "" {
+
+	rest = strings.TrimLeftFunc(rest, unicode.IsSpace)
+	if rest != "" && rest != "\\" {
 		line.errorf("Internal pkglint error: splitIntoShellwords rest=%q text=%q", rest, text)
 	}
 	return words, rest
