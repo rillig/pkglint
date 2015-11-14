@@ -9,11 +9,11 @@ const (
 	NQ_DONT_KNOW
 )
 
-func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) NeedsQuoting {
-	defer tracecall("variableNeedsQuoting", varname, context)()
+func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQuoting {
+	defer tracecall("variableNeedsQuoting", varname, *vuc)()
 
 	vartype := getVariableType(line, varname)
-	if vartype == nil || context.vartype == nil {
+	if vartype == nil || vuc.vartype == nil {
 		return NQ_DONT_KNOW
 	}
 
@@ -34,7 +34,7 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 		if vartype.kindOfList == LK_NONE {
 			return NQ_DOESNT_MATTER
 		}
-		if vartype.kindOfList == LK_SHELL && context.extent != VUC_EXT_WORDPART {
+		if vartype.kindOfList == LK_SHELL && vuc.extent != VUC_EXT_WORDPART {
 			return NQ_NO
 		}
 	}
@@ -42,20 +42,20 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 	// In .for loops, the :Q operator is always misplaced, since
 	// the items are broken up at white-space, not as shell words
 	// like in all other parts of make(1).
-	if context.shellword == VUC_SHW_FOR {
+	if vuc.shellword == VUC_SHW_FOR {
 		return NQ_NO
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := context.vartype.isConsideredList() && (context.shellword == VUC_SHW_BACKT || context.extent != VUC_EXT_WORDPART)
+	wantList := vuc.vartype.isConsideredList() && (vuc.shellword == VUC_SHW_BACKT || vuc.extent != VUC_EXT_WORDPART)
 	haveList := vartype.isConsideredList()
 
 	_ = G.opts.DebugQuoting && line.debugf(
 		"variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
-		varname, context, vartype, wantList, haveList)
+		varname, vuc, vartype, wantList, haveList)
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
-	if context.extent == VUC_EXT_WORDPART && context.shellword == VUC_SHW_PLAIN {
+	if vuc.extent == VUC_EXT_WORDPART && vuc.shellword == VUC_SHW_PLAIN {
 		if vartype.kindOfList == LK_NONE && vartype.checker.name == "ShellWord" {
 			return NQ_NO
 		}
@@ -64,9 +64,9 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 	// Assuming the tool definitions don't include very special characters,
 	// so they can safely be used inside any quotes.
 	if G.globalData.varnameToToolname[varname] != "" {
-		shellword := context.shellword
+		shellword := vuc.shellword
 		switch {
-		case shellword == VUC_SHW_PLAIN && context.extent != VUC_EXT_WORDPART:
+		case shellword == VUC_SHW_PLAIN && vuc.extent != VUC_EXT_WORDPART:
 			return NQ_NO
 		case shellword == VUC_SHW_BACKT:
 			return NQ_NO
@@ -79,7 +79,7 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 	// to be quoted. An exception is in the case of backticks,
 	// because the whole backticks expression is parsed as a single
 	// shell word by pkglint.
-	if context.extent == VUC_EXT_WORDPART && context.shellword != VUC_SHW_BACKT {
+	if vuc.extent == VUC_EXT_WORDPART && vuc.shellword != VUC_SHW_BACKT {
 		return NQ_YES
 	}
 
