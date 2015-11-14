@@ -105,7 +105,6 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 func checkForUsedComment(lines []*Line, relativeName string) {
 	expected := "# used by " + relativeName
-
 	for _, line := range lines {
 		if line.text == expected {
 			return
@@ -120,7 +119,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 		lastCommentLine = i
 	}
 
-	insertLine := lines[lastCommentLine+1]
+	insertLine := lines[imin(lastCommentLine+1, len(lines)-1)]
 	insertLine.warnf("Please add a line %q here.", expected)
 	insertLine.explainWarning(
 		"Since Makefile.common files usually don't have any comments and",

@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+func imin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func intMax(a, b int) int {
 	if a > b {
 		return a
