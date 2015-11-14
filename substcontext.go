@@ -4,7 +4,6 @@ package main
 // class (see mk/subst.mk).
 type SubstContext struct {
 	id        *string
-	class     *string
 	stage     *string
 	message   *string
 	files     []string
@@ -13,9 +12,12 @@ type SubstContext struct {
 	filterCmd *string
 }
 
-func (self *SubstContext) isComplete() bool {
-	return self.id != nil && self.class != nil && len(self.files) != 0 && (len(self.sed) != 0 || len(self.vars) != 0 || self.filterCmd != nil)
+func (ctx *SubstContext) isComplete() bool {
+	return ctx.id != nil &&
+		len(ctx.files) != 0 &&
+		(len(ctx.sed) != 0 || len(ctx.vars) != 0 || ctx.filterCmd != nil)
 }
+
 func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) {
 	if !G.opts.optWarnExtra {
 		return
@@ -26,22 +28,24 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 		if len(classes) > 1 {
 			line.logWarning("Please add only one class at a time to SUBST_CLASSES.")
 		}
-		if self.class != nil {
+		if self.id != nil {
 			line.logWarning("SUBST_CLASSES should only appear once in a SUBST block.")
 		}
 		self.id = &classes[0]
-		self.class = &classes[0]
 		return
 	}
 
-	var varbase, varparam string
-	if m, varparam := match1(varname, `^SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD)\.([\-\w_]+)$`); m {
-		if self.id == nil {
-			line.logWarning("SUBST_CLASSES should come before the definition of %q.", varname)
-			self.id = &varparam
+	m, varbase, varparam := match2(varname, `^(SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD))\.([\-\w_]+)$`)
+	if !m {
+		if self.id != nil {
+			line.logWarning("Foreign variable %q in SUBST block.", varname)
 		}
-	} else if self.id != nil {
-		line.logWarning("Foreign variable in SUBST block.")
+		return
+	}
+
+	if self.id == nil {
+		line.logWarning("SUBST_CLASSES should come before the definition of %q.", varname)
+		self.id = &varparam
 	}
 
 	if self.id != nil && varparam != *self.id {
@@ -52,10 +56,9 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 
 			// The following assignment prevents an additional warning,
 			// but from a technically viewpoint, it is incorrect.
-			self.class = &varparam
 			self.id = &varparam
 		} else {
-			line.logWarning("Variable parameter %q does not match SUBST class %q.", varparam, self.id)
+			line.logWarning("Variable parameter %q does not match SUBST class %q.", varparam, *self.id)
 		}
 		return
 	}
@@ -95,11 +98,12 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 		line.logWarning("Foreign variable in SUBST block.")
 	}
 }
+
 func (self *SubstContext) finish(line *Line) {
 	if self.id == nil || !G.opts.optWarnExtra {
 		return
 	}
-	if self.class == nil {
+	if self.id == nil {
 		line.logWarning("Incomplete SUBST block: SUBST_CLASSES missing.")
 	}
 	if self.stage == nil {
@@ -112,7 +116,6 @@ func (self *SubstContext) finish(line *Line) {
 		line.logWarning("Incomplete SUBST block: SUBST_SED, SUBST_VARS or SUBST_FILTER_CMD missing.")
 	}
 	self.id = nil
-	self.class = nil
 	self.stage = nil
 	self.message = nil
 	self.files = self.files[:0]
