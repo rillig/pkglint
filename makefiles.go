@@ -160,7 +160,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		}
 	}
 
-	_ = G.opts.optDebugMisc && debugf(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	_ = G.opts.optDebugMisc && dummyLine.debugf("resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	return tmp
 }
 
@@ -378,7 +378,7 @@ func checklinesMk(lines []*Line) {
 			comment := text[negToZero(m[8]):negToZero(m[9])]
 
 			if align != " " && !matches(align, `^\t*$`) {
-				_ = G.opts.optWarnSpace && line.notef("Alignment of variable values should be done with tabs, not spaces.")
+				_ = G.opts.optWarnSpace && line.notef("Alignment of variable values should be done with tabs, not spaces.%s", "")
 				prefix := varname + space1 + op
 				alignedLen := tabLength(prefix + align)
 				if alignedLen%8 == 0 {

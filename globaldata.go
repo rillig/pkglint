@@ -194,12 +194,12 @@ func (self *GlobalData) loadTools() {
 	}
 
 	if G.opts.optDebugTools {
-		debugf(NO_FILE, NO_LINES, "tools: %v", tools)
-		debugf(NO_FILE, NO_LINES, "vartools: %v", vartools)
-		debugf(NO_FILE, NO_LINES, "predefinedTools: %v", predefinedTools)
-		debugf(NO_FILE, NO_LINES, "varnameToToolname: %v", varnameToToolname)
+		dummyLine.debugf("tools: %v", tools)
+		dummyLine.debugf("vartools: %v", vartools)
+		dummyLine.debugf("predefinedTools: %v", predefinedTools)
+		dummyLine.debugf("varnameToToolname: %v", varnameToToolname)
 	}
-	_ = G.opts.optDebugMisc && debugf(NO_FILE, NO_LINES, "systemBuildDefs: %v", systemBuildDefs)
+	_ = G.opts.optDebugMisc && dummyLine.debugf("systemBuildDefs: %v", systemBuildDefs)
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to

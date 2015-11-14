@@ -23,6 +23,8 @@ var (
 	LL_DEBUG = LogLevel{"DEBUG", "debug"}
 )
 
+var dummyLine = NewLine(NO_FILE, NO_LINES, "", nil)
+
 func logMessage(level LogLevel, fname, lineno, message string) {
 	if fname != NO_FILE {
 		fname = path.Clean(fname)

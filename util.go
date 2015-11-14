@@ -337,7 +337,7 @@ func argsStr(args ...interface{}) string {
 
 func trace(action, funcname string, args ...interface{}) {
 	if G.opts.optDebugTrace {
-		debugf(NO_FILE, NO_LINES, "%s%s%s(%s)", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...))
+		dummyLine.debugf("%s%s%s(%s)", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...))
 	}
 }
 func tracecall(funcname string, args ...interface{}) func() {

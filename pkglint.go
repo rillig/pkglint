@@ -249,10 +249,10 @@ func loadPackageMakefile(fname string) []*Line {
 	}
 
 	_ = G.opts.optDebugMisc &&
-		debugf(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
-		debugf(NO_FILE, NO_LINES, "FILESDIR=%s", G.pkgContext.filesdir) &&
-		debugf(NO_FILE, NO_LINES, "PATCHDIR=%s", G.pkgContext.patchdir) &&
-		debugf(NO_FILE, NO_LINES, "PKGDIR=%s", *G.pkgContext.pkgdir)
+		dummyLine.debugf("DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
+		dummyLine.debugf("FILESDIR=%s", G.pkgContext.filesdir) &&
+		dummyLine.debugf("PATCHDIR=%s", G.pkgContext.patchdir) &&
+		dummyLine.debugf("PKGDIR=%s", *G.pkgContext.pkgdir)
 
 	return mainLines
 }
@@ -407,7 +407,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	value = resolveVarsInRelativePath(value, true)
 	if matches(value, reUnresolvedVar) {
 		value = resolveVariableRefs(value)
-		_ = G.opts.optDebugMisc && debugf(NO_FILE, NO_LINES, "expandVariableWithDefault: failed varname=%q value=%q", varname, value)
+		_ = G.opts.optDebugMisc && dummyLine.debugf("expandVariableWithDefault: failed varname=%q value=%q", varname, value)
 	}
 	return value
 }

@@ -81,7 +81,7 @@ func (cv *CheckVartype) CFlag() {
 		return
 	}
 	if !matches(value, reUnresolvedVar) {
-		line.warnf("Compiler flag %q should start with a hyphen.")
+		line.warnf("Compiler flag %q should start with a hyphen.", value)
 	}
 }
 
@@ -290,7 +290,7 @@ func (cv *CheckVartype) Identifier() {
 
 func (cv *CheckVartype) Integer() {
 	if !matches(cv.value, `^\d+$`) {
-		cv.line.warnf("Invalid integer %q.")
+		cv.line.warnf("Invalid integer %q.", cv.value)
 	}
 }
 
