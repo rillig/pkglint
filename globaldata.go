@@ -71,7 +71,7 @@ func (self *GlobalData) loadDistSites() {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
 				names[varname] = true
 				for _, url := range splitOnSpace(urls) {
-					if match0(url, `^(?:http://|https://|ftp://).+/`) {
+					if matches(url, `^(?:http://|https://|ftp://).+/`) {
 						url2name[url] = varname
 					}
 				}
@@ -131,7 +131,7 @@ func (self *GlobalData) loadTools() {
 		lines := loadExistingLines(fname, true)
 		for _, line := range lines {
 			if m, varname, _, value, _ := match4(line.text, reVarassign); m {
-				if varname == "TOOLS_CREATE" && (value == "[" || match0(value, `^?[-\w.]+$`)) {
+				if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^?[-\w.]+$`)) {
 					tools[value] = true
 				} else if m, toolname := match1(varname, `^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$`); m {
 					tools[toolname] = true
@@ -165,7 +165,7 @@ func (self *GlobalData) loadTools() {
 					_ = G.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
-							if !match0(tool, reUnresolvedVar) && tools[tool] {
+							if !matches(tool, reUnresolvedVar) && tools[tool] {
 								predefinedTools[tool] = true
 								predefinedTools["TOOLS_"+tool] = true
 							}
@@ -276,7 +276,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 	changes := make([]Change, 0)
 	for _, line := range lines {
 		text := line.text
-		if !match0(text, `^\t[A-Z]`) {
+		if !matches(text, `^\t[A-Z]`) {
 			continue
 		}
 
@@ -321,7 +321,7 @@ func (self *GlobalData) loadDocChanges() {
 	fnames := make([]string, 0)
 	for _, file := range files {
 		fname := file.Name()
-		if match0(fname, `^CHANGES-20\d\d$`) && fname >= "CHANGES-2011" {
+		if matches(fname, `^CHANGES-20\d\d$`) && fname >= "CHANGES-2011" {
 			fnames = append(fnames, fname)
 		}
 	}

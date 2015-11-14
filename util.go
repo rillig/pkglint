@@ -226,9 +226,6 @@ func matchn(s, re string, n int) []string {
 	return nil
 }
 
-func match0(s, re string) bool {
-	return matchn(s, re, 0) != nil
-}
 func match1(s, re string) (bool, string) {
 	if m := matchn(s, re, 1); m != nil {
 		return true, m[1]

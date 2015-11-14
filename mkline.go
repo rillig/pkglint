@@ -222,7 +222,7 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 	// configure scripts.
 	//
 	// When doing checks outside a package, the :M* operator is needed for safety.
-	needMstar := match0(varname, reGnuConfigureVolatileVars) &&
+	needMstar := matches(varname, reGnuConfigureVolatileVars) &&
 		(G.pkgContext == nil || G.pkgContext.vardef["GNU_CONFIGURE"] != nil)
 
 	strippedMod := mod
@@ -337,7 +337,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		}
 	}
 
-	if match0(value, `/etc/rc\.d`) {
+	if matches(value, `/etc/rc\.d`) {
 		line.logWarning("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
@@ -356,7 +356,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		}
 	}
 
-	if varname == "CONFIGURE_ARGS" && match0(value, `=\$\{PREFIX\}/share/kde`) {
+	if varname == "CONFIGURE_ARGS" && matches(value, `=\$\{PREFIX\}/share/kde`) {
 		line.logNote("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
 		line.explainNote(
 			"That file probably does many things automatically and consistently that",
@@ -378,7 +378,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		checklineMkDecreasingOrder(line, varname, value)
 	}
 
-	if comment == "# defined" && !match0(varname, `.*(?:_MK|_COMMON)$`) {
+	if comment == "# defined" && !matches(varname, `.*(?:_MK|_COMMON)$`) {
 		line.logNote("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
 		line.explainNote(
 			"The value #defined says something about the state of the variable, but",
@@ -389,9 +389,9 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 	}
 
 	if m, pkgvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
-		if match0(varname, `^PKG_.*_REASON$`) {
+		if matches(varname, `^PKG_.*_REASON$`) {
 			// ok
-		} else if match0(varname, `^(?:DIST_SUBDIR|WRKSRC)$`) {
+		} else if matches(varname, `^(?:DIST_SUBDIR|WRKSRC)$`) {
 			line.logWarning("%s should not be used in %s, as it sometimes includes the PKGREVISION. Please use %s_NOREV instead.", pkgvarname, varname, pkgvarname)
 		} else {
 			_ = G.opts.optDebugMisc && line.logDebug("Use of PKGNAME in %s.", varname)
@@ -408,7 +408,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		line.logWarning("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
-	if match0(value, `^[^=]\@comment`) {
+	if matches(value, `^[^=]\@comment`) {
 		line.logWarning("Please don't use @comment in %s.", varname)
 		line.explainWarning(
 			"Here you are defining a variable containing @comment. As this value",
@@ -518,7 +518,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 			if !vartype.mayBeAppendedTo() {
 				line.logWarning("The \"+=\" operator should only be used with lists.")
 			}
-		} else if !match0(varbase, `^_`) && !match0(varbase, reVarnamePlural) {
+		} else if !matches(varbase, `^_`) && !matches(varbase, reVarnamePlural) {
 			line.logWarning("As %s is modified using \"+=\", its name should indicate plural.", varname)
 		}
 	}

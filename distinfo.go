@@ -46,7 +46,7 @@ func checkfileDistinfo(fname string) {
 			ctx.onFilenameChange(line, fname)
 		}
 
-		if !match0(fname, `^\w`) {
+		if !matches(fname, `^\w`) {
 			line.logError("All file names must start with a letter.")
 		}
 
@@ -104,7 +104,7 @@ func (ctx *DistinfoContext) onFilenameChange(line *Line, fname string) {
 		}
 	}
 
-	ctx.isPatch = match0(fname, `^patch-.+$`)
+	ctx.isPatch = matches(fname, `^patch-.+$`)
 	ctx.previousFilename = fname
 	ctx.seenAlgorithms = make([]string, 0)
 }

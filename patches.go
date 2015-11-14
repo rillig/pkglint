@@ -25,7 +25,7 @@ func guessFileType(line *Line, fname string) FileType {
 	basename = strings.TrimSuffix(basename, ".in") // doesn’t influence the content type
 	ext := strings.TrimLeft(path.Ext(basename), ".")
 
-	if match0(basename, `^I?[Mm]akefile|\.ma?k$`) {
+	if matches(basename, `^I?[Mm]akefile|\.ma?k$`) {
 		return FT_MAKE
 	}
 	if basename == "configure" || basename == "configure.ac" {
@@ -89,7 +89,7 @@ func checklineCppMacroNames(line *Line, text string) {
 		} else if better := badCppMacros[macro]; better != "" {
 			line.logWarning("The macro %q is not portable enough. Please use %q instead", macro, better)
 			line.explainWarning("See the pkgsrc guide, section \"CPP defines\" for details.")
-		} else if match0(macro, `(?i)^_+NetBSD_+Version_+$`) && macro != "__NetBSD_Version__" {
+		} else if matches(macro, `(?i)^_+NetBSD_+Version_+$`) && macro != "__NetBSD_Version__" {
 			line.logWarning("Misspelled variant %q of %q.", macro, "__NetBSD_Version__")
 		}
 	}
@@ -99,11 +99,11 @@ func checkwordAbsolutePathname(line *Line, word string) {
 	defer tracecall("checkwordAbsolutePathname", word)()
 
 	switch {
-	case match0(word, `^/dev/(?:null|tty|zero)$`):
+	case matches(word, `^/dev/(?:null|tty|zero)$`):
 		// These are defined by POSIX.
 	case word == "/bin/sh":
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
-	case !match0(word, `/(?:[a-z]|\$[({])`):
+	case !matches(word, `/(?:[a-z]|\$[({])`):
 		// Assume that all pathnames start with a lowercase letter.
 	default:
 		line.logWarning("Found absolute pathname: %s", word)
@@ -126,10 +126,10 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 		_ = G.opts.optDebugMisc && line.logDebug("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
 		switch {
-		case match0(before, `[A-Z_]+\s*$`):
+		case matches(before, `[A-Z_]+\s*$`):
 			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
 
-		case match0(before, `\+\s*$`):
+		case matches(before, `\+\s*$`):
 			// ok; Python example: libdir = prefix + '/lib'
 
 		default:
@@ -149,13 +149,13 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		case hasSuffix(before, "@"):
 			// ok; autotools example: @PREFIX@/bin
 
-		case match0(before, `[)}]$`):
+		case matches(before, `[)}]$`):
 			// ok; autotools example: ${prefix}/bin
 
-		case match0(before, `\+\s*["']$`):
+		case matches(before, `\+\s*["']$`):
 			// ok; Python example: prefix + '/lib'
 
-		case match0(before, `\w$`):
+		case matches(before, `\w$`):
 			// ok; shell example: libdir=$prefix/lib
 
 		default:
@@ -570,7 +570,7 @@ func (ctx *CheckPatchContext) useUnifiedDiffs() {
 
 func (ctx *CheckPatchContext) checkText(text string) {
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
-		if match0(text, rePatchUniHunk) {
+		if matches(text, rePatchUniHunk) {
 			ctx.line.logWarning("Found RCS tag \"$%s$\". Please remove it.", tagname)
 		} else {
 			ctx.line.logWarning("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
@@ -607,7 +607,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	case FT_SOURCE:
 		checklineSourceAbsolutePathname(line, addedText)
 	case FT_CONFIGURE:
-		if match0(addedText, `: Avoid regenerating within pkgsrc$`) {
+		if matches(addedText, `: Avoid regenerating within pkgsrc$`) {
 			line.logError("This code must not be included in patches.")
 			line.explainError(
 				"It is generated automatically by pkgsrc after the patch phase.",

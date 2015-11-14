@@ -67,7 +67,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 		return
 	}
 
-	if match0(shellword, `\$\{PREFIX\}/man(?:$|/)`) {
+	if matches(shellword, `\$\{PREFIX\}/man(?:$|/)`) {
 		line.logWarning("Please use ${PKGMANDIR} instead of \"man\".")
 	}
 	if contains(shellword, "etc/rc.d") {
@@ -160,7 +160,7 @@ outer:
 				// Fine.
 			case state == SWST_BACKT:
 				// Don't check anything here, to avoid false positives for tool names.
-			case (state == SWST_SQUOT || state == SWST_DQUOT) && match0(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
+			case (state == SWST_SQUOT || state == SWST_DQUOT) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
 				// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
 			case state == SWST_DQUOT && hasSuffix(mod, ":Q"):
 				line.logWarning("Please don't use the :Q operator in double quotes.")
@@ -368,14 +368,14 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		st.checkPipeExitcode()
 		st.checkSetE(setE)
 
-		if (state == SCST_SET && match0(shellword, `^-.*e`)) || (state == SCST_START && shellword == "${RUN}") {
+		if (state == SCST_SET && matches(shellword, `^-.*e`)) || (state == SCST_START && shellword == "${RUN}") {
 			setE = true
 		}
 
 		state = nextState(line, state, shellword)
 	}
 
-	if !match0(rest, `^\s*$`) {
+	if !matches(rest, `^\s*$`) {
 		line.logError("Internal pkglint error: checklineMkShelltext %s %q %q", state, rest, shelltext)
 	}
 
@@ -456,10 +456,10 @@ func (ctx *ShelltextContext) checkCommandStart() {
 
 		checklineMkShellcmdUse(line, shellword)
 
-	case match0(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
+	case matches(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
 		// Shell builtins are fine.
 
-	case match0(shellword, `^[\w_]+=.*$`):
+	case matches(shellword, `^[\w_]+=.*$`):
 		// Variable assignment
 
 	case hasPrefix(shellword, "./"):
@@ -528,7 +528,7 @@ func (ctx *ShelltextContext) checkConditionalCd() {
 func (ctx *ShelltextContext) checkAutoMkdirs() {
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
-	if (state == SCST_INSTALL_D || state == SCST_MKDIR) && match0(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) {
+	if (state == SCST_INSTALL_D || state == SCST_MKDIR) && matches(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) {
 		line.logWarning("Please use AUTO_MKDIRS instead of %q.",
 			ifelseStr(state == SCST_MKDIR, "${MKDIR}", "${INSTALL} -d"))
 		line.explainWarning(
@@ -538,7 +538,7 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 			"${PREFIX}.")
 	}
 
-	if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && !match0(shellword, reMkShellvaruse) {
+	if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && !matches(shellword, reMkShellvaruse) {
 		if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
 			line.logNote("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
 			line.explainNote(
@@ -582,7 +582,7 @@ func (ctx *ShelltextContext) checkQuoteSubstitution() {
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
 	if state == SCST_PAX_S || state == SCST_SED_E {
-		if false && !match0(shellword, `"^[\"\'].*[\"\']$`) {
+		if false && !matches(shellword, `"^[\"\'].*[\"\']$`) {
 			line.logWarning("Substitution commands like %q should always be quoted.", shellword)
 			line.explainWarning(
 				"Usually these substitution commands contain characters like '*' or",
@@ -641,7 +641,7 @@ func isForbiddenShellCommand(cmd string) bool {
 func (msline *MkShellLine) checkCommandUse(shellcmd string) {
 	line := msline.line
 
-	if G.mkContext == nil || !match0(G.mkContext.target, `^(?:pre|do|post)-install$`) {
+	if G.mkContext == nil || !matches(G.mkContext.target, `^(?:pre|do|post)-install$`) {
 		return
 	}
 
@@ -684,7 +684,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 		return SCST_CASE_LABEL
 	case state == SCST_CASE_LABEL_CONT && shellword == "|":
 		return SCST_CASE_LABEL
-	case match0(shellword, `^[;&\|]+$`):
+	case matches(shellword, `^[;&\|]+$`):
 		return SCST_START
 	case state == SCST_START:
 		switch shellword {
@@ -710,7 +710,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 			return SCST_FOR
 		default:
 			switch {
-			case match0(shellword, `^\$\{INSTALL_[A-Z]+_DIR\}$`):
+			case matches(shellword, `^\$\{INSTALL_[A-Z]+_DIR\}$`):
 				return SCST_INSTALL_DIR
 			case matches(shellword, reShVarassign):
 				return SCST_START
@@ -723,7 +723,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 	case state == SCST_INSTALL && shellword == "-d":
 		return SCST_INSTALL_D
 	case state == SCST_INSTALL, state == SCST_INSTALL_D:
-		if match0(shellword, `^-[ogm]$`) {
+		if matches(shellword, `^-[ogm]$`) {
 			return SCST_CONT // XXX: why not state?
 		}
 		return state
@@ -735,7 +735,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 		return state
 	case state == SCST_PAX && shellword == "-s":
 		return SCST_PAX_S
-	case state == SCST_PAX && match0(shellword, `^-`):
+	case state == SCST_PAX && matches(shellword, `^-`):
 		return SCST_PAX
 	case state == SCST_PAX:
 		return SCST_CONT
@@ -743,7 +743,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 		return SCST_PAX
 	case state == SCST_SED && shellword == "-e":
 		return SCST_SED_E
-	case state == SCST_SED && match0(shellword, `^-`):
+	case state == SCST_SED && matches(shellword, `^-`):
 		return SCST_SED
 	case state == SCST_SED:
 		return SCST_CONT

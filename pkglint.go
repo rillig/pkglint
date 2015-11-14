@@ -176,8 +176,8 @@ func checkItem(fname string) {
 		logFatal(G.currentDir, NO_LINES, "Cannot determine absolute path.")
 	}
 	absCurrentDir := filepath.ToSlash(abs)
-	G.isWip = !G.opts.optImport && match0(absCurrentDir, `/wip/|/wip$`)
-	G.isInfrastructure = match0(absCurrentDir, `/mk/|/mk$`)
+	G.isWip = !G.opts.optImport && matches(absCurrentDir, `/wip/|/wip$`)
+	G.isInfrastructure = matches(absCurrentDir, `/mk/|/mk$`)
 	G.curPkgsrcdir = nil
 	pkgpath := ""
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
@@ -405,7 +405,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 
 	value := line.extra["value"].(string)
 	value = resolveVarsInRelativePath(value, true)
-	if match0(value, reUnresolvedVar) {
+	if matches(value, reUnresolvedVar) {
 		value = resolveVariableRefs(value)
 		_ = G.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "expandVariableWithDefault: failed varname=%q value=%q", varname, value)
 	}
@@ -456,7 +456,7 @@ func checklineValidCharactersInValue(line *Line, reValidchars string) {
 }
 
 func checklineTrailingWhitespace(line *Line) {
-	if match0(line.text, `\s$`) {
+	if matches(line.text, `\s$`) {
 		line.logNote("Trailing white-space.")
 		line.explainNote(
 			"When a line ends with some white-space, that space is in most cases",
@@ -473,7 +473,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 		rcsid = "Id"
 	}
 
-	if !match0(line.text, `^`+prefixRe+`\$`+rcsid+`(?::[^\$]+)?\$$`) {
+	if !matches(line.text, `^`+prefixRe+`\$`+rcsid+`(?::[^\$]+)?\$$`) {
 		line.logError("Expected %s.", suggestedPrefix+"$"+rcsid+"$")
 		line.explainError(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
@@ -498,7 +498,7 @@ func checklineMkAbsolutePathname(line *Line, text string) {
 	// Another context where absolute pathnames usually appear is in
 	// assignments like "bindir=/bin".
 	if m, path := match1(text, `(?:^|\$[({]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[\w/*]|\"[\w/*]*\"|'[\w/*]*')*)`); m {
-		if match0(path, `^/\w`) {
+		if matches(path, `^/\w`) {
 			checkwordAbsolutePathname(line, path)
 		}
 	}
@@ -510,7 +510,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	}
 
 	resolvedPath := resolveVarsInRelativePath(path, true)
-	if match0(resolvedPath, reUnresolvedVar) {
+	if matches(resolvedPath, reUnresolvedVar) {
 		return
 	}
 
@@ -523,12 +523,12 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	}
 
 	switch {
-	case match0(path, `^\.\./\.\./[^/]+/[^/]`):
+	case matches(path, `^\.\./\.\./[^/]+/[^/]`):
 	case hasPrefix(path, "../../mk/"):
 		// There need not be two directory levels for mk/ files.
-	case match0(path, `^\.\./mk/`) && *G.curPkgsrcdir == "..":
+	case matches(path, `^\.\./mk/`) && *G.curPkgsrcdir == "..":
 		// That's fine for category Makefiles.
-	case match0(path, `^\.\.`):
+	case matches(path, `^\.\.`):
 		line.logWarning("Invalid relative path %q.", path)
 	}
 }
@@ -620,7 +620,7 @@ func checkfile(fname string) {
 	defer tracecall("checkfile", fname)()
 
 	basename := path.Base(fname)
-	if match0(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {
+	if matches(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {
 		if G.opts.optImport {
 			logError(fname, NO_LINES, "Must be cleaned up before committing the package.")
 		}
@@ -638,14 +638,14 @@ func checkfile(fname string) {
 		switch {
 		case basename == "files" || basename == "patches" || basename == "CVS":
 			// Ok
-		case match0(fname, `(?:^|/)files/[^/]*$`):
+		case matches(fname, `(?:^|/)files/[^/]*$`):
 			// Ok
 		case !isEmptyDir(fname):
 			logWarning(fname, NO_LINES, "Unknown directory name.")
 		}
 
 	case (st.Mode() & os.ModeSymlink) != 0:
-		if !match0(basename, `^work`) {
+		if !matches(basename, `^work`) {
 			logWarning(fname, NO_LINES, "Unknown symlink name.")
 		}
 
@@ -665,7 +665,7 @@ func checkfile(fname string) {
 			checkfileDescr(fname)
 		}
 
-	case match0(basename, `^distinfo`):
+	case matches(basename, `^distinfo`):
 		if G.opts.optCheckDistinfo {
 			checkfileDistinfo(fname)
 		}
@@ -675,30 +675,30 @@ func checkfile(fname string) {
 			checkfileExtra(fname)
 		}
 
-	case match0(basename, `^MESSAGE`):
+	case matches(basename, `^MESSAGE`):
 		if G.opts.optCheckMessage {
 			checkfileMessage(fname)
 		}
 
-	case match0(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
+	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
 		if G.opts.optCheckPatches {
 			checkfilePatch(fname)
 		}
 
-	case match0(fname, `(?:^|/)patches/manual[^/]*$`):
+	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
 		if G.opts.optDebugUnchecked {
 			logDebug(fname, NO_LINES, "Unchecked file %q.", fname)
 		}
 
-	case match0(fname, `(?:^|/)patches/[^/]*$`):
+	case matches(fname, `(?:^|/)patches/[^/]*$`):
 		logWarning(fname, NO_LINES, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
-	case match0(basename, `^(?:.*\.mk|Makefile.*)$`) && !match0(fname, `files/`) && !match0(fname, `patches/`):
+	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
 		if G.opts.optCheckMk {
 			checkfileMk(fname)
 		}
 
-	case match0(basename, `^PLIST`):
+	case matches(basename, `^PLIST`):
 		if G.opts.optCheckPlist {
 			checkfilePlist(fname)
 		}
@@ -706,10 +706,10 @@ func checkfile(fname string) {
 	case (basename == "TODO" || basename == "README"):
 		// Ok
 
-	case match0(basename, `^CHANGES-.*`):
+	case matches(basename, `^CHANGES-.*`):
 		loadDocChanges(fname)
 
-	case match0(fname, `(?:^|/)files/[^/]*$`):
+	case matches(fname, `(?:^|/)files/[^/]*$`):
 		// Ok
 	default:
 		logWarning(fname, NO_LINES, "Unexpected file found.")

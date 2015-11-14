@@ -91,7 +91,7 @@ func checkdirPackage(pkgpath string) {
 	// Determine the used variables before checking any of the Makefile fragments.
 	for _, fname := range files {
 		if (hasPrefix(path.Base(fname), "Makefile.") || hasSuffix(fname, ".mk")) &&
-			!match0(fname, `patch-`) &&
+			!matches(fname, `patch-`) &&
 			!contains(fname, *G.pkgContext.pkgdir+"/") &&
 			!contains(fname, G.pkgContext.filesdir+"/") {
 			if lines, err := loadLines(fname, true); err == nil && lines != nil {
@@ -110,7 +110,7 @@ func checkdirPackage(pkgpath string) {
 		} else {
 			checkfile(fname)
 		}
-		if match0(fname, `/patches/patch-*$`) {
+		if matches(fname, `/patches/patch-*$`) {
 			havePatches = true
 		} else if hasSuffix(fname, "/distinfo") {
 			haveDistinfo = true
@@ -163,12 +163,12 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 			languagesLine := vardef["USE_LANGUAGES"]
 			value := languagesLine.extra["value"].(string)
 
-			if languagesLine.extra["comment"] != nil && match0(languagesLine.extra["comment"].(string), `(?-i)\b(?:c|empty|none)\b`) {
+			if languagesLine.extra["comment"] != nil && matches(languagesLine.extra["comment"].(string), `(?-i)\b(?:c|empty|none)\b`) {
 				// Don't emit a warning, since the comment
 				// probably contains a statement that C is
 				// really not needed.
 
-			} else if !match0(value, `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
+			} else if !matches(value, `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
 				vardef["GNU_CONFIGURE"].logWarning("GNU_CONFIGURE almost always needs a C compiler, ...")
 				languagesLine.logWarning("... but \"c\" is not added to USE_LANGUAGES.")
 			}
@@ -194,7 +194,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 			pkgnameLine.logNote("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
 		}
 
-		if pkgname == "" && distname != "" && !match0(distname, reUnresolvedVar) && !match0(distname, rePkgname) {
+		if pkgname == "" && distname != "" && !matches(distname, reUnresolvedVar) && !matches(distname, rePkgname) {
 			distnameLine.logWarning("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 		}
 

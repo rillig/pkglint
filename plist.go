@@ -65,7 +65,7 @@ func checkfilePlist(fname string) {
 			}
 		}
 
-		if match0(text, `^[\w$]`) {
+		if matches(text, `^[\w$]`) {
 			pctx.allFiles[text] = line
 			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
 				pctx.allDirs[dir] = line
@@ -90,7 +90,7 @@ func checkfilePlist(fname string) {
 			pline.checkDirective(cmd, arg)
 		} else if m, dirname, basename := match2(text, `^([A-Za-z0-9\$].*)/([^/]+)$`); m {
 			pline.checkPathname(pctx, dirname, basename)
-		} else if match0(text, `^\$\{[\w_]+\}$`) {
+		} else if matches(text, `^\$\{[\w_]+\}$`) {
 			// A variable on its own line.
 		} else {
 			line.logWarning("Unknown line type.")
@@ -108,7 +108,7 @@ type PlistLine struct {
 func (pline *PlistLine) checkTrailingWhitespace() {
 	line := pline.line
 
-	if match0(line.text, `\s$`) {
+	if matches(line.text, `\s$`) {
 		line.logError("pkgsrc does not support filenames ending in white-space.")
 		line.explainError(
 			"Each character in the PLIST is relevant, even trailing white-space.")
@@ -168,7 +168,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	line := pline.line
 	text := line.text
 
-	if G.opts.optWarnPlistSort && match0(text, `^\w`) && !match0(text, reUnresolvedVar) {
+	if G.opts.optWarnPlistSort && matches(text, `^\w`) && !matches(text, reUnresolvedVar) {
 		if pctx.lastFname != "" {
 			if pctx.lastFname > text {
 				line.logWarning("%q should be sorted before %q.", text, pctx.lastFname)
@@ -217,7 +217,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		line.logError("Configuration files must not be registered in the PLIST. "+
 			"Please use the CONF_FILES framework, which is described in %s.", f)
 
-	case hasPrefix(text, "include/") && match0(text, `^include/.*\.(?:h|hpp)$`):
+	case hasPrefix(text, "include/") && matches(text, `^include/.*\.(?:h|hpp)$`):
 		// Fine.
 
 	case text == "info/dir":
@@ -249,7 +249,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "man/"):
 		if m, catOrMan, section, manpage, ext, gz := match5(text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`); m {
 
-			if !match0(section, `^[\dln]$`) {
+			if !matches(section, `^[\dln]$`) {
 				line.logWarning("Unknown section %q for manual page.", section)
 			}
 

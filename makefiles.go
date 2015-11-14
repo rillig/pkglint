@@ -26,7 +26,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		includeFile := ""
 		if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
 			includeFile = resolveVarsInRelativePath(inc, true)
-			if match0(includeFile, reUnresolvedVar) {
+			if matches(includeFile, reUnresolvedVar) {
 				if !contains(fname, "/mk/") {
 					line.logNote("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
@@ -47,7 +47,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		if isIncludeLine && G.pkgContext.included[includeFile] == nil {
 			G.pkgContext.included[includeFile] = line
 
-			if match0(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
+			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				line.logWarning("References to other packages should look like \"../../category/package\", not \"../package\".")
 				line.explainWarning(explanationRelativeDirs()...)
 			}
@@ -196,7 +196,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if match0(text, `^\s*$`) {
+	if matches(text, `^\s*$`) {
 		line.extra["is_empty"] = true
 		return
 	}
@@ -232,7 +232,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if match0(text, reConflict) {
+	if matches(text, reConflict) {
 		return
 	}
 
@@ -376,7 +376,7 @@ func checklinesMk(lines []*Line) {
 			value := line.extra["value"].(string)
 			comment := text[negToZero(m[8]):negToZero(m[9])]
 
-			if align != " " && !match0(align, `^\t*$`) {
+			if align != " " && !matches(align, `^\t*$`) {
 				_ = G.opts.optWarnSpace && line.logNote("Alignment of variable values should be done with tabs, not spaces.")
 				prefix := varname + space1 + op
 				alignedLen := tabLength(prefix + align)
@@ -413,23 +413,23 @@ func checklinesMk(lines []*Line) {
 				G.pkgContext.seen_bsd_prefs_mk = true
 			}
 
-			if match0(includefile, `/x11-links/buildlink3\.mk$`) {
+			if matches(includefile, `/x11-links/buildlink3\.mk$`) {
 				line.logError("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
 			}
-			if match0(includefile, `/jpeg/buildlink3\.mk$`) {
+			if matches(includefile, `/jpeg/buildlink3\.mk$`) {
 				line.logError("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
 			}
-			if match0(includefile, `/intltool/buildlink3\.mk$`) {
+			if matches(includefile, `/intltool/buildlink3\.mk$`) {
 				line.logWarning("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 			}
 			if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
 				line.logError("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
 			}
 
-		} else if match0(text, reMkSysinclude) {
+		} else if matches(text, reMkSysinclude) {
 
 		} else if m, indent, directive, args := match3(text, reMkCond); m {
-			if match0(directive, `^(?:endif|endfor|elif|else)$`) {
+			if matches(directive, `^(?:endif|endfor|elif|else)$`) {
 				if len(ctx.indentation) > 1 {
 					ctx.popIndent()
 				} else {
@@ -442,18 +442,18 @@ func checklinesMk(lines []*Line) {
 				_ = G.opts.optWarnSpace && line.logNote("This directive should be indented by %d spaces.", ctx.indentDepth())
 			}
 
-			if directive == "if" && match0(args, `^!defined\([\w]+_MK\)$`) {
+			if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
 				ctx.pushIndent(ctx.indentDepth())
 
-			} else if match0(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
+			} else if matches(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
 				ctx.pushIndent(ctx.indentDepth() + 2)
 			}
 
 			reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
-			if match0(directive, reDirectivesWithArgs) && args == "" {
+			if matches(directive, reDirectivesWithArgs) && args == "" {
 				line.logError("\".%s\" requires arguments.", directive)
 
-			} else if !match0(directive, reDirectivesWithArgs) && args != "" {
+			} else if !matches(directive, reDirectivesWithArgs) && args != "" {
 				line.logError("\".%s\" does not take arguments.", directive)
 
 				if directive == "else" {
@@ -464,7 +464,7 @@ func checklinesMk(lines []*Line) {
 				checklineMkCond(line, args)
 
 			} else if directive == "ifdef" || directive == "ifndef" {
-				if match0(args, `\s`) {
+				if matches(args, `\s`) {
 					line.logError("The \".%s\" directive can only handle _one_ argument.", directive)
 				} else {
 					line.logWarning("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
@@ -478,9 +478,9 @@ func checklinesMk(lines []*Line) {
 							line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 						}
 
-						if match0(forvar, `^[_a-z][_a-z0-9]*$`) {
+						if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
 							// Fine.
-						} else if match0(forvar, `[A-Z]`) {
+						} else if matches(forvar, `[A-Z]`) {
 							line.logWarning(".for variable names should not contain uppercase letters.")
 						} else {
 							line.logError("Invalid variable name %q.", forvar)

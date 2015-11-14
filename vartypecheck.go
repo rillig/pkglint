@@ -21,13 +21,13 @@ func (cv *CheckVartype) AwkCommand() {
 }
 
 func (cv *CheckVartype) BrokenIn() {
-	if !match0(cv.value, `^pkgsrc-20\d\d\dQ[1234]$`) {
+	if !matches(cv.value, `^pkgsrc-20\d\d\dQ[1234]$`) {
 		cv.line.logWarning("Invalid value %q for %s.", cv.value, cv.varname)
 	}
 }
 
 func (cv *CheckVartype) BuildlinkDepmethod() {
-	if !match0(cv.value, reUnresolvedVar) && cv.value != "build" && cv.value != "full" {
+	if !matches(cv.value, reUnresolvedVar) && cv.value != "build" && cv.value != "full" {
 		cv.line.logWarning("Invalid dependency method %q. Valid methods are \"build\" or \"full\".", cv.value)
 	}
 }
@@ -80,7 +80,7 @@ func (cv *CheckVartype) CFlag() {
 		line.logWarning("Unknown compiler flag %q.", value)
 		return
 	}
-	if !match0(value, reUnresolvedVar) {
+	if !matches(value, reUnresolvedVar) {
 		line.logWarning("Compiler flag %q should start with a hyphen.")
 	}
 }
@@ -94,7 +94,7 @@ func (cv *CheckVartype) Comment() {
 	if m, first := match1(value, `^(?i)(a|an)\s`); m {
 		line.logWarning("COMMENT should not begin with %q.", first)
 	}
-	if match0(value, `^[a-z]`) {
+	if matches(value, `^[a-z]`) {
 		line.logWarning("COMMENT should start with a capital letter.")
 	}
 	if hasSuffix(value, ".") {
@@ -187,7 +187,7 @@ func (cv *CheckVartype) DependencyWithPath() {
 		return
 	}
 
-	if match0(value, `:\.\./[^/]+$`) {
+	if matches(value, `:\.\./[^/]+$`) {
 		line.logWarning("Dependencies should have the form \"../../category/package\".")
 		line.explainWarning(explanationRelativeDirs()...)
 		return
@@ -210,11 +210,11 @@ func (cv *CheckVartype) DistSuffix() {
 func (cv *CheckVartype) EmulPlatform() {
 
 	if m, opsys, arch := match2(cv.value, `^(\w+)-(\w+)$`); m {
-		if !match0(opsys, `^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$`) {
+		if !matches(opsys, `^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$`) {
 			cv.line.logWarning("Unknown operating system: %s", opsys)
 		}
 		// no check for os_version
-		if !match0(arch, `^(?:i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)"`) {
+		if !matches(arch, `^(?:i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)"`) {
 			cv.line.logWarning("Unknown hardware architecture: %s", arch)
 		}
 
@@ -252,13 +252,13 @@ func (cv *CheckVartype) Filename() {
 	switch {
 	case contains(cv.valueNovar, "/"):
 		cv.line.logWarning("A filename should not contain a slash.")
-	case !match0(cv.valueNovar, `^[-0-9\@A-Za-z.,_~+%]*$`):
+	case !matches(cv.valueNovar, `^[-0-9\@A-Za-z.,_~+%]*$`):
 		cv.line.logWarning("%q is not a valid filename.", cv.value)
 	}
 }
 
 func (cv *CheckVartype) Filemask() {
-	if !match0(cv.valueNovar, `^[-0-9A-Za-z._~+%*?]*$`) {
+	if !matches(cv.valueNovar, `^[-0-9A-Za-z._~+%*?]*$`) {
 		cv.line.logWarning("%q is not a valid filename mask.", cv.value)
 	}
 }
@@ -267,7 +267,7 @@ func (cv *CheckVartype) FileMode() {
 	switch {
 	case cv.value != "" && cv.valueNovar == "":
 		// Fine.
-	case match0(cv.value, `^[0-7]{3,4}`):
+	case matches(cv.value, `^[0-7]{3,4}`):
 		// Fine.
 	default:
 		cv.line.logWarning("Invalid file mode %q.", cv.value)
@@ -279,7 +279,7 @@ func (cv *CheckVartype) Identifier() {
 		//line.logWarning("Identifiers should be given directly.")
 	}
 	switch {
-	case match0(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+$`):
+	case matches(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+$`):
 		// Fine.
 	case cv.value != "" && cv.valueNovar == "":
 		// Don't warn here.
@@ -289,13 +289,13 @@ func (cv *CheckVartype) Identifier() {
 }
 
 func (cv *CheckVartype) Integer() {
-	if !match0(cv.value, `^\d+$`) {
+	if !matches(cv.value, `^\d+$`) {
 		cv.line.logWarning("Invalid integer %q.")
 	}
 }
 
 func (cv *CheckVartype) LdFlag() {
-	if match0(cv.value, `^-[Ll]`) || cv.value == "-static" {
+	if matches(cv.value, `^-[Ll]`) || cv.value == "-static" {
 		return
 	} else if m, rpathFlag := match1(cv.value, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
 		cv.line.logWarning("Please use ${COMPILER_RPATH_FLAG} instead of %s.", rpathFlag)
@@ -319,7 +319,7 @@ func (cv *CheckVartype) MailAddress() {
 		if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
 			line.logWarning("Please write NetBSD.org instead of %q.", domain)
 		}
-		if match0(value, `(?i)^(tech-pkg|packages)\@NetBSD\.org$`) {
+		if matches(value, `(?i)^(tech-pkg|packages)\@NetBSD\.org$`) {
 			line.logError("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 		}
 
@@ -331,7 +331,7 @@ func (cv *CheckVartype) MailAddress() {
 func (cv *CheckVartype) Message() {
 	line, varname, value := cv.line, cv.varname, cv.value
 
-	if match0(value, `^[\"'].*[\"']$`) {
+	if matches(value, `^[\"'].*[\"']$`) {
 		line.logWarning("%s should not be quoted.", varname)
 		line.explainWarning(
 			"The quoting is only needed for variables which are interpreted as",
@@ -364,7 +364,7 @@ func (cv *CheckVartype) Option() {
 		return
 	}
 
-	if match0(value, `^-?([a-z][-0-9a-z_\+]*)$`) {
+	if matches(value, `^-?([a-z][-0-9a-z_\+]*)$`) {
 		line.logWarning("Use of the underscore character in option names is deprecated.")
 		return
 	}
@@ -381,25 +381,25 @@ func (cv *CheckVartype) Pathlist() {
 	for _, path := range strings.Split(cv.value, ":") {
 		pathNovar := removeVariableReferences(path)
 
-		if !match0(pathNovar, `^[-0-9A-Za-z._~+%/]*$`) {
+		if !matches(pathNovar, `^[-0-9A-Za-z._~+%/]*$`) {
 			cv.line.logWarning("%q is not a valid pathname.", path)
 		}
 
-		if !match0(path, `^[$/]`) {
+		if !matches(path, `^[$/]`) {
 			cv.line.logWarning("All components of %q (in this case %q) should be an absolute path.", cv.value, path)
 		}
 	}
 }
 
 func (cv *CheckVartype) Pathmask() {
-	if !match0(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
+	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
 		cv.line.logWarning("%q is not a valid pathname mask.", cv.value)
 	}
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
 
 func (cv *CheckVartype) Pathname() {
-	if !match0(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
+	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.line.logWarning("%q is not a valid pathname.", cv.value)
 	}
 	checklineMkAbsolutePathname(cv.line, cv.value)
@@ -423,7 +423,7 @@ func (cv *CheckVartype) PkgPath() {
 
 func (cv *CheckVartype) PkgOptionsVar() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, "Varname", cv.op, cv.value, cv.comment, false, cv.guessed)
-	if !match0(cv.value, `\$\{PKGBASE[:\}]`) {
+	if !matches(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.logError("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		cv.line.explainError(
 			"PKGBASE is defined in bsd.pkg.mk, which is included as the",
@@ -433,7 +433,7 @@ func (cv *CheckVartype) PkgOptionsVar() {
 }
 
 func (cv *CheckVartype) PkgRevision() {
-	if !match0(cv.value, `^[1-9]\d*$`) {
+	if !matches(cv.value, `^[1-9]\d*$`) {
 		cv.line.logWarning("%s must be a positive integer number.", cv.varname)
 	}
 	if path.Base(cv.line.fname) != "Makefile" {
@@ -451,11 +451,11 @@ func (cv *CheckVartype) PlatformTriple() {
 	rePart := `(?:\[[^\]]+\]|[^-\[])+`
 	reTriple := `^(` + rePart + `)-(` + rePart + `)-(` + rePart + `)$`
 	if m, opsys, _, arch := match3(cv.value, reTriple); m {
-		if !match0(opsys, `^(?:\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|QNX|SunOS)$`) {
+		if !matches(opsys, `^(?:\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|QNX|SunOS)$`) {
 			cv.line.logWarning("Unknown operating system: %s", opsys)
 		}
 		// no check for os_version
-		if !match0(arch, `^(?:\*|i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
+		if !matches(arch, `^(?:\*|i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
 			cv.line.logWarning("Unknown hardware architecture: %s", arch)
 		}
 
@@ -478,7 +478,7 @@ func (cv *CheckVartype) PythonDependency() {
 	if cv.value != cv.valueNovar {
 		cv.line.logWarning("Python dependencies should not contain variables.")
 	}
-	if !match0(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$`) {
+	if !matches(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$`) {
 		cv.line.logWarning("Invalid Python dependency %q.", cv.value)
 		cv.line.explainWarning(
 			"Python dependencies must be an identifier for a package, as specified",
@@ -561,7 +561,7 @@ func (cv *CheckVartype) SedCommands() {
 		case word == "-n":
 			// Don't print lines per default.
 
-		case i == 0 && match0(word, `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`):
+		case i == 0 && matches(word, `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`):
 			line.logWarning("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 		default:
@@ -581,7 +581,7 @@ func (cv *CheckVartype) ShellWord() {
 }
 
 func (cv *CheckVartype) Stage() {
-	if !match0(cv.value, `^(?:pre|do|post)-(?:extract|patch|configure|build|install)`) {
+	if !matches(cv.value, `^(?:pre|do|post)-(?:extract|patch|configure|build|install)`) {
 		cv.line.logWarning("Invalid stage name. Use one of {pre,do,post}-{extract,patch,configure,build,install}.")
 	}
 }
@@ -626,11 +626,11 @@ func (cv *CheckVartype) URL() {
 			line.logError("The subdirectory in %s must end with a slash.", name)
 		}
 
-	} else if match0(value, reUnresolvedVar) {
+	} else if matches(value, reUnresolvedVar) {
 		// No further checks
 
 	} else if m, _, host, _, _ := match4(value, `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?\@A-Z_a-z~]|#)*$`); m {
-		if match0(host, `(?i)\.NetBSD\.org$`) && !match0(host, `\.NetBSD\.org$`) {
+		if matches(host, `(?i)\.NetBSD\.org$`) && !matches(host, `\.NetBSD\.org$`) {
 			line.logWarning("Please write NetBSD.org instead of %s.", host)
 		}
 
@@ -652,36 +652,36 @@ func (cv *CheckVartype) URL() {
 }
 
 func (cv *CheckVartype) UserGroupName() {
-	if cv.value == cv.valueNovar && !match0(cv.value, `^[0-9_a-z]+$`) {
+	if cv.value == cv.valueNovar && !matches(cv.value, `^[0-9_a-z]+$`) {
 		cv.line.logWarning("Invalid user or group name %q.", cv.value)
 	}
 }
 
 func (cv *CheckVartype) Varname() {
-	if cv.value == cv.valueNovar && !match0(cv.value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
+	if cv.value == cv.valueNovar && !matches(cv.value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
 		cv.line.logWarning("%q is not a valid variable name.", cv.value)
 	}
 }
 
 func (cv *CheckVartype) Version() {
-	if !match0(cv.value, `^([\d.])+$`) {
+	if !matches(cv.value, `^([\d.])+$`) {
 		cv.line.logWarning("Invalid version number %q.", cv.value)
 	}
 }
 
 func (cv *CheckVartype) WrapperReorder() {
-	if !match0(cv.value, `^reorder:l:([\w\-]+):([\w\-]+)$`) {
+	if !matches(cv.value, `^reorder:l:([\w\-]+):([\w\-]+)$`) {
 		cv.line.logWarning("Unknown wrapper reorder command %q.", cv.value)
 	}
 }
 
 func (cv *CheckVartype) WrapperTransform() {
 	switch {
-	case match0(cv.value, `^rm:(?:-[DILOUWflm].*|-std=.*)$`):
-	case match0(cv.value, `^l:([^:]+):(.+)$`):
-	case match0(cv.value, `^'?(?:opt|rename|rm-optarg|rmdir):.*$`):
+	case matches(cv.value, `^rm:(?:-[DILOUWflm].*|-std=.*)$`):
+	case matches(cv.value, `^l:([^:]+):(.+)$`):
+	case matches(cv.value, `^'?(?:opt|rename|rm-optarg|rmdir):.*$`):
 	case cv.value == "-e":
-	case match0(cv.value, `^\"?'?s[|:,]`):
+	case matches(cv.value, `^\"?'?s[|:,]`):
 	default:
 		cv.line.logWarning("Unknown wrapper transform command %q.", cv.value)
 	}
@@ -701,13 +701,13 @@ func (cv *CheckVartype) WrksrcSubdirectory() {
 	} else if cv.value != "" && cv.valueNovar == "" {
 		// The value of another variable
 
-	} else if !match0(cv.valueNovar, `^(?:\.|[0-9A-Za-z_\@][-0-9A-Za-z_\@./+]*)$`) {
+	} else if !matches(cv.valueNovar, `^(?:\.|[0-9A-Za-z_\@][-0-9A-Za-z_\@./+]*)$`) {
 		cv.line.logWarning("%q is not a valid subdirectory of ${WRKSRC}.", cv.value)
 	}
 }
 
 func (cv *CheckVartype) Yes() {
-	if !match0(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
+	if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
 		cv.line.logWarning("%s should be set to YES or yes.", cv.varname)
 		cv.line.explainWarning(
 			"This variable means \"yes\" if it is defined, and \"no\" if it is",
@@ -718,13 +718,13 @@ func (cv *CheckVartype) Yes() {
 }
 
 func (cv *CheckVartype) YesNo() {
-	if !match0(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
+	if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.logWarning("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
 }
 
 func (cv *CheckVartype) YesNo_Indirectly() {
-	if cv.valueNovar != "" && !match0(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
+	if cv.valueNovar != "" && !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.logWarning("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
 }
