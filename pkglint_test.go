@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+
 	check "gopkg.in/check.v1"
 )
 

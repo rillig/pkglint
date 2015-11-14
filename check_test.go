@@ -4,8 +4,9 @@ package main
 
 import (
 	"bytes"
-	check "gopkg.in/check.v1"
 	"testing"
+
+	check "gopkg.in/check.v1"
 )
 
 var equals = check.Equals
