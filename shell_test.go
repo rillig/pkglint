@@ -11,6 +11,11 @@ func (s *Suite) TestSplitIntoShellwords_LineContinuation(c *check.C) {
 
 	c.Check(words, check.DeepEquals, []string{"if", "true", ";", "then"})
 	c.Check(rest, equals, "\\")
+
+	words, rest = splitIntoShellwords(line, "pax -s /.*~$$//g")
+
+	c.Check(words, check.DeepEquals, []string{"pax", "-s", "/.*~$$//g"})
+	c.Check(rest, equals, "")
 }
 
 func (s *Suite) TestChecklineMkShelltext(c *check.C) {
