@@ -24,7 +24,6 @@ func loadRawLines(fname string) ([]PhysLine, error) {
 	physlines := make([]PhysLine, 0)
 	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
-		logError(fname, NO_LINES, "Cannot be read")
 		return nil, err
 	}
 	for lineno, physline := range strings.SplitAfter(string(rawtext), "\n") {

@@ -8,6 +8,7 @@ import (
 func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 	fileLines, err := loadLines(fname, true)
 	if err != nil {
+		logError(fname, NO_LINES, "Cannot be read")
 		return false
 	}
 
