@@ -299,7 +299,7 @@ outer:
 	}
 
 	if strings.TrimSpace(rest) != "" {
-		line.errorf("Internal pkglint error: checklineMkShellword %s, %q, %q", state, rest, shellword)
+		line.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, rest, shellword)
 	}
 }
 
@@ -376,7 +376,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	}
 
 	if !matches(rest, `^\s*$`) {
-		line.errorf("Internal pkglint error: checklineMkShelltext %s %q %q", state, rest, shelltext)
+		line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, rest, shelltext)
 	}
 
 }
@@ -778,7 +778,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 	case state == SCST_ECHO:
 		return SCST_CONT
 	default:
-		line.errorf("Internal pkglint error: shellword.nextState %s %q", state, shellword)
+		line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
 		return SCST_START
 	}
 }
@@ -793,7 +793,7 @@ func splitIntoShellwords(line *Line, text string) ([]string, string) {
 	}
 	rest = strings.TrimSpace(rest)
 	if rest != "" {
-		line.errorf("Internal pkglint error: splitIntoShellwords %q %q", text, rest)
+		line.errorf("Internal pkglint error: splitIntoShellwords rest=%q text=%q", rest, text)
 	}
 	return words, rest
 }

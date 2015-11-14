@@ -480,7 +480,7 @@ func checklinesPatch(lines []*Line) {
 		}
 
 		if !found {
-			ctx.line.errorf("Internal pkglint error: checklinesPatch %s", ctx.state)
+			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
 			ctx.state = PST_TEXT
 			lineno++
 		}
@@ -509,7 +509,7 @@ func checklinesPatch(lines []*Line) {
 		}
 
 		if !found {
-			ctx.line.errorf("Internal pkglint error: checklinesPatch %s", ctx.state)
+			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
 			break
 		}
 	}
