@@ -31,8 +31,6 @@ func (s *CaptureOutputSuite) TestChecklineMkCondition(c *check.C) {
 		"Only { ccache ccc clang distcc f2c gcc hp icc ido gcc mipspro "+
 		"mipspro-ucode pcc sunpro xlc } are allowed.\n")
 
-	s.ResetOutput()
-
 	checklineMkCondition(line, "${A} != ${B}")
 
 	c.Check(s.Stdout(), equals, "") // Unknown condition types are silently ignored
