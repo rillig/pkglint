@@ -16,7 +16,7 @@ func checkfileBuildlink3Mk(fname string) {
 	parselinesMk(lines)
 	checklinesMk(lines)
 
-	exp := &Expecter{lines, 0}
+	exp := NewExpecter(lines)
 
 	for exp.advanceIfMatches(`^#`) != nil {
 		if hasPrefix(exp.previousLine().text, "# XXX") {

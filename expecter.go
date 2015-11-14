@@ -6,6 +6,10 @@ type Expecter struct {
 	index int
 }
 
+func NewExpecter(lines []*Line) *Expecter {
+	return &Expecter{lines, 0}
+}
+
 func (ctx *Expecter) currentLine() *Line {
 	if ctx.index < len(ctx.lines) {
 		return ctx.lines[ctx.index]

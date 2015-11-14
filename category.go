@@ -20,7 +20,7 @@ func checkdirCategory() {
 	}
 	parselinesMk(lines)
 
-	exp := &Expecter{lines, 0}
+	exp := NewExpecter(lines)
 	if checklineRcsid(exp.currentLine(), `#\s+`, "# ") {
 		exp.advance()
 	}
