@@ -69,7 +69,7 @@ func (self *Line) warnf(format string, args ...interface{}) bool {
 }
 func (self *Line) notef(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return notef(self.fname, self.lines, format, args)
+	return notef(self.fname, self.lines, format, args...)
 }
 func (self *Line) debugf(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
