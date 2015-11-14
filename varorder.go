@@ -97,8 +97,8 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 	varindex := 0
 	nextSection := true
 	var vars []OccDef
-	below := make(map[string]*string)
-	var belowWhat *string
+	below := make(map[string]string)
+	var belowWhat string
 
 	// If the current section is optional but contains non-optional
 	// fields, the complete section may be skipped as long as there
@@ -135,7 +135,7 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 			varcanon := line.extra["varcanon"].(string)
 
 			if belowText, exists := below[varcanon]; exists {
-				if belowText != nil {
+				if belowText != "" {
 					line.warnf("%s appears too late. Please put it below %s.", varcanon, belowText)
 				} else {
 					line.warnf("%s appears too late. It should be the very first definition.", varcanon)
@@ -169,7 +169,7 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 				}
 				lineno++
 			}
-			belowWhat = newStr(varcanon)
+			belowWhat = varcanon
 
 		default:
 			for varindex < len(vars) {
@@ -181,7 +181,7 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 			}
 			nextSection = true
 			if text == "" {
-				belowWhat = newStr("the previous empty line")
+				belowWhat = "the previous empty line"
 				lineno++
 			}
 		}
