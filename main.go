@@ -10,7 +10,7 @@ func main() {
 	G.logOut, G.logErr = os.Stdout, os.Stderr
 
 	G.opts = ParseCommandLine(os.Args, G.logOut)
-	if G.opts.optPrintVersion {
+	if G.opts.PrintVersion {
 		fmt.Printf("%s\n", confVersion)
 		return
 	}

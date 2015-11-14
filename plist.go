@@ -53,7 +53,7 @@ func checkfilePlist(fname string) {
 		if hasPrefix(text, "${") {
 			if m, varname, rest := match2(text, `^\$\{([\w_]+)\}(.*)`); m {
 				if G.pkgContext.plistSubstCond[varname] {
-					_ = G.opts.optDebugMisc && line.debugf("Removed PLIST_SUBST conditional %q.", varname)
+					_ = G.opts.DebugMisc && line.debugf("Removed PLIST_SUBST conditional %q.", varname)
 					text = rest
 				}
 			}
@@ -162,7 +162,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	line := pline.line
 	text := line.text
 
-	if G.opts.optWarnPlistSort && matches(text, `^\w`) && !matches(text, reUnresolvedVar) {
+	if G.opts.WarnPlistSort && matches(text, `^\w`) && !matches(text, reUnresolvedVar) {
 		if pctx.lastFname != "" {
 			if pctx.lastFname > text {
 				line.warnf("%q should be sorted before %q.", text, pctx.lastFname)
@@ -190,7 +190,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		case pctx.allFiles["man/man6/"+basename+".6"] != nil:
 		case pctx.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] != nil:
 		default:
-			if G.opts.optWarnExtra {
+			if G.opts.WarnExtra {
 				line.warnf("Manual page missing for bin/%s.", basename)
 				line.explain(
 					"All programs that can be run directly by the user should have a manual",
@@ -231,7 +231,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "lib/"):
 		if m, dir, lib, ext := match3(text, `^(lib/(?:.*/)*)([^/]+)\.(so|a|la)$`); m {
 			if dir == "lib/" && !hasPrefix(lib, "lib") {
-				_ = G.opts.optWarnExtra && line.warnf("Library filename does not start with \"lib\".")
+				_ = G.opts.WarnExtra && line.warnf("Library filename does not start with \"lib\".")
 			}
 			if ext == "la" {
 				if G.pkgContext.vardef["USE_LIBTOOL"] == nil {
@@ -276,7 +276,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "sbin/"):
 		binname := text[5:]
 
-		if pctx.allFiles["man/man8/"+binname+".8"] == nil && G.opts.optWarnExtra {
+		if pctx.allFiles["man/man8/"+binname+".8"] == nil && G.opts.WarnExtra {
 			line.warnf("Manual page missing for sbin/%s.", binname)
 			line.explain(
 				"All programs that can be run directly by the user should have a manual",
@@ -312,7 +312,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		// Fine.
 
 	case hasPrefix(text, "share/doc/html/"):
-		_ = G.opts.optWarnPlistDepr && line.warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
+		_ = G.opts.WarnPlistDepr && line.warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
 	case G.pkgContext.effectivePkgbase != nil && (hasPrefix(text, "share/doc/"+*G.pkgContext.effectivePkgbase+"/") ||
 		hasPrefix(text, "share/examples/"+*G.pkgContext.effectivePkgbase+"/")):
@@ -337,7 +337,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		line.warnf("Man pages should be installed into man/, not share/man/.")
 
 	default:
-		_ = G.opts.optDebugUnchecked && line.debugf("Unchecked pathname %q.", text)
+		_ = G.opts.DebugUnchecked && line.debugf("Unchecked pathname %q.", text)
 	}
 
 	if contains(text, "${PKGLOCALEDIR}") && G.pkgContext.vardef["USE_PKGLOCALEDIR"] == nil {

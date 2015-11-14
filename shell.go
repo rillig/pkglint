@@ -92,7 +92,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 	state := SWST_PLAIN
 outer:
 	for rest != "" {
-		_ = G.opts.optDebugShell && line.debugf("shell state %s: %q", state, rest)
+		_ = G.opts.DebugShell && line.debugf("shell state %s: %q", state, rest)
 
 		var m []string
 		switch {
@@ -223,7 +223,7 @@ outer:
 				replacePrefix(&rest, &m, `^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
 				replacePrefix(&rest, &m, `^\$\$(\$)\$`):
 				shvarname := m[1]
-				if G.opts.optWarnQuoting && checkQuoting {
+				if G.opts.WarnQuoting && checkQuoting {
 					line.warnf("Unquoted shell variable %q.", shvarname)
 					line.explain(
 						"When a shell variable contains white-space, it is expanded (split into",
@@ -286,7 +286,7 @@ outer:
 			case replacePrefix(&rest, &m, `^\$\$\{([0-9A-Za-z_]+)\}`),
 				replacePrefix(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)`):
 				shvarname := m[1]
-				_ = G.opts.optDebugShell && line.debugf("checklineMkShellword: found double-quoted variable %q.", shvarname)
+				_ = G.opts.DebugShell && line.debugf("checklineMkShellword: found double-quoted variable %q.", shvarname)
 			case replacePrefix(&rest, &m, `^\$\$`):
 				line.warnf("Unquoted $ or strange shell variable found.")
 			case replacePrefix(&rest, &m, `^\\(.)`):
@@ -350,7 +350,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		shellword := m[1]
 		st := &ShelltextContext{line, state, shellword}
 
-		_ = G.opts.optDebugShell && line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
+		_ = G.opts.DebugShell && line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
 
 		{
 			quotingNecessary := state != SCST_CASE &&
@@ -505,7 +505,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 			case G.pkgContext.vardef[vartool] != nil:
 				// This command has been explicitly defined in the package; assume it to be valid.
 			default:
-				if G.opts.optWarnExtra {
+				if G.opts.WarnExtra {
 					line.warnf("Unknown shell command %q.", shellword)
 					line.explain(
 						"If you want your package to be portable to all platforms that pkgsrc",
@@ -608,7 +608,7 @@ func (ctx *ShelltextContext) checkEchoN() {
 func (ctx *ShelltextContext) checkPipeExitcode() {
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
-	if G.opts.optWarnExtra && state != SCST_CASE_LABEL_CONT && shellword == "|" {
+	if G.opts.WarnExtra && state != SCST_CASE_LABEL_CONT && shellword == "|" {
 		line.warnf("The exitcode of the left-hand-side command of the pipe operator is ignored.")
 		line.explain(
 			"If you need to detect the failure of the left-hand-side command, use",
@@ -619,7 +619,7 @@ func (ctx *ShelltextContext) checkPipeExitcode() {
 func (ctx *ShelltextContext) checkSetE(eflag bool) {
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
-	if G.opts.optWarnExtra && shellword == ";" && state != SCST_COND_CONT && state != SCST_FOR_CONT && !eflag {
+	if G.opts.WarnExtra && shellword == ";" && state != SCST_COND_CONT && state != SCST_FOR_CONT && !eflag {
 		line.warnf("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
 		line.explain(
 			"Older versions of the NetBSD make(1) had run the shell commands using",
@@ -783,7 +783,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 	case state == SCST_ECHO:
 		return SCST_CONT
 	default:
-		_ = G.opts.optDebugShell && line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
+		_ = G.opts.DebugShell && line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
 		return SCST_START
 	}
 }

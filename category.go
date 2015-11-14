@@ -170,7 +170,7 @@ func checkdirCategory() {
 
 	autofix(lines)
 
-	if G.opts.optRecursive {
+	if G.opts.Recursive {
 		G.todo = append(subdirs, G.todo...)
 	}
 }

@@ -1,7 +1,7 @@
 package main
 
 func checklinesPackageMakefileVarorder(lines []*Line) {
-	if !G.opts.optWarnOrder {
+	if !G.opts.WarnOrder {
 		return
 	}
 
@@ -114,7 +114,7 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 		line := lines[lineno]
 		text := line.text
 
-		_ = G.opts.optDebugMisc && line.debugf("[varorder] section %d variable %d", sectindex, varindex)
+		_ = G.opts.DebugMisc && line.debugf("[varorder] section %d variable %d", sectindex, varindex)
 
 		if nextSection {
 			nextSection = false

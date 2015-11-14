@@ -31,7 +31,7 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 	}
 
 	text, sep := "", ""
-	if !G.opts.optGccOutput {
+	if !G.opts.GccOutput {
 		text += sep + level.traditionalName + ":"
 		sep = " "
 	}
@@ -42,7 +42,7 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 			text += ":" + lineno
 		}
 	}
-	if G.opts.optGccOutput {
+	if G.opts.GccOutput {
 		text += sep + level.gccName + ":"
 		sep = " "
 	}
@@ -84,10 +84,10 @@ func debugf(fname, lineno, format string, args ...interface{}) bool {
 }
 
 func printSummary() {
-	if !G.opts.optQuiet {
+	if !G.opts.Quiet {
 		if G.errors != 0 || G.warnings != 0 {
 			fmt.Printf("%d errors and %d warnings found.", G.errors, G.warnings)
-			if !G.opts.optExplain {
+			if !G.opts.Explain {
 				fmt.Printf(" (Use -e for more details.)")
 			}
 			fmt.Printf("\n")

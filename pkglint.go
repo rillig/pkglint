@@ -113,7 +113,7 @@ func checkItem(fname string) {
 		fatalf(G.currentDir, NO_LINES, "Cannot determine absolute path.")
 	}
 	absCurrentDir := filepath.ToSlash(abs)
-	G.isWip = !G.opts.optImport && matches(absCurrentDir, `/wip/|/wip$`)
+	G.isWip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	G.isInfrastructure = matches(absCurrentDir, `/mk/|/mk$`)
 	G.curPkgsrcdir = nil
 	pkgpath := ""
@@ -162,7 +162,7 @@ func loadPackageMakefile(fname string) []*Line {
 		return nil
 	}
 
-	if G.opts.optDumpMakefile {
+	if G.opts.DumpMakefile {
 		debugf(G.currentDir, NO_LINES, "Whole Makefile (with all included files) follows:")
 		for _, line := range allLines {
 			fmt.Printf("%s\n", line.String())
@@ -185,7 +185,7 @@ func loadPackageMakefile(fname string) []*Line {
 		}
 	}
 
-	_ = G.opts.optDebugMisc &&
+	_ = G.opts.DebugMisc &&
 		dummyLine.debugf("DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
 		dummyLine.debugf("FILESDIR=%s", G.pkgContext.filesdir) &&
 		dummyLine.debugf("PATCHDIR=%s", G.pkgContext.patchdir) &&
@@ -227,7 +227,7 @@ func extractUsedVariables(line *Line, text string) []string {
 	}
 
 	if rest != "" {
-		_ = G.opts.optDebugMisc && line.debugf("extractUsedVariables: rest=%q", rest)
+		_ = G.opts.DebugMisc && line.debugf("extractUsedVariables: rest=%q", rest)
 	}
 	return result
 }
@@ -299,9 +299,9 @@ func getVariableType(line *Line, varname string) *Vartype {
 	}
 
 	if gtype != nil {
-		_ = G.opts.optDebugVartypes && line.debugf("The guessed type of %q is %v.", varname, gtype)
+		_ = G.opts.DebugVartypes && line.debugf("The guessed type of %q is %v.", varname, gtype)
 	} else {
-		_ = G.opts.optDebugVartypes && line.debugf("No type definition found for %q.", varname)
+		_ = G.opts.DebugVartypes && line.debugf("No type definition found for %q.", varname)
 	}
 	return gtype
 }
@@ -345,14 +345,14 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	if matches(value, reUnresolvedVar) {
 		value = resolveVariableRefs(value)
 	}
-	_ = G.opts.optDebugMisc && line.debugf("Expanded %q to %q", varname, value)
+	_ = G.opts.DebugMisc && line.debugf("Expanded %q to %q", varname, value)
 	return value
 }
 
 func getVariablePermissions(line *Line, varname string) string {
 	vartype := getVariableType(line, varname)
 	if vartype == nil {
-		_ = G.opts.optDebugMisc && line.debugf("No type definition found for %q.", varname)
+		_ = G.opts.DebugMisc && line.debugf("No type definition found for %q.", varname)
 		return "adpsu"
 	}
 	return vartype.effectivePermissions(line.fname)
@@ -555,7 +555,7 @@ func checkfile(fname string) {
 
 	basename := path.Base(fname)
 	if matches(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {
-		if G.opts.optImport {
+		if G.opts.Import {
 			errorf(fname, NO_LINES, "Must be cleaned up before committing the package.")
 		}
 		return
@@ -597,40 +597,40 @@ func checkfile(fname string) {
 		errorf(fname, NO_LINES, "Only files and directories are allowed in pkgsrc.")
 
 	case basename == "ALTERNATIVES":
-		if G.opts.optCheckAlternatives {
+		if G.opts.CheckAlternatives {
 			checkfileExtra(fname)
 		}
 	case basename == "buildlink3.mk":
-		if G.opts.optCheckBuildlink3 {
+		if G.opts.CheckBuildlink3 {
 			checkfileBuildlink3Mk(fname)
 		}
 	case hasPrefix(basename, "DESCR"):
-		if G.opts.optCheckDescr {
+		if G.opts.CheckDescr {
 			checkfileDescr(fname)
 		}
 
 	case matches(basename, `^distinfo`):
-		if G.opts.optCheckDistinfo {
+		if G.opts.CheckDistinfo {
 			CheckfileDistinfo(fname)
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
-		if G.opts.optCheckInstall {
+		if G.opts.CheckInstall {
 			checkfileExtra(fname)
 		}
 
 	case matches(basename, `^MESSAGE`):
-		if G.opts.optCheckMessage {
+		if G.opts.CheckMessage {
 			checkfileMessage(fname)
 		}
 
 	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
-		if G.opts.optCheckPatches {
+		if G.opts.CheckPatches {
 			checkfilePatch(fname)
 		}
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
-		if G.opts.optDebugUnchecked {
+		if G.opts.DebugUnchecked {
 			debugf(fname, NO_LINES, "Unchecked file %q.", fname)
 		}
 
@@ -638,12 +638,12 @@ func checkfile(fname string) {
 		warnf(fname, NO_LINES, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
-		if G.opts.optCheckMk {
+		if G.opts.CheckMk {
 			checkfileMk(fname)
 		}
 
 	case matches(basename, `^PLIST`):
-		if G.opts.optCheckPlist {
+		if G.opts.CheckPlist {
 			checkfilePlist(fname)
 		}
 
@@ -658,7 +658,7 @@ func checkfile(fname string) {
 		// Ok
 	default:
 		warnf(fname, NO_LINES, "Unexpected file found.")
-		if G.opts.optCheckExtra {
+		if G.opts.CheckExtra {
 			checkfileExtra(fname)
 		}
 	}

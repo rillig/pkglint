@@ -42,7 +42,7 @@ func guessFileType(line *Line, fname string) FileType {
 		return FT_UNKNOWN
 	}
 
-	_ = G.opts.optDebugMisc && line.debugf("Unknown file type for %q", fname)
+	_ = G.opts.DebugMisc && line.debugf("Unknown file type for %q", fname)
 	return FT_UNKNOWN
 }
 
@@ -123,7 +123,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 // Looks for strings like "/dev/cd0" appearing in source code
 func checklineSourceAbsolutePathname(line *Line, text string) {
 	if matched, before, _, str := match3(text, `(.*)(["'])(/\w[^"']*)["']`); matched {
-		_ = G.opts.optDebugMisc && line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+		_ = G.opts.DebugMisc && line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
 		switch {
 		case matches(before, `[A-Z_]+\s*$`):
@@ -159,7 +159,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 			// ok; shell example: libdir=$prefix/lib
 
 		default:
-			_ = G.opts.optDebugMisc && line.debugf("before=%q", before)
+			_ = G.opts.DebugMisc && line.debugf("before=%q", before)
 			checkwordAbsolutePathname(line, path)
 		}
 	}
@@ -252,7 +252,7 @@ var patchTransitions = map[State][]transition{
 			}
 		}},
 		{"", PST_TEXT, func(ctx *CheckPatchContext) {
-			_ = G.opts.optWarnSpace && ctx.line.notef("Empty line expected.")
+			_ = G.opts.WarnSpace && ctx.line.notef("Empty line expected.")
 		}},
 	},
 
@@ -279,7 +279,7 @@ var patchTransitions = map[State][]transition{
 			ctx.currentFilename = &ctx.m[1]
 			ctx.currentFiletype = new(FileType)
 			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
-			_ = G.opts.optDebugPatches && ctx.line.debugf("filename=%q filetype=%q", *ctx.currentFilename, *ctx.currentFiletype)
+			_ = G.opts.DebugPatches && ctx.line.debugf("filename=%q filetype=%q", *ctx.currentFilename, *ctx.currentFiletype)
 			ctx.patchedFiles++
 			ctx.hunks = 0
 		}},
@@ -377,7 +377,7 @@ var patchTransitions = map[State][]transition{
 			*ctx.currentFilename = ctx.m[1]
 			ctx.currentFiletype = new(FileType)
 			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
-			_ = G.opts.optDebugPatches && ctx.line.debugf("filename=%q filetype=%q", ctx.currentFilename, ctx.currentFiletype)
+			_ = G.opts.DebugPatches && ctx.line.debugf("filename=%q filetype=%q", ctx.currentFilename, ctx.currentFiletype)
 			ctx.patchedFiles++
 			ctx.hunks = 0
 		}},
@@ -434,7 +434,7 @@ var patchTransitions = map[State][]transition{
 		{rePatchUniLineNoNewline, PST_UNI_LINE, func(ctx *CheckPatchContext) {
 		}},
 		{rePatchEmpty, PST_UNI_LINE, func(ctx *CheckPatchContext) {
-			_ = G.opts.optWarnSpace && ctx.line.notef("Leading white-space missing in hunk.")
+			_ = G.opts.WarnSpace && ctx.line.notef("Leading white-space missing in hunk.")
 			ctx.checkHunkLine(1, 1, PST_UNI_HUNK)
 		}},
 		{"", PST_UNI_HUNK, func(ctx *CheckPatchContext) {
@@ -452,7 +452,7 @@ func checklinesPatch(lines []*Line) {
 		text := line.text
 		ctx.line = line
 
-		_ = G.opts.optDebugPatches &&
+		_ = G.opts.DebugPatches &&
 			line.debugf("state=%s hunks=%d del=%d add=%d text=%s",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines, text)
 
@@ -488,7 +488,7 @@ func checklinesPatch(lines []*Line) {
 
 	fname := lines[0].fname
 	for ctx.state != PST_TEXT {
-		_ = G.opts.optDebugPatches &&
+		_ = G.opts.DebugPatches &&
 			debugf(fname, "EOF", "state=%s hunks=%d del=%d add=%d",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
 
@@ -542,7 +542,7 @@ type CheckPatchContext struct {
 }
 
 func (ctx *CheckPatchContext) expectEmptyLine() {
-	_ = G.opts.optWarnSpace && ctx.line.notef("Empty line expected.")
+	_ = G.opts.WarnSpace && ctx.line.notef("Empty line expected.")
 }
 
 func (ctx *CheckPatchContext) expectComment() {
@@ -659,7 +659,7 @@ func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate Stat
 	if nilToZero(ctx.dellines) == 0 && nilToZero(ctx.addlines) == 0 {
 		if ctx.contextScanningLeading != nil {
 			if ctx.leadingContextLines != ctx.trailingContextLines {
-				_ = G.opts.optDebugPatches && ctx.line.warnf(
+				_ = G.opts.DebugPatches && ctx.line.warnf(
 					"The hunk that ends here does not have as many leading (%d) as trailing (%d) lines of context.",
 					ctx.leadingContextLines, ctx.trailingContextLines)
 			}
@@ -676,7 +676,7 @@ func (ctx *CheckPatchContext) checkHunkLine(deldelta, adddelta int, newstate Sta
 	// absolute paths and similar things. If it is not given,
 	// only those lines that really add something to the patched
 	// file are checked.
-	if adddelta > 0 && (deldelta == 0 || G.opts.optWarnExtra) {
+	if adddelta > 0 && (deldelta == 0 || G.opts.WarnExtra) {
 		ctx.checkAddedContents()
 	}
 }

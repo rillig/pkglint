@@ -50,7 +50,7 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 	wantList := context.vartype.isConsideredList() && (context.shellword == VUC_SHW_BACKT || context.extent != VUC_EXT_WORDPART)
 	haveList := vartype.isConsideredList()
 
-	_ = G.opts.optDebugQuoting && line.debugf(
+	_ = G.opts.DebugQuoting && line.debugf(
 		"variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
 		varname, context, vartype, wantList, haveList)
 
@@ -94,6 +94,6 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 		return NQ_YES
 	}
 
-	_ = G.opts.optDebugQuoting && line.debugf("Don't know whether :Q is needed for %q", varname)
+	_ = G.opts.DebugQuoting && line.debugf("Don't know whether :Q is needed for %q", varname)
 	return NQ_DONT_KNOW
 }

@@ -5,8 +5,8 @@ import (
 )
 
 func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
-	G.opts.optWarnTypes = true
-	G.opts.optDebugUnchecked = true
+	G.opts.WarnTypes = true
+	G.opts.DebugUnchecked = true
 	line := NewLine("fname", "1", "dummy", nil)
 	initacls()
 

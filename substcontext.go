@@ -19,7 +19,7 @@ func (ctx *SubstContext) isComplete() bool {
 }
 
 func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) {
-	if !G.opts.optWarnExtra {
+	if !G.opts.WarnExtra {
 		return
 	}
 
@@ -100,7 +100,7 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 }
 
 func (self *SubstContext) finish(line *Line) {
-	if self.id == "" || !G.opts.optWarnExtra {
+	if self.id == "" || !G.opts.WarnExtra {
 		return
 	}
 	if self.id == "" {

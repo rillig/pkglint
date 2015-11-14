@@ -40,7 +40,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			if path.Base(fname) == "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkgContext.bl3[bl3File] = line
-					_ = G.opts.optDebugMisc && line.debugf("Buildlink3 file in package: %q", bl3File)
+					_ = G.opts.DebugMisc && line.debugf("Buildlink3 file in package: %q", bl3File)
 				}
 			}
 		}
@@ -53,12 +53,12 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				line.explain(explanationRelativeDirs()...)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
-				_ = G.opts.optDebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
+				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkgContext.seenMakefileCommon = true
 			}
 			if m, _, mkfile := match2(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m {
 				if mkfile != "buildlink3.mk" && mkfile != "options.mk" {
-					_ = G.opts.optDebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
+					_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 					G.pkgContext.seenMakefileCommon = true
 				}
 			}
@@ -76,7 +76,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 					line.errorf("Cannot read %q.", dirname+"/"+includeFile)
 					return false
 				} else {
-					_ = G.opts.optDebugInclude && line.debugf("Including %q.", dirname+"/"+includeFile)
+					_ = G.opts.DebugInclude && line.debugf("Including %q.", dirname+"/"+includeFile)
 					lengthBeforeInclude := len(*allLines)
 					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
 						return false
@@ -94,7 +94,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
 
 			if op != "?=" || G.pkgContext.vardef[varname] == nil {
-				_ = G.opts.optDebugMisc && line.debugf("varassign(%q, %q, %q)", varname, op, value)
+				_ = G.opts.DebugMisc && line.debugf("varassign(%q, %q, %q)", varname, op, value)
 				G.pkgContext.vardef[varname] = line
 			}
 		}
@@ -131,7 +131,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 		"you should think about giving it a proper name (maybe plugin.mk) and",
 		"documenting its interface.")
 	insertLine.appendBefore(expected)
-	if G.opts.optAutofix {
+	if G.opts.Autofix {
 		saveAutofixChanges(lines)
 	}
 }
@@ -159,7 +159,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		}
 	}
 
-	_ = G.opts.optDebugMisc && dummyLine.debugf("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	_ = G.opts.DebugMisc && dummyLine.debugf("resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	return tmp
 }
 
@@ -320,13 +320,13 @@ func checklinesMk(lines []*Line) {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
 			for _, varname := range splitOnSpace(line.extra["value"].(string)) {
 				G.mkContext.buildDefs[varname] = true
-				_ = G.opts.optDebugMisc && line.debugf("%q is added to BUILD_DEFS.", varname)
+				_ = G.opts.DebugMisc && line.debugf("%q is added to BUILD_DEFS.", varname)
 			}
 
 		case "PLIST_VARS":
 			for _, id := range splitOnSpace(line.extra["value"].(string)) {
 				G.mkContext.plistVars["PLIST."+id] = true
-				_ = G.opts.optDebugMisc && line.debugf("PLIST.%s is added to PLIST_VARS.", id)
+				_ = G.opts.DebugMisc && line.debugf("PLIST.%s is added to PLIST_VARS.", id)
 				useVar(line, "PLIST."+id)
 			}
 
@@ -334,13 +334,13 @@ func checklinesMk(lines []*Line) {
 			for _, tool := range splitOnSpace(line.extra["value"].(string)) {
 				tool = strings.Split(tool, ":")[0]
 				G.mkContext.tools[tool] = true
-				_ = G.opts.optDebugMisc && line.debugf("%s is added to USE_TOOLS.", tool)
+				_ = G.opts.DebugMisc && line.debugf("%s is added to USE_TOOLS.", tool)
 			}
 
 		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(line.extra["value"].(string)) {
 				useVar(line, varnameCanon(svar))
-				_ = G.opts.optDebugMisc && line.debugf("varuse %s", svar)
+				_ = G.opts.DebugMisc && line.debugf("varuse %s", svar)
 			}
 
 		case "OPSYSVARS":
@@ -375,7 +375,7 @@ func checklinesMk(lines []*Line) {
 			comment := text[negToZero(m[8]):negToZero(m[9])]
 
 			if align != " " && !matches(align, `^\t*$`) {
-				_ = G.opts.optWarnSpace && line.notef("Alignment of variable values should be done with tabs, not spaces.%s", "")
+				_ = G.opts.WarnSpace && line.notef("Alignment of variable values should be done with tabs, not spaces.%s", "")
 				prefix := varname + space1 + op
 				alignedLen := tabLength(prefix + align)
 				if alignedLen%8 == 0 {
@@ -390,7 +390,7 @@ func checklinesMk(lines []*Line) {
 			checklineMkShellcmd(line, shellcmd)
 
 		} else if m, include, includefile := match2(text, reMkInclude); m {
-			_ = G.opts.optDebugInclude && line.debugf("includefile=%s", includefile)
+			_ = G.opts.DebugInclude && line.debugf("includefile=%s", includefile)
 			checklineRelativePath(line, includefile, include == "include")
 
 			if hasSuffix(includefile, "../Makefile") {
@@ -437,7 +437,7 @@ func checklinesMk(lines []*Line) {
 
 			// Check the indentation
 			if indent != strings.Repeat(" ", ctx.indentDepth()) {
-				_ = G.opts.optWarnSpace && line.notef("This directive should be indented by %d spaces.", ctx.indentDepth())
+				_ = G.opts.WarnSpace && line.notef("This directive should be indented by %d spaces.", ctx.indentDepth())
 			}
 
 			if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
@@ -519,7 +519,7 @@ func checklinesMk(lines []*Line) {
 			}
 
 		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
-			_ = G.opts.optDebugMisc && line.debugf("targets=%q, dependencies=%q", targets, dependencies)
+			_ = G.opts.DebugMisc && line.debugf("targets=%q, dependencies=%q", targets, dependencies)
 			ctx.target = targets
 
 			for _, source := range splitOnSpace(dependencies) {
@@ -559,7 +559,7 @@ func checklinesMk(lines []*Line) {
 				"white-space.")
 
 		} else {
-			_ = G.opts.optDebugMisc && line.debugf("Unknown line format")
+			_ = G.opts.DebugMisc && line.debugf("Unknown line format")
 		}
 	}
 	substcontext.finish(lines[len(lines)-1])

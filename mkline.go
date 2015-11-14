@@ -18,7 +18,7 @@ func checklineMkVardef(line *Line, varname, op string) {
 		G.mkContext.vardef[varname] = line
 	}
 
-	if !G.opts.optWarnPerm {
+	if !G.opts.WarnPerm {
 		return
 	}
 
@@ -78,14 +78,14 @@ func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContex
 	defer tracecall("checklineMkVaruse", line, varname, mod, *vuc)()
 
 	vartype := getVariableType(line, varname)
-	if G.opts.optWarnExtra &&
+	if G.opts.WarnExtra &&
 		!(vartype != nil && vartype.guessed == NOT_GUESSED) &&
 		!varIsUsed(varname) &&
 		!(G.mkContext != nil && G.mkContext.forVars[varname]) {
 		line.warnf("%s is used but not defined. Spelling mistake?", varname)
 	}
 
-	if G.opts.optWarnPerm {
+	if G.opts.WarnPerm {
 		checklineMkVarusePerm(line, varname, vuc)
 	}
 
@@ -99,7 +99,7 @@ func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContex
 		checklineMkVaruseFor(line, varname, vartype, needsQuoting)
 	}
 
-	if G.opts.optWarnQuoting && vuc.shellword != VUC_SHW_UNKNOWN && needsQuoting != NQ_DONT_KNOW {
+	if G.opts.WarnQuoting && vuc.shellword != VUC_SHW_UNKNOWN && needsQuoting != NQ_DONT_KNOW {
 		checklineMkVaruseShellword(line, varname, vartype, vuc, mod, needsQuoting)
 	}
 
@@ -304,7 +304,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 
 	checklineMkVardef(line, varname, op)
 
-	if G.opts.optWarnExtra && op == "?=" && G.pkgContext != nil && !G.pkgContext.seen_bsd_prefs_mk {
+	if G.opts.WarnExtra && op == "?=" && G.pkgContext != nil && !G.pkgContext.seen_bsd_prefs_mk {
 		switch varbase {
 		case "BUILDLINK_PKGSRCDIR", "BUILDLINK_DEPMETHOD", "BUILDLINK_ABI_DEPENDS":
 			// FIXME: What about these ones? They occur quite often.
@@ -327,7 +327,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == ":=" && varname == strings.ToLower(varname) {
-		_ = G.opts.optDebugUnchecked && line.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
+		_ = G.opts.DebugUnchecked && line.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
 
 	} else if !varIsUsed(varname) {
 		if vartypes := G.globalData.getVartypes(); vartypes[varname] != nil || vartypes[varcanon] != nil {
@@ -396,7 +396,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		} else if matches(varname, `^(?:DIST_SUBDIR|WRKSRC)$`) {
 			line.warnf("%s should not be used in %s, as it sometimes includes the PKGREVISION. Please use %s_NOREV instead.", pkgvarname, varname, pkgvarname)
 		} else {
-			_ = G.opts.optDebugMisc && line.debugf("Use of PKGNAME in %s.", varname)
+			_ = G.opts.DebugMisc && line.debugf("Use of PKGNAME in %s.", varname)
 		}
 	}
 
@@ -508,7 +508,7 @@ var reVarnamePlural string = "^(?:" +
 func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	defer tracecall("checklineMkVartype", varname, op, value, comment)()
 
-	if !G.opts.optWarnTypes {
+	if !G.opts.WarnTypes {
 		return
 	}
 
@@ -528,10 +528,10 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	switch {
 	case vartype == nil:
 		// Cannot check anything if the type is not known.
-		_ = G.opts.optDebugUnchecked && line.debugf("Unchecked variable assignment for %s.", varname)
+		_ = G.opts.DebugUnchecked && line.debugf("Unchecked variable assignment for %s.", varname)
 
 	case op == "!=":
-		_ = G.opts.optDebugMisc && line.debugf("Use of !=: %q", value)
+		_ = G.opts.DebugMisc && line.debugf("Use of !=: %q", value)
 
 	case vartype.kindOfList == LK_NONE:
 		checklineMkVartypeNolist(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.guessed)

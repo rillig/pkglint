@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Suite) TestSubstContext(c *check.C) {
-	G.opts.optWarnExtra = true
+	G.opts.WarnExtra = true
 	line := NewLine("Makefile", "1", "dummy", nil)
 	ctx := new(SubstContext)
 

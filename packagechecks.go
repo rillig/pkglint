@@ -21,7 +21,7 @@ func checkpackagePossibleDowngrade() {
 
 	change := G.globalData.lastChange[G.pkgContext.pkgpath]
 	if change == nil {
-		_ = G.opts.optDebugMisc && line.debugf("No change log for package %q", G.pkgContext.pkgpath)
+		_ = G.opts.DebugMisc && line.debugf("No change log for package %q", G.pkgContext.pkgpath)
 		return
 	}
 
@@ -56,7 +56,7 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 	// included by the package but not by this buildlink3.mk file.
 	for packageBl3, line := range G.pkgContext.bl3 {
 		if includedFiles[packageBl3] == nil {
-			_ = G.opts.optDebugMisc && line.debugf("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
+			_ = G.opts.DebugMisc && line.debugf("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 		}
 	}
 }
@@ -78,7 +78,7 @@ func checkdirPackage(pkgpath string) {
 	if *ctx.pkgdir != "." {
 		files = append(files, dirglob(G.currentDir+"/"+*ctx.pkgdir)...)
 	}
-	if G.opts.optCheckExtra {
+	if G.opts.CheckExtra {
 		files = append(files, dirglob(G.currentDir+"/"+ctx.filesdir)...)
 	}
 	files = append(files, dirglob(G.currentDir+"/"+ctx.patchdir)...)
@@ -103,7 +103,7 @@ func checkdirPackage(pkgpath string) {
 
 	for _, fname := range files {
 		if fname == G.currentDir+"/Makefile" {
-			if G.opts.optCheckMakefile {
+			if G.opts.CheckMakefile {
 				checkfilePackageMakefile(fname, lines)
 			}
 		} else {
@@ -116,7 +116,7 @@ func checkdirPackage(pkgpath string) {
 		}
 	}
 
-	if G.opts.optCheckDistinfo && G.opts.optCheckPatches {
+	if G.opts.CheckDistinfo && G.opts.CheckPatches {
 		if havePatches && !haveDistinfo {
 			warnf(G.currentDir+"/"+ctx.distinfoFile, NO_LINES, "File not found. Please run \"%s makepatchsum\".", confMake)
 		}
@@ -198,7 +198,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		}
 
 		if G.pkgContext.effectivePkgnameLine != nil {
-			_ = G.opts.optDebugMisc && G.pkgContext.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
+			_ = G.opts.DebugMisc && G.pkgContext.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
 				G.pkgContext.effectivePkgname, G.pkgContext.effectivePkgbase, G.pkgContext.effectivePkgversion)
 		}
 
@@ -253,7 +253,7 @@ func pkgnameFromDistname(pkgname, distname string) string {
 		qsep := regexp.QuoteMeta(sep)
 		if m, left, from, right, to, mod := match5(subst, `^(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`(g?)$`); m {
 			newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
-			_ = G.opts.optDebugMisc && G.pkgContext.vardef["PKGNAME"].debugf("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+			_ = G.opts.DebugMisc && G.pkgContext.vardef["PKGNAME"].debugf("pkgnameFromDistname %q => %q", pkgname, newPkgname)
 			pkgname = newPkgname
 		}
 	}

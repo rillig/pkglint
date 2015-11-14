@@ -21,7 +21,7 @@ func (s *Suite) TestParseMkCond_Compare(c *check.C) {
 }
 
 func (s *Suite) TestChecklineMkCondition(c *check.C) {
-	G.opts.optWarnTypes = true
+	G.opts.WarnTypes = true
 	line := NewLine("fname", "1", "", nil)
 	initacls()
 

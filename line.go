@@ -47,7 +47,7 @@ func (self *Line) physicalLines() []PhysLine {
 	return append(self.before, append(self.physlines, self.after...)...)
 }
 func (self *Line) printSource(out io.Writer) {
-	if G.opts.optPrintSource {
+	if G.opts.PrintSource {
 		io.WriteString(out, "\n")
 		for _, physline := range self.physicalLines() {
 			fmt.Fprintf(out, "> %s", physline.textnl)
@@ -75,7 +75,7 @@ func (self *Line) debugf(format string, args ...interface{}) bool {
 	return debugf(self.fname, self.lines, format, args...)
 }
 func (self *Line) explain(explanation ...string) {
-	if G.opts.optExplain {
+	if G.opts.Explain {
 		io.WriteString(G.logOut, "\n")
 		for _, explanationLine := range explanation {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")

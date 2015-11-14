@@ -345,13 +345,13 @@ func argsStr(args ...interface{}) string {
 }
 
 func trace(action, funcname string, args ...interface{}) {
-	if G.opts.optDebugTrace {
+	if G.opts.DebugTrace {
 		io.WriteString(os.Stdout, sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
 	}
 }
 
 func tracecall(funcname string, args ...interface{}) func() {
-	if G.opts.optDebugTrace {
+	if G.opts.DebugTrace {
 		trace("+ ", funcname, args...)
 		G.traceDepth++
 		return func() {
