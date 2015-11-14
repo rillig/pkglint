@@ -783,7 +783,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 	case state == SCST_ECHO:
 		return SCST_CONT
 	default:
-		line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
+		_ = G.opts.optDebugShell && line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
 		return SCST_START
 	}
 }
@@ -798,8 +798,5 @@ func splitIntoShellwords(line *Line, text string) ([]string, string) {
 	}
 
 	rest = strings.TrimLeftFunc(rest, unicode.IsSpace)
-	if rest != "" && rest != "\\" {
-		line.errorf("Internal pkglint error: splitIntoShellwords rest=%q text=%q", rest, text)
-	}
 	return words, rest
 }
