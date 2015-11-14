@@ -11,28 +11,6 @@ import (
 	"strings"
 )
 
-// A SimpleMatch is the result of applying a regular expression to a Perl
-// scalar value. It can return the range and the text of the captured
-// groups.
-//
-type SimpleMatch struct {
-	str    string
-	starts []int
-	ends   []int
-	n      int
-}
-
-func NewSimpleMatch(str string, starts, ends []int, n int) *SimpleMatch {
-	return &SimpleMatch{str, starts, ends, n}
-}
-func (self *SimpleMatch) has(i int) bool {
-	return 0 <= i && i <= self.n && self.starts[i] != -1 && self.ends[i] != -1
-}
-func (self *SimpleMatch) text(i int) string {
-	start, end := self.starts[i], self.ends[i]
-	return self.str[start : end-start]
-}
-
 // A Vartype in pkglint is a combination of a data type and a permission
 // specification. Further details can be found in the chapter ``The pkglint
 // type system'' of the pkglint book.
