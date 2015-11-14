@@ -197,7 +197,6 @@ func checkItem(fname string) {
 	}
 
 	if isReg {
-		checkperms(fname)
 		checkfile(fname)
 		return
 	}
@@ -629,6 +628,16 @@ func checkfile(fname string) {
 	if err != nil {
 		logError(fname, NO_LINES, "%s", err)
 		return
+	}
+
+	if st.Mode().IsRegular() && (st.Mode().Perm()&0111 != 0) && !isCommitted(fname) {
+		line := NewLine(fname, NO_LINES, "", nil)
+		line.logWarning("Should not be executable.")
+		line.explainWarning(
+			"No package file should ever be executable. Even the INSTALL and",
+			"DEINSTALL scripts are usually not usable in the form they have in the",
+			"package, as the pathnames get adjusted during installation. So there is",
+			"no need to have any file executable.")
 	}
 
 	switch {
