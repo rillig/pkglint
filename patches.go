@@ -125,11 +125,14 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 	if matched, before, _, str := match3(text, `(.*)(["'])(/\w[^"']*)["']`); matched {
 		_ = G.opts.optDebugMisc && line.logDebug("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
-		if match0(before, `[A-Z_]+\s*$`) {
+		switch {
+		case match0(before, `[A-Z_]+\s*$`):
 			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
-		} else if match0(before, `\+\s*$`) {
+
+		case match0(before, `\+\s*$`):
 			// ok; Python example: libdir = prefix + '/lib'
-		} else {
+
+		default:
 			checkwordAbsolutePathname(line, str)
 		}
 	}
@@ -142,19 +145,20 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		// Don't warn for absolute pathnames in comments, except for shell interpreters.
 
 	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
-		if hasSuffix(before, "@") {
+		switch {
+		case hasSuffix(before, "@"):
 			// ok; autotools example: @PREFIX@/bin
 
-		} else if match0(before, `[)}]$`) {
+		case match0(before, `[)}]$`):
 			// ok; autotools example: ${prefix}/bin
 
-		} else if match0(before, `\+\s*["']$`) {
+		case match0(before, `\+\s*["']$`):
 			// ok; Python example: prefix + '/lib'
 
-		} else if match0(before, `\w$`) {
+		case match0(before, `\w$`):
 			// ok; shell example: libdir=$prefix/lib
 
-		} else {
+		default:
 			_ = G.opts.optDebugMisc && line.logDebug("before=%q", before)
 			checkwordAbsolutePathname(line, path)
 		}

@@ -114,15 +114,16 @@ func (cv *CheckVartype) Dependency() {
 	}
 
 	if m, depbase, bracket, version, versionWildcard, other := match5(value, `^(`+rePkgbase+`)-(?:\[(.*)\]\*|(\d+(?:\.\d+)*(?:\.\*)?)(\{,nb\*\}|\*|)|(.*))?$`); m {
-		if bracket != "" {
+		switch {
+		case bracket != "":
 			if bracket != "0-9" {
 				line.logWarning("Only [0-9]* is allowed in the numeric part of a dependency.")
 			}
 
-		} else if version != "" && versionWildcard != "" {
+		case version != "" && versionWildcard != "":
 			// Fine.
 
-		} else if version != "" {
+		case version != "":
 			line.logWarning("Please append \"{,nb*}\" to the version number of this dependency.")
 			line.explainWarning(
 				"Usually, a dependency should stay valid when the PKGREVISION is",
@@ -130,27 +131,28 @@ func (cv *CheckVartype) Dependency() {
 				"current form, the dependency only matches if the PKGREVISION is",
 				"undefined.")
 
-		} else if other == "*" {
+		case other == "*":
 			line.logWarning("Please use %s-[0-9]* instead of %s-*.", depbase, depbase)
 			line.explainWarning(
 				"If you use a * alone, the package specification may match other",
 				"packages that have the same prefix, but a longer name. For example,",
 				"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
 
-		} else {
+		default:
 			line.logError("Unknown dependency pattern %q.", value)
 		}
 		return
 	}
 
-	if contains(value, "{") {
+	switch {
+	case contains(value, "{"):
 		// No check yet for alternative dependency patterns.
 		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked alternative dependency pattern: %s", value)
 
-	} else if value != cv.valueNovar {
+	case value != cv.valueNovar:
 		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked dependency: %s", value)
 
-	} else {
+	default:
 		line.logWarning("Unknown dependency format: %s", value)
 		line.explainWarning(
 			"Typical dependencies have the following forms:",
@@ -170,12 +172,12 @@ func (cv *CheckVartype) DependencyWithPath() {
 	if m, pattern, relpath, _, pkg := match4(value, `(.*):(\.\./\.\./([^/]+)/([^/]+))$`); m {
 		checklineRelativePkgdir(line, relpath)
 
-		if pkg == "msgfmt" || pkg == "gettext" {
+		switch pkg {
+		case "msgfmt", "gettext":
 			line.logWarning("Please use USE_TOOLS+=msgfmt instead of this dependency.")
-		} else if pkg == "perl5" {
+		case "perl5":
 			line.logWarning("Please use USE_TOOLS+=perl:run instead of this dependency.")
-
-		} else if pkg == "gmake" {
+		case "gmake":
 			line.logWarning("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
@@ -247,10 +249,10 @@ func (cv *CheckVartype) FetchURL() {
 }
 
 func (cv *CheckVartype) Filename() {
-	if contains(cv.valueNovar, "/") {
+	switch {
+	case contains(cv.valueNovar, "/"):
 		cv.line.logWarning("A filename should not contain a slash.")
-
-	} else if !match0(cv.valueNovar, `^[-0-9\@A-Za-z.,_~+%]*$`) {
+	case !match0(cv.valueNovar, `^[-0-9\@A-Za-z.,_~+%]*$`):
 		cv.line.logWarning("%q is not a valid filename.", cv.value)
 	}
 }
@@ -262,11 +264,12 @@ func (cv *CheckVartype) Filemask() {
 }
 
 func (cv *CheckVartype) FileMode() {
-	if cv.value != "" && cv.valueNovar == "" {
+	switch {
+	case cv.value != "" && cv.valueNovar == "":
 		// Fine.
-	} else if match0(cv.value, `^[0-7]{3,4}`) {
+	case match0(cv.value, `^[0-7]{3,4}`):
 		// Fine.
-	} else {
+	default:
 		cv.line.logWarning("Invalid file mode %q.", cv.value)
 	}
 }
@@ -275,11 +278,12 @@ func (cv *CheckVartype) Identifier() {
 	if cv.value != cv.valueNovar {
 		//line.logWarning("Identifiers should be given directly.")
 	}
-	if match0(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+$`) {
+	switch {
+	case match0(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+$`):
 		// Fine.
-	} else if cv.value != "" && cv.valueNovar == "" {
+	case cv.value != "" && cv.valueNovar == "":
 		// Don't warn here.
-	} else {
+	default:
 		cv.line.logWarning("Invalid identifier %q.", cv.value)
 	}
 }
@@ -528,7 +532,8 @@ func (cv *CheckVartype) SedCommands() {
 		word := words[i]
 		checklineMkShellword(cv.line, word, true)
 
-		if word == "-e" {
+		switch {
+		case word == "-e":
 			if i+1 < nwords {
 				// Check the real sed command here.
 				i++
@@ -550,16 +555,16 @@ func (cv *CheckVartype) SedCommands() {
 			} else {
 				line.logError("The -e option to sed requires an argument.")
 			}
-		} else if word == "-E" {
+		case word == "-E":
 			// Switch to extended regular expressions mode.
 
-		} else if word == "-n" {
+		case word == "-n":
 			// Don't print lines per default.
 
-		} else if i == 0 && match0(word, `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`) {
+		case i == 0 && match0(word, `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`):
 			line.logWarning("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
-		} else {
+		default:
 			line.logWarning("Unknown sed command %q.", word)
 		}
 	}
@@ -628,13 +633,14 @@ func (cv *CheckVartype) URL() {
 		}
 
 	} else if m, scheme, _, absPath := match3(value, `^([0-9A-Za-z]+)://([^/]+)(.*)$`); m {
-		if scheme != "ftp" && scheme != "http" && scheme != "https" && scheme != "gopher" {
+		switch {
+		case scheme != "ftp" && scheme != "http" && scheme != "https" && scheme != "gopher":
 			line.logWarning("%q is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.", value)
 
-		} else if absPath == "" {
+		case absPath == "":
 			line.logNote("For consistency, please add a trailing slash to %q.", value)
 
-		} else {
+		default:
 			line.logWarning("%q is not a valid URL.", value)
 		}
 
@@ -644,18 +650,13 @@ func (cv *CheckVartype) URL() {
 }
 
 func (cv *CheckVartype) UserGroupName() {
-	if cv.value != cv.valueNovar {
-		// No checks for now.
-	} else if !match0(cv.value, `^[0-9_a-z]+$`) {
+	if cv.value == cv.valueNovar && !match0(cv.value, `^[0-9_a-z]+$`) {
 		cv.line.logWarning("Invalid user or group name %q.", cv.value)
 	}
 }
 
 func (cv *CheckVartype) Varname() {
-	if cv.value != "" && cv.valueNovar == "" {
-		// The value of another variable
-
-	} else if !match0(cv.valueNovar, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
+	if cv.value == cv.valueNovar && !match0(cv.value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
 		cv.line.logWarning("%q is not a valid variable name.", cv.value)
 	}
 }

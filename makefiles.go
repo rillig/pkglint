@@ -316,35 +316,36 @@ func checklinesMk(lines []*Line) {
 		if line.extra["is_varassign"] == nil {
 			continue
 		}
-		varcanon := line.extra["varcanon"].(string)
 
-		if varcanon == "BUILD_DEFS" || varcanon == "PKG_GROUPS_VARS" || varcanon == "PKG_USERS_VARS" {
+		varcanon := line.extra["varcanon"].(string)
+		switch varcanon {
+		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
 			for _, varname := range splitOnSpace(line.extra["value"].(string)) {
 				G.mkContext.buildDefs[varname] = true
 				_ = G.opts.optDebugMisc && line.logDebug("%q is added to BUILD_DEFS.", varname)
 			}
 
-		} else if varcanon == "PLIST_VARS" {
+		case "PLIST_VARS":
 			for _, id := range splitOnSpace(line.extra["value"].(string)) {
 				G.mkContext.plistVars["PLIST."+id] = true
 				_ = G.opts.optDebugMisc && line.logDebug("PLIST.%s is added to PLIST_VARS.", id)
 				useVar(line, "PLIST."+id)
 			}
 
-		} else if varcanon == "USE_TOOLS" {
+		case "USE_TOOLS":
 			for _, tool := range splitOnSpace(line.extra["value"].(string)) {
 				tool = strings.Split(tool, ":")[0]
 				G.mkContext.tools[tool] = true
 				_ = G.opts.optDebugMisc && line.logDebug("%s is added to USE_TOOLS.", tool)
 			}
 
-		} else if varcanon == "SUBST_VARS.*" {
+		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(line.extra["value"].(string)) {
 				useVar(line, varnameCanon(svar))
 				_ = G.opts.optDebugMisc && line.logDebug("varuse %s", svar)
 			}
 
-		} else if varcanon == "OPSYSVARS" {
+		case "OPSYSVARS":
 			for _, osvar := range splitOnSpace(line.extra["value"].(string)) {
 				useVar(line, osvar+".*")
 				defineVar(line, osvar)

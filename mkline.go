@@ -555,17 +555,18 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		}
 	}
 
-	if vartype == nil {
+	switch {
+	case vartype == nil:
 		// Cannot check anything if the type is not known.
 		_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked variable assignment for %s.", varname)
 
-	} else if op == "!=" {
+	case op == "!=":
 		_ = G.opts.optDebugMisc && line.logDebug("Use of !=: %q", value)
 
-	} else if vartype.kindOfList == LK_NONE {
+	case vartype.kindOfList == LK_NONE:
 		checklineMkVartypeNolist(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 
-	} else {
+	default:
 		var words []string
 		if vartype.kindOfList == LK_INTERNAL {
 			words = splitOnSpace(value)

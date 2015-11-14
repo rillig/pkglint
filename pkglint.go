@@ -198,15 +198,19 @@ func checkItem(fname string) {
 
 	if isReg {
 		checkfile(fname)
-	} else if *G.curPkgsrcdir == "" {
-		logError(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
-	} else if *G.curPkgsrcdir == "../.." {
+		return
+	}
+
+	switch *G.curPkgsrcdir {
+	case "../..":
 		checkdirPackage(pkgpath)
-	} else if *G.curPkgsrcdir == ".." {
+	case "..":
 		checkdirCategory()
-	} else if *G.curPkgsrcdir == "." {
+	case ".":
 		checkdirToplevel()
-	} else {
+	case "":
+		logError(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
+	default:
 		logError(fname, NO_LINES, "Don't know how to check this directory.")
 	}
 }
@@ -633,12 +637,12 @@ func checkfile(fname string) {
 
 	switch {
 	case st.Mode().IsDir():
-		if basename == "files" || basename == "patches" || basename == "CVS" {
+		switch {
+		case basename == "files" || basename == "patches" || basename == "CVS":
 			// Ok
-		} else if match0(fname, `(?:^|/)files/[^/]*$`) {
+		case match0(fname, `(?:^|/)files/[^/]*$`):
 			// Ok
-
-		} else if !isEmptyDir(fname) {
+		case !isEmptyDir(fname):
 			logWarning(fname, NO_LINES, "Unknown directory name.")
 		}
 

@@ -105,30 +105,35 @@ outer:
 			// * http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
 			stripped := ""
 			for rest != "" {
-				if replacestart(&rest, &m, "^`") {
+				switch {
+				case replacestart(&rest, &m, "^`"):
 					if state == SWST_BACKT {
 						state = SWST_PLAIN
 					} else {
 						state = SWST_DQUOT
 					}
 					goto endOfBackticks
-				}
-				if replacestart(&rest, &m, "^\\\\([\\\\`$])") {
+
+				case replacestart(&rest, &m, "^\\\\([\\\\`$])"):
 					stripped += m[1]
-				} else if replacestart(&rest, &m, `^(\\)`) {
+
+				case replacestart(&rest, &m, `^(\\)`):
 					line.logWarning("Backslashes should be doubled inside backticks.")
 					stripped += m[1]
-				} else if state == SWST_DQUOT_BACKT && replacestart(&rest, &m, `^"`) {
+
+				case state == SWST_DQUOT_BACKT && replacestart(&rest, &m, `^"`):
 					line.logWarning("Double quotes inside backticks inside double quotes are error prone.")
 					line.explainWarning(
 						"According to the SUSv3, they produce undefined results.",
 						"",
 						"See the paragraph starting \"Within the backquoted ...\" in",
 						"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
-				} else if replacestart(&rest, &m, "^([^\\\\`]+)") {
+
+				case replacestart(&rest, &m, "^([^\\\\`]+)"):
 					stripped += m[1]
-				} else {
-					panic(sprintf("rest=%v", rest))
+
+				default:
+					line.logError("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, rest)
 				}
 			}
 			line.logError("Unfinished backquotes: rest=%v", rest)
@@ -252,13 +257,14 @@ outer:
 			}
 
 		case state == SWST_SQUOT:
-			if replacestart(&rest, &m, `^'`) {
+			switch {
+			case replacestart(&rest, &m, `^'`):
 				state = SWST_PLAIN
-			} else if replacestart(&rest, &m, `^[^\$\']+`) {
+			case replacestart(&rest, &m, `^[^\$\']+`):
 				// just skip
-			} else if replacestart(&rest, &m, `^\$\$`) {
+			case replacestart(&rest, &m, `^\$\$`):
 				// just skip
-			} else {
+			default:
 				break outer
 			}
 
