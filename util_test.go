@@ -38,3 +38,11 @@ func (s *Suite) TestReplaceFirst(c *check.C) {
 	c.Check(m, check.DeepEquals, []string{"a+b", "a", "+", "b"})
 	c.Check(rest, equals, "X+c+d")
 }
+
+func (s *Suite) TestTabLength(c *check.C) {
+	c.Check(tabLength("12345"), equals, 5)
+	c.Check(tabLength("\t"), equals, 8)
+	c.Check(tabLength("123\t"), equals, 8)
+	c.Check(tabLength("1234567\t"), equals, 8)
+	c.Check(tabLength("12345678\t"), equals, 16)
+}

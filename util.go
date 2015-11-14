@@ -105,7 +105,7 @@ func tabLength(s string) int {
 	length := 0
 	for _, r := range s {
 		if r == '\t' {
-			length = (length + 7) % 8
+			length = length - length%8 + 8
 		} else {
 			length++
 		}
