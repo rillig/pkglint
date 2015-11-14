@@ -164,13 +164,11 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 }
 
 func parselineMk(line *Line) {
+	defer tracecall("parselineMk", line.text)()
+
 	text := line.text
 
 	if m, varname, op, value, comment := match4(text, reVarassign); m {
-
-		// In variable assignments, a '#' character is preceded
-		// by a backslash. In shell commands, it is interpreted
-		// literally.
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 

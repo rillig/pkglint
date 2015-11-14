@@ -110,7 +110,7 @@ const (
 	reConflict                 = `^(<<<<<<<|=======|>>>>>>>)`
 	reUnresolvedVar            = `\$\{`
 	reAsciiChar                = `[\t -~]`
-	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*(.*?)(?:\s*(#.*))?$`
+	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`
 	reShVarassign              = `^([A-Z_a-z][0-9A-Z_a-z]*)=`
 	// This regular expression cannot parse all kinds of shell programs, but
 	// it will catch almost all shell programs that are portable enough to be
