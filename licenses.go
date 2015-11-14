@@ -13,6 +13,10 @@ func parseLicenses(licenses string) []string {
 }
 
 func checktoplevelUnusedLicenses() {
+	if G.ipcUsedLicenses == nil {
+		return
+	}
+
 	licensedir := G.globalData.pkgsrcdir + "/licenses"
 	files, _ := ioutil.ReadDir(licensedir)
 	for _, licensefile := range files {
@@ -32,7 +36,7 @@ func checklineLicense(line *Line, value string) {
 		licenseFile := G.globalData.pkgsrcdir + "/licenses/" + license
 		if licenseFileLine := G.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
 			licenseFile = G.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.extra["value"].(string), false)
-		} else {
+		} else if G.ipcUsedLicenses != nil {
 			G.ipcUsedLicenses[license] = true
 		}
 

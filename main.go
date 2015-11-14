@@ -26,9 +26,8 @@ func main() {
 		G.todo = G.todo[1:]
 		checkItem(item)
 	}
-	if G.ipcCheckingRootRecursively {
-		checktoplevelUnusedLicenses()
-	}
+
+	checktoplevelUnusedLicenses()
 	printSummary()
 	if G.errors != 0 {
 		os.Exit(1)

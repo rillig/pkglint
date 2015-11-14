@@ -15,10 +15,9 @@ type GlobalVars struct {
 	isWip            bool   // Is the current directory from pkgsrc-wip?
 	isInfrastructure bool   // Is the currently checked item from the pkgsrc infrastructure?
 
-	ipcDistinfo                map[string]*Hash // Maps "alg:fname" => "checksum".
-	ipcUsedLicenses            map[string]bool  // asdf
-	ipcCheckingRootRecursively bool             // Only in this case is ipcUsedLicenses filled.
-	todo                       []string         // The list of directory entries that still need to be checked. Mostly relevant with --recursive.
+	ipcDistinfo     map[string]*Hash // Maps "alg:fname" => "checksum".
+	ipcUsedLicenses map[string]bool  // Maps "license name" => true
+	todo            []string         // The list of directory entries that still need to be checked. Mostly relevant with --recursive.
 
 	errors     int
 	warnings   int

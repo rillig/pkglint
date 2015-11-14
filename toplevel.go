@@ -33,7 +33,7 @@ func checkdirToplevel() {
 	checklinesMk(lines)
 
 	if G.opts.optRecursive {
-		G.ipcCheckingRootRecursively = true
+		G.ipcUsedLicenses = make(map[string]bool)
 		G.todo = append(G.todo, ctx.subdirs...)
 	}
 }
