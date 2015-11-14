@@ -30,7 +30,7 @@ func checkdirCategory() {
 	exp.expectEmptyLine()
 
 	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) != nil {
-		checklineValidCharactersInValue(exp.previousLine(), `[-\040'(),/0-9A-Za-z]`)
+		checklineValidCharactersInValue(exp.previousLine(), `[- '(),/0-9A-Za-z]`)
 	} else {
 		exp.currentLine().errorf("COMMENT= line expected.")
 	}
