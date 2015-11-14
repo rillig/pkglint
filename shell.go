@@ -107,7 +107,7 @@ outer:
 			stripped := ""
 			for rest != "" {
 				switch {
-				case replacestart(&rest, &m, "^`"):
+				case replacePrefix(&rest, &m, "^`"):
 					if state == SWST_BACKT {
 						state = SWST_PLAIN
 					} else {
@@ -115,14 +115,14 @@ outer:
 					}
 					goto endOfBackticks
 
-				case replacestart(&rest, &m, "^\\\\([\\\\`$])"):
+				case replacePrefix(&rest, &m, "^\\\\([\\\\`$])"):
 					stripped += m[1]
 
-				case replacestart(&rest, &m, `^(\\)`):
+				case replacePrefix(&rest, &m, `^(\\)`):
 					line.warnf("Backslashes should be doubled inside backticks.")
 					stripped += m[1]
 
-				case state == SWST_DQUOT_BACKT && replacestart(&rest, &m, `^"`):
+				case state == SWST_DQUOT_BACKT && replacePrefix(&rest, &m, `^"`):
 					line.warnf("Double quotes inside backticks inside double quotes are error prone.")
 					line.explain(
 						"According to the SUSv3, they produce undefined results.",
@@ -130,7 +130,7 @@ outer:
 						"See the paragraph starting \"Within the backquoted ...\" in",
 						"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
 
-				case replacestart(&rest, &m, "^([^\\\\`]+)"):
+				case replacePrefix(&rest, &m, "^([^\\\\`]+)"):
 					stripped += m[1]
 
 				default:
@@ -143,9 +143,9 @@ outer:
 			msline.checklineMkShelltext(stripped)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
-		case replacestart(&rest, &m, `^\$\{(`+reVarname+`|@)(:[^\{]+)?\}`),
-			replacestart(&rest, &m, `^\$\((`+reVarname+`|@])(:[^\)]+)?\)`),
-			replacestart(&rest, &m, `^\$([\w@])()`):
+		case replacePrefix(&rest, &m, `^\$\{(`+reVarname+`|@)(:[^\{]+)?\}`),
+			replacePrefix(&rest, &m, `^\$\((`+reVarname+`|@])(:[^\)]+)?\)`),
+			replacePrefix(&rest, &m, `^\$([\w@])()`):
 			varname, mod := m[1], m[2]
 
 			if varname == "@" {
@@ -189,16 +189,16 @@ outer:
 		// The syntax of the variable modifiers can get quite
 		// hairy. In lack of motivation, we just skip anything
 		// complicated, hoping that at least the braces are balanced.
-		case replacestart(&rest, &m, `^\$\{`):
+		case replacePrefix(&rest, &m, `^\$\{`):
 			braces := 1
 		skip:
 			for rest != "" && braces > 0 {
 				switch {
-				case replacestart(&rest, &m, `^\}`):
+				case replacePrefix(&rest, &m, `^\}`):
 					braces--
-				case replacestart(&rest, &m, `^\{`):
+				case replacePrefix(&rest, &m, `^\{`):
 					braces++
-				case replacestart(&rest, &m, `^[^{}]+`):
+				case replacePrefix(&rest, &m, `^[^{}]+`):
 				// skip
 				default:
 					break skip
@@ -207,17 +207,17 @@ outer:
 
 		case state == SWST_PLAIN:
 			switch {
-			case replacestart(&rest, &m, `^[!#\%&\(\)*+,\-.\/0-9:;<=>?\@A-Z\[\]^_a-z{|}~]+`),
-				replacestart(&rest, &m, `^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)`):
-			case replacestart(&rest, &m, `^'`):
+			case replacePrefix(&rest, &m, `^[!#\%&\(\)*+,\-.\/0-9:;<=>?\@A-Z\[\]^_a-z{|}~]+`),
+				replacePrefix(&rest, &m, `^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)`):
+			case replacePrefix(&rest, &m, `^'`):
 				state = SWST_SQUOT
-			case replacestart(&rest, &m, `^"`):
+			case replacePrefix(&rest, &m, `^"`):
 				state = SWST_DQUOT
-			case replacestart(&rest, &m, "^`"):
+			case replacePrefix(&rest, &m, "^`"):
 				state = SWST_BACKT
-			case replacestart(&rest, &m, `^\$\$([0-9A-Z_a-z]+|\#)`),
-				replacestart(&rest, &m, `^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
-				replacestart(&rest, &m, `^\$\$(\$)\$`):
+			case replacePrefix(&rest, &m, `^\$\$([0-9A-Z_a-z]+|\#)`),
+				replacePrefix(&rest, &m, `^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
+				replacePrefix(&rest, &m, `^\$\$(\$)\$`):
 				shvarname := m[1]
 				if G.opts.optWarnQuoting && checkQuoting {
 					line.warnf("Unquoted shell variable %q.", shvarname)
@@ -235,19 +235,19 @@ outer:
 						"\tcp \"$fname\" /tmp",
 						"\t# copies one file, as intended")
 				}
-			case replacestart(&rest, &m, `^\$\@`):
+			case replacePrefix(&rest, &m, `^\$\@`):
 				line.warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
 				line.explain(
 					"It is more readable and prevents confusion with the shell variable of",
 					"the same name.")
 
-			case replacestart(&rest, &m, `^\$\$@`):
+			case replacePrefix(&rest, &m, `^\$\$@`):
 				line.warnf("The $@ shell variable should only be used in double quotes.")
 
-			case replacestart(&rest, &m, `^\$\$\?`):
+			case replacePrefix(&rest, &m, `^\$\$\?`):
 				line.warnf("The $? shell variable is often not available in \"set -e\" mode.")
 
-			case replacestart(&rest, &m, `^\$\$\(`):
+			case replacePrefix(&rest, &m, `^\$\$\(`):
 				line.warnf("Invoking subshells via $(...) is not portable enough.")
 				line.explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
@@ -259,11 +259,11 @@ outer:
 
 		case state == SWST_SQUOT:
 			switch {
-			case replacestart(&rest, &m, `^'`):
+			case replacePrefix(&rest, &m, `^'`):
 				state = SWST_PLAIN
-			case replacestart(&rest, &m, `^[^\$\']+`):
+			case replacePrefix(&rest, &m, `^[^\$\']+`):
 				// just skip
-			case replacestart(&rest, &m, `^\$\$`):
+			case replacePrefix(&rest, &m, `^\$\$`):
 				// just skip
 			default:
 				break outer
@@ -271,21 +271,21 @@ outer:
 
 		case state == SWST_DQUOT:
 			switch {
-			case replacestart(&rest, &m, `^"`):
+			case replacePrefix(&rest, &m, `^"`):
 				state = SWST_PLAIN
-			case replacestart(&rest, &m, "^`"):
+			case replacePrefix(&rest, &m, "^`"):
 				state = SWST_DQUOT_BACKT
-			case replacestart(&rest, &m, "^[^$\"\\\\`]+"):
+			case replacePrefix(&rest, &m, "^[^$\"\\\\`]+"):
 				// just skip
-			case replacestart(&rest, &m, "^\\\\(?:[\\\\\"`]|\\$\\$)"):
+			case replacePrefix(&rest, &m, "^\\\\(?:[\\\\\"`]|\\$\\$)"):
 				// just skip
-			case replacestart(&rest, &m, `^\$\$\{([0-9A-Za-z_]+)\}`),
-				replacestart(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)`):
+			case replacePrefix(&rest, &m, `^\$\$\{([0-9A-Za-z_]+)\}`),
+				replacePrefix(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)`):
 				shvarname := m[1]
 				_ = G.opts.optDebugShell && line.debugf("checklineMkShellword: found double-quoted variable %q.", shvarname)
-			case replacestart(&rest, &m, `^\$\$`):
+			case replacePrefix(&rest, &m, `^\$\$`):
 				line.warnf("Unquoted $ or strange shell variable found.")
-			case replacestart(&rest, &m, `^\\(.)`):
+			case replacePrefix(&rest, &m, `^\\(.)`):
 				char := m[1]
 				line.warnf("Please use \"%s\" instead of \"%s\".", "\\\\"+char, "\\"+char)
 				line.explain(
@@ -336,13 +336,13 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 
 	setE := false
 	var m []string
-	if replacestart(&rest, &m, `^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
+	if replacePrefix(&rest, &m, `^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
 		hidden, macro := m[1], m[2]
 		msline.checkLineStart(hidden, macro, rest, &setE)
 	}
 
 	state := SCST_START
-	for replacestart(&rest, &m, reShellword) {
+	for replacePrefix(&rest, &m, reShellword) {
 		shellword := m[1]
 		st := &ShelltextContext{line, state, shellword}
 
@@ -789,7 +789,7 @@ func splitIntoShellwords(line *Line, text string) ([]string, string) {
 
 	rest := text
 	var m []string
-	for replacestart(&rest, &m, reShellword) {
+	for replacePrefix(&rest, &m, reShellword) {
 		words = append(words, m[1])
 	}
 

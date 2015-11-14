@@ -283,7 +283,8 @@ func replaceFirst(s, re, replacement string) ([]string, string) {
 	}
 	return nil, s
 }
-func replacestart(ps *string, pm *[]string, re string) bool {
+
+func replacePrefix(ps *string, pm *[]string, re string) bool {
 	if m := reCompile(re).FindStringSubmatch(*ps); m != nil {
 		*ps = (*ps)[len(m[0]):]
 		*pm = m
