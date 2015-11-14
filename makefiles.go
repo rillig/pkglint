@@ -149,8 +149,8 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	if G.pkgContext != nil {
 		tmp = strings.Replace(tmp, "${FILESDIR}", G.pkgContext.filesdir, -1)
 	}
-	if G.pkgContext != nil && G.pkgContext.pkgdir != nil {
-		tmp = strings.Replace(tmp, "${PKGDIR}", *G.pkgContext.pkgdir, -1)
+	if G.pkgContext != nil {
+		tmp = strings.Replace(tmp, "${PKGDIR}", G.pkgContext.pkgdir, -1)
 	}
 
 	if adjustDepth {

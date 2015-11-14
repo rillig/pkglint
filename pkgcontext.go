@@ -3,7 +3,7 @@ package main
 // Context of the package that is currently checked.
 type PkgContext struct {
 	pkgpath              string  // e.g. "category/pkgdir"
-	pkgdir               *string // PKGDIR from the package Makefile
+	pkgdir               string  // PKGDIR from the package Makefile
 	filesdir             string  // FILESDIR from the package Makefile
 	patchdir             string  // PATCHDIR from the package Makefile
 	distinfoFile         string  // DISTINFO_FILE from the package Makefile
@@ -24,10 +24,10 @@ type PkgContext struct {
 func newPkgContext(pkgpath string) *PkgContext {
 	ctx := &PkgContext{
 		pkgpath,
-		nil,
-		"files",
-		"patches",
-		"distinfo",
+		"",
+		"",
+		"",
+		"",
 		nil,
 		nil,
 		nil,

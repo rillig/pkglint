@@ -155,8 +155,7 @@ func checkItem(fname string) {
 func loadPackageMakefile(fname string) []*Line {
 	G.pkgContext.included = make(map[string]*Line)
 
-	mainLines := make([]*Line, 0)
-	allLines := make([]*Line, 0)
+	var mainLines, allLines []*Line
 	if !readMakefile(fname, &mainLines, &allLines) {
 		errorf(fname, NO_LINES, "Cannot be read.")
 		return nil
@@ -171,7 +170,7 @@ func loadPackageMakefile(fname string) []*Line {
 
 	determineUsedVariables(allLines)
 
-	G.pkgContext.pkgdir = newStr(expandVariableWithDefault("PKGDIR", "."))
+	G.pkgContext.pkgdir = expandVariableWithDefault("PKGDIR", ".")
 	G.pkgContext.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
 	G.pkgContext.filesdir = expandVariableWithDefault("FILESDIR", "files")
 	G.pkgContext.patchdir = expandVariableWithDefault("PATCHDIR", "patches")
@@ -189,7 +188,7 @@ func loadPackageMakefile(fname string) []*Line {
 		dummyLine.debugf("DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
 		dummyLine.debugf("FILESDIR=%s", G.pkgContext.filesdir) &&
 		dummyLine.debugf("PATCHDIR=%s", G.pkgContext.patchdir) &&
-		dummyLine.debugf("PKGDIR=%s", *G.pkgContext.pkgdir)
+		dummyLine.debugf("PKGDIR=%s", G.pkgContext.pkgdir)
 
 	return mainLines
 }

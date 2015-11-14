@@ -75,8 +75,8 @@ func checkdirPackage(pkgpath string) {
 	}
 
 	files := dirglob(G.currentDir)
-	if *ctx.pkgdir != "." {
-		files = append(files, dirglob(G.currentDir+"/"+*ctx.pkgdir)...)
+	if ctx.pkgdir != "." {
+		files = append(files, dirglob(G.currentDir+"/"+ctx.pkgdir)...)
 	}
 	if G.opts.CheckExtra {
 		files = append(files, dirglob(G.currentDir+"/"+ctx.filesdir)...)
@@ -92,7 +92,7 @@ func checkdirPackage(pkgpath string) {
 	for _, fname := range files {
 		if (hasPrefix(path.Base(fname), "Makefile.") || hasSuffix(fname, ".mk")) &&
 			!matches(fname, `patch-`) &&
-			!contains(fname, *G.pkgContext.pkgdir+"/") &&
+			!contains(fname, G.pkgContext.pkgdir+"/") &&
 			!contains(fname, G.pkgContext.filesdir+"/") {
 			if lines, err := loadLines(fname, true); err == nil && lines != nil {
 				parselinesMk(lines)
@@ -133,9 +133,8 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 	vardef := G.pkgContext.vardef
 	if vardef["PLIST_SRC"] == nil &&
 		vardef["GENERATE_PLIST"] == nil &&
-		vardef["META_PACKAGE"] == nil &&
-		G.pkgContext.pkgdir != nil {
-		if dir := G.currentDir + "/" + *G.pkgContext.pkgdir; !fileExists(dir+"/PLIST") && !fileExists(dir+"/PLIST.common") {
+		vardef["META_PACKAGE"] == nil {
+		if dir := G.currentDir + "/" + G.pkgContext.pkgdir; !fileExists(dir+"/PLIST") && !fileExists(dir+"/PLIST.common") {
 			warnf(fname, NO_LINES, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
 		}
 
