@@ -412,7 +412,7 @@ func (cv *CheckVartype) Perl5Packlist() {
 }
 
 func (cv *CheckVartype) PkgName() {
-	if cv.value == cv.valueNovar && !match0(cv.value, rePkgname) {
+	if cv.value == cv.valueNovar && match(cv.value, rePkgname) == nil {
 		cv.line.logWarning("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
 	}
 }
