@@ -407,8 +407,8 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	value = resolveVarsInRelativePath(value, true)
 	if matches(value, reUnresolvedVar) {
 		value = resolveVariableRefs(value)
-		_ = G.opts.optDebugMisc && dummyLine.debugf("expandVariableWithDefault: failed varname=%q value=%q", varname, value)
 	}
+	_ = G.opts.optDebugMisc && line.debugf("Expanded %q to %q", varname, value)
 	return value
 }
 
