@@ -36,7 +36,7 @@ func mustMatch(pattern string, s string) []string {
 	if m := reCompile(pattern).FindStringSubmatch(s); m != nil {
 		return m
 	}
-	panic(sprintf("mustMatch %#v %#v", pattern, s))
+	panic(sprintf("mustMatch %q %q", pattern, s))
 }
 
 func isEmptyDir(fname string) bool {
