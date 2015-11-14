@@ -47,15 +47,10 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 		sep = " "
 	}
 	text += sep + message + "\n"
-	switch {
-	case level != LL_FATAL && G.logOut == nil:
-		io.WriteString(os.Stdout, text)
-	case level != LL_FATAL:
+	if level != LL_FATAL {
 		io.WriteString(G.logOut, text)
-	case G.logErr == nil:
-		io.WriteString(os.Stderr, text)
-	default:
-		io.WriteString(G.logOut, text)
+	} else {
+		io.WriteString(G.logErr, text)
 	}
 }
 

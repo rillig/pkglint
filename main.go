@@ -7,8 +7,9 @@ import (
 
 func main() {
 	G = &GlobalVars{}
+	G.logOut, G.logErr = os.Stdout, os.Stderr
 
-	G.opts = ParseCommandLine(os.Args, os.Stdout)
+	G.opts = ParseCommandLine(os.Args, G.logOut)
 	if G.opts.optPrintVersion {
 		fmt.Printf("%s\n", confVersion)
 		return

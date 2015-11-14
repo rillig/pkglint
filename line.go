@@ -20,7 +20,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -56,23 +55,23 @@ func (self *Line) printSource(out io.Writer) {
 	}
 }
 func (self *Line) fatalf(format string, args ...interface{}) bool {
-	self.printSource(os.Stderr)
+	self.printSource(G.logErr)
 	return fatalf(self.fname, self.lines, format, args...)
 }
 func (self *Line) errorf(format string, args ...interface{}) bool {
-	self.printSource(os.Stdout)
+	self.printSource(G.logOut)
 	return errorf(self.fname, self.lines, format, args...)
 }
 func (self *Line) warnf(format string, args ...interface{}) bool {
-	self.printSource(os.Stdout)
+	self.printSource(G.logOut)
 	return warnf(self.fname, self.lines, format, args...)
 }
 func (self *Line) notef(format string, args ...interface{}) bool {
-	self.printSource(os.Stdout)
+	self.printSource(G.logOut)
 	return notef(self.fname, self.lines, format, args...)
 }
 func (self *Line) debugf(format string, args ...interface{}) bool {
-	self.printSource(os.Stdout)
+	self.printSource(G.logOut)
 	return debugf(self.fname, self.lines, format, args...)
 }
 func (self *Line) explainError(explanation ...string) {
