@@ -11,12 +11,11 @@ func (s *CaptureOutputSuite) TestSubstContext(c *check.C) {
 
 	ctx.checkVarassign(line, "PKGNAME", "=", "pkgname-1.0")
 
-	c.Check(ctx.id, check.IsNil)
+	c.Check(ctx.id, equals, "")
 
 	ctx.checkVarassign(line, "SUBST_CLASSES", "+=", "interp")
 
-	c.Assert(ctx.id, check.NotNil)
-	c.Check(*ctx.id, equals, "interp")
+	c.Check(ctx.id, equals, "interp")
 
 	ctx.checkVarassign(line, "SUBST_FILES.interp", "=", "Makefile")
 
