@@ -40,7 +40,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			if path.Base(fname) == "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkgContext.bl3[bl3File] = line
-					_ = G.opts.optDebugMisc && line.debugf("Buildlink3 file in package: %v", bl3File)
+					_ = G.opts.optDebugMisc && line.debugf("Buildlink3 file in package: %q", bl3File)
 				}
 			}
 		}
@@ -236,7 +236,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	line.fatalf("Unknown Makefile line format.")
+	line.errorf("Unknown Makefile line format.")
 }
 
 func parselinesMk(lines []*Line) {
@@ -521,7 +521,7 @@ func checklinesMk(lines []*Line) {
 			}
 
 		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
-			_ = G.opts.optDebugMisc && line.debugf("targets=%v, dependencies=%v", targets, dependencies)
+			_ = G.opts.optDebugMisc && line.debugf("targets=%q, dependencies=%q", targets, dependencies)
 			ctx.target = targets
 
 			for _, source := range splitOnSpace(dependencies) {

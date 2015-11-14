@@ -117,7 +117,7 @@ func (self *GlobalData) loadTools() {
 		}
 	}
 	if len(toolFiles) <= 1 {
-		fatalf(toolFiles[0], NO_LINES, "Too few tool files files.")
+		fatalf(toolFiles[0], NO_LINES, "Too few tool files.")
 	}
 
 	tools := make(map[string]bool)
@@ -252,10 +252,10 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
-					line.warnf("Invalid package name %v", pkgname)
+					line.warnf("Invalid package name %q", pkgname)
 				}
 			} else {
-				line.warnf("Invalid line format %v", text)
+				line.warnf("Invalid line format %q", text)
 			}
 		}
 	}
@@ -296,7 +296,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 			changes = append(changes, Change{line, action, pkgpath, version, author, date})
 
 		} else {
-			line.warnf("Unknown doc/CHANGES line: %v", text)
+			line.warnf("Unknown doc/CHANGES line: %q", text)
 			line.explain("See mk/misc/developer.mk for the rules.")
 		}
 	}

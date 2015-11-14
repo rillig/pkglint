@@ -58,7 +58,7 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 	haveList := vartype.isConsideredList()
 
 	_ = G.opts.optDebugQuoting && line.debugf(
-		"variableNeedsQuoting: varname=%v, context=%v, type=%v, wantList=%v, haveList=%v",
+		"variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
 		varname, context, vartype, wantList, haveList)
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
@@ -101,6 +101,6 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 		return NQ_YES
 	}
 
-	_ = G.opts.optDebugQuoting && line.debugf("Don't know whether :Q is needed for %v", varname)
+	_ = G.opts.optDebugQuoting && line.debugf("Don't know whether :Q is needed for %q", varname)
 	return NQ_DONT_KNOW
 }

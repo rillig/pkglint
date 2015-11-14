@@ -137,7 +137,7 @@ outer:
 					line.errorf("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, rest)
 				}
 			}
-			line.errorf("Unfinished backquotes: rest=%v", rest)
+			line.errorf("Unfinished backquotes: rest=%q", rest)
 
 		endOfBackticks:
 			msline.checklineMkShelltext(stripped)
@@ -329,7 +329,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	}
 
 	if m, cmd := match1(shelltext, `^@*-(.*(?:MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m {
-		line.notef("You don't need to use \"-\" before %v.", cmd)
+		line.notef("You don't need to use \"-\" before %q.", cmd)
 	}
 
 	rest := shelltext
@@ -346,7 +346,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		shellword := m[1]
 		st := &ShelltextContext{line, state, shellword}
 
-		_ = G.opts.optDebugShell && line.debugf("checklineMkShelltext state=%v shellword=%v", state, shellword)
+		_ = G.opts.optDebugShell && line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
 
 		{
 			quotingNecessary := state != SCST_CASE &&

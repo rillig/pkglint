@@ -21,13 +21,13 @@ func checkpackagePossibleDowngrade() {
 
 	change := G.globalData.lastChange[G.pkgContext.pkgpath]
 	if change == nil {
-		_ = G.opts.optDebugMisc && line.debugf("No change log for package %v", G.pkgContext.pkgpath)
+		_ = G.opts.optDebugMisc && line.debugf("No change log for package %q", G.pkgContext.pkgpath)
 		return
 	}
 
 	if change.action == "Updated" {
 		if pkgverCmp(pkgversion, change.version) < 0 {
-			line.warnf("The package is being downgraded from %v to %v", change.version, pkgversion)
+			line.warnf("The package is being downgraded from %s to %s", change.version, pkgversion)
 		}
 	}
 }

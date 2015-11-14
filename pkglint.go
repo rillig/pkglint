@@ -290,7 +290,7 @@ func extractUsedVariables(line *Line, text string) []string {
 	}
 
 	if rest != "" {
-		_ = G.opts.optDebugMisc && line.debugf("extractUsedVariables: rest=%v", rest)
+		_ = G.opts.optDebugMisc && line.debugf("extractUsedVariables: rest=%q", rest)
 	}
 	return result
 }
@@ -362,9 +362,9 @@ func getVariableType(line *Line, varname string) *Vartype {
 	}
 
 	if gtype != nil {
-		_ = G.opts.optDebugVartypes && line.debugf("The guessed type of %v is %v.", varname, gtype)
+		_ = G.opts.optDebugVartypes && line.debugf("The guessed type of %q is %v.", varname, gtype)
 	} else {
-		_ = G.opts.optDebugVartypes && line.debugf("No type definition found for %v.", varname)
+		_ = G.opts.optDebugVartypes && line.debugf("No type definition found for %q.", varname)
 	}
 	return gtype
 }
@@ -517,7 +517,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	abs := ifelseStr(hasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
-			line.errorf("%v does not exist.", resolvedPath)
+			line.errorf("%q does not exist.", resolvedPath)
 		}
 		return
 	}
