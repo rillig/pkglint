@@ -10,10 +10,6 @@ func parseAclEntries(args []string) []AclEntry {
 	return result
 }
 
-func loadVartypesBasictypes() {
-	notImplemented("loadVartypesBasicTypes: don’t use self-grep")
-}
-
 type NeedsQuoting int
 
 const (

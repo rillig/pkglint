@@ -714,7 +714,8 @@ func checkfile(fname string) {
 		// Ok
 
 	case matches(basename, `^CHANGES-.*`):
-		loadDocChanges(fname)
+		// This only checks the file, but doesn’t register the changes globally.
+		G.globalData.loadDocChangesFromFile(fname)
 
 	case matches(fname, `(?:^|/)files/[^/]*$`):
 		// Ok

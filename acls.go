@@ -19,11 +19,6 @@ package main
 
 var aclVartypes = make(map[string]*Vartype)
 
-func getBasicType(typename string) *Vartype {
-	notImplemented("getBasicType")
-	return nil
-}
-
 func acl(varname string, kindOfList KindOfList, vartype string, aclentries ...string) {
 	m := mustMatch(`^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`, varname)
 	varbase, varparam := m[1], m[2]
