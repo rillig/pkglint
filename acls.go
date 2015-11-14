@@ -27,6 +27,7 @@ func acl(varname string, kindOfList KindOfList, vartype string, aclentries ...st
 
 	var vtype *Vartype
 	if basicType != "" {
+		lookupPrimitiveCheck(basicType)
 		vtype = newBasicVartype(kindOfList, basicType, parseAclEntries(aclentries), NOT_GUESSED)
 	} else {
 		vtype = newEnumVartype(kindOfList, enumValues, parseAclEntries(aclentries), NOT_GUESSED)
@@ -197,7 +198,6 @@ func initacls() {
 	bl3list("BUILDLINK_LDFLAGS.*", LK_SHELL, "LdFlag")
 	bl3list("BUILDLINK_LIBDIRS.*", LK_SHELL, "Pathname")
 	acl("BUILDLINK_LIBS.*", LK_SHELL, "LdFlag", "buildlink3.mk:a")
-	acl("BUILDLINK_PACKAGES", LK_NONE, "BuildlinkPackages", "buildlink3.mk:aps")
 	acl("BUILDLINK_PASSTHRU_DIRS", LK_SHELL, "Pathname", "Makefile:a", "Makefile.common:a", "buildlink3.mk:a", "hacks.mk:a")
 	acl("BUILDLINK_PASSTHRU_RPATHDIRS", LK_SHELL, "Pathname", "Makefile:a", "Makefile.common:a", "buildlink3.mk:a", "hacks.mk:a")
 	acl("BUILDLINK_PKGSRCDIR.*", LK_NONE, "RelativePkgDir", "buildlink3.mk:dp")
@@ -232,7 +232,7 @@ func initacls() {
 	// ^^ may also be changed by the user
 	acl("CHECK_BUILTIN", LK_NONE, "YesNo", "builtin.mk:d", "Makefile:s")
 	acl("CHECK_BUILTIN.*", LK_NONE, "YesNo", "*:p")
-	acl("CHECK_FILES_SKIP", LK_SHELL, "Pathmask", "Makefile:a", "Makefile.common:a")
+	acl("CHECK_FILES_SKIP", LK_SHELL, "BasicRegularExpression", "Makefile:a", "Makefile.common:a")
 	pkg("CHECK_FILES_SUPPORTED", LK_NONE, "YesNo")
 	usr("CHECK_HEADERS", LK_NONE, "YesNo")
 	pkglist("CHECK_HEADERS_SKIP", LK_SHELL, "Pathmask")

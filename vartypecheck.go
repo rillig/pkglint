@@ -16,8 +16,130 @@ type CheckVartype struct {
 	guessed     Guessed
 }
 
+func lookupPrimitiveCheck(primitiveType string) func(*CheckVartype) {
+	switch primitiveType {
+	case "AwkCommand":
+		return (*CheckVartype).AwkCommand
+	case "BasicRegularExpression":
+		return (*CheckVartype).BasicRegularExpression
+	case "BrokenIn":
+		return (*CheckVartype).BrokenIn
+	case "BuildlinkDepmethod":
+		return (*CheckVartype).BuildlinkDepmethod
+	case "BuildlinkDepth":
+		return (*CheckVartype).BuildlinkDepth
+	case "Category":
+		return (*CheckVartype).Category
+	case "CFlag":
+		return (*CheckVartype).CFlag
+	case "Comment":
+		return (*CheckVartype).Comment
+	case "Dependency":
+		return (*CheckVartype).Dependency
+	case "DependencyWithPath":
+		return (*CheckVartype).DependencyWithPath
+	case "DistSuffix":
+		return (*CheckVartype).DistSuffix
+	case "EmulPlatform":
+		return (*CheckVartype).EmulPlatform
+	case "FetchURL":
+		return (*CheckVartype).FetchURL
+	case "Filename":
+		return (*CheckVartype).Filename
+	case "Filemask":
+		return (*CheckVartype).Filemask
+	case "FileMode":
+		return (*CheckVartype).FileMode
+	case "Identifier":
+		return (*CheckVartype).Identifier
+	case "Integer":
+		return (*CheckVartype).Integer
+	case "LdFlag":
+		return (*CheckVartype).LdFlag
+	case "License":
+		return (*CheckVartype).License
+	case "MailAddress":
+		return (*CheckVartype).MailAddress
+	case "Message":
+		return (*CheckVartype).Message
+	case "Option":
+		return (*CheckVartype).Option
+	case "Pathlist":
+		return (*CheckVartype).Pathlist
+	case "Pathmask":
+		return (*CheckVartype).Pathmask
+	case "Pathname":
+		return (*CheckVartype).Pathname
+	case "Perl5Packlist":
+		return (*CheckVartype).Perl5Packlist
+	case "PkgName":
+		return (*CheckVartype).PkgName
+	case "PkgPath":
+		return (*CheckVartype).PkgPath
+	case "PkgOptionsVar":
+		return (*CheckVartype).PkgOptionsVar
+	case "PkgRevision":
+		return (*CheckVartype).PkgRevision
+	case "PlatformTriple":
+		return (*CheckVartype).PlatformTriple
+	case "PrefixPathname":
+		return (*CheckVartype).PrefixPathname
+	case "PythonDependency":
+		return (*CheckVartype).PythonDependency
+	case "RelativePkgDir":
+		return (*CheckVartype).RelativePkgDir
+	case "RelativePkgPath":
+		return (*CheckVartype).RelativePkgPath
+	case "Restricted":
+		return (*CheckVartype).Restricted
+	case "SedCommand":
+		return (*CheckVartype).SedCommand
+	case "SedCommands":
+		return (*CheckVartype).SedCommands
+	case "ShellCommand":
+		return (*CheckVartype).ShellCommand
+	case "ShellWord":
+		return (*CheckVartype).ShellWord
+	case "Stage":
+		return (*CheckVartype).Stage
+	case "String":
+		return (*CheckVartype).String
+	case "Tool":
+		return (*CheckVartype).Tool
+	case "Unchecked":
+		return (*CheckVartype).Unchecked
+	case "URL":
+		return (*CheckVartype).URL
+	case "UserGroupName":
+		return (*CheckVartype).UserGroupName
+	case "Varname":
+		return (*CheckVartype).Varname
+	case "Version":
+		return (*CheckVartype).Version
+	case "WrapperReorder":
+		return (*CheckVartype).WrapperReorder
+	case "WrapperTransform":
+		return (*CheckVartype).WrapperTransform
+	case "WrkdirSubdirectory":
+		return (*CheckVartype).WrkdirSubdirectory
+	case "WrksrcSubdirectory":
+		return (*CheckVartype).WrksrcSubdirectory
+	case "Yes":
+		return (*CheckVartype).Yes
+	case "YesNo":
+		return (*CheckVartype).YesNo
+	case "YesNo_Indirectly":
+		return (*CheckVartype).YesNo_Indirectly
+	default:
+		panic(sprintf("Internal pkglint error: checklineMkVartypePrimitive %q", primitiveType))
+	}
+}
+
 func (cv *CheckVartype) AwkCommand() {
 	_ = G.opts.optDebugUnchecked && cv.line.debugf("Unchecked AWK command: %q", cv.value)
+}
+
+func (cv *CheckVartype) BasicRegularExpression() {
 }
 
 func (cv *CheckVartype) BrokenIn() {
