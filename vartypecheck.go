@@ -561,8 +561,8 @@ func (cv *CheckVartype) SedCommands() {
 		case word == "-n":
 			// Don't print lines per default.
 
-		case i == 0 && matches(word, `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`):
-			line.logWarning("Please always use \"-e\" in sed commands, even if there is only one substitution.")
+		case i == 0 && matches(word, `^(["']?)(?:\d*|/.*/)s.+["']$`):
+			line.logNote("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 		default:
 			line.logWarning("Unknown sed command %q.", word)
