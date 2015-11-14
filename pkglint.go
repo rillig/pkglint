@@ -109,7 +109,7 @@ const (
 	reMkShellcmd               = `^\t(.*)$`
 	reConflict                 = `^(<<<<<<<|=======|>>>>>>>)`
 	reUnresolvedVar            = `\$\{`
-	reValidchars               = `[\011\040-\176]`
+	reAsciiChar                = `[\t -~]`
 	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*(.*?)(?:\s*(#.*))?$`
 	reShVarassign              = `^([A-Z_a-z][0-9A-Z_a-z]*)=`
 	// This regular expression cannot parse all kinds of shell programs, but
@@ -431,8 +431,8 @@ func checklineLength(line *Line, maxlength int) {
 	}
 }
 
-func checklineValidCharacters(line *Line, reValidchars string) {
-	rest := reCompile(reValidchars).ReplaceAllString(line.text, "")
+func checklineValidCharacters(line *Line, reChar string) {
+	rest := reCompile(reChar).ReplaceAllString(line.text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -442,10 +442,10 @@ func checklineValidCharacters(line *Line, reValidchars string) {
 	}
 }
 
-func checklineValidCharactersInValue(line *Line, reValidchars string) {
+func checklineValidCharactersInValue(line *Line, reValid string) {
 	varname := line.extra["varname"].(string)
 	value := line.extra["value"].(string)
-	rest := reCompile(reValidchars).ReplaceAllString(value, "")
+	rest := reCompile(reValid).ReplaceAllString(value, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -573,7 +573,7 @@ func checkfileMessage(fname string) {
 	for _, line := range lines {
 		checklineLength(line, 80)
 		checklineTrailingWhitespace(line)
-		checklineValidCharacters(line, reValidchars)
+		checklineValidCharacters(line, reAsciiChar)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
 		lastLine.logWarning("Expected a line of exactly 75 \"=\" characters.")
