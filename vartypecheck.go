@@ -508,57 +508,59 @@ func (cv *CheckVartype) SedCommand() {
 func (cv *CheckVartype) SedCommands() {
 	line := cv.line
 
-	words := shellSplit(cv.value)
-	if words == nil {
-		line.logError("Invalid shell words in sed commands.")
-		line.explainError(
-			"If your sed commands have embedded \"#\" characters, you need to escape",
-			"them with a backslash, otherwise make(1) will interpret them as a",
-			"comment, no matter if they occur in single or double quotes or",
-			"whatever.")
+	words, rest := splitIntoShellwords(line, cv.value)
+	if rest != "" {
+		if contains(cv.value, "#") {
+			line.logError("Invalid shell words in sed commands.")
+			line.explainError(
+				"If your sed commands have embedded \"#\" characters, you need to escape",
+				"them with a backslash, otherwise make(1) will interpret them as a",
+				"comment, no matter if they occur in single or double quotes or",
+				"whatever.")
+		}
+		return
+	}
 
-	} else {
-		nwords := len(words)
-		ncommands := 0
+	nwords := len(words)
+	ncommands := 0
 
-		for i := 0; i < nwords; i++ {
-			word := words[i]
-			checklineMkShellword(cv.line, word, true)
+	for i := 0; i < nwords; i++ {
+		word := words[i]
+		checklineMkShellword(cv.line, word, true)
 
-			if word == "-e" {
-				if i+1 < nwords {
-					// Check the real sed command here.
-					i++
-					ncommands++
-					if ncommands > 1 {
-						line.logWarning("Each sed command should appear in an assignment of its own.")
-						line.explainWarning(
-							"For example, instead of",
-							"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
-							"use",
-							"    SUBST_SED.foo+=        -e s,command1,,",
-							"    SUBST_SED.foo+=        -e s,command2,,",
-							"",
-							"This way, short sed commands cannot be hidden at the end of a line.")
-					}
-					checklineMkShellword(line, words[i-1], true)
-					checklineMkShellword(line, words[i], true)
-					checklineMkVartypeSimple(line, cv.varname, "SedCommand", cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
-				} else {
-					line.logError("The -e option to sed requires an argument.")
+		if word == "-e" {
+			if i+1 < nwords {
+				// Check the real sed command here.
+				i++
+				ncommands++
+				if ncommands > 1 {
+					line.logWarning("Each sed command should appear in an assignment of its own.")
+					line.explainWarning(
+						"For example, instead of",
+						"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
+						"use",
+						"    SUBST_SED.foo+=        -e s,command1,,",
+						"    SUBST_SED.foo+=        -e s,command2,,",
+						"",
+						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-			} else if word == "-E" {
-				// Switch to extended regular expressions mode.
-
-			} else if word == "-n" {
-				// Don't print lines per default.
-
-			} else if i == 0 && match0(word, `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`) {
-				line.logWarning("Please always use \"-e\" in sed commands, even if there is only one substitution.")
-
+				checklineMkShellword(line, words[i-1], true)
+				checklineMkShellword(line, words[i], true)
+				checklineMkVartypeSimple(line, cv.varname, "SedCommand", cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
-				line.logWarning("Unknown sed command %q.", word)
+				line.logError("The -e option to sed requires an argument.")
 			}
+		} else if word == "-E" {
+			// Switch to extended regular expressions mode.
+
+		} else if word == "-n" {
+			// Don't print lines per default.
+
+		} else if i == 0 && match0(word, `^([\"']?)(?:\d*|/.*/)s(.).*\2g?\1$`) {
+			line.logWarning("Please always use \"-e\" in sed commands, even if there is only one substitution.")
+
+		} else {
+			line.logWarning("Unknown sed command %q.", word)
 		}
 	}
 }

@@ -570,7 +570,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		if vartype.kindOfList == LK_INTERNAL {
 			words = splitOnSpace(value)
 		} else {
-			words = splitIntoShellwords(line, value)
+			words, _ = splitIntoShellwords(line, value)
 		}
 
 		for _, word := range words {

@@ -631,21 +631,6 @@ func isForbiddenShellCommand(cmd string) bool {
 	return false
 }
 
-func shellSplit(text string) []string {
-	words := make([]string, 0)
-
-	rest := text
-	var m []string
-	for replacestart(&rest, &m, reShellword) {
-		words = append(words, m[1])
-	}
-	if match0(rest, `^\s*$`) {
-		return words
-	} else {
-		return nil
-	}
-}
-
 // Some shell commands should not be used in the install phase.
 func (msline *MkShellLine) checkCommandUse(shellcmd string) {
 	line := msline.line
@@ -792,26 +777,17 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 	}
 }
 
-func splitIntoShellwords(line *Line, text string) []string {
+func splitIntoShellwords(line *Line, text string) ([]string, string) {
 	words := make([]string, 0)
+
 	rest := text
-	for {
-		var m []string
-		m, rest = replaceFirst(rest, reShellword, "")
-		if m == nil {
-			break
-		}
-
-		word := m[1]
-		if hasPrefix(word, "#") {
-			break
-		}
-		words = append(words, word)
+	var m []string
+	for replacestart(&rest, &m, reShellword) {
+		words = append(words, m[1])
 	}
-
-	if match0(rest, `\S`) {
+	rest = strings.TrimSpace(rest)
+	if rest != "" {
 		line.logError("Internal pkglint error: splitIntoShellwords %q %q", text, rest)
 	}
-
-	return words
+	return words, rest
 }

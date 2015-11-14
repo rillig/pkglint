@@ -594,7 +594,8 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	case FT_SHELL:
 	case FT_MAKE:
 		// This check is not as accurate as the similar one in checklineMkShelltext.
-		for _, shellword := range reCompile(reShellword).FindAllString(addedText, -1) {
+		shellwords, _ := splitIntoShellwords(line, addedText)
+		for _, shellword := range shellwords {
 			if !hasPrefix(shellword, "#") {
 				checklineMkAbsolutePathname(line, shellword)
 			}
