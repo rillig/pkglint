@@ -90,12 +90,8 @@ func debugf(fname, lineno, format string, args ...interface{}) bool {
 
 func explain(level LogLevel, fname, lineno string, explanation []string) {
 	if G.opts.optExplain {
-		out := os.Stdout
-		if level == LL_FATAL {
-			out = os.Stderr
-		}
 		for _, explanationLine := range explanation {
-			io.WriteString(out, "\t"+explanationLine+"\n")
+			io.WriteString(os.Stdout, "\t"+explanationLine+"\n")
 		}
 	}
 }
