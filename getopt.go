@@ -10,7 +10,7 @@ import (
 
 type Options struct {
 	options []*Option
-	out io.Writer
+	out     io.Writer
 }
 
 func NewOptions(out io.Writer) *Options {
