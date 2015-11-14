@@ -298,10 +298,7 @@ func negToZero(i int) int {
 }
 
 func toInt(s string) int {
-	n, err := strconv.Atoi(s)
-	if err != nil {
-		panic("toInt " + s)
-	}
+	n, _ := strconv.Atoi(s)
 	return n
 }
 
