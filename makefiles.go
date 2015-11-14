@@ -381,7 +381,7 @@ func checklinesMk(lines []*Line) {
 				prefix := varname + space1 + op
 				alignedLen := tabLength(prefix + align)
 				if alignedLen%8 == 0 {
-					tabalign := strings.Repeat("\t", (alignedLen-tabLength(prefix)+7)/8)
+					tabalign := strings.Repeat("\t", (alignedLen-tabLength(prefix))/8)
 					line.replace(prefix+align, prefix+tabalign)
 				}
 			}
