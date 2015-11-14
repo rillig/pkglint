@@ -563,7 +563,7 @@ func checklineMkVartypeNolist(line *Line, varname string, vartype *Vartype, op, 
 func checklineMkVartypePrimitive(line *Line, varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
 	defer tracecall("checklineMkVartypePrimitive", varname, op, value, comment, isList, guessed)()
 
-	ctx := &CheckVartype{line, varname, op, value, "", comment, isList, guessed == GUESSED}
+	ctx := &VartypeCheckContext{line, varname, op, value, "", comment, isList, guessed == GUESSED}
 	ctx.valueNovar = withoutMakeVariables(line, value, isList)
 
 	checker.checker(ctx)
