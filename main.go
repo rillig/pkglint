@@ -16,6 +16,9 @@ func main() {
 	}
 
 	G.globalData.Initialize(findPkgsrcTopdir())
+	if G.opts.optCheckGlobal {
+		G.ipcUsedLicenses = make(map[string]bool)
+	}
 
 	G.todo = append(G.todo, G.opts.args...)
 	if len(G.todo) == 0 {

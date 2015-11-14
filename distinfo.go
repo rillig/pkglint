@@ -54,15 +54,16 @@ func checkfileDistinfo(fname string) {
 		}
 
 		// Inter-package check for differing distfile checksums.
-		if G.opts.optCheckGlobal && !ctx.isPatch {
-			otherHash := G.ipcDistinfo[alg+":"+fname]
+		if G.ipcDistinfo != nil && !ctx.isPatch {
+			key := alg + ":" + fname
+			otherHash := G.ipcDistinfo[key]
 			if otherHash != nil {
 				if otherHash.hash != hash {
 					line.errorf("The hash %s for %s is %s, ...", alg, fname, hash)
 					otherHash.line.errorf("... which differs from %s.", otherHash.hash)
 				}
 			} else {
-				G.ipcDistinfo[alg+":"+fname] = &Hash{hash, line}
+				G.ipcDistinfo[key] = &Hash{hash, line}
 			}
 		}
 
