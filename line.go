@@ -76,9 +76,11 @@ func (self *Line) debugf(format string, args ...interface{}) bool {
 }
 func (self *Line) explain(explanation ...string) {
 	if G.opts.optExplain {
+		io.WriteString(G.logOut, "\n")
 		for _, explanationLine := range explanation {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
 		}
+		io.WriteString(G.logOut, "\n")
 	}
 }
 func (self *Line) String() string {
