@@ -1,12 +1,12 @@
 package main
 
 // High-level iterating through lines and checking them.
-type ExpectContext struct {
+type Expecter struct {
 	lines []*Line
 	index int
 }
 
-func (ctx *ExpectContext) currentLine() *Line {
+func (ctx *Expecter) currentLine() *Line {
 	if ctx.index < len(ctx.lines) {
 		return ctx.lines[ctx.index]
 	}
@@ -14,18 +14,18 @@ func (ctx *ExpectContext) currentLine() *Line {
 	return NewLine(ctx.lines[0].fname, "EOF", "", nil) // dummy
 }
 
-func (ctx *ExpectContext) previousLine() *Line {
+func (ctx *Expecter) previousLine() *Line {
 	return ctx.lines[ctx.index-1]
 }
 
-func (ctx *ExpectContext) eof() bool {
+func (ctx *Expecter) eof() bool {
 	return !(ctx.index < len(ctx.lines))
 }
-func (ctx *ExpectContext) advance() {
+func (ctx *Expecter) advance() {
 	ctx.index++
 }
 
-func (ctx *ExpectContext) advanceIfMatches(re string) []string {
+func (ctx *Expecter) advanceIfMatches(re string) []string {
 	if ctx.index < len(ctx.lines) {
 		if m := match(ctx.lines[ctx.index].text, re); m != nil {
 			ctx.index++
@@ -35,7 +35,7 @@ func (ctx *ExpectContext) advanceIfMatches(re string) []string {
 	return nil
 }
 
-func (ctx *ExpectContext) expectEmptyLine() bool {
+func (ctx *Expecter) expectEmptyLine() bool {
 	if ctx.advanceIfMatches(`^$`) != nil {
 		return true
 	}
@@ -44,7 +44,7 @@ func (ctx *ExpectContext) expectEmptyLine() bool {
 	return false
 }
 
-func (ctx *ExpectContext) expectText(text string) bool {
+func (ctx *Expecter) expectText(text string) bool {
 	if ctx.index < len(ctx.lines) && ctx.lines[ctx.index].text == text {
 		ctx.index++
 		return true
