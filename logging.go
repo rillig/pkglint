@@ -111,5 +111,3 @@ func printSummary() {
 		}
 	}
 }
-
-

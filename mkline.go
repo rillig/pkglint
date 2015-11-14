@@ -89,7 +89,7 @@ func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContex
 		checklineMkVarusePerm(line, varname, vuc)
 	}
 
-	if varname == "LOCALBASE" && !G.isInternal {
+	if varname == "LOCALBASE" && !G.isInfrastructure {
 		checklineMkVaruseLocalbase(line)
 	}
 
@@ -373,7 +373,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		line.logWarning("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	if hasPrefix(varname, "_") && !G.isInternal {
+	if hasPrefix(varname, "_") && !G.isInfrastructure {
 		line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 	}
 

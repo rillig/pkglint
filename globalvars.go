@@ -11,9 +11,9 @@ type GlobalVars struct {
 	pkgContext   *PkgContext
 	mkContext    *MkContext
 
-	currentDir string // The currently checked directory, relative to the cwd
-	isWip      bool   // Is the current directory from pkgsrc-wip?
-	isInternal bool   // Is the currently checked item from the pkgsrc infrastructure?
+	currentDir       string // The currently checked directory, relative to the cwd
+	isWip            bool   // Is the current directory from pkgsrc-wip?
+	isInfrastructure bool   // Is the currently checked item from the pkgsrc infrastructure?
 
 	ipcDistinfo                map[string]*Hash // Maps "alg:fname" => "checksum".
 	ipcUsedLicenses            map[string]bool  // asdf

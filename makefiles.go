@@ -473,7 +473,7 @@ func checklinesMk(lines []*Line) {
 			} else if directive == "for" {
 				if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 					for _, forvar := range splitOnSpace(vars) {
-						if !G.isInternal && hasPrefix(forvar, "_") {
+						if !G.isInfrastructure && hasPrefix(forvar, "_") {
 							line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 						}
 

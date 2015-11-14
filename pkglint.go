@@ -177,7 +177,7 @@ func checkItem(fname string) {
 	}
 	absCurrentDir := filepath.ToSlash(abs)
 	G.isWip = !G.opts.optImport && match0(absCurrentDir, `/wip/|/wip$`)
-	G.isInternal = match0(absCurrentDir, `/mk/|/mk$`)
+	G.isInfrastructure = match0(absCurrentDir, `/mk/|/mk$`)
 	G.curPkgsrcdir = nil
 	pkgpath := ""
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
