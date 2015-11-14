@@ -13,7 +13,7 @@ type CheckVartype struct {
 	valueNovar  string
 	comment     string
 	listContext bool
-	guessed     bool
+	guessed     Guessed
 }
 
 func (cv *CheckVartype) AwkCommand() {
@@ -230,7 +230,7 @@ func (cv *CheckVartype) EmulPlatform() {
 }
 
 func (cv *CheckVartype) FetchURL() {
-	checklineMkVartypeSimple(cv.line, cv.varname, "URL", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	checklineMkVartypePrimitive(cv.line, cv.varname, "URL", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	for siteUrl, siteName := range G.globalData.masterSiteUrls {
 		if hasPrefix(cv.value, siteUrl) {
@@ -373,8 +373,8 @@ func (cv *CheckVartype) Option() {
 }
 
 func (cv *CheckVartype) Pathlist() {
-	if !contains(cv.value, ":") && cv.guessed {
-		checklineMkVartypeSimple(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	if !contains(cv.value, ":") && cv.guessed == GUESSED {
+		checklineMkVartypePrimitive(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
@@ -422,7 +422,7 @@ func (cv *CheckVartype) PkgPath() {
 }
 
 func (cv *CheckVartype) PkgOptionsVar() {
-	checklineMkVartypeSimple(cv.line, cv.varname, "Varname", cv.op, cv.value, cv.comment, false, cv.guessed)
+	checklineMkVartypePrimitive(cv.line, cv.varname, "Varname", cv.op, cv.value, cv.comment, false, cv.guessed)
 	if !match0(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.logError("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		cv.line.explainError(
@@ -551,7 +551,7 @@ func (cv *CheckVartype) SedCommands() {
 				}
 				checklineMkShellword(line, words[i-1], true)
 				checklineMkShellword(line, words[i], true)
-				checklineMkVartypeSimple(line, cv.varname, "SedCommand", cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
+				checklineMkVartypePrimitive(line, cv.varname, "SedCommand", cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
 				line.logError("The -e option to sed requires an argument.")
 			}
@@ -598,7 +598,9 @@ func (cv *CheckVartype) Tool() {
 		if !G.globalData.tools[toolname] {
 			cv.line.logError("Unknown tool %q.", toolname)
 		}
-		if tooldep != "" && !match0(tooldep, `^(bootstrap|build|pkgsrc|run)`) {
+		switch tooldep {
+		case "", "bootstrap", "build", "pkgsrc", "run":
+		default:
 			cv.line.logError("Unknown tool dependency %q. Use one of \"build\", \"pkgsrc\" or \"run\".", tooldep)
 		}
 	} else {
@@ -686,7 +688,7 @@ func (cv *CheckVartype) WrapperTransform() {
 }
 
 func (cv *CheckVartype) WrkdirSubdirectory() {
-	checklineMkVartypeSimple(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	checklineMkVartypePrimitive(cv.line, cv.varname, "Pathname", cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 }
 
 func (cv *CheckVartype) WrksrcSubdirectory() {

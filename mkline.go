@@ -272,38 +272,6 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 	}
 }
 
-// @param op
-//	The operator that is used for reading or writing to the variable.
-//	One of: "=", "+=", ":=", "!=", "?=", "use", "pp-use", "".
-//	For some variables (like BuildlinkDepth or BuildlinkPackages), the
-//	operator influences the valid values.
-// @param comment
-//	In assignments, a part of the line may be commented out. If there
-//	is no comment, pass C<undef>.
-//
-func checklineMkVartypeSimple(line *Line, varname string, basicType string, op, value, comment string, listContext, guessed bool) {
-	defer tracecall("checklineMkVartypeSimple", line, varname, basicType, op, value, comment, listContext, guessed)()
-
-	valueNovar := value
-	for {
-		var m []string
-		if m, valueNovar = replaceFirst(valueNovar, `\$\{([^{}]*)\}`, ""); m != nil {
-			varuse := m[1]
-			if !listContext && hasSuffix(varuse, ":Q") {
-				line.logWarning("The :Q operator should only be used in lists and shell commands.")
-			}
-		} else {
-			break
-		}
-	}
-
-	notImplemented("checklineMkVartypeSimple")
-	_ = valueNovar
-	// fn := basicCheck(vartype.basicType)
-	// TODO: basic check(vartype)
-	// fn()
-}
-
 func checklineMkDecreasingOrder(line *Line, varname, value string) {
 	strversions := splitOnSpace(value)
 	intversions := make([]int, len(strversions))
@@ -593,11 +561,14 @@ func checklineMkVartypeNolist(line *Line, varname string, vartype *Vartype, op, 
 	}
 }
 
+// The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
+// For some variables (like BuildlinkDepth or BuildlinkPackages), the operator influences the valid values.
+// The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func checklineMkVartypePrimitive(line *Line, varname string, primitiveType string, op, value, comment string, isList bool, guessed Guessed) {
 	defer tracecall("checklineMkVartypePrimitive", varname, primitiveType, op, value, comment, isList, guessed)()
 
 	ctx := &CheckVartype{line, varname, op, value, "", comment, isList, guessed == GUESSED}
-	ctx.valueNovar = resolveVariableRefs(value)
+	ctx.valueNovar = withoutMakeVariables(line, value, isList)
 	switch primitiveType {
 	case "AwkCommand":
 		ctx.AwkCommand()
@@ -711,5 +682,20 @@ func checklineMkVartypePrimitive(line *Line, varname string, primitiveType strin
 		ctx.YesNo_Indirectly()
 	default:
 		line.logError("Internal pkglint error: checklineMkVartypePrimitive %q", primitiveType)
+	}
+}
+
+func withoutMakeVariables(line *Line, value string, qModifierAllowed bool) string {
+	valueNovar := value
+	for {
+		var m []string
+		if m, valueNovar = replaceFirst(valueNovar, `\$\{([^{}]*)\}`, ""); m != nil {
+			varuse := m[1]
+			if !qModifierAllowed && hasSuffix(varuse, ":Q") {
+				line.logWarning("The :Q operator should only be used in lists and shell commands.")
+			}
+		} else {
+			return valueNovar
+		}
 	}
 }

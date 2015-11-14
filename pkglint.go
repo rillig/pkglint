@@ -381,7 +381,6 @@ func resolveVariableRefs(text string) string {
 			varname := m[2 : len(m)-1]
 			if !visited[varname] {
 				visited[varname] = true
-				trace("", "resolve.visit", varname)
 				if G.pkgContext != nil && G.pkgContext.vardef[varname] != nil {
 					return G.pkgContext.vardef[varname].extra["value"].(string)
 				}
@@ -391,7 +390,6 @@ func resolveVariableRefs(text string) string {
 			}
 			return sprintf("${%s}", varname)
 		})
-		trace("", "resolveStep", str, replaced)
 		if replaced == str {
 			return replaced
 		}
