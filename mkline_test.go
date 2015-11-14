@@ -4,7 +4,7 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-func (s *CaptureOutputSuite) TestChecklineMkVartype_SimpleType(c *check.C) {
+func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	G.opts.optWarnTypes = true
 	G.opts.optDebugUnchecked = true
 	line := NewLine("fname", "1", "dummy", nil)
@@ -26,7 +26,7 @@ func (s *CaptureOutputSuite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	c.Check(s.Stdout(), equals, "WARN: fname:1: COMMENT should not begin with \"A\".\n")
 }
 
-func (s *CaptureOutputSuite) TestChecklineMkVartype(c *check.C) {
+func (s *Suite) TestChecklineMkVartype(c *check.C) {
 	line := NewLine("fname", "1", "dummy", nil)
 	initacls()
 

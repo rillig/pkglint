@@ -4,7 +4,7 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-func (s *CaptureOutputSuite) TestSubstContext(c *check.C) {
+func (s *Suite) TestSubstContext(c *check.C) {
 	G.opts.optWarnExtra = true
 	line := NewLine("Makefile", "1", "dummy", nil)
 	ctx := new(SubstContext)

@@ -20,7 +20,7 @@ func (s *Suite) TestParseMkCond_Compare(c *check.C) {
 	c.Check(cond, check.DeepEquals, NewTree("compareVarStr", "VARNAME", "!=", "Value"))
 }
 
-func (s *CaptureOutputSuite) TestChecklineMkCondition(c *check.C) {
+func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	G.opts.optWarnTypes = true
 	line := NewLine("fname", "1", "", nil)
 	initacls()

@@ -25,7 +25,7 @@ func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
 	c.Check(G.warnings, equals, 0)
 }
 
-func (s *CaptureOutputSuite) TestChecklinesPatch_WithoutComment(c *check.C) {
+func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
 	lines := mklines("patch-as",
 		"$"+"NetBSD$",
 		"",

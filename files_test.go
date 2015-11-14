@@ -31,7 +31,7 @@ func (s *Suite) TestConvertToLogicalLines_cont(c *check.C) {
 	c.Check(lines[1].String(), equals, "fname_cont:3: third")
 }
 
-func (s *CaptureOutputSuite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
+func (s *Suite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
 	physlines := []PhysLine{
 		{1, "last line\\"},
 	}
