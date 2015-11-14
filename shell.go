@@ -351,7 +351,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 			quotingNecessary := state != SCST_CASE &&
 				state != SCST_FOR_CONT &&
 				state != SCST_SET_CONT &&
-				!(state == SCST_START && match0(shellword, reShVarassign))
+				!(state == SCST_START && matches(shellword, reShVarassign))
 			msline.checklineMkShellword(shellword, quotingNecessary)
 		}
 
@@ -712,7 +712,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 			switch {
 			case match0(shellword, `^\$\{INSTALL_[A-Z]+_DIR\}$`):
 				return SCST_INSTALL_DIR
-			case match0(shellword, reShVarassign):
+			case matches(shellword, reShVarassign):
 				return SCST_START
 			default:
 				return SCST_CONT

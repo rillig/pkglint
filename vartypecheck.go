@@ -70,7 +70,7 @@ func (cv *CheckVartype) Category() {
 func (cv *CheckVartype) CFlag() {
 	line, value := cv.line, cv.value
 
-	if match0(value, `^(-[DILOUWfgm].|-std=`) {
+	if matches(value, `^-[DILOUWfgm].`) || hasPrefix(value, "-std=") {
 		return
 	}
 	if value == "-c99" {

@@ -211,6 +211,11 @@ func reCompile(re string) *regexp.Regexp {
 func match(s, re string) []string {
 	return reCompile(re).FindStringSubmatch(s)
 }
+
+func matches(s, re string) bool {
+	return reCompile(re).MatchString(s)
+}
+
 func matchn(s, re string, n int) []string {
 	if m := match(s, re); m != nil {
 		if len(m) != 1+n {
