@@ -800,3 +800,37 @@ func splitIntoShellwords(line *Line, text string) ([]string, string) {
 	rest = strings.TrimLeftFunc(rest, unicode.IsSpace)
 	return words, rest
 }
+
+// This regular expression cannot parse all kinds of shell programs, but
+// it will catch almost all shell programs that are portable enough to be
+// used in pkgsrc.
+const reShellword = `\s*(` +
+	`#.*` + // shell comment
+	`|(?:` +
+	`'[^']*'` + // single quoted string
+	`|"(?:\\.|[^"\\])*"` + // double quoted string
+	"|`[^`]*`" + // backticks command execution
+	`|\\\$\$` + // a shell-escaped dollar sign
+	`|\\[^\$]` + // other escaped characters
+	`|\$[\w_]` + // one-character make(1) variable
+	`|\$\{[^{}]+\}` + // make(1) variable, ${...}
+	`|\$\([^()]+\)` + // make(1) variable, $(...)
+	`|\$[/\@<^]` + // special make(1) variables
+	`|\$\$[0-9A-Z_a-z]+` + // shell variable
+	`|\$\$[#?@]` + // special shell variables
+	`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
+	`|\$\$\$\$` + // the special pid shell variable
+	`|\$\$\{[0-9A-Z_a-z]+\}` + // shell variable in braces
+	`|\$\$\(` + // POSIX-style backticks replacement
+	`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
+	`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
+	`)+` + // any of the above may be repeated
+	`|;;?` +
+	`|&&?` +
+	`|\|\|?` +
+	`|\(` +
+	`|\)` +
+	`|>&` +
+	`|<<?` +
+	`|>>?` +
+	`|#.*)`

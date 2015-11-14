@@ -57,37 +57,6 @@ type AclEntry struct {
 	permissions string
 }
 
-// The various contexts in which make(1) variables can appear in pkgsrc.
-// Further details can be found in the chapter “The pkglint type system”
-// of the pkglint book.
-type VarUseContextTime int
-
-const (
-	VUC_TIME_UNKNOWN VarUseContextTime = iota
-	VUC_TIME_LOAD
-	VUC_TIME_RUN
-)
-
-type VarUseContextShellword int
-
-const (
-	VUC_SHW_UNKNOWN VarUseContextShellword = iota
-	VUC_SHW_PLAIN
-	VUC_SHW_DQUOT
-	VUC_SHW_SQUOT
-	VUC_SHW_BACKT
-	VUC_SHW_FOR
-)
-
-type VarUseContextExtent int
-
-const (
-	VUC_EXTENT_UNKNOWN VarUseContextExtent = iota
-	VUC_EXT_FULL
-	VUC_EXT_WORD
-	VUC_EXT_WORDPART
-)
-
 type CvsEntry struct {
 	fname    string
 	revision string
@@ -112,42 +81,9 @@ const (
 	reAsciiChar                = `[\t -~]`
 	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`
 	reShVarassign              = `^([A-Z_a-z][0-9A-Z_a-z]*)=`
-	// This regular expression cannot parse all kinds of shell programs, but
-	// it will catch almost all shell programs that are portable enough to be
-	// used in pkgsrc.
-	reShellword = `\s*(` +
-		`#.*` + // shell comment
-		`|(?:` +
-		`'[^']*'` + // single quoted string
-		`|"(?:\\.|[^"\\])*"` + // double quoted string
-		"|`[^`]*`" + // backticks command execution
-		`|\\\$\$` + // a shell-escaped dollar sign
-		`|\\[^\$]` + // other escaped characters
-		`|\$[\w_]` + // one-character make(1) variable
-		`|\$\{[^{}]+\}` + // make(1) variable, ${...}
-		`|\$\([^()]+\)` + // make(1) variable, $(...)
-		`|\$[/\@<^]` + // special make(1) variables
-		`|\$\$[0-9A-Z_a-z]+` + // shell variable
-		`|\$\$[#?@]` + // special shell variables
-		`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
-		`|\$\$\$\$` + // the special pid shell variable
-		`|\$\$\{[0-9A-Z_a-z]+\}` + // shell variable in braces
-		`|\$\$\(` + // POSIX-style backticks replacement
-		`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
-		`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
-		`)+` + // any of the above may be repeated
-		`|;;?` +
-		`|&&?` +
-		`|\|\|?` +
-		`|\(` +
-		`|\)` +
-		`|>&` +
-		`|<<?` +
-		`|>>?` +
-		`|#.*)`
-	reVarname    = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
-	rePkgbase    = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
-	rePkgversion = `\d(?:\w|\.\d)*`
+	reVarname                  = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
+	rePkgbase                  = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
+	rePkgversion               = `\d(?:\w|\.\d)*`
 )
 
 func explanationRelativeDirs() []string {

@@ -46,6 +46,16 @@ func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries 
 	}
 }
 
+func parseAclEntries(args []string) []AclEntry {
+	result := make([]AclEntry, 0)
+	for _, arg := range args {
+		m := mustMatch(`^([\w.*]+|_):([adpsu]*)$`, arg)
+		glob, perms := m[1], m[2]
+		result = append(result, AclEntry{glob, perms})
+	}
+	return result
+}
+
 // A package-defined variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
 func pkg(varname string, kindOfList KindOfList, checker *VarChecker) {
 	acl(varname, kindOfList, checker, "Makefile:su", "Makefile.common:dsu", "buildlink3.mk:", "builtin.mk:", "*.mk:dsu")
