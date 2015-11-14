@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 )
 
@@ -58,9 +59,9 @@ type CmdOpts struct {
 	args []string
 }
 
-func ParseCommandLine(args []string) CmdOpts {
+func ParseCommandLine(args []string, out io.Writer) CmdOpts {
 	result := CmdOpts{}
-	opts := &Options{}
+	opts := NewOptions(out)
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "Enable or disable specific checks")
 	check.AddFlagVar("ALTERNATIVES", &result.optCheckAlternatives, true, "check ALTERNATIVES files")

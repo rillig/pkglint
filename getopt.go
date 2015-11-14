@@ -5,12 +5,16 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 )
 
 type Options struct {
 	options []*Option
+	out io.Writer
+}
+
+func NewOptions(out io.Writer) *Options {
+	return &Options{nil, out}
 }
 
 func (self *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
@@ -118,7 +122,7 @@ func (self *Options) Help(generalUsage string) {
 			tbl = append(tbl, strings.Split(row, "\t"))
 		}
 	}
-	printTable(os.Stdout, tbl)
+	printTable(self.out, tbl)
 
 	hasFlagGroups := false
 	for _, opt := range self.options {
@@ -134,7 +138,7 @@ func (self *Options) Help(generalUsage string) {
 
 			fmt.Printf("\n")
 			fmt.Printf("  Flags for -%c, --%s:\n", opt.shortName, opt.longName)
-			printTable(os.Stdout, tbl)
+			printTable(self.out, tbl)
 		}
 	}
 	if hasFlagGroups {
