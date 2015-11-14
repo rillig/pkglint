@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type DistinfoContext struct {
+type DistinfoChecker struct {
 	previousFilename string
 	isPatch          bool
 	seenAlgorithms   []string
@@ -33,7 +33,7 @@ func checkfileDistinfo(fname string) {
 		patchesDir = "patches"
 	}
 
-	ctx := &DistinfoContext{"", false, make([]string, 0)}
+	ctx := &DistinfoChecker{"", false, make([]string, 0)}
 	inDistinfo := make(map[string]bool)
 	for i, line := range lines {
 		if i < 2 {
@@ -93,7 +93,7 @@ func checkfileDistinfo(fname string) {
 	}
 }
 
-func (ctx *DistinfoContext) onFilenameChange(line *Line, fname string) {
+func (ctx *DistinfoChecker) onFilenameChange(line *Line, fname string) {
 	if ctx.previousFilename != "" {
 		hashAlgorithms := strings.Join(ctx.seenAlgorithms, ", ")
 		_ = G.opts.optDebugMisc && line.debugf("File %s is hashed with %v.", fname, ctx.seenAlgorithms)
@@ -113,7 +113,7 @@ func (ctx *DistinfoContext) onFilenameChange(line *Line, fname string) {
 	ctx.seenAlgorithms = make([]string, 0)
 }
 
-func (ctx *DistinfoContext) checkPatchSha1(line *Line, fname, distinfoSha1Hex string) {
+func (ctx *DistinfoChecker) checkPatchSha1(line *Line, fname, distinfoSha1Hex string) {
 	patchBytes, err := ioutil.ReadFile(fname)
 	if err != nil {
 		line.errorf("%s does not exist.", fname)
