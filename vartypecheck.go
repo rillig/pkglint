@@ -44,27 +44,22 @@ func (cv *CheckVartype) BuildlinkDepth() {
 }
 
 func (cv *CheckVartype) Category() {
+	if fileExists(*G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
+		return
+	}
 	switch cv.value {
-	case "archivers", "audio",
-		"benchmarks", "biology",
-		"cad", "chat", "chinese", "comms", "converters", "cross", "crosspkgtools",
-		"databases", "devel",
-		"editors", "emulators",
-		"filesystems", "finance", "fonts",
-		"games", "geography", "gnome", "gnustep", "graphics",
-		"ham",
-		"inputmethod",
+	case
+		"chinese", "crosspkgtools",
+		"gnome", "gnustep",
 		"japanese", "java",
 		"kde", "korean",
-		"lang", "linux", "local",
-		"mail", "math", "mbone", "meta-pkgs", "misc", "multimedia",
-		"net", "news",
-		"packages", "parallel", "perl5", "pkgtools", "plan9", "print", "python",
+		"linux", "local",
+		"packages", "perl5", "plan9", "python",
 		"ruby",
-		"scm", "security", "shells", "sysutils",
-		"tcl", "textproc", "time", "tk",
-		"windowmaker", "wm", "www",
-		"x11", "xmms":
+		"scm",
+		"tcl", "tk",
+		"windowmaker",
+		"xmms":
 	default:
 		cv.line.errorf("Invalid category %q.", cv.value)
 	}
