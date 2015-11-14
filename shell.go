@@ -52,17 +52,21 @@ type MkShellLine struct {
 	line *Line
 }
 
+func NewMkShellLine(line *Line) *MkShellLine {
+	return &MkShellLine{line}
+}
+
 func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting bool) {
-	line := msline.line
 	defer tracecall("checklineMkShellword", shellword, checkQuoting)()
 
-	if shellword == "" {
+	if shellword == "" || hasPrefix(shellword, "#") {
 		return
 	}
 
 	shellcommandContextType := newBasicVartype(LK_NONE, "ShellCommand", []AclEntry{{"*", "adsu"}}, NOT_GUESSED)
 	shellwordVuc := &VarUseContext{VUC_TIME_UNKNOWN, shellcommandContextType, VUC_SHW_PLAIN, VUC_EXT_WORD}
 
+	line := msline.line
 	if m, varname, mod := match2(shellword, `^\$\{(`+reVarname+`)(:[^{}]+)?\}$`); m {
 		checklineMkVaruse(line, varname, mod, shellwordVuc)
 		return
