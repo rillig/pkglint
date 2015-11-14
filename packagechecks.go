@@ -104,7 +104,6 @@ func checkdirPackage(pkgpath string) {
 	for _, fname := range files {
 		if fname == G.currentDir+"/Makefile" {
 			if G.opts.optCheckMakefile {
-				checkperms(fname)
 				checkfilePackageMakefile(fname, lines)
 			}
 		} else {

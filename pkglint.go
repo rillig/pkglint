@@ -197,6 +197,7 @@ func checkItem(fname string) {
 	}
 
 	if isReg {
+		checkperms(fname)
 		checkfile(fname)
 		return
 	}
@@ -536,7 +537,6 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 func checkfileExtra(fname string) {
 	defer tracecall("checkfileExtra", fname)()
 
-	checkperms(fname)
 	lines := loadNonemptyLines(fname, false)
 	if lines == nil {
 		return
@@ -553,7 +553,6 @@ func checkfileMessage(fname string) {
 		"empty line, your text and finally the footer line, which is the",
 		"same as the header line."}
 
-	checkperms(fname)
 	lines := loadNonemptyLines(fname, false)
 	if lines == nil {
 		return
@@ -605,7 +604,6 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 func checkfileMk(fname string) {
 	defer tracecall("checkfileMk", fname)()
 
-	checkperms(fname)
 	lines := loadNonemptyLines(fname, true)
 	if lines == nil {
 		return

@@ -77,7 +77,6 @@ func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 }
 
 func loadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
-	checkperms(fname)
 	lines, err := loadLines(fname, joinContinuationLines)
 	if err != nil {
 		logError(fname, NO_LINES, "Cannot be read.")

@@ -8,7 +8,6 @@ func checkfileDescr(fname string) {
 		maxlines = 24
 	)
 
-	checkperms(fname)
 	lines := loadNonemptyLines(fname, false)
 	if lines == nil {
 		return
