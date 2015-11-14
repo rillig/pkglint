@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -344,9 +345,10 @@ func argsStr(args ...interface{}) string {
 
 func trace(action, funcname string, args ...interface{}) {
 	if G.opts.optDebugTrace {
-		dummyLine.debugf("%s%s%s(%s)", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...))
+		io.WriteString(G.logOut, sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
 	}
 }
+
 func tracecall(funcname string, args ...interface{}) func() {
 	if G.opts.optDebugTrace {
 		trace("+ ", funcname, args...)
