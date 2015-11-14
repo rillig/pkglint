@@ -199,7 +199,7 @@ func checklineMkVaruseFor(line *Line, varname string, vartype *Vartype, needsQuo
 	case vartype == nil:
 		// Cannot check anything here.
 
-	case vartype.kindOfList == LK_INTERNAL:
+	case vartype.kindOfList == LK_SPACE:
 		// Fine
 
 	case needsQuoting == NQ_DOESNT_MATTER || needsQuoting == NQ_NO:
@@ -568,7 +568,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 
 	default:
 		var words []string
-		if vartype.kindOfList == LK_INTERNAL {
+		if vartype.kindOfList == LK_SPACE {
 			words = splitOnSpace(value)
 		} else {
 			words, _ = splitIntoShellwords(line, value)
@@ -576,7 +576,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 
 		for _, word := range words {
 			checklineMkVartypeNolist(line, varname, vartype, op, word, comment, true, vartype.guessed)
-			if vartype.kindOfList != LK_INTERNAL {
+			if vartype.kindOfList != LK_SPACE {
 				checklineMkShellword(line, word, true)
 			}
 		}

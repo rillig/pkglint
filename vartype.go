@@ -55,9 +55,9 @@ func (self *Vartype) union() (perms string) {
 // the implementation of checklineMkVartype easier.
 func (self *Vartype) isConsideredList() bool {
 	switch {
-	case self.kindOfList == LK_EXTERNAL:
+	case self.kindOfList == LK_SHELL:
 		return true
-	case self.kindOfList == LK_INTERNAL:
+	case self.kindOfList == LK_SPACE:
 		return false
 	case self.basicType == "BuildlinkPackages":
 		return true
@@ -81,10 +81,10 @@ func (self *Vartype) String() string {
 	switch self.kindOfList {
 	case LK_NONE:
 		return self.basicType
-	case LK_INTERNAL:
-		return "InternalList of " + self.basicType
-	case LK_EXTERNAL:
-		return "List of " + self.basicType
+	case LK_SPACE:
+		return "SpaceList of " + self.basicType
+	case LK_SHELL:
+		return "ShellList of " + self.basicType
 	default:
 		panic("")
 	}

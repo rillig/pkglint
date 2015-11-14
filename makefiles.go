@@ -500,7 +500,7 @@ func checklinesMk(lines []*Line) {
 						}
 					}
 
-					forLoopType := newBasicVartype(LK_INTERNAL, "Unchecked", []AclEntry{{"*", "pu"}}, guessed)
+					forLoopType := newBasicVartype(LK_SPACE, "Unchecked", []AclEntry{{"*", "pu"}}, guessed)
 					forLoopContext := &VarUseContext{
 						VUC_TIME_LOAD,
 						forLoopType,

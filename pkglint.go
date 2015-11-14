@@ -49,8 +49,8 @@ func (self *SimpleMatch) text(i int) string {
 type KindOfList struct{ name string }
 
 var LK_NONE = KindOfList{"none"}
-var LK_INTERNAL = KindOfList{"internal"}
-var LK_EXTERNAL = KindOfList{"external"}
+var LK_SPACE = KindOfList{"whitespace"}
+var LK_SHELL = KindOfList{"shellwords"}
 
 type AclEntry struct {
 	glob        string
@@ -332,29 +332,29 @@ func getVariableType(line *Line, varname string) *Vartype {
 	var gtype *Vartype
 	switch {
 	case hasSuffix(varname, "DIRS"):
-		gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
+		gtype = newBasicVartype(LK_SHELL, "Pathmask", allowRuntime, GUESSED)
 	case hasSuffix(varname, "DIR"), hasSuffix(varname, "_HOME"):
 		gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
 	case hasSuffix(varname, "FILES"):
-		gtype = newBasicVartype(LK_EXTERNAL, "Pathmask", allowRuntime, GUESSED)
+		gtype = newBasicVartype(LK_SHELL, "Pathmask", allowRuntime, GUESSED)
 	case hasSuffix(varname, "FILE"):
 		gtype = newBasicVartype(LK_NONE, "Pathname", allowRuntime, GUESSED)
 	case hasSuffix(varname, "PATH"):
 		gtype = newBasicVartype(LK_NONE, "Pathlist", allowRuntime, GUESSED)
 	case hasSuffix(varname, "PATHS"):
-		gtype = newBasicVartype(LK_EXTERNAL, "Pathname", allowRuntime, GUESSED)
+		gtype = newBasicVartype(LK_SHELL, "Pathname", allowRuntime, GUESSED)
 	case hasSuffix(varname, "_USER"):
 		gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
 	case hasSuffix(varname, "_GROUP"):
 		gtype = newBasicVartype(LK_NONE, "UserGroupName", allowAll, GUESSED)
 	case hasSuffix(varname, "_ENV"):
-		gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
+		gtype = newBasicVartype(LK_SHELL, "ShellWord", allowRuntime, GUESSED)
 	case hasSuffix(varname, "_CMD"):
 		gtype = newBasicVartype(LK_NONE, "ShellCommand", allowRuntime, GUESSED)
 	case hasSuffix(varname, "_ARGS"):
-		gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
+		gtype = newBasicVartype(LK_SHELL, "ShellWord", allowRuntime, GUESSED)
 	case hasSuffix(varname, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"), hasSuffix(varname, "_LDFLAGS"):
-		gtype = newBasicVartype(LK_EXTERNAL, "ShellWord", allowRuntime, GUESSED)
+		gtype = newBasicVartype(LK_SHELL, "ShellWord", allowRuntime, GUESSED)
 	case hasSuffix(varname, "_MK"):
 		gtype = newBasicVartype(LK_NONE, "Unchecked", allowAll, GUESSED)
 	case hasPrefix(varname, "PLIST."):

@@ -45,7 +45,7 @@ func variableNeedsQuoting(line *Line, varname string, context *VarUseContext) Ne
 		if vartype.kindOfList == LK_NONE {
 			return NQ_DOESNT_MATTER
 		}
-		if vartype.kindOfList == LK_EXTERNAL && context.extent != VUC_EXT_WORDPART {
+		if vartype.kindOfList == LK_SHELL && context.extent != VUC_EXT_WORDPART {
 			return NQ_NO
 		}
 	}
