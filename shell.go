@@ -369,7 +369,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		st.checkPipeExitcode()
 		st.checkSetE(setE)
 
-		if (state == SCST_SET && matches(shellword, `^-.*e`)) || (state == SCST_START && shellword == "${RUN}") {
+		if state == SCST_SET && matches(shellword, `^-.*e`) || state == SCST_START && shellword == "${RUN}" {
 			setE = true
 		}
 

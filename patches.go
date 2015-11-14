@@ -296,7 +296,7 @@ var patchTransitions = map[State][]transition{
 		{rePatchCtxHunkDel, PST_CTX_LINE_DEL0, func(ctx *CheckPatchContext) {
 			ctx.dellines = new(int)
 			if ctx.m[2] != "" {
-				*ctx.dellines = (1 + toInt(ctx.m[2]) - toInt(ctx.m[1]))
+				*ctx.dellines = 1 + toInt(ctx.m[2]) - toInt(ctx.m[1])
 			} else {
 				*ctx.dellines = toInt(ctx.m[1])
 			}

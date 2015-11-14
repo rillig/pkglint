@@ -160,7 +160,7 @@ func checkItem(fname string) {
 	defer tracecall("checkItem", fname)()
 
 	st, err := os.Stat(fname)
-	if err != nil || (!st.Mode().IsDir() && !st.Mode().IsRegular()) {
+	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {
 		errorf(fname, NO_LINES, "No such file or directory.")
 		return
 	}
@@ -241,10 +241,10 @@ func loadPackageMakefile(fname string) []*Line {
 
 	if varIsDefined("PHPEXT_MK") {
 		if !varIsDefined("USE_PHP_EXT_PATCHES") {
-			G.pkgContext.patchdir = ("patches")
+			G.pkgContext.patchdir = "patches"
 		}
 		if varIsDefined("PECL_VERSION") {
-			G.pkgContext.distinfoFile = ("distinfo")
+			G.pkgContext.distinfoFile = "distinfo"
 		}
 	}
 
@@ -630,7 +630,7 @@ func checkfile(fname string) {
 		return
 	}
 
-	if st.Mode().IsRegular() && (st.Mode().Perm()&0111 != 0) && !isCommitted(fname) {
+	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, NO_LINES, "", nil)
 		line.warnf("Should not be executable.")
 		line.explain(
@@ -651,7 +651,7 @@ func checkfile(fname string) {
 			warnf(fname, NO_LINES, "Unknown directory name.")
 		}
 
-	case (st.Mode() & os.ModeSymlink) != 0:
+	case st.Mode()&os.ModeSymlink != 0:
 		if !matches(basename, `^work`) {
 			warnf(fname, NO_LINES, "Unknown symlink name.")
 		}
@@ -710,7 +710,7 @@ func checkfile(fname string) {
 			checkfilePlist(fname)
 		}
 
-	case (basename == "TODO" || basename == "README"):
+	case basename == "TODO" || basename == "README":
 		// Ok
 
 	case matches(basename, `^CHANGES-.*`):
