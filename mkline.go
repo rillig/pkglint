@@ -273,6 +273,8 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 }
 
 func checklineMkDecreasingOrder(line *Line, varname, value string) {
+	defer tracecall("checklineMkDecreasingOrder", varname, value)()
+
 	strversions := splitOnSpace(value)
 	intversions := make([]int, len(strversions))
 	for i, strversion := range strversions {
@@ -284,8 +286,8 @@ func checklineMkDecreasingOrder(line *Line, varname, value string) {
 		intversions[i] = iver
 	}
 
-	for i, ver := range intversions[1:] {
-		if ver >= intversions[i-1] {
+	for i, ver := range intversions {
+		if i > 0 && ver >= intversions[i-1] {
 			line.warnf("The values for %s should be in decreasing order.", varname)
 			line.explainWarning(
 				"If they aren't, it may be possible that needless versions of packages",
