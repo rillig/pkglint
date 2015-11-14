@@ -34,7 +34,7 @@ func newEnumVartype(kindOfList KindOfList, enumValues string, aclEntries []AclEn
 
 func (self *Vartype) effectivePermissions(fname string) string {
 	for _, aclEntry := range self.aclEntries {
-		if m, _ := path.Match(aclEntry.glob, fname); m {
+		if m, _ := path.Match(aclEntry.glob, path.Base(fname)); m {
 			return aclEntry.permissions
 		}
 	}

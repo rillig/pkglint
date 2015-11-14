@@ -20,6 +20,7 @@ func (s *Suite) TestVartypeEffectivePermissions(c *check.C) {
 
 		c.Check(t.basicType, equals, "ShellWord")
 		c.Check(t.effectivePermissions("Makefile"), equals, "as")
+		c.Check(t.effectivePermissions("../Makefile"), equals, "as")
 		c.Check(t.effectivePermissions("options.mk"), equals, "")
 	}
 }
