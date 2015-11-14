@@ -112,6 +112,4 @@ func printSummary() {
 	}
 }
 
-func internalError(args ...interface{}) {
-	panic(argsStr(args))
-}
+

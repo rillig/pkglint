@@ -560,7 +560,7 @@ func checklinesMk(lines []*Line) {
 				"white-space.")
 
 		} else {
-			line.logError("[Internal] Unknown line format: %s", text)
+			_ = G.opts.optDebugMisc && line.logDebug("Unknown line format")
 		}
 	}
 	substcontext.finish(lines[len(lines)-1])

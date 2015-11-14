@@ -570,7 +570,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		if vartype.kindOfList == LK_INTERNAL {
 			words = splitOnSpace(value)
 		} else {
-			words = splitIntoShellwords(value)
+			words = splitIntoShellwords(line, value)
 		}
 
 		for _, word := range words {
@@ -709,6 +709,6 @@ func checklineMkVartypePrimitive(line *Line, varname string, primitiveType strin
 	case "YesNo_Indirectly":
 		ctx.YesNo_Indirectly()
 	default:
-		internalError("checklineMkVartypePrimitive", primitiveType)
+		line.logError("Internal pkglint error: checklineMkVartypePrimitive %q", primitiveType)
 	}
 }

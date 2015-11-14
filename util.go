@@ -300,7 +300,7 @@ func negToZero(i int) int {
 func toInt(s string) int {
 	n, err := strconv.Atoi(s)
 	if err != nil {
-		logFatal(NO_FILE, NO_LINES, "Internal error: %q", err)
+		panic("toInt " + s)
 	}
 	return n
 }
@@ -372,7 +372,7 @@ func relpath(from, to string) string {
 	absTo, err2 := filepath.Abs(to)
 	rel, err3 := filepath.Rel(absFrom, absTo)
 	if err1 != nil || err2 != nil || err3 != nil {
-		internalError("relpath", from, to, err1, err2, err3)
+		panic("relpath" + argsStr(from, to, err1, err2, err3))
 	}
 	return filepath.ToSlash(rel)
 }
