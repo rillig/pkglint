@@ -346,7 +346,7 @@ func argsStr(args ...interface{}) string {
 
 func trace(action, funcname string, args ...interface{}) {
 	if G.opts.optDebugTrace {
-		io.WriteString(G.logOut, sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
+		io.WriteString(os.Stdout, sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
 	}
 }
 
