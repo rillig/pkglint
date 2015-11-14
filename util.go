@@ -52,7 +52,7 @@ func isEmptyDir(fname string) bool {
 func getSubdirs(fname string) []string {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		logFatal(fname, NO_LINES, "Cannot be read.")
+		logFatal(fname, NO_LINES, "Cannot be read: %s", err)
 	}
 
 	subdirs := make([]string, 0)
