@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -84,12 +83,12 @@ func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationL
 		}
 	} else {
 		for _, physline := range physlines {
-			loglines = append(loglines, NewLine(fname, strconv.Itoa(physline.lineno), strings.TrimSuffix(physline.textnl, "\n"), []PhysLine{physline}))
+			loglines = append(loglines, NewLine(fname, sprintf("%d", physline.lineno), strings.TrimSuffix(physline.textnl, "\n"), []PhysLine{physline}))
 		}
 	}
 
 	if 0 < len(physlines) && !hasSuffix(physlines[len(physlines)-1].textnl, "\n") {
-		errorf(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
+		errorf(fname, sprintf("%d", physlines[len(physlines)-1].lineno), "File must end with a newline.")
 	}
 
 	return loglines
