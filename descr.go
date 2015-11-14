@@ -27,7 +27,7 @@ func checkfileDescr(fname string) {
 		line := lines[maxlines]
 
 		line.warnf("File too long (should be no more than %d lines).", maxlines)
-		line.explainWarning(
+		line.explain(
 			"A common terminal size is 80x25 characters. The DESCR file should",
 			"fit on one screen. It is also intended to give a _brief_ summary",
 			"about the package's contents.")

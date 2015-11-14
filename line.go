@@ -74,14 +74,12 @@ func (self *Line) debugf(format string, args ...interface{}) bool {
 	self.printSource(G.logOut)
 	return debugf(self.fname, self.lines, format, args...)
 }
-func (self *Line) explainError(explanation ...string) {
-	explain(LL_ERROR, self.fname, self.lines, explanation)
-}
-func (self *Line) explainWarning(explanation ...string) {
-	explain(LL_WARN, self.fname, self.lines, explanation)
-}
-func (self *Line) explainNote(explanation ...string) {
-	explain(LL_NOTE, self.fname, self.lines, explanation)
+func (self *Line) explain(explanation ...string) {
+	if G.opts.optExplain {
+		for _, explanationLine := range explanation {
+			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
+		}
+	}
 }
 func (self *Line) String() string {
 	return self.fname + ":" + self.lines + ": " + self.text

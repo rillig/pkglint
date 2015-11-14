@@ -125,7 +125,7 @@ func (cv *CheckVartype) Dependency() {
 
 		case version != "":
 			line.warnf("Please append \"{,nb*}\" to the version number of this dependency.")
-			line.explainWarning(
+			line.explain(
 				"Usually, a dependency should stay valid when the PKGREVISION is",
 				"increased, since those changes are most often editorial. In the",
 				"current form, the dependency only matches if the PKGREVISION is",
@@ -133,7 +133,7 @@ func (cv *CheckVartype) Dependency() {
 
 		case other == "*":
 			line.warnf("Please use %s-[0-9]* instead of %s-*.", depbase, depbase)
-			line.explainWarning(
+			line.explain(
 				"If you use a * alone, the package specification may match other",
 				"packages that have the same prefix, but a longer name. For example,",
 				"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
@@ -154,7 +154,7 @@ func (cv *CheckVartype) Dependency() {
 
 	default:
 		line.warnf("Unknown dependency format: %s", value)
-		line.explainWarning(
+		line.explain(
 			"Typical dependencies have the following forms:",
 			"",
 			"* package>=2.5",
@@ -189,12 +189,12 @@ func (cv *CheckVartype) DependencyWithPath() {
 
 	if matches(value, `:\.\./[^/]+$`) {
 		line.warnf("Dependencies should have the form \"../../category/package\".")
-		line.explainWarning(explanationRelativeDirs()...)
+		line.explain(explanationRelativeDirs()...)
 		return
 	}
 
 	line.warnf("Unknown dependency format.")
-	line.explainWarning(
+	line.explain(
 		"Examples for valid dependencies are:",
 		"  package-[0-9]*:../../category/package",
 		"  package>=3.41:../../category/package",
@@ -220,7 +220,7 @@ func (cv *CheckVartype) EmulPlatform() {
 
 	} else {
 		cv.line.warnf("%q is not a valid emulation platform.", cv.value)
-		cv.line.explainWarning(
+		cv.line.explain(
 			"An emulation platform has the form <OPSYS>-<MACHINE_ARCH>.",
 			"OPSYS is the lower-case name of the operating system, and MACHINE_ARCH",
 			"is the hardware architecture.",
@@ -333,7 +333,7 @@ func (cv *CheckVartype) Message() {
 
 	if matches(value, `^[\"'].*[\"']$`) {
 		line.warnf("%s should not be quoted.", varname)
-		line.explainWarning(
+		line.explain(
 			"The quoting is only needed for variables which are interpreted as",
 			"multiple words (or, generally speaking, a list of something). A single",
 			"text message does not belong to this class, since it is only printed",
@@ -355,7 +355,7 @@ func (cv *CheckVartype) Option() {
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z\+]*)$`); m {
 		if G.globalData.pkgOptions[optname] == "" {
 			line.warnf("Unknown option \"%s\".", optname)
-			line.explainWarning(
+			line.explain(
 				"This option is not documented in the mk/defaults/options.description",
 				"file. If this is not a typo, please think of a brief but precise",
 				"description and either update that file yourself or ask on the",
@@ -425,7 +425,7 @@ func (cv *CheckVartype) PkgOptionsVar() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, "Varname", cv.op, cv.value, cv.comment, false, cv.guessed)
 	if !matches(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
-		cv.line.explainError(
+		cv.line.explain(
 			"PKGBASE is defined in bsd.pkg.mk, which is included as the",
 			"very last file, but PKG_OPTIONS_VAR is evaluated earlier.",
 			"Use ${PKGNAME:C/-[0-9].*//} instead.")
@@ -438,7 +438,7 @@ func (cv *CheckVartype) PkgRevision() {
 	}
 	if path.Base(cv.line.fname) != "Makefile" {
 		cv.line.errorf("%s only makes sense directly in the package Makefile.", cv.varname)
-		cv.line.explainError(
+		cv.line.explain(
 			"Usually, different packages using the same Makefile.common have",
 			"different dependencies and will be bumped at different times (e.g. for",
 			"shlib major bumps) and thus the PKGREVISIONs must be in the separate",
@@ -461,7 +461,7 @@ func (cv *CheckVartype) PlatformTriple() {
 
 	} else {
 		cv.line.warnf("%q is not a valid platform triple.", cv.value)
-		cv.line.explainWarning(
+		cv.line.explain(
 			"A platform triple has the form <OPSYS>-<OS_VERSION>-<MACHINE_ARCH>.",
 			"Each of these components may be a shell globbing expression.",
 			"Examples: NetBSD-*-i386, *-*-*, Linux-*-*.")
@@ -480,7 +480,7 @@ func (cv *CheckVartype) PythonDependency() {
 	}
 	if !matches(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$`) {
 		cv.line.warnf("Invalid Python dependency %q.", cv.value)
-		cv.line.explainWarning(
+		cv.line.explain(
 			"Python dependencies must be an identifier for a package, as specified",
 			"in lang/python/versioned_dependencies.mk. This identifier may be",
 			"followed by :build for a build-time only dependency, or by :link for",
@@ -499,7 +499,7 @@ func (cv *CheckVartype) RelativePkgPath() {
 func (cv *CheckVartype) Restricted() {
 	if cv.value != "${RESTRICTED}" {
 		cv.line.warnf("The only valid value for %s is ${RESTRICTED}.", cv.varname)
-		cv.line.explainWarning(
+		cv.line.explain(
 			"These variables are used to control which files may be mirrored on FTP",
 			"servers or CD-ROM collections. They are not intended to mark packages",
 			"whose only MASTER_SITES are on ftp.NetBSD.org.")
@@ -516,7 +516,7 @@ func (cv *CheckVartype) SedCommands() {
 	if rest != "" {
 		if contains(cv.value, "#") {
 			line.errorf("Invalid shell words in sed commands.")
-			line.explainError(
+			line.explain(
 				"If your sed commands have embedded \"#\" characters, you need to escape",
 				"them with a backslash, otherwise make(1) will interpret them as a",
 				"comment, no matter if they occur in single or double quotes or",
@@ -540,7 +540,7 @@ func (cv *CheckVartype) SedCommands() {
 				ncommands++
 				if ncommands > 1 {
 					line.warnf("Each sed command should appear in an assignment of its own.")
-					line.explainWarning(
+					line.explain(
 						"For example, instead of",
 						"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
 						"use",
@@ -709,7 +709,7 @@ func (cv *CheckVartype) WrksrcSubdirectory() {
 func (cv *CheckVartype) Yes() {
 	if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
 		cv.line.warnf("%s should be set to YES or yes.", cv.varname)
-		cv.line.explainWarning(
+		cv.line.explain(
 			"This variable means \"yes\" if it is defined, and \"no\" if it is",
 			"undefined. Even when it has the value \"no\", this means \"yes\".",
 			"Therefore when it is defined, its value should correspond to its",

@@ -50,7 +50,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				line.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
-				line.explainWarning(explanationRelativeDirs()...)
+				line.explain(explanationRelativeDirs()...)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
 				_ = G.opts.optDebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
@@ -121,7 +121,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 
 	insertLine := lines[imin(lastCommentLine+1, len(lines)-1)]
 	insertLine.warnf("Please add a line %q here.", expected)
-	insertLine.explainWarning(
+	insertLine.explain(
 		"Since Makefile.common files usually don't have any comments and",
 		"therefore not a clearly defined interface, they should at least contain",
 		"references to all files that include them, so that it is easier to see",
@@ -258,7 +258,7 @@ func checklineMkText(line *Line, text string) {
 
 	if contains(text, "${WRKSRC}/../") {
 		line.warnf("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
-		line.explainWarning(
+		line.explain(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
 			"and INSTALL_DIRS are subdirectories of it.")
 	}
@@ -397,7 +397,7 @@ func checklinesMk(lines []*Line) {
 
 			if hasSuffix(includefile, "../Makefile") {
 				line.errorf("Other Makefiles must not be included directly.")
-				line.explainError(
+				line.explain(
 					"If you want to include portions of another Makefile, extract",
 					"the common parts and put them into a Makefile.common. After",
 					"that, both this one and the other package should include the",
@@ -543,7 +543,7 @@ func checklinesMk(lines []*Line) {
 
 				} else if !allowedTargets[target] {
 					line.warnf("Unusual target %q.", target)
-					line.explainWarning(
+					line.explain(
 						"If you want to define your own targets, you can \"declare\"",
 						"them by inserting a \".PHONY: my-target\" line before this line. This",
 						"will tell make(1) to not interpret this target's name as a filename.")
@@ -555,7 +555,7 @@ func checklinesMk(lines []*Line) {
 
 		} else if hasPrefix(text, " ") {
 			line.warnf("Makefile lines should not start with space characters.")
-			line.explainWarning(
+			line.explain(
 				"If you want this line to contain a shell program, use a tab",
 				"character for indentation. Otherwise please remove the leading",
 				"white-space.")

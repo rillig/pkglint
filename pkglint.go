@@ -424,7 +424,7 @@ func getVariablePermissions(line *Line, varname string) string {
 func checklineLength(line *Line, maxlength int) {
 	if len(line.text) > maxlength {
 		line.warnf("Line too long (should be no more than maxlength characters).")
-		line.explainWarning(
+		line.explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
 			"Moderately short lines also make reading easier.")
@@ -458,7 +458,7 @@ func checklineValidCharactersInValue(line *Line, reValid string) {
 func checklineTrailingWhitespace(line *Line) {
 	if matches(line.text, `\s$`) {
 		line.notef("Trailing white-space.")
-		line.explainNote(
+		line.explain(
 			"When a line ends with some white-space, that space is in most cases",
 			"irrelevant and can be removed, leading to a \"normal form\" syntax.")
 		line.replaceRegex(`\s+\n$`, "\n")
@@ -475,7 +475,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 
 	if !matches(line.text, `^`+prefixRe+`\$`+rcsid+`(?::[^\$]+)?\$$`) {
 		line.errorf("Expected %s.", suggestedPrefix+"$"+rcsid+"$")
-		line.explainError(
+		line.explain(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
 			"version can be traced back later from a binary package. This is to",
 			"ensure reproducible builds, for example for finding bugs.",
@@ -560,14 +560,14 @@ func checkfileMessage(fname string) {
 	if len(lines) < 3 {
 		lastLine := lines[len(lines)-1]
 		lastLine.warnf("File too short.")
-		lastLine.explainWarning(explanation...)
+		lastLine.explain(explanation...)
 		return
 	}
 
 	hline := strings.Repeat("=", 75)
 	if line := lines[0]; line.text != hline {
 		line.warnf("Expected a line of exactly 75 \"=\" characters.")
-		line.explainWarning(explanation...)
+		line.explain(explanation...)
 	}
 	checklineRcsid(lines[1], ``, "")
 	for _, line := range lines {
@@ -577,7 +577,7 @@ func checkfileMessage(fname string) {
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
 		lastLine.warnf("Expected a line of exactly 75 \"=\" characters.")
-		lastLine.explainWarning(explanation...)
+		lastLine.explain(explanation...)
 	}
 	checklinesTrailingEmptyLines(lines)
 }
@@ -593,7 +593,7 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 
 	} else {
 		line.warnf("%q is not a valid relative package directory.", pkgdir)
-		line.explainWarning(
+		line.explain(
 			"A relative pathname always starts with \"../../\", followed",
 			"by a category, a slash and a the directory name of the package.",
 			"For example, \"../../misc/screen\" is a valid relative pathname.")
@@ -633,7 +633,7 @@ func checkfile(fname string) {
 	if st.Mode().IsRegular() && (st.Mode().Perm()&0111 != 0) && !isCommitted(fname) {
 		line := NewLine(fname, NO_LINES, "", nil)
 		line.warnf("Should not be executable.")
-		line.explainWarning(
+		line.explain(
 			"No package file should ever be executable. Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in the",
 			"package, as the pathnames get adjusted during installation. So there is",

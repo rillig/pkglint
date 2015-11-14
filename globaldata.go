@@ -297,7 +297,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 
 		} else {
 			line.warnf("Unknown doc/CHANGES line: %v", text)
-			line.explainWarning("See mk/misc/developer.mk for the rules.")
+			line.explain("See mk/misc/developer.mk for the rules.")
 		}
 	}
 	return changes

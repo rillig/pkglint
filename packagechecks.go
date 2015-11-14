@@ -229,7 +229,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 				switch {
 				case cmp < 0:
 					pkgnameLine.warnf("This package should be updated to %s%s", sugg.version, comment)
-					pkgnameLine.explainWarning(
+					pkgnameLine.explain(
 						"The wishlist for package updates in doc/TODO mentions that a newer",
 						"version of this package is available.")
 				case cmp > 0:

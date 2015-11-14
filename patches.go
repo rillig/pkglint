@@ -88,7 +88,7 @@ func checklineCppMacroNames(line *Line, text string) {
 			// nice
 		} else if better := badCppMacros[macro]; better != "" {
 			line.warnf("The macro %q is not portable enough. Please use %q instead", macro, better)
-			line.explainWarning("See the pkgsrc guide, section \"CPP defines\" for details.")
+			line.explain("See the pkgsrc guide, section \"CPP defines\" for details.")
 		} else if matches(macro, `(?i)^_+NetBSD_+Version_+$`) && macro != "__NetBSD_Version__" {
 			line.warnf("Misspelled variant %q of %q.", macro, "__NetBSD_Version__")
 		}
@@ -107,7 +107,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 		// Assume that all pathnames start with a lowercase letter.
 	default:
 		line.warnf("Found absolute pathname: %s", word)
-		line.explainWarning(
+		line.explain(
 			"Absolute pathnames are often an indicator for unportable code. As",
 			"pkgsrc aims to be a portable system, absolute pathnames should be",
 			"avoided whenever possible.",
@@ -401,7 +401,7 @@ var patchTransitions = map[State][]transition{
 			ctx.checkText(ctx.line.text)
 			if hasSuffix(ctx.line.text, "\r") {
 				ctx.line.errorf("The hunk header must not end with a CR character.")
-				ctx.line.explainError(
+				ctx.line.explain(
 					"The MacOS X patch utility cannot handle these.")
 			}
 			ctx.hunks++
@@ -547,7 +547,7 @@ func (ctx *CheckPatchContext) expectEmptyLine() {
 
 func (ctx *CheckPatchContext) expectComment() {
 	ctx.line.errorf("Comment expected.")
-	ctx.line.explainError(
+	ctx.line.explain(
 		"Each patch must document why it is necessary. If it has been applied",
 		"because of a security issue, a reference to the CVE should be mentioned",
 		"as well.",
@@ -603,7 +603,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	case FT_CONFIGURE:
 		if matches(addedText, `: Avoid regenerating within pkgsrc$`) {
 			line.errorf("This code must not be included in patches.")
-			line.explainError(
+			line.explain(
 				"It is generated automatically by pkgsrc after the patch phase.",
 				"",
 				"For more details, look for \"configure-scripts-override\" in",

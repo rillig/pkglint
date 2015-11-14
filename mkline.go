@@ -61,7 +61,7 @@ func checklineMkVardef(line *Line, varname, op string) {
 
 		line.warnf("Permission [%s] requested for %s but only [%s] is allowed.",
 			expandPermission(needed), varname, expandPermission(perms))
-		line.explainWarning(
+		line.explain(
 			"The available permissions are:",
 			"\tappend\t\tappend something using +=",
 			"\tdefault\t\tset a default value using ?=",
@@ -105,7 +105,7 @@ func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContex
 
 	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mkContext.buildDefs[varname] {
 		line.warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
-		line.explainWarning(
+		line.explain(
 			"When a pkgsrc package is built, many things can be configured by the",
 			"pkgsrc user in the mk.conf file. All these configurations should be",
 			"recorded in the binary package, so the package can be reliably rebuilt.",
@@ -137,7 +137,7 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 
 	if isLoadTime && !isIndirect {
 		line.warnf("%s should not be evaluated at load time.", varname)
-		line.explainWarning(
+		line.explain(
 			"Many variables, especially lists of something, get their values",
 			"incrementally. Therefore it is generally unsafe to rely on their value",
 			"until it is clear that it will never change again. This point is",
@@ -151,7 +151,7 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 
 	if isLoadTime && isIndirect {
 		line.warnf("%s should not be evaluated indirectly at load time.", varname)
-		line.explainWarning(
+		line.explain(
 			"The variable on the left-hand side may be evaluated at load time, but",
 			"the variable on the right-hand side may not. Due to this assignment, it",
 			"might be used indirectly at load-time, when it is not guaranteed to be",
@@ -165,7 +165,7 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 
 func checklineMkVaruseLocalbase(line *Line) {
 	line.warnf("The LOCALBASE variable should not be used by packages.")
-	line.explainWarning(
+	line.explain(
 		// from jlam via private mail.
 		"Currently, LOCALBASE is typically used in these cases:",
 		"",
@@ -207,7 +207,7 @@ func checklineMkVaruseFor(line *Line, varname string, vartype *Vartype, needsQuo
 
 	default:
 		line.warnf("The variable %s should not be used in .for loops.", varname)
-		line.explainWarning(
+		line.explain(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
 			"Therefore only variables that are specifically designed to match this",
@@ -240,7 +240,7 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 		} else {
 			line.warnf("Please use ${%s%s} instead of ${%s%s} and make sure the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 		}
-		line.explainWarning(
+		line.explain(
 			"See the pkgsrc guide, section \"quoting guideline\", for details.")
 	}
 
@@ -264,10 +264,10 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 		switch needsQuoting {
 		case NQ_NO:
 			line.warnf("The :Q operator should not be used for ${%s} here.", varname)
-			line.explainWarning(expl...)
+			line.explain(expl...)
 		case NQ_DOESNT_MATTER:
 			line.notef("The :Q operator isn't necessary for ${%s} here.", varname)
-			line.explainWarning(expl...)
+			line.explain(expl...)
 		}
 	}
 }
@@ -289,7 +289,7 @@ func checklineMkDecreasingOrder(line *Line, varname, value string) {
 	for i, ver := range intversions {
 		if i > 0 && ver >= intversions[i-1] {
 			line.warnf("The values for %s should be in decreasing order.", varname)
-			line.explainWarning(
+			line.explain(
 				"If they aren't, it may be possible that needless versions of packages",
 				"are installed.")
 		}
@@ -311,7 +311,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 
 		default:
 			line.warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
-			line.explainWarning(
+			line.explain(
 				"The ?= operator is used to provide a default value to a variable. In",
 				"pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
 				"file. This file must be included explicitly. If a ?= operator appears",
@@ -360,7 +360,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 
 	if varname == "CONFIGURE_ARGS" && matches(value, `=\$\{PREFIX\}/share/kde`) {
 		line.notef("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
-		line.explainNote(
+		line.explain(
 			"That file probably does many things automatically and consistently that",
 			"this package also does. When using kde3.mk, you can probably also leave",
 			"out some explicit dependencies.")
@@ -382,7 +382,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 
 	if comment == "# defined" && !matches(varname, `.*(?:_MK|_COMMON)$`) {
 		line.notef("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
-		line.explainNote(
+		line.explain(
 			"The value #defined says something about the state of the variable, but",
 			"not what that _means_. In some cases a variable that is defined means",
 			"\"yes\", in other cases it is an empty list (which is also only the",
@@ -412,7 +412,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 
 	if matches(value, `^[^=]\@comment`) {
 		line.warnf("Please don't use @comment in %s.", varname)
-		line.explainWarning(
+		line.explain(
 			"Here you are defining a variable containing @comment. As this value",
 			"typically includes a space as the last character you probably also used",
 			"quotes around the variable. This can lead to confusion when adding this",
