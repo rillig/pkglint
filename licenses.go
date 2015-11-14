@@ -24,7 +24,7 @@ func checktoplevelUnusedLicenses() {
 		licensepath := licensedir + "/" + licensename
 		if fileExists(licensepath) {
 			if !G.ipcUsedLicenses[licensename] {
-				logWarning(licensepath, NO_LINES, "This license seems to be unused.")
+				warnf(licensepath, NO_LINES, "This license seems to be unused.")
 			}
 		}
 	}
@@ -41,7 +41,7 @@ func checklineLicense(line *Line, value string) {
 		}
 
 		if !fileExists(licenseFile) {
-			line.logWarning("License file %s does not exist.", path.Clean(licenseFile))
+			line.warnf("License file %s does not exist.", path.Clean(licenseFile))
 		}
 
 		switch license {
@@ -50,7 +50,7 @@ func checklineLicense(line *Line, value string) {
 			"no-profit",
 			"no-redistribution",
 			"shareware":
-			line.logWarning("License %s is deprecated.", license)
+			line.warnf("License %s is deprecated.", license)
 		}
 	}
 }

@@ -8,7 +8,7 @@ import (
 func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 	fileLines, err := loadLines(fname, true)
 	if err != nil {
-		logError(fname, NO_LINES, "Cannot be read")
+		errorf(fname, NO_LINES, "Cannot be read")
 		return false
 	}
 
@@ -29,7 +29,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			includeFile = resolveVarsInRelativePath(inc, true)
 			if matches(includeFile, reUnresolvedVar) {
 				if !contains(fname, "/mk/") {
-					line.logNote("Skipping include file %q. This may result in false warnings.", includeFile)
+					line.notef("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
 			} else {
 				isIncludeLine = true
@@ -40,7 +40,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			if path.Base(fname) == "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkgContext.bl3[bl3File] = line
-					_ = G.opts.optDebugMisc && line.logDebug("Buildlink3 file in package: %v", bl3File)
+					_ = G.opts.optDebugMisc && line.debugf("Buildlink3 file in package: %v", bl3File)
 				}
 			}
 		}
@@ -49,16 +49,16 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			G.pkgContext.included[includeFile] = line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
-				line.logWarning("References to other packages should look like \"../../category/package\", not \"../package\".")
+				line.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
 				line.explainWarning(explanationRelativeDirs()...)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
-				_ = G.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
+				_ = G.opts.optDebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkgContext.seenMakefileCommon = true
 			}
 			if m, _, mkfile := match2(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m {
 				if mkfile != "buildlink3.mk" && mkfile != "options.mk" {
-					_ = G.opts.optDebugInclude && line.logDebug("Including %q sets seenMakefileCommon.", includeFile)
+					_ = G.opts.optDebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 					G.pkgContext.seenMakefileCommon = true
 				}
 			}
@@ -73,10 +73,10 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 					dirname = G.currentDir
 				}
 				if !fileExists(dirname + "/" + includeFile) {
-					line.logError("Cannot read %q.", dirname+"/"+includeFile)
+					line.errorf("Cannot read %q.", dirname+"/"+includeFile)
 					return false
 				} else {
-					_ = G.opts.optDebugInclude && line.logDebug("Including %q.", dirname+"/"+includeFile)
+					_ = G.opts.optDebugInclude && line.debugf("Including %q.", dirname+"/"+includeFile)
 					lengthBeforeInclude := len(*allLines)
 					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
 						return false
@@ -94,7 +94,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
 
 			if op != "?=" || G.pkgContext.vardef[varname] == nil {
-				_ = G.opts.optDebugMisc && line.logDebug("varassign(%q, %q, %q)", varname, op, value)
+				_ = G.opts.optDebugMisc && line.debugf("varassign(%q, %q, %q)", varname, op, value)
 				G.pkgContext.vardef[varname] = line
 			}
 		}
@@ -121,7 +121,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 	}
 
 	insertLine := lines[lastCommentLine+1]
-	insertLine.logWarning("Please add a line %q here.", expected)
+	insertLine.warnf("Please add a line %q here.", expected)
 	insertLine.explainWarning(
 		`Since Makefile.common files usually don't have any comments and
 therefore not a clearly defined interface, they should at least contain
@@ -160,7 +160,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		}
 	}
 
-	_ = G.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	_ = G.opts.optDebugMisc && debugf(NO_FILE, NO_LINES, "resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	return tmp
 }
 
@@ -228,7 +228,7 @@ func parselineMk(line *Line) {
 		line.extra["targets"] = targets
 		line.extra["sources"] = sources
 		if whitespace != "" {
-			line.logWarning("Space before colon in dependency line.")
+			line.warnf("Space before colon in dependency line.")
 		}
 		return
 	}
@@ -237,7 +237,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	line.logFatal("Unknown Makefile line format.")
+	line.fatalf("Unknown Makefile line format.")
 }
 
 func parselinesMk(lines []*Line) {
@@ -250,7 +250,7 @@ func checklineMkText(line *Line, text string) {
 	defer tracecall("checklineMkText", text)()
 
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
-		line.logWarning("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
+		line.warnf("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}
 
 	if line.lines == "1" {
@@ -258,7 +258,7 @@ func checklineMkText(line *Line, text string) {
 	}
 
 	if contains(text, "${WRKSRC}/../") {
-		line.logWarning("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
+		line.warnf("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
 		line.explainWarning(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
 			"and INSTALL_DIRS are subdirectories of it.")
@@ -266,7 +266,7 @@ func checklineMkText(line *Line, text string) {
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.
 	if m, flag := match1(text, `\b(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R)\b`); m {
-		line.logWarning("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+		line.warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
 	}
 
 	rest := text
@@ -285,7 +285,7 @@ func checklineMkText(line *Line, text string) {
 			instead = G.globalData.deprecated[varcanon]
 		}
 		if instead != "" {
-			line.logWarning("Use of %q is deprecated. %s", varname, instead)
+			line.warnf("Use of %q is deprecated. %s", varname, instead)
 		}
 	}
 }
@@ -323,13 +323,13 @@ func checklinesMk(lines []*Line) {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
 			for _, varname := range splitOnSpace(line.extra["value"].(string)) {
 				G.mkContext.buildDefs[varname] = true
-				_ = G.opts.optDebugMisc && line.logDebug("%q is added to BUILD_DEFS.", varname)
+				_ = G.opts.optDebugMisc && line.debugf("%q is added to BUILD_DEFS.", varname)
 			}
 
 		case "PLIST_VARS":
 			for _, id := range splitOnSpace(line.extra["value"].(string)) {
 				G.mkContext.plistVars["PLIST."+id] = true
-				_ = G.opts.optDebugMisc && line.logDebug("PLIST.%s is added to PLIST_VARS.", id)
+				_ = G.opts.optDebugMisc && line.debugf("PLIST.%s is added to PLIST_VARS.", id)
 				useVar(line, "PLIST."+id)
 			}
 
@@ -337,13 +337,13 @@ func checklinesMk(lines []*Line) {
 			for _, tool := range splitOnSpace(line.extra["value"].(string)) {
 				tool = strings.Split(tool, ":")[0]
 				G.mkContext.tools[tool] = true
-				_ = G.opts.optDebugMisc && line.logDebug("%s is added to USE_TOOLS.", tool)
+				_ = G.opts.optDebugMisc && line.debugf("%s is added to USE_TOOLS.", tool)
 			}
 
 		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(line.extra["value"].(string)) {
 				useVar(line, varnameCanon(svar))
-				_ = G.opts.optDebugMisc && line.logDebug("varuse %s", svar)
+				_ = G.opts.optDebugMisc && line.debugf("varuse %s", svar)
 			}
 
 		case "OPSYSVARS":
@@ -378,7 +378,7 @@ func checklinesMk(lines []*Line) {
 			comment := text[negToZero(m[8]):negToZero(m[9])]
 
 			if align != " " && !matches(align, `^\t*$`) {
-				_ = G.opts.optWarnSpace && line.logNote("Alignment of variable values should be done with tabs, not spaces.")
+				_ = G.opts.optWarnSpace && line.notef("Alignment of variable values should be done with tabs, not spaces.")
 				prefix := varname + space1 + op
 				alignedLen := tabLength(prefix + align)
 				if alignedLen%8 == 0 {
@@ -393,11 +393,11 @@ func checklinesMk(lines []*Line) {
 			checklineMkShellcmd(line, shellcmd)
 
 		} else if m, include, includefile := match2(text, reMkInclude); m {
-			_ = G.opts.optDebugInclude && line.logDebug("includefile=%s", includefile)
+			_ = G.opts.optDebugInclude && line.debugf("includefile=%s", includefile)
 			checklineRelativePath(line, includefile, include == "include")
 
 			if hasSuffix(includefile, "../Makefile") {
-				line.logError("Other Makefiles must not be included directly.")
+				line.errorf("Other Makefiles must not be included directly.")
 				line.explainError(
 					"If you want to include portions of another Makefile, extract",
 					"the common parts and put them into a Makefile.common. After",
@@ -407,7 +407,7 @@ func checklinesMk(lines []*Line) {
 
 			if includefile == "../../mk/bsd.prefs.mk" {
 				if path.Base(line.fname) == "buildlink3.mk" {
-					line.logNote("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+					line.notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 				}
 				G.pkgContext.seen_bsd_prefs_mk = true
 			} else if includefile == "../../mk/bsd.fast.prefs.mk" {
@@ -415,16 +415,16 @@ func checklinesMk(lines []*Line) {
 			}
 
 			if matches(includefile, `/x11-links/buildlink3\.mk$`) {
-				line.logError("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
+				line.errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
 			}
 			if matches(includefile, `/jpeg/buildlink3\.mk$`) {
-				line.logError("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
+				line.errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
 			}
 			if matches(includefile, `/intltool/buildlink3\.mk$`) {
-				line.logWarning("Please write \"USE_TOOLS+= intltool\" instead of this line.")
+				line.warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 			}
 			if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
-				line.logError("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
+				line.errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
 			}
 
 		} else if matches(text, reMkSysinclude) {
@@ -434,13 +434,13 @@ func checklinesMk(lines []*Line) {
 				if len(ctx.indentation) > 1 {
 					ctx.popIndent()
 				} else {
-					line.logError("Unmatched .%s.", directive)
+					line.errorf("Unmatched .%s.", directive)
 				}
 			}
 
 			// Check the indentation
 			if indent != strings.Repeat(" ", ctx.indentDepth()) {
-				_ = G.opts.optWarnSpace && line.logNote("This directive should be indented by %d spaces.", ctx.indentDepth())
+				_ = G.opts.optWarnSpace && line.notef("This directive should be indented by %d spaces.", ctx.indentDepth())
 			}
 
 			if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
@@ -452,13 +452,13 @@ func checklinesMk(lines []*Line) {
 
 			reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
 			if matches(directive, reDirectivesWithArgs) && args == "" {
-				line.logError("\".%s\" requires arguments.", directive)
+				line.errorf("\".%s\" requires arguments.", directive)
 
 			} else if !matches(directive, reDirectivesWithArgs) && args != "" {
-				line.logError("\".%s\" does not take arguments.", directive)
+				line.errorf("\".%s\" does not take arguments.", directive)
 
 				if directive == "else" {
-					line.logNote("If you meant \"else if\", use \".elif\".")
+					line.notef("If you meant \"else if\", use \".elif\".")
 				}
 
 			} else if directive == "if" || directive == "elif" {
@@ -466,9 +466,9 @@ func checklinesMk(lines []*Line) {
 
 			} else if directive == "ifdef" || directive == "ifndef" {
 				if matches(args, `\s`) {
-					line.logError("The \".%s\" directive can only handle _one_ argument.", directive)
+					line.errorf("The \".%s\" directive can only handle _one_ argument.", directive)
 				} else {
-					line.logWarning("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
+					line.warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
 						directive, ifelseStr(directive == "ifdef", "", "!"), args)
 				}
 
@@ -476,15 +476,15 @@ func checklinesMk(lines []*Line) {
 				if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 					for _, forvar := range splitOnSpace(vars) {
 						if !G.isInfrastructure && hasPrefix(forvar, "_") {
-							line.logWarning("Variable names starting with an underscore are reserved for internal pkgsrc use.")
+							line.warnf("Variable names starting with an underscore are reserved for internal pkgsrc use.")
 						}
 
 						if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
 							// Fine.
 						} else if matches(forvar, `[A-Z]`) {
-							line.logWarning(".for variable names should not contain uppercase letters.")
+							line.warnf(".for variable names should not contain uppercase letters.")
 						} else {
-							line.logError("Invalid variable name %q.", forvar)
+							line.errorf("Invalid variable name %q.", forvar)
 						}
 
 						ctx.forVars[forvar] = true
@@ -516,13 +516,13 @@ func checklinesMk(lines []*Line) {
 			} else if directive == "undef" && args != "" {
 				for _, uvar := range splitOnSpace(args) {
 					if ctx.forVars[uvar] {
-						line.logNote("Using \".undef\" after a \".for\" loop is unnecessary.")
+						line.notef("Using \".undef\" after a \".for\" loop is unnecessary.")
 					}
 				}
 			}
 
 		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
-			_ = G.opts.optDebugMisc && line.logDebug("targets=%v, dependencies=%v", targets, dependencies)
+			_ = G.opts.optDebugMisc && line.debugf("targets=%v, dependencies=%v", targets, dependencies)
 			ctx.target = targets
 
 			for _, source := range splitOnSpace(dependencies) {
@@ -543,7 +543,7 @@ func checklinesMk(lines []*Line) {
 					// TODO: Check for spelling mistakes.
 
 				} else if !allowedTargets[target] {
-					line.logWarning("Unusual target %q.", target)
+					line.warnf("Unusual target %q.", target)
 					line.explainWarning(
 						"If you want to define your own targets, you can \"declare\"",
 						"them by inserting a \".PHONY: my-target\" line before this line. This",
@@ -552,17 +552,17 @@ func checklinesMk(lines []*Line) {
 			}
 
 		} else if m, directive := match1(text, `^\.\s*(\S*)`); m {
-			line.logError("Unknown directive \".%s\".", directive)
+			line.errorf("Unknown directive \".%s\".", directive)
 
 		} else if hasPrefix(text, " ") {
-			line.logWarning("Makefile lines should not start with space characters.")
+			line.warnf("Makefile lines should not start with space characters.")
 			line.explainWarning(
 				"If you want this line to contain a shell program, use a tab",
 				"character for indentation. Otherwise please remove the leading",
 				"white-space.")
 
 		} else {
-			_ = G.opts.optDebugMisc && line.logDebug("Unknown line format")
+			_ = G.opts.optDebugMisc && line.debugf("Unknown line format")
 		}
 	}
 	substcontext.finish(lines[len(lines)-1])
@@ -570,7 +570,7 @@ func checklinesMk(lines []*Line) {
 	checklinesTrailingEmptyLines(lines)
 
 	if len(ctx.indentation) != 1 {
-		lines[len(lines)-1].logError("Directive indentation is not 0, but %d.", ctx.indentDepth())
+		lines[len(lines)-1].errorf("Directive indentation is not 0, but %d.", ctx.indentDepth())
 	}
 
 	G.mkContext = nil

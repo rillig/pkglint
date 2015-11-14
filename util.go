@@ -52,7 +52,7 @@ func isEmptyDir(fname string) bool {
 func getSubdirs(fname string) []string {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		logFatal(fname, NO_LINES, "Cannot be read: %s", err)
+		fatalf(fname, NO_LINES, "Cannot be read: %s", err)
 	}
 
 	subdirs := make([]string, 0)
@@ -87,7 +87,7 @@ func isCommitted(fname string) bool {
 func checkPermissions(fname string) {
 	st, err := os.Stat(fname)
 	if err != nil && st.Mode().IsRegular() && st.Mode()&0111 != 0 {
-		logWarning(fname, NO_LINES, "Should not be executable.")
+		warnf(fname, NO_LINES, "Should not be executable.")
 	}
 }
 
@@ -337,7 +337,7 @@ func argsStr(args ...interface{}) string {
 
 func trace(action, funcname string, args ...interface{}) {
 	if G.opts.optDebugTrace {
-		logDebug(NO_FILE, NO_LINES, "%s%s%s(%s)", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...))
+		debugf(NO_FILE, NO_LINES, "%s%s%s(%s)", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...))
 	}
 }
 func tracecall(funcname string, args ...interface{}) func() {

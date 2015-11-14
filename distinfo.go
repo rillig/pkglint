@@ -25,7 +25,7 @@ func checkfileDistinfo(fname string) {
 
 	checklineRcsid(lines[0], ``, "")
 	if 1 < len(lines) && lines[1].text != "" {
-		lines[1].logNote("Empty line expected.")
+		lines[1].notef("Empty line expected.")
 	}
 
 	patchesDir := G.pkgContext.patchdir
@@ -38,7 +38,7 @@ func checkfileDistinfo(fname string) {
 	for _, line := range lines[2:] {
 		m, alg, fname, hash := match3(line.text, `^(\w+) \(([^)]+)\) = (.*)(?: bytes)?$`)
 		if !m {
-			line.logError("Unknown line type.")
+			line.errorf("Unknown line type.")
 			continue
 		}
 
@@ -47,7 +47,7 @@ func checkfileDistinfo(fname string) {
 		}
 
 		if !matches(fname, `^\w`) {
-			line.logError("All file names must start with a letter.")
+			line.errorf("All file names must start with a letter.")
 		}
 
 		// Inter-package check for differing distfile checksums.
@@ -55,8 +55,8 @@ func checkfileDistinfo(fname string) {
 			otherHash := G.ipcDistinfo[alg+":"+fname]
 			if otherHash != nil {
 				if otherHash.hash != hash {
-					line.logError("The hash %s for %s is %s, ...", alg, fname, hash)
-					otherHash.line.logError("... which differs from %s.", otherHash.hash)
+					line.errorf("The hash %s for %s is %s, ...", alg, fname, hash)
+					otherHash.line.errorf("... which differs from %s.", otherHash.hash)
 				}
 			} else {
 				G.ipcDistinfo[alg+":"+fname] = &Hash{hash, line}
@@ -68,7 +68,7 @@ func checkfileDistinfo(fname string) {
 		if ctx.isPatch && G.pkgContext.distinfoFile != "./../../lang/php5/distinfo" {
 			fname := G.currentDir + "/" + patchesDir + "/" + fname
 			if distinfoIsCommitted && !isCommitted(fname) {
-				line.logWarning("%s/%s is registered in distinfo but not added to CVS.", patchesDir, fname)
+				line.warnf("%s/%s is registered in distinfo but not added to CVS.", patchesDir, fname)
 			}
 			ctx.checkPatchSha1(line, fname, hash)
 		}
@@ -83,7 +83,7 @@ func checkfileDistinfo(fname string) {
 		for _, file := range files {
 			patch := file.Name()
 			if !inDistinfo[patch] {
-				logError(fname, NO_LINES, "patch is not recorded. Run \"%s makepatchsum\".", confMake)
+				errorf(fname, NO_LINES, "patch is not recorded. Run \"%s makepatchsum\".", confMake)
 			}
 		}
 	}
@@ -92,14 +92,14 @@ func checkfileDistinfo(fname string) {
 func (ctx *DistinfoContext) onFilenameChange(line *Line, fname string) {
 	if ctx.previousFilename != "" {
 		hashAlgorithms := strings.Join(ctx.seenAlgorithms, ", ")
-		_ = G.opts.optDebugMisc && line.logDebug("File %s is hashed with %v.", fname, ctx.seenAlgorithms)
+		_ = G.opts.optDebugMisc && line.debugf("File %s is hashed with %v.", fname, ctx.seenAlgorithms)
 		if ctx.isPatch {
 			if hashAlgorithms != "SHA1" {
-				line.logError("Expected SHA1 hash for %s, got %s.", fname, hashAlgorithms)
+				line.errorf("Expected SHA1 hash for %s, got %s.", fname, hashAlgorithms)
 			}
 		} else {
 			if hashAlgorithms != "SHA1, RMD160, Size" && hashAlgorithms != "SHA1, RMD160, SHA512, Size" {
-				line.logError("Expected SHA1, RMD160, SHA512, Size checksums for %s, got %s.", fname, hashAlgorithms)
+				line.errorf("Expected SHA1, RMD160, SHA512, Size checksums for %s, got %s.", fname, hashAlgorithms)
 			}
 		}
 	}
@@ -112,7 +112,7 @@ func (ctx *DistinfoContext) onFilenameChange(line *Line, fname string) {
 func (ctx *DistinfoContext) checkPatchSha1(line *Line, fname, distinfoSha1Hex string) {
 	patchBytes, err := ioutil.ReadFile(fname)
 	if err != nil {
-		line.logError("%s does not exist.", fname)
+		line.errorf("%s does not exist.", fname)
 		return
 	}
 
@@ -125,6 +125,6 @@ func (ctx *DistinfoContext) checkPatchSha1(line *Line, fname, distinfoSha1Hex st
 	}
 	fileSha1Hex := sprintf("%x", h.Sum(nil))
 	if distinfoSha1Hex != fileSha1Hex {
-		line.logError("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", fname, distinfoSha1Hex, fileSha1Hex, confMake)
+		line.errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", fname, distinfoSha1Hex, fileSha1Hex, confMake)
 	}
 }

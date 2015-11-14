@@ -32,7 +32,7 @@ func checkdirCategory() {
 	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) != nil {
 		checklineValidCharactersInValue(exp.previousLine(), `[-\040'(),/0-9A-Za-z]`)
 	} else {
-		exp.currentLine().logError("COMMENT= line expected.")
+		exp.currentLine().errorf("COMMENT= line expected.")
 	}
 	exp.expectEmptyLine()
 
@@ -52,17 +52,17 @@ func checkdirCategory() {
 		if m, commentFlag, indentation, subdir, comment := match4(text, `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
 			commentedOut := commentFlag == "#"
 			if commentedOut && comment == "" {
-				line.logWarning("%q commented out without giving a reason.", subdir)
+				line.warnf("%q commented out without giving a reason.", subdir)
 			}
 
 			if indentation != "\t" {
-				line.logWarning("Indentation should be a single tab character.")
+				line.warnf("Indentation should be a single tab character.")
 			}
 
 			if subdir == prevSubdir {
-				line.logError("%q must only appear once.", subdir)
+				line.errorf("%q must only appear once.", subdir)
 			} else if subdir < prevSubdir {
-				line.logWarning("%q should come before %q.", subdir, prevSubdir)
+				line.warnf("%q should come before %q.", subdir, prevSubdir)
 			} else {
 				// correctly ordered
 			}
@@ -73,7 +73,7 @@ func checkdirCategory() {
 
 		} else {
 			if line.text != "" {
-				line.logError("SUBDIR+= line or empty line expected.")
+				line.errorf("SUBDIR+= line or empty line expected.")
 			}
 			break
 		}
@@ -127,14 +127,14 @@ func checkdirCategory() {
 
 		if !f_atend && (m_atend || f_current < m_current) {
 			if !mCheck[f_current] {
-				line.logError("%q exists in the file system, but not in the Makefile.", f_current)
+				line.errorf("%q exists in the file system, but not in the Makefile.", f_current)
 				line.appendBefore("SUBDIR+=\t" + f_current)
 			}
 			f_neednext = true
 
 		} else if !m_atend && (f_atend || m_current < f_current) {
 			if !fCheck[m_current] {
-				line.logError("%q exists in the Makefile, but not in the file system.", m_current)
+				line.errorf("%q exists in the Makefile, but not in the file system.", m_current)
 				line.delete()
 			}
 			m_neednext = true
@@ -163,7 +163,7 @@ func checkdirCategory() {
 	}
 
 	if !exp.eof() {
-		exp.currentLine().logError("The file should end here.")
+		exp.currentLine().errorf("The file should end here.")
 	}
 
 	checklinesMk(lines)

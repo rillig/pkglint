@@ -114,7 +114,7 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 		line := lines[lineno]
 		text := line.text
 
-		_ = G.opts.optDebugMisc && line.logDebug("[varorder] section %d variable %d", sectindex, varindex)
+		_ = G.opts.optDebugMisc && line.debugf("[varorder] section %d variable %d", sectindex, varindex)
 
 		if nextSection {
 			nextSection = false
@@ -136,9 +136,9 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 
 			if belowText, exists := below[varcanon]; exists {
 				if belowText != nil {
-					line.logWarning("%s appears too late. Please put it below %s.", varcanon, belowText)
+					line.warnf("%s appears too late. Please put it below %s.", varcanon, belowText)
 				} else {
-					line.logWarning("%s appears too late. It should be the very first definition.", varcanon)
+					line.warnf("%s appears too late. It should be the very first definition.", varcanon)
 				}
 				lineno++
 				continue
@@ -154,12 +154,12 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 			switch {
 			case !(varindex < len(vars)):
 				if sections[sectindex].count != optional {
-					line.logWarning("Empty line expected.")
+					line.warnf("Empty line expected.")
 				}
 				nextSection = true
 
 			case varcanon != vars[varindex].varname:
-				line.logWarning("Expected %s, but found %s.", vars[varindex].varname, varcanon)
+				line.warnf("Expected %s, but found %s.", vars[varindex].varname, varcanon)
 				lineno++
 
 			default:
@@ -174,7 +174,7 @@ func checklinesPackageMakefileVarorder(lines []*Line) {
 		default:
 			for varindex < len(vars) {
 				if vars[varindex].count == once && !maySkipSection {
-					line.logWarning("%s should be set here.", vars[varindex].varname)
+					line.warnf("%s should be set here.", vars[varindex].varname)
 				}
 				below[vars[varindex].varname] = belowWhat
 				varindex++

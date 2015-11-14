@@ -21,13 +21,13 @@ func checkpackagePossibleDowngrade() {
 
 	change := G.globalData.lastChange[G.pkgContext.pkgpath]
 	if change == nil {
-		_ = G.opts.optDebugMisc && line.logDebug("No change log for package %v", G.pkgContext.pkgpath)
+		_ = G.opts.optDebugMisc && line.debugf("No change log for package %v", G.pkgContext.pkgpath)
 		return
 	}
 
 	if change.action == "Updated" {
 		if pkgverCmp(pkgversion, change.version) < 0 {
-			line.logWarning("The package is being downgraded from %v to %v", change.version, pkgversion)
+			line.warnf("The package is being downgraded from %v to %v", change.version, pkgversion)
 		}
 	}
 }
@@ -46,7 +46,7 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 			if m, bl3 := match1(file, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
 				includedFiles[bl3] = line
 				if G.pkgContext.bl3[bl3] == nil {
-					line.logWarning("%s/buildlink3.mk is included by this file but not by the package.", bl3)
+					line.warnf("%s/buildlink3.mk is included by this file but not by the package.", bl3)
 				}
 			}
 		}
@@ -56,7 +56,7 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 	// included by the package but not by this buildlink3.mk file.
 	for packageBl3, line := range G.pkgContext.bl3 {
 		if includedFiles[packageBl3] == nil {
-			_ = G.opts.optDebugMisc && line.logDebug("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
+			_ = G.opts.optDebugMisc && line.debugf("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 		}
 	}
 }
@@ -70,7 +70,7 @@ func checkdirPackage(pkgpath string) {
 	// we need to handle the Makefile first to get some variables
 	lines := loadPackageMakefile(G.currentDir + "/Makefile")
 	if lines == nil {
-		logError(G.currentDir+"/Makefile", NO_LINES, "Cannot be read.")
+		errorf(G.currentDir+"/Makefile", NO_LINES, "Cannot be read.")
 		return
 	}
 
@@ -118,12 +118,12 @@ func checkdirPackage(pkgpath string) {
 
 	if G.opts.optCheckDistinfo && G.opts.optCheckPatches {
 		if havePatches && !haveDistinfo {
-			logWarning(G.currentDir+"/"+ctx.distinfoFile, NO_LINES, "File not found. Please run \"%s makepatchsum\".", confMake)
+			warnf(G.currentDir+"/"+ctx.distinfoFile, NO_LINES, "File not found. Please run \"%s makepatchsum\".", confMake)
 		}
 	}
 
 	if !isEmptyDir(G.currentDir + "/scripts") {
-		logWarning(G.currentDir+"/scripts", NO_LINES, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
+		warnf(G.currentDir+"/scripts", NO_LINES, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
 	}
 }
 
@@ -136,26 +136,26 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		vardef["META_PACKAGE"] == nil &&
 		G.pkgContext.pkgdir != nil {
 		if dir := G.currentDir + "/" + *G.pkgContext.pkgdir; !fileExists(dir+"/PLIST") && !fileExists(dir+"/PLIST.common") {
-			logWarning(fname, NO_LINES, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
+			warnf(fname, NO_LINES, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
 		}
 
 		if (vardef["NO_CHECKSUM"] != nil || vardef["META_PACKAGE"] != nil) && isEmptyDir(G.currentDir+"/"+G.pkgContext.patchdir) {
 			if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; fileExists(distinfoFile) {
-				logWarning(distinfoFile, NO_LINES, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
+				warnf(distinfoFile, NO_LINES, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
 			}
 		} else {
 			if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; !fileExists(distinfoFile) {
-				logWarning(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
+				warnf(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
 			}
 		}
 
 		if vardef["REPLACE_PERL"] != nil && vardef["NO_CONFIGURE"] != nil {
-			vardef["REPLACE_PERL"].logWarning("REPLACE_PERL is ignored when ...")
-			vardef["NO_CONFIGURE"].logWarning("... NO_CONFIGURE is set.")
+			vardef["REPLACE_PERL"].warnf("REPLACE_PERL is ignored when ...")
+			vardef["NO_CONFIGURE"].warnf("... NO_CONFIGURE is set.")
 		}
 
 		if vardef["LICENSE"] == nil {
-			logError(fname, NO_LINES, "Each package must define its LICENSE.")
+			errorf(fname, NO_LINES, "Each package must define its LICENSE.")
 		}
 
 		if vardef["GNU_CONFIGURE"] != nil && vardef["USE_LANGUAGES"] != nil {
@@ -168,8 +168,8 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 				// really not needed.
 
 			} else if !matches(value, `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
-				vardef["GNU_CONFIGURE"].logWarning("GNU_CONFIGURE almost always needs a C compiler, ...")
-				languagesLine.logWarning("... but \"c\" is not added to USE_LANGUAGES.")
+				vardef["GNU_CONFIGURE"].warnf("GNU_CONFIGURE almost always needs a C compiler, ...")
+				languagesLine.warnf("... but \"c\" is not added to USE_LANGUAGES.")
 			}
 		}
 
@@ -190,27 +190,27 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		}
 
 		if pkgname != "" && pkgname == distname {
-			pkgnameLine.logNote("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+			pkgnameLine.notef("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
 		}
 
 		if pkgname == "" && distname != "" && !matches(distname, reUnresolvedVar) && !matches(distname, rePkgname) {
-			distnameLine.logWarning("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
+			distnameLine.warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 		}
 
 		if G.pkgContext.effectivePkgnameLine != nil {
-			_ = G.opts.optDebugMisc && G.pkgContext.effectivePkgnameLine.logDebug("Effective name=%q base=%q version=%q",
+			_ = G.opts.optDebugMisc && G.pkgContext.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
 				G.pkgContext.effectivePkgname, G.pkgContext.effectivePkgbase, G.pkgContext.effectivePkgversion)
 		}
 
 		checkpackagePossibleDowngrade()
 
 		if vardef["COMMENT"] == nil {
-			logWarning(fname, NO_LINES, "No COMMENT given.")
+			warnf(fname, NO_LINES, "No COMMENT given.")
 		}
 
 		if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
-			vardef["USE_IMAKE"].logNote("USE_IMAKE makes ...")
-			vardef["USE_X11"].logNote("... USE_X11 superfluous.")
+			vardef["USE_IMAKE"].notef("USE_IMAKE makes ...")
+			vardef["USE_X11"].notef("... USE_X11 superfluous.")
 		}
 
 		if G.pkgContext.effectivePkgbase != nil {
@@ -228,14 +228,14 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 				cmp := pkgverCmp(*G.pkgContext.effectivePkgversion, suggver)
 				switch {
 				case cmp < 0:
-					pkgnameLine.logWarning("This package should be updated to %s%s", sugg.version, comment)
+					pkgnameLine.warnf("This package should be updated to %s%s", sugg.version, comment)
 					pkgnameLine.explainWarning(
 						"The wishlist for package updates in doc/TODO mentions that a newer",
 						"version of this package is available.")
 				case cmp > 0:
-					pkgnameLine.logNote("This package is newer than the update request to %s%s.", suggver, comment)
+					pkgnameLine.notef("This package is newer than the update request to %s%s.", suggver, comment)
 				default:
-					pkgnameLine.logNote("The update request to %s from doc/TODO%s has been done.", suggver, comment)
+					pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
 				}
 			}
 		}
@@ -253,7 +253,7 @@ func pkgnameFromDistname(pkgname, distname string) string {
 		qsep := regexp.QuoteMeta(sep)
 		if m, left, from, right, to, mod := match5(subst, `^(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`(g?)$`); m {
 			newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
-			_ = G.opts.optDebugMisc && G.pkgContext.vardef["PKGNAME"].logDebug("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+			_ = G.opts.optDebugMisc && G.pkgContext.vardef["PKGNAME"].debugf("pkgnameFromDistname %q => %q", pkgname, newPkgname)
 			pkgname = newPkgname
 		}
 	}

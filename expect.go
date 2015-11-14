@@ -40,7 +40,7 @@ func (ctx *ExpectContext) expectEmptyLine() bool {
 		return true
 	}
 
-	_ = G.opts.optWarnSpace && ctx.currentLine().logNote("Empty line expected.")
+	_ = G.opts.optWarnSpace && ctx.currentLine().notef("Empty line expected.")
 	return false
 }
 
@@ -50,6 +50,6 @@ func (ctx *ExpectContext) expectText(text string) bool {
 		return true
 	}
 
-	ctx.currentLine().logWarning("This line should contain the following text: %s", text)
+	ctx.currentLine().warnf("This line should contain the following text: %s", text)
 	return false
 }

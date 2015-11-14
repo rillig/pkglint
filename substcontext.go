@@ -26,10 +26,10 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	if varname == "SUBST_CLASSES" {
 		classes := splitOnSpace(value)
 		if len(classes) > 1 {
-			line.logWarning("Please add only one class at a time to SUBST_CLASSES.")
+			line.warnf("Please add only one class at a time to SUBST_CLASSES.")
 		}
 		if self.id != "" {
-			line.logWarning("SUBST_CLASSES should only appear once in a SUBST block.")
+			line.warnf("SUBST_CLASSES should only appear once in a SUBST block.")
 		}
 		self.id = classes[0]
 		return
@@ -38,13 +38,13 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	m, varbase, varparam := match2(varname, `^(SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD))\.([\-\w_]+)$`)
 	if !m {
 		if self.id != "" {
-			line.logWarning("Foreign variable %q in SUBST block.", varname)
+			line.warnf("Foreign variable %q in SUBST block.", varname)
 		}
 		return
 	}
 
 	if self.id == "" {
-		line.logWarning("SUBST_CLASSES should come before the definition of %q.", varname)
+		line.warnf("SUBST_CLASSES should come before the definition of %q.", varname)
 		self.id = varparam
 	}
 
@@ -58,7 +58,7 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 			// but from a technically viewpoint, it is incorrect.
 			self.id = varparam
 		} else {
-			line.logWarning("Variable parameter %q does not match SUBST class %q.", varparam, self.id)
+			line.warnf("Variable parameter %q does not match SUBST class %q.", varparam, self.id)
 		}
 		return
 	}
@@ -66,36 +66,36 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 	switch varbase {
 	case "SUBST_STAGE":
 		if self.stage != "" {
-			line.logWarning("Duplicate definition of %q.", varname)
+			line.warnf("Duplicate definition of %q.", varname)
 		}
 		self.stage = value
 	case "SUBST_MESSAGE":
 		if self.message != "" {
-			line.logWarning("Duplicate definition of %q.", varname)
+			line.warnf("Duplicate definition of %q.", varname)
 		}
 		self.message = value
 	case "SUBST_FILES":
 		if len(self.files) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_FILES line should use the \"+=\" operator.")
+			line.warnf("All but the first SUBST_FILES line should use the \"+=\" operator.")
 		}
 		self.files = append(self.files, value)
 	case "SUBST_SED":
 		if len(self.sed) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_SED line should use the \"+=\" operator.")
+			line.warnf("All but the first SUBST_SED line should use the \"+=\" operator.")
 		}
 		self.sed = append(self.sed, value)
 	case "SUBST_FILTER_CMD":
 		if self.filterCmd != "" {
-			line.logWarning("Duplicate definition of %q.", varname)
+			line.warnf("Duplicate definition of %q.", varname)
 		}
 		self.filterCmd = value
 	case "SUBST_VARS":
 		if len(self.vars) > 0 && op != "+=" {
-			line.logWarning("All but the first SUBST_VARS line should use the \"+=\" operator.")
+			line.warnf("All but the first SUBST_VARS line should use the \"+=\" operator.")
 		}
 		self.vars = append(self.vars, value)
 	default:
-		line.logWarning("Foreign variable in SUBST block.")
+		line.warnf("Foreign variable in SUBST block.")
 	}
 }
 
@@ -104,16 +104,16 @@ func (self *SubstContext) finish(line *Line) {
 		return
 	}
 	if self.id == "" {
-		line.logWarning("Incomplete SUBST block: SUBST_CLASSES missing.")
+		line.warnf("Incomplete SUBST block: SUBST_CLASSES missing.")
 	}
 	if self.stage == "" {
-		line.logWarning("Incomplete SUBST block: SUBST_STAGE missing.")
+		line.warnf("Incomplete SUBST block: SUBST_STAGE missing.")
 	}
 	if len(self.files) == 0 {
-		line.logWarning("Incomplete SUBST block: SUBST_FILES missing.")
+		line.warnf("Incomplete SUBST block: SUBST_FILES missing.")
 	}
 	if len(self.sed) == 0 && len(self.vars) == 0 && self.filterCmd == "" {
-		line.logWarning("Incomplete SUBST block: SUBST_SED, SUBST_VARS or SUBST_FILTER_CMD missing.")
+		line.warnf("Incomplete SUBST block: SUBST_SED, SUBST_VARS or SUBST_FILTER_CMD missing.")
 	}
 	self.id = ""
 	self.stage = ""

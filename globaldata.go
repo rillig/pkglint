@@ -83,7 +83,7 @@ func (self *GlobalData) loadDistSites() {
 	names["MASTER_SITE_SUSE_UPD"] = true
 	names["MASTER_SITE_LOCAL"] = true
 
-	_ = G.opts.optDebugMisc && logDebug(fname, NO_LINES, "Loaded %d MASTER_SITE_* URLs.", len(url2name))
+	_ = G.opts.optDebugMisc && debugf(fname, NO_LINES, "Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	self.masterSiteUrls = url2name
 	self.masterSiteVars = names
 }
@@ -97,7 +97,7 @@ func (self *GlobalData) loadPkgOptions() {
 		if m, optname, optdescr := match2(line.text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
 			options[optname] = optdescr
 		} else {
-			line.logFatal("Unknown line format.")
+			line.fatalf("Unknown line format.")
 		}
 	}
 	self.pkgOptions = options
@@ -117,7 +117,7 @@ func (self *GlobalData) loadTools() {
 		}
 	}
 	if len(toolFiles) <= 1 {
-		logFatal(toolFiles[0], NO_LINES, "Too few tool files files.")
+		fatalf(toolFiles[0], NO_LINES, "Too few tool files files.")
 	}
 
 	tools := make(map[string]bool)
@@ -162,7 +162,7 @@ func (self *GlobalData) loadTools() {
 
 			if m, varname, _, value, _ := match4(text, reVarassign); m {
 				if varname == "USE_TOOLS" {
-					_ = G.opts.optDebugTools && line.logDebug("[condDepth=%d] %s", condDepth, value)
+					_ = G.opts.optDebugTools && line.debugf("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
 							if !matches(tool, reUnresolvedVar) && tools[tool] {
@@ -194,12 +194,12 @@ func (self *GlobalData) loadTools() {
 	}
 
 	if G.opts.optDebugTools {
-		logDebug(NO_FILE, NO_LINES, "tools: %v", tools)
-		logDebug(NO_FILE, NO_LINES, "vartools: %v", vartools)
-		logDebug(NO_FILE, NO_LINES, "predefinedTools: %v", predefinedTools)
-		logDebug(NO_FILE, NO_LINES, "varnameToToolname: %v", varnameToToolname)
+		debugf(NO_FILE, NO_LINES, "tools: %v", tools)
+		debugf(NO_FILE, NO_LINES, "vartools: %v", vartools)
+		debugf(NO_FILE, NO_LINES, "predefinedTools: %v", predefinedTools)
+		debugf(NO_FILE, NO_LINES, "varnameToToolname: %v", varnameToToolname)
 	}
-	_ = G.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "systemBuildDefs: %v", systemBuildDefs)
+	_ = G.opts.optDebugMisc && debugf(NO_FILE, NO_LINES, "systemBuildDefs: %v", systemBuildDefs)
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
@@ -252,10 +252,10 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
-					line.logWarning("Invalid package name %v", pkgname)
+					line.warnf("Invalid package name %v", pkgname)
 				}
 			} else {
-				line.logWarning("Invalid line format %v", text)
+				line.warnf("Invalid line format %v", text)
 			}
 		}
 	}
@@ -296,7 +296,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 			changes = append(changes, Change{line, action, pkgpath, version, author, date})
 
 		} else {
-			line.logWarning("Unknown doc/CHANGES line: %v", text)
+			line.warnf("Unknown doc/CHANGES line: %v", text)
 			line.explainWarning("See mk/misc/developer.mk for the rules.")
 		}
 	}
@@ -315,7 +315,7 @@ func (self *GlobalData) loadDocChanges() {
 	docdir := G.globalData.pkgsrcdir + "/doc"
 	files, err := ioutil.ReadDir(docdir)
 	if err != nil {
-		logFatal(docdir, NO_LINES, "Cannot be read.")
+		fatalf(docdir, NO_LINES, "Cannot be read.")
 	}
 
 	fnames := make([]string, 0)

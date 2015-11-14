@@ -66,11 +66,11 @@ func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 func loadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 	lines, err := loadLines(fname, joinContinuationLines)
 	if err != nil {
-		logError(fname, NO_LINES, "Cannot be read.")
+		errorf(fname, NO_LINES, "Cannot be read.")
 		return nil
 	}
 	if len(lines) == 0 {
-		logError(fname, NO_LINES, "Must not be empty.")
+		errorf(fname, NO_LINES, "Must not be empty.")
 		return nil
 	}
 	return lines
@@ -89,7 +89,7 @@ func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationL
 	}
 
 	if 0 < len(physlines) && !hasSuffix(physlines[len(physlines)-1].textnl, "\n") {
-		logError(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
+		errorf(fname, strconv.Itoa(physlines[len(physlines)-1].lineno), "File must end with a newline.")
 	}
 
 	return loglines
@@ -114,22 +114,22 @@ func saveAutofixChanges(lines []*Line) {
 		}
 		err := ioutil.WriteFile(tmpname, []byte(text), 0777)
 		if err != nil {
-			logError(tmpname, NO_LINES, "Cannot write.")
+			errorf(tmpname, NO_LINES, "Cannot write.")
 			continue
 		}
 		err = os.Rename(tmpname, fname)
 		if err != nil {
-			logError(fname, NO_LINES, "Cannot overwrite with auto-fixed content.")
+			errorf(fname, NO_LINES, "Cannot overwrite with auto-fixed content.")
 			continue
 		}
-		logNote(fname, NO_LINES, "Has been auto-fixed. Please re-run pkglint.")
+		notef(fname, NO_LINES, "Has been auto-fixed. Please re-run pkglint.")
 	}
 }
 
 func loadExistingLines(fname string, foldBackslashLines bool) []*Line {
 	lines, err := loadLines(fname, foldBackslashLines)
 	if lines == nil || err != nil {
-		logFatal(fname, NO_LINES, "Cannot be read.")
+		fatalf(fname, NO_LINES, "Cannot be read.")
 	}
 	return lines
 }

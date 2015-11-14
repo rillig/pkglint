@@ -55,25 +55,25 @@ func (self *Line) printSource(out io.Writer) {
 		}
 	}
 }
-func (self *Line) logFatal(format string, args ...interface{}) bool {
+func (self *Line) fatalf(format string, args ...interface{}) bool {
 	self.printSource(os.Stderr)
-	return logFatal(self.fname, self.lines, format, args...)
+	return fatalf(self.fname, self.lines, format, args...)
 }
-func (self *Line) logError(format string, args ...interface{}) bool {
+func (self *Line) errorf(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logError(self.fname, self.lines, format, args...)
+	return errorf(self.fname, self.lines, format, args...)
 }
-func (self *Line) logWarning(format string, args ...interface{}) bool {
+func (self *Line) warnf(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logWarning(self.fname, self.lines, format, args...)
+	return warnf(self.fname, self.lines, format, args...)
 }
-func (self *Line) logNote(format string, args ...interface{}) bool {
+func (self *Line) notef(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logNote(self.fname, self.lines, format, args)
+	return notef(self.fname, self.lines, format, args)
 }
-func (self *Line) logDebug(format string, args ...interface{}) bool {
+func (self *Line) debugf(format string, args ...interface{}) bool {
 	self.printSource(os.Stdout)
-	return logDebug(self.fname, self.lines, format, args...)
+	return debugf(self.fname, self.lines, format, args...)
 }
 func (self *Line) explainError(explanation ...string) {
 	explain(LL_ERROR, self.fname, self.lines, explanation)

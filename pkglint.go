@@ -161,7 +161,7 @@ func checkItem(fname string) {
 
 	st, err := os.Stat(fname)
 	if err != nil || (!st.Mode().IsDir() && !st.Mode().IsRegular()) {
-		logError(fname, NO_LINES, "No such file or directory.")
+		errorf(fname, NO_LINES, "No such file or directory.")
 		return
 	}
 	isDir := st.Mode().IsDir()
@@ -173,7 +173,7 @@ func checkItem(fname string) {
 	}
 	abs, err := filepath.Abs(G.currentDir)
 	if err != nil {
-		logFatal(G.currentDir, NO_LINES, "Cannot determine absolute path.")
+		fatalf(G.currentDir, NO_LINES, "Cannot determine absolute path.")
 	}
 	absCurrentDir := filepath.ToSlash(abs)
 	G.isWip = !G.opts.optImport && matches(absCurrentDir, `/wip/|/wip$`)
@@ -188,7 +188,7 @@ func checkItem(fname string) {
 	}
 
 	if pkgpath == "" {
-		logError(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
+		errorf(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
 		return
 	}
 
@@ -209,9 +209,9 @@ func checkItem(fname string) {
 	case ".":
 		checkdirToplevel()
 	case "":
-		logError(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
+		errorf(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
 	default:
-		logError(fname, NO_LINES, "Don't know how to check this directory.")
+		errorf(fname, NO_LINES, "Don't know how to check this directory.")
 	}
 }
 
@@ -221,12 +221,12 @@ func loadPackageMakefile(fname string) []*Line {
 	mainLines := make([]*Line, 0)
 	allLines := make([]*Line, 0)
 	if !readMakefile(fname, &mainLines, &allLines) {
-		logError(fname, NO_LINES, "Cannot be read.")
+		errorf(fname, NO_LINES, "Cannot be read.")
 		return nil
 	}
 
 	if G.opts.optDumpMakefile {
-		logDebug(G.currentDir, NO_LINES, "Whole Makefile (with all included files) follows:")
+		debugf(G.currentDir, NO_LINES, "Whole Makefile (with all included files) follows:")
 		for _, line := range allLines {
 			fmt.Printf("%s\n", line.String())
 		}
@@ -249,10 +249,10 @@ func loadPackageMakefile(fname string) []*Line {
 	}
 
 	_ = G.opts.optDebugMisc &&
-		logDebug(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
-		logDebug(NO_FILE, NO_LINES, "FILESDIR=%s", G.pkgContext.filesdir) &&
-		logDebug(NO_FILE, NO_LINES, "PATCHDIR=%s", G.pkgContext.patchdir) &&
-		logDebug(NO_FILE, NO_LINES, "PKGDIR=%s", *G.pkgContext.pkgdir)
+		debugf(NO_FILE, NO_LINES, "DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
+		debugf(NO_FILE, NO_LINES, "FILESDIR=%s", G.pkgContext.filesdir) &&
+		debugf(NO_FILE, NO_LINES, "PATCHDIR=%s", G.pkgContext.patchdir) &&
+		debugf(NO_FILE, NO_LINES, "PKGDIR=%s", *G.pkgContext.pkgdir)
 
 	return mainLines
 }
@@ -290,7 +290,7 @@ func extractUsedVariables(line *Line, text string) []string {
 	}
 
 	if rest != "" {
-		_ = G.opts.optDebugMisc && line.logDebug("extractUsedVariables: rest=%v", rest)
+		_ = G.opts.optDebugMisc && line.debugf("extractUsedVariables: rest=%v", rest)
 	}
 	return result
 }
@@ -362,9 +362,9 @@ func getVariableType(line *Line, varname string) *Vartype {
 	}
 
 	if gtype != nil {
-		_ = G.opts.optDebugVartypes && line.logDebug("The guessed type of %v is %v.", varname, gtype)
+		_ = G.opts.optDebugVartypes && line.debugf("The guessed type of %v is %v.", varname, gtype)
 	} else {
-		_ = G.opts.optDebugVartypes && line.logDebug("No type definition found for %v.", varname)
+		_ = G.opts.optDebugVartypes && line.debugf("No type definition found for %v.", varname)
 	}
 	return gtype
 }
@@ -407,7 +407,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	value = resolveVarsInRelativePath(value, true)
 	if matches(value, reUnresolvedVar) {
 		value = resolveVariableRefs(value)
-		_ = G.opts.optDebugMisc && logDebug(NO_FILE, NO_LINES, "expandVariableWithDefault: failed varname=%q value=%q", varname, value)
+		_ = G.opts.optDebugMisc && debugf(NO_FILE, NO_LINES, "expandVariableWithDefault: failed varname=%q value=%q", varname, value)
 	}
 	return value
 }
@@ -415,7 +415,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 func getVariablePermissions(line *Line, varname string) string {
 	vartype := getVariableType(line, varname)
 	if vartype == nil {
-		_ = G.opts.optDebugMisc && line.logDebug("No type definition found for %q.", varname)
+		_ = G.opts.optDebugMisc && line.debugf("No type definition found for %q.", varname)
 		return "adpsu"
 	}
 	return vartype.effectivePermissions(line.fname)
@@ -423,7 +423,7 @@ func getVariablePermissions(line *Line, varname string) string {
 
 func checklineLength(line *Line, maxlength int) {
 	if len(line.text) > maxlength {
-		line.logWarning("Line too long (should be no more than maxlength characters).")
+		line.warnf("Line too long (should be no more than maxlength characters).")
 		line.explainWarning(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
@@ -438,7 +438,7 @@ func checklineValidCharacters(line *Line, reChar string) {
 		for _, c := range rest {
 			uni += sprintf(" %U", c)
 		}
-		line.logWarning("Line contains invalid characters (%s).", uni[1:])
+		line.warnf("Line contains invalid characters (%s).", uni[1:])
 	}
 }
 
@@ -451,13 +451,13 @@ func checklineValidCharactersInValue(line *Line, reValid string) {
 		for _, c := range rest {
 			uni += sprintf(" %U", c)
 		}
-		line.logWarning("%s contains invalid characters (%s).", varname, uni[1:])
+		line.warnf("%s contains invalid characters (%s).", varname, uni[1:])
 	}
 }
 
 func checklineTrailingWhitespace(line *Line) {
 	if matches(line.text, `\s$`) {
-		line.logNote("Trailing white-space.")
+		line.notef("Trailing white-space.")
 		line.explainNote(
 			"When a line ends with some white-space, that space is in most cases",
 			"irrelevant and can be removed, leading to a \"normal form\" syntax.")
@@ -474,7 +474,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	}
 
 	if !matches(line.text, `^`+prefixRe+`\$`+rcsid+`(?::[^\$]+)?\$$`) {
-		line.logError("Expected %s.", suggestedPrefix+"$"+rcsid+"$")
+		line.errorf("Expected %s.", suggestedPrefix+"$"+rcsid+"$")
 		line.explainError(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
 			"version can be traced back later from a binary package. This is to",
@@ -506,7 +506,7 @@ func checklineMkAbsolutePathname(line *Line, text string) {
 
 func checklineRelativePath(line *Line, path string, mustExist bool) {
 	if !G.isWip && contains(path, "/wip/") {
-		line.logError("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+		line.errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
 	resolvedPath := resolveVarsInRelativePath(path, true)
@@ -517,7 +517,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	abs := ifelseStr(hasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
-			line.logError("%v does not exist.", resolvedPath)
+			line.errorf("%v does not exist.", resolvedPath)
 		}
 		return
 	}
@@ -529,7 +529,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	case matches(path, `^\.\./mk/`) && *G.curPkgsrcdir == "..":
 		// That's fine for category Makefiles.
 	case matches(path, `^\.\.`):
-		line.logWarning("Invalid relative path %q.", path)
+		line.warnf("Invalid relative path %q.", path)
 	}
 }
 
@@ -559,14 +559,14 @@ func checkfileMessage(fname string) {
 
 	if len(lines) < 3 {
 		lastLine := lines[len(lines)-1]
-		lastLine.logWarning("File too short.")
+		lastLine.warnf("File too short.")
 		lastLine.explainWarning(explanation...)
 		return
 	}
 
 	hline := strings.Repeat("=", 75)
 	if line := lines[0]; line.text != hline {
-		line.logWarning("Expected a line of exactly 75 \"=\" characters.")
+		line.warnf("Expected a line of exactly 75 \"=\" characters.")
 		line.explainWarning(explanation...)
 	}
 	checklineRcsid(lines[1], ``, "")
@@ -576,7 +576,7 @@ func checkfileMessage(fname string) {
 		checklineValidCharacters(line, reAsciiChar)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
-		lastLine.logWarning("Expected a line of exactly 75 \"=\" characters.")
+		lastLine.warnf("Expected a line of exactly 75 \"=\" characters.")
 		lastLine.explainWarning(explanation...)
 	}
 	checklinesTrailingEmptyLines(lines)
@@ -588,11 +588,11 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
 		if !fileExists(G.globalData.pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
-			line.logError("There is no package in otherpkgpath.")
+			line.errorf("There is no package in otherpkgpath.")
 		}
 
 	} else {
-		line.logWarning("%q is not a valid relative package directory.", pkgdir)
+		line.warnf("%q is not a valid relative package directory.", pkgdir)
 		line.explainWarning(
 			"A relative pathname always starts with \"../../\", followed",
 			"by a category, a slash and a the directory name of the package.",
@@ -619,20 +619,20 @@ func checkfile(fname string) {
 	basename := path.Base(fname)
 	if matches(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {
 		if G.opts.optImport {
-			logError(fname, NO_LINES, "Must be cleaned up before committing the package.")
+			errorf(fname, NO_LINES, "Must be cleaned up before committing the package.")
 		}
 		return
 	}
 
 	st, err := os.Lstat(fname)
 	if err != nil {
-		logError(fname, NO_LINES, "%s", err)
+		errorf(fname, NO_LINES, "%s", err)
 		return
 	}
 
 	if st.Mode().IsRegular() && (st.Mode().Perm()&0111 != 0) && !isCommitted(fname) {
 		line := NewLine(fname, NO_LINES, "", nil)
-		line.logWarning("Should not be executable.")
+		line.warnf("Should not be executable.")
 		line.explainWarning(
 			"No package file should ever be executable. Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in the",
@@ -648,16 +648,16 @@ func checkfile(fname string) {
 		case matches(fname, `(?:^|/)files/[^/]*$`):
 			// Ok
 		case !isEmptyDir(fname):
-			logWarning(fname, NO_LINES, "Unknown directory name.")
+			warnf(fname, NO_LINES, "Unknown directory name.")
 		}
 
 	case (st.Mode() & os.ModeSymlink) != 0:
 		if !matches(basename, `^work`) {
-			logWarning(fname, NO_LINES, "Unknown symlink name.")
+			warnf(fname, NO_LINES, "Unknown symlink name.")
 		}
 
 	case !st.Mode().IsRegular():
-		logError(fname, NO_LINES, "Only files and directories are allowed in pkgsrc.")
+		errorf(fname, NO_LINES, "Only files and directories are allowed in pkgsrc.")
 
 	case basename == "ALTERNATIVES":
 		if G.opts.optCheckAlternatives {
@@ -694,11 +694,11 @@ func checkfile(fname string) {
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
 		if G.opts.optDebugUnchecked {
-			logDebug(fname, NO_LINES, "Unchecked file %q.", fname)
+			debugf(fname, NO_LINES, "Unchecked file %q.", fname)
 		}
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
-		logWarning(fname, NO_LINES, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
+		warnf(fname, NO_LINES, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
 		if G.opts.optCheckMk {
@@ -720,7 +720,7 @@ func checkfile(fname string) {
 	case matches(fname, `(?:^|/)files/[^/]*$`):
 		// Ok
 	default:
-		logWarning(fname, NO_LINES, "Unexpected file found.")
+		warnf(fname, NO_LINES, "Unexpected file found.")
 		if G.opts.optCheckExtra {
 			checkfileExtra(fname)
 		}
@@ -734,6 +734,6 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 		last--
 	}
 	if last != max {
-		lines[last].logNote("Trailing empty lines.")
+		lines[last].notef("Trailing empty lines.")
 	}
 }

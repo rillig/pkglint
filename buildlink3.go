@@ -20,14 +20,14 @@ func checkfileBuildlink3Mk(fname string) {
 
 	for exp.advanceIfMatches(`^#`) != nil {
 		if hasPrefix(exp.previousLine().text, "# XXX") {
-			exp.previousLine().logNote("Please read this comment and remove it if appropriate.")
+			exp.previousLine().notef("Please read this comment and remove it if appropriate.")
 		}
 	}
 
 	exp.expectEmptyLine()
 
 	if exp.advanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) != nil {
-		exp.previousLine().logWarning("This line belongs inside the .ifdef block.")
+		exp.previousLine().warnf("This line belongs inside the .ifdef block.")
 		for exp.advanceIfMatches(`^$`) != nil {
 		}
 	}
@@ -41,7 +41,7 @@ func checkfileBuildlink3Mk(fname string) {
 	if m := exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`); m != nil {
 		pkgid = m[1]
 	} else {
-		exp.currentLine().logWarning("Expected a BUILDLINK_TREE line.")
+		exp.currentLine().warnf("Expected a BUILDLINK_TREE line.")
 		return
 	}
 	exp.expectEmptyLine()
@@ -55,20 +55,20 @@ func checkfileBuildlink3Mk(fname string) {
 		return
 	}
 	if !exp.expectText(pkgbase + "_BUILDLINK3_MK:=") {
-		exp.currentLine().logError("Expected the multiple-inclusion guard.")
+		exp.currentLine().errorf("Expected the multiple-inclusion guard.")
 		return
 	}
 	exp.expectEmptyLine()
 
 	ucPkgid := strings.ToUpper(strings.Replace(pkgid, "-", "_", -1))
 	if ucPkgid != pkgbase {
-		pkgbaseLine.logError("Package name mismatch between %q ...", pkgbase)
-		pkgidLine.logError("... and %q.", pkgid)
+		pkgbaseLine.errorf("Package name mismatch between %q ...", pkgbase)
+		pkgidLine.errorf("... and %q.", pkgid)
 	}
 	if G.pkgContext != nil && G.pkgContext.effectivePkgbase != nil {
 		if mkbase := *G.pkgContext.effectivePkgbase; mkbase != "" && mkbase != pkgid {
-			pkgidLine.logError("Package name mismatch between %q ...", pkgid)
-			G.pkgContext.effectivePkgnameLine.logError("... and %q.", mkbase)
+			pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
+			G.pkgContext.effectivePkgnameLine.errorf("... and %q.", mkbase)
 		}
 	}
 
@@ -76,7 +76,7 @@ func checkfileBuildlink3Mk(fname string) {
 	indentLevel := 1 // The first .if is from the second paragraph.
 	for {
 		if exp.eof() {
-			exp.currentLine().logWarning("Expected .endif")
+			exp.currentLine().warnf("Expected .endif")
 			return
 		}
 
@@ -93,7 +93,7 @@ func checkfileBuildlink3Mk(fname string) {
 				} else if m, p := match1(value, reDependencyWildcard); m {
 					abiPkg, abiVersion = p, ""
 				} else {
-					_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked dependency pattern %q.", value)
+					_ = G.opts.optDebugUnchecked && line.debugf("Unchecked dependency pattern %q.", value)
 				}
 				doCheck = true
 			}
@@ -104,22 +104,22 @@ func checkfileBuildlink3Mk(fname string) {
 				} else if m, p := match1(value, reDependencyWildcard); m {
 					apiPkg, apiVersion = p, ""
 				} else {
-					_ = G.opts.optDebugUnchecked && line.logDebug("Unchecked dependency pattern %q.", value)
+					_ = G.opts.optDebugUnchecked && line.debugf("Unchecked dependency pattern %q.", value)
 				}
 				doCheck = true
 			}
 			if doCheck && abiPkg != "" && apiPkg != "" && abiPkg != apiPkg {
-				abiLine.logWarning("Package name mismatch between %q ...", abiPkg)
-				apiLine.logWarning("... and %q.", apiPkg)
+				abiLine.warnf("Package name mismatch between %q ...", abiPkg)
+				apiLine.warnf("... and %q.", apiPkg)
 			}
 			if doCheck && abiVersion != "" && apiVersion != "" && pkgverCmp(abiVersion, apiVersion) < 0 {
-				abiLine.logWarning("ABI version (%s) should be at least ...", abiVersion)
-				apiLine.logWarning("... API version (%s).", apiVersion)
+				abiLine.warnf("ABI version (%s) should be at least ...", abiVersion)
+				apiLine.warnf("... API version (%s).", apiVersion)
 			}
 
 			if m, varparam := match1(varname, `^BUILDLINK_[\w_]+\.(.*)$`); m {
 				if varparam != pkgid {
-					line.logWarning("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
+					line.warnf("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
 				}
 			}
 
@@ -144,12 +144,12 @@ func checkfileBuildlink3Mk(fname string) {
 			}
 
 		} else {
-			_ = G.opts.optDebugUnchecked && exp.currentLine().logWarning("Unchecked line in third paragraph.")
+			_ = G.opts.optDebugUnchecked && exp.currentLine().warnf("Unchecked line in third paragraph.")
 			exp.advance()
 		}
 	}
 	if apiLine == nil {
-		exp.currentLine().logWarning("Definition of BUILDLINK_API_DEPENDS is missing.")
+		exp.currentLine().warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
 	exp.expectEmptyLine()
 
@@ -157,7 +157,7 @@ func checkfileBuildlink3Mk(fname string) {
 	exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgbase) + `$`)
 
 	if !exp.eof() {
-		exp.currentLine().logWarning("The file should end here.")
+		exp.currentLine().warnf("The file should end here.")
 	}
 
 	checklinesBuildlink3Inclusion(lines)
