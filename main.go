@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	G = &GlobalVars{}
+	G = new(GlobalVars)
 	G.logOut, G.logErr = os.Stdout, os.Stderr
 
 	G.opts = ParseCommandLine(os.Args, G.logOut)

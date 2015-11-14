@@ -18,7 +18,7 @@ func NewOptions(out io.Writer) *Options {
 }
 
 func (self *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
-	grp := &FlagGroup{}
+	grp := new(FlagGroup)
 	opt := &Option{shortName, longName, argDescription, description, nil, nil, grp}
 	self.options = append(self.options, opt)
 	return grp

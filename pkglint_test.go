@@ -31,7 +31,7 @@ func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 }
 
 func (s *Suite) TestPrintTable(c *check.C) {
-	out := &bytes.Buffer{}
+	out := new(bytes.Buffer)
 
 	printTable(out, [][]string{{"hello", "world"}, {"how", "are", "you?"}})
 

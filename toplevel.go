@@ -8,7 +8,7 @@ type Toplevel struct {
 func checkdirToplevel() {
 	defer tracecall("checkdirToplevel", G.currentDir)()
 
-	ctx := &Toplevel{}
+	ctx := new(Toplevel)
 	ctx.subdirs = make([]string, 0)
 
 	fname := G.currentDir + "/Makefile"

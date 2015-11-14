@@ -291,7 +291,7 @@ func checklinesMk(lines []*Line) {
 	defer tracecall("checklinesMk", lines[0].fname)()
 
 	allowedTargets := make(map[string]bool)
-	substcontext := &SubstContext{}
+	substcontext := new(SubstContext)
 
 	ctx := newMkContext()
 	G.mkContext = ctx

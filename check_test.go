@@ -32,7 +32,7 @@ func (s *Suite) Output() string {
 }
 
 func (s *Suite) SetUpTest(c *check.C) {
-	G = &GlobalVars{}
+	G = new(GlobalVars)
 	G.logOut, G.logErr = &s.stdout, &s.stderr
 }
 
@@ -46,6 +46,6 @@ func (s *Suite) TearDownTest(c *check.C) {
 	}
 }
 
-var _ = check.Suite(&Suite{})
+var _ = check.Suite(new(Suite))
 
 func Test(t *testing.T) { check.TestingT(t) }

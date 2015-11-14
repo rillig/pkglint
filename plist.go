@@ -34,7 +34,7 @@ func checkfilePlist(fname string) {
 			"Meta packages also don't need a PLIST file.")
 	}
 
-	pctx := &PlistContext{}
+	pctx := new(PlistContext)
 	pctx.allFiles = make(map[string]*Line)
 	pctx.allDirs = make(map[string]*Line)
 

@@ -41,7 +41,7 @@ type version struct {
 }
 
 func mkversion(vstr string) *version {
-	v := &version{}
+	v := new(version)
 	rest := strings.ToLower(vstr)
 	for rest != "" {
 		switch {
