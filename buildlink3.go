@@ -10,13 +10,8 @@ func checkfileBuildlink3Mk(fname string) {
 
 	checkperms(fname)
 
-	lines, err := loadLines(fname, true)
-	if err != nil {
-		logError(fname, NO_LINES, "Cannot be read.")
-		return
-	}
-	if len(lines) == 0 {
-		logError(fname, NO_LINES, "Must not be empty.")
+	lines := loadNonemptyLines(fname, true)
+	if lines == nil {
 		return
 	}
 

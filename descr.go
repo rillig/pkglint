@@ -9,14 +9,8 @@ func checkfileDescr(fname string) {
 	)
 
 	checkperms(fname)
-	lines, err := loadLines(fname, false)
-	if err != nil {
-		logError(NO_FILE, NO_LINES, "Cannot be read.")
-		return
-	}
-
-	if len(lines) == 0 {
-		logError(NO_FILE, NO_LINES, "Must not be empty.")
+	lines := loadNonemptyLines(fname, false)
+	if lines == nil {
 		return
 	}
 

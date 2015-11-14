@@ -13,9 +13,8 @@ func checkdirToplevel() {
 
 	fname := G.currentDir + "/Makefile"
 
-	lines, err := loadLines(fname, true)
-	if err != nil {
-		logError(fname, NO_LINES, "Cannot be read.")
+	lines := loadNonemptyLines(fname, true)
+	if lines == nil {
 		return
 	}
 

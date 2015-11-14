@@ -14,16 +14,11 @@ func checkfilePlist(fname string) {
 	defer tracecall("checkfilePlist", fname)()
 
 	checkperms(fname)
-	lines, err := loadLines(fname, false)
-	if err != nil {
-		logError(fname, NO_LINES, "Cannot be read.")
+	lines := loadNonemptyLines(fname, false)
+	if lines == nil {
 		return
 	}
 
-	if len(lines) == 0 {
-		logError(fname, NO_LINES, "Must not be empty.")
-		return
-	}
 	checklineRcsid(lines[0], `@comment `, "@comment ")
 
 	if len(lines) == 1 {
