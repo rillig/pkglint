@@ -11,15 +11,6 @@ import (
 	"strings"
 )
 
-type QuotingResult string
-
-const (
-	QR_FALSE         QuotingResult = "false"
-	QR_TRUE          QuotingResult = "true"
-	QR_DONT_KNOW     QuotingResult = "don’t know"
-	QR_DOESNT_MATTER QuotingResult = "doesn’t matter"
-)
-
 // A SimpleMatch is the result of applying a regular expression to a Perl
 // scalar value. It can return the range and the text of the captured
 // groups.
