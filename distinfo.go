@@ -35,7 +35,10 @@ func checkfileDistinfo(fname string) {
 
 	ctx := &DistinfoContext{"", false, make([]string, 0)}
 	inDistinfo := make(map[string]bool)
-	for _, line := range lines[2:] {
+	for i, line := range lines {
+		if i < 2 {
+			continue
+		}
 		m, alg, fname, hash := match3(line.text, `^(\w+) \(([^)]+)\) = (.*)(?: bytes)?$`)
 		if !m {
 			line.errorf("Unknown line type.")
