@@ -11,21 +11,6 @@ import (
 	"strings"
 )
 
-// A Vartype in pkglint is a combination of a data type and a permission
-// specification. Further details can be found in the chapter ``The pkglint
-// type system'' of the pkglint book.
-
-type KindOfList struct{ name string }
-
-var LK_NONE = KindOfList{"none"}
-var LK_SPACE = KindOfList{"whitespace"}
-var LK_SHELL = KindOfList{"shellwords"}
-
-type AclEntry struct {
-	glob        string
-	permissions string
-}
-
 type CvsEntry struct {
 	fname    string
 	revision string
