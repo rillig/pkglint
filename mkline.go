@@ -390,13 +390,9 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 			"It is this meaning that should be described.")
 	}
 
-	if m, pkgvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
-		if matches(varname, `^PKG_.*_REASON$`) {
-			// ok
-		} else if matches(varname, `^(?:DIST_SUBDIR|WRKSRC)$`) {
-			line.warnf("%s should not be used in %s, as it sometimes includes the PKGREVISION. Please use %s_NOREV instead.", pkgvarname, varname, pkgvarname)
-		} else {
-			_ = G.opts.DebugMisc && line.debugf("Use of PKGNAME in %s.", varname)
+	if m, revvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
+		if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
+			line.warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
 		}
 	}
 
