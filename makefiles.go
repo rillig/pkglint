@@ -57,7 +57,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				line.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
-				line.explain(explanationRelativeDirs()...)
+				explainRelativeDirs(line)
 			}
 			if path.Base(includeFile) == "Makefile.common" {
 				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)

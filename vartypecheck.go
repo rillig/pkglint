@@ -184,7 +184,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 	if matches(value, `:\.\./[^/]+$`) {
 		line.warnf("Dependencies should have the form \"../../category/package\".")
-		line.explain(explanationRelativeDirs()...)
+		explainRelativeDirs(line)
 		return
 	}
 

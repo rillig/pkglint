@@ -21,11 +21,11 @@ const (
 	rePkgversion         = `\d(?:\w|\.\d)*`
 )
 
-func explanationRelativeDirs() []string {
-	return []string{
+func explainRelativeDirs(line *Line) {
+	line.explain(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
-		"main pkgsrc repository."}
+		"main pkgsrc repository.")
 }
 
 // The pkgsrc top-level directory, relative to the given directory.
