@@ -90,7 +90,7 @@ func isCommitted(fname string) bool {
 }
 
 func removeVariableReferences(expr string) string {
-	replaced := regcomp(`\$\{([^{}]*)\}`).ReplaceAllString(expr, "")
+	replaced := regcomp(`\$\{[^{}]+\}`).ReplaceAllString(expr, "")
 	if replaced != expr {
 		return removeVariableReferences(replaced)
 	}
