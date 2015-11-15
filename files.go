@@ -63,22 +63,22 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 }
 
 func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
-	rawtext, err := ioutil.ReadFile(fname)
+	rawText, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
 
+	return convertToLogicalLines(fname, string(rawText), joinContinuationLines), nil
+}
+
+func convertToLogicalLines(fname string, rawText string, joinContinuationLines bool) []*Line {
 	var rawLines []*RawLine
-	for lineno, rawLine := range strings.SplitAfter(string(rawtext), "\n") {
+	for lineno, rawLine := range strings.SplitAfter(rawText, "\n") {
 		if rawLine != "" {
 			rawLines = append(rawLines, &RawLine{1 + lineno, rawLine})
 		}
 	}
 
-	return convertToLogicalLines(fname, rawLines, joinContinuationLines), nil
-}
-
-func convertToLogicalLines(fname string, rawLines []*RawLine, joinContinuationLines bool) []*Line {
 	var loglines []*Line
 	if joinContinuationLines {
 		for lineno := 0; lineno < len(rawLines); {

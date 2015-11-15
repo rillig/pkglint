@@ -9,14 +9,6 @@ my $show_source_flag	= false;
 package FileUtil
 
 sub load_lines($$) {
-	my ($fname, $fold_backslash_lines) = @_;
-	my ($physlines, $seen_newline, $loglines);
-
-	$physlines = load_physical_lines($fname);
-	if (!$physlines) {
-		return false;
-	}
-
 	$seen_newline = true;
 	$loglines = [];
 	if ($fold_backslash_lines) {
