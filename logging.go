@@ -29,7 +29,7 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 		fname = path.Clean(fname)
 	}
 
-	text, sep := "", ""
+	var text, sep string
 	if !G.opts.GccOutput {
 		text += sep + level.traditionalName + ":"
 		sep = " "
