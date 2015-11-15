@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
-	lines := mklines("patch-as",
+	lines := s.NewLines("patch-as",
 		"$"+"NetBSD$",
 		"",
 		"Text",
@@ -26,7 +26,7 @@ func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
-	lines := mklines("patch-as",
+	lines := s.NewLines("patch-as",
 		"$"+"NetBSD$",
 		"",
 		"--- file.orig",
