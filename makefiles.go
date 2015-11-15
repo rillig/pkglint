@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const reMkComment = `^\s*#(.*)$`
+
 func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 	fileLines, err := loadLines(fname, true)
 	if err != nil {
