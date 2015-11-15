@@ -12,13 +12,7 @@ type SubstContext struct {
 	filterCmd string
 }
 
-func (ctx *SubstContext) isComplete() bool {
-	return ctx.id != "" &&
-		len(ctx.files) != 0 &&
-		(len(ctx.sed) != 0 || len(ctx.vars) != 0 || ctx.filterCmd != "")
-}
-
-func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) {
+func (self *SubstContext) Varassign(line *Line, varname, op, value string) {
 	if !G.opts.WarnExtra {
 		return
 	}
@@ -48,72 +42,59 @@ func (self *SubstContext) checkVarassign(line *Line, varname, op, value string) 
 		self.id = varparam
 	}
 
-	if self.id != "" && varparam != self.id {
-		if self.isComplete() {
+	if varparam != self.id {
+		if self.IsComplete() {
 			// XXX: This code sometimes produces weird warnings. See
 			// meta-pkgs/xorg/Makefile.common 1.41 for an example.
-			self.finish(line)
+			self.Finish(line)
 
 			// The following assignment prevents an additional warning,
 			// but from a technically viewpoint, it is incorrect.
 			self.id = varparam
 		} else {
-			line.warnf("Variable parameter %q does not match SUBST class %q.", varparam, self.id)
+			line.warnf("Variable %q does not match SUBST class %q.", varname, self.id)
 		}
 		return
 	}
 
 	switch varbase {
 	case "SUBST_STAGE":
-		if self.stage != "" {
-			line.warnf("Duplicate definition of %q.", varname)
-		}
-		self.stage = value
+		self.dup(line, &self.stage, varname, value)
 	case "SUBST_MESSAGE":
-		if self.message != "" {
-			line.warnf("Duplicate definition of %q.", varname)
-		}
-		self.message = value
+		self.dup(line, &self.message, varname, value)
 	case "SUBST_FILES":
-		if len(self.files) > 0 && op != "+=" {
-			line.warnf("All but the first SUBST_FILES line should use the \"+=\" operator.")
-		}
-		self.files = append(self.files, value)
+		self.duplist(line, &self.files, varname, op, value)
 	case "SUBST_SED":
-		if len(self.sed) > 0 && op != "+=" {
-			line.warnf("All but the first SUBST_SED line should use the \"+=\" operator.")
-		}
-		self.sed = append(self.sed, value)
+		self.duplist(line, &self.sed, varname, op, value)
 	case "SUBST_FILTER_CMD":
-		if self.filterCmd != "" {
-			line.warnf("Duplicate definition of %q.", varname)
-		}
-		self.filterCmd = value
+		self.dup(line, &self.filterCmd, varname, value)
 	case "SUBST_VARS":
-		if len(self.vars) > 0 && op != "+=" {
-			line.warnf("All but the first SUBST_VARS line should use the \"+=\" operator.")
-		}
-		self.vars = append(self.vars, value)
+		self.duplist(line, &self.vars, varname, op, value)
 	default:
-		line.warnf("Foreign variable in SUBST block.")
+		line.warnf("Foreign variable %q in SUBST block.", varname)
 	}
 }
 
-func (self *SubstContext) finish(line *Line) {
+func (ctx *SubstContext) IsComplete() bool {
+	return ctx.id != "" &&
+		ctx.stage != "" &&
+		len(ctx.files) != 0 &&
+		(len(ctx.sed) != 0 || len(ctx.vars) != 0 || ctx.filterCmd != "")
+}
+
+func (self *SubstContext) Finish(line *Line) {
 	if self.id == "" || !G.opts.WarnExtra {
 		return
 	}
-	if self.id == "" {
-		line.warnf("Incomplete SUBST block: SUBST_CLASSES missing.")
-	}
 	if self.stage == "" {
-		line.warnf("Incomplete SUBST block: SUBST_STAGE missing.")
+		line.warnf("Incomplete SUBST block: %s missing.", self.varname("SUBST_STAGE"))
 	}
 	if len(self.files) == 0 {
-		line.warnf("Incomplete SUBST block: SUBST_FILES missing.")
+		line.warnf("Incomplete SUBST block: %s missing.", self.varname("SUBST_FILES"))
 	}
 	if len(self.sed) == 0 && len(self.vars) == 0 && self.filterCmd == "" {
-		line.warnf("Incomplete SUBST block: SUBST_SED, SUBST_VARS or SUBST_FILTER_CMD missing.")
+		line.warnf("Incomplete SUBST block: %s, %s or %s missing.",
+			self.varname("SUBST_SED"), self.varname("SUBST_VARS"), self.varname("SUBST_FILTER_CMD"))
 	}
 	self.id = ""
 	self.stage = ""
@@ -122,4 +103,26 @@ func (self *SubstContext) finish(line *Line) {
 	self.sed = nil
 	self.vars = nil
 	self.filterCmd = ""
+}
+
+func (ctx *SubstContext) varname(varbase string) string {
+	if ctx.id != "" {
+		return varbase + "." + ctx.id
+	} else {
+		return varbase
+	}
+}
+
+func (ctx *SubstContext) dup(line *Line, pstr *string, varname, value string) {
+	if *pstr != "" {
+		line.warnf("Duplicate definition of %q.", varname)
+	}
+	*pstr = value
+}
+
+func (ctx *SubstContext) duplist(line *Line, plist *[]string, varname, op, value string) {
+	if len(*plist) > 0 && op != "+=" {
+		line.warnf("All but the first %q lines should use the \"+=\" operator.", varname)
+	}
+	*plist = append(*plist, value)
 }
