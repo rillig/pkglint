@@ -8,36 +8,6 @@ my $show_source_flag	= false;
 
 package line
 
-sub prepend_before($$) {
-	my ($self, $text) = @_;
-
-	unshift(@{$self->[BEFORE]}, [0, "$text\n"]);
-	$self->[CHANGED] = true;
-}
-sub append_before($$) {
-	my ($self, $text) = @_;
-
-	push(@{$self->[BEFORE]}, [0, "$text\n"]);
-	$self->[CHANGED] = true;
-}
-sub prepend_after($$) {
-	my ($self, $text) = @_;
-
-	unshift(@{$self->[AFTER]}, [0, "$text\n"]);
-	$self->[CHANGED] = true;
-}
-sub append_after($$) {
-	my ($self, $text) = @_;
-
-	push(@{$self->[AFTER]}, [0, "$text\n"]);
-	$self->[CHANGED] = true;
-}
-sub delete($) {
-	my ($self) = @_;
-
-	$self->[PHYSLINES] = [];
-	$self->[CHANGED] = true;
-}
 sub replace($$$) {
 	my ($self, $from, $to) = @_;
 	my $phys = $self->[PHYSLINES];
