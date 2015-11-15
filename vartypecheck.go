@@ -176,7 +176,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			line.warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		if match(pattern, reDependencyCmp) == nil && match(pattern, reDependencyWildcard) == nil {
+		if !matches(pattern, reDependencyCmp) && !matches(pattern, reDependencyWildcard) {
 			line.errorf("Unknown dependency pattern %q.", pattern)
 		}
 		return
@@ -416,7 +416,7 @@ func (cv *VartypeCheck) Perl5Packlist() {
 }
 
 func (cv *VartypeCheck) PkgName() {
-	if cv.value == cv.valueNovar && match(cv.value, rePkgname) == nil {
+	if cv.value == cv.valueNovar && !matches(cv.value, rePkgname) {
 		cv.line.warnf("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
 	}
 }
