@@ -19,22 +19,6 @@ func LoadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 	return lines
 }
 
-func loadRawLines(fname string) ([]*RawLine, error) {
-	rawtext, err := ioutil.ReadFile(fname)
-	if err != nil {
-		return nil, err
-	}
-
-	var rawLines []*RawLine
-	for lineno, rawLine := range strings.SplitAfter(string(rawtext), "\n") {
-		if rawLine != "" {
-			rawLines = append(rawLines, &RawLine{1 + lineno, rawLine})
-		}
-	}
-
-	return rawLines, nil
-}
-
 func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 	text := ""
 	index := *pindex
@@ -71,10 +55,18 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 }
 
 func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
-	rawLines, err := loadRawLines(fname)
+	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
+
+	var rawLines []*RawLine
+	for lineno, rawLine := range strings.SplitAfter(string(rawtext), "\n") {
+		if rawLine != "" {
+			rawLines = append(rawLines, &RawLine{1 + lineno, rawLine})
+		}
+	}
+
 	return convertToLogicalLines(fname, rawLines, joinContinuationLines), nil
 }
 
