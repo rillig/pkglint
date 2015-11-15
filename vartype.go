@@ -45,30 +45,29 @@ func (self *Vartype) effectivePermissions(fname string) string {
 // Returns the union of all possible permissions. This can be used to
 // check whether a variable may be defined or used at all, or if it is
 // read-only.
-func (self *Vartype) union() (perms string) {
+func (self *Vartype) union() string {
+	var permissions string
 	for _, aclEntry := range self.aclEntries {
-		perms += aclEntry.permissions
+		permissions += aclEntry.permissions
 	}
-	return
+	return permissions
 }
 
+// Returns whether the type is considered a shell list.
 // This distinction between “real lists” and “considered a list” makes
 // the implementation of checklineMkVartype easier.
 func (self *Vartype) isConsideredList() bool {
-	switch {
-	case self.kindOfList == LK_SHELL:
+	switch self.kindOfList {
+	case LK_SHELL:
 		return true
-	case self.kindOfList == LK_SPACE:
-		return false
-	case self.checker.name == "BuildlinkPackages":
-		return true
-	case self.checker.name == "SedCommands":
-		return true
-	case self.checker.name == "ShellCommand":
-		return true
-	default:
+	case LK_SPACE:
 		return false
 	}
+	switch self.checker {
+	case CheckvarSedCommands, CheckvarShellCommand:
+		return true
+	}
+	return false
 }
 
 func (self *Vartype) mayBeAppendedTo() bool {
@@ -144,7 +143,7 @@ var (
 	CheckvarRelativePkgPath        = &VarChecker{"RelativePkgPath", (*VartypeCheck).RelativePkgPath}
 	CheckvarRestricted             = &VarChecker{"Restricted", (*VartypeCheck).Restricted}
 	CheckvarSedCommand             = &VarChecker{"SedCommand", (*VartypeCheck).SedCommand}
-	CheckvarSedCommands            = &VarChecker{"SedCommands", (*VartypeCheck).SedCommands}
+	CheckvarSedCommands            = &VarChecker{"SedCommands", nil}
 	CheckvarShellCommand           = &VarChecker{"ShellCommand", nil}
 	CheckvarShellWord              = &VarChecker{"ShellWord", nil}
 	CheckvarStage                  = &VarChecker{"Stage", (*VartypeCheck).Stage}
@@ -164,7 +163,8 @@ var (
 	CheckvarYesNo_Indirectly       = &VarChecker{"YesNo_Indirectly", (*VartypeCheck).YesNo_Indirectly}
 )
 
-func init() {
+func init() { // Necessary due to circular dependency
+	CheckvarSedCommands.checker = (*VartypeCheck).SedCommands
 	CheckvarShellCommand.checker = (*VartypeCheck).ShellCommand
 	CheckvarShellWord.checker = (*VartypeCheck).ShellWord
 }
