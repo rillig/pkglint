@@ -5,7 +5,12 @@ import (
 	"strings"
 )
 
-const reMkComment = `^\s*#(.*)$`
+const (
+	reMkComment    = `^\s*#(.*)$`
+	reMkDependency = `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`
+	reMkSysinclude = `^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$`
+	reMkShellcmd   = `^\t(.*)$`
+)
 
 func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 	fileLines, err := loadLines(fname, true)
@@ -232,7 +237,7 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if matches(text, reConflict) {
+	if matches(text, `^(<<<<<<<|=======|>>>>>>>)`) {
 		return
 	}
 

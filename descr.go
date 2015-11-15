@@ -16,7 +16,7 @@ func checkfileDescr(fname string) {
 	for _, line := range lines {
 		checklineLength(line, maxchars)
 		checklineTrailingWhitespace(line)
-		checklineValidCharacters(line, reAsciiChar)
+		checklineValidCharacters(line, `[\t -~]`)
 		if contains(line.text, "${") {
 			line.warnf("Variables are not expanded in the DESCR file.")
 		}

@@ -10,22 +10,15 @@ import (
 )
 
 const (
-	reDependencyCmp            = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$`
-	reDependencyWildcard       = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
-	reMkCond                   = `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s+([^\s#][^#]*?))?\s*(?:#.*)?$`
-	reMkDependency             = `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`
-	reMkInclude                = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
-	reMkSysinclude             = `^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$`
-	reMkShellvaruse            = `(?:^|[^\$])\$\$\{?(\w+)\}?`
-	reMkShellcmd               = `^\t(.*)$`
-	reConflict                 = `^(<<<<<<<|=======|>>>>>>>)`
-	reAsciiChar                = `[\t -~]`
-	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`
-	reVarnameDirect            = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
-	reVarname                  = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
-	rePkgname                  = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
-	rePkgbase                  = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
-	rePkgversion               = `\d(?:\w|\.\d)*`
+	reDependencyCmp      = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$`
+	reDependencyWildcard = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
+	reMkCond             = `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s+([^\s#][^#]*?))?\s*(?:#.*)?$`
+	reMkInclude          = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
+	reVarassign          = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`
+	reVarname            = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
+	rePkgname            = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
+	rePkgbase            = `(?:[+.\w]|-[A-Z_a-z])+`
+	rePkgversion         = `\d(?:\w|\.\d)*`
 )
 
 func explanationRelativeDirs() []string {
@@ -391,7 +384,7 @@ func checkfileMessage(fname string) {
 	for _, line := range lines {
 		checklineLength(line, 80)
 		checklineTrailingWhitespace(line)
-		checklineValidCharacters(line, reAsciiChar)
+		checklineValidCharacters(line, `[\t -~]`)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
 		lastLine.warnf("Expected a line of exactly 75 \"=\" characters.")
