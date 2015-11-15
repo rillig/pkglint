@@ -385,3 +385,11 @@ func stringStringMapKeys(m map[string]string) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+func abspath(fname string) string {
+	abs, err := filepath.Abs(fname)
+	if err != nil {
+		fatalf(fname, NO_LINES, "Cannot determine absolute path.")
+	}
+	return filepath.ToSlash(abs)
+}

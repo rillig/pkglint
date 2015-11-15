@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -43,7 +42,7 @@ func explanationRelativeDirs() []string {
 func CheckDirent(fname string) {
 	defer tracecall("CheckDirent", fname)()
 
-	st, err := os.Stat(fname)
+	st, err := os.Lstat(fname)
 	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {
 		errorf(fname, NO_LINES, "No such file or directory.")
 		return
@@ -51,15 +50,8 @@ func CheckDirent(fname string) {
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	G.currentDir = fname
-	if isReg {
-		G.currentDir = path.Dir(fname)
-	}
-	abs, err := filepath.Abs(G.currentDir)
-	if err != nil {
-		fatalf(G.currentDir, NO_LINES, "Cannot determine absolute path.")
-	}
-	absCurrentDir := filepath.ToSlash(abs)
+	G.currentDir = ifelseStr(isReg, path.Dir(fname), fname)
+	absCurrentDir := abspath(G.currentDir)
 	G.isWip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	G.isInfrastructure = matches(absCurrentDir, `/mk/|/mk$`)
 	G.curPkgsrcdir = findPkgsrcTopdir(G.currentDir)
