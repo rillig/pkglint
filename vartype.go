@@ -4,9 +4,8 @@ import (
 	"path"
 )
 
-// A Vartype in pkglint is a combination of a data type and a permission
-// specification. Further details can be found in the chapter ``The pkglint
-// type system'' of the pkglint book.
+// Vartype is a combination of a data type and a permission specification.
+// See vardefs.go for examples, and vartypecheck.go for the implementation.
 type Vartype struct {
 	kindOfList KindOfList
 	checker    *VarChecker
@@ -17,14 +16,14 @@ type Vartype struct {
 type KindOfList int
 
 const (
-	LK_NONE KindOfList = iota
-	LK_SPACE
-	LK_SHELL
+	LK_NONE  KindOfList = iota // Plain data type
+	LK_SPACE                   // List entries are separated by whitespace; used in .for loops.
+	LK_SHELL                   // List entries are shell words; used in the :M, :S modifiers.
 )
 
 type AclEntry struct {
-	glob        string
-	permissions string
+	glob        string // Examples: "Makefile", "*.mk"
+	permissions string // Some of: "a"ppend, "d"efault, "s"et; "p"reprocessing, "u"se
 }
 
 type Guessed bool
