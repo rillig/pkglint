@@ -226,7 +226,7 @@ func checklineMkVaruseShellword(line *Line, varname string, vartype *Vartype, vu
 	// configure scripts.
 	//
 	// When doing checks outside a package, the :M* operator is needed for safety.
-	needMstar := matches(varname, reGnuConfigureVolatileVars) &&
+	needMstar := matches(varname, `^(?:.*_)?(?:CFLAGS||CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`) &&
 		(G.pkgContext == nil || G.pkgContext.vardef["GNU_CONFIGURE"] != nil)
 
 	strippedMod := mod
