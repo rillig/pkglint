@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type VartypeCheckContext struct {
+type VartypeCheck struct {
 	line        *Line
 	varname     string
 	op          string
@@ -16,21 +16,21 @@ type VartypeCheckContext struct {
 	guessed     Guessed
 }
 
-func (cv *VartypeCheckContext) AwkCommand() {
+func (cv *VartypeCheck) AwkCommand() {
 	_ = G.opts.DebugUnchecked && cv.line.debugf("Unchecked AWK command: %q", cv.value)
 }
 
-func (cv *VartypeCheckContext) BasicRegularExpression() {
+func (cv *VartypeCheck) BasicRegularExpression() {
 	_ = G.opts.DebugUnchecked && cv.line.debugf("Unchecked basic regular expression: %q", cv.value)
 }
 
-func (cv *VartypeCheckContext) BuildlinkDepmethod() {
+func (cv *VartypeCheck) BuildlinkDepmethod() {
 	if !matches(cv.value, reUnresolvedVar) && cv.value != "build" && cv.value != "full" {
 		cv.line.warnf("Invalid dependency method %q. Valid methods are \"build\" or \"full\".", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) BuildlinkDepth() {
+func (cv *VartypeCheck) BuildlinkDepth() {
 	if (cv.op != "use" || cv.value != "+") &&
 		cv.value != "${BUILDLINK_DEPTH}+" &&
 		cv.value != "${BUILDLINK_DEPTH:S/+$//}" {
@@ -38,7 +38,7 @@ func (cv *VartypeCheckContext) BuildlinkDepth() {
 	}
 }
 
-func (cv *VartypeCheckContext) Category() {
+func (cv *VartypeCheck) Category() {
 	if fileExists(G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
 		return
 	}
@@ -60,7 +60,7 @@ func (cv *VartypeCheckContext) Category() {
 	}
 }
 
-func (cv *VartypeCheckContext) CFlag() {
+func (cv *VartypeCheck) CFlag() {
 	line, value := cv.line, cv.value
 
 	if matches(value, `^-[DILOUWfgm].`) || hasPrefix(value, "-std=") {
@@ -78,7 +78,7 @@ func (cv *VartypeCheckContext) CFlag() {
 	}
 }
 
-func (cv *VartypeCheckContext) Comment() {
+func (cv *VartypeCheck) Comment() {
 	line, value := cv.line, cv.value
 
 	if value == "SHORT_DESCRIPTION_OF_THE_PACKAGE" {
@@ -98,7 +98,7 @@ func (cv *VartypeCheckContext) Comment() {
 	}
 }
 
-func (cv *VartypeCheckContext) Dependency() {
+func (cv *VartypeCheck) Dependency() {
 	line, value := cv.line, cv.value
 
 	if m, depbase, depop, depversion := match3(value, `^(`+rePkgbase+`)(<|=|>|<=|>=|!=|-)(`+rePkgversion+`)$`); m {
@@ -156,7 +156,7 @@ func (cv *VartypeCheckContext) Dependency() {
 	}
 }
 
-func (cv *VartypeCheckContext) DependencyWithPath() {
+func (cv *VartypeCheck) DependencyWithPath() {
 	line, value := cv.line, cv.value
 	if value != cv.valueNovar {
 		return // It's probably not worth checking this.
@@ -194,13 +194,13 @@ func (cv *VartypeCheckContext) DependencyWithPath() {
 		"  package-2.718:../../category/package")
 }
 
-func (cv *VartypeCheckContext) DistSuffix() {
+func (cv *VartypeCheck) DistSuffix() {
 	if cv.value == ".tar.gz" {
 		cv.line.notef("%s is \".tar.gz\" by default, so this definition may be redundant.", cv.varname)
 	}
 }
 
-func (cv *VartypeCheckContext) EmulPlatform() {
+func (cv *VartypeCheck) EmulPlatform() {
 
 	if m, opsys, arch := match2(cv.value, `^(\w+)-(\w+)$`); m {
 		if !matches(opsys, `^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$`) {
@@ -222,7 +222,7 @@ func (cv *VartypeCheckContext) EmulPlatform() {
 	}
 }
 
-func (cv *VartypeCheckContext) FetchURL() {
+func (cv *VartypeCheck) FetchURL() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	for siteUrl, siteName := range G.globalData.masterSiteUrls {
@@ -241,7 +241,7 @@ func (cv *VartypeCheckContext) FetchURL() {
 	}
 }
 
-func (cv *VartypeCheckContext) Filename() {
+func (cv *VartypeCheck) Filename() {
 	switch {
 	case contains(cv.valueNovar, "/"):
 		cv.line.warnf("A filename should not contain a slash.")
@@ -250,13 +250,13 @@ func (cv *VartypeCheckContext) Filename() {
 	}
 }
 
-func (cv *VartypeCheckContext) Filemask() {
+func (cv *VartypeCheck) Filemask() {
 	if !matches(cv.valueNovar, `^[-0-9A-Za-z._~+%*?]*$`) {
 		cv.line.warnf("%q is not a valid filename mask.", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) FileMode() {
+func (cv *VartypeCheck) FileMode() {
 	switch {
 	case cv.value != "" && cv.valueNovar == "":
 		// Fine.
@@ -267,7 +267,7 @@ func (cv *VartypeCheckContext) FileMode() {
 	}
 }
 
-func (cv *VartypeCheckContext) Identifier() {
+func (cv *VartypeCheck) Identifier() {
 	if cv.value != cv.valueNovar {
 		//line.logWarning("Identifiers should be given directly.")
 	}
@@ -281,13 +281,13 @@ func (cv *VartypeCheckContext) Identifier() {
 	}
 }
 
-func (cv *VartypeCheckContext) Integer() {
+func (cv *VartypeCheck) Integer() {
 	if !matches(cv.value, `^\d+$`) {
 		cv.line.warnf("Invalid integer %q.", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) LdFlag() {
+func (cv *VartypeCheck) LdFlag() {
 	if matches(cv.value, `^-[Ll]`) || cv.value == "-static" {
 		return
 	} else if m, rpathFlag := match1(cv.value, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
@@ -301,11 +301,11 @@ func (cv *VartypeCheckContext) LdFlag() {
 	}
 }
 
-func (cv *VartypeCheckContext) License() {
+func (cv *VartypeCheck) License() {
 	checklineLicense(cv.line, cv.value)
 }
 
-func (cv *VartypeCheckContext) MailAddress() {
+func (cv *VartypeCheck) MailAddress() {
 	line, value := cv.line, cv.value
 
 	if m, _, domain := match2(value, `^([+\-.0-9A-Z_a-z]+)\@([-\w\d.]+)$`); m {
@@ -321,7 +321,7 @@ func (cv *VartypeCheckContext) MailAddress() {
 	}
 }
 
-func (cv *VartypeCheckContext) Message() {
+func (cv *VartypeCheck) Message() {
 	line, varname, value := cv.line, cv.varname, cv.value
 
 	if matches(value, `^[\"'].*[\"']$`) {
@@ -337,7 +337,7 @@ func (cv *VartypeCheckContext) Message() {
 	}
 }
 
-func (cv *VartypeCheckContext) Option() {
+func (cv *VartypeCheck) Option() {
 	line, value, valueNovar := cv.line, cv.value, cv.valueNovar
 
 	if value != valueNovar {
@@ -365,7 +365,7 @@ func (cv *VartypeCheckContext) Option() {
 	line.errorf("Invalid option name.")
 }
 
-func (cv *VartypeCheckContext) Pathlist() {
+func (cv *VartypeCheck) Pathlist() {
 	if !contains(cv.value, ":") && cv.guessed == GUESSED {
 		checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
@@ -384,37 +384,37 @@ func (cv *VartypeCheckContext) Pathlist() {
 	}
 }
 
-func (cv *VartypeCheckContext) Pathmask() {
+func (cv *VartypeCheck) Pathmask() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
 		cv.line.warnf("%q is not a valid pathname mask.", cv.value)
 	}
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
 
-func (cv *VartypeCheckContext) Pathname() {
+func (cv *VartypeCheck) Pathname() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.line.warnf("%q is not a valid pathname.", cv.value)
 	}
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
 
-func (cv *VartypeCheckContext) Perl5Packlist() {
+func (cv *VartypeCheck) Perl5Packlist() {
 	if cv.value != cv.valueNovar {
 		cv.line.warnf("%s should not depend on other variables.", cv.varname)
 	}
 }
 
-func (cv *VartypeCheckContext) PkgName() {
+func (cv *VartypeCheck) PkgName() {
 	if cv.value == cv.valueNovar && match(cv.value, rePkgname) == nil {
 		cv.line.warnf("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) PkgPath() {
+func (cv *VartypeCheck) PkgPath() {
 	checklineRelativePkgdir(cv.line, G.curPkgsrcdir+"/"+cv.value)
 }
 
-func (cv *VartypeCheckContext) PkgOptionsVar() {
+func (cv *VartypeCheck) PkgOptionsVar() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
 	if !matches(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
@@ -425,7 +425,7 @@ func (cv *VartypeCheckContext) PkgOptionsVar() {
 	}
 }
 
-func (cv *VartypeCheckContext) PkgRevision() {
+func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.value, `^[1-9]\d*$`) {
 		cv.line.warnf("%s must be a positive integer number.", cv.varname)
 	}
@@ -440,7 +440,7 @@ func (cv *VartypeCheckContext) PkgRevision() {
 	}
 }
 
-func (cv *VartypeCheckContext) PlatformTriple() {
+func (cv *VartypeCheck) PlatformTriple() {
 	rePart := `(?:\[[^\]]+\]|[^-\[])+`
 	reTriple := `^(` + rePart + `)-(` + rePart + `)-(` + rePart + `)$`
 	if m, opsys, _, arch := match3(cv.value, reTriple); m {
@@ -461,13 +461,13 @@ func (cv *VartypeCheckContext) PlatformTriple() {
 	}
 }
 
-func (cv *VartypeCheckContext) PrefixPathname() {
+func (cv *VartypeCheck) PrefixPathname() {
 	if m, mansubdir := match1(cv.value, `^man/(.+)`); m {
 		cv.line.warnf("Please use \"${PKGMANDIR}/%s\" instead of %q.", mansubdir, cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) PythonDependency() {
+func (cv *VartypeCheck) PythonDependency() {
 	if cv.value != cv.valueNovar {
 		cv.line.warnf("Python dependencies should not contain variables.")
 	}
@@ -481,15 +481,15 @@ func (cv *VartypeCheckContext) PythonDependency() {
 	}
 }
 
-func (cv *VartypeCheckContext) RelativePkgDir() {
+func (cv *VartypeCheck) RelativePkgDir() {
 	checklineRelativePkgdir(cv.line, cv.value)
 }
 
-func (cv *VartypeCheckContext) RelativePkgPath() {
+func (cv *VartypeCheck) RelativePkgPath() {
 	checklineRelativePath(cv.line, cv.value, true)
 }
 
-func (cv *VartypeCheckContext) Restricted() {
+func (cv *VartypeCheck) Restricted() {
 	if cv.value != "${RESTRICTED}" {
 		cv.line.warnf("The only valid value for %s is ${RESTRICTED}.", cv.varname)
 		cv.line.explain(
@@ -499,10 +499,10 @@ func (cv *VartypeCheckContext) Restricted() {
 	}
 }
 
-func (cv *VartypeCheckContext) SedCommand() {
+func (cv *VartypeCheck) SedCommand() {
 }
 
-func (cv *VartypeCheckContext) SedCommands() {
+func (cv *VartypeCheck) SedCommands() {
 	line := cv.line
 
 	words, rest := splitIntoShellwords(line, cv.value)
@@ -563,27 +563,27 @@ func (cv *VartypeCheckContext) SedCommands() {
 	}
 }
 
-func (cv *VartypeCheckContext) ShellCommand() {
+func (cv *VartypeCheck) ShellCommand() {
 	NewMkShellLine(cv.line).checklineMkShelltext(cv.value)
 }
 
-func (cv *VartypeCheckContext) ShellWord() {
+func (cv *VartypeCheck) ShellWord() {
 	if !cv.listContext {
 		checklineMkShellword(cv.line, cv.value, true)
 	}
 }
 
-func (cv *VartypeCheckContext) Stage() {
+func (cv *VartypeCheck) Stage() {
 	if !matches(cv.value, `^(?:pre|do|post)-(?:extract|patch|configure|build|install)`) {
 		cv.line.warnf("Invalid stage name. Use one of {pre,do,post}-{extract,patch,configure,build,install}.")
 	}
 }
 
-func (cv *VartypeCheckContext) String() {
+func (cv *VartypeCheck) String() {
 	// No further checks possible.
 }
 
-func (cv *VartypeCheckContext) Tool() {
+func (cv *VartypeCheck) Tool() {
 	if cv.varname == "TOOLS_NOOP" && cv.op == "+=" {
 		// no warning for package-defined tool definitions
 
@@ -601,11 +601,11 @@ func (cv *VartypeCheckContext) Tool() {
 	}
 }
 
-func (cv *VartypeCheckContext) Unchecked() {
+func (cv *VartypeCheck) Unchecked() {
 	// Do nothing, as the name says.
 }
 
-func (cv *VartypeCheckContext) URL() {
+func (cv *VartypeCheck) URL() {
 	line, value := cv.line, cv.value
 
 	if value == "" && hasPrefix(cv.comment, "#") {
@@ -644,31 +644,31 @@ func (cv *VartypeCheckContext) URL() {
 	}
 }
 
-func (cv *VartypeCheckContext) UserGroupName() {
+func (cv *VartypeCheck) UserGroupName() {
 	if cv.value == cv.valueNovar && !matches(cv.value, `^[0-9_a-z]+$`) {
 		cv.line.warnf("Invalid user or group name %q.", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) Varname() {
+func (cv *VartypeCheck) Varname() {
 	if cv.value == cv.valueNovar && !matches(cv.value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
 		cv.line.warnf("%q is not a valid variable name.", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) Version() {
+func (cv *VartypeCheck) Version() {
 	if !matches(cv.value, `^([\d.])+$`) {
 		cv.line.warnf("Invalid version number %q.", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) WrapperReorder() {
+func (cv *VartypeCheck) WrapperReorder() {
 	if !matches(cv.value, `^reorder:l:([\w\-]+):([\w\-]+)$`) {
 		cv.line.warnf("Unknown wrapper reorder command %q.", cv.value)
 	}
 }
 
-func (cv *VartypeCheckContext) WrapperTransform() {
+func (cv *VartypeCheck) WrapperTransform() {
 	switch {
 	case matches(cv.value, `^rm:(?:-[DILOUWflm].*|-std=.*)$`):
 	case matches(cv.value, `^l:([^:]+):(.+)$`):
@@ -680,11 +680,11 @@ func (cv *VartypeCheckContext) WrapperTransform() {
 	}
 }
 
-func (cv *VartypeCheckContext) WrkdirSubdirectory() {
+func (cv *VartypeCheck) WrkdirSubdirectory() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 }
 
-func (cv *VartypeCheckContext) WrksrcSubdirectory() {
+func (cv *VartypeCheck) WrksrcSubdirectory() {
 	if m, _, rest := match2(cv.value, `^(\$\{WRKSRC\})(?:/(.*))?`); m {
 		if rest == "" {
 			rest = "."
@@ -699,7 +699,7 @@ func (cv *VartypeCheckContext) WrksrcSubdirectory() {
 	}
 }
 
-func (cv *VartypeCheckContext) Yes() {
+func (cv *VartypeCheck) Yes() {
 	if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
 		cv.line.warnf("%s should be set to YES or yes.", cv.varname)
 		cv.line.explain(
@@ -710,13 +710,13 @@ func (cv *VartypeCheckContext) Yes() {
 	}
 }
 
-func (cv *VartypeCheckContext) YesNo() {
+func (cv *VartypeCheck) YesNo() {
 	if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.warnf("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
 }
 
-func (cv *VartypeCheckContext) YesNo_Indirectly() {
+func (cv *VartypeCheck) YesNo_Indirectly() {
 	if cv.valueNovar != "" && !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.warnf("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}

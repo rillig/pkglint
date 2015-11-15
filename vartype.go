@@ -94,7 +94,7 @@ func (self *Vartype) String() string {
 
 type VarChecker struct {
 	name    string
-	checker func(*VartypeCheckContext)
+	checker func(*VartypeCheck)
 }
 
 func (vc *VarChecker) IsEnum() bool {
@@ -108,64 +108,64 @@ func (vc *VarChecker) AllowedEnums() string {
 }
 
 var (
-	CheckvarAwkCommand             = &VarChecker{"AwkCommand", (*VartypeCheckContext).AwkCommand}
-	CheckvarBasicRegularExpression = &VarChecker{"BasicRegularExpression", (*VartypeCheckContext).BasicRegularExpression}
-	CheckvarBuildlinkDepmethod     = &VarChecker{"BuildlinkDepmethod", (*VartypeCheckContext).BuildlinkDepmethod}
-	CheckvarBuildlinkDepth         = &VarChecker{"BuildlinkDepth", (*VartypeCheckContext).BuildlinkDepth}
-	CheckvarCategory               = &VarChecker{"Category", (*VartypeCheckContext).Category}
-	CheckvarCFlag                  = &VarChecker{"CFlag", (*VartypeCheckContext).CFlag}
-	CheckvarComment                = &VarChecker{"Comment", (*VartypeCheckContext).Comment}
-	CheckvarDependency             = &VarChecker{"Dependency", (*VartypeCheckContext).Dependency}
-	CheckvarDependencyWithPath     = &VarChecker{"DependencyWithPath", (*VartypeCheckContext).DependencyWithPath}
-	CheckvarDistSuffix             = &VarChecker{"DistSuffix", (*VartypeCheckContext).DistSuffix}
-	CheckvarEmulPlatform           = &VarChecker{"EmulPlatform", (*VartypeCheckContext).EmulPlatform}
-	CheckvarFetchURL               = &VarChecker{"FetchURL", (*VartypeCheckContext).FetchURL}
-	CheckvarFilename               = &VarChecker{"Filename", (*VartypeCheckContext).Filename}
-	CheckvarFilemask               = &VarChecker{"Filemask", (*VartypeCheckContext).Filemask}
-	CheckvarFileMode               = &VarChecker{"FileMode", (*VartypeCheckContext).FileMode}
-	CheckvarIdentifier             = &VarChecker{"Identifier", (*VartypeCheckContext).Identifier}
-	CheckvarInteger                = &VarChecker{"Integer", (*VartypeCheckContext).Integer}
-	CheckvarLdFlag                 = &VarChecker{"LdFlag", (*VartypeCheckContext).LdFlag}
-	CheckvarLicense                = &VarChecker{"License", (*VartypeCheckContext).License}
-	CheckvarMailAddress            = &VarChecker{"MailAddress", (*VartypeCheckContext).MailAddress}
-	CheckvarMessage                = &VarChecker{"Message", (*VartypeCheckContext).Message}
-	CheckvarOption                 = &VarChecker{"Option", (*VartypeCheckContext).Option}
-	CheckvarPathlist               = &VarChecker{"Pathlist", (*VartypeCheckContext).Pathlist}
-	CheckvarPathmask               = &VarChecker{"Pathmask", (*VartypeCheckContext).Pathmask}
-	CheckvarPathname               = &VarChecker{"Pathname", (*VartypeCheckContext).Pathname}
-	CheckvarPerl5Packlist          = &VarChecker{"Perl5Packlist", (*VartypeCheckContext).Perl5Packlist}
-	CheckvarPkgName                = &VarChecker{"PkgName", (*VartypeCheckContext).PkgName}
-	CheckvarPkgPath                = &VarChecker{"PkgPath", (*VartypeCheckContext).PkgPath}
-	CheckvarPkgOptionsVar          = &VarChecker{"PkgOptionsVar", (*VartypeCheckContext).PkgOptionsVar}
-	CheckvarPkgRevision            = &VarChecker{"PkgRevision", (*VartypeCheckContext).PkgRevision}
-	CheckvarPlatformTriple         = &VarChecker{"PlatformTriple", (*VartypeCheckContext).PlatformTriple}
-	CheckvarPrefixPathname         = &VarChecker{"PrefixPathname", (*VartypeCheckContext).PrefixPathname}
-	CheckvarPythonDependency       = &VarChecker{"PythonDependency", (*VartypeCheckContext).PythonDependency}
-	CheckvarRelativePkgDir         = &VarChecker{"RelativePkgDir", (*VartypeCheckContext).RelativePkgDir}
-	CheckvarRelativePkgPath        = &VarChecker{"RelativePkgPath", (*VartypeCheckContext).RelativePkgPath}
-	CheckvarRestricted             = &VarChecker{"Restricted", (*VartypeCheckContext).Restricted}
-	CheckvarSedCommand             = &VarChecker{"SedCommand", (*VartypeCheckContext).SedCommand}
-	CheckvarSedCommands            = &VarChecker{"SedCommands", (*VartypeCheckContext).SedCommands}
+	CheckvarAwkCommand             = &VarChecker{"AwkCommand", (*VartypeCheck).AwkCommand}
+	CheckvarBasicRegularExpression = &VarChecker{"BasicRegularExpression", (*VartypeCheck).BasicRegularExpression}
+	CheckvarBuildlinkDepmethod     = &VarChecker{"BuildlinkDepmethod", (*VartypeCheck).BuildlinkDepmethod}
+	CheckvarBuildlinkDepth         = &VarChecker{"BuildlinkDepth", (*VartypeCheck).BuildlinkDepth}
+	CheckvarCategory               = &VarChecker{"Category", (*VartypeCheck).Category}
+	CheckvarCFlag                  = &VarChecker{"CFlag", (*VartypeCheck).CFlag}
+	CheckvarComment                = &VarChecker{"Comment", (*VartypeCheck).Comment}
+	CheckvarDependency             = &VarChecker{"Dependency", (*VartypeCheck).Dependency}
+	CheckvarDependencyWithPath     = &VarChecker{"DependencyWithPath", (*VartypeCheck).DependencyWithPath}
+	CheckvarDistSuffix             = &VarChecker{"DistSuffix", (*VartypeCheck).DistSuffix}
+	CheckvarEmulPlatform           = &VarChecker{"EmulPlatform", (*VartypeCheck).EmulPlatform}
+	CheckvarFetchURL               = &VarChecker{"FetchURL", (*VartypeCheck).FetchURL}
+	CheckvarFilename               = &VarChecker{"Filename", (*VartypeCheck).Filename}
+	CheckvarFilemask               = &VarChecker{"Filemask", (*VartypeCheck).Filemask}
+	CheckvarFileMode               = &VarChecker{"FileMode", (*VartypeCheck).FileMode}
+	CheckvarIdentifier             = &VarChecker{"Identifier", (*VartypeCheck).Identifier}
+	CheckvarInteger                = &VarChecker{"Integer", (*VartypeCheck).Integer}
+	CheckvarLdFlag                 = &VarChecker{"LdFlag", (*VartypeCheck).LdFlag}
+	CheckvarLicense                = &VarChecker{"License", (*VartypeCheck).License}
+	CheckvarMailAddress            = &VarChecker{"MailAddress", (*VartypeCheck).MailAddress}
+	CheckvarMessage                = &VarChecker{"Message", (*VartypeCheck).Message}
+	CheckvarOption                 = &VarChecker{"Option", (*VartypeCheck).Option}
+	CheckvarPathlist               = &VarChecker{"Pathlist", (*VartypeCheck).Pathlist}
+	CheckvarPathmask               = &VarChecker{"Pathmask", (*VartypeCheck).Pathmask}
+	CheckvarPathname               = &VarChecker{"Pathname", (*VartypeCheck).Pathname}
+	CheckvarPerl5Packlist          = &VarChecker{"Perl5Packlist", (*VartypeCheck).Perl5Packlist}
+	CheckvarPkgName                = &VarChecker{"PkgName", (*VartypeCheck).PkgName}
+	CheckvarPkgPath                = &VarChecker{"PkgPath", (*VartypeCheck).PkgPath}
+	CheckvarPkgOptionsVar          = &VarChecker{"PkgOptionsVar", (*VartypeCheck).PkgOptionsVar}
+	CheckvarPkgRevision            = &VarChecker{"PkgRevision", (*VartypeCheck).PkgRevision}
+	CheckvarPlatformTriple         = &VarChecker{"PlatformTriple", (*VartypeCheck).PlatformTriple}
+	CheckvarPrefixPathname         = &VarChecker{"PrefixPathname", (*VartypeCheck).PrefixPathname}
+	CheckvarPythonDependency       = &VarChecker{"PythonDependency", (*VartypeCheck).PythonDependency}
+	CheckvarRelativePkgDir         = &VarChecker{"RelativePkgDir", (*VartypeCheck).RelativePkgDir}
+	CheckvarRelativePkgPath        = &VarChecker{"RelativePkgPath", (*VartypeCheck).RelativePkgPath}
+	CheckvarRestricted             = &VarChecker{"Restricted", (*VartypeCheck).Restricted}
+	CheckvarSedCommand             = &VarChecker{"SedCommand", (*VartypeCheck).SedCommand}
+	CheckvarSedCommands            = &VarChecker{"SedCommands", (*VartypeCheck).SedCommands}
 	CheckvarShellCommand           = &VarChecker{"ShellCommand", nil}
 	CheckvarShellWord              = &VarChecker{"ShellWord", nil}
-	CheckvarStage                  = &VarChecker{"Stage", (*VartypeCheckContext).Stage}
-	CheckvarString                 = &VarChecker{"String", (*VartypeCheckContext).String}
-	CheckvarTool                   = &VarChecker{"Tool", (*VartypeCheckContext).Tool}
-	CheckvarUnchecked              = &VarChecker{"Unchecked", (*VartypeCheckContext).Unchecked}
-	CheckvarURL                    = &VarChecker{"URL", (*VartypeCheckContext).URL}
-	CheckvarUserGroupName          = &VarChecker{"UserGroupName", (*VartypeCheckContext).UserGroupName}
-	CheckvarVarname                = &VarChecker{"Varname", (*VartypeCheckContext).Varname}
-	CheckvarVersion                = &VarChecker{"Version", (*VartypeCheckContext).Version}
-	CheckvarWrapperReorder         = &VarChecker{"WrapperReorder", (*VartypeCheckContext).WrapperReorder}
-	CheckvarWrapperTransform       = &VarChecker{"WrapperTransform", (*VartypeCheckContext).WrapperTransform}
-	CheckvarWrkdirSubdirectory     = &VarChecker{"WrkdirSubdirectory", (*VartypeCheckContext).WrkdirSubdirectory}
-	CheckvarWrksrcSubdirectory     = &VarChecker{"WrksrcSubdirectory", (*VartypeCheckContext).WrksrcSubdirectory}
-	CheckvarYes                    = &VarChecker{"Yes", (*VartypeCheckContext).Yes}
-	CheckvarYesNo                  = &VarChecker{"YesNo", (*VartypeCheckContext).YesNo}
-	CheckvarYesNo_Indirectly       = &VarChecker{"YesNo_Indirectly", (*VartypeCheckContext).YesNo_Indirectly}
+	CheckvarStage                  = &VarChecker{"Stage", (*VartypeCheck).Stage}
+	CheckvarString                 = &VarChecker{"String", (*VartypeCheck).String}
+	CheckvarTool                   = &VarChecker{"Tool", (*VartypeCheck).Tool}
+	CheckvarUnchecked              = &VarChecker{"Unchecked", (*VartypeCheck).Unchecked}
+	CheckvarURL                    = &VarChecker{"URL", (*VartypeCheck).URL}
+	CheckvarUserGroupName          = &VarChecker{"UserGroupName", (*VartypeCheck).UserGroupName}
+	CheckvarVarname                = &VarChecker{"Varname", (*VartypeCheck).Varname}
+	CheckvarVersion                = &VarChecker{"Version", (*VartypeCheck).Version}
+	CheckvarWrapperReorder         = &VarChecker{"WrapperReorder", (*VartypeCheck).WrapperReorder}
+	CheckvarWrapperTransform       = &VarChecker{"WrapperTransform", (*VartypeCheck).WrapperTransform}
+	CheckvarWrkdirSubdirectory     = &VarChecker{"WrkdirSubdirectory", (*VartypeCheck).WrkdirSubdirectory}
+	CheckvarWrksrcSubdirectory     = &VarChecker{"WrksrcSubdirectory", (*VartypeCheck).WrksrcSubdirectory}
+	CheckvarYes                    = &VarChecker{"Yes", (*VartypeCheck).Yes}
+	CheckvarYesNo                  = &VarChecker{"YesNo", (*VartypeCheck).YesNo}
+	CheckvarYesNo_Indirectly       = &VarChecker{"YesNo_Indirectly", (*VartypeCheck).YesNo_Indirectly}
 )
 
 func init() {
-	CheckvarShellCommand.checker = (*VartypeCheckContext).ShellCommand
-	CheckvarShellWord.checker = (*VartypeCheckContext).ShellWord
+	CheckvarShellCommand.checker = (*VartypeCheck).ShellCommand
+	CheckvarShellWord.checker = (*VartypeCheck).ShellWord
 }

@@ -25,7 +25,7 @@ func enum(values string) *VarChecker {
 		vmap[value] = true
 	}
 	name := "enum:" + values
-	return &VarChecker{name, func(ctx *VartypeCheckContext) {
+	return &VarChecker{name, func(ctx *VartypeCheck) {
 		if !vmap[ctx.value] {
 			ctx.line.warnf("%q is not valid for %s. Use one of { %s } instead.", ctx.value, ctx.varname, values)
 		}
