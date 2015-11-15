@@ -867,3 +867,5 @@ const reShellword = `\s*(` +
 	`|<<?` +
 	`|>>?` +
 	`|#.*)`
+
+const reShVarassign = `^([A-Z_a-z]\w*)=`
