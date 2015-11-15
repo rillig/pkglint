@@ -5,6 +5,9 @@ import (
 	"os"
 )
 
+const confMake = "@BMAKE@"
+const confVersion = "@VERSION@"
+
 func main() {
 	G = new(GlobalVars)
 	G.logOut, G.logErr = os.Stdout, os.Stderr
