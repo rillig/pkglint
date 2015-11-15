@@ -8369,26 +8369,3 @@ sub checkitem($) {
 		log_error($item, NO_LINE_NUMBER, "Don't know how to check this directory.");
 	}
 }
-
-#
-# The main program
-#
-
-sub main() {
-
-	local $| = true;
-	parse_command_line();
-
-	@todo_items = (@ARGV != 0) ? @ARGV : (".");
-	while (@todo_items != 0) {
-		checkitem(shift(@todo_items));
-	}
-
-	if ($ipc_checking_root_recursively) {
-		check_unused_licenses();
-	}
-
-	PkgLint::Logging::print_summary_and_exit($opt_quiet);
-}
-
-main() unless caller();
