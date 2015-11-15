@@ -24,22 +24,26 @@ type RawLine struct {
 	textnl string
 }
 
+func (rline *RawLine) String() string {
+	return sprintf("%d:%s", rline.lineno, rline.textnl)
+}
+
 type Line struct {
 	fname   string
 	lines   string
 	text    string
-	raw     []RawLine
+	raw     []*RawLine
 	changed bool
-	before  []RawLine
-	after   []RawLine
+	before  []*RawLine
+	after   []*RawLine
 	extra   map[string]interface{}
 }
 
-func NewLine(fname, linenos, text string, rawLines []RawLine) *Line {
-	return &Line{fname, linenos, text, rawLines, false, []RawLine{}, []RawLine{}, make(map[string]interface{})}
+func NewLine(fname, linenos, text string, rawLines []*RawLine) *Line {
+	return &Line{fname, linenos, text, rawLines, false, nil, nil, make(map[string]interface{})}
 }
 
-func (self *Line) rawLines() []RawLine {
+func (self *Line) rawLines() []*RawLine {
 	return append(self.before, append(self.raw, self.after...)...)
 }
 func (self *Line) printSource(out io.Writer) {
@@ -86,19 +90,19 @@ func (self *Line) String() string {
 }
 
 func (self *Line) prependBefore(line string) {
-	self.before = append([]RawLine{{0, line + "\n"}}, self.before...)
+	self.before = append([]*RawLine{{0, line + "\n"}}, self.before...)
 	self.changed = true
 }
 func (self *Line) appendBefore(line string) {
-	self.before = append(self.before, RawLine{0, line + "\n"})
+	self.before = append(self.before, &RawLine{0, line + "\n"})
 	self.changed = true
 }
 func (self *Line) prependAfter(line string) {
-	self.after = append([]RawLine{{0, line + "\n"}}, self.after...)
+	self.after = append([]*RawLine{{0, line + "\n"}}, self.after...)
 	self.changed = true
 }
 func (self *Line) appendAfter(line string) {
-	self.after = append(self.after, RawLine{0, line + "\n"})
+	self.after = append(self.after, &RawLine{0, line + "\n"})
 	self.changed = true
 }
 func (self *Line) delete() {
@@ -126,6 +130,6 @@ func (self *Line) replaceRegex(from, to string) {
 	}
 }
 func (line *Line) setText(text string) {
-	line.raw = []RawLine{{0, text + "\n"}}
+	line.raw = []*RawLine{{0, text + "\n"}}
 	line.changed = true
 }

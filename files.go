@@ -6,25 +6,25 @@ import (
 	"strings"
 )
 
-func loadRawLines(fname string) ([]RawLine, error) {
-	rawLines := make([]RawLine, 0)
+func loadRawLines(fname string) ([]*RawLine, error) {
+	var rawLines []*RawLine
 	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
 	for lineno, rawLine := range strings.SplitAfter(string(rawtext), "\n") {
 		if rawLine != "" {
-			rawLines = append(rawLines, RawLine{1 + lineno, rawLine})
+			rawLines = append(rawLines, &RawLine{1 + lineno, rawLine})
 		}
 	}
 	return rawLines, nil
 }
 
-func getLogicalLine(fname string, rawLines []RawLine, pindex *int) *Line {
+func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 	text := ""
 	index := *pindex
 	firstlineno := rawLines[index].lineno
-	lineRawLines := make([]RawLine, 0)
+	var lineRawLines []*RawLine
 	interestingRawLines := rawLines[index:]
 
 	for i, rawLine := range interestingRawLines {
@@ -75,7 +75,7 @@ func loadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 	return lines
 }
 
-func convertToLogicalLines(fname string, rawLines []RawLine, joinContinuationLines bool) []*Line {
+func convertToLogicalLines(fname string, rawLines []*RawLine, joinContinuationLines bool) []*Line {
 	loglines := make([]*Line, 0)
 	if joinContinuationLines {
 		for lineno := 0; lineno < len(rawLines); {
@@ -83,7 +83,7 @@ func convertToLogicalLines(fname string, rawLines []RawLine, joinContinuationLin
 		}
 	} else {
 		for _, rawLine := range rawLines {
-			loglines = append(loglines, NewLine(fname, sprintf("%d", rawLine.lineno), strings.TrimSuffix(rawLine.textnl, "\n"), []RawLine{rawLine}))
+			loglines = append(loglines, NewLine(fname, sprintf("%d", rawLine.lineno), strings.TrimSuffix(rawLine.textnl, "\n"), []*RawLine{rawLine}))
 		}
 	}
 
@@ -95,7 +95,7 @@ func convertToLogicalLines(fname string, rawLines []RawLine, joinContinuationLin
 }
 
 func saveAutofixChanges(lines []*Line) {
-	changes := make(map[string][]RawLine)
+	changes := make(map[string][]*RawLine)
 	changed := make(map[string]bool)
 	for _, line := range lines {
 		if line.changed {

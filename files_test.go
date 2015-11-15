@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Suite) TestConvertToLogicalLines_nocont(c *check.C) {
-	rawLines := []RawLine{
+	rawLines := []*RawLine{
 		{1, "first line\n"},
 		{2, "second line\n"},
 	}
@@ -18,7 +18,7 @@ func (s *Suite) TestConvertToLogicalLines_nocont(c *check.C) {
 }
 
 func (s *Suite) TestConvertToLogicalLines_cont(c *check.C) {
-	rawLines := []RawLine{
+	rawLines := []*RawLine{
 		{1, "first line \\\n"},
 		{2, "second line\n"},
 		{3, "third\n"},
@@ -32,7 +32,7 @@ func (s *Suite) TestConvertToLogicalLines_cont(c *check.C) {
 }
 
 func (s *Suite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
-	rawLines := []RawLine{
+	rawLines := []*RawLine{
 		{1, "last line\\"},
 	}
 
