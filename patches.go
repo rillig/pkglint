@@ -81,7 +81,7 @@ var badCppMacros = map[string]string{
 }
 
 func checklineCppMacroNames(line *Line, text string) {
-	for _, m := range reCompile(`defined\((__[\w_]+)\)|\b(_\w+)\(`).FindAllStringSubmatch(text, -1) {
+	for _, m := range regcomp(`defined\((__[\w_]+)\)|\b(_\w+)\(`).FindAllStringSubmatch(text, -1) {
 		macro := m[1] + m[2]
 
 		if goodCppMacros[macro] {

@@ -8,7 +8,7 @@ import (
 
 func parseLicenses(licenses string) []string {
 	noPerl := strings.Replace(licenses, "${PERL5_LICENSE}", "gnu-gpl-v2 OR artistic", -1)
-	noOps := reCompile(`[()]|AND|OR`).ReplaceAllString(noPerl, "") // cheated
+	noOps := regcomp(`[()]|AND|OR`).ReplaceAllString(noPerl, "") // cheated
 	return splitOnSpace(noOps)
 }
 

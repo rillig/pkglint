@@ -141,7 +141,7 @@ func loadPackageMakefile(fname string) []*Line {
 }
 
 func determineUsedVariables(lines []*Line) {
-	re := reCompile(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
+	re := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
 	for _, line := range lines {
 		rest := line.text
 		for {
@@ -157,7 +157,7 @@ func determineUsedVariables(lines []*Line) {
 }
 
 func extractUsedVariables(line *Line, text string) []string {
-	re := reCompile(`^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
+	re := regcomp(`^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
 	result := make([]string, 0)
 	for {
@@ -258,7 +258,7 @@ func resolveVariableRefs(text string) string {
 	visited := make(map[string]bool) // To prevent endless loops
 
 	str := text
-	re := reCompile(`\$\{(\w+)\}`)
+	re := regcomp(`\$\{(\w+)\}`)
 	for {
 		replaced := re.ReplaceAllStringFunc(str, func(m string) string {
 			varname := m[2 : len(m)-1]
@@ -315,7 +315,7 @@ func checklineLength(line *Line, maxlength int) {
 }
 
 func checklineValidCharacters(line *Line, reChar string) {
-	rest := reCompile(reChar).ReplaceAllString(line.text, "")
+	rest := regcomp(reChar).ReplaceAllString(line.text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -328,7 +328,7 @@ func checklineValidCharacters(line *Line, reChar string) {
 func checklineValidCharactersInValue(line *Line, reValid string) {
 	varname := line.extra["varname"].(string)
 	value := line.extra["value"].(string)
-	rest := reCompile(reValid).ReplaceAllString(value, "")
+	rest := regcomp(reValid).ReplaceAllString(value, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {

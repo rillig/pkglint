@@ -366,7 +366,7 @@ func checklinesMk(lines []*Line) {
 		} else if line.extra["is_comment"] != nil {
 			// No further checks.
 
-		} else if m := reCompile(reVarassign).FindStringSubmatchIndex(text); m != nil {
+		} else if m := regcomp(reVarassign).FindStringSubmatchIndex(text); m != nil {
 			varname := text[m[2]:m[3]]
 			space1 := text[m[3]:m[4]]
 			op := text[m[4]:m[5]]

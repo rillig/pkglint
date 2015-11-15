@@ -33,7 +33,7 @@ func ifelseStr(cond bool, a, b string) string {
 }
 
 func mustMatch(pattern string, s string) []string {
-	if m := reCompile(pattern).FindStringSubmatch(s); m != nil {
+	if m := regcomp(pattern).FindStringSubmatch(s); m != nil {
 		return m
 	}
 	panic(sprintf("mustMatch %q %q", pattern, s))
@@ -100,7 +100,7 @@ func checkPermissions(fname string) {
 }
 
 func removeVariableReferences(expr string) string {
-	replaced := reCompile(`\$\{([^{}]*)\}`).ReplaceAllString(expr, "")
+	replaced := regcomp(`\$\{([^{}]*)\}`).ReplaceAllString(expr, "")
 	if replaced != expr {
 		return removeVariableReferences(replaced)
 	}
@@ -184,7 +184,7 @@ func varIsUsed(varname string) bool {
 }
 
 func splitOnSpace(s string) []string {
-	return reCompile(`\s+`).Split(s, -1)
+	return regcomp(`\s+`).Split(s, -1)
 }
 
 func fileExists(fname string) bool {
@@ -199,7 +199,7 @@ func dirExists(fname string) bool {
 
 func stringset(s string) map[string]bool {
 	result := make(map[string]bool)
-	for _, m := range reCompile(`\S+`).FindAllString(s, -1) {
+	for _, m := range regcomp(`\S+`).FindAllString(s, -1) {
 		result[m] = true
 	}
 	return result
@@ -207,7 +207,7 @@ func stringset(s string) map[string]bool {
 
 var res = make(map[string]*regexp.Regexp)
 
-func reCompile(re string) *regexp.Regexp {
+func regcomp(re string) *regexp.Regexp {
 	cre := res[re]
 	if cre == nil {
 		cre = regexp.MustCompile(re)
@@ -217,11 +217,11 @@ func reCompile(re string) *regexp.Regexp {
 }
 
 func match(s, re string) []string {
-	return reCompile(re).FindStringSubmatch(s)
+	return regcomp(re).FindStringSubmatch(s)
 }
 
 func matches(s, re string) bool {
-	return reCompile(re).MatchString(s)
+	return regcomp(re).MatchString(s)
 }
 
 func matchn(s, re string, n int) []string {
@@ -273,7 +273,7 @@ func match5(s, re string) (bool, string, string, string, string, string) {
 func replaceFirst(s, re, replacement string) ([]string, string) {
 	defer tracecall("replaceFirst", s, re, replacement)()
 
-	if m := reCompile(re).FindStringSubmatchIndex(s); m != nil {
+	if m := regcomp(re).FindStringSubmatchIndex(s); m != nil {
 		replaced := s[:m[0]] + replacement + s[m[1]:]
 		mm := make([]string, len(m)/2)
 		for i := 0; i < len(m); i += 2 {
@@ -285,7 +285,7 @@ func replaceFirst(s, re, replacement string) ([]string, string) {
 }
 
 func replacePrefix(ps *string, pm *[]string, re string) bool {
-	if m := reCompile(re).FindStringSubmatch(*ps); m != nil {
+	if m := regcomp(re).FindStringSubmatch(*ps); m != nil {
 		*ps = (*ps)[len(m[0]):]
 		*pm = m
 		return true
@@ -367,7 +367,7 @@ func tracecall(funcname string, args ...interface{}) func() {
 func mkopSubst(s string, left bool, from string, right bool, to string, all bool) string {
 	re := ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", "")
 	done := false
-	return reCompile(re).ReplaceAllStringFunc(s, func(match string) string {
+	return regcomp(re).ReplaceAllStringFunc(s, func(match string) string {
 		if all || !done {
 			done = !all
 			return to

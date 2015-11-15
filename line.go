@@ -120,7 +120,7 @@ func (self *Line) replace(from, to string) {
 func (self *Line) replaceRegex(from, to string) {
 	for _, physline := range self.physlines {
 		if physline.lineno != 0 {
-			if replaced := reCompile(from).ReplaceAllString(physline.textnl, to); replaced != physline.textnl {
+			if replaced := regcomp(from).ReplaceAllString(physline.textnl, to); replaced != physline.textnl {
 				physline.textnl = replaced
 				self.changed = true
 			}
