@@ -566,7 +566,7 @@ func initacls() {
 	acl("PERL5_PACKLIST", LK_SHELL, CheckvarPerl5Packlist, "Makefile:s", "options.mk:sa")
 	acl("PERL5_PACKLIST_DIR", LK_NONE, CheckvarPathname)
 	sys("PGSQL_PREFIX", LK_NONE, CheckvarPathname)
-	acl("PGSQL_VERSIONS_ACCEPTED", LK_SHELL, enum("82 83 84 90 91"))
+	acl("PGSQL_VERSIONS_ACCEPTED", LK_SHELL, enum("91 92 93 94"))
 	usr("PGSQL_VERSION_DEFAULT", LK_NONE, CheckvarVersion)
 	sys("PG_LIB_EXT", LK_NONE, enum("dylib so"))
 	sys("PGSQL_TYPE", LK_NONE, enum("postgresql81-client postgresql80-client"))
