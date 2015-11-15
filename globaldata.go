@@ -200,10 +200,10 @@ func (self *GlobalData) loadTools() {
 	}
 
 	if G.opts.DebugTools {
-		dummyLine.debugf("tools: %v", tools)
-		dummyLine.debugf("vartools: %v", vartools)
-		dummyLine.debugf("predefinedTools: %v", predefinedTools)
-		dummyLine.debugf("varnameToToolname: %v", varnameToToolname)
+		dummyLine.debugf("tools: %v", stringBoolMapKeys(tools))
+		dummyLine.debugf("vartools: %v", stringStringMapKeys(vartools))
+		dummyLine.debugf("predefinedTools: %v", stringBoolMapKeys(predefinedTools))
+		dummyLine.debugf("varnameToToolname: %v", stringStringMapKeys(varnameToToolname))
 	}
 	_ = G.opts.DebugMisc && dummyLine.debugf("systemBuildDefs: %v", systemBuildDefs)
 

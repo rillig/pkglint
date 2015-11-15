@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sort"
 )
 
 func imin(a, b int) int {
@@ -365,4 +366,22 @@ func relpath(from, to string) string {
 		panic("relpath" + argsStr(from, to, err1, err2, err3))
 	}
 	return filepath.ToSlash(rel)
+}
+
+func stringBoolMapKeys(m map[string]bool) []string {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func stringStringMapKeys(m map[string]string) []string {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
