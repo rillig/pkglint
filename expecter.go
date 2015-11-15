@@ -30,6 +30,8 @@ func (ctx *Expecter) advance() {
 }
 
 func (ctx *Expecter) advanceIfMatches(re string) []string {
+	defer tracecall("Expecter.advanceIfMatches", ctx.currentLine().text, re)()
+
 	if ctx.index < len(ctx.lines) {
 		if m := match(ctx.lines[ctx.index].text, re); m != nil {
 			ctx.index++
