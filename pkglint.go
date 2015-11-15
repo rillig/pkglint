@@ -89,9 +89,10 @@ func checkItem(fname string) {
 	}
 }
 
+// The pkgsrc top-level directory, relative to the given directory.
 func findPkgsrcTopdir(fname string) string {
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
-		if fileExists(dir + "/mk/bsd.pkg.mk") {
+		if fileExists(fname + "/" + dir + "/mk/bsd.pkg.mk") {
 			return dir
 		}
 	}

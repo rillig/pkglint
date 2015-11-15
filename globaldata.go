@@ -49,10 +49,13 @@ type SuggestedUpdate struct {
 }
 
 func (self *GlobalData) Initialize() {
-	self.pkgsrcdir = findPkgsrcTopdir(G.todo[0])
-	if self.pkgsrcdir == "" {
-		dummyLine.fatalf("%q is not inside a pkgsrc tree.", G.todo[0])
+	firstArg := G.todo[0]
+	if relTopdir := findPkgsrcTopdir(firstArg); relTopdir != "" {
+		self.pkgsrcdir = firstArg + "/" + relTopdir
+	} else {
+		dummyLine.fatalf("%q is not inside a pkgsrc tree.", firstArg)
 	}
+
 	initacls()
 	self.loadDistSites()
 	self.loadPkgOptions()
