@@ -13,9 +13,8 @@ const (
 )
 
 func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
-	fileLines, err := loadLines(fname, true)
-	if err != nil {
-		errorf(fname, NO_LINES, "Cannot be read")
+	fileLines := LoadNonemptyLines(fname, true)
+	if fileLines != nil {
 		return false
 	}
 
