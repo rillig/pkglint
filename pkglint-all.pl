@@ -934,17 +934,6 @@ sub expand_variable($) {
 	return $value;
 }
 
-sub shell_split($) {
-	my ($text) = @_;
-	my ($words);
-
-	$words = [];
-	while ($text =~ s/^$regex_shellword//) {
-		push(@{$words}, $1);
-	}
-	return (($text =~ m"^\s*$") ? $words : false);
-}
-
 sub varname_base($) {
 	my ($varname) = @_;
 
