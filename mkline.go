@@ -534,7 +534,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		_ = G.opts.DebugMisc && line.debugf("Use of !=: %q", value)
 
 	case vartype.kindOfList == LK_NONE:
-		checklineMkVartypeNolist(line, varname, vartype, op, value, comment, vartype.isConsideredList(), vartype.guessed)
+		checklineMkVartypePrimitive(line, varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 
 	default:
 		var words []string
@@ -545,16 +545,12 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 		}
 
 		for _, word := range words {
-			checklineMkVartypeNolist(line, varname, vartype, op, word, comment, true, vartype.guessed)
+			checklineMkVartypePrimitive(line, varname, vartype.checker, op, word, comment, true, vartype.guessed)
 			if vartype.kindOfList != LK_SPACE {
 				checklineMkShellword(line, word, true)
 			}
 		}
 	}
-}
-
-func checklineMkVartypeNolist(line *Line, varname string, vartype *Vartype, op, value, comment string, isList bool, guessed Guessed) {
-	checklineMkVartypePrimitive(line, varname, vartype.checker, op, value, comment, isList, guessed)
 }
 
 // The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
