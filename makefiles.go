@@ -372,23 +372,8 @@ func checklinesMk(lines []*Line) {
 		} else if line.extra["is_comment"] != nil {
 			// No further checks.
 
-		} else if m := regcomp(reVarassign).FindStringSubmatchIndex(text); m != nil {
-			varname := text[m[2]:m[3]]
-			space1 := text[m[3]:m[4]]
-			op := text[m[4]:m[5]]
-			align := text[m[5]:m[6]]
-			value := line.extra["value"].(string)
-			comment := text[negToZero(m[8]):negToZero(m[9])]
-
-			if align != " " && !matches(align, `^\t*$`) {
-				_ = G.opts.WarnSpace && line.notef("Alignment of variable values should be done with tabs, not spaces.%s", "")
-				prefix := varname + space1 + op
-				alignedLen := tabLength(prefix + align)
-				if alignedLen%8 == 0 {
-					tabalign := strings.Repeat("\t", (alignedLen-tabLength(prefix))/8)
-					line.replace(prefix+align, prefix+tabalign)
-				}
-			}
+		} else if m, varname, op, value, comment := match4(text, reVarassign); m {
+			ChecklineMkVaralign(line)
 			checklineMkVarassign(line, varname, op, value, comment)
 			substcontext.Varassign(line, varname, op, value)
 

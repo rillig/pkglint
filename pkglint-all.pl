@@ -934,40 +934,6 @@ sub expand_variable($) {
 	return $value;
 }
 
-sub backtrace($) {
-	my $msg = shift();
-	my (@callers);
-
-	my $n = 0;
-	while (my @info = caller($n)) {
-		push(@callers, [$info[2], $info[3]]);
-		$n++;
-	}
-
-	log_debug(NO_FILE, NO_LINE_NUMBER, $msg);
-	for (my $i = $#callers; $i >= 0; $i--) {
-		my $info = $callers[$i];
-		log_debug(NO_FILE, NO_LINE_NUMBER, sprintf("  line %4d called %s", $info->[0], $info->[1]));
-	}
-}
-
-# Returns the number of columns that a string occupies when printed with
-# a tabulator size of 8.
-sub tablen($) {
-	my ($s) = @_;
-	my ($len);
-
-	$len = 0;
-	foreach my $c (split(qr"", $s)) {
-		if ($c eq "\t") {
-			$len = ($len + 7) & ~7;
-		} else {
-			$len++;
-		}
-	}
-	return $len;
-}
-
 sub shell_split($) {
 	my ($text) = @_;
 	my ($words);

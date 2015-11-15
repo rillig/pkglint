@@ -579,3 +579,23 @@ func withoutMakeVariables(line *Line, value string, qModifierAllowed bool) strin
 		}
 	}
 }
+
+func ChecklineMkVaralign(line *Line) {
+	text := line.text
+	if m := regcomp(reVarassign).FindStringSubmatchIndex(text); m != nil {
+		varname := text[m[2]:m[3]]
+		space1 := text[m[3]:m[4]]
+		op := text[m[4]:m[5]]
+		align := text[m[5]:m[6]]
+
+		if align != " " && !matches(align, `^\t*$`) {
+			_ = G.opts.WarnSpace && line.notef("Alignment of variable values should be done with tabs, not spaces.")
+			prefix := varname + space1 + op
+			alignedLen := tabLength(prefix + align)
+			if alignedLen%8 == 0 {
+				tabalign := strings.Repeat("\t", (alignedLen+7-tabLength(prefix))/8)
+				line.replace(prefix+align, prefix+tabalign)
+			}
+		}
+	}
+}
