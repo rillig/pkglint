@@ -15,12 +15,12 @@ func main() {
 		return
 	}
 
-	G.globalData.Initialize(findPkgsrcTopdir())
-
 	G.todo = append(G.todo, G.opts.args...)
 	if len(G.todo) == 0 {
 		G.todo = []string{"."}
 	}
+
+	G.globalData.Initialize()
 
 	for len(G.todo) != 0 {
 		item := G.todo[0]

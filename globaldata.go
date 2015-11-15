@@ -48,8 +48,11 @@ type SuggestedUpdate struct {
 	comment string
 }
 
-func (self *GlobalData) Initialize(pkgsrcdir string) {
-	self.pkgsrcdir = pkgsrcdir
+func (self *GlobalData) Initialize() {
+	self.pkgsrcdir = findPkgsrcTopdir(G.todo[0])
+	if self.pkgsrcdir == "" {
+		dummyLine.fatalf("%q is not inside a pkgsrc tree.", G.todo[0])
+	}
 	initacls()
 	self.loadDistSites()
 	self.loadPkgOptions()

@@ -62,17 +62,9 @@ func checkItem(fname string) {
 	absCurrentDir := filepath.ToSlash(abs)
 	G.isWip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	G.isInfrastructure = matches(absCurrentDir, `/mk/|/mk$`)
-	G.curPkgsrcdir = ""
-	pkgpath := ""
-	for _, dir := range []string{".", "..", "../..", "../../.."} {
-		if fileExists(G.currentDir + "/" + dir + "/mk/bsd.pkg.mk") {
-			G.curPkgsrcdir = dir
-			pkgpath = relpath(G.currentDir, G.currentDir+"/"+dir)
-		}
-	}
-
-	if pkgpath == "" {
-		errorf(fname, NO_LINES, "Cannot determine the pkgsrc root directory.")
+	G.curPkgsrcdir = findPkgsrcTopdir(G.currentDir)
+	if G.curPkgsrcdir == "" {
+		errorf(fname, NO_LINES, "Cannot determine the pkgsrc root directory for %q.", G.currentDir)
 		return
 	}
 
@@ -87,7 +79,7 @@ func checkItem(fname string) {
 
 	switch G.curPkgsrcdir {
 	case "../..":
-		checkdirPackage(pkgpath)
+		checkdirPackage(relpath(G.curPkgsrcdir, G.currentDir))
 	case "..":
 		checkdirCategory()
 	case ".":
@@ -95,6 +87,15 @@ func checkItem(fname string) {
 	default:
 		errorf(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
 	}
+}
+
+func findPkgsrcTopdir(fname string) string {
+	for _, dir := range []string{".", "..", "../..", "../../.."} {
+		if fileExists(dir + "/mk/bsd.pkg.mk") {
+			return dir
+		}
+	}
+	return ""
 }
 
 func loadPackageMakefile(fname string) []*Line {
