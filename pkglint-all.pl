@@ -888,22 +888,6 @@ sub resolve_relative_path($$) {
 	return $relpath;
 }
 
-# Takes two pathnames and returns the relative pathname to get from
-# the first to the second.
-sub relative_path($$) {
-	my ($from, $to) = @_;
-
-	my $abs_from = Cwd::abs_path($from);
-	my $abs_to = Cwd::abs_path($to);
-	if ($abs_to =~ m"^\Q$abs_from/\E(.*)$") {
-		return $1;
-	} elsif ($abs_to eq $abs_from) {
-		return ".";
-	} else {
-		assert(false, "$abs_from is not a prefix of $abs_to");
-	}
-}
-
 sub resolve_variable_rec1($$);
 sub resolve_variable_rec2($$);
 
@@ -948,31 +932,6 @@ sub expand_variable($) {
 		}
 	}
 	return $value;
-}
-
-sub set_default_value($$) {
-	my ($varref, $value) = @_;
-
-	if (!defined(${$varref}) || ${$varref} =~ regex_unresolved) {
-		${$varref} = $value;
-	}
-}
-
-sub strip_mk_comment($) {
-	my ($text) = @_;
-
-	$text =~ s/(^|[^\\])#.*/$1/;
-	$text =~ s/\\#/#/g;
-	return $text;
-}
-
-# Removes all uses of make variables from a string.
-sub remove_variables($) {
-	my ($text) = @_;
-
-	while ($text =~ s/\$\{([^{}]*)\}//g) {
-	}
-	return $text;
 }
 
 sub backtrace($) {
