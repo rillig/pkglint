@@ -441,61 +441,13 @@ func (ctx *ShelltextContext) checkCommandStart() {
 
 	switch {
 	case shellword == "${RUN}":
-		// Just skip this one.
-
-	case isForbiddenShellCommand(shellword):
-		line.errorf("%q must not be used in Makefiles.", shellword)
-		line.explain(
-			"This command must appear in INSTALL scripts, not in the package",
-			"Makefile, so that the package also works if it is installed as a binary",
-			"package via pkg_add.")
-
-	case G.globalData.tools[shellword]:
-		if !G.mkContext.tools[shellword] && !G.mkContext.tools["g"+shellword] {
-			line.warnf("The %q tool is used but not added to USE_TOOLS.", shellword)
-		}
-
-		if G.globalData.varRequiredTools[shellword] {
-			line.warnf("Please use ${%s} instead of %q.", G.globalData.vartools[shellword], shellword)
-		}
-
-		checklineMkShellcmdUse(line, shellword)
-
+	case ctx.handleForbiddenCommand(shellword):
+	case ctx.handleTool(shellword):
 	case ctx.handleCommandVariable(shellword):
-		// Ok
-
 	case matches(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
-		// Shell builtins are fine.
-
-	case matches(shellword, `^[\w_]+=.*$`):
-		// Variable assignment
-
-	case hasPrefix(shellword, "./"):
-		// All commands from the current directory are fine.
-
-	case hasPrefix(shellword, "#"):
-		semicolon := contains(shellword, ";")
-		multiline := contains(line.lines, "--")
-
-		if semicolon {
-			line.warnf("A shell comment should not contain semicolons.")
-		}
-		if multiline {
-			line.warnf("A shell comment does not stop at the end of line.")
-		}
-
-		if semicolon || multiline {
-			line.explain(
-				"When you split a shell command into multiple lines that are continued",
-				"with a backslash, they will nevertheless be converted to a single line",
-				"before the shell sees them. That means that even if it _looks_ like that",
-				"the comment only spans one line in the Makefile, in fact it spans until",
-				"the end of the whole shell command. To insert a comment into shell code,",
-				"you can pass it as an argument to the ${SHCOMMENT} macro, which expands",
-				"to a command doing nothing. Note that any special characters are",
-				"nevertheless interpreted by the shell.")
-		}
-
+	case matches(shellword, `^[\w_]+=.*$`): // Variable assignment
+	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
+	case ctx.handleComment(shellword):
 	default:
 		if G.opts.WarnExtra {
 			line.warnf("Unknown shell command %q.", shellword)
@@ -505,6 +457,38 @@ func (ctx *ShelltextContext) checkCommandStart() {
 				"tools framework.")
 		}
 	}
+}
+
+func (ctx *ShelltextContext) handleTool(shellword string) bool {
+	if !G.globalData.tools[shellword] {
+		return false
+	}
+
+	if !G.mkContext.tools[shellword] && !G.mkContext.tools["g"+shellword] {
+		ctx.line.warnf("The %q tool is used but not added to USE_TOOLS.", shellword)
+	}
+
+	if G.globalData.varRequiredTools[shellword] {
+		ctx.line.warnf("Please use ${%s} instead of %q.", G.globalData.vartools[shellword], shellword)
+	}
+
+	checklineMkShellcmdUse(ctx.line, shellword)
+	return true
+}
+
+func (ctx *ShelltextContext) handleForbiddenCommand(shellword string) bool {
+	switch path.Base(shellword) {
+	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
+	default:
+		return false
+	}
+
+	ctx.line.errorf("%q must not be used in Makefiles.", shellword)
+	ctx.line.explain(
+		"This command must appear in INSTALL scripts, not in the package",
+		"Makefile, so that the package also works if it is installed as a binary",
+		"package via pkg_add.")
+	return true
 }
 
 func (ctx *ShelltextContext) handleCommandVariable(shellword string) bool {
@@ -530,6 +514,36 @@ func (ctx *ShelltextContext) handleCommandVariable(shellword string) bool {
 		}
 	}
 	return false
+}
+
+func (ctx *ShelltextContext) handleComment(shellword string) bool {
+	if !hasPrefix(shellword, "#") {
+		return false
+	}
+
+	line := ctx.line
+	semicolon := contains(shellword, ";")
+	multiline := contains(line.lines, "--")
+
+	if semicolon {
+		line.warnf("A shell comment should not contain semicolons.")
+	}
+	if multiline {
+		line.warnf("A shell comment does not stop at the end of line.")
+	}
+
+	if semicolon || multiline {
+		line.explain(
+			"When you split a shell command into multiple lines that are continued",
+			"with a backslash, they will nevertheless be converted to a single line",
+			"before the shell sees them. That means that even if it _looks_ like that",
+			"the comment only spans one line in the Makefile, in fact it spans until",
+			"the end of the whole shell command. To insert a comment into shell code,",
+			"you can pass it as an argument to the ${SHCOMMENT} macro, which expands",
+			"to a command doing nothing. Note that any special characters are",
+			"nevertheless interpreted by the shell.")
+	}
+	return true
 }
 
 func (ctx *ShelltextContext) checkConditionalCd() {
@@ -646,14 +660,6 @@ func (ctx *ShelltextContext) checkSetE(eflag bool) {
 			"To fix this warning, either insert \"set -e\" at the beginning of this",
 			"line or use the \"&&\" operator instead of the semicolon.")
 	}
-}
-
-func isForbiddenShellCommand(cmd string) bool {
-	switch path.Base(cmd) {
-	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
-		return true
-	}
-	return false
 }
 
 // Some shell commands should not be used in the install phase.
