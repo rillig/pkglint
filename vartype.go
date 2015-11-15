@@ -14,11 +14,13 @@ type Vartype struct {
 	guessed    Guessed
 }
 
-type KindOfList struct{ name string }
+type KindOfList int
 
-var LK_NONE = KindOfList{"none"}
-var LK_SPACE = KindOfList{"whitespace"}
-var LK_SHELL = KindOfList{"shellwords"}
+const (
+	LK_NONE KindOfList = iota
+	LK_SPACE
+	LK_SHELL
+)
 
 type AclEntry struct {
 	glob        string
