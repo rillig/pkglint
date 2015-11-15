@@ -66,7 +66,7 @@ func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting b
 	shellwordVuc := &VarUseContext{VUC_TIME_UNKNOWN, shellcommandContextType, VUC_SHW_PLAIN, VUC_EXT_WORD}
 
 	line := msline.line
-	if m, varname, mod := match2(shellword, `^\$\{(`+reVarname+`)(:[^{}]+)?\}$`); m {
+	if m, varname, mod := match2(shellword, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
 		checklineMkVaruse(line, varname, mod, shellwordVuc)
 		return
 	}
@@ -146,8 +146,8 @@ outer:
 			msline.checklineMkShelltext(stripped)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
-		case replacePrefix(&rest, &m, `^\$\{(`+reVarname+`|@)(:[^\{]+)?\}`),
-			replacePrefix(&rest, &m, `^\$\((`+reVarname+`|@])(:[^\)]+)?\)`),
+		case replacePrefix(&rest, &m, `^\$\{(`+reVarnameDirect+`|@)(:[^\{]+)?\}`),
+			replacePrefix(&rest, &m, `^\$\((`+reVarnameDirect+`|@])(:[^\)]+)?\)`),
 			replacePrefix(&rest, &m, `^\$([\w@])()`):
 			varname, mod := m[1], m[2]
 

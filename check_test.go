@@ -38,11 +38,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 func (s *Suite) TearDownTest(c *check.C) {
 	G = nil
-	if out := s.Stdout(); out != "" {
-		c.Errorf("Unchecked output on stdout: %q", out)
-	}
-	if err := s.Stderr(); err != "" {
-		c.Errorf("Unchecked output on stderr: %q", err)
+	if out := s.Output(); out != "" {
+		c.Errorf("Unchecked output; check with: c.Check(s.Output(), equals, %q)", out)
 	}
 }
 

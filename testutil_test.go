@@ -7,3 +7,7 @@ func mklines(fname string, lines ...string) []*Line {
 	}
 	return result
 }
+
+func UseCommandLine(args ...string) {
+	G.opts = ParseCommandLine(append([]string{"pkglint"}, args...), G.logOut)
+}

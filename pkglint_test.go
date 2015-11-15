@@ -63,6 +63,7 @@ func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
 	G.pkgContext.vardef["GCC_VERSION"] = line // circular reference
 
 	resolved := resolveVariableRefs("gcc-${GCC_VERSION}")
+
 	c.Check(resolved, equals, "gcc-${GCC_VERSION}")
 }
 
@@ -79,5 +80,15 @@ func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
 	G.pkgContext.vardef["THIRD"] = line3
 
 	resolved := resolveVariableRefs("you ${FIRST}")
+
 	c.Check(resolved, equals, "you got it")
+}
+
+func (s *Suite) TestReVarname(c *check.C) {
+	re := `^(?:` + reVarname + `)$`
+
+	c.Check(matches("", re), equals, false)
+	c.Check(matches("VARNAME", re), equals, true)
+	c.Check(matches("0FLAGS", re), equals, true)
+	c.Check(matches("CFLAGS.${prog}.DEBUG", re), equals, true)
 }

@@ -27,6 +27,7 @@ const (
 	reAsciiChar                = `[\t -~]`
 	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`
 	reShVarassign              = `^([A-Z_a-z][0-9A-Z_a-z]*)=`
+	reVarnameDirect            = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
 	reVarname                  = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
 	rePkgbase                  = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
 	rePkgversion               = `\d(?:\w|\.\d)*`
