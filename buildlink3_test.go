@@ -23,6 +23,6 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 		"BUILDLINK_TREE+=        -Xbae")
 
 	checklinesBuildlink3Mk(lines)
-	
+
 	c.Check(s.Output(), equals, "ERROR: buildlink3.mk:12: \"/mk/motif.buildlink3.mk\" does not exist.\n")
 }

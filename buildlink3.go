@@ -16,7 +16,7 @@ func checkfileBuildlink3Mk(fname string) {
 	checklinesBuildlink3Mk(lines)
 }
 
-func checklinesBuildlink3Mk(lines []*Line) {	
+func checklinesBuildlink3Mk(lines []*Line) {
 	parselinesMk(lines)
 	checklinesMk(lines)
 
@@ -158,7 +158,7 @@ func checklinesBuildlink3Mk(lines []*Line) {
 	exp.expectEmptyLine()
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
-	if exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgid) + `$`) == nil {
+	if exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-`+regexp.QuoteMeta(pkgid)+`$`) == nil {
 		exp.currentLine().warnf("Expected BUILDLINK_TREE line.")
 	}
 
