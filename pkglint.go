@@ -1,6 +1,6 @@
 package main
 
-// based on NetBSD: pkglint.pl,v 1.893 2015/10/15 03:00:56 rillig Exp $
+// based on pkglint.pl 1.896
 
 import (
 	"fmt"
