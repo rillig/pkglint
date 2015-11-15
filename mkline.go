@@ -51,7 +51,7 @@ func checklineMkVardef(line *Line, varname, op string) {
 				case 's':
 					result += "set, "
 				case 'u':
-					result += "runtime-use, "
+					result += "runtime, "
 				case '?':
 					result += "unknown, "
 				}
@@ -59,7 +59,7 @@ func checklineMkVardef(line *Line, varname, op string) {
 			return strings.TrimRight(result, ", ")
 		}
 
-		line.warnf("Permission %q requested for %s, but only { %s } is allowed.",
+		line.warnf("Permission [%s] requested for %s, but only [%s] is allowed.", // XXX
 			expandPermission(needed), varname, expandPermission(perms))
 		line.explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
