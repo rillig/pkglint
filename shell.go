@@ -57,7 +57,7 @@ func NewMkShellLine(line *Line) *MkShellLine {
 }
 
 func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting bool) {
-	defer tracecall("checklineMkShellword", shellword, checkQuoting)()
+	defer tracecall("MkShellLine.checklineMkShellword", shellword, checkQuoting)()
 
 	if shellword == "" || hasPrefix(shellword, "#") {
 		return
@@ -315,8 +315,9 @@ type ShelltextContext struct {
 }
 
 func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
+	defer tracecall("MkShellLine.checklineMkShelltext", shelltext)()
+
 	line := msline.line
-	defer tracecall("checklineMkShelltext", shelltext)()
 
 	if contains(shelltext, "${SED}") || contains(shelltext, "${MV}") {
 		line.notef("Please use the SUBST framework instead of ${SED} and ${MV}.")
@@ -387,6 +388,8 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 }
 
 func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
+	defer tracecall("MkShellLine.checkLineStart", hidden, macro, rest, eflag)()
+
 	line := msline.line
 
 	switch {
@@ -433,6 +436,8 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 }
 
 func (ctx *ShelltextContext) checkCommandStart() {
+	defer tracecall("ShelltextContext.checkCommandStart", ctx.state, ctx.shellword)()
+
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
 
 	if state != SCST_START && state == SCST_COND {
@@ -441,13 +446,13 @@ func (ctx *ShelltextContext) checkCommandStart() {
 
 	switch {
 	case shellword == "${RUN}":
-	case ctx.handleForbiddenCommand(shellword):
-	case ctx.handleTool(shellword):
-	case ctx.handleCommandVariable(shellword):
+	case ctx.handleForbiddenCommand():
+	case ctx.handleTool():
+	case ctx.handleCommandVariable():
 	case matches(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
 	case matches(shellword, `^[\w_]+=.*$`): // Variable assignment
 	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
-	case ctx.handleComment(shellword):
+	case ctx.handleComment():
 	default:
 		if G.opts.WarnExtra {
 			line.warnf("Unknown shell command %q.", shellword)
@@ -459,7 +464,10 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	}
 }
 
-func (ctx *ShelltextContext) handleTool(shellword string) bool {
+func (ctx *ShelltextContext) handleTool() bool {
+	defer tracecall("ShelltextContext.handleTool", ctx.shellword)()
+
+	shellword := ctx.shellword
 	if !G.globalData.tools[shellword] {
 		return false
 	}
@@ -476,14 +484,14 @@ func (ctx *ShelltextContext) handleTool(shellword string) bool {
 	return true
 }
 
-func (ctx *ShelltextContext) handleForbiddenCommand(shellword string) bool {
-	switch path.Base(shellword) {
+func (ctx *ShelltextContext) handleForbiddenCommand() bool {
+	switch path.Base(ctx.shellword) {
 	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
 	default:
 		return false
 	}
 
-	ctx.line.errorf("%q must not be used in Makefiles.", shellword)
+	ctx.line.errorf("%q must not be used in Makefiles.", ctx.shellword)
 	ctx.line.explain(
 		"This command must appear in INSTALL scripts, not in the package",
 		"Makefile, so that the package also works if it is installed as a binary",
@@ -491,7 +499,10 @@ func (ctx *ShelltextContext) handleForbiddenCommand(shellword string) bool {
 	return true
 }
 
-func (ctx *ShelltextContext) handleCommandVariable(shellword string) bool {
+func (ctx *ShelltextContext) handleCommandVariable() bool {
+	defer tracecall("ShelltextContext.handleCommandVariable", ctx.shellword)()
+
+	shellword := ctx.shellword
 	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
 
 		if toolname := G.globalData.varnameToToolname[varname]; toolname != "" {
@@ -516,7 +527,10 @@ func (ctx *ShelltextContext) handleCommandVariable(shellword string) bool {
 	return false
 }
 
-func (ctx *ShelltextContext) handleComment(shellword string) bool {
+func (ctx *ShelltextContext) handleComment() bool {
+	defer tracecall("ShelltextContext.handleComment", ctx.shellword)()
+
+	shellword := ctx.shellword
 	if !hasPrefix(shellword, "#") {
 		return false
 	}
