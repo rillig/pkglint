@@ -8,35 +8,6 @@ my $show_source_flag	= false;
 
 package FileUtil
 
-sub load_lines($$) {
-	$seen_newline = true;
-	$loglines = [];
-	if ($fold_backslash_lines) {
-		for (my $lineno = 0; $lineno <= $#{$physlines}; ) {
-			push(@{$loglines}, get_logical_line($fname, $physlines, \$lineno));
-		}
-	} else {
-		foreach my $physline (@{$physlines}) {
-			my $text = $physline->[1];
-
-			$text =~ s/\n$//;
-			push(@{$loglines}, PkgLint::Line->new($fname, $physline->[0], $text, [$physline]));
-		}
-	}
-
-	if (0 <= $#{$physlines} && $physlines->[-1]->[1] !~ m"\n$") {
-		log_error($fname, $physlines->[-1]->[0], "File must end with a newline.");
-	}
-
-	return $loglines;
-}
-
-sub load_file($) {
-	my ($fname) = @_;
-
-	return load_lines($fname, false);
-}
-
 sub save_autofix_changes($) {
 	my ($lines) = @_;
 
