@@ -1,6 +1,7 @@
 package main
 
-// Whether a variable is used correctly depends on many things:
+// VarUseContext defines the context in which a variable is defined
+// or used. Whether that is allowed depends on:
 //
 // * The variable’s data type, as defined in vardefs.go.
 // * Whether the variable is accessed at loading time (when the
@@ -27,9 +28,6 @@ type VarUseContext struct {
 	extent    VarUseContextExtent
 }
 
-// The various contexts in which make(1) variables can appear in pkgsrc.
-// Further details can be found in the chapter “The pkglint type system”
-// of the pkglint book.
 type VarUseContextTime int
 
 const (
@@ -65,6 +63,6 @@ func (self *VarUseContext) String() string {
 	return sprintf("(%s %s %s %s)",
 		[]string{"unknown-time", "load-time", "run-time"}[self.time],
 		typename,
-		[]string{"none", "plain", "dquot", "squot", "backt", "for"}[self.shellword],
-		[]string{"unknown", "full", "word", "word-part"}[self.extent])
+		[]string{"unknown", "plain", "dquot", "squot", "backt", "for"}[self.shellword],
+		[]string{"unknown", "word", "word-part"}[self.extent])
 }
