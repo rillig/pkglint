@@ -108,7 +108,6 @@ func (vc *VarChecker) AllowedEnums() string {
 var (
 	CheckvarAwkCommand             = &VarChecker{"AwkCommand", (*VartypeCheckContext).AwkCommand}
 	CheckvarBasicRegularExpression = &VarChecker{"BasicRegularExpression", (*VartypeCheckContext).BasicRegularExpression}
-	CheckvarBrokenIn               = &VarChecker{"BrokenIn", (*VartypeCheckContext).BrokenIn}
 	CheckvarBuildlinkDepmethod     = &VarChecker{"BuildlinkDepmethod", (*VartypeCheckContext).BuildlinkDepmethod}
 	CheckvarBuildlinkDepth         = &VarChecker{"BuildlinkDepth", (*VartypeCheckContext).BuildlinkDepth}
 	CheckvarCategory               = &VarChecker{"Category", (*VartypeCheckContext).Category}

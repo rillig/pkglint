@@ -9,14 +9,14 @@ import (
 )
 
 func checklineMkShellword(line *Line, word string, checkQuoting bool) {
-	(&MkShellLine{line}).checklineMkShellword(word, checkQuoting)
+	NewMkShellLine(line).checklineMkShellword(word, checkQuoting)
 }
 func checklineMkShellcmdUse(line *Line, shellcmd string) {
-	(&MkShellLine{line}).checkCommandUse(shellcmd)
+	NewMkShellLine(line).checkCommandUse(shellcmd)
 }
 func checklineMkShellcmd(line *Line, shellcmd string) {
 	checklineMkText(line, shellcmd)
-	(&MkShellLine{line}).checklineMkShelltext(shellcmd)
+	NewMkShellLine(line).checklineMkShelltext(shellcmd)
 }
 
 type ShellCommandState string
@@ -39,7 +39,6 @@ const (
 	SCST_CASE_IN         ShellCommandState = "case in"
 	SCST_CASE_LABEL      ShellCommandState = "case label"
 	SCST_CASE_LABEL_CONT ShellCommandState = "case-label-continuation"
-	SCST_CASE_PAREN      ShellCommandState = "case-paren"
 	SCST_FOR             ShellCommandState = "for"
 	SCST_FOR_IN          ShellCommandState = "for-in"
 	SCST_FOR_CONT        ShellCommandState = "for-continuation"

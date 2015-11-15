@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -62,11 +61,11 @@ func checkItem(fname string) {
 	absCurrentDir := filepath.ToSlash(abs)
 	G.isWip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	G.isInfrastructure = matches(absCurrentDir, `/mk/|/mk$`)
-	G.curPkgsrcdir = nil
+	G.curPkgsrcdir = ""
 	pkgpath := ""
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
 		if fileExists(G.currentDir + "/" + dir + "/mk/bsd.pkg.mk") {
-			G.curPkgsrcdir = newStr(dir)
+			G.curPkgsrcdir = dir
 			pkgpath = relpath(G.currentDir, G.currentDir+"/"+dir)
 		}
 	}
@@ -85,17 +84,15 @@ func checkItem(fname string) {
 		return
 	}
 
-	switch *G.curPkgsrcdir {
+	switch G.curPkgsrcdir {
 	case "../..":
 		checkdirPackage(pkgpath)
 	case "..":
 		checkdirCategory()
 	case ".":
 		checkdirToplevel()
-	case "":
-		errorf(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
 	default:
-		errorf(fname, NO_LINES, "Don't know how to check this directory.")
+		errorf(fname, NO_LINES, "Cannot check directories outside a pkgsrc tree.")
 	}
 }
 
@@ -176,17 +173,6 @@ func extractUsedVariables(line *Line, text string) []string {
 		_ = G.opts.DebugMisc && line.debugf("extractUsedVariables: rest=%q", rest)
 	}
 	return result
-}
-
-func getNbpart() string {
-	line := G.pkgContext.vardef["PKGREVISION"]
-	if line != nil {
-		pkgrevision, err := strconv.Atoi(line.extra["value"].(string))
-		if err != nil && pkgrevision != 0 {
-			return sprintf("nb%d", pkgrevision)
-		}
-	}
-	return ""
 }
 
 // Returns the type of the variable (maybe guessed based on the variable name),
@@ -409,7 +395,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	case matches(path, `^\.\./\.\./[^/]+/[^/]`):
 	case hasPrefix(path, "../../mk/"):
 		// There need not be two directory levels for mk/ files.
-	case matches(path, `^\.\./mk/`) && *G.curPkgsrcdir == "..":
+	case matches(path, `^\.\./mk/`) && G.curPkgsrcdir == "..":
 		// That's fine for category Makefiles.
 	case matches(path, `^\.\.`):
 		line.warnf("Invalid relative path %q.", path)

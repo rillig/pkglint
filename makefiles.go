@@ -139,7 +139,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	tmp := relpath
-	tmp = strings.Replace(tmp, "${PKGSRCDIR}", *G.curPkgsrcdir, -1)
+	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.curPkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${LUA_PKGSRCDIR}", "../../lang/lua52", -1)
@@ -155,7 +155,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	if adjustDepth {
 		if m, pkgpath := match1(tmp, `^\.\./\.\./([^.].*)$`); m {
-			tmp = *G.curPkgsrcdir + "/" + pkgpath
+			tmp = G.curPkgsrcdir + "/" + pkgpath
 		}
 	}
 

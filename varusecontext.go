@@ -33,7 +33,6 @@ type VarUseContextExtent int
 
 const (
 	VUC_EXTENT_UNKNOWN VarUseContextExtent = iota
-	VUC_EXT_FULL
 	VUC_EXT_WORD
 	VUC_EXT_WORDPART
 )

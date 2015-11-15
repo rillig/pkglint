@@ -88,17 +88,6 @@ func isCommitted(fname string) bool {
 	return false
 }
 
-// No package file should ever be executable. Even the INSTALL and
-// DEINSTALL scripts are usually not usable in the form they have in the
-// package, as the pathnames get adjusted during installation. So there is
-// no need to have any file executable.
-func checkPermissions(fname string) {
-	st, err := os.Stat(fname)
-	if err != nil && st.Mode().IsRegular() && st.Mode()&0111 != 0 {
-		warnf(fname, NO_LINES, "Should not be executable.")
-	}
-}
-
 func removeVariableReferences(expr string) string {
 	replaced := regcomp(`\$\{([^{}]*)\}`).ReplaceAllString(expr, "")
 	if replaced != expr {
@@ -311,14 +300,6 @@ func negToZero(i int) int {
 func toInt(s string) int {
 	n, _ := strconv.Atoi(s)
 	return n
-}
-
-func newInt(i int) *int {
-	return &i
-}
-
-func newStr(s string) *string {
-	return &s
 }
 
 func dirglob(dirname string) []string {

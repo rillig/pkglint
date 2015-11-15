@@ -21,12 +21,7 @@ func (cv *VartypeCheckContext) AwkCommand() {
 }
 
 func (cv *VartypeCheckContext) BasicRegularExpression() {
-}
-
-func (cv *VartypeCheckContext) BrokenIn() {
-	if !matches(cv.value, `^pkgsrc-20\d\d\dQ[1234]$`) {
-		cv.line.warnf("Invalid value %q for %s.", cv.value, cv.varname)
-	}
+	_ = G.opts.DebugUnchecked && cv.line.debugf("Unchecked basic regular expression: %q", cv.value)
 }
 
 func (cv *VartypeCheckContext) BuildlinkDepmethod() {
@@ -44,7 +39,7 @@ func (cv *VartypeCheckContext) BuildlinkDepth() {
 }
 
 func (cv *VartypeCheckContext) Category() {
-	if fileExists(*G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
+	if fileExists(G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
 		return
 	}
 	switch cv.value {
@@ -416,7 +411,7 @@ func (cv *VartypeCheckContext) PkgName() {
 }
 
 func (cv *VartypeCheckContext) PkgPath() {
-	checklineRelativePkgdir(cv.line, *G.curPkgsrcdir+"/"+cv.value)
+	checklineRelativePkgdir(cv.line, G.curPkgsrcdir+"/"+cv.value)
 }
 
 func (cv *VartypeCheckContext) PkgOptionsVar() {
@@ -569,7 +564,7 @@ func (cv *VartypeCheckContext) SedCommands() {
 }
 
 func (cv *VartypeCheckContext) ShellCommand() {
-	(&MkShellLine{cv.line}).checklineMkShelltext(cv.value)
+	NewMkShellLine(cv.line).checklineMkShelltext(cv.value)
 }
 
 func (cv *VartypeCheckContext) ShellWord() {

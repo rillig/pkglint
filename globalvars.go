@@ -5,7 +5,7 @@ import (
 )
 
 type GlobalVars struct {
-	curPkgsrcdir *string // The pkgsrc directory, relative to the directory that is currently checked.
+	curPkgsrcdir string // The pkgsrc directory, relative to the directory that is currently checked.
 	opts         CmdOpts
 	globalData   GlobalData
 	pkgContext   *PkgContext
