@@ -133,116 +133,116 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 	vardef := G.pkgContext.vardef
 	if vardef["PLIST_SRC"] == nil &&
 		vardef["GENERATE_PLIST"] == nil &&
-		vardef["META_PACKAGE"] == nil {
-		if dir := G.currentDir + "/" + G.pkgContext.pkgdir; !fileExists(dir+"/PLIST") && !fileExists(dir+"/PLIST.common") {
-			warnf(fname, NO_LINES, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
-		}
-
-		if (vardef["NO_CHECKSUM"] != nil || vardef["META_PACKAGE"] != nil) && isEmptyDir(G.currentDir+"/"+G.pkgContext.patchdir) {
-			if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; fileExists(distinfoFile) {
-				warnf(distinfoFile, NO_LINES, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
-			}
-		} else {
-			if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; !fileExists(distinfoFile) {
-				warnf(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
-			}
-		}
-
-		if vardef["REPLACE_PERL"] != nil && vardef["NO_CONFIGURE"] != nil {
-			vardef["REPLACE_PERL"].warnf("REPLACE_PERL is ignored when ...")
-			vardef["NO_CONFIGURE"].warnf("... NO_CONFIGURE is set.")
-		}
-
-		if vardef["LICENSE"] == nil {
-			errorf(fname, NO_LINES, "Each package must define its LICENSE.")
-		}
-
-		if vardef["GNU_CONFIGURE"] != nil && vardef["USE_LANGUAGES"] != nil {
-			languagesLine := vardef["USE_LANGUAGES"]
-			value := languagesLine.extra["value"].(string)
-
-			if languagesLine.extra["comment"] != nil && matches(languagesLine.extra["comment"].(string), `(?-i)\b(?:c|empty|none)\b`) {
-				// Don't emit a warning, since the comment
-				// probably contains a statement that C is
-				// really not needed.
-
-			} else if !matches(value, `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
-				vardef["GNU_CONFIGURE"].warnf("GNU_CONFIGURE almost always needs a C compiler, ...")
-				languagesLine.warnf("... but \"c\" is not added to USE_LANGUAGES.")
-			}
-		}
-
-		distnameLine := vardef["DISTNAME"]
-		pkgnameLine := vardef["PKGNAME"]
-
-		distname := ""
-		if distnameLine != nil {
-			distname = distnameLine.extra["value"].(string)
-		}
-		pkgname := ""
-		if pkgnameLine != nil {
-			pkgname = pkgnameLine.extra["value"].(string)
-		}
-
-		if distname != "" && pkgname != "" {
-			pkgname = pkgnameFromDistname(pkgname, distname)
-		}
-
-		if pkgname != "" && pkgname == distname {
-			pkgnameLine.notef("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
-		}
-
-		if pkgname == "" && distname != "" && !matches(distname, reUnresolvedVar) && !matches(distname, rePkgname) {
-			distnameLine.warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
-		}
-
-		if G.pkgContext.effectivePkgnameLine != nil {
-			_ = G.opts.DebugMisc && G.pkgContext.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
-				G.pkgContext.effectivePkgname, G.pkgContext.effectivePkgbase, G.pkgContext.effectivePkgversion)
-		}
-
-		checkpackagePossibleDowngrade()
-
-		if vardef["COMMENT"] == nil {
-			warnf(fname, NO_LINES, "No COMMENT given.")
-		}
-
-		if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
-			vardef["USE_IMAKE"].notef("USE_IMAKE makes ...")
-			vardef["USE_X11"].notef("... USE_X11 superfluous.")
-		}
-
-		if G.pkgContext.effectivePkgbase != nil {
-			for _, sugg := range G.globalData.suggestedUpdates {
-				if *G.pkgContext.effectivePkgbase != sugg.pkgname {
-					continue
-				}
-
-				suggver, comment := sugg.version, sugg.comment
-				if comment != "" {
-					comment = " (" + comment + ")"
-				}
-
-				pkgnameLine := G.pkgContext.effectivePkgnameLine
-				cmp := pkgverCmp(*G.pkgContext.effectivePkgversion, suggver)
-				switch {
-				case cmp < 0:
-					pkgnameLine.warnf("This package should be updated to %s%s", sugg.version, comment)
-					pkgnameLine.explain(
-						"The wishlist for package updates in doc/TODO mentions that a newer",
-						"version of this package is available.")
-				case cmp > 0:
-					pkgnameLine.notef("This package is newer than the update request to %s%s.", suggver, comment)
-				default:
-					pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
-				}
-			}
-		}
-
-		checklinesMk(lines)
-		checklinesPackageMakefileVarorder(lines)
-		autofix(lines)
+		vardef["META_PACKAGE"] == nil &&
+		!fileExists(G.currentDir+"/"+G.pkgContext.pkgdir+"/PLIST") &&
+		!fileExists(G.currentDir+"/"+G.pkgContext.pkgdir+"/PLIST.common") {
+		warnf(fname, NO_LINES, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
 	}
+
+	if (vardef["NO_CHECKSUM"] != nil || vardef["META_PACKAGE"] != nil) && isEmptyDir(G.currentDir+"/"+G.pkgContext.patchdir) {
+		if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; fileExists(distinfoFile) {
+			warnf(distinfoFile, NO_LINES, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
+		}
+	} else {
+		if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; !fileExists(distinfoFile) {
+			warnf(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
+		}
+	}
+
+	if vardef["REPLACE_PERL"] != nil && vardef["NO_CONFIGURE"] != nil {
+		vardef["REPLACE_PERL"].warnf("REPLACE_PERL is ignored when ...")
+		vardef["NO_CONFIGURE"].warnf("... NO_CONFIGURE is set.")
+	}
+
+	if vardef["LICENSE"] == nil {
+		errorf(fname, NO_LINES, "Each package must define its LICENSE.")
+	}
+
+	if vardef["GNU_CONFIGURE"] != nil && vardef["USE_LANGUAGES"] != nil {
+		languagesLine := vardef["USE_LANGUAGES"]
+		value := languagesLine.extra["value"].(string)
+
+		if languagesLine.extra["comment"] != nil && matches(languagesLine.extra["comment"].(string), `(?-i)\b(?:c|empty|none)\b`) {
+			// Don't emit a warning, since the comment
+			// probably contains a statement that C is
+			// really not needed.
+
+		} else if !matches(value, `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
+			vardef["GNU_CONFIGURE"].warnf("GNU_CONFIGURE almost always needs a C compiler, ...")
+			languagesLine.warnf("... but \"c\" is not added to USE_LANGUAGES.")
+		}
+	}
+
+	distnameLine := vardef["DISTNAME"]
+	pkgnameLine := vardef["PKGNAME"]
+
+	distname := ""
+	if distnameLine != nil {
+		distname = distnameLine.extra["value"].(string)
+	}
+	pkgname := ""
+	if pkgnameLine != nil {
+		pkgname = pkgnameLine.extra["value"].(string)
+	}
+
+	if distname != "" && pkgname != "" {
+		pkgname = pkgnameFromDistname(pkgname, distname)
+	}
+
+	if pkgname != "" && pkgname == distname {
+		pkgnameLine.notef("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+	}
+
+	if pkgname == "" && distname != "" && !matches(distname, reUnresolvedVar) && !matches(distname, rePkgname) {
+		distnameLine.warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
+	}
+
+	if G.pkgContext.effectivePkgnameLine != nil {
+		_ = G.opts.DebugMisc && G.pkgContext.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
+			G.pkgContext.effectivePkgname, G.pkgContext.effectivePkgbase, G.pkgContext.effectivePkgversion)
+	}
+
+	checkpackagePossibleDowngrade()
+
+	if vardef["COMMENT"] == nil {
+		warnf(fname, NO_LINES, "No COMMENT given.")
+	}
+
+	if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
+		vardef["USE_IMAKE"].notef("USE_IMAKE makes ...")
+		vardef["USE_X11"].notef("... USE_X11 superfluous.")
+	}
+
+	if G.pkgContext.effectivePkgbase != nil {
+		for _, sugg := range G.globalData.suggestedUpdates {
+			if *G.pkgContext.effectivePkgbase != sugg.pkgname {
+				continue
+			}
+
+			suggver, comment := sugg.version, sugg.comment
+			if comment != "" {
+				comment = " (" + comment + ")"
+			}
+
+			pkgnameLine := G.pkgContext.effectivePkgnameLine
+			cmp := pkgverCmp(*G.pkgContext.effectivePkgversion, suggver)
+			switch {
+			case cmp < 0:
+				pkgnameLine.warnf("This package should be updated to %s%s", sugg.version, comment)
+				pkgnameLine.explain(
+					"The wishlist for package updates in doc/TODO mentions that a newer",
+					"version of this package is available.")
+			case cmp > 0:
+				pkgnameLine.notef("This package is newer than the update request to %s%s.", suggver, comment)
+			default:
+				pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
+			}
+		}
+	}
+
+	checklinesMk(lines)
+	checklinesPackageMakefileVarorder(lines)
+	autofix(lines)
 }
 
 func pkgnameFromDistname(pkgname, distname string) string {
