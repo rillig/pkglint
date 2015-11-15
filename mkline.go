@@ -554,7 +554,7 @@ func checklineMkVartype(line *Line, varname, op, value, comment string) {
 }
 
 // The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
-// For some variables (like BuildlinkDepth or BuildlinkPackages), the operator influences the valid values.
+// For some variables (like BuildlinkDepth), the operator influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func checklineMkVartypePrimitive(line *Line, varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
 	defer tracecall("checklineMkVartypePrimitive", varname, op, value, comment, isList, guessed)()

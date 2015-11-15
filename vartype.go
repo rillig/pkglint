@@ -73,7 +73,6 @@ func (self *Vartype) isConsideredList() bool {
 func (self *Vartype) mayBeAppendedTo() bool {
 	return self.kindOfList != LK_NONE ||
 		self.checker.name == "AwkCommand" ||
-		self.checker.name == "BuildlinkPackages" ||
 		self.checker.name == "SedCommands"
 }
 
