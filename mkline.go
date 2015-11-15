@@ -163,7 +163,7 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 	}
 
 	if !contains(perms, "p") && !contains(perms, "u") {
-		line.warnf("%s must not be used in this file.", varname)
+		line.warnf("%s may not be used in this file.", varname) // XXX
 	}
 }
 
