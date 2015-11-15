@@ -8,7 +8,7 @@ func checkfileDescr(fname string) {
 		maxlines = 24
 	)
 
-	lines := loadNonemptyLines(fname, false)
+	lines := LoadNonemptyLines(fname, false)
 	if lines == nil {
 		return
 	}

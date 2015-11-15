@@ -13,7 +13,7 @@ func checkdirToplevel() {
 
 	fname := G.currentDir + "/Makefile"
 
-	lines := loadNonemptyLines(fname, true)
+	lines := LoadNonemptyLines(fname, true)
 	if lines == nil {
 		return
 	}

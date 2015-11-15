@@ -13,7 +13,7 @@ type PlistContext struct {
 func checkfilePlist(fname string) {
 	defer tracecall("checkfilePlist", fname)()
 
-	lines := loadNonemptyLines(fname, false)
+	lines := LoadNonemptyLines(fname, false)
 	if lines == nil {
 		return
 	}

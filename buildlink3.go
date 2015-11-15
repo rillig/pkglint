@@ -8,7 +8,7 @@ import (
 func checkfileBuildlink3Mk(fname string) {
 	defer tracecall("checkfileBuildlink3Mk", fname)()
 
-	lines := loadNonemptyLines(fname, true)
+	lines := LoadNonemptyLines(fname, true)
 	if lines == nil {
 		return
 	}

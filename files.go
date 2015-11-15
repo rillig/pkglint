@@ -6,6 +6,19 @@ import (
 	"strings"
 )
 
+func LoadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
+	lines, err := loadLines(fname, joinContinuationLines)
+	if err != nil {
+		errorf(fname, NO_LINES, "Cannot be read.")
+		return nil
+	}
+	if len(lines) == 0 {
+		errorf(fname, NO_LINES, "Must not be empty.")
+		return nil
+	}
+	return lines
+}
+
 func loadRawLines(fname string) ([]*RawLine, error) {
 	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
@@ -63,19 +76,6 @@ func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 		return nil, err
 	}
 	return convertToLogicalLines(fname, rawLines, joinContinuationLines), nil
-}
-
-func loadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
-	lines, err := loadLines(fname, joinContinuationLines)
-	if err != nil {
-		errorf(fname, NO_LINES, "Cannot be read.")
-		return nil
-	}
-	if len(lines) == 0 {
-		errorf(fname, NO_LINES, "Must not be empty.")
-		return nil
-	}
-	return lines
 }
 
 func convertToLogicalLines(fname string, rawLines []*RawLine, joinContinuationLines bool) []*Line {

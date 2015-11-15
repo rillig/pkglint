@@ -14,7 +14,7 @@ func checkdirCategory() {
 	defer tracecall("checkdirCategory", G.currentDir)()
 
 	fname := G.currentDir + "/Makefile"
-	lines := loadNonemptyLines(fname, true)
+	lines := LoadNonemptyLines(fname, true)
 	if lines == nil {
 		return
 	}

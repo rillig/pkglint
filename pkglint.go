@@ -347,7 +347,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 func checkfileExtra(fname string) {
 	defer tracecall("checkfileExtra", fname)()
 
-	lines := loadNonemptyLines(fname, false)
+	lines := LoadNonemptyLines(fname, false)
 	if lines == nil {
 		return
 	}
@@ -363,7 +363,7 @@ func checkfileMessage(fname string) {
 		"empty line, your text and finally the footer line, which is the",
 		"same as the header line."}
 
-	lines := loadNonemptyLines(fname, false)
+	lines := LoadNonemptyLines(fname, false)
 	if lines == nil {
 		return
 	}
@@ -414,7 +414,7 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 func checkfileMk(fname string) {
 	defer tracecall("checkfileMk", fname)()
 
-	lines := loadNonemptyLines(fname, true)
+	lines := LoadNonemptyLines(fname, true)
 	if lines == nil {
 		return
 	}

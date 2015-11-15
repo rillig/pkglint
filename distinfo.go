@@ -10,7 +10,7 @@ import (
 func CheckfileDistinfo(fname string) {
 	defer tracecall("checkfileDistinfo", fname)()
 
-	lines := loadNonemptyLines(fname, false)
+	lines := LoadNonemptyLines(fname, false)
 	if lines == nil {
 		return
 	}
