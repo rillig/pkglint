@@ -19,11 +19,12 @@ type GlobalVars struct {
 	ipcDistinfo     map[string]*Hash // Maps "alg:fname" => "checksum".
 	ipcUsedLicenses map[string]bool  // Maps "license name" => true
 
-	errors     int
-	warnings   int
-	traceDepth int
-	logOut     io.Writer
-	logErr     io.Writer
+	errors                int
+	warnings              int
+	explanationsAvailable bool
+	traceDepth            int
+	logOut                io.Writer
+	logErr                io.Writer
 }
 
 type Hash struct {

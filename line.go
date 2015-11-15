@@ -81,6 +81,8 @@ func (self *Line) explain(explanation ...string) {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
 		}
 		io.WriteString(G.logOut, "\n")
+	} else {
+		G.explanationsAvailable = true
 	}
 }
 func (self *Line) String() string {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -86,13 +85,11 @@ func debugf(fname, lineno, format string, args ...interface{}) bool {
 func printSummary() {
 	if !G.opts.Quiet {
 		if G.errors != 0 || G.warnings != 0 {
-			fmt.Printf("%d errors and %d warnings found.", G.errors, G.warnings)
-			if !G.opts.Explain {
-				fmt.Printf(" (Use -e for more details.)")
-			}
-			fmt.Printf("\n")
+			explanations := ifelseStr(G.explanationsAvailable, " (Use -e to show explanations.)", "")
+			summary := sprintf("%d errors and %d warnings found.%s\n", G.errors, G.warnings, explanations)
+			io.WriteString(G.logOut, summary)
 		} else {
-			fmt.Printf("looks fine.\n")
+			io.WriteString(G.logOut, "looks fine.\n")
 		}
 	}
 }
