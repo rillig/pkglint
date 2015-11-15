@@ -19,7 +19,6 @@ const (
 	reMkInclude                = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
 	reMkSysinclude             = `^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$`
 	reMkShellvaruse            = `(?:^|[^\$])\$\$\{?(\w+)\}?`
-	rePkgname                  = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
 	reMkShellcmd               = `^\t(.*)$`
 	reConflict                 = `^(<<<<<<<|=======|>>>>>>>)`
 	reUnresolvedVar            = `\$\{`
@@ -28,6 +27,7 @@ const (
 	reShVarassign              = `^([A-Z_a-z][0-9A-Z_a-z]*)=`
 	reVarnameDirect            = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
 	reVarname                  = `(?:[-*+.0-9A-Z_a-z{}\[]+|\$\{[\w_]+\})+`
+	rePkgname                  = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
 	rePkgbase                  = `(?:[+.0-9A-Z_a-z]|-[A-Z_a-z])+`
 	rePkgversion               = `\d(?:\w|\.\d)*`
 )
