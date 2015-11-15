@@ -60,6 +60,7 @@ func (cv *VartypeCheck) Category() {
 	}
 }
 
+// A single option to the C/C++ compiler.
 func (cv *VartypeCheck) CFlag() {
 	line, value := cv.line, cv.value
 
@@ -78,6 +79,7 @@ func (cv *VartypeCheck) CFlag() {
 	}
 }
 
+// The single-line description of the package.
 func (cv *VartypeCheck) Comment() {
 	line, value := cv.line, cv.value
 
@@ -241,6 +243,8 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 }
 
+// See Pathname
+// See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
 	switch {
 	case contains(cv.valueNovar, "/"):
@@ -321,6 +325,7 @@ func (cv *VartypeCheck) MailAddress() {
 	}
 }
 
+// See ${STEP_MSG}, ${PKG_FAIL_REASON}
 func (cv *VartypeCheck) Message() {
 	line, varname, value := cv.line, cv.varname, cv.value
 
@@ -337,6 +342,7 @@ func (cv *VartypeCheck) Message() {
 	}
 }
 
+// A package option from options.mk
 func (cv *VartypeCheck) Option() {
 	line, value, valueNovar := cv.line, cv.value, cv.valueNovar
 
@@ -365,6 +371,7 @@ func (cv *VartypeCheck) Option() {
 	line.errorf("Invalid option name.")
 }
 
+// The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
 	if !contains(cv.value, ":") && cv.guessed == GUESSED {
 		checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
@@ -384,6 +391,8 @@ func (cv *VartypeCheck) Pathlist() {
 	}
 }
 
+// Shell globbing including slashes.
+// See Filemask
 func (cv *VartypeCheck) Pathmask() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
 		cv.line.warnf("%q is not a valid pathname mask.", cv.value)
@@ -391,6 +400,8 @@ func (cv *VartypeCheck) Pathmask() {
 	checklineMkAbsolutePathname(cv.line, cv.value)
 }
 
+// Like Filename, but including slashes
+// See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
 func (cv *VartypeCheck) Pathname() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.line.warnf("%q is not a valid pathname.", cv.value)
@@ -410,10 +421,6 @@ func (cv *VartypeCheck) PkgName() {
 	}
 }
 
-func (cv *VartypeCheck) PkgPath() {
-	checklineRelativePkgdir(cv.line, G.curPkgsrcdir+"/"+cv.value)
-}
-
 func (cv *VartypeCheck) PkgOptionsVar() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
 	if !matches(cv.value, `\$\{PKGBASE[:\}]`) {
@@ -423,6 +430,12 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 			"very last file, but PKG_OPTIONS_VAR is evaluated earlier.",
 			"Use ${PKGNAME:C/-[0-9].*//} instead.")
 	}
+}
+
+// A directory name relative to the top-level pkgsrc directory.
+// Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
+func (cv *VartypeCheck) PkgPath() {
+	checklineRelativePkgdir(cv.line, G.curPkgsrcdir+"/"+cv.value)
 }
 
 func (cv *VartypeCheck) PkgRevision() {
@@ -481,10 +494,12 @@ func (cv *VartypeCheck) PythonDependency() {
 	}
 }
 
+// Refers to a package directory.
 func (cv *VartypeCheck) RelativePkgDir() {
 	checklineRelativePkgdir(cv.line, cv.value)
 }
 
+// Refers to a file or directory.
 func (cv *VartypeCheck) RelativePkgPath() {
 	checklineRelativePath(cv.line, cv.value, true)
 }
@@ -510,8 +525,8 @@ func (cv *VartypeCheck) SedCommands() {
 		if contains(cv.value, "#") {
 			line.errorf("Invalid shell words in sed commands.")
 			line.explain(
-				"If your sed commands have embedded \"#\" characters, you need to escape",
-				"them with a backslash, otherwise make(1) will interpret them as a",
+				"When sed commands have embedded \"#\" characters, they need to be",
+				"escaped with a backslash, otherwise make(1) will interpret them as a",
 				"comment, no matter if they occur in single or double quotes or",
 				"whatever.")
 		}
@@ -653,6 +668,14 @@ func (cv *VartypeCheck) UserGroupName() {
 func (cv *VartypeCheck) Varname() {
 	if cv.value == cv.valueNovar && !matches(cv.value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
 		cv.line.warnf("%q is not a valid variable name.", cv.value)
+		cv.line.explain(
+			"Variable names are restricted to only uppercase letters and the",
+			"underscore in the basename, and arbitrary characters in the",
+			"parameterized part, following the dot.",
+			"",
+			"Examples:",
+			"\t* PKGNAME",
+			"\t* PKG_OPTIONS.gnuchess")
 	}
 }
 
@@ -684,6 +707,7 @@ func (cv *VartypeCheck) WrkdirSubdirectory() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 }
 
+// A directory relative to ${WRKSRC}, for use in CONFIGURE_DIRS and similar variables.
 func (cv *VartypeCheck) WrksrcSubdirectory() {
 	if m, _, rest := match2(cv.value, `^(\$\{WRKSRC\})(?:/(.*))?`); m {
 		if rest == "" {
@@ -699,6 +723,7 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 	}
 }
 
+// Used for variables that are checked using `.if defined(VAR)`.
 func (cv *VartypeCheck) Yes() {
 	if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
 		cv.line.warnf("%s should be set to YES or yes.", cv.varname)
@@ -710,12 +735,17 @@ func (cv *VartypeCheck) Yes() {
 	}
 }
 
+// The type YesNo is used for variables that are checked using
+//     .if defined(VAR) && !empty(VAR:M[Yy][Ee][Ss])
+//
 func (cv *VartypeCheck) YesNo() {
 	if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.warnf("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
 }
 
+// Like YesNo, but the value may be produced by a shell command using the
+// != operator.
 func (cv *VartypeCheck) YesNo_Indirectly() {
 	if cv.valueNovar != "" && !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.warnf("%s should be set to YES, yes, NO, or no.", cv.varname)

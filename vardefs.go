@@ -1,13 +1,6 @@
 package main
 
-// This file defines the specific type of some variables, according to
-// their current use in pkgsrc.
-//
-// The type YesNo is used for variables that are checked using
-//     .if defined(VAR) && !empty(VAR:M[Yy][Ee][Ss])
-//
-// The type Yes is used for variables that are checked using
-//     .if defined(VAR)
+// This file defines the specific type of some variables.
 //
 // There are two types of lists:
 // * LK_SHELL is a list whose elements are split by shell rules

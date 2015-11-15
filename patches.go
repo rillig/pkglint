@@ -198,33 +198,34 @@ const (
 	rePatchUniLineNoNewline = `^\\ No newline at end of file$`
 )
 
-type State string
+// See doc/statemachine.patch.dia
+type PatchState string
 
 const (
-	PST_START         State = "start"
-	PST_CENTER        State = "center"
-	PST_TEXT          State = "text"
-	PST_CTX_FILE_ADD  State = "ctxFileAdd"
-	PST_CTX_HUNK      State = "ctxHunk"
-	PST_CTX_HUNK_DEL  State = "ctxHunkDel"
-	PST_CTX_LINE_DEL0 State = "ctxLineDel0"
-	PST_CTX_LINE_DEL  State = "ctxLineDel"
-	PST_CTX_LINE_ADD0 State = "ctxLineAdd0"
-	PST_CTX_LINE_ADD  State = "ctxLineAdd"
-	PST_UNI_FILE_ADD  State = "uniFileAdd"
-	PST_UNI_HUNK      State = "uniHunk"
-	PST_UNI_LINE      State = "uniLine"
+	PST_START         PatchState = "start"
+	PST_CENTER        PatchState = "center"
+	PST_TEXT          PatchState = "text"
+	PST_CTX_FILE_ADD  PatchState = "ctxFileAdd"
+	PST_CTX_HUNK      PatchState = "ctxHunk"
+	PST_CTX_HUNK_DEL  PatchState = "ctxHunkDel"
+	PST_CTX_LINE_DEL0 PatchState = "ctxLineDel0"
+	PST_CTX_LINE_DEL  PatchState = "ctxLineDel"
+	PST_CTX_LINE_ADD0 PatchState = "ctxLineAdd0"
+	PST_CTX_LINE_ADD  PatchState = "ctxLineAdd"
+	PST_UNI_FILE_ADD  PatchState = "uniFileAdd"
+	PST_UNI_HUNK      PatchState = "uniHunk"
+	PST_UNI_LINE      PatchState = "uniLine"
 )
 
 func ptNop(ctx *CheckPatchContext) {}
 
 type transition struct {
 	re     string
-	next   State
+	next   PatchState
 	action func(*CheckPatchContext)
 }
 
-var patchTransitions = map[State][]transition{
+var patchTransitions = map[PatchState][]transition{
 	PST_START: {
 		{rePatchRcsid, PST_CENTER, func(ctx *CheckPatchContext) {
 			checklineRcsid(ctx.line, ``, "")
@@ -524,9 +525,9 @@ func checklinesPatch(lines []*Line) {
 }
 
 type CheckPatchContext struct {
-	state                  State
-	redostate              *State
-	nextstate              State
+	state                  PatchState
+	redostate              *PatchState
+	nextstate              PatchState
 	dellines               *int
 	addlines               *int
 	hunks                  int
@@ -616,7 +617,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 	}
 }
 
-func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate State) {
+func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate PatchState) {
 	if deldelta > 0 && nilToZero(ctx.dellines) == 0 {
 		ctx.redostate = &newstate
 		if nilToZero(ctx.addlines) > 0 {
@@ -668,7 +669,7 @@ func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate Stat
 	}
 }
 
-func (ctx *CheckPatchContext) checkHunkLine(deldelta, adddelta int, newstate State) {
+func (ctx *CheckPatchContext) checkHunkLine(deldelta, adddelta int, newstate PatchState) {
 	ctx.checkContents()
 	ctx.checkHunkEnd(deldelta, adddelta, newstate)
 

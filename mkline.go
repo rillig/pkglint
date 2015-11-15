@@ -59,15 +59,19 @@ func checklineMkVardef(line *Line, varname, op string) {
 			return strings.TrimRight(result, ", ")
 		}
 
-		line.warnf("Permission [%s] requested for %s but only [%s] is allowed.",
+		line.warnf("Permission %q requested for %s, but only { %s } is allowed.",
 			expandPermission(needed), varname, expandPermission(perms))
 		line.explain(
+			"Pkglint restricts the allowed actions on variables based on the filename.",
+			"",
 			"The available permissions are:",
-			"\tappend\t\tappend something using +=",
-			"\tdefault\t\tset a default value using ?=",
-			"\tpreprocess\tuse a variable during preprocessing",
-			"\truntime\t\tuse a variable at runtime",
-			"\tset\t\tset a variable using :=, =, !=",
+			"\tappend       append something using +=",
+			"\tdefault      set a default value using ?=",
+			"\tpreprocess   use a variable during preprocessing (e.g. .if, .for)",
+			"\truntime      use a variable at runtime",
+			"\t             (when the shell commands are run)",
+			"\tset          set a variable using :=, =, !=",
+			"\t             (which happens during preprocessing)",
 			"",
 			"A \"?\" means that pkglint doesn't know which permissions are allowed",
 			"and which are not.")
@@ -79,9 +83,9 @@ func checklineMkVaruse(line *Line, varname string, mod string, vuc *VarUseContex
 
 	vartype := getVariableType(line, varname)
 	if G.opts.WarnExtra &&
-		!(vartype != nil && vartype.guessed == NOT_GUESSED) &&
+		(vartype == nil || vartype.guessed == GUESSED) &&
 		!varIsUsed(varname) &&
-		!(G.mkContext != nil && G.mkContext.forVars[varname]) {
+		(G.mkContext == nil || !G.mkContext.forVars[varname]) {
 		line.warnf("%s is used but not defined. Spelling mistake?", varname)
 	}
 

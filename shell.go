@@ -19,6 +19,7 @@ func checklineMkShellcmd(line *Line, shellcmd string) {
 	NewMkShellLine(line).checklineMkShelltext(shellcmd)
 }
 
+// See doc/statemachine.shellcmd.dia
 type ShellCommandState string
 
 const (

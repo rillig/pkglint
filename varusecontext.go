@@ -1,5 +1,25 @@
 package main
 
+// Whether a variable is used correctly depends on many things:
+//
+// * The variable’s data type, as defined in vardefs.go.
+// * Whether the variable is accessed at loading time (when the
+//   Makefiles are parsed) or at run time (when the shell commands are
+//   run). Especially at load time, there are several points of time
+//   (e.g. the bsd.pkg.mk file is loaded at the very end, therefore
+//   the variables that are defined there cannot be used at load time.)
+// * When used on the right-hand side of an assigment, the variable can
+//   represent a list of words, a single word or even only part of a
+//   word. This distinction decides upon the correct use of the :Q
+//   operator.
+// * When used in shell commands, the variable can appear inside single
+//   quotes, double quotes, backticks or some combination thereof. This
+//   also influences whether the variable is correctly used.
+// * When used in preprocessing statements like .if or .for, the other
+//   operands of that statement should fit to the variable and are
+//   checked against the variable type. For example, comparing OPSYS to
+//   x86_64 doesn’t make sense.
+
 type VarUseContext struct {
 	time      VarUseContextTime
 	vartype   *Vartype
