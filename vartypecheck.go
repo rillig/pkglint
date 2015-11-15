@@ -39,7 +39,7 @@ func (cv *VartypeCheck) BuildlinkDepth() {
 }
 
 func (cv *VartypeCheck) Category() {
-	if fileExists(G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
+	if fileExists(G.currentDir + "/" + G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
 		return
 	}
 	switch cv.value {
