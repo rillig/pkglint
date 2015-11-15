@@ -842,7 +842,7 @@ func splitIntoShellwords(line *Line, text string) ([]string, string) {
 // This regular expression cannot parse all kinds of shell programs, but
 // it will catch almost all shell programs that are portable enough to be
 // used in pkgsrc.
-const reShellword = `\s*(` +
+const reShellword = `^\s*(` +
 	`#.*` + // shell comment
 	`|(?:` +
 	`'[^']*'` + // single quoted string
