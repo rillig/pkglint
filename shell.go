@@ -349,7 +349,6 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 	state := SCST_START
 	for replacePrefix(&rest, &m, reShellword) {
 		shellword := m[1]
-		st := &ShelltextContext{line, state, shellword}
 
 		_ = G.opts.DebugShell && line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
 
@@ -361,6 +360,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 			msline.checklineMkShellword(shellword, quotingNecessary)
 		}
 
+		st := &ShelltextContext{line, state, shellword}
 		st.checkCommandStart()
 		st.checkConditionalCd()
 		if state != SCST_PAX_S && state != SCST_SED_E && state != SCST_CASE_LABEL {
@@ -439,8 +439,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	defer tracecall("ShelltextContext.checkCommandStart", ctx.state, ctx.shellword)()
 
 	line, state, shellword := ctx.line, ctx.state, ctx.shellword
-
-	if state != SCST_START && state == SCST_COND {
+	if state != SCST_START && state != SCST_COND {
 		return
 	}
 
