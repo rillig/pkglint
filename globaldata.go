@@ -67,7 +67,7 @@ func (self *GlobalData) Initialize() {
 
 func (self *GlobalData) loadDistSites() {
 	fname := self.pkgsrcdir + "/mk/fetch/sites.mk"
-	lines := loadExistingLines(fname, true)
+	lines := LoadExistingLines(fname, true)
 
 	names := make(map[string]bool)
 	url2name := make(map[string]string)
@@ -96,7 +96,7 @@ func (self *GlobalData) loadDistSites() {
 
 func (self *GlobalData) loadPkgOptions() {
 	fname := self.pkgsrcdir + "/mk/defaults/options.description"
-	lines := loadExistingLines(fname, false)
+	lines := LoadExistingLines(fname, false)
 
 	options := make(map[string]string)
 	for _, line := range lines {
@@ -113,7 +113,7 @@ func (self *GlobalData) loadTools() {
 	toolFiles := []string{"defaults.mk"}
 	{
 		fname := G.globalData.pkgsrcdir + "/mk/tools/bsd.tools.mk"
-		lines := loadExistingLines(fname, true)
+		lines := LoadExistingLines(fname, true)
 		for _, line := range lines {
 			if m, _, includefile := match2(line.text, reMkInclude); m {
 				if m, toolfile := match1(includefile, `^(?:\$\{PKGSRCDIR\}/mk/tools/)?([^/]+)$`); m {
@@ -134,7 +134,7 @@ func (self *GlobalData) loadTools() {
 
 	for _, basename := range toolFiles {
 		fname := G.globalData.pkgsrcdir + "/mk/tools/" + basename
-		lines := loadExistingLines(fname, true)
+		lines := LoadExistingLines(fname, true)
 		for _, line := range lines {
 			if m, varname, _, value, _ := match4(line.text, reVarassign); m {
 				if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^?[-\w.]+$`)) {
@@ -162,7 +162,7 @@ func (self *GlobalData) loadTools() {
 		fname := G.globalData.pkgsrcdir + "/mk/" + basename
 		condDepth := 0
 
-		lines := loadExistingLines(fname, true)
+		lines := LoadExistingLines(fname, true)
 		for _, line := range lines {
 			text := line.text
 
@@ -236,7 +236,7 @@ func (self *GlobalData) loadTools() {
 }
 
 func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
-	lines := loadExistingLines(fname, false)
+	lines := LoadExistingLines(fname, false)
 
 	updates := make([]SuggestedUpdate, 0)
 	state := 0
@@ -277,7 +277,7 @@ func (self *GlobalData) loadSuggestedUpdates() {
 }
 
 func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
-	lines := loadExistingLines(fname, false)
+	lines := LoadExistingLines(fname, false)
 
 	changes := make([]Change, 0)
 	for _, line := range lines {
@@ -344,7 +344,7 @@ func (self *GlobalData) loadDocChanges() {
 }
 
 func (self *GlobalData) loadUserDefinedVars() {
-	lines := loadExistingLines(G.globalData.pkgsrcdir+"/mk/defaults/mk.conf", true)
+	lines := LoadExistingLines(G.globalData.pkgsrcdir+"/mk/defaults/mk.conf", true)
 
 	self.userDefinedVars = make(map[string]*Line)
 	for _, line := range lines {

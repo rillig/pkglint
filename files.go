@@ -19,6 +19,14 @@ func LoadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 	return lines
 }
 
+func LoadExistingLines(fname string, foldBackslashLines bool) []*Line {
+	lines, err := loadLines(fname, foldBackslashLines)
+	if lines == nil || err != nil {
+		fatalf(fname, NO_LINES, "Cannot be read.")
+	}
+	return lines
+}
+
 func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 	text := ""
 	index := *pindex
@@ -118,14 +126,6 @@ func saveAutofixChanges(lines []*Line) {
 		}
 		notef(fname, NO_LINES, "Has been auto-fixed. Please re-run pkglint.")
 	}
-}
-
-func loadExistingLines(fname string, foldBackslashLines bool) []*Line {
-	lines, err := loadLines(fname, foldBackslashLines)
-	if lines == nil || err != nil {
-		fatalf(fname, NO_LINES, "Cannot be read.")
-	}
-	return lines
 }
 
 func autofix(lines []*Line) {
