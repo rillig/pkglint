@@ -22,37 +22,37 @@ package main
 //   x86_64 doesn’t make sense.
 
 type VarUseContext struct {
-	time      VarUseContextTime
+	time      vucTime
 	vartype   *Vartype
-	shellword VarUseContextShellword
-	extent    VarUseContextExtent
+	shellword vucShellword
+	extent    vucExtent
 }
 
-type VarUseContextTime int
+type vucTime int
 
 const (
-	VUC_TIME_UNKNOWN VarUseContextTime = iota
-	VUC_TIME_LOAD                      // During loading, not all variables are available yet.
-	VUC_TIME_RUN                       // All files have been read, especially bsd.pkg.mk.
+	VUC_TIME_UNKNOWN vucTime = iota
+	VUC_TIME_LOAD            // During loading, not all variables are available yet.
+	VUC_TIME_RUN             // All files have been read, especially bsd.pkg.mk.
 )
 
-type VarUseContextShellword int
+type vucShellword int
 
 const (
-	VUC_SHW_UNKNOWN VarUseContextShellword = iota
-	VUC_SHW_PLAIN                          // Example: echo LOCALBASE=${LOCALBASE}
-	VUC_SHW_DQUOT                          // Example: echo "The version is ${PKGVERSION}."
-	VUC_SHW_SQUOT                          // Example: echo 'The version is ${PKGVERSION}.'
-	VUC_SHW_BACKT                          // Example: echo \`sed 1q ${WRKSRC}/README\`
-	VUC_SHW_FOR                            // Example: for f in ${EXAMPLE_FILES}
+	VUC_SHW_UNKNOWN vucShellword = iota
+	VUC_SHW_PLAIN                // Example: echo LOCALBASE=${LOCALBASE}
+	VUC_SHW_DQUOT                // Example: echo "The version is ${PKGVERSION}."
+	VUC_SHW_SQUOT                // Example: echo 'The version is ${PKGVERSION}.'
+	VUC_SHW_BACKT                // Example: echo \`sed 1q ${WRKSRC}/README\`
+	VUC_SHW_FOR                  // Example: for f in ${EXAMPLE_FILES}
 )
 
-type VarUseContextExtent int
+type vucExtent int
 
 const (
-	VUC_EXTENT_UNKNOWN VarUseContextExtent = iota
-	VUC_EXT_WORD                           // Example: echo ${LOCALBASE}
-	VUC_EXT_WORDPART                       // Example: echo LOCALBASE=${LOCALBASE}
+	VUC_EXTENT_UNKNOWN vucExtent = iota
+	VUC_EXT_WORD                 // Example: echo ${LOCALBASE}
+	VUC_EXT_WORDPART             // Example: echo LOCALBASE=${LOCALBASE}
 )
 
 func (self *VarUseContext) String() string {
