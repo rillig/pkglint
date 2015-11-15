@@ -7,9 +7,9 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
-	"sort"
 )
 
 func imin(a, b int) int {

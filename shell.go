@@ -461,6 +461,9 @@ func (ctx *ShelltextContext) checkCommandStart() {
 
 		checklineMkShellcmdUse(line, shellword)
 
+	case ctx.handleCommandVariable(shellword):
+		// Ok
+
 	case matches(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
 		// Shell builtins are fine.
 
@@ -494,28 +497,39 @@ func (ctx *ShelltextContext) checkCommandStart() {
 		}
 
 	default:
-		if m, vartool := match1(shellword, `^\$\{([\w_]+)\}$`); m {
-			plainTool := G.globalData.varnameToToolname[vartool]
-			vartype := G.globalData.getVartypes()[vartool]
-			switch {
-			case plainTool != "" && !G.mkContext.tools[plainTool]:
-				line.warnf("The %q tool is used but not added to USE_TOOLS.", plainTool)
-			case vartype != nil && vartype.checker == CheckvarShellCommand:
-				checklineMkShellcmdUse(line, shellword)
-			case G.pkgContext.vardef[vartool] != nil:
-				// This command has been explicitly defined in the package; assume it to be valid.
-			default:
-				if G.opts.WarnExtra {
-					line.warnf("Unknown shell command %q.", shellword)
-					line.explain(
-						"If you want your package to be portable to all platforms that pkgsrc",
-						"supports, you should only use shell commands that are covered by the",
-						"tools framework.")
-				}
-				checklineMkShellcmdUse(line, shellword)
-			}
+		if G.opts.WarnExtra {
+			line.warnf("Unknown shell command %q.", shellword)
+			line.explain(
+				"If you want your package to be portable to all platforms that pkgsrc",
+				"supports, you should only use shell commands that are covered by the",
+				"tools framework.")
 		}
 	}
+}
+
+func (ctx *ShelltextContext) handleCommandVariable(shellword string) bool {
+	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
+
+		if toolname := G.globalData.varnameToToolname[varname]; toolname != "" {
+			if !G.mkContext.tools[toolname] {
+				ctx.line.warnf("The %q tool is used but not added to USE_TOOLS.")
+			}
+			checklineMkShellcmdUse(ctx.line, shellword)
+			return true
+		}
+
+		if vartype := getVariableType(ctx.line, varname); vartype != nil && vartype.checker.name == "ShellCommand" {
+			checklineMkShellcmdUse(ctx.line, shellword)
+			return true
+		}
+
+		// When the package author has explicitly defined a command
+		// variable, assume it to be valid.
+		if G.pkgContext != nil && G.pkgContext.vardef[varname] != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (ctx *ShelltextContext) checkConditionalCd() {
