@@ -5,12 +5,12 @@ import (
 )
 
 func (s *Suite) TestConvertToLogicalLines_nocont(c *check.C) {
-	phys := []PhysLine{
+	rawLines := []RawLine{
 		{1, "first line\n"},
 		{2, "second line\n"},
 	}
 
-	lines := convertToLogicalLines("fname_nocont", phys, false)
+	lines := convertToLogicalLines("fname_nocont", rawLines, false)
 
 	c.Check(lines, check.HasLen, 2)
 	c.Check(lines[0].String(), equals, "fname_nocont:1: first line")
@@ -18,13 +18,13 @@ func (s *Suite) TestConvertToLogicalLines_nocont(c *check.C) {
 }
 
 func (s *Suite) TestConvertToLogicalLines_cont(c *check.C) {
-	phys := []PhysLine{
+	rawLines := []RawLine{
 		{1, "first line \\\n"},
 		{2, "second line\n"},
 		{3, "third\n"},
 	}
 
-	lines := convertToLogicalLines("fname_cont", phys, true)
+	lines := convertToLogicalLines("fname_cont", rawLines, true)
 
 	c.Check(lines, check.HasLen, 2)
 	c.Check(lines[0].String(), equals, "fname_cont:1--2: first line second line")
@@ -32,11 +32,11 @@ func (s *Suite) TestConvertToLogicalLines_cont(c *check.C) {
 }
 
 func (s *Suite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
-	physlines := []PhysLine{
+	rawLines := []RawLine{
 		{1, "last line\\"},
 	}
 
-	lines := convertToLogicalLines("fname_contlast", physlines, true)
+	lines := convertToLogicalLines("fname_contlast", rawLines, true)
 
 	c.Check(lines, check.HasLen, 1)
 	c.Check(lines[0].String(), equals, "fname_contlast:1: last line\\")

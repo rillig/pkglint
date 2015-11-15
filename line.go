@@ -2,20 +2,16 @@ package main
 
 // When files are read in by pkglint, they are interpreted in terms of
 // lines. For Makefiles, line continuations are handled properly, allowing
-// multiple physical lines to end in a single logical line. For other files
+// multiple raw lines to end in a single logical line. For other files
 // there is a 1:1 translation.
 //
-// A difference between the physical and the logical lines is that the
-// physical lines include the line end sequence, whereas the logical lines
+// A difference between the raw and the logical lines is that the
+// raw lines include the line end sequence, whereas the logical lines
 // do not.
 //
-// Some methods allow modification of the physical lines contained in the
-// logical line, but leave the C<text> field untouched. These methods are
+// Some methods allow modification of the raw lines contained in the
+// logical line, but leave the “text” field untouched. These methods are
 // used in the --autofix mode.
-//
-// A line can have some "extra" fields that allow the results of parsing to
-// be saved under a name.
-//
 
 import (
 	"fmt"
@@ -23,34 +19,34 @@ import (
 	"strings"
 )
 
-type PhysLine struct {
+type RawLine struct {
 	lineno int
 	textnl string
 }
 
 type Line struct {
-	fname     string
-	lines     string
-	text      string
-	physlines []PhysLine
-	changed   bool
-	before    []PhysLine
-	after     []PhysLine
-	extra     map[string]interface{}
+	fname   string
+	lines   string
+	text    string
+	raw     []RawLine
+	changed bool
+	before  []RawLine
+	after   []RawLine
+	extra   map[string]interface{}
 }
 
-func NewLine(fname, linenos, text string, physlines []PhysLine) *Line {
-	return &Line{fname, linenos, text, physlines, false, []PhysLine{}, []PhysLine{}, make(map[string]interface{})}
+func NewLine(fname, linenos, text string, rawLines []RawLine) *Line {
+	return &Line{fname, linenos, text, rawLines, false, []RawLine{}, []RawLine{}, make(map[string]interface{})}
 }
 
-func (self *Line) physicalLines() []PhysLine {
-	return append(self.before, append(self.physlines, self.after...)...)
+func (self *Line) rawLines() []RawLine {
+	return append(self.before, append(self.raw, self.after...)...)
 }
 func (self *Line) printSource(out io.Writer) {
 	if G.opts.PrintSource {
 		io.WriteString(out, "\n")
-		for _, physline := range self.physicalLines() {
-			fmt.Fprintf(out, "> %s", physline.textnl)
+		for _, rawLine := range self.rawLines() {
+			fmt.Fprintf(out, "> %s", rawLine.textnl)
 		}
 	}
 }
@@ -90,46 +86,46 @@ func (self *Line) String() string {
 }
 
 func (self *Line) prependBefore(line string) {
-	self.before = append([]PhysLine{{0, line + "\n"}}, self.before...)
+	self.before = append([]RawLine{{0, line + "\n"}}, self.before...)
 	self.changed = true
 }
 func (self *Line) appendBefore(line string) {
-	self.before = append(self.before, PhysLine{0, line + "\n"})
+	self.before = append(self.before, RawLine{0, line + "\n"})
 	self.changed = true
 }
 func (self *Line) prependAfter(line string) {
-	self.after = append([]PhysLine{{0, line + "\n"}}, self.after...)
+	self.after = append([]RawLine{{0, line + "\n"}}, self.after...)
 	self.changed = true
 }
 func (self *Line) appendAfter(line string) {
-	self.after = append(self.after, PhysLine{0, line + "\n"})
+	self.after = append(self.after, RawLine{0, line + "\n"})
 	self.changed = true
 }
 func (self *Line) delete() {
-	self.physlines = []PhysLine{}
+	self.raw = nil
 	self.changed = true
 }
 func (self *Line) replace(from, to string) {
-	for _, physline := range self.physlines {
-		if physline.lineno != 0 {
-			if replaced := strings.Replace(physline.textnl, from, to, 1); replaced != physline.textnl {
-				physline.textnl = replaced
+	for _, rawLine := range self.raw {
+		if rawLine.lineno != 0 {
+			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
+				rawLine.textnl = replaced
 				self.changed = true
 			}
 		}
 	}
 }
 func (self *Line) replaceRegex(from, to string) {
-	for _, physline := range self.physlines {
-		if physline.lineno != 0 {
-			if replaced := regcomp(from).ReplaceAllString(physline.textnl, to); replaced != physline.textnl {
-				physline.textnl = replaced
+	for _, rawLine := range self.raw {
+		if rawLine.lineno != 0 {
+			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
+				rawLine.textnl = replaced
 				self.changed = true
 			}
 		}
 	}
 }
 func (line *Line) setText(text string) {
-	line.physlines = []PhysLine{{0, text + "\n"}}
+	line.raw = []RawLine{{0, text + "\n"}}
 	line.changed = true
 }

@@ -6,37 +6,37 @@ import (
 	"strings"
 )
 
-func loadRawLines(fname string) ([]PhysLine, error) {
-	physlines := make([]PhysLine, 0)
+func loadRawLines(fname string) ([]RawLine, error) {
+	rawLines := make([]RawLine, 0)
 	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
-	for lineno, physline := range strings.SplitAfter(string(rawtext), "\n") {
-		if physline != "" {
-			physlines = append(physlines, PhysLine{1 + lineno, physline})
+	for lineno, rawLine := range strings.SplitAfter(string(rawtext), "\n") {
+		if rawLine != "" {
+			rawLines = append(rawLines, RawLine{1 + lineno, rawLine})
 		}
 	}
-	return physlines, nil
+	return rawLines, nil
 }
 
-func getLogicalLine(fname string, physlines []PhysLine, pindex *int) *Line {
+func getLogicalLine(fname string, rawLines []RawLine, pindex *int) *Line {
 	text := ""
 	index := *pindex
-	firstlineno := physlines[index].lineno
-	lphyslines := make([]PhysLine, 0)
-	interestingPhyslines := physlines[index:]
+	firstlineno := rawLines[index].lineno
+	lineRawLines := make([]RawLine, 0)
+	interestingRawLines := rawLines[index:]
 
-	for i, physline := range interestingPhyslines {
-		_, indent, phystext, outdent, cont := match4(physline.textnl, `^([ \t]*)(.*?)([ \t]*)(\\?)\n?$`)
+	for i, rawLine := range interestingRawLines {
+		_, indent, rawText, outdent, cont := match4(rawLine.textnl, `^([ \t]*)(.*?)([ \t]*)(\\?)\n?$`)
 
 		if text == "" {
 			text += indent
 		}
-		text += phystext
-		lphyslines = append(lphyslines, physline)
+		text += rawText
+		lineRawLines = append(lineRawLines, rawLine)
 
-		if cont == "\\" && i != len(interestingPhyslines)-1 {
+		if cont == "\\" && i != len(interestingRawLines)-1 {
 			text += " "
 			index++
 		} else {
@@ -45,21 +45,21 @@ func getLogicalLine(fname string, physlines []PhysLine, pindex *int) *Line {
 		}
 	}
 
-	lastlineno := physlines[index].lineno
+	lastlineno := rawLines[index].lineno
 	*pindex = index + 1
 
 	slineno := ifelseStr(firstlineno == lastlineno,
 		sprintf("%d", firstlineno),
 		sprintf("%d--%d", firstlineno, lastlineno))
-	return NewLine(fname, slineno, text, lphyslines)
+	return NewLine(fname, slineno, text, lineRawLines)
 }
 
 func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
-	physlines, err := loadRawLines(fname)
+	rawLines, err := loadRawLines(fname)
 	if err != nil {
 		return nil, err
 	}
-	return convertToLogicalLines(fname, physlines, joinContinuationLines), nil
+	return convertToLogicalLines(fname, rawLines, joinContinuationLines), nil
 }
 
 func loadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
@@ -75,41 +75,41 @@ func loadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 	return lines
 }
 
-func convertToLogicalLines(fname string, physlines []PhysLine, joinContinuationLines bool) []*Line {
+func convertToLogicalLines(fname string, rawLines []RawLine, joinContinuationLines bool) []*Line {
 	loglines := make([]*Line, 0)
 	if joinContinuationLines {
-		for lineno := 0; lineno < len(physlines); {
-			loglines = append(loglines, getLogicalLine(fname, physlines, &lineno))
+		for lineno := 0; lineno < len(rawLines); {
+			loglines = append(loglines, getLogicalLine(fname, rawLines, &lineno))
 		}
 	} else {
-		for _, physline := range physlines {
-			loglines = append(loglines, NewLine(fname, sprintf("%d", physline.lineno), strings.TrimSuffix(physline.textnl, "\n"), []PhysLine{physline}))
+		for _, rawLine := range rawLines {
+			loglines = append(loglines, NewLine(fname, sprintf("%d", rawLine.lineno), strings.TrimSuffix(rawLine.textnl, "\n"), []RawLine{rawLine}))
 		}
 	}
 
-	if 0 < len(physlines) && !hasSuffix(physlines[len(physlines)-1].textnl, "\n") {
-		errorf(fname, sprintf("%d", physlines[len(physlines)-1].lineno), "File must end with a newline.")
+	if 0 < len(rawLines) && !hasSuffix(rawLines[len(rawLines)-1].textnl, "\n") {
+		errorf(fname, sprintf("%d", rawLines[len(rawLines)-1].lineno), "File must end with a newline.")
 	}
 
 	return loglines
 }
 
 func saveAutofixChanges(lines []*Line) {
-	changes := make(map[string][]PhysLine)
+	changes := make(map[string][]RawLine)
 	changed := make(map[string]bool)
 	for _, line := range lines {
 		if line.changed {
 			changed[line.fname] = true
 		}
-		changes[line.fname] = append(changes[line.fname], line.physicalLines()...)
+		changes[line.fname] = append(changes[line.fname], line.rawLines()...)
 	}
 
 	for fname := range changed {
-		physlines := changes[fname]
+		rawLines := changes[fname]
 		tmpname := fname + ".pkglint.tmp"
 		text := ""
-		for _, physline := range physlines {
-			text += physline.textnl
+		for _, rawLine := range rawLines {
+			text += rawLine.textnl
 		}
 		err := ioutil.WriteFile(tmpname, []byte(text), 0777)
 		if err != nil {
