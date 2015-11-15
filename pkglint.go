@@ -40,8 +40,8 @@ func explanationRelativeDirs() []string {
 		"main pkgsrc repository."}
 }
 
-func checkItem(fname string) {
-	defer tracecall("checkItem", fname)()
+func CheckDirent(fname string) {
+	defer tracecall("CheckDirent", fname)()
 
 	st, err := os.Stat(fname)
 	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {

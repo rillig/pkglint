@@ -28,7 +28,7 @@ func main() {
 	for len(G.todo) != 0 {
 		item := G.todo[0]
 		G.todo = G.todo[1:]
-		checkItem(item)
+		CheckDirent(item)
 	}
 
 	checktoplevelUnusedLicenses()
