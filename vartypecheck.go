@@ -25,7 +25,7 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 }
 
 func (cv *VartypeCheck) BuildlinkDepmethod() {
-	if !matches(cv.value, reUnresolvedVar) && cv.value != "build" && cv.value != "full" {
+	if !containsVarRef(cv.value) && cv.value != "build" && cv.value != "full" {
 		cv.line.warnf("Invalid dependency method %q. Valid methods are \"build\" or \"full\".", cv.value)
 	}
 }
@@ -74,7 +74,7 @@ func (cv *VartypeCheck) CFlag() {
 		line.warnf("Unknown compiler flag %q.", value)
 		return
 	}
-	if !matches(value, reUnresolvedVar) {
+	if !containsVarRef(value) {
 		line.warnf("Compiler flag %q should start with a hyphen.", value)
 	}
 }
@@ -634,7 +634,7 @@ func (cv *VartypeCheck) URL() {
 			line.errorf("The subdirectory in %s must end with a slash.", name)
 		}
 
-	} else if matches(value, reUnresolvedVar) {
+	} else if containsVarRef(value) {
 		// No further checks
 
 	} else if m, _, host, _, _ := match4(value, `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?\@A-Z_a-z~]|#)*$`); m {

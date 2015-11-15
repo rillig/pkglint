@@ -171,7 +171,7 @@ func (self *GlobalData) loadTools() {
 					_ = G.opts.DebugTools && line.debugf("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
-							if !matches(tool, reUnresolvedVar) && tools[tool] {
+							if !containsVarRef(tool) && tools[tool] {
 								predefinedTools[tool] = true
 								predefinedTools["TOOLS_"+tool] = true
 							}

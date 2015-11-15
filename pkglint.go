@@ -21,7 +21,6 @@ const (
 	reMkShellvaruse            = `(?:^|[^\$])\$\$\{?(\w+)\}?`
 	reMkShellcmd               = `^\t(.*)$`
 	reConflict                 = `^(<<<<<<<|=======|>>>>>>>)`
-	reUnresolvedVar            = `\$\{`
 	reAsciiChar                = `[\t -~]`
 	reVarassign                = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`
 	reVarnameDirect            = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
@@ -226,7 +225,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 
 	value := line.extra["value"].(string)
 	value = resolveVarsInRelativePath(value, true)
-	if matches(value, reUnresolvedVar) {
+	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}
 	_ = G.opts.DebugMisc && line.debugf("Expanded %q to %q", varname, value)
@@ -331,7 +330,7 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 	}
 
 	resolvedPath := resolveVarsInRelativePath(path, true)
-	if matches(resolvedPath, reUnresolvedVar) {
+	if containsVarRef(resolvedPath) {
 		return
 	}
 

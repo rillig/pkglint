@@ -193,7 +193,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		pkgnameLine.notef("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
 	}
 
-	if pkgname == "" && distname != "" && !matches(distname, reUnresolvedVar) && !matches(distname, rePkgname) {
+	if pkgname == "" && distname != "" && !containsVarRef(distname) && !matches(distname, rePkgname) {
 		distnameLine.warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 

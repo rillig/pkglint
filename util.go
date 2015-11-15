@@ -393,3 +393,7 @@ func abspath(fname string) string {
 	}
 	return filepath.ToSlash(abs)
 }
+
+func containsVarRef(s string) bool {
+	return contains(s, "${")
+}

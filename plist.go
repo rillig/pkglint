@@ -162,7 +162,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	line := pline.line
 	text := line.text
 
-	if G.opts.WarnPlistSort && matches(text, `^\w`) && !matches(text, reUnresolvedVar) {
+	if G.opts.WarnPlistSort && matches(text, `^\w`) && !containsVarRef(text) {
 		if pctx.lastFname != "" {
 			if pctx.lastFname > text {
 				line.warnf("%q should be sorted before %q.", text, pctx.lastFname)
