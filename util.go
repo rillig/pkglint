@@ -359,6 +359,8 @@ func mkopSubst(s string, left bool, from string, right bool, to string, all bool
 }
 
 func relpath(from, to string) string {
+	defer tracecall("relpath", from, to)()
+
 	absFrom, err1 := filepath.Abs(from)
 	absTo, err2 := filepath.Abs(to)
 	rel, err3 := filepath.Rel(absFrom, absTo)

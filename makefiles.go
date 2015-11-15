@@ -13,8 +13,10 @@ const (
 )
 
 func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
+	defer tracecall("readMakefile", fname)()
+
 	fileLines := LoadNonemptyLines(fname, true)
-	if fileLines != nil {
+	if fileLines == nil {
 		return false
 	}
 

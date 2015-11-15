@@ -39,6 +39,8 @@ func findPkgsrcTopdir(fname string) string {
 }
 
 func loadPackageMakefile(fname string) []*Line {
+	defer tracecall("loadPackageMakefile", fname)()
+
 	G.pkgContext.included = make(map[string]*Line)
 
 	var mainLines, allLines []*Line
