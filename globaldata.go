@@ -238,7 +238,7 @@ func (self *GlobalData) loadTools() {
 func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 	lines := LoadExistingLines(fname, false)
 
-	updates := make([]SuggestedUpdate, 0)
+	var updates []SuggestedUpdate
 	state := 0
 	for _, line := range lines {
 		text := line.text
@@ -279,7 +279,7 @@ func (self *GlobalData) loadSuggestedUpdates() {
 func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 	lines := LoadExistingLines(fname, false)
 
-	changes := make([]Change, 0)
+	var changes []Change
 	for _, line := range lines {
 		text := line.text
 		if !matches(text, `^\t[A-Z]`) {
@@ -324,7 +324,7 @@ func (self *GlobalData) loadDocChanges() {
 		fatalf(docdir, NO_LINES, "Cannot be read.")
 	}
 
-	fnames := make([]string, 0)
+	var fnames []string
 	for _, file := range files {
 		fname := file.Name()
 		if matches(fname, `^CHANGES-20\d\d$`) && fname >= "CHANGES-2011" {

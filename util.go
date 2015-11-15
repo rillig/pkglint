@@ -64,7 +64,7 @@ func getSubdirs(fname string) []string {
 		fatalf(fname, NO_LINES, "Cannot be read: %s", err)
 	}
 
-	subdirs := make([]string, 0)
+	var subdirs []string
 	for _, dirent := range dirents {
 		name := dirent.Name()
 		if name != "." && name != ".." && name != "CVS" && dirent.IsDir() && !isEmptyDir(fname+"/"+name) {
@@ -306,7 +306,7 @@ func toInt(s string) int {
 func dirglob(dirname string) []string {
 	fis, err := ioutil.ReadDir(dirname)
 	if err != nil {
-		return make([]string, 0)
+		return nil
 	}
 	fnames := make([]string, len(fis))
 	for i, fi := range fis {

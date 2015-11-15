@@ -40,7 +40,7 @@ func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries 
 }
 
 func parseAclEntries(args []string) []AclEntry {
-	result := make([]AclEntry, 0)
+	var result []AclEntry
 	for _, arg := range args {
 		m := mustMatch(`^([\w.*]+|_):([adpsu]*)$`, arg)
 		glob, perms := m[1], m[2]

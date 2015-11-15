@@ -9,7 +9,6 @@ func checkdirToplevel() {
 	defer tracecall("checkdirToplevel", G.currentDir)()
 
 	ctx := new(Toplevel)
-	ctx.subdirs = make([]string, 0)
 
 	fname := G.currentDir + "/Makefile"
 

@@ -38,7 +38,7 @@ func checkfilePlist(fname string) {
 	pctx.allFiles = make(map[string]*Line)
 	pctx.allDirs = make(map[string]*Line)
 
-	extraLines := make([]*Line, 0)
+	var extraLines []*Line
 	if path.Base(fname) == "PLIST.common_end" {
 		commonLines, err := loadLines(path.Dir(fname)+"/PLIST.common", false)
 		if err == nil {

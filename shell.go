@@ -827,7 +827,7 @@ func nextState(line *Line, state ShellCommandState, shellword string) ShellComma
 }
 
 func splitIntoShellwords(line *Line, text string) ([]string, string) {
-	words := make([]string, 0)
+	var words []string
 
 	rest := text
 	var m []string

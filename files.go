@@ -79,7 +79,7 @@ func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 }
 
 func convertToLogicalLines(fname string, rawLines []*RawLine, joinContinuationLines bool) []*Line {
-	loglines := make([]*Line, 0)
+	var loglines []*Line
 	if joinContinuationLines {
 		for lineno := 0; lineno < len(rawLines); {
 			loglines = append(loglines, getLogicalLine(fname, rawLines, &lineno))

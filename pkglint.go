@@ -98,7 +98,7 @@ func determineUsedVariables(lines []*Line) {
 func extractUsedVariables(line *Line, text string) []string {
 	re := regcomp(`^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
-	result := make([]string, 0)
+	var result []string
 	for {
 		m := re.FindStringSubmatchIndex(rest)
 		if m == nil {

@@ -42,7 +42,7 @@ func checkdirCategory() {
 
 	fSubdirs := getSubdirs(G.currentDir)
 	sort.Sort(sort.StringSlice(fSubdirs))
-	mSubdirs := make([]Subdir, 0)
+	var mSubdirs []Subdir
 
 	prevSubdir := ""
 	for !exp.eof() {
@@ -94,7 +94,7 @@ func checkdirCategory() {
 	f_index, f_atend, f_neednext, f_current := 0, false, true, ""
 	m_index, m_atend, m_neednext, m_current := 0, false, true, ""
 
-	subdirs := make([]string, 0)
+	var subdirs []string
 
 	var line *Line
 	m_active := false

@@ -110,7 +110,7 @@ func (self *Options) Help(generalUsage string) {
 	fmt.Printf("usage: %s\n", generalUsage)
 	fmt.Printf("\n")
 
-	tbl := make([][]string, 0)
+	var tbl [][]string
 	for _, opt := range self.options {
 		if opt.argDescription == "" {
 			row := sprintf("\t-%c, --%s\t %s",
