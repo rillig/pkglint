@@ -46,33 +46,6 @@ sub save_autofix_changes($) {
 
 package Vartype
 
-# Returns whether the type is considered an external list. All external
-# lists are, of course, as well as some other data types that are not
-# defined as lists to make the implementation of checkline_mk_vartype
-# easier.
-sub is_practically_a_list($) {
-	my ($self) = @_;
-
-	return ($self->kind_of_list == LK_EXTERNAL) ? true
-	    : ($self->kind_of_list == LK_INTERNAL) ? false
-	    : ($self->basic_type eq "BuildlinkPackages") ? true
-	    : ($self->basic_type eq "SedCommands") ? true
-	    : ($self->basic_type eq "ShellCommand") ? true
-	    : false;
-}
-
-# Returns whether variables of this type may be extended using the "+="
-# operator.
-sub may_use_plus_eq($) {
-	my ($self) = @_;
-
-	return ($self->kind_of_list != LK_NONE) ? true
-	    : ($self->basic_type eq "AwkCommand") ? true
-	    : ($self->basic_type eq "BuildlinkPackages") ? true
-	    : ($self->basic_type eq "SedCommands") ? true
-	    : false;
-}
-
 sub to_string($) {
 	my ($self) = @_;
 
