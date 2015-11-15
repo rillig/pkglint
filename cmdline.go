@@ -54,7 +54,6 @@ type CmdOpts struct {
 	Recursive,
 	PrintSource,
 	PrintVersion bool
-	Pkgsrcdir string
 
 	args []string
 }
@@ -96,7 +95,6 @@ func ParseCommandLine(args []string, out io.Writer) CmdOpts {
 	opts.AddFlagVar('h', "help", &result.PrintHelp, false, "print a detailed usage message")
 	opts.AddFlagVar('I', "dumpmakefile", &result.DumpMakefile, false, "Dump the Makefile after parsing")
 	opts.AddFlagVar('i', "import", &result.Import, false, "Prepare the import of a wip package")
-	opts.AddStrVar('p', "pkgsrcdir", &result.Pkgsrcdir, "", "Set the root directory of pkgsrc explicitly")
 	opts.AddFlagVar('q', "quiet", &result.Quiet, false, "Don't print a summary line when finishing")
 	opts.AddFlagVar('r', "recursive", &result.Recursive, false, "Recursive---check subdirectories, too")
 	opts.AddFlagVar('s', "source", &result.PrintSource, false, "Show the source lines together with diagnostics")
@@ -116,7 +114,7 @@ func ParseCommandLine(args []string, out io.Writer) CmdOpts {
 	warn.AddFlagVar("types", &result.WarnTypes, true, "do some simple type checking in Makefiles")
 	warn.AddFlagVar("varorder", &result.WarnVarorder, false, "warn about the ordering of variables")
 
-	result.args, _ = opts.Parse(args)
+	result.args, _ = opts.Parse(args) // XXX: error handling
 
 	if result.PrintHelp {
 		opts.Help("pkglint [options] dir...")
