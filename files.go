@@ -7,16 +7,18 @@ import (
 )
 
 func loadRawLines(fname string) ([]*RawLine, error) {
-	var rawLines []*RawLine
 	rawtext, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
+
+	var rawLines []*RawLine
 	for lineno, rawLine := range strings.SplitAfter(string(rawtext), "\n") {
 		if rawLine != "" {
 			rawLines = append(rawLines, &RawLine{1 + lineno, rawLine})
 		}
 	}
+
 	return rawLines, nil
 }
 
@@ -48,10 +50,11 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 	lastlineno := rawLines[index].lineno
 	*pindex = index + 1
 
-	slineno := ifelseStr(firstlineno == lastlineno,
-		sprintf("%d", firstlineno),
-		sprintf("%d--%d", firstlineno, lastlineno))
-	return NewLine(fname, slineno, text, lineRawLines)
+	if firstlineno == lastlineno {
+		return NewLine(fname, sprintf("%d", firstlineno), text, lineRawLines)
+	} else {
+		return NewLine(fname, sprintf("%d--%d", firstlineno, lastlineno), text, lineRawLines)
+	}
 }
 
 func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
