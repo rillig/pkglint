@@ -129,7 +129,3 @@ func (self *Line) replaceRegex(from, to string) {
 		}
 	}
 }
-func (line *Line) setText(text string) {
-	line.raw = []*RawLine{{0, text + "\n"}}
-	line.changed = true
-}

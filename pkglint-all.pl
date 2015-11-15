@@ -6,33 +6,6 @@ my $gcc_output_format	= false;
 my $explain_flag	= false;
 my $show_source_flag	= false;
 
-package line
-
-sub replace($$$) {
-	my ($self, $from, $to) = @_;
-	my $phys = $self->[PHYSLINES];
-
-	foreach my $i (0..$#{$phys}) {
-		if ($phys->[$i]->[0] != 0 && $phys->[$i]->[1] =~ s/\Q$from\E/$to/g) {
-			$self->[CHANGED] = true;
-		}
-	}
-}
-sub replace_regex($$$) {
-	my ($self, $from_re, $to) = @_;
-	my $phys = $self->[PHYSLINES];
-
-	foreach my $i (0..$#{$phys}) {
-		if ($phys->[$i]->[0] != 0 && $phys->[$i]->[1] =~ s/$from_re/$to/) {
-			$self->[CHANGED] = true;
-		}
-	}
-}
-sub set_text($$) {
-	my ($self, $text) = @_;
-	$self->[PHYSLINES] = [[0, "$text\n"]];
-	$self->[CHANGED] = true;
-}
 # $NetBSD: FileUtil.pm,v 1.3 2015/10/11 21:06:20 rillig Exp $
 #
 # Subroutines for loading and saving line-oriented files.

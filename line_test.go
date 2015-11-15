@@ -22,8 +22,10 @@ func (s *Suite) TestLineAppendPrepend(c *check.C) {
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{{1, "lruginao\n"}})
 	c.Check(line.raw[0].textnl, equals, "lruginao\n")
 
+	line.changed = false
 	line.replace("lruginao", "middle")
 	
+	c.Check(line.changed, equals, true)
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{{1, "middle\n"}})
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 	
