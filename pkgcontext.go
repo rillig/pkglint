@@ -22,23 +22,13 @@ type PkgContext struct {
 }
 
 func newPkgContext(pkgpath string) *PkgContext {
-	ctx := &PkgContext{
-		pkgpath,
-		"",
-		"",
-		"",
-		"",
-		nil,
-		nil,
-		nil,
-		nil,
-		false,
-		make(map[string]*Line),
-		make(map[string]*Line),
-		make(map[string]*Line),
-		make(map[string]bool),
-		make(map[string]*Line),
-		false}
+	ctx := &PkgContext{}
+	ctx.pkgpath = pkgpath
+	ctx.vardef = make(map[string]*Line)
+	ctx.varuse = make(map[string]*Line)
+	ctx.bl3 = make(map[string]*Line)
+	ctx.plistSubstCond = make(map[string]bool)
+	ctx.included = make(map[string]*Line)
 	for varname, line := range G.globalData.userDefinedVars {
 		ctx.vardef[varname] = line
 	}

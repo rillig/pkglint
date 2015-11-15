@@ -359,15 +359,15 @@ func mkopSubst(s string, left bool, from string, right bool, to string, all bool
 }
 
 func relpath(from, to string) string {
-	defer tracecall("relpath", from, to)()
-
 	absFrom, err1 := filepath.Abs(from)
 	absTo, err2 := filepath.Abs(to)
 	rel, err3 := filepath.Rel(absFrom, absTo)
 	if err1 != nil || err2 != nil || err3 != nil {
 		panic("relpath" + argsStr(from, to, err1, err2, err3))
 	}
-	return filepath.ToSlash(rel)
+	result := filepath.ToSlash(rel)
+	trace("", "relpath", from, to, "=>", result)
+	return result
 }
 
 func stringBoolMapKeys(m map[string]bool) []string {

@@ -45,7 +45,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		}
 
 		if isIncludeLine {
-			if path.Base(fname) == "buildlink3.mk" {
+			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkgContext.bl3[bl3File] = line
 					_ = G.opts.DebugMisc && line.debugf("Buildlink3 file in package: %q", bl3File)
@@ -60,15 +60,10 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				line.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
 				explainRelativeDirs(line)
 			}
-			if path.Base(includeFile) == "Makefile.common" {
+
+			if dir, base := path.Dir(includeFile), path.Base(includeFile); dir != "../mk" && base != "buildlink3.mk" && base != "options.mk" {
 				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkgContext.seenMakefileCommon = true
-			}
-			if m, _, mkfile := match2(includeFile, `^(?:\.\./(\.\./[^/]+/)?[^/]+/)?([^/]+)$`); m {
-				if mkfile != "buildlink3.mk" && mkfile != "options.mk" {
-					_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
-					G.pkgContext.seenMakefileCommon = true
-				}
 			}
 
 			if !contains(includeFile, "/mk/") {
@@ -112,6 +107,10 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 }
 
 func checkForUsedComment(lines []*Line, relativeName string) {
+	if len(lines) < 3 {
+		return
+	}
+
 	expected := "# used by " + relativeName
 	for _, line := range lines {
 		if line.text == expected {
@@ -119,15 +118,12 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 		}
 	}
 
-	lastCommentLine := 0
-	for i, line := range lines {
-		if m, _ := match1(line.text, reMkComment); m {
-			break
-		}
-		lastCommentLine = i
+	i := 0
+	for i < 2 && matches(lines[i].text, reMkComment) {
+		i++
 	}
 
-	insertLine := lines[imin(lastCommentLine+1, len(lines)-1)]
+	insertLine := lines[i]
 	insertLine.warnf("Please add a line %q here.", expected)
 	insertLine.explain(
 		"Since Makefile.common files usually don't have any comments and",
@@ -139,9 +135,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 		"you should think about giving it a proper name (maybe plugin.mk) and",
 		"documenting its interface.")
 	insertLine.appendBefore(expected)
-	if G.opts.Autofix {
-		saveAutofixChanges(lines)
-	}
+	autofix(lines)
 }
 
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
