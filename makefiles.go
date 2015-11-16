@@ -60,7 +60,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				explainRelativeDirs(line)
 			}
 
-			if incDir != "../mk" && incBase != "buildlink3.mk" && incBase != "options.mk" {
+			if incDir != "../../mk/" && incBase != "buildlink3.mk" && incBase != "options.mk" {
 				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkgContext.seenMakefileCommon = true
 			}
