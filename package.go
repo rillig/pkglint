@@ -52,11 +52,11 @@ func checklinesBuildlink3Inclusion(lines []*Line) {
 		}
 	}
 
-	// Print debugging messages for all buildlink3.mk files that are
-	// included by the package but not by this buildlink3.mk file.
-	for packageBl3, line := range G.pkgContext.bl3 {
-		if includedFiles[packageBl3] == nil {
-			_ = G.opts.DebugMisc && line.debugf("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
+	if G.opts.DebugMisc {
+		for packageBl3, line := range G.pkgContext.bl3 {
+			if includedFiles[packageBl3] == nil {
+				line.debugf("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
+			}
 		}
 	}
 }
@@ -260,6 +260,8 @@ func pkgnameFromDistname(pkgname, distname string) string {
 }
 
 func ChecklinesPackageMakefileVarorder(lines []*Line) {
+	defer tracecall("ChecklinesPackageMakefileVarorder", len(lines))
+
 	if !G.opts.WarnOrder {
 		return
 	}
