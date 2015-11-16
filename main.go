@@ -13,6 +13,14 @@ func main() {
 	G = new(GlobalVars)
 	G.logOut, G.logErr, G.traceOut = os.Stdout, os.Stderr, os.Stdout
 
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(pkglintFatal); ok {
+				os.Exit(1)
+			}
+			panic(r)
+		}
+	}()
 	new(Pkglint).Main(os.Args...)
 
 	if G.errors != 0 {

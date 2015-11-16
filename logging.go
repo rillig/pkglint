@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"os"
 	"path"
 )
 
@@ -56,8 +55,7 @@ func logMessage(level LogLevel, fname, lineno, message string) {
 func fatalf(fname, lineno, format string, args ...interface{}) bool {
 	message := sprintf(format, args...)
 	logMessage(LL_FATAL, fname, lineno, message)
-	os.Exit(1)
-	return false
+	panic(pkglintFatal{})
 }
 func errorf(fname, lineno, format string, args ...interface{}) bool {
 	message := sprintf(format, args...)
@@ -93,3 +91,5 @@ func printSummary() {
 		}
 	}
 }
+
+type pkglintFatal struct{}
