@@ -270,7 +270,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 					"or not.")
 			}
 		} else {
-			line.warnf("Invalid filename %q for manual page.", text)
+			// maybe: line.warnf("Invalid filename %q for manual page.", text)
 		}
 
 	case hasPrefix(text, "sbin/"):
