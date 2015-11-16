@@ -36,7 +36,7 @@ func (p *Pkglint) Main(args ...string) {
 		return
 	}
 	if G.opts.PrintVersion {
-		fmt.Printf("%s\n", confVersion)
+		fmt.Fprintf(G.logOut, "%s\n", confVersion)
 		return
 	}
 
