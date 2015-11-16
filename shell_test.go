@@ -27,6 +27,7 @@ func (s *Suite) TestChecklineMkShelltext(c *check.C) {
 
 func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	s.UseCommandLine("-Wall")
+	G.globalData.InitVartypes()
 	line := NewLine("fname", "1", "dummy", nil)
 
 	c.Check(matches("${list}", `^`+reVarname+`$`), equals, true)

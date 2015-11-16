@@ -10,7 +10,7 @@ const confVersion = "@VERSION@"
 
 func main() {
 	G = new(GlobalVars)
-	G.logOut, G.logErr = os.Stdout, os.Stderr
+	G.logOut, G.logErr, G.traceOut = os.Stdout, os.Stderr, os.Stdout
 
 	G.opts = ParseCommandLine(os.Args, G.logOut)
 	if G.opts.PrintVersion {

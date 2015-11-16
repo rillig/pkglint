@@ -29,6 +29,9 @@ func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries 
 
 	vtype := &Vartype{kindOfList, checker, parseAclEntries(aclentries), NOT_GUESSED}
 
+	if G.globalData.vartypes == nil {
+		G.globalData.vartypes = make(map[string]*Vartype)
+	}
 	if varparam == "" || varparam == "*" {
 		G.globalData.vartypes[varbase] = vtype
 	}
@@ -75,7 +78,7 @@ func cmdline(varname string, kindOfList KindOfList, checker *VarChecker) {
 	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:pu")
 }
 
-func initacls() {
+func (gd *GlobalData) InitVartypes() {
 	usr("ALLOW_VULNERABLE_PACKAGES", LK_NONE, CheckvarYes)
 	usr("MANINSTALL", LK_SHELL, enum("maninstall catinstall"))
 	usr("MANZ", LK_NONE, CheckvarYes)
@@ -193,8 +196,8 @@ func initacls() {
 	acl("BUILDLINK_DEPTH", LK_NONE, CheckvarBuildlinkDepth, "buildlink3.mk:ps", "builtin.mk:ps")
 	sys("BUILDLINK_DIR", LK_NONE, CheckvarPathname)
 	bl3list("BUILDLINK_FILES.*", LK_SHELL, CheckvarPathmask)
-	acl("BUILDLINK_FILES_CMD.*", LK_SHELL, CheckvarShellWord) // Should better be ShellCommand
-	acl("BUILDLINK_INCDIRS.*", LK_SHELL, CheckvarPathname, "buildlink3.mk:ad") // b:d?
+	acl("BUILDLINK_FILES_CMD.*", LK_SHELL, CheckvarShellWord)                  // Should better be ShellCommand
+	acl("BUILDLINK_INCDIRS.*", LK_SHELL, CheckvarPathname, "buildlink3.mk:ad") // Should [d]efault really be allowed in buildlink3.mk?
 	acl("BUILDLINK_JAVA_PREFIX.*", LK_NONE, CheckvarPathname, "buildlink3.mk:s")
 	acl("BUILDLINK_LDADD.*", LK_SHELL, CheckvarLdFlag, "builtin.mk:adsu", "buildlink3.mk:", "Makefile:u", "Makefile.common:u", "*.mk:u")
 	sys("BUILDLINK_LDFLAGS", LK_SHELL, CheckvarLdFlag)

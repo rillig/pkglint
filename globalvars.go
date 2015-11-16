@@ -25,6 +25,7 @@ type GlobalVars struct {
 	traceDepth            int
 	logOut                io.Writer
 	logErr                io.Writer
+	traceOut              io.Writer
 }
 
 type Hash struct {

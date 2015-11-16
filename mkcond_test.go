@@ -21,9 +21,9 @@ func (s *Suite) TestParseMkCond_Compare(c *check.C) {
 }
 
 func (s *Suite) TestChecklineMkCondition(c *check.C) {
-	G.opts.WarnTypes = true
+	s.UseCommandLine("-Wtypes")
+	G.globalData.InitVartypes()
 	line := NewLine("fname", "1", "", nil)
-	initacls()
 
 	checklineMkCondition(line, "!empty(PKGSRC_COMPILER:Mmycc)")
 

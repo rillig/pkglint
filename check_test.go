@@ -43,7 +43,7 @@ func (s *Suite) UseCommandLine(args ...string) {
 
 func (s *Suite) SetUpTest(c *check.C) {
 	G = new(GlobalVars)
-	G.logOut, G.logErr = &s.stdout, &s.stderr
+	G.logOut, G.logErr, G.traceOut = &s.stdout, &s.stderr, &s.stdout
 }
 
 func (s *Suite) TearDownTest(c *check.C) {

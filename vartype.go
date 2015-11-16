@@ -2,6 +2,7 @@ package main
 
 import (
 	"path"
+	"strings"
 )
 
 // Vartype is a combination of a data type and a permission specification.
@@ -33,13 +34,35 @@ const (
 	GUESSED     Guessed = true
 )
 
+// The allowed actions in this file, or "?" if unknown.
 func (self *Vartype) effectivePermissions(fname string) string {
 	for _, aclEntry := range self.aclEntries {
 		if m, _ := path.Match(aclEntry.glob, path.Base(fname)); m {
 			return aclEntry.permissions
 		}
 	}
-	return ""
+	return "?"
+}
+
+func ReadableVartypePermissions(perms string) string {
+	result := ""
+	for _, c := range perms {
+		switch c {
+		case 'a':
+			result += "append, "
+		case 'd':
+			result += "default, "
+		case 'p':
+			result += "preprocess, "
+		case 's':
+			result += "set, "
+		case 'u':
+			result += "runtime, "
+		case '?':
+			result += "unknown, "
+		}
+	}
+	return strings.TrimRight(result, ", ")
 }
 
 // Returns the union of all possible permissions. This can be used to

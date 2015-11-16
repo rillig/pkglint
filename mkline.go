@@ -38,29 +38,8 @@ func checklineMkVardef(line *Line, varname, op string) {
 	}
 
 	if !contains(perms, needed) {
-		expandPermission := func(perm string) string {
-			result := ""
-			for _, c := range perm {
-				switch c {
-				case 'a':
-					result += "append, "
-				case 'd':
-					result += "default, "
-				case 'p':
-					result += "preprocess, "
-				case 's':
-					result += "set, "
-				case 'u':
-					result += "runtime, "
-				case '?':
-					result += "unknown, "
-				}
-			}
-			return strings.TrimRight(result, ", ")
-		}
-
-		line.warnf("Permission [%s] requested for %s, but only [%s] is allowed.", // XXX
-			expandPermission(needed), varname, expandPermission(perms))
+		line.warnf("Permission [%s] requested for %s, but only [%s] is allowed.", // XXX: improve diagnostic syntax
+			ReadableVartypePermissions(needed), varname, ReadableVartypePermissions(perms))
 		line.explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
 			"",

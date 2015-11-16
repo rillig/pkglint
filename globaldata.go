@@ -45,21 +45,22 @@ type SuggestedUpdate struct {
 	comment string
 }
 
-func (self *GlobalData) Initialize() {
+func (gd *GlobalData) Initialize() {
 	firstArg := G.todo[0]
 	if relTopdir := findPkgsrcTopdir(firstArg); relTopdir != "" {
-		self.pkgsrcdir = firstArg + "/" + relTopdir
+		gd.pkgsrcdir = firstArg + "/" + relTopdir
 	} else {
 		dummyLine.fatalf("%q is not inside a pkgsrc tree.", firstArg)
 	}
 
-	initacls()
-	self.loadDistSites()
-	self.loadPkgOptions()
-	self.loadDocChanges()
-	self.loadUserDefinedVars()
-	self.loadTools()
-	self.deprecated = getDeprecatedVars()
+	gd.vartypes = make(map[string]*Vartype)
+	gd.InitVartypes()
+	gd.loadDistSites()
+	gd.loadPkgOptions()
+	gd.loadDocChanges()
+	gd.loadUserDefinedVars()
+	gd.loadTools()
+	gd.deprecated = getDeprecatedVars()
 }
 
 func (self *GlobalData) loadDistSites() {

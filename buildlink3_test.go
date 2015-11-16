@@ -5,6 +5,7 @@ import (
 )
 
 func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
+	G.globalData.InitVartypes()
 	lines := s.NewLines("buildlink3.mk",
 		"# $"+"NetBSD$",
 		"",

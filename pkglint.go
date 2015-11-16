@@ -224,12 +224,12 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 }
 
 func getVariablePermissions(line *Line, varname string) string {
-	vartype := getVariableType(line, varname)
-	if vartype == nil {
-		_ = G.opts.DebugMisc && line.debugf("No type definition found for %q.", varname)
-		return "adpsu"
+	if vartype := getVariableType(line, varname); vartype != nil {
+		return vartype.effectivePermissions(line.fname)
 	}
-	return vartype.effectivePermissions(line.fname)
+
+	_ = G.opts.DebugMisc && line.debugf("No type definition found for %q.", varname)
+	return "adpsu"
 }
 
 func checklineLength(line *Line, maxlength int) {
