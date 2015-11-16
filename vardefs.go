@@ -65,7 +65,7 @@ func pkglist(varname string, kindOfList KindOfList, checker *VarChecker) {
 // builtin.mk files or at load-time, since the system/user preferences
 // may not have been loaded when these files are included.
 func sys(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:u")
+	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:u", "*:u")
 }
 func usr(varname string, kindOfList KindOfList, checker *VarChecker) {
 	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:u")
