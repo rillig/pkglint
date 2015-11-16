@@ -107,8 +107,8 @@ func (self *Options) parseShortOptions(args []string, i int, arg string) int {
 }
 
 func (self *Options) Help(generalUsage string) {
-	fmt.Printf("usage: %s\n", generalUsage)
-	fmt.Printf("\n")
+	fmt.Fprintf(self.out, "usage: %s\n", generalUsage)
+	fmt.Fprintln(self.out)
 
 	var tbl [][]string
 	for _, opt := range self.options {
@@ -136,14 +136,14 @@ func (self *Options) Help(generalUsage string) {
 				tbl = append(tbl, strings.Split(row, "\t"))
 			}
 
-			fmt.Printf("\n")
-			fmt.Printf("  Flags for -%c, --%s:\n", opt.shortName, opt.longName)
+			fmt.Fprintln(self.out)
+			fmt.Fprintf(self.out, "  Flags for -%c, --%s:\n", opt.shortName, opt.longName)
 			printTable(self.out, tbl)
 		}
 	}
 	if hasFlagGroups {
-		fmt.Printf("\n")
-		fmt.Printf("  (Prefix a flag with \"no-\" to disable it.)\n")
+		fmt.Fprintln(self.out)
+		fmt.Fprint(self.out, "  (Prefix a flag with \"no-\" to disable it.)\n")
 	}
 }
 

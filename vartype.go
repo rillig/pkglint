@@ -108,7 +108,7 @@ func (self *Vartype) String() string {
 	case LK_SHELL:
 		return "ShellList of " + self.checker.name
 	default:
-		panic("")
+		panic("Unknown list type")
 	}
 }
 

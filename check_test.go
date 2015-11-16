@@ -38,7 +38,7 @@ func (s *Suite) NewLines(fname string, lines ...string) []*Line {
 }
 
 func (s *Suite) UseCommandLine(args ...string) {
-	G.opts = ParseCommandLine(append([]string{"pkglint"}, args...), G.logOut)
+	G.opts = new(Pkglint).ParseCommandLine(append([]string{"pkglint"}, args...), G.logOut)
 }
 
 func (s *Suite) SetUpTest(c *check.C) {

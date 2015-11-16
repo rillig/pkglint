@@ -28,6 +28,59 @@ type GlobalVars struct {
 	traceOut              io.Writer
 }
 
+type CmdOpts struct {
+	CheckAlternatives,
+	CheckBuildlink3,
+	CheckDescr,
+	CheckDistinfo,
+	CheckExtra,
+	CheckGlobal,
+	CheckInstall,
+	CheckMakefile,
+	CheckMessage,
+	CheckMk,
+	CheckPatches,
+	CheckPlist bool
+
+	DebugInclude,
+	DebugMisc,
+	DebugPatches,
+	DebugQuoting,
+	DebugShell,
+	DebugTools,
+	DebugTrace,
+	DebugUnchecked,
+	DebugUnused,
+	DebugVartypes,
+	DebugVaruse bool
+
+	WarnAbsname,
+	WarnDirectcmd,
+	WarnExtra,
+	WarnOrder,
+	WarnPerm,
+	WarnPlistDepr,
+	WarnPlistSort,
+	WarnQuoting,
+	WarnSpace,
+	WarnStyle,
+	WarnTypes,
+	WarnVarorder bool
+
+	Explain,
+	Autofix,
+	GccOutput,
+	PrintHelp,
+	DumpMakefile,
+	Import,
+	Quiet,
+	Recursive,
+	PrintSource,
+	PrintVersion bool
+
+	args []string
+}
+
 type Hash struct {
 	hash string
 	line *Line
