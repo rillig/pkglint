@@ -346,7 +346,7 @@ func (gd *GlobalData) InitVartypes() {
 	usr("EMUL_TYPE.*", LK_NONE, enum("native builtin suse suse-9.1 suse-9.x suse-10.0 suse-10.x"))
 	sys("ERROR_CAT", LK_NONE, CheckvarShellCommand)
 	sys("ERROR_MSG", LK_NONE, CheckvarShellCommand)
-	acl("EVAL_PREFIX", LK_SPACE, CheckvarShellWord, "Makefile:a", "Makefile.common:a") // XXX: Looks like a type mismatch.
+	acl("EVAL_PREFIX", LK_SPACE, CheckvarShellWord, "Makefile:a", "Makefile.common:a") // XXX: Combining ShellWord with LK_SPACE looks weird.
 	sys("EXPORT_SYMBOLS_LDFLAGS", LK_SHELL, CheckvarLdFlag)
 	sys("EXTRACT_CMD", LK_NONE, CheckvarShellCommand)
 	pkg("EXTRACT_DIR", LK_NONE, CheckvarPathname)

@@ -798,7 +798,7 @@ func nextState(line *Line, state scState, shellword string) scState {
 		return SCST_INSTALL_D
 	case state == SCST_INSTALL, state == SCST_INSTALL_D:
 		if matches(shellword, `^-[ogm]$`) {
-			return SCST_CONT // XXX: why not state?
+			return SCST_CONT // XXX: why not keep the state?
 		}
 		return state
 	case state == SCST_INSTALL_DIR && hasPrefix(shellword, "-"):

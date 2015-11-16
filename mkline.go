@@ -38,7 +38,8 @@ func checklineMkVardef(line *Line, varname, op string) {
 	}
 
 	if !contains(perms, needed) {
-		line.warnf("Permission [%s] requested for %s, but only [%s] is allowed.", // XXX: improve diagnostic syntax
+		// XXX: line.warnf("Permission %q requested for %s, but only { %s } is allowed.",
+		line.warnf("Permission [%s] requested for %s, but only [%s] is allowed.",
 			ReadableVartypePermissions(needed), varname, ReadableVartypePermissions(perms))
 		line.explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
@@ -142,7 +143,7 @@ func checklineMkVarusePerm(line *Line, varname string, vuc *VarUseContext) {
 	}
 
 	if !contains(perms, "p") && !contains(perms, "u") {
-		line.warnf("%s may not be used in this file.", varname) // XXX
+		line.warnf("%s may not be used in this file.", varname) 
 	}
 }
 
