@@ -15,3 +15,20 @@ func (s *Suite) TestPkgnameFromDistname(c *check.C) {
 	c.Check(pkgnameFromDistname("${DISTNAME:S|^lib||}", "libncurses"), equals, "ncurses")
 	c.Check(pkgnameFromDistname("${DISTNAME:S|^lib||}", "mylib"), equals, "mylib")
 }
+
+func (s *Suite) TestChecklinesPackageMakefileVarorder(c *check.C) {
+	s.UseCommandLine("-Worder")
+	G.pkgContext = newPkgContext("x11/9term")
+	lines := s.NewLines("Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"DISTNAME=9term",
+		"CATEGORIES=x11")
+
+	ChecklinesPackageMakefileVarorder(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:3: CATEGORIES should be set here.\n"+
+		"WARN: Makefile:3: COMMENT should be set here.\n"+
+		"WARN: Makefile:3: LICENSE should be set here.\n")
+}
