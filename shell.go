@@ -22,35 +22,66 @@ func checklineMkShellcmd(line *Line, shellcmd string) {
 const (
 	reMkShellvaruse = `(?:^|[^\$])\$\$\{?(\w+)\}?`
 	reVarnameDirect = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
+	reShellword     = `^\s*(` +
+		`#.*` + // shell comment
+		`|(?:` +
+		`'[^']*'` + // single quoted string
+		`|"(?:\\.|[^"\\])*"` + // double quoted string
+		"|`[^`]*`" + // backticks command execution
+		`|\\\$\$` + // a shell-escaped dollar sign
+		`|\\[^\$]` + // other escaped characters
+		`|\$[\w_]` + // one-character make(1) variable
+		`|\$\{[^{}]+\}` + // make(1) variable, ${...}
+		`|\$\([^()]+\)` + // make(1) variable, $(...)
+		`|\$[/\@<^]` + // special make(1) variables
+		`|\$\$[0-9A-Z_a-z]+` + // shell variable
+		`|\$\$[#?@]` + // special shell variables
+		`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
+		`|\$\$\$\$` + // the special pid shell variable
+		`|\$\$\{[0-9A-Z_a-z]+\}` + // shell variable in braces
+		`|\$\$\(` + // POSIX-style backticks replacement
+		`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
+		`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
+		`)+` + // any of the above may be repeated
+		`|;;?` +
+		`|&&?` +
+		`|\|\|?` +
+		`|\(` +
+		`|\)` +
+		`|>&` +
+		`|<<?` +
+		`|>>?` +
+		`|#.*)`
+	reShVarassign = `^([A-Z_a-z]\w*)=`
 )
 
-// See doc/statemachine.shellcmd.dia
-type ShellCommandState string
+// Shell command state; see doc/statemachine.shellcmd.dia.
+type scState string
 
 const (
-	SCST_START           ShellCommandState = "start"
-	SCST_CONT            ShellCommandState = "continuation"
-	SCST_INSTALL         ShellCommandState = "install"
-	SCST_INSTALL_D       ShellCommandState = "install -d"
-	SCST_MKDIR           ShellCommandState = "mkdir"
-	SCST_PAX             ShellCommandState = "pax"
-	SCST_PAX_S           ShellCommandState = "pax -s"
-	SCST_SED             ShellCommandState = "sed"
-	SCST_SED_E           ShellCommandState = "sed -e"
-	SCST_SET             ShellCommandState = "set"
-	SCST_SET_CONT        ShellCommandState = "set-continuation"
-	SCST_COND            ShellCommandState = "cond"
-	SCST_COND_CONT       ShellCommandState = "cond-continuation"
-	SCST_CASE            ShellCommandState = "case"
-	SCST_CASE_IN         ShellCommandState = "case in"
-	SCST_CASE_LABEL      ShellCommandState = "case label"
-	SCST_CASE_LABEL_CONT ShellCommandState = "case-label-continuation"
-	SCST_FOR             ShellCommandState = "for"
-	SCST_FOR_IN          ShellCommandState = "for-in"
-	SCST_FOR_CONT        ShellCommandState = "for-continuation"
-	SCST_ECHO            ShellCommandState = "echo"
-	SCST_INSTALL_DIR     ShellCommandState = "install-dir"
-	SCST_INSTALL_DIR2    ShellCommandState = "install-dir2"
+	SCST_START           scState = "start"
+	SCST_CONT            scState = "continuation"
+	SCST_INSTALL         scState = "install"
+	SCST_INSTALL_D       scState = "install -d"
+	SCST_MKDIR           scState = "mkdir"
+	SCST_PAX             scState = "pax"
+	SCST_PAX_S           scState = "pax -s"
+	SCST_SED             scState = "sed"
+	SCST_SED_E           scState = "sed -e"
+	SCST_SET             scState = "set"
+	SCST_SET_CONT        scState = "set-continuation"
+	SCST_COND            scState = "cond"
+	SCST_COND_CONT       scState = "cond-continuation"
+	SCST_CASE            scState = "case"
+	SCST_CASE_IN         scState = "case in"
+	SCST_CASE_LABEL      scState = "case label"
+	SCST_CASE_LABEL_CONT scState = "case-label-continuation"
+	SCST_FOR             scState = "for"
+	SCST_FOR_IN          scState = "for-in"
+	SCST_FOR_CONT        scState = "for-continuation"
+	SCST_ECHO            scState = "echo"
+	SCST_INSTALL_DIR     scState = "install-dir"
+	SCST_INSTALL_DIR2    scState = "install-dir2"
 )
 
 type MkShellLine struct {
@@ -315,7 +346,7 @@ outer:
 
 type ShelltextContext struct {
 	line      *Line
-	state     ShellCommandState
+	state     scState
 	shellword string
 }
 
@@ -721,7 +752,7 @@ func (msline *MkShellLine) checkCommandUse(shellcmd string) {
 	}
 }
 
-func nextState(line *Line, state ShellCommandState, shellword string) ShellCommandState {
+func nextState(line *Line, state scState, shellword string) scState {
 	switch {
 	case shellword == ";;":
 		return SCST_CASE_LABEL
@@ -838,39 +869,3 @@ func splitIntoShellwords(line *Line, text string) ([]string, string) {
 	rest = strings.TrimLeftFunc(rest, unicode.IsSpace)
 	return words, rest
 }
-
-// This regular expression cannot parse all kinds of shell programs, but
-// it will catch almost all shell programs that are portable enough to be
-// used in pkgsrc.
-const reShellword = `^\s*(` +
-	`#.*` + // shell comment
-	`|(?:` +
-	`'[^']*'` + // single quoted string
-	`|"(?:\\.|[^"\\])*"` + // double quoted string
-	"|`[^`]*`" + // backticks command execution
-	`|\\\$\$` + // a shell-escaped dollar sign
-	`|\\[^\$]` + // other escaped characters
-	`|\$[\w_]` + // one-character make(1) variable
-	`|\$\{[^{}]+\}` + // make(1) variable, ${...}
-	`|\$\([^()]+\)` + // make(1) variable, $(...)
-	`|\$[/\@<^]` + // special make(1) variables
-	`|\$\$[0-9A-Z_a-z]+` + // shell variable
-	`|\$\$[#?@]` + // special shell variables
-	`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
-	`|\$\$\$\$` + // the special pid shell variable
-	`|\$\$\{[0-9A-Z_a-z]+\}` + // shell variable in braces
-	`|\$\$\(` + // POSIX-style backticks replacement
-	`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
-	`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
-	`)+` + // any of the above may be repeated
-	`|;;?` +
-	`|&&?` +
-	`|\|\|?` +
-	`|\(` +
-	`|\)` +
-	`|>&` +
-	`|<<?` +
-	`|>>?` +
-	`|#.*)`
-
-const reShVarassign = `^([A-Z_a-z]\w*)=`

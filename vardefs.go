@@ -392,8 +392,7 @@ func initacls() {
 	sys("GAMEMODE", LK_NONE, CheckvarFileMode)
 	sys("GAMES_USER", LK_NONE, CheckvarUserGroupName)
 	pkglist("GCC_REQD", LK_SHELL, CheckvarVersion)
-	pkglist("GENERATE_PLIST", LK_SHELL, CheckvarShellWord)
-	// ^^ List of Shellcommand, terminated with a semicolon
+	pkglist("GENERATE_PLIST", LK_SHELL, CheckvarShellWord) // List of Shellcommand, terminated with a semicolon
 	pkg("GITHUB_PROJECT", LK_NONE, CheckvarIdentifier)
 	pkg("GITHUB_TAG", LK_NONE, CheckvarIdentifier)
 	pkg("GITHUB_RELEASE", LK_NONE, CheckvarFilename)
@@ -411,8 +410,7 @@ func initacls() {
 	acl("IGNORE_PKG.*", LK_NONE, CheckvarYes, "*:sp")
 	acl("INCOMPAT_CURSES", LK_SPACE, CheckvarPlatformTriple, "Makefile:as")
 	acl("INCOMPAT_ICONV", LK_SPACE, CheckvarPlatformTriple)
-	acl("INFO_DIR", LK_NONE, CheckvarPathname)
-	// ^^ relative to PREFIX")
+	acl("INFO_DIR", LK_NONE, CheckvarPathname) // relative to PREFIX
 	pkg("INFO_FILES", LK_NONE, CheckvarYes)
 	sys("INSTALL", LK_NONE, CheckvarShellCommand)
 	pkglist("INSTALLATION_DIRS", LK_SHELL, CheckvarPrefixPathname)

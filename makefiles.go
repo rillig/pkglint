@@ -20,7 +20,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		return false
 	}
 
-	parselinesMk(fileLines)
+	ParselinesMk(fileLines)
 	isMainMakefile := len(*mainLines) == 0
 
 	for _, line := range fileLines {
@@ -238,7 +238,7 @@ func parselineMk(line *Line) {
 	line.errorf("Unknown Makefile line format.")
 }
 
-func parselinesMk(lines []*Line) {
+func ParselinesMk(lines []*Line) {
 	for _, line := range lines {
 		parselineMk(line)
 	}
@@ -288,8 +288,8 @@ func checklineMkText(line *Line, text string) {
 	}
 }
 
-func checklinesMk(lines []*Line) {
-	defer tracecall("checklinesMk", lines[0].fname)()
+func ChecklinesMk(lines []*Line) {
+	defer tracecall("ChecklinesMk", lines[0].fname)()
 
 	allowedTargets := make(map[string]bool)
 	substcontext := new(SubstContext)

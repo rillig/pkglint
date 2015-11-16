@@ -17,8 +17,8 @@ func checkfileBuildlink3Mk(fname string) {
 }
 
 func checklinesBuildlink3Mk(lines []*Line) {
-	parselinesMk(lines)
-	checklinesMk(lines)
+	ParselinesMk(lines)
+	ChecklinesMk(lines)
 
 	exp := NewExpecter(lines)
 

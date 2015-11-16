@@ -95,7 +95,7 @@ func checkdirPackage(pkgpath string) {
 			!contains(fname, G.pkgContext.pkgdir+"/") &&
 			!contains(fname, G.pkgContext.filesdir+"/") {
 			if lines, err := loadLines(fname, true); err == nil && lines != nil {
-				parselinesMk(lines)
+				ParselinesMk(lines)
 				determineUsedVariables(lines)
 			}
 		}
@@ -240,8 +240,8 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		}
 	}
 
-	checklinesMk(lines)
-	checklinesPackageMakefileVarorder(lines)
+	ChecklinesMk(lines)
+	ChecklinesPackageMakefileVarorder(lines)
 	autofix(lines)
 }
 
@@ -259,7 +259,7 @@ func pkgnameFromDistname(pkgname, distname string) string {
 	return pkgname
 }
 
-func checklinesPackageMakefileVarorder(lines []*Line) {
+func ChecklinesPackageMakefileVarorder(lines []*Line) {
 	if !G.opts.WarnOrder {
 		return
 	}

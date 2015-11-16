@@ -17,7 +17,7 @@ func checkdirToplevel() {
 		return
 	}
 
-	parselinesMk(lines)
+	ParselinesMk(lines)
 	if 0 < len(lines) {
 		checklineRcsid(lines[0], `#\s+`, "# ")
 	}
@@ -28,7 +28,7 @@ func checkdirToplevel() {
 		}
 	}
 
-	checklinesMk(lines)
+	ChecklinesMk(lines)
 
 	if G.opts.Recursive {
 		if G.opts.CheckGlobal {

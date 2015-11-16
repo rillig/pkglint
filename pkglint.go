@@ -419,8 +419,8 @@ func checkfileMk(fname string) {
 		return
 	}
 
-	parselinesMk(lines)
-	checklinesMk(lines)
+	ParselinesMk(lines)
+	ChecklinesMk(lines)
 	autofix(lines)
 }
 
