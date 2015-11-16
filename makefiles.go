@@ -31,7 +31,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		}
 		*allLines = append(*allLines, line)
 
-		var includeFile string
+		var includeFile, incDir, incBase string
 		if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
 			includeFile = resolveVarsInRelativePath(inc, true)
 			if containsVarRef(includeFile) {
@@ -40,6 +40,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				}
 				includeFile = ""
 			}
+			incDir, incBase = path.Split(includeFile)
 		}
 
 		if includeFile != "" {
@@ -59,12 +60,12 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				explainRelativeDirs(line)
 			}
 
-			if dir, base := path.Dir(includeFile), path.Base(includeFile); dir != "../mk" && base != "buildlink3.mk" && base != "options.mk" {
+			if incDir != "../mk" && incBase != "buildlink3.mk" && incBase != "options.mk" {
 				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkgContext.seenMakefileCommon = true
 			}
 
-			if !contains(includeFile, "/mk/") {
+			if !contains(incDir, "/mk/") {
 				dirname := path.Dir(fname)
 
 				// Only look in the directory relative to the
@@ -76,17 +77,17 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				if !fileExists(dirname + "/" + includeFile) {
 					line.errorf("Cannot read %q.", dirname+"/"+includeFile)
 					return false
-				} else {
-					_ = G.opts.DebugInclude && line.debugf("Including %q.", dirname+"/"+includeFile)
-					lengthBeforeInclude := len(*allLines)
-					if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
-						return false
-					}
+				}
 
-					if path.Base(includeFile) == "Makefile.common" {
-						makefileCommonLines := (*allLines)[lengthBeforeInclude:]
-						checkForUsedComment(makefileCommonLines, relpath(G.globalData.pkgsrcdir, fname))
-					}
+				_ = G.opts.DebugInclude && line.debugf("Including %q.", dirname+"/"+includeFile)
+				lengthBeforeInclude := len(*allLines)
+				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
+					return false
+				}
+
+				if incBase == "Makefile.common" {
+					makefileCommonLines := (*allLines)[lengthBeforeInclude:]
+					checkForUsedComment(makefileCommonLines, relpath(G.globalData.pkgsrcdir, fname))
 				}
 			}
 		}
