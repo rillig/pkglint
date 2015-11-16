@@ -31,20 +31,18 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		}
 		*allLines = append(*allLines, line)
 
-		isIncludeLine := false
-		includeFile := ""
+		var includeFile string
 		if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
 			includeFile = resolveVarsInRelativePath(inc, true)
 			if containsVarRef(includeFile) {
 				if !contains(fname, "/mk/") {
 					line.notef("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
-			} else {
-				isIncludeLine = true
+				includeFile = ""
 			}
 		}
 
-		if isIncludeLine {
+		if includeFile != "" {
 			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkgContext.bl3[bl3File] = line
@@ -53,7 +51,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			}
 		}
 
-		if isIncludeLine && G.pkgContext.included[includeFile] == nil {
+		if includeFile != "" && G.pkgContext.included[includeFile] == nil {
 			G.pkgContext.included[includeFile] = line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
