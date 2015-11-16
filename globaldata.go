@@ -24,10 +24,7 @@ type GlobalData struct {
 	lastChange          map[string]*Change
 	userDefinedVars     map[string]*Line
 	deprecated          map[string]string
-}
-
-func (gd *GlobalData) getVartypes() map[string]*Vartype {
-	return aclVartypes
+	vartypes            map[string]*Vartype // varcanon => type
 }
 
 // A change entry from doc/CHANGES-*

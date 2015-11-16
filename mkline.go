@@ -334,7 +334,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		_ = G.opts.DebugUnchecked && line.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
 
 	} else if !varIsUsed(varname) {
-		if vartypes := G.globalData.getVartypes(); vartypes[varname] != nil || vartypes[varcanon] != nil {
+		if vartypes := G.globalData.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
 			// Ok
 		} else if deprecated := G.globalData.deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok

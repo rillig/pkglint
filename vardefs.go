@@ -10,8 +10,6 @@ package main
 //
 // Last synced with mk/defaults/mk.conf revision 1.118
 
-var aclVartypes = make(map[string]*Vartype)
-
 func enum(values string) *VarChecker {
 	vmap := make(map[string]bool)
 	for _, value := range splitOnSpace(values) {
@@ -32,10 +30,10 @@ func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries 
 	vtype := &Vartype{kindOfList, checker, parseAclEntries(aclentries), NOT_GUESSED}
 
 	if varparam == "" || varparam == "*" {
-		aclVartypes[varbase] = vtype
+		G.globalData.vartypes[varbase] = vtype
 	}
 	if varparam == "*" || varparam == ".*" {
-		aclVartypes[varbase+".*"] = vtype
+		G.globalData.vartypes[varbase+".*"] = vtype
 	}
 }
 
@@ -184,21 +182,18 @@ func initacls() {
 	sys("BSD_MAKE_ENV", LK_SHELL, CheckvarShellWord)
 	acl("BUILDLINK_ABI_DEPENDS.*", LK_SPACE, CheckvarDependency, "*:a")
 	acl("BUILDLINK_API_DEPENDS.*", LK_SPACE, CheckvarDependency, "*:a")
-	acl("BUILDLINK_CONTENTS_FILTER", LK_SHELL, CheckvarShellWord)
-	// ^^ should rather be ShellCommand
+	acl("BUILDLINK_CONTENTS_FILTER", LK_SHELL, CheckvarShellWord) // Should better be ShellCommand
 	sys("BUILDLINK_CFLAGS", LK_SHELL, CheckvarCFlag)
 	bl3list("BUILDLINK_CFLAGS.*", LK_SHELL, CheckvarCFlag)
 	sys("BUILDLINK_CPPFLAGS", LK_SHELL, CheckvarCFlag)
 	bl3list("BUILDLINK_CPPFLAGS.*", LK_SHELL, CheckvarCFlag)
 	acl("BUILDLINK_CONTENTS_FILTER.*", LK_NONE, CheckvarShellCommand, "buildlink3.mk:s")
 	acl("BUILDLINK_DEPENDS", LK_SPACE, CheckvarIdentifier, "buildlink3.mk:a")
-	acl("BUILDLINK_DEPMETHOD.*", LK_SHELL, CheckvarBuildlinkDepmethod, "buildlink3.mk:ad", "Makefile:as", "Makefile.common:a", "*.mk:a")
-	// ^^ FIXME: b:d may lead to unexpected behavior.
+	acl("BUILDLINK_DEPMETHOD.*", LK_SHELL, CheckvarBuildlinkDepmethod, "buildlink3.mk:ad", "Makefile:as", "Makefile.common:a", "*.mk:a") // FIXME: buildlink3.mk:d may lead to unexpected behavior.
 	acl("BUILDLINK_DEPTH", LK_NONE, CheckvarBuildlinkDepth, "buildlink3.mk:ps", "builtin.mk:ps")
 	sys("BUILDLINK_DIR", LK_NONE, CheckvarPathname)
 	bl3list("BUILDLINK_FILES.*", LK_SHELL, CheckvarPathmask)
-	acl("BUILDLINK_FILES_CMD.*", LK_SHELL, CheckvarShellWord)
-	// ^^ ShellCommand
+	acl("BUILDLINK_FILES_CMD.*", LK_SHELL, CheckvarShellWord) // Should better be ShellCommand
 	acl("BUILDLINK_INCDIRS.*", LK_SHELL, CheckvarPathname, "buildlink3.mk:ad") // b:d?
 	acl("BUILDLINK_JAVA_PREFIX.*", LK_NONE, CheckvarPathname, "buildlink3.mk:s")
 	acl("BUILDLINK_LDADD.*", LK_SHELL, CheckvarLdFlag, "builtin.mk:adsu", "buildlink3.mk:", "Makefile:u", "Makefile.common:u", "*.mk:u")
@@ -236,8 +231,7 @@ func initacls() {
 	acl("CATEGORIES", LK_SHELL, CheckvarCategory, "Makefile:as", "Makefile.common:ads")
 	sys("CC_VERSION", LK_NONE, CheckvarMessage)
 	sys("CC", LK_NONE, CheckvarShellCommand)
-	pkglist("CFLAGS*", LK_SHELL, CheckvarCFlag)
-	// ^^ may also be changed by the user
+	pkglist("CFLAGS*", LK_SHELL, CheckvarCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", LK_NONE, CheckvarYesNo, "builtin.mk:d", "Makefile:s")
 	acl("CHECK_BUILTIN.*", LK_NONE, CheckvarYesNo, "*:p")
 	acl("CHECK_FILES_SKIP", LK_SHELL, CheckvarBasicRegularExpression, "Makefile:a", "Makefile.common:a")
@@ -248,8 +242,6 @@ func initacls() {
 	pkglist("CHECK_INTERPRETER_SKIP", LK_SHELL, CheckvarPathmask)
 	usr("CHECK_PERMS", LK_NONE, CheckvarYesNo)
 	pkglist("CHECK_PERMS_SKIP", LK_SHELL, CheckvarPathmask)
-	//CHECK_PERMS_AUTOFIX", "YesNo", pkg...)
-	// ^^ experimental
 	usr("CHECK_PORTABILITY", LK_NONE, CheckvarYesNo)
 	pkglist("CHECK_PORTABILITY_SKIP", LK_SHELL, CheckvarPathmask)
 	acl("CHECK_SHLIBS", LK_NONE, CheckvarYesNo, "Makefile:s")
@@ -275,8 +267,7 @@ func initacls() {
 	pkglist("CONF_FILES", LK_SHELL, CheckvarShellWord)
 	pkg("CONF_FILES_MODE", LK_NONE, enum("0644 0640 0600 0400"))
 	pkglist("CONF_FILES_PERMS", LK_SHELL, CheckvarShellWord)
-	sys("COPY", LK_NONE, enum("-c"))
-	// ^^ the flag that tells ${INSTALL} to copy a file
+	sys("COPY", LK_NONE, enum("-c")) // The flag that tells ${INSTALL} to copy a file
 	sys("CPP", LK_NONE, CheckvarShellCommand)
 	pkglist("CPPFLAGS*", LK_SHELL, CheckvarCFlag)
 	acl("CRYPTO", LK_NONE, CheckvarYes, "Makefile:s")
@@ -300,8 +291,7 @@ func initacls() {
 	pkg("DIST_SUBDIR", LK_NONE, CheckvarPathname)
 	acl("DJB_BUILD_ARGS", LK_SHELL, CheckvarShellWord)
 	acl("DJB_BUILD_TARGETS", LK_SHELL, CheckvarIdentifier)
-	acl("DJB_CONFIG_CMDS", LK_SHELL, CheckvarShellWord, "options.mk:s")
-	// ^^ ShellCommand, terminated by a semicolon
+	acl("DJB_CONFIG_CMDS", LK_SHELL, CheckvarShellWord, "options.mk:s") // ShellCommand, terminated by a semicolon
 	acl("DJB_CONFIG_DIRS", LK_SHELL, CheckvarWrksrcSubdirectory)
 	acl("DJB_CONFIG_HOME", LK_NONE, CheckvarFilename)
 	acl("DJB_CONFIG_PREFIX", LK_NONE, CheckvarPathname)
@@ -322,17 +312,14 @@ func initacls() {
 	sys("ECHO", LK_NONE, CheckvarShellCommand)
 	sys("ECHO_MSG", LK_NONE, CheckvarShellCommand)
 	sys("ECHO_N", LK_NONE, CheckvarShellCommand)
-	pkg("EGDIR", LK_NONE, CheckvarPathname)
-	// ^^ This variable is not defined by the system, but has been established
-	// as a convention.
+	pkg("EGDIR", LK_NONE, CheckvarPathname) // Not defined anywhere, but used in many places like this.
 	sys("EMACS_BIN", LK_NONE, CheckvarPathname)
 	sys("EMACS_ETCPREFIX", LK_NONE, CheckvarPathname)
 	sys("EMACS_FLAVOR", LK_NONE, enum("emacs xemacs"))
 	sys("EMACS_INFOPREFIX", LK_NONE, CheckvarPathname)
 	sys("EMACS_LISPPREFIX", LK_NONE, CheckvarPathname)
 	acl("EMACS_MODULES", LK_SHELL, CheckvarIdentifier, "Makefile:as", "Makefile.common:as")
-	sys("EMACS_PKGNAME_PREFIX", LK_NONE, CheckvarIdentifier)
-	// ^^ or the empty string.
+	sys("EMACS_PKGNAME_PREFIX", LK_NONE, CheckvarIdentifier) // Or the empty string.
 	sys("EMACS_TYPE", LK_NONE, enum("emacs xemacs"))
 	acl("EMACS_USE_LEIM", LK_NONE, CheckvarYes)
 	acl("EMACS_VERSIONS_ACCEPTED", LK_SHELL, enum("emacs25 emacs24 emacs24nox emacs23 emacs23nox emacs22 emacs22nox emacs21 emacs21nox emacs20 xemacs215 xemacs215nox xemacs214 xemacs214nox"), "Makefile:s")
@@ -356,8 +343,7 @@ func initacls() {
 	usr("EMUL_TYPE.*", LK_NONE, enum("native builtin suse suse-9.1 suse-9.x suse-10.0 suse-10.x"))
 	sys("ERROR_CAT", LK_NONE, CheckvarShellCommand)
 	sys("ERROR_MSG", LK_NONE, CheckvarShellCommand)
-	acl("EVAL_PREFIX", LK_SPACE, CheckvarShellWord, "Makefile:a", "Makefile.common:a")
-	// ^^ FIXME: Looks like a type mismatch.
+	acl("EVAL_PREFIX", LK_SPACE, CheckvarShellWord, "Makefile:a", "Makefile.common:a") // XXX: Looks like a type mismatch.
 	sys("EXPORT_SYMBOLS_LDFLAGS", LK_SHELL, CheckvarLdFlag)
 	sys("EXTRACT_CMD", LK_NONE, CheckvarShellCommand)
 	pkg("EXTRACT_DIR", LK_NONE, CheckvarPathname)
@@ -638,13 +624,12 @@ func initacls() {
 	pkglist("PKG_SYSCONFDIR_PERMS", LK_SHELL, CheckvarShellWord)
 	sys("PKG_SYSCONFBASEDIR", LK_NONE, CheckvarPathname)
 	pkg("PKG_SYSCONFSUBDIR", LK_NONE, CheckvarPathname)
-	acl("PKG_SYSCONFVAR", LK_NONE, CheckvarIdentifier)
-	// ^^ FIXME: name/type mismatch.")
+	acl("PKG_SYSCONFVAR", LK_NONE, CheckvarIdentifier) // FIXME: name/type mismatch.")
 	acl("PKG_UID", LK_NONE, CheckvarInteger, "Makefile:s")
 	acl("PKG_USERS", LK_SHELL, CheckvarShellWord, "Makefile:as")
 	pkg("PKG_USERS_VARS", LK_SHELL, CheckvarVarname)
 	acl("PKG_USE_KERBEROS", LK_NONE, CheckvarYes, "Makefile:s", "Makefile.common:s")
-	//PLIST.*", "# has special handling code")
+	// PLIST.* has special handling code
 	pkglist("PLIST_VARS", LK_SHELL, CheckvarIdentifier)
 	pkglist("PLIST_SRC", LK_SHELL, CheckvarRelativePkgPath)
 	pkglist("PLIST_SUBST", LK_SHELL, CheckvarShellWord)
@@ -659,8 +644,7 @@ func initacls() {
 	sys("PTHREAD_LDFLAGS", LK_SHELL, CheckvarLdFlag)
 	sys("PTHREAD_LIBS", LK_SHELL, CheckvarLdFlag)
 	acl("PTHREAD_OPTS", LK_SHELL, enum("native optional require"), "Makefile:as", "Makefile.common:a", "buildlink3.mk:a")
-	sys("PTHREAD_TYPE", LK_NONE, CheckvarIdentifier)
-	// ^^ or "native" or "none".
+	sys("PTHREAD_TYPE", LK_NONE, CheckvarIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", LK_NONE, CheckvarYes)
 	acl("PYPKGPREFIX", LK_NONE, enum("py27 py33 py34"), "*:pu", "pyversion.mk:s", "*:")
 	pkg("PYTHON_FOR_BUILD_ONLY", LK_NONE, CheckvarYes)

@@ -10,7 +10,7 @@ func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	line := NewLine("fname", "1", "dummy", nil)
 	initacls()
 
-	vartype1 := G.globalData.getVartypes()["COMMENT"]
+	vartype1 := G.globalData.vartypes["COMMENT"]
 	c.Assert(vartype1, check.NotNil)
 	c.Check(vartype1.guessed, equals, NOT_GUESSED)
 

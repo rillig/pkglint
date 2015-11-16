@@ -121,10 +121,10 @@ func extractUsedVariables(line *Line, text string) []string {
 // or nil if the type cannot even be guessed.
 func getVariableType(line *Line, varname string) *Vartype {
 
-	if vartype := G.globalData.getVartypes()[varname]; vartype != nil {
+	if vartype := G.globalData.vartypes[varname]; vartype != nil {
 		return vartype
 	}
-	if vartype := G.globalData.getVartypes()[varnameCanon(varname)]; vartype != nil {
+	if vartype := G.globalData.vartypes[varnameCanon(varname)]; vartype != nil {
 		return vartype
 	}
 
