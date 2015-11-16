@@ -41,7 +41,7 @@ func (s *Suite) UseCommandLine(args ...string) {
 	G.opts = new(Pkglint).ParseCommandLine(append([]string{"pkglint"}, args...), G.logOut)
 }
 
-func (s*Suite) ExpectFatalError(action func()) {
+func (s *Suite) ExpectFatalError(action func()) {
 	if r := recover(); r != nil {
 		if _, ok := r.(pkglintFatal); ok {
 			action()
