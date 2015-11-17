@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"path"
 )
 
 const NO_FILE = ""
@@ -25,7 +24,7 @@ var dummyLine = NewLine(NO_FILE, NO_LINES, "", nil)
 
 func logMessage(level LogLevel, fname, lineno, message string) {
 	if fname != NO_FILE {
-		fname = path.Clean(fname)
+		fname = cleanpath(fname)
 	}
 
 	var text, sep string

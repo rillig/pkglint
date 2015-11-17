@@ -396,6 +396,31 @@ func abspath(fname string) string {
 	return filepath.ToSlash(abs)
 }
 
+// Differs from path.Clean in that only "../../" is replaced, not "../".
+// Also, the initial directory is always kept.
+// This is to provide the package path as context in recursive invocations of pkglint.
+func cleanpath(fname string) string {
+	tmp := fname
+	for len(tmp) > 2 && hasPrefix(tmp, "./") {
+		tmp = tmp[2:]
+	}
+	for contains(tmp, "/./") {
+		tmp = strings.Replace(tmp, "/./", "/", -1)
+	}
+	for contains(tmp, "//") {
+		tmp = strings.Replace(tmp, "//", "/", -1)
+	}
+	return reReplaceRepeatedly(tmp, `/[^.][^/]*/[^.][^/]*/\.\./\.\./`, "/")
+}
+
 func containsVarRef(s string) bool {
 	return contains(s, "${")
+}
+
+func reReplaceRepeatedly(from string, re string, to string) string {
+	replaced := regcomp(re).ReplaceAllString(from, to)
+	if replaced != from {
+		return reReplaceRepeatedly(replaced, re, to)
+	}
+	return replaced
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"path"
 	"strings"
 )
 
@@ -41,7 +40,7 @@ func checklineLicense(line *Line, value string) {
 		}
 
 		if !fileExists(licenseFile) {
-			line.warnf("License file %s does not exist.", path.Clean(licenseFile))
+			line.warnf("License file %s does not exist.", cleanpath(licenseFile))
 		}
 
 		switch license {
