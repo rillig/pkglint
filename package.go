@@ -231,7 +231,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 			cmp := pkgverCmp(G.pkgContext.effectivePkgversion, suggver)
 			switch {
 			case cmp < 0:
-				pkgnameLine.warnf("This package should be updated to %s%s", sugg.version, comment)
+				pkgnameLine.warnf("This package should be updated to %s%s.", sugg.version, comment)
 				pkgnameLine.explain(
 					"The wishlist for package updates in doc/TODO mentions that a newer",
 					"version of this package is available.")
@@ -241,8 +241,6 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 				pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
 			}
 		}
-	} else {
-		warnf(NO_FILE, NO_LINES, "effectivePkgbase is nil")
 	}
 
 	ChecklinesMk(lines)
