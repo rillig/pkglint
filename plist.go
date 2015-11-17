@@ -223,7 +223,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 			line.warnf("Packages that install info files should set INFO_FILES.")
 		}
 
-	case G.pkgContext.effectivePkgbase != nil && hasPrefix(text, "lib/"+*G.pkgContext.effectivePkgbase+"/"):
+	case G.pkgContext.effectivePkgbase != "" && hasPrefix(text, "lib/"+G.pkgContext.effectivePkgbase+"/"):
 		// Fine.
 
 	case hasPrefix(text, "lib/locale/"):
@@ -289,7 +289,8 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
 		if G.pkgContext.included[f] == nil {
-			line.warnf("Packages that install a .desktop entry should .include %q.", f)
+			// line.warnf("Packages that install a .desktop entry should .include %q.", f) // XXX: diag
+			line.warnf("Packages that install a .desktop entry may .include %q.", f)
 			line.explain(
 				"If *.desktop files contain MimeType keys, the global MIME type registry",
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
@@ -298,7 +299,8 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "share/icons/hicolor/") && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
-			line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
+			// line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f) // XXX: diag
+			line.errorf("Please .include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile.")
 		}
 
 	case hasPrefix(text, "share/icons/gnome") && G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
@@ -315,8 +317,8 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "share/doc/html/"):
 		_ = G.opts.WarnPlistDepr && line.warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
-	case G.pkgContext.effectivePkgbase != nil && (hasPrefix(text, "share/doc/"+*G.pkgContext.effectivePkgbase+"/") ||
-		hasPrefix(text, "share/examples/"+*G.pkgContext.effectivePkgbase+"/")):
+	case G.pkgContext.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkgContext.effectivePkgbase+"/") ||
+		hasPrefix(text, "share/examples/"+G.pkgContext.effectivePkgbase+"/")):
 		// Fine.
 
 	case text == "share/icons/hicolor/icon-theme.cache" && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":

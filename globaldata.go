@@ -255,7 +255,7 @@ func parselinesSuggestedUpdates(lines []*Line) []SuggestedUpdate {
 		}
 
 		if state == 3 {
-			if m, pkgname, comment := match2(text, `\to\s(\S+)(?:\s*(.+))?$`); m {
+			if m, pkgname, comment := match2(text, `^\to\s(\S+)(?:\s*(.+))?$`); m {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {

@@ -7,9 +7,9 @@ type PkgContext struct {
 	filesdir             string  // FILESDIR from the package Makefile
 	patchdir             string  // PATCHDIR from the package Makefile
 	distinfoFile         string  // DISTINFO_FILE from the package Makefile
-	effectivePkgname     *string // PKGNAME or DISTNAME from the package Makefile
-	effectivePkgbase     *string // The effective PKGNAME without the version
-	effectivePkgversion  *string // The version part of the effective PKGNAME
+	effectivePkgname     string // PKGNAME or DISTNAME from the package Makefile
+	effectivePkgbase     string // The effective PKGNAME without the version
+	effectivePkgversion  string // The version part of the effective PKGNAME
 	effectivePkgnameLine *Line   // The origin of the three effective_* values
 	seen_bsd_prefs_mk    bool    // Has bsd.prefs.mk already been included?
 

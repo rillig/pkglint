@@ -69,8 +69,8 @@ func checklinesBuildlink3Mk(lines []*Line) {
 		pkgbaseLine.errorf("Package name mismatch between %q ...", pkgbase)
 		pkgidLine.errorf("... and %q.", pkgid)
 	}
-	if G.pkgContext != nil && G.pkgContext.effectivePkgbase != nil {
-		if mkbase := *G.pkgContext.effectivePkgbase; mkbase != "" && mkbase != pkgid {
+	if G.pkgContext != nil {
+		if mkbase := G.pkgContext.effectivePkgbase; mkbase != "" && mkbase != pkgid {
 			pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
 			G.pkgContext.effectivePkgnameLine.errorf("... and %q.", mkbase)
 		}

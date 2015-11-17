@@ -3,16 +3,14 @@ package main
 import (
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 func checkpackagePossibleDowngrade() {
 	defer tracecall("checkpackagePossibleDowngrade")()
 
-	if G.pkgContext.effectivePkgname == nil {
-		return
-	}
-	m, _, pkgversion := match2(*G.pkgContext.effectivePkgname, rePkgname)
+	m, _, pkgversion := match2(G.pkgContext.effectivePkgname, rePkgname)
 	if !m {
 		return
 	}
@@ -197,6 +195,11 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		distnameLine.warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
+	G.pkgContext.effectivePkgname,
+		G.pkgContext.effectivePkgnameLine,
+		G.pkgContext.effectivePkgbase,
+		G.pkgContext.effectivePkgversion = determineEffectivePkgVars(pkgname,pkgnameLine,distname,distnameLine)
+
 	if G.pkgContext.effectivePkgnameLine != nil {
 		_ = G.opts.DebugMisc && G.pkgContext.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
 			G.pkgContext.effectivePkgname, G.pkgContext.effectivePkgbase, G.pkgContext.effectivePkgversion)
@@ -213,9 +216,9 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		vardef["USE_X11"].notef("... USE_X11 superfluous.")
 	}
 
-	if G.pkgContext.effectivePkgbase != nil {
-		for _, sugg := range G.globalData.suggestedUpdates {
-			if *G.pkgContext.effectivePkgbase != sugg.pkgname {
+	if G.pkgContext.effectivePkgbase != "" {
+		for _, sugg := range G.globalData.getSuggestedPackageUpdates() {
+			if G.pkgContext.effectivePkgbase != sugg.pkgname {
 				continue
 			}
 
@@ -225,7 +228,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 			}
 
 			pkgnameLine := G.pkgContext.effectivePkgnameLine
-			cmp := pkgverCmp(*G.pkgContext.effectivePkgversion, suggver)
+			cmp := pkgverCmp(G.pkgContext.effectivePkgversion, suggver)
 			switch {
 			case cmp < 0:
 				pkgnameLine.warnf("This package should be updated to %s%s", sugg.version, comment)
@@ -238,11 +241,39 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 				pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
 			}
 		}
+	} else {
+		warnf(NO_FILE, NO_LINES, "effectivePkgbase is nil")
 	}
 
 	ChecklinesMk(lines)
 	ChecklinesPackageMakefileVarorder(lines)
 	autofix(lines)
+}
+
+func getNbpart() string {
+	line := G.pkgContext.vardef["PKGREVISION"]
+	if line == nil {
+		return ""
+	}
+	pkgrevision := line.extra["value"].(string)
+	if rev, err := strconv.Atoi(pkgrevision); err != nil {
+		return sprintf("nb%d", rev)
+	}
+	return ""
+}
+
+func determineEffectivePkgVars(pkgname string, pkgnameLine *Line, distname string, distnameLine *Line) (string,*Line,string,string){
+	if pkgname != "" && !containsVarRef(pkgname) {
+		if m, m1, m2 := match2(pkgname, rePkgname); m {
+			return pkgname + getNbpart(), pkgnameLine, m1, m2
+		}
+	}
+	if distname != "" && !containsVarRef(distname) {
+		if m, m1, m2 := match2(distname, rePkgname); m {
+			return distname + getNbpart(), distnameLine, m1, m2
+		}
+	}
+	return "", nil, "", ""
 }
 
 func pkgnameFromDistname(pkgname, distname string) string {
