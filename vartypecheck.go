@@ -423,7 +423,7 @@ func (cv *VartypeCheck) PkgName() {
 
 func (cv *VartypeCheck) PkgOptionsVar() {
 	checklineMkVartypePrimitive(cv.line, cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
-	if !matches(cv.value, `\$\{PKGBASE[:\}]`) {
+	if matches(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		cv.line.explain(
 			"PKGBASE is defined in bsd.pkg.mk, which is included as the",
