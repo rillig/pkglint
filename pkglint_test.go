@@ -92,3 +92,30 @@ func (s *Suite) TestReVarname(c *check.C) {
 	c.Check(matches("0FLAGS", re), equals, true)
 	c.Check(matches("CFLAGS.${prog}.DEBUG", re), equals, true)
 }
+
+func (s *Suite) TestChecklineRcsid(c *check.C) {
+	lines := s.NewLines("fname",
+		"$"+"NetBSD: dummy $",
+		"$"+"NetBSD$",
+		"$"+"Id: dummy $",
+		"$"+"Id$",
+		"$"+"FreeBSD$")
+
+	for _, line := range lines {
+		checklineRcsid(line, ``, "")
+	}
+
+	c.Check(s.Output(), equals, ""+
+		"ERROR: fname:3: Expected \"$"+"NetBSD$\".\n"+
+		"ERROR: fname:4: Expected \"$"+"NetBSD$\".\n"+
+		"ERROR: fname:5: Expected \"$"+"NetBSD$\".\n")
+
+	G.isWip = true
+
+	for _, line := range lines {
+		checklineRcsid(line, ``, "")
+	}
+
+	c.Check(s.Output(), equals, ""+
+		"ERROR: fname:5: Expected \"$"+"NetBSD$\".\n")
+}

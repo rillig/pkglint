@@ -25,6 +25,7 @@ func (s *Suite) Stderr() string {
 	return s.stderr.String()
 }
 
+// Returns and consumes the output from both stdout and stderr.
 func (s *Suite) Output() string {
 	return s.Stdout() + s.Stderr()
 }

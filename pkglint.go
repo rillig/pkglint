@@ -279,13 +279,13 @@ func checklineTrailingWhitespace(line *Line) {
 func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	defer tracecall("checklineRcsid", prefixRe, suggestedPrefix)()
 
-	rcsid := "NetBSD"
+	repartRcsid := "NetBSD"
 	if G.isWip {
-		rcsid = "Id"
+		repartRcsid = "(?:NetBSD|Id)"
 	}
 
-	if !matches(line.text, `^`+prefixRe+`\$`+rcsid+`(?::[^\$]+)?\$$`) {
-		line.errorf("Expected %s.", suggestedPrefix+"$"+rcsid+"$")
+	if !matches(line.text, `^`+prefixRe+`\$`+repartRcsid+`(?::[^\$]+)?\$$`) {
+		line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 		line.explain(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
 			"version can be traced back later from a binary package. This is to",
