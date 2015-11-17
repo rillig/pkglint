@@ -622,7 +622,8 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 
 	if (state == SCST_INSTALL_DIR || state == SCST_INSTALL_DIR2) && !matches(shellword, reMkShellvaruse) {
 		if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
-			line.notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
+			//line.notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname) // XXX: diag
+			line.notef("You can use AUTO_MKDIRS=yes or INSTALLATION_DIRS+= %s instead of this command.", dirname)
 			line.explain(
 				"This saves you some typing. You also don't have to think about which of",
 				"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
