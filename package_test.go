@@ -32,3 +32,18 @@ func (s *Suite) TestChecklinesPackageMakefileVarorder(c *check.C) {
 		"WARN: Makefile:3: COMMENT should be set here.\n"+
 		"WARN: Makefile:3: LICENSE should be set here.\n")
 }
+
+func (s *Suite) TestGetNbpart(c *check.C) {
+	G.pkgContext = newPkgContext("category/pkgbase")
+	line := NewLine("Makefile", "1", "PKGREVISION=14", nil)
+	parselineMk(line)
+	G.pkgContext.vardef["PKGREVISION"] = line
+
+	c.Check(getNbpart(), equals, "nb14")
+
+	line = NewLine("Makefile", "1", "PKGREVISION=asdf", nil)
+	parselineMk(line)
+	G.pkgContext.vardef["PKGREVISION"] = line
+
+	c.Check(getNbpart(), equals, "")
+}

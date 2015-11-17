@@ -198,7 +198,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 	G.pkgContext.effectivePkgname,
 		G.pkgContext.effectivePkgnameLine,
 		G.pkgContext.effectivePkgbase,
-		G.pkgContext.effectivePkgversion = determineEffectivePkgVars(pkgname,pkgnameLine,distname,distnameLine)
+		G.pkgContext.effectivePkgversion = determineEffectivePkgVars(pkgname, pkgnameLine, distname, distnameLine)
 
 	if G.pkgContext.effectivePkgnameLine != nil {
 		_ = G.opts.DebugMisc && G.pkgContext.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
@@ -254,13 +254,13 @@ func getNbpart() string {
 		return ""
 	}
 	pkgrevision := line.extra["value"].(string)
-	if rev, err := strconv.Atoi(pkgrevision); err != nil {
+	if rev, err := strconv.Atoi(pkgrevision); err == nil {
 		return sprintf("nb%d", rev)
 	}
 	return ""
 }
 
-func determineEffectivePkgVars(pkgname string, pkgnameLine *Line, distname string, distnameLine *Line) (string,*Line,string,string){
+func determineEffectivePkgVars(pkgname string, pkgnameLine *Line, distname string, distnameLine *Line) (string, *Line, string, string) {
 	if pkgname != "" && !containsVarRef(pkgname) {
 		if m, m1, m2 := match2(pkgname, rePkgname); m {
 			return pkgname + getNbpart(), pkgnameLine, m1, m2
