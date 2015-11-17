@@ -165,7 +165,8 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	if G.opts.WarnPlistSort && matches(text, `^\w`) && !containsVarRef(text) {
 		if pctx.lastFname != "" {
 			if pctx.lastFname > text {
-				line.warnf("%q should be sorted before %q.", text, pctx.lastFname)
+				// XXX: line.warnf("%q should be sorted before %q.", text, pctx.lastFname)
+				line.warnf("%s should be sorted before %s.", text, pctx.lastFname)
 				line.explain(
 					"For aesthetic reasons, the files in the PLIST should be sorted",
 					"alphabetically.")
