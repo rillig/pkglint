@@ -20,4 +20,6 @@ func (s *Suite) TestPkgverCmp(c *check.C) {
 	c.Check(pkgverCmp("1.0alpha", "1.0"), equals, -1)
 	c.Check(pkgverCmp("1.0nb1", "1.0"), equals, 1)
 	c.Check(pkgverCmp("1.0nb2", "1.0nb1"), equals, 1)
+	c.Check(pkgverCmp("2.0.1nb17", "2.0.1nb4"), equals, 1)
+	c.Check(pkgverCmp("2.0.1nb4", "2.0.1nb17"), equals, -1)
 }

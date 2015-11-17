@@ -400,6 +400,8 @@ func abspath(fname string) string {
 // Also, the initial directory is always kept.
 // This is to provide the package path as context in recursive invocations of pkglint.
 func cleanpath(fname string) string {
+	defer tracecall("cleanpath", fname)()
+
 	tmp := fname
 	for len(tmp) > 2 && hasPrefix(tmp, "./") {
 		tmp = tmp[2:]

@@ -542,7 +542,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 
 		if toolname := G.globalData.varnameToToolname[varname]; toolname != "" {
 			if !G.mkContext.tools[toolname] {
-				ctx.line.warnf("The %q tool is used but not added to USE_TOOLS.")
+				ctx.line.warnf("The %q tool is used but not added to USE_TOOLS.", toolname)
 			}
 			checklineMkShellcmdUse(ctx.line, shellword)
 			return true
