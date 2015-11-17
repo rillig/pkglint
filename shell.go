@@ -355,7 +355,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 
 	line := msline.line
 
-	if contains(shelltext, "${SED}") || contains(shelltext, "${MV}") {
+	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
 		line.notef("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		line.explain(
 			"When converting things, pay attention to \"#\" characters. In shell",
