@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"sort"
 )
@@ -58,6 +57,7 @@ func (gd *GlobalData) Initialize() {
 	gd.loadDistSites()
 	gd.loadPkgOptions()
 	gd.loadDocChanges()
+	gd.loadSuggestedUpdates()
 	gd.loadUserDefinedVars()
 	gd.loadTools()
 	gd.deprecated = getDeprecatedVars()
@@ -233,9 +233,12 @@ func (self *GlobalData) loadTools() {
 	}
 }
 
-func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
+func loadSuggestedUpdates(fname string) []SuggestedUpdate {
 	lines := LoadExistingLines(fname, false)
+	return parselinesSuggestedUpdates(lines)
+}
 
+func parselinesSuggestedUpdates(lines []*Line) []SuggestedUpdate {
 	var updates []SuggestedUpdate
 	state := 0
 	for _, line := range lines {
@@ -267,10 +270,9 @@ func loadSuggestedUpdatesFile(fname string) []SuggestedUpdate {
 }
 
 func (self *GlobalData) loadSuggestedUpdates() {
-	self.suggestedUpdates = loadSuggestedUpdatesFile(G.globalData.pkgsrcdir + "/doc/TODO")
-	wipFilename := G.globalData.pkgsrcdir + "/wip/TODO"
-	if _, err := os.Stat(wipFilename); err != nil {
-		self.suggestedWipUpdates = loadSuggestedUpdatesFile(wipFilename)
+	self.suggestedUpdates = loadSuggestedUpdates(G.globalData.pkgsrcdir + "/doc/TODO")
+	if wipFilename := G.globalData.pkgsrcdir + "/wip/TODO"; fileExists(wipFilename) {
+		self.suggestedWipUpdates = loadSuggestedUpdates(wipFilename)
 	}
 }
 
