@@ -66,13 +66,17 @@ func checklinesBuildlink3Mk(lines []*Line) {
 
 	ucPkgid := strings.ToUpper(strings.Replace(pkgid, "-", "_", -1))
 	if ucPkgid != pkgbase {
-		pkgbaseLine.errorf("Package name mismatch between %q ...", pkgbase)
-		pkgidLine.errorf("... and %q.", pkgid)
+		// XXX diag pkgbaseLine.errorf("Package name mismatch between %q ...", pkgbase)
+		// XXX diag pkgidLine.errorf("... and %q.", pkgid)
+		pkgbaseLine.errorf("Package name mismatch between %s ...", pkgbase)
+		pkgidLine.errorf("... and %s.", pkgid)
 	}
 	if G.pkgContext != nil {
 		if mkbase := G.pkgContext.effectivePkgbase; mkbase != "" && mkbase != pkgid {
-			pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
-			G.pkgContext.effectivePkgnameLine.errorf("... and %q.", mkbase)
+			// XXX diag pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
+			// XXX diag G.pkgContext.effectivePkgnameLine.errorf("... and %q.", mkbase)
+			pkgidLine.errorf("Package name mismatch between %s ...", pkgid)
+			G.pkgContext.effectivePkgnameLine.errorf("... and %s.", mkbase)
 		}
 	}
 
@@ -113,8 +117,10 @@ func checklinesBuildlink3Mk(lines []*Line) {
 				doCheck = true
 			}
 			if doCheck && abiPkg != "" && apiPkg != "" && abiPkg != apiPkg {
-				abiLine.warnf("Package name mismatch between %q ...", abiPkg)
-				apiLine.warnf("... and %q.", apiPkg)
+				// XXX diag abiLine.warnf("Package name mismatch between %q ...", abiPkg)
+				// XXX diag apiLine.warnf("... and %q.", apiPkg)
+				abiLine.warnf("Package name mismatch between %s ...", abiPkg)
+				apiLine.warnf("... and %s.", apiPkg)
 			}
 			if doCheck && abiVersion != "" && apiVersion != "" && pkgverCmp(abiVersion, apiVersion) < 0 {
 				abiLine.warnf("ABI version (%s) should be at least ...", abiVersion)

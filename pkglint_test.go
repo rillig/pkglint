@@ -106,9 +106,9 @@ func (s *Suite) TestChecklineRcsid(c *check.C) {
 	}
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: fname:3: Expected \"$"+"NetBSD$\".\n"+
-		"ERROR: fname:4: Expected \"$"+"NetBSD$\".\n"+
-		"ERROR: fname:5: Expected \"$"+"NetBSD$\".\n")
+		"ERROR: fname:3: \"$"+"NetBSD$\" expected.\n"+
+		"ERROR: fname:4: \"$"+"NetBSD$\" expected.\n"+
+		"ERROR: fname:5: \"$"+"NetBSD$\" expected.\n")
 
 	G.isWip = true
 
@@ -117,5 +117,5 @@ func (s *Suite) TestChecklineRcsid(c *check.C) {
 	}
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: fname:5: Expected \"$"+"NetBSD$\".\n")
+		"ERROR: fname:5: \"$"+"NetBSD$\" expected.\n")
 }

@@ -234,7 +234,7 @@ func getVariablePermissions(line *Line, varname string) string {
 
 func checklineLength(line *Line, maxlength int) {
 	if len(line.text) > maxlength {
-		line.warnf("Line too long (should be no more than maxlength characters).")
+		line.warnf("Line too long (should be no more than %d characters).", maxlength)
 		line.explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
@@ -285,7 +285,8 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	}
 
 	if !matches(line.text, `^`+prefixRe+`\$`+repartRcsid+`(?::[^\$]+)?\$$`) {
-		line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+		// XXX: diag line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+		line.errorf("%q expected.", suggestedPrefix+"$"+"NetBSD$")
 		line.explain(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
 			"version can be traced back later from a binary package. This is to",

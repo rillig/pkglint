@@ -87,7 +87,8 @@ func checkfilePlist(fname string) {
 		} else if matches(text, `^\$\{[\w_]+\}$`) {
 			// A variable on its own line.
 		} else {
-			line.warnf("Unknown line type.")
+			// XXX diag line.warnf("Unknown line type.")
+			line.errorf("Unknown line type.")
 		}
 	}
 
@@ -300,7 +301,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
 			// line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f) // XXX: diag
-			line.errorf("Please .include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile.")
+			line.errorf("Please .include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile")
 		}
 
 	case hasPrefix(text, "share/icons/gnome") && G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
