@@ -435,20 +435,11 @@ const reVarnamePlural = "^(?:" +
 	"|.*LIST" +
 	"|.*_AWK" +
 	"|.*_ENV" +
+	"|.*_OVERRIDE" +
+	"|.*_PREREQ" +
 	"|.*_REQD" +
 	"|.*_SED" +
 	"|.*_SKIP" +
-	"|BUILDLINK_LDADD" +
-	"|COMMENT" +
-	"|EXTRACT_ONLY" +
-	"|FETCH_MESSAGE" +
-	"|GENERATE_PLIST" +
-	"|PLIST_CAT" +
-	"|PLIST_PRE" +
-	"|PREPEND_PATH" +
-
-	"|.*_OVERRIDE" +
-	"|.*_PREREQ" +
 	"|.*_SRC" +
 	"|.*_SUBST" +
 	"|.*_TARGET" +
@@ -456,8 +447,17 @@ const reVarnamePlural = "^(?:" +
 	"|BROKEN_EXCEPT_ON_PLATFORM" +
 	"|BROKEN_ON_PLATFORM" +
 	"|BUILDLINK_DEPMETHOD" +
+	"|BUILDLINK_LDADD" +
 	"|BUILDLINK_TRANSFORM" +
+	"|COMMENT" +
+	"|CRYPTO" +
+	"|DEINSTALL_TEMPLATE" +
 	"|EVAL_PREFIX" +
+	"|EXTRACT_ONLY" +
+	"|FETCH_MESSAGE" +
+	"|FIX_RPATH" +
+	"|GENERATE_PLIST" +
+	"|INSTALL_TEMPLATE" +
 	"|INTERACTIVE_STAGE" +
 	"|LICENSE" +
 	"|MASTER_SITE_.*" +
@@ -467,12 +467,11 @@ const reVarnamePlural = "^(?:" +
 	"|ONLY_FOR_COMPILER" +
 	"|ONLY_FOR_PLATFORM" +
 	"|PERL5_PACKLIST" +
+	"|PLIST_CAT" +
+	"|PLIST_PRE" +
 	"|PKG_FAIL_REASON" +
 	"|PKG_SKIP_REASON" +
-	"|CRYPTO" +
-	"|DEINSTALL_TEMPLATE" +
-	"|FIX_RPATH" +
-	"|INSTALL_TEMPLATE" +
+	"|PREPEND_PATH" +
 	"|PYTHON_VERSIONS_INCOMPATIBLE" +
 	"|REPLACE_INTERPRETER" +
 	"|REPLACE_PERL" +
@@ -483,7 +482,8 @@ const reVarnamePlural = "^(?:" +
 	"|TOOLS_BROKEN" +
 	"|TOOLS_CREATE" +
 	"|TOOLS_GNU_MISSING" +
-	"|TOOLS_NOOP)$"
+	"|TOOLS_NOOP"+
+	")$"
 
 func checklineMkVartype(line *Line, varname, op, value, comment string) {
 	defer tracecall("checklineMkVartype", varname, op, value, comment)()
