@@ -309,7 +309,7 @@ func checklineMkAbsolutePathname(line *Line, text string) {
 	//
 	// Another context where absolute pathnames usually appear is in
 	// assignments like "bindir=/bin".
-	if m, path := match1(text, `(?:^|\$[({]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[\w/*]|\"[\w/*]*\"|'[\w/*]*')*)`); m {
+	if m, path := match1(text, `(?:^|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
 		if matches(path, `^/\w`) {
 			checkwordAbsolutePathname(line, path)
 		}
