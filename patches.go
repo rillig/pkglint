@@ -103,9 +103,8 @@ func checkwordAbsolutePathname(line *Line, word string) {
 		// These are defined by POSIX.
 	case word == "/bin/sh":
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
-	case !matches(word, `/(?:[a-z]|\$[({])`):
-		// Assume that all pathnames start with a lowercase letter.
-	default:
+	case matches(word, `^/(?:[a-z]|\$[({])`):
+		// Absolute paths probably start with a lowercase letter.
 		line.warnf("Found absolute pathname: %s", word)
 		line.explain(
 			"Absolute pathnames are often an indicator for unportable code. As",
