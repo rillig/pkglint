@@ -119,3 +119,12 @@ func (s *Suite) TestChecklineRcsid(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"ERROR: fname:5: \"$"+"NetBSD$\" expected.\n")
 }
+
+func (s *Suite) TestChecklineMkAbsolutePathname(c *check.C) {
+	line := NewLine("Makefile", "1", "dummy", nil)
+
+	checklineMkAbsolutePathname(line, "bindir=/bin")
+	checklineMkAbsolutePathname(line, "bindir=/../lib")
+
+	c.Check(s.Output(), equals, "WARN: Makefile:1: Found absolute pathname: /bin\n")
+}
