@@ -430,7 +430,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 	}
 }
 
-var reVarnamePlural string = "^(?:" +
+const reVarnamePlural = "^(?:" +
 	".*S" +
 	"|.*LIST" +
 	"|.*_AWK" +
