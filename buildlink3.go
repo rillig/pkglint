@@ -129,7 +129,8 @@ func checklinesBuildlink3Mk(lines []*Line) {
 
 			if m, varparam := match1(varname, `^BUILDLINK_[\w_]+\.(.*)$`); m {
 				if varparam != pkgid {
-					line.warnf("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
+					// XXX diag line.warnf("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
+					line.warnf("Only buildlink variables for %s, not %s may be set in this file.", pkgid, varparam)
 				}
 			}
 
