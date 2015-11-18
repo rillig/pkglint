@@ -1617,31 +1617,6 @@ sub check_unused_licenses() {
 	}
 }
 
-sub checkpackage_possible_downgrade() {
-
-	$opt_debug_trace and log_debug(NO_FILE, NO_LINES, "checkpackage_possible_downgrade");
-
-	return unless defined $effective_pkgname;
-	return unless $effective_pkgname =~ regex_pkgname;
-	my ($pkgbase, $pkgversion) = ($1, $2);
-	my $line = $effective_pkgname_line;
-
-	my @changes = get_doc_CHANGES($pkgpath);
-	if (@changes == 0) {
-		$opt_debug_misc and $line->log_debug("No changes have been recorded for package $pkgpath.");
-		return;
-	}
-
-	my $last_change = $changes[-1];
-	return unless $last_change->action eq "Updated";
-
-	my $last_version = $last_change->version;
-
-	if (dewey_cmp($pkgversion, "<", $last_version)) {
-		$line->log_warning("The package is being downgraded from $last_version to $pkgversion.");
-	}
-}
-
 #
 # Subroutines to check a single line.
 #
@@ -5023,10 +4998,6 @@ sub checkfile_package_Makefile($$) {
 		: (undef, undef, undef, undef);
 	if (defined($effective_pkgname_line)) {
 		$opt_debug_misc and $effective_pkgname_line->log_debug("Effective name=${effective_pkgname} base=${effective_pkgbase} version=${effective_pkgversion}.");
-		# XXX: too many false positives
-		if (false && $pkgpath =~ m"/([^/]+)$" && $effective_pkgbase ne $1) {
-			$effective_pkgname_line->log_warning("Mismatch between PKGNAME ($effective_pkgname) and package directory ($1).");
-		}
 	}
 
 	checkpackage_possible_downgrade();
