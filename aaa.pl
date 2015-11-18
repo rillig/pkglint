@@ -85,56 +85,6 @@ my @todo_items;			# The list of directory entries that still need
 				# to be checked. Mostly relevant with
 				# --recursive.
 
-# The symbol table for ACL definitions maps ACL names to ACLs.
-my $acl_definitions = {};
-
-sub parse_acls($$) {
-	my ($line, $acltext) = @_;
-	my ($acls);
-
-	use constant ACL_shortcuts => {
-		"b" => qr"(?:^|/)buildlink3\.mk$",
-		"c" => qr"(?:^|/)Makefile\.common$",
-		"h" => qr"(?:^|/)hacks\.mk$",
-		"m" => qr"(?:^|/)Makefile$",
-		"o" => qr"(?:^|/)options\.mk$",
-	};
-
-	my $regex_acl_entry = qr"^(?:
-		  \$([\w_]+)			# $acl_name
-		| ([\w.*]+|_):([adpsu]*)	# file*mask:perms
-		) (?:\,\s*|$)"x;
-
-	if (!defined($acltext)) {
-		return undef;
-	}
-
-	$acls = [];
-	while ($acltext =~ s,$regex_acl_entry,,) {
-		my ($acldef, $subject, $perms) = ($1, $2, $3);
-
-		if (defined($acldef)) {
-			if (!exists($acl_definitions->{$acldef})) {
-				$line->log_fatal("ACL definition ${acldef} not found.");
-			} else {
-				push(@{$acls}, @{$acl_definitions->{$acldef}});
-			}
-
-		} else {
-			# Transform $subject to a regular expression.
-			$subject =~ s/\./[.]/g;
-			$subject =~ s/\*/.*/g;
-
-			push(@{$acls}, [exists(ACL_shortcuts->{$subject}) ? ACL_shortcuts->{$subject} : qr"(?:^|/)${subject}$", $perms]);
-		}
-	}
-	if ($acltext ne "") {
-		$line->log_fatal("Invalid ACL: ${acltext}.");
-	}
-
-	return $acls;
-}
-
 sub get_vartypes_basictypes() {
 	state $result = undef;
 	return $result if defined($result);
