@@ -87,7 +87,7 @@ func checklineCppMacroNames(line *Line, text string) {
 		if goodCppMacros[macro] {
 			// nice
 		} else if better := badCppMacros[macro]; better != "" {
-			line.warnf("The macro %q is not portable enough. Please use %q instead", macro, better)
+			line.warnf("The macro %q is not portable enough. Please use %q instead.", macro, better)
 			line.explain("See the pkgsrc guide, section \"CPP defines\" for details.")
 		} else if matches(macro, `(?i)^_+NetBSD_+Version_+$`) && macro != "__NetBSD_Version__" {
 			line.warnf("Misspelled variant %q of %q.", macro, "__NetBSD_Version__")
