@@ -85,33 +85,6 @@ my @todo_items;			# The list of directory entries that still need
 				# to be checked. Mostly relevant with
 				# --recursive.
 
-sub get_pkg_options() {
-	state $result = undef;
-	return $result if defined($result);
-
-	my ($fname) = ("${cwd_pkgsrcdir}/mk/defaults/options.description");
-	my ($lines, $options);
-
-	if (!($lines = load_file($fname))) {
-		log_fatal($fname, NO_LINE_NUMBER, "Cannot be read.");
-	}
-
-	$options = {};
-	foreach my $line (@{$lines}) {
-		if ($line->text =~ m"^([-0-9a-z_+]+)(?:\s+(.*))?$") {
-			my ($optname, $optdescr) = ($1, $2);
-
-			$options->{$optname} = defined($optdescr)
-			    ? $optdescr
-			    : "";
-		} else {
-			$line->log_error("Unknown line format.");
-		}
-	}
-
-	return ($result = $options);
-}
-
 my $load_tool_names_system_build_defs = undef;		# XXX: misplaced, but works
 my $load_tool_names_tools = undef;
 my $load_tool_names_vartools = undef;
