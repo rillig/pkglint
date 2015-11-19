@@ -70,8 +70,7 @@ func (self *GlobalData) loadDistSites() {
 	names := make(map[string]bool)
 	url2name := make(map[string]string)
 	for _, line := range lines {
-		text := line.text
-		if m, varname, _, urls, _ := match4(text, reVarassign); m {
+		if m, varname, _, urls, _ := match4(line.text, reVarassign); m {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
 				names[varname] = true
 				for _, url := range splitOnSpace(urls) {
