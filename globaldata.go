@@ -95,15 +95,14 @@ func (self *GlobalData) loadPkgOptions() {
 	fname := self.pkgsrcdir + "/mk/defaults/options.description"
 	lines := LoadExistingLines(fname, false)
 
-	options := make(map[string]string)
+	self.pkgOptions = make(map[string]string) 
 	for _, line := range lines {
 		if m, optname, optdescr := match2(line.text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
-			options[optname] = optdescr
+			self.pkgOptions[optname] = optdescr
 		} else {
 			line.fatalf("Unknown line format.")
 		}
 	}
-	self.pkgOptions = options
 }
 
 func (self *GlobalData) loadTools() {

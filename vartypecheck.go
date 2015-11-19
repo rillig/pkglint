@@ -352,7 +352,7 @@ func (cv *VartypeCheck) Option() {
 	}
 
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z\+]*)$`); m {
-		if G.globalData.pkgOptions[optname] == "" {
+		if _, found := G.globalData.pkgOptions[optname]; !found { // There’s a difference between empty and absent here.
 			line.warnf("Unknown option \"%s\".", optname)
 			line.explain(
 				"This option is not documented in the mk/defaults/options.description",
