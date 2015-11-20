@@ -142,7 +142,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 			warnf(distinfoFile, NO_LINES, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
 		}
 	} else {
-		if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; !fileExists(distinfoFile) {
+		if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
 			// XXX: diag warnf(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
 			warnf(distinfoFile, NO_LINES, "File not found. Please run '%s makesum'.", confMake)
 		}
