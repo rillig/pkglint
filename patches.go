@@ -247,23 +247,19 @@ var patchTransitions = map[PatchState][]transition{
 		{rePatchEmpty, PST_READY, ptNop},
 		{rePatchTextError, PST_NEEDNL, ptSeenComment},
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
-			if ctx.seenComment {
-				ctx.expectEmptyLine()
-			} else {
+			if !ctx.seenComment {
 				ctx.expectComment()
 			}
+			ctx.expectEmptyLine()
 			ctx.line.warnf("Please use unified diffs (diff -u) for patches.")
 		}},
 		{rePatchUniFileDel, PST_UNI_FILE_ADD, func(ctx *CheckPatchContext) {
-			if ctx.seenComment {
-				ctx.expectEmptyLine()
-			} else {
+			if !ctx.seenComment {
 				ctx.expectComment()
 			}
+			ctx.expectEmptyLine()
 		}},
-		{rePatchNonempty, PST_NEEDNL, func(ctx *CheckPatchContext) {
-			_ = G.opts.WarnSpace && ctx.line.notef("Empty line expected.")
-		}},
+		{rePatchNonempty, PST_NEEDNL, ptNop},
 	},
 
 	PST_READY: {

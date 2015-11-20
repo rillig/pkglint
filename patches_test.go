@@ -5,6 +5,7 @@ import (
 )
 
 func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
+	s.UseCommandLine("-Wall")
 	lines := s.NewLines("patch-as",
 		"$"+"NetBSD$",
 		"",
@@ -25,6 +26,7 @@ func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
+	s.UseCommandLine("-Wall")
 	lines := s.NewLines("patch-as",
 		"$"+"NetBSD$",
 		"",
@@ -50,6 +52,7 @@ func (s *Suite) TestChecklineOtherAbsolutePathname(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesPatch_ErrorCode(c *check.C) {
+	s.UseCommandLine("-Wall")
 	lines := s.NewLines("patch-as",
 		"$"+"NetBSD$",
 		"",
@@ -69,6 +72,7 @@ func (s *Suite) TestChecklinesPatch_ErrorCode(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesPatch_WrongOrder(c *check.C) {
+	s.UseCommandLine("-Wall")
 	lines := s.NewLines("patch-as",
 		"$"+"NetBSD$",
 		"",
