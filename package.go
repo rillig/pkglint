@@ -143,7 +143,8 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		}
 	} else {
 		if distinfoFile := G.currentDir + "/" + G.pkgContext.distinfoFile; !fileExists(distinfoFile) {
-			warnf(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
+			// XXX: diag warnf(distinfoFile, NO_LINES, "File not found. Please run \"%s makesum\".", confMake)
+			warnf(distinfoFile, NO_LINES, "File not found. Please run '%s makesum'.", confMake)
 		}
 	}
 
