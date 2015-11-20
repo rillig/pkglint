@@ -145,18 +145,11 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 
 	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
 		switch {
-		case hasSuffix(before, "@"):
-			// ok; autotools example: @PREFIX@/bin
-
-		case matches(before, `[)}]$`):
-			// ok; autotools example: ${prefix}/bin
-
-		case matches(before, `\+\s*["']$`):
-			// ok; Python example: prefix + '/lib'
-
-		case matches(before, `\w$`):
-			// ok; shell example: libdir=$prefix/lib
-
+		case hasSuffix(before, "@"): // Example: @PREFIX@/bin
+		case matches(before, `[)}]$`): // Example: ${prefix}/bin
+		case matches(before, `\+\s*["']$`): // Example: prefix + '/lib'
+		case matches(before, `\w$`): // Example: libdir=$prefix/lib
+		case hasSuffix(before, "."): // Example: ../dir
 		default:
 			_ = G.opts.DebugMisc && line.debugf("before=%q", before)
 			checkwordAbsolutePathname(line, path)

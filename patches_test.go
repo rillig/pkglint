@@ -41,5 +41,13 @@ func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
 
 	c.Check(G.errors, equals, 1)
 	c.Check(G.warnings, equals, 0)
-	c.Check(s.Stdout(), equals, "ERROR: patch-as:3: Comment expected.\n")
+	c.Check(s.Output(), equals, "ERROR: patch-as:3: Comment expected.\n")
+}
+
+func (s *Suite) TestChecklineOtherAbsolutePathname(c *check.C) {
+	line := NewLine("patch-ag", "1", "+$install -s -c ./bin/rosegarden ${DESTDIR}$BINDIR", nil)
+
+	checklineOtherAbsolutePathname(line, line.text)
+
+	c.Check(s.Output(), equals, "")
 }

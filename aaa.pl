@@ -4752,44 +4752,6 @@ sub checkline_source_absolute_pathname($$) {
 	}
 }
 
-# Last resort if the file does not look like a Makefile or typical
-# source code. All strings that look like pathnames and start with
-# one of the typical Unix prefixes are found.
-#
-sub checkline_other_absolute_pathname($$) {
-	my ($line, $text) = @_;
-
-	$opt_debug_trace and $line->log_debug("checkline_other_absolute_pathname(\"${text}\")");
-
-	if ($text =~ m"^#[^!]") {
-		# Don't warn for absolute pathnames in comments,
-		# except for shell interpreters.
-
-	} elsif ($text =~ m"^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$") {
-		my ($before, $path, $after) = ($1, $2, $3);
-
-		if ($before =~ m"\@$") {
-			# Something like @PREFIX@/bin
-
-		} elsif ($before =~ m"[)}]$") {
-			# Something like ${prefix}/bin or $(PREFIX)/bin
-
-		} elsif ($before =~ m"\+\s*[\"']$") {
-			# Something like foodir + '/lib'
-
-		} elsif ($before =~ m"\w$") {
-			# Something like $dir/lib
-
-		} elsif ($before =~ m"\.$") {
-			# ../foo is not an absolute pathname.
-
-		} else {
-			$opt_debug_misc and $line->log_debug("before=${before}");
-			checkword_absolute_pathname($line, $path);
-		}
-	}
-}
-
 sub checkfile_patch($) {
 	my ($fname) = @_;
 	my ($lines);
