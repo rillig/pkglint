@@ -34,6 +34,7 @@ func (s *Suite) TestSubstContext_Complete(c *check.C) {
 	G.opts.WarnExtra = true
 	line := NewLine("Makefile", "1", "dummy", nil)
 	ctx := new(SubstContext)
+
 	ctx.Varassign(line, "PKGNAME", "=", "pkgname-1.0")
 	ctx.Varassign(line, "SUBST_CLASSES", "+=", "p")
 	ctx.Varassign(line, "SUBST_FILES.p", "=", "Makefile")
@@ -48,4 +49,19 @@ func (s *Suite) TestSubstContext_Complete(c *check.C) {
 	ctx.Finish(line)
 
 	c.Check(s.Output(), equals, "")
+}
+
+func (s *Suite) TestSubstContext_NoClass(c *check.C) {
+	s.UseCommandLine("-Wextra")
+	line := NewLine("Makefile", "1", "dummy", nil)
+	ctx := new(SubstContext)
+
+	ctx.Varassign(line, "UNRELATED", "=", "anything")
+	ctx.Varassign(line, "SUBST_FILES.repl", "+=", "Makefile.in")
+	ctx.Varassign(line, "SUBST_SED.repl", "+=", "-e s,from,to,g")
+	ctx.Finish(line)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:1: SUBST_CLASSES should come before the definition of \"SUBST_FILES.repl\".\n"+
+		"WARN: Makefile:1: Incomplete SUBST block: SUBST_STAGE.repl missing.\n")
 }
