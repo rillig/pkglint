@@ -51,8 +51,10 @@ func (s *Suite) TestCleanpath(c *check.C) {
 	c.Check(cleanpath("simple/path"), equals, "simple/path")
 	c.Check(cleanpath("/absolute/path"), equals, "/absolute/path")
 	c.Check(cleanpath("./././."), equals, ".")
-	c.Check(cleanpath("./././"), equals, "./")
+	c.Check(cleanpath("./././"), equals, ".")
 	c.Check(cleanpath("dir/../dir/../dir/../dir/subdir/../../Makefile"), equals, "dir/../dir/../dir/../Makefile")
 	c.Check(cleanpath("dir/multi/././/file"), equals, "dir/multi/file")
 	c.Check(cleanpath("111/222/../../333/444/../../555/666/../../777/888/9"), equals, "111/222/../../777/888/9")
+	c.Check(cleanpath("cat/pkg.v1/../../cat/pkg.v2/Makefile"), equals, "cat/pkg.v1/../../cat/pkg.v2/Makefile")
+	c.Check(cleanpath("dir/"), equals, "dir")
 }

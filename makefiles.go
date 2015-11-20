@@ -60,17 +60,18 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				explainRelativeDirs(line)
 			}
 
-			if incDir != "../../mk/" && incBase != "buildlink3.mk" && incBase != "options.mk" {
+			if !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
 				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkgContext.seenMakefileCommon = true
 			}
 
 			if !contains(incDir, "/mk/") {
-				dirname := path.Dir(fname)
+				dirname, _ := path.Split(fname)
+				dirname = cleanpath(dirname)
 
 				// Only look in the directory relative to the
 				// current file and in the current working directory.
-				// We don't have an include dir list, like make(1) does.
+				// Pkglint doesn’t have an include dir list, like make(1) does.
 				if !fileExists(dirname + "/" + includeFile) {
 					dirname = G.currentDir
 				}

@@ -412,7 +412,9 @@ func cleanpath(fname string) string {
 	for contains(tmp, "//") {
 		tmp = strings.Replace(tmp, "//", "/", -1)
 	}
-	return reReplaceRepeatedly(tmp, `/[^.][^/]*/[^.][^/]*/\.\./\.\./`, "/")
+	tmp = reReplaceRepeatedly(tmp, `/[^.][^/]*/[^.][^/]*/\.\./\.\./`, "/")
+	tmp = strings.TrimSuffix(tmp, "/")
+	return tmp
 }
 
 func containsVarRef(s string) bool {
