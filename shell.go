@@ -511,7 +511,7 @@ func (ctx *ShelltextContext) handleTool() bool {
 		ctx.line.warnf("The %q tool is used but not added to USE_TOOLS.", shellword)
 	}
 
-	if G.globalData.varRequiredTools[shellword] {
+	if G.globalData.toolsVarRequired[shellword] {
 		ctx.line.warnf("Please use ${%s} instead of %q.", G.globalData.vartools[shellword], shellword)
 	}
 

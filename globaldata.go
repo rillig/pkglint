@@ -8,21 +8,22 @@ import (
 
 // Constant data that is loaded once.
 type GlobalData struct {
-	pkgsrcdir           string // Relative to the current working directory.
-	masterSiteUrls      map[string]string
-	masterSiteVars      map[string]bool
-	pkgOptions          map[string]string
-	tools               map[string]bool   // Known tool names, e.g. "sed" and "gm4".
-	vartools            map[string]string // Maps tool names to their respective variable, e.g. "sed" => "SED", "gzip" => "GZIP_CMD".
-	predefinedTools     map[string]bool   // Tools that a package does not need to add to USE_TOOLS explicitly because they are used by the pkgsrc infrastructure, too.
-	varnameToToolname   map[string]string // Maps the tool variable names to the tool name they use, e.g. "GZIP_CMD" => "gzip" and "SED" => "sed".
-	systemBuildDefs     map[string]bool   // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
-	varRequiredTools    map[string]bool   // Tool variable names that may not be converted to their "direct" form, that is: ${CP} => cp.
-	suggestedUpdates    []SuggestedUpdate
-	suggestedWipUpdates []SuggestedUpdate
-	lastChange          map[string]*Change
-	userDefinedVars     map[string]*Line
-	deprecated          map[string]string
+	pkgsrcdir           string              // Relative to the current working directory.
+	masterSiteUrls      map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
+	masterSiteVars      map[string]bool     // "MASTER_SITE_GITHUB" => true
+	pkgOptions          map[string]string   // "x11" => "Provides X11 support"
+	tools               map[string]bool     // Known tool names, e.g. "sed" and "gm4".
+	vartools            map[string]string   // Maps tool names to their respective variable, e.g. "sed" => "SED", "gzip" => "GZIP_CMD".
+	predefinedTools     map[string]bool     // Tools that a package does not need to add to USE_TOOLS explicitly because they are used by the pkgsrc infrastructure, too.
+	varnameToToolname   map[string]string   // Maps the tool variable names to the tool name they use, e.g. "GZIP_CMD" => "gzip" and "SED" => "sed".
+	systemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
+	toolvarsVarRequired map[string]bool     // Tool variable names that may not be converted to their "direct" form, that is: ${CP} may not be written as cp.
+	toolsVarRequired    map[string]bool     // Tools that need to be written in variable form, e.g. echo => ${ECHO}.
+	suggestedUpdates    []SuggestedUpdate   //
+	suggestedWipUpdates []SuggestedUpdate   //
+	lastChange          map[string]*Change  //
+	userDefinedVars     map[string]*Line    //
+	deprecated          map[string]string   //
 	vartypes            map[string]*Vartype // varcanon => type
 }
 
@@ -225,12 +226,18 @@ func (self *GlobalData) loadTools() {
 	self.predefinedTools = predefinedTools
 	self.varnameToToolname = varnameToToolname
 	self.systemBuildDefs = systemBuildDefs
-	self.varRequiredTools = map[string]bool{
+	self.toolvarsVarRequired = map[string]bool{
 		"ECHO":   true,
 		"ECHO_N": true,
 		"FALSE":  true,
 		"TEST":   true,
 		"TRUE":   true,
+	}
+	self.toolsVarRequired = map[string]bool{
+		"echo":  true,
+		"false": true,
+		"test":  true,
+		"true":  true,
 	}
 }
 

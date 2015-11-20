@@ -41,3 +41,18 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"${.TARGET}\" instead of \"$@\".\n")
 }
+
+func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
+	s.UseCommandLine("-Wall")
+	G.globalData.tools = map[string]bool{"echo": true}
+	G.globalData.vartools = map[string]string{"echo": "ECHO"}
+	G.globalData.toolsVarRequired = map[string]bool{"echo": true}
+	G.mkContext = newMkContext()
+	line := NewLine("fname", "3", "dummy", nil)
+
+	checklineMkShellcmd(line, "echo \"hello, world\"")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:3: The \"echo\" tool is used but not added to USE_TOOLS.\n"+
+		"WARN: fname:3: Please use ${ECHO} instead of \"echo\".\n")
+}
