@@ -21,8 +21,7 @@ func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
 
 	checklinesPatch(lines)
 
-	c.Check(G.errors, equals, 0)
-	c.Check(G.warnings, equals, 0)
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
@@ -39,8 +38,6 @@ func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
 
 	checklinesPatch(lines)
 
-	c.Check(G.errors, equals, 1)
-	c.Check(G.warnings, equals, 0)
 	c.Check(s.Output(), equals, "ERROR: patch-as:3: Comment expected.\n")
 }
 
@@ -69,4 +66,24 @@ func (s *Suite) TestChecklinesPatch_ErrorCode(c *check.C) {
 	checklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "")
+}
+
+func (s *Suite) TestChecklinesPatch_WrongOrder(c *check.C) {
+	lines := s.NewLines("patch-as",
+		"$"+"NetBSD$",
+		"",
+		"Text",
+		"Text",
+		"",
+		"+++ file",      // Wrong
+		"--- file.orig", // Wrong
+		"@@ -5,3 +5,3 @@",
+		" context before",
+		"-old line",
+		"+old line",
+		" context after")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "ERROR: patch-as:7: Unified diff headers must be first ---, then +++.\n")
 }

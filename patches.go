@@ -196,22 +196,36 @@ const (
 type PatchState string
 
 const (
-	PST_START         PatchState = "start"
-	PST_CENTER        PatchState = "center"
-	PST_TEXT          PatchState = "text"
-	PST_CTX_FILE_ADD  PatchState = "ctxFileAdd"
-	PST_CTX_HUNK      PatchState = "ctxHunk"
-	PST_CTX_HUNK_DEL  PatchState = "ctxHunkDel"
-	PST_CTX_LINE_DEL0 PatchState = "ctxLineDel0"
-	PST_CTX_LINE_DEL  PatchState = "ctxLineDel"
-	PST_CTX_LINE_ADD0 PatchState = "ctxLineAdd0"
-	PST_CTX_LINE_ADD  PatchState = "ctxLineAdd"
-	PST_UNI_FILE_ADD  PatchState = "uniFileAdd"
-	PST_UNI_HUNK      PatchState = "uniHunk"
-	PST_UNI_LINE      PatchState = "uniLine"
+	PST_START  PatchState = "PST_START"  // Begining of the file
+	PST_NEEDNL PatchState = "PST_NEEDNL" // Outside of any diff
+	PST_READY  PatchState = "PST_READY"  // Ready for a diff
+
+	PST_CTX_FILE_ADD  PatchState = "PST_CTX_FILE_ADD"  // After the DeleteFile line of a context diff
+	PST_CTX_HUNK      PatchState = "PST_CTX_HUNK"      // After the AddFile line of a context diff
+	PST_CTX_HUNK_DEL  PatchState = "PST_CTX_HUNK_DEL"  //
+	PST_CTX_LINE_DEL0 PatchState = "PST_CTX_LINE_DEL0" //
+	PST_CTX_LINE_DEL  PatchState = "PST_CTX_LINE_DEL"  //
+	PST_CTX_LINE_ADD0 PatchState = "PST_CTX_LINE_ADD0" //
+	PST_CTX_LINE_ADD  PatchState = "PST_CTX_LINE_ADD"  //
+
+	PST_UNI_FILE_DEL_ERR PatchState = "PST_UNI_FILE_DEL_ERR" // Sometimes, the DeleteFile and AddFile are reversed
+	PST_UNI_FILE_ADD     PatchState = "PST_UNI_FILE_ADD"     // After the DeleteFile line of a unified diff
+	PST_UNI_HUNK         PatchState = "PST_UNI_HUNK"         // After the AddFile line of a unified diff
+	PST_UNI_LINE         PatchState = "PST_UNI_LINE"         // After reading the hunk header
 )
 
 func ptNop(ctx *CheckPatchContext) {}
+func ptSeenComment(ctx *CheckPatchContext) {
+	ctx.seenComment = true
+}
+func ptUniFileAdd(ctx *CheckPatchContext) {
+	ctx.currentFilename = ctx.m[1]
+	ctx.currentFiletype = new(FileType)
+	*ctx.currentFiletype = guessFileType(ctx.line, ctx.currentFilename)
+	_ = G.opts.DebugPatches && ctx.line.debugf("filename=%q filetype=%v", ctx.currentFilename, *ctx.currentFiletype)
+	ctx.patchedFiles++
+	ctx.hunks = 0
+}
 
 type transition struct {
 	re     string
@@ -221,19 +235,17 @@ type transition struct {
 
 var patchTransitions = map[PatchState][]transition{
 	PST_START: {
-		{rePatchRcsid, PST_CENTER, func(ctx *CheckPatchContext) {
+		{rePatchRcsid, PST_NEEDNL, func(ctx *CheckPatchContext) {
 			checklineRcsid(ctx.line, ``, "")
 		}},
-		{"", PST_CENTER, func(ctx *CheckPatchContext) {
+		{"", PST_NEEDNL, func(ctx *CheckPatchContext) {
 			checklineRcsid(ctx.line, ``, "")
 		}},
 	},
 
-	PST_CENTER: {
-		{rePatchEmpty, PST_TEXT, ptNop},
-		{rePatchTextError, PST_TEXT, func(ctx *CheckPatchContext) {
-			ctx.seenComment = true
-		}},
+	PST_NEEDNL: {
+		{rePatchEmpty, PST_READY, ptNop},
+		{rePatchTextError, PST_NEEDNL, ptSeenComment},
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
 			if ctx.seenComment {
 				ctx.expectEmptyLine()
@@ -249,15 +261,13 @@ var patchTransitions = map[PatchState][]transition{
 				ctx.expectComment()
 			}
 		}},
-		{"", PST_TEXT, func(ctx *CheckPatchContext) {
+		{rePatchNonempty, PST_NEEDNL, func(ctx *CheckPatchContext) {
 			_ = G.opts.WarnSpace && ctx.line.notef("Empty line expected.")
 		}},
 	},
 
-	PST_TEXT: {
-		{rePatchTextError, PST_TEXT, func(ctx *CheckPatchContext) {
-			ctx.seenComment = true
-		}},
+	PST_READY: {
+		{rePatchTextError, PST_READY, ptSeenComment},
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
 			if !ctx.seenComment {
 				ctx.expectComment()
@@ -269,18 +279,25 @@ var patchTransitions = map[PatchState][]transition{
 				ctx.expectComment()
 			}
 		}},
-		{rePatchNonempty, PST_TEXT, func(ctx *CheckPatchContext) {
-			ctx.seenComment = true
+		{rePatchUniFileAdd, PST_UNI_FILE_DEL_ERR, ptUniFileAdd},
+		{rePatchNonempty, PST_NEEDNL, ptSeenComment},
+		{rePatchEmpty, PST_READY, ptNop},
+	},
+
+	PST_UNI_FILE_DEL_ERR: {
+		{rePatchUniFileDel, PST_UNI_HUNK, func(ctx *CheckPatchContext) {
+			ctx.line.errorf("Unified diff headers must be first ---, then +++.")
 		}},
-		{rePatchEmpty, PST_TEXT, ptNop},
+		{rePatchNonempty, PST_NEEDNL, ptNop},
+		{rePatchEmpty, PST_READY, ptNop},
 	},
 
 	PST_CTX_FILE_ADD: {
 		{rePatchCtxFileAdd, PST_CTX_HUNK, func(ctx *CheckPatchContext) {
-			ctx.currentFilename = &ctx.m[1]
+			ctx.currentFilename = ctx.m[1]
 			ctx.currentFiletype = new(FileType)
-			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
-			_ = G.opts.DebugPatches && ctx.line.debugf("filename=%q filetype=%q", *ctx.currentFilename, *ctx.currentFiletype)
+			*ctx.currentFiletype = guessFileType(ctx.line, ctx.currentFilename)
+			_ = G.opts.DebugPatches && ctx.line.debugf("filename=%q filetype=%v", ctx.currentFilename, *ctx.currentFiletype)
 			ctx.patchedFiles++
 			ctx.hunks = 0
 		}},
@@ -290,16 +307,15 @@ var patchTransitions = map[PatchState][]transition{
 		{rePatchCtxHunk, PST_CTX_HUNK_DEL, func(ctx *CheckPatchContext) {
 			ctx.hunks++
 		}},
-		{"", PST_TEXT, ptNop},
+		{"", PST_READY, ptNop},
 	},
 
 	PST_CTX_HUNK_DEL: {
 		{rePatchCtxHunkDel, PST_CTX_LINE_DEL0, func(ctx *CheckPatchContext) {
-			ctx.dellines = new(int)
 			if ctx.m[2] != "" {
-				*ctx.dellines = 1 + toInt(ctx.m[2]) - toInt(ctx.m[1])
+				ctx.dellines = 1 + toInt(ctx.m[2]) - toInt(ctx.m[1])
 			} else {
-				*ctx.dellines = toInt(ctx.m[1])
+				ctx.dellines = toInt(ctx.m[1])
 			}
 		}},
 	},
@@ -315,12 +331,11 @@ var patchTransitions = map[PatchState][]transition{
 			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
 		}},
 		{rePatchCtxHunkAdd, PST_CTX_LINE_ADD0, func(ctx *CheckPatchContext) {
-			ctx.dellines = nil
-			ctx.addlines = new(int)
+			ctx.dellines = 0
 			if 2 < len(ctx.m) {
-				*ctx.addlines = 1 + toInt(ctx.m[2]) - toInt(ctx.m[1])
+				ctx.addlines = 1 + toInt(ctx.m[2]) - toInt(ctx.m[1])
 			} else {
-				*ctx.addlines = toInt(ctx.m[1])
+				ctx.addlines = toInt(ctx.m[1])
 			}
 		}},
 	},
@@ -336,7 +351,7 @@ var patchTransitions = map[PatchState][]transition{
 			ctx.checkHunkLine(1, 0, PST_CTX_LINE_DEL0)
 		}},
 		{"", PST_CTX_LINE_DEL0, func(ctx *CheckPatchContext) {
-			if nilToZero(ctx.dellines) != 0 {
+			if ctx.dellines != 0 {
 				ctx.line.warnf("Invalid number of deleted lines (%d missing).", ctx.dellines)
 			}
 		}},
@@ -366,38 +381,28 @@ var patchTransitions = map[PatchState][]transition{
 			ctx.checkHunkLine(0, 1, PST_CTX_HUNK)
 		}},
 		{"", PST_CTX_LINE_ADD0, func(ctx *CheckPatchContext) {
-			if nilToZero(ctx.addlines) != 0 {
+			if ctx.addlines != 0 {
 				ctx.line.warnf("Invalid number of added lines (%d missing).", ctx.addlines)
 			}
 		}},
 	},
 
 	PST_UNI_FILE_ADD: {
-		{rePatchUniFileAdd, PST_UNI_HUNK, func(ctx *CheckPatchContext) {
-			ctx.currentFilename = new(string)
-			*ctx.currentFilename = ctx.m[1]
-			ctx.currentFiletype = new(FileType)
-			*ctx.currentFiletype = guessFileType(ctx.line, *ctx.currentFilename)
-			_ = G.opts.DebugPatches && ctx.line.debugf("filename=%q filetype=%q", ctx.currentFilename, ctx.currentFiletype)
-			ctx.patchedFiles++
-			ctx.hunks = 0
-		}},
+		{rePatchUniFileAdd, PST_UNI_HUNK, ptUniFileAdd},
 	},
 
 	PST_UNI_HUNK: {
 		{rePatchUniHunk, PST_UNI_LINE, func(ctx *CheckPatchContext) {
 			m := ctx.m
-			ctx.dellines = new(int)
 			if m[1] != "" {
-				*ctx.dellines = toInt(m[2])
+				ctx.dellines = toInt(m[2])
 			} else {
-				*ctx.dellines = 1
+				ctx.dellines = 1
 			}
-			ctx.addlines = new(int)
 			if m[3] != "" {
-				*ctx.addlines = toInt(m[4])
+				ctx.addlines = toInt(m[4])
 			} else {
-				*ctx.addlines = 1
+				ctx.addlines = 1
 			}
 			ctx.checkText(ctx.line.text)
 			if hasSuffix(ctx.line.text, "\r") {
@@ -415,7 +420,7 @@ var patchTransitions = map[PatchState][]transition{
 			ctx.leadingContextLines = 0
 			ctx.trailingContextLines = 0
 		}},
-		{"", PST_TEXT, func(ctx *CheckPatchContext) {
+		{"", PST_READY, func(ctx *CheckPatchContext) {
 			if ctx.hunks == 0 {
 				ctx.line.warnf("No hunks for file %q.", ctx.currentFilename)
 			}
@@ -439,8 +444,8 @@ var patchTransitions = map[PatchState][]transition{
 			ctx.checkHunkLine(1, 1, PST_UNI_HUNK)
 		}},
 		{"", PST_UNI_HUNK, func(ctx *CheckPatchContext) {
-			if nilToZero(ctx.dellines) != 0 || nilToZero(ctx.addlines) != 0 {
-				ctx.line.warnf("Unexpected end of hunk (-%d,+%d expected).", nilToZero(ctx.dellines), nilToZero(ctx.addlines))
+			if ctx.dellines != 0 || ctx.addlines != 0 {
+				ctx.line.warnf("Unexpected end of hunk (-%d,+%d expected).", ctx.dellines, ctx.addlines)
 			}
 		}},
 	},
@@ -482,13 +487,13 @@ func checklinesPatch(lines []*Line) {
 
 		if !found {
 			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
-			ctx.state = PST_TEXT
+			ctx.state = PST_READY
 			lineno++
 		}
 	}
 
 	fname := lines[0].fname
-	for ctx.state != PST_TEXT {
+	for ctx.state != PST_READY {
 		_ = G.opts.DebugPatches &&
 			debugf(fname, "EOF", "state=%s hunks=%d del=%d add=%d",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
@@ -528,11 +533,11 @@ type CheckPatchContext struct {
 	state                  PatchState
 	redostate              *PatchState
 	nextstate              PatchState
-	dellines               *int
-	addlines               *int
+	dellines               int
+	addlines               int
 	hunks                  int
 	seenComment            bool
-	currentFilename        *string
+	currentFilename        string
 	currentFiletype        *FileType
 	patchedFiles           int
 	leadingContextLines    int
@@ -618,18 +623,18 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 }
 
 func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate PatchState) {
-	if deldelta > 0 && nilToZero(ctx.dellines) == 0 {
+	if deldelta > 0 && ctx.dellines == 0 {
 		ctx.redostate = &newstate
-		if nilToZero(ctx.addlines) > 0 {
-			ctx.line.errorf("Expected %d more lines to be added.", *ctx.addlines)
+		if ctx.addlines > 0 {
+			ctx.line.errorf("Expected %d more lines to be added.", ctx.addlines)
 		}
 		return
 	}
 
-	if adddelta > 0 && nilToZero(ctx.addlines) == 0 {
+	if adddelta > 0 && ctx.addlines == 0 {
 		ctx.redostate = &newstate
-		if nilToZero(ctx.dellines) > 0 {
-			ctx.line.errorf("Expected %d more lines to be deleted.", *ctx.dellines)
+		if ctx.dellines > 0 {
+			ctx.line.errorf("Expected %d more lines to be deleted.", ctx.dellines)
 		}
 		return
 	}
@@ -651,13 +656,13 @@ func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate Patc
 	}
 
 	if deldelta > 0 {
-		*ctx.dellines -= deldelta
+		ctx.dellines -= deldelta
 	}
 	if adddelta > 0 {
-		*ctx.addlines -= adddelta
+		ctx.addlines -= adddelta
 	}
 
-	if nilToZero(ctx.dellines) == 0 && nilToZero(ctx.addlines) == 0 {
+	if ctx.dellines == 0 && ctx.addlines == 0 {
 		if ctx.contextScanningLeading != nil {
 			if ctx.leadingContextLines != ctx.trailingContextLines {
 				_ = G.opts.DebugPatches && ctx.line.warnf(
