@@ -19,6 +19,10 @@ func CheckfileDistinfo(fname string) {
 	if patchesDir == "" && dirExists(G.currentDir+"/patches") {
 		patchesDir = "patches"
 	}
+	if G.pkgContext != nil && hasSuffix(fname, "/lang/php54/distinfo") {
+		patchesDir = G.curPkgsrcdir + "/lang/php54/patches"
+	}
+	_ = G.opts.DebugMisc && debugf(fname, NO_LINES, "patchesDir=%q", patchesDir)
 
 	ck := &distinfoLinesChecker{
 		fname, patchesDir, isCommitted(fname),
@@ -134,7 +138,7 @@ func (ck *distinfoLinesChecker) checkGlobalMismatch(line *Line, fname, alg, hash
 }
 
 func (ck *distinfoLinesChecker) checkUncommittedPatch(line *Line, fname, sha1Hash string) {
-	if ck.isPatch && !hasSuffix(G.pkgContext.distinfoFile, "/lang/php5/distinfo") {
+	if ck.isPatch {
 		fname := G.currentDir + "/" + ck.patchdir + "/" + fname
 		if ck.isCommitted && !isCommitted(fname) {
 			line.warnf("%s/%s is registered in distinfo but not added to CVS.", ck.patchdir, fname)
