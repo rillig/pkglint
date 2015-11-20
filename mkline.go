@@ -482,7 +482,7 @@ const reVarnamePlural = "^(?:" +
 	"|TOOLS_BROKEN" +
 	"|TOOLS_CREATE" +
 	"|TOOLS_GNU_MISSING" +
-	"|TOOLS_NOOP"+
+	"|TOOLS_NOOP" +
 	")$"
 
 func checklineMkVartype(line *Line, varname, op, value, comment string) {

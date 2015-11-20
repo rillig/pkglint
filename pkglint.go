@@ -28,7 +28,7 @@ func explainRelativeDirs(line *Line) {
 		"main pkgsrc repository.")
 }
 
-// The pkgsrc top-level directory, relative to the given directory.
+// Returns the pkgsrc top-level directory, relative to the given file or directory.
 func findPkgsrcTopdir(fname string) string {
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
 		if fileExists(fname + "/" + dir + "/mk/bsd.pkg.mk") {

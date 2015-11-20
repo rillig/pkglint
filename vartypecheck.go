@@ -64,17 +64,13 @@ func (cv *VartypeCheck) Category() {
 func (cv *VartypeCheck) CFlag() {
 	line, value := cv.line, cv.value
 
-	if matches(value, `^-[DILOUWfgm].`) || hasPrefix(value, "-std=") {
-		return
-	}
-	if value == "-c99" {
-		return // Only useful for the IRIX C compiler
-	}
-	if hasPrefix(value, "-") {
+	switch {
+	case matches(value, `^-[DILOUWfgm]`),
+		hasPrefix(value, "-std="),
+		value == "-c99":
+	case hasPrefix(value, "-"):
 		line.warnf("Unknown compiler flag %q.", value)
-		return
-	}
-	if !containsVarRef(value) {
+	case !containsVarRef(value):
 		line.warnf("Compiler flag %q should start with a hyphen.", value)
 	}
 }
@@ -209,7 +205,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 			cv.line.warnf("Unknown operating system: %s", opsys)
 		}
 		// no check for os_version
-		if !matches(arch, `^(?:i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)"`) {
+		if !matches(arch, `^(?:i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
 			cv.line.warnf("Unknown hardware architecture: %s", arch)
 		}
 

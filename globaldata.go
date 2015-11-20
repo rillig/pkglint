@@ -2,7 +2,7 @@ package main
 
 import (
 	"io/ioutil"
-	"path/filepath"
+	"path"
 	"sort"
 )
 
@@ -46,6 +46,9 @@ type SuggestedUpdate struct {
 
 func (gd *GlobalData) Initialize() {
 	firstArg := G.todo[0]
+	if fileExists(firstArg) {
+		firstArg = path.Dir(firstArg)
+	}
 	if relTopdir := findPkgsrcTopdir(firstArg); relTopdir != "" {
 		gd.pkgsrcdir = firstArg + "/" + relTopdir
 	} else {
@@ -95,7 +98,7 @@ func (self *GlobalData) loadPkgOptions() {
 	fname := self.pkgsrcdir + "/mk/defaults/options.description"
 	lines := LoadExistingLines(fname, false)
 
-	self.pkgOptions = make(map[string]string) 
+	self.pkgOptions = make(map[string]string)
 	for _, line := range lines {
 		if m, optname, optdescr := match2(line.text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
 			self.pkgOptions[optname] = optdescr
@@ -333,7 +336,7 @@ func (self *GlobalData) loadDocChanges() {
 	sort.Strings(fnames)
 	self.lastChange = make(map[string]*Change)
 	for _, fname := range fnames {
-		changes := self.loadDocChangesFromFile(filepath.Join(docdir, fname))
+		changes := self.loadDocChangesFromFile(docdir + "/" + fname)
 		for _, change := range changes {
 			c := change
 			self.lastChange[change.pkgpath] = &c
