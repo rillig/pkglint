@@ -150,6 +150,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		case matches(before, `\+\s*["']$`): // Example: prefix + '/lib'
 		case matches(before, `\w$`): // Example: libdir=$prefix/lib
 		case hasSuffix(before, "."): // Example: ../dir
+		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
 		default:
 			_ = G.opts.DebugMisc && line.debugf("before=%q", before)
 			checkwordAbsolutePathname(line, path)
