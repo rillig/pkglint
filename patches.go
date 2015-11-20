@@ -173,6 +173,7 @@ const (
 	rePatchRcsid            = `^\$.*\$$`
 	rePatchNonempty         = `^(.+)$`
 	rePatchEmpty            = `^$`
+	rePatchTextError        = `\*\*\* Error code`
 	rePatchCtxFileDel       = `^\*\*\*\s(\S+)(.*)$`
 	rePatchCtxFileAdd       = `^---\s(\S+)(.*)$`
 	rePatchCtxHunk          = `^\*{15}(.*)$`
@@ -230,6 +231,9 @@ var patchTransitions = map[PatchState][]transition{
 
 	PST_CENTER: {
 		{rePatchEmpty, PST_TEXT, ptNop},
+		{rePatchTextError, PST_TEXT, func(ctx *CheckPatchContext) {
+			ctx.seenComment = true
+		}},
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
 			if ctx.seenComment {
 				ctx.expectEmptyLine()
@@ -251,6 +255,9 @@ var patchTransitions = map[PatchState][]transition{
 	},
 
 	PST_TEXT: {
+		{rePatchTextError, PST_TEXT, func(ctx *CheckPatchContext) {
+			ctx.seenComment = true
+		}},
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
 			if !ctx.seenComment {
 				ctx.expectComment()

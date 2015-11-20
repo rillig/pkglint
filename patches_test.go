@@ -51,3 +51,22 @@ func (s *Suite) TestChecklineOtherAbsolutePathname(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 }
+
+func (s *Suite) TestChecklinesPatch_ErrorCode(c *check.C) {
+	lines := s.NewLines("patch-as",
+		"$"+"NetBSD$",
+		"",
+		"*** Error code 1", // Looks like a context diff, but isn’t.
+		"",
+		"--- file.orig",
+		"+++ file",
+		"@@ -5,3 +5,3 @@",
+		" context before",
+		"-old line",
+		"+old line",
+		" context after")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "")
+}
