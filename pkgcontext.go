@@ -35,12 +35,17 @@ func newPkgContext(pkgpath string) *PkgContext {
 	return ctx
 }
 
-func (ctx *PkgContext) defineVar(varname string, line *Line) {
+func (ctx *PkgContext) defineVar(line *Line, varname string) {
+	if line.extra["value"] == nil {
+		line.errorf("Internal pkglint error: novalue")
+		return
+	}
 	if ctx.vardef[varname] == nil {
-		if line.extra["value"] == nil {
-			line.errorf("Internal pkglint error: novalue")
-		}
 		ctx.vardef[varname] = line
+	}
+	varcanon := varnameCanon(varname)
+	if ctx.vardef[varcanon] == nil {
+		ctx.vardef[varcanon] = line
 	}
 }
 func (ctx *PkgContext) varValue(varname string) (string, bool) {

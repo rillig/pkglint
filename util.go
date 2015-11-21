@@ -12,13 +12,6 @@ import (
 	"strings"
 )
 
-func imin(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func intMax(a, b int) int {
 	if a > b {
 		return a
@@ -127,36 +120,30 @@ func varnameParam(varname string) string {
 }
 
 func defineVar(line *Line, varname string) {
-	varcanon := varnameCanon(varname)
-	mk := G.mkContext
-	if mk != nil {
-		mk.vardef[varname] = line
-		mk.vardef[varcanon] = line
+	if mk := G.mkContext; mk != nil {
+		mk.defineVar(line, varname)
 	}
-	pkg := G.pkgContext
-	if pkg != nil {
-		pkg.vardef[varname] = line
-		pkg.vardef[varcanon] = line
+	if pkg := G.pkgContext; pkg != nil {
+		pkg.defineVar(line, varname)
 	}
 }
 func varIsDefined(varname string) bool {
 	varcanon := varnameCanon(varname)
-	mk := G.mkContext
-	if mk != nil && (mk.vardef[varname] != nil || mk.vardef[varcanon] != nil) {
+	if mk := G.mkContext; mk != nil && (mk.vardef[varname] != nil || mk.vardef[varcanon] != nil) {
 		return true
 	}
-	pkg := G.pkgContext
-	return pkg != nil && (pkg.vardef[varname] != nil || pkg.vardef[varcanon] != nil)
+	if pkg := G.pkgContext; pkg != nil && (pkg.vardef[varname] != nil || pkg.vardef[varcanon] != nil) {
+		return true
+	}
+	return false
 }
 func useVar(line *Line, varname string) {
 	varcanon := varnameCanon(varname)
-	mk := G.mkContext
-	if mk != nil {
+	if mk := G.mkContext; mk != nil {
 		mk.varuse[varname] = line
 		mk.varuse[varcanon] = line
 	}
-	pkg := G.pkgContext
-	if pkg != nil {
+	if pkg := G.pkgContext; pkg != nil {
 		pkg.varuse[varname] = line
 		pkg.varuse[varcanon] = line
 	}

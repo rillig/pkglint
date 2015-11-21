@@ -293,7 +293,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "share/icons/hicolor/") && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
-			line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f) 
+			line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
 		}
 
 	case hasPrefix(text, "share/icons/gnome") && G.pkgContext.pkgpath != "graphics/gnome-icon-theme":

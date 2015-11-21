@@ -36,18 +36,26 @@ func (ctx *MkContext) pushIndent(indent int) {
 	ctx.indentation = append(ctx.indentation, indent)
 }
 
-func (ctx *MkContext) defineVar(varname string, line *Line) {
+func (ctx *MkContext) defineVar(line *Line, varname string) {
+	if line.extra["value"] == nil {
+		line.errorf("Internal pkglint error: novalue")
+		return
+	}
 	if ctx.vardef[varname] == nil {
-		if line.extra["value"] == nil {
-			line.errorf("Internal pkglint error: novalue")
-		}
 		ctx.vardef[varname] = line
 	}
+	varcanon := varnameCanon(varname)
+	if ctx.vardef[varcanon] == nil {
+		ctx.vardef[varcanon] = line
+	}
 }
-func (ctx *MkContext) varValue(varname string) (string, bool) {
+
+func (ctx *MkContext) varValue(varname string) (value string, found bool) {
 	if line := ctx.vardef[varname]; line != nil {
 		if value := line.extra["value"]; value != nil {
 			return value.(string), true
+		} else {
+			line.errorf("Internal pkglint error: novalue")
 		}
 	}
 	return "", false
