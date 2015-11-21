@@ -230,7 +230,7 @@ type transition struct {
 
 func (ctx *CheckPatchContext) checkOutside() {
 	text := ctx.line.text
-	if text != "" && ctx.needEmptyLineNow {
+	if G.opts.WarnSpace && text != "" && ctx.needEmptyLineNow {
 		ctx.line.notef("Empty line expected.")
 	}
 	ctx.needEmptyLineNow = false
@@ -241,7 +241,7 @@ func (ctx *CheckPatchContext) checkOutside() {
 }
 
 func (ctx *CheckPatchContext) checkBeginDiff() {
-	if !ctx.prevLineWasEmpty {
+	if G.opts.WarnSpace && !ctx.prevLineWasEmpty {
 		ctx.line.notef("Empty line expected.")
 	}
 	if !ctx.seenComment {
