@@ -35,7 +35,7 @@ func mustMatch(pattern string, s string) []string {
 
 func isEmptyDir(fname string) bool {
 	dirents, err := ioutil.ReadDir(fname)
-	if err != nil {
+	if err != nil || hasSuffix(fname, "/CVS") {
 		return true
 	}
 	for _, dirent := range dirents {
