@@ -6,7 +6,7 @@ package main
 // * LK_SHELL is a list whose elements are split by shell rules
 // * LK_SPACE is a list whose elements are split by whitespace
 //
-// The other types are described in pkglint.pl, checkline_mk_vartype_basic.
+// See vartypecheck.go for how these types are checked.
 //
 // Last synced with mk/defaults/mk.conf revision 1.118
 

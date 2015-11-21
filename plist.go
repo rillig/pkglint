@@ -10,13 +10,8 @@ type PlistContext struct {
 	lastFname string
 }
 
-func checkfilePlist(fname string) {
-	defer tracecall("checkfilePlist", fname)()
-
-	lines := LoadNonemptyLines(fname, false)
-	if lines == nil {
-		return
-	}
+func checklinesPlist(lines []*Line) {
+	defer tracecall("checklinesPlist", lines[0].fname)()
 
 	checklineRcsid(lines[0], `@comment `, "@comment ")
 
@@ -39,7 +34,7 @@ func checkfilePlist(fname string) {
 	pctx.allDirs = make(map[string]*Line)
 
 	var extraLines []*Line
-	if path.Base(fname) == "PLIST.common_end" {
+	if fname := lines[0].fname; path.Base(fname) == "PLIST.common_end" {
 		commonLines, err := loadLines(path.Dir(fname)+"/PLIST.common", false)
 		if err == nil {
 			extraLines = commonLines

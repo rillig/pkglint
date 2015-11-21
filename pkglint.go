@@ -350,26 +350,19 @@ func checklineRelativePath(line *Line, path string, mustExist bool) {
 func checkfileExtra(fname string) {
 	defer tracecall("checkfileExtra", fname)()
 
-	lines := LoadNonemptyLines(fname, false)
-	if lines == nil {
-		return
+	if lines := LoadNonemptyLines(fname, false); lines != nil {
+		checklinesTrailingEmptyLines(lines)
 	}
-	checklinesTrailingEmptyLines(lines)
 }
 
-func checkfileMessage(fname string) {
-	defer tracecall("checkfileMessage", fname)()
+func checklinesMessage(lines []*Line) {
+	defer tracecall("checklinesMessage", lines[0].fname)()
 
 	explanation := []string{
 		"A MESSAGE file should consist of a header line, having 75 \"=\"",
 		"characters, followed by a line containing only the RCS Id, then an",
 		"empty line, your text and finally the footer line, which is the",
 		"same as the header line."}
-
-	lines := LoadNonemptyLines(fname, false)
-	if lines == nil {
-		return
-	}
 
 	if len(lines) < 3 {
 		lastLine := lines[len(lines)-1]
@@ -477,18 +470,26 @@ func checkfile(fname string) {
 		if G.opts.CheckAlternatives {
 			checkfileExtra(fname)
 		}
+
 	case basename == "buildlink3.mk":
 		if G.opts.CheckBuildlink3 {
-			checkfileBuildlink3Mk(fname)
-		}
-	case hasPrefix(basename, "DESCR"):
-		if G.opts.CheckDescr {
-			checkfileDescr(fname)
+			if lines := LoadNonemptyLines(fname, true); lines != nil {
+				checklinesBuildlink3Mk(lines)
+			}
 		}
 
-	case matches(basename, `^distinfo`):
+	case hasPrefix(basename, "DESCR"):
+		if G.opts.CheckDescr {
+			if lines := LoadNonemptyLines(fname, false); lines != nil {
+				checklinesDescr(lines)
+			}
+		}
+
+	case hasPrefix(basename, "distinfo"):
 		if G.opts.CheckDistinfo {
-			CheckfileDistinfo(fname)
+			if lines := LoadNonemptyLines(fname, false); lines != nil {
+				checklinesDistinfo(lines)
+			}
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
@@ -496,14 +497,18 @@ func checkfile(fname string) {
 			checkfileExtra(fname)
 		}
 
-	case matches(basename, `^MESSAGE`):
+	case hasPrefix(basename, "MESSAGE"):
 		if G.opts.CheckMessage {
-			checkfileMessage(fname)
+			if lines := LoadNonemptyLines(fname, false); lines != nil {
+				checklinesMessage(lines)
+			}
 		}
 
 	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
 		if G.opts.CheckPatches {
-			checkfilePatch(fname)
+			if lines := LoadNonemptyLines(fname, false); lines != nil {
+				checklinesPatch(lines)
+			}
 		}
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
@@ -519,20 +524,23 @@ func checkfile(fname string) {
 			checkfileMk(fname)
 		}
 
-	case matches(basename, `^PLIST`):
+	case hasPrefix(basename, "PLIST"):
 		if G.opts.CheckPlist {
-			checkfilePlist(fname)
+			if lines := LoadNonemptyLines(fname, false); lines != nil {
+				checklinesPlist(lines)
+			}
 		}
 
 	case basename == "TODO" || basename == "README":
 		// Ok
 
-	case matches(basename, `^CHANGES-.*`):
+	case hasPrefix(basename, "CHANGES-"):
 		// This only checks the file, but doesn’t register the changes globally.
 		G.globalData.loadDocChangesFromFile(fname)
 
 	case matches(fname, `(?:^|/)files/[^/]*$`):
-		// Ok
+		// Skip
+
 	default:
 		warnf(fname, NO_LINES, "Unexpected file found.")
 		if G.opts.CheckExtra {

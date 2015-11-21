@@ -158,17 +158,6 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 	}
 }
 
-func checkfilePatch(fname string) {
-	defer tracecall("checkfilePatch", fname)()
-
-	lines := LoadNonemptyLines(fname, false)
-	if lines == nil {
-		return
-	}
-
-	checklinesPatch(lines)
-}
-
 const (
 	rePatchRcsid            = `^\$.*\$$`
 	rePatchNonempty         = `^(.+)$`
@@ -439,6 +428,8 @@ var patchTransitions = map[PatchState][]transition{
 }
 
 func checklinesPatch(lines []*Line) {
+	defer tracecall("checklinesPatch", lines[0].fname)()
+
 	checklineRcsid(lines[0], ``, "")
 
 	ctx := CheckPatchContext{state: PST_OUTSIDE, needEmptyLineNow: true}

@@ -7,14 +7,10 @@ import (
 	"strings"
 )
 
-func CheckfileDistinfo(fname string) {
-	defer tracecall("checkfileDistinfo", fname)()
+func checklinesDistinfo(lines []*Line) {
+	defer tracecall("checklinesDistinfo", lines[0].fname)()
 
-	lines := LoadNonemptyLines(fname, false)
-	if lines == nil {
-		return
-	}
-
+	fname := lines[0].fname
 	patchesDir := G.pkgContext.patchdir
 	if patchesDir == "" && dirExists(G.currentDir+"/patches") {
 		patchesDir = "patches"

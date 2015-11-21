@@ -5,18 +5,9 @@ import (
 	"strings"
 )
 
-func checkfileBuildlink3Mk(fname string) {
-	defer tracecall("checkfileBuildlink3Mk", fname)()
-
-	lines := LoadNonemptyLines(fname, true)
-	if lines == nil {
-		return
-	}
-
-	checklinesBuildlink3Mk(lines)
-}
-
 func checklinesBuildlink3Mk(lines []*Line) {
+	defer tracecall("checklinesBuildlink3Mk", lines[0].fname)()
+
 	ParselinesMk(lines)
 	ChecklinesMk(lines)
 

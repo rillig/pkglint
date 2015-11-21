@@ -1,11 +1,5 @@
 package main
 
-func checkfileDescr(fname string) {
-	if lines := LoadNonemptyLines(fname, false); lines != nil {
-		checklinesDescr(lines)
-	}
-}
-
 func checklinesDescr(lines []*Line) {
 	defer tracecall("checklinesDescr", lines[0].fname)()
 
