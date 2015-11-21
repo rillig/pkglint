@@ -259,7 +259,7 @@ outer:
 				replacePrefix(&rest, &m, `^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
 				replacePrefix(&rest, &m, `^\$\$(\$)\$`):
 				shvarname := m[1]
-				if G.opts.WarnQuoting && checkQuoting {
+				if G.opts.WarnQuoting && checkQuoting && msline.variableNeedsQuoting(shvarname) {
 					line.warnf("Unquoted shell variable %q.", shvarname)
 					line.explain(
 						"When a shell variable contains white-space, it is expanded (split into",
@@ -342,6 +342,16 @@ outer:
 	if strings.TrimSpace(rest) != "" {
 		line.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, rest, shellword)
 	}
+}
+
+func (msline *MkShellLine) variableNeedsQuoting(shvarname string) bool {
+	switch shvarname {
+	case "#", "?":
+		return false // Definitely ok
+	case "d", "f", "i", "dir", "file", "src", "dst":
+		return false // Probably ok
+	}
+	return true
 }
 
 type ShelltextContext struct {
