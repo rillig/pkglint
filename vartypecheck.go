@@ -450,6 +450,10 @@ func (cv *VartypeCheck) PkgRevision() {
 }
 
 func (cv *VartypeCheck) PlatformTriple() {
+	if cv.value != cv.valueNovar {
+		return
+	}
+
 	rePart := `(?:\[[^\]]+\]|[^-\[])+`
 	reTriple := `^(` + rePart + `)-(` + rePart + `)-(` + rePart + `)$`
 	if m, opsys, _, arch := match3(cv.value, reTriple); m {
