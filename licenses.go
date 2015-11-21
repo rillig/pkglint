@@ -40,7 +40,9 @@ func checklineLicense(line *Line, value string) {
 		}
 		if licenseFile == "" {
 			licenseFile = G.globalData.pkgsrcdir + "/licenses/" + license
-			G.ipcUsedLicenses[license] = true
+			if G.ipcUsedLicenses != nil {
+				G.ipcUsedLicenses[license] = true
+			}
 		}
 
 		if !fileExists(licenseFile) {

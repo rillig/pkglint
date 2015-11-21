@@ -393,9 +393,13 @@ func ChecklinesMk(lines []*Line) {
 				if path.Base(line.fname) == "buildlink3.mk" {
 					line.notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 				}
-				G.pkgContext.seen_bsd_prefs_mk = true
+				if G.pkgContext != nil {
+					G.pkgContext.seen_bsd_prefs_mk = true
+				}
 			} else if includefile == "../../mk/bsd.fast.prefs.mk" {
-				G.pkgContext.seen_bsd_prefs_mk = true
+				if G.pkgContext != nil {
+					G.pkgContext.seen_bsd_prefs_mk = true
+				}
 			}
 
 			if matches(includefile, `/x11-links/buildlink3\.mk$`) {
