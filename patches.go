@@ -196,9 +196,7 @@ const (
 type PatchState string
 
 const (
-	PST_START  PatchState = "PST_START"  // Begining of the file
-	PST_NEEDNL PatchState = "PST_NEEDNL" // Outside of any diff
-	PST_READY  PatchState = "PST_READY"  // Ready for a diff
+	PST_OUTSIDE PatchState = "PST_OUTSIDE" // Outside of a diff
 
 	PST_CTX_FILE_ADD  PatchState = "PST_CTX_FILE_ADD"  // After the DeleteFile line of a context diff
 	PST_CTX_HUNK      PatchState = "PST_CTX_HUNK"      // After the AddFile line of a context diff
@@ -215,9 +213,6 @@ const (
 )
 
 func ptNop(ctx *CheckPatchContext) {}
-func ptSeenComment(ctx *CheckPatchContext) {
-	ctx.seenComment = true
-}
 func ptUniFileAdd(ctx *CheckPatchContext) {
 	ctx.currentFilename = ctx.m[1]
 	ctx.currentFiletype = new(FileType)
@@ -233,59 +228,55 @@ type transition struct {
 	action func(*CheckPatchContext)
 }
 
-var patchTransitions = map[PatchState][]transition{
-	PST_START: {
-		{rePatchRcsid, PST_NEEDNL, func(ctx *CheckPatchContext) {
-			checklineRcsid(ctx.line, ``, "")
-		}},
-		{"", PST_NEEDNL, func(ctx *CheckPatchContext) {
-			checklineRcsid(ctx.line, ``, "")
-		}},
-	},
+func (ctx *CheckPatchContext) checkOutside() {
+	text := ctx.line.text
+	if text != "" && ctx.needEmptyLineNow {
+		ctx.line.notef("Empty line expected.")
+	}
+	ctx.needEmptyLineNow = false
+	if text != "" {
+		ctx.seenComment = true
+	}
+	ctx.prevLineWasEmpty = text == ""
+}
 
-	PST_NEEDNL: {
-		{rePatchEmpty, PST_READY, ptNop},
-		{rePatchTextError, PST_NEEDNL, ptSeenComment},
+func (ctx *CheckPatchContext) checkBeginDiff() {
+	if !ctx.prevLineWasEmpty {
+		ctx.line.notef("Empty line expected.")
+	}
+	if !ctx.seenComment {
+		ctx.line.errorf("Comment expected.")
+		ctx.line.explain(
+			"Each patch must document why it is necessary. If it has been applied",
+			"because of a security issue, a reference to the CVE should be mentioned",
+			"as well.",
+			"",
+			"Since it is our goal to have as few patches as possible, all patches",
+			"should be sent to the upstream maintainers of the package. After you",
+			"have done so, you should add a reference to the bug report containing",
+			"the patch.")
+	}
+	ctx.checkOutside()
+}
+
+var patchTransitions = map[PatchState][]transition{
+	PST_OUTSIDE: {
+		{rePatchEmpty, PST_OUTSIDE, (*CheckPatchContext).checkOutside},
+		{rePatchTextError, PST_OUTSIDE, (*CheckPatchContext).checkOutside},
 		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
-			if !ctx.seenComment {
-				ctx.expectComment()
-			}
-			ctx.expectEmptyLine()
+			ctx.checkBeginDiff()
 			ctx.line.warnf("Please use unified diffs (diff -u) for patches.")
 		}},
-		{rePatchUniFileDel, PST_UNI_FILE_ADD, func(ctx *CheckPatchContext) {
-			if !ctx.seenComment {
-				ctx.expectComment()
-			}
-			ctx.expectEmptyLine()
-		}},
-		{rePatchNonempty, PST_NEEDNL, ptNop},
-	},
-
-	PST_READY: {
-		{rePatchTextError, PST_READY, ptSeenComment},
-		{rePatchCtxFileDel, PST_CTX_FILE_ADD, func(ctx *CheckPatchContext) {
-			if !ctx.seenComment {
-				ctx.expectComment()
-			}
-			ctx.useUnifiedDiffs()
-		}},
-		{rePatchUniFileDel, PST_UNI_FILE_ADD, func(ctx *CheckPatchContext) {
-			if !ctx.seenComment {
-				ctx.expectComment()
-			}
-		}},
+		{rePatchUniFileDel, PST_UNI_FILE_ADD, (*CheckPatchContext).checkBeginDiff},
 		{rePatchUniFileAdd, PST_UNI_FILE_DEL_ERR, ptUniFileAdd},
-		{rePatchNonempty, PST_NEEDNL, ptSeenComment},
-		{rePatchEmpty, PST_READY, ptNop},
+		{rePatchNonempty, PST_OUTSIDE, (*CheckPatchContext).checkOutside},
 	},
 
 	PST_UNI_FILE_DEL_ERR: {
 		{rePatchUniFileDel, PST_UNI_HUNK, func(ctx *CheckPatchContext) {
-			ctx.line.errorf("Unified diff headers must be first ---, then +++.")
+			ctx.line.warnf("Unified diff headers should be first ---, then +++.")
 		}},
-		{rePatchNonempty, PST_NEEDNL, ptNop},
-		{rePatchEmpty, PST_READY, ptNop},
+		{"", PST_OUTSIDE, ptNop},
 	},
 
 	PST_CTX_FILE_ADD: {
@@ -303,7 +294,7 @@ var patchTransitions = map[PatchState][]transition{
 		{rePatchCtxHunk, PST_CTX_HUNK_DEL, func(ctx *CheckPatchContext) {
 			ctx.hunks++
 		}},
-		{"", PST_READY, ptNop},
+		{"", PST_OUTSIDE, ptNop},
 	},
 
 	PST_CTX_HUNK_DEL: {
@@ -416,7 +407,7 @@ var patchTransitions = map[PatchState][]transition{
 			ctx.leadingContextLines = 0
 			ctx.trailingContextLines = 0
 		}},
-		{"", PST_READY, func(ctx *CheckPatchContext) {
+		{"", PST_OUTSIDE, func(ctx *CheckPatchContext) {
 			if ctx.hunks == 0 {
 				ctx.line.warnf("No hunks for file %q.", ctx.currentFilename)
 			}
@@ -448,8 +439,10 @@ var patchTransitions = map[PatchState][]transition{
 }
 
 func checklinesPatch(lines []*Line) {
-	ctx := CheckPatchContext{state: PST_START}
-	for lineno := 0; lineno < len(lines); {
+	checklineRcsid(lines[0], ``, "")
+
+	ctx := CheckPatchContext{state: PST_OUTSIDE, needEmptyLineNow: true}
+	for lineno := 1; lineno < len(lines); {
 		line := lines[lineno]
 		text := line.text
 		ctx.line = line
@@ -483,13 +476,13 @@ func checklinesPatch(lines []*Line) {
 
 		if !found {
 			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
-			ctx.state = PST_READY
+			ctx.state = PST_OUTSIDE
 			lineno++
 		}
 	}
 
 	fname := lines[0].fname
-	for ctx.state != PST_READY {
+	for ctx.state != PST_OUTSIDE {
 		_ = G.opts.DebugPatches &&
 			debugf(fname, "EOF", "state=%s hunks=%d del=%d add=%d",
 				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
@@ -533,6 +526,8 @@ type CheckPatchContext struct {
 	addlines               int
 	hunks                  int
 	seenComment            bool
+	needEmptyLineNow       bool
+	prevLineWasEmpty       bool
 	currentFilename        string
 	currentFiletype        *FileType
 	patchedFiles           int
@@ -545,19 +540,6 @@ type CheckPatchContext struct {
 
 func (ctx *CheckPatchContext) expectEmptyLine() {
 	_ = G.opts.WarnSpace && ctx.line.notef("Empty line expected.")
-}
-
-func (ctx *CheckPatchContext) expectComment() {
-	ctx.line.errorf("Comment expected.")
-	ctx.line.explain(
-		"Each patch must document why it is necessary. If it has been applied",
-		"because of a security issue, a reference to the CVE should be mentioned",
-		"as well.",
-		"",
-		"Since it is our goal to have as few patches as possible, all patches",
-		"should be sent to the upstream maintainers of the package. After you",
-		"have done so, you should add a reference to the bug report containing",
-		"the patch.")
 }
 
 func (ctx *CheckPatchContext) useUnifiedDiffs() {
