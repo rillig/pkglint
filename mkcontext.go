@@ -25,6 +25,7 @@ func newMkContext() *MkContext {
 	}
 	return &MkContext{forVars, indentation, "", vardef, varuse, buildDefs, plistVars, tools}
 }
+
 func (ctx *MkContext) indentDepth() int {
 	return ctx.indentation[len(ctx.indentation)-1]
 }
@@ -33,4 +34,21 @@ func (ctx *MkContext) popIndent() {
 }
 func (ctx *MkContext) pushIndent(indent int) {
 	ctx.indentation = append(ctx.indentation, indent)
+}
+
+func (ctx *MkContext) defineVar(varname string, line *Line) {
+	if ctx.vardef[varname] == nil {
+		if line.extra["value"] == nil {
+			line.errorf("Internal pkglint error: novalue")
+		}
+		ctx.vardef[varname] = line
+	}
+}
+func (ctx *MkContext) varValue(varname string) (string, bool) {
+	if line := ctx.vardef[varname]; line != nil {
+		if value := line.extra["value"]; value != nil {
+			return value.(string), true
+		}
+	}
+	return "", false
 }

@@ -10,13 +10,11 @@ import (
 func checklineMkVardef(line *Line, varname, op string) {
 	defer tracecall("checklineMkVardef", varname, op)()
 
-	if G.pkgContext != nil && G.pkgContext.vardef[varname] == nil {
-		G.pkgContext.vardef[varname] = line
+	if G.pkgContext != nil {
+		G.pkgContext.defineVar(varname, line)
 	}
 
-	if G.mkContext.vardef[varname] == nil {
-		G.mkContext.vardef[varname] = line
-	}
+	G.mkContext.defineVar(varname, line)
 
 	if !G.opts.WarnPerm {
 		return

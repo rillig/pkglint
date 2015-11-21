@@ -186,17 +186,20 @@ func resolveVariableRefs(text string) string {
 	visited := make(map[string]bool) // To prevent endless loops
 
 	str := text
-	re := regcomp(`\$\{([\w.]+)\}`)
 	for {
-		replaced := re.ReplaceAllStringFunc(str, func(m string) string {
+		replaced := regcomp(`\$\{([\w.]+)\}`).ReplaceAllStringFunc(str, func(m string) string {
 			varname := m[2 : len(m)-1]
 			if !visited[varname] {
 				visited[varname] = true
-				if G.pkgContext != nil && G.pkgContext.vardef[varname] != nil {
-					return G.pkgContext.vardef[varname].extra["value"].(string)
+				if ctx := G.pkgContext; ctx != nil {
+					if value, ok := ctx.varValue(varname); ok {
+						return value
+					}
 				}
-				if G.mkContext != nil && G.mkContext.vardef[varname] != nil {
-					return G.mkContext.vardef[varname].extra["value"].(string)
+				if ctx := G.mkContext; ctx != nil {
+					if value, ok := ctx.varValue(varname); ok {
+						return value
+					}
 				}
 			}
 			return sprintf("${%s}", varname)
