@@ -698,6 +698,9 @@ func (ctx *ShelltextContext) checkPipeExitcode() {
 	if G.opts.WarnExtra && state != SCST_CASE_LABEL_CONT && shellword == "|" {
 		line.warnf("The exitcode of the left-hand-side command of the pipe operator is ignored.")
 		line.explain(
+			"In a shell command like \"cat *.txt | grep keyword\", if the command",
+			"on the left side of the \"|\" fails, this failure is ignored.",
+			"",
 			"If you need to detect the failure of the left-hand-side command, use",
 			"temporary files to save the output of the command.")
 	}
