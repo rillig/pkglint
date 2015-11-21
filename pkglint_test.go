@@ -84,6 +84,17 @@ func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
 	c.Check(resolved, equals, "you got it")
 }
 
+func (s *Suite) TestResolveVariableRefs_SpecialChars(c *check.C) {
+	line := NewLine("fname", "dummy", "dummy", nil)
+	line.extra["value"] = "x11"
+	G.pkgContext = newPkgContext("category/pkg")
+	G.pkgContext.vardef["GST_PLUGINS0.10_TYPE"] = line
+
+	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
+
+	c.Check(resolved, equals, "gst-plugins0.10-x11/distinfo")
+}
+
 func (s *Suite) TestReVarname(c *check.C) {
 	re := `^(?:` + reVarname + `)$`
 

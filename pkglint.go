@@ -186,7 +186,7 @@ func resolveVariableRefs(text string) string {
 	visited := make(map[string]bool) // To prevent endless loops
 
 	str := text
-	re := regcomp(`\$\{(\w+)\}`)
+	re := regcomp(`\$\{([\w.]+)\}`)
 	for {
 		replaced := re.ReplaceAllStringFunc(str, func(m string) string {
 			varname := m[2 : len(m)-1]
