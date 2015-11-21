@@ -33,7 +33,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 		var includeFile, incDir, incBase string
 		if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
-			includeFile = resolveVarsInRelativePath(inc, true)
+			includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
 			if containsVarRef(includeFile) {
 				if !contains(fname, "/mk/") {
 					line.notef("Skipping include file %q. This may result in false warnings.", includeFile)
