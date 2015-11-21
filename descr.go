@@ -1,20 +1,16 @@
 package main
 
 func checkfileDescr(fname string) {
-	defer tracecall("checkfileDescr", fname)()
-
-	const (
-		maxchars = 80
-		maxlines = 24
-	)
-
-	lines := LoadNonemptyLines(fname, false)
-	if lines == nil {
-		return
+	if lines := LoadNonemptyLines(fname, false); lines != nil {
+		checklinesDescr(lines)
 	}
+}
+
+func checklinesDescr(lines []*Line) {
+	defer tracecall("checklinesDescr", lines[0].fname)()
 
 	for _, line := range lines {
-		checklineLength(line, maxchars)
+		checklineLength(line, 80)
 		checklineTrailingWhitespace(line)
 		checklineValidCharacters(line, `[\t -~]`)
 		if contains(line.text, "${") {
@@ -23,7 +19,7 @@ func checkfileDescr(fname string) {
 	}
 	checklinesTrailingEmptyLines(lines)
 
-	if len(lines) > maxlines {
+	if maxlines := 24; len(lines) > maxlines {
 		line := lines[maxlines]
 
 		line.warnf("File too long (should be no more than %d lines).", maxlines)
