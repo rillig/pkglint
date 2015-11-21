@@ -32,10 +32,14 @@ func checktoplevelUnusedLicenses() {
 func checklineLicense(line *Line, value string) {
 	licenses := parseLicenses(value)
 	for _, license := range licenses {
-		licenseFile := G.globalData.pkgsrcdir + "/licenses/" + license
-		if licenseFileLine := G.pkgContext.vardef["LICENSE_FILE"]; licenseFileLine != nil {
-			licenseFile = G.currentDir + "/" + resolveVarsInRelativePath(licenseFileLine.extra["value"].(string), false)
-		} else if G.ipcUsedLicenses != nil {
+		var licenseFile string
+		if pkg := G.pkgContext; pkg != nil {
+			if licenseFileValue, ok := pkg.varValue("LICENSE_FILE"); ok {
+				licenseFile = G.currentDir + "/" + resolveVarsInRelativePath(licenseFileValue, false)
+			}
+		}
+		if licenseFile == "" {
+			licenseFile = G.globalData.pkgsrcdir + "/licenses/" + license
 			G.ipcUsedLicenses[license] = true
 		}
 
@@ -49,7 +53,7 @@ func checklineLicense(line *Line, value string) {
 			"no-profit",
 			"no-redistribution",
 			"shareware":
-			line.warnf("License %s is deprecated.", license)
+			line.warnf("License %q is deprecated.", license)
 		}
 	}
 }
