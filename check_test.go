@@ -11,7 +11,7 @@ var equals = check.Equals
 var deepEquals = check.DeepEquals
 
 type Suite struct {
-	c *check.C
+	c      *check.C
 	stdout bytes.Buffer
 	stderr bytes.Buffer
 }
