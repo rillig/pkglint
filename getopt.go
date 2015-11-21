@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 	"text/tabwriter"
+	"unicode/utf8"
 )
 
 type Options struct {
@@ -20,14 +21,14 @@ func NewOptions(out io.Writer) *Options {
 
 func (self *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
 	grp := new(FlagGroup)
-	opt := &Option{shortName, longName, argDescription, description, nil, grp}
+	opt := &Option{shortName, longName, argDescription, description, grp}
 	self.options = append(self.options, opt)
 	return grp
 }
 
-func (self *Options) AddFlagVar(shortName rune, longName string, flag *bool, defval bool, description string) {
-	*flag = defval
-	opt := &Option{shortName, longName, "", description, &flag, nil}
+func (self *Options) AddFlagVar(shortName rune, longName string, pflag *bool, defval bool, description string) {
+	*pflag = defval
+	opt := &Option{shortName, longName, "", description, pflag}
 	self.options = append(self.options, opt)
 }
 
@@ -35,7 +36,7 @@ func (self *Options) Parse(args []string) (remainingArgs []string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if rerr, ok := r.(OptErr); ok {
-				err = rerr
+				err = OptErr(args[0] + ": " + string(rerr))
 			} else {
 				panic(r)
 			}
@@ -44,58 +45,75 @@ func (self *Options) Parse(args []string) (remainingArgs []string, err error) {
 
 	for i := 1; i < len(args); i++ {
 		arg := args[i]
-		if arg == "--" {
+		switch {
+		case arg == "--":
 			return args[i+1:], nil
-		} else if hasPrefix(arg, "--") {
+		case hasPrefix(arg, "--"):
 			i += self.parseLongOption(args, i, arg[2:])
-		} else if hasPrefix(arg, "-") {
+		case hasPrefix(arg, "-"):
 			i += self.parseShortOptions(args, i, arg[1:])
-		} else {
+		default:
 			return args[i:], nil
 		}
 	}
 	return args[len(args):], nil
 }
 
-func (self *Options) parseLongOption(args []string, i int, optionName string) int {
+func (self *Options) parseLongOption(args []string, i int, argRest string) int {
+	parts := strings.SplitN(argRest, "=", 2)
+	argname := parts[0]
+	var argval *string
+	if 1 < len(parts) {
+		argval = &parts[1]
+	}
+
 	for _, opt := range self.options {
-		if optionName == opt.longName {
-			if opt.flagGroup != nil {
-				opt.flagGroup.parse(args[i+1])
-				return 1
-			}
-			if opt.flag != nil {
-				**opt.flag = true
+		if argname == opt.longName {
+			switch data := opt.data.(type) {
+			case *bool:
+				if argval == nil {
+					*data = true
+				} else {
+					switch *argval {
+					case "true", "on", "enabled", "1":
+						*data = true
+					case "false", "off", "disabled", "0":
+						*data = false
+					default:
+						panic(OptErr("invalid argument for option --" + opt.longName))
+					}
+				}
 				return 0
+			case *FlagGroup:
+				if argval == nil {
+					data.parse("--"+opt.longName+"=", args[i+1])
+					return 1
+				} else {
+					data.parse("--"+opt.longName+"=", *argval)
+					return 0
+				}
 			}
-			panic(OptErr("unknown option type for " + optionName))
-		} else if prefix := opt.longName + "="; hasPrefix(optionName, prefix) {
-			if opt.flagGroup != nil {
-				opt.flagGroup.parse(optionName[len(prefix):])
-				return 0
-			}
-			panic(OptErr("unknown option type for " + opt.longName))
 		}
 	}
-	panic(OptErr("unknown option: " + args[i]))
+	panic(OptErr("unknown option: --" + argRest))
 }
 
 func (self *Options) parseShortOptions(args []string, i int, optchars string) int {
 	for ai, optchar := range optchars {
 		for _, opt := range self.options {
 			if optchar == opt.shortName {
-				if opt.flag != nil {
-					**opt.flag = true
-				} else if opt.flagGroup != nil {
-					argarg := strings.TrimPrefix(optchars, sprintf("%s%c", optchars[:ai], optchar))
+				switch data := opt.data.(type) {
+				case *bool:
+					*data = true
+				case *FlagGroup:
+					argarg := optchars[ai+utf8.RuneLen(optchar):]
 					if argarg != "" {
-						opt.flagGroup.parse(argarg)
+						data.parse(sprintf("-%c", optchar), argarg)
 						return 0
+					} else {
+						data.parse(sprintf("-%c", optchar), args[i+1])
+						return 1
 					}
-					opt.flagGroup.parse(args[i+1])
-					return 1
-				} else {
-					panic(OptErr("not implemented: " + optchars[ai:]))
 				}
 			}
 		}
@@ -124,13 +142,14 @@ func (self *Options) Help(generalUsage string) {
 
 	hasFlagGroups := false
 	for _, opt := range self.options {
-		if opt.flagGroup != nil {
+		switch flagGroup := opt.data.(type) {
+		case *FlagGroup:
 			hasFlagGroups = true
 			fmt.Fprintln(wr)
 			fmt.Fprintf(wr, "  Flags for -%c, --%s:\n", opt.shortName, opt.longName)
 			fmt.Fprintf(wr, "    all\t all of the following\n")
 			fmt.Fprintf(wr, "    none\t none of the following\n")
-			for _, flag := range opt.flagGroup.flags {
+			for _, flag := range flagGroup.flags {
 				fmt.Fprintf(wr, "    %s\t %s (%v)\n", flag.name, flag.help, ifelseStr(*flag.value, "enabled", "disabled"))
 			}
 			wr.Flush()
@@ -148,8 +167,7 @@ type Option struct {
 	longName       string
 	argDescription string
 	description    string
-	flag           **bool
-	flagGroup      *FlagGroup
+	data           interface{}
 }
 
 type FlagGroup struct {
@@ -162,7 +180,7 @@ func (self *FlagGroup) AddFlagVar(name string, flag *bool, defval bool, help str
 	*flag = defval
 }
 
-func (self *FlagGroup) parse(arg string) {
+func (self *FlagGroup) parse(optionPrefix, arg string) {
 argopt:
 	for _, argopt := range strings.Split(arg, ",") {
 		if argopt == "none" || argopt == "all" {
@@ -181,7 +199,7 @@ argopt:
 				continue argopt
 			}
 		}
-		panic("FlagGroup.parse: " + argopt)
+		panic(OptErr("unknown option: " + optionPrefix + argopt))
 	}
 }
 
