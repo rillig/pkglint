@@ -12,7 +12,7 @@ func (s *Suite) TestGetopt_Short(c *check.C) {
 	args, err := opts.Parse([]string{"progname", "-h"})
 
 	c.Assert(err, check.IsNil)
-	c.Check(args, check.DeepEquals, []string{})
+	c.Check(args, check.IsNil)
 	c.Check(help, equals, true)
 }
 
@@ -43,4 +43,27 @@ func (s *Suite) TestGetopt_UnknownFlag(c *check.C) {
 	_, err = opts.Parse([]string{"progname", "--warnings=all", "--warnings=no-error"})
 
 	c.Check(err.Error(), equals, "progname: unknown option: --warnings=no-error")
+}
+
+func (s *Suite) TestGetopt_MixedArgsAndOptions(c *check.C) {
+	opts := NewOptions()
+	var aflag, bflag bool
+	opts.AddFlagVar('a', "aflag", &aflag, false, "")
+	opts.AddFlagVar('b', "bflag", &bflag, false, "")
+
+	args, err := opts.Parse([]string{"progname", "-a", "arg1", "-b", "arg2"})
+
+	c.Assert(err, check.IsNil)
+	c.Check(args, check.DeepEquals, []string{"arg1", "arg2"})
+	c.Check(aflag, equals, true)
+	c.Check(bflag, equals, true)
+
+	aflag = false
+	bflag = false
+	args, err = opts.Parse([]string{"progname", "-a", "--", "arg1", "-b", "arg2"})
+
+	c.Assert(err, check.IsNil)
+	c.Check(args, check.DeepEquals, []string{"arg1", "-b", "arg2"})
+	c.Check(aflag, equals, true)
+	c.Check(bflag, equals, false)
 }

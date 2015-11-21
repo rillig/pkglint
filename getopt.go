@@ -46,16 +46,16 @@ func (self *Options) Parse(args []string) (remainingArgs []string, err error) {
 		arg := args[i]
 		switch {
 		case arg == "--":
-			return args[i+1:], nil
+			return append(remainingArgs, args[i+1:]...), nil
 		case hasPrefix(arg, "--"):
 			i += self.parseLongOption(args, i, arg[2:])
 		case hasPrefix(arg, "-"):
 			i += self.parseShortOptions(args, i, arg[1:])
 		default:
-			return args[i:], nil
+			remainingArgs = append(remainingArgs, arg)
 		}
 	}
-	return args[len(args):], nil
+	return
 }
 
 func (self *Options) parseLongOption(args []string, i int, argRest string) int {
