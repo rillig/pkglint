@@ -288,8 +288,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	}
 
 	if !matches(line.text, `^`+prefixRe+`\$`+repartRcsid+`(?::[^\$]+)?\$$`) {
-		// XXX: diag line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
-		line.errorf("%q expected.", suggestedPrefix+"$"+"NetBSD$")
+		line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 		line.explain(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
 			"version can be traced back later from a binary package. This is to",

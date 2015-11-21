@@ -87,8 +87,7 @@ func checkfilePlist(fname string) {
 		} else if matches(text, `^\$\{[\w_]+\}$`) {
 			// A variable on its own line.
 		} else {
-			// XXX diag line.warnf("Unknown line type.")
-			line.errorf("Unknown line type.")
+			line.warnf("Unknown line type.")
 		}
 	}
 
@@ -290,8 +289,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
 		if G.pkgContext.included[f] == nil {
-			// line.warnf("Packages that install a .desktop entry should .include %q.", f) // XXX: diag
-			line.warnf("Packages that install a .desktop entry may .include %q.", f)
+			line.warnf("Packages that install a .desktop entry should .include %q.", f)
 			line.explain(
 				"If *.desktop files contain MimeType keys, the global MIME type registry",
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
@@ -300,8 +298,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename stri
 	case hasPrefix(text, "share/icons/hicolor/") && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
 		if G.pkgContext.included[f] == nil {
-			// line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f) // XXX: diag
-			line.errorf("Please .include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile")
+			line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f) 
 		}
 
 	case hasPrefix(text, "share/icons/gnome") && G.pkgContext.pkgpath != "graphics/gnome-icon-theme":

@@ -55,6 +55,6 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 	checklinesBuildlink3Mk(lines)
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: buildlink3.mk:3: Package name mismatch between hs-X11 ...\n"+
-		"ERROR: Makefile:3: ... and X11.\n")
+		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" ...\n"+
+		"ERROR: Makefile:3: ... and \"X11\".\n")
 }
