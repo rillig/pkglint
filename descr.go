@@ -8,7 +8,7 @@ func checklinesDescr(lines []*Line) {
 		checklineTrailingWhitespace(line)
 		checklineValidCharacters(line, `[\t -~]`)
 		if contains(line.text, "${") {
-			line.warnf("Variables are not expanded in the DESCR file.")
+			line.notef("Variables are not expanded in the DESCR file.")
 		}
 	}
 	checklinesTrailingEmptyLines(lines)
