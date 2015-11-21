@@ -73,6 +73,7 @@ type CmdOpts struct {
 	PrintHelp,
 	DumpMakefile,
 	Import,
+	Profile,
 	Quiet,
 	Recursive,
 	PrintSource,

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 )
 
 const confMake = "@BMAKE@"
@@ -37,6 +38,15 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 		return 0
 	}
 
+	if G.opts.Profile {
+		f, err := os.Create("pkglint.pprof")
+		if err != nil {
+			fatalf(NO_FILE, NO_LINES, "Cannot create profiling file: %s", err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
 	for _, arg := range G.opts.args {
 		G.todo = append(G.todo, filepath.ToSlash(arg))
 	}
@@ -65,6 +75,20 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	opts := NewOptions()
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
+	debug := opts.AddFlagGroup('D', "debugging", "debug,...", "enable or disable debugging categories")
+	opts.AddFlagVar('e', "explain", &gopts.Explain, false, "explain the diagnostics or give further help")
+	opts.AddFlagVar('F', "autofix", &gopts.Autofix, false, "try to automatically fix some errors (experimental)")
+	opts.AddFlagVar('g', "gcc-output-format", &gopts.GccOutput, false, "mimic the gcc output format")
+	opts.AddFlagVar('h', "help", &gopts.PrintHelp, false, "print a detailed usage message")
+	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
+	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
+	opts.AddFlagVar('p', "profile", &gopts.Profile, false, "profile the executing program")
+	opts.AddFlagVar('q', "quiet", &gopts.Quiet, false, "don't print a summary line when finishing")
+	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")
+	opts.AddFlagVar('s', "source", &gopts.PrintSource, false, "show the source lines together with diagnostics")
+	opts.AddFlagVar('V', "version", &gopts.PrintVersion, false, "print the version number of pkglint")
+	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
+
 	check.AddFlagVar("ALTERNATIVES", &gopts.CheckAlternatives, true, "check ALTERNATIVES files")
 	check.AddFlagVar("bl3", &gopts.CheckBuildlink3, true, "check buildlink3.mk files")
 	check.AddFlagVar("DESCR", &gopts.CheckDescr, true, "check DESCR file")
@@ -78,7 +102,6 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	check.AddFlagVar("patches", &gopts.CheckPatches, true, "check patches")
 	check.AddFlagVar("PLIST", &gopts.CheckPlist, true, "check PLIST files")
 
-	debug := opts.AddFlagGroup('D', "debugging", "debug,...", "enable or disable debugging categories")
 	debug.AddFlagVar("include", &gopts.DebugInclude, false, "included files")
 	debug.AddFlagVar("misc", &gopts.DebugMisc, false, "all things that didn't fit elsewhere")
 	debug.AddFlagVar("patches", &gopts.DebugPatches, false, "the states of the patch parser")
@@ -91,18 +114,6 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	debug.AddFlagVar("vartypes", &gopts.DebugVartypes, false, "additional type information")
 	debug.AddFlagVar("varuse", &gopts.DebugVaruse, false, "contexts where variables are used")
 
-	opts.AddFlagVar('e', "explain", &gopts.Explain, false, "explain the diagnostics or give further help")
-	opts.AddFlagVar('F', "autofix", &gopts.Autofix, false, "try to automatically fix some errors (experimental)")
-	opts.AddFlagVar('g', "gcc-output-format", &gopts.GccOutput, false, "mimic the gcc output format")
-	opts.AddFlagVar('h', "help", &gopts.PrintHelp, false, "print a detailed usage message")
-	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
-	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
-	opts.AddFlagVar('q', "quiet", &gopts.Quiet, false, "don't print a summary line when finishing")
-	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")
-	opts.AddFlagVar('s', "source", &gopts.PrintSource, false, "show the source lines together with diagnostics")
-	opts.AddFlagVar('V', "version", &gopts.PrintVersion, false, "print the version number of pkglint")
-
-	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
 	warn.AddFlagVar("absname", &gopts.WarnAbsname, true, "warn about use of absolute file names")
 	warn.AddFlagVar("directcmd", &gopts.WarnDirectcmd, true, "warn about use of direct command names instead of Make variables")
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
