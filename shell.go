@@ -512,7 +512,7 @@ func (ctx *ShelltextContext) handleTool() bool {
 	}
 
 	if G.globalData.toolsVarRequired[shellword] {
-		ctx.line.warnf("Please use ${%s} instead of %q.", G.globalData.vartools[shellword], shellword)
+		ctx.line.warnf("Please use \"${%s}\" instead of %q.", G.globalData.vartools[shellword], shellword)
 	}
 
 	checklineMkShellcmdUse(ctx.line, shellword)

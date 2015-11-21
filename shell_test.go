@@ -54,5 +54,5 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:3: The \"echo\" tool is used but not added to USE_TOOLS.\n"+
-		"WARN: fname:3: Please use ${ECHO} instead of \"echo\".\n")
+		"WARN: fname:3: Please use \"${ECHO}\" instead of \"echo\".\n")
 }
