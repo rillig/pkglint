@@ -24,3 +24,11 @@ func (s *Suite) TestVartypeEffectivePermissions(c *check.C) {
 		c.Check(t.effectivePermissions("options.mk"), equals, "?")
 	}
 }
+
+func (s *Suite) TestVarCheckerHasEnum(c *check.C) {
+	vc := enum("catinstall middle maninstall")
+
+	c.Check(vc.HasEnum("catinstall"), equals, true)
+	c.Check(vc.HasEnum("middle"), equals, true)
+	c.Check(vc.HasEnum("maninstall"), equals, true)
+}

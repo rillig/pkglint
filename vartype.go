@@ -118,13 +118,13 @@ type VarChecker struct {
 }
 
 func (vc *VarChecker) IsEnum() bool {
-	return hasPrefix(vc.name, "enum:")
+	return hasPrefix(vc.name, "enum: ")
 }
 func (vc *VarChecker) HasEnum(value string) bool {
 	return !matches(value, `\s`) && contains(vc.name, " "+value+" ")
 }
 func (vc *VarChecker) AllowedEnums() string {
-	return vc.name[5:]
+	return vc.name[6 : len(vc.name)-1]
 }
 
 var (
