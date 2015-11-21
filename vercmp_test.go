@@ -22,4 +22,6 @@ func (s *Suite) TestPkgverCmp(c *check.C) {
 	c.Check(pkgverCmp("1.0nb2", "1.0nb1"), equals, 1)
 	c.Check(pkgverCmp("2.0.1nb17", "2.0.1nb4"), equals, 1)
 	c.Check(pkgverCmp("2.0.1nb4", "2.0.1nb17"), equals, -1)
+	c.Check(pkgverCmp("2.0pre", "2.0rc"), equals, 0)
+	c.Check(pkgverCmp("2.0pre", "2.0pl"), equals, -1)
 }
