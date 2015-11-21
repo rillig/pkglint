@@ -30,12 +30,6 @@ func (self *Options) AddFlagVar(shortName rune, longName string, flag *bool, def
 	self.options = append(self.options, opt)
 }
 
-func (self *Options) AddStrVar(shortName rune, longName string, str *string, defval string, description string) {
-	*str = defval
-	opt := &Option{shortName, longName, "", description, nil, &str, nil}
-	self.options = append(self.options, opt)
-}
-
 func (self *Options) Parse(args []string) ([]string, error) {
 	for i := 1; i < len(args); i++ {
 		arg := args[i]
