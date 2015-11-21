@@ -22,3 +22,7 @@ func (s *Suite) TestTreeMatch_fails(c *check.C) {
 	c.Check(tree.Match(pattern), equals, false)
 	c.Check(varname, equals, (*string)(nil))
 }
+
+func (s *Suite) TestTreeString(c *check.C) {
+	c.Check(NewTree("not", NewTree("empty", "varname")).String(), equals, "(not (empty \"varname\"))")
+}
