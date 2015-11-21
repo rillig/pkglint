@@ -78,7 +78,7 @@ func (self *GlobalData) loadDistSites() {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
 				names[varname] = true
 				for _, url := range splitOnSpace(urls) {
-					if matches(url, `^(?:http://|https://|ftp://).+/`) {
+					if matches(url, `^(?:http://|https://|ftp://)`) {
 						url2name[url] = varname
 					}
 				}

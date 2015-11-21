@@ -228,7 +228,7 @@ func (cv *VartypeCheck) FetchURL() {
 			subdir := cv.value[len(siteUrl):]
 			isGithub := hasPrefix(cv.value, "https://github.com/")
 			if isGithub {
-				subdir = strings.Split(subdir, "/")[0]
+				subdir = strings.SplitAfter(subdir, "/")[0]
 			}
 			cv.line.warnf("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.value)
 			if isGithub {
