@@ -86,7 +86,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 					return false
 				}
 
-				if incBase == "Makefile.common" {
+				if incBase == "Makefile.common" && incDir != "" {
 					makefileCommonLines := (*allLines)[lengthBeforeInclude:]
 					checkForUsedComment(makefileCommonLines, relpath(G.globalData.pkgsrcdir, fname))
 				}
