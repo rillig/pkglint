@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-
 	check "gopkg.in/check.v1"
 )
 
@@ -28,16 +26,6 @@ func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 	c.Check(G.mkContext.varuse["inner"], equals, line)
 	c.Check(G.mkContext.varuse["outer."], equals, line)
 	c.Check(G.mkContext.varuse["outer.*"], equals, line)
-}
-
-func (s *Suite) TestPrintTable(c *check.C) {
-	out := new(bytes.Buffer)
-
-	printTable(out, [][]string{{"hello", "world"}, {"how", "are", "you?"}})
-
-	c.Check(out.String(), equals, ""+
-		"hello  world\n"+
-		"how    are    you?\n")
 }
 
 func (s *Suite) TestReShellword(c *check.C) {

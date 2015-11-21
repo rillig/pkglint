@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"text/tabwriter"
 )
 
 type Options struct {
@@ -101,43 +102,41 @@ func (self *Options) parseShortOptions(args []string, i int, arg string) int {
 }
 
 func (self *Options) Help(generalUsage string) {
-	fmt.Fprintf(self.out, "usage: %s\n", generalUsage)
-	fmt.Fprintln(self.out)
+	wr := tabwriter.NewWriter(self.out, 1, 0, 2, ' ', tabwriter.TabIndent)
 
-	var tbl [][]string
+	fmt.Fprintf(wr, "usage: %s\n", generalUsage)
+	fmt.Fprintln(wr)
+	wr.Flush()
+
 	for _, opt := range self.options {
 		if opt.argDescription == "" {
-			row := sprintf("\t-%c, --%s\t %s",
+			fmt.Fprintf(wr, "  -%c, --%s\t %s\n",
 				opt.shortName, opt.longName, opt.description)
-			tbl = append(tbl, strings.Split(row, "\t"))
 		} else {
-			row := sprintf("\t-%c, --%s=%s\t %s",
+			fmt.Fprintf(wr, "  -%c, --%s=%s\t %s\n",
 				opt.shortName, opt.longName, opt.argDescription, opt.description)
-			tbl = append(tbl, strings.Split(row, "\t"))
 		}
 	}
-	printTable(self.out, tbl)
+	wr.Flush()
 
 	hasFlagGroups := false
 	for _, opt := range self.options {
 		if opt.flagGroup != nil {
 			hasFlagGroups = true
-			tbl := tbl[:0]
-			tbl = append(tbl, []string{"", "", "all", " all of the following"})
-			tbl = append(tbl, []string{"", "", "none", " none of the following"})
+			fmt.Fprintln(wr)
+			fmt.Fprintf(wr, "  Flags for -%c, --%s:\n", opt.shortName, opt.longName)
+			fmt.Fprintf(wr, "    all\t all of the following\n")
+			fmt.Fprintf(wr, "    none\t none of the following\n")
 			for _, flag := range opt.flagGroup.flags {
-				row := sprintf("\t\t%s\t %s (%v)", flag.name, flag.help, *flag.value)
-				tbl = append(tbl, strings.Split(row, "\t"))
+				fmt.Fprintf(wr, "    %s\t %s (%v)\n", flag.name, flag.help, ifelseStr(*flag.value, "enabled", "disabled"))
 			}
-
-			fmt.Fprintln(self.out)
-			fmt.Fprintf(self.out, "  Flags for -%c, --%s:\n", opt.shortName, opt.longName)
-			printTable(self.out, tbl)
+			wr.Flush()
 		}
 	}
 	if hasFlagGroups {
-		fmt.Fprintln(self.out)
-		fmt.Fprint(self.out, "  (Prefix a flag with \"no-\" to disable it.)\n")
+		fmt.Fprintln(wr)
+		fmt.Fprint(wr, "  (Prefix a flag with \"no-\" to disable it.)\n")
+		wr.Flush()
 	}
 }
 
@@ -188,26 +187,4 @@ type GroupFlag struct {
 	name  string
 	value *bool
 	help  string
-}
-
-func printTable(out io.Writer, table [][]string) {
-	width := make(map[int]int)
-	for _, row := range table {
-		for colno, cell := range row {
-			width[colno] = intMax(width[colno], len(cell))
-		}
-	}
-
-	for _, row := range table {
-		for colno, cell := range row {
-			if colno != 0 {
-				io.WriteString(out, "  ")
-			}
-			io.WriteString(out, cell)
-			if colno != len(row)-1 {
-				io.WriteString(out, sprintf("%*s", width[colno]-len(cell), ""))
-			}
-		}
-		io.WriteString(out, "\n")
-	}
 }
