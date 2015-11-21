@@ -10,74 +10,6 @@ package main
 //
 // Last synced with mk/defaults/mk.conf revision 1.118
 
-func enum(values string) *VarChecker {
-	vmap := make(map[string]bool)
-	for _, value := range splitOnSpace(values) {
-		vmap[value] = true
-	}
-	name := "enum:" + values
-	return &VarChecker{name, func(ctx *VartypeCheck) {
-		if !vmap[ctx.value] {
-			ctx.line.warnf("%q is not valid for %s. Use one of { %s } instead.", ctx.value, ctx.varname, values)
-		}
-	}}
-}
-
-func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries ...string) {
-	m := mustMatch(`^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`, varname)
-	varbase, varparam := m[1], m[2]
-
-	vtype := &Vartype{kindOfList, checker, parseAclEntries(aclentries), NOT_GUESSED}
-
-	if G.globalData.vartypes == nil {
-		G.globalData.vartypes = make(map[string]*Vartype)
-	}
-	if varparam == "" || varparam == "*" {
-		G.globalData.vartypes[varbase] = vtype
-	}
-	if varparam == "*" || varparam == ".*" {
-		G.globalData.vartypes[varbase+".*"] = vtype
-	}
-}
-
-func parseAclEntries(args []string) []AclEntry {
-	var result []AclEntry
-	for _, arg := range args {
-		m := mustMatch(`^([\w.*]+|_):([adpsu]*)$`, arg)
-		glob, perms := m[1], m[2]
-		result = append(result, AclEntry{glob, perms})
-	}
-	return result
-}
-
-// A package-defined variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
-func pkg(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "Makefile:su", "Makefile.common:dsu", "buildlink3.mk:", "builtin.mk:", "*.mk:dsu")
-}
-
-// A package-defined list may be appended to in all Makefiles except buildlink3.mk and builtin.mk.
-// Simple assignment (instead of appending) is only allowed in Makefile and Makefile.common.
-func pkglist(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "Makefile:asu", "Makefile.common:asu", "buildlink3.mk:", "builtin.mk:", "*.mk:au")
-}
-
-// A user-defined or system-defined variable must not be set by any
-// package file. It also must not be used in buildlink3.mk and
-// builtin.mk files or at load-time, since the system/user preferences
-// may not have been loaded when these files are included.
-func sys(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:u", "*:u")
-}
-func usr(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:u")
-}
-func bl3list(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "buildlink3.mk:a", "builtin.mk:a")
-}
-func cmdline(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:pu")
-}
-
 func (gd *GlobalData) InitVartypes() {
 	usr("ALLOW_VULNERABLE_PACKAGES", LK_NONE, CheckvarYes)
 	usr("MANINSTALL", LK_SHELL, enum("maninstall catinstall"))
@@ -757,4 +689,72 @@ func (gd *GlobalData) InitVartypes() {
 	sys("X11_PKGSRCDIR.*", LK_NONE, CheckvarPathname)
 	usr("XAW_TYPE", LK_NONE, enum("3d neXtaw standard xpm"))
 	acl("XMKMF_FLAGS", LK_SHELL, CheckvarShellWord)
+}
+
+func enum(values string) *VarChecker {
+	vmap := make(map[string]bool)
+	for _, value := range splitOnSpace(values) {
+		vmap[value] = true
+	}
+	name := "enum:" + values
+	return &VarChecker{name, func(ctx *VartypeCheck) {
+		if !vmap[ctx.value] {
+			ctx.line.warnf("%q is not valid for %s. Use one of { %s } instead.", ctx.value, ctx.varname, values)
+		}
+	}}
+}
+
+func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries ...string) {
+	m := mustMatch(`^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`, varname)
+	varbase, varparam := m[1], m[2]
+
+	vtype := &Vartype{kindOfList, checker, parseAclEntries(aclentries), NOT_GUESSED}
+
+	if G.globalData.vartypes == nil {
+		G.globalData.vartypes = make(map[string]*Vartype)
+	}
+	if varparam == "" || varparam == "*" {
+		G.globalData.vartypes[varbase] = vtype
+	}
+	if varparam == "*" || varparam == ".*" {
+		G.globalData.vartypes[varbase+".*"] = vtype
+	}
+}
+
+func parseAclEntries(args []string) []AclEntry {
+	var result []AclEntry
+	for _, arg := range args {
+		m := mustMatch(`^([\w.*]+|_):([adpsu]*)$`, arg)
+		glob, perms := m[1], m[2]
+		result = append(result, AclEntry{glob, perms})
+	}
+	return result
+}
+
+// A package-defined variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
+func pkg(varname string, kindOfList KindOfList, checker *VarChecker) {
+	acl(varname, kindOfList, checker, "Makefile:su", "Makefile.common:dsu", "buildlink3.mk:", "builtin.mk:", "*.mk:dsu")
+}
+
+// A package-defined list may be appended to in all Makefiles except buildlink3.mk and builtin.mk.
+// Simple assignment (instead of appending) is only allowed in Makefile and Makefile.common.
+func pkglist(varname string, kindOfList KindOfList, checker *VarChecker) {
+	acl(varname, kindOfList, checker, "Makefile:asu", "Makefile.common:asu", "buildlink3.mk:", "builtin.mk:", "*.mk:au")
+}
+
+// A user-defined or system-defined variable must not be set by any
+// package file. It also must not be used in buildlink3.mk and
+// builtin.mk files or at load-time, since the system/user preferences
+// may not have been loaded when these files are included.
+func sys(varname string, kindOfList KindOfList, checker *VarChecker) {
+	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:u", "*:u")
+}
+func usr(varname string, kindOfList KindOfList, checker *VarChecker) {
+	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:u")
+}
+func bl3list(varname string, kindOfList KindOfList, checker *VarChecker) {
+	acl(varname, kindOfList, checker, "buildlink3.mk:a", "builtin.mk:a")
+}
+func cmdline(varname string, kindOfList KindOfList, checker *VarChecker) {
+	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:pu")
 }
