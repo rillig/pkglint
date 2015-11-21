@@ -22,8 +22,9 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 		if r := recover(); r != nil {
 			if _, ok := r.(pkglintFatal); ok {
 				exitcode = 1
+			} else {
+				panic(r)
 			}
-			panic(r)
 		}
 	}()
 
