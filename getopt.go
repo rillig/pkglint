@@ -20,18 +20,28 @@ func NewOptions(out io.Writer) *Options {
 
 func (self *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
 	grp := new(FlagGroup)
-	opt := &Option{shortName, longName, argDescription, description, nil, nil, grp}
+	opt := &Option{shortName, longName, argDescription, description, nil, grp}
 	self.options = append(self.options, opt)
 	return grp
 }
 
 func (self *Options) AddFlagVar(shortName rune, longName string, flag *bool, defval bool, description string) {
 	*flag = defval
-	opt := &Option{shortName, longName, "", description, &flag, nil, nil}
+	opt := &Option{shortName, longName, "", description, &flag, nil}
 	self.options = append(self.options, opt)
 }
 
-func (self *Options) Parse(args []string) ([]string, error) {
+func (self *Options) Parse(args []string) (remainingArgs []string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if rerr, ok := r.(OptErr); ok {
+				err = rerr
+			} else {
+				panic(r)
+			}
+		}
+	}()
+
 	for i := 1; i < len(args); i++ {
 		arg := args[i]
 		if arg == "--" {
@@ -47,9 +57,9 @@ func (self *Options) Parse(args []string) ([]string, error) {
 	return args[len(args):], nil
 }
 
-func (self *Options) parseLongOption(args []string, i int, arg string) int {
+func (self *Options) parseLongOption(args []string, i int, optionName string) int {
 	for _, opt := range self.options {
-		if arg == opt.longName {
+		if optionName == opt.longName {
 			if opt.flagGroup != nil {
 				opt.flagGroup.parse(args[i+1])
 				return 1
@@ -58,34 +68,26 @@ func (self *Options) parseLongOption(args []string, i int, arg string) int {
 				**opt.flag = true
 				return 0
 			}
-			panic("not implemented: " + opt.longName)
-		} else if prefix := opt.longName + "="; hasPrefix(arg, prefix) {
+			panic(OptErr("unknown option type for " + optionName))
+		} else if prefix := opt.longName + "="; hasPrefix(optionName, prefix) {
 			if opt.flagGroup != nil {
-				opt.flagGroup.parse(arg[len(prefix):])
+				opt.flagGroup.parse(optionName[len(prefix):])
 				return 0
 			}
-			panic("not implemented: " + opt.longName)
+			panic(OptErr("unknown option type for " + opt.longName))
 		}
 	}
-	panic("not implemented: " + arg)
+	panic(OptErr("unknown option: " + args[i]))
 }
 
-func (self *Options) parseShortOptions(args []string, i int, arg string) int {
-	for ai, optchar := range arg {
+func (self *Options) parseShortOptions(args []string, i int, optchars string) int {
+	for ai, optchar := range optchars {
 		for _, opt := range self.options {
 			if optchar == opt.shortName {
 				if opt.flag != nil {
 					**opt.flag = true
-				} else if opt.str != nil {
-					argarg := strings.TrimPrefix(arg, sprintf("%s%c", arg[:ai], optchar))
-					if argarg != "" {
-						**opt.str = argarg
-						return 0
-					}
-					**opt.str = args[i+1]
-					return 1
 				} else if opt.flagGroup != nil {
-					argarg := strings.TrimPrefix(arg, sprintf("%s%c", arg[:ai], optchar))
+					argarg := strings.TrimPrefix(optchars, sprintf("%s%c", optchars[:ai], optchar))
 					if argarg != "" {
 						opt.flagGroup.parse(argarg)
 						return 0
@@ -93,10 +95,11 @@ func (self *Options) parseShortOptions(args []string, i int, arg string) int {
 					opt.flagGroup.parse(args[i+1])
 					return 1
 				} else {
-					panic("not implemented: " + arg[ai:])
+					panic(OptErr("not implemented: " + optchars[ai:]))
 				}
 			}
 		}
+		panic(OptErr(sprintf("unknown option: -%c", optchar)))
 	}
 	return 0
 }
@@ -146,7 +149,6 @@ type Option struct {
 	argDescription string
 	description    string
 	flag           **bool
-	str            **string
 	flagGroup      *FlagGroup
 }
 
@@ -187,4 +189,10 @@ type GroupFlag struct {
 	name  string
 	value *bool
 	help  string
+}
+
+type OptErr string
+
+func (err OptErr) Error() string {
+	return string(err)
 }
