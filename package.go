@@ -187,7 +187,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 		pkgname = pkgnameFromDistname(pkgname, distname)
 	}
 
-	if pkgname != "" && pkgname == distname {
+	if pkgname != "" && pkgname == distname && pkgnameLine.extra["comment"].(string) == "" {
 		pkgnameLine.notef("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
 	}
 
