@@ -39,3 +39,19 @@ func (s *Suite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
 	c.Check(lines[0].String(), equals, "fname_contlast:1: last line\\")
 	c.Check(s.Stdout(), equals, "ERROR: fname_contlast:1: File must end with a newline.\n")
 }
+
+func (s *Suite) TestSplitRawLine(c *check.C) {
+	indent, rawText, outdent, cont := splitRawLine("\n")
+
+	c.Check(indent, equals, "")
+	c.Check(rawText, equals, "")
+	c.Check(outdent, equals, "")
+	c.Check(cont, equals, "")
+
+	indent, rawText, outdent, cont = splitRawLine("\tasdf   \\\n")
+
+	c.Check(indent, equals, "\t")
+	c.Check(rawText, equals, "asdf")
+	c.Check(outdent, equals, "   ")
+	c.Check(cont, equals, "\\")
+}

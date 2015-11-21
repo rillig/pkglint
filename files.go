@@ -35,7 +35,7 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 	interestingRawLines := rawLines[index:]
 
 	for i, rawLine := range interestingRawLines {
-		_, indent, rawText, outdent, cont := match4(rawLine.textnl, `^([ \t]*)(.*?)([ \t]*)(\\?)\n?$`)
+		indent, rawText, outdent, cont := splitRawLine(rawLine.textnl)
 
 		if text == "" {
 			text += indent
@@ -60,6 +60,17 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 	} else {
 		return NewLine(fname, sprintf("%d--%d", firstlineno, lastlineno), text, lineRawLines)
 	}
+}
+
+func splitRawLine(textnl string) (string, string, string, string) {
+	m1234 := strings.TrimSuffix(textnl, "\n")
+	m234 := strings.TrimLeft(m1234, " \t")
+	m23 := strings.TrimSuffix(m234, "\\")
+	m2 := strings.TrimRight(m23, " \t")
+	indent := m1234[: len(m1234)-len(m234)]
+	outdent := m23[len(m2):]
+	cont := m234[len(m23):]
+	return indent, m2, outdent, cont
 }
 
 func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
