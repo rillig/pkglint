@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"path/filepath"
+	"path"
 )
 
 func CheckDirent(fname string) {
@@ -16,7 +16,7 @@ func CheckDirent(fname string) {
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	G.currentDir = ifelseStr(isReg, filepath.Dir(fname), fname)
+	G.currentDir = ifelseStr(isReg, path.Dir(fname), fname)
 	absCurrentDir := abspath(G.currentDir)
 	G.isWip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	G.isInfrastructure = matches(absCurrentDir, `/mk/|/mk$`)

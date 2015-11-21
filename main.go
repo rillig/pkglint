@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 const confMake = "@BMAKE@"
@@ -40,7 +41,9 @@ func (p *Pkglint) Main(args ...string) {
 		return
 	}
 
-	G.todo = append(G.todo, G.opts.args...)
+	for _, arg := range G.opts.args {
+		G.todo = append(G.todo, filepath.ToSlash(arg))
+	}
 	if len(G.todo) == 0 {
 		G.todo = []string{"."}
 	}
