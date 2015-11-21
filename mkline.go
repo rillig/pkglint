@@ -322,7 +322,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 	}
 
 	if hasPrefix(varname, "_") && !G.isInfrastructure {
-		line.warnf("Variable names starting with an underscore are reserved for internal pkgsrc use.")
+		line.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
 	if varname == "PERL5_PACKLIST" {

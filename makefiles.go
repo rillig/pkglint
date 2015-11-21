@@ -464,7 +464,7 @@ func ChecklinesMk(lines []*Line) {
 				if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 					for _, forvar := range splitOnSpace(vars) {
 						if !G.isInfrastructure && hasPrefix(forvar, "_") {
-							line.warnf("Variable names starting with an underscore are reserved for internal pkgsrc use.")
+							line.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
 						}
 
 						if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
