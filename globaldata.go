@@ -356,6 +356,7 @@ func (self *GlobalData) loadUserDefinedVars() {
 
 	self.userDefinedVars = make(map[string]*Line)
 	for _, line := range lines {
+		parselineMk(line)
 		if m, varname, _, _, _ := match4(line.text, reVarassign); m {
 			self.userDefinedVars[varname] = line
 		}
