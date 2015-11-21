@@ -12,11 +12,10 @@ import (
 
 type Options struct {
 	options []*Option
-	out     io.Writer
 }
 
-func NewOptions(out io.Writer) *Options {
-	return &Options{nil, out}
+func NewOptions() *Options {
+	return new(Options)
 }
 
 func (self *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
@@ -99,12 +98,14 @@ func (self *Options) parseLongOption(args []string, i int, argRest string) int {
 }
 
 func (self *Options) parseShortOptions(args []string, i int, optchars string) int {
+optchar:
 	for ai, optchar := range optchars {
 		for _, opt := range self.options {
 			if optchar == opt.shortName {
 				switch data := opt.data.(type) {
 				case *bool:
 					*data = true
+					continue optchar
 				case *FlagGroup:
 					argarg := optchars[ai+utf8.RuneLen(optchar):]
 					if argarg != "" {
@@ -122,8 +123,8 @@ func (self *Options) parseShortOptions(args []string, i int, optchars string) in
 	return 0
 }
 
-func (self *Options) Help(generalUsage string) {
-	wr := tabwriter.NewWriter(self.out, 1, 0, 2, ' ', tabwriter.TabIndent)
+func (self *Options) Help(out io.Writer, generalUsage string) {
+	wr := tabwriter.NewWriter(out, 1, 0, 2, ' ', tabwriter.TabIndent)
 
 	fmt.Fprintf(wr, "usage: %s\n", generalUsage)
 	fmt.Fprintln(wr)

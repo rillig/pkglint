@@ -5,14 +5,16 @@ import (
 )
 
 func (s *Suite) TestMainHelp(c *check.C) {
-	new(Pkglint).Main("pkglint", "-h")
+	exitcode := new(Pkglint).Main("pkglint", "-h")
 
+	c.Check(exitcode, equals, 0)
 	c.Check(s.Output(), check.Matches, `^\Qusage: pkglint [options] dir...\E\n(?s).+`)
 }
 
 func (s *Suite) TestMainVersion(c *check.C) {
-	new(Pkglint).Main("pkglint", "--version")
+	exitcode := new(Pkglint).Main("pkglint", "--version")
 
+	c.Check(exitcode, equals, 0)
 	c.Check(s.Output(), check.Matches, `(?:@VERSION@|\d+\.\d+)\n`)
 }
 
