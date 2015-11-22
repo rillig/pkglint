@@ -438,7 +438,7 @@ func NewHistogram() *Histogram {
 }
 
 func (h *Histogram) add(s string) {
-	if G.opts.Profile {
+	if G.opts.Profiling {
 		h.histo[s]++
 	}
 }

@@ -139,5 +139,11 @@ func saveAutofixChanges(lines []*Line) {
 func autofix(lines []*Line) {
 	if G.opts.Autofix {
 		saveAutofixChanges(lines)
+	} else if !G.autofixAvailable {
+		for _, line := range lines {
+			if line.changed {
+				G.autofixAvailable = true
+			}
+		}
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime/pprof"
@@ -147,4 +148,20 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	}
 
 	return nil
+}
+
+func printSummary() {
+	if !G.opts.Quiet {
+		if G.errors != 0 || G.warnings != 0 {
+			fmt.Fprintf(G.logOut, "%d errors and %d warnings found.\n", G.errors, G.warnings)
+			if G.explanationsAvailable {
+				fmt.Fprint(G.logOut, "(Run pkglint with the -e option to show explanations.)\n")
+			}
+			if G.autofixAvailable {
+				fmt.Fprint(G.logOut, "(Run pkglint with the -F option to automatically fix some issues.)\n")
+			}
+		} else {
+			io.WriteString(G.logOut, "looks fine.\n")
+		}
+	}
 }

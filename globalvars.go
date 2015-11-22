@@ -22,6 +22,7 @@ type GlobalVars struct {
 	errors                int
 	warnings              int
 	explanationsAvailable bool
+	autofixAvailable      bool
 	traceDepth            int
 	logOut                io.Writer
 	logErr                io.Writer

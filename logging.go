@@ -79,16 +79,4 @@ func debugf(fname, lineno, format string, args ...interface{}) bool {
 	return true
 }
 
-func printSummary() {
-	if !G.opts.Quiet {
-		if G.errors != 0 || G.warnings != 0 {
-			explanations := ifelseStr(G.explanationsAvailable, " (Use -e to show explanations.)", "")
-			summary := sprintf("%d errors and %d warnings found.%s\n", G.errors, G.warnings, explanations)
-			io.WriteString(G.logOut, summary)
-		} else {
-			io.WriteString(G.logOut, "looks fine.\n")
-		}
-	}
-}
-
 type pkglintFatal struct{}
