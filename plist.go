@@ -35,7 +35,7 @@ func checklinesPlist(lines []*Line) {
 
 	var extraLines []*Line
 	if fname := lines[0].fname; path.Base(fname) == "PLIST.common_end" {
-		commonLines, err := loadLines(path.Dir(fname)+"/PLIST.common", false)
+		commonLines, err := readLines(path.Dir(fname)+"/PLIST.common", false)
 		if err == nil {
 			extraLines = commonLines
 		}

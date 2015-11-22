@@ -7,7 +7,7 @@ import (
 )
 
 func LoadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
-	lines, err := loadLines(fname, joinContinuationLines)
+	lines, err := readLines(fname, joinContinuationLines)
 	if err != nil {
 		errorf(fname, NO_LINES, "Cannot be read.")
 		return nil
@@ -20,7 +20,7 @@ func LoadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 }
 
 func LoadExistingLines(fname string, foldBackslashLines bool) []*Line {
-	lines, err := loadLines(fname, foldBackslashLines)
+	lines, err := readLines(fname, foldBackslashLines)
 	if lines == nil || err != nil {
 		fatalf(fname, NO_LINES, "Cannot be read.")
 	}
@@ -70,7 +70,7 @@ func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, c
 	return m1234[:len(m1234)-len(m234)], m2, m23[len(m2):], m234[len(m23):]
 }
 
-func loadLines(fname string, joinContinuationLines bool) ([]*Line, error) {
+func readLines(fname string, joinContinuationLines bool) ([]*Line, error) {
 	rawText, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err

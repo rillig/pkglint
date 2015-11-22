@@ -71,7 +71,7 @@ func getSubdirs(fname string) []string {
 // Checks whether a file is already committed to the CVS repository.
 func isCommitted(fname string) bool {
 	basename := path.Base(fname)
-	lines, err := loadLines(path.Dir(fname)+"/CVS/Entries", false)
+	lines, err := readLines(path.Dir(fname)+"/CVS/Entries", false)
 	if err != nil {
 		return false
 	}

@@ -92,7 +92,7 @@ func checkdirPackage(pkgpath string) {
 			!matches(fname, `patch-`) &&
 			!contains(fname, G.pkgContext.pkgdir+"/") &&
 			!contains(fname, G.pkgContext.filesdir+"/") {
-			if lines, err := loadLines(fname, true); err == nil && lines != nil {
+			if lines, err := readLines(fname, true); err == nil && lines != nil {
 				ParselinesMk(lines)
 				determineUsedVariables(lines)
 			}
