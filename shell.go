@@ -33,7 +33,7 @@ const (
 		`|\$[\w_]` + // one-character make(1) variable
 		`|\$\{[^{}]+\}` + // make(1) variable, ${...}
 		`|\$\([^()]+\)` + // make(1) variable, $(...)
-		`|\$[/\@<^]` + // special make(1) variables
+		`|\$[/@<^]` + // special make(1) variables
 		`|\$\$[0-9A-Z_a-z]+` + // shell variable
 		`|\$\$[#?@]` + // special shell variables
 		`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
@@ -247,7 +247,7 @@ outer:
 
 		case state == SWST_PLAIN:
 			switch {
-			case replacePrefix(&rest, &m, `^[!#\%&\(\)*+,\-.\/0-9:;<=>?\@A-Z\[\]^_a-z{|}~]+`),
+			case replacePrefix(&rest, &m, `^[!#\%&\(\)*+,\-.\/0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
 				replacePrefix(&rest, &m, `^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)`):
 			case replacePrefix(&rest, &m, `^'`):
 				state = SWST_SQUOT
@@ -275,7 +275,7 @@ outer:
 						"\tcp \"$fname\" /tmp",
 						"\t# copies one file, as intended")
 				}
-			case replacePrefix(&rest, &m, `^\$\@`):
+			case replacePrefix(&rest, &m, `^\$@`):
 				line.warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
 				line.explain(
 					"It is more readable and prevents confusion with the shell variable of",
@@ -320,7 +320,7 @@ outer:
 			case replacePrefix(&rest, &m, "^\\\\(?:[\\\\\"`]|\\$\\$)"):
 				// just skip
 			case replacePrefix(&rest, &m, `^\$\$\{([0-9A-Za-z_]+)\}`),
-				replacePrefix(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?\@]|\$\$)`):
+				replacePrefix(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):
 				shvarname := m[1]
 				_ = G.opts.DebugShell && line.debugf("checklineMkShellword: found double-quoted variable %q.", shvarname)
 			case replacePrefix(&rest, &m, `^\$\$`):

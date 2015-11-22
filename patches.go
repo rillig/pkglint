@@ -174,7 +174,7 @@ const (
 	rePatchCtxLineContext   = `^(?:\s\s(.*))?$`
 	rePatchUniFileDel       = `^---\s(\S+)(?:\s+(.*))?$`
 	rePatchUniFileAdd       = `^\+\+\+\s(\S+)(?:\s+(.*))?$`
-	rePatchUniHunk          = `^\@\@\s-(?:(\d+),)?(\d+)\s\+(?:(\d+),)?(\d+)\s\@\@(.*)$`
+	rePatchUniHunk          = `^@@\s-(?:(\d+),)?(\d+)\s\+(?:(\d+),)?(\d+)\s@@(.*)$`
 	rePatchUniLineDel       = `^-(.*)$`
 	rePatchUniLineAdd       = `^\+(.*)$`
 	rePatchUniLineContext   = `^\s(.*)$`

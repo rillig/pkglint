@@ -245,7 +245,7 @@ func (cv *VartypeCheck) Filename() {
 	switch {
 	case contains(cv.valueNovar, "/"):
 		cv.line.warnf("A filename should not contain a slash.")
-	case !matches(cv.valueNovar, `^[-0-9\@A-Za-z.,_~+%]*$`):
+	case !matches(cv.valueNovar, `^[-0-9@A-Za-z.,_~+%]*$`):
 		cv.line.warnf("%q is not a valid filename.", cv.value)
 	}
 }
@@ -308,11 +308,11 @@ func (cv *VartypeCheck) License() {
 func (cv *VartypeCheck) MailAddress() {
 	line, value := cv.line, cv.value
 
-	if m, _, domain := match2(value, `^([+\-.0-9A-Z_a-z]+)\@([-\w\d.]+)$`); m {
+	if m, _, domain := match2(value, `^([+\-.0-9A-Z_a-z]+)@([-\w\d.]+)$`); m {
 		if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
 			line.warnf("Please write NetBSD.org instead of %q.", domain)
 		}
-		if matches(value, `(?i)^(tech-pkg|packages)\@NetBSD\.org$`) {
+		if matches(value, `(?i)^(tech-pkg|packages)@NetBSD\.org$`) {
 			line.errorf("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 		}
 
@@ -637,7 +637,7 @@ func (cv *VartypeCheck) URL() {
 	} else if containsVarRef(value) {
 		// No further checks
 
-	} else if m, _, host, _, _ := match4(value, `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?\@A-Z_a-z~]|#)*$`); m {
+	} else if m, _, host, _, _ := match4(value, `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?@A-Z_a-z~]|#)*$`); m {
 		if matches(host, `(?i)\.NetBSD\.org$`) && !matches(host, `\.NetBSD\.org$`) {
 			line.warnf("Please write NetBSD.org instead of %s.", host)
 		}
@@ -718,7 +718,7 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 	} else if cv.value != "" && cv.valueNovar == "" {
 		// The value of another variable
 
-	} else if !matches(cv.valueNovar, `^(?:\.|[0-9A-Za-z_\@][-0-9A-Za-z_\@./+]*)$`) {
+	} else if !matches(cv.valueNovar, `^(?:\.|[0-9A-Za-z_@][-0-9A-Za-z_@./+]*)$`) {
 		cv.line.warnf("%q is not a valid subdirectory of ${WRKSRC}.", cv.value)
 	}
 }

@@ -96,7 +96,7 @@ func determineUsedVariables(lines []*Line) {
 }
 
 func extractUsedVariables(line *Line, text string) []string {
-	re := regcomp(`^(?:[^\$]+|\$[\$*<>?\@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
+	re := regcomp(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
 	var result []string
 	for {

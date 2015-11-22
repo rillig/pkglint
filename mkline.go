@@ -384,7 +384,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 		line.warnf("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
-	if matches(value, `^[^=]\@comment`) {
+	if matches(value, `^[^=]@comment`) {
 		line.warnf("Please don't use @comment in %s.", varname)
 		line.explain(
 			"Here you are defining a variable containing @comment. As this value",
@@ -402,7 +402,7 @@ func checklineMkVarassign(line *Line, varname, op, value, comment string) {
 
 	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
 	if G.pkgContext != nil && G.pkgContext.plistSubstCond != nil {
-		if m, plistVarname := match1(value, `(.+)=.*\@comment.*`); m {
+		if m, plistVarname := match1(value, `(.+)=.*@comment.*`); m {
 			G.pkgContext.plistSubstCond[plistVarname] = true
 		}
 	}

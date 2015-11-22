@@ -62,7 +62,7 @@ func checklinesPlist(lines []*Line) {
 		}
 
 		if hasPrefix(text, "@") {
-			if m, dirname := match1(text, `^\@exec \$\{MKDIR\} %D/(.*)$`); m {
+			if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
 				for dir := dirname; dir != "."; dir = path.Dir(dir) {
 					pctx.allDirs[dir] = line
 				}
@@ -86,7 +86,7 @@ type PlistLine struct {
 
 func (pline *PlistLine) check(pctx *PlistContext) {
 	text := pline.line.text
-	if m, cmd, arg := match2(text, `^(?:\$\{[\w_]+\})?\@([a-z-]+)\s+(.*)`); m {
+	if m, cmd, arg := match2(text, `^(?:\$\{[\w_]+\})?@([a-z-]+)\s+(.*)`); m {
 		pline.checkDirective(cmd, arg)
 	} else if m, dirname, basename := match2(text, `^([A-Za-z0-9\$].*)/([^/]+)$`); m {
 		pline.checkPathname(pctx, dirname, basename)
