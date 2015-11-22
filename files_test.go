@@ -41,17 +41,17 @@ func (s *Suite) TestConvertToLogicalLines_contInLastLine(c *check.C) {
 }
 
 func (s *Suite) TestSplitRawLine(c *check.C) {
-	indent, rawText, outdent, cont := splitRawLine("\n")
+	leadingWhitespace, text, trailingWhitespace, continuation := splitRawLine("\n")
 
-	c.Check(indent, equals, "")
-	c.Check(rawText, equals, "")
-	c.Check(outdent, equals, "")
-	c.Check(cont, equals, "")
+	c.Check(leadingWhitespace, equals, "")
+	c.Check(text, equals, "")
+	c.Check(trailingWhitespace, equals, "")
+	c.Check(continuation, equals, "")
 
-	indent, rawText, outdent, cont = splitRawLine("\tasdf   \\\n")
+	leadingWhitespace, text, trailingWhitespace, continuation = splitRawLine("\tasdf   \\\n")
 
-	c.Check(indent, equals, "\t")
-	c.Check(rawText, equals, "asdf")
-	c.Check(outdent, equals, "   ")
-	c.Check(cont, equals, "\\")
+	c.Check(leadingWhitespace, equals, "\t")
+	c.Check(text, equals, "asdf")
+	c.Check(trailingWhitespace, equals, "   ")
+	c.Check(continuation, equals, "\\")
 }
