@@ -11,9 +11,9 @@ func checklinesDistinfo(lines []*Line) {
 	defer tracecall("checklinesDistinfo", lines[0].fname)()
 
 	fname := lines[0].fname
-	patchesDir := G.pkgContext.patchdir
-	if patchesDir == "" && dirExists(G.currentDir+"/patches") {
-		patchesDir = "patches"
+	var patchesDir = "patches"
+	if G.pkgContext != nil && dirExists(G.currentDir+"/"+G.pkgContext.patchdir) {
+		patchesDir = G.pkgContext.patchdir
 	}
 	if G.pkgContext != nil && hasSuffix(fname, "/lang/php54/distinfo") {
 		patchesDir = G.curPkgsrcdir + "/lang/php54/patches"
@@ -66,22 +66,23 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 	ck.onFilenameChange(NewLine(ck.fname, "EOF", "", nil), "")
 }
 
-func (ctx *distinfoLinesChecker) onFilenameChange(line *Line, fname string) {
-	if ctx.previousFilename != "" {
+func (ctx *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
+	prevFname := ctx.previousFilename
+	if prevFname != "" {
 		algorithms := strings.Join(ctx.algorithms, ", ")
 		if ctx.isPatch {
 			if algorithms != "SHA1" {
-				line.errorf("Expected SHA1 hash for %s, got %s.", fname, algorithms)
+				line.errorf("Expected SHA1 hash for %s, got %s.", prevFname, algorithms)
 			}
 		} else {
 			if algorithms != "SHA1, RMD160, Size" && algorithms != "SHA1, RMD160, SHA512, Size" {
-				line.errorf("Expected SHA1, RMD160, SHA512, Size checksums for %s, got %s.", fname, algorithms)
+				line.errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", prevFname, algorithms)
 			}
 		}
 	}
 
-	ctx.isPatch = matches(fname, `^patch-.+$`) && fileExists(G.currentDir+"/"+ctx.patchdir+"/"+fname)
-	ctx.previousFilename = fname
+	ctx.isPatch = matches(nextFname, `^patch-.+$`) && fileExists(G.currentDir+"/"+ctx.patchdir+"/"+nextFname)
+	ctx.previousFilename = nextFname
 	ctx.algorithms = nil
 }
 
