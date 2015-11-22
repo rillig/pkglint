@@ -87,7 +87,7 @@ type PlistLine struct {
 
 func (pline *PlistLine) check(pctx *PlistContext) {
 	text := pline.line.text
-	if matches(text, `^\w`) {
+	if hasAlnumPrefix(text) {
 		pline.checkPathname(pctx, text)
 	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)\s+(.*)`); m {
 		pline.checkDirective(cmd, arg)
@@ -165,7 +165,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, fullname string) {
 	sdirname, basename := path.Split(fullname)
 	dirname := strings.TrimSuffix(sdirname, "/")
 
-	if G.opts.WarnPlistSort && matches(text, `^\w`) && !containsVarRef(text) {
+	if G.opts.WarnPlistSort && hasAlnumPrefix(text) && !containsVarRef(text) {
 		if pctx.lastFname != "" {
 			if pctx.lastFname > text {
 				line.warnf("%q should be sorted before %q.", text, pctx.lastFname)

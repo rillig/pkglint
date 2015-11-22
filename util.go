@@ -480,3 +480,11 @@ func (a ByCountDesc) Less(i, j int) bool {
 	}
 	return a[i].count == a[j].count && a[i].s < a[j].s
 }
+
+func hasAlnumPrefix(s string) bool {
+	if s == "" {
+		return false
+	}
+	b := s[0]
+	return '0' <= b && b <= '9' || 'A' <= b && b <= 'Z' || b == '_' || 'a' <= b && b <= 'z'
+}
