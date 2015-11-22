@@ -9,7 +9,6 @@ const (
 	reMkComment    = `^\s*#(.*)$`
 	reMkDependency = `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`
 	reMkSysinclude = `^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$`
-	reMkShellcmd   = `^\t(.*)$`
 )
 
 func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
@@ -32,15 +31,17 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		*allLines = append(*allLines, line)
 
 		var includeFile, incDir, incBase string
-		if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
-			includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
-			if containsVarRef(includeFile) {
-				if !contains(fname, "/mk/") {
-					line.notef("Skipping include file %q. This may result in false warnings.", includeFile)
+		if hasPrefix(text, ".") {
+			if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
+				includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
+				if containsVarRef(includeFile) {
+					if !contains(fname, "/mk/") {
+						line.notef("Skipping include file %q. This may result in false warnings.", includeFile)
+					}
+					includeFile = ""
 				}
-				includeFile = ""
+				incDir, incBase = path.Split(includeFile)
 			}
-			incDir, incBase = path.Split(includeFile)
 		}
 
 		if includeFile != "" {
@@ -170,7 +171,7 @@ func parselineMk(line *Line) {
 
 	text := line.text
 
-	if m, varname, op, value, comment := match4(text, reVarassign); m {
+	if m, varname, op, value, comment := matchVarassign(text); m {
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 
@@ -184,9 +185,9 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if m, shellcmd := match1(text, reMkShellcmd); m {
+	if hasPrefix(text, "\t") {
 		line.extra["is_shellcmd"] = true
-		line.extra["shellcmd"] = shellcmd
+		line.extra["shellcmd"] = text[1:]
 		return
 	}
 
@@ -368,13 +369,13 @@ func ChecklinesMk(lines []*Line) {
 		} else if line.extra["is_comment"] != nil {
 			// No further checks.
 
-		} else if m, varname, op, value, comment := match4(text, reVarassign); m {
+		} else if m, varname, op, value, comment := matchVarassign(text); m {
 			ChecklineMkVaralign(line)
 			checklineMkVarassign(line, varname, op, value, comment)
 			substcontext.Varassign(line, varname, op, value)
 
-		} else if m, shellcmd := match1(text, reMkShellcmd); m {
-			checklineMkShellcmd(line, shellcmd)
+		} else if hasPrefix(text, "\t") {
+			checklineMkShellcmd(line, text[1:])
 
 		} else if m, include, includefile := match2(text, reMkInclude); m {
 			_ = G.opts.DebugInclude && line.debugf("includefile=%s", includefile)

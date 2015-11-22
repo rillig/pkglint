@@ -64,6 +64,10 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 
 	checktoplevelUnusedLicenses()
 	printSummary()
+	if G.opts.Profile {
+		rematch.printStats("rematch", G.logOut)
+		renomatch.printStats("renomatch", G.logOut)
+	}
 	if G.errors != 0 {
 		return 1
 	}

@@ -74,7 +74,7 @@ func (self *GlobalData) loadDistSites() {
 	names := make(map[string]bool)
 	url2name := make(map[string]string)
 	for _, line := range lines {
-		if m, varname, _, urls, _ := match4(line.text, reVarassign); m {
+		if m, varname, _, urls, _ := matchVarassign(line.text); m {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
 				names[varname] = true
 				for _, url := range splitOnSpace(urls) {
@@ -136,7 +136,7 @@ func (self *GlobalData) loadTools() {
 		fname := G.globalData.pkgsrcdir + "/mk/tools/" + basename
 		lines := LoadExistingLines(fname, true)
 		for _, line := range lines {
-			if m, varname, _, value, _ := match4(line.text, reVarassign); m {
+			if m, varname, _, value, _ := matchVarassign(line.text); m {
 				if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^?[-\w.]+$`)) {
 					tools[value] = true
 				} else if m, toolname := match1(varname, `^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$`); m {
@@ -166,7 +166,7 @@ func (self *GlobalData) loadTools() {
 		for _, line := range lines {
 			text := line.text
 
-			if m, varname, _, value, _ := match4(text, reVarassign); m {
+			if m, varname, _, value, _ := matchVarassign(text); m {
 				if varname == "USE_TOOLS" {
 					_ = G.opts.DebugTools && line.debugf("[condDepth=%d] %s", condDepth, value)
 					if condDepth == 0 {
@@ -290,7 +290,7 @@ func (self *GlobalData) loadDocChangesFromFile(fname string) []Change {
 	var changes []Change
 	for _, line := range lines {
 		text := line.text
-		if !matches(text, `^\t[A-Z]`) {
+		if !(hasPrefix(text, "\t") && matches(text, `^\t[A-Z]`)) {
 			continue
 		}
 
@@ -357,7 +357,7 @@ func (self *GlobalData) loadUserDefinedVars() {
 	self.userDefinedVars = make(map[string]*Line)
 	for _, line := range lines {
 		parselineMk(line)
-		if m, varname, _, _, _ := match4(line.text, reVarassign); m {
+		if m, varname, _, _, _ := matchVarassign(line.text); m {
 			self.userDefinedVars[varname] = line
 		}
 	}

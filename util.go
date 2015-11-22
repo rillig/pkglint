@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -193,8 +194,17 @@ func regcomp(re string) *regexp.Regexp {
 	return cre
 }
 
+var rematch = NewHistogram()
+var renomatch = NewHistogram()
+
 func match(s, re string) []string {
-	return regcomp(re).FindStringSubmatch(s)
+	m := regcomp(re).FindStringSubmatch(s)
+	if m != nil {
+		rematch.add(re)
+	} else {
+		renomatch.add(re)
+	}
+	return m
 }
 
 func matches(s, re string) bool {
@@ -414,4 +424,58 @@ func reReplaceRepeatedly(from string, re string, to string) string {
 		return reReplaceRepeatedly(replaced, re, to)
 	}
 	return replaced
+}
+
+type Histogram struct {
+	histo map[string]int
+}
+
+func NewHistogram() *Histogram {
+	h := new(Histogram)
+	h.histo = make(map[string]int)
+	return h
+}
+
+func (h *Histogram) add(s string) {
+	if G.opts.Profile {
+		h.histo[s]++
+	}
+}
+
+func (h *Histogram) printStats(caption string, out io.Writer) {
+	entries := make([]HistogramEntry, len(h.histo))
+
+	i := 0
+	for s, count := range h.histo {
+		entries[i] = HistogramEntry{s, count}
+		i++
+	}
+
+	sort.Sort(ByCountDesc(entries))
+
+	for i, entry := range entries {
+		fmt.Fprintf(out, "%s %6d %s\n", caption, entry.count, entry.s)
+		if i >= 10 {
+			break
+		}
+	}
+}
+
+type HistogramEntry struct {
+	s     string
+	count int
+}
+type ByCountDesc []HistogramEntry
+
+func (a ByCountDesc) Len() int {
+	return len(a)
+}
+func (a ByCountDesc) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+func (a ByCountDesc) Less(i, j int) bool {
+	if a[j].count < a[i].count {
+		return true
+	}
+	return a[i].count == a[j].count && a[i].s < a[j].s
 }

@@ -67,7 +67,7 @@ func splitRawLine(textnl string) (string, string, string, string) {
 	m234 := strings.TrimLeft(m1234, " \t")
 	m23 := strings.TrimSuffix(m234, "\\")
 	m2 := strings.TrimRight(m23, " \t")
-	indent := m1234[: len(m1234)-len(m234)]
+	indent := m1234[:len(m1234)-len(m234)]
 	outdent := m23[len(m2):]
 	cont := m234[len(m23):]
 	return indent, m2, outdent, cont
