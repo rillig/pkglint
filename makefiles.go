@@ -6,7 +6,6 @@ import (
 )
 
 const (
-	reMkComment    = `^\s*#(.*)$`
 	reMkDependency = `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`
 	reMkSysinclude = `^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$`
 )
@@ -120,7 +119,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 	}
 
 	i := 0
-	for i < 2 && matches(lines[i].text, reMkComment) {
+	for i < 2 && matches(lines[i].text, `^\s*#(.*)$`) {
 		i++
 	}
 
@@ -191,13 +190,13 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if m, comment := match1(text, reMkComment); m {
+	if index := strings.IndexByte(text, '#'); index != -1 && strings.TrimSpace(text[:index]) == "" {
 		line.extra["is_comment"] = true
-		line.extra["comment"] = comment
+		line.extra["comment"] = text[index+1:]
 		return
 	}
 
-	if matches(text, `^\s*$`) {
+	if strings.TrimSpace(text) == "" {
 		line.extra["is_empty"] = true
 		return
 	}

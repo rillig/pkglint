@@ -71,19 +71,9 @@ func checklinesPlist(lines []*Line) {
 	}
 
 	for _, line := range lines {
-		text := line.text
 		pline := &PlistLine{line}
+		pline.check(pctx)
 		pline.checkTrailingWhitespace()
-
-		if m, cmd, arg := match2(text, `^(?:\$\{[\w_]+\})?\@([a-z-]+)\s+(.*)`); m {
-			pline.checkDirective(cmd, arg)
-		} else if m, dirname, basename := match2(text, `^([A-Za-z0-9\$].*)/([^/]+)$`); m {
-			pline.checkPathname(pctx, dirname, basename)
-		} else if matches(text, `^\$\{[\w_]+\}$`) {
-			// A variable on its own line.
-		} else {
-			line.warnf("Unknown line type.")
-		}
 	}
 
 	checklinesTrailingEmptyLines(lines)
@@ -92,6 +82,19 @@ func checklinesPlist(lines []*Line) {
 
 type PlistLine struct {
 	line *Line
+}
+
+func (pline *PlistLine) check(pctx *PlistContext) {
+	text := pline.line.text
+	if m, cmd, arg := match2(text, `^(?:\$\{[\w_]+\})?\@([a-z-]+)\s+(.*)`); m {
+		pline.checkDirective(cmd, arg)
+	} else if m, dirname, basename := match2(text, `^([A-Za-z0-9\$].*)/([^/]+)$`); m {
+		pline.checkPathname(pctx, dirname, basename)
+	} else if matches(text, `^\$\{[\w_]+\}$`) {
+		// A variable on its own line.
+	} else {
+		pline.line.warnf("Unknown line type.")
+	}
 }
 
 func (pline *PlistLine) checkTrailingWhitespace() {
