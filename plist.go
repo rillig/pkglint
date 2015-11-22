@@ -360,9 +360,11 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, fullname string) {
 			"since its contents changes frequently.")
 	}
 
-	if m, basename, _ := match2(text, `^(.*)(\.a|\.so[0-9.]*)$`); m {
-		if laLine := pctx.allFiles[basename+".la"]; laLine != nil {
-			line.warnf("Redundant library found. The libtool library is in line %s.", laLine)
+	if contains(basename, ".a") || contains(basename, ".so") {
+		if m, basename := match1(text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
+			if laLine := pctx.allFiles[basename+".la"]; laLine != nil {
+				line.warnf("Redundant library found. The libtool library is in line %s.", laLine)
+			}
 		}
 	}
 }

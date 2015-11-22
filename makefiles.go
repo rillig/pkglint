@@ -30,7 +30,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		*allLines = append(*allLines, line)
 
 		var includeFile, incDir, incBase string
-		if hasPrefix(text, ".") {
+		if hasPrefix(text, ".") && hasSuffix(text, "\"") {
 			if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
 				includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
 				if containsVarRef(includeFile) {
