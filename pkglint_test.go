@@ -127,3 +127,13 @@ func (s *Suite) TestChecklineMkAbsolutePathname(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: Makefile:1: Found absolute pathname: /bin\n")
 }
+
+func (s *Suite) TestMatchVarassign(c *check.C) {
+	m, varname, op, value, comment := matchVarassign("C++=c11")
+
+	c.Check(m, equals, true)
+	c.Check(varname, equals, "C+")
+	c.Check(op, equals, "+=")
+	c.Check(value, equals, "c11")
+	c.Check(comment, equals, "")
+}

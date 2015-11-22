@@ -562,7 +562,7 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 
 func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 	if contains(text, "=") {
-		m, varname, op, value, comment = match4(text, `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`)
+		m, varname, op, value, comment = match4(text, reVarassign)
 	}
 	return
 }
