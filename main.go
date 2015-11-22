@@ -38,7 +38,7 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 		return 0
 	}
 
-	if G.opts.Profile {
+	if G.opts.Profiling {
 		f, err := os.Create("pkglint.pprof")
 		if err != nil {
 			fatalf(NO_FILE, NO_LINES, "Cannot create profiling file: %s", err)
@@ -64,7 +64,7 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 
 	checktoplevelUnusedLicenses()
 	printSummary()
-	if G.opts.Profile {
+	if G.opts.Profiling {
 		rematch.printStats("rematch", G.logOut)
 		renomatch.printStats("renomatch", G.logOut)
 	}
@@ -86,7 +86,7 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	opts.AddFlagVar('h', "help", &gopts.PrintHelp, false, "print a detailed usage message")
 	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
 	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
-	opts.AddFlagVar('p', "profile", &gopts.Profile, false, "profile the executing program")
+	opts.AddFlagVar('p', "profiling", &gopts.Profiling, false, "profile the executing program")
 	opts.AddFlagVar('q', "quiet", &gopts.Quiet, false, "don't print a summary line when finishing")
 	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")
 	opts.AddFlagVar('s', "source", &gopts.PrintSource, false, "show the source lines together with diagnostics")
