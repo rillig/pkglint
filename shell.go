@@ -822,7 +822,7 @@ func nextState(line *Line, state scState, shellword string) scState {
 		return state
 	case state == SCST_PAX && shellword == "-s":
 		return SCST_PAX_S
-	case state == SCST_PAX && matches(shellword, `^-`):
+	case state == SCST_PAX && hasPrefix(shellword, "-"):
 		return SCST_PAX
 	case state == SCST_PAX:
 		return SCST_CONT
@@ -830,7 +830,7 @@ func nextState(line *Line, state scState, shellword string) scState {
 		return SCST_PAX
 	case state == SCST_SED && shellword == "-e":
 		return SCST_SED_E
-	case state == SCST_SED && matches(shellword, `^-`):
+	case state == SCST_SED && hasPrefix(shellword, "-"):
 		return SCST_SED
 	case state == SCST_SED:
 		return SCST_CONT
