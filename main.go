@@ -153,7 +153,9 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 func printSummary() {
 	if !G.opts.Quiet {
 		if G.errors != 0 || G.warnings != 0 {
-			fmt.Fprintf(G.logOut, "%d errors and %d warnings found.\n", G.errors, G.warnings)
+			fmt.Fprintf(G.logOut, "%d %s and %d %s found.\n",
+				G.errors, ifelseStr(G.errors == 1, "error", "errors"),
+				G.warnings, ifelseStr(G.warnings == 1, "warning", "warnings"))
 			if G.explanationsAvailable {
 				fmt.Fprint(G.logOut, "(Run pkglint with the -e option to show explanations.)\n")
 			}
