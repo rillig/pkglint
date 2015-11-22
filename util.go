@@ -208,7 +208,13 @@ func match(s, re string) []string {
 }
 
 func matches(s, re string) bool {
-	return regcomp(re).MatchString(s)
+	matches := regcomp(re).MatchString(s)
+	if matches {
+		rematch.add(re)
+	} else {
+		renomatch.add(re)
+	}
+	return matches
 }
 
 func matchn(s, re string, n int) []string {

@@ -100,7 +100,7 @@ func (pline *PlistLine) check(pctx *PlistContext) {
 func (pline *PlistLine) checkTrailingWhitespace() {
 	line := pline.line
 
-	if matches(line.text, `\s$`) {
+	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
 		line.errorf("pkgsrc does not support filenames ending in white-space.")
 		line.explain(
 			"Each character in the PLIST is relevant, even trailing white-space.")

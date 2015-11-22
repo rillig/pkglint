@@ -270,11 +270,11 @@ func checklineValidCharactersInValue(line *Line, reValid string) {
 }
 
 func checklineTrailingWhitespace(line *Line) {
-	if matches(line.text, `\s$`) {
+	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
 		line.notef("Trailing white-space.")
 		line.explain(
 			"When a line ends with some white-space, that space is in most cases",
-			"irrelevant and can be removed, leading to a \"normal form\" syntax.")
+			"irrelevant and can be removed.")
 		line.replaceRegex(`\s+\n$`, "\n")
 	}
 }
