@@ -13,41 +13,43 @@ func (s *Suite) TestVartypeCheckFetchURL(c *check.C) {
 		"MASTER_SITE_GITHUB": true,
 		"MASTER_SITE_GNU":    true,
 	}
-	line := NewLine("fname", "1", "dummy", nil)
-	vc := &VartypeCheck{
-		line,
-		"MASTER_SITES",
-		"=",
-		"https://github.com/example/project/",
-		"https://github.com/example/project/",
-		"",
-		true,
-		NOT_GUESSED}
 
-	vc.FetchURL()
+	newVartypeCheck("MASTER_SITES", "=", "https://github.com/example/project/").FetchURL()
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Please use ${MASTER_SITE_GITHUB:=example/} instead of \"https://github.com/example/project/\".\n"+
 		"WARN: fname:1: Run \"@BMAKE@ help topic=github\" for further tips.\n")
 
-	vc.value = "http://ftp.gnu.org/pub/gnu/bison" // Missing a slash at the end
-	vc.valueNovar = vc.value
-
-	vc.FetchURL()
+	newVartypeCheck("MASTER_SITES", "=", "http://ftp.gnu.org/pub/gnu/bison").FetchURL() // Missing a slash at the end
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use ${MASTER_SITE_GNU:=bison} instead of \"http://ftp.gnu.org/pub/gnu/bison\".\n")
 
-	vc.value = "${MASTER_SITE_GNU:=bison}"
-	vc.valueNovar = ""
-
-	vc.FetchURL()
+	newVartypeCheck("MASTER_SITES", "=", "${MASTER_SITE_GNU:=bison}").FetchURL()
 
 	c.Check(s.Output(), equals, "ERROR: fname:1: The subdirectory in MASTER_SITE_GNU must end with a slash.\n")
 
-	vc.value = "${MASTER_SITE_INVALID:=subdir/}"
-	vc.valueNovar = ""
-
-	vc.FetchURL()
+	newVartypeCheck("MASTER_SITES", "=", "${MASTER_SITE_INVALID:=subdir/}").FetchURL()
 
 	c.Check(s.Output(), equals, "ERROR: fname:1: MASTER_SITE_INVALID does not exist.\n")
+}
+
+func (s *Suite) TestVartypeCheckYes(c *check.C) {
+
+	newVartypeCheck("APACHE_MODULE", "=", "yes").Yes()
+
+	c.Check(s.Output(), equals, "")
+
+	newVartypeCheck("APACHE_MODULE", "=", "no").Yes()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: APACHE_MODULE should be set to YES or yes.\n")
+
+	newVartypeCheck("APACHE_MODULE", "=", "${YESVAR}").Yes()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: APACHE_MODULE should be set to YES or yes.\n")
+}
+
+func newVartypeCheck(varname, op, value string) *VartypeCheck {
+	line := NewLine("fname", "1", "dummy", nil)
+	valueNovar := withoutMakeVariables(line, value, true)
+	return &VartypeCheck{line, varname, op, value, valueNovar, "", true, NOT_GUESSED}
 }
