@@ -2,6 +2,7 @@ package main
 
 import (
 	"path"
+	"strings"
 )
 
 type PlistContext struct {
@@ -86,10 +87,12 @@ type PlistLine struct {
 
 func (pline *PlistLine) check(pctx *PlistContext) {
 	text := pline.line.text
-	if m, cmd, arg := match2(text, `^(?:\$\{[\w_]+\})?@([a-z-]+)\s+(.*)`); m {
+	if matches(text, `^\w`) {
+		pline.checkPathname(pctx, text)
+	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)\s+(.*)`); m {
 		pline.checkDirective(cmd, arg)
-	} else if m, dirname, basename := match2(text, `^([A-Za-z0-9\$].*)/([^/]+)$`); m {
-		pline.checkPathname(pctx, dirname, basename)
+	} else if hasPrefix(text, "$") {
+		pline.checkPathname(pctx, text)
 	} else if matches(text, `^\$\{[\w_]+\}$`) {
 		// A variable on its own line.
 	} else {
@@ -156,15 +159,16 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 	}
 }
 
-func (pline *PlistLine) checkPathname(pctx *PlistContext, dirname, basename string) {
+func (pline *PlistLine) checkPathname(pctx *PlistContext, fullname string) {
 	line := pline.line
 	text := line.text
+	sdirname, basename := path.Split(fullname)
+	dirname := strings.TrimSuffix(sdirname, "/")
 
 	if G.opts.WarnPlistSort && matches(text, `^\w`) && !containsVarRef(text) {
 		if pctx.lastFname != "" {
 			if pctx.lastFname > text {
-				// XXX: line.warnf("%q should be sorted before %q.", text, pctx.lastFname)
-				line.warnf("%s should be sorted before %s.", text, pctx.lastFname)
+				line.warnf("%q should be sorted before %q.", text, pctx.lastFname)
 				line.explain(
 					"For aesthetic reasons, the files in the PLIST should be sorted",
 					"alphabetically.")
