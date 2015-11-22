@@ -221,40 +221,35 @@ func matchn(s, re string, n int) []string {
 	return nil
 }
 
-func match1(s, re string) (bool, string) {
+func match1(s, re string) (matched bool, m1 string) {
 	if m := matchn(s, re, 1); m != nil {
 		return true, m[1]
-	} else {
-		return false, ""
 	}
+	return
 }
-func match2(s, re string) (bool, string, string) {
+func match2(s, re string) (matched bool, m1, m2 string) {
 	if m := matchn(s, re, 2); m != nil {
 		return true, m[1], m[2]
-	} else {
-		return false, "", ""
 	}
+	return
 }
-func match3(s, re string) (bool, string, string, string) {
+func match3(s, re string) (matched bool, m1, m2, m3 string) {
 	if m := matchn(s, re, 3); m != nil {
 		return true, m[1], m[2], m[3]
-	} else {
-		return false, "", "", ""
 	}
+	return
 }
-func match4(s, re string) (bool, string, string, string, string) {
+func match4(s, re string) (matched bool, m1, m2, m3, m4 string) {
 	if m := matchn(s, re, 4); m != nil {
 		return true, m[1], m[2], m[3], m[4]
-	} else {
-		return false, "", "", "", ""
 	}
+	return
 }
-func match5(s, re string) (bool, string, string, string, string, string) {
+func match5(s, re string) (matched bool, m1, m2, m3, m4, m5 string) {
 	if m := matchn(s, re, 5); m != nil {
 		return true, m[1], m[2], m[3], m[4], m[5]
-	} else {
-		return false, "", "", "", "", ""
 	}
+	return
 }
 
 func replaceFirst(s, re, replacement string) ([]string, string) {
