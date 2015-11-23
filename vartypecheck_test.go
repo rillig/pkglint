@@ -18,7 +18,7 @@ func (s *Suite) TestVartypeCheckFetchURL(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Please use ${MASTER_SITE_GITHUB:=example/} instead of \"https://github.com/example/project/\".\n"+
-		"WARN: fname:1: Run \"@BMAKE@ help topic=github\" for further tips.\n")
+		"WARN: fname:1: Run \""+confMake+" help topic=github\" for further tips.\n")
 
 	newVartypeCheck("MASTER_SITES", "=", "http://ftp.gnu.org/pub/gnu/bison").FetchURL() // Missing a slash at the end
 
