@@ -2,6 +2,7 @@ package main
 
 import (
 	check "gopkg.in/check.v1"
+	"io/ioutil"
 )
 
 func (s *Suite) TestConvertToLogicalLines_nocont(c *check.C) {
@@ -54,4 +55,25 @@ func (s *Suite) TestSplitRawLine(c *check.C) {
 	c.Check(text, equals, "asdf")
 	c.Check(trailingWhitespace, equals, "   ")
 	c.Check(continuation, equals, "\\")
+}
+
+func (s *Suite) TestAutofix(c *check.C) {
+	tmpdir := c.MkDir()
+	tmpname := tmpdir + "/Makefile"
+	lines := s.NewLines(tmpname,
+		"line1",
+		"line2",
+		"line3")
+	lines[1].replaceRegex(`.`, "X")
+
+	autofix(lines)
+
+	c.Assert(fileExists(tmpname), equals, false)
+
+	G.opts.Autofix = true
+	autofix(lines)
+
+	content, err := ioutil.ReadFile(tmpdir + "/Makefile")
+	c.Assert(err, check.IsNil)
+	c.Check(string(content), equals, "line1\nXXXXX\nline3\n")
 }
