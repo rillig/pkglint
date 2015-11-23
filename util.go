@@ -13,6 +13,14 @@ import (
 	"strings"
 )
 
+// Short names for commonly used functions.
+var (
+	sprintf   = fmt.Sprintf
+	contains  = strings.Contains
+	hasPrefix = strings.HasPrefix
+	hasSuffix = strings.HasSuffix
+)
+
 func intMax(a, b int) int {
 	if a > b {
 		return a
