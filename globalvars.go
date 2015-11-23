@@ -22,6 +22,7 @@ type GlobalVars struct {
 	errors                int
 	warnings              int
 	explanationsAvailable bool
+	explanationsGiven     map[string]bool
 	autofixAvailable      bool
 	traceDepth            int
 	logOut                io.Writer

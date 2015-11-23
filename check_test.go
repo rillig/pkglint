@@ -45,6 +45,10 @@ func (s *Suite) UseCommandLine(args ...string) {
 	}
 }
 
+func (s *Suite) DummyLine() *Line {
+	return NewLine("fname", "1", "dummy", nil)
+}
+
 func (s *Suite) ExpectFatalError(action func()) {
 	if r := recover(); r != nil {
 		if _, ok := r.(pkglintFatal); ok {

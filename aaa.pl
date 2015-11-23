@@ -1,48 +1,8 @@
-package logging
-
 my $errors		= 0;
 my $warnings		= 0;
 my $gcc_output_format	= false;
 my $explain_flag	= false;
 my $show_source_flag	= false;
-
-package FileUtil
-
-sub save_autofix_changes($) {
-	my ($lines) = @_;
-
-	my (%changed, %physlines);
-
-	foreach my $line (@{$lines}) {
-		if ($line->is_changed) {
-			$changed{$line->fname}++;
-		}
-		push(@{$physlines{$line->fname}}, @{$line->physlines});
-	}
-
-	foreach my $fname (sort(keys(%changed))) {
-		my $new = "${fname}.pkglint.tmp";
-		my $f;
-
-		if (!open($f, ">", $new)) {
-			log_error($new, NO_LINE_NUMBER, "$!");
-			next;
-		}
-		foreach my $physline (@{$physlines{$fname}}) {
-			print $f ($physline->[1]);
-		}
-		if (!close($f)) {
-			log_error($new, NO_LINE_NUMBER, "$!");
-			next;
-		}
-
-		if (!rename($new, $fname)) {
-			log_error($fname, NO_LINE_NUMBER, "$!");
-			next;
-		}
-		log_note($fname, NO_LINE_NUMBER, "Has been autofixed. Please re-run pkglint.");
-	}
-}
 
 # Context of the package that is currently checked.
 my $pkgpath;			# The relative path to the package within PKGSRC
@@ -594,110 +554,6 @@ sub extract_used_variables($$) {
 	return $result;
 }
 
-sub get_nbpart() {
-	my $line = $pkgctx_vardef->{"PKGREVISION"};
-	return "" unless defined($line);
-	my $pkgrevision = $line->get("value");
-	return "" unless $pkgrevision =~ m"^\d+$";
-	return "" unless $pkgrevision + 0 != 0;
-	return "nb$pkgrevision";
-}
-
-sub check_pkglint_version() {
-	state $done = false;
-	return if $done;
-	$done = true;
-
-	my $lines = load_lines("${cwd_pkgsrcdir}/pkgtools/pkglint/Makefile", true);
-	return unless $lines;
-
-	my $pkglint_version = undef;
-	foreach my $line (@{$lines}) {
-		if ($line->text =~ regex_varassign) {
-			my ($varname, undef, $value, undef) = ($1, $2, $3, $4);
-
-			if ($varname eq "DISTNAME" || $varname eq "PKGNAME") {
-				if ($value =~ regex_pkgname) {
-					$pkglint_version = $2;
-				}
-			}
-		}
-	}
-	return unless defined($pkglint_version);
-
-	if (dewey_cmp($pkglint_version, ">", conf_distver)) {
-		log_note(NO_FILE, NO_LINE_NUMBER, "A newer version of pkglint is available.");
-	} elsif (dewey_cmp($pkglint_version, "<", conf_distver)) {
-		log_error(NO_FILE, NO_LINE_NUMBER, "The pkglint version is newer than the tree to check.");
-	}
-}
-
-# When processing a file using the expect* subroutines below, it may
-# happen that $lineno points past the end of the file. In that case,
-# print the warning without associated source code.
-sub lines_log_warning($$$) {
-	my ($lines, $lineno, $msg) = @_;
-
-	assert(false, "The line number is negative (${lineno}).")
-		unless 0 <= $lineno;
-	assert(@{$lines} != 0, "The lines may not be empty.");
-
-	if ($lineno <= $#{$lines}) {
-		$lines->[$lineno]->log_warning($msg);
-	} else {
-		log_warning($lines->[0]->fname, "EOF", $msg);
-	}
-}
-
-# Checks if the current line ($lines->{${$lineno_ref}}) matches the
-# regular expression, and if it does, increments ${${lineno_ref}}.
-# @param $lines
-#	The lines that are checked.
-# @param $lineno_ref
-#	A reference to the line number, an integer variable.
-# @param $regex
-#	The regular expression to be checked.
-# @return
-#	The result of the regular expression match or false.
-sub expect($$$) {
-	my ($lines, $lineno_ref, $regex) = @_;
-	my $lineno = ${$lineno_ref};
-
-	if ($lineno <= $#{$lines} && $lines->[$lineno]->text =~ $regex) {
-		${$lineno_ref}++;
-		return PkgLint::SimpleMatch->new($lines->[$lineno]->text, \@-, \@+);
-	} else {
-		return false;
-	}
-}
-
-sub expect_empty_line($$) {
-	my ($lines, $lineno_ref) = @_;
-
-	if (expect($lines, $lineno_ref, qr"^$")) {
-		return true;
-	} else {
-		$opt_warn_space and $lines->[${$lineno_ref}]->log_note("Empty line expected.");
-		return false;
-	}
-}
-
-sub expect_text($$$) {
-	my ($lines, $lineno_ref, $text) = @_;
-
-	my $rv = expect($lines, $lineno_ref, qr"^\Q${text}\E$");
-	$rv or lines_log_warning($lines, ${$lineno_ref}, "Expected \"${text}\".");
-	return $rv;
-}
-
-sub expect_re($$$) {
-	my ($lines, $lineno_ref, $re) = @_;
-
-	my $rv = expect($lines, $lineno_ref, $re);
-	$rv or lines_log_warning($lines, ${$lineno_ref}, "Expected text matching $re.");
-	return $rv;
-}
-
 # Returns an object of type Pkglint::Type that represents the type of
 # the variable (maybe guessed based on the variable name), or undef if
 # the type cannot even be guessed.
@@ -895,78 +751,6 @@ sub variable_needs_quoting($$$) {
 	return dont_know;
 }
 
-#
-# Parsing.
-#
-
-# Checks whether $tree matches $pattern, and if so, instanciates the
-# variables in $pattern. If they don't match, some variables may be
-# instanciated nevertheless, but the exact behavior is unspecified.
-#
-sub tree_match($$);
-sub tree_match($$) {
-	my ($tree, $pattern) = @_;
-
-	my $d1 = Data::Dumper->new([$tree, $pattern])->Terse(true)->Indent(0);
-	my $d2 = Data::Dumper->new([$pattern])->Terse(true)->Indent(0);
-	$opt_debug_trace and log_debug(NO_FILE, NO_LINES, sprintf("tree_match(%s, %s)", $d1->Dump, $d2->Dump));
-
-	return true if (!defined($tree) && !defined($pattern));
-	return false if (!defined($tree) || !defined($pattern));
-	my $aref = ref($tree);
-	my $pref = ref($pattern);
-	if ($pref eq "SCALAR" && !defined($$pattern)) {
-		$$pattern = $tree;
-		return true;
-	}
-	if ($aref eq "" && ($pref eq "" || $pref eq "SCALAR")) {
-		return $tree eq $pattern;
-	}
-	if ($aref eq "ARRAY" && $pref eq "ARRAY") {
-		return false if scalar(@$tree) != scalar(@$pattern);
-		for (my $i = 0; $i < scalar(@$tree); $i++) {
-			return false unless tree_match($tree->[$i], $pattern->[$i]);
-		}
-		return true;
-	}
-	return false;
-}
-
-# TODO: Needs to be redesigned to handle more complex expressions.
-sub parse_mk_cond($$);
-sub parse_mk_cond($$) {
-	my ($line, $cond) = @_;
-
-	$opt_debug_trace and $line->log_debug("parse_mk_cond(\"${cond}\")");
-
-	my $re_simple_varname = qr"[A-Z_][A-Z0-9_]*(?:\.[\w_+\-]+)?";
-	while ($cond ne "") {
-		if ($cond =~ s/^!//) {
-			return ["not", parse_mk_cond($line, $cond)];
-		} elsif ($cond =~ s/^defined\((${re_simple_varname})\)$//) {
-			return ["defined", $1];
-		} elsif ($cond =~ s/^empty\((${re_simple_varname})\)$//) {
-			return ["empty", $1];
-		} elsif ($cond =~ s/^empty\((${re_simple_varname}):M([^\$:{})]+)\)$//) {
-			return ["empty", ["match", $1, $2]];
-		} elsif ($cond =~ s/^\$\{(${re_simple_varname})\}\s+(==|!=)\s+"([^"\$\\]*)"$//) {
-			return [$2, ["var", $1], ["string", $3]];
-		} else {
-			$opt_debug_unchecked and $line->log_debug("parse_mk_cond: ${cond}");
-			return ["unknown", $cond];
-		}
-	}
-}
-
-sub parse_licenses($) {
-	my ($licenses) = @_;
-
-	$licenses =~ s,\$\{PERL5_LICENSE},gnu-gpl-v2 OR artistic,g;
-	$licenses =~ s,[()]|AND|OR,,g; # XXX: treats OR like AND
-	my @licenses = split(/\s+/, $licenses);
-	return \@licenses;
-}
-
 # This procedure fills in the extra fields of a line, depending on the
 # line type. These fields can later be queried without having to parse
 # them again and again.
@@ -1052,14 +836,6 @@ sub parseline_mk($) {
 
 	} else {
 		$line->log_fatal("Unknown line format: " . $line->to_string());
-	}
-}
-
-sub parselines_mk($) {
-	my ($lines) = @_;
-
-	foreach my $line (@{$lines}) {
-		parseline_mk($line);
 	}
 }
 
@@ -1157,75 +933,6 @@ sub checkword_absolute_pathname($$) {
 "the programs see later when they are executed. Usually it is empty, so",
 "if anything after that variable starts with a slash, it is considered",
 "an absolute pathname.");
-	}
-}
-
-sub check_unused_licenses() {
-
-	for my $licensefile (glob("${cwd_pkgsrcdir}/licenses/*")) {
-		if (-f $licensefile) {
-			my $licensename = basename($licensefile);
-			if (!exists($ipc_used_licenses{$licensename})) {
-				log_warning($licensefile, NO_LINES, "This license seems to be unused.");
-			}
-		}
-	}
-}
-
-#
-# Subroutines to check a single line.
-#
-
-sub checkline_length($$) {
-	my ($line, $maxlength) = @_;
-
-	if (length($line->text) > $maxlength) {
-		$line->log_warning("Line too long (should be no more than $maxlength characters).");
-		$line->explain_warning(
-"Back in the old time, terminals with 80x25 characters were common.",
-"And this is still the default size of many terminal emulators.",
-"Moderately short lines also make reading easier.");
-	}
-}
-
-sub checkline_valid_characters($$) {
-	my ($line, $re_validchars) = @_;
-	my ($rest);
-
-	($rest = $line->text) =~ s/$re_validchars//g;
-	if ($rest ne "") {
-		my @chars = map { sprintf("0x%02x", ord($_)); } split(//, $rest);
-		$line->log_warning("Line contains invalid characters (" . join(", ", @chars) . ").");
-	}
-}
-
-sub checkline_valid_characters_in_variable($$) {
-	my ($line, $re_validchars) = @_;
-	my ($varname, $rest);
-
-	$varname = $line->get("varname");
-	$rest = $line->get("value");
-
-	$rest =~ s/$re_validchars//g;
-	if ($rest ne "") {
-		my @chars = map { sprintf("0x%02x", ord($_)); } split(//, $rest);
-		$line->log_warning("${varname} contains invalid characters (" . join(", ", @chars) . ").");
-	}
-}
-
-sub checkline_trailing_whitespace($) {
-	my ($line) = @_;
-
-	$opt_debug_trace and $line->log_debug("checkline_trailing_whitespace()");
-
-	if ($line->text =~ /\s+$/) {
-		$line->log_note("Trailing white-space.");
-		$line->explain_note(
-"When a line ends with some white-space, that space is in most cases",
-"irrelevant and can be removed, leading to a \"normal form\" syntax.",
-"",
-"Note: This is mostly for aesthetic reasons.");
-		$line->replace_regex(qr"\s+\n$", "\n");
 	}
 }
 
@@ -4035,19 +3742,6 @@ sub checklines_buildlink3_inclusion($) {
 # Procedures to check a single file.
 #
 
-sub checkfile_ALTERNATIVES($) {
-	my ($fname) = @_;
-	my ($lines);
-
-	$opt_debug_trace and log_debug($fname, NO_LINES, "checkfile_ALTERNATIVES()");
-
-	checkperms($fname);
-	if (!($lines = load_file($fname))) {
-		log_error($fname, NO_LINE_NUMBER, "Cannot be read.");
-		return;
-	}
-}
-
 sub checkfile_buildlink3_mk($) {
 	my ($fname) = @_;
 	my ($lines, $lineno, $m);
@@ -4391,62 +4085,6 @@ sub checkfile_distinfo($) {
 	}
 }
 
-sub checkfile_extra($) {
-	my ($fname) = @_;
-
-	$opt_debug_trace and log_debug($fname, NO_LINES, "checkfile_extra()");
-
-	my $lines = load_file($fname) or return log_error($fname, NO_LINE_NUMBER, "Could not be read.");
-	checklines_trailing_empty_lines($lines);
-	checkperms($fname);
-}
-
-sub checkfile_INSTALL($) {
-	my ($fname) = @_;
-
-	$opt_debug_trace and log_debug($fname, NO_LINES, "checkfile_INSTALL()");
-
-	checkperms($fname);
-	my $lines = load_file($fname) or return log_error($fname, NO_LINE_NUMBER, "Cannot be read.");
-}
-
-sub checkfile_MESSAGE($) {
-	my ($fname) = @_;
-
-	my @explanation = (
-		"A MESSAGE file should consist of a header line, having 75 \"=\"",
-		"characters, followed by a line containing only the RCS Id, then an",
-		"empty line, your text and finally the footer line, which is the",
-		"same as the header line.");
-
-	$opt_debug_trace and log_debug($fname, NO_LINES, "checkfile_MESSAGE()");
-
-	checkperms($fname);
-	my $lines = load_file($fname) or return log_error($fname, NO_LINE_NUMBER, "Cannot be read.");
-
-	if (@{$lines} < 3) {
-		log_warning($fname, NO_LINE_NUMBER, "File too short.");
-		explain_warning($fname, NO_LINE_NUMBER, @explanation);
-		return;
-	}
-	if ($lines->[0]->text ne "=" x 75) {
-		$lines->[0]->log_warning("Expected a line of exactly 75 \"=\" characters.");
-		explain_warning($fname, NO_LINE_NUMBER, @explanation);
-	}
-	checkline_rcsid($lines->[1], "");
-	foreach my $line (@{$lines}) {
-		checkline_length($line, 80);
-		checkline_trailing_whitespace($line);
-		checkline_valid_characters($line, regex_validchars);
-		checkline_spellcheck($line);
-	}
-	if ($lines->[-1]->text ne "=" x 75) {
-		$lines->[-1]->log_warning("Expected a line of exactly 75 \"=\" characters.");
-		explain_warning($fname, NO_LINE_NUMBER, @explanation);
-	}
-	checklines_trailing_empty_lines($lines);
-}
-
 sub checkfile_mk($) {
 	my ($fname) = @_;
 
@@ -4592,63 +4230,6 @@ sub checkfile_package_Makefile($$) {
 	checklines_mk($lines);
 	checklines_package_Makefile_varorder($lines);
 	autofix($lines);
-}
-
-# $NetBSD: Patches.pm,v 1.3 2015/10/11 21:23:34 rillig Exp $
-#
-# Everything concerning checks for patch files.
-#
-
-use strict;
-use warnings;
-
-# Guess the type of file based on the filename. This is used to select
-# the proper subroutine for detecting absolute pathnames.
-#
-# Returns one of "source", "shell", "make", "text", "configure",
-# "ignore", "unknown".
-#
-sub get_filetype($$) {
-	my ($line, $fname) = @_;
-	my $basename = basename($fname);
-
-	# The trailig .in part is not needed, since it does not
-	# influence the type of contents.
-	$basename =~ s,\.in$,,;
-
-	# Let's assume that everything else that looks like a Makefile
-	# is indeed a Makefile.
-	if ($basename =~ m"^I?[Mm]akefile(?:\..*|)?|.*\.ma?k$") {
-		return "make";
-	}
-
-	# Too many false positives for shell scripts, so configure
-	# scripts get their own category.
-	if ($basename =~ m"^configure(?:|\.ac)$") {
-		$opt_debug_unchecked and $line->log_debug("Skipped check for absolute pathnames.");
-		return "configure";
-	}
-
-	if ($basename =~ m"\.(?:sh|m4)$"i) {
-		return "shell";
-	}
-
-	if ($basename =~ m"\.(?:cc?|cpp|cxx|el|hh?|hpp|l|pl|pm|py|s|t|y)$"i) {
-		return "source";
-	}
-
-	if ($basename =~ m"^.+\.(?:\d+|conf|html|info|man|po|tex|texi|texinfo|txt|xml)$"i) {
-		return "text";
-	}
-
-	# Filenames without extension are hard to guess right. :(
-	if ($basename !~ m"\.") {
-		return "unknown";
-	}
-
-	$opt_debug_misc and $line->log_debug("Don't know the file type of ${fname}.");
-
-	return "unknown";
 }
 
 sub checkline_cpp_macro_names($$) {

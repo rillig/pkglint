@@ -185,7 +185,7 @@ func dirExists(fname string) bool {
 
 func stringset(s string) map[string]bool {
 	result := make(map[string]bool)
-	for _, m := range regcomp(`\S+`).FindAllString(s, -1) {
+	for _, m := range splitOnSpace(strings.TrimSpace(s)) {
 		result[m] = true
 	}
 	return result

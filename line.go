@@ -76,6 +76,15 @@ func (self *Line) debugf(format string, args ...interface{}) bool {
 }
 func (self *Line) explain(explanation ...string) {
 	if G.opts.Explain {
+		complete := strings.Join(explanation, "\n")
+		if G.explanationsGiven[complete] {
+			return
+		}
+		if G.explanationsGiven == nil {
+			G.explanationsGiven = make(map[string]bool)
+			G.explanationsGiven[complete] = true
+		}
+
 		io.WriteString(G.logOut, "\n")
 		for _, explanationLine := range explanation {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
