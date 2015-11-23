@@ -23,20 +23,21 @@ const (
 func guessFileType(line *Line, fname string) FileType {
 	basename := path.Base(fname)
 	basename = strings.TrimSuffix(basename, ".in") // doesn’t influence the content type
-	ext := strings.TrimLeft(path.Ext(basename), ".")
+	ext := strings.ToLower(strings.TrimLeft(path.Ext(basename), "."))
 
-	if matches(basename, `^I?[Mm]akefile|\.ma?k$`) {
+	switch {
+	case matches(basename, `^I?[Mm]akefile|\.ma?k$`):
 		return FT_MAKE
-	}
-	if basename == "configure" || basename == "configure.ac" {
+	case basename == "configure" || basename == "configure.ac":
 		return FT_CONFIGURE
 	}
+
 	switch ext {
 	case "m4", "sh":
 		return FT_SHELL
 	case "c", "cc", "cpp", "cxx", "el", "h", "hh", "hpp", "l", "pl", "pm", "py", "s", "t", "y":
 		return FT_SOURCE
-	case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "conf", "html", "info", "man", "po", "tex", "texi", "texinfo", "txt", "xml":
+	case "conf", "html", "info", "man", "po", "tex", "texi", "texinfo", "txt", "xml":
 		return FT_TEXT
 	case "":
 		return FT_UNKNOWN
