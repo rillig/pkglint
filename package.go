@@ -15,7 +15,7 @@ func checkpackagePossibleDowngrade() {
 		return
 	}
 
-	line := *G.pkgContext.effectivePkgnameLine
+	line := G.pkgContext.effectivePkgnameLine
 
 	change := G.globalData.lastChange[G.pkgContext.pkgpath]
 	if change == nil {
