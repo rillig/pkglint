@@ -589,8 +589,8 @@ func (cv *VartypeCheck) ShellWord() {
 }
 
 func (cv *VartypeCheck) Stage() {
-	if !matches(cv.value, `^(?:pre|do|post)-(?:extract|patch|configure|build|install)`) {
-		cv.line.warnf("Invalid stage name. Use one of {pre,do,post}-{extract,patch,configure,build,install}.")
+	if !matches(cv.value, `^(?:pre|do|post)-(?:extract|patch|configure|build|test|install)`) {
+		cv.line.warnf("Invalid stage name %q. Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.", cv.value)
 	}
 }
 

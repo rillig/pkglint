@@ -33,6 +33,21 @@ func (s *Suite) TestVartypeCheckFetchURL(c *check.C) {
 	c.Check(s.Output(), equals, "ERROR: fname:1: MASTER_SITE_INVALID does not exist.\n")
 }
 
+func (s *Suite) TestVartypeCheckStage(c *check.C) {
+
+	newVartypeCheck("SUBST_STAGE.dummy", "=", "post-patch").Stage()
+
+	c.Check(s.Output(), equals, "")
+
+	newVartypeCheck("SUBST_STAGE.dummy", "=", "post-modern").Stage()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: Invalid stage name \"post-modern\". Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.\n")
+
+	newVartypeCheck("SUBST_STAGE.dummy", "=", "pre-test").Stage()
+
+	c.Check(s.Output(), equals, "")
+}
+
 func (s *Suite) TestVartypeCheckYes(c *check.C) {
 
 	newVartypeCheck("APACHE_MODULE", "=", "yes").Yes()
