@@ -111,3 +111,21 @@ func (s *Suite) TestChecklinesPatch_WrongOrder(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: patch-WrongOrder:7: Unified diff headers should be first ---, then +++.\n")
 }
+
+func (s *Suite) TestChecklinesPatch_CppMacroNames(c *check.C) {
+	G.opts.Explain = true
+	line := s.DummyLine()
+
+	checklineCppMacroNames(line, "+#if defined(__NetBSD_version__)")
+
+	c.Check(s.Output(), equals, "WARN: fname:1: Misspelled variant \"__NetBSD_version__\" of \"__NetBSD_Version__\".\n")
+
+	checklineCppMacroNames(line, "+#if defined(__sun__) || defined(__svr4__) || defined(__linux__)")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: The macro \"__sun__\" is not portable enough. Please use \"__sun\" instead.\n"+
+		"\n"+
+		"\tSee the pkgsrc guide, section \"CPP defines\" for details.\n"+
+		"\n"+
+		"WARN: fname:1: The macro \"__svr4__\" is not portable enough. Please use \"__SVR4\" instead.\n")
+}
