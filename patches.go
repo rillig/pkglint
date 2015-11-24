@@ -47,55 +47,6 @@ func guessFileType(line *Line, fname string) FileType {
 	return FT_UNKNOWN
 }
 
-var goodCppMacros = stringset(`
-		__STDC__
-
-		__GNUC__ __GNUC_MINOR__
-		__SUNPRO_C
-
-		__i386
-		__mips
-		__sparc
-
-		__APPLE__
-		__bsdi__
-		__CYGWIN__
-		__DragonFly__
-		__FreeBSD__ __FreeBSD_version
-		__INTERIX
-		__linux__
-		__MINGW32__
-		__NetBSD__ __NetBSD_Version__
-		__OpenBSD__
-		__SVR4
-		__sgi
-		__sun
-
-		__GLIBC__
-`)
-var badCppMacros = map[string]string{
-	"__sgi__":      "__sgi",
-	"__sparc__":    "__sparc",
-	"__sparc_v9__": "__sparcv9",
-	"__sun__":      "__sun",
-	"__svr4__":     "__SVR4",
-}
-
-func checklineCppMacroNames(line *Line, text string) {
-	for _, m := range regcomp(`defined\((__[\w_]+)\)|\b(_\w+)\(`).FindAllStringSubmatch(text, -1) {
-		macro := m[1] + m[2]
-
-		if goodCppMacros[macro] {
-			// nice
-		} else if better := badCppMacros[macro]; better != "" {
-			line.warnf("The macro %q is not portable enough. Please use %q instead.", macro, better)
-			line.explain("See the pkgsrc guide, section \"CPP defines\" for details.")
-		} else if matches(macro, `(?i)^_+NetBSD_+Version_+$`) && macro != "__NetBSD_Version__" {
-			line.warnf("Misspelled variant %q of %q.", macro, "__NetBSD_Version__")
-		}
-	}
-}
-
 func checkwordAbsolutePathname(line *Line, word string) {
 	defer tracecall("checkwordAbsolutePathname", word)()
 
@@ -235,7 +186,7 @@ func (ctx *CheckPatchContext) checkBeginDiff() {
 		ctx.line.notef("Empty line expected.")
 	}
 	if !ctx.seenComment {
-		ctx.line.errorf("Comment expected.")
+		ctx.line.errorf("Each patch must be documented.")
 		ctx.line.explain(
 			"Each patch must document why it is necessary. If it has been applied",
 			"because of a security issue, a reference to the CVE should be mentioned",
@@ -561,8 +512,6 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 
 	line := ctx.line
 	addedText := ctx.m[1]
-
-	checklineCppMacroNames(line, addedText)
 
 	switch *ctx.currentFiletype {
 	case FT_SHELL:
