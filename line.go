@@ -97,28 +97,14 @@ func (self *Line) String() string {
 	return self.fname + ":" + self.lines + ": " + self.text
 }
 
-func (self *Line) prependBefore(line string) {
-	self.before = append([]*RawLine{{0, line + "\n"}}, self.before...)
-	self.changed = true
-	if G.opts.PrintAutofix {
-		self.notef("Autofix: inserting a line %q before this line.", line)
-	}
-}
-func (self *Line) appendBefore(line string) {
+func (self *Line) insertBefore(line string) {
 	self.before = append(self.before, &RawLine{0, line + "\n"})
 	self.changed = true
 	if G.opts.PrintAutofix {
 		self.notef("Autofix: inserting a line %q before this line.", line)
 	}
 }
-func (self *Line) prependAfter(line string) {
-	self.after = append([]*RawLine{{0, line + "\n"}}, self.after...)
-	self.changed = true
-	if G.opts.PrintAutofix {
-		self.notef("Autofix: inserting a line %q after this line.", line)
-	}
-}
-func (self *Line) appendAfter(line string) {
+func (self *Line) insertAfter(line string) {
 	self.after = append(self.after, &RawLine{0, line + "\n"})
 	self.changed = true
 	if G.opts.PrintAutofix {

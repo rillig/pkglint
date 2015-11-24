@@ -128,7 +128,7 @@ func checkdirCategory() {
 		if !f_atend && (m_atend || f_current < m_current) {
 			if !mCheck[f_current] {
 				line.errorf("%q exists in the file system, but not in the Makefile.", f_current)
-				line.appendBefore("SUBDIR+=\t" + f_current)
+				line.insertBefore("SUBDIR+=\t" + f_current)
 			}
 			f_neednext = true
 

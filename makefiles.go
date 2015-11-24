@@ -134,7 +134,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 		"If there are more than five packages that use a Makefile.common,",
 		"you should think about giving it a proper name (maybe plugin.mk) and",
 		"documenting its interface.")
-	insertLine.appendBefore(expected)
+	insertLine.insertBefore(expected)
 	saveAutofixChanges(lines)
 }
 
