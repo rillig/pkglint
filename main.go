@@ -122,7 +122,7 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	warn.AddFlagVar("absname", &gopts.WarnAbsname, true, "warn about use of absolute file names")
 	warn.AddFlagVar("directcmd", &gopts.WarnDirectcmd, true, "warn about use of direct command names instead of Make variables")
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
-	warn.AddFlagVar("order", &gopts.WarnOrder, true, "warn if Makefile entries are unordered")
+	warn.AddFlagVar("order", &gopts.WarnOrder, false, "warn if Makefile entries are unordered")
 	warn.AddFlagVar("perm", &gopts.WarnPerm, false, "warn about unforeseen variable definition and use")
 	warn.AddFlagVar("plist-depr", &gopts.WarnPlistDepr, false, "warn about deprecated paths in PLISTs")
 	warn.AddFlagVar("plist-sort", &gopts.WarnPlistSort, false, "warn about unsorted entries in PLISTs")
@@ -130,7 +130,6 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	warn.AddFlagVar("space", &gopts.WarnSpace, false, "warn about inconsistent use of white-space")
 	warn.AddFlagVar("style", &gopts.WarnStyle, false, "warn about stylistic issues")
 	warn.AddFlagVar("types", &gopts.WarnTypes, true, "do some simple type checking in Makefiles")
-	warn.AddFlagVar("varorder", &gopts.WarnVarorder, false, "warn about the ordering of variables")
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {

@@ -66,8 +66,7 @@ type CmdOpts struct {
 	WarnQuoting,
 	WarnSpace,
 	WarnStyle,
-	WarnTypes,
-	WarnVarorder bool
+	WarnTypes bool
 
 	Explain,
 	Autofix,
