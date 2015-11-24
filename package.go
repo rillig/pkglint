@@ -245,7 +245,7 @@ func checkfilePackageMakefile(fname string, lines []*Line) {
 
 	ChecklinesMk(lines)
 	ChecklinesPackageMakefileVarorder(lines)
-	autofix(lines)
+	saveAutofixChanges(lines)
 }
 
 func getNbpart() string {

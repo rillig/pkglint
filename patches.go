@@ -337,6 +337,7 @@ var patchTransitions = map[PatchState][]transition{
 				ctx.line.errorf("The hunk header must not end with a CR character.")
 				ctx.line.explain(
 					"The MacOS X patch utility cannot handle these.")
+				ctx.line.replace("\r\n", "\n")
 			}
 			ctx.hunks++
 			if m[1] != "" && m[1] != "1" {
@@ -459,6 +460,7 @@ func checklinesPatch(lines []*Line) {
 	}
 
 	checklinesTrailingEmptyLines(lines)
+	saveAutofixChanges(lines)
 }
 
 type CheckPatchContext struct {

@@ -66,12 +66,12 @@ func (s *Suite) TestAutofix(c *check.C) {
 		"line3")
 	lines[1].replaceRegex(`.`, "X")
 
-	autofix(lines)
+	saveAutofixChanges(lines)
 
 	c.Assert(fileExists(tmpname), equals, false)
 
 	G.opts.Autofix = true
-	autofix(lines)
+	saveAutofixChanges(lines)
 
 	content, err := ioutil.ReadFile(tmpdir + "/Makefile")
 	c.Assert(err, check.IsNil)

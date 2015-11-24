@@ -78,7 +78,7 @@ func checklinesPlist(lines []*Line) {
 	}
 
 	checklinesTrailingEmptyLines(lines)
-	autofix(lines)
+	saveAutofixChanges(lines)
 }
 
 type PlistLine struct {

@@ -90,9 +90,8 @@ func (self *Line) explain(explanation ...string) {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
 		}
 		io.WriteString(G.logOut, "\n")
-	} else {
-		G.explanationsAvailable = true
 	}
+	G.explanationsAvailable = true
 }
 func (self *Line) String() string {
 	return self.fname + ":" + self.lines + ": " + self.text
@@ -101,18 +100,30 @@ func (self *Line) String() string {
 func (self *Line) prependBefore(line string) {
 	self.before = append([]*RawLine{{0, line + "\n"}}, self.before...)
 	self.changed = true
+	if G.opts.PrintAutofix {
+		self.notef("Autofix: inserting a line %q before this line.", line)
+	}
 }
 func (self *Line) appendBefore(line string) {
 	self.before = append(self.before, &RawLine{0, line + "\n"})
 	self.changed = true
+	if G.opts.PrintAutofix {
+		self.notef("Autofix: inserting a line %q before this line.", line)
+	}
 }
 func (self *Line) prependAfter(line string) {
 	self.after = append([]*RawLine{{0, line + "\n"}}, self.after...)
 	self.changed = true
+	if G.opts.PrintAutofix {
+		self.notef("Autofix: inserting a line %q after this line.", line)
+	}
 }
 func (self *Line) appendAfter(line string) {
 	self.after = append(self.after, &RawLine{0, line + "\n"})
 	self.changed = true
+	if G.opts.PrintAutofix {
+		self.notef("Autofix: inserting a line %q after this line.", line)
+	}
 }
 func (self *Line) delete() {
 	self.raw = nil
@@ -124,6 +135,10 @@ func (self *Line) replace(from, to string) {
 			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
 				rawLine.textnl = replaced
 				self.changed = true
+				if G.opts.PrintAutofix {
+					self.notef("Autofix: replacing %q with %q.", from, to)
+				}
+				G.autofixAvailable = true
 			}
 		}
 	}
@@ -134,6 +149,10 @@ func (self *Line) replaceRegex(from, to string) {
 			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
 				rawLine.textnl = replaced
 				self.changed = true
+				if G.opts.PrintAutofix {
+					self.notef("Autofix: replacing regular expression %q with %q.", from, to)
+				}
+				G.autofixAvailable = true
 			}
 		}
 	}

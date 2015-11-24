@@ -168,7 +168,7 @@ func checkdirCategory() {
 
 	ChecklinesMk(lines)
 
-	autofix(lines)
+	saveAutofixChanges(lines)
 
 	if G.opts.Recursive {
 		G.todo = append(subdirs, G.todo...)

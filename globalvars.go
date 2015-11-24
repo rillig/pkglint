@@ -77,6 +77,7 @@ type CmdOpts struct {
 	Profiling,
 	Quiet,
 	Recursive,
+	PrintAutofix,
 	PrintSource,
 	PrintVersion bool
 

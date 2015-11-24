@@ -135,7 +135,7 @@ func checkForUsedComment(lines []*Line, relativeName string) {
 		"you should think about giving it a proper name (maybe plugin.mk) and",
 		"documenting its interface.")
 	insertLine.appendBefore(expected)
-	autofix(lines)
+	saveAutofixChanges(lines)
 }
 
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {

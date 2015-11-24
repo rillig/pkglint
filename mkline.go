@@ -565,11 +565,12 @@ func ChecklineMkVaralign(line *Line) {
 		if G.opts.WarnSpace && align != " " && strings.Trim(align, "\t") != "" {
 			line.notef("Alignment of variable values should be done with tabs, not spaces.")
 			prefix := varname + space1 + op
-			alignedLen := tabLength(prefix + align)
-			if alignedLen%8 == 0 {
-				tabalign := strings.Repeat("\t", (alignedLen+7-tabLength(prefix))/8)
-				line.replace(prefix+align, prefix+tabalign)
+			alignedWidth := tabLength(prefix + align)
+			tabs := ""
+			for tabLength(prefix+tabs) < alignedWidth {
+				tabs += "\t"
 			}
+			line.replace(prefix+align, prefix+tabs)
 		}
 	}
 }

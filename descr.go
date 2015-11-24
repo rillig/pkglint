@@ -23,5 +23,5 @@ func checklinesDescr(lines []*Line) {
 			"about the package's contents.")
 	}
 
-	autofix(lines)
+	saveAutofixChanges(lines)
 }

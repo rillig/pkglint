@@ -106,6 +106,10 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 }
 
 func saveAutofixChanges(lines []*Line) {
+	if !G.opts.Autofix || !G.autofixAvailable {
+		return
+	}
+
 	changes := make(map[string][]*RawLine)
 	changed := make(map[string]bool)
 	for _, line := range lines {
@@ -133,17 +137,5 @@ func saveAutofixChanges(lines []*Line) {
 			continue
 		}
 		notef(fname, NO_LINES, "Has been auto-fixed. Please re-run pkglint.")
-	}
-}
-
-func autofix(lines []*Line) {
-	if G.opts.Autofix {
-		saveAutofixChanges(lines)
-	} else if !G.autofixAvailable {
-		for _, line := range lines {
-			if line.changed {
-				G.autofixAvailable = true
-			}
-		}
 	}
 }

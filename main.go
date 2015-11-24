@@ -82,6 +82,7 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
 	debug := opts.AddFlagGroup('D', "debugging", "debug,...", "enable or disable debugging categories")
 	opts.AddFlagVar('e', "explain", &gopts.Explain, false, "explain the diagnostics or give further help")
+	opts.AddFlagVar('f', "show-autofix", &gopts.PrintAutofix, false, "show what pkglint can fix automatically")
 	opts.AddFlagVar('F', "autofix", &gopts.Autofix, false, "try to automatically fix some errors (experimental)")
 	opts.AddFlagVar('g', "gcc-output-format", &gopts.GccOutput, false, "mimic the gcc output format")
 	opts.AddFlagVar('h', "help", &gopts.PrintHelp, false, "print a detailed usage message")
@@ -155,10 +156,13 @@ func printSummary() {
 			fmt.Fprintf(G.logOut, "%d %s and %d %s found.\n",
 				G.errors, ifelseStr(G.errors == 1, "error", "errors"),
 				G.warnings, ifelseStr(G.warnings == 1, "warning", "warnings"))
-			if G.explanationsAvailable {
+			if G.explanationsAvailable && !G.opts.Explain {
 				fmt.Fprint(G.logOut, "(Run pkglint with the -e option to show explanations.)\n")
 			}
-			if G.autofixAvailable {
+			if G.autofixAvailable && !G.opts.PrintAutofix && !G.opts.Autofix {
+				fmt.Fprint(G.logOut, "(Run pkglint with the -f option to show what can be fixed automatically.)\n")
+			}
+			if G.autofixAvailable && !G.opts.Autofix {
 				fmt.Fprint(G.logOut, "(Run pkglint with the -F option to automatically fix some issues.)\n")
 			}
 		} else {
