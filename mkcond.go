@@ -35,13 +35,12 @@ func checklineMkCondition(line *Line, condition string) {
 	tree := parseMkCond(line, condition)
 
 	{
-		var pvarname, pmatch *string
-		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &pmatch)))) {
-			varname, match := *pvarname, *pmatch
-			vartype := getVariableType(line, varname)
+		var pvarname, ppattern *string
+		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &ppattern)))) {
+			vartype := getVariableType(line, *pvarname)
 			if vartype != nil && vartype.checker.IsEnum() {
-				if !matches(match, `[\$\[*]`) && !vartype.checker.HasEnum(match) {
-					line.warnf("Invalid :M value %q. Only { %s } are allowed.", match, vartype.checker.AllowedEnums())
+				if !matches(*ppattern, `[\$\[*]`) && !vartype.checker.HasEnum(*ppattern) {
+					line.warnf("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())
 				}
 			}
 			return
@@ -51,8 +50,7 @@ func checklineMkCondition(line *Line, condition string) {
 	{
 		var pop, pvarname, pvalue *string
 		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
-			varname, _, value := *pvarname, *pop, *pvalue
-			checklineMkVartype(line, varname, "use", value, "")
+			checklineMkVartype(line, *pvarname, "use", *pvalue, "")
 		}
 	}
 }

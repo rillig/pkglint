@@ -8,9 +8,11 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 	G.globalData.InitVartypes()
 	lines := s.NewLines("buildlink3.mk",
 		"# $"+"NetBSD$",
+		"# XXX automatically generated",
 		"",
 		"BUILDLINK_TREE+=        Xbae",
 		"",
+		"BUILDLINK_DEPMETHOD.Xbae?=\tfull",
 		".if !defined(XBAE_BUILDLINK3_MK)",
 		"XBAE_BUILDLINK3_MK:=",
 		"",
@@ -25,7 +27,9 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 
 	checklinesBuildlink3Mk(lines)
 
-	c.Check(s.Output(), equals, "ERROR: buildlink3.mk:12: \"/mk/motif.buildlink3.mk\" does not exist.\n")
+	c.Check(s.Output(), equals, ""+
+		"ERROR: buildlink3.mk:14: \"/mk/motif.buildlink3.mk\" does not exist.\n"+
+		"NOTE: buildlink3.mk:2: Please read this comment and remove it if appropriate.\n")
 }
 
 // The mismatch reported here is a false positive. The mk/haskell.mk file
@@ -57,4 +61,32 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" ...\n"+
 		"ERROR: Makefile:3: ... and \"X11\".\n")
+}
+
+func (s *Suite) TestChecklinesBuildlink3_NoBuildlinkTree(c *check.C) {
+	s.UseCommandLine("-Wall", "-Call")
+	G.globalData.InitVartypes()
+	lines := s.NewLines("buildlink3.mk",
+		"# $"+"NetBSD$",
+		"",
+		"BUILDLINK_DEPMETHOD.hs-X11?=\tfull",
+		"BUILDLINK_TREE+=\ths-X11",
+		"",
+		".if !defined(HS_X11_BUILDLINK3_MK)",
+		"HS_X11_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
+		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
+		"",
+		".endif\t# HS_X11_BUILDLINK3_MK",
+		"",
+		"# needless comment",
+		"BUILDLINK_TREE+=\t-hs-X11")
+
+	checklinesBuildlink3Mk(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: buildlink3.mk:3: This line belongs inside the .ifdef block.\n"+
+		"WARN: buildlink3.mk:14: Expected BUILDLINK_TREE line.\n"+
+		"WARN: buildlink3.mk:14: The file should end here.\n")
 }
