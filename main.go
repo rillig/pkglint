@@ -46,6 +46,8 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
+		G.rematch = NewHistogram()
+		G.renomatch = NewHistogram()
 	}
 
 	for _, arg := range G.opts.args {
@@ -66,8 +68,8 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 	checktoplevelUnusedLicenses()
 	printSummary()
 	if G.opts.Profiling {
-		rematch.printStats("rematch", G.logOut)
-		renomatch.printStats("renomatch", G.logOut)
+		G.rematch.printStats("rematch", G.logOut)
+		G.renomatch.printStats("renomatch", G.logOut)
 	}
 	if G.errors != 0 {
 		return 1

@@ -202,25 +202,26 @@ func regcomp(re string) *regexp.Regexp {
 	return cre
 }
 
-var rematch = NewHistogram()
-var renomatch = NewHistogram()
-
 func match(s, re string) []string {
 	m := regcomp(re).FindStringSubmatch(s)
-	if m != nil {
-		rematch.add(re)
-	} else {
-		renomatch.add(re)
+	if G.opts.Profiling {
+		if m != nil {
+			G.rematch.add(re)
+		} else {
+			G.renomatch.add(re)
+		}
 	}
 	return m
 }
 
 func matches(s, re string) bool {
 	matches := regcomp(re).MatchString(s)
-	if matches {
-		rematch.add(re)
-	} else {
-		renomatch.add(re)
+	if G.opts.Profiling {
+		if matches {
+			G.rematch.add(re)
+		} else {
+			G.renomatch.add(re)
+		}
 	}
 	return matches
 }

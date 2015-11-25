@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"regexp"
 )
 
 type GlobalVars struct {
@@ -28,6 +29,10 @@ type GlobalVars struct {
 	logOut                io.Writer
 	logErr                io.Writer
 	traceOut              io.Writer
+
+	res       map[string]*regexp.Regexp
+	rematch   *Histogram
+	renomatch *Histogram
 }
 
 type CmdOpts struct {
