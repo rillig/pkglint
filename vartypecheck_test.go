@@ -11,6 +11,27 @@ func (s *Suite) TestVartypeCheck_Category(c *check.C) {
 	c.Check(s.Output(), equals, "ERROR: fname:1: Invalid category \"arabic\".\n")
 }
 
+func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
+	newVartypeCheck("DEPENDS", "+=", "Perl").Dependency()
+	newVartypeCheck("DEPENDS", "+=", "perl5>=5.22").Dependency()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: Unknown dependency format: Perl\n")
+}
+
+func (s *Suite) TestVartypeCheck_DependencyWithPatch(c *check.C) {
+	G.curPkgsrcdir = "../.."
+	newVartypeCheck("DEPENDS", "+=", "Perl").DependencyWithPath()
+	newVartypeCheck("DEPENDS", "+=", "perl5>=5.22:../perl5").DependencyWithPath()
+	newVartypeCheck("DEPENDS", "+=", "perl5>=5.24:../../lang/perl5").DependencyWithPath()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: Unknown dependency format.\n"+
+		"WARN: fname:1: Dependencies should have the form \"../../category/package\".\n"+
+		"ERROR: fname:1: \"../../lang/perl5\" does not exist.\n"+
+		"ERROR: fname:1: There is no package in \"lang/perl5\".\n"+
+		"WARN: fname:1: Please use USE_TOOLS+=perl:run instead of this dependency.\n")
+}
+
 func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 	G.globalData.masterSiteUrls = map[string]string{
 		"https://github.com/":         "MASTER_SITE_GITHUB",

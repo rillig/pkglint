@@ -395,7 +395,7 @@ func checklineRelativePkgdir(line *Line, pkgdir string) {
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
 		if !fileExists(G.globalData.pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
-			line.errorf("There is no package in %s.", otherpkgpath)
+			line.errorf("There is no package in %q.", otherpkgpath)
 		}
 
 	} else {
