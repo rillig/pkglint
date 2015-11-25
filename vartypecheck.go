@@ -115,7 +115,7 @@ func (cv *VartypeCheck) Dependency() {
 				"undefined.")
 
 		case other == "*":
-			line.warnf("Please use %s-[0-9]* instead of %s-*.", depbase, depbase)
+			line.warnf("Please use \"%s-[0-9]*\" instead of \"%s-*\".", depbase, depbase)
 			line.explain(
 				"If you use a * alone, the package specification may match other",
 				"packages that have the same prefix, but a longer name. For example,",
@@ -561,7 +561,7 @@ func (cv *VartypeCheck) SedCommands() {
 		case word == "-n":
 			// Don't print lines per default.
 
-		case i == 0 && matches(word, `^(["']?)(?:\d*|/.*/)s.+["']$`):
+		case i == 0 && matches(word, `^(["']?)(?:\d*|/.*/)s.+["']?$`):
 			line.notef("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 		default:

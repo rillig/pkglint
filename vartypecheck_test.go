@@ -12,21 +12,41 @@ func (s *Suite) TestVartypeCheck_Category(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
-	newVartypeCheck("DEPENDS", "+=", "Perl").Dependency()
-	newVartypeCheck("DEPENDS", "+=", "perl5>=5.22").Dependency()
+	newVartypeCheck("CONFLICTS", "+=", "Perl").Dependency()
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Unknown dependency format: Perl\n")
+
+	newVartypeCheck("CONFLICTS", "+=", "perl5>=5.22").Dependency()
+
+	c.Check(s.Output(), equals, "")
+
+	newVartypeCheck("CONFLICTS", "+=", "perl5-*").Dependency()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".\n")
+
+	newVartypeCheck("CONFLICTS", "+=", "perl5-5.22.*").Dependency()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: Please append \"{,nb*}\" to the version number of this dependency.\n")
+
+	newVartypeCheck("CONFLICTS", "+=", "perl5-5.22.*{,nb*}").Dependency()
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_DependencyWithPatch(c *check.C) {
 	G.curPkgsrcdir = "../.."
+
 	newVartypeCheck("DEPENDS", "+=", "Perl").DependencyWithPath()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: Unknown dependency format.\n")
+
 	newVartypeCheck("DEPENDS", "+=", "perl5>=5.22:../perl5").DependencyWithPath()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: Dependencies should have the form \"../../category/package\".\n")
+
 	newVartypeCheck("DEPENDS", "+=", "perl5>=5.24:../../lang/perl5").DependencyWithPath()
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Unknown dependency format.\n"+
-		"WARN: fname:1: Dependencies should have the form \"../../category/package\".\n"+
 		"ERROR: fname:1: \"../../lang/perl5\" does not exist.\n"+
 		"ERROR: fname:1: There is no package in \"lang/perl5\".\n"+
 		"WARN: fname:1: Please use USE_TOOLS+=perl:run instead of this dependency.\n")
@@ -59,6 +79,13 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 	newVartypeCheck("MASTER_SITES", "=", "${MASTER_SITE_INVALID:=subdir/}").FetchURL()
 
 	c.Check(s.Output(), equals, "ERROR: fname:1: MASTER_SITE_INVALID does not exist.\n")
+}
+
+func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
+
+	newVartypeCheck("SUBST_SED.dummy", "=", "s,@COMPILER@,gcc,g").SedCommands()
+
+	c.Check(s.Output(), equals, "NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
