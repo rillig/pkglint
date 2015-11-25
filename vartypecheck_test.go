@@ -4,7 +4,14 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-func (s *Suite) TestVartypeCheckFetchURL(c *check.C) {
+func (s *Suite) TestVartypeCheck_Category(c *check.C) {
+	newVartypeCheck("CATEGORIES", "=", "chinese").Category()
+	newVartypeCheck("CATEGORIES", "=", "arabic").Category()
+
+	c.Check(s.Output(), equals, "ERROR: fname:1: Invalid category \"arabic\".\n")
+}
+
+func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 	G.globalData.masterSiteUrls = map[string]string{
 		"https://github.com/":         "MASTER_SITE_GITHUB",
 		"http://ftp.gnu.org/pub/gnu/": "MASTER_SITE_GNU",
@@ -33,7 +40,7 @@ func (s *Suite) TestVartypeCheckFetchURL(c *check.C) {
 	c.Check(s.Output(), equals, "ERROR: fname:1: MASTER_SITE_INVALID does not exist.\n")
 }
 
-func (s *Suite) TestVartypeCheckStage(c *check.C) {
+func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
 
 	newVartypeCheck("SUBST_STAGE.dummy", "=", "post-patch").Stage()
 
@@ -48,7 +55,7 @@ func (s *Suite) TestVartypeCheckStage(c *check.C) {
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) TestVartypeCheckYes(c *check.C) {
+func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 
 	newVartypeCheck("APACHE_MODULE", "=", "yes").Yes()
 
