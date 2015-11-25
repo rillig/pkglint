@@ -91,14 +91,6 @@ func isCommitted(fname string) bool {
 	return false
 }
 
-func removeVariableReferences(expr string) string {
-	replaced := regcomp(`\$\{[^{}]+\}`).ReplaceAllString(expr, "")
-	if replaced != expr {
-		return removeVariableReferences(replaced)
-	}
-	return replaced
-}
-
 // Returns the number of columns that a string occupies when printed with
 // a tabulator size of 8.
 func tabLength(s string) int {

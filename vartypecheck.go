@@ -367,14 +367,16 @@ func (cv *VartypeCheck) Pathlist() {
 	}
 
 	for _, path := range strings.Split(cv.value, ":") {
-		pathNovar := removeVariableReferences(path)
+		if contains(path, "${") {
+			continue
+		}
 
-		if !matches(pathNovar, `^[-0-9A-Za-z._~+%/]*$`) {
+		if !matches(path, `^[-0-9A-Za-z._~+%/]*$`) {
 			cv.line.warnf("%q is not a valid pathname.", path)
 		}
 
-		if !matches(path, `^[$/]`) {
-			cv.line.warnf("All components of %q (in this case %q) should be an absolute path.", cv.value, path)
+		if !hasPrefix(path, "/") {
+			cv.line.warnf("All components of %s (in this case %q) should be absolute paths.", cv.varname, path)
 		}
 	}
 }
@@ -539,7 +541,7 @@ func (cv *VartypeCheck) SedCommands() {
 				i++
 				ncommands++
 				if ncommands > 1 {
-					line.warnf("Each sed command should appear in an assignment of its own.")
+					line.notef("Each sed command should appear in an assignment of its own.")
 					line.explain(
 						"For example, instead of",
 						"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",

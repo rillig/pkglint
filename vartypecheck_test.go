@@ -81,11 +81,33 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 	c.Check(s.Output(), equals, "ERROR: fname:1: MASTER_SITE_INVALID does not exist.\n")
 }
 
+func (s *Suite) TestVartypeCheck_Message(c *check.C) {
+
+	newVartypeCheck("SUBST_MESSAGE.id", "=", "\"Correct paths\"").Message()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: SUBST_MESSAGE.id should not be quoted.\n")
+
+	newVartypeCheck("SUBST_MESSAGE.id", "=", "Correct paths").Message()
+
+	c.Check(s.Output(), equals, "")
+}
+
+func (s *Suite) TestVartypeCheck_Pathlist(c *check.C) {
+
+	newVartypeCheck("PATH", "=", "/usr/bin:/usr/sbin:.:${LOCALBASE}/bin").Pathlist()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: All components of PATH (in this case \".\") should be absolute paths.\n")
+}
+
 func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 
 	newVartypeCheck("SUBST_SED.dummy", "=", "s,@COMPILER@,gcc,g").SedCommands()
 
 	c.Check(s.Output(), equals, "NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n")
+
+	newVartypeCheck("SUBST_SED.dummy", "=", "-e s,a,b, -e a,b,c,").SedCommands()
+
+	c.Check(s.Output(), equals, "NOTE: fname:1: Each sed command should appear in an assignment of its own.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
