@@ -99,6 +99,21 @@ func (s *Suite) TestVartypeCheck_Pathlist(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: All components of PATH (in this case \".\") should be absolute paths.\n")
 }
 
+func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {
+
+	newVartypeCheck("PKGREVISION", "=", "3a").PkgRevision()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: PKGREVISION must be a positive integer number.\n"+
+		"ERROR: fname:1: PKGREVISION only makes sense directly in the package Makefile.\n")
+
+	vc := newVartypeCheck("PKGREVISION", "=", "3")
+	vc.line.fname = "Makefile"
+	vc.PkgRevision()
+
+	c.Check(s.Output(), equals, "")
+}
+
 func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 
 	newVartypeCheck("SUBST_SED.dummy", "=", "s,@COMPILER@,gcc,g").SedCommands()
