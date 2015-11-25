@@ -125,7 +125,6 @@ func (gd *GlobalData) InitVartypes() {
 	acl("BUILDLINK_CONTENTS_FILTER.*", LK_NONE, CheckvarShellCommand, "buildlink3.mk:s")
 	acl("BUILDLINK_DEPENDS", LK_SPACE, CheckvarIdentifier, "buildlink3.mk:a")
 	acl("BUILDLINK_DEPMETHOD.*", LK_SHELL, CheckvarBuildlinkDepmethod, "buildlink3.mk:ad", "Makefile:as", "Makefile.common:a", "*.mk:a") // FIXME: buildlink3.mk:d may lead to unexpected behavior.
-	acl("BUILDLINK_DEPTH", LK_NONE, CheckvarBuildlinkDepth, "buildlink3.mk:ps", "builtin.mk:ps")
 	sys("BUILDLINK_DIR", LK_NONE, CheckvarPathname)
 	bl3list("BUILDLINK_FILES.*", LK_SHELL, CheckvarPathmask)
 	acl("BUILDLINK_FILES_CMD.*", LK_SHELL, CheckvarShellWord)                  // Should better be ShellCommand

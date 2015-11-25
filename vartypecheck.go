@@ -30,14 +30,6 @@ func (cv *VartypeCheck) BuildlinkDepmethod() {
 	}
 }
 
-func (cv *VartypeCheck) BuildlinkDepth() {
-	if (cv.op != "use" || cv.value != "+") &&
-		cv.value != "${BUILDLINK_DEPTH}+" &&
-		cv.value != "${BUILDLINK_DEPTH:S/+$//}" {
-		cv.line.warnf("Invalid value.")
-	}
-}
-
 func (cv *VartypeCheck) Category() {
 	if fileExists(G.currentDir + "/" + G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
 		return

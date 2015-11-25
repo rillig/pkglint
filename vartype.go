@@ -131,7 +131,6 @@ var (
 	CheckvarAwkCommand             = &VarChecker{"AwkCommand", (*VartypeCheck).AwkCommand}
 	CheckvarBasicRegularExpression = &VarChecker{"BasicRegularExpression", (*VartypeCheck).BasicRegularExpression}
 	CheckvarBuildlinkDepmethod     = &VarChecker{"BuildlinkDepmethod", (*VartypeCheck).BuildlinkDepmethod}
-	CheckvarBuildlinkDepth         = &VarChecker{"BuildlinkDepth", (*VartypeCheck).BuildlinkDepth}
 	CheckvarCategory               = &VarChecker{"Category", (*VartypeCheck).Category}
 	CheckvarCFlag                  = &VarChecker{"CFlag", (*VartypeCheck).CFlag}
 	CheckvarComment                = &VarChecker{"Comment", (*VartypeCheck).Comment}
