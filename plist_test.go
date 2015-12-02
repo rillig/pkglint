@@ -15,7 +15,7 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 	checklinesPlist(lines)
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: PLIST:1: Expected \"@comment $NetBSD$\".\n"+
+		"ERROR: PLIST:1: Expected \"@comment $"+"NetBSD$\".\n"+
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.\n"+
 		"WARN: PLIST:5: Please remove this line. It is no longer necessary.\n")
 }
