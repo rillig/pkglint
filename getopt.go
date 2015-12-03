@@ -18,20 +18,20 @@ func NewOptions() *Options {
 	return new(Options)
 }
 
-func (self *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
+func (o *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
 	grp := new(FlagGroup)
 	opt := &option{shortName, longName, argDescription, description, grp}
-	self.options = append(self.options, opt)
+	o.options = append(o.options, opt)
 	return grp
 }
 
-func (self *Options) AddFlagVar(shortName rune, longName string, pflag *bool, defval bool, description string) {
+func (o *Options) AddFlagVar(shortName rune, longName string, pflag *bool, defval bool, description string) {
 	*pflag = defval
 	opt := &option{shortName, longName, "", description, pflag}
-	self.options = append(self.options, opt)
+	o.options = append(o.options, opt)
 }
 
-func (self *Options) Parse(args []string) (remainingArgs []string, err error) {
+func (o *Options) Parse(args []string) (remainingArgs []string, err error) {
 	var skip int
 	for i := 1; i < len(args) && err == nil; i++ {
 		arg := args[i]
@@ -39,10 +39,10 @@ func (self *Options) Parse(args []string) (remainingArgs []string, err error) {
 		case arg == "--":
 			return append(remainingArgs, args[i+1:]...), err
 		case hasPrefix(arg, "--"):
-			skip, err = self.parseLongOption(args, i, arg[2:])
+			skip, err = o.parseLongOption(args, i, arg[2:])
 			i += skip
 		case hasPrefix(arg, "-"):
-			skip, err = self.parseShortOptions(args, i, arg[1:])
+			skip, err = o.parseShortOptions(args, i, arg[1:])
 			i += skip
 		default:
 			remainingArgs = append(remainingArgs, arg)
@@ -54,7 +54,7 @@ func (self *Options) Parse(args []string) (remainingArgs []string, err error) {
 	return
 }
 
-func (self *Options) parseLongOption(args []string, i int, argRest string) (skip int, err error) {
+func (o *Options) parseLongOption(args []string, i int, argRest string) (skip int, err error) {
 	parts := strings.SplitN(argRest, "=", 2)
 	argname := parts[0]
 	var argval *string
@@ -62,14 +62,14 @@ func (self *Options) parseLongOption(args []string, i int, argRest string) (skip
 		argval = &parts[1]
 	}
 
-	for _, opt := range self.options {
+	for _, opt := range o.options {
 		if argname == opt.longName {
-			return self.handleLongOption(args, i, opt, argval)
+			return o.handleLongOption(args, i, opt, argval)
 		}
 	}
 
 	var prefixOpt *option
-	for _, opt := range self.options {
+	for _, opt := range o.options {
 		if strings.HasPrefix(opt.longName, argname) {
 			if prefixOpt == nil {
 				prefixOpt = opt
@@ -79,12 +79,12 @@ func (self *Options) parseLongOption(args []string, i int, argRest string) (skip
 		}
 	}
 	if prefixOpt != nil {
-		return self.handleLongOption(args, i, prefixOpt, argval)
+		return o.handleLongOption(args, i, prefixOpt, argval)
 	}
 	return 0, OptErr("unknown option: --" + argRest)
 }
 
-func (self *Options) handleLongOption(args []string, i int, opt *option, argval *string) (skip int, err error) {
+func (o *Options) handleLongOption(args []string, i int, opt *option, argval *string) (skip int, err error) {
 	switch data := opt.data.(type) {
 	case *bool:
 		if argval == nil {
@@ -110,10 +110,10 @@ func (self *Options) handleLongOption(args []string, i int, opt *option, argval 
 	panic("getopt: unknown option type")
 }
 
-func (self *Options) parseShortOptions(args []string, i int, optchars string) (skip int, err error) {
+func (o *Options) parseShortOptions(args []string, i int, optchars string) (skip int, err error) {
 optchar:
 	for ai, optchar := range optchars {
-		for _, opt := range self.options {
+		for _, opt := range o.options {
 			if optchar == opt.shortName {
 				switch data := opt.data.(type) {
 				case *bool:
@@ -134,14 +134,14 @@ optchar:
 	return 0, nil
 }
 
-func (self *Options) Help(out io.Writer, generalUsage string) {
+func (o *Options) Help(out io.Writer, generalUsage string) {
 	wr := tabwriter.NewWriter(out, 1, 0, 2, ' ', tabwriter.TabIndent)
 
 	fmt.Fprintf(wr, "usage: %s\n", generalUsage)
 	fmt.Fprintln(wr)
 	wr.Flush()
 
-	for _, opt := range self.options {
+	for _, opt := range o.options {
 		if opt.argDescription == "" {
 			fmt.Fprintf(wr, "  -%c, --%s\t %s\n",
 				opt.shortName, opt.longName, opt.description)
@@ -153,7 +153,7 @@ func (self *Options) Help(out io.Writer, generalUsage string) {
 	wr.Flush()
 
 	hasFlagGroups := false
-	for _, opt := range self.options {
+	for _, opt := range o.options {
 		switch flagGroup := opt.data.(type) {
 		case *FlagGroup:
 			hasFlagGroups = true
@@ -186,22 +186,22 @@ type FlagGroup struct {
 	flags []*GroupFlag
 }
 
-func (self *FlagGroup) AddFlagVar(name string, flag *bool, defval bool, help string) {
+func (fg *FlagGroup) AddFlagVar(name string, flag *bool, defval bool, help string) {
 	opt := &GroupFlag{name, flag, help}
-	self.flags = append(self.flags, opt)
+	fg.flags = append(fg.flags, opt)
 	*flag = defval
 }
 
-func (self *FlagGroup) parse(optionPrefix, arg string) (err error) {
+func (fg *FlagGroup) parse(optionPrefix, arg string) (err error) {
 argopt:
 	for _, argopt := range strings.Split(arg, ",") {
 		if argopt == "none" || argopt == "all" {
-			for _, opt := range self.flags {
+			for _, opt := range fg.flags {
 				*opt.value = argopt == "all"
 			}
 			continue argopt
 		}
-		for _, opt := range self.flags {
+		for _, opt := range fg.flags {
 			if argopt == opt.name {
 				*opt.value = true
 				continue argopt

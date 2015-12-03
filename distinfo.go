@@ -66,11 +66,11 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 	ck.onFilenameChange(NewLine(ck.fname, "EOF", "", nil), "")
 }
 
-func (ctx *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
-	prevFname := ctx.previousFilename
+func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
+	prevFname := ck.previousFilename
 	if prevFname != "" {
-		algorithms := strings.Join(ctx.algorithms, ", ")
-		if ctx.isPatch {
+		algorithms := strings.Join(ck.algorithms, ", ")
+		if ck.isPatch {
 			if algorithms != "SHA1" {
 				line.errorf("Expected SHA1 hash for %s, got %s.", prevFname, algorithms)
 			}
@@ -81,12 +81,12 @@ func (ctx *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) 
 		}
 	}
 
-	ctx.isPatch = matches(nextFname, `^patch-.+$`) && fileExists(G.currentDir+"/"+ctx.patchdir+"/"+nextFname)
-	ctx.previousFilename = nextFname
-	ctx.algorithms = nil
+	ck.isPatch = matches(nextFname, `^patch-.+$`) && fileExists(G.currentDir+"/"+ck.patchdir+"/"+nextFname)
+	ck.previousFilename = nextFname
+	ck.algorithms = nil
 }
 
-func (ctx *distinfoLinesChecker) checkPatchSha1(line *Line, fname, distinfoSha1Hex string) {
+func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, fname, distinfoSha1Hex string) {
 	patchBytes, err := ioutil.ReadFile(fname)
 	if err != nil {
 		line.errorf("%s does not exist.", fname)
