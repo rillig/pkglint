@@ -35,3 +35,20 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 		"NOTE: distinfo:2: Empty line expected.\n"+
 		"ERROR: distinfo:5: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.\n")
 }
+
+func (s *Suite) TestChecklinesDistinfo_GlobalHashMismatch(c *check.C) {
+	otherLine := NewLine("other/Makefile", "1", "dummy", nil)
+	G.ipcDistinfo = make(map[string]*Hash)
+	G.ipcDistinfo["SHA512:pkgname-1.0.tar.gz"] = &Hash{"asdfasdf", otherLine}
+	lines := s.NewLines("distinfo",
+		"$"+"NetBSD$",
+		"",
+		"SHA512 (pkgname-1.0.tar.gz) = 12341234")
+
+	checklinesDistinfo(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"ERROR: distinfo:3: The hash SHA512 for pkgname-1.0.tar.gz is 12341234, ...\n"+
+		"ERROR: other/Makefile:1: ... which differs from asdfasdf.\n"+
+		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"pkgname-1.0.tar.gz\", got SHA512.\n")
+}
