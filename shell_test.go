@@ -30,7 +30,6 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	G.globalData.InitVartypes()
 	line := NewLine("fname", "1", "dummy", nil)
 
-	c.Check(matches("${list}", `^`+reVarname+`$`), equals, true)
 	c.Check(matches("${list}", `^`+reVarnameDirect+`$`), equals, false)
 
 	checklineMkShellword(line, "${${list}}", false)
