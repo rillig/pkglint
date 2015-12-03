@@ -61,7 +61,7 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 		ck.algorithms = append(ck.algorithms, alg)
 
 		ck.checkGlobalMismatch(line, fname, alg, hash)
-		ck.checkUncommittedPatch(line, fname, hash)
+		ck.checkUncommittedPatch(line, ck.patchdir + "/" + fname, hash)
 	}
 	ck.onFilenameChange(NewLine(ck.fname, "EOF", "", nil), "")
 }
@@ -87,7 +87,7 @@ func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
 }
 
 func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, fname, distinfoSha1Hex string) {
-	patchBytes, err := ioutil.ReadFile(fname)
+	patchBytes, err := ioutil.ReadFile(G.currentDir + "/" + fname)
 	if err != nil {
 		line.errorf("%s does not exist.", fname)
 		return
@@ -134,13 +134,12 @@ func (ck *distinfoLinesChecker) checkGlobalMismatch(line *Line, fname, alg, hash
 	}
 }
 
-func (ck *distinfoLinesChecker) checkUncommittedPatch(line *Line, fname, sha1Hash string) {
+func (ck *distinfoLinesChecker) checkUncommittedPatch(line *Line, relFname, sha1Hash string) {
 	if ck.isPatch {
-		fname := G.currentDir + "/" + ck.patchdir + "/" + fname
-		if ck.isCommitted && !isCommitted(fname) {
-			line.warnf("%s/%s is registered in distinfo but not added to CVS.", ck.patchdir, fname)
+		if ck.isCommitted && !isCommitted(G.currentDir+"/"+relFname) {
+			line.warnf("%s is registered in distinfo but not added to CVS.", relFname)
 		}
-		ck.checkPatchSha1(line, fname, sha1Hash)
-		ck.patches[fname] = true
+		ck.checkPatchSha1(line, relFname, sha1Hash)
+		ck.patches[relFname] = true
 	}
 }
