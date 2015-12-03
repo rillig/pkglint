@@ -2,33 +2,20 @@ package main
 
 import (
 	check "gopkg.in/check.v1"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 func (s *Suite) TestChecklinesDistinfo(c *check.C) {
-	tmpdir := c.MkDir()
-	patchesdir := tmpdir + "/patches"
-	patchAa := patchesdir + "/patch-aa"
-	patchContents := "" +
-		"$" + "NetBSD$ line is ignored\n" +
-		"patch contents\n"
+	s.CreateTmpFile(c, "patches/patch-aa",
+		"$"+"NetBSD$ line is ignored",
+		"patch contents")
+	G.currentDir = s.tmpdir
 
-	os.Mkdir(patchesdir, 0777)
-	if err := ioutil.WriteFile(patchAa, []byte(patchContents), 0666); err != nil {
-		c.Fatal(err)
-	}
-	G.currentDir = filepath.ToSlash(tmpdir)
-
-	lines := s.NewLines("distinfo",
+	checklinesDistinfo(s.NewLines("distinfo",
 		"should be the RCS ID",
 		"should be empty",
 		"MD5 (distfile.tar.gz) = 12345678901234567890123456789012",
 		"SHA1 (distfile.tar.gz) = 1234567890123456789012345678901234567890",
-		"SHA1 (patch-aa) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7")
-
-	checklinesDistinfo(lines)
+		"SHA1 (patch-aa) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7"))
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: distinfo:1: Expected \"$"+"NetBSD$\".\n"+
@@ -37,19 +24,18 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesDistinfo_GlobalHashMismatch(c *check.C) {
-	otherLine := NewLine("other/Makefile", "1", "dummy", nil)
+	otherLine := NewLine("other/distinfo", "7", "dummy", nil)
 	G.ipcDistinfo = make(map[string]*Hash)
 	G.ipcDistinfo["SHA512:pkgname-1.0.tar.gz"] = &Hash{"asdfasdf", otherLine}
-	lines := s.NewLines("distinfo",
+
+	checklinesDistinfo(s.NewLines("distinfo",
 		"$"+"NetBSD$",
 		"",
-		"SHA512 (pkgname-1.0.tar.gz) = 12341234")
-
-	checklinesDistinfo(lines)
+		"SHA512 (pkgname-1.0.tar.gz) = 12341234"))
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: distinfo:3: The hash SHA512 for pkgname-1.0.tar.gz is 12341234, ...\n"+
-		"ERROR: other/Makefile:1: ... which differs from asdfasdf.\n"+
+		"ERROR: other/distinfo:7: ... which differs from asdfasdf.\n"+
 		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"pkgname-1.0.tar.gz\", got SHA512.\n")
 }
 
@@ -65,12 +51,11 @@ func (s *Suite) TestChecklinesDistinfo_UncommittedPatch(c *check.C) {
 	s.CreateTmpFile(c, "CVS/Entries",
 		"/distinfo/...")
 	G.currentDir = s.tmpdir
-	lines := s.NewLines(s.tmpdir+"/distinfo",
+
+	checklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
 		"$"+"NetBSD$",
 		"",
-		"SHA1 (patch-aa) = 5ad1fb9b3c328fff5caa1a23e8f330e707dd50c0")
+		"SHA1 (patch-aa) = 5ad1fb9b3c328fff5caa1a23e8f330e707dd50c0"))
 
-	checklinesDistinfo(lines)
-
-	c.Check(s.Output(), equals, "WARN: "+lines[0].fname+":3: patches/patch-aa is registered in distinfo but not added to CVS.\n")
+	c.Check(s.Output(), equals, "WARN: "+s.tmpdir+"/distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.\n")
 }
