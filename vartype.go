@@ -181,7 +181,7 @@ var (
 	CheckvarWrksrcSubdirectory     = &VarChecker{"WrksrcSubdirectory", (*VartypeCheck).WrksrcSubdirectory}
 	CheckvarYes                    = &VarChecker{"Yes", (*VartypeCheck).Yes}
 	CheckvarYesNo                  = &VarChecker{"YesNo", (*VartypeCheck).YesNo}
-	CheckvarYesNoIndirectly       = &VarChecker{"YesNoIndirectly", (*VartypeCheck).YesNoIndirectly}
+	CheckvarYesNoIndirectly        = &VarChecker{"YesNoIndirectly", (*VartypeCheck).YesNoIndirectly}
 )
 
 func init() { // Necessary due to circular dependency

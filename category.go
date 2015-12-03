@@ -5,7 +5,7 @@ import (
 )
 
 type subdir struct {
-	name string
+	name   string
 	line   *Line
 	active bool
 }
