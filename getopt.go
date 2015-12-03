@@ -49,7 +49,7 @@ func (o *Options) Parse(args []string) (remainingArgs []string, err error) {
 		}
 	}
 	if err != nil {
-		err = OptErr(args[0] + ": " + err.Error())
+		err = optErr(args[0] + ": " + err.Error())
 	}
 	return
 }
@@ -74,14 +74,14 @@ func (o *Options) parseLongOption(args []string, i int, argRest string) (skip in
 			if prefixOpt == nil {
 				prefixOpt = opt
 			} else {
-				return 0, OptErr(fmt.Sprintf("ambiguous option: --%s could mean --%s or --%s", argRest, prefixOpt.longName, opt.longName))
+				return 0, optErr(fmt.Sprintf("ambiguous option: --%s could mean --%s or --%s", argRest, prefixOpt.longName, opt.longName))
 			}
 		}
 	}
 	if prefixOpt != nil {
 		return o.handleLongOption(args, i, prefixOpt, argval)
 	}
-	return 0, OptErr("unknown option: --" + argRest)
+	return 0, optErr("unknown option: --" + argRest)
 }
 
 func (o *Options) handleLongOption(args []string, i int, opt *option, argval *string) (skip int, err error) {
@@ -96,7 +96,7 @@ func (o *Options) handleLongOption(args []string, i int, opt *option, argval *st
 			case "false", "off", "disabled", "0":
 				*data = false
 			default:
-				return 0, OptErr("invalid argument for option --" + opt.longName)
+				return 0, optErr("invalid argument for option --" + opt.longName)
 			}
 		}
 		return 0, nil
@@ -129,7 +129,7 @@ optchar:
 				}
 			}
 		}
-		return 0, OptErr(sprintf("unknown option: -%c", optchar))
+		return 0, optErr(sprintf("unknown option: -%c", optchar))
 	}
 	return 0, nil
 }
@@ -183,11 +183,11 @@ type option struct {
 }
 
 type FlagGroup struct {
-	flags []*GroupFlag
+	flags []*groupFlag
 }
 
 func (fg *FlagGroup) AddFlagVar(name string, flag *bool, defval bool, help string) {
-	opt := &GroupFlag{name, flag, help}
+	opt := &groupFlag{name, flag, help}
 	fg.flags = append(fg.flags, opt)
 	*flag = defval
 }
@@ -211,19 +211,19 @@ argopt:
 				continue argopt
 			}
 		}
-		return OptErr("unknown option: " + optionPrefix + argopt)
+		return optErr("unknown option: " + optionPrefix + argopt)
 	}
 	return nil
 }
 
-type GroupFlag struct {
+type groupFlag struct {
 	name  string
 	value *bool
 	help  string
 }
 
-type OptErr string
+type optErr string
 
-func (err OptErr) Error() string {
+func (err optErr) Error() string {
 	return string(err)
 }
