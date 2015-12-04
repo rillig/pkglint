@@ -85,6 +85,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	if out := s.Output(); out != "" {
 		c.Logf("Unchecked output; check with: c.Check(s.Output(), equals, %q)", out)
 	}
+	s.tmpdir = ""
 }
 
 var _ = check.Suite(new(Suite))
