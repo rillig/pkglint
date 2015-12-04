@@ -56,6 +56,15 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 		"WARN: fname:3: Please use \"${ECHO}\" instead of \"echo\".\n")
 }
 
+func (s *Suite) TestMkShellLine_checklineMkShelltext(c *check.C) {
+
+	shline := NewMkShellLine(s.DummyLine())
+
+	shline.checklineMkShelltext("for f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done")
+
+	c.Check(s.Output(), equals, "NOTE: fname:1: Please use the SUBST framework instead of ${SED} and ${MV}.\n")
+}
+
 func (s *Suite) TestMkShellLine_checkCommandUse(c *check.C) {
 	G.mkContext = newMkContext()
 	G.mkContext.target = "do-install"
