@@ -5,9 +5,9 @@ import (
 )
 
 func (s *Suite) TestChecklinesDistinfo(c *check.C) {
-	s.CreateTmpFile(c, "patches/patch-aa",
-		"$"+"NetBSD$ line is ignored",
-		"patch contents")
+	s.CreateTmpFile(c, "patches/patch-aa", ""+
+		"$"+"NetBSD$ line is ignored\n"+
+		"patch contents\n")
 	G.currentDir = s.tmpdir
 
 	checklinesDistinfo(s.NewLines("distinfo",
@@ -40,16 +40,16 @@ func (s *Suite) TestChecklinesDistinfo_GlobalHashMismatch(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesDistinfo_UncommittedPatch(c *check.C) {
-	s.CreateTmpFile(c, "patches/patch-aa",
-		"$"+"NetBSD$",
-		"",
-		"--- oldfile",
-		"+++ newfile",
-		"@@ -1,1 +1,1 @@",
-		"-old",
-		"+new")
+	s.CreateTmpFile(c, "patches/patch-aa", ""+
+		"$"+"NetBSD$\n"+
+		"\n"+
+		"--- oldfile\n"+
+		"+++ newfile\n"+
+		"@@ -1,1 +1,1 @@\n"+
+		"-old\n"+
+		"+new\n")
 	s.CreateTmpFile(c, "CVS/Entries",
-		"/distinfo/...")
+		"/distinfo/...\n")
 	G.currentDir = s.tmpdir
 
 	checklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",

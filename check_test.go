@@ -54,18 +54,14 @@ func (s *Suite) DummyLine() *Line {
 	return NewLine("fname", "1", "dummy", nil)
 }
 
-func (s *Suite) CreateTmpFile(c *check.C, fname string, lines ...string) {
+func (s *Suite) CreateTmpFile(c *check.C, fname, content string) {
 	if s.tmpdir == "" {
 		s.tmpdir = filepath.ToSlash(c.MkDir())
 	}
 	err := os.MkdirAll(s.tmpdir+"/"+path.Dir(fname), 0777)
 	c.Check(err, check.IsNil)
 
-	data := ""
-	for _, line := range lines {
-		data += line + "\n"
-	}
-	err = ioutil.WriteFile(s.tmpdir+"/"+fname, []byte(data), 0666)
+	err = ioutil.WriteFile(s.tmpdir+"/"+fname, []byte(content), 0666)
 	c.Check(err, check.IsNil)
 }
 
