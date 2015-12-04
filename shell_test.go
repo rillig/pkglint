@@ -55,3 +55,18 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 		"WARN: fname:3: The \"echo\" tool is used but not added to USE_TOOLS.\n"+
 		"WARN: fname:3: Please use \"${ECHO}\" instead of \"echo\".\n")
 }
+
+func (s *Suite) TestMkShellLine_checkCommandUse(c *check.C) {
+	G.mkContext = newMkContext()
+	G.mkContext.target = "do-install"
+
+	shline := NewMkShellLine(s.DummyLine())
+
+	shline.checkCommandUse("sed")
+
+	c.Check(s.Output(), equals, "WARN: fname:1: The shell command \"sed\" should not be used in the install phase.\n")
+
+	shline.checkCommandUse("cp")
+
+	c.Check(s.Output(), equals, "WARN: fname:1: ${CP} should not be used to install files.\n")
+}
