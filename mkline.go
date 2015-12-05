@@ -31,21 +31,16 @@ func (ml *MkLine) checkVardefPermissions(varname, op string) {
 	perms := getVariablePermissions(line, varname)
 	var needed string
 	switch op {
-	case "=":
-		needed = "s"
-	case "!=":
+	case "=", "!=", ":=":
 		needed = "s"
 	case "?=":
 		needed = "d"
 	case "+=":
 		needed = "a"
-	case ":=":
-		needed = "s"
 	}
 
 	if !contains(perms, needed) {
-		// XXX: line.warnf("Permission %q requested for %s, but only { %s } is allowed.",
-		line.warnf("Permission [%s] requested for %s, but only [%s] is allowed.",
+		line.warnf("Permission %q requested for %s, but only { %s } are allowed.",
 			ReadableVartypePermissions(needed), varname, ReadableVartypePermissions(perms))
 		line.explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
