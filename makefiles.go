@@ -328,10 +328,10 @@ func ChecklinesMk(lines []*Line) {
 		} else if line.extra["is_comment"] != nil {
 			// No further checks.
 
-		} else if m, varname, op, value, comment := matchVarassign(text); m {
+		} else if m, varname, op, value, _ := matchVarassign(text); m {
 			ml := NewMkLine(line)
 			ml.checkVaralign()
-			ml.checkVarassign(varname, op, value, comment)
+			ml.checkVarassign()
 			substcontext.Varassign(line, varname, op, value)
 
 		} else if hasPrefix(text, "\t") {

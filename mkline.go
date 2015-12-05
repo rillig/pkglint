@@ -288,10 +288,14 @@ func (ml *MkLine) checkDecreasingOrder(varname, value string) {
 	}
 }
 
-func (ml *MkLine) checkVarassign(varname, op, value, comment string) {
-	defer tracecall("MkLine.checkVarassign", varname, op, value)()
+func (ml *MkLine) checkVarassign() {
+	defer tracecall("MkLine.checkVarassign")()
 
 	line := ml.line
+	varname := line.extra["varname"].(string)
+	op := line.extra["op"].(string)
+	value := line.extra["value"].(string)
+	comment := line.extra["comment"].(string)
 	varbase := varnameBase(varname)
 	varcanon := varnameCanon(varname)
 
