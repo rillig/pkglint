@@ -29,9 +29,11 @@ func parseMkCond(line *Line, cond string) *Tree {
 	return NewTree("unknown", cond)
 }
 
-func checklineMkIf(line *Line, condition string) {
-	defer tracecall("checklineMkCond", condition)()
+func (ml *MkLine) checkIf() {
+	defer tracecall("checklineMkCond")()
 
+	line := ml.line
+	condition := line.extra["args"].(string)
 	tree := parseMkCond(line, condition)
 
 	{

@@ -171,7 +171,7 @@ func parselineMk(line *Line) {
 	if len(line.extra) != 0 {
 		return
 	}
-	
+
 	text := line.text
 
 	if m, varname, op, value, comment := matchVarassign(text); m {
@@ -411,7 +411,7 @@ func ChecklinesMk(lines []*Line) {
 				}
 
 			} else if directive == "if" || directive == "elif" {
-				checklineMkIf(line, args)
+				NewMkLine(line).checkIf()
 
 			} else if directive == "ifdef" || directive == "ifndef" {
 				if matches(args, `\s`) {

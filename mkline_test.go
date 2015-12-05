@@ -80,8 +80,8 @@ func (s *Suite) TestChecklineMkVaralign(c *check.C) {
 func (s *Suite) TestMkLine_CheckAbsolutePathname(c *check.C) {
 	ml := NewMkLine(NewLine("Makefile", "1", "# dummy", nil))
 
-	ml.checkAbsolutePathname( "bindir=/bin")
-	ml.checkAbsolutePathname( "bindir=/../lib")
+	ml.checkAbsolutePathname("bindir=/bin")
+	ml.checkAbsolutePathname("bindir=/../lib")
 
 	c.Check(s.Output(), equals, "WARN: Makefile:1: Found absolute pathname: /bin\n")
 }
