@@ -641,7 +641,7 @@ func (ml *MkLine) checkText(text string) {
 }
 
 func (ml *MkLine) checkAbsolutePathname(text string) {
-	defer tracecall("checklineMkAbsolutePathname", text)()
+	defer tracecall("MkLine.checkAbsolutePathname", text)()
 
 	// In the GNU coding standards, DESTDIR is defined as a (usually
 	// empty) prefix that can be used to install files to a different
@@ -653,6 +653,34 @@ func (ml *MkLine) checkAbsolutePathname(text string) {
 	if m, path := match1(text, `(?:^|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
 		if matches(path, `^/\w`) {
 			checkwordAbsolutePathname(ml.line, path)
+		}
+	}
+}
+
+func (ml *MkLine) checkIf() {
+	defer tracecall("MkLine.checkIf")()
+
+	line := ml.line
+	condition := line.extra["args"].(string)
+	tree := parseMkCond(line, condition)
+
+	{
+		var pvarname, ppattern *string
+		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &ppattern)))) {
+			vartype := getVariableType(line, *pvarname)
+			if vartype != nil && vartype.checker.IsEnum() {
+				if !matches(*ppattern, `[\$\[*]`) && !vartype.checker.HasEnum(*ppattern) {
+					line.warnf("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())
+				}
+			}
+			return
+		}
+	}
+
+	{
+		var pop, pvarname, pvalue *string
+		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
+			NewMkLine(line).checkVartype(*pvarname, "use", *pvalue, "")
 		}
 	}
 }
