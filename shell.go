@@ -81,6 +81,16 @@ func NewMkShellLine(line *Line) *MkShellLine {
 	return &MkShellLine{line}
 }
 
+type ShellwordState string
+
+const (
+	swstPlain      ShellwordState = "plain"
+	swstSquot      ShellwordState = "squot"
+	swstDquot      ShellwordState = "dquot"
+	swstDquotBackt ShellwordState = "dquot+backt"
+	swstBackt      ShellwordState = "backt"
+)
+
 func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	defer tracecall("MkShellLine.checklineMkShellword", shellword, checkQuoting)()
 
@@ -104,15 +114,6 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 		line.warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	type ShellwordState string
-	const (
-		swstPlain      ShellwordState = "plain"
-		swstSquot      ShellwordState = "squot"
-		swstDquot      ShellwordState = "dquot"
-		swstDquotBackt ShellwordState = "dquot+backt"
-		swstBackt      ShellwordState = "backt"
-	)
-
 	rest := shellword
 	state := swstPlain
 outer:
@@ -126,50 +127,9 @@ outer:
 		// recursively, instead of splitting off the first
 		// make(1) variable.
 		case state == swstBackt || state == swstDquotBackt:
-			// Scan for the end of the backticks, checking
-			// for single backslashes and removing one level
-			// of backslashes. Backslashes are only removed
-			// before a dollar, a backslash or a backtick.
-			//
-			// References:
-			// * http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-			stripped := ""
-			for rest != "" {
-				switch {
-				case replacePrefix(&rest, &m, "^`"):
-					if state == swstBackt {
-						state = swstPlain
-					} else {
-						state = swstDquot
-					}
-					goto endOfBackticks
-
-				case replacePrefix(&rest, &m, "^\\\\([\\\\`$])"):
-					stripped += m[1]
-
-				case replacePrefix(&rest, &m, `^(\\)`):
-					line.warnf("Backslashes should be doubled inside backticks.")
-					stripped += m[1]
-
-				case state == swstDquotBackt && replacePrefix(&rest, &m, `^"`):
-					line.warnf("Double quotes inside backticks inside double quotes are error prone.")
-					line.explain(
-						"According to the SUSv3, they produce undefined results.",
-						"",
-						"See the paragraph starting \"Within the backquoted ...\" in",
-						"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
-
-				case replacePrefix(&rest, &m, "^([^\\\\`]+)"):
-					stripped += m[1]
-
-				default:
-					line.errorf("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, rest)
-				}
-			}
-			line.errorf("Unfinished backquotes: rest=%q", rest)
-
-		endOfBackticks:
-			msline.checkShelltext(stripped)
+			var backtCommand string
+			backtCommand, rest, state = msline.unescapeBackticks(shellword, rest, state)
+			msline.checkShelltext(backtCommand)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case replacePrefix(&rest, &m, `^\$\{(`+reVarnameDirect+`|@)(:[^\{]+)?\}`),
@@ -331,6 +291,50 @@ outer:
 	if strings.TrimSpace(rest) != "" {
 		line.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, rest, shellword)
 	}
+}
+
+// Scan for the end of the backticks, checking for single backslashes
+// and removing one level of backslashes. Backslashes are only removed
+// before a dollar, a backslash or a backtick.
+//
+// See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
+func (msline *MkShellLine) unescapeBackticks(shellword, rest string, state ShellwordState) (unescaped, newRest string, newState ShellwordState) {
+	line := msline.line
+	var m []string
+	for rest != "" {
+		switch {
+		case replacePrefix(&rest, &m, "^`"):
+			if state == swstBackt {
+				state = swstPlain
+			} else {
+				state = swstDquot
+			}
+			return unescaped, rest, state
+
+		case replacePrefix(&rest, &m, "^\\\\([\\\\`$])"):
+			unescaped += m[1]
+
+		case replacePrefix(&rest, &m, `^(\\)`):
+			line.warnf("Backslashes should be doubled inside backticks.")
+			unescaped += m[1]
+
+		case state == swstDquotBackt && replacePrefix(&rest, &m, `^"`):
+			line.warnf("Double quotes inside backticks inside double quotes are error prone.")
+			line.explain(
+				"According to the SUSv3, they produce undefined results.",
+				"",
+				"See the paragraph starting \"Within the backquoted ...\" in",
+				"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
+
+		case replacePrefix(&rest, &m, "^([^\\\\`]+)"):
+			unescaped += m[1]
+
+		default:
+			line.errorf("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, rest)
+		}
+	}
+	line.errorf("Unfinished backquotes: rest=%q", rest)
+	return unescaped, rest, state
 }
 
 func (msline *MkShellLine) variableNeedsQuoting(shvarname string) bool {
