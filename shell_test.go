@@ -35,20 +35,6 @@ func (s *Suite) TestChecklineMkShelltext(c *check.C) {
 		"WARN: fname:1: Unknown shell command \"echo\".\n"+
 		"WARN: fname:1: Unquoted shell variable \"uname\".\n")
 
-	// The following test case goes beyond the limits of the current shell parser.
-
-	// foobar="`echo \"foo   bar\"`"
-	msline.checklineMkShelltext("foobar=\"`echo \\\"foo   bar\\\"`\"")
-
-	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
-		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
-		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
-		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
-		"WARN: fname:1: Unknown shell command \"echo\".\n"+
-		"ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"\\\\foo\", shellword=\"\\\\foo\"\n"+
-		"ERROR: fname:1: Internal pkglint error: checklineMkShelltext state=continuation rest=\"\\\\\" shellword=\"echo \\\\foo   bar\\\\\"\n")
-
 	G.globalData.tools = map[string]bool{"echo": true}
 	G.globalData.predefinedTools = map[string]bool{"echo": true}
 	G.mkContext = newMkContext()
@@ -84,6 +70,37 @@ func (s *Suite) TestChecklineMkShelltext(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"\\\\n\" instead of \"\\n\".\n")
 }
 
+func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.mkContext = newMkContext()
+	msline := NewMkShellLine(NewLine("fname", "1", "# dummy", nil))
+
+	// foobar="`echo \"foo   bar\"`"
+	msline.checklineMkShelltext("foobar=\"`echo \\\"foo   bar\\\"`\"")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
+		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
+		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
+		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
+		"WARN: fname:1: Unknown shell command \"echo\".\n"+
+		"ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"\\\\foo\", shellword=\"\\\\foo\"\n"+
+		"ERROR: fname:1: Internal pkglint error: checklineMkShelltext state=continuation rest=\"\\\\\" shellword=\"echo \\\\foo   bar\\\\\"\n")
+}
+
+func (s *Suite) TestMkShellLine_CheckShelltext_InternalError2(c *check.C) {
+	G.globalData.InitVartypes()
+	msline := NewMkShellLine(NewLine("fname", "1", "# dummy", nil))
+	G.mkContext = newMkContext()
+	s.RegisterTool("pax", "PAX", false)
+	G.mkContext.tools["pax"] = true
+
+	msline.checklineMkShelltext("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
+
+	c.Check(s.Output(), equals, "ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"$$//g\", shellword=\"/.*~$$//g\"\n")
+}
+
 func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
@@ -100,11 +117,17 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"${.TARGET}\" instead of \"$@\".\n")
 }
 
+func (s *Suite) TestMkShellLine_CheckShellword_InternalError(c *check.C) {
+	line := NewLine("fname", "1", "# dummy", nil)
+
+	checklineMkShellword(line, "/.*~$$//g", false)
+
+	c.Check(s.Output(), equals, "ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"$$//g\", shellword=\"/.*~$$//g\"\n")
+}
+
 func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
-	G.globalData.tools = map[string]bool{"echo": true}
-	G.globalData.vartools = map[string]string{"echo": "ECHO"}
-	G.globalData.toolsVarRequired = map[string]bool{"echo": true}
+	s.RegisterTool("echo", "ECHO", true)
 	G.mkContext = newMkContext()
 	line := NewLine("fname", "3", "# dummy", nil)
 
