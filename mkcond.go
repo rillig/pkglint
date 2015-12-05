@@ -50,7 +50,7 @@ func checklineMkIf(line *Line, condition string) {
 	{
 		var pop, pvarname, pvalue *string
 		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
-			checklineMkVartype(line, *pvarname, "use", *pvalue, "")
+			NewMkLine(line).checkVartype(*pvarname, "use", *pvalue, "")
 		}
 	}
 }

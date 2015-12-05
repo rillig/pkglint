@@ -263,6 +263,6 @@ func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 
 func newVartypeCheck(varname, op, value string) *VartypeCheck {
 	line := NewLine("fname", "1", "dummy", nil)
-	valueNovar := withoutMakeVariables(line, value, true)
+	valueNovar := NewMkLine(line).withoutMakeVariables(value, true)
 	return &VartypeCheck{line, varname, op, value, valueNovar, "", true, guNotGuessed}
 }
