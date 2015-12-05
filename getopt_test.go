@@ -45,7 +45,7 @@ func (s *Suite) TestGetopt_UnknownFlagInGroup(c *check.C) {
 	c.Check(err.Error(), equals, "progname: unknown option: --warnings=no-error")
 }
 
-func (s *Suite) TestGetopt_AmbiguousLong(c *check.C) {
+func (s *Suite) TestGetopt_AbbreviatedLong(c *check.C) {
 	opts := NewOptions()
 	var longFlag, longerFlag bool
 	opts.AddFlagVar('?', "long", &longFlag, false, "")
