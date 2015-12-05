@@ -136,7 +136,7 @@ func (s *Suite) TestMkShellLine_checkCommandUse(c *check.C) {
 	G.mkContext = newMkContext()
 	G.mkContext.target = "do-install"
 
-	shline := NewMkShellLine(s.DummyLine())
+	shline := NewMkShellLine(NewLine("fname", "1", "dummy", nil))
 
 	shline.checkCommandUse("sed")
 
