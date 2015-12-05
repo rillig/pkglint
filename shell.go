@@ -5,7 +5,6 @@ package main
 import (
 	"path"
 	"strings"
-	"unicode"
 )
 
 const (
@@ -114,13 +113,12 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 		line.warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	rest := shellword
+	repl := NewPrefixReplacer(shellword)
 	state := swstPlain
 outer:
-	for rest != "" {
-		_ = G.opts.DebugShell && line.debugf("shell state %s: %q", state, rest)
+	for repl.rest != "" {
+		_ = G.opts.DebugShell && line.debugf("shell state %s: %q", state, repl.rest)
 
-		var m []string
 		switch {
 		// When parsing inside backticks, it is more
 		// reasonable to check the whole shell command
@@ -128,14 +126,14 @@ outer:
 		// make(1) variable.
 		case state == swstBackt || state == swstDquotBackt:
 			var backtCommand string
-			backtCommand, rest, state = msline.unescapeBackticks(shellword, rest, state)
+			backtCommand, state = msline.unescapeBackticks(shellword, repl, state)
 			msline.checkShelltext(backtCommand)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
-		case replacePrefix(&rest, &m, `^\$\{(`+reVarnameDirect+`|@)(:[^\{]+)?\}`),
-			replacePrefix(&rest, &m, `^\$\((`+reVarnameDirect+`|@])(:[^\)]+)?\)`),
-			replacePrefix(&rest, &m, `^\$([\w@])()`):
-			varname, mod := m[1], m[2]
+		case repl.startsWith(`^\$\{(` + reVarnameDirect + `|@)(:[^\{]+)?\}`),
+			repl.startsWith(`^\$\((` + reVarnameDirect + `|@])(:[^\)]+)?\)`),
+			repl.startsWith(`^\$([\w@])()`):
+			varname, mod := repl.m[1], repl.m[2]
 
 			if varname == "@" {
 				line.warnf("Please use \"${.TARGET}\" instead of \"$@\".")
@@ -178,16 +176,16 @@ outer:
 		// The syntax of the variable modifiers can get quite
 		// hairy. In lack of motivation, we just skip anything
 		// complicated, hoping that at least the braces are balanced.
-		case replacePrefix(&rest, &m, `^\$\{`):
+		case repl.startsWith(`^\$\{`):
 			braces := 1
 		skip:
-			for rest != "" && braces > 0 {
+			for repl.rest != "" && braces > 0 {
 				switch {
-				case replacePrefix(&rest, &m, `^\}`):
+				case repl.startsWith(`^\}`):
 					braces--
-				case replacePrefix(&rest, &m, `^\{`):
+				case repl.startsWith(`^\{`):
 					braces++
-				case replacePrefix(&rest, &m, `^[^{}]+`):
+				case repl.startsWith(`^[^{}]+`):
 				// skip
 				default:
 					break skip
@@ -196,18 +194,18 @@ outer:
 
 		case state == swstPlain:
 			switch {
-			case replacePrefix(&rest, &m, `^[!#\%&\(\)*+,\-.\/0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
-				replacePrefix(&rest, &m, `^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)`):
-			case replacePrefix(&rest, &m, `^'`):
+			case repl.startsWith(`^[!#\%&\(\)*+,\-.\/0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
+				repl.startsWith(`^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)`):
+			case repl.startsWith(`^'`):
 				state = swstSquot
-			case replacePrefix(&rest, &m, `^"`):
+			case repl.startsWith(`^"`):
 				state = swstDquot
-			case replacePrefix(&rest, &m, "^`"):
+			case repl.startsWith("^`"):
 				state = swstBackt
-			case replacePrefix(&rest, &m, `^\$\$([0-9A-Z_a-z]+|\#)`),
-				replacePrefix(&rest, &m, `^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
-				replacePrefix(&rest, &m, `^\$\$(\$)\$`):
-				shvarname := m[1]
+			case repl.startsWith(`^\$\$([0-9A-Z_a-z]+|\#)`),
+				repl.startsWith(`^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
+				repl.startsWith(`^\$\$(\$)\$`):
+				shvarname := repl.m[1]
 				if G.opts.WarnQuoting && checkQuoting && msline.variableNeedsQuoting(shvarname) {
 					line.warnf("Unquoted shell variable %q.", shvarname)
 					line.explain(
@@ -224,19 +222,19 @@ outer:
 						"\tcp \"$fname\" /tmp",
 						"\t# copies one file, as intended")
 				}
-			case replacePrefix(&rest, &m, `^\$@`):
+			case repl.startsWith(`^\$@`):
 				line.warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
 				line.explain(
 					"It is more readable and prevents confusion with the shell variable of",
 					"the same name.")
 
-			case replacePrefix(&rest, &m, `^\$\$@`):
+			case repl.startsWith(`^\$\$@`):
 				line.warnf("The $@ shell variable should only be used in double quotes.")
 
-			case replacePrefix(&rest, &m, `^\$\$\?`):
+			case repl.startsWith(`^\$\$\?`):
 				line.warnf("The $? shell variable is often not available in \"set -e\" mode.")
 
-			case replacePrefix(&rest, &m, `^\$\$\(`):
+			case repl.startsWith(`^\$\$\(`):
 				line.warnf("Invoking subshells via $(...) is not portable enough.")
 				line.explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
@@ -248,11 +246,11 @@ outer:
 
 		case state == swstSquot:
 			switch {
-			case replacePrefix(&rest, &m, `^'`):
+			case repl.startsWith(`^'`):
 				state = swstPlain
-			case replacePrefix(&rest, &m, `^[^\$\']+`):
+			case repl.startsWith(`^[^\$\']+`):
 				// just skip
-			case replacePrefix(&rest, &m, `^\$\$`):
+			case repl.startsWith(`^\$\$`):
 				// just skip
 			default:
 				break outer
@@ -260,22 +258,22 @@ outer:
 
 		case state == swstDquot:
 			switch {
-			case replacePrefix(&rest, &m, `^"`):
+			case repl.startsWith(`^"`):
 				state = swstPlain
-			case replacePrefix(&rest, &m, "^`"):
+			case repl.startsWith("^`"):
 				state = swstDquotBackt
-			case replacePrefix(&rest, &m, "^[^$\"\\\\`]+"):
+			case repl.startsWith("^[^$\"\\\\`]+"):
 				// just skip
-			case replacePrefix(&rest, &m, "^\\\\(?:[\\\\\"`]|\\$\\$)"):
+			case repl.startsWith("^\\\\(?:[\\\\\"`]|\\$\\$)"):
 				// just skip
-			case replacePrefix(&rest, &m, `^\$\$\{([0-9A-Za-z_]+)\}`),
-				replacePrefix(&rest, &m, `^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):
-				shvarname := m[1]
+			case repl.startsWith(`^\$\$\{([0-9A-Za-z_]+)\}`),
+				repl.startsWith(`^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):
+				shvarname := repl.m[1]
 				_ = G.opts.DebugShell && line.debugf("checklineMkShellword: found double-quoted variable %q.", shvarname)
-			case replacePrefix(&rest, &m, `^\$\$`):
+			case repl.startsWith(`^\$\$`):
 				line.warnf("Unquoted $ or strange shell variable found.")
-			case replacePrefix(&rest, &m, `^\\(.)`):
-				char := m[1]
+			case repl.startsWith(`^\\(.)`):
+				char := repl.m[1]
 				line.warnf("Please use \"%s\" instead of \"%s\".", "\\\\"+char, "\\"+char)
 				line.explain(
 					"Although the current code may work, it is not good style to rely on",
@@ -288,8 +286,8 @@ outer:
 		}
 	}
 
-	if strings.TrimSpace(rest) != "" {
-		line.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, rest, shellword)
+	if strings.TrimSpace(repl.rest) != "" {
+		line.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, repl.rest, shellword)
 	}
 }
 
@@ -298,27 +296,26 @@ outer:
 // before a dollar, a backslash or a backtick.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-func (msline *MkShellLine) unescapeBackticks(shellword, rest string, state ShellwordState) (unescaped, newRest string, newState ShellwordState) {
+func (msline *MkShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, state ShellwordState) (unescaped string, newState ShellwordState) {
 	line := msline.line
-	var m []string
-	for rest != "" {
+	for repl.rest != "" {
 		switch {
-		case replacePrefix(&rest, &m, "^`"):
+		case repl.startsWith("^`"):
 			if state == swstBackt {
 				state = swstPlain
 			} else {
 				state = swstDquot
 			}
-			return unescaped, rest, state
+			return unescaped, state
 
-		case replacePrefix(&rest, &m, "^\\\\([\\\\`$])"):
-			unescaped += m[1]
+		case repl.startsWith("^\\\\([\\\\`$])"):
+			unescaped += repl.m[1]
 
-		case replacePrefix(&rest, &m, `^(\\)`):
+		case repl.startsWith(`^(\\)`):
 			line.warnf("Backslashes should be doubled inside backticks.")
-			unescaped += m[1]
+			unescaped += repl.m[1]
 
-		case state == swstDquotBackt && replacePrefix(&rest, &m, `^"`):
+		case state == swstDquotBackt && repl.startsWith(`^"`):
 			line.warnf("Double quotes inside backticks inside double quotes are error prone.")
 			line.explain(
 				"According to the SUSv3, they produce undefined results.",
@@ -326,15 +323,15 @@ func (msline *MkShellLine) unescapeBackticks(shellword, rest string, state Shell
 				"See the paragraph starting \"Within the backquoted ...\" in",
 				"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
 
-		case replacePrefix(&rest, &m, "^([^\\\\`]+)"):
-			unescaped += m[1]
+		case repl.startsWith("^([^\\\\`]+)"):
+			unescaped += repl.m[1]
 
 		default:
-			line.errorf("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, rest)
+			line.errorf("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, repl.rest)
 		}
 	}
-	line.errorf("Unfinished backquotes: rest=%q", rest)
-	return unescaped, rest, state
+	line.errorf("Unfinished backquotes: rest=%q", repl.rest)
+	return unescaped, state
 }
 
 func (msline *MkShellLine) variableNeedsQuoting(shvarname string) bool {
@@ -376,18 +373,16 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 		line.notef("You don't need to use \"-\" before %q.", cmd)
 	}
 
-	rest := shelltext
-
 	setE := false
-	var m []string
-	if replacePrefix(&rest, &m, `^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
-		hidden, macro := m[1], m[2]
-		msline.checkLineStart(hidden, macro, rest, &setE)
+	repl := NewPrefixReplacer(shelltext)
+	if repl.startsWith(`^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
+		hidden, macro := repl.m[1], repl.m[2]
+		msline.checkLineStart(hidden, macro, repl.rest, &setE)
 	}
 
 	state := scstStart
-	for replacePrefix(&rest, &m, reShellword) {
-		shellword := m[1]
+	for repl.startsWith(reShellword) {
+		shellword := repl.m[1]
 
 		_ = G.opts.DebugShell && line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
 
@@ -420,8 +415,9 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 		state = nextState(line, state, shellword)
 	}
 
-	if !matches(rest, `^\s*$`) {
-		line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, rest, shelltext)
+	repl.startsWith(`^\s+`)
+	if repl.rest != "" {
+		line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, repl.rest, shelltext)
 	}
 
 }
@@ -866,12 +862,10 @@ func nextState(line *Line, state scState, shellword string) scState {
 func splitIntoShellwords(line *Line, text string) ([]string, string) {
 	var words []string
 
-	rest := text
-	var m []string
-	for replacePrefix(&rest, &m, reShellword) {
-		words = append(words, m[1])
+	repl := NewPrefixReplacer(text)
+	for repl.startsWith(reShellword) {
+		words = append(words, repl.m[1])
 	}
-
-	rest = strings.TrimLeftFunc(rest, unicode.IsSpace)
-	return words, rest
+	repl.startsWith(`^\s+`)
+	return words, repl.rest
 }
