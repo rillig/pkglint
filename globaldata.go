@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-// Constant data that is loaded once.
+// GlobalData contains data describing pkgsrc as a whole.
 type GlobalData struct {
 	pkgsrcdir           string              // Relative to the current working directory.
 	masterSiteUrls      map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
@@ -27,7 +27,7 @@ type GlobalData struct {
 	vartypes            map[string]*Vartype // varcanon => type
 }
 
-// A change entry from doc/CHANGES-*
+// Change is a change entry from the `doc/CHANGES-*` files.
 type Change struct {
 	line    *Line
 	action  string
@@ -37,7 +37,7 @@ type Change struct {
 	date    string
 }
 
-// From the doc/TODO file.
+// SuggestedUpdate is from the `doc/TODO` file.
 type SuggestedUpdate struct {
 	line    *Line
 	pkgname string
