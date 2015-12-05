@@ -8,17 +8,6 @@ import (
 	"unicode"
 )
 
-func checklineMkShellword(line *Line, word string, checkQuoting bool) {
-	NewMkShellLine(line).checkShellword(word, checkQuoting)
-}
-func checklineMkShellcmdUse(line *Line, shellcmd string) {
-	NewMkShellLine(line).checkCommandUse(shellcmd)
-}
-func checklineMkShellcmd(line *Line, shellcmd string) {
-	NewMkLine(line).checkText(shellcmd)
-	NewMkShellLine(line).checkShelltext(shellcmd)
-}
-
 const (
 	reMkShellvaruse = `(?:^|[^\$])\$\$\{?(\w+)\}?`
 	reVarnameDirect = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
@@ -525,7 +514,7 @@ func (ctx *ShelltextContext) handleTool() bool {
 		ctx.line.warnf("Please use \"${%s}\" instead of %q.", G.globalData.vartools[shellword], shellword)
 	}
 
-	checklineMkShellcmdUse(ctx.line, shellword)
+	NewMkShellLine(ctx.line).checkCommandUse(shellword)
 	return true
 }
 
@@ -554,12 +543,12 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 			if !G.mkContext.tools[toolname] {
 				ctx.line.warnf("The %q tool is used but not added to USE_TOOLS.", toolname)
 			}
-			checklineMkShellcmdUse(ctx.line, shellword)
+			NewMkShellLine(ctx.line).checkCommandUse(shellword)
 			return true
 		}
 
 		if vartype := getVariableType(ctx.line, varname); vartype != nil && vartype.checker.name == "ShellCommand" {
-			checklineMkShellcmdUse(ctx.line, shellword)
+			NewMkShellLine(ctx.line).checkCommandUse(shellword)
 			return true
 		}
 

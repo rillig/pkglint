@@ -541,7 +541,7 @@ func (ml *MkLine) checkVartype(varname, op, value, comment string) {
 		for _, word := range words {
 			ml.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 			if vartype.kindOfList != lkSpace {
-				checklineMkShellword(line, word, true)
+				NewMkShellLine(ml.line).checkShellword(word, true)
 			}
 		}
 	}

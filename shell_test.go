@@ -104,23 +104,23 @@ func (s *Suite) TestMkShellLine_CheckShelltext_InternalError2(c *check.C) {
 func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
-	line := NewLine("fname", "1", "# dummy", nil)
+	msline := NewMkShellLine(NewLine("fname", "1", "# dummy", nil))
 
 	c.Check(matches("${list}", `^`+reVarnameDirect+`$`), equals, false)
 
-	checklineMkShellword(line, "${${list}}", false)
+	msline.checkShellword("${${list}}", false)
 
 	c.Check(s.Output(), equals, "")
 
-	checklineMkShellword(line, "\"$@\"", false)
+	msline.checkShellword("\"$@\"", false)
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"${.TARGET}\" instead of \"$@\".\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShellword_InternalError(c *check.C) {
-	line := NewLine("fname", "1", "# dummy", nil)
+	msline := NewMkShellLine(NewLine("fname", "1", "# dummy", nil))
 
-	checklineMkShellword(line, "/.*~$$//g", false)
+	msline.checkShellword("/.*~$$//g", false)
 
 	c.Check(s.Output(), equals, "ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"$$//g\", shellword=\"/.*~$$//g\"\n")
 }
@@ -131,7 +131,9 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 	G.mkContext = newMkContext()
 	line := NewLine("fname", "3", "# dummy", nil)
 
-	checklineMkShellcmd(line, "echo \"hello, world\"")
+	shellcmd := "echo \"hello, world\""
+	NewMkLine(line).checkText(shellcmd)
+	NewMkShellLine(line).checkShelltext(shellcmd)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:3: The \"echo\" tool is used but not added to USE_TOOLS.\n"+
