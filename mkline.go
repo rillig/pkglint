@@ -634,3 +634,20 @@ func (ml *MkLine) checkText(text string) {
 		}
 	}
 }
+
+func (ml *MkLine) checkAbsolutePathname(text string) {
+	defer tracecall("checklineMkAbsolutePathname", text)()
+
+	// In the GNU coding standards, DESTDIR is defined as a (usually
+	// empty) prefix that can be used to install files to a different
+	// location from what they have been built for. Therefore
+	// everything following it is considered an absolute pathname.
+	//
+	// Another context where absolute pathnames usually appear is in
+	// assignments like "bindir=/bin".
+	if m, path := match1(text, `(?:^|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
+		if matches(path, `^/\w`) {
+			checkwordAbsolutePathname(ml.line, path)
+		}
+	}
+}

@@ -528,7 +528,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 		shellwords, _ := splitIntoShellwords(line, addedText)
 		for _, shellword := range shellwords {
 			if !hasPrefix(shellword, "#") {
-				checklineMkAbsolutePathname(line, shellword)
+				NewMkLine(line).checkAbsolutePathname(shellword)
 			}
 		}
 	case ftSource:

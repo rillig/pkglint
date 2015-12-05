@@ -410,7 +410,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 		st.checkCommandStart()
 		st.checkConditionalCd()
 		if state != scstPaxS && state != scstSedE && state != scstCaseLabel {
-			checklineMkAbsolutePathname(line, shellword)
+			NewMkLine(line).checkAbsolutePathname(shellword)
 		}
 		st.checkAutoMkdirs()
 		st.checkInstallMulti()
