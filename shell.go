@@ -9,14 +9,14 @@ import (
 )
 
 func checklineMkShellword(line *Line, word string, checkQuoting bool) {
-	NewMkShellLine(line).checklineMkShellword(word, checkQuoting)
+	NewMkShellLine(line).checkShellword(word, checkQuoting)
 }
 func checklineMkShellcmdUse(line *Line, shellcmd string) {
 	NewMkShellLine(line).checkCommandUse(shellcmd)
 }
 func checklineMkShellcmd(line *Line, shellcmd string) {
 	NewMkLine(line).checkText(shellcmd)
-	NewMkShellLine(line).checklineMkShelltext(shellcmd)
+	NewMkShellLine(line).checkShelltext(shellcmd)
 }
 
 const (
@@ -92,7 +92,7 @@ func NewMkShellLine(line *Line) *MkShellLine {
 	return &MkShellLine{line}
 }
 
-func (msline *MkShellLine) checklineMkShellword(shellword string, checkQuoting bool) {
+func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	defer tracecall("MkShellLine.checklineMkShellword", shellword, checkQuoting)()
 
 	if shellword == "" || hasPrefix(shellword, "#") {
@@ -180,7 +180,7 @@ outer:
 			line.errorf("Unfinished backquotes: rest=%q", rest)
 
 		endOfBackticks:
-			msline.checklineMkShelltext(stripped)
+			msline.checkShelltext(stripped)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case replacePrefix(&rest, &m, `^\$\{(`+reVarnameDirect+`|@)(:[^\{]+)?\}`),
@@ -360,7 +360,7 @@ type ShelltextContext struct {
 	shellword string
 }
 
-func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
+func (msline *MkShellLine) checkShelltext(shelltext string) {
 	defer tracecall("MkShellLine.checklineMkShelltext", shelltext)()
 
 	line := msline.line
@@ -403,7 +403,7 @@ func (msline *MkShellLine) checklineMkShelltext(shelltext string) {
 				state != scstForCont &&
 				state != scstSetCont &&
 				!(state == scstStart && matches(shellword, reShVarassign))
-			msline.checklineMkShellword(shellword, quotingNecessary)
+			msline.checkShellword(shellword, quotingNecessary)
 		}
 
 		st := &ShelltextContext{line, state, shellword}

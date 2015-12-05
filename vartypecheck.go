@@ -573,7 +573,7 @@ func (cv *VartypeCheck) SedCommands() {
 }
 
 func (cv *VartypeCheck) ShellCommand() {
-	NewMkShellLine(cv.line).checklineMkShelltext(cv.value)
+	NewMkShellLine(cv.line).checkShelltext(cv.value)
 }
 
 func (cv *VartypeCheck) ShellWord() {
