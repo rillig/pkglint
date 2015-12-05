@@ -29,11 +29,11 @@ func checklinesDistinfo(lines []*Line) {
 }
 
 type distinfoLinesChecker struct {
-	fname       string
-	patchdir    string // Relative to G.currentDir
-	isCommitted bool
+	distinfoFilename    string
+	patchdir            string // Relative to G.currentDir
+	distinfoIsCommitted bool
 
-	patches          map[string]bool
+	patches          map[string]bool // "patch-aa" => true
 	previousFilename string
 	isPatch          bool
 	algorithms       []string
@@ -49,21 +49,21 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 		if i < 2 {
 			continue
 		}
-		m, alg, fname, hash := match3(line.text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
+		m, alg, filename, hash := match3(line.text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
 		if !m {
 			line.errorf("Invalid line.")
 			continue
 		}
 
-		if fname != ck.previousFilename {
-			ck.onFilenameChange(line, fname)
+		if filename != ck.previousFilename {
+			ck.onFilenameChange(line, filename)
 		}
 		ck.algorithms = append(ck.algorithms, alg)
 
-		ck.checkGlobalMismatch(line, fname, alg, hash)
-		ck.checkUncommittedPatch(line, ck.patchdir+"/"+fname, hash)
+		ck.checkGlobalMismatch(line, filename, alg, hash)
+		ck.checkUncommittedPatch(line, filename, hash)
 	}
-	ck.onFilenameChange(NewLine(ck.fname, "EOF", "", nil), "")
+	ck.onFilenameChange(NewLine(ck.distinfoFilename, "EOF", "", nil), "")
 }
 
 func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
@@ -86,10 +86,10 @@ func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
 	ck.algorithms = nil
 }
 
-func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, fname, distinfoSha1Hex string) {
-	patchBytes, err := ioutil.ReadFile(G.currentDir + "/" + fname)
+func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFname, distinfoSha1Hex string) {
+	patchBytes, err := ioutil.ReadFile(G.currentDir + "/" + patchFname)
 	if err != nil {
-		line.errorf("%s does not exist.", fname)
+		line.errorf("%s does not exist.", patchFname)
 		return
 	}
 
@@ -102,18 +102,21 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, fname, distinfoSha1He
 	}
 	fileSha1Hex := sprintf("%x", h.Sum(nil))
 	if distinfoSha1Hex != fileSha1Hex {
-		line.errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", fname, distinfoSha1Hex, fileSha1Hex, confMake)
+		line.errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
 	}
 }
 
 func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	files, err := ioutil.ReadDir(G.currentDir + "/" + ck.patchdir)
 	if err != nil {
-		for _, file := range files {
-			patch := file.Name()
-			if !ck.patches[patch] {
-				errorf(ck.fname, NO_LINES, "patch is not recorded. Run \"%s makepatchsum\".", confMake)
-			}
+		_ = G.opts.DebugUnchecked && debugf(ck.distinfoFilename, NO_LINES, "Cannot read patchesDir %q: %s", ck.patchdir, err)
+		return
+	}
+
+	for _, file := range files {
+		patch := file.Name()
+		if !ck.patches[patch] {
+			errorf(ck.distinfoFilename, NO_LINES, "patch %q is not recorded. Run \"%s makepatchsum\".", ck.patchdir+"/"+patch, confMake)
 		}
 	}
 }
@@ -134,12 +137,13 @@ func (ck *distinfoLinesChecker) checkGlobalMismatch(line *Line, fname, alg, hash
 	}
 }
 
-func (ck *distinfoLinesChecker) checkUncommittedPatch(line *Line, relFname, sha1Hash string) {
+func (ck *distinfoLinesChecker) checkUncommittedPatch(line *Line, patchName, sha1Hash string) {
 	if ck.isPatch {
-		if ck.isCommitted && !isCommitted(G.currentDir+"/"+relFname) {
-			line.warnf("%s is registered in distinfo but not added to CVS.", relFname)
+		patchFname := ck.patchdir + "/" + patchName
+		if ck.distinfoIsCommitted && !isCommitted(G.currentDir+"/"+patchFname) {
+			line.warnf("%s is registered in distinfo but not added to CVS.", patchFname)
 		}
-		ck.checkPatchSha1(line, relFname, sha1Hash)
-		ck.patches[relFname] = true
+		ck.checkPatchSha1(line, patchFname, sha1Hash)
+		ck.patches[patchName] = true
 	}
 }

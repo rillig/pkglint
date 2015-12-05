@@ -59,3 +59,22 @@ func (s *Suite) TestChecklinesDistinfo_UncommittedPatch(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: "+s.tmpdir+"/distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.\n")
 }
+
+func (s *Suite) TestChecklinesDistinfo_UnrecordedPatches(c *check.C) {
+	s.CreateTmpFile(c, "patches/patch-aa", "")
+	s.CreateTmpFile(c, "patches/patch-src-Makefile", "")
+	G.currentDir = s.tmpdir
+
+	checklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
+		"$"+"NetBSD$",
+		"",
+		"SHA1 (distfile.tar.gz) = ...",
+		"RMD160 (distfile.tar.gz) = ...",
+		"SHA512 (distfile.tar.gz) = ...",
+		"Size (distfile.tar.gz) = 1024 bytes"))
+
+	c.Check(s.Output(), equals, sprintf(""+
+		"ERROR: %[1]s: patch \"patches/patch-aa\" is not recorded. Run \"%s makepatchsum\".\n"+
+		"ERROR: %[1]s: patch \"patches/patch-src-Makefile\" is not recorded. Run \"%s makepatchsum\".\n",
+		s.tmpdir+"/distinfo", confMake))
+}
