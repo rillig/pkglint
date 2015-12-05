@@ -22,7 +22,7 @@ type GlobalData struct {
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	lastChange          map[string]*Change  //
-	userDefinedVars     map[string]*Line    //
+	userDefinedVars     map[string]*Line    // varname => line (after calling parselineMk on it)
 	deprecated          map[string]string   //
 	vartypes            map[string]*Vartype // varcanon => type
 }
@@ -357,7 +357,7 @@ func (gd *GlobalData) loadUserDefinedVars() {
 	gd.userDefinedVars = make(map[string]*Line)
 	for _, line := range lines {
 		parselineMk(line)
-		if m, varname, _, _, _ := matchVarassign(line.text); m {
+		if varname, ok := line.extra["varname"].(string); ok {
 			gd.userDefinedVars[varname] = line
 		}
 	}
