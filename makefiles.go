@@ -168,6 +168,10 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 func parselineMk(line *Line) {
 	defer tracecall("parselineMk", line.text)()
 
+	if len(line.extra) != 0 {
+		return
+	}
+	
 	text := line.text
 
 	if m, varname, op, value, comment := matchVarassign(text); m {

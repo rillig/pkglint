@@ -12,6 +12,7 @@ type MkLine struct {
 }
 
 func NewMkLine(line *Line) *MkLine {
+	parselineMk(line)
 	return &MkLine{line}
 }
 

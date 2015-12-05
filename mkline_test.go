@@ -7,7 +7,7 @@ import (
 func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	s.UseCommandLine(c, "-Wtypes", "-Dunchecked")
 	G.globalData.InitVartypes()
-	ml := NewMkLine(NewLine("fname", "1", "dummy", nil))
+	ml := NewMkLine(NewLine("fname", "1", "COMMENT=\tA nice package", nil))
 
 	vartype1 := G.globalData.vartypes["COMMENT"]
 	c.Assert(vartype1, check.NotNil)
@@ -27,7 +27,7 @@ func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 
 func (s *Suite) TestChecklineMkVartype(c *check.C) {
 	G.globalData.InitVartypes()
-	ml := NewMkLine(NewLine("fname", "1", "dummy", nil))
+	ml := NewMkLine(NewLine("fname", "1", "DISTNAME=gcc-${GCC_VERSION}", nil))
 
 	ml.checkVartype("DISTNAME", "=", "gcc-${GCC_VERSION}", "")
 }
@@ -78,7 +78,7 @@ func (s *Suite) TestChecklineMkVaralign(c *check.C) {
 }
 
 func (s *Suite) TestMkLine_CheckAbsolutePathname(c *check.C) {
-	ml := NewMkLine(NewLine("Makefile", "1", "dummy", nil))
+	ml := NewMkLine(NewLine("Makefile", "1", "# dummy", nil))
 
 	ml.checkAbsolutePathname( "bindir=/bin")
 	ml.checkAbsolutePathname( "bindir=/../lib")
