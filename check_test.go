@@ -38,7 +38,7 @@ func (s *Suite) Output() string {
 }
 
 func (s *Suite) OutputCleanTmpdir() string {
-	return strings.Replace(s.Output(), s.tmpdir+"/", "", -1)
+	return strings.Replace(s.Output(), s.tmpdir, "~", -1)
 }
 
 func (s *Suite) NewLines(fname string, lines ...string) []*Line {
