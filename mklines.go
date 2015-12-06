@@ -77,7 +77,7 @@ func (mklines *MkLines) check() {
 			mklines.checklinePreproc(ctx, mkline, indent, directive, args)
 
 		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
-			mklines.checklineDependencyRule(ctx,mkline,targets,dependencies,allowedTargets)
+			mklines.checklineDependencyRule(ctx, mkline, targets, dependencies, allowedTargets)
 
 		} else if m, directive := match1(text, `^\.\s*(\S*)`); m {
 			mkline.errorf("Unknown directive \".%s\".", directive)
@@ -257,7 +257,7 @@ func (mklines *MkLines) checklinePreproc(ctx *MkContext, mkline *MkLine, indent,
 	}
 }
 
-func (mklines *MkLines) checklineDependencyRule(ctx*MkContext,mkline *MkLine,targets,dependencies string, allowedTargets map[string]bool) {
+func (mklines *MkLines) checklineDependencyRule(ctx *MkContext, mkline *MkLine, targets, dependencies string, allowedTargets map[string]bool) {
 	_ = G.opts.DebugMisc && mkline.debugf("targets=%q, dependencies=%q", targets, dependencies)
 	ctx.target = targets
 

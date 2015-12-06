@@ -267,7 +267,15 @@ func NewPrefixReplacer(s string) *PrefixReplacer {
 	return &PrefixReplacer{s, nil}
 }
 
-func (pr *PrefixReplacer) startsWith(re string) bool {
+func (pr *PrefixReplacer) advanceStr(prefix string) bool {
+	pr.m = nil
+	if hasPrefix(pr.rest, prefix) {
+		pr.rest = pr.rest[len(prefix):]
+		return true
+	}
+	return false
+}
+func (pr *PrefixReplacer) advanceRegexp(re string) bool {
 	if m := regcomp(re).FindStringSubmatch(pr.rest); m != nil {
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
