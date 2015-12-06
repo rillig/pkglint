@@ -8,7 +8,7 @@ import (
 )
 
 type MkLine struct {
-	line *Line
+	*Line
 }
 
 func NewMkLine(line *Line) *MkLine {
@@ -16,20 +16,19 @@ func NewMkLine(line *Line) *MkLine {
 	return &MkLine{line}
 }
 
-func (ml *MkLine) checkVardef(varname, op string) {
+func (mkline *MkLine) checkVardef(varname, op string) {
 	defer tracecall("MkLine.checkVardef", varname, op)()
 
-	defineVar(ml, varname)
-	ml.checkVardefPermissions(varname, op)
+	defineVar(mkline, varname)
+	mkline.checkVardefPermissions(varname, op)
 }
 
-func (ml *MkLine) checkVardefPermissions(varname, op string) {
+func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	if !G.opts.WarnPerm {
 		return
 	}
 
-	line := ml.line
-	perms := getVariablePermissions(line, varname)
+	perms := getVariablePermissions(mkline.Line, varname)
 	var needed string
 	switch op {
 	case "=", "!=", ":=":
@@ -41,9 +40,9 @@ func (ml *MkLine) checkVardefPermissions(varname, op string) {
 	}
 
 	if !contains(perms, needed) {
-		line.warnf("Permission %q requested for %s, but only { %s } are allowed.",
+		mkline.warnf("Permission %q requested for %s, but only { %s } are allowed.",
 			ReadableVartypePermissions(needed), varname, ReadableVartypePermissions(perms))
-		line.explain(
+		mkline.explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
 			"",
 			"The available permissions are:",
@@ -60,37 +59,36 @@ func (ml *MkLine) checkVardefPermissions(varname, op string) {
 	}
 }
 
-func (ml *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext) {
-	defer tracecall("MkLine.checkVaruse", ml.line, varname, mod, *vuc)()
+func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext) {
+	defer tracecall("MkLine.checkVaruse", mkline, varname, mod, *vuc)()
 
-	line := ml.line
-	vartype := getVariableType(line, varname)
+	vartype := getVariableType(mkline.Line, varname)
 	if G.opts.WarnExtra &&
 		(vartype == nil || vartype.guessed == guGuessed) &&
 		!varIsUsed(varname) &&
 		!(G.mkContext != nil && G.mkContext.forVars[varname]) {
-		line.warnf("%s is used but not defined. Spelling mistake?", varname)
+		mkline.warnf("%s is used but not defined. Spelling mistake?", varname)
 	}
 
-	ml.checkVarusePermissions(varname, vuc)
+	mkline.checkVarusePermissions(varname, vuc)
 
 	if varname == "LOCALBASE" && !G.isInfrastructure {
-		ml.warnVaruseLocalbase()
+		mkline.warnVaruseLocalbase()
 	}
 
-	needsQuoting := variableNeedsQuoting(line, varname, vuc)
+	needsQuoting := variableNeedsQuoting(mkline.Line, varname, vuc)
 
 	if vuc.shellword == vucQuotFor {
-		ml.checkVaruseFor(varname, vartype, needsQuoting)
+		mkline.checkVaruseFor(varname, vartype, needsQuoting)
 	}
 
 	if G.opts.WarnQuoting && vuc.shellword != vucQuotUnknown && needsQuoting != nqDontKnow {
-		ml.checkVaruseShellword(varname, vartype, vuc, mod, needsQuoting)
+		mkline.checkVaruseShellword(varname, vartype, vuc, mod, needsQuoting)
 	}
 
 	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mkContext.buildDefs[varname] {
-		line.warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
-		line.explain(
+		mkline.warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
+		mkline.explain(
 			"When a pkgsrc package is built, many things can be configured by the",
 			"pkgsrc user in the mk.conf file. All these configurations should be",
 			"recorded in the binary package, so the package can be reliably rebuilt.",
@@ -99,13 +97,12 @@ func (ml *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext) {
 	}
 }
 
-func (ml *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext) {
+func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext) {
 	if !G.opts.WarnPerm {
 		return
 	}
 
-	line := ml.line
-	perms := getVariablePermissions(line, varname)
+	perms := getVariablePermissions(mkline.Line, varname)
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -126,8 +123,8 @@ func (ml *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext) {
 	}
 
 	if isLoadTime && !isIndirect {
-		line.warnf("%s should not be evaluated at load time.", varname)
-		line.explain(
+		mkline.warnf("%s should not be evaluated at load time.", varname)
+		mkline.explain(
 			"Many variables, especially lists of something, get their values",
 			"incrementally. Therefore it is generally unsafe to rely on their value",
 			"until it is clear that it will never change again. This point is",
@@ -140,8 +137,8 @@ func (ml *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext) {
 	}
 
 	if isLoadTime && isIndirect {
-		line.warnf("%s should not be evaluated indirectly at load time.", varname)
-		line.explain(
+		mkline.warnf("%s should not be evaluated indirectly at load time.", varname)
+		mkline.explain(
 			"The variable on the left-hand side may be evaluated at load time, but",
 			"the variable on the right-hand side may not. Due to this assignment, it",
 			"might be used indirectly at load-time, when it is not guaranteed to be",
@@ -149,14 +146,13 @@ func (ml *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext) {
 	}
 
 	if !contains(perms, "p") && !contains(perms, "u") {
-		line.warnf("%s may not be used in this file.", varname)
+		mkline.warnf("%s may not be used in this file.", varname)
 	}
 }
 
-func (ml *MkLine) warnVaruseLocalbase() {
-	line := ml.line
-	line.warnf("The LOCALBASE variable should not be used by packages.")
-	line.explain(
+func (mkline *MkLine) warnVaruseLocalbase() {
+	mkline.warnf("The LOCALBASE variable should not be used by packages.")
+	mkline.explain(
 		// from jlam via private mail.
 		"Currently, LOCALBASE is typically used in these cases:",
 		"",
@@ -185,7 +181,7 @@ func (ml *MkLine) warnVaruseLocalbase() {
 		"	CONFIGURE_ENV+= --with-datafiles=${PREFIX}/share/battalion")
 }
 
-func (ml *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
+func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
 	switch {
 	case vartype == nil:
 		// Cannot check anything here.
@@ -197,8 +193,8 @@ func (ml *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting 
 		// Fine, this variable is not supposed to contain special characters.
 
 	default:
-		ml.line.warnf("The variable %s should not be used in .for loops.", varname)
-		ml.line.explain(
+		mkline.warnf("The variable %s should not be used in .for loops.", varname)
+		mkline.explain(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
 			"Therefore only variables that are specifically designed to match this",
@@ -206,7 +202,7 @@ func (ml *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting 
 	}
 }
 
-func (ml *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
+func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
 
 	// In GNU configure scripts, a few variables need to be
 	// passed through the :M* operator before they reach the
@@ -222,17 +218,16 @@ func (ml *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc *Va
 	}
 	correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 
-	line := ml.line
 	if mod == ":M*:Q" && !needMstar {
-		line.notef("The :M* modifier is not needed here.")
+		mkline.notef("The :M* modifier is not needed here.")
 
 	} else if mod != correctMod && needsQuoting == nqYes {
 		if vuc.shellword == vucQuotPlain {
-			line.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+			mkline.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
 		} else {
-			line.warnf("Please use ${%s%s} instead of ${%s%s} and make sure the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
+			mkline.warnf("Please use ${%s%s} instead of ${%s%s} and make sure the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 		}
-		line.explain(
+		mkline.explain(
 			"See the pkgsrc guide, section \"quoting guideline\", for details.")
 	}
 
@@ -255,16 +250,16 @@ func (ml *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc *Va
 
 		switch needsQuoting {
 		case nqNo:
-			line.warnf("The :Q operator should not be used for ${%s} here.", varname)
-			line.explain(expl...)
+			mkline.warnf("The :Q operator should not be used for ${%s} here.", varname)
+			mkline.explain(expl...)
 		case nqDoesntMatter:
-			line.notef("The :Q operator isn't necessary for ${%s} here.", varname)
-			line.explain(expl...)
+			mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
+			mkline.explain(expl...)
 		}
 	}
 }
 
-func (ml *MkLine) checkDecreasingOrder(varname, value string) {
+func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
 	defer tracecall("MkLine.checkDecreasingOrder", varname, value)()
 
 	strversions := splitOnSpace(value)
@@ -272,7 +267,7 @@ func (ml *MkLine) checkDecreasingOrder(varname, value string) {
 	for i, strversion := range strversions {
 		iver, err := strconv.Atoi(strversion)
 		if err != nil || !(iver > 0) {
-			ml.line.errorf("All values for %s must be positive integers.", varname)
+			mkline.errorf("All values for %s must be positive integers.", varname)
 			return
 		}
 		intversions[i] = iver
@@ -280,26 +275,25 @@ func (ml *MkLine) checkDecreasingOrder(varname, value string) {
 
 	for i, ver := range intversions {
 		if i > 0 && ver >= intversions[i-1] {
-			ml.line.warnf("The values for %s should be in decreasing order.", varname)
-			ml.line.explain(
+			mkline.warnf("The values for %s should be in decreasing order.", varname)
+			mkline.explain(
 				"If they aren't, it may be possible that needless versions of packages",
 				"are installed.")
 		}
 	}
 }
 
-func (ml *MkLine) checkVarassign() {
+func (mkline *MkLine) checkVarassign() {
 	defer tracecall("MkLine.checkVarassign")()
 
-	line := ml.line
-	varname := line.extra["varname"].(string)
-	op := line.extra["op"].(string)
-	value := line.extra["value"].(string)
-	comment := line.extra["comment"].(string)
+	varname := mkline.extra["varname"].(string)
+	op := mkline.extra["op"].(string)
+	value := mkline.extra["value"].(string)
+	comment := mkline.extra["comment"].(string)
 	varbase := varnameBase(varname)
 	varcanon := varnameCanon(varname)
 
-	ml.checkVardef(varname, op)
+	mkline.checkVardef(varname, op)
 
 	if G.opts.WarnExtra && op == "?=" && G.pkgContext != nil && !G.pkgContext.seenBsdPrefsMk {
 		switch varbase {
@@ -307,8 +301,8 @@ func (ml *MkLine) checkVarassign() {
 			// FIXME: What about these ones? They occur quite often.
 
 		default:
-			line.warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
-			line.explain(
+			mkline.warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+			mkline.explain(
 				"The ?= operator is used to provide a default value to a variable. In",
 				"pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
 				"file. This file must be included explicitly. If a ?= operator appears",
@@ -319,12 +313,12 @@ func (ml *MkLine) checkVarassign() {
 		}
 	}
 
-	ml.checkText(value)
-	ml.checkVartype(varname, op, value, comment)
+	mkline.checkText(value)
+	mkline.checkVartype(varname, op, value, comment)
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == ":=" && varname == strings.ToLower(varname) {
-		_ = G.opts.DebugUnchecked && line.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
+		_ = G.opts.DebugUnchecked && mkline.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
 
 	} else if !varIsUsed(varname) {
 		if vartypes := G.globalData.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
@@ -332,16 +326,16 @@ func (ml *MkLine) checkVarassign() {
 		} else if deprecated := G.globalData.deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
 		} else {
-			line.warnf("%s is defined but not used. Spelling mistake?", varname)
+			mkline.warnf("%s is defined but not used. Spelling mistake?", varname)
 		}
 	}
 
 	if matches(value, `/etc/rc\.d`) {
-		line.warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
+		mkline.warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
 	if hasPrefix(varname, "_") && !G.isInfrastructure {
-		line.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
+		mkline.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
 	if varname == "PERL5_PACKLIST" && G.pkgContext != nil {
@@ -350,14 +344,14 @@ func (ml *MkLine) checkVarassign() {
 
 			ucvalue, ucguess := strings.ToUpper(value), strings.ToUpper(guess)
 			if ucvalue != ucguess && ucvalue != "${PERL5_SITEARCH}/"+ucguess {
-				line.warnf("Unusual value for PERL5_PACKLIST -- %q expected.", guess)
+				mkline.warnf("Unusual value for PERL5_PACKLIST -- %q expected.", guess)
 			}
 		}
 	}
 
 	if varname == "CONFIGURE_ARGS" && matches(value, `=\$\{PREFIX\}/share/kde`) {
-		line.notef("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
-		line.explain(
+		mkline.notef("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
+		mkline.explain(
 			"That file probably does many things automatically and consistently that",
 			"this package also does. When using kde3.mk, you can probably also leave",
 			"out some explicit dependencies.")
@@ -369,17 +363,17 @@ func (ml *MkLine) checkVarassign() {
 			// The variables mentioned in EVAL_PREFIX will later be
 			// defined by find-prefix.mk. Therefore, they are marked
 			// as known in the current file.
-			G.mkContext.vardef[evalVarname] = ml
+			G.mkContext.vardef[evalVarname] = mkline
 		}
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
-		ml.checkDecreasingOrder(varname, value)
+		mkline.checkDecreasingOrder(varname, value)
 	}
 
 	if comment == "# defined" && !matches(varname, `.*(?:_MK|_COMMON)$`) {
-		line.notef("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
-		line.explain(
+		mkline.notef("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
+		mkline.explain(
 			"The value #defined says something about the state of the variable, but",
 			"not what that _means_. In some cases a variable that is defined means",
 			"\"yes\", in other cases it is an empty list (which is also only the",
@@ -389,23 +383,23 @@ func (ml *MkLine) checkVarassign() {
 
 	if m, revvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
 		if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
-			line.warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
+			mkline.warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
 		}
 	}
 
 	if fix := G.globalData.deprecated[varname]; fix != "" {
-		line.warnf("Definition of %s is deprecated. %s", varname, fix)
+		mkline.warnf("Definition of %s is deprecated. %s", varname, fix)
 	} else if fix := G.globalData.deprecated[varcanon]; fix != "" {
-		line.warnf("Definition of %s is deprecated. %s", varname, fix)
+		mkline.warnf("Definition of %s is deprecated. %s", varname, fix)
 	}
 
 	if hasPrefix(varname, "SITES_") {
-		line.warnf("SITES_* is deprecated. Please use SITES.* instead.")
+		mkline.warnf("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
 	if matches(value, `^[^=]@comment`) {
-		line.warnf("Please don't use @comment in %s.", varname)
-		line.explain(
+		mkline.warnf("Please don't use @comment in %s.", varname)
+		mkline.explain(
 			"Here you are defining a variable containing @comment. As this value",
 			"typically includes a space as the last character you probably also used",
 			"quotes around the variable. This can lead to confusion when adding this",
@@ -432,14 +426,14 @@ func (ml *MkLine) checkVarassign() {
 		time = vucTimeParse
 	}
 
-	usedVars := extractUsedVariables(line, value)
+	usedVars := extractUsedVariables(mkline.Line, value)
 	vuc := &VarUseContext{
 		time,
-		getVariableType(line, varname),
+		getVariableType(mkline.Line, varname),
 		vucQuotUnknown,
 		vucExtentUnknown}
 	for _, usedVar := range usedVars {
-		ml.checkVaruse(usedVar, "", vuc)
+		mkline.checkVaruse(usedVar, "", vuc)
 	}
 }
 
@@ -498,50 +492,49 @@ const reVarnamePlural = "^(?:" +
 	"|TOOLS_NOOP" +
 	")$"
 
-func (ml *MkLine) checkVartype(varname, op, value, comment string) {
+func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 	defer tracecall("MkLine.checkVartype", varname, op, value, comment)()
 
 	if !G.opts.WarnTypes {
 		return
 	}
 
-	line := ml.line
 	varbase := varnameBase(varname)
-	vartype := getVariableType(line, varname)
+	vartype := getVariableType(mkline.Line, varname)
 
 	if op == "+=" {
 		if vartype != nil {
 			if !vartype.mayBeAppendedTo() {
-				line.warnf("The \"+=\" operator should only be used with lists.")
+				mkline.warnf("The \"+=\" operator should only be used with lists.")
 			}
 		} else if !matches(varbase, `^_`) && !matches(varbase, reVarnamePlural) {
-			line.warnf("As %s is modified using \"+=\", its name should indicate plural.", varname)
+			mkline.warnf("As %s is modified using \"+=\", its name should indicate plural.", varname)
 		}
 	}
 
 	switch {
 	case vartype == nil:
 		// Cannot check anything if the type is not known.
-		_ = G.opts.DebugUnchecked && line.debugf("Unchecked variable assignment for %s.", varname)
+		_ = G.opts.DebugUnchecked && mkline.debugf("Unchecked variable assignment for %s.", varname)
 
 	case op == "!=":
-		_ = G.opts.DebugMisc && line.debugf("Use of !=: %q", value)
+		_ = G.opts.DebugMisc && mkline.debugf("Use of !=: %q", value)
 
 	case vartype.kindOfList == lkNone:
-		ml.checkVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)
+		mkline.checkVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 
 	default:
 		var words []string
 		if vartype.kindOfList == lkSpace {
 			words = splitOnSpace(value)
 		} else {
-			words, _ = splitIntoShellwords(line, value)
+			words, _ = splitIntoShellwords(mkline.Line, value)
 		}
 
 		for _, word := range words {
-			ml.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
+			mkline.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 			if vartype.kindOfList != lkSpace {
-				NewMkShellLine(ml.line).checkShellword(word, true)
+				NewMkShellLine(mkline.Line).checkShellword(word, true)
 			}
 		}
 	}
@@ -550,23 +543,23 @@ func (ml *MkLine) checkVartype(varname, op, value, comment string) {
 // The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
 // For some variables (like BuildlinkDepth), the operator influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func (ml *MkLine) checkVartypePrimitive(varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
+func (mkline *MkLine) checkVartypePrimitive(varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
 	defer tracecall("MkLine.checkVartypePrimitive", varname, op, value, comment, isList, guessed)()
 
-	ctx := &VartypeCheck{ml.line, varname, op, value, "", comment, isList, guessed == guGuessed}
-	ctx.valueNovar = ml.withoutMakeVariables(value, isList)
+	ctx := &VartypeCheck{mkline.Line, varname, op, value, "", comment, isList, guessed == guGuessed}
+	ctx.valueNovar = mkline.withoutMakeVariables(value, isList)
 
 	checker.checker(ctx)
 }
 
-func (ml *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) string {
+func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) string {
 	valueNovar := value
 	for {
 		var m []string
 		if m, valueNovar = replaceFirst(valueNovar, `\$\{([^{}]*)\}`, ""); m != nil {
 			varuse := m[1]
 			if !qModifierAllowed && hasSuffix(varuse, ":Q") {
-				ml.line.warnf("The :Q operator should only be used in lists and shell commands.")
+				mkline.warnf("The :Q operator should only be used in lists and shell commands.")
 			}
 		} else {
 			return valueNovar
@@ -574,8 +567,8 @@ func (ml *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) stri
 	}
 }
 
-func (ml *MkLine) checkVaralign() {
-	text := ml.line.text
+func (mkline *MkLine) checkVaralign() {
+	text := mkline.text
 	if m := regcomp(reVarassign).FindStringSubmatchIndex(text); m != nil {
 		varname := text[m[2]:m[3]]
 		space1 := text[m[3]:m[4]]
@@ -583,40 +576,39 @@ func (ml *MkLine) checkVaralign() {
 		align := text[m[5]:m[6]]
 
 		if G.opts.WarnSpace && align != " " && strings.Trim(align, "\t") != "" {
-			ml.line.notef("Alignment of variable values should be done with tabs, not spaces.")
+			mkline.notef("Alignment of variable values should be done with tabs, not spaces.")
 			prefix := varname + space1 + op
 			alignedWidth := tabLength(prefix + align)
 			tabs := ""
 			for tabLength(prefix+tabs) < alignedWidth {
 				tabs += "\t"
 			}
-			ml.line.replace(prefix+align, prefix+tabs)
+			mkline.replace(prefix+align, prefix+tabs)
 		}
 	}
 }
 
-func (ml *MkLine) checkText(text string) {
+func (mkline *MkLine) checkText(text string) {
 	defer tracecall("MkLine.checkText", text)()
 
-	line := ml.line
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
-		line.warnf("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
+		mkline.warnf("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}
 
-	if line.lines == "1" {
-		checklineRcsid(line, `# `, "# ")
+	if mkline.lines == "1" {
+		checklineRcsid(mkline.Line, `# `, "# ")
 	}
 
 	if contains(text, "${WRKSRC}/../") {
-		line.warnf("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
-		line.explain(
+		mkline.warnf("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
+		mkline.explain(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
 			"and INSTALL_DIRS are subdirectories of it.")
 	}
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.
 	if m, flag := match1(text, `\b(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R)\b`); m {
-		line.warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+		mkline.warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
 	}
 
 	rest := text
@@ -635,25 +627,24 @@ func (ml *MkLine) checkText(text string) {
 			instead = G.globalData.deprecated[varcanon]
 		}
 		if instead != "" {
-			line.warnf("Use of %q is deprecated. %s", varname, instead)
+			mkline.warnf("Use of %q is deprecated. %s", varname, instead)
 		}
 	}
 }
 
-func (ml *MkLine) checkIf() {
+func (mkline *MkLine) checkIf() {
 	defer tracecall("MkLine.checkIf")()
 
-	line := ml.line
-	condition := line.extra["args"].(string)
-	tree := parseMkCond(line, condition)
+	condition := mkline.extra["args"].(string)
+	tree := parseMkCond(mkline.Line, condition)
 
 	{
 		var pvarname, ppattern *string
 		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &ppattern)))) {
-			vartype := getVariableType(line, *pvarname)
+			vartype := getVariableType(mkline.Line, *pvarname)
 			if vartype != nil && vartype.checker.IsEnum() {
 				if !matches(*ppattern, `[\$\[*]`) && !vartype.checker.HasEnum(*ppattern) {
-					line.warnf("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())
+					mkline.warnf("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())
 				}
 			}
 			return
@@ -663,7 +654,7 @@ func (ml *MkLine) checkIf() {
 	{
 		var pop, pvarname, pvalue *string
 		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
-			NewMkLine(line).checkVartype(*pvarname, "use", *pvalue, "")
+			mkline.checkVartype(*pvarname, "use", *pvalue, "")
 		}
 	}
 }

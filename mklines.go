@@ -20,7 +20,7 @@ func NewMkLines(lines []*Line) *MkLines {
 }
 
 func (mklines *MkLines) check() {
-	defer tracecall("MkLines.check", mklines.mklines[0].line.fname)()
+	defer tracecall("MkLines.check", mklines.lines[0].fname)()
 
 	allowedTargets := make(map[string]bool)
 	substcontext := new(SubstContext)
@@ -43,41 +43,40 @@ func (mklines *MkLines) check() {
 	// are collected to make the order of the definitions irrelevant.
 
 	for _, mkline := range mklines.mklines {
-		line := mkline.line
-		if line.extra["is_varassign"] == nil {
+		if mkline.extra["is_varassign"] == nil {
 			continue
 		}
 
-		varcanon := line.extra["varcanon"].(string)
+		varcanon := mkline.extra["varcanon"].(string)
 		switch varcanon {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
-			for _, varname := range splitOnSpace(line.extra["value"].(string)) {
+			for _, varname := range splitOnSpace(mkline.extra["value"].(string)) {
 				G.mkContext.buildDefs[varname] = true
-				_ = G.opts.DebugMisc && line.debugf("%q is added to BUILD_DEFS.", varname)
+				_ = G.opts.DebugMisc && mkline.debugf("%q is added to BUILD_DEFS.", varname)
 			}
 
 		case "PLIST_VARS":
-			for _, id := range splitOnSpace(line.extra["value"].(string)) {
+			for _, id := range splitOnSpace(mkline.extra["value"].(string)) {
 				G.mkContext.plistVars["PLIST."+id] = true
-				_ = G.opts.DebugMisc && line.debugf("PLIST.%s is added to PLIST_VARS.", id)
+				_ = G.opts.DebugMisc && mkline.debugf("PLIST.%s is added to PLIST_VARS.", id)
 				useVar(mkline, "PLIST."+id)
 			}
 
 		case "USE_TOOLS":
-			for _, tool := range splitOnSpace(line.extra["value"].(string)) {
+			for _, tool := range splitOnSpace(mkline.extra["value"].(string)) {
 				tool = strings.Split(tool, ":")[0]
 				G.mkContext.tools[tool] = true
-				_ = G.opts.DebugMisc && line.debugf("%s is added to USE_TOOLS.", tool)
+				_ = G.opts.DebugMisc && mkline.debugf("%s is added to USE_TOOLS.", tool)
 			}
 
 		case "SUBST_VARS.*":
-			for _, svar := range splitOnSpace(line.extra["value"].(string)) {
+			for _, svar := range splitOnSpace(mkline.extra["value"].(string)) {
 				useVar(mkline, varnameCanon(svar))
-				_ = G.opts.DebugMisc && line.debugf("varuse %s", svar)
+				_ = G.opts.DebugMisc && mkline.debugf("varuse %s", svar)
 			}
 
 		case "OPSYSVARS":
-			for _, osvar := range splitOnSpace(line.extra["value"].(string)) {
+			for _, osvar := range splitOnSpace(mkline.extra["value"].(string)) {
 				useVar(mkline, osvar+".*")
 				defineVar(mkline, osvar)
 			}
@@ -86,38 +85,36 @@ func (mklines *MkLines) check() {
 
 	// In the second pass, the actual checks are done.
 
-	checklineRcsid(mklines.mklines[0].line, `#\s+`, "# ")
+	checklineRcsid(mklines.lines[0], `#\s+`, "# ")
 
 	for _, mkline := range mklines.mklines {
-		line := mkline.line
-		text := line.text
+		text := mkline.text
 
-		checklineTrailingWhitespace(line)
+		checklineTrailingWhitespace(mkline.Line)
 
-		if line.extra["is_empty"] != nil {
-			substcontext.Finish(NewMkLine(line))
+		if mkline.extra["is_empty"] != nil {
+			substcontext.Finish(mkline)
 
-		} else if line.extra["is_comment"] != nil {
+		} else if mkline.extra["is_comment"] != nil {
 			// No further checks.
 
-		} else if line.extra["is_varassign"] != nil {
-			ml := NewMkLine(line)
-			ml.checkVaralign()
-			ml.checkVarassign()
-			substcontext.Varassign(NewMkLine(line))
+		} else if mkline.extra["is_varassign"] != nil {
+			mkline.checkVaralign()
+			mkline.checkVarassign()
+			substcontext.Varassign(mkline)
 
 		} else if hasPrefix(text, "\t") {
 			shellcmd := text[1:]
-			NewMkLine(line).checkText(shellcmd)
-			NewMkShellLine(line).checkShelltext(shellcmd)
+			mkline.checkText(shellcmd)
+			NewMkShellLine(mkline.Line).checkShelltext(shellcmd)
 
 		} else if m, include, includefile := match2(text, reMkInclude); m {
-			_ = G.opts.DebugInclude && line.debugf("includefile=%s", includefile)
-			checklineRelativePath(line, includefile, include == "include")
+			_ = G.opts.DebugInclude && mkline.debugf("includefile=%s", includefile)
+			checklineRelativePath(mkline.Line, includefile, include == "include")
 
 			if hasSuffix(includefile, "../Makefile") {
-				line.errorf("Other Makefiles must not be included directly.")
-				line.explain(
+				mkline.errorf("Other Makefiles must not be included directly.")
+				mkline.explain(
 					"If you want to include portions of another Makefile, extract",
 					"the common parts and put them into a Makefile.common. After",
 					"that, both this one and the other package should include the",
@@ -125,8 +122,8 @@ func (mklines *MkLines) check() {
 			}
 
 			if includefile == "../../mk/bsd.prefs.mk" {
-				if path.Base(line.fname) == "buildlink3.mk" {
-					line.notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+				if path.Base(mkline.fname) == "buildlink3.mk" {
+					mkline.notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 				}
 				if G.pkgContext != nil {
 					G.pkgContext.seenBsdPrefsMk = true
@@ -138,16 +135,16 @@ func (mklines *MkLines) check() {
 			}
 
 			if matches(includefile, `/x11-links/buildlink3\.mk$`) {
-				line.errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
+				mkline.errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
 			}
 			if matches(includefile, `/jpeg/buildlink3\.mk$`) {
-				line.errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
+				mkline.errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
 			}
 			if matches(includefile, `/intltool/buildlink3\.mk$`) {
-				line.warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
+				mkline.warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 			}
 			if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
-				line.errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
+				mkline.errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
 			}
 
 		} else if matches(text, reMkSysinclude) {
@@ -157,13 +154,13 @@ func (mklines *MkLines) check() {
 				if len(ctx.indentation) > 1 {
 					ctx.popIndent()
 				} else {
-					line.errorf("Unmatched .%s.", directive)
+					mkline.errorf("Unmatched .%s.", directive)
 				}
 			}
 
 			// Check the indentation
 			if indent != strings.Repeat(" ", ctx.indentDepth()) {
-				_ = G.opts.WarnSpace && line.notef("This directive should be indented by %d spaces.", ctx.indentDepth())
+				_ = G.opts.WarnSpace && mkline.notef("This directive should be indented by %d spaces.", ctx.indentDepth())
 			}
 
 			if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
@@ -175,23 +172,23 @@ func (mklines *MkLines) check() {
 
 			reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
 			if matches(directive, reDirectivesWithArgs) && args == "" {
-				line.errorf("\".%s\" requires arguments.", directive)
+				mkline.errorf("\".%s\" requires arguments.", directive)
 
 			} else if !matches(directive, reDirectivesWithArgs) && args != "" {
-				line.errorf("\".%s\" does not take arguments.", directive)
+				mkline.errorf("\".%s\" does not take arguments.", directive)
 
 				if directive == "else" {
-					line.notef("If you meant \"else if\", use \".elif\".")
+					mkline.notef("If you meant \"else if\", use \".elif\".")
 				}
 
 			} else if directive == "if" || directive == "elif" {
-				NewMkLine(line).checkIf()
+				mkline.checkIf()
 
 			} else if directive == "ifdef" || directive == "ifndef" {
 				if matches(args, `\s`) {
-					line.errorf("The \".%s\" directive can only handle _one_ argument.", directive)
+					mkline.errorf("The \".%s\" directive can only handle _one_ argument.", directive)
 				} else {
-					line.warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
+					mkline.warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
 						directive, ifelseStr(directive == "ifdef", "", "!"), args)
 				}
 
@@ -199,15 +196,15 @@ func (mklines *MkLines) check() {
 				if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 					for _, forvar := range splitOnSpace(vars) {
 						if !G.isInfrastructure && hasPrefix(forvar, "_") {
-							line.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
+							mkline.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
 						}
 
 						if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
 							// Fine.
 						} else if matches(forvar, `[A-Z]`) {
-							line.warnf(".for variable names should not contain uppercase letters.")
+							mkline.warnf(".for variable names should not contain uppercase letters.")
 						} else {
-							line.errorf("Invalid variable name %q.", forvar)
+							mkline.errorf("Invalid variable name %q.", forvar)
 						}
 
 						ctx.forVars[forvar] = true
@@ -217,7 +214,7 @@ func (mklines *MkLines) check() {
 					guessed := guGuessed
 					for _, value := range splitOnSpace(values) {
 						if m, vname := match1(value, `^\$\{(.*)\}`); m {
-							vartype := getVariableType(line, vname)
+							vartype := getVariableType(mkline.Line, vname)
 							if vartype != nil && !vartype.guessed {
 								guessed = guNotGuessed
 							}
@@ -231,21 +228,21 @@ func (mklines *MkLines) check() {
 						vucQuotFor,
 						vucExtentWord,
 					}
-					for _, fvar := range extractUsedVariables(line, values) {
-						NewMkLine(line).checkVaruse(fvar, "", forLoopContext)
+					for _, fvar := range extractUsedVariables(mkline.Line, values) {
+						mkline.checkVaruse(fvar, "", forLoopContext)
 					}
 				}
 
 			} else if directive == "undef" && args != "" {
 				for _, uvar := range splitOnSpace(args) {
 					if ctx.forVars[uvar] {
-						line.notef("Using \".undef\" after a \".for\" loop is unnecessary.")
+						mkline.notef("Using \".undef\" after a \".for\" loop is unnecessary.")
 					}
 				}
 			}
 
 		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
-			_ = G.opts.DebugMisc && line.debugf("targets=%q, dependencies=%q", targets, dependencies)
+			_ = G.opts.DebugMisc && mkline.debugf("targets=%q, dependencies=%q", targets, dependencies)
 			ctx.target = targets
 
 			for _, source := range splitOnSpace(dependencies) {
@@ -266,8 +263,8 @@ func (mklines *MkLines) check() {
 					// TODO: Check for spelling mistakes.
 
 				} else if !allowedTargets[target] {
-					line.warnf("Unusual target %q.", target)
-					line.explain(
+					mkline.warnf("Unusual target %q.", target)
+					mkline.explain(
 						"If you want to define your own targets, you can \"declare\"",
 						"them by inserting a \".PHONY: my-target\" line before this line. This",
 						"will tell make(1) to not interpret this target's name as a filename.")
@@ -275,17 +272,17 @@ func (mklines *MkLines) check() {
 			}
 
 		} else if m, directive := match1(text, `^\.\s*(\S*)`); m {
-			line.errorf("Unknown directive \".%s\".", directive)
+			mkline.errorf("Unknown directive \".%s\".", directive)
 
 		} else if hasPrefix(text, " ") {
-			line.warnf("Makefile lines should not start with space characters.")
-			line.explain(
+			mkline.warnf("Makefile lines should not start with space characters.")
+			mkline.explain(
 				"If you want this line to contain a shell program, use a tab",
 				"character for indentation. Otherwise please remove the leading",
 				"white-space.")
 
 		} else {
-			_ = G.opts.DebugMisc && line.debugf("Unknown line format")
+			_ = G.opts.DebugMisc && mkline.debugf("Unknown line format")
 		}
 	}
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
@@ -294,7 +291,7 @@ func (mklines *MkLines) check() {
 	checklinesTrailingEmptyLines(mklines.lines)
 
 	if len(ctx.indentation) != 1 {
-		lastMkline.line.errorf("Directive indentation is not 0, but %d.", ctx.indentDepth())
+		lastMkline.errorf("Directive indentation is not 0, but %d.", ctx.indentDepth())
 	}
 
 	G.mkContext = nil

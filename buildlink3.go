@@ -6,7 +6,7 @@ import (
 )
 
 func checklinesBuildlink3Mk(mklines *MkLines) {
-	defer tracecall("checklinesBuildlink3Mk", mklines.mklines[0].line.fname)()
+	defer tracecall("checklinesBuildlink3Mk", mklines.lines[0].fname)()
 
 	mklines.check()
 
@@ -62,7 +62,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	if G.pkgContext != nil {
 		if mkbase := G.pkgContext.effectivePkgbase; mkbase != "" && mkbase != pkgid {
 			pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
-			G.pkgContext.effectivePkgnameLine.line.errorf("... and %q.", mkbase)
+			G.pkgContext.effectivePkgnameLine.errorf("... and %q.", mkbase)
 		}
 	}
 

@@ -81,7 +81,7 @@ func loadPackageMakefile(fname string) []*Line {
 func determineUsedVariables(mklines *MkLines) {
 	re := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
 	for _, mkline := range mklines.mklines {
-		rest := mkline.line.text
+		rest := mkline.text
 		for {
 			m := re.FindStringSubmatchIndex(rest)
 			if m == nil {
@@ -216,12 +216,12 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 		return defaultValue
 	}
 
-	value := mkline.line.extra["value"].(string)
+	value := mkline.extra["value"].(string)
 	value = resolveVarsInRelativePath(value, true)
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}
-	_ = G.opts.DebugMisc && mkline.line.debugf("Expanded %q to %q", varname, value)
+	_ = G.opts.DebugMisc && mkline.debugf("Expanded %q to %q", varname, value)
 	return value
 }
 

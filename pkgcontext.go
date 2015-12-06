@@ -46,11 +46,7 @@ func (ctx *PkgContext) defineVar(mkline *MkLine, varname string) {
 }
 func (ctx *PkgContext) varValue(varname string) (string, bool) {
 	if mkline := ctx.vardef[varname]; mkline != nil {
-		if value := mkline.line.extra["value"]; value != nil {
-			return value.(string), true
-		} else {
-			mkline.line.errorf("Internal pkglint error: novalue")
-		}
+		return mkline.extra["value"].(string), true
 	}
 	return "", false
 }

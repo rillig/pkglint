@@ -48,7 +48,7 @@ func (ctx *MkContext) defineVar(mkline *MkLine, varname string) {
 
 func (ctx *MkContext) varValue(varname string) (value string, found bool) {
 	if mkline := ctx.vardef[varname]; mkline != nil {
-		return mkline.line.extra["value"].(string), true
+		return mkline.extra["value"].(string), true
 	}
 	return "", false
 }

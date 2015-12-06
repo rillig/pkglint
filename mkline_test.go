@@ -7,29 +7,29 @@ import (
 func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	s.UseCommandLine(c, "-Wtypes", "-Dunchecked")
 	G.globalData.InitVartypes()
-	ml := NewMkLine(NewLine("fname", "1", "COMMENT=\tA nice package", nil))
+	mkline := NewMkLine(NewLine("fname", "1", "COMMENT=\tA nice package", nil))
 
 	vartype1 := G.globalData.vartypes["COMMENT"]
 	c.Assert(vartype1, check.NotNil)
 	c.Check(vartype1.guessed, equals, guNotGuessed)
 
-	vartype := getVariableType(ml.line, "COMMENT")
+	vartype := getVariableType(mkline.Line, "COMMENT")
 
 	c.Assert(vartype, check.NotNil)
 	c.Check(vartype.checker.name, equals, "Comment")
 	c.Check(vartype.guessed, equals, guNotGuessed)
 	c.Check(vartype.kindOfList, equals, lkNone)
 
-	ml.checkVartype("COMMENT", "=", "A nice package", "")
+	mkline.checkVartype("COMMENT", "=", "A nice package", "")
 
 	c.Check(s.Stdout(), equals, "WARN: fname:1: COMMENT should not begin with \"A\".\n")
 }
 
 func (s *Suite) TestChecklineMkVartype(c *check.C) {
 	G.globalData.InitVartypes()
-	ml := NewMkLine(NewLine("fname", "1", "DISTNAME=gcc-${GCC_VERSION}", nil))
+	mkline := NewMkLine(NewLine("fname", "1", "DISTNAME=gcc-${GCC_VERSION}", nil))
 
-	ml.checkVartype("DISTNAME", "=", "gcc-${GCC_VERSION}", "")
+	mkline.checkVartype("DISTNAME", "=", "gcc-${GCC_VERSION}", "")
 }
 
 func (s *Suite) TestChecklineMkVaralign(c *check.C) {
