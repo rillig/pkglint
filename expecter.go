@@ -15,7 +15,7 @@ func (ctx *Expecter) currentLine() *Line {
 		return ctx.lines[ctx.index]
 	}
 
-	return NewLine(ctx.lines[0].fname, "EOF", "", nil) // dummy
+	return NewLineEof(ctx.lines[0].fname)
 }
 
 func (ctx *Expecter) previousLine() *Line {

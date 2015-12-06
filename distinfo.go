@@ -62,7 +62,7 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 		ck.checkGlobalMismatch(line, filename, alg, hash)
 		ck.checkUncommittedPatch(line, filename, hash)
 	}
-	ck.onFilenameChange(NewLine(ck.distinfoFilename, "EOF", "", nil), "")
+	ck.onFilenameChange(NewLineEof(ck.distinfoFilename), "")
 }
 
 func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {

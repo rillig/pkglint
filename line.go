@@ -43,6 +43,11 @@ func NewLine(fname, linenos, text string, rawLines []*RawLine) *Line {
 	return &Line{fname, linenos, text, rawLines, false, nil, nil, make(map[string]interface{})}
 }
 
+// NewLineEof creates a dummy line for logging.
+func NewLineEof(fname string) *Line {
+	return NewLine(fname, "EOF", "", nil)
+}
+
 func (ln *Line) rawLines() []*RawLine {
 	return append(append(append([]*RawLine(nil), ln.before...), ln.raw...), ln.after...)
 }
