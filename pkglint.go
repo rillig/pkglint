@@ -389,7 +389,7 @@ func checkfile(fname string) {
 			}
 		}
 
-	case hasPrefix(basename, "distinfo"):
+	case basename == "distinfo":
 		if G.opts.CheckDistinfo {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
 				checklinesDistinfo(lines)
