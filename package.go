@@ -219,8 +219,39 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 		}
 	}
 
-	distnameLine := vardef["DISTNAME"]
-	pkgnameLine := vardef["PKGNAME"]
+	pkg.determineEffectivePkgVars()
+	pkg.checkPossibleDowngrade()
+
+	if vardef["COMMENT"] == nil {
+		warnf(fname, noLines, "No COMMENT given.")
+	}
+
+	if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
+		vardef["USE_IMAKE"].notef("USE_IMAKE makes ...")
+		vardef["USE_X11"].notef("... USE_X11 superfluous.")
+	}
+
+	pkg.checkUpdate()
+	mklines.check()
+	pkg.ChecklinesPackageMakefileVarorder(mklines)
+	saveAutofixChanges(mklines.lines)
+}
+
+func (pkg *Package) getNbpart() string {
+	line := pkg.vardef["PKGREVISION"]
+	if line == nil {
+		return ""
+	}
+	pkgrevision := line.extra["value"].(string)
+	if rev, err := strconv.Atoi(pkgrevision); err == nil {
+		return sprintf("nb%d", rev)
+	}
+	return ""
+}
+
+func (pkg *Package) determineEffectivePkgVars() {
+	distnameLine := pkg.vardef["DISTNAME"]
+	pkgnameLine := pkg.vardef["PKGNAME"]
 
 	distname := ""
 	if distnameLine != nil {
@@ -243,63 +274,6 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 		distnameLine.warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
-	pkg.determineEffectivePkgVars(pkgname, pkgnameLine, distname, distnameLine)
-	pkg.checkPossibleDowngrade()
-
-	if vardef["COMMENT"] == nil {
-		warnf(fname, noLines, "No COMMENT given.")
-	}
-
-	if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
-		vardef["USE_IMAKE"].notef("USE_IMAKE makes ...")
-		vardef["USE_X11"].notef("... USE_X11 superfluous.")
-	}
-
-	if pkg.effectivePkgbase != "" {
-		for _, sugg := range G.globalData.getSuggestedPackageUpdates() {
-			if pkg.effectivePkgbase != sugg.pkgname {
-				continue
-			}
-
-			suggver, comment := sugg.version, sugg.comment
-			if comment != "" {
-				comment = " (" + comment + ")"
-			}
-
-			pkgnameLine := pkg.effectivePkgnameLine
-			cmp := pkgverCmp(pkg.effectivePkgversion, suggver)
-			switch {
-			case cmp < 0:
-				pkgnameLine.warnf("This package should be updated to %s%s.", sugg.version, comment)
-				pkgnameLine.explain(
-					"The wishlist for package updates in doc/TODO mentions that a newer",
-					"version of this package is available.")
-			case cmp > 0:
-				pkgnameLine.notef("This package is newer than the update request to %s%s.", suggver, comment)
-			default:
-				pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
-			}
-		}
-	}
-
-	mklines.check()
-	pkg.ChecklinesPackageMakefileVarorder(mklines)
-	saveAutofixChanges(mklines.lines)
-}
-
-func (pkg *Package) getNbpart() string {
-	line := pkg.vardef["PKGREVISION"]
-	if line == nil {
-		return ""
-	}
-	pkgrevision := line.extra["value"].(string)
-	if rev, err := strconv.Atoi(pkgrevision); err == nil {
-		return sprintf("nb%d", rev)
-	}
-	return ""
-}
-
-func (pkg *Package) determineEffectivePkgVars(pkgname string, pkgnameLine *MkLine, distname string, distnameLine *MkLine) {
 	if pkgname != "" && !containsVarRef(pkgname) {
 		if m, m1, m2 := match2(pkgname, rePkgname); m {
 			pkg.effectivePkgname = pkgname + pkg.getNbpart()
@@ -334,6 +308,35 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 		}
 	}
 	return pkgname
+}
+
+func (pkg *Package) checkUpdate() {
+	if pkg.effectivePkgbase != "" {
+		for _, sugg := range G.globalData.getSuggestedPackageUpdates() {
+			if pkg.effectivePkgbase != sugg.pkgname {
+				continue
+			}
+
+			suggver, comment := sugg.version, sugg.comment
+			if comment != "" {
+				comment = " (" + comment + ")"
+			}
+
+			pkgnameLine := pkg.effectivePkgnameLine
+			cmp := pkgverCmp(pkg.effectivePkgversion, suggver)
+			switch {
+			case cmp < 0:
+				pkgnameLine.warnf("This package should be updated to %s%s.", sugg.version, comment)
+				pkgnameLine.explain(
+					"The wishlist for package updates in doc/TODO mentions that a newer",
+					"version of this package is available.")
+			case cmp > 0:
+				pkgnameLine.notef("This package is newer than the update request to %s%s.", suggver, comment)
+			default:
+				pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
+			}
+		}
+	}
 }
 
 func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {

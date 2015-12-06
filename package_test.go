@@ -99,12 +99,15 @@ func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
 
 func (s *Suite) TestPackage_DetermineEffectivePkgVars_Precedence(c *check.C) {
 	pkg := NewPackage("category/pkgbase")
-	pkgnameLine := NewMkLine(NewLine("Makefile", 3, "PKGNAME=dummy", nil))
-	distnameLine := NewMkLine(NewLine("Makefile", 4, "DISTNAME=dummy", nil))
+	pkgnameLine := NewMkLine(NewLine("Makefile", 3, "PKGNAME=pkgname-1.0", nil))
+	distnameLine := NewMkLine(NewLine("Makefile", 4, "DISTNAME=distname-1.0", nil))
 	pkgrevisionLine := NewMkLine(NewLine("Makefile", 5, "PKGREVISION=13", nil))
-	pkg.defineVar(pkgrevisionLine, "PKGREVISION")
 
-	pkg.determineEffectivePkgVars("pkgname-1.0", pkgnameLine, "distname-1.0", distnameLine)
+	pkg.defineVar(pkgnameLine, pkgnameLine.Varname())
+	pkg.defineVar(distnameLine, distnameLine.Varname())
+	pkg.defineVar(pkgrevisionLine, pkgrevisionLine.Varname())
+
+	pkg.determineEffectivePkgVars()
 
 	c.Check(pkg.effectivePkgbase, equals, "pkgname")
 	c.Check(pkg.effectivePkgname, equals, "pkgname-1.0nb13")

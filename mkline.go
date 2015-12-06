@@ -17,6 +17,14 @@ func NewMkLine(line *Line) *MkLine {
 	return &MkLine{line}
 }
 
+func (mkline *MkLine) IsVarassign() bool {
+	return mkline.extra["is_varassign"] != nil
+}
+
+func (mkline *MkLine) Varname() string {
+	return mkline.extra["varname"].(string)
+}
+
 func (mkline *MkLine) checkVardef(varname, op string) {
 	defer tracecall("MkLine.checkVardef", varname, op)()
 
