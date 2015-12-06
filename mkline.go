@@ -534,7 +534,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 		for _, word := range words {
 			mkline.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 			if vartype.kindOfList != lkSpace {
-				NewMkShellLine(mkline.Line).checkShellword(word, true)
+				NewMkShellLine(mkline).checkShellword(word, true)
 			}
 		}
 	}
@@ -546,7 +546,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 func (mkline *MkLine) checkVartypePrimitive(varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
 	defer tracecall("MkLine.checkVartypePrimitive", varname, op, value, comment, isList, guessed)()
 
-	ctx := &VartypeCheck{mkline.Line, varname, op, value, "", comment, isList, guessed == guGuessed}
+	ctx := &VartypeCheck{mkline, varname, op, value, "", comment, isList, guessed == guGuessed}
 	ctx.valueNovar = mkline.withoutMakeVariables(value, isList)
 
 	checker.checker(ctx)
@@ -656,5 +656,59 @@ func (mkline *MkLine) checkIf() {
 		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
 			mkline.checkVartype(*pvarname, "use", *pvalue, "")
 		}
+	}
+}
+
+func (mkline *MkLine) explainRelativeDirs() {
+	mkline.explain(
+		"Directories in the form \"../../category/package\" make it easier to",
+		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
+		"main pkgsrc repository.")
+}
+
+func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
+	mkline.checkRelativePath(pkgdir, true)
+	pkgdir = resolveVarsInRelativePath(pkgdir, false)
+
+	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
+		if !fileExists(G.globalData.pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
+			mkline.errorf("There is no package in %q.", otherpkgpath)
+		}
+
+	} else {
+		mkline.warnf("%q is not a valid relative package directory.", pkgdir)
+		mkline.explain(
+			"A relative pathname always starts with \"../../\", followed",
+			"by a category, a slash and a the directory name of the package.",
+			"For example, \"../../misc/screen\" is a valid relative pathname.")
+	}
+}
+
+func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
+	if !G.isWip && contains(path, "/wip/") {
+		mkline.errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+	}
+
+	resolvedPath := resolveVarsInRelativePath(path, true)
+	if containsVarRef(resolvedPath) {
+		return
+	}
+
+	abs := ifelseStr(hasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
+	if !dirExists(abs) {
+		if mustExist {
+			mkline.errorf("%q does not exist.", resolvedPath)
+		}
+		return
+	}
+
+	switch {
+	case matches(path, `^\.\./\.\./[^/]+/[^/]`):
+	case hasPrefix(path, "../../mk/"):
+		// There need not be two directory levels for mk/ files.
+	case matches(path, `^\.\./mk/`) && G.curPkgsrcdir == "..":
+		// That's fine for category Makefiles.
+	case matches(path, `^\.\.`):
+		mkline.warnf("Invalid relative path %q.", path)
 	}
 }

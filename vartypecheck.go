@@ -6,7 +6,7 @@ import (
 )
 
 type VartypeCheck struct {
-	line        *Line
+	line        *MkLine
 	varname     string
 	op          string
 	value       string
@@ -153,7 +153,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	if m, pattern, relpath, _, pkg := match4(value, `(.*):(\.\./\.\./([^/]+)/([^/]+))$`); m {
-		checklineRelativePkgdir(line, relpath)
+		line.checkRelativePkgdir(relpath)
 
 		switch pkg {
 		case "msgfmt", "gettext":
@@ -172,7 +172,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 	if matches(value, `:\.\./[^/]+$`) {
 		line.warnf("Dependencies should have the form \"../../category/package\".")
-		explainRelativeDirs(line)
+		line.explainRelativeDirs()
 		return
 	}
 
@@ -213,7 +213,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 }
 
 func (cv *VartypeCheck) FetchURL() {
-	NewMkLine(cv.line).checkVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	cv.line.checkVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	for siteUrl, siteName := range G.globalData.masterSiteUrls {
 		if hasPrefix(cv.value, siteUrl) {
@@ -362,7 +362,7 @@ func (cv *VartypeCheck) Option() {
 // The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
 	if !contains(cv.value, ":") && cv.guessed == guGuessed {
-		NewMkLine(cv.line).checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+		cv.line.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
@@ -412,7 +412,7 @@ func (cv *VartypeCheck) PkgName() {
 }
 
 func (cv *VartypeCheck) PkgOptionsVar() {
-	NewMkLine(cv.line).checkVartypePrimitive(cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
+	cv.line.checkVartypePrimitive(cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
 	if matches(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		cv.line.explain(
@@ -425,7 +425,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // A directory name relative to the top-level pkgsrc directory.
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
-	checklineRelativePkgdir(cv.line, G.curPkgsrcdir+"/"+cv.value)
+	cv.line.checkRelativePkgdir(G.curPkgsrcdir + "/" + cv.value)
 }
 
 func (cv *VartypeCheck) PkgRevision() {
@@ -490,12 +490,12 @@ func (cv *VartypeCheck) PythonDependency() {
 
 // Refers to a package directory.
 func (cv *VartypeCheck) RelativePkgDir() {
-	checklineRelativePkgdir(cv.line, cv.value)
+	cv.line.checkRelativePkgdir(cv.value)
 }
 
 // Refers to a file or directory.
 func (cv *VartypeCheck) RelativePkgPath() {
-	checklineRelativePath(cv.line, cv.value, true)
+	cv.line.checkRelativePath(cv.value, true)
 }
 
 func (cv *VartypeCheck) Restricted() {
@@ -514,7 +514,7 @@ func (cv *VartypeCheck) SedCommand() {
 func (cv *VartypeCheck) SedCommands() {
 	line := cv.line
 
-	words, rest := splitIntoShellwords(line, cv.value)
+	words, rest := splitIntoShellwords(line.Line, cv.value)
 	if rest != "" {
 		if contains(cv.value, "#") {
 			line.errorf("Invalid shell words in sed commands.")
@@ -553,7 +553,7 @@ func (cv *VartypeCheck) SedCommands() {
 				}
 				NewMkShellLine(line).checkShellword(words[i-1], true)
 				NewMkShellLine(line).checkShellword(words[i], true)
-				NewMkLine(line).checkVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
+				line.checkVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
 				line.errorf("The -e option to sed requires an argument.")
 			}
@@ -698,7 +698,7 @@ func (cv *VartypeCheck) WrapperTransform() {
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {
-	NewMkLine(cv.line).checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	cv.line.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 }
 
 // A directory relative to ${WRKSRC}, for use in CONFIGURE_DIRS and similar variables.

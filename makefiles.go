@@ -18,10 +18,10 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		return false
 	}
 
-	ParselinesMk(fileLines)
 	isMainMakefile := len(*mainLines) == 0
 
-	for _, line := range fileLines {
+	for _, mkline := range NewMkLines(fileLines).mklines {
+		line := mkline.Line
 		text := line.text
 
 		if isMainMakefile {
@@ -56,8 +56,8 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			G.pkgContext.included[includeFile] = line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
-				line.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
-				explainRelativeDirs(line)
+				mkline.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
+				mkline.explainRelativeDirs()
 			}
 
 			if !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {

@@ -20,13 +20,6 @@ const (
 	rePkgversion         = `\d(?:\w|\.\d)*`
 )
 
-func explainRelativeDirs(line *Line) {
-	line.explain(
-		"Directories in the form \"../../category/package\" make it easier to",
-		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
-		"main pkgsrc repository.")
-}
-
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
 func findPkgsrcTopdir(fname string) string {
 	for _, dir := range []string{".", "..", "../..", "../../.."} {
@@ -293,35 +286,6 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	return true
 }
 
-func checklineRelativePath(line *Line, path string, mustExist bool) {
-	if !G.isWip && contains(path, "/wip/") {
-		line.errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
-	}
-
-	resolvedPath := resolveVarsInRelativePath(path, true)
-	if containsVarRef(resolvedPath) {
-		return
-	}
-
-	abs := ifelseStr(hasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
-	if _, err := os.Stat(abs); err != nil {
-		if mustExist {
-			line.errorf("%q does not exist.", resolvedPath)
-		}
-		return
-	}
-
-	switch {
-	case matches(path, `^\.\./\.\./[^/]+/[^/]`):
-	case hasPrefix(path, "../../mk/"):
-		// There need not be two directory levels for mk/ files.
-	case matches(path, `^\.\./mk/`) && G.curPkgsrcdir == "..":
-		// That's fine for category Makefiles.
-	case matches(path, `^\.\.`):
-		line.warnf("Invalid relative path %q.", path)
-	}
-}
-
 func checkfileExtra(fname string) {
 	defer tracecall("checkfileExtra", fname)()
 
@@ -362,24 +326,6 @@ func checklinesMessage(lines []*Line) {
 		lastLine.explain(explanation...)
 	}
 	checklinesTrailingEmptyLines(lines)
-}
-
-func checklineRelativePkgdir(line *Line, pkgdir string) {
-	checklineRelativePath(line, pkgdir, true)
-	pkgdir = resolveVarsInRelativePath(pkgdir, false)
-
-	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
-		if !fileExists(G.globalData.pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
-			line.errorf("There is no package in %q.", otherpkgpath)
-		}
-
-	} else {
-		line.warnf("%q is not a valid relative package directory.", pkgdir)
-		line.explain(
-			"A relative pathname always starts with \"../../\", followed",
-			"by a category, a slash and a the directory name of the package.",
-			"For example, \"../../misc/screen\" is a valid relative pathname.")
-	}
 }
 
 func checkfileMk(fname string) {

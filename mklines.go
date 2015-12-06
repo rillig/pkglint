@@ -106,11 +106,11 @@ func (mklines *MkLines) check() {
 		} else if hasPrefix(text, "\t") {
 			shellcmd := text[1:]
 			mkline.checkText(shellcmd)
-			NewMkShellLine(mkline.Line).checkShelltext(shellcmd)
+			NewMkShellLine(mkline).checkShelltext(shellcmd)
 
 		} else if m, include, includefile := match2(text, reMkInclude); m {
 			_ = G.opts.DebugInclude && mkline.debugf("includefile=%s", includefile)
-			checklineRelativePath(mkline.Line, includefile, include == "include")
+			mkline.checkRelativePath(includefile, include == "include")
 
 			if hasSuffix(includefile, "../Makefile") {
 				mkline.errorf("Other Makefiles must not be included directly.")

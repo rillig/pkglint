@@ -29,7 +29,7 @@ func checktoplevelUnusedLicenses() {
 	}
 }
 
-func checklineLicense(line *Line, value string) {
+func checklineLicense(line *MkLine, value string) {
 	licenses := parseLicenses(value)
 	for _, license := range licenses {
 		var licenseFile string
