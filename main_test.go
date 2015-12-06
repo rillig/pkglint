@@ -15,7 +15,7 @@ func (s *Suite) TestMainVersion(c *check.C) {
 	exitcode := new(Pkglint).Main("pkglint", "--version")
 
 	c.Check(exitcode, equals, 0)
-	c.Check(s.Output(), check.Matches, `(?:@VERSION@|\d+\.\d+)\n`)
+	c.Check(s.Output(), equals, confVersion+"\n")
 }
 
 func (s *Suite) TestMainNoArgs(c *check.C) {
