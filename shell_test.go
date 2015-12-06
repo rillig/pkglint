@@ -20,8 +20,9 @@ func (s *Suite) TestSplitIntoShellwords_LineContinuation(c *check.C) {
 
 func (s *Suite) TestChecklineMkShelltext(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
-	G.mkContext = newMkContext()
-	msline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
+	G.mk = s.NewMkLines("fname",
+		"# dummy")
+	msline := NewMkShellLine(G.mk.mklines[0])
 
 	msline.checkShelltext("@# Comment")
 
@@ -37,7 +38,8 @@ func (s *Suite) TestChecklineMkShelltext(c *check.C) {
 
 	G.globalData.tools = map[string]bool{"echo": true}
 	G.globalData.predefinedTools = map[string]bool{"echo": true}
-	G.mkContext = newMkContext()
+	G.mk = s.NewMkLines("fname",
+		"# dummy")
 	G.globalData.InitVartypes()
 
 	msline.checkShelltext("echo ${PKGNAME:Q}") // vucQuotPlain
@@ -73,8 +75,9 @@ func (s *Suite) TestChecklineMkShelltext(c *check.C) {
 func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
-	G.mkContext = newMkContext()
-	msline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
+	G.mk = s.NewMkLines("fname",
+		"# dummy")
+	msline := NewMkShellLine(G.mk.mklines[0])
 
 	// foobar="`echo \"foo   bar\"`"
 	msline.checkShelltext("foobar=\"`echo \\\"foo   bar\\\"`\"")
@@ -91,10 +94,11 @@ func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
 
 func (s *Suite) TestMkShellLine_CheckShelltext_InternalError2(c *check.C) {
 	G.globalData.InitVartypes()
-	msline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
-	G.mkContext = newMkContext()
+	G.mk = s.NewMkLines("fname",
+		"# dummy")
+	msline := NewMkShellLine(G.mk.mklines[0])
 	s.RegisterTool("pax", "PAX", false)
-	G.mkContext.tools["pax"] = true
+	G.mk.tools["pax"] = true
 
 	msline.checkShelltext("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 
@@ -128,7 +132,8 @@ func (s *Suite) TestMkShellLine_CheckShellword_InternalError(c *check.C) {
 func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	s.RegisterTool("echo", "ECHO", true)
-	G.mkContext = newMkContext()
+	G.mk = s.NewMkLines("fname",
+		"# dummy")
 	line := NewLine("fname", 3, "# dummy", nil)
 
 	shellcmd := "echo \"hello, world\""
@@ -158,8 +163,9 @@ func (s *Suite) TestMkShellLine_checklineMkShelltext(c *check.C) {
 }
 
 func (s *Suite) TestMkShellLine_checkCommandUse(c *check.C) {
-	G.mkContext = newMkContext()
-	G.mkContext.target = "do-install"
+	G.mk = s.NewMkLines("fname",
+		"# dummy")
+	G.mk.target = "do-install"
 
 	shline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "\tdummy", nil)))
 

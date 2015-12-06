@@ -5,29 +5,29 @@ import (
 )
 
 func (s *Suite) TestDetermineUsedVariables_simple(c *check.C) {
-	G.mkContext = newMkContext()
 	mklines := s.NewMkLines("fname",
 		"\t${VAR}")
 	mkline := mklines.mklines[0]
+	G.mk = mklines
 
 	mklines.determineUsedVariables()
 
-	c.Check(len(G.mkContext.varuse), equals, 1)
-	c.Check(G.mkContext.varuse["VAR"], equals, mkline)
+	c.Check(len(mklines.varuse), equals, 1)
+	c.Check(mklines.varuse["VAR"], equals, mkline)
 }
 
 func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
-	G.mkContext = newMkContext()
 	mklines := s.NewMkLines("fname",
 		"\t${outer.${inner}}")
 	mkline := mklines.mklines[0]
+	G.mk = mklines
 
 	mklines.determineUsedVariables()
 
-	c.Check(len(G.mkContext.varuse), equals, 3)
-	c.Check(G.mkContext.varuse["inner"], equals, mkline)
-	c.Check(G.mkContext.varuse["outer."], equals, mkline)
-	c.Check(G.mkContext.varuse["outer.*"], equals, mkline)
+	c.Check(len(mklines.varuse), equals, 3)
+	c.Check(mklines.varuse["inner"], equals, mkline)
+	c.Check(mklines.varuse["outer."], equals, mkline)
+	c.Check(mklines.varuse["outer.*"], equals, mkline)
 }
 
 func (s *Suite) TestReShellword(c *check.C) {

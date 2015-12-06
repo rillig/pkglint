@@ -67,7 +67,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 	if G.opts.WarnExtra &&
 		(vartype == nil || vartype.guessed == guGuessed) &&
 		!varIsUsed(varname) &&
-		!(G.mkContext != nil && G.mkContext.forVars[varname]) {
+		!(G.mk != nil && G.mk.forVars[varname]) {
 		mkline.warnf("%s is used but not defined. Spelling mistake?", varname)
 	}
 
@@ -87,7 +87,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 		mkline.checkVaruseShellword(varname, vartype, vuc, mod, needsQuoting)
 	}
 
-	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mkContext.buildDefs[varname] {
+	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mk.buildDefs[varname] {
 		mkline.warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		mkline.explain(
 			"When a pkgsrc package is built, many things can be configured by the",
@@ -364,7 +364,7 @@ func (mkline *MkLine) checkVarassign() {
 			// The variables mentioned in EVAL_PREFIX will later be
 			// defined by find-prefix.mk. Therefore, they are marked
 			// as known in the current file.
-			G.mkContext.vardef[evalVarname] = mkline
+			G.mk.vardef[evalVarname] = mkline
 		}
 	}
 

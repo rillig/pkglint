@@ -114,8 +114,8 @@ func varnameParam(varname string) string {
 }
 
 func defineVar(mkline *MkLine, varname string) {
-	if G.mkContext != nil {
-		G.mkContext.defineVar(mkline, varname)
+	if G.mk != nil {
+		G.mk.defineVar(mkline, varname)
 	}
 	if G.pkg != nil {
 		G.pkg.defineVar(mkline, varname)
@@ -123,7 +123,7 @@ func defineVar(mkline *MkLine, varname string) {
 }
 func varIsDefined(varname string) bool {
 	varcanon := varnameCanon(varname)
-	if mk := G.mkContext; mk != nil && (mk.vardef[varname] != nil || mk.vardef[varcanon] != nil) {
+	if G.mk != nil && (G.mk.vardef[varname] != nil || G.mk.vardef[varcanon] != nil) {
 		return true
 	}
 	if G.pkg != nil && (G.pkg.vardef[varname] != nil || G.pkg.vardef[varcanon] != nil) {
@@ -133,9 +133,9 @@ func varIsDefined(varname string) bool {
 }
 func useVar(mkline *MkLine, varname string) {
 	varcanon := varnameCanon(varname)
-	if mk := G.mkContext; mk != nil {
-		mk.varuse[varname] = mkline
-		mk.varuse[varcanon] = mkline
+	if G.mk != nil {
+		G.mk.varuse[varname] = mkline
+		G.mk.varuse[varcanon] = mkline
 	}
 	if G.pkg != nil {
 		G.pkg.varuse[varname] = mkline
@@ -145,7 +145,7 @@ func useVar(mkline *MkLine, varname string) {
 
 func varIsUsed(varname string) bool {
 	varcanon := varnameCanon(varname)
-	if mk := G.mkContext; mk != nil && (mk.varuse[varname] != nil || mk.varuse[varcanon] != nil) {
+	if G.mk != nil && (G.mk.varuse[varname] != nil || G.mk.varuse[varcanon] != nil) {
 		return true
 	}
 	if G.pkg != nil && (G.pkg.varuse[varname] != nil || G.pkg.varuse[varcanon] != nil) {

@@ -9,7 +9,7 @@ type GlobalVars struct {
 	opts       CmdOpts    //
 	globalData GlobalData //
 	pkg        *Package   // The package that is currently checked.
-	mkContext  *MkContext // The Makefile (or fragment) that is currently checked.
+	mk         *MkLines   // The Makefile (or fragment) that is currently checked.
 
 	todo             []string // The files or directories that still need to be checked.
 	currentDir       string   // The currently checked directory, relative to the cwd

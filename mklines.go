@@ -5,9 +5,18 @@ import (
 	"strings"
 )
 
+// MkLines contains data for the Makefile (or *.mk) that is currently checked.
 type MkLines struct {
-	mklines []*MkLine
-	lines   []*Line
+	mklines     []*MkLine
+	lines       []*Line
+	forVars     map[string]bool    // The variables currently used in .for loops
+	indentation []int              // Indentation depth of preprocessing directives
+	target      string             // Current make(1) target
+	vardef      map[string]*MkLine // varname => line; for all variables that are defined in the current file
+	varuse      map[string]*MkLine // varname => line; for all variables that are used in the current file
+	buildDefs   map[string]bool    // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
+	plistVars   map[string]bool    // Variables that are registered in PLIST_VARS, to ensure that all user-defined variables are added to it.
+	tools       map[string]bool    // Set of tools that are declared to be used.
 }
 
 func NewMkLines(lines []*Line) *MkLines {
@@ -16,7 +25,49 @@ func NewMkLines(lines []*Line) *MkLines {
 		parselineMk(line)
 		mklines[i] = NewMkLine(line)
 	}
-	return &MkLines{mklines, lines}
+	tools := make(map[string]bool)
+	for tool := range G.globalData.predefinedTools {
+		tools[tool] = true
+	}
+
+	return &MkLines{
+		mklines,
+		lines,
+		make(map[string]bool),
+		make([]int, 1),
+		"",
+		make(map[string]*MkLine),
+		make(map[string]*MkLine),
+		make(map[string]bool),
+		make(map[string]bool),
+		tools}
+}
+
+func (mklines *MkLines) indentDepth() int {
+	return mklines.indentation[len(mklines.indentation)-1]
+}
+func (mklines *MkLines) popIndent() {
+	mklines.indentation = mklines.indentation[:len(mklines.indentation)-1]
+}
+func (mklines *MkLines) pushIndent(indent int) {
+	mklines.indentation = append(mklines.indentation, indent)
+}
+
+func (mklines *MkLines) defineVar(mkline *MkLine, varname string) {
+	if mklines.vardef[varname] == nil {
+		mklines.vardef[varname] = mkline
+	}
+	varcanon := varnameCanon(varname)
+	if mklines.vardef[varcanon] == nil {
+		mklines.vardef[varcanon] = mkline
+	}
+}
+
+func (mklines *MkLines) varValue(varname string) (value string, found bool) {
+	if mkline := mklines.vardef[varname]; mkline != nil {
+		return mkline.extra["value"].(string), true
+	}
+	return "", false
 }
 
 func (mklines *MkLines) check() {
@@ -25,9 +76,8 @@ func (mklines *MkLines) check() {
 	allowedTargets := make(map[string]bool)
 	substcontext := new(SubstContext)
 
-	ctx := newMkContext()
-	G.mkContext = ctx
-	defer func() { G.mkContext = nil }()
+	G.mk = mklines
+	defer func() { G.mk = nil }()
 
 	mklines.determineUsedVariables()
 
@@ -74,10 +124,10 @@ func (mklines *MkLines) check() {
 		} else if matches(text, reMkSysinclude) {
 
 		} else if m, indent, directive, args := match3(text, reMkCond); m {
-			mklines.checklinePreproc(ctx, mkline, indent, directive, args)
+			mklines.checklinePreproc(mkline, indent, directive, args)
 
 		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
-			mklines.checklineDependencyRule(ctx, mkline, targets, dependencies, allowedTargets)
+			mklines.checklineDependencyRule(mkline, targets, dependencies, allowedTargets)
 
 		} else if m, directive := match1(text, `^\.\s*(\S*)`); m {
 			mkline.errorf("Unknown directive \".%s\".", directive)
@@ -98,11 +148,9 @@ func (mklines *MkLines) check() {
 
 	checklinesTrailingEmptyLines(mklines.lines)
 
-	if len(ctx.indentation) != 1 {
-		lastMkline.errorf("Directive indentation is not 0, but %d.", ctx.indentDepth())
+	if len(mklines.indentation) != 1 {
+		lastMkline.errorf("Directive indentation is not 0, but %d.", mklines.indentDepth())
 	}
-
-	G.mkContext = nil
 }
 
 func (mklines *MkLines) determineDefinedVariables() {
@@ -115,13 +163,13 @@ func (mklines *MkLines) determineDefinedVariables() {
 		switch varcanon {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
 			for _, varname := range splitOnSpace(mkline.extra["value"].(string)) {
-				G.mkContext.buildDefs[varname] = true
+				mklines.buildDefs[varname] = true
 				_ = G.opts.DebugMisc && mkline.debugf("%q is added to BUILD_DEFS.", varname)
 			}
 
 		case "PLIST_VARS":
 			for _, id := range splitOnSpace(mkline.extra["value"].(string)) {
-				G.mkContext.plistVars["PLIST."+id] = true
+				mklines.plistVars["PLIST."+id] = true
 				_ = G.opts.DebugMisc && mkline.debugf("PLIST.%s is added to PLIST_VARS.", id)
 				useVar(mkline, "PLIST."+id)
 			}
@@ -129,7 +177,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 		case "USE_TOOLS":
 			for _, tool := range splitOnSpace(mkline.extra["value"].(string)) {
 				tool = strings.Split(tool, ":")[0]
-				G.mkContext.tools[tool] = true
+				mklines.tools[tool] = true
 				_ = G.opts.DebugMisc && mkline.debugf("%s is added to USE_TOOLS.", tool)
 			}
 
@@ -164,25 +212,25 @@ func (mklines *MkLines) determineUsedVariables() {
 	}
 }
 
-func (mklines *MkLines) checklinePreproc(ctx *MkContext, mkline *MkLine, indent, directive, args string) {
+func (mklines *MkLines) checklinePreproc(mkline *MkLine, indent, directive, args string) {
 	if matches(directive, `^(?:endif|endfor|elif|else)$`) {
-		if len(ctx.indentation) > 1 {
-			ctx.popIndent()
+		if len(mklines.indentation) > 1 {
+			mklines.popIndent()
 		} else {
 			mkline.errorf("Unmatched .%s.", directive)
 		}
 	}
 
 	// Check the indentation
-	if indent != strings.Repeat(" ", ctx.indentDepth()) {
-		_ = G.opts.WarnSpace && mkline.notef("This directive should be indented by %d spaces.", ctx.indentDepth())
+	if indent != strings.Repeat(" ", mklines.indentDepth()) {
+		_ = G.opts.WarnSpace && mkline.notef("This directive should be indented by %d spaces.", mklines.indentDepth())
 	}
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
-		ctx.pushIndent(ctx.indentDepth())
+		mklines.pushIndent(mklines.indentDepth())
 
 	} else if matches(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
-		ctx.pushIndent(ctx.indentDepth() + 2)
+		mklines.pushIndent(mklines.indentDepth() + 2)
 	}
 
 	reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
@@ -222,7 +270,7 @@ func (mklines *MkLines) checklinePreproc(ctx *MkContext, mkline *MkLine, indent,
 					mkline.errorf("Invalid variable name %q.", forvar)
 				}
 
-				ctx.forVars[forvar] = true
+				mklines.forVars[forvar] = true
 			}
 
 			// Check if any of the value's types is not guessed.
@@ -250,16 +298,16 @@ func (mklines *MkLines) checklinePreproc(ctx *MkContext, mkline *MkLine, indent,
 
 	} else if directive == "undef" && args != "" {
 		for _, uvar := range splitOnSpace(args) {
-			if ctx.forVars[uvar] {
+			if mklines.forVars[uvar] {
 				mkline.notef("Using \".undef\" after a \".for\" loop is unnecessary.")
 			}
 		}
 	}
 }
 
-func (mklines *MkLines) checklineDependencyRule(ctx *MkContext, mkline *MkLine, targets, dependencies string, allowedTargets map[string]bool) {
+func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, dependencies string, allowedTargets map[string]bool) {
 	_ = G.opts.DebugMisc && mkline.debugf("targets=%q, dependencies=%q", targets, dependencies)
-	ctx.target = targets
+	mklines.target = targets
 
 	for _, source := range splitOnSpace(dependencies) {
 		if source == ".PHONY" {

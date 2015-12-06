@@ -172,8 +172,8 @@ func resolveVariableRefs(text string) string {
 						return value
 					}
 				}
-				if ctx := G.mkContext; ctx != nil {
-					if value, ok := ctx.varValue(varname); ok {
+				if G.mk != nil {
+					if value, ok := G.mk.varValue(varname); ok {
 						return value
 					}
 				}
@@ -416,9 +416,7 @@ func checkfile(fname string) {
 		}
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
-		if G.opts.DebugUnchecked {
-			debugf(fname, noLines, "Unchecked file %q.", fname)
-		}
+		_ = G.opts.DebugUnchecked && debugf(fname, noLines, "Unchecked file %q.", fname)
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
 		warnf(fname, noLines, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
