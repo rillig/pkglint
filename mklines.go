@@ -22,7 +22,6 @@ type MkLines struct {
 func NewMkLines(lines []*Line) *MkLines {
 	mklines := make([]*MkLine, len(lines))
 	for i, line := range lines {
-		parselineMk(line)
 		mklines[i] = NewMkLine(line)
 	}
 	tools := make(map[string]bool)

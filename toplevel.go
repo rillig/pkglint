@@ -17,8 +17,6 @@ func checkdirToplevel() {
 		return
 	}
 
-	ParselinesMk(lines)
-
 	for _, line := range lines {
 		if m, commentedOut, indentation, subdir, comment := match4(line.text, `^(#?)SUBDIR\s*\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
 			ctx.checkSubdir(line, commentedOut == "#", indentation, subdir, comment)
