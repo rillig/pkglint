@@ -14,9 +14,9 @@ type Package struct {
 	filesdir             string  // FILESDIR from the package Makefile
 	patchdir             string  // PATCHDIR from the package Makefile
 	distinfoFile         string  // DISTINFO_FILE from the package Makefile
-	effectivePkgname     string  // PKGNAME or DISTNAME from the package Makefile
+	effectivePkgname     string  // PKGNAME or DISTNAME from the package Makefile, including nb13
 	effectivePkgbase     string  // The effective PKGNAME without the version
-	effectivePkgversion  string  // The version part of the effective PKGNAME
+	effectivePkgversion  string  // The version part of the effective PKGNAME, excluding nb13
 	effectivePkgnameLine *MkLine // The origin of the three effective_* values
 	seenBsdPrefsMk       bool    // Has bsd.prefs.mk already been included?
 
@@ -244,12 +244,6 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	pkg.determineEffectivePkgVars(pkgname, pkgnameLine, distname, distnameLine)
-
-	if pkg.effectivePkgnameLine != nil {
-		_ = G.opts.DebugMisc && pkg.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
-			pkg.effectivePkgname, pkg.effectivePkgbase, pkg.effectivePkgversion)
-	}
-
 	pkg.checkPossibleDowngrade()
 
 	if vardef["COMMENT"] == nil {
@@ -308,19 +302,23 @@ func (pkg *Package) getNbpart() string {
 func (pkg *Package) determineEffectivePkgVars(pkgname string, pkgnameLine *MkLine, distname string, distnameLine *MkLine) {
 	if pkgname != "" && !containsVarRef(pkgname) {
 		if m, m1, m2 := match2(pkgname, rePkgname); m {
-			pkg.effectivePkgname,
-				pkg.effectivePkgnameLine,
-				pkg.effectivePkgbase,
-				pkg.effectivePkgversion = pkgname+pkg.getNbpart(), pkgnameLine, m1, m2
+			pkg.effectivePkgname = pkgname + pkg.getNbpart()
+			pkg.effectivePkgnameLine = pkgnameLine
+			pkg.effectivePkgbase = m1
+			pkg.effectivePkgversion = m2
 		}
 	}
-	if distname != "" && !containsVarRef(distname) {
+	if pkg.effectivePkgnameLine == nil && distname != "" && !containsVarRef(distname) {
 		if m, m1, m2 := match2(distname, rePkgname); m {
-			pkg.effectivePkgname,
-				pkg.effectivePkgnameLine,
-				pkg.effectivePkgbase,
-				pkg.effectivePkgversion = distname+pkg.getNbpart(), distnameLine, m1, m2
+			pkg.effectivePkgname = distname + pkg.getNbpart()
+			pkg.effectivePkgnameLine = distnameLine
+			pkg.effectivePkgbase = m1
+			pkg.effectivePkgversion = m2
 		}
+	}
+	if pkg.effectivePkgnameLine != nil {
+		_ = G.opts.DebugMisc && pkg.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
+			pkg.effectivePkgname, pkg.effectivePkgbase, pkg.effectivePkgversion)
 	}
 }
 

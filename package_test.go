@@ -96,3 +96,17 @@ func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.\n")
 }
+
+func (s *Suite) TestPackage_DetermineEffectivePkgVars_Precedence(c *check.C) {
+	pkg := NewPackage("category/pkgbase")
+	pkgnameLine := NewMkLine(NewLine("Makefile", 3, "PKGNAME=dummy", nil))
+	distnameLine := NewMkLine(NewLine("Makefile", 4, "DISTNAME=dummy", nil))
+	pkgrevisionLine := NewMkLine(NewLine("Makefile", 5, "PKGREVISION=13", nil))
+	pkg.defineVar(pkgrevisionLine, "PKGREVISION")
+
+	pkg.determineEffectivePkgVars("pkgname-1.0", pkgnameLine, "distname-1.0", distnameLine)
+
+	c.Check(pkg.effectivePkgbase, equals, "pkgname")
+	c.Check(pkg.effectivePkgname, equals, "pkgname-1.0nb13")
+	c.Check(pkg.effectivePkgversion, equals, "1.0")
+}
