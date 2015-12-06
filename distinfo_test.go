@@ -8,6 +8,8 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 	s.CreateTmpFile(c, "patches/patch-aa", ""+
 		"$"+"NetBSD$ line is ignored\n"+
 		"patch contents\n")
+	s.CreateTmpFile(c, "patches/patch-ab", ""+
+		"patch contents\n")
 	G.currentDir = s.tmpdir
 
 	checklinesDistinfo(s.NewLines("distinfo",
@@ -15,7 +17,8 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 		"should be empty",
 		"MD5 (distfile.tar.gz) = 12345678901234567890123456789012",
 		"SHA1 (distfile.tar.gz) = 1234567890123456789012345678901234567890",
-		"SHA1 (patch-aa) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7"))
+		"SHA1 (patch-aa) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7",
+		"SHA1 (patch-ab) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7"))
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: distinfo:1: Expected \"$"+"NetBSD$\".\n"+
@@ -74,8 +77,8 @@ func (s *Suite) TestChecklinesDistinfo_UnrecordedPatches(c *check.C) {
 		"SHA512 (distfile.tar.gz) = ...",
 		"Size (distfile.tar.gz) = 1024 bytes"))
 
-	c.Check(s.Output(), equals, sprintf(""+
-		"ERROR: %[1]s: patch \"patches/patch-aa\" is not recorded. Run \"%s makepatchsum\".\n"+
-		"ERROR: %[1]s: patch \"patches/patch-src-Makefile\" is not recorded. Run \"%s makepatchsum\".\n",
-		s.tmpdir+"/distinfo", confMake))
+	c.Check(s.OutputCleanTmpdir(), equals, sprintf(""+
+		"ERROR: distinfo: patch \"patches/patch-aa\" is not recorded. Run \"%[1]s makepatchsum\".\n"+
+		"ERROR: distinfo: patch \"patches/patch-src-Makefile\" is not recorded. Run \"%[1]s makepatchsum\".\n",
+		confMake))
 }
