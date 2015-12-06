@@ -3,6 +3,7 @@ package main
 // Checks concerning single lines in Makefiles.
 
 import (
+	"os"
 	"strconv"
 	"strings"
 )
@@ -695,7 +696,7 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 	}
 
 	abs := ifelseStr(hasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
-	if !dirExists(abs) {
+	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
 			mkline.errorf("%q does not exist.", resolvedPath)
 		}
