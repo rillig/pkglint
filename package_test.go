@@ -19,18 +19,26 @@ func (s *Suite) TestPkgnameFromDistname(c *check.C) {
 func (s *Suite) TestChecklinesPackageMakefileVarorder(c *check.C) {
 	s.UseCommandLine(c, "-Worder")
 	G.pkgContext = newPkgContext("x11/9term")
-	lines := s.NewLines("Makefile",
+
+	ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
 		"# $"+"NetBSD$",
 		"",
 		"DISTNAME=9term",
-		"CATEGORIES=x11")
+		"CATEGORIES=x11"))
 
-	ChecklinesPackageMakefileVarorder(lines)
+	c.Check(s.Output(), equals, "")
+
+	ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"DISTNAME=9term",
+		"CATEGORIES=x11",
+		"",
+		".include \"../../mk/bsd.pkg.mk\""))
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: Makefile:3: CATEGORIES should be set here.\n"+
-		"WARN: Makefile:3: COMMENT should be set here.\n"+
-		"WARN: Makefile:3: LICENSE should be set here.\n")
+		"WARN: Makefile:6: COMMENT should be set here.\n"+
+		"WARN: Makefile:6: LICENSE should be set here.\n")
 }
 
 func (s *Suite) TestGetNbpart(c *check.C) {

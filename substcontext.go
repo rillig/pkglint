@@ -17,7 +17,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		return
 	}
 
-	line:=mkline.line
+	line := mkline.line
 	varname := line.extra["varname"].(string)
 	op := line.extra["op"].(string)
 	value := line.extra["value"].(string)
@@ -87,7 +87,7 @@ func (ctx *SubstContext) IsComplete() bool {
 }
 
 func (ctx *SubstContext) Finish(mkline *MkLine) {
-	line:=mkline.line
+	line := mkline.line
 	if ctx.id == "" || !G.opts.WarnExtra {
 		return
 	}

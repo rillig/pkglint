@@ -56,7 +56,7 @@ func (s *Suite) TestSubstContext_NoClass(c *check.C) {
 	ctx.Varassign(newSubstLine("10", "UNRELATED=anything"))
 	ctx.Varassign(newSubstLine("11", "SUBST_FILES.repl+=Makefile.in"))
 	ctx.Varassign(newSubstLine("12", "SUBST_SED.repl+=-e s,from,to,g"))
-	ctx.Finish(newSubstLine("13",""))
+	ctx.Finish(newSubstLine("13", ""))
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:11: SUBST_CLASSES should come before the definition of \"SUBST_FILES.repl\".\n"+

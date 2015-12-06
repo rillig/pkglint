@@ -399,12 +399,12 @@ func ChecklinesPackageMakefileVarorder(lines []*Line) {
 	// - new lineno > old lineno
 	// - new sectindex > old sectindex
 	// - new sectindex == old sectindex && new varindex > old varindex
-	// - new next_section == true && old next_section == false
-	for lineno <= len(lines) {
+	// - new nextSection == true && old nextSection == false
+	for lineno < len(lines) {
 		line := lines[lineno]
 		text := line.text
 
-		_ = G.opts.DebugMisc && line.debugf("[varorder] section %d variable %d", sectindex, varindex)
+		_ = G.opts.DebugMisc && line.debugf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
 
 		if nextSection {
 			nextSection = false

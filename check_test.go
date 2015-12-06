@@ -43,6 +43,12 @@ func (s *Suite) NewLines(fname string, lines ...string) []*Line {
 	return result
 }
 
+func (s *Suite) NewMkLines(fname string, lines ...string) []*Line {
+	result := s.NewLines(fname, lines...)
+	ParselinesMk(result)
+	return result
+}
+
 func (s *Suite) UseCommandLine(c *check.C, args ...string) {
 	exitcode := new(Pkglint).ParseCommandLine(append([]string{"pkglint"}, args...))
 	if exitcode != nil && *exitcode != 0 {
