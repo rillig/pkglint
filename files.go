@@ -58,11 +58,7 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 	lastlineno := rawLines[index].lineno
 	*pindex = index + 1
 
-	if firstlineno == lastlineno {
-		return NewLine(fname, sprintf("%d", firstlineno), text, lineRawLines)
-	} else {
-		return NewLine(fname, sprintf("%d--%d", firstlineno, lastlineno), text, lineRawLines)
-	}
+	return NewLineMulti(fname, firstlineno, lastlineno, text, lineRawLines)
 }
 
 func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
@@ -97,7 +93,7 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 		}
 	} else {
 		for _, rawLine := range rawLines {
-			loglines = append(loglines, NewLine(fname, sprintf("%d", rawLine.lineno), strings.TrimSuffix(rawLine.textnl, "\n"), []*RawLine{rawLine}))
+			loglines = append(loglines, NewLine(fname, rawLine.lineno, strings.TrimSuffix(rawLine.textnl, "\n"), []*RawLine{rawLine}))
 		}
 	}
 

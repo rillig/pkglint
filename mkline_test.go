@@ -7,7 +7,7 @@ import (
 func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	s.UseCommandLine(c, "-Wtypes", "-Dunchecked")
 	G.globalData.InitVartypes()
-	mkline := NewMkLine(NewLine("fname", "1", "COMMENT=\tA nice package", nil))
+	mkline := NewMkLine(NewLine("fname", 1, "COMMENT=\tA nice package", nil))
 
 	vartype1 := G.globalData.vartypes["COMMENT"]
 	c.Assert(vartype1, check.NotNil)
@@ -27,7 +27,7 @@ func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 
 func (s *Suite) TestChecklineMkVartype(c *check.C) {
 	G.globalData.InitVartypes()
-	mkline := NewMkLine(NewLine("fname", "1", "DISTNAME=gcc-${GCC_VERSION}", nil))
+	mkline := NewMkLine(NewLine("fname", 1, "DISTNAME=gcc-${GCC_VERSION}", nil))
 
 	mkline.checkVartype("DISTNAME", "=", "gcc-${GCC_VERSION}", "")
 }

@@ -47,7 +47,7 @@ func (s *Suite) TestReShellword(c *check.C) {
 }
 
 func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
-	mkline := NewMkLine(NewLine("fname", "1", "GCC_VERSION=${GCC_VERSION}", nil))
+	mkline := NewMkLine(NewLine("fname", 1, "GCC_VERSION=${GCC_VERSION}", nil))
 	G.pkg = NewPackage(".")
 	G.pkg.vardef["GCC_VERSION"] = mkline
 
@@ -57,9 +57,9 @@ func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
 }
 
 func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
-	mkline1 := NewMkLine(NewLine("fname", "10", "_=${SECOND}", nil))
-	mkline2 := NewMkLine(NewLine("fname", "11", "_=${THIRD}", nil))
-	mkline3 := NewMkLine(NewLine("fname", "12", "_=got it", nil))
+	mkline1 := NewMkLine(NewLine("fname", 10, "_=${SECOND}", nil))
+	mkline2 := NewMkLine(NewLine("fname", 11, "_=${THIRD}", nil))
+	mkline3 := NewMkLine(NewLine("fname", 12, "_=got it", nil))
 	G.pkg = NewPackage(".")
 	defineVar(mkline1, "FIRST")
 	defineVar(mkline2, "SECOND")
@@ -71,7 +71,7 @@ func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
 }
 
 func (s *Suite) TestResolveVariableRefs_SpecialChars(c *check.C) {
-	mkline := NewMkLine(NewLine("fname", "dummy", "_=x11", nil))
+	mkline := NewMkLine(NewLine("fname", 10, "_=x11", nil))
 	G.pkg = NewPackage("category/pkg")
 	G.pkg.vardef["GST_PLUGINS0.10_TYPE"] = mkline
 

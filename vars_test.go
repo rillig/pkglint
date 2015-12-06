@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Suite) TestVariableNeedsQuoting(c *check.C) {
-	line := NewLine("fname", "1", "dummy", nil)
+	line := NewLine("fname", 1, "dummy", nil)
 	G.globalData.InitVartypes()
 	pkgnameType := G.globalData.vartypes["PKGNAME"]
 

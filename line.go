@@ -29,27 +29,50 @@ func (rline *RawLine) String() string {
 }
 
 type Line struct {
-	fname   string
-	lines   string
-	text    string
-	raw     []*RawLine
-	changed bool
-	before  []*RawLine
-	after   []*RawLine
-	extra   map[string]interface{}
+	fname     string
+	firstLine int // Zero means not applicable, -1 means EOF
+	lastLine  int // Usually the same as firstLine, may differ in Makefiles
+	text      string
+	raw       []*RawLine
+	changed   bool
+	before    []*RawLine
+	after     []*RawLine
+	extra     map[string]interface{}
 }
 
-func NewLine(fname, linenos, text string, rawLines []*RawLine) *Line {
-	return &Line{fname, linenos, text, rawLines, false, nil, nil, make(map[string]interface{})}
+func NewLine(fname string, lineno int, text string, rawLines []*RawLine) *Line {
+	return NewLineMulti(fname, lineno, lineno, text, rawLines)
+}
+
+// NewLineMulti is for logical Makefile lines that end with backslash.
+func NewLineMulti(fname string, firstLine, lastLine int, text string, rawLines []*RawLine) *Line {
+	return &Line{fname, firstLine, lastLine, text, rawLines, false, nil, nil, make(map[string]interface{})}
 }
 
 // NewLineEof creates a dummy line for logging.
 func NewLineEof(fname string) *Line {
-	return NewLine(fname, "EOF", "", nil)
+	return NewLineMulti(fname, -1, 0, "", nil)
 }
 
 func (ln *Line) rawLines() []*RawLine {
 	return append(append(append([]*RawLine(nil), ln.before...), ln.raw...), ln.after...)
+}
+
+func (ln *Line) linenos() string {
+	switch {
+	case ln.firstLine == -1:
+		return "EOF"
+	case ln.firstLine == 0:
+		return ""
+	case ln.firstLine == ln.lastLine:
+		return sprintf("%d", ln.firstLine)
+	default:
+		return sprintf("%d--%d", ln.firstLine, ln.lastLine)
+	}
+}
+
+func (ln *Line) IsMultiline() bool {
+	return ln.firstLine > 0 && ln.firstLine != ln.lastLine
 }
 
 func (ln *Line) printSource(out io.Writer) {
@@ -63,23 +86,23 @@ func (ln *Line) printSource(out io.Writer) {
 
 func (ln *Line) fatalf(format string, args ...interface{}) {
 	ln.printSource(G.logErr)
-	fatalf(ln.fname, ln.lines, format, args...)
+	fatalf(ln.fname, ln.linenos(), format, args...)
 }
 func (ln *Line) errorf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return errorf(ln.fname, ln.lines, format, args...)
+	return errorf(ln.fname, ln.linenos(), format, args...)
 }
 func (ln *Line) warnf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return warnf(ln.fname, ln.lines, format, args...)
+	return warnf(ln.fname, ln.linenos(), format, args...)
 }
 func (ln *Line) notef(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return notef(ln.fname, ln.lines, format, args...)
+	return notef(ln.fname, ln.linenos(), format, args...)
 }
 func (ln *Line) debugf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return debugf(ln.fname, ln.lines, format, args...)
+	return debugf(ln.fname, ln.linenos(), format, args...)
 }
 
 func (ln *Line) explain(explanation ...string) {
@@ -103,7 +126,7 @@ func (ln *Line) explain(explanation ...string) {
 }
 
 func (ln *Line) String() string {
-	return ln.fname + ":" + ln.lines + ": " + ln.text
+	return ln.fname + ":" + ln.linenos() + ": " + ln.text
 }
 
 func (ln *Line) insertBefore(line string) {

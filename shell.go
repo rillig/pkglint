@@ -564,7 +564,7 @@ func (ctx *ShelltextContext) handleComment() bool {
 	}
 
 	semicolon := contains(shellword, ";")
-	multiline := contains(ctx.msline.lines, "--")
+	multiline := ctx.msline.IsMultiline()
 
 	if semicolon {
 		ctx.msline.warnf("A shell comment should not contain semicolons.")

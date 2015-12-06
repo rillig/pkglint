@@ -24,7 +24,7 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesDistinfo_GlobalHashMismatch(c *check.C) {
-	otherLine := NewLine("other/distinfo", "7", "dummy", nil)
+	otherLine := NewLine("other/distinfo", 7, "dummy", nil)
 	G.ipcDistinfo = make(map[string]*Hash)
 	G.ipcDistinfo["SHA512:pkgname-1.0.tar.gz"] = &Hash{"asdfasdf", otherLine}
 

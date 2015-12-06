@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Suite) TestLineModify(c *check.C) {
-	line := NewLine("fname", "1", "dummy", []*RawLine{{1, "original\n"}})
+	line := NewLine("fname", 1, "dummy", []*RawLine{{1, "original\n"}})
 
 	c.Check(line.changed, equals, false)
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{{1, "original\n"}})
@@ -51,7 +51,7 @@ func (s *Suite) TestLineModify(c *check.C) {
 }
 
 func (s *Suite) TestLine_CheckAbsolutePathname(c *check.C) {
-	line := NewLine("Makefile", "1", "# dummy", nil)
+	line := NewLine("Makefile", 1, "# dummy", nil)
 
 	line.checkAbsolutePathname("bindir=/bin")
 	line.checkAbsolutePathname("bindir=/../lib")

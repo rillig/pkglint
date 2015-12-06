@@ -342,7 +342,7 @@ func checkfile(fname string) {
 	}
 
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
-		line := NewLine(fname, noLines, "", nil)
+		line := NewLine(fname, 0, "", nil)
 		line.warnf("Should not be executable.")
 		line.explain(
 			"No package file should ever be executable. Even the INSTALL and",

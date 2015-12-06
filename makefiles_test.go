@@ -8,7 +8,7 @@ import (
 // it is escaped by a backslash. In shell commands, on the other hand, it
 // is interpreted literally.
 func (s *Suite) TestParselineMk_VarAssign(c *check.C) {
-	line := NewLine("fname", "1", "SED_CMD=\t's,\\#,hash,g'", nil)
+	line := NewLine("fname", 1, "SED_CMD=\t's,\\#,hash,g'", nil)
 
 	parselineMk(line)
 

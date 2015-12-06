@@ -20,7 +20,7 @@ var (
 	llDebug = &LogLevel{"DEBUG", "debug"}
 )
 
-var dummyLine = NewLine(noFile, noLines, "", nil)
+var dummyLine = NewLine(noFile, 0, "", nil)
 
 func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...interface{}) bool {
 	if fname != noFile {

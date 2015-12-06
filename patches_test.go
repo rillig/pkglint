@@ -70,7 +70,7 @@ func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
 }
 
 func (s *Suite) TestChecklineOtherAbsolutePathname(c *check.C) {
-	line := NewLine("patch-ag", "1", "+$install -s -c ./bin/rosegarden ${DESTDIR}$BINDIR", nil)
+	line := NewLine("patch-ag", 1, "+$install -s -c ./bin/rosegarden ${DESTDIR}$BINDIR", nil)
 
 	checklineOtherAbsolutePathname(line, line.text)
 

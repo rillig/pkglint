@@ -596,7 +596,7 @@ func (mkline *MkLine) checkText(text string) {
 		mkline.warnf("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}
 
-	if mkline.lines == "1" {
+	if mkline.firstLine == 1 {
 		checklineRcsid(mkline.Line, `# `, "# ")
 	}
 
