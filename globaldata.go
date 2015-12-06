@@ -357,8 +357,8 @@ func (gd *GlobalData) loadUserDefinedVars() {
 
 	gd.userDefinedVars = make(map[string]*MkLine)
 	for _, mkline := range mklines.mklines {
-		if varname, ok := mkline.extra["varname"].(string); ok {
-			gd.userDefinedVars[varname] = mkline
+		if mkline.IsVarassign() {
+			gd.userDefinedVars[mkline.Varname()] = mkline
 		}
 	}
 }

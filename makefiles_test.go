@@ -7,11 +7,15 @@ import (
 // In variable assignments, a plain '#' introduces a line comment, unless
 // it is escaped by a backslash. In shell commands, on the other hand, it
 // is interpreted literally.
-func (s *Suite) TestParselineMk_VarAssign(c *check.C) {
-	line := NewLine("fname", 1, "SED_CMD=\t's,\\#,hash,g'", nil)
+func (s *Suite) TestParselineMk_Varassign(c *check.C) {
+	line := NewMkLine(NewLine("fname", 1, "SED_CMD=\t's,\\#,hash,g'", nil))
 
-	parselineMk(line)
+	c.Check(line.Varname(), equals, "SED_CMD")
+	c.Check(line.Value(), equals, "'s,#,hash,g'")
+}
 
-	c.Check(line.extra["varname"], equals, "SED_CMD")
-	c.Check(line.extra["value"], equals, "'s,#,hash,g'")
+func (s *Suite) TestParselineMk_Shellcmd(c *check.C) {
+	line := NewMkLine(NewLine("fname", 1, "\tsed -e 's,\\#,hash,g'", nil))
+
+	c.Check(line.Shellcmd(), equals, "sed -e 's,\\#,hash,g'")
 }

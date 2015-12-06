@@ -193,7 +193,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 		return defaultValue
 	}
 
-	value := mkline.extra["value"].(string)
+	value := mkline.Value()
 	value = resolveVarsInRelativePath(value, true)
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
@@ -232,16 +232,14 @@ func checklineValidCharacters(line *Line, reChar string) {
 	}
 }
 
-func checklineValidCharactersInValue(line *Line, reValid string) {
-	varname := line.extra["varname"].(string)
-	value := line.extra["value"].(string)
-	rest := regcomp(reValid).ReplaceAllString(value, "")
+func checklineValidCharactersInValue(line *MkLine, reValid string) {
+	rest := regcomp(reValid).ReplaceAllString(line.Value(), "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
 			uni += sprintf(" %U", c)
 		}
-		line.warnf("%s contains invalid characters (%s).", varname, uni[1:])
+		line.warnf("%s contains invalid characters (%s).", line.Varname(), uni[1:])
 	}
 }
 

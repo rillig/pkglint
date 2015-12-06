@@ -17,13 +17,28 @@ func NewMkLine(line *Line) *MkLine {
 	return &MkLine{line}
 }
 
-func (mkline *MkLine) IsVarassign() bool {
-	return mkline.extra["is_varassign"] != nil
-}
-
-func (mkline *MkLine) Varname() string {
-	return mkline.extra["varname"].(string)
-}
+func (mkline *MkLine) IsVarassign() bool   { return mkline.extra["is_varassign"] != nil }
+func (mkline *MkLine) Varname() string     { return mkline.extra["varname"].(string) }
+func (mkline *MkLine) Varcanon() string    { return mkline.extra["varcanon"].(string) }
+func (mkline *MkLine) Varparam() string    { return mkline.extra["varparam"].(string) }
+func (mkline *MkLine) Op() string          { return mkline.extra["op"].(string) }
+func (mkline *MkLine) Value() string       { return mkline.extra["value"].(string) }
+func (mkline *MkLine) Comment() string     { return mkline.extra["comment"].(string) }
+func (mkline *MkLine) IsShellcmd() bool    { return mkline.extra["is_shellcmd"] != nil }
+func (mkline *MkLine) Shellcmd() string    { return mkline.extra["shellcmd"].(string) }
+func (mkline *MkLine) IsComment() bool     { return mkline.extra["is_comment"] != nil } // Re-uses .Comment()
+func (mkline *MkLine) IsEmpty() bool       { return mkline.extra["is_empty"] != nil }
+func (mkline *MkLine) IsCond() bool        { return mkline.extra["is_cond"] != nil }
+func (mkline *MkLine) Indent() string      { return mkline.extra["indent"].(string) }
+func (mkline *MkLine) Directive() string   { return mkline.extra["directive"].(string) }
+func (mkline *MkLine) Args() string        { return mkline.extra["args"].(string) }
+func (mkline *MkLine) IsInclude() bool     { return mkline.extra["is_include"] != nil }
+func (mkline *MkLine) MustExist() bool     { return mkline.extra["must_exist"].(bool) }
+func (mkline *MkLine) Includefile() string { return mkline.extra["includefile"].(string) }
+func (mkline *MkLine) IsSysinclude() bool  { return mkline.extra["is_sysinclude"] != nil } // Re-uses .Includefile() and .Comment()
+func (mkline *MkLine) IsDependency() bool  { return mkline.extra["is_dependency"] != nil }
+func (mkline *MkLine) Targets() string     { return mkline.extra["targets"].(string) }
+func (mkline *MkLine) Sources() string     { return mkline.extra["sources"].(string) }
 
 func (mkline *MkLine) checkVardef(varname, op string) {
 	defer tracecall("MkLine.checkVardef", varname, op)()
@@ -295,10 +310,10 @@ func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
 func (mkline *MkLine) checkVarassign() {
 	defer tracecall("MkLine.checkVarassign")()
 
-	varname := mkline.extra["varname"].(string)
-	op := mkline.extra["op"].(string)
-	value := mkline.extra["value"].(string)
-	comment := mkline.extra["comment"].(string)
+	varname := mkline.Varname()
+	op := mkline.Op()
+	value := mkline.Value()
+	comment := mkline.Comment()
 	varbase := varnameBase(varname)
 	varcanon := varnameCanon(varname)
 
@@ -644,7 +659,7 @@ func (mkline *MkLine) checkText(text string) {
 func (mkline *MkLine) checkIf() {
 	defer tracecall("MkLine.checkIf")()
 
-	condition := mkline.extra["args"].(string)
+	condition := mkline.Args()
 	tree := parseMkCond(mkline.Line, condition)
 
 	{

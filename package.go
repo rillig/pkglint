@@ -55,7 +55,7 @@ func (pkg *Package) defineVar(mkline *MkLine, varname string) {
 
 func (pkg *Package) varValue(varname string) (string, bool) {
 	if mkline := pkg.vardef[varname]; mkline != nil {
-		return mkline.extra["value"].(string), true
+		return mkline.Value(), true
 	}
 	return "", false
 }
@@ -89,7 +89,8 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	// Collect all the included buildlink3.mk files from the file.
 	includedFiles := make(map[string]*MkLine)
 	for _, mkline := range mklines.mklines {
-		if m, _, file := match2(mkline.text, reMkInclude); m {
+		if mkline.IsInclude() {
+			file := mkline.Includefile()
 			if m, bl3 := match1(file, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
 				includedFiles[bl3] = mkline
 				if pkg.bl3[bl3] == nil {
@@ -206,14 +207,13 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 
 	if vardef["GNU_CONFIGURE"] != nil && vardef["USE_LANGUAGES"] != nil {
 		languagesLine := vardef["USE_LANGUAGES"]
-		value := languagesLine.extra["value"].(string)
 
-		if languagesLine.extra["comment"] != nil && matches(languagesLine.extra["comment"].(string), `(?-i)\b(?:c|empty|none)\b`) {
+		if matches(languagesLine.Comment(), `(?-i)\b(?:c|empty|none)\b`) {
 			// Don't emit a warning, since the comment
 			// probably contains a statement that C is
 			// really not needed.
 
-		} else if !matches(value, `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
+		} else if !matches(languagesLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
 			vardef["GNU_CONFIGURE"].warnf("GNU_CONFIGURE almost always needs a C compiler, ...")
 			languagesLine.warnf("... but \"c\" is not added to USE_LANGUAGES.")
 		}
@@ -242,7 +242,7 @@ func (pkg *Package) getNbpart() string {
 	if line == nil {
 		return ""
 	}
-	pkgrevision := line.extra["value"].(string)
+	pkgrevision := line.Value()
 	if rev, err := strconv.Atoi(pkgrevision); err == nil {
 		return sprintf("nb%d", rev)
 	}
@@ -255,18 +255,18 @@ func (pkg *Package) determineEffectivePkgVars() {
 
 	distname := ""
 	if distnameLine != nil {
-		distname = distnameLine.extra["value"].(string)
+		distname = distnameLine.Value()
 	}
 	pkgname := ""
 	if pkgnameLine != nil {
-		pkgname = pkgnameLine.extra["value"].(string)
+		pkgname = pkgnameLine.Value()
 	}
 
 	if distname != "" && pkgname != "" {
 		pkgname = pkg.pkgnameFromDistname(pkgname, distname)
 	}
 
-	if pkgname != "" && pkgname == distname && pkgnameLine.extra["comment"].(string) == "" {
+	if pkgname != "" && pkgname == distname && pkgnameLine.Comment() == "" {
 		pkgnameLine.notef("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
 	}
 
@@ -448,6 +448,7 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 	// - new sectindex == old sectindex && new varindex > old varindex
 	// - new nextSection == true && old nextSection == false
 	for lineno < len(mklines.lines) {
+		mkline := mklines.mklines[lineno]
 		line := mklines.lines[lineno]
 		text := line.text
 
@@ -468,8 +469,8 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		case hasPrefix(text, "#"):
 			lineno++
 
-		case line.extra["varcanon"] != nil:
-			varcanon := line.extra["varcanon"].(string)
+		case mkline.IsVarassign():
+			varcanon := mkline.Varcanon()
 
 			if belowText, exists := below[varcanon]; exists {
 				if belowText != "" {

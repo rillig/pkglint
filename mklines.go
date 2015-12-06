@@ -75,7 +75,7 @@ func (mklines *MkLines) useVar(mkline *MkLine, varname string) {
 
 func (mklines *MkLines) varValue(varname string) (value string, found bool) {
 	if mkline := mklines.vardef[varname]; mkline != nil {
-		return mkline.extra["value"].(string), true
+		return mkline.Value(), true
 	}
 	return "", false
 }
@@ -112,13 +112,13 @@ func (mklines *MkLines) check() {
 
 		checklineTrailingWhitespace(mkline.Line)
 
-		if mkline.extra["is_empty"] != nil {
+		if mkline.IsEmpty() {
 			substcontext.Finish(mkline)
 
-		} else if mkline.extra["is_comment"] != nil {
+		} else if mkline.IsComment() {
 			// No further checks.
 
-		} else if mkline.extra["is_varassign"] != nil {
+		} else if mkline.IsVarassign() {
 			mkline.checkVaralign()
 			mkline.checkVarassign()
 			substcontext.Varassign(mkline)
@@ -128,13 +128,13 @@ func (mklines *MkLines) check() {
 			mkline.checkText(shellcmd)
 			NewMkShellLine(mkline).checkShelltext(shellcmd)
 
-		} else if m, include, includefile := match2(text, reMkInclude); m {
-			mklines.checklineInclude(mkline, includefile, include == "include")
+		} else if mkline.IsInclude() {
+			mklines.checklineInclude(mkline)
 
 		} else if matches(text, reMkSysinclude) {
 
-		} else if m, indent, directive, args := match3(text, reMkCond); m {
-			mklines.checklinePreproc(mkline, indent, directive, args)
+		} else if mkline.IsCond() {
+			mklines.checklineCond(mkline)
 
 		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
 			mklines.checklineDependencyRule(mkline, targets, dependencies, allowedTargets)
@@ -165,40 +165,40 @@ func (mklines *MkLines) check() {
 
 func (mklines *MkLines) determineDefinedVariables() {
 	for _, mkline := range mklines.mklines {
-		if mkline.extra["is_varassign"] == nil {
+		if !mkline.IsVarassign() {
 			continue
 		}
 
-		varcanon := mkline.extra["varcanon"].(string)
+		varcanon := mkline.Varcanon()
 		switch varcanon {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
-			for _, varname := range splitOnSpace(mkline.extra["value"].(string)) {
+			for _, varname := range splitOnSpace(mkline.Value()) {
 				mklines.buildDefs[varname] = true
 				_ = G.opts.DebugMisc && mkline.debugf("%q is added to BUILD_DEFS.", varname)
 			}
 
 		case "PLIST_VARS":
-			for _, id := range splitOnSpace(mkline.extra["value"].(string)) {
+			for _, id := range splitOnSpace(mkline.Value()) {
 				mklines.plistVars["PLIST."+id] = true
 				_ = G.opts.DebugMisc && mkline.debugf("PLIST.%s is added to PLIST_VARS.", id)
 				mklines.useVar(mkline, "PLIST."+id)
 			}
 
 		case "USE_TOOLS":
-			for _, tool := range splitOnSpace(mkline.extra["value"].(string)) {
+			for _, tool := range splitOnSpace(mkline.Value()) {
 				tool = strings.Split(tool, ":")[0]
 				mklines.tools[tool] = true
 				_ = G.opts.DebugMisc && mkline.debugf("%s is added to USE_TOOLS.", tool)
 			}
 
 		case "SUBST_VARS.*":
-			for _, svar := range splitOnSpace(mkline.extra["value"].(string)) {
+			for _, svar := range splitOnSpace(mkline.Value()) {
 				mklines.useVar(mkline, varnameCanon(svar))
 				_ = G.opts.DebugMisc && mkline.debugf("varuse %s", svar)
 			}
 
 		case "OPSYSVARS":
-			for _, osvar := range splitOnSpace(mkline.extra["value"].(string)) {
+			for _, osvar := range splitOnSpace(mkline.Value()) {
 				mklines.useVar(mkline, osvar+".*")
 				defineVar(mkline, osvar)
 			}
@@ -222,7 +222,9 @@ func (mklines *MkLines) determineUsedVariables() {
 	}
 }
 
-func (mklines *MkLines) checklinePreproc(mkline *MkLine, indent, directive, args string) {
+func (mklines *MkLines) checklineCond(mkline *MkLine) {
+	indent, directive, args := mkline.Indent(), mkline.Directive(), mkline.Args()
+
 	if matches(directive, `^(?:endif|endfor|elif|else)$`) {
 		if len(mklines.indentation) > 1 {
 			mklines.popIndent()
@@ -346,11 +348,13 @@ func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, depende
 	}
 }
 
-func (mklines *MkLines) checklineInclude(mkline *MkLine, includefile string, mustExist bool) {
+func (mklines *MkLines) checklineInclude(mkline *MkLine) {
+	includefile := mkline.Includefile()
+	mustExist := mkline.MustExist()
 	_ = G.opts.DebugInclude && mkline.debugf("includefile=%s", includefile)
 	mkline.checkRelativePath(includefile, mustExist)
 
-	if hasSuffix(includefile, "../Makefile") {
+	if hasSuffix(includefile, "/Makefile") {
 		mkline.errorf("Other Makefiles must not be included directly.")
 		mkline.explain(
 			"If you want to include portions of another Makefile, extract",

@@ -93,8 +93,8 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 			}
 		}
 
-		if line.extra["is_varassign"] != nil {
-			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
+		if mkline.IsVarassign() {
+			varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
 
 			if op != "?=" || G.pkg.vardef[varname] == nil {
 				_ = G.opts.DebugMisc && line.debugf("varassign(%q, %q, %q)", varname, op, value)
@@ -179,8 +179,9 @@ func parselineMk(line *Line) {
 		return
 	}
 
-	if m, _, includefile := match2(text, reMkInclude); m {
+	if m, directive, includefile := match2(text, reMkInclude); m {
 		line.extra["is_include"] = true
+		line.extra["must_exist"] = directive == "include"
 		line.extra["includefile"] = includefile
 		return
 	}

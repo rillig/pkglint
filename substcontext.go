@@ -17,9 +17,9 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		return
 	}
 
-	varname := mkline.extra["varname"].(string)
-	op := mkline.extra["op"].(string)
-	value := mkline.extra["value"].(string)
+	varname := mkline.Varname()
+	op := mkline.Op()
+	value := mkline.Value()
 	if varname == "SUBST_CLASSES" {
 		classes := splitOnSpace(value)
 		if len(classes) > 1 {
