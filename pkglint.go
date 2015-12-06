@@ -30,7 +30,7 @@ func findPkgsrcTopdir(fname string) string {
 	return ""
 }
 
-func loadPackageMakefile(fname string) []*Line {
+func (pkg *Package) loadPackageMakefile(fname string) []*Line {
 	defer tracecall("loadPackageMakefile", fname)()
 
 	var mainLines, allLines []*Line
@@ -48,25 +48,25 @@ func loadPackageMakefile(fname string) []*Line {
 
 	NewMkLines(allLines).determineUsedVariables()
 
-	G.pkgContext.pkgdir = expandVariableWithDefault("PKGDIR", ".")
-	G.pkgContext.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
-	G.pkgContext.filesdir = expandVariableWithDefault("FILESDIR", "files")
-	G.pkgContext.patchdir = expandVariableWithDefault("PATCHDIR", "patches")
+	pkg.pkgdir = expandVariableWithDefault("PKGDIR", ".")
+	pkg.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
+	pkg.filesdir = expandVariableWithDefault("FILESDIR", "files")
+	pkg.patchdir = expandVariableWithDefault("PATCHDIR", "patches")
 
 	if varIsDefined("PHPEXT_MK") {
 		if !varIsDefined("USE_PHP_EXT_PATCHES") {
-			G.pkgContext.patchdir = "patches"
+			pkg.patchdir = "patches"
 		}
 		if varIsDefined("PECL_VERSION") {
-			G.pkgContext.distinfoFile = "distinfo"
+			pkg.distinfoFile = "distinfo"
 		}
 	}
 
 	_ = G.opts.DebugMisc &&
-		dummyLine.debugf("DISTINFO_FILE=%s", G.pkgContext.distinfoFile) &&
-		dummyLine.debugf("FILESDIR=%s", G.pkgContext.filesdir) &&
-		dummyLine.debugf("PATCHDIR=%s", G.pkgContext.patchdir) &&
-		dummyLine.debugf("PKGDIR=%s", G.pkgContext.pkgdir)
+		dummyLine.debugf("DISTINFO_FILE=%s", pkg.distinfoFile) &&
+		dummyLine.debugf("FILESDIR=%s", pkg.filesdir) &&
+		dummyLine.debugf("PATCHDIR=%s", pkg.patchdir) &&
+		dummyLine.debugf("PKGDIR=%s", pkg.pkgdir)
 
 	return mainLines
 }
@@ -167,8 +167,8 @@ func resolveVariableRefs(text string) string {
 			varname := m[2 : len(m)-1]
 			if !visited[varname] {
 				visited[varname] = true
-				if ctx := G.pkgContext; ctx != nil {
-					if value, ok := ctx.varValue(varname); ok {
+				if G.pkg != nil {
+					if value, ok := G.pkg.varValue(varname); ok {
 						return value
 					}
 				}
@@ -188,7 +188,7 @@ func resolveVariableRefs(text string) string {
 }
 
 func expandVariableWithDefault(varname, defaultValue string) string {
-	mkline := G.pkgContext.vardef[varname]
+	mkline := G.pkg.vardef[varname]
 	if mkline == nil {
 		return defaultValue
 	}

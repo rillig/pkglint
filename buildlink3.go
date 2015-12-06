@@ -59,10 +59,10 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 		pkgbaseLine.errorf("Package name mismatch between %q ...", pkgbase)
 		pkgidLine.errorf("... and %q.", pkgid)
 	}
-	if G.pkgContext != nil {
-		if mkbase := G.pkgContext.effectivePkgbase; mkbase != "" && mkbase != pkgid {
+	if G.pkg != nil {
+		if mkbase := G.pkg.effectivePkgbase; mkbase != "" && mkbase != pkgid {
 			pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
-			G.pkgContext.effectivePkgnameLine.errorf("... and %q.", mkbase)
+			G.pkg.effectivePkgnameLine.errorf("... and %q.", mkbase)
 		}
 	}
 
@@ -156,5 +156,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 		exp.currentLine().warnf("The file should end here.")
 	}
 
-	checklinesBuildlink3Inclusion(mklines)
+	if G.pkg != nil {
+		G.pkg.checklinesBuildlink3Inclusion(mklines)
+	}
 }

@@ -125,12 +125,12 @@ func (mklines *MkLines) check() {
 				if path.Base(mkline.fname) == "buildlink3.mk" {
 					mkline.notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 				}
-				if G.pkgContext != nil {
-					G.pkgContext.seenBsdPrefsMk = true
+				if G.pkg != nil {
+					G.pkg.seenBsdPrefsMk = true
 				}
 			} else if includefile == "../../mk/bsd.fast.prefs.mk" {
-				if G.pkgContext != nil {
-					G.pkgContext.seenBsdPrefsMk = true
+				if G.pkg != nil {
+					G.pkg.seenBsdPrefsMk = true
 				}
 			}
 
@@ -311,37 +311,4 @@ func (mklines *MkLines) determineUsedVariables() {
 			rest = rest[:m[0]] + rest[m[1]:]
 		}
 	}
-}
-
-func (mklines *MkLines) checkForUsedComment(relativeName string) {
-	lines := mklines.lines
-	if len(lines) < 3 {
-		return
-	}
-
-	expected := "# used by " + relativeName
-	for _, line := range lines {
-		if line.text == expected {
-			return
-		}
-	}
-
-	i := 0
-	for i < 2 && matches(lines[i].text, `^\s*#(.*)$`) {
-		i++
-	}
-
-	insertLine := lines[i]
-	insertLine.warnf("Please add a line %q here.", expected)
-	insertLine.explain(
-		"Since Makefile.common files usually don't have any comments and",
-		"therefore not a clearly defined interface, they should at least contain",
-		"references to all files that include them, so that it is easier to see",
-		"what effects future changes may have.",
-		"",
-		"If there are more than five packages that use a Makefile.common,",
-		"you should think about giving it a proper name (maybe plugin.mk) and",
-		"documenting its interface.")
-	insertLine.insertBefore(expected)
-	saveAutofixChanges(lines)
 }

@@ -12,11 +12,10 @@ func checklinesDistinfo(lines []*Line) {
 
 	fname := lines[0].fname
 	var patchesDir = "patches"
-	if G.pkgContext != nil && dirExists(G.currentDir+"/"+G.pkgContext.patchdir) {
-		patchesDir = G.pkgContext.patchdir
-	}
-	if G.pkgContext != nil && hasSuffix(fname, "/lang/php54/distinfo") {
+	if G.pkg != nil && hasSuffix(fname, "/lang/php54/distinfo") {
 		patchesDir = G.curPkgsrcdir + "/lang/php54/patches"
+	} else if G.pkg != nil && dirExists(G.currentDir+"/"+G.pkg.patchdir) {
+		patchesDir = G.pkg.patchdir
 	}
 	_ = G.opts.DebugMisc && debugf(fname, noLines, "patchesDir=%q", patchesDir)
 

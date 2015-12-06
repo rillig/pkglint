@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -96,7 +97,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 func (s *Suite) TearDownTest(c *check.C) {
 	G = nil
 	if out := s.Output(); out != "" {
-		c.Logf("Unchecked output; check with: c.Check(s.Output(), equals, %q)", out)
+		fmt.Fprintf(os.Stderr, "Unchecked output in %q; check with: c.Check(s.Output(), equals, %q)", c.TestName(), out)
 	}
 	s.tmpdir = ""
 }

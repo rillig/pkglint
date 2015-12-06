@@ -48,7 +48,7 @@ func checklinesPlist(lines []*Line) {
 
 		if hasPrefix(text, "${") {
 			if m, varname, rest := match2(text, `^\$\{([\w_]+)\}(.*)`); m {
-				if G.pkgContext != nil && G.pkgContext.plistSubstCond[varname] {
+				if G.pkg != nil && G.pkg.plistSubstCond[varname] {
 					_ = G.opts.DebugMisc && line.debugf("Removed PLIST_SUBST conditional %q.", varname)
 					text = rest
 				}
@@ -196,11 +196,11 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, fullname string) {
 		line.errorf("\"info/dir\" must not be listed. Use install-info to add/remove an entry.")
 
 	case hasPrefix(text, "info/"):
-		if G.pkgContext != nil && G.pkgContext.vardef["INFO_FILES"] == nil {
+		if G.pkg != nil && G.pkg.vardef["INFO_FILES"] == nil {
 			line.warnf("Packages that install info files should set INFO_FILES.")
 		}
 
-	case G.pkgContext != nil && G.pkgContext.effectivePkgbase != "" && hasPrefix(text, "lib/"+G.pkgContext.effectivePkgbase+"/"):
+	case G.pkg != nil && G.pkg.effectivePkgbase != "" && hasPrefix(text, "lib/"+G.pkg.effectivePkgbase+"/"):
 		// Fine.
 
 	case hasPrefix(text, "lib/locale/"):
@@ -217,22 +217,22 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, fullname string) {
 
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
-		if G.pkgContext != nil && G.pkgContext.included[f] == nil {
+		if G.pkg != nil && G.pkg.included[f] == nil {
 			line.warnf("Packages that install a .desktop entry should .include %q.", f)
 			line.explain(
 				"If *.desktop files contain MimeType keys, the global MIME type registry",
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
 		}
 
-	case hasPrefix(text, "share/icons/hicolor/") && G.pkgContext != nil && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
+	case hasPrefix(text, "share/icons/hicolor/") && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
-		if G.pkgContext.included[f] == nil {
+		if G.pkg.included[f] == nil {
 			line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
 		}
 
-	case hasPrefix(text, "share/icons/gnome") && G.pkgContext != nil && G.pkgContext.pkgpath != "graphics/gnome-icon-theme":
+	case hasPrefix(text, "share/icons/gnome") && G.pkg != nil && G.pkg.pkgpath != "graphics/gnome-icon-theme":
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
-		if G.pkgContext.included[f] == nil {
+		if G.pkg.included[f] == nil {
 			line.errorf("The package Makefile must include %q.", f)
 			line.explain(
 				"Packages that install GNOME icons must maintain the icon theme cache.")
@@ -244,11 +244,11 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, fullname string) {
 	case hasPrefix(text, "share/doc/html/"):
 		_ = G.opts.WarnPlistDepr && line.warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
-	case G.pkgContext != nil && G.pkgContext.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkgContext.effectivePkgbase+"/") ||
-		hasPrefix(text, "share/examples/"+G.pkgContext.effectivePkgbase+"/")):
+	case G.pkg != nil && G.pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkg.effectivePkgbase+"/") ||
+		hasPrefix(text, "share/examples/"+G.pkg.effectivePkgbase+"/")):
 		// Fine.
 
-	case text == "share/icons/hicolor/icon-theme.cache" && G.pkgContext != nil && G.pkgContext.pkgpath != "graphics/hicolor-icon-theme":
+	case text == "share/icons/hicolor/icon-theme.cache" && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
 		line.errorf("This file must not appear in any PLIST file.")
 		line.explain(
 			"Remove this line and add the following line to the package Makefile.",
@@ -270,7 +270,7 @@ func (pline *PlistLine) checkPathname(pctx *PlistContext, fullname string) {
 		_ = G.opts.DebugUnchecked && line.debugf("Unchecked pathname %q.", text)
 	}
 
-	if contains(text, "${PKGLOCALEDIR}") && G.pkgContext != nil && G.pkgContext.vardef["USE_PKGLOCALEDIR"] == nil {
+	if contains(text, "${PKGLOCALEDIR}") && G.pkg != nil && G.pkg.vardef["USE_PKGLOCALEDIR"] == nil {
 		line.warnf("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
 	}
 
@@ -326,7 +326,7 @@ func (pline *PlistLine) checkpathLib(pctx *PlistContext, basename string) {
 			_ = G.opts.WarnExtra && pline.line.warnf("Library filename does not start with \"lib\".")
 		}
 		if ext == "la" {
-			if G.pkgContext != nil && G.pkgContext.vardef["USE_LIBTOOL"] == nil {
+			if G.pkg != nil && G.pkg.vardef["USE_LIBTOOL"] == nil {
 				pline.line.warnf("Packages that install libtool libraries should define USE_LIBTOOL.")
 			}
 		}

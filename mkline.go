@@ -211,7 +211,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	//
 	// When doing checks outside a package, the :M* operator is needed for safety.
 	needMstar := matches(varname, `^(?:.*_)?(?:CFLAGS||CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`) &&
-		(G.pkgContext == nil || G.pkgContext.vardef["GNU_CONFIGURE"] != nil)
+		(G.pkg == nil || G.pkg.vardef["GNU_CONFIGURE"] != nil)
 
 	strippedMod := mod
 	if m, stripped := match1(mod, `(.*?)(?::M\*)?(?::Q)?$`); m {
@@ -296,7 +296,7 @@ func (mkline *MkLine) checkVarassign() {
 
 	mkline.checkVardef(varname, op)
 
-	if G.opts.WarnExtra && op == "?=" && G.pkgContext != nil && !G.pkgContext.seenBsdPrefsMk {
+	if G.opts.WarnExtra && op == "?=" && G.pkg != nil && !G.pkg.seenBsdPrefsMk {
 		switch varbase {
 		case "BUILDLINK_PKGSRCDIR", "BUILDLINK_DEPMETHOD", "BUILDLINK_ABI_DEPENDS":
 			// FIXME: What about these ones? They occur quite often.
@@ -339,8 +339,8 @@ func (mkline *MkLine) checkVarassign() {
 		mkline.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
-	if varname == "PERL5_PACKLIST" && G.pkgContext != nil {
-		if m, p5pkgname := match1(G.pkgContext.effectivePkgbase, `^p5-(.*)`); m {
+	if varname == "PERL5_PACKLIST" && G.pkg != nil {
+		if m, p5pkgname := match1(G.pkg.effectivePkgbase, `^p5-(.*)`); m {
 			guess := "auto/" + strings.Replace(p5pkgname, "-", "/", -1) + "/.packlist"
 
 			ucvalue, ucguess := strings.ToUpper(value), strings.ToUpper(guess)
@@ -415,9 +415,9 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
-	if G.pkgContext != nil && G.pkgContext.plistSubstCond != nil {
+	if G.pkg != nil {
 		if m, plistVarname := match1(value, `(.+)=.*@comment.*`); m {
-			G.pkgContext.plistSubstCond[plistVarname] = true
+			G.pkg.plistSubstCond[plistVarname] = true
 		}
 	}
 

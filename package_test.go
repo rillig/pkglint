@@ -5,22 +5,24 @@ import (
 )
 
 func (s *Suite) TestPkgnameFromDistname(c *check.C) {
-	G.pkgContext = newPkgContext("dummy")
-	G.pkgContext.vardef["PKGNAME"] = NewMkLine(NewLine("dummy", "dummy", "dummy", nil))
+	pkg := NewPackage("dummy")
+	pkg.vardef["PKGNAME"] = NewMkLine(NewLine("Makefile", "5", "PKGNAME=dummy", nil))
 
-	c.Check(pkgnameFromDistname("pkgname-1.0", "whatever"), equals, "pkgname-1.0")
-	c.Check(pkgnameFromDistname("${DISTNAME}", "distname-1.0"), equals, "distname-1.0")
-	c.Check(pkgnameFromDistname("${DISTNAME:S/dist/pkg/}", "distname-1.0"), equals, "pkgname-1.0")
-	c.Check(pkgnameFromDistname("${DISTNAME:S|a|b|g}", "panama-0.13"), equals, "pbnbmb-0.13")
-	c.Check(pkgnameFromDistname("${DISTNAME:S|^lib||}", "libncurses"), equals, "ncurses")
-	c.Check(pkgnameFromDistname("${DISTNAME:S|^lib||}", "mylib"), equals, "mylib")
+	c.Check(pkg.pkgnameFromDistname("pkgname-1.0", "whatever"), equals, "pkgname-1.0")
+	c.Check(pkg.pkgnameFromDistname("${DISTNAME}", "distname-1.0"), equals, "distname-1.0")
+	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S/dist/pkg/}", "distname-1.0"), equals, "pkgname-1.0")
+	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S|a|b|g}", "panama-0.13"), equals, "pbnbmb-0.13")
+	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S|^lib||}", "libncurses"), equals, "ncurses")
+	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S|^lib||}", "mylib"), equals, "mylib")
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestChecklinesPackageMakefileVarorder(c *check.C) {
 	s.UseCommandLine(c, "-Worder")
-	G.pkgContext = newPkgContext("x11/9term")
+	pkg := NewPackage("x11/9term")
 
-	ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
+	pkg.ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
 		"# $"+"NetBSD$",
 		"",
 		"DISTNAME=9term",
@@ -28,7 +30,7 @@ func (s *Suite) TestChecklinesPackageMakefileVarorder(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 
-	ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
+	pkg.ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
 		"# $"+"NetBSD$",
 		"",
 		"DISTNAME=9term",
@@ -42,12 +44,55 @@ func (s *Suite) TestChecklinesPackageMakefileVarorder(c *check.C) {
 }
 
 func (s *Suite) TestGetNbpart(c *check.C) {
-	G.pkgContext = newPkgContext("category/pkgbase")
-	G.pkgContext.vardef["PKGREVISION"] = NewMkLine(NewLine("Makefile", "1", "PKGREVISION=14", nil))
+	pkg := NewPackage("category/pkgbase")
+	pkg.vardef["PKGREVISION"] = NewMkLine(NewLine("Makefile", "1", "PKGREVISION=14", nil))
 
-	c.Check(getNbpart(), equals, "nb14")
+	c.Check(pkg.getNbpart(), equals, "nb14")
 
-	G.pkgContext.vardef["PKGREVISION"] = NewMkLine(NewLine("Makefile", "1", "PKGREVISION=asdf", nil))
+	pkg.vardef["PKGREVISION"] = NewMkLine(NewLine("Makefile", "1", "PKGREVISION=asdf", nil))
 
-	c.Check(getNbpart(), equals, "")
+	c.Check(pkg.getNbpart(), equals, "")
+}
+
+func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
+	s.NewMkLines("Makefile.common",
+		"# $"+"NetBSD$",
+		"",
+		"# used by sysutils/mc",
+	).checkForUsedComment("sysutils/mc")
+
+	c.Check(s.Output(), equals, "")
+
+	s.NewMkLines("Makefile.common").checkForUsedComment("category/package")
+
+	c.Check(s.Output(), equals, "")
+
+	s.NewMkLines("Makefile.common",
+		"# $"+"NetBSD$",
+	).checkForUsedComment("category/package")
+
+	c.Check(s.Output(), equals, "")
+
+	s.NewMkLines("Makefile.common",
+		"# $"+"NetBSD$",
+		"",
+	).checkForUsedComment("category/package")
+
+	c.Check(s.Output(), equals, "")
+
+	s.NewMkLines("Makefile.common",
+		"# $"+"NetBSD$",
+		"",
+		"VARNAME=\tvalue",
+	).checkForUsedComment("category/package")
+
+	c.Check(s.Output(), equals, "WARN: Makefile.common:2: Please add a line \"# used by category/package\" here.\n")
+
+	s.NewMkLines("Makefile.common",
+		"# $"+"NetBSD$",
+		"#",
+		"#",
+	).checkForUsedComment("category/package")
+
+	c.Check(s.Output(), equals, "WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.\n")
 }

@@ -548,7 +548,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 
 		// When the package author has explicitly defined a command
 		// variable, assume it to be valid.
-		if G.pkgContext != nil && G.pkgContext.vardef[varname] != nil {
+		if G.pkg != nil && G.pkg.vardef[varname] != nil {
 			return true
 		}
 	}

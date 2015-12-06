@@ -19,9 +19,8 @@ func (s *Suite) TestMainVersion(c *check.C) {
 }
 
 func (s *Suite) TestMainNoArgs(c *check.C) {
-	defer s.ExpectFatalError(func() {
-		c.Check(s.Stderr(), equals, "FATAL: \".\" is not inside a pkgsrc tree.\n")
-	})
+	exitcode := new(Pkglint).Main("pkglint")
 
-	new(Pkglint).Main("pkglint")
+	c.Check(exitcode, equals, 1)
+	c.Check(s.Stderr(), equals, "FATAL: \".\" is not inside a pkgsrc tree.\n")
 }

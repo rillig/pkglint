@@ -46,14 +46,14 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		if includeFile != "" {
 			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
-					G.pkgContext.bl3[bl3File] = line
+					G.pkg.bl3[bl3File] = line
 					_ = G.opts.DebugMisc && line.debugf("Buildlink3 file in package: %q", bl3File)
 				}
 			}
 		}
 
-		if includeFile != "" && G.pkgContext.included[includeFile] == nil {
-			G.pkgContext.included[includeFile] = line
+		if includeFile != "" && G.pkg.included[includeFile] == nil {
+			G.pkg.included[includeFile] = line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				mkline.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
@@ -62,7 +62,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 			if !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
 				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
-				G.pkgContext.seenMakefileCommon = true
+				G.pkg.seenMakefileCommon = true
 			}
 
 			if !contains(incDir, "/mk/") {
@@ -96,9 +96,9 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 		if line.extra["is_varassign"] != nil {
 			varname, op, value := line.extra["varname"].(string), line.extra["op"].(string), line.extra["value"].(string)
 
-			if op != "?=" || G.pkgContext.vardef[varname] == nil {
+			if op != "?=" || G.pkg.vardef[varname] == nil {
 				_ = G.opts.DebugMisc && line.debugf("varassign(%q, %q, %q)", varname, op, value)
-				G.pkgContext.vardef[varname] = NewMkLine(line) // XXX
+				G.pkg.vardef[varname] = NewMkLine(line) // XXX
 			}
 		}
 	}
@@ -116,11 +116,9 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", "../../lang/php54", -1)
 	tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", "suse100", -1)
 	tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", "../../lang/python27", -1)
-	if G.pkgContext != nil {
-		tmp = strings.Replace(tmp, "${FILESDIR}", G.pkgContext.filesdir, -1)
-	}
-	if G.pkgContext != nil {
-		tmp = strings.Replace(tmp, "${PKGDIR}", G.pkgContext.pkgdir, -1)
+	if G.pkg != nil {
+		tmp = strings.Replace(tmp, "${FILESDIR}", G.pkg.filesdir, -1)
+		tmp = strings.Replace(tmp, "${PKGDIR}", G.pkg.pkgdir, -1)
 	}
 
 	if adjustDepth {

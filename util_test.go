@@ -76,5 +76,6 @@ func (s *Suite) TestIsEmptyDirAndGetSubdirs(c *check.C) {
 			c.Check(s.Output(), check.Matches, `FATAL: (.+): Cannot be read: open (.+): (.+)\n`)
 		})
 		c.Check(getSubdirs(nodir), check.DeepEquals, []string(nil))
+		c.FailNow()
 	}
 }

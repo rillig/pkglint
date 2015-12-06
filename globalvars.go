@@ -6,12 +6,12 @@ import (
 )
 
 type GlobalVars struct {
-	opts       CmdOpts
-	globalData GlobalData
-	pkgContext *PkgContext
-	mkContext  *MkContext
+	opts       CmdOpts    //
+	globalData GlobalData //
+	pkg        *Package   // The package that is currently checked.
+	mkContext  *MkContext // The Makefile (or fragment) that is currently checked.
 
-	todo             []string // The items that still need to be checked.
+	todo             []string // The files or directories that still need to be checked.
 	currentDir       string   // The currently checked directory, relative to the cwd
 	curPkgsrcdir     string   // The pkgsrc directory, relative to currentDir
 	isWip            bool     // Is the currently checked directory from pkgsrc-wip?

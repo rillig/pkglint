@@ -33,8 +33,8 @@ func checklineLicense(line *MkLine, value string) {
 	licenses := parseLicenses(value)
 	for _, license := range licenses {
 		var licenseFile string
-		if pkg := G.pkgContext; pkg != nil {
-			if licenseFileValue, ok := pkg.varValue("LICENSE_FILE"); ok {
+		if G.pkg != nil {
+			if licenseFileValue, ok := G.pkg.varValue("LICENSE_FILE"); ok {
 				licenseFile = G.currentDir + "/" + resolveVarsInRelativePath(licenseFileValue, false)
 			}
 		}
