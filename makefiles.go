@@ -88,7 +88,7 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 				if incBase == "Makefile.common" && incDir != "" {
 					makefileCommonLines := (*allLines)[lengthBeforeInclude:]
-					checkForUsedComment(makefileCommonLines, relpath(G.globalData.pkgsrcdir, fname))
+					NewMkLines(makefileCommonLines).checkForUsedComment(relpath(G.globalData.pkgsrcdir, fname))
 				}
 			}
 		}
@@ -104,38 +104,6 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 	}
 
 	return true
-}
-
-func checkForUsedComment(lines []*Line, relativeName string) {
-	if len(lines) < 3 {
-		return
-	}
-
-	expected := "# used by " + relativeName
-	for _, line := range lines {
-		if line.text == expected {
-			return
-		}
-	}
-
-	i := 0
-	for i < 2 && matches(lines[i].text, `^\s*#(.*)$`) {
-		i++
-	}
-
-	insertLine := lines[i]
-	insertLine.warnf("Please add a line %q here.", expected)
-	insertLine.explain(
-		"Since Makefile.common files usually don't have any comments and",
-		"therefore not a clearly defined interface, they should at least contain",
-		"references to all files that include them, so that it is easier to see",
-		"what effects future changes may have.",
-		"",
-		"If there are more than five packages that use a Makefile.common,",
-		"you should think about giving it a proper name (maybe plugin.mk) and",
-		"documenting its interface.")
-	insertLine.insertBefore(expected)
-	saveAutofixChanges(lines)
 }
 
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
