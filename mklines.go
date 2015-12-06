@@ -29,7 +29,7 @@ func (mklines *MkLines) check() {
 	G.mkContext = ctx
 	defer func() { G.mkContext = nil }()
 
-	determineUsedVariables(mklines)
+	mklines.determineUsedVariables()
 
 	prefixes := splitOnSpace("pre do post")
 	actions := splitOnSpace("fetch extract patch tools wrapper configure build test install package clean")
@@ -295,4 +295,20 @@ func (mklines *MkLines) check() {
 	}
 
 	G.mkContext = nil
+}
+
+func (mklines *MkLines) determineUsedVariables() {
+	re := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
+	for _, mkline := range mklines.mklines {
+		rest := mkline.text
+		for {
+			m := re.FindStringSubmatchIndex(rest)
+			if m == nil {
+				break
+			}
+			varname := rest[m[2]:m[3]]
+			useVar(mkline, varname)
+			rest = rest[:m[0]] + rest[m[1]:]
+		}
+	}
 }

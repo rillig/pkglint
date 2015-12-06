@@ -46,7 +46,7 @@ func loadPackageMakefile(fname string) []*Line {
 		}
 	}
 
-	determineUsedVariables(NewMkLines(allLines))
+	NewMkLines(allLines).determineUsedVariables()
 
 	G.pkgContext.pkgdir = expandVariableWithDefault("PKGDIR", ".")
 	G.pkgContext.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
@@ -69,22 +69,6 @@ func loadPackageMakefile(fname string) []*Line {
 		dummyLine.debugf("PKGDIR=%s", G.pkgContext.pkgdir)
 
 	return mainLines
-}
-
-func determineUsedVariables(mklines *MkLines) {
-	re := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
-	for _, mkline := range mklines.mklines {
-		rest := mkline.text
-		for {
-			m := re.FindStringSubmatchIndex(rest)
-			if m == nil {
-				break
-			}
-			varname := rest[m[2]:m[3]]
-			useVar(mkline, varname)
-			rest = rest[:m[0]] + rest[m[1]:]
-		}
-	}
 }
 
 func extractUsedVariables(line *Line, text string) []string {

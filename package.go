@@ -93,7 +93,7 @@ func checkdirPackage(pkgpath string) {
 			!contains(fname, G.pkgContext.pkgdir+"/") &&
 			!contains(fname, G.pkgContext.filesdir+"/") {
 			if lines, err := readLines(fname, true); err == nil && lines != nil {
-				determineUsedVariables(NewMkLines(lines))
+				NewMkLines(lines).determineUsedVariables()
 			}
 		}
 	}
