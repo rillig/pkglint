@@ -131,17 +131,6 @@ func varIsDefined(varname string) bool {
 	}
 	return false
 }
-func useVar(mkline *MkLine, varname string) {
-	varcanon := varnameCanon(varname)
-	if G.mk != nil {
-		G.mk.varuse[varname] = mkline
-		G.mk.varuse[varcanon] = mkline
-	}
-	if G.pkg != nil {
-		G.pkg.varuse[varname] = mkline
-		G.pkg.varuse[varcanon] = mkline
-	}
-}
 
 func varIsUsed(varname string) bool {
 	varcanon := varnameCanon(varname)

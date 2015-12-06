@@ -63,6 +63,16 @@ func (mklines *MkLines) defineVar(mkline *MkLine, varname string) {
 	}
 }
 
+func (mklines *MkLines) useVar(mkline *MkLine, varname string) {
+	varcanon := varnameCanon(varname)
+	mklines.varuse[varname] = mkline
+	mklines.varuse[varcanon] = mkline
+	if G.pkg != nil {
+		G.pkg.varuse[varname] = mkline
+		G.pkg.varuse[varcanon] = mkline
+	}
+}
+
 func (mklines *MkLines) varValue(varname string) (value string, found bool) {
 	if mkline := mklines.vardef[varname]; mkline != nil {
 		return mkline.extra["value"].(string), true
@@ -171,7 +181,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, id := range splitOnSpace(mkline.extra["value"].(string)) {
 				mklines.plistVars["PLIST."+id] = true
 				_ = G.opts.DebugMisc && mkline.debugf("PLIST.%s is added to PLIST_VARS.", id)
-				useVar(mkline, "PLIST."+id)
+				mklines.useVar(mkline, "PLIST."+id)
 			}
 
 		case "USE_TOOLS":
@@ -183,13 +193,13 @@ func (mklines *MkLines) determineDefinedVariables() {
 
 		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(mkline.extra["value"].(string)) {
-				useVar(mkline, varnameCanon(svar))
+				mklines.useVar(mkline, varnameCanon(svar))
 				_ = G.opts.DebugMisc && mkline.debugf("varuse %s", svar)
 			}
 
 		case "OPSYSVARS":
 			for _, osvar := range splitOnSpace(mkline.extra["value"].(string)) {
-				useVar(mkline, osvar+".*")
+				mklines.useVar(mkline, osvar+".*")
 				defineVar(mkline, osvar)
 			}
 		}
@@ -206,7 +216,7 @@ func (mklines *MkLines) determineUsedVariables() {
 				break
 			}
 			varname := rest[m[2]:m[3]]
-			useVar(mkline, varname)
+			mklines.useVar(mkline, varname)
 			rest = rest[:m[0]] + rest[m[1]:]
 		}
 	}
