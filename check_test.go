@@ -43,10 +43,8 @@ func (s *Suite) NewLines(fname string, lines ...string) []*Line {
 	return result
 }
 
-func (s *Suite) NewMkLines(fname string, lines ...string) []*Line {
-	result := s.NewLines(fname, lines...)
-	ParselinesMk(result)
-	return result
+func (s *Suite) NewMkLines(fname string, lines ...string) *MkLines {
+	return NewMkLines(s.NewLines(fname, lines...))
 }
 
 func (s *Suite) UseCommandLine(c *check.C, args ...string) {

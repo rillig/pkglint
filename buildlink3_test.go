@@ -6,7 +6,7 @@ import (
 
 func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 	G.globalData.InitVartypes()
-	lines := s.NewLines("buildlink3.mk",
+	mklines := s.NewMkLines("buildlink3.mk",
 		"# $"+"NetBSD$",
 		"# XXX automatically generated",
 		"",
@@ -25,7 +25,7 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 		"",
 		"BUILDLINK_TREE+=        -Xbae")
 
-	checklinesBuildlink3Mk(lines)
+	checklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: buildlink3.mk:14: \"/mk/motif.buildlink3.mk\" does not exist.\n"+
@@ -40,8 +40,8 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 	G.globalData.InitVartypes()
 	G.pkgContext = newPkgContext("x11/hs-X11")
 	G.pkgContext.effectivePkgbase = "X11"
-	G.pkgContext.effectivePkgnameLine = NewLine("Makefile", "3", "DISTNAME=\tX11-1.0", nil)
-	lines := s.NewLines("buildlink3.mk",
+	G.pkgContext.effectivePkgnameLine = NewMkLine(NewLine("Makefile", "3", "DISTNAME=\tX11-1.0", nil))
+	mklines := s.NewMkLines("buildlink3.mk",
 		"# $"+"NetBSD$",
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
@@ -56,7 +56,7 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 		"",
 		"BUILDLINK_TREE+=\t-hs-X11")
 
-	checklinesBuildlink3Mk(lines)
+	checklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" ...\n"+
@@ -66,7 +66,7 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 func (s *Suite) TestChecklinesBuildlink3_NoBuildlinkTree(c *check.C) {
 	s.UseCommandLine(c, "-Wall", "-Call")
 	G.globalData.InitVartypes()
-	lines := s.NewLines("buildlink3.mk",
+	mklines := s.NewMkLines("buildlink3.mk",
 		"# $"+"NetBSD$",
 		"",
 		"BUILDLINK_DEPMETHOD.hs-X11?=\tfull",
@@ -83,7 +83,7 @@ func (s *Suite) TestChecklinesBuildlink3_NoBuildlinkTree(c *check.C) {
 		"# needless comment",
 		"BUILDLINK_TREE+=\t-hs-X11")
 
-	checklinesBuildlink3Mk(lines)
+	checklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: buildlink3.mk:3: This line belongs inside the .ifdef block.\n"+

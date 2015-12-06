@@ -113,12 +113,12 @@ func varnameParam(varname string) string {
 	return parts[len(parts)-1]
 }
 
-func defineVar(line *Line, varname string) {
+func defineVar(mkline *MkLine, varname string) {
 	if mk := G.mkContext; mk != nil {
-		mk.defineVar(line, varname)
+		mk.defineVar(mkline, varname)
 	}
 	if pkg := G.pkgContext; pkg != nil {
-		pkg.defineVar(line, varname)
+		pkg.defineVar(mkline, varname)
 	}
 }
 func varIsDefined(varname string) bool {
@@ -131,15 +131,15 @@ func varIsDefined(varname string) bool {
 	}
 	return false
 }
-func useVar(line *Line, varname string) {
+func useVar(mkline *MkLine, varname string) {
 	varcanon := varnameCanon(varname)
 	if mk := G.mkContext; mk != nil {
-		mk.varuse[varname] = line
-		mk.varuse[varcanon] = line
+		mk.varuse[varname] = mkline
+		mk.varuse[varcanon] = mkline
 	}
 	if pkg := G.pkgContext; pkg != nil {
-		pkg.varuse[varname] = line
-		pkg.varuse[varcanon] = line
+		pkg.varuse[varname] = mkline
+		pkg.varuse[varcanon] = mkline
 	}
 }
 

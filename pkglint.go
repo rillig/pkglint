@@ -53,7 +53,7 @@ func loadPackageMakefile(fname string) []*Line {
 		}
 	}
 
-	determineUsedVariables(allLines)
+	determineUsedVariables(NewMkLines(allLines))
 
 	G.pkgContext.pkgdir = expandVariableWithDefault("PKGDIR", ".")
 	G.pkgContext.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
@@ -78,17 +78,17 @@ func loadPackageMakefile(fname string) []*Line {
 	return mainLines
 }
 
-func determineUsedVariables(lines []*Line) {
+func determineUsedVariables(mklines *MkLines) {
 	re := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
-	for _, line := range lines {
-		rest := line.text
+	for _, mkline := range mklines.mklines {
+		rest := mkline.line.text
 		for {
 			m := re.FindStringSubmatchIndex(rest)
 			if m == nil {
 				break
 			}
 			varname := rest[m[2]:m[3]]
-			useVar(line, varname)
+			useVar(mkline, varname)
 			rest = rest[:m[0]] + rest[m[1]:]
 		}
 	}
@@ -211,17 +211,17 @@ func resolveVariableRefs(text string) string {
 }
 
 func expandVariableWithDefault(varname, defaultValue string) string {
-	line := G.pkgContext.vardef[varname]
-	if line == nil {
+	mkline := G.pkgContext.vardef[varname]
+	if mkline == nil {
 		return defaultValue
 	}
 
-	value := line.extra["value"].(string)
+	value := mkline.line.extra["value"].(string)
 	value = resolveVarsInRelativePath(value, true)
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}
-	_ = G.opts.DebugMisc && line.debugf("Expanded %q to %q", varname, value)
+	_ = G.opts.DebugMisc && mkline.line.debugf("Expanded %q to %q", varname, value)
 	return value
 }
 
@@ -390,8 +390,7 @@ func checkfileMk(fname string) {
 		return
 	}
 
-	ParselinesMk(lines)
-	ChecklinesMk(lines)
+	NewMkLines(lines).check()
 	saveAutofixChanges(lines)
 }
 
@@ -449,7 +448,7 @@ func checkfile(fname string) {
 	case basename == "buildlink3.mk":
 		if G.opts.CheckBuildlink3 {
 			if lines := LoadNonemptyLines(fname, true); lines != nil {
-				checklinesBuildlink3Mk(lines)
+				checklinesBuildlink3Mk(NewMkLines(lines))
 			}
 		}
 

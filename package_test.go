@@ -6,7 +6,7 @@ import (
 
 func (s *Suite) TestPkgnameFromDistname(c *check.C) {
 	G.pkgContext = newPkgContext("dummy")
-	G.pkgContext.vardef["PKGNAME"] = NewLine("dummy", "dummy", "dummy", nil)
+	G.pkgContext.vardef["PKGNAME"] = NewMkLine(NewLine("dummy", "dummy", "dummy", nil))
 
 	c.Check(pkgnameFromDistname("pkgname-1.0", "whatever"), equals, "pkgname-1.0")
 	c.Check(pkgnameFromDistname("${DISTNAME}", "distname-1.0"), equals, "distname-1.0")
@@ -43,15 +43,11 @@ func (s *Suite) TestChecklinesPackageMakefileVarorder(c *check.C) {
 
 func (s *Suite) TestGetNbpart(c *check.C) {
 	G.pkgContext = newPkgContext("category/pkgbase")
-	line := NewLine("Makefile", "1", "PKGREVISION=14", nil)
-	parselineMk(line)
-	G.pkgContext.vardef["PKGREVISION"] = line
+	G.pkgContext.vardef["PKGREVISION"] = NewMkLine(NewLine("Makefile", "1", "PKGREVISION=14", nil))
 
 	c.Check(getNbpart(), equals, "nb14")
 
-	line = NewLine("Makefile", "1", "PKGREVISION=asdf", nil)
-	parselineMk(line)
-	G.pkgContext.vardef["PKGREVISION"] = line
+	G.pkgContext.vardef["PKGREVISION"] = NewMkLine(NewLine("Makefile", "1", "PKGREVISION=asdf", nil))
 
 	c.Check(getNbpart(), equals, "")
 }

@@ -22,7 +22,7 @@ type GlobalData struct {
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	lastChange          map[string]*Change  //
-	userDefinedVars     map[string]*Line    // varname => line (after calling parselineMk on it)
+	userDefinedVars     map[string]*MkLine  // varname => line
 	deprecated          map[string]string   //
 	vartypes            map[string]*Vartype // varcanon => type
 }
@@ -353,12 +353,12 @@ func (gd *GlobalData) loadDocChanges() {
 
 func (gd *GlobalData) loadUserDefinedVars() {
 	lines := LoadExistingLines(G.globalData.pkgsrcdir+"/mk/defaults/mk.conf", true)
+	mklines := NewMkLines(lines)
 
-	gd.userDefinedVars = make(map[string]*Line)
-	for _, line := range lines {
-		parselineMk(line)
-		if varname, ok := line.extra["varname"].(string); ok {
-			gd.userDefinedVars[varname] = line
+	gd.userDefinedVars = make(map[string]*MkLine)
+	for _, mkline := range mklines.mklines {
+		if varname, ok := mkline.line.extra["varname"].(string); ok {
+			gd.userDefinedVars[varname] = mkline
 		}
 	}
 }

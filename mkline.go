@@ -19,7 +19,7 @@ func NewMkLine(line *Line) *MkLine {
 func (ml *MkLine) checkVardef(varname, op string) {
 	defer tracecall("MkLine.checkVardef", varname, op)()
 
-	defineVar(ml.line, varname)
+	defineVar(ml, varname)
 	ml.checkVardefPermissions(varname, op)
 }
 
@@ -369,7 +369,7 @@ func (ml *MkLine) checkVarassign() {
 			// The variables mentioned in EVAL_PREFIX will later be
 			// defined by find-prefix.mk. Therefore, they are marked
 			// as known in the current file.
-			G.mkContext.vardef[evalVarname] = line
+			G.mkContext.vardef[evalVarname] = ml
 		}
 	}
 

@@ -5,13 +5,12 @@ import (
 	"strings"
 )
 
-func checklinesBuildlink3Mk(lines []*Line) {
-	defer tracecall("checklinesBuildlink3Mk", lines[0].fname)()
+func checklinesBuildlink3Mk(mklines *MkLines) {
+	defer tracecall("checklinesBuildlink3Mk", mklines.mklines[0].line.fname)()
 
-	ParselinesMk(lines)
-	ChecklinesMk(lines)
+	mklines.check()
 
-	exp := NewExpecter(lines)
+	exp := NewExpecter(mklines.lines)
 
 	for exp.advanceIfMatches(`^#`) != nil {
 		if hasPrefix(exp.previousLine().text, "# XXX") {
@@ -63,7 +62,7 @@ func checklinesBuildlink3Mk(lines []*Line) {
 	if G.pkgContext != nil {
 		if mkbase := G.pkgContext.effectivePkgbase; mkbase != "" && mkbase != pkgid {
 			pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
-			G.pkgContext.effectivePkgnameLine.errorf("... and %q.", mkbase)
+			G.pkgContext.effectivePkgnameLine.line.errorf("... and %q.", mkbase)
 		}
 	}
 
@@ -157,5 +156,5 @@ func checklinesBuildlink3Mk(lines []*Line) {
 		exp.currentLine().warnf("The file should end here.")
 	}
 
-	checklinesBuildlink3Inclusion(lines)
+	checklinesBuildlink3Inclusion(mklines)
 }

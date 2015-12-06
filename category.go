@@ -166,7 +166,7 @@ func checkdirCategory() {
 		exp.currentLine().errorf("The file should end here.")
 	}
 
-	ChecklinesMk(lines)
+	NewMkLines(lines).check()
 
 	saveAutofixChanges(lines)
 

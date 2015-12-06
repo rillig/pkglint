@@ -6,26 +6,28 @@ import (
 
 func (s *Suite) TestDetermineUsedVariables_simple(c *check.C) {
 	G.mkContext = newMkContext()
-	line := NewLine("fname", "1", "${VAR}", nil)
-	lines := []*Line{line}
+	mklines := s.NewMkLines("fname",
+		"\t${VAR}")
+	mkline := mklines.mklines[0]
 
-	determineUsedVariables(lines)
+	determineUsedVariables(mklines)
 
 	c.Check(len(G.mkContext.varuse), equals, 1)
-	c.Check(G.mkContext.varuse["VAR"], equals, line)
+	c.Check(G.mkContext.varuse["VAR"], equals, mkline)
 }
 
 func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 	G.mkContext = newMkContext()
-	line := NewLine("fname", "2", "${outer.${inner}}", nil)
-	lines := []*Line{line}
+	mklines := s.NewMkLines("fname",
+		"\t${outer.${inner}}")
+	mkline := mklines.mklines[0]
 
-	determineUsedVariables(lines)
+	determineUsedVariables(mklines)
 
 	c.Check(len(G.mkContext.varuse), equals, 3)
-	c.Check(G.mkContext.varuse["inner"], equals, line)
-	c.Check(G.mkContext.varuse["outer."], equals, line)
-	c.Check(G.mkContext.varuse["outer.*"], equals, line)
+	c.Check(G.mkContext.varuse["inner"], equals, mkline)
+	c.Check(G.mkContext.varuse["outer."], equals, mkline)
+	c.Check(G.mkContext.varuse["outer.*"], equals, mkline)
 }
 
 func (s *Suite) TestReShellword(c *check.C) {
@@ -45,10 +47,9 @@ func (s *Suite) TestReShellword(c *check.C) {
 }
 
 func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
-	line := NewLine("fname", "1", "dummy", nil)
-	line.extra["value"] = "${GCC_VERSION}"
+	mkline := NewMkLine(NewLine("fname", "1", "GCC_VERSION=${GCC_VERSION}", nil))
 	G.pkgContext = newPkgContext(".")
-	G.pkgContext.vardef["GCC_VERSION"] = line // circular reference
+	G.pkgContext.vardef["GCC_VERSION"] = mkline
 
 	resolved := resolveVariableRefs("gcc-${GCC_VERSION}")
 
@@ -56,16 +57,13 @@ func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
 }
 
 func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
-	line1 := NewLine("fname", "dummy", "dummy", nil)
-	line1.extra["value"] = "${SECOND}"
-	line2 := NewLine("fname", "dummy", "dummy", nil)
-	line2.extra["value"] = "${THIRD}"
-	line3 := NewLine("fname", "dummy", "dummy", nil)
-	line3.extra["value"] = "got it"
+	mkline1 := NewMkLine(NewLine("fname", "10", "_=${SECOND}", nil))
+	mkline2 := NewMkLine(NewLine("fname", "11", "_=${THIRD}", nil))
+	mkline3 := NewMkLine(NewLine("fname", "12", "_=got it", nil))
 	G.pkgContext = newPkgContext(".")
-	G.pkgContext.vardef["FIRST"] = line1
-	G.pkgContext.vardef["SECOND"] = line2
-	G.pkgContext.vardef["THIRD"] = line3
+	defineVar(mkline1, "FIRST")
+	defineVar(mkline2, "SECOND")
+	defineVar(mkline3, "THIRD")
 
 	resolved := resolveVariableRefs("you ${FIRST}")
 
@@ -73,10 +71,9 @@ func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
 }
 
 func (s *Suite) TestResolveVariableRefs_SpecialChars(c *check.C) {
-	line := NewLine("fname", "dummy", "dummy", nil)
-	line.extra["value"] = "x11"
+	mkline := NewMkLine(NewLine("fname", "dummy", "_=x11", nil))
 	G.pkgContext = newPkgContext("category/pkg")
-	G.pkgContext.vardef["GST_PLUGINS0.10_TYPE"] = line
+	G.pkgContext.vardef["GST_PLUGINS0.10_TYPE"] = mkline
 
 	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
 
