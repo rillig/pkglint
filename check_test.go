@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	check "gopkg.in/check.v1"
@@ -34,6 +35,10 @@ func (s *Suite) Stderr() string {
 // Returns and consumes the output from both stdout and stderr.
 func (s *Suite) Output() string {
 	return s.Stdout() + s.Stderr()
+}
+
+func (s *Suite) OutputCleanTmpdir() string {
+	return strings.Replace(s.Output(), s.tmpdir+"/", "", -1)
 }
 
 func (s *Suite) NewLines(fname string, lines ...string) []*Line {
@@ -68,15 +73,17 @@ func (s *Suite) RegisterTool(toolname, varname string, varRequired bool) {
 	}
 }
 
-func (s *Suite) CreateTmpFile(c *check.C, fname, content string) {
+func (s *Suite) CreateTmpFile(c *check.C, relFname, content string) (absFname string) {
 	if s.tmpdir == "" {
 		s.tmpdir = filepath.ToSlash(c.MkDir())
 	}
-	err := os.MkdirAll(s.tmpdir+"/"+path.Dir(fname), 0777)
-	c.Check(err, check.IsNil)
+	absFname = s.tmpdir + "/" + relFname
+	err := os.MkdirAll(path.Dir(absFname), 0777)
+	c.Assert(err, check.IsNil)
 
-	err = ioutil.WriteFile(s.tmpdir+"/"+fname, []byte(content), 0666)
+	err = ioutil.WriteFile(absFname, []byte(content), 0666)
 	c.Check(err, check.IsNil)
+	return
 }
 
 func (s *Suite) ExpectFatalError(action func()) {

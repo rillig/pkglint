@@ -18,14 +18,11 @@ func checkdirCategory() {
 	if lines == nil {
 		return
 	}
-	ParselinesMk(lines)
+
+	NewMkLines(lines).check()
 
 	exp := NewExpecter(lines)
-	if checklineRcsid(exp.currentLine(), `#\s+`, "# ") {
-		exp.advance()
-	}
-
-	for !exp.eof() && exp.advanceIfMatches(`^#`) != nil {
+	for exp.advanceIfMatches(`^#`) != nil {
 	}
 	exp.expectEmptyLine()
 
@@ -165,8 +162,6 @@ func checkdirCategory() {
 	if !exp.eof() {
 		exp.currentLine().errorf("The file should end here.")
 	}
-
-	NewMkLines(lines).check()
 
 	saveAutofixChanges(lines)
 
