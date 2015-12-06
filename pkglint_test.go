@@ -107,3 +107,20 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 	c.Check(value, equals, "c11")
 	c.Check(comment, equals, "")
 }
+
+func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {
+	makefile := s.CreateTmpFile(c, "category/package/Makefile", ""+
+		"# $"+"NetBSD$\n"+
+		"\n"+
+		"PKGNAME=pkgname-1.67\n"+
+		"DISTNAME=distfile_1_67\n"+
+		".include \"../../category/package/Makefile\"\n")
+	pkg := NewPackage("category/package")
+	G.currentDir = s.tmpdir + "/category/package"
+	G.curPkgsrcdir = "../.."
+	G.pkg = pkg
+
+	pkg.loadPackageMakefile(makefile)
+
+	c.Check(s.OutputCleanTmpdir(), equals, "")
+}
