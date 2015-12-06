@@ -19,7 +19,7 @@ func main() {
 
 type Pkglint struct{}
 
-func (p *Pkglint) Main(args ...string) (exitcode int) {
+func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	defer func() {
 		if r := recover(); r != nil {
 			if _, ok := r.(pkglintFatal); ok {
@@ -30,7 +30,7 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 		}
 	}()
 
-	if exitcode := p.ParseCommandLine(args); exitcode != nil {
+	if exitcode := pkglint.ParseCommandLine(args); exitcode != nil {
 		return *exitcode
 	}
 
@@ -66,7 +66,7 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 	}
 
 	checktoplevelUnusedLicenses()
-	printSummary()
+	pkglint.printSummary()
 	if G.opts.Profiling {
 		G.rematch.printStats("rematch", G.logOut)
 		G.renomatch.printStats("renomatch", G.logOut)
@@ -77,7 +77,7 @@ func (p *Pkglint) Main(args ...string) (exitcode int) {
 	return 0
 }
 
-func (p *Pkglint) ParseCommandLine(args []string) *int {
+func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	gopts := &G.opts
 	opts := NewOptions()
 
@@ -152,7 +152,7 @@ func (p *Pkglint) ParseCommandLine(args []string) *int {
 	return nil
 }
 
-func printSummary() {
+func (pkglint *Pkglint) printSummary() {
 	if !G.opts.Quiet {
 		if G.errors != 0 || G.warnings != 0 {
 			fmt.Fprintf(G.logOut, "%d %s and %d %s found.\n",
