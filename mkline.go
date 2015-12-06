@@ -695,7 +695,10 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 		return
 	}
 
-	abs := ifelseStr(hasPrefix(resolvedPath, "/"), "", G.currentDir+"/") + resolvedPath
+	abs := resolvedPath
+	if !hasPrefix(abs, "/") {
+		abs = G.currentDir + "/" + abs
+	}
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
 			mkline.errorf("%q does not exist.", resolvedPath)
@@ -703,13 +706,10 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 		return
 	}
 
-	switch {
-	case matches(path, `^\.\./\.\./[^/]+/[^/]`):
-	case hasPrefix(path, "../../mk/"):
-		// There need not be two directory levels for mk/ files.
-	case matches(path, `^\.\./mk/`) && G.curPkgsrcdir == "..":
-		// That's fine for category Makefiles.
-	case matches(path, `^\.\.`):
+	if hasPrefix(path, "../") &&
+		!matches(path, `^\.\./\.\./[^/]+/[^/]`) &&
+		!(G.curPkgsrcdir == ".." && hasPrefix(path, "../mk/")) && // For category Makefiles.
+		!hasPrefix(path, "../../mk/") {
 		mkline.warnf("Invalid relative path %q.", path)
 	}
 }
