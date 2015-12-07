@@ -130,12 +130,8 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 
-	G.opts.DebugTrace = true
-	G.opts.DebugShell = true
 	msline.checkShellword("embed${DISTINFO_FILE:Q}ded", true)
 
-	s.Output()
-	return
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
