@@ -478,41 +478,15 @@ func (mkline *MkLine) checkVarassign() {
 		mkline.warnf("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
-	if matches(value, `^[^=]@comment`) {
-		mkline.warnf("Please don't use @comment in %s.", varname)
-		mkline.explain(
-			"Here you are defining a variable containing @comment. As this value",
-			"typically includes a space as the last character you probably also used",
-			"quotes around the variable. This can lead to confusion when adding this",
-			"variable to PLIST_SUBST, as all other variables are quoted using the :Q",
-			"operator when they are appended. As it is hard to check whether a",
-			"variable that is appended to PLIST_SUBST is already quoted or not, you",
-			"should not have pre-quoted variables at all.",
-			"",
-			"To solve this, you should directly use PLIST_SUBST+= ${varname}=${value}",
-			"or use any other variable for collecting the list of PLIST substitutions",
-			"and later append that variable with PLIST_SUBST+= ${MY_PLIST_SUBST}.")
-	}
-
-	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
-	if G.pkg != nil {
-		if m, plistVarname := match1(value, `(.+)=.*@comment.*`); m {
-			G.pkg.plistSubstCond[plistVarname] = true
-		}
-	}
+	mkline.checkVarassignPlistComment(varname, value)
 
 	time := vucTimeRun
-	switch op {
-	case ":=", "!=":
+	if op == ":=" || op == "!=" {
 		time = vucTimeParse
 	}
 
 	usedVars := extractUsedVariables(mkline.Line, value)
-	vuc := &VarUseContext{
-		time,
-		getVariableType(mkline.Line, varname),
-		vucQuotUnknown,
-		vucExtentUnknown}
+	vuc := &VarUseContext{time, getVariableType(mkline.Line, varname), vucQuotUnknown, vucExtentUnknown}
 	for _, usedVar := range usedVars {
 		mkline.checkVaruse(usedVar, "", vuc)
 	}
@@ -534,6 +508,31 @@ func (mkline *MkLine) checkVarassignBsdPrefs() {
 			"preferences, which can result in unexpected behavior. The easiest way",
 			"to include the mk.conf file is by including the bsd.prefs.mk file,",
 			"which will take care of everything.")
+	}
+}
+
+func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
+	if matches(value, `^[^=]@comment`) {
+		mkline.warnf("Please don't use @comment in %s.", varname)
+		mkline.explain(
+			"Here you are defining a variable containing @comment. As this value",
+			"typically includes a space as the last character you probably also used",
+			"quotes around the variable. This can lead to confusion when adding this",
+			"variable to PLIST_SUBST, as all other variables are quoted using the :Q",
+			"operator when they are appended. As it is hard to check whether a",
+			"variable that is appended to PLIST_SUBST is already quoted or not, you",
+			"should not have pre-quoted variables at all.",
+			"",
+			"To solve this, you should directly use PLIST_SUBST+= ${varname}=${value}",
+			"or use any other variable for collecting the list of PLIST substitutions",
+			"and later append that variable with PLIST_SUBST+= ${MY_PLIST_SUBST}.")
+	}
+
+	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
+	if G.pkg != nil {
+		if m, plistVarname := match1(value, `(.+)=.*@comment.*`); m {
+			G.pkg.plistSubstCond[plistVarname] = true
+		}
 	}
 }
 
