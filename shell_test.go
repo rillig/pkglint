@@ -119,6 +119,26 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	msline.checkShellword("\"$@\"", false)
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"${.TARGET}\" instead of \"$@\".\n")
+
+	msline.checkShellword("${COMMENT:Q}", true)
+
+	c.Check(s.Output(), equals, "WARN: fname:1: COMMENT may not be used in this file.\n")
+
+	msline.checkShellword("\"${DISTINFO_FILE:Q}\"", true)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
+		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
+
+	G.opts.DebugTrace = true
+	G.opts.DebugShell = true
+	msline.checkShellword("embed${DISTINFO_FILE:Q}ded", true)
+
+	s.Output()
+	return
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
+		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShellword_InternalError(c *check.C) {
