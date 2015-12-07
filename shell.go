@@ -80,15 +80,17 @@ func NewMkShellLine(mkline *MkLine) *MkShellLine {
 	return &MkShellLine{mkline}
 }
 
-type ShellwordState string
+type ShellwordState int
 
 const (
-	swstPlain      ShellwordState = "plain"
-	swstSquot      ShellwordState = "squot"
-	swstDquot      ShellwordState = "dquot"
-	swstDquotBackt ShellwordState = "dquot+backt"
-	swstBackt      ShellwordState = "backt"
+	swstPlain ShellwordState = iota
+	swstSquot
+	swstDquot
+	swstDquotBackt
+	swstBackt
 )
+
+var ShellwordStateName = [...]string{"plain", "squot", "dquot", "dquot+backt", "backt"}
 
 func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	defer tracecall("MkShellLine.checklineMkShellword", shellword, checkQuoting)()
@@ -116,7 +118,7 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	state := swstPlain
 outer:
 	for repl.rest != "" {
-		_ = G.opts.DebugShell && msline.debugf("shell state %s: %q", state, repl.rest)
+		_ = G.opts.DebugShell && msline.debugf("shell state %s: %q", ShellwordStateName[state], repl.rest)
 
 		switch {
 		// When parsing inside backticks, it is more
@@ -286,7 +288,7 @@ outer:
 	}
 
 	if strings.TrimSpace(repl.rest) != "" {
-		msline.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, repl.rest, shellword)
+		msline.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", ShellwordStateName[state], repl.rest, shellword)
 	}
 }
 
