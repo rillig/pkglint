@@ -389,28 +389,10 @@ func (mkline *MkLine) checkVarassign() {
 	op := mkline.Op()
 	value := mkline.Value()
 	comment := mkline.Comment()
-	varbase := varnameBase(varname)
 	varcanon := varnameCanon(varname)
 
 	mkline.checkVardef(varname, op)
-
-	if G.opts.WarnExtra && op == "?=" && G.pkg != nil && !G.pkg.seenBsdPrefsMk {
-		switch varbase {
-		case "BUILDLINK_PKGSRCDIR", "BUILDLINK_DEPMETHOD", "BUILDLINK_ABI_DEPENDS":
-			// FIXME: What about these ones? They occur quite often.
-
-		default:
-			mkline.warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
-			mkline.explain(
-				"The ?= operator is used to provide a default value to a variable. In",
-				"pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
-				"file. This file must be included explicitly. If a ?= operator appears",
-				"before mk.conf has been included, it will not care about the user's",
-				"preferences, which can result in unexpected behavior. The easiest way",
-				"to include the mk.conf file is by including the bsd.prefs.mk file,",
-				"which will take care of everything.")
-		}
-	}
+	mkline.checkVarassignBsdPrefs()
 
 	mkline.checkText(value)
 	mkline.checkVartype(varname, op, value, comment)
@@ -533,6 +515,25 @@ func (mkline *MkLine) checkVarassign() {
 		vucExtentUnknown}
 	for _, usedVar := range usedVars {
 		mkline.checkVaruse(usedVar, "", vuc)
+	}
+}
+
+func (mkline *MkLine) checkVarassignBsdPrefs() {
+	if G.opts.WarnExtra && mkline.Op() == "?=" && G.pkg != nil && !G.pkg.seenBsdPrefsMk {
+		switch mkline.Varcanon() {
+		case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
+			return
+		}
+
+		mkline.warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+		mkline.explain(
+			"The ?= operator is used to provide a default value to a variable. In",
+			"pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
+			"file. This file must be included explicitly. If a ?= operator appears",
+			"before mk.conf has been included, it will not care about the user's",
+			"preferences, which can result in unexpected behavior. The easiest way",
+			"to include the mk.conf file is by including the bsd.prefs.mk file,",
+			"which will take care of everything.")
 	}
 }
 
