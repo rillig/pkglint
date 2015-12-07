@@ -259,6 +259,9 @@ func NewPrefixReplacer(s string) *PrefixReplacer {
 func (pr *PrefixReplacer) advanceStr(prefix string) bool {
 	pr.m = nil
 	if hasPrefix(pr.rest, prefix) {
+		if G.opts.DebugTrace {
+			trace("", "PrefixReplacer.advanceStr", pr.rest, prefix)
+		}
 		pr.rest = pr.rest[len(prefix):]
 		return true
 	}
@@ -266,6 +269,9 @@ func (pr *PrefixReplacer) advanceStr(prefix string) bool {
 }
 func (pr *PrefixReplacer) advanceRegexp(re string) bool {
 	if m := regcomp(re).FindStringSubmatch(pr.rest); m != nil {
+		if G.opts.DebugTrace {
+			trace("", "PrefixReplacer.advanceRegexp", pr.rest, re, m[0])
+		}
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
 		return true
