@@ -132,24 +132,39 @@ const (
 	rePatchUniLineNoNewline = `^\\ No newline at end of file$`
 )
 
-type PatchState string
+type PatchState int
 
 const (
-	pstOutside PatchState = "pstOutside" // Outside of a diff
-
-	pstCtxFileAdd  PatchState = "pstCtxFileAdd"  // After the DeleteFile line of a context diff
-	pstCtxHunk     PatchState = "pstCtxHunk"     // After the AddFile line of a context diff
-	pstCtxHunkDel  PatchState = "pstCtxHunkDel"  //
-	pstCtxLineDel0 PatchState = "pstCtxLineDel0" //
-	pstCtxLineDel  PatchState = "pstCtxLineDel"  //
-	pstCtxLineAdd0 PatchState = "pstCtxLineAdd0" //
-	pstCtxLineAdd  PatchState = "pstCtxLineAdd"  //
-
-	pstUniFileDelErr PatchState = "pstUniFileDelErr" // Sometimes, the DeleteFile and AddFile are reversed
-	pstUniFileAdd    PatchState = "pstUniFileAdd"    // After the DeleteFile line of a unified diff
-	pstUniHunk       PatchState = "pstUniHunk"       // After the AddFile line of a unified diff
-	pstUniLine       PatchState = "pstUniLine"       // After reading the hunk header
+	pstOutside       PatchState = iota // Outside of a diff
+	pstCtxFileAdd                      // After the DeleteFile line of a context diff
+	pstCtxHunk                         // After the AddFile line of a context diff
+	pstCtxHunkDel                      //
+	pstCtxLineDel0                     //
+	pstCtxLineDel                      //
+	pstCtxLineAdd0                     //
+	pstCtxLineAdd                      //
+	pstUniFileDelErr                   // Sometimes, the DeleteFile and AddFile are reversed
+	pstUniFileAdd                      // After the DeleteFile line of a unified diff
+	pstUniHunk                         // After the AddFile line of a unified diff
+	pstUniLine                         // After reading the hunk header
 )
+
+func (ps PatchState) String() string{
+	return [...]string{
+		"outside",
+		"ctx-file-add",
+		"ctx-hunk",
+		"ctx-hunk-del",
+		"ctx-line-del0",
+		"ctx-line-del",
+		"ctx-line-add0",
+		"ctx-line-add",
+		"uni-file-del-err",
+		"uni-file-add",
+		"uni-hunk",
+		"uni-line",
+	}[ps]
+}
 
 func ptNop(ctx *CheckPatchContext) {}
 func ptUniFileAdd(ctx *CheckPatchContext) {

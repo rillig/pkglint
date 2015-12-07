@@ -44,33 +44,61 @@ const (
 )
 
 // ShellCommandState
-type scState string
+type scState int
 
 const (
-	scstStart         scState = "start"
-	scstCont          scState = "continuation"
-	scstInstall       scState = "install"
-	scstInstallD      scState = "install -d"
-	scstMkdir         scState = "mkdir"
-	scstPax           scState = "pax"
-	scstPaxS          scState = "pax -s"
-	scstSed           scState = "sed"
-	scstSedE          scState = "sed -e"
-	scstSet           scState = "set"
-	scstSetCont       scState = "set-continuation"
-	scstCond          scState = "cond"
-	scstCondCont      scState = "cond-continuation"
-	scstCase          scState = "case"
-	scstCaseIn        scState = "case in"
-	scstCaseLabel     scState = "case label"
-	scstCaseLabelCont scState = "case-label-continuation"
-	scstFor           scState = "for"
-	scstForIn         scState = "for-in"
-	scstForCont       scState = "for-continuation"
-	scstEcho          scState = "echo"
-	scstInstallDir    scState = "install-dir"
-	scstInstallDir2   scState = "install-dir2"
+	scstStart scState = iota
+	scstCont
+	scstInstall
+	scstInstallD
+	scstMkdir
+	scstPax
+	scstPaxS
+	scstSed
+	scstSedE
+	scstSet
+	scstSetCont
+	scstCond
+	scstCondCont
+	scstCase
+	scstCaseIn
+	scstCaseLabel
+	scstCaseLabelCont
+	scstFor
+	scstForIn
+	scstForCont
+	scstEcho
+	scstInstallDir
+	scstInstallDir2
 )
+
+func (st scState) String() string {
+	return [...]string{
+		"start",
+		"continuation",
+		"install",
+		"install -d",
+		"mkdir",
+		"pax",
+		"pax -s",
+		"sed",
+		"sed -e",
+		"set",
+		"set-continuation",
+		"cond",
+		"cond-continuation",
+		"case",
+		"case in",
+		"case label",
+		"case-label-continuation",
+		"for",
+		"for-in",
+		"for-continuation",
+		"echo",
+		"install-dir",
+		"install-dir2",
+	}[st]
+}
 
 type MkShellLine struct {
 	*MkLine
@@ -90,7 +118,9 @@ const (
 	swstBackt
 )
 
-var ShellwordStateName = [...]string{"plain", "squot", "dquot", "dquot+backt", "backt"}
+func (st ShellwordState) String() string {
+	return [...]string{"plain", "squot", "dquot", "dquot+backt", "backt"}[st]
+}
 
 func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	defer tracecall("MkShellLine.checklineMkShellword", shellword, checkQuoting)()
@@ -118,7 +148,7 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	state := swstPlain
 outer:
 	for repl.rest != "" {
-		_ = G.opts.DebugShell && msline.debugf("shell state %s: %q", ShellwordStateName[state], repl.rest)
+		_ = G.opts.DebugShell && msline.debugf("shell state %s: %q", state, repl.rest)
 
 		switch {
 		// When parsing inside backticks, it is more
@@ -288,7 +318,7 @@ outer:
 	}
 
 	if strings.TrimSpace(repl.rest) != "" {
-		msline.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", ShellwordStateName[state], repl.rest, shellword)
+		msline.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, repl.rest, shellword)
 	}
 }
 
