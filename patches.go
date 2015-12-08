@@ -7,6 +7,237 @@ import (
 	"strings"
 )
 
+func checklinesPatch(lines []*Line) {
+	defer tracecall("checklinesPatch", lines[0].fname)()
+
+	checklineRcsid(lines[0], ``, "")
+
+	ctx := CheckPatchContext{state: pstOutside, needEmptyLineNow: true}
+	for lineno := 1; lineno < len(lines); {
+		line := lines[lineno]
+		text := line.text
+		ctx.line = line
+
+		_ = G.opts.DebugPatches &&
+			line.debugf("state=%s hunks=%d del=%d add=%d text=%s",
+				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines, text)
+
+		found := false
+		for _, t := range patchTransitions[ctx.state] {
+			if t.re == "" {
+				ctx.m = ctx.m[:0]
+			} else if ctx.m = match(text, t.re); ctx.m == nil {
+				continue
+			}
+
+			ctx.redostate = pstNil
+			ctx.nextstate = t.next
+			t.action(&ctx)
+			if ctx.redostate != pstNil {
+				ctx.state = ctx.redostate
+			} else {
+				ctx.state = ctx.nextstate
+				if t.re != "" {
+					lineno++
+				}
+			}
+			found = true
+			break
+		}
+
+		if !found {
+			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
+			ctx.state = pstOutside
+			lineno++
+		}
+	}
+
+	fname := lines[0].fname
+	for ctx.state != pstOutside {
+		_ = G.opts.DebugPatches &&
+			debugf(fname, "EOF", "state=%s hunks=%d del=%d add=%d",
+				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
+
+		found := false
+		for _, t := range patchTransitions[ctx.state] {
+			if t.re == "" {
+				ctx.m = ctx.m[:0]
+				ctx.redostate = pstNil
+				ctx.nextstate = t.next
+				t.action(&ctx)
+				if ctx.redostate != pstNil {
+					ctx.state = ctx.redostate
+				} else {
+					ctx.state = ctx.nextstate
+				}
+				found = true
+			}
+		}
+
+		if !found {
+			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
+			break
+		}
+	}
+
+	if ctx.patchedFiles > 1 {
+		warnf(fname, noLines, "Contains patches for %d files, should be only one.", ctx.patchedFiles)
+	} else if ctx.patchedFiles == 0 {
+		errorf(fname, noLines, "Contains no patch.")
+	}
+
+	checklinesTrailingEmptyLines(lines)
+	saveAutofixChanges(lines)
+}
+
+type CheckPatchContext struct {
+	state                  PatchState
+	redostate              PatchState
+	nextstate              PatchState
+	dellines               int
+	addlines               int
+	hunks                  int
+	seenComment            bool
+	needEmptyLineNow       bool
+	prevLineWasEmpty       bool
+	currentFilename        string
+	currentFiletype        *FileType
+	patchedFiles           int
+	leadingContextLines    int
+	trailingContextLines   int
+	contextScanningLeading *bool
+	line                   *Line
+	m                      []string
+}
+
+func (ctx *CheckPatchContext) expectEmptyLine() {
+	if G.opts.WarnSpace {
+		ctx.line.notef("Empty line expected.")
+		ctx.line.insertBefore("\n")
+	}
+}
+
+func (ctx *CheckPatchContext) useUnifiedDiffs() {
+	ctx.line.warnf("Please use unified diffs (diff -u) for patches.")
+}
+
+func (ctx *CheckPatchContext) checkText(text string) {
+	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
+		if matches(text, rePatchUniHunk) {
+			ctx.line.warnf("Found RCS tag \"$%s$\". Please remove it.", tagname)
+		} else {
+			ctx.line.warnf("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
+		}
+	}
+}
+
+func (ctx *CheckPatchContext) checkContents() {
+	if 1 < len(ctx.m) {
+		ctx.checkText(ctx.m[1])
+	}
+}
+
+func (ctx *CheckPatchContext) checkAddedContents() {
+	if !(1 < len(ctx.m)) {
+		return
+	}
+
+	line := ctx.line
+	addedText := ctx.m[1]
+
+	switch *ctx.currentFiletype {
+	case ftShell:
+	case ftMakefile:
+		// This check is not as accurate as the similar one in MkLine.checkShelltext.
+		shellwords, _ := splitIntoShellwords(line, addedText)
+		for _, shellword := range shellwords {
+			if !hasPrefix(shellword, "#") {
+				line.checkAbsolutePathname(shellword)
+			}
+		}
+	case ftSource:
+		checklineSourceAbsolutePathname(line, addedText)
+	case ftConfigure:
+		if matches(addedText, `: Avoid regenerating within pkgsrc$`) {
+			line.errorf("This code must not be included in patches.")
+			line.explain(
+				"It is generated automatically by pkgsrc after the patch phase.",
+				"",
+				"For more details, look for \"configure-scripts-override\" in",
+				"mk/configure/gnu-configure.mk.")
+		}
+	case ftIgnore:
+		break
+	default:
+		checklineOtherAbsolutePathname(line, addedText)
+	}
+}
+
+func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate PatchState) {
+	if deldelta > 0 && ctx.dellines == 0 {
+		ctx.redostate = newstate
+		if ctx.addlines > 0 {
+			ctx.line.errorf("Expected %d more lines to be added.", ctx.addlines)
+		}
+		return
+	}
+
+	if adddelta > 0 && ctx.addlines == 0 {
+		ctx.redostate = newstate
+		if ctx.dellines > 0 {
+			ctx.line.errorf("Expected %d more lines to be deleted.", ctx.dellines)
+		}
+		return
+	}
+
+	if ctx.contextScanningLeading != nil {
+		if deldelta != 0 && adddelta != 0 {
+			if *ctx.contextScanningLeading {
+				ctx.leadingContextLines++
+			} else {
+				ctx.trailingContextLines++
+			}
+		} else {
+			if *ctx.contextScanningLeading {
+				*ctx.contextScanningLeading = false
+			} else {
+				ctx.trailingContextLines = 0
+			}
+		}
+	}
+
+	if deldelta > 0 {
+		ctx.dellines -= deldelta
+	}
+	if adddelta > 0 {
+		ctx.addlines -= adddelta
+	}
+
+	if ctx.dellines == 0 && ctx.addlines == 0 {
+		if ctx.contextScanningLeading != nil {
+			if ctx.leadingContextLines != ctx.trailingContextLines {
+				_ = G.opts.DebugPatches && ctx.line.warnf(
+					"The hunk that ends here does not have as many leading (%d) as trailing (%d) lines of context.",
+					ctx.leadingContextLines, ctx.trailingContextLines)
+			}
+		}
+		ctx.nextstate = newstate
+	}
+}
+
+func (ctx *CheckPatchContext) checkHunkLine(deldelta, adddelta int, newstate PatchState) {
+	ctx.checkContents()
+	ctx.checkHunkEnd(deldelta, adddelta, newstate)
+
+	// If -Wextra is given, the context lines are checked for
+	// absolute paths and similar things. If it is not given,
+	// only those lines that really add something to the patched
+	// file are checked.
+	if adddelta > 0 && (deldelta == 0 || G.opts.WarnExtra) {
+		ctx.checkAddedContents()
+	}
+}
+
 type FileType int
 
 const (
@@ -399,233 +630,3 @@ var patchTransitions = map[PatchState][]transition{
 	},
 }
 
-func checklinesPatch(lines []*Line) {
-	defer tracecall("checklinesPatch", lines[0].fname)()
-
-	checklineRcsid(lines[0], ``, "")
-
-	ctx := CheckPatchContext{state: pstOutside, needEmptyLineNow: true}
-	for lineno := 1; lineno < len(lines); {
-		line := lines[lineno]
-		text := line.text
-		ctx.line = line
-
-		_ = G.opts.DebugPatches &&
-			line.debugf("state=%s hunks=%d del=%d add=%d text=%s",
-				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines, text)
-
-		found := false
-		for _, t := range patchTransitions[ctx.state] {
-			if t.re == "" {
-				ctx.m = ctx.m[:0]
-			} else if ctx.m = match(text, t.re); ctx.m == nil {
-				continue
-			}
-
-			ctx.redostate = pstNil
-			ctx.nextstate = t.next
-			t.action(&ctx)
-			if ctx.redostate != pstNil {
-				ctx.state = ctx.redostate
-			} else {
-				ctx.state = ctx.nextstate
-				if t.re != "" {
-					lineno++
-				}
-			}
-			found = true
-			break
-		}
-
-		if !found {
-			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
-			ctx.state = pstOutside
-			lineno++
-		}
-	}
-
-	fname := lines[0].fname
-	for ctx.state != pstOutside {
-		_ = G.opts.DebugPatches &&
-			debugf(fname, "EOF", "state=%s hunks=%d del=%d add=%d",
-				ctx.state, ctx.hunks, ctx.dellines, ctx.addlines)
-
-		found := false
-		for _, t := range patchTransitions[ctx.state] {
-			if t.re == "" {
-				ctx.m = ctx.m[:0]
-				ctx.redostate = pstNil
-				ctx.nextstate = t.next
-				t.action(&ctx)
-				if ctx.redostate != pstNil {
-					ctx.state = ctx.redostate
-				} else {
-					ctx.state = ctx.nextstate
-				}
-				found = true
-			}
-		}
-
-		if !found {
-			ctx.line.errorf("Internal pkglint error: checklinesPatch state=%s", ctx.state)
-			break
-		}
-	}
-
-	if ctx.patchedFiles > 1 {
-		warnf(fname, noLines, "Contains patches for %d files, should be only one.", ctx.patchedFiles)
-	} else if ctx.patchedFiles == 0 {
-		errorf(fname, noLines, "Contains no patch.")
-	}
-
-	checklinesTrailingEmptyLines(lines)
-	saveAutofixChanges(lines)
-}
-
-type CheckPatchContext struct {
-	state                  PatchState
-	redostate              PatchState
-	nextstate              PatchState
-	dellines               int
-	addlines               int
-	hunks                  int
-	seenComment            bool
-	needEmptyLineNow       bool
-	prevLineWasEmpty       bool
-	currentFilename        string
-	currentFiletype        *FileType
-	patchedFiles           int
-	leadingContextLines    int
-	trailingContextLines   int
-	contextScanningLeading *bool
-	line                   *Line
-	m                      []string
-}
-
-func (ctx *CheckPatchContext) expectEmptyLine() {
-	if G.opts.WarnSpace {
-		ctx.line.notef("Empty line expected.")
-		ctx.line.insertBefore("\n")
-	}
-}
-
-func (ctx *CheckPatchContext) useUnifiedDiffs() {
-	ctx.line.warnf("Please use unified diffs (diff -u) for patches.")
-}
-
-func (ctx *CheckPatchContext) checkText(text string) {
-	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
-		if matches(text, rePatchUniHunk) {
-			ctx.line.warnf("Found RCS tag \"$%s$\". Please remove it.", tagname)
-		} else {
-			ctx.line.warnf("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
-		}
-	}
-}
-
-func (ctx *CheckPatchContext) checkContents() {
-	if 1 < len(ctx.m) {
-		ctx.checkText(ctx.m[1])
-	}
-}
-
-func (ctx *CheckPatchContext) checkAddedContents() {
-	if !(1 < len(ctx.m)) {
-		return
-	}
-
-	line := ctx.line
-	addedText := ctx.m[1]
-
-	switch *ctx.currentFiletype {
-	case ftShell:
-	case ftMakefile:
-		// This check is not as accurate as the similar one in MkLine.checkShelltext.
-		shellwords, _ := splitIntoShellwords(line, addedText)
-		for _, shellword := range shellwords {
-			if !hasPrefix(shellword, "#") {
-				line.checkAbsolutePathname(shellword)
-			}
-		}
-	case ftSource:
-		checklineSourceAbsolutePathname(line, addedText)
-	case ftConfigure:
-		if matches(addedText, `: Avoid regenerating within pkgsrc$`) {
-			line.errorf("This code must not be included in patches.")
-			line.explain(
-				"It is generated automatically by pkgsrc after the patch phase.",
-				"",
-				"For more details, look for \"configure-scripts-override\" in",
-				"mk/configure/gnu-configure.mk.")
-		}
-	case ftIgnore:
-		break
-	default:
-		checklineOtherAbsolutePathname(line, addedText)
-	}
-}
-
-func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate PatchState) {
-	if deldelta > 0 && ctx.dellines == 0 {
-		ctx.redostate = newstate
-		if ctx.addlines > 0 {
-			ctx.line.errorf("Expected %d more lines to be added.", ctx.addlines)
-		}
-		return
-	}
-
-	if adddelta > 0 && ctx.addlines == 0 {
-		ctx.redostate = newstate
-		if ctx.dellines > 0 {
-			ctx.line.errorf("Expected %d more lines to be deleted.", ctx.dellines)
-		}
-		return
-	}
-
-	if ctx.contextScanningLeading != nil {
-		if deldelta != 0 && adddelta != 0 {
-			if *ctx.contextScanningLeading {
-				ctx.leadingContextLines++
-			} else {
-				ctx.trailingContextLines++
-			}
-		} else {
-			if *ctx.contextScanningLeading {
-				*ctx.contextScanningLeading = false
-			} else {
-				ctx.trailingContextLines = 0
-			}
-		}
-	}
-
-	if deldelta > 0 {
-		ctx.dellines -= deldelta
-	}
-	if adddelta > 0 {
-		ctx.addlines -= adddelta
-	}
-
-	if ctx.dellines == 0 && ctx.addlines == 0 {
-		if ctx.contextScanningLeading != nil {
-			if ctx.leadingContextLines != ctx.trailingContextLines {
-				_ = G.opts.DebugPatches && ctx.line.warnf(
-					"The hunk that ends here does not have as many leading (%d) as trailing (%d) lines of context.",
-					ctx.leadingContextLines, ctx.trailingContextLines)
-			}
-		}
-		ctx.nextstate = newstate
-	}
-}
-
-func (ctx *CheckPatchContext) checkHunkLine(deldelta, adddelta int, newstate PatchState) {
-	ctx.checkContents()
-	ctx.checkHunkEnd(deldelta, adddelta, newstate)
-
-	// If -Wextra is given, the context lines are checked for
-	// absolute paths and similar things. If it is not given,
-	// only those lines that really add something to the patched
-	// file are checked.
-	if adddelta > 0 && (deldelta == 0 || G.opts.WarnExtra) {
-		ctx.checkAddedContents()
-	}
-}
