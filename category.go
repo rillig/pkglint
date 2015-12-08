@@ -151,13 +151,7 @@ func checkdirCategory() {
 	}
 
 	exp.expectEmptyLine()
-
-	if exp.currentLine().text == ".include \"../mk/bsd.pkg.subdir.mk\"" {
-		exp.advance()
-	} else {
-		exp.expectText(".include \"../mk/misc/category.mk\"")
-	}
-
+	exp.expectText(".include \"../mk/misc/category.mk\"")
 	if !exp.eof() {
 		exp.currentLine().errorf("The file should end here.")
 	}
