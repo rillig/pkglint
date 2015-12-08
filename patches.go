@@ -110,17 +110,6 @@ type CheckPatchContext struct {
 	m                      []string
 }
 
-func (ctx *CheckPatchContext) expectEmptyLine() {
-	if G.opts.WarnSpace {
-		ctx.line.notef("Empty line expected.")
-		ctx.line.insertBefore("\n")
-	}
-}
-
-func (ctx *CheckPatchContext) useUnifiedDiffs() {
-	ctx.line.warnf("Please use unified diffs (diff -u) for patches.")
-}
-
 func (ctx *CheckPatchContext) checkText(text string) {
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
 		if matches(text, rePatchUniHunk) {
