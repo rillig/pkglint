@@ -398,8 +398,8 @@ func (ps PatchState) String() string {
 	}[ps]
 }
 
-func ptNop(ctx *CheckPatchContext) {}
-func ptUniFileAdd(ctx *CheckPatchContext) {
+func (ctx *CheckPatchContext) ptNop() {}
+func (ctx *CheckPatchContext) ptUniFileAdd() {
 	ctx.currentFilename = ctx.m[1]
 	ctx.currentFiletype = new(FileType)
 	*ctx.currentFiletype = guessFileType(ctx.line, ctx.currentFilename)
@@ -456,7 +456,7 @@ var patchTransitions = map[PatchState][]transition{
 			ctx.line.warnf("Please use unified diffs (diff -u) for patches.")
 		}},
 		{rePatchUniFileDel, pstUniFileAdd, (*CheckPatchContext).checkBeginDiff},
-		{rePatchUniFileAdd, pstUniFileDelErr, ptUniFileAdd},
+		{rePatchUniFileAdd, pstUniFileDelErr, (*CheckPatchContext).ptUniFileAdd},
 		{rePatchNonempty, pstOutside, (*CheckPatchContext).checkOutside},
 	},
 
@@ -464,7 +464,7 @@ var patchTransitions = map[PatchState][]transition{
 		{rePatchUniFileDel, pstUniHunk, func(ctx *CheckPatchContext) {
 			ctx.line.warnf("Unified diff headers should be first ---, then +++.")
 		}},
-		{"", pstOutside, ptNop},
+		{"", pstOutside, (*CheckPatchContext).ptNop},
 	},
 
 	pstCtxFileAdd: {
@@ -482,7 +482,7 @@ var patchTransitions = map[PatchState][]transition{
 		{rePatchCtxHunk, pstCtxHunkDel, func(ctx *CheckPatchContext) {
 			ctx.hunks++
 		}},
-		{"", pstOutside, ptNop},
+		{"", pstOutside, (*CheckPatchContext).ptNop},
 	},
 
 	pstCtxHunkDel: {
@@ -542,7 +542,7 @@ var patchTransitions = map[PatchState][]transition{
 		{rePatchCtxLineAdd, pstCtxLineAdd, func(ctx *CheckPatchContext) {
 			ctx.checkHunkLine(0, 1, pstCtxHunk)
 		}},
-		{"", pstCtxHunk, ptNop},
+		{"", pstCtxHunk, (*CheckPatchContext).ptNop},
 	},
 
 	pstCtxLineAdd: {
@@ -563,7 +563,7 @@ var patchTransitions = map[PatchState][]transition{
 	},
 
 	pstUniFileAdd: {
-		{rePatchUniFileAdd, pstUniHunk, ptUniFileAdd},
+		{rePatchUniFileAdd, pstUniHunk, (*CheckPatchContext).ptUniFileAdd},
 	},
 
 	pstUniHunk: {
@@ -629,4 +629,3 @@ var patchTransitions = map[PatchState][]transition{
 		}},
 	},
 }
-
