@@ -135,21 +135,22 @@ const (
 type PatchState int
 
 const (
-	pstOutside       PatchState = iota // Outside of a diff
-	pstCtxFileAdd                      // After the DeleteFile line of a context diff
-	pstCtxHunk                         // After the AddFile line of a context diff
-	pstCtxHunkDel                      //
-	pstCtxLineDel0                     //
-	pstCtxLineDel                      //
-	pstCtxLineAdd0                     //
-	pstCtxLineAdd                      //
-	pstUniFileDelErr                   // Sometimes, the DeleteFile and AddFile are reversed
-	pstUniFileAdd                      // After the DeleteFile line of a unified diff
-	pstUniHunk                         // After the AddFile line of a unified diff
-	pstUniLine                         // After reading the hunk header
+	pstNil           PatchState = iota
+	pstOutside                  // Outside of a diff
+	pstCtxFileAdd               // After the DeleteFile line of a context diff
+	pstCtxHunk                  // After the AddFile line of a context diff
+	pstCtxHunkDel               //
+	pstCtxLineDel0              //
+	pstCtxLineDel               //
+	pstCtxLineAdd0              //
+	pstCtxLineAdd               //
+	pstUniFileDelErr            // Sometimes, the DeleteFile and AddFile are reversed
+	pstUniFileAdd               // After the DeleteFile line of a unified diff
+	pstUniHunk                  // After the AddFile line of a unified diff
+	pstUniLine                  // After reading the hunk header
 )
 
-func (ps PatchState) String() string{
+func (ps PatchState) String() string {
 	return [...]string{
 		"outside",
 		"ctx-file-add",
@@ -421,11 +422,11 @@ func checklinesPatch(lines []*Line) {
 				continue
 			}
 
-			ctx.redostate = nil
+			ctx.redostate = pstNil
 			ctx.nextstate = t.next
 			t.action(&ctx)
-			if ctx.redostate != nil {
-				ctx.state = *ctx.redostate
+			if ctx.redostate != pstNil {
+				ctx.state = ctx.redostate
 			} else {
 				ctx.state = ctx.nextstate
 				if t.re != "" {
@@ -453,11 +454,11 @@ func checklinesPatch(lines []*Line) {
 		for _, t := range patchTransitions[ctx.state] {
 			if t.re == "" {
 				ctx.m = ctx.m[:0]
-				ctx.redostate = nil
+				ctx.redostate = pstNil
 				ctx.nextstate = t.next
 				t.action(&ctx)
-				if ctx.redostate != nil {
-					ctx.state = *ctx.redostate
+				if ctx.redostate != pstNil {
+					ctx.state = ctx.redostate
 				} else {
 					ctx.state = ctx.nextstate
 				}
@@ -483,7 +484,7 @@ func checklinesPatch(lines []*Line) {
 
 type CheckPatchContext struct {
 	state                  PatchState
-	redostate              *PatchState
+	redostate              PatchState
 	nextstate              PatchState
 	dellines               int
 	addlines               int
@@ -566,7 +567,7 @@ func (ctx *CheckPatchContext) checkAddedContents() {
 
 func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate PatchState) {
 	if deldelta > 0 && ctx.dellines == 0 {
-		ctx.redostate = &newstate
+		ctx.redostate = newstate
 		if ctx.addlines > 0 {
 			ctx.line.errorf("Expected %d more lines to be added.", ctx.addlines)
 		}
@@ -574,7 +575,7 @@ func (ctx *CheckPatchContext) checkHunkEnd(deldelta, adddelta int, newstate Patc
 	}
 
 	if adddelta > 0 && ctx.addlines == 0 {
-		ctx.redostate = &newstate
+		ctx.redostate = newstate
 		if ctx.dellines > 0 {
 			ctx.line.errorf("Expected %d more lines to be deleted.", ctx.dellines)
 		}
