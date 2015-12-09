@@ -117,3 +117,47 @@ func (s *Suite) TestChecklinesPatch_WrongOrder(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: patch-WrongOrder:7: Unified diff headers should be first ---, then +++.\n")
 }
+
+func (s *Suite) TestChecklinesPatch_ContextDiff(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	lines := s.NewLines("patch-ctx",
+		"$"+"NetBSD$",
+		"",
+		"diff -cr history.c.orig history.c",
+		"*** history.c.orig",
+		"--- history.c",
+		"***************",
+		"*** 11,16 ****",
+		"--- 11,24 ----",
+		"  context1",
+		"  context2",
+		"  ",
+		"+ addition1",
+		"+ ",
+		"+ addition3",
+		"+ addition4",
+		"+ addition5 \"/usr/bin/grep\"",
+		"+ ",
+		"+ ",
+		"+ ",
+		"  context4",
+		"  context5",
+		"  context6",
+		"***************",
+		"*** 19,24 ****",
+		"--- 27,33 ----",
+		"  context1",
+		"  context2",
+		"  ",
+		"+ ",
+		"  context4",
+		"  context5",
+		"  context6")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"NOTE: patch-ctx:4: Empty line expected.\n"+
+		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.\n"+
+		"WARN: patch-ctx:16: Found absolute pathname: /usr/bin/grep\n")
+}
