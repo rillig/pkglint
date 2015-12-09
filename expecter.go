@@ -46,7 +46,10 @@ func (ctx *Expecter) expectEmptyLine() bool {
 		return true
 	}
 
-	_ = G.opts.WarnSpace && ctx.currentLine().notef("Empty line expected.")
+	if G.opts.WarnSpace {
+		ctx.currentLine().notef("Empty line expected.")
+		ctx.currentLine().insertBefore("")
+	}
 	return false
 }
 
