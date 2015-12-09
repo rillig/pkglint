@@ -227,109 +227,6 @@ func (ctx *CheckPatchContext) checkHunkLine(deldelta, adddelta int, newstate Pat
 	}
 }
 
-type FileType int
-
-const (
-	ftSource FileType = iota
-	ftShell
-	ftMakefile
-	ftText
-	ftConfigure
-	ftIgnore
-	ftUnknown
-)
-
-// This is used to select the proper subroutine for detecting absolute pathnames.
-func guessFileType(line *Line, fname string) FileType {
-	basename := path.Base(fname)
-	basename = strings.TrimSuffix(basename, ".in") // doesn’t influence the content type
-	ext := strings.ToLower(strings.TrimLeft(path.Ext(basename), "."))
-
-	switch {
-	case matches(basename, `^I?[Mm]akefile|\.ma?k$`):
-		return ftMakefile
-	case basename == "configure" || basename == "configure.ac":
-		return ftConfigure
-	}
-
-	switch ext {
-	case "m4", "sh":
-		return ftShell
-	case "c", "cc", "cpp", "cxx", "el", "h", "hh", "hpp", "l", "pl", "pm", "py", "s", "t", "y":
-		return ftSource
-	case "conf", "html", "info", "man", "po", "tex", "texi", "texinfo", "txt", "xml":
-		return ftText
-	case "":
-		return ftUnknown
-	}
-
-	_ = G.opts.DebugMisc && line.debugf("Unknown file type for %q", fname)
-	return ftUnknown
-}
-
-func checkwordAbsolutePathname(line *Line, word string) {
-	defer tracecall("checkwordAbsolutePathname", word)()
-
-	switch {
-	case matches(word, `^/dev/(?:null|tty|zero)$`):
-		// These are defined by POSIX.
-	case word == "/bin/sh":
-		// This is usually correct, although on Solaris, it's pretty feature-crippled.
-	case matches(word, `^/(?:[a-z]|\$[({])`):
-		// Absolute paths probably start with a lowercase letter.
-		line.warnf("Found absolute pathname: %s", word)
-		line.explain(
-			"Absolute pathnames are often an indicator for unportable code. As",
-			"pkgsrc aims to be a portable system, absolute pathnames should be",
-			"avoided whenever possible.",
-			"",
-			"A special variable in this context is ${DESTDIR}, which is used in GNU",
-			"projects to specify a different directory for installation than what",
-			"the programs see later when they are executed. Usually it is empty, so",
-			"if anything after that variable starts with a slash, it is considered",
-			"an absolute pathname.")
-	}
-}
-
-// Looks for strings like "/dev/cd0" appearing in source code
-func checklineSourceAbsolutePathname(line *Line, text string) {
-	if matched, before, _, str := match3(text, `(.*)(["'])(/\w[^"']*)["']`); matched {
-		_ = G.opts.DebugMisc && line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
-
-		switch {
-		case matches(before, `[A-Z_]+\s*$`):
-			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
-
-		case matches(before, `\+\s*$`):
-			// ok; Python example: libdir = prefix + '/lib'
-
-		default:
-			checkwordAbsolutePathname(line, str)
-		}
-	}
-}
-
-func checklineOtherAbsolutePathname(line *Line, text string) {
-	defer tracecall("checklineOtherAbsolutePathname", text)()
-
-	if hasPrefix(text, "#") && !hasPrefix(text, "#!") {
-		// Don't warn for absolute pathnames in comments, except for shell interpreters.
-
-	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
-		switch {
-		case hasSuffix(before, "@"): // Example: @PREFIX@/bin
-		case matches(before, `[)}]$`): // Example: ${prefix}/bin
-		case matches(before, `\+\s*["']$`): // Example: prefix + '/lib'
-		case matches(before, `\w$`): // Example: libdir=$prefix/lib
-		case hasSuffix(before, "."): // Example: ../dir
-		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
-		default:
-			_ = G.opts.DebugMisc && line.debugf("before=%q", before)
-			checkwordAbsolutePathname(line, path)
-		}
-	}
-}
-
 const (
 	rePatchNonempty         = `^(.+)$`
 	rePatchEmpty            = `^$`
@@ -617,4 +514,107 @@ var patchTransitions = map[PatchState][]transition{
 			}
 		}},
 	},
+}
+
+type FileType int
+
+const (
+	ftSource FileType = iota
+	ftShell
+	ftMakefile
+	ftText
+	ftConfigure
+	ftIgnore
+	ftUnknown
+)
+
+// This is used to select the proper subroutine for detecting absolute pathnames.
+func guessFileType(line *Line, fname string) FileType {
+	basename := path.Base(fname)
+	basename = strings.TrimSuffix(basename, ".in") // doesn’t influence the content type
+	ext := strings.ToLower(strings.TrimLeft(path.Ext(basename), "."))
+
+	switch {
+	case matches(basename, `^I?[Mm]akefile|\.ma?k$`):
+		return ftMakefile
+	case basename == "configure" || basename == "configure.ac":
+		return ftConfigure
+	}
+
+	switch ext {
+	case "m4", "sh":
+		return ftShell
+	case "c", "cc", "cpp", "cxx", "el", "h", "hh", "hpp", "l", "pl", "pm", "py", "s", "t", "y":
+		return ftSource
+	case "conf", "html", "info", "man", "po", "tex", "texi", "texinfo", "txt", "xml":
+		return ftText
+	case "":
+		return ftUnknown
+	}
+
+	_ = G.opts.DebugMisc && line.debugf("Unknown file type for %q", fname)
+	return ftUnknown
+}
+
+func checkwordAbsolutePathname(line *Line, word string) {
+	defer tracecall("checkwordAbsolutePathname", word)()
+
+	switch {
+	case matches(word, `^/dev/(?:null|tty|zero)$`):
+		// These are defined by POSIX.
+	case word == "/bin/sh":
+		// This is usually correct, although on Solaris, it's pretty feature-crippled.
+	case matches(word, `^/(?:[a-z]|\$[({])`):
+		// Absolute paths probably start with a lowercase letter.
+		line.warnf("Found absolute pathname: %s", word)
+		line.explain(
+			"Absolute pathnames are often an indicator for unportable code. As",
+			"pkgsrc aims to be a portable system, absolute pathnames should be",
+			"avoided whenever possible.",
+			"",
+			"A special variable in this context is ${DESTDIR}, which is used in GNU",
+			"projects to specify a different directory for installation than what",
+			"the programs see later when they are executed. Usually it is empty, so",
+			"if anything after that variable starts with a slash, it is considered",
+			"an absolute pathname.")
+	}
+}
+
+// Looks for strings like "/dev/cd0" appearing in source code
+func checklineSourceAbsolutePathname(line *Line, text string) {
+	if matched, before, _, str := match3(text, `(.*)(["'])(/\w[^"']*)["']`); matched {
+		_ = G.opts.DebugMisc && line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+
+		switch {
+		case matches(before, `[A-Z_]+\s*$`):
+			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
+
+		case matches(before, `\+\s*$`):
+			// ok; Python example: libdir = prefix + '/lib'
+
+		default:
+			checkwordAbsolutePathname(line, str)
+		}
+	}
+}
+
+func checklineOtherAbsolutePathname(line *Line, text string) {
+	defer tracecall("checklineOtherAbsolutePathname", text)()
+
+	if hasPrefix(text, "#") && !hasPrefix(text, "#!") {
+		// Don't warn for absolute pathnames in comments, except for shell interpreters.
+
+	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
+		switch {
+		case hasSuffix(before, "@"): // Example: @PREFIX@/bin
+		case matches(before, `[)}]$`): // Example: ${prefix}/bin
+		case matches(before, `\+\s*["']$`): // Example: prefix + '/lib'
+		case matches(before, `\w$`): // Example: libdir=$prefix/lib
+		case hasSuffix(before, "."): // Example: ../dir
+		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
+		default:
+			_ = G.opts.DebugMisc && line.debugf("before=%q", before)
+			checkwordAbsolutePathname(line, path)
+		}
+	}
 }
