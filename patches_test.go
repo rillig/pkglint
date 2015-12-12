@@ -315,3 +315,22 @@ func (s *Suite) TestChecklinesPatch_ShortAtEof(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 }
+
+func (s *Suite) TestChecklinesPatch_AddTab(c *check.C) {
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"comment",
+		"",
+		"--- oldfile",
+		"+++ newfile",
+		"@@ -1,3 +1,3 @@",
+		"\tcontext",
+		"-old",
+		"+new",
+		"\tcontext")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "")
+}

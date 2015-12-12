@@ -112,7 +112,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case text == "":
 				linesToDel--
 				linesToAdd--
-			case hasPrefix(text, " "):
+			case hasPrefix(text, " "), hasPrefix(text, "\t"):
 				linesToDel--
 				linesToAdd--
 				ck.checklineContext(text[1:], patchedFileType)
