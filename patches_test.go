@@ -316,6 +316,8 @@ func (s *Suite) TestChecklinesPatch_ShortAtEof(c *check.C) {
 	c.Check(s.Output(), equals, "")
 }
 
+// In some context lines, the leading space character is missing.
+// Since this is no problem for patch(1), pkglint also doesn’t complain.
 func (s *Suite) TestChecklinesPatch_AddTab(c *check.C) {
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",

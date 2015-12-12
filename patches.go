@@ -66,7 +66,7 @@ func (ck *PatchChecker) check() {
 		}
 
 		ck.exp.advance()
-		ck.previousLineEmpty = line.text == ""
+		ck.previousLineEmpty = line.text == "" || hasPrefix(line.text, "diff ")
 		if !ck.previousLineEmpty {
 			ck.seenDocumentation = true
 		}
@@ -134,7 +134,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	}
 	if !ck.exp.eof() {
 		line := ck.exp.currentLine()
-		if line.text != "" && !matches(line.text, rePatchUniFileDel) {
+		if line.text != "" && !matches(line.text, rePatchUniFileDel) && !hasPrefix(line.text, "Index:") && !hasPrefix(line.text, "diff ") {
 			line.notef("Empty line or end of file expected.")
 			line.explain(
 				"This empty line makes the end of the patch visible.",
