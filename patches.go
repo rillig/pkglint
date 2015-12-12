@@ -55,8 +55,8 @@ func (ck *PatchChecker) check() {
 			ck.stepBack()
 		}
 
-		if ck.advanceIfMatches(rePatchCtxFileDel) {
-			if ck.advanceIfMatches(rePatchCtxFileAdd) {
+		if ck.advanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
+			if ck.advanceIfMatches(`^---\s(\S+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
 				line.warnf("Please use unified diffs (diff -u) for patches.")
 				return
@@ -232,8 +232,6 @@ func (ck *PatchChecker) checktextRcsid(text string) {
 }
 
 const (
-	rePatchCtxFileDel = `^\*\*\*\s(\S+)(.*)$`
-	rePatchCtxFileAdd = `^---\s(\S+)(.*)$`
 	rePatchUniFileDel = `^---\s(\S+)(?:\s+(.*))?$`
 	rePatchUniFileAdd = `^\+\+\+\s(\S+)(?:\s+(.*))?$`
 	rePatchUniHunk    = `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`
