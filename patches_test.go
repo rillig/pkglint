@@ -273,7 +273,7 @@ func (s *Suite) TestChecklinesPatch_NoNewline_withFollowingText(c *check.C) {
 
 	checklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "NOTE: patch-aa:12: Empty line or end of file expected.\n")
+	c.Check(s.Output(), equals, "WARN: patch-aa:12: Empty line or end of file expected.\n")
 }
 
 func (s *Suite) TestChecklinesPatch_NoNewline(c *check.C) {
