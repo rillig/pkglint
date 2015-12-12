@@ -35,6 +35,8 @@ const (
 	vucTimeRun
 )
 
+func (t vucTime) String() string { return [...]string{"unknown", "parse", "run"}[t] }
+
 // The quoting context in which the variable is used.
 // Depending on this context, the modifiers :Q or :M can be allowed or not.
 type vucQuoting int
@@ -54,6 +56,10 @@ const (
 	vucQuotFor
 )
 
+func (q vucQuoting) String() string {
+	return [...]string{"unknown", "plain", "dquot", "squot", "backt", "mk-for"}[q]
+}
+
 type vucExtent int
 
 const (
@@ -62,14 +68,14 @@ const (
 	vucExtentWordpart           // Example: echo LOCALBASE=${LOCALBASE}
 )
 
+func (e vucExtent) String() string {
+	return [...]string{"unknown", "word", "wordpart"}[e]
+}
+
 func (vuc *VarUseContext) String() string {
 	typename := "no-type"
 	if vuc.vartype != nil {
 		typename = vuc.vartype.String()
 	}
-	return sprintf("(%s %s %s %s)",
-		[]string{"unknown", "load-time", "run-time"}[vuc.time],
-		typename,
-		[]string{"unknown", "plain", "dquot", "squot", "backt", "for"}[vuc.shellword],
-		[]string{"unknown", "word", "word-part"}[vuc.extent])
+	return sprintf("(%s %s %s %s)", vuc.time, typename, vuc.shellword, vuc.extent)
 }
