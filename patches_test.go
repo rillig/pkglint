@@ -2,7 +2,8 @@ package main
 
 import (
 	check "gopkg.in/check.v1"
-	"path/filepath"
+	"io/ioutil"
+	"os"
 )
 
 func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
@@ -27,8 +28,7 @@ func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesPatch_WithoutEmptyLine(c *check.C) {
-	tmpdir := c.MkDir()
-	fname := filepath.ToSlash(tmpdir + "/patch-WithoutEmptyLines")
+	fname := s.CreateTmpFile(c, "patch-WithoutEmptyLines", "dummy")
 	s.UseCommandLine(c, "-Wall", "--autofix")
 	lines := s.NewLines(fname,
 		"$"+"NetBSD$",
@@ -43,12 +43,27 @@ func (s *Suite) TestChecklinesPatch_WithoutEmptyLine(c *check.C) {
 
 	checklinesPatch(lines)
 
-	c.Check(s.Output(), equals, ""+
-		"NOTE: "+fname+":2: Empty line expected.\n"+
-		"NOTE: "+fname+":2: Autofix: inserting a line \"\\n\" before this line.\n"+
-		"NOTE: "+fname+":3: Empty line expected.\n"+
-		"NOTE: "+fname+":3: Autofix: inserting a line \"\\n\" before this line.\n"+
-		"NOTE: "+fname+": Has been auto-fixed. Please re-run pkglint.\n")
+	c.Check(s.OutputCleanTmpdir(), equals, ""+
+		"NOTE: ~/patch-WithoutEmptyLines:2: Empty line expected.\n"+
+		"NOTE: ~/patch-WithoutEmptyLines:2: Autofix: inserting a line \"\" before this line.\n"+
+		"NOTE: ~/patch-WithoutEmptyLines:3: Empty line expected.\n"+
+		"NOTE: ~/patch-WithoutEmptyLines:3: Autofix: inserting a line \"\" before this line.\n"+
+		"NOTE: ~/patch-WithoutEmptyLines: Has been auto-fixed. Please re-run pkglint.\n")
+
+	fixed, err := ioutil.ReadFile(fname)
+	c.Assert(err, check.IsNil)
+	c.Check(string(fixed), equals, ""+
+		"$NetBSD$\n"+
+		"\n"+
+		"Text\n"+
+		"\n"+
+		"--- file.orig\n"+
+		"+++ file\n"+
+		"@@ -5,3 +5,3 @@\n"+
+		" context before\n"+
+		"-old line\n"+
+		"+old line\n"+
+		" context after\n")
 }
 
 func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
@@ -160,4 +175,40 @@ func (s *Suite) TestChecklinesPatch_ContextDiff(c *check.C) {
 		"NOTE: patch-ctx:4: Empty line expected.\n"+
 		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.\n"+
 		"WARN: patch-ctx:16: Found absolute pathname: /usr/bin/grep\n")
+}
+
+func (s *Suite) TestChecklinesPatch_NoPatch(c *check.C) {
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"-- oldfile",
+		"++ newfile")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "ERROR: patch-aa: Contains no patch.\n")
+}
+
+func (s *Suite) TestChecklinesPatch_TwoPatches(c *check.C) {
+	G.traceOut = os.Stdout
+	s.UseCommandLine(c,"-Dtrace")
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"--- oldfile",
+		"+++ newfile",
+		"@@ -1 +1 @@",
+		"-old",
+		"+new",
+		"--- oldfile2",
+		"+++ newfile2",
+		"@@ -1 +1 @@",
+		"-old",
+		"+new")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"ERROR: patch-aa:3: Each patch must be documented.\n"+
+		"WARN: patch-aa: Contains patches for 2 files, should be only one.\n")
 }

@@ -4,10 +4,11 @@ package main
 type Expecter struct {
 	lines []*Line
 	index int
+	m     []string
 }
 
 func NewExpecter(lines []*Line) *Expecter {
-	return &Expecter{lines, 0}
+	return &Expecter{lines, 0, nil}
 }
 
 func (ctx *Expecter) currentLine() *Line {
@@ -27,6 +28,7 @@ func (ctx *Expecter) eof() bool {
 }
 func (ctx *Expecter) advance() {
 	ctx.index++
+	ctx.m = nil
 }
 
 func (ctx *Expecter) advanceIfMatches(re string) []string {
@@ -35,6 +37,7 @@ func (ctx *Expecter) advanceIfMatches(re string) []string {
 	if ctx.index < len(ctx.lines) {
 		if m := match(ctx.lines[ctx.index].text, re); m != nil {
 			ctx.index++
+			ctx.m = m
 			return m
 		}
 	}
@@ -56,6 +59,7 @@ func (ctx *Expecter) expectEmptyLine() bool {
 func (ctx *Expecter) expectText(text string) bool {
 	if ctx.index < len(ctx.lines) && ctx.lines[ctx.index].text == text {
 		ctx.index++
+		ctx.m = nil
 		return true
 	}
 
