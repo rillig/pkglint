@@ -12,7 +12,7 @@ import (
 func checklinesPatch(lines []*Line) {
 	defer tracecall("checklinesPatch", lines[0].fname)()
 
-	(&PatchChecker{lines, NewExpecter(lines), false, false, ftUnknown}).check()
+	(&PatchChecker{lines, NewExpecter(lines), false, false}).check()
 }
 
 type PatchChecker struct {
@@ -20,12 +20,11 @@ type PatchChecker struct {
 	exp               *Expecter
 	seenDocumentation bool
 	previousLineEmpty bool
-	patchedFileType   FileType
 }
 
 func (ck *PatchChecker) check() {
 	defer tracecall("PatchChecker.check")()
-	
+
 	if checklineRcsid(ck.lines[0], ``, "") {
 		ck.exp.advance()
 	}
@@ -99,17 +98,21 @@ func (ck *PatchChecker) stepBack() {
 func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	defer tracecall("PatchChecker.checkUnifiedDiff")()
 
+	patchedFileType := guessFileType(ck.exp.currentLine(), patchedFile)
+	_ = G.opts.DebugMisc && ck.exp.currentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
+
 	hasHunks := false
 	for ck.advanceIfMatches(rePatchUniHunk) {
 		hasHunks = true
 		linesToDel, linesToAdd := 1, 1
-		_, _ = fmt.Sscanf(ck.exp.m[2], "%u", &linesToDel)
-		_, _ = fmt.Sscanf(ck.exp.m[2], "%u", &linesToAdd)
+		_, _ = fmt.Sscanf(ck.exp.m[2], "%d", &linesToDel)
+		_, _ = fmt.Sscanf(ck.exp.m[4], "%d", &linesToAdd)
+		_ = G.opts.DebugMisc && ck.exp.previousLine().debugf("hunk -%d +%d", linesToDel,linesToAdd)
 		ck.checktextUniHunkCr()
 
 		for linesToDel > 0 || linesToAdd > 0 {
-			line := ck.exp.currentLine()
 			ck.exp.advance()
+			line := ck.exp.previousLine()
 			text := line.text
 			switch {
 			case text == "":
@@ -118,12 +121,12 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case hasPrefix(text, " "):
 				linesToDel--
 				linesToAdd--
-				ck.checklineContext(text[1:])
+				ck.checklineContext(text[1:], patchedFileType)
 			case hasPrefix(text, "-"):
 				linesToDel--
 			case hasPrefix(text, "+"):
 				linesToAdd--
-				ck.checklineAdded(text[1:])
+				ck.checklineAdded(text[1:], patchedFileType)
 			default:
 				line.errorf("Internal pkglint error: unexpectedPatchFormat")
 				return
@@ -139,6 +142,9 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 func (ck *PatchChecker) checkContextDiff(patchedFile string) {
 	defer tracecall("PatchChecker.checkContextDiff")()
 
+	patchedFileType := guessFileType(ck.exp.currentLine(), patchedFile)
+	_ = G.opts.DebugMisc && ck.exp.currentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
+
 	hasHunks := false
 	for ck.advanceIfMatches(rePatchCtxHunk) {
 		hasHunks = true
@@ -147,8 +153,8 @@ func (ck *PatchChecker) checkContextDiff(patchedFile string) {
 		if !ok1 || !ok2 {
 			return
 		}
-		ck.checkContextHunkPart(linesToDel, false)
-		ck.checkContextHunkPart(linesToAdd, true)
+		ck.checkContextHunkPart(linesToDel, false, patchedFileType)
+		ck.checkContextHunkPart(linesToAdd, true, patchedFileType)
 	}
 	if !hasHunks {
 		ck.exp.currentLine().errorf("No patch hunks for %q.", patchedFile)
@@ -174,7 +180,7 @@ func (ck *PatchChecker) parselineContextHunk(re string) (nlines int, ok bool) {
 	return nlines, true
 }
 
-func (ck *PatchChecker) checkContextHunkPart(nlines int, adding bool) {
+func (ck *PatchChecker) checkContextHunkPart(nlines int, adding bool, patchedFileType FileType) {
 	defer tracecall("PatchChecker.checkContextHunkPart")()
 
 	for ; !ck.exp.eof() && nlines > 0; nlines-- {
@@ -183,16 +189,16 @@ func (ck *PatchChecker) checkContextHunkPart(nlines int, adding bool) {
 
 		switch {
 		case hasPrefix(text, "  "):
-			ck.checklineContext(text[2:])
+			ck.checklineContext(text[2:], patchedFileType)
 		case hasPrefix(text, "! ") && adding:
-			ck.checklineAdded(text[2:])
+			ck.checklineAdded(text[2:], patchedFileType)
 		case hasPrefix(text, "+ "):
-			ck.checklineAdded(text[2:])
+			ck.checklineAdded(text[2:], patchedFileType)
 		}
 	}
 }
 
-func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int ) {
+func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 	defer tracecall("PatchChecker.checkBeginDiff")()
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
@@ -213,23 +219,23 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int ) {
 	}
 }
 
-func (ck *PatchChecker) checktextDocumentation(text string) {
-	ck.exp.currentLine().errorf("notImplemented")
-}
+func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) {
+	defer tracecall("PatchChecker.checklineContext", text, patchedFileType)()
 
-func (ck *PatchChecker) checklineContext(text string) {
 	if G.opts.WarnExtra {
-		ck.checklineAdded(text)
+		ck.checklineAdded(text, patchedFileType)
 	} else {
 		ck.checktextRcsid(text)
 	}
 }
 
-func (ck *PatchChecker) checklineAdded(addedText string) {
+func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileType) {
+	defer tracecall("PatchChecker.checklineAdded", addedText, patchedFileType)()
+
 	ck.checktextRcsid(addedText)
 
 	line := ck.exp.previousLine()
-	switch ck.patchedFileType {
+	switch patchedFileType {
 	case ftShell:
 	case ftMakefile:
 		// This check is not as accurate as the similar one in MkLine.checkShelltext.
@@ -258,6 +264,8 @@ func (ck *PatchChecker) checklineAdded(addedText string) {
 }
 
 func (ck *PatchChecker) checktextUniHunkCr() {
+	defer tracecall("PatchChecker.checktextUniHunkCr")()
+
 	line := ck.exp.previousLine()
 	if hasSuffix(line.text, "\r") {
 		line.errorf("The hunk header must not end with a CR character.")
@@ -310,6 +318,18 @@ const (
 	ftIgnore
 	ftUnknown
 )
+
+func (ft FileType) String() string {
+	return [...]string{
+		"source code",
+		"shell code",
+		"Makefile",
+		"text file",
+		"configure file",
+		"ignored",
+		"unknown",
+	}[ft]
+}
 
 // This is used to select the proper subroutine for detecting absolute pathnames.
 func guessFileType(line *Line, fname string) FileType {

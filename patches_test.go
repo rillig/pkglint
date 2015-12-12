@@ -3,7 +3,6 @@ package main
 import (
 	check "gopkg.in/check.v1"
 	"io/ioutil"
-	"os"
 )
 
 func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
@@ -190,8 +189,6 @@ func (s *Suite) TestChecklinesPatch_NoPatch(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesPatch_TwoPatches(c *check.C) {
-	G.traceOut = os.Stdout
-	s.UseCommandLine(c,"-Dtrace")
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -211,4 +208,81 @@ func (s *Suite) TestChecklinesPatch_TwoPatches(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"ERROR: patch-aa:3: Each patch must be documented.\n"+
 		"WARN: patch-aa: Contains patches for 2 files, should be only one.\n")
+}
+
+func (s *Suite) TestChecklinesPatch_PatchlikeDocumentation(c *check.C) {
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"--- oldfile",
+		"",
+		"+++ newfile",
+		"",
+		"*** oldOrNewFile")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "ERROR: patch-aa: Contains no patch.\n")
+}
+
+func (s *Suite) TestChecklinesPatch_OnlyUnifiedHeader(c *check.C) {
+	lines := s.NewLines("patch-unified",
+		"$"+"NetBSD$",
+		"",
+		"Documentation for the patch",
+		"",
+		"--- file.orig",
+		"+++ file")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "ERROR: patch-unified:EOF: No patch hunks for \"file\".\n")
+}
+
+func (s *Suite) TestChecklinesPatch_OnlyContextHeader(c *check.C) {
+	lines := s.NewLines("patch-context",
+		"$"+"NetBSD$",
+		"",
+		"Documentation for the patch",
+		"",
+		"***************",
+		"*** file.orig",
+		"--- file")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: patch-context:6: Please use unified diffs (diff -u) for patches.\n"+
+		"ERROR: patch-context:EOF: No patch hunks for \"file\".\n")
+}
+
+func (s *Suite) TestChecklinesPatch_Makefile(c *check.C) {
+	lines := s.NewLines("patch-unified",
+		"$"+"NetBSD$",
+		"",
+		"Documentation for the patch",
+		"",
+		"--- Makefile.orig",
+		"+++ Makefile",
+		"@@ -1,3 +1,5 @@",
+		" \t/bin/cp context before",
+		"-\t/bin/cp deleted",
+		"+\t/bin/cp added",
+		"+#\t/bin/cp added comment",
+		"+# added comment",
+		" \t/bin/cp context after")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: patch-unified:10: Found absolute pathname: /bin/cp\n")
+
+	G.opts.WarnExtra = true
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: patch-unified:8: Found absolute pathname: /bin/cp\n"+
+		"WARN: patch-unified:10: Found absolute pathname: /bin/cp\n"+
+		"WARN: patch-unified:13: Found absolute pathname: /bin/cp\n")
 }
