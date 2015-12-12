@@ -105,8 +105,8 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		ck.checktextUniHunkCr()
 
 		for linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.exp.currentLine().text, "\\") {
+			line := ck.exp.currentLine()
 			ck.exp.advance()
-			line := ck.exp.previousLine()
 			text := line.text
 			switch {
 			case text == "":

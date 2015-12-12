@@ -256,7 +256,7 @@ func (s *Suite) TestChecklinesPatch_Makefile(c *check.C) {
 		"WARN: patch-unified:13: Found absolute pathname: /bin/cp\n")
 }
 
-func (s *Suite) TestChecklinesPatch_NoNewline(c *check.C) {
+func (s *Suite) TestChecklinesPatch_NoNewline_withFollowingText(c *check.C) {
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -274,4 +274,44 @@ func (s *Suite) TestChecklinesPatch_NoNewline(c *check.C) {
 	checklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "NOTE: patch-aa:12: Empty line or end of file expected.\n")
+}
+
+func (s *Suite) TestChecklinesPatch_NoNewline(c *check.C) {
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"comment",
+		"",
+		"--- oldfile",
+		"+++ newfile",
+		"@@ -1 +1 @@",
+		"-old",
+		"\\ No newline at end of file",
+		"+new",
+		"\\ No newline at end of file")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "")
+}
+
+func (s *Suite) TestChecklinesPatch_ShortAtEof(c *check.C) {
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"comment",
+		"",
+		"--- oldfile",
+		"+++ newfile",
+		"@@ -1,7 +1,6 @@",
+		" 1",
+		" 2",
+		" 3",
+		"-4",
+		" 5",
+		" 6") // Line 7 was empty, therefore omitted
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "")
 }
