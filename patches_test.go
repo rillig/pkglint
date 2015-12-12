@@ -144,7 +144,7 @@ func (s *Suite) TestChecklinesPatch_ContextDiff(c *check.C) {
 	checklinesPatch(lines)
 
 	c.Check(s.Output(), equals, ""+
-		"NOTE: patch-ctx:4: Empty line expected.\n"+
+		"ERROR: patch-ctx:4: Each patch must be documented.\n"+
 		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.\n")
 }
 
