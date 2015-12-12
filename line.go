@@ -113,8 +113,8 @@ func (ln *Line) explain(explanation ...string) {
 		}
 		if G.explanationsGiven == nil {
 			G.explanationsGiven = make(map[string]bool)
-			G.explanationsGiven[complete] = true
 		}
+		G.explanationsGiven[complete] = true
 
 		io.WriteString(G.logOut, "\n")
 		for _, explanationLine := range explanation {
