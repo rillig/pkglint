@@ -64,7 +64,7 @@ func notef(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.logOut, llNote, fname, lineno, format, args...)
 }
 func debugf(fname, lineno, format string, args ...interface{}) bool {
-	return logf(G.logOut, llDebug, fname, lineno, format, args...)
+	return logf(G.debugOut, llDebug, fname, lineno, format, args...)
 }
 
 type pkglintFatal struct{}

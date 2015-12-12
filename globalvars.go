@@ -28,7 +28,7 @@ type GlobalVars struct {
 	traceDepth            int
 	logOut                io.Writer
 	logErr                io.Writer
-	traceOut              io.Writer
+	debugOut              io.Writer
 
 	res       map[string]*regexp.Regexp
 	rematch   *Histogram

@@ -53,6 +53,11 @@ func (s *Suite) NewMkLines(fname string, lines ...string) *MkLines {
 	return NewMkLines(s.NewLines(fname, lines...))
 }
 
+func (s *Suite) DebugToStdout() {
+	G.debugOut = os.Stdout
+	G.opts.DebugTrace = true
+}
+
 func (s *Suite) UseCommandLine(c *check.C, args ...string) {
 	exitcode := new(Pkglint).ParseCommandLine(append([]string{"pkglint"}, args...))
 	if exitcode != nil && *exitcode != 0 {
@@ -98,7 +103,7 @@ func (s *Suite) ExpectFatalError(action func()) {
 
 func (s *Suite) SetUpTest(c *check.C) {
 	G = new(GlobalVars)
-	G.logOut, G.logErr, G.traceOut = &s.stdout, &s.stderr, &s.stdout
+	G.logOut, G.logErr, G.debugOut = &s.stdout, &s.stderr, &s.stdout
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
