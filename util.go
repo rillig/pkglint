@@ -287,9 +287,11 @@ func negToZero(i int) int {
 	return 0
 }
 
-func toInt(s string) int {
-	n, _ := strconv.Atoi(s)
-	return n
+func toInt(s string, def int) int {
+	if n, err := strconv.Atoi(s); err == nil {
+		return n
+	}
+	return def
 }
 
 func dirglob(dirname string) []string {

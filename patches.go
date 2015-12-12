@@ -3,9 +3,7 @@ package main
 // Checks for patch files.
 
 import (
-	"fmt"
 	"path"
-	"strconv"
 	"strings"
 )
 
@@ -59,12 +57,9 @@ func (ck *PatchChecker) check() {
 
 		if ck.advanceIfMatches(rePatchCtxFileDel) {
 			if ck.advanceIfMatches(rePatchCtxFileAdd) {
-				patchedFile := ck.exp.m[1]
 				ck.checkBeginDiff(line, patchedFiles)
 				line.warnf("Please use unified diffs (diff -u) for patches.")
-				ck.checkContextDiff(patchedFile)
-				patchedFiles++
-				continue
+				return
 			}
 
 			ck.stepBack()
@@ -104,13 +99,12 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	hasHunks := false
 	for ck.advanceIfMatches(rePatchUniHunk) {
 		hasHunks = true
-		linesToDel, linesToAdd := 1, 1
-		_, _ = fmt.Sscanf(ck.exp.m[2], "%d", &linesToDel)
-		_, _ = fmt.Sscanf(ck.exp.m[4], "%d", &linesToAdd)
-		_ = G.opts.DebugMisc && ck.exp.previousLine().debugf("hunk -%d +%d", linesToDel,linesToAdd)
+		linesToDel := toInt(ck.exp.m[2], 1)
+		linesToAdd := toInt(ck.exp.m[4], 1)
+		_ = G.opts.DebugMisc && ck.exp.previousLine().debugf("hunk -%d +%d", linesToDel, linesToAdd)
 		ck.checktextUniHunkCr()
 
-		for linesToDel > 0 || linesToAdd > 0 {
+		for linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.exp.currentLine().text, "\\") {
 			ck.exp.advance()
 			line := ck.exp.previousLine()
 			text := line.text
@@ -127,6 +121,8 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case hasPrefix(text, "+"):
 				linesToAdd--
 				ck.checklineAdded(text[1:], patchedFileType)
+			case hasPrefix(text, "\\"):
+				// \ No newline at end of file
 			default:
 				line.errorf("Internal pkglint error: unexpectedPatchFormat")
 				return
@@ -136,64 +132,14 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	if !hasHunks {
 		ck.exp.currentLine().errorf("No patch hunks for %q.", patchedFile)
 	}
-}
-
-// See http://www.gnu.org/software/diffutils/manual/html_node/Detailed-Context.html
-func (ck *PatchChecker) checkContextDiff(patchedFile string) {
-	defer tracecall("PatchChecker.checkContextDiff")()
-
-	patchedFileType := guessFileType(ck.exp.currentLine(), patchedFile)
-	_ = G.opts.DebugMisc && ck.exp.currentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
-
-	hasHunks := false
-	for ck.advanceIfMatches(rePatchCtxHunk) {
-		hasHunks = true
-		linesToDel, ok1 := ck.parselineContextHunk(rePatchCtxHunkDel)
-		linesToAdd, ok2 := ck.parselineContextHunk(rePatchCtxHunkAdd)
-		if !ok1 || !ok2 {
-			return
-		}
-		ck.checkContextHunkPart(linesToDel, false, patchedFileType)
-		ck.checkContextHunkPart(linesToAdd, true, patchedFileType)
-	}
-	if !hasHunks {
-		ck.exp.currentLine().errorf("No patch hunks for %q.", patchedFile)
-	}
-}
-
-func (ck *PatchChecker) parselineContextHunk(re string) (nlines int, ok bool) {
-	defer tracecall("PatchChecker.parselineContextHunk")()
-
-	if !ck.advanceIfMatches(re) {
-		ck.exp.currentLine().warnf("Parse error in context diff")
-		return 0, false
-	}
-
-	nlines = 1
-	if m := ck.exp.m; m[2] != "" {
-		if start, err := strconv.Atoi(m[1]); err == nil {
-			if end, err := strconv.Atoi(m[2]); err == nil {
-				nlines = end - start
-			}
-		}
-	}
-	return nlines, true
-}
-
-func (ck *PatchChecker) checkContextHunkPart(nlines int, adding bool, patchedFileType FileType) {
-	defer tracecall("PatchChecker.checkContextHunkPart")()
-
-	for ; !ck.exp.eof() && nlines > 0; nlines-- {
-		ck.exp.advance()
-		text := ck.exp.previousLine().text
-
-		switch {
-		case hasPrefix(text, "  "):
-			ck.checklineContext(text[2:], patchedFileType)
-		case hasPrefix(text, "! ") && adding:
-			ck.checklineAdded(text[2:], patchedFileType)
-		case hasPrefix(text, "+ "):
-			ck.checklineAdded(text[2:], patchedFileType)
+	if !ck.exp.eof() {
+		line := ck.exp.currentLine()
+		if line.text != "" && !matches(line.text, rePatchUniFileDel) {
+			line.notef("Empty line or end of file expected.")
+			line.explain(
+				"This empty line makes the end of the patch visible.",
+				"Otherwise the reader would have to count lines to see where",
+				"the patch ends.")
 		}
 	}
 }
@@ -286,25 +232,11 @@ func (ck *PatchChecker) checktextRcsid(text string) {
 }
 
 const (
-	rePatchNonempty         = `^(.+)$`
-	rePatchEmpty            = `^$`
-	rePatchTextError        = `\*\*\* Error code`
-	rePatchCtxFileDel       = `^\*\*\*\s(\S+)(.*)$`
-	rePatchCtxFileAdd       = `^---\s(\S+)(.*)$`
-	rePatchCtxHunk          = `^\*{15}(.*)$`
-	rePatchCtxHunkDel       = `^\*\*\*\s(\d+)(?:,(\d+))?\s\*\*\*\*$`
-	rePatchCtxHunkAdd       = `^-{3}\s(\d+)(?:,(\d+))?\s----$`
-	rePatchCtxLineDel       = `^(?:-\s(.*))?$`
-	rePatchCtxLineMod       = `^(?:!\s(.*))?$`
-	rePatchCtxLineAdd       = `^(?:\+\s(.*))?$`
-	rePatchCtxLineContext   = `^(?:\s\s(.*))?$`
-	rePatchUniFileDel       = `^---\s(\S+)(?:\s+(.*))?$`
-	rePatchUniFileAdd       = `^\+\+\+\s(\S+)(?:\s+(.*))?$`
-	rePatchUniHunk          = `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`
-	rePatchUniLineDel       = `^-(.*)$`
-	rePatchUniLineAdd       = `^\+(.*)$`
-	rePatchUniLineContext   = `^\s(.*)$`
-	rePatchUniLineNoNewline = `^\\ No newline at end of file$`
+	rePatchCtxFileDel = `^\*\*\*\s(\S+)(.*)$`
+	rePatchCtxFileAdd = `^---\s(\S+)(.*)$`
+	rePatchUniFileDel = `^---\s(\S+)(?:\s+(.*))?$`
+	rePatchUniFileAdd = `^\+\+\+\s(\S+)(?:\s+(.*))?$`
+	rePatchUniHunk    = `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`
 )
 
 type FileType int

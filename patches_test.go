@@ -139,41 +139,13 @@ func (s *Suite) TestChecklinesPatch_ContextDiff(c *check.C) {
 		"",
 		"diff -cr history.c.orig history.c",
 		"*** history.c.orig",
-		"--- history.c",
-		"***************",
-		"*** 11,16 ****",
-		"--- 11,24 ----",
-		"  context1",
-		"  context2",
-		"  ",
-		"+ addition1",
-		"+ ",
-		"+ addition3",
-		"+ addition4",
-		"+ addition5 \"/usr/bin/grep\"",
-		"+ ",
-		"+ ",
-		"+ ",
-		"  context4",
-		"  context5",
-		"  context6",
-		"***************",
-		"*** 19,24 ****",
-		"--- 27,33 ----",
-		"  context1",
-		"  context2",
-		"  ",
-		"+ ",
-		"  context4",
-		"  context5",
-		"  context6")
+		"--- history.c")
 
 	checklinesPatch(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: patch-ctx:4: Empty line expected.\n"+
-		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.\n"+
-		"WARN: patch-ctx:16: Found absolute pathname: /usr/bin/grep\n")
+		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.\n")
 }
 
 func (s *Suite) TestChecklinesPatch_NoPatch(c *check.C) {
@@ -245,15 +217,12 @@ func (s *Suite) TestChecklinesPatch_OnlyContextHeader(c *check.C) {
 		"",
 		"Documentation for the patch",
 		"",
-		"***************",
 		"*** file.orig",
 		"--- file")
 
 	checklinesPatch(lines)
 
-	c.Check(s.Output(), equals, ""+
-		"WARN: patch-context:6: Please use unified diffs (diff -u) for patches.\n"+
-		"ERROR: patch-context:EOF: No patch hunks for \"file\".\n")
+	c.Check(s.Output(), equals, "WARN: patch-context:5: Please use unified diffs (diff -u) for patches.\n")
 }
 
 func (s *Suite) TestChecklinesPatch_Makefile(c *check.C) {
@@ -285,4 +254,24 @@ func (s *Suite) TestChecklinesPatch_Makefile(c *check.C) {
 		"WARN: patch-unified:8: Found absolute pathname: /bin/cp\n"+
 		"WARN: patch-unified:10: Found absolute pathname: /bin/cp\n"+
 		"WARN: patch-unified:13: Found absolute pathname: /bin/cp\n")
+}
+
+func (s *Suite) TestChecklinesPatch_NoNewline(c *check.C) {
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"comment",
+		"",
+		"--- oldfile",
+		"+++ newfile",
+		"@@ -1 +1 @@",
+		"-old",
+		"\\ No newline at end of file",
+		"+new",
+		"\\ No newline at end of file",
+		"last line (a comment)")
+
+	checklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "NOTE: patch-aa:12: Empty line or end of file expected.\n")
 }
