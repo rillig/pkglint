@@ -20,6 +20,12 @@ type PatchChecker struct {
 	previousLineEmpty bool
 }
 
+const (
+	rePatchUniFileDel = `^---\s(\S+)(?:\s+(.*))?$`
+	rePatchUniFileAdd = `^\+\+\+\s(\S+)(?:\s+(.*))?$`
+	rePatchUniHunk    = `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`
+)
+
 func (ck *PatchChecker) check() {
 	defer tracecall("PatchChecker.check")()
 
@@ -230,12 +236,6 @@ func (ck *PatchChecker) checktextRcsid(text string) {
 		}
 	}
 }
-
-const (
-	rePatchUniFileDel = `^---\s(\S+)(?:\s+(.*))?$`
-	rePatchUniFileAdd = `^\+\+\+\s(\S+)(?:\s+(.*))?$`
-	rePatchUniHunk    = `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`
-)
 
 type FileType int
 
