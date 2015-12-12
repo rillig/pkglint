@@ -116,35 +116,36 @@ func getVariableType(line *Line, varname string) *Vartype {
 	allowRuntime := []AclEntry{{"*", "adsu"}}
 
 	// Guess the datatype of the variable based on naming conventions.
+	varbase := varnameBase(varname)
 	var gtype *Vartype
 	switch {
-	case hasSuffix(varname, "DIRS"):
+	case hasSuffix(varbase, "DIRS"):
 		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, guGuessed}
-	case hasSuffix(varname, "DIR"), hasSuffix(varname, "_HOME"):
+	case hasSuffix(varbase, "DIR"), hasSuffix(varname, "_HOME"):
 		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, guGuessed}
-	case hasSuffix(varname, "FILES"):
+	case hasSuffix(varbase, "FILES"):
 		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, guGuessed}
-	case hasSuffix(varname, "FILE"):
+	case hasSuffix(varbase, "FILE"):
 		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, guGuessed}
-	case hasSuffix(varname, "PATH"):
+	case hasSuffix(varbase, "PATH"):
 		gtype = &Vartype{lkNone, CheckvarPathlist, allowRuntime, guGuessed}
-	case hasSuffix(varname, "PATHS"):
+	case hasSuffix(varbase, "PATHS"):
 		gtype = &Vartype{lkShell, CheckvarPathname, allowRuntime, guGuessed}
-	case hasSuffix(varname, "_USER"):
+	case hasSuffix(varbase, "_USER"):
 		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, guGuessed}
-	case hasSuffix(varname, "_GROUP"):
+	case hasSuffix(varbase, "_GROUP"):
 		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, guGuessed}
-	case hasSuffix(varname, "_ENV"):
+	case hasSuffix(varbase, "_ENV"):
 		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
-	case hasSuffix(varname, "_CMD"):
+	case hasSuffix(varbase, "_CMD"):
 		gtype = &Vartype{lkNone, CheckvarShellCommand, allowRuntime, guGuessed}
-	case hasSuffix(varname, "_ARGS"):
+	case hasSuffix(varbase, "_ARGS"):
 		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
-	case hasSuffix(varname, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"), hasSuffix(varname, "_LDFLAGS"):
+	case hasSuffix(varbase, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"), hasSuffix(varname, "_LDFLAGS"):
 		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
-	case hasSuffix(varname, "_MK"):
+	case hasSuffix(varbase, "_MK"):
 		gtype = &Vartype{lkNone, CheckvarUnchecked, allowAll, guGuessed}
-	case hasPrefix(varname, "PLIST."):
+	case hasPrefix(varbase, "PLIST."):
 		gtype = &Vartype{lkNone, CheckvarYes, allowAll, guGuessed}
 	}
 

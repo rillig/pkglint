@@ -15,3 +15,18 @@ func (s *Suite) TestVariableNeedsQuoting(c *check.C) {
 
 	c.Check(nq, equals, nqDontKnow)
 }
+
+func (s *Suite) TestVariableNeedsQuoting_Varbase(c *check.C) {
+	line := NewLine("fname", 1, "dummy", nil)
+	G.globalData.InitVartypes()
+
+	t1 := getVariableType(line, "FONT_DIRS")
+
+	c.Assert(t1, check.NotNil)
+	c.Check(t1.String(), equals, "ShellList of Pathmask")
+
+	t2 := getVariableType(line, "FONT_DIRS.ttf")
+
+	c.Assert(t2, check.NotNil)
+	c.Check(t2.String(), equals, "ShellList of Pathmask")
+}
