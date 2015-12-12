@@ -72,7 +72,7 @@ func (ck *PatchChecker) check() {
 		}
 
 		ck.exp.advance()
-		ck.previousLineEmpty = line.text == "" || hasPrefix(line.text, "diff ")
+		ck.previousLineEmpty = line.text == "" || hasPrefix(line.text, "diff ") || hasPrefix(line.text, "=============")
 		if !ck.previousLineEmpty {
 			ck.seenDocumentation = true
 		}
