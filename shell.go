@@ -101,11 +101,12 @@ func (st scState) String() string {
 }
 
 type MkShellLine struct {
-	*MkLine
+	*Line
+	mkline *MkLine
 }
 
 func NewMkShellLine(mkline *MkLine) *MkShellLine {
-	return &MkShellLine{mkline}
+	return &MkShellLine{mkline.Line, mkline}
 }
 
 type ShellwordState int
@@ -133,7 +134,7 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	shellwordVuc := &VarUseContext{vucTimeUnknown, shellcommandContextType, vucQuotPlain, vucExtentWord}
 
 	if m, varname, mod := match2(shellword, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
-		msline.checkVaruse(varname, mod, shellwordVuc)
+		msline.mkline.checkVaruse(varname, mod, shellwordVuc)
 		return
 	}
 
@@ -201,7 +202,7 @@ outer:
 					vucstate = vucQuotBackt
 				}
 				vuc := &VarUseContext{vucTimeUnknown, shellcommandContextType, vucstate, vucExtentWordpart}
-				msline.checkVaruse(varname, mod, vuc)
+				msline.mkline.checkVaruse(varname, mod, vuc)
 			}
 
 		// The syntax of the variable modifiers can get quite
