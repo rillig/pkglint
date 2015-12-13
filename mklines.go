@@ -207,7 +207,8 @@ func (mklines *MkLines) determineUsedVariables() {
 func (mklines *MkLines) checklineCond(mkline *MkLine) {
 	indent, directive, args := mkline.Indent(), mkline.Directive(), mkline.Args()
 
-	if matches(directive, `^(?:endif|endfor|elif|else)$`) {
+	switch directive {
+	case "endif", "endfor", "elif", "else":
 		if len(mklines.indentation) > 1 {
 			mklines.popIndent()
 		} else {

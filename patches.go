@@ -312,7 +312,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 		_ = G.opts.DebugMisc && line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
 		switch {
-		case matches(before, `[A-Z_]+\s*$`):
+		case matches(before, `[A-Z_]\s*$`):
 			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
 
 		case matches(before, `\+\s*$`):

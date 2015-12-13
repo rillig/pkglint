@@ -155,7 +155,7 @@ func checkdirPackage(pkgpath string) {
 		} else {
 			checkfile(fname)
 		}
-		if matches(fname, `/patches/patch-*$`) {
+		if contains(fname, "/patches/patch-") {
 			havePatches = true
 		} else if hasSuffix(fname, "/distinfo") {
 			haveDistinfo = true
@@ -539,7 +539,7 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 	}
 
 	i := 0
-	for i < 2 && matches(lines[i].text, `^\s*#(.*)$`) {
+	for i < 2 && hasPrefix(lines[i].text, "#") {
 		i++
 	}
 

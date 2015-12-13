@@ -80,7 +80,7 @@ func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
 		}
 	}
 
-	ck.isPatch = matches(nextFname, `^patch-.+$`) && fileExists(G.currentDir+"/"+ck.patchdir+"/"+nextFname)
+	ck.isPatch = hasPrefix(nextFname, "patch-") && fileExists(G.currentDir+"/"+ck.patchdir+"/"+nextFname)
 	ck.previousFilename = nextFname
 	ck.algorithms = nil
 }

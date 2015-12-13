@@ -63,7 +63,7 @@ func (exp *Expecter) advanceIfEquals(text string) bool {
 }
 
 func (exp *Expecter) expectEmptyLine() bool {
-	if exp.advanceIfMatches(`^$`) {
+	if exp.advanceIfEquals("") {
 		return true
 	}
 

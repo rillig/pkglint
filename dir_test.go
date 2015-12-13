@@ -30,8 +30,8 @@ func (s *Suite) TestCheckDirent(c *check.C) {
 	CheckDirent(s.tmpdir + "/category/package")
 
 	c.Check(s.OutputCleanTmpdir(), equals, "ERROR: ~/category/package/Makefile: Must not be empty.\n")
-	
+
 	CheckDirent(s.tmpdir + "/category/package/nonexistent")
-	
+
 	c.Check(s.OutputCleanTmpdir(), equals, "ERROR: ~/category/package/nonexistent: No such file or directory.\n")
 }

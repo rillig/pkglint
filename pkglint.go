@@ -315,7 +315,7 @@ func checkfile(fname string) {
 	defer tracecall("checkfile", fname)()
 
 	basename := path.Base(fname)
-	if matches(basename, `^(?:work.*|.*~|.*\.orig|.*\.rej)$`) {
+	if hasPrefix(basename, "work") || hasSuffix(basename, "~") || hasSuffix(basename, ".orig") || hasSuffix(basename, ".rej") {
 		if G.opts.Import {
 			errorf(fname, noLines, "Must be cleaned up before committing the package.")
 		}

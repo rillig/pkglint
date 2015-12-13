@@ -481,7 +481,7 @@ func (mkline *MkLine) checkVarassign() {
 		mkline.checkDecreasingOrder(varname, value)
 	}
 
-	if comment == "# defined" && !matches(varname, `.*(?:_MK|_COMMON)$`) {
+	if comment == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
 		mkline.notef("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
 		mkline.explain(
 			"The value #defined says something about the state of the variable, but",

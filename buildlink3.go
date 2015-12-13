@@ -24,7 +24,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 	if exp.advanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) {
 		exp.previousLine().warnf("This line belongs inside the .ifdef block.")
-		for exp.advanceIfMatches(`^$`) {
+		for exp.advanceIfEquals("") {
 		}
 	}
 
@@ -123,7 +123,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				exp.advanceIfMatches(`^\.\s*include "../../mk/pkg-build-options\.mk"$`)
 			}
 
-		} else if exp.advanceIfMatches(`^(?:#.*)?$`) {
+		} else if exp.advanceIfEquals("") || exp.advanceIfPrefix("#") {
 			// Comments and empty lines are fine here.
 
 		} else if exp.advanceIfMatches(`^\.\s*include "\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk"$`) ||

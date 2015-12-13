@@ -108,8 +108,6 @@ func (ck *PlistChecker) checkline(pline *PlistLine) {
 		pline.checkDirective(cmd, arg)
 	} else if hasPrefix(text, "$") {
 		ck.checkpath(pline)
-	} else if matches(text, `^\$\{[\w_]+\}$`) {
-		// A variable on its own line.
 	} else {
 		pline.warnf("Unknown line type.")
 	}
