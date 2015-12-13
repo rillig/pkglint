@@ -37,20 +37,20 @@ func (ck *PatchChecker) check() {
 	patchedFiles := 0
 	for !ck.exp.eof() {
 		line := ck.exp.currentLine()
-		if ck.advanceIfMatches(rePatchUniFileDel) {
-			if ck.advanceIfMatches(rePatchUniFileAdd) {
+		if ck.exp.advanceIfMatches(rePatchUniFileDel) {
+			if ck.exp.advanceIfMatches(rePatchUniFileAdd) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.checkUnifiedDiff(ck.exp.m[1])
 				patchedFiles++
 				continue
 			}
 
-			ck.stepBack()
+			ck.exp.stepBack()
 		}
 
-		if ck.advanceIfMatches(rePatchUniFileAdd) {
+		if ck.exp.advanceIfMatches(rePatchUniFileAdd) {
 			patchedFile := ck.exp.m[1]
-			if ck.advanceIfMatches(rePatchUniFileDel) {
+			if ck.exp.advanceIfMatches(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.exp.previousLine().warnf("Unified diff headers should be first ---, then +++.")
 				ck.checkUnifiedDiff(patchedFile)
@@ -58,17 +58,17 @@ func (ck *PatchChecker) check() {
 				continue
 			}
 
-			ck.stepBack()
+			ck.exp.stepBack()
 		}
 
-		if ck.advanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
-			if ck.advanceIfMatches(`^---\s(\S+)(.*)$`) {
+		if ck.exp.advanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
+			if ck.exp.advanceIfMatches(`^---\s(\S+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
 				line.warnf("Please use unified diffs (diff -u) for patches.")
 				return
 			}
 
-			ck.stepBack()
+			ck.exp.stepBack()
 		}
 
 		ck.exp.advance()
@@ -88,13 +88,6 @@ func (ck *PatchChecker) check() {
 	saveAutofixChanges(ck.lines)
 }
 
-func (ck *PatchChecker) advanceIfMatches(re string) bool {
-	return ck.exp.advanceIfMatches(re) != nil
-}
-func (ck *PatchChecker) stepBack() {
-	ck.exp.index--
-}
-
 // See http://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
 func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	defer tracecall("PatchChecker.checkUnifiedDiff")()
@@ -103,7 +96,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	_ = G.opts.DebugMisc && ck.exp.currentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
 
 	hasHunks := false
-	for ck.advanceIfMatches(rePatchUniHunk) {
+	for ck.exp.advanceIfMatches(rePatchUniHunk) {
 		hasHunks = true
 		linesToDel := toInt(ck.exp.m[2], 1)
 		linesToAdd := toInt(ck.exp.m[4], 1)

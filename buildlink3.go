@@ -22,9 +22,9 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 	exp.expectEmptyLine()
 
-	if exp.advanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) != nil {
+	if exp.advanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) {
 		exp.previousLine().warnf("This line belongs inside the .ifdef block.")
-		for exp.advanceIfMatches(`^$`) != nil {
+		for exp.advanceIfMatches(`^$`) {
 		}
 	}
 
@@ -34,8 +34,8 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	apiLine, apiPkg, apiVersion := (*Line)(nil), "", ""
 
 	// First paragraph: Introduction of the package identifier
-	if m := exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`); m != nil {
-		pkgid = m[1]
+	if exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`) {
+		pkgid = exp.m[1]
 	} else {
 		exp.currentLine().warnf("Expected a BUILDLINK_TREE line.")
 		return
@@ -44,9 +44,9 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 	// Second paragraph: multiple inclusion protection and introduction
 	// of the uppercase package identifier.
-	if m := exp.advanceIfMatches(`^\.if !defined\((\S+)_BUILDLINK3_MK\)$`); m != nil {
+	if exp.advanceIfMatches(`^\.if !defined\((\S+)_BUILDLINK3_MK\)$`) {
+		pkgbase = exp.m[1]
 		pkgbaseLine = exp.previousLine()
-		pkgbase = m[1]
 	} else {
 		return
 	}
@@ -78,8 +78,8 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 		line := exp.currentLine()
 
-		if m := exp.advanceIfMatches(reVarassign); m != nil {
-			varname, value := m[1], m[3]
+		if exp.advanceIfMatches(reVarassign) {
+			varname, value := exp.m[1], exp.m[3]
 			doCheck := false
 
 			if varname == "BUILDLINK_ABI_DEPENDS."+pkgid {
@@ -123,17 +123,17 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				exp.advanceIfMatches(`^\.\s*include "../../mk/pkg-build-options\.mk"$`)
 			}
 
-		} else if exp.advanceIfMatches(`^(?:#.*)?$`) != nil {
+		} else if exp.advanceIfMatches(`^(?:#.*)?$`) {
 			// Comments and empty lines are fine here.
 
-		} else if exp.advanceIfMatches(`^\.\s*include "\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk"$`) != nil ||
-			exp.advanceIfMatches(`^\.\s*include "\.\./\.\./mk/(\S+)\.buildlink3\.mk"$`) != nil {
+		} else if exp.advanceIfMatches(`^\.\s*include "\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk"$`) ||
+			exp.advanceIfMatches(`^\.\s*include "\.\./\.\./mk/(\S+)\.buildlink3\.mk"$`) {
 			// TODO: Maybe check dependency lines.
 
-		} else if exp.advanceIfMatches(`^\.if\s`) != nil {
+		} else if exp.advanceIfMatches(`^\.if\s`) {
 			indentLevel++
 
-		} else if exp.advanceIfMatches(`^\.endif.*$`) != nil {
+		} else if exp.advanceIfMatches(`^\.endif.*$`) {
 			indentLevel--
 			if indentLevel == 0 {
 				break
@@ -150,7 +150,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	exp.expectEmptyLine()
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
-	if exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-`+regexp.QuoteMeta(pkgid)+`$`) == nil {
+	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgid) + `$`) {
 		exp.currentLine().warnf("Expected BUILDLINK_TREE line.")
 	}
 

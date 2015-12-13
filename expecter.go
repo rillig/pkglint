@@ -33,17 +33,21 @@ func (ctx *Expecter) advance() bool {
 	return true
 }
 
-func (ctx *Expecter) advanceIfMatches(re string) []string {
+func (exp *Expecter) stepBack() {
+	exp.index--
+}
+
+func (ctx *Expecter) advanceIfMatches(re string) bool {
 	defer tracecall("Expecter.advanceIfMatches", ctx.currentLine().text, re)()
 
 	if !ctx.eof() {
 		if m := match(ctx.lines[ctx.index].text, re); m != nil {
 			ctx.index++
 			ctx.m = m
-			return m
+			return true
 		}
 	}
-	return nil
+	return false
 }
 
 func (exp *Expecter) advanceIfPrefix(prefix string) bool {
@@ -54,12 +58,12 @@ func (exp *Expecter) advanceIfPrefix(prefix string) bool {
 
 func (exp *Expecter) advanceIfEquals(text string) bool {
 	defer tracecall("Expecter.advanceIfEquals", exp.currentLine().text, text)()
-	
+
 	return !exp.eof() && exp.lines[exp.index].text == text && exp.advance()
 }
 
 func (ctx *Expecter) expectEmptyLine() bool {
-	if ctx.advanceIfMatches(`^$`) != nil {
+	if ctx.advanceIfMatches(`^$`) {
 		return true
 	}
 

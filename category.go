@@ -21,11 +21,11 @@ func checkdirCategory() {
 	NewMkLines(lines).check()
 
 	exp := NewExpecter(lines)
-	for exp.advanceIfMatches(`^#`) != nil {
+	for exp.advanceIfPrefix("#") {
 	}
 	exp.expectEmptyLine()
 
-	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) != nil {
+	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) {
 		checklineValidCharactersInValue(NewMkLine(exp.previousLine()), `[- '(),/0-9A-Za-z]`)
 	} else {
 		exp.currentLine().errorf("COMMENT= line expected.")
