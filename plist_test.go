@@ -9,19 +9,29 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 	lines := s.NewLines("PLIST",
 		"bin/i386/6c",
 		"bin/program",
+		"etc/my.cnf",
+		"etc/rc.d/service",
 		"@exec ${MKDIR} include/pkgbase",
+		"info/dir",
+		"lib/libc.so.6",
+		"lib/libc.la",
 		"${PLIST.man}man/cat3/strcpy.4",
 		"${PLIST.obsolete}@unexec rmdir /tmp")
 
 	checklinesPlist(lines)
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: PLIST:1: Expected \"@comment $"+"NetBSD$\".\n"+
+		"ERROR: PLIST:1: Expected \"@comment $NetBSD$\".\n"+
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.\n"+
 		"WARN: PLIST:2: Manual page missing for bin/program.\n"+
-		"WARN: PLIST:4: Preformatted manual page without unformatted one.\n"+
-		"WARN: PLIST:4: Preformatted manual pages should end in \".0\".\n"+
-		"WARN: PLIST:5: Please remove this line. It is no longer necessary.\n")
+		"ERROR: PLIST:3: Configuration files must not be registered in the PLIST. Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.\n"+
+		"ERROR: PLIST:4: RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.\n"+
+		"ERROR: PLIST:6: \"info/dir\" must not be listed. Use install-info to add/remove an entry.\n"+
+		"WARN: PLIST:7: Redundant library found. The libtool library is in line 8.\n"+
+		"WARN: PLIST:8: \"lib/libc.la\" should be sorted before \"lib/libc.so.6\".\n"+
+		"WARN: PLIST:9: Preformatted manual page without unformatted one.\n"+
+		"WARN: PLIST:9: Preformatted manual pages should end in \".0\".\n"+
+		"WARN: PLIST:10: Please remove this line. It is no longer necessary.\n")
 }
 
 func (s *Suite) TestChecklinesPlist_empty(c *check.C) {

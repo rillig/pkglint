@@ -204,9 +204,8 @@ func (ck *PlistChecker) checkpathEtc(pline *PlistLine, dirname, basename string)
 		return
 	}
 
-	f := "mk/pkginstall/bsd.pkginstall.mk"
-	pline.errorf("Configuration files must not be registered in the PLIST. "+
-		"Please use the CONF_FILES framework, which is described in %s.", f)
+	pline.errorf("Configuration files must not be registered in the PLIST. " +
+		"Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
 }
 
 func (ck *PlistChecker) checkpathInfo(pline *PlistLine, dirname, basename string) {
@@ -244,7 +243,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 	if contains(basename, ".a") || contains(basename, ".so") {
 		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
 			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
-				pline.warnf("Redundant library found. The libtool library is in line %s.", laLine)
+				pline.warnf("Redundant library found. The libtool library is in line %s.", laLine.linenos())
 			}
 		}
 	}
