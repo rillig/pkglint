@@ -10,11 +10,35 @@ import (
 
 type MkLine struct {
 	*Line
-	extra     map[mklineExtra]interface{}
+
+	isShellcmd   bool
+	isComment    bool
+	isEmpty      bool
+	isSysinclude bool
+	isDependency bool
+
+	varname  string
+	varcanon string
+	varparam string
+	op       string
+	value    string
+	comment  string
+
+	shellcmd string
+
+	indent    string
+	directive string
+	args      string
+
+	mustExist   bool
+	includefile string
+
+	targets string
+	sources string
 }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
-	mkline = &MkLine{line, make(map[mklineExtra]interface{})}
+	mkline = &MkLine{Line: line}
 
 	text := line.text
 
@@ -22,59 +46,56 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 
-		mkline.extra[mkxIsVarassign] = true
-		mkline.extra[mkxVarname] = varname
-		mkline.extra[mkxVarcanon] = varnameCanon(varname)
-		mkline.extra[mkxVarparam] = varparam
-		mkline.extra[mkxOp] = op
-		mkline.extra[mkxValue] = value
-		mkline.extra[mkxComment] = comment
+		mkline.varname = varname
+		mkline.varcanon = varnameCanon(varname)
+		mkline.varparam = varparam
+		mkline.op = op
+		mkline.value = value
+		mkline.comment = comment
 		return
 	}
 
 	if hasPrefix(text, "\t") {
-		mkline.extra[mkxIsShellcmd] = true
-		mkline.extra[mkxShellcmd] = text[1:]
+		mkline.isShellcmd = true
+		mkline.shellcmd = text[1:]
 		return
 	}
 
 	if index := strings.IndexByte(text, '#'); index != -1 && strings.TrimSpace(text[:index]) == "" {
-		mkline.extra[mkxIsComment] = true
-		mkline.extra[mkxComment] = text[index+1:]
+		mkline.isComment = true
+		mkline.comment = text[index+1:]
 		return
 	}
 
 	if strings.TrimSpace(text) == "" {
-		mkline.extra[mkxIsEmpty] = true
+		mkline.isEmpty = true
 		return
 	}
 
 	if m, indent, directive, args := match3(text, reMkCond); m {
-		mkline.extra[mkxIsCond] = true
-		mkline.extra[mkxIndent] = indent
-		mkline.extra[mkxDirective] = directive
-		mkline.extra[mkxArgs] = args
+		mkline.indent = indent
+		mkline.directive = directive
+		mkline.args = args
 		return
 	}
 
 	if m, directive, includefile := match2(text, reMkInclude); m {
-		mkline.extra[mkxIsInclude] = true
-		mkline.extra[mkxMustExist] = directive == "include"
-		mkline.extra[mkxIncludefile] = includefile
+		mkline.mustExist = directive == "include"
+		mkline.includefile = includefile
 		return
 	}
 
 	if m, includefile, comment := match2(text, reMkSysinclude); m {
-		mkline.extra[mkxIsSysinclude] = true
-		mkline.extra[mkxIncludefile] = includefile
-		mkline.extra[mkxComment] = comment
+		mkline.isSysinclude = true
+		mkline.includefile = includefile
+		mkline.comment = comment
 		return
 	}
 
 	if m, targets, whitespace, sources := match3(text, reMkDependency); m {
-		mkline.extra[mkxIsDependency] = true
-		mkline.extra[mkxTargets] = targets
-		mkline.extra[mkxSources] = sources
+		mkline.isDependency = true
+		mkline.targets = targets
+		mkline.sources = sources
 		if whitespace != "" {
 			line.warnf("Space before colon in dependency line.")
 		}
@@ -91,53 +112,28 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 type mklineExtra int
 
-const (
-	mkxIsVarassign mklineExtra = iota
-	mkxVarname
-	mkxVarcanon
-	mkxVarparam
-	mkxOp
-	mkxValue
-	mkxComment
-	mkxIsShellcmd
-	mkxShellcmd
-	mkxIsComment
-	mkxIsEmpty
-	mkxIsCond
-	mkxIndent
-	mkxDirective
-	mkxArgs
-	mkxIsInclude
-	mkxMustExist
-	mkxIncludefile
-	mkxIsSysinclude
-	mkxIsDependency
-	mkxTargets
-	mkxSources
-)
-
-func (mkline *MkLine) IsVarassign() bool   { return mkline.extra[mkxIsVarassign] != nil }
-func (mkline *MkLine) Varname() string     { return mkline.extra[mkxVarname].(string) }
-func (mkline *MkLine) Varcanon() string    { return mkline.extra[mkxVarcanon].(string) }
-func (mkline *MkLine) Varparam() string    { return mkline.extra[mkxVarparam].(string) }
-func (mkline *MkLine) Op() string          { return mkline.extra[mkxOp].(string) }
-func (mkline *MkLine) Value() string       { return mkline.extra[mkxValue].(string) }
-func (mkline *MkLine) Comment() string     { return mkline.extra[mkxComment].(string) }
-func (mkline *MkLine) IsShellcmd() bool    { return mkline.extra[mkxIsShellcmd] != nil }
-func (mkline *MkLine) Shellcmd() string    { return mkline.extra[mkxShellcmd].(string) }
-func (mkline *MkLine) IsComment() bool     { return mkline.extra[mkxIsComment] != nil } // Re-uses .Comment()
-func (mkline *MkLine) IsEmpty() bool       { return mkline.extra[mkxIsEmpty] != nil }
-func (mkline *MkLine) IsCond() bool        { return mkline.extra[mkxIsCond] != nil }
-func (mkline *MkLine) Indent() string      { return mkline.extra[mkxIndent].(string) }
-func (mkline *MkLine) Directive() string   { return mkline.extra[mkxDirective].(string) }
-func (mkline *MkLine) Args() string        { return mkline.extra[mkxArgs].(string) }
-func (mkline *MkLine) IsInclude() bool     { return mkline.extra[mkxIsInclude] != nil }
-func (mkline *MkLine) MustExist() bool     { return mkline.extra[mkxMustExist].(bool) }
-func (mkline *MkLine) Includefile() string { return mkline.extra[mkxIncludefile].(string) }
-func (mkline *MkLine) IsSysinclude() bool  { return mkline.extra[mkxIsSysinclude] != nil } // Re-uses .Includefile() and .Comment()
-func (mkline *MkLine) IsDependency() bool  { return mkline.extra[mkxIsDependency] != nil }
-func (mkline *MkLine) Targets() string     { return mkline.extra[mkxTargets].(string) }
-func (mkline *MkLine) Sources() string     { return mkline.extra[mkxSources].(string) }
+func (mkline *MkLine) IsVarassign() bool   { return mkline.varname != "" }
+func (mkline *MkLine) Varname() string     { return mkline.varname }
+func (mkline *MkLine) Varcanon() string    { return mkline.varcanon }
+func (mkline *MkLine) Varparam() string    { return mkline.varparam }
+func (mkline *MkLine) Op() string          { return mkline.op }
+func (mkline *MkLine) Value() string       { return mkline.value }
+func (mkline *MkLine) Comment() string     { return mkline.comment }
+func (mkline *MkLine) IsShellcmd() bool    { return mkline.isShellcmd }
+func (mkline *MkLine) Shellcmd() string    { return mkline.shellcmd }
+func (mkline *MkLine) IsComment() bool     { return mkline.isComment }
+func (mkline *MkLine) IsEmpty() bool       { return mkline.isEmpty }
+func (mkline *MkLine) IsCond() bool        { return mkline.directive != "" }
+func (mkline *MkLine) Indent() string      { return mkline.indent }
+func (mkline *MkLine) Directive() string   { return mkline.directive }
+func (mkline *MkLine) Args() string        { return mkline.args }
+func (mkline *MkLine) IsInclude() bool     { return mkline.includefile != "" && !mkline.isSysinclude }
+func (mkline *MkLine) MustExist() bool     { return mkline.mustExist }
+func (mkline *MkLine) Includefile() string { return mkline.includefile }
+func (mkline *MkLine) IsSysinclude() bool  { return mkline.isSysinclude }
+func (mkline *MkLine) IsDependency() bool  { return mkline.isDependency }
+func (mkline *MkLine) Targets() string     { return mkline.targets }
+func (mkline *MkLine) Sources() string     { return mkline.sources }
 
 func (mkline *MkLine) checkVardef(varname, op string) {
 	defer tracecall("MkLine.checkVardef", varname, op)()
