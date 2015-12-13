@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-type PlistChecker struct {
-	allFiles  map[string]*PlistLine
-	allDirs   map[string]*PlistLine
-	lastFname string
-}
-
 func checklinesPlist(lines []*Line) {
 	defer tracecall("checklinesPlist", lines[0].fname)()
 
@@ -35,6 +29,18 @@ func checklinesPlist(lines []*Line) {
 		make(map[string]*PlistLine),
 		""}
 	ck.check(lines)
+}
+
+type PlistChecker struct {
+	allFiles  map[string]*PlistLine
+	allDirs   map[string]*PlistLine
+	lastFname string
+}
+
+type PlistLine struct {
+	*Line
+	conditional string
+	text        string
 }
 
 func (ck *PlistChecker) check(plainLines []*Line) {
@@ -68,7 +74,7 @@ func (ck *PlistChecker) check(plainLines []*Line) {
 	}
 
 	for _, pline := range plines {
-		pline.check(ck)
+		ck.checkline(pline)
 		pline.checkTrailingWhitespace()
 	}
 
@@ -90,20 +96,14 @@ func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
 	return plines
 }
 
-type PlistLine struct {
-	*Line
-	conditional string
-	text        string
-}
-
-func (pline *PlistLine) check(ck *PlistChecker) {
+func (ck *PlistChecker) checkline(pline *PlistLine) {
 	text := pline.text
 	if hasAlnumPrefix(text) {
-		pline.checkPathname(ck, text)
+		ck.checkPathname(pline, text)
 	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)\s+(.*)`); m {
 		pline.checkDirective(cmd, arg)
 	} else if hasPrefix(text, "$") {
-		pline.checkPathname(ck, text)
+		ck.checkPathname(pline, text)
 	} else if matches(text, `^\$\{[\w_]+\}$`) {
 		// A variable on its own line.
 	} else {
@@ -111,68 +111,11 @@ func (pline *PlistLine) check(ck *PlistChecker) {
 	}
 }
 
-func (pline *PlistLine) checkTrailingWhitespace() {
-	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
-		pline.errorf("pkgsrc does not support filenames ending in white-space.")
-		pline.explain(
-			"Each character in the PLIST is relevant, even trailing white-space.")
-	}
-}
-
-func (pline *PlistLine) checkDirective(cmd, arg string) {
-	line := pline.Line
-
-	if cmd == "unexec" {
-		if m, arg := match1(arg, `^(?:rmdir|\$\{RMDIR\} \%D/)(.*)`); m {
-			if !contains(arg, "true") && !contains(arg, "${TRUE}") {
-				pline.warnf("Please remove this line. It is no longer necessary.")
-			}
-		}
-	}
-
-	switch cmd {
-	case "exec", "unexec":
-		switch {
-		case contains(arg, "install-info"),
-			contains(arg, "${INSTALL_INFO}"):
-			line.warnf("@exec/unexec install-info is deprecated.")
-		case contains(arg, "ldconfig") && !contains(arg, "/usr/bin/true"):
-			pline.errorf("ldconfig must be used with \"||/usr/bin/true\".")
-		}
-
-	case "comment":
-		// Nothing to do.
-
-	case "dirrm":
-		line.warnf("@dirrm is obsolete. Please remove this line.")
-		pline.explain(
-			"Directories are removed automatically when they are empty.",
-			"When a package needs an empty directory, it can use the @pkgdir",
-			"command in the PLIST")
-
-	case "imake-man":
-		args := splitOnSpace(arg)
-		if len(args) != 3 {
-			line.warnf("Invalid number of arguments for imake-man.")
-		} else {
-			if args[2] == "${IMAKE_MANNEWSUFFIX}" {
-				pline.warnAboutPlistImakeMannewsuffix()
-			}
-		}
-
-	case "pkgdir":
-		// Nothing to check.
-
-	default:
-		line.warnf("Unknown PLIST directive \"@%s\".", cmd)
-	}
-}
-
-func (pline *PlistLine) checkPathname(ck *PlistChecker, fullname string) {
+func (ck *PlistChecker) checkPathname(pline *PlistLine, fullname string) {
 	sdirname, basename := path.Split(fullname)
 	dirname := strings.TrimSuffix(sdirname, "/")
 
-	pline.checkSorted(ck)
+	ck.checkSorted(pline)
 
 	if contains(basename, "${IMAKE_MANNEWSUFFIX}") {
 		pline.warnAboutPlistImakeMannewsuffix()
@@ -184,7 +127,7 @@ func (pline *PlistLine) checkPathname(ck *PlistChecker, fullname string) {
 		line.warnf("The bin/ directory should not have subdirectories.")
 
 	case dirname == "bin":
-		pline.checkpathBin(ck, basename)
+		ck.checkpathBin(pline, basename)
 
 	case hasPrefix(text, "doc/"):
 		line.errorf("Documentation must be installed under share/doc, not doc.")
@@ -215,13 +158,13 @@ func (pline *PlistLine) checkPathname(ck *PlistChecker, fullname string) {
 		line.errorf("\"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 
 	case hasPrefix(text, "lib/"):
-		pline.checkpathLib(ck, basename)
+		ck.checkpathLib(pline, basename)
 
 	case hasPrefix(text, "man/"):
-		pline.checkpathMan(ck)
+		ck.checkpathMan(pline)
 
 	case hasPrefix(text, "sbin/"):
-		pline.checkpathSbin(ck)
+		ck.checkpathSbin(pline)
 
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
@@ -296,7 +239,7 @@ func (pline *PlistLine) checkPathname(ck *PlistChecker, fullname string) {
 	}
 }
 
-func (pline *PlistLine) checkSorted(ck *PlistChecker) {
+func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 	if text := pline.text; G.opts.WarnPlistSort && hasAlnumPrefix(text) && !containsVarRef(text) {
 		if ck.lastFname != "" {
 			if ck.lastFname > text {
@@ -311,7 +254,7 @@ func (pline *PlistLine) checkSorted(ck *PlistChecker) {
 	}
 }
 
-func (pline *PlistLine) checkpathBin(ck *PlistChecker, basename string) {
+func (ck *PlistChecker) checkpathBin(pline *PlistLine, basename string) {
 	switch {
 	case ck.allFiles["man/man1/"+basename+".1"] != nil:
 	case ck.allFiles["man/man6/"+basename+".6"] != nil:
@@ -328,7 +271,7 @@ func (pline *PlistLine) checkpathBin(ck *PlistChecker, basename string) {
 	}
 }
 
-func (pline *PlistLine) checkpathLib(ck *PlistChecker, basename string) {
+func (ck *PlistChecker) checkpathLib(pline *PlistLine, basename string) {
 	if m, dir, lib, ext := match3(pline.text, `^(lib/(?:.*/)*)([^/]+)\.(so|a|la)$`); m {
 		if dir == "lib/" && !hasPrefix(lib, "lib") {
 			_ = G.opts.WarnExtra && pline.warnf("Library filename does not start with \"lib\".")
@@ -349,7 +292,7 @@ func (pline *PlistLine) checkpathLib(ck *PlistChecker, basename string) {
 	}
 }
 
-func (pline *PlistLine) checkpathMan(ck *PlistChecker) {
+func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 	line := pline.Line
 
 	m, catOrMan, section, manpage, ext, gz := match5(pline.text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`)
@@ -386,7 +329,7 @@ func (pline *PlistLine) checkpathMan(ck *PlistChecker) {
 	}
 }
 
-func (pline *PlistLine) checkpathSbin(ck *PlistChecker) {
+func (ck *PlistChecker) checkpathSbin(pline *PlistLine) {
 	binname := pline.text[5:]
 
 	if ck.allFiles["man/man8/"+binname+".8"] == nil && G.opts.WarnExtra {
@@ -396,6 +339,62 @@ func (pline *PlistLine) checkpathSbin(ck *PlistChecker) {
 			"page for quick reference. The programs in the sbin/ directory should have",
 			"corresponding manual pages in section 8 (filename program.8), not in",
 			"section 1.")
+	}
+}
+
+func (pline *PlistLine) checkTrailingWhitespace() {
+	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
+		pline.errorf("pkgsrc does not support filenames ending in white-space.")
+		pline.explain(
+			"Each character in the PLIST is relevant, even trailing white-space.")
+	}
+}
+
+func (pline *PlistLine) checkDirective(cmd, arg string) {
+	line := pline.Line
+
+	if cmd == "unexec" {
+		if m, arg := match1(arg, `^(?:rmdir|\$\{RMDIR\} \%D/)(.*)`); m {
+			if !contains(arg, "true") && !contains(arg, "${TRUE}") {
+				pline.warnf("Please remove this line. It is no longer necessary.")
+			}
+		}
+	}
+
+	switch cmd {
+	case "exec", "unexec":
+		switch {
+		case contains(arg, "install-info"),
+			contains(arg, "${INSTALL_INFO}"):
+			line.warnf("@exec/unexec install-info is deprecated.")
+		case contains(arg, "ldconfig") && !contains(arg, "/usr/bin/true"):
+			pline.errorf("ldconfig must be used with \"||/usr/bin/true\".")
+		}
+
+	case "comment":
+		// Nothing to do.
+
+	case "dirrm":
+		line.warnf("@dirrm is obsolete. Please remove this line.")
+		pline.explain(
+			"Directories are removed automatically when they are empty.",
+			"When a package needs an empty directory, it can use the @pkgdir",
+			"command in the PLIST")
+
+	case "imake-man":
+		args := splitOnSpace(arg)
+		switch {
+		case len(args) != 3:
+			line.warnf("Invalid number of arguments for imake-man.")
+		case args[2] == "${IMAKE_MANNEWSUFFIX}":
+			pline.warnAboutPlistImakeMannewsuffix()
+		}
+
+	case "pkgdir":
+		// Nothing to check.
+
+	default:
+		line.warnf("Unknown PLIST directive \"@%s\".", cmd)
 	}
 }
 
