@@ -111,45 +111,28 @@ func (mklines *MkLines) check() {
 
 		checklineTrailingWhitespace(mkline.Line)
 
-		if mkline.IsEmpty() {
+		switch {
+		case mkline.IsEmpty():
 			substcontext.Finish(mkline)
-
-		} else if mkline.IsComment() {
-			// No further checks.
-
-		} else if mkline.IsVarassign() {
+		
+		case mkline.IsVarassign():
 			mkline.checkVaralign()
 			mkline.checkVarassign()
 			substcontext.Varassign(mkline)
-
-		} else if hasPrefix(text, "\t") {
+		
+		case hasPrefix(text, "\t"):
 			shellcmd := text[1:]
 			mkline.checkText(shellcmd)
 			NewMkShellLine(mkline).checkShelltext(shellcmd)
-
-		} else if mkline.IsInclude() {
+		
+		case mkline.IsInclude():
 			mklines.checklineInclude(mkline)
-
-		} else if matches(text, reMkSysinclude) {
-
-		} else if mkline.IsCond() {
+		
+		case mkline.IsCond():
 			mklines.checklineCond(mkline)
-
-		} else if m, targets, _, dependencies := match3(text, reMkDependency); m {
-			mklines.checklineDependencyRule(mkline, targets, dependencies, allowedTargets)
-
-		} else if m, directive := match1(text, `^\.\s*(\S*)`); m {
-			mkline.errorf("Unknown directive \".%s\".", directive)
-
-		} else if hasPrefix(text, " ") {
-			mkline.warnf("Makefile lines should not start with space characters.")
-			mkline.explain(
-				"If you want this line to contain a shell program, use a tab",
-				"character for indentation. Otherwise please remove the leading",
-				"white-space.")
-
-		} else {
-			_ = G.opts.DebugMisc && mkline.debugf("Unknown line format")
+		
+		case mkline.IsDependency():
+			mklines.checklineDependencyRule(mkline, mkline.Targets(), mkline.Sources(), allowedTargets)
 		}
 	}
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]

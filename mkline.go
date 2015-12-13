@@ -26,6 +26,14 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 	text := line.text
 
+	if hasPrefix(text, " ") {
+		mkline.warnf("Makefile lines should not start with space characters.")
+		mkline.explain(
+			"If you want this line to contain a shell program, use a tab",
+			"character for indentation. Otherwise please remove the leading",
+			"white-space.")
+	}
+
 	if m, varname, op, value, comment := matchVarassign(text); m {
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
