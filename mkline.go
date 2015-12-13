@@ -10,14 +10,11 @@ import (
 
 type MkLine struct {
 	*Line
+	extra     map[mklineExtra]interface{}
 }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
-	mkline = &MkLine{line}
-
-	if len(line.extra) != 0 {
-		return
-	}
+	mkline = &MkLine{line, make(map[mklineExtra]interface{})}
 
 	text := line.text
 
@@ -25,59 +22,59 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 
-		line.extra[mkxIsVarassign] = true
-		line.extra[mkxVarname] = varname
-		line.extra[mkxVarcanon] = varnameCanon(varname)
-		line.extra[mkxVarparam] = varparam
-		line.extra[mkxOp] = op
-		line.extra[mkxValue] = value
-		line.extra[mkxComment] = comment
+		mkline.extra[mkxIsVarassign] = true
+		mkline.extra[mkxVarname] = varname
+		mkline.extra[mkxVarcanon] = varnameCanon(varname)
+		mkline.extra[mkxVarparam] = varparam
+		mkline.extra[mkxOp] = op
+		mkline.extra[mkxValue] = value
+		mkline.extra[mkxComment] = comment
 		return
 	}
 
 	if hasPrefix(text, "\t") {
-		line.extra[mkxIsShellcmd] = true
-		line.extra[mkxShellcmd] = text[1:]
+		mkline.extra[mkxIsShellcmd] = true
+		mkline.extra[mkxShellcmd] = text[1:]
 		return
 	}
 
 	if index := strings.IndexByte(text, '#'); index != -1 && strings.TrimSpace(text[:index]) == "" {
-		line.extra[mkxIsComment] = true
-		line.extra[mkxComment] = text[index+1:]
+		mkline.extra[mkxIsComment] = true
+		mkline.extra[mkxComment] = text[index+1:]
 		return
 	}
 
 	if strings.TrimSpace(text) == "" {
-		line.extra[mkxIsEmpty] = true
+		mkline.extra[mkxIsEmpty] = true
 		return
 	}
 
 	if m, indent, directive, args := match3(text, reMkCond); m {
-		line.extra[mkxIsCond] = true
-		line.extra[mkxIndent] = indent
-		line.extra[mkxDirective] = directive
-		line.extra[mkxArgs] = args
+		mkline.extra[mkxIsCond] = true
+		mkline.extra[mkxIndent] = indent
+		mkline.extra[mkxDirective] = directive
+		mkline.extra[mkxArgs] = args
 		return
 	}
 
 	if m, directive, includefile := match2(text, reMkInclude); m {
-		line.extra[mkxIsInclude] = true
-		line.extra[mkxMustExist] = directive == "include"
-		line.extra[mkxIncludefile] = includefile
+		mkline.extra[mkxIsInclude] = true
+		mkline.extra[mkxMustExist] = directive == "include"
+		mkline.extra[mkxIncludefile] = includefile
 		return
 	}
 
 	if m, includefile, comment := match2(text, reMkSysinclude); m {
-		line.extra[mkxIsSysinclude] = true
-		line.extra[mkxIncludefile] = includefile
-		line.extra[mkxComment] = comment
+		mkline.extra[mkxIsSysinclude] = true
+		mkline.extra[mkxIncludefile] = includefile
+		mkline.extra[mkxComment] = comment
 		return
 	}
 
 	if m, targets, whitespace, sources := match3(text, reMkDependency); m {
-		line.extra[mkxIsDependency] = true
-		line.extra[mkxTargets] = targets
-		line.extra[mkxSources] = sources
+		mkline.extra[mkxIsDependency] = true
+		mkline.extra[mkxTargets] = targets
+		mkline.extra[mkxSources] = sources
 		if whitespace != "" {
 			line.warnf("Space before colon in dependency line.")
 		}
@@ -89,7 +86,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 	}
 
 	line.errorf("Unknown Makefile line format.")
-	return &MkLine{line}
+	return mkline
 }
 
 type mklineExtra int
