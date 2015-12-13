@@ -492,6 +492,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("PHASE_MSG", lkNone, CheckvarShellCommand)
 	usr("PHP_VERSION_REQD", lkNone, CheckvarVersion)
 	sys("PKGBASE", lkNone, CheckvarIdentifier)
+	acl("PKGCONFIG_FILE.*", lkShell, CheckvarPathname, "builtin.mk:as", "pkgconfig-builtin.mk:p")
 	acl("PKGCONFIG_OVERRIDE", lkShell, CheckvarPathmask, "Makefile:as", "Makefile.common:a")
 	pkg("PKGCONFIG_OVERRIDE_STAGE", lkNone, CheckvarStage)
 	pkg("PKGDIR", lkNone, CheckvarRelativePkgDir)
@@ -723,7 +724,7 @@ func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries 
 func parseAclEntries(args []string) []AclEntry {
 	var result []AclEntry
 	for _, arg := range args {
-		m := mustMatch(`^([\w.*]+|_):([adpsu]*)$`, arg)
+		m := mustMatch(`^([\w-.*]+|_):([adpsu]*)$`, arg)
 		glob, perms := m[1], m[2]
 		result = append(result, AclEntry{glob, perms})
 	}
