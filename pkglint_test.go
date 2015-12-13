@@ -124,3 +124,28 @@ func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {
 
 	c.Check(s.OutputCleanTmpdir(), equals, "")
 }
+
+func (s *Suite) TestChecklinesMessage_short(c *check.C) {
+	lines := s.NewLines("MESSAGE",
+		"one line")
+
+	checklinesMessage(lines)
+
+	c.Check(s.Output(), equals, "WARN: MESSAGE:1: File too short.\n")
+}
+
+func (s *Suite) TestChecklinesMessage_malformed(c *check.C) {
+	lines := s.NewLines("MESSAGE",
+		"1",
+		"2",
+		"3",
+		"4",
+		"5")
+
+	checklinesMessage(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: MESSAGE:1: Expected a line of exactly 75 \"=\" characters.\n"+
+		"ERROR: MESSAGE:2: Expected \"$"+"NetBSD$\".\n"+
+		"WARN: MESSAGE:5: Expected a line of exactly 75 \"=\" characters.\n")
+}
