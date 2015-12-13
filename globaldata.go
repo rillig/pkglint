@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"path"
 	"sort"
+	"strings"
 )
 
 // GlobalData contains data describing pkgsrc as a whole.
@@ -284,33 +285,46 @@ func (gd *GlobalData) loadSuggestedUpdates() {
 	}
 }
 
-func (gd *GlobalData) loadDocChangesFromFile(fname string) []Change {
+func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 	lines := LoadExistingLines(fname, false)
 
-	var changes []Change
-	for _, line := range lines {
+	parseChange := func(line *Line) *Change {
 		text := line.text
-		if !(hasPrefix(text, "\t") && matches(text, `^\t[A-Z]`)) {
-			continue
+		if !hasPrefix(line.text, "\t") {
+			return nil
 		}
 
-		if m, action, pkgpath, version, author, date := match5(text, `^\t(Updated) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
-			changes = append(changes, Change{line, action, pkgpath, version, author, date})
+		f := strings.Fields(text)
+		n := len(f)
+		if n != 4 && n != 6 {
+			return nil
+		}
 
-		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Added) (\S+) version (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
-			changes = append(changes, Change{line, action, pkgpath, version, author, date})
+		action, pkgpath, author, date := f[0], f[1], f[len(f)-2], f[len(f)-1]
+		if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
+			return nil
+		}
+		author, date = author[1:], date[:len(date)-1]
 
-		} else if m, action, pkgpath, author, date := match4(text, `^\t(Removed) (\S+) (?:successor \S+ )?\[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
-			changes = append(changes, Change{line, action, pkgpath, "", author, date})
+		switch {
+		case action == "Added" && f[2] == "version" && n == 6:
+			return &Change{line, action, pkgpath, f[3], author, date}
+		case (action == "Updated" || action == "Downgraded") && f[2] == "to" && n == 6:
+			return &Change{line, action, pkgpath, f[3], author, date}
+		case action == "Removed" && (n == 6 && f[2] == "successor" || n == 4):
+			return &Change{line, action, pkgpath, "", author, date}
+		case (action == "Renamed" || action == "Moved") && f[2] == "to" && n == 6:
+			return &Change{line, action, pkgpath, "", author, date}
+		}
+		return nil
+	}
 
-		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Downgraded) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
-			changes = append(changes, Change{line, action, pkgpath, version, author, date})
-
-		} else if m, action, pkgpath, version, author, date := match5(text, `^\t(Renamed|Moved) (\S+) to (\S+) \[(\S+) (\d\d\d\d-\d\d-\d\d)\]$`); m {
-			changes = append(changes, Change{line, action, pkgpath, version, author, date})
-
+	var changes []*Change
+	for _, line := range lines {
+		if change := parseChange(line); change != nil {
+			changes = append(changes, change)
 		} else {
-			line.warnf("Unknown doc/CHANGES line: %q", text)
+			line.warnf("Unknown doc/CHANGES line: %q", line.text)
 			line.explain("See mk/misc/developer.mk for the rules.")
 		}
 	}
@@ -345,8 +359,7 @@ func (gd *GlobalData) loadDocChanges() {
 	for _, fname := range fnames {
 		changes := gd.loadDocChangesFromFile(docdir + "/" + fname)
 		for _, change := range changes {
-			c := change
-			gd.lastChange[change.pkgpath] = &c
+			gd.lastChange[change.pkgpath] = change
 		}
 	}
 }

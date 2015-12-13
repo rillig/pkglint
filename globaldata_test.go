@@ -57,3 +57,25 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 		"DEBUG: predefinedTools: []\n"+
 		"DEBUG: varnameToToolname: [AWK CHOWN MV]\n")
 }
+
+func (s *Suite) TestGlobalData_loadDocChanges(c *check.C) {
+	s.CreateTmpFile(c, "doc/CHANGES-2015", ""+
+		"\tAdded category/package version 1.0 [author1 2015-01-01]\n"+
+		"\tUpdated category/package to 1.5 [author2 2015-01-02]\n"+
+		"\tRenamed category/package to category/pkg [author3 2015-01-03]\n"+
+		"\tMoved category/package to other/package [author4 2015-01-04]\n"+
+		"\tRemoved category/package [author5 2015-01-05]\n"+
+		"\tRemoved category/package successor category/package2 [author6 2015-01-06]\n"+
+		"\tDowngraded category/package to 1.2 [author7 2015-01-07]\n")
+
+	changes := G.globalData.loadDocChangesFromFile(s.tmpdir + "/doc/CHANGES-2015")
+
+	c.Assert(len(changes), equals, 7)
+	c.Check(*changes[0], equals, Change{changes[0].line, "Added", "category/package", "1.0", "author1", "2015-01-01"})
+	c.Check(*changes[1], equals, Change{changes[1].line, "Updated", "category/package", "1.5", "author2", "2015-01-02"})
+	c.Check(*changes[2], equals, Change{changes[2].line, "Renamed", "category/package", "", "author3", "2015-01-03"})
+	c.Check(*changes[3], equals, Change{changes[3].line, "Moved", "category/package", "", "author4", "2015-01-04"})
+	c.Check(*changes[4], equals, Change{changes[4].line, "Removed", "category/package", "", "author5", "2015-01-05"})
+	c.Check(*changes[5], equals, Change{changes[5].line, "Removed", "category/package", "", "author6", "2015-01-06"})
+	c.Check(*changes[6], equals, Change{changes[6].line, "Downgraded", "category/package", "1.2", "author7", "2015-01-07"})
+}
