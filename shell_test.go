@@ -150,11 +150,13 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 	s.RegisterTool("echo", "ECHO", true)
 	G.mk = s.NewMkLines("fname",
 		"# dummy")
-	line := NewLine("fname", 3, "# dummy", nil)
+	mkline := NewMkLine(NewLine("fname", 3, "# dummy", nil))
 
-	shellcmd := "echo \"hello, world\""
-	NewMkLine(line).checkText(shellcmd)
-	NewMkShellLine(NewMkLine(line)).checkShelltext(shellcmd)
+	mkline.checkText("echo \"hello, world\"")
+
+	c.Check(s.Output(), equals, "")
+
+	NewMkShellLine(mkline).checkShelltext("echo \"hello, world\"")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:3: The \"echo\" tool is used but not added to USE_TOOLS.\n"+
