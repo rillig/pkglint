@@ -37,7 +37,7 @@ type Line struct {
 	changed   bool
 	before    []*RawLine
 	after     []*RawLine
-	extra     map[string]interface{}
+	extra     map[mklineExtra]interface{}
 }
 
 func NewLine(fname string, lineno int, text string, rawLines []*RawLine) *Line {
@@ -46,7 +46,7 @@ func NewLine(fname string, lineno int, text string, rawLines []*RawLine) *Line {
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
 func NewLineMulti(fname string, firstLine, lastLine int, text string, rawLines []*RawLine) *Line {
-	return &Line{fname, firstLine, lastLine, text, rawLines, false, nil, nil, make(map[string]interface{})}
+	return &Line{fname, firstLine, lastLine, text, rawLines, false, nil, nil, make(map[mklineExtra]interface{})}
 }
 
 // NewLineEof creates a dummy line for logging.
