@@ -185,19 +185,16 @@ func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string)
 		return
 	}
 
-	switch {
-	case ck.allFiles["man/man1/"+basename+".1"] != nil:
-	case ck.allFiles["man/man6/"+basename+".6"] != nil:
-	case ck.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] != nil:
-	default:
-		if G.opts.WarnExtra {
-			pline.warnf("Manual page missing for bin/%s.", basename)
-			pline.explain(
-				"All programs that can be run directly by the user should have a manual",
-				"page for quick reference. The programs in the bin/ directory should have",
-				"corresponding manual pages in section 1 (filename program.1), not in",
-				"section 8.")
-		}
+	if G.opts.WarnExtra &&
+		ck.allFiles["man/man1/"+basename+".1"] == nil &&
+		ck.allFiles["man/man6/"+basename+".6"] == nil &&
+		ck.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] == nil {
+		pline.warnf("Manual page missing for bin/%s.", basename)
+		pline.explain(
+			"All programs that can be run directly by the user should have a manual",
+			"page for quick reference. The programs in the bin/ directory should have",
+			"corresponding manual pages in section 1 (filename program.1), not in",
+			"section 8.")
 	}
 }
 

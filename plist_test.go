@@ -5,6 +5,7 @@ import (
 )
 
 func (s *Suite) TestChecklinesPlist(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
 	lines := s.NewLines("PLIST",
 		"bin/i386/6c",
 		"bin/program",
@@ -17,6 +18,7 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"ERROR: PLIST:1: Expected \"@comment $"+"NetBSD$\".\n"+
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.\n"+
+		"WARN: PLIST:2: Manual page missing for bin/program.\n"+
 		"WARN: PLIST:4: Preformatted manual page without unformatted one.\n"+
 		"WARN: PLIST:4: Preformatted manual pages should end in \".0\".\n"+
 		"WARN: PLIST:5: Please remove this line. It is no longer necessary.\n")
@@ -54,4 +56,20 @@ func (s *Suite) TestChecklinesPlist_conditional(c *check.C) {
 	checklinesPlist(lines)
 
 	c.Check(s.Output(), equals, "WARN: PLIST:2: The bin/ directory should not have subdirectories.\n")
+}
+
+func (s *Suite) TestChecklinesPlist_sorting(c *check.C) {
+	s.UseCommandLine(c, "-Wplist-sort")
+	lines := s.NewLines("PLIST",
+		"@comment $"+"NetBSD$",
+		"sbin/i386/6c",
+		"sbin/program",
+		"bin/otherprogram",
+		"${PLIST.conditional}bin/cat")
+
+	checklinesPlist(lines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: PLIST:4: \"bin/otherprogram\" should be sorted before \"sbin/program\".\n"+
+		"WARN: PLIST:5: \"bin/cat\" should be sorted before \"bin/otherprogram\".\n")
 }
