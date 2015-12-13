@@ -387,7 +387,7 @@ func (cv *VartypeCheck) Pathmask() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
 		cv.line.warnf("%q is not a valid pathname mask.", cv.value)
 	}
-	cv.line.checkAbsolutePathname(cv.value)
+	cv.line.line.checkAbsolutePathname(cv.value)
 }
 
 // Like Filename, but including slashes
@@ -396,7 +396,7 @@ func (cv *VartypeCheck) Pathname() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.line.warnf("%q is not a valid pathname.", cv.value)
 	}
-	cv.line.checkAbsolutePathname(cv.value)
+	cv.line.line.checkAbsolutePathname(cv.value)
 }
 
 func (cv *VartypeCheck) Perl5Packlist() {
@@ -432,7 +432,7 @@ func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.value, `^[1-9]\d*$`) {
 		cv.line.warnf("%s must be a positive integer number.", cv.varname)
 	}
-	if path.Base(cv.line.fname) != "Makefile" {
+	if path.Base(cv.line.line.fname) != "Makefile" {
 		cv.line.errorf("%s only makes sense directly in the package Makefile.", cv.varname)
 		cv.line.explain(
 			"Usually, different packages using the same Makefile.common have",
@@ -514,7 +514,7 @@ func (cv *VartypeCheck) SedCommand() {
 func (cv *VartypeCheck) SedCommands() {
 	line := cv.line
 
-	words, rest := splitIntoShellwords(line.Line, cv.value)
+	words, rest := splitIntoShellwords(line.line, cv.value)
 	if rest != "" {
 		if contains(cv.value, "#") {
 			line.errorf("Invalid shell words in sed commands.")

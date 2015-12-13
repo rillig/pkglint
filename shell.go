@@ -106,7 +106,7 @@ type MkShellLine struct {
 }
 
 func NewMkShellLine(mkline *MkLine) *MkShellLine {
-	return &MkShellLine{mkline.Line, mkline}
+	return &MkShellLine{mkline.line, mkline}
 }
 
 type ShellwordState int

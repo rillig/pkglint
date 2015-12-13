@@ -107,30 +107,30 @@ func (mklines *MkLines) check() {
 	checklineRcsid(mklines.lines[0], `#\s+`, "# ")
 
 	for _, mkline := range mklines.mklines {
-		text := mkline.text
+		text := mkline.line.text
 
-		checklineTrailingWhitespace(mkline.Line)
+		checklineTrailingWhitespace(mkline.line)
 
 		switch {
 		case mkline.IsEmpty():
 			substcontext.Finish(mkline)
-		
+
 		case mkline.IsVarassign():
 			mkline.checkVaralign()
 			mkline.checkVarassign()
 			substcontext.Varassign(mkline)
-		
+
 		case hasPrefix(text, "\t"):
 			shellcmd := text[1:]
 			mkline.checkText(shellcmd)
 			NewMkShellLine(mkline).checkShelltext(shellcmd)
-		
+
 		case mkline.IsInclude():
 			mklines.checklineInclude(mkline)
-		
+
 		case mkline.IsCond():
 			mklines.checklineCond(mkline)
-		
+
 		case mkline.IsDependency():
 			mklines.checklineDependencyRule(mkline, mkline.Targets(), mkline.Sources(), allowedTargets)
 		}
@@ -191,7 +191,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 func (mklines *MkLines) determineUsedVariables() {
 	re := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
 	for _, mkline := range mklines.mklines {
-		rest := mkline.text
+		rest := mkline.line.text
 		for {
 			m := re.FindStringSubmatchIndex(rest)
 			if m == nil {
@@ -271,7 +271,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 			guessed := guGuessed
 			for _, value := range splitOnSpace(values) {
 				if m, vname := match1(value, `^\$\{(.*)\}`); m {
-					vartype := getVariableType(mkline.Line, vname)
+					vartype := getVariableType(mkline.line, vname)
 					if vartype != nil && !vartype.guessed {
 						guessed = guNotGuessed
 					}
@@ -280,7 +280,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 
 			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", "pu"}}, guessed}
 			forLoopContext := &VarUseContext{vucTimeParse, forLoopType, vucQuotFor, vucExtentWord}
-			for _, forLoopVar := range extractUsedVariables(mkline.Line, values) {
+			for _, forLoopVar := range extractUsedVariables(mkline.line, values) {
 				mkline.checkVaruse(forLoopVar, "", forLoopContext)
 			}
 		}
@@ -341,7 +341,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	}
 
 	if includefile == "../../mk/bsd.prefs.mk" {
-		if path.Base(mkline.fname) == "buildlink3.mk" {
+		if path.Base(mkline.line.fname) == "buildlink3.mk" {
 			mkline.notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.pkg != nil {

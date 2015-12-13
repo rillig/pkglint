@@ -22,7 +22,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 	isMainMakefile := len(mainLines.mklines) == 0
 
 	for _, mkline := range fileMklines.mklines {
-		line := mkline.Line
+		line := mkline.line
 		text := line.text
 
 		if isMainMakefile {

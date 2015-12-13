@@ -9,7 +9,7 @@ import (
 )
 
 type MkLine struct {
-	*Line
+	line *Line
 
 	xtype uint8
 	xb1   bool
@@ -21,8 +21,24 @@ type MkLine struct {
 	xs6   string
 }
 
+func (mkline *MkLine) errorf(format string, args ...interface{}) bool {
+	return mkline.line.errorf(format, args...)
+}
+func (mkline *MkLine) warnf(format string, args ...interface{}) bool {
+	return mkline.line.warnf(format, args...)
+}
+func (mkline *MkLine) notef(format string, args ...interface{}) bool {
+	return mkline.line.notef(format, args...)
+}
+func (mkline *MkLine) debugf(format string, args ...interface{}) bool {
+	return mkline.line.debugf(format, args...)
+}
+func (mkline *MkLine) explain(explanation ...string) {
+	mkline.line.explain(explanation...)
+}
+
 func NewMkLine(line *Line) (mkline *MkLine) {
-	mkline = &MkLine{Line: line}
+	mkline = &MkLine{line: line}
 
 	text := line.text
 
@@ -140,7 +156,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		return
 	}
 
-	perms := getVariablePermissions(mkline.Line, varname)
+	perms := getVariablePermissions(mkline.line, varname)
 	var needed string
 	switch op {
 	case "=", "!=", ":=":
@@ -174,7 +190,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext) {
 	defer tracecall("MkLine.checkVaruse", mkline, varname, mod, *vuc)()
 
-	vartype := getVariableType(mkline.Line, varname)
+	vartype := getVariableType(mkline.line, varname)
 	if G.opts.WarnExtra &&
 		(vartype == nil || vartype.guessed == guGuessed) &&
 		!varIsUsed(varname) &&
@@ -188,7 +204,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 		mkline.warnVaruseLocalbase()
 	}
 
-	needsQuoting := variableNeedsQuoting(mkline.Line, varname, vuc)
+	needsQuoting := variableNeedsQuoting(mkline.line, varname, vuc)
 
 	if vuc.shellword == vucQuotFor {
 		mkline.checkVaruseFor(varname, vartype, needsQuoting)
@@ -214,7 +230,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 		return
 	}
 
-	perms := getVariablePermissions(mkline.Line, varname)
+	perms := getVariablePermissions(mkline.line, varname)
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -498,8 +514,8 @@ func (mkline *MkLine) checkVarassign() {
 		time = vucTimeParse
 	}
 
-	usedVars := extractUsedVariables(mkline.Line, value)
-	vuc := &VarUseContext{time, getVariableType(mkline.Line, varname), vucQuotUnknown, vucExtentUnknown}
+	usedVars := extractUsedVariables(mkline.line, value)
+	vuc := &VarUseContext{time, getVariableType(mkline.line, varname), vucQuotUnknown, vucExtentUnknown}
 	for _, usedVar := range usedVars {
 		mkline.checkVaruse(usedVar, "", vuc)
 	}
@@ -612,7 +628,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 	}
 
 	varbase := varnameBase(varname)
-	vartype := getVariableType(mkline.Line, varname)
+	vartype := getVariableType(mkline.line, varname)
 
 	if op == "+=" {
 		if vartype != nil {
@@ -640,7 +656,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 		if vartype.kindOfList == lkSpace {
 			words = splitOnSpace(value)
 		} else {
-			words, _ = splitIntoShellwords(mkline.Line, value)
+			words, _ = splitIntoShellwords(mkline.line, value)
 		}
 
 		for _, word := range words {
@@ -680,7 +696,7 @@ func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) 
 }
 
 func (mkline *MkLine) checkVaralign() {
-	text := mkline.text
+	text := mkline.line.text
 	if m := regcomp(reVarassign).FindStringSubmatchIndex(text); m != nil {
 		varname := text[m[2]:m[3]]
 		space1 := text[m[3]:m[4]]
@@ -695,7 +711,7 @@ func (mkline *MkLine) checkVaralign() {
 			for tabLength(prefix+tabs) < alignedWidth {
 				tabs += "\t"
 			}
-			mkline.replace(prefix+align, prefix+tabs)
+			mkline.line.replace(prefix+align, prefix+tabs)
 		}
 	}
 }
@@ -707,8 +723,8 @@ func (mkline *MkLine) checkText(text string) {
 		mkline.warnf("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
 	}
 
-	if mkline.firstLine == 1 {
-		checklineRcsid(mkline.Line, `# `, "# ")
+	if mkline.line.firstLine == 1 {
+		checklineRcsid(mkline.line, `# `, "# ")
 	}
 
 	if contains(text, "${WRKSRC}/../") {
@@ -748,12 +764,12 @@ func (mkline *MkLine) checkIf() {
 	defer tracecall("MkLine.checkIf")()
 
 	condition := mkline.Args()
-	tree := parseMkCond(mkline.Line, condition)
+	tree := parseMkCond(mkline.line, condition)
 
 	{
 		var pvarname, ppattern *string
 		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &ppattern)))) {
-			vartype := getVariableType(mkline.Line, *pvarname)
+			vartype := getVariableType(mkline.line, *pvarname)
 			if vartype != nil && vartype.checker.IsEnum() {
 				if !matches(*ppattern, `[\$\[*]`) && !vartype.checker.HasEnum(*ppattern) {
 					mkline.warnf("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())

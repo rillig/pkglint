@@ -203,7 +203,7 @@ func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {
 		"ERROR: fname:1: PKGREVISION only makes sense directly in the package Makefile.\n")
 
 	vc := newVartypeCheck("PKGREVISION", "=", "3")
-	vc.line.fname = "Makefile"
+	vc.line.line.fname = "Makefile"
 	vc.PkgRevision()
 
 	c.Check(s.Output(), equals, "")
