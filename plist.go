@@ -38,7 +38,7 @@ type PlistChecker struct {
 }
 
 type PlistLine struct {
-	line *Line
+	line        *Line
 	conditional string
 	text        string
 }
@@ -192,6 +192,9 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
 				pline.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.line.fname, prev.line.linenos())
+				if pline.line.fname == prev.line.fname && pline.line.text == prev.line.text {
+					pline.line.delete()
+				}
 			}
 		}
 		ck.lastFname = text
