@@ -82,7 +82,9 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 		text := pline.text
 
 		if matches(text, `^[\w$]`) {
-			ck.allFiles[text] = pline
+			if ck.allFiles[text] == nil {
+				ck.allFiles[text] = pline
+			}
 			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
 				ck.allDirs[dir] = pline
 			}
@@ -173,8 +175,9 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 				pline.warnf("%q should be sorted before %q.", text, ck.lastFname)
 				pline.explain(
 					"The files in the PLIST should be sorted alphabetically.")
-			} else if ck.lastFname == text {
-				pline.errorf("Duplicate filename.")
+			}
+			if prev := ck.allFiles[text]; prev != nil && prev != pline {
+				pline.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.fname, prev.linenos())
 			}
 		}
 		ck.lastFname = text

@@ -16,7 +16,9 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"lib/libc.so.6",
 		"lib/libc.la",
 		"${PLIST.man}man/cat3/strcpy.4",
-		"${PLIST.obsolete}@unexec rmdir /tmp")
+		"${PLIST.obsolete}@unexec rmdir /tmp",
+		"share/tzinfo",
+		"share/tzinfo")
 
 	checklinesPlist(lines)
 
@@ -31,7 +33,8 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"WARN: PLIST:8: \"lib/libc.la\" should be sorted before \"lib/libc.so.6\".\n"+
 		"WARN: PLIST:9: Preformatted manual page without unformatted one.\n"+
 		"WARN: PLIST:9: Preformatted manual pages should end in \".0\".\n"+
-		"WARN: PLIST:10: Please remove this line. It is no longer necessary.\n")
+		"WARN: PLIST:10: Please remove this line. It is no longer necessary.\n"+
+		"ERROR: PLIST:12: Duplicate filename \"share/tzinfo\", already appeared in PLIST:11.\n")
 }
 
 func (s *Suite) TestChecklinesPlist_empty(c *check.C) {
