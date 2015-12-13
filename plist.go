@@ -99,11 +99,11 @@ func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
 func (ck *PlistChecker) checkline(pline *PlistLine) {
 	text := pline.text
 	if hasAlnumPrefix(text) {
-		ck.checkPathname(pline, text)
+		ck.checkpath(pline)
 	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)\s+(.*)`); m {
 		pline.checkDirective(cmd, arg)
 	} else if hasPrefix(text, "$") {
-		ck.checkPathname(pline, text)
+		ck.checkpath(pline)
 	} else if matches(text, `^\$\{[\w_]+\}$`) {
 		// A variable on its own line.
 	} else {
@@ -111,8 +111,9 @@ func (ck *PlistChecker) checkline(pline *PlistLine) {
 	}
 }
 
-func (ck *PlistChecker) checkPathname(pline *PlistLine, fullname string) {
-	sdirname, basename := path.Split(fullname)
+func (ck *PlistChecker) checkpath(pline *PlistLine) {
+	line, text := pline.Line, pline.text
+	sdirname, basename := path.Split(text)
 	dirname := strings.TrimSuffix(sdirname, "/")
 
 	ck.checkSorted(pline)
@@ -121,104 +122,28 @@ func (ck *PlistChecker) checkPathname(pline *PlistLine, fullname string) {
 		pline.warnAboutPlistImakeMannewsuffix()
 	}
 
-	line, text := pline.Line, pline.text
-	switch {
-	case hasPrefix(dirname, "bin/"):
-		line.warnf("The bin/ directory should not have subdirectories.")
+	topdir := ""
+	if firstSlash := strings.IndexByte(text, '/'); firstSlash != -1 {
+		topdir = text[:firstSlash]
+	}
 
-	case dirname == "bin":
-		ck.checkpathBin(pline, basename)
-
-	case hasPrefix(text, "doc/"):
+	switch topdir {
+	case "bin":
+		ck.checkpathBin(pline, dirname, basename)
+	case "doc":
 		line.errorf("Documentation must be installed under share/doc, not doc.")
-
-	case hasPrefix(text, "etc/rc.d/"):
-		line.errorf("RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.")
-
-	case hasPrefix(text, "etc/"):
-		f := "mk/pkginstall/bsd.pkginstall.mk"
-		line.errorf("Configuration files must not be registered in the PLIST. "+
-			"Please use the CONF_FILES framework, which is described in %s.", f)
-
-	case hasPrefix(text, "include/") && matches(text, `^include/.*\.(?:h|hpp)$`):
-		// Fine.
-
-	case text == "info/dir":
-		line.errorf("\"info/dir\" must not be listed. Use install-info to add/remove an entry.")
-
-	case hasPrefix(text, "info/"):
-		if G.pkg != nil && G.pkg.vardef["INFO_FILES"] == nil {
-			line.warnf("Packages that install info files should set INFO_FILES.")
-		}
-
-	case G.pkg != nil && G.pkg.effectivePkgbase != "" && hasPrefix(text, "lib/"+G.pkg.effectivePkgbase+"/"):
-		// Fine.
-
-	case hasPrefix(text, "lib/locale/"):
-		line.errorf("\"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
-
-	case hasPrefix(text, "lib/"):
-		ck.checkpathLib(pline, basename)
-
-	case hasPrefix(text, "man/"):
+	case "etc":
+		ck.checkpathEtc(pline, dirname, basename)
+	case "info":
+		ck.checkpathInfo(pline, dirname, basename)
+	case "lib":
+		ck.checkpathLib(pline, dirname, basename)
+	case "man":
 		ck.checkpathMan(pline)
-
-	case hasPrefix(text, "sbin/"):
+	case "sbin":
 		ck.checkpathSbin(pline)
-
-	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
-		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
-		if G.pkg != nil && G.pkg.included[f] == nil {
-			line.warnf("Packages that install a .desktop entry should .include %q.", f)
-			line.explain(
-				"If *.desktop files contain MimeType keys, the global MIME type registry",
-				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
-		}
-
-	case hasPrefix(text, "share/icons/hicolor/") && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
-		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
-		if G.pkg.included[f] == nil {
-			line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
-		}
-
-	case hasPrefix(text, "share/icons/gnome") && G.pkg != nil && G.pkg.pkgpath != "graphics/gnome-icon-theme":
-		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
-		if G.pkg.included[f] == nil {
-			line.errorf("The package Makefile must include %q.", f)
-			line.explain(
-				"Packages that install GNOME icons must maintain the icon theme cache.")
-		}
-
-	case dirname == "share/aclocal" && hasSuffix(basename, ".m4"):
-		// Fine.
-
-	case hasPrefix(text, "share/doc/html/"):
-		_ = G.opts.WarnPlistDepr && line.warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
-
-	case G.pkg != nil && G.pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkg.effectivePkgbase+"/") ||
-		hasPrefix(text, "share/examples/"+G.pkg.effectivePkgbase+"/")):
-		// Fine.
-
-	case text == "share/icons/hicolor/icon-theme.cache" && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
-		line.errorf("This file must not appear in any PLIST file.")
-		line.explain(
-			"Remove this line and add the following line to the package Makefile.",
-			"",
-			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
-
-	case hasPrefix(text, "share/info/"):
-		line.warnf("Info pages should be installed into info/, not share/info/.")
-		line.explain(
-			"To fix this, you should add INFO_FILES=yes to the package Makefile.")
-
-	case hasPrefix(text, "share/locale/") && hasSuffix(text, ".mo"):
-		// Fine.
-
-	case hasPrefix(text, "share/man/"):
-		line.warnf("Man pages should be installed into man/, not share/man/.")
-
-	default:
-		_ = G.opts.DebugUnchecked && line.debugf("Unchecked pathname %q.", text)
+	case "share":
+		ck.checkpathShare(pline)
 	}
 
 	if contains(text, "${PKGLOCALEDIR}") && G.pkg != nil && G.pkg.vardef["USE_PKGLOCALEDIR"] == nil {
@@ -254,7 +179,12 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 	}
 }
 
-func (ck *PlistChecker) checkpathBin(pline *PlistLine, basename string) {
+func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string) {
+	if contains(dirname, "/") {
+		pline.warnf("The bin/ directory should not have subdirectories.")
+		return
+	}
+
 	switch {
 	case ck.allFiles["man/man1/"+basename+".1"] != nil:
 	case ck.allFiles["man/man6/"+basename+".6"] != nil:
@@ -271,7 +201,38 @@ func (ck *PlistChecker) checkpathBin(pline *PlistLine, basename string) {
 	}
 }
 
-func (ck *PlistChecker) checkpathLib(pline *PlistLine, basename string) {
+func (ck *PlistChecker) checkpathEtc(pline *PlistLine, dirname, basename string) {
+	if hasPrefix(pline.text, "etc/rc.d/") {
+		pline.errorf("RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.")
+		return
+	}
+
+	f := "mk/pkginstall/bsd.pkginstall.mk"
+	pline.errorf("Configuration files must not be registered in the PLIST. "+
+		"Please use the CONF_FILES framework, which is described in %s.", f)
+}
+
+func (ck *PlistChecker) checkpathInfo(pline *PlistLine, dirname, basename string) {
+	if pline.text == "info/dir" {
+		pline.errorf("\"info/dir\" must not be listed. Use install-info to add/remove an entry.")
+		return
+	}
+
+	if G.pkg != nil && G.pkg.vardef["INFO_FILES"] == nil {
+		pline.warnf("Packages that install info files should set INFO_FILES.")
+	}
+}
+
+func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string) {
+	switch {
+	case G.pkg != nil && G.pkg.effectivePkgbase != "" && hasPrefix(pline.text, "lib/"+G.pkg.effectivePkgbase+"/"):
+		return
+
+	case hasPrefix(pline.text, "lib/locale/"):
+		pline.errorf("\"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
+		return
+	}
+
 	if m, dir, lib, ext := match3(pline.text, `^(lib/(?:.*/)*)([^/]+)\.(so|a|la)$`); m {
 		if dir == "lib/" && !hasPrefix(lib, "lib") {
 			_ = G.opts.WarnExtra && pline.warnf("Library filename does not start with \"lib\".")
@@ -339,6 +300,59 @@ func (ck *PlistChecker) checkpathSbin(pline *PlistLine) {
 			"page for quick reference. The programs in the sbin/ directory should have",
 			"corresponding manual pages in section 8 (filename program.8), not in",
 			"section 1.")
+	}
+}
+
+func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
+	line, text := pline.Line, pline.text
+	switch {
+	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
+		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
+		if G.pkg != nil && G.pkg.included[f] == nil {
+			line.warnf("Packages that install a .desktop entry should .include %q.", f)
+			line.explain(
+				"If *.desktop files contain MimeType keys, the global MIME type registry",
+				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
+		}
+
+	case hasPrefix(text, "share/icons/hicolor/") && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
+		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
+		if G.pkg.included[f] == nil {
+			line.errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
+		}
+
+	case hasPrefix(text, "share/icons/gnome") && G.pkg != nil && G.pkg.pkgpath != "graphics/gnome-icon-theme":
+		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
+		if G.pkg.included[f] == nil {
+			line.errorf("The package Makefile must include %q.", f)
+			line.explain(
+				"Packages that install GNOME icons must maintain the icon theme cache.")
+		}
+
+	case hasPrefix(text, "share/doc/html/"):
+		_ = G.opts.WarnPlistDepr && line.warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
+
+	case G.pkg != nil && G.pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkg.effectivePkgbase+"/") ||
+		hasPrefix(text, "share/examples/"+G.pkg.effectivePkgbase+"/")):
+		// Fine.
+
+	case text == "share/icons/hicolor/icon-theme.cache" && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
+		line.errorf("This file must not appear in any PLIST file.")
+		line.explain(
+			"Remove this line and add the following line to the package Makefile.",
+			"",
+			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
+
+	case hasPrefix(text, "share/info/"):
+		line.warnf("Info pages should be installed into info/, not share/info/.")
+		line.explain(
+			"To fix this, you should add INFO_FILES=yes to the package Makefile.")
+
+	case hasPrefix(text, "share/locale/") && hasSuffix(text, ".mo"):
+		// Fine.
+
+	case hasPrefix(text, "share/man/"):
+		line.warnf("Man pages should be installed into man/, not share/man/.")
 	}
 }
 
