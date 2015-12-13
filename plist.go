@@ -38,16 +38,32 @@ type PlistChecker struct {
 }
 
 type PlistLine struct {
-	*Line
+	line *Line
 	conditional string
 	text        string
+}
+
+func (pline *PlistLine) errorf(format string, args ...interface{}) bool {
+	return pline.line.errorf(format, args...)
+}
+func (pline *PlistLine) warnf(format string, args ...interface{}) bool {
+	return pline.line.warnf(format, args...)
+}
+func (pline *PlistLine) notef(format string, args ...interface{}) bool {
+	return pline.line.notef(format, args...)
+}
+func (pline *PlistLine) debugf(format string, args ...interface{}) bool {
+	return pline.line.debugf(format, args...)
+}
+func (pline *PlistLine) explain(explanation ...string) {
+	pline.line.explain(explanation...)
 }
 
 func (ck *PlistChecker) check(plainLines []*Line) {
 	plines := ck.newLines(plainLines)
 	ck.collectFilesAndDirs(plines)
 
-	if fname := plines[0].fname; path.Base(fname) == "PLIST.common_end" {
+	if fname := plines[0].line.fname; path.Base(fname) == "PLIST.common_end" {
 		commonLines, err := readLines(strings.TrimSuffix(fname, "_end"), false)
 		if err == nil {
 			ck.collectFilesAndDirs(ck.newLines(commonLines))
@@ -114,7 +130,7 @@ func (ck *PlistChecker) checkline(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkpath(pline *PlistLine) {
-	line, text := pline.Line, pline.text
+	line, text := pline.line, pline.text
 	sdirname, basename := path.Split(text)
 	dirname := strings.TrimSuffix(sdirname, "/")
 
@@ -175,7 +191,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 					"The files in the PLIST should be sorted alphabetically.")
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
-				pline.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.fname, prev.linenos())
+				pline.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.line.fname, prev.line.linenos())
 			}
 		}
 		ck.lastFname = text
@@ -246,14 +262,14 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 	if contains(basename, ".a") || contains(basename, ".so") {
 		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
 			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
-				pline.warnf("Redundant library found. The libtool library is in line %s.", laLine.linenos())
+				pline.warnf("Redundant library found. The libtool library is in line %d.", laLine.line.firstLine)
 			}
 		}
 	}
 }
 
 func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
-	line := pline.Line
+	line := pline.line
 
 	m, catOrMan, section, manpage, ext, gz := match5(pline.text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`)
 	if !m {
@@ -303,7 +319,7 @@ func (ck *PlistChecker) checkpathSbin(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
-	line, text := pline.Line, pline.text
+	line, text := pline.line, pline.text
 	switch {
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
@@ -364,7 +380,7 @@ func (pline *PlistLine) checkTrailingWhitespace() {
 }
 
 func (pline *PlistLine) checkDirective(cmd, arg string) {
-	line := pline.Line
+	line := pline.line
 
 	if cmd == "unexec" {
 		if m, arg := match1(arg, `^(?:rmdir|\$\{RMDIR\} \%D/)(.*)`); m {
