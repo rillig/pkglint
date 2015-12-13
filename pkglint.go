@@ -233,17 +233,6 @@ func checklineValidCharacters(line *Line, reChar string) {
 	}
 }
 
-func checklineValidCharactersInValue(line *MkLine, reValid string) {
-	rest := regcomp(reValid).ReplaceAllString(line.Value(), "")
-	if rest != "" {
-		uni := ""
-		for _, c := range rest {
-			uni += sprintf(" %U", c)
-		}
-		line.warnf("%s contains invalid characters (%s).", line.Varname(), uni[1:])
-	}
-}
-
 func checklineTrailingWhitespace(line *Line) {
 	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
 		line.notef("Trailing white-space.")

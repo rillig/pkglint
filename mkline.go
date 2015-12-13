@@ -785,6 +785,17 @@ func (mkline *MkLine) checkIf() {
 	}
 }
 
+func (mkline *MkLine) checklineValidCharactersInValue(reValid string) {
+	rest := regcomp(reValid).ReplaceAllString(mkline.Value(), "")
+	if rest != "" {
+		uni := ""
+		for _, c := range rest {
+			uni += sprintf(" %U", c)
+		}
+		mkline.warnf("%s contains invalid characters (%s).", mkline.Varname(), uni[1:])
+	}
+}
+
 func (mkline *MkLine) explainRelativeDirs() {
 	mkline.explain(
 		"Directories in the form \"../../category/package\" make it easier to",
