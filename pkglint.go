@@ -35,7 +35,6 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 
 	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
 	if !readMakefile(fname, mainLines, allLines, "") {
-		errorf(fname, noLines, "Cannot be read.")
 		return nil
 	}
 

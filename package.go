@@ -118,7 +118,6 @@ func checkdirPackage(pkgpath string) {
 	// we need to handle the Makefile first to get some variables
 	lines := pkg.loadPackageMakefile(G.currentDir + "/Makefile")
 	if lines == nil {
-		errorf(G.currentDir+"/Makefile", noLines, "Cannot be read.")
 		return
 	}
 
