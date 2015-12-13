@@ -11,25 +11,25 @@ func NewExpecter(lines []*Line) *Expecter {
 	return &Expecter{lines, 0, nil}
 }
 
-func (ctx *Expecter) currentLine() *Line {
-	if ctx.index < len(ctx.lines) {
-		return ctx.lines[ctx.index]
+func (exp *Expecter) currentLine() *Line {
+	if exp.index < len(exp.lines) {
+		return exp.lines[exp.index]
 	}
 
-	return NewLineEof(ctx.lines[0].fname)
+	return NewLineEof(exp.lines[0].fname)
 }
 
-func (ctx *Expecter) previousLine() *Line {
-	return ctx.lines[ctx.index-1]
+func (exp *Expecter) previousLine() *Line {
+	return exp.lines[exp.index-1]
 }
 
-func (ctx *Expecter) eof() bool {
-	return !(ctx.index < len(ctx.lines))
+func (exp *Expecter) eof() bool {
+	return !(exp.index < len(exp.lines))
 }
 
-func (ctx *Expecter) advance() bool {
-	ctx.index++
-	ctx.m = nil
+func (exp *Expecter) advance() bool {
+	exp.index++
+	exp.m = nil
 	return true
 }
 
@@ -37,13 +37,13 @@ func (exp *Expecter) stepBack() {
 	exp.index--
 }
 
-func (ctx *Expecter) advanceIfMatches(re string) bool {
-	defer tracecall("Expecter.advanceIfMatches", ctx.currentLine().text, re)()
+func (exp *Expecter) advanceIfMatches(re string) bool {
+	defer tracecall("Expecter.advanceIfMatches", exp.currentLine().text, re)()
 
-	if !ctx.eof() {
-		if m := match(ctx.lines[ctx.index].text, re); m != nil {
-			ctx.index++
-			ctx.m = m
+	if !exp.eof() {
+		if m := match(exp.lines[exp.index].text, re); m != nil {
+			exp.index++
+			exp.m = m
 			return true
 		}
 	}
@@ -62,25 +62,25 @@ func (exp *Expecter) advanceIfEquals(text string) bool {
 	return !exp.eof() && exp.lines[exp.index].text == text && exp.advance()
 }
 
-func (ctx *Expecter) expectEmptyLine() bool {
-	if ctx.advanceIfMatches(`^$`) {
+func (exp *Expecter) expectEmptyLine() bool {
+	if exp.advanceIfMatches(`^$`) {
 		return true
 	}
 
 	if G.opts.WarnSpace {
-		ctx.currentLine().notef("Empty line expected.")
-		ctx.currentLine().insertBefore("")
+		exp.currentLine().notef("Empty line expected.")
+		exp.currentLine().insertBefore("")
 	}
 	return false
 }
 
-func (ctx *Expecter) expectText(text string) bool {
-	if !ctx.eof() && ctx.lines[ctx.index].text == text {
-		ctx.index++
-		ctx.m = nil
+func (exp *Expecter) expectText(text string) bool {
+	if !exp.eof() && exp.lines[exp.index].text == text {
+		exp.index++
+		exp.m = nil
 		return true
 	}
 
-	ctx.currentLine().warnf("This line should contain the following text: %s", text)
+	exp.currentLine().warnf("This line should contain the following text: %s", text)
 	return false
 }
