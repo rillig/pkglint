@@ -125,7 +125,7 @@ func saveAutofixChanges(lines []*Line) {
 		for _, rawLine := range rawLines {
 			text += rawLine.textnl
 		}
-		err := ioutil.WriteFile(tmpname, []byte(text), 0777)
+		err := ioutil.WriteFile(tmpname, []byte(text), 0666)
 		if err != nil {
 			errorf(tmpname, noLines, "Cannot write.")
 			continue
