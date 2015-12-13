@@ -130,7 +130,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case hasPrefix(text, "\\"):
 				// \ No newline at end of file
 			default:
-				line.errorf("Internal pkglint error: unexpectedPatchFormat")
+				line.errorf("Invalid line in unified patch hunk")
 				return
 			}
 		}
@@ -200,7 +200,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	case ftSource:
 		checklineSourceAbsolutePathname(line, addedText)
 	case ftConfigure:
-		if matches(addedText, `: Avoid regenerating within pkgsrc$`) {
+		if hasPrefix(addedText, ": Avoid regenerating within pkgsrc") {
 			line.errorf("This code must not be included in patches.")
 			line.explain(
 				"It is generated automatically by pkgsrc after the patch phase.",
