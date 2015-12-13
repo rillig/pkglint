@@ -38,6 +38,9 @@ func (s *Suite) Output() string {
 }
 
 func (s *Suite) OutputCleanTmpdir() string {
+	if s.tmpdir == "" {
+		return "error: OutputCleanTmpdir must only be called when s.tmpdir is actually set."
+	}
 	return strings.Replace(s.Output(), s.tmpdir, "~", -1)
 }
 
