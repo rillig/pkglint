@@ -10,24 +10,27 @@ const (
 	reMkSysinclude = `^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$`
 )
 
-func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
+func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {
 	defer tracecall("readMakefile", fname)()
 
 	fileLines := LoadNonemptyLines(fname, true)
 	if fileLines == nil {
 		return false
 	}
+	fileMklines := NewMkLines(fileLines)
 
-	isMainMakefile := len(*mainLines) == 0
+	isMainMakefile := len(mainLines.mklines) == 0
 
-	for _, mkline := range NewMkLines(fileLines).mklines {
+	for _, mkline := range fileMklines.mklines {
 		line := mkline.Line
 		text := line.text
 
 		if isMainMakefile {
-			*mainLines = append(*mainLines, line)
+			mainLines.mklines = append(mainLines.mklines, mkline)
+			mainLines.lines = append(mainLines.lines, line)
 		}
-		*allLines = append(*allLines, line)
+		allLines.mklines = append(allLines.mklines, mkline)
+		allLines.lines = append(allLines.lines, line)
 
 		var includeFile, incDir, incBase string
 		if hasPrefix(text, ".") && hasSuffix(text, "\"") {
@@ -81,14 +84,9 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 				}
 
 				_ = G.opts.DebugInclude && line.debugf("Including %q.", dirname+"/"+includeFile)
-				lengthBeforeInclude := len(*allLines)
-				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines) {
+				includingFname := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
+				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {
 					return false
-				}
-
-				if incBase == "Makefile.common" && incDir != "" {
-					makefileCommonLines := (*allLines)[lengthBeforeInclude:]
-					NewMkLines(makefileCommonLines).checkForUsedComment(relpath(G.globalData.pkgsrcdir, fname))
 				}
 			}
 		}
@@ -98,9 +96,13 @@ func readMakefile(fname string, mainLines *[]*Line, allLines *[]*Line) bool {
 
 			if op != "?=" || G.pkg.vardef[varname] == nil {
 				_ = G.opts.DebugMisc && line.debugf("varassign(%q, %q, %q)", varname, op, value)
-				G.pkg.vardef[varname] = NewMkLine(line) // XXX
+				G.pkg.vardef[varname] = mkline
 			}
 		}
+	}
+
+	if includingFnameForUsedCheck != "" {
+		fileMklines.checkForUsedComment(relpath(G.globalData.pkgsrcdir, includingFnameForUsedCheck))
 	}
 
 	return true

@@ -151,7 +151,7 @@ func checkdirPackage(pkgpath string) {
 	for _, fname := range files {
 		if fname == G.currentDir+"/Makefile" {
 			if G.opts.CheckMakefile {
-				pkg.checkfilePackageMakefile(fname, NewMkLines(lines))
+				pkg.checkfilePackageMakefile(fname, lines)
 			}
 		} else {
 			checkfile(fname)

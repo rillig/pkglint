@@ -30,23 +30,23 @@ func findPkgsrcTopdir(fname string) string {
 	return ""
 }
 
-func (pkg *Package) loadPackageMakefile(fname string) []*Line {
+func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	defer tracecall("loadPackageMakefile", fname)()
 
-	var mainLines, allLines []*Line
-	if !readMakefile(fname, &mainLines, &allLines) {
+	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
+	if !readMakefile(fname, mainLines, allLines, "") {
 		errorf(fname, noLines, "Cannot be read.")
 		return nil
 	}
 
 	if G.opts.DumpMakefile {
 		debugf(G.currentDir, noLines, "Whole Makefile (with all included files) follows:")
-		for _, line := range allLines {
+		for _, line := range allLines.lines {
 			fmt.Printf("%s\n", line.String())
 		}
 	}
 
-	NewMkLines(allLines).determineUsedVariables()
+	allLines.determineUsedVariables()
 
 	pkg.pkgdir = expandVariableWithDefault("PKGDIR", ".")
 	pkg.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
