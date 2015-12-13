@@ -45,31 +45,12 @@ type PlistLine struct {
 
 func (ck *PlistChecker) check(plainLines []*Line) {
 	plines := ck.newLines(plainLines)
-	var extraLines []*PlistLine
+	ck.collectFilesAndDirs(plines)
+
 	if fname := plines[0].fname; path.Base(fname) == "PLIST.common_end" {
-		commonLines, err := readLines(path.Dir(fname)+"/PLIST.common", false)
+		commonLines, err := readLines(strings.TrimSuffix(fname, "_end"), false)
 		if err == nil {
-			extraLines = ck.newLines(commonLines)
-		}
-	}
-
-	// Collect all files and directories that appear in the PLIST file.
-	for _, pline := range append(append([]*PlistLine(nil), extraLines...), plines...) {
-		text := pline.text
-
-		if matches(text, `^[\w$]`) {
-			ck.allFiles[text] = pline
-			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
-				ck.allDirs[dir] = pline
-			}
-		}
-
-		if hasPrefix(text, "@") {
-			if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
-				for dir := dirname; dir != "."; dir = path.Dir(dir) {
-					ck.allDirs[dir] = pline
-				}
-			}
+			ck.collectFilesAndDirs(ck.newLines(commonLines))
 		}
 	}
 
@@ -94,6 +75,27 @@ func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
 		plines[i] = &PlistLine{line, conditional, text}
 	}
 	return plines
+}
+
+func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
+	for _, pline := range plines {
+		text := pline.text
+
+		if matches(text, `^[\w$]`) {
+			ck.allFiles[text] = pline
+			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
+				ck.allDirs[dir] = pline
+			}
+		}
+
+		if hasPrefix(text, "@") {
+			if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
+				for dir := dirname; dir != "."; dir = path.Dir(dir) {
+					ck.allDirs[dir] = pline
+				}
+			}
+		}
+	}
 }
 
 func (ck *PlistChecker) checkline(pline *PlistLine) {
