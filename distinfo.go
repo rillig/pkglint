@@ -102,8 +102,9 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFname, distinfoS
 	}
 	fileSha1Hex := sprintf("%x", h.Sum(nil))
 	if distinfoSha1Hex != fileSha1Hex {
-		line.errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
-		line.replace(distinfoSha1Hex, fileSha1Hex)
+		if !line.autofixReplace(distinfoSha1Hex, fileSha1Hex) {
+			line.errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
+		}
 	}
 }
 

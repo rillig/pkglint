@@ -43,9 +43,7 @@ func (s *Suite) TestChecklinesPatch_WithoutEmptyLine(c *check.C) {
 	checklinesPatch(lines)
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
-		"NOTE: ~/patch-WithoutEmptyLines:2: Empty line expected.\n"+
 		"NOTE: ~/patch-WithoutEmptyLines:2: Autofix: inserting a line \"\" before this line.\n"+
-		"NOTE: ~/patch-WithoutEmptyLines:3: Empty line expected.\n"+
 		"NOTE: ~/patch-WithoutEmptyLines:3: Autofix: inserting a line \"\" before this line.\n"+
 		"NOTE: ~/patch-WithoutEmptyLines: Has been auto-fixed. Please re-run pkglint.\n")
 

@@ -704,14 +704,15 @@ func (mkline *MkLine) checkVaralign() {
 		align := text[m[5]:m[6]]
 
 		if G.opts.WarnSpace && align != " " && strings.Trim(align, "\t") != "" {
-			mkline.notef("Alignment of variable values should be done with tabs, not spaces.")
 			prefix := varname + space1 + op
 			alignedWidth := tabLength(prefix + align)
 			tabs := ""
 			for tabLength(prefix+tabs) < alignedWidth {
 				tabs += "\t"
 			}
-			mkline.line.replace(prefix+align, prefix+tabs)
+			if !mkline.line.autofixReplace(prefix+align, prefix+tabs) {
+				mkline.notef("Alignment of variable values should be done with tabs, not spaces.")
+			}
 		}
 	}
 }

@@ -29,14 +29,15 @@ func (rline *RawLine) String() string {
 }
 
 type Line struct {
-	fname     string
-	firstLine int // Zero means not applicable, -1 means EOF
-	lastLine  int // Usually the same as firstLine, may differ in Makefiles
-	text      string
-	raw       []*RawLine
-	changed   bool
-	before    []*RawLine
-	after     []*RawLine
+	fname          string
+	firstLine      int32 // Zero means not applicable, -1 means EOF
+	lastLine       int32 // Usually the same as firstLine, may differ in Makefiles
+	text           string
+	raw            []*RawLine
+	changed        bool
+	before         []*RawLine
+	after          []*RawLine
+	autofixMessage *string
 }
 
 func NewLine(fname string, lineno int, text string, rawLines []*RawLine) *Line {
@@ -45,7 +46,7 @@ func NewLine(fname string, lineno int, text string, rawLines []*RawLine) *Line {
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
 func NewLineMulti(fname string, firstLine, lastLine int, text string, rawLines []*RawLine) *Line {
-	return &Line{fname, firstLine, lastLine, text, rawLines, false, nil, nil}
+	return &Line{fname, int32(firstLine), int32(lastLine), text, rawLines, false, nil, nil, nil}
 }
 
 // NewLineEof creates a dummy line for logging.
@@ -89,19 +90,19 @@ func (ln *Line) fatalf(format string, args ...interface{}) {
 }
 func (ln *Line) errorf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return errorf(ln.fname, ln.linenos(), format, args...)
+	return errorf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
 func (ln *Line) warnf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return warnf(ln.fname, ln.linenos(), format, args...)
+	return warnf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
 func (ln *Line) notef(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return notef(ln.fname, ln.linenos(), format, args...)
+	return notef(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
 func (ln *Line) debugf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
-	return debugf(ln.fname, ln.linenos(), format, args...)
+	return debugf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
 
 func (ln *Line) explain(explanation ...string) {
@@ -128,48 +129,72 @@ func (ln *Line) String() string {
 	return ln.fname + ":" + ln.linenos() + ": " + ln.text
 }
 
-func (ln *Line) insertBefore(line string) {
+func (ln *Line) recordAutofixf(format string, args ...interface{}) {
+	msg := sprintf(format, args...)
+	ln.autofixMessage = &msg
+}
+
+func (ln *Line) logAutofix() bool {
+	if ln.autofixMessage != nil {
+		notef(ln.fname, ln.linenos(), "%s", *ln.autofixMessage)
+		ln.autofixMessage = nil
+	}
+	return true
+}
+
+func (ln *Line) autofixInsertBefore(line string) bool {
 	ln.before = append(ln.before, &RawLine{0, line + "\n"})
-	ln.noteAutofix("Autofix: inserting a line %q before this line.", line)
+	return ln.noteAutofix("Autofix: inserting a line %q before this line.", line)
 }
 
-func (ln *Line) insertAfter(line string) {
+func (ln *Line) autofixInsertAfter(line string) bool {
 	ln.after = append(ln.after, &RawLine{0, line + "\n"})
-	ln.noteAutofix("Autofix: inserting a line %q after this line.", line)
+	return ln.noteAutofix("Autofix: inserting a line %q after this line.", line)
 }
 
-func (ln *Line) delete() {
+func (ln *Line) autofixDelete() bool {
 	ln.raw = nil
 	ln.changed = true
+	return ln.noteAutofix("Autofix: deleting this line.")
 }
 
-func (ln *Line) replace(from, to string) {
+func (ln *Line) autofixReplace(from, to string) bool {
 	for _, rawLine := range ln.raw {
 		if rawLine.lineno != 0 {
 			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
 				rawLine.textnl = replaced
-				ln.noteAutofix("Autofix: replacing %q with %q.", from, to)
+				return ln.noteAutofix("Autofix: replacing %q with %q.", from, to)
 			}
 		}
 	}
+	return false
 }
-func (ln *Line) replaceRegex(from, to string) {
+
+func (ln *Line) autofixReplaceRegexp(from, to string) bool {
 	for _, rawLine := range ln.raw {
 		if rawLine.lineno != 0 {
 			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
 				rawLine.textnl = replaced
-				ln.noteAutofix("Autofix: replacing regular expression %q with %q.", from, to)
+				return ln.noteAutofix("Autofix: replacing regular expression %q with %q.", from, to)
 			}
 		}
 	}
+	return false
 }
 
-func (ln *Line) noteAutofix(format string, args ...interface{}) {
-	ln.changed = true
-	if G.opts.Autofix || G.opts.PrintAutofix {
-		ln.notef(format, args...)
+func (ln *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bool) {
+	if ln.firstLine < 1 {
+		return false
 	}
-	G.autofixAvailable = true
+	ln.changed = true
+	if G.opts.Autofix {
+		ln.notef(format,args...)
+		return true
+	}
+	if G.opts.PrintAutofix {
+		ln.recordAutofixf(format, args...)
+	}
+	return false
 }
 
 func (ln *Line) checkAbsolutePathname(text string) {

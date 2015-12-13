@@ -106,6 +106,11 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 
 func saveAutofixChanges(lines []*Line) {
 	if !G.opts.Autofix {
+		for _, line := range lines {
+			if line.changed {
+				G.autofixAvailable = true
+			}
+		}
 		return
 	}
 

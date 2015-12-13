@@ -55,6 +55,7 @@ func (s *Suite) TestGetNbpart(c *check.C) {
 }
 
 func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
+	s.UseCommandLine(c, "--show-autofix")
 	s.NewMkLines("Makefile.common",
 		"# $"+"NetBSD$",
 		"",
@@ -86,7 +87,9 @@ func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
 		"VARNAME=\tvalue",
 	).checkForUsedComment("category/package")
 
-	c.Check(s.Output(), equals, "WARN: Makefile.common:2: Please add a line \"# used by category/package\" here.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here.\n"+
+		"NOTE: Makefile.common:2: Autofix: inserting a line \"# used by category/package\" before this line.\n")
 
 	s.NewMkLines("Makefile.common",
 		"# $"+"NetBSD$",
@@ -94,7 +97,9 @@ func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
 		"#",
 	).checkForUsedComment("category/package")
 
-	c.Check(s.Output(), equals, "WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.\n"+
+		"NOTE: Makefile.common:3: Autofix: inserting a line \"# used by category/package\" before this line.\n")
 }
 
 func (s *Suite) TestPackage_DetermineEffectivePkgVars_Precedence(c *check.C) {

@@ -191,9 +191,8 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 					"The files in the PLIST should be sorted alphabetically.")
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
-				pline.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.line.fname, prev.line.linenos())
-				if pline.line.fname == prev.line.fname && pline.line.text == prev.line.text {
-					pline.line.delete()
+				if !pline.line.autofixDelete() {
+					pline.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.line.fname, prev.line.linenos())
 				}
 			}
 		}

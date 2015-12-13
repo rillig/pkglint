@@ -234,11 +234,12 @@ func checklineValidCharacters(line *Line, reChar string) {
 
 func checklineTrailingWhitespace(line *Line) {
 	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
-		line.notef("Trailing white-space.")
-		line.explain(
-			"When a line ends with some white-space, that space is in most cases",
-			"irrelevant and can be removed.")
-		line.replaceRegex(`\s+\n$`, "\n")
+		if !line.autofixReplaceRegexp(`\s+\n$`, "\n") {
+			line.notef("Trailing white-space.")
+			line.explain(
+				"When a line ends with some white-space, that space is in most cases",
+				"irrelevant and can be removed.")
+		}
 	}
 }
 
@@ -246,12 +247,13 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	defer tracecall("checklineRcsid", prefixRe, suggestedPrefix)()
 
 	if !matches(line.text, `^`+prefixRe+`\$NetBSD(?::[^\$]+)?\$$`) {
-		line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
-		line.explain(
-			"Several files in pkgsrc must contain the CVS Id, so that their current",
-			"version can be traced back later from a binary package. This is to",
-			"ensure reproducible builds, for example for finding bugs.")
-		line.insertBefore(suggestedPrefix + "$" + "NetBSD$")
+		if !line.autofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
+			line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+			line.explain(
+				"Several files in pkgsrc must contain the CVS Id, so that their current",
+				"version can be traced back later from a binary package. This is to",
+				"ensure reproducible builds, for example for finding bugs.")
+		}
 		return false
 	}
 	return true

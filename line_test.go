@@ -10,29 +10,29 @@ func (s *Suite) TestLineModify(c *check.C) {
 	c.Check(line.changed, equals, false)
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{{1, "original\n"}})
 
-	line.replaceRegex(`(.)(.*)(.)`, "$3$2$1")
+	line.autofixReplaceRegexp(`(.)(.*)(.)`, "$3$2$1")
 
 	c.Check(line.changed, equals, true)
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{{1, "lriginao\n"}})
 
 	line.changed = false
-	line.replace("i", "u")
+	line.autofixReplace("i", "u")
 
 	c.Check(line.changed, equals, true)
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{{1, "lruginao\n"}})
 	c.Check(line.raw[0].textnl, equals, "lruginao\n")
 
 	line.changed = false
-	line.replace("lruginao", "middle")
+	line.autofixReplace("lruginao", "middle")
 
 	c.Check(line.changed, equals, true)
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{{1, "middle\n"}})
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 
-	line.insertBefore("before")
-	line.insertBefore("between before and middle")
-	line.insertAfter("between middle and after")
-	line.insertAfter("after")
+	line.autofixInsertBefore("before")
+	line.autofixInsertBefore("between before and middle")
+	line.autofixInsertAfter("between middle and after")
+	line.autofixInsertAfter("after")
 
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{
 		{0, "before\n"},
@@ -41,7 +41,7 @@ func (s *Suite) TestLineModify(c *check.C) {
 		{0, "between middle and after\n"},
 		{0, "after\n"}})
 
-	line.delete()
+	line.autofixDelete()
 
 	c.Check(line.rawLines(), check.DeepEquals, []*RawLine{
 		{0, "before\n"},

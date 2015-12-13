@@ -124,15 +124,17 @@ func checkdirCategory() {
 
 		if !fAtend && (mAtend || fCurrent < mCurrent) {
 			if !mCheck[fCurrent] {
-				line.errorf("%q exists in the file system, but not in the Makefile.", fCurrent)
-				line.insertBefore("SUBDIR+=\t" + fCurrent)
+				if !line.autofixInsertBefore("SUBDIR+=\t" + fCurrent) {
+					line.errorf("%q exists in the file system, but not in the Makefile.", fCurrent)
+				}
 			}
 			fNeednext = true
 
 		} else if !mAtend && (fAtend || mCurrent < fCurrent) {
 			if !fCheck[mCurrent] {
-				line.errorf("%q exists in the Makefile, but not in the file system.", mCurrent)
-				line.delete()
+				if !line.autofixDelete() {
+					line.errorf("%q exists in the Makefile, but not in the file system.", mCurrent)
+				}
 			}
 			mNeednext = true
 
