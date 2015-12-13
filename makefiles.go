@@ -7,7 +7,7 @@ import (
 
 const (
 	reMkDependency = `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`
-	reMkSysinclude = `^\.\s*s?include\s+<([^>]+)>\s*(?:#.*)?$`
+	reMkSysinclude = `^\.\s*(s?include)\s+<([^>]+)>\s*(?:#.*)?$`
 )
 
 func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {

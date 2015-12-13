@@ -76,3 +76,53 @@ func (s *Suite) TestChecklineMkVaralign(c *check.C) {
 		"NOTE: file.mk:6: Autofix: replacing \"VAR=    \\t\" with \"VAR=\\t\\t\".\n")
 	c.Check(tabLength("VAR=    \t"), equals, 16)
 }
+
+func (s *Suite) TestMkLine_fields(c *check.C) {
+	mklines := NewMkLines(s.NewLines("test.mk",
+		"VARNAME.param?=value # varassign comment",
+		"\tshell command # shell comment",
+		"# whole line comment",
+		"",
+		".  if !empty(PKGNAME:M*-*) # cond comment",
+		".include \"../../mk/bsd.prefs.mk\" # include comment",
+		".include <subdir.mk> # sysinclude comment",
+		"target1 target2: source1 source2"))
+	ln := mklines.mklines
+
+	c.Check(ln[0].IsVarassign(), equals, true)
+	c.Check(ln[0].Varname(), equals, "VARNAME.param")
+	c.Check(ln[0].Varcanon(), equals, "VARNAME.*")
+	c.Check(ln[0].Varparam(), equals, "param")
+	c.Check(ln[0].Op(), equals, "?=")
+	c.Check(ln[0].Value(), equals, "value")
+	c.Check(ln[0].Comment(), equals, "# varassign comment")
+
+	c.Check(ln[1].IsShellcmd(), equals, true)
+	c.Check(ln[1].Shellcmd(), equals, "shell command # shell comment")
+
+	c.Check(ln[2].IsComment(), equals, true)
+	c.Check(ln[2].Comment(), equals, " whole line comment")
+
+	c.Check(ln[3].IsEmpty(), equals, true)
+
+	c.Check(ln[4].IsCond(), equals, true)
+	c.Check(ln[4].Indent(), equals, "  ")
+	c.Check(ln[4].Directive(), equals, "if")
+	c.Check(ln[4].Args(), equals, "!empty(PKGNAME:M*-*)")
+	c.Check(ln[4].Comment(), equals, "") // Not needed
+
+	c.Check(ln[5].IsInclude(), equals, true)
+	c.Check(ln[5].MustExist(), equals, true)
+	c.Check(ln[5].Includefile(), equals, "../../mk/bsd.prefs.mk")
+	c.Check(ln[5].Comment(), equals, "") // Not needed
+
+	c.Check(ln[6].IsSysinclude(), equals, true)
+	c.Check(ln[6].MustExist(), equals, true)
+	c.Check(ln[6].Includefile(), equals, "subdir.mk")
+	c.Check(ln[6].Comment(), equals, "") // Not needed
+
+	c.Check(ln[7].IsDependency(), equals, true)
+	c.Check(ln[7].Targets(), equals, "target1 target2")
+	c.Check(ln[7].Sources(), equals, "source1 source2")
+	c.Check(ln[7].Comment(), equals, "") // Not needed
+}
