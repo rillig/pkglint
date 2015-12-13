@@ -161,4 +161,6 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	if G.pkg != nil {
 		G.pkg.checklinesBuildlink3Inclusion(mklines)
 	}
+
+	saveAutofixChanges(mklines.lines)
 }
