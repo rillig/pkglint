@@ -360,29 +360,27 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	}
 
 	if hasSuffix(mod, ":Q") {
-		expl := []string{
-			"Many variables in pkgsrc do not need the :Q operator, since they",
-			"are not expected to contain white-space or other special characters.",
-			"",
-			"Another case is when a variable of type ShellWord appears in a context",
-			"that expects a shell word, it does not need to have a :Q operator. Even",
-			"when it is concatenated with another variable, it still stays _one_ word.",
-			"",
-			"Example:",
-			"\tWORD1=  Have\\ fun             # 1 word",
-			"\tWORD2=  \"with BSD Make\"       # 1 word, too",
-			"",
-			"\tdemo:",
-			"\t\techo ${WORD1}${WORD2} # still 1 word",
-		}
-
-		switch needsQuoting {
-		case nqNo:
+		if needsQuoting == nqNo {
 			mkline.warnf("The :Q operator should not be used for ${%s} here.", varname)
-			mkline.explain(expl...)
-		case nqDoesntMatter:
+		}
+		if needsQuoting == nqDoesntMatter {
 			mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
-			mkline.explain(expl...)
+		}
+		if needsQuoting == nqNo || needsQuoting == nqDoesntMatter {
+			mkline.explain(
+				"Many variables in pkgsrc do not need the :Q operator, since they",
+				"are not expected to contain white-space or other special characters.",
+				"",
+				"Another case is when a variable of type ShellWord appears in a context",
+				"that expects a shell word, it does not need to have a :Q operator. Even",
+				"when it is concatenated with another variable, it still stays _one_ word.",
+				"",
+				"Example:",
+				"\tWORD1=  Have\\ fun             # 1 word",
+				"\tWORD2=  \"with BSD Make\"       # 1 word, too",
+				"",
+				"\tdemo:",
+				"\t\techo ${WORD1}${WORD2} # still 1 word")
 		}
 	}
 }
