@@ -323,7 +323,7 @@ func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 	for _, line := range lines {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
-		} else {
+		} else if len(line.text) >= 2 && line.text[0] == '\t' && 'A' <= line.text[1] && line.text[1] <= 'Z' {
 			line.warnf("Unknown doc/CHANGES line: %q", line.text)
 			line.explain("See mk/misc/developer.mk for the rules.")
 		}
