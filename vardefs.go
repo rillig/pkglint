@@ -750,7 +750,7 @@ func sys(varname string, kindOfList KindOfList, checker *VarChecker) {
 	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:u", "*:u")
 }
 func usr(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "buildlink3.mk:", "builtin.mk:", "*:u")
+	acl(varname, kindOfList, checker, "buildlink3.mk:", "*:pu")
 }
 func bl3list(varname string, kindOfList KindOfList, checker *VarChecker) {
 	acl(varname, kindOfList, checker, "buildlink3.mk:a", "builtin.mk:a")
