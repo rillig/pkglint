@@ -12,9 +12,11 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 	exp := NewExpecter(mklines.lines)
 
-	for exp.advanceIfMatches(`^#`) != nil {
-		if hasPrefix(exp.previousLine().text, "# XXX") {
+	for {
+		if exp.advanceIfPrefix("# XXX") {
 			exp.previousLine().notef("Please read this comment and remove it if appropriate.")
+		} else if !exp.advanceIfPrefix("#") {
+			break
 		}
 	}
 

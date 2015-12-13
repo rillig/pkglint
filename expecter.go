@@ -26,15 +26,17 @@ func (ctx *Expecter) previousLine() *Line {
 func (ctx *Expecter) eof() bool {
 	return !(ctx.index < len(ctx.lines))
 }
-func (ctx *Expecter) advance() {
+
+func (ctx *Expecter) advance() bool {
 	ctx.index++
 	ctx.m = nil
+	return true
 }
 
 func (ctx *Expecter) advanceIfMatches(re string) []string {
 	defer tracecall("Expecter.advanceIfMatches", ctx.currentLine().text, re)()
 
-	if ctx.index < len(ctx.lines) {
+	if !ctx.eof() {
 		if m := match(ctx.lines[ctx.index].text, re); m != nil {
 			ctx.index++
 			ctx.m = m
@@ -42,6 +44,18 @@ func (ctx *Expecter) advanceIfMatches(re string) []string {
 		}
 	}
 	return nil
+}
+
+func (exp *Expecter) advanceIfPrefix(prefix string) bool {
+	defer tracecall("Expecter.advanceIfPrefix", exp.currentLine().text, prefix)()
+
+	return !exp.eof() && hasPrefix(exp.lines[exp.index].text, prefix) && exp.advance()
+}
+
+func (exp *Expecter) advanceIfEquals(text string) bool {
+	defer tracecall("Expecter.advanceIfEquals", exp.currentLine().text, text)()
+	
+	return !exp.eof() && exp.lines[exp.index].text == text && exp.advance()
 }
 
 func (ctx *Expecter) expectEmptyLine() bool {
@@ -57,7 +71,7 @@ func (ctx *Expecter) expectEmptyLine() bool {
 }
 
 func (ctx *Expecter) expectText(text string) bool {
-	if ctx.index < len(ctx.lines) && ctx.lines[ctx.index].text == text {
+	if !ctx.eof() && ctx.lines[ctx.index].text == text {
 		ctx.index++
 		ctx.m = nil
 		return true
