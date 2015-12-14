@@ -26,7 +26,7 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 
 func (cv *VartypeCheck) BuildlinkDepmethod() {
 	if !containsVarRef(cv.value) && cv.value != "build" && cv.value != "full" {
-		cv.line.warnf("Invalid dependency method %q. Valid methods are \"build\" or \"full\".", cv.value)
+		cv.line.warn1("Invalid dependency method %q. Valid methods are \"build\" or \"full\".", cv.value)
 	}
 }
 
@@ -61,9 +61,9 @@ func (cv *VartypeCheck) CFlag() {
 		hasPrefix(value, "-std="),
 		value == "-c99":
 	case hasPrefix(value, "-"):
-		line.warnf("Unknown compiler flag %q.", value)
+		line.warn1("Unknown compiler flag %q.", value)
 	case !containsVarRef(value):
-		line.warnf("Compiler flag %q should start with a hyphen.", value)
+		line.warn1("Compiler flag %q should start with a hyphen.", value)
 	}
 }
 
@@ -75,16 +75,16 @@ func (cv *VartypeCheck) Comment() {
 		line.errorf("COMMENT must be set.")
 	}
 	if m, first := match1(value, `^(?i)(a|an)\s`); m {
-		line.warnf("COMMENT should not begin with %q.", first)
+		line.warn1("COMMENT should not begin with %q.", first)
 	}
 	if matches(value, `^[a-z]`) {
-		line.warnf("COMMENT should start with a capital letter.")
+		line.warn0("COMMENT should start with a capital letter.")
 	}
 	if hasSuffix(value, ".") {
-		line.warnf("COMMENT should not end with a period.")
+		line.warn0("COMMENT should not end with a period.")
 	}
 	if len(value) > 70 {
-		line.warnf("COMMENT should not be longer than 70 characters.")
+		line.warn0("COMMENT should not be longer than 70 characters.")
 	}
 }
 
@@ -100,14 +100,14 @@ func (cv *VartypeCheck) Dependency() {
 		switch {
 		case bracket != "":
 			if bracket != "0-9" {
-				line.warnf("Only [0-9]* is allowed in the numeric part of a dependency.")
+				line.warn0("Only [0-9]* is allowed in the numeric part of a dependency.")
 			}
 
 		case version != "" && versionWildcard != "":
 			// Fine.
 
 		case version != "":
-			line.warnf("Please append \"{,nb*}\" to the version number of this dependency.")
+			line.warn0("Please append \"{,nb*}\" to the version number of this dependency.")
 			line.explain(
 				"Usually, a dependency should stay valid when the PKGREVISION is",
 				"increased, since those changes are most often editorial. In the",
@@ -115,7 +115,7 @@ func (cv *VartypeCheck) Dependency() {
 				"undefined.")
 
 		case other == "*":
-			line.warnf("Please use \"%s-[0-9]*\" instead of \"%s-*\".", depbase, depbase)
+			line.warn2("Please use \"%s-[0-9]*\" instead of \"%s-*\".", depbase, depbase)
 			line.explain(
 				"If you use a * alone, the package specification may match other",
 				"packages that have the same prefix, but a longer name. For example,",
@@ -136,7 +136,7 @@ func (cv *VartypeCheck) Dependency() {
 		_ = G.opts.DebugUnchecked && line.debugf("Unchecked dependency: %s", value)
 
 	default:
-		line.warnf("Unknown dependency format: %s", value)
+		line.warn1("Unknown dependency format: %s", value)
 		line.explain(
 			"Typical dependencies have the following forms:",
 			"",
@@ -157,11 +157,11 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 		switch pkg {
 		case "msgfmt", "gettext":
-			line.warnf("Please use USE_TOOLS+=msgfmt instead of this dependency.")
+			line.warn0("Please use USE_TOOLS+=msgfmt instead of this dependency.")
 		case "perl5":
-			line.warnf("Please use USE_TOOLS+=perl:run instead of this dependency.")
+			line.warn0("Please use USE_TOOLS+=perl:run instead of this dependency.")
 		case "gmake":
-			line.warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
+			line.warn0("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
 		if !matches(pattern, reDependencyCmp) && !matches(pattern, reDependencyWildcard) {
@@ -171,12 +171,12 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	if matches(value, `:\.\./[^/]+$`) {
-		line.warnf("Dependencies should have the form \"../../category/package\".")
+		line.warn0("Dependencies should have the form \"../../category/package\".")
 		line.explainRelativeDirs()
 		return
 	}
 
-	line.warnf("Unknown dependency format.")
+	line.warn0("Unknown dependency format.")
 	line.explain(
 		"Examples for valid dependencies are:",
 		"  package-[0-9]*:../../category/package",
@@ -194,15 +194,15 @@ func (cv *VartypeCheck) EmulPlatform() {
 
 	if m, opsys, arch := match2(cv.value, `^(\w+)-(\w+)$`); m {
 		if !matches(opsys, `^(?:bsdos|cygwin|darwin|dragonfly|freebsd|haiku|hpux|interix|irix|linux|netbsd|openbsd|osf1|sunos|solaris)$`) {
-			cv.line.warnf("Unknown operating system: %s", opsys)
+			cv.line.warn1("Unknown operating system: %s", opsys)
 		}
 		// no check for os_version
 		if !matches(arch, `^(?:i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
-			cv.line.warnf("Unknown hardware architecture: %s", arch)
+			cv.line.warn1("Unknown hardware architecture: %s", arch)
 		}
 
 	} else {
-		cv.line.warnf("%q is not a valid emulation platform.", cv.value)
+		cv.line.warn1("%q is not a valid emulation platform.", cv.value)
 		cv.line.explain(
 			"An emulation platform has the form <OPSYS>-<MACHINE_ARCH>.",
 			"OPSYS is the lower-case name of the operating system, and MACHINE_ARCH",
@@ -224,7 +224,7 @@ func (cv *VartypeCheck) FetchURL() {
 			}
 			cv.line.warnf("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.value)
 			if isGithub {
-				cv.line.warnf("Run \"%s help topic=github\" for further tips.", confMake)
+				cv.line.warn1("Run \"%s help topic=github\" for further tips.", confMake)
 			}
 			return
 		}
@@ -236,15 +236,15 @@ func (cv *VartypeCheck) FetchURL() {
 func (cv *VartypeCheck) Filename() {
 	switch {
 	case contains(cv.valueNovar, "/"):
-		cv.line.warnf("A filename should not contain a slash.")
+		cv.line.warn0("A filename should not contain a slash.")
 	case !matches(cv.valueNovar, `^[-0-9@A-Za-z.,_~+%]*$`):
-		cv.line.warnf("%q is not a valid filename.", cv.value)
+		cv.line.warn1("%q is not a valid filename.", cv.value)
 	}
 }
 
 func (cv *VartypeCheck) Filemask() {
 	if !matches(cv.valueNovar, `^[-0-9A-Za-z._~+%*?]*$`) {
-		cv.line.warnf("%q is not a valid filename mask.", cv.value)
+		cv.line.warn1("%q is not a valid filename mask.", cv.value)
 	}
 }
 
@@ -255,7 +255,7 @@ func (cv *VartypeCheck) FileMode() {
 	case matches(cv.value, `^[0-7]{3,4}`):
 		// Fine.
 	default:
-		cv.line.warnf("Invalid file mode %q.", cv.value)
+		cv.line.warn1("Invalid file mode %q.", cv.value)
 	}
 }
 
@@ -269,13 +269,13 @@ func (cv *VartypeCheck) Identifier() {
 	case cv.value != "" && cv.valueNovar == "":
 		// Don't warn here.
 	default:
-		cv.line.warnf("Invalid identifier %q.", cv.value)
+		cv.line.warn1("Invalid identifier %q.", cv.value)
 	}
 }
 
 func (cv *VartypeCheck) Integer() {
 	if !matches(cv.value, `^\d+$`) {
-		cv.line.warnf("Invalid integer %q.", cv.value)
+		cv.line.warn1("Invalid integer %q.", cv.value)
 	}
 }
 
@@ -283,13 +283,13 @@ func (cv *VartypeCheck) LdFlag() {
 	if matches(cv.value, `^-[Ll]`) || cv.value == "-static" {
 		return
 	} else if m, rpathFlag := match1(cv.value, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
-		cv.line.warnf("Please use ${COMPILER_RPATH_FLAG} instead of %s.", rpathFlag)
+		cv.line.warn1("Please use ${COMPILER_RPATH_FLAG} instead of %s.", rpathFlag)
 
 	} else if hasPrefix(cv.value, "-") {
-		cv.line.warnf("Unknown linker flag %q.", cv.value)
+		cv.line.warn1("Unknown linker flag %q.", cv.value)
 
 	} else if cv.value == cv.valueNovar {
-		cv.line.warnf("Linker flag %q does not start with a dash.", cv.value)
+		cv.line.warn1("Linker flag %q does not start with a dash.", cv.value)
 	}
 }
 
@@ -302,14 +302,14 @@ func (cv *VartypeCheck) MailAddress() {
 
 	if m, _, domain := match2(value, `^([+\-.0-9A-Z_a-z]+)@([-\w\d.]+)$`); m {
 		if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
-			line.warnf("Please write \"NetBSD.org\" instead of %q.", domain)
+			line.warn1("Please write \"NetBSD.org\" instead of %q.", domain)
 		}
 		if matches(value, `(?i)^(tech-pkg|packages)@NetBSD\.org$`) {
 			line.errorf("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 		}
 
 	} else {
-		line.warnf("\"%s\" is not a valid mail address.", value)
+		line.warn1("\"%s\" is not a valid mail address.", value)
 	}
 }
 
@@ -318,7 +318,7 @@ func (cv *VartypeCheck) Message() {
 	line, varname, value := cv.line, cv.varname, cv.value
 
 	if matches(value, `^[\"'].*[\"']$`) {
-		line.warnf("%s should not be quoted.", varname)
+		line.warn1("%s should not be quoted.", varname)
 		line.explain(
 			"The quoting is only needed for variables which are interpreted as",
 			"multiple words (or, generally speaking, a list of something). A single",
@@ -341,7 +341,7 @@ func (cv *VartypeCheck) Option() {
 
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z\+]*)$`); m {
 		if _, found := G.globalData.pkgOptions[optname]; !found { // There’s a difference between empty and absent here.
-			line.warnf("Unknown option \"%s\".", optname)
+			line.warn1("Unknown option \"%s\".", optname)
 			line.explain(
 				"This option is not documented in the mk/defaults/options.description",
 				"file. If this is not a typo, please think of a brief but precise",
@@ -352,7 +352,7 @@ func (cv *VartypeCheck) Option() {
 	}
 
 	if matches(value, `^-?([a-z][-0-9a-z_\+]*)$`) {
-		line.warnf("Use of the underscore character in option names is deprecated.")
+		line.warn0("Use of the underscore character in option names is deprecated.")
 		return
 	}
 
@@ -372,11 +372,11 @@ func (cv *VartypeCheck) Pathlist() {
 		}
 
 		if !matches(path, `^[-0-9A-Za-z._~+%/]*$`) {
-			cv.line.warnf("%q is not a valid pathname.", path)
+			cv.line.warn1("%q is not a valid pathname.", path)
 		}
 
 		if !hasPrefix(path, "/") {
-			cv.line.warnf("All components of %s (in this case %q) should be absolute paths.", cv.varname, path)
+			cv.line.warn2("All components of %s (in this case %q) should be absolute paths.", cv.varname, path)
 		}
 	}
 }
@@ -385,7 +385,7 @@ func (cv *VartypeCheck) Pathlist() {
 // See Filemask
 func (cv *VartypeCheck) Pathmask() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
-		cv.line.warnf("%q is not a valid pathname mask.", cv.value)
+		cv.line.warn1("%q is not a valid pathname mask.", cv.value)
 	}
 	cv.line.line.checkAbsolutePathname(cv.value)
 }
@@ -394,20 +394,20 @@ func (cv *VartypeCheck) Pathmask() {
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
 func (cv *VartypeCheck) Pathname() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
-		cv.line.warnf("%q is not a valid pathname.", cv.value)
+		cv.line.warn1("%q is not a valid pathname.", cv.value)
 	}
 	cv.line.line.checkAbsolutePathname(cv.value)
 }
 
 func (cv *VartypeCheck) Perl5Packlist() {
 	if cv.value != cv.valueNovar {
-		cv.line.warnf("%s should not depend on other variables.", cv.varname)
+		cv.line.warn1("%s should not depend on other variables.", cv.varname)
 	}
 }
 
 func (cv *VartypeCheck) PkgName() {
 	if cv.value == cv.valueNovar && !matches(cv.value, rePkgname) {
-		cv.line.warnf("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
+		cv.line.warn1("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
 	}
 }
 
@@ -430,7 +430,7 @@ func (cv *VartypeCheck) PkgPath() {
 
 func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.value, `^[1-9]\d*$`) {
-		cv.line.warnf("%s must be a positive integer number.", cv.varname)
+		cv.line.warn1("%s must be a positive integer number.", cv.varname)
 	}
 	if path.Base(cv.line.line.fname) != "Makefile" {
 		cv.line.errorf("%s only makes sense directly in the package Makefile.", cv.varname)
@@ -452,15 +452,15 @@ func (cv *VartypeCheck) PlatformTriple() {
 	reTriple := `^(` + rePart + `)-(` + rePart + `)-(` + rePart + `)$`
 	if m, opsys, _, arch := match3(cv.value, reTriple); m {
 		if !matches(opsys, `^(?:\*|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|Haiku|HPUX|Interix|IRIX|Linux|NetBSD|OpenBSD|OSF1|QNX|SunOS)$`) {
-			cv.line.warnf("Unknown operating system: %s", opsys)
+			cv.line.warn1("Unknown operating system: %s", opsys)
 		}
 		// no check for os_version
 		if !matches(arch, `^(?:\*|i386|alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|hpcmips|hpcsh|hppa|ia64|m68k|m88k|mips|mips64|mipsel|mipseb|mipsn32|ns32k|pc532|pmax|powerpc|rs6000|s390|sparc|sparc64|vax|x86_64)$`) {
-			cv.line.warnf("Unknown hardware architecture: %s", arch)
+			cv.line.warn1("Unknown hardware architecture: %s", arch)
 		}
 
 	} else {
-		cv.line.warnf("%q is not a valid platform triple.", cv.value)
+		cv.line.warn1("%q is not a valid platform triple.", cv.value)
 		cv.line.explain(
 			"A platform triple has the form <OPSYS>-<OS_VERSION>-<MACHINE_ARCH>.",
 			"Each of these components may be a shell globbing expression.",
@@ -470,16 +470,16 @@ func (cv *VartypeCheck) PlatformTriple() {
 
 func (cv *VartypeCheck) PrefixPathname() {
 	if m, mansubdir := match1(cv.value, `^man/(.+)`); m {
-		cv.line.warnf("Please use \"${PKGMANDIR}/%s\" instead of %q.", mansubdir, cv.value)
+		cv.line.warn2("Please use \"${PKGMANDIR}/%s\" instead of %q.", mansubdir, cv.value)
 	}
 }
 
 func (cv *VartypeCheck) PythonDependency() {
 	if cv.value != cv.valueNovar {
-		cv.line.warnf("Python dependencies should not contain variables.")
+		cv.line.warn0("Python dependencies should not contain variables.")
 	}
 	if !matches(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$`) {
-		cv.line.warnf("Invalid Python dependency %q.", cv.value)
+		cv.line.warn1("Invalid Python dependency %q.", cv.value)
 		cv.line.explain(
 			"Python dependencies must be an identifier for a package, as specified",
 			"in lang/python/versioned_dependencies.mk. This identifier may be",
@@ -500,7 +500,7 @@ func (cv *VartypeCheck) RelativePkgPath() {
 
 func (cv *VartypeCheck) Restricted() {
 	if cv.value != "${RESTRICTED}" {
-		cv.line.warnf("The only valid value for %s is ${RESTRICTED}.", cv.varname)
+		cv.line.warn1("The only valid value for %s is ${RESTRICTED}.", cv.varname)
 		cv.line.explain(
 			"These variables are used to control which files may be mirrored on FTP",
 			"servers or CD-ROM collections. They are not intended to mark packages",
@@ -567,7 +567,7 @@ func (cv *VartypeCheck) SedCommands() {
 			line.notef("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 		default:
-			line.warnf("Unknown sed command %q.", word)
+			line.warn1("Unknown sed command %q.", word)
 		}
 	}
 }
@@ -584,7 +584,7 @@ func (cv *VartypeCheck) ShellWord() {
 
 func (cv *VartypeCheck) Stage() {
 	if !matches(cv.value, `^(?:pre|do|post)-(?:extract|patch|configure|build|test|install)`) {
-		cv.line.warnf("Invalid stage name %q. Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.", cv.value)
+		cv.line.warn1("Invalid stage name %q. Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.", cv.value)
 	}
 }
 
@@ -633,35 +633,35 @@ func (cv *VartypeCheck) URL() {
 
 	} else if m, _, host, _, _ := match4(value, `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:=?@A-Z_a-z~]|#)*$`); m {
 		if matches(host, `(?i)\.NetBSD\.org$`) && !matches(host, `\.NetBSD\.org$`) {
-			line.warnf("Please write NetBSD.org instead of %s.", host)
+			line.warn1("Please write NetBSD.org instead of %s.", host)
 		}
 
 	} else if m, scheme, _, absPath := match3(value, `^([0-9A-Za-z]+)://([^/]+)(.*)$`); m {
 		switch {
 		case scheme != "ftp" && scheme != "http" && scheme != "https" && scheme != "gopher":
-			line.warnf("%q is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.", value)
+			line.warn1("%q is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.", value)
 
 		case absPath == "":
 			line.notef("For consistency, please add a trailing slash to %q.", value)
 
 		default:
-			line.warnf("%q is not a valid URL.", value)
+			line.warn1("%q is not a valid URL.", value)
 		}
 
 	} else {
-		line.warnf("%q is not a valid URL.", value)
+		line.warn1("%q is not a valid URL.", value)
 	}
 }
 
 func (cv *VartypeCheck) UserGroupName() {
 	if cv.value == cv.valueNovar && !matches(cv.value, `^[0-9_a-z]+$`) {
-		cv.line.warnf("Invalid user or group name %q.", cv.value)
+		cv.line.warn1("Invalid user or group name %q.", cv.value)
 	}
 }
 
 func (cv *VartypeCheck) Varname() {
 	if cv.value == cv.valueNovar && !matches(cv.value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
-		cv.line.warnf("%q is not a valid variable name.", cv.value)
+		cv.line.warn1("%q is not a valid variable name.", cv.value)
 		cv.line.explain(
 			"Variable names are restricted to only uppercase letters and the",
 			"underscore in the basename, and arbitrary characters in the",
@@ -675,13 +675,13 @@ func (cv *VartypeCheck) Varname() {
 
 func (cv *VartypeCheck) Version() {
 	if !matches(cv.value, `^([\d.])+$`) {
-		cv.line.warnf("Invalid version number %q.", cv.value)
+		cv.line.warn1("Invalid version number %q.", cv.value)
 	}
 }
 
 func (cv *VartypeCheck) WrapperReorder() {
 	if !matches(cv.value, `^reorder:l:([\w\-]+):([\w\-]+)$`) {
-		cv.line.warnf("Unknown wrapper reorder command %q.", cv.value)
+		cv.line.warn1("Unknown wrapper reorder command %q.", cv.value)
 	}
 }
 
@@ -693,7 +693,7 @@ func (cv *VartypeCheck) WrapperTransform() {
 	case cv.value == "-e":
 	case matches(cv.value, `^\"?'?s[|:,]`):
 	default:
-		cv.line.warnf("Unknown wrapper transform command %q.", cv.value)
+		cv.line.warn1("Unknown wrapper transform command %q.", cv.value)
 	}
 }
 
@@ -713,14 +713,14 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 		// The value of another variable
 
 	} else if !matches(cv.valueNovar, `^(?:\.|[0-9A-Za-z_@][-0-9A-Za-z_@./+]*)$`) {
-		cv.line.warnf("%q is not a valid subdirectory of ${WRKSRC}.", cv.value)
+		cv.line.warn1("%q is not a valid subdirectory of ${WRKSRC}.", cv.value)
 	}
 }
 
 // Used for variables that are checked using `.if defined(VAR)`.
 func (cv *VartypeCheck) Yes() {
 	if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
-		cv.line.warnf("%s should be set to YES or yes.", cv.varname)
+		cv.line.warn1("%s should be set to YES or yes.", cv.varname)
 		cv.line.explain(
 			"This variable means \"yes\" if it is defined, and \"no\" if it is",
 			"undefined. Even when it has the value \"no\", this means \"yes\".",
@@ -734,7 +734,7 @@ func (cv *VartypeCheck) Yes() {
 //
 func (cv *VartypeCheck) YesNo() {
 	if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
-		cv.line.warnf("%s should be set to YES, yes, NO, or no.", cv.varname)
+		cv.line.warn1("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
 }
 
@@ -742,6 +742,6 @@ func (cv *VartypeCheck) YesNo() {
 // != operator.
 func (cv *VartypeCheck) YesNoIndirectly() {
 	if cv.valueNovar != "" && !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
-		cv.line.warnf("%s should be set to YES, yes, NO, or no.", cv.varname)
+		cv.line.warn1("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
 }

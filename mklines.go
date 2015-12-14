@@ -254,13 +254,13 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 		if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 			for _, forvar := range splitOnSpace(vars) {
 				if !G.isInfrastructure && hasPrefix(forvar, "_") {
-					mkline.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
+					mkline.warn1("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
 				}
 
 				if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
 					// Fine.
 				} else if matches(forvar, `[A-Z]`) {
-					mkline.warnf(".for variable names should not contain uppercase letters.")
+					mkline.warn0(".for variable names should not contain uppercase letters.")
 				} else {
 					mkline.errorf("Invalid variable name %q.", forvar)
 				}
@@ -317,7 +317,7 @@ func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, depende
 			// TODO: Check for spelling mistakes.
 
 		} else if !allowedTargets[target] {
-			mkline.warnf("Unusual target %q.", target)
+			mkline.warn1("Unusual target %q.", target)
 			mkline.explain(
 				"If you want to define your own targets, you can \"declare\"",
 				"them by inserting a \".PHONY: my-target\" line before this line. This",
@@ -361,7 +361,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 		mkline.errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
 	}
 	if matches(includefile, `/intltool/buildlink3\.mk$`) {
-		mkline.warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
+		mkline.warn0("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 	}
 	if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
 		mkline.errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)

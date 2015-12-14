@@ -27,6 +27,15 @@ func (mkline *MkLine) errorf(format string, args ...interface{}) bool {
 func (mkline *MkLine) warnf(format string, args ...interface{}) bool {
 	return mkline.line.warnf(format, args...)
 }
+func (mkline *MkLine) warn0(format string) bool {
+	return mkline.warnf(format)
+}
+func (mkline *MkLine) warn1(format, arg1 string) bool {
+	return mkline.warnf(format, arg1)
+}
+func (mkline *MkLine) warn2(format, arg1, arg2 string) bool {
+	return mkline.warnf(format, arg1, arg2)
+}
 func (mkline *MkLine) notef(format string, args ...interface{}) bool {
 	return mkline.line.notef(format, args...)
 }
@@ -43,7 +52,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 	text := line.text
 
 	if hasPrefix(text, " ") {
-		mkline.warnf("Makefile lines should not start with space characters.")
+		mkline.warn0("Makefile lines should not start with space characters.")
 		mkline.explain(
 			"If you want this line to contain a shell program, use a tab",
 			"character for indentation. Otherwise please remove the leading",
@@ -195,7 +204,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 		(vartype == nil || vartype.guessed == guGuessed) &&
 		!varIsUsed(varname) &&
 		!(G.mk != nil && G.mk.forVars[varname]) {
-		mkline.warnf("%s is used but not defined. Spelling mistake?", varname)
+		mkline.warn1("%s is used but not defined. Spelling mistake?", varname)
 	}
 
 	mkline.checkVarusePermissions(varname, vuc)
@@ -215,7 +224,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 	}
 
 	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mk.buildDefs[varname] {
-		mkline.warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
+		mkline.warn1("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		mkline.explain(
 			"When a pkgsrc package is built, many things can be configured by the",
 			"pkgsrc user in the mk.conf file. All these configurations should be",
@@ -251,7 +260,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 	}
 
 	if isLoadTime && !isIndirect {
-		mkline.warnf("%s should not be evaluated at load time.", varname)
+		mkline.warn1("%s should not be evaluated at load time.", varname)
 		mkline.explain(
 			"Many variables, especially lists of something, get their values",
 			"incrementally. Therefore it is generally unsafe to rely on their value",
@@ -265,7 +274,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 	}
 
 	if isLoadTime && isIndirect {
-		mkline.warnf("%s should not be evaluated indirectly at load time.", varname)
+		mkline.warn1("%s should not be evaluated indirectly at load time.", varname)
 		mkline.explain(
 			"The variable on the left-hand side may be evaluated at load time, but",
 			"the variable on the right-hand side may not. Due to this assignment, it",
@@ -274,12 +283,12 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 	}
 
 	if !contains(perms, "p") && !contains(perms, "u") {
-		mkline.warnf("%s may not be used in this file.", varname)
+		mkline.warn1("%s may not be used in this file.", varname)
 	}
 }
 
 func (mkline *MkLine) warnVaruseLocalbase() {
-	mkline.warnf("The LOCALBASE variable should not be used by packages.")
+	mkline.warn0("The LOCALBASE variable should not be used by packages.")
 	mkline.explain(
 		// from jlam via private mail.
 		"Currently, LOCALBASE is typically used in these cases:",
@@ -321,7 +330,7 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 		// Fine, this variable is not supposed to contain special characters.
 
 	default:
-		mkline.warnf("The variable %s should not be used in .for loops.", varname)
+		mkline.warn1("The variable %s should not be used in .for loops.", varname)
 		mkline.explain(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
@@ -369,7 +378,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 		needExplain := false
 		if needsQuoting == nqNo && !mkline.line.autofixReplace(bad, good) {
-			needExplain = mkline.warnf("The :Q operator should not be used for ${%s} here.", varname)
+			needExplain = mkline.warn1("The :Q operator should not be used for ${%s} here.", varname)
 		}
 		if needsQuoting == nqDoesntMatter && !mkline.line.autofixReplace(bad, good) {
 			needExplain = mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
@@ -409,7 +418,7 @@ func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
 
 	for i, ver := range intversions {
 		if i > 0 && ver >= intversions[i-1] {
-			mkline.warnf("The values for %s should be in decreasing order.", varname)
+			mkline.warn1("The values for %s should be in decreasing order.", varname)
 			mkline.explain(
 				"If they aren't, it may be possible that needless versions of packages",
 				"are installed.")
@@ -442,16 +451,16 @@ func (mkline *MkLine) checkVarassign() {
 		} else if deprecated := G.globalData.deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
 		} else {
-			mkline.warnf("%s is defined but not used. Spelling mistake?", varname)
+			mkline.warn1("%s is defined but not used. Spelling mistake?", varname)
 		}
 	}
 
 	if matches(value, `/etc/rc\.d`) {
-		mkline.warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
+		mkline.warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
 	if hasPrefix(varname, "_") && !G.isInfrastructure {
-		mkline.warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
+		mkline.warn1("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
 	if varname == "PERL5_PACKLIST" && G.pkg != nil {
@@ -460,7 +469,7 @@ func (mkline *MkLine) checkVarassign() {
 
 			ucvalue, ucguess := strings.ToUpper(value), strings.ToUpper(guess)
 			if ucvalue != ucguess && ucvalue != "${PERL5_SITEARCH}/"+ucguess {
-				mkline.warnf("Unusual value for PERL5_PACKLIST -- %q expected.", guess)
+				mkline.warn1("Unusual value for PERL5_PACKLIST -- %q expected.", guess)
 			}
 		}
 	}
@@ -504,13 +513,13 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	if fix := G.globalData.deprecated[varname]; fix != "" {
-		mkline.warnf("Definition of %s is deprecated. %s", varname, fix)
+		mkline.warn2("Definition of %s is deprecated. %s", varname, fix)
 	} else if fix := G.globalData.deprecated[varcanon]; fix != "" {
-		mkline.warnf("Definition of %s is deprecated. %s", varname, fix)
+		mkline.warn2("Definition of %s is deprecated. %s", varname, fix)
 	}
 
 	if hasPrefix(varname, "SITES_") {
-		mkline.warnf("SITES_* is deprecated. Please use SITES.* instead.")
+		mkline.warn0("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
 	mkline.checkVarassignPlistComment(varname, value)
@@ -534,7 +543,7 @@ func (mkline *MkLine) checkVarassignBsdPrefs() {
 			return
 		}
 
-		mkline.warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+		mkline.warn0("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 		mkline.explain(
 			"The ?= operator is used to provide a default value to a variable. In",
 			"pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
@@ -548,7 +557,7 @@ func (mkline *MkLine) checkVarassignBsdPrefs() {
 
 func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
 	if matches(value, `^[^=]@comment`) {
-		mkline.warnf("Please don't use @comment in %s.", varname)
+		mkline.warn1("Please don't use @comment in %s.", varname)
 		mkline.explain(
 			"Here you are defining a variable containing @comment. As this value",
 			"typically includes a space as the last character you probably also used",
@@ -639,10 +648,10 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 	if op == "+=" {
 		if vartype != nil {
 			if !vartype.mayBeAppendedTo() {
-				mkline.warnf("The \"+=\" operator should only be used with lists.")
+				mkline.warn0("The \"+=\" operator should only be used with lists.")
 			}
 		} else if !matches(varbase, `^_`) && !matches(varbase, reVarnamePlural) {
-			mkline.warnf("As %s is modified using \"+=\", its name should indicate plural.", varname)
+			mkline.warn1("As %s is modified using \"+=\", its name should indicate plural.", varname)
 		}
 	}
 
@@ -693,7 +702,7 @@ func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) 
 		if m, valueNovar = replaceFirst(valueNovar, `\$\{([^{}]*)\}`, ""); m != nil {
 			varuse := m[1]
 			if !qModifierAllowed && hasSuffix(varuse, ":Q") {
-				mkline.warnf("The :Q operator should only be used in lists and shell commands.")
+				mkline.warn0("The :Q operator should only be used in lists and shell commands.")
 			}
 		} else {
 			return valueNovar
@@ -735,7 +744,7 @@ func (mkline *MkLine) checkText(text string) {
 	}
 
 	if contains(text, "${WRKSRC}/../") {
-		mkline.warnf("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
+		mkline.warn0("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
 		mkline.explain(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
 			"and INSTALL_DIRS are subdirectories of it.")
@@ -743,7 +752,7 @@ func (mkline *MkLine) checkText(text string) {
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.
 	if m, flag := match1(text, `\b(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R)\b`); m {
-		mkline.warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+		mkline.warn1("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
 	}
 
 	rest := text
@@ -762,7 +771,7 @@ func (mkline *MkLine) checkText(text string) {
 			instead = G.globalData.deprecated[varcanon]
 		}
 		if instead != "" {
-			mkline.warnf("Use of %q is deprecated. %s", varname, instead)
+			mkline.warn2("Use of %q is deprecated. %s", varname, instead)
 		}
 	}
 }
@@ -779,7 +788,7 @@ func (mkline *MkLine) checkIf() {
 			vartype := getVariableType(mkline.line, *pvarname)
 			if vartype != nil && vartype.checker.IsEnum() {
 				if !matches(*ppattern, `[\$\[*]`) && !vartype.checker.HasEnum(*ppattern) {
-					mkline.warnf("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())
+					mkline.warn2("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())
 				}
 			}
 			return
@@ -801,7 +810,7 @@ func (mkline *MkLine) checklineValidCharactersInValue(reValid string) {
 		for _, c := range rest {
 			uni += sprintf(" %U", c)
 		}
-		mkline.warnf("%s contains invalid characters (%s).", mkline.Varname(), uni[1:])
+		mkline.warn2("%s contains invalid characters (%s).", mkline.Varname(), uni[1:])
 	}
 }
 
@@ -822,7 +831,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 		}
 
 	} else {
-		mkline.warnf("%q is not a valid relative package directory.", pkgdir)
+		mkline.warn1("%q is not a valid relative package directory.", pkgdir)
 		mkline.explain(
 			"A relative pathname always starts with \"../../\", followed",
 			"by a category, a slash and a the directory name of the package.",
@@ -855,6 +864,6 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 		!matches(path, `^\.\./\.\./[^/]+/[^/]`) &&
 		!(G.curPkgsrcdir == ".." && hasPrefix(path, "../mk/")) && // For category Makefiles.
 		!hasPrefix(path, "../../mk/") {
-		mkline.warnf("Invalid relative path %q.", path)
+		mkline.warn1("Invalid relative path %q.", path)
 	}
 }

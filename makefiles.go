@@ -59,7 +59,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			G.pkg.included[includeFile] = line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
-				mkline.warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
+				mkline.warn0("References to other packages should look like \"../../category/package\", not \"../package\".")
 				mkline.explainRelativeDirs()
 			}
 

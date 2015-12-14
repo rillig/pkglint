@@ -46,7 +46,7 @@ func checklineLicense(line *MkLine, value string) {
 		}
 
 		if !fileExists(licenseFile) {
-			line.warnf("License file %s does not exist.", cleanpath(licenseFile))
+			line.warn1("License file %s does not exist.", cleanpath(licenseFile))
 		}
 
 		switch license {
@@ -55,7 +55,7 @@ func checklineLicense(line *MkLine, value string) {
 			"no-profit",
 			"no-redistribution",
 			"shareware":
-			line.warnf("License %q is deprecated.", license)
+			line.warn1("License %q is deprecated.", license)
 		}
 	}
 }

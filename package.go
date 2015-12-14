@@ -78,7 +78,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 	if change.action == "Updated" {
 		if pkgverCmp(pkgversion, change.version) < 0 {
-			mkline.warnf("The package is being downgraded from %s to %s", change.version, pkgversion)
+			mkline.warn2("The package is being downgraded from %s to %s", change.version, pkgversion)
 		}
 	}
 }
@@ -94,7 +94,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 			if m, bl3 := match1(file, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
 				includedFiles[bl3] = mkline
 				if pkg.bl3[bl3] == nil {
-					mkline.warnf("%s/buildlink3.mk is included by this file but not by the package.", bl3)
+					mkline.warn1("%s/buildlink3.mk is included by this file but not by the package.", bl3)
 				}
 			}
 		}
@@ -196,8 +196,8 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if vardef["REPLACE_PERL"] != nil && vardef["NO_CONFIGURE"] != nil {
-		vardef["REPLACE_PERL"].warnf("REPLACE_PERL is ignored when ...")
-		vardef["NO_CONFIGURE"].warnf("... NO_CONFIGURE is set.")
+		vardef["REPLACE_PERL"].warn0("REPLACE_PERL is ignored when ...")
+		vardef["NO_CONFIGURE"].warn0("... NO_CONFIGURE is set.")
 	}
 
 	if vardef["LICENSE"] == nil {
@@ -213,8 +213,8 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 			// really not needed.
 
 		} else if !matches(languagesLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
-			vardef["GNU_CONFIGURE"].warnf("GNU_CONFIGURE almost always needs a C compiler, ...")
-			languagesLine.warnf("... but \"c\" is not added to USE_LANGUAGES.")
+			vardef["GNU_CONFIGURE"].warn0("GNU_CONFIGURE almost always needs a C compiler, ...")
+			languagesLine.warn0("... but \"c\" is not added to USE_LANGUAGES.")
 		}
 	}
 
@@ -270,7 +270,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 
 	if pkgname == "" && distname != "" && !containsVarRef(distname) && !matches(distname, rePkgname) {
-		distnameLine.warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
+		distnameLine.warn0("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
 	if pkgname != "" && !containsVarRef(pkgname) {
@@ -325,7 +325,7 @@ func (pkg *Package) checkUpdate() {
 			cmp := pkgverCmp(pkg.effectivePkgversion, suggver)
 			switch {
 			case cmp < 0:
-				pkgnameLine.warnf("This package should be updated to %s%s.", sugg.version, comment)
+				pkgnameLine.warn2("This package should be updated to %s%s.", sugg.version, comment)
 				pkgnameLine.explain(
 					"The wishlist for package updates in doc/TODO mentions that a newer",
 					"version of this package is available.")
