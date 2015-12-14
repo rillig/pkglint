@@ -96,6 +96,15 @@ func (ln *Line) warnf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
 	return warnf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
+func (ln *Line) warn0(format string) bool {
+	return ln.warnf(format)
+}
+func (ln *Line) warn1(format, arg1 string) bool {
+	return ln.warnf(format, arg1)
+}
+func (ln *Line) warn2(format, arg1, arg2 string) bool {
+	return ln.warnf(format, arg1, arg2)
+}
 func (ln *Line) notef(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
 	return notef(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()

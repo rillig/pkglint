@@ -49,17 +49,17 @@ func checkdirCategory() {
 		if m, commentFlag, indentation, name, comment := match4(text, `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
 			commentedOut := commentFlag == "#"
 			if commentedOut && comment == "" {
-				line.warnf("%q commented out without giving a reason.", name)
+				line.warn1("%q commented out without giving a reason.", name)
 			}
 
 			if indentation != "\t" {
-				line.warnf("Indentation should be a single tab character.")
+				line.warn0("Indentation should be a single tab character.")
 			}
 
 			if name == prevSubdir {
 				line.errorf("%q must only appear once.", name)
 			} else if name < prevSubdir {
-				line.warnf("%q should come before %q.", name, prevSubdir)
+				line.warn2("%q should come before %q.", name, prevSubdir)
 			} else {
 				// correctly ordered
 			}

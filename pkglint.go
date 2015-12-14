@@ -228,7 +228,7 @@ func checklineValidCharacters(line *Line, reChar string) {
 		for _, c := range rest {
 			uni += sprintf(" %U", c)
 		}
-		line.warnf("Line contains invalid characters (%s).", uni[1:])
+		line.warn1("Line contains invalid characters (%s).", uni[1:])
 	}
 }
 
@@ -278,14 +278,14 @@ func checklinesMessage(lines []*Line) {
 
 	if len(lines) < 3 {
 		lastLine := lines[len(lines)-1]
-		lastLine.warnf("File too short.")
+		lastLine.warn0("File too short.")
 		lastLine.explain(explanation...)
 		return
 	}
 
 	hline := strings.Repeat("=", 75)
 	if line := lines[0]; line.text != hline {
-		line.warnf("Expected a line of exactly 75 \"=\" characters.")
+		line.warn0("Expected a line of exactly 75 \"=\" characters.")
 		line.explain(explanation...)
 	}
 	checklineRcsid(lines[1], ``, "")
@@ -295,7 +295,7 @@ func checklinesMessage(lines []*Line) {
 		checklineValidCharacters(line, `[\t -~]`)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
-		lastLine.warnf("Expected a line of exactly 75 \"=\" characters.")
+		lastLine.warn0("Expected a line of exactly 75 \"=\" characters.")
 		lastLine.explain(explanation...)
 	}
 	checklinesTrailingEmptyLines(lines)
@@ -332,7 +332,7 @@ func checkfile(fname string) {
 
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, 0, "", nil)
-		line.warnf("Should not be executable.")
+		line.warn0("Should not be executable.")
 		line.explain(
 			"No package file should ever be executable. Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in the",

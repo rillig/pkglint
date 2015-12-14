@@ -82,6 +82,6 @@ func (exp *Expecter) expectText(text string) bool {
 		return true
 	}
 
-	exp.currentLine().warnf("This line should contain the following text: %s", text)
+	exp.currentLine().warn1("This line should contain the following text: %s", text)
 	return false
 }

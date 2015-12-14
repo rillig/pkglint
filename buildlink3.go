@@ -23,7 +23,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	exp.expectEmptyLine()
 
 	if exp.advanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) {
-		exp.previousLine().warnf("This line belongs inside the .ifdef block.")
+		exp.previousLine().warn0("This line belongs inside the .ifdef block.")
 		for exp.advanceIfEquals("") {
 		}
 	}
@@ -37,7 +37,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	if exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`) {
 		pkgid = exp.m[1]
 	} else {
-		exp.currentLine().warnf("Expected a BUILDLINK_TREE line.")
+		exp.currentLine().warn0("Expected a BUILDLINK_TREE line.")
 		return
 	}
 	exp.expectEmptyLine()
@@ -72,7 +72,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	indentLevel := 1 // The first .if is from the second paragraph.
 	for {
 		if exp.eof() {
-			exp.currentLine().warnf("Expected .endif")
+			exp.currentLine().warn0("Expected .endif")
 			return
 		}
 
@@ -105,17 +105,17 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				doCheck = true
 			}
 			if doCheck && abiPkg != "" && apiPkg != "" && abiPkg != apiPkg {
-				abiLine.warnf("Package name mismatch between %q ...", abiPkg)
-				apiLine.warnf("... and %q.", apiPkg)
+				abiLine.warn1("Package name mismatch between %q ...", abiPkg)
+				apiLine.warn1("... and %q.", apiPkg)
 			}
 			if doCheck && abiVersion != "" && apiVersion != "" && pkgverCmp(abiVersion, apiVersion) < 0 {
-				abiLine.warnf("ABI version (%s) should be at least ...", abiVersion)
-				apiLine.warnf("... API version (%s).", apiVersion)
+				abiLine.warn1("ABI version (%s) should be at least ...", abiVersion)
+				apiLine.warn1("... API version (%s).", apiVersion)
 			}
 
 			if m, varparam := match1(varname, `^BUILDLINK_[\w_]+\.(.*)$`); m {
 				if varparam != pkgid {
-					line.warnf("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
+					line.warn2("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
 				}
 			}
 
@@ -140,22 +140,22 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 			}
 
 		} else {
-			_ = G.opts.DebugUnchecked && exp.currentLine().warnf("Unchecked line in third paragraph.")
+			_ = G.opts.DebugUnchecked && exp.currentLine().warn0("Unchecked line in third paragraph.")
 			exp.advance()
 		}
 	}
 	if apiLine == nil {
-		exp.currentLine().warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
+		exp.currentLine().warn0("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
 	exp.expectEmptyLine()
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
 	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgid) + `$`) {
-		exp.currentLine().warnf("Expected BUILDLINK_TREE line.")
+		exp.currentLine().warn0("Expected BUILDLINK_TREE line.")
 	}
 
 	if !exp.eof() {
-		exp.currentLine().warnf("The file should end here.")
+		exp.currentLine().warn0("The file should end here.")
 	}
 
 	if G.pkg != nil {

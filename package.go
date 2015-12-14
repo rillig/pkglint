@@ -473,9 +473,9 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 
 			if belowText, exists := below[varcanon]; exists {
 				if belowText != "" {
-					line.warnf("%s appears too late. Please put it below %s.", varcanon, belowText)
+					line.warn2("%s appears too late. Please put it below %s.", varcanon, belowText)
 				} else {
-					line.warnf("%s appears too late. It should be the very first definition.", varcanon)
+					line.warn1("%s appears too late. It should be the very first definition.", varcanon)
 				}
 				lineno++
 				continue
@@ -491,12 +491,12 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 			switch {
 			case !(varindex < len(vars)):
 				if sections[sectindex].count != optional {
-					line.warnf("Empty line expected.")
+					line.warn0("Empty line expected.")
 				}
 				nextSection = true
 
 			case varcanon != vars[varindex].varname:
-				line.warnf("Expected %s, but found %s.", vars[varindex].varname, varcanon)
+				line.warn2("Expected %s, but found %s.", vars[varindex].varname, varcanon)
 				lineno++
 
 			default:
@@ -511,7 +511,7 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		default:
 			for varindex < len(vars) {
 				if vars[varindex].count == once && !maySkipSection {
-					line.warnf("%s should be set here.", vars[varindex].varname)
+					line.warn1("%s should be set here.", vars[varindex].varname)
 				}
 				below[vars[varindex].varname] = belowWhat
 				varindex++
@@ -545,7 +545,7 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 
 	insertLine := lines[i]
 	if !insertLine.autofixInsertBefore(expected) {
-		insertLine.warnf("Please add a line %q here.", expected)
+		insertLine.warn1("Please add a line %q here.", expected)
 		insertLine.explain(
 			"Since Makefile.common files usually don't have any comments and",
 			"therefore not a clearly defined interface, they should at least contain",

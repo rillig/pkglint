@@ -52,7 +52,7 @@ func (ck *PatchChecker) check() {
 			patchedFile := ck.exp.m[1]
 			if ck.exp.advanceIfMatches(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
-				ck.exp.previousLine().warnf("Unified diff headers should be first ---, then +++.")
+				ck.exp.previousLine().warn0("Unified diff headers should be first ---, then +++.")
 				ck.checkUnifiedDiff(patchedFile)
 				patchedFiles++
 				continue
@@ -64,7 +64,7 @@ func (ck *PatchChecker) check() {
 		if ck.exp.advanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
 			if ck.exp.advanceIfMatches(`^---\s(\S+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
-				line.warnf("Please use unified diffs (diff -u) for patches.")
+				line.warn0("Please use unified diffs (diff -u) for patches.")
 				return
 			}
 
@@ -134,7 +134,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	if !ck.exp.eof() {
 		line := ck.exp.currentLine()
 		if line.text != "" && !matches(line.text, rePatchUniFileDel) && !hasPrefix(line.text, "Index:") && !hasPrefix(line.text, "diff ") {
-			line.warnf("Empty line or end of file expected.")
+			line.warn0("Empty line or end of file expected.")
 			line.explain(
 				"This empty line makes the end of the patch clearly visible.",
 				"Otherwise the reader would have to count lines to see where",
@@ -225,9 +225,9 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 func (ck *PatchChecker) checktextRcsid(text string) {
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
 		if matches(text, rePatchUniHunk) {
-			ck.exp.previousLine().warnf("Found RCS tag \"$%s$\". Please remove it.", tagname)
+			ck.exp.previousLine().warn1("Found RCS tag \"$%s$\". Please remove it.", tagname)
 		} else {
-			ck.exp.previousLine().warnf("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
+			ck.exp.previousLine().warn1("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
 		}
 	}
 }
@@ -294,7 +294,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
 	case matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
-		line.warnf("Found absolute pathname: %s", word)
+		line.warn1("Found absolute pathname: %s", word)
 		line.explain(
 			"Absolute pathnames are often an indicator for unportable code. As",
 			"pkgsrc aims to be a portable system, absolute pathnames should be",

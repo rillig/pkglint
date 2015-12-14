@@ -108,7 +108,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xs1 = targets
 		mkline.xs2 = sources
 		if whitespace != "" {
-			line.warnf("Space before colon in dependency line.")
+			line.warn0("Space before colon in dependency line.")
 		}
 		return
 	}

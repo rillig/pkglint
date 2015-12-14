@@ -11,7 +11,7 @@ func checklinesPlist(lines []*Line) {
 	checklineRcsid(lines[0], `@comment `, "@comment ")
 
 	if len(lines) == 1 {
-		lines[0].warnf("PLIST files shouldn't be empty.")
+		lines[0].warn0("PLIST files shouldn't be empty.")
 		lines[0].explain(
 			"One reason for empty PLISTs is that this is a newly created package",
 			"and that the author didn't run \"bmake print-PLIST\" after installing",
@@ -165,17 +165,17 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 	}
 
 	if contains(text, "${PKGLOCALEDIR}") && G.pkg != nil && G.pkg.vardef["USE_PKGLOCALEDIR"] == nil {
-		line.warnf("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
+		line.warn0("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
 	}
 
 	if contains(text, "/CVS/") {
-		line.warnf("CVS files should not be in the PLIST.")
+		line.warn0("CVS files should not be in the PLIST.")
 	}
 	if hasSuffix(text, ".orig") {
-		line.warnf(".orig files should not be in the PLIST.")
+		line.warn0(".orig files should not be in the PLIST.")
 	}
 	if hasSuffix(text, "/perllocal.pod") {
-		line.warnf("perllocal.pod files should not be in the PLIST.")
+		line.warn0("perllocal.pod files should not be in the PLIST.")
 		line.explain(
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts,",
 			"since its contents changes frequently.")
@@ -280,20 +280,20 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 	}
 
 	if !matches(section, `^[\dln]$`) {
-		line.warnf("Unknown section %q for manual page.", section)
+		line.warn1("Unknown section %q for manual page.", section)
 	}
 
 	if catOrMan == "cat" && ck.allFiles["man/man"+section+"/"+manpage+"."+section] == nil {
-		line.warnf("Preformatted manual page without unformatted one.")
+		line.warn0("Preformatted manual page without unformatted one.")
 	}
 
 	if catOrMan == "cat" {
 		if ext != "0" {
-			line.warnf("Preformatted manual pages should end in \".0\".")
+			line.warn0("Preformatted manual pages should end in \".0\".")
 		}
 	} else {
 		if section != ext {
-			line.warnf("Mismatch between the section (%s) and extension (%s) of the manual page.", section, ext)
+			line.warn2("Mismatch between the section (%s) and extension (%s) of the manual page.", section, ext)
 		}
 	}
 
@@ -326,7 +326,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
 		if G.pkg != nil && G.pkg.included[f] == nil {
-			line.warnf("Packages that install a .desktop entry should .include %q.", f)
+			line.warn1("Packages that install a .desktop entry should .include %q.", f)
 			line.explain(
 				"If *.desktop files contain MimeType keys, the global MIME type registry",
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
@@ -347,7 +347,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		}
 
 	case hasPrefix(text, "share/doc/html/"):
-		_ = G.opts.WarnPlistDepr && line.warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
+		_ = G.opts.WarnPlistDepr && line.warn0("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
 	case G.pkg != nil && G.pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkg.effectivePkgbase+"/") ||
 		hasPrefix(text, "share/examples/"+G.pkg.effectivePkgbase+"/")):
@@ -361,7 +361,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
 
 	case hasPrefix(text, "share/info/"):
-		line.warnf("Info pages should be installed into info/, not share/info/.")
+		line.warn0("Info pages should be installed into info/, not share/info/.")
 		line.explain(
 			"To fix this, you should add INFO_FILES=yes to the package Makefile.")
 
@@ -369,7 +369,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		// Fine.
 
 	case hasPrefix(text, "share/man/"):
-		line.warnf("Man pages should be installed into man/, not share/man/.")
+		line.warn0("Man pages should be installed into man/, not share/man/.")
 	}
 }
 
@@ -397,7 +397,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 		switch {
 		case contains(arg, "install-info"),
 			contains(arg, "${INSTALL_INFO}"):
-			line.warnf("@exec/unexec install-info is deprecated.")
+			line.warn0("@exec/unexec install-info is deprecated.")
 		case contains(arg, "ldconfig") && !contains(arg, "/usr/bin/true"):
 			pline.errorf("ldconfig must be used with \"||/usr/bin/true\".")
 		}
@@ -406,7 +406,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 		// Nothing to do.
 
 	case "dirrm":
-		line.warnf("@dirrm is obsolete. Please remove this line.")
+		line.warn0("@dirrm is obsolete. Please remove this line.")
 		pline.explain(
 			"Directories are removed automatically when they are empty.",
 			"When a package needs an empty directory, it can use the @pkgdir",
@@ -416,7 +416,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 		args := splitOnSpace(arg)
 		switch {
 		case len(args) != 3:
-			line.warnf("Invalid number of arguments for imake-man.")
+			line.warn0("Invalid number of arguments for imake-man.")
 		case args[2] == "${IMAKE_MANNEWSUFFIX}":
 			pline.warnAboutPlistImakeMannewsuffix()
 		}
@@ -425,7 +425,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 		// Nothing to check.
 
 	default:
-		line.warnf("Unknown PLIST directive \"@%s\".", cmd)
+		line.warn1("Unknown PLIST directive \"@%s\".", cmd)
 	}
 }
 

@@ -143,7 +143,7 @@ func (ck *distinfoLinesChecker) checkUncommittedPatch(line *Line, patchName, sha
 	if ck.isPatch {
 		patchFname := ck.patchdir + "/" + patchName
 		if ck.distinfoIsCommitted && !isCommitted(G.currentDir+"/"+patchFname) {
-			line.warnf("%s is registered in distinfo but not added to CVS.", patchFname)
+			line.warn1("%s is registered in distinfo but not added to CVS.", patchFname)
 		}
 		ck.checkPatchSha1(line, patchFname, sha1Hash)
 		ck.patches[patchName] = true

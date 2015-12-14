@@ -268,10 +268,10 @@ func parselinesSuggestedUpdates(lines []*Line) []SuggestedUpdate {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
-					line.warnf("Invalid package name %q", pkgname)
+					line.warn1("Invalid package name %q", pkgname)
 				}
 			} else {
-				line.warnf("Invalid line format %q", text)
+				line.warn1("Invalid line format %q", text)
 			}
 		}
 	}
@@ -324,7 +324,7 @@ func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
 		} else if len(line.text) >= 2 && line.text[0] == '\t' && 'A' <= line.text[1] && line.text[1] <= 'Z' {
-			line.warnf("Unknown doc/CHANGES line: %q", line.text)
+			line.warn1("Unknown doc/CHANGES line: %q", line.text)
 			line.explain("See mk/misc/developer.mk for the rules.")
 		}
 	}

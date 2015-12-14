@@ -35,11 +35,11 @@ func checkdirToplevel() {
 
 func (ctx *Toplevel) checkSubdir(line *Line, commentedOut bool, indentation, subdir, comment string) {
 	if commentedOut && comment == "" {
-		line.warnf("%q commented out without giving a reason.", subdir)
+		line.warn1("%q commented out without giving a reason.", subdir)
 	}
 
 	if indentation != "\t" {
-		line.warnf("Indentation should be a single tab character.")
+		line.warn0("Indentation should be a single tab character.")
 	}
 
 	if contains(subdir, "$") || !fileExists(G.currentDir+"/"+subdir+"/Makefile") {
@@ -55,7 +55,7 @@ func (ctx *Toplevel) checkSubdir(line *Line, commentedOut bool, indentation, sub
 	case subdir == "archivers" && prev == "x11":
 		// This exception is documented in the top-level Makefile.
 	default:
-		line.warnf("%s should come before %s", subdir, prev)
+		line.warn2("%s should come before %s", subdir, prev)
 	}
 	ctx.previousSubdir = subdir
 
