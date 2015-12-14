@@ -324,15 +324,16 @@ func trace(action, funcname string, args ...interface{}) {
 }
 
 func tracecall(funcname string, args ...interface{}) func() {
-	if G.opts.DebugTrace {
-		trace("+ ", funcname, args...)
-		G.traceDepth++
-		return func() {
-			G.traceDepth--
-			trace("- ", funcname, args...)
-		}
-	} else {
+	if !G.opts.DebugTrace {
 		return func() {}
+	}
+
+	trace("+ ", funcname, args...)
+	G.traceDepth++
+
+	return func() {
+		G.traceDepth--
+		trace("- ", funcname, args...)
 	}
 }
 
