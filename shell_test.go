@@ -90,7 +90,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_showAutofix(c *check.C) {
-	s.UseCommandLine(c, "-Wall","--show-autofix")
+	s.UseCommandLine(c, "-Wall", "--show-autofix")
 	G.globalData.InitVartypes()
 	s.RegisterTool("echo", "ECHO", false)
 	G.mk = s.NewMkLines("Makefile",
@@ -105,7 +105,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_showAutofix(c *check.C) {
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_autofix(c *check.C) {
-	s.UseCommandLine(c, "-Wall","--autofix")
+	s.UseCommandLine(c, "-Wall", "--autofix")
 	G.globalData.InitVartypes()
 	s.RegisterTool("echo", "ECHO", false)
 	G.mk = s.NewMkLines("Makefile",

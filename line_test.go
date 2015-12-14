@@ -5,8 +5,8 @@ import (
 )
 
 func (s *Suite) TestLineModify(c *check.C) {
-	s.UseCommandLine(c,"--show-autofix")
-	
+	s.UseCommandLine(c, "--show-autofix")
+
 	line := NewLine("fname", 1, "dummy", []*RawLine{{1, "original\n"}})
 
 	c.Check(line.changed, equals, false)

@@ -367,7 +367,6 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	if hasSuffix(mod, ":Q") && (needsQuoting == nqNo || needsQuoting == nqDoesntMatter) {
 		bad := "${" + varname + mod + "}"
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
-		trace("","qqq",bad,good)
 		needExplain := false
 		if needsQuoting == nqNo && !mkline.line.autofixReplace(bad, good) {
 			needExplain = mkline.warnf("The :Q operator should not be used for ${%s} here.", varname)
