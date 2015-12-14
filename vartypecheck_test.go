@@ -259,7 +259,7 @@ func runVartypeChecks(varname, op string, checker func(*VartypeCheck), values ..
 	for i, value := range values {
 		mkline := NewMkLine(NewLine("fname", i+1, varname+op+value, nil))
 		valueNovar := mkline.withoutMakeVariables(value, true)
-		vc := &VartypeCheck{mkline, varname, op, value, valueNovar, "", true, guNotGuessed}
+		vc := &VartypeCheck{mkline, mkline.line, varname, op, value, valueNovar, "", true, guNotGuessed}
 		checker(vc)
 	}
 }
@@ -268,7 +268,7 @@ func runVartypeChecksFname(fname, varname, op string, checker func(*VartypeCheck
 	for i, value := range values {
 		mkline := NewMkLine(NewLine(fname, i+1, varname+op+value, nil))
 		valueNovar := mkline.withoutMakeVariables(value, true)
-		vc := &VartypeCheck{mkline, varname, op, value, valueNovar, "", true, guNotGuessed}
+		vc := &VartypeCheck{mkline, mkline.line, varname, op, value, valueNovar, "", true, guNotGuessed}
 		checker(vc)
 	}
 }

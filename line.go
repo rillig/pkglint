@@ -97,7 +97,7 @@ func (ln *Line) warnf(format string, args ...interface{}) bool {
 	return warnf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
 func (ln *Line) warn0(format string) bool {
-	return ln.warn0(format)
+	return ln.warnf(format)
 }
 func (ln *Line) warn1(format, arg1 string) bool {
 	return ln.warnf(format, arg1)
