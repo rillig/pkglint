@@ -6,7 +6,8 @@ import (
 )
 
 type VartypeCheck struct {
-	line        *MkLine
+	mkline      *MkLine
+	line        *Line
 	varname     string
 	op          string
 	value       string
@@ -153,7 +154,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	if m, pattern, relpath, _, pkg := match4(value, `(.*):(\.\./\.\./([^/]+)/([^/]+))$`); m {
-		line.checkRelativePkgdir(relpath)
+		cv.mkline.checkRelativePkgdir(relpath)
 
 		switch pkg {
 		case "msgfmt", "gettext":
@@ -172,7 +173,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 	if matches(value, `:\.\./[^/]+$`) {
 		line.warn0("Dependencies should have the form \"../../category/package\".")
-		line.explainRelativeDirs()
+		cv.mkline.explainRelativeDirs()
 		return
 	}
 
@@ -213,7 +214,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 }
 
 func (cv *VartypeCheck) FetchURL() {
-	cv.line.checkVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	for siteUrl, siteName := range G.globalData.masterSiteUrls {
 		if hasPrefix(cv.value, siteUrl) {
@@ -294,7 +295,7 @@ func (cv *VartypeCheck) LdFlag() {
 }
 
 func (cv *VartypeCheck) License() {
-	checklineLicense(cv.line, cv.value)
+	checklineLicense(cv.mkline, cv.value)
 }
 
 func (cv *VartypeCheck) MailAddress() {
@@ -362,7 +363,7 @@ func (cv *VartypeCheck) Option() {
 // The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
 	if !contains(cv.value, ":") && cv.guessed == guGuessed {
-		cv.line.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+		cv.mkline.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
@@ -387,7 +388,7 @@ func (cv *VartypeCheck) Pathmask() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
 		cv.line.warn1("%q is not a valid pathname mask.", cv.value)
 	}
-	cv.line.line.checkAbsolutePathname(cv.value)
+	cv.line.checkAbsolutePathname(cv.value)
 }
 
 // Like Filename, but including slashes
@@ -396,7 +397,7 @@ func (cv *VartypeCheck) Pathname() {
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.line.warn1("%q is not a valid pathname.", cv.value)
 	}
-	cv.line.line.checkAbsolutePathname(cv.value)
+	cv.line.checkAbsolutePathname(cv.value)
 }
 
 func (cv *VartypeCheck) Perl5Packlist() {
@@ -412,7 +413,7 @@ func (cv *VartypeCheck) PkgName() {
 }
 
 func (cv *VartypeCheck) PkgOptionsVar() {
-	cv.line.checkVartypePrimitive(cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
+	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
 	if matches(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		cv.line.explain(
@@ -425,14 +426,14 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // A directory name relative to the top-level pkgsrc directory.
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
-	cv.line.checkRelativePkgdir(G.curPkgsrcdir + "/" + cv.value)
+	cv.mkline.checkRelativePkgdir(G.curPkgsrcdir + "/" + cv.value)
 }
 
 func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.value, `^[1-9]\d*$`) {
 		cv.line.warn1("%s must be a positive integer number.", cv.varname)
 	}
-	if path.Base(cv.line.line.fname) != "Makefile" {
+	if path.Base(cv.line.fname) != "Makefile" {
 		cv.line.errorf("%s only makes sense directly in the package Makefile.", cv.varname)
 		cv.line.explain(
 			"Usually, different packages using the same Makefile.common have",
@@ -490,12 +491,12 @@ func (cv *VartypeCheck) PythonDependency() {
 
 // Refers to a package directory.
 func (cv *VartypeCheck) RelativePkgDir() {
-	cv.line.checkRelativePkgdir(cv.value)
+	cv.mkline.checkRelativePkgdir(cv.value)
 }
 
 // Refers to a file or directory.
 func (cv *VartypeCheck) RelativePkgPath() {
-	cv.line.checkRelativePath(cv.value, true)
+	cv.mkline.checkRelativePath(cv.value, true)
 }
 
 func (cv *VartypeCheck) Restricted() {
@@ -513,8 +514,10 @@ func (cv *VartypeCheck) SedCommand() {
 
 func (cv *VartypeCheck) SedCommands() {
 	line := cv.line
+	mkline := cv.mkline
+	shline := NewMkShellLine(mkline)
 
-	words, rest := splitIntoShellwords(line.line, cv.value)
+	words, rest := splitIntoShellwords(line, cv.value)
 	if rest != "" {
 		if contains(cv.value, "#") {
 			line.errorf("Invalid shell words in sed commands.")
@@ -532,7 +535,7 @@ func (cv *VartypeCheck) SedCommands() {
 
 	for i := 0; i < nwords; i++ {
 		word := words[i]
-		NewMkShellLine(cv.line).checkShellword(word, true)
+		shline.checkShellword(word, true)
 
 		switch {
 		case word == "-e":
@@ -551,9 +554,9 @@ func (cv *VartypeCheck) SedCommands() {
 						"",
 						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-				NewMkShellLine(line).checkShellword(words[i-1], true)
-				NewMkShellLine(line).checkShellword(words[i], true)
-				line.checkVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
+				shline.checkShellword(words[i-1], true)
+				shline.checkShellword(words[i], true)
+				mkline.checkVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
 				line.errorf("The -e option to sed requires an argument.")
 			}
@@ -573,12 +576,12 @@ func (cv *VartypeCheck) SedCommands() {
 }
 
 func (cv *VartypeCheck) ShellCommand() {
-	NewMkShellLine(cv.line).checkShelltext(cv.value)
+	NewMkShellLine(cv.mkline).checkShelltext(cv.value)
 }
 
 func (cv *VartypeCheck) ShellWord() {
 	if !cv.listContext {
-		NewMkShellLine(cv.line).checkShellword(cv.value, true)
+		NewMkShellLine(cv.mkline).checkShellword(cv.value, true)
 	}
 }
 
@@ -698,7 +701,7 @@ func (cv *VartypeCheck) WrapperTransform() {
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {
-	cv.line.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 }
 
 // A directory relative to ${WRKSRC}, for use in CONFIGURE_DIRS and similar variables.
