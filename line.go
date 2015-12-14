@@ -88,50 +88,28 @@ func (ln *Line) fatalf(format string, args ...interface{}) {
 	ln.printSource(G.logErr)
 	fatalf(ln.fname, ln.linenos(), format, args...)
 }
+
 func (ln *Line) errorf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
 	return errorf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
+
 func (ln *Line) warnf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
 	return warnf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
-func (ln *Line) warn0(format string) bool {
-	return ln.warnf(format)
-}
-func (ln *Line) warn1(format, arg1 string) bool {
-	return ln.warnf(format, arg1)
-}
-func (ln *Line) warn2(format, arg1, arg2 string) bool {
-	return ln.warnf(format, arg1, arg2)
-}
+func (ln *Line) warn0(format string) bool             { return ln.warnf(format) }
+func (ln *Line) warn1(format, arg1 string) bool       { return ln.warnf(format, arg1) }
+func (ln *Line) warn2(format, arg1, arg2 string) bool { return ln.warnf(format, arg1, arg2) }
+
 func (ln *Line) notef(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
 	return notef(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
+
 func (ln *Line) debugf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
 	return debugf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
-}
-
-func (ln *Line) explain(explanation ...string) {
-	if G.opts.Explain {
-		complete := strings.Join(explanation, "\n")
-		if G.explanationsGiven[complete] {
-			return
-		}
-		if G.explanationsGiven == nil {
-			G.explanationsGiven = make(map[string]bool)
-		}
-		G.explanationsGiven[complete] = true
-
-		io.WriteString(G.logOut, "\n")
-		for _, explanationLine := range explanation {
-			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
-		}
-		io.WriteString(G.logOut, "\n")
-	}
-	G.explanationsAvailable = true
 }
 
 func (ln *Line) String() string {

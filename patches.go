@@ -135,7 +135,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		line := ck.exp.currentLine()
 		if line.text != "" && !matches(line.text, rePatchUniFileDel) && !hasPrefix(line.text, "Index:") && !hasPrefix(line.text, "diff ") {
 			line.warn0("Empty line or end of file expected.")
-			line.explain(
+			explain3(
 				"This empty line makes the end of the patch clearly visible.",
 				"Otherwise the reader would have to count lines to see where",
 				"the patch ends.")
@@ -148,7 +148,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.errorf("Each patch must be documented.")
-		line.explain(
+		explain(
 			"Each patch must document why it is necessary. If it has been applied",
 			"because of a security issue, a reference to the CVE should be mentioned",
 			"as well.",
@@ -196,7 +196,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	case ftConfigure:
 		if hasPrefix(addedText, ": Avoid regenerating within pkgsrc") {
 			line.errorf("This code must not be included in patches.")
-			line.explain(
+			explain(
 				"It is generated automatically by pkgsrc after the patch phase.",
 				"",
 				"For more details, look for \"configure-scripts-override\" in",
@@ -216,7 +216,7 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 	if hasSuffix(line.text, "\r") {
 		if !line.autofixReplace("\r\n", "\n") {
 			line.errorf("The hunk header must not end with a CR character.")
-			line.explain(
+			explain1(
 				"The MacOS X patch utility cannot handle these.")
 		}
 	}
@@ -295,7 +295,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 	case matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
 		line.warn1("Found absolute pathname: %s", word)
-		line.explain(
+		explain(
 			"Absolute pathnames are often an indicator for unportable code. As",
 			"pkgsrc aims to be a portable system, absolute pathnames should be",
 			"avoided whenever possible.",

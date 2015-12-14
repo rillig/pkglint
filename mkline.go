@@ -42,9 +42,6 @@ func (mkline *MkLine) notef(format string, args ...interface{}) bool {
 func (mkline *MkLine) debugf(format string, args ...interface{}) bool {
 	return mkline.line.debugf(format, args...)
 }
-func (mkline *MkLine) explain(explanation ...string) {
-	mkline.line.explain(explanation...)
-}
 
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{line: line}
@@ -53,7 +50,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 	if hasPrefix(text, " ") {
 		mkline.warn0("Makefile lines should not start with space characters.")
-		mkline.explain(
+		explain3(
 			"If you want this line to contain a shell program, use a tab",
 			"character for indentation. Otherwise please remove the leading",
 			"white-space.")
@@ -179,7 +176,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	if !contains(perms, needed) {
 		mkline.warnf("Permission %q requested for %s, but only { %s } are allowed.",
 			ReadableVartypePermissions(needed), varname, ReadableVartypePermissions(perms))
-		mkline.explain(
+		explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
 			"",
 			"The available permissions are:",
@@ -225,7 +222,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 
 	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mk.buildDefs[varname] {
 		mkline.warn1("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
-		mkline.explain(
+		explain(
 			"When a pkgsrc package is built, many things can be configured by the",
 			"pkgsrc user in the mk.conf file. All these configurations should be",
 			"recorded in the binary package, so the package can be reliably rebuilt.",
@@ -261,7 +258,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 
 	if isLoadTime && !isIndirect {
 		mkline.warn1("%s should not be evaluated at load time.", varname)
-		mkline.explain(
+		explain(
 			"Many variables, especially lists of something, get their values",
 			"incrementally. Therefore it is generally unsafe to rely on their value",
 			"until it is clear that it will never change again. This point is",
@@ -275,7 +272,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 
 	if isLoadTime && isIndirect {
 		mkline.warn1("%s should not be evaluated indirectly at load time.", varname)
-		mkline.explain(
+		explain(
 			"The variable on the left-hand side may be evaluated at load time, but",
 			"the variable on the right-hand side may not. Due to this assignment, it",
 			"might be used indirectly at load-time, when it is not guaranteed to be",
@@ -289,7 +286,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 
 func (mkline *MkLine) warnVaruseLocalbase() {
 	mkline.warn0("The LOCALBASE variable should not be used by packages.")
-	mkline.explain(
+	explain(
 		// from jlam via private mail.
 		"Currently, LOCALBASE is typically used in these cases:",
 		"",
@@ -331,7 +328,7 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 
 	default:
 		mkline.warn1("The variable %s should not be used in .for loops.", varname)
-		mkline.explain(
+		explain(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
 			"Therefore only variables that are specifically designed to match this",
@@ -368,7 +365,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 				mkline.warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
 					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 			}
-			mkline.explain(
+			explain1(
 				"See the pkgsrc guide, section \"quoting guideline\", for details.")
 		}
 	}
@@ -384,7 +381,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 			needExplain = mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
 		if needExplain {
-			mkline.explain(
+			explain(
 				"Many variables in pkgsrc do not need the :Q operator, since they",
 				"are not expected to contain white-space or other special characters.",
 				"",
@@ -419,7 +416,7 @@ func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
 	for i, ver := range intversions {
 		if i > 0 && ver >= intversions[i-1] {
 			mkline.warn1("The values for %s should be in decreasing order.", varname)
-			mkline.explain(
+			explain2(
 				"If they aren't, it may be possible that needless versions of packages",
 				"are installed.")
 		}
@@ -476,7 +473,7 @@ func (mkline *MkLine) checkVarassign() {
 
 	if varname == "CONFIGURE_ARGS" && matches(value, `=\$\{PREFIX\}/share/kde`) {
 		mkline.notef("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
-		mkline.explain(
+		explain3(
 			"That file probably does many things automatically and consistently that",
 			"this package also does. When using kde3.mk, you can probably also leave",
 			"out some explicit dependencies.")
@@ -498,7 +495,7 @@ func (mkline *MkLine) checkVarassign() {
 
 	if comment == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
 		mkline.notef("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
-		mkline.explain(
+		explain(
 			"The value #defined says something about the state of the variable, but",
 			"not what that _means_. In some cases a variable that is defined means",
 			"\"yes\", in other cases it is an empty list (which is also only the",
@@ -544,7 +541,7 @@ func (mkline *MkLine) checkVarassignBsdPrefs() {
 		}
 
 		mkline.warn0("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
-		mkline.explain(
+		explain(
 			"The ?= operator is used to provide a default value to a variable. In",
 			"pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
 			"file. This file must be included explicitly. If a ?= operator appears",
@@ -558,7 +555,7 @@ func (mkline *MkLine) checkVarassignBsdPrefs() {
 func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
 	if matches(value, `^[^=]@comment`) {
 		mkline.warn1("Please don't use @comment in %s.", varname)
-		mkline.explain(
+		explain(
 			"Here you are defining a variable containing @comment. As this value",
 			"typically includes a space as the last character you probably also used",
 			"quotes around the variable. This can lead to confusion when adding this",
@@ -745,7 +742,7 @@ func (mkline *MkLine) checkText(text string) {
 
 	if contains(text, "${WRKSRC}/../") {
 		mkline.warn0("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
-		mkline.explain(
+		explain2(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
 			"and INSTALL_DIRS are subdirectories of it.")
 	}
@@ -815,7 +812,7 @@ func (mkline *MkLine) checklineValidCharactersInValue(reValid string) {
 }
 
 func (mkline *MkLine) explainRelativeDirs() {
-	mkline.explain(
+	explain3(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
 		"main pkgsrc repository.")
@@ -832,7 +829,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 
 	} else {
 		mkline.warn1("%q is not a valid relative package directory.", pkgdir)
-		mkline.explain(
+		explain3(
 			"A relative pathname always starts with \"../../\", followed",
 			"by a category, a slash and a the directory name of the package.",
 			"For example, \"../../misc/screen\" is a valid relative pathname.")

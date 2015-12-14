@@ -318,7 +318,7 @@ func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, depende
 
 		} else if !allowedTargets[target] {
 			mkline.warn1("Unusual target %q.", target)
-			mkline.explain(
+			explain3(
 				"If you want to define your own targets, you can \"declare\"",
 				"them by inserting a \".PHONY: my-target\" line before this line. This",
 				"will tell make(1) to not interpret this target's name as a filename.")
@@ -334,7 +334,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 
 	if hasSuffix(includefile, "/Makefile") {
 		mkline.errorf("Other Makefiles must not be included directly.")
-		mkline.explain(
+		explain(
 			"If you want to include portions of another Makefile, extract",
 			"the common parts and put them into a Makefile.common. After",
 			"that, both this one and the other package should include the",

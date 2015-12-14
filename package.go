@@ -326,7 +326,7 @@ func (pkg *Package) checkUpdate() {
 			switch {
 			case cmp < 0:
 				pkgnameLine.warn2("This package should be updated to %s%s.", sugg.version, comment)
-				pkgnameLine.explain(
+				explain2(
 					"The wishlist for package updates in doc/TODO mentions that a newer",
 					"version of this package is available.")
 			case cmp > 0:
@@ -546,7 +546,7 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 	insertLine := lines[i]
 	if !insertLine.autofixInsertBefore(expected) {
 		insertLine.warn1("Please add a line %q here.", expected)
-		insertLine.explain(
+		explain(
 			"Since Makefile.common files usually don't have any comments and",
 			"therefore not a clearly defined interface, they should at least contain",
 			"references to all files that include them, so that it is easier to see",

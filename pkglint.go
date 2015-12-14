@@ -214,7 +214,7 @@ func getVariablePermissions(line *Line, varname string) string {
 func checklineLength(line *Line, maxlength int) {
 	if len(line.text) > maxlength {
 		line.warnf("Line too long (should be no more than %d characters).", maxlength)
-		line.explain(
+		explain3(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
 			"Moderately short lines also make reading easier.")
@@ -236,7 +236,7 @@ func checklineTrailingWhitespace(line *Line) {
 	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
 		if !line.autofixReplaceRegexp(`\s+\n$`, "\n") {
 			line.notef("Trailing white-space.")
-			line.explain(
+			explain2(
 				"When a line ends with some white-space, that space is in most cases",
 				"irrelevant and can be removed.")
 		}
@@ -249,7 +249,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 	if !matches(line.text, `^`+prefixRe+`\$NetBSD(?::[^\$]+)?\$$`) {
 		if !line.autofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
 			line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
-			line.explain(
+			explain3(
 				"Several files in pkgsrc must contain the CVS Id, so that their current",
 				"version can be traced back later from a binary package. This is to",
 				"ensure reproducible builds, for example for finding bugs.")
@@ -270,23 +270,25 @@ func checkfileExtra(fname string) {
 func checklinesMessage(lines []*Line) {
 	defer tracecall("checklinesMessage", lines[0].fname)()
 
-	explanation := []string{
-		"A MESSAGE file should consist of a header line, having 75 \"=\"",
-		"characters, followed by a line containing only the RCS Id, then an",
-		"empty line, your text and finally the footer line, which is the",
-		"same as the header line."}
+	explainMessage := func() {
+		explain(
+			"A MESSAGE file should consist of a header line, having 75 \"=\"",
+			"characters, followed by a line containing only the RCS Id, then an",
+			"empty line, your text and finally the footer line, which is the",
+			"same as the header line.")
+	}
 
 	if len(lines) < 3 {
 		lastLine := lines[len(lines)-1]
 		lastLine.warn0("File too short.")
-		lastLine.explain(explanation...)
+		explainMessage()
 		return
 	}
 
 	hline := strings.Repeat("=", 75)
 	if line := lines[0]; line.text != hline {
 		line.warn0("Expected a line of exactly 75 \"=\" characters.")
-		line.explain(explanation...)
+		explainMessage()
 	}
 	checklineRcsid(lines[1], ``, "")
 	for _, line := range lines {
@@ -296,7 +298,7 @@ func checklinesMessage(lines []*Line) {
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
 		lastLine.warn0("Expected a line of exactly 75 \"=\" characters.")
-		lastLine.explain(explanation...)
+		explainMessage()
 	}
 	checklinesTrailingEmptyLines(lines)
 }
@@ -333,7 +335,7 @@ func checkfile(fname string) {
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, 0, "", nil)
 		line.warn0("Should not be executable.")
-		line.explain(
+		explain(
 			"No package file should ever be executable. Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in the",
 			"package, as the pathnames get adjusted during installation. So there is",

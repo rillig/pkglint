@@ -12,7 +12,7 @@ func checklinesPlist(lines []*Line) {
 
 	if len(lines) == 1 {
 		lines[0].warn0("PLIST files shouldn't be empty.")
-		lines[0].explain(
+		explain(
 			"One reason for empty PLISTs is that this is a newly created package",
 			"and that the author didn't run \"bmake print-PLIST\" after installing",
 			"the files.",
@@ -54,9 +54,6 @@ func (pline *PlistLine) notef(format string, args ...interface{}) bool {
 }
 func (pline *PlistLine) debugf(format string, args ...interface{}) bool {
 	return pline.line.debugf(format, args...)
-}
-func (pline *PlistLine) explain(explanation ...string) {
-	pline.line.explain(explanation...)
 }
 
 func (ck *PlistChecker) check(plainLines []*Line) {
@@ -176,7 +173,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 	}
 	if hasSuffix(text, "/perllocal.pod") {
 		line.warn0("perllocal.pod files should not be in the PLIST.")
-		line.explain(
+		explain2(
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts,",
 			"since its contents changes frequently.")
 	}
@@ -187,7 +184,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 		if ck.lastFname != "" {
 			if ck.lastFname > text {
 				pline.warnf("%q should be sorted before %q.", text, ck.lastFname)
-				pline.explain(
+				explain1(
 					"The files in the PLIST should be sorted alphabetically.")
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
@@ -211,7 +208,7 @@ func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string)
 		ck.allFiles["man/man6/"+basename+".6"] == nil &&
 		ck.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] == nil {
 		pline.warnf("Manual page missing for bin/%s.", basename)
-		pline.explain(
+		explain(
 			"All programs that can be run directly by the user should have a manual",
 			"page for quick reference. The programs in the bin/ directory should have",
 			"corresponding manual pages in section 1 (filename program.1), not in",
@@ -299,7 +296,7 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 
 	if gz != "" {
 		line.notef("The .gz extension is unnecessary for manual pages.")
-		line.explain(
+		explain(
 			"Whether the manual pages are installed in compressed form or not is",
 			"configured by the pkgsrc user. Compression and decompression takes place",
 			"automatically, no matter if the .gz extension is mentioned in the PLIST",
@@ -312,7 +309,7 @@ func (ck *PlistChecker) checkpathSbin(pline *PlistLine) {
 
 	if ck.allFiles["man/man8/"+binname+".8"] == nil && G.opts.WarnExtra {
 		pline.warnf("Manual page missing for sbin/%s.", binname)
-		pline.explain(
+		explain(
 			"All programs that can be run directly by the user should have a manual",
 			"page for quick reference. The programs in the sbin/ directory should have",
 			"corresponding manual pages in section 8 (filename program.8), not in",
@@ -327,7 +324,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
 		if G.pkg != nil && G.pkg.included[f] == nil {
 			line.warn1("Packages that install a .desktop entry should .include %q.", f)
-			line.explain(
+			explain2(
 				"If *.desktop files contain MimeType keys, the global MIME type registry",
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
 		}
@@ -342,7 +339,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
 		if G.pkg.included[f] == nil {
 			line.errorf("The package Makefile must include %q.", f)
-			line.explain(
+			explain1(
 				"Packages that install GNOME icons must maintain the icon theme cache.")
 		}
 
@@ -355,14 +352,14 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 
 	case text == "share/icons/hicolor/icon-theme.cache" && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
 		line.errorf("This file must not appear in any PLIST file.")
-		line.explain(
+		explain3(
 			"Remove this line and add the following line to the package Makefile.",
 			"",
 			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
 
 	case hasPrefix(text, "share/info/"):
 		line.warn0("Info pages should be installed into info/, not share/info/.")
-		line.explain(
+		explain1(
 			"To fix this, you should add INFO_FILES=yes to the package Makefile.")
 
 	case hasPrefix(text, "share/locale/") && hasSuffix(text, ".mo"):
@@ -376,7 +373,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 func (pline *PlistLine) checkTrailingWhitespace() {
 	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
 		pline.errorf("pkgsrc does not support filenames ending in white-space.")
-		pline.explain(
+		explain1(
 			"Each character in the PLIST is relevant, even trailing white-space.")
 	}
 }
@@ -407,7 +404,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 
 	case "dirrm":
 		line.warn0("@dirrm is obsolete. Please remove this line.")
-		pline.explain(
+		explain3(
 			"Directories are removed automatically when they are empty.",
 			"When a package needs an empty directory, it can use the @pkgdir",
 			"command in the PLIST")
@@ -431,7 +428,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 
 func (pline *PlistLine) warnAboutPlistImakeMannewsuffix() {
 	pline.warnf("IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.")
-	pline.explain(
+	explain(
 		"This is the result of a print-PLIST call that has not been edited",
 		"manually by the package maintainer. Please replace the",
 		"IMAKE_MANNEWSUFFIX with:",

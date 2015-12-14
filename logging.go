@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"strings"
 )
 
 const noFile = ""
@@ -66,5 +67,28 @@ func notef(fname, lineno, format string, args ...interface{}) bool {
 func debugf(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.debugOut, llDebug, fname, lineno, format, args...)
 }
+
+func explain(explanation ...string) {
+	if G.opts.Explain {
+		complete := strings.Join(explanation, "\n")
+		if G.explanationsGiven[complete] {
+			return
+		}
+		if G.explanationsGiven == nil {
+			G.explanationsGiven = make(map[string]bool)
+		}
+		G.explanationsGiven[complete] = true
+
+		io.WriteString(G.logOut, "\n")
+		for _, explanationLine := range explanation {
+			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
+		}
+		io.WriteString(G.logOut, "\n")
+	}
+	G.explanationsAvailable = true
+}
+func explain1(e1 string)         { explain(e1) }
+func explain2(e1, e2 string)     { explain(e1, e2) }
+func explain3(e1, e2, e3 string) { explain(e1, e2, e3) }
 
 type pkglintFatal struct{}
