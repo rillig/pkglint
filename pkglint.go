@@ -456,7 +456,20 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 	}
 
 	var space string
-	if m, varname, space, op, value, comment = match5(text, `^ *([-*+A-Z_a-z0-9.${}\[]+)(\s*)([!:?]?=)\s*((?:\\#|[^#])*)\s*(#.*)?$`); m {
+	trimmed := strings.TrimSpace(text)
+	if m, varname, space, op = match3(trimmed, `^([-*+A-Z_a-z0-9.${}\[]+)(\s*)([!:?]?=)`); m {
+		rest := trimmed[len(varname)+len(space)+len(op):]
+		valuebuf := make([]rune, 0, len(rest))
+		for i, r := range rest {
+			if r == '#' && (i == 0 || rest[i-1] != '\\') {
+				comment = rest[i:]
+				break
+			} else if r != '\\' || i >= len(rest) || rest[i+1] != '#' {
+				valuebuf = append(valuebuf, r)
+			}
+		}
+
+		value = strings.TrimSpace(string(valuebuf))
 		if hasSuffix(varname, "+") && space == "" && op == "=" {
 			varname = varname[:len(varname)-1]
 			op = "+="
