@@ -92,23 +92,27 @@ func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
 
 func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 	for _, pline := range plines {
-		text := pline.text
-
-		if matches(text, `^[\w$]`) {
-			if ck.allFiles[text] == nil {
-				ck.allFiles[text] = pline
-			}
-			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
-				ck.allDirs[dir] = pline
-			}
-		}
-
-		if hasPrefix(text, "@") {
-			if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
-				for dir := dirname; dir != "."; dir = path.Dir(dir) {
+		if text := pline.text; len(text) > 0 {
+			first := text[0]
+			switch {
+			case 'a' <= first && first <= 'z',
+				first == '$',
+				'A' <= first && first <= 'Z',
+				'0' <= first && first <= '9':
+				if ck.allFiles[text] == nil {
+					ck.allFiles[text] = pline
+				}
+				for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
 					ck.allDirs[dir] = pline
 				}
+			case first == '@':
+				if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
+					for dir := dirname; dir != "."; dir = path.Dir(dir) {
+						ck.allDirs[dir] = pline
+					}
+				}
 			}
+
 		}
 	}
 }

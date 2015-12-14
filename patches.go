@@ -223,6 +223,9 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 }
 
 func (ck *PatchChecker) checktextRcsid(text string) {
+	if strings.IndexByte(text, '$') == -1 {
+		return
+	}
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
 		if matches(text, rePatchUniHunk) {
 			ck.exp.previousLine().warn1("Found RCS tag \"$%s$\". Please remove it.", tagname)
