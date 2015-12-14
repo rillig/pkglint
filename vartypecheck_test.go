@@ -95,22 +95,39 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_DependencyWithPatch(c *check.C) {
+	s.CreateTmpFile(c, "x11/alacarte/Makefile", "# empty\n")
+	s.CreateTmpFile(c, "category/package/Makefile", "# empty\n")
+	G.globalData.pkgsrcdir = s.tmpdir
+	G.currentDir = s.tmpdir + "/category/package"
 	G.curPkgsrcdir = "../.."
 
-	newVartypeCheck("DEPENDS", "+=", "Perl").DependencyWithPath()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: Unknown dependency format.\n")
-
-	newVartypeCheck("DEPENDS", "+=", "perl5>=5.22:../perl5").DependencyWithPath()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: Dependencies should have the form \"../../category/package\".\n")
-
-	newVartypeCheck("DEPENDS", "+=", "perl5>=5.24:../../lang/perl5").DependencyWithPath()
+	runVartypeChecks("DEPENDS", "+=", (*VartypeCheck).DependencyWithPath,
+		"Perl",
+		"perl5>=5.22:../perl5",
+		"perl5>=5.24:../../lang/perl5",
+		"broken0.12.1:../../x11/alacarte",
+		"broken[0-9]*:../../x11/alacarte",
+		"broken[0-9]*../../x11/alacarte",
+		"broken>=:../../x11/alacarte",
+		"broken=0:../../x11/alacarte",
+		"broken=:../../x11/alacarte",
+		"broken-:../../x11/alacarte",
+		"broken>:../../x11/alacarte")
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: fname:1: \"../../lang/perl5\" does not exist.\n"+
-		"ERROR: fname:1: There is no package in \"lang/perl5\".\n"+
-		"WARN: fname:1: Please use USE_TOOLS+=perl:run instead of this dependency.\n")
+		"WARN: fname:1: Unknown dependency format.\n"+
+		"WARN: fname:2: Dependencies should have the form \"../../category/package\".\n"+
+		"ERROR: fname:3: \"../../lang/perl5\" does not exist.\n"+
+		"ERROR: fname:3: There is no package in \"lang/perl5\".\n"+
+		"WARN: fname:3: Please use USE_TOOLS+=perl:run instead of this dependency.\n"+
+		"ERROR: fname:4: Unknown dependency pattern \"broken0.12.1\".\n"+
+		"ERROR: fname:5: Unknown dependency pattern \"broken[0-9]*\".\n"+
+		"WARN: fname:6: Unknown dependency format.\n"+
+		"ERROR: fname:7: Unknown dependency pattern \"broken>=\".\n"+
+		"ERROR: fname:8: Unknown dependency pattern \"broken=0\".\n"+
+		"ERROR: fname:9: Unknown dependency pattern \"broken=\".\n"+
+		"ERROR: fname:10: Unknown dependency pattern \"broken-\".\n"+
+		"ERROR: fname:11: Unknown dependency pattern \"broken>\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_DistSuffix(c *check.C) {
@@ -265,4 +282,13 @@ func newVartypeCheck(varname, op, value string) *VartypeCheck {
 	mkline := NewMkLine(NewLine("fname", 1, varname+op+value, nil))
 	valueNovar := mkline.withoutMakeVariables(value, true)
 	return &VartypeCheck{mkline, varname, op, value, valueNovar, "", true, guNotGuessed}
+}
+
+func runVartypeChecks(varname, op string, checker func(*VartypeCheck), values ...string) {
+	for i, value := range values {
+		mkline := NewMkLine(NewLine("fname", i+1, varname+op+value, nil))
+		valueNovar := mkline.withoutMakeVariables(value, true)
+		vc := &VartypeCheck{mkline, varname, op, value, valueNovar, "", true, guNotGuessed}
+		checker(vc)
+	}
 }
