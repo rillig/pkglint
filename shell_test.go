@@ -72,6 +72,52 @@ func (s *Suite) TestChecklineMkShelltext(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"\\\\n\" instead of \"\\n\".\n")
 }
 
+func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	s.RegisterTool("echo", "ECHO", false)
+	G.mk = s.NewMkLines("Makefile",
+		"\techo ${PKGNAME:Q}")
+	shline := NewMkShellLine(G.mk.mklines[0])
+
+	c.Check(shline.Line.raw[0].textnl, equals, "\techo ${PKGNAME:Q}\n")
+	c.Check(shline.Line.raw[0].lineno, equals, 1)
+
+	shline.checkShelltext("echo ${PKGNAME:Q}")
+
+	c.Check(s.Output(), equals, ""+
+		"NOTE: Makefile:1: The :Q operator isn't necessary for ${PKGNAME} here.\n")
+}
+
+func (s *Suite) TestMkShellLine_CheckShelltext_showAutofix(c *check.C) {
+	s.UseCommandLine(c, "-Wall","--show-autofix")
+	G.globalData.InitVartypes()
+	s.RegisterTool("echo", "ECHO", false)
+	G.mk = s.NewMkLines("Makefile",
+		"\techo ${PKGNAME:Q}")
+	shline := NewMkShellLine(G.mk.mklines[0])
+
+	shline.checkShelltext("echo ${PKGNAME:Q}")
+
+	c.Check(s.Output(), equals, ""+
+		"NOTE: Makefile:1: The :Q operator isn't necessary for ${PKGNAME} here.\n"+
+		"NOTE: Makefile:1: Autofix: replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
+}
+
+func (s *Suite) TestMkShellLine_CheckShelltext_autofix(c *check.C) {
+	s.UseCommandLine(c, "-Wall","--autofix")
+	G.globalData.InitVartypes()
+	s.RegisterTool("echo", "ECHO", false)
+	G.mk = s.NewMkLines("Makefile",
+		"\techo ${PKGNAME:Q}")
+	shline := NewMkShellLine(G.mk.mklines[0])
+
+	shline.checkShelltext("echo ${PKGNAME:Q}")
+
+	c.Check(s.Output(), equals, ""+
+		"NOTE: Makefile:1: Autofix: replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
+}
+
 func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
@@ -159,7 +205,6 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 	NewMkShellLine(mkline).checkShelltext("echo \"hello, world\"")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:3: The \"echo\" tool is used but not added to USE_TOOLS.\n"+
 		"WARN: fname:3: Please use \"${ECHO}\" instead of \"echo\".\n")
 }
 

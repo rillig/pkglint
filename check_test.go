@@ -73,12 +73,14 @@ func (s *Suite) RegisterTool(toolname, varname string, varRequired bool) {
 		G.globalData.tools = make(map[string]bool)
 		G.globalData.vartools = make(map[string]string)
 		G.globalData.toolsVarRequired = make(map[string]bool)
+		G.globalData.predefinedTools = make(map[string]bool)
 	}
 	G.globalData.tools[toolname] = true
 	G.globalData.vartools[toolname] = varname
 	if varRequired {
 		G.globalData.toolsVarRequired[toolname] = true
 	}
+	G.globalData.predefinedTools[toolname] = true
 }
 
 func (s *Suite) CreateTmpFile(c *check.C, relFname, content string) (absFname string) {
@@ -92,6 +94,12 @@ func (s *Suite) CreateTmpFile(c *check.C, relFname, content string) (absFname st
 	err = ioutil.WriteFile(absFname, []byte(content), 0666)
 	c.Check(err, check.IsNil)
 	return
+}
+
+func (s *Suite) LoadTmpFile(c *check.C, relFname string) string {
+	bytes, err := ioutil.ReadFile(s.tmpdir + "/" + relFname)
+	c.Assert(err, check.IsNil)
+	return string(bytes)
 }
 
 func (s *Suite) ExpectFatalError(action func()) {

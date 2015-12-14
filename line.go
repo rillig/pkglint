@@ -143,18 +143,23 @@ func (ln *Line) logAutofix() bool {
 }
 
 func (ln *Line) autofixInsertBefore(line string) bool {
-	ln.before = append(ln.before, &RawLine{0, line + "\n"})
+	if G.opts.PrintAutofix || G.opts.Autofix {
+		ln.before = append(ln.before, &RawLine{0, line + "\n"})
+	}
 	return ln.noteAutofix("Autofix: inserting a line %q before this line.", line)
 }
 
 func (ln *Line) autofixInsertAfter(line string) bool {
-	ln.after = append(ln.after, &RawLine{0, line + "\n"})
+	if G.opts.PrintAutofix || G.opts.Autofix {
+		ln.after = append(ln.after, &RawLine{0, line + "\n"})
+	}
 	return ln.noteAutofix("Autofix: inserting a line %q after this line.", line)
 }
 
 func (ln *Line) autofixDelete() bool {
-	ln.raw = nil
-	ln.changed = true
+	if G.opts.PrintAutofix || G.opts.Autofix {
+		ln.raw = nil
+	}
 	return ln.noteAutofix("Autofix: deleting this line.")
 }
 
@@ -162,7 +167,9 @@ func (ln *Line) autofixReplace(from, to string) bool {
 	for _, rawLine := range ln.raw {
 		if rawLine.lineno != 0 {
 			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
-				rawLine.textnl = replaced
+				if G.opts.PrintAutofix || G.opts.Autofix {
+					rawLine.textnl = replaced
+				}
 				return ln.noteAutofix("Autofix: replacing %q with %q.", from, to)
 			}
 		}
@@ -174,7 +181,9 @@ func (ln *Line) autofixReplaceRegexp(from, to string) bool {
 	for _, rawLine := range ln.raw {
 		if rawLine.lineno != 0 {
 			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
-				rawLine.textnl = replaced
+				if G.opts.PrintAutofix || G.opts.Autofix {
+					rawLine.textnl = replaced
+				}
 				return ln.noteAutofix("Autofix: replacing regular expression %q with %q.", from, to)
 			}
 		}
@@ -188,7 +197,7 @@ func (ln *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bo
 	}
 	ln.changed = true
 	if G.opts.Autofix {
-		ln.notef(format,args...)
+		ln.notef(format, args...)
 		return true
 	}
 	if G.opts.PrintAutofix {

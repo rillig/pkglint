@@ -344,29 +344,38 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	if m, stripped := match1(mod, `(.*?)(?::M\*)?(?::Q)?$`); m {
 		strippedMod = stripped
 	}
-	correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 
 	if mod == ":M*:Q" && !needMstar {
 		mkline.notef("The :M* modifier is not needed here.")
 
-	} else if mod != correctMod && needsQuoting == nqYes {
-		if vuc.shellword == vucQuotPlain {
-			mkline.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
-		} else {
-			mkline.warnf("Please use ${%s%s} instead of ${%s%s} and make sure the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
+	} else if needsQuoting == nqYes {
+		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
+		if mod != correctMod {
+			if vuc.shellword == vucQuotPlain {
+				if !mkline.line.autofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
+					mkline.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+				}
+			} else {
+				mkline.warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
+					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
+			}
+			mkline.explain(
+				"See the pkgsrc guide, section \"quoting guideline\", for details.")
 		}
-		mkline.explain(
-			"See the pkgsrc guide, section \"quoting guideline\", for details.")
 	}
 
-	if hasSuffix(mod, ":Q") {
-		if needsQuoting == nqNo {
-			mkline.warnf("The :Q operator should not be used for ${%s} here.", varname)
+	if hasSuffix(mod, ":Q") && (needsQuoting == nqNo || needsQuoting == nqDoesntMatter) {
+		bad := "${" + varname + mod + "}"
+		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
+		trace("","qqq",bad,good)
+		needExplain := false
+		if needsQuoting == nqNo && !mkline.line.autofixReplace(bad, good) {
+			needExplain = mkline.warnf("The :Q operator should not be used for ${%s} here.", varname)
 		}
-		if needsQuoting == nqDoesntMatter {
-			mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
+		if needsQuoting == nqDoesntMatter && !mkline.line.autofixReplace(bad, good) {
+			needExplain = mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
-		if needsQuoting == nqNo || needsQuoting == nqDoesntMatter {
+		if needExplain {
 			mkline.explain(
 				"Many variables in pkgsrc do not need the :Q operator, since they",
 				"are not expected to contain white-space or other special characters.",
