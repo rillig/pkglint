@@ -1,7 +1,5 @@
 package main
 
-// based on pkglint.pl 1.896
-
 import (
 	"fmt"
 	"os"
@@ -14,7 +12,6 @@ const (
 	reDependencyWildcard = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
 	reMkCond             = `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s+([^\s#][^#]*?))?\s*(?:#.*)?$`
 	reMkInclude          = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
-	reVarassign          = `^ *([-*+A-Z_a-z0-9.${}\[]+?)\s*([!+:?]?=)\s*((?:\\#|[^#])*?)(?:\s*(#.*))?$`
 	rePkgname            = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
 	rePkgbase            = `(?:[+.\w]|-[A-Z_a-z])+`
 	rePkgversion         = `\d(?:\w|\.\d)*`
@@ -454,8 +451,17 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 }
 
 func matchVarassign(text string) (m bool, varname, op, value, comment string) {
-	if contains(text, "=") {
-		m, varname, op, value, comment = match4(text, reVarassign)
+	if !contains(text, "=") {
+		return
+	}
+
+	var space string
+	if m, varname, space, op, value, comment = match5(text, `^ *([-*+A-Z_a-z0-9.${}\[]+)(\s*)([!:?]?=)\s*((?:\\#|[^#])*)\s*(#.*)?$`); m {
+		if hasSuffix(varname, "+") && space == "" && op == "=" {
+			varname = varname[:len(varname)-1]
+			op = "+="
+		}
+		value = strings.TrimSpace(value)
 	}
 	return
 }

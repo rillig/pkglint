@@ -708,15 +708,12 @@ func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) 
 }
 
 func (mkline *MkLine) checkVaralign() {
-	text := mkline.line.text
-	if m := regcomp(reVarassign).FindStringSubmatchIndex(text); m != nil {
-		varname := text[m[2]:m[3]]
-		space1 := text[m[3]:m[4]]
-		op := text[m[4]:m[5]]
-		align := text[m[5]:m[6]]
+	if !G.opts.WarnSpace {
+		return
+	}
 
-		if G.opts.WarnSpace && align != " " && strings.Trim(align, "\t") != "" {
-			prefix := varname + space1 + op
+	if m, prefix, align := match2(mkline.line.text, `^( *[-*+A-Z_a-z0-9.${}\[]+\s*[!:?]?=)(\s*)`); m {
+		if align != " " && strings.Trim(align, "\t") != "" {
 			alignedWidth := tabLength(prefix + align)
 			tabs := ""
 			for tabLength(prefix+tabs) < alignedWidth {

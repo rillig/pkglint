@@ -77,9 +77,11 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 		}
 
 		line := exp.currentLine()
+		mkline := mklines.mklines[exp.index]
 
-		if exp.advanceIfMatches(reVarassign) {
-			varname, value := exp.m[1], exp.m[3]
+		if mkline.IsVarassign() {
+			exp.advance()
+			varname, value := mkline.Varname(), mkline.Value()
 			doCheck := false
 
 			if varname == "BUILDLINK_ABI_DEPENDS."+pkgid {

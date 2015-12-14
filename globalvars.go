@@ -33,6 +33,7 @@ type GlobalVars struct {
 	res       map[string]*regexp.Regexp
 	rematch   *Histogram
 	renomatch *Histogram
+	retime    *Histogram
 }
 
 type CmdOpts struct {

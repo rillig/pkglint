@@ -48,6 +48,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		defer pprof.StopCPUProfile()
 		G.rematch = NewHistogram()
 		G.renomatch = NewHistogram()
+		G.retime = NewHistogram()
 	}
 
 	for _, arg := range G.opts.args {
@@ -70,6 +71,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	if G.opts.Profiling {
 		G.rematch.printStats("rematch", G.logOut)
 		G.renomatch.printStats("renomatch", G.logOut)
+		G.retime.printStats("retime", G.logOut)
 	}
 	if G.errors != 0 {
 		return 1

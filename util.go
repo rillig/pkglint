@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Short names for commonly used functions.
@@ -169,13 +170,23 @@ func regcomp(re string) *regexp.Regexp {
 }
 
 func match(s, re string) []string {
+	if !G.opts.Profiling {
+		return regcomp(re).FindStringSubmatch(s)
+	}
+
+	before := time.Now()
+	immediatelyBefore := time.Now()
 	m := regcomp(re).FindStringSubmatch(s)
-	if G.opts.Profiling {
-		if m != nil {
-			G.rematch.add(re)
-		} else {
-			G.renomatch.add(re)
-		}
+	after := time.Now()
+
+	delay := immediatelyBefore.UnixNano() - before.UnixNano()
+	timeTaken := after.UnixNano() - immediatelyBefore.UnixNano() - delay
+
+	G.retime.add(re, int(timeTaken))
+	if m != nil {
+		G.rematch.add(re, 1)
+	} else {
+		G.renomatch.add(re, 1)
 	}
 	return m
 }
@@ -184,9 +195,9 @@ func matches(s, re string) bool {
 	matches := regcomp(re).MatchString(s)
 	if G.opts.Profiling {
 		if matches {
-			G.rematch.add(re)
+			G.rematch.add(re, 1)
 		} else {
-			G.renomatch.add(re)
+			G.renomatch.add(re, 1)
 		}
 	}
 	return matches
@@ -431,9 +442,9 @@ func NewHistogram() *Histogram {
 	return h
 }
 
-func (h *Histogram) add(s string) {
+func (h *Histogram) add(s string, n int) {
 	if G.opts.Profiling {
-		h.histo[s]++
+		h.histo[s] += n
 	}
 }
 
