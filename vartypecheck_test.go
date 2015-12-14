@@ -2,96 +2,88 @@ package main
 
 import (
 	check "gopkg.in/check.v1"
-	"io/ioutil"
-	"os"
 )
 
 func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
-	newVartypeCheck("PLIST_AWK", "+=", "{print $0}").AwkCommand()
+	runVartypeChecks("PLIST_AWK", "+=", (*VartypeCheck).AwkCommand,
+		"{print $0}")
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_BasicRegularExpression(c *check.C) {
-	newVartypeCheck("REPLACE_FILES.pl", "=", ".*\\.pl$").BasicRegularExpression()
+	runVartypeChecks("REPLACE_FILES.pl", "=", (*VartypeCheck).BasicRegularExpression,
+		".*\\.pl$")
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_BuildlinkDepmethod(c *check.C) {
-	newVartypeCheck("BUILDLINK_DEPMETHOD.libc", "?=", "full").BuildlinkDepmethod()
-	newVartypeCheck("BUILDLINK_DEPMETHOD.libc", "?=", "unknown").BuildlinkDepmethod()
+	runVartypeChecks("BUILDLINK_DEPMETHOD.libc", "?=", (*VartypeCheck).BuildlinkDepmethod,
+		"full",
+		"unknown")
 
-	c.Check(s.Output(), equals, "WARN: fname:1: Invalid dependency method \"unknown\". Valid methods are \"build\" or \"full\".\n")
+	c.Check(s.Output(), equals, "WARN: fname:2: Invalid dependency method \"unknown\". Valid methods are \"build\" or \"full\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_Category(c *check.C) {
-	tmpdir := c.MkDir()
-	categorydir := tmpdir + "/filesyscategory"
-	categoryMakefile := categorydir + "/Makefile"
-	os.Mkdir(categorydir, 0777)
-	ioutil.WriteFile(categoryMakefile, []byte("# Nothing\n"), 0777)
-	G.currentDir = tmpdir
+	s.CreateTmpFile(c, "filesyscategory/Makefile", "# empty\n")
+	G.currentDir = s.tmpdir
 	G.curPkgsrcdir = "."
 
-	newVartypeCheck("CATEGORIES", "=", "chinese").Category()
-	newVartypeCheck("CATEGORIES", "=", "arabic").Category()
-	newVartypeCheck("CATEGORIES", "=", "filesyscategory").Category()
+	runVartypeChecks("CATEGORIES", "=", (*VartypeCheck).Category,
+		"chinese",
+		"arabic",
+		"filesyscategory")
 
-	c.Check(s.Output(), equals, "ERROR: fname:1: Invalid category \"arabic\".\n")
+	c.Check(s.Output(), equals, "ERROR: fname:2: Invalid category \"arabic\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_CFlag(c *check.C) {
-	newVartypeCheck("CFLAGS", "+=", "-Wall").CFlag()
-	newVartypeCheck("CFLAGS", "+=", "/W3").CFlag()
-	newVartypeCheck("CFLAGS", "+=", "target:sparc64").CFlag()
-	newVartypeCheck("CFLAGS", "+=", "-std=c99").CFlag()
-	newVartypeCheck("CFLAGS", "+=", "-XX:+PrintClassHistogramAfterFullGC").CFlag()
+	runVartypeChecks("CFLAGS", "+=", (*VartypeCheck).CFlag,
+		"-Wall",
+		"/W3",
+		"target:sparc64",
+		"-std=c99",
+		"-XX:+PrintClassHistogramAfterFullGC")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Compiler flag \"/W3\" should start with a hyphen.\n"+
-		"WARN: fname:1: Compiler flag \"target:sparc64\" should start with a hyphen.\n"+
-		"WARN: fname:1: Unknown compiler flag \"-XX:+PrintClassHistogramAfterFullGC\".\n")
+		"WARN: fname:2: Compiler flag \"/W3\" should start with a hyphen.\n"+
+		"WARN: fname:3: Compiler flag \"target:sparc64\" should start with a hyphen.\n"+
+		"WARN: fname:5: Unknown compiler flag \"-XX:+PrintClassHistogramAfterFullGC\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_Comment(c *check.C) {
-	newVartypeCheck("COMMENT", "=", "Versatile Programming Language").Comment()
-	newVartypeCheck("COMMENT", "=", "SHORT_DESCRIPTION_OF_THE_PACKAGE").Comment()
-	newVartypeCheck("COMMENT", "=", "A great package.").Comment()
-	newVartypeCheck("COMMENT", "=", "some packages need a very very long comment to explain their basic usefulness").Comment()
+	runVartypeChecks("COMMENT", "=", (*VartypeCheck).Comment,
+		"Versatile Programming Language",
+		"SHORT_DESCRIPTION_OF_THE_PACKAGE",
+		"A great package.",
+		"some packages need a very very long comment to explain their basic usefulness")
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: fname:1: COMMENT must be set.\n"+
-		"WARN: fname:1: COMMENT should not begin with \"A\".\n"+
-		"WARN: fname:1: COMMENT should not end with a period.\n"+
-		"WARN: fname:1: COMMENT should start with a capital letter.\n"+
-		"WARN: fname:1: COMMENT should not be longer than 70 characters.\n")
+		"ERROR: fname:2: COMMENT must be set.\n"+
+		"WARN: fname:3: COMMENT should not begin with \"A\".\n"+
+		"WARN: fname:3: COMMENT should not end with a period.\n"+
+		"WARN: fname:4: COMMENT should start with a capital letter.\n"+
+		"WARN: fname:4: COMMENT should not be longer than 70 characters.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
-	newVartypeCheck("CONFLICTS", "+=", "Perl").Dependency()
+	runVartypeChecks("CONFLICTS", "+=", (*VartypeCheck).Dependency,
+		"Perl",
+		"perl5>=5.22",
+		"perl5-*",
+		"perl5-5.22.*",
+		"perl5-[5.10-5.22]*",
+		"py-docs",
+		"perl5-5.22.*{,nb*}")
 
-	c.Check(s.Output(), equals, "WARN: fname:1: Unknown dependency format: Perl\n")
-
-	newVartypeCheck("CONFLICTS", "+=", "perl5>=5.22").Dependency()
-
-	c.Check(s.Output(), equals, "")
-
-	newVartypeCheck("CONFLICTS", "+=", "perl5-*").Dependency()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".\n")
-
-	newVartypeCheck("CONFLICTS", "+=", "perl5-5.22.*").Dependency()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: Please append \"{,nb*}\" to the version number of this dependency.\n")
-
-	newVartypeCheck("CONFLICTS", "+=", "perl5-[5.10-5.22]*").Dependency()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: Only [0-9]* is allowed in the numeric part of a dependency.\n")
-
-	newVartypeCheck("CONFLICTS", "+=", "py-docs").Dependency()
-
-	c.Check(s.Output(), equals, "ERROR: fname:1: Unknown dependency pattern \"py-docs\".\n")
-
-	newVartypeCheck("CONFLICTS", "+=", "perl5-5.22.*{,nb*}").Dependency()
-
-	c.Check(s.Output(), equals, "")
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: Unknown dependency format: Perl\n"+
+		"WARN: fname:3: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".\n"+
+		"WARN: fname:4: Please append \"{,nb*}\" to the version number of this dependency.\n"+
+		"WARN: fname:5: Only [0-9]* is allowed in the numeric part of a dependency.\n"+
+		"ERROR: fname:6: Unknown dependency pattern \"py-docs\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_DependencyWithPatch(c *check.C) {
@@ -131,21 +123,23 @@ func (s *Suite) TestVartypeCheck_DependencyWithPatch(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_DistSuffix(c *check.C) {
-	newVartypeCheck("EXTRACT_SUFX", "=", ".tar.gz").DistSuffix()
-	newVartypeCheck("EXTRACT_SUFX", "=", ".tar.bz2").DistSuffix()
+	runVartypeChecks("EXTRACT_SUFX", "=", (*VartypeCheck).DistSuffix,
+		".tar.gz",
+		".tar.bz2")
 
 	c.Check(s.Output(), equals, "NOTE: fname:1: EXTRACT_SUFX is \".tar.gz\" by default, so this definition may be redundant.\n")
 }
 
 func (s *Suite) TestVartypeCheck_EmulPlatform(c *check.C) {
-	newVartypeCheck("EMUL_PLATFORM", "=", "linux-i386").EmulPlatform()
-	newVartypeCheck("EMUL_PLATFORM", "=", "nextbsd-8087").EmulPlatform()
-	newVartypeCheck("EMUL_PLATFORM", "=", "${LINUX}").EmulPlatform()
+	runVartypeChecks("EMUL_PLATFORM", "=", (*VartypeCheck).EmulPlatform,
+		"linux-i386",
+		"nextbsd-8087",
+		"${LINUX}")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Unknown operating system: nextbsd\n"+
-		"WARN: fname:1: Unknown hardware architecture: 8087\n"+
-		"WARN: fname:1: \"${LINUX}\" is not a valid emulation platform.\n")
+		"WARN: fname:2: Unknown operating system: nextbsd\n"+
+		"WARN: fname:2: Unknown hardware architecture: 8087\n"+
+		"WARN: fname:3: \"${LINUX}\" is not a valid emulation platform.\n")
 }
 
 func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
@@ -158,135 +152,121 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 		"MASTER_SITE_GNU":    true,
 	}
 
-	newVartypeCheck("MASTER_SITES", "=", "https://github.com/example/project/").FetchURL()
+	runVartypeChecks("MASTER_SITES", "=", (*VartypeCheck).FetchURL,
+		"https://github.com/example/project/",
+		"http://ftp.gnu.org/pub/gnu/bison", // Missing a slash at the end
+		"${MASTER_SITE_GNU:=bison}",
+		"${MASTER_SITE_INVALID:=subdir/}")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Please use ${MASTER_SITE_GITHUB:=example/} instead of \"https://github.com/example/project/\".\n"+
-		"WARN: fname:1: Run \""+confMake+" help topic=github\" for further tips.\n")
-
-	newVartypeCheck("MASTER_SITES", "=", "http://ftp.gnu.org/pub/gnu/bison").FetchURL() // Missing a slash at the end
-
-	c.Check(s.Output(), equals, "WARN: fname:1: Please use ${MASTER_SITE_GNU:=bison} instead of \"http://ftp.gnu.org/pub/gnu/bison\".\n")
-
-	newVartypeCheck("MASTER_SITES", "=", "${MASTER_SITE_GNU:=bison}").FetchURL()
-
-	c.Check(s.Output(), equals, "ERROR: fname:1: The subdirectory in MASTER_SITE_GNU must end with a slash.\n")
-
-	newVartypeCheck("MASTER_SITES", "=", "${MASTER_SITE_INVALID:=subdir/}").FetchURL()
-
-	c.Check(s.Output(), equals, "ERROR: fname:1: MASTER_SITE_INVALID does not exist.\n")
+		"WARN: fname:1: Run \""+confMake+" help topic=github\" for further tips.\n"+
+		"WARN: fname:2: Please use ${MASTER_SITE_GNU:=bison} instead of \"http://ftp.gnu.org/pub/gnu/bison\".\n"+
+		"ERROR: fname:3: The subdirectory in MASTER_SITE_GNU must end with a slash.\n"+
+		"ERROR: fname:4: MASTER_SITE_INVALID does not exist.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Filename(c *check.C) {
-	newVartypeCheck("FNAME", "=", "Filename with spaces.docx").Filename()
+	runVartypeChecks("FNAME", "=", (*VartypeCheck).Filename,
+		"Filename with spaces.docx",
+		"OS/2-manual.txt")
 
-	c.Check(s.Output(), equals, "WARN: fname:1: \"Filename with spaces.docx\" is not a valid filename.\n")
-
-	newVartypeCheck("FNAME", "=", "OS/2-manual.txt").Filename()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: A filename should not contain a slash.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: \"Filename with spaces.docx\" is not a valid filename.\n"+
+		"WARN: fname:2: A filename should not contain a slash.\n")
 }
 
 func (s *Suite) TestVartypeCheck_MailAddress(c *check.C) {
-	newVartypeCheck("MAINTAINER", "=", "pkgsrc-users@netbsd.org").MailAddress()
+	runVartypeChecks("MAINTAINER", "=", (*VartypeCheck).MailAddress,
+		"pkgsrc-users@netbsd.org")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please write \"NetBSD.org\" instead of \"netbsd.org\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_Message(c *check.C) {
-
-	newVartypeCheck("SUBST_MESSAGE.id", "=", "\"Correct paths\"").Message()
+	runVartypeChecks("SUBST_MESSAGE.id", "=", (*VartypeCheck).Message,
+		"\"Correct paths\"",
+		"Correct paths")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: SUBST_MESSAGE.id should not be quoted.\n")
-
-	newVartypeCheck("SUBST_MESSAGE.id", "=", "Correct paths").Message()
-
-	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_Pathlist(c *check.C) {
-
-	newVartypeCheck("PATH", "=", "/usr/bin:/usr/sbin:.:${LOCALBASE}/bin").Pathlist()
+	runVartypeChecks("PATH", "=", (*VartypeCheck).Pathlist,
+		"/usr/bin:/usr/sbin:.:${LOCALBASE}/bin")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: All components of PATH (in this case \".\") should be absolute paths.\n")
 }
 
 func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {
-
-	newVartypeCheck("PKGREVISION", "=", "3a").PkgRevision()
+	runVartypeChecks("PKGREVISION", "=", (*VartypeCheck).PkgRevision,
+		"3a")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: PKGREVISION must be a positive integer number.\n"+
 		"ERROR: fname:1: PKGREVISION only makes sense directly in the package Makefile.\n")
 
-	vc := newVartypeCheck("PKGREVISION", "=", "3")
-	vc.line.line.fname = "Makefile"
-	vc.PkgRevision()
+	runVartypeChecksFname("Makefile", "PKGREVISION", "=", (*VartypeCheck).PkgRevision,
+		"3")
 
 	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_PlatformTriple(c *check.C) {
-	newVartypeCheck("ONLY_FOR_PLATFORM", "=", "linux-i386").PlatformTriple()
-	newVartypeCheck("ONLY_FOR_PLATFORM", "=", "nextbsd-5.0-8087").PlatformTriple()
-	newVartypeCheck("ONLY_FOR_PLATFORM", "=", "${LINUX}").PlatformTriple()
+	runVartypeChecks("ONLY_FOR_PLATFORM", "=", (*VartypeCheck).PlatformTriple,
+		"linux-i386",
+		"nextbsd-5.0-8087",
+		"${LINUX}")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: \"linux-i386\" is not a valid platform triple.\n"+
-		"WARN: fname:1: Unknown operating system: nextbsd\n"+
-		"WARN: fname:1: Unknown hardware architecture: 8087\n")
+		"WARN: fname:2: Unknown operating system: nextbsd\n"+
+		"WARN: fname:2: Unknown hardware architecture: 8087\n")
 }
 
 func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 
-	newVartypeCheck("SUBST_SED.dummy", "=", "s,@COMPILER@,gcc,g").SedCommands()
+	runVartypeChecks("SUBST_SED.dummy", "=", (*VartypeCheck).SedCommands,
+		"s,@COMPILER@,gcc,g",
+		"-e s,a,b, -e a,b,c,")
 
-	c.Check(s.Output(), equals, "NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n")
-
-	newVartypeCheck("SUBST_SED.dummy", "=", "-e s,a,b, -e a,b,c,").SedCommands()
-
-	c.Check(s.Output(), equals, "NOTE: fname:1: Each sed command should appear in an assignment of its own.\n")
+	c.Check(s.Output(), equals, ""+
+		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n"+
+		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
+	runVartypeChecks("SUBST_STAGE.dummy", "=", (*VartypeCheck).Stage,
+		"post-patch",
+		"post-modern",
+		"pre-test")
 
-	newVartypeCheck("SUBST_STAGE.dummy", "=", "post-patch").Stage()
-
-	c.Check(s.Output(), equals, "")
-
-	newVartypeCheck("SUBST_STAGE.dummy", "=", "post-modern").Stage()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: Invalid stage name \"post-modern\". Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.\n")
-
-	newVartypeCheck("SUBST_STAGE.dummy", "=", "pre-test").Stage()
-
-	c.Check(s.Output(), equals, "")
+	c.Check(s.Output(), equals, "WARN: fname:2: Invalid stage name \"post-modern\". Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
+	runVartypeChecks("APACHE_MODULE", "=", (*VartypeCheck).Yes,
+		"yes",
+		"no",
+		"${YESVAR}")
 
-	newVartypeCheck("APACHE_MODULE", "=", "yes").Yes()
-
-	c.Check(s.Output(), equals, "")
-
-	newVartypeCheck("APACHE_MODULE", "=", "no").Yes()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: APACHE_MODULE should be set to YES or yes.\n")
-
-	newVartypeCheck("APACHE_MODULE", "=", "${YESVAR}").Yes()
-
-	c.Check(s.Output(), equals, "WARN: fname:1: APACHE_MODULE should be set to YES or yes.\n")
-}
-
-func newVartypeCheck(varname, op, value string) *VartypeCheck {
-	mkline := NewMkLine(NewLine("fname", 1, varname+op+value, nil))
-	valueNovar := mkline.withoutMakeVariables(value, true)
-	return &VartypeCheck{mkline, varname, op, value, valueNovar, "", true, guNotGuessed}
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:2: APACHE_MODULE should be set to YES or yes.\n"+
+		"WARN: fname:3: APACHE_MODULE should be set to YES or yes.\n")
 }
 
 func runVartypeChecks(varname, op string, checker func(*VartypeCheck), values ...string) {
 	for i, value := range values {
 		mkline := NewMkLine(NewLine("fname", i+1, varname+op+value, nil))
+		valueNovar := mkline.withoutMakeVariables(value, true)
+		vc := &VartypeCheck{mkline, varname, op, value, valueNovar, "", true, guNotGuessed}
+		checker(vc)
+	}
+}
+
+func runVartypeChecksFname(fname, varname, op string, checker func(*VartypeCheck), values ...string) {
+	for i, value := range values {
+		mkline := NewMkLine(NewLine(fname, i+1, varname+op+value, nil))
 		valueNovar := mkline.withoutMakeVariables(value, true)
 		vc := &VartypeCheck{mkline, varname, op, value, valueNovar, "", true, guNotGuessed}
 		checker(vc)
