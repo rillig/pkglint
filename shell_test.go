@@ -80,8 +80,8 @@ func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
 		"\techo ${PKGNAME:Q}")
 	shline := NewMkShellLine(G.mk.mklines[0])
 
-	c.Check(shline.Line.raw[0].textnl, equals, "\techo ${PKGNAME:Q}\n")
-	c.Check(shline.Line.raw[0].lineno, equals, 1)
+	c.Check(shline.line.raw[0].textnl, equals, "\techo ${PKGNAME:Q}\n")
+	c.Check(shline.line.raw[0].lineno, equals, 1)
 
 	shline.checkShelltext("echo ${PKGNAME:Q}")
 
