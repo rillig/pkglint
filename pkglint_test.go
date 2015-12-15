@@ -99,13 +99,21 @@ func (s *Suite) TestChecklineRcsid(c *check.C) {
 }
 
 func (s *Suite) TestMatchVarassign(c *check.C) {
-	m, varname, op, value, comment := matchVarassign("C++=c11")
-
-	c.Check(m, equals, true)
-	c.Check(varname, equals, "C+")
-	c.Check(op, equals, "+=")
-	c.Check(value, equals, "c11")
-	c.Check(comment, equals, "")
+	checkVarassign := func(text string, ck check.Checker, varname, op, value, comment string) {
+		type va struct {
+			varname, op, value, comment string
+		}
+		expected := va{varname, op, value, comment}
+		am, avarname, aop, avalue, acomment := matchVarassign(text)
+		if !am {
+			c.Errorf("Text %q doesn’t match variable assignment", text)
+			return
+		}
+		actual := va{avarname, aop, avalue, acomment}
+		c.Check(actual, ck, expected)
+	}
+	
+	checkVarassign("C++=c11", equals, "C+", "+=", "c11", "")
 }
 
 func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {
