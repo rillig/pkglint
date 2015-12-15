@@ -464,7 +464,7 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 			if r == '#' && (i == 0 || rest[i-1] != '\\') {
 				comment = rest[i:]
 				break
-			} else if r != '\\' || i >= len(rest) || rest[i+1] != '#' {
+			} else if r != '\\' || i+1 >= len(rest) || rest[i+1] != '#' {
 				valuebuf = append(valuebuf, r)
 			}
 		}

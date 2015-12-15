@@ -112,8 +112,13 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 		actual := va{avarname, aop, avalue, acomment}
 		c.Check(actual, ck, expected)
 	}
-	
+
 	checkVarassign("C++=c11", equals, "C+", "+=", "c11", "")
+	checkVarassign("V=v", equals, "V", "=", "v", "")
+	checkVarassign("VAR=#comment", equals, "VAR", "=", "", "#comment")
+	checkVarassign("VAR=\\#comment", equals, "VAR", "=", "#comment", "")
+	checkVarassign("VAR=\\\\\\##comment", equals, "VAR", "=", "\\\\#", "#comment")
+	checkVarassign("VAR=\\", equals, "VAR", "=", "\\", "")
 }
 
 func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {
