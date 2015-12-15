@@ -1,0 +1,49 @@
+#! /bin/sh
+set -eu
+
+srcdir="$HOME/pkglint"
+archivedir="$srcdir/archive"
+pkgsrcdir="$HOME/pkgsrc"
+
+(cd "$srcdir" && rm .git/index && git reset > /dev/null)
+if (cd "$srcdir" && git diff-index --quiet HEAD); then
+  runid=$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print $1$2$3"-"$4$5}')-$(cd "$srcdir" && git rev-parse --short HEAD)
+else
+  runid=$(date +'%Y%m%d-%H%M')-$(cd "$srcdir" && git rev-parse --short HEAD)-mod
+fi
+
+echo "=> Installing pkglint"
+(cd "$srcdir" && chmod 644 *.go)
+(cd "$srcdir" && go fmt && go build && go test && go install && cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe")
+
+#echo "=> Analyzing test coverage"
+#(cd ~/pkglint && gocover)
+
+#echo "=> Analyzing code style"
+#(cd ~/pkglint && gometalinter --exclude "exported method|unexported|drop this else") | less
+
+#echo "=> Copying files to NetBSD VM"
+#rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync --include="*.go" --exclude="*" ~/pkglint/ netbsd:proj/pkgsrc/pkgtools/pkglint/files/
+
+#echo "=> Installing NetBSD package"
+#ssh netbsd ". .bash_profile && cd proj/pkgsrc/pkgtools/pkglint && bmake update"
+
+echo "=> Running pkglint on the pkgsrc tree"
+#ssh netbsd ". .bash_profile && time (cd ~/proj/pkgsrc && pkglint -r -Wall -Call) > ~/pkglint-work.out || true"
+time (cd "$pkgsrcdir" && pkglint -pr -Wall -Call) > "$archivedir/$runid.tmp" || true
+mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
+
+echo "=> Generating diffs"
+#ssh netbsd ". .bash_profile && diff -u pkglint-5.2.2.out pkglint-work.out" | less
+(
+  cd "$archivedir"
+  for out in *.out; do
+    diff="${out%.out}.diff"
+    if [ ! -f "$diff" ]; then
+      diff -u "reference.out" "$out" > "$diff" || true
+      touch -r "$out" "$diff"
+    fi
+  done
+)
+
+echo "=> OK"
