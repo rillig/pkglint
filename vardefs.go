@@ -705,7 +705,7 @@ func enum(values string) *VarChecker {
 }
 
 func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries ...string) {
-	m := mustMatch(`^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`, varname)
+	m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`)
 	varbase, varparam := m[1], m[2]
 
 	vtype := &Vartype{kindOfList, checker, parseAclEntries(aclentries), guNotGuessed}
@@ -724,7 +724,7 @@ func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries 
 func parseAclEntries(args []string) []AclEntry {
 	var result []AclEntry
 	for _, arg := range args {
-		m := mustMatch(`^([\w-.*]+|_):([adpsu]*)$`, arg)
+		m := mustMatch(arg, `^([\w-.*]+|_):([adpsu]*)$`)
 		glob, perms := m[1], m[2]
 		result = append(result, AclEntry{glob, perms})
 	}

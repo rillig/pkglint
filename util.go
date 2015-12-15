@@ -29,11 +29,11 @@ func ifelseStr(cond bool, a, b string) string {
 	return b
 }
 
-func mustMatch(pattern string, s string) []string {
-	if m := regcomp(pattern).FindStringSubmatch(s); m != nil {
+func mustMatch(s, re string) []string {
+	if m := match(s, re); m != nil {
 		return m
 	}
-	panic(sprintf("mustMatch %q %q", pattern, s))
+	panic(sprintf("mustMatch %q %q", s, re))
 }
 
 func isEmptyDir(fname string) bool {
@@ -279,7 +279,7 @@ func (pr *PrefixReplacer) advanceStr(prefix string) bool {
 	return false
 }
 func (pr *PrefixReplacer) advanceRegexp(re string) bool {
-	if m := regcomp(re).FindStringSubmatch(pr.rest); m != nil {
+	if m := match(pr.rest, re); m != nil {
 		if G.opts.DebugTrace {
 			trace("", "PrefixReplacer.advanceRegexp", pr.rest, re, m[0])
 		}
