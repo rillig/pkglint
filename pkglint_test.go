@@ -119,6 +119,7 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 	checkVarassign("VAR=\\#comment", equals, "VAR", "=", "#comment", "")
 	checkVarassign("VAR=\\\\\\##comment", equals, "VAR", "=", "\\\\#", "#comment")
 	checkVarassign("VAR=\\", equals, "VAR", "=", "\\", "")
+	checkVarassign("VAR += value", equals, "VAR", "+=", "value", "")
 }
 
 func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {
