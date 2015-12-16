@@ -112,6 +112,12 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 		actual := va{avarname, aop, avalue, acomment}
 		c.Check(actual, ck, expected)
 	}
+	checkNotVarassign := func(text string) {
+		m, _, _, _, _ := matchVarassign(text)
+		if m {
+			c.Errorf("Text %q matches variable assignment, but shouldn’t.", text)
+		}
+	}
 
 	checkVarassign("C++=c11", equals, "C+", "+=", "c11", "")
 	checkVarassign("V=v", equals, "V", "=", "v", "")
@@ -120,6 +126,8 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 	checkVarassign("VAR=\\\\\\##comment", equals, "VAR", "=", "\\\\#", "#comment")
 	checkVarassign("VAR=\\", equals, "VAR", "=", "\\", "")
 	checkVarassign("VAR += value", equals, "VAR", "+=", "value", "")
+	checkVarassign(" VAR=value", equals, "VAR", "=", "value", "")
+	checkNotVarassign("\tVAR=value")
 }
 
 func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {

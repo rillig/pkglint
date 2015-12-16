@@ -456,7 +456,7 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 	}
 
 	var space string
-	trimmed := strings.TrimSpace(text)
+	trimmed := strings.TrimLeft(text, " ")
 	if m, varname, space, op = match3(trimmed, `^([-*+A-Z_a-z0-9.${}\[]+)(\s*)([!+:?]?=)`); m {
 		rest := trimmed[len(varname)+len(space)+len(op):]
 		valuebuf := make([]rune, 0, len(rest))
