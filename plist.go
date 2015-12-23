@@ -254,7 +254,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 	switch ext := path.Ext(basename); ext {
 	case ".a", ".la", ".so":
 		if dirname == "lib" && !hasPrefix(basename, "lib") {
-			_ = G.opts.WarnExtra && pline.warnf("Library filename should start with \"lib\".")
+			_ = G.opts.WarnExtra && pline.warnf("Library filename %q should start with \"lib\".", basename)
 		}
 		if ext == "la" {
 			if G.pkg != nil && G.pkg.vardef["USE_LIBTOOL"] == nil {
