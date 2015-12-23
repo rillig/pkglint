@@ -251,9 +251,10 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 		return
 	}
 
-	if m, dir, lib, ext := match3(pline.text, `^(lib/(?:.*/)*)([^/]+)\.(so|a|la)$`); m {
-		if dir == "lib/" && !hasPrefix(lib, "lib") {
-			_ = G.opts.WarnExtra && pline.warnf("Library filename does not start with \"lib\".")
+	switch ext := path.Ext(basename); ext {
+	case ".a", ".la", ".so":
+		if dirname == "lib" && !hasPrefix(basename, "lib") {
+			_ = G.opts.WarnExtra && pline.warnf("Library filename should start with \"lib\".")
 		}
 		if ext == "la" {
 			if G.pkg != nil && G.pkg.vardef["USE_LIBTOOL"] == nil {

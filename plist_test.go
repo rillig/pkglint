@@ -13,6 +13,7 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"etc/rc.d/service",
 		"@exec ${MKDIR} include/pkgbase",
 		"info/dir",
+		"lib/c.so",
 		"lib/libc.so.6",
 		"lib/libc.la",
 		"${PLIST.man}man/cat3/strcpy.4",
@@ -29,12 +30,13 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"ERROR: PLIST:3: Configuration files must not be registered in the PLIST. Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.\n"+
 		"ERROR: PLIST:4: RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.\n"+
 		"ERROR: PLIST:6: \"info/dir\" must not be listed. Use install-info to add/remove an entry.\n"+
-		"WARN: PLIST:7: Redundant library found. The libtool library is in line 8.\n"+
-		"WARN: PLIST:8: \"lib/libc.la\" should be sorted before \"lib/libc.so.6\".\n"+
-		"WARN: PLIST:9: Preformatted manual page without unformatted one.\n"+
-		"WARN: PLIST:9: Preformatted manual pages should end in \".0\".\n"+
-		"WARN: PLIST:10: Please remove this line. It is no longer necessary.\n"+
-		"ERROR: PLIST:12: Duplicate filename \"share/tzinfo\", already appeared in PLIST:11.\n")
+		"WARN: PLIST:7: Library filename should start with \"lib\".\n"+
+		"WARN: PLIST:8: Redundant library found. The libtool library is in line 9.\n"+
+		"WARN: PLIST:9: \"lib/libc.la\" should be sorted before \"lib/libc.so.6\".\n"+
+		"WARN: PLIST:10: Preformatted manual page without unformatted one.\n"+
+		"WARN: PLIST:10: Preformatted manual pages should end in \".0\".\n"+
+		"WARN: PLIST:11: Please remove this line. It is no longer necessary.\n"+
+		"ERROR: PLIST:13: Duplicate filename \"share/tzinfo\", already appeared in PLIST:12.\n")
 }
 
 func (s *Suite) TestChecklinesPlist_empty(c *check.C) {
