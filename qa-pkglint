@@ -40,7 +40,7 @@ echo "=> Generating diffs"
   for out in *.out; do
     diff="${out%.out}.diff"
     if [ ! -f "$diff" ]; then
-      diff -u "reference.out" "$out" > "$diff" || true
+      diff -u "reference" "$out" > "$diff" || true
       touch -r "$out" "$diff"
     fi
   done
