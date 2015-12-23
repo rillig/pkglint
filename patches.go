@@ -313,7 +313,10 @@ func checkwordAbsolutePathname(line *Line, word string) {
 
 // Looks for strings like "/dev/cd0" appearing in source code
 func checklineSourceAbsolutePathname(line *Line, text string) {
-	if matched, before, _, str := match3(text, `(.*)(["'])(/\w[^"']*)["']`); matched {
+	if !strings.ContainsAny(text, "\"'") {
+		return
+	}
+	if matched, before, _, str := match3(text, `^(.*)(["'])(/\w[^"']*)["']`); matched {
 		_ = G.opts.DebugMisc && line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 
 		switch {
