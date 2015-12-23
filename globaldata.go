@@ -185,7 +185,7 @@ func (gd *GlobalData) loadTools() {
 					}
 				}
 
-			} else if m, _, cond, _ := match3(text, reMkCond); m {
+			} else if m, _, cond, _ := matchMkCond(text); m {
 				switch cond {
 				case "if":
 				case "ifdef":

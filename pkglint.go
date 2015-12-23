@@ -10,7 +10,6 @@ import (
 const (
 	reDependencyCmp      = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$`
 	reDependencyWildcard = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
-	reMkCond             = `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s+([^\s#][^#]*?))?\s*(?:#.*)?$`
 	reMkInclude          = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
 	rePkgname            = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
 	rePkgbase            = `(?:[+.\w]|-[A-Z_a-z])+`

@@ -87,7 +87,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		return
 	}
 
-	if m, indent, directive, args := match3(text, reMkCond); m {
+	if m, indent, directive, args := matchMkCond(text); m {
 		mkline.xtype = 5
 		mkline.xs1 = indent
 		mkline.xs2 = directive
@@ -860,4 +860,9 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 		!hasPrefix(path, "../../mk/") {
 		mkline.warn1("Invalid relative path %q.", path)
 	}
+}
+
+func matchMkCond(text string) (m bool, indent, directive, args string) {
+	reMkCond := `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s+([^\s#][^#]*?))?\s*(?:#.*)?$`
+	return match3(text, reMkCond)
 }
