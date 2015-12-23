@@ -863,6 +863,9 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 }
 
 func matchMkCond(text string) (m bool, indent, directive, args string) {
-	reMkCond := `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s+([^\s#][^#]*?))?\s*(?:#.*)?$`
-	return match3(text, reMkCond)
+	if hasPrefix(text, ".") {
+		m, indent, directive, args = match3(text, `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s([^#]*))?`)
+		args = strings.TrimSpace(args)
+	}
+	return
 }
