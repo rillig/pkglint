@@ -72,7 +72,9 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 	change := G.globalData.lastChange[pkg.pkgpath]
 	if change == nil {
-		_ = G.opts.DebugMisc && mkline.debugf("No change log for package %q", pkg.pkgpath)
+		if G.opts.DebugMisc {
+			mkline.debugf("No change log for package %q", pkg.pkgpath)
+		}
 		return
 	}
 
@@ -290,8 +292,10 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 	if pkg.effectivePkgnameLine != nil {
-		_ = G.opts.DebugMisc && pkg.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
-			pkg.effectivePkgname, pkg.effectivePkgbase, pkg.effectivePkgversion)
+		if G.opts.DebugMisc {
+			pkg.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
+				pkg.effectivePkgname, pkg.effectivePkgbase, pkg.effectivePkgversion)
+		}
 	}
 }
 
@@ -302,7 +306,9 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 		qsep := regexp.QuoteMeta(sep)
 		if m, left, from, right, to, mod := match5(subst, `^(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`(g?)$`); m {
 			newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
-			_ = G.opts.DebugMisc && pkg.vardef["PKGNAME"].debugf("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+			if G.opts.DebugMisc {
+				pkg.vardef["PKGNAME"].debugf("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+			}
 			pkgname = newPkgname
 		}
 	}
@@ -451,7 +457,9 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		line := mklines.lines[lineno]
 		text := line.text
 
-		_ = G.opts.DebugMisc && line.debugf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
+		if G.opts.DebugMisc {
+			line.debugf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
+		}
 
 		if nextSection {
 			nextSection = false

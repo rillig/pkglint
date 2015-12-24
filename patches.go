@@ -93,14 +93,18 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	defer tracecall("PatchChecker.checkUnifiedDiff")()
 
 	patchedFileType := guessFileType(ck.exp.currentLine(), patchedFile)
-	_ = G.opts.DebugMisc && ck.exp.currentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
+	if G.opts.DebugMisc {
+		ck.exp.currentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
+	}
 
 	hasHunks := false
 	for ck.exp.advanceIfMatches(rePatchUniHunk) {
 		hasHunks = true
 		linesToDel := toInt(ck.exp.m[2], 1)
 		linesToAdd := toInt(ck.exp.m[4], 1)
-		_ = G.opts.DebugMisc && ck.exp.previousLine().debugf("hunk -%d +%d", linesToDel, linesToAdd)
+		if G.opts.DebugMisc {
+			ck.exp.previousLine().debugf("hunk -%d +%d", linesToDel, linesToAdd)
+		}
 		ck.checktextUniHunkCr()
 
 		for linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.exp.currentLine().text, "\\") {
@@ -283,7 +287,9 @@ func guessFileType(line *Line, fname string) FileType {
 		return ftUnknown
 	}
 
-	_ = G.opts.DebugMisc && line.debug1("Unknown file type for %q", fname)
+	if G.opts.DebugMisc {
+		line.debug1("Unknown file type for %q", fname)
+	}
 	return ftUnknown
 }
 
@@ -317,7 +323,9 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 		return
 	}
 	if matched, before, _, str := match3(text, `^(.*)(["'])(/\w[^"']*)["']`); matched {
-		_ = G.opts.DebugMisc && line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+		if G.opts.DebugMisc {
+			line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+		}
 
 		switch {
 		case matches(before, `[A-Z_]\s*$`):
@@ -347,7 +355,9 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		case hasSuffix(before, "."): // Example: ../dir
 		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
 		default:
-			_ = G.opts.DebugMisc && line.debug1("before=%q", before)
+			if G.opts.DebugMisc {
+				line.debug1("before=%q", before)
+			}
 			checkwordAbsolutePathname(line, path)
 		}
 	}

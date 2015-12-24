@@ -156,13 +156,17 @@ func (mklines *MkLines) determineDefinedVariables() {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
 			for _, varname := range splitOnSpace(mkline.Value()) {
 				mklines.buildDefs[varname] = true
-				_ = G.opts.DebugMisc && mkline.debugf("%q is added to BUILD_DEFS.", varname)
+				if G.opts.DebugMisc {
+					mkline.debugf("%q is added to BUILD_DEFS.", varname)
+				}
 			}
 
 		case "PLIST_VARS":
 			for _, id := range splitOnSpace(mkline.Value()) {
 				mklines.plistVars["PLIST."+id] = true
-				_ = G.opts.DebugMisc && mkline.debugf("PLIST.%s is added to PLIST_VARS.", id)
+				if G.opts.DebugMisc {
+					mkline.debugf("PLIST.%s is added to PLIST_VARS.", id)
+				}
 				mklines.useVar(mkline, "PLIST."+id)
 			}
 
@@ -170,13 +174,17 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, tool := range splitOnSpace(mkline.Value()) {
 				tool = strings.Split(tool, ":")[0]
 				mklines.tools[tool] = true
-				_ = G.opts.DebugMisc && mkline.debugf("%s is added to USE_TOOLS.", tool)
+				if G.opts.DebugMisc {
+					mkline.debugf("%s is added to USE_TOOLS.", tool)
+				}
 			}
 
 		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(mkline.Value()) {
 				mklines.useVar(mkline, varnameCanon(svar))
-				_ = G.opts.DebugMisc && mkline.debugf("varuse %s", svar)
+				if G.opts.DebugMisc {
+					mkline.debugf("varuse %s", svar)
+				}
 			}
 
 		case "OPSYSVARS":
@@ -218,7 +226,9 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 
 	// Check the indentation
 	if indent != strings.Repeat(" ", mklines.indentDepth()) {
-		_ = G.opts.WarnSpace && mkline.notef("This directive should be indented by %d spaces.", mklines.indentDepth())
+		if G.opts.WarnSpace {
+			mkline.notef("This directive should be indented by %d spaces.", mklines.indentDepth())
+		}
 	}
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
@@ -296,7 +306,9 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 }
 
 func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, dependencies string, allowedTargets map[string]bool) {
-	_ = G.opts.DebugMisc && mkline.debugf("targets=%q, dependencies=%q", targets, dependencies)
+	if G.opts.DebugMisc {
+		mkline.debugf("targets=%q, dependencies=%q", targets, dependencies)
+	}
 	mklines.target = targets
 
 	for _, source := range splitOnSpace(dependencies) {
@@ -329,7 +341,9 @@ func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, depende
 func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
-	_ = G.opts.DebugInclude && mkline.debugf("includefile=%s", includefile)
+	if G.opts.DebugInclude {
+		mkline.debugf("includefile=%s", includefile)
+	}
 	mkline.checkRelativePath(includefile, mustExist)
 
 	if hasSuffix(includefile, "/Makefile") {

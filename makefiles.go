@@ -50,7 +50,9 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkg.bl3[bl3File] = line
-					_ = G.opts.DebugMisc && line.debug1("Buildlink3 file in package: %q", bl3File)
+					if G.opts.DebugMisc {
+						line.debug1("Buildlink3 file in package: %q", bl3File)
+					}
 				}
 			}
 		}
@@ -64,7 +66,9 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			}
 
 			if !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
-				_ = G.opts.DebugInclude && line.debug1("Including %q sets seenMakefileCommon.", includeFile)
+				if G.opts.DebugInclude {
+					line.debug1("Including %q sets seenMakefileCommon.", includeFile)
+				}
 				G.pkg.seenMakefileCommon = true
 			}
 
@@ -83,7 +87,9 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 					return false
 				}
 
-				_ = G.opts.DebugInclude && line.debug1("Including %q.", dirname+"/"+includeFile)
+				if G.opts.DebugInclude {
+					line.debug1("Including %q.", dirname+"/"+includeFile)
+				}
 				includingFname := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
 				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {
 					return false
@@ -95,7 +101,9 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
 
 			if op != "?=" || G.pkg.vardef[varname] == nil {
-				_ = G.opts.DebugMisc && line.debugf("varassign(%q, %q, %q)", varname, op, value)
+				if G.opts.DebugMisc {
+					line.debugf("varassign(%q, %q, %q)", varname, op, value)
+				}
 				G.pkg.vardef[varname] = mkline
 			}
 		}
@@ -129,6 +137,8 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		}
 	}
 
-	_ = G.opts.DebugMisc && dummyLine.debugf("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	if G.opts.DebugMisc {
+		dummyLine.debugf("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	}
 	return tmp
 }

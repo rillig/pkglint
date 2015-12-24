@@ -91,7 +91,9 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				} else if m, p := match1(value, reDependencyWildcard); m {
 					abiPkg, abiVersion = p, ""
 				} else {
-					_ = G.opts.DebugUnchecked && line.debug1("Unchecked dependency pattern %q.", value)
+					if G.opts.DebugUnchecked {
+						line.debug1("Unchecked dependency pattern %q.", value)
+					}
 				}
 				doCheck = true
 			}
@@ -102,7 +104,9 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				} else if m, p := match1(value, reDependencyWildcard); m {
 					apiPkg, apiVersion = p, ""
 				} else {
-					_ = G.opts.DebugUnchecked && line.debug1("Unchecked dependency pattern %q.", value)
+					if G.opts.DebugUnchecked {
+						line.debug1("Unchecked dependency pattern %q.", value)
+					}
 				}
 				doCheck = true
 			}
@@ -142,7 +146,9 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 			}
 
 		} else {
-			_ = G.opts.DebugUnchecked && exp.currentLine().warn0("Unchecked line in third paragraph.")
+			if G.opts.DebugUnchecked {
+				exp.currentLine().warn0("Unchecked line in third paragraph.")
+			}
 			exp.advance()
 		}
 	}

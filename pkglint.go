@@ -57,11 +57,12 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 		}
 	}
 
-	_ = G.opts.DebugMisc &&
-		dummyLine.debugf("DISTINFO_FILE=%s", pkg.distinfoFile) &&
-		dummyLine.debugf("FILESDIR=%s", pkg.filesdir) &&
-		dummyLine.debugf("PATCHDIR=%s", pkg.patchdir) &&
+	if G.opts.DebugMisc {
+		dummyLine.debugf("DISTINFO_FILE=%s", pkg.distinfoFile)
+		dummyLine.debugf("FILESDIR=%s", pkg.filesdir)
+		dummyLine.debugf("PATCHDIR=%s", pkg.patchdir)
 		dummyLine.debugf("PKGDIR=%s", pkg.pkgdir)
+	}
 
 	return mainLines
 }
@@ -83,7 +84,9 @@ func extractUsedVariables(line *Line, text string) []string {
 	}
 
 	if rest != "" {
-		_ = G.opts.DebugMisc && line.debug1("extractUsedVariables: rest=%q", rest)
+		if G.opts.DebugMisc {
+			line.debug1("extractUsedVariables: rest=%q", rest)
+		}
 	}
 	return result
 }
@@ -144,10 +147,12 @@ func getVariableType(line *Line, varname string) *Vartype {
 		gtype = &Vartype{lkNone, CheckvarYes, allowAll, guGuessed}
 	}
 
-	if gtype != nil {
-		_ = G.opts.DebugVartypes && line.debugf("The guessed type of %q is %v.", varname, gtype)
-	} else {
-		_ = G.opts.DebugVartypes && line.debug1("No type definition found for %q.", varname)
+	if G.opts.DebugVartypes {
+		if gtype != nil {
+			line.debugf("The guessed type of %q is %v.", varname, gtype)
+		} else {
+			line.debug1("No type definition found for %q.", varname)
+		}
 	}
 	return gtype
 }
@@ -194,7 +199,9 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}
-	_ = G.opts.DebugMisc && mkline.debugf("Expanded %q to %q", varname, value)
+	if G.opts.DebugMisc {
+		mkline.debugf("Expanded %q to %q", varname, value)
+	}
 	return value
 }
 
@@ -203,7 +210,9 @@ func getVariablePermissions(line *Line, varname string) AclPermissions {
 		return vartype.effectivePermissions(line.fname)
 	}
 
-	_ = G.opts.DebugMisc && line.debug1("No type definition found for %q.", varname)
+	if G.opts.DebugMisc {
+		line.debug1("No type definition found for %q.", varname)
+	}
 	return aclpAll
 }
 
@@ -403,7 +412,9 @@ func checkfile(fname string) {
 		}
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
-		_ = G.opts.DebugUnchecked && debugf(fname, noLines, "Unchecked file %q.", fname)
+		if G.opts.DebugUnchecked {
+			debugf(fname, noLines, "Unchecked file %q.", fname)
+		}
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
 		warnf(fname, noLines, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")

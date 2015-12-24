@@ -18,11 +18,15 @@ type VartypeCheck struct {
 }
 
 func (cv *VartypeCheck) AwkCommand() {
-	_ = G.opts.DebugUnchecked && cv.line.debug1("Unchecked AWK command: %q", cv.value)
+	if G.opts.DebugUnchecked {
+		cv.line.debug1("Unchecked AWK command: %q", cv.value)
+	}
 }
 
 func (cv *VartypeCheck) BasicRegularExpression() {
-	_ = G.opts.DebugUnchecked && cv.line.debug1("Unchecked basic regular expression: %q", cv.value)
+	if G.opts.DebugUnchecked {
+		cv.line.debug1("Unchecked basic regular expression: %q", cv.value)
+	}
 }
 
 func (cv *VartypeCheck) BuildlinkDepmethod() {
@@ -131,10 +135,14 @@ func (cv *VartypeCheck) Dependency() {
 	switch {
 	case contains(value, "{"):
 		// No check yet for alternative dependency patterns.
-		_ = G.opts.DebugUnchecked && line.debug1("Unchecked alternative dependency pattern: %s", value)
+		if G.opts.DebugUnchecked {
+			line.debug1("Unchecked alternative dependency pattern: %s", value)
+		}
 
 	case value != cv.valueNovar:
-		_ = G.opts.DebugUnchecked && line.debug1("Unchecked dependency: %s", value)
+		if G.opts.DebugUnchecked {
+			line.debug1("Unchecked dependency: %s", value)
+		}
 
 	default:
 		line.warn1("Unknown dependency format: %s", value)
@@ -336,7 +344,9 @@ func (cv *VartypeCheck) Option() {
 	line, value, valueNovar := cv.line, cv.value, cv.valueNovar
 
 	if value != valueNovar {
-		_ = G.opts.DebugUnchecked && line.debug1("Unchecked option name: %q", value)
+		if G.opts.DebugUnchecked {
+			line.debug1("Unchecked option name: %q", value)
+		}
 		return
 	}
 

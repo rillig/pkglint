@@ -439,7 +439,9 @@ func (mkline *MkLine) checkVarassign() {
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == ":=" && varname == strings.ToLower(varname) {
-		_ = G.opts.DebugUnchecked && mkline.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
+		if G.opts.DebugUnchecked {
+			mkline.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
+		}
 
 	} else if !varIsUsed(varname) {
 		if vartypes := G.globalData.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
@@ -654,10 +656,14 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 	switch {
 	case vartype == nil:
 		// Cannot check anything if the type is not known.
-		_ = G.opts.DebugUnchecked && mkline.debugf("Unchecked variable assignment for %s.", varname)
+		if G.opts.DebugUnchecked {
+			mkline.debugf("Unchecked variable assignment for %s.", varname)
+		}
 
 	case op == "!=":
-		_ = G.opts.DebugMisc && mkline.debugf("Use of !=: %q", value)
+		if G.opts.DebugMisc {
+			mkline.debugf("Use of !=: %q", value)
+		}
 
 	case vartype.kindOfList == lkNone:
 		mkline.checkVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)

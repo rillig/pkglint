@@ -17,7 +17,9 @@ func checklinesDistinfo(lines []*Line) {
 	} else if G.pkg != nil && dirExists(G.currentDir+"/"+G.pkg.patchdir) {
 		patchesDir = G.pkg.patchdir
 	}
-	_ = G.opts.DebugMisc && debugf(fname, noLines, "patchesDir=%q", patchesDir)
+	if G.opts.DebugMisc {
+		debugf(fname, noLines, "patchesDir=%q", patchesDir)
+	}
 
 	ck := &distinfoLinesChecker{
 		fname, patchesDir, isCommitted(fname),
@@ -111,7 +113,9 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFname, distinfoS
 func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	files, err := ioutil.ReadDir(G.currentDir + "/" + ck.patchdir)
 	if err != nil {
-		_ = G.opts.DebugUnchecked && debugf(ck.distinfoFilename, noLines, "Cannot read patchesDir %q: %s", ck.patchdir, err)
+		if G.opts.DebugUnchecked {
+			debugf(ck.distinfoFilename, noLines, "Cannot read patchesDir %q: %s", ck.patchdir, err)
+		}
 		return
 	}
 

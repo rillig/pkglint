@@ -50,9 +50,10 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 	wantList := vuc.vartype.isConsideredList() && (vuc.shellword == vucQuotBackt || vuc.extent != vucExtentWordpart)
 	haveList := vartype.isConsideredList()
 
-	_ = G.opts.DebugQuoting && line.debugf(
-		"variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
-		varname, vuc, vartype, wantList, haveList)
+	if G.opts.DebugQuoting {
+		line.debugf("variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
+			varname, vuc, vartype, wantList, haveList)
+	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.extent == vucExtentWordpart && vuc.shellword == vucQuotPlain {
@@ -94,6 +95,8 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 		return nqYes
 	}
 
-	_ = G.opts.DebugQuoting && line.debug1("Don't know whether :Q is needed for %q", varname)
+	if G.opts.DebugQuoting {
+		line.debug1("Don't know whether :Q is needed for %q", varname)
+	}
 	return nqDontKnow
 }

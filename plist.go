@@ -253,8 +253,8 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 
 	switch ext := path.Ext(basename); ext {
 	case ".a", ".la", ".so":
-		if dirname == "lib" && !hasPrefix(basename, "lib") {
-			_ = G.opts.WarnExtra && pline.warnf("Library filename %q should start with \"lib\".", basename)
+		if G.opts.WarnExtra && dirname == "lib" && !hasPrefix(basename, "lib") {
+			pline.warnf("Library filename %q should start with \"lib\".", basename)
 		}
 		if ext == "la" {
 			if G.pkg != nil && G.pkg.vardef["USE_LIBTOOL"] == nil {
@@ -349,7 +349,9 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		}
 
 	case hasPrefix(text, "share/doc/html/"):
-		_ = G.opts.WarnPlistDepr && line.warn0("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
+		if G.opts.WarnPlistDepr {
+			line.warn0("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
+		}
 
 	case G.pkg != nil && G.pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkg.effectivePkgbase+"/") ||
 		hasPrefix(text, "share/examples/"+G.pkg.effectivePkgbase+"/")):

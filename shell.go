@@ -150,7 +150,9 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	state := swstPlain
 outer:
 	for repl.rest != "" {
-		_ = G.opts.DebugShell && line.debugf("shell state %s: %q", state, repl.rest)
+		if G.opts.DebugShell {
+			line.debugf("shell state %s: %q", state, repl.rest)
+		}
 
 		switch {
 		// When parsing inside backticks, it is more
@@ -303,7 +305,9 @@ outer:
 			case repl.advanceRegexp(`^\$\$\{([0-9A-Za-z_]+)\}`),
 				repl.advanceRegexp(`^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):
 				shvarname := repl.m[1]
-				_ = G.opts.DebugShell && line.debug1("checklineMkShellword: found double-quoted variable %q.", shvarname)
+				if G.opts.DebugShell {
+					line.debug1("checklineMkShellword: found double-quoted variable %q.", shvarname)
+				}
 			case repl.advanceStr("$$"):
 				line.warn0("Unquoted $ or strange shell variable found.")
 			case repl.advanceRegexp(`^\\(.)`):
@@ -417,7 +421,9 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 	for repl.advanceRegexp(reShellword) {
 		shellword := repl.m[1]
 
-		_ = G.opts.DebugShell && line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
+		if G.opts.DebugShell {
+			line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
+		}
 
 		{
 			quotingNecessary := state != scstCase &&
@@ -878,7 +884,9 @@ func (msline *MkShellLine) nextState(state scState, shellword string) scState {
 	case state == scstEcho:
 		return scstCont
 	default:
-		_ = G.opts.DebugShell && msline.line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
+		if G.opts.DebugShell {
+			msline.line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
+		}
 		return scstStart
 	}
 }
