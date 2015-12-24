@@ -73,7 +73,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	change := G.globalData.lastChange[pkg.pkgpath]
 	if change == nil {
 		if G.opts.DebugMisc {
-			mkline.debugf("No change log for package %q", pkg.pkgpath)
+			mkline.debug1("No change log for package %q", pkg.pkgpath)
 		}
 		return
 	}
@@ -228,8 +228,8 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
-		vardef["USE_IMAKE"].notef("USE_IMAKE makes ...")
-		vardef["USE_X11"].notef("... USE_X11 superfluous.")
+		vardef["USE_IMAKE"].note0("USE_IMAKE makes ...")
+		vardef["USE_X11"].note0("... USE_X11 superfluous.")
 	}
 
 	pkg.checkUpdate()
@@ -268,7 +268,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 
 	if pkgname != "" && pkgname == distname && pkgnameLine.Comment() == "" {
-		pkgnameLine.notef("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+		pkgnameLine.note0("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
 	}
 
 	if pkgname == "" && distname != "" && !containsVarRef(distname) && !matches(distname, rePkgname) {
@@ -307,7 +307,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 		if m, left, from, right, to, mod := match5(subst, `^(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`(g?)$`); m {
 			newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
 			if G.opts.DebugMisc {
-				pkg.vardef["PKGNAME"].debugf("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+				pkg.vardef["PKGNAME"].debug2("pkgnameFromDistname %q => %q", pkgname, newPkgname)
 			}
 			pkgname = newPkgname
 		}
@@ -336,9 +336,9 @@ func (pkg *Package) checkUpdate() {
 					"The wishlist for package updates in doc/TODO mentions that a newer",
 					"version of this package is available.")
 			case cmp > 0:
-				pkgnameLine.notef("This package is newer than the update request to %s%s.", suggver, comment)
+				pkgnameLine.note2("This package is newer than the update request to %s%s.", suggver, comment)
 			default:
-				pkgnameLine.notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
+				pkgnameLine.note2("The update request to %s from doc/TODO%s has been done.", suggver, comment)
 			}
 		}
 	}

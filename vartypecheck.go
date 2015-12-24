@@ -53,7 +53,7 @@ func (cv *VartypeCheck) Category() {
 		"windowmaker",
 		"xmms":
 	default:
-		cv.line.errorf("Invalid category %q.", cv.value)
+		cv.line.error1("Invalid category %q.", cv.value)
 	}
 }
 
@@ -77,7 +77,7 @@ func (cv *VartypeCheck) Comment() {
 	line, value := cv.line, cv.value
 
 	if value == "SHORT_DESCRIPTION_OF_THE_PACKAGE" {
-		line.errorf("COMMENT must be set.")
+		line.error0("COMMENT must be set.")
 	}
 	if m, first := match1(value, `^(?i)(a|an)\s`); m {
 		line.warn1("COMMENT should not begin with %q.", first)
@@ -127,7 +127,7 @@ func (cv *VartypeCheck) Dependency() {
 				"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
 
 		default:
-			line.errorf("Unknown dependency pattern %q.", value)
+			line.error1("Unknown dependency pattern %q.", value)
 		}
 		return
 	}
@@ -174,7 +174,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		}
 
 		if !matches(pattern, reDependencyCmp) && !matches(pattern, reDependencyWildcard) {
-			line.errorf("Unknown dependency pattern %q.", pattern)
+			line.error1("Unknown dependency pattern %q.", pattern)
 		}
 		return
 	}
@@ -195,7 +195,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 func (cv *VartypeCheck) DistSuffix() {
 	if cv.value == ".tar.gz" {
-		cv.line.notef("%s is \".tar.gz\" by default, so this definition may be redundant.", cv.varname)
+		cv.line.note1("%s is \".tar.gz\" by default, so this definition may be redundant.", cv.varname)
 	}
 }
 
@@ -314,7 +314,7 @@ func (cv *VartypeCheck) MailAddress() {
 			line.warn1("Please write \"NetBSD.org\" instead of %q.", domain)
 		}
 		if matches(value, `(?i)^(tech-pkg|packages)@NetBSD\.org$`) {
-			line.errorf("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
+			line.error0("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 		}
 
 	} else {
@@ -367,7 +367,7 @@ func (cv *VartypeCheck) Option() {
 		return
 	}
 
-	line.errorf("Invalid option name.")
+	line.error0("Invalid option name.")
 }
 
 // The PATH environment variable
@@ -425,7 +425,7 @@ func (cv *VartypeCheck) PkgName() {
 func (cv *VartypeCheck) PkgOptionsVar() {
 	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
 	if matches(cv.value, `\$\{PKGBASE[:\}]`) {
-		cv.line.errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
+		cv.line.error0("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		explain3(
 			"PKGBASE is defined in bsd.pkg.mk, which is included as the",
 			"very last file, but PKG_OPTIONS_VAR is evaluated earlier.",
@@ -444,7 +444,7 @@ func (cv *VartypeCheck) PkgRevision() {
 		cv.line.warn1("%s must be a positive integer number.", cv.varname)
 	}
 	if path.Base(cv.line.fname) != "Makefile" {
-		cv.line.errorf("%s only makes sense directly in the package Makefile.", cv.varname)
+		cv.line.error1("%s only makes sense directly in the package Makefile.", cv.varname)
 		explain(
 			"Usually, different packages using the same Makefile.common have",
 			"different dependencies and will be bumped at different times (e.g. for",
@@ -530,7 +530,7 @@ func (cv *VartypeCheck) SedCommands() {
 	words, rest := splitIntoShellwords(line, cv.value)
 	if rest != "" {
 		if contains(cv.value, "#") {
-			line.errorf("Invalid shell words in sed commands.")
+			line.error0("Invalid shell words in sed commands.")
 			explain(
 				"When sed commands have embedded \"#\" characters, they need to be",
 				"escaped with a backslash, otherwise make(1) will interpret them as a",
@@ -554,7 +554,7 @@ func (cv *VartypeCheck) SedCommands() {
 				i++
 				ncommands++
 				if ncommands > 1 {
-					line.notef("Each sed command should appear in an assignment of its own.")
+					line.note0("Each sed command should appear in an assignment of its own.")
 					explain(
 						"For example, instead of",
 						"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
@@ -568,7 +568,7 @@ func (cv *VartypeCheck) SedCommands() {
 				shline.checkShellword(words[i], true)
 				mkline.checkVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
-				line.errorf("The -e option to sed requires an argument.")
+				line.error0("The -e option to sed requires an argument.")
 			}
 		case word == "-E":
 			// Switch to extended regular expressions mode.
@@ -577,7 +577,7 @@ func (cv *VartypeCheck) SedCommands() {
 			// Don't print lines per default.
 
 		case i == 0 && matches(word, `^(["']?)(?:\d*|/.*/)s.+["']?$`):
-			line.notef("Please always use \"-e\" in sed commands, even if there is only one substitution.")
+			line.note0("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 		default:
 			line.warn1("Unknown sed command %q.", word)
@@ -611,15 +611,15 @@ func (cv *VartypeCheck) Tool() {
 
 	} else if m, toolname, tooldep := match2(cv.value, `^([-\w]+|\[)(?::(\w+))?$`); m {
 		if !G.globalData.tools[toolname] {
-			cv.line.errorf("Unknown tool %q.", toolname)
+			cv.line.error1("Unknown tool %q.", toolname)
 		}
 		switch tooldep {
 		case "", "bootstrap", "build", "pkgsrc", "run":
 		default:
-			cv.line.errorf("Unknown tool dependency %q. Use one of \"build\", \"pkgsrc\" or \"run\".", tooldep)
+			cv.line.error1("Unknown tool dependency %q. Use one of \"build\", \"pkgsrc\" or \"run\".", tooldep)
 		}
 	} else {
-		cv.line.errorf("Invalid tool syntax: %q.", cv.value)
+		cv.line.error1("Invalid tool syntax: %q.", cv.value)
 	}
 }
 
@@ -635,10 +635,10 @@ func (cv *VartypeCheck) URL() {
 
 	} else if m, name, subdir := match2(value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
 		if !G.globalData.masterSiteVars[name] {
-			line.errorf("%s does not exist.", name)
+			line.error1("%s does not exist.", name)
 		}
 		if !hasSuffix(subdir, "/") {
-			line.errorf("The subdirectory in %s must end with a slash.", name)
+			line.error1("The subdirectory in %s must end with a slash.", name)
 		}
 
 	} else if containsVarRef(value) {
@@ -655,7 +655,7 @@ func (cv *VartypeCheck) URL() {
 			line.warn1("%q is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.", value)
 
 		case absPath == "":
-			line.notef("For consistency, please add a trailing slash to %q.", value)
+			line.note1("For consistency, please add a trailing slash to %q.", value)
 
 		default:
 			line.warn1("%q is not a valid URL.", value)
@@ -720,7 +720,7 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 		if rest == "" {
 			rest = "."
 		}
-		cv.line.notef("You can use %q instead of %q.", rest, cv.value)
+		cv.line.note2("You can use %q instead of %q.", rest, cv.value)
 
 	} else if cv.value != "" && cv.valueNovar == "" {
 		// The value of another variable

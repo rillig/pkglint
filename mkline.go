@@ -22,12 +22,20 @@ type MkLine struct {
 }
 
 func (mkline *MkLine) errorf(format string, args ...interface{}) { mkline.line.errorf(format, args...) }
+func (mkline *MkLine) error0(format string)                      { mkline.line.error0(format) }
+func (mkline *MkLine) error1(format, arg1 string)                { mkline.line.error1(format, arg1) }
+func (mkline *MkLine) error2(format, arg1, arg2 string)          { mkline.line.error2(format, arg1, arg2) }
 func (mkline *MkLine) warnf(format string, args ...interface{})  { mkline.line.warnf(format, args...) }
 func (mkline *MkLine) warn0(format string)                       { mkline.line.warn0(format) }
 func (mkline *MkLine) warn1(format, arg1 string)                 { mkline.line.warn1(format, arg1) }
 func (mkline *MkLine) warn2(format, arg1, arg2 string)           { mkline.line.warn2(format, arg1, arg2) }
 func (mkline *MkLine) notef(format string, args ...interface{})  { mkline.line.notef(format, args...) }
+func (mkline *MkLine) note0(format string)                       { mkline.line.note0(format) }
+func (mkline *MkLine) note1(format, arg1 string)                 { mkline.line.note1(format, arg1) }
+func (mkline *MkLine) note2(format, arg1, arg2 string)           { mkline.line.note2(format, arg1, arg2) }
 func (mkline *MkLine) debugf(format string, args ...interface{}) { mkline.line.debugf(format, args...) }
+func (mkline *MkLine) debug1(format, arg1 string)                { mkline.line.debug1(format, arg1) }
+func (mkline *MkLine) debug2(format, arg1, arg2 string)          { mkline.line.debug2(format, arg1, arg2) }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{line: line}
@@ -109,7 +117,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		return
 	}
 
-	line.errorf("Unknown Makefile line format.")
+	line.error0("Unknown Makefile line format.")
 	return mkline
 }
 
@@ -337,7 +345,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	}
 
 	if mod == ":M*:Q" && !needMstar {
-		mkline.notef("The :M* modifier is not needed here.")
+		mkline.line.note0("The :M* modifier is not needed here.")
 
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
@@ -365,7 +373,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 		}
 		if needsQuoting == nqDoesntMatter && !mkline.line.autofixReplace(bad, good) {
 			needExplain = true
-			mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
+			mkline.note1("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
 		if needExplain {
 			explain(
@@ -394,7 +402,7 @@ func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
 	for i, strversion := range strversions {
 		iver, err := strconv.Atoi(strversion)
 		if err != nil || !(iver > 0) {
-			mkline.errorf("All values for %s must be positive integers.", varname)
+			mkline.error1("All values for %s must be positive integers.", varname)
 			return
 		}
 		intversions[i] = iver
@@ -428,7 +436,7 @@ func (mkline *MkLine) checkVarassign() {
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == ":=" && varname == strings.ToLower(varname) {
 		if G.opts.DebugUnchecked {
-			mkline.debugf("%s might be unused unless it is an argument to a procedure file.", varname)
+			mkline.debug1("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
 
 	} else if !varIsUsed(varname) {
@@ -461,7 +469,7 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	if varname == "CONFIGURE_ARGS" && matches(value, `=\$\{PREFIX\}/share/kde`) {
-		mkline.notef("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
+		mkline.note0("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
 		explain3(
 			"That file probably does many things automatically and consistently that",
 			"this package also does. When using kde3.mk, you can probably also leave",
@@ -483,7 +491,7 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	if comment == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
-		mkline.notef("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
+		mkline.note0("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
 		explain(
 			"The value #defined says something about the state of the variable, but",
 			"not what that _means_. In some cases a variable that is defined means",
@@ -645,12 +653,12 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 	case vartype == nil:
 		// Cannot check anything if the type is not known.
 		if G.opts.DebugUnchecked {
-			mkline.debugf("Unchecked variable assignment for %s.", varname)
+			mkline.debug1("Unchecked variable assignment for %s.", varname)
 		}
 
 	case op == "!=":
 		if G.opts.DebugMisc {
-			mkline.debugf("Use of !=: %q", value)
+			mkline.debug1("Use of !=: %q", value)
 		}
 
 	case vartype.kindOfList == lkNone:
@@ -713,7 +721,7 @@ func (mkline *MkLine) checkVaralign() {
 				tabs += "\t"
 			}
 			if !mkline.line.autofixReplace(prefix+align, prefix+tabs) {
-				mkline.notef("Alignment of variable values should be done with tabs, not spaces.")
+				mkline.note0("Alignment of variable values should be done with tabs, not spaces.")
 			}
 		}
 	}
@@ -723,7 +731,7 @@ func (mkline *MkLine) checkText(text string) {
 	defer tracecall("MkLine.checkText", text)()
 
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
-		mkline.warnf("$%s is ambiguous. Use ${%s} if you mean a Makefile variable or $$%s if you mean a shell variable.", varname, varname, varname)
+		mkline.warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
 	}
 
 	if mkline.line.firstLine == 1 {
@@ -814,7 +822,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
 		if !fileExists(G.globalData.pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
-			mkline.errorf("There is no package in %q.", otherpkgpath)
+			mkline.error1("There is no package in %q.", otherpkgpath)
 		}
 
 	} else {
@@ -828,7 +836,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 
 func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 	if !G.isWip && contains(path, "/wip/") {
-		mkline.errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+		mkline.error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
 	resolvedPath := resolveVarsInRelativePath(path, true)
@@ -842,7 +850,7 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 	}
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
-			mkline.errorf("%q does not exist.", resolvedPath)
+			mkline.error1("%q does not exist.", resolvedPath)
 		}
 		return
 	}

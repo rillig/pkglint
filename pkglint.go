@@ -58,10 +58,10 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	}
 
 	if G.opts.DebugMisc {
-		dummyLine.debugf("DISTINFO_FILE=%s", pkg.distinfoFile)
-		dummyLine.debugf("FILESDIR=%s", pkg.filesdir)
-		dummyLine.debugf("PATCHDIR=%s", pkg.patchdir)
-		dummyLine.debugf("PKGDIR=%s", pkg.pkgdir)
+		dummyLine.debug1("DISTINFO_FILE=%s", pkg.distinfoFile)
+		dummyLine.debug1("FILESDIR=%s", pkg.filesdir)
+		dummyLine.debug1("PATCHDIR=%s", pkg.patchdir)
+		dummyLine.debug1("PKGDIR=%s", pkg.pkgdir)
 	}
 
 	return mainLines
@@ -240,7 +240,7 @@ func checklineValidCharacters(line *Line, reChar string) {
 func checklineTrailingWhitespace(line *Line) {
 	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
 		if !line.autofixReplaceRegexp(`\s+\n$`, "\n") {
-			line.notef("Trailing white-space.")
+			line.note0("Trailing white-space.")
 			explain2(
 				"When a line ends with some white-space, that space is in most cases",
 				"irrelevant and can be removed.")
@@ -253,7 +253,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 
 	if !matches(line.text, `^`+prefixRe+`\$NetBSD(?::[^\$]+)?\$$`) {
 		if !line.autofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
-			line.errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+			line.error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 			explain3(
 				"Several files in pkgsrc must contain the CVS Id, so that their current",
 				"version can be traced back later from a binary package. This is to",
@@ -456,7 +456,7 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 		last--
 	}
 	if last != max {
-		lines[last].notef("Trailing empty lines.")
+		lines[last].note0("Trailing empty lines.")
 	}
 }
 

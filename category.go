@@ -29,7 +29,7 @@ func checkdirCategory() {
 	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) {
 		mklines.mklines[exp.index-1].checklineValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
 	} else {
-		exp.currentLine().errorf("COMMENT= line expected.")
+		exp.currentLine().error0("COMMENT= line expected.")
 	}
 	exp.expectEmptyLine()
 
@@ -57,7 +57,7 @@ func checkdirCategory() {
 			}
 
 			if name == prevSubdir {
-				line.errorf("%q must only appear once.", name)
+				line.error1("%q must only appear once.", name)
 			} else if name < prevSubdir {
 				line.warn2("%q should come before %q.", name, prevSubdir)
 			} else {
@@ -70,7 +70,7 @@ func checkdirCategory() {
 
 		} else {
 			if line.text != "" {
-				line.errorf("SUBDIR+= line or empty line expected.")
+				line.error0("SUBDIR+= line or empty line expected.")
 			}
 			break
 		}
@@ -125,7 +125,7 @@ func checkdirCategory() {
 		if !fAtend && (mAtend || fCurrent < mCurrent) {
 			if !mCheck[fCurrent] {
 				if !line.autofixInsertBefore("SUBDIR+=\t" + fCurrent) {
-					line.errorf("%q exists in the file system, but not in the Makefile.", fCurrent)
+					line.error1("%q exists in the file system, but not in the Makefile.", fCurrent)
 				}
 			}
 			fNeednext = true
@@ -133,7 +133,7 @@ func checkdirCategory() {
 		} else if !mAtend && (fAtend || mCurrent < fCurrent) {
 			if !fCheck[mCurrent] {
 				if !line.autofixDelete() {
-					line.errorf("%q exists in the Makefile, but not in the file system.", mCurrent)
+					line.error1("%q exists in the Makefile, but not in the file system.", mCurrent)
 				}
 			}
 			mNeednext = true
@@ -156,7 +156,7 @@ func checkdirCategory() {
 	exp.expectEmptyLine()
 	exp.expectText(".include \"../mk/misc/category.mk\"")
 	if !exp.eof() {
-		exp.currentLine().errorf("The file should end here.")
+		exp.currentLine().error0("The file should end here.")
 	}
 
 	saveAutofixChanges(lines)

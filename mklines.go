@@ -157,7 +157,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, varname := range splitOnSpace(mkline.Value()) {
 				mklines.buildDefs[varname] = true
 				if G.opts.DebugMisc {
-					mkline.debugf("%q is added to BUILD_DEFS.", varname)
+					mkline.debug1("%q is added to BUILD_DEFS.", varname)
 				}
 			}
 
@@ -165,7 +165,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, id := range splitOnSpace(mkline.Value()) {
 				mklines.plistVars["PLIST."+id] = true
 				if G.opts.DebugMisc {
-					mkline.debugf("PLIST.%s is added to PLIST_VARS.", id)
+					mkline.debug1("PLIST.%s is added to PLIST_VARS.", id)
 				}
 				mklines.useVar(mkline, "PLIST."+id)
 			}
@@ -175,7 +175,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 				tool = strings.Split(tool, ":")[0]
 				mklines.tools[tool] = true
 				if G.opts.DebugMisc {
-					mkline.debugf("%s is added to USE_TOOLS.", tool)
+					mkline.debug1("%s is added to USE_TOOLS.", tool)
 				}
 			}
 
@@ -183,7 +183,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, svar := range splitOnSpace(mkline.Value()) {
 				mklines.useVar(mkline, varnameCanon(svar))
 				if G.opts.DebugMisc {
-					mkline.debugf("varuse %s", svar)
+					mkline.debug1("varuse %s", svar)
 				}
 			}
 
@@ -220,7 +220,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 		if len(mklines.indentation) > 1 {
 			mklines.popIndent()
 		} else {
-			mkline.errorf("Unmatched .%s.", directive)
+			mkline.error1("Unmatched .%s.", directive)
 		}
 	}
 
@@ -240,13 +240,13 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 
 	reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
 	if matches(directive, reDirectivesWithArgs) && args == "" {
-		mkline.errorf("\".%s\" requires arguments.", directive)
+		mkline.error1("\".%s\" requires arguments.", directive)
 
 	} else if !matches(directive, reDirectivesWithArgs) && args != "" {
-		mkline.errorf("\".%s\" does not take arguments.", directive)
+		mkline.error1("\".%s\" does not take arguments.", directive)
 
 		if directive == "else" {
-			mkline.notef("If you meant \"else if\", use \".elif\".")
+			mkline.note0("If you meant \"else if\", use \".elif\".")
 		}
 
 	} else if directive == "if" || directive == "elif" {
@@ -254,7 +254,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 
 	} else if directive == "ifdef" || directive == "ifndef" {
 		if matches(args, `\s`) {
-			mkline.errorf("The \".%s\" directive can only handle _one_ argument.", directive)
+			mkline.error1("The \".%s\" directive can only handle _one_ argument.", directive)
 		} else {
 			mkline.warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
 				directive, ifelseStr(directive == "ifdef", "", "!"), args)
@@ -272,7 +272,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 				} else if matches(forvar, `[A-Z]`) {
 					mkline.warn0(".for variable names should not contain uppercase letters.")
 				} else {
-					mkline.errorf("Invalid variable name %q.", forvar)
+					mkline.error1("Invalid variable name %q.", forvar)
 				}
 
 				mklines.forVars[forvar] = true
@@ -299,7 +299,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 	} else if directive == "undef" && args != "" {
 		for _, uvar := range splitOnSpace(args) {
 			if mklines.forVars[uvar] {
-				mkline.notef("Using \".undef\" after a \".for\" loop is unnecessary.")
+				mkline.note0("Using \".undef\" after a \".for\" loop is unnecessary.")
 			}
 		}
 	}
@@ -307,7 +307,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 
 func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, dependencies string, allowedTargets map[string]bool) {
 	if G.opts.DebugMisc {
-		mkline.debugf("targets=%q, dependencies=%q", targets, dependencies)
+		mkline.debug2("targets=%q, dependencies=%q", targets, dependencies)
 	}
 	mklines.target = targets
 
@@ -342,12 +342,12 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
 	if G.opts.DebugInclude {
-		mkline.debugf("includefile=%s", includefile)
+		mkline.debug1("includefile=%s", includefile)
 	}
 	mkline.checkRelativePath(includefile, mustExist)
 
 	if hasSuffix(includefile, "/Makefile") {
-		mkline.errorf("Other Makefiles must not be included directly.")
+		mkline.error0("Other Makefiles must not be included directly.")
 		explain(
 			"If you want to include portions of another Makefile, extract",
 			"the common parts and put them into a Makefile.common. After",
@@ -357,7 +357,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 
 	if includefile == "../../mk/bsd.prefs.mk" {
 		if path.Base(mkline.line.fname) == "buildlink3.mk" {
-			mkline.notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+			mkline.note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.pkg != nil {
 			G.pkg.seenBsdPrefsMk = true
@@ -369,15 +369,15 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	}
 
 	if matches(includefile, `/x11-links/buildlink3\.mk$`) {
-		mkline.errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
+		mkline.error1("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
 	}
 	if matches(includefile, `/jpeg/buildlink3\.mk$`) {
-		mkline.errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
+		mkline.error1("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
 	}
 	if matches(includefile, `/intltool/buildlink3\.mk$`) {
 		mkline.warn0("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 	}
 	if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
-		mkline.errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
+		mkline.error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
 	}
 }

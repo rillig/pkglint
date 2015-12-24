@@ -368,7 +368,7 @@ func (msline *MkShellLine) unescapeBackticks(shellword string, repl *PrefixRepla
 			line.errorf("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, repl.rest)
 		}
 	}
-	line.errorf("Unfinished backquotes: rest=%q", repl.rest)
+	line.error1("Unfinished backquotes: rest=%q", repl.rest)
 	return unescaped, state
 }
 
@@ -393,7 +393,7 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 	line := msline.line
 
 	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
-		line.notef("Please use the SUBST framework instead of ${SED} and ${MV}.")
+		line.note0("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		explain(
 			"When converting things, pay attention to \"#\" characters. In shell",
 			"commands make(1) does not interpret them as comment character, but",
@@ -407,7 +407,7 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 	}
 
 	if m, cmd := match1(shelltext, `^@*-(.*(?:MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m {
-		line.notef("You don't need to use \"-\" before %q.", cmd)
+		line.note1("You don't need to use \"-\" before %q.", cmd)
 	}
 
 	setE := false
@@ -564,7 +564,7 @@ func (ctx *ShelltextContext) handleForbiddenCommand() bool {
 		return false
 	}
 
-	ctx.msline.line.errorf("%q must not be used in Makefiles.", ctx.shellword)
+	ctx.msline.line.error1("%q must not be used in Makefiles.", ctx.shellword)
 	explain3(
 		"This command must appear in INSTALL scripts, not in the package",
 		"Makefile, so that the package also works if it is installed as a binary",
@@ -635,7 +635,7 @@ func (ctx *ShelltextContext) handleComment() bool {
 
 func (ctx *ShelltextContext) checkConditionalCd() {
 	if ctx.state == scstCond && ctx.shellword == "cd" {
-		ctx.msline.line.errorf("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+		ctx.msline.line.error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 		explain3(
 			"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 			"shell will exit, no matter if it is protected by an \"if\" or the",
@@ -659,7 +659,7 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 
 	if (state == scstInstallDir || state == scstInstallDir2) && !matches(shellword, reMkShellvaruse) {
 		if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
-			line.notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
+			line.note1("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
 			explain(
 				"This saves you some typing. You also don't have to think about which of",
 				"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",

@@ -14,7 +14,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 	for {
 		if exp.advanceIfPrefix("# XXX") {
-			exp.previousLine().notef("Please read this comment and remove it if appropriate.")
+			exp.previousLine().note0("Please read this comment and remove it if appropriate.")
 		} else if !exp.advanceIfPrefix("#") {
 			break
 		}
@@ -51,20 +51,20 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 		return
 	}
 	if !exp.expectText(pkgbase + "_BUILDLINK3_MK:=") {
-		exp.currentLine().errorf("Expected the multiple-inclusion guard.")
+		exp.currentLine().error0("Expected the multiple-inclusion guard.")
 		return
 	}
 	exp.expectEmptyLine()
 
 	ucPkgid := strings.ToUpper(strings.Replace(pkgid, "-", "_", -1))
 	if ucPkgid != pkgbase {
-		pkgbaseLine.errorf("Package name mismatch between %q ...", pkgbase)
-		pkgidLine.errorf("... and %q.", pkgid)
+		pkgbaseLine.error1("Package name mismatch between %q ...", pkgbase)
+		pkgidLine.error1("... and %q.", pkgid)
 	}
 	if G.pkg != nil {
 		if mkbase := G.pkg.effectivePkgbase; mkbase != "" && mkbase != pkgid {
-			pkgidLine.errorf("Package name mismatch between %q ...", pkgid)
-			G.pkg.effectivePkgnameLine.errorf("... and %q.", mkbase)
+			pkgidLine.error1("Package name mismatch between %q ...", pkgid)
+			G.pkg.effectivePkgnameLine.line.error1("... and %q.", mkbase)
 		}
 	}
 

@@ -51,7 +51,7 @@ func (ctx *Toplevel) checkSubdir(line *Line, commentedOut bool, indentation, sub
 	case subdir > prev:
 		// Correctly ordered
 	case subdir == prev:
-		line.errorf("Each subdir must only appear once.")
+		line.error0("Each subdir must only appear once.")
 	case subdir == "archivers" && prev == "x11":
 		// This exception is documented in the top-level Makefile.
 	default:

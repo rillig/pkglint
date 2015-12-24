@@ -127,13 +127,13 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case hasPrefix(text, "\\"):
 				// \ No newline at end of file
 			default:
-				line.errorf("Invalid line in unified patch hunk")
+				line.error0("Invalid line in unified patch hunk")
 				return
 			}
 		}
 	}
 	if !hasHunks {
-		ck.exp.currentLine().errorf("No patch hunks for %q.", patchedFile)
+		ck.exp.currentLine().error1("No patch hunks for %q.", patchedFile)
 	}
 	if !ck.exp.eof() {
 		line := ck.exp.currentLine()
@@ -151,7 +151,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 	defer tracecall("PatchChecker.checkBeginDiff")()
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
-		line.errorf("Each patch must be documented.")
+		line.error0("Each patch must be documented.")
 		explain(
 			"Each patch must document why it is necessary. If it has been applied",
 			"because of a security issue, a reference to the CVE should be mentioned",
@@ -164,7 +164,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 	}
 	if G.opts.WarnSpace && !ck.previousLineEmpty {
 		if !line.autofixInsertBefore("") {
-			line.notef("Empty line expected.")
+			line.note0("Empty line expected.")
 		}
 	}
 }
@@ -199,7 +199,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 		checklineSourceAbsolutePathname(line, addedText)
 	case ftConfigure:
 		if hasPrefix(addedText, ": Avoid regenerating within pkgsrc") {
-			line.errorf("This code must not be included in patches.")
+			line.error0("This code must not be included in patches.")
 			explain(
 				"It is generated automatically by pkgsrc after the patch phase.",
 				"",
@@ -219,7 +219,7 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 	line := ck.exp.previousLine()
 	if hasSuffix(line.text, "\r") {
 		if !line.autofixReplace("\r\n", "\n") {
-			line.errorf("The hunk header must not end with a CR character.")
+			line.error0("The hunk header must not end with a CR character.")
 			explain1(
 				"The MacOS X patch utility cannot handle these.")
 		}
@@ -324,7 +324,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 	}
 	if matched, before, _, str := match3(text, `^(.*)(["'])(/\w[^"']*)["']`); matched {
 		if G.opts.DebugMisc {
-			line.debugf("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+			line.debug2("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 		}
 
 		switch {

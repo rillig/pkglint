@@ -38,7 +38,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
 				if containsVarRef(includeFile) {
 					if !contains(fname, "/mk/") {
-						line.notef("Skipping include file %q. This may result in false warnings.", includeFile)
+						line.note1("Skipping include file %q. This may result in false warnings.", includeFile)
 					}
 					includeFile = ""
 				}
@@ -83,7 +83,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 					dirname = G.currentDir
 				}
 				if !fileExists(dirname + "/" + includeFile) {
-					line.errorf("Cannot read %q.", dirname+"/"+includeFile)
+					line.error1("Cannot read %q.", dirname+"/"+includeFile)
 					return false
 				}
 
@@ -138,7 +138,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	}
 
 	if G.opts.DebugMisc {
-		dummyLine.debugf("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+		dummyLine.debug2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	}
 	return tmp
 }

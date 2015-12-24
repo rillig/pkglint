@@ -69,7 +69,7 @@ func (exp *Expecter) expectEmptyLine() bool {
 
 	if G.opts.WarnSpace {
 		if !exp.currentLine().autofixInsertBefore("") {
-			exp.currentLine().notef("Empty line expected.")
+			exp.currentLine().note0("Empty line expected.")
 		}
 	}
 	return false

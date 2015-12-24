@@ -44,7 +44,7 @@ type distinfoLinesChecker struct {
 func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 	checklineRcsid(lines[0], ``, "")
 	if 1 < len(lines) && lines[1].text != "" {
-		lines[1].notef("Empty line expected.")
+		lines[1].note0("Empty line expected.")
 	}
 
 	for i, line := range lines {
@@ -53,7 +53,7 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 		}
 		m, alg, filename, hash := match3(line.text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
 		if !m {
-			line.errorf("Invalid line.")
+			line.error0("Invalid line.")
 			continue
 		}
 
@@ -74,11 +74,11 @@ func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
 		algorithms := strings.Join(ck.algorithms, ", ")
 		if ck.isPatch {
 			if algorithms != "SHA1" {
-				line.errorf("Expected SHA1 hash for %s, got %s.", prevFname, algorithms)
+				line.error2("Expected SHA1 hash for %s, got %s.", prevFname, algorithms)
 			}
 		} else {
 			if algorithms != "SHA1, RMD160, Size" && algorithms != "SHA1, RMD160, SHA512, Size" {
-				line.errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", prevFname, algorithms)
+				line.error2("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", prevFname, algorithms)
 			}
 		}
 	}
@@ -91,7 +91,7 @@ func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
 func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFname, distinfoSha1Hex string) {
 	patchBytes, err := ioutil.ReadFile(G.currentDir + "/" + patchFname)
 	if err != nil {
-		line.errorf("%s does not exist.", patchFname)
+		line.error1("%s does not exist.", patchFname)
 		return
 	}
 
@@ -135,7 +135,7 @@ func (ck *distinfoLinesChecker) checkGlobalMismatch(line *Line, fname, alg, hash
 		if otherHash != nil {
 			if otherHash.hash != hash {
 				line.errorf("The hash %s for %s is %s, ...", alg, fname, hash)
-				otherHash.line.errorf("... which differs from %s.", otherHash.hash)
+				otherHash.line.error1("... which differs from %s.", otherHash.hash)
 			}
 		} else {
 			G.ipcDistinfo[key] = &Hash{hash, line}

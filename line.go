@@ -94,6 +94,9 @@ func (ln *Line) errorf(format string, args ...interface{}) {
 	errorf(ln.fname, ln.linenos(), format, args...)
 	ln.logAutofix()
 }
+func (ln *Line) error0(format string)             { ln.errorf(format) }
+func (ln *Line) error1(format, arg1 string)       { ln.errorf(format, arg1) }
+func (ln *Line) error2(format, arg1, arg2 string) { ln.errorf(format, arg1, arg2) }
 
 func (ln *Line) warnf(format string, args ...interface{}) {
 	ln.printSource(G.logOut)
@@ -109,13 +112,17 @@ func (ln *Line) notef(format string, args ...interface{}) {
 	notef(ln.fname, ln.linenos(), format, args...)
 	ln.logAutofix()
 }
+func (ln *Line) note0(format string)             { ln.notef(format) }
+func (ln *Line) note1(format, arg1 string)       { ln.notef(format, arg1) }
+func (ln *Line) note2(format, arg1, arg2 string) { ln.notef(format, arg1, arg2) }
 
 func (ln *Line) debugf(format string, args ...interface{}) {
 	ln.printSource(G.logOut)
 	debugf(ln.fname, ln.linenos(), format, args...)
 	ln.logAutofix()
 }
-func (ln *Line) debug1(format, arg1 string) { ln.debugf(format, arg1) }
+func (ln *Line) debug1(format, arg1 string)       { ln.debugf(format, arg1) }
+func (ln *Line) debug2(format, arg1, arg2 string) { ln.debugf(format, arg1, arg2) }
 
 func (ln *Line) String() string {
 	return ln.fname + ":" + ln.linenos() + ": " + ln.text
