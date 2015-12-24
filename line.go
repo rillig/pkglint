@@ -89,29 +89,33 @@ func (ln *Line) fatalf(format string, args ...interface{}) {
 	fatalf(ln.fname, ln.linenos(), format, args...)
 }
 
-func (ln *Line) errorf(format string, args ...interface{}) bool {
+func (ln *Line) errorf(format string, args ...interface{}) {
 	ln.printSource(G.logOut)
-	return errorf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
+	errorf(ln.fname, ln.linenos(), format, args...)
+	ln.logAutofix()
 }
 
-func (ln *Line) warnf(format string, args ...interface{}) bool {
+func (ln *Line) warnf(format string, args ...interface{}) {
 	ln.printSource(G.logOut)
-	return warnf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
+	warnf(ln.fname, ln.linenos(), format, args...)
+	ln.logAutofix()
 }
-func (ln *Line) warn0(format string) bool             { return ln.warnf(format) }
-func (ln *Line) warn1(format, arg1 string) bool       { return ln.warnf(format, arg1) }
-func (ln *Line) warn2(format, arg1, arg2 string) bool { return ln.warnf(format, arg1, arg2) }
+func (ln *Line) warn0(format string)             { ln.warnf(format) }
+func (ln *Line) warn1(format, arg1 string)       { ln.warnf(format, arg1) }
+func (ln *Line) warn2(format, arg1, arg2 string) { ln.warnf(format, arg1, arg2) }
 
-func (ln *Line) notef(format string, args ...interface{}) bool {
+func (ln *Line) notef(format string, args ...interface{}) {
 	ln.printSource(G.logOut)
-	return notef(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
+	notef(ln.fname, ln.linenos(), format, args...)
+	ln.logAutofix()
 }
 
-func (ln *Line) debugf(format string, args ...interface{}) bool {
+func (ln *Line) debugf(format string, args ...interface{}) {
 	ln.printSource(G.logOut)
-	return debugf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
+	debugf(ln.fname, ln.linenos(), format, args...)
+	ln.logAutofix()
 }
-func (ln *Line) debug1(format, arg1 string) bool { return ln.debugf(format, arg1) }
+func (ln *Line) debug1(format, arg1 string) { ln.debugf(format, arg1) }
 
 func (ln *Line) String() string {
 	return ln.fname + ":" + ln.linenos() + ": " + ln.text
@@ -122,12 +126,11 @@ func (ln *Line) recordAutofixf(format string, args ...interface{}) {
 	ln.autofixMessage = &msg
 }
 
-func (ln *Line) logAutofix() bool {
+func (ln *Line) logAutofix() {
 	if ln.autofixMessage != nil {
 		notef(ln.fname, ln.linenos(), "%s", *ln.autofixMessage)
 		ln.autofixMessage = nil
 	}
-	return true
 }
 
 func (ln *Line) autofixInsertBefore(line string) bool {

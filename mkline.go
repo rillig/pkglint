@@ -21,27 +21,13 @@ type MkLine struct {
 	xs6   string
 }
 
-func (mkline *MkLine) errorf(format string, args ...interface{}) bool {
-	return mkline.line.errorf(format, args...)
-}
-func (mkline *MkLine) warnf(format string, args ...interface{}) bool {
-	return mkline.line.warnf(format, args...)
-}
-func (mkline *MkLine) warn0(format string) bool {
-	return mkline.warnf(format)
-}
-func (mkline *MkLine) warn1(format, arg1 string) bool {
-	return mkline.warnf(format, arg1)
-}
-func (mkline *MkLine) warn2(format, arg1, arg2 string) bool {
-	return mkline.warnf(format, arg1, arg2)
-}
-func (mkline *MkLine) notef(format string, args ...interface{}) bool {
-	return mkline.line.notef(format, args...)
-}
-func (mkline *MkLine) debugf(format string, args ...interface{}) bool {
-	return mkline.line.debugf(format, args...)
-}
+func (mkline *MkLine) errorf(format string, args ...interface{}) { mkline.line.errorf(format, args...) }
+func (mkline *MkLine) warnf(format string, args ...interface{})  { mkline.line.warnf(format, args...) }
+func (mkline *MkLine) warn0(format string)                       { mkline.line.warn0(format) }
+func (mkline *MkLine) warn1(format, arg1 string)                 { mkline.line.warn1(format, arg1) }
+func (mkline *MkLine) warn2(format, arg1, arg2 string)           { mkline.line.warn2(format, arg1, arg2) }
+func (mkline *MkLine) notef(format string, args ...interface{})  { mkline.line.notef(format, args...) }
+func (mkline *MkLine) debugf(format string, args ...interface{}) { mkline.line.debugf(format, args...) }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{line: line}
@@ -374,10 +360,12 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 		needExplain := false
 		if needsQuoting == nqNo && !mkline.line.autofixReplace(bad, good) {
-			needExplain = mkline.warn1("The :Q operator should not be used for ${%s} here.", varname)
+			needExplain = true
+			mkline.warn1("The :Q operator should not be used for ${%s} here.", varname)
 		}
 		if needsQuoting == nqDoesntMatter && !mkline.line.autofixReplace(bad, good) {
-			needExplain = mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
+			needExplain = true
+			mkline.notef("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
 		if needExplain {
 			explain(

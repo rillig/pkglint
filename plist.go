@@ -43,18 +43,10 @@ type PlistLine struct {
 	text        string
 }
 
-func (pline *PlistLine) errorf(format string, args ...interface{}) bool {
-	return pline.line.errorf(format, args...)
-}
-func (pline *PlistLine) warnf(format string, args ...interface{}) bool {
-	return pline.line.warnf(format, args...)
-}
-func (pline *PlistLine) notef(format string, args ...interface{}) bool {
-	return pline.line.notef(format, args...)
-}
-func (pline *PlistLine) debugf(format string, args ...interface{}) bool {
-	return pline.line.debugf(format, args...)
-}
+func (pline *PlistLine) errorf(format string, args ...interface{}) { pline.line.errorf(format, args...) }
+func (pline *PlistLine) warnf(format string, args ...interface{})  { pline.line.warnf(format, args...) }
+func (pline *PlistLine) notef(format string, args ...interface{})  { pline.line.notef(format, args...) }
+func (pline *PlistLine) debugf(format string, args ...interface{}) { pline.line.debugf(format, args...) }
 
 func (ck *PlistChecker) check(plainLines []*Line) {
 	plines := ck.newLines(plainLines)
