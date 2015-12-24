@@ -24,7 +24,38 @@ const (
 
 type AclEntry struct {
 	glob        string // Examples: "Makefile", "*.mk"
-	permissions string // Some of: "a"ppend, "d"efault, "s"et; "p"reprocessing, "u"se
+	permissions AclPermissions
+}
+
+type AclPermissions int
+
+const (
+	aclpAppend      AclPermissions = 1 << iota // VAR += value
+	aclpDefault                                // VAR ?= value
+	aclpSet                                    // VAR = value
+	aclpUseLoadtime                            // OTHER := ${VAR}, OTHER != ${VAR}
+	aclpUse                                    // OTHER = ${VAR}
+	aclpUnknown
+	aclpAll        AclPermissions = aclpAppend | aclpDefault | aclpSet | aclpUseLoadtime | aclpUse
+	aclpAllRuntime AclPermissions = aclpAppend | aclpDefault | aclpSet | aclpUse
+)
+
+func (perms AclPermissions) contains(subset AclPermissions) bool {
+	return perms&subset == subset
+}
+
+func (perms AclPermissions) String() string {
+	if perms == 0 {
+		return ""
+	}
+	result := "" +
+		ifelseStr(perms.contains(aclpAppend), "append, ", "") +
+		ifelseStr(perms.contains(aclpDefault), "default, ", "") +
+		ifelseStr(perms.contains(aclpUseLoadtime), "preprocess, ", "") +
+		ifelseStr(perms.contains(aclpSet), "set, ", "") +
+		ifelseStr(perms.contains(aclpUse), "runtime, ", "") +
+		ifelseStr(perms.contains(aclpUnknown), "unknown, ", "")
+	return strings.TrimRight(result, ", ")
 }
 
 // Guessed says whether the type definition is guessed (based on the
@@ -37,43 +68,22 @@ const (
 )
 
 // The allowed actions in this file, or "?" if unknown.
-func (vt *Vartype) effectivePermissions(fname string) string {
+func (vt *Vartype) effectivePermissions(fname string) AclPermissions {
 	for _, aclEntry := range vt.aclEntries {
 		if m, _ := path.Match(aclEntry.glob, path.Base(fname)); m {
 			return aclEntry.permissions
 		}
 	}
-	return "?"
-}
-
-func ReadableVartypePermissions(perms string) string {
-	result := ""
-	for _, c := range perms {
-		switch c {
-		case 'a':
-			result += "append, "
-		case 'd':
-			result += "default, "
-		case 'p':
-			result += "preprocess, "
-		case 's':
-			result += "set, "
-		case 'u':
-			result += "runtime, "
-		case '?':
-			result += "unknown, "
-		}
-	}
-	return strings.TrimRight(result, ", ")
+	return aclpUnknown
 }
 
 // Returns the union of all possible permissions. This can be used to
 // check whether a variable may be defined or used at all, or if it is
 // read-only.
-func (vt *Vartype) union() string {
-	var permissions string
+func (vt *Vartype) union() AclPermissions {
+	var permissions AclPermissions
 	for _, aclEntry := range vt.aclEntries {
-		permissions += aclEntry.permissions
+		permissions |= aclEntry.permissions
 	}
 	return permissions
 }

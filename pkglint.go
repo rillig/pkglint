@@ -100,15 +100,15 @@ func getVariableType(line *Line, varname string) *Vartype {
 	}
 
 	if G.globalData.varnameToToolname[varname] != "" {
-		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", "u"}}, guNotGuessed}
+		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpUse}}, guNotGuessed}
 	}
 
 	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
-		return &Vartype{lkNone, CheckvarPathname, []AclEntry{{"*", "u"}}, guNotGuessed}
+		return &Vartype{lkNone, CheckvarPathname, []AclEntry{{"*", aclpUse}}, guNotGuessed}
 	}
 
-	allowAll := []AclEntry{{"*", "adpsu"}}
-	allowRuntime := []AclEntry{{"*", "adsu"}}
+	allowAll := []AclEntry{{"*", aclpAll}}
+	allowRuntime := []AclEntry{{"*", aclpAllRuntime}}
 
 	// Guess the datatype of the variable based on naming conventions.
 	varbase := varnameBase(varname)
@@ -198,13 +198,13 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	return value
 }
 
-func getVariablePermissions(line *Line, varname string) string {
+func getVariablePermissions(line *Line, varname string) AclPermissions {
 	if vartype := getVariableType(line, varname); vartype != nil {
 		return vartype.effectivePermissions(line.fname)
 	}
 
 	_ = G.opts.DebugMisc && line.debugf("No type definition found for %q.", varname)
-	return "adpsu"
+	return aclpAll
 }
 
 func checklineLength(line *Line, maxlength int) {

@@ -279,7 +279,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 				}
 			}
 
-			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", "pu"}}, guessed}
+			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", aclpUseLoadtime | aclpUse}}, guessed}
 			forLoopContext := &VarUseContext{vucTimeParse, forLoopType, vucQuotFor, vucExtentWord}
 			for _, forLoopVar := range extractUsedVariables(mkline.line, values) {
 				mkline.checkVaruse(forLoopVar, "", forLoopContext)

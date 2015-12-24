@@ -131,7 +131,7 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	}
 
 	line := msline.line
-	shellcommandContextType := &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", "adsu"}}, guNotGuessed}
+	shellcommandContextType := &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpAllRuntime}}, guNotGuessed}
 	shellwordVuc := &VarUseContext{vucTimeUnknown, shellcommandContextType, vucQuotPlain, vucExtentWord}
 
 	if m, varname, mod := match2(shellword, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {

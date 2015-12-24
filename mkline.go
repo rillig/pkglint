@@ -163,33 +163,32 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	}
 
 	perms := getVariablePermissions(mkline.line, varname)
-	var needed string
+	var needed AclPermissions
 	switch op {
 	case "=", "!=", ":=":
-		needed = "s"
+		needed = aclpSet
 	case "?=":
-		needed = "d"
+		needed = aclpDefault
 	case "+=":
-		needed = "a"
+		needed = aclpAppend
 	}
 
-	if !contains(perms, needed) {
-		mkline.warnf("Permission %q requested for %s, but only { %s } are allowed.",
-			ReadableVartypePermissions(needed), varname, ReadableVartypePermissions(perms))
+	if !perms.contains(needed) {
+		mkline.warnf("Permission %q requested for %s, but only { %s } are allowed.", needed, varname, perms)
 		explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
 			"",
 			"The available permissions are:",
 			"\tappend       append something using +=",
 			"\tdefault      set a default value using ?=",
-			"\tpreprocess   use a variable during preprocessing (e.g. .if, .for)",
-			"\truntime      use a variable at runtime",
-			"\t             (when the shell commands are run)",
 			"\tset          set a variable using :=, =, !=",
 			"\t             (which happens during preprocessing)",
-			"",
-			"A \"?\" means that pkglint doesn't know which permissions are allowed",
-			"and which are not.")
+			"\tuse-loadtime use a variable at load time",
+			"\t             (e.g. .if, .for, right-hand side of :=, !=)",
+			"\tuse          use a variable at run time",
+			"\t             (when the shell commands are run)",
+			"\tunknown      pkglint doesn't know which actions are allowed",
+			"\t             and which are not.")
 	}
 }
 
@@ -248,10 +247,10 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 	case vuc.vartype != nil && vuc.vartype.guessed == guGuessed:
 		// Don't warn about unknown variables.
 
-	case vuc.time == vucTimeParse && !contains(perms, "p"):
+	case vuc.time == vucTimeParse && !perms.contains(aclpUseLoadtime):
 		isLoadTime = true
 
-	case vuc.vartype != nil && contains(vuc.vartype.union(), "p") && !contains(perms, "p"):
+	case vuc.vartype != nil && vuc.vartype.union().contains(aclpUseLoadtime) && !perms.contains(aclpUseLoadtime):
 		isLoadTime = true
 		isIndirect = true
 	}
@@ -279,7 +278,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 			"properly defined.")
 	}
 
-	if !contains(perms, "p") && !contains(perms, "u") {
+	if !perms.contains(aclpUseLoadtime) && !perms.contains(aclpUse) {
 		mkline.warn1("%s may not be used in this file.", varname)
 	}
 }
