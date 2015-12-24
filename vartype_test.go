@@ -43,6 +43,6 @@ func (s *Suite) TestAclPermissions_contains(c *check.C) {
 
 func (s *Suite) TestAclPermissions_String(c *check.C) {
 	c.Check(AclPermissions(0).String(), equals, "none")
-	c.Check(aclpAll.String(), equals, "set, default, append, use-loadtime, use")
+	c.Check(aclpAll.String(), equals, "set, set-default, append, use-loadtime, use")
 	c.Check(aclpUnknown.String(), equals, "unknown")
 }

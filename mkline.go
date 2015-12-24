@@ -168,7 +168,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	case "=", "!=", ":=":
 		needed = aclpSet
 	case "?=":
-		needed = aclpDefault
+		needed = aclpSetDefault
 	case "+=":
 		needed = aclpAppend
 	}

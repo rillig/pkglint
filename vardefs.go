@@ -736,7 +736,7 @@ func parseAclEntries(varname string, args []string) []AclEntry {
 			case "append":
 				permissions |= aclpAppend
 			case "default":
-				permissions |= aclpDefault
+				permissions |= aclpSetDefault
 			case "set":
 				permissions |= aclpSet
 			case "use":

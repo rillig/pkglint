@@ -31,13 +31,13 @@ type AclPermissions int
 
 const (
 	aclpSet         AclPermissions = 1 << iota // VAR = value
-	aclpDefault                                // VAR ?= value
+	aclpSetDefault                             // VAR ?= value
 	aclpAppend                                 // VAR += value
 	aclpUseLoadtime                            // OTHER := ${VAR}, OTHER != ${VAR}
 	aclpUse                                    // OTHER = ${VAR}
 	aclpUnknown
-	aclpAll        AclPermissions = aclpAppend | aclpDefault | aclpSet | aclpUseLoadtime | aclpUse
-	aclpAllRuntime AclPermissions = aclpAppend | aclpDefault | aclpSet | aclpUse
+	aclpAll        AclPermissions = aclpAppend | aclpSetDefault | aclpSet | aclpUseLoadtime | aclpUse
+	aclpAllRuntime AclPermissions = aclpAppend | aclpSetDefault | aclpSet | aclpUse
 )
 
 func (perms AclPermissions) contains(subset AclPermissions) bool {
@@ -50,7 +50,7 @@ func (perms AclPermissions) String() string {
 	}
 	result := "" +
 		ifelseStr(perms.contains(aclpSet), "set, ", "") +
-		ifelseStr(perms.contains(aclpDefault), "default, ", "") +
+		ifelseStr(perms.contains(aclpSetDefault), "set-default, ", "") +
 		ifelseStr(perms.contains(aclpAppend), "append, ", "") +
 		ifelseStr(perms.contains(aclpUseLoadtime), "use-loadtime, ", "") +
 		ifelseStr(perms.contains(aclpUse), "use, ", "") +
