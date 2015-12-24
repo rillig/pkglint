@@ -283,7 +283,7 @@ func guessFileType(line *Line, fname string) FileType {
 		return ftUnknown
 	}
 
-	_ = G.opts.DebugMisc && line.debugf("Unknown file type for %q", fname)
+	_ = G.opts.DebugMisc && line.debug1("Unknown file type for %q", fname)
 	return ftUnknown
 }
 
@@ -347,7 +347,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		case hasSuffix(before, "."): // Example: ../dir
 		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
 		default:
-			_ = G.opts.DebugMisc && line.debugf("before=%q", before)
+			_ = G.opts.DebugMisc && line.debug1("before=%q", before)
 			checkwordAbsolutePathname(line, path)
 		}
 	}

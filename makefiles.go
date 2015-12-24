@@ -50,7 +50,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.pkg.bl3[bl3File] = line
-					_ = G.opts.DebugMisc && line.debugf("Buildlink3 file in package: %q", bl3File)
+					_ = G.opts.DebugMisc && line.debug1("Buildlink3 file in package: %q", bl3File)
 				}
 			}
 		}
@@ -64,7 +64,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			}
 
 			if !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
-				_ = G.opts.DebugInclude && line.debugf("Including %q sets seenMakefileCommon.", includeFile)
+				_ = G.opts.DebugInclude && line.debug1("Including %q sets seenMakefileCommon.", includeFile)
 				G.pkg.seenMakefileCommon = true
 			}
 
@@ -83,7 +83,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 					return false
 				}
 
-				_ = G.opts.DebugInclude && line.debugf("Including %q.", dirname+"/"+includeFile)
+				_ = G.opts.DebugInclude && line.debug1("Including %q.", dirname+"/"+includeFile)
 				includingFname := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
 				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {
 					return false

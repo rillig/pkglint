@@ -111,6 +111,7 @@ func (ln *Line) debugf(format string, args ...interface{}) bool {
 	ln.printSource(G.logOut)
 	return debugf(ln.fname, ln.linenos(), format, args...) && ln.logAutofix()
 }
+func (ln *Line) debug1(format, arg1 string) bool { return ln.debugf(format, arg1) }
 
 func (ln *Line) String() string {
 	return ln.fname + ":" + ln.linenos() + ": " + ln.text

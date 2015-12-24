@@ -94,6 +94,6 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 		return nqYes
 	}
 
-	_ = G.opts.DebugQuoting && line.debugf("Don't know whether :Q is needed for %q", varname)
+	_ = G.opts.DebugQuoting && line.debug1("Don't know whether :Q is needed for %q", varname)
 	return nqDontKnow
 }

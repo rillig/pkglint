@@ -303,7 +303,7 @@ outer:
 			case repl.advanceRegexp(`^\$\$\{([0-9A-Za-z_]+)\}`),
 				repl.advanceRegexp(`^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):
 				shvarname := repl.m[1]
-				_ = G.opts.DebugShell && line.debugf("checklineMkShellword: found double-quoted variable %q.", shvarname)
+				_ = G.opts.DebugShell && line.debug1("checklineMkShellword: found double-quoted variable %q.", shvarname)
 			case repl.advanceStr("$$"):
 				line.warn0("Unquoted $ or strange shell variable found.")
 			case repl.advanceRegexp(`^\\(.)`):

@@ -83,7 +83,7 @@ func extractUsedVariables(line *Line, text string) []string {
 	}
 
 	if rest != "" {
-		_ = G.opts.DebugMisc && line.debugf("extractUsedVariables: rest=%q", rest)
+		_ = G.opts.DebugMisc && line.debug1("extractUsedVariables: rest=%q", rest)
 	}
 	return result
 }
@@ -147,7 +147,7 @@ func getVariableType(line *Line, varname string) *Vartype {
 	if gtype != nil {
 		_ = G.opts.DebugVartypes && line.debugf("The guessed type of %q is %v.", varname, gtype)
 	} else {
-		_ = G.opts.DebugVartypes && line.debugf("No type definition found for %q.", varname)
+		_ = G.opts.DebugVartypes && line.debug1("No type definition found for %q.", varname)
 	}
 	return gtype
 }
@@ -203,7 +203,7 @@ func getVariablePermissions(line *Line, varname string) AclPermissions {
 		return vartype.effectivePermissions(line.fname)
 	}
 
-	_ = G.opts.DebugMisc && line.debugf("No type definition found for %q.", varname)
+	_ = G.opts.DebugMisc && line.debug1("No type definition found for %q.", varname)
 	return aclpAll
 }
 

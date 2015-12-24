@@ -91,7 +91,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				} else if m, p := match1(value, reDependencyWildcard); m {
 					abiPkg, abiVersion = p, ""
 				} else {
-					_ = G.opts.DebugUnchecked && line.debugf("Unchecked dependency pattern %q.", value)
+					_ = G.opts.DebugUnchecked && line.debug1("Unchecked dependency pattern %q.", value)
 				}
 				doCheck = true
 			}
@@ -102,7 +102,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				} else if m, p := match1(value, reDependencyWildcard); m {
 					apiPkg, apiVersion = p, ""
 				} else {
-					_ = G.opts.DebugUnchecked && line.debugf("Unchecked dependency pattern %q.", value)
+					_ = G.opts.DebugUnchecked && line.debug1("Unchecked dependency pattern %q.", value)
 				}
 				doCheck = true
 			}
