@@ -30,9 +30,9 @@ type AclEntry struct {
 type AclPermissions int
 
 const (
-	aclpAppend      AclPermissions = 1 << iota // VAR += value
+	aclpSet         AclPermissions = 1 << iota // VAR = value
 	aclpDefault                                // VAR ?= value
-	aclpSet                                    // VAR = value
+	aclpAppend                                 // VAR += value
 	aclpUseLoadtime                            // OTHER := ${VAR}, OTHER != ${VAR}
 	aclpUse                                    // OTHER = ${VAR}
 	aclpUnknown
@@ -46,14 +46,14 @@ func (perms AclPermissions) contains(subset AclPermissions) bool {
 
 func (perms AclPermissions) String() string {
 	if perms == 0 {
-		return ""
+		return "none"
 	}
 	result := "" +
-		ifelseStr(perms.contains(aclpAppend), "append, ", "") +
-		ifelseStr(perms.contains(aclpDefault), "default, ", "") +
-		ifelseStr(perms.contains(aclpUseLoadtime), "preprocess, ", "") +
 		ifelseStr(perms.contains(aclpSet), "set, ", "") +
-		ifelseStr(perms.contains(aclpUse), "runtime, ", "") +
+		ifelseStr(perms.contains(aclpDefault), "default, ", "") +
+		ifelseStr(perms.contains(aclpAppend), "append, ", "") +
+		ifelseStr(perms.contains(aclpUseLoadtime), "use-loadtime, ", "") +
+		ifelseStr(perms.contains(aclpUse), "use, ", "") +
 		ifelseStr(perms.contains(aclpUnknown), "unknown, ", "")
 	return strings.TrimRight(result, ", ")
 }
