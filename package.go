@@ -293,7 +293,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 	if pkg.effectivePkgnameLine != nil {
 		if G.opts.DebugMisc {
-			pkg.effectivePkgnameLine.debugf("Effective name=%q base=%q version=%q",
+			pkg.effectivePkgnameLine.line.debugf("Effective name=%q base=%q version=%q",
 				pkg.effectivePkgname, pkg.effectivePkgbase, pkg.effectivePkgversion)
 		}
 	}

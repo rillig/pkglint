@@ -22,19 +22,12 @@ type MkLine struct {
 	xs6   string
 }
 
-func (mkline *MkLine) errorf(format string, args ...interface{}) { mkline.line.errorf(format, args...) }
-func (mkline *MkLine) error0(format string)                      { mkline.line.error0(format) }
 func (mkline *MkLine) error1(format, arg1 string)                { mkline.line.error1(format, arg1) }
-func (mkline *MkLine) error2(format, arg1, arg2 string)          { mkline.line.error2(format, arg1, arg2) }
-func (mkline *MkLine) warnf(format string, args ...interface{})  { mkline.line.warnf(format, args...) }
 func (mkline *MkLine) warn0(format string)                       { mkline.line.warn0(format) }
 func (mkline *MkLine) warn1(format, arg1 string)                 { mkline.line.warn1(format, arg1) }
 func (mkline *MkLine) warn2(format, arg1, arg2 string)           { mkline.line.warn2(format, arg1, arg2) }
-func (mkline *MkLine) notef(format string, args ...interface{})  { mkline.line.notef(format, args...) }
 func (mkline *MkLine) note0(format string)                       { mkline.line.note0(format) }
-func (mkline *MkLine) note1(format, arg1 string)                 { mkline.line.note1(format, arg1) }
 func (mkline *MkLine) note2(format, arg1, arg2 string)           { mkline.line.note2(format, arg1, arg2) }
-func (mkline *MkLine) debugf(format string, args ...interface{}) { mkline.line.debugf(format, args...) }
 func (mkline *MkLine) debug1(format, arg1 string)                { mkline.line.debug1(format, arg1) }
 func (mkline *MkLine) debug2(format, arg1, arg2 string)          { mkline.line.debug2(format, arg1, arg2) }
 
@@ -169,7 +162,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	}
 
 	if !perms.contains(needed) {
-		mkline.warnf("Permission %q requested for %s, but only { %s } are allowed.", needed, varname, perms)
+		mkline.line.warnf("Permission %q requested for %s, but only { %s } are allowed.", needed, varname, perms)
 		explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
 			"",
@@ -355,10 +348,10 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 		if mod != correctMod {
 			if vuc.quoting == vucQuotPlain {
 				if !mkline.line.autofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
-					mkline.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+					mkline.line.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
 				}
 			} else {
-				mkline.warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
+				mkline.line.warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
 					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 			}
 			explain1(
@@ -376,7 +369,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 		}
 		if needsQuoting == nqDoesntMatter && !mkline.line.autofixReplace(bad, good) {
 			needExplain = true
-			mkline.note1("The :Q operator isn't necessary for ${%s} here.", varname)
+			mkline.line.note1("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
 		if needExplain {
 			explain(
@@ -505,7 +498,7 @@ func (mkline *MkLine) checkVarassign() {
 
 	if m, revvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
 		if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
-			mkline.warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
+			mkline.line.warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
 		}
 	}
 
@@ -841,7 +834,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 
 func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 	if !G.isWip && strings.Contains(path, "/wip/") {
-		mkline.error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+		mkline.line.error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
 	resolvedPath := resolveVarsInRelativePath(path, true)

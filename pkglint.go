@@ -200,7 +200,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 		value = resolveVariableRefs(value)
 	}
 	if G.opts.DebugMisc {
-		mkline.debugf("Expanded %q to %q", varname, value)
+		mkline.debug2("Expanded %q to %q", varname, value)
 	}
 	return value
 }
