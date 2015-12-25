@@ -3,6 +3,7 @@ package main
 // Checks concerning single lines in Makefiles.
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -803,7 +804,7 @@ func (mkline *MkLine) checklineValidCharactersInValue(reValid string) {
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
-			uni += sprintf(" %U", c)
+			uni += fmt.Sprintf(" %U", c)
 		}
 		mkline.warn2("%s contains invalid characters (%s).", mkline.Varname(), uni[1:])
 	}

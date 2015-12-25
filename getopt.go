@@ -123,14 +123,14 @@ optchar:
 				case *FlagGroup:
 					argarg := optchars[ai+utf8.RuneLen(optchar):]
 					if argarg != "" {
-						return 0, data.parse(sprintf("-%c", optchar), argarg)
+						return 0, data.parse(fmt.Sprintf("-%c", optchar), argarg)
 					} else {
-						return 1, data.parse(sprintf("-%c", optchar), args[i+1])
+						return 1, data.parse(fmt.Sprintf("-%c", optchar), args[i+1])
 					}
 				}
 			}
 		}
-		return 0, optErr(sprintf("unknown option: -%c", optchar))
+		return 0, optErr(fmt.Sprintf("unknown option: -%c", optchar))
 	}
 	return 0, nil
 }

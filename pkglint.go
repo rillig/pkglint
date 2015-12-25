@@ -179,7 +179,7 @@ func resolveVariableRefs(text string) string {
 					}
 				}
 			}
-			return sprintf("${%s}", varname)
+			return fmt.Sprintf("${%s}", varname)
 		})
 		if replaced == str {
 			return replaced
@@ -231,7 +231,7 @@ func checklineValidCharacters(line *Line, reChar string) {
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
-			uni += sprintf(" %U", c)
+			uni += fmt.Sprintf(" %U", c)
 		}
 		line.warn1("Line contains invalid characters (%s).", uni[1:])
 	}

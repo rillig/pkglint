@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 // VarUseContext defines the context in which a variable is defined
 // or used. Whether that is allowed depends on:
 //
@@ -77,5 +81,5 @@ func (vuc *VarUseContext) String() string {
 	if vuc.vartype != nil {
 		typename = vuc.vartype.String()
 	}
-	return sprintf("(%s %s %s %s)", vuc.time, typename, vuc.shellword, vuc.extent)
+	return fmt.Sprintf("(%s %s %s %s)", vuc.time, typename, vuc.shellword, vuc.extent)
 }

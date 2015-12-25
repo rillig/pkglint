@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"strings"
 )
@@ -44,7 +45,7 @@ func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...
 		text += sep + level.gccName + ":"
 		sep = " "
 	}
-	text += sep + sprintf(format, args...) + "\n"
+	text += sep + fmt.Sprintf(format, args...) + "\n"
 	io.WriteString(out, text)
 	return true
 }

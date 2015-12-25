@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -746,7 +747,7 @@ func parseAclEntries(varname string, args []string) []AclEntry {
 			case "":
 				break
 			default:
-				print(sprintf("Invalid ACL permission %q for varname %q.\n", perm, varname))
+				print(fmt.Sprintf("Invalid ACL permission %q for varname %q.\n", perm, varname))
 			}
 		}
 		result = append(result, AclEntry{glob, permissions})

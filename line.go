@@ -25,7 +25,7 @@ type RawLine struct {
 }
 
 func (rline *RawLine) String() string {
-	return sprintf("%d:%s", rline.lineno, rline.textnl)
+	return fmt.Sprintf("%d:%s", rline.lineno, rline.textnl)
 }
 
 type Line struct {
@@ -67,9 +67,9 @@ func (ln *Line) linenos() string {
 	case ln.firstLine == 0:
 		return ""
 	case ln.firstLine == ln.lastLine:
-		return sprintf("%d", ln.firstLine)
+		return fmt.Sprintf("%d", ln.firstLine)
 	default:
-		return sprintf("%d--%d", ln.firstLine, ln.lastLine)
+		return fmt.Sprintf("%d--%d", ln.firstLine, ln.lastLine)
 	}
 }
 
@@ -131,7 +131,7 @@ func (ln *Line) String() string {
 }
 
 func (ln *Line) recordAutofixf(format string, args ...interface{}) {
-	msg := sprintf(format, args...)
+	msg := fmt.Sprintf(format, args...)
 	ln.autofixMessage = &msg
 }
 

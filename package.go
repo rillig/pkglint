@@ -245,7 +245,7 @@ func (pkg *Package) getNbpart() string {
 	}
 	pkgrevision := line.Value()
 	if rev, err := strconv.Atoi(pkgrevision); err == nil {
-		return sprintf("nb%d", rev)
+		return "nb" + strconv.Itoa(rev)
 	}
 	return ""
 }

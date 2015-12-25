@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -98,7 +99,7 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 	}
 
 	if 0 < len(rawLines) && !hasSuffix(rawLines[len(rawLines)-1].textnl, "\n") {
-		errorf(fname, sprintf("%d", rawLines[len(rawLines)-1].lineno), "File must end with a newline.")
+		errorf(fname, fmt.Sprintf("%d", rawLines[len(rawLines)-1].lineno), "File must end with a newline.")
 	}
 
 	return loglines

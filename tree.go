@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type Tree struct {
 	name string
 	args []interface{}
@@ -55,10 +59,10 @@ func (t *Tree) String() string {
 			continue
 		}
 		if arg, ok := arg.(string); ok {
-			s += sprintf(" %q", arg)
+			s += fmt.Sprintf(" %q", arg)
 			continue
 		} else {
-			s += sprintf(" %v", arg)
+			s += fmt.Sprintf(" %v", arg)
 		}
 	}
 	return s + ")"

@@ -16,7 +16,6 @@ import (
 
 // Short names for commonly used functions.
 var (
-	sprintf   = fmt.Sprintf
 	contains  = strings.Contains
 	hasPrefix = strings.HasPrefix
 	hasSuffix = strings.HasSuffix
@@ -33,7 +32,7 @@ func mustMatch(s, re string) []string {
 	if m := match(s, re); m != nil {
 		return m
 	}
-	panic(sprintf("mustMatch %q %q", s, re))
+	panic(fmt.Sprintf("mustMatch %q %q", s, re))
 }
 
 func isEmptyDir(fname string) bool {
@@ -206,7 +205,7 @@ func matches(s, re string) bool {
 func matchn(s, re string, n int) []string {
 	if m := match(s, re); m != nil {
 		if len(m) != 1+n {
-			panic(sprintf("expected match%d, got match%d for %q", len(m)-1, n, re))
+			panic(fmt.Sprintf("expected match%d, got match%d for %q", len(m)-1, n, re))
 		}
 		return m
 	}
@@ -323,14 +322,14 @@ func argsStr(args ...interface{}) string {
 		if i != 0 {
 			argsStr += ", "
 		}
-		argsStr += sprintf("%#v", arg)
+		argsStr += fmt.Sprintf("%#v", arg)
 	}
 	return argsStr
 }
 
 func trace(action, funcname string, args ...interface{}) {
 	if G.opts.DebugTrace {
-		io.WriteString(G.debugOut, sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
+		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
 	}
 }
 
