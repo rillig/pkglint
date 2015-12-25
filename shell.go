@@ -10,7 +10,7 @@ import (
 const (
 	reMkShellvaruse = `(?:^|[^\$])\$\$\{?(\w+)\}?`
 	reVarnameDirect = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
-	reShellword     = `^\s*(` +
+	reShellToken    = `^\s*(` +
 		`#.*` + // shell comment
 		`|(?:` +
 		`'[^']*'` + // single quoted string
@@ -162,7 +162,8 @@ outer:
 		case state == swstBackt || state == swstDquotBackt:
 			var backtCommand string
 			backtCommand, state = msline.unescapeBackticks(shellword, repl, state)
-			msline.checkShelltext(backtCommand)
+			setE := true
+			msline.checkShellCommand(backtCommand, &setE)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case repl.advanceRegexp(`^\$\{(` + reVarnameDirect + `|@)(:[^\{]+)?\}`),
@@ -388,8 +389,8 @@ type ShelltextContext struct {
 	shellword string
 }
 
-func (msline *MkShellLine) checkShelltext(shelltext string) {
-	defer tracecall1("MkShellLine.checklineMkShelltext", shelltext)()
+func (msline *MkShellLine) checkShellCommandLine(shelltext string) {
+	defer tracecall1("MkShellLine.checkShelltext", shelltext)()
 	line := msline.line
 
 	if strings.Contains(shelltext, "${SED}") && strings.Contains(shelltext, "${MV}") {
@@ -417,12 +418,17 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 		msline.checkLineStart(hidden, macro, repl.rest, &setE)
 	}
 
+	msline.checkShellCommand(repl.rest, &setE)
+}
+
+func (msline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 	state := scstStart
-	for repl.advanceRegexp(reShellword) {
+	repl := NewPrefixReplacer(shellcmd)
+	for repl.advanceRegexp(reShellToken) {
 		shellword := repl.m[1]
 
 		if G.opts.DebugShell {
-			line.debugf("checklineMkShelltext state=%v shellword=%q", state, shellword)
+			msline.line.debugf("checkShellCommand state=%v shellword=%q", state, shellword)
 		}
 
 		{
@@ -445,10 +451,10 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 		st.checkQuoteSubstitution()
 		st.checkEchoN()
 		st.checkPipeExitcode()
-		st.checkSetE(setE)
+		st.checkSetE(*pSetE)
 
 		if state == scstSet && matches(shellword, `^-.*e`) || state == scstStart && shellword == "${RUN}" {
-			setE = true
+			*pSetE = true
 		}
 
 		state = msline.nextState(state, shellword)
@@ -456,9 +462,16 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 
 	repl.advanceRegexp(`^\s+`)
 	if repl.rest != "" {
-		line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, repl.rest, shelltext)
+		msline.line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, repl.rest, shellcmd)
 	}
+}
 
+func (msline *MkShellLine) checkShellCommands(shellcmds string) {
+	setE := true
+	msline.checkShellCommand(shellcmds, &setE)
+	if !hasSuffix(shellcmds, ";") {
+		msline.line.warn0("This shell command list should end with a semicolon.")
+	}
 }
 
 func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
@@ -476,7 +489,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 		// Shell comments may be hidden, since they cannot have side effects.
 
 	default:
-		if m, cmd := match1(rest, reShellword); m {
+		if m, cmd := match1(rest, reShellToken); m {
 			switch cmd {
 			case "${DELAYED_ERROR_MSG}", "${DELAYED_WARNING_MSG}",
 				"${DO_NADA}",
@@ -891,11 +904,28 @@ func (msline *MkShellLine) nextState(state scState, shellword string) scState {
 	}
 }
 
-func splitIntoShellwords(line *Line, text string) ([]string, string) {
-	var words []string
-
+func splitIntoShellTokens(line *Line, text string) (words []string, rest string) {
 	repl := NewPrefixReplacer(text)
-	for repl.advanceRegexp(reShellword) {
+	for repl.advanceRegexp(reShellToken) {
+		words = append(words, repl.m[1])
+	}
+	repl.advanceRegexp(`^\s+`)
+	return words, repl.rest
+}
+
+// Compare devel/bmake/files/str.c, function brk_string.
+func splitIntoShellWords(line *Line, text string) (words []string, rest string) {
+	reShellWord := `^\s*(` +
+		`#.*` + // shell comment
+		`|(?:` +
+		`'[^']*'` + // single quoted string
+		`|"(?:\\.|[^"\\])*"` + // double quoted string
+		"|`[^`]*`" + // backticks command execution
+		"|[^\\s\"'`\\\\]+" + // normal characters
+		`|\\.` + // escaped character
+		`)+)` // any of the above may be repeated
+	repl := NewPrefixReplacer(text)
+	for repl.advanceRegexp(reShellWord) {
 		words = append(words, repl.m[1])
 	}
 	repl.advanceRegexp(`^\s+`)

@@ -30,8 +30,8 @@ func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 	c.Check(mklines.varuse["outer.*"], equals, mkline)
 }
 
-func (s *Suite) TestReShellword(c *check.C) {
-	re := `^(?:` + reShellword + `)$`
+func (s *Suite) TestReShellToken(c *check.C) {
+	re := `^(?:` + reShellToken + `)$`
 	matches := check.NotNil
 	doesntMatch := check.IsNil
 

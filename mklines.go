@@ -123,7 +123,7 @@ func (mklines *MkLines) check() {
 		case hasPrefix(text, "\t"):
 			shellcmd := text[1:]
 			mkline.checkText(shellcmd)
-			NewMkShellLine(mkline).checkShelltext(shellcmd)
+			NewMkShellLine(mkline).checkShellCommandLine(shellcmd)
 
 		case mkline.IsInclude():
 			mklines.checklineInclude(mkline)

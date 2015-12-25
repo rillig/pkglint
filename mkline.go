@@ -672,7 +672,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 
 	case vartype.kindOfList == lkShell:
 		shline := NewMkShellLine(mkline)
-		words, _ := splitIntoShellwords(mkline.line, value)
+		words, _ := splitIntoShellWords(mkline.line, value)
 		for _, word := range words {
 			mkline.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 			shline.checkShellword(word, true)

@@ -131,17 +131,11 @@ func (s *Suite) TestMkLine_fields(c *check.C) {
 }
 
 func (s *Suite) TestMkLine_checkVarassign(c *check.C) {
-	//s.DebugToStdout()
-	//s.UseCommandLine(c,"-Dall")
 	G.pkg = NewPackage("graphics/gimp-fix-ca")
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=", nil))
 
 	mkline.checkVarassign()
 
-	c.Check(s.Output(), equals, ""+
-		"WARN: fname:10: \"&\" is not a valid URL.\n"+
-		"WARN: fname:10: \"id=9884\" is not a valid URL.\n"+
-		"WARN: fname:10: \"&\" is not a valid URL.\n"+
-		"WARN: fname:10: \"file=\" is not a valid URL.\n")
+	c.Check(s.Output(), equals, "")
 }

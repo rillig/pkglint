@@ -178,6 +178,7 @@ var (
 	CheckvarSedCommand             = &VarChecker{"SedCommand", (*VartypeCheck).SedCommand}
 	CheckvarSedCommands            = &VarChecker{"SedCommands", nil}
 	CheckvarShellCommand           = &VarChecker{"ShellCommand", nil}
+	CheckvarShellCommands          = &VarChecker{"ShellCommands", (*VartypeCheck).ShellCommands}
 	CheckvarShellWord              = &VarChecker{"ShellWord", nil}
 	CheckvarStage                  = &VarChecker{"Stage", (*VartypeCheck).Stage}
 	CheckvarString                 = &VarChecker{"String", (*VartypeCheck).String}

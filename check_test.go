@@ -115,7 +115,7 @@ func (s *Suite) ExpectFatalError(action func()) {
 func (s *Suite) SetUpTest(c *check.C) {
 	G = new(GlobalVars)
 	G.logOut, G.logErr, G.debugOut = &s.stdout, &s.stderr, &s.stdout
-	s.UseCommandLine(c, /* no arguments */)
+	s.UseCommandLine(c /* no arguments */)
 }
 
 func (s *Suite) TearDownTest(c *check.C) {

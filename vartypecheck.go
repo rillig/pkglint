@@ -527,7 +527,7 @@ func (cv *VartypeCheck) SedCommands() {
 	mkline := cv.mkline
 	shline := NewMkShellLine(mkline)
 
-	words, rest := splitIntoShellwords(line, cv.value)
+	words, rest := splitIntoShellTokens(line, cv.value)
 	if rest != "" {
 		if strings.Contains(cv.value, "#") {
 			line.error0("Invalid shell words in sed commands.")
@@ -586,7 +586,13 @@ func (cv *VartypeCheck) SedCommands() {
 }
 
 func (cv *VartypeCheck) ShellCommand() {
-	NewMkShellLine(cv.mkline).checkShelltext(cv.value)
+	setE := true
+	NewMkShellLine(cv.mkline).checkShellCommand(cv.value, &setE)
+}
+
+// Zero or more shell commands, each terminated with a semicolon.
+func (cv *VartypeCheck) ShellCommands() {
+	NewMkShellLine(cv.mkline).checkShellCommands(cv.value)
 }
 
 func (cv *VartypeCheck) ShellWord() {

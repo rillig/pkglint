@@ -122,7 +122,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("BSD_MAKE_ENV", lkShell, CheckvarShellWord)
 	acl("BUILDLINK_ABI_DEPENDS.*", lkSpace, CheckvarDependency, "*:append")
 	acl("BUILDLINK_API_DEPENDS.*", lkSpace, CheckvarDependency, "*:append")
-	acl("BUILDLINK_CONTENTS_FILTER", lkShell, CheckvarShellWord) // Should better be ShellCommand
+	acl("BUILDLINK_CONTENTS_FILTER", lkNone, CheckvarShellCommand)
 	sys("BUILDLINK_CFLAGS", lkShell, CheckvarCFlag)
 	bl3list("BUILDLINK_CFLAGS.*", lkShell, CheckvarCFlag)
 	sys("BUILDLINK_CPPFLAGS", lkShell, CheckvarCFlag)
@@ -132,7 +132,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("BUILDLINK_DEPMETHOD.*", lkShell, CheckvarBuildlinkDepmethod, "buildlink3.mk:default,append", "Makefile:set,append", "Makefile.common:append", "*.mk:append") // FIXME: buildlink3.mk:d may lead to unexpected behavior.
 	sys("BUILDLINK_DIR", lkNone, CheckvarPathname)
 	bl3list("BUILDLINK_FILES.*", lkShell, CheckvarPathmask)
-	acl("BUILDLINK_FILES_CMD.*", lkShell, CheckvarShellWord)                              // Should better be ShellCommand
+	acl("BUILDLINK_FILES_CMD.*", lkNone, CheckvarShellCommand)
 	acl("BUILDLINK_INCDIRS.*", lkShell, CheckvarPathname, "buildlink3.mk:default,append") // Should [d]efault really be allowed in buildlink3.mk?
 	acl("BUILDLINK_JAVA_PREFIX.*", lkNone, CheckvarPathname, "buildlink3.mk:set")
 	acl("BUILDLINK_LDADD.*", lkShell, CheckvarLdFlag, "builtin.mk:set,default,append,use", "buildlink3.mk:", "Makefile:use", "Makefile.common:use", "*.mk:use")
@@ -230,7 +230,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkg("DIST_SUBDIR", lkNone, CheckvarPathname)
 	acl("DJB_BUILD_ARGS", lkShell, CheckvarShellWord)
 	acl("DJB_BUILD_TARGETS", lkShell, CheckvarIdentifier)
-	acl("DJB_CONFIG_CMDS", lkShell, CheckvarShellWord, "options.mk:set") // ShellCommand, terminated by a semicolon
+	acl("DJB_CONFIG_CMDS", lkNone, CheckvarShellCommands, "options.mk:set")
 	acl("DJB_CONFIG_DIRS", lkShell, CheckvarWrksrcSubdirectory)
 	acl("DJB_CONFIG_HOME", lkNone, CheckvarFilename)
 	acl("DJB_CONFIG_PREFIX", lkNone, CheckvarPathname)
@@ -317,7 +317,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("GAMEMODE", lkNone, CheckvarFileMode)
 	sys("GAMES_USER", lkNone, CheckvarUserGroupName)
 	pkglist("GCC_REQD", lkShell, CheckvarVersion)
-	pkglist("GENERATE_PLIST", lkShell, CheckvarShellWord) // List of Shellcommand, terminated with a semicolon
+	pkglist("GENERATE_PLIST", lkNone, CheckvarShellCommands)
 	pkg("GITHUB_PROJECT", lkNone, CheckvarIdentifier)
 	pkg("GITHUB_TAG", lkNone, CheckvarIdentifier)
 	pkg("GITHUB_RELEASE", lkNone, CheckvarFilename)

@@ -187,12 +187,13 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	line := ck.exp.previousLine()
 	switch patchedFileType {
 	case ftShell:
+		break
 	case ftMakefile:
 		// This check is not as accurate as the similar one in MkLine.checkShelltext.
-		shellwords, _ := splitIntoShellwords(line, addedText)
-		for _, shellword := range shellwords {
-			if !hasPrefix(shellword, "#") {
-				line.checkAbsolutePathname(shellword)
+		shellTokens, _ := splitIntoShellTokens(line, addedText)
+		for _, shellToken := range shellTokens {
+			if !hasPrefix(shellToken, "#") {
+				line.checkAbsolutePathname(shellToken)
 			}
 		}
 	case ftSource:
