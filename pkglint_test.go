@@ -30,22 +30,6 @@ func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 	c.Check(mklines.varuse["outer.*"], equals, mkline)
 }
 
-func (s *Suite) TestReShellToken(c *check.C) {
-	re := `^(?:` + reShellToken + `)$`
-	matches := check.NotNil
-	doesntMatch := check.IsNil
-
-	c.Check(match("", re), doesntMatch)
-	c.Check(match("$var", re), matches)
-	c.Check(match("$var$var", re), matches)
-	c.Check(match("$var;;", re), doesntMatch) // More than one shellword
-	c.Check(match("'single-quoted'", re), matches)
-	c.Check(match("\"", re), doesntMatch)       // Incomplete string
-	c.Check(match("'...'\"...\"", re), matches) // Mixed strings
-	c.Check(match("\"...\"", re), matches)
-	c.Check(match("`cat file`", re), matches)
-}
-
 func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "GCC_VERSION=${GCC_VERSION}", nil))
 	G.pkg = NewPackage(".")
