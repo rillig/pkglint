@@ -423,10 +423,8 @@ func (msline *MkShellLine) checkShellCommandLine(shelltext string) {
 
 func (msline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 	state := scstStart
-	repl := NewPrefixReplacer(shellcmd)
-	for repl.advanceRegexp(reShellToken) {
-		shellword := repl.m[1]
-
+	shellTokens, rest := splitIntoShellTokens(msline.line, shellcmd)
+	for _, shellword := range shellTokens {
 		if G.opts.DebugShell {
 			msline.line.debugf("checkShellCommand state=%v shellword=%q", state, shellword)
 		}
@@ -460,9 +458,8 @@ func (msline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 		state = msline.nextState(state, shellword)
 	}
 
-	repl.advanceRegexp(`^\s+`)
-	if repl.rest != "" {
-		msline.line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, repl.rest, shellcmd)
+	if rest != "" {
+		msline.line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, rest, shellcmd)
 	}
 }
 
