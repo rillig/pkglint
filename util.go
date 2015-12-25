@@ -243,7 +243,9 @@ func match5(s, re string) (matched bool, m1, m2, m3, m4, m5 string) {
 }
 
 func replaceFirst(s, re, replacement string) ([]string, string) {
-	defer tracecall("replaceFirst", s, re, replacement)()
+	if G.opts.DebugTrace {
+		defer tracecall("replaceFirst", s, re, replacement)()
+	}
 
 	if m := regcomp(re).FindStringSubmatchIndex(s); m != nil {
 		replaced := s[:m[0]] + replacement + s[m[1]:]
@@ -346,17 +348,17 @@ func tracecall(funcname string, args ...interface{}) func() {
 	}
 }
 func tracecall0(funcname string) func() {
-	switch { // prevent inlining
+	switch { // prevent inlining, for code size
 	}
 	return tracecall(funcname)
 }
 func tracecall1(funcname, arg1 string) func() {
-	switch { // prevent inlining
+	switch { // prevent inlining, for code size
 	}
 	return tracecall(funcname, arg1)
 }
 func tracecall2(funcname, arg1, arg2 string) func() {
-	switch { // prevent inlining
+	switch { // prevent inlining, for code size
 	}
 	return tracecall(funcname, arg1, arg2)
 }

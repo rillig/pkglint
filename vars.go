@@ -10,7 +10,9 @@ const (
 )
 
 func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQuoting {
-	defer tracecall("variableNeedsQuoting", varname, *vuc)()
+	if G.opts.DebugTrace {
+		defer tracecall("variableNeedsQuoting", varname, *vuc)()
+	}
 
 	vartype := getVariableType(line, varname)
 	if vartype == nil || vuc.vartype == nil {

@@ -188,7 +188,9 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 }
 
 func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext) {
-	defer tracecall("MkLine.checkVaruse", mkline, varname, mod, *vuc)()
+	if G.opts.DebugTrace {
+		defer tracecall("MkLine.checkVaruse", mkline, varname, mod, *vuc)()
+	}
 
 	vartype := getVariableType(mkline.line, varname)
 	if G.opts.WarnExtra &&
@@ -631,7 +633,9 @@ const reVarnamePlural = "^(?:" +
 	")$"
 
 func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
-	defer tracecall("MkLine.checkVartype", varname, op, value, comment)()
+	if G.opts.DebugTrace {
+		defer tracecall("MkLine.checkVartype", varname, op, value, comment)()
+	}
 
 	if !G.opts.WarnTypes {
 		return
@@ -684,7 +688,9 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 // For some variables (like BuildlinkDepth), the operator influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func (mkline *MkLine) checkVartypePrimitive(varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
-	defer tracecall("MkLine.checkVartypePrimitive", varname, op, value, comment, isList, guessed)()
+	if G.opts.DebugTrace {
+		defer tracecall("MkLine.checkVartypePrimitive", varname, op, value, comment, isList, guessed)()
+	}
 
 	ctx := &VartypeCheck{mkline, mkline.line, varname, op, value, "", comment, isList, guessed == guGuessed}
 	ctx.valueNovar = mkline.withoutMakeVariables(value, isList)

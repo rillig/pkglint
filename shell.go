@@ -124,7 +124,9 @@ func (st ShellwordState) String() string {
 }
 
 func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
-	defer tracecall("MkShellLine.checklineMkShellword", shellword, checkQuoting)()
+	if G.opts.DebugTrace {
+		defer tracecall("MkShellLine.checkShellword", shellword, checkQuoting)()
+	}
 
 	if shellword == "" || hasPrefix(shellword, "#") {
 		return
@@ -472,8 +474,9 @@ func (msline *MkShellLine) checkShellCommands(shellcmds string) {
 }
 
 func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
-	defer tracecall("MkShellLine.checkLineStart", hidden, macro, rest, eflag)()
-	line := msline.line
+	if G.opts.DebugTrace {
+		defer tracecall("MkShellLine.checkLineStart", hidden, macro, rest, eflag)()
+	}
 
 	switch {
 	case !strings.Contains(hidden, "@"):
@@ -496,7 +499,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 				"${SHCOMMENT}", "${STEP_MSG}",
 				"${WARNING_CAT}", "${WARNING_MSG}":
 			default:
-				line.warn1("The shell command %q should not be hidden.", cmd)
+				msline.line.warn1("The shell command %q should not be hidden.", cmd)
 				explain3(
 					"Hidden shell commands do not appear on the terminal or in the log file",
 					"when they are executed. When they fail, the error message cannot be",
@@ -506,7 +509,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	}
 
 	if strings.Contains(hidden, "-") {
-		line.warn0("The use of a leading \"-\" to suppress errors is deprecated.")
+		msline.line.warn0("The use of a leading \"-\" to suppress errors is deprecated.")
 		explain3(
 			"If you really want to ignore any errors from this command (including",
 			"all errors you never thought of), append \"|| ${TRUE}\" to the",

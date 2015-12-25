@@ -18,7 +18,9 @@ func NewTree(name string, args ...interface{}) *Tree {
 // If the match is partially successful, some or all of the variables
 // may have been copied or not.
 func (t *Tree) Match(pattern *Tree) bool {
-	defer tracecall("Tree.Match", t, pattern)()
+	if G.opts.DebugTrace {
+		defer tracecall("Tree.Match", t, pattern)()
+	}
 	if t.name != pattern.name || len(t.args) != len(pattern.args) {
 		return false
 	}
