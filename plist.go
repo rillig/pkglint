@@ -132,7 +132,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 
 	ck.checkSorted(pline)
 
-	if contains(basename, "${IMAKE_MANNEWSUFFIX}") {
+	if strings.Contains(basename, "${IMAKE_MANNEWSUFFIX}") {
 		pline.warnAboutPlistImakeMannewsuffix()
 	}
 
@@ -160,11 +160,11 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 		ck.checkpathShare(pline)
 	}
 
-	if contains(text, "${PKGLOCALEDIR}") && G.pkg != nil && G.pkg.vardef["USE_PKGLOCALEDIR"] == nil {
+	if strings.Contains(text, "${PKGLOCALEDIR}") && G.pkg != nil && G.pkg.vardef["USE_PKGLOCALEDIR"] == nil {
 		line.warn0("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
 	}
 
-	if contains(text, "/CVS/") {
+	if strings.Contains(text, "/CVS/") {
 		line.warn0("CVS files should not be in the PLIST.")
 	}
 	if hasSuffix(text, ".orig") {
@@ -197,7 +197,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string) {
-	if contains(dirname, "/") {
+	if strings.Contains(dirname, "/") {
 		pline.warn0("The bin/ directory should not have subdirectories.")
 		return
 	}
@@ -258,7 +258,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 		}
 	}
 
-	if contains(basename, ".a") || contains(basename, ".so") {
+	if strings.Contains(basename, ".a") || strings.Contains(basename, ".so") {
 		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
 			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
 				pline.warnf("Redundant library found. The libtool library is in line %d.", laLine.line.firstLine)
@@ -385,7 +385,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 
 	if cmd == "unexec" {
 		if m, arg := match1(arg, `^(?:rmdir|\$\{RMDIR\} \%D/)(.*)`); m {
-			if !contains(arg, "true") && !contains(arg, "${TRUE}") {
+			if !strings.Contains(arg, "true") && !strings.Contains(arg, "${TRUE}") {
 				pline.warn0("Please remove this line. It is no longer necessary.")
 			}
 		}
@@ -394,10 +394,10 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 	switch cmd {
 	case "exec", "unexec":
 		switch {
-		case contains(arg, "install-info"),
-			contains(arg, "${INSTALL_INFO}"):
+		case strings.Contains(arg, "install-info"),
+			strings.Contains(arg, "${INSTALL_INFO}"):
 			line.warn0("@exec/unexec install-info is deprecated.")
-		case contains(arg, "ldconfig") && !contains(arg, "/usr/bin/true"):
+		case strings.Contains(arg, "ldconfig") && !strings.Contains(arg, "/usr/bin/true"):
 			pline.error0("ldconfig must be used with \"||/usr/bin/true\".")
 		}
 

@@ -461,7 +461,7 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 }
 
 func matchVarassign(text string) (m bool, varname, op, value, comment string) {
-	if !contains(text, "=") {
+	if !strings.Contains(text, "=") {
 		return
 	}
 

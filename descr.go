@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strings"
+)
+
 func checklinesDescr(lines []*Line) {
 	defer tracecall1("checklinesDescr", lines[0].fname)()
 
@@ -7,7 +11,7 @@ func checklinesDescr(lines []*Line) {
 		checklineLength(line, 80)
 		checklineTrailingWhitespace(line)
 		checklineValidCharacters(line, `[\t -~]`)
-		if contains(line.text, "${") {
+		if strings.Contains(line.text, "${") {
 			line.note0("Variables are not expanded in the DESCR file.")
 		}
 	}

@@ -141,8 +141,8 @@ func checkdirPackage(pkgpath string) {
 	for _, fname := range files {
 		if (hasPrefix(path.Base(fname), "Makefile.") || hasSuffix(fname, ".mk")) &&
 			!matches(fname, `patch-`) &&
-			!contains(fname, pkg.pkgdir+"/") &&
-			!contains(fname, pkg.filesdir+"/") {
+			!strings.Contains(fname, pkg.pkgdir+"/") &&
+			!strings.Contains(fname, pkg.filesdir+"/") {
 			if lines, err := readLines(fname, true); err == nil && lines != nil {
 				NewMkLines(lines).determineUsedVariables()
 			}
@@ -157,7 +157,7 @@ func checkdirPackage(pkgpath string) {
 		} else {
 			checkfile(fname)
 		}
-		if contains(fname, "/patches/patch-") {
+		if strings.Contains(fname, "/patches/patch-") {
 			havePatches = true
 		} else if hasSuffix(fname, "/distinfo") {
 			haveDistinfo = true

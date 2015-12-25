@@ -142,7 +142,7 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	if matches(shellword, `\$\{PREFIX\}/man(?:$|/)`) {
 		line.warn0("Please use ${PKGMANDIR} instead of \"man\".")
 	}
-	if contains(shellword, "etc/rc.d") {
+	if strings.Contains(shellword, "etc/rc.d") {
 		line.warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
@@ -392,7 +392,7 @@ func (msline *MkShellLine) checkShelltext(shelltext string) {
 	defer tracecall1("MkShellLine.checklineMkShelltext", shelltext)()
 	line := msline.line
 
-	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
+	if strings.Contains(shelltext, "${SED}") && strings.Contains(shelltext, "${MV}") {
 		line.note0("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		explain(
 			"When converting things, pay attention to \"#\" characters. In shell",
@@ -466,7 +466,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	line := msline.line
 
 	switch {
-	case !contains(hidden, "@"):
+	case !strings.Contains(hidden, "@"):
 		// Nothing is hidden at all.
 
 	case hasPrefix(G.mk.target, "show-") || hasSuffix(G.mk.target, "-message"):
@@ -495,7 +495,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 		}
 	}
 
-	if contains(hidden, "-") {
+	if strings.Contains(hidden, "-") {
 		line.warn0("The use of a leading \"-\" to suppress errors is deprecated.")
 		explain3(
 			"If you really want to ignore any errors from this command (including",
@@ -609,7 +609,7 @@ func (ctx *ShelltextContext) handleComment() bool {
 		return false
 	}
 
-	semicolon := contains(shellword, ";")
+	semicolon := strings.Contains(shellword, ";")
 	multiline := ctx.msline.line.IsMultiline()
 
 	if semicolon {

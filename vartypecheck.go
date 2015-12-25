@@ -133,7 +133,7 @@ func (cv *VartypeCheck) Dependency() {
 	}
 
 	switch {
-	case contains(value, "{"):
+	case strings.Contains(value, "{"):
 		// No check yet for alternative dependency patterns.
 		if G.opts.DebugUnchecked {
 			line.debug1("Unchecked alternative dependency pattern: %s", value)
@@ -244,7 +244,7 @@ func (cv *VartypeCheck) FetchURL() {
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
 	switch {
-	case contains(cv.valueNovar, "/"):
+	case strings.Contains(cv.valueNovar, "/"):
 		cv.line.warn0("A filename should not contain a slash.")
 	case !matches(cv.valueNovar, `^[-0-9@A-Za-z.,_~+%]*$`):
 		cv.line.warn1("%q is not a valid filename.", cv.value)
@@ -372,13 +372,13 @@ func (cv *VartypeCheck) Option() {
 
 // The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
-	if !contains(cv.value, ":") && cv.guessed == guGuessed {
+	if !strings.Contains(cv.value, ":") && cv.guessed == guGuessed {
 		cv.mkline.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
 	for _, path := range strings.Split(cv.value, ":") {
-		if contains(path, "${") {
+		if strings.Contains(path, "${") {
 			continue
 		}
 
@@ -529,7 +529,7 @@ func (cv *VartypeCheck) SedCommands() {
 
 	words, rest := splitIntoShellwords(line, cv.value)
 	if rest != "" {
-		if contains(cv.value, "#") {
+		if strings.Contains(cv.value, "#") {
 			line.error0("Invalid shell words in sed commands.")
 			explain(
 				"When sed commands have embedded \"#\" characters, they need to be",
