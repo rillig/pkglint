@@ -55,6 +55,8 @@ func NewLineEof(fname string) *Line {
 }
 
 func (ln *Line) rawLines() []*RawLine {
+	switch { // prevent inlining
+	}
 	return append(append(append([]*RawLine(nil), ln.before...), ln.raw...), ln.after...)
 }
 

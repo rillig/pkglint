@@ -347,9 +347,21 @@ func tracecall(funcname string, args ...interface{}) func() {
 		trace("- ", funcname, args...)
 	}
 }
-func tracecall0(funcname string) func()             { return tracecall(funcname) }
-func tracecall1(funcname, arg1 string) func()       { return tracecall(funcname, arg1) }
-func tracecall2(funcname, arg1, arg2 string) func() { return tracecall(funcname, arg1, arg2) }
+func tracecall0(funcname string) func() {
+	switch { // prevent inlining
+	}
+	return tracecall(funcname)
+}
+func tracecall1(funcname, arg1 string) func() {
+	switch { // prevent inlining
+	}
+	return tracecall(funcname, arg1)
+}
+func tracecall2(funcname, arg1, arg2 string) func() {
+	switch { // prevent inlining
+	}
+	return tracecall(funcname, arg1, arg2)
+}
 
 // Emulates make(1)’s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, all bool) string {
