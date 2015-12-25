@@ -665,19 +665,17 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 	case vartype.kindOfList == lkNone:
 		mkline.checkVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 
-	default:
-		var words []string
-		if vartype.kindOfList == lkSpace {
-			words = splitOnSpace(value)
-		} else {
-			words, _ = splitIntoShellwords(mkline.line, value)
+	case vartype.kindOfList == lkSpace:
+		for _, word := range splitOnSpace(value) {
+			mkline.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 		}
 
+	case vartype.kindOfList == lkShell:
+		shline := NewMkShellLine(mkline)
+		words, _ := splitIntoShellwords(mkline.line, value)
 		for _, word := range words {
 			mkline.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
-			if vartype.kindOfList != lkSpace {
-				NewMkShellLine(mkline).checkShellword(word, true)
-			}
+			shline.checkShellword(word, true)
 		}
 	}
 }
