@@ -71,13 +71,14 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 	// Assuming the tool definitions don't include very special characters,
 	// so they can safely be used inside any quotes.
 	if G.globalData.varnameToToolname[varname] != "" {
-		quoting := vuc.quoting
-		switch {
-		case quoting == vucQuotPlain && vuc.extent != vucExtentWordpart:
+		switch vuc.quoting {
+		case vucQuotPlain:
+			if vuc.extent != vucExtentWordpart {
+				return nqNo
+			}
+		case vucQuotBackt:
 			return nqNo
-		case quoting == vucQuotBackt:
-			return nqNo
-		case quoting == vucQuotDquot || quoting == vucQuotSquot:
+		case vucQuotDquot, vucQuotSquot:
 			return nqDoesntMatter
 		}
 	}
