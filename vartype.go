@@ -99,7 +99,7 @@ func (vt *Vartype) isConsideredList() bool {
 		return false
 	}
 	switch vt.checker {
-	case CheckvarSedCommands, CheckvarShellCommands:
+	case CheckvarSedCommands, CheckvarShellCommand, CheckvarShellCommands:
 		return true
 	}
 	return false
