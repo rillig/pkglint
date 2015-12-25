@@ -44,7 +44,7 @@ const (
 )
 
 // ShellCommandState
-type scState int
+type scState uint8
 
 const (
 	scstStart scState = iota
@@ -109,7 +109,7 @@ func NewMkShellLine(mkline *MkLine) *MkShellLine {
 	return &MkShellLine{mkline.line, mkline}
 }
 
-type ShellwordState int
+type ShellwordState uint8
 
 const (
 	swstPlain ShellwordState = iota

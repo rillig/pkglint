@@ -239,7 +239,7 @@ func (ck *PatchChecker) checktextRcsid(text string) {
 	}
 }
 
-type FileType int
+type FileType uint8
 
 const (
 	ftSource FileType = iota

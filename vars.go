@@ -1,6 +1,6 @@
 package main
 
-type NeedsQuoting int
+type NeedsQuoting uint8
 
 const (
 	nqNo NeedsQuoting = iota

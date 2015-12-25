@@ -19,7 +19,7 @@ type VarUseContext struct {
 	extent    vucExtent
 }
 
-type vucTime int
+type vucTime uint8
 
 const (
 	vucTimeUnknown vucTime = iota
@@ -39,7 +39,7 @@ func (t vucTime) String() string { return [...]string{"unknown", "parse", "run"}
 
 // The quoting context in which the variable is used.
 // Depending on this context, the modifiers :Q or :M can be allowed or not.
-type vucQuoting int
+type vucQuoting uint8
 
 const (
 	vucQuotUnknown vucQuoting = iota
@@ -60,7 +60,7 @@ func (q vucQuoting) String() string {
 	return [...]string{"unknown", "plain", "dquot", "squot", "backt", "mk-for"}[q]
 }
 
-type vucExtent int
+type vucExtent uint8
 
 const (
 	vucExtentUnknown  vucExtent = iota

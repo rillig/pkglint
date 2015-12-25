@@ -351,7 +351,7 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		return
 	}
 
-	type OccCount int
+	type OccCount uint8
 	const (
 		once OccCount = iota
 		optional

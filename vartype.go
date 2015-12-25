@@ -14,7 +14,7 @@ type Vartype struct {
 	guessed    Guessed
 }
 
-type KindOfList int
+type KindOfList uint8
 
 const (
 	lkNone  KindOfList = iota // Plain data type
@@ -27,7 +27,7 @@ type AclEntry struct {
 	permissions AclPermissions
 }
 
-type AclPermissions int
+type AclPermissions uint8
 
 const (
 	aclpSet         AclPermissions = 1 << iota // VAR = value
