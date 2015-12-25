@@ -10,7 +10,7 @@ func (s *Suite) TestVariableNeedsQuoting(c *check.C) {
 	pkgnameType := G.globalData.vartypes["PKGNAME"]
 
 	// In Makefile: PKGNAME := ${UNKNOWN}
-	vuc := &VarUseContext{vucTimeParse, pkgnameType, vucQuotUnknown, vucExtentUnknown}
+	vuc := &VarUseContext{pkgnameType, vucTimeParse, vucQuotUnknown, vucExtentUnknown}
 	nq := variableNeedsQuoting(line, "UNKNOWN", vuc)
 
 	c.Check(nq, equals, nqDontKnow)

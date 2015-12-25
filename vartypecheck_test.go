@@ -86,7 +86,7 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 		"ERROR: fname:6: Unknown dependency pattern \"py-docs\".\n")
 }
 
-func (s *Suite) TestVartypeCheck_DependencyWithPatch(c *check.C) {
+func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 	s.CreateTmpFile(c, "x11/alacarte/Makefile", "# empty\n")
 	s.CreateTmpFile(c, "category/package/Makefile", "# empty\n")
 	G.globalData.pkgsrcdir = s.tmpdir
@@ -164,6 +164,12 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 		"WARN: fname:2: Please use ${MASTER_SITE_GNU:=bison} instead of \"http://ftp.gnu.org/pub/gnu/bison\".\n"+
 		"ERROR: fname:3: The subdirectory in MASTER_SITE_GNU must end with a slash.\n"+
 		"ERROR: fname:4: MASTER_SITE_INVALID does not exist.\n")
+
+	// PR 46570, keyword gimp-fix-ca
+	runVartypeChecks("MASTER_SITES", "=", (*VartypeCheck).FetchURL,
+		"https://example.org/download.cgi?fname=fname&sha1=12341234")
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_Filename(c *check.C) {

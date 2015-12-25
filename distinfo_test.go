@@ -78,8 +78,7 @@ func (s *Suite) TestChecklinesDistinfo_UnrecordedPatches(c *check.C) {
 		"SHA512 (distfile.tar.gz) = ...",
 		"Size (distfile.tar.gz) = 1024 bytes"))
 
-	c.Check(s.OutputCleanTmpdir(), equals, sprintf(""+
-		"ERROR: ~/distinfo: patch \"patches/patch-aa\" is not recorded. Run \"%[1]s makepatchsum\".\n"+
-		"ERROR: ~/distinfo: patch \"patches/patch-src-Makefile\" is not recorded. Run \"%[1]s makepatchsum\".\n",
-		confMake))
+	c.Check(s.OutputCleanTmpdir(), equals, ""+
+		"ERROR: ~/distinfo: patch \"patches/patch-aa\" is not recorded. Run \""+confMake+" makepatchsum\".\n"+
+		"ERROR: ~/distinfo: patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".\n")
 }
