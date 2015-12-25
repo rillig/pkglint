@@ -234,7 +234,7 @@ outer:
 		case state == swstPlain:
 			switch {
 			case repl.advanceRegexp(`^[!#\%&\(\)*+,\-.\/0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
-				repl.advanceRegexp(`^\\(?:[ !"#'\(\)*;?\\^{|}]|\$\$)`):
+				repl.advanceRegexp(`^\\(?:[ !"#'\(\)*./;?\\^{|}]|\$\$)`):
 			case repl.advanceStr("'"):
 				state = swstSquot
 			case repl.advanceStr("\""):
@@ -303,7 +303,7 @@ outer:
 				state = swstDquotBackt
 			case repl.advanceRegexp("^[^$\"\\\\`]+"):
 				// just skip
-			case repl.advanceRegexp("^\\\\(?:[\\\\\"`]|\\$\\$)"):
+			case repl.advanceStr("\\$$"), repl.advanceRegexp("^\\\\[\\\\\"`./]"):
 				// just skip
 			case repl.advanceRegexp(`^\$\$\{([0-9A-Za-z_]+)\}`),
 				repl.advanceRegexp(`^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):

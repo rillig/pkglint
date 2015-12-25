@@ -197,6 +197,14 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
+
+	msline.checkShellword("s,\\.,,", true)
+
+	c.Check(s.Output(), equals, "")
+
+	msline.checkShellword("\"s,\\.,,\"", true)
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestMkShellLine_CheckShellword_InternalError(c *check.C) {
