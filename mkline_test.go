@@ -129,3 +129,15 @@ func (s *Suite) TestMkLine_fields(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: test.mk:9: Space before colon in dependency line.\n")
 }
+
+func (s *Suite) TestMkLine_checkVarassign(c *check.C) {
+	//s.DebugToStdout()
+	//s.UseCommandLine(c,"-Dall")
+	G.pkg = NewPackage("graphics/gimp-fix-ca")
+	G.globalData.InitVartypes()
+	mkline := NewMkLine(NewLine("fname", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=", nil))
+
+	mkline.checkVarassign()
+
+	c.Check(s.Output(), equals, "")
+}
