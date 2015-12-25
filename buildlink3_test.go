@@ -28,6 +28,8 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 	checklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
+		"ERROR: buildlink3.mk:12: \"/x11/Xbae\" does not exist.\n"+
+		"ERROR: buildlink3.mk:12: There is no package in \"x11/Xbae\".\n"+
 		"ERROR: buildlink3.mk:14: \"/mk/motif.buildlink3.mk\" does not exist.\n"+
 		"NOTE: buildlink3.mk:2: Please read this comment and remove it if appropriate.\n")
 }

@@ -139,5 +139,9 @@ func (s *Suite) TestMkLine_checkVarassign(c *check.C) {
 
 	mkline.checkVarassign()
 
-	c.Check(s.Output(), equals, "")
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:10: \"&\" is not a valid URL.\n"+
+		"WARN: fname:10: \"id=9884\" is not a valid URL.\n"+
+		"WARN: fname:10: \"&\" is not a valid URL.\n"+
+		"WARN: fname:10: \"file=\" is not a valid URL.\n")
 }
