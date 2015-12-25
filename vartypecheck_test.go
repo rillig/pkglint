@@ -231,7 +231,6 @@ func (s *Suite) TestVartypeCheck_PlatformTriple(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
-
 	runVartypeChecks("SUBST_SED.dummy", "=", (*VartypeCheck).SedCommands,
 		"s,@COMPILER@,gcc,g",
 		"-e s,a,b, -e a,b,c,")
@@ -239,6 +238,14 @@ func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n"+
 		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n")
+}
+
+func (s *Suite) TestVartypeCheck_ShellCommands(c *check.C) {
+	runVartypeChecks("GENERATE_PLIST", "+=", (*VartypeCheck).ShellCommands,
+		"echo bin/program",
+		"echo bin/program;")
+
+	c.Check(s.Output(), equals, "WARN: fname:1: This shell command list should end with a semicolon.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Stage(c *check.C) {

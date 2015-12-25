@@ -99,16 +99,14 @@ func (vt *Vartype) isConsideredList() bool {
 		return false
 	}
 	switch vt.checker {
-	case CheckvarSedCommands, CheckvarShellCommand:
+	case CheckvarSedCommands, CheckvarShellCommands:
 		return true
 	}
 	return false
 }
 
 func (vt *Vartype) mayBeAppendedTo() bool {
-	return vt.kindOfList != lkNone ||
-		vt.checker == CheckvarAwkCommand ||
-		vt.checker == CheckvarSedCommands
+	return vt.kindOfList != lkNone || vt.isConsideredList()
 }
 
 func (vt *Vartype) String() string {
@@ -178,7 +176,7 @@ var (
 	CheckvarSedCommand             = &VarChecker{"SedCommand", (*VartypeCheck).SedCommand}
 	CheckvarSedCommands            = &VarChecker{"SedCommands", nil}
 	CheckvarShellCommand           = &VarChecker{"ShellCommand", nil}
-	CheckvarShellCommands          = &VarChecker{"ShellCommands", (*VartypeCheck).ShellCommands}
+	CheckvarShellCommands          = &VarChecker{"ShellCommands", nil}
 	CheckvarShellWord              = &VarChecker{"ShellWord", nil}
 	CheckvarStage                  = &VarChecker{"Stage", (*VartypeCheck).Stage}
 	CheckvarString                 = &VarChecker{"String", (*VartypeCheck).String}
@@ -200,5 +198,6 @@ var (
 func init() { // Necessary due to circular dependency
 	CheckvarSedCommands.checker = (*VartypeCheck).SedCommands
 	CheckvarShellCommand.checker = (*VartypeCheck).ShellCommand
+	CheckvarShellCommands.checker = (*VartypeCheck).ShellCommands
 	CheckvarShellWord.checker = (*VartypeCheck).ShellWord
 }
