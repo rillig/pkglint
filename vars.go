@@ -48,12 +48,12 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 	// In .for loops, the :Q operator is always misplaced, since
 	// the items are broken up at white-space, not as shell words
 	// like in all other parts of make(1).
-	if vuc.shellword == vucQuotFor {
+	if vuc.quoting == vucQuotFor {
 		return nqNo
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vuc.vartype.isConsideredList() && (vuc.shellword == vucQuotBackt || vuc.extent != vucExtentWordpart)
+	wantList := vuc.vartype.isConsideredList() && (vuc.quoting == vucQuotBackt || vuc.extent != vucExtentWordpart)
 	haveList := vartype.isConsideredList()
 
 	if G.opts.DebugQuoting {
@@ -62,8 +62,8 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
-	if vuc.extent == vucExtentWordpart && vuc.shellword == vucQuotPlain {
-		if vartype.kindOfList == lkNone && vartype.checker.name == "ShellWord" {
+	if vuc.extent == vucExtentWordpart && vuc.quoting == vucQuotPlain {
+		if vartype.kindOfList == lkNone && vartype.checker == CheckvarShellWord {
 			return nqNo
 		}
 	}
@@ -71,13 +71,13 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 	// Assuming the tool definitions don't include very special characters,
 	// so they can safely be used inside any quotes.
 	if G.globalData.varnameToToolname[varname] != "" {
-		shellword := vuc.shellword
+		quoting := vuc.quoting
 		switch {
-		case shellword == vucQuotPlain && vuc.extent != vucExtentWordpart:
+		case quoting == vucQuotPlain && vuc.extent != vucExtentWordpart:
 			return nqNo
-		case shellword == vucQuotBackt:
+		case quoting == vucQuotBackt:
 			return nqNo
-		case shellword == vucQuotDquot || shellword == vucQuotSquot:
+		case quoting == vucQuotDquot || quoting == vucQuotSquot:
 			return nqDoesntMatter
 		}
 	}
@@ -86,7 +86,7 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 	// to be quoted. An exception is in the case of backticks,
 	// because the whole backticks expression is parsed as a single
 	// shell word by pkglint.
-	if vuc.extent == vucExtentWordpart && vuc.shellword != vucQuotBackt {
+	if vuc.extent == vucExtentWordpart && vuc.quoting != vucQuotBackt {
 		return nqYes
 	}
 

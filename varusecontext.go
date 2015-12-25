@@ -17,10 +17,10 @@ import (
 //   checked against the variable type. For example, comparing OPSYS to
 //   x86_64 doesn’t make sense.
 type VarUseContext struct {
-	vartype   *Vartype
-	time      vucTime
-	shellword vucQuoting
-	extent    vucExtent
+	vartype *Vartype
+	time    vucTime
+	quoting vucQuoting
+	extent  vucExtent
 }
 
 type vucTime uint8
@@ -81,5 +81,5 @@ func (vuc *VarUseContext) String() string {
 	if vuc.vartype != nil {
 		typename = vuc.vartype.String()
 	}
-	return fmt.Sprintf("(%s %s %s %s)", vuc.time, typename, vuc.shellword, vuc.extent)
+	return fmt.Sprintf("(%s %s %s %s)", vuc.time, typename, vuc.quoting, vuc.extent)
 }

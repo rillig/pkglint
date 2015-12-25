@@ -206,11 +206,11 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 
 	needsQuoting := variableNeedsQuoting(mkline.line, varname, vuc)
 
-	if vuc.shellword == vucQuotFor {
+	if vuc.quoting == vucQuotFor {
 		mkline.checkVaruseFor(varname, vartype, needsQuoting)
 	}
 
-	if G.opts.WarnQuoting && vuc.shellword != vucQuotUnknown && needsQuoting != nqDontKnow {
+	if G.opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
 		mkline.checkVaruseShellword(varname, vartype, vuc, mod, needsQuoting)
 	}
 
@@ -351,7 +351,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 		if mod != correctMod {
-			if vuc.shellword == vucQuotPlain {
+			if vuc.quoting == vucQuotPlain {
 				if !mkline.line.autofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
 					mkline.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
 				}
