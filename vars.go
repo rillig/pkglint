@@ -18,16 +18,22 @@ func variableNeedsQuoting(line *Line, varname string, vuc *VarUseContext) NeedsQ
 	}
 
 	isPlainWord := vartype.checker.IsEnum()
-	switch vartype.checker.name {
-	case "DistSuffix",
-		"FileMode", "Filename",
-		"Identifier",
-		"Option",
-		"Pathname", "PkgName", "PkgOptionsVar", "PkgRevision",
-		"RelativePkgDir", "RelativePkgPath",
-		"UserGroupName",
-		"Varname", "Version",
-		"WrkdirSubdirectory":
+	if c := vartype.checker; false ||
+		c == CheckvarDistSuffix ||
+		c == CheckvarFileMode ||
+		c == CheckvarFilename ||
+		c == CheckvarIdentifier ||
+		c == CheckvarOption ||
+		c == CheckvarPathname ||
+		c == CheckvarPkgName ||
+		c == CheckvarPkgOptionsVar ||
+		c == CheckvarPkgRevision ||
+		c == CheckvarRelativePkgDir ||
+		c == CheckvarRelativePkgPath ||
+		c == CheckvarUserGroupName ||
+		c == CheckvarVarname ||
+		c == CheckvarVersion ||
+		c == CheckvarWrkdirSubdirectory {
 		isPlainWord = true
 	}
 	if isPlainWord {
