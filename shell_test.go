@@ -150,11 +150,11 @@ func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
 		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
 		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
 		"WARN: fname:1: Unknown shell command \"echo\".\n"+
-		"ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"\\\\foo\", shellword=\"\\\\foo\"\n"+
-		"ERROR: fname:1: Internal pkglint error: checklineMkShelltext state=continuation rest=\"\\\\\" shellword=\"echo \\\\foo   bar\\\\\"\n")
+		"ERROR: fname:1: Internal pkglint error: MkShellLine.checkShellword state=plain, rest=\"\\\\foo\", shellword=\"\\\\foo\"\n"+
+		"ERROR: fname:1: Internal pkglint error: MkShellLine.checkShellCommand state=continuation rest=\"\\\\\" shellword=\"echo \\\\foo   bar\\\\\"\n")
 }
 
-func (s *Suite) TestMkShellLine_CheckShelltext_InternalError2(c *check.C) {
+func (s *Suite) TestMkShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {
 	G.globalData.InitVartypes()
 	G.mk = s.NewMkLines("fname",
 		"# dummy")
@@ -164,7 +164,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_InternalError2(c *check.C) {
 
 	msline.checkShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 
-	c.Check(s.Output(), equals, "ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"$$//g\", shellword=\"/.*~$$//g\"\n")
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestChecklineMkShellword(c *check.C) {
@@ -207,12 +207,12 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) TestMkShellLine_CheckShellword_InternalError(c *check.C) {
+func (s *Suite) TestMkShellLine_CheckShellword_DollarWithoutVariable(c *check.C) {
 	msline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
-	msline.checkShellword("/.*~$$//g", false)
+	msline.checkShellword("/.*~$$//g", false) // Typical argument to pax(1).
 
-	c.Check(s.Output(), equals, "ERROR: fname:1: Internal pkglint error: checklineMkShellword state=plain, rest=\"$$//g\", shellword=\"/.*~$$//g\"\n")
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {

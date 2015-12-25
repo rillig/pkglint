@@ -241,8 +241,8 @@ outer:
 				state = swstDquot
 			case repl.advanceStr("`"):
 				state = swstBackt
-			case repl.advanceRegexp(`^\$\$([0-9A-Z_a-z]+|\#)`),
-				repl.advanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|\#)\}`),
+			case repl.advanceRegexp(`^\$\$([0-9A-Z_a-z]+|#)`),
+				repl.advanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`),
 				repl.advanceRegexp(`^\$\$(\$)\$`):
 				shvarname := repl.m[1]
 				if G.opts.WarnQuoting && checkQuoting && msline.variableNeedsQuoting(shvarname) {
@@ -278,6 +278,9 @@ outer:
 				explain2(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell. Please use backticks (`...`) as a replacement.")
+
+			case repl.advanceStr("$$"): // Not part of a variable.
+				break
 
 			default:
 				break outer
@@ -328,7 +331,7 @@ outer:
 	}
 
 	if strings.TrimSpace(repl.rest) != "" {
-		line.errorf("Internal pkglint error: checklineMkShellword state=%s, rest=%q, shellword=%q", state, repl.rest, shellword)
+		line.errorf("Internal pkglint error: MkShellLine.checkShellword state=%s, rest=%q, shellword=%q", state, repl.rest, shellword)
 	}
 }
 
@@ -461,7 +464,7 @@ func (msline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 	}
 
 	if rest != "" {
-		msline.line.errorf("Internal pkglint error: checklineMkShelltext state=%s rest=%q shellword=%q", state, rest, shellcmd)
+		msline.line.errorf("Internal pkglint error: MkShellLine.checkShellCommand state=%s rest=%q shellword=%q", state, rest, shellcmd)
 	}
 }
 
