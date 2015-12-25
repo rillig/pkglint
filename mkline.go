@@ -22,14 +22,14 @@ type MkLine struct {
 	xs6   string
 }
 
-func (mkline *MkLine) error1(format, arg1 string)                { mkline.line.error1(format, arg1) }
-func (mkline *MkLine) warn0(format string)                       { mkline.line.warn0(format) }
-func (mkline *MkLine) warn1(format, arg1 string)                 { mkline.line.warn1(format, arg1) }
-func (mkline *MkLine) warn2(format, arg1, arg2 string)           { mkline.line.warn2(format, arg1, arg2) }
-func (mkline *MkLine) note0(format string)                       { mkline.line.note0(format) }
-func (mkline *MkLine) note2(format, arg1, arg2 string)           { mkline.line.note2(format, arg1, arg2) }
-func (mkline *MkLine) debug1(format, arg1 string)                { mkline.line.debug1(format, arg1) }
-func (mkline *MkLine) debug2(format, arg1, arg2 string)          { mkline.line.debug2(format, arg1, arg2) }
+func (mkline *MkLine) error1(format, arg1 string)       { mkline.line.error1(format, arg1) }
+func (mkline *MkLine) warn0(format string)              { mkline.line.warn0(format) }
+func (mkline *MkLine) warn1(format, arg1 string)        { mkline.line.warn1(format, arg1) }
+func (mkline *MkLine) warn2(format, arg1, arg2 string)  { mkline.line.warn2(format, arg1, arg2) }
+func (mkline *MkLine) note0(format string)              { mkline.line.note0(format) }
+func (mkline *MkLine) note2(format, arg1, arg2 string)  { mkline.line.note2(format, arg1, arg2) }
+func (mkline *MkLine) debug1(format, arg1 string)       { mkline.line.debug1(format, arg1) }
+func (mkline *MkLine) debug2(format, arg1, arg2 string) { mkline.line.debug2(format, arg1, arg2) }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{line: line}
