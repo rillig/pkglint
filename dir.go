@@ -6,7 +6,7 @@ import (
 )
 
 func CheckDirent(fname string) {
-	defer tracecall("CheckDirent", fname)()
+	defer tracecall1("CheckDirent", fname)()
 
 	st, err := os.Lstat(fname)
 	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {

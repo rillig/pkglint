@@ -6,7 +6,7 @@ import (
 )
 
 func checklinesPlist(lines []*Line) {
-	defer tracecall("checklinesPlist", lines[0].fname)()
+	defer tracecall1("checklinesPlist", lines[0].fname)()
 
 	checklineRcsid(lines[0], `@comment `, "@comment ")
 

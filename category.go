@@ -11,7 +11,7 @@ type subdir struct {
 }
 
 func checkdirCategory() {
-	defer tracecall("checkdirCategory", G.currentDir)()
+	defer tracecall1("checkdirCategory", G.currentDir)()
 
 	lines := LoadNonemptyLines(G.currentDir+"/Makefile", true)
 	if lines == nil {

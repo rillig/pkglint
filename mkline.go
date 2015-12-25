@@ -145,7 +145,7 @@ func (mkline *MkLine) Targets() string     { return mkline.xs1 }
 func (mkline *MkLine) Sources() string     { return mkline.xs2 }
 
 func (mkline *MkLine) checkVardef(varname, op string) {
-	defer tracecall("MkLine.checkVardef", varname, op)()
+	defer tracecall2("MkLine.checkVardef", varname, op)()
 
 	defineVar(mkline, varname)
 	mkline.checkVardefPermissions(varname, op)
@@ -395,7 +395,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 }
 
 func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
-	defer tracecall("MkLine.checkDecreasingOrder", varname, value)()
+	defer tracecall2("MkLine.checkDecreasingOrder", varname, value)()
 
 	strversions := splitOnSpace(value)
 	intversions := make([]int, len(strversions))
@@ -419,7 +419,7 @@ func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
 }
 
 func (mkline *MkLine) checkVarassign() {
-	defer tracecall("MkLine.checkVarassign")()
+	defer tracecall0("MkLine.checkVarassign")()
 
 	varname := mkline.Varname()
 	op := mkline.Op()
@@ -524,7 +524,7 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	usedVars := extractUsedVariables(mkline.line, value)
-	vuc := &VarUseContext{time, getVariableType(mkline.line, varname), vucQuotUnknown, vucExtentUnknown}
+	vuc := &VarUseContext{getVariableType(mkline.line, varname), time, vucQuotUnknown, vucExtentUnknown}
 	for _, usedVar := range usedVars {
 		mkline.checkVaruse(usedVar, "", vuc)
 	}
@@ -728,7 +728,7 @@ func (mkline *MkLine) checkVaralign() {
 }
 
 func (mkline *MkLine) checkText(text string) {
-	defer tracecall("MkLine.checkText", text)()
+	defer tracecall1("MkLine.checkText", text)()
 
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
 		mkline.warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
@@ -772,7 +772,7 @@ func (mkline *MkLine) checkText(text string) {
 }
 
 func (mkline *MkLine) checkIf() {
-	defer tracecall("MkLine.checkIf")()
+	defer tracecall0("MkLine.checkIf")()
 
 	condition := mkline.Args()
 	tree := parseMkCond(mkline.line, condition)

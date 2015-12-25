@@ -8,7 +8,7 @@ import (
 )
 
 func checklinesPatch(lines []*Line) {
-	defer tracecall("checklinesPatch", lines[0].fname)()
+	defer tracecall1("checklinesPatch", lines[0].fname)()
 
 	(&PatchChecker{lines, NewExpecter(lines), false, false}).check()
 }
@@ -27,7 +27,7 @@ const (
 )
 
 func (ck *PatchChecker) check() {
-	defer tracecall("PatchChecker.check")()
+	defer tracecall0("PatchChecker.check")()
 
 	if checklineRcsid(ck.lines[0], ``, "") {
 		ck.exp.advance()
@@ -90,7 +90,7 @@ func (ck *PatchChecker) check() {
 
 // See http://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
 func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
-	defer tracecall("PatchChecker.checkUnifiedDiff")()
+	defer tracecall0("PatchChecker.checkUnifiedDiff")()
 
 	patchedFileType := guessFileType(ck.exp.currentLine(), patchedFile)
 	if G.opts.DebugMisc {
@@ -148,7 +148,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 }
 
 func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
-	defer tracecall("PatchChecker.checkBeginDiff")()
+	defer tracecall0("PatchChecker.checkBeginDiff")()
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.error0("Each patch must be documented.")
@@ -170,7 +170,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 }
 
 func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) {
-	defer tracecall("PatchChecker.checklineContext", text, patchedFileType)()
+	defer tracecall2("PatchChecker.checklineContext", text, patchedFileType.String())()
 
 	if G.opts.WarnExtra {
 		ck.checklineAdded(text, patchedFileType)
@@ -180,7 +180,7 @@ func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) 
 }
 
 func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileType) {
-	defer tracecall("PatchChecker.checklineAdded", addedText, patchedFileType)()
+	defer tracecall2("PatchChecker.checklineAdded", addedText, patchedFileType.String())()
 
 	ck.checktextRcsid(addedText)
 
@@ -214,7 +214,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 }
 
 func (ck *PatchChecker) checktextUniHunkCr() {
-	defer tracecall("PatchChecker.checktextUniHunkCr")()
+	defer tracecall0("PatchChecker.checktextUniHunkCr")()
 
 	line := ck.exp.previousLine()
 	if hasSuffix(line.text, "\r") {
@@ -294,7 +294,7 @@ func guessFileType(line *Line, fname string) FileType {
 }
 
 func checkwordAbsolutePathname(line *Line, word string) {
-	defer tracecall("checkwordAbsolutePathname", word)()
+	defer tracecall1("checkwordAbsolutePathname", word)()
 
 	switch {
 	case matches(word, `^/dev/(?:null|tty|zero)$`):
@@ -341,7 +341,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 }
 
 func checklineOtherAbsolutePathname(line *Line, text string) {
-	defer tracecall("checklineOtherAbsolutePathname", text)()
+	defer tracecall1("checklineOtherAbsolutePathname", text)()
 
 	if hasPrefix(text, "#") && !hasPrefix(text, "#!") {
 		// Don't warn for absolute pathnames in comments, except for shell interpreters.

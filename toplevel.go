@@ -6,7 +6,7 @@ type Toplevel struct {
 }
 
 func checkdirToplevel() {
-	defer tracecall("checkdirToplevel", G.currentDir)()
+	defer tracecall1("checkdirToplevel", G.currentDir)()
 
 	ctx := new(Toplevel)
 

@@ -347,6 +347,9 @@ func tracecall(funcname string, args ...interface{}) func() {
 		trace("- ", funcname, args...)
 	}
 }
+func tracecall0(funcname string) func()             { return tracecall(funcname) }
+func tracecall1(funcname, arg1 string) func()       { return tracecall(funcname, arg1) }
+func tracecall2(funcname, arg1, arg2 string) func() { return tracecall(funcname, arg1, arg2) }
 
 // Emulates make(1)’s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, all bool) string {
@@ -403,7 +406,7 @@ func abspath(fname string) string {
 // Also, the initial directory is always kept.
 // This is to provide the package path as context in recursive invocations of pkglint.
 func cleanpath(fname string) string {
-	defer tracecall("cleanpath", fname)()
+	defer tracecall1("cleanpath", fname)()
 
 	tmp := fname
 	for len(tmp) > 2 && hasPrefix(tmp, "./") {

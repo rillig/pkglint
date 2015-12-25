@@ -132,7 +132,7 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 
 	line := msline.line
 	shellcommandContextType := &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpAllRuntime}}, guNotGuessed}
-	shellwordVuc := &VarUseContext{vucTimeUnknown, shellcommandContextType, vucQuotPlain, vucExtentWord}
+	shellwordVuc := &VarUseContext{shellcommandContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
 	if m, varname, mod := match2(shellword, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
 		msline.mkline.checkVaruse(varname, mod, shellwordVuc)
@@ -205,7 +205,7 @@ outer:
 				case swstBackt:
 					vucstate = vucQuotBackt
 				}
-				vuc := &VarUseContext{vucTimeUnknown, shellcommandContextType, vucstate, vucExtentWordpart}
+				vuc := &VarUseContext{shellcommandContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
 				msline.mkline.checkVaruse(varname, mod, vuc)
 			}
 
@@ -389,7 +389,7 @@ type ShelltextContext struct {
 }
 
 func (msline *MkShellLine) checkShelltext(shelltext string) {
-	defer tracecall("MkShellLine.checklineMkShelltext", shelltext)()
+	defer tracecall1("MkShellLine.checklineMkShelltext", shelltext)()
 	line := msline.line
 
 	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
@@ -509,7 +509,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 }
 
 func (ctx *ShelltextContext) checkCommandStart() {
-	defer tracecall("ShelltextContext.checkCommandStart", ctx.state, ctx.shellword)()
+	defer tracecall2("ShelltextContext.checkCommandStart", ctx.state.String(), ctx.shellword)()
 
 	state, shellword := ctx.state, ctx.shellword
 	if state != scstStart && state != scstCond {
@@ -538,7 +538,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 }
 
 func (ctx *ShelltextContext) handleTool() bool {
-	defer tracecall("ShelltextContext.handleTool", ctx.shellword)()
+	defer tracecall1("ShelltextContext.handleTool", ctx.shellword)()
 
 	shellword := ctx.shellword
 	if !G.globalData.tools[shellword] {
@@ -573,7 +573,7 @@ func (ctx *ShelltextContext) handleForbiddenCommand() bool {
 }
 
 func (ctx *ShelltextContext) handleCommandVariable() bool {
-	defer tracecall("ShelltextContext.handleCommandVariable", ctx.shellword)()
+	defer tracecall1("ShelltextContext.handleCommandVariable", ctx.shellword)()
 
 	shellword := ctx.shellword
 	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
@@ -601,7 +601,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 }
 
 func (ctx *ShelltextContext) handleComment() bool {
-	defer tracecall("ShelltextContext.handleComment", ctx.shellword)()
+	defer tracecall1("ShelltextContext.handleComment", ctx.shellword)()
 	line := ctx.msline.line
 
 	shellword := ctx.shellword

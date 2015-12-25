@@ -13,8 +13,8 @@ package main
 //   checked against the variable type. For example, comparing OPSYS to
 //   x86_64 doesn’t make sense.
 type VarUseContext struct {
-	time      vucTime
 	vartype   *Vartype
+	time      vucTime
 	shellword vucQuoting
 	extent    vucExtent
 }

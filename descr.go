@@ -1,7 +1,7 @@
 package main
 
 func checklinesDescr(lines []*Line) {
-	defer tracecall("checklinesDescr", lines[0].fname)()
+	defer tracecall1("checklinesDescr", lines[0].fname)()
 
 	for _, line := range lines {
 		checklineLength(line, 80)

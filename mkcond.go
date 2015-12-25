@@ -1,7 +1,7 @@
 package main
 
 func parseMkCond(line *Line, cond string) *Tree {
-	defer tracecall("parseMkCond", cond)()
+	defer tracecall1("parseMkCond", cond)()
 
 	const (
 		repartVarname = `[A-Z_][A-Z0-9_]*(?:\.[\w_+\-]+)?`

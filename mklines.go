@@ -80,7 +80,7 @@ func (mklines *MkLines) varValue(varname string) (value string, found bool) {
 }
 
 func (mklines *MkLines) check() {
-	defer tracecall("MkLines.check", mklines.lines[0].fname)()
+	defer tracecall1("MkLines.check", mklines.lines[0].fname)()
 
 	allowedTargets := make(map[string]bool)
 	substcontext := new(SubstContext)
@@ -290,7 +290,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 			}
 
 			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", aclpUseLoadtime | aclpUse}}, guessed}
-			forLoopContext := &VarUseContext{vucTimeParse, forLoopType, vucQuotFor, vucExtentWord}
+			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, vucExtentWord}
 			for _, forLoopVar := range extractUsedVariables(mkline.line, values) {
 				mkline.checkVaruse(forLoopVar, "", forLoopContext)
 			}
