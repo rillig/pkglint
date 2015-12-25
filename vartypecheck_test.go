@@ -257,6 +257,15 @@ func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:2: Invalid stage name \"post-modern\". Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.\n")
 }
 
+func (s *Suite) TestVartypeCheck_URL(c *check.C) {
+	runVartypeChecks("MASTER_SITES", "=", (*VartypeCheck).URL,
+		"http://example.org/distfiles/",
+		"http://example.org/download?fname=distfile;version=1.0",
+		"http://example.org/download?fname=<distfile>;version=<version>")
+
+	c.Check(s.Output(), equals, "WARN: fname:3: \"http://example.org/download?fname=<distfile>;version=<version>\" is not a valid URL.\n")
+}
+
 func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 	runVartypeChecks("APACHE_MODULE", "=", (*VartypeCheck).Yes,
 		"yes",
