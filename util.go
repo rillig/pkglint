@@ -384,7 +384,9 @@ func relpath(from, to string) string {
 		panic("relpath" + argsStr(from, to, err1, err2, err3))
 	}
 	result := filepath.ToSlash(rel)
-	trace("", "relpath", from, to, "=>", result)
+	if G.opts.DebugTrace {
+		trace("", "relpath", from, to, "=>", result)
+	}
 	return result
 }
 
