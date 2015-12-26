@@ -123,7 +123,7 @@ func (st ShellwordState) String() string {
 	return [...]string{"plain", "squot", "dquot", "dquot+backt", "backt"}[st]
 }
 
-func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
+func (shline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	if G.opts.DebugTrace {
 		defer tracecall("MkShellLine.checkShellword", shellword, checkQuoting)()
 	}
@@ -132,12 +132,12 @@ func (msline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 		return
 	}
 
-	line := msline.line
+	line := shline.line
 	shellcommandsContextType := &Vartype{lkNone, CheckvarShellCommands, []AclEntry{{"*", aclpAllRuntime}}, guNotGuessed}
 	shellwordVuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
 	if m, varname, mod := match2(shellword, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
-		msline.mkline.checkVaruse(varname, mod, shellwordVuc)
+		shline.mkline.checkVaruse(varname, mod, shellwordVuc)
 		return
 	}
 
@@ -163,9 +163,9 @@ outer:
 		// make(1) variable.
 		case state == swstBackt || state == swstDquotBackt:
 			var backtCommand string
-			backtCommand, state = msline.unescapeBackticks(shellword, repl, state)
+			backtCommand, state = shline.unescapeBackticks(shellword, repl, state)
 			setE := true
-			msline.checkShellCommand(backtCommand, &setE)
+			shline.checkShellCommand(backtCommand, &setE)
 
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case repl.advanceRegexp(`^\$\{(` + reVarnameDirect + `|@)(:[^\{]+)?\}`),
@@ -174,7 +174,7 @@ outer:
 			varname, mod := repl.m[1], repl.m[2]
 
 			if varname == "@" {
-				line := msline.line
+				line := shline.line
 				line.warn0("Please use \"${.TARGET}\" instead of \"$@\".")
 				explain2(
 					"The variable $@ can easily be confused with the shell variable of the",
@@ -209,7 +209,7 @@ outer:
 					vucstate = vucQuotBackt
 				}
 				vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
-				msline.mkline.checkVaruse(varname, mod, vuc)
+				shline.mkline.checkVaruse(varname, mod, vuc)
 			}
 
 		// The syntax of the variable modifiers can get quite
@@ -245,7 +245,7 @@ outer:
 				repl.advanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`),
 				repl.advanceRegexp(`^\$\$(\$)\$`):
 				shvarname := repl.m[1]
-				if G.opts.WarnQuoting && checkQuoting && msline.variableNeedsQuoting(shvarname) {
+				if G.opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shvarname) {
 					line.warn1("Unquoted shell variable %q.", shvarname)
 					explain(
 						"When a shell variable contains white-space, it is expanded (split into",
@@ -340,8 +340,8 @@ outer:
 // before a dollar, a backslash or a backtick.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-func (msline *MkShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, state ShellwordState) (unescaped string, newState ShellwordState) {
-	line := msline.line
+func (shline *MkShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, state ShellwordState) (unescaped string, newState ShellwordState) {
+	line := shline.line
 	for repl.rest != "" {
 		switch {
 		case repl.advanceStr("`"):
@@ -378,7 +378,7 @@ func (msline *MkShellLine) unescapeBackticks(shellword string, repl *PrefixRepla
 	return unescaped, state
 }
 
-func (msline *MkShellLine) variableNeedsQuoting(shvarname string) bool {
+func (shline *MkShellLine) variableNeedsQuoting(shvarname string) bool {
 	switch shvarname {
 	case "#", "?":
 		return false // Definitely ok
@@ -389,14 +389,14 @@ func (msline *MkShellLine) variableNeedsQuoting(shvarname string) bool {
 }
 
 type ShelltextContext struct {
-	msline    *MkShellLine
+	shline    *MkShellLine
 	state     scState
 	shellword string
 }
 
-func (msline *MkShellLine) checkShellCommandLine(shelltext string) {
+func (shline *MkShellLine) checkShellCommandLine(shelltext string) {
 	defer tracecall1("MkShellLine.checkShelltext", shelltext)()
-	line := msline.line
+	line := shline.line
 
 	if strings.Contains(shelltext, "${SED}") && strings.Contains(shelltext, "${MV}") {
 		line.note0("Please use the SUBST framework instead of ${SED} and ${MV}.")
@@ -420,18 +420,18 @@ func (msline *MkShellLine) checkShellCommandLine(shelltext string) {
 	repl := NewPrefixReplacer(shelltext)
 	if repl.advanceRegexp(`^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
 		hidden, macro := repl.m[1], repl.m[2]
-		msline.checkLineStart(hidden, macro, repl.rest, &setE)
+		shline.checkLineStart(hidden, macro, repl.rest, &setE)
 	}
 
-	msline.checkShellCommand(repl.rest, &setE)
+	shline.checkShellCommand(repl.rest, &setE)
 }
 
-func (msline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
+func (shline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 	state := scstStart
-	shellTokens, rest := splitIntoShellTokens(msline.line, shellcmd)
+	shellTokens, rest := splitIntoShellTokens(shline.line, shellcmd)
 	for _, shellword := range shellTokens {
 		if G.opts.DebugShell {
-			msline.line.debugf("checkShellCommand state=%v shellword=%q", state, shellword)
+			shline.line.debugf("checkShellCommand state=%v shellword=%q", state, shellword)
 		}
 
 		{
@@ -439,14 +439,14 @@ func (msline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 				state != scstForCont &&
 				state != scstSetCont &&
 				!(state == scstStart && matches(shellword, reShVarassign))
-			msline.checkShellword(shellword, quotingNecessary)
+			shline.checkShellword(shellword, quotingNecessary)
 		}
 
-		st := &ShelltextContext{msline, state, shellword}
+		st := &ShelltextContext{shline, state, shellword}
 		st.checkCommandStart()
 		st.checkConditionalCd()
 		if state != scstPaxS && state != scstSedE && state != scstCaseLabel {
-			msline.line.checkAbsolutePathname(shellword)
+			shline.line.checkAbsolutePathname(shellword)
 		}
 		st.checkAutoMkdirs()
 		st.checkInstallMulti()
@@ -460,23 +460,23 @@ func (msline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 			*pSetE = true
 		}
 
-		state = msline.nextState(state, shellword)
+		state = shline.nextState(state, shellword)
 	}
 
 	if rest != "" {
-		msline.line.errorf("Internal pkglint error: MkShellLine.checkShellCommand state=%s rest=%q shellword=%q", state, rest, shellcmd)
+		shline.line.errorf("Internal pkglint error: MkShellLine.checkShellCommand state=%s rest=%q shellword=%q", state, rest, shellcmd)
 	}
 }
 
-func (msline *MkShellLine) checkShellCommands(shellcmds string) {
+func (shline *MkShellLine) checkShellCommands(shellcmds string) {
 	setE := true
-	msline.checkShellCommand(shellcmds, &setE)
+	shline.checkShellCommand(shellcmds, &setE)
 	if !hasSuffix(shellcmds, ";") {
-		msline.line.warn0("This shell command list should end with a semicolon.")
+		shline.line.warn0("This shell command list should end with a semicolon.")
 	}
 }
 
-func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
+func (shline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
 	if G.opts.DebugTrace {
 		defer tracecall("MkShellLine.checkLineStart", hidden, macro, rest, eflag)()
 	}
@@ -503,7 +503,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 				"${WARNING_CAT}", "${WARNING_MSG}":
 				break
 			default:
-				msline.line.warn1("The shell command %q should not be hidden.", cmd)
+				shline.line.warn1("The shell command %q should not be hidden.", cmd)
 				explain3(
 					"Hidden shell commands do not appear on the terminal or in the log file",
 					"when they are executed. When they fail, the error message cannot be",
@@ -513,7 +513,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	}
 
 	if strings.Contains(hidden, "-") {
-		msline.line.warn0("The use of a leading \"-\" to suppress errors is deprecated.")
+		shline.line.warn0("The use of a leading \"-\" to suppress errors is deprecated.")
 		explain3(
 			"If you really want to ignore any errors from this command (including",
 			"all errors you never thought of), append \"|| ${TRUE}\" to the",
@@ -544,7 +544,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	case ctx.handleComment():
 	default:
 		if G.opts.WarnExtra {
-			line := ctx.msline.line
+			line := ctx.shline.line
 			line.warn1("Unknown shell command %q.", shellword)
 			explain3(
 				"If you want your package to be portable to all platforms that pkgsrc",
@@ -563,14 +563,14 @@ func (ctx *ShelltextContext) handleTool() bool {
 	}
 
 	if !G.mk.tools[shellword] && !G.mk.tools["g"+shellword] {
-		ctx.msline.line.warn1("The %q tool is used but not added to USE_TOOLS.", shellword)
+		ctx.shline.line.warn1("The %q tool is used but not added to USE_TOOLS.", shellword)
 	}
 
 	if G.globalData.toolsVarRequired[shellword] {
-		ctx.msline.line.warn2("Please use \"${%s}\" instead of %q.", G.globalData.vartools[shellword], shellword)
+		ctx.shline.line.warn2("Please use \"${%s}\" instead of %q.", G.globalData.vartools[shellword], shellword)
 	}
 
-	ctx.msline.checkCommandUse(shellword)
+	ctx.shline.checkCommandUse(shellword)
 	return true
 }
 
@@ -581,7 +581,7 @@ func (ctx *ShelltextContext) handleForbiddenCommand() bool {
 		return false
 	}
 
-	ctx.msline.line.error1("%q must not be used in Makefiles.", ctx.shellword)
+	ctx.shline.line.error1("%q must not be used in Makefiles.", ctx.shellword)
 	explain3(
 		"This command must appear in INSTALL scripts, not in the package",
 		"Makefile, so that the package also works if it is installed as a binary",
@@ -597,14 +597,14 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 
 		if toolname := G.globalData.varnameToToolname[varname]; toolname != "" {
 			if !G.mk.tools[toolname] {
-				ctx.msline.line.warn1("The %q tool is used but not added to USE_TOOLS.", toolname)
+				ctx.shline.line.warn1("The %q tool is used but not added to USE_TOOLS.", toolname)
 			}
-			ctx.msline.checkCommandUse(shellword)
+			ctx.shline.checkCommandUse(shellword)
 			return true
 		}
 
-		if vartype := getVariableType(ctx.msline.line, varname); vartype != nil && vartype.checker.name == "ShellCommand" {
-			ctx.msline.checkCommandUse(shellword)
+		if vartype := getVariableType(ctx.shline.line, varname); vartype != nil && vartype.checker.name == "ShellCommand" {
+			ctx.shline.checkCommandUse(shellword)
 			return true
 		}
 
@@ -619,7 +619,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 
 func (ctx *ShelltextContext) handleComment() bool {
 	defer tracecall1("ShelltextContext.handleComment", ctx.shellword)()
-	line := ctx.msline.line
+	line := ctx.shline.line
 
 	shellword := ctx.shellword
 	if !hasPrefix(shellword, "#") {
@@ -627,7 +627,7 @@ func (ctx *ShelltextContext) handleComment() bool {
 	}
 
 	semicolon := strings.Contains(shellword, ";")
-	multiline := ctx.msline.line.IsMultiline()
+	multiline := ctx.shline.line.IsMultiline()
 
 	if semicolon {
 		line.warn0("A shell comment should not contain semicolons.")
@@ -652,7 +652,7 @@ func (ctx *ShelltextContext) handleComment() bool {
 
 func (ctx *ShelltextContext) checkConditionalCd() {
 	if ctx.state == scstCond && ctx.shellword == "cd" {
-		ctx.msline.line.error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+		ctx.shline.line.error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 		explain3(
 			"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 			"shell will exit, no matter if it is protected by an \"if\" or the",
@@ -663,7 +663,7 @@ func (ctx *ShelltextContext) checkConditionalCd() {
 func (ctx *ShelltextContext) checkAutoMkdirs() {
 	state, shellword := ctx.state, ctx.shellword
 
-	line := ctx.msline.line
+	line := ctx.shline.line
 	if (state == scstInstallD || state == scstMkdir) && matches(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) {
 		line.warn1("Please use AUTO_MKDIRS instead of %q.",
 			ifelseStr(state == scstMkdir, "${MKDIR}", "${INSTALL} -d"))
@@ -693,7 +693,7 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 
 func (ctx *ShelltextContext) checkInstallMulti() {
 	if ctx.state == scstInstallDir2 && hasPrefix(ctx.shellword, "$") {
-		line := ctx.msline.line
+		line := ctx.shline.line
 		line.warn0("The INSTALL_*_DIR commands can only handle one directory at a time.")
 		explain2(
 			"Many implementations of install(1) can handle more, but pkgsrc aims at",
@@ -703,7 +703,7 @@ func (ctx *ShelltextContext) checkInstallMulti() {
 
 func (ctx *ShelltextContext) checkPaxPe() {
 	if ctx.state == scstPax && ctx.shellword == "-pe" {
-		line := ctx.msline.line
+		line := ctx.shline.line
 		line.warn0("Please use the -pp option to pax(1) instead of -pe.")
 		explain3(
 			"The -pe option tells pax to preserve the ownership of the files, which",
@@ -715,7 +715,7 @@ func (ctx *ShelltextContext) checkPaxPe() {
 func (ctx *ShelltextContext) checkQuoteSubstitution() {
 	if ctx.state == scstPaxS || ctx.state == scstSedE {
 		if false && !matches(ctx.shellword, `"^[\"\'].*[\"\']$`) {
-			line := ctx.msline.line
+			line := ctx.shline.line
 			line.warn1("Substitution commands like %q should always be quoted.", ctx.shellword)
 			explain3(
 				"Usually these substitution commands contain characters like '*' or",
@@ -727,13 +727,13 @@ func (ctx *ShelltextContext) checkQuoteSubstitution() {
 
 func (ctx *ShelltextContext) checkEchoN() {
 	if ctx.state == scstEcho && ctx.shellword == "-n" {
-		ctx.msline.line.warn0("Please use ${ECHO_N} instead of \"echo -n\".")
+		ctx.shline.line.warn0("Please use ${ECHO_N} instead of \"echo -n\".")
 	}
 }
 
 func (ctx *ShelltextContext) checkPipeExitcode() {
 	if G.opts.WarnExtra && ctx.state != scstCaseLabelCont && ctx.shellword == "|" {
-		line := ctx.msline.line
+		line := ctx.shline.line
 		line.warn0("The exitcode of the left-hand-side command of the pipe operator is ignored.")
 		explain(
 			"In a shell command like \"cat *.txt | grep keyword\", if the command",
@@ -746,7 +746,7 @@ func (ctx *ShelltextContext) checkPipeExitcode() {
 
 func (ctx *ShelltextContext) checkSetE(eflag bool) {
 	if G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !eflag {
-		line := ctx.msline.line
+		line := ctx.shline.line
 		line.warn0("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
 		explain(
 			"Older versions of the NetBSD make(1) had run the shell commands using",
@@ -762,12 +762,12 @@ func (ctx *ShelltextContext) checkSetE(eflag bool) {
 }
 
 // Some shell commands should not be used in the install phase.
-func (msline *MkShellLine) checkCommandUse(shellcmd string) {
+func (shline *MkShellLine) checkCommandUse(shellcmd string) {
 	if G.mk == nil || !matches(G.mk.target, `^(?:pre|do|post)-install$`) {
 		return
 	}
 
-	line := msline.line
+	line := shline.line
 	switch shellcmd {
 	case "${INSTALL}",
 		"${INSTALL_DATA}", "${INSTALL_DATA_DIR}",
@@ -801,7 +801,7 @@ func (msline *MkShellLine) checkCommandUse(shellcmd string) {
 	}
 }
 
-func (msline *MkShellLine) nextState(state scState, shellword string) scState {
+func (shline *MkShellLine) nextState(state scState, shellword string) scState {
 	switch {
 	case shellword == ";;":
 		return scstCaseLabel
@@ -902,7 +902,7 @@ func (msline *MkShellLine) nextState(state scState, shellword string) scState {
 		return scstCont
 	default:
 		if G.opts.DebugShell {
-			msline.line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
+			shline.line.errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
 		}
 		return scstStart
 	}
