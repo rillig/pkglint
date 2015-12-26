@@ -12,12 +12,13 @@ func (s *Suite) TestReShellToken(c *check.C) {
 	c.Check(match("", re), doesntMatch)
 	c.Check(match("$var", re), matches)
 	c.Check(match("$var$var", re), matches)
-	c.Check(match("$var;;", re), doesntMatch) // More than one shellword
+	c.Check(match("$var;;", re), doesntMatch) // More than one token
 	c.Check(match("'single-quoted'", re), matches)
 	c.Check(match("\"", re), doesntMatch)       // Incomplete string
 	c.Check(match("'...'\"...\"", re), matches) // Mixed strings
 	c.Check(match("\"...\"", re), matches)
 	c.Check(match("`cat file`", re), matches)
+	c.Check(match("${file%.c}.o", re), matches)
 }
 
 func (s *Suite) TestSplitIntoShellTokens_LineContinuation(c *check.C) {
@@ -86,6 +87,10 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	shline.checkShellCommandLine("echo \"\\n\"") // As seen by make(1); the shell sees: echo "\n"
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"\\\\n\" instead of \"\\n\".\n")
+
+	shline.checkShellCommandLine("${RUN} for f in *.c; do echo $${f%.c}; done")
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {

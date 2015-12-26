@@ -23,10 +23,10 @@ const (
 		`|\$\([^()]+\)` + // make(1) variable, $(...)
 		`|\$[/@<^]` + // special make(1) variables
 		`|\$\$[0-9A-Z_a-z]+` + // shell variable
-		`|\$\$[#?@]` + // special shell variables
+		`|\$\$[!#?@]` + // special shell variables
 		`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
 		`|\$\$\$\$` + // the special pid shell variable
-		`|\$\$\{[0-9A-Z_a-z]+\}` + // shell variable in braces
+		`|\$\$\{[0-9A-Z_a-z]+[#%:]?[^}]*\}` + // shell variable in braces
 		`|\$\$\(` + // POSIX-style backticks replacement
 		`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
 		`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
