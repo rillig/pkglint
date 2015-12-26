@@ -96,8 +96,10 @@ func (cv *VartypeCheck) Comment() {
 func (cv *VartypeCheck) Dependency() {
 	line, value := cv.line, cv.value
 
-	if m, depbase, depop, depversion := match3(value, `^(`+rePkgbase+`)(<|=|>|<=|>=|!=|-)(`+rePkgversion+`)$`); m {
-		_, _, _ = depbase, depop, depversion
+	if matches(value, `^(`+rePkgbase+`)(<|=|>|<=|>=|!=|-)(`+rePkgversion+`)$`) {
+		return
+	}
+	if matches(value, `^(`+rePkgbase+`)>=?(`+rePkgversion+`)<=?(`+rePkgversion+`)$`) {
 		return
 	}
 

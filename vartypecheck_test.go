@@ -85,8 +85,7 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 		"WARN: fname:3: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".\n"+
 		"WARN: fname:4: Please append \"{,nb*}\" to the version number of this dependency.\n"+
 		"WARN: fname:5: Only [0-9]* is allowed in the numeric part of a dependency.\n"+
-		"ERROR: fname:6: Unknown dependency pattern \"py-docs\".\n"+
-		"WARN: fname:8: Unknown dependency pattern \"libkipi>=0.1.5<4.0\".\n")
+		"ERROR: fname:6: Unknown dependency pattern \"py-docs\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
