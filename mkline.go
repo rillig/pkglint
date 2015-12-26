@@ -571,7 +571,7 @@ func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
 }
 
 const reVarnamePlural = "^(?:" +
-	".*S" +
+	".*[Ss]" +
 	"|.*LIST" +
 	"|.*_AWK" +
 	"|.*_ENV" +
@@ -642,7 +642,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 			if !vartype.mayBeAppendedTo() {
 				mkline.warn0("The \"+=\" operator should only be used with lists.")
 			}
-		} else if !matches(varbase, `^_`) && !matches(varbase, reVarnamePlural) {
+		} else if !hasPrefix(varbase,"_") && !matches(varbase, reVarnamePlural) {
 			mkline.warn1("As %s is modified using \"+=\", its name should indicate plural.", varname)
 		}
 	}
