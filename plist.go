@@ -2,6 +2,7 @@ package main
 
 import (
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -39,8 +40,8 @@ type PlistChecker struct {
 
 type PlistLine struct {
 	line        *Line
-	conditional string
-	text        string
+	conditional string // e.g. PLIST.docs
+	text        string // Like line.text, without the conditional
 }
 
 func (ck *PlistChecker) check(plainLines []*Line) {
@@ -60,7 +61,15 @@ func (ck *PlistChecker) check(plainLines []*Line) {
 	}
 
 	checklinesTrailingEmptyLines(plainLines)
-	saveAutofixChanges(plainLines)
+	if G.opts.WarnPlistSort {
+		sorter := NewPlistLineSorter(plines)
+		sorter.Sort()
+		if !sorter.autofixed {
+			saveAutofixChanges(plainLines)
+		}
+	} else {
+		saveAutofixChanges(plainLines)
+	}
 }
 
 func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
@@ -68,7 +77,7 @@ func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
 	for i, line := range lines {
 		conditional, text := "", line.text
 		if hasPrefix(text, "${PLIST.") {
-			if m, cond, rest := match2(text, `^\$\{([\w.]+)\}(.*)`); m {
+			if m, cond, rest := match2(text, `^\$\{(PLIST\.[\w-.]+)\}(.*)`); m {
 				conditional, text = cond, rest
 			}
 		}
@@ -173,7 +182,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 	if text := pline.text; G.opts.WarnPlistSort && hasAlnumPrefix(text) && !containsVarRef(text) {
 		if ck.lastFname != "" {
-			if ck.lastFname > text {
+			if ck.lastFname > text && !G.opts.Autofix {
 				pline.line.warn2("%q should be sorted before %q.", text, ck.lastFname)
 				explain1(
 					"The files in the PLIST should be sorted alphabetically.")
@@ -432,4 +441,59 @@ func (pline *PlistLine) warnAboutPlistImakeMannewsuffix() {
 		"\tIMAKE_FILEMAN_SUFFIX for file formats,",
 		"\tIMAKE_GAMEMAN_SUFFIX for games,",
 		"\tIMAKE_MISCMAN_SUFFIX for other man pages.")
+}
+
+type plistLineSorter struct {
+	first     *Line
+	plines    []*PlistLine
+	lines     []*Line
+	after     map[*PlistLine][]*Line
+	swapped   bool
+	autofixed bool
+}
+
+func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
+	s := &plistLineSorter{first: plines[0].line, after: make(map[*PlistLine][]*Line)}
+	prev := plines[0]
+	for _, pline := range plines[1:] {
+		if hasPrefix(pline.text, "@") || strings.Contains(pline.text, "$") {
+			s.after[prev] = append(s.after[prev], pline.line)
+		} else {
+			s.plines = append(s.plines, pline)
+			s.lines = append(s.lines, pline.line)
+		}
+		prev = pline
+	}
+	return s
+}
+
+func (s *plistLineSorter) Len() int {
+	return len(s.plines)
+}
+func (s *plistLineSorter) Less(i, j int) bool {
+	return s.plines[i].text < s.plines[j].text
+}
+func (s *plistLineSorter) Swap(i, j int) {
+	s.swapped = true
+	s.lines[i].changed = true
+	s.lines[j].changed = true
+	s.lines[i], s.lines[j] = s.lines[j], s.lines[i]
+	s.plines[i], s.plines[j] = s.plines[j], s.plines[i]
+}
+
+func (s *plistLineSorter) Sort() {
+	sort.Stable(s)
+
+	if !s.swapped {
+		return
+	}
+
+	s.first.noteAutofix("Autofix: Sorting the whole file.")
+	s.first.logAutofix()
+	lines := []*Line{s.first}
+	for _, pline := range s.plines {
+		lines = append(lines, pline.line)
+		lines = append(lines, s.after[pline]...)
+	}
+	s.autofixed = saveAutofixChanges(lines)
 }

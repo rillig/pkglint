@@ -88,3 +88,48 @@ func (s *Suite) TestChecklinesPlist_sorting(c *check.C) {
 		"WARN: PLIST:4: \"bin/otherprogram\" should be sorted before \"sbin/program\".\n"+
 		"WARN: PLIST:5: \"bin/cat\" should be sorted before \"bin/otherprogram\".\n")
 }
+
+func (s *Suite) TestPlistChecker_sort(c *check.C) {
+	s.UseCommandLine(c, "--autofix")
+	tmpfile := s.CreateTmpFile(c, "PLIST", "dummy\n")
+	ck := &PlistChecker{nil, nil, ""}
+	lines := s.NewLines(tmpfile,
+		"@comment $"+"NetBSD$",
+		"A",
+		"b",
+		"CCC",
+		"lib/${UNKNOWN}.la",
+		"C",
+		"ddd",
+		"@exec echo \"after ddd\"",
+		"sbin/program",
+		"${PLIST.one}bin/program",
+		"${PKGMANDIR}/man1/program.1",
+		"${PLIST.two}bin/program2",
+		"lib/before.la",
+		"lib/after.la",
+		"@exec echo \"after lib/after.la\"")
+	plines := ck.newLines(lines)
+
+	NewPlistLineSorter(plines).Sort()
+
+	c.Check(s.OutputCleanTmpdir(), equals, ""+
+		"NOTE: ~/PLIST:1: Autofix: Sorting the whole file.\n"+
+		"NOTE: ~/PLIST: Has been auto-fixed. Please re-run pkglint.\n")
+	c.Check(s.LoadTmpFile(c, "PLIST"), equals, ""+
+		"@comment $NetBSD$\n"+
+		"A\n"+
+		"C\n"+
+		"CCC\n"+
+		"lib/${UNKNOWN}.la\n"+ // Stays below the previous line
+		"b\n"+
+		"${PLIST.one}bin/program\n"+ // Conditionals are ignored while sorting
+		"${PKGMANDIR}/man1/program.1\n"+ // Stays below the previous line
+		"${PLIST.two}bin/program2\n"+
+		"ddd\n"+
+		"@exec echo \"after ddd\"\n"+ // Stays below the previous line
+		"lib/after.la\n"+
+		"@exec echo \"after lib/after.la\"\n"+
+		"lib/before.la\n"+
+		"sbin/program\n")
+}
