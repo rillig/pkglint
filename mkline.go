@@ -772,8 +772,7 @@ func (mkline *MkLine) checkText(text string) {
 func (mkline *MkLine) checkIf() {
 	defer tracecall0("MkLine.checkIf")()
 
-	condition := mkline.Args()
-	tree := parseMkCond(mkline.line, condition)
+	tree := mkline.parseMkCond(mkline.Args())
 
 	{
 		var pvarname, ppattern *string
@@ -867,6 +866,35 @@ func matchMkCond(text string) (m bool, indent, directive, args string) {
 		args = strings.TrimSpace(args)
 	}
 	return
+}
+
+func (mkline *MkLine) parseMkCond(cond string) *Tree {
+	defer tracecall1("parseMkCond", cond)()
+
+	const (
+		repartVarname = `[A-Z_][A-Z0-9_]*(?:\.[\w_+\-]+)?`
+		reDefined     = `^defined\((` + repartVarname + `)\)`
+		reEmpty       = `^empty\((` + repartVarname + `)\)`
+		reEmptyMatch  = `^empty\((` + repartVarname + `):M([^\$:{})]+)\)`
+		reCompare     = `^\$\{(` + repartVarname + `)\}\s+(==|!=)\s+"([^"\$\\]*)"`
+	)
+
+	if m, rest := replaceFirst(cond, `^!`, ""); m != nil {
+		return NewTree("not", mkline.parseMkCond(rest))
+	}
+	if m, rest := replaceFirst(cond, reDefined, ""); m != nil {
+		return NewTree("defined", mkline.parseMkCond(rest))
+	}
+	if m, _ := replaceFirst(cond, reEmpty, ""); m != nil {
+		return NewTree("empty", m[1])
+	}
+	if m, _ := replaceFirst(cond, reEmptyMatch, ""); m != nil {
+		return NewTree("empty", NewTree("match", m[1], m[2]))
+	}
+	if m, _ := replaceFirst(cond, reCompare, ""); m != nil {
+		return NewTree("compareVarStr", m[1], m[2], m[3])
+	}
+	return NewTree("unknown", cond)
 }
 
 // VarUseContext defines the context in which a variable is defined
