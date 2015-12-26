@@ -402,15 +402,23 @@ func (shline *MkShellLine) checkShellCommandLine(shelltext string) {
 	if strings.Contains(shelltext, "${SED}") && strings.Contains(shelltext, "${MV}") {
 		line.note0("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		explain(
-			"When converting things, pay attention to \"#\" characters. In shell",
-			"commands make(1) does not interpret them as comment character, but",
-			"in other lines it does. Therefore, instead of the shell command",
+			"Using the SUBST framework is simpler to understand, since you only have",
+			"to tell it what to change, when to change it and in which files.",
 			"",
-			"\tsed -e 's,#define foo,,'",
-			"",
-			"you need to write",
-			"",
-			"\tSUBST_SED.foo+=\t's,\\#define foo,,'")
+			"Run \"bmake help topic=subst\" for more information.")
+		if strings.Contains(shelltext, "#") {
+			explain(
+				"When migrating to the SUBST framework, pay attention to \"#\"",
+				"characters. In shell commands, make(1) does not interpret them as",
+				"comment character, but in variable assignments it does. Therefore,",
+				"instead of the shell command",
+				"",
+				"\tsed -e 's,#define foo,,'",
+				"",
+				"you need to write",
+				"",
+				"\tSUBST_SED.foo+=\t's,\\#define foo,,'")
+		}
 	}
 
 	if m, cmd := match1(shelltext, `^@*-(.*(?:MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m {
@@ -505,20 +513,23 @@ func (shline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 				break
 			default:
 				shline.line.warn1("The shell command %q should not be hidden.", cmd)
-				explain3(
+				explain(
 					"Hidden shell commands do not appear on the terminal or in the log file",
 					"when they are executed. When they fail, the error message cannot be",
-					"assigned to the command, which is very difficult to debug.")
+					"assigned to the command, which is very difficult to debug.",
+					"",
+					"It is better to insert ${RUN} at the beginning of the whole command line.",
+					"This will hide the command by default, but shows it when PKG_DEBUG_LEVEL",
+					"is set.")
 			}
 		}
 	}
 
 	if strings.Contains(hidden, "-") {
-		shline.line.warn0("The use of a leading \"-\" to suppress errors is deprecated.")
-		explain3(
-			"If you really want to ignore any errors from this command (including",
-			"all errors you never thought of), append \"|| ${TRUE}\" to the",
-			"command.")
+		shline.line.warn0("Using a leading \"-\" to suppress errors is deprecated.")
+		explain2(
+			"If you really want to ignore any errors from this command, append",
+			"\"|| ${TRUE}\" to the command.")
 	}
 
 	if macro == "${RUN}" {
