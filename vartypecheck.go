@@ -145,13 +145,14 @@ func (cv *VartypeCheck) Dependency() {
 		}
 
 	default:
-		line.warn1("Unknown dependency format %q.", value)
+		line.warn1("Unknown dependency pattern %q.", value)
 		explain(
 			"Typical dependencies have the following forms:",
 			"",
-			"* package>=2.5",
-			"* package-[0-9]*",
-			"* package-3.141")
+			"\tpackage>=2.5",
+			"\tpackage-[0-9]*",
+			"\tpackage-3.141",
+			"\tpackage>=2.71827<=3.1415")
 	}
 }
 
@@ -161,7 +162,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		return // It's probably not worth checking this.
 	}
 
-	if m, pattern, relpath, _, pkg := match4(value, `(.*):(\.\./\.\./([^/]+)/([^/]+))$`); m {
+	if m, pattern, relpath, pkg := match3(value, `(.*):(\.\./\.\./[^/]+/([^/]+))$`); m {
 		cv.mkline.checkRelativePkgdir(relpath)
 
 		switch pkg {
@@ -173,9 +174,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			line.warn0("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		if !matches(pattern, reDependencyCmp) && !matches(pattern, reDependencyWildcard) {
-			line.error1("Unknown dependency pattern %q.", pattern)
-		}
+		cv.mkline.checkVartypePrimitive(cv.varname, CheckvarDependency, cv.op, pattern, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
@@ -185,9 +184,9 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		return
 	}
 
-	line.warn1("Unknown dependency format %q.", value)
+	line.warn1("Unknown dependency pattern with path %q.", value)
 	explain4(
-		"Examples for valid dependencies are:",
+		"Examples for valid dependency patterns with path are:",
 		"  package-[0-9]*:../../category/package",
 		"  package>=3.41:../../category/package",
 		"  package-2.718:../../category/package")
