@@ -61,14 +61,14 @@ func (cv *VartypeCheck) Category() {
 func (cv *VartypeCheck) CFlag() {
 	line, value := cv.line, cv.value
 
-	switch {
-	case matches(value, `^-[DILOUWfgm]`),
-		hasPrefix(value, "-std="),
-		value == "-c99":
-	case hasPrefix(value, "-"):
-		line.warn1("Unknown compiler flag %q.", value)
-	case !containsVarRef(value):
-		line.warn1("Compiler flag %q should start with a hyphen.", value)
+	if hasPrefix(value, "-") {
+		if !matches(value, `^-[DILOUWfgm]`) && !hasPrefix(value, "-std=") && value != "-c99" {
+			line.warn1("Unknown compiler flag %q.", value)
+		}
+	} else {
+		if !containsVarRef(value) && !(hasPrefix(value, "`") && hasSuffix(value, "`")) {
+			line.warn1("Compiler flag %q should start with a hyphen.", value)
+		}
 	}
 }
 

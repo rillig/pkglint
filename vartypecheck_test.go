@@ -45,7 +45,8 @@ func (s *Suite) TestVartypeCheck_CFlag(c *check.C) {
 		"/W3",
 		"target:sparc64",
 		"-std=c99",
-		"-XX:+PrintClassHistogramAfterFullGC")
+		"-XX:+PrintClassHistogramAfterFullGC",
+		"`pkg-config pidgin --cflags`")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:2: Compiler flag \"/W3\" should start with a hyphen.\n"+
