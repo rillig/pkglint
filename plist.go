@@ -199,7 +199,7 @@ func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string)
 		ck.allFiles["man/man6/"+basename+".6"] == nil &&
 		ck.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] == nil {
 		pline.line.warn1("Manual page missing for bin/%s.", basename)
-		explain(
+		explain4(
 			"All programs that can be run directly by the user should have a manual",
 			"page for quick reference. The programs in the bin/ directory should have",
 			"corresponding manual pages in section 1 (filename program.1), not in",
@@ -288,7 +288,7 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 
 	if gz != "" {
 		line.note0("The .gz extension is unnecessary for manual pages.")
-		explain(
+		explain4(
 			"Whether the manual pages are installed in compressed form or not is",
 			"configured by the pkgsrc user. Compression and decompression takes place",
 			"automatically, no matter if the .gz extension is mentioned in the PLIST",
@@ -301,7 +301,7 @@ func (ck *PlistChecker) checkpathSbin(pline *PlistLine) {
 
 	if ck.allFiles["man/man8/"+binname+".8"] == nil && G.opts.WarnExtra {
 		pline.line.warn1("Manual page missing for sbin/%s.", binname)
-		explain(
+		explain4(
 			"All programs that can be run directly by the user should have a manual",
 			"page for quick reference. The programs in the sbin/ directory should have",
 			"corresponding manual pages in section 8 (filename program.8), not in",

@@ -88,8 +88,9 @@ func explain(explanation ...string) {
 	}
 	G.explanationsAvailable = true
 }
-func explain1(e1 string)         { explain(e1) }
-func explain2(e1, e2 string)     { explain(e1, e2) }
-func explain3(e1, e2, e3 string) { explain(e1, e2, e3) }
+func explain1(e1 string)             { explain(e1) }
+func explain2(e1, e2 string)         { explain(e1, e2) }
+func explain3(e1, e2, e3 string)     { explain(e1, e2, e3) }
+func explain4(e1, e2, e3, e4 string) { explain(e1, e2, e3, e4) }
 
 type pkglintFatal struct{}

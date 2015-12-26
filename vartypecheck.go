@@ -113,7 +113,7 @@ func (cv *VartypeCheck) Dependency() {
 
 		case version != "":
 			line.warn0("Please append \"{,nb*}\" to the version number of this dependency.")
-			explain(
+			explain4(
 				"Usually, a dependency should stay valid when the PKGREVISION is",
 				"increased, since those changes are most often editorial. In the",
 				"current form, the dependency only matches if the PKGREVISION is",
@@ -186,7 +186,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	line.warn0("Unknown dependency format.")
-	explain(
+	explain4(
 		"Examples for valid dependencies are:",
 		"  package-[0-9]*:../../category/package",
 		"  package>=3.41:../../category/package",
@@ -353,7 +353,7 @@ func (cv *VartypeCheck) Option() {
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z\+]*)$`); m {
 		if _, found := G.globalData.pkgOptions[optname]; !found { // There’s a difference between empty and absent here.
 			line.warn1("Unknown option \"%s\".", optname)
-			explain(
+			explain4(
 				"This option is not documented in the mk/defaults/options.description",
 				"file. If this is not a typo, please think of a brief but precise",
 				"description and either update that file yourself or ask on the",
@@ -491,7 +491,7 @@ func (cv *VartypeCheck) PythonDependency() {
 	}
 	if !matches(cv.valueNovar, `^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$`) {
 		cv.line.warn1("Invalid Python dependency %q.", cv.value)
-		explain(
+		explain4(
 			"Python dependencies must be an identifier for a package, as specified",
 			"in lang/python/versioned_dependencies.mk. This identifier may be",
 			"followed by :build for a build-time only dependency, or by :link for",
@@ -531,7 +531,7 @@ func (cv *VartypeCheck) SedCommands() {
 	if rest != "" {
 		if strings.Contains(cv.value, "#") {
 			line.error0("Invalid shell words in sed commands.")
-			explain(
+			explain4(
 				"When sed commands have embedded \"#\" characters, they need to be",
 				"escaped with a backslash, otherwise make(1) will interpret them as a",
 				"comment, no matter if they occur in single or double quotes or",
@@ -740,7 +740,7 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 func (cv *VartypeCheck) Yes() {
 	if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
 		cv.line.warn1("%s should be set to YES or yes.", cv.varname)
-		explain(
+		explain4(
 			"This variable means \"yes\" if it is defined, and \"no\" if it is",
 			"undefined. Even when it has the value \"no\", this means \"yes\".",
 			"Therefore when it is defined, its value should correspond to its",

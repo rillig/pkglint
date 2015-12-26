@@ -261,7 +261,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 
 	if isLoadTime && isIndirect {
 		mkline.warn1("%s should not be evaluated indirectly at load time.", varname)
-		explain(
+		explain4(
 			"The variable on the left-hand side may be evaluated at load time, but",
 			"the variable on the right-hand side may not. Due to this assignment, it",
 			"might be used indirectly at load-time, when it is not guaranteed to be",
@@ -317,7 +317,7 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 
 	default:
 		mkline.warn1("The variable %s should not be used in .for loops.", varname)
-		explain(
+		explain4(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
 			"Therefore only variables that are specifically designed to match this",

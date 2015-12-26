@@ -276,7 +276,7 @@ func checklinesMessage(lines []*Line) {
 	defer tracecall1("checklinesMessage", lines[0].fname)()
 
 	explainMessage := func() {
-		explain(
+		explain4(
 			"A MESSAGE file should consist of a header line, having 75 \"=\"",
 			"characters, followed by a line containing only the RCS Id, then an",
 			"empty line, your text and finally the footer line, which is the",
@@ -340,7 +340,7 @@ func checkfile(fname string) {
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, 0, "", nil)
 		line.warn0("Should not be executable.")
-		explain(
+		explain4(
 			"No package file should ever be executable. Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in the",
 			"package, as the pathnames get adjusted during installation. So there is",

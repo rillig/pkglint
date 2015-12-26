@@ -319,7 +319,7 @@ outer:
 			case repl.advanceRegexp(`^\\(.)`):
 				char := repl.m[1]
 				line.warn2("Please use \"%s\" instead of \"%s\".", "\\\\"+char, "\\"+char)
-				explain(
+				explain4(
 					"Although the current code may work, it is not good style to rely on",
 					"the shell passing this escape sequence exactly as is, and not",
 					"discarding the backslash. Alternatively you can use single quotes",
@@ -361,7 +361,7 @@ func (msline *MkShellLine) unescapeBackticks(shellword string, repl *PrefixRepla
 
 		case state == swstDquotBackt && repl.advanceStr("\""):
 			line.warn0("Double quotes inside backticks inside double quotes are error prone.")
-			explain(
+			explain4(
 				"According to the SUSv3, they produce undefined results.",
 				"",
 				"See the paragraph starting \"Within the backquoted ...\" in",
@@ -667,7 +667,7 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 	if (state == scstInstallD || state == scstMkdir) && matches(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/`) {
 		line.warn1("Please use AUTO_MKDIRS instead of %q.",
 			ifelseStr(state == scstMkdir, "${MKDIR}", "${INSTALL} -d"))
-		explain(
+		explain4(
 			"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
 			"mentioned in the PLIST. If you need additional directories, specify",
 			"them in INSTALLATION_DIRS, which is a list of directories relative to",
