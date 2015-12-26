@@ -822,7 +822,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 			mkline.error1("There is no package in %q.", otherpkgpath)
 		}
 
-	} else {
+	} else if !containsVarRef(pkgdir) {
 		mkline.warn1("%q is not a valid relative package directory.", pkgdir)
 		explain3(
 			"A relative pathname always starts with \"../../\", followed",
