@@ -183,6 +183,16 @@ func (s *Suite) TestVartypeCheck_Filename(c *check.C) {
 		"WARN: fname:2: A filename should not contain a slash.\n")
 }
 
+func (s *Suite) TestVartypeCheck_LdFlag(c *check.C) {
+	runVartypeChecks("LDFLAGS", "+=", (*VartypeCheck).LdFlag,
+		"-lc",
+		"-L/usr/lib64",
+		"`pkg-config pidgin --ldflags`",
+		"-unknown")
+
+	c.Check(s.Output(), equals, "WARN: fname:4: Unknown linker flag \"-unknown\".\n")
+}
+
 func (s *Suite) TestVartypeCheck_MailAddress(c *check.C) {
 	runVartypeChecks("MAINTAINER", "=", (*VartypeCheck).MailAddress,
 		"pkgsrc-users@netbsd.org")

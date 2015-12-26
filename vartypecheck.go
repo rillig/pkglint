@@ -289,16 +289,16 @@ func (cv *VartypeCheck) Integer() {
 }
 
 func (cv *VartypeCheck) LdFlag() {
-	if matches(cv.value, `^-[Ll]`) || cv.value == "-static" {
-		return
-	} else if m, rpathFlag := match1(cv.value, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
-		cv.line.warn1("Please use ${COMPILER_RPATH_FLAG} instead of %s.", rpathFlag)
-
-	} else if hasPrefix(cv.value, "-") {
-		cv.line.warn1("Unknown linker flag %q.", cv.value)
-
-	} else if cv.value == cv.valueNovar {
-		cv.line.warn1("Linker flag %q does not start with a dash.", cv.value)
+	if ldflag := cv.value; hasPrefix(ldflag, "-") {
+		if m, rpathFlag := match1(ldflag, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
+			cv.line.warn1("Please use \"${COMPILER_RPATH_FLAG}\" instead of %q.", rpathFlag)
+		} else if !hasPrefix(ldflag, "-L") && !hasPrefix(ldflag, "-l") && ldflag != "-static" {
+			cv.line.warn1("Unknown linker flag %q.", cv.value)
+		}
+	} else {
+		if ldflag == cv.valueNovar && !(hasPrefix(ldflag, "`") && hasSuffix(ldflag, "`")) {
+			cv.line.warn1("Linker flag %q should does not start with a dash.", cv.value)
+		}
 	}
 }
 
