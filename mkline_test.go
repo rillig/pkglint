@@ -181,6 +181,32 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: \"mailto:someone@example.org\" is not a valid URL.\n")
 }
 
+func (s *Suite) TestMkLine_variableNeedsQuoting(c *check.C) {
+	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
+	G.globalData.InitVartypes()
+	pkgnameType := G.globalData.vartypes["PKGNAME"]
+
+	vuc := &VarUseContext{pkgnameType, vucTimeParse, vucQuotUnknown, vucExtentUnknown}
+	nq := mkline.variableNeedsQuoting("UNKNOWN", vuc)
+
+	c.Check(nq, equals, nqDontKnow)
+}
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_Varbase(c *check.C) {
+	line := NewLine("fname", 1, "dummy", nil)
+	G.globalData.InitVartypes()
+
+	t1 := getVariableType(line, "FONT_DIRS")
+
+	c.Assert(t1, check.NotNil)
+	c.Check(t1.String(), equals, "ShellList of Pathmask")
+
+	t2 := getVariableType(line, "FONT_DIRS.ttf")
+
+	c.Assert(t2, check.NotNil)
+	c.Check(t2.String(), equals, "ShellList of Pathmask")
+}
+
 func (s *Suite) TestVarUseContext_ToString(c *check.C) {
 	G.globalData.InitVartypes()
 	vartype := getVariableType(NewLine("fname", 1, "dummy", nil), "PKGNAME")
