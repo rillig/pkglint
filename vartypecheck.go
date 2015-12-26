@@ -350,7 +350,7 @@ func (cv *VartypeCheck) Option() {
 		return
 	}
 
-	if m, optname := match1(value, `^-?([a-z][-0-9a-z\+]*)$`); m {
+	if m, optname := match1(value, `^-?([a-z][-0-9a-z+]*)$`); m {
 		if _, found := G.globalData.pkgOptions[optname]; !found { // There’s a difference between empty and absent here.
 			line.warn1("Unknown option \"%s\".", optname)
 			explain4(
@@ -367,7 +367,7 @@ func (cv *VartypeCheck) Option() {
 		return
 	}
 
-	line.error1("Invalid option name %q. Option names must start with a lowercase letter.", value)
+	line.error1("Invalid option name %q. Option names must start with a lowercase letter and be all-lowercase.", value)
 }
 
 // The PATH environment variable
