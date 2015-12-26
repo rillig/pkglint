@@ -160,13 +160,13 @@ func (pkglint *Pkglint) printSummary() {
 				G.errors, ifelseStr(G.errors == 1, "error", "errors"),
 				G.warnings, ifelseStr(G.warnings == 1, "warning", "warnings"))
 			if G.explanationsAvailable && !G.opts.Explain {
-				fmt.Fprint(G.logOut, "(Run pkglint with the -e option to show explanations.)\n")
+				fmt.Fprint(G.logOut, "(Run \"pkglint -e\" to show explanations.)\n")
 			}
 			if G.autofixAvailable && !G.opts.PrintAutofix && !G.opts.Autofix {
-				fmt.Fprint(G.logOut, "(Run pkglint with the -f option to show what can be fixed automatically.)\n")
+				fmt.Fprint(G.logOut, "(Run \"pkglint -f\" to show what can be fixed automatically.)\n")
 			}
 			if G.autofixAvailable && !G.opts.Autofix {
-				fmt.Fprint(G.logOut, "(Run pkglint with the -F option to automatically fix some issues.)\n")
+				fmt.Fprint(G.logOut, "(Run \"pkglint -F\" to automatically fix some issues.)\n")
 			}
 		} else {
 			io.WriteString(G.logOut, "looks fine.\n")
