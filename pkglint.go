@@ -272,6 +272,32 @@ func checkfileExtra(fname string) {
 	}
 }
 
+func checklinesDescr(lines []*Line) {
+	defer tracecall1("checklinesDescr", lines[0].fname)()
+
+	for _, line := range lines {
+		checklineLength(line, 80)
+		checklineTrailingWhitespace(line)
+		checklineValidCharacters(line, `[\t -~]`)
+		if strings.Contains(line.text, "${") {
+			line.note0("Variables are not expanded in the DESCR file.")
+		}
+	}
+	checklinesTrailingEmptyLines(lines)
+
+	if maxlines := 24; len(lines) > maxlines {
+		line := lines[maxlines]
+
+		line.warnf("File too long (should be no more than %d lines).", maxlines)
+		explain3(
+			"A common terminal size is 80x25 characters. The DESCR file should",
+			"fit on one screen. It is also intended to give a _brief_ summary",
+			"about the package's contents.")
+	}
+
+	saveAutofixChanges(lines)
+}
+
 func checklinesMessage(lines []*Line) {
 	defer tracecall1("checklinesMessage", lines[0].fname)()
 
