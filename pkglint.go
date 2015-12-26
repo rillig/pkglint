@@ -487,35 +487,76 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 }
 
 func matchVarassign(text string) (m bool, varname, op, value, comment string) {
-	if !strings.Contains(text, "=") {
+	if strings.IndexByte(text, '=') == -1 {
 		return
 	}
 
-	var space, rest string
-	trimmed := strings.TrimLeft(text, " ")
-	if m, varname, op = match2(trimmed, `^([\w$*\-.{}]+)([!+:?]?=)`); m {
-		rest = trimmed[len(varname)+len(op):]
-	} else if m, varname, space, op = match3(trimmed, `^([-*+A-Z_a-z0-9.${}\[]+)(\s*)([!+:?]?=)`); m {
-		rest = trimmed[len(varname)+len(space)+len(op):]
+	i, n := 0, len(text)
+
+	for i < n && text[i] == ' ' {
+		i++
+	}
+
+	varnameStart := i
+	for ; i < n; i++ {
+		b := text[i]
+		if b < 64 && (0x03ff6c1000000000>>b)&1 == 0 {
+			break
+		}
+		if b >= 128 || (0x2ffffffe8ffffffe>>(b&63))&1 == 0 {
+			break
+		}
+	}
+	varnameEnd := i
+
+	if varnameEnd == varnameStart {
+		return
+	}
+
+	for i < n && (text[i] == ' ' || text[i] == '\t') {
+		i++
+	}
+
+	opStart := i
+	if i < n {
+		if c := text[i]; c == '!' || c == '+' || c == ':' || c == '?' {
+			i++
+		}
+	}
+	if i < n && text[i] == '=' {
+		i++
 	} else {
 		return
 	}
+	opEnd := i
 
-	valuebuf := make([]rune, 0, len(rest))
-	for i, r := range rest {
-		if r == '#' && (i == 0 || rest[i-1] != '\\') {
-			comment = rest[i:]
+	for i < n && (text[i] == ' ' || text[i] == '\t') {
+		i++
+	}
+
+	valueStart := i
+	valuebuf := make([]byte, 0, n-valueStart)
+	for ; i < n; i++ {
+		b := text[i]
+		if b == '#' && (i == valueStart || text[i-1] != '\\') {
 			break
-		} else if r != '\\' || i+1 >= len(rest) || rest[i+1] != '#' {
-			valuebuf = append(valuebuf, r)
+		} else if b != '\\' || i+1 >= n || text[i+1] != '#' {
+			valuebuf = append(valuebuf, b)
 		}
 	}
-	value = strings.TrimSpace(string(valuebuf))
 
-	if hasSuffix(varname, "+") && space == "" && op == "=" {
-		varname = varname[:len(varname)-1]
-		op = "+="
+	commentStart := i
+	commentEnd := n
+
+	if text[varnameEnd-1] == '+' && varnameEnd == opStart && text[opStart] == '=' {
+		varnameEnd--
+		opStart--
 	}
-	value = strings.TrimSpace(value)
+
+	m = true
+	varname = text[varnameStart:varnameEnd]
+	op = text[opStart:opEnd]
+	value = strings.TrimSpace(string(valuebuf))
+	comment = text[commentStart:commentEnd]
 	return
 }

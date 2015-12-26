@@ -114,6 +114,8 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 	checkVarassign("VAR += value", equals, "VAR", "+=", "value", "")
 	checkVarassign(" VAR=value", equals, "VAR", "=", "value", "")
 	checkNotVarassign("\tVAR=value")
+	checkNotVarassign("?=value")
+	checkNotVarassign("<=value")
 }
 
 func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {
