@@ -14,8 +14,9 @@ const (
 		`#.*` + // shell comment
 		`|(?:` +
 		`'[^']*'` + // single quoted string
-		`|"(?:\\.|[^"\\])*"` + // double quoted string
-		"|`[^`]*`" + // backticks command execution
+		"|\"`[^`]+`\"" + // backticks command execution in double quotes
+		"|\"(?:\\\\.|[^\"\\\\`])*\"" + // double quoted string
+		"|`[^`]*`" + // backticks command execution, somewhat naive
 		`|\\\$\$` + // a shell-escaped dollar sign
 		`|\\[^\$]` + // other escaped characters
 		`|\$[\w_]` + // one-character make(1) variable
@@ -456,7 +457,7 @@ func (shline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 		st.checkPipeExitcode()
 		st.checkSetE(*pSetE)
 
-		if state == scstSet && matches(shellword, `^-.*e`) || state == scstStart && shellword == "${RUN}" {
+		if state == scstSet && hasPrefix(shellword, "-") && strings.Contains(shellword, "e") || state == scstStart && shellword == "${RUN}" {
 			*pSetE = true
 		}
 
@@ -464,7 +465,7 @@ func (shline *MkShellLine) checkShellCommand(shellcmd string, pSetE *bool) {
 	}
 
 	if rest != "" {
-		shline.line.errorf("Internal pkglint error: MkShellLine.checkShellCommand state=%s rest=%q shellword=%q", state, rest, shellcmd)
+		shline.line.errorf("Internal pkglint error: MkShellLine.checkShellCommand state=%s rest=%q shellcmd=%q", state, rest, shellcmd)
 	}
 }
 

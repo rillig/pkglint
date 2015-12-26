@@ -91,6 +91,33 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	shline.checkShellCommandLine("${RUN} for f in *.c; do echo $${f%.c}; done")
 
 	c.Check(s.Output(), equals, "")
+
+	// Based on mail/thunderbird/Makefile, rev. 1.159
+	shline.checkShellCommandLine("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: Unknown shell command \"unzip\".\n"+
+		"WARN: fname:1: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
+		"WARN: fname:1: Unknown shell command \"awk\".\n")
+
+	// From mail/thunderbird/Makefile, rev. 1.159
+	shline.checkShellCommandLine("" +
+		"${RUN} for e in ${XPI_FILES}; do " +
+		"  subdir=\"`${UNZIP_CMD} -c \"$$e\" install.rdf | awk '/^    <em:id>/ {sub(\".*<em:id>\",\"\");sub(\"</em:id>.*\",\"\");print;exit;}'`\" && " +
+		"  ${MKDIR} \"${WRKDIR}/extensions/$$subdir\" && " +
+		"  cd \"${WRKDIR}/extensions/$$subdir\" && " +
+		"  ${UNZIP_CMD} -aqo $$e; " +
+		"done")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: XPI_FILES is used but not defined. Spelling mistake?\n"+
+		"WARN: fname:1: UNZIP_CMD is used but not defined. Spelling mistake?\n"+
+		"WARN: fname:1: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
+		"WARN: fname:1: Unknown shell command \"awk\".\n"+
+		"WARN: fname:1: MKDIR is used but not defined. Spelling mistake?\n"+
+		"WARN: fname:1: Unknown shell command \"${MKDIR}\".\n"+
+		"WARN: fname:1: UNZIP_CMD is used but not defined. Spelling mistake?\n"+
+		"WARN: fname:1: Unquoted shell variable \"e\".\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
@@ -156,7 +183,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
 		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
 		"WARN: fname:1: Unknown shell command \"echo\".\n"+
 		"ERROR: fname:1: Internal pkglint error: MkShellLine.checkShellword state=plain, rest=\"\\\\foo\", shellword=\"\\\\foo\"\n"+
-		"ERROR: fname:1: Internal pkglint error: MkShellLine.checkShellCommand state=continuation rest=\"\\\\\" shellword=\"echo \\\\foo   bar\\\\\"\n")
+		"ERROR: fname:1: Internal pkglint error: MkShellLine.checkShellCommand state=continuation rest=\"\\\\\" shellcmd=\"echo \\\\foo   bar\\\\\"\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {
