@@ -367,7 +367,7 @@ func (cv *VartypeCheck) Option() {
 		return
 	}
 
-	line.error0("Invalid option name.")
+	line.error1("Invalid option name %q. Option names must start with a lowercase letter.", value)
 }
 
 // The PATH environment variable
@@ -727,6 +727,8 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 			rest = "."
 		}
 		cv.line.note2("You can use %q instead of %q.", rest, cv.value)
+		explain1(
+			"These directories are interpreted relative to ${WRKSRC}.")
 
 	} else if cv.value != "" && cv.valueNovar == "" {
 		// The value of another variable

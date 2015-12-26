@@ -153,14 +153,17 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.error0("Each patch must be documented.")
 		explain(
-			"Each patch must document why it is necessary. If it has been applied",
-			"because of a security issue, a reference to the CVE should be mentioned",
-			"as well.",
+			"Pkgsrc tries to have as few patches as possible. Therefore, each patch",
+			"must document why it is necessary. Typical reasons are portability or",
+			"security.",
 			"",
-			"Since it is our goal to have as few patches as possible, all patches",
-			"should be sent to the upstream maintainers of the package. After you",
-			"have done so, you should add a reference to the bug report containing",
-			"the patch.")
+			"Patches that are related to a security issue should mention the corres-",
+			"ponding CVE identifier.",
+			"",
+			"Each patch should be sent to the upstream maintainers of the package,",
+			"so that they can include it in future versions. After submitting a",
+			"patch, the corresponding bug report should be mentioned in this file,",
+			"to prevent duplicate work.")
 	}
 	if G.opts.WarnSpace && !ck.previousLineEmpty {
 		if !line.autofixInsertBefore("") {
