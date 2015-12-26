@@ -615,7 +615,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 			return true
 		}
 
-		if vartype := getVariableType(ctx.shline.line, varname); vartype != nil && vartype.checker.name == "ShellCommand" {
+		if vartype := ctx.shline.mkline.getVariableType(varname); vartype != nil && vartype.checker.name == "ShellCommand" {
 			ctx.shline.checkCommandUse(shellword)
 			return true
 		}

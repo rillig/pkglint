@@ -91,72 +91,6 @@ func extractUsedVariables(line *Line, text string) []string {
 	return result
 }
 
-// Returns the type of the variable (maybe guessed based on the variable name),
-// or nil if the type cannot even be guessed.
-func getVariableType(line *Line, varname string) *Vartype {
-
-	if vartype := G.globalData.vartypes[varname]; vartype != nil {
-		return vartype
-	}
-	if vartype := G.globalData.vartypes[varnameCanon(varname)]; vartype != nil {
-		return vartype
-	}
-
-	if G.globalData.varnameToToolname[varname] != "" {
-		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpUse}}, guNotGuessed}
-	}
-
-	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
-		return &Vartype{lkNone, CheckvarPathname, []AclEntry{{"*", aclpUse}}, guNotGuessed}
-	}
-
-	allowAll := []AclEntry{{"*", aclpAll}}
-	allowRuntime := []AclEntry{{"*", aclpAllRuntime}}
-
-	// Guess the datatype of the variable based on naming conventions.
-	varbase := varnameBase(varname)
-	var gtype *Vartype
-	switch {
-	case hasSuffix(varbase, "DIRS"):
-		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "DIR"), hasSuffix(varname, "_HOME"):
-		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "FILES"):
-		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "FILE"):
-		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "PATH"):
-		gtype = &Vartype{lkNone, CheckvarPathlist, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "PATHS"):
-		gtype = &Vartype{lkShell, CheckvarPathname, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "_USER"):
-		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, guGuessed}
-	case hasSuffix(varbase, "_GROUP"):
-		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, guGuessed}
-	case hasSuffix(varbase, "_ENV"):
-		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "_CMD"):
-		gtype = &Vartype{lkNone, CheckvarShellCommand, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "_ARGS"):
-		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"), hasSuffix(varname, "_LDFLAGS"):
-		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
-	case hasSuffix(varbase, "_MK"):
-		gtype = &Vartype{lkNone, CheckvarUnchecked, allowAll, guGuessed}
-	case hasPrefix(varbase, "PLIST."):
-		gtype = &Vartype{lkNone, CheckvarYes, allowAll, guGuessed}
-	}
-
-	if G.opts.DebugVartypes {
-		if gtype != nil {
-			line.debugf("The guessed type of %q is %v.", varname, gtype)
-		} else {
-			line.debug1("No type definition found for %q.", varname)
-		}
-	}
-	return gtype
-}
-
 func resolveVariableRefs(text string) string {
 	defer tracecall1("resolveVariableRefs", text)()
 
@@ -203,17 +137,6 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 		mkline.debug2("Expanded %q to %q", varname, value)
 	}
 	return value
-}
-
-func getVariablePermissions(line *Line, varname string) AclPermissions {
-	if vartype := getVariableType(line, varname); vartype != nil {
-		return vartype.effectivePermissions(line.fname)
-	}
-
-	if G.opts.DebugMisc {
-		line.debug1("No type definition found for %q.", varname)
-	}
-	return aclpAll
 }
 
 func checklineLength(line *Line, maxlength int) {

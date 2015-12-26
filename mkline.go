@@ -150,7 +150,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		return
 	}
 
-	perms := getVariablePermissions(mkline.line, varname)
+	perms := mkline.getVariablePermissions(varname)
 	var needed AclPermissions
 	switch op {
 	case "=", "!=", ":=":
@@ -185,7 +185,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 		defer tracecall("MkLine.checkVaruse", mkline, varname, mod, *vuc)()
 	}
 
-	vartype := getVariableType(mkline.line, varname)
+	vartype := mkline.getVariableType(varname)
 	if G.opts.WarnExtra &&
 		(vartype == nil || vartype.guessed == guGuessed) &&
 		!varIsUsed(varname) &&
@@ -225,7 +225,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 		return
 	}
 
-	perms := getVariablePermissions(mkline.line, varname)
+	perms := mkline.getVariablePermissions(varname)
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -520,7 +520,7 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	usedVars := extractUsedVariables(mkline.line, value)
-	vuc := &VarUseContext{getVariableType(mkline.line, varname), time, vucQuotUnknown, vucExtentUnknown}
+	vuc := &VarUseContext{mkline.getVariableType(varname), time, vucQuotUnknown, vucExtentUnknown}
 	for _, usedVar := range usedVars {
 		mkline.checkVaruse(usedVar, "", vuc)
 	}
@@ -635,7 +635,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 	}
 
 	varbase := varnameBase(varname)
-	vartype := getVariableType(mkline.line, varname)
+	vartype := mkline.getVariableType(varname)
 
 	if op == "+=" {
 		if vartype != nil {
@@ -777,7 +777,7 @@ func (mkline *MkLine) checkIf() {
 	{
 		var pvarname, ppattern *string
 		if tree.Match(NewTree("not", NewTree("empty", NewTree("match", &pvarname, &ppattern)))) {
-			vartype := getVariableType(mkline.line, *pvarname)
+			vartype := mkline.getVariableType(*pvarname)
 			if vartype != nil && vartype.checker.IsEnum() {
 				if !matches(*ppattern, `[\$\[*]`) && !vartype.checker.HasEnum(*ppattern) {
 					mkline.warn2("Invalid :M value %q. Only { %s } are allowed.", *ppattern, vartype.checker.AllowedEnums())
@@ -911,7 +911,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) N
 		defer tracecall("variableNeedsQuoting", varname, *vuc)()
 	}
 
-	vartype := getVariableType(mkline.line, varname)
+	vartype := mkline.getVariableType(varname)
 	if vartype == nil || vuc.vartype == nil {
 		return nqDontKnow
 	}
@@ -1005,6 +1005,83 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) N
 		mkline.line.debug1("Don't know whether :Q is needed for %q", varname)
 	}
 	return nqDontKnow
+}
+
+// Returns the type of the variable (maybe guessed based on the variable name),
+// or nil if the type cannot even be guessed.
+func (mkline *MkLine) getVariableType(varname string) *Vartype {
+
+	if vartype := G.globalData.vartypes[varname]; vartype != nil {
+		return vartype
+	}
+	if vartype := G.globalData.vartypes[varnameCanon(varname)]; vartype != nil {
+		return vartype
+	}
+
+	if G.globalData.varnameToToolname[varname] != "" {
+		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpUse}}, guNotGuessed}
+	}
+
+	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
+		return &Vartype{lkNone, CheckvarPathname, []AclEntry{{"*", aclpUse}}, guNotGuessed}
+	}
+
+	allowAll := []AclEntry{{"*", aclpAll}}
+	allowRuntime := []AclEntry{{"*", aclpAllRuntime}}
+
+	// Guess the datatype of the variable based on naming conventions.
+	varbase := varnameBase(varname)
+	var gtype *Vartype
+	switch {
+	case hasSuffix(varbase, "DIRS"):
+		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "DIR"), hasSuffix(varname, "_HOME"):
+		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "FILES"):
+		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "FILE"):
+		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "PATH"):
+		gtype = &Vartype{lkNone, CheckvarPathlist, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "PATHS"):
+		gtype = &Vartype{lkShell, CheckvarPathname, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "_USER"):
+		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, guGuessed}
+	case hasSuffix(varbase, "_GROUP"):
+		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, guGuessed}
+	case hasSuffix(varbase, "_ENV"):
+		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "_CMD"):
+		gtype = &Vartype{lkNone, CheckvarShellCommand, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "_ARGS"):
+		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"), hasSuffix(varname, "_LDFLAGS"):
+		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, guGuessed}
+	case hasSuffix(varbase, "_MK"):
+		gtype = &Vartype{lkNone, CheckvarUnchecked, allowAll, guGuessed}
+	case hasPrefix(varbase, "PLIST."):
+		gtype = &Vartype{lkNone, CheckvarYes, allowAll, guGuessed}
+	}
+
+	if G.opts.DebugVartypes {
+		if gtype != nil {
+			mkline.line.debug2("The guessed type of %q is %q.", varname, gtype.String())
+		} else {
+			mkline.line.debug1("No type definition found for %q.", varname)
+		}
+	}
+	return gtype
+}
+
+func (mkline *MkLine) getVariablePermissions(varname string) AclPermissions {
+	if vartype := mkline.getVariableType(varname); vartype != nil {
+		return vartype.effectivePermissions(mkline.line.fname)
+	}
+
+	if G.opts.DebugMisc {
+		mkline.debug1("No type definition found for %q.", varname)
+	}
+	return aclpAll
 }
 
 // VarUseContext defines the context in which a variable is defined

@@ -13,7 +13,7 @@ func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	c.Assert(vartype1, check.NotNil)
 	c.Check(vartype1.guessed, equals, guNotGuessed)
 
-	vartype := getVariableType(mkline.line, "COMMENT")
+	vartype := mkline.getVariableType("COMMENT")
 
 	c.Assert(vartype, check.NotNil)
 	c.Check(vartype.checker.name, equals, "Comment")
@@ -193,15 +193,15 @@ func (s *Suite) TestMkLine_variableNeedsQuoting(c *check.C) {
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_Varbase(c *check.C) {
-	line := NewLine("fname", 1, "dummy", nil)
+	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
 	G.globalData.InitVartypes()
 
-	t1 := getVariableType(line, "FONT_DIRS")
+	t1 := mkline.getVariableType("FONT_DIRS")
 
 	c.Assert(t1, check.NotNil)
 	c.Check(t1.String(), equals, "ShellList of Pathmask")
 
-	t2 := getVariableType(line, "FONT_DIRS.ttf")
+	t2 := mkline.getVariableType("FONT_DIRS.ttf")
 
 	c.Assert(t2, check.NotNil)
 	c.Check(t2.String(), equals, "ShellList of Pathmask")
@@ -209,7 +209,8 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_Varbase(c *check.C) {
 
 func (s *Suite) TestVarUseContext_ToString(c *check.C) {
 	G.globalData.InitVartypes()
-	vartype := getVariableType(NewLine("fname", 1, "dummy", nil), "PKGNAME")
+	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
+	vartype := mkline.getVariableType("PKGNAME")
 	vuc := &VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, vucExtentWord}
 
 	c.Check(vuc.String(), equals, "(unknown PkgName backt word)")
