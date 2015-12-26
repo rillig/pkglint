@@ -491,26 +491,31 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 		return
 	}
 
-	var space string
+	var space, rest string
 	trimmed := strings.TrimLeft(text, " ")
-	if m, varname, space, op = match3(trimmed, `^([-*+A-Z_a-z0-9.${}\[]+)(\s*)([!+:?]?=)`); m {
-		rest := trimmed[len(varname)+len(space)+len(op):]
-		valuebuf := make([]rune, 0, len(rest))
-		for i, r := range rest {
-			if r == '#' && (i == 0 || rest[i-1] != '\\') {
-				comment = rest[i:]
-				break
-			} else if r != '\\' || i+1 >= len(rest) || rest[i+1] != '#' {
-				valuebuf = append(valuebuf, r)
-			}
-		}
-
-		value = strings.TrimSpace(string(valuebuf))
-		if hasSuffix(varname, "+") && space == "" && op == "=" {
-			varname = varname[:len(varname)-1]
-			op = "+="
-		}
-		value = strings.TrimSpace(value)
+	if m, varname, op = match2(trimmed, `^([\w$*\-.{}]+)([!+:?]?=)`); m {
+		rest = trimmed[len(varname)+len(op):]
+	} else if m, varname, space, op = match3(trimmed, `^([-*+A-Z_a-z0-9.${}\[]+)(\s*)([!+:?]?=)`); m {
+		rest = trimmed[len(varname)+len(space)+len(op):]
+	} else {
+		return
 	}
+
+	valuebuf := make([]rune, 0, len(rest))
+	for i, r := range rest {
+		if r == '#' && (i == 0 || rest[i-1] != '\\') {
+			comment = rest[i:]
+			break
+		} else if r != '\\' || i+1 >= len(rest) || rest[i+1] != '#' {
+			valuebuf = append(valuebuf, r)
+		}
+	}
+	value = strings.TrimSpace(string(valuebuf))
+
+	if hasSuffix(varname, "+") && space == "" && op == "=" {
+		varname = varname[:len(varname)-1]
+		op = "+="
+	}
+	value = strings.TrimSpace(value)
 	return
 }
