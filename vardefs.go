@@ -269,7 +269,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("EMULSUBDIR", lkNone, CheckvarPathname)
 	sys("OPSYS_EMULDIR", lkNone, CheckvarPathname)
 	sys("EMULSUBDIRSLASH", lkNone, CheckvarPathname)
-	sys("EMUL_ARCH", lkNone, enum("i386 none"))
+	sys("EMUL_ARCH", lkNone, enum("i386 none x86_64"))
 	sys("EMUL_DISTRO", lkNone, CheckvarIdentifier)
 	sys("EMUL_IS_NATIVE", lkNone, CheckvarYes)
 	pkg("EMUL_MODULES.*", lkShell, CheckvarIdentifier)
