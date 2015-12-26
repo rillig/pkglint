@@ -120,7 +120,7 @@ func (mklines *MkLines) check() {
 			mkline.checkVarassign()
 			substcontext.Varassign(mkline)
 
-		case hasPrefix(text, "\t"):
+		case mkline.IsShellcmd():
 			shellcmd := text[1:]
 			mkline.checkText(shellcmd)
 			NewMkShellLine(mkline).checkShellCommandLine(shellcmd)
