@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+
 	check "gopkg.in/check.v1"
 )
 
