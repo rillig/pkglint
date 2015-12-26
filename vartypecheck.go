@@ -145,7 +145,7 @@ func (cv *VartypeCheck) Dependency() {
 		}
 
 	default:
-		line.warn1("Unknown dependency format: %s", value)
+		line.warn1("Unknown dependency format %q.", value)
 		explain(
 			"Typical dependencies have the following forms:",
 			"",
@@ -185,7 +185,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		return
 	}
 
-	line.warn0("Unknown dependency format.")
+	line.warn1("Unknown dependency format %q.", value)
 	explain4(
 		"Examples for valid dependencies are:",
 		"  package-[0-9]*:../../category/package",

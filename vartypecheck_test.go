@@ -77,14 +77,16 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 		"perl5-5.22.*",
 		"perl5-[5.10-5.22]*",
 		"py-docs",
-		"perl5-5.22.*{,nb*}")
+		"perl5-5.22.*{,nb*}",
+		"libkipi>=0.1.5<4.0")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Unknown dependency format: Perl\n"+
+		"WARN: fname:1: Unknown dependency format \"Perl\".\n"+
 		"WARN: fname:3: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".\n"+
 		"WARN: fname:4: Please append \"{,nb*}\" to the version number of this dependency.\n"+
 		"WARN: fname:5: Only [0-9]* is allowed in the numeric part of a dependency.\n"+
-		"ERROR: fname:6: Unknown dependency pattern \"py-docs\".\n")
+		"ERROR: fname:6: Unknown dependency pattern \"py-docs\".\n"+
+		"WARN: fname:8: Unknown dependency format \"libkipi>=0.1.5<4.0\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
@@ -108,14 +110,14 @@ func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 		"broken>:../../x11/alacarte")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Unknown dependency format.\n"+
+		"WARN: fname:1: Unknown dependency format \"Perl\".\n"+
 		"WARN: fname:2: Dependencies should have the form \"../../category/package\".\n"+
 		"ERROR: fname:3: \"../../lang/perl5\" does not exist.\n"+
 		"ERROR: fname:3: There is no package in \"lang/perl5\".\n"+
 		"WARN: fname:3: Please use USE_TOOLS+=perl:run instead of this dependency.\n"+
 		"ERROR: fname:4: Unknown dependency pattern \"broken0.12.1\".\n"+
 		"ERROR: fname:5: Unknown dependency pattern \"broken[0-9]*\".\n"+
-		"WARN: fname:6: Unknown dependency format.\n"+
+		"WARN: fname:6: Unknown dependency format \"broken[0-9]*../../x11/alacarte\".\n"+
 		"ERROR: fname:7: Unknown dependency pattern \"broken>=\".\n"+
 		"ERROR: fname:8: Unknown dependency pattern \"broken=0\".\n"+
 		"ERROR: fname:9: Unknown dependency pattern \"broken=\".\n"+
