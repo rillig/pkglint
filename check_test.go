@@ -113,13 +113,13 @@ func (s *Suite) ExpectFatalError(action func()) {
 }
 
 func (s *Suite) SetUpTest(c *check.C) {
-	G = new(GlobalVars)
+	G = GlobalVars{}
 	G.logOut, G.logErr, G.debugOut = &s.stdout, &s.stderr, &s.stdout
 	s.UseCommandLine(c /* no arguments */)
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
-	G = nil
+	G = GlobalVars{}
 	if out := s.Output(); out != "" {
 		fmt.Fprintf(os.Stderr, "Unchecked output in %q; check with: c.Check(s.Output(), equals, %q)", c.TestName(), out)
 	}

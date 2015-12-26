@@ -12,7 +12,6 @@ const confMake = "@BMAKE@"
 const confVersion = "@VERSION@"
 
 func main() {
-	G = new(GlobalVars)
 	G.logOut, G.logErr, G.debugOut = os.Stdout, os.Stderr, os.Stdout
 	os.Exit(new(Pkglint).Main(os.Args...))
 }

@@ -95,4 +95,4 @@ type Hash struct {
 	line *Line
 }
 
-var G *GlobalVars
+var G GlobalVars
