@@ -297,7 +297,7 @@ func (cv *VartypeCheck) LdFlag() {
 		}
 	} else {
 		if ldflag == cv.valueNovar && !(hasPrefix(ldflag, "`") && hasSuffix(ldflag, "`")) {
-			cv.line.warn1("Linker flag %q should does not start with a dash.", cv.value)
+			cv.line.warn1("Linker flag %q should start with a hypen.", cv.value)
 		}
 	}
 }
