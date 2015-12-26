@@ -361,7 +361,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkg("INSTALL_TARGET", lkShell, CheckvarIdentifier)
 	acl("INSTALL_TEMPLATES", lkShell, CheckvarPathname, "Makefile:set,append", "Makefile.common:set,default,append")
 	acl("INSTALL_UNSTRIPPED", lkNone, CheckvarYesNo, "Makefile:set", "Makefile.common:set")
-	pkg("INTERACTIVE_STAGE", lkShell, enum("fetch extract configure build install"))
+	pkg("INTERACTIVE_STAGE", lkShell, enum("fetch extract configure build test install"))
 	acl("IS_BUILTIN.*", lkNone, CheckvarYesNoIndirectly, "builtin.mk:set,use-loadtime,use")
 	sys("JAVA_BINPREFIX", lkNone, CheckvarPathname)
 	pkg("JAVA_CLASSPATH", lkNone, CheckvarShellWord)
