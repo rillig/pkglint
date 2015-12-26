@@ -15,7 +15,7 @@ const (
 		`|(?:` +
 		`'[^']*'` + // single quoted string
 		"|\"`[^`]+`\"" + // backticks command execution in double quotes
-		"|\"(?:\\\\.|[^\"\\\\`])*\"" + // double quoted string
+		`|"(?:\\.|[^"])*"` + // double quoted string
 		"|`[^`]*`" + // backticks command execution, somewhat naive
 		`|\\\$\$` + // a shell-escaped dollar sign
 		`|\\[^\$]` + // other escaped characters
