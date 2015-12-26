@@ -98,22 +98,25 @@ func tabLength(s string) int {
 }
 
 func varnameBase(varname string) string {
-	return strings.Split(varname, ".")[0]
+	dot := strings.IndexByte(varname, '.')
+	if dot != -1 {
+		return varname[:dot]
+	}
+	return varname
 }
 func varnameCanon(varname string) string {
-	parts := strings.SplitN(varname, ".", 2)
-	if len(parts) == 2 {
-		return parts[0] + ".*"
+	dot := strings.IndexByte(varname, '.')
+	if dot != -1 {
+		return varname[:dot] + ".*"
 	}
-	return parts[0]
+	return varname
 }
 func varnameParam(varname string) string {
 	dot := strings.IndexByte(varname, '.')
 	if dot != -1 {
 		return varname[dot+1:]
-	} else {
-		return ""
 	}
+	return ""
 }
 
 func defineVar(mkline *MkLine, varname string) {
