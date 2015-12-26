@@ -162,8 +162,8 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 			"",
 			"Each patch should be sent to the upstream maintainers of the package,",
 			"so that they can include it in future versions. After submitting a",
-			"patch, the corresponding bug report should be mentioned in this file,",
-			"to prevent duplicate work.")
+			"patch upstream, the corresponding bug report should be mentioned in",
+			"this file, to prevent duplicate work.")
 	}
 	if G.opts.WarnSpace && !ck.previousLineEmpty {
 		if !line.autofixInsertBefore("") {
