@@ -94,7 +94,9 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 		}
 	} else {
 		for _, rawLine := range rawLines {
-			loglines = append(loglines, NewLine(fname, rawLine.lineno, strings.TrimSuffix(rawLine.textnl, "\n"), []*RawLine{rawLine}))
+			text := strings.TrimSuffix(rawLine.textnl, "\n")
+			logline := NewLine(fname, rawLine.lineno, text, []*RawLine{rawLine})
+			loglines = append(loglines, logline)
 		}
 	}
 

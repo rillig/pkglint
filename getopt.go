@@ -19,6 +19,8 @@ func NewOptions() *Options {
 }
 
 func (o *Options) AddFlagGroup(shortName rune, longName, argDescription, description string) *FlagGroup {
+	switch { // prevent inlining
+	}
 	grp := new(FlagGroup)
 	opt := &option{shortName, longName, argDescription, description, grp}
 	o.options = append(o.options, opt)
@@ -26,6 +28,8 @@ func (o *Options) AddFlagGroup(shortName rune, longName, argDescription, descrip
 }
 
 func (o *Options) AddFlagVar(shortName rune, longName string, pflag *bool, defval bool, description string) {
+	switch { // prevent inlining
+	}
 	*pflag = defval
 	opt := &option{shortName, longName, "", description, pflag}
 	o.options = append(o.options, opt)
@@ -188,6 +192,8 @@ type FlagGroup struct {
 }
 
 func (fg *FlagGroup) AddFlagVar(name string, flag *bool, defval bool, help string) {
+	switch { // prevent inlining
+	}
 	opt := &groupFlag{name, flag, help}
 	fg.flags = append(fg.flags, opt)
 	*flag = defval

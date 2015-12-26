@@ -501,6 +501,7 @@ func (msline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 				"${PHASE_MSG}", "${PRINTF}",
 				"${SHCOMMENT}", "${STEP_MSG}",
 				"${WARNING_CAT}", "${WARNING_MSG}":
+				break
 			default:
 				msline.line.warn1("The shell command %q should not be hidden.", cmd)
 				explain3(
