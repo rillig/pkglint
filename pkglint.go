@@ -423,10 +423,10 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 	varnameStart := i
 	for ; i < n; i++ {
 		b := text[i]
-		if b < 64 && (0x03ff6c1000000000>>b)&1 == 0 {
+		if b < 64 && (uint64(0x03ff6c1000000000)>>b)&1 == 0 {
 			break
 		}
-		if b >= 128 || (0x2ffffffe8ffffffe>>(b&63))&1 == 0 {
+		if b >= 128 || (uint64(0x2ffffffe8ffffffe)>>(b&63))&1 == 0 {
 			break
 		}
 	}
