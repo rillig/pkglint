@@ -119,10 +119,8 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				apiLine.warn1("... API version (%s).", apiVersion)
 			}
 
-			if m, varparam := match1(varname, `^BUILDLINK_[\w_]+\.(.*)$`); m {
-				if varparam != pkgid {
-					line.warn2("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
-				}
+			if varparam := mkline.Varparam(); varparam != "" && varparam != pkgid && mkline.Varcanon() != "BUILDLINK_API_DEPENDS.*" {
+				line.warn2("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
 			}
 
 			if varname == "pkgbase" {

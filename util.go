@@ -108,8 +108,12 @@ func varnameCanon(varname string) string {
 	return parts[0]
 }
 func varnameParam(varname string) string {
-	parts := strings.SplitN(varname, ".", 2)
-	return parts[len(parts)-1]
+	dot := strings.IndexByte(varname, '.')
+	if dot != -1 {
+		return varname[dot+1:]
+	} else {
+		return ""
+	}
 }
 
 func defineVar(mkline *MkLine, varname string) {

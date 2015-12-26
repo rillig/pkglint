@@ -87,7 +87,8 @@ func (s *Suite) TestMkLine_fields(c *check.C) {
 		".include \"../../mk/bsd.prefs.mk\" # include comment",
 		".include <subdir.mk> # sysinclude comment",
 		"target1 target2: source1 source2",
-		"target : source"))
+		"target : source",
+		"VARNAME+=value"))
 	ln := mklines.mklines
 
 	c.Check(ln[0].IsVarassign(), equals, true)
@@ -126,6 +127,11 @@ func (s *Suite) TestMkLine_fields(c *check.C) {
 	c.Check(ln[7].Targets(), equals, "target1 target2")
 	c.Check(ln[7].Sources(), equals, "source1 source2")
 	c.Check(ln[7].Comment(), equals, "") // Not needed
+
+	c.Check(ln[9].IsVarassign(), equals, true)
+	c.Check(ln[9].Varname(), equals, "VARNAME")
+	c.Check(ln[9].Varcanon(), equals, "VARNAME")
+	c.Check(ln[9].Varparam(), equals, "")
 
 	c.Check(s.Output(), equals, "WARN: test.mk:9: Space before colon in dependency line.\n")
 }
