@@ -16,6 +16,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ type RawLine struct {
 }
 
 func (rline *RawLine) String() string {
-	return fmt.Sprintf("%d:%s", rline.lineno, rline.textnl)
+	return strconv.Itoa(rline.lineno) + ":" + rline.textnl
 }
 
 type Line struct {
@@ -67,9 +68,9 @@ func (ln *Line) linenos() string {
 	case ln.firstLine == 0:
 		return ""
 	case ln.firstLine == ln.lastLine:
-		return fmt.Sprintf("%d", ln.firstLine)
+		return strconv.Itoa(int(ln.firstLine))
 	default:
-		return fmt.Sprintf("%d--%d", ln.firstLine, ln.lastLine)
+		return strconv.Itoa(int(ln.firstLine)) + "--" + strconv.Itoa(int(ln.lastLine))
 	}
 }
 
@@ -81,7 +82,8 @@ func (ln *Line) printSource(out io.Writer) {
 	if G.opts.PrintSource {
 		io.WriteString(out, "\n")
 		for _, rawLine := range ln.rawLines() {
-			fmt.Fprintf(out, "> %s", rawLine.textnl)
+			io.WriteString(out, "> ")
+			io.WriteString(out, rawLine.textnl)
 		}
 	}
 }
@@ -128,11 +130,6 @@ func (ln *Line) debug2(format, arg1, arg2 string) { ln.debugf(format, arg1, arg2
 
 func (ln *Line) String() string {
 	return ln.fname + ":" + ln.linenos() + ": " + ln.text
-}
-
-func (ln *Line) recordAutofixf(format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	ln.autofixMessage = &msg
 }
 
 func (ln *Line) logAutofix() {
@@ -201,7 +198,8 @@ func (ln *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bo
 		return true
 	}
 	if G.opts.PrintAutofix {
-		ln.recordAutofixf(format, args...)
+		msg := fmt.Sprintf(format, args...)
+		ln.autofixMessage = &msg
 	}
 	return false
 }

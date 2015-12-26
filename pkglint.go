@@ -179,7 +179,7 @@ func resolveVariableRefs(text string) string {
 					}
 				}
 			}
-			return fmt.Sprintf("${%s}", varname)
+			return "${" + varname + "}"
 		})
 		if replaced == str {
 			return replaced
