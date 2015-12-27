@@ -47,7 +47,7 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 		text += rawText
 		lineRawLines = append(lineRawLines, rawLine)
 
-		if cont == "\\" && i != len(interestingRawLines)-1 {
+		if cont != "" && i != len(interestingRawLines)-1 {
 			text += " "
 			index++
 		} else {
@@ -63,11 +63,33 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 }
 
 func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
-	m1234 := strings.TrimSuffix(textnl, "\n")
-	m234 := strings.TrimLeft(m1234, " \t")
-	m23 := strings.TrimSuffix(m234, "\\")
-	m2 := strings.TrimRight(m23, " \t")
-	return m1234[:len(m1234)-len(m234)], m2, m23[len(m2):], m234[len(m23):]
+	i, m := 0, len(textnl)
+
+	if m > i && textnl[m-1] == '\n' {
+		m--
+	}
+
+	if m > i && textnl[m-1] == '\\' {
+		m--
+		cont = textnl[m:m+1]
+	}
+
+	trailingEnd := m
+	for m > i && (textnl[m-1] == ' ' || textnl[m-1] == '\t') {
+		m--
+	}
+	trailingStart := m
+	trailingWhitespace = textnl[trailingStart:trailingEnd]
+
+	leadingStart := i
+	for i < m && (textnl[i] == ' ' || textnl[i] == '\t') {
+		i++
+	}
+	leadingEnd := i
+	leadingWhitespace = textnl[leadingStart:leadingEnd]
+
+	text = textnl[leadingEnd:trailingStart]
+	return
 }
 
 func readLines(fname string, joinContinuationLines bool) ([]*Line, error) {
