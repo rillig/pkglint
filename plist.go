@@ -475,8 +475,6 @@ func (s *plistLineSorter) Less(i, j int) bool {
 }
 func (s *plistLineSorter) Swap(i, j int) {
 	s.swapped = true
-	s.lines[i].changed = true
-	s.lines[j].changed = true
 	s.lines[i], s.lines[j] = s.lines[j], s.lines[i]
 	s.plines[i], s.plines[j] = s.plines[j], s.plines[i]
 }
@@ -490,6 +488,7 @@ func (s *plistLineSorter) Sort() {
 
 	s.first.noteAutofix("Autofix: Sorting the whole file.")
 	s.first.logAutofix()
+	s.first.changed = true // Otherwise the changes won’t be saved
 	lines := []*Line{s.first}
 	for _, pline := range s.plines {
 		lines = append(lines, pline.line)
