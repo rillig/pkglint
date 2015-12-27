@@ -79,10 +79,16 @@ func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
 			if algorithms != "SHA1" {
 				line.error2("Expected SHA1 hash for %s, got %s.", prevFname, algorithms)
 			}
-		} else {
-			if algorithms != "SHA1, RMD160, Size" && algorithms != "SHA1, RMD160, SHA512, Size" {
-				line.error2("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", prevFname, algorithms)
-			}
+		} else if hasPrefix(prevFname, "patch-") && algorithms == "SHA1" {
+			line.warn2("Patch file %q does not exist in directory %q.", prevFname, cleanpath(ck.patchdir))
+			explain(
+				"If the patches directory looks correct, the patch may have been",
+				"removed without updating the distinfo file. In such a case please",
+				"update the distinfo file.",
+				"",
+				"If the patches directory looks wrong, pkglint needs to be improved.")
+		} else if algorithms != "SHA1, RMD160, Size" && algorithms != "SHA1, RMD160, SHA512, Size" {
+			line.error2("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", prevFname, algorithms)
 		}
 	}
 
@@ -132,7 +138,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 
 // Inter-package check for differing distfile checksums.
 func (ck *distinfoLinesChecker) checkGlobalMismatch(line *Line, fname, alg, hash string) {
-	if G.ipcDistinfo != nil && !ck.isPatch {
+	if G.ipcDistinfo != nil && !hasPrefix(fname, "patch-") { // Intentionally checking the filename instead of ck.isPatch
 		key := alg + ":" + fname
 		otherHash := G.ipcDistinfo[key]
 		if otherHash != nil {
