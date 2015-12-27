@@ -455,33 +455,35 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 	}
 	opEnd := i
 
+	if text[varnameEnd-1] == '+' && varnameEnd == opStart && text[opStart] == '=' {
+		varnameEnd--
+		opStart--
+	}
+
 	for i < n && (text[i] == ' ' || text[i] == '\t') {
 		i++
 	}
 
 	valueStart := i
-	valuebuf := make([]byte, 0, n-valueStart)
+	valuebuf := make([]byte, n-valueStart)
+	j := 0
 	for ; i < n; i++ {
 		b := text[i]
 		if b == '#' && (i == valueStart || text[i-1] != '\\') {
 			break
 		} else if b != '\\' || i+1 >= n || text[i+1] != '#' {
-			valuebuf = append(valuebuf, b)
+			valuebuf[j] = b
+			j++
 		}
 	}
 
 	commentStart := i
 	commentEnd := n
 
-	if text[varnameEnd-1] == '+' && varnameEnd == opStart && text[opStart] == '=' {
-		varnameEnd--
-		opStart--
-	}
-
 	m = true
 	varname = text[varnameStart:varnameEnd]
 	op = text[opStart:opEnd]
-	value = strings.TrimSpace(string(valuebuf))
+	value = strings.TrimSpace(string(valuebuf[:j]))
 	comment = text[commentStart:commentEnd]
 	return
 }
