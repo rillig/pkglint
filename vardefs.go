@@ -173,7 +173,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("CC", lkNone, CheckvarShellCommand)
 	pkglist("CFLAGS*", lkShell, CheckvarCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", lkNone, CheckvarYesNo, "builtin.mk: default; Makefile: set")
-	acl("CHECK_BUILTIN.*", lkNone, CheckvarYesNo, "builtin.mk: default; *: use-loadtime")
+	acl("CHECK_BUILTIN.*", lkNone, CheckvarYesNo, "buildlink3.mk: set; builtin.mk: default; *: use-loadtime")
 	acl("CHECK_FILES_SKIP", lkShell, CheckvarBasicRegularExpression, "Makefile, Makefile.common: append")
 	pkg("CHECK_FILES_SUPPORTED", lkNone, CheckvarYesNo)
 	usr("CHECK_HEADERS", lkNone, CheckvarYesNo)
@@ -635,7 +635,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkglist("SPECIAL_PERMS", lkShell, CheckvarShellWord)
 	sys("STEP_MSG", lkNone, CheckvarShellCommand)
 	acl("SUBDIR", lkShell, CheckvarFilename, "Makefile: append; *:")
-	acl("SUBST_CLASSES", lkShell, CheckvarIdentifier, "*: append")
+	acl("SUBST_CLASSES", lkShell, CheckvarIdentifier, "Makefile: set, append; *: append")
 	acl("SUBST_FILES.*", lkShell, CheckvarPathmask, "Makefile: set, append; Makefile.*, *.mk: set, append")
 	acl("SUBST_FILTER_CMD.*", lkNone, CheckvarShellCommand, "Makefile, Makefile.*, *.mk: set")
 	acl("SUBST_MESSAGE.*", lkNone, CheckvarMessage, "Makefile, Makefile.*, *.mk: set")

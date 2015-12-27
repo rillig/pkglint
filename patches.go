@@ -214,7 +214,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	case ftSource:
 		checklineSourceAbsolutePathname(line, addedText)
 	case ftConfigure:
-		if hasPrefix(addedText, ": Avoid regenerating within pkgsrc") {
+		if hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
 			line.error0("This code must not be included in patches.")
 			explain4(
 				"It is generated automatically by pkgsrc after the patch phase.",
