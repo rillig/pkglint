@@ -1130,12 +1130,28 @@ func (mkline *MkLine) determineUsedVariables() (varnames []string) {
 	}
 
 	for {
-		if !strings.Contains(rest, "${") &&
-			!strings.Contains(rest, "$(") &&
-			!strings.Contains(rest, "defined(") &&
-			!strings.Contains(rest, "empty(") {
+		p1 := strings.Index(rest, "${")
+		p2 := strings.Index(rest, "$(")
+		p3 := strings.Index(rest, "defined(")
+		p4 := strings.Index(rest, "empty(")
+		if p1 == -1 && p2 == -1 && p3 == -1 && p4 == -1 {
 			return
 		}
+		min := 0
+		if p1 != -1 && p1 < min {
+			min = p1
+		}
+		if p2 != -1 && p2 < min {
+			min = p2
+		}
+		if p3 != -1 && p3 < min {
+			min = p3
+		}
+		if p4 != -1 && p4 < min {
+			min = p4
+		}
+		rest = rest[min:]
+
 		m := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
 		if m == nil {
 			return
