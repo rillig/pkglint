@@ -163,7 +163,15 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		needed = aclpAppend
 	}
 
-	if !perms.contains(needed) {
+	vartype := mkline.getVariableType(varname)
+	switch {
+	case perms.contains(needed):
+		break
+	case perms == aclpNone && vartype != nil && vartype.union() == aclpNone:
+		mkline.line.warnf("The variable %s may not be modified by any package.", varname)
+	case perms == aclpNone:
+		mkline.line.warnf("The variable %s may not be modified in this file.", varname)
+	default:
 		mkline.line.warnf("Permission %q requested for %s, but only { %s } are allowed.", needed, varname, perms)
 		explain(
 			"Pkglint restricts the allowed actions on variables based on the filename.",
