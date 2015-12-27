@@ -1,2 +1,5 @@
 /archive/
+/coverage.html
+/pkglint.cov
 /pkglint.exe
+/pkglint.test.exe
