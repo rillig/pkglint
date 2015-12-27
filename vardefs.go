@@ -652,7 +652,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("TOOLS_ALIASES", lkShell, CheckvarFilename)
 	sys("TOOLS_BROKEN", lkShell, CheckvarTool)
 	sys("TOOLS_CREATE", lkShell, CheckvarTool)
-	sys("TOOLS_DEPENDS.*", lkSpace, CheckvarDependencyWithPath)
+	acl("TOOLS_DEPENDS.*", lkSpace, CheckvarDependencyWithPath, "buildlink3.mk:", "builtin.mk:use", "*:use", "Makefile:set,default","Makefile.*:set,default")
 	sys("TOOLS_GNU_MISSING", lkShell, CheckvarTool)
 	sys("TOOLS_NOOP", lkShell, CheckvarTool)
 	sys("TOOLS_PATH.*", lkNone, CheckvarPathname)
