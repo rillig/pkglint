@@ -172,10 +172,10 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		alternativeFiles := vartype.allowedFiles(needed)
 		switch {
 		case alternativeActions != 0 && alternativeFiles != "":
-			mkline.line.warnf("The variable %s may not be %s (only %s) in this file (but in %s).",
+			mkline.line.warnf("The variable %s may not be %s (only %s) in this file; it would be ok in %s.",
 				varname, needed.HumanString(), alternativeActions.HumanString(), alternativeFiles)
 		case alternativeFiles != "":
-			mkline.line.warnf("The variable %s may not be %s in this file (but in %s).",
+			mkline.line.warnf("The variable %s may not be %s in this file; it would be ok in %s.",
 				varname, needed.HumanString(), alternativeFiles)
 		case alternativeActions != 0:
 			mkline.line.warnf("The variable %s may not be %s (only %s) in this file.",
