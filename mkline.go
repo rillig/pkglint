@@ -1138,16 +1138,16 @@ func (mkline *MkLine) determineUsedVariables() (varnames []string) {
 			return
 		}
 		min := -1
-		if min == -1 || p1 < min {
+		if min == -1 || (p1 != -1 && p1 < min) {
 			min = p1
 		}
-		if min == -1 || p2 < min {
+		if min == -1 || (p2 != -1 && p2 < min) {
 			min = p2
 		}
-		if min == -1 || p3 < min {
+		if min == -1 || (p3 != -1 && p3 < min) {
 			min = p3
 		}
-		if min == -1 || p4 < min {
+		if min == -1 || (p4 != -1 && p4 < min) {
 			min = p4
 		}
 		rest = rest[min:]
