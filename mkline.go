@@ -184,6 +184,8 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 			mkline.line.warnf("The variable %s may not be %s by any package.",
 				varname, needed.HumanString())
 		}
+	case perms == aclpUnknown && !G.opts.DebugUnchecked:
+		break
 	default:
 		mkline.line.warnf("Permission %q requested for %s, but only { %s } are allowed.", needed, varname, perms)
 		explain(
