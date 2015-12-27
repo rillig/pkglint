@@ -24,3 +24,14 @@ func (s *Suite) TestMainNoArgs(c *check.C) {
 	c.Check(exitcode, equals, 1)
 	c.Check(s.Stderr(), equals, "FATAL: \".\" is not inside a pkgsrc tree.\n")
 }
+
+// go test -c -covermode count
+// env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov -check.f TestRunPkglint
+// go tool cover -html=pkglint.cov -o coverage.html
+func (s *Suite) TestRunPkglint(c *check.C) {
+	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
+	if cmdline != "" {
+		G.logOut, G.logErr, G.debugOut = os.Stdout, os.Stderr, os.Stdout
+		new(Pkglint).Main(append([]string{"pkglint"}, splitOnSpace(cmdline)...)...)
+	}
+}
