@@ -184,6 +184,12 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 			mkline.line.warnf("The variable %s may not be %s by any package.",
 				varname, needed.HumanString())
 		}
+		explain4(
+			"The allowed actions for a variable are determined based on the file",
+			"name in which the variable is used or defined. The exact rules are",
+			"hard-coded into pkglint. If they seem to be incorrect, please ask on",
+			"the tech-pkg@NetBSD.org mailing list.")
+
 	case perms == aclpUnknown && !G.opts.DebugUnchecked:
 		break
 	default:
