@@ -398,7 +398,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("MAKEVARS", lkShell, CheckvarVarname, "builtin.mk:append", "buildlink3.mk:append", "hacks.mk:append")
 	pkglist("MAKE_DIRS", lkShell, CheckvarPathname)
 	pkglist("MAKE_DIRS_PERMS", lkShell, CheckvarShellWord)
-	pkglist("MAKE_ENV", lkShell, CheckvarShellWord)
+	acl("MAKE_ENV", lkShell, CheckvarShellWord, "Makefile:append,set,use", "Makefile.common:append,set,use", "buildlink3.mk:append", "builtin.mk:append", "*.mk:append,use")
 	pkg("MAKE_FILE", lkNone, CheckvarPathname)
 	pkglist("MAKE_FLAGS", lkShell, CheckvarShellWord)
 	usr("MAKE_JOBS", lkNone, CheckvarInteger)
