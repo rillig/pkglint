@@ -39,6 +39,8 @@ const (
 	aclpNone       AclPermissions = 0
 	aclpAll        AclPermissions = aclpAppend | aclpSetDefault | aclpSet | aclpUseLoadtime | aclpUse
 	aclpAllRuntime AclPermissions = aclpAppend | aclpSetDefault | aclpSet | aclpUse
+	aclpAllWrite   AclPermissions = aclpSet | aclpSetDefault | aclpAppend
+	aclpAllRead    AclPermissions = aclpUseLoadtime | aclpUse
 )
 
 func (perms AclPermissions) contains(subset AclPermissions) bool {
@@ -56,6 +58,16 @@ func (perms AclPermissions) String() string {
 		ifelseStr(perms.contains(aclpUseLoadtime), "use-loadtime, ", "") +
 		ifelseStr(perms.contains(aclpUse), "use, ", "") +
 		ifelseStr(perms.contains(aclpUnknown), "unknown, ", "")
+	return strings.TrimRight(result, ", ")
+}
+
+func (perms AclPermissions) HumanString() string {
+	result := "" +
+		ifelseStr(perms.contains(aclpSet), "set, ", "") +
+		ifelseStr(perms.contains(aclpSetDefault), "given a default value, ", "") +
+		ifelseStr(perms.contains(aclpAppend), "appended to, ", "") +
+		ifelseStr(perms.contains(aclpUseLoadtime), "used at load time, ", "") +
+		ifelseStr(perms.contains(aclpUse), "used, ", "")
 	return strings.TrimRight(result, ", ")
 }
 
