@@ -172,7 +172,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("CC", lkNone, CheckvarShellCommand)
 	pkglist("CFLAGS*", lkShell, CheckvarCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", lkNone, CheckvarYesNo, "builtin.mk:default", "Makefile:set")
-	acl("CHECK_BUILTIN.*", lkNone, CheckvarYesNo, "*:use-loadtime")
+	acl("CHECK_BUILTIN.*", lkNone, CheckvarYesNo, "builtin.mk:default", "*:use-loadtime")
 	acl("CHECK_FILES_SKIP", lkShell, CheckvarBasicRegularExpression, "Makefile:append", "Makefile.common:append")
 	pkg("CHECK_FILES_SUPPORTED", lkNone, CheckvarYesNo)
 	usr("CHECK_HEADERS", lkNone, CheckvarYesNo)
