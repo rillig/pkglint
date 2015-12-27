@@ -152,7 +152,15 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		return
 	}
 
-	perms := mkline.getVariablePermissions(varname)
+	vartype := mkline.getVariableType(varname)
+	if vartype == nil {
+		if G.opts.DebugMisc {
+			mkline.debug1("No type definition found for %q.", varname)
+		}
+		return
+	}
+
+	perms := vartype.effectivePermissions(mkline.line.fname)
 	var needed AclPermissions
 	switch op {
 	case "=", "!=", ":=":
@@ -163,11 +171,14 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		needed = aclpAppend
 	}
 
-	vartype := mkline.getVariableType(varname)
 	switch {
 	case perms.contains(needed):
 		break
-	case vartype != nil && perms != aclpUnknown:
+	case perms == aclpUnknown:
+		if G.opts.DebugUnchecked {
+			mkline.line.debug1("Unknown permissions for %q.", varname)
+		}
+	default:
 		alternativeActions := perms & aclpAllWrite
 		alternativeFiles := vartype.allowedFiles(needed)
 		switch {
@@ -189,25 +200,6 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 			"name in which the variable is used or defined. The exact rules are",
 			"hard-coded into pkglint. If they seem to be incorrect, please ask on",
 			"the tech-pkg@NetBSD.org mailing list.")
-
-	case perms == aclpUnknown && !G.opts.DebugUnchecked:
-		break
-	default:
-		mkline.line.warnf("Permission %q requested for %s, but only { %s } are allowed.", needed, varname, perms)
-		explain(
-			"Pkglint restricts the allowed actions on variables based on the filename.",
-			"",
-			"The available permissions are:",
-			"\tappend       append something using +=",
-			"\tdefault      set a default value using ?=",
-			"\tset          set a variable using :=, =, !=",
-			"\t             (which happens during preprocessing)",
-			"\tuse-loadtime use a variable at load time",
-			"\t             (e.g. .if, .for, right-hand side of :=, !=)",
-			"\tuse          use a variable at run time",
-			"\t             (when the shell commands are run)",
-			"\tunknown      pkglint doesn't know which actions are allowed",
-			"\t             and which are not.")
 	}
 }
 
@@ -256,7 +248,19 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 		return
 	}
 
-	perms := mkline.getVariablePermissions(varname)
+	// This is the type of the variable that is being used. Not to
+	// be confused with vuc.vartype, which is the type of the
+	// context in which the variable is used (often a ShellCommand
+	// or, in an assignment, the type of the left hand side variable).
+	vartype := mkline.getVariableType(varname)
+	if vartype == nil {
+		if G.opts.DebugMisc {
+			mkline.debug1("No type definition found for %q.", varname)
+		}
+		return
+	}
+
+	perms := vartype.effectivePermissions(mkline.line.fname)
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -1150,17 +1154,6 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 		}
 	}
 	return gtype
-}
-
-func (mkline *MkLine) getVariablePermissions(varname string) AclPermissions {
-	if vartype := mkline.getVariableType(varname); vartype != nil {
-		return vartype.effectivePermissions(mkline.line.fname)
-	}
-
-	if G.opts.DebugMisc {
-		mkline.debug1("No type definition found for %q.", varname)
-	}
-	return aclpAll
 }
 
 // TODO: merge with determineUsedVariables
