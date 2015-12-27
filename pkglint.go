@@ -410,10 +410,6 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 }
 
 func matchVarassign(text string) (m bool, varname, op, value, comment string) {
-	if strings.IndexByte(text, '=') == -1 {
-		return
-	}
-
 	i, n := 0, len(text)
 
 	for i < n && text[i] == ' ' {
@@ -423,10 +419,16 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 	varnameStart := i
 	for ; i < n; i++ {
 		b := text[i]
-		if b < 64 && (uint64(0x03ff6c1000000000)>>b)&1 == 0 {
-			break
+		mask := uint(0)
+		switch b & 0xE0 {
+		case 0x20:
+			mask = 0x03ff6c10
+		case 0x40:
+			mask = 0x8ffffffe
+		case 0x60:
+			mask = 0x2ffffffe
 		}
-		if b >= 128 || (uint64(0x2ffffffe8ffffffe)>>(b&63))&1 == 0 {
+		if (mask>>(b&0x1F))&1 == 0 {
 			break
 		}
 	}
@@ -442,7 +444,7 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 
 	opStart := i
 	if i < n {
-		if c := text[i]; c == '!' || c == '+' || c == ':' || c == '?' {
+		if b := text[i]; b&0xE0 == 0x20 && (0x84000802>>(b&0x1F))&1 != 0 {
 			i++
 		}
 	}
