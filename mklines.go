@@ -197,17 +197,10 @@ func (mklines *MkLines) determineDefinedVariables() {
 }
 
 func (mklines *MkLines) determineUsedVariables() {
-	re := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`)
 	for _, mkline := range mklines.mklines {
-		rest := mkline.line.text
-		for {
-			m := re.FindStringSubmatchIndex(rest)
-			if m == nil {
-				break
-			}
-			varname := rest[m[2]:m[3]]
+		varnames := mkline.determineUsedVariables()
+		for _, varname := range varnames {
 			mklines.useVar(mkline, varname)
-			rest = rest[:m[0]] + rest[m[1]:]
 		}
 	}
 }

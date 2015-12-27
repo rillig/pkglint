@@ -1122,6 +1122,31 @@ func (mkline *MkLine) getVariablePermissions(varname string) AclPermissions {
 	return aclpAll
 }
 
+func (mkline *MkLine) determineUsedVariables() (varnames []string) {
+	rest := mkline.line.text
+
+	if strings.HasPrefix(rest, "#") {
+		return
+	}
+
+	for {
+		if !strings.Contains(rest, "${") &&
+			!strings.Contains(rest, "$(") &&
+			!strings.Contains(rest, "defined(") &&
+			!strings.Contains(rest, "empty(") {
+			return
+		}
+		m := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
+		if m == nil {
+			return
+		}
+		varname := rest[m[2]:m[3]]
+		varnames = append(varnames, varname)
+		rest = rest[:m[0]] + rest[m[1]:]
+	}
+	return
+}
+
 // VarUseContext defines the context in which a variable is defined
 // or used. Whether that is allowed depends on:
 //
