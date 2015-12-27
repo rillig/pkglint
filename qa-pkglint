@@ -29,8 +29,8 @@ echo "=> Installing pkglint"
 #ssh netbsd ". .bash_profile && cd proj/pkgsrc/pkgtools/pkglint && bmake update"
 
 echo "=> Running pkglint on the pkgsrc tree"
-time (cd "$pkgsrcdir" && pkglint -pr -Wall -Call) > "$archivedir/$runid.tmp" || true
-mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
+time (cd "$pkgsrcdir" && pkglint -pr -Wall -Call) > "$archivedir/$runid-$$.tmp" || true
+mv "$archivedir/$runid-$$.tmp" "$archivedir/$runid.out"
 
 echo "=> Generating diffs"
 (
