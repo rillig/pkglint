@@ -76,7 +76,7 @@ func (cv *VartypeCheck) CFlag() {
 func (cv *VartypeCheck) Comment() {
 	line, value := cv.line, cv.value
 
-	if value == "SHORT_DESCRIPTION_OF_THE_PACKAGE" {
+	if value == "TODO: Short description of the package" { // See pkgtools/url2pkg/files/url2pkg.pl, keyword "COMMENT".
 		line.error0("COMMENT must be set.")
 	}
 	if m, first := match1(value, `^(?i)(a|an)\s`); m {
