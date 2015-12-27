@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"strings"
 
 	check "gopkg.in/check.v1"
@@ -176,4 +175,3 @@ func (s *Suite) TestChecklinesMessage_malformed(c *check.C) {
 		"ERROR: MESSAGE:2: Expected \"$"+"NetBSD$\".\n"+
 		"WARN: MESSAGE:5: Expected a line of exactly 75 \"=\" characters.\n")
 }
-

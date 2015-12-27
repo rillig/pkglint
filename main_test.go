@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	check "gopkg.in/check.v1"
 )
 
