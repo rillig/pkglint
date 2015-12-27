@@ -634,7 +634,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkglist("SPECIAL_PERMS", lkShell, CheckvarShellWord)
 	sys("STEP_MSG", lkNone, CheckvarShellCommand)
 	acl("SUBDIR", lkShell, CheckvarFilename, "Makefile:append", "*:")
-	acl("SUBST_CLASSES", lkShell, CheckvarIdentifier, "Makefile:append", "Makefile.common:append", "hacks.mk:append", "Makefile.*:append")
+	acl("SUBST_CLASSES", lkShell, CheckvarIdentifier, "Makefile:append", "Makefile.*:append", "hacks.mk:append", "options.mk:append")
 	acl("SUBST_FILES.*", lkShell, CheckvarPathmask, "Makefile:set,append", "Makefile.common:set,append", "hacks.mk:set,append", "options.mk:set,append", "Makefile.*:set,append")
 	acl("SUBST_FILTER_CMD.*", lkNone, CheckvarShellCommand, "Makefile:set", "Makefile.common:set", "hacks.mk:set", "options.mk:set", "Makefile.*:set")
 	acl("SUBST_MESSAGE.*", lkNone, CheckvarMessage, "Makefile:set", "Makefile.common:set", "hacks.mk:set", "options.mk:set", "Makefile.*:set")
