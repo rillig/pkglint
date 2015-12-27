@@ -167,9 +167,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	switch {
 	case perms.contains(needed):
 		break
-	case perms == aclpUnknown && false: // XXX: restore !G.opts.DebugUnchecked:
-		break
-	case vartype != nil:
+	case vartype != nil && perms != aclpUnknown:
 		alternativeActions := perms & aclpAllWrite
 		alternativeFiles := vartype.allowedFiles(needed)
 		switch {
