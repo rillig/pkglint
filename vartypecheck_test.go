@@ -57,7 +57,7 @@ func (s *Suite) TestVartypeCheck_CFlag(c *check.C) {
 func (s *Suite) TestVartypeCheck_Comment(c *check.C) {
 	runVartypeChecks("COMMENT", "=", (*VartypeCheck).Comment,
 		"Versatile Programming Language",
-		"SHORT_DESCRIPTION_OF_THE_PACKAGE",
+		"TODO: Short description of the package", 
 		"A great package.",
 		"some packages need a very very long comment to explain their basic usefulness")
 
@@ -78,7 +78,8 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 		"perl5-[5.10-5.22]*",
 		"py-docs",
 		"perl5-5.22.*{,nb*}",
-		"libkipi>=0.1.5<4.0")
+		"libkipi>=0.1.5<4.0",
+		"gtk2+>=2.16")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Unknown dependency pattern \"Perl\".\n"+
@@ -106,7 +107,8 @@ func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 		"broken=0:../../x11/alacarte",
 		"broken=:../../x11/alacarte",
 		"broken-:../../x11/alacarte",
-		"broken>:../../x11/alacarte")
+		"broken>:../../x11/alacarte",
+		"gtk2+>=2.16:../../x11/alacarte")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Unknown dependency pattern with path \"Perl\".\n"+
