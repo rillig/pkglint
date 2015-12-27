@@ -167,7 +167,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	switch {
 	case perms.contains(needed):
 		break
-	case perms == aclpUnknown && !G.opts.DebugUnchecked:
+	case perms == aclpUnknown && false: // XXX: restore !G.opts.DebugUnchecked:
 		break
 	case vartype != nil:
 		alternativeActions := perms & aclpAllWrite
@@ -181,7 +181,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 				varname, needed.HumanString(), alternativeFiles)
 		case alternativeActions != 0:
 			mkline.line.warnf("The variable %s may not be %s (only %s) in this file.",
-				varname, needed.HumanString(), alternativeActions)
+				varname, needed.HumanString(), alternativeActions.HumanString())
 		default:
 			mkline.line.warnf("The variable %s may not be %s by any package.",
 				varname, needed.HumanString())
