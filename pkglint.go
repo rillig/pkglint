@@ -69,30 +69,6 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	return mainLines
 }
 
-func extractUsedVariables(line *Line, text string) []string {
-	re := regcomp(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
-	rest := text
-	var result []string
-	for {
-		m := re.FindStringSubmatchIndex(rest)
-		if m == nil {
-			break
-		}
-		varname := rest[negToZero(m[2]):negToZero(m[3])]
-		rest = rest[:m[0]] + rest[m[1]:]
-		if varname != "" {
-			result = append(result, varname)
-		}
-	}
-
-	if rest != "" {
-		if G.opts.DebugMisc {
-			line.debug1("extractUsedVariables: rest=%q", rest)
-		}
-	}
-	return result
-}
-
 func resolveVariableRefs(text string) string {
 	if G.opts.DebugTrace {
 		defer tracecall1("resolveVariableRefs", text)()

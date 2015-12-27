@@ -554,7 +554,7 @@ func (mkline *MkLine) checkVarassign() {
 		time = vucTimeParse
 	}
 
-	usedVars := extractUsedVariables(mkline.line, value)
+	usedVars := mkline.extractUsedVariables(value)
 	vuc := &VarUseContext{mkline.getVariableType(varname), time, vucQuotUnknown, vucExtentUnknown}
 	for _, usedVar := range usedVars {
 		mkline.checkVaruse(usedVar, "", vuc)
@@ -1161,6 +1161,29 @@ func (mkline *MkLine) getVariablePermissions(varname string) AclPermissions {
 		mkline.debug1("No type definition found for %q.", varname)
 	}
 	return aclpAll
+}
+
+// TODO: merge with determineUsedVariables
+func (mkline *MkLine) extractUsedVariables(text string) []string {
+	re := regcomp(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
+	rest := text
+	var result []string
+	for {
+		m := re.FindStringSubmatchIndex(rest)
+		if m == nil {
+			break
+		}
+		varname := rest[negToZero(m[2]):negToZero(m[3])]
+		rest = rest[:m[0]] + rest[m[1]:]
+		if varname != "" {
+			result = append(result, varname)
+		}
+	}
+
+	if rest != "" && G.opts.DebugMisc {
+		mkline.debug1("extractUsedVariables: rest=%q", rest)
+	}
+	return result
 }
 
 func (mkline *MkLine) determineUsedVariables() (varnames []string) {
