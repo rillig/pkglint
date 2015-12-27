@@ -861,10 +861,48 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 }
 
 func matchMkCond(text string) (m bool, indent, directive, args string) {
-	if hasPrefix(text, ".") {
-		m, indent, directive, args = match3(text, `^\.(\s*)(if|ifdef|ifndef|else|elif|endif|for|endfor|undef)(?:\s([^#]*))?`)
-		args = strings.TrimSpace(args)
+	i, n := 0, len(text)
+	if i < n && text[i] == '.' {
+		i++
+	} else {
+		return
 	}
+
+	indentStart := i
+	for i < n && (text[i] == ' ' || text[i] == '\t') {
+		i++
+	}
+	indentEnd := i
+
+	directiveStart := i
+	for i < n && 'a' <= text[i] && text[i] <= 'z' {
+		i++
+	}
+	directiveEnd := i
+	directive = text[directiveStart:directiveEnd]
+	switch directive {
+	case "if", "ifdef", "ifndef", "else", "elif", "endif", "for", "endfor", "undef":
+		break
+	default:
+		return
+	}
+
+	for i < n && (text[i] == ' ' || text[i] == '\t') {
+		i++
+	}
+
+	argsStart := i
+	for i < n && text[i] != '#' {
+		i++
+	}
+	for i > argsStart && (text[i-1] == ' ' || text[i-1] == '\t') {
+		i--
+	}
+	argsEnd := i
+
+	m = true
+	indent = text[indentStart:indentEnd]
+	args = text[argsStart:argsEnd]
 	return
 }
 
