@@ -32,6 +32,16 @@ func LoadExistingLines(fname string, foldBackslashLines bool) []*Line {
 }
 
 func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
+	{ // Handle the common case efficiently
+		index := *pindex
+		rawLine := rawLines[*pindex]
+		textnl := rawLine.textnl
+		if hasSuffix(textnl, "\n") && !hasSuffix(textnl, "\\\n") {
+			*pindex = index + 1
+			return NewLine(fname, rawLine.lineno, textnl[:len(textnl)-1], rawLines[index:index+1])
+		}
+	}
+
 	text := ""
 	index := *pindex
 	firstlineno := rawLines[index].lineno
@@ -71,7 +81,7 @@ func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, c
 
 	if m > i && textnl[m-1] == '\\' {
 		m--
-		cont = textnl[m:m+1]
+		cont = textnl[m : m+1]
 	}
 
 	trailingEnd := m
