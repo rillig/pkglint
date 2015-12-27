@@ -620,6 +620,7 @@ func (gd *GlobalData) InitVartypes() {
 	usr("ROOT_GROUP", lkNone, CheckvarUserGroupName)
 	usr("RUBY_VERSION_REQD", lkNone, CheckvarVersion)
 	sys("RUN", lkNone, CheckvarShellCommand)
+	sys("RUN_LDCONFIG", lkNone, CheckvarYesNo)
 	acl("SCRIPTS_ENV", lkShell, CheckvarShellWord, "Makefile:append", "Makefile.common:append")
 	usr("SETUID_ROOT_PERMS", lkShell, CheckvarShellWord)
 	sys("SHAREGRP", lkNone, CheckvarUserGroupName)
