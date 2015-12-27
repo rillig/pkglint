@@ -57,7 +57,7 @@ func (s *Suite) TestVartypeCheck_CFlag(c *check.C) {
 func (s *Suite) TestVartypeCheck_Comment(c *check.C) {
 	runVartypeChecks("COMMENT", "=", (*VartypeCheck).Comment,
 		"Versatile Programming Language",
-		"TODO: Short description of the package", 
+		"TODO: Short description of the package",
 		"A great package.",
 		"some packages need a very very long comment to explain their basic usefulness")
 
