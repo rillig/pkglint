@@ -396,7 +396,10 @@ type ShelltextContext struct {
 }
 
 func (shline *MkShellLine) checkShellCommandLine(shelltext string) {
-	defer tracecall1("MkShellLine.checkShelltext", shelltext)()
+	if G.opts.DebugTrace {
+		defer tracecall1("MkShellLine.checkShelltext", shelltext)()
+	}
+
 	line := shline.line
 
 	if strings.Contains(shelltext, "${SED}") && strings.Contains(shelltext, "${MV}") {
@@ -538,7 +541,9 @@ func (shline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 }
 
 func (ctx *ShelltextContext) checkCommandStart() {
-	defer tracecall2("ShelltextContext.checkCommandStart", ctx.state.String(), ctx.shellword)()
+	if G.opts.DebugTrace {
+		defer tracecall2("ShelltextContext.checkCommandStart", ctx.state.String(), ctx.shellword)()
+	}
 
 	state, shellword := ctx.state, ctx.shellword
 	if state != scstStart && state != scstCond {
@@ -567,7 +572,9 @@ func (ctx *ShelltextContext) checkCommandStart() {
 }
 
 func (ctx *ShelltextContext) handleTool() bool {
-	defer tracecall1("ShelltextContext.handleTool", ctx.shellword)()
+	if G.opts.DebugTrace {
+		defer tracecall1("ShelltextContext.handleTool", ctx.shellword)()
+	}
 
 	shellword := ctx.shellword
 	if !G.globalData.tools[shellword] {
@@ -602,7 +609,9 @@ func (ctx *ShelltextContext) handleForbiddenCommand() bool {
 }
 
 func (ctx *ShelltextContext) handleCommandVariable() bool {
-	defer tracecall1("ShelltextContext.handleCommandVariable", ctx.shellword)()
+	if G.opts.DebugTrace {
+		defer tracecall1("ShelltextContext.handleCommandVariable", ctx.shellword)()
+	}
 
 	shellword := ctx.shellword
 	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
@@ -630,9 +639,11 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 }
 
 func (ctx *ShelltextContext) handleComment() bool {
-	defer tracecall1("ShelltextContext.handleComment", ctx.shellword)()
-	line := ctx.shline.line
+	if G.opts.DebugTrace {
+		defer tracecall1("ShelltextContext.handleComment", ctx.shellword)()
+	}
 
+	line := ctx.shline.line
 	shellword := ctx.shellword
 	if !hasPrefix(shellword, "#") {
 		return false

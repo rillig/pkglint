@@ -11,7 +11,9 @@ const (
 )
 
 func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {
-	defer tracecall1("readMakefile", fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("readMakefile", fname)()
+	}
 
 	fileLines := LoadNonemptyLines(fname, true)
 	if fileLines == nil {

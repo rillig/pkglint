@@ -27,7 +27,9 @@ func findPkgsrcTopdir(fname string) string {
 }
 
 func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
-	defer tracecall1("loadPackageMakefile", fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("loadPackageMakefile", fname)()
+	}
 
 	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
 	if !readMakefile(fname, mainLines, allLines, "") {
@@ -92,7 +94,9 @@ func extractUsedVariables(line *Line, text string) []string {
 }
 
 func resolveVariableRefs(text string) string {
-	defer tracecall1("resolveVariableRefs", text)()
+	if G.opts.DebugTrace {
+		defer tracecall1("resolveVariableRefs", text)()
+	}
 
 	visited := make(map[string]bool) // To prevent endless loops
 
@@ -172,7 +176,9 @@ func checklineTrailingWhitespace(line *Line) {
 }
 
 func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
-	defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
+	if G.opts.DebugTrace {
+		defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
+	}
 
 	if !matches(line.text, `^`+prefixRe+`\$NetBSD(?::[^\$]+)?\$$`) {
 		if !line.autofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
@@ -188,7 +194,9 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 }
 
 func checkfileExtra(fname string) {
-	defer tracecall1("checkfileExtra", fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checkfileExtra", fname)()
+	}
 
 	if lines := LoadNonemptyLines(fname, false); lines != nil {
 		checklinesTrailingEmptyLines(lines)
@@ -196,7 +204,9 @@ func checkfileExtra(fname string) {
 }
 
 func checklinesDescr(lines []*Line) {
-	defer tracecall1("checklinesDescr", lines[0].fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checklinesDescr", lines[0].fname)()
+	}
 
 	for _, line := range lines {
 		checklineLength(line, 80)
@@ -222,7 +232,9 @@ func checklinesDescr(lines []*Line) {
 }
 
 func checklinesMessage(lines []*Line) {
-	defer tracecall1("checklinesMessage", lines[0].fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checklinesMessage", lines[0].fname)()
+	}
 
 	explainMessage := func() {
 		explain4(
@@ -258,7 +270,9 @@ func checklinesMessage(lines []*Line) {
 }
 
 func checkfileMk(fname string) {
-	defer tracecall1("checkfileMk", fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checkfileMk", fname)()
+	}
 
 	lines := LoadNonemptyLines(fname, true)
 	if lines == nil {
@@ -270,7 +284,9 @@ func checkfileMk(fname string) {
 }
 
 func checkfile(fname string) {
-	defer tracecall1("checkfile", fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checkfile", fname)()
+	}
 
 	basename := path.Base(fname)
 	if hasPrefix(basename, "work") || hasSuffix(basename, "~") || hasSuffix(basename, ".orig") || hasSuffix(basename, ".rej") {

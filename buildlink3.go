@@ -6,7 +6,9 @@ import (
 )
 
 func checklinesBuildlink3Mk(mklines *MkLines) {
-	defer tracecall1("checklinesBuildlink3Mk", mklines.lines[0].fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checklinesBuildlink3Mk", mklines.lines[0].fname)()
+	}
 
 	mklines.check()
 

@@ -9,7 +9,9 @@ import (
 )
 
 func checklinesDistinfo(lines []*Line) {
-	defer tracecall1("checklinesDistinfo", lines[0].fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checklinesDistinfo", lines[0].fname)()
+	}
 
 	fname := lines[0].fname
 	var patchesDir = "patches"

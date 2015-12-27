@@ -139,7 +139,9 @@ func (mkline *MkLine) Targets() string     { return mkline.xs1 }
 func (mkline *MkLine) Sources() string     { return mkline.xs2 }
 
 func (mkline *MkLine) checkVardef(varname, op string) {
-	defer tracecall2("MkLine.checkVardef", varname, op)()
+	if G.opts.DebugTrace {
+		defer tracecall2("MkLine.checkVardef", varname, op)()
+	}
 
 	defineVar(mkline, varname)
 	mkline.checkVardefPermissions(varname, op)
@@ -391,7 +393,9 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 }
 
 func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
-	defer tracecall2("MkLine.checkDecreasingOrder", varname, value)()
+	if G.opts.DebugTrace {
+		defer tracecall2("MkLine.checkDecreasingOrder", varname, value)()
+	}
 
 	strversions := splitOnSpace(value)
 	intversions := make([]int, len(strversions))
@@ -415,7 +419,9 @@ func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
 }
 
 func (mkline *MkLine) checkVarassign() {
-	defer tracecall0("MkLine.checkVarassign")()
+	if G.opts.DebugTrace {
+		defer tracecall0("MkLine.checkVarassign")()
+	}
 
 	varname := mkline.Varname()
 	op := mkline.Op()
@@ -726,7 +732,9 @@ func (mkline *MkLine) checkVaralign() {
 }
 
 func (mkline *MkLine) checkText(text string) {
-	defer tracecall1("MkLine.checkText", text)()
+	if G.opts.DebugTrace {
+		defer tracecall1("MkLine.checkText", text)()
+	}
 
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
 		mkline.warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
@@ -770,7 +778,9 @@ func (mkline *MkLine) checkText(text string) {
 }
 
 func (mkline *MkLine) checkIf() {
-	defer tracecall0("MkLine.checkIf")()
+	if G.opts.DebugTrace {
+		defer tracecall0("MkLine.checkIf")()
+	}
 
 	tree := mkline.parseMkCond(mkline.Args())
 
@@ -907,7 +917,9 @@ func matchMkCond(text string) (m bool, indent, directive, args string) {
 }
 
 func (mkline *MkLine) parseMkCond(cond string) *Tree {
-	defer tracecall1("parseMkCond", cond)()
+	if G.opts.DebugTrace {
+		defer tracecall1("parseMkCond", cond)()
+	}
 
 	const (
 		repartVarname = `[A-Z_][A-Z0-9_]*(?:\.[\w_+\-]+)?`

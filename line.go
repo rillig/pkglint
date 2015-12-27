@@ -205,7 +205,9 @@ func (ln *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bo
 }
 
 func (ln *Line) checkAbsolutePathname(text string) {
-	defer tracecall1("Line.checkAbsolutePathname", text)()
+	if G.opts.DebugTrace {
+		defer tracecall1("Line.checkAbsolutePathname", text)()
+	}
 
 	// In the GNU coding standards, DESTDIR is defined as a (usually
 	// empty) prefix that can be used to install files to a different

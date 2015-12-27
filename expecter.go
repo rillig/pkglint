@@ -38,7 +38,9 @@ func (exp *Expecter) stepBack() {
 }
 
 func (exp *Expecter) advanceIfMatches(re string) bool {
-	defer tracecall2("Expecter.advanceIfMatches", exp.currentLine().text, re)()
+	if G.opts.DebugTrace {
+		defer tracecall2("Expecter.advanceIfMatches", exp.currentLine().text, re)()
+	}
 
 	if !exp.eof() {
 		if m := match(exp.lines[exp.index].text, re); m != nil {
@@ -51,13 +53,17 @@ func (exp *Expecter) advanceIfMatches(re string) bool {
 }
 
 func (exp *Expecter) advanceIfPrefix(prefix string) bool {
-	defer tracecall2("Expecter.advanceIfPrefix", exp.currentLine().text, prefix)()
+	if G.opts.DebugTrace {
+		defer tracecall2("Expecter.advanceIfPrefix", exp.currentLine().text, prefix)()
+	}
 
 	return !exp.eof() && hasPrefix(exp.lines[exp.index].text, prefix) && exp.advance()
 }
 
 func (exp *Expecter) advanceIfEquals(text string) bool {
-	defer tracecall2("Expecter.advanceIfEquals", exp.currentLine().text, text)()
+	if G.opts.DebugTrace {
+		defer tracecall2("Expecter.advanceIfEquals", exp.currentLine().text, text)()
+	}
 
 	return !exp.eof() && exp.lines[exp.index].text == text && exp.advance()
 }

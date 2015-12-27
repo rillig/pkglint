@@ -10,10 +10,11 @@ type Toplevel struct {
 }
 
 func checkdirToplevel() {
-	defer tracecall1("checkdirToplevel", G.currentDir)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checkdirToplevel", G.currentDir)()
+	}
 
 	ctx := new(Toplevel)
-
 	fname := G.currentDir + "/Makefile"
 
 	lines := LoadNonemptyLines(fname, true)

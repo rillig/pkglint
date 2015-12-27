@@ -343,7 +343,7 @@ func trace(action, funcname string, args ...interface{}) {
 
 func tracecall(funcname string, args ...interface{}) func() {
 	if !G.opts.DebugTrace {
-		return func() {}
+		panic("Internal pkglint error: calls to tracecall must only occur in tracing mode")
 	}
 
 	trace("+ ", funcname, args...)
@@ -427,8 +427,6 @@ func abspath(fname string) string {
 // Also, the initial directory is always kept.
 // This is to provide the package path as context in recursive invocations of pkglint.
 func cleanpath(fname string) string {
-	defer tracecall1("cleanpath", fname)()
-
 	tmp := fname
 	for len(tmp) > 2 && hasPrefix(tmp, "./") {
 		tmp = tmp[2:]

@@ -61,7 +61,9 @@ func (pkg *Package) varValue(varname string) (string, bool) {
 }
 
 func (pkg *Package) checkPossibleDowngrade() {
-	defer tracecall0("Package.checkPossibleDowngrade")()
+	if G.opts.DebugTrace {
+		defer tracecall0("Package.checkPossibleDowngrade")()
+	}
 
 	m, _, pkgversion := match2(pkg.effectivePkgname, rePkgname)
 	if !m {
@@ -86,7 +88,9 @@ func (pkg *Package) checkPossibleDowngrade() {
 }
 
 func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
-	defer tracecall0("checklinesbuildlink3Inclusion")()
+	if G.opts.DebugTrace {
+		defer tracecall0("checklinesbuildlink3Inclusion")()
+	}
 
 	// Collect all the included buildlink3.mk files from the file.
 	includedFiles := make(map[string]*MkLine)
@@ -112,7 +116,10 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 }
 
 func checkdirPackage(pkgpath string) {
-	defer tracecall1("checkdirPackage", pkgpath)()
+	if G.opts.DebugTrace {
+		defer tracecall1("checkdirPackage", pkgpath)()
+	}
+
 	G.pkg = NewPackage(pkgpath)
 	defer func() { G.pkg = nil }()
 	pkg := G.pkg
@@ -176,7 +183,9 @@ func checkdirPackage(pkgpath string) {
 }
 
 func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
-	defer tracecall1("Package.checkfilePackageMakefile", fname)()
+	if G.opts.DebugTrace {
+		defer tracecall1("Package.checkfilePackageMakefile", fname)()
+	}
 
 	vardef := pkg.vardef
 	if vardef["PLIST_SRC"] == nil &&
@@ -345,7 +354,9 @@ func (pkg *Package) checkUpdate() {
 }
 
 func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
-	defer tracecall0("ChecklinesPackageMakefileVarorder")()
+	if G.opts.DebugTrace {
+		defer tracecall0("ChecklinesPackageMakefileVarorder")()
+	}
 
 	if !G.opts.WarnOrder || pkg.seenMakefileCommon {
 		return
