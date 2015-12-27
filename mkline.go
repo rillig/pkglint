@@ -165,7 +165,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 
 	vartype := mkline.getVariableType(varname)
 	switch {
-	case perms.contains(needed):
+	case perms.contains(needed), perms == aclpUnknown:
 		break
 	case perms == aclpNone && vartype != nil && vartype.union() == aclpNone:
 		mkline.line.warnf("The variable %s may not be modified by any package.", varname)
