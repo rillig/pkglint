@@ -167,10 +167,12 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 	switch {
 	case perms.contains(needed), perms == aclpUnknown:
 		break
-	case perms == aclpNone && vartype != nil && vartype.union() == aclpNone:
-		mkline.line.warnf("The variable %s may not be modified by any package.", varname)
-	case perms == aclpNone:
-		mkline.line.warnf("The variable %s may not be modified in this file.", varname)
+	case perms == aclpNone && vartype != nil:
+		if vartype.union().contains(needed) {
+			mkline.line.warnf("The variable %s may not be modified in this file (but in %s).", varname, vartype.allowedFiles(needed))
+		} else {
+			mkline.line.warnf("The variable %s may not be modified by any package.", varname)
+		}
 	default:
 		mkline.line.warnf("Permission %q requested for %s, but only { %s } are allowed.", needed, varname, perms)
 		explain(

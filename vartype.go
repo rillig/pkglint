@@ -89,6 +89,16 @@ func (vt *Vartype) union() AclPermissions {
 	return permissions
 }
 
+func (vt *Vartype) allowedFiles(perms AclPermissions) string {
+	files := make([]string, 0, len(vt.aclEntries))
+	for _, aclEntry := range vt.aclEntries {
+		if aclEntry.permissions.contains(perms) {
+			files = append(files, aclEntry.glob)
+		}
+	}
+	return strings.Join(files, ", ")
+}
+
 // Returns whether the type is considered a shell list.
 // This distinction between “real lists” and “considered a list” makes
 // the implementation of checklineMkVartype easier.
