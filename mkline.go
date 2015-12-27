@@ -165,7 +165,9 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 
 	vartype := mkline.getVariableType(varname)
 	switch {
-	case perms.contains(needed), perms == aclpUnknown:
+	case perms.contains(needed):
+		break
+	case perms == aclpUnknown && !G.opts.DebugUnchecked:
 		break
 	case perms == aclpNone && vartype != nil:
 		if vartype.union().contains(needed) {
