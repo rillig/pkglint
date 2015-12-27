@@ -119,56 +119,6 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	return value
 }
 
-func checklineLength(line *Line, maxlength int) {
-	if len(line.text) > maxlength {
-		line.warnf("Line too long (should be no more than %d characters).", maxlength)
-		explain3(
-			"Back in the old time, terminals with 80x25 characters were common.",
-			"And this is still the default size of many terminal emulators.",
-			"Moderately short lines also make reading easier.")
-	}
-}
-
-func checklineValidCharacters(line *Line, reChar string) {
-	rest := regcomp(reChar).ReplaceAllString(line.text, "")
-	if rest != "" {
-		uni := ""
-		for _, c := range rest {
-			uni += fmt.Sprintf(" %U", c)
-		}
-		line.warn1("Line contains invalid characters (%s).", uni[1:])
-	}
-}
-
-func checklineTrailingWhitespace(line *Line) {
-	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
-		if !line.autofixReplaceRegexp(`\s+\n$`, "\n") {
-			line.note0("Trailing white-space.")
-			explain2(
-				"When a line ends with some white-space, that space is in most cases",
-				"irrelevant and can be removed.")
-		}
-	}
-}
-
-func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
-	if G.opts.DebugTrace {
-		defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
-	}
-
-	if !matches(line.text, `^`+prefixRe+`\$NetBSD(?::[^\$]+)?\$$`) {
-		if !line.autofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
-			line.error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
-			explain3(
-				"Several files in pkgsrc must contain the CVS Id, so that their current",
-				"version can be traced back later from a binary package. This is to",
-				"ensure reproducible builds, for example for finding bugs.")
-		}
-		return false
-	}
-	return true
-}
-
 func checkfileExtra(fname string) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checkfileExtra", fname)()
@@ -185,9 +135,9 @@ func checklinesDescr(lines []*Line) {
 	}
 
 	for _, line := range lines {
-		checklineLength(line, 80)
-		checklineTrailingWhitespace(line)
-		checklineValidCharacters(line, `[\t -~]`)
+		line.checkLength(80)
+		line.checkTrailingWhitespace()
+		line.checkValidCharacters(`[\t -~]`)
 		if strings.Contains(line.text, "${") {
 			line.note0("Variables are not expanded in the DESCR file.")
 		}
@@ -234,9 +184,9 @@ func checklinesMessage(lines []*Line) {
 	}
 	checklineRcsid(lines[1], ``, "")
 	for _, line := range lines {
-		checklineLength(line, 80)
-		checklineTrailingWhitespace(line)
-		checklineValidCharacters(line, `[\t -~]`)
+		line.checkLength(80)
+		line.checkTrailingWhitespace()
+		line.checkValidCharacters(`[\t -~]`)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
 		lastLine.warn0("Expected a line of exactly 75 \"=\" characters.")

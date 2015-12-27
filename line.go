@@ -222,3 +222,54 @@ func (ln *Line) checkAbsolutePathname(text string) {
 		}
 	}
 }
+
+func (line *Line) checkLength(maxlength int) {
+	if len(line.text) > maxlength {
+		line.warnf("Line too long (should be no more than %d characters).", maxlength)
+		explain3(
+			"Back in the old time, terminals with 80x25 characters were common.",
+			"And this is still the default size of many terminal emulators.",
+			"Moderately short lines also make reading easier.")
+	}
+}
+
+func (line *Line) checkValidCharacters(reChar string) {
+	rest := regcomp(reChar).ReplaceAllString(line.text, "")
+	if rest != "" {
+		uni := ""
+		for _, c := range rest {
+			uni += fmt.Sprintf(" %U", c)
+		}
+		line.warn1("Line contains invalid characters (%s).", uni[1:])
+	}
+}
+
+func (line *Line) checkTrailingWhitespace() {
+	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
+		if !line.autofixReplaceRegexp(`\s+\n$`, "\n") {
+			line.note0("Trailing white-space.")
+			explain2(
+				"When a line ends with some white-space, that space is in most cases",
+				"irrelevant and can be removed.")
+		}
+	}
+}
+
+func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
+	if G.opts.DebugTrace {
+		defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
+	}
+
+	if matches(line.text, `^`+prefixRe+`\$NetBSD(?::[^\$]+)?\$$`) {
+		return true
+	}
+
+	if !line.autofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
+		line.error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+		explain3(
+			"Several files in pkgsrc must contain the CVS Id, so that their current",
+			"version can be traced back later from a binary package. This is to",
+			"ensure reproducible builds, for example for finding bugs.")
+	}
+	return false
+}

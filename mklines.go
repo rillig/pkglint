@@ -111,7 +111,7 @@ func (mklines *MkLines) check() {
 	for _, mkline := range mklines.mklines {
 		text := mkline.line.text
 
-		checklineTrailingWhitespace(mkline.line)
+		mkline.line.checkTrailingWhitespace()
 
 		switch {
 		case mkline.IsEmpty():
