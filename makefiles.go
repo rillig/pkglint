@@ -25,7 +25,6 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 
 	for _, mkline := range fileMklines.mklines {
 		line := mkline.line
-		text := line.text
 
 		if isMainMakefile {
 			mainLines.mklines = append(mainLines.mklines, mkline)
@@ -35,17 +34,16 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 		allLines.lines = append(allLines.lines, line)
 
 		var includeFile, incDir, incBase string
-		if hasPrefix(text, ".") && hasSuffix(text, "\"") {
-			if m, inc := match1(text, `^\.\s*include\s+\"(.*)\"$`); m {
-				includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
-				if containsVarRef(includeFile) {
-					if !strings.Contains(fname, "/mk/") {
-						line.note1("Skipping include file %q. This may result in false warnings.", includeFile)
-					}
-					includeFile = ""
+		if mkline.IsInclude() {
+			inc := mkline.Includefile()
+			includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
+			if containsVarRef(includeFile) {
+				if !strings.Contains(fname, "/mk/") {
+					line.note1("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
-				incDir, incBase = path.Split(includeFile)
+				includeFile = ""
 			}
+			incDir, incBase = path.Split(includeFile)
 		}
 
 		if includeFile != "" {
