@@ -24,7 +24,7 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 	checklinesPlist(lines)
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: PLIST:1: Expected \"@comment $NetBSD$\".\n"+
+		"ERROR: PLIST:1: Expected \"@comment $"+"NetBSD$\".\n"+
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.\n"+
 		"WARN: PLIST:2: Manual page missing for bin/program.\n"+
 		"ERROR: PLIST:3: Configuration files must not be registered in the PLIST. Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.\n"+
@@ -117,7 +117,7 @@ func (s *Suite) TestPlistChecker_sort(c *check.C) {
 		"NOTE: ~/PLIST:1: Autofix: Sorting the whole file.\n"+
 		"NOTE: ~/PLIST: Has been auto-fixed. Please re-run pkglint.\n")
 	c.Check(s.LoadTmpFile(c, "PLIST"), equals, ""+
-		"@comment $NetBSD$\n"+
+		"@comment $"+"NetBSD$\n"+
 		"A\n"+
 		"C\n"+
 		"CCC\n"+

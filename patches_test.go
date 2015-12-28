@@ -50,7 +50,7 @@ func (s *Suite) TestChecklinesPatch_WithoutEmptyLine(c *check.C) {
 	fixed, err := ioutil.ReadFile(fname)
 	c.Assert(err, check.IsNil)
 	c.Check(string(fixed), equals, ""+
-		"$NetBSD$\n"+
+		"$"+"NetBSD$\n"+
 		"\n"+
 		"Text\n"+
 		"\n"+

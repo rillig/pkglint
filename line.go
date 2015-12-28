@@ -260,7 +260,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 		defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
 	}
 
-	if matches(line.text, `^`+prefixRe+`\$NetBSD(?::[^\$]+)?\$$`) {
+	if matches(line.text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
 		return true
 	}
 
