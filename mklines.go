@@ -145,6 +145,8 @@ func (mklines *MkLines) check() {
 	if len(mklines.indentation) != 1 {
 		lastMkline.line.errorf("Directive indentation is not 0, but %d.", mklines.indentDepth())
 	}
+
+	saveAutofixChanges(mklines.lines)
 }
 
 func (mklines *MkLines) determineDefinedVariables() {
@@ -220,8 +222,8 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 	}
 
 	// Check the indentation
-	if indent != strings.Repeat(" ", mklines.indentDepth()) {
-		if G.opts.WarnSpace {
+	if expected := strings.Repeat(" ", mklines.indentDepth()); indent != expected {
+		if G.opts.WarnSpace && !mkline.line.autofixReplace("."+indent, "."+expected) {
 			mkline.line.notef("This directive should be indented by %d spaces.", mklines.indentDepth())
 		}
 	}
