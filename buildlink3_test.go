@@ -8,7 +8,7 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 	G.globalData.InitVartypes()
 	mklines := s.NewMkLines("buildlink3.mk",
 		"# $"+"NetBSD$",
-		"# XXX automatically generated",
+		"# XXX This file was created automatically using createbuildlink-@PKGVERSION@",
 		"",
 		"BUILDLINK_TREE+=        Xbae",
 		"",
@@ -61,8 +61,8 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 	checklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" ...\n"+
-		"ERROR: Makefile:3: ... and \"X11\".\n")
+		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" in this file ...\n"+
+		"ERROR: Makefile:3: ... and \"X11\" from the package Makefile.\n")
 }
 
 func (s *Suite) TestChecklinesBuildlink3_NoBuildlinkTree(c *check.C) {

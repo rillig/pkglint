@@ -14,11 +14,11 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 	exp := NewExpecter(mklines.lines)
 
-	for {
-		if exp.advanceIfPrefix("# XXX") {
-			exp.previousLine().note0("Please read this comment and remove it if appropriate.")
-		} else if !exp.advanceIfPrefix("#") {
-			break
+	for exp.advanceIfPrefix("#") {
+		line := exp.previousLine()
+		// See pkgtools/createbuildlink/files/createbuildlink
+		if hasPrefix(line.text, "# XXX This file was created automatically") {
+			line.note0("Please read this comment and remove it if appropriate.")
 		}
 	}
 
@@ -30,43 +30,41 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 		}
 	}
 
-	pkgbaseLine, pkgbase := (*Line)(nil), ""
-	pkgidLine, pkgid := exp.currentLine(), ""
+	pkgbaseLine, pkgbase := exp.currentLine(), ""
 	abiLine, abiPkg, abiVersion := (*Line)(nil), "", ""
 	apiLine, apiPkg, apiVersion := (*Line)(nil), "", ""
 
 	// First paragraph: Introduction of the package identifier
-	if exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`) {
-		pkgid = exp.m[1]
-	} else {
+	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`) {
 		exp.currentLine().warn0("Expected a BUILDLINK_TREE line.")
 		return
 	}
+	pkgbase = exp.m[1]
+
 	exp.expectEmptyLine()
 
 	// Second paragraph: multiple inclusion protection and introduction
 	// of the uppercase package identifier.
-	if exp.advanceIfMatches(`^\.if !defined\((\S+)_BUILDLINK3_MK\)$`) {
-		pkgbase = exp.m[1]
-		pkgbaseLine = exp.previousLine()
-	} else {
+	if !exp.advanceIfMatches(`^\.if !defined\((\S+)_BUILDLINK3_MK\)$`) {
 		return
 	}
-	if !exp.expectText(pkgbase + "_BUILDLINK3_MK:=") {
-		exp.currentLine().error0("Expected the multiple-inclusion guard.")
+	pkgupperLine, pkgupper := exp.previousLine(), exp.m[1]
+
+	if !exp.expectText(pkgupper + "_BUILDLINK3_MK:=") {
 		return
 	}
 	exp.expectEmptyLine()
 
-	ucPkgid := strings.ToUpper(strings.Replace(pkgid, "-", "_", -1))
-	if ucPkgid != pkgbase {
-		pkgbaseLine.error1("Package name mismatch between %q ...", pkgbase)
-		pkgidLine.error1("... and %q.", pkgid)
+	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
+	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
+	if ucPkgbase != pkgupper {
+		pkgupperLine.error1("Package name mismatch between multiple-inclusion guard %q ...", pkgupper)
+		pkgbaseLine.error1("... and package name %q.", pkgbase)
 	}
 	if G.pkg != nil {
-		if mkbase := G.pkg.effectivePkgbase; mkbase != "" && mkbase != pkgid {
-			pkgidLine.error1("Package name mismatch between %q ...", pkgid)
-			G.pkg.effectivePkgnameLine.line.error1("... and %q.", mkbase)
+		if mkbase := G.pkg.effectivePkgbase; mkbase != "" && mkbase != pkgbase {
+			pkgbaseLine.error1("Package name mismatch between %q in this file ...", pkgbase)
+			G.pkg.effectivePkgnameLine.line.error1("... and %q from the package Makefile.", mkbase)
 		}
 	}
 
@@ -86,7 +84,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 			varname, value := mkline.Varname(), mkline.Value()
 			doCheck := false
 
-			if varname == "BUILDLINK_ABI_DEPENDS."+pkgid {
+			if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
 				abiLine = line
 				if m, p, v := match2(value, reDependencyCmp); m {
 					abiPkg, abiVersion = p, v
@@ -99,7 +97,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				}
 				doCheck = true
 			}
-			if varname == "BUILDLINK_API_DEPENDS."+pkgid {
+			if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
 				apiLine = line
 				if m, p, v := match2(value, reDependencyCmp); m {
 					apiPkg, apiVersion = p, v
@@ -113,17 +111,17 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				doCheck = true
 			}
 			if doCheck && abiPkg != "" && apiPkg != "" && abiPkg != apiPkg {
-				abiLine.warn1("Package name mismatch between %q ...", abiPkg)
-				apiLine.warn1("... and %q.", apiPkg)
+				abiLine.warn1("Package name mismatch between ABI %q ...", abiPkg)
+				apiLine.warn1("... and API %q.", apiPkg)
 			}
 			if doCheck && abiVersion != "" && apiVersion != "" && pkgverCmp(abiVersion, apiVersion) < 0 {
 				abiLine.warn1("ABI version (%s) should be at least ...", abiVersion)
 				apiLine.warn1("... API version (%s).", apiVersion)
 			}
 
-			if varparam := mkline.Varparam(); varparam != "" && varparam != pkgid {
+			if varparam := mkline.Varparam(); varparam != "" && varparam != pkgbase {
 				if hasPrefix(varname, "BUILDLINK_") && mkline.Varcanon() != "BUILDLINK_API_DEPENDS.*" {
-					line.warn2("Only buildlink variables for %q, not %q may be set in this file.", pkgid, varparam)
+					line.warn2("Only buildlink variables for %q, not %q may be set in this file.", pkgbase, varparam)
 				}
 			}
 
@@ -160,7 +158,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	exp.expectEmptyLine()
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
-	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgid) + `$`) {
+	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgbase) + `$`) {
 		exp.currentLine().warn0("Expected BUILDLINK_TREE line.")
 	}
 
