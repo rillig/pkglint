@@ -186,8 +186,9 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 		if ck.lastFname != "" {
 			if ck.lastFname > text && !G.opts.Autofix {
 				pline.line.warn2("%q should be sorted before %q.", text, ck.lastFname)
-				explain1(
-					"The files in the PLIST should be sorted alphabetically.")
+				explain2(
+					"The files in the PLIST should be sorted alphabetically.",
+					"To fix this, run \"pkglint -F PLIST\".")
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
 				if !pline.line.autofixDelete() {
