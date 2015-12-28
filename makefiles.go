@@ -72,7 +72,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				G.pkg.seenMakefileCommon = true
 			}
 
-			if !strings.Contains(incDir, "/mk/") {
+			if !strings.Contains(incDir, "/mk/") || strings.HasSuffix(includeFile, "/mk/haskell.mk") {
 				dirname, _ := path.Split(fname)
 				dirname = cleanpath(dirname)
 
