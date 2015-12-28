@@ -48,6 +48,7 @@ func (s *Suite) TestLineModify(c *check.C) {
 	c.Check(line.rawLines(), check.DeepEquals, s.NewRawLines(
 		0, "", "before\n",
 		0, "", "between before and middle\n",
+		1, "original\n", "",
 		0, "", "between middle and after\n",
 		0, "", "after\n"))
 }
@@ -61,7 +62,7 @@ func (s *Suite) TestLine_CheckAbsolutePathname(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: Makefile:1: Found absolute pathname: /bin\n")
 }
 
-func (s *Suite) TestShowAutofix(c *check.C) {
+func (s *Suite) TestShowAutofix_replace(c *check.C) {
 	s.UseCommandLine(c, "--show-autofix", "--source")
 	line := NewLineMulti("Makefile", 27, 29, "# old", s.NewRawLines(
 		27, "before\n",
@@ -80,4 +81,35 @@ func (s *Suite) TestShowAutofix(c *check.C) {
 		"> after\n"+
 		"WARN: Makefile:27--29: Using \"old\" is deprecated.\n"+
 		"AUTOFIX: Makefile:27--29: Replacing \"old\" with \"new\".\n")
+}
+
+func (s *Suite) TestShowAutofix_insert(c *check.C) {
+	s.UseCommandLine(c, "--show-autofix", "--source")
+	line := NewLine("Makefile", 30, "original", s.NewRawLines(30, "original\n"))
+
+	if !line.autofixInsertBefore("inserted") {
+		line.warn0("Dummy")
+	}
+
+	c.Check(s.Output(), equals, ""+
+		"\n"+
+		"+ inserted\n"+
+		"> original\n"+
+		"WARN: Makefile:30: Dummy\n"+
+		"AUTOFIX: Makefile:30: Inserting a line \"inserted\" before this line.\n")
+}
+
+func (s *Suite) TestShowAutofix_delete(c *check.C) {
+	s.UseCommandLine(c, "--show-autofix", "--source")
+	line := NewLine("Makefile", 30, "to be deleted", s.NewRawLines(30, "to be deleted\n"))
+
+	if !line.autofixDelete() {
+		line.warn0("Dummy")
+	}
+
+	c.Check(s.Output(), equals, ""+
+		"\n"+
+		"- to be deleted\n"+
+		"WARN: Makefile:30: Dummy\n"+
+		"AUTOFIX: Makefile:30: Deleting this line.\n")
 }

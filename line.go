@@ -84,8 +84,12 @@ func (ln *Line) printSource(out io.Writer) {
 		io.WriteString(out, "\n")
 		for _, rawLine := range ln.rawLines() {
 			if rawLine.textnl != rawLine.orignl {
-				io.WriteString(out, "- "+rawLine.orignl)
-				io.WriteString(out, "+ "+rawLine.textnl)
+				if rawLine.orignl != "" {
+					io.WriteString(out, "- "+rawLine.orignl)
+				}
+				if rawLine.textnl != "" {
+					io.WriteString(out, "+ "+rawLine.textnl)
+				}
 			} else {
 				io.WriteString(out, "> "+rawLine.orignl)
 			}
@@ -160,7 +164,9 @@ func (ln *Line) autofixInsertAfter(line string) bool {
 
 func (ln *Line) autofixDelete() bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		ln.raw = nil
+		for _, rawLine := range ln.raw {
+			rawLine.textnl = ""
+		}
 	}
 	return ln.noteAutofix("Deleting this line.")
 }
