@@ -447,7 +447,7 @@ func (pline *PlistLine) warnAboutPlistImakeMannewsuffix() {
 }
 
 type plistLineSorter struct {
-	first     *Line
+	first     *PlistLine
 	plines    []*PlistLine
 	lines     []*Line
 	after     map[*PlistLine][]*Line
@@ -456,7 +456,7 @@ type plistLineSorter struct {
 }
 
 func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
-	s := &plistLineSorter{first: plines[0].line, after: make(map[*PlistLine][]*Line)}
+	s := &plistLineSorter{first: plines[0], after: make(map[*PlistLine][]*Line)}
 	prev := plines[0]
 	for _, pline := range plines[1:] {
 		if hasPrefix(pline.text, "@") || strings.Contains(pline.text, "$") {
@@ -489,10 +489,12 @@ func (s *plistLineSorter) Sort() {
 		return
 	}
 
-	s.first.noteAutofix("Sorting the whole file.")
-	s.first.logAutofix()
-	s.first.changed = true // Otherwise the changes won’t be saved
-	lines := []*Line{s.first}
+	firstLine := s.first.line
+	firstLine.noteAutofix("Sorting the whole file.")
+	firstLine.logAutofix()
+	firstLine.changed = true // Otherwise the changes won’t be saved
+	lines := []*Line{firstLine}
+	lines = append(lines, s.after[s.first]...)
 	for _, pline := range s.plines {
 		lines = append(lines, pline.line)
 		lines = append(lines, s.after[pline]...)

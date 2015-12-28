@@ -77,6 +77,7 @@ func (s *Suite) TestChecklinesPlist_sorting(c *check.C) {
 	s.UseCommandLine(c, "-Wplist-sort")
 	lines := s.NewLines("PLIST",
 		"@comment $"+"NetBSD$",
+		"@comment Do not remove",
 		"sbin/i386/6c",
 		"sbin/program",
 		"bin/otherprogram",
@@ -85,8 +86,8 @@ func (s *Suite) TestChecklinesPlist_sorting(c *check.C) {
 	checklinesPlist(lines)
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: PLIST:4: \"bin/otherprogram\" should be sorted before \"sbin/program\".\n"+
-		"WARN: PLIST:5: \"bin/cat\" should be sorted before \"bin/otherprogram\".\n")
+		"WARN: PLIST:5: \"bin/otherprogram\" should be sorted before \"sbin/program\".\n"+
+		"WARN: PLIST:6: \"bin/cat\" should be sorted before \"bin/otherprogram\".\n")
 }
 
 func (s *Suite) TestPlistChecker_sort(c *check.C) {
@@ -95,6 +96,7 @@ func (s *Suite) TestPlistChecker_sort(c *check.C) {
 	ck := &PlistChecker{nil, nil, ""}
 	lines := s.NewLines(tmpfile,
 		"@comment $"+"NetBSD$",
+		"@comment Do not remove",
 		"A",
 		"b",
 		"CCC",
@@ -118,6 +120,7 @@ func (s *Suite) TestPlistChecker_sort(c *check.C) {
 		"AUTOFIX: ~/PLIST: Has been auto-fixed. Please re-run pkglint.\n")
 	c.Check(s.LoadTmpFile(c, "PLIST"), equals, ""+
 		"@comment $"+"NetBSD$\n"+
+		"@comment Do not remove\n"+
 		"A\n"+
 		"C\n"+
 		"CCC\n"+
