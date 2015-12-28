@@ -149,7 +149,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_showAutofix(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: Makefile:1: The :Q operator isn't necessary for ${PKGNAME} here.\n"+
-		"NOTE: Makefile:1: Autofix: replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
+		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_autofix(c *check.C) {
@@ -163,7 +163,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_autofix(c *check.C) {
 	shline.checkShellCommandLine("echo ${PKGNAME:Q}")
 
 	c.Check(s.Output(), equals, ""+
-		"NOTE: Makefile:1: Autofix: replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
+		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {

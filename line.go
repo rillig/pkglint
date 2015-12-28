@@ -139,7 +139,7 @@ func (ln *Line) String() string {
 
 func (ln *Line) logAutofix() {
 	if ln.autofixMessage != nil {
-		notef(ln.fname, ln.linenos(), "%s", *ln.autofixMessage)
+		autofixf(ln.fname, ln.linenos(), "%s", *ln.autofixMessage)
 		ln.autofixMessage = nil
 	}
 }
@@ -148,21 +148,21 @@ func (ln *Line) autofixInsertBefore(line string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
 		ln.before = append(ln.before, &RawLine{0, "", line + "\n"})
 	}
-	return ln.noteAutofix("Autofix: inserting a line %q before this line.", line)
+	return ln.noteAutofix("Inserting a line %q before this line.", line)
 }
 
 func (ln *Line) autofixInsertAfter(line string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
 		ln.after = append(ln.after, &RawLine{0, "", line + "\n"})
 	}
-	return ln.noteAutofix("Autofix: inserting a line %q after this line.", line)
+	return ln.noteAutofix("Inserting a line %q after this line.", line)
 }
 
 func (ln *Line) autofixDelete() bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
 		ln.raw = nil
 	}
-	return ln.noteAutofix("Autofix: deleting this line.")
+	return ln.noteAutofix("Deleting this line.")
 }
 
 func (ln *Line) autofixReplace(from, to string) bool {
@@ -172,7 +172,7 @@ func (ln *Line) autofixReplace(from, to string) bool {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				return ln.noteAutofix("Autofix: replacing %q with %q.", from, to)
+				return ln.noteAutofix("Replacing %q with %q.", from, to)
 			}
 		}
 	}
@@ -186,7 +186,7 @@ func (ln *Line) autofixReplaceRegexp(from, to string) bool {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				return ln.noteAutofix("Autofix: replacing regular expression %q with %q.", from, to)
+				return ln.noteAutofix("Replacing regular expression %q with %q.", from, to)
 			}
 		}
 	}
@@ -199,7 +199,7 @@ func (ln *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bo
 	}
 	ln.changed = true
 	if G.opts.Autofix {
-		ln.notef(format, args...)
+		autofixf(ln.fname, ln.linenos(), format, args...)
 		return true
 	}
 	if G.opts.PrintAutofix {

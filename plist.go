@@ -489,7 +489,7 @@ func (s *plistLineSorter) Sort() {
 		return
 	}
 
-	s.first.noteAutofix("Autofix: Sorting the whole file.")
+	s.first.noteAutofix("Sorting the whole file.")
 	s.first.logAutofix()
 	s.first.changed = true // Otherwise the changes won’t be saved
 	lines := []*Line{s.first}

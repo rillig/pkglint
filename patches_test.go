@@ -43,9 +43,9 @@ func (s *Suite) TestChecklinesPatch_WithoutEmptyLine(c *check.C) {
 	checklinesPatch(lines)
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
-		"NOTE: ~/patch-WithoutEmptyLines:2: Autofix: inserting a line \"\" before this line.\n"+
-		"NOTE: ~/patch-WithoutEmptyLines:3: Autofix: inserting a line \"\" before this line.\n"+
-		"NOTE: ~/patch-WithoutEmptyLines: Has been auto-fixed. Please re-run pkglint.\n")
+		"AUTOFIX: ~/patch-WithoutEmptyLines:2: Inserting a line \"\" before this line.\n"+
+		"AUTOFIX: ~/patch-WithoutEmptyLines:3: Inserting a line \"\" before this line.\n"+
+		"AUTOFIX: ~/patch-WithoutEmptyLines: Has been auto-fixed. Please re-run pkglint.\n")
 
 	fixed, err := ioutil.ReadFile(fname)
 	c.Assert(err, check.IsNil)

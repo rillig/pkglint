@@ -79,5 +79,5 @@ func (s *Suite) TestShowAutofix(c *check.C) {
 		"+ The new song\n"+
 		"> after\n"+
 		"WARN: Makefile:27--29: Using \"old\" is deprecated.\n"+
-		"NOTE: Makefile:27--29: Autofix: replacing \"old\" with \"new\".\n")
+		"AUTOFIX: Makefile:27--29: Replacing \"old\" with \"new\".\n")
 }

@@ -114,8 +114,8 @@ func (s *Suite) TestPlistChecker_sort(c *check.C) {
 	NewPlistLineSorter(plines).Sort()
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
-		"NOTE: ~/PLIST:1: Autofix: Sorting the whole file.\n"+
-		"NOTE: ~/PLIST: Has been auto-fixed. Please re-run pkglint.\n")
+		"AUTOFIX: ~/PLIST:1: Sorting the whole file.\n"+
+		"AUTOFIX: ~/PLIST: Has been auto-fixed. Please re-run pkglint.\n")
 	c.Check(s.LoadTmpFile(c, "PLIST"), equals, ""+
 		"@comment $"+"NetBSD$\n"+
 		"A\n"+

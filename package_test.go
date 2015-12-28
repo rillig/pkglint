@@ -89,7 +89,7 @@ func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here.\n"+
-		"NOTE: Makefile.common:2: Autofix: inserting a line \"# used by category/package\" before this line.\n")
+		"AUTOFIX: Makefile.common:2: Inserting a line \"# used by category/package\" before this line.\n")
 
 	s.NewMkLines("Makefile.common",
 		"# $"+"NetBSD$",
@@ -99,7 +99,7 @@ func (s *Suite) TestMkLines_CheckForUsedComment(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.\n"+
-		"NOTE: Makefile.common:3: Autofix: inserting a line \"# used by category/package\" before this line.\n")
+		"AUTOFIX: Makefile.common:3: Inserting a line \"# used by category/package\" before this line.\n")
 }
 
 func (s *Suite) TestPackage_DetermineEffectivePkgVars_Precedence(c *check.C) {

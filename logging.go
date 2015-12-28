@@ -15,11 +15,12 @@ type LogLevel struct {
 }
 
 var (
-	llFatal = &LogLevel{"FATAL", "fatal"}
-	llError = &LogLevel{"ERROR", "error"}
-	llWarn  = &LogLevel{"WARN", "warning"}
-	llNote  = &LogLevel{"NOTE", "note"}
-	llDebug = &LogLevel{"DEBUG", "debug"}
+	llFatal   = &LogLevel{"FATAL", "fatal"}
+	llError   = &LogLevel{"ERROR", "error"}
+	llWarn    = &LogLevel{"WARN", "warning"}
+	llNote    = &LogLevel{"NOTE", "note"}
+	llDebug   = &LogLevel{"DEBUG", "debug"}
+	llAutofix = &LogLevel{"AUTOFIX", "autofix"}
 )
 
 var dummyLine = NewLine(noFile, 0, "", nil)
@@ -64,6 +65,9 @@ func warnf(fname, lineno, format string, args ...interface{}) bool {
 }
 func notef(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.logOut, llNote, fname, lineno, format, args...)
+}
+func autofixf(fname, lineno, format string, args ...interface{}) bool {
+	return logf(G.logOut, llAutofix, fname, lineno, format, args...)
 }
 func debugf(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.debugOut, llDebug, fname, lineno, format, args...)

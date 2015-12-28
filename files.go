@@ -175,7 +175,7 @@ func saveAutofixChanges(lines []*Line) (autofixed bool) {
 			errorf(fname, noLines, "Cannot overwrite with auto-fixed content.")
 			continue
 		}
-		notef(fname, noLines, "Has been auto-fixed. Please re-run pkglint.")
+		autofixf(fname, noLines, "Has been auto-fixed. Please re-run pkglint.")
 		autofixed = true
 	}
 	return

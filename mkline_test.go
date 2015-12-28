@@ -63,17 +63,17 @@ func (s *Suite) TestChecklineMkVaralign(c *check.C) {
 	c.Check(lines[6].rawLines()[0].String(), equals, "7:VAR=\tvalue\n")
 	c.Check(s.Output(), equals, ""+
 		"NOTE: file.mk:1: Alignment of variable values should be done with tabs, not spaces.\n"+
-		"NOTE: file.mk:1: Autofix: replacing \"VAR=   \" with \"VAR=\\t\".\n"+
+		"AUTOFIX: file.mk:1: Replacing \"VAR=   \" with \"VAR=\\t\".\n"+
 		"NOTE: file.mk:2: Alignment of variable values should be done with tabs, not spaces.\n"+
-		"NOTE: file.mk:2: Autofix: replacing \"VAR=    \" with \"VAR=\\t\".\n"+
+		"AUTOFIX: file.mk:2: Replacing \"VAR=    \" with \"VAR=\\t\".\n"+
 		"NOTE: file.mk:3: Alignment of variable values should be done with tabs, not spaces.\n"+
-		"NOTE: file.mk:3: Autofix: replacing \"VAR=     \" with \"VAR=\\t\\t\".\n"+
+		"AUTOFIX: file.mk:3: Replacing \"VAR=     \" with \"VAR=\\t\\t\".\n"+
 		"NOTE: file.mk:4: Alignment of variable values should be done with tabs, not spaces.\n"+
-		"NOTE: file.mk:4: Autofix: replacing \"VAR= \\t\" with \"VAR=\\t\".\n"+
+		"AUTOFIX: file.mk:4: Replacing \"VAR= \\t\" with \"VAR=\\t\".\n"+
 		"NOTE: file.mk:5: Alignment of variable values should be done with tabs, not spaces.\n"+
-		"NOTE: file.mk:5: Autofix: replacing \"VAR=   \\t\" with \"VAR=\\t\".\n"+
+		"AUTOFIX: file.mk:5: Replacing \"VAR=   \\t\" with \"VAR=\\t\".\n"+
 		"NOTE: file.mk:6: Alignment of variable values should be done with tabs, not spaces.\n"+
-		"NOTE: file.mk:6: Autofix: replacing \"VAR=    \\t\" with \"VAR=\\t\\t\".\n")
+		"AUTOFIX: file.mk:6: Replacing \"VAR=    \\t\" with \"VAR=\\t\\t\".\n")
 	c.Check(tabLength("VAR=    \t"), equals, 16)
 }
 

@@ -19,11 +19,11 @@ func (s *Suite) TestMkLines_AutofixConditionalIndentation(c *check.C) {
 	mklines.check()
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
-		"NOTE: ~/fname.mk:3: Autofix: replacing \".\" with \".  \".\n"+
-		"NOTE: ~/fname.mk:4: Autofix: replacing \".\" with \".    \".\n"+
-		"NOTE: ~/fname.mk:5: Autofix: replacing \".\" with \".    \".\n"+
-		"NOTE: ~/fname.mk:6: Autofix: replacing \".\" with \".  \".\n"+
-		"NOTE: ~/fname.mk: Has been auto-fixed. Please re-run pkglint.\n")
+		"AUTOFIX: ~/fname.mk:3: Replacing \".\" with \".  \".\n"+
+		"AUTOFIX: ~/fname.mk:4: Replacing \".\" with \".    \".\n"+
+		"AUTOFIX: ~/fname.mk:5: Replacing \".\" with \".    \".\n"+
+		"AUTOFIX: ~/fname.mk:6: Replacing \".\" with \".  \".\n"+
+		"AUTOFIX: ~/fname.mk: Has been auto-fixed. Please re-run pkglint.\n")
 	c.Check(s.LoadTmpFile(c, "fname.mk"), equals, ""+
 		"# $NetBSD$\n"+
 		".if defined(A)\n"+

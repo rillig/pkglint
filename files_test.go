@@ -73,7 +73,7 @@ func (s *Suite) TestAutofix_show(c *check.C) {
 	c.Check(s.LoadTmpFile(c, "Makefile"), equals, "line1\nline2\nline3\n")
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
 		"WARN: ~/Makefile:2: Something's wrong here.\n"+
-		"NOTE: ~/Makefile:2: Autofix: replacing regular expression \".\" with \"X\".\n")
+		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".\n")
 }
 
 func (s *Suite) TestAutofix_fix(c *check.C) {
@@ -91,6 +91,6 @@ func (s *Suite) TestAutofix_fix(c *check.C) {
 
 	c.Check(s.LoadTmpFile(c, "Makefile"), equals, "line1\nXXXXX\nline3\n")
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
-		"NOTE: ~/Makefile:2: Autofix: replacing regular expression \".\" with \"X\".\n"+
-		"NOTE: ~/Makefile: Has been auto-fixed. Please re-run pkglint.\n")
+		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".\n"+
+		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.\n")
 }
