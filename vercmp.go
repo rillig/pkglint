@@ -54,6 +54,9 @@ func mkversion(vstr string) *version {
 			}
 			rest = rest[i:]
 			v.add(n)
+		case rest[0] == '_' || rest[0] == '.':
+			v.add(0)
+			rest = rest[1:]
 		case hasPrefix(rest, "alpha"):
 			v.add(-3)
 			rest = rest[5:]
@@ -69,9 +72,6 @@ func mkversion(vstr string) *version {
 		case hasPrefix(rest, "pl"):
 			v.add(0)
 			rest = rest[2:]
-		case hasPrefix(rest, "_") || hasPrefix(rest, "."):
-			v.add(0)
-			rest = rest[1:]
 		case hasPrefix(rest, "nb"):
 			i := 2
 			n := 0

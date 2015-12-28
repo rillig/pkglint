@@ -79,14 +79,29 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 		"py-docs",
 		"perl5-5.22.*{,nb*}",
 		"libkipi>=0.1.5<4.0",
-		"gtk2+>=2.16")
+		"gtk2+>=2.16",
+		"perl-5.22",
+		"perl-5*",
+		"gtksourceview-sharp-2.0-[0-9]*",
+		"perl-5.22{,nb*}",
+		"perl-5.22{,nb[0-9]*}",
+		"mbrola-301h{,nb[0-9]*}",
+		"mpg123{,-esound,-nas}>=0.59.18",
+		"mysql*-{client,server}-[0-9]*",
+		"postgresql8[0-35-9]-${module}-[0-9]*",
+		"ncurses-${NC_VERS}{,nb*}",
+		"{ssh{,6}-[0-9]*,openssh-[0-9]*}")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Unknown dependency pattern \"Perl\".\n"+
 		"WARN: fname:3: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".\n"+
-		"WARN: fname:4: Please append \"{,nb*}\" to the version number of this dependency.\n"+
 		"WARN: fname:5: Only [0-9]* is allowed in the numeric part of a dependency.\n"+
-		"ERROR: fname:6: Unknown dependency pattern \"py-docs\".\n")
+		"WARN: fname:5: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.\n"+
+		"WARN: fname:6: Unknown dependency pattern \"py-docs\".\n"+
+		"WARN: fname:10: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.\n"+
+		"WARN: fname:11: Please use \"5.*\" instead of \"5*\" as the version pattern.\n"+
+		"WARN: fname:12: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.\n"+
+		"WARN: fname:20: The version pattern \"[0-9]*,openssh-[0-9]*}\" should not contain a hyphen.\n") // XXX
 }
 
 func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
@@ -120,8 +135,9 @@ func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 		"WARN: fname:5: Unknown dependency pattern \"broken[0-9]*\".\n"+
 		"WARN: fname:6: Unknown dependency pattern with path \"broken[0-9]*../../x11/alacarte\".\n"+
 		"WARN: fname:7: Unknown dependency pattern \"broken>=\".\n"+
+		"WARN: fname:8: Unknown dependency pattern \"broken=0\".\n"+
 		"WARN: fname:9: Unknown dependency pattern \"broken=\".\n"+
-		"ERROR: fname:10: Unknown dependency pattern \"broken-\".\n"+
+		"WARN: fname:10: Unknown dependency pattern \"broken-\".\n"+
 		"WARN: fname:11: Unknown dependency pattern \"broken>\".\n")
 }
 

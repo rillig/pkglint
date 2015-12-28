@@ -267,25 +267,33 @@ func replaceFirst(s, re, replacement string) ([]string, string) {
 
 type PrefixReplacer struct {
 	rest string
-	m    []string
+	s    string   // The last match from a prefix
+	m    []string // The last match from a regular expression
 }
 
 func NewPrefixReplacer(s string) *PrefixReplacer {
-	return &PrefixReplacer{s, nil}
+	return &PrefixReplacer{s, "", nil}
 }
 
 func (pr *PrefixReplacer) advanceStr(prefix string) bool {
 	pr.m = nil
+	pr.s = ""
 	if hasPrefix(pr.rest, prefix) {
 		if G.opts.DebugTrace {
 			trace("", "PrefixReplacer.advanceStr", pr.rest, prefix)
 		}
+		pr.s = prefix
 		pr.rest = pr.rest[len(prefix):]
 		return true
 	}
 	return false
 }
 func (pr *PrefixReplacer) advanceRegexp(re string) bool {
+	pr.m = nil
+	pr.s = ""
+	if !hasPrefix(re, "^") {
+		panic("advanceRegexp: " + re)
+	}
 	if m := match(pr.rest, re); m != nil {
 		if G.opts.DebugTrace {
 			trace("", "PrefixReplacer.advanceRegexp", pr.rest, re, m[0])
@@ -295,6 +303,17 @@ func (pr *PrefixReplacer) advanceRegexp(re string) bool {
 		return true
 	}
 	return false
+}
+func (pr *PrefixReplacer) Mark() string {
+	return pr.rest
+}
+func (pr *PrefixReplacer) Reset(mark string) {
+	pr.rest = mark
+}
+func (pr *PrefixReplacer) AdvanceRest() string {
+	rest := pr.rest
+	pr.rest = ""
+	return rest
 }
 
 // Useful in combination with regex.Find*Index

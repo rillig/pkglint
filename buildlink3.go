@@ -31,8 +31,8 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	}
 
 	pkgbaseLine, pkgbase := exp.currentLine(), ""
-	abiLine, abiPkg, abiVersion := (*Line)(nil), "", ""
-	apiLine, apiPkg, apiVersion := (*Line)(nil), "", ""
+	var abiLine, apiLine *Line
+	var abi, api *DependencyPattern
 
 	// First paragraph: Introduction of the package identifier
 	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`) {
@@ -86,42 +86,42 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 			const (
 				reDependencyCmp      = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$`
-				reDependencyWildcard = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
+				reDependencyWildcard = `^(-(?:\[0-9\]\*|\d[^-]*)$`
 			)
 
 			if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
 				abiLine = line
-				if m, p, v := match2(value, reDependencyCmp); m {
-					abiPkg, abiVersion = p, v
-				} else if m, p := match1(value, reDependencyWildcard); m {
-					abiPkg, abiVersion = p, ""
+				repl := NewPrefixReplacer(value)
+				if dp := ParseDependency(repl); dp != nil && repl.rest == "" {
+					abi = dp
 				} else {
-					if G.opts.DebugUnchecked {
-						line.debug1("Unchecked dependency pattern %q.", value)
-					}
+					line.warn1("Unknown dependency pattern %q.", value)
 				}
 				doCheck = true
 			}
 			if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
 				apiLine = line
-				if m, p, v := match2(value, reDependencyCmp); m {
-					apiPkg, apiVersion = p, v
-				} else if m, p := match1(value, reDependencyWildcard); m {
-					apiPkg, apiVersion = p, ""
+				repl := NewPrefixReplacer(value)
+				if dp := ParseDependency(repl); dp != nil && repl.rest == "" {
+					api = dp
 				} else {
-					if G.opts.DebugUnchecked {
-						line.debug1("Unchecked dependency pattern %q.", value)
-					}
+					line.warn1("Unknown dependency pattern %q.", value)
 				}
 				doCheck = true
 			}
-			if doCheck && abiPkg != "" && apiPkg != "" && abiPkg != apiPkg {
-				abiLine.warn1("Package name mismatch between ABI %q ...", abiPkg)
-				apiLine.warn1("... and API %q.", apiPkg)
+			if doCheck && abi != nil && api != nil && abi.pkgbase != api.pkgbase && !hasPrefix(api.pkgbase, "{") {
+				abiLine.warn1("Package name mismatch between ABI %q ...", abi.pkgbase)
+				apiLine.warn1("... and API %q.", api.pkgbase)
 			}
-			if doCheck && abiVersion != "" && apiVersion != "" && pkgverCmp(abiVersion, apiVersion) < 0 {
-				abiLine.warn1("ABI version %q should be at least ...", abiVersion)
-				apiLine.warn1("... API version %q.", apiVersion)
+			if doCheck {
+				if abi != nil && abi.lower != "" && !containsVarRef(abi.lower) {
+					if api != nil && api.lower != "" && !containsVarRef(api.lower) {
+						if pkgverCmp(abi.lower, api.lower) < 0 {
+							abiLine.warn1("ABI version %q should be at least ...", abi.lower)
+							apiLine.warn1("... API version %q.", api.lower)
+						}
+					}
+				}
 			}
 
 			if varparam := mkline.Varparam(); varparam != "" && varparam != pkgbase {

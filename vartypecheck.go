@@ -96,57 +96,9 @@ func (cv *VartypeCheck) Comment() {
 func (cv *VartypeCheck) Dependency() {
 	line, value := cv.line, cv.value
 
-	if matches(value, `^(`+rePkgbase+`)(<|=|>|<=|>=|!=|-)(`+rePkgversion+`)$`) {
-		return
-	}
-	if matches(value, `^(`+rePkgbase+`)>=?(`+rePkgversion+`)<=?(`+rePkgversion+`)$`) {
-		return
-	}
-
-	if m, depbase, bracket, version, versionWildcard, other := match5(value, `^(`+rePkgbase+`)-(?:\[(.*)\]\*|(\d+(?:\.\d+)*(?:\.\*)?)(\{,nb\*\}|\*|)|(.*))?$`); m {
-		switch {
-		case bracket != "":
-			if bracket != "0-9" {
-				line.warn0("Only [0-9]* is allowed in the numeric part of a dependency.")
-			}
-
-		case version != "" && versionWildcard != "":
-			// Fine.
-
-		case version != "":
-			line.warn0("Please append \"{,nb*}\" to the version number of this dependency.")
-			explain4(
-				"Usually, a dependency should stay valid when the PKGREVISION is",
-				"increased, since those changes are most often editorial. In the",
-				"current form, the dependency only matches if the PKGREVISION is",
-				"undefined.")
-
-		case other == "*":
-			line.warn2("Please use \"%s-[0-9]*\" instead of \"%s-*\".", depbase, depbase)
-			explain3(
-				"If you use a * alone, the package specification may match other",
-				"packages that have the same prefix, but a longer name. For example,",
-				"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
-
-		default:
-			line.error1("Unknown dependency pattern %q.", value)
-		}
-		return
-	}
-
-	switch {
-	case strings.Contains(value, "{"):
-		// No check yet for alternative dependency patterns.
-		if G.opts.DebugUnchecked {
-			line.debug1("Unchecked alternative dependency pattern: %s", value)
-		}
-
-	case value != cv.valueNovar:
-		if G.opts.DebugUnchecked {
-			line.debug1("Unchecked dependency: %s", value)
-		}
-
-	default:
+	repl := NewPrefixReplacer(value)
+	dp := ParseDependency(repl)
+	if dp == nil {
 		line.warn1("Unknown dependency pattern %q.", value)
 		explain(
 			"Typical dependencies have the following forms:",
@@ -154,7 +106,48 @@ func (cv *VartypeCheck) Dependency() {
 			"\tpackage>=2.5",
 			"\tpackage-[0-9]*",
 			"\tpackage-3.141",
-			"\tpackage>=2.71827<=3.1415")
+			"\tpackage>=2.71828<=3.1415")
+		return
+	}
+
+	wildcard := dp.wildcard
+	if m, inside := match1(wildcard, `^\[(.*)\]\*$`); m {
+		if inside != "0-9" {
+			line.warn0("Only [0-9]* is allowed in the numeric part of a dependency.")
+		}
+
+	} else if m, ver, suffix := match2(wildcard, `^(\d\w*(?:\.\w+)*)(\.\*|\{,nb\*\}|\{,nb\[0-9\]\*\}|\*|)$`); m {
+		if suffix == "" {
+			line.warn2("Please use %q instead of %q as the version pattern.", ver+"{,nb*}", ver)
+			explain3(
+				"Without the \"{,nb*}\" suffix, this version pattern only matches",
+				"package versions that don't have a PKGREVISION (which is the part",
+				"after the \"nb\").")
+		}
+		if suffix == "*" {
+			line.warn2("Please use %q instead of %q as the version pattern.", ver+".*", ver+"*")
+			explain2(
+				"For example, the version \"1*\" also matches \"10.0.0\", which is",
+				"probably not intended.")
+		}
+
+	} else if wildcard == "*" {
+		line.warn1("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", dp.pkgbase)
+		explain3(
+			"If you use a * alone, the package specification may match other",
+			"packages that have the same prefix, but a longer name. For example,",
+			"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
+	}
+
+	if nocclasses := regcomp(`\[[\d-]+\]`).ReplaceAllString(wildcard, ""); strings.Contains(nocclasses, "-") {
+		line.warn1("The version pattern %q should not contain a hyphen.", wildcard)
+		explain(
+			"Pkgsrc interprets package names with version numbers like this:",
+			"",
+			"\t\"foo-2.0-2.1.x\" => pkgbase \"foo\", version \"2.0-2.1.x\"",
+			"",
+			"To make the \"2.0\" above part of the package basename, the hyphen",
+			"must be omitted, so the full package name becomes \"foo2.0-2.1.x\".")
 	}
 }
 

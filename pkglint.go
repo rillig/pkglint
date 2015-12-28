@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	reMkInclude          = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
-	rePkgname            = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
-	rePkgbase            = `(?:[+.\w]|-[A-Z_a-z])+`
-	rePkgversion         = `\d(?:\w|\.\d)*`
+	reMkInclude  = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
+	rePkgname    = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
+	rePkgbase    = `(?:[+.\w]|-[A-Z_a-z])+`
+	rePkgversion = `\d(?:\w|\.\d)*`
 )
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
@@ -426,4 +426,84 @@ func matchVarassign(text string) (m bool, varname, op, value, comment string) {
 	value = strings.TrimSpace(string(valuebuf[:j]))
 	comment = text[commentStart:commentEnd]
 	return
+}
+
+type DependencyPattern struct {
+	pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
+	lowerOp  string // ">=", ">"
+	lower    string // "2.5.0", "${PYVER}"
+	upperOp  string // "<", "<="
+	upper    string // "3.0", "${PYVER}"
+	wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
+}
+
+func ParsePkgbasePattern(repl *PrefixReplacer) (pkgbase string) {
+	for {
+		if repl.advanceRegexp(`^\$\{\w+\}`) ||
+			repl.advanceRegexp(`^[\w.*+,{}]+`) ||
+			repl.advanceRegexp(`^\[[\d-]+\]`) {
+			pkgbase += repl.m[0]
+			continue
+		}
+
+		mark := repl.Mark()
+		if repl.advanceStr("-") {
+			if repl.advanceRegexp(`^\d`) ||
+				repl.advanceRegexp(`^\$\{\w*VER\w*\}`) ||
+				repl.advanceStr("[") {
+				repl.Reset(mark)
+				return
+			}
+			pkgbase += "-"
+		} else {
+			return
+		}
+	}
+}
+
+func ParseDependency(repl *PrefixReplacer) *DependencyPattern {
+	var dp DependencyPattern
+	mark := repl.Mark()
+	dp.pkgbase = ParsePkgbasePattern(repl)
+	if dp.pkgbase == "" {
+		return nil
+	}
+
+	mark2 := repl.Mark()
+	if repl.advanceStr(">=") || repl.advanceStr(">") {
+		op := repl.s
+		if repl.advanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
+			dp.lowerOp = op
+			dp.lower = repl.m[0]
+		} else {
+			repl.Reset(mark2)
+		}
+	}
+	if repl.advanceStr("<=") || repl.advanceStr("<") {
+		op := repl.s
+		if repl.advanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
+			dp.upperOp = op
+			dp.upper = repl.m[0]
+		} else {
+			repl.Reset(mark2)
+		}
+	}
+	if dp.lowerOp != "" || dp.upperOp != "" {
+		return &dp
+	}
+	if repl.advanceStr("-") && repl.rest != "" {
+		dp.wildcard = repl.AdvanceRest()
+		return &dp
+	}
+	if hasPrefix(dp.pkgbase, "${") && hasSuffix(dp.pkgbase, "}") {
+		return &dp
+	}
+	if hasSuffix(dp.pkgbase, "-*") {
+		dp.pkgbase = strings.TrimSuffix(dp.pkgbase, "-*")
+		dp.wildcard = "*"
+		return &dp
+	}
+
+	repl.Reset(mark)
+	return nil
 }
