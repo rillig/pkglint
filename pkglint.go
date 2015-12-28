@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	reDependencyCmp      = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$`
-	reDependencyWildcard = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
 	reMkInclude          = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
 	rePkgname            = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
 	rePkgbase            = `(?:[+.\w]|-[A-Z_a-z])+`

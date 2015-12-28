@@ -84,6 +84,11 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 			varname, value := mkline.Varname(), mkline.Value()
 			doCheck := false
 
+			const (
+				reDependencyCmp      = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d])+)[<>]=?(\d[^-*?\[\]]*)$`
+				reDependencyWildcard = `^((?:\$\{[\w_]+\}|[\w_\.+]|-[^\d\[])+)-(?:\[0-9\]\*|\d[^-]*)$`
+			)
+
 			if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
 				abiLine = line
 				if m, p, v := match2(value, reDependencyCmp); m {
