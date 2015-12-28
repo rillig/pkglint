@@ -410,17 +410,14 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 			explain(
 				"Many variables in pkgsrc do not need the :Q operator, since they",
 				"are not expected to contain white-space or other special characters.",
+				"Examples for these \"safe\" variables are:",
 				"",
-				"Another case is when a variable of type ShellWord appears in a context",
-				"that expects a shell word, it does not need to have a :Q operator. Even",
-				"when it is concatenated with another variable, it still stays _one_ word.",
-				"",
-				"Example:",
-				"\tWORD1=  Have\\ fun             # 1 word",
-				"\tWORD2=  \"with BSD Make\"       # 1 word, too",
-				"",
-				"\tdemo:",
-				"\t\techo ${WORD1}${WORD2} # still 1 word")
+				"\t* filenames",
+				"\t* directory names",
+				"\t* user and group names",
+				"\t* tool names and tool paths",
+				"\t* variable names",
+				"\t* PKGNAME")
 		}
 	}
 }
