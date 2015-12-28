@@ -83,8 +83,12 @@ func (ln *Line) printSource(out io.Writer) {
 	if G.opts.PrintSource {
 		io.WriteString(out, "\n")
 		for _, rawLine := range ln.rawLines() {
-			io.WriteString(out, "> ")
-			io.WriteString(out, rawLine.orignl)
+			if rawLine.textnl != rawLine.orignl {
+				io.WriteString(out, "- "+rawLine.orignl)
+				io.WriteString(out, "+ "+rawLine.textnl)
+			} else {
+				io.WriteString(out, "> "+rawLine.orignl)
+			}
 		}
 	}
 }
@@ -135,14 +139,6 @@ func (ln *Line) String() string {
 
 func (ln *Line) logAutofix() {
 	if ln.autofixMessage != nil {
-		if G.opts.PrintSource {
-			out := G.logOut
-			io.WriteString(out, "\n")
-			for _, rawLine := range ln.rawLines() {
-				io.WriteString(out, "> ")
-				io.WriteString(out, rawLine.textnl)
-			}
-		}
 		notef(ln.fname, ln.linenos(), "%s", *ln.autofixMessage)
 		ln.autofixMessage = nil
 	}

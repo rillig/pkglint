@@ -63,7 +63,10 @@ func (s *Suite) TestLine_CheckAbsolutePathname(c *check.C) {
 
 func (s *Suite) TestShowAutofix(c *check.C) {
 	s.UseCommandLine(c, "--show-autofix", "--source")
-	line := NewLine("Makefile", 28, "# old", s.NewRawLines(28, "# old\n"))
+	line := NewLineMulti("Makefile", 27, 29, "# old", s.NewRawLines(
+		27, "before\n",
+		28, "The old song\n",
+		29, "after\n"))
 
 	if !line.autofixReplace("old", "new") {
 		line.warn0("Using \"old\" is deprecated.")
@@ -71,9 +74,10 @@ func (s *Suite) TestShowAutofix(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"\n"+
-		"> # old\n"+
-		"WARN: Makefile:28: Using \"old\" is deprecated.\n"+
-		"\n"+
-		"> # new\n"+
-		"NOTE: Makefile:28: Autofix: replacing \"old\" with \"new\".\n")
+		"> before\n"+
+		"- The old song\n"+
+		"+ The new song\n"+
+		"> after\n"+
+		"WARN: Makefile:27--29: Using \"old\" is deprecated.\n"+
+		"NOTE: Makefile:27--29: Autofix: replacing \"old\" with \"new\".\n")
 }
