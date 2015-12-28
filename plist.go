@@ -292,7 +292,7 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 			line.warn0("Preformatted manual pages should end in \".0\".")
 		}
 	} else {
-		if section != ext {
+		if !hasPrefix(ext, section) {
 			line.warn2("Mismatch between the section (%s) and extension (%s) of the manual page.", section, ext)
 		}
 	}
