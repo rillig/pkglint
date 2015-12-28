@@ -115,7 +115,7 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 	var rawLines []*RawLine
 	for lineno, rawLine := range strings.SplitAfter(rawText, "\n") {
 		if rawLine != "" {
-			rawLines = append(rawLines, &RawLine{1 + lineno, rawLine})
+			rawLines = append(rawLines, &RawLine{1 + lineno, rawLine, rawLine})
 		}
 	}
 

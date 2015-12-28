@@ -163,7 +163,7 @@ func (pkglint *Pkglint) printSummary() {
 				fmt.Fprint(G.logOut, "(Run \"pkglint -e\" to show explanations.)\n")
 			}
 			if G.autofixAvailable && !G.opts.PrintAutofix && !G.opts.Autofix {
-				fmt.Fprint(G.logOut, "(Run \"pkglint -f\" to show what can be fixed automatically.)\n")
+				fmt.Fprint(G.logOut, "(Run \"pkglint -fs\" to show what can be fixed automatically.)\n")
 			}
 			if G.autofixAvailable && !G.opts.Autofix {
 				fmt.Fprint(G.logOut, "(Run \"pkglint -F\" to automatically fix some issues.)\n")

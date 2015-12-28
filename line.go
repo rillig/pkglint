@@ -22,6 +22,7 @@ import (
 
 type RawLine struct {
 	lineno int
+	orignl string
 	textnl string
 }
 
@@ -83,7 +84,7 @@ func (ln *Line) printSource(out io.Writer) {
 		io.WriteString(out, "\n")
 		for _, rawLine := range ln.rawLines() {
 			io.WriteString(out, "> ")
-			io.WriteString(out, rawLine.textnl)
+			io.WriteString(out, rawLine.orignl)
 		}
 	}
 }
@@ -134,6 +135,14 @@ func (ln *Line) String() string {
 
 func (ln *Line) logAutofix() {
 	if ln.autofixMessage != nil {
+		if G.opts.PrintSource {
+			out := G.logOut
+			io.WriteString(out, "\n")
+			for _, rawLine := range ln.rawLines() {
+				io.WriteString(out, "> ")
+				io.WriteString(out, rawLine.textnl)
+			}
+		}
 		notef(ln.fname, ln.linenos(), "%s", *ln.autofixMessage)
 		ln.autofixMessage = nil
 	}
@@ -141,14 +150,14 @@ func (ln *Line) logAutofix() {
 
 func (ln *Line) autofixInsertBefore(line string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		ln.before = append(ln.before, &RawLine{0, line + "\n"})
+		ln.before = append(ln.before, &RawLine{0, "", line + "\n"})
 	}
 	return ln.noteAutofix("Autofix: inserting a line %q before this line.", line)
 }
 
 func (ln *Line) autofixInsertAfter(line string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		ln.after = append(ln.after, &RawLine{0, line + "\n"})
+		ln.after = append(ln.after, &RawLine{0, "", line + "\n"})
 	}
 	return ln.noteAutofix("Autofix: inserting a line %q after this line.", line)
 }

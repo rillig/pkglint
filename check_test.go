@@ -44,10 +44,31 @@ func (s *Suite) OutputCleanTmpdir() string {
 	return strings.Replace(s.Output(), s.tmpdir, "~", -1)
 }
 
-func (s *Suite) NewLines(fname string, lines ...string) []*Line {
-	result := make([]*Line, len(lines))
-	for i, line := range lines {
-		result[i] = NewLine(fname, i+1, line, []*RawLine{{i + 1, line + "\n"}})
+// Arguments are either (lineno, orignl) or (lineno, orignl, textnl).
+func (s *Suite) NewRawLines(args ...interface{}) []*RawLine {
+	rawlines := make([]*RawLine, len(args)/2)
+	j := 0
+	for i := 0; i < len(args); i += 2 {
+		lineno := args[i].(int)
+		orignl := args[i+1].(string)
+		textnl := orignl
+		if i+2 < len(args) {
+			if s, ok := args[i+2].(string); ok {
+				textnl = s
+				i++
+			}
+		}
+		rawlines[j] = &RawLine{lineno, orignl, textnl}
+		j++
+	}
+	return rawlines[:j]
+}
+
+func (s *Suite) NewLines(fname string, texts ...string) []*Line {
+	result := make([]*Line, len(texts))
+	for i, text := range texts {
+		textnl := text + "\n"
+		result[i] = NewLine(fname, i+1, text, s.NewRawLines(i+1, textnl))
 	}
 	return result
 }
