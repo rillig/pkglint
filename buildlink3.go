@@ -58,7 +58,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
 	if ucPkgbase != pkgupper {
-		pkgupperLine.error1("Package name mismatch between multiple-inclusion guard %q ...", pkgupper)
+		pkgupperLine.error2("Package name mismatch between multiple-inclusion guard %q (expected %q) ...", pkgupper, ucPkgbase)
 		pkgbaseLine.error1("... and package name %q.", pkgbase)
 	}
 	if G.pkg != nil {
@@ -115,8 +115,8 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				apiLine.warn1("... and API %q.", apiPkg)
 			}
 			if doCheck && abiVersion != "" && apiVersion != "" && pkgverCmp(abiVersion, apiVersion) < 0 {
-				abiLine.warn1("ABI version (%s) should be at least ...", abiVersion)
-				apiLine.warn1("... API version (%s).", apiVersion)
+				abiLine.warn1("ABI version %q should be at least ...", abiVersion)
+				apiLine.warn1("... API version %q.", apiVersion)
 			}
 
 			if varparam := mkline.Varparam(); varparam != "" && varparam != pkgbase {
