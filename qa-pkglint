@@ -9,7 +9,7 @@ pkgsrcdir="$HOME/pkgsrc"
 if (cd "$srcdir" && git diff-index --quiet HEAD); then
   runid=$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print $1$2$3"-"$4$5}')-$(cd "$srcdir" && git rev-parse --short HEAD)
 else
-  runid=$(date +'%Y%m%d-%H%M')-$(cd "$srcdir" && git rev-parse --short HEAD)-mod
+  runid=$(date +'%Y%m%d-%H%M')-$(cd "$srcdir" && git rev-parse --short HEAD)-mod-$$
 fi
 
 echo "=> Installing pkglint"
@@ -29,8 +29,8 @@ echo "=> Installing pkglint"
 #ssh netbsd ". .bash_profile && cd proj/pkgsrc/pkgtools/pkglint && bmake update"
 
 echo "=> Running pkglint on the pkgsrc tree"
-time (cd "$pkgsrcdir" && pkglint -pr -Wall -Call) > "$archivedir/$runid-$$.tmp" || true
-mv "$archivedir/$runid-$$.tmp" "$archivedir/$runid.out"
+time (cd "$pkgsrcdir" && "$archivedir/$runid.exe" -pr -Wall -Call) > "$archivedir/$runid.tmp" || true
+mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
 
 echo "=> Generating diffs"
 (
