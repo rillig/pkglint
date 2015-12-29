@@ -56,33 +56,33 @@ func NewLineEof(fname string) *Line {
 	return NewLineMulti(fname, -1, 0, "", nil)
 }
 
-func (ln *Line) rawLines() []*RawLine {
+func (line *Line) rawLines() []*RawLine {
 	switch { // prevent inlining
 	}
-	return append(append(append([]*RawLine(nil), ln.before...), ln.raw...), ln.after...)
+	return append(append(append([]*RawLine(nil), line.before...), line.raw...), line.after...)
 }
 
-func (ln *Line) linenos() string {
+func (line *Line) linenos() string {
 	switch {
-	case ln.firstLine == -1:
+	case line.firstLine == -1:
 		return "EOF"
-	case ln.firstLine == 0:
+	case line.firstLine == 0:
 		return ""
-	case ln.firstLine == ln.lastLine:
-		return strconv.Itoa(int(ln.firstLine))
+	case line.firstLine == line.lastLine:
+		return strconv.Itoa(int(line.firstLine))
 	default:
-		return strconv.Itoa(int(ln.firstLine)) + "--" + strconv.Itoa(int(ln.lastLine))
+		return strconv.Itoa(int(line.firstLine)) + "--" + strconv.Itoa(int(line.lastLine))
 	}
 }
 
-func (ln *Line) IsMultiline() bool {
-	return ln.firstLine > 0 && ln.firstLine != ln.lastLine
+func (line *Line) IsMultiline() bool {
+	return line.firstLine > 0 && line.firstLine != line.lastLine
 }
 
-func (ln *Line) printSource(out io.Writer) {
+func (line *Line) printSource(out io.Writer) {
 	if G.opts.PrintSource {
 		io.WriteString(out, "\n")
-		for _, rawLine := range ln.rawLines() {
+		for _, rawLine := range line.rawLines() {
 			if rawLine.textnl != rawLine.orignl {
 				if rawLine.orignl != "" {
 					io.WriteString(out, "- "+rawLine.orignl)
@@ -97,125 +97,125 @@ func (ln *Line) printSource(out io.Writer) {
 	}
 }
 
-func (ln *Line) fatalf(format string, args ...interface{}) {
-	ln.printSource(G.logErr)
-	fatalf(ln.fname, ln.linenos(), format, args...)
+func (line *Line) fatalf(format string, args ...interface{}) {
+	line.printSource(G.logErr)
+	fatalf(line.fname, line.linenos(), format, args...)
 }
 
-func (ln *Line) errorf(format string, args ...interface{}) {
-	ln.printSource(G.logOut)
-	errorf(ln.fname, ln.linenos(), format, args...)
-	ln.logAutofix()
+func (line *Line) errorf(format string, args ...interface{}) {
+	line.printSource(G.logOut)
+	errorf(line.fname, line.linenos(), format, args...)
+	line.logAutofix()
 }
-func (ln *Line) error0(format string)             { ln.errorf(format) }
-func (ln *Line) error1(format, arg1 string)       { ln.errorf(format, arg1) }
-func (ln *Line) error2(format, arg1, arg2 string) { ln.errorf(format, arg1, arg2) }
+func (line *Line) error0(format string)             { line.errorf(format) }
+func (line *Line) error1(format, arg1 string)       { line.errorf(format, arg1) }
+func (line *Line) error2(format, arg1, arg2 string) { line.errorf(format, arg1, arg2) }
 
-func (ln *Line) warnf(format string, args ...interface{}) {
-	ln.printSource(G.logOut)
-	warnf(ln.fname, ln.linenos(), format, args...)
-	ln.logAutofix()
+func (line *Line) warnf(format string, args ...interface{}) {
+	line.printSource(G.logOut)
+	warnf(line.fname, line.linenos(), format, args...)
+	line.logAutofix()
 }
-func (ln *Line) warn0(format string)             { ln.warnf(format) }
-func (ln *Line) warn1(format, arg1 string)       { ln.warnf(format, arg1) }
-func (ln *Line) warn2(format, arg1, arg2 string) { ln.warnf(format, arg1, arg2) }
+func (line *Line) warn0(format string)             { line.warnf(format) }
+func (line *Line) warn1(format, arg1 string)       { line.warnf(format, arg1) }
+func (line *Line) warn2(format, arg1, arg2 string) { line.warnf(format, arg1, arg2) }
 
-func (ln *Line) notef(format string, args ...interface{}) {
-	ln.printSource(G.logOut)
-	notef(ln.fname, ln.linenos(), format, args...)
-	ln.logAutofix()
+func (line *Line) notef(format string, args ...interface{}) {
+	line.printSource(G.logOut)
+	notef(line.fname, line.linenos(), format, args...)
+	line.logAutofix()
 }
-func (ln *Line) note0(format string)             { ln.notef(format) }
-func (ln *Line) note1(format, arg1 string)       { ln.notef(format, arg1) }
-func (ln *Line) note2(format, arg1, arg2 string) { ln.notef(format, arg1, arg2) }
+func (line *Line) note0(format string)             { line.notef(format) }
+func (line *Line) note1(format, arg1 string)       { line.notef(format, arg1) }
+func (line *Line) note2(format, arg1, arg2 string) { line.notef(format, arg1, arg2) }
 
-func (ln *Line) debugf(format string, args ...interface{}) {
-	ln.printSource(G.logOut)
-	debugf(ln.fname, ln.linenos(), format, args...)
-	ln.logAutofix()
+func (line *Line) debugf(format string, args ...interface{}) {
+	line.printSource(G.logOut)
+	debugf(line.fname, line.linenos(), format, args...)
+	line.logAutofix()
 }
-func (ln *Line) debug1(format, arg1 string)       { ln.debugf(format, arg1) }
-func (ln *Line) debug2(format, arg1, arg2 string) { ln.debugf(format, arg1, arg2) }
+func (line *Line) debug1(format, arg1 string)       { line.debugf(format, arg1) }
+func (line *Line) debug2(format, arg1, arg2 string) { line.debugf(format, arg1, arg2) }
 
-func (ln *Line) String() string {
-	return ln.fname + ":" + ln.linenos() + ": " + ln.text
+func (line *Line) String() string {
+	return line.fname + ":" + line.linenos() + ": " + line.text
 }
 
-func (ln *Line) logAutofix() {
-	if ln.autofixMessage != nil {
-		autofixf(ln.fname, ln.linenos(), "%s", *ln.autofixMessage)
-		ln.autofixMessage = nil
+func (line *Line) logAutofix() {
+	if line.autofixMessage != nil {
+		autofixf(line.fname, line.linenos(), "%s", *line.autofixMessage)
+		line.autofixMessage = nil
 	}
 }
 
-func (ln *Line) autofixInsertBefore(line string) bool {
+func (line *Line) autofixInsertBefore(text string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		ln.before = append(ln.before, &RawLine{0, "", line + "\n"})
+		line.before = append(line.before, &RawLine{0, "", text + "\n"})
 	}
-	return ln.noteAutofix("Inserting a line %q before this line.", line)
+	return line.noteAutofix("Inserting a line %q before this line.", text)
 }
 
-func (ln *Line) autofixInsertAfter(line string) bool {
+func (line *Line) autofixInsertAfter(text string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		ln.after = append(ln.after, &RawLine{0, "", line + "\n"})
+		line.after = append(line.after, &RawLine{0, "", text + "\n"})
 	}
-	return ln.noteAutofix("Inserting a line %q after this line.", line)
+	return line.noteAutofix("Inserting a line %q after this line.", text)
 }
 
-func (ln *Line) autofixDelete() bool {
+func (line *Line) autofixDelete() bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		for _, rawLine := range ln.raw {
+		for _, rawLine := range line.raw {
 			rawLine.textnl = ""
 		}
 	}
-	return ln.noteAutofix("Deleting this line.")
+	return line.noteAutofix("Deleting this line.")
 }
 
-func (ln *Line) autofixReplace(from, to string) bool {
-	for _, rawLine := range ln.raw {
+func (line *Line) autofixReplace(from, to string) bool {
+	for _, rawLine := range line.raw {
 		if rawLine.lineno != 0 {
 			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				return ln.noteAutofix("Replacing %q with %q.", from, to)
+				return line.noteAutofix("Replacing %q with %q.", from, to)
 			}
 		}
 	}
 	return false
 }
 
-func (ln *Line) autofixReplaceRegexp(from, to string) bool {
-	for _, rawLine := range ln.raw {
+func (line *Line) autofixReplaceRegexp(from, to string) bool {
+	for _, rawLine := range line.raw {
 		if rawLine.lineno != 0 {
 			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				return ln.noteAutofix("Replacing regular expression %q with %q.", from, to)
+				return line.noteAutofix("Replacing regular expression %q with %q.", from, to)
 			}
 		}
 	}
 	return false
 }
 
-func (ln *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bool) {
-	if ln.firstLine < 1 {
+func (line *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bool) {
+	if line.firstLine < 1 {
 		return false
 	}
-	ln.changed = true
+	line.changed = true
 	if G.opts.Autofix {
-		autofixf(ln.fname, ln.linenos(), format, args...)
+		autofixf(line.fname, line.linenos(), format, args...)
 		return true
 	}
 	if G.opts.PrintAutofix {
 		msg := fmt.Sprintf(format, args...)
-		ln.autofixMessage = &msg
+		line.autofixMessage = &msg
 	}
 	return false
 }
 
-func (ln *Line) checkAbsolutePathname(text string) {
+func (line *Line) checkAbsolutePathname(text string) {
 	if G.opts.DebugTrace {
 		defer tracecall1("Line.checkAbsolutePathname", text)()
 	}
@@ -229,7 +229,7 @@ func (ln *Line) checkAbsolutePathname(text string) {
 	// assignments like "bindir=/bin".
 	if m, path := match1(text, `(?:^|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
 		if matches(path, `^/\w`) {
-			checkwordAbsolutePathname(ln, path)
+			checkwordAbsolutePathname(line, path)
 		}
 	}
 }
