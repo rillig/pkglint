@@ -34,6 +34,7 @@ type GlobalVars struct {
 	rematch   *Histogram
 	renomatch *Histogram
 	retime    *Histogram
+	loghisto  *Histogram
 }
 
 type CmdOpts struct {

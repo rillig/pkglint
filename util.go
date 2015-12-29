@@ -489,7 +489,7 @@ func (h *Histogram) add(s string, n int) {
 	}
 }
 
-func (h *Histogram) printStats(caption string, out io.Writer) {
+func (h *Histogram) printStats(caption string, out io.Writer, limit int) {
 	entries := make([]HistogramEntry, len(h.histo))
 
 	i := 0
@@ -502,7 +502,7 @@ func (h *Histogram) printStats(caption string, out io.Writer) {
 
 	for i, entry := range entries {
 		fmt.Fprintf(out, "%s %6d %s\n", caption, entry.count, entry.s)
-		if i >= 10 {
+		if limit > 0 && i >= limit {
 			break
 		}
 	}

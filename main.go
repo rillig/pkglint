@@ -48,6 +48,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		G.rematch = NewHistogram()
 		G.renomatch = NewHistogram()
 		G.retime = NewHistogram()
+		G.loghisto = NewHistogram()
 	}
 
 	for _, arg := range G.opts.args {
@@ -68,9 +69,10 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	checktoplevelUnusedLicenses()
 	pkglint.printSummary()
 	if G.opts.Profiling {
-		G.rematch.printStats("rematch", G.logOut)
-		G.renomatch.printStats("renomatch", G.logOut)
-		G.retime.printStats("retime", G.logOut)
+		G.loghisto.printStats("loghisto", G.logOut, 0)
+		G.rematch.printStats("rematch", G.logOut, 10)
+		G.renomatch.printStats("renomatch", G.logOut, 10)
+		G.retime.printStats("retime", G.logOut, 10)
 	}
 	if G.errors != 0 {
 		return 1
