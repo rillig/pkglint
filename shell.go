@@ -769,18 +769,20 @@ func (ctx *ShelltextContext) checkPipeExitcode() {
 
 func (ctx *ShelltextContext) checkSetE(eflag bool) {
 	if G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !eflag {
-		line := ctx.shline.line
-		line.warn0("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
+		ctx.shline.line.warn0("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
 		explain(
-			"Older versions of the NetBSD make(1) had run the shell commands using",
-			"the \"-e\" option of /bin/sh. In 2004, this behavior has been changed to",
-			"follow the POSIX conventions, which is to not use the \"-e\" option.",
-			"The consequence of this change is that shell programs don't terminate",
-			"as soon as an error occurs, but try to continue with the next command.",
-			"Imagine what would happen for these commands:",
-			"    cd \"HOME\"; cd /nonexistent; rm -rf *",
-			"To fix this warning, either insert \"set -e\" at the beginning of this",
-			"line or use the \"&&\" operator instead of the semicolon.")
+			"Normally, when a shell command fails (returns non-zero), the remaining",
+			"commands are still executed. For example, the following commands would",
+			"remove all files from the HOME directory:",
+			"",
+			"\tcd \"$HOME\"; cd /nonexistent; rm -rf *",
+			"",
+			"To fix this warning, you can:",
+			"",
+			"* insert ${RUN} at the beginning of the line",
+			"  (which among other things does \"set -e\")",
+			"* insert \"set -e\" explicitly at the beginning of the line",
+			"* use \"&&\" instead of \";\" to separate the commands")
 	}
 }
 
