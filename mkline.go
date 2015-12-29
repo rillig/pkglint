@@ -90,14 +90,14 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		return
 	}
 
-	if m, directive, includefile := match2(text, reMkSysinclude); m {
+	if m, directive, includefile := match2(text, `^\.\s*(s?include)\s+<([^>]+)>\s*(?:#.*)?$`); m {
 		mkline.xtype = 7
 		mkline.xb1 = directive == "include"
 		mkline.xs1 = includefile
 		return
 	}
 
-	if m, targets, whitespace, sources := match3(text, reMkDependency); m {
+	if m, targets, whitespace, sources := match3(text, `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`); m {
 		mkline.xtype = 8
 		mkline.xs1 = targets
 		mkline.xs2 = sources
