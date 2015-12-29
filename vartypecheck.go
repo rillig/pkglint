@@ -218,9 +218,9 @@ func (cv *VartypeCheck) EmulPlatform() {
 func (cv *VartypeCheck) FetchURL() {
 	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
-	for siteUrl, siteName := range G.globalData.masterSiteUrls {
-		if hasPrefix(cv.value, siteUrl) {
-			subdir := cv.value[len(siteUrl):]
+	for siteURL, siteName := range G.globalData.masterSiteUrls {
+		if hasPrefix(cv.value, siteURL) {
+			subdir := cv.value[len(siteURL):]
 			isGithub := hasPrefix(cv.value, "https://github.com/")
 			if isGithub {
 				subdir = strings.SplitAfter(subdir, "/")[0]
