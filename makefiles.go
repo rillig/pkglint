@@ -65,7 +65,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				mkline.explainRelativeDirs()
 			}
 
-			if !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
+			if path.Base(fname) == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
 				if G.opts.DebugInclude {
 					line.debug1("Including %q sets seenMakefileCommon.", includeFile)
 				}
