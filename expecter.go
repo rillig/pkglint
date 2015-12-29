@@ -16,7 +16,7 @@ func (exp *Expecter) currentLine() *Line {
 		return exp.lines[exp.index]
 	}
 
-	return NewLineEof(exp.lines[0].fname)
+	return NewLineEOF(exp.lines[0].fname)
 }
 
 func (exp *Expecter) previousLine() *Line {

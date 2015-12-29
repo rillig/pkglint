@@ -10,8 +10,6 @@ import (
 const (
 	reMkInclude  = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
 	rePkgname    = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
-	rePkgbase    = `(?:[+.\w]|-[A-Z_a-z])+`
-	rePkgversion = `\d(?:\w|\.\d)*`
 )
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.

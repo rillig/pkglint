@@ -51,8 +51,8 @@ func NewLineMulti(fname string, firstLine, lastLine int, text string, rawLines [
 	return &Line{fname, int32(firstLine), int32(lastLine), text, rawLines, false, nil, nil, nil}
 }
 
-// NewLineEof creates a dummy line for logging.
-func NewLineEof(fname string) *Line {
+// NewLineEOF creates a dummy line for logging, with the “line number” EOF.
+func NewLineEOF(fname string) *Line {
 	return NewLineMulti(fname, -1, 0, "", nil)
 }
 
