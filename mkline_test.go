@@ -141,7 +141,7 @@ func (s *Suite) TestMkLine_checkVarassign(c *check.C) {
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=", nil))
 
-	mkline.checkVarassign()
+	mkline.CheckVarassign()
 
 	c.Check(s.Output(), equals, "")
 }
@@ -224,8 +224,8 @@ func (s *Suite) TestMkLine_(c *check.C) {
 		"ac_cv_libpari_libs+=\t-L${BUILDLINK_PREFIX.pari}/lib", // From math/clisp-pari/Makefile, rev. 1.8
 		"var+=value")
 
-	G.Mk.mklines[1].checkVarassign()
-	G.Mk.mklines[2].checkVarassign()
+	G.Mk.mklines[1].CheckVarassign()
+	G.Mk.mklines[2].CheckVarassign()
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:2: ac_cv_libpari_libs is defined but not used. Spelling mistake?\n"+

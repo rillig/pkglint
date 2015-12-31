@@ -76,14 +76,14 @@ func (pkg *Package) checkPossibleDowngrade() {
 	change := G.globalData.LastChange[pkg.pkgpath]
 	if change == nil {
 		if G.opts.DebugMisc {
-			mkline.debug1("No change log for package %q", pkg.pkgpath)
+			mkline.Debug1("No change log for package %q", pkg.pkgpath)
 		}
 		return
 	}
 
 	if change.Action == "Updated" {
 		if pkgverCmp(pkgversion, change.Version) < 0 {
-			mkline.warn2("The package is being downgraded from %s to %s", change.Version, pkgversion)
+			mkline.Warn2("The package is being downgraded from %s to %s", change.Version, pkgversion)
 		}
 	}
 }
@@ -101,7 +101,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 			if m, bl3 := match1(file, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
 				includedFiles[bl3] = mkline
 				if pkg.bl3[bl3] == nil {
-					mkline.warn1("%s/buildlink3.mk is included by this file but not by the package.", bl3)
+					mkline.Warn1("%s/buildlink3.mk is included by this file but not by the package.", bl3)
 				}
 			}
 		}
@@ -240,7 +240,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 	isMainMakefile := len(mainLines.mklines) == 0
 
 	for _, mkline := range fileMklines.mklines {
-		line := mkline.line
+		line := mkline.Line
 
 		if isMainMakefile {
 			mainLines.mklines = append(mainLines.mklines, mkline)
@@ -277,7 +277,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			G.Pkg.included[includeFile] = line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
-				mkline.warn0("References to other packages should look like \"../../category/package\", not \"../package\".")
+				mkline.Warn0("References to other packages should look like \"../../category/package\", not \"../package\".")
 				mkline.explainRelativeDirs()
 			}
 
@@ -357,8 +357,8 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if vardef["REPLACE_PERL"] != nil && vardef["NO_CONFIGURE"] != nil {
-		vardef["REPLACE_PERL"].warn0("REPLACE_PERL is ignored when ...")
-		vardef["NO_CONFIGURE"].warn0("... NO_CONFIGURE is set.")
+		vardef["REPLACE_PERL"].Warn0("REPLACE_PERL is ignored when ...")
+		vardef["NO_CONFIGURE"].Warn0("... NO_CONFIGURE is set.")
 	}
 
 	if vardef["LICENSE"] == nil {
@@ -374,8 +374,8 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 			// really not needed.
 
 		} else if !matches(languagesLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
-			vardef["GNU_CONFIGURE"].warn0("GNU_CONFIGURE almost always needs a C compiler, ...")
-			languagesLine.warn0("... but \"c\" is not added to USE_LANGUAGES.")
+			vardef["GNU_CONFIGURE"].Warn0("GNU_CONFIGURE almost always needs a C compiler, ...")
+			languagesLine.Warn0("... but \"c\" is not added to USE_LANGUAGES.")
 		}
 	}
 
@@ -387,8 +387,8 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {
-		vardef["USE_IMAKE"].note0("USE_IMAKE makes ...")
-		vardef["USE_X11"].note0("... USE_X11 superfluous.")
+		vardef["USE_IMAKE"].Note0("USE_IMAKE makes ...")
+		vardef["USE_X11"].Note0("... USE_X11 superfluous.")
 	}
 
 	pkg.checkUpdate()
@@ -427,11 +427,11 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 
 	if pkgname != "" && pkgname == distname && pkgnameLine.Comment() == "" {
-		pkgnameLine.note0("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+		pkgnameLine.Note0("PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
 	}
 
 	if pkgname == "" && distname != "" && !containsVarRef(distname) && !matches(distname, rePkgname) {
-		distnameLine.warn0("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
+		distnameLine.Warn0("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
 	if pkgname != "" && !containsVarRef(pkgname) {
@@ -452,7 +452,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 	if pkg.effectivePkgnameLine != nil {
 		if G.opts.DebugMisc {
-			pkg.effectivePkgnameLine.line.Debugf("Effective name=%q base=%q version=%q",
+			pkg.effectivePkgnameLine.Line.Debugf("Effective name=%q base=%q version=%q",
 				pkg.effectivePkgname, pkg.effectivePkgbase, pkg.effectivePkgversion)
 		}
 	}
@@ -466,7 +466,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 		if m, left, from, right, to, mod := match5(subst, `^(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`(g?)$`); m {
 			newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
 			if G.opts.DebugMisc {
-				pkg.vardef["PKGNAME"].debug2("pkgnameFromDistname %q => %q", pkgname, newPkgname)
+				pkg.vardef["PKGNAME"].Debug2("pkgnameFromDistname %q => %q", pkgname, newPkgname)
 			}
 			pkgname = newPkgname
 		}
@@ -490,14 +490,14 @@ func (pkg *Package) checkUpdate() {
 			cmp := pkgverCmp(pkg.effectivePkgversion, suggver)
 			switch {
 			case cmp < 0:
-				pkgnameLine.warn2("This package should be updated to %s%s.", sugg.Version, comment)
+				pkgnameLine.Warn2("This package should be updated to %s%s.", sugg.Version, comment)
 				Explain2(
 					"The wishlist for package updates in doc/TODO mentions that a newer",
 					"version of this package is available.")
 			case cmp > 0:
-				pkgnameLine.note2("This package is newer than the update request to %s%s.", suggver, comment)
+				pkgnameLine.Note2("This package is newer than the update request to %s%s.", suggver, comment)
 			default:
-				pkgnameLine.note2("The update request to %s from doc/TODO%s has been done.", suggver, comment)
+				pkgnameLine.Note2("The update request to %s from doc/TODO%s has been done.", suggver, comment)
 			}
 		}
 	}

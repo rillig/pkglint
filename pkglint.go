@@ -66,7 +66,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 		value = resolveVariableRefs(value)
 	}
 	if G.opts.DebugMisc {
-		mkline.debug2("Expanded %q to %q", varname, value)
+		mkline.Debug2("Expanded %q to %q", varname, value)
 	}
 	return value
 }

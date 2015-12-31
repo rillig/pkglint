@@ -64,7 +64,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	if G.Pkg != nil {
 		if mkbase := G.Pkg.effectivePkgbase; mkbase != "" && mkbase != pkgbase {
 			pkgbaseLine.Error1("Package name mismatch between %q in this file ...", pkgbase)
-			G.Pkg.effectivePkgnameLine.line.Error1("... and %q from the package Makefile.", mkbase)
+			G.Pkg.effectivePkgnameLine.Line.Error1("... and %q from the package Makefile.", mkbase)
 		}
 	}
 

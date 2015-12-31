@@ -107,7 +107,7 @@ type MkShellLine struct {
 }
 
 func NewMkShellLine(mkline *MkLine) *MkShellLine {
-	return &MkShellLine{mkline.line, mkline}
+	return &MkShellLine{mkline.Line, mkline}
 }
 
 type ShellwordState uint8
@@ -138,7 +138,7 @@ func (shline *MkShellLine) checkShellword(shellword string, checkQuoting bool) {
 	shellwordVuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
 	if m, varname, mod := match2(shellword, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
-		shline.mkline.checkVaruse(varname, mod, shellwordVuc)
+		shline.mkline.CheckVaruse(varname, mod, shellwordVuc)
 		return
 	}
 
@@ -210,7 +210,7 @@ outer:
 					vucstate = vucQuotBackt
 				}
 				vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
-				shline.mkline.checkVaruse(varname, mod, vuc)
+				shline.mkline.CheckVaruse(varname, mod, vuc)
 			}
 
 		// The syntax of the variable modifiers can get quite
