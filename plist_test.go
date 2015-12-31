@@ -36,7 +36,7 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"WARN: PLIST:10: Preformatted manual page without unformatted one.\n"+
 		"WARN: PLIST:10: Preformatted manual pages should end in \".0\".\n"+
 		"WARN: PLIST:11: Please remove this line. It is no longer necessary.\n"+
-		"ERROR: PLIST:13: Duplicate filename \"share/tzinfo\", already appeared in PLIST:12.\n")
+		"ERROR: PLIST:13: Duplicate filename \"share/tzinfo\", already appeared in line 12.\n")
 }
 
 func (s *Suite) TestChecklinesPlist_empty(c *check.C) {
