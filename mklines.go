@@ -118,13 +118,13 @@ func (mklines *MkLines) check() {
 			substcontext.Finish(mkline)
 
 		case mkline.IsVarassign():
-			mkline.checkVaralign()
+			mkline.CheckVaralign()
 			mkline.CheckVarassign()
 			substcontext.Varassign(mkline)
 
 		case mkline.IsShellcmd():
 			shellcmd := text[1:]
-			mkline.checkText(shellcmd)
+			mkline.CheckText(shellcmd)
 			NewMkShellLine(mkline).checkShellCommandLine(shellcmd)
 
 		case mkline.IsInclude():
@@ -247,7 +247,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 		}
 
 	} else if directive == "if" || directive == "elif" {
-		mkline.checkIf()
+		mkline.CheckIf()
 
 	} else if directive == "ifdef" || directive == "ifndef" {
 		if matches(args, `\s`) {
@@ -341,7 +341,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	if G.opts.DebugInclude {
 		mkline.Debug1("includefile=%s", includefile)
 	}
-	mkline.checkRelativePath(includefile, mustExist)
+	mkline.CheckRelativePath(includefile, mustExist)
 
 	if hasSuffix(includefile, "/Makefile") {
 		mkline.Line.Error0("Other Makefiles must not be included directly.")

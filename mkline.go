@@ -422,7 +422,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 	}
 }
 
-func (mkline *MkLine) checkDecreasingOrder(varname, value string) {
+func (mkline *MkLine) CheckDecreasingOrder(varname, value string) {
 	if G.opts.DebugTrace {
 		defer tracecall2("MkLine.checkDecreasingOrder", varname, value)()
 	}
@@ -462,8 +462,8 @@ func (mkline *MkLine) CheckVarassign() {
 	mkline.CheckVardef(varname, op)
 	mkline.CheckVarassignBsdPrefs()
 
-	mkline.checkText(value)
-	mkline.checkVartype(varname, op, value, comment)
+	mkline.CheckText(value)
+	mkline.CheckVartype(varname, op, value, comment)
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == ":=" && varname == strings.ToLower(varname) {
@@ -519,7 +519,7 @@ func (mkline *MkLine) CheckVarassign() {
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
-		mkline.checkDecreasingOrder(varname, value)
+		mkline.CheckDecreasingOrder(varname, value)
 	}
 
 	if comment == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
@@ -548,7 +548,7 @@ func (mkline *MkLine) CheckVarassign() {
 		mkline.Warn0("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
-	mkline.checkVarassignPlistComment(varname, value)
+	mkline.CheckVarassignPlistComment(varname, value)
 
 	time := vucTimeRun
 	if op == ":=" || op == "!=" {
@@ -581,7 +581,7 @@ func (mkline *MkLine) CheckVarassignBsdPrefs() {
 	}
 }
 
-func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
+func (mkline *MkLine) CheckVarassignPlistComment(varname, value string) {
 	if matches(value, `^[^=]@comment`) {
 		mkline.Warn1("Please don't use @comment in %s.", varname)
 		Explain(
@@ -661,7 +661,7 @@ const reVarnamePlural = "^(?:" +
 	"|TOOLS_NOOP" +
 	")$"
 
-func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
+func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
 	if G.opts.DebugTrace {
 		defer tracecall("MkLine.checkVartype", varname, op, value, comment)()
 	}
@@ -696,18 +696,18 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 		}
 
 	case vartype.kindOfList == lkNone:
-		mkline.checkVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)
+		mkline.CheckVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)
 
 	case vartype.kindOfList == lkSpace:
 		for _, word := range splitOnSpace(value) {
-			mkline.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
+			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 		}
 
 	case vartype.kindOfList == lkShell:
 		shline := NewMkShellLine(mkline)
 		words, _ := splitIntoShellWords(mkline.Line, value)
 		for _, word := range words {
-			mkline.checkVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
+			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 			shline.checkShellword(word, true)
 		}
 	}
@@ -716,7 +716,7 @@ func (mkline *MkLine) checkVartype(varname, op, value, comment string) {
 // The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
 // For some variables (like BuildlinkDepth), the operator influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func (mkline *MkLine) checkVartypePrimitive(varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
+func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op, value, comment string, isList bool, guessed Guessed) {
 	if G.opts.DebugTrace {
 		defer tracecall("MkLine.checkVartypePrimitive", varname, op, value, comment, isList, guessed)()
 	}
@@ -742,7 +742,7 @@ func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) 
 	}
 }
 
-func (mkline *MkLine) checkVaralign() {
+func (mkline *MkLine) CheckVaralign() {
 	if !G.opts.WarnSpace {
 		return
 	}
@@ -761,7 +761,7 @@ func (mkline *MkLine) checkVaralign() {
 	}
 }
 
-func (mkline *MkLine) checkText(text string) {
+func (mkline *MkLine) CheckText(text string) {
 	if G.opts.DebugTrace {
 		defer tracecall1("MkLine.checkText", text)()
 	}
@@ -807,7 +807,7 @@ func (mkline *MkLine) checkText(text string) {
 	}
 }
 
-func (mkline *MkLine) checkIf() {
+func (mkline *MkLine) CheckIf() {
 	if G.opts.DebugTrace {
 		defer tracecall0("MkLine.checkIf")()
 	}
@@ -830,12 +830,12 @@ func (mkline *MkLine) checkIf() {
 	{
 		var pop, pvarname, pvalue *string
 		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
-			mkline.checkVartype(*pvarname, "use", *pvalue, "")
+			mkline.CheckVartype(*pvarname, "use", *pvalue, "")
 		}
 	}
 }
 
-func (mkline *MkLine) checklineValidCharactersInValue(reValid string) {
+func (mkline *MkLine) CheckValidCharactersInValue(reValid string) {
 	rest := regcomp(reValid).ReplaceAllString(mkline.Value(), "")
 	if rest != "" {
 		uni := ""
@@ -853,8 +853,8 @@ func (mkline *MkLine) explainRelativeDirs() {
 		"main pkgsrc repository.")
 }
 
-func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
-	mkline.checkRelativePath(pkgdir, true)
+func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
+	mkline.CheckRelativePath(pkgdir, true)
 	pkgdir = resolveVarsInRelativePath(pkgdir, false)
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
@@ -871,7 +871,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 	}
 }
 
-func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
+func (mkline *MkLine) CheckRelativePath(path string, mustExist bool) {
 	if !G.Wip && strings.Contains(path, "/wip/") {
 		mkline.Line.Error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}

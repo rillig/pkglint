@@ -20,7 +20,7 @@ func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	c.Check(vartype.guessed, equals, guNotGuessed)
 	c.Check(vartype.kindOfList, equals, lkNone)
 
-	mkline.checkVartype("COMMENT", "=", "A nice package", "")
+	mkline.CheckVartype("COMMENT", "=", "A nice package", "")
 
 	c.Check(s.Stdout(), equals, "WARN: fname:1: COMMENT should not begin with \"A\".\n")
 }
@@ -29,7 +29,7 @@ func (s *Suite) TestChecklineMkVartype(c *check.C) {
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 1, "DISTNAME=gcc-${GCC_VERSION}", nil))
 
-	mkline.checkVartype("DISTNAME", "=", "gcc-${GCC_VERSION}", "")
+	mkline.CheckVartype("DISTNAME", "=", "gcc-${GCC_VERSION}", "")
 }
 
 func (s *Suite) TestChecklineMkVaralign(c *check.C) {
@@ -44,7 +44,7 @@ func (s *Suite) TestChecklineMkVaralign(c *check.C) {
 		"VAR=\tvalue")     // Already aligned with tabs only, left unchanged.
 
 	for _, line := range lines {
-		NewMkLine(line).checkVaralign()
+		NewMkLine(line).CheckVaralign()
 	}
 
 	c.Check(lines[0].changed, equals, true)
@@ -166,17 +166,17 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	s.UseCommandLine(c, "-Wtypes")
 	G.globalData.InitVartypes()
 
-	NewMkLine(NewLine("fname", 1, ".if !empty(PKGSRC_COMPILER:Mmycc)", nil)).checkIf()
+	NewMkLine(NewLine("fname", 1, ".if !empty(PKGSRC_COMPILER:Mmycc)", nil)).CheckIf()
 
 	c.Check(s.Stdout(), equals, "WARN: fname:1: Invalid :M value \"mycc\". "+
 		"Only { ccache ccc clang distcc f2c gcc hp icc ido gcc mipspro "+
 		"mipspro-ucode pcc sunpro xlc } are allowed.\n")
 
-	NewMkLine(NewLine("fname", 1, ".elif ${A} != ${B}", nil)).checkIf()
+	NewMkLine(NewLine("fname", 1, ".elif ${A} != ${B}", nil)).CheckIf()
 
 	c.Check(s.Stdout(), equals, "") // Unknown condition types are silently ignored
 
-	NewMkLine(NewLine("fname", 1, ".if ${HOMEPAGE} == \"mailto:someone@example.org\"", nil)).checkIf()
+	NewMkLine(NewLine("fname", 1, ".if ${HOMEPAGE} == \"mailto:someone@example.org\"", nil)).CheckIf()
 
 	c.Check(s.Output(), equals, "WARN: fname:1: \"mailto:someone@example.org\" is not a valid URL.\n")
 }

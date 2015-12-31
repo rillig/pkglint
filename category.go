@@ -23,7 +23,7 @@ func CheckdirCategory() {
 	exp.ExpectEmptyLine()
 
 	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) {
-		mklines.mklines[exp.index-1].checklineValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
+		mklines.mklines[exp.index-1].CheckValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
 	} else {
 		exp.CurrentLine().Error0("COMMENT= line expected.")
 	}

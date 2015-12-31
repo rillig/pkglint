@@ -158,7 +158,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	if m, pattern, relpath, pkg := match3(value, `(.*):(\.\./\.\./[^/]+/([^/]+))$`); m {
-		cv.mkline.checkRelativePkgdir(relpath)
+		cv.mkline.CheckRelativePkgdir(relpath)
 
 		switch pkg {
 		case "msgfmt", "gettext":
@@ -169,7 +169,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			line.Warn0("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		cv.mkline.checkVartypePrimitive(cv.varname, CheckvarDependency, cv.op, pattern, cv.comment, cv.listContext, cv.guessed)
+		cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarDependency, cv.op, pattern, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
@@ -216,7 +216,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 }
 
 func (cv *VartypeCheck) FetchURL() {
-	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	for siteURL, siteName := range G.globalData.MasterSiteUrls {
 		if hasPrefix(cv.value, siteURL) {
@@ -376,7 +376,7 @@ func (cv *VartypeCheck) Option() {
 // The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
 	if !strings.Contains(cv.value, ":") && cv.guessed == guGuessed {
-		cv.mkline.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+		cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
@@ -426,7 +426,7 @@ func (cv *VartypeCheck) PkgName() {
 }
 
 func (cv *VartypeCheck) PkgOptionsVar() {
-	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
+	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarVarname, cv.op, cv.value, cv.comment, false, cv.guessed)
 	if matches(cv.value, `\$\{PKGBASE[:\}]`) {
 		cv.line.Error0("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		Explain3(
@@ -439,7 +439,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // A directory name relative to the top-level pkgsrc directory.
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
-	cv.mkline.checkRelativePkgdir(G.CurPkgsrcdir + "/" + cv.value)
+	cv.mkline.CheckRelativePkgdir(G.CurPkgsrcdir + "/" + cv.value)
 }
 
 func (cv *VartypeCheck) PkgRevision() {
@@ -504,12 +504,12 @@ func (cv *VartypeCheck) PythonDependency() {
 
 // Refers to a package directory.
 func (cv *VartypeCheck) RelativePkgDir() {
-	cv.mkline.checkRelativePkgdir(cv.value)
+	cv.mkline.CheckRelativePkgdir(cv.value)
 }
 
 // Refers to a file or directory.
 func (cv *VartypeCheck) RelativePkgPath() {
-	cv.mkline.checkRelativePath(cv.value, true)
+	cv.mkline.CheckRelativePath(cv.value, true)
 }
 
 func (cv *VartypeCheck) Restricted() {
@@ -569,7 +569,7 @@ func (cv *VartypeCheck) SedCommands() {
 				}
 				shline.checkShellword(words[i-1], true)
 				shline.checkShellword(words[i], true)
-				mkline.checkVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
+				mkline.CheckVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
 				line.Error0("The -e option to sed requires an argument.")
 			}
@@ -712,7 +712,7 @@ func (cv *VartypeCheck) WrapperTransform() {
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {
-	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 }
 
 // A directory relative to ${WRKSRC}, for use in CONFIGURE_DIRS and similar variables.
