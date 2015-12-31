@@ -244,7 +244,7 @@ func (line *Line) CheckAbsolutePathname(text string) {
 func (line *Line) CheckLength(maxlength int) {
 	if len(line.Text) > maxlength {
 		line.Warnf("Line too long (should be no more than %d characters).", maxlength)
-		explain3(
+		Explain3(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
 			"Moderately short lines also make reading easier.")
@@ -266,7 +266,7 @@ func (line *Line) CheckTrailingWhitespace() {
 	if hasSuffix(line.Text, " ") || hasSuffix(line.Text, "\t") {
 		if !line.AutofixReplaceRegexp(`\s+\n$`, "\n") {
 			line.Note0("Trailing white-space.")
-			explain2(
+			Explain2(
 				"When a line ends with some white-space, that space is in most cases",
 				"irrelevant and can be removed.")
 		}
@@ -284,7 +284,7 @@ func (line *Line) CheckRcsid(prefixRe, suggestedPrefix string) bool {
 
 	if !line.AutofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
 		line.Error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
-		explain3(
+		Explain3(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
 			"version can be traced back later from a binary package. This is to",
 			"ensure reproducible builds, for example for finding bugs.")

@@ -81,7 +81,7 @@ func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
 			}
 		} else if hasPrefix(prevFname, "patch-") && algorithms == "SHA1" {
 			line.Warn2("Patch file %q does not exist in directory %q.", prevFname, cleanpath(ck.patchdir))
-			explain(
+			Explain(
 				"If the patches directory looks correct, the patch may have been",
 				"removed without updating the distinfo file. In such a case please",
 				"update the distinfo file.",

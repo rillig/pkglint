@@ -145,7 +145,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		line := ck.exp.CurrentLine()
 		if line.Text != "" && !matches(line.Text, rePatchUniFileDel) && !hasPrefix(line.Text, "Index:") && !hasPrefix(line.Text, "diff ") {
 			line.Warn0("Empty line or end of file expected.")
-			explain3(
+			Explain3(
 				"This empty line makes the end of the patch clearly visible.",
 				"Otherwise the reader would have to count lines to see where",
 				"the patch ends.")
@@ -160,7 +160,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.Error0("Each patch must be documented.")
-		explain(
+		Explain(
 			"Pkgsrc tries to have as few patches as possible. Therefore, each patch",
 			"must document why it is necessary. Typical reasons are portability or",
 			"security.",
@@ -216,7 +216,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	case ftConfigure:
 		if hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
 			line.Error0("This code must not be included in patches.")
-			explain4(
+			Explain4(
 				"It is generated automatically by pkgsrc after the patch phase.",
 				"",
 				"For more details, look for \"configure-scripts-override\" in",
@@ -238,7 +238,7 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 	if hasSuffix(line.Text, "\r") {
 		if !line.AutofixReplace("\r\n", "\n") {
 			line.Error0("The hunk header must not end with a CR character.")
-			explain1(
+			Explain1(
 				"The MacOS X patch utility cannot handle these.")
 		}
 	}
@@ -324,7 +324,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 	case matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
 		line.Warn1("Found absolute pathname: %s", word)
-		explain(
+		Explain(
 			"Absolute pathnames are often an indicator for unportable code. As",
 			"pkgsrc aims to be a portable system, absolute pathnames should be",
 			"avoided whenever possible.",

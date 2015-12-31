@@ -76,7 +76,7 @@ func Debugf(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.debugOut, llDebug, fname, lineno, format, args...)
 }
 
-func explain(explanation ...string) {
+func Explain(explanation ...string) {
 	if G.opts.Explain {
 		complete := strings.Join(explanation, "\n")
 		if G.explanationsGiven[complete] {
@@ -95,9 +95,9 @@ func explain(explanation ...string) {
 	}
 	G.explanationsAvailable = true
 }
-func explain1(e1 string)             { explain(e1) }
-func explain2(e1, e2 string)         { explain(e1, e2) }
-func explain3(e1, e2, e3 string)     { explain(e1, e2, e3) }
-func explain4(e1, e2, e3, e4 string) { explain(e1, e2, e3, e4) }
+func Explain1(e1 string)             { Explain(e1) }
+func Explain2(e1, e2 string)         { Explain(e1, e2) }
+func Explain3(e1, e2, e3 string)     { Explain(e1, e2, e3) }
+func Explain4(e1, e2, e3, e4 string) { Explain(e1, e2, e3, e4) }
 
 type pkglintFatal struct{}
