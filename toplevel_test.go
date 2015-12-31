@@ -21,7 +21,7 @@ func (s *Suite) TestCheckdirToplevel(c *check.C) {
 	s.CreateTmpFile(c, "x11/Makefile", "")
 	G.globalData.InitVartypes()
 
-	G.currentDir = s.tmpdir
+	G.CurrentDir = s.tmpdir
 	checkdirToplevel()
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+

@@ -163,7 +163,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 		ck.checkpathShare(pline)
 	}
 
-	if strings.Contains(text, "${PKGLOCALEDIR}") && G.pkg != nil && G.pkg.vardef["USE_PKGLOCALEDIR"] == nil {
+	if strings.Contains(text, "${PKGLOCALEDIR}") && G.Pkg != nil && G.Pkg.vardef["USE_PKGLOCALEDIR"] == nil {
 		line.warn0("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
 	}
 
@@ -235,14 +235,14 @@ func (ck *PlistChecker) checkpathInfo(pline *PlistLine, dirname, basename string
 		return
 	}
 
-	if G.pkg != nil && G.pkg.vardef["INFO_FILES"] == nil {
+	if G.Pkg != nil && G.Pkg.vardef["INFO_FILES"] == nil {
 		pline.line.warn0("Packages that install info files should set INFO_FILES.")
 	}
 }
 
 func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string) {
 	switch {
-	case G.pkg != nil && G.pkg.effectivePkgbase != "" && hasPrefix(pline.text, "lib/"+G.pkg.effectivePkgbase+"/"):
+	case G.Pkg != nil && G.Pkg.effectivePkgbase != "" && hasPrefix(pline.text, "lib/"+G.Pkg.effectivePkgbase+"/"):
 		return
 
 	case hasPrefix(pline.text, "lib/locale/"):
@@ -256,7 +256,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 			pline.line.warn1("Library filename %q should start with \"lib\".", basename)
 		}
 		if ext == "la" {
-			if G.pkg != nil && G.pkg.vardef["USE_LIBTOOL"] == nil {
+			if G.Pkg != nil && G.Pkg.vardef["USE_LIBTOOL"] == nil {
 				pline.line.warn0("Packages that install libtool libraries should define USE_LIBTOOL.")
 			}
 		}
@@ -326,22 +326,22 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 	switch {
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
-		if G.pkg != nil && G.pkg.included[f] == nil {
+		if G.Pkg != nil && G.Pkg.included[f] == nil {
 			line.warn1("Packages that install a .desktop entry should .include %q.", f)
 			explain2(
 				"If *.desktop files contain MimeType keys, the global MIME type registry",
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
 		}
 
-	case hasPrefix(text, "share/icons/hicolor/") && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
+	case hasPrefix(text, "share/icons/hicolor/") && G.Pkg != nil && G.Pkg.pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
-		if G.pkg.included[f] == nil {
+		if G.Pkg.included[f] == nil {
 			line.error1("Packages that install hicolor icons must include %q in the Makefile.", f)
 		}
 
-	case hasPrefix(text, "share/icons/gnome") && G.pkg != nil && G.pkg.pkgpath != "graphics/gnome-icon-theme":
+	case hasPrefix(text, "share/icons/gnome") && G.Pkg != nil && G.Pkg.pkgpath != "graphics/gnome-icon-theme":
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
-		if G.pkg.included[f] == nil {
+		if G.Pkg.included[f] == nil {
 			line.error1("The package Makefile must include %q.", f)
 			explain1(
 				"Packages that install GNOME icons must maintain the icon theme cache.")
@@ -352,11 +352,11 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 			line.warn0("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 		}
 
-	case G.pkg != nil && G.pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.pkg.effectivePkgbase+"/") ||
-		hasPrefix(text, "share/examples/"+G.pkg.effectivePkgbase+"/")):
+	case G.Pkg != nil && G.Pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.Pkg.effectivePkgbase+"/") ||
+		hasPrefix(text, "share/examples/"+G.Pkg.effectivePkgbase+"/")):
 		// Fine.
 
-	case text == "share/icons/hicolor/icon-theme.cache" && G.pkg != nil && G.pkg.pkgpath != "graphics/hicolor-icon-theme":
+	case text == "share/icons/hicolor/icon-theme.cache" && G.Pkg != nil && G.Pkg.pkgpath != "graphics/hicolor-icon-theme":
 		line.error0("This file must not appear in any PLIST file.")
 		explain3(
 			"Remove this line and add the following line to the package Makefile.",

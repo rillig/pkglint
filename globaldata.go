@@ -47,7 +47,7 @@ type SuggestedUpdate struct {
 }
 
 func (gd *GlobalData) Initialize() {
-	firstArg := G.todo[0]
+	firstArg := G.Todo[0]
 	if fileExists(firstArg) {
 		firstArg = path.Dir(firstArg)
 	}
@@ -334,7 +334,7 @@ func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 }
 
 func (gd *GlobalData) GetSuggestedPackageUpdates() []SuggestedUpdate {
-	if G.isWip {
+	if G.Wip {
 		return gd.suggestedWipUpdates
 	} else {
 		return gd.suggestedUpdates

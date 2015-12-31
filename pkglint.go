@@ -33,7 +33,7 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	}
 
 	if G.opts.DumpMakefile {
-		debugf(G.currentDir, noLines, "Whole Makefile (with all included files) follows:")
+		debugf(G.CurrentDir, noLines, "Whole Makefile (with all included files) follows:")
 		for _, line := range allLines.lines {
 			fmt.Printf("%s\n", line.String())
 		}
@@ -78,13 +78,13 @@ func resolveVariableRefs(text string) string {
 			varname := m[2 : len(m)-1]
 			if !visited[varname] {
 				visited[varname] = true
-				if G.pkg != nil {
-					if value, ok := G.pkg.varValue(varname); ok {
+				if G.Pkg != nil {
+					if value, ok := G.Pkg.varValue(varname); ok {
 						return value
 					}
 				}
-				if G.mk != nil {
-					if value, ok := G.mk.varValue(varname); ok {
+				if G.Mk != nil {
+					if value, ok := G.Mk.varValue(varname); ok {
 						return value
 					}
 				}
@@ -99,7 +99,7 @@ func resolveVariableRefs(text string) string {
 }
 
 func expandVariableWithDefault(varname, defaultValue string) string {
-	mkline := G.pkg.vardef[varname]
+	mkline := G.Pkg.vardef[varname]
 	if mkline == nil {
 		return defaultValue
 	}

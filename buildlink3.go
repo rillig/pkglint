@@ -61,10 +61,10 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		pkgupperLine.error2("Package name mismatch between multiple-inclusion guard %q (expected %q) ...", pkgupper, ucPkgbase)
 		pkgbaseLine.error1("... and package name %q.", pkgbase)
 	}
-	if G.pkg != nil {
-		if mkbase := G.pkg.effectivePkgbase; mkbase != "" && mkbase != pkgbase {
+	if G.Pkg != nil {
+		if mkbase := G.Pkg.effectivePkgbase; mkbase != "" && mkbase != pkgbase {
 			pkgbaseLine.error1("Package name mismatch between %q in this file ...", pkgbase)
-			G.pkg.effectivePkgnameLine.line.error1("... and %q from the package Makefile.", mkbase)
+			G.Pkg.effectivePkgnameLine.line.error1("... and %q from the package Makefile.", mkbase)
 		}
 	}
 
@@ -171,8 +171,8 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		exp.CurrentLine().warn0("The file should end here.")
 	}
 
-	if G.pkg != nil {
-		G.pkg.checklinesBuildlink3Inclusion(mklines)
+	if G.Pkg != nil {
+		G.Pkg.checklinesBuildlink3Inclusion(mklines)
 	}
 
 	SaveAutofixChanges(mklines.lines)

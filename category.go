@@ -6,10 +6,10 @@ import (
 
 func CheckdirCategory() {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkdirCategory", G.currentDir)()
+		defer tracecall1("checkdirCategory", G.CurrentDir)()
 	}
 
-	lines := LoadNonemptyLines(G.currentDir+"/Makefile", true)
+	lines := LoadNonemptyLines(G.CurrentDir+"/Makefile", true)
 	if lines == nil {
 		return
 	}
@@ -39,7 +39,7 @@ func CheckdirCategory() {
 	// the (hopefully) sorted list of SUBDIRs. The first step is to
 	// collect the SUBDIRs in the Makefile and in the file system.
 
-	fSubdirs := getSubdirs(G.currentDir)
+	fSubdirs := getSubdirs(G.CurrentDir)
 	sort.Sort(sort.StringSlice(fSubdirs))
 	var mSubdirs []subdir
 
@@ -144,14 +144,14 @@ func CheckdirCategory() {
 			fNeednext = true
 			mNeednext = true
 			if mActive {
-				subdirs = append(subdirs, G.currentDir+"/"+mCurrent)
+				subdirs = append(subdirs, G.CurrentDir+"/"+mCurrent)
 			}
 		}
 	}
 
 	// the pkgsrc-wip category Makefile defines its own targets for
 	// generating indexes and READMEs. Just skip them.
-	if G.isWip {
+	if G.Wip {
 		exp.index = len(exp.lines) - 2
 	}
 
@@ -164,6 +164,6 @@ func CheckdirCategory() {
 	SaveAutofixChanges(lines)
 
 	if G.opts.Recursive {
-		G.todo = append(append([]string(nil), subdirs...), G.todo...)
+		G.Todo = append(append([]string(nil), subdirs...), G.Todo...)
 	}
 }

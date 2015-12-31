@@ -18,13 +18,13 @@ func CheckDirent(fname string) {
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	G.currentDir = ifelseStr(isReg, path.Dir(fname), fname)
-	absCurrentDir := abspath(G.currentDir)
-	G.isWip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
-	G.isInfrastructure = matches(absCurrentDir, `/mk/|/mk$`)
-	G.curPkgsrcdir = findPkgsrcTopdir(G.currentDir)
-	if G.curPkgsrcdir == "" {
-		errorf(fname, noLines, "Cannot determine the pkgsrc root directory for %q.", G.currentDir)
+	G.CurrentDir = ifelseStr(isReg, path.Dir(fname), fname)
+	absCurrentDir := abspath(G.CurrentDir)
+	G.Wip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
+	G.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)
+	G.CurPkgsrcdir = findPkgsrcTopdir(G.CurrentDir)
+	if G.CurPkgsrcdir == "" {
+		errorf(fname, noLines, "Cannot determine the pkgsrc root directory for %q.", G.CurrentDir)
 		return
 	}
 
@@ -36,9 +36,9 @@ func CheckDirent(fname string) {
 		return
 	}
 
-	switch G.curPkgsrcdir {
+	switch G.CurPkgsrcdir {
 	case "../..":
-		checkdirPackage(relpath(G.globalData.Pkgsrcdir, G.currentDir))
+		checkdirPackage(relpath(G.globalData.Pkgsrcdir, G.CurrentDir))
 	case "..":
 		CheckdirCategory()
 	case ".":

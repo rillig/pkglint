@@ -497,7 +497,7 @@ func (shline *MkShellLine) checkLineStart(hidden, macro, rest string, eflag *boo
 	case !strings.Contains(hidden, "@"):
 		// Nothing is hidden at all.
 
-	case hasPrefix(G.mk.target, "show-") || hasSuffix(G.mk.target, "-message"):
+	case hasPrefix(G.Mk.target, "show-") || hasSuffix(G.Mk.target, "-message"):
 		// In these targets commands may be hidden.
 
 	case hasPrefix(rest, "#"):
@@ -581,7 +581,7 @@ func (ctx *ShelltextContext) handleTool() bool {
 		return false
 	}
 
-	if !G.mk.tools[shellword] && !G.mk.tools["g"+shellword] {
+	if !G.Mk.tools[shellword] && !G.Mk.tools["g"+shellword] {
 		ctx.shline.line.warn1("The %q tool is used but not added to USE_TOOLS.", shellword)
 	}
 
@@ -617,7 +617,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
 
 		if toolname := G.globalData.VarnameToToolname[varname]; toolname != "" {
-			if !G.mk.tools[toolname] {
+			if !G.Mk.tools[toolname] {
 				ctx.shline.line.warn1("The %q tool is used but not added to USE_TOOLS.", toolname)
 			}
 			ctx.shline.checkCommandUse(shellword)
@@ -631,7 +631,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 
 		// When the package author has explicitly defined a command
 		// variable, assume it to be valid.
-		if G.pkg != nil && G.pkg.vardef[varname] != nil {
+		if G.Pkg != nil && G.Pkg.vardef[varname] != nil {
 			return true
 		}
 	}
@@ -788,7 +788,7 @@ func (ctx *ShelltextContext) checkSetE(eflag bool) {
 
 // Some shell commands should not be used in the install phase.
 func (shline *MkShellLine) checkCommandUse(shellcmd string) {
-	if G.mk == nil || !matches(G.mk.target, `^(?:pre|do|post)-install$`) {
+	if G.Mk == nil || !matches(G.Mk.target, `^(?:pre|do|post)-install$`) {
 		return
 	}
 

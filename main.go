@@ -52,17 +52,17 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	}
 
 	for _, arg := range G.opts.args {
-		G.todo = append(G.todo, filepath.ToSlash(arg))
+		G.Todo = append(G.Todo, filepath.ToSlash(arg))
 	}
-	if len(G.todo) == 0 {
-		G.todo = []string{"."}
+	if len(G.Todo) == 0 {
+		G.Todo = []string{"."}
 	}
 
 	G.globalData.Initialize()
 
-	for len(G.todo) != 0 {
-		item := G.todo[0]
-		G.todo = G.todo[1:]
+	for len(G.Todo) != 0 {
+		item := G.Todo[0]
+		G.Todo = G.Todo[1:]
 		CheckDirent(item)
 	}
 

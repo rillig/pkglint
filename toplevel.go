@@ -11,11 +11,11 @@ type Toplevel struct {
 
 func checkdirToplevel() {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkdirToplevel", G.currentDir)()
+		defer tracecall1("checkdirToplevel", G.CurrentDir)()
 	}
 
 	ctx := new(Toplevel)
-	fname := G.currentDir + "/Makefile"
+	fname := G.CurrentDir + "/Makefile"
 
 	lines := LoadNonemptyLines(fname, true)
 	if lines == nil {
@@ -32,10 +32,10 @@ func checkdirToplevel() {
 
 	if G.opts.Recursive {
 		if G.opts.CheckGlobal {
-			G.ipcUsedLicenses = make(map[string]bool)
-			G.ipcDistinfo = make(map[string]*Hash)
+			G.UsedLicenses = make(map[string]bool)
+			G.Hash = make(map[string]*Hash)
 		}
-		G.todo = append(G.todo, ctx.subdirs...)
+		G.Todo = append(G.Todo, ctx.subdirs...)
 	}
 }
 
@@ -48,7 +48,7 @@ func (ctx *Toplevel) checkSubdir(line *Line, commentedOut bool, indentation, sub
 		line.warn0("Indentation should be a single tab character.")
 	}
 
-	if strings.Contains(subdir, "$") || !fileExists(G.currentDir+"/"+subdir+"/Makefile") {
+	if strings.Contains(subdir, "$") || !fileExists(G.CurrentDir+"/"+subdir+"/Makefile") {
 		return
 	}
 
@@ -66,6 +66,6 @@ func (ctx *Toplevel) checkSubdir(line *Line, commentedOut bool, indentation, sub
 	ctx.previousSubdir = subdir
 
 	if !commentedOut {
-		ctx.subdirs = append(ctx.subdirs, G.currentDir+"/"+subdir)
+		ctx.subdirs = append(ctx.subdirs, G.CurrentDir+"/"+subdir)
 	}
 }

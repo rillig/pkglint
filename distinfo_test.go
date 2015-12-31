@@ -10,7 +10,7 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 		"patch contents\n")
 	s.CreateTmpFile(c, "patches/patch-ab", ""+
 		"patch contents\n")
-	G.currentDir = s.tmpdir
+	G.CurrentDir = s.tmpdir
 
 	ChecklinesDistinfo(s.NewLines("distinfo",
 		"should be the RCS ID",
@@ -28,8 +28,8 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 
 func (s *Suite) TestChecklinesDistinfo_GlobalHashMismatch(c *check.C) {
 	otherLine := NewLine("other/distinfo", 7, "dummy", nil)
-	G.ipcDistinfo = make(map[string]*Hash)
-	G.ipcDistinfo["SHA512:pkgname-1.0.tar.gz"] = &Hash{"asdfasdf", otherLine}
+	G.Hash = make(map[string]*Hash)
+	G.Hash["SHA512:pkgname-1.0.tar.gz"] = &Hash{"asdfasdf", otherLine}
 
 	ChecklinesDistinfo(s.NewLines("distinfo",
 		"$"+"NetBSD$",
@@ -53,7 +53,7 @@ func (s *Suite) TestChecklinesDistinfo_UncommittedPatch(c *check.C) {
 		"+new\n")
 	s.CreateTmpFile(c, "CVS/Entries",
 		"/distinfo/...\n")
-	G.currentDir = s.tmpdir
+	G.CurrentDir = s.tmpdir
 
 	ChecklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
 		"$"+"NetBSD$",
@@ -68,7 +68,7 @@ func (s *Suite) TestChecklinesDistinfo_UnrecordedPatches(c *check.C) {
 	s.CreateTmpFile(c, "patches/CVS/Entries", "")
 	s.CreateTmpFile(c, "patches/patch-aa", "")
 	s.CreateTmpFile(c, "patches/patch-src-Makefile", "")
-	G.currentDir = s.tmpdir
+	G.CurrentDir = s.tmpdir
 
 	ChecklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
 		"$"+"NetBSD$",

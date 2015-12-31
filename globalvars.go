@@ -8,17 +8,17 @@ import (
 type GlobalVars struct {
 	opts       CmdOpts    //
 	globalData GlobalData //
-	pkg        *Package   // The package that is currently checked.
-	mk         *MkLines   // The Makefile (or fragment) that is currently checked.
+	Pkg        *Package   // The package that is currently checked.
+	Mk         *MkLines   // The Makefile (or fragment) that is currently checked.
 
-	todo             []string // The files or directories that still need to be checked.
-	currentDir       string   // The currently checked directory, relative to the cwd
-	curPkgsrcdir     string   // The pkgsrc directory, relative to currentDir
-	isWip            bool     // Is the currently checked directory from pkgsrc-wip?
-	isInfrastructure bool     // Is the currently checked item from the pkgsrc infrastructure?
+	Todo           []string // The files or directories that still need to be checked.
+	CurrentDir     string   // The currently checked directory, relative to the cwd
+	CurPkgsrcdir   string   // The pkgsrc directory, relative to currentDir
+	Wip            bool     // Is the currently checked directory from pkgsrc-wip?
+	Infrastructure bool     // Is the currently checked item from the pkgsrc infrastructure?
 
-	ipcDistinfo     map[string]*Hash // Maps "alg:fname" => "checksum".
-	ipcUsedLicenses map[string]bool  // Maps "license name" => true
+	Hash         map[string]*Hash // Maps "alg:fname" => hash (inter-package check).
+	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
 
 	errors                int
 	warnings              int

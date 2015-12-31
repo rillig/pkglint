@@ -212,13 +212,13 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 	if G.opts.WarnExtra &&
 		(vartype == nil || vartype.guessed == guGuessed) &&
 		!varIsUsed(varname) &&
-		!(G.mk != nil && G.mk.forVars[varname]) {
+		!(G.Mk != nil && G.Mk.forVars[varname]) {
 		mkline.warn1("%s is used but not defined. Spelling mistake?", varname)
 	}
 
 	mkline.checkVarusePermissions(varname, vuc)
 
-	if varname == "LOCALBASE" && !G.isInfrastructure {
+	if varname == "LOCALBASE" && !G.Infrastructure {
 		mkline.warnVaruseLocalbase()
 	}
 
@@ -232,7 +232,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 		mkline.checkVaruseShellword(varname, vartype, vuc, mod, needsQuoting)
 	}
 
-	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.SystemBuildDefs[varname] && !G.mk.buildDefs[varname] {
+	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.SystemBuildDefs[varname] && !G.Mk.buildDefs[varname] {
 		mkline.warn1("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		explain(
 			"When a pkgsrc package is built, many things can be configured by the",
@@ -368,7 +368,7 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	//
 	// When doing checks outside a package, the :M* operator is needed for safety.
 	needMstar := matches(varname, `^(?:.*_)?(?:CFLAGS||CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`) &&
-		(G.pkg == nil || G.pkg.vardef["GNU_CONFIGURE"] != nil)
+		(G.Pkg == nil || G.Pkg.vardef["GNU_CONFIGURE"] != nil)
 
 	strippedMod := mod
 	if m, stripped := match1(mod, `(.*?)(?::M\*)?(?::Q)?$`); m {
@@ -485,12 +485,12 @@ func (mkline *MkLine) checkVarassign() {
 		mkline.warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	if hasPrefix(varname, "_") && !G.isInfrastructure {
+	if hasPrefix(varname, "_") && !G.Infrastructure {
 		mkline.warn1("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
-	if varname == "PERL5_PACKLIST" && G.pkg != nil {
-		if m, p5pkgname := match1(G.pkg.effectivePkgbase, `^p5-(.*)`); m {
+	if varname == "PERL5_PACKLIST" && G.Pkg != nil {
+		if m, p5pkgname := match1(G.Pkg.effectivePkgbase, `^p5-(.*)`); m {
 			guess := "auto/" + strings.Replace(p5pkgname, "-", "/", -1) + "/.packlist"
 
 			ucvalue, ucguess := strings.ToUpper(value), strings.ToUpper(guess)
@@ -514,7 +514,7 @@ func (mkline *MkLine) checkVarassign() {
 			// The variables mentioned in EVAL_PREFIX will later be
 			// defined by find-prefix.mk. Therefore, they are marked
 			// as known in the current file.
-			G.mk.vardef[evalVarname] = mkline
+			G.Mk.vardef[evalVarname] = mkline
 		}
 	}
 
@@ -563,7 +563,7 @@ func (mkline *MkLine) checkVarassign() {
 }
 
 func (mkline *MkLine) checkVarassignBsdPrefs() {
-	if G.opts.WarnExtra && mkline.Op() == "?=" && G.pkg != nil && !G.pkg.seenBsdPrefsMk {
+	if G.opts.WarnExtra && mkline.Op() == "?=" && G.Pkg != nil && !G.Pkg.seenBsdPrefsMk {
 		switch mkline.Varcanon() {
 		case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
 			return
@@ -599,9 +599,9 @@ func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
 	}
 
 	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
-	if G.pkg != nil {
+	if G.Pkg != nil {
 		if m, plistVarname := match1(value, `(.+)=.*@comment.*`); m {
-			G.pkg.plistSubstCond[plistVarname] = true
+			G.Pkg.plistSubstCond[plistVarname] = true
 		}
 	}
 }
@@ -872,7 +872,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 }
 
 func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
-	if !G.isWip && strings.Contains(path, "/wip/") {
+	if !G.Wip && strings.Contains(path, "/wip/") {
 		mkline.line.error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
@@ -883,7 +883,7 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 
 	abs := resolvedPath
 	if !hasPrefix(abs, "/") {
-		abs = G.currentDir + "/" + abs
+		abs = G.CurrentDir + "/" + abs
 	}
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
@@ -894,7 +894,7 @@ func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 
 	if hasPrefix(path, "../") &&
 		!matches(path, `^\.\./\.\./[^/]+/[^/]`) &&
-		!(G.curPkgsrcdir == ".." && hasPrefix(path, "../mk/")) && // For category Makefiles.
+		!(G.CurPkgsrcdir == ".." && hasPrefix(path, "../mk/")) && // For category Makefiles.
 		!hasPrefix(path, "../../mk/") {
 		mkline.warn1("Invalid relative path %q.", path)
 	}

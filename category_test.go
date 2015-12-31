@@ -14,7 +14,7 @@ func (s *Suite) TestCheckdirCategory_TotallyBroken(c *check.C) {
 		"\n"+
 		".include \"../mk/category.mk\"\n")
 
-	G.currentDir = s.tmpdir + "/archivers"
+	G.CurrentDir = s.tmpdir + "/archivers"
 	CheckdirCategory()
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+

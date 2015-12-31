@@ -120,26 +120,26 @@ func checkdirPackage(pkgpath string) {
 		defer tracecall1("checkdirPackage", pkgpath)()
 	}
 
-	G.pkg = NewPackage(pkgpath)
-	defer func() { G.pkg = nil }()
-	pkg := G.pkg
+	G.Pkg = NewPackage(pkgpath)
+	defer func() { G.Pkg = nil }()
+	pkg := G.Pkg
 
 	// we need to handle the Makefile first to get some variables
-	lines := pkg.loadPackageMakefile(G.currentDir + "/Makefile")
+	lines := pkg.loadPackageMakefile(G.CurrentDir + "/Makefile")
 	if lines == nil {
 		return
 	}
 
-	files := dirglob(G.currentDir)
+	files := dirglob(G.CurrentDir)
 	if pkg.pkgdir != "." {
-		files = append(files, dirglob(G.currentDir+"/"+pkg.pkgdir)...)
+		files = append(files, dirglob(G.CurrentDir+"/"+pkg.pkgdir)...)
 	}
 	if G.opts.CheckExtra {
-		files = append(files, dirglob(G.currentDir+"/"+pkg.filesdir)...)
+		files = append(files, dirglob(G.CurrentDir+"/"+pkg.filesdir)...)
 	}
-	files = append(files, dirglob(G.currentDir+"/"+pkg.patchdir)...)
+	files = append(files, dirglob(G.CurrentDir+"/"+pkg.patchdir)...)
 	if pkg.distinfoFile != "distinfo" && pkg.distinfoFile != "./distinfo" {
-		files = append(files, G.currentDir+"/"+pkg.distinfoFile)
+		files = append(files, G.CurrentDir+"/"+pkg.distinfoFile)
 	}
 	haveDistinfo := false
 	havePatches := false
@@ -157,7 +157,7 @@ func checkdirPackage(pkgpath string) {
 	}
 
 	for _, fname := range files {
-		if fname == G.currentDir+"/Makefile" {
+		if fname == G.CurrentDir+"/Makefile" {
 			if G.opts.CheckMakefile {
 				pkg.checkfilePackageMakefile(fname, lines)
 			}
@@ -173,12 +173,12 @@ func checkdirPackage(pkgpath string) {
 
 	if G.opts.CheckDistinfo && G.opts.CheckPatches {
 		if havePatches && !haveDistinfo {
-			warnf(G.currentDir+"/"+pkg.distinfoFile, noLines, "File not found. Please run \"%s makepatchsum\".", confMake)
+			warnf(G.CurrentDir+"/"+pkg.distinfoFile, noLines, "File not found. Please run \"%s makepatchsum\".", confMake)
 		}
 	}
 
-	if !isEmptyDir(G.currentDir + "/scripts") {
-		warnf(G.currentDir+"/scripts", noLines, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
+	if !isEmptyDir(G.CurrentDir + "/scripts") {
+		warnf(G.CurrentDir+"/scripts", noLines, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
 	}
 }
 
@@ -191,17 +191,17 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	if vardef["PLIST_SRC"] == nil &&
 		vardef["GENERATE_PLIST"] == nil &&
 		vardef["META_PACKAGE"] == nil &&
-		!fileExists(G.currentDir+"/"+pkg.pkgdir+"/PLIST") &&
-		!fileExists(G.currentDir+"/"+pkg.pkgdir+"/PLIST.common") {
+		!fileExists(G.CurrentDir+"/"+pkg.pkgdir+"/PLIST") &&
+		!fileExists(G.CurrentDir+"/"+pkg.pkgdir+"/PLIST.common") {
 		warnf(fname, noLines, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
 	}
 
-	if (vardef["NO_CHECKSUM"] != nil || vardef["META_PACKAGE"] != nil) && isEmptyDir(G.currentDir+"/"+pkg.patchdir) {
-		if distinfoFile := G.currentDir + "/" + pkg.distinfoFile; fileExists(distinfoFile) {
+	if (vardef["NO_CHECKSUM"] != nil || vardef["META_PACKAGE"] != nil) && isEmptyDir(G.CurrentDir+"/"+pkg.patchdir) {
+		if distinfoFile := G.CurrentDir + "/" + pkg.distinfoFile; fileExists(distinfoFile) {
 			warnf(distinfoFile, noLines, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
 		}
 	} else {
-		if distinfoFile := G.currentDir + "/" + pkg.distinfoFile; !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
+		if distinfoFile := G.CurrentDir + "/" + pkg.distinfoFile; !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
 			warnf(distinfoFile, noLines, "File not found. Please run \"%s makesum\".", confMake)
 		}
 	}

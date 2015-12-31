@@ -62,8 +62,8 @@ func (s *Suite) TestChecklinesPlist_commonEnd(c *check.C) {
 }
 
 func (s *Suite) TestChecklinesPlist_conditional(c *check.C) {
-	G.pkg = NewPackage("category/pkgbase")
-	G.pkg.plistSubstCond["PLIST.bincmds"] = true
+	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg.plistSubstCond["PLIST.bincmds"] = true
 	lines := s.NewLines("PLIST",
 		"@comment $"+"NetBSD$",
 		"${PLIST.bincmds}bin/subdir/command")

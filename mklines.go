@@ -66,9 +66,9 @@ func (mklines *MkLines) useVar(mkline *MkLine, varname string) {
 	varcanon := varnameCanon(varname)
 	mklines.varuse[varname] = mkline
 	mklines.varuse[varcanon] = mkline
-	if G.pkg != nil {
-		G.pkg.varuse[varname] = mkline
-		G.pkg.varuse[varcanon] = mkline
+	if G.Pkg != nil {
+		G.Pkg.varuse[varname] = mkline
+		G.Pkg.varuse[varcanon] = mkline
 	}
 }
 
@@ -87,8 +87,8 @@ func (mklines *MkLines) check() {
 	allowedTargets := make(map[string]bool)
 	substcontext := new(SubstContext)
 
-	G.mk = mklines
-	defer func() { G.mk = nil }()
+	G.Mk = mklines
+	defer func() { G.Mk = nil }()
 
 	mklines.determineUsedVariables()
 
@@ -260,7 +260,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 	} else if directive == "for" {
 		if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 			for _, forvar := range splitOnSpace(vars) {
-				if !G.isInfrastructure && hasPrefix(forvar, "_") {
+				if !G.Infrastructure && hasPrefix(forvar, "_") {
 					mkline.warn1("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
 				}
 
@@ -356,12 +356,12 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 		if path.Base(mkline.line.Fname) == "buildlink3.mk" {
 			mkline.note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
-		if G.pkg != nil {
-			G.pkg.seenBsdPrefsMk = true
+		if G.Pkg != nil {
+			G.Pkg.seenBsdPrefsMk = true
 		}
 	} else if includefile == "../../mk/bsd.fast.prefs.mk" {
-		if G.pkg != nil {
-			G.pkg.seenBsdPrefsMk = true
+		if G.Pkg != nil {
+			G.Pkg.seenBsdPrefsMk = true
 		}
 	}
 

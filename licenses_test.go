@@ -13,7 +13,7 @@ func (s *Suite) TestChecklineLicense(c *check.C) {
 	s.CreateTmpFile(c, "licenses/gnu-gpl-v2", "Most software \u2026")
 	mkline := NewMkLine(NewLine("Makefile", 7, "LICENSE=dummy", nil))
 	G.globalData.Pkgsrcdir = s.tmpdir
-	G.currentDir = s.tmpdir
+	G.CurrentDir = s.tmpdir
 
 	checklineLicense(mkline, "gpl-v2")
 

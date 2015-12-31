@@ -44,7 +44,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 		if includeFile != "" {
 			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
-					G.pkg.bl3[bl3File] = line
+					G.Pkg.bl3[bl3File] = line
 					if G.opts.DebugMisc {
 						line.debug1("Buildlink3 file in package: %q", bl3File)
 					}
@@ -52,8 +52,8 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			}
 		}
 
-		if includeFile != "" && G.pkg.included[includeFile] == nil {
-			G.pkg.included[includeFile] = line
+		if includeFile != "" && G.Pkg.included[includeFile] == nil {
+			G.Pkg.included[includeFile] = line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				mkline.warn0("References to other packages should look like \"../../category/package\", not \"../package\".")
@@ -64,7 +64,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				if G.opts.DebugInclude {
 					line.debug1("Including %q sets seenMakefileCommon.", includeFile)
 				}
-				G.pkg.seenMakefileCommon = true
+				G.Pkg.seenMakefileCommon = true
 			}
 
 			if !strings.Contains(incDir, "/mk/") || strings.HasSuffix(includeFile, "/mk/haskell.mk") {
@@ -75,7 +75,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				// current file and in the current working directory.
 				// Pkglint doesn’t have an include dir list, like make(1) does.
 				if !fileExists(dirname + "/" + includeFile) {
-					dirname = G.currentDir
+					dirname = G.CurrentDir
 				}
 				if !fileExists(dirname + "/" + includeFile) {
 					line.error1("Cannot read %q.", dirname+"/"+includeFile)
@@ -95,11 +95,11 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 		if mkline.IsVarassign() {
 			varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
 
-			if op != "?=" || G.pkg.vardef[varname] == nil {
+			if op != "?=" || G.Pkg.vardef[varname] == nil {
 				if G.opts.DebugMisc {
 					line.debugf("varassign(%q, %q, %q)", varname, op, value)
 				}
-				G.pkg.vardef[varname] = mkline
+				G.Pkg.vardef[varname] = mkline
 			}
 		}
 	}
@@ -114,21 +114,21 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	tmp := relpath
-	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.curPkgsrcdir, -1)
+	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.CurPkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${LUA_PKGSRCDIR}", "../../lang/lua52", -1)
 	tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", "../../lang/php55", -1)
 	tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", "suse100", -1)
 	tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", "../../lang/python27", -1)
-	if G.pkg != nil {
-		tmp = strings.Replace(tmp, "${FILESDIR}", G.pkg.filesdir, -1)
-		tmp = strings.Replace(tmp, "${PKGDIR}", G.pkg.pkgdir, -1)
+	if G.Pkg != nil {
+		tmp = strings.Replace(tmp, "${FILESDIR}", G.Pkg.filesdir, -1)
+		tmp = strings.Replace(tmp, "${PKGDIR}", G.Pkg.pkgdir, -1)
 	}
 
 	if adjustDepth {
 		if m, pkgpath := match1(tmp, `^\.\./\.\./([^.].*)$`); m {
-			tmp = G.curPkgsrcdir + "/" + pkgpath
+			tmp = G.CurPkgsrcdir + "/" + pkgpath
 		}
 	}
 

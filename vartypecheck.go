@@ -36,7 +36,7 @@ func (cv *VartypeCheck) BuildlinkDepmethod() {
 }
 
 func (cv *VartypeCheck) Category() {
-	if fileExists(G.currentDir + "/" + G.curPkgsrcdir + "/" + cv.value + "/Makefile") {
+	if fileExists(G.CurrentDir + "/" + G.CurPkgsrcdir + "/" + cv.value + "/Makefile") {
 		return
 	}
 	switch cv.value {
@@ -439,7 +439,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // A directory name relative to the top-level pkgsrc directory.
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
-	cv.mkline.checkRelativePkgdir(G.curPkgsrcdir + "/" + cv.value)
+	cv.mkline.checkRelativePkgdir(G.CurPkgsrcdir + "/" + cv.value)
 }
 
 func (cv *VartypeCheck) PkgRevision() {

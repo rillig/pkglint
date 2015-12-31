@@ -28,8 +28,8 @@ func (s *Suite) TestVartypeCheck_BuildlinkDepmethod(c *check.C) {
 
 func (s *Suite) TestVartypeCheck_Category(c *check.C) {
 	s.CreateTmpFile(c, "filesyscategory/Makefile", "# empty\n")
-	G.currentDir = s.tmpdir
-	G.curPkgsrcdir = "."
+	G.CurrentDir = s.tmpdir
+	G.CurPkgsrcdir = "."
 
 	runVartypeChecks("CATEGORIES", "=", (*VartypeCheck).Category,
 		"chinese",
@@ -108,8 +108,8 @@ func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 	s.CreateTmpFile(c, "x11/alacarte/Makefile", "# empty\n")
 	s.CreateTmpFile(c, "category/package/Makefile", "# empty\n")
 	G.globalData.Pkgsrcdir = s.tmpdir
-	G.currentDir = s.tmpdir + "/category/package"
-	G.curPkgsrcdir = "../.."
+	G.CurrentDir = s.tmpdir + "/category/package"
+	G.CurPkgsrcdir = "../.."
 
 	runVartypeChecks("DEPENDS", "+=", (*VartypeCheck).DependencyWithPath,
 		"Perl",

@@ -10,7 +10,7 @@ func (s *Suite) TestDetermineUsedVariables_simple(c *check.C) {
 	mklines := s.NewMkLines("fname",
 		"\t${VAR}")
 	mkline := mklines.mklines[0]
-	G.mk = mklines
+	G.Mk = mklines
 
 	mklines.determineUsedVariables()
 
@@ -22,7 +22,7 @@ func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 	mklines := s.NewMkLines("fname",
 		"\t${outer.${inner}}")
 	mkline := mklines.mklines[0]
-	G.mk = mklines
+	G.Mk = mklines
 
 	mklines.determineUsedVariables()
 
@@ -34,8 +34,8 @@ func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 
 func (s *Suite) TestResolveVariableRefs_CircularReference(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "GCC_VERSION=${GCC_VERSION}", nil))
-	G.pkg = NewPackage(".")
-	G.pkg.vardef["GCC_VERSION"] = mkline
+	G.Pkg = NewPackage(".")
+	G.Pkg.vardef["GCC_VERSION"] = mkline
 
 	resolved := resolveVariableRefs("gcc-${GCC_VERSION}")
 
@@ -46,7 +46,7 @@ func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
 	mkline1 := NewMkLine(NewLine("fname", 10, "_=${SECOND}", nil))
 	mkline2 := NewMkLine(NewLine("fname", 11, "_=${THIRD}", nil))
 	mkline3 := NewMkLine(NewLine("fname", 12, "_=got it", nil))
-	G.pkg = NewPackage(".")
+	G.Pkg = NewPackage(".")
 	defineVar(mkline1, "FIRST")
 	defineVar(mkline2, "SECOND")
 	defineVar(mkline3, "THIRD")
@@ -58,8 +58,8 @@ func (s *Suite) TestResolveVariableRefs_Multilevel(c *check.C) {
 
 func (s *Suite) TestResolveVariableRefs_SpecialChars(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 10, "_=x11", nil))
-	G.pkg = NewPackage("category/pkg")
-	G.pkg.vardef["GST_PLUGINS0.10_TYPE"] = mkline
+	G.Pkg = NewPackage("category/pkg")
+	G.Pkg.vardef["GST_PLUGINS0.10_TYPE"] = mkline
 
 	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
 
@@ -126,9 +126,9 @@ func (s *Suite) TestPackage_LoadPackageMakefile(c *check.C) {
 		"DISTNAME=distfile_1_67\n"+
 		".include \"../../category/package/Makefile\"\n")
 	pkg := NewPackage("category/package")
-	G.currentDir = s.tmpdir + "/category/package"
-	G.curPkgsrcdir = "../.."
-	G.pkg = pkg
+	G.CurrentDir = s.tmpdir + "/category/package"
+	G.CurPkgsrcdir = "../.."
+	G.Pkg = pkg
 
 	pkg.loadPackageMakefile(makefile)
 
