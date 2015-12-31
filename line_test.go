@@ -12,29 +12,29 @@ func (s *Suite) TestLineModify(c *check.C) {
 	c.Check(line.changed, equals, false)
 	c.Check(line.rawLines(), check.DeepEquals, s.NewRawLines(1, "original\n"))
 
-	line.autofixReplaceRegexp(`(.)(.*)(.)`, "$3$2$1")
+	line.AutofixReplaceRegexp(`(.)(.*)(.)`, "$3$2$1")
 
 	c.Check(line.changed, equals, true)
 	c.Check(line.rawLines(), check.DeepEquals, s.NewRawLines(1, "original\n", "lriginao\n"))
 
 	line.changed = false
-	line.autofixReplace("i", "u")
+	line.AutofixReplace("i", "u")
 
 	c.Check(line.changed, equals, true)
 	c.Check(line.rawLines(), check.DeepEquals, s.NewRawLines(1, "original\n", "lruginao\n"))
 	c.Check(line.raw[0].textnl, equals, "lruginao\n")
 
 	line.changed = false
-	line.autofixReplace("lruginao", "middle")
+	line.AutofixReplace("lruginao", "middle")
 
 	c.Check(line.changed, equals, true)
 	c.Check(line.rawLines(), check.DeepEquals, s.NewRawLines(1, "original\n", "middle\n"))
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 
-	line.autofixInsertBefore("before")
-	line.autofixInsertBefore("between before and middle")
-	line.autofixInsertAfter("between middle and after")
-	line.autofixInsertAfter("after")
+	line.AutofixInsertBefore("before")
+	line.AutofixInsertBefore("between before and middle")
+	line.AutofixInsertAfter("between middle and after")
+	line.AutofixInsertAfter("after")
 
 	c.Check(line.rawLines(), check.DeepEquals, s.NewRawLines(
 		0, "", "before\n",
@@ -43,7 +43,7 @@ func (s *Suite) TestLineModify(c *check.C) {
 		0, "", "between middle and after\n",
 		0, "", "after\n"))
 
-	line.autofixDelete()
+	line.AutofixDelete()
 
 	c.Check(line.rawLines(), check.DeepEquals, s.NewRawLines(
 		0, "", "before\n",
@@ -56,8 +56,8 @@ func (s *Suite) TestLineModify(c *check.C) {
 func (s *Suite) TestLine_CheckAbsolutePathname(c *check.C) {
 	line := NewLine("Makefile", 1, "# dummy", nil)
 
-	line.checkAbsolutePathname("bindir=/bin")
-	line.checkAbsolutePathname("bindir=/../lib")
+	line.CheckAbsolutePathname("bindir=/bin")
+	line.CheckAbsolutePathname("bindir=/../lib")
 
 	c.Check(s.Output(), equals, "WARN: Makefile:1: Found absolute pathname: /bin\n")
 }
@@ -69,8 +69,8 @@ func (s *Suite) TestShowAutofix_replace(c *check.C) {
 		28, "The old song\n",
 		29, "after\n"))
 
-	if !line.autofixReplace("old", "new") {
-		line.warn0("Using \"old\" is deprecated.")
+	if !line.AutofixReplace("old", "new") {
+		line.Warn0("Using \"old\" is deprecated.")
 	}
 
 	c.Check(s.Output(), equals, ""+
@@ -87,8 +87,8 @@ func (s *Suite) TestShowAutofix_insert(c *check.C) {
 	s.UseCommandLine(c, "--show-autofix", "--source")
 	line := NewLine("Makefile", 30, "original", s.NewRawLines(30, "original\n"))
 
-	if !line.autofixInsertBefore("inserted") {
-		line.warn0("Dummy")
+	if !line.AutofixInsertBefore("inserted") {
+		line.Warn0("Dummy")
 	}
 
 	c.Check(s.Output(), equals, ""+
@@ -103,8 +103,8 @@ func (s *Suite) TestShowAutofix_delete(c *check.C) {
 	s.UseCommandLine(c, "--show-autofix", "--source")
 	line := NewLine("Makefile", 30, "to be deleted", s.NewRawLines(30, "to be deleted\n"))
 
-	if !line.autofixDelete() {
-		line.warn0("Dummy")
+	if !line.AutofixDelete() {
+		line.Warn0("Dummy")
 	}
 
 	c.Check(s.Output(), equals, ""+

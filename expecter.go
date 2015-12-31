@@ -74,8 +74,8 @@ func (exp *Expecter) ExpectEmptyLine() bool {
 	}
 
 	if G.opts.WarnSpace {
-		if !exp.CurrentLine().autofixInsertBefore("") {
-			exp.CurrentLine().note0("Empty line expected.")
+		if !exp.CurrentLine().AutofixInsertBefore("") {
+			exp.CurrentLine().Note0("Empty line expected.")
 		}
 	}
 	return false
@@ -88,6 +88,6 @@ func (exp *Expecter) ExpectText(text string) bool {
 		return true
 	}
 
-	exp.CurrentLine().warn1("This line should contain the following text: %s", text)
+	exp.CurrentLine().Warn1("This line should contain the following text: %s", text)
 	return false
 }

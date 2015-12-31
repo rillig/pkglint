@@ -707,7 +707,7 @@ func enum(values string) *VarChecker {
 	name := "enum: " + values + " " // See IsEnum
 	return &VarChecker{name, func(ctx *VartypeCheck) {
 		if !vmap[ctx.value] {
-			ctx.line.warnf("%q is not valid for %s. Use one of { %s } instead.", ctx.value, ctx.varname, values)
+			ctx.line.Warnf("%q is not valid for %s. Use one of { %s } instead.", ctx.value, ctx.varname, values)
 		}
 	}}
 }

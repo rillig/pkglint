@@ -104,45 +104,45 @@ func (line *Line) printSource(out io.Writer) {
 	}
 }
 
-func (line *Line) fatalf(format string, args ...interface{}) {
+func (line *Line) Fatalf(format string, args ...interface{}) {
 	line.printSource(G.logErr)
 	fatalf(line.Fname, line.linenos(), format, args...)
 }
 
-func (line *Line) errorf(format string, args ...interface{}) {
+func (line *Line) Errorf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
 	errorf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
-func (line *Line) error0(format string)             { line.errorf(format) }
-func (line *Line) error1(format, arg1 string)       { line.errorf(format, arg1) }
-func (line *Line) error2(format, arg1, arg2 string) { line.errorf(format, arg1, arg2) }
+func (line *Line) Error0(format string)             { line.Errorf(format) }
+func (line *Line) Error1(format, arg1 string)       { line.Errorf(format, arg1) }
+func (line *Line) Error2(format, arg1, arg2 string) { line.Errorf(format, arg1, arg2) }
 
-func (line *Line) warnf(format string, args ...interface{}) {
+func (line *Line) Warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
 	warnf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
-func (line *Line) warn0(format string)             { line.warnf(format) }
-func (line *Line) warn1(format, arg1 string)       { line.warnf(format, arg1) }
-func (line *Line) warn2(format, arg1, arg2 string) { line.warnf(format, arg1, arg2) }
+func (line *Line) Warn0(format string)             { line.Warnf(format) }
+func (line *Line) Warn1(format, arg1 string)       { line.Warnf(format, arg1) }
+func (line *Line) Warn2(format, arg1, arg2 string) { line.Warnf(format, arg1, arg2) }
 
-func (line *Line) notef(format string, args ...interface{}) {
+func (line *Line) Notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
 	notef(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
-func (line *Line) note0(format string)             { line.notef(format) }
-func (line *Line) note1(format, arg1 string)       { line.notef(format, arg1) }
-func (line *Line) note2(format, arg1, arg2 string) { line.notef(format, arg1, arg2) }
+func (line *Line) Note0(format string)             { line.Notef(format) }
+func (line *Line) Note1(format, arg1 string)       { line.Notef(format, arg1) }
+func (line *Line) Note2(format, arg1, arg2 string) { line.Notef(format, arg1, arg2) }
 
-func (line *Line) debugf(format string, args ...interface{}) {
+func (line *Line) Debugf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
 	debugf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
-func (line *Line) debug1(format, arg1 string)       { line.debugf(format, arg1) }
-func (line *Line) debug2(format, arg1, arg2 string) { line.debugf(format, arg1, arg2) }
+func (line *Line) Debug1(format, arg1 string)       { line.Debugf(format, arg1) }
+func (line *Line) Debug2(format, arg1, arg2 string) { line.Debugf(format, arg1, arg2) }
 
 func (line *Line) String() string {
 	return line.Fname + ":" + line.linenos() + ": " + line.Text
@@ -155,58 +155,58 @@ func (line *Line) logAutofix() {
 	}
 }
 
-func (line *Line) autofixInsertBefore(text string) bool {
+func (line *Line) AutofixInsertBefore(text string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
 		line.before = append(line.before, &RawLine{0, "", text + "\n"})
 	}
-	return line.noteAutofix("Inserting a line %q before this line.", text)
+	return line.RememberAutofix("Inserting a line %q before this line.", text)
 }
 
-func (line *Line) autofixInsertAfter(text string) bool {
+func (line *Line) AutofixInsertAfter(text string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
 		line.after = append(line.after, &RawLine{0, "", text + "\n"})
 	}
-	return line.noteAutofix("Inserting a line %q after this line.", text)
+	return line.RememberAutofix("Inserting a line %q after this line.", text)
 }
 
-func (line *Line) autofixDelete() bool {
+func (line *Line) AutofixDelete() bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
 		for _, rawLine := range line.raw {
 			rawLine.textnl = ""
 		}
 	}
-	return line.noteAutofix("Deleting this line.")
+	return line.RememberAutofix("Deleting this line.")
 }
 
-func (line *Line) autofixReplace(from, to string) bool {
+func (line *Line) AutofixReplace(from, to string) bool {
 	for _, rawLine := range line.raw {
 		if rawLine.Lineno != 0 {
 			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				return line.noteAutofix("Replacing %q with %q.", from, to)
+				return line.RememberAutofix("Replacing %q with %q.", from, to)
 			}
 		}
 	}
 	return false
 }
 
-func (line *Line) autofixReplaceRegexp(from, to string) bool {
+func (line *Line) AutofixReplaceRegexp(from, to string) bool {
 	for _, rawLine := range line.raw {
 		if rawLine.Lineno != 0 {
 			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				return line.noteAutofix("Replacing regular expression %q with %q.", from, to)
+				return line.RememberAutofix("Replacing regular expression %q with %q.", from, to)
 			}
 		}
 	}
 	return false
 }
 
-func (line *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed bool) {
+func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFixed bool) {
 	if line.firstLine < 1 {
 		return false
 	}
@@ -222,7 +222,7 @@ func (line *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed 
 	return false
 }
 
-func (line *Line) checkAbsolutePathname(text string) {
+func (line *Line) CheckAbsolutePathname(text string) {
 	if G.opts.DebugTrace {
 		defer tracecall1("Line.checkAbsolutePathname", text)()
 	}
@@ -241,9 +241,9 @@ func (line *Line) checkAbsolutePathname(text string) {
 	}
 }
 
-func (line *Line) checkLength(maxlength int) {
+func (line *Line) CheckLength(maxlength int) {
 	if len(line.Text) > maxlength {
-		line.warnf("Line too long (should be no more than %d characters).", maxlength)
+		line.Warnf("Line too long (should be no more than %d characters).", maxlength)
 		explain3(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
@@ -251,21 +251,21 @@ func (line *Line) checkLength(maxlength int) {
 	}
 }
 
-func (line *Line) checkValidCharacters(reChar string) {
+func (line *Line) CheckValidCharacters(reChar string) {
 	rest := regcomp(reChar).ReplaceAllString(line.Text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
 			uni += fmt.Sprintf(" %U", c)
 		}
-		line.warn1("Line contains invalid characters (%s).", uni[1:])
+		line.Warn1("Line contains invalid characters (%s).", uni[1:])
 	}
 }
 
-func (line *Line) checkTrailingWhitespace() {
+func (line *Line) CheckTrailingWhitespace() {
 	if hasSuffix(line.Text, " ") || hasSuffix(line.Text, "\t") {
-		if !line.autofixReplaceRegexp(`\s+\n$`, "\n") {
-			line.note0("Trailing white-space.")
+		if !line.AutofixReplaceRegexp(`\s+\n$`, "\n") {
+			line.Note0("Trailing white-space.")
 			explain2(
 				"When a line ends with some white-space, that space is in most cases",
 				"irrelevant and can be removed.")
@@ -282,8 +282,8 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 		return true
 	}
 
-	if !line.autofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
-		line.error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+	if !line.AutofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
+		line.Error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 		explain3(
 			"Several files in pkgsrc must contain the CVS Id, so that their current",
 			"version can be traced back later from a binary package. This is to",

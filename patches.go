@@ -56,7 +56,7 @@ func (ck *PatchChecker) check() {
 			patchedFile := ck.exp.m[1]
 			if ck.exp.advanceIfMatches(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
-				ck.exp.PreviousLine().warn0("Unified diff headers should be first ---, then +++.")
+				ck.exp.PreviousLine().Warn0("Unified diff headers should be first ---, then +++.")
 				ck.checkUnifiedDiff(patchedFile)
 				patchedFiles++
 				continue
@@ -68,7 +68,7 @@ func (ck *PatchChecker) check() {
 		if ck.exp.advanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
 			if ck.exp.advanceIfMatches(`^---\s(\S+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
-				line.warn0("Please use unified diffs (diff -u) for patches.")
+				line.Warn0("Please use unified diffs (diff -u) for patches.")
 				return
 			}
 
@@ -100,7 +100,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 
 	patchedFileType := guessFileType(ck.exp.CurrentLine(), patchedFile)
 	if G.opts.DebugMisc {
-		ck.exp.CurrentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
+		ck.exp.CurrentLine().Debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
 	}
 
 	hasHunks := false
@@ -109,7 +109,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		linesToDel := toInt(ck.exp.m[2], 1)
 		linesToAdd := toInt(ck.exp.m[4], 1)
 		if G.opts.DebugMisc {
-			ck.exp.PreviousLine().debugf("hunk -%d +%d", linesToDel, linesToAdd)
+			ck.exp.PreviousLine().Debugf("hunk -%d +%d", linesToDel, linesToAdd)
 		}
 		ck.checktextUniHunkCr()
 
@@ -133,18 +133,18 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case hasPrefix(text, "\\"):
 				// \ No newline at end of file
 			default:
-				line.error0("Invalid line in unified patch hunk")
+				line.Error0("Invalid line in unified patch hunk")
 				return
 			}
 		}
 	}
 	if !hasHunks {
-		ck.exp.CurrentLine().error1("No patch hunks for %q.", patchedFile)
+		ck.exp.CurrentLine().Error1("No patch hunks for %q.", patchedFile)
 	}
 	if !ck.exp.EOF() {
 		line := ck.exp.CurrentLine()
 		if line.Text != "" && !matches(line.Text, rePatchUniFileDel) && !hasPrefix(line.Text, "Index:") && !hasPrefix(line.Text, "diff ") {
-			line.warn0("Empty line or end of file expected.")
+			line.Warn0("Empty line or end of file expected.")
 			explain3(
 				"This empty line makes the end of the patch clearly visible.",
 				"Otherwise the reader would have to count lines to see where",
@@ -159,7 +159,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 	}
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
-		line.error0("Each patch must be documented.")
+		line.Error0("Each patch must be documented.")
 		explain(
 			"Pkgsrc tries to have as few patches as possible. Therefore, each patch",
 			"must document why it is necessary. Typical reasons are portability or",
@@ -174,8 +174,8 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 			"this file, to prevent duplicate work.")
 	}
 	if G.opts.WarnSpace && !ck.previousLineEmpty {
-		if !line.autofixInsertBefore("") {
-			line.note0("Empty line expected.")
+		if !line.AutofixInsertBefore("") {
+			line.Note0("Empty line expected.")
 		}
 	}
 }
@@ -208,14 +208,14 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 		shellTokens, _ := splitIntoShellTokens(line, addedText)
 		for _, shellToken := range shellTokens {
 			if !hasPrefix(shellToken, "#") {
-				line.checkAbsolutePathname(shellToken)
+				line.CheckAbsolutePathname(shellToken)
 			}
 		}
 	case ftSource:
 		checklineSourceAbsolutePathname(line, addedText)
 	case ftConfigure:
 		if hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
-			line.error0("This code must not be included in patches.")
+			line.Error0("This code must not be included in patches.")
 			explain4(
 				"It is generated automatically by pkgsrc after the patch phase.",
 				"",
@@ -236,8 +236,8 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 
 	line := ck.exp.PreviousLine()
 	if hasSuffix(line.Text, "\r") {
-		if !line.autofixReplace("\r\n", "\n") {
-			line.error0("The hunk header must not end with a CR character.")
+		if !line.AutofixReplace("\r\n", "\n") {
+			line.Error0("The hunk header must not end with a CR character.")
 			explain1(
 				"The MacOS X patch utility cannot handle these.")
 		}
@@ -250,9 +250,9 @@ func (ck *PatchChecker) checktextRcsid(text string) {
 	}
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
 		if matches(text, rePatchUniHunk) {
-			ck.exp.PreviousLine().warn1("Found RCS tag \"$%s$\". Please remove it.", tagname)
+			ck.exp.PreviousLine().Warn1("Found RCS tag \"$%s$\". Please remove it.", tagname)
 		} else {
-			ck.exp.PreviousLine().warn1("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
+			ck.exp.PreviousLine().Warn1("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
 		}
 	}
 }
@@ -306,7 +306,7 @@ func guessFileType(line *Line, fname string) FileType {
 	}
 
 	if G.opts.DebugMisc {
-		line.debug1("Unknown file type for %q", fname)
+		line.Debug1("Unknown file type for %q", fname)
 	}
 	return ftUnknown
 }
@@ -323,7 +323,7 @@ func checkwordAbsolutePathname(line *Line, word string) {
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
 	case matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
-		line.warn1("Found absolute pathname: %s", word)
+		line.Warn1("Found absolute pathname: %s", word)
 		explain(
 			"Absolute pathnames are often an indicator for unportable code. As",
 			"pkgsrc aims to be a portable system, absolute pathnames should be",
@@ -344,7 +344,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 	}
 	if matched, before, _, str := match3(text, `^(.*)(["'])(/\w[^"']*)["']`); matched {
 		if G.opts.DebugMisc {
-			line.debug2("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+			line.Debug2("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 		}
 
 		switch {
@@ -378,7 +378,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
 		default:
 			if G.opts.DebugMisc {
-				line.debug1("before=%q", before)
+				line.Debug1("before=%q", before)
 			}
 			checkwordAbsolutePathname(line, path)
 		}

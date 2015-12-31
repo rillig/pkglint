@@ -22,14 +22,14 @@ type MkLine struct {
 	xs6   string
 }
 
-func (mkline *MkLine) error1(format, arg1 string)       { mkline.line.error1(format, arg1) }
-func (mkline *MkLine) warn0(format string)              { mkline.line.warn0(format) }
-func (mkline *MkLine) warn1(format, arg1 string)        { mkline.line.warn1(format, arg1) }
-func (mkline *MkLine) warn2(format, arg1, arg2 string)  { mkline.line.warn2(format, arg1, arg2) }
-func (mkline *MkLine) note0(format string)              { mkline.line.note0(format) }
-func (mkline *MkLine) note2(format, arg1, arg2 string)  { mkline.line.note2(format, arg1, arg2) }
-func (mkline *MkLine) debug1(format, arg1 string)       { mkline.line.debug1(format, arg1) }
-func (mkline *MkLine) debug2(format, arg1, arg2 string) { mkline.line.debug2(format, arg1, arg2) }
+func (mkline *MkLine) error1(format, arg1 string)       { mkline.line.Error1(format, arg1) }
+func (mkline *MkLine) warn0(format string)              { mkline.line.Warn0(format) }
+func (mkline *MkLine) warn1(format, arg1 string)        { mkline.line.Warn1(format, arg1) }
+func (mkline *MkLine) warn2(format, arg1, arg2 string)  { mkline.line.Warn2(format, arg1, arg2) }
+func (mkline *MkLine) note0(format string)              { mkline.line.Note0(format) }
+func (mkline *MkLine) note2(format, arg1, arg2 string)  { mkline.line.Note2(format, arg1, arg2) }
+func (mkline *MkLine) debug1(format, arg1 string)       { mkline.line.Debug1(format, arg1) }
+func (mkline *MkLine) debug2(format, arg1, arg2 string) { mkline.line.Debug2(format, arg1, arg2) }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{line: line}
@@ -102,7 +102,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xs1 = targets
 		mkline.xs2 = sources
 		if whitespace != "" {
-			line.warn0("Space before colon in dependency line.")
+			line.Warn0("Space before colon in dependency line.")
 		}
 		return
 	}
@@ -111,7 +111,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		return
 	}
 
-	line.error0("Unknown Makefile line format.")
+	line.Error0("Unknown Makefile line format.")
 	return mkline
 }
 
@@ -176,23 +176,23 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		break
 	case perms == aclpUnknown:
 		if G.opts.DebugUnchecked {
-			mkline.line.debug1("Unknown permissions for %q.", varname)
+			mkline.line.Debug1("Unknown permissions for %q.", varname)
 		}
 	default:
 		alternativeActions := perms & aclpAllWrite
 		alternativeFiles := vartype.allowedFiles(needed)
 		switch {
 		case alternativeActions != 0 && alternativeFiles != "":
-			mkline.line.warnf("The variable %s may not be %s (only %s) in this file; it would be ok in %s.",
+			mkline.line.Warnf("The variable %s may not be %s (only %s) in this file; it would be ok in %s.",
 				varname, needed.HumanString(), alternativeActions.HumanString(), alternativeFiles)
 		case alternativeFiles != "":
-			mkline.line.warnf("The variable %s may not be %s in this file; it would be ok in %s.",
+			mkline.line.Warnf("The variable %s may not be %s in this file; it would be ok in %s.",
 				varname, needed.HumanString(), alternativeFiles)
 		case alternativeActions != 0:
-			mkline.line.warnf("The variable %s may not be %s (only %s) in this file.",
+			mkline.line.Warnf("The variable %s may not be %s (only %s) in this file.",
 				varname, needed.HumanString(), alternativeActions.HumanString())
 		default:
-			mkline.line.warnf("The variable %s may not be %s by any package.",
+			mkline.line.Warnf("The variable %s may not be %s by any package.",
 				varname, needed.HumanString())
 		}
 		explain4(
@@ -376,17 +376,17 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 	}
 
 	if mod == ":M*:Q" && !needMstar {
-		mkline.line.note0("The :M* modifier is not needed here.")
+		mkline.line.Note0("The :M* modifier is not needed here.")
 
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 		if mod != correctMod {
 			if vuc.quoting == vucQuotPlain {
-				if !mkline.line.autofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
-					mkline.line.warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+				if !mkline.line.AutofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
+					mkline.line.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
 				}
 			} else {
-				mkline.line.warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
+				mkline.line.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
 					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 			}
 			explain1(
@@ -398,13 +398,13 @@ func (mkline *MkLine) checkVaruseShellword(varname string, vartype *Vartype, vuc
 		bad := "${" + varname + mod + "}"
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 		needExplain := false
-		if needsQuoting == nqNo && !mkline.line.autofixReplace(bad, good) {
+		if needsQuoting == nqNo && !mkline.line.AutofixReplace(bad, good) {
 			needExplain = true
 			mkline.warn1("The :Q operator should not be used for ${%s} here.", varname)
 		}
-		if needsQuoting == nqDoesntMatter && !mkline.line.autofixReplace(bad, good) {
+		if needsQuoting == nqDoesntMatter && !mkline.line.AutofixReplace(bad, good) {
 			needExplain = true
-			mkline.line.note1("The :Q operator isn't necessary for ${%s} here.", varname)
+			mkline.line.Note1("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
 		if needExplain {
 			explain(
@@ -534,7 +534,7 @@ func (mkline *MkLine) checkVarassign() {
 
 	if m, revvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
 		if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
-			mkline.line.warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
+			mkline.line.Warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
 		}
 	}
 
@@ -754,7 +754,7 @@ func (mkline *MkLine) checkVaralign() {
 			for tabLength(prefix+tabs) < alignedWidth {
 				tabs += "\t"
 			}
-			if !mkline.line.autofixReplace(prefix+align, prefix+tabs) {
+			if !mkline.line.AutofixReplace(prefix+align, prefix+tabs) {
 				mkline.note0("Alignment of variable values should be done with tabs, not spaces.")
 			}
 		}
@@ -873,7 +873,7 @@ func (mkline *MkLine) checkRelativePkgdir(pkgdir string) {
 
 func (mkline *MkLine) checkRelativePath(path string, mustExist bool) {
 	if !G.Wip && strings.Contains(path, "/wip/") {
-		mkline.line.error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+		mkline.line.Error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
 	resolvedPath := resolveVarsInRelativePath(path, true)
@@ -1036,7 +1036,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) N
 	haveList := vartype.isConsideredList()
 
 	if G.opts.DebugQuoting {
-		mkline.line.debugf("variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
+		mkline.line.Debugf("variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
 			varname, vuc, vartype, wantList, haveList)
 	}
 
@@ -1082,7 +1082,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) N
 	}
 
 	if G.opts.DebugQuoting {
-		mkline.line.debug1("Don't know whether :Q is needed for %q", varname)
+		mkline.line.Debug1("Don't know whether :Q is needed for %q", varname)
 	}
 	return nqDontKnow
 }
@@ -1145,9 +1145,9 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 
 	if G.opts.DebugVartypes {
 		if gtype != nil {
-			mkline.line.debug2("The guessed type of %q is %q.", varname, gtype.String())
+			mkline.line.Debug2("The guessed type of %q is %q.", varname, gtype.String())
 		} else {
-			mkline.line.debug1("No type definition found for %q.", varname)
+			mkline.line.Debug1("No type definition found for %q.", varname)
 		}
 	}
 	return gtype

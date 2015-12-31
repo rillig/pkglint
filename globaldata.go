@@ -54,7 +54,7 @@ func (gd *GlobalData) Initialize() {
 	if relTopdir := findPkgsrcTopdir(firstArg); relTopdir != "" {
 		gd.Pkgsrcdir = firstArg + "/" + relTopdir
 	} else {
-		dummyLine.fatalf("%q is not inside a pkgsrc tree.", firstArg)
+		dummyLine.Fatalf("%q is not inside a pkgsrc tree.", firstArg)
 	}
 
 	gd.vartypes = make(map[string]*Vartype)
@@ -107,7 +107,7 @@ func (gd *GlobalData) loadPkgOptions() {
 		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
 			gd.PkgOptions[optname] = optdescr
 		} else {
-			line.fatalf("Unknown line format.")
+			line.Fatalf("Unknown line format.")
 		}
 	}
 }
@@ -172,7 +172,7 @@ func (gd *GlobalData) loadTools() {
 			if m, varname, _, value, _ := matchVarassign(text); m {
 				if varname == "USE_TOOLS" {
 					if G.opts.DebugTools {
-						line.debugf("[condDepth=%d] %s", condDepth, value)
+						line.Debugf("[condDepth=%d] %s", condDepth, value)
 					}
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
@@ -201,13 +201,13 @@ func (gd *GlobalData) loadTools() {
 	}
 
 	if G.opts.DebugTools {
-		dummyLine.debugf("tools: %v", stringBoolMapKeys(tools))
-		dummyLine.debugf("vartools: %v", stringStringMapKeys(vartools))
-		dummyLine.debugf("predefinedTools: %v", stringBoolMapKeys(predefinedTools))
-		dummyLine.debugf("varnameToToolname: %v", stringStringMapKeys(varnameToToolname))
+		dummyLine.Debugf("tools: %v", stringBoolMapKeys(tools))
+		dummyLine.Debugf("vartools: %v", stringStringMapKeys(vartools))
+		dummyLine.Debugf("predefinedTools: %v", stringBoolMapKeys(predefinedTools))
+		dummyLine.Debugf("varnameToToolname: %v", stringStringMapKeys(varnameToToolname))
 	}
 	if G.opts.DebugMisc {
-		dummyLine.debugf("systemBuildDefs: %v", systemBuildDefs)
+		dummyLine.Debugf("systemBuildDefs: %v", systemBuildDefs)
 	}
 
 	// Some user-defined variables do not influence the binary
@@ -270,10 +270,10 @@ func parselinesSuggestedUpdates(lines []*Line) []SuggestedUpdate {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
-					line.warn1("Invalid package name %q", pkgname)
+					line.Warn1("Invalid package name %q", pkgname)
 				}
 			} else {
-				line.warn1("Invalid line format %q", text)
+				line.Warn1("Invalid line format %q", text)
 			}
 		}
 	}
@@ -326,7 +326,7 @@ func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
 		} else if len(line.Text) >= 2 && line.Text[0] == '\t' && 'A' <= line.Text[1] && line.Text[1] <= 'Z' {
-			line.warn1("Unknown doc/CHANGES line: %q", line.Text)
+			line.Warn1("Unknown doc/CHANGES line: %q", line.Text)
 			explain1("See mk/misc/developer.mk for the rules.")
 		}
 	}

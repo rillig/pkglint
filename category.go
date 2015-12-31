@@ -25,7 +25,7 @@ func CheckdirCategory() {
 	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) {
 		mklines.mklines[exp.index-1].checklineValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
 	} else {
-		exp.CurrentLine().error0("COMMENT= line expected.")
+		exp.CurrentLine().Error0("COMMENT= line expected.")
 	}
 	exp.ExpectEmptyLine()
 
@@ -51,17 +51,17 @@ func CheckdirCategory() {
 		if m, commentFlag, indentation, name, comment := match4(text, `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
 			commentedOut := commentFlag == "#"
 			if commentedOut && comment == "" {
-				line.warn1("%q commented out without giving a reason.", name)
+				line.Warn1("%q commented out without giving a reason.", name)
 			}
 
 			if indentation != "\t" {
-				line.warn0("Indentation should be a single tab character.")
+				line.Warn0("Indentation should be a single tab character.")
 			}
 
 			if name == prevSubdir {
-				line.error1("%q must only appear once.", name)
+				line.Error1("%q must only appear once.", name)
 			} else if name < prevSubdir {
-				line.warn2("%q should come before %q.", name, prevSubdir)
+				line.Warn2("%q should come before %q.", name, prevSubdir)
 			} else {
 				// correctly ordered
 			}
@@ -72,7 +72,7 @@ func CheckdirCategory() {
 
 		} else {
 			if line.Text != "" {
-				line.error0("SUBDIR+= line or empty line expected.")
+				line.Error0("SUBDIR+= line or empty line expected.")
 			}
 			break
 		}
@@ -126,16 +126,16 @@ func CheckdirCategory() {
 
 		if !fAtend && (mAtend || fCurrent < mCurrent) {
 			if !mCheck[fCurrent] {
-				if !line.autofixInsertBefore("SUBDIR+=\t" + fCurrent) {
-					line.error1("%q exists in the file system, but not in the Makefile.", fCurrent)
+				if !line.AutofixInsertBefore("SUBDIR+=\t" + fCurrent) {
+					line.Error1("%q exists in the file system, but not in the Makefile.", fCurrent)
 				}
 			}
 			fNeednext = true
 
 		} else if !mAtend && (fAtend || mCurrent < fCurrent) {
 			if !fCheck[mCurrent] {
-				if !line.autofixDelete() {
-					line.error1("%q exists in the Makefile, but not in the file system.", mCurrent)
+				if !line.AutofixDelete() {
+					line.Error1("%q exists in the Makefile, but not in the file system.", mCurrent)
 				}
 			}
 			mNeednext = true
@@ -158,7 +158,7 @@ func CheckdirCategory() {
 	exp.ExpectEmptyLine()
 	exp.ExpectText(".include \"../mk/misc/category.mk\"")
 	if !exp.EOF() {
-		exp.CurrentLine().error0("The file should end here.")
+		exp.CurrentLine().Error0("The file should end here.")
 	}
 
 	SaveAutofixChanges(lines)

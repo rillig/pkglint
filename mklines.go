@@ -111,7 +111,7 @@ func (mklines *MkLines) check() {
 	for _, mkline := range mklines.mklines {
 		text := mkline.line.Text
 
-		mkline.line.checkTrailingWhitespace()
+		mkline.line.CheckTrailingWhitespace()
 
 		switch {
 		case mkline.IsEmpty():
@@ -143,7 +143,7 @@ func (mklines *MkLines) check() {
 	checklinesTrailingEmptyLines(mklines.lines)
 
 	if len(mklines.indentation) != 1 {
-		lastMkline.line.errorf("Directive indentation is not 0, but %d.", mklines.indentDepth())
+		lastMkline.line.Errorf("Directive indentation is not 0, but %d.", mklines.indentDepth())
 	}
 
 	SaveAutofixChanges(mklines.lines)
@@ -223,8 +223,8 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 
 	// Check the indentation
 	if expected := strings.Repeat(" ", mklines.indentDepth()); indent != expected {
-		if G.opts.WarnSpace && !mkline.line.autofixReplace("."+indent, "."+expected) {
-			mkline.line.notef("This directive should be indented by %d spaces.", mklines.indentDepth())
+		if G.opts.WarnSpace && !mkline.line.AutofixReplace("."+indent, "."+expected) {
+			mkline.line.Notef("This directive should be indented by %d spaces.", mklines.indentDepth())
 		}
 	}
 
@@ -253,7 +253,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 		if matches(args, `\s`) {
 			mkline.error1("The \".%s\" directive can only handle _one_ argument.", directive)
 		} else {
-			mkline.line.warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
+			mkline.line.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
 				directive, ifelseStr(directive == "ifdef", "", "!"), args)
 		}
 
@@ -344,7 +344,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	mkline.checkRelativePath(includefile, mustExist)
 
 	if hasSuffix(includefile, "/Makefile") {
-		mkline.line.error0("Other Makefiles must not be included directly.")
+		mkline.line.Error0("Other Makefiles must not be included directly.")
 		explain4(
 			"If you want to include portions of another Makefile, extract",
 			"the common parts and put them into a Makefile.common. After",
@@ -375,6 +375,6 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 		mkline.warn0("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 	}
 	if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
-		mkline.line.error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
+		mkline.line.Error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
 	}
 }

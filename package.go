@@ -109,7 +109,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	if G.opts.DebugMisc {
 		for packageBl3, line := range pkg.bl3 {
 			if includedFiles[packageBl3] == nil {
-				line.debug1("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
+				line.Debug1("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 			}
 		}
 	}
@@ -302,7 +302,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 	if pkg.effectivePkgnameLine != nil {
 		if G.opts.DebugMisc {
-			pkg.effectivePkgnameLine.line.debugf("Effective name=%q base=%q version=%q",
+			pkg.effectivePkgnameLine.line.Debugf("Effective name=%q base=%q version=%q",
 				pkg.effectivePkgname, pkg.effectivePkgbase, pkg.effectivePkgversion)
 		}
 	}
@@ -469,7 +469,7 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		text := line.Text
 
 		if G.opts.DebugMisc {
-			line.debugf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
+			line.Debugf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
 		}
 
 		if nextSection {
@@ -492,9 +492,9 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 
 			if belowText, exists := below[varcanon]; exists {
 				if belowText != "" {
-					line.warn2("%s appears too late. Please put it below %s.", varcanon, belowText)
+					line.Warn2("%s appears too late. Please put it below %s.", varcanon, belowText)
 				} else {
-					line.warn1("%s appears too late. It should be the very first definition.", varcanon)
+					line.Warn1("%s appears too late. It should be the very first definition.", varcanon)
 				}
 				lineno++
 				continue
@@ -510,12 +510,12 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 			switch {
 			case !(varindex < len(vars)):
 				if sections[sectindex].count != optional {
-					line.warn0("Empty line expected.")
+					line.Warn0("Empty line expected.")
 				}
 				nextSection = true
 
 			case varcanon != vars[varindex].varname:
-				line.warn2("Expected %s, but found %s.", vars[varindex].varname, varcanon)
+				line.Warn2("Expected %s, but found %s.", vars[varindex].varname, varcanon)
 				lineno++
 
 			default:
@@ -530,7 +530,7 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		default:
 			for varindex < len(vars) {
 				if vars[varindex].count == once && !maySkipSection {
-					line.warn1("%s should be set here.", vars[varindex].varname)
+					line.Warn1("%s should be set here.", vars[varindex].varname)
 				}
 				below[vars[varindex].varname] = belowWhat
 				varindex++
@@ -563,8 +563,8 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 	}
 
 	insertLine := lines[i]
-	if !insertLine.autofixInsertBefore(expected) {
-		insertLine.warn1("Please add a line %q here.", expected)
+	if !insertLine.AutofixInsertBefore(expected) {
+		insertLine.Warn1("Please add a line %q here.", expected)
 		explain(
 			"Since Makefile.common files usually don't have any comments and",
 			"therefore not a clearly defined interface, they should at least contain",

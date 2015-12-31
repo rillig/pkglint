@@ -34,7 +34,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
 			if containsVarRef(includeFile) {
 				if !strings.Contains(fname, "/mk/") {
-					line.note1("Skipping include file %q. This may result in false warnings.", includeFile)
+					line.Note1("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
 				includeFile = ""
 			}
@@ -46,7 +46,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.Pkg.bl3[bl3File] = line
 					if G.opts.DebugMisc {
-						line.debug1("Buildlink3 file in package: %q", bl3File)
+						line.Debug1("Buildlink3 file in package: %q", bl3File)
 					}
 				}
 			}
@@ -62,7 +62,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 
 			if path.Base(fname) == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
 				if G.opts.DebugInclude {
-					line.debug1("Including %q sets seenMakefileCommon.", includeFile)
+					line.Debug1("Including %q sets seenMakefileCommon.", includeFile)
 				}
 				G.Pkg.seenMakefileCommon = true
 			}
@@ -78,12 +78,12 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 					dirname = G.CurrentDir
 				}
 				if !fileExists(dirname + "/" + includeFile) {
-					line.error1("Cannot read %q.", dirname+"/"+includeFile)
+					line.Error1("Cannot read %q.", dirname+"/"+includeFile)
 					return false
 				}
 
 				if G.opts.DebugInclude {
-					line.debug1("Including %q.", dirname+"/"+includeFile)
+					line.Debug1("Including %q.", dirname+"/"+includeFile)
 				}
 				includingFname := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
 				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {
@@ -97,7 +97,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 
 			if op != "?=" || G.Pkg.vardef[varname] == nil {
 				if G.opts.DebugMisc {
-					line.debugf("varassign(%q, %q, %q)", varname, op, value)
+					line.Debugf("varassign(%q, %q, %q)", varname, op, value)
 				}
 				G.Pkg.vardef[varname] = mkline
 			}
@@ -133,7 +133,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	}
 
 	if G.opts.DebugMisc {
-		dummyLine.debug2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+		dummyLine.Debug2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	}
 	return tmp
 }

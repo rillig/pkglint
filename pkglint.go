@@ -56,10 +56,10 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	}
 
 	if G.opts.DebugMisc {
-		dummyLine.debug1("DISTINFO_FILE=%s", pkg.distinfoFile)
-		dummyLine.debug1("FILESDIR=%s", pkg.filesdir)
-		dummyLine.debug1("PATCHDIR=%s", pkg.patchdir)
-		dummyLine.debug1("PKGDIR=%s", pkg.pkgdir)
+		dummyLine.Debug1("DISTINFO_FILE=%s", pkg.distinfoFile)
+		dummyLine.Debug1("FILESDIR=%s", pkg.filesdir)
+		dummyLine.Debug1("PATCHDIR=%s", pkg.patchdir)
+		dummyLine.Debug1("PKGDIR=%s", pkg.pkgdir)
 	}
 
 	return mainLines
@@ -131,11 +131,11 @@ func checklinesDescr(lines []*Line) {
 	}
 
 	for _, line := range lines {
-		line.checkLength(80)
-		line.checkTrailingWhitespace()
-		line.checkValidCharacters(`[\t -~]`)
+		line.CheckLength(80)
+		line.CheckTrailingWhitespace()
+		line.CheckValidCharacters(`[\t -~]`)
 		if strings.Contains(line.Text, "${") {
-			line.note0("Variables are not expanded in the DESCR file.")
+			line.Note0("Variables are not expanded in the DESCR file.")
 		}
 	}
 	checklinesTrailingEmptyLines(lines)
@@ -143,7 +143,7 @@ func checklinesDescr(lines []*Line) {
 	if maxlines := 24; len(lines) > maxlines {
 		line := lines[maxlines]
 
-		line.warnf("File too long (should be no more than %d lines).", maxlines)
+		line.Warnf("File too long (should be no more than %d lines).", maxlines)
 		explain3(
 			"A common terminal size is 80x25 characters. The DESCR file should",
 			"fit on one screen. It is also intended to give a _brief_ summary",
@@ -168,24 +168,24 @@ func checklinesMessage(lines []*Line) {
 
 	if len(lines) < 3 {
 		lastLine := lines[len(lines)-1]
-		lastLine.warn0("File too short.")
+		lastLine.Warn0("File too short.")
 		explainMessage()
 		return
 	}
 
 	hline := strings.Repeat("=", 75)
 	if line := lines[0]; line.Text != hline {
-		line.warn0("Expected a line of exactly 75 \"=\" characters.")
+		line.Warn0("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
 	checklineRcsid(lines[1], ``, "")
 	for _, line := range lines {
-		line.checkLength(80)
-		line.checkTrailingWhitespace()
-		line.checkValidCharacters(`[\t -~]`)
+		line.CheckLength(80)
+		line.CheckTrailingWhitespace()
+		line.CheckValidCharacters(`[\t -~]`)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.Text != hline {
-		lastLine.warn0("Expected a line of exactly 75 \"=\" characters.")
+		lastLine.Warn0("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
 	checklinesTrailingEmptyLines(lines)
@@ -226,7 +226,7 @@ func checkfile(fname string) {
 
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, 0, "", nil)
-		line.warn0("Should not be executable.")
+		line.Warn0("Should not be executable.")
 		explain4(
 			"No package file should ever be executable. Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in the",
@@ -343,7 +343,7 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 		last--
 	}
 	if last != max {
-		lines[last].note0("Trailing empty lines.")
+		lines[last].Note0("Trailing empty lines.")
 	}
 }
 
