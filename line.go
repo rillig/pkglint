@@ -106,12 +106,12 @@ func (line *Line) printSource(out io.Writer) {
 
 func (line *Line) Fatalf(format string, args ...interface{}) {
 	line.printSource(G.logErr)
-	fatalf(line.Fname, line.linenos(), format, args...)
+	Fatalf(line.Fname, line.linenos(), format, args...)
 }
 
 func (line *Line) Errorf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	errorf(line.Fname, line.linenos(), format, args...)
+	Errorf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) Error0(format string)             { line.Errorf(format) }
@@ -120,7 +120,7 @@ func (line *Line) Error2(format, arg1, arg2 string) { line.Errorf(format, arg1, 
 
 func (line *Line) Warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	warnf(line.Fname, line.linenos(), format, args...)
+	Warnf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) Warn0(format string)             { line.Warnf(format) }
@@ -129,7 +129,7 @@ func (line *Line) Warn2(format, arg1, arg2 string) { line.Warnf(format, arg1, ar
 
 func (line *Line) Notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	notef(line.Fname, line.linenos(), format, args...)
+	Notef(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) Note0(format string)             { line.Notef(format) }
@@ -138,7 +138,7 @@ func (line *Line) Note2(format, arg1, arg2 string) { line.Notef(format, arg1, ar
 
 func (line *Line) Debugf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	debugf(line.Fname, line.linenos(), format, args...)
+	Debugf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) Debug1(format, arg1 string)       { line.Debugf(format, arg1) }

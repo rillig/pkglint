@@ -10,8 +10,8 @@ const noFile = ""
 const noLines = ""
 
 type LogLevel struct {
-	traditionalName string
-	gccName         string
+	TraditionalName string
+	GccName         string
 }
 
 var (
@@ -32,7 +32,7 @@ func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...
 
 	var text, sep string
 	if !G.opts.GccOutput {
-		text += sep + level.traditionalName + ":"
+		text += sep + level.TraditionalName + ":"
 		sep = " "
 	}
 	if fname != noFile {
@@ -43,7 +43,7 @@ func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...
 		}
 	}
 	if G.opts.GccOutput {
-		text += sep + level.gccName + ":"
+		text += sep + level.GccName + ":"
 		sep = " "
 	}
 	if G.opts.Profiling {
@@ -54,25 +54,25 @@ func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...
 	return true
 }
 
-func fatalf(fname, lineno, format string, args ...interface{}) {
+func Fatalf(fname, lineno, format string, args ...interface{}) {
 	logf(G.logErr, llFatal, fname, lineno, format, args...)
 	panic(pkglintFatal{})
 }
-func errorf(fname, lineno, format string, args ...interface{}) bool {
+func Errorf(fname, lineno, format string, args ...interface{}) bool {
 	G.errors++
 	return logf(G.logOut, llError, fname, lineno, format, args...)
 }
-func warnf(fname, lineno, format string, args ...interface{}) bool {
+func Warnf(fname, lineno, format string, args ...interface{}) bool {
 	G.warnings++
 	return logf(G.logOut, llWarn, fname, lineno, format, args...)
 }
-func notef(fname, lineno, format string, args ...interface{}) bool {
+func Notef(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.logOut, llNote, fname, lineno, format, args...)
 }
 func autofixf(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.logOut, llAutofix, fname, lineno, format, args...)
 }
-func debugf(fname, lineno, format string, args ...interface{}) bool {
+func Debugf(fname, lineno, format string, args ...interface{}) bool {
 	return logf(G.debugOut, llDebug, fname, lineno, format, args...)
 }
 

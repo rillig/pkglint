@@ -33,7 +33,7 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	}
 
 	if G.opts.DumpMakefile {
-		debugf(G.CurrentDir, noLines, "Whole Makefile (with all included files) follows:")
+		Debugf(G.CurrentDir, noLines, "Whole Makefile (with all included files) follows:")
 		for _, line := range allLines.lines {
 			fmt.Printf("%s\n", line.String())
 		}
@@ -213,14 +213,14 @@ func checkfile(fname string) {
 	basename := path.Base(fname)
 	if hasPrefix(basename, "work") || hasSuffix(basename, "~") || hasSuffix(basename, ".orig") || hasSuffix(basename, ".rej") {
 		if G.opts.Import {
-			errorf(fname, noLines, "Must be cleaned up before committing the package.")
+			Errorf(fname, noLines, "Must be cleaned up before committing the package.")
 		}
 		return
 	}
 
 	st, err := os.Lstat(fname)
 	if err != nil {
-		errorf(fname, noLines, "%s", err)
+		Errorf(fname, noLines, "%s", err)
 		return
 	}
 
@@ -242,16 +242,16 @@ func checkfile(fname string) {
 		case matches(fname, `(?:^|/)files/[^/]*$`):
 			// Ok
 		case !isEmptyDir(fname):
-			warnf(fname, noLines, "Unknown directory name.")
+			Warnf(fname, noLines, "Unknown directory name.")
 		}
 
 	case st.Mode()&os.ModeSymlink != 0:
 		if !matches(basename, `^work`) {
-			warnf(fname, noLines, "Unknown symlink name.")
+			Warnf(fname, noLines, "Unknown symlink name.")
 		}
 
 	case !st.Mode().IsRegular():
-		errorf(fname, noLines, "Only files and directories are allowed in pkgsrc.")
+		Errorf(fname, noLines, "Only files and directories are allowed in pkgsrc.")
 
 	case basename == "ALTERNATIVES":
 		if G.opts.CheckAlternatives {
@@ -300,11 +300,11 @@ func checkfile(fname string) {
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
 		if G.opts.DebugUnchecked {
-			debugf(fname, noLines, "Unchecked file %q.", fname)
+			Debugf(fname, noLines, "Unchecked file %q.", fname)
 		}
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
-		warnf(fname, noLines, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
+		Warnf(fname, noLines, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
 		if G.opts.CheckMk {
@@ -329,7 +329,7 @@ func checkfile(fname string) {
 		// Skip
 
 	default:
-		warnf(fname, noLines, "Unexpected file found.")
+		Warnf(fname, noLines, "Unexpected file found.")
 		if G.opts.CheckExtra {
 			checkfileExtra(fname)
 		}

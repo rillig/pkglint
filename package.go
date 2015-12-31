@@ -173,12 +173,12 @@ func checkdirPackage(pkgpath string) {
 
 	if G.opts.CheckDistinfo && G.opts.CheckPatches {
 		if havePatches && !haveDistinfo {
-			warnf(G.CurrentDir+"/"+pkg.distinfoFile, noLines, "File not found. Please run \"%s makepatchsum\".", confMake)
+			Warnf(G.CurrentDir+"/"+pkg.distinfoFile, noLines, "File not found. Please run \"%s makepatchsum\".", confMake)
 		}
 	}
 
 	if !isEmptyDir(G.CurrentDir + "/scripts") {
-		warnf(G.CurrentDir+"/scripts", noLines, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
+		Warnf(G.CurrentDir+"/scripts", noLines, "This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
 	}
 }
 
@@ -193,16 +193,16 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 		vardef["META_PACKAGE"] == nil &&
 		!fileExists(G.CurrentDir+"/"+pkg.pkgdir+"/PLIST") &&
 		!fileExists(G.CurrentDir+"/"+pkg.pkgdir+"/PLIST.common") {
-		warnf(fname, noLines, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
+		Warnf(fname, noLines, "Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?")
 	}
 
 	if (vardef["NO_CHECKSUM"] != nil || vardef["META_PACKAGE"] != nil) && isEmptyDir(G.CurrentDir+"/"+pkg.patchdir) {
 		if distinfoFile := G.CurrentDir + "/" + pkg.distinfoFile; fileExists(distinfoFile) {
-			warnf(distinfoFile, noLines, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
+			Warnf(distinfoFile, noLines, "This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
 		}
 	} else {
 		if distinfoFile := G.CurrentDir + "/" + pkg.distinfoFile; !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
-			warnf(distinfoFile, noLines, "File not found. Please run \"%s makesum\".", confMake)
+			Warnf(distinfoFile, noLines, "File not found. Please run \"%s makesum\".", confMake)
 		}
 	}
 
@@ -212,7 +212,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if vardef["LICENSE"] == nil {
-		errorf(fname, noLines, "Each package must define its LICENSE.")
+		Errorf(fname, noLines, "Each package must define its LICENSE.")
 	}
 
 	if vardef["GNU_CONFIGURE"] != nil && vardef["USE_LANGUAGES"] != nil {
@@ -233,7 +233,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	pkg.checkPossibleDowngrade()
 
 	if vardef["COMMENT"] == nil {
-		warnf(fname, noLines, "No COMMENT given.")
+		Warnf(fname, noLines, "No COMMENT given.")
 	}
 
 	if vardef["USE_IMAKE"] != nil && vardef["USE_X11"] != nil {

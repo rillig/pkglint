@@ -10,11 +10,11 @@ import (
 func LoadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 	lines, err := readLines(fname, joinContinuationLines)
 	if err != nil {
-		errorf(fname, noLines, "Cannot be read.")
+		Errorf(fname, noLines, "Cannot be read.")
 		return nil
 	}
 	if len(lines) == 0 {
-		errorf(fname, noLines, "Must not be empty.")
+		Errorf(fname, noLines, "Must not be empty.")
 		return nil
 	}
 	return lines
@@ -23,10 +23,10 @@ func LoadNonemptyLines(fname string, joinContinuationLines bool) []*Line {
 func LoadExistingLines(fname string, foldBackslashLines bool) []*Line {
 	lines, err := readLines(fname, foldBackslashLines)
 	if err != nil {
-		fatalf(fname, noLines, "Cannot be read.")
+		Fatalf(fname, noLines, "Cannot be read.")
 	}
 	if lines == nil {
-		fatalf(fname, noLines, "Must not be empty.")
+		Fatalf(fname, noLines, "Must not be empty.")
 	}
 	return lines
 }
@@ -133,7 +133,7 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 	}
 
 	if 0 < len(rawLines) && !hasSuffix(rawLines[len(rawLines)-1].textnl, "\n") {
-		errorf(fname, strconv.Itoa(rawLines[len(rawLines)-1].Lineno), "File must end with a newline.")
+		Errorf(fname, strconv.Itoa(rawLines[len(rawLines)-1].Lineno), "File must end with a newline.")
 	}
 
 	return loglines
@@ -167,12 +167,12 @@ func SaveAutofixChanges(lines []*Line) (autofixed bool) {
 		}
 		err := ioutil.WriteFile(tmpname, []byte(text), 0666)
 		if err != nil {
-			errorf(tmpname, noLines, "Cannot write.")
+			Errorf(tmpname, noLines, "Cannot write.")
 			continue
 		}
 		err = os.Rename(tmpname, fname)
 		if err != nil {
-			errorf(fname, noLines, "Cannot overwrite with auto-fixed content.")
+			Errorf(fname, noLines, "Cannot overwrite with auto-fixed content.")
 			continue
 		}
 		autofixf(fname, noLines, "Has been auto-fixed. Please re-run pkglint.")

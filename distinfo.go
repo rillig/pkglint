@@ -21,7 +21,7 @@ func ChecklinesDistinfo(lines []*Line) {
 		patchesDir = G.Pkg.patchdir
 	}
 	if G.opts.DebugMisc {
-		debugf(fname, noLines, "patchesDir=%q", patchesDir)
+		Debugf(fname, noLines, "patchesDir=%q", patchesDir)
 	}
 
 	ck := &distinfoLinesChecker{
@@ -123,7 +123,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	files, err := ioutil.ReadDir(G.CurrentDir + "/" + ck.patchdir)
 	if err != nil {
 		if G.opts.DebugUnchecked {
-			debugf(ck.distinfoFilename, noLines, "Cannot read patchesDir %q: %s", ck.patchdir, err)
+			Debugf(ck.distinfoFilename, noLines, "Cannot read patchesDir %q: %s", ck.patchdir, err)
 		}
 		return
 	}
@@ -131,7 +131,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	for _, file := range files {
 		patch := file.Name()
 		if file.Mode().IsRegular() && !ck.patches[patch] {
-			errorf(ck.distinfoFilename, noLines, "patch %q is not recorded. Run \"%s makepatchsum\".", ck.patchdir+"/"+patch, confMake)
+			Errorf(ck.distinfoFilename, noLines, "patch %q is not recorded. Run \"%s makepatchsum\".", ck.patchdir+"/"+patch, confMake)
 		}
 	}
 }
