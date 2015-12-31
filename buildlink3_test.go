@@ -25,7 +25,7 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 		"",
 		"BUILDLINK_TREE+=        -Xbae")
 
-	checklinesBuildlink3Mk(mklines)
+	ChecklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: buildlink3.mk:12: \"/x11/Xbae\" does not exist.\n"+
@@ -58,7 +58,7 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 		"",
 		"BUILDLINK_TREE+=\t-hs-X11")
 
-	checklinesBuildlink3Mk(mklines)
+	ChecklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" in this file ...\n"+
@@ -85,7 +85,7 @@ func (s *Suite) TestChecklinesBuildlink3_NoBuildlinkTree(c *check.C) {
 		"# needless comment",
 		"BUILDLINK_TREE+=\t-hs-X11")
 
-	checklinesBuildlink3Mk(mklines)
+	ChecklinesBuildlink3Mk(mklines)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: buildlink3.mk:3: This line belongs inside the .ifdef block.\n"+

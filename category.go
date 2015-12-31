@@ -4,13 +4,7 @@ import (
 	"sort"
 )
 
-type subdir struct {
-	name   string
-	line   *Line
-	active bool
-}
-
-func checkdirCategory() {
+func CheckdirCategory() {
 	if G.opts.DebugTrace {
 		defer tracecall1("checkdirCategory", G.currentDir)()
 	}
@@ -24,16 +18,22 @@ func checkdirCategory() {
 	mklines.check()
 
 	exp := NewExpecter(lines)
-	for exp.advanceIfPrefix("#") {
+	for exp.AdvanceIfPrefix("#") {
 	}
-	exp.expectEmptyLine()
+	exp.ExpectEmptyLine()
 
 	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) {
 		mklines.mklines[exp.index-1].checklineValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
 	} else {
-		exp.currentLine().error0("COMMENT= line expected.")
+		exp.CurrentLine().error0("COMMENT= line expected.")
 	}
-	exp.expectEmptyLine()
+	exp.ExpectEmptyLine()
+
+	type subdir struct {
+		name   string
+		line   *Line
+		active bool
+	}
 
 	// And now to the most complicated part of the category Makefiles,
 	// the (hopefully) sorted list of SUBDIRs. The first step is to
@@ -44,9 +44,9 @@ func checkdirCategory() {
 	var mSubdirs []subdir
 
 	prevSubdir := ""
-	for !exp.eof() {
-		line := exp.currentLine()
-		text := line.text
+	for !exp.EOF() {
+		line := exp.CurrentLine()
+		text := line.Text
 
 		if m, commentFlag, indentation, name, comment := match4(text, `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
 			commentedOut := commentFlag == "#"
@@ -68,10 +68,10 @@ func checkdirCategory() {
 
 			mSubdirs = append(mSubdirs, subdir{name, line, !commentedOut})
 			prevSubdir = name
-			exp.advance()
+			exp.Advance()
 
 		} else {
-			if line.text != "" {
+			if line.Text != "" {
 				line.error0("SUBDIR+= line or empty line expected.")
 			}
 			break
@@ -103,7 +103,7 @@ func checkdirCategory() {
 			mNeednext = false
 			if mIndex >= len(mSubdirs) {
 				mAtend = true
-				line = exp.currentLine()
+				line = exp.CurrentLine()
 				continue
 			} else {
 				mCurrent = mSubdirs[mIndex].name
@@ -155,10 +155,10 @@ func checkdirCategory() {
 		exp.index = len(exp.lines) - 2
 	}
 
-	exp.expectEmptyLine()
-	exp.expectText(".include \"../mk/misc/category.mk\"")
-	if !exp.eof() {
-		exp.currentLine().error0("The file should end here.")
+	exp.ExpectEmptyLine()
+	exp.ExpectText(".include \"../mk/misc/category.mk\"")
+	if !exp.EOF() {
+		exp.CurrentLine().error0("The file should end here.")
 	}
 
 	saveAutofixChanges(lines)

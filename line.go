@@ -21,20 +21,20 @@ import (
 )
 
 type RawLine struct {
-	lineno int
+	Lineno int
 	orignl string
 	textnl string
 }
 
 func (rline *RawLine) String() string {
-	return strconv.Itoa(rline.lineno) + ":" + rline.textnl
+	return strconv.Itoa(rline.Lineno) + ":" + rline.textnl
 }
 
 type Line struct {
-	fname          string
+	Fname          string
 	firstLine      int32 // Zero means not applicable, -1 means EOF
 	lastLine       int32 // Usually the same as firstLine, may differ in Makefiles
-	text           string
+	Text           string
 	raw            []*RawLine
 	changed        bool
 	before         []*RawLine
@@ -99,12 +99,12 @@ func (line *Line) printSource(out io.Writer) {
 
 func (line *Line) fatalf(format string, args ...interface{}) {
 	line.printSource(G.logErr)
-	fatalf(line.fname, line.linenos(), format, args...)
+	fatalf(line.Fname, line.linenos(), format, args...)
 }
 
 func (line *Line) errorf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	errorf(line.fname, line.linenos(), format, args...)
+	errorf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) error0(format string)             { line.errorf(format) }
@@ -113,7 +113,7 @@ func (line *Line) error2(format, arg1, arg2 string) { line.errorf(format, arg1, 
 
 func (line *Line) warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	warnf(line.fname, line.linenos(), format, args...)
+	warnf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) warn0(format string)             { line.warnf(format) }
@@ -122,7 +122,7 @@ func (line *Line) warn2(format, arg1, arg2 string) { line.warnf(format, arg1, ar
 
 func (line *Line) notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	notef(line.fname, line.linenos(), format, args...)
+	notef(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) note0(format string)             { line.notef(format) }
@@ -131,19 +131,19 @@ func (line *Line) note2(format, arg1, arg2 string) { line.notef(format, arg1, ar
 
 func (line *Line) debugf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	debugf(line.fname, line.linenos(), format, args...)
+	debugf(line.Fname, line.linenos(), format, args...)
 	line.logAutofix()
 }
 func (line *Line) debug1(format, arg1 string)       { line.debugf(format, arg1) }
 func (line *Line) debug2(format, arg1, arg2 string) { line.debugf(format, arg1, arg2) }
 
 func (line *Line) String() string {
-	return line.fname + ":" + line.linenos() + ": " + line.text
+	return line.Fname + ":" + line.linenos() + ": " + line.Text
 }
 
 func (line *Line) logAutofix() {
 	if line.autofixMessage != nil {
-		autofixf(line.fname, line.linenos(), "%s", *line.autofixMessage)
+		autofixf(line.Fname, line.linenos(), "%s", *line.autofixMessage)
 		line.autofixMessage = nil
 	}
 }
@@ -173,7 +173,7 @@ func (line *Line) autofixDelete() bool {
 
 func (line *Line) autofixReplace(from, to string) bool {
 	for _, rawLine := range line.raw {
-		if rawLine.lineno != 0 {
+		if rawLine.Lineno != 0 {
 			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
@@ -187,7 +187,7 @@ func (line *Line) autofixReplace(from, to string) bool {
 
 func (line *Line) autofixReplaceRegexp(from, to string) bool {
 	for _, rawLine := range line.raw {
-		if rawLine.lineno != 0 {
+		if rawLine.Lineno != 0 {
 			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
@@ -205,7 +205,7 @@ func (line *Line) noteAutofix(format string, args ...interface{}) (hasBeenFixed 
 	}
 	line.changed = true
 	if G.opts.Autofix {
-		autofixf(line.fname, line.linenos(), format, args...)
+		autofixf(line.Fname, line.linenos(), format, args...)
 		return true
 	}
 	if G.opts.PrintAutofix {
@@ -235,7 +235,7 @@ func (line *Line) checkAbsolutePathname(text string) {
 }
 
 func (line *Line) checkLength(maxlength int) {
-	if len(line.text) > maxlength {
+	if len(line.Text) > maxlength {
 		line.warnf("Line too long (should be no more than %d characters).", maxlength)
 		explain3(
 			"Back in the old time, terminals with 80x25 characters were common.",
@@ -245,7 +245,7 @@ func (line *Line) checkLength(maxlength int) {
 }
 
 func (line *Line) checkValidCharacters(reChar string) {
-	rest := regcomp(reChar).ReplaceAllString(line.text, "")
+	rest := regcomp(reChar).ReplaceAllString(line.Text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -256,7 +256,7 @@ func (line *Line) checkValidCharacters(reChar string) {
 }
 
 func (line *Line) checkTrailingWhitespace() {
-	if hasSuffix(line.text, " ") || hasSuffix(line.text, "\t") {
+	if hasSuffix(line.Text, " ") || hasSuffix(line.Text, "\t") {
 		if !line.autofixReplaceRegexp(`\s+\n$`, "\n") {
 			line.note0("Trailing white-space.")
 			explain2(
@@ -271,7 +271,7 @@ func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
 		defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
 	}
 
-	if matches(line.text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
+	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
 		return true
 	}
 

@@ -79,3 +79,12 @@ func (s *Suite) TestGlobalData_loadDocChanges(c *check.C) {
 	c.Check(*changes[5], equals, Change{changes[5].line, "Removed", "category/package", "", "author6", "2015-01-06"})
 	c.Check(*changes[6], equals, Change{changes[6].line, "Downgraded", "category/package", "1.2", "author7", "2015-01-07"})
 }
+
+func (s *Suite) TestGlobalData_deprecated(c *check.C) {
+	G.globalData.loadDeprecatedVars()
+
+	line := NewLine("Makefile", 5, "USE_PERL5=\tyes", nil)
+	NewMkLine(line).checkVarassign()
+
+	c.Check(s.Output(), equals, "WARN: Makefile:5: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.\n")
+}

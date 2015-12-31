@@ -38,13 +38,13 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 		textnl := rawLine.textnl
 		if hasSuffix(textnl, "\n") && !hasSuffix(textnl, "\\\n") {
 			*pindex = index + 1
-			return NewLine(fname, rawLine.lineno, textnl[:len(textnl)-1], rawLines[index:index+1])
+			return NewLine(fname, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index:index+1])
 		}
 	}
 
 	text := ""
 	index := *pindex
-	firstlineno := rawLines[index].lineno
+	firstlineno := rawLines[index].Lineno
 	var lineRawLines []*RawLine
 	interestingRawLines := rawLines[index:]
 
@@ -66,7 +66,7 @@ func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) *Line {
 		}
 	}
 
-	lastlineno := rawLines[index].lineno
+	lastlineno := rawLines[index].Lineno
 	*pindex = index + 1
 
 	return NewLineMulti(fname, firstlineno, lastlineno, text, lineRawLines)
@@ -127,13 +127,13 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 	} else {
 		for _, rawLine := range rawLines {
 			text := strings.TrimSuffix(rawLine.textnl, "\n")
-			logline := NewLine(fname, rawLine.lineno, text, []*RawLine{rawLine})
+			logline := NewLine(fname, rawLine.Lineno, text, []*RawLine{rawLine})
 			loglines = append(loglines, logline)
 		}
 	}
 
 	if 0 < len(rawLines) && !hasSuffix(rawLines[len(rawLines)-1].textnl, "\n") {
-		errorf(fname, strconv.Itoa(rawLines[len(rawLines)-1].lineno), "File must end with a newline.")
+		errorf(fname, strconv.Itoa(rawLines[len(rawLines)-1].Lineno), "File must end with a newline.")
 	}
 
 	return loglines
@@ -153,9 +153,9 @@ func saveAutofixChanges(lines []*Line) (autofixed bool) {
 	changed := make(map[string]bool)
 	for _, line := range lines {
 		if line.changed {
-			changed[line.fname] = true
+			changed[line.Fname] = true
 		}
-		changes[line.fname] = append(changes[line.fname], line.rawLines()...)
+		changes[line.Fname] = append(changes[line.Fname], line.rawLines()...)
 	}
 
 	for fname := range changed {

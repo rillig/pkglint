@@ -466,7 +466,7 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 	for lineno < len(mklines.lines) {
 		mkline := mklines.mklines[lineno]
 		line := mklines.lines[lineno]
-		text := line.text
+		text := line.Text
 
 		if G.opts.DebugMisc {
 			line.debugf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
@@ -552,13 +552,13 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 
 	expected := "# used by " + relativeName
 	for _, line := range lines {
-		if line.text == expected {
+		if line.Text == expected {
 			return
 		}
 	}
 
 	i := 0
-	for i < 2 && hasPrefix(lines[i].text, "#") {
+	for i < 2 && hasPrefix(lines[i].Text, "#") {
 		i++
 	}
 

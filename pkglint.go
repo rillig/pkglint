@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	reMkInclude  = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
-	rePkgname    = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
+	reMkInclude = `^\.\s*(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
+	rePkgname   = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
 )
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
@@ -127,14 +127,14 @@ func checkfileExtra(fname string) {
 
 func checklinesDescr(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesDescr", lines[0].fname)()
+		defer tracecall1("checklinesDescr", lines[0].Fname)()
 	}
 
 	for _, line := range lines {
 		line.checkLength(80)
 		line.checkTrailingWhitespace()
 		line.checkValidCharacters(`[\t -~]`)
-		if strings.Contains(line.text, "${") {
+		if strings.Contains(line.Text, "${") {
 			line.note0("Variables are not expanded in the DESCR file.")
 		}
 	}
@@ -155,7 +155,7 @@ func checklinesDescr(lines []*Line) {
 
 func checklinesMessage(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesMessage", lines[0].fname)()
+		defer tracecall1("checklinesMessage", lines[0].Fname)()
 	}
 
 	explainMessage := func() {
@@ -174,7 +174,7 @@ func checklinesMessage(lines []*Line) {
 	}
 
 	hline := strings.Repeat("=", 75)
-	if line := lines[0]; line.text != hline {
+	if line := lines[0]; line.Text != hline {
 		line.warn0("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
@@ -184,7 +184,7 @@ func checklinesMessage(lines []*Line) {
 		line.checkTrailingWhitespace()
 		line.checkValidCharacters(`[\t -~]`)
 	}
-	if lastLine := lines[len(lines)-1]; lastLine.text != hline {
+	if lastLine := lines[len(lines)-1]; lastLine.Text != hline {
 		lastLine.warn0("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
@@ -261,7 +261,7 @@ func checkfile(fname string) {
 	case basename == "buildlink3.mk":
 		if G.opts.CheckBuildlink3 {
 			if lines := LoadNonemptyLines(fname, true); lines != nil {
-				checklinesBuildlink3Mk(NewMkLines(lines))
+				ChecklinesBuildlink3Mk(NewMkLines(lines))
 			}
 		}
 
@@ -275,7 +275,7 @@ func checkfile(fname string) {
 	case basename == "distinfo":
 		if G.opts.CheckDistinfo {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
-				checklinesDistinfo(lines)
+				ChecklinesDistinfo(lines)
 			}
 		}
 
@@ -339,7 +339,7 @@ func checkfile(fname string) {
 func checklinesTrailingEmptyLines(lines []*Line) {
 	max := len(lines)
 	last := max
-	for last > 1 && lines[last-1].text == "" {
+	for last > 1 && lines[last-1].Text == "" {
 		last--
 	}
 	if last != max {

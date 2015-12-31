@@ -8,7 +8,7 @@ import (
 
 func checklinesPlist(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesPlist", lines[0].fname)()
+		defer tracecall1("checklinesPlist", lines[0].Fname)()
 	}
 
 	checklineRcsid(lines[0], `@comment `, "@comment ")
@@ -50,7 +50,7 @@ func (ck *PlistChecker) check(plainLines []*Line) {
 	plines := ck.newLines(plainLines)
 	ck.collectFilesAndDirs(plines)
 
-	if fname := plines[0].line.fname; path.Base(fname) == "PLIST.common_end" {
+	if fname := plines[0].line.Fname; path.Base(fname) == "PLIST.common_end" {
 		commonLines, err := readLines(strings.TrimSuffix(fname, "_end"), false)
 		if err == nil {
 			ck.collectFilesAndDirs(ck.newLines(commonLines))
@@ -77,7 +77,7 @@ func (ck *PlistChecker) check(plainLines []*Line) {
 func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
 	plines := make([]*PlistLine, len(lines))
 	for i, line := range lines {
-		conditional, text := "", line.text
+		conditional, text := "", line.Text
 		if hasPrefix(text, "${PLIST.") {
 			if m, cond, rest := match2(text, `^\$\{(PLIST\.[\w-.]+)\}(.*)`); m {
 				conditional, text = cond, rest
@@ -192,7 +192,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
 				if !pline.line.autofixDelete() {
-					pline.line.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.line.fname, prev.line.linenos())
+					pline.line.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.line.Fname, prev.line.linenos())
 				}
 			}
 		}

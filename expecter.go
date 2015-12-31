@@ -11,23 +11,23 @@ func NewExpecter(lines []*Line) *Expecter {
 	return &Expecter{lines, 0, nil}
 }
 
-func (exp *Expecter) currentLine() *Line {
+func (exp *Expecter) CurrentLine() *Line {
 	if exp.index < len(exp.lines) {
 		return exp.lines[exp.index]
 	}
 
-	return NewLineEOF(exp.lines[0].fname)
+	return NewLineEOF(exp.lines[0].Fname)
 }
 
-func (exp *Expecter) previousLine() *Line {
+func (exp *Expecter) PreviousLine() *Line {
 	return exp.lines[exp.index-1]
 }
 
-func (exp *Expecter) eof() bool {
+func (exp *Expecter) EOF() bool {
 	return !(exp.index < len(exp.lines))
 }
 
-func (exp *Expecter) advance() bool {
+func (exp *Expecter) Advance() bool {
 	exp.index++
 	exp.m = nil
 	return true
@@ -39,11 +39,11 @@ func (exp *Expecter) stepBack() {
 
 func (exp *Expecter) advanceIfMatches(re string) bool {
 	if G.opts.DebugTrace {
-		defer tracecall2("Expecter.advanceIfMatches", exp.currentLine().text, re)()
+		defer tracecall2("Expecter.advanceIfMatches", exp.CurrentLine().Text, re)()
 	}
 
-	if !exp.eof() {
-		if m := match(exp.lines[exp.index].text, re); m != nil {
+	if !exp.EOF() {
+		if m := match(exp.lines[exp.index].Text, re); m != nil {
 			exp.index++
 			exp.m = m
 			return true
@@ -52,42 +52,42 @@ func (exp *Expecter) advanceIfMatches(re string) bool {
 	return false
 }
 
-func (exp *Expecter) advanceIfPrefix(prefix string) bool {
+func (exp *Expecter) AdvanceIfPrefix(prefix string) bool {
 	if G.opts.DebugTrace {
-		defer tracecall2("Expecter.advanceIfPrefix", exp.currentLine().text, prefix)()
+		defer tracecall2("Expecter.advanceIfPrefix", exp.CurrentLine().Text, prefix)()
 	}
 
-	return !exp.eof() && hasPrefix(exp.lines[exp.index].text, prefix) && exp.advance()
+	return !exp.EOF() && hasPrefix(exp.lines[exp.index].Text, prefix) && exp.Advance()
 }
 
-func (exp *Expecter) advanceIfEquals(text string) bool {
+func (exp *Expecter) AdvanceIfEquals(text string) bool {
 	if G.opts.DebugTrace {
-		defer tracecall2("Expecter.advanceIfEquals", exp.currentLine().text, text)()
+		defer tracecall2("Expecter.advanceIfEquals", exp.CurrentLine().Text, text)()
 	}
 
-	return !exp.eof() && exp.lines[exp.index].text == text && exp.advance()
+	return !exp.EOF() && exp.lines[exp.index].Text == text && exp.Advance()
 }
 
-func (exp *Expecter) expectEmptyLine() bool {
-	if exp.advanceIfEquals("") {
+func (exp *Expecter) ExpectEmptyLine() bool {
+	if exp.AdvanceIfEquals("") {
 		return true
 	}
 
 	if G.opts.WarnSpace {
-		if !exp.currentLine().autofixInsertBefore("") {
-			exp.currentLine().note0("Empty line expected.")
+		if !exp.CurrentLine().autofixInsertBefore("") {
+			exp.CurrentLine().note0("Empty line expected.")
 		}
 	}
 	return false
 }
 
-func (exp *Expecter) expectText(text string) bool {
-	if !exp.eof() && exp.lines[exp.index].text == text {
+func (exp *Expecter) ExpectText(text string) bool {
+	if !exp.EOF() && exp.lines[exp.index].Text == text {
 		exp.index++
 		exp.m = nil
 		return true
 	}
 
-	exp.currentLine().warn1("This line should contain the following text: %s", text)
+	exp.CurrentLine().warn1("This line should contain the following text: %s", text)
 	return false
 }

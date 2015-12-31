@@ -12,7 +12,7 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 		"patch contents\n")
 	G.currentDir = s.tmpdir
 
-	checklinesDistinfo(s.NewLines("distinfo",
+	ChecklinesDistinfo(s.NewLines("distinfo",
 		"should be the RCS ID",
 		"should be empty",
 		"MD5 (distfile.tar.gz) = 12345678901234567890123456789012",
@@ -31,7 +31,7 @@ func (s *Suite) TestChecklinesDistinfo_GlobalHashMismatch(c *check.C) {
 	G.ipcDistinfo = make(map[string]*Hash)
 	G.ipcDistinfo["SHA512:pkgname-1.0.tar.gz"] = &Hash{"asdfasdf", otherLine}
 
-	checklinesDistinfo(s.NewLines("distinfo",
+	ChecklinesDistinfo(s.NewLines("distinfo",
 		"$"+"NetBSD$",
 		"",
 		"SHA512 (pkgname-1.0.tar.gz) = 12341234"))
@@ -55,7 +55,7 @@ func (s *Suite) TestChecklinesDistinfo_UncommittedPatch(c *check.C) {
 		"/distinfo/...\n")
 	G.currentDir = s.tmpdir
 
-	checklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
+	ChecklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
 		"$"+"NetBSD$",
 		"",
 		"SHA1 (patch-aa) = 5ad1fb9b3c328fff5caa1a23e8f330e707dd50c0"))
@@ -70,7 +70,7 @@ func (s *Suite) TestChecklinesDistinfo_UnrecordedPatches(c *check.C) {
 	s.CreateTmpFile(c, "patches/patch-src-Makefile", "")
 	G.currentDir = s.tmpdir
 
-	checklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
+	ChecklinesDistinfo(s.NewLines(s.tmpdir+"/distinfo",
 		"$"+"NetBSD$",
 		"",
 		"SHA1 (distfile.tar.gz) = ...",

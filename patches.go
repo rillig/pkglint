@@ -9,7 +9,7 @@ import (
 
 func checklinesPatch(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesPatch", lines[0].fname)()
+		defer tracecall1("checklinesPatch", lines[0].Fname)()
 	}
 
 	(&PatchChecker{lines, NewExpecter(lines), false, false}).check()
@@ -34,13 +34,13 @@ func (ck *PatchChecker) check() {
 	}
 
 	if checklineRcsid(ck.lines[0], ``, "") {
-		ck.exp.advance()
+		ck.exp.Advance()
 	}
-	ck.previousLineEmpty = ck.exp.expectEmptyLine()
+	ck.previousLineEmpty = ck.exp.ExpectEmptyLine()
 
 	patchedFiles := 0
-	for !ck.exp.eof() {
-		line := ck.exp.currentLine()
+	for !ck.exp.EOF() {
+		line := ck.exp.CurrentLine()
 		if ck.exp.advanceIfMatches(rePatchUniFileDel) {
 			if ck.exp.advanceIfMatches(rePatchUniFileAdd) {
 				ck.checkBeginDiff(line, patchedFiles)
@@ -56,7 +56,7 @@ func (ck *PatchChecker) check() {
 			patchedFile := ck.exp.m[1]
 			if ck.exp.advanceIfMatches(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
-				ck.exp.previousLine().warn0("Unified diff headers should be first ---, then +++.")
+				ck.exp.PreviousLine().warn0("Unified diff headers should be first ---, then +++.")
 				ck.checkUnifiedDiff(patchedFile)
 				patchedFiles++
 				continue
@@ -75,17 +75,17 @@ func (ck *PatchChecker) check() {
 			ck.exp.stepBack()
 		}
 
-		ck.exp.advance()
-		ck.previousLineEmpty = line.text == "" || hasPrefix(line.text, "diff ") || hasPrefix(line.text, "=============")
+		ck.exp.Advance()
+		ck.previousLineEmpty = line.Text == "" || hasPrefix(line.Text, "diff ") || hasPrefix(line.Text, "=============")
 		if !ck.previousLineEmpty {
 			ck.seenDocumentation = true
 		}
 	}
 
 	if patchedFiles > 1 {
-		warnf(ck.lines[0].fname, noLines, "Contains patches for %d files, should be only one.", patchedFiles)
+		warnf(ck.lines[0].Fname, noLines, "Contains patches for %d files, should be only one.", patchedFiles)
 	} else if patchedFiles == 0 {
-		errorf(ck.lines[0].fname, noLines, "Contains no patch.")
+		errorf(ck.lines[0].Fname, noLines, "Contains no patch.")
 	}
 
 	checklinesTrailingEmptyLines(ck.lines)
@@ -98,9 +98,9 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		defer tracecall0("PatchChecker.checkUnifiedDiff")()
 	}
 
-	patchedFileType := guessFileType(ck.exp.currentLine(), patchedFile)
+	patchedFileType := guessFileType(ck.exp.CurrentLine(), patchedFile)
 	if G.opts.DebugMisc {
-		ck.exp.currentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
+		ck.exp.CurrentLine().debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
 	}
 
 	hasHunks := false
@@ -109,14 +109,14 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		linesToDel := toInt(ck.exp.m[2], 1)
 		linesToAdd := toInt(ck.exp.m[4], 1)
 		if G.opts.DebugMisc {
-			ck.exp.previousLine().debugf("hunk -%d +%d", linesToDel, linesToAdd)
+			ck.exp.PreviousLine().debugf("hunk -%d +%d", linesToDel, linesToAdd)
 		}
 		ck.checktextUniHunkCr()
 
-		for linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.exp.currentLine().text, "\\") {
-			line := ck.exp.currentLine()
-			ck.exp.advance()
-			text := line.text
+		for linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.exp.CurrentLine().Text, "\\") {
+			line := ck.exp.CurrentLine()
+			ck.exp.Advance()
+			text := line.Text
 			switch {
 			case text == "":
 				linesToDel--
@@ -139,11 +139,11 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		}
 	}
 	if !hasHunks {
-		ck.exp.currentLine().error1("No patch hunks for %q.", patchedFile)
+		ck.exp.CurrentLine().error1("No patch hunks for %q.", patchedFile)
 	}
-	if !ck.exp.eof() {
-		line := ck.exp.currentLine()
-		if line.text != "" && !matches(line.text, rePatchUniFileDel) && !hasPrefix(line.text, "Index:") && !hasPrefix(line.text, "diff ") {
+	if !ck.exp.EOF() {
+		line := ck.exp.CurrentLine()
+		if line.Text != "" && !matches(line.Text, rePatchUniFileDel) && !hasPrefix(line.Text, "Index:") && !hasPrefix(line.Text, "diff ") {
 			line.warn0("Empty line or end of file expected.")
 			explain3(
 				"This empty line makes the end of the patch clearly visible.",
@@ -199,7 +199,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 
 	ck.checktextRcsid(addedText)
 
-	line := ck.exp.previousLine()
+	line := ck.exp.PreviousLine()
 	switch patchedFileType {
 	case ftShell:
 		break
@@ -234,8 +234,8 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 		defer tracecall0("PatchChecker.checktextUniHunkCr")()
 	}
 
-	line := ck.exp.previousLine()
-	if hasSuffix(line.text, "\r") {
+	line := ck.exp.PreviousLine()
+	if hasSuffix(line.Text, "\r") {
 		if !line.autofixReplace("\r\n", "\n") {
 			line.error0("The hunk header must not end with a CR character.")
 			explain1(
@@ -250,9 +250,9 @@ func (ck *PatchChecker) checktextRcsid(text string) {
 	}
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
 		if matches(text, rePatchUniHunk) {
-			ck.exp.previousLine().warn1("Found RCS tag \"$%s$\". Please remove it.", tagname)
+			ck.exp.PreviousLine().warn1("Found RCS tag \"$%s$\". Please remove it.", tagname)
 		} else {
-			ck.exp.previousLine().warn1("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
+			ck.exp.PreviousLine().warn1("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
 		}
 	}
 }

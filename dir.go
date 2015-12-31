@@ -40,7 +40,7 @@ func CheckDirent(fname string) {
 	case "../..":
 		checkdirPackage(relpath(G.globalData.pkgsrcdir, G.currentDir))
 	case "..":
-		checkdirCategory()
+		CheckdirCategory()
 	case ".":
 		checkdirToplevel()
 	default:

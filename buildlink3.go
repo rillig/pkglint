@@ -5,55 +5,55 @@ import (
 	"strings"
 )
 
-func checklinesBuildlink3Mk(mklines *MkLines) {
+func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesBuildlink3Mk", mklines.lines[0].fname)()
+		defer tracecall1("checklinesBuildlink3Mk", mklines.lines[0].Fname)()
 	}
 
 	mklines.check()
 
 	exp := NewExpecter(mklines.lines)
 
-	for exp.advanceIfPrefix("#") {
-		line := exp.previousLine()
+	for exp.AdvanceIfPrefix("#") {
+		line := exp.PreviousLine()
 		// See pkgtools/createbuildlink/files/createbuildlink
-		if hasPrefix(line.text, "# XXX This file was created automatically") {
+		if hasPrefix(line.Text, "# XXX This file was created automatically") {
 			line.note0("Please read this comment and remove it if appropriate.")
 		}
 	}
 
-	exp.expectEmptyLine()
+	exp.ExpectEmptyLine()
 
 	if exp.advanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) {
-		exp.previousLine().warn0("This line belongs inside the .ifdef block.")
-		for exp.advanceIfEquals("") {
+		exp.PreviousLine().warn0("This line belongs inside the .ifdef block.")
+		for exp.AdvanceIfEquals("") {
 		}
 	}
 
-	pkgbaseLine, pkgbase := exp.currentLine(), ""
+	pkgbaseLine, pkgbase := exp.CurrentLine(), ""
 	var abiLine, apiLine *Line
 	var abi, api *DependencyPattern
 
 	// First paragraph: Introduction of the package identifier
 	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`) {
-		exp.currentLine().warn0("Expected a BUILDLINK_TREE line.")
+		exp.CurrentLine().warn0("Expected a BUILDLINK_TREE line.")
 		return
 	}
 	pkgbase = exp.m[1]
 
-	exp.expectEmptyLine()
+	exp.ExpectEmptyLine()
 
 	// Second paragraph: multiple inclusion protection and introduction
 	// of the uppercase package identifier.
 	if !exp.advanceIfMatches(`^\.if !defined\((\S+)_BUILDLINK3_MK\)$`) {
 		return
 	}
-	pkgupperLine, pkgupper := exp.previousLine(), exp.m[1]
+	pkgupperLine, pkgupper := exp.PreviousLine(), exp.m[1]
 
-	if !exp.expectText(pkgupper + "_BUILDLINK3_MK:=") {
+	if !exp.ExpectText(pkgupper + "_BUILDLINK3_MK:=") {
 		return
 	}
-	exp.expectEmptyLine()
+	exp.ExpectEmptyLine()
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
@@ -71,16 +71,16 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 	// Third paragraph: Package information.
 	indentLevel := 1 // The first .if is from the second paragraph.
 	for {
-		if exp.eof() {
-			exp.currentLine().warn0("Expected .endif")
+		if exp.EOF() {
+			exp.CurrentLine().warn0("Expected .endif")
 			return
 		}
 
-		line := exp.currentLine()
+		line := exp.CurrentLine()
 		mkline := mklines.mklines[exp.index]
 
 		if mkline.IsVarassign() {
-			exp.advance()
+			exp.Advance()
 			varname, value := mkline.Varname(), mkline.Value()
 			doCheck := false
 
@@ -134,7 +134,7 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 				exp.advanceIfMatches(`^\.\s*include "../../mk/pkg-build-options\.mk"$`)
 			}
 
-		} else if exp.advanceIfEquals("") || exp.advanceIfPrefix("#") {
+		} else if exp.AdvanceIfEquals("") || exp.AdvanceIfPrefix("#") {
 			// Comments and empty lines are fine here.
 
 		} else if exp.advanceIfMatches(`^\.\s*include "\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk"$`) ||
@@ -152,23 +152,23 @@ func checklinesBuildlink3Mk(mklines *MkLines) {
 
 		} else {
 			if G.opts.DebugUnchecked {
-				exp.currentLine().warn0("Unchecked line in third paragraph.")
+				exp.CurrentLine().warn0("Unchecked line in third paragraph.")
 			}
-			exp.advance()
+			exp.Advance()
 		}
 	}
 	if apiLine == nil {
-		exp.currentLine().warn0("Definition of BUILDLINK_API_DEPENDS is missing.")
+		exp.CurrentLine().warn0("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
-	exp.expectEmptyLine()
+	exp.ExpectEmptyLine()
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
 	if !exp.advanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgbase) + `$`) {
-		exp.currentLine().warn0("Expected BUILDLINK_TREE line.")
+		exp.CurrentLine().warn0("Expected BUILDLINK_TREE line.")
 	}
 
-	if !exp.eof() {
-		exp.currentLine().warn0("The file should end here.")
+	if !exp.EOF() {
+		exp.CurrentLine().warn0("The file should end here.")
 	}
 
 	if G.pkg != nil {

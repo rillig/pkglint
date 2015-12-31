@@ -437,7 +437,7 @@ func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.value, `^[1-9]\d*$`) {
 		cv.line.warn1("%s must be a positive integer number.", cv.varname)
 	}
-	if path.Base(cv.line.fname) != "Makefile" {
+	if path.Base(cv.line.Fname) != "Makefile" {
 		cv.line.error1("%s only makes sense directly in the package Makefile.", cv.varname)
 		explain(
 			"Usually, different packages using the same Makefile.common have",

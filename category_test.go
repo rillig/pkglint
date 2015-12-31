@@ -15,7 +15,7 @@ func (s *Suite) TestCheckdirCategory_TotallyBroken(c *check.C) {
 		".include \"../mk/category.mk\"\n")
 
 	G.currentDir = s.tmpdir + "/archivers"
-	checkdirCategory()
+	CheckdirCategory()
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".\n"+

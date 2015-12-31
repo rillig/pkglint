@@ -81,7 +81,7 @@ func (mklines *MkLines) varValue(varname string) (value string, found bool) {
 
 func (mklines *MkLines) check() {
 	if G.opts.DebugTrace {
-		defer tracecall1("MkLines.check", mklines.lines[0].fname)()
+		defer tracecall1("MkLines.check", mklines.lines[0].Fname)()
 	}
 
 	allowedTargets := make(map[string]bool)
@@ -109,7 +109,7 @@ func (mklines *MkLines) check() {
 	checklineRcsid(mklines.lines[0], `#\s+`, "# ")
 
 	for _, mkline := range mklines.mklines {
-		text := mkline.line.text
+		text := mkline.line.Text
 
 		mkline.line.checkTrailingWhitespace()
 
@@ -353,7 +353,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	}
 
 	if includefile == "../../mk/bsd.prefs.mk" {
-		if path.Base(mkline.line.fname) == "buildlink3.mk" {
+		if path.Base(mkline.line.Fname) == "buildlink3.mk" {
 			mkline.note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.pkg != nil {

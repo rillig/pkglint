@@ -76,7 +76,7 @@ func isCommitted(fname string) bool {
 		return false
 	}
 	for _, line := range lines {
-		if hasPrefix(line.text, "/"+basename+"/") {
+		if hasPrefix(line.Text, "/"+basename+"/") {
 			return true
 		}
 	}

@@ -34,7 +34,7 @@ func (mkline *MkLine) debug2(format, arg1, arg2 string) { mkline.line.debug2(for
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{line: line}
 
-	text := line.text
+	text := line.Text
 
 	if hasPrefix(text, " ") {
 		mkline.warn0("Makefile lines should not start with space characters.")
@@ -160,7 +160,7 @@ func (mkline *MkLine) checkVardefPermissions(varname, op string) {
 		return
 	}
 
-	perms := vartype.effectivePermissions(mkline.line.fname)
+	perms := vartype.effectivePermissions(mkline.line.Fname)
 	var needed AclPermissions
 	switch op {
 	case "=", "!=", ":=":
@@ -260,7 +260,7 @@ func (mkline *MkLine) checkVarusePermissions(varname string, vuc *VarUseContext)
 		return
 	}
 
-	perms := vartype.effectivePermissions(mkline.line.fname)
+	perms := vartype.effectivePermissions(mkline.line.Fname)
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -747,7 +747,7 @@ func (mkline *MkLine) checkVaralign() {
 		return
 	}
 
-	if m, prefix, align := match2(mkline.line.text, `^( *[-*+A-Z_a-z0-9.${}\[]+\s*[!:?]?=)(\s*)`); m {
+	if m, prefix, align := match2(mkline.line.Text, `^( *[-*+A-Z_a-z0-9.${}\[]+\s*[!:?]?=)(\s*)`); m {
 		if align != " " && strings.Trim(align, "\t") != "" {
 			alignedWidth := tabLength(prefix + align)
 			tabs := ""
@@ -1177,7 +1177,7 @@ func (mkline *MkLine) extractUsedVariables(text string) []string {
 }
 
 func (mkline *MkLine) determineUsedVariables() (varnames []string) {
-	rest := mkline.line.text
+	rest := mkline.line.Text
 
 	if strings.HasPrefix(rest, "#") {
 		return

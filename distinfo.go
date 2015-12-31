@@ -8,12 +8,12 @@ import (
 	"strings"
 )
 
-func checklinesDistinfo(lines []*Line) {
+func ChecklinesDistinfo(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesDistinfo", lines[0].fname)()
+		defer tracecall1("checklinesDistinfo", lines[0].Fname)()
 	}
 
-	fname := lines[0].fname
+	fname := lines[0].Fname
 	var patchesDir = "patches"
 	if G.pkg != nil && hasSuffix(fname, "/lang/php55/distinfo") {
 		patchesDir = G.curPkgsrcdir + "/lang/php55/patches"
@@ -46,7 +46,7 @@ type distinfoLinesChecker struct {
 
 func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 	checklineRcsid(lines[0], ``, "")
-	if 1 < len(lines) && lines[1].text != "" {
+	if 1 < len(lines) && lines[1].Text != "" {
 		lines[1].note0("Empty line expected.")
 	}
 
@@ -54,7 +54,7 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 		if i < 2 {
 			continue
 		}
-		m, alg, filename, hash := match3(line.text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
+		m, alg, filename, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
 		if !m {
 			line.error0("Invalid line.")
 			continue
