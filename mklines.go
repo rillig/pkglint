@@ -25,7 +25,7 @@ func NewMkLines(lines []*Line) *MkLines {
 		mklines[i] = NewMkLine(line)
 	}
 	tools := make(map[string]bool)
-	for tool := range G.globalData.predefinedTools {
+	for tool := range G.globalData.PredefinedTools {
 		tools[tool] = true
 	}
 

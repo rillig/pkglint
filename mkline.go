@@ -232,7 +232,7 @@ func (mkline *MkLine) checkVaruse(varname string, mod string, vuc *VarUseContext
 		mkline.checkVaruseShellword(varname, vartype, vuc, mod, needsQuoting)
 	}
 
-	if G.globalData.userDefinedVars[varname] != nil && !G.globalData.systemBuildDefs[varname] && !G.mk.buildDefs[varname] {
+	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.SystemBuildDefs[varname] && !G.mk.buildDefs[varname] {
 		mkline.warn1("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		explain(
 			"When a pkgsrc package is built, many things can be configured by the",
@@ -474,7 +474,7 @@ func (mkline *MkLine) checkVarassign() {
 	} else if !varIsUsed(varname) {
 		if vartypes := G.globalData.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
 			// Ok
-		} else if deprecated := G.globalData.deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
+		} else if deprecated := G.globalData.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
 		} else {
 			mkline.warn1("%s is defined but not used. Spelling mistake?", varname)
@@ -538,9 +538,9 @@ func (mkline *MkLine) checkVarassign() {
 		}
 	}
 
-	if fix := G.globalData.deprecated[varname]; fix != "" {
+	if fix := G.globalData.Deprecated[varname]; fix != "" {
 		mkline.warn2("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix := G.globalData.deprecated[varcanon]; fix != "" {
+	} else if fix := G.globalData.Deprecated[varcanon]; fix != "" {
 		mkline.warn2("Definition of %s is deprecated. %s", varname, fix)
 	}
 
@@ -797,9 +797,9 @@ func (mkline *MkLine) checkText(text string) {
 		varbase, varext := m[1], m[2]
 		varname := varbase + varext
 		varcanon := varnameCanon(varname)
-		instead := G.globalData.deprecated[varname]
+		instead := G.globalData.Deprecated[varname]
 		if instead == "" {
-			instead = G.globalData.deprecated[varcanon]
+			instead = G.globalData.Deprecated[varcanon]
 		}
 		if instead != "" {
 			mkline.warn2("Use of %q is deprecated. %s", varname, instead)
@@ -1049,7 +1049,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) N
 
 	// Assuming the tool definitions don't include very special characters,
 	// so they can safely be used inside any quotes.
-	if G.globalData.varnameToToolname[varname] != "" {
+	if G.globalData.VarnameToToolname[varname] != "" {
 		switch vuc.quoting {
 		case vucQuotPlain:
 			if vuc.extent != vucExtentWordpart {
@@ -1098,11 +1098,11 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 		return vartype
 	}
 
-	if G.globalData.varnameToToolname[varname] != "" {
+	if G.globalData.VarnameToToolname[varname] != "" {
 		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpUse}}, guNotGuessed}
 	}
 
-	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.varnameToToolname[toolvarname] != "" {
+	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.VarnameToToolname[toolvarname] != "" {
 		return &Vartype{lkNone, CheckvarPathname, []AclEntry{{"*", aclpUse}}, guNotGuessed}
 	}
 

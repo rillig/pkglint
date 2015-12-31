@@ -15,35 +15,35 @@ type GlobalData struct {
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
 	Tools               map[string]bool     // Known tool names, e.g. "sed" and "gm4".
 	Vartools            map[string]string   // Maps tool names to their respective variable, e.g. "sed" => "SED", "gzip" => "GZIP_CMD".
-	predefinedTools     map[string]bool     // Tools that a package does not need to add to USE_TOOLS explicitly because they are used by the pkgsrc infrastructure, too.
-	varnameToToolname   map[string]string   // Maps the tool variable names to the tool name they use, e.g. "GZIP_CMD" => "gzip" and "SED" => "sed".
-	systemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
+	PredefinedTools     map[string]bool     // Tools that a package does not need to add to USE_TOOLS explicitly because they are used by the pkgsrc infrastructure, too.
+	VarnameToToolname   map[string]string   // Maps the tool variable names to the tool name they use, e.g. "GZIP_CMD" => "gzip" and "SED" => "sed".
+	SystemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
 	toolvarsVarRequired map[string]bool     // Tool variable names that may not be converted to their "direct" form, that is: ${CP} may not be written as cp.
 	toolsVarRequired    map[string]bool     // Tools that need to be written in variable form, e.g. "echo"; see Vartools.
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
-	lastChange          map[string]*Change  //
-	userDefinedVars     map[string]*MkLine  // varname => line
-	deprecated          map[string]string   //
+	LastChange          map[string]*Change  //
+	UserDefinedVars     map[string]*MkLine  // varname => line
+	Deprecated          map[string]string   //
 	vartypes            map[string]*Vartype // varcanon => type
 }
 
 // Change is a change entry from the `doc/CHANGES-*` files.
 type Change struct {
-	line    *Line
-	action  string
-	pkgpath string
-	version string
-	author  string
-	date    string
+	Line    *Line
+	Action  string
+	Pkgpath string
+	Version string
+	Author  string
+	Date    string
 }
 
 // SuggestedUpdate is from the `doc/TODO` file.
 type SuggestedUpdate struct {
-	line    *Line
-	pkgname string
-	version string
-	comment string
+	Line    *Line
+	Pkgname string
+	Version string
+	Comment string
 }
 
 func (gd *GlobalData) Initialize() {
@@ -226,9 +226,9 @@ func (gd *GlobalData) loadTools() {
 
 	gd.Tools = tools
 	gd.Vartools = vartools
-	gd.predefinedTools = predefinedTools
-	gd.varnameToToolname = varnameToToolname
-	gd.systemBuildDefs = systemBuildDefs
+	gd.PredefinedTools = predefinedTools
+	gd.VarnameToToolname = varnameToToolname
+	gd.SystemBuildDefs = systemBuildDefs
 	gd.toolvarsVarRequired = map[string]bool{
 		"ECHO":   true,
 		"ECHO_N": true,
@@ -333,7 +333,7 @@ func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 	return changes
 }
 
-func (gd *GlobalData) getSuggestedPackageUpdates() []SuggestedUpdate {
+func (gd *GlobalData) GetSuggestedPackageUpdates() []SuggestedUpdate {
 	if G.isWip {
 		return gd.suggestedWipUpdates
 	} else {
@@ -357,11 +357,11 @@ func (gd *GlobalData) loadDocChanges() {
 	}
 
 	sort.Strings(fnames)
-	gd.lastChange = make(map[string]*Change)
+	gd.LastChange = make(map[string]*Change)
 	for _, fname := range fnames {
 		changes := gd.loadDocChangesFromFile(docdir + "/" + fname)
 		for _, change := range changes {
-			gd.lastChange[change.pkgpath] = change
+			gd.LastChange[change.Pkgpath] = change
 		}
 	}
 }
@@ -370,16 +370,16 @@ func (gd *GlobalData) loadUserDefinedVars() {
 	lines := LoadExistingLines(G.globalData.Pkgsrcdir+"/mk/defaults/mk.conf", true)
 	mklines := NewMkLines(lines)
 
-	gd.userDefinedVars = make(map[string]*MkLine)
+	gd.UserDefinedVars = make(map[string]*MkLine)
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
-			gd.userDefinedVars[mkline.Varname()] = mkline
+			gd.UserDefinedVars[mkline.Varname()] = mkline
 		}
 	}
 }
 
 func (gd *GlobalData) loadDeprecatedVars() {
-	gd.deprecated = map[string]string{
+	gd.Deprecated = map[string]string{
 
 		// December 2003
 		"FIX_RPATH": "It has been removed from pkgsrc in 2003.",

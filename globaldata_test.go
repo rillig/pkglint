@@ -71,13 +71,13 @@ func (s *Suite) TestGlobalData_loadDocChanges(c *check.C) {
 	changes := G.globalData.loadDocChangesFromFile(s.tmpdir + "/doc/CHANGES-2015")
 
 	c.Assert(len(changes), equals, 7)
-	c.Check(*changes[0], equals, Change{changes[0].line, "Added", "category/package", "1.0", "author1", "2015-01-01"})
-	c.Check(*changes[1], equals, Change{changes[1].line, "Updated", "category/package", "1.5", "author2", "2015-01-02"})
-	c.Check(*changes[2], equals, Change{changes[2].line, "Renamed", "category/package", "", "author3", "2015-01-03"})
-	c.Check(*changes[3], equals, Change{changes[3].line, "Moved", "category/package", "", "author4", "2015-01-04"})
-	c.Check(*changes[4], equals, Change{changes[4].line, "Removed", "category/package", "", "author5", "2015-01-05"})
-	c.Check(*changes[5], equals, Change{changes[5].line, "Removed", "category/package", "", "author6", "2015-01-06"})
-	c.Check(*changes[6], equals, Change{changes[6].line, "Downgraded", "category/package", "1.2", "author7", "2015-01-07"})
+	c.Check(*changes[0], equals, Change{changes[0].Line, "Added", "category/package", "1.0", "author1", "2015-01-01"})
+	c.Check(*changes[1], equals, Change{changes[1].Line, "Updated", "category/package", "1.5", "author2", "2015-01-02"})
+	c.Check(*changes[2], equals, Change{changes[2].Line, "Renamed", "category/package", "", "author3", "2015-01-03"})
+	c.Check(*changes[3], equals, Change{changes[3].Line, "Moved", "category/package", "", "author4", "2015-01-04"})
+	c.Check(*changes[4], equals, Change{changes[4].Line, "Removed", "category/package", "", "author5", "2015-01-05"})
+	c.Check(*changes[5], equals, Change{changes[5].Line, "Removed", "category/package", "", "author6", "2015-01-06"})
+	c.Check(*changes[6], equals, Change{changes[6].Line, "Downgraded", "category/package", "1.2", "author7", "2015-01-07"})
 }
 
 func (s *Suite) TestGlobalData_deprecated(c *check.C) {

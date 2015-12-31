@@ -37,7 +37,7 @@ func NewPackage(pkgpath string) *Package {
 		plistSubstCond: make(map[string]bool),
 		included:       make(map[string]*Line),
 	}
-	for varname, line := range G.globalData.userDefinedVars {
+	for varname, line := range G.globalData.UserDefinedVars {
 		pkg.vardef[varname] = line
 	}
 	return pkg
@@ -72,7 +72,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 	mkline := pkg.effectivePkgnameLine
 
-	change := G.globalData.lastChange[pkg.pkgpath]
+	change := G.globalData.LastChange[pkg.pkgpath]
 	if change == nil {
 		if G.opts.DebugMisc {
 			mkline.debug1("No change log for package %q", pkg.pkgpath)
@@ -80,9 +80,9 @@ func (pkg *Package) checkPossibleDowngrade() {
 		return
 	}
 
-	if change.action == "Updated" {
-		if pkgverCmp(pkgversion, change.version) < 0 {
-			mkline.warn2("The package is being downgraded from %s to %s", change.version, pkgversion)
+	if change.Action == "Updated" {
+		if pkgverCmp(pkgversion, change.Version) < 0 {
+			mkline.warn2("The package is being downgraded from %s to %s", change.Version, pkgversion)
 		}
 	}
 }
@@ -326,12 +326,12 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 
 func (pkg *Package) checkUpdate() {
 	if pkg.effectivePkgbase != "" {
-		for _, sugg := range G.globalData.getSuggestedPackageUpdates() {
-			if pkg.effectivePkgbase != sugg.pkgname {
+		for _, sugg := range G.globalData.GetSuggestedPackageUpdates() {
+			if pkg.effectivePkgbase != sugg.Pkgname {
 				continue
 			}
 
-			suggver, comment := sugg.version, sugg.comment
+			suggver, comment := sugg.Version, sugg.Comment
 			if comment != "" {
 				comment = " (" + comment + ")"
 			}
@@ -340,7 +340,7 @@ func (pkg *Package) checkUpdate() {
 			cmp := pkgverCmp(pkg.effectivePkgversion, suggver)
 			switch {
 			case cmp < 0:
-				pkgnameLine.warn2("This package should be updated to %s%s.", sugg.version, comment)
+				pkgnameLine.warn2("This package should be updated to %s%s.", sugg.Version, comment)
 				explain2(
 					"The wishlist for package updates in doc/TODO mentions that a newer",
 					"version of this package is available.")

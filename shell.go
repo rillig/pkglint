@@ -616,7 +616,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 	shellword := ctx.shellword
 	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
 
-		if toolname := G.globalData.varnameToToolname[varname]; toolname != "" {
+		if toolname := G.globalData.VarnameToToolname[varname]; toolname != "" {
 			if !G.mk.tools[toolname] {
 				ctx.shline.line.warn1("The %q tool is used but not added to USE_TOOLS.", toolname)
 			}
