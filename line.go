@@ -273,7 +273,7 @@ func (line *Line) CheckTrailingWhitespace() {
 	}
 }
 
-func checklineRcsid(line *Line, prefixRe, suggestedPrefix string) bool {
+func (line *Line) CheckRcsid(prefixRe, suggestedPrefix string) bool {
 	if G.opts.DebugTrace {
 		defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
 	}

@@ -771,7 +771,7 @@ func (mkline *MkLine) checkText(text string) {
 	}
 
 	if mkline.line.firstLine == 1 {
-		checklineRcsid(mkline.line, `# `, "# ")
+		mkline.line.CheckRcsid(`# `, "# ")
 	}
 
 	if strings.Contains(text, "${WRKSRC}/../") {

@@ -33,7 +33,7 @@ func (ck *PatchChecker) check() {
 		defer tracecall0("PatchChecker.check")()
 	}
 
-	if checklineRcsid(ck.lines[0], ``, "") {
+	if ck.lines[0].CheckRcsid(``, "") {
 		ck.exp.Advance()
 	}
 	ck.previousLineEmpty = ck.exp.ExpectEmptyLine()

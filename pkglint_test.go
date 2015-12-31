@@ -75,7 +75,7 @@ func (s *Suite) TestChecklineRcsid(c *check.C) {
 		"$"+"FreeBSD$")
 
 	for _, line := range lines {
-		checklineRcsid(line, ``, "")
+		line.CheckRcsid(``, "")
 	}
 
 	c.Check(s.Output(), equals, ""+

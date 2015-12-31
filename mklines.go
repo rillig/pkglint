@@ -106,7 +106,7 @@ func (mklines *MkLines) check() {
 
 	// In the second pass, the actual checks are done.
 
-	checklineRcsid(mklines.lines[0], `#\s+`, "# ")
+	mklines.lines[0].CheckRcsid(`#\s+`, "# ")
 
 	for _, mkline := range mklines.mklines {
 		text := mkline.line.Text

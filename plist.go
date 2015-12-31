@@ -11,7 +11,7 @@ func checklinesPlist(lines []*Line) {
 		defer tracecall1("checklinesPlist", lines[0].Fname)()
 	}
 
-	checklineRcsid(lines[0], `@comment `, "@comment ")
+	lines[0].CheckRcsid(`@comment `, "@comment ")
 
 	if len(lines) == 1 {
 		lines[0].Warn0("PLIST files shouldn't be empty.")

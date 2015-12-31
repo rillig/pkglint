@@ -178,7 +178,7 @@ func checklinesMessage(lines []*Line) {
 		line.Warn0("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
-	checklineRcsid(lines[1], ``, "")
+	lines[1].CheckRcsid(``, "")
 	for _, line := range lines {
 		line.CheckLength(80)
 		line.CheckTrailingWhitespace()
