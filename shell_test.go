@@ -53,7 +53,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"WARN: fname:1: Unknown shell command \"echo\".\n"+
 		"WARN: fname:1: Unquoted shell variable \"uname\".\n")
 
-	G.globalData.tools = map[string]bool{"echo": true}
+	G.globalData.Tools = map[string]bool{"echo": true}
 	G.globalData.predefinedTools = map[string]bool{"echo": true}
 	G.mk = s.NewMkLines("fname",
 		"# dummy")

@@ -10,16 +10,16 @@ import (
 // GlobalData contains data describing pkgsrc as a whole.
 type GlobalData struct {
 	Pkgsrcdir           string              // Relative to the current working directory.
-	masterSiteUrls      map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
-	masterSiteVars      map[string]bool     // "MASTER_SITE_GITHUB" => true
-	pkgOptions          map[string]string   // "x11" => "Provides X11 support"
-	tools               map[string]bool     // Known tool names, e.g. "sed" and "gm4".
-	vartools            map[string]string   // Maps tool names to their respective variable, e.g. "sed" => "SED", "gzip" => "GZIP_CMD".
+	MasterSiteUrls      map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
+	MasterSiteVars      map[string]bool     // "MASTER_SITE_GITHUB" => true
+	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
+	Tools               map[string]bool     // Known tool names, e.g. "sed" and "gm4".
+	Vartools            map[string]string   // Maps tool names to their respective variable, e.g. "sed" => "SED", "gzip" => "GZIP_CMD".
 	predefinedTools     map[string]bool     // Tools that a package does not need to add to USE_TOOLS explicitly because they are used by the pkgsrc infrastructure, too.
 	varnameToToolname   map[string]string   // Maps the tool variable names to the tool name they use, e.g. "GZIP_CMD" => "gzip" and "SED" => "sed".
 	systemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
 	toolvarsVarRequired map[string]bool     // Tool variable names that may not be converted to their "direct" form, that is: ${CP} may not be written as cp.
-	toolsVarRequired    map[string]bool     // Tools that need to be written in variable form, e.g. echo => ${ECHO}.
+	toolsVarRequired    map[string]bool     // Tools that need to be written in variable form, e.g. "echo"; see Vartools.
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	lastChange          map[string]*Change  //
@@ -94,18 +94,18 @@ func (gd *GlobalData) loadDistSites() {
 	if G.opts.DebugMisc {
 		debugf(fname, noLines, "Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	}
-	gd.masterSiteUrls = url2name
-	gd.masterSiteVars = names
+	gd.MasterSiteUrls = url2name
+	gd.MasterSiteVars = names
 }
 
 func (gd *GlobalData) loadPkgOptions() {
 	fname := gd.Pkgsrcdir + "/mk/defaults/options.description"
 	lines := LoadExistingLines(fname, false)
 
-	gd.pkgOptions = make(map[string]string)
+	gd.PkgOptions = make(map[string]string)
 	for _, line := range lines {
 		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
-			gd.pkgOptions[optname] = optdescr
+			gd.PkgOptions[optname] = optdescr
 		} else {
 			line.fatalf("Unknown line format.")
 		}
@@ -224,8 +224,8 @@ func (gd *GlobalData) loadTools() {
 	systemBuildDefs["GAMEOWN"] = true
 	systemBuildDefs["GAMEGRP"] = true
 
-	gd.tools = tools
-	gd.vartools = vartools
+	gd.Tools = tools
+	gd.Vartools = vartools
 	gd.predefinedTools = predefinedTools
 	gd.varnameToToolname = varnameToToolname
 	gd.systemBuildDefs = systemBuildDefs

@@ -162,11 +162,11 @@ func (s *Suite) TestVartypeCheck_EmulPlatform(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
-	G.globalData.masterSiteUrls = map[string]string{
+	G.globalData.MasterSiteUrls = map[string]string{
 		"https://github.com/":         "MASTER_SITE_GITHUB",
 		"http://ftp.gnu.org/pub/gnu/": "MASTER_SITE_GNU",
 	}
-	G.globalData.masterSiteVars = map[string]bool{
+	G.globalData.MasterSiteVars = map[string]bool{
 		"MASTER_SITE_GITHUB": true,
 		"MASTER_SITE_GNU":    true,
 	}

@@ -577,7 +577,7 @@ func (ctx *ShelltextContext) handleTool() bool {
 	}
 
 	shellword := ctx.shellword
-	if !G.globalData.tools[shellword] {
+	if !G.globalData.Tools[shellword] {
 		return false
 	}
 
@@ -586,7 +586,7 @@ func (ctx *ShelltextContext) handleTool() bool {
 	}
 
 	if G.globalData.toolsVarRequired[shellword] {
-		ctx.shline.line.warn2("Please use \"${%s}\" instead of %q.", G.globalData.vartools[shellword], shellword)
+		ctx.shline.line.warn2("Please use \"${%s}\" instead of %q.", G.globalData.Vartools[shellword], shellword)
 	}
 
 	ctx.shline.checkCommandUse(shellword)

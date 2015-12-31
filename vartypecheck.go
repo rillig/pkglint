@@ -218,7 +218,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 func (cv *VartypeCheck) FetchURL() {
 	cv.mkline.checkVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
-	for siteURL, siteName := range G.globalData.masterSiteUrls {
+	for siteURL, siteName := range G.globalData.MasterSiteUrls {
 		if hasPrefix(cv.value, siteURL) {
 			subdir := cv.value[len(siteURL):]
 			isGithub := hasPrefix(cv.value, "https://github.com/")
@@ -234,7 +234,7 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 
 	if m, name, subdir := match2(cv.value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
-		if !G.globalData.masterSiteVars[name] {
+		if !G.globalData.MasterSiteVars[name] {
 			cv.line.error1("%s does not exist.", name)
 		}
 		if !hasSuffix(subdir, "/") {
@@ -354,7 +354,7 @@ func (cv *VartypeCheck) Option() {
 	}
 
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z+]*)$`); m {
-		if _, found := G.globalData.pkgOptions[optname]; !found { // There’s a difference between empty and absent here.
+		if _, found := G.globalData.PkgOptions[optname]; !found { // There’s a difference between empty and absent here.
 			line.warn1("Unknown option \"%s\".", optname)
 			explain4(
 				"This option is not documented in the mk/defaults/options.description",
@@ -619,7 +619,7 @@ func (cv *VartypeCheck) Tool() {
 		// no warning for package-defined tool definitions
 
 	} else if m, toolname, tooldep := match2(cv.value, `^([-\w]+|\[)(?::(\w+))?$`); m {
-		if !G.globalData.tools[toolname] {
+		if !G.globalData.Tools[toolname] {
 			cv.line.error1("Unknown tool %q.", toolname)
 		}
 		switch tooldep {
