@@ -192,7 +192,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
 				if !pline.line.autofixDelete() {
-					pline.line.errorf("Duplicate filename %q, already appeared in %s:%s.", text, prev.line.Fname, prev.line.linenos())
+					pline.line.errorf("Duplicate filename %q, already appeared in %s.", text, prev.line.ReferenceFrom(pline.line))
 				}
 			}
 		}
@@ -265,7 +265,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 	if strings.Contains(basename, ".a") || strings.Contains(basename, ".so") {
 		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
 			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
-				pline.line.warnf("Redundant library found. The libtool library is in line %d.", laLine.line.firstLine)
+				pline.line.warn1("Redundant library found. The libtool library is in %s.", laLine.line.ReferenceFrom(pline.line))
 			}
 		}
 	}

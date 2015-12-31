@@ -75,6 +75,13 @@ func (line *Line) linenos() string {
 	}
 }
 
+func (line *Line) ReferenceFrom(other *Line) string {
+	if line.Fname != other.Fname {
+		return line.Fname + ":" + line.linenos()
+	}
+	return "line " + line.linenos()
+}
+
 func (line *Line) IsMultiline() bool {
 	return line.firstLine > 0 && line.firstLine != line.lastLine
 }
