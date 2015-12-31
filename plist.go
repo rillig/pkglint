@@ -67,10 +67,10 @@ func (ck *PlistChecker) check(plainLines []*Line) {
 		sorter := NewPlistLineSorter(plines)
 		sorter.Sort()
 		if !sorter.autofixed {
-			saveAutofixChanges(plainLines)
+			SaveAutofixChanges(plainLines)
 		}
 	} else {
-		saveAutofixChanges(plainLines)
+		SaveAutofixChanges(plainLines)
 	}
 }
 
@@ -499,5 +499,5 @@ func (s *plistLineSorter) Sort() {
 		lines = append(lines, pline.line)
 		lines = append(lines, s.after[pline]...)
 	}
-	s.autofixed = saveAutofixChanges(lines)
+	s.autofixed = SaveAutofixChanges(lines)
 }

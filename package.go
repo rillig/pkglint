@@ -244,7 +244,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	pkg.checkUpdate()
 	mklines.check()
 	pkg.ChecklinesPackageMakefileVarorder(mklines)
-	saveAutofixChanges(mklines.lines)
+	SaveAutofixChanges(mklines.lines)
 }
 
 func (pkg *Package) getNbpart() string {
@@ -575,5 +575,5 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 			"you should think about giving it a proper name (maybe plugin.mk) and",
 			"documenting its interface.")
 	}
-	saveAutofixChanges(lines)
+	SaveAutofixChanges(lines)
 }

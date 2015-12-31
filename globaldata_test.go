@@ -45,7 +45,7 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 		"USE_TOOLS+=msgfmt\n"+
 		"TOOLS_CREATE+=msgfmt\n")
 	s.CreateTmpFile(c, "mk/bsd.pkg.mk", "# empty\n")
-	G.globalData.pkgsrcdir = s.tmpdir
+	G.globalData.Pkgsrcdir = s.tmpdir
 	G.currentDir = s.tmpdir
 	G.curPkgsrcdir = "."
 

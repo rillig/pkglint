@@ -161,7 +161,7 @@ func CheckdirCategory() {
 		exp.CurrentLine().error0("The file should end here.")
 	}
 
-	saveAutofixChanges(lines)
+	SaveAutofixChanges(lines)
 
 	if G.opts.Recursive {
 		G.todo = append(append([]string(nil), subdirs...), G.todo...)

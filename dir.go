@@ -38,7 +38,7 @@ func CheckDirent(fname string) {
 
 	switch G.curPkgsrcdir {
 	case "../..":
-		checkdirPackage(relpath(G.globalData.pkgsrcdir, G.currentDir))
+		checkdirPackage(relpath(G.globalData.Pkgsrcdir, G.currentDir))
 	case "..":
 		CheckdirCategory()
 	case ".":

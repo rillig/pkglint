@@ -105,7 +105,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 	}
 
 	if includingFnameForUsedCheck != "" {
-		fileMklines.checkForUsedComment(relpath(G.globalData.pkgsrcdir, includingFnameForUsedCheck))
+		fileMklines.checkForUsedComment(relpath(G.globalData.Pkgsrcdir, includingFnameForUsedCheck))
 	}
 
 	return true

@@ -107,7 +107,7 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 	s.CreateTmpFile(c, "x11/alacarte/Makefile", "# empty\n")
 	s.CreateTmpFile(c, "category/package/Makefile", "# empty\n")
-	G.globalData.pkgsrcdir = s.tmpdir
+	G.globalData.Pkgsrcdir = s.tmpdir
 	G.currentDir = s.tmpdir + "/category/package"
 	G.curPkgsrcdir = "../.."
 

@@ -30,7 +30,7 @@ func ChecklinesDistinfo(lines []*Line) {
 	ck.checkLines(lines)
 	checklinesTrailingEmptyLines(lines)
 	ck.checkUnrecordedPatches()
-	saveAutofixChanges(lines)
+	SaveAutofixChanges(lines)
 }
 
 type distinfoLinesChecker struct {

@@ -175,5 +175,5 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		G.pkg.checklinesBuildlink3Inclusion(mklines)
 	}
 
-	saveAutofixChanges(mklines.lines)
+	SaveAutofixChanges(mklines.lines)
 }

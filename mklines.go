@@ -146,7 +146,7 @@ func (mklines *MkLines) check() {
 		lastMkline.line.errorf("Directive indentation is not 0, but %d.", mklines.indentDepth())
 	}
 
-	saveAutofixChanges(mklines.lines)
+	SaveAutofixChanges(mklines.lines)
 }
 
 func (mklines *MkLines) determineDefinedVariables() {

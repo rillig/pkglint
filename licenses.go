@@ -16,7 +16,7 @@ func checktoplevelUnusedLicenses() {
 		return
 	}
 
-	licensedir := G.globalData.pkgsrcdir + "/licenses"
+	licensedir := G.globalData.Pkgsrcdir + "/licenses"
 	files, _ := ioutil.ReadDir(licensedir)
 	for _, licensefile := range files {
 		licensename := licensefile.Name()
@@ -39,7 +39,7 @@ func checklineLicense(line *MkLine, value string) {
 			}
 		}
 		if licenseFile == "" {
-			licenseFile = G.globalData.pkgsrcdir + "/licenses/" + license
+			licenseFile = G.globalData.Pkgsrcdir + "/licenses/" + license
 			if G.ipcUsedLicenses != nil {
 				G.ipcUsedLicenses[license] = true
 			}

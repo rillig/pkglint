@@ -67,7 +67,7 @@ func (s *Suite) TestAutofix_show(c *check.C) {
 	if !lines[1].autofixReplaceRegexp(`.`, "X") {
 		lines[1].warn0("Something's wrong here.") // Prints the autofix NOTE afterwards
 	}
-	saveAutofixChanges(lines)
+	SaveAutofixChanges(lines)
 
 	c.Check(lines[1].raw[0].textnl, equals, "XXXXX\n")
 	c.Check(s.LoadTmpFile(c, "Makefile"), equals, "line1\nline2\nline3\n")
@@ -87,7 +87,7 @@ func (s *Suite) TestAutofix_fix(c *check.C) {
 	if !lines[1].autofixReplaceRegexp(`.`, "X") {
 		lines[1].warn0("Something's wrong here.") // Prints the autofix NOTE afterwards
 	}
-	saveAutofixChanges(lines)
+	SaveAutofixChanges(lines)
 
 	c.Check(s.LoadTmpFile(c, "Makefile"), equals, "line1\nXXXXX\nline3\n")
 	c.Check(s.OutputCleanTmpdir(), equals, ""+

@@ -139,7 +139,7 @@ func convertToLogicalLines(fname string, rawText string, joinContinuationLines b
 	return loglines
 }
 
-func saveAutofixChanges(lines []*Line) (autofixed bool) {
+func SaveAutofixChanges(lines []*Line) (autofixed bool) {
 	if !G.opts.Autofix {
 		for _, line := range lines {
 			if line.changed {

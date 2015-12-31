@@ -150,7 +150,7 @@ func checklinesDescr(lines []*Line) {
 			"about the package's contents.")
 	}
 
-	saveAutofixChanges(lines)
+	SaveAutofixChanges(lines)
 }
 
 func checklinesMessage(lines []*Line) {
@@ -202,7 +202,7 @@ func checkfileMk(fname string) {
 	}
 
 	NewMkLines(lines).check()
-	saveAutofixChanges(lines)
+	SaveAutofixChanges(lines)
 }
 
 func checkfile(fname string) {

@@ -89,7 +89,7 @@ func (ck *PatchChecker) check() {
 	}
 
 	checklinesTrailingEmptyLines(ck.lines)
-	saveAutofixChanges(ck.lines)
+	SaveAutofixChanges(ck.lines)
 }
 
 // See http://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html

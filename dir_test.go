@@ -17,7 +17,7 @@ func (s *Suite) TestCheckDirent(c *check.C) {
 	s.CreateTmpFile(c, "category/package/Makefile", "")
 	s.CreateTmpFile(c, "category/Makefile", "")
 	s.CreateTmpFile(c, "Makefile", "")
-	G.globalData.pkgsrcdir = s.tmpdir
+	G.globalData.Pkgsrcdir = s.tmpdir
 
 	CheckDirent(s.tmpdir)
 
