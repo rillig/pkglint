@@ -232,3 +232,17 @@ func (s *Suite) TestMkLine_(c *check.C) {
 		"WARN: Makefile:3: As var is modified using \"+=\", its name should indicate plural.\n"+
 		"WARN: Makefile:3: var is defined but not used. Spelling mistake?\n")
 }
+
+// In variable assignments, a plain '#' introduces a line comment, unless
+// it is escaped by a backslash. In shell commands, on the other hand, it
+// is interpreted literally.
+func (s *Suite) TestParselineMk(c *check.C) {
+	line1 := NewMkLine(NewLine("fname", 1, "SED_CMD=\t's,\\#,hash,g'", nil))
+
+	c.Check(line1.Varname(), equals, "SED_CMD")
+	c.Check(line1.Value(), equals, "'s,#,hash,g'")
+
+	line2 := NewMkLine(NewLine("fname", 1, "\tsed -e 's,\\#,hash,g'", nil))
+
+	c.Check(line2.Shellcmd(), equals, "sed -e 's,\\#,hash,g'")
+}

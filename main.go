@@ -67,7 +67,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	}
 
 	checktoplevelUnusedLicenses()
-	pkglint.printSummary()
+	pkglint.PrintSummary()
 	if G.opts.Profiling {
 		G.loghisto.printStats("loghisto", G.logOut, 0)
 		G.rematch.printStats("rematch", G.logOut, 10)
@@ -155,7 +155,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	return nil
 }
 
-func (pkglint *Pkglint) printSummary() {
+func (pkglint *Pkglint) PrintSummary() {
 	if !G.opts.Quiet {
 		if G.errors != 0 || G.warnings != 0 {
 			fmt.Fprintf(G.logOut, "%d %s and %d %s found.\n",

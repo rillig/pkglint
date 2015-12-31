@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -20,49 +19,6 @@ func findPkgsrcTopdir(fname string) string {
 		}
 	}
 	return ""
-}
-
-func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
-	if G.opts.DebugTrace {
-		defer tracecall1("loadPackageMakefile", fname)()
-	}
-
-	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
-	if !readMakefile(fname, mainLines, allLines, "") {
-		return nil
-	}
-
-	if G.opts.DumpMakefile {
-		Debugf(G.CurrentDir, noLines, "Whole Makefile (with all included files) follows:")
-		for _, line := range allLines.lines {
-			fmt.Printf("%s\n", line.String())
-		}
-	}
-
-	allLines.determineUsedVariables()
-
-	pkg.pkgdir = expandVariableWithDefault("PKGDIR", ".")
-	pkg.distinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
-	pkg.filesdir = expandVariableWithDefault("FILESDIR", "files")
-	pkg.patchdir = expandVariableWithDefault("PATCHDIR", "patches")
-
-	if varIsDefined("PHPEXT_MK") {
-		if !varIsDefined("USE_PHP_EXT_PATCHES") {
-			pkg.patchdir = "patches"
-		}
-		if varIsDefined("PECL_VERSION") {
-			pkg.distinfoFile = "distinfo"
-		}
-	}
-
-	if G.opts.DebugMisc {
-		dummyLine.Debug1("DISTINFO_FILE=%s", pkg.distinfoFile)
-		dummyLine.Debug1("FILESDIR=%s", pkg.filesdir)
-		dummyLine.Debug1("PATCHDIR=%s", pkg.patchdir)
-		dummyLine.Debug1("PKGDIR=%s", pkg.pkgdir)
-	}
-
-	return mainLines
 }
 
 func resolveVariableRefs(text string) string {
@@ -504,4 +460,31 @@ func ParseDependency(repl *PrefixReplacer) *DependencyPattern {
 
 	repl.Reset(mark)
 	return nil
+}
+
+func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
+
+	tmp := relpath
+	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.CurPkgsrcdir, -1)
+	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
+	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
+	tmp = strings.Replace(tmp, "${LUA_PKGSRCDIR}", "../../lang/lua52", -1)
+	tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", "../../lang/php55", -1)
+	tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", "suse100", -1)
+	tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", "../../lang/python27", -1)
+	if G.Pkg != nil {
+		tmp = strings.Replace(tmp, "${FILESDIR}", G.Pkg.filesdir, -1)
+		tmp = strings.Replace(tmp, "${PKGDIR}", G.Pkg.pkgdir, -1)
+	}
+
+	if adjustDepth {
+		if m, pkgpath := match1(tmp, `^\.\./\.\./([^.].*)$`); m {
+			tmp = G.CurPkgsrcdir + "/" + pkgpath
+		}
+	}
+
+	if G.opts.DebugMisc {
+		dummyLine.Debug2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	}
+	return tmp
 }
