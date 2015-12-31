@@ -232,6 +232,15 @@ func (cv *VartypeCheck) FetchURL() {
 			return
 		}
 	}
+
+	if m, name, subdir := match2(cv.value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
+		if !G.globalData.masterSiteVars[name] {
+			cv.line.error1("%s does not exist.", name)
+		}
+		if !hasSuffix(subdir, "/") {
+			cv.line.error1("The subdirectory in %s must end with a slash.", name)
+		}
+	}
 }
 
 // See Pathname
@@ -632,14 +641,6 @@ func (cv *VartypeCheck) URL() {
 
 	if value == "" && hasPrefix(cv.comment, "#") {
 		// Ok
-
-	} else if m, name, subdir := match2(value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
-		if !G.globalData.masterSiteVars[name] {
-			line.error1("%s does not exist.", name)
-		}
-		if !hasSuffix(subdir, "/") {
-			line.error1("The subdirectory in %s must end with a slash.", name)
-		}
 
 	} else if containsVarRef(value) {
 		// No further checks
