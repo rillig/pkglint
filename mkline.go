@@ -775,11 +775,20 @@ func (mkline *MkLine) CheckText(text string) {
 		mkline.Line.CheckRcsid(`# `, "# ")
 	}
 
-	if contains(text, "${WRKSRC}/../") {
-		mkline.Warn0("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
-		Explain2(
-			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
-			"and INSTALL_DIRS are subdirectories of it.")
+	if contains(text, "${WRKSRC}/..") {
+		mkline.Warn0("Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".")
+		Explain(
+			"WRKSRC should be defined so that there is no need to do anything",
+			"outside of this directory.",
+			"",
+			"Example:",
+			"",
+			"\tWRKSRC=\t${WRKDIR}",
+			"\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
+			"\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
+			"",
+			"See the pkgsrc guide, section \"Directories used during the build",
+			"process\" for more information.")
 	}
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.

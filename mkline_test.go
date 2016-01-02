@@ -309,7 +309,8 @@ func (s *Suite) TestMkLine_Misc(c *check.C) {
 		".endfor",
 		"GAMES_USER?=pkggames",
 		"PLIST_SUBST+= CONDITIONAL=${CONDITIONAL}",
-		"CONDITIONAL=\"@comment\"")
+		"CONDITIONAL=\"@comment\"",
+		"BUILD_DIRS=\t${WRKSRC}/../build")
 
 	G.Mk.Check()
 
@@ -318,5 +319,7 @@ func (s *Suite) TestMkLine_Misc(c *check.C) {
 		"NOTE: options.mk:4: Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.\n"+
 		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".\n"+
 		"WARN: options.mk:7: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".\n"+
-		"WARN: options.mk:9: Please don't use @comment in CONDITIONAL.\n")
+		"WARN: options.mk:9: Please don't use @comment in CONDITIONAL.\n"+
+		"WARN: options.mk:10: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".\n"+
+		"NOTE: options.mk:10: You can use \"../build\" instead of \"${WRKSRC}/../build\".\n")
 }
