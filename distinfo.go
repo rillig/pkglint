@@ -28,7 +28,7 @@ func ChecklinesDistinfo(lines []*Line) {
 		fname, patchesDir, isCommitted(fname),
 		make(map[string]bool), "", false, nil}
 	ck.checkLines(lines)
-	checklinesTrailingEmptyLines(lines)
+	ChecklinesTrailingEmptyLines(lines)
 	ck.checkUnrecordedPatches()
 	SaveAutofixChanges(lines)
 }

@@ -9,7 +9,7 @@ type Toplevel struct {
 	subdirs        []string
 }
 
-func checkdirToplevel() {
+func CheckdirToplevel() {
 	if G.opts.DebugTrace {
 		defer tracecall1("checkdirToplevel", G.CurrentDir)()
 	}

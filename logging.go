@@ -47,7 +47,7 @@ func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...
 		sep = " "
 	}
 	if G.opts.Profiling {
-		G.loghisto.add(format, 1)
+		G.loghisto.Add(format, 1)
 	}
 	text += sep + fmt.Sprintf(format, args...) + "\n"
 	io.WriteString(out, text)

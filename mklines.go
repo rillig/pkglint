@@ -125,7 +125,7 @@ func (mklines *MkLines) Check() {
 		case mkline.IsShellcmd():
 			shellcmd := text[1:]
 			mkline.CheckText(shellcmd)
-			NewMkShellLine(mkline).checkShellCommandLine(shellcmd)
+			NewMkShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 		case mkline.IsInclude():
 			mklines.checklineInclude(mkline)
@@ -140,7 +140,7 @@ func (mklines *MkLines) Check() {
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
 	substcontext.Finish(lastMkline)
 
-	checklinesTrailingEmptyLines(mklines.lines)
+	ChecklinesTrailingEmptyLines(mklines.lines)
 
 	if len(mklines.indentation) != 1 {
 		lastMkline.Line.Errorf("Directive indentation is not 0, but %d.", mklines.IndentDepth())

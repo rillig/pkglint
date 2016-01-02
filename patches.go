@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-func checklinesPatch(lines []*Line) {
+func ChecklinesPatch(lines []*Line) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checklinesPatch", lines[0].Fname)()
 	}
 
-	(&PatchChecker{lines, NewExpecter(lines), false, false}).check()
+	(&PatchChecker{lines, NewExpecter(lines), false, false}).Check()
 }
 
 type PatchChecker struct {
@@ -28,7 +28,7 @@ const (
 	rePatchUniHunk    = `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`
 )
 
-func (ck *PatchChecker) check() {
+func (ck *PatchChecker) Check() {
 	if G.opts.DebugTrace {
 		defer tracecall0("PatchChecker.check")()
 	}
@@ -88,7 +88,7 @@ func (ck *PatchChecker) check() {
 		Errorf(ck.lines[0].Fname, noLines, "Contains no patch.")
 	}
 
-	checklinesTrailingEmptyLines(ck.lines)
+	ChecklinesTrailingEmptyLines(ck.lines)
 	SaveAutofixChanges(ck.lines)
 }
 

@@ -22,7 +22,7 @@ func (s *Suite) TestCheckdirToplevel(c *check.C) {
 	G.globalData.InitVartypes()
 
 	G.CurrentDir = s.tmpdir
-	checkdirToplevel()
+	CheckdirToplevel()
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
 		"WARN: ~/Makefile:3: Indentation should be a single tab character.\n"+

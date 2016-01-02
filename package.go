@@ -163,7 +163,7 @@ func checkdirPackage(pkgpath string) {
 				pkg.checkfilePackageMakefile(fname, lines)
 			}
 		} else {
-			checkfile(fname)
+			Checkfile(fname)
 		}
 		if strings.Contains(fname, "/patches/patch-") {
 			havePatches = true

@@ -90,7 +90,7 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 			varname, op, value, comment string
 		}
 		expected := va{varname, op, value, comment}
-		am, avarname, aop, avalue, acomment := matchVarassign(text)
+		am, avarname, aop, avalue, acomment := MatchVarassign(text)
 		if !am {
 			c.Errorf("Text %q doesn’t match variable assignment", text)
 			return
@@ -99,7 +99,7 @@ func (s *Suite) TestMatchVarassign(c *check.C) {
 		c.Check(actual, ck, expected)
 	}
 	checkNotVarassign := func(text string) {
-		m, _, _, _, _ := matchVarassign(text)
+		m, _, _, _, _ := MatchVarassign(text)
 		if m {
 			c.Errorf("Text %q matches variable assignment, but shouldn’t.", text)
 		}
@@ -143,7 +143,7 @@ func (s *Suite) TestChecklinesDescr(c *check.C) {
 		"", "", "", "", "", "", "", "", "20",
 		"", "", "", "", "", "", "", "", "", "30")
 
-	checklinesDescr(lines)
+	ChecklinesDescr(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: DESCR:1: Line too long (should be no more than 80 characters).\n"+
@@ -155,7 +155,7 @@ func (s *Suite) TestChecklinesMessage_short(c *check.C) {
 	lines := s.NewLines("MESSAGE",
 		"one line")
 
-	checklinesMessage(lines)
+	ChecklinesMessage(lines)
 
 	c.Check(s.Output(), equals, "WARN: MESSAGE:1: File too short.\n")
 }
@@ -168,7 +168,7 @@ func (s *Suite) TestChecklinesMessage_malformed(c *check.C) {
 		"4",
 		"5")
 
-	checklinesMessage(lines)
+	ChecklinesMessage(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: MESSAGE:1: Expected a line of exactly 75 \"=\" characters.\n"+

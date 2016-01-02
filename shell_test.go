@@ -41,11 +41,11 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"# dummy")
 	shline := NewMkShellLine(G.Mk.mklines[0])
 
-	shline.checkShellCommandLine("@# Comment")
+	shline.CheckShellCommandLine("@# Comment")
 
 	c.Check(s.Output(), equals, "")
 
-	shline.checkShellCommandLine("uname=`uname`; echo $$uname")
+	shline.CheckShellCommandLine("uname=`uname`; echo $$uname")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Unknown shell command \"uname\".\n"+
@@ -59,41 +59,41 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"# dummy")
 	G.globalData.InitVartypes()
 
-	shline.checkShellCommandLine("echo ${PKGNAME:Q}") // vucQuotPlain
+	shline.CheckShellCommandLine("echo ${PKGNAME:Q}") // vucQuotPlain
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: PKGNAME may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${PKGNAME} here.\n")
 
-	shline.checkShellCommandLine("echo \"${CFLAGS:Q}\"") // vucQuotDquot
+	shline.CheckShellCommandLine("echo \"${CFLAGS:Q}\"") // vucQuotDquot
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Please don't use the :Q operator in double quotes.\n"+
 		"WARN: fname:1: CFLAGS may not be used in this file.\n"+
 		"WARN: fname:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} and make sure the variable appears outside of any quoting characters.\n")
 
-	shline.checkShellCommandLine("echo '${COMMENT:Q}'") // vucQuotSquot
+	shline.CheckShellCommandLine("echo '${COMMENT:Q}'") // vucQuotSquot
 
 	c.Check(s.Output(), equals, "WARN: fname:1: COMMENT may not be used in this file.\n")
 
-	shline.checkShellCommandLine("echo $$@")
+	shline.CheckShellCommandLine("echo $$@")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: The $@ shell variable should only be used in double quotes.\n")
 
-	shline.checkShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo $
+	shline.CheckShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo $
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Unquoted $ or strange shell variable found.\n")
 
-	shline.checkShellCommandLine("echo \"\\n\"") // As seen by make(1); the shell sees: echo "\n"
+	shline.CheckShellCommandLine("echo \"\\n\"") // As seen by make(1); the shell sees: echo "\n"
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"\\\\n\" instead of \"\\n\".\n")
 
-	shline.checkShellCommandLine("${RUN} for f in *.c; do echo $${f%.c}; done")
+	shline.CheckShellCommandLine("${RUN} for f in *.c; do echo $${f%.c}; done")
 
 	c.Check(s.Output(), equals, "")
 
 	// Based on mail/thunderbird/Makefile, rev. 1.159
-	shline.checkShellCommandLine("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
+	shline.CheckShellCommandLine("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Unknown shell command \"unzip\".\n"+
@@ -101,7 +101,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"WARN: fname:1: Unknown shell command \"awk\".\n")
 
 	// From mail/thunderbird/Makefile, rev. 1.159
-	shline.checkShellCommandLine("" +
+	shline.CheckShellCommandLine("" +
 		"${RUN} for e in ${XPI_FILES}; do " +
 		"  subdir=\"`${UNZIP_CMD} -c \"$$e\" install.rdf | awk '/^    <em:id>/ {sub(\".*<em:id>\",\"\");sub(\"</em:id>.*\",\"\");print;exit;}'`\" && " +
 		"  ${MKDIR} \"${WRKDIR}/extensions/$$subdir\" && " +
@@ -131,7 +131,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
 	c.Check(shline.line.raw[0].textnl, equals, "\techo ${PKGNAME:Q}\n")
 	c.Check(shline.line.raw[0].Lineno, equals, 1)
 
-	shline.checkShellCommandLine("echo ${PKGNAME:Q}")
+	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: Makefile:1: The :Q operator isn't necessary for ${PKGNAME} here.\n")
@@ -145,7 +145,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_showAutofix(c *check.C) {
 		"\techo ${PKGNAME:Q}")
 	shline := NewMkShellLine(G.Mk.mklines[0])
 
-	shline.checkShellCommandLine("echo ${PKGNAME:Q}")
+	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: Makefile:1: The :Q operator isn't necessary for ${PKGNAME} here.\n"+
@@ -160,7 +160,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_autofix(c *check.C) {
 		"\techo ${PKGNAME:Q}")
 	shline := NewMkShellLine(G.Mk.mklines[0])
 
-	shline.checkShellCommandLine("echo ${PKGNAME:Q}")
+	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
 	c.Check(s.Output(), equals, ""+
 		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
@@ -174,7 +174,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
 	shline := NewMkShellLine(G.Mk.mklines[0])
 
 	// foobar="`echo \"foo   bar\"`"
-	shline.checkShellCommandLine("foobar=\"`echo \\\"foo   bar\\\"`\"")
+	shline.CheckShellCommandLine("foobar=\"`echo \\\"foo   bar\\\"`\"")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
@@ -194,7 +194,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_DollarWithoutVariable(c *check.C)
 	s.RegisterTool("pax", "PAX", false)
 	G.Mk.tools["pax"] = true
 
-	shline.checkShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
+	shline.CheckShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 
 	c.Check(s.Output(), equals, "")
 }
@@ -206,35 +206,35 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 
 	c.Check(matches("${list}", `^`+reVarnameDirect+`$`), equals, false)
 
-	shline.checkShellword("${${list}}", false)
+	shline.CheckShellword("${${list}}", false)
 
 	c.Check(s.Output(), equals, "")
 
-	shline.checkShellword("\"$@\"", false)
+	shline.CheckShellword("\"$@\"", false)
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"${.TARGET}\" instead of \"$@\".\n")
 
-	shline.checkShellword("${COMMENT:Q}", true)
+	shline.CheckShellword("${COMMENT:Q}", true)
 
 	c.Check(s.Output(), equals, "WARN: fname:1: COMMENT may not be used in this file.\n")
 
-	shline.checkShellword("\"${DISTINFO_FILE:Q}\"", true)
+	shline.CheckShellword("\"${DISTINFO_FILE:Q}\"", true)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 
-	shline.checkShellword("embed${DISTINFO_FILE:Q}ded", true)
+	shline.CheckShellword("embed${DISTINFO_FILE:Q}ded", true)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 
-	shline.checkShellword("s,\\.,,", true)
+	shline.CheckShellword("s,\\.,,", true)
 
 	c.Check(s.Output(), equals, "")
 
-	shline.checkShellword("\"s,\\.,,\"", true)
+	shline.CheckShellword("\"s,\\.,,\"", true)
 
 	c.Check(s.Output(), equals, "")
 }
@@ -242,7 +242,7 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 func (s *Suite) TestMkShellLine_CheckShellword_DollarWithoutVariable(c *check.C) {
 	shline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
-	shline.checkShellword("/.*~$$//g", false) // Typical argument to pax(1).
+	shline.CheckShellword("/.*~$$//g", false) // Typical argument to pax(1).
 
 	c.Check(s.Output(), equals, "")
 }
@@ -258,7 +258,7 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 
-	NewMkShellLine(mkline).checkShellCommandLine("echo \"hello, world\"")
+	NewMkShellLine(mkline).CheckShellCommandLine("echo \"hello, world\"")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:3: Please use \"${ECHO}\" instead of \"echo\".\n")
@@ -268,15 +268,15 @@ func (s *Suite) TestMkShellLine_checklineMkShelltext(c *check.C) {
 
 	shline := NewMkShellLine(NewMkLine(NewLine("Makefile", 3, "# dummy", nil)))
 
-	shline.checkShellCommandLine("for f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done")
+	shline.CheckShellCommandLine("for f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done")
 
 	c.Check(s.Output(), equals, "NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.\n")
 
-	shline.checkShellCommandLine("install -c manpage.1 ${PREFIX}/man/man1/manpage.1")
+	shline.CheckShellCommandLine("install -c manpage.1 ${PREFIX}/man/man1/manpage.1")
 
 	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use ${PKGMANDIR} instead of \"man\".\n")
 
-	shline.checkShellCommandLine("cp init-script ${PREFIX}/etc/rc.d/service")
+	shline.CheckShellCommandLine("cp init-script ${PREFIX}/etc/rc.d/service")
 
 	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.\n")
 }

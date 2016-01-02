@@ -71,17 +71,17 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	return value
 }
 
-func checkfileExtra(fname string) {
+func CheckfileExtra(fname string) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checkfileExtra", fname)()
 	}
 
 	if lines := LoadNonemptyLines(fname, false); lines != nil {
-		checklinesTrailingEmptyLines(lines)
+		ChecklinesTrailingEmptyLines(lines)
 	}
 }
 
-func checklinesDescr(lines []*Line) {
+func ChecklinesDescr(lines []*Line) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checklinesDescr", lines[0].Fname)()
 	}
@@ -94,7 +94,7 @@ func checklinesDescr(lines []*Line) {
 			line.Note0("Variables are not expanded in the DESCR file.")
 		}
 	}
-	checklinesTrailingEmptyLines(lines)
+	ChecklinesTrailingEmptyLines(lines)
 
 	if maxlines := 24; len(lines) > maxlines {
 		line := lines[maxlines]
@@ -109,7 +109,7 @@ func checklinesDescr(lines []*Line) {
 	SaveAutofixChanges(lines)
 }
 
-func checklinesMessage(lines []*Line) {
+func ChecklinesMessage(lines []*Line) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checklinesMessage", lines[0].Fname)()
 	}
@@ -144,10 +144,10 @@ func checklinesMessage(lines []*Line) {
 		lastLine.Warn0("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
-	checklinesTrailingEmptyLines(lines)
+	ChecklinesTrailingEmptyLines(lines)
 }
 
-func checkfileMk(fname string) {
+func CheckfileMk(fname string) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checkfileMk", fname)()
 	}
@@ -161,7 +161,7 @@ func checkfileMk(fname string) {
 	SaveAutofixChanges(lines)
 }
 
-func checkfile(fname string) {
+func Checkfile(fname string) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checkfile", fname)()
 	}
@@ -211,7 +211,7 @@ func checkfile(fname string) {
 
 	case basename == "ALTERNATIVES":
 		if G.opts.CheckAlternatives {
-			checkfileExtra(fname)
+			CheckfileExtra(fname)
 		}
 
 	case basename == "buildlink3.mk":
@@ -224,7 +224,7 @@ func checkfile(fname string) {
 	case hasPrefix(basename, "DESCR"):
 		if G.opts.CheckDescr {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
-				checklinesDescr(lines)
+				ChecklinesDescr(lines)
 			}
 		}
 
@@ -237,20 +237,20 @@ func checkfile(fname string) {
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
 		if G.opts.CheckInstall {
-			checkfileExtra(fname)
+			CheckfileExtra(fname)
 		}
 
 	case hasPrefix(basename, "MESSAGE"):
 		if G.opts.CheckMessage {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
-				checklinesMessage(lines)
+				ChecklinesMessage(lines)
 			}
 		}
 
 	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
 		if G.opts.CheckPatches {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
-				checklinesPatch(lines)
+				ChecklinesPatch(lines)
 			}
 		}
 
@@ -264,7 +264,7 @@ func checkfile(fname string) {
 
 	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
 		if G.opts.CheckMk {
-			checkfileMk(fname)
+			CheckfileMk(fname)
 		}
 
 	case hasPrefix(basename, "PLIST"):
@@ -287,12 +287,12 @@ func checkfile(fname string) {
 	default:
 		Warnf(fname, noLines, "Unexpected file found.")
 		if G.opts.CheckExtra {
-			checkfileExtra(fname)
+			CheckfileExtra(fname)
 		}
 	}
 }
 
-func checklinesTrailingEmptyLines(lines []*Line) {
+func ChecklinesTrailingEmptyLines(lines []*Line) {
 	max := len(lines)
 	last := max
 	for last > 1 && lines[last-1].Text == "" {
@@ -303,7 +303,7 @@ func checklinesTrailingEmptyLines(lines []*Line) {
 	}
 }
 
-func matchVarassign(text string) (m bool, varname, op, value, comment string) {
+func MatchVarassign(text string) (m bool, varname, op, value, comment string) {
 	i, n := 0, len(text)
 
 	for i < n && text[i] == ' ' {
@@ -393,18 +393,18 @@ type DependencyPattern struct {
 
 func ParsePkgbasePattern(repl *PrefixReplacer) (pkgbase string) {
 	for {
-		if repl.advanceRegexp(`^\$\{\w+\}`) ||
-			repl.advanceRegexp(`^[\w.*+,{}]+`) ||
-			repl.advanceRegexp(`^\[[\d-]+\]`) {
+		if repl.AdvanceRegexp(`^\$\{\w+\}`) ||
+			repl.AdvanceRegexp(`^[\w.*+,{}]+`) ||
+			repl.AdvanceRegexp(`^\[[\d-]+\]`) {
 			pkgbase += repl.m[0]
 			continue
 		}
 
 		mark := repl.Mark()
-		if repl.advanceStr("-") {
-			if repl.advanceRegexp(`^\d`) ||
-				repl.advanceRegexp(`^\$\{\w*VER\w*\}`) ||
-				repl.advanceStr("[") {
+		if repl.AdvanceStr("-") {
+			if repl.AdvanceRegexp(`^\d`) ||
+				repl.AdvanceRegexp(`^\$\{\w*VER\w*\}`) ||
+				repl.AdvanceStr("[") {
 				repl.Reset(mark)
 				return
 			}
@@ -424,18 +424,18 @@ func ParseDependency(repl *PrefixReplacer) *DependencyPattern {
 	}
 
 	mark2 := repl.Mark()
-	if repl.advanceStr(">=") || repl.advanceStr(">") {
+	if repl.AdvanceStr(">=") || repl.AdvanceStr(">") {
 		op := repl.s
-		if repl.advanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
+		if repl.AdvanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
 			dp.lowerOp = op
 			dp.lower = repl.m[0]
 		} else {
 			repl.Reset(mark2)
 		}
 	}
-	if repl.advanceStr("<=") || repl.advanceStr("<") {
+	if repl.AdvanceStr("<=") || repl.AdvanceStr("<") {
 		op := repl.s
-		if repl.advanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
+		if repl.AdvanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
 			dp.upperOp = op
 			dp.upper = repl.m[0]
 		} else {
@@ -445,7 +445,7 @@ func ParseDependency(repl *PrefixReplacer) *DependencyPattern {
 	if dp.lowerOp != "" || dp.upperOp != "" {
 		return &dp
 	}
-	if repl.advanceStr("-") && repl.rest != "" {
+	if repl.AdvanceStr("-") && repl.rest != "" {
 		dp.wildcard = repl.AdvanceRest()
 		return &dp
 	}

@@ -31,7 +31,7 @@ func checklinesPlist(lines []*Line) {
 		make(map[string]*PlistLine),
 		make(map[string]*PlistLine),
 		""}
-	ck.check(lines)
+	ck.Check(lines)
 }
 
 type PlistChecker struct {
@@ -46,23 +46,23 @@ type PlistLine struct {
 	text        string // Like line.text, without the conditional
 }
 
-func (ck *PlistChecker) check(plainLines []*Line) {
-	plines := ck.newLines(plainLines)
+func (ck *PlistChecker) Check(plainLines []*Line) {
+	plines := ck.NewLines(plainLines)
 	ck.collectFilesAndDirs(plines)
 
 	if fname := plines[0].line.Fname; path.Base(fname) == "PLIST.common_end" {
 		commonLines, err := readLines(strings.TrimSuffix(fname, "_end"), false)
 		if err == nil {
-			ck.collectFilesAndDirs(ck.newLines(commonLines))
+			ck.collectFilesAndDirs(ck.NewLines(commonLines))
 		}
 	}
 
 	for _, pline := range plines {
 		ck.checkline(pline)
-		pline.checkTrailingWhitespace()
+		pline.CheckTrailingWhitespace()
 	}
 
-	checklinesTrailingEmptyLines(plainLines)
+	ChecklinesTrailingEmptyLines(plainLines)
 	if G.opts.WarnPlistSort {
 		sorter := NewPlistLineSorter(plines)
 		sorter.Sort()
@@ -74,7 +74,7 @@ func (ck *PlistChecker) check(plainLines []*Line) {
 	}
 }
 
-func (ck *PlistChecker) newLines(lines []*Line) []*PlistLine {
+func (ck *PlistChecker) NewLines(lines []*Line) []*PlistLine {
 	plines := make([]*PlistLine, len(lines))
 	for i, line := range lines {
 		conditional, text := "", line.Text
@@ -120,7 +120,7 @@ func (ck *PlistChecker) checkline(pline *PlistLine) {
 	if hasAlnumPrefix(text) {
 		ck.checkpath(pline)
 	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)\s+(.*)`); m {
-		pline.checkDirective(cmd, arg)
+		pline.CheckDirective(cmd, arg)
 	} else if hasPrefix(text, "$") {
 		ck.checkpath(pline)
 	} else {
@@ -136,7 +136,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 	ck.checkSorted(pline)
 
 	if strings.Contains(basename, "${IMAKE_MANNEWSUFFIX}") {
-		pline.warnAboutPlistImakeMannewsuffix()
+		pline.warnImakeMannewsuffix()
 	}
 
 	topdir := ""
@@ -376,7 +376,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 	}
 }
 
-func (pline *PlistLine) checkTrailingWhitespace() {
+func (pline *PlistLine) CheckTrailingWhitespace() {
 	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
 		pline.line.Error0("pkgsrc does not support filenames ending in white-space.")
 		Explain1(
@@ -384,7 +384,7 @@ func (pline *PlistLine) checkTrailingWhitespace() {
 	}
 }
 
-func (pline *PlistLine) checkDirective(cmd, arg string) {
+func (pline *PlistLine) CheckDirective(cmd, arg string) {
 	line := pline.line
 
 	if cmd == "unexec" {
@@ -421,7 +421,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 		case len(args) != 3:
 			line.Warn0("Invalid number of arguments for imake-man.")
 		case args[2] == "${IMAKE_MANNEWSUFFIX}":
-			pline.warnAboutPlistImakeMannewsuffix()
+			pline.warnImakeMannewsuffix()
 		}
 
 	case "pkgdir":
@@ -432,7 +432,7 @@ func (pline *PlistLine) checkDirective(cmd, arg string) {
 	}
 }
 
-func (pline *PlistLine) warnAboutPlistImakeMannewsuffix() {
+func (pline *PlistLine) warnImakeMannewsuffix() {
 	pline.line.Warn0("IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.")
 	Explain(
 		"This is the result of a print-PLIST call that has not been edited",

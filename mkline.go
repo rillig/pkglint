@@ -44,7 +44,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 			"white-space.")
 	}
 
-	if m, varname, op, value, comment := matchVarassign(text); m {
+	if m, varname, op, value, comment := MatchVarassign(text); m {
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 
@@ -708,7 +708,7 @@ func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
 		words, _ := splitIntoShellWords(mkline.Line, value)
 		for _, word := range words {
 			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
-			shline.checkShellword(word, true)
+			shline.CheckShellword(word, true)
 		}
 	}
 }

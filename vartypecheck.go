@@ -548,7 +548,7 @@ func (cv *VartypeCheck) SedCommands() {
 
 	for i := 0; i < nwords; i++ {
 		word := words[i]
-		shline.checkShellword(word, true)
+		shline.CheckShellword(word, true)
 
 		switch {
 		case word == "-e":
@@ -567,8 +567,8 @@ func (cv *VartypeCheck) SedCommands() {
 						"",
 						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-				shline.checkShellword(words[i-1], true)
-				shline.checkShellword(words[i], true)
+				shline.CheckShellword(words[i-1], true)
+				shline.CheckShellword(words[i], true)
 				mkline.CheckVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
 				line.Error0("The -e option to sed requires an argument.")
@@ -590,17 +590,17 @@ func (cv *VartypeCheck) SedCommands() {
 
 func (cv *VartypeCheck) ShellCommand() {
 	setE := true
-	NewMkShellLine(cv.mkline).checkShellCommand(cv.value, &setE)
+	NewMkShellLine(cv.mkline).CheckShellCommand(cv.value, &setE)
 }
 
 // Zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
-	NewMkShellLine(cv.mkline).checkShellCommands(cv.value)
+	NewMkShellLine(cv.mkline).CheckShellCommands(cv.value)
 }
 
 func (cv *VartypeCheck) ShellWord() {
 	if !cv.listContext {
-		NewMkShellLine(cv.mkline).checkShellword(cv.value, true)
+		NewMkShellLine(cv.mkline).CheckShellword(cv.value, true)
 	}
 }
 

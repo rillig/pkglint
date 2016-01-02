@@ -69,10 +69,10 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	checktoplevelUnusedLicenses()
 	pkglint.PrintSummary()
 	if G.opts.Profiling {
-		G.loghisto.printStats("loghisto", G.logOut, 0)
-		G.rematch.printStats("rematch", G.logOut, 10)
-		G.renomatch.printStats("renomatch", G.logOut, 10)
-		G.retime.printStats("retime", G.logOut, 10)
+		G.loghisto.PrintStats("loghisto", G.logOut, 0)
+		G.rematch.PrintStats("rematch", G.logOut, 10)
+		G.renomatch.PrintStats("renomatch", G.logOut, 10)
+		G.retime.PrintStats("retime", G.logOut, 10)
 	}
 	if G.errors != 0 {
 		return 1

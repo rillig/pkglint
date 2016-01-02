@@ -187,11 +187,11 @@ func match(s, re string) []string {
 	delay := immediatelyBefore.UnixNano() - before.UnixNano()
 	timeTaken := after.UnixNano() - immediatelyBefore.UnixNano() - delay
 
-	G.retime.add(re, int(timeTaken))
+	G.retime.Add(re, int(timeTaken))
 	if m != nil {
-		G.rematch.add(re, 1)
+		G.rematch.Add(re, 1)
 	} else {
-		G.renomatch.add(re, 1)
+		G.renomatch.Add(re, 1)
 	}
 	return m
 }
@@ -200,9 +200,9 @@ func matches(s, re string) bool {
 	matches := regcomp(re).MatchString(s)
 	if G.opts.Profiling {
 		if matches {
-			G.rematch.add(re, 1)
+			G.rematch.Add(re, 1)
 		} else {
-			G.renomatch.add(re, 1)
+			G.renomatch.Add(re, 1)
 		}
 	}
 	return matches
@@ -275,7 +275,7 @@ func NewPrefixReplacer(s string) *PrefixReplacer {
 	return &PrefixReplacer{s, "", nil}
 }
 
-func (pr *PrefixReplacer) advanceStr(prefix string) bool {
+func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.m = nil
 	pr.s = ""
 	if hasPrefix(pr.rest, prefix) {
@@ -288,7 +288,7 @@ func (pr *PrefixReplacer) advanceStr(prefix string) bool {
 	}
 	return false
 }
-func (pr *PrefixReplacer) advanceRegexp(re string) bool {
+func (pr *PrefixReplacer) AdvanceRegexp(re string) bool {
 	pr.m = nil
 	pr.s = ""
 	if !hasPrefix(re, "^") {
@@ -483,13 +483,13 @@ func NewHistogram() *Histogram {
 	return h
 }
 
-func (h *Histogram) add(s string, n int) {
+func (h *Histogram) Add(s string, n int) {
 	if G.opts.Profiling {
 		h.histo[s] += n
 	}
 }
 
-func (h *Histogram) printStats(caption string, out io.Writer, limit int) {
+func (h *Histogram) PrintStats(caption string, out io.Writer, limit int) {
 	entries := make([]HistogramEntry, len(h.histo))
 
 	i := 0

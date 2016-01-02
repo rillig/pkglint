@@ -32,7 +32,7 @@ func CheckDirent(fname string) {
 	case isDir && isEmptyDir(fname):
 		return
 	case isReg:
-		checkfile(fname)
+		Checkfile(fname)
 		return
 	}
 
@@ -42,7 +42,7 @@ func CheckDirent(fname string) {
 	case "..":
 		CheckdirCategory()
 	case ".":
-		checkdirToplevel()
+		CheckdirToplevel()
 	default:
 		Errorf(fname, noLines, "Cannot check directories outside a pkgsrc tree.")
 	}

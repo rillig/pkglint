@@ -21,7 +21,7 @@ func (s *Suite) TestChecklinesPatch_WithComment(c *check.C) {
 		"+old line",
 		" context after")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "")
 }
@@ -40,7 +40,7 @@ func (s *Suite) TestChecklinesPatch_WithoutEmptyLine(c *check.C) {
 		"+old line",
 		" context after")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
 		"AUTOFIX: ~/patch-WithoutEmptyLines:2: Inserting a line \"\" before this line.\n"+
@@ -76,7 +76,7 @@ func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
 		"+old line",
 		" context after")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "ERROR: patch-WithoutComment:3: Each patch must be documented.\n")
 }
@@ -104,7 +104,7 @@ func (s *Suite) TestChecklinesPatch_ErrorCode(c *check.C) {
 		"+old line",
 		" context after")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "")
 }
@@ -125,7 +125,7 @@ func (s *Suite) TestChecklinesPatch_WrongOrder(c *check.C) {
 		"+old line",
 		" context after")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "WARN: patch-WrongOrder:7: Unified diff headers should be first ---, then +++.\n")
 }
@@ -139,7 +139,7 @@ func (s *Suite) TestChecklinesPatch_ContextDiff(c *check.C) {
 		"*** history.c.orig",
 		"--- history.c")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: patch-ctx:4: Each patch must be documented.\n"+
@@ -153,7 +153,7 @@ func (s *Suite) TestChecklinesPatch_NoPatch(c *check.C) {
 		"-- oldfile",
 		"++ newfile")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "ERROR: patch-aa: Contains no patch.\n")
 }
@@ -173,7 +173,7 @@ func (s *Suite) TestChecklinesPatch_TwoPatches(c *check.C) {
 		"-old",
 		"+new")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: patch-aa:3: Each patch must be documented.\n"+
@@ -190,7 +190,7 @@ func (s *Suite) TestChecklinesPatch_PatchlikeDocumentation(c *check.C) {
 		"",
 		"*** oldOrNewFile")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "ERROR: patch-aa: Contains no patch.\n")
 }
@@ -204,7 +204,7 @@ func (s *Suite) TestChecklinesPatch_OnlyUnifiedHeader(c *check.C) {
 		"--- file.orig",
 		"+++ file")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "ERROR: patch-unified:EOF: No patch hunks for \"file\".\n")
 }
@@ -218,7 +218,7 @@ func (s *Suite) TestChecklinesPatch_OnlyContextHeader(c *check.C) {
 		"*** file.orig",
 		"--- file")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "WARN: patch-context:5: Please use unified diffs (diff -u) for patches.\n")
 }
@@ -239,14 +239,14 @@ func (s *Suite) TestChecklinesPatch_Makefile(c *check.C) {
 		"+# added comment",
 		" \t/bin/cp context after")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: patch-unified:10: Found absolute pathname: /bin/cp\n")
 
 	G.opts.WarnExtra = true
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: patch-unified:8: Found absolute pathname: /bin/cp\n"+
@@ -269,7 +269,7 @@ func (s *Suite) TestChecklinesPatch_NoNewline_withFollowingText(c *check.C) {
 		"\\ No newline at end of file",
 		"last line (a comment)")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "WARN: patch-aa:12: Empty line or end of file expected.\n")
 }
@@ -288,7 +288,7 @@ func (s *Suite) TestChecklinesPatch_NoNewline(c *check.C) {
 		"+new",
 		"\\ No newline at end of file")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "")
 }
@@ -309,7 +309,7 @@ func (s *Suite) TestChecklinesPatch_ShortAtEof(c *check.C) {
 		" 5",
 		" 6") // Line 7 was empty, therefore omitted
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "")
 }
@@ -330,7 +330,7 @@ func (s *Suite) TestChecklinesPatch_AddTab(c *check.C) {
 		"+new",
 		"\tcontext")
 
-	checklinesPatch(lines)
+	ChecklinesPatch(lines)
 
 	c.Check(s.Output(), equals, "")
 }
