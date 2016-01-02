@@ -26,7 +26,7 @@ func ChecklinesDistinfo(lines []*Line) {
 
 	ck := &distinfoLinesChecker{
 		fname, patchesDir, isCommitted(fname),
-		make(map[string]bool), "", false, nil}
+		make(map[string]bool), nil, "", false, nil}
 	ck.checkLines(lines)
 	ChecklinesTrailingEmptyLines(lines)
 	ck.checkUnrecordedPatches()
@@ -39,7 +39,8 @@ type distinfoLinesChecker struct {
 	distinfoIsCommitted bool
 
 	patches          map[string]bool // "patch-aa" => true
-	previousFilename string
+	currentFirstLine *Line
+	currentFilename  string
 	isPatch          bool
 	algorithms       []string
 }
@@ -60,7 +61,7 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 			continue
 		}
 
-		if filename != ck.previousFilename {
+		if filename != ck.currentFilename {
 			ck.onFilenameChange(line, filename)
 		}
 		ck.algorithms = append(ck.algorithms, alg)
@@ -72,28 +73,29 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 }
 
 func (ck *distinfoLinesChecker) onFilenameChange(line *Line, nextFname string) {
-	prevFname := ck.previousFilename
-	if prevFname != "" {
+	currentFname := ck.currentFilename
+	if currentFname != "" {
 		algorithms := strings.Join(ck.algorithms, ", ")
 		if ck.isPatch {
 			if algorithms != "SHA1" {
-				line.Error2("Expected SHA1 hash for %s, got %s.", prevFname, algorithms)
+				line.Error2("Expected SHA1 hash for %s, got %s.", currentFname, algorithms)
 			}
-		} else if hasPrefix(prevFname, "patch-") && algorithms == "SHA1" {
-			line.Warn2("Patch file %q does not exist in directory %q.", prevFname, cleanpath(ck.patchdir))
+		} else if hasPrefix(currentFname, "patch-") && algorithms == "SHA1" {
+			ck.currentFirstLine.Warn2("Patch file %q does not exist in directory %q.", currentFname, cleanpath(ck.patchdir))
 			Explain(
 				"If the patches directory looks correct, the patch may have been",
-				"removed without updating the distinfo file. In such a case please",
+				"removed without updating the distinfo file.  In such a case please",
 				"update the distinfo file.",
 				"",
 				"If the patches directory looks wrong, pkglint needs to be improved.")
 		} else if algorithms != "SHA1, RMD160, Size" && algorithms != "SHA1, RMD160, SHA512, Size" {
-			line.Error2("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", prevFname, algorithms)
+			line.Error2("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", currentFname, algorithms)
 		}
 	}
 
 	ck.isPatch = hasPrefix(nextFname, "patch-") && fileExists(G.CurrentDir+"/"+ck.patchdir+"/"+nextFname)
-	ck.previousFilename = nextFname
+	ck.currentFilename = nextFname
+	ck.currentFirstLine = line
 	ck.algorithms = nil
 }
 

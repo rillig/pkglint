@@ -18,12 +18,14 @@ func (s *Suite) TestChecklinesDistinfo(c *check.C) {
 		"MD5 (distfile.tar.gz) = 12345678901234567890123456789012",
 		"SHA1 (distfile.tar.gz) = 1234567890123456789012345678901234567890",
 		"SHA1 (patch-aa) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7",
-		"SHA1 (patch-ab) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7"))
+		"SHA1 (patch-ab) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7",
+		"SHA1 (patch-nonexistent) = 1234"))
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: distinfo:1: Expected \"$"+"NetBSD$\".\n"+
 		"NOTE: distinfo:2: Empty line expected.\n"+
-		"ERROR: distinfo:5: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.\n")
+		"ERROR: distinfo:5: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.\n"+
+		"WARN: distinfo:7: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".\n")
 }
 
 func (s *Suite) TestChecklinesDistinfo_GlobalHashMismatch(c *check.C) {
