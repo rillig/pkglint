@@ -16,6 +16,10 @@ func (p *Parser) EOF() bool {
 	return p.repl.rest == ""
 }
 
+func (p *Parser) Rest() string {
+	return p.repl.rest
+}
+
 func (p *Parser) PkgbasePattern() (pkgbase string) {
 	repl := p.repl
 	

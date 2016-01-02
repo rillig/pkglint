@@ -4,12 +4,12 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-func (s *Suite) TestParsePkgbasePattern(c *check.C) {
+func (s *Suite) TestParser_PkgbasePattern(c *check.C) {
 	test := func(pattern, expected, rest string) {
 		parser := NewParser(pattern)
 		actual := parser.PkgbasePattern()
 		c.Check(actual, equals, expected)
-		c.Check(parser.EOF(), equals, true)
+		c.Check(parser.Rest(), equals, rest)
 	}
 
 	test("fltk", "fltk", "")
