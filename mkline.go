@@ -581,7 +581,8 @@ func (mkline *MkLine) CheckVarassignBsdPrefs() {
 }
 
 func (mkline *MkLine) CheckVarassignPlistComment(varname, value string) {
-	if contains(value, "@comment") && !matches(value, `="@comment "`) {
+	if false && // This is currently neither correct nor helpful
+		contains(value, "@comment") && !matches(value, `="@comment "`) {
 		mkline.Warn1("Please don't use @comment in %s.", varname)
 		Explain(
 			"If you are defining a PLIST conditional here, use one of the",
