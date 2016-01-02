@@ -22,7 +22,7 @@ func (p *Parser) Rest() string {
 
 func (p *Parser) PkgbasePattern() (pkgbase string) {
 	repl := p.repl
-	
+
 	for {
 		if repl.AdvanceRegexp(`^\$\{\w+\}`) ||
 			repl.AdvanceRegexp(`^[\w.*+,{}]+`) ||
@@ -48,7 +48,7 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 
 func (p *Parser) Dependency() *DependencyPattern {
 	repl := p.repl
-	
+
 	var dp DependencyPattern
 	mark := repl.Mark()
 	dp.pkgbase = p.PkgbasePattern()
@@ -94,4 +94,3 @@ func (p *Parser) Dependency() *DependencyPattern {
 	repl.Reset(mark)
 	return nil
 }
-
