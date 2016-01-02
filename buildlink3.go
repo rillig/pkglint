@@ -18,7 +18,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		line := exp.PreviousLine()
 		// See pkgtools/createbuildlink/files/createbuildlink
 		if hasPrefix(line.Text, "# XXX This file was created automatically") {
-			line.Note0("Please read this comment and remove it if appropriate.")
+			line.Error0("This comment indicates unfinished work (url2pkg).")
 		}
 	}
 

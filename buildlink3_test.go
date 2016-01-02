@@ -31,7 +31,7 @@ func (s *Suite) TestChecklinesBuildlink3(c *check.C) {
 		"ERROR: buildlink3.mk:12: \"/x11/Xbae\" does not exist.\n"+
 		"ERROR: buildlink3.mk:12: There is no package in \"x11/Xbae\".\n"+
 		"ERROR: buildlink3.mk:14: \"/mk/motif.buildlink3.mk\" does not exist.\n"+
-		"NOTE: buildlink3.mk:2: Please read this comment and remove it if appropriate.\n")
+		"ERROR: buildlink3.mk:2: This comment indicates unfinished work (url2pkg).\n")
 }
 
 // The mismatch reported here is a false positive. The mk/haskell.mk file
