@@ -32,3 +32,22 @@ func (s *Suite) TestCheckdirCategory_TotallyBroken(c *check.C) {
 		"WARN: ~/archivers/Makefile:4: This line should contain the following text: .include \"../mk/misc/category.mk\"\n"+
 		"ERROR: ~/archivers/Makefile:4: The file should end here.\n")
 }
+
+func (s *Suite) TestCheckdirCategory_InvalidComment(c *check.C) {
+	G.globalData.InitVartypes()
+	s.CreateTmpFile(c, "archivers/Makefile", ""+
+		"# $"+"NetBSD$\n"+
+		"COMMENT=\t\\Make $$$$ fast\"\n"+
+		"\n"+
+		"SUBDIR+=\tpackage\n"+
+		"\n"+
+		".include \"../mk/misc/category.mk\"\n")
+	s.CreateTmpFile(c, "archivers/package/Makefile", "# dummy\n")
+	s.CreateTmpFile(c, "mk/misc/category.mk", "# dummy\n")
+	G.CurrentDir = s.tmpdir + "/archivers"
+	G.CurPkgsrcdir = ".."
+
+	CheckdirCategory()
+
+	c.Check(s.OutputCleanTmpdir(), equals, "WARN: ~/archivers/Makefile:2: COMMENT contains invalid characters (U+005C U+0024 U+0024 U+0024 U+0024 U+0022).\n")
+}
