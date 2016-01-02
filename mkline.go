@@ -568,13 +568,15 @@ func (mkline *MkLine) CheckVarassignBsdPrefs() {
 
 		mkline.Warn0("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 		Explain(
-			"The ?= operator is used to provide a default value to a variable. In",
-			"pkgsrc, many variables can be set by the pkgsrc user in the mk.conf",
-			"file. This file must be included explicitly. If a ?= operator appears",
-			"before mk.conf has been included, it will not care about the user's",
-			"preferences, which can result in unexpected behavior. The easiest way",
-			"to include the mk.conf file is by including the bsd.prefs.mk file,",
-			"which will take care of everything.")
+			"The ?= operator is used to provide a default value to a variable.",
+			"In pkgsrc, many variables can be set by the pkgsrc user in the",
+			"mk.conf file.  This file must be included explicitly.  If a ?=",
+			"operator appears before mk.conf has been included, it will not care",
+			"about the user's preferences, which can result in unexpected",
+			"behavior.",
+			"",
+			"The easiest way to include the mk.conf file is by including the",
+			"bsd.prefs.mk file, which will take care of everything.")
 	}
 }
 

@@ -97,8 +97,10 @@ func Explain(explanation ...string) {
 			if l := tabLength(s); l > 68 && contains(s, " ") {
 				print(fmt.Sprintf("Long explanation line (%d): %s\n", l, s))
 			}
-			if matches(s, `\. [^ ]`) {
-				print(fmt.Sprintf("Short space after period: %s\n", s))
+			if m, before := match1(s, `(.+)\. [^ ]`); m {
+				if !matches(before, `\d$`) {
+					print(fmt.Sprintf("Short space after period: %s\n", s))
+				}
 			}
 		}
 	}
