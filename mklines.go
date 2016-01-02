@@ -109,8 +109,6 @@ func (mklines *MkLines) Check() {
 	mklines.lines[0].CheckRcsid(`#\s+`, "# ")
 
 	for _, mkline := range mklines.mklines {
-		text := mkline.Line.Text
-
 		mkline.Line.CheckTrailingWhitespace()
 		mkline.Line.CheckValidCharacters(`[\t -~]`)
 
@@ -119,16 +117,18 @@ func (mklines *MkLines) Check() {
 			substcontext.Finish(mkline)
 
 		case mkline.IsVarassign():
+			mklines.target = ""
 			mkline.CheckVaralign()
 			mkline.CheckVarassign()
 			substcontext.Varassign(mkline)
 
 		case mkline.IsShellcmd():
-			shellcmd := text[1:]
+			shellcmd := mkline.Shellcmd()
 			mkline.CheckText(shellcmd)
 			NewMkShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 		case mkline.IsInclude():
+			mklines.target = ""
 			mklines.checklineInclude(mkline)
 
 		case mkline.IsCond():
