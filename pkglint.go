@@ -270,7 +270,7 @@ func Checkfile(fname string) {
 	case hasPrefix(basename, "PLIST"):
 		if G.opts.CheckPlist {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
-				checklinesPlist(lines)
+				ChecklinesPlist(lines)
 			}
 		}
 

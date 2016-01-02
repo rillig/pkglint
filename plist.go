@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func checklinesPlist(lines []*Line) {
+func ChecklinesPlist(lines []*Line) {
 	if G.opts.DebugTrace {
 		defer tracecall1("checklinesPlist", lines[0].Fname)()
 	}

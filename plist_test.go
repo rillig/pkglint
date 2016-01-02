@@ -21,7 +21,7 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"share/tzinfo",
 		"share/tzinfo")
 
-	checklinesPlist(lines)
+	ChecklinesPlist(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: PLIST:1: Expected \"@comment $"+"NetBSD$\".\n"+
@@ -43,7 +43,7 @@ func (s *Suite) TestChecklinesPlist_empty(c *check.C) {
 	lines := s.NewLines("PLIST",
 		"@comment $"+"NetBSD$")
 
-	checklinesPlist(lines)
+	ChecklinesPlist(lines)
 
 	c.Check(s.Output(), equals, "WARN: PLIST:1: PLIST files shouldn't be empty.\n")
 }
@@ -56,7 +56,7 @@ func (s *Suite) TestChecklinesPlist_commonEnd(c *check.C) {
 		"@comment $"+"NetBSD$\n"+
 		"sbin/common_end\n")
 
-	checklinesPlist(LoadExistingLines(fname, false))
+	ChecklinesPlist(LoadExistingLines(fname, false))
 
 	c.Check(s.OutputCleanTmpdir(), equals, "")
 }
@@ -68,7 +68,7 @@ func (s *Suite) TestChecklinesPlist_conditional(c *check.C) {
 		"@comment $"+"NetBSD$",
 		"${PLIST.bincmds}bin/subdir/command")
 
-	checklinesPlist(lines)
+	ChecklinesPlist(lines)
 
 	c.Check(s.Output(), equals, "WARN: PLIST:2: The bin/ directory should not have subdirectories.\n")
 }
@@ -83,7 +83,7 @@ func (s *Suite) TestChecklinesPlist_sorting(c *check.C) {
 		"bin/otherprogram",
 		"${PLIST.conditional}bin/cat")
 
-	checklinesPlist(lines)
+	ChecklinesPlist(lines)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: PLIST:5: \"bin/otherprogram\" should be sorted before \"sbin/program\".\n"+
