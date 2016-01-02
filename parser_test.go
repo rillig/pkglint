@@ -21,13 +21,16 @@ func (s *Suite) TestParser_PkgbasePattern(c *check.C) {
 
 func (s *Suite) TestParser_Dependency(c *check.C) {
 
-	testDependency := func(pattern string, expected DependencyPattern) {
+	testDependencyRest := func(pattern string, expected DependencyPattern, rest string) {
 		parser := NewParser(pattern)
 		dp := parser.Dependency()
 		if c.Check(dp, check.NotNil) {
 			c.Check(*dp, equals, expected)
-			c.Check(parser.EOF(), equals, true)
+			c.Check(parser.Rest(), equals, rest)
 		}
+	}
+	testDependency := func(pattern string, expected DependencyPattern) {
+		testDependencyRest(pattern, expected, "")
 	}
 
 	testDependency("fltk>=1.1.5rc1<1.3", DependencyPattern{"fltk", ">=", "1.1.5rc1", "<", "1.3", ""})
@@ -43,5 +46,6 @@ func (s *Suite) TestParser_Dependency(c *check.C) {
 	testDependency("mysql*-{client,server}-[0-9]*", DependencyPattern{"mysql*-{client,server}", "", "", "", "", "[0-9]*"})
 	testDependency("postgresql8[0-35-9]-${module}-[0-9]*", DependencyPattern{"postgresql8[0-35-9]-${module}", "", "", "", "", "[0-9]*"})
 	testDependency("ncurses-${NC_VERS}{,nb*}", DependencyPattern{"ncurses", "", "", "", "", "${NC_VERS}{,nb*}"})
+	testDependencyRest("gnome-control-center>=2.20.1{,nb*}", DependencyPattern{"gnome-control-center", ">=", "2.20.1", "", "", ""}, "{,nb*}")
 	// "{ssh{,6}-[0-9]*,openssh-[0-9]*}" is not representable using the current data structure
 }

@@ -130,7 +130,15 @@ func (cv *VartypeCheck) Dependency() {
 
 	parser := NewParser(value)
 	deppat := parser.Dependency()
-	if deppat == nil || !parser.EOF() {
+	if deppat != nil && deppat.wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
+		line.Warn0("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
+		Explain4(
+			"The \"{,nb*}\" extension is only necessary for dependencies of the form",
+			"\"pkgbase-1.2\", since the pattern \"pkgbase-1.2\" doesn't match the",
+			"version \"pkgbase-1.2nb5\". For dependency patterns using the comparison",
+			"operators this is not necessary.")
+
+	} else if deppat == nil || !parser.EOF() {
 		line.Warn1("Unknown dependency pattern %q.", value)
 		Explain(
 			"Typical dependencies have the following forms:",

@@ -90,7 +90,8 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 		"mysql*-{client,server}-[0-9]*",
 		"postgresql8[0-35-9]-${module}-[0-9]*",
 		"ncurses-${NC_VERS}{,nb*}",
-		"{ssh{,6}-[0-9]*,openssh-[0-9]*}")
+		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
+		"gnome-control-center>=2.20.1{,nb*}")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Unknown dependency pattern \"Perl\".\n"+
@@ -101,7 +102,8 @@ func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
 		"WARN: fname:10: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.\n"+
 		"WARN: fname:11: Please use \"5.*\" instead of \"5*\" as the version pattern.\n"+
 		"WARN: fname:12: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.\n"+
-		"WARN: fname:20: The version pattern \"[0-9]*,openssh-[0-9]*}\" should not contain a hyphen.\n") // XXX
+		"WARN: fname:20: The version pattern \"[0-9]*,openssh-[0-9]*}\" should not contain a hyphen.\n"+ // XXX
+		"WARN: fname:21: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.\n")
 }
 
 func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
