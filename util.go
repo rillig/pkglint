@@ -348,7 +348,11 @@ func argsStr(args ...interface{}) string {
 		if i != 0 {
 			argsStr += ", "
 		}
-		argsStr += fmt.Sprintf("%#v", arg)
+		if str, ok := arg.(fmt.Stringer); ok {
+			argsStr += str.String()
+		} else {
+			argsStr += fmt.Sprintf("%#v", arg)
+		}
 	}
 	return argsStr
 }
