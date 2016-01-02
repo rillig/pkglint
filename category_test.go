@@ -19,6 +19,7 @@ func (s *Suite) TestCheckdirCategory_TotallyBroken(c *check.C) {
 
 	c.Check(s.OutputCleanTmpdir(), equals, ""+
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".\n"+
+		"WARN: ~/archivers/Makefile:4: Line contains invalid characters (U+2019).\n"+
 		"WARN: ~/archivers/Makefile:4: SUBDIR- is defined but not used. Spelling mistake?\n"+
 		"ERROR: ~/archivers/Makefile:6: \"../mk/category.mk\" does not exist.\n"+
 		"ERROR: ~/archivers/Makefile:2: COMMENT= line expected.\n"+

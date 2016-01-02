@@ -112,6 +112,7 @@ func (mklines *MkLines) Check() {
 		text := mkline.Line.Text
 
 		mkline.Line.CheckTrailingWhitespace()
+		mkline.Line.CheckValidCharacters(`[\t -~]`)
 
 		switch {
 		case mkline.IsEmpty():
