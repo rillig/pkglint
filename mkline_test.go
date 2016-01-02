@@ -312,7 +312,6 @@ func (s *Suite) TestMkLine_Misc(c *check.C) {
 	G.Mk.Check()
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: options.mk:2: The variable PKG_FAIL_REASON should not be used in .for loops.\n"+
 		"WARN: options.mk:3: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.\n"+
 		"NOTE: options.mk:4: Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.\n"+
 		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".\n"+

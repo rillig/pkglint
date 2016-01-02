@@ -344,7 +344,8 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 		defer tracecall("MkLine.checkVaruseFor", varname, vartype, needsQuoting)()
 	}
 
-	if vartype != nil &&
+	if false && // Too many false positives
+		vartype != nil &&
 		vartype.kindOfList != lkSpace &&
 		needsQuoting != nqDoesntMatter {
 		mkline.Warn1("The variable %s should not be used in .for loops.", varname)
