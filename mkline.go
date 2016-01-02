@@ -160,7 +160,7 @@ func (mkline *MkLine) CheckVardefPermissions(varname, op string) {
 		return
 	}
 
-	perms := vartype.effectivePermissions(mkline.Line.Fname)
+	perms := vartype.EffectivePermissions(mkline.Line.Fname)
 	var needed AclPermissions
 	switch op {
 	case "=", "!=", ":=":
@@ -172,7 +172,7 @@ func (mkline *MkLine) CheckVardefPermissions(varname, op string) {
 	}
 
 	switch {
-	case perms.contains(needed):
+	case perms.Contains(needed):
 		break
 	case perms == aclpUnknown:
 		if G.opts.DebugUnchecked {
@@ -180,7 +180,7 @@ func (mkline *MkLine) CheckVardefPermissions(varname, op string) {
 		}
 	default:
 		alternativeActions := perms & aclpAllWrite
-		alternativeFiles := vartype.allowedFiles(needed)
+		alternativeFiles := vartype.AllowedFiles(needed)
 		switch {
 		case alternativeActions != 0 && alternativeFiles != "":
 			mkline.Line.Warnf("The variable %s may not be %s (only %s) in this file; it would be ok in %s.",
@@ -260,7 +260,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 		return
 	}
 
-	perms := vartype.effectivePermissions(mkline.Line.Fname)
+	perms := vartype.EffectivePermissions(mkline.Line.Fname)
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -272,10 +272,10 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 	case vuc.vartype != nil && vuc.vartype.guessed == guGuessed:
 		// Don't warn about unknown variables.
 
-	case vuc.time == vucTimeParse && !perms.contains(aclpUseLoadtime):
+	case vuc.time == vucTimeParse && !perms.Contains(aclpUseLoadtime):
 		isLoadTime = true
 
-	case vuc.vartype != nil && vuc.vartype.union().contains(aclpUseLoadtime) && !perms.contains(aclpUseLoadtime):
+	case vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) && !perms.Contains(aclpUseLoadtime):
 		isLoadTime = true
 		isIndirect = true
 	}
@@ -303,7 +303,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 			"properly defined.")
 	}
 
-	if !perms.contains(aclpUseLoadtime) && !perms.contains(aclpUse) {
+	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
 		mkline.Warn1("%s may not be used in this file.", varname)
 	}
 }
@@ -675,7 +675,7 @@ func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
 
 	if op == "+=" {
 		if vartype != nil {
-			if !vartype.mayBeAppendedTo() {
+			if !vartype.MayBeAppendedTo() {
 				mkline.Warn0("The \"+=\" operator should only be used with lists.")
 			}
 		} else if !hasPrefix(varbase, "_") && !matches(varbase, reVarnamePlural) {
@@ -696,7 +696,7 @@ func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
 		}
 
 	case vartype.kindOfList == lkNone:
-		mkline.CheckVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.isConsideredList(), vartype.guessed)
+		mkline.CheckVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.IsConsideredList(), vartype.guessed)
 
 	case vartype.kindOfList == lkSpace:
 		for _, word := range splitOnSpace(value) {
@@ -1032,8 +1032,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) N
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vuc.vartype.isConsideredList() && (vuc.quoting == vucQuotBackt || vuc.extent != vucExtentWordpart)
-	haveList := vartype.isConsideredList()
+	wantList := vuc.vartype.IsConsideredList() && (vuc.quoting == vucQuotBackt || vuc.extent != vucExtentWordpart)
+	haveList := vartype.IsConsideredList()
 
 	if G.opts.DebugQuoting {
 		mkline.Line.Debugf("variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",

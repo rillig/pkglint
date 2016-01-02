@@ -12,16 +12,16 @@ func (s *Suite) TestVartypeEffectivePermissions(c *check.C) {
 
 		c.Check(t.checker.name, equals, "Pathname")
 		c.Check(t.aclEntries, check.DeepEquals, []AclEntry{{glob: "*", permissions: aclpUse}})
-		c.Check(t.effectivePermissions("Makefile"), equals, aclpUse)
+		c.Check(t.EffectivePermissions("Makefile"), equals, aclpUse)
 	}
 
 	{
 		t := G.globalData.vartypes["EXTRACT_OPTS"]
 
 		c.Check(t.checker.name, equals, "ShellWord")
-		c.Check(t.effectivePermissions("Makefile"), equals, aclpAppend|aclpSet)
-		c.Check(t.effectivePermissions("../Makefile"), equals, aclpAppend|aclpSet)
-		c.Check(t.effectivePermissions("options.mk"), equals, aclpUnknown)
+		c.Check(t.EffectivePermissions("Makefile"), equals, aclpAppend|aclpSet)
+		c.Check(t.EffectivePermissions("../Makefile"), equals, aclpAppend|aclpSet)
+		c.Check(t.EffectivePermissions("options.mk"), equals, aclpUnknown)
 	}
 }
 
@@ -36,9 +36,9 @@ func (s *Suite) TestVarCheckerHasEnum(c *check.C) {
 func (s *Suite) TestAclPermissions_contains(c *check.C) {
 	perms := aclpAllRuntime
 
-	c.Check(perms.contains(aclpAllRuntime), equals, true)
-	c.Check(perms.contains(aclpUse), equals, true)
-	c.Check(perms.contains(aclpUseLoadtime), equals, false)
+	c.Check(perms.Contains(aclpAllRuntime), equals, true)
+	c.Check(perms.Contains(aclpUse), equals, true)
+	c.Check(perms.Contains(aclpUseLoadtime), equals, false)
 }
 
 func (s *Suite) TestAclPermissions_String(c *check.C) {

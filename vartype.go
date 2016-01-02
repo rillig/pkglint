@@ -42,7 +42,7 @@ const (
 	aclpAllRead    AclPermissions = aclpUseLoadtime | aclpUse
 )
 
-func (perms AclPermissions) contains(subset AclPermissions) bool {
+func (perms AclPermissions) Contains(subset AclPermissions) bool {
 	return perms&subset == subset
 }
 
@@ -51,22 +51,22 @@ func (perms AclPermissions) String() string {
 		return "none"
 	}
 	result := "" +
-		ifelseStr(perms.contains(aclpSet), "set, ", "") +
-		ifelseStr(perms.contains(aclpSetDefault), "set-default, ", "") +
-		ifelseStr(perms.contains(aclpAppend), "append, ", "") +
-		ifelseStr(perms.contains(aclpUseLoadtime), "use-loadtime, ", "") +
-		ifelseStr(perms.contains(aclpUse), "use, ", "") +
-		ifelseStr(perms.contains(aclpUnknown), "unknown, ", "")
+		ifelseStr(perms.Contains(aclpSet), "set, ", "") +
+		ifelseStr(perms.Contains(aclpSetDefault), "set-default, ", "") +
+		ifelseStr(perms.Contains(aclpAppend), "append, ", "") +
+		ifelseStr(perms.Contains(aclpUseLoadtime), "use-loadtime, ", "") +
+		ifelseStr(perms.Contains(aclpUse), "use, ", "") +
+		ifelseStr(perms.Contains(aclpUnknown), "unknown, ", "")
 	return strings.TrimRight(result, ", ")
 }
 
 func (perms AclPermissions) HumanString() string {
 	result := "" +
-		ifelseStr(perms.contains(aclpSet), "set, ", "") +
-		ifelseStr(perms.contains(aclpSetDefault), "given a default value, ", "") +
-		ifelseStr(perms.contains(aclpAppend), "appended to, ", "") +
-		ifelseStr(perms.contains(aclpUseLoadtime), "used at load time, ", "") +
-		ifelseStr(perms.contains(aclpUse), "used, ", "")
+		ifelseStr(perms.Contains(aclpSet), "set, ", "") +
+		ifelseStr(perms.Contains(aclpSetDefault), "given a default value, ", "") +
+		ifelseStr(perms.Contains(aclpAppend), "appended to, ", "") +
+		ifelseStr(perms.Contains(aclpUseLoadtime), "used at load time, ", "") +
+		ifelseStr(perms.Contains(aclpUse), "used, ", "")
 	return strings.TrimRight(result, ", ")
 }
 
@@ -80,7 +80,7 @@ const (
 )
 
 // The allowed actions in this file, or "?" if unknown.
-func (vt *Vartype) effectivePermissions(fname string) AclPermissions {
+func (vt *Vartype) EffectivePermissions(fname string) AclPermissions {
 	for _, aclEntry := range vt.aclEntries {
 		if m, _ := path.Match(aclEntry.glob, path.Base(fname)); m {
 			return aclEntry.permissions
@@ -92,7 +92,7 @@ func (vt *Vartype) effectivePermissions(fname string) AclPermissions {
 // Returns the union of all possible permissions. This can be used to
 // check whether a variable may be defined or used at all, or if it is
 // read-only.
-func (vt *Vartype) union() AclPermissions {
+func (vt *Vartype) Union() AclPermissions {
 	var permissions AclPermissions
 	for _, aclEntry := range vt.aclEntries {
 		permissions |= aclEntry.permissions
@@ -100,10 +100,10 @@ func (vt *Vartype) union() AclPermissions {
 	return permissions
 }
 
-func (vt *Vartype) allowedFiles(perms AclPermissions) string {
+func (vt *Vartype) AllowedFiles(perms AclPermissions) string {
 	files := make([]string, 0, len(vt.aclEntries))
 	for _, aclEntry := range vt.aclEntries {
-		if aclEntry.permissions.contains(perms) {
+		if aclEntry.permissions.Contains(perms) {
 			files = append(files, aclEntry.glob)
 		}
 	}
@@ -113,7 +113,7 @@ func (vt *Vartype) allowedFiles(perms AclPermissions) string {
 // Returns whether the type is considered a shell list.
 // This distinction between “real lists” and “considered a list” makes
 // the implementation of checklineMkVartype easier.
-func (vt *Vartype) isConsideredList() bool {
+func (vt *Vartype) IsConsideredList() bool {
 	switch vt.kindOfList {
 	case lkShell:
 		return true
@@ -127,8 +127,8 @@ func (vt *Vartype) isConsideredList() bool {
 	return false
 }
 
-func (vt *Vartype) mayBeAppendedTo() bool {
-	return vt.kindOfList != lkNone || vt.isConsideredList()
+func (vt *Vartype) MayBeAppendedTo() bool {
+	return vt.kindOfList != lkNone || vt.IsConsideredList()
 }
 
 func (vt *Vartype) String() string {
