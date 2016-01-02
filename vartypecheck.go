@@ -91,23 +91,21 @@ func (cv *VartypeCheck) Category() {
 
 // A single option to the C/C++ compiler.
 func (cv *VartypeCheck) CFlag() {
-	line, value := cv.line, cv.value
-
-	if hasPrefix(value, "-") {
-		switch {
-		case matches(value, `^-[DILOUWfgm]`),
-			hasPrefix(value, "-std="),
-			value == "-c99",
-			value == "-c",
-			value == "-no-integrated-as":
-			return
-		}
-		line.Warn1("Unknown compiler flag %q.", value)
-
-	} else {
-		if !containsVarRef(value) && !(hasPrefix(value, "`") && hasSuffix(value, "`")) {
-			line.Warn1("Compiler flag %q should start with a hyphen.", value)
-		}
+	cflag := cv.value
+	switch {
+	case matches(cflag, `^-[DILOUWfgm]`),
+		hasPrefix(cflag, "-std="),
+		cflag == "-c99",
+		cflag == "-c",
+		cflag == "-no-integrated-as",
+		cflag == "-pthread",
+		hasPrefix(cflag, "`") && hasSuffix(cflag, "`"),
+		containsVarRef(cflag):
+		return
+	case hasPrefix(cflag, "-"):
+		cv.line.Warn1("Unknown compiler flag %q.", cflag)
+	default:
+		cv.line.Warn1("Compiler flag %q should start with a hyphen.", cflag)
 	}
 }
 
@@ -339,16 +337,26 @@ func (cv *VartypeCheck) Integer() {
 }
 
 func (cv *VartypeCheck) LdFlag() {
-	if ldflag := cv.value; hasPrefix(ldflag, "-") {
-		if m, rpathFlag := match1(ldflag, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
-			cv.line.Warn1("Please use \"${COMPILER_RPATH_FLAG}\" instead of %q.", rpathFlag)
-		} else if !hasPrefix(ldflag, "-L") && !hasPrefix(ldflag, "-l") && ldflag != "-static" && !hasPrefix(ldflag, "-static-") {
-			cv.line.Warn1("Unknown linker flag %q.", cv.value)
-		}
-	} else {
-		if ldflag == cv.valueNovar && !(hasPrefix(ldflag, "`") && hasSuffix(ldflag, "`")) {
-			cv.line.Warn1("Linker flag %q should start with a hypen.", cv.value)
-		}
+	ldflag := cv.value
+	if m, rpathFlag := match1(ldflag, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
+		cv.line.Warn1("Please use \"${COMPILER_RPATH_FLAG}\" instead of %q.", rpathFlag)
+		return
+	}
+
+	switch {
+	case hasPrefix(ldflag, "-L"),
+		hasPrefix(ldflag, "-l"),
+		ldflag == "-pthread",
+		ldflag == "-static",
+		hasPrefix(ldflag, "-static-"),
+		hasPrefix(ldflag, "-Wl,-"),
+		hasPrefix(ldflag, "`") && hasSuffix(ldflag, "`"),
+		ldflag != cv.valueNovar:
+		return
+	case hasPrefix(ldflag, "-"):
+		cv.line.Warn1("Unknown linker flag %q.", cv.value)
+	default:
+		cv.line.Warn1("Linker flag %q should start with a hypen.", cv.value)
 	}
 }
 
@@ -747,15 +755,15 @@ func (cv *VartypeCheck) WrapperReorder() {
 }
 
 func (cv *VartypeCheck) WrapperTransform() {
-	switch {
-	case matches(cv.value, `^rm:(?:-[DILOUWflm].*|-std=.*)$`):
-	case matches(cv.value, `^l:([^:]+):(.+)$`):
-	case matches(cv.value, `^'?(?:opt|rename|rm-optarg|rmdir):.*$`):
-	case cv.value == "-e":
-	case matches(cv.value, `^\"?'?s[|:,]`):
-	default:
-		cv.line.Warn1("Unknown wrapper transform command %q.", cv.value)
+	cmd := cv.value
+	if hasPrefix(cmd, "rm:-") ||
+		matches(cmd, `^(R|l|rpath):([^:]+):(.+)$`) ||
+		matches(cmd, `^'?(opt|rename|rm-optarg|rmdir):.*$`) ||
+		cmd == "-e" ||
+		matches(cmd, `^["']?s[|:,]`) {
+		return
 	}
+	cv.line.Warn1("Unknown wrapper transform command %q.", cmd)
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {
