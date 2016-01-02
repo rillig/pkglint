@@ -5,21 +5,21 @@ import (
 )
 
 func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
-	runVartypeChecks("PLIST_AWK", "+=", (*VartypeCheck).AwkCommand,
+	runVartypeChecks("PLIST_AWK", opAssignAppend, (*VartypeCheck).AwkCommand,
 		"{print $0}")
 
 	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_BasicRegularExpression(c *check.C) {
-	runVartypeChecks("REPLACE_FILES.pl", "=", (*VartypeCheck).BasicRegularExpression,
+	runVartypeChecks("REPLACE_FILES.pl", opAssign, (*VartypeCheck).BasicRegularExpression,
 		".*\\.pl$")
 
 	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_BuildlinkDepmethod(c *check.C) {
-	runVartypeChecks("BUILDLINK_DEPMETHOD.libc", "?=", (*VartypeCheck).BuildlinkDepmethod,
+	runVartypeChecks("BUILDLINK_DEPMETHOD.libc", opAssignDefault, (*VartypeCheck).BuildlinkDepmethod,
 		"full",
 		"unknown")
 
@@ -31,7 +31,7 @@ func (s *Suite) TestVartypeCheck_Category(c *check.C) {
 	G.CurrentDir = s.tmpdir
 	G.CurPkgsrcdir = "."
 
-	runVartypeChecks("CATEGORIES", "=", (*VartypeCheck).Category,
+	runVartypeChecks("CATEGORIES", opAssign, (*VartypeCheck).Category,
 		"chinese",
 		"arabic",
 		"filesyscategory")
@@ -40,7 +40,7 @@ func (s *Suite) TestVartypeCheck_Category(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_CFlag(c *check.C) {
-	runVartypeChecks("CFLAGS", "+=", (*VartypeCheck).CFlag,
+	runVartypeChecks("CFLAGS", opAssignAppend, (*VartypeCheck).CFlag,
 		"-Wall",
 		"/W3",
 		"target:sparc64",
@@ -55,7 +55,7 @@ func (s *Suite) TestVartypeCheck_CFlag(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_Comment(c *check.C) {
-	runVartypeChecks("COMMENT", "=", (*VartypeCheck).Comment,
+	runVartypeChecks("COMMENT", opAssign, (*VartypeCheck).Comment,
 		"Versatile Programming Language",
 		"TODO: Short description of the package",
 		"A great package.",
@@ -70,7 +70,7 @@ func (s *Suite) TestVartypeCheck_Comment(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_Dependency(c *check.C) {
-	runVartypeChecks("CONFLICTS", "+=", (*VartypeCheck).Dependency,
+	runVartypeChecks("CONFLICTS", opAssignAppend, (*VartypeCheck).Dependency,
 		"Perl",
 		"perl5>=5.22",
 		"perl5-*",
@@ -111,7 +111,7 @@ func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 	G.CurrentDir = s.tmpdir + "/category/package"
 	G.CurPkgsrcdir = "../.."
 
-	runVartypeChecks("DEPENDS", "+=", (*VartypeCheck).DependencyWithPath,
+	runVartypeChecks("DEPENDS", opAssignAppend, (*VartypeCheck).DependencyWithPath,
 		"Perl",
 		"perl5>=5.22:../perl5",
 		"perl5>=5.24:../../lang/perl5",
@@ -142,7 +142,7 @@ func (s *Suite) TestVartypeCheck_DependencyWithPath(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_DistSuffix(c *check.C) {
-	runVartypeChecks("EXTRACT_SUFX", "=", (*VartypeCheck).DistSuffix,
+	runVartypeChecks("EXTRACT_SUFX", opAssign, (*VartypeCheck).DistSuffix,
 		".tar.gz",
 		".tar.bz2")
 
@@ -150,7 +150,7 @@ func (s *Suite) TestVartypeCheck_DistSuffix(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_EmulPlatform(c *check.C) {
-	runVartypeChecks("EMUL_PLATFORM", "=", (*VartypeCheck).EmulPlatform,
+	runVartypeChecks("EMUL_PLATFORM", opAssign, (*VartypeCheck).EmulPlatform,
 		"linux-i386",
 		"nextbsd-8087",
 		"${LINUX}")
@@ -171,7 +171,7 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 		"MASTER_SITE_GNU":    true,
 	}
 
-	runVartypeChecks("MASTER_SITES", "=", (*VartypeCheck).FetchURL,
+	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).FetchURL,
 		"https://github.com/example/project/",
 		"http://ftp.gnu.org/pub/gnu/bison", // Missing a slash at the end
 		"${MASTER_SITE_GNU:=bison}",
@@ -185,14 +185,14 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 		"ERROR: fname:4: MASTER_SITE_INVALID does not exist.\n")
 
 	// PR 46570, keyword gimp-fix-ca
-	runVartypeChecks("MASTER_SITES", "=", (*VartypeCheck).FetchURL,
+	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).FetchURL,
 		"https://example.org/download.cgi?fname=fname&sha1=12341234")
 
 	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_Filename(c *check.C) {
-	runVartypeChecks("FNAME", "=", (*VartypeCheck).Filename,
+	runVartypeChecks("FNAME", opAssign, (*VartypeCheck).Filename,
 		"Filename with spaces.docx",
 		"OS/2-manual.txt")
 
@@ -202,7 +202,7 @@ func (s *Suite) TestVartypeCheck_Filename(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_LdFlag(c *check.C) {
-	runVartypeChecks("LDFLAGS", "+=", (*VartypeCheck).LdFlag,
+	runVartypeChecks("LDFLAGS", opAssignAppend, (*VartypeCheck).LdFlag,
 		"-lc",
 		"-L/usr/lib64",
 		"`pkg-config pidgin --ldflags`",
@@ -212,14 +212,14 @@ func (s *Suite) TestVartypeCheck_LdFlag(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_MailAddress(c *check.C) {
-	runVartypeChecks("MAINTAINER", "=", (*VartypeCheck).MailAddress,
+	runVartypeChecks("MAINTAINER", opAssign, (*VartypeCheck).MailAddress,
 		"pkgsrc-users@netbsd.org")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please write \"NetBSD.org\" instead of \"netbsd.org\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_Message(c *check.C) {
-	runVartypeChecks("SUBST_MESSAGE.id", "=", (*VartypeCheck).Message,
+	runVartypeChecks("SUBST_MESSAGE.id", opAssign, (*VartypeCheck).Message,
 		"\"Correct paths\"",
 		"Correct paths")
 
@@ -227,28 +227,28 @@ func (s *Suite) TestVartypeCheck_Message(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_Pathlist(c *check.C) {
-	runVartypeChecks("PATH", "=", (*VartypeCheck).Pathlist,
+	runVartypeChecks("PATH", opAssign, (*VartypeCheck).Pathlist,
 		"/usr/bin:/usr/sbin:.:${LOCALBASE}/bin")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: All components of PATH (in this case \".\") should be absolute paths.\n")
 }
 
 func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {
-	runVartypeChecks("PKGREVISION", "=", (*VartypeCheck).PkgRevision,
+	runVartypeChecks("PKGREVISION", opAssign, (*VartypeCheck).PkgRevision,
 		"3a")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: PKGREVISION must be a positive integer number.\n"+
 		"ERROR: fname:1: PKGREVISION only makes sense directly in the package Makefile.\n")
 
-	runVartypeChecksFname("Makefile", "PKGREVISION", "=", (*VartypeCheck).PkgRevision,
+	runVartypeChecksFname("Makefile", "PKGREVISION", opAssign, (*VartypeCheck).PkgRevision,
 		"3")
 
 	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestVartypeCheck_PlatformTriple(c *check.C) {
-	runVartypeChecks("ONLY_FOR_PLATFORM", "=", (*VartypeCheck).PlatformTriple,
+	runVartypeChecks("ONLY_FOR_PLATFORM", opAssign, (*VartypeCheck).PlatformTriple,
 		"linux-i386",
 		"nextbsd-5.0-8087",
 		"${LINUX}")
@@ -260,7 +260,7 @@ func (s *Suite) TestVartypeCheck_PlatformTriple(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
-	runVartypeChecks("SUBST_SED.dummy", "=", (*VartypeCheck).SedCommands,
+	runVartypeChecks("SUBST_SED.dummy", opAssign, (*VartypeCheck).SedCommands,
 		"s,@COMPILER@,gcc,g",
 		"-e s,a,b, -e a,b,c,")
 
@@ -270,7 +270,7 @@ func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_ShellCommands(c *check.C) {
-	runVartypeChecks("GENERATE_PLIST", "+=", (*VartypeCheck).ShellCommands,
+	runVartypeChecks("GENERATE_PLIST", opAssign, (*VartypeCheck).ShellCommands,
 		"echo bin/program",
 		"echo bin/program;")
 
@@ -278,7 +278,7 @@ func (s *Suite) TestVartypeCheck_ShellCommands(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
-	runVartypeChecks("SUBST_STAGE.dummy", "=", (*VartypeCheck).Stage,
+	runVartypeChecks("SUBST_STAGE.dummy", opAssign, (*VartypeCheck).Stage,
 		"post-patch",
 		"post-modern",
 		"pre-test")
@@ -287,7 +287,7 @@ func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_URL(c *check.C) {
-	runVartypeChecks("MASTER_SITES", "=", (*VartypeCheck).URL,
+	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).URL,
 		"http://example.org/distfiles/",
 		"http://example.org/download?fname=distfile;version=1.0",
 		"http://example.org/download?fname=<distfile>;version=<version>")
@@ -296,7 +296,7 @@ func (s *Suite) TestVartypeCheck_URL(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
-	runVartypeChecks("APACHE_MODULE", "=", (*VartypeCheck).Yes,
+	runVartypeChecks("APACHE_MODULE", opAssign, (*VartypeCheck).Yes,
 		"yes",
 		"no",
 		"${YESVAR}")
@@ -306,18 +306,18 @@ func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 		"WARN: fname:3: APACHE_MODULE should be set to YES or yes.\n")
 }
 
-func runVartypeChecks(varname, op string, checker func(*VartypeCheck), values ...string) {
+func runVartypeChecks(varname string, op MkOperator, checker func(*VartypeCheck), values ...string) {
 	for i, value := range values {
-		mkline := NewMkLine(NewLine("fname", i+1, varname+op+value, nil))
+		mkline := NewMkLine(NewLine("fname", i+1, varname+op.String()+value, nil))
 		valueNovar := mkline.withoutMakeVariables(value, true)
 		vc := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNovar, "", true, false}
 		checker(vc)
 	}
 }
 
-func runVartypeChecksFname(fname, varname, op string, checker func(*VartypeCheck), values ...string) {
+func runVartypeChecksFname(fname, varname string, op MkOperator, checker func(*VartypeCheck), values ...string) {
 	for i, value := range values {
-		mkline := NewMkLine(NewLine(fname, i+1, varname+op+value, nil))
+		mkline := NewMkLine(NewLine(fname, i+1, varname+op.String()+value, nil))
 		valueNovar := mkline.withoutMakeVariables(value, true)
 		vc := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNovar, "", true, false}
 		checker(vc)

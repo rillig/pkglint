@@ -20,7 +20,7 @@ func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
 	c.Check(vartype.guessed, equals, false)
 	c.Check(vartype.kindOfList, equals, lkNone)
 
-	mkline.CheckVartype("COMMENT", "=", "A nice package", "")
+	mkline.CheckVartype("COMMENT", opAssign, "A nice package", "")
 
 	c.Check(s.Stdout(), equals, "WARN: fname:1: COMMENT should not begin with \"A\".\n")
 }
@@ -29,7 +29,7 @@ func (s *Suite) TestChecklineMkVartype(c *check.C) {
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 1, "DISTNAME=gcc-${GCC_VERSION}", nil))
 
-	mkline.CheckVartype("DISTNAME", "=", "gcc-${GCC_VERSION}", "")
+	mkline.CheckVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
 }
 
 func (s *Suite) TestChecklineMkVaralign(c *check.C) {
@@ -95,7 +95,7 @@ func (s *Suite) TestMkLine_fields(c *check.C) {
 	c.Check(ln[0].Varname(), equals, "VARNAME.param")
 	c.Check(ln[0].Varcanon(), equals, "VARNAME.*")
 	c.Check(ln[0].Varparam(), equals, "param")
-	c.Check(ln[0].Op(), equals, "?=")
+	c.Check(ln[0].Op(), equals, opAssignDefault)
 	c.Check(ln[0].Value(), equals, "value")
 	c.Check(ln[0].Comment(), equals, "# varassign comment")
 

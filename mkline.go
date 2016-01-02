@@ -14,10 +14,10 @@ type MkLine struct {
 
 	xtype uint8
 	xb1   bool
+	xop   MkOperator
 	xs1   string
 	xs2   string
 	xs3   string
-	xs4   string
 	xs5   string
 	xs6   string
 }
@@ -52,7 +52,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xs1 = varname
 		mkline.xs2 = varnameCanon(varname)
 		mkline.xs3 = varparam
-		mkline.xs4 = op
+		mkline.xop = NewMkOperator(op)
 		mkline.xs5 = value
 		mkline.xs6 = comment
 		return
@@ -119,7 +119,7 @@ func (mkline *MkLine) IsVarassign() bool   { return mkline.xtype == 1 }
 func (mkline *MkLine) Varname() string     { return mkline.xs1 }
 func (mkline *MkLine) Varcanon() string    { return mkline.xs2 }
 func (mkline *MkLine) Varparam() string    { return mkline.xs3 }
-func (mkline *MkLine) Op() string          { return mkline.xs4 }
+func (mkline *MkLine) Op() MkOperator      { return mkline.xop }
 func (mkline *MkLine) Value() string       { return mkline.xs5 }
 func (mkline *MkLine) Comment() string     { return mkline.xs6 }
 func (mkline *MkLine) IsShellcmd() bool    { return mkline.xtype == 2 }
@@ -138,16 +138,16 @@ func (mkline *MkLine) IsDependency() bool  { return mkline.xtype == 8 }
 func (mkline *MkLine) Targets() string     { return mkline.xs1 }
 func (mkline *MkLine) Sources() string     { return mkline.xs2 }
 
-func (mkline *MkLine) CheckVardef(varname, op string) {
+func (mkline *MkLine) CheckVardef(varname string, op MkOperator) {
 	if G.opts.DebugTrace {
-		defer tracecall2("MkLine.checkVardef", varname, op)()
+		defer tracecall("MkLine.checkVardef", varname, op)()
 	}
 
 	defineVar(mkline, varname)
 	mkline.CheckVardefPermissions(varname, op)
 }
 
-func (mkline *MkLine) CheckVardefPermissions(varname, op string) {
+func (mkline *MkLine) CheckVardefPermissions(varname string, op MkOperator) {
 	if !G.opts.WarnPerm {
 		return
 	}
@@ -163,11 +163,11 @@ func (mkline *MkLine) CheckVardefPermissions(varname, op string) {
 	perms := vartype.EffectivePermissions(mkline.Line.Fname)
 	var needed AclPermissions
 	switch op {
-	case "=", "!=", ":=":
+	case opAssign, opAssignShell, opAssignEval:
 		needed = aclpSet
-	case "?=":
+	case opAssignDefault:
 		needed = aclpSetDefault
-	case "+=":
+	case opAssignAppend:
 		needed = aclpAppend
 	}
 
@@ -466,7 +466,7 @@ func (mkline *MkLine) CheckVarassign() {
 	mkline.CheckVartype(varname, op, value, comment)
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
-	if op == ":=" && varname == strings.ToLower(varname) {
+	if op == opAssignEval && varname == strings.ToLower(varname) {
 		if G.opts.DebugUnchecked {
 			mkline.Debug1("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
@@ -551,7 +551,7 @@ func (mkline *MkLine) CheckVarassign() {
 	mkline.CheckVarassignPlistComment(varname, value)
 
 	time := vucTimeRun
-	if op == ":=" || op == "!=" {
+	if op == opAssignEval || op == opAssignShell {
 		time = vucTimeParse
 	}
 
@@ -563,7 +563,7 @@ func (mkline *MkLine) CheckVarassign() {
 }
 
 func (mkline *MkLine) CheckVarassignBsdPrefs() {
-	if G.opts.WarnExtra && mkline.Op() == "?=" && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
+	if G.opts.WarnExtra && mkline.Op() == opAssignDefault && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
 		switch mkline.Varcanon() {
 		case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
 			return
@@ -661,7 +661,7 @@ const reVarnamePlural = "^(?:" +
 	"|TOOLS_NOOP" +
 	")$"
 
-func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
+func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment string) {
 	if G.opts.DebugTrace {
 		defer tracecall("MkLine.checkVartype", varname, op, value, comment)()
 	}
@@ -673,7 +673,7 @@ func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
 	varbase := varnameBase(varname)
 	vartype := mkline.getVariableType(varname)
 
-	if op == "+=" {
+	if op == opAssignAppend {
 		if vartype != nil {
 			if !vartype.MayBeAppendedTo() {
 				mkline.Warn0("The \"+=\" operator should only be used with lists.")
@@ -690,7 +690,7 @@ func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
 			mkline.Debug1("Unchecked variable assignment for %s.", varname)
 		}
 
-	case op == "!=":
+	case op == opAssignShell:
 		if G.opts.DebugMisc {
 			mkline.Debug1("Use of !=: %q", value)
 		}
@@ -716,7 +716,7 @@ func (mkline *MkLine) CheckVartype(varname, op, value, comment string) {
 // The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
 // For some variables (like BuildlinkDepth), the operator influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op, value, comment string, isList bool, guessed bool) {
+func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op MkOperator, value, comment string, isList bool, guessed bool) {
 	if G.opts.DebugTrace {
 		defer tracecall("MkLine.checkVartypePrimitive", varname, op, value, comment, isList, guessed)()
 	}
@@ -830,7 +830,7 @@ func (mkline *MkLine) CheckIf() {
 	{
 		var pop, pvarname, pvalue *string
 		if tree.Match(NewTree("compareVarStr", &pvarname, &pop, &pvalue)) {
-			mkline.CheckVartype(*pvarname, "use", *pvalue, "")
+			mkline.CheckVartype(*pvarname, opUse, *pvalue, "")
 		}
 	}
 }

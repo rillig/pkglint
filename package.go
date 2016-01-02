@@ -316,7 +316,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 		if mkline.IsVarassign() {
 			varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
 
-			if op != "?=" || G.Pkg.vardef[varname] == nil {
+			if op != opAssignDefault || G.Pkg.vardef[varname] == nil {
 				if G.opts.DebugMisc {
 					line.Debugf("varassign(%q, %q, %q)", varname, op, value)
 				}

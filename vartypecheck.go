@@ -9,13 +9,44 @@ type VartypeCheck struct {
 	mkline      *MkLine
 	line        *Line
 	varname     string
-	op          string
+	op          MkOperator
 	value       string
 	valueNovar  string
 	comment     string
 	listContext bool
 	guessed     bool // Whether the type definition is guessed (based on the variable name) or explicitly defined (see vardefs.go).
+}
 
+type MkOperator uint8
+
+const (
+	opAssign        MkOperator = iota // =
+	opAssignShell                     // !=
+	opAssignEval                      // :=
+	opAssignAppend                    // +=
+	opAssignDefault                   // ?=
+	opUseLoadtime
+	opUse
+)
+
+func NewMkOperator(op string) MkOperator {
+	switch op {
+	case "=":
+		return opAssign
+	case "!=":
+		return opAssignShell
+	case ":=":
+		return opAssignEval
+	case "+=":
+		return opAssignAppend
+	case "?=":
+		return opAssignDefault
+	}
+	return opAssign
+}
+
+func (op MkOperator) String() string {
+	return [...]string{"=", "!=", ":=", "+=", "?=", "use", "use-loadtime"}[op]
 }
 
 func (cv *VartypeCheck) AwkCommand() {
@@ -616,7 +647,7 @@ func (cv *VartypeCheck) String() {
 }
 
 func (cv *VartypeCheck) Tool() {
-	if cv.varname == "TOOLS_NOOP" && cv.op == "+=" {
+	if cv.varname == "TOOLS_NOOP" && cv.op == opAssignAppend {
 		// no warning for package-defined tool definitions
 
 	} else if m, toolname, tooldep := match2(cv.value, `^([-\w]+|\[)(?::(\w+))?$`); m {

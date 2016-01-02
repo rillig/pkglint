@@ -125,8 +125,8 @@ func (ctx *SubstContext) dup(mkline *MkLine, pstr *string, varname, value string
 	*pstr = value
 }
 
-func (ctx *SubstContext) duplist(mkline *MkLine, plist *[]string, varname, op, value string) {
-	if len(*plist) > 0 && op != "+=" {
+func (ctx *SubstContext) duplist(mkline *MkLine, plist *[]string, varname string, op MkOperator, value string) {
+	if len(*plist) > 0 && op != opAssignAppend {
 		mkline.Warn1("All but the first %q lines should use the \"+=\" operator.", varname)
 	}
 	*plist = append(*plist, value)
