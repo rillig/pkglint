@@ -783,7 +783,7 @@ func parseAclEntries(varname string, aclentries string) []AclEntry {
 
 // A package-defined variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
 func pkg(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "Makefile: set, use; Makefile.common: default, set, use; buildlink3.mk, builtin.mk:; *.mk: default, set, use")
+	acl(varname, kindOfList, checker, "Makefile: set, use; buildlink3.mk, builtin.mk:; Makefile.*, *.mk: default, set, use")
 }
 
 // A package-defined list may be appended to in all Makefiles except buildlink3.mk and builtin.mk.
