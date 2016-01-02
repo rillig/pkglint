@@ -307,6 +307,8 @@ outer:
 				state = swstDquotBackt
 			case repl.AdvanceRegexp("^[^$\"\\\\`]+"):
 				break
+			case repl.AdvanceStr("\\$$"):
+				break
 			case repl.AdvanceRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
 				break
 			case repl.AdvanceRegexp(`^\$\$\{[0-9A-Za-z_]+\}`),
