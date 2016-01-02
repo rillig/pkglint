@@ -91,8 +91,8 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 			if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
 				abiLine = line
-				repl := NewPrefixReplacer(value)
-				if dp := ParseDependency(repl); dp != nil && repl.rest == "" {
+				parser := NewParser(value)
+				if dp := parser.Dependency(); dp != nil && parser.EOF() {
 					abi = dp
 				} else {
 					line.Warn1("Unknown dependency pattern %q.", value)
@@ -101,8 +101,8 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 			}
 			if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
 				apiLine = line
-				repl := NewPrefixReplacer(value)
-				if dp := ParseDependency(repl); dp != nil && repl.rest == "" {
+				parser := NewParser(value)
+				if dp := parser.Dependency(); dp != nil && parser.EOF() {
 					api = dp
 				} else {
 					line.Warn1("Unknown dependency pattern %q.", value)

@@ -415,53 +415,6 @@ func ParsePkgbasePattern(repl *PrefixReplacer) (pkgbase string) {
 	}
 }
 
-func ParseDependency(repl *PrefixReplacer) *DependencyPattern {
-	var dp DependencyPattern
-	mark := repl.Mark()
-	dp.pkgbase = ParsePkgbasePattern(repl)
-	if dp.pkgbase == "" {
-		return nil
-	}
-
-	mark2 := repl.Mark()
-	if repl.AdvanceStr(">=") || repl.AdvanceStr(">") {
-		op := repl.s
-		if repl.AdvanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
-			dp.lowerOp = op
-			dp.lower = repl.m[0]
-		} else {
-			repl.Reset(mark2)
-		}
-	}
-	if repl.AdvanceStr("<=") || repl.AdvanceStr("<") {
-		op := repl.s
-		if repl.AdvanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
-			dp.upperOp = op
-			dp.upper = repl.m[0]
-		} else {
-			repl.Reset(mark2)
-		}
-	}
-	if dp.lowerOp != "" || dp.upperOp != "" {
-		return &dp
-	}
-	if repl.AdvanceStr("-") && repl.rest != "" {
-		dp.wildcard = repl.AdvanceRest()
-		return &dp
-	}
-	if hasPrefix(dp.pkgbase, "${") && hasSuffix(dp.pkgbase, "}") {
-		return &dp
-	}
-	if hasSuffix(dp.pkgbase, "-*") {
-		dp.pkgbase = strings.TrimSuffix(dp.pkgbase, "-*")
-		dp.wildcard = "*"
-		return &dp
-	}
-
-	repl.Reset(mark)
-	return nil
-}
-
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	tmp := relpath

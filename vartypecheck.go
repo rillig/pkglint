@@ -96,9 +96,9 @@ func (cv *VartypeCheck) Comment() {
 func (cv *VartypeCheck) Dependency() {
 	line, value := cv.line, cv.value
 
-	repl := NewPrefixReplacer(value)
-	dp := ParseDependency(repl)
-	if dp == nil {
+	parser := NewParser(value)
+	deppat := parser.Dependency()
+	if deppat == nil || !parser.EOF() {
 		line.Warn1("Unknown dependency pattern %q.", value)
 		Explain(
 			"Typical dependencies have the following forms:",
@@ -110,7 +110,7 @@ func (cv *VartypeCheck) Dependency() {
 		return
 	}
 
-	wildcard := dp.wildcard
+	wildcard := deppat.wildcard
 	if m, inside := match1(wildcard, `^\[(.*)\]\*$`); m {
 		if inside != "0-9" {
 			line.Warn0("Only [0-9]* is allowed in the numeric part of a dependency.")
@@ -132,7 +132,7 @@ func (cv *VartypeCheck) Dependency() {
 		}
 
 	} else if wildcard == "*" {
-		line.Warn1("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", dp.pkgbase)
+		line.Warn1("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.pkgbase)
 		Explain3(
 			"If you use a * alone, the package specification may match other",
 			"packages that have the same prefix, but a longer name. For example,",

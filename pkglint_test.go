@@ -176,33 +176,6 @@ func (s *Suite) TestChecklinesMessage_malformed(c *check.C) {
 		"WARN: MESSAGE:5: Expected a line of exactly 75 \"=\" characters.\n")
 }
 
-func (s *Suite) TestParseDependency(c *check.C) {
-
-	testDependency := func(pattern string, expected DependencyPattern) {
-		repl := NewPrefixReplacer(pattern)
-		dp := ParseDependency(repl)
-		if c.Check(dp, check.NotNil) {
-			c.Check(*dp, equals, expected)
-			c.Check(repl.rest, equals, "")
-		}
-	}
-
-	testDependency("fltk>=1.1.5rc1<1.3", DependencyPattern{"fltk", ">=", "1.1.5rc1", "<", "1.3", ""})
-	testDependency("libwcalc-1.0*", DependencyPattern{"libwcalc", "", "", "", "", "1.0*"})
-	testDependency("${PHP_PKG_PREFIX}-pdo-5.*", DependencyPattern{"${PHP_PKG_PREFIX}-pdo", "", "", "", "", "5.*"})
-	testDependency("${PYPKGPREFIX}-metakit-[0-9]*", DependencyPattern{"${PYPKGPREFIX}-metakit", "", "", "", "", "[0-9]*"})
-	testDependency("boost-build-1.59.*", DependencyPattern{"boost-build", "", "", "", "", "1.59.*"})
-	testDependency("${_EMACS_REQD}", DependencyPattern{"${_EMACS_REQD}", "", "", "", "", ""})
-	testDependency("{gcc46,gcc46-libs}>=4.6.0", DependencyPattern{"{gcc46,gcc46-libs}", ">=", "4.6.0", "", "", ""})
-	testDependency("perl5-*", DependencyPattern{"perl5", "", "", "", "", "*"})
-	testDependency("verilog{,-current}-[0-9]*", DependencyPattern{"verilog{,-current}", "", "", "", "", "[0-9]*"})
-	testDependency("mpg123{,-esound,-nas}>=0.59.18", DependencyPattern{"mpg123{,-esound,-nas}", ">=", "0.59.18", "", "", ""})
-	testDependency("mysql*-{client,server}-[0-9]*", DependencyPattern{"mysql*-{client,server}", "", "", "", "", "[0-9]*"})
-	testDependency("postgresql8[0-35-9]-${module}-[0-9]*", DependencyPattern{"postgresql8[0-35-9]-${module}", "", "", "", "", "[0-9]*"})
-	testDependency("ncurses-${NC_VERS}{,nb*}", DependencyPattern{"ncurses", "", "", "", "", "${NC_VERS}{,nb*}"})
-	// "{ssh{,6}-[0-9]*,openssh-[0-9]*}" is not representable using the current data structure
-}
-
 func (s *Suite) TestParsePkgbasePattern(c *check.C) {
 	test := func(pattern, expected, rest string) {
 		repl := NewPrefixReplacer(pattern)
