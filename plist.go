@@ -21,7 +21,7 @@ func ChecklinesPlist(lines []*Line) {
 			"the files.",
 			"",
 			"Another reason, common for Perl packages, is that the final PLIST is",
-			"automatically generated. Since the source PLIST is not used at all,",
+			"automatically generated.  Since the source PLIST is not used at all,",
 			"you can remove it.",
 			"",
 			"Meta packages also don't need a PLIST file.")
@@ -211,11 +211,12 @@ func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string)
 		ck.allFiles["man/man6/"+basename+".6"] == nil &&
 		ck.allFiles["${IMAKE_MAN_DIR}/"+basename+".${IMAKE_MANNEWSUFFIX}"] == nil {
 		pline.line.Warn1("Manual page missing for bin/%s.", basename)
-		Explain4(
-			"All programs that can be run directly by the user should have a manual",
-			"page for quick reference. The programs in the bin/ directory should have",
-			"corresponding manual pages in section 1 (filename program.1), not in",
-			"section 8.")
+		Explain(
+			"All programs that can be run directly by the user should have a",
+			"manual page for quick reference.  The programs in the bin/ directory",
+			"should have corresponding manual pages in section 1 (filename",
+			"program.1), while the programs in the sbin/ directory have their",
+			"manual pages in section 8.")
 	}
 }
 
@@ -313,11 +314,12 @@ func (ck *PlistChecker) checkpathSbin(pline *PlistLine) {
 
 	if ck.allFiles["man/man8/"+binname+".8"] == nil && G.opts.WarnExtra {
 		pline.line.Warn1("Manual page missing for sbin/%s.", binname)
-		Explain4(
-			"All programs that can be run directly by the user should have a manual",
-			"page for quick reference. The programs in the sbin/ directory should have",
-			"corresponding manual pages in section 8 (filename program.8), not in",
-			"section 1.")
+		Explain(
+			"All programs that can be run directly by the user should have a",
+			"manual page for quick reference.  The programs in the sbin/ directory",
+			"should have corresponding manual pages in section 8 (filename",
+			"program.1), while the programs in the bin/ directory have their",
+			"manual pages in section 1.")
 	}
 }
 

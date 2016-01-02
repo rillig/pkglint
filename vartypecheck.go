@@ -140,10 +140,10 @@ func (cv *VartypeCheck) Dependency() {
 	if deppat != nil && deppat.wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
 		line.Warn0("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
 		Explain4(
-			"The \"{,nb*}\" extension is only necessary for dependencies of the form",
-			"\"pkgbase-1.2\", since the pattern \"pkgbase-1.2\" doesn't match the",
-			"version \"pkgbase-1.2nb5\". For dependency patterns using the comparison",
-			"operators this is not necessary.")
+			"The \"{,nb*}\" extension is only necessary for dependencies of the",
+			"form \"pkgbase-1.2\", since the pattern \"pkgbase-1.2\" doesn't match",
+			"the version \"pkgbase-1.2nb5\".  For dependency patterns using the",
+			"comparison operators, this is not necessary.")
 
 	} else if deppat == nil || !parser.EOF() {
 		line.Warn1("Unknown dependency pattern %q.", value)
@@ -182,7 +182,7 @@ func (cv *VartypeCheck) Dependency() {
 		line.Warn1("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.pkgbase)
 		Explain3(
 			"If you use a * alone, the package specification may match other",
-			"packages that have the same prefix, but a longer name. For example,",
+			"packages that have the same prefix, but a longer name.  For example,",
 			"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
 	}
 
@@ -255,8 +255,8 @@ func (cv *VartypeCheck) EmulPlatform() {
 		cv.line.Warn1("%q is not a valid emulation platform.", cv.value)
 		Explain(
 			"An emulation platform has the form <OPSYS>-<MACHINE_ARCH>.",
-			"OPSYS is the lower-case name of the operating system, and MACHINE_ARCH",
-			"is the hardware architecture.",
+			"OPSYS is the lower-case name of the operating system, and",
+			"MACHINE_ARCH is the hardware architecture.",
 			"",
 			"Examples: linux-i386, irix-mipsel.")
 	}
@@ -380,12 +380,12 @@ func (cv *VartypeCheck) Message() {
 		line.Warn1("%s should not be quoted.", varname)
 		Explain(
 			"The quoting is only needed for variables which are interpreted as",
-			"multiple words (or, generally speaking, a list of something). A single",
-			"text message does not belong to this class, since it is only printed",
-			"as a whole.",
+			"multiple words (or, generally speaking, a list of something).  A",
+			"single text message does not belong to this class, since it is only",
+			"printed as a whole.",
 			"",
-			"On the other hand, PKG_FAIL_REASON is a _list_ of text messages, so in",
-			"that case, the quoting has to be done.`")
+			"On the other hand, PKG_FAIL_REASON is a _list_ of text messages, so",
+			"in that case, the quoting has to be done.")
 	}
 }
 
@@ -497,10 +497,10 @@ func (cv *VartypeCheck) PkgRevision() {
 		cv.line.Error1("%s only makes sense directly in the package Makefile.", cv.varname)
 		Explain(
 			"Usually, different packages using the same Makefile.common have",
-			"different dependencies and will be bumped at different times (e.g. for",
-			"shlib major bumps) and thus the PKGREVISIONs must be in the separate",
-			"Makefiles. There is no practical way of having this information in a",
-			"commonly used Makefile.")
+			"different dependencies and will be bumped at different times (e.g.",
+			"for shlib major bumps) and thus the PKGREVISIONs must be in the",
+			"separate Makefiles.  There is no practical way of having this",
+			"information in a commonly used Makefile.")
 	}
 }
 
@@ -786,7 +786,7 @@ func (cv *VartypeCheck) Yes() {
 		cv.line.Warn1("%s should be set to YES or yes.", cv.varname)
 		Explain4(
 			"This variable means \"yes\" if it is defined, and \"no\" if it is",
-			"undefined. Even when it has the value \"no\", this means \"yes\".",
+			"undefined.  Even when it has the value \"no\", this means \"yes\".",
 			"Therefore when it is defined, its value should correspond to its",
 			"meaning.")
 	}

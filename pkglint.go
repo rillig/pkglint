@@ -101,9 +101,9 @@ func ChecklinesDescr(lines []*Line) {
 
 		line.Warnf("File too long (should be no more than %d lines).", maxlines)
 		Explain3(
-			"A common terminal size is 80x25 characters. The DESCR file should",
-			"fit on one screen. It is also intended to give a _brief_ summary",
-			"about the package's contents.")
+			"The DESCR file should fit on a traditional terminal of 80x25",
+			"characters.  It is also intended to give a _brief_ summary about",
+			"the package's contents.")
 	}
 
 	SaveAutofixChanges(lines)

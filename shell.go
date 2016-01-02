@@ -178,8 +178,8 @@ outer:
 				line := shline.line
 				line.Warn0("Please use \"${.TARGET}\" instead of \"$@\".")
 				Explain2(
-					"The variable $@ can easily be confused with the shell variable of the",
-					"same name, which has a completely different meaning.")
+					"The variable $@ can easily be confused with the shell variable of",
+					"the same name, which has a completely different meaning.")
 				varname = ".TARGET"
 			}
 
@@ -193,8 +193,8 @@ outer:
 			case state == swstDquot && hasSuffix(mod, ":Q"):
 				line.Warn0("Please don't use the :Q operator in double quotes.")
 				Explain2(
-					"Either remove the :Q or the double quotes. In most cases, it is more",
-					"appropriate to remove the double quotes.")
+					"Either remove the :Q or the double quotes.  In most cases, it is",
+					"more appropriate to remove the double quotes.")
 			}
 
 			if varname != "@" {
@@ -249,11 +249,12 @@ outer:
 				if G.opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shvarname) {
 					line.Warn1("Unquoted shell variable %q.", shvarname)
 					Explain(
-						"When a shell variable contains white-space, it is expanded (split into",
-						"multiple words) when it is written as $variable in a shell script.",
-						"If that is not intended, you should add quotation marks around it,",
-						"like \"$variable\". Then, the variable will always expand to a single",
-						"word, preserving all white-space and other special characters.",
+						"When a shell variable contains white-space, it is expanded (split",
+						"into multiple words) when it is written as $variable in a shell",
+						"script.  If that is not intended, you should add quotation marks",
+						"around it, like \"$variable\".  Then, the variable will always expand",
+						"to a single word, preserving all white-space and other special",
+						"characters.",
 						"",
 						"Example:",
 						"\tfname=\"Curriculum vitae.doc\"",
@@ -396,8 +397,9 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
 		line.Note0("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		Explain(
-			"Using the SUBST framework is simpler to understand, since you only have",
-			"to tell it what to change, when to change it and in which files.",
+			"Using the SUBST framework instead of explicit commands is easier",
+			"to understand, since all the complexity of using sed and mv is",
+			"hidden behind the scenes.",
 			"",
 			"Run \"bmake help topic=subst\" for more information.")
 		if contains(shelltext, "#") {
@@ -762,9 +764,9 @@ func (ctx *ShelltextContext) checkSetE(eflag bool) {
 	if G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !eflag {
 		ctx.shline.line.Warn0("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
 		Explain(
-			"Normally, when a shell command fails (returns non-zero), the remaining",
-			"commands are still executed. For example, the following commands would",
-			"remove all files from the HOME directory:",
+			"Normally, when a shell command fails (returns non-zero), the",
+			"remaining commands are still executed.  For example, the following",
+			"commands would remove all files from the HOME directory:",
 			"",
 			"\tcd \"$HOME\"; cd /nonexistent; rm -rf *",
 			"",
@@ -800,15 +802,15 @@ func (shline *ShellLine) checkCommandUse(shellcmd string) {
 		"tr", "${TR}":
 		line.Warn1("The shell command %q should not be used in the install phase.", shellcmd)
 		Explain3(
-			"In the install phase, the only thing that should be done is to install",
-			"the prepared files to their final location. The file's contents should",
-			"not be changed anymore.")
+			"In the install phase, the only thing that should be done is to",
+			"install the prepared files to their final location.  The file's",
+			"contents should not be changed anymore.")
 
 	case "cp", "${CP}":
 		line.Warn0("${CP} should not be used to install files.")
 		Explain(
 			"The ${CP} command is highly platform dependent and cannot overwrite",
-			"files that don't have write permission. Please use ${PAX} instead.",
+			"files that don't have write permission.  Please use ${PAX} instead.",
 			"",
 			"For example, instead of",
 			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",

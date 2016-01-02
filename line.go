@@ -285,9 +285,9 @@ func (line *Line) CheckRcsid(prefixRe, suggestedPrefix string) bool {
 	if !line.AutofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
 		line.Error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 		Explain3(
-			"Several files in pkgsrc must contain the CVS Id, so that their current",
-			"version can be traced back later from a binary package. This is to",
-			"ensure reproducible builds, for example for finding bugs.")
+			"Several files in pkgsrc must contain the CVS Id, so that their",
+			"current version can be traced back later from a binary package.",
+			"This is to ensure reproducible builds, for example for finding bugs.")
 	}
 	return false
 }

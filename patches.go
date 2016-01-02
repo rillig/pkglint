@@ -161,17 +161,17 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.Error0("Each patch must be documented.")
 		Explain(
-			"Pkgsrc tries to have as few patches as possible. Therefore, each patch",
-			"must document why it is necessary. Typical reasons are portability or",
-			"security.",
+			"Pkgsrc tries to have as few patches as possible.  Therefore, each",
+			"patch must document why it is necessary.  Typical reasons are",
+			"portability or security.",
 			"",
-			"Patches that are related to a security issue should mention the corres-",
-			"ponding CVE identifier.",
+			"Patches that are related to a security issue should mention the",
+			"corresponding CVE identifier.",
 			"",
-			"Each patch should be sent to the upstream maintainers of the package,",
-			"so that they can include it in future versions. After submitting a",
-			"patch upstream, the corresponding bug report should be mentioned in",
-			"this file, to prevent duplicate work.")
+			"Each patch should be sent to the upstream maintainers of the",
+			"package, so that they can include it in future versions.  After",
+			"submitting a patch upstream, the corresponding bug report should",
+			"be mentioned in this file, to prevent duplicate work.")
 	}
 	if G.opts.WarnSpace && !ck.previousLineEmpty {
 		if !line.AutofixInsertBefore("") {
@@ -325,15 +325,15 @@ func checkwordAbsolutePathname(line *Line, word string) {
 		// Absolute paths probably start with a lowercase letter.
 		line.Warn1("Found absolute pathname: %s", word)
 		Explain(
-			"Absolute pathnames are often an indicator for unportable code. As",
+			"Absolute pathnames are often an indicator for unportable code.  As",
 			"pkgsrc aims to be a portable system, absolute pathnames should be",
 			"avoided whenever possible.",
 			"",
-			"A special variable in this context is ${DESTDIR}, which is used in GNU",
-			"projects to specify a different directory for installation than what",
-			"the programs see later when they are executed. Usually it is empty, so",
-			"if anything after that variable starts with a slash, it is considered",
-			"an absolute pathname.")
+			"A special variable in this context is ${DESTDIR}, which is used in",
+			"GNU projects to specify a different directory for installation than",
+			"what the programs see later when they are executed.  Usually it is",
+			"empty, so if anything after that variable starts with a slash, it is",
+			"considered an absolute pathname.")
 	}
 }
 

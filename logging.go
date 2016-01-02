@@ -92,6 +92,15 @@ func Explain(explanation ...string) {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
 		}
 		io.WriteString(G.logOut, "\n")
+	} else {
+		for _, s := range explanation {
+			if l := tabLength(s); l > 68 && contains(s, " ") {
+				print(fmt.Sprintf("Long explanation line (%d): %s\n", l, s))
+			}
+			if matches(s, `\. [^ ]`) {
+				print(fmt.Sprintf("Short space after period: %s\n", s))
+			}
+		}
 	}
 	G.explanationsAvailable = true
 }
