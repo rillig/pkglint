@@ -246,3 +246,71 @@ func (s *Suite) TestParselineMk(c *check.C) {
 
 	c.Check(line2.Shellcmd(), equals, "sed -e 's,\\#,hash,g'")
 }
+
+func (s *Suite) TestMkLine_LeadingSpace(c *check.C) {
+	_ = NewMkLine(NewLine("rubyversion.mk", 427, " _RUBYVER=\t2.15", nil))
+
+	c.Check(s.Output(), equals, "WARN: rubyversion.mk:427: Makefile lines should not start with space characters.\n")
+}
+
+func (s *Suite) TestMkLine_CheckVardefPermissions(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("options.mk",
+		"# $"+"NetBSD$",
+		"PKG_DEVELOPER?=\tyes",
+		"COMMENT=\t${PKG_DEVELOPER}")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: options.mk:2: The variable PKG_DEVELOPER may not be given a default value by any package.\n")
+}
+
+func (s *Suite) TestMkLine_CheckVarusePermissions(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("options.mk",
+		"# $"+"NetBSD$",
+		"COMMENT=\t${GAMES_USER}",
+		"COMMENT:=\t${PKGBASE}",
+		"PYPKGPREFIX=${PKGBASE}")
+	G.globalData.UserDefinedVars = map[string]*MkLine{
+		"GAMES_USER": mklines.mklines[0],
+	}
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: options.mk:2: The user-defined variable GAMES_USER is used but not added to BUILD_DEFS.\n"+
+		"WARN: options.mk:3: PKGBASE should not be evaluated at load time.\n"+
+		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.\n"+
+		"WARN: options.mk:4: \"${PKGBASE}\" is not valid for PYPKGPREFIX. Use one of { py27 py33 py34 } instead.\n"+
+		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.\n")
+}
+
+func (s *Suite) TestMkLine_WarnVaruseLocalbase(c *check.C) {
+	mkline := NewMkLine(NewLine("options.mk", 56, "PKGNAME=${LOCALBASE}", nil))
+
+	mkline.WarnVaruseLocalbase()
+
+	c.Check(s.Output(), equals, "WARN: options.mk:56: The LOCALBASE variable should not be used by packages.\n")
+}
+
+func (s *Suite) TestMkLine_Misc(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("options.mk",
+		"# $"+"NetBSD$",
+		".for word in ${PKG_FAIL_REASON}",
+		"PYTHON_VERSIONS_ACCEPTED=\t27 35 30",
+		"CONFIGURE_ARGS+=\t--sharedir=${PREFIX}/share/kde",
+		"COMMENT=\t# defined",
+		".endfor")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: options.mk:2: The variable PKG_FAIL_REASON should not be used in .for loops.\n"+
+		"WARN: options.mk:3: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.\n"+
+		"NOTE: options.mk:4: Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.\n"+
+		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".\n")
+}

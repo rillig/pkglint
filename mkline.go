@@ -40,7 +40,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.Warn0("Makefile lines should not start with space characters.")
 		Explain3(
 			"If you want this line to contain a shell program, use a tab",
-			"character for indentation. Otherwise please remove the leading",
+			"character for indentation.  Otherwise please remove the leading",
 			"white-space.")
 	}
 
@@ -197,9 +197,9 @@ func (mkline *MkLine) CheckVardefPermissions(varname string, op MkOperator) {
 		}
 		Explain4(
 			"The allowed actions for a variable are determined based on the file",
-			"name in which the variable is used or defined. The exact rules are",
-			"hard-coded into pkglint. If they seem to be incorrect, please ask on",
-			"the tech-pkg@NetBSD.org mailing list.")
+			"name in which the variable is used or defined.  The exact rules are",
+			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
+			"on the tech-pkg@NetBSD.org mailing list.")
 	}
 }
 
@@ -225,7 +225,7 @@ func (mkline *MkLine) CheckVaruse(varname string, mod string, vuc *VarUseContext
 	needsQuoting := mkline.variableNeedsQuoting(varname, vuc)
 
 	if vuc.quoting == vucQuotFor {
-		mkline.CheckVaruseFor(varname, vartype, needsQuoting)
+		mkline.checkVaruseFor(varname, vartype, needsQuoting)
 	}
 
 	if G.opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
@@ -236,10 +236,10 @@ func (mkline *MkLine) CheckVaruse(varname string, mod string, vuc *VarUseContext
 		mkline.Warn1("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		Explain(
 			"When a pkgsrc package is built, many things can be configured by the",
-			"pkgsrc user in the mk.conf file. All these configurations should be",
-			"recorded in the binary package, so the package can be reliably rebuilt.",
-			"The BUILD_DEFS variable contains a list of all these user-settable",
-			"variables, so please add your variable to it, too.")
+			"pkgsrc user in the mk.conf file.  All these configurations should be",
+			"recorded in the binary package, so the package can be reliably",
+			"rebuilt.  The BUILD_DEFS variable contains a list of all these",
+			"user-settable variables, so please add your variable to it, too.")
 	}
 }
 
@@ -284,23 +284,23 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 		mkline.Warn1("%s should not be evaluated at load time.", varname)
 		Explain(
 			"Many variables, especially lists of something, get their values",
-			"incrementally. Therefore it is generally unsafe to rely on their value",
-			"until it is clear that it will never change again. This point is",
-			"reached when the whole package Makefile is loaded and execution of the",
-			"shell commands starts, in some cases earlier.",
+			"incrementally.  Therefore it is generally unsafe to rely on their",
+			"value until it is clear that it will never change again.  This",
+			"point is reached when the whole package Makefile is loaded and",
+			"execution of the shell commands starts, in some cases earlier.",
 			"",
 			"Additionally, when using the \":=\" operator, each $$ is replaced",
-			"with a single $, so variables that have references to shell variables",
-			"or regular expressions are modified in a subtle way.")
+			"with a single $, so variables that have references to shell",
+			"variables or regular expressions are modified in a subtle way.")
 	}
 
 	if isLoadTime && isIndirect {
 		mkline.Warn1("%s should not be evaluated indirectly at load time.", varname)
 		Explain4(
-			"The variable on the left-hand side may be evaluated at load time, but",
-			"the variable on the right-hand side may not. Due to this assignment, it",
-			"might be used indirectly at load-time, when it is not guaranteed to be",
-			"properly defined.")
+			"The variable on the left-hand side may be evaluated at load time,",
+			"but the variable on the right-hand side may not.  Because of the",
+			"assignment in this line, the variable might be used indirectly",
+			"at load time, before it is guaranteed to be properly initialized.")
 	}
 
 	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
@@ -332,31 +332,27 @@ func (mkline *MkLine) WarnVaruseLocalbase() {
 		"",
 		"In the second case, the example is:",
 		"",
-		"	CONFIGURE_ENV+= --with-datafiles=${LOCALBASE}/share/battalion",
+		"	CONFIGURE_ENV+= --with-datafiles=${LOCALBASE}/share/pkgbase",
 		"",
 		"This should really be:",
 		"",
-		"	CONFIGURE_ENV+= --with-datafiles=${PREFIX}/share/battalion")
+		"	CONFIGURE_ENV+= --with-datafiles=${PREFIX}/share/pkgbase")
 }
 
-func (mkline *MkLine) CheckVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
-	switch {
-	case vartype == nil:
-		// Cannot check anything here.
+func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
+	if G.opts.DebugTrace {
+		defer tracecall("MkLine.checkVaruseFor", varname, vartype, needsQuoting)()
+	}
 
-	case vartype.kindOfList == lkSpace:
-		// Fine
-
-	case needsQuoting == nqDoesntMatter || needsQuoting == nqNo:
-		// Fine, this variable is not supposed to contain special characters.
-
-	default:
+	if vartype != nil &&
+		vartype.kindOfList != lkSpace &&
+		needsQuoting != nqDoesntMatter {
 		mkline.Warn1("The variable %s should not be used in .for loops.", varname)
 		Explain4(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
-			"Therefore only variables that are specifically designed to match this",
-			"requirement should be used here.")
+			"Therefore only variables that are split at whitespace or don't",
+			"contain any special characters should be used here.")
 	}
 }
 
@@ -442,8 +438,8 @@ func (mkline *MkLine) CheckDecreasingOrder(varname, value string) {
 		if i > 0 && ver >= intversions[i-1] {
 			mkline.Warn1("The values for %s should be in decreasing order.", varname)
 			Explain2(
-				"If they aren't, it may be possible that needless versions of packages",
-				"are installed.")
+				"If they aren't, it may be possible that needless versions of",
+				"packages are installed.")
 		}
 	}
 }
@@ -503,8 +499,8 @@ func (mkline *MkLine) CheckVarassign() {
 	if varname == "CONFIGURE_ARGS" && matches(value, `=\$\{PREFIX\}/share/kde`) {
 		mkline.Note0("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
 		Explain3(
-			"That file probably does many things automatically and consistently that",
-			"this package also does. When using kde3.mk, you can probably also leave",
+			"That file does many things automatically and consistently that this",
+			"package also does.  When using kde3.mk, you can probably also leave",
 			"out some explicit dependencies.")
 	}
 
@@ -525,11 +521,11 @@ func (mkline *MkLine) CheckVarassign() {
 	if comment == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
 		mkline.Note0("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
 		Explain(
-			"The value #defined says something about the state of the variable, but",
-			"not what that _means_. In some cases a variable that is defined means",
-			"\"yes\", in other cases it is an empty list (which is also only the",
-			"state of the variable), whose meaning could be described with \"none\".",
-			"It is this meaning that should be described.")
+			"The value #defined says something about the state of the variable,",
+			"but not what that _means_.  In some cases a variable that is defined",
+			"means \"yes\", in other cases it is an empty list (which is also",
+			"only the state of the variable), whose meaning could be described",
+			"with \"none\".  It is this meaning that should be described.")
 	}
 
 	if m, revvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
@@ -986,9 +982,9 @@ const (
 	nqDontKnow
 )
 
-func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) NeedsQuoting {
+func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
 	if G.opts.DebugTrace {
-		defer tracecall("variableNeedsQuoting", varname, *vuc)()
+		defer tracecall("variableNeedsQuoting", varname, *vuc, "=>", needsQuoting)()
 	}
 
 	vartype := mkline.getVariableType(varname)

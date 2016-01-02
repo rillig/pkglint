@@ -113,3 +113,11 @@ func (s *Suite) TestShowAutofix_delete(c *check.C) {
 		"WARN: Makefile:30: Dummy\n"+
 		"AUTOFIX: Makefile:30: Deleting this line.\n")
 }
+
+func (s *Suite) TestLine_CheckTrailingWhitespace(c *check.C) {
+	line := NewLine("Makefile", 32, "The line must go on   ", nil)
+
+	line.CheckTrailingWhitespace()
+
+	c.Check(s.Output(), equals, "NOTE: Makefile:32: Trailing white-space.\n")
+}
