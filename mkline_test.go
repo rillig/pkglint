@@ -307,7 +307,9 @@ func (s *Suite) TestMkLine_Misc(c *check.C) {
 		"CONFIGURE_ARGS+=\t--sharedir=${PREFIX}/share/kde",
 		"COMMENT=\t# defined",
 		".endfor",
-		"GAMES_USER?=pkggames")
+		"GAMES_USER?=pkggames",
+		"PLIST_SUBST+= CONDITIONAL=${CONDITIONAL}",
+		"CONDITIONAL=\"@comment\"")
 
 	G.Mk.Check()
 
@@ -315,5 +317,6 @@ func (s *Suite) TestMkLine_Misc(c *check.C) {
 		"WARN: options.mk:3: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.\n"+
 		"NOTE: options.mk:4: Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.\n"+
 		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".\n"+
-		"WARN: options.mk:7: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".\n")
+		"WARN: options.mk:7: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".\n"+
+		"WARN: options.mk:9: Please don't use @comment in CONDITIONAL.\n")
 }

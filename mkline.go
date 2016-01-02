@@ -579,20 +579,22 @@ func (mkline *MkLine) CheckVarassignBsdPrefs() {
 }
 
 func (mkline *MkLine) CheckVarassignPlistComment(varname, value string) {
-	if matches(value, `^[^=]@comment`) {
+	if contains(value, "@comment") && !matches(value, `="@comment "`) {
 		mkline.Warn1("Please don't use @comment in %s.", varname)
 		Explain(
-			"Here you are defining a variable containing @comment. As this value",
-			"typically includes a space as the last character you probably also used",
-			"quotes around the variable. This can lead to confusion when adding this",
-			"variable to PLIST_SUBST, as all other variables are quoted using the :Q",
-			"operator when they are appended. As it is hard to check whether a",
-			"variable that is appended to PLIST_SUBST is already quoted or not, you",
-			"should not have pre-quoted variables at all.",
+			"If you are defining a PLIST conditional here, use one of the",
+			"following patterns instead:",
 			"",
-			"To solve this, you should directly use PLIST_SUBST+= ${varname}=${value}",
-			"or use any other variable for collecting the list of PLIST substitutions",
-			"and later append that variable with PLIST_SUBST+= ${MY_PLIST_SUBST}.")
+			"1. The direct way, without intermediate variable",
+			"",
+			"\tPLIST_SUBST+=\tMY_VAR=\"@comment \"",
+			"",
+			"2. The indirect way, with a separate variable",
+			"",
+			"\tPLIST_VARS+=\tMY_VAR",
+			"\t.if ...",
+			"\tMY_VAR?=\tyes",
+			"\t.endif")
 	}
 
 	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
