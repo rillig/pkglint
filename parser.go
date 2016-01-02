@@ -16,12 +16,38 @@ func (p *Parser) EOF() bool {
 	return p.repl.rest == ""
 }
 
+func (p *Parser) PkgbasePattern() (pkgbase string) {
+	repl := p.repl
+	
+	for {
+		if repl.AdvanceRegexp(`^\$\{\w+\}`) ||
+			repl.AdvanceRegexp(`^[\w.*+,{}]+`) ||
+			repl.AdvanceRegexp(`^\[[\d-]+\]`) {
+			pkgbase += repl.m[0]
+			continue
+		}
+
+		mark := repl.Mark()
+		if repl.AdvanceStr("-") {
+			if repl.AdvanceRegexp(`^\d`) ||
+				repl.AdvanceRegexp(`^\$\{\w*VER\w*\}`) ||
+				repl.AdvanceStr("[") {
+				repl.Reset(mark)
+				return
+			}
+			pkgbase += "-"
+		} else {
+			return
+		}
+	}
+}
+
 func (p *Parser) Dependency() *DependencyPattern {
 	repl := p.repl
 	
 	var dp DependencyPattern
 	mark := repl.Mark()
-	dp.pkgbase = ParsePkgbasePattern(repl)
+	dp.pkgbase = p.PkgbasePattern()
 	if dp.pkgbase == "" {
 		return nil
 	}

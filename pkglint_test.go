@@ -175,18 +175,3 @@ func (s *Suite) TestChecklinesMessage_malformed(c *check.C) {
 		"ERROR: MESSAGE:2: Expected \"$"+"NetBSD$\".\n"+
 		"WARN: MESSAGE:5: Expected a line of exactly 75 \"=\" characters.\n")
 }
-
-func (s *Suite) TestParsePkgbasePattern(c *check.C) {
-	test := func(pattern, expected, rest string) {
-		repl := NewPrefixReplacer(pattern)
-		actual := ParsePkgbasePattern(repl)
-		c.Check(actual, equals, expected)
-		c.Check(repl.rest, equals, rest)
-	}
-
-	test("fltk", "fltk", "")
-	test("fltk|", "fltk", "|")
-	test("boost-build-1.59.*", "boost-build", "-1.59.*")
-	test("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
-	test("${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*")
-}

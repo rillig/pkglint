@@ -391,30 +391,6 @@ type DependencyPattern struct {
 	wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
 }
 
-func ParsePkgbasePattern(repl *PrefixReplacer) (pkgbase string) {
-	for {
-		if repl.AdvanceRegexp(`^\$\{\w+\}`) ||
-			repl.AdvanceRegexp(`^[\w.*+,{}]+`) ||
-			repl.AdvanceRegexp(`^\[[\d-]+\]`) {
-			pkgbase += repl.m[0]
-			continue
-		}
-
-		mark := repl.Mark()
-		if repl.AdvanceStr("-") {
-			if repl.AdvanceRegexp(`^\d`) ||
-				repl.AdvanceRegexp(`^\$\{\w*VER\w*\}`) ||
-				repl.AdvanceStr("[") {
-				repl.Reset(mark)
-				return
-			}
-			pkgbase += "-"
-		} else {
-			return
-		}
-	}
-}
-
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 
 	tmp := relpath
