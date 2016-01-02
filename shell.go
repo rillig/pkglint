@@ -306,15 +306,12 @@ outer:
 			case repl.AdvanceStr("`"):
 				state = swstDquotBackt
 			case repl.AdvanceRegexp("^[^$\"\\\\`]+"):
-				// just skip
+				break
 			case repl.AdvanceRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
-				// just skip
-			case repl.AdvanceRegexp(`^\$\$\{([0-9A-Za-z_]+)\}`),
-				repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):
-				shvarname := repl.m[1]
-				if G.opts.DebugShell {
-					line.Debug1("checklineMkShellword: found double-quoted variable %q.", shvarname)
-				}
+				break
+			case repl.AdvanceRegexp(`^\$\$\{[0-9A-Za-z_]+\}`),
+				repl.AdvanceRegexp(`^\$\$(?:[0-9A-Z_a-z]+|[!#?@]|\$\$)`):
+				break
 			case repl.AdvanceStr("$$"):
 				line.Warn0("Unquoted $ or strange shell variable found.")
 			default:
