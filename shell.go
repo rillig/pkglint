@@ -307,7 +307,7 @@ outer:
 				state = swstDquotBackt
 			case repl.AdvanceRegexp("^[^$\"\\\\`]+"):
 				// just skip
-			case repl.AdvanceStr("\\$$"), repl.AdvanceRegexp("^\\\\[\\\\\"`./]"):
+			case repl.AdvanceRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
 				// just skip
 			case repl.AdvanceRegexp(`^\$\$\{([0-9A-Za-z_]+)\}`),
 				repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|[!#?@]|\$\$)`):
@@ -317,14 +317,6 @@ outer:
 				}
 			case repl.AdvanceStr("$$"):
 				line.Warn0("Unquoted $ or strange shell variable found.")
-			case repl.AdvanceRegexp(`^\\(.)`):
-				char := repl.m[1]
-				line.Warn2("Please use \"%s\" instead of \"%s\".", "\\\\"+char, "\\"+char)
-				Explain4(
-					"Although the current code may work, it is not good style to rely on",
-					"the shell passing this escape sequence exactly as is, and not",
-					"discarding the backslash. Alternatively you can use single quotes",
-					"instead of double quotes.")
 			default:
 				break outer
 			}

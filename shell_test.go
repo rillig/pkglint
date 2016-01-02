@@ -86,7 +86,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 
 	shline.CheckShellCommandLine("echo \"\\n\"") // As seen by make(1); the shell sees: echo "\n"
 
-	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"\\\\n\" instead of \"\\n\".\n")
+	c.Check(s.Output(), equals, "")
 
 	shline.CheckShellCommandLine("${RUN} for f in *.c; do echo $${f%.c}; done")
 
