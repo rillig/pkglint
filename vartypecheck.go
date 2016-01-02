@@ -14,7 +14,8 @@ type VartypeCheck struct {
 	valueNovar  string
 	comment     string
 	listContext bool
-	guessed     Guessed
+	guessed     bool // Whether the type definition is guessed (based on the variable name) or explicitly defined (see vardefs.go).
+
 }
 
 func (cv *VartypeCheck) AwkCommand() {
@@ -375,7 +376,7 @@ func (cv *VartypeCheck) Option() {
 
 // The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
-	if !contains(cv.value, ":") && cv.guessed == guGuessed {
+	if !contains(cv.value, ":") && cv.guessed {
 		cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}

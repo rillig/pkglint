@@ -276,12 +276,12 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 			}
 
 			// Check if any of the value's types is not guessed.
-			guessed := guGuessed
+			guessed := true
 			for _, value := range splitOnSpace(values) {
 				if m, vname := match1(value, `^\$\{(.*)\}`); m {
 					vartype := mkline.getVariableType(vname)
 					if vartype != nil && !vartype.guessed {
-						guessed = guNotGuessed
+						guessed = false
 					}
 				}
 			}

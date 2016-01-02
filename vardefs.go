@@ -716,7 +716,7 @@ func acl(varname string, kindOfList KindOfList, checker *VarChecker, aclentries 
 	m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`)
 	varbase, varparam := m[1], m[2]
 
-	vtype := &Vartype{kindOfList, checker, parseAclEntries(varname, aclentries), guNotGuessed}
+	vtype := &Vartype{kindOfList, checker, parseAclEntries(varname, aclentries), false}
 
 	if G.globalData.vartypes == nil {
 		G.globalData.vartypes = make(map[string]*Vartype)

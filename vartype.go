@@ -11,7 +11,7 @@ type Vartype struct {
 	kindOfList KindOfList
 	checker    *VarChecker
 	aclEntries []AclEntry
-	guessed    Guessed
+	guessed    bool
 }
 
 type KindOfList uint8
@@ -70,16 +70,6 @@ func (perms AclPermissions) HumanString() string {
 	return strings.TrimRight(result, ", ")
 }
 
-// Guessed says whether the type definition is guessed (based on the
-// variable name) or explicitly defined (see vardefs.go).
-type Guessed bool
-
-const (
-	guNotGuessed Guessed = false
-	guGuessed    Guessed = true
-)
-
-// The allowed actions in this file, or "?" if unknown.
 func (vt *Vartype) EffectivePermissions(fname string) AclPermissions {
 	for _, aclEntry := range vt.aclEntries {
 		if m, _ := path.Match(aclEntry.glob, path.Base(fname)); m {
