@@ -41,8 +41,8 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatch(c *check.C) {
 	s.UseCommandLine(c, "-Wall", "-Call")
 	G.globalData.InitVartypes()
 	G.Pkg = NewPackage("x11/hs-X11")
-	G.Pkg.effectivePkgbase = "X11"
-	G.Pkg.effectivePkgnameLine = NewMkLine(NewLine("Makefile", 3, "DISTNAME=\tX11-1.0", nil))
+	G.Pkg.EffectivePkgbase = "X11"
+	G.Pkg.EffectivePkgnameLine = NewMkLine(NewLine("Makefile", 3, "DISTNAME=\tX11-1.0", nil))
 	mklines := s.NewMkLines("buildlink3.mk",
 		"# $"+"NetBSD$",
 		"",

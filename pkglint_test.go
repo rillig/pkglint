@@ -12,7 +12,7 @@ func (s *Suite) TestDetermineUsedVariables_simple(c *check.C) {
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
 
-	mklines.determineUsedVariables()
+	mklines.DetermineUsedVariables()
 
 	c.Check(len(mklines.varuse), equals, 1)
 	c.Check(mklines.varuse["VAR"], equals, mkline)
@@ -24,7 +24,7 @@ func (s *Suite) TestDetermineUsedVariables_nested(c *check.C) {
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
 
-	mklines.determineUsedVariables()
+	mklines.DetermineUsedVariables()
 
 	c.Check(len(mklines.varuse), equals, 3)
 	c.Check(mklines.varuse["inner"], equals, mkline)

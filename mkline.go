@@ -490,7 +490,7 @@ func (mkline *MkLine) CheckVarassign() {
 	}
 
 	if varname == "PERL5_PACKLIST" && G.Pkg != nil {
-		if m, p5pkgname := match1(G.Pkg.effectivePkgbase, `^p5-(.*)`); m {
+		if m, p5pkgname := match1(G.Pkg.EffectivePkgbase, `^p5-(.*)`); m {
 			guess := "auto/" + strings.Replace(p5pkgname, "-", "/", -1) + "/.packlist"
 
 			ucvalue, ucguess := strings.ToUpper(value), strings.ToUpper(guess)
@@ -563,7 +563,7 @@ func (mkline *MkLine) CheckVarassign() {
 }
 
 func (mkline *MkLine) CheckVarassignBsdPrefs() {
-	if G.opts.WarnExtra && mkline.Op() == "?=" && G.Pkg != nil && !G.Pkg.seenBsdPrefsMk {
+	if G.opts.WarnExtra && mkline.Op() == "?=" && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
 		switch mkline.Varcanon() {
 		case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
 			return

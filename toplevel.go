@@ -28,7 +28,7 @@ func checkdirToplevel() {
 		}
 	}
 
-	NewMkLines(lines).check()
+	NewMkLines(lines).Check()
 
 	if G.opts.Recursive {
 		if G.opts.CheckGlobal {

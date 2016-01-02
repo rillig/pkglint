@@ -42,17 +42,17 @@ func NewMkLines(lines []*Line) *MkLines {
 		tools}
 }
 
-func (mklines *MkLines) indentDepth() int {
+func (mklines *MkLines) IndentDepth() int {
 	return mklines.indentation[len(mklines.indentation)-1]
 }
-func (mklines *MkLines) popIndent() {
+func (mklines *MkLines) PopIndent() {
 	mklines.indentation = mklines.indentation[:len(mklines.indentation)-1]
 }
-func (mklines *MkLines) pushIndent(indent int) {
+func (mklines *MkLines) PushIndent(indent int) {
 	mklines.indentation = append(mklines.indentation, indent)
 }
 
-func (mklines *MkLines) defineVar(mkline *MkLine, varname string) {
+func (mklines *MkLines) DefineVar(mkline *MkLine, varname string) {
 	if mklines.vardef[varname] == nil {
 		mklines.vardef[varname] = mkline
 	}
@@ -62,7 +62,7 @@ func (mklines *MkLines) defineVar(mkline *MkLine, varname string) {
 	}
 }
 
-func (mklines *MkLines) useVar(mkline *MkLine, varname string) {
+func (mklines *MkLines) UseVar(mkline *MkLine, varname string) {
 	varcanon := varnameCanon(varname)
 	mklines.varuse[varname] = mkline
 	mklines.varuse[varcanon] = mkline
@@ -72,14 +72,14 @@ func (mklines *MkLines) useVar(mkline *MkLine, varname string) {
 	}
 }
 
-func (mklines *MkLines) varValue(varname string) (value string, found bool) {
+func (mklines *MkLines) VarValue(varname string) (value string, found bool) {
 	if mkline := mklines.vardef[varname]; mkline != nil {
 		return mkline.Value(), true
 	}
 	return "", false
 }
 
-func (mklines *MkLines) check() {
+func (mklines *MkLines) Check() {
 	if G.opts.DebugTrace {
 		defer tracecall1("MkLines.check", mklines.lines[0].Fname)()
 	}
@@ -90,7 +90,7 @@ func (mklines *MkLines) check() {
 	G.Mk = mklines
 	defer func() { G.Mk = nil }()
 
-	mklines.determineUsedVariables()
+	mklines.DetermineUsedVariables()
 
 	prefixes := splitOnSpace("pre do post")
 	actions := splitOnSpace("fetch extract patch tools wrapper configure build test install package clean")
@@ -143,7 +143,7 @@ func (mklines *MkLines) check() {
 	checklinesTrailingEmptyLines(mklines.lines)
 
 	if len(mklines.indentation) != 1 {
-		lastMkline.Line.Errorf("Directive indentation is not 0, but %d.", mklines.indentDepth())
+		lastMkline.Line.Errorf("Directive indentation is not 0, but %d.", mklines.IndentDepth())
 	}
 
 	SaveAutofixChanges(mklines.lines)
@@ -171,7 +171,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 				if G.opts.DebugMisc {
 					mkline.Debug1("PLIST.%s is added to PLIST_VARS.", id)
 				}
-				mklines.useVar(mkline, "PLIST."+id)
+				mklines.UseVar(mkline, "PLIST."+id)
 			}
 
 		case "USE_TOOLS":
@@ -185,7 +185,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 
 		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(mkline.Value()) {
-				mklines.useVar(mkline, varnameCanon(svar))
+				mklines.UseVar(mkline, varnameCanon(svar))
 				if G.opts.DebugMisc {
 					mkline.Debug1("varuse %s", svar)
 				}
@@ -193,18 +193,18 @@ func (mklines *MkLines) determineDefinedVariables() {
 
 		case "OPSYSVARS":
 			for _, osvar := range splitOnSpace(mkline.Value()) {
-				mklines.useVar(mkline, osvar+".*")
+				mklines.UseVar(mkline, osvar+".*")
 				defineVar(mkline, osvar)
 			}
 		}
 	}
 }
 
-func (mklines *MkLines) determineUsedVariables() {
+func (mklines *MkLines) DetermineUsedVariables() {
 	for _, mkline := range mklines.mklines {
 		varnames := mkline.determineUsedVariables()
 		for _, varname := range varnames {
-			mklines.useVar(mkline, varname)
+			mklines.UseVar(mkline, varname)
 		}
 	}
 }
@@ -215,24 +215,24 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 	switch directive {
 	case "endif", "endfor", "elif", "else":
 		if len(mklines.indentation) > 1 {
-			mklines.popIndent()
+			mklines.PopIndent()
 		} else {
 			mkline.Error1("Unmatched .%s.", directive)
 		}
 	}
 
 	// Check the indentation
-	if expected := strings.Repeat(" ", mklines.indentDepth()); indent != expected {
+	if expected := strings.Repeat(" ", mklines.IndentDepth()); indent != expected {
 		if G.opts.WarnSpace && !mkline.Line.AutofixReplace("."+indent, "."+expected) {
-			mkline.Line.Notef("This directive should be indented by %d spaces.", mklines.indentDepth())
+			mkline.Line.Notef("This directive should be indented by %d spaces.", mklines.IndentDepth())
 		}
 	}
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
-		mklines.pushIndent(mklines.indentDepth())
+		mklines.PushIndent(mklines.IndentDepth())
 
 	} else if matches(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
-		mklines.pushIndent(mklines.indentDepth() + 2)
+		mklines.PushIndent(mklines.IndentDepth() + 2)
 	}
 
 	reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
@@ -357,11 +357,11 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 			mkline.Note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.Pkg != nil {
-			G.Pkg.seenBsdPrefsMk = true
+			G.Pkg.SeenBsdPrefsMk = true
 		}
 	} else if includefile == "../../mk/bsd.fast.prefs.mk" {
 		if G.Pkg != nil {
-			G.Pkg.seenBsdPrefsMk = true
+			G.Pkg.SeenBsdPrefsMk = true
 		}
 	}
 

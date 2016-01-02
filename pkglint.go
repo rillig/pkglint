@@ -40,7 +40,7 @@ func resolveVariableRefs(text string) string {
 					}
 				}
 				if G.Mk != nil {
-					if value, ok := G.Mk.varValue(varname); ok {
+					if value, ok := G.Mk.VarValue(varname); ok {
 						return value
 					}
 				}
@@ -157,7 +157,7 @@ func checkfileMk(fname string) {
 		return
 	}
 
-	NewMkLines(lines).check()
+	NewMkLines(lines).Check()
 	SaveAutofixChanges(lines)
 }
 
@@ -473,8 +473,8 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", "suse100", -1)
 	tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", "../../lang/python27", -1)
 	if G.Pkg != nil {
-		tmp = strings.Replace(tmp, "${FILESDIR}", G.Pkg.filesdir, -1)
-		tmp = strings.Replace(tmp, "${PKGDIR}", G.Pkg.pkgdir, -1)
+		tmp = strings.Replace(tmp, "${FILESDIR}", G.Pkg.Filesdir, -1)
+		tmp = strings.Replace(tmp, "${PKGDIR}", G.Pkg.Pkgdir, -1)
 	}
 
 	if adjustDepth {

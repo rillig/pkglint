@@ -17,8 +17,8 @@ func ChecklinesDistinfo(lines []*Line) {
 	var patchesDir = "patches"
 	if G.Pkg != nil && hasSuffix(fname, "/lang/php55/distinfo") {
 		patchesDir = G.CurPkgsrcdir + "/lang/php55/patches"
-	} else if G.Pkg != nil && dirExists(G.CurrentDir+"/"+G.Pkg.patchdir) {
-		patchesDir = G.Pkg.patchdir
+	} else if G.Pkg != nil && dirExists(G.CurrentDir+"/"+G.Pkg.Patchdir) {
+		patchesDir = G.Pkg.Patchdir
 	}
 	if G.opts.DebugMisc {
 		Debugf(fname, noLines, "patchesDir=%q", patchesDir)

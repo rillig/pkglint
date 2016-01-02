@@ -242,7 +242,7 @@ func (ck *PlistChecker) checkpathInfo(pline *PlistLine, dirname, basename string
 
 func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string) {
 	switch {
-	case G.Pkg != nil && G.Pkg.effectivePkgbase != "" && hasPrefix(pline.text, "lib/"+G.Pkg.effectivePkgbase+"/"):
+	case G.Pkg != nil && G.Pkg.EffectivePkgbase != "" && hasPrefix(pline.text, "lib/"+G.Pkg.EffectivePkgbase+"/"):
 		return
 
 	case hasPrefix(pline.text, "lib/locale/"):
@@ -333,13 +333,13 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
 		}
 
-	case hasPrefix(text, "share/icons/hicolor/") && G.Pkg != nil && G.Pkg.pkgpath != "graphics/hicolor-icon-theme":
+	case hasPrefix(text, "share/icons/hicolor/") && G.Pkg != nil && G.Pkg.Pkgpath != "graphics/hicolor-icon-theme":
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
 		if G.Pkg.included[f] == nil {
 			line.Error1("Packages that install hicolor icons must include %q in the Makefile.", f)
 		}
 
-	case hasPrefix(text, "share/icons/gnome") && G.Pkg != nil && G.Pkg.pkgpath != "graphics/gnome-icon-theme":
+	case hasPrefix(text, "share/icons/gnome") && G.Pkg != nil && G.Pkg.Pkgpath != "graphics/gnome-icon-theme":
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
 		if G.Pkg.included[f] == nil {
 			line.Error1("The package Makefile must include %q.", f)
@@ -352,11 +352,11 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 			line.Warn0("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 		}
 
-	case G.Pkg != nil && G.Pkg.effectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.Pkg.effectivePkgbase+"/") ||
-		hasPrefix(text, "share/examples/"+G.Pkg.effectivePkgbase+"/")):
+	case G.Pkg != nil && G.Pkg.EffectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.Pkg.EffectivePkgbase+"/") ||
+		hasPrefix(text, "share/examples/"+G.Pkg.EffectivePkgbase+"/")):
 		// Fine.
 
-	case text == "share/icons/hicolor/icon-theme.cache" && G.Pkg != nil && G.Pkg.pkgpath != "graphics/hicolor-icon-theme":
+	case text == "share/icons/hicolor/icon-theme.cache" && G.Pkg != nil && G.Pkg.Pkgpath != "graphics/hicolor-icon-theme":
 		line.Error0("This file must not appear in any PLIST file.")
 		Explain3(
 			"Remove this line and add the following line to the package Makefile.",

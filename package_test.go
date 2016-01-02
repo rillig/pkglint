@@ -114,7 +114,7 @@ func (s *Suite) TestPackage_DetermineEffectivePkgVars_Precedence(c *check.C) {
 
 	pkg.determineEffectivePkgVars()
 
-	c.Check(pkg.effectivePkgbase, equals, "pkgname")
-	c.Check(pkg.effectivePkgname, equals, "pkgname-1.0nb13")
-	c.Check(pkg.effectivePkgversion, equals, "1.0")
+	c.Check(pkg.EffectivePkgbase, equals, "pkgname")
+	c.Check(pkg.EffectivePkgname, equals, "pkgname-1.0nb13")
+	c.Check(pkg.EffectivePkgversion, equals, "1.0")
 }

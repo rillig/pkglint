@@ -10,7 +10,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		defer tracecall1("checklinesBuildlink3Mk", mklines.lines[0].Fname)()
 	}
 
-	mklines.check()
+	mklines.Check()
 
 	exp := NewExpecter(mklines.lines)
 
@@ -62,9 +62,9 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		pkgbaseLine.Error1("... and package name %q.", pkgbase)
 	}
 	if G.Pkg != nil {
-		if mkbase := G.Pkg.effectivePkgbase; mkbase != "" && mkbase != pkgbase {
+		if mkbase := G.Pkg.EffectivePkgbase; mkbase != "" && mkbase != pkgbase {
 			pkgbaseLine.Error1("Package name mismatch between %q in this file ...", pkgbase)
-			G.Pkg.effectivePkgnameLine.Line.Error1("... and %q from the package Makefile.", mkbase)
+			G.Pkg.EffectivePkgnameLine.Line.Error1("... and %q from the package Makefile.", mkbase)
 		}
 	}
 
