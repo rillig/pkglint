@@ -297,20 +297,24 @@ func (s *Suite) TestMkLine_WarnVaruseLocalbase(c *check.C) {
 }
 
 func (s *Suite) TestMkLine_Misc(c *check.C) {
+	s.UseCommandLine(c, "-Wextra")
 	G.globalData.InitVartypes()
-	mklines := s.NewMkLines("options.mk",
+	G.Pkg = NewPackage("category/pkgbase")
+	G.Mk = s.NewMkLines("options.mk",
 		"# $"+"NetBSD$",
 		".for word in ${PKG_FAIL_REASON}",
 		"PYTHON_VERSIONS_ACCEPTED=\t27 35 30",
 		"CONFIGURE_ARGS+=\t--sharedir=${PREFIX}/share/kde",
 		"COMMENT=\t# defined",
-		".endfor")
+		".endfor",
+		"GAMES_USER?=pkggames")
 
-	mklines.Check()
+	G.Mk.Check()
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: options.mk:2: The variable PKG_FAIL_REASON should not be used in .for loops.\n"+
 		"WARN: options.mk:3: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.\n"+
 		"NOTE: options.mk:4: Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.\n"+
-		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".\n")
+		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".\n"+
+		"WARN: options.mk:7: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".\n")
 }
