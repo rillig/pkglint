@@ -139,7 +139,7 @@ func (cv *VartypeCheck) Dependency() {
 			"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
 	}
 
-	if nocclasses := regcomp(`\[[\d-]+\]`).ReplaceAllString(wildcard, ""); strings.Contains(nocclasses, "-") {
+	if nocclasses := regcomp(`\[[\d-]+\]`).ReplaceAllString(wildcard, ""); contains(nocclasses, "-") {
 		line.Warn1("The version pattern %q should not contain a hyphen.", wildcard)
 		Explain(
 			"Pkgsrc interprets package names with version numbers like this:",
@@ -247,7 +247,7 @@ func (cv *VartypeCheck) FetchURL() {
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
 	switch {
-	case strings.Contains(cv.valueNovar, "/"):
+	case contains(cv.valueNovar, "/"):
 		cv.line.Warn0("A filename should not contain a slash.")
 	case !matches(cv.valueNovar, `^[-0-9@A-Za-z.,_~+%]*$`):
 		cv.line.Warn1("%q is not a valid filename.", cv.value)
@@ -375,13 +375,13 @@ func (cv *VartypeCheck) Option() {
 
 // The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
-	if !strings.Contains(cv.value, ":") && cv.guessed == guGuessed {
+	if !contains(cv.value, ":") && cv.guessed == guGuessed {
 		cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarPathname, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 		return
 	}
 
 	for _, path := range strings.Split(cv.value, ":") {
-		if strings.Contains(path, "${") {
+		if contains(path, "${") {
 			continue
 		}
 
@@ -532,7 +532,7 @@ func (cv *VartypeCheck) SedCommands() {
 
 	words, rest := splitIntoShellTokens(line, cv.value)
 	if rest != "" {
-		if strings.Contains(cv.value, "#") {
+		if contains(cv.value, "#") {
 			line.Error0("Invalid shell words in sed commands.")
 			Explain4(
 				"When sed commands have embedded \"#\" characters, they need to be",

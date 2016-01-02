@@ -90,7 +90,7 @@ func ChecklinesDescr(lines []*Line) {
 		line.CheckLength(80)
 		line.CheckTrailingWhitespace()
 		line.CheckValidCharacters(`[\t -~]`)
-		if strings.Contains(line.Text, "${") {
+		if contains(line.Text, "${") {
 			line.Note0("Variables are not expanded in the DESCR file.")
 		}
 	}

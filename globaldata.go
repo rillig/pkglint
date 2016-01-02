@@ -119,7 +119,7 @@ func (gd *GlobalData) loadTools() {
 		lines := LoadExistingLines(fname, true)
 		for _, line := range lines {
 			if m, _, includefile := match2(line.Text, reMkInclude); m {
-				if !strings.Contains(includefile, "/") {
+				if !contains(includefile, "/") {
 					toolFiles = append(toolFiles, includefile)
 				}
 			}

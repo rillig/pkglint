@@ -153,7 +153,7 @@ func (vc *VarChecker) IsEnum() bool {
 	return hasPrefix(vc.name, "enum: ")
 }
 func (vc *VarChecker) HasEnum(value string) bool {
-	return !strings.Contains(value, " ") && strings.Contains(vc.name, " "+value+" ")
+	return !contains(value, " ") && contains(vc.name, " "+value+" ")
 }
 func (vc *VarChecker) AllowedEnums() string {
 	return vc.name[6 : len(vc.name)-1]

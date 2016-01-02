@@ -774,7 +774,7 @@ func (mkline *MkLine) CheckText(text string) {
 		mkline.Line.CheckRcsid(`# `, "# ")
 	}
 
-	if strings.Contains(text, "${WRKSRC}/../") {
+	if contains(text, "${WRKSRC}/../") {
 		mkline.Warn0("Using \"${WRKSRC}/..\" is conceptually wrong. Please use a combination of WRKSRC, CONFIGURE_DIRS and BUILD_DIRS instead.")
 		Explain2(
 			"You should define WRKSRC such that all of CONFIGURE_DIRS, BUILD_DIRS",
@@ -872,7 +872,7 @@ func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
 }
 
 func (mkline *MkLine) CheckRelativePath(path string, mustExist bool) {
-	if !G.Wip && strings.Contains(path, "/wip/") {
+	if !G.Wip && contains(path, "/wip/") {
 		mkline.Line.Error0("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 

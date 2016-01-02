@@ -15,6 +15,7 @@ import (
 )
 
 // Short names for commonly used functions.
+func contains(s, substr string) bool  { return strings.Contains(s, substr) }
 func hasPrefix(s, prefix string) bool { return strings.HasPrefix(s, prefix) }
 func hasSuffix(s, suffix string) bool { return strings.HasSuffix(s, suffix) }
 
@@ -448,10 +449,10 @@ func cleanpath(fname string) string {
 	for len(tmp) > 2 && hasPrefix(tmp, "./") {
 		tmp = tmp[2:]
 	}
-	for strings.Contains(tmp, "/./") {
+	for contains(tmp, "/./") {
 		tmp = strings.Replace(tmp, "/./", "/", -1)
 	}
-	for strings.Contains(tmp, "//") {
+	for contains(tmp, "//") {
 		tmp = strings.Replace(tmp, "//", "/", -1)
 	}
 	tmp = reReplaceRepeatedly(tmp, `/[^.][^/]*/[^.][^/]*/\.\./\.\./`, "/")
@@ -460,7 +461,7 @@ func cleanpath(fname string) string {
 }
 
 func containsVarRef(s string) bool {
-	return strings.Contains(s, "${")
+	return contains(s, "${")
 }
 
 func reReplaceRepeatedly(from string, re string, to string) string {

@@ -149,8 +149,8 @@ func checkdirPackage(pkgpath string) {
 	for _, fname := range files {
 		if (hasPrefix(path.Base(fname), "Makefile.") || hasSuffix(fname, ".mk")) &&
 			!matches(fname, `patch-`) &&
-			!strings.Contains(fname, pkg.Pkgdir+"/") &&
-			!strings.Contains(fname, pkg.Filesdir+"/") {
+			!contains(fname, pkg.Pkgdir+"/") &&
+			!contains(fname, pkg.Filesdir+"/") {
 			if lines, err := readLines(fname, true); err == nil && lines != nil {
 				NewMkLines(lines).DetermineUsedVariables()
 			}
@@ -165,7 +165,7 @@ func checkdirPackage(pkgpath string) {
 		} else {
 			Checkfile(fname)
 		}
-		if strings.Contains(fname, "/patches/patch-") {
+		if contains(fname, "/patches/patch-") {
 			havePatches = true
 		} else if hasSuffix(fname, "/distinfo") {
 			haveDistinfo = true
@@ -254,7 +254,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 			inc := mkline.Includefile()
 			includeFile = resolveVariableRefs(resolveVarsInRelativePath(inc, true))
 			if containsVarRef(includeFile) {
-				if !strings.Contains(fname, "/mk/") {
+				if !contains(fname, "/mk/") {
 					line.Note1("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
 				includeFile = ""
@@ -288,7 +288,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				G.Pkg.seenMakefileCommon = true
 			}
 
-			if !strings.Contains(incDir, "/mk/") || strings.HasSuffix(includeFile, "/mk/haskell.mk") {
+			if !contains(incDir, "/mk/") || strings.HasSuffix(includeFile, "/mk/haskell.mk") {
 				dirname, _ := path.Split(fname)
 				dirname = cleanpath(dirname)
 

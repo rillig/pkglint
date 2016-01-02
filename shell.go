@@ -145,7 +145,7 @@ func (shline *ShellLine) CheckShellword(shellword string, checkQuoting bool) {
 	if matches(shellword, `\$\{PREFIX\}/man(?:$|/)`) {
 		line.Warn0("Please use ${PKGMANDIR} instead of \"man\".")
 	}
-	if strings.Contains(shellword, "etc/rc.d") {
+	if contains(shellword, "etc/rc.d") {
 		line.Warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
@@ -402,14 +402,14 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 	line := shline.line
 
-	if strings.Contains(shelltext, "${SED}") && strings.Contains(shelltext, "${MV}") {
+	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
 		line.Note0("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		Explain(
 			"Using the SUBST framework is simpler to understand, since you only have",
 			"to tell it what to change, when to change it and in which files.",
 			"",
 			"Run \"bmake help topic=subst\" for more information.")
-		if strings.Contains(shelltext, "#") {
+		if contains(shelltext, "#") {
 			Explain(
 				"When migrating to the SUBST framework, pay attention to \"#\"",
 				"characters. In shell commands, make(1) does not interpret them as",
@@ -468,7 +468,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 		st.checkPipeExitcode()
 		st.checkSetE(*pSetE)
 
-		if state == scstSet && hasPrefix(shellword, "-") && strings.Contains(shellword, "e") || state == scstStart && shellword == "${RUN}" {
+		if state == scstSet && hasPrefix(shellword, "-") && contains(shellword, "e") || state == scstStart && shellword == "${RUN}" {
 			*pSetE = true
 		}
 
@@ -494,7 +494,7 @@ func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool)
 	}
 
 	switch {
-	case !strings.Contains(hidden, "@"):
+	case !contains(hidden, "@"):
 		// Nothing is hidden at all.
 
 	case hasPrefix(G.Mk.target, "show-") || hasSuffix(G.Mk.target, "-message"):
@@ -528,7 +528,7 @@ func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool)
 		}
 	}
 
-	if strings.Contains(hidden, "-") {
+	if contains(hidden, "-") {
 		shline.line.Warn0("Using a leading \"-\" to suppress errors is deprecated.")
 		Explain2(
 			"If you really want to ignore any errors from this command, append",
@@ -649,7 +649,7 @@ func (ctx *ShelltextContext) handleComment() bool {
 		return false
 	}
 
-	semicolon := strings.Contains(shellword, ";")
+	semicolon := contains(shellword, ";")
 	multiline := ctx.shline.line.IsMultiline()
 
 	if semicolon {

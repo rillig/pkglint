@@ -135,7 +135,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 
 	ck.checkSorted(pline)
 
-	if strings.Contains(basename, "${IMAKE_MANNEWSUFFIX}") {
+	if contains(basename, "${IMAKE_MANNEWSUFFIX}") {
 		pline.warnImakeMannewsuffix()
 	}
 
@@ -163,11 +163,11 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 		ck.checkpathShare(pline)
 	}
 
-	if strings.Contains(text, "${PKGLOCALEDIR}") && G.Pkg != nil && G.Pkg.vardef["USE_PKGLOCALEDIR"] == nil {
+	if contains(text, "${PKGLOCALEDIR}") && G.Pkg != nil && G.Pkg.vardef["USE_PKGLOCALEDIR"] == nil {
 		line.Warn0("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
 	}
 
-	if strings.Contains(text, "/CVS/") {
+	if contains(text, "/CVS/") {
 		line.Warn0("CVS files should not be in the PLIST.")
 	}
 	if hasSuffix(text, ".orig") {
@@ -201,7 +201,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string) {
-	if strings.Contains(dirname, "/") {
+	if contains(dirname, "/") {
 		pline.line.Warn0("The bin/ directory should not have subdirectories.")
 		return
 	}
@@ -262,7 +262,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 		}
 	}
 
-	if strings.Contains(basename, ".a") || strings.Contains(basename, ".so") {
+	if contains(basename, ".a") || contains(basename, ".so") {
 		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
 			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
 				pline.line.Warn1("Redundant library found. The libtool library is in %s.", laLine.line.ReferenceFrom(pline.line))
@@ -389,7 +389,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 
 	if cmd == "unexec" {
 		if m, arg := match1(arg, `^(?:rmdir|\$\{RMDIR\} \%D/)(.*)`); m {
-			if !strings.Contains(arg, "true") && !strings.Contains(arg, "${TRUE}") {
+			if !contains(arg, "true") && !contains(arg, "${TRUE}") {
 				pline.line.Warn0("Please remove this line. It is no longer necessary.")
 			}
 		}
@@ -398,10 +398,10 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 	switch cmd {
 	case "exec", "unexec":
 		switch {
-		case strings.Contains(arg, "install-info"),
-			strings.Contains(arg, "${INSTALL_INFO}"):
+		case contains(arg, "install-info"),
+			contains(arg, "${INSTALL_INFO}"):
 			line.Warn0("@exec/unexec install-info is deprecated.")
-		case strings.Contains(arg, "ldconfig") && !strings.Contains(arg, "/usr/bin/true"):
+		case contains(arg, "ldconfig") && !contains(arg, "/usr/bin/true"):
 			pline.line.Error0("ldconfig must be used with \"||/usr/bin/true\".")
 		}
 
@@ -459,7 +459,7 @@ func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 	s := &plistLineSorter{first: plines[0], after: make(map[*PlistLine][]*Line)}
 	prev := plines[0]
 	for _, pline := range plines[1:] {
-		if hasPrefix(pline.text, "@") || strings.Contains(pline.text, "$") {
+		if hasPrefix(pline.text, "@") || contains(pline.text, "$") {
 			s.after[prev] = append(s.after[prev], pline.line)
 		} else {
 			s.plines = append(s.plines, pline)
