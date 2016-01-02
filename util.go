@@ -15,10 +15,8 @@ import (
 )
 
 // Short names for commonly used functions.
-var (
-	hasPrefix = strings.HasPrefix
-	hasSuffix = strings.HasSuffix
-)
+func hasPrefix(s, prefix string) bool { return strings.HasPrefix(s, prefix) }
+func hasSuffix(s, suffix string) bool { return strings.HasSuffix(s, suffix) }
 
 func ifelseStr(cond bool, a, b string) string {
 	if cond {
