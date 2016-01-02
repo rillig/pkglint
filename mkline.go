@@ -12,14 +12,14 @@ import (
 type MkLine struct {
 	Line *Line
 
-	xtype uint8
-	xb1   bool
-	xop   MkOperator
-	xs1   string
-	xs2   string
-	xs3   string
-	xs5   string
-	xs6   string
+	xtype      uint8
+	xmustexist bool
+	xop        MkOperator
+	xs1        string
+	xs2        string
+	xs3        string
+	xvalue     string
+	xcomment   string
 }
 
 func (mkline *MkLine) Error1(format, arg1 string)       { mkline.Line.Error1(format, arg1) }
@@ -53,8 +53,8 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xs2 = varnameCanon(varname)
 		mkline.xs3 = varparam
 		mkline.xop = NewMkOperator(op)
-		mkline.xs5 = value
-		mkline.xs6 = comment
+		mkline.xvalue = value
+		mkline.xcomment = comment
 		return
 	}
 
@@ -66,7 +66,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 	if index := strings.IndexByte(text, '#'); index != -1 && strings.TrimSpace(text[:index]) == "" {
 		mkline.xtype = 3
-		mkline.xs6 = text[index+1:]
+		mkline.xcomment = text[index+1:]
 		return
 	}
 
@@ -85,14 +85,14 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 	if m, directive, includefile := match2(text, reMkInclude); m {
 		mkline.xtype = 6
-		mkline.xb1 = directive == "include"
+		mkline.xmustexist = directive == "include"
 		mkline.xs1 = includefile
 		return
 	}
 
 	if m, directive, includefile := match2(text, `^\.\s*(s?include)\s+<([^>]+)>\s*(?:#.*)?$`); m {
 		mkline.xtype = 7
-		mkline.xb1 = directive == "include"
+		mkline.xmustexist = directive == "include"
 		mkline.xs1 = includefile
 		return
 	}
@@ -120,8 +120,8 @@ func (mkline *MkLine) Varname() string     { return mkline.xs1 }
 func (mkline *MkLine) Varcanon() string    { return mkline.xs2 }
 func (mkline *MkLine) Varparam() string    { return mkline.xs3 }
 func (mkline *MkLine) Op() MkOperator      { return mkline.xop }
-func (mkline *MkLine) Value() string       { return mkline.xs5 }
-func (mkline *MkLine) Comment() string     { return mkline.xs6 }
+func (mkline *MkLine) Value() string       { return mkline.xvalue }
+func (mkline *MkLine) Comment() string     { return mkline.xcomment }
 func (mkline *MkLine) IsShellcmd() bool    { return mkline.xtype == 2 }
 func (mkline *MkLine) Shellcmd() string    { return mkline.xs1 }
 func (mkline *MkLine) IsComment() bool     { return mkline.xtype == 3 }
@@ -131,7 +131,7 @@ func (mkline *MkLine) Indent() string      { return mkline.xs1 }
 func (mkline *MkLine) Directive() string   { return mkline.xs2 }
 func (mkline *MkLine) Args() string        { return mkline.xs3 }
 func (mkline *MkLine) IsInclude() bool     { return mkline.xtype == 6 }
-func (mkline *MkLine) MustExist() bool     { return mkline.xb1 }
+func (mkline *MkLine) MustExist() bool     { return mkline.xmustexist }
 func (mkline *MkLine) Includefile() string { return mkline.xs1 }
 func (mkline *MkLine) IsSysinclude() bool  { return mkline.xtype == 7 }
 func (mkline *MkLine) IsDependency() bool  { return mkline.xtype == 8 }
