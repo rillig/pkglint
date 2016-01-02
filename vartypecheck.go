@@ -94,9 +94,16 @@ func (cv *VartypeCheck) CFlag() {
 	line, value := cv.line, cv.value
 
 	if hasPrefix(value, "-") {
-		if !matches(value, `^-[DILOUWfgm]`) && !hasPrefix(value, "-std=") && value != "-c99" {
-			line.Warn1("Unknown compiler flag %q.", value)
+		switch {
+		case matches(value, `^-[DILOUWfgm]`),
+			hasPrefix(value, "-std="),
+			value == "-c99",
+			value == "-c",
+			value == "-no-integrated-as":
+			return
 		}
+		line.Warn1("Unknown compiler flag %q.", value)
+
 	} else {
 		if !containsVarRef(value) && !(hasPrefix(value, "`") && hasSuffix(value, "`")) {
 			line.Warn1("Compiler flag %q should start with a hyphen.", value)
@@ -335,7 +342,7 @@ func (cv *VartypeCheck) LdFlag() {
 	if ldflag := cv.value; hasPrefix(ldflag, "-") {
 		if m, rpathFlag := match1(ldflag, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
 			cv.line.Warn1("Please use \"${COMPILER_RPATH_FLAG}\" instead of %q.", rpathFlag)
-		} else if !hasPrefix(ldflag, "-L") && !hasPrefix(ldflag, "-l") && ldflag != "-static" {
+		} else if !hasPrefix(ldflag, "-L") && !hasPrefix(ldflag, "-l") && ldflag != "-static" && !hasPrefix(ldflag, "-static-") {
 			cv.line.Warn1("Unknown linker flag %q.", cv.value)
 		}
 	} else {

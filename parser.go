@@ -59,7 +59,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 	mark2 := repl.Mark()
 	if repl.AdvanceStr(">=") || repl.AdvanceStr(">") {
 		op := repl.s
-		if repl.AdvanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
+		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
 			dp.lowerOp = op
 			dp.lower = repl.m[0]
 		} else {
@@ -68,7 +68,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 	}
 	if repl.AdvanceStr("<=") || repl.AdvanceStr("<") {
 		op := repl.s
-		if repl.AdvanceRegexp(`^(?:\$\{\w+\}|\d[\w.]*)`) {
+		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
 			dp.upperOp = op
 			dp.upper = repl.m[0]
 		} else {
