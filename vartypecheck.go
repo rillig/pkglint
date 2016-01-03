@@ -266,13 +266,12 @@ func (cv *VartypeCheck) FetchURL() {
 	for siteURL, siteName := range G.globalData.MasterSiteUrls {
 		if hasPrefix(cv.value, siteURL) {
 			subdir := cv.value[len(siteURL):]
-			isGithub := hasPrefix(cv.value, "https://github.com/")
-			if isGithub {
+			if hasPrefix(cv.value, "https://github.com/") {
 				subdir = strings.SplitAfter(subdir, "/")[0]
-			}
-			cv.line.Warnf("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.value)
-			if isGithub {
-				cv.line.Warn1("Run \"%s help topic=github\" for further tips.", confMake)
+				cv.line.Warnf("Please use ${%s:=%s} instead of %q and run \"%s help topic=github\" for further tips.",
+					siteName, subdir, cv.value, confMake)
+			} else {
+				cv.line.Warnf("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.value)
 			}
 			return
 		}

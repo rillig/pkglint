@@ -180,8 +180,7 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 		"${MASTER_SITE_INVALID:=subdir/}")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Please use ${MASTER_SITE_GITHUB:=example/} instead of \"https://github.com/example/project/\".\n"+
-		"WARN: fname:1: Run \""+confMake+" help topic=github\" for further tips.\n"+
+		"WARN: fname:1: Please use ${MASTER_SITE_GITHUB:=example/} instead of \"https://github.com/example/project/\" and run \""+confMake+" help topic=github\" for further tips.\n"+
 		"WARN: fname:2: Please use ${MASTER_SITE_GNU:=bison} instead of \"http://ftp.gnu.org/pub/gnu/bison\".\n"+
 		"ERROR: fname:3: The subdirectory in MASTER_SITE_GNU must end with a slash.\n"+
 		"ERROR: fname:4: MASTER_SITE_INVALID does not exist.\n")
