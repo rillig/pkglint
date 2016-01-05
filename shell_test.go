@@ -131,6 +131,12 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"WARN: fname:1: WRKSRC may not be used in this file.\n"+
 		"WARN: fname:1: Unknown shell command \"[\".\n"+
 		"WARN: fname:1: Unknown shell command \"${TOOLS_PATH.msgfmt}\".\n")
+
+	shline.CheckShellCommandLine("@cp from to")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: The shell command \"cp\" should not be hidden.\n"+
+		"WARN: fname:1: Unknown shell command \"cp\".\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {

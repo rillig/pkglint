@@ -510,13 +510,13 @@ func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool)
 			default:
 				shline.line.Warn1("The shell command %q should not be hidden.", cmd)
 				Explain(
-					"Hidden shell commands do not appear on the terminal or in the log file",
-					"when they are executed. When they fail, the error message cannot be",
-					"assigned to the command, which is very difficult to debug.",
+					"Hidden shell commands do not appear on the terminal or in the log",
+					"file when they are executed.  When they fail, the error message",
+					"cannot be assigned to the command, which is very difficult to debug.",
 					"",
-					"It is better to insert ${RUN} at the beginning of the whole command line.",
-					"This will hide the command by default, but shows it when PKG_DEBUG_LEVEL",
-					"is set.")
+					"It is better to insert ${RUN} at the beginning of the whole command",
+					"line.  This will hide the command by default, but shows it when",
+					"PKG_DEBUG_LEVEL is set.")
 			}
 		}
 	}
