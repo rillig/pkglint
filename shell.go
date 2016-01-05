@@ -312,11 +312,11 @@ outer:
 				break
 			case repl.AdvanceRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
 				break
-			case repl.AdvanceRegexp(`^\$\$\{[0-9A-Za-z_]+\}`),
-				repl.AdvanceRegexp(`^\$\$(?:[0-9A-Z_a-z]+|[!#?@]|\$\$)`):
+			case repl.AdvanceRegexp(`^\$\$\{\w+[#%+\-:]*[^{}]*\}`),
+				repl.AdvanceRegexp(`^\$\$(?:\w+|[!#?@]|\$\$)`):
 				break
 			case repl.AdvanceStr("$$"):
-				line.Warn0("Unquoted $ or strange shell variable found.")
+				line.Warn0("Unescaped $ or strange shell variable found.")
 			default:
 				break outer
 			}

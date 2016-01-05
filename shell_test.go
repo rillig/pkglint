@@ -82,7 +82,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 
 	shline.CheckShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo $
 
-	c.Check(s.Output(), equals, "WARN: fname:1: Unquoted $ or strange shell variable found.\n")
+	c.Check(s.Output(), equals, "WARN: fname:1: Unescaped $ or strange shell variable found.\n")
 
 	shline.CheckShellCommandLine("echo \"\\n\"") // As seen by make(1); the shell sees: echo "\n"
 
@@ -118,6 +118,19 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"WARN: fname:1: Unknown shell command \"${MKDIR}\".\n"+
 		"WARN: fname:1: UNZIP_CMD is used but not defined. Spelling mistake?\n"+
 		"WARN: fname:1: Unquoted shell variable \"e\".\n")
+
+	// From x11/wxGTK28/Makefile
+	shline.CheckShellCommandLine("" +
+		"set -e; cd ${WRKSRC}/locale; " +
+		"for lang in *.po; do " +
+		"  [ \"$${lang}\" = \"wxstd.po\" ] && continue; " +
+		"  ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"; " +
+		"done")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: WRKSRC may not be used in this file.\n"+
+		"WARN: fname:1: Unknown shell command \"[\".\n"+
+		"WARN: fname:1: Unknown shell command \"${TOOLS_PATH.msgfmt}\".\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
