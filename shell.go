@@ -694,15 +694,16 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 		if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
 			line.Note1("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
 			Explain(
-				"Many packages include a list of all needed directories in their PLIST",
-				"file. In such a case, you can just set AUTO_MKDIRS=yes and be done.",
-				"The pkgsrc infrastructure will then create all directories in advance.",
+				"Many packages include a list of all needed directories in their",
+				"PLIST file.  In such a case, you can just set AUTO_MKDIRS=yes and",
+				"be done.  The pkgsrc infrastructure will then create all directories",
+				"in advance.",
 				"",
-				"To create directories that are not mentioned in the PLIST file, it is",
-				"easier to just list them in INSTALLATION_DIRS than to execute the",
-				"commands explicitly. That way, you don't have to think about which of",
-				"the many INSTALL_*_DIR macros is appropriate, since INSTALLATION_DIRS",
-				"takes care of that.")
+				"To create directories that are not mentioned in the PLIST file, it",
+				"is easier to just list them in INSTALLATION_DIRS than to execute the",
+				"commands explicitly.  That way, you don't have to think about which",
+				"of the many INSTALL_*_DIR variables is appropriate, since",
+				"INSTALLATION_DIRS takes care of that.")
 		}
 	}
 }

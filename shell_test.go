@@ -137,6 +137,10 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: The shell command \"cp\" should not be hidden.\n"+
 		"WARN: fname:1: Unknown shell command \"cp\".\n")
+	
+	shline.CheckShellCommandLine("${RUN} ${INSTALL_DATA_DIR} share/pkgbase ${PREFIX}/share/pkgbase")
+	
+	c.Check(s.Output(), equals, "NOTE: fname:1: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= share/pkgbase\" instead of this command.\n")
 }
 
 func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
