@@ -6,6 +6,7 @@ import (
 
 func (s *Suite) TestChecklinesPlist(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
+	G.Pkg = NewPackage("category/pkgbase")
 	lines := s.NewLines("PLIST",
 		"bin/i386/6c",
 		"bin/program",
@@ -20,6 +21,7 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"man/man1/imake.${IMAKE_MANNEWSUFFIX}",
 		"${PLIST.obsolete}@unexec rmdir /tmp",
 		"sbin/clockctl",
+		"share/icons/gnome/delete-icon",
 		"share/tzinfo",
 		"share/tzinfo")
 
@@ -40,7 +42,8 @@ func (s *Suite) TestChecklinesPlist(c *check.C) {
 		"WARN: PLIST:11: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.\n"+
 		"WARN: PLIST:12: Please remove this line. It is no longer necessary.\n"+
 		"WARN: PLIST:13: Manual page missing for sbin/clockctl.\n"+
-		"ERROR: PLIST:15: Duplicate filename \"share/tzinfo\", already appeared in line 14.\n")
+		"ERROR: PLIST:14: The package Makefile must include \"../../graphics/gnome-icon-theme/buildlink3.mk\".\n"+
+		"ERROR: PLIST:16: Duplicate filename \"share/tzinfo\", already appeared in line 15.\n")
 }
 
 func (s *Suite) TestChecklinesPlist_empty(c *check.C) {

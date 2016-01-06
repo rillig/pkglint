@@ -345,8 +345,9 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
 		if G.Pkg.included[f] == nil {
 			line.Error1("The package Makefile must include %q.", f)
-			Explain1(
-				"Packages that install GNOME icons must maintain the icon theme cache.")
+			Explain2(
+				"Packages that install GNOME icons must maintain the icon theme",
+				"cache.")
 		}
 
 	case hasPrefix(text, "share/doc/html/"):
