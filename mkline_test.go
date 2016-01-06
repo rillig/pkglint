@@ -322,3 +322,13 @@ func (s *Suite) TestMkLine_Misc(c *check.C) {
 		"WARN: options.mk:10: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".\n"+
 		"NOTE: options.mk:10: You can use \"../build\" instead of \"${WRKSRC}/../build\".\n")
 }
+
+func (s *Suite) TestMkLine_CheckRelativePkgdir(c *check.C) {
+	mkline := NewMkLine(NewLine("Makefile", 46, "# dummy", nil))
+
+	mkline.CheckRelativePkgdir("../pkgbase")
+
+	c.Check(s.Output(), equals, ""+
+		"ERROR: Makefile:46: \"../pkgbase\" does not exist.\n"+
+		"WARN: Makefile:46: \"../pkgbase\" is not a valid relative package directory.\n")
+}
