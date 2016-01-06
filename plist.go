@@ -438,7 +438,7 @@ func (pline *PlistLine) warnImakeMannewsuffix() {
 	pline.line.Warn0("IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.")
 	Explain(
 		"This is the result of a print-PLIST call that has not been edited",
-		"manually by the package maintainer. Please replace the",
+		"manually by the package maintainer.  Please replace the",
 		"IMAKE_MANNEWSUFFIX with:",
 		"",
 		"\tIMAKE_MAN_SUFFIX for programs,",
