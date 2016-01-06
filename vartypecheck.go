@@ -412,9 +412,9 @@ func (cv *VartypeCheck) Option() {
 			line.Warn1("Unknown option \"%s\".", optname)
 			Explain4(
 				"This option is not documented in the mk/defaults/options.description",
-				"file.  If this is not a typo, please think of a brief but precise",
-				"description and either update that file yourself or ask on the",
-				"tech-pkg@NetBSD.org mailing list.")
+				"file.  Please think of a brief but precise description and either",
+				"update that file yourself or suggest a description for this option",
+				"on the tech-pkg@NetBSD.org mailing list.")
 		}
 		return
 	}
