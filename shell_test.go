@@ -39,7 +39,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
-	shline := NewMkShellLine(G.Mk.mklines[0])
+	shline := NewShellLine(G.Mk.mklines[0])
 
 	shline.CheckShellCommandLine("@# Comment")
 
@@ -143,13 +143,13 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	c.Check(s.Output(), equals, "NOTE: fname:1: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= share/pkgbase\" instead of this command.\n")
 }
 
-func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
+func (s *Suite) TestShellLine_CheckShelltext_nofix(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterTool("echo", "ECHO", false)
 	G.Mk = s.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
-	shline := NewMkShellLine(G.Mk.mklines[0])
+	shline := NewShellLine(G.Mk.mklines[0])
 
 	c.Check(shline.line.raw[0].textnl, equals, "\techo ${PKGNAME:Q}\n")
 	c.Check(shline.line.raw[0].Lineno, equals, 1)
@@ -160,13 +160,13 @@ func (s *Suite) TestMkShellLine_CheckShelltext_nofix(c *check.C) {
 		"NOTE: Makefile:1: The :Q operator isn't necessary for ${PKGNAME} here.\n")
 }
 
-func (s *Suite) TestMkShellLine_CheckShelltext_showAutofix(c *check.C) {
+func (s *Suite) TestShellLine_CheckShelltext_showAutofix(c *check.C) {
 	s.UseCommandLine(c, "-Wall", "--show-autofix")
 	G.globalData.InitVartypes()
 	s.RegisterTool("echo", "ECHO", false)
 	G.Mk = s.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
-	shline := NewMkShellLine(G.Mk.mklines[0])
+	shline := NewShellLine(G.Mk.mklines[0])
 
 	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
@@ -175,13 +175,13 @@ func (s *Suite) TestMkShellLine_CheckShelltext_showAutofix(c *check.C) {
 		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
 }
 
-func (s *Suite) TestMkShellLine_CheckShelltext_autofix(c *check.C) {
+func (s *Suite) TestShellLine_CheckShelltext_autofix(c *check.C) {
 	s.UseCommandLine(c, "-Wall", "--autofix")
 	G.globalData.InitVartypes()
 	s.RegisterTool("echo", "ECHO", false)
 	G.Mk = s.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
-	shline := NewMkShellLine(G.Mk.mklines[0])
+	shline := NewShellLine(G.Mk.mklines[0])
 
 	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
@@ -189,12 +189,12 @@ func (s *Suite) TestMkShellLine_CheckShelltext_autofix(c *check.C) {
 		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".\n")
 }
 
-func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
+func (s *Suite) TestShellLine_CheckShelltext_InternalError1(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
-	shline := NewMkShellLine(G.Mk.mklines[0])
+	shline := NewShellLine(G.Mk.mklines[0])
 
 	// foobar="`echo \"foo   bar\"`"
 	shline.CheckShellCommandLine("foobar=\"`echo \\\"foo   bar\\\"`\"")
@@ -209,11 +209,11 @@ func (s *Suite) TestMkShellLine_CheckShelltext_InternalError1(c *check.C) {
 		"ERROR: fname:1: Internal pkglint error: ShellLine.CheckShellCommand state=continuation rest=\"\\\\\" shellcmd=\"echo \\\\foo   bar\\\\\"\n")
 }
 
-func (s *Suite) TestMkShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {
+func (s *Suite) TestShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
-	shline := NewMkShellLine(G.Mk.mklines[0])
+	shline := NewShellLine(G.Mk.mklines[0])
 	s.RegisterTool("pax", "PAX", false)
 	G.Mk.tools["pax"] = true
 
@@ -225,7 +225,7 @@ func (s *Suite) TestMkShellLine_CheckShelltext_DollarWithoutVariable(c *check.C)
 func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
-	shline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
+	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
 	c.Check(matches("${list}", `^`+reVarnameDirect+`$`), equals, false)
 
@@ -262,8 +262,8 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) TestMkShellLine_CheckToken_DollarWithoutVariable(c *check.C) {
-	shline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
+func (s *Suite) TestShellLine_CheckToken_DollarWithoutVariable(c *check.C) {
+	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
 	shline.CheckToken("/.*~$$//g", false) // Typical argument to pax(1).
 
@@ -281,15 +281,15 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 
-	NewMkShellLine(mkline).CheckShellCommandLine("echo \"hello, world\"")
+	NewShellLine(mkline).CheckShellCommandLine("echo \"hello, world\"")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:3: Please use \"${ECHO}\" instead of \"echo\".\n")
 }
 
-func (s *Suite) TestMkShellLine_checklineMkShelltext(c *check.C) {
+func (s *Suite) TestShellLine_checklineMkShelltext(c *check.C) {
 
-	shline := NewMkShellLine(NewMkLine(NewLine("Makefile", 3, "# dummy", nil)))
+	shline := NewShellLine(NewMkLine(NewLine("Makefile", 3, "# dummy", nil)))
 
 	shline.CheckShellCommandLine("for f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done")
 
@@ -304,12 +304,12 @@ func (s *Suite) TestMkShellLine_checklineMkShelltext(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.\n")
 }
 
-func (s *Suite) TestMkShellLine_checkCommandUse(c *check.C) {
+func (s *Suite) TestShellLine_checkCommandUse(c *check.C) {
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
 	G.Mk.target = "do-install"
 
-	shline := NewMkShellLine(NewMkLine(NewLine("fname", 1, "\tdummy", nil)))
+	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "\tdummy", nil)))
 
 	shline.checkCommandUse("sed")
 

@@ -582,7 +582,7 @@ func (cv *VartypeCheck) SedCommand() {
 func (cv *VartypeCheck) SedCommands() {
 	line := cv.line
 	mkline := cv.mkline
-	shline := NewMkShellLine(mkline)
+	shline := NewShellLine(mkline)
 
 	tokens, rest := splitIntoShellTokens(line, cv.value)
 	if rest != "" {
@@ -644,17 +644,17 @@ func (cv *VartypeCheck) SedCommands() {
 
 func (cv *VartypeCheck) ShellCommand() {
 	setE := true
-	NewMkShellLine(cv.mkline).CheckShellCommand(cv.value, &setE)
+	NewShellLine(cv.mkline).CheckShellCommand(cv.value, &setE)
 }
 
 // Zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
-	NewMkShellLine(cv.mkline).CheckShellCommands(cv.value)
+	NewShellLine(cv.mkline).CheckShellCommands(cv.value)
 }
 
 func (cv *VartypeCheck) ShellWord() {
 	if !cv.listContext {
-		NewMkShellLine(cv.mkline).CheckToken(cv.value, true)
+		NewShellLine(cv.mkline).CheckToken(cv.value, true)
 	}
 }
 

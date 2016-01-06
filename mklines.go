@@ -125,7 +125,7 @@ func (mklines *MkLines) Check() {
 		case mkline.IsShellcmd():
 			shellcmd := mkline.Shellcmd()
 			mkline.CheckText(shellcmd)
-			NewMkShellLine(mkline).CheckShellCommandLine(shellcmd)
+			NewShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 		case mkline.IsInclude():
 			mklines.target = ""

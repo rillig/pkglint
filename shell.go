@@ -106,7 +106,7 @@ type ShellLine struct {
 	mkline *MkLine
 }
 
-func NewMkShellLine(mkline *MkLine) *ShellLine {
+func NewShellLine(mkline *MkLine) *ShellLine {
 	return &ShellLine{mkline.Line, mkline}
 }
 
@@ -389,7 +389,7 @@ type ShelltextContext struct {
 
 func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("MkShellLine.checkShelltext", shelltext)()
+		defer tracecall1("ShellLine.CheckShellCommandLine", shelltext)()
 	}
 
 	line := shline.line
@@ -485,7 +485,7 @@ func (shline *ShellLine) CheckShellCommands(shellcmds string) {
 
 func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
 	if G.opts.DebugTrace {
-		defer tracecall("MkShellLine.checkLineStart", hidden, macro, rest, eflag)()
+		defer tracecall("ShellLine.checkLineStart", hidden, macro, rest, eflag)()
 	}
 
 	switch {
