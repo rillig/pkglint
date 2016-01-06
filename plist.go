@@ -316,10 +316,10 @@ func (ck *PlistChecker) checkpathSbin(pline *PlistLine) {
 		pline.line.Warn1("Manual page missing for sbin/%s.", binname)
 		Explain(
 			"All programs that can be run directly by the user should have a",
-			"manual page for quick reference.  The programs in the sbin/ directory",
-			"should have corresponding manual pages in section 8 (filename",
-			"program.1), while the programs in the bin/ directory have their",
-			"manual pages in section 1.")
+			"manual page for quick reference.  The programs in the sbin/",
+			"directory should have corresponding manual pages in section 8",
+			"(filename program.8), while the programs in the bin/ directory",
+			"have their manual pages in section 1.")
 	}
 }
 
