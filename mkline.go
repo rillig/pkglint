@@ -710,7 +710,7 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		words, _ := splitIntoShellWords(mkline.Line, value)
 		for _, word := range words {
 			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
-			shline.CheckShellword(word, true)
+			shline.CheckToken(word, true)
 		}
 	}
 }

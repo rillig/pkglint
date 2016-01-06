@@ -584,7 +584,7 @@ func (cv *VartypeCheck) SedCommands() {
 	mkline := cv.mkline
 	shline := NewMkShellLine(mkline)
 
-	words, rest := splitIntoShellTokens(line, cv.value)
+	tokens, rest := splitIntoShellTokens(line, cv.value)
 	if rest != "" {
 		if contains(cv.value, "#") {
 			line.Error0("Invalid shell words in sed commands.")
@@ -597,16 +597,16 @@ func (cv *VartypeCheck) SedCommands() {
 		return
 	}
 
-	nwords := len(words)
+	ntokens := len(tokens)
 	ncommands := 0
 
-	for i := 0; i < nwords; i++ {
-		word := words[i]
-		shline.CheckShellword(word, true)
+	for i := 0; i < ntokens; i++ {
+		token := tokens[i]
+		shline.CheckToken(token, true)
 
 		switch {
-		case word == "-e":
-			if i+1 < nwords {
+		case token == "-e":
+			if i+1 < ntokens {
 				// Check the real sed command here.
 				i++
 				ncommands++
@@ -621,23 +621,23 @@ func (cv *VartypeCheck) SedCommands() {
 						"",
 						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-				shline.CheckShellword(words[i-1], true)
-				shline.CheckShellword(words[i], true)
-				mkline.CheckVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, words[i], cv.comment, cv.listContext, cv.guessed)
+				shline.CheckToken(tokens[i-1], true)
+				shline.CheckToken(tokens[i], true)
+				mkline.CheckVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, tokens[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
 				line.Error0("The -e option to sed requires an argument.")
 			}
-		case word == "-E":
+		case token == "-E":
 			// Switch to extended regular expressions mode.
 
-		case word == "-n":
+		case token == "-n":
 			// Don't print lines per default.
 
-		case i == 0 && matches(word, `^(["']?)(?:\d*|/.*/)s.+["']?$`):
+		case i == 0 && matches(token, `^(["']?)(?:\d*|/.*/)s.+["']?$`):
 			line.Note0("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 		default:
-			line.Warn1("Unknown sed command %q.", word)
+			line.Warn1("Unknown sed command %q.", token)
 		}
 	}
 }
@@ -654,7 +654,7 @@ func (cv *VartypeCheck) ShellCommands() {
 
 func (cv *VartypeCheck) ShellWord() {
 	if !cv.listContext {
-		NewMkShellLine(cv.mkline).CheckShellword(cv.value, true)
+		NewMkShellLine(cv.mkline).CheckToken(cv.value, true)
 	}
 }
 

@@ -124,12 +124,12 @@ func (st ShellwordState) String() string {
 	return [...]string{"plain", "squot", "dquot", "dquot+backt", "backt"}[st]
 }
 
-func (shline *ShellLine) CheckShellword(shellword string, checkQuoting bool) {
+func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
 	if G.opts.DebugTrace {
-		defer tracecall("MkShellLine.checkShellword", shellword, checkQuoting)()
+		defer tracecall("ShellLine.CheckToken", token, checkQuoting)()
 	}
 
-	if shellword == "" || hasPrefix(shellword, "#") {
+	if token == "" || hasPrefix(token, "#") {
 		return
 	}
 
@@ -137,19 +137,19 @@ func (shline *ShellLine) CheckShellword(shellword string, checkQuoting bool) {
 	shellcommandsContextType := &Vartype{lkNone, CheckvarShellCommands, []AclEntry{{"*", aclpAllRuntime}}, false}
 	shellwordVuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
-	if m, varname, mod := match2(shellword, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
+	if m, varname, mod := match2(token, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
 		shline.mkline.CheckVaruse(varname, mod, shellwordVuc)
 		return
 	}
 
-	if matches(shellword, `\$\{PREFIX\}/man(?:$|/)`) {
+	if matches(token, `\$\{PREFIX\}/man(?:$|/)`) {
 		line.Warn0("Please use ${PKGMANDIR} instead of \"man\".")
 	}
-	if contains(shellword, "etc/rc.d") {
+	if contains(token, "etc/rc.d") {
 		line.Warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	repl := NewPrefixReplacer(shellword)
+	repl := NewPrefixReplacer(token)
 	state := swstPlain
 outer:
 	for repl.rest != "" {
@@ -164,7 +164,7 @@ outer:
 		// make(1) variable.
 		case state == swstBackt || state == swstDquotBackt:
 			var backtCommand string
-			backtCommand, state = shline.unescapeBackticks(shellword, repl, state)
+			backtCommand, state = shline.unescapeBackticks(token, repl, state)
 			setE := true
 			shline.CheckShellCommand(backtCommand, &setE)
 
@@ -324,7 +324,7 @@ outer:
 	}
 
 	if strings.TrimSpace(repl.rest) != "" {
-		line.Errorf("Internal pkglint error: MkShellLine.checkShellword state=%s, rest=%q, shellword=%q", state, repl.rest, shellword)
+		line.Errorf("Internal pkglint error: ShellLine.CheckToken state=%s, rest=%q, token=%q", state, repl.rest, token)
 	}
 }
 
@@ -433,25 +433,26 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 	state := scstStart
-	shellTokens, rest := splitIntoShellTokens(shline.line, shellcmd)
-	for _, shellword := range shellTokens {
+	tokens, rest := splitIntoShellTokens(shline.line, shellcmd)
+	prevToken := ""
+	for _, token := range tokens {
 		if G.opts.DebugShell {
-			shline.line.Debugf("checkShellCommand state=%v shellword=%q", state, shellword)
+			shline.line.Debugf("checkShellCommand state=%v token=%q", state, token)
 		}
 
 		{
 			quotingNecessary := state != scstCase &&
 				state != scstForCont &&
 				state != scstSetCont &&
-				!(state == scstStart && matches(shellword, reShVarassign))
-			shline.CheckShellword(shellword, quotingNecessary)
+				!(state == scstStart && matches(token, reShVarassign))
+			shline.CheckToken(token, quotingNecessary)
 		}
 
-		st := &ShelltextContext{shline, state, shellword}
+		st := &ShelltextContext{shline, state, token}
 		st.checkCommandStart()
 		st.checkConditionalCd()
 		if state != scstPaxS && state != scstSedE && state != scstCaseLabel {
-			shline.line.CheckAbsolutePathname(shellword)
+			shline.line.CheckAbsolutePathname(token)
 		}
 		st.checkAutoMkdirs()
 		st.checkInstallMulti()
@@ -459,17 +460,18 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 		st.checkQuoteSubstitution()
 		st.checkEchoN()
 		st.checkPipeExitcode()
-		st.checkSetE(*pSetE)
+		st.checkSetE(*pSetE, prevToken)
 
-		if state == scstSet && hasPrefix(shellword, "-") && contains(shellword, "e") || state == scstStart && shellword == "${RUN}" {
+		if state == scstSet && hasPrefix(token, "-") && contains(token, "e") || state == scstStart && token == "${RUN}" {
 			*pSetE = true
 		}
 
-		state = shline.nextState(state, shellword)
+		state = shline.nextState(state, token)
+		prevToken = token
 	}
 
 	if rest != "" {
-		shline.line.Errorf("Internal pkglint error: MkShellLine.checkShellCommand state=%s rest=%q shellcmd=%q", state, rest, shellcmd)
+		shline.line.Errorf("Internal pkglint error: ShellLine.CheckShellCommand state=%s rest=%q shellcmd=%q", state, rest, shellcmd)
 	}
 }
 
@@ -761,9 +763,9 @@ func (ctx *ShelltextContext) checkPipeExitcode() {
 	}
 }
 
-func (ctx *ShelltextContext) checkSetE(eflag bool) {
+func (ctx *ShelltextContext) checkSetE(eflag bool, prevToken string) {
 	if G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !eflag {
-		ctx.shline.line.Warn0("Please switch to \"set -e\" mode before using a semicolon to separate commands.")
+		ctx.shline.line.Warn1("Please switch to \"set -e\" mode before using a semicolon (the one after %q) to separate commands.", prevToken)
 		Explain(
 			"Normally, when a shell command fails (returns non-zero), the",
 			"remaining commands are still executed.  For example, the following",
