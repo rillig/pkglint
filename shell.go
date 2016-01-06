@@ -460,7 +460,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 		st.checkQuoteSubstitution()
 		st.checkEchoN()
 		st.checkPipeExitcode()
-		st.checkSetE(*pSetE, prevToken)
+		st.checkSetE(pSetE, prevToken)
 
 		if state == scstSet && hasPrefix(token, "-") && contains(token, "e") || state == scstStart && token == "${RUN}" {
 			*pSetE = true
@@ -763,8 +763,9 @@ func (ctx *ShelltextContext) checkPipeExitcode() {
 	}
 }
 
-func (ctx *ShelltextContext) checkSetE(eflag bool, prevToken string) {
-	if G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !eflag {
+func (ctx *ShelltextContext) checkSetE(eflag *bool, prevToken string) {
+	if G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !*eflag {
+		*eflag = true
 		ctx.shline.line.Warn1("Please switch to \"set -e\" mode before using a semicolon (the one after %q) to separate commands.", prevToken)
 		Explain(
 			"Normally, when a shell command fails (returns non-zero), the",
