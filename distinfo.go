@@ -10,7 +10,7 @@ import (
 
 func ChecklinesDistinfo(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesDistinfo", lines[0].Fname)()
+		defer tracecall1(lines[0].Fname)()
 	}
 
 	fname := lines[0].Fname

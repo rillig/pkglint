@@ -6,7 +6,7 @@ import (
 
 func CheckdirCategory() {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkdirCategory", G.CurrentDir)()
+		defer tracecall1(G.CurrentDir)()
 	}
 
 	lines := LoadNonemptyLines(G.CurrentDir+"/Makefile", true)
@@ -22,7 +22,7 @@ func CheckdirCategory() {
 	}
 	exp.ExpectEmptyLine()
 
-	if exp.advanceIfMatches(`^COMMENT=\t*(.*)`) {
+	if exp.AdvanceIfMatches(`^COMMENT=\t*(.*)`) {
 		mklines.mklines[exp.index-1].CheckValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
 	} else {
 		exp.CurrentLine().Error0("COMMENT= line expected.")

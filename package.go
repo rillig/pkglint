@@ -63,7 +63,7 @@ func (pkg *Package) varValue(varname string) (string, bool) {
 
 func (pkg *Package) checkPossibleDowngrade() {
 	if G.opts.DebugTrace {
-		defer tracecall0("Package.checkPossibleDowngrade")()
+		defer tracecall0()()
 	}
 
 	m, _, pkgversion := match2(pkg.EffectivePkgname, rePkgname)
@@ -90,7 +90,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	if G.opts.DebugTrace {
-		defer tracecall0("checklinesbuildlink3Inclusion")()
+		defer tracecall0()()
 	}
 
 	// Collect all the included buildlink3.mk files from the file.
@@ -118,7 +118,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 
 func checkdirPackage(pkgpath string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkdirPackage", pkgpath)()
+		defer tracecall1(pkgpath)()
 	}
 
 	G.Pkg = NewPackage(pkgpath)
@@ -185,7 +185,7 @@ func checkdirPackage(pkgpath string) {
 
 func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	if G.opts.DebugTrace {
-		defer tracecall1("loadPackageMakefile", fname)()
+		defer tracecall1(fname)()
 	}
 
 	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
@@ -228,7 +228,7 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 
 func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {
 	if G.opts.DebugTrace {
-		defer tracecall1("readMakefile", fname)()
+		defer tracecall1(fname)()
 	}
 
 	fileLines := LoadNonemptyLines(fname, true)
@@ -334,7 +334,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 
 func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	if G.opts.DebugTrace {
-		defer tracecall1("Package.checkfilePackageMakefile", fname)()
+		defer tracecall1(fname)()
 	}
 
 	vardef := pkg.vardef
@@ -505,7 +505,7 @@ func (pkg *Package) checkUpdate() {
 
 func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 	if G.opts.DebugTrace {
-		defer tracecall0("ChecklinesPackageMakefileVarorder")()
+		defer tracecall0()()
 	}
 
 	if !G.opts.WarnOrder || pkg.seenMakefileCommon {

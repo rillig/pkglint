@@ -81,7 +81,7 @@ func (mklines *MkLines) VarValue(varname string) (value string, found bool) {
 
 func (mklines *MkLines) Check() {
 	if G.opts.DebugTrace {
-		defer tracecall1("MkLines.check", mklines.lines[0].Fname)()
+		defer tracecall1(mklines.lines[0].Fname)()
 	}
 
 	allowedTargets := make(map[string]bool)

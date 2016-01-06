@@ -19,7 +19,7 @@ func NewTree(name string, args ...interface{}) *Tree {
 // may have been copied or not.
 func (t *Tree) Match(pattern *Tree) bool {
 	if G.opts.DebugTrace {
-		defer tracecall("Tree.Match", t, pattern)()
+		defer tracecall(t, pattern)()
 	}
 	if t.name != pattern.name || len(t.args) != len(pattern.args) {
 		return false

@@ -7,7 +7,7 @@ import (
 
 func CheckDirent(fname string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("CheckDirent", fname)()
+		defer tracecall1(fname)()
 	}
 
 	st, err := os.Lstat(fname)

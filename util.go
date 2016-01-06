@@ -7,7 +7,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -250,7 +252,7 @@ func match5(s, re string) (matched bool, m1, m2, m3, m4, m5 string) {
 
 func replaceFirst(s, re, replacement string) ([]string, string) {
 	if G.opts.DebugTrace {
-		defer tracecall("replaceFirst", s, re, replacement)()
+		defer tracecall(s, re, replacement)()
 	}
 
 	if m := regcomp(re).FindStringSubmatchIndex(s); m != nil {
@@ -279,7 +281,7 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.s = ""
 	if hasPrefix(pr.rest, prefix) {
 		if G.opts.DebugTrace {
-			trace("", "PrefixReplacer.advanceStr", pr.rest, prefix)
+			trace("", "PrefixReplacer.AdvanceStr", pr.rest, prefix)
 		}
 		pr.s = prefix
 		pr.rest = pr.rest[len(prefix):]
@@ -291,11 +293,11 @@ func (pr *PrefixReplacer) AdvanceRegexp(re string) bool {
 	pr.m = nil
 	pr.s = ""
 	if !hasPrefix(re, "^") {
-		panic("advanceRegexp: " + re)
+		panic("PrefixReplacer.AdvanceRegexp: " + re)
 	}
 	if m := match(pr.rest, re); m != nil {
 		if G.opts.DebugTrace {
-			trace("", "PrefixReplacer.advanceRegexp", pr.rest, re, m[0])
+			trace("", "PrefixReplacer.AdvanceRegexp", pr.rest, re, m[0])
 		}
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
@@ -342,13 +344,19 @@ func dirglob(dirname string) []string {
 	return fnames
 }
 
+// http://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
+func isNil(a interface{}) bool {
+	defer func() { recover() }()
+	return a == nil || reflect.ValueOf(a).IsNil()
+}
+
 func argsStr(args ...interface{}) string {
 	argsStr := ""
 	for i, arg := range args {
 		if i != 0 {
 			argsStr += ", "
 		}
-		if str, ok := arg.(fmt.Stringer); ok {
+		if str, ok := arg.(fmt.Stringer); ok && !isNil(str) {
 			argsStr += str.String()
 		} else {
 			argsStr += fmt.Sprintf("%#v", arg)
@@ -363,11 +371,17 @@ func trace(action, funcname string, args ...interface{}) {
 	}
 }
 
-func tracecall(funcname string, args ...interface{}) func() {
+func tracecallInternal(args ...interface{}) func() {
 	if !G.opts.DebugTrace {
 		panic("Internal pkglint error: calls to tracecall must only occur in tracing mode")
 	}
 
+	funcname := "?"
+	if pc, _, _, ok := runtime.Caller(2); ok {
+		if fn := runtime.FuncForPC(pc); fn != nil {
+			funcname = strings.TrimSuffix(fn.Name(), "main.")
+		}
+	}
 	trace("+ ", funcname, args...)
 	G.traceDepth++
 
@@ -376,20 +390,25 @@ func tracecall(funcname string, args ...interface{}) func() {
 		trace("- ", funcname, args...)
 	}
 }
-func tracecall0(funcname string) func() {
-	switch { // prevent inlining, for code size
+func tracecall0() func() {
+	switch { // prevent inlining, for code size and performance
 	}
-	return tracecall(funcname)
+	return tracecallInternal()
 }
-func tracecall1(funcname, arg1 string) func() {
-	switch { // prevent inlining, for code size
+func tracecall1(arg1 string) func() {
+	switch { // prevent inlining, for code size and performance
 	}
-	return tracecall(funcname, arg1)
+	return tracecallInternal(arg1)
 }
-func tracecall2(funcname, arg1, arg2 string) func() {
-	switch { // prevent inlining, for code size
+func tracecall2(arg1, arg2 string) func() {
+	switch { // prevent inlining, for code size and performance
 	}
-	return tracecall(funcname, arg1, arg2)
+	return tracecallInternal(arg1, arg2)
+}
+func tracecall(args ...interface{}) func() {
+	switch { // prevent inlining, for code size and performance
+	}
+	return tracecallInternal(args...)
 }
 
 // Emulates make(1)’s :S substitution operator.

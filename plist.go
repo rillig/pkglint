@@ -8,7 +8,7 @@ import (
 
 func ChecklinesPlist(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesPlist", lines[0].Fname)()
+		defer tracecall1(lines[0].Fname)()
 	}
 
 	lines[0].CheckRcsid(`@comment `, "@comment ")

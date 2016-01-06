@@ -9,7 +9,7 @@ import (
 
 func ChecklinesPatch(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesPatch", lines[0].Fname)()
+		defer tracecall1(lines[0].Fname)()
 	}
 
 	(&PatchChecker{lines, NewExpecter(lines), false, false}).Check()
@@ -30,7 +30,7 @@ const (
 
 func (ck *PatchChecker) Check() {
 	if G.opts.DebugTrace {
-		defer tracecall0("PatchChecker.check")()
+		defer tracecall0()()
 	}
 
 	if ck.lines[0].CheckRcsid(``, "") {
@@ -41,20 +41,20 @@ func (ck *PatchChecker) Check() {
 	patchedFiles := 0
 	for !ck.exp.EOF() {
 		line := ck.exp.CurrentLine()
-		if ck.exp.advanceIfMatches(rePatchUniFileDel) {
-			if ck.exp.advanceIfMatches(rePatchUniFileAdd) {
+		if ck.exp.AdvanceIfMatches(rePatchUniFileDel) {
+			if ck.exp.AdvanceIfMatches(rePatchUniFileAdd) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.checkUnifiedDiff(ck.exp.m[1])
 				patchedFiles++
 				continue
 			}
 
-			ck.exp.stepBack()
+			ck.exp.StepBack()
 		}
 
-		if ck.exp.advanceIfMatches(rePatchUniFileAdd) {
+		if ck.exp.AdvanceIfMatches(rePatchUniFileAdd) {
 			patchedFile := ck.exp.m[1]
-			if ck.exp.advanceIfMatches(rePatchUniFileDel) {
+			if ck.exp.AdvanceIfMatches(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.exp.PreviousLine().Warn0("Unified diff headers should be first ---, then +++.")
 				ck.checkUnifiedDiff(patchedFile)
@@ -62,17 +62,17 @@ func (ck *PatchChecker) Check() {
 				continue
 			}
 
-			ck.exp.stepBack()
+			ck.exp.StepBack()
 		}
 
-		if ck.exp.advanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
-			if ck.exp.advanceIfMatches(`^---\s(\S+)(.*)$`) {
+		if ck.exp.AdvanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
+			if ck.exp.AdvanceIfMatches(`^---\s(\S+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
 				line.Warn0("Please use unified diffs (diff -u) for patches.")
 				return
 			}
 
-			ck.exp.stepBack()
+			ck.exp.StepBack()
 		}
 
 		ck.exp.Advance()
@@ -95,7 +95,7 @@ func (ck *PatchChecker) Check() {
 // See http://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
 func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	if G.opts.DebugTrace {
-		defer tracecall0("PatchChecker.checkUnifiedDiff")()
+		defer tracecall0()()
 	}
 
 	patchedFileType := guessFileType(ck.exp.CurrentLine(), patchedFile)
@@ -104,7 +104,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	}
 
 	hasHunks := false
-	for ck.exp.advanceIfMatches(rePatchUniHunk) {
+	for ck.exp.AdvanceIfMatches(rePatchUniHunk) {
 		hasHunks = true
 		linesToDel := toInt(ck.exp.m[2], 1)
 		linesToAdd := toInt(ck.exp.m[4], 1)
@@ -155,7 +155,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 
 func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 	if G.opts.DebugTrace {
-		defer tracecall0("PatchChecker.checkBeginDiff")()
+		defer tracecall0()()
 	}
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
@@ -182,7 +182,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 
 func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) {
 	if G.opts.DebugTrace {
-		defer tracecall2("PatchChecker.checklineContext", text, patchedFileType.String())()
+		defer tracecall2(text, patchedFileType.String())()
 	}
 
 	if G.opts.WarnExtra {
@@ -194,7 +194,7 @@ func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) 
 
 func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileType) {
 	if G.opts.DebugTrace {
-		defer tracecall2("PatchChecker.checklineAdded", addedText, patchedFileType.String())()
+		defer tracecall2(addedText, patchedFileType.String())()
 	}
 
 	ck.checktextRcsid(addedText)
@@ -231,7 +231,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 
 func (ck *PatchChecker) checktextUniHunkCr() {
 	if G.opts.DebugTrace {
-		defer tracecall0("PatchChecker.checktextUniHunkCr")()
+		defer tracecall0()()
 	}
 
 	line := ck.exp.PreviousLine()
@@ -313,7 +313,7 @@ func guessFileType(line *Line, fname string) FileType {
 
 func checkwordAbsolutePathname(line *Line, word string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkwordAbsolutePathname", word)()
+		defer tracecall1(word)()
 	}
 
 	switch {
@@ -364,7 +364,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 
 func checklineOtherAbsolutePathname(line *Line, text string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklineOtherAbsolutePathname", text)()
+		defer tracecall1(text)()
 	}
 
 	if hasPrefix(text, "#") && !hasPrefix(text, "#!") {

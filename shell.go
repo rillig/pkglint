@@ -126,7 +126,7 @@ func (st ShellwordState) String() string {
 
 func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
 	if G.opts.DebugTrace {
-		defer tracecall("ShellLine.CheckToken", token, checkQuoting)()
+		defer tracecall(token, checkQuoting)()
 	}
 
 	if token == "" || hasPrefix(token, "#") {
@@ -389,7 +389,7 @@ type ShelltextContext struct {
 
 func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("ShellLine.CheckShellCommandLine", shelltext)()
+		defer tracecall1(shelltext)()
 	}
 
 	line := shline.line
@@ -485,7 +485,7 @@ func (shline *ShellLine) CheckShellCommands(shellcmds string) {
 
 func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
 	if G.opts.DebugTrace {
-		defer tracecall("ShellLine.checkLineStart", hidden, macro, rest, eflag)()
+		defer tracecall(hidden, macro, rest, eflag)()
 	}
 
 	switch {
@@ -537,7 +537,7 @@ func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool)
 
 func (ctx *ShelltextContext) checkCommandStart() {
 	if G.opts.DebugTrace {
-		defer tracecall2("ShelltextContext.checkCommandStart", ctx.state.String(), ctx.shellword)()
+		defer tracecall2(ctx.state.String(), ctx.shellword)()
 	}
 
 	state, shellword := ctx.state, ctx.shellword
@@ -568,7 +568,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 
 func (ctx *ShelltextContext) handleTool() bool {
 	if G.opts.DebugTrace {
-		defer tracecall1("ShelltextContext.handleTool", ctx.shellword)()
+		defer tracecall1(ctx.shellword)()
 	}
 
 	shellword := ctx.shellword
@@ -605,7 +605,7 @@ func (ctx *ShelltextContext) handleForbiddenCommand() bool {
 
 func (ctx *ShelltextContext) handleCommandVariable() bool {
 	if G.opts.DebugTrace {
-		defer tracecall1("ShelltextContext.handleCommandVariable", ctx.shellword)()
+		defer tracecall1(ctx.shellword)()
 	}
 
 	shellword := ctx.shellword
@@ -635,7 +635,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 
 func (ctx *ShelltextContext) handleComment() bool {
 	if G.opts.DebugTrace {
-		defer tracecall1("ShelltextContext.handleComment", ctx.shellword)()
+		defer tracecall1(ctx.shellword)()
 	}
 
 	line := ctx.shline.line

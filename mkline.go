@@ -140,7 +140,7 @@ func (mkline *MkLine) Sources() string     { return mkline.xs2 }
 
 func (mkline *MkLine) CheckVardef(varname string, op MkOperator) {
 	if G.opts.DebugTrace {
-		defer tracecall("MkLine.checkVardef", varname, op)()
+		defer tracecall(varname, op)()
 	}
 
 	defineVar(mkline, varname)
@@ -205,7 +205,7 @@ func (mkline *MkLine) CheckVardefPermissions(varname string, op MkOperator) {
 
 func (mkline *MkLine) CheckVaruse(varname string, mod string, vuc *VarUseContext) {
 	if G.opts.DebugTrace {
-		defer tracecall("MkLine.checkVaruse", mkline, varname, mod, *vuc)()
+		defer tracecall(mkline, varname, mod, *vuc)()
 	}
 
 	vartype := mkline.getVariableType(varname)
@@ -341,7 +341,7 @@ func (mkline *MkLine) WarnVaruseLocalbase() {
 
 func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
 	if G.opts.DebugTrace {
-		defer tracecall("MkLine.checkVaruseFor", varname, vartype, needsQuoting)()
+		defer tracecall(varname, vartype, needsQuoting)()
 	}
 
 	if false && // Too many false positives
@@ -421,7 +421,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 
 func (mkline *MkLine) CheckDecreasingOrder(varname, value string) {
 	if G.opts.DebugTrace {
-		defer tracecall2("MkLine.checkDecreasingOrder", varname, value)()
+		defer tracecall2(varname, value)()
 	}
 
 	strversions := splitOnSpace(value)
@@ -447,7 +447,7 @@ func (mkline *MkLine) CheckDecreasingOrder(varname, value string) {
 
 func (mkline *MkLine) CheckVarassign() {
 	if G.opts.DebugTrace {
-		defer tracecall0("MkLine.checkVarassign")()
+		defer tracecall0()()
 	}
 
 	varname := mkline.Varname()
@@ -665,7 +665,7 @@ const reVarnamePlural = "^(?:" +
 
 func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment string) {
 	if G.opts.DebugTrace {
-		defer tracecall("MkLine.checkVartype", varname, op, value, comment)()
+		defer tracecall(varname, op, value, comment)()
 	}
 
 	if !G.opts.WarnTypes {
@@ -715,12 +715,11 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 	}
 }
 
-// The `op` parameter is one of `=`, `+=`, `:=`, `!=`, `?=`, `use`, `pp-use`, ``.
-// For some variables (like BuildlinkDepth), the operator influences the valid values.
+// For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op MkOperator, value, comment string, isList bool, guessed bool) {
 	if G.opts.DebugTrace {
-		defer tracecall("MkLine.checkVartypePrimitive", varname, op, value, comment, isList, guessed)()
+		defer tracecall(varname, op, value, comment, isList, guessed)()
 	}
 
 	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, "", comment, isList, guessed}
@@ -765,7 +764,7 @@ func (mkline *MkLine) CheckVaralign() {
 
 func (mkline *MkLine) CheckText(text string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("MkLine.checkText", text)()
+		defer tracecall1(text)()
 	}
 
 	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
@@ -820,7 +819,7 @@ func (mkline *MkLine) CheckText(text string) {
 
 func (mkline *MkLine) CheckIf() {
 	if G.opts.DebugTrace {
-		defer tracecall0("MkLine.checkIf")()
+		defer tracecall0()()
 	}
 
 	tree := mkline.parseMkCond(mkline.Args())
@@ -959,7 +958,7 @@ func matchMkCond(text string) (m bool, indent, directive, args string) {
 
 func (mkline *MkLine) parseMkCond(cond string) *Tree {
 	if G.opts.DebugTrace {
-		defer tracecall1("parseMkCond", cond)()
+		defer tracecall1(cond)()
 	}
 
 	const (
@@ -999,7 +998,7 @@ const (
 
 func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
 	if G.opts.DebugTrace {
-		defer tracecall("variableNeedsQuoting", varname, *vuc, "=>", needsQuoting)()
+		defer tracecall(varname, *vuc, "=>", needsQuoting)()
 	}
 
 	vartype := mkline.getVariableType(varname)

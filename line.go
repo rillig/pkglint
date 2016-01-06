@@ -224,7 +224,7 @@ func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFi
 
 func (line *Line) CheckAbsolutePathname(text string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("Line.checkAbsolutePathname", text)()
+		defer tracecall1(text)()
 	}
 
 	// In the GNU coding standards, DESTDIR is defined as a (usually
@@ -275,7 +275,7 @@ func (line *Line) CheckTrailingWhitespace() {
 
 func (line *Line) CheckRcsid(prefixRe, suggestedPrefix string) bool {
 	if G.opts.DebugTrace {
-		defer tracecall2("checklineRcsid", prefixRe, suggestedPrefix)()
+		defer tracecall2(prefixRe, suggestedPrefix)()
 	}
 
 	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {

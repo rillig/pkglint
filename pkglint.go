@@ -23,7 +23,7 @@ func findPkgsrcTopdir(fname string) string {
 
 func resolveVariableRefs(text string) string {
 	if G.opts.DebugTrace {
-		defer tracecall1("resolveVariableRefs", text)()
+		defer tracecall1(text)()
 	}
 
 	visited := make(map[string]bool) // To prevent endless loops
@@ -73,7 +73,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 
 func CheckfileExtra(fname string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkfileExtra", fname)()
+		defer tracecall1(fname)()
 	}
 
 	if lines := LoadNonemptyLines(fname, false); lines != nil {
@@ -83,7 +83,7 @@ func CheckfileExtra(fname string) {
 
 func ChecklinesDescr(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesDescr", lines[0].Fname)()
+		defer tracecall1(lines[0].Fname)()
 	}
 
 	for _, line := range lines {
@@ -111,7 +111,7 @@ func ChecklinesDescr(lines []*Line) {
 
 func ChecklinesMessage(lines []*Line) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checklinesMessage", lines[0].Fname)()
+		defer tracecall1(lines[0].Fname)()
 	}
 
 	explainMessage := func() {
@@ -149,7 +149,7 @@ func ChecklinesMessage(lines []*Line) {
 
 func CheckfileMk(fname string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkfileMk", fname)()
+		defer tracecall1(fname)()
 	}
 
 	lines := LoadNonemptyLines(fname, true)
@@ -163,7 +163,7 @@ func CheckfileMk(fname string) {
 
 func Checkfile(fname string) {
 	if G.opts.DebugTrace {
-		defer tracecall1("checkfile", fname)()
+		defer tracecall1(fname)()
 	}
 
 	basename := path.Base(fname)
