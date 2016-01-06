@@ -227,6 +227,20 @@ func (s *Suite) TestVartypeCheck_Message(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: SUBST_MESSAGE.id should not be quoted.\n")
 }
 
+func (s *Suite) TestVartypeCheck_Option(c *check.C) {
+	G.globalData.PkgOptions = map[string]string{
+		"documented":   "Option description",
+		"undocumented": "",
+	}
+
+	runVartypeChecks("PKG_OPTIONS.pkgbase", opAssign, (*VartypeCheck).Option,
+		"documented",
+		"undocumented",
+		"unknown")
+
+	c.Check(s.Output(), equals, "WARN: fname:3: Unknown option \"unknown\".\n")
+}
+
 func (s *Suite) TestVartypeCheck_Pathlist(c *check.C) {
 	runVartypeChecks("PATH", opAssign, (*VartypeCheck).Pathlist,
 		"/usr/bin:/usr/sbin:.:${LOCALBASE}/bin")
