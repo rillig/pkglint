@@ -1007,22 +1007,22 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) (
 	}
 
 	isPlainWord := vartype.checker.IsEnum()
-	if c := vartype.checker; false ||
-		c == CheckvarDistSuffix ||
-		c == CheckvarFileMode ||
-		c == CheckvarFilename ||
-		c == CheckvarIdentifier ||
-		c == CheckvarOption ||
-		c == CheckvarPathname ||
-		c == CheckvarPkgName ||
-		c == CheckvarPkgOptionsVar ||
-		c == CheckvarPkgRevision ||
-		c == CheckvarRelativePkgDir ||
-		c == CheckvarRelativePkgPath ||
-		c == CheckvarUserGroupName ||
-		c == CheckvarVarname ||
-		c == CheckvarVersion ||
-		c == CheckvarWrkdirSubdirectory {
+	switch vartype.checker {
+	case CheckvarDistSuffix,
+		CheckvarFileMode,
+		CheckvarFilename,
+		CheckvarIdentifier,
+		CheckvarOption,
+		CheckvarPathname,
+		CheckvarPkgName,
+		CheckvarPkgOptionsVar,
+		CheckvarPkgRevision,
+		CheckvarRelativePkgDir,
+		CheckvarRelativePkgPath,
+		CheckvarUserGroupName,
+		CheckvarVarname,
+		CheckvarVersion,
+		CheckvarWrkdirSubdirectory:
 		isPlainWord = true
 	}
 	if isPlainWord {
