@@ -303,9 +303,9 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 		line.Note0("The .gz extension is unnecessary for manual pages.")
 		Explain4(
 			"Whether the manual pages are installed in compressed form or not is",
-			"configured by the pkgsrc user. Compression and decompression takes place",
-			"automatically, no matter if the .gz extension is mentioned in the PLIST",
-			"or not.")
+			"configured by the pkgsrc user.  Compression and decompression takes",
+			"place automatically, no matter if the .gz extension is mentioned in",
+			"the PLIST or not.")
 	}
 }
 

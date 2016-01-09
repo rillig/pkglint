@@ -154,3 +154,13 @@ func (s *Suite) TestPlistChecker_checkpathShare_Desktop(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: PLIST:2: Packages that install a .desktop entry should .include \"../../sysutils/desktop-file-utils/desktopdb.mk\".\n")
 }
+
+func (s *Suite) TestPlistChecker_checkpathMan_gz(c *check.C) {
+	G.Pkg = NewPackage("category/pkgbase")
+
+	ChecklinesPlist(s.NewLines("PLIST",
+		"@comment $"+"NetBSD$",
+		"man/man3/strerror.3.gz"))
+
+	c.Check(s.Output(), equals, "NOTE: PLIST:2: The .gz extension is unnecessary for manual pages.\n")
+}
