@@ -376,3 +376,16 @@ func (s *Suite) TestShellLine_CheckShellCommandLine_InstallD(c *check.C) {
 		"WARN: Makefile:85: Please use AUTO_MKDIRS instead of \"${INSTALL} -d\".\n"+
 		"WARN: Makefile:85: Please use AUTO_MKDIRS instead of \"${INSTALL} -d\".\n")
 }
+
+func (s *Suite) TestShellLine_(c *check.C) {
+	tmpfile := s.CreateTmpFile(c, "Makefile", ""+
+		"# $"+"NetBSD$\n"+
+		"pre-install:\n"+
+		"\t"+"# comment\\\n"+
+		"\t"+"echo \"hello\"\n")
+	lines := LoadNonemptyLines(tmpfile, true)
+	
+	NewMkLines(lines).Check()
+	
+	c.Check(s.OutputCleanTmpdir(), equals, "WARN: ~/Makefile:3--4: A shell comment does not stop at the end of line.\n")
+}

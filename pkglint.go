@@ -184,10 +184,10 @@ func Checkfile(fname string) {
 		line := NewLine(fname, 0, "", nil)
 		line.Warn0("Should not be executable.")
 		Explain4(
-			"No package file should ever be executable. Even the INSTALL and",
-			"DEINSTALL scripts are usually not usable in the form they have in the",
-			"package, as the pathnames get adjusted during installation. So there is",
-			"no need to have any file executable.")
+			"No package file should ever be executable.  Even the INSTALL and",
+			"DEINSTALL scripts are usually not usable in the form they have in",
+			"the package, as the pathnames get adjusted during installation.",
+			"So there is no need to have any file executable.")
 	}
 
 	switch {

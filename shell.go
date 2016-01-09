@@ -656,14 +656,18 @@ func (ctx *ShelltextContext) handleComment() bool {
 
 	if semicolon || multiline {
 		Explain(
-			"When you split a shell command into multiple lines that are continued",
-			"with a backslash, they will nevertheless be converted to a single line",
-			"before the shell sees them. That means that even if it _looks_ like that",
-			"the comment only spans one line in the Makefile, in fact it spans until",
-			"the end of the whole shell command. To insert a comment into shell code,",
-			"you can pass it as an argument to the ${SHCOMMENT} macro, which expands",
-			"to a command doing nothing. Note that any special characters are",
-			"nevertheless interpreted by the shell.")
+			"When you split a shell command into multiple lines that are",
+			"continued with a backslash, they will nevertheless be converted to",
+			"a single line before the shell sees them.  That means that even if",
+			"it _looks_ like that the comment only spans one line in the",
+			"Makefile, in fact it spans until the end of the whole shell command.",
+			"",
+			"To insert a comment into shell code, you can write it like this:",
+			"",
+			"\t"+"${SHCOMMENT} \"The following command might fail; this is ok.\"",
+			"",
+			"Note that any special characters in the comment are still",
+			"interpreted by the shell.")
 	}
 	return true
 }
