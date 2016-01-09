@@ -274,6 +274,17 @@ func (s *Suite) TestVartypeCheck_PlatformTriple(c *check.C) {
 		"WARN: fname:2: Unknown hardware architecture: 8087\n")
 }
 
+func (s *Suite) TestVartypeCheck_PythonDependency(c *check.C) {
+	runVartypeChecks("PYTHON_VERSIONED_DEPENDENCIES", opAssign, (*VartypeCheck).PythonDependency,
+		"cairo",
+		"${PYDEP}",
+		"cairo,X")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:2: Python dependencies should not contain variables.\n"+
+		"WARN: fname:3: Invalid Python dependency \"cairo,X\".\n")
+}
+
 func (s *Suite) TestVartypeCheck_Restricted(c *check.C) {
 	runVartypeChecks("NO_BIN_ON_CDROM", opAssign, (*VartypeCheck).Restricted,
 		"May only be distributed free of charge")
