@@ -143,3 +143,14 @@ func (s *Suite) TestPlistChecker_sort(c *check.C) {
 		"lib/before.la\n"+
 		"sbin/program\n")
 }
+
+func (s *Suite) TestPlistChecker_checkpathShare_Desktop(c *check.C) {
+	s.UseCommandLine(c, "-Wextra")
+	G.Pkg = NewPackage("category/pkgpath")
+
+	ChecklinesPlist(s.NewLines("PLIST",
+		"@comment $"+"NetBSD$",
+		"share/applications/pkgbase.desktop"))
+	
+	c.Check(s.Output(), equals, "WARN: PLIST:2: Packages that install a .desktop entry should .include \"../../sysutils/desktop-file-utils/desktopdb.mk\".\n")
+}

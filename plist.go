@@ -330,9 +330,10 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
 		if G.opts.WarnExtra && G.Pkg != nil && G.Pkg.included[f] == nil {
 			line.Warn1("Packages that install a .desktop entry should .include %q.", f)
-			Explain2(
-				"If *.desktop files contain MimeType keys, the global MIME type registry",
-				"must be updated by desktop-file-utils. Otherwise, this warning is harmless.")
+			Explain3(
+				"If *.desktop files contain MimeType keys, the global MIME type",
+				"registry must be updated by desktop-file-utils.  Otherwise, this",
+				"warning is harmless.")
 		}
 
 	case hasPrefix(text, "share/icons/hicolor/") && G.Pkg != nil && G.Pkg.Pkgpath != "graphics/hicolor-icon-theme":
