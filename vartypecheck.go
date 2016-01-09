@@ -570,9 +570,9 @@ func (cv *VartypeCheck) Restricted() {
 	if cv.value != "${RESTRICTED}" {
 		cv.line.Warn1("The only valid value for %s is ${RESTRICTED}.", cv.varname)
 		Explain3(
-			"These variables are used to control which files may be mirrored on FTP",
-			"servers or CD-ROM collections. They are not intended to mark packages",
-			"whose only MASTER_SITES are on ftp.NetBSD.org.")
+			"These variables are used to control which files may be mirrored on",
+			"FTP servers or CD-ROM collections.  They are not intended to mark",
+			"packages whose only MASTER_SITES are on ftp.NetBSD.org.")
 	}
 }
 

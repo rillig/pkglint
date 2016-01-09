@@ -274,6 +274,13 @@ func (s *Suite) TestVartypeCheck_PlatformTriple(c *check.C) {
 		"WARN: fname:2: Unknown hardware architecture: 8087\n")
 }
 
+func (s *Suite) TestVartypeCheck_Restricted(c *check.C) {
+	runVartypeChecks("NO_BIN_ON_CDROM", opAssign, (*VartypeCheck).Restricted,
+		"May only be distributed free of charge")
+
+	c.Check(s.Output(), equals, "WARN: fname:1: The only valid value for NO_BIN_ON_CDROM is ${RESTRICTED}.\n")
+}
+
 func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 	runVartypeChecks("SUBST_SED.dummy", opAssign, (*VartypeCheck).SedCommands,
 		"s,@COMPILER@,gcc,g",
