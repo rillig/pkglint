@@ -171,7 +171,7 @@ outer:
 		// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case repl.AdvanceRegexp(`^\$\{(` + reVarnameDirect + `|@)(:[^\{]+)?\}`),
 			repl.AdvanceRegexp(`^\$\((` + reVarnameDirect + `|@])(:[^\)]+)?\)`),
-			repl.AdvanceRegexp(`^\$([\w@])()`):
+			repl.AdvanceRegexp(`^\$([\w@<])()`):
 			varname, mod := repl.m[1], repl.m[2]
 
 			if varname == "@" {

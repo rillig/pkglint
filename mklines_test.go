@@ -33,3 +33,15 @@ func (s *Suite) TestMkLines_AutofixConditionalIndentation(c *check.C) {
 		".  endfor\n"+
 		".endif\n")
 }
+
+func (s *Suite) TestMkLines_UnusualTarget(c *check.C) {
+	mklines := s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"echo: echo.c",
+		"\tcc -o ${.TARGET} $<")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: Makefile:3: Unusual target \"echo\".\n")
+}

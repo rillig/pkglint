@@ -330,7 +330,7 @@ func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, depende
 			mkline.Warn1("Unusual target %q.", target)
 			Explain3(
 				"If you want to define your own targets, you can \"declare\"",
-				"them by inserting a \".PHONY: my-target\" line before this line. This",
+				"them by inserting a \".PHONY: my-target\" line before this line.  This",
 				"will tell make(1) to not interpret this target's name as a filename.")
 		}
 	}
