@@ -366,3 +366,13 @@ func (s *Suite) TestShellLine_CheckShellCommandLine_InstallDirs(c *check.C) {
 		"NOTE: Makefile:85: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= dir2\" instead of this command.\n"+
 		"WARN: Makefile:85: The INSTALL_*_DIR commands can only handle one directory at a time.\n")
 }
+
+func (s *Suite) TestShellLine_CheckShellCommandLine_InstallD(c *check.C) {
+	shline := NewShellLine(NewMkLine(NewLine("Makefile", 85, "\t${RUN} ${INSTALL} -d ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2", nil)))
+
+	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:85: Please use AUTO_MKDIRS instead of \"${INSTALL} -d\".\n"+
+		"WARN: Makefile:85: Please use AUTO_MKDIRS instead of \"${INSTALL} -d\".\n")
+}

@@ -686,10 +686,10 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 		line.Warn1("Please use AUTO_MKDIRS instead of %q.",
 			ifelseStr(state == scstMkdir, "${MKDIR}", "${INSTALL} -d"))
 		Explain4(
-			"Setting AUTO_MKDIRS=yes automatically creates all directories that are",
-			"mentioned in the PLIST. If you need additional directories, specify",
-			"them in INSTALLATION_DIRS, which is a list of directories relative to",
-			"${PREFIX}.")
+			"Setting AUTO_MKDIRS=yes automatically creates all directories that",
+			"are mentioned in the PLIST.  If you need additional directories,",
+			"specify them in INSTALLATION_DIRS, which is a list of directories",
+			"relative to ${PREFIX}.")
 	}
 
 	if (state == scstInstallDir || state == scstInstallDir2) && !matches(shellword, reMkShellvaruse) {
