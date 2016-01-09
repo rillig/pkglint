@@ -328,7 +328,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 	switch {
 	case hasPrefix(text, "share/applications/") && hasSuffix(text, ".desktop"):
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
-		if G.Pkg != nil && G.Pkg.included[f] == nil {
+		if G.opts.WarnExtra && G.Pkg != nil && G.Pkg.included[f] == nil {
 			line.Warn1("Packages that install a .desktop entry should .include %q.", f)
 			Explain2(
 				"If *.desktop files contain MimeType keys, the global MIME type registry",
