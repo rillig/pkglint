@@ -814,7 +814,7 @@ func (shline *ShellLine) checkCommandUse(shellcmd string) {
 		line.Warn0("${CP} should not be used to install files.")
 		Explain(
 			"The ${CP} command is highly platform dependent and cannot overwrite",
-			"files that don't have write permission.  Please use ${PAX} instead.",
+			"read-only files.  Please use ${PAX} instead.",
 			"",
 			"For example, instead of",
 			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
