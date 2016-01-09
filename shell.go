@@ -715,8 +715,8 @@ func (ctx *ShelltextContext) checkInstallMulti() {
 		line := ctx.shline.line
 		line.Warn0("The INSTALL_*_DIR commands can only handle one directory at a time.")
 		Explain2(
-			"Many implementations of install(1) can handle more, but pkgsrc aims at",
-			"maximum portability.")
+			"Many implementations of install(1) can handle more, but pkgsrc aims",
+			"at maximum portability.")
 	}
 }
 
