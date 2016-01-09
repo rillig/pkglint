@@ -45,3 +45,15 @@ func (s *Suite) TestMkLines_UnusualTarget(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: Makefile:3: Unusual target \"echo\".\n")
 }
+
+func (s *Suite) TestMkLines_checklineInclude_Makefile(c *check.C) {
+	mklines := s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		".include \"../../other/package/Makefile\"")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, ""+
+		"ERROR: Makefile:2: \"/other/package/Makefile\" does not exist.\n"+
+		"ERROR: Makefile:2: Other Makefiles must not be included directly.\n")
+}

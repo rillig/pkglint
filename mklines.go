@@ -348,7 +348,7 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 		mkline.Line.Error0("Other Makefiles must not be included directly.")
 		Explain4(
 			"If you want to include portions of another Makefile, extract",
-			"the common parts and put them into a Makefile.common. After",
+			"the common parts and put them into a Makefile.common.  After",
 			"that, both this one and the other package should include the",
 			"Makefile.common.")
 	}
