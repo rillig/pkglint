@@ -405,8 +405,8 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		if contains(shelltext, "#") {
 			Explain(
 				"When migrating to the SUBST framework, pay attention to \"#\"",
-				"characters. In shell commands, make(1) does not interpret them as",
-				"comment character, but in variable assignments it does. Therefore,",
+				"characters.  In shell commands, make(1) does not interpret them as",
+				"comment character, but in variable assignments it does.  Therefore,",
 				"instead of the shell command",
 				"",
 				"\tsed -e 's,#define foo,,'",

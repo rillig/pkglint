@@ -339,3 +339,11 @@ func (s *Suite) TestSplitIntoShellWords(c *check.C) {
 	c.Check(words, check.DeepEquals, []string{"a", "b", "\"c  c  c\"", "d;;d;;", "\"e\"''``"})
 	c.Check(rest, equals, "'rest")
 }
+
+func (s *Suite) TestShellLine_CheckShellCommandLine_SedMv(c *check.C) {
+	shline := NewShellLine(NewMkLine(NewLine("Makefile", 85, "\t${RUN} ${SED} 's,#,// comment:,g' fname > fname.tmp; ${MV} fname.tmp fname", nil)))
+
+	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+
+	c.Check(s.Output(), equals, "NOTE: Makefile:85: Please use the SUBST framework instead of ${SED} and ${MV}.\n")
+}
