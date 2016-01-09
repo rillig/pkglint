@@ -279,7 +279,7 @@ outer:
 				line.Warn0("Invoking subshells via $(...) is not portable enough.")
 				Explain2(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
-					"subshell. Please use backticks (`...`) as a replacement.")
+					"subshell.  Please use backticks (`...`) as a replacement.")
 
 			case repl.AdvanceStr("$$"): // Not part of a variable.
 				break

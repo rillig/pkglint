@@ -347,3 +347,11 @@ func (s *Suite) TestShellLine_CheckShellCommandLine_SedMv(c *check.C) {
 
 	c.Check(s.Output(), equals, "NOTE: Makefile:85: Please use the SUBST framework instead of ${SED} and ${MV}.\n")
 }
+
+func (s *Suite) TestShellLine_CheckShellCommandLine_Subshell(c *check.C) {
+	shline := NewShellLine(NewMkLine(NewLine("Makefile", 85, "\t${RUN} uname=$$(uname)", nil)))
+
+	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+
+	c.Check(s.Output(), equals, "WARN: Makefile:85: Invoking subshells via $(...) is not portable enough.\n")
+}
