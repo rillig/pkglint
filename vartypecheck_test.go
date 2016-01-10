@@ -248,6 +248,13 @@ func (s *Suite) TestVartypeCheck_Pathlist(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: All components of PATH (in this case \".\") should be absolute paths.\n")
 }
 
+func (s *Suite) TestVartypeCheck_PkgOptionsVar(c *check.C) {
+	runVartypeChecks("PKG_OPTIONS_VAR.screen", opAssign, (*VartypeCheck).PkgOptionsVar,
+		"PKG_OPTIONS.${PKGBASE}")
+
+	c.Check(s.Output(), equals, "ERROR: fname:1: PKGBASE must not be used in PKG_OPTIONS_VAR.\n")
+}
+
 func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {
 	runVartypeChecks("PKGREVISION", opAssign, (*VartypeCheck).PkgRevision,
 		"3a")
