@@ -384,8 +384,8 @@ func (s *Suite) TestShellLine_(c *check.C) {
 		"\t"+"# comment\\\n"+
 		"\t"+"echo \"hello\"\n")
 	lines := LoadNonemptyLines(tmpfile, true)
-	
+
 	NewMkLines(lines).Check()
-	
+
 	c.Check(s.OutputCleanTmpdir(), equals, "WARN: ~/Makefile:3--4: A shell comment does not stop at the end of line.\n")
 }

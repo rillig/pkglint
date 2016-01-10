@@ -302,11 +302,14 @@ func (s *Suite) TestVartypeCheck_Restricted(c *check.C) {
 func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 	runVartypeChecks("SUBST_SED.dummy", opAssign, (*VartypeCheck).SedCommands,
 		"s,@COMPILER@,gcc,g",
-		"-e s,a,b, -e a,b,c,")
+		"-e s,a,b, -e a,b,c,",
+		"-e \"s,#,comment ,\"",
+		"-e \"s,\\#,comment ,\"")
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n"+
-		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n")
+		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n"+
+		"ERROR: fname:3: Invalid shell words \"\\\"s,\" in sed commands.\n")
 }
 
 func (s *Suite) TestVartypeCheck_ShellCommands(c *check.C) {
@@ -349,8 +352,8 @@ func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 func runVartypeChecks(varname string, op MkOperator, checker func(*VartypeCheck), values ...string) {
 	for i, value := range values {
 		mkline := NewMkLine(NewLine("fname", i+1, varname+op.String()+value, nil))
-		valueNovar := mkline.withoutMakeVariables(value, true)
-		vc := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNovar, "", true, false}
+		valueNovar := mkline.withoutMakeVariables(mkline.Value(), true)
+		vc := &VartypeCheck{mkline, mkline.Line, mkline.Varname(), mkline.Op(), mkline.Value(), valueNovar, "", true, false}
 		checker(vc)
 	}
 }

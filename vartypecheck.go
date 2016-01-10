@@ -585,8 +585,8 @@ func (cv *VartypeCheck) SedCommands() {
 
 	tokens, rest := splitIntoShellTokens(line, cv.value)
 	if rest != "" {
-		if contains(cv.value, "#") {
-			line.Error0("Invalid shell words in sed commands.")
+		if strings.Contains(line.Text, "#") {
+			line.Error1("Invalid shell words %q in sed commands.", rest)
 			Explain4(
 				"When sed commands have embedded \"#\" characters, they need to be",
 				"escaped with a backslash, otherwise make(1) will interpret them as a",
