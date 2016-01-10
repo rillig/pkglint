@@ -109,6 +109,12 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token("${RUBY${RUBY_VER}_PATCHLEVEL}", varuse("RUBY${RUBY_VER}_PATCHLEVEL"))
 	token("${DISTFILES:M*.gem}", varuse("DISTFILES", "M*.gem"))
 	token("$(GNUSTEP_USER_ROOT)", varuse("GNUSTEP_USER_ROOT"))
+	token("${LOCALBASE:S^/^_^}", varuse("LOCALBASE", "S^/^_^"))
+	token("${SOURCES:%.c=%.o}", varuse("SOURCES", "%.c=%.o"))
+	token("${GIT_TEMPLATES:@.t.@ ${EGDIR}/${GIT_TEMPLATEDIR}/${.t.} ${PREFIX}/${GIT_CORE_TEMPLATEDIR}/${.t.} @:M*}",
+		varuse("GIT_TEMPLATES", "@.t.@ ${EGDIR}/${GIT_TEMPLATEDIR}/${.t.} ${PREFIX}/${GIT_CORE_TEMPLATEDIR}/${.t.} @", "M*"))
+	token("${${EMACS_VERSION_MAJOR}>22:?@comment :}", varuse("${EMACS_VERSION_MAJOR}>22", "?@comment ", ""))
+	token("${DISTNAME:C:_:-:}", varuse("DISTNAME", "C:_:-:"))
 
 	parse("${VAR)", nil, "${VAR)")
 	parse("$(VAR}", nil, "$(VAR}")

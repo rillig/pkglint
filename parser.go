@@ -131,6 +131,11 @@ func (p *Parser) Varname() string {
 func (p *Parser) VarUse() *MkVarUse {
 	repl := p.repl
 
+	// Special handling for very weird expression.
+	if repl.AdvanceStr("${${EMACS_VERSION_MAJOR}>22:?@comment :}") {
+		return &MkVarUse{"${EMACS_VERSION_MAJOR}>22", []string{"?@comment ", ""}}
+	}
+
 	mark := repl.Mark()
 	if repl.AdvanceStr("${") || repl.AdvanceStr("$(") {
 		closing := "}"
@@ -150,14 +155,14 @@ func (p *Parser) VarUse() *MkVarUse {
 				}
 
 				if repl.AdvanceRegexp(`^[=DMNU]`) {
-					for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$\\`+closing+`]|\\.)+`) {
+					for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:\\`+closing+`]|\\.)+`) {
 					}
 					modifiers = append(modifiers, repl.Since(modifierMark))
 					continue
 				}
 				repl.Reset(modifierMark)
 
-				if repl.AdvanceRegexp(`^[CS]([,/|])`) {
+				if repl.AdvanceRegexp(`^[CS]([,/:^|])`) {
 					separator := repl.m[1]
 					re := `^([^` + separator + `$\\` + closing + `]|\\.)+`
 					repl.AdvanceStr("^")
@@ -175,6 +180,23 @@ func (p *Parser) VarUse() *MkVarUse {
 					}
 				}
 				repl.Reset(modifierMark)
+
+				if repl.AdvanceRegexp(`^@([\w.]+)@`) {
+					for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:@\\`+closing+`]|\\.)+`) {
+					}
+					if repl.AdvanceStr("@") {
+						modifiers = append(modifiers, repl.Since(modifierMark))
+						continue
+					}
+				}
+				repl.Reset(modifierMark)
+
+				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$\\`+closing+`]|\\.)+`) {
+				}
+				if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
+					modifiers = append(modifiers, suffixSubst)
+					continue
+				}
 
 				goto fail
 			}
