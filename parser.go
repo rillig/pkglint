@@ -152,15 +152,38 @@ func (p *Parser) VarUse() *MkVarUse {
 				switch {
 				case repl.AdvanceRegexp(`^[MN][\w*\-=?\[\]]+`),
 					repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|ts.|tu|tw|u)`),
-					repl.AdvanceRegexp(`^S/\^?([^/:$\\]|\\.|\$\{\w+\})*\$?/([^/:$\\]+|\\.|\$\{\w+\})*/[1gW]?`),
-					repl.AdvanceRegexp(`^S\|\^?([^:$\\|]|\\.|\$\{\w+\})*\$?\|([^:$\\|]+|\\.|\$\{\w+\})*\|[1gW]?`),
-					repl.AdvanceRegexp(`^S,\^?([^,:$\\]|\\.|\$\{\w+\})*\$?,([^,:$\\]+|\\.|\$\{\w+\})*,[1gW]?`),
-					repl.AdvanceRegexp(`^C/\^?([^/:$\\]*|\\.|\$\{\w+\})*\$?/(\\\d|[^/:$\\]+|\$\{\w+\})*/[1gW]?`),
+					repl.AdvanceRegexp(`^C/\^?([^/$\\]*|\\.|\$\{\w+\})*\$?/(\\\d|[^/$\\]+|\$\{\w+\})*/[1gW]?`),
 					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
-					modifier := repl.m[0]
-					modifiers = append(modifiers, modifier)
+					modifiers = append(modifiers, repl.Since(modifierMark))
 					continue
 				}
+
+				if repl.AdvanceStr("M") {
+					for p.VarUse() != nil || repl.AdvanceRegexp(`^[\w*\-=?\[\]]+`) {
+					}
+					modifiers = append(modifiers, repl.Since(modifierMark))
+					continue
+				}
+				repl.Reset(modifierMark)
+
+				if repl.AdvanceRegexp(`^S([,/|])`) {
+					separator := repl.m[1]
+					re := `^([^` + separator + `$\\]|\\.)+`
+					repl.AdvanceStr("^")
+					for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+					}
+					repl.AdvanceStr("$")
+					if repl.AdvanceStr(separator) {
+						for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+						}
+						if repl.AdvanceStr(separator) {
+							repl.AdvanceRegexp(`^[1gW]`)
+							modifiers = append(modifiers, repl.Since(modifierMark))
+							continue
+						}
+					}
+				}
+				repl.Reset(modifierMark)
 
 				if repl.AdvanceStr("D") || repl.AdvanceStr("U") {
 					if p.VarUse() != nil || repl.AdvanceRegexp(`^\w+`) {
