@@ -63,17 +63,27 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 		}
 		c.Check(p.Rest(), equals, expectedRest)
 	}
+	token := func(input string, expectedToken MkToken) {
+		test(input, []*MkToken{&expectedToken}, "")
+	}
+	literal := func(literal string) MkToken {
+		return MkToken{literal: literal}
+	}
+	varuse := func(varname string, modifiers ...string) MkToken {
+		return MkToken{varuse: MkVarUse{varname: varname, modifiers: modifiers}}
+	}
 
-	test("literal", []*MkToken{{literal: "literal"}}, "")
-	test("\\/share\\/ { print \"share directory\" }", []*MkToken{{literal: "\\/share\\/ { print \"share directory\" }"}}, "")
-	test("${VARIABLE}", []*MkToken{{varname: "VARIABLE"}}, "")
-	test("${VARIABLE.param}", []*MkToken{{varname: "VARIABLE.param"}}, "")
-	test("${VARIABLE.${param}}", []*MkToken{{varname: "VARIABLE.${param}"}}, "")
-	test("${VARIABLE.hicolor-icon-theme}", []*MkToken{{varname: "VARIABLE.hicolor-icon-theme"}}, "")
-	test("${VARIABLE.gtk+extra}", []*MkToken{{varname: "VARIABLE.gtk+extra"}}, "")
-	test("${VARIABLE:S/old/new/}", []*MkToken{{varname: "VARIABLE", modifiers: []string{"S/old/new/"}}}, "")
-	test("${GNUSTEP_LFLAGS:S/-L//g}", []*MkToken{{varname: "GNUSTEP_LFLAGS", modifiers: []string{"S/-L//g"}}}, "")
-	test("${SUSE_VERSION:S/.//}", []*MkToken{{varname: "SUSE_VERSION", modifiers: []string{"S/.//"}}}, "")
-	test("${MASTER_SITE_GNOME:=sources/alacarte/0.13/}", []*MkToken{{varname: "MASTER_SITE_GNOME", modifiers: []string{"=sources/alacarte/0.13/"}}}, "")
-	test("${INCLUDE_DIRS:H:T}", []*MkToken{{varname: "INCLUDE_DIRS", modifiers: []string{"H", "T"}}}, "")
+	token("literal", literal("literal"))
+	token("\\/share\\/ { print \"share directory\" }", literal("\\/share\\/ { print \"share directory\" }"))
+	token("${VARIABLE}", varuse("VARIABLE"))
+	token("${VARIABLE.param}", varuse("VARIABLE.param"))
+	token("${VARIABLE.${param}}", varuse("VARIABLE.${param}"))
+	token("${VARIABLE.hicolor-icon-theme}", varuse("VARIABLE.hicolor-icon-theme"))
+	token("${VARIABLE.gtk+extra}", varuse("VARIABLE.gtk+extra"))
+	token("${VARIABLE:S/old/new/}", varuse("VARIABLE", "S/old/new/"))
+	token("${GNUSTEP_LFLAGS:S/-L//g}", varuse("GNUSTEP_LFLAGS", "S/-L//g"))
+	token("${SUSE_VERSION:S/.//}", varuse("SUSE_VERSION", "S/.//"))
+	token("${MASTER_SITE_GNOME:=sources/alacarte/0.13/}", varuse("MASTER_SITE_GNOME", "=sources/alacarte/0.13/"))
+	token("${INCLUDE_DIRS:H:T}", varuse("INCLUDE_DIRS", "H", "T"))
+	token("${A.${B.${C.${D}}}}", varuse("A.${B.${C.${D}}}"))
 }

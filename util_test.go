@@ -79,3 +79,10 @@ func (s *Suite) TestIsEmptyDirAndGetSubdirs(c *check.C) {
 		c.FailNow()
 	}
 }
+
+func (s *Suite) TestPrefixReplacer_Since(c *check.C) {
+	repl := NewPrefixReplacer("hello, world")
+	mark := repl.Mark()
+	repl.AdvanceRegexp(`^\w+`)
+	c.Check(repl.Since(mark), equals, "hello")
+}

@@ -96,53 +96,26 @@ func (p *Parser) Dependency() *DependencyPattern {
 }
 
 type MkToken struct {
-	literal   string
+	literal string
+	varuse  MkVarUse
+}
+type MkVarUse struct {
 	varname   string
 	modifiers []string
 }
 
 func (p *Parser) MkTokens() []*MkToken {
-	repl := p.repl
-
 	var tokens []*MkToken
 
-next:
-	mark := repl.Mark()
-	switch {
-	case repl.AdvanceStr("${"):
-		var token MkToken
-		if varname := p.Varname(); varname != "" {
-			token.varname = varname
-			for repl.AdvanceStr(":") {
-				var modifier string
-				switch {
-				case repl.AdvanceRegexp(`^M(\*|[\w-]+)`),
-					repl.AdvanceRegexp(`^[HQT]`),
-					repl.AdvanceRegexp(`^S/\^?[\w+\-.]*\$?/[\w+\-.]*/g?`),
-					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
-					modifier = repl.m[0]
-				}
-				if modifier != "" {
-					token.modifiers = append(token.modifiers, modifier)
-				} else {
-					goto failvaruse
-				}
-			}
-			if p.repl.AdvanceStr("}") {
-				tokens = append(tokens, &token)
-				goto next
-			}
+	for {
+		if varuse := p.VarUse(); varuse != nil {
+			tokens = append(tokens, &MkToken{varuse: *varuse})
+		} else if p.repl.AdvanceRegexp(`^([^$\\]+|\$\$|\\[\w"./()]|\$$)+`) {
+			tokens = append(tokens, &MkToken{literal: p.repl.m[0]})
+		} else {
+			return tokens
 		}
-	failvaruse:
-		repl.Reset(mark)
-		break
-
-	case repl.AdvanceRegexp(`^([^$\\]+|\$\$|\\[\w"./()]|\$$)+`):
-		tokens = append(tokens, &MkToken{literal: repl.m[0]})
-		goto next
-
 	}
-	return tokens
 }
 
 func (p *Parser) Varname() string {
@@ -150,18 +123,47 @@ func (p *Parser) Varname() string {
 
 	mark := repl.Mark()
 	if repl.AdvanceRegexp(`^\.?\w+`) {
-		varbase := repl.m[0]
 		if !repl.AdvanceStr(".") {
-			return varbase
+			return repl.Since(mark)
 		}
 		if repl.AdvanceRegexp(`^[\w-+.]+`) {
-			return varbase + "." + repl.m[0]
+			return repl.Since(mark)
 		}
-		if repl.AdvanceRegexp(`^\$\{\w+\}`) {
-			return varbase + "." + repl.m[0]
+		if varuse := p.VarUse(); varuse != nil {
+			return repl.Since(mark)
 		}
 	}
 
 	repl.Reset(mark)
 	return ""
+}
+
+func (p *Parser) VarUse() *MkVarUse {
+	repl := p.repl
+
+	mark := repl.Mark()
+	if repl.AdvanceStr("${") {
+		varname := p.Varname()
+		if varname != "" {
+			var modifiers []string
+			for repl.AdvanceStr(":") {
+				switch {
+				case repl.AdvanceRegexp(`^M(\*|[\w-]+)`),
+					repl.AdvanceRegexp(`^[HQT]`),
+					repl.AdvanceRegexp(`^S/\^?[\w+\-.]*\$?/[\w+\-.]*/g?`),
+					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
+					modifier := repl.m[0]
+					modifiers = append(modifiers, modifier)
+				default:
+					goto fail
+				}
+			}
+			if repl.AdvanceStr("}") {
+				return &MkVarUse{varname, modifiers}
+			}
+		}
+	}
+fail:
+	repl.Reset(mark)
+	return nil
 }

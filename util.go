@@ -311,6 +311,9 @@ func (pr *PrefixReplacer) Mark() string {
 func (pr *PrefixReplacer) Reset(mark string) {
 	pr.rest = mark
 }
+func (pr *PrefixReplacer) Since(mark string) string {
+	return mark[:len(mark)-len(pr.rest)]
+}
 func (pr *PrefixReplacer) AdvanceRest() string {
 	rest := pr.rest
 	pr.rest = ""
