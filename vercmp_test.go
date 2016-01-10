@@ -13,6 +13,8 @@ func (s *Suite) TestMkversion(c *check.C) {
 	c.Check(newVersion("20151110"), check.DeepEquals, &version{[]int{20151110}, 0})
 	c.Check(newVersion("0"), check.DeepEquals, &version{[]int{0}, 0})
 	c.Check(newVersion("nb1"), check.DeepEquals, &version{nil, 1})
+	c.Check(newVersion("1.0.1a"), deepEquals, &version{[]int{1, 0, 0, 0, 1, 1}, 0})
+	c.Check(newVersion("1.0.1z"), deepEquals, &version{[]int{1, 0, 0, 0, 1, 26}, 0})
 }
 
 func (s *Suite) TestPkgverCmp(c *check.C) {

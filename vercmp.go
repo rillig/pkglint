@@ -49,7 +49,7 @@ func newVersion(vstr string) *version {
 			n := 0
 			i := 0
 			for i < len(rest) && isdigit(rest[i]) {
-				n = 10*n + (int(rest[i]) - '0')
+				n = 10*n + int(rest[i]-'0')
 				i++
 			}
 			rest = rest[i:]
@@ -76,13 +76,13 @@ func newVersion(vstr string) *version {
 			i := 2
 			n := 0
 			for i < len(rest) && isdigit(rest[i]) {
-				n = 10*n + (int(rest[i]) - '0')
+				n = 10*n + int(rest[i]-'0')
 				i++
 			}
 			v.nb = n
 			rest = rest[i:]
-		case 'a' <= rest[0] && rest[0] <= 'z':
-			v.Add(int(rest[0]) - 'a' + 1)
+		case rest[0]-'a' <= 'z'-'a':
+			v.Add(int(rest[0] - 'a' + 1))
 			rest = rest[1:]
 		default:
 			rest = rest[1:]
@@ -95,7 +95,7 @@ func (v *version) Add(i int) {
 	v.v = append(v.v, i)
 }
 func isdigit(b byte) bool {
-	return '0' <= b && b <= '9'
+	return b-'0' <= 9
 }
 func (v *version) Place(i int) int {
 	if i < len(v.v) {
