@@ -75,4 +75,5 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	test("${GNUSTEP_LFLAGS:S/-L//g}", []*MkToken{{varname: "GNUSTEP_LFLAGS", modifiers: []string{"S/-L//g"}}}, "")
 	test("${SUSE_VERSION:S/.//}", []*MkToken{{varname: "SUSE_VERSION", modifiers: []string{"S/.//"}}}, "")
 	test("${MASTER_SITE_GNOME:=sources/alacarte/0.13/}", []*MkToken{{varname: "MASTER_SITE_GNOME", modifiers: []string{"=sources/alacarte/0.13/"}}}, "")
+	test("${INCLUDE_DIRS:H:T}", []*MkToken{{varname: "INCLUDE_DIRS", modifiers: []string{"H", "T"}}}, "")
 }
