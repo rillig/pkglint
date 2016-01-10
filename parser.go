@@ -149,26 +149,23 @@ func (p *Parser) VarUse() *MkVarUse {
 			var modifiers []string
 			for repl.AdvanceStr(":") {
 				modifierMark := repl.Mark()
-				switch {
-				case repl.AdvanceRegexp(`^[MN][\w*\-=?\[\]]+`),
-					repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|ts.|tu|tw|u)`),
-					repl.AdvanceRegexp(`^C/\^?([^/$\\]*|\\.|\$\{\w+\})*\$?/(\\\d|[^/$\\]+|\$\{\w+\})*/[1gW]?`),
-					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
+
+				if repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|ts.|tu|tw|u)`) {
 					modifiers = append(modifiers, repl.Since(modifierMark))
 					continue
 				}
 
-				if repl.AdvanceStr("M") {
-					for p.VarUse() != nil || repl.AdvanceRegexp(`^[\w*\-=?\[\]]+`) {
+				if repl.AdvanceRegexp(`^[=DMNU]`) {
+					for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$\\{}]|\\.)+`) {
 					}
 					modifiers = append(modifiers, repl.Since(modifierMark))
 					continue
 				}
 				repl.Reset(modifierMark)
 
-				if repl.AdvanceRegexp(`^S([,/|])`) {
+				if repl.AdvanceRegexp(`^[CS]([,/|])`) {
 					separator := repl.m[1]
-					re := `^([^` + separator + `$\\]|\\.)+`
+					re := `^([^` + separator + `$\\{}]|\\.)+`
 					repl.AdvanceStr("^")
 					for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 					}
@@ -184,13 +181,6 @@ func (p *Parser) VarUse() *MkVarUse {
 					}
 				}
 				repl.Reset(modifierMark)
-
-				if repl.AdvanceStr("D") || repl.AdvanceStr("U") {
-					if p.VarUse() != nil || repl.AdvanceRegexp(`^\w+`) {
-						modifiers = append(modifiers, repl.Since(modifierMark))
-						continue
-					}
-				}
 
 				goto fail
 			}
