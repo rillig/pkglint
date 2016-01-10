@@ -16,7 +16,7 @@ type GlobalVars struct {
 	CurPkgsrcdir   string       // The pkgsrc directory, relative to currentDir
 	Wip            bool         // Is the currently checked directory from pkgsrc-wip?
 	Infrastructure bool         // Is the currently checked item from the pkgsrc infrastructure?
-	TestingData    *TestingData // Is pkglint in self-testing mode?
+	TestingData    *TestingData // Is pkglint in self-testing mode (only during development)?
 
 	Hash         map[string]*Hash // Maps "alg:fname" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
