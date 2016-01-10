@@ -57,7 +57,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
-	if ucPkgbase != pkgupper {
+	if ucPkgbase != pkgupper && !containsVarRef(pkgbase) {
 		pkgupperLine.Error2("Package name mismatch between multiple-inclusion guard %q (expected %q) ...", pkgupper, ucPkgbase)
 		pkgbaseLine.Error1("... and package name %q.", pkgbase)
 	}

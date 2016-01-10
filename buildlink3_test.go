@@ -239,3 +239,25 @@ func (s *Suite) TestChecklinesBuildlink3_UnknownDependencyPatterns(c *check.C) {
 		"WARN: buildlink3.mk:9: Unknown dependency pattern \"hs-X11!=1.6.1\".\n"+
 		"WARN: buildlink3.mk:10: Unknown dependency pattern \"hs-X11!=1.6.1.2nb2\".\n")
 }
+
+func (s *Suite) TestChecklinesBuildlink3_PkgbaseWithVariable(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("buildlink3.mk",
+		"# $"+"NetBSD$",
+		"",
+		"BUILDLINK_TREE+=\t${PYPKGPREFIX}-wxWidgets",
+		"",
+		".if !defined(PY_WXWIDGETS_BUILDLINK3_MK)",
+		"PY_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${PYPKGPREFIX}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${PYPKGPREFIX}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${PYPKGPREFIX}-wxWidgets")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	c.Check(s.Output(), equals, "") // No warning, because of unresolvable variable PYPKGPREFIX
+}
