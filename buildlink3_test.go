@@ -179,8 +179,7 @@ func (s *Suite) TestChecklinesBuildlink3_NoBuildlinkTreeAtEnd(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: buildlink3.mk:3: This line belongs inside the .ifdef block.\n"+
-		"WARN: buildlink3.mk:15: Expected BUILDLINK_TREE line.\n"+
-		"WARN: buildlink3.mk:15: The file should end here.\n")
+		"WARN: buildlink3.mk:15: This line should contain the following text: BUILDLINK_TREE+=\t-hs-X11\n")
 }
 
 func (s *Suite) TestChecklinesBuildlink3_MultipleInclusionWrong(c *check.C) {
@@ -259,5 +258,29 @@ func (s *Suite) TestChecklinesBuildlink3_PkgbaseWithVariable(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	c.Check(s.Output(), equals, "") // No warning, because of unresolvable variable PYPKGPREFIX
+	c.Check(s.Output(), equals, "WARN: buildlink3.mk:3: Please use \"py\" instead of \"${PYPKGPREFIX}\".\n")
+}
+
+func (s *Suite) TestChecklinesBuildlink3_PkgbaseWithUnknownVariable(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("buildlink3.mk",
+		"# $"+"NetBSD$",
+		"",
+		"BUILDLINK_TREE+=\t${LICENSE}-wxWidgets",
+		"",
+		".if !defined(LICENSE_BUILDLINK3_MK)",
+		"LICENSE_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${LICENSE}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${LICENSE}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${PYPKGPREFIX}-wxWidgets")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string.\n"+
+		"WARN: buildlink3.mk:13: This line should contain the following text: BUILDLINK_TREE+=\t-${LICENSE}-wxWidgets\n")
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"regexp"
 	"strings"
 )
 
@@ -40,6 +39,34 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		return
 	}
 	pkgbase = exp.m[1]
+	if containsVarRef(pkgbase) {
+		warned := false
+		for _, pair := range []struct{ varuse, simple string }{
+			{"${PYPKGPREFIX}", "py"},
+			{"${RUBY_BASE}", "ruby"},
+			{"${RUBY_PKGPREFIX}", "ruby"},
+			{"${PHP_PKG_PREFIX}", "php"},
+		} {
+			if contains(pkgbase, pair.varuse) && !pkgbaseLine.AutofixReplace(pair.varuse, pair.simple) {
+				pkgbaseLine.Warn2("Please use %q instead of %q.", pair.simple, pair.varuse)
+				warned = true
+			}
+		}
+		if !warned {
+			if m, varuse := match1(pkgbase, `(\$\{\w+\})`); m {
+				pkgbaseLine.Warn1("Please replace %q with a simple string.", varuse)
+				warned = true
+			}
+		}
+		if warned {
+			Explain(
+				"Having variable package names in the BUILDLINK_TREE is not",
+				"necessary, since other packages depend on this package only for",
+				"a specific version of Python, Ruby or PHP.  Since these",
+				"package identifiers are only used at build time, they should",
+				"not include the specific version of the language interpreter.")
+		}
+	}
 
 	exp.ExpectEmptyLine()
 
@@ -159,8 +186,8 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	exp.ExpectEmptyLine()
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
-	if !exp.AdvanceIfMatches(`^BUILDLINK_TREE\+=\s*-` + regexp.QuoteMeta(pkgbase) + `$`) {
-		exp.CurrentLine().Warn0("Expected BUILDLINK_TREE line.")
+	if !exp.ExpectText("BUILDLINK_TREE+=\t-" + pkgbase) {
+		return
 	}
 
 	if !exp.EOF() {
