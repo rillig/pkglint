@@ -148,7 +148,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 		} else {
 			if G.opts.DebugUnchecked {
-				exp.CurrentLine().Warn0("Unchecked line in third paragraph.")
+				exp.CurrentLine().Debugf("Unchecked line in third paragraph.")
 			}
 			exp.Advance()
 		}
