@@ -117,7 +117,9 @@ next:
 				switch {
 				case repl.AdvanceStr("Q"):
 					token.modifiers = append(token.modifiers, "Q")
-				case repl.AdvanceRegexp(`^=[\w/]+`):
+				case repl.AdvanceRegexp(`^S/\^?[\w-]*\$?/[\w-]*/`):
+					token.modifiers = append(token.modifiers, repl.m[0])
+				case repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
 					token.modifiers = append(token.modifiers, repl.m[0])
 				default:
 					goto failvaruse

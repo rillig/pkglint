@@ -50,3 +50,16 @@ func (s *Suite) TestParser_Dependency(c *check.C) {
 	testDependencyRest("gnome-control-center>=2.20.1{,nb*}", DependencyPattern{"gnome-control-center", ">=", "2.20.1", "", "", ""}, "{,nb*}")
 	// "{ssh{,6}-[0-9]*,openssh-[0-9]*}" is not representable using the current data structure
 }
+
+func (s *Suite) TestParser_MkTokens(c *check.C) {
+	test := func(input string, expectedTokens []*MkToken, expectedRest string) {
+		p := NewParser(input)
+		actualTokens := p.MkTokens()
+		c.Check(actualTokens, deepEquals, expectedTokens)
+		c.Check(p.Rest(), equals, expectedRest)
+	}
+
+	test("literal", []*MkToken{{literal: "literal"}}, "")
+	test("${VARIABLE}", []*MkToken{{varname: "VARIABLE"}}, "")
+	test("${VARIABLE:S/old/new/}", []*MkToken{{varname: "VARIABLE", modifiers: []string{"S/old/new/"}}}, "")
+}
