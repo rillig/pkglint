@@ -151,7 +151,7 @@ func (p *Parser) VarUse() *MkVarUse {
 				modifierMark := repl.Mark()
 				switch {
 				case repl.AdvanceRegexp(`^[MN][\w*\-=?\[\]]+`),
-					repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`),
+					repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|ts.|tu|tw|u)`),
 					repl.AdvanceRegexp(`^S/\^?([\w"+,\-.:=|]|\\.)*\$?/([\w"+,\-.:=|]*|\\.)*/[1gW]?`),
 					repl.AdvanceRegexp(`^S\|\^?([\w"+,\-./:]|\\.)*\$?\|([\w"+,\-./:]*|\\.)*\|[1gW]?`),
 					repl.AdvanceRegexp(`^S,\^?([\w"+\-./:=|]|\\.)*\$?,([\w"+\-./:=|]*|\\.)*,[1gW]?`),
