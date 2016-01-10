@@ -111,8 +111,8 @@ next:
 	switch {
 	case repl.AdvanceStr("${"):
 		var token MkToken
-		if repl.AdvanceRegexp(`^[\w.]+`) {
-			token.varname = repl.m[0]
+		if varname := p.Varname(); varname != "" {
+			token.varname = varname
 			for repl.AdvanceStr(":") {
 				switch {
 				case repl.AdvanceStr("Q"):
@@ -140,4 +140,25 @@ next:
 
 	}
 	return tokens
+}
+
+func (p *Parser) Varname() string {
+	repl := p.repl
+
+	mark := repl.Mark()
+	if repl.AdvanceRegexp(`^\.?\w+`) {
+		varbase := repl.m[0]
+		if !repl.AdvanceStr(".") {
+			return varbase
+		}
+		if repl.AdvanceRegexp(`^[\w-+.]+`) {
+			return varbase + "." + repl.m[0]
+		}
+		if repl.AdvanceRegexp(`^\$\{\w+\}`) {
+			return varbase + "." + repl.m[0]
+		}
+	}
+
+	repl.Reset(mark)
+	return ""
 }

@@ -56,10 +56,20 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 		p := NewParser(input)
 		actualTokens := p.MkTokens()
 		c.Check(actualTokens, deepEquals, expectedTokens)
+		for i, expectedToken := range expectedTokens {
+			if i < len(actualTokens) {
+				c.Check(*actualTokens[i], deepEquals, *expectedToken)
+			}
+		}
 		c.Check(p.Rest(), equals, expectedRest)
 	}
 
 	test("literal", []*MkToken{{literal: "literal"}}, "")
 	test("${VARIABLE}", []*MkToken{{varname: "VARIABLE"}}, "")
+	test("${VARIABLE.param}", []*MkToken{{varname: "VARIABLE.param"}}, "")
+	test("${VARIABLE.${param}}", []*MkToken{{varname: "VARIABLE.${param}"}}, "")
+	test("${VARIABLE.hicolor-icon-theme}", []*MkToken{{varname: "VARIABLE.hicolor-icon-theme"}}, "")
+	test("${VARIABLE.gtk+extra}", []*MkToken{{varname: "VARIABLE.gtk+extra"}}, "")
 	test("${VARIABLE:S/old/new/}", []*MkToken{{varname: "VARIABLE", modifiers: []string{"S/old/new/"}}}, "")
+	test("${MASTER_SITE_GNOME:=sources/alacarte/0.13/}", []*MkToken{{varname: "MASTER_SITE_GNOME", modifiers: []string{"=sources/alacarte/0.13/"}}}, "")
 }
