@@ -86,6 +86,54 @@ func (s *Suite) TestChecklinesBuildlink3_NameMismatchMultipleInclusion(c *check.
 		"WARN: buildlink3.mk:9: Definition of BUILDLINK_API_DEPENDS is missing.\n")
 }
 
+func (s *Suite) TestChecklinesBuildlink3_NameMismatchAbiApi(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("buildlink3.mk",
+		"# $"+"NetBSD$",
+		"",
+		"BUILDLINK_TREE+=\ths-X11",
+		"",
+		".if !defined(HS_X11_BUILDLINK3_MK)",
+		"HS_X11_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
+		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X12>=1.6.1.2nb2",
+		"",
+		".endif\t# HS_X11_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-hs-X11")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: buildlink3.mk:9: Package name mismatch between ABI \"hs-X12\" ...\n"+
+		"WARN: buildlink3.mk:8: ... and API \"hs-X11\".\n")
+}
+
+func (s *Suite) TestChecklinesBuildlink3_AbiApiVersions(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("buildlink3.mk",
+		"# $"+"NetBSD$",
+		"",
+		"BUILDLINK_TREE+=\ths-X11",
+		"",
+		".if !defined(HS_X11_BUILDLINK3_MK)",
+		"HS_X11_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
+		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.0",
+		"",
+		".endif\t# HS_X11_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-hs-X11")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: buildlink3.mk:9: ABI version \"1.6.0\" should be at least ...\n"+
+		"WARN: buildlink3.mk:8: ... API version \"1.6.1\".\n")
+}
+
 func (s *Suite) TestChecklinesBuildlink3_NoBuildlinkTreeAtBeginning(c *check.C) {
 	G.globalData.InitVartypes()
 	mklines := s.NewMkLines("buildlink3.mk",
