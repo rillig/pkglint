@@ -94,8 +94,6 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 				parser := NewParser(value)
 				if dp := parser.Dependency(); dp != nil && parser.EOF() {
 					abi = dp
-				} else {
-					line.Warn1("Unknown dependency pattern %q.", value)
 				}
 				doCheck = true
 			}
@@ -104,8 +102,6 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 				parser := NewParser(value)
 				if dp := parser.Dependency(); dp != nil && parser.EOF() {
 					api = dp
-				} else {
-					line.Warn1("Unknown dependency pattern %q.", value)
 				}
 				doCheck = true
 			}

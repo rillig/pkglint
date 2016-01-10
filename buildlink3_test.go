@@ -166,3 +166,28 @@ func (s *Suite) TestChecklinesBuildlink3_EndIfMissing(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: buildlink3.mk:EOF: Expected .endif\n")
 }
+
+func (s *Suite) TestChecklinesBuildlink3_UnknownDependencyPatterns(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("buildlink3.mk",
+		"# $"+"NetBSD$",
+		"",
+		"BUILDLINK_TREE+= hs-X11",
+		"",
+		".if !defined(HS_X11_BUILDLINK3_MK)",
+		"HS_X11_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_DEPMETHOD.hs-X11?=\tfull",
+		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11!=1.6.1",
+		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11!=1.6.1.2nb2",
+		"",
+		".endif\t# HS_X11_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-hs-X11")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: buildlink3.mk:9: Unknown dependency pattern \"hs-X11!=1.6.1\".\n"+
+		"WARN: buildlink3.mk:10: Unknown dependency pattern \"hs-X11!=1.6.1.2nb2\".\n")
+}
