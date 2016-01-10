@@ -122,28 +122,22 @@ func (p *Parser) Varname() string {
 	repl := p.repl
 
 	mark := repl.Mark()
-	if repl.AdvanceRegexp(`^\.?\w+`) {
-		if repl.AdvanceStr(".") {
-			if repl.AdvanceRegexp(`^[\w-+.]+`) || p.VarUse() != nil {
-				return repl.Since(mark)
-			}
-		} else {
-			if hasSuffix(repl.Since(mark), "_") {
-				p.VarUse()
-			}
-			return repl.Since(mark)
-		}
+	repl.AdvanceStr(".")
+	for p.VarUse() != nil || repl.AdvanceRegexp(`^[\w\-+.]+`) {
 	}
-
-	repl.Reset(mark)
-	return ""
+	return repl.Since(mark)
 }
 
 func (p *Parser) VarUse() *MkVarUse {
 	repl := p.repl
 
 	mark := repl.Mark()
-	if repl.AdvanceStr("${") {
+	if repl.AdvanceStr("${") || repl.AdvanceStr("$(") {
+		closing := "}"
+		if repl.Since(mark) == "$(" {
+			closing = ")"
+		}
+
 		varname := p.Varname()
 		if varname != "" {
 			var modifiers []string
@@ -156,7 +150,7 @@ func (p *Parser) VarUse() *MkVarUse {
 				}
 
 				if repl.AdvanceRegexp(`^[=DMNU]`) {
-					for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$\\{}]|\\.)+`) {
+					for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$\\`+closing+`]|\\.)+`) {
 					}
 					modifiers = append(modifiers, repl.Since(modifierMark))
 					continue
@@ -165,7 +159,7 @@ func (p *Parser) VarUse() *MkVarUse {
 
 				if repl.AdvanceRegexp(`^[CS]([,/|])`) {
 					separator := repl.m[1]
-					re := `^([^` + separator + `$\\{}]|\\.)+`
+					re := `^([^` + separator + `$\\` + closing + `]|\\.)+`
 					repl.AdvanceStr("^")
 					for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 					}
@@ -184,11 +178,12 @@ func (p *Parser) VarUse() *MkVarUse {
 
 				goto fail
 			}
-			if repl.AdvanceStr("}") {
+			if repl.AdvanceStr(closing) {
 				return &MkVarUse{varname, modifiers}
 			}
 		}
 	}
+
 fail:
 	repl.Reset(mark)
 	return nil

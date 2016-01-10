@@ -52,7 +52,7 @@ func (s *Suite) TestParser_Dependency(c *check.C) {
 }
 
 func (s *Suite) TestParser_MkTokens(c *check.C) {
-	test := func(input string, expectedTokens []*MkToken, expectedRest string) {
+	parse := func(input string, expectedTokens []*MkToken, expectedRest string) {
 		p := NewParser(input)
 		actualTokens := p.MkTokens()
 		c.Check(actualTokens, deepEquals, expectedTokens)
@@ -64,7 +64,7 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 		c.Check(p.Rest(), equals, expectedRest)
 	}
 	token := func(input string, expectedToken MkToken) {
-		test(input, []*MkToken{&expectedToken}, "")
+		parse(input, []*MkToken{&expectedToken}, "")
 	}
 	literal := func(literal string) MkToken {
 		return MkToken{literal: literal}
@@ -106,4 +106,10 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token("${PKGNAME:S/py${_PYTHON_VERSION}/py${i}/:C/-[0-9].*$/-[0-9]*/}", varuse("PKGNAME", "S/py${_PYTHON_VERSION}/py${i}/", "C/-[0-9].*$/-[0-9]*/"))
 	token("${_PERL5_VARS:tl:S/^/-V:/}", varuse("_PERL5_VARS", "tl", "S/^/-V:/"))
 	token("${_PERL5_VARS_OUT:M${_var_:tl}=*:S/^${_var_:tl}=${_PERL5_PREFIX:=/}//}", varuse("_PERL5_VARS_OUT", "M${_var_:tl}=*", "S/^${_var_:tl}=${_PERL5_PREFIX:=/}//"))
+	token("${RUBY${RUBY_VER}_PATCHLEVEL}", varuse("RUBY${RUBY_VER}_PATCHLEVEL"))
+	token("${DISTFILES:M*.gem}", varuse("DISTFILES", "M*.gem"))
+	token("$(GNUSTEP_USER_ROOT)", varuse("GNUSTEP_USER_ROOT"))
+
+	parse("${VAR)", nil, "${VAR)")
+	parse("$(VAR}", nil, "$(VAR}")
 }
