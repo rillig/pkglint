@@ -206,7 +206,6 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 				modifiers = append(modifiers, repl.Since(modifierMark))
 				continue
 			}
-			repl.Reset(modifierMark)
 
 		case 'C', 'S':
 			if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
@@ -226,7 +225,6 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 					}
 				}
 			}
-			repl.Reset(modifierMark)
 
 		case '@':
 			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
@@ -237,7 +235,6 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 					continue
 				}
 			}
-			repl.Reset(modifierMark)
 
 		case '[':
 			if repl.AdvanceRegexp(`^\[[-.\d]+\]`) {
@@ -247,23 +244,23 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 
 		case '?':
 			repl.AdvanceStr("?")
-			for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:`+closing+`]|\$\$)+`) {
+			re := `^([^$:` + closing + `]|\$\$)+`
+			for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 			}
 			if repl.AdvanceStr(":") {
-				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:`+closing+`]|\$\$)+`) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 				}
 				modifiers = append(modifiers, repl.Since(modifierMark))
 				continue
 			}
-			repl.Reset(modifierMark)
+		}
 
-		default:
-			for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$`+closing+`]|\$\$)+`) {
-			}
-			if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
-				modifiers = append(modifiers, suffixSubst)
-				continue
-			}
+		repl.Reset(modifierMark)
+		for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$`+closing+`]|\$\$)+`) {
+		}
+		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
+			modifiers = append(modifiers, suffixSubst)
+			continue
 		}
 	}
 	return modifiers

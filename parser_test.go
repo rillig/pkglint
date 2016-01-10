@@ -120,6 +120,7 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token("${PREFIX:C;///*;/;g:C;/$;;}", varuse("PREFIX", "C;///*;/;g", "C;/$;;"))
 	token("${GZIP_CMD:[1]:Q}", varuse("GZIP_CMD", "[1]", "Q"))
 	token("${DISTNAME:C/-[0-9]+$$//:C/_/-/}", varuse("DISTNAME", "C/-[0-9]+$$//", "C/_/-/"))
+	token("${DISTNAME:slang%=slang2%}", varuse("DISTNAME", "slang%=slang2%"))
 
 	/* weird features */
 	token("${${EMACS_VERSION_MAJOR}>22:?@comment :}", varuse("${EMACS_VERSION_MAJOR}>22", "?@comment :"))
