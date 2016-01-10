@@ -276,6 +276,37 @@ func NewPrefixReplacer(s string) *PrefixReplacer {
 	return &PrefixReplacer{s, "", nil}
 }
 
+func (pr *PrefixReplacer) AdvanceBytes(bits0x00, bits0x20, bits0x40, bits0x60 uint32, re string) bool {
+	if G.TestingData != nil {
+		pr.verifyBits(bits0x00, bits0x20, bits0x40, bits0x60, re)
+	}
+
+	rest := pr.rest
+	n := len(pr.rest)
+	i := 0
+loop:
+	for ; i < n; i++ {
+		b := rest[i]
+		var mask uint32
+		switch b & 0xE0 {
+		case 0x00:
+			mask = bits0x00
+		case 0x20:
+			mask = bits0x20
+		case 0x40:
+			mask = bits0x40
+		case 0x60:
+			mask = bits0x60
+		}
+		if (mask>>(b&0x1F))&1 == 0 {
+			break loop
+		}
+	}
+	pr.s = rest[:i]
+	pr.rest = rest[i:]
+	return i != 0
+}
+
 func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.m = nil
 	pr.s = ""
@@ -308,6 +339,15 @@ func (pr *PrefixReplacer) AdvanceRegexp(re string) bool {
 	}
 	return false
 }
+
+func (pr *PrefixReplacer) PeekByte() int {
+	rest := pr.rest
+	if len(rest) == 0 {
+		return -1
+	}
+	return int(rest[0])
+}
+
 func (pr *PrefixReplacer) Mark() string {
 	return pr.rest
 }
@@ -324,6 +364,46 @@ func (pr *PrefixReplacer) AdvanceRest() string {
 	rest := pr.rest
 	pr.rest = ""
 	return rest
+}
+
+func (pr *PrefixReplacer) verifyBits(bits0x00, bits0x20, bits0x40, bits0x60 uint32, re string) {
+	if G.TestingData.VerifiedBits[re] {
+		return
+	}
+	G.TestingData.VerifiedBits[re] = true
+	rec := regcomp(re)
+
+	var actual0x00, actual0x20, actual0x40, actual0x60 uint32
+	mask := uint32(0)
+	for i := byte(0); i < 0x80; i++ {
+		if rec.Match([]byte{i}) {
+			mask |= uint32(1) << (i & 31)
+		}
+		switch i {
+		case 0x1F:
+			actual0x00 = mask
+		case 0x3F:
+			actual0x20 = mask
+		case 0x5F:
+			actual0x40 = mask
+		case 0x7F:
+			actual0x60 = mask
+		}
+		if i&0x1F == 0x1F {
+			mask = 0
+		}
+	}
+	if actual0x00 == bits0x00 && actual0x20 == bits0x20 && actual0x40 == bits0x40 && actual0x60 == bits0x60 {
+		return
+	}
+
+	print(fmt.Sprintf(""+
+		"Expected bits(%#08x, %#08x, %#08x, %#08x), "+
+		"not bits(%#08x, %#08x, %#08x, %#08x) "+
+		"for pattern %q.\n",
+		actual0x00, actual0x20, actual0x40, actual0x60,
+		bits0x00, bits0x20, bits0x40, bits0x60,
+		re))
 }
 
 // Useful in combination with regex.Find*Index

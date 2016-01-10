@@ -145,7 +145,7 @@ func (p *Parser) Varname() string {
 
 	mark := repl.Mark()
 	repl.AdvanceStr(".")
-	for p.VarUse() != nil || repl.AdvanceRegexp(`^[\w\-+.]+`) {
+	for p.VarUse() != nil || repl.AdvanceBytes(0x00000000, 0x03ff6800, 0x87fffffe, 0x07fffffe, `[\w+\-.]`) {
 	}
 	return repl.Since(mark)
 }
@@ -179,9 +179,9 @@ func (p *Parser) VarUse() *MkVarUse {
 				return &MkVarUse{varexpr, modifiers}
 			}
 		}
+		repl.Reset(mark)
 	}
 
-	repl.Reset(mark)
 	return nil
 }
 
@@ -192,54 +192,61 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 	for repl.AdvanceStr(":") {
 		modifierMark := repl.Mark()
 
-		if repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|ts.|tu|tw|u)`) {
-			modifiers = append(modifiers, repl.Since(modifierMark))
-			continue
-		}
-
-		if repl.AdvanceRegexp(`^[=DMNU]`) {
-			for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:`+closing+`]|\$\$)+`) {
+		switch repl.PeekByte() {
+		case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
+			if repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|ts.|tu|tw|u)`) {
+				modifiers = append(modifiers, repl.Since(modifierMark))
+				continue
 			}
-			modifiers = append(modifiers, repl.Since(modifierMark))
-			continue
-		}
-		repl.Reset(modifierMark)
 
-		if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
-			separator := repl.m[1]
-			repl.AdvanceStr("^")
-			re := `^([^\` + separator + `$` + closing + `\\]|\$\$|\\.)+`
-			for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+		case '=', 'D', 'M', 'N', 'U':
+			if repl.AdvanceRegexp(`^[=DMNU]`) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:`+closing+`]|\$\$)+`) {
+				}
+				modifiers = append(modifiers, repl.Since(modifierMark))
+				continue
 			}
-			repl.AdvanceStr("$")
-			if repl.AdvanceStr(separator) {
+			repl.Reset(modifierMark)
+
+		case 'C', 'S':
+			if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
+				separator := repl.m[1]
+				repl.AdvanceStr("^")
+				re := `^([^\` + separator + `$` + closing + `\\]|\$\$|\\.)+`
 				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 				}
+				repl.AdvanceStr("$")
 				if repl.AdvanceStr(separator) {
-					repl.AdvanceRegexp(`^[1gW]`)
+					for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+					}
+					if repl.AdvanceStr(separator) {
+						repl.AdvanceRegexp(`^[1gW]`)
+						modifiers = append(modifiers, repl.Since(modifierMark))
+						continue
+					}
+				}
+			}
+			repl.Reset(modifierMark)
+
+		case '@':
+			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:@`+closing+`]|\$\$)+`) {
+				}
+				if repl.AdvanceStr("@") {
 					modifiers = append(modifiers, repl.Since(modifierMark))
 					continue
 				}
 			}
-		}
-		repl.Reset(modifierMark)
+			repl.Reset(modifierMark)
 
-		if repl.AdvanceRegexp(`^@([\w.]+)@`) {
-			for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:@`+closing+`]|\$\$)+`) {
-			}
-			if repl.AdvanceStr("@") {
+		case '[':
+			if repl.AdvanceRegexp(`^\[[-.\d]+\]`) {
 				modifiers = append(modifiers, repl.Since(modifierMark))
 				continue
 			}
-		}
-		repl.Reset(modifierMark)
 
-		if repl.AdvanceRegexp(`^\[[-.\d]+\]`) {
-			modifiers = append(modifiers, repl.Since(modifierMark))
-			continue
-		}
-
-		if repl.AdvanceStr("?") {
+		case '?':
+			repl.AdvanceStr("?")
 			for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:`+closing+`]|\$\$)+`) {
 			}
 			if repl.AdvanceStr(":") {
@@ -248,14 +255,15 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 				modifiers = append(modifiers, repl.Since(modifierMark))
 				continue
 			}
-		}
-		repl.Reset(modifierMark)
+			repl.Reset(modifierMark)
 
-		for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$`+closing+`]|\$\$)+`) {
-		}
-		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
-			modifiers = append(modifiers, suffixSubst)
-			continue
+		default:
+			for p.VarUse() != nil || repl.AdvanceRegexp(`^([^:$`+closing+`]|\$\$)+`) {
+			}
+			if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
+				modifiers = append(modifiers, suffixSubst)
+				continue
+			}
 		}
 	}
 	return modifiers
