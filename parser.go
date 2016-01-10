@@ -110,7 +110,7 @@ func (p *Parser) MkTokens() []*MkToken {
 	for {
 		if varuse := p.VarUse(); varuse != nil {
 			tokens = append(tokens, &MkToken{varuse: *varuse})
-		} else if p.repl.AdvanceRegexp(`^([^$\\]+|\$\$|\\[\w"./()]|\$$)+`) {
+		} else if p.repl.AdvanceRegexp(`^([^$\\]+|\$\$|\\.|\$$)+`) {
 			tokens = append(tokens, &MkToken{literal: p.repl.m[0]})
 		} else {
 			return tokens
