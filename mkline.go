@@ -55,20 +55,14 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xop = NewMkOperator(op)
 		mkline.xvalue = value
 		mkline.xcomment = comment
-
-		if true || G.opts.DebugUnchecked {
-			p := NewParser(value)
-			p.MkTokens()
-			if p.Rest() != "" {
-				mkline.Debug1("Cannot parse MkTokens %q.", p.Rest())
-			}
-		}
+		mkline.Tokenize(value)
 		return
 	}
 
 	if hasPrefix(text, "\t") {
 		mkline.xtype = 2
 		mkline.xs1 = text[1:]
+		mkline.Tokenize(mkline.xs1)
 		return
 	}
 
@@ -145,6 +139,14 @@ func (mkline *MkLine) IsSysinclude() bool  { return mkline.xtype == 7 }
 func (mkline *MkLine) IsDependency() bool  { return mkline.xtype == 8 }
 func (mkline *MkLine) Targets() string     { return mkline.xs1 }
 func (mkline *MkLine) Sources() string     { return mkline.xs2 }
+
+func (mkline *MkLine) Tokenize(s string) {
+	p := NewParser(s)
+	p.MkTokens()
+	if p.Rest() != "" {
+		mkline.Error1("Invalid Makefile syntax at %q.", p.Rest())
+	}
+}
 
 func (mkline *MkLine) CheckVardef(varname string, op MkOperator) {
 	if G.opts.DebugTrace {

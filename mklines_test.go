@@ -39,7 +39,7 @@ func (s *Suite) TestMkLines_UnusualTarget(c *check.C) {
 		"# $"+"NetBSD$",
 		"",
 		"echo: echo.c",
-		"\tcc -o ${.TARGET} $<")
+		"\tcc -o ${.TARGET} ${.IMPSRC}")
 
 	mklines.Check()
 

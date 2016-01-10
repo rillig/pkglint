@@ -11,7 +11,7 @@ func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
 		"{print $$0}")
 
 	c.Check(s.Output(), equals, ""+
-		"DEBUG: fname:1: Cannot parse MkTokens \"$0}\".\n"+
+		"ERROR: fname:1: Invalid Makefile syntax at \"$0}\".\n"+
 		"DEBUG: fname:1: Unchecked AWK command: \"{print $0}\"\n"+
 		"DEBUG: fname:2: Unchecked AWK command: \"{print $$0}\"\n")
 }
