@@ -149,10 +149,10 @@ func (p *Parser) VarUse() *MkVarUse {
 			var modifiers []string
 			for repl.AdvanceStr(":") {
 				switch {
-				case repl.AdvanceRegexp(`^M[\w*\-=]+`),
-					repl.AdvanceRegexp(`^(H|Q|T|tl|tu)`),
-					repl.AdvanceRegexp(`^S/\^?[\w+\-.:]*\$?/[\w+\-.:]*/g?`),
-					repl.AdvanceRegexp(`^C/\^?([\w()+\-.:\[\]]*|\\.)*\$?/(\\\d|\w+)*/g?`),
+				case repl.AdvanceRegexp(`^[MN][\w*\-=?\[\]]+`),
+					repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`),
+					repl.AdvanceRegexp(`^S/\^?[\w+\-.:]*\$?/[\w+\-.:]*/[1gW]?`),
+					repl.AdvanceRegexp(`^C/\^?([\w()+\-.:=?\[\]^]*|\\.)*\$?/(\\\d|\w+)*/[1gW]?`),
 					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
 					modifier := repl.m[0]
 					modifiers = append(modifiers, modifier)
