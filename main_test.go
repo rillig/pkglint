@@ -28,6 +28,7 @@ func (s *Suite) TestMainNoArgs(c *check.C) {
 }
 
 // go test -c -covermode count
+// pkgsrcdir=...
 // env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov -check.f TestRunPkglint
 // go tool cover -html=pkglint.cov -o coverage.html
 func (s *Suite) TestRunPkglint(c *check.C) {
