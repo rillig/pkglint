@@ -151,6 +151,7 @@ func (p *Parser) VarUse() *MkVarUse {
 				case repl.AdvanceRegexp(`^M(\*|[\w-]+)`),
 					repl.AdvanceRegexp(`^[HQT]`),
 					repl.AdvanceRegexp(`^S/\^?[\w+\-.]*\$?/[\w+\-.]*/g?`),
+					repl.AdvanceRegexp(`^C/\^?([\w()+\-.\[\]]*|\\.)*\$?/(\\\d|\w+)*/g?`),
 					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
 					modifier := repl.m[0]
 					modifiers = append(modifiers, modifier)
