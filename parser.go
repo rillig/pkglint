@@ -114,14 +114,17 @@ next:
 		if varname := p.Varname(); varname != "" {
 			token.varname = varname
 			for repl.AdvanceStr(":") {
+				var modifier string
 				switch {
-				case repl.AdvanceStr("Q"):
-					token.modifiers = append(token.modifiers, "Q")
-				case repl.AdvanceRegexp(`^S/\^?[\w-]*\$?/[\w-]*/`):
-					token.modifiers = append(token.modifiers, repl.m[0])
-				case repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
-					token.modifiers = append(token.modifiers, repl.m[0])
-				default:
+				case repl.AdvanceRegexp(`^M(\*|[\w-]+)`),
+					repl.AdvanceRegexp(`^Q`),
+					repl.AdvanceRegexp(`^S/\^?[\w+\-.]*\$?/[\w+\-.]*/`),
+					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
+					modifier = repl.m[0]
+				}
+				if modifier != "" {
+					token.modifiers = append(token.modifiers, modifier)
+				} else {
 					goto failvaruse
 				}
 			}
