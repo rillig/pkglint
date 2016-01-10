@@ -118,7 +118,7 @@ next:
 				switch {
 				case repl.AdvanceRegexp(`^M(\*|[\w-]+)`),
 					repl.AdvanceRegexp(`^Q`),
-					repl.AdvanceRegexp(`^S/\^?[\w+\-.]*\$?/[\w+\-.]*/`),
+					repl.AdvanceRegexp(`^S/\^?[\w+\-.]*\$?/[\w+\-.]*/g?`),
 					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
 					modifier = repl.m[0]
 				}

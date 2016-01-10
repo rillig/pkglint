@@ -72,5 +72,7 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	test("${VARIABLE.hicolor-icon-theme}", []*MkToken{{varname: "VARIABLE.hicolor-icon-theme"}}, "")
 	test("${VARIABLE.gtk+extra}", []*MkToken{{varname: "VARIABLE.gtk+extra"}}, "")
 	test("${VARIABLE:S/old/new/}", []*MkToken{{varname: "VARIABLE", modifiers: []string{"S/old/new/"}}}, "")
+	test("${GNUSTEP_LFLAGS:S/-L//g}", []*MkToken{{varname: "GNUSTEP_LFLAGS", modifiers: []string{"S/-L//g"}}}, "")
+	test("${SUSE_VERSION:S/.//}", []*MkToken{{varname: "SUSE_VERSION", modifiers: []string{"S/.//"}}}, "")
 	test("${MASTER_SITE_GNOME:=sources/alacarte/0.13/}", []*MkToken{{varname: "MASTER_SITE_GNOME", modifiers: []string{"=sources/alacarte/0.13/"}}}, "")
 }
