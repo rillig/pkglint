@@ -18,9 +18,10 @@ func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
 
 func (s *Suite) TestVartypeCheck_BasicRegularExpression(c *check.C) {
 	runVartypeChecks("REPLACE_FILES.pl", opAssign, (*VartypeCheck).BasicRegularExpression,
-		".*\\.pl$")
+		".*\\.pl$",
+		".*\\.pl$$")
 
-	c.Check(s.Output(), equals, "")
+	c.Check(s.Output(), equals, "ERROR: fname:1: Invalid Makefile syntax at \"$\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_BuildlinkDepmethod(c *check.C) {

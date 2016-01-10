@@ -105,18 +105,39 @@ type MkVarUse struct {
 }
 
 func (p *Parser) MkTokens() []*MkToken {
-	var tokens []*MkToken
+	repl := p.repl
 
-	for {
+	var tokens []*MkToken
+	for !p.EOF() {
 		if varuse := p.VarUse(); varuse != nil {
 			tokens = append(tokens, &MkToken{varuse: *varuse})
-		} else if p.repl.AdvanceRegexp(`^([^$]+|\$\$|\$$)+`) {
-			literal := strings.Replace(p.repl.m[0], "$$", "$", -1)
-			tokens = append(tokens, &MkToken{literal: literal})
-		} else {
-			return tokens
+			continue
 		}
+
+		mark := repl.Mark()
+		needsReplace := false
+	again:
+		dollar := strings.IndexByte(repl.rest, '$')
+		if dollar == -1 {
+			dollar = len(repl.rest)
+		}
+		repl.Skip(dollar)
+		if repl.AdvanceStr("$$") {
+			needsReplace = true
+			goto again
+		}
+		literal := repl.Since(mark)
+		if needsReplace {
+			literal = strings.Replace(literal, "$$", "$", -1)
+		}
+		if literal != "" {
+			tokens = append(tokens, &MkToken{literal: literal})
+			continue
+		}
+
+		break
 	}
+	return tokens
 }
 
 func (p *Parser) Varname() string {

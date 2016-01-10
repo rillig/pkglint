@@ -314,6 +314,9 @@ func (pr *PrefixReplacer) Mark() string {
 func (pr *PrefixReplacer) Reset(mark string) {
 	pr.rest = mark
 }
+func (pr *PrefixReplacer) Skip(n int) {
+	pr.rest = pr.rest[n:]
+}
 func (pr *PrefixReplacer) Since(mark string) string {
 	return mark[:len(mark)-len(pr.rest)]
 }
