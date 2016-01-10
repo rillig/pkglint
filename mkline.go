@@ -56,7 +56,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xvalue = value
 		mkline.xcomment = comment
 
-		if G.opts.DebugUnchecked {
+		if true || G.opts.DebugUnchecked {
 			p := NewParser(value)
 			p.MkTokens()
 			if p.Rest() != "" {
