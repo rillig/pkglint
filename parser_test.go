@@ -75,6 +75,8 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 
 	token("literal", literal("literal"))
 	token("\\/share\\/ { print \"share directory\" }", literal("\\/share\\/ { print \"share directory\" }"))
+	token("find . -name \\*.orig -o -name \\*.pre", literal("find . -name \\*.orig -o -name \\*.pre"))
+
 	token("${VARIABLE}", varuse("VARIABLE"))
 	token("${VARIABLE.param}", varuse("VARIABLE.param"))
 	token("${VARIABLE.${param}}", varuse("VARIABLE.${param}"))
@@ -88,5 +90,6 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token("${A.${B.${C.${D}}}}", varuse("A.${B.${C.${D}}}"))
 	token("${RUBY_VERSION:C/([0-9]+)\\.([0-9]+)\\.([0-9]+)/\\1/}", varuse("RUBY_VERSION", "C/([0-9]+)\\.([0-9]+)\\.([0-9]+)/\\1/"))
 	token("${PERL5_${_var_}:Q}", varuse("PERL5_${_var_}", "Q"))
-	token("find . -name \\*.orig -o -name \\*.pre", literal("find . -name \\*.orig -o -name \\*.pre"))
+	token("${PKGNAME_REQD:C/(^.*-|^)py([0-9][0-9])-.*/\\2/}", varuse("PKGNAME_REQD", "C/(^.*-|^)py([0-9][0-9])-.*/\\2/"))
+	token("${PYLIB:S|/|\\\\/|g}", varuse("PYLIB", "S|/|\\\\/|g"))
 }
