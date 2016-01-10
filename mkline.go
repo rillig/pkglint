@@ -56,10 +56,12 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xvalue = value
 		mkline.xcomment = comment
 
-		p := NewParser(value)
-		p.MkTokens()
-		if p.Rest() != "" {
-			mkline.Error1("Cannot parse MkTokens %q.", p.Rest())
+		if G.opts.DebugUnchecked {
+			p := NewParser(value)
+			p.MkTokens()
+			if p.Rest() != "" {
+				mkline.Debug1("Cannot parse MkTokens %q.", p.Rest())
+			}
 		}
 		return
 	}

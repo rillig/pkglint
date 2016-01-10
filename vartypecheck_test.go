@@ -5,11 +5,15 @@ import (
 )
 
 func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
+	s.UseCommandLine(c, "-Dunchecked")
 	runVartypeChecks("PLIST_AWK", opAssignAppend, (*VartypeCheck).AwkCommand,
 		"{print $0}",
 		"{print $$0}")
 
-	c.Check(s.Output(), equals, "ERROR: fname:1: Cannot parse MkTokens \"$0}\".\n")
+	c.Check(s.Output(), equals, ""+
+		"DEBUG: fname:1: Cannot parse MkTokens \"$0}\".\n"+
+		"DEBUG: fname:1: Unchecked AWK command: \"{print $0}\"\n"+
+		"DEBUG: fname:2: Unchecked AWK command: \"{print $$0}\"\n")
 }
 
 func (s *Suite) TestVartypeCheck_BasicRegularExpression(c *check.C) {

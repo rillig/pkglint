@@ -335,11 +335,12 @@ func (s *Suite) TestMkLine_CheckRelativePkgdir(c *check.C) {
 
 // PR pkg/46570, item 2
 func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
+	s.UseCommandLine(c, "-Dunchecked")
 	mkline := NewMkLine(NewLine("Makefile", 93, "EGDIRS=${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d", nil))
 
 	mkline.CheckVarassign()
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: Makefile:93: Cannot parse MkTokens \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
+		"DEBUG: Makefile:93: Cannot parse MkTokens \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
 }
