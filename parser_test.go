@@ -65,6 +65,7 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	}
 
 	test("literal", []*MkToken{{literal: "literal"}}, "")
+	test("\\/share\\/ { print \"share directory\" }", []*MkToken{{literal: "\\/share\\/ { print \"share directory\" }"}}, "")
 	test("${VARIABLE}", []*MkToken{{varname: "VARIABLE"}}, "")
 	test("${VARIABLE.param}", []*MkToken{{varname: "VARIABLE.param"}}, "")
 	test("${VARIABLE.${param}}", []*MkToken{{varname: "VARIABLE.${param}"}}, "")

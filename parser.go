@@ -134,7 +134,7 @@ next:
 		repl.Reset(mark)
 		break
 
-	case repl.AdvanceRegexp(`^([^$\\]+|\$\$|\\[\w".]|\$$)+`):
+	case repl.AdvanceRegexp(`^([^$\\]+|\$\$|\\[\w"./()]|\$$)+`):
 		tokens = append(tokens, &MkToken{literal: repl.m[0]})
 		goto next
 
