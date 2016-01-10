@@ -94,3 +94,48 @@ func (p *Parser) Dependency() *DependencyPattern {
 	repl.Reset(mark)
 	return nil
 }
+
+type MkToken struct {
+	literal   string
+	varname   string
+	modifiers []string
+}
+
+func (p *Parser) MkTokens() []*MkToken {
+	repl := p.repl
+
+	var tokens []*MkToken
+
+next:
+	mark := repl.Mark()
+	switch {
+	case repl.AdvanceStr("${"):
+		var token MkToken
+		if repl.AdvanceRegexp(`^[\w.]+`) {
+			token.varname = repl.m[0]
+			for repl.AdvanceStr(":") {
+				switch {
+				case repl.AdvanceStr("Q"):
+					token.modifiers = append(token.modifiers, "Q")
+				case repl.AdvanceRegexp(`^=[\w/]+`):
+					token.modifiers = append(token.modifiers, repl.m[0])
+				default:
+					goto failvaruse
+				}
+			}
+			if p.repl.AdvanceStr("}") {
+				tokens = append(tokens, &token)
+				goto next
+			}
+		}
+	failvaruse:
+		repl.Reset(mark)
+		break
+
+	case repl.AdvanceRegexp(`^([^$\\]+|\$\$|\\[\w".]|\$$)+`):
+		tokens = append(tokens, &MkToken{literal: repl.m[0]})
+		goto next
+
+	}
+	return tokens
+}

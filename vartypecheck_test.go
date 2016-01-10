@@ -6,9 +6,10 @@ import (
 
 func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
 	runVartypeChecks("PLIST_AWK", opAssignAppend, (*VartypeCheck).AwkCommand,
-		"{print $0}")
+		"{print $0}",
+		"{print $$0}")
 
-	c.Check(s.Output(), equals, "")
+	c.Check(s.Output(), equals, "ERROR: fname:1: Cannot parse MkTokens \"$0}\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_BasicRegularExpression(c *check.C) {

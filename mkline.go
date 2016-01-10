@@ -55,6 +55,12 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xop = NewMkOperator(op)
 		mkline.xvalue = value
 		mkline.xcomment = comment
+
+		p := NewParser(value)
+		p.MkTokens()
+		if p.Rest() != "" {
+			mkline.Error1("Cannot parse MkTokens %q.", p.Rest())
+		}
 		return
 	}
 

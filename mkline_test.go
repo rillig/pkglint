@@ -332,3 +332,14 @@ func (s *Suite) TestMkLine_CheckRelativePkgdir(c *check.C) {
 		"ERROR: Makefile:46: \"../pkgbase\" does not exist.\n"+
 		"WARN: Makefile:46: \"../pkgbase\" is not a valid relative package directory.\n")
 }
+
+// PR pkg/46570, item 2
+func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
+	mkline := NewMkLine(NewLine("Makefile", 93, "EGDIRS=${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d", nil))
+
+	mkline.CheckVarassign()
+
+	c.Check(s.Output(), equals, ""+
+		"ERROR: Makefile:93: Cannot parse MkTokens \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
+		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
+}
