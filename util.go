@@ -293,7 +293,10 @@ func (pr *PrefixReplacer) AdvanceRegexp(re string) bool {
 	pr.m = nil
 	pr.s = ""
 	if !hasPrefix(re, "^") {
-		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: regular expression %q must have prefix %q", re, "^"))
+		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: regular expression %q must have prefix %q.", re, "^"))
+	}
+	if matches("", re) {
+		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
 	}
 	if m := match(pr.rest, re); m != nil {
 		if G.opts.DebugTrace {

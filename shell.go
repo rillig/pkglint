@@ -421,11 +421,16 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		line.Note1("You don't need to use \"-\" before %q.", cmd)
 	}
 
-	setE := false
 	repl := NewPrefixReplacer(shelltext)
-	if repl.AdvanceRegexp(`^\s*([-@]*)(\$\{_PKG_SILENT\}\$\{_PKG_DEBUG\}|\$\{RUN\}|)`) {
-		hidden, macro := repl.m[1], repl.m[2]
-		shline.checkLineStart(hidden, macro, repl.rest, &setE)
+	repl.AdvanceRegexp(`^\s+`)
+	if repl.AdvanceRegexp(`^[-@]+`) {
+		shline.checkHiddenAndSuppress(repl.m[0], repl.rest)
+	}
+	setE := false
+	if repl.AdvanceStr("${RUN}") {
+		setE = true
+	} else {
+		repl.AdvanceStr("${_PKG_SILENT}${_PKG_DEBUG}")
 	}
 
 	shline.CheckShellCommand(repl.rest, &setE)
@@ -483,17 +488,17 @@ func (shline *ShellLine) CheckShellCommands(shellcmds string) {
 	}
 }
 
-func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool) {
+func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) {
 	if G.opts.DebugTrace {
-		defer tracecall(hidden, macro, rest, eflag)()
+		defer tracecall(hiddenAndSuppress, rest)()
 	}
 
 	switch {
-	case !contains(hidden, "@"):
+	case !contains(hiddenAndSuppress, "@"):
 		// Nothing is hidden at all.
 
 	case hasPrefix(G.Mk.target, "show-") || hasSuffix(G.Mk.target, "-message"):
-		// In these targets commands may be hidden.
+		// In these targets, all commands may be hidden.
 
 	case hasPrefix(rest, "#"):
 		// Shell comments may be hidden, since they cannot have side effects.
@@ -523,15 +528,11 @@ func (shline *ShellLine) checkLineStart(hidden, macro, rest string, eflag *bool)
 		}
 	}
 
-	if contains(hidden, "-") {
+	if contains(hiddenAndSuppress, "-") {
 		shline.line.Warn0("Using a leading \"-\" to suppress errors is deprecated.")
 		Explain2(
 			"If you really want to ignore any errors from this command, append",
 			"\"|| ${TRUE}\" to the command.")
-	}
-
-	if macro == "${RUN}" {
-		*eflag = true
 	}
 }
 
