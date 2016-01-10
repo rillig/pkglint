@@ -123,13 +123,14 @@ func (p *Parser) Varname() string {
 
 	mark := repl.Mark()
 	if repl.AdvanceRegexp(`^\.?\w+`) {
-		if !repl.AdvanceStr(".") {
-			return repl.Since(mark)
-		}
-		if repl.AdvanceRegexp(`^[\w-+.]+`) {
-			return repl.Since(mark)
-		}
-		if varuse := p.VarUse(); varuse != nil {
+		if repl.AdvanceStr(".") {
+			if repl.AdvanceRegexp(`^[\w-+.]+`) || p.VarUse() != nil {
+				return repl.Since(mark)
+			}
+		} else {
+			if hasSuffix(repl.Since(mark), "_") {
+				p.VarUse()
+			}
 			return repl.Since(mark)
 		}
 	}
@@ -148,10 +149,10 @@ func (p *Parser) VarUse() *MkVarUse {
 			var modifiers []string
 			for repl.AdvanceStr(":") {
 				switch {
-				case repl.AdvanceRegexp(`^M(\*|[\w-]+)`),
-					repl.AdvanceRegexp(`^[HQT]`),
-					repl.AdvanceRegexp(`^S/\^?[\w+\-.]*\$?/[\w+\-.]*/g?`),
-					repl.AdvanceRegexp(`^C/\^?([\w()+\-.\[\]]*|\\.)*\$?/(\\\d|\w+)*/g?`),
+				case repl.AdvanceRegexp(`^M[\w*\-=]+`),
+					repl.AdvanceRegexp(`^(H|Q|T|tl|tu)`),
+					repl.AdvanceRegexp(`^S/\^?[\w+\-.:]*\$?/[\w+\-.:]*/g?`),
+					repl.AdvanceRegexp(`^C/\^?([\w()+\-.:\[\]]*|\\.)*\$?/(\\\d|\w+)*/g?`),
 					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
 					modifier := repl.m[0]
 					modifiers = append(modifiers, modifier)
