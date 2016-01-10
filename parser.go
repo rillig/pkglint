@@ -148,6 +148,7 @@ func (p *Parser) VarUse() *MkVarUse {
 		if varname != "" {
 			var modifiers []string
 			for repl.AdvanceStr(":") {
+				modifierMark := repl.Mark()
 				switch {
 				case repl.AdvanceRegexp(`^[MN][\w*\-=?\[\]]+`),
 					repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`),
@@ -157,9 +158,17 @@ func (p *Parser) VarUse() *MkVarUse {
 					repl.AdvanceRegexp(`^=[\w-./]+`): // Special form of ${VAR:.c=.o}
 					modifier := repl.m[0]
 					modifiers = append(modifiers, modifier)
-				default:
-					goto fail
+					continue
 				}
+
+				if repl.AdvanceStr("D") || repl.AdvanceStr("U") {
+					if p.VarUse() != nil || repl.AdvanceRegexp(`^\w+`) {
+						modifiers = append(modifiers, repl.Since(modifierMark))
+						continue
+					}
+				}
+
+				goto fail
 			}
 			if repl.AdvanceStr("}") {
 				return &MkVarUse{varname, modifiers}
