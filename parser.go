@@ -228,7 +228,7 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 
 		case '@':
 			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
-				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:@`+closing+`]|\$\$)+`) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:@`+closing+`\\]|\$\$|\\.)+`) {
 				}
 				if repl.AdvanceStr("@") {
 					modifiers = append(modifiers, repl.Since(modifierMark))
