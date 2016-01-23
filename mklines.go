@@ -386,9 +386,11 @@ type VaralignBlock struct {
 		prefix string
 		align  string
 	}
-	skip        bool
-	maxSpaceLen int
-	maxTabLen   int
+	skip           bool
+	differ         bool
+	maxPrefixWidth int
+	maxSpaceWidth  int
+	maxTabWidth    int
 }
 
 func (va *VaralignBlock) Check(mkline *MkLine) {
@@ -415,12 +417,24 @@ func (va *VaralignBlock) Check(mkline *MkLine) {
 	}{mkline, prefix, align})
 
 	alignedWidth := tabLength(valueAlign)
-	if hasSuffix(align, " ") && alignedWidth > va.maxSpaceLen {
-		va.maxSpaceLen = imax((va.maxSpaceLen+7)&-8, alignedWidth)
+	if hasSuffix(align, " ") {
+		if va.maxSpaceWidth != 0 && alignedWidth != va.maxSpaceWidth {
+			va.differ = true
+		}
+		if alignedWidth > va.maxSpaceWidth {
+			va.maxSpaceWidth = alignedWidth
+		}
+	} else {
+		if va.maxTabWidth != 0 && alignedWidth != va.maxTabWidth {
+			va.differ = true
+		}
+		if alignedWidth > va.maxTabWidth {
+			va.maxTabWidth = alignedWidth
+		}
 	}
-	if hasSuffix(align, "\t") && alignedWidth > va.maxTabLen {
-		va.maxTabLen = alignedWidth
-	}
+
+	prefixWidth := (tabLength(prefix) + 7) & -8
+	va.maxPrefixWidth = imax(va.maxPrefixWidth, prefixWidth)
 }
 
 func (va *VaralignBlock) Finish() {
@@ -439,21 +453,31 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 		return
 	}
 
-	goodlen := va.maxTabLen
-	if contains(oldalign, " ") && va.maxSpaceLen > va.maxTabLen {
-		goodlen = va.maxSpaceLen
-		if va.maxTabLen == 0 {
-			goodlen = (va.maxSpaceLen + 7) & -8
+	goodWidth := va.maxTabWidth
+	if contains(oldalign, " ") && va.maxSpaceWidth > va.maxTabWidth {
+		if va.maxTabWidth == 0 {
+			goodWidth = (va.maxSpaceWidth + 7) & -8
+		} else {
+			goodWidth = va.maxSpaceWidth
 		}
 	}
+
+	minWidth := (va.maxPrefixWidth + 7) & -8
+	if minWidth < goodWidth && va.differ {
+		goodWidth = minWidth
+	}
+
 	newalign := ""
-	for tabLength(prefix+newalign) < goodlen {
+	for tabLength(prefix+newalign) < goodWidth {
 		newalign += "\t"
 	}
 	if newalign == oldalign {
 		return
 	}
-	if hasSuffix(oldalign, " ") && tabLength(prefix+oldalign) == goodlen && va.maxSpaceLen > va.maxTabLen && va.maxTabLen != 0 {
+	if hasSuffix(oldalign, " ") &&
+		tabLength(prefix+oldalign) == goodWidth &&
+		va.maxSpaceWidth > va.maxTabWidth &&
+		va.maxTabWidth != 0 {
 		return
 	}
 
@@ -462,11 +486,11 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 		wrongColumn := tabLength(prefix+oldalign) != tabLength(prefix+newalign)
 		switch {
 		case hasSpace && wrongColumn:
-			mkline.Line.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", goodlen+1)
+			mkline.Line.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", goodWidth+1)
 		case hasSpace:
 			mkline.Line.Notef("Variable values should be aligned with tabs, not spaces.")
 		case wrongColumn:
-			mkline.Line.Notef("This variable value should be aligned to column %d.", goodlen+1)
+			mkline.Line.Notef("This variable value should be aligned to column %d.", goodWidth+1)
 		}
 		if wrongColumn {
 			Explain(

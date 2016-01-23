@@ -84,6 +84,29 @@ func (s *Suite) TestMkLine_CheckVaralign_Autofix(c *check.C) {
 		"AUTOFIX: file.mk:11: Replacing \"VAR=    \\t\" with \"VAR=\\t\\t\".\n")
 }
 
+func (s *Suite) TestMkLine_CheckVaralign_ReduceIndentation(c *check.C) {
+	s.UseCommandLine(c, "-Wspace")
+	mklines := s.NewMkLines("file.mk",
+		"VAR= \tvalue",
+		"VAR=    \tvalue",
+		"VAR=\t\t\t\tvalue",
+		"",
+		"VAR=\t\t\tneedlessly", // Nothing to be fixed here, since it looks good.
+		"VAR=\t\t\tdeep",
+		"VAR=\t\t\tindentation")
+
+	varalign := new(VaralignBlock)
+	for _, mkline := range mklines.mklines {
+		varalign.Check(mkline)
+	}
+	varalign.Finish()
+
+	c.Check(s.Output(), equals, ""+
+		"NOTE: file.mk:1: Variable values should be aligned with tabs, not spaces.\n"+
+		"NOTE: file.mk:2: This variable value should be aligned with tabs, not spaces, to column 9.\n"+
+		"NOTE: file.mk:3: This variable value should be aligned to column 9.\n")
+}
+
 func (s *Suite) TestMkLine_CheckVaralign_Advanced(c *check.C) {
 	s.UseCommandLine(c, "-Wspace")
 	fname := s.CreateTmpFileLines(c, "Makefile",
