@@ -32,7 +32,7 @@ func (s *Suite) TestChecklineMkVartype(c *check.C) {
 	mkline.CheckVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
 }
 
-func (s *Suite) TestChecklineMkVaralign(c *check.C) {
+func (s *Suite) TestMkLine_CheckVaralign_Autofix(c *check.C) {
 	s.UseCommandLine(c, "-Wspace", "-f")
 	lines := s.NewLines("file.mk",
 		"VAR=   value",    // Indentation 7, fixed to 8.
@@ -75,6 +75,38 @@ func (s *Suite) TestChecklineMkVaralign(c *check.C) {
 		"NOTE: file.mk:6: Alignment of variable values should be done with tabs, not spaces.\n"+
 		"AUTOFIX: file.mk:6: Replacing \"VAR=    \\t\" with \"VAR=\\t\\t\".\n")
 	c.Check(tabLength("VAR=    \t"), equals, 16)
+}
+
+func (s *Suite) TestMkLine_CheckVaralign_Advanced(c *check.C) {
+	s.UseCommandLine(c, "-Wspace")
+	fname := s.CreateTmpFileLines(c, "Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"VAR= \\", // In continuation lines, indenting with spaces is ok
+		"\tvalue",
+		"",
+		"VAR= indented with one space",   // Exactly one space is ok in general
+		"VAR=  indented with two spaces", // Two spaces are uncommon
+		"",
+		"BLOCK=\tindented with tab",
+		"BLOCK_LONGVAR= indented with space", // This is ok, to prevent the block from being indented further
+		"",
+		"BLOCK=\tshort",
+		"BLOCK_LONGVAR=\tlong",
+		"",
+		"BLOCK_A= avalue", // The values in a block should be aligned
+		"BLOCK_AA= value",
+		"BLOCK_AAA= value",
+		"BLOCK_AAAA= value",
+		"",
+		"VAR=\t${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables",
+		"VAR=\t${BLOCK_A}${BLOCK_AA}${BLOCK_AAA}${BLOCK_AAAA}")
+	mklines := NewMkLines(LoadExistingLines(fname, true))
+
+	mklines.Check()
+
+	c.Check(s.OutputCleanTmpdir(), equals, ""+
+		"NOTE: ~/Makefile:7: Alignment of variable values should be done with tabs, not spaces.\n")
 }
 
 func (s *Suite) TestMkLine_fields(c *check.C) {

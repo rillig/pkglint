@@ -759,7 +759,7 @@ func (mkline *MkLine) CheckVaralign() {
 	}
 
 	if m, prefix, align := match2(mkline.Line.Text, `^( *[-*+A-Z_a-z0-9.${}\[]+\s*[!:?]?=)(\s*)`); m {
-		if align != " " && strings.Trim(align, "\t") != "" {
+		if align != " " && strings.Trim(align, "\t") != "" && !mkline.Line.IsMultiline() {
 			alignedWidth := tabLength(prefix + align)
 			tabs := ""
 			for tabLength(prefix+tabs) < alignedWidth {
