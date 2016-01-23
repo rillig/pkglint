@@ -84,14 +84,10 @@ func (mklines *MkLines) Check() {
 		defer tracecall1(mklines.lines[0].Fname)()
 	}
 
-	allowedTargets := make(map[string]bool)
-	substcontext := new(SubstContext)
-
 	G.Mk = mklines
 	defer func() { G.Mk = nil }()
 
-	mklines.DetermineUsedVariables()
-
+	allowedTargets := make(map[string]bool)
 	prefixes := splitOnSpace("pre do post")
 	actions := splitOnSpace("fetch extract patch tools wrapper configure build test install package clean")
 	for _, prefix := range prefixes {
@@ -102,15 +98,19 @@ func (mklines *MkLines) Check() {
 
 	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
 	// are collected to make the order of the definitions irrelevant.
+	mklines.DetermineUsedVariables()
 	mklines.determineDefinedVariables()
 
 	// In the second pass, the actual checks are done.
 
 	mklines.lines[0].CheckRcsid(`#\s+`, "# ")
 
+	substcontext := new(SubstContext)
+	varalign := new(VaralignBlock)
 	for _, mkline := range mklines.mklines {
 		mkline.Line.CheckTrailingWhitespace()
 		mkline.Line.CheckValidCharacters(`[\t -~]`)
+		varalign.Check(mkline)
 
 		switch {
 		case mkline.IsEmpty():
@@ -118,7 +118,6 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsVarassign():
 			mklines.target = ""
-			mkline.CheckVaralign()
 			mkline.CheckVarassign()
 			substcontext.Varassign(mkline)
 
@@ -140,6 +139,7 @@ func (mklines *MkLines) Check() {
 	}
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
 	substcontext.Finish(lastMkline)
+	varalign.Finish()
 
 	ChecklinesTrailingEmptyLines(mklines.lines)
 
@@ -377,5 +377,94 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	}
 	if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
 		mkline.Line.Error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
+	}
+}
+
+type VaralignBlock struct {
+	info []struct {
+		mkline *MkLine
+		prefix string
+		align  string
+	}
+	skip        bool
+	maxSpaceLen int
+	maxTabLen   int
+}
+
+func (va *VaralignBlock) Check(mkline *MkLine) {
+	if !G.opts.WarnSpace {
+		return
+	}
+	if mkline.IsEmpty() {
+		va.Finish()
+		return
+	}
+	if !mkline.IsVarassign() {
+		va.skip = true
+		return
+	}
+
+	if m, prefix, align := match2(mkline.Line.Text, `^( *[-*+A-Z_a-z0-9.${}\[]+\s*[!:?]?=)(\s*)`); m {
+		va.info = append(va.info, struct {
+			mkline *MkLine
+			prefix string
+			align  string
+		}{mkline, prefix, align})
+
+		alignedWidth := tabLength(prefix + align)
+		if hasSuffix(align, " ") && alignedWidth > va.maxSpaceLen {
+			va.maxSpaceLen = imax((va.maxSpaceLen+7)&-8, alignedWidth)
+		}
+		if hasSuffix(align, "\t") && alignedWidth > va.maxTabLen {
+			va.maxTabLen = alignedWidth
+		}
+	}
+}
+
+func (va *VaralignBlock) Finish() {
+	if !va.skip {
+		for _, info := range va.info {
+			if !info.mkline.Line.IsMultiline() {
+				va.fixalign(info.mkline, info.prefix, info.align)
+			}
+		}
+	}
+	*va = VaralignBlock{}
+}
+
+func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
+	if mkline.Line.IsMultiline() {
+		return
+	}
+
+	goodlen := va.maxTabLen
+	if contains(oldalign, " ") && va.maxSpaceLen > va.maxTabLen {
+		goodlen = va.maxSpaceLen
+		if va.maxTabLen == 0 {
+			goodlen = (va.maxSpaceLen + 7) & -8
+		}
+	}
+	newalign := ""
+	for tabLength(prefix+newalign) < goodlen {
+		newalign += "\t"
+	}
+	if newalign == oldalign {
+		return
+	}
+	if hasSuffix(oldalign, " ") && tabLength(prefix+oldalign) == goodlen && va.maxTabLen != 0 {
+		return
+	}
+
+	if !mkline.Line.AutofixReplace(prefix+oldalign, prefix+newalign) {
+		hasSpace := contains(oldalign, " ")
+		wrongColumn := tabLength(prefix+oldalign) != tabLength(prefix+newalign)
+		switch {
+		case hasSpace && wrongColumn:
+			mkline.Line.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", goodlen+1)
+		case hasSpace:
+			mkline.Line.Notef("Variable values should be aligned with tabs, not spaces.")
+		case wrongColumn:
+			mkline.Line.Notef("This variable value should be aligned to column %d.", goodlen+1)
+		}
 	}
 }

@@ -753,25 +753,6 @@ func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) 
 	}
 }
 
-func (mkline *MkLine) CheckVaralign() {
-	if !G.opts.WarnSpace {
-		return
-	}
-
-	if m, prefix, align := match2(mkline.Line.Text, `^( *[-*+A-Z_a-z0-9.${}\[]+\s*[!:?]?=)(\s*)`); m {
-		if align != " " && strings.Trim(align, "\t") != "" && !mkline.Line.IsMultiline() {
-			alignedWidth := tabLength(prefix + align)
-			tabs := ""
-			for tabLength(prefix+tabs) < alignedWidth {
-				tabs += "\t"
-			}
-			if !mkline.Line.AutofixReplace(prefix+align, prefix+tabs) {
-				mkline.Note0("Alignment of variable values should be done with tabs, not spaces.")
-			}
-		}
-	}
-}
-
 func (mkline *MkLine) CheckText(text string) {
 	if G.opts.DebugTrace {
 		defer tracecall1(text)()
