@@ -433,8 +433,7 @@ func (va *VaralignBlock) Check(mkline *MkLine) {
 		}
 	}
 
-	prefixWidth := (tabLength(prefix) + 7) & -8
-	va.maxPrefixWidth = imax(va.maxPrefixWidth, prefixWidth)
+	va.maxPrefixWidth = imax(va.maxPrefixWidth, tabLength(prefix))
 }
 
 func (va *VaralignBlock) Finish() {
@@ -462,7 +461,7 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 		}
 	}
 
-	minWidth := (va.maxPrefixWidth + 7) & -8
+	minWidth := (va.maxPrefixWidth + 1 + 7) & -8
 	if minWidth < goodWidth && va.differ {
 		goodWidth = minWidth
 	}
