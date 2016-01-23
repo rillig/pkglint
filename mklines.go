@@ -433,7 +433,7 @@ func (va *VaralignBlock) Finish() {
 }
 
 func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
-	if mkline.Line.IsMultiline() {
+	if mkline.Line.IsMultiline() || mkline.Value() == "" && mkline.Comment() == "" {
 		return
 	}
 
@@ -451,7 +451,7 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 	if newalign == oldalign {
 		return
 	}
-	if hasSuffix(oldalign, " ") && tabLength(prefix+oldalign) == goodlen && va.maxTabLen != 0 {
+	if hasSuffix(oldalign, " ") && tabLength(prefix+oldalign) == goodlen && va.maxSpaceLen > va.maxTabLen && va.maxTabLen != 0 {
 		return
 	}
 
@@ -465,6 +465,20 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 			mkline.Line.Notef("Variable values should be aligned with tabs, not spaces.")
 		case wrongColumn:
 			mkline.Line.Notef("This variable value should be aligned to column %d.", goodlen+1)
+		}
+		if wrongColumn {
+			Explain(
+				"Normally, all variable values in a block should start at the same",
+				"column.  There are some exceptions to this rule:",
+				"",
+				"When a single overly long variable name appears in a block, its",
+				"value may be separated with a single space instead of tabs.",
+				"",
+				"Variable definitions that span multiple lines are not checked for",
+				"alignment at all.",
+				"",
+				"When the block contains something else than variable definitions,",
+				"it is not checked at all.")
 		}
 	}
 }

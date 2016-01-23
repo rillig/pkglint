@@ -158,6 +158,19 @@ func (s *Suite) TestMkLine_CheckVaralign_Advanced(c *check.C) {
 		"VAR=\t${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}\n")
 }
 
+func (s *Suite) TestMkLine_CheckVaralign_Misc(c *check.C) {
+	s.UseCommandLine(c, "-Wspace")
+	mklines := s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"VAR=    space",
+		"VAR=\ttab ${VAR}")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "NOTE: Makefile:3: Variable values should be aligned with tabs, not spaces.\n")
+}
+
 func (s *Suite) TestMkLine_fields(c *check.C) {
 	mklines := NewMkLines(s.NewLines("test.mk",
 		"VARNAME.param?=value # varassign comment",
