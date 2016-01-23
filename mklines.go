@@ -417,7 +417,7 @@ func (va *VaralignBlock) Check(mkline *MkLine) {
 	}{mkline, prefix, align})
 
 	alignedWidth := tabLength(valueAlign)
-	if hasSuffix(align, " ") {
+	if contains(align, " ") {
 		if va.maxSpaceWidth != 0 && alignedWidth != va.maxSpaceWidth {
 			va.differ = true
 		}
@@ -452,19 +452,23 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 		return
 	}
 
-	goodWidth := va.maxTabWidth
-	if contains(oldalign, " ") && va.maxSpaceWidth > va.maxTabWidth {
-		if va.maxTabWidth == 0 {
-			goodWidth = (va.maxSpaceWidth + 7) & -8
-		} else {
-			goodWidth = va.maxSpaceWidth
-		}
+	hasSpace := contains(oldalign, " ")
+	if hasSpace &&
+		va.maxTabWidth != 0 &&
+		va.maxSpaceWidth > va.maxTabWidth &&
+		tabLength(prefix+oldalign) == va.maxSpaceWidth {
+		return
 	}
 
-	minWidth := (va.maxPrefixWidth + 1 + 7) & -8
-	if minWidth < goodWidth && va.differ {
+	goodWidth := va.maxTabWidth
+	if goodWidth == 0 && va.differ {
+		goodWidth = va.maxSpaceWidth
+	}
+	minWidth := va.maxPrefixWidth + 1
+	if goodWidth == 0 || minWidth < goodWidth && va.differ {
 		goodWidth = minWidth
 	}
+	goodWidth = (goodWidth + 7) & -8
 
 	newalign := ""
 	for tabLength(prefix+newalign) < goodWidth {
@@ -473,15 +477,8 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 	if newalign == oldalign {
 		return
 	}
-	if hasSuffix(oldalign, " ") &&
-		tabLength(prefix+oldalign) == goodWidth &&
-		va.maxSpaceWidth > va.maxTabWidth &&
-		va.maxTabWidth != 0 {
-		return
-	}
 
 	if !mkline.Line.AutofixReplace(prefix+oldalign, prefix+newalign) {
-		hasSpace := contains(oldalign, " ")
 		wrongColumn := tabLength(prefix+oldalign) != tabLength(prefix+newalign)
 		switch {
 		case hasSpace && wrongColumn:
@@ -496,8 +493,9 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 				"Normally, all variable values in a block should start at the same",
 				"column.  There are some exceptions to this rule:",
 				"",
-				"When a single overly long variable name appears in a block, its",
-				"value may be separated with a single space instead of tabs.",
+				"Definitions for long variable names may be indented with a single",
+				"space instead of tabs, but only if they appear in a block that is",
+				"otherwise indented using tabs.",
 				"",
 				"Variable definitions that span multiple lines are not checked for",
 				"alignment at all.",
