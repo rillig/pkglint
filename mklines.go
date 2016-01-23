@@ -404,20 +404,22 @@ func (va *VaralignBlock) Check(mkline *MkLine) {
 		return
 	}
 
-	if m, prefix, align := match2(mkline.Line.Text, `^( *[-*+A-Z_a-z0-9.${}\[]+\s*[!:?]?=)(\s*)`); m {
-		va.info = append(va.info, struct {
-			mkline *MkLine
-			prefix string
-			align  string
-		}{mkline, prefix, align})
+	valueAlign := mkline.ValueAlign()
+	prefix := strings.TrimRight(valueAlign, " \t")
+	align := valueAlign[len(prefix):]
 
-		alignedWidth := tabLength(prefix + align)
-		if hasSuffix(align, " ") && alignedWidth > va.maxSpaceLen {
-			va.maxSpaceLen = imax((va.maxSpaceLen+7)&-8, alignedWidth)
-		}
-		if hasSuffix(align, "\t") && alignedWidth > va.maxTabLen {
-			va.maxTabLen = alignedWidth
-		}
+	va.info = append(va.info, struct {
+		mkline *MkLine
+		prefix string
+		align  string
+	}{mkline, prefix, align})
+
+	alignedWidth := tabLength(valueAlign)
+	if hasSuffix(align, " ") && alignedWidth > va.maxSpaceLen {
+		va.maxSpaceLen = imax((va.maxSpaceLen+7)&-8, alignedWidth)
+	}
+	if hasSuffix(align, "\t") && alignedWidth > va.maxTabLen {
+		va.maxTabLen = alignedWidth
 	}
 }
 
