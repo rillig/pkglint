@@ -394,7 +394,7 @@ type VaralignBlock struct {
 }
 
 func (va *VaralignBlock) Check(mkline *MkLine) {
-	if !G.opts.WarnSpace || mkline.Line.IsMultiline() {
+	if !G.opts.WarnSpace || mkline.Line.IsMultiline() || mkline.IsComment() || mkline.IsCond() {
 		return
 	}
 	if mkline.IsEmpty() {

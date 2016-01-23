@@ -444,7 +444,8 @@ func (s *Suite) TestMkLine_CheckVarusePermissions(c *check.C) {
 		"WARN: options.mk:3: PKGBASE should not be evaluated at load time.\n"+
 		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.\n"+
 		"WARN: options.mk:4: \"${PKGBASE}\" is not valid for PYPKGPREFIX. Use one of { py27 py33 py34 } instead.\n"+
-		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.\n")
+		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.\n"+
+		"NOTE: options.mk:4: This variable value should be aligned to column 17.\n")
 }
 
 func (s *Suite) TestMkLine_WarnVaruseLocalbase(c *check.C) {
