@@ -338,7 +338,7 @@ func MatchVarassign(text string) (m bool, varname, op, value, comment string) {
 
 	opStart := i
 	if i < n {
-		if b := text[i]; b&0xE0 == 0x20 && (uint(0x84000802)>>(b&0x1F))&1 != 0 {
+		if b := text[i]; b == '!' || b == '+' || b == ':' || b == '?' {
 			i++
 		}
 	}
