@@ -62,7 +62,7 @@ func (s *Suite) TestChecklinesDistinfo_UncommittedPatch(c *check.C) {
 		"",
 		"SHA1 (patch-aa) = 5ad1fb9b3c328fff5caa1a23e8f330e707dd50c0"))
 
-	c.Check(s.OutputCleanTmpdir(), equals, ""+
+	c.Check(s.Output(), equals, ""+
 		"WARN: ~/distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.\n")
 }
 
@@ -80,7 +80,7 @@ func (s *Suite) TestChecklinesDistinfo_UnrecordedPatches(c *check.C) {
 		"SHA512 (distfile.tar.gz) = ...",
 		"Size (distfile.tar.gz) = 1024 bytes"))
 
-	c.Check(s.OutputCleanTmpdir(), equals, ""+
+	c.Check(s.Output(), equals, ""+
 		"ERROR: ~/distinfo: patch \"patches/patch-aa\" is not recorded. Run \""+confMake+" makepatchsum\".\n"+
 		"ERROR: ~/distinfo: patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".\n")
 }
