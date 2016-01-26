@@ -200,7 +200,7 @@ func (s *Suite) TestMkLine_CheckVaralign_Advanced(c *check.C) {
 		"AUTOFIX: ~/Makefile:18: Replacing \"GRP_AAAA= \" with \"GRP_AAAA=\\t\".\n"+
 		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.\n")
 	c.Check(s.LoadTmpFile(c, "Makefile"), equals, ""+
-		"# $NetBSD$\n"+
+		"# $"+"NetBSD$\n"+
 		"\n"+
 		"VAR= \\\n"+
 		"\tvalue\n"+
