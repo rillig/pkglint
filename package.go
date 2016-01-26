@@ -82,12 +82,14 @@ func (pkg *Package) checkPossibleDowngrade() {
 	}
 
 	if change.Action == "Updated" {
-		if pkgverCmp(pkgversion, change.Version) < 0 {
+		changeVersion := regcomp(`nb\d+$`).ReplaceAllString(change.Version, "")
+		if pkgverCmp(pkgversion, changeVersion) < 0 {
 			mkline.Line.Warnf("The package is being downgraded from %s (see %s) to %s", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
-			Explain3(
-				"The files in doc/CHANGES-*, in which all version changes are recorded,",
-				"have a higher version number than what the package says.  This is unusual,",
-				"since packages are typically upgraded instead of downgraded.")
+			Explain4(
+				"The files in doc/CHANGES-*, in which all version changes are",
+				"recorded, have a higher version number than what the package says.",
+				"This is unusual, since packages are typically upgraded instead of",
+				"downgraded.")
 		}
 	}
 }
