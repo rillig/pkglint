@@ -145,7 +145,7 @@ func (ck *distinfoLinesChecker) checkGlobalMismatch(line *Line, fname, alg, hash
 		otherHash := G.Hash[key]
 		if otherHash != nil {
 			if otherHash.hash != hash {
-				line.Errorf("The hash %s for %s is %s, which differs from %s in %s.", 
+				line.Errorf("The hash %s for %s is %s, which differs from %s in %s.",
 					alg, fname, hash, otherHash.hash, otherHash.line.ReferenceFrom(line))
 			}
 		} else {

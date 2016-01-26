@@ -370,7 +370,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 		Errorf(fname, noLines, "Each package must define its LICENSE.")
 	}
 
-	if gnuLine, useLine := vardef["GNU_CONFIGURE"], vardef["USE_LANGUAGES"]; gnuLine  != nil && useLine != nil {
+	if gnuLine, useLine := vardef["GNU_CONFIGURE"], vardef["USE_LANGUAGES"]; gnuLine != nil && useLine != nil {
 		if matches(useLine.Comment(), `(?-i)\b(?:c|empty|none)\b`) {
 			// Don't emit a warning, since the comment
 			// probably contains a statement that C is
