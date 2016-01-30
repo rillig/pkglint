@@ -105,8 +105,8 @@ func (mklines *MkLines) Check() {
 
 	mklines.lines[0].CheckRcsid(`#\s+`, "# ")
 
-	substcontext := new(SubstContext)
-	varalign := new(VaralignBlock)
+	var substcontext SubstContext
+	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
 		mkline.Line.CheckTrailingWhitespace()
 		mkline.Line.CheckValidCharacters(`[\t -~]`)
