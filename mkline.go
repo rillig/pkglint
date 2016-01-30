@@ -824,15 +824,16 @@ func (mkline *MkLine) CheckCond() {
 	}
 
 	cond.Visit("empty", func(node *Tree) {
-		empty := node.args[0].(MkVarUse)
-		if len(empty.modifiers) == 1 {
-			modifier := empty.modifiers[0]
-			if hasPrefix(modifier, "M") || hasPrefix(modifier, "N") {
-				vartype := mkline.getVariableType(empty.varname)
+		varuse := node.args[0].(MkVarUse)
+		varname := varuse.varname
+		for _, modifier := range varuse.modifiers {
+			if modifier[0] == 'M' || modifier[0] == 'N' {
+				pattern := modifier[1:]
+				vartype := mkline.getVariableType(varname)
 				if vartype != nil && vartype.checker.IsEnum() {
-					pattern := modifier[1:]
 					if !matches(pattern, `[\$*?\[]`) && !vartype.checker.HasEnum(pattern) {
-						mkline.Warn2("Invalid :M value %q. Only { %s } are allowed.", pattern, vartype.checker.AllowedEnums())
+						mkline.Line.Warnf("Invalid :%c value %q for %s. Only { %s } are allowed.",
+							modifier[0], pattern, varname, vartype.checker.AllowedEnums())
 					}
 				}
 			}
