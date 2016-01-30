@@ -255,7 +255,7 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 		}
 
 	} else if directive == "if" || directive == "elif" {
-		mkline.CheckIf()
+		mkline.CheckCond()
 
 	} else if directive == "ifdef" || directive == "ifndef" {
 		if matches(args, `\s`) {

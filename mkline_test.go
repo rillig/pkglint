@@ -309,17 +309,17 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	s.UseCommandLine(c, "-Wtypes")
 	G.globalData.InitVartypes()
 
-	NewMkLine(NewLine("fname", 1, ".if !empty(PKGSRC_COMPILER:Mmycc)", nil)).CheckIf()
+	NewMkLine(NewLine("fname", 1, ".if !empty(PKGSRC_COMPILER:Mmycc)", nil)).CheckCond()
 
 	c.Check(s.Stdout(), equals, "WARN: fname:1: Invalid :M value \"mycc\". "+
 		"Only { ccache ccc clang distcc f2c gcc hp icc ido gcc mipspro "+
 		"mipspro-ucode pcc sunpro xlc } are allowed.\n")
 
-	NewMkLine(NewLine("fname", 1, ".elif ${A} != ${B}", nil)).CheckIf()
+	NewMkLine(NewLine("fname", 1, ".elif ${A} != ${B}", nil)).CheckCond()
 
 	c.Check(s.Stdout(), equals, "") // Unknown condition types are silently ignored
 
-	NewMkLine(NewLine("fname", 1, ".if ${HOMEPAGE} == \"mailto:someone@example.org\"", nil)).CheckIf()
+	NewMkLine(NewLine("fname", 1, ".if ${HOMEPAGE} == \"mailto:someone@example.org\"", nil)).CheckCond()
 
 	c.Check(s.Output(), equals, "WARN: fname:1: \"mailto:someone@example.org\" is not a valid URL.\n")
 }

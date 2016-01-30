@@ -811,7 +811,7 @@ func (mkline *MkLine) CheckText(text string) {
 	}
 }
 
-func (mkline *MkLine) CheckIf() {
+func (mkline *MkLine) CheckCond() {
 	if G.opts.DebugTrace {
 		defer tracecall0()()
 	}
