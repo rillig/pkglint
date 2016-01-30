@@ -344,7 +344,7 @@ func (p *Parser) mkCondAtom() *Tree {
 	mark := repl.Mark()
 	switch {
 	case repl.AdvanceStr("!"):
-		cond := p.MkCond()
+		cond := p.mkCondAtom()
 		if cond != nil {
 			return NewTree("not", cond)
 		}
@@ -375,7 +375,16 @@ func (p *Parser) mkCondAtom() *Tree {
 			return NewTree("exists", fname)
 		}
 	default:
-		if lhs := p.VarUse(); lhs != nil {
+		lhs := p.VarUse()
+		mark := repl.Mark()
+		if lhs == nil && repl.AdvanceStr("\"") {
+			if quotedLhs := p.VarUse(); quotedLhs != nil && repl.AdvanceStr("\"") {
+				lhs = quotedLhs
+			} else {
+				repl.Reset(mark)
+			}
+		}
+		if lhs != nil {
 			if repl.AdvanceRegexp(`^\s*(==|!=)\s*`) {
 				op := repl.m[1]
 				if repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {

@@ -173,6 +173,8 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 		NewTree("compareVarStr", varuse("VARNAME", "Mi386"), "!=", "Value"))
 	cond("${VARNAME} != Value",
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
+	cond("\"${VARNAME}\" != Value",
+		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
 	cond("(defined(VARNAME))",
 		NewTree("defined", "VARNAME"))
 	cond("exists(/etc/hosts)",
