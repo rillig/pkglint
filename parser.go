@@ -369,6 +369,8 @@ func (p *Parser) mkCondAtom() *Tree {
 				} else if rhs := p.VarUse(); rhs != nil {
 					return NewTree("compareVarVar", *lhs, op, *rhs)
 				}
+			} else {
+				return NewTree("not", NewTree("empty", *lhs)) // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
 		}
 	}

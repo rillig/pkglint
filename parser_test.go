@@ -157,6 +157,8 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 	}
 	_, _ = literal, varuse
 
+	cond("${OPSYS:MNetBSD}",
+		NewTree("not", NewTree("empty", varuse("OPSYS", "MNetBSD"))))
 	cond("defined(VARNAME)",
 		NewTree("defined", "VARNAME"))
 	cond("empty(VARNAME)",

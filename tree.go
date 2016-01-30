@@ -23,9 +23,8 @@ func (t *Tree) String() string {
 		if arg, ok := arg.(string); ok {
 			s += fmt.Sprintf(" %q", arg)
 			continue
-		} else {
-			s += fmt.Sprintf(" %v", arg)
 		}
+		s += fmt.Sprintf(" %v", arg)
 	}
 	return s + ")"
 }
