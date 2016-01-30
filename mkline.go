@@ -817,35 +817,33 @@ func (mkline *MkLine) CheckIf() {
 	}
 
 	p := NewParser(mkline.Args())
-	tree := p.MkCond()
+	cond := p.MkCond()
 	if !p.EOF() {
 		mkline.Warn1("Unknown conditional %q.", mkline.Args())
 		return
 	}
 
-	if tree.name == "not" {
-		if notArg := tree.args[0].(*Tree); notArg.name == "empty" {
-			empty := notArg.args[0].(MkVarUse)
-			if len(empty.modifiers) == 1 {
-				modifier := empty.modifiers[0]
-				if hasPrefix(modifier, "M") || hasPrefix(modifier, "N") {
-					vartype := mkline.getVariableType(empty.varname)
-					if vartype != nil && vartype.checker.IsEnum() {
-						pattern := modifier[1:]
-						if !matches(pattern, `[\$\[*]`) && !vartype.checker.HasEnum(pattern) {
-							mkline.Warn2("Invalid :M value %q. Only { %s } are allowed.", pattern, vartype.checker.AllowedEnums())
-						}
+	cond.Visit("empty", func(node *Tree) {
+		empty := node.args[0].(MkVarUse)
+		if len(empty.modifiers) == 1 {
+			modifier := empty.modifiers[0]
+			if hasPrefix(modifier, "M") || hasPrefix(modifier, "N") {
+				vartype := mkline.getVariableType(empty.varname)
+				if vartype != nil && vartype.checker.IsEnum() {
+					pattern := modifier[1:]
+					if !matches(pattern, `[\$\[*]`) && !vartype.checker.HasEnum(pattern) {
+						mkline.Warn2("Invalid :M value %q. Only { %s } are allowed.", pattern, vartype.checker.AllowedEnums())
 					}
 				}
 			}
 		}
-	}
+	})
 
-	if tree.name == "compareVarStr" {
-		varname := tree.args[0].(MkVarUse).varname
-		value := tree.args[2].(string)
+	cond.Visit("compareVarStr", func(node *Tree) {
+		varname := node.args[0].(MkVarUse).varname
+		value := node.args[2].(string)
 		mkline.CheckVartype(varname, opUse, value, "")
-	}
+	})
 }
 
 func (mkline *MkLine) CheckValidCharactersInValue(reValid string) {

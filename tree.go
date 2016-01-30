@@ -29,3 +29,14 @@ func (t *Tree) String() string {
 	}
 	return s + ")"
 }
+
+func (t *Tree) Visit(nodename string, action func(t *Tree)) {
+	if t.name == nodename {
+		action(t)
+	}
+	for _, arg := range t.args {
+		if child, ok := arg.(*Tree); ok {
+			child.Visit(nodename, action)
+		}
+	}
+}
