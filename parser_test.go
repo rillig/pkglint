@@ -175,4 +175,20 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 		NewTree("exists", "/etc/hosts"))
 	cond("exists(${PREFIX}/var)",
 		NewTree("exists", "${PREFIX}/var"))
+	cond("${OPSYS} == \"NetBSD\" || ${OPSYS} == \"OpenBSD\"",
+		NewTree("or",
+			NewTree("compareVarStr", varuse("OPSYS"), "==", "NetBSD"),
+			NewTree("compareVarStr", varuse("OPSYS"), "==", "OpenBSD")))
+	cond("${OPSYS} == \"NetBSD\" && ${MACHINE_ARCH} == \"i386\"",
+		NewTree("and",
+			NewTree("compareVarStr", varuse("OPSYS"), "==", "NetBSD"),
+			NewTree("compareVarStr", varuse("MACHINE_ARCH"), "==", "i386")))
+	cond("defined(A) && defined(B) || defined(C) && defined(D)",
+		NewTree("or",
+			NewTree("and",
+				NewTree("defined", "A"),
+				NewTree("defined", "B")),
+			NewTree("and",
+				NewTree("defined", "C"),
+				NewTree("defined", "D"))))
 }

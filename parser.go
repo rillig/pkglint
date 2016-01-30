@@ -282,6 +282,44 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 }
 
 func (p *Parser) MkCond() *Tree {
+	return p.mkCondOr()
+}
+
+func (p *Parser) mkCondOr() *Tree {
+	and := p.mkCondAnd()
+	if and == nil {
+		return nil
+	}
+
+	ands := append([]interface{}(nil), and)
+	for p.repl.AdvanceRegexp(`^\s*\|\|\s*`) {
+		next := p.mkCondAnd()
+		ands = append(ands, next)
+	}
+	if len(ands) == 1 {
+		return and
+	}
+	return NewTree("or", ands...)
+}
+
+func (p *Parser) mkCondAnd() *Tree {
+	atom := p.mkCondAtom()
+	if atom == nil {
+		return nil
+	}
+
+	atoms := append([]interface{}(nil), atom)
+	for p.repl.AdvanceRegexp(`^\s*&&\s*`) {
+		next := p.mkCondAtom()
+		atoms = append(atoms, next)
+	}
+	if len(atoms) == 1 {
+		return atom
+	}
+	return NewTree("and", atoms...)
+}
+
+func (p *Parser) mkCondAtom() *Tree {
 	if G.opts.DebugTrace {
 		defer tracecall1(p.Rest())()
 	}
