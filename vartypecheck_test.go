@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	
 	check "gopkg.in/check.v1"
 )
 
@@ -363,6 +365,13 @@ func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:2: APACHE_MODULE should be set to YES or yes.\n"+
 		"WARN: fname:3: APACHE_MODULE should be set to YES or yes.\n")
+
+	runVartypeUseChecks("PKG_DEVELOPER", opUseLoadtime, (*VartypeCheck).Yes,
+		"yes",
+		"no",
+		"${YESVAR}")
+
+	c.Check(s.Output(), equals, "WARN: fname:2: The only sensible value to compare this variable with is the case-insensitive value [yY][eE][sS].\n")
 }
 
 func (s *Suite) TestVartypeCheck_YesNo(c *check.C) {
@@ -393,6 +402,19 @@ func runVartypeChecks(varname string, op MkOperator, checker func(*VartypeCheck)
 		mkline := NewMkLine(NewLine("fname", i+1, varname+op.String()+value, nil))
 		valueNovar := mkline.withoutMakeVariables(mkline.Value(), true)
 		vc := &VartypeCheck{mkline, mkline.Line, mkline.Varname(), mkline.Op(), mkline.Value(), valueNovar, "", true, false}
+		checker(vc)
+	}
+}
+
+func runVartypeUseChecks(varname string, op MkOperator, checker func(*VartypeCheck), values ...string) {
+	for i, value := range values {
+		text := "# dummy"
+		if op == opUseLoadtime {
+			text = fmt.Sprintf(".if ${%s} == %q", varname, value)
+		}
+		mkline := NewMkLine(NewLine("fname", i+1, text, nil))
+		valueNovar := mkline.withoutMakeVariables(value, true)
+		vc := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNovar, "", true, false}
 		checker(vc)
 	}
 }

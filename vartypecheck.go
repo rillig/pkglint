@@ -786,15 +786,28 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 	}
 }
 
-// Used for variables that are checked using `.if defined(VAR)`.
 func (cv *VartypeCheck) Yes() {
-	if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
-		cv.line.Warn1("%s should be set to YES or yes.", cv.varname)
-		Explain4(
-			"This variable means \"yes\" if it is defined, and \"no\" if it is",
-			"undefined.  Even when it has the value \"no\", this means \"yes\".",
-			"Therefore when it is defined, its value should correspond to its",
-			"meaning.")
+	switch cv.op {
+	case opUse, opUseLoadtime:
+		if cv.value == cv.valueNovar && strings.ToLower(cv.value) != "yes" {
+			cv.line.Warn0("The only sensible value to compare this variable with is the case-insensitive value [yY][eE][sS].")
+			Explain(
+				"This variable can have only two values: defined or undefined.",
+				"When it is defined, it means \"yes\", even when its value is",
+				"\"no\" or the empty string.",
+				"",
+				"Therefore, it should not be checked by comparing its value",
+				"but using \".if defined(VARNAME)\" alone.")
+		}
+	default:
+		if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
+			cv.line.Warn1("%s should be set to YES or yes.", cv.varname)
+			Explain4(
+				"This variable means \"yes\" if it is defined, and \"no\" if it is",
+				"undefined.  Even when it has the value \"no\", this means \"yes\".",
+				"Therefore when it is defined, its value should correspond to its",
+				"meaning.")
+		}
 	}
 }
 
