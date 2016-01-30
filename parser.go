@@ -312,6 +312,14 @@ func (p *Parser) MkCond() *Tree {
 				return NewTree("empty", MkVarUse{varname, modifiers})
 			}
 		}
+	case repl.AdvanceStr("exists("):
+		fnameMark := repl.Mark()
+		for p.VarUse() != nil || repl.AdvanceRegexp(`^[^$)]+`) {
+		}
+		fname := repl.Since(fnameMark)
+		if repl.AdvanceStr(")") {
+			return NewTree("exists", fname)
+		}
 	default:
 		if lhs := p.VarUse(); lhs != nil {
 			if repl.AdvanceRegexp(`^\s*(==|!=)\s*`) {
