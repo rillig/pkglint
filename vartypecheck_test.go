@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	
+
 	check "gopkg.in/check.v1"
 )
 
