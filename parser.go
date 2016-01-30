@@ -280,3 +280,46 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 	}
 	return modifiers
 }
+
+func (p *Parser) MkCond() *Tree {
+	if G.opts.DebugTrace {
+		defer tracecall1(p.Rest())()
+	}
+
+	repl := p.repl
+	mark := repl.Mark()
+	switch {
+	case repl.AdvanceStr("!"):
+		cond := p.MkCond()
+		if cond != nil {
+			return NewTree("not", cond)
+		}
+	case repl.AdvanceStr("defined("):
+		if varname := p.Varname(); varname != "" {
+			if repl.AdvanceStr(")") {
+				return NewTree("defined", varname)
+			}
+		}
+	case repl.AdvanceStr("empty("):
+		if varname := p.Varname(); varname != "" {
+			modifiers := p.VarUseModifiers(")")
+			if repl.AdvanceStr(")") {
+				return NewTree("empty", MkVarUse{varname, modifiers})
+			}
+		}
+	default:
+		if lhs := p.VarUse(); lhs != nil {
+			if repl.AdvanceRegexp(`^\s*(==|!=)\s*`) {
+				op := repl.m[1]
+				if repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
+					rhs := repl.m[1]
+					return NewTree("compareVarStr", *lhs, op, rhs)
+				} else if rhs := p.VarUse(); rhs != nil {
+					return NewTree("compareVarVar", *lhs, op, *rhs)
+				}
+			}
+		}
+	}
+	repl.Reset(mark)
+	return nil
+}

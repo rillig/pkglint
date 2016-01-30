@@ -138,3 +138,35 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	parse("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
 	parse("$(VAR}", nil, "$(VAR}") // Opening parenthesis, closing brace
 }
+
+func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
+	parse := func(input string, expectedTree *Tree, expectedRest string) {
+		p := NewParser(input)
+		actualTree := p.MkCond()
+		c.Check(actualTree, deepEquals, expectedTree)
+		c.Check(p.Rest(), equals, expectedRest)
+	}
+	cond := func(input string, expectedTree *Tree) {
+		parse(input, expectedTree, "")
+	}
+	literal := func(literal string) MkToken {
+		return MkToken{literal: literal}
+	}
+	varuse := func(varname string, modifiers ...string) MkVarUse {
+		return MkVarUse{varname: varname, modifiers: modifiers}
+	}
+	_, _ = literal, varuse
+
+	cond("defined(VARNAME)",
+		NewTree("defined", "VARNAME"))
+	cond("empty(VARNAME)",
+		NewTree("empty", varuse("VARNAME")))
+	cond("!empty(VARNAME)",
+		NewTree("not", NewTree("empty", varuse("VARNAME"))))
+	cond("!empty(VARNAME:M[yY][eE][sS])",
+		NewTree("not", NewTree("empty", varuse("VARNAME", "M[yY][eE][sS]"))))
+	cond("${VARNAME} != \"Value\"",
+		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
+	cond("${VARNAME:Mi386} != \"Value\"",
+		NewTree("compareVarStr", varuse("VARNAME", "Mi386"), "!=", "Value"))
+}

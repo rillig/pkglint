@@ -305,22 +305,6 @@ func (s *Suite) TestMkLine_checkVarassign(c *check.C) {
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) TestParseMkCond_NotEmptyMatch(c *check.C) {
-	mkline := NewMkLine(NewLine("fname", 1, ".if !empty(USE_LIBTOOL:M[Yy][Ee][Ss])", nil))
-
-	cond := mkline.parseMkCond(mkline.Args())
-
-	c.Check(cond, check.DeepEquals, NewTree("not", NewTree("empty", NewTree("match", "USE_LIBTOOL", "[Yy][Ee][Ss]"))))
-}
-
-func (s *Suite) TestParseMkCond_Compare(c *check.C) {
-	mkline := NewMkLine(NewLine("fname", 1, ".if ${VARNAME} != \"Value\"", nil))
-
-	cond := mkline.parseMkCond(mkline.Args())
-
-	c.Check(cond, check.DeepEquals, NewTree("compareVarStr", "VARNAME", "!=", "Value"))
-}
-
 func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	s.UseCommandLine(c, "-Wtypes")
 	G.globalData.InitVartypes()
