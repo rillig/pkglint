@@ -828,14 +828,7 @@ func (mkline *MkLine) CheckCond() {
 		varname := varuse.varname
 		for _, modifier := range varuse.modifiers {
 			if modifier[0] == 'M' || modifier[0] == 'N' {
-				pattern := modifier[1:]
-				vartype := mkline.getVariableType(varname)
-				if vartype != nil && vartype.checker.IsEnum() {
-					if !matches(pattern, `[\$*?\[]`) && !vartype.checker.HasEnum(pattern) {
-						mkline.Line.Warnf("Invalid :%c value %q for %s. Only { %s } are allowed.",
-							modifier[0], pattern, varname, vartype.checker.AllowedEnums())
-					}
-				}
+				mkline.CheckVartype(varname, opUseLoadtime, modifier[1:], "")
 			}
 		}
 	})
@@ -846,7 +839,7 @@ func (mkline *MkLine) CheckCond() {
 		varmods := varuse.modifiers
 		value := node.args[2].(string)
 		if len(varmods) == 0 || len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
-			mkline.CheckVartype(varname, opUse, value, "")
+			mkline.CheckVartype(varname, opUseLoadtime, value, "")
 		}
 	})
 }
