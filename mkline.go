@@ -840,9 +840,13 @@ func (mkline *MkLine) CheckIf() {
 	})
 
 	cond.Visit("compareVarStr", func(node *Tree) {
-		varname := node.args[0].(MkVarUse).varname
+		varuse := node.args[0].(MkVarUse)
+		varname := varuse.varname
+		varmods := varuse.modifiers
 		value := node.args[2].(string)
-		mkline.CheckVartype(varname, opUse, value, "")
+		if len(varmods) == 0 || len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
+			mkline.CheckVartype(varname, opUse, value, "")
+		}
 	})
 }
 
