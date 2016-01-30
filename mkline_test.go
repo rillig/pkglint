@@ -311,7 +311,7 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 
 	NewMkLine(NewLine("fname", 1, ".if !empty(PKGSRC_COMPILER:Mmycc)", nil)).CheckCond()
 
-	c.Check(s.Stdout(), equals, "WARN: fname:1: Invalid :M value \"mycc\". "+
+	c.Check(s.Stdout(), equals, "WARN: fname:1: Invalid :M value \"mycc\" for PKGSRC_COMPILER. "+
 		"Only { ccache ccc clang distcc f2c gcc hp icc ido gcc mipspro "+
 		"mipspro-ucode pcc sunpro xlc } are allowed.\n")
 
