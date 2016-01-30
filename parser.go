@@ -342,6 +342,7 @@ func (p *Parser) mkCondAtom() *Tree {
 
 	repl := p.repl
 	mark := repl.Mark()
+	repl.SkipSpace()
 	switch {
 	case repl.AdvanceStr("!"):
 		cond := p.mkCondAtom()
@@ -350,29 +351,33 @@ func (p *Parser) mkCondAtom() *Tree {
 		}
 	case repl.AdvanceStr("("):
 		cond := p.MkCond()
-		if cond != nil && repl.AdvanceStr(")") {
-			return cond
+		if cond != nil {
+			repl.SkipSpace()
+			if repl.AdvanceStr(")") {
+				return cond
+			}
 		}
-	case repl.AdvanceStr("defined("):
+	case repl.AdvanceRegexp(`^defined\s*\(`):
 		if varname := p.Varname(); varname != "" {
 			if repl.AdvanceStr(")") {
 				return NewTree("defined", varname)
 			}
 		}
-	case repl.AdvanceStr("empty("), repl.AdvanceStr("make("), repl.AdvanceStr("target("):
+	case repl.AdvanceRegexp(`^empty\s*\(`):
 		if varname := p.Varname(); varname != "" {
 			modifiers := p.VarUseModifiers(")")
 			if repl.AdvanceStr(")") {
 				return NewTree("empty", MkVarUse{varname, modifiers})
 			}
 		}
-	case repl.AdvanceStr("exists("):
-		fnameMark := repl.Mark()
+	case repl.AdvanceRegexp(`^(commands|exists|make|target)\s*\(`):
+		funcname := repl.m[1]
+		argMark := repl.Mark()
 		for p.VarUse() != nil || repl.AdvanceRegexp(`^[^$)]+`) {
 		}
-		fname := repl.Since(fnameMark)
+		arg := repl.Since(argMark)
 		if repl.AdvanceStr(")") {
-			return NewTree("exists", fname)
+			return NewTree(funcname, arg)
 		}
 	default:
 		lhs := p.VarUse()
@@ -400,6 +405,9 @@ func (p *Parser) mkCondAtom() *Tree {
 			} else {
 				return NewTree("not", NewTree("empty", *lhs)) // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
+		}
+		if repl.AdvanceRegexp(`^\d+(?:\.\d+)?`) {
+			return NewTree("literalNum", repl.m[0])
 		}
 	}
 	repl.Reset(mark)

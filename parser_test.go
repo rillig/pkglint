@@ -199,6 +199,13 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 			NewTree("and",
 				NewTree("defined", "C"),
 				NewTree("defined", "D"))))
+
+	// Exotic cases
+	cond("0",
+		NewTree("literalNum", "0"))
+	cond("! ( defined(A)  && empty(VARNAME) )",
+		NewTree("not", NewTree("and", NewTree("defined", "A"), NewTree("empty", varuse("VARNAME")))))
+
 	condrest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
 		NewTree("not", NewTree("empty", varuse("PKG_OPTIONS", "Msndfile"))),
 		" || defined(PKG_OPTIONS:Msamplerate)")

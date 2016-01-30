@@ -819,7 +819,7 @@ func (mkline *MkLine) CheckIf() {
 	p := NewParser(mkline.Args())
 	cond := p.MkCond()
 	if !p.EOF() {
-		mkline.Warn1("Unknown conditional %q.", mkline.Args())
+		mkline.Warn1("Invalid conditional %q.", mkline.Args())
 		return
 	}
 
