@@ -818,8 +818,10 @@ func (cv *VartypeCheck) YesNo() {
 		switch cv.value {
 		case "[yY][eE][sS]":
 		case "[Yy][Ee][Ss]":
+		case "[nN][oO]":
+		case "[Nn][Oo]":
 		default:
-			cv.line.Warn2("YesNo %s %q", cv.varname, cv.value)
+			cv.line.Warnf("%s should be matched against %q or %q, not %q.", cv.varname, "[yY][eE][sS]", "[nN][oO]", cv.value)
 		}
 	} else if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.Warn1("%s should be set to YES, yes, NO, or no.", cv.varname)
