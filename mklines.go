@@ -88,8 +88,8 @@ func (mklines *MkLines) Check() {
 	defer func() { G.Mk = nil }()
 
 	allowedTargets := make(map[string]bool)
-	prefixes := splitOnSpace("pre do post")
-	actions := splitOnSpace("fetch extract patch tools wrapper configure build test install package clean")
+	prefixes := [...]string{"pre", "do", "post"}
+	actions := [...]string{"fetch", "extract", "patch", "tools", "wrapper", "configure", "build", "test", "install", "package", "clean"}
 	for _, prefix := range prefixes {
 		for _, action := range actions {
 			allowedTargets[prefix+"-"+action] = true
