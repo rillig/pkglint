@@ -42,13 +42,13 @@ func NewMkLines(lines []*Line) *MkLines {
 		tools}
 }
 
-func (mklines *MkLines) IndentDepth() int {
+func (mklines *MkLines) indentDepth() int {
 	return mklines.indentation[len(mklines.indentation)-1]
 }
-func (mklines *MkLines) PopIndent() {
+func (mklines *MkLines) popIndent() {
 	mklines.indentation = mklines.indentation[:len(mklines.indentation)-1]
 }
-func (mklines *MkLines) PushIndent(indent int) {
+func (mklines *MkLines) pushIndent(indent int) {
 	mklines.indentation = append(mklines.indentation, indent)
 }
 
@@ -143,8 +143,8 @@ func (mklines *MkLines) Check() {
 
 	ChecklinesTrailingEmptyLines(mklines.lines)
 
-	if len(mklines.indentation) != 1 && mklines.IndentDepth() != 0 {
-		lastMkline.Line.Errorf("Directive indentation is not 0, but %d.", mklines.IndentDepth())
+	if len(mklines.indentation) != 1 && mklines.indentDepth() != 0 {
+		lastMkline.Line.Errorf("Directive indentation is not 0, but %d.", mklines.indentDepth())
 	}
 
 	SaveAutofixChanges(mklines.lines)
@@ -223,24 +223,24 @@ func (mklines *MkLines) checklineCond(mkline *MkLine) {
 	switch directive {
 	case "endif", "endfor", "elif", "else":
 		if len(mklines.indentation) > 1 {
-			mklines.PopIndent()
+			mklines.popIndent()
 		} else {
 			mkline.Error1("Unmatched .%s.", directive)
 		}
 	}
 
 	// Check the indentation
-	if expected := strings.Repeat(" ", mklines.IndentDepth()); indent != expected {
+	if expected := strings.Repeat(" ", mklines.indentDepth()); indent != expected {
 		if G.opts.WarnSpace && !mkline.Line.AutofixReplace("."+indent, "."+expected) {
-			mkline.Line.Notef("This directive should be indented by %d spaces.", mklines.IndentDepth())
+			mkline.Line.Notef("This directive should be indented by %d spaces.", mklines.indentDepth())
 		}
 	}
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
-		mklines.PushIndent(mklines.IndentDepth())
+		mklines.pushIndent(mklines.indentDepth())
 
 	} else if matches(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
-		mklines.PushIndent(mklines.IndentDepth() + 2)
+		mklines.pushIndent(mklines.indentDepth() + 2)
 	}
 
 	reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
