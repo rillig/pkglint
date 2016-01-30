@@ -789,16 +789,15 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 func (cv *VartypeCheck) Yes() {
 	switch cv.op {
 	case opUse, opUseLoadtime:
-		if cv.value == cv.valueNovar && strings.ToLower(cv.value) != "yes" {
-			cv.line.Warn0("The only sensible value to compare this variable with is the case-insensitive value [yY][eE][sS].")
-			Explain(
-				"This variable can have only two values: defined or undefined.",
-				"When it is defined, it means \"yes\", even when its value is",
-				"\"no\" or the empty string.",
-				"",
-				"Therefore, it should not be checked by comparing its value",
-				"but using \".if defined(VARNAME)\" alone.")
-		}
+		cv.line.Warn1("%s should only be used in a \".if defined(...)\" conditional.", cv.varname)
+		Explain(
+			"This variable can have only two values: defined or undefined.",
+			"When it is defined, it means \"yes\", even when its value is",
+			"\"no\" or the empty string.",
+			"",
+			"Therefore, it should not be checked by comparing its value",
+			"but using \".if defined(VARNAME)\" alone.")
+
 	default:
 		if !matches(cv.value, `^(?:YES|yes)(?:\s+#.*)?$`) {
 			cv.line.Warn1("%s should be set to YES or yes.", cv.varname)

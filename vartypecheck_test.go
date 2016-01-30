@@ -371,7 +371,10 @@ func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 		"no",
 		"${YESVAR}")
 
-	c.Check(s.Output(), equals, "WARN: fname:2: The only sensible value to compare this variable with is the case-insensitive value [yY][eE][sS].\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: PKG_DEVELOPER should only be used in a \".if defined(...)\" conditional.\n"+
+		"WARN: fname:2: PKG_DEVELOPER should only be used in a \".if defined(...)\" conditional.\n"+
+		"WARN: fname:3: PKG_DEVELOPER should only be used in a \".if defined(...)\" conditional.\n")
 }
 
 func (s *Suite) TestVartypeCheck_YesNo(c *check.C) {
