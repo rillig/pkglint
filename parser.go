@@ -343,7 +343,7 @@ func (p *Parser) mkCondAtom() *Tree {
 				return NewTree("defined", varname)
 			}
 		}
-	case repl.AdvanceStr("empty("):
+	case repl.AdvanceStr("empty("), repl.AdvanceStr("make("), repl.AdvanceStr("target("):
 		if varname := p.Varname(); varname != "" {
 			modifiers := p.VarUseModifiers(")")
 			if repl.AdvanceStr(")") {
