@@ -294,6 +294,11 @@ func (p *Parser) MkCond() *Tree {
 		if cond != nil {
 			return NewTree("not", cond)
 		}
+	case repl.AdvanceStr("("):
+		cond := p.MkCond()
+		if cond != nil && repl.AdvanceStr(")") {
+			return cond
+		}
 	case repl.AdvanceStr("defined("):
 		if varname := p.Varname(); varname != "" {
 			if repl.AdvanceStr(")") {
