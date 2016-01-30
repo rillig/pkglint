@@ -393,9 +393,9 @@ func (p *Parser) mkCondAtom() *Tree {
 			if repl.AdvanceRegexp(`^\s*(<|<=|==|!=|>=|>)\s*(\d+(?:\.\d+)?)`) {
 				return NewTree("compareVarNum", *lhs, repl.m[1], repl.m[2])
 			}
-			if repl.AdvanceRegexp(`^\s*(==|!=)\s*`) {
+			if repl.AdvanceRegexp(`^\s*(<|<=|==|!=|>=|>)\s*`) {
 				op := repl.m[1]
-				if repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
+				if (op == "!=" || op == "==") && repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
 					return NewTree("compareVarStr", *lhs, op, repl.m[1])
 				} else if repl.AdvanceRegexp(`^\w+`) {
 					return NewTree("compareVarStr", *lhs, op, repl.m[0])

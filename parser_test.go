@@ -175,8 +175,6 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
 	cond("\"${VARNAME}\" != Value",
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
-	cond("${OS_VERSION} >= 6.5",
-		NewTree("compareVarNum", varuse("OS_VERSION"), ">=", "6.5"))
 	cond("(defined(VARNAME))",
 		NewTree("defined", "VARNAME"))
 	cond("exists(/etc/hosts)",
@@ -205,7 +203,14 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 		NewTree("literalNum", "0"))
 	cond("! ( defined(A)  && empty(VARNAME) )",
 		NewTree("not", NewTree("and", NewTree("defined", "A"), NewTree("empty", varuse("VARNAME")))))
+	cond("${REQD_MAJOR} > ${MAJOR}",
+		NewTree("compareVarVar", varuse("REQD_MAJOR"), ">", varuse("MAJOR")))
+	cond("${OS_VERSION} >= 6.5",
+		NewTree("compareVarNum", varuse("OS_VERSION"), ">=", "6.5"))
+	cond("${OS_VERSION} == 5.3",
+		NewTree("compareVarNum", varuse("OS_VERSION"), "==", "5.3"))
 
+	// Errors
 	condrest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
 		NewTree("not", NewTree("empty", varuse("PKG_OPTIONS", "Msndfile"))),
 		" || defined(PKG_OPTIONS:Msamplerate)")
