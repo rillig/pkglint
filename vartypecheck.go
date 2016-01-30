@@ -92,6 +92,9 @@ func (cv *VartypeCheck) Category() {
 
 // A single option to the C/C++ compiler.
 func (cv *VartypeCheck) CFlag() {
+	if cv.op == opUseMatch {
+		return
+	}
 	cflag := cv.value
 	switch {
 	case matches(cflag, `^-[DILOUWfgm]`),
@@ -292,6 +295,8 @@ func (cv *VartypeCheck) FetchURL() {
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
 	switch {
+	case cv.op == opUseMatch:
+		break
 	case contains(cv.valueNovar, "/"):
 		cv.line.Warn0("A filename should not contain a slash.")
 	case !matches(cv.valueNovar, `^[-0-9@A-Za-z.,_~+%]*$`):
@@ -300,6 +305,9 @@ func (cv *VartypeCheck) Filename() {
 }
 
 func (cv *VartypeCheck) Filemask() {
+	if cv.op == opUseMatch {
+		return
+	}
 	if !matches(cv.valueNovar, `^[-0-9A-Za-z._~+%*?]*$`) {
 		cv.line.Warn1("%q is not a valid filename mask.", cv.value)
 	}
@@ -343,6 +351,9 @@ func (cv *VartypeCheck) Integer() {
 }
 
 func (cv *VartypeCheck) LdFlag() {
+	if cv.op == opUseMatch {
+		return
+	}
 	ldflag := cv.value
 	if m, rpathFlag := match1(ldflag, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
 		cv.line.Warn1("Please use \"${COMPILER_RPATH_FLAG}\" instead of %q.", rpathFlag)
@@ -459,6 +470,9 @@ func (cv *VartypeCheck) Pathlist() {
 // Shell globbing including slashes.
 // See Filemask
 func (cv *VartypeCheck) Pathmask() {
+	if cv.op == opUseMatch {
+		return
+	}
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
 		cv.line.Warn1("%q is not a valid pathname mask.", cv.value)
 	}
@@ -468,6 +482,9 @@ func (cv *VartypeCheck) Pathmask() {
 // Like Filename, but including slashes
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
 func (cv *VartypeCheck) Pathname() {
+	if cv.op == opUseMatch {
+		return
+	}
 	if !matches(cv.valueNovar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.line.Warn1("%q is not a valid pathname.", cv.value)
 	}
@@ -481,7 +498,7 @@ func (cv *VartypeCheck) Perl5Packlist() {
 }
 
 func (cv *VartypeCheck) PkgName() {
-	if cv.value == cv.valueNovar && !matches(cv.value, rePkgname) {
+	if cv.op != opUseMatch && cv.value == cv.valueNovar && !matches(cv.value, rePkgname) {
 		cv.line.Warn1("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.value)
 	}
 }
@@ -649,6 +666,9 @@ func (cv *VartypeCheck) SedCommands() {
 }
 
 func (cv *VartypeCheck) ShellCommand() {
+	if cv.op == opUseMatch {
+		return
+	}
 	setE := true
 	NewShellLine(cv.mkline).CheckShellCommand(cv.value, &setE)
 }
@@ -687,7 +707,7 @@ func (cv *VartypeCheck) Tool() {
 		default:
 			cv.line.Error1("Unknown tool dependency %q. Use one of \"build\", \"pkgsrc\" or \"run\".", tooldep)
 		}
-	} else {
+	} else if cv.op != opUseMatch {
 		cv.line.Error1("Invalid tool syntax: %q.", cv.value)
 	}
 }
