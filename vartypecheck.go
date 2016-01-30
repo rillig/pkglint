@@ -46,7 +46,7 @@ func NewMkOperator(op string) MkOperator {
 }
 
 func (op MkOperator) String() string {
-	return [...]string{"=", "!=", ":=", "+=", "?=", "use", "use-loadtime"}[op]
+	return [...]string{"=", "!=", ":=", "+=", "?=", "use-loadtime", "use"}[op]
 }
 
 func (cv *VartypeCheck) AwkCommand() {
@@ -814,7 +814,14 @@ func (cv *VartypeCheck) Yes() {
 //     .if defined(VAR) && !empty(VAR:M[Yy][Ee][Ss])
 //
 func (cv *VartypeCheck) YesNo() {
-	if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
+	if cv.op == opUseLoadtime {
+		switch cv.value {
+		case "[yY][eE][sS]":
+		case "[Yy][Ee][Ss]":
+		default:
+			cv.line.Warn2("YesNo %s %q", cv.varname, cv.value)
+		}
+	} else if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.Warn1("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
 }
