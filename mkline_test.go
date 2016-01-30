@@ -311,9 +311,9 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 
 	NewMkLine(NewLine("fname", 1, ".if !empty(PKGSRC_COMPILER:Mmycc)", nil)).CheckCond()
 
-	c.Check(s.Stdout(), equals, "WARN: fname:1: \"mycc\" is not valid for PKGSRC_COMPILER. "+
-		"Use one of { ccache ccc clang distcc f2c gcc hp icc ido gcc mipspro "+
-		"mipspro-ucode pcc sunpro xlc } instead.\n")
+	c.Check(s.Stdout(), equals, "WARN: fname:1: The pattern \"mycc\" cannot match any of "+
+		"{ ccache ccc clang distcc f2c gcc hp icc ido "+
+		"gcc mipspro mipspro-ucode pcc sunpro xlc }.\n")
 
 	NewMkLine(NewLine("fname", 1, ".elif ${A} != ${B}", nil)).CheckCond()
 

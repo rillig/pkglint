@@ -749,7 +749,7 @@ func (cv *VartypeCheck) Varname() {
 
 func (cv *VartypeCheck) Version() {
 	if cv.op == opUseMatch {
-		if !matches(cv.value, `^[\[\d][\w\-.*?\[\]]+$`) {
+		if !matches(cv.value, `^[\d?\[][\w\-.*?\[\]]+$`) {
 			cv.line.Warn1("Invalid version number pattern %q.", cv.value)
 		}
 	} else if cv.value == cv.valueNovar && !matches(cv.value, `^\d[\w.]+$`) {

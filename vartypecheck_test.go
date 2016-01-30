@@ -171,6 +171,15 @@ func (s *Suite) TestVartypeCheck_EmulPlatform(c *check.C) {
 		"WARN: fname:3: \"${LINUX}\" is not a valid emulation platform.\n")
 }
 
+func (s *Suite) TestVartypeCheck_Enum(c *check.C) {
+	runVartypeMatchChecks("JDK", enum("jdk1 jdk2 jdk4").checker,
+		"*",
+		"jdk*",
+		"sun-jdk*")
+
+	c.Check(s.Output(), equals, "WARN: fname:3: The pattern \"sun-jdk*\" cannot match any of { jdk1 jdk2 jdk4 }.\n")
+}
+
 func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 	G.globalData.MasterSiteUrls = map[string]string{
 		"https://github.com/":         "MASTER_SITE_GITHUB",
@@ -366,7 +375,7 @@ func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 		"WARN: fname:2: APACHE_MODULE should be set to YES or yes.\n"+
 		"WARN: fname:3: APACHE_MODULE should be set to YES or yes.\n")
 
-	runVartypeUseChecks("PKG_DEVELOPER", opUseMatch, (*VartypeCheck).Yes,
+	runVartypeMatchChecks("PKG_DEVELOPER", (*VartypeCheck).Yes,
 		"yes",
 		"no",
 		"${YESVAR}")
@@ -401,6 +410,9 @@ func (s *Suite) TestVartypeCheck_YesNoIndirectly(c *check.C) {
 }
 
 func runVartypeChecks(varname string, op MkOperator, checker func(*VartypeCheck), values ...string) {
+	if !contains(op.String(), "=") {
+		panic("runVartypeChecks needs an assignment operator")
+	}
 	for i, value := range values {
 		mkline := NewMkLine(NewLine("fname", i+1, varname+op.String()+value, nil))
 		valueNovar := mkline.withoutMakeVariables(mkline.Value(), true)
@@ -409,15 +421,12 @@ func runVartypeChecks(varname string, op MkOperator, checker func(*VartypeCheck)
 	}
 }
 
-func runVartypeUseChecks(varname string, op MkOperator, checker func(*VartypeCheck), values ...string) {
+func runVartypeMatchChecks(varname string, checker func(*VartypeCheck), values ...string) {
 	for i, value := range values {
-		text := "# dummy"
-		if op == opUseLoadtime {
-			text = fmt.Sprintf(".if ${%s} == %q", varname, value)
-		}
+		text := fmt.Sprintf(".if ${%s:M%s} == \"\"", varname, value)
 		mkline := NewMkLine(NewLine("fname", i+1, text, nil))
 		valueNovar := mkline.withoutMakeVariables(value, true)
-		vc := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNovar, "", true, false}
+		vc := &VartypeCheck{mkline, mkline.Line, varname, opUseMatch, value, valueNovar, "", true, false}
 		checker(vc)
 	}
 }

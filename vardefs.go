@@ -29,7 +29,7 @@ func (gd *GlobalData) InitVartypes() {
 	usr("PKGSRC_SLEEPSECS", lkNone, CheckvarInteger)
 	usr("USETBL", lkNone, CheckvarYes)
 	usr("ABI", lkNone, enum("32 64"))
-	usr("PKG_DEVELOPER", lkNone, CheckvarYes)
+	usr("PKG_DEVELOPER", lkNone, CheckvarYesNo)
 	usr("USE_ABI_DEPENDS", lkNone, CheckvarYesNo)
 	usr("PKG_REGISTER_SHELLS", lkNone, enum("YES NO"))
 	usr("PKGSRC_COMPILER", lkShell, enum("ccache ccc clang distcc f2c gcc hp icc ido gcc mipspro mipspro-ucode pcc sunpro xlc"))
@@ -705,9 +705,26 @@ func enum(values string) *VarChecker {
 		vmap[value] = true
 	}
 	name := "enum: " + values + " " // See IsEnum
-	return &VarChecker{name, func(ctx *VartypeCheck) {
-		if !vmap[ctx.value] {
-			ctx.line.Warnf("%q is not valid for %s. Use one of { %s } instead.", ctx.value, ctx.varname, values)
+	return &VarChecker{name, func(cv *VartypeCheck) {
+		if cv.op == opUseMatch {
+			if !vmap[cv.value] {
+				canMatch := false
+				for value := range vmap {
+					if ok, err := path.Match(cv.value, value); err != nil {
+						cv.line.Warnf("Invalid match pattern %q.", cv.value)
+					} else if ok {
+						canMatch = true
+					}
+				}
+				if !canMatch {
+					cv.line.Warnf("The pattern %q cannot match any of { %s }.", cv.value, values)
+				}
+			}
+			return
+		}
+		
+		if !vmap[cv.value] {
+			cv.line.Warnf("%q is not valid for %s. Use one of { %s } instead.", cv.value, cv.varname, values)
 		}
 	}}
 }
