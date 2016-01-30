@@ -292,8 +292,16 @@ func (p *Parser) mkCondOr() *Tree {
 	}
 
 	ands := append([]interface{}(nil), and)
-	for p.repl.AdvanceRegexp(`^\s*\|\|\s*`) {
+	for {
+		mark := p.repl.Mark()
+		if !p.repl.AdvanceRegexp(`^\s*\|\|\s*`) {
+			break
+		}
 		next := p.mkCondAnd()
+		if next == nil {
+			p.repl.Reset(mark)
+			break
+		}
 		ands = append(ands, next)
 	}
 	if len(ands) == 1 {
@@ -309,8 +317,16 @@ func (p *Parser) mkCondAnd() *Tree {
 	}
 
 	atoms := append([]interface{}(nil), atom)
-	for p.repl.AdvanceRegexp(`^\s*&&\s*`) {
+	for {
+		mark := p.repl.Mark()
+		if !p.repl.AdvanceRegexp(`^\s*&&\s*`) {
+			break
+		}
 		next := p.mkCondAtom()
+		if next == nil {
+			p.repl.Reset(mark)
+			break
+		}
 		atoms = append(atoms, next)
 	}
 	if len(atoms) == 1 {

@@ -140,14 +140,14 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 }
 
 func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
-	parse := func(input string, expectedTree *Tree, expectedRest string) {
+	condrest := func(input string, expectedTree *Tree, expectedRest string) {
 		p := NewParser(input)
 		actualTree := p.MkCond()
 		c.Check(actualTree, deepEquals, expectedTree)
 		c.Check(p.Rest(), equals, expectedRest)
 	}
 	cond := func(input string, expectedTree *Tree) {
-		parse(input, expectedTree, "")
+		condrest(input, expectedTree, "")
 	}
 	literal := func(literal string) MkToken {
 		return MkToken{literal: literal}
@@ -195,4 +195,7 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 			NewTree("and",
 				NewTree("defined", "C"),
 				NewTree("defined", "D"))))
+	condrest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
+		NewTree("not", NewTree("empty", varuse("PKG_OPTIONS", "Msndfile"))),
+		" || defined(PKG_OPTIONS:Msamplerate)")
 }
