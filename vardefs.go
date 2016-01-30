@@ -587,7 +587,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("PTHREAD_OPTS", lkShell, enum("native optional require"), "Makefile: set, append; Makefile.common: append; buildlink3.mk: append")
 	sys("PTHREAD_TYPE", lkNone, CheckvarIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", lkNone, CheckvarYes)
-	acl("PYPKGPREFIX", lkNone, enum("py27 py33 py34"), "pyversion.mk: set; *: use-loadtime, use")
+	acl("PYPKGPREFIX", lkNone, enum("py27 py33 py34 py35"), "pyversion.mk: set; *: use-loadtime, use")
 	pkg("PYTHON_FOR_BUILD_ONLY", lkNone, CheckvarYes)
 	pkglist("REPLACE_PYTHON", lkShell, CheckvarPathmask)
 	pkg("PYTHON_VERSIONS_ACCEPTED", lkShell, CheckvarVersion)

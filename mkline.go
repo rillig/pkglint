@@ -831,7 +831,7 @@ func (mkline *MkLine) CheckIf() {
 				vartype := mkline.getVariableType(empty.varname)
 				if vartype != nil && vartype.checker.IsEnum() {
 					pattern := modifier[1:]
-					if !matches(pattern, `[\$\[*]`) && !vartype.checker.HasEnum(pattern) {
+					if !matches(pattern, `[\$*?\[]`) && !vartype.checker.HasEnum(pattern) {
 						mkline.Warn2("Invalid :M value %q. Only { %s } are allowed.", pattern, vartype.checker.AllowedEnums())
 					}
 				}
