@@ -385,6 +385,9 @@ func (p *Parser) mkCondAtom() *Tree {
 			}
 		}
 		if lhs != nil {
+			if repl.AdvanceRegexp(`^\s*(<|<=|==|!=|>=|>)\s*(\d+(?:\.\d+)?)`) {
+				return NewTree("compareVarNum", *lhs, repl.m[1], repl.m[2])
+			}
 			if repl.AdvanceRegexp(`^\s*(==|!=)\s*`) {
 				op := repl.m[1]
 				if repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {

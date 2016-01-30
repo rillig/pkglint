@@ -175,6 +175,8 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
 	cond("\"${VARNAME}\" != Value",
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
+	cond("${OS_VERSION} >= 6.5",
+		NewTree("compareVarNum", varuse("OS_VERSION"), ">=", "6.5"))
 	cond("(defined(VARNAME))",
 		NewTree("defined", "VARNAME"))
 	cond("exists(/etc/hosts)",
