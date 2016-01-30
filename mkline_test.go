@@ -326,6 +326,10 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	NewMkLine(NewLine("fname", 1, ".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])", nil)).CheckCond()
 
 	c.Check(s.Output(), equals, "WARN: fname:1: PKGSRC_RUN_TEST should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".\n")
+
+	NewMkLine(NewLine("fname", 1, ".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])", nil)).CheckCond()
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting(c *check.C) {

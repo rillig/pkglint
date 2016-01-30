@@ -836,9 +836,8 @@ func (cv *VartypeCheck) YesNo() {
 	}
 }
 
-// Like YesNo, but the value may be taken from another variable.
 func (cv *VartypeCheck) YesNoIndirectly() {
-	if cv.valueNovar != "" && !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
-		cv.line.Warn1("%s should be set to YES, yes, NO, or no.", cv.varname)
+	if cv.valueNovar != "" {
+		cv.YesNo()
 	}
 }
