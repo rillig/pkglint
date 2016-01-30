@@ -363,8 +363,9 @@ func (p *Parser) mkCondAtom() *Tree {
 			if repl.AdvanceRegexp(`^\s*(==|!=)\s*`) {
 				op := repl.m[1]
 				if repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
-					rhs := repl.m[1]
-					return NewTree("compareVarStr", *lhs, op, rhs)
+					return NewTree("compareVarStr", *lhs, op, repl.m[1])
+				} else if repl.AdvanceRegexp(`^\w+`) {
+					return NewTree("compareVarStr", *lhs, op, repl.m[0])
 				} else if rhs := p.VarUse(); rhs != nil {
 					return NewTree("compareVarVar", *lhs, op, *rhs)
 				}
