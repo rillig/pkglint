@@ -317,6 +317,12 @@ func (cv *VartypeCheck) FileMode() {
 }
 
 func (cv *VartypeCheck) Identifier() {
+	if cv.op == opUseMatch {
+		if cv.value == cv.valueNovar && !matches(cv.value, `^[\w*?]`) {
+			cv.line.Warn2("Invalid identifier pattern %q for %s.", cv.value, cv.varname)
+		}
+		return
+	}
 	if cv.value != cv.valueNovar {
 		//line.logWarning("Identifiers should be given directly.")
 	}
@@ -742,7 +748,11 @@ func (cv *VartypeCheck) Varname() {
 }
 
 func (cv *VartypeCheck) Version() {
-	if !matches(cv.value, `^([\d.])+$`) {
+	if cv.op == opUseMatch {
+		if !matches(cv.value, `^[\[\d][\w\-.*?\[\]]+$`) {
+			cv.line.Warn1("Invalid version number pattern %q.", cv.value)
+		}
+	} else if cv.value == cv.valueNovar && !matches(cv.value, `^\d[\w.]+$`) {
 		cv.line.Warn1("Invalid version number %q.", cv.value)
 	}
 }
