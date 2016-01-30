@@ -25,8 +25,9 @@ const (
 	opAssignEval                      // :=
 	opAssignAppend                    // +=
 	opAssignDefault                   // ?=
-	opUseLoadtime
-	opUse
+	opUse                             //
+	opUseLoadtime                     //
+	opUseMatch                        // Used in the :M operator
 )
 
 func NewMkOperator(op string) MkOperator {
@@ -46,7 +47,7 @@ func NewMkOperator(op string) MkOperator {
 }
 
 func (op MkOperator) String() string {
-	return [...]string{"=", "!=", ":=", "+=", "?=", "use-loadtime", "use"}[op]
+	return [...]string{"=", "!=", ":=", "+=", "?=", "use", "use-loadtime", "use-match"}[op]
 }
 
 func (cv *VartypeCheck) AwkCommand() {
@@ -788,7 +789,7 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 
 func (cv *VartypeCheck) Yes() {
 	switch cv.op {
-	case opUse, opUseLoadtime:
+	case opUseMatch:
 		cv.line.Warn1("%s should only be used in a \".if defined(...)\" conditional.", cv.varname)
 		Explain(
 			"This variable can have only two values: defined or undefined.",
@@ -810,11 +811,8 @@ func (cv *VartypeCheck) Yes() {
 	}
 }
 
-// The type YesNo is used for variables that are checked using
-//     .if defined(VAR) && !empty(VAR:M[Yy][Ee][Ss])
-//
 func (cv *VartypeCheck) YesNo() {
-	if cv.op == opUseLoadtime {
+	if cv.op == opUseMatch {
 		switch cv.value {
 		case "[yY][eE][sS]":
 		case "[Yy][Ee][Ss]":
@@ -828,8 +826,7 @@ func (cv *VartypeCheck) YesNo() {
 	}
 }
 
-// Like YesNo, but the value may be produced by a shell command using the
-// != operator.
+// Like YesNo, but the value may be taken from another variable.
 func (cv *VartypeCheck) YesNoIndirectly() {
 	if cv.valueNovar != "" && !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.Warn1("%s should be set to YES, yes, NO, or no.", cv.varname)

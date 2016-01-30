@@ -828,7 +828,7 @@ func (mkline *MkLine) CheckCond() {
 		varname := varuse.varname
 		for _, modifier := range varuse.modifiers {
 			if modifier[0] == 'M' || modifier[0] == 'N' {
-				mkline.CheckVartype(varname, opUseLoadtime, modifier[1:], "")
+				mkline.CheckVartype(varname, opUseMatch, modifier[1:], "")
 			}
 		}
 	})
@@ -839,7 +839,7 @@ func (mkline *MkLine) CheckCond() {
 		varmods := varuse.modifiers
 		value := node.args[2].(string)
 		if len(varmods) == 0 || len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
-			mkline.CheckVartype(varname, opUseLoadtime, value, "")
+			mkline.CheckVartype(varname, opUseMatch, value, "")
 		}
 	})
 }

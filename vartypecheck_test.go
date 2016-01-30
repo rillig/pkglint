@@ -366,7 +366,7 @@ func (s *Suite) TestVartypeCheck_Yes(c *check.C) {
 		"WARN: fname:2: APACHE_MODULE should be set to YES or yes.\n"+
 		"WARN: fname:3: APACHE_MODULE should be set to YES or yes.\n")
 
-	runVartypeUseChecks("PKG_DEVELOPER", opUseLoadtime, (*VartypeCheck).Yes,
+	runVartypeUseChecks("PKG_DEVELOPER", opUseMatch, (*VartypeCheck).Yes,
 		"yes",
 		"no",
 		"${YESVAR}")
