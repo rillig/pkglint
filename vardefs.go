@@ -723,7 +723,7 @@ func enum(values string) *VarChecker {
 			}
 			return
 		}
-		
+
 		if !vmap[cv.value] {
 			cv.line.Warnf("%q is not valid for %s. Use one of { %s } instead.", cv.value, cv.varname, values)
 		}
