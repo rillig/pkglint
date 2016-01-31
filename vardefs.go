@@ -718,7 +718,7 @@ func enum(values string) *VarChecker {
 					}
 				}
 				if !canMatch {
-					cv.line.Warnf("The pattern %q cannot match any of { %s }.", cv.value, values)
+					cv.line.Warnf("The pattern %q cannot match any of { %s } for %s.", cv.value, values, cv.varname)
 				}
 			}
 			return
