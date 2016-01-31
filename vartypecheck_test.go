@@ -175,7 +175,8 @@ func (s *Suite) TestVartypeCheck_Enum(c *check.C) {
 	runVartypeMatchChecks("JDK", enum("jdk1 jdk2 jdk4").checker,
 		"*",
 		"jdk*",
-		"sun-jdk*")
+		"sun-jdk*",
+		"${JDKNAME}")
 
 	c.Check(s.Output(), equals, "WARN: fname:3: The pattern \"sun-jdk*\" cannot match any of { jdk1 jdk2 jdk4 }.\n")
 }

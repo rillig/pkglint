@@ -708,7 +708,7 @@ func enum(values string) *VarChecker {
 	name := "enum: " + values + " " // See IsEnum
 	return &VarChecker{name, func(cv *VartypeCheck) {
 		if cv.op == opUseMatch {
-			if !vmap[cv.value] {
+			if !vmap[cv.value] && cv.value == cv.valueNovar {
 				canMatch := false
 				for value := range vmap {
 					if ok, err := path.Match(cv.value, value); err != nil {
