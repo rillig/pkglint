@@ -537,7 +537,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("PKG_HACKS", lkShell, CheckvarIdentifier, "hacks.mk: append")
 	sys("PKG_INFO", lkNone, CheckvarShellCommand)
 	sys("PKG_JAVA_HOME", lkNone, CheckvarPathname)
-	jvms := enum("blackdown-jdk13 jdk jdk14 kaffe sun-jdk13 sun-jdk14 sun-jdk15 sun-jdk6 openjdk7 openjdk7-bin sun-jdk7 openjdk8 oracle-jdk8")
+	jvms := enum("openjdk8 oracle-jdk8 openjdk7 sun-jdk7 sun-jdk6 jdk16 jdk15 kaffe") // See mk/java-vm.mk:/_PKG_JVMS/
 	sys("PKG_JVM", lkNone, jvms)
 	acl("PKG_JVMS_ACCEPTED", lkShell, jvms, "Makefile: set; Makefile.common: default, set")
 	usr("PKG_JVM_DEFAULT", lkNone, jvms)
