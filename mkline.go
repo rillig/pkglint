@@ -826,6 +826,21 @@ func (mkline *MkLine) CheckCond() {
 	cond.Visit("empty", func(node *Tree) {
 		varuse := node.args[0].(MkVarUse)
 		varname := varuse.varname
+		if matches(varname, `^\$.*:[MN]`) {
+			mkline.Warn0("The empty() function takes a variable name as parameter, not a variable expression.")
+			Explain(
+				"Instead of empty(${VARNAME:Mpattern}), you should write either",
+				"of the following:",
+				"",
+				"\tempty(VARNAME:Mpattern)",
+				"\t${VARNAME:Mpattern} == \"\"",
+				"",
+				"Instead of !empty(${VARNAME:Mpattern}), you should write either",
+				"of the following:",
+				"",
+				"\t!empty(VARNAME:Mpattern)",
+				"\t${VARNAME:Mpattern}")
+		}
 		for _, modifier := range varuse.modifiers {
 			if modifier[0] == 'M' || modifier[0] == 'N' {
 				mkline.CheckVartype(varname, opUseMatch, modifier[1:], "")
