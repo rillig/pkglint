@@ -209,6 +209,8 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 		NewTree("compareVarNum", varuse("OS_VERSION"), ">=", "6.5"))
 	cond("${OS_VERSION} == 5.3",
 		NewTree("compareVarNum", varuse("OS_VERSION"), "==", "5.3"))
+	cond("!empty(${OS_VARIANT:MIllumos})", // Probably not intended
+		NewTree("not", NewTree("empty", varuse("${OS_VARIANT:MIllumos}"))))
 
 	// Errors
 	condrest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
