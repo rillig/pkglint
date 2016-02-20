@@ -155,10 +155,7 @@ func (p *Parser) VarUse() *MkVarUse {
 
 	mark := repl.Mark()
 	if repl.AdvanceStr("${") || repl.AdvanceStr("$(") {
-		closing := "}"
-		if repl.Since(mark) == "$(" {
-			closing = ")"
-		}
+		closing := ifelseStr(repl.Since(mark) == "${", "}", ")")
 
 		varnameMark := repl.Mark()
 		varname := p.Varname()
