@@ -144,7 +144,7 @@ func (mkline *MkLine) Targets() string     { return mkline.xs1 }
 func (mkline *MkLine) Sources() string     { return mkline.xs2 }
 
 func (mkline *MkLine) Tokenize(s string) {
-	p := NewParser(s)
+	p := NewParser(mkline.Line, s)
 	p.MkTokens()
 	if p.Rest() != "" {
 		mkline.Error1("Invalid Makefile syntax at %q.", p.Rest())
@@ -816,7 +816,7 @@ func (mkline *MkLine) CheckCond() {
 		defer tracecall0()()
 	}
 
-	p := NewParser(mkline.Args())
+	p := NewParser(mkline.Line, mkline.Args())
 	cond := p.MkCond()
 	if !p.EOF() {
 		mkline.Warn1("Invalid conditional %q.", mkline.Args())

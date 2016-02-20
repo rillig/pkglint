@@ -137,7 +137,7 @@ func (cv *VartypeCheck) Comment() {
 func (cv *VartypeCheck) Dependency() {
 	line, value := cv.line, cv.value
 
-	parser := NewParser(value)
+	parser := NewParser(line, value)
 	deppat := parser.Dependency()
 	if deppat != nil && deppat.wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
 		line.Warn0("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")

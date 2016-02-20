@@ -5,11 +5,12 @@ import (
 )
 
 type Parser struct {
+	line *Line
 	repl *PrefixReplacer
 }
 
-func NewParser(s string) *Parser {
-	return &Parser{NewPrefixReplacer(s)}
+func NewParser(line *Line, s string) *Parser {
+	return &Parser{line, NewPrefixReplacer(s)}
 }
 
 func (p *Parser) EOF() bool {
@@ -155,11 +156,15 @@ func (p *Parser) VarUse() *MkVarUse {
 
 	mark := repl.Mark()
 	if repl.AdvanceStr("${") || repl.AdvanceStr("$(") {
-		closing := ifelseStr(repl.Since(mark) == "${", "}", ")")
+		usingRoundParen := repl.Since(mark) == "$("
+		closing := ifelseStr(usingRoundParen, ")", "}")
 
 		varnameMark := repl.Mark()
 		varname := p.Varname()
 		if varname != "" {
+			if usingRoundParen {
+				p.line.Warn1("Please use curly braces {} instead of round parentheses () for %s.", varname)
+			}
 			modifiers := p.VarUseModifiers(closing)
 			if repl.AdvanceStr(closing) {
 				return &MkVarUse{varname, modifiers}
