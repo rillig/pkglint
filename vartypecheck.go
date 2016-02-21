@@ -560,6 +560,7 @@ func (cv *VartypeCheck) PlatformTriple() {
 	}
 }
 
+// A pathname relative to ${PREFIX}.
 func (cv *VartypeCheck) PrefixPathname() {
 	if m, mansubdir := match1(cv.value, `^man/(.+)`); m {
 		cv.line.Warn2("Please use \"${PKGMANDIR}/%s\" instead of %q.", mansubdir, cv.value)
@@ -579,12 +580,12 @@ func (cv *VartypeCheck) PythonDependency() {
 	}
 }
 
-// Refers to a package directory.
+// Refers to a package directory, e.g. ../../category/pkgbase.
 func (cv *VartypeCheck) RelativePkgDir() {
 	cv.mkline.CheckRelativePkgdir(cv.value)
 }
 
-// Refers to a file or directory.
+// Refers to a file or directory, e.g. ../../category/pkgbase, ../../category/pkgbase/Makefile.
 func (cv *VartypeCheck) RelativePkgPath() {
 	cv.mkline.CheckRelativePath(cv.value, true)
 }

@@ -991,21 +991,31 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) (
 
 	isPlainWord := vartype.checker.IsEnum()
 	switch vartype.checker {
-	case CheckvarDistSuffix,
+	case CheckvarBuildlinkDepmethod,
+		CheckvarCategory,
+		CheckvarDistSuffix,
+		CheckvarEmulPlatform,
 		CheckvarFileMode,
 		CheckvarFilename,
 		CheckvarIdentifier,
+		CheckvarInteger,
 		CheckvarOption,
 		CheckvarPathname,
+		CheckvarPerl5Packlist,
 		CheckvarPkgName,
 		CheckvarPkgOptionsVar,
+		CheckvarPkgPath,
 		CheckvarPkgRevision,
+		CheckvarPrefixPathname,
+		CheckvarPythonDependency,
 		CheckvarRelativePkgDir,
 		CheckvarRelativePkgPath,
+		CheckvarStage,
 		CheckvarUserGroupName,
-		CheckvarVarname,
 		CheckvarVersion,
-		CheckvarWrkdirSubdirectory:
+		CheckvarWrkdirSubdirectory,
+		CheckvarYesNo,
+		CheckvarYesNoIndirectly:
 		isPlainWord = true
 	}
 	if isPlainWord {
