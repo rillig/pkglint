@@ -165,7 +165,7 @@ func (p *Parser) VarUse() *MkVarUse {
 			if usingRoundParen {
 				p.line.Warn1("Please use curly braces {} instead of round parentheses () for %s.", varname)
 			}
-			modifiers := p.VarUseModifiers(closing)
+			modifiers := p.VarUseModifiers(varname, closing)
 			if repl.AdvanceStr(closing) {
 				return &MkVarUse{varname, modifiers}
 			}
@@ -176,7 +176,7 @@ func (p *Parser) VarUse() *MkVarUse {
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":sh") || hasPrefix(rest, ":?") {
 			varexpr := repl.Since(varnameMark)
-			modifiers := p.VarUseModifiers(closing)
+			modifiers := p.VarUseModifiers(varexpr, closing)
 			if repl.AdvanceStr(closing) {
 				return &MkVarUse{varexpr, modifiers}
 			}
@@ -187,7 +187,7 @@ func (p *Parser) VarUse() *MkVarUse {
 	return nil
 }
 
-func (p *Parser) VarUseModifiers(closing string) []string {
+func (p *Parser) VarUseModifiers(varname, closing string) []string {
 	repl := p.repl
 
 	var modifiers []string
@@ -245,12 +245,14 @@ func (p *Parser) VarUseModifiers(closing string) []string {
 
 		case '@':
 			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
+				loopvar := repl.m[1]
 				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:@`+closing+`\\]|\$\$|\\.)+`) {
 				}
-				if repl.AdvanceStr("@") {
-					modifiers = append(modifiers, repl.Since(modifierMark))
-					continue
+				if !repl.AdvanceStr("@") {
+					p.line.Warn2("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
 				}
+				modifiers = append(modifiers, repl.Since(modifierMark))
+				continue
 			}
 
 		case '[':
@@ -367,7 +369,7 @@ func (p *Parser) mkCondAtom() *Tree {
 		}
 	case repl.AdvanceRegexp(`^empty\s*\(`):
 		if varname := p.Varname(); varname != "" {
-			modifiers := p.VarUseModifiers(")")
+			modifiers := p.VarUseModifiers(varname, ")")
 			if repl.AdvanceStr(")") {
 				return NewTree("empty", MkVarUse{varname, modifiers})
 			}

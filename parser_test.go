@@ -140,6 +140,10 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	parse("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
 	parse("$(VAR}", nil, "$(VAR}") // Opening parenthesis, closing brace
 	c.Check(s.Output(), equals, "WARN: Please use curly braces {} instead of round parentheses () for VAR.\n")
+
+	token("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
+	token("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end
+	c.Check(s.Output(), equals, "WARN: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".\n")
 }
 
 func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
