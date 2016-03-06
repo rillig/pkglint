@@ -334,6 +334,14 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	NewMkLine(NewLine("fname", 1, ".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})", nil)).CheckCond()
 
 	c.Check(s.Output(), equals, "WARN: fname:1: The empty() function takes a variable name as parameter, not a variable expression.\n")
+
+	NewMkLine(NewLine("fname", 1, ".if ${EMUL_PLATFORM} == \"linux-x386\"", nil)).CheckCond()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: \"x386\" is not valid for the hardware architecture part of EMUL_PLATFORM. Use one of { alpha amd64 arc arm arm32 cobalt convex dreamcast hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } instead.\n")
+
+	NewMkLine(NewLine("fname", 1, ".if ${EMUL_PLATFORM:Mlinux-x386}", nil)).CheckCond()
+
+	c.Check(s.Output(), equals, "WARN: fname:1: The pattern \"x386\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of EMUL_PLATFORM.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting(c *check.C) {

@@ -853,7 +853,9 @@ func (mkline *MkLine) CheckCond() {
 		varname := varuse.varname
 		varmods := varuse.modifiers
 		value := node.args[2].(string)
-		if len(varmods) == 0 || len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
+		if len(varmods) == 0 {
+			mkline.CheckVartype(varname, opUse, value, "")
+		} else if len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
 			mkline.CheckVartype(varname, opUseMatch, value, "")
 		}
 	})
