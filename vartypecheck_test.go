@@ -288,20 +288,6 @@ func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_PlatformPattern(c *check.C) {
-	runVartypeChecks("ONLY_FOR_PLATFORM", opAssign, (*VartypeCheck).PlatformPattern,
-		"linux-i386",
-		"nextbsd-5.0-8087",
-		"netbsd-7.0-l*",
-		"NetBSD-1.6.2-i386",
-		"${LINUX}")
-
-	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: \"linux-i386\" is not a valid platform pattern.\n"+
-		"WARN: fname:2: \"nextbsd\" is not valid for the operating system part of ONLY_FOR_PLATFORM. Use one of { Bitrig BSDOS Cygwin Darwin DragonFly FreeBSD Haiku HPUX Interix IRIX Linux MirBSD NetBSD OpenBSD OSF1 QNX SunOS } instead.\n"+
-		"WARN: fname:2: \"8087\" is not valid for the hardware architecture part of ONLY_FOR_PLATFORM. Use one of { alpha amd64 arc arm arm32 cobalt convex dreamcast hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } instead.\n"+
-		"WARN: fname:3: \"netbsd\" is not valid for the operating system part of ONLY_FOR_PLATFORM. Use one of { Bitrig BSDOS Cygwin Darwin DragonFly FreeBSD Haiku HPUX Interix IRIX Linux MirBSD NetBSD OpenBSD OSF1 QNX SunOS } instead.\n"+
-		"WARN: fname:3: \"l*\" is not valid for the hardware architecture part of ONLY_FOR_PLATFORM. Use one of { alpha amd64 arc arm arm32 cobalt convex dreamcast hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } instead.\n")
-
 	runVartypeMatchChecks("ONLY_FOR_PLATFORM", (*VartypeCheck).PlatformPattern,
 		"linux-i386",
 		"nextbsd-5.0-8087",

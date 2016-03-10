@@ -587,7 +587,7 @@ func (cv *VartypeCheck) PlatformPattern() {
 			cv.mkline,
 			cv.line,
 			"the operating system part of " + cv.varname,
-			cv.op,
+			opUseMatch, // Always allow patterns, since this is a PlatformPattern.
 			opsysPattern,
 			opsysPattern,
 			cv.comment,
@@ -601,7 +601,7 @@ func (cv *VartypeCheck) PlatformPattern() {
 			cv.mkline,
 			cv.line,
 			"the hardware architecture part of " + cv.varname,
-			cv.op,
+			opUseMatch, // Always allow patterns, since this is a PlatformPattern.
 			archPattern,
 			archPattern,
 			cv.comment,
