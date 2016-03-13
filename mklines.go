@@ -135,6 +135,11 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsDependency():
 			mklines.checklineDependencyRule(mkline, mkline.Targets(), mkline.Sources(), allowedTargets)
+
+		case mkline.IsComment():
+			if hasPrefix(mkline.Line.Text, "# url2pkg-marker") {
+				mkline.Line.Error0("This comment indicates unfinished work (url2pkg).")
+			}
 		}
 	}
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
