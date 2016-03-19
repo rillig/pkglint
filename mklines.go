@@ -356,39 +356,39 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 	}
 	mkline.CheckRelativePath(includefile, mustExist)
 
-	if hasSuffix(includefile, "/Makefile") {
+	switch {
+	case hasSuffix(includefile, "/Makefile"):
 		mkline.Line.Error0("Other Makefiles must not be included directly.")
 		Explain4(
 			"If you want to include portions of another Makefile, extract",
 			"the common parts and put them into a Makefile.common.  After",
 			"that, both this one and the other package should include the",
 			"Makefile.common.")
-	}
 
-	if includefile == "../../mk/bsd.prefs.mk" {
+	case includefile == "../../mk/bsd.prefs.mk":
 		if path.Base(mkline.Line.Fname) == "buildlink3.mk" {
 			mkline.Note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.Pkg != nil {
 			G.Pkg.SeenBsdPrefsMk = true
 		}
-	} else if includefile == "../../mk/bsd.fast.prefs.mk" {
+
+	case includefile == "../../mk/bsd.fast.prefs.mk":
 		if G.Pkg != nil {
 			G.Pkg.SeenBsdPrefsMk = true
 		}
-	}
 
-	if hasSuffix(includefile, "/x11-links/buildlink3.mk") {
+	case hasSuffix(includefile, "/x11-links/buildlink3.mk"):
 		mkline.Error1("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
-	}
-	if hasSuffix(includefile, "/jpeg/buildlink3.mk") {
+
+	case hasSuffix(includefile, "/jpeg/buildlink3.mk"):
 		mkline.Error1("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
-	}
-	if hasSuffix(includefile, "/intltool/buildlink3.mk") {
+
+	case hasSuffix(includefile, "/intltool/buildlink3.mk"):
 		mkline.Warn0("Please write \"USE_TOOLS+= intltool\" instead of this line.")
-	}
-	if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
-		mkline.Line.Error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, dir)
+
+	case hasSuffix(includefile, "/builtin.mk"):
+		mkline.Line.Error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, path.Dir(includefile))
 	}
 }
 
