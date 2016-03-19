@@ -408,6 +408,11 @@ func (s *Suite) TestParselineMk(c *check.C) {
 	line2 := NewMkLine(NewLine("fname", 1, "\tsed -e 's,\\#,hash,g'", nil))
 
 	c.Check(line2.Shellcmd(), equals, "sed -e 's,\\#,hash,g'")
+
+	// From shells/zsh/Makefile.common, rev. 1.78
+	NewMkLine(NewLine("fname", 1, "\t# $ sha1 patches/patch-ac", nil))
+
+	c.Check(s.Output(), equals, "")
 }
 
 func (s *Suite) TestMkLine_LeadingSpace(c *check.C) {

@@ -145,7 +145,7 @@ func (mkline *MkLine) Sources() string     { return mkline.xs2 }
 
 func (mkline *MkLine) Tokenize(s string) {
 	p := NewParser(mkline.Line, s)
-	p.MkTokens()
+	_ = p.MkTokens()
 	if p.Rest() != "" {
 		mkline.Error1("Invalid Makefile syntax at %q.", p.Rest())
 	}

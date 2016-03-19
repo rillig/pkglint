@@ -110,6 +110,9 @@ func (p *Parser) MkTokens() []*MkToken {
 
 	var tokens []*MkToken
 	for !p.EOF() {
+		if repl.AdvanceStr("#") {
+			repl.AdvanceRest()
+		}
 		if varuse := p.VarUse(); varuse != nil {
 			tokens = append(tokens, &MkToken{varuse: *varuse})
 			continue
