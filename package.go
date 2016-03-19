@@ -690,6 +690,9 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 				if vars[varindex].count == once && !maySkipSection {
 					line.Warn1("The canonical position for the required variable %s is here.", vars[varindex].varname)
 					Explain(
+						"In simple package Makefiles, some common variables should be",
+						"arranged in a specific order.",
+						"",
 						"See doc/Makefile-example or the pkgsrc guide, section",
 						"\"Package components\", subsection \"Makefile\" for more information.")
 				}
