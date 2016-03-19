@@ -378,13 +378,13 @@ func (mklines *MkLines) checklineInclude(mkline *MkLine) {
 		}
 	}
 
-	if matches(includefile, `/x11-links/buildlink3\.mk$`) {
+	if hasSuffix(includefile, "/x11-links/buildlink3.mk") {
 		mkline.Error1("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
 	}
-	if matches(includefile, `/jpeg/buildlink3\.mk$`) {
+	if hasSuffix(includefile, "/jpeg/buildlink3.mk") {
 		mkline.Error1("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
 	}
-	if matches(includefile, `/intltool/buildlink3\.mk$`) {
+	if hasSuffix(includefile, "/intltool/buildlink3.mk") {
 		mkline.Warn0("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 	}
 	if m, dir := match1(includefile, `(.*)/builtin\.mk$`); m {
