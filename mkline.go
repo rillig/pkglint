@@ -119,6 +119,9 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 	return mkline
 }
 
+func (mkline *MkLine) String() string {
+	return fmt.Sprintf("%s:%s", mkline.Line.Fname, mkline.Line.linenos())
+}
 func (mkline *MkLine) IsVarassign() bool   { return mkline.xtype == 1 }
 func (mkline *MkLine) Varname() string     { return mkline.xs1 }
 func (mkline *MkLine) Varcanon() string    { return mkline.xs2 }
@@ -218,7 +221,7 @@ func (mkline *MkLine) CheckVardefPermissions(varname string, op MkOperator) {
 
 func (mkline *MkLine) CheckVaruse(varname string, mod string, vuc *VarUseContext) {
 	if G.opts.DebugTrace {
-		defer tracecall(mkline, varname, mod, *vuc)()
+		defer tracecall(mkline, varname, mod, vuc)()
 	}
 
 	vartype := mkline.getVariableType(varname)
@@ -371,6 +374,9 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 }
 
 func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
+	if G.opts.DebugTrace {
+		defer tracecall(varname, vartype, vuc, mod, needsQuoting)()
+	}
 
 	// In GNU configure scripts, a few variables need to be
 	// passed through the :M* operator before they reach the
@@ -981,9 +987,13 @@ const (
 	nqDontKnow
 )
 
+func (nq NeedsQuoting) String() string {
+	return [...]string{"no", "yes", "doesn't matter", "don't known"}[nq]
+}
+
 func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
 	if G.opts.DebugTrace {
-		defer tracecall(varname, *vuc, "=>", needsQuoting)()
+		defer tracecall(varname, vuc, "=>", needsQuoting)()
 	}
 
 	vartype := mkline.getVariableType(varname)
@@ -1300,5 +1310,5 @@ func (vuc *VarUseContext) String() string {
 	if vuc.vartype != nil {
 		typename = vuc.vartype.String()
 	}
-	return fmt.Sprintf("(%s %s %s %s)", vuc.time, typename, vuc.quoting, vuc.extent)
+	return fmt.Sprintf("(%s time:%s quoting:%s extent:%s)", typename, vuc.time, vuc.quoting, vuc.extent)
 }

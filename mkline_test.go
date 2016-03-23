@@ -376,7 +376,7 @@ func (s *Suite) TestVarUseContext_ToString(c *check.C) {
 	vartype := mkline.getVariableType("PKGNAME")
 	vuc := &VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, vucExtentWord}
 
-	c.Check(vuc.String(), equals, "(unknown PkgName backt word)")
+	c.Check(vuc.String(), equals, "(PkgName time:unknown quoting:backt extent:word)")
 }
 
 func (s *Suite) TestMkLine_(c *check.C) {
