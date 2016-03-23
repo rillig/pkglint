@@ -518,3 +518,22 @@ func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
 		"ERROR: Makefile:93: Invalid Makefile syntax at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
 }
+
+func (s *Suite) TestMkLine_Assign_URL_to_ListOfURLs(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.globalData.MasterSiteVars = map[string]bool{"MASTER_SITE_SOURCEFORGE": true}
+	mkline := NewMkLine(NewLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}", nil))
+
+	mkline.CheckVarassign()
+
+	// FIXME: This :Q must not be here, since a single URL can trivially be added to a list of URLs.
+	c.Check(s.Output(), equals, "WARN: Makefile:95: Please use ${HOMEPAGE:Q} instead of ${HOMEPAGE}.\n")
+
+	// FIXME: In databases/squirrelsql/Makefile:6 this produces an error message.
+	mkline = NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))
+
+	mkline.CheckVarassign()
+
+	c.Check(s.Output(), equals, "")
+}
