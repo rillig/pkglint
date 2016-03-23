@@ -342,6 +342,12 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 	NewMkLine(NewLine("fname", 1, ".if ${EMUL_PLATFORM:Mlinux-x386}", nil)).CheckCond()
 
 	c.Check(s.Output(), equals, "WARN: fname:1: The pattern \"x386\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of EMUL_PLATFORM.\n")
+
+	NewMkLine(NewLine("fname", 98, ".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}", nil)).CheckCond()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:98: The pattern \"UnknownOS\" cannot match any of { Bitrig BSDOS Cygwin Darwin DragonFly FreeBSD Haiku HPUX Interix IRIX Linux MirBSD NetBSD OpenBSD OSF1 QNX SunOS } for the operating system part of MACHINE_PLATFORM.\n"+
+		"WARN: fname:98: The pattern \"x86\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for MACHINE_ARCH.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting(c *check.C) {

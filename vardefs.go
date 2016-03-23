@@ -391,8 +391,10 @@ func (gd *GlobalData) InitVartypes() {
 	sys("LINKER_RPATH_FLAG", lkNone, CheckvarShellWord)
 	sys("LOWER_OPSYS", lkNone, CheckvarIdentifier)
 	acl("LTCONFIG_OVERRIDE", lkShell, CheckvarPathmask, "Makefile: set, append; Makefile.common: append")
-	sys("MACHINE_ARCH", lkNone, CheckvarIdentifier)
+	sys("MACHINE_ARCH", lkNone, platformArchEnum)
+	sys("MACHINE_GNU_ARCH", lkNone, platformArchEnum)
 	sys("MACHINE_GNU_PLATFORM", lkNone, CheckvarPlatformPattern) // This one is actually not a pattern
+	sys("MACHINE_PLATFORM", lkNone, CheckvarPlatformPattern)     // This one is actually not a pattern
 	acl("MAINTAINER", lkNone, CheckvarMailAddress, "Makefile: set; Makefile.common: default")
 	sys("MAKE", lkNone, CheckvarShellCommand)
 	pkglist("MAKEFLAGS", lkShell, CheckvarShellWord)

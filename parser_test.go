@@ -146,7 +146,7 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".\n")
 }
 
-func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
+func (s *Suite) TestParser_MkCond(c *check.C) {
 	condrest := func(input string, expectedTree *Tree, expectedRest string) {
 		p := NewParser(dummyLine, input)
 		actualTree := p.MkCond()
@@ -156,13 +156,9 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 	cond := func(input string, expectedTree *Tree) {
 		condrest(input, expectedTree, "")
 	}
-	literal := func(literal string) MkToken {
-		return MkToken{literal: literal}
-	}
 	varuse := func(varname string, modifiers ...string) MkVarUse {
 		return MkVarUse{varname: varname, modifiers: modifiers}
 	}
-	_, _ = literal, varuse
 
 	cond("${OPSYS:MNetBSD}",
 		NewTree("not", NewTree("empty", varuse("OPSYS", "MNetBSD"))))
@@ -204,6 +200,10 @@ func (s *Suite) TestParser_MkCond_Basics(c *check.C) {
 			NewTree("and",
 				NewTree("defined", "C"),
 				NewTree("defined", "D"))))
+	cond("${MACHINE_ARCH:Mi386} || ${MACHINE_OPSYS:MNetBSD}",
+		NewTree("or",
+			NewTree("not", NewTree("empty", varuse("MACHINE_ARCH", "Mi386"))),
+			NewTree("not", NewTree("empty", varuse("MACHINE_OPSYS", "MNetBSD")))))
 
 	// Exotic cases
 	cond("0",
