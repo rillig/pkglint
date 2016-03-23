@@ -58,7 +58,7 @@ const (
 		"Bitrig|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|" +
 		"Haiku|HPUX|Interix|IRIX|Linux|MirBSD|NetBSD|OpenBSD|OSF1|QNX|SunOS"
 	rePlatformArch = "" +
-		"alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|" +
+		"alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|evbarm|" +
 		"hpcmips|hpcsh|hppa|i386|ia64|" +
 		"m68k|m88k|mips|mips64|mips64eb|mips64el|mipseb|mipsel|mipsn32|" +
 		"ns32k|pc532|pmax|powerpc|rs6000|s390|sh3eb|sh3el|sparc|sparc64|vax|x86_64"
