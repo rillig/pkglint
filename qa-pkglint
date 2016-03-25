@@ -6,18 +6,27 @@ archivedir="$srcdir/archive"
 pkgsrcdir="$HOME/pkgsrc"
 
 genrunid() {
-  (cd "$srcdir" && rm .git/index && git reset > /dev/null)
-  if (cd "$srcdir" && git diff-index --quiet HEAD); then
-    runid=$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print $1$2$3"-"$4$5}')-$(cd "$srcdir" && git rev-parse --short HEAD)
+  headcommit=$(cd "$srcdir" && git rev-parse --short HEAD)
+  if (cd "$srcdir" && git diff --quiet && git diff --cached --quiet); then
+    timestamp="$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print $1$2$3"-"$4$5}')"
+    runid="$timestamp-$headcommit"
   else
-    runid=$(date +'%Y%m%d-%H%M')-$(cd "$srcdir" && git rev-parse --short HEAD)-mod-$$
+    runid="$(date +'%Y%m%d-%H%M')-$headcommit-mod-$$"
   fi
 }
 
 install() {
+  genrunid
   echo "=> Installing pkglint"
   (cd "$srcdir" && chmod 644 *.go)
   (cd "$srcdir" && go fmt && go build && go test && go install && cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe")
+}
+
+install_notest() {
+  genrunid
+  echo "=> Installing pkglint"
+  (cd "$srcdir" && chmod 644 *.go)
+  (cd "$srcdir" && go fmt && go build && go install && cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe")
 }
 
 analyze() {
@@ -37,6 +46,7 @@ netbsd() {
 }
 
 pkgsrc() {
+  genrunid
   echo "=> Running pkglint on the pkgsrc tree"
   time (cd "$pkgsrcdir" && "$archivedir/$runid.exe" -pr -Wall -Call) > "$archivedir/$runid.tmp" || true
   mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
