@@ -149,21 +149,21 @@ func SaveAutofixChanges(lines []*Line) (autofixed bool) {
 		return
 	}
 
-	changes := make(map[string][]*RawLine)
+	changes := make(map[string][]string)
 	changed := make(map[string]bool)
 	for _, line := range lines {
 		if line.changed {
 			changed[line.Fname] = true
 		}
-		changes[line.Fname] = append(changes[line.Fname], line.rawLines()...)
+		changes[line.Fname] = append(changes[line.Fname], line.modifiedLines()...)
 	}
 
 	for fname := range changed {
-		rawLines := changes[fname]
+		changedLines := changes[fname]
 		tmpname := fname + ".pkglint.tmp"
 		text := ""
-		for _, rawLine := range rawLines {
-			text += rawLine.textnl
+		for _, changedLine := range changedLines {
+			text += changedLine
 		}
 		err := ioutil.WriteFile(tmpname, []byte(text), 0666)
 		if err != nil {

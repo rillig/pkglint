@@ -56,19 +56,19 @@ func (s *Suite) TestMkLine_CheckVaralign_Autofix(c *check.C) {
 	varalign.Finish()
 
 	c.Check(lines[0].changed, equals, true)
-	c.Check(lines[0].rawLines()[0].String(), equals, "1:VAR=\tvalue\n")
+	c.Check(lines[0].raw[0].String(), equals, "1:VAR=\tvalue\n")
 	c.Check(lines[2].changed, equals, true)
-	c.Check(lines[2].rawLines()[0].String(), equals, "3:VAR=\tvalue\n")
+	c.Check(lines[2].raw[0].String(), equals, "3:VAR=\tvalue\n")
 	c.Check(lines[4].changed, equals, true)
-	c.Check(lines[4].rawLines()[0].String(), equals, "5:VAR=\tvalue\n")
+	c.Check(lines[4].raw[0].String(), equals, "5:VAR=\tvalue\n")
 	c.Check(lines[6].changed, equals, true)
-	c.Check(lines[6].rawLines()[0].String(), equals, "7:VAR=\tvalue\n")
+	c.Check(lines[6].raw[0].String(), equals, "7:VAR=\tvalue\n")
 	c.Check(lines[8].changed, equals, true)
-	c.Check(lines[8].rawLines()[0].String(), equals, "9:VAR=\tvalue\n")
+	c.Check(lines[8].raw[0].String(), equals, "9:VAR=\tvalue\n")
 	c.Check(lines[10].changed, equals, true)
-	c.Check(lines[10].rawLines()[0].String(), equals, "11:VAR=\tvalue\n")
+	c.Check(lines[10].raw[0].String(), equals, "11:VAR=\tvalue\n")
 	c.Check(lines[12].changed, equals, false)
-	c.Check(lines[12].rawLines()[0].String(), equals, "13:VAR=\tvalue\n")
+	c.Check(lines[12].raw[0].String(), equals, "13:VAR=\tvalue\n")
 	c.Check(s.Output(), equals, ""+
 		"NOTE: file.mk:1: This variable value should be aligned with tabs, not spaces, to column 9.\n"+
 		"AUTOFIX: file.mk:1: Replacing \"VAR=   \" with \"VAR=\\t\".\n"+

@@ -38,8 +38,8 @@ type Line struct {
 	Text           string
 	raw            []*RawLine
 	changed        bool
-	before         []*RawLine
-	after          []*RawLine
+	before         []string
+	after          []string
 	autofixMessage *string
 }
 
@@ -57,10 +57,16 @@ func NewLineEOF(fname string) *Line {
 	return NewLineMulti(fname, -1, 0, "", nil)
 }
 
-func (line *Line) rawLines() []*RawLine {
+func (line *Line) modifiedLines() []string {
 	switch { // prevent inlining
 	}
-	return append(append(append([]*RawLine(nil), line.before...), line.raw...), line.after...)
+	result := make([]string, 0)
+	result = append(result, line.before...)
+	for _, raw := range line.raw {
+		result = append(result, raw.textnl)
+	}
+	result = append(result, line.after...)
+	return result
 }
 
 func (line *Line) linenos() string {
@@ -90,7 +96,10 @@ func (line *Line) IsMultiline() bool {
 func (line *Line) printSource(out io.Writer) {
 	if G.opts.PrintSource {
 		io.WriteString(out, "\n")
-		for _, rawLine := range line.rawLines() {
+		for _, before := range line.before {
+			io.WriteString(out, "+ "+before)
+		}
+		for _, rawLine := range line.raw {
 			if rawLine.textnl != rawLine.orignl {
 				if rawLine.orignl != "" {
 					io.WriteString(out, "- "+rawLine.orignl)
@@ -101,6 +110,9 @@ func (line *Line) printSource(out io.Writer) {
 			} else {
 				io.WriteString(out, "> "+rawLine.orignl)
 			}
+		}
+		for _, after := range line.after {
+			io.WriteString(out, "+ "+after)
 		}
 	}
 }
@@ -158,14 +170,14 @@ func (line *Line) logAutofix() {
 
 func (line *Line) AutofixInsertBefore(text string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		line.before = append(line.before, &RawLine{0, "", text + "\n"})
+		line.before = append(line.before, text+"\n")
 	}
 	return line.RememberAutofix("Inserting a line %q before this line.", text)
 }
 
 func (line *Line) AutofixInsertAfter(text string) bool {
 	if G.opts.PrintAutofix || G.opts.Autofix {
-		line.after = append(line.after, &RawLine{0, "", text + "\n"})
+		line.after = append(line.after, text+"\n")
 	}
 	return line.RememberAutofix("Inserting a line %q after this line.", text)
 }
