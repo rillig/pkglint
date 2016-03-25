@@ -157,7 +157,7 @@ func (mkline *MkLine) Check() {
 
 	case mkline.IsShellcmd():
 		shellcmd := mkline.Shellcmd()
-		mkline.CheckText(shellcmd)
+		mkline.checkText(shellcmd)
 		NewShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 	case mkline.IsComment():
@@ -662,7 +662,7 @@ func (mkline *MkLine) checkVarassign() {
 	mkline.checkVarassignDefPermissions(varname, op)
 	mkline.checkVarassignBsdPrefs()
 
-	mkline.CheckText(value)
+	mkline.checkText(value)
 	mkline.CheckVartype(varname, op, value, comment)
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
@@ -951,7 +951,7 @@ func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) 
 	}
 }
 
-func (mkline *MkLine) CheckText(text string) {
+func (mkline *MkLine) checkText(text string) {
 	if G.opts.DebugTrace {
 		defer tracecall1(text)()
 	}

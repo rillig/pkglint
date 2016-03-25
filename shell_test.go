@@ -278,7 +278,7 @@ func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 		"# dummy")
 	mkline := NewMkLine(NewLine("fname", 3, "# dummy", nil))
 
-	mkline.CheckText("echo \"hello, world\"")
+	mkline.checkText("echo \"hello, world\"")
 
 	c.Check(s.Output(), equals, "")
 
