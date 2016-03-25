@@ -427,7 +427,7 @@ func (s *Suite) TestMkLine_LeadingSpace(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: rubyversion.mk:427: Makefile lines should not start with space characters.\n")
 }
 
-func (s *Suite) TestMkLine_CheckVardefPermissions(c *check.C) {
+func (s *Suite) TestMkLine_checkVarassignDefPermissions(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	mklines := s.NewMkLines("options.mk",
