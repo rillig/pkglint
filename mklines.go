@@ -1,7 +1,6 @@
 package main
 
 import (
-	"path"
 	"strings"
 )
 
@@ -108,8 +107,7 @@ func (mklines *MkLines) Check() {
 	var substcontext SubstContext
 	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
-		mkline.Line.CheckTrailingWhitespace()
-		mkline.Line.CheckValidCharacters(`[\t -~]`)
+		mkline.Check()
 		varalign.Check(mkline)
 
 		switch {
@@ -118,28 +116,16 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsVarassign():
 			mklines.target = ""
-			mkline.CheckVarassign()
 			substcontext.Varassign(mkline)
-
-		case mkline.IsShellcmd():
-			shellcmd := mkline.Shellcmd()
-			mkline.CheckText(shellcmd)
-			NewShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 		case mkline.IsInclude():
 			mklines.target = ""
-			mklines.checklineInclude(mkline)
 
 		case mkline.IsCond():
 			mklines.checklineCond(mkline)
 
 		case mkline.IsDependency():
 			mklines.checklineDependencyRule(mkline, mkline.Targets(), mkline.Sources(), allowedTargets)
-
-		case mkline.IsComment():
-			if hasPrefix(mkline.Line.Text, "# url2pkg-marker") {
-				mkline.Line.Error0("This comment indicates unfinished work (url2pkg).")
-			}
 		}
 	}
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
@@ -345,50 +331,6 @@ func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, depende
 				"them by inserting a \".PHONY: my-target\" line before this line.  This",
 				"will tell make(1) to not interpret this target's name as a filename.")
 		}
-	}
-}
-
-func (mklines *MkLines) checklineInclude(mkline *MkLine) {
-	includefile := mkline.Includefile()
-	mustExist := mkline.MustExist()
-	if G.opts.DebugInclude {
-		mkline.Debug1("includefile=%s", includefile)
-	}
-	mkline.CheckRelativePath(includefile, mustExist)
-
-	switch {
-	case hasSuffix(includefile, "/Makefile"):
-		mkline.Line.Error0("Other Makefiles must not be included directly.")
-		Explain4(
-			"If you want to include portions of another Makefile, extract",
-			"the common parts and put them into a Makefile.common.  After",
-			"that, both this one and the other package should include the",
-			"Makefile.common.")
-
-	case includefile == "../../mk/bsd.prefs.mk":
-		if path.Base(mkline.Line.Fname) == "buildlink3.mk" {
-			mkline.Note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
-		}
-		if G.Pkg != nil {
-			G.Pkg.SeenBsdPrefsMk = true
-		}
-
-	case includefile == "../../mk/bsd.fast.prefs.mk":
-		if G.Pkg != nil {
-			G.Pkg.SeenBsdPrefsMk = true
-		}
-
-	case hasSuffix(includefile, "/x11-links/buildlink3.mk"):
-		mkline.Error1("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
-
-	case hasSuffix(includefile, "/jpeg/buildlink3.mk"):
-		mkline.Error1("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
-
-	case hasSuffix(includefile, "/intltool/buildlink3.mk"):
-		mkline.Warn0("Please write \"USE_TOOLS+= intltool\" instead of this line.")
-
-	case hasSuffix(includefile, "/builtin.mk"):
-		mkline.Line.Error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, path.Dir(includefile))
 	}
 }
 

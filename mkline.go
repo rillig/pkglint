@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -145,6 +146,73 @@ func (mkline *MkLine) IsSysinclude() bool  { return mkline.xtype == 7 }
 func (mkline *MkLine) IsDependency() bool  { return mkline.xtype == 8 }
 func (mkline *MkLine) Targets() string     { return mkline.xs1 }
 func (mkline *MkLine) Sources() string     { return mkline.xs2 }
+
+func (mkline *MkLine) Check() {
+	mkline.Line.CheckTrailingWhitespace()
+	mkline.Line.CheckValidCharacters(`[\t -~]`)
+
+	switch {
+	case mkline.IsVarassign():
+		mkline.CheckVarassign()
+
+	case mkline.IsShellcmd():
+		shellcmd := mkline.Shellcmd()
+		mkline.CheckText(shellcmd)
+		NewShellLine(mkline).CheckShellCommandLine(shellcmd)
+
+	case mkline.IsComment():
+		if hasPrefix(mkline.Line.Text, "# url2pkg-marker") {
+			mkline.Line.Error0("This comment indicates unfinished work (url2pkg).")
+		}
+
+	case mkline.IsInclude():
+		mkline.checkInclude()
+	}
+}
+
+func (mkline *MkLine) checkInclude() {
+	includefile := mkline.Includefile()
+	mustExist := mkline.MustExist()
+	if G.opts.DebugInclude {
+		mkline.Debug1("includefile=%s", includefile)
+	}
+	mkline.CheckRelativePath(includefile, mustExist)
+
+	switch {
+	case hasSuffix(includefile, "/Makefile"):
+		mkline.Line.Error0("Other Makefiles must not be included directly.")
+		Explain4(
+			"If you want to include portions of another Makefile, extract",
+			"the common parts and put them into a Makefile.common.  After",
+			"that, both this one and the other package should include the",
+			"Makefile.common.")
+
+	case includefile == "../../mk/bsd.prefs.mk":
+		if path.Base(mkline.Line.Fname) == "buildlink3.mk" {
+			mkline.Note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+		}
+		if G.Pkg != nil {
+			G.Pkg.SeenBsdPrefsMk = true
+		}
+
+	case includefile == "../../mk/bsd.fast.prefs.mk":
+		if G.Pkg != nil {
+			G.Pkg.SeenBsdPrefsMk = true
+		}
+
+	case hasSuffix(includefile, "/x11-links/buildlink3.mk"):
+		mkline.Error1("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
+
+	case hasSuffix(includefile, "/jpeg/buildlink3.mk"):
+		mkline.Error1("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
+
+	case hasSuffix(includefile, "/intltool/buildlink3.mk"):
+		mkline.Warn0("Please write \"USE_TOOLS+= intltool\" instead of this line.")
+
+	case hasSuffix(includefile, "/builtin.mk"):
+		mkline.Line.Error2("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, path.Dir(includefile))
+	}
+}
 
 func (mkline *MkLine) Tokenize(s string) {
 	p := NewParser(mkline.Line, s)
