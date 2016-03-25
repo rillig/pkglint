@@ -13,7 +13,7 @@ func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
 		"{print $$0}")
 
 	c.Check(s.Output(), equals, ""+
-		"ERROR: fname:1: Invalid Makefile syntax at \"$0}\".\n"+
+		"WARN: fname:1: $0 is ambiguous. Use ${0} if you mean a Makefile variable or $$0 if you mean a shell variable.\n"+
 		"DEBUG: fname:1: Unchecked AWK command: \"{print $0}\"\n"+
 		"DEBUG: fname:2: Unchecked AWK command: \"{print $$0}\"\n")
 }

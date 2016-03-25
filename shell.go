@@ -170,6 +170,7 @@ outer:
 			setE := true
 			shline.CheckShellCommand(backtCommand, &setE)
 
+			// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case shline.checkVaruseToken(parser, state):
 			break
 
@@ -270,76 +271,54 @@ outer:
 }
 
 func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) bool {
-	repl := parser.repl
+	varuse := parser.VarUse()
+	if varuse == nil {
+		return false
+	}
+	varname := varuse.varname
+	mod := ""
+	for _, modifier := range varuse.modifiers {
+		mod += ":" + modifier
+	}
+
+	if varname == "@" {
+		shline.line.Warn0("Please use \"${.TARGET}\" instead of \"$@\".")
+		Explain2(
+			"The variable $@ can easily be confused with the shell variable of",
+			"the same name, which has a completely different meaning.")
+		varname = ".TARGET"
+	}
 
 	switch {
-	// Make(1) variables have the same syntax, no matter in which state we are currently.
-	case repl.AdvanceRegexp(`^\$\{(` + reVarnameDirect + `|@)(:[^\{]+)?\}`),
-		repl.AdvanceRegexp(`^\$\((` + reVarnameDirect + `|@])(:[^\)]+)?\)`),
-		repl.AdvanceRegexp(`^\$([\w@<])()`):
-		varname, mod := repl.m[1], repl.m[2]
-
-		if varname == "@" {
-			line := shline.line
-			line.Warn0("Please use \"${.TARGET}\" instead of \"$@\".")
-			Explain2(
-				"The variable $@ can easily be confused with the shell variable of",
-				"the same name, which has a completely different meaning.")
-			varname = ".TARGET"
-		}
-
-		switch {
-		case state == swstPlain && hasSuffix(mod, ":Q"):
-			// Fine.
-		case state == swstBackt:
-			// Don't check anything here, to avoid false positives for tool names.
-		case (state == swstSquot || state == swstDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
-			// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
-		case state == swstDquot && hasSuffix(mod, ":Q"):
-			shline.line.Warn0("Please don't use the :Q operator in double quotes.")
-			Explain2(
-				"Either remove the :Q or the double quotes.  In most cases, it is",
-				"more appropriate to remove the double quotes.")
-		}
-
-		if varname != "@" {
-			vucstate := vucQuotUnknown
-			switch state {
-			case swstPlain:
-				vucstate = vucQuotPlain
-			case swstDquot:
-				vucstate = vucQuotDquot
-			case swstSquot:
-				vucstate = vucQuotSquot
-			case swstBackt:
-				vucstate = vucQuotBackt
-			}
-			vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
-			shline.mkline.CheckVaruse(varname, mod, vuc)
-		}
-		return true
-
-	// The syntax of the variable modifiers can get quite
-	// hairy. In lack of motivation, we just skip anything
-	// complicated, hoping that at least the braces are balanced.
-	case repl.AdvanceStr("${"):
-		braces := 1
-	skip:
-		for !parser.EOF() && braces > 0 {
-			switch {
-			case repl.AdvanceStr("}"):
-				braces--
-			case repl.AdvanceStr("{"):
-				braces++
-			case repl.AdvanceRegexp(`^[^{}]+`):
-			// skip
-			default:
-				break skip
-			}
-		}
-		return true
+	case state == swstPlain && hasSuffix(mod, ":Q"):
+		// Fine.
+	case state == swstBackt:
+		// Don't check anything here, to avoid false positives for tool names.
+	case (state == swstSquot || state == swstDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
+		// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
+	case state == swstDquot && hasSuffix(mod, ":Q"):
+		shline.line.Warn0("Please don't use the :Q operator in double quotes.")
+		Explain2(
+			"Either remove the :Q or the double quotes.  In most cases, it is",
+			"more appropriate to remove the double quotes.")
 	}
-	return false
+
+	if varname != "@" {
+		vucstate := vucQuotUnknown
+		switch state {
+		case swstPlain:
+			vucstate = vucQuotPlain
+		case swstDquot:
+			vucstate = vucQuotDquot
+		case swstSquot:
+			vucstate = vucQuotSquot
+		case swstBackt:
+			vucstate = vucQuotBackt
+		}
+		vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
+		shline.mkline.CheckVaruse(varname, mod, vuc)
+	}
+	return true
 }
 
 // Scan for the end of the backticks, checking for single backslashes

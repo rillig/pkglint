@@ -190,6 +190,17 @@ func (p *Parser) VarUse() *MkVarUse {
 		repl.Reset(mark)
 	}
 
+	if repl.AdvanceStr("$@") {
+		return &MkVarUse{"@", nil}
+	}
+	if repl.AdvanceStr("$<") {
+		return &MkVarUse{"<", nil}
+	}
+	if repl.AdvanceRegexp(`^\$(\w)`) {
+		varname := repl.m[1]
+		p.line.Warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
+		return &MkVarUse{varname, nil}
+	}
 	return nil
 }
 

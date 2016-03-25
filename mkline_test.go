@@ -516,6 +516,9 @@ func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: Makefile:93: Invalid Makefile syntax at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
+		"ERROR: Makefile:93: Internal pkglint error: ShellLine.CheckToken state=plain, rest=\"${EGDIR/apparmor.d\", token=\"${EGDIR/apparmor.d\"\n"+
+		"ERROR: Makefile:93: Internal pkglint error: ShellLine.CheckToken state=plain, rest=\"${EGDIR/dbus-1/system.d\", token=\"${EGDIR/dbus-1/system.d\"\n"+
+		"ERROR: Makefile:93: Internal pkglint error: ShellLine.CheckToken state=plain, rest=\"${EGDIR/pam.d\", token=\"${EGDIR/pam.d\"\n"+
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
 }
 

@@ -232,7 +232,7 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 
 	shline.CheckToken("${${list}}", false)
 
-	c.Check(s.Output(), equals, "")
+	c.Check(s.Output(), equals, "WARN: fname:1: ${list} is used but not defined. Spelling mistake?\n")
 
 	shline.CheckToken("\"$@\"", false)
 
@@ -294,7 +294,12 @@ func (s *Suite) TestShellLine_checklineMkShelltext(c *check.C) {
 
 	shline.CheckShellCommandLine("for f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done")
 
-	c.Check(s.Output(), equals, "NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.\n")
+	c.Check(s.Output(), equals, ""+
+		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n")
 
 	shline.CheckShellCommandLine("install -c manpage.1 ${PREFIX}/man/man1/manpage.1")
 
