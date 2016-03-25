@@ -149,12 +149,13 @@ func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
 		line.Warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	repl := NewPrefixReplacer(token)
+	parser := NewParser(line, token)
+	repl := parser.repl
 	state := swstPlain
 outer:
-	for repl.rest != "" {
+	for !parser.EOF() {
 		if G.opts.DebugShell {
-			line.Debugf("shell state %s: %q", state, repl.rest)
+			line.Debugf("shell state %s: %q", state, parser.Rest())
 		}
 
 		switch {
@@ -219,7 +220,7 @@ outer:
 		case repl.AdvanceStr("${"):
 			braces := 1
 		skip:
-			for repl.rest != "" && braces > 0 {
+			for !parser.EOF() && braces > 0 {
 				switch {
 				case repl.AdvanceStr("}"):
 					braces--
@@ -323,8 +324,8 @@ outer:
 		}
 	}
 
-	if strings.TrimSpace(repl.rest) != "" {
-		line.Errorf("Internal pkglint error: ShellLine.CheckToken state=%s, rest=%q, token=%q", state, repl.rest, token)
+	if strings.TrimSpace(parser.Rest()) != "" {
+		line.Errorf("Internal pkglint error: ShellLine.CheckToken state=%s, rest=%q, token=%q", state, parser.Rest(), token)
 	}
 }
 
@@ -557,8 +558,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	case ctx.handleComment():
 	default:
 		if G.opts.WarnExtra {
-			line := ctx.shline.line
-			line.Warn1("Unknown shell command %q.", shellword)
+			ctx.shline.line.Warn1("Unknown shell command %q.", shellword)
 			Explain3(
 				"If you want your package to be portable to all platforms that pkgsrc",
 				"supports, you should only use shell commands that are covered by the",
@@ -592,16 +592,14 @@ func (ctx *ShelltextContext) handleTool() bool {
 func (ctx *ShelltextContext) handleForbiddenCommand() bool {
 	switch path.Base(ctx.shellword) {
 	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
-	default:
-		return false
+		ctx.shline.line.Error1("%q must not be used in Makefiles.", ctx.shellword)
+		Explain3(
+			"This command must appear in INSTALL scripts, not in the package",
+			"Makefile, so that the package also works if it is installed as a binary",
+			"package via pkg_add.")
+		return true
 	}
-
-	ctx.shline.line.Error1("%q must not be used in Makefiles.", ctx.shellword)
-	Explain3(
-		"This command must appear in INSTALL scripts, not in the package",
-		"Makefile, so that the package also works if it is installed as a binary",
-		"package via pkg_add.")
-	return true
+	return false
 }
 
 func (ctx *ShelltextContext) handleCommandVariable() bool {
@@ -639,7 +637,6 @@ func (ctx *ShelltextContext) handleComment() bool {
 		defer tracecall1(ctx.shellword)()
 	}
 
-	line := ctx.shline.line
 	shellword := ctx.shellword
 	if !hasPrefix(shellword, "#") {
 		return false
@@ -649,10 +646,10 @@ func (ctx *ShelltextContext) handleComment() bool {
 	multiline := ctx.shline.line.IsMultiline()
 
 	if semicolon {
-		line.Warn0("A shell comment should not contain semicolons.")
+		ctx.shline.line.Warn0("A shell comment should not contain semicolons.")
 	}
 	if multiline {
-		line.Warn0("A shell comment does not stop at the end of line.")
+		ctx.shline.line.Warn0("A shell comment does not stop at the end of line.")
 	}
 
 	if semicolon || multiline {
@@ -935,6 +932,7 @@ func (shline *ShellLine) nextState(state scState, shellword string) scState {
 	}
 }
 
+// Example: "word1 word2;;;" => "word1", "word2", ";;", ";"
 func splitIntoShellTokens(line *Line, text string) (words []string, rest string) {
 	repl := NewPrefixReplacer(text)
 	for repl.AdvanceRegexp(reShellToken) {
@@ -944,6 +942,7 @@ func splitIntoShellTokens(line *Line, text string) (words []string, rest string)
 	return words, repl.rest
 }
 
+// Example: "word1 word2;;;" => "word1", "word2;;;"
 // Compare devel/bmake/files/str.c, function brk_string.
 func splitIntoShellWords(line *Line, text string) (words []string, rest string) {
 	reShellWord := `^\s*(` +
