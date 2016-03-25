@@ -516,9 +516,6 @@ func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: Makefile:93: Invalid Makefile syntax at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
-		"ERROR: Makefile:93: Internal pkglint error: ShellLine.CheckToken state=plain, rest=\"${EGDIR/apparmor.d\", token=\"${EGDIR/apparmor.d\"\n"+
-		"ERROR: Makefile:93: Internal pkglint error: ShellLine.CheckToken state=plain, rest=\"${EGDIR/dbus-1/system.d\", token=\"${EGDIR/dbus-1/system.d\"\n"+
-		"ERROR: Makefile:93: Internal pkglint error: ShellLine.CheckToken state=plain, rest=\"${EGDIR/pam.d\", token=\"${EGDIR/pam.d\"\n"+
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
 }
 
@@ -530,8 +527,7 @@ func (s *Suite) TestMkLine_Assign_URL_to_ListOfURLs(c *check.C) {
 
 	mkline.CheckVarassign()
 
-	// FIXME: This :Q must not be here, since a single URL can trivially be added to a list of URLs.
-	c.Check(s.Output(), equals, "WARN: Makefile:95: Please use ${HOMEPAGE:Q} instead of ${HOMEPAGE}.\n")
+	c.Check(s.Output(), equals, "") // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
 
 	// FIXME: In databases/squirrelsql/Makefile:6 this produces an error message.
 	mkline = NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))

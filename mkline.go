@@ -725,11 +725,16 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		}
 
 	case vartype.kindOfList == lkShell:
-		shline := NewShellLine(mkline)
 		words, _ := splitIntoShellWords(mkline.Line, value)
 		for _, word := range words {
 			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
-			shline.CheckToken(word, true)
+		}
+
+		if false { // See mkline_test.go:/:Q/
+			shline := NewShellLine(mkline)
+			for _, word := range words {
+				shline.CheckToken(word, true)
+			}
 		}
 	}
 }
