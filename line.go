@@ -58,9 +58,7 @@ func NewLineEOF(fname string) *Line {
 }
 
 func (line *Line) modifiedLines() []string {
-	switch { // prevent inlining
-	}
-	result := make([]string, 0)
+	var result []string
 	result = append(result, line.before...)
 	for _, raw := range line.raw {
 		result = append(result, raw.textnl)

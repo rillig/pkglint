@@ -393,8 +393,8 @@ func (p *Parser) mkCondAtom() *Tree {
 		lhs := p.VarUse()
 		mark := repl.Mark()
 		if lhs == nil && repl.AdvanceStr("\"") {
-			if quotedLhs := p.VarUse(); quotedLhs != nil && repl.AdvanceStr("\"") {
-				lhs = quotedLhs
+			if quotedLHS := p.VarUse(); quotedLHS != nil && repl.AdvanceStr("\"") {
+				lhs = quotedLHS
 			} else {
 				repl.Reset(mark)
 			}

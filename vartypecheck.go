@@ -26,7 +26,6 @@ const (
 	opAssignAppend                    // +=
 	opAssignDefault                   // ?=
 	opUse                             //
-	opUseLoadtime                     //
 	opUseMatch                        // Used in the :M operator
 )
 
