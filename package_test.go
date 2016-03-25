@@ -142,3 +142,17 @@ func (s *Suite) TestPackage_CheckPossibleDowngrade(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 }
+
+func (s *Suite) TestCheckdirPackage(c *check.C) {
+	s.CreateTmpFile(c, "Makefile", ""+
+		"# $"+"NetBSD$\n")
+	G.CurrentDir = s.tmpdir
+
+	checkdirPackage(s.tmpdir)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: ~/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?\n"+
+		"WARN: ~/distinfo: File not found. Please run \"@BMAKE@ makesum\".\n"+
+		"ERROR: ~/Makefile: Each package must define its LICENSE.\n"+
+		"WARN: ~/Makefile: No COMMENT given.\n")
+}
