@@ -53,14 +53,14 @@ const (
 	reEmulPlatform = "" +
 		"bitrig|bsdos|cygwin|darwin|dragonfly|freebsd|" +
 		"haiku|hpux|interix|irix|linux|mirbsd|netbsd|openbsd|osf1|solaris"
-	rePlatformOs = "" +
-		"Bitrig|BSDOS|Cygwin|Darwin|DragonFly|FreeBSD|" +
-		"Haiku|HPUX|Interix|IRIX|Linux|MirBSD|NetBSD|OpenBSD|OSF1|QNX|SunOS"
+	rePlatformOs = "" + // See mk/platform
+		"AIX|BSDOS|Bitrig|Cygwin|Darwin|DragonFly|FreeBSD|FreeMiNT|GNUkFreeBSD|" +
+		"HPUX|Haiku|IRIX|Interix|Linux|Minix|MirBSD|NetBSD|OSF1|OpenBSD|QNX|SCO_SV|SunOS|UnixWare"
 	rePlatformArch = "" +
-		"alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|evbarm|" +
-		"hpcmips|hpcsh|hppa|i386|ia64|" +
-		"m68k|m88k|mips|mips64|mips64eb|mips64el|mipseb|mipsel|mipsn32|" +
-		"ns32k|pc532|pmax|powerpc|rs6000|s390|sh3eb|sh3el|sparc|sparc64|vax|x86_64"
+		"alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|earmv6hf|earmv7hf|evbarm|" +
+		"hpcmips|hpcsh|hppa|hppa64|i386|ia64|" +
+		"m68k|m88k|mips|mips64|mips64eb|mips64el|mipseb|mipsel|mipsn32|mlrisc|" +
+		"ns32k|pc532|pmax|powerpc|powerpc64|rs6000|s390|sh3eb|sh3el|sparc|sparc64|vax|x86_64"
 )
 
 var (
