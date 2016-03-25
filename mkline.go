@@ -346,15 +346,6 @@ func (mkline *MkLine) Tokenize(s string) {
 	}
 }
 
-func (mkline *MkLine) CheckVardef(varname string, op MkOperator) {
-	if G.opts.DebugTrace {
-		defer tracecall(varname, op)()
-	}
-
-	defineVar(mkline, varname)
-	mkline.CheckVardefPermissions(varname, op)
-}
-
 func (mkline *MkLine) CheckVardefPermissions(varname string, op MkOperator) {
 	if !G.opts.WarnPerm {
 		return
@@ -667,7 +658,8 @@ func (mkline *MkLine) checkVarassign() {
 	comment := mkline.Comment()
 	varcanon := varnameCanon(varname)
 
-	mkline.CheckVardef(varname, op)
+	defineVar(mkline, varname)
+	mkline.CheckVardefPermissions(varname, op)
 	mkline.checkVarassignBsdPrefs()
 
 	mkline.CheckText(value)
