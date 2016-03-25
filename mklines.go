@@ -114,7 +114,8 @@ func (mklines *MkLines) Check() {
 			mkline.checkCond(&indentation, mklines.forVars)
 
 		case mkline.IsDependency():
-			mklines.checklineDependencyRule(mkline, mkline.Targets(), mkline.Sources(), allowedTargets)
+			mkline.checkDependencyRule(allowedTargets)
+			mklines.target = mkline.Targets()
 		}
 	}
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
@@ -193,39 +194,6 @@ func (mklines *MkLines) DetermineUsedVariables() {
 		varnames := mkline.determineUsedVariables()
 		for _, varname := range varnames {
 			mklines.UseVar(mkline, varname)
-		}
-	}
-}
-
-func (mklines *MkLines) checklineDependencyRule(mkline *MkLine, targets, dependencies string, allowedTargets map[string]bool) {
-	if G.opts.DebugMisc {
-		mkline.Debug2("targets=%q, dependencies=%q", targets, dependencies)
-	}
-	mklines.target = targets
-
-	for _, source := range splitOnSpace(dependencies) {
-		if source == ".PHONY" {
-			for _, target := range splitOnSpace(targets) {
-				allowedTargets[target] = true
-			}
-		}
-	}
-
-	for _, target := range splitOnSpace(targets) {
-		if target == ".PHONY" {
-			for _, dep := range splitOnSpace(dependencies) {
-				allowedTargets[dep] = true
-			}
-
-		} else if target == ".ORDER" {
-			// TODO: Check for spelling mistakes.
-
-		} else if !allowedTargets[target] {
-			mkline.Warn1("Unusual target %q.", target)
-			Explain3(
-				"If you want to define your own targets, you can \"declare\"",
-				"them by inserting a \".PHONY: my-target\" line before this line.  This",
-				"will tell make(1) to not interpret this target's name as a filename.")
 		}
 	}
 }

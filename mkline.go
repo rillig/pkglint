@@ -307,6 +307,37 @@ func (mkline *MkLine) checkCond(indentation *Indentation, forVars map[string]boo
 	}
 }
 
+func (mkline *MkLine) checkDependencyRule(allowedTargets map[string]bool) {
+	targets := splitOnSpace(mkline.Targets())
+	sources := splitOnSpace(mkline.Sources())
+
+	for _, source := range sources {
+		if source == ".PHONY" {
+			for _, target := range targets {
+				allowedTargets[target] = true
+			}
+		}
+	}
+
+	for _, target := range targets {
+		if target == ".PHONY" {
+			for _, dep := range sources {
+				allowedTargets[dep] = true
+			}
+
+		} else if target == ".ORDER" {
+			// TODO: Check for spelling mistakes.
+
+		} else if !allowedTargets[target] {
+			mkline.Warn1("Unusual target %q.", target)
+			Explain3(
+				"If you want to define your own targets, you can \"declare\"",
+				"them by inserting a \".PHONY: my-target\" line before this line.  This",
+				"will tell make(1) to not interpret this target's name as a filename.")
+		}
+	}
+}
+
 func (mkline *MkLine) Tokenize(s string) {
 	p := NewParser(mkline.Line, s)
 	_ = p.MkTokens()
