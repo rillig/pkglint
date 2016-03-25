@@ -293,6 +293,8 @@ func (s *Suite) TestVartypeCheck_PlatformPattern(c *check.C) {
 		"nextbsd-5.0-8087",
 		"netbsd-7.0-l*",
 		"NetBSD-1.6.2-i386",
+		"FreeBSD*",
+		"FreeBSD-*",
 		"${LINUX}")
 
 	c.Check(s.Output(), equals, ""+
@@ -300,7 +302,8 @@ func (s *Suite) TestVartypeCheck_PlatformPattern(c *check.C) {
 		"WARN: fname:2: The pattern \"nextbsd\" cannot match any of { Bitrig BSDOS Cygwin Darwin DragonFly FreeBSD Haiku HPUX Interix IRIX Linux MirBSD NetBSD OpenBSD OSF1 QNX SunOS } for the operating system part of ONLY_FOR_PLATFORM.\n"+
 		"WARN: fname:2: The pattern \"8087\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast evbarm hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of ONLY_FOR_PLATFORM.\n"+
 		"WARN: fname:3: The pattern \"netbsd\" cannot match any of { Bitrig BSDOS Cygwin Darwin DragonFly FreeBSD Haiku HPUX Interix IRIX Linux MirBSD NetBSD OpenBSD OSF1 QNX SunOS } for the operating system part of ONLY_FOR_PLATFORM.\n"+
-		"WARN: fname:3: The pattern \"l*\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast evbarm hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of ONLY_FOR_PLATFORM.\n")
+		"WARN: fname:3: The pattern \"l*\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast evbarm hpcmips hpcsh hppa i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 ns32k pc532 pmax powerpc rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of ONLY_FOR_PLATFORM.\n"+
+		"WARN: fname:5: \"FreeBSD*\" is not a valid platform pattern.\n")
 }
 
 func (s *Suite) TestVartypeCheck_PythonDependency(c *check.C) {

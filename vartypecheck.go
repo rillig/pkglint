@@ -580,8 +580,15 @@ func (cv *VartypeCheck) PlatformPattern() {
 	}
 
 	const rePart = `(?:\[[^\]]+\]|[^-\[])+`
+	const rePair = `^(` + rePart + `)-(` + rePart + `)$`
 	const reTriple = `^(` + rePart + `)-(` + rePart + `)-(` + rePart + `)$`
-	if m, opsysPattern, _, archPattern := match3(cv.value, reTriple); m {
+
+	pattern := cv.value
+	if matches(pattern, rePair) && hasSuffix(pattern, "*") {
+		pattern += "-*"
+	}
+
+	if m, opsysPattern, _, archPattern := match3(pattern, reTriple); m {
 		opsysCv := &VartypeCheck{
 			cv.mkline,
 			cv.line,
