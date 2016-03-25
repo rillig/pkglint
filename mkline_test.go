@@ -300,7 +300,7 @@ func (s *Suite) TestMkLine_checkVarassign(c *check.C) {
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=", nil))
 
-	mkline.CheckVarassign()
+	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, "")
 }
@@ -393,8 +393,8 @@ func (s *Suite) TestMkLine_(c *check.C) {
 		"ac_cv_libpari_libs+=\t-L${BUILDLINK_PREFIX.pari}/lib", // From math/clisp-pari/Makefile, rev. 1.8
 		"var+=value")
 
-	G.Mk.mklines[1].CheckVarassign()
-	G.Mk.mklines[2].CheckVarassign()
+	G.Mk.mklines[1].checkVarassign()
+	G.Mk.mklines[2].checkVarassign()
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:2: ac_cv_libpari_libs is defined but not used. Spelling mistake?\n"+
@@ -512,7 +512,7 @@ func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
 	s.UseCommandLine(c, "-Dunchecked")
 	mkline := NewMkLine(NewLine("Makefile", 93, "EGDIRS=${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d", nil))
 
-	mkline.CheckVarassign()
+	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: Makefile:93: Invalid Makefile syntax at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
@@ -525,14 +525,14 @@ func (s *Suite) TestMkLine_Assign_URL_to_ListOfURLs(c *check.C) {
 	G.globalData.MasterSiteVars = map[string]bool{"MASTER_SITE_SOURCEFORGE": true}
 	mkline := NewMkLine(NewLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}", nil))
 
-	mkline.CheckVarassign()
+	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, "") // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
 
 	// FIXME: In databases/squirrelsql/Makefile:6 this produces an error message.
 	mkline = NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))
 
-	mkline.CheckVarassign()
+	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, "")
 }

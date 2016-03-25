@@ -153,7 +153,7 @@ func (mkline *MkLine) Check() {
 
 	switch {
 	case mkline.IsVarassign():
-		mkline.CheckVarassign()
+		mkline.checkVarassign()
 
 	case mkline.IsShellcmd():
 		shellcmd := mkline.Shellcmd()
@@ -656,7 +656,7 @@ func (mkline *MkLine) CheckDecreasingOrder(varname, value string) {
 	}
 }
 
-func (mkline *MkLine) CheckVarassign() {
+func (mkline *MkLine) checkVarassign() {
 	if G.opts.DebugTrace {
 		defer tracecall0()()
 	}
@@ -668,7 +668,7 @@ func (mkline *MkLine) CheckVarassign() {
 	varcanon := varnameCanon(varname)
 
 	mkline.CheckVardef(varname, op)
-	mkline.CheckVarassignBsdPrefs()
+	mkline.checkVarassignBsdPrefs()
 
 	mkline.CheckText(value)
 	mkline.CheckVartype(varname, op, value, comment)
@@ -756,7 +756,7 @@ func (mkline *MkLine) CheckVarassign() {
 		mkline.Warn0("SITES_* is deprecated. Please use SITES.* instead.")
 	}
 
-	mkline.CheckVarassignPlistComment(varname, value)
+	mkline.checkVarassignPlistComment(varname, value)
 
 	time := vucTimeRun
 	if op == opAssignEval || op == opAssignShell {
@@ -770,7 +770,7 @@ func (mkline *MkLine) CheckVarassign() {
 	}
 }
 
-func (mkline *MkLine) CheckVarassignBsdPrefs() {
+func (mkline *MkLine) checkVarassignBsdPrefs() {
 	if G.opts.WarnExtra && mkline.Op() == opAssignDefault && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
 		switch mkline.Varcanon() {
 		case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
@@ -791,7 +791,7 @@ func (mkline *MkLine) CheckVarassignBsdPrefs() {
 	}
 }
 
-func (mkline *MkLine) CheckVarassignPlistComment(varname, value string) {
+func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
 	if false && // This is currently neither correct nor helpful
 		contains(value, "@comment") && !matches(value, `="@comment "`) {
 		mkline.Warn1("Please don't use @comment in %s.", varname)
