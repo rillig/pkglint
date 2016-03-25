@@ -214,6 +214,99 @@ func (mkline *MkLine) checkInclude() {
 	}
 }
 
+func (mkline *MkLine) checkCond(indentation *Indentation, forVars map[string]bool) {
+	indent, directive, args := mkline.Indent(), mkline.Directive(), mkline.Args()
+
+	switch directive {
+	case "endif", "endfor", "elif", "else":
+		if indentation.Len() > 1 {
+			indentation.Pop()
+		} else {
+			mkline.Error1("Unmatched .%s.", directive)
+		}
+	}
+
+	// Check the indentation
+	if expected := strings.Repeat(" ", indentation.Depth()); indent != expected {
+		if G.opts.WarnSpace && !mkline.Line.AutofixReplace("."+indent, "."+expected) {
+			mkline.Line.Notef("This directive should be indented by %d spaces.", indentation.Depth())
+		}
+	}
+
+	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
+		indentation.Push(indentation.Depth())
+
+	} else if matches(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
+		indentation.Push(indentation.Depth() + 2)
+	}
+
+	reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
+	if matches(directive, reDirectivesWithArgs) && args == "" {
+		mkline.Error1("\".%s\" requires arguments.", directive)
+
+	} else if !matches(directive, reDirectivesWithArgs) && args != "" {
+		mkline.Error1("\".%s\" does not take arguments.", directive)
+
+		if directive == "else" {
+			mkline.Note0("If you meant \"else if\", use \".elif\".")
+		}
+
+	} else if directive == "if" || directive == "elif" {
+		mkline.CheckCond()
+
+	} else if directive == "ifdef" || directive == "ifndef" {
+		if matches(args, `\s`) {
+			mkline.Error1("The \".%s\" directive can only handle _one_ argument.", directive)
+		} else {
+			mkline.Line.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
+				directive, ifelseStr(directive == "ifdef", "", "!"), args)
+		}
+
+	} else if directive == "for" {
+		if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
+			for _, forvar := range splitOnSpace(vars) {
+				if !G.Infrastructure && hasPrefix(forvar, "_") {
+					mkline.Warn1("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
+				}
+
+				if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
+					// Fine.
+				} else if matches(forvar, `[A-Z]`) {
+					mkline.Warn0(".for variable names should not contain uppercase letters.")
+				} else {
+					mkline.Error1("Invalid variable name %q.", forvar)
+				}
+
+				forVars[forvar] = true
+			}
+
+			// Check if any of the value's types is not guessed.
+			guessed := true
+			for _, value := range splitOnSpace(values) {
+				if m, vname := match1(value, `^\$\{(.*)\}`); m {
+					vartype := mkline.getVariableType(vname)
+					if vartype != nil && !vartype.guessed {
+						guessed = false
+					}
+				}
+			}
+
+			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", aclpAllRead}}, guessed}
+			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, vucExtentWord}
+			for _, forLoopVar := range mkline.extractUsedVariables(values) {
+				mkline.CheckVaruse(forLoopVar, "", forLoopContext)
+			}
+		}
+
+	} else if directive == "undef" && args != "" {
+		for _, uvar := range splitOnSpace(args) {
+			if forVars[uvar] {
+				mkline.Note0("Using \".undef\" after a \".for\" loop is unnecessary.")
+			}
+		}
+	}
+}
+
 func (mkline *MkLine) Tokenize(s string) {
 	p := NewParser(mkline.Line, s)
 	_ = p.MkTokens()
@@ -1385,3 +1478,12 @@ func (vuc *VarUseContext) String() string {
 	}
 	return fmt.Sprintf("(%s time:%s quoting:%s extent:%s)", typename, vuc.time, vuc.quoting, vuc.extent)
 }
+
+type Indentation struct {
+	data []int
+}
+
+func (ind *Indentation) Len() int        { return len(ind.data) }
+func (ind *Indentation) Depth() int      { return ind.data[len(ind.data)-1] }
+func (ind *Indentation) Pop()            { ind.data = ind.data[:len(ind.data)-1] }
+func (ind *Indentation) Push(indent int) { ind.data = append(ind.data, indent) }
