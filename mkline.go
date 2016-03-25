@@ -960,10 +960,6 @@ func (mkline *MkLine) checkText(text string) {
 		mkline.Warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
 	}
 
-	if mkline.Line.firstLine == 1 {
-		mkline.Line.CheckRcsid(`# `, "# ")
-	}
-
 	if contains(text, "${WRKSRC}/..") {
 		mkline.Warn0("Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".")
 		Explain(
