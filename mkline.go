@@ -621,7 +621,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 	}
 }
 
-func (mkline *MkLine) CheckDecreasingOrder(varname, value string) {
+func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
 	if G.opts.DebugTrace {
 		defer tracecall2(varname, value)()
 	}
@@ -681,7 +681,7 @@ func (mkline *MkLine) checkVarassign() {
 		}
 	}
 
-	if matches(value, `/etc/rc\.d`) {
+	if contains(value, "/etc/rc.d") {
 		mkline.Warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
@@ -700,7 +700,7 @@ func (mkline *MkLine) checkVarassign() {
 		}
 	}
 
-	if varname == "CONFIGURE_ARGS" && matches(value, `=\$\{PREFIX\}/share/kde`) {
+	if varname == "CONFIGURE_ARGS" && contains(value, "=${PREFIX}/share/kde") {
 		mkline.Note0("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
 		Explain3(
 			"That file does many things automatically and consistently that this",
@@ -719,7 +719,7 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
-		mkline.CheckDecreasingOrder(varname, value)
+		mkline.checkVarassignPythonVersions(varname, value)
 	}
 
 	if comment == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
