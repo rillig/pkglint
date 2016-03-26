@@ -525,10 +525,14 @@ func (s *Suite) TestMkLine_Assign_URL_to_ListOfURLs(c *check.C) {
 	G.globalData.MasterSiteVars = map[string]bool{"MASTER_SITE_SOURCEFORGE": true}
 	mkline := NewMkLine(NewLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}", nil))
 
+	vuc := &VarUseContext{G.globalData.vartypes["MASTER_SITES"], vucTimeRun, vucQuotPlain, vucExtentWord}
+	nq := mkline.variableNeedsQuoting("HOMEPAGE", G.globalData.vartypes["HOMEPAGE"], vuc)
+
+	c.Check(nq, equals, nqNo)
+
 	mkline.checkVarassign()
 
-	// FIXME: The above warning is incorrect.
-	c.Check(s.Output(), equals, "WARN: Makefile:95: Please use ${HOMEPAGE:Q} instead of ${HOMEPAGE}.\n") // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
+	c.Check(s.Output(), equals, "") // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
 
 	// FIXME: In databases/squirrelsql/Makefile:6 this produces an error message.
 	mkline = NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))

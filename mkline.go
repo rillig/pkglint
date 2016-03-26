@@ -1299,6 +1299,11 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	}
 
 	if wantList != haveList {
+		if vuc.vartype != nil && vartype != nil {
+			if vuc.vartype.checker == CheckvarFetchURL && vartype.checker == CheckvarURL {
+				return nqNo
+			}
+		}
 		return nqYes
 	}
 
