@@ -294,7 +294,7 @@ func (mkline *MkLine) checkCond(indentation *Indentation, forVars map[string]boo
 			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", aclpAllRead}}, guessed}
 			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, vucExtentWord}
 			for _, forLoopVar := range mkline.extractUsedVariables(values) {
-				mkline.CheckVaruse(forLoopVar, "", forLoopContext)
+				mkline.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
 			}
 		}
 
@@ -402,11 +402,12 @@ func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator
 	}
 }
 
-func (mkline *MkLine) CheckVaruse(varname string, mod string, vuc *VarUseContext) {
+func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	if G.opts.DebugTrace {
-		defer tracecall(mkline, varname, mod, vuc)()
+		defer tracecall(mkline, varuse, vuc)()
 	}
 
+	varname := varuse.varname
 	vartype := mkline.getVariableType(varname)
 	if G.opts.WarnExtra &&
 		(vartype == nil || vartype.guessed) &&
@@ -428,7 +429,7 @@ func (mkline *MkLine) CheckVaruse(varname string, mod string, vuc *VarUseContext
 	}
 
 	if G.opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
-		mkline.CheckVaruseShellword(varname, vartype, vuc, mod, needsQuoting)
+		mkline.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
 	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.SystemBuildDefs[varname] && !G.Mk.buildDefs[varname] {
@@ -709,7 +710,7 @@ func (mkline *MkLine) checkVarassign() {
 	usedVars := mkline.extractUsedVariables(value)
 	vuc := &VarUseContext{mkline.getVariableType(varname), time, vucQuotUnknown, vucExtentUnknown}
 	for _, usedVar := range usedVars {
-		mkline.CheckVaruse(usedVar, "", vuc)
+		mkline.CheckVaruse(&MkVarUse{usedVar, nil}, vuc)
 	}
 }
 

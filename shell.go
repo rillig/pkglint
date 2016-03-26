@@ -139,7 +139,12 @@ func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
 	line := shline.line
 
 	if m, varname, mod := match2(token, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
-		shline.mkline.CheckVaruse(varname, mod, shellwordVuc)
+		var mods []string // XXX
+		if mod != "" {
+			mods = []string{mod[1:]}
+		}
+		shline.mkline.CheckVaruse(&MkVarUse{varname, mods}, shellwordVuc)
+		_ = mod
 		return
 	}
 
@@ -316,7 +321,11 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 			vucstate = vucQuotBackt
 		}
 		vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
-		shline.mkline.CheckVaruse(varname, mod, vuc)
+		var mods []string // XXX
+		if mod != "" {
+			mods = []string{mod[1:]}
+		}
+		shline.mkline.CheckVaruse(&MkVarUse{varname, mods}, vuc)
 	}
 	return true
 }

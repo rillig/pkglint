@@ -102,7 +102,15 @@ type MkToken struct {
 }
 type MkVarUse struct {
 	varname   string
-	modifiers []string
+	modifiers []string // E.g. "Q", "S/from/to/"
+}
+
+func (vu *MkVarUse) Mod() string {
+	mod := ""
+	for _, modifier := range vu.modifiers {
+		mod += ":" + modifier
+	}
+	return mod
 }
 
 func (p *Parser) MkTokens() []*MkToken {

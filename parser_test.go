@@ -224,3 +224,9 @@ func (s *Suite) TestParser_MkCond(c *check.C) {
 		NewTree("not", NewTree("empty", varuse("PKG_OPTIONS", "Msndfile"))),
 		" || defined(PKG_OPTIONS:Msamplerate)")
 }
+
+func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
+	varuse := &MkVarUse{"varname", []string{"Q"}}
+
+	c.Check(varuse.Mod(), equals, ":Q")
+}
