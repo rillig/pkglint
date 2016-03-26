@@ -138,13 +138,9 @@ func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
 
 	line := shline.line
 
-	if m, varname, mod := match2(token, `^\$\{(`+reVarnameDirect+`)(:[^{}]+)?\}$`); m {
-		var mods []string // XXX
-		if mod != "" {
-			mods = []string{mod[1:]}
-		}
-		shline.mkline.CheckVaruse(&MkVarUse{varname, mods}, shellwordVuc)
-		_ = mod
+	p := NewParser(line, token)
+	if varuse := p.VarUse(); varuse != nil && p.EOF() {
+		shline.mkline.CheckVaruse(varuse, shellwordVuc)
 		return
 	}
 

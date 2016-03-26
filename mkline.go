@@ -964,10 +964,6 @@ func (mkline *MkLine) checkText(text string) {
 		defer tracecall1(text)()
 	}
 
-	if m, varname := match1(text, `^(?:[^#]*[^\$])?\$(\w+)`); m {
-		mkline.Warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
-	}
-
 	if contains(text, "${WRKSRC}/..") {
 		mkline.Warn0("Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".")
 		Explain(
