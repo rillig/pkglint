@@ -124,6 +124,20 @@ func (st ShellwordState) String() string {
 	return [...]string{"plain", "squot", "dquot", "dquot+backt", "backt"}[st]
 }
 
+func (st ShellwordState) ToVarUseContext() vucQuoting {
+	switch st {
+	case swstPlain:
+		return vucQuotPlain
+	case swstDquot:
+		return vucQuotDquot
+	case swstSquot:
+		return vucQuotSquot
+	case swstBackt:
+		return vucQuotBackt
+	}
+	return vucQuotUnknown
+}
+
 var shellcommandsContextType = &Vartype{lkNone, CheckvarShellCommands, []AclEntry{{"*", aclpAllRuntime}}, false}
 var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
@@ -302,17 +316,7 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 	}
 
 	if varname != "@" {
-		vucstate := vucQuotUnknown
-		switch state {
-		case swstPlain:
-			vucstate = vucQuotPlain
-		case swstDquot:
-			vucstate = vucQuotDquot
-		case swstSquot:
-			vucstate = vucQuotSquot
-		case swstBackt:
-			vucstate = vucQuotBackt
-		}
+		vucstate := state.ToVarUseContext()
 		vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
 		shline.mkline.CheckVaruse(varuse, vuc)
 	}
@@ -950,4 +954,62 @@ func splitIntoShellWords(line *Line, text string) (words []string, rest string) 
 	}
 	repl.AdvanceRegexp(`^\s+`)
 	return words, repl.rest
+}
+
+type ShQuote struct {
+	repl  *PrefixReplacer
+	State ShellwordState
+}
+
+func NewShQuote(s string) *ShQuote {
+	return &ShQuote{NewPrefixReplacer(s), swstPlain}
+}
+
+func (sq *ShQuote) Feed(s string) {
+	repl := sq.repl
+	repl.rest += s
+	for repl.rest != "" {
+		rest := repl.rest
+		if repl.AdvanceRegexp(`^(?:\\.|[^"'` + "`" + `\\])+`) {
+			continue
+		}
+		switch sq.State {
+		case swstPlain:
+			switch {
+			case repl.AdvanceStr("\""):
+				sq.State = swstDquot
+			case repl.AdvanceStr("'"):
+				sq.State = swstSquot
+			case repl.AdvanceStr("`"):
+				sq.State = swstBackt
+			}
+		case swstDquot:
+			switch {
+			case repl.AdvanceStr("\""):
+				sq.State = swstPlain
+			case repl.AdvanceStr("`"):
+				sq.State = swstDquotBackt
+			}
+		case swstDquotBackt:
+			switch {
+			case repl.AdvanceStr("`"):
+				sq.State = swstDquot
+			}
+		case swstSquot:
+			switch {
+			case repl.AdvanceStr("'"):
+				sq.State = swstPlain
+			case repl.AdvanceRegexp(`^[^']+`):
+			}
+		case swstBackt:
+			switch {
+			case repl.AdvanceStr("`"):
+				sq.State = swstPlain
+			}
+		}
+		if repl.rest == rest {
+			repl.AdvanceRest()
+			sq.State = swstPlain
+		}
+	}
 }

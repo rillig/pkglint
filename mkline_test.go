@@ -557,3 +557,15 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_4(c *check.C) {
 		"WARN: builtin.mk:3: PKG_ADMIN should not be evaluated at load time.\n"+
 		"NOTE: builtin.mk:3: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.\n")
 }
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mkline := NewMkLine(NewLine("Makefile", 3, "SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'", nil))
+
+	mkline.checkVarassign()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n"+
+		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
+}

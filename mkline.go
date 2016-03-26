@@ -704,7 +704,10 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	mkline.checkVarassignPlistComment(varname, value)
+	mkline.checkVarassignVaruse(varname, op)
+}
 
+func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 	time := vucTimeRun
 	if op == opAssignEval || op == opAssignShell {
 		time = vucTimeParse
@@ -724,10 +727,12 @@ func (mkline *MkLine) checkVarassign() {
 			}
 			p.repl.Reset(mark)
 
-			quoting := vucQuotPlain // XXX: Not always correct
-			vuc := &VarUseContext{vartype, time, quoting, extent}
+			quoting := NewShQuote("")
 			for _, token := range p.MkTokens() {
-				if token.varuse.varname != "" {
+				if token.literal != "" {
+					quoting.Feed(token.literal)
+				} else {
+					vuc := &VarUseContext{vartype, time, quoting.State.ToVarUseContext(), extent}
 					mkline.CheckVaruse(&token.varuse, vuc)
 				}
 			}

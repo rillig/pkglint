@@ -396,3 +396,21 @@ func (s *Suite) TestShellLine_(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: ~/Makefile:3--4: A shell comment does not stop at the end of line.\n")
 }
+
+func (s *Suite) Test_ShQuote(c *check.C) {
+	sq := NewShQuote("")
+	step := func(s string, expectedState ShellwordState) {
+		sq.Feed(s)
+		c.Check(sq.State, equals, expectedState)
+		c.Check(sq.repl.rest, equals, "")
+	}
+
+	step("hello", swstPlain)
+	step("\"dq", swstDquot)
+	step("`", swstDquotBackt)
+	step("`", swstDquot)
+	step("\"", swstPlain)
+	step("'", swstSquot)
+	step("\"", swstSquot)
+	step("'", swstPlain)
+}
