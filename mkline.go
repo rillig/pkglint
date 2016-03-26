@@ -711,6 +711,9 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	vartype := mkline.getVariableType(varname)
+	if op == opAssignShell {
+		vartype = shellcommandsContextType
+	}
 	for _, word := range mkline.mkwords {
 		if contains(word, "${") {
 			p := NewParser(mkline.Line, word)
@@ -1298,6 +1301,9 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqDoesntMatter
 	}
 
+	if G.opts.DebugTrace {
+		trace("", "MkLine.variableNeedsQuoting", "wantList", wantList, "haveList", haveList)
+	}
 	if wantList != haveList {
 		if vuc.vartype != nil && vartype != nil {
 			if vuc.vartype.checker == CheckvarFetchURL && vartype.checker == CheckvarURL {

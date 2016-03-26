@@ -350,16 +350,6 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 		"WARN: fname:98: The pattern \"x86\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast earmv6hf earmv7hf evbarm hpcmips hpcsh hppa hppa64 i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for MACHINE_ARCH.\n")
 }
 
-func (s *Suite) TestMkLine_variableNeedsQuoting(c *check.C) {
-	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
-	G.globalData.InitVartypes()
-
-	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, vucExtentUnknown}
-	nq := mkline.variableNeedsQuoting("UNKNOWN", nil, vuc)
-
-	c.Check(nq, equals, nqDontKnow)
-}
-
 func (s *Suite) TestMkLine_variableNeedsQuoting_Varbase(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
 	G.globalData.InitVartypes()
@@ -518,7 +508,17 @@ func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
 }
 
-func (s *Suite) TestMkLine_Assign_URL_to_ListOfURLs(c *check.C) {
+func (s *Suite) TestMkLine_variableNeedsQuoting_1(c *check.C) {
+	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
+	G.globalData.InitVartypes()
+
+	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, vucExtentUnknown}
+	nq := mkline.variableNeedsQuoting("UNKNOWN", nil, vuc)
+
+	c.Check(nq, equals, nqDontKnow)
+}
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_2(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	G.globalData.MasterSiteVars = map[string]bool{"MASTER_SITE_SOURCEFORGE": true}
@@ -532,11 +532,28 @@ func (s *Suite) TestMkLine_Assign_URL_to_ListOfURLs(c *check.C) {
 	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, "") // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
+}
 
-	// Assigning lists to lists is ok.
-	mkline = NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))
+// Assigning lists to lists is ok.
+func (s *Suite) TestMkLine_variableNeedsQuoting_3(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.globalData.MasterSiteVars = map[string]bool{"MASTER_SITE_SOURCEFORGE": true}
+	mkline := NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))
 
 	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, "")
+}
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_4(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mkline := NewMkLine(NewLine("builtin.mk", 3, "USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}", nil))
+
+	mkline.checkVarassign()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: builtin.mk:3: PKG_ADMIN should not be evaluated at load time.\n"+
+		"NOTE: builtin.mk:3: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.\n")
 }
