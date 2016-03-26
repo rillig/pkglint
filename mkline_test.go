@@ -353,9 +353,8 @@ func (s *Suite) TestChecklineMkCondition(c *check.C) {
 func (s *Suite) TestMkLine_variableNeedsQuoting(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
 	G.globalData.InitVartypes()
-	pkgnameType := G.globalData.vartypes["PKGNAME"]
 
-	vuc := &VarUseContext{pkgnameType, vucTimeParse, vucQuotUnknown, vucExtentUnknown}
+	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, vucExtentUnknown}
 	nq := mkline.variableNeedsQuoting("UNKNOWN", nil, vuc)
 
 	c.Check(nq, equals, nqDontKnow)
@@ -534,7 +533,7 @@ func (s *Suite) TestMkLine_Assign_URL_to_ListOfURLs(c *check.C) {
 
 	c.Check(s.Output(), equals, "") // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
 
-	// FIXME: In databases/squirrelsql/Makefile:6 this produces an error message.
+	// Assigning lists to lists is ok.
 	mkline = NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))
 
 	mkline.checkVarassign()
