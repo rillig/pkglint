@@ -681,6 +681,42 @@ func (mkline *MkLine) checkVarassign() {
 		}
 	}
 
+	mkline.checkVarassignSpecific()
+
+	if varname == "EVAL_PREFIX" {
+		if m, evalVarname := match1(value, `^([\w_]+)=`); m {
+
+			// The variables mentioned in EVAL_PREFIX will later be
+			// defined by find-prefix.mk. Therefore, they are marked
+			// as known in the current file.
+			G.Mk.vardef[evalVarname] = mkline
+		}
+	}
+
+	if fix := G.globalData.Deprecated[varname]; fix != "" {
+		mkline.Warn2("Definition of %s is deprecated. %s", varname, fix)
+	} else if fix := G.globalData.Deprecated[varcanon]; fix != "" {
+		mkline.Warn2("Definition of %s is deprecated. %s", varname, fix)
+	}
+
+	mkline.checkVarassignPlistComment(varname, value)
+
+	time := vucTimeRun
+	if op == opAssignEval || op == opAssignShell {
+		time = vucTimeParse
+	}
+
+	usedVars := mkline.extractUsedVariables(value)
+	vuc := &VarUseContext{mkline.getVariableType(varname), time, vucQuotUnknown, vucExtentUnknown}
+	for _, usedVar := range usedVars {
+		mkline.CheckVaruse(usedVar, "", vuc)
+	}
+}
+
+func (mkline *MkLine) checkVarassignSpecific() {
+	varname := mkline.Varname()
+	value := mkline.Value()
+
 	if contains(value, "/etc/rc.d") {
 		mkline.Warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
@@ -708,21 +744,11 @@ func (mkline *MkLine) checkVarassign() {
 			"out some explicit dependencies.")
 	}
 
-	if varname == "EVAL_PREFIX" {
-		if m, evalVarname := match1(value, `^([\w_]+)=`); m {
-
-			// The variables mentioned in EVAL_PREFIX will later be
-			// defined by find-prefix.mk. Therefore, they are marked
-			// as known in the current file.
-			G.Mk.vardef[evalVarname] = mkline
-		}
-	}
-
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
 		mkline.checkVarassignPythonVersions(varname, value)
 	}
 
-	if comment == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
+	if mkline.Comment() == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
 		mkline.Note0("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
 		Explain(
 			"The value #defined says something about the state of the variable,",
@@ -738,27 +764,8 @@ func (mkline *MkLine) checkVarassign() {
 		}
 	}
 
-	if fix := G.globalData.Deprecated[varname]; fix != "" {
-		mkline.Warn2("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix := G.globalData.Deprecated[varcanon]; fix != "" {
-		mkline.Warn2("Definition of %s is deprecated. %s", varname, fix)
-	}
-
 	if hasPrefix(varname, "SITES_") {
 		mkline.Warn0("SITES_* is deprecated. Please use SITES.* instead.")
-	}
-
-	mkline.checkVarassignPlistComment(varname, value)
-
-	time := vucTimeRun
-	if op == opAssignEval || op == opAssignShell {
-		time = vucTimeParse
-	}
-
-	usedVars := mkline.extractUsedVariables(value)
-	vuc := &VarUseContext{mkline.getVariableType(varname), time, vucQuotUnknown, vucExtentUnknown}
-	for _, usedVar := range usedVars {
-		mkline.CheckVaruse(usedVar, "", vuc)
 	}
 }
 
