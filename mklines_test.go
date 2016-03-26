@@ -57,3 +57,17 @@ func (s *Suite) TestMkLines_checklineInclude_Makefile(c *check.C) {
 		"ERROR: Makefile:2: \"/other/package/Makefile\" does not exist.\n"+
 		"ERROR: Makefile:2: Other Makefiles must not be included directly.\n")
 }
+
+func (s *Suite) TestMkLines_Quoting(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Pkg = NewPackage("category/pkgbase")
+	mklines := s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"GNU_CONFIGURE=\tyes",
+		"CONFIGURE_ENV+=\tX_LIBS=${X11_LDFLAGS:Q}")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.\n")
+}

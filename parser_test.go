@@ -63,14 +63,14 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 		}
 		c.Check(p.Rest(), equals, expectedRest)
 	}
-	token := func(input string, expectedToken MkToken) {
-		parse(input, []*MkToken{&expectedToken}, "")
+	token := func(input string, expectedToken *MkToken) {
+		parse(input, []*MkToken{expectedToken}, "")
 	}
-	literal := func(literal string) MkToken {
-		return MkToken{literal: literal}
+	literal := func(literal string) *MkToken {
+		return &MkToken{literal: literal}
 	}
-	varuse := func(varname string, modifiers ...string) MkToken {
-		return MkToken{varuse: MkVarUse{varname: varname, modifiers: modifiers}}
+	varuse := func(varname string, modifiers ...string) *MkToken {
+		return &MkToken{varuse: MkVarUse{varname: varname, modifiers: modifiers}}
 	}
 
 	token("literal", literal("literal"))
@@ -144,6 +144,8 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
 	token("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end
 	c.Check(s.Output(), equals, "WARN: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".\n")
+
+	parse("hello, ${W:L:tl}orld", []*MkToken{literal("hello, "), varuse("W", "L", "tl"), literal("orld")}, "")
 }
 
 func (s *Suite) TestParser_MkCond(c *check.C) {

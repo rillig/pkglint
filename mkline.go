@@ -22,6 +22,7 @@ type MkLine struct {
 	xs3        string
 	xvalue     string
 	xcomment   string
+	mkwords    []string
 }
 
 func (mkline *MkLine) Error1(format, arg1 string)       { mkline.Line.Error1(format, arg1) }
@@ -59,6 +60,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xvalue = value
 		mkline.xcomment = comment
 		mkline.Tokenize(value)
+		mkline.mkwords, _ = splitIntoShellWords(mkline.Line, value)
 		return
 	}
 
@@ -338,12 +340,13 @@ func (mkline *MkLine) checkDependencyRule(allowedTargets map[string]bool) {
 	}
 }
 
-func (mkline *MkLine) Tokenize(s string) {
+func (mkline *MkLine) Tokenize(s string) []*MkToken {
 	p := NewParser(mkline.Line, s)
-	_ = p.MkTokens()
+	tokens := p.MkTokens()
 	if p.Rest() != "" {
 		mkline.Error1("Invalid Makefile syntax at %q.", p.Rest())
 	}
+	return tokens
 }
 
 func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator) {
@@ -422,7 +425,7 @@ func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		mkline.WarnVaruseLocalbase()
 	}
 
-	needsQuoting := mkline.variableNeedsQuoting(varname, vuc)
+	needsQuoting := mkline.variableNeedsQuoting(varname, vartype, vuc)
 
 	if vuc.quoting == vucQuotFor {
 		mkline.checkVaruseFor(varname, vartype, needsQuoting)
@@ -707,10 +710,25 @@ func (mkline *MkLine) checkVarassign() {
 		time = vucTimeParse
 	}
 
-	usedVars := mkline.extractUsedVariables(value)
-	vuc := &VarUseContext{mkline.getVariableType(varname), time, vucQuotUnknown, vucExtentUnknown}
-	for _, usedVar := range usedVars {
-		mkline.CheckVaruse(&MkVarUse{usedVar, nil}, vuc)
+	vartype := mkline.getVariableType(varname)
+	for _, word := range mkline.mkwords {
+		if contains(word, "${") {
+			p := NewParser(mkline.Line, word)
+			mark := p.repl.Mark()
+			extent := vucExtentWordpart
+			if p.VarUse() != nil && p.EOF() {
+				extent = vucExtentWord
+			}
+			p.repl.Reset(mark)
+
+			quoting := vucQuotPlain // XXX: Not always correct
+			vuc := &VarUseContext{vartype, time, quoting, extent}
+			for _, token := range p.MkTokens() {
+				if token.varuse.varname != "" {
+					mkline.CheckVaruse(&token.varuse, vuc)
+				}
+			}
+		}
 	}
 }
 
@@ -1180,12 +1198,11 @@ func (nq NeedsQuoting) String() string {
 	return [...]string{"no", "yes", "doesn't matter", "don't known"}[nq]
 }
 
-func (mkline *MkLine) variableNeedsQuoting(varname string, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
+func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
 	if G.opts.DebugTrace {
-		defer tracecall(varname, vuc, "=>", needsQuoting)()
+		defer tracecall(varname, vartype, vuc, "=>", &needsQuoting)()
 	}
 
-	vartype := mkline.getVariableType(varname)
 	if vartype == nil || vuc.vartype == nil {
 		return nqDontKnow
 	}
