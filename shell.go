@@ -277,10 +277,6 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 		return false
 	}
 	varname := varuse.varname
-	mod := ""
-	for _, modifier := range varuse.modifiers {
-		mod += ":" + modifier
-	}
 
 	if varname == "@" {
 		shline.line.Warn0("Please use \"${.TARGET}\" instead of \"$@\".")
@@ -288,16 +284,17 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 			"The variable $@ can easily be confused with the shell variable of",
 			"the same name, which has a completely different meaning.")
 		varname = ".TARGET"
+		varuse = &MkVarUse{varname, varuse.modifiers}
 	}
 
 	switch {
-	case state == swstPlain && hasSuffix(mod, ":Q"):
+	case state == swstPlain && varuse.IsQ():
 		// Fine.
 	case state == swstBackt:
 		// Don't check anything here, to avoid false positives for tool names.
 	case (state == swstSquot || state == swstDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
 		// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
-	case state == swstDquot && hasSuffix(mod, ":Q"):
+	case state == swstDquot && varuse.IsQ():
 		shline.line.Warn0("Please don't use the :Q operator in double quotes.")
 		Explain2(
 			"Either remove the :Q or the double quotes.  In most cases, it is",
@@ -317,11 +314,7 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 			vucstate = vucQuotBackt
 		}
 		vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
-		var mods []string // XXX
-		if mod != "" {
-			mods = []string{mod[1:]}
-		}
-		shline.mkline.CheckVaruse(&MkVarUse{varname, mods}, vuc)
+		shline.mkline.CheckVaruse(varuse, vuc)
 	}
 	return true
 }

@@ -113,6 +113,11 @@ func (vu *MkVarUse) Mod() string {
 	return mod
 }
 
+func (vu *MkVarUse) IsQ() bool {
+	mlen := len(vu.modifiers)
+	return mlen > 0 && vu.modifiers[mlen-1] == "Q"
+}
+
 func (p *Parser) MkTokens() []*MkToken {
 	repl := p.repl
 
