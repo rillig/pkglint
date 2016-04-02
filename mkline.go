@@ -1281,7 +1281,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vuc.vartype.IsConsideredList() && (vuc.quoting == vucQuotBackt || vuc.extent != vucExtentWordpart)
+	wantList := vuc.vartype.IsConsideredList()
 	haveList := vartype.IsConsideredList()
 
 	if G.opts.Debug {
@@ -1324,7 +1324,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	// to be quoted. An exception is in the case of backticks,
 	// because the whole backticks expression is parsed as a single
 	// shell word by pkglint.
-	if vuc.extent == vucExtentWordpart && vuc.quoting != vucQuotBackt {
+	if vuc.extent == vucExtentWordpart && vuc.vartype != nil && vuc.vartype.IsShell() && vuc.quoting != vucQuotBackt {
 		return nqYes
 	}
 

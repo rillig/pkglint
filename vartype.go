@@ -134,6 +134,13 @@ func (vt *Vartype) String() string {
 	}
 }
 
+func (vt *Vartype) IsShell() bool {
+	checker := vt.checker
+	return checker == CheckvarShellCommand ||
+		checker == CheckvarShellCommands ||
+		checker == CheckvarShellWord
+}
+
 type VarChecker struct {
 	name    string
 	checker func(*VartypeCheck)

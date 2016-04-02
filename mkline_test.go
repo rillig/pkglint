@@ -565,7 +565,6 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
 	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n"+
 		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
 }
 
@@ -615,4 +614,17 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_8(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:2: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
 		"WARN: Makefile:3: The exitcode of the left-hand-side command of the pipe operator is ignored.\n")
+}
+
+// Based on mail/mailfront/Makefile.
+func (s *Suite) TestMkLine_variableNeedsQuoting_9(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"MASTER_SITES=${HOMEPAGE}archive/")
+
+	G.Mk.mklines[1].Check()
+
+	c.Check(s.Output(), equals, "") // Don’t suggest to use ${HOMEPAGE:Q}.
 }
