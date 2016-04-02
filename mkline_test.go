@@ -599,3 +599,23 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_7(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 }
+
+// Based on graphics/circos/Makefile.
+func (s *Suite) TestMkLine_variableNeedsQuoting_8(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.opts.DebugQuoting = true
+	s.RegisterTool(&Tool{Name: "perl", Varname: "PERL5", Predefined: true})
+	s.RegisterTool(&Tool{Name: "bash", Varname: "BASH", Predefined: true})
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"\t${RUN} cd ${WRKSRC} && ( ${ECHO} ${PERL5:Q} ; ${ECHO} ) | ${BASH} ./install",
+		"\t${RUN} cd ${WRKSRC} && ( ${ECHO} ${PERL5} ; ${ECHO} ) | ${BASH} ./install")
+
+	G.Mk.mklines[1].Check()
+	G.Mk.mklines[2].Check()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:2: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
+		"WARN: Makefile:3: The exitcode of the left-hand-side command of the pipe operator is ignored.\n")
+}

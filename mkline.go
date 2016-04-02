@@ -1282,6 +1282,15 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		}
 	}
 
+	// Both of these can be correct, depending on the situation:
+	// 1. echo ${PERL5:Q}
+	// 2. xargs ${PERL5}
+	if vuc.extent == vucExtentWord && vuc.quoting == vucQuotPlain {
+		if wantList && haveList {
+			return nqDontKnow
+		}
+	}
+
 	// Assuming the tool definitions don't include very special characters,
 	// so they can safely be used inside any quotes.
 	if G.globalData.Tools.byVarname[varname] != nil {
