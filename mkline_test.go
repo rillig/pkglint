@@ -658,3 +658,18 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_11(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} out of any quoting characters.\n")
 }
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_12(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	s.RegisterMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("devel/catch/Makefile",
+		"# $"+"NetBSD$",
+		"HOMEPAGE=${MASTER_SITE_GITHUB:=philsquared/Catch/}")
+
+	G.Mk.mklines[1].Check()
+
+	// This warning is ok, since the HOMEPAGE should be a single
+	// URL and MASTER_SITE_* is a list of URLs.
+	c.Check(s.Output(), equals, "WARN: devel/catch/Makefile:2: Please use ${MASTER_SITE_GITHUB:=philsquared/Catch/:Q} instead of ${MASTER_SITE_GITHUB:=philsquared/Catch/}.\n")
+}

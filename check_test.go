@@ -87,6 +87,17 @@ func (s *Suite) UseCommandLine(c *check.C, args ...string) {
 	}
 }
 
+func (s *Suite) RegisterMasterSite(varname string, urls ...string) {
+	if G.globalData.MasterSiteVars == nil {
+		G.globalData.MasterSiteVars = make(map[string]bool)
+		G.globalData.MasterSiteUrls = make(map[string]string)
+	}
+	G.globalData.MasterSiteVars[varname] = true
+	for _, url := range urls {
+		G.globalData.MasterSiteUrls[url] = varname
+	}
+}
+
 func (s *Suite) RegisterTool(tool *Tool) {
 	reg := G.globalData.Tools
 
