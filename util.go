@@ -56,7 +56,7 @@ func isEmptyDir(fname string) bool {
 func getSubdirs(fname string) []string {
 	dirents, err := ioutil.ReadDir(fname)
 	if err != nil {
-		Fatalf(fname, noLines, "Cannot be read: %s", err)
+		NewLineWhole(fname).Fatalf("Cannot be read: %s", err)
 	}
 
 	var subdirs []string
@@ -494,7 +494,7 @@ func stringStringMapKeys(m map[string]string) []string {
 func abspath(fname string) string {
 	abs, err := filepath.Abs(fname)
 	if err != nil {
-		Fatalf(fname, noLines, "Cannot determine absolute path.")
+		NewLineWhole(fname).Fatalf("Cannot determine absolute path.")
 	}
 	return filepath.ToSlash(abs)
 }

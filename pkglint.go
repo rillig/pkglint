@@ -169,14 +169,14 @@ func Checkfile(fname string) {
 	basename := path.Base(fname)
 	if hasPrefix(basename, "work") || hasSuffix(basename, "~") || hasSuffix(basename, ".orig") || hasSuffix(basename, ".rej") {
 		if G.opts.Import {
-			Errorf(fname, noLines, "Must be cleaned up before committing the package.")
+			NewLineWhole(fname).Error0("Must be cleaned up before committing the package.")
 		}
 		return
 	}
 
 	st, err := os.Lstat(fname)
 	if err != nil {
-		Errorf(fname, noLines, "%s", err)
+		NewLineWhole(fname).Errorf("%s", err)
 		return
 	}
 
@@ -198,16 +198,16 @@ func Checkfile(fname string) {
 		case matches(fname, `(?:^|/)files/[^/]*$`):
 			// Ok
 		case !isEmptyDir(fname):
-			Warnf(fname, noLines, "Unknown directory name.")
+			NewLineWhole(fname).Warn0("Unknown directory name.")
 		}
 
 	case st.Mode()&os.ModeSymlink != 0:
 		if !matches(basename, `^work`) {
-			Warnf(fname, noLines, "Unknown symlink name.")
+			NewLineWhole(fname).Warn0("Unknown symlink name.")
 		}
 
 	case !st.Mode().IsRegular():
-		Errorf(fname, noLines, "Only files and directories are allowed in pkgsrc.")
+		NewLineWhole(fname).Error0("Only files and directories are allowed in pkgsrc.")
 
 	case basename == "ALTERNATIVES":
 		if G.opts.CheckAlternatives {
@@ -256,11 +256,11 @@ func Checkfile(fname string) {
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
 		if G.opts.DebugUnchecked {
-			Debugf(fname, noLines, "Unchecked file %q.", fname)
+			NewLineWhole(fname).Debug1("Unchecked file %q.", fname)
 		}
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
-		Warnf(fname, noLines, "Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
+		NewLineWhole(fname).Warn0("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
 		if G.opts.CheckMk {
@@ -285,7 +285,7 @@ func Checkfile(fname string) {
 		// Skip
 
 	default:
-		Warnf(fname, noLines, "Unexpected file found.")
+		NewLineWhole(fname).Warn0("Unexpected file found.")
 		if G.opts.CheckExtra {
 			CheckfileExtra(fname)
 		}

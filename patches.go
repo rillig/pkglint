@@ -83,9 +83,9 @@ func (ck *PatchChecker) Check() {
 	}
 
 	if patchedFiles > 1 {
-		Warnf(ck.lines[0].Fname, noLines, "Contains patches for %d files, should be only one.", patchedFiles)
+		NewLineWhole(ck.lines[0].Fname).Warnf("Contains patches for %d files, should be only one.", patchedFiles)
 	} else if patchedFiles == 0 {
-		Errorf(ck.lines[0].Fname, noLines, "Contains no patch.")
+		NewLineWhole(ck.lines[0].Fname).Error0("Contains no patch.")
 	}
 
 	ChecklinesTrailingEmptyLines(ck.lines)

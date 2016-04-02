@@ -6,9 +6,6 @@ import (
 	"strings"
 )
 
-const noFile = ""
-const noLines = ""
-
 type LogLevel struct {
 	TraditionalName string
 	GccName         string
@@ -23,10 +20,10 @@ var (
 	llAutofix = &LogLevel{"AUTOFIX", "autofix"}
 )
 
-var dummyLine = NewLine(noFile, 0, "", nil)
+var dummyLine = NewLine("", 0, "", nil)
 
-func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...interface{}) bool {
-	if fname != noFile {
+func logs(out io.Writer, level *LogLevel, fname, lineno, format, msg string) bool {
+	if fname != "" {
 		fname = cleanpath(fname)
 	}
 
@@ -35,10 +32,10 @@ func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...
 		text += sep + level.TraditionalName + ":"
 		sep = " "
 	}
-	if fname != noFile {
+	if fname != "" {
 		text += sep + fname
 		sep = ": "
-		if lineno != noLines {
+		if lineno != "" {
 			text += ":" + lineno
 		}
 	}
@@ -49,31 +46,31 @@ func logf(out io.Writer, level *LogLevel, fname, lineno, format string, args ...
 	if G.opts.Profiling {
 		G.loghisto.Add(format, 1)
 	}
-	text += sep + fmt.Sprintf(format, args...) + "\n"
+	text += sep + msg + "\n"
 	io.WriteString(out, text)
 	return true
 }
 
-func Fatalf(fname, lineno, format string, args ...interface{}) {
-	logf(G.logErr, llFatal, fname, lineno, format, args...)
+func Fatals(fname, lineno, format, msg string) {
+	logs(G.logErr, llFatal, fname, lineno, format, msg)
 	panic(pkglintFatal{})
 }
-func Errorf(fname, lineno, format string, args ...interface{}) bool {
+func Errors(fname, lineno, format, msg string) bool {
 	G.errors++
-	return logf(G.logOut, llError, fname, lineno, format, args...)
+	return logs(G.logOut, llError, fname, lineno, format, msg)
 }
-func Warnf(fname, lineno, format string, args ...interface{}) bool {
+func Warns(fname, lineno, format, msg string) bool {
 	G.warnings++
-	return logf(G.logOut, llWarn, fname, lineno, format, args...)
+	return logs(G.logOut, llWarn, fname, lineno, format, msg)
 }
-func Notef(fname, lineno, format string, args ...interface{}) bool {
-	return logf(G.logOut, llNote, fname, lineno, format, args...)
+func Notes(fname, lineno, format, msg string) bool {
+	return logs(G.logOut, llNote, fname, lineno, format, msg)
 }
-func autofixf(fname, lineno, format string, args ...interface{}) bool {
-	return logf(G.logOut, llAutofix, fname, lineno, format, args...)
+func autofixs(fname, lineno, format, msg string) bool {
+	return logs(G.logOut, llAutofix, fname, lineno, format, msg)
 }
-func Debugf(fname, lineno, format string, args ...interface{}) bool {
-	return logf(G.debugOut, llDebug, fname, lineno, format, args...)
+func Debugs(fname, lineno, format, msg string) bool {
+	return logs(G.debugOut, llDebug, fname, lineno, format, msg)
 }
 
 func Explain(explanation ...string) {

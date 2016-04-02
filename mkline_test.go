@@ -603,7 +603,6 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_7(c *check.C) {
 // Based on graphics/circos/Makefile.
 func (s *Suite) TestMkLine_variableNeedsQuoting_8(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
-	G.opts.DebugQuoting = true
 	s.RegisterTool(&Tool{Name: "perl", Varname: "PERL5", Predefined: true})
 	s.RegisterTool(&Tool{Name: "bash", Varname: "BASH", Predefined: true})
 	G.globalData.InitVartypes()

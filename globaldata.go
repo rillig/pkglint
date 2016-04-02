@@ -87,7 +87,7 @@ func (gd *GlobalData) loadDistSites() {
 	names["MASTER_SITE_LOCAL"] = true
 
 	if G.opts.DebugMisc {
-		Debugf(fname, noLines, "Loaded %d MASTER_SITE_* URLs.", len(url2name))
+		NewLineWhole(fname).Debugf("Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	}
 	gd.MasterSiteUrls = url2name
 	gd.MasterSiteVars = names
@@ -121,7 +121,7 @@ func (gd *GlobalData) loadTools() {
 		}
 	}
 	if len(toolFiles) <= 1 {
-		Fatalf(toolFiles[0], noLines, "Too few tool files.")
+		NewLineWhole(toolFiles[0]).Fatalf("Too few tool files.")
 	}
 
 	reg := NewToolRegistry()
@@ -324,7 +324,7 @@ func (gd *GlobalData) loadDocChanges() {
 	docdir := G.globalData.Pkgsrcdir + "/doc"
 	files, err := ioutil.ReadDir(docdir)
 	if err != nil {
-		Fatalf(docdir, noLines, "Cannot be read.")
+		NewLineWhole(docdir).Fatalf("Cannot be read.")
 	}
 
 	var fnames []string

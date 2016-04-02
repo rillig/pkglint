@@ -57,6 +57,11 @@ func NewLineEOF(fname string) *Line {
 	return NewLineMulti(fname, -1, 0, "", nil)
 }
 
+// NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
+func NewLineWhole(fname string) *Line {
+	return NewLine(fname, 0, "", nil)
+}
+
 func (line *Line) modifiedLines() []string {
 	var result []string
 	result = append(result, line.before...)
@@ -117,12 +122,12 @@ func (line *Line) printSource(out io.Writer) {
 
 func (line *Line) Fatalf(format string, args ...interface{}) {
 	line.printSource(G.logErr)
-	Fatalf(line.Fname, line.linenos(), format, args...)
+	Fatals(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 }
 
 func (line *Line) Errorf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	Errorf(line.Fname, line.linenos(), format, args...)
+	Errors(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 func (line *Line) Error0(format string)             { line.Errorf(format) }
@@ -131,7 +136,7 @@ func (line *Line) Error2(format, arg1, arg2 string) { line.Errorf(format, arg1, 
 
 func (line *Line) Warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	Warnf(line.Fname, line.linenos(), format, args...)
+	Warns(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 func (line *Line) Warn0(format string)             { line.Warnf(format) }
@@ -140,7 +145,7 @@ func (line *Line) Warn2(format, arg1, arg2 string) { line.Warnf(format, arg1, ar
 
 func (line *Line) Notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	Notef(line.Fname, line.linenos(), format, args...)
+	Notes(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 func (line *Line) Note0(format string)             { line.Notef(format) }
@@ -149,7 +154,7 @@ func (line *Line) Note2(format, arg1, arg2 string) { line.Notef(format, arg1, ar
 
 func (line *Line) Debugf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	Debugf(line.Fname, line.linenos(), format, args...)
+	Debugs(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 func (line *Line) Debug1(format, arg1 string)       { line.Debugf(format, arg1) }
@@ -161,7 +166,7 @@ func (line *Line) String() string {
 
 func (line *Line) logAutofix() {
 	if line.autofixMessage != nil {
-		autofixf(line.Fname, line.linenos(), "%s", *line.autofixMessage)
+		autofixs(line.Fname, line.linenos(), "%s", *line.autofixMessage)
 		line.autofixMessage = nil
 	}
 }
@@ -223,7 +228,7 @@ func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFi
 	}
 	line.changed = true
 	if G.opts.Autofix {
-		autofixf(line.Fname, line.linenos(), format, args...)
+		autofixs(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 		return true
 	}
 	if G.opts.PrintAutofix {
