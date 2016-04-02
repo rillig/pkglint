@@ -374,7 +374,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("KRB5BASE", lkNone, CheckvarPathname)
 	acl("KRB5_ACCEPTED", lkShell, enum("heimdal mit-krb5"), "")
 	usr("KRB5_DEFAULT", lkNone, enum("heimdal mit-krb5"))
-	sys("KRB5_TYPE", lkNone, CheckvarUnchecked)
+	sys("KRB5_TYPE", lkNone, CheckvarIdentifier)
 	sys("LD", lkNone, CheckvarShellCommand)
 	pkglist("LDFLAGS*", lkShell, CheckvarLdFlag)
 	sys("LIBGRP", lkNone, CheckvarUserGroupName)
