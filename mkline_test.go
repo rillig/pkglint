@@ -569,3 +569,23 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
 		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n"+
 		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
 }
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
+	s.UseCommandLine(c, "-Wall", "-Dtools")
+	G.globalData.InitVartypes()
+	s.RegisterTool("find", "FIND", false)
+	s.RegisterTool("sort", "SORT", false)
+	G.Pkg = NewPackage("category/pkgbase")
+	G.Mk = s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"USE_TOOLS+=\tfind sort",
+		"GENERATE_PLIST= cd ${DESTDIR}${PREFIX}; ${FIND} * \\( -type f -or -type l \\) | ${SORT};")
+
+	G.Mk.determineDefinedVariables()
+	G.Mk.mklines[3].Check()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:4: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
+		"WARN: Makefile:4: Please use ${SORT:Q} instead of ${SORT}.\n") // FIXME: The :Q must not be here.
+}
