@@ -583,8 +583,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
 	G.Mk.mklines[1].Check()
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: Makefile:2: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
-		"WARN: Makefile:2: Please use ${SORT:Q} instead of ${SORT}.\n") // FIXME: The :Q must not be here.
+		"WARN: Makefile:2: The exitcode of the left-hand-side command of the pipe operator is ignored.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_7(c *check.C) {

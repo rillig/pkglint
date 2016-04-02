@@ -729,7 +729,13 @@ func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 	if op == opAssignShell {
 		vartype = shellcommandsContextType
 	}
-	for _, word := range mkline.mkwords {
+
+	words := mkline.mkwords
+	if vartype != nil && (vartype.checker == CheckvarShellCommands || vartype.checker == CheckvarShellCommand) {
+		words, _ = splitIntoShellTokens(mkline.Line, mkline.Value())
+	}
+
+	for _, word := range words {
 		if contains(word, "${") {
 			p := NewParser(mkline.Line, word)
 			mark := p.repl.Mark()
