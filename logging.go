@@ -92,7 +92,7 @@ func Explain(explanation ...string) {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
 		}
 		io.WriteString(G.logOut, "\n")
-	} else if G.TestingData != nil {
+	} else if G.Testing {
 		for _, s := range explanation {
 			if l := tabLength(s); l > 68 && contains(s, " ") {
 				print(fmt.Sprintf("Long explanation line (%d): %s\n", l, s))

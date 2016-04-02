@@ -142,7 +142,7 @@ func (s *Suite) ExpectFatalError(action func()) {
 }
 
 func (s *Suite) SetUpTest(c *check.C) {
-	G = GlobalVars{TestingData: &TestingData{VerifiedBits: make(map[string]bool)}}
+	G = GlobalVars{Testing: true}
 	G.logOut, G.logErr, G.debugOut = &s.stdout, &s.stderr, &s.stdout
 	s.UseCommandLine(c /* no arguments */)
 }

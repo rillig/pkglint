@@ -11,12 +11,12 @@ type GlobalVars struct {
 	Pkg        *Package   // The package that is currently checked.
 	Mk         *MkLines   // The Makefile (or fragment) that is currently checked.
 
-	Todo           []string     // The files or directories that still need to be checked.
-	CurrentDir     string       // The currently checked directory, relative to the cwd
-	CurPkgsrcdir   string       // The pkgsrc directory, relative to currentDir
-	Wip            bool         // Is the currently checked directory from pkgsrc-wip?
-	Infrastructure bool         // Is the currently checked item from the pkgsrc infrastructure?
-	TestingData    *TestingData // Is pkglint in self-testing mode (only during development)?
+	Todo           []string // The files or directories that still need to be checked.
+	CurrentDir     string   // The currently checked directory, relative to the cwd
+	CurPkgsrcdir   string   // The pkgsrc directory, relative to currentDir
+	Wip            bool     // Is the currently checked directory from pkgsrc-wip?
+	Infrastructure bool     // Is the currently checked item from the pkgsrc infrastructure?
+	Testing        bool     // Is pkglint in self-testing mode (only during development)?
 
 	Hash         map[string]*Hash // Maps "alg:fname" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
@@ -95,10 +95,6 @@ type CmdOpts struct {
 type Hash struct {
 	hash string
 	line *Line
-}
-
-type TestingData struct {
-	VerifiedBits map[string]bool
 }
 
 var G GlobalVars
