@@ -2,6 +2,7 @@ package main
 
 import (
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -50,23 +51,60 @@ func (op MkOperator) String() string {
 }
 
 const (
-	reEmulPlatform = "" +
-		"bitrig|bsdos|cygwin|darwin|dragonfly|freebsd|" +
-		"haiku|hpux|interix|irix|linux|mirbsd|netbsd|openbsd|osf1|solaris"
-	rePlatformOs = "" + // See mk/platform
+	reMachineOpsys = "" + // See mk/platform
 		"AIX|BSDOS|Bitrig|Cygwin|Darwin|DragonFly|FreeBSD|FreeMiNT|GNUkFreeBSD|" +
 		"HPUX|Haiku|IRIX|Interix|Linux|Minix|MirBSD|NetBSD|OSF1|OpenBSD|QNX|SCO_SV|SunOS|UnixWare"
-	rePlatformArch = "" +
-		"alpha|amd64|arc|arm|arm32|cobalt|convex|dreamcast|earmv6hf|earmv7hf|evbarm|" +
-		"hpcmips|hpcsh|hppa|hppa64|i386|ia64|" +
-		"m68k|m88k|mips|mips64|mips64eb|mips64el|mipseb|mipsel|mipsn32|mlrisc|" +
-		"ns32k|pc532|pmax|powerpc|powerpc64|rs6000|s390|sh3eb|sh3el|sparc|sparc64|vax|x86_64"
+
+	// See mk/emulator/emulator-vars.mk.
+	reEmulOpsys = "" +
+		"bitrig|bsdos|cygwin|darwin|dragonfly|freebsd|" +
+		"haiku|hpux|interix|irix|linux|mirbsd|netbsd|openbsd|osf1|solaris|sunos"
+
+	// Hardware architectures having the same name in bsd.own.mk and the GNU world.
+	// These are best-effort guesses, since they depend on the operating system.
+	reArch = "" +
+		"alpha|amd64|arc|arm|cobalt|convex|dreamcast|i386|" +
+		"hpcmips|hpcsh|hppa|hppa64|ia64|" +
+		"m68k|m88k|mips|mips64|mips64el|mipseb|mipsel|mipsn32|mlrisc|" +
+		"ns32k|pc532|pmax|powerpc|powerpc64|rs6000|s390|sparc|sparc64|vax|x86_64"
+
+	// See mk/bsd.prefs.mk:/^GNU_ARCH\./
+	reMachineArch = "" +
+		reArch + "|" +
+		"aarch64eb|amd64|arm26|arm32|coldfire|earm|earmeb|earmhf|earmhfeb|earmv4|earmv4eb|earmv5|" +
+		"earmv5eb|earmv6|earmv6eb|earmv6hf|earmv6hfeb|earmv7|earmv7eb|earmv7hf|earmv7hfeb|" +
+		"i386|i586|i686|m68000|mips|mips64eb|sh3eb|sh3el"
+
+	// See mk/bsd.prefs.mk:/^GNU_ARCH\./
+	reMachineGnuArch = "" +
+		reArch + "|" +
+		"aarch64_be|arm|armeb|armv4|armv4eb|armv6|armv6eb|armv7|armv7eb|" +
+		"i486|m5407|m68010|mips64|mipsel|sh|shle|x86_64"
+
+	reEmulArch = reMachineArch // Just a wild guess.
 )
 
+func enumFromRe(re string) *VarChecker {
+	values := strings.Split(re, "|")
+	sort.Strings(values)
+	seen := make(map[string]bool)
+	var unique []string
+	for _, value := range values {
+		if !seen[value] {
+			seen[value] = true
+			unique = append(unique, value)
+		}
+	}
+	return enum(strings.Join(unique, " "))
+}
+
 var (
-	emulPlatformEnum = enum(strings.Replace(reEmulPlatform, "|", " ", -1))
-	platformOsEnum   = enum(strings.Replace(rePlatformOs, "|", " ", -1))
-	platformArchEnum = enum(strings.Replace(rePlatformArch, "|", " ", -1))
+	enumMachineOpsys            = enumFromRe(reMachineOpsys)
+	enumMachineArch             = enumFromRe(reMachineArch)
+	enumMachineGnuArch          = enumFromRe(reMachineGnuArch)
+	enumEmulOpsys               = enumFromRe(reEmulOpsys)
+	enumEmulArch                = enumFromRe(reEmulArch)
+	enumMachineGnuPlatformOpsys = enumEmulOpsys
 )
 
 func (cv *VartypeCheck) AwkCommand() {
@@ -275,7 +313,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 			cv.comment,
 			cv.listContext,
 			cv.guessed}
-		emulPlatformEnum.checker(opsysCv)
+		enumEmulOpsys.checker(opsysCv)
 
 		// no check for os_version
 
@@ -289,7 +327,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 			cv.comment,
 			cv.listContext,
 			cv.guessed}
-		platformArchEnum.checker(archCv)
+		enumEmulArch.checker(archCv)
 	} else {
 		cv.line.Warn1("%q is not a valid emulation platform.", cv.value)
 		Explain(
@@ -418,6 +456,60 @@ func (cv *VartypeCheck) LdFlag() {
 
 func (cv *VartypeCheck) License() {
 	checklineLicense(cv.mkline, cv.value)
+}
+
+func (cv *VartypeCheck) MachineGnuPlatform() {
+	if cv.value != cv.valueNovar {
+		return
+	}
+
+	const rePart = `(?:\[[^\]]+\]|[^-\[])+`
+	const rePair = `^(` + rePart + `)-(` + rePart + `)$`
+	const reTriple = `^(` + rePart + `)-(` + rePart + `)-(` + rePart + `)$`
+
+	pattern := cv.value
+	if matches(pattern, rePair) && hasSuffix(pattern, "*") {
+		pattern += "-*"
+	}
+
+	if m, archPattern, vendorPattern, opsysPattern := match3(pattern, reTriple); m {
+		archCv := &VartypeCheck{
+			cv.mkline,
+			cv.line,
+			"the hardware architecture part of " + cv.varname,
+			opUseMatch, // Always allow patterns, since this is a PlatformPattern.
+			archPattern,
+			archPattern,
+			cv.comment,
+			cv.listContext,
+			cv.guessed}
+		enumMachineGnuArch.checker(archCv)
+
+		_ = vendorPattern
+
+		opsysCv := &VartypeCheck{
+			cv.mkline,
+			cv.line,
+			"the operating system part of " + cv.varname,
+			opUseMatch, // Always allow patterns, since this is a PlatformPattern.
+			opsysPattern,
+			opsysPattern,
+			cv.comment,
+			cv.listContext,
+			cv.guessed}
+		enumMachineGnuPlatformOpsys.checker(opsysCv)
+
+	} else {
+		cv.line.Warn1("%q is not a valid platform pattern.", cv.value)
+		Explain(
+			"A platform pattern has the form <OPSYS>-<OS_VERSION>-<MACHINE_ARCH>.",
+			"Each of these components may be a shell globbing expression.",
+			"",
+			"Examples:",
+			"* NetBSD-[456].*-i386",
+			"* *-*-*",
+			"* Linux-*-*")
+	}
 }
 
 func (cv *VartypeCheck) MailAddress() {
@@ -574,7 +666,11 @@ func (cv *VartypeCheck) PkgRevision() {
 	}
 }
 
-func (cv *VartypeCheck) PlatformPattern() {
+func (cv *VartypeCheck) MachinePlatform() {
+	cv.MachinePlatformPattern()
+}
+
+func (cv *VartypeCheck) MachinePlatformPattern() {
 	if cv.value != cv.valueNovar {
 		return
 	}
@@ -599,7 +695,7 @@ func (cv *VartypeCheck) PlatformPattern() {
 			cv.comment,
 			cv.listContext,
 			cv.guessed}
-		platformOsEnum.checker(opsysCv)
+		enumMachineOpsys.checker(opsysCv)
 
 		// no check for os_version
 
@@ -613,7 +709,7 @@ func (cv *VartypeCheck) PlatformPattern() {
 			cv.comment,
 			cv.listContext,
 			cv.guessed}
-		platformArchEnum.checker(archCv)
+		enumMachineArch.checker(archCv)
 
 	} else {
 		cv.line.Warn1("%q is not a valid platform pattern.", cv.value)

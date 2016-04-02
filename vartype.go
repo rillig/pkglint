@@ -168,6 +168,9 @@ var (
 	CheckvarInteger                = &VarChecker{"Integer", (*VartypeCheck).Integer}
 	CheckvarLdFlag                 = &VarChecker{"LdFlag", (*VartypeCheck).LdFlag}
 	CheckvarLicense                = &VarChecker{"License", (*VartypeCheck).License}
+	CheckvarMachineGnuPlatform     = &VarChecker{"MachineGnuPlatform", (*VartypeCheck).MachineGnuPlatform}
+	CheckvarMachinePlatform        = &VarChecker{"MachinePlatform", (*VartypeCheck).MachinePlatform}
+	CheckvarMachinePlatformPattern = &VarChecker{"MachinePlatformPattern", (*VartypeCheck).MachinePlatformPattern}
 	CheckvarMailAddress            = &VarChecker{"MailAddress", (*VartypeCheck).MailAddress}
 	CheckvarMessage                = &VarChecker{"Message", (*VartypeCheck).Message}
 	CheckvarOption                 = &VarChecker{"Option", (*VartypeCheck).Option}
@@ -179,7 +182,6 @@ var (
 	CheckvarPkgPath                = &VarChecker{"PkgPath", (*VartypeCheck).PkgPath}
 	CheckvarPkgOptionsVar          = &VarChecker{"PkgOptionsVar", (*VartypeCheck).PkgOptionsVar}
 	CheckvarPkgRevision            = &VarChecker{"PkgRevision", (*VartypeCheck).PkgRevision}
-	CheckvarPlatformPattern        = &VarChecker{"PlatformPattern", (*VartypeCheck).PlatformPattern}
 	CheckvarPrefixPathname         = &VarChecker{"PrefixPathname", (*VartypeCheck).PrefixPathname}
 	CheckvarPythonDependency       = &VarChecker{"PythonDependency", (*VartypeCheck).PythonDependency}
 	CheckvarRelativePkgDir         = &VarChecker{"RelativePkgDir", (*VartypeCheck).RelativePkgDir}

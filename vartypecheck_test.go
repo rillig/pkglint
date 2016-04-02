@@ -166,8 +166,8 @@ func (s *Suite) TestVartypeCheck_EmulPlatform(c *check.C) {
 		"${LINUX}")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:2: \"nextbsd\" is not valid for the operating system part of EMUL_PLATFORM. Use one of { bitrig bsdos cygwin darwin dragonfly freebsd haiku hpux interix irix linux mirbsd netbsd openbsd osf1 solaris } instead.\n"+
-		"WARN: fname:2: \"8087\" is not valid for the hardware architecture part of EMUL_PLATFORM. Use one of { alpha amd64 arc arm arm32 cobalt convex dreamcast earmv6hf earmv7hf evbarm hpcmips hpcsh hppa hppa64 i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } instead.\n"+
+		"WARN: fname:2: \"nextbsd\" is not valid for the operating system part of EMUL_PLATFORM. Use one of { bitrig bsdos cygwin darwin dragonfly freebsd haiku hpux interix irix linux mirbsd netbsd openbsd osf1 solaris sunos } instead.\n"+
+		"WARN: fname:2: \"8087\" is not valid for the hardware architecture part of EMUL_PLATFORM. Use one of { aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb hpcmips hpcsh hppa hppa64 i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } instead.\n"+
 		"WARN: fname:3: \"${LINUX}\" is not a valid emulation platform.\n")
 }
 
@@ -230,6 +230,16 @@ func (s *Suite) TestVartypeCheck_LdFlag(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:4: Unknown linker flag \"-unknown\".\n")
 }
 
+func (s *Suite) TestVartypeCheck_MachineGnuPlatform(c *check.C) {
+	runVartypeMatchChecks("MACHINE_GNU_PLATFORM", (*VartypeCheck).MachineGnuPlatform,
+		"x86_64-pc-cygwin",
+		"Cygwin-*-amd64")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:2: The pattern \"Cygwin\" cannot match any of { aarch64_be alpha amd64 arc arm armeb armv4 armv4eb armv6 armv6eb armv7 armv7eb cobalt convex dreamcast hpcmips hpcsh hppa hppa64 i386 i486 ia64 m5407 m68010 m68k m88k mips mips64 mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh shle sparc sparc64 vax x86_64 } for the hardware architecture part of MACHINE_GNU_PLATFORM.\n"+
+		"WARN: fname:2: The pattern \"amd64\" cannot match any of { bitrig bsdos cygwin darwin dragonfly freebsd haiku hpux interix irix linux mirbsd netbsd openbsd osf1 solaris sunos } for the operating system part of MACHINE_GNU_PLATFORM.\n")
+}
+
 func (s *Suite) TestVartypeCheck_MailAddress(c *check.C) {
 	runVartypeChecks("MAINTAINER", opAssign, (*VartypeCheck).MailAddress,
 		"pkgsrc-users@netbsd.org")
@@ -287,8 +297,8 @@ func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) TestVartypeCheck_PlatformPattern(c *check.C) {
-	runVartypeMatchChecks("ONLY_FOR_PLATFORM", (*VartypeCheck).PlatformPattern,
+func (s *Suite) TestVartypeCheck_MachinePlatformPattern(c *check.C) {
+	runVartypeMatchChecks("ONLY_FOR_PLATFORM", (*VartypeCheck).MachinePlatformPattern,
 		"linux-i386",
 		"nextbsd-5.0-8087",
 		"netbsd-7.0-l*",
@@ -300,9 +310,9 @@ func (s *Suite) TestVartypeCheck_PlatformPattern(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: \"linux-i386\" is not a valid platform pattern.\n"+
 		"WARN: fname:2: The pattern \"nextbsd\" cannot match any of { AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare } for the operating system part of ONLY_FOR_PLATFORM.\n"+
-		"WARN: fname:2: The pattern \"8087\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast earmv6hf earmv7hf evbarm hpcmips hpcsh hppa hppa64 i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of ONLY_FOR_PLATFORM.\n"+
+		"WARN: fname:2: The pattern \"8087\" cannot match any of { aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb hpcmips hpcsh hppa hppa64 i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of ONLY_FOR_PLATFORM.\n"+
 		"WARN: fname:3: The pattern \"netbsd\" cannot match any of { AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare } for the operating system part of ONLY_FOR_PLATFORM.\n"+
-		"WARN: fname:3: The pattern \"l*\" cannot match any of { alpha amd64 arc arm arm32 cobalt convex dreamcast earmv6hf earmv7hf evbarm hpcmips hpcsh hppa hppa64 i386 ia64 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of ONLY_FOR_PLATFORM.\n"+
+		"WARN: fname:3: The pattern \"l*\" cannot match any of { aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb hpcmips hpcsh hppa hppa64 i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } for the hardware architecture part of ONLY_FOR_PLATFORM.\n"+
 		"WARN: fname:5: \"FreeBSD*\" is not a valid platform pattern.\n")
 }
 
