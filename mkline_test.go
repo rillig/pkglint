@@ -628,3 +628,20 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_9(c *check.C) {
 
 	c.Check(s.Output(), equals, "") // Don’t suggest to use ${HOMEPAGE:Q}.
 }
+
+// Based on www/firefox31/xpi.mk.
+func (s *Suite) TestMkLine_variableNeedsQuoting_10(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	s.RegisterTool(&Tool{Name: "awk", Varname: "AWK", Predefined: true})
+	s.RegisterTool(&Tool{Name: "echo", Varname: "ECHO", Predefined: true})
+	G.Mk = s.NewMkLines("xpi.mk",
+		"# $"+"NetBSD$",
+		"\t id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"",
+		"\t id=`${AWK} '{print}' < ${WRKSRC}/idfile` && echo \"$$id\"")
+
+	G.Mk.mklines[1].Check()
+	G.Mk.mklines[2].Check()
+
+	c.Check(s.Output(), equals, "WARN: xpi.mk:2: Invoking subshells via $(...) is not portable enough.\n") // Don’t suggest to use ${AWK:Q}.
+}

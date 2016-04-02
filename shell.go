@@ -16,7 +16,7 @@ const (
 		`'[^']*'` + // single quoted string
 		"|\"`[^`]+`\"" + // backticks command execution in double quotes
 		`|"(?:\\.|[^"])*"` + // double quoted string
-		"|`[^`]*`" + // backticks command execution, somewhat naive
+		"|`[^`]*`" + // backticks command execution (very simple case)
 		`|\\\$\$` + // a shell-escaped dollar sign
 		`|\\[^\$]` + // other escaped characters
 		`|\$[\w_]` + // one-character make(1) variable
@@ -28,10 +28,10 @@ const (
 		`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
 		`|\$\$\$\$` + // the special pid shell variable
 		`|\$\$\{[0-9A-Z_a-z]+[#%:]?[^}]*\}` + // shell variable in braces
-		`|\$\$\(` + // POSIX-style backticks replacement
 		`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
 		`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
 		`)+` + // any of the above may be repeated
+		`|\$\$\(` + // POSIX-style backticks replacement
 		`|;;?` +
 		`|&&?` +
 		`|\|\|?` +
@@ -546,8 +546,8 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	case ctx.handleForbiddenCommand():
 	case ctx.handleTool():
 	case ctx.handleCommandVariable():
-	case matches(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
-	case matches(shellword, `^[\w_]+=.*$`): // Variable assignment
+	case matches(shellword, `^(?:\$\$\(|\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
+	case matches(shellword, `^\w+=`): // Variable assignment
 	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
 	case hasPrefix(shellword, "${PKGSRCDIR"): // With or without the :Q modifier
 	case ctx.handleComment():
