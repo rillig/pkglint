@@ -16,7 +16,6 @@ var (
 	llError   = &LogLevel{"ERROR", "error"}
 	llWarn    = &LogLevel{"WARN", "warning"}
 	llNote    = &LogLevel{"NOTE", "note"}
-	llDebug   = &LogLevel{"DEBUG", "debug"}
 	llAutofix = &LogLevel{"AUTOFIX", "autofix"}
 )
 
@@ -68,9 +67,6 @@ func Notes(fname, lineno, format, msg string) bool {
 }
 func autofixs(fname, lineno, format, msg string) bool {
 	return logs(G.logOut, llAutofix, fname, lineno, format, msg)
-}
-func Debugs(fname, lineno, format, msg string) bool {
-	return logs(G.debugOut, llDebug, fname, lineno, format, msg)
 }
 
 func Explain(explanation ...string) {

@@ -86,7 +86,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	opts := NewOptions()
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
-	debug := opts.AddFlagGroup('D', "debugging", "debug,...", "enable or disable debugging categories")
+	opts.AddFlagVar('d', "debug", &gopts.Debug, false, "log verbose call traces for debugging")
 	opts.AddFlagVar('e', "explain", &gopts.Explain, false, "explain the diagnostics or give further help")
 	opts.AddFlagVar('f', "show-autofix", &gopts.PrintAutofix, false, "show what pkglint can fix automatically")
 	opts.AddFlagVar('F', "autofix", &gopts.Autofix, false, "try to automatically fix some errors (experimental)")
@@ -113,18 +113,6 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	check.AddFlagVar("mk", &gopts.CheckMk, true, "check other .mk files")
 	check.AddFlagVar("patches", &gopts.CheckPatches, true, "check patches")
 	check.AddFlagVar("PLIST", &gopts.CheckPlist, true, "check PLIST files")
-
-	debug.AddFlagVar("include", &gopts.DebugInclude, false, "included files")
-	debug.AddFlagVar("misc", &gopts.DebugMisc, false, "all things that didn't fit elsewhere")
-	debug.AddFlagVar("patches", &gopts.DebugPatches, false, "the states of the patch parser")
-	debug.AddFlagVar("quoting", &gopts.DebugQuoting, false, "additional information about quoting")
-	debug.AddFlagVar("shell", &gopts.DebugShell, false, "the parsers for shell words and shell commands")
-	debug.AddFlagVar("tools", &gopts.DebugTools, false, "the tools framework")
-	debug.AddFlagVar("trace", &gopts.DebugTrace, false, "follow subroutine calls")
-	debug.AddFlagVar("unchecked", &gopts.DebugUnchecked, false, "show the current limitations of pkglint")
-	debug.AddFlagVar("unused", &gopts.DebugUnused, false, "unused variables")
-	debug.AddFlagVar("vartypes", &gopts.DebugVartypes, false, "additional type information")
-	debug.AddFlagVar("varuse", &gopts.DebugVaruse, false, "contexts where variables are used")
 
 	warn.AddFlagVar("absname", &gopts.WarnAbsname, true, "warn about use of absolute file names")
 	warn.AddFlagVar("directcmd", &gopts.WarnDirectcmd, true, "warn about use of direct command names instead of Make variables")

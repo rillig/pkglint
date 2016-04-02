@@ -77,7 +77,7 @@ func (s *Suite) NewMkLines(fname string, lines ...string) *MkLines {
 
 func (s *Suite) DebugToStdout() {
 	G.debugOut = os.Stdout
-	G.opts.DebugTrace = true
+	G.opts.Debug = true
 }
 
 func (s *Suite) UseCommandLine(c *check.C, args ...string) {

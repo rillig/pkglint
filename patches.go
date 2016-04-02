@@ -8,7 +8,7 @@ import (
 )
 
 func ChecklinesPatch(lines []*Line) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(lines[0].Fname)()
 	}
 
@@ -29,7 +29,7 @@ const (
 )
 
 func (ck *PatchChecker) Check() {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall0()()
 	}
 
@@ -94,13 +94,13 @@ func (ck *PatchChecker) Check() {
 
 // See http://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
 func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall0()()
 	}
 
 	patchedFileType := guessFileType(ck.exp.CurrentLine(), patchedFile)
-	if G.opts.DebugMisc {
-		ck.exp.CurrentLine().Debugf("guessFileType(%q) = %s", patchedFile, patchedFileType)
+	if G.opts.Debug {
+		traceStep("guessFileType(%q) = %s", patchedFile, patchedFileType)
 	}
 
 	hasHunks := false
@@ -108,8 +108,8 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		hasHunks = true
 		linesToDel := toInt(ck.exp.m[2], 1)
 		linesToAdd := toInt(ck.exp.m[4], 1)
-		if G.opts.DebugMisc {
-			ck.exp.PreviousLine().Debugf("hunk -%d +%d", linesToDel, linesToAdd)
+		if G.opts.Debug {
+			traceStep("hunk -%d +%d", linesToDel, linesToAdd)
 		}
 		ck.checktextUniHunkCr()
 
@@ -154,7 +154,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 }
 
 func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall0()()
 	}
 
@@ -181,7 +181,7 @@ func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
 }
 
 func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall2(text, patchedFileType.String())()
 	}
 
@@ -193,7 +193,7 @@ func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) 
 }
 
 func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileType) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall2(addedText, patchedFileType.String())()
 	}
 
@@ -230,7 +230,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 }
 
 func (ck *PatchChecker) checktextUniHunkCr() {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall0()()
 	}
 
@@ -282,7 +282,11 @@ func (ft FileType) String() string {
 }
 
 // This is used to select the proper subroutine for detecting absolute pathnames.
-func guessFileType(line *Line, fname string) FileType {
+func guessFileType(line *Line, fname string) (fileType FileType) {
+	if G.opts.Debug {
+		defer tracecall(fname, "=>", &fileType)()
+	}
+
 	basename := path.Base(fname)
 	basename = strings.TrimSuffix(basename, ".in") // doesn’t influence the content type
 	ext := strings.ToLower(strings.TrimLeft(path.Ext(basename), "."))
@@ -305,14 +309,14 @@ func guessFileType(line *Line, fname string) FileType {
 		return ftUnknown
 	}
 
-	if G.opts.DebugMisc {
-		line.Debug1("Unknown file type for %q", fname)
+	if G.opts.Debug {
+		traceStep("Unknown file type for %q", fname)
 	}
 	return ftUnknown
 }
 
 func checkwordAbsolutePathname(line *Line, word string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(word)()
 	}
 
@@ -345,8 +349,8 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 		return
 	}
 	if matched, before, _, str := match3(text, `^(.*)(["'])(/\w[^"']*)["']`); matched {
-		if G.opts.DebugMisc {
-			line.Debug2("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+		if G.opts.Debug {
+			traceStep("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 		}
 
 		switch {
@@ -363,7 +367,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 }
 
 func checklineOtherAbsolutePathname(line *Line, text string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(text)()
 	}
 
@@ -379,8 +383,8 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		case hasSuffix(before, "."): // Example: ../dir
 		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
 		default:
-			if G.opts.DebugMisc {
-				line.Debug1("before=%q", before)
+			if G.opts.Debug {
+				traceStep("before=%q", before)
 			}
 			checkwordAbsolutePathname(line, path)
 		}

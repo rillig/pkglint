@@ -25,14 +25,12 @@ type MkLine struct {
 	mkwords    []string
 }
 
-func (mkline *MkLine) Error1(format, arg1 string)       { mkline.Line.Error1(format, arg1) }
-func (mkline *MkLine) Warn0(format string)              { mkline.Line.Warn0(format) }
-func (mkline *MkLine) Warn1(format, arg1 string)        { mkline.Line.Warn1(format, arg1) }
-func (mkline *MkLine) Warn2(format, arg1, arg2 string)  { mkline.Line.Warn2(format, arg1, arg2) }
-func (mkline *MkLine) Note0(format string)              { mkline.Line.Note0(format) }
-func (mkline *MkLine) Note2(format, arg1, arg2 string)  { mkline.Line.Note2(format, arg1, arg2) }
-func (mkline *MkLine) Debug1(format, arg1 string)       { mkline.Line.Debug1(format, arg1) }
-func (mkline *MkLine) Debug2(format, arg1, arg2 string) { mkline.Line.Debug2(format, arg1, arg2) }
+func (mkline *MkLine) Error1(format, arg1 string)      { mkline.Line.Error1(format, arg1) }
+func (mkline *MkLine) Warn0(format string)             { mkline.Line.Warn0(format) }
+func (mkline *MkLine) Warn1(format, arg1 string)       { mkline.Line.Warn1(format, arg1) }
+func (mkline *MkLine) Warn2(format, arg1, arg2 string) { mkline.Line.Warn2(format, arg1, arg2) }
+func (mkline *MkLine) Note0(format string)             { mkline.Line.Note0(format) }
+func (mkline *MkLine) Note2(format, arg1, arg2 string) { mkline.Line.Note2(format, arg1, arg2) }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{Line: line}
@@ -173,10 +171,14 @@ func (mkline *MkLine) Check() {
 }
 
 func (mkline *MkLine) checkInclude() {
+	if G.opts.Debug {
+		defer tracecall0()()
+	}
+
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
-	if G.opts.DebugInclude {
-		mkline.Debug1("includefile=%s", includefile)
+	if G.opts.Debug {
+		traceStep("includefile=%s", includefile)
 	}
 	mkline.CheckRelativePath(includefile, mustExist)
 
@@ -353,11 +355,14 @@ func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator
 	if !G.opts.WarnPerm {
 		return
 	}
+	if G.opts.Debug {
+		defer tracecall(varname, op)()
+	}
 
 	vartype := mkline.getVariableType(varname)
 	if vartype == nil {
-		if G.opts.DebugMisc {
-			mkline.Debug1("No type definition found for %q.", varname)
+		if G.opts.Debug {
+			traceStep("No type definition found for %q.", varname)
 		}
 		return
 	}
@@ -377,8 +382,8 @@ func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator
 	case perms.Contains(needed):
 		break
 	case perms == aclpUnknown:
-		if G.opts.DebugUnchecked {
-			mkline.Line.Debug1("Unknown permissions for %q.", varname)
+		if G.opts.Debug {
+			traceStep("Unknown permissions for %q.", varname)
 		}
 	default:
 		alternativeActions := perms & aclpAllWrite
@@ -406,7 +411,7 @@ func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator
 }
 
 func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(mkline, varuse, vuc)()
 	}
 
@@ -450,6 +455,9 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 	if !G.opts.WarnPerm {
 		return
 	}
+	if G.opts.Debug {
+		defer tracecall(varname, vuc)()
+	}
 
 	// This is the type of the variable that is being used. Not to
 	// be confused with vuc.vartype, which is the type of the
@@ -457,8 +465,8 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 	// or, in an assignment, the type of the left hand side variable).
 	vartype := mkline.getVariableType(varname)
 	if vartype == nil {
-		if G.opts.DebugMisc {
-			mkline.Debug1("No type definition found for %q.", varname)
+		if G.opts.Debug {
+			traceStep("No type definition found for %q.", varname)
 		}
 		return
 	}
@@ -543,7 +551,7 @@ func (mkline *MkLine) WarnVaruseLocalbase() {
 }
 
 func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(varname, vartype, needsQuoting)()
 	}
 
@@ -561,7 +569,7 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 }
 
 func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(varname, vartype, vuc, mod, needsQuoting)()
 	}
 
@@ -626,7 +634,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 }
 
 func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall2(varname, value)()
 	}
 
@@ -652,7 +660,7 @@ func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
 }
 
 func (mkline *MkLine) checkVarassign() {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall0()()
 	}
 
@@ -671,8 +679,8 @@ func (mkline *MkLine) checkVarassign() {
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == opAssignEval && varname == strings.ToLower(varname) {
-		if G.opts.DebugUnchecked {
-			mkline.Debug1("%s might be unused unless it is an argument to a procedure file.", varname)
+		if G.opts.Debug {
+			traceStep("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
 
 	} else if !varIsUsed(varname) {
@@ -708,7 +716,7 @@ func (mkline *MkLine) checkVarassign() {
 }
 
 func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(varname, op)()
 	}
 
@@ -905,7 +913,7 @@ const reVarnamePlural = `^(?:` +
 	`)$`
 
 func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(varname, op, value, comment)()
 	}
 
@@ -929,13 +937,13 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 	switch {
 	case vartype == nil:
 		// Cannot check anything if the type is not known.
-		if G.opts.DebugUnchecked {
-			mkline.Debug1("Unchecked variable assignment for %s.", varname)
+		if G.opts.Debug {
+			traceStep("Unchecked variable assignment for %s.", varname)
 		}
 
 	case op == opAssignShell:
-		if G.opts.DebugMisc {
-			mkline.Debug1("Use of !=: %q", value)
+		if G.opts.Debug {
+			traceStep("Unchecked use of !=: %q", value)
 		}
 
 	case vartype.kindOfList == lkNone:
@@ -964,7 +972,7 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 // For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op MkOperator, value, comment string, isList bool, guessed bool) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(varname, op, value, comment, isList, guessed)()
 	}
 
@@ -990,7 +998,7 @@ func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) 
 }
 
 func (mkline *MkLine) checkText(text string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(text)()
 	}
 
@@ -1037,7 +1045,7 @@ func (mkline *MkLine) checkText(text string) {
 }
 
 func (mkline *MkLine) CheckCond() {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall0()()
 	}
 
@@ -1211,7 +1219,7 @@ func (nq NeedsQuoting) String() string {
 }
 
 func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(varname, vartype, vuc, "=>", &needsQuoting)()
 	}
 
@@ -1270,8 +1278,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	wantList := vuc.vartype.IsConsideredList() && (vuc.quoting == vucQuotBackt || vuc.extent != vucExtentWordpart)
 	haveList := vartype.IsConsideredList()
 
-	if G.opts.DebugQuoting {
-		mkline.Line.Debugf("variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
+	if G.opts.Debug {
+		traceStep("variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
 			varname, vuc, vartype, wantList, haveList)
 	}
 
@@ -1321,7 +1329,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqDoesntMatter
 	}
 
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		trace("", "MkLine.variableNeedsQuoting", "wantList", wantList, "haveList", haveList)
 	}
 	if wantList != haveList {
@@ -1333,8 +1341,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqYes
 	}
 
-	if G.opts.DebugQuoting {
-		mkline.Line.Debug1("Don't know whether :Q is needed for %q", varname)
+	if G.opts.Debug {
+		traceStep("Don't know whether :Q is needed for %q", varname)
 	}
 	return nqDontKnow
 }
@@ -1342,6 +1350,10 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 // Returns the type of the variable (maybe guessed based on the variable name),
 // or nil if the type cannot even be guessed.
 func (mkline *MkLine) getVariableType(varname string) *Vartype {
+	if G.opts.Debug {
+		defer tracecall1(varname)()
+	}
+
 	if vartype := G.globalData.vartypes[varname]; vartype != nil {
 		return vartype
 	}
@@ -1396,11 +1408,11 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 		gtype = &Vartype{lkNone, CheckvarYes, allowAll, true}
 	}
 
-	if G.opts.DebugVartypes {
+	if G.opts.Debug {
 		if gtype != nil {
-			mkline.Line.Debug2("The guessed type of %q is %q.", varname, gtype.String())
+			traceStep("The guessed type of %q is %q.", varname, gtype.String())
 		} else {
-			mkline.Line.Debug1("No type definition found for %q.", varname)
+			traceStep("No type definition found for %q.", varname)
 		}
 	}
 	return gtype
@@ -1423,8 +1435,8 @@ func (mkline *MkLine) extractUsedVariables(text string) []string {
 		}
 	}
 
-	if rest != "" && G.opts.DebugMisc {
-		mkline.Debug1("extractUsedVariables: rest=%q", rest)
+	if G.opts.Debug && rest != "" {
+		traceStep("extractUsedVariables: rest=%q", rest)
 	}
 	return result
 }

@@ -52,18 +52,6 @@ type CmdOpts struct {
 	CheckPatches,
 	CheckPlist bool
 
-	DebugInclude,
-	DebugMisc,
-	DebugPatches,
-	DebugQuoting,
-	DebugShell,
-	DebugTools,
-	DebugTrace,
-	DebugUnchecked,
-	DebugUnused,
-	DebugVartypes,
-	DebugVaruse bool
-
 	WarnAbsname,
 	WarnDirectcmd,
 	WarnExtra,
@@ -85,6 +73,7 @@ type CmdOpts struct {
 	Profiling,
 	Quiet,
 	Recursive,
+	Debug,
 	PrintAutofix,
 	PrintSource,
 	PrintVersion bool

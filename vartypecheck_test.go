@@ -7,15 +7,12 @@ import (
 )
 
 func (s *Suite) TestVartypeCheck_AwkCommand(c *check.C) {
-	s.UseCommandLine(c, "-Dunchecked")
 	runVartypeChecks("PLIST_AWK", opAssignAppend, (*VartypeCheck).AwkCommand,
 		"{print $0}",
 		"{print $$0}")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: $0 is ambiguous. Use ${0} if you mean a Makefile variable or $$0 if you mean a shell variable.\n"+
-		"DEBUG: fname:1: Unchecked AWK command: \"{print $0}\"\n"+
-		"DEBUG: fname:2: Unchecked AWK command: \"{print $$0}\"\n")
+		"WARN: fname:1: $0 is ambiguous. Use ${0} if you mean a Makefile variable or $$0 if you mean a shell variable.\n")
 }
 
 func (s *Suite) TestVartypeCheck_BasicRegularExpression(c *check.C) {

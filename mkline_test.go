@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Suite) TestChecklineMkVartype_SimpleType(c *check.C) {
-	s.UseCommandLine(c, "-Wtypes", "-Dunchecked")
+	s.UseCommandLine(c, "-Wtypes")
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 1, "COMMENT=\tA nice package", nil))
 
@@ -498,7 +498,6 @@ func (s *Suite) TestMkLine_CheckRelativePkgdir(c *check.C) {
 
 // PR pkg/46570, item 2
 func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
-	s.UseCommandLine(c, "-Dunchecked")
 	mkline := NewMkLine(NewLine("Makefile", 93, "EGDIRS=${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d", nil))
 
 	mkline.checkVarassign()

@@ -6,7 +6,7 @@ import (
 )
 
 func CheckDirent(fname string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(fname)()
 	}
 

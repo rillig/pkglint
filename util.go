@@ -251,7 +251,7 @@ func match5(s, re string) (matched bool, m1, m2, m3, m4, m5 string) {
 }
 
 func replaceFirst(s, re, replacement string) ([]string, string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(s, re, replacement)()
 	}
 
@@ -280,7 +280,7 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.m = nil
 	pr.s = ""
 	if hasPrefix(pr.rest, prefix) {
-		if G.opts.DebugTrace {
+		if G.opts.Debug {
 			trace("", "PrefixReplacer.AdvanceStr", pr.rest, prefix)
 		}
 		pr.s = prefix
@@ -313,7 +313,7 @@ func (pr *PrefixReplacer) AdvanceRegexp(re string) bool {
 		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
 	}
 	if m := match(pr.rest, re); m != nil {
-		if G.opts.DebugTrace {
+		if G.opts.Debug {
 			trace("", "PrefixReplacer.AdvanceRegexp", pr.rest, re, m[0])
 		}
 		pr.rest = pr.rest[len(m[0]):]
@@ -401,13 +401,20 @@ func argsStr(args ...interface{}) string {
 }
 
 func trace(action, funcname string, args ...interface{}) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
 	}
 }
 
+func traceStep(format string, args ...interface{}) {
+	if G.opts.Debug {
+		msg := fmt.Sprintf(format, args...)
+		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s %s\n", strings.Repeat("| ", G.traceDepth), msg))
+	}
+}
+
 func tracecallInternal(args ...interface{}) func() {
-	if !G.opts.DebugTrace {
+	if !G.opts.Debug {
 		panic("Internal pkglint error: calls to tracecall must only occur in tracing mode")
 	}
 
@@ -467,7 +474,7 @@ func relpath(from, to string) string {
 		panic("relpath" + argsStr(from, to, err1, err2, err3))
 	}
 	result := filepath.ToSlash(rel)
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		trace("", "relpath", from, to, "=>", result)
 	}
 	return result

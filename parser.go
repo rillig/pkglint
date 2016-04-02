@@ -370,7 +370,7 @@ func (p *Parser) mkCondAnd() *Tree {
 }
 
 func (p *Parser) mkCondAtom() *Tree {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(p.Rest())()
 	}
 

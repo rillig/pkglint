@@ -31,7 +31,6 @@ func (s *Suite) TestParselinesSuggestedUpdates(c *check.C) {
 }
 
 func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
-	s.UseCommandLine(c, "-Dtools")
 	s.CreateTmpFile(c, "mk/tools/bsd.tools.mk", ""+
 		".include \"flex.mk\"\n"+
 		".include \"gettext.mk\"\n")
@@ -52,13 +51,22 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 
 	G.globalData.loadTools()
 
+	G.opts.Debug = true
+	G.globalData.Tools.Trace()
+
 	c.Check(s.Output(), equals, ""+
-		"DEBUG: ~/mk/bsd.pkg.mk:1: [condDepth=0] mv\n"+
-		"DEBUG: tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true}\n"+
-		"DEBUG: tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false}\n"+
-		"DEBUG: tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false}\n"+
-		"DEBUG: tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false}\n"+
-		"DEBUG: tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true}\n")
+		"TRACE: + netbsd.org/pkglint.(*ToolRegistry).Trace()\n"+
+		"TRACE: |  tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true}\n"+
+		"TRACE: |  tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false}\n"+
+		"TRACE: |  tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |  tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |  tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |  tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false}\n"+
+		"TRACE: |  tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false}\n"+
+		"TRACE: |  tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true}\n"+
+		"TRACE: |  tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |  tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: - netbsd.org/pkglint.(*ToolRegistry).Trace()\n")
 }
 
 func (s *Suite) TestGlobalData_loadDocChanges(c *check.C) {

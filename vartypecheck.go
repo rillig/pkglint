@@ -108,14 +108,14 @@ var (
 )
 
 func (cv *VartypeCheck) AwkCommand() {
-	if G.opts.DebugUnchecked {
-		cv.line.Debug1("Unchecked AWK command: %q", cv.value)
+	if G.opts.Debug {
+		traceStep("Unchecked AWK command: %q", cv.value)
 	}
 }
 
 func (cv *VartypeCheck) BasicRegularExpression() {
-	if G.opts.DebugUnchecked {
-		cv.line.Debug1("Unchecked basic regular expression: %q", cv.value)
+	if G.opts.Debug {
+		traceStep("Unchecked basic regular expression: %q", cv.value)
 	}
 }
 
@@ -550,8 +550,8 @@ func (cv *VartypeCheck) Option() {
 	line, value, valueNovar := cv.line, cv.value, cv.valueNovar
 
 	if value != valueNovar {
-		if G.opts.DebugUnchecked {
-			line.Debug1("Unchecked option name: %q", value)
+		if G.opts.Debug {
+			traceStep("Unchecked option name: %q", value)
 		}
 		return
 	}

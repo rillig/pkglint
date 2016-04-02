@@ -22,7 +22,7 @@ func findPkgsrcTopdir(fname string) string {
 }
 
 func resolveVariableRefs(text string) string {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(text)()
 	}
 
@@ -65,14 +65,14 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}
-	if G.opts.DebugMisc {
-		mkline.Debug2("Expanded %q to %q", varname, value)
+	if G.opts.Debug {
+		traceStep("Expanded %q to %q", varname, value)
 	}
 	return value
 }
 
 func CheckfileExtra(fname string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(fname)()
 	}
 
@@ -82,7 +82,7 @@ func CheckfileExtra(fname string) {
 }
 
 func ChecklinesDescr(lines []*Line) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(lines[0].Fname)()
 	}
 
@@ -110,7 +110,7 @@ func ChecklinesDescr(lines []*Line) {
 }
 
 func ChecklinesMessage(lines []*Line) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(lines[0].Fname)()
 	}
 
@@ -148,7 +148,7 @@ func ChecklinesMessage(lines []*Line) {
 }
 
 func CheckfileMk(fname string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(fname)()
 	}
 
@@ -162,7 +162,7 @@ func CheckfileMk(fname string) {
 }
 
 func Checkfile(fname string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(fname)()
 	}
 
@@ -255,8 +255,8 @@ func Checkfile(fname string) {
 		}
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
-		if G.opts.DebugUnchecked {
-			NewLineWhole(fname).Debug1("Unchecked file %q.", fname)
+		if G.opts.Debug {
+			traceStep("Unchecked file %q.", fname)
 		}
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
@@ -414,8 +414,8 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 		}
 	}
 
-	if G.opts.DebugMisc {
-		dummyLine.Debug2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	if G.opts.Debug {
+		traceStep("resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	}
 	return tmp
 }

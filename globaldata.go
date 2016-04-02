@@ -86,8 +86,8 @@ func (gd *GlobalData) loadDistSites() {
 	names["MASTER_SITE_SUSE_UPD"] = true
 	names["MASTER_SITE_LOCAL"] = true
 
-	if G.opts.DebugMisc {
-		NewLineWhole(fname).Debugf("Loaded %d MASTER_SITE_* URLs.", len(url2name))
+	if G.opts.Debug {
+		traceStep("Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	}
 	gd.MasterSiteUrls = url2name
 	gd.MasterSiteVars = names
@@ -162,8 +162,8 @@ func (gd *GlobalData) loadTools() {
 
 			if m, varname, _, _, value, _ := MatchVarassign(text); m {
 				if varname == "USE_TOOLS" {
-					if G.opts.DebugTools {
-						line.Debugf("[condDepth=%d] %s", condDepth, value)
+					if G.opts.Debug {
+						traceStep("[condDepth=%d] %s", condDepth, value)
 					}
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
@@ -191,11 +191,11 @@ func (gd *GlobalData) loadTools() {
 		}
 	}
 
-	if G.opts.DebugTools {
-		reg.Log()
+	if G.opts.Debug {
+		reg.Trace()
 	}
-	if G.opts.DebugMisc {
-		dummyLine.Debugf("systemBuildDefs: %v", systemBuildDefs)
+	if G.opts.Debug {
+		traceStep("systemBuildDefs: %v", systemBuildDefs)
 	}
 
 	// Some user-defined variables do not influence the binary
@@ -555,7 +555,11 @@ func (tr *ToolRegistry) RegisterRequireVar(toolname, varname string) {
 	tool.MustUseVarForm = true
 }
 
-func (tr *ToolRegistry) Log() {
+func (tr *ToolRegistry) Trace() {
+	if G.opts.Debug {
+		defer tracecall0()()
+	}
+
 	var keys []string
 	for k := range tr.byName {
 		keys = append(keys, k)
@@ -563,6 +567,6 @@ func (tr *ToolRegistry) Log() {
 	sort.Strings(keys)
 
 	for _, toolname := range keys {
-		dummyLine.Debugf("tool %+v", tr.byName[toolname])
+		traceStep("tool %+v", tr.byName[toolname])
 	}
 }

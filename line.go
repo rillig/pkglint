@@ -152,14 +152,6 @@ func (line *Line) Note0(format string)             { line.Notef(format) }
 func (line *Line) Note1(format, arg1 string)       { line.Notef(format, arg1) }
 func (line *Line) Note2(format, arg1, arg2 string) { line.Notef(format, arg1, arg2) }
 
-func (line *Line) Debugf(format string, args ...interface{}) {
-	line.printSource(G.logOut)
-	Debugs(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
-	line.logAutofix()
-}
-func (line *Line) Debug1(format, arg1 string)       { line.Debugf(format, arg1) }
-func (line *Line) Debug2(format, arg1, arg2 string) { line.Debugf(format, arg1, arg2) }
-
 func (line *Line) String() string {
 	return line.Fname + ":" + line.linenos() + ": " + line.Text
 }
@@ -239,7 +231,7 @@ func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFi
 }
 
 func (line *Line) CheckAbsolutePathname(text string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(text)()
 	}
 
@@ -290,7 +282,7 @@ func (line *Line) CheckTrailingWhitespace() {
 }
 
 func (line *Line) CheckRcsid(prefixRe, suggestedPrefix string) bool {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall2(prefixRe, suggestedPrefix)()
 	}
 

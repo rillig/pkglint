@@ -9,7 +9,7 @@ import (
 )
 
 func ChecklinesDistinfo(lines []*Line) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(lines[0].Fname)()
 	}
 
@@ -20,8 +20,8 @@ func ChecklinesDistinfo(lines []*Line) {
 	} else if G.Pkg != nil && dirExists(G.CurrentDir+"/"+G.Pkg.Patchdir) {
 		patchesDir = G.Pkg.Patchdir
 	}
-	if G.opts.DebugMisc {
-		NewLineWhole(fname).Debug1("patchesDir=%q", patchesDir)
+	if G.opts.Debug {
+		traceStep("patchesDir=%q", patchesDir)
 	}
 
 	ck := &distinfoLinesChecker{
@@ -124,8 +124,8 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFname, distinfoS
 func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	files, err := ioutil.ReadDir(G.CurrentDir + "/" + ck.patchdir)
 	if err != nil {
-		if G.opts.DebugUnchecked {
-			NewLineWhole(ck.distinfoFilename).Debugf("Cannot read patchesDir %q: %s", ck.patchdir, err)
+		if G.opts.Debug {
+			traceStep("Cannot read patchesDir %q: %s", ck.patchdir, err)
 		}
 		return
 	}

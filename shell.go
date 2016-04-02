@@ -142,7 +142,7 @@ var shellcommandsContextType = &Vartype{lkNone, CheckvarShellCommands, []AclEntr
 var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
 func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(token, checkQuoting)()
 	}
 
@@ -170,8 +170,8 @@ func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
 	state := swstPlain
 outer:
 	for !parser.EOF() {
-		if G.opts.DebugShell {
-			line.Debugf("shell state %s: %q", state, parser.Rest())
+		if G.opts.Debug {
+			traceStep("shell state %s: %q", state, parser.Rest())
 		}
 
 		switch {
@@ -383,7 +383,7 @@ type ShelltextContext struct {
 }
 
 func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(shelltext)()
 	}
 
@@ -436,8 +436,8 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 	tokens, rest := splitIntoShellTokens(shline.line, shellcmd)
 	prevToken := ""
 	for _, token := range tokens {
-		if G.opts.DebugShell {
-			shline.line.Debugf("checkShellCommand state=%v token=%q", state, token)
+		if G.opts.Debug {
+			traceStep("checkShellCommand state=%v token=%q", state, token)
 		}
 
 		{
@@ -484,7 +484,7 @@ func (shline *ShellLine) CheckShellCommands(shellcmds string) {
 }
 
 func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall(hiddenAndSuppress, rest)()
 	}
 
@@ -532,7 +532,7 @@ func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) 
 }
 
 func (ctx *ShelltextContext) checkCommandStart() {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall2(ctx.state.String(), ctx.shellword)()
 	}
 
@@ -563,7 +563,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 }
 
 func (ctx *ShelltextContext) handleTool() bool {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(ctx.shellword)()
 	}
 
@@ -599,7 +599,7 @@ func (ctx *ShelltextContext) handleForbiddenCommand() bool {
 }
 
 func (ctx *ShelltextContext) handleCommandVariable() bool {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(ctx.shellword)()
 	}
 
@@ -629,7 +629,7 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 }
 
 func (ctx *ShelltextContext) handleComment() bool {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(ctx.shellword)()
 	}
 
@@ -921,8 +921,8 @@ func (shline *ShellLine) nextState(state scState, shellword string) scState {
 	case state == scstEcho:
 		return scstCont
 	default:
-		if G.opts.DebugShell {
-			shline.line.Errorf("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
+		if G.opts.Debug {
+			traceStep("Internal pkglint error: shellword.nextState state=%s shellword=%q", state, shellword)
 		}
 		return scstStart
 	}

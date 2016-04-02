@@ -5,7 +5,7 @@ import (
 )
 
 func ChecklinesBuildlink3Mk(mklines *MkLines) {
-	if G.opts.DebugTrace {
+	if G.opts.Debug {
 		defer tracecall1(mklines.lines[0].Fname)()
 	}
 
@@ -174,8 +174,8 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 			}
 
 		} else {
-			if G.opts.DebugUnchecked {
-				exp.CurrentLine().Debugf("Unchecked line in third paragraph.")
+			if G.opts.Debug {
+				traceStep("Unchecked line %s in third paragraph.", exp.CurrentLine().linenos())
 			}
 			exp.Advance()
 		}
