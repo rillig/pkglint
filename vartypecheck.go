@@ -63,7 +63,7 @@ const (
 	// Hardware architectures having the same name in bsd.own.mk and the GNU world.
 	// These are best-effort guesses, since they depend on the operating system.
 	reArch = "" +
-		"alpha|amd64|arc|arm|cobalt|convex|dreamcast|i386|" +
+		"aarch64|alpha|amd64|arc|arm|cobalt|convex|dreamcast|i386|" +
 		"hpcmips|hpcsh|hppa|hppa64|ia64|" +
 		"m68k|m88k|mips|mips64|mips64el|mipseb|mipsel|mipsn32|mlrisc|" +
 		"ns32k|pc532|pmax|powerpc|powerpc64|rs6000|s390|sparc|sparc64|vax|x86_64"
