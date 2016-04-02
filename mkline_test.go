@@ -571,21 +571,19 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
-	s.UseCommandLine(c, "-Wall", "-Dtools")
+	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
-	s.RegisterTool(&Tool{Name: "find", Varname: "FIND"})
-	s.RegisterTool(&Tool{Name: "sort", Varname: "SORT"})
+	s.RegisterTool(&Tool{Name: "find", Varname: "FIND", Predefined: true})
+	s.RegisterTool(&Tool{Name: "sort", Varname: "SORT", Predefined: true})
 	G.Pkg = NewPackage("category/pkgbase")
 	G.Mk = s.NewMkLines("Makefile",
 		"# $"+"NetBSD$",
-		"",
-		"USE_TOOLS+=\tfind sort",
 		"GENERATE_PLIST= cd ${DESTDIR}${PREFIX}; ${FIND} * \\( -type f -or -type l \\) | ${SORT};")
 
 	G.Mk.determineDefinedVariables()
-	G.Mk.mklines[3].Check()
+	G.Mk.mklines[1].Check()
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: Makefile:4: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
-		"WARN: Makefile:4: Please use ${SORT:Q} instead of ${SORT}.\n") // FIXME: The :Q must not be here.
+		"WARN: Makefile:2: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
+		"WARN: Makefile:2: Please use ${SORT:Q} instead of ${SORT}.\n") // FIXME: The :Q must not be here.
 }
