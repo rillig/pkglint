@@ -55,6 +55,9 @@ func (pkg *Package) defineVar(mkline *MkLine, varname string) {
 }
 
 func (pkg *Package) varValue(varname string) (string, bool) {
+	if varname == "KRB5_TYPE" {
+		return "heimdal", true
+	}
 	if mkline := pkg.vardef[varname]; mkline != nil {
 		return mkline.Value(), true
 	}
