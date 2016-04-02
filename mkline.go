@@ -708,6 +708,10 @@ func (mkline *MkLine) checkVarassign() {
 }
 
 func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
+	if G.opts.DebugTrace {
+		defer tracecall(varname, op)()
+	}
+
 	time := vucTimeRun
 	if op == opAssignEval || op == opAssignShell {
 		time = vucTimeParse
