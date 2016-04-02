@@ -587,3 +587,15 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
 		"WARN: Makefile:2: The exitcode of the left-hand-side command of the pipe operator is ignored.\n"+
 		"WARN: Makefile:2: Please use ${SORT:Q} instead of ${SORT}.\n") // FIXME: The :Q must not be here.
 }
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_7(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"EGDIR=\t${EGDIR}/${MACHINE_GNU_PLATFORM}")
+
+	G.Mk.mklines[1].Check()
+
+	c.Check(s.Output(), equals, "")
+}

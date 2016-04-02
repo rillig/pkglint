@@ -1229,6 +1229,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		CheckvarFilename,
 		CheckvarIdentifier,
 		CheckvarInteger,
+		CheckvarMachineGnuPlatform,
+		CheckvarMachinePlatform,
 		CheckvarOption,
 		CheckvarPathname,
 		CheckvarPerl5Packlist,
