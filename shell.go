@@ -549,6 +549,7 @@ func (ctx *ShelltextContext) checkCommandStart() {
 	case matches(shellword, `^(?:\(|\)|:|;|;;|&&|\|\||\{|\}|break|case|cd|continue|do|done|elif|else|esac|eval|exec|exit|export|fi|for|if|read|set|shift|then|umask|unset|while)$`):
 	case matches(shellword, `^[\w_]+=.*$`): // Variable assignment
 	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
+	case hasPrefix(shellword, "${PKGSRCDIR"): // With or without the :Q modifier
 	case ctx.handleComment():
 	default:
 		if G.opts.WarnExtra {
