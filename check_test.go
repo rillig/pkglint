@@ -93,6 +93,7 @@ func (s *Suite) RegisterTool(toolname, varname string, varRequired bool) {
 		G.globalData.Vartools = make(map[string]string)
 		G.globalData.toolsVarRequired = make(map[string]bool)
 		G.globalData.PredefinedTools = make(map[string]bool)
+		G.globalData.VarnameToToolname = make(map[string]string)
 	}
 	G.globalData.Tools[toolname] = true
 	G.globalData.Vartools[toolname] = varname
@@ -100,6 +101,7 @@ func (s *Suite) RegisterTool(toolname, varname string, varRequired bool) {
 		G.globalData.toolsVarRequired[toolname] = true
 	}
 	G.globalData.PredefinedTools[toolname] = true
+	G.globalData.VarnameToToolname[varname] = toolname
 }
 
 func (s *Suite) CreateTmpFile(c *check.C, relFname, content string) (absFname string) {
