@@ -87,21 +87,19 @@ func (s *Suite) UseCommandLine(c *check.C, args ...string) {
 	}
 }
 
-func (s *Suite) RegisterTool(toolname, varname string, varRequired bool) {
-	if G.globalData.Tools == nil {
-		G.globalData.Tools = make(map[string]bool)
-		G.globalData.Vartools = make(map[string]string)
-		G.globalData.toolsVarRequired = make(map[string]bool)
-		G.globalData.PredefinedTools = make(map[string]bool)
-		G.globalData.VarnameToToolname = make(map[string]string)
+func (s *Suite) RegisterTool(tool *Tool) {
+	reg := G.globalData.Tools
+
+	if len(reg.byName) == 0 && len(reg.byVarname) == 0 {
+		reg = NewToolRegistry()
+		G.globalData.Tools = reg
 	}
-	G.globalData.Tools[toolname] = true
-	G.globalData.Vartools[toolname] = varname
-	if varRequired {
-		G.globalData.toolsVarRequired[toolname] = true
+	if tool.Name != "" {
+		reg.byName[tool.Name] = tool
 	}
-	G.globalData.PredefinedTools[toolname] = true
-	G.globalData.VarnameToToolname[varname] = toolname
+	if tool.Varname != "" {
+		reg.byVarname[tool.Varname] = tool
+	}
 }
 
 func (s *Suite) CreateTmpFile(c *check.C, relFname, content string) (absFname string) {

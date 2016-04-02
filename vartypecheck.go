@@ -768,7 +768,7 @@ func (cv *VartypeCheck) Tool() {
 		// no warning for package-defined tool definitions
 
 	} else if m, toolname, tooldep := match2(cv.value, `^([-\w]+|\[)(?::(\w+))?$`); m {
-		if !G.globalData.Tools[toolname] {
+		if G.globalData.Tools.byName[toolname] == nil {
 			cv.line.Error1("Unknown tool %q.", toolname)
 		}
 		switch tooldep {

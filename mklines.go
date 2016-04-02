@@ -23,8 +23,10 @@ func NewMkLines(lines []*Line) *MkLines {
 		mklines[i] = NewMkLine(line)
 	}
 	tools := make(map[string]bool)
-	for tool := range G.globalData.PredefinedTools {
-		tools[tool] = true
+	for toolname, tool := range G.globalData.Tools.byName {
+		if tool.Predefined {
+			tools[toolname] = true
+		}
 	}
 
 	return &MkLines{

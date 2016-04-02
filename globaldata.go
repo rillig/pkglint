@@ -13,13 +13,8 @@ type GlobalData struct {
 	MasterSiteUrls      map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
 	MasterSiteVars      map[string]bool     // "MASTER_SITE_GITHUB" => true
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
-	Tools               map[string]bool     // Known tool names, e.g. "sed" and "gm4".
-	Vartools            map[string]string   // Maps tool names to their respective variable, e.g. "sed" => "SED", "gzip" => "GZIP_CMD".
-	PredefinedTools     map[string]bool     // Tools that a package does not need to add to USE_TOOLS explicitly because they are used by the pkgsrc infrastructure, too.
-	VarnameToToolname   map[string]string   // Maps the tool variable names to the tool name they use, e.g. "GZIP_CMD" => "gzip" and "SED" => "sed".
+	Tools               ToolRegistry        //
 	SystemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
-	toolvarsVarRequired map[string]bool     // Tool variable names that may not be converted to their "direct" form, that is: ${CP} may not be written as cp.
-	toolsVarRequired    map[string]bool     // Tools that need to be written in variable form, e.g. "echo"; see Vartools.
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	LastChange          map[string]*Change  //
@@ -129,10 +124,7 @@ func (gd *GlobalData) loadTools() {
 		Fatalf(toolFiles[0], noLines, "Too few tool files.")
 	}
 
-	tools := make(map[string]bool)
-	vartools := make(map[string]string)
-	predefinedTools := make(map[string]bool)
-	varnameToToolname := make(map[string]string)
+	reg := NewToolRegistry()
 	systemBuildDefs := make(map[string]bool)
 
 	for _, basename := range toolFiles {
@@ -141,19 +133,18 @@ func (gd *GlobalData) loadTools() {
 		for _, line := range lines {
 			if m, varname, _, _, value, _ := MatchVarassign(line.Text); m {
 				if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^?[-\w.]+$`)) {
-					tools[value] = true
+					reg.Register(value)
+
 				} else if m, toolname := match1(varname, `^_TOOLS_VARNAME\.([-\w.]+|\[)$`); m {
-					tools[toolname] = true
-					vartools[toolname] = value
-					varnameToToolname[value] = toolname
+					reg.RegisterVarname(toolname, value)
 
 				} else if m, toolname := match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
-					tools[toolname] = true
+					reg.Register(toolname)
 
 				} else if m, toolname := match1(varname, `_TOOLS\.(.*)`); m {
-					tools[toolname] = true
+					reg.Register(toolname)
 					for _, tool := range splitOnSpace(value) {
-						tools[tool] = true
+						reg.Register(tool)
 					}
 				}
 			}
@@ -176,9 +167,9 @@ func (gd *GlobalData) loadTools() {
 					}
 					if condDepth == 0 {
 						for _, tool := range splitOnSpace(value) {
-							if !containsVarRef(tool) && tools[tool] {
-								predefinedTools[tool] = true
-								predefinedTools["TOOLS_"+tool] = true
+							if !containsVarRef(tool) {
+								reg.Register(tool).Predefined = true
+								reg.Register("TOOLS_" + tool).Predefined = true
 							}
 						}
 					}
@@ -201,10 +192,7 @@ func (gd *GlobalData) loadTools() {
 	}
 
 	if G.opts.DebugTools {
-		dummyLine.Debugf("tools: %v", stringBoolMapKeys(tools))
-		dummyLine.Debugf("vartools: %v", stringStringMapKeys(vartools))
-		dummyLine.Debugf("predefinedTools: %v", stringBoolMapKeys(predefinedTools))
-		dummyLine.Debugf("varnameToToolname: %v", stringStringMapKeys(varnameToToolname))
+		reg.Log()
 	}
 	if G.opts.DebugMisc {
 		dummyLine.Debugf("systemBuildDefs: %v", systemBuildDefs)
@@ -224,24 +212,15 @@ func (gd *GlobalData) loadTools() {
 	systemBuildDefs["GAMEOWN"] = true
 	systemBuildDefs["GAMEGRP"] = true
 
-	gd.Tools = tools
-	gd.Vartools = vartools
-	gd.PredefinedTools = predefinedTools
-	gd.VarnameToToolname = varnameToToolname
+	reg.RegisterRequireVar("echo", "ECHO")
+	reg.RegisterRequireVar("echo -n", "ECHO_N")
+	reg.RegisterRequireVar("false", "FALSE")
+	reg.RegisterRequireVar("test", "TEST")
+	reg.RegisterRequireVar("true", "TRUE")
+	reg.byName["echo -n"].Predefined = reg.byName["echo"].Predefined
+
+	gd.Tools = reg
 	gd.SystemBuildDefs = systemBuildDefs
-	gd.toolvarsVarRequired = map[string]bool{
-		"ECHO":   true,
-		"ECHO_N": true,
-		"FALSE":  true,
-		"TEST":   true,
-		"TRUE":   true,
-	}
-	gd.toolsVarRequired = map[string]bool{
-		"echo":  true,
-		"false": true,
-		"test":  true,
-		"true":  true,
-	}
 }
 
 func loadSuggestedUpdates(fname string) []SuggestedUpdate {
@@ -535,5 +514,55 @@ func (gd *GlobalData) loadDeprecatedVars() {
 
 		// January 2016
 		"SUBST_POSTCMD.*": "Has been removed, as it seemed unused.",
+	}
+}
+
+// See `mk/tools/`.
+type Tool struct {
+	Name           string // e.g. "sed", "gzip"
+	Varname        string // e.g. "SED", "GZIP_CMD"
+	MustUseVarForm bool   // True for echo, because of many differing implementations.
+	Predefined     bool   // This tool is used by the pkgsrc infrastructure, therefore the package does not need to add it to USE_TOOLS explicitly.
+}
+
+type ToolRegistry struct {
+	byName    map[string]*Tool
+	byVarname map[string]*Tool
+}
+
+func NewToolRegistry() ToolRegistry {
+	return ToolRegistry{make(map[string]*Tool), make(map[string]*Tool)}
+}
+
+func (tr *ToolRegistry) Register(toolname string) *Tool {
+	tool := tr.byName[toolname]
+	if tool == nil {
+		tool = &Tool{Name: toolname}
+		tr.byName[toolname] = tool
+	}
+	return tool
+}
+
+func (tr *ToolRegistry) RegisterVarname(toolname, varname string) *Tool {
+	tool := tr.Register(toolname)
+	tool.Varname = varname
+	tr.byVarname[varname] = tool
+	return tool
+}
+
+func (tr *ToolRegistry) RegisterRequireVar(toolname, varname string) {
+	tool := tr.RegisterVarname(toolname, varname)
+	tool.MustUseVarForm = true
+}
+
+func (tr *ToolRegistry) Log() {
+	var keys []string
+	for k := range tr.byName {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, toolname := range keys {
+		dummyLine.Debugf("tool %+v", tr.byName[toolname])
 	}
 }

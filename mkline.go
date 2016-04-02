@@ -1278,7 +1278,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 
 	// Assuming the tool definitions don't include very special characters,
 	// so they can safely be used inside any quotes.
-	if G.globalData.VarnameToToolname[varname] != "" {
+	if G.globalData.Tools.byVarname[varname] != nil {
 		switch vuc.quoting {
 		case vucQuotPlain:
 			if vuc.extent != vucExtentWordpart {
@@ -1334,11 +1334,11 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 		return vartype
 	}
 
-	if G.globalData.VarnameToToolname[varname] != "" {
+	if G.globalData.Tools.byVarname[varname] != nil {
 		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpUse}}, false}
 	}
 
-	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.VarnameToToolname[toolvarname] != "" {
+	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.Tools.byVarname[toolvarname] != nil {
 		return &Vartype{lkNone, CheckvarPathname, []AclEntry{{"*", aclpUse}}, false}
 	}
 

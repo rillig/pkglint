@@ -573,8 +573,8 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
 func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
 	s.UseCommandLine(c, "-Wall", "-Dtools")
 	G.globalData.InitVartypes()
-	s.RegisterTool("find", "FIND", false)
-	s.RegisterTool("sort", "SORT", false)
+	s.RegisterTool(&Tool{Name: "find", Varname: "FIND"})
+	s.RegisterTool(&Tool{Name: "sort", Varname: "SORT"})
 	G.Pkg = NewPackage("category/pkgbase")
 	G.Mk = s.NewMkLines("Makefile",
 		"# $"+"NetBSD$",

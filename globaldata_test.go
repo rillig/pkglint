@@ -44,7 +44,8 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 	s.CreateTmpFile(c, "mk/tools/gettext.mk", ""+
 		"USE_TOOLS+=msgfmt\n"+
 		"TOOLS_CREATE+=msgfmt\n")
-	s.CreateTmpFile(c, "mk/bsd.pkg.mk", "# empty\n")
+	s.CreateTmpFile(c, "mk/bsd.pkg.mk",
+		"USE_TOOLS+=\tmv\n")
 	G.globalData.Pkgsrcdir = s.tmpdir
 	G.CurrentDir = s.tmpdir
 	G.CurPkgsrcdir = "."
@@ -52,10 +53,12 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 	G.globalData.loadTools()
 
 	c.Check(s.Output(), equals, ""+
-		"DEBUG: tools: [chown gawk msgfmt mv]\n"+
-		"DEBUG: vartools: [chown gawk mv]\n"+
-		"DEBUG: predefinedTools: []\n"+
-		"DEBUG: varnameToToolname: [AWK CHOWN MV]\n")
+		"DEBUG: ~/mk/bsd.pkg.mk:1: [condDepth=0] mv\n"+
+		"DEBUG: tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true}\n"+
+		"DEBUG: tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false}\n"+
+		"DEBUG: tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false}\n"+
+		"DEBUG: tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false}\n"+
+		"DEBUG: tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true}\n")
 }
 
 func (s *Suite) TestGlobalData_loadDocChanges(c *check.C) {

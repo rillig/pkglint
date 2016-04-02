@@ -54,8 +54,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"WARN: fname:1: Unquoted shell variable \"uname\".\n"+
 		"WARN: fname:1: Unknown shell command \"echo\".\n")
 
-	G.globalData.Tools = map[string]bool{"echo": true}
-	G.globalData.PredefinedTools = map[string]bool{"echo": true}
+	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
 	G.globalData.InitVartypes()
@@ -147,7 +146,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 func (s *Suite) TestShellLine_CheckShelltext_nofix(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
-	s.RegisterTool("echo", "ECHO", false)
+	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
 	G.Mk = s.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
@@ -164,7 +163,7 @@ func (s *Suite) TestShellLine_CheckShelltext_nofix(c *check.C) {
 func (s *Suite) TestShellLine_CheckShelltext_showAutofix(c *check.C) {
 	s.UseCommandLine(c, "-Wall", "--show-autofix")
 	G.globalData.InitVartypes()
-	s.RegisterTool("echo", "ECHO", false)
+	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
 	G.Mk = s.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
@@ -179,7 +178,7 @@ func (s *Suite) TestShellLine_CheckShelltext_showAutofix(c *check.C) {
 func (s *Suite) TestShellLine_CheckShelltext_autofix(c *check.C) {
 	s.UseCommandLine(c, "-Wall", "--autofix")
 	G.globalData.InitVartypes()
-	s.RegisterTool("echo", "ECHO", false)
+	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
 	G.Mk = s.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
@@ -215,7 +214,7 @@ func (s *Suite) TestShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
 	shline := NewShellLine(G.Mk.mklines[0])
-	s.RegisterTool("pax", "PAX", false)
+	s.RegisterTool(&Tool{Name: "pax", Varname: "PAX"})
 	G.Mk.tools["pax"] = true
 
 	shline.CheckShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
@@ -273,7 +272,7 @@ func (s *Suite) TestShellLine_CheckToken_DollarWithoutVariable(c *check.C) {
 
 func (s *Suite) TestShelltextContext_CheckCommandStart(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
-	s.RegisterTool("echo", "ECHO", true)
+	s.RegisterTool(&Tool{Name: "echo", Varname: "ECHO", MustUseVarForm: true, Predefined: true})
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
 	mkline := NewMkLine(NewLine("fname", 3, "# dummy", nil))

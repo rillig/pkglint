@@ -567,7 +567,8 @@ func (ctx *ShelltextContext) handleTool() bool {
 	}
 
 	shellword := ctx.shellword
-	if !G.globalData.Tools[shellword] {
+	tool := G.globalData.Tools.byName[shellword]
+	if tool == nil {
 		return false
 	}
 
@@ -575,8 +576,8 @@ func (ctx *ShelltextContext) handleTool() bool {
 		ctx.shline.line.Warn1("The %q tool is used but not added to USE_TOOLS.", shellword)
 	}
 
-	if G.globalData.toolsVarRequired[shellword] {
-		ctx.shline.line.Warn2("Please use \"${%s}\" instead of %q.", G.globalData.Vartools[shellword], shellword)
+	if tool.MustUseVarForm {
+		ctx.shline.line.Warn2("Please use \"${%s}\" instead of %q.", tool.Varname, shellword)
 	}
 
 	ctx.shline.checkCommandUse(shellword)
@@ -604,9 +605,9 @@ func (ctx *ShelltextContext) handleCommandVariable() bool {
 	shellword := ctx.shellword
 	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
 
-		if toolname := G.globalData.VarnameToToolname[varname]; toolname != "" {
-			if !G.Mk.tools[toolname] {
-				ctx.shline.line.Warn1("The %q tool is used but not added to USE_TOOLS.", toolname)
+		if tool := G.globalData.Tools.byVarname[varname]; tool != nil {
+			if !G.Mk.tools[tool.Name] {
+				ctx.shline.line.Warn1("The %q tool is used but not added to USE_TOOLS.", tool.Name)
 			}
 			ctx.shline.checkCommandUse(shellword)
 			return true
