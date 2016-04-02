@@ -142,7 +142,7 @@ func (gd *GlobalData) loadTools() {
 			if m, varname, _, _, value, _ := MatchVarassign(line.Text); m {
 				if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^?[-\w.]+$`)) {
 					tools[value] = true
-				} else if m, toolname := match1(varname, `^(?:_TOOLS_VARNAME)\.([-\w.]+|\[)$`); m {
+				} else if m, toolname := match1(varname, `^_TOOLS_VARNAME\.([-\w.]+|\[)$`); m {
 					tools[toolname] = true
 					vartools[toolname] = value
 					varnameToToolname[value] = toolname
