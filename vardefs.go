@@ -486,7 +486,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("PATCH_DIST_ARGS", lkShell, CheckvarShellWord, "Makefile: set, append")
 	acl("PATCH_DIST_CAT", lkNone, CheckvarShellCommand, "")
 	acl("PATCH_DIST_STRIP*", lkNone, CheckvarShellWord, "Makefile, Makefile.common: set; buildlink3.mk:; builtin.mk:; *.mk: set")
-	acl("PATCH_SITES", lkShell, CheckvarURL, "Makefile: set; options.mk: set; Makefile.common: set")
+	acl("PATCH_SITES", lkShell, CheckvarFetchURL, "Makefile: set; options.mk: set; Makefile.common: set")
 	acl("PATCH_STRIP", lkNone, CheckvarShellWord, "")
 	pkg("PERL5_USE_PACKLIST", lkNone, CheckvarYesNo)
 	acl("PERL5_PACKLIST", lkShell, CheckvarPerl5Packlist, "Makefile: set; options.mk: set, append")
