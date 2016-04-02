@@ -564,8 +564,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
 
 	mkline.checkVarassign()
 
-	c.Check(s.Output(), equals, ""+
-		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
+	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
@@ -644,4 +643,18 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_10(c *check.C) {
 	G.Mk.mklines[2].Check()
 
 	c.Check(s.Output(), equals, "WARN: xpi.mk:2: Invoking subshells via $(...) is not portable enough.\n") // Don’t suggest to use ${AWK:Q}.
+}
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_11(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("x11/mlterm/Makefile",
+		"# $"+"NetBSD$",
+		"SUBST_SED.link=-e 's|(LIBTOOL_LINK).*(LIBS)|& ${LDFLAGS:M*:Q}|g'",
+		"SUBST_SED.link=-e 's|(LIBTOOL_LINK).*(LIBS)|& '${LDFLAGS:M*:Q}'|g'")
+
+	G.Mk.mklines[1].Check()
+	G.Mk.mklines[2].Check()
+
+	c.Check(s.Output(), equals, "WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} out of any quoting characters.\n")
 }

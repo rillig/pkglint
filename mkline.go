@@ -602,6 +602,9 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 			}
 			Explain1(
 				"See the pkgsrc guide, section \"quoting guideline\", for details.")
+
+		} else if vuc.quoting != vucQuotPlain {
+			mkline.Line.Warnf("Please move ${%s%s} out of any quoting characters.", varname, mod)
 		}
 	}
 
@@ -731,7 +734,7 @@ func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 	}
 
 	words := mkline.mkwords
-	if vartype != nil && (vartype.checker == CheckvarShellCommands || vartype.checker == CheckvarShellCommand) {
+	if vartype != nil && vartype.IsShell() {
 		words, _ = splitIntoShellTokens(mkline.Line, mkline.Value())
 	}
 
@@ -965,13 +968,6 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		for _, word := range words {
 			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 		}
-
-		if false { // See mkline_test.go:/:Q/
-			shline := NewShellLine(mkline)
-			for _, word := range words {
-				shline.CheckToken(word, true)
-			}
-		}
 	}
 }
 
@@ -979,7 +975,7 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op MkOperator, value, comment string, isList bool, guessed bool) {
 	if G.opts.Debug {
-		defer tracecall(varname, op, value, comment, isList, guessed)()
+		defer tracecall(varname, checker.name, op, value, comment, isList, guessed)()
 	}
 
 	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, "", comment, isList, guessed}
@@ -1331,7 +1327,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	// Assigning lists to lists does not require any quoting, though
 	// there may be cases like "CONFIGURE_ARGS+= -libs ${LDFLAGS:Q}"
 	// where quoting is necessary.
-	if wantList && haveList {
+	if wantList && haveList && vuc.extent != vucExtentWordpart {
 		return nqDoesntMatter
 	}
 

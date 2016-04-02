@@ -770,7 +770,6 @@ func (cv *VartypeCheck) SedCommand() {
 func (cv *VartypeCheck) SedCommands() {
 	line := cv.line
 	mkline := cv.mkline
-	shline := NewShellLine(mkline)
 
 	tokens, rest := splitIntoShellTokens(line, cv.value)
 	if rest != "" {
@@ -790,7 +789,6 @@ func (cv *VartypeCheck) SedCommands() {
 
 	for i := 0; i < ntokens; i++ {
 		token := tokens[i]
-		shline.CheckToken(token, true)
 
 		switch {
 		case token == "-e":
@@ -809,8 +807,6 @@ func (cv *VartypeCheck) SedCommands() {
 						"",
 						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-				shline.CheckToken(tokens[i-1], true)
-				shline.CheckToken(tokens[i], true)
 				mkline.CheckVartypePrimitive(cv.varname, CheckvarSedCommand, cv.op, tokens[i], cv.comment, cv.listContext, cv.guessed)
 			} else {
 				line.Error0("The -e option to sed requires an argument.")

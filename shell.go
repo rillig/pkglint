@@ -286,6 +286,10 @@ outer:
 }
 
 func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) bool {
+	if G.opts.Debug {
+		defer tracecall(parser.Rest(), state)()
+	}
+
 	varuse := parser.VarUse()
 	if varuse == nil {
 		return false

@@ -87,13 +87,15 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 
 	shline.CheckShellCommandLine("echo '${COMMENT:Q}'") // vucQuotSquot
 
-	c.Check(s.Output(), equals, "WARN: fname:1: COMMENT may not be used in this file.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: COMMENT may not be used in this file.\n"+
+		"WARN: fname:1: Please move ${COMMENT:Q} out of any quoting characters.\n")
 
 	shline.CheckShellCommandLine("echo $$@")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: The $@ shell variable should only be used in double quotes.\n")
 
-	shline.CheckShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo $
+	shline.CheckShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo "$"
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Unescaped $ or strange shell variable found.\n")
 
