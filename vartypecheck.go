@@ -404,10 +404,23 @@ func (cv *VartypeCheck) FileMode() {
 func (cv *VartypeCheck) Homepage() {
 	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
-	if m, site, subdir := match2(cv.value, `^\$\{(MASTER_SITE_\w+)(?::=([\w\-/]+))?\}$`); m {
-		fixedUrl := G.globalData.MasterSiteVarToUrl[site] + subdir
-		if !cv.line.AutofixReplace(cv.value, fixedUrl) {
-			cv.line.Warn1("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedUrl)
+	if m, sitename, subdir := match2(cv.value, `^\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\}$`); m {
+		baseUrl := G.globalData.MasterSiteVarToUrl[sitename]
+		if sitename == "MASTER_SITES" && G.Pkg != nil {
+			baseUrl, _ = G.Pkg.varValue("MASTER_SITES")
+		}
+		fixedUrl := baseUrl + subdir
+		explain := false
+		if baseUrl != "" {
+			if !cv.line.AutofixReplace(cv.value, fixedUrl) {
+				cv.line.Warn1("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedUrl)
+				explain = true
+			}
+		} else {
+			cv.line.Warn0("HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+			explain = true
+		}
+		if explain {
 			Explain(
 				"The HOMEPAGE is a single URL, while MASTER_SITES is a list of URLs.",
 				"As long as this list has exactly one element, this works, but as",
