@@ -118,10 +118,11 @@ const (
 	swstDquot
 	swstDquotBackt
 	swstBackt
+	swstUnknown
 )
 
 func (st ShellwordState) String() string {
-	return [...]string{"plain", "squot", "dquot", "dquot+backt", "backt"}[st]
+	return [...]string{"plain", "squot", "dquot", "dquot+backt", "backt", "unknown"}[st]
 }
 
 func (st ShellwordState) ToVarUseContext() vucQuoting {
@@ -964,58 +965,88 @@ func splitIntoShellWords(line *Line, text string) (words []string, rest string) 
 
 type ShQuote struct {
 	repl  *PrefixReplacer
-	State ShellwordState
+	stack string
 }
 
 func NewShQuote(s string) *ShQuote {
-	return &ShQuote{NewPrefixReplacer(s), swstPlain}
+	return &ShQuote{NewPrefixReplacer(s), ""}
+}
+
+func (sq *ShQuote) ShellwordState() ShellwordState {
+	switch sq.stack {
+	case "":
+		return swstPlain
+	case "\"":
+		return swstDquot
+	case "\"`":
+		return swstDquotBackt
+	case "'":
+		return swstSquot
+	case "`":
+		return swstBackt
+	default:
+		return swstUnknown
+	}
 }
 
 func (sq *ShQuote) Feed(s string) {
+	const reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
+
 	repl := sq.repl
 	repl.rest += s
 	for repl.rest != "" {
-		rest := repl.rest
-		if repl.AdvanceRegexp(`^(?:\\.|[^"'` + "`" + `\\])+`) {
+		mark := repl.Mark()
+		if repl.AdvanceRegexp(reSkip) {
 			continue
 		}
-		switch sq.State {
-		case swstPlain:
+		if repl.AdvanceRegexp(`^\\.`) { // Not always correct, but works well in the common cases.
+			continue
+		}
+		switch sq.stack {
+		case "":
 			switch {
 			case repl.AdvanceStr("\""):
-				sq.State = swstDquot
+				sq.stack = "\""
 			case repl.AdvanceStr("'"):
-				sq.State = swstSquot
+				sq.stack = "'"
 			case repl.AdvanceStr("`"):
-				sq.State = swstBackt
+				sq.stack = "`"
 			}
-		case swstDquot:
+		case "\"":
 			switch {
 			case repl.AdvanceStr("\""):
-				sq.State = swstPlain
+				sq.stack = ""
 			case repl.AdvanceStr("`"):
-				sq.State = swstDquotBackt
+				sq.stack = "\"`"
 			}
-		case swstDquotBackt:
+		case "\"`":
 			switch {
 			case repl.AdvanceStr("`"):
-				sq.State = swstDquot
+				sq.stack = "\""
+			case repl.AdvanceStr("'"):
+				sq.stack = "\"`'"
 			}
-		case swstSquot:
+		case "\"`'":
 			switch {
 			case repl.AdvanceStr("'"):
-				sq.State = swstPlain
+				sq.stack = "\"`"
+			}
+		case "'":
+			switch {
+			case repl.AdvanceStr("'"):
+				sq.stack = ""
 			case repl.AdvanceRegexp(`^[^']+`):
 			}
-		case swstBackt:
+		case "`":
 			switch {
 			case repl.AdvanceStr("`"):
-				sq.State = swstPlain
+				sq.stack = ""
 			}
 		}
-		if repl.rest == rest {
+		if repl.Since(mark) == "" {
+			traceStep2("ShQuote.stuck stack=%s rest=%s", sq.stack, sq.repl.rest)
 			repl.AdvanceRest()
-			sq.State = swstPlain
+			sq.stack = "?"
 		}
 	}
 }

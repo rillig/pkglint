@@ -413,18 +413,24 @@ func (s *Suite) TestShellLine_(c *check.C) {
 
 func (s *Suite) Test_ShQuote(c *check.C) {
 	sq := NewShQuote("")
-	step := func(s string, expectedState ShellwordState) {
+	step := func(s, expectedStack string) {
 		sq.Feed(s)
-		c.Check(sq.State, equals, expectedState)
+		c.Check(sq.stack, equals, expectedStack)
 		c.Check(sq.repl.rest, equals, "")
 	}
 
-	step("hello", swstPlain)
-	step("\"dq", swstDquot)
-	step("`", swstDquotBackt)
-	step("`", swstDquot)
-	step("\"", swstPlain)
-	step("'", swstSquot)
-	step("\"", swstSquot)
-	step("'", swstPlain)
+	step("hello", "")
+	step("\"dq", "\"")
+	step("`", "\"`")
+	step("`", "\"")
+	step("\"", "")
+	step("'", "'")
+	step("\"", "'")
+	step("'", "")
+
+	step("\"`${SH} -c ", "\"`")
+	step("'${ECHO} $$TK_LD_FLAGS", "\"`'")
+	step("'", "\"`")
+	step("`", "\"")
+	step("\"", "")
 }

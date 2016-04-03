@@ -671,3 +671,16 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_12(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: devel/catch/Makefile:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. Use https://github.com/philsquared/Catch/ directly.\n")
 }
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_13(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	s.RegisterTool(&Tool{Varname: "SH", Predefined: true})
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("x11/labltk/Makefile",
+		"# $"+"NetBSD$",
+		"CONFIGURE_ARGS+=\t-tklibs \"`${SH} -c '${ECHO} $$TK_LD_FLAGS'`\"")
+
+	G.Mk.mklines[1].Check()
+
+	c.Check(s.Output(), equals, "") // Don’t suggest ${ECHO:Q} here.
+}

@@ -762,7 +762,7 @@ func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 				if token.literal != "" {
 					quoting.Feed(token.literal)
 				} else {
-					vuc := &VarUseContext{vartype, time, quoting.State.ToVarUseContext(), extent}
+					vuc := &VarUseContext{vartype, time, quoting.ShellwordState().ToVarUseContext(), extent}
 					mkline.CheckVaruse(&token.varuse, vuc)
 				}
 			}
