@@ -989,64 +989,77 @@ func (sq *ShQuote) ShellwordState() ShellwordState {
 	}
 }
 
-func (sq *ShQuote) Feed(s string) {
-	const reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
+func (sq *ShQuote) Feed(str string) {
+	const (
+		reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
+		S      = "'"
+		D      = "\""
+		B      = "`"
+	)
 
 	repl := sq.repl
-	repl.rest += s
+	repl.rest += str
 	for repl.rest != "" {
-		mark := repl.Mark()
 		if repl.AdvanceRegexp(reSkip) {
 			continue
 		}
-		if repl.AdvanceRegexp(`^\\.`) { // Not always correct, but works well in the common cases.
-			continue
-		}
+
+		mark := repl.Mark()
 		switch sq.stack {
 		case "":
 			switch {
-			case repl.AdvanceStr("\""):
-				sq.stack = "\""
-			case repl.AdvanceStr("'"):
-				sq.stack = "'"
-			case repl.AdvanceStr("`"):
-				sq.stack = "`"
+			case repl.AdvanceStr(D):
+				sq.stack = D
+			case repl.AdvanceStr(S):
+				sq.stack = S
+			case repl.AdvanceStr(B):
+				sq.stack = B
+			case repl.AdvanceRegexp(`^\\.`):
 			}
-		case "\"":
+
+		case D:
 			switch {
-			case repl.AdvanceStr("\""):
+			case repl.AdvanceStr(D):
 				sq.stack = ""
-			case repl.AdvanceStr("`"):
-				sq.stack = "\"`"
+			case repl.AdvanceStr(B):
+				sq.stack = D + B
+			case repl.AdvanceStr(S):
+			case repl.AdvanceRegexp(`^\\.`):
 			}
-		case "\"`":
+		case S:
 			switch {
-			case repl.AdvanceStr("`"):
-				sq.stack = "\""
-			case repl.AdvanceStr("'"):
-				sq.stack = "\"`'"
-			}
-		case "\"`'":
-			switch {
-			case repl.AdvanceStr("'"):
-				sq.stack = "\"`"
-			}
-		case "'":
-			switch {
-			case repl.AdvanceStr("'"):
+			case repl.AdvanceStr(S):
 				sq.stack = ""
 			case repl.AdvanceRegexp(`^[^']+`):
 			}
-		case "`":
+		case B:
 			switch {
-			case repl.AdvanceStr("`"):
+			case repl.AdvanceStr(B):
 				sq.stack = ""
+			case repl.AdvanceStr(S):
+				sq.stack = B + S
+			case repl.AdvanceRegexp(`^\\.`):
+			}
+
+		case D + B:
+			switch {
+			case repl.AdvanceStr(B):
+				sq.stack = D
+			case repl.AdvanceStr(S):
+				sq.stack = D + B + S
+			case repl.AdvanceRegexp(`^\\.`):
+			}
+		case D + B + S:
+			switch {
+			case repl.AdvanceStr(S):
+				sq.stack = D + B
 			}
 		}
+
 		if repl.Since(mark) == "" {
 			traceStep2("ShQuote.stuck stack=%s rest=%s", sq.stack, sq.repl.rest)
 			repl.AdvanceRest()
-			sq.stack = "?"
+			sq.stack += "?"
 		}
 	}
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	check "gopkg.in/check.v1"
 )
 
@@ -412,25 +414,30 @@ func (s *Suite) TestShellLine_(c *check.C) {
 }
 
 func (s *Suite) Test_ShQuote(c *check.C) {
-	sq := NewShQuote("")
-	step := func(s, expectedStack string) {
-		sq.Feed(s)
-		c.Check(sq.stack, equals, expectedStack)
-		c.Check(sq.repl.rest, equals, "")
+	traceQuoting := func(input string) (result string) {
+		sq := NewShQuote("")
+		for _, part := range strings.Split(input, "x") {
+			sq.Feed(part)
+			result += part + "[" + strings.Map(func(r rune) rune {
+				switch r {
+				case '"':
+					return 'd'
+				case '\'':
+					return 's'
+				case '`':
+					return 'b'
+				default:
+					return r
+				}
+			}, sq.stack) + "]"
+		}
+		return
 	}
 
-	step("hello", "")
-	step("\"dq", "\"")
-	step("`", "\"`")
-	step("`", "\"")
-	step("\"", "")
-	step("'", "'")
-	step("\"", "'")
-	step("'", "")
-
-	step("\"`${SH} -c ", "\"`")
-	step("'${ECHO} $$TK_LD_FLAGS", "\"`'")
-	step("'", "\"`")
-	step("`", "\"")
-	step("\"", "")
+	c.Check(traceQuoting("x\"x`x`x\"x'x\"x'"), equals, "[]\"[d]`[db]`[d]\"[]'[s]\"[s]'[]")
+	c.Check(traceQuoting("x\"x`x'x'x`x\""), equals, "[]\"[d]`[db]'[dbs]'[db]`[d]\"[]")
+	c.Check(traceQuoting("x\\\"x\\'x\\`x\\\\"), equals, "[]\\\"[]\\'[]\\`[]\\\\[]")
+	c.Check(traceQuoting("x\"x\\\"x\\'x\\`x\\\\"), equals, "[]\"[d]\\\"[d]\\'[d]\\`[d]\\\\[d]")
+	c.Check(traceQuoting("x'x\\\"x\\'x\\`x\\\\"), equals, "[]'[s]\\\"[s]\\'[]\\`[]\\\\[]")
+	c.Check(traceQuoting("x`x\\\"x\\'x\\`x\\\\"), equals, "[]`[b]\\\"[b]\\'[b]\\`[b]\\\\[b]")
 }
