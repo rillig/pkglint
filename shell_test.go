@@ -244,8 +244,6 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 	G.globalData.InitVartypes()
 	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
-	c.Check(matches("${list}", `^`+reVarnameDirect+`$`), equals, false)
-
 	shline.CheckToken("${${list}}", false)
 
 	c.Check(s.Output(), equals, "") // No warning for variables that are completely indirect.

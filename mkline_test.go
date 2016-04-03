@@ -436,7 +436,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_1(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
 	G.globalData.InitVartypes()
 
-	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, vucExtentUnknown}
+	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, vucExtentWord}
 	nq := mkline.variableNeedsQuoting("UNKNOWN", nil, vuc)
 
 	c.Check(nq, equals, nqDontKnow)

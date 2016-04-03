@@ -1587,14 +1587,11 @@ func (q vucQuoting) String() string {
 type vucExtent uint8
 
 const (
-	vucExtentUnknown  vucExtent = iota
-	vucExtentWord               // Example: echo ${LOCALBASE}
-	vucExtentWordpart           // Example: echo LOCALBASE=${LOCALBASE}
+	vucExtentWord     vucExtent = iota // Example: echo ${LOCALBASE}
+	vucExtentWordpart                  // Example: echo LOCALBASE=${LOCALBASE}
 )
 
-func (e vucExtent) String() string {
-	return [...]string{"unknown", "word", "wordpart"}[e]
-}
+func (e vucExtent) String() string { return [...]string{"word", "wordpart"}[e] }
 
 func (vuc *VarUseContext) String() string {
 	typename := "no-type"

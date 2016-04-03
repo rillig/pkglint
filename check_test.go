@@ -89,8 +89,8 @@ func (s *Suite) UseCommandLine(c *check.C, args ...string) {
 }
 
 func (s *Suite) RegisterMasterSite(varname string, urls ...string) {
-	name2url := &G.globalData.MasterSiteVarToUrl
-	url2name := &G.globalData.MasterSiteUrlToVar
+	name2url := &G.globalData.MasterSiteVarToURL
+	url2name := &G.globalData.MasterSiteURLToVar
 	if *name2url == nil {
 		*name2url = make(map[string]string)
 		*url2name = make(map[string]string)

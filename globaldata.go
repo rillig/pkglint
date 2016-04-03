@@ -10,8 +10,8 @@ import (
 // GlobalData contains data describing pkgsrc as a whole.
 type GlobalData struct {
 	Pkgsrcdir           string              // Relative to the current working directory.
-	MasterSiteUrlToVar  map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
-	MasterSiteVarToUrl  map[string]string   // "MASTER_SITE_GITHUB" => "https://github.com/"
+	MasterSiteURLToVar  map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
+	MasterSiteVarToURL  map[string]string   // "MASTER_SITE_GITHUB" => "https://github.com/"
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
 	Tools               ToolRegistry        //
 	SystemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
@@ -90,8 +90,8 @@ func (gd *GlobalData) loadDistSites() {
 	if G.opts.Debug {
 		traceStep("Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	}
-	gd.MasterSiteUrlToVar = url2name
-	gd.MasterSiteVarToUrl = name2url
+	gd.MasterSiteURLToVar = url2name
+	gd.MasterSiteVarToURL = name2url
 }
 
 func (gd *GlobalData) loadPkgOptions() {

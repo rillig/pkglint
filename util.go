@@ -490,24 +490,6 @@ func relpath(from, to string) string {
 	return result
 }
 
-func stringBoolMapKeys(m map[string]bool) []string {
-	var keys []string
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-func stringStringMapKeys(m map[string]string) []string {
-	var keys []string
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
 func abspath(fname string) string {
 	abs, err := filepath.Abs(fname)
 	if err != nil {

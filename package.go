@@ -119,7 +119,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	}
 
 	if G.opts.Debug {
-		for packageBl3, _ := range pkg.bl3 {
+		for packageBl3 := range pkg.bl3 {
 			if includedFiles[packageBl3] == nil {
 				traceStep1("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 			}

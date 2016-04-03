@@ -9,7 +9,6 @@ import (
 
 const (
 	reMkShellvaruse = `(?:^|[^\$])\$\$\{?(\w+)\}?`
-	reVarnameDirect = `(?:[-*+.0-9A-Z_a-z{}\[]+)`
 	reShellToken    = `^\s*(` +
 		`#.*` + // shell comment
 		`|(?:` +

@@ -344,7 +344,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 func (cv *VartypeCheck) FetchURL() {
 	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
-	for siteURL, siteName := range G.globalData.MasterSiteUrlToVar {
+	for siteURL, siteName := range G.globalData.MasterSiteURLToVar {
 		if hasPrefix(cv.value, siteURL) {
 			subdir := cv.value[len(siteURL):]
 			if hasPrefix(cv.value, "https://github.com/") {
@@ -359,7 +359,7 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 
 	if m, name, subdir := match2(cv.value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
-		if G.globalData.MasterSiteVarToUrl[name] == "" {
+		if G.globalData.MasterSiteVarToURL[name] == "" {
 			cv.line.Error1("The site %s does not exist.", name)
 		}
 		if !hasSuffix(subdir, "/") {
@@ -405,18 +405,18 @@ func (cv *VartypeCheck) Homepage() {
 	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
 	if m, wrong, sitename, subdir := match3(cv.value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`); m {
-		baseUrl := G.globalData.MasterSiteVarToUrl[sitename]
+		baseURL := G.globalData.MasterSiteVarToURL[sitename]
 		if sitename == "MASTER_SITES" && G.Pkg != nil {
 			masterSites, _ := G.Pkg.varValue("MASTER_SITES")
 			if !containsVarRef(masterSites) {
-				baseUrl = masterSites
+				baseURL = masterSites
 			}
 		}
-		fixedUrl := baseUrl + subdir
+		fixedURL := baseURL + subdir
 		explain := false
-		if baseUrl != "" {
-			if !cv.line.AutofixReplace(wrong, fixedUrl) {
-				cv.line.Warn1("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedUrl)
+		if baseURL != "" {
+			if !cv.line.AutofixReplace(wrong, fixedURL) {
+				cv.line.Warn1("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedURL)
 				explain = true
 			}
 		} else {
