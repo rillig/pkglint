@@ -409,7 +409,7 @@ func trace(action, funcname string, args ...interface{}) {
 func traceStep(format string, args ...interface{}) {
 	if G.opts.Debug {
 		msg := fmt.Sprintf(format, args...)
-		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s %s\n", strings.Repeat("| ", G.traceDepth), msg))
+		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s  %s\n", strings.Repeat("| ", G.traceDepth), msg))
 	}
 }
 func traceStep1(format string, arg0 string) {

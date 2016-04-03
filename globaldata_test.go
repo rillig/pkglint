@@ -56,16 +56,16 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"TRACE: + netbsd.org/pkglint.(*ToolRegistry).Trace()\n"+
-		"TRACE: |  tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true}\n"+
-		"TRACE: |  tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false}\n"+
-		"TRACE: |  tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |  tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |  tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |  tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false}\n"+
-		"TRACE: |  tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false}\n"+
-		"TRACE: |  tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true}\n"+
-		"TRACE: |  tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |  tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |   tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true}\n"+
+		"TRACE: |   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false}\n"+
+		"TRACE: |   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |   tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |   tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false}\n"+
+		"TRACE: |   tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false}\n"+
+		"TRACE: |   tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true}\n"+
+		"TRACE: |   tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |   tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:false}\n"+
 		"TRACE: - netbsd.org/pkglint.(*ToolRegistry).Trace()\n")
 }
 
