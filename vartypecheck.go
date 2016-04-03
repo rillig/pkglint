@@ -407,7 +407,10 @@ func (cv *VartypeCheck) Homepage() {
 	if m, wrong, sitename, subdir := match3(cv.value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`); m {
 		baseUrl := G.globalData.MasterSiteVarToUrl[sitename]
 		if sitename == "MASTER_SITES" && G.Pkg != nil {
-			baseUrl, _ = G.Pkg.varValue("MASTER_SITES")
+			masterSites, _ := G.Pkg.varValue("MASTER_SITES")
+			if !containsVarRef(masterSites) {
+				baseUrl = masterSites
+			}
 		}
 		fixedUrl := baseUrl + subdir
 		explain := false
