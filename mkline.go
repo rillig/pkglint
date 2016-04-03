@@ -1309,7 +1309,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqYes
 	}
 
-    // SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
+	// SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
 	if vuc.vartype != nil && vuc.vartype.IsPlainString() {
 		return nqNo
 	}
