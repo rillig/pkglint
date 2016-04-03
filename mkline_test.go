@@ -703,3 +703,15 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_13(c *check.C) {
 
 	c.Check(s.Output(), equals, "") // Don’t suggest ${ECHO:Q} here.
 }
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_14(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("x11/qt5-qtbase/Makefile.common",
+		"BUILDLINK_TRANSFORM+=opt:-ldl:${BUILDLINK_LDADD.dl:M*}")
+
+	G.Mk.mklines[0].Check()
+
+	// Note: The :M* modifier is not necessary, since this is not a GNU Configure package.
+	c.Check(s.Output(), equals, "WARN: x11/qt5-qtbase/Makefile.common:1: Please use ${BUILDLINK_LDADD.dl:Q} instead of ${BUILDLINK_LDADD.dl:M*}.\n")
+}

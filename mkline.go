@@ -1324,6 +1324,12 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqYes
 	}
 
+	// Bad: LDADD += -l${LIBS}
+	// Good: LDADD += ${LIBS:@lib@-l${lib} @}
+	if wantList && haveList && vuc.extent == vucExtentWordpart {
+		return nqYes
+	}
+
 	if G.opts.Debug {
 		traceStep1("Don't know whether :Q is needed for %q", varname)
 	}
