@@ -203,7 +203,7 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	}
 
 	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
-	if !readMakefile(fname, mainLines, allLines, "") {
+	if !pkg.readMakefile(fname, mainLines, allLines, "") {
 		return nil
 	}
 
@@ -240,7 +240,7 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	return mainLines
 }
 
-func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {
+func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {
 	if G.opts.Debug {
 		defer tracecall1(fname)()
 	}
@@ -322,7 +322,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 					traceStep1("Including %q.", dirname+"/"+includeFile)
 				}
 				includingFname := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
-				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {
+				if !pkg.readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {
 					return false
 				}
 			}
