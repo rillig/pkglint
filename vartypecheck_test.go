@@ -179,14 +179,8 @@ func (s *Suite) TestVartypeCheck_Enum(c *check.C) {
 }
 
 func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
-	G.globalData.MasterSiteUrls = map[string]string{
-		"https://github.com/":         "MASTER_SITE_GITHUB",
-		"http://ftp.gnu.org/pub/gnu/": "MASTER_SITE_GNU",
-	}
-	G.globalData.MasterSiteVars = map[string]bool{
-		"MASTER_SITE_GITHUB": true,
-		"MASTER_SITE_GNU":    true,
-	}
+	s.RegisterMasterSite("MASTER_SITE_GNU", "http://ftp.gnu.org/pub/gnu/")
+	s.RegisterMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 
 	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).FetchURL,
 		"https://github.com/example/project/",
@@ -205,6 +199,13 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 		"https://example.org/download.cgi?fname=fname&sha1=12341234")
 
 	c.Check(s.Output(), equals, "")
+
+	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).FetchURL,
+		"http://example.org/distfiles/",
+		"http://example.org/download?fname=distfile;version=1.0",
+		"http://example.org/download?fname=<distfile>;version=<version>")
+
+	c.Check(s.Output(), equals, "WARN: fname:3: \"http://example.org/download?fname=<distfile>;version=<version>\" is not a valid URL.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Filename(c *check.C) {
@@ -359,15 +360,6 @@ func (s *Suite) TestVartypeCheck_Stage(c *check.C) {
 		"pre-test")
 
 	c.Check(s.Output(), equals, "WARN: fname:2: Invalid stage name \"post-modern\". Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.\n")
-}
-
-func (s *Suite) TestVartypeCheck_URL(c *check.C) {
-	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).URL,
-		"http://example.org/distfiles/",
-		"http://example.org/download?fname=distfile;version=1.0",
-		"http://example.org/download?fname=<distfile>;version=<version>")
-
-	c.Check(s.Output(), equals, "WARN: fname:3: \"http://example.org/download?fname=<distfile>;version=<version>\" is not a valid URL.\n")
 }
 
 func (s *Suite) TestVartypeCheck_Varname(c *check.C) {
