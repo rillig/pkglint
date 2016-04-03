@@ -281,7 +281,7 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.s = ""
 	if hasPrefix(pr.rest, prefix) {
 		if G.opts.Debug {
-			trace("", "PrefixReplacer.AdvanceStr", pr.rest, prefix)
+			traceStep("PrefixReplacer.AdvanceStr(%q, %q)", pr.rest, prefix)
 		}
 		pr.s = prefix
 		pr.rest = pr.rest[len(prefix):]
@@ -309,12 +309,12 @@ func (pr *PrefixReplacer) AdvanceRegexp(re string) bool {
 	if !hasPrefix(re, "^") {
 		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: regular expression %q must have prefix %q.", re, "^"))
 	}
-	if matches("", re) {
+	if G.Testing && matches("", re) {
 		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
 	}
 	if m := match(pr.rest, re); m != nil {
 		if G.opts.Debug {
-			trace("", "PrefixReplacer.AdvanceRegexp", pr.rest, re, m[0])
+			traceStep("PrefixReplacer.AdvanceRegexp(%q, %q, %q)", pr.rest, re, m[0])
 		}
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
@@ -400,12 +400,6 @@ func argsStr(args ...interface{}) string {
 	return argsStr
 }
 
-func trace(action, funcname string, args ...interface{}) {
-	if G.opts.Debug {
-		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s%s%s(%s)\n", strings.Repeat("| ", G.traceDepth), action, funcname, argsStr(args...)))
-	}
-}
-
 func traceStep(format string, args ...interface{}) {
 	if G.opts.Debug {
 		msg := fmt.Sprintf(format, args...)
@@ -434,12 +428,16 @@ func tracecallInternal(args ...interface{}) func() {
 			funcname = strings.TrimSuffix(fn.Name(), "main.")
 		}
 	}
-	trace("+ ", funcname, args...)
+	if G.opts.Debug {
+		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s+ %s(%s)\n", strings.Repeat("| ", G.traceDepth), funcname, argsStr(args...)))
+	}
 	G.traceDepth++
 
 	return func() {
 		G.traceDepth--
-		trace("- ", funcname, args...)
+		if G.opts.Debug {
+			io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s- %s(%s)\n", strings.Repeat("| ", G.traceDepth), funcname, argsStr(args...)))
+		}
 	}
 }
 func tracecall0() func() {
@@ -485,7 +483,7 @@ func relpath(from, to string) string {
 	}
 	result := filepath.ToSlash(rel)
 	if G.opts.Debug {
-		trace("", "relpath", from, to, "=>", result)
+		traceStep("relpath from %q to %q = %q", from, to, result)
 	}
 	return result
 }
