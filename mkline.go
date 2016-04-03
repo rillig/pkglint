@@ -503,7 +503,25 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 		isIndirect = true
 	}
 
-	if isLoadTime && !isIndirect {
+	done := false
+	tool := G.globalData.Tools.byVarname[varname]
+	if isLoadTime && tool != nil && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
+		mkline.Warn1("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
+		done = true
+	}
+
+	if !done && isLoadTime && tool != nil && G.Pkg != nil {
+		usable, defined := G.Pkg.loadTimeTools[tool.Name]
+		if usable {
+			done = true
+		}
+		if defined && !usable {
+			mkline.Warn1("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
+			done = true
+		}
+	}
+
+	if !done && isLoadTime && !isIndirect {
 		mkline.Warn1("%s should not be evaluated at load time.", varname)
 		Explain(
 			"Many variables, especially lists of something, get their values",
@@ -515,15 +533,17 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 			"Additionally, when using the \":=\" operator, each $$ is replaced",
 			"with a single $, so variables that have references to shell",
 			"variables or regular expressions are modified in a subtle way.")
+		done = true
 	}
 
-	if isLoadTime && isIndirect {
+	if !done && isLoadTime && isIndirect {
 		mkline.Warn1("%s should not be evaluated indirectly at load time.", varname)
 		Explain4(
 			"The variable on the left-hand side may be evaluated at load time,",
 			"but the variable on the right-hand side may not.  Because of the",
 			"assignment in this line, the variable might be used indirectly",
 			"at load time, before it is guaranteed to be properly initialized.")
+		done = true
 	}
 
 	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
@@ -684,15 +704,15 @@ func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
 }
 
 func (mkline *MkLine) checkVarassign() {
-	if G.opts.Debug {
-		defer tracecall0()()
-	}
-
 	varname := mkline.Varname()
 	op := mkline.Op()
 	value := mkline.Value()
 	comment := mkline.Comment()
 	varcanon := varnameCanon(varname)
+
+	if G.opts.Debug {
+		defer tracecall(varname, op, value)()
+	}
 
 	defineVar(mkline, varname)
 	mkline.checkVarassignDefPermissions(varname, op)
@@ -1392,16 +1412,8 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 			traceStep("Use of tool %+v", tool)
 		}
 		if tool.UsableAtLoadtime {
-			perms |= aclpUseLoadtime
-		} else if G.Pkg != nil {
-			usable, defined := G.Pkg.loadTimeTools[tool.Name]
-			if G.opts.Debug {
-				traceStep("usable=%v defined=%v", usable, defined)
-			}
-			if usable {
+			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.loadTimeTools[tool.Name] {
 				perms |= aclpUseLoadtime
-			} else if defined {
-				mkline.Warn1("To make the tool %q usable at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
 			}
 		}
 		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", perms}}, false}

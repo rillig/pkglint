@@ -204,6 +204,7 @@ func (s *Suite) Test_Package_Varuse_LoadTime(c *check.C) {
 		"do-build:",
 		"\t${ECHO} before: ${FALSE_BEFORE} ${NICE_BEFORE} ${TRUE_BEFORE}",
 		"\t${ECHO} after: ${FALSE_AFTER} ${NICE_AFTER} ${TRUE_AFTER}",
+		"\t${ECHO}; ${FALSE}; ${NICE}; ${TRUE}",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 	s.CreateTmpFileLines(c, "category/pkgbase/distinfo",
@@ -212,7 +213,8 @@ func (s *Suite) Test_Package_Varuse_LoadTime(c *check.C) {
 	(&Pkglint{}).Main("pkglint", "-q", "-Wperm", s.tmpdir+"/category/pkgbase")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: ~/category/pkgbase/Makefile:9: NICE should not be evaluated at load time.\n"+
-		"WARN: ~/category/pkgbase/Makefile:16: To make the tool \"NICE\" usable at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.\n"+
-		"WARN: ~/category/pkgbase/Makefile:16: NICE should not be evaluated at load time.\n")
+		"WARN: ~/category/pkgbase/Makefile:8: To use the tool \"FALSE\" at load time, bsd.prefs.mk has to be included before.\n"+
+		"WARN: ~/category/pkgbase/Makefile:9: To use the tool \"NICE\" at load time, bsd.prefs.mk has to be included before.\n"+
+		"WARN: ~/category/pkgbase/Makefile:10: To use the tool \"TRUE\" at load time, bsd.prefs.mk has to be included before.\n"+
+		"WARN: ~/category/pkgbase/Makefile:16: To use the tool \"NICE\" at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.\n")
 }
