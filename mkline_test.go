@@ -665,11 +665,15 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_12(c *check.C) {
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("devel/catch/Makefile",
 		"# $"+"NetBSD$",
-		"HOMEPAGE=${MASTER_SITE_GITHUB:=philsquared/Catch/}")
+		"HOMEPAGE=${MASTER_SITE_GITHUB:=philsquared/Catch/}",
+		"HOMEPAGE=${MASTER_SITE_GITHUB}")
 
 	G.Mk.mklines[1].Check()
+	G.Mk.mklines[2].Check()
 
-	c.Check(s.Output(), equals, "WARN: devel/catch/Makefile:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. Use https://github.com/philsquared/Catch/ directly.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: devel/catch/Makefile:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. Use https://github.com/philsquared/Catch/ directly.\n"+
+		"WARN: devel/catch/Makefile:3: HOMEPAGE should not be defined in terms of MASTER_SITEs. Use https://github.com/ directly.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_13(c *check.C) {

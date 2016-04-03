@@ -404,7 +404,7 @@ func (cv *VartypeCheck) FileMode() {
 func (cv *VartypeCheck) Homepage() {
 	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
-	if m, site, subdir := match2(cv.value, `^\$\{(MASTER_SITE_\w+):=([\w\-/]+)\}$`); m {
+	if m, site, subdir := match2(cv.value, `^\$\{(MASTER_SITE_\w+)(?::=([\w\-/]+))?\}$`); m {
 		fixedUrl := G.globalData.MasterSiteVarToUrl[site] + subdir
 		if !cv.line.AutofixReplace(cv.value, fixedUrl) {
 			cv.line.Warn1("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedUrl)
@@ -412,7 +412,9 @@ func (cv *VartypeCheck) Homepage() {
 				"The HOMEPAGE is a single URL, while MASTER_SITES is a list of URLs.",
 				"As long as this list has exactly one element, this works, but as",
 				"soon as another site is added, the HOMEPAGE would not be a valid",
-				"URL anymore.")
+				"URL anymore.",
+				"",
+				"Defining MASTER_SITES=${HOMEPAGE} is ok, though.")
 		}
 	}
 }
