@@ -196,18 +196,12 @@ func (mkline *MkLine) checkInclude() {
 			mkline.Note0("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.Pkg != nil {
-			G.Pkg.SeenBsdPrefsMk = true
-			if G.opts.Debug {
-				traceStep("SeenBsdPrefsMk")
-			}
+			G.Pkg.setSeenBsdPrefsMk()
 		}
 
-	case includefile == "../../mk/bsd.fast.prefs.mk":
+	case includefile == "../../mk/bsd.fast.prefs.mk", includefile == "../../mk/buildlink3/bsd.builtin.mk":
 		if G.Pkg != nil {
-			G.Pkg.SeenBsdPrefsMk = true
-			if G.opts.Debug {
-				traceStep("SeenBsdPrefsMk")
-			}
+			G.Pkg.setSeenBsdPrefsMk()
 		}
 
 	case hasSuffix(includefile, "/x11-links/buildlink3.mk"):
@@ -505,7 +499,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 
 	done := false
 	tool := G.globalData.Tools.byVarname[varname]
-	if isLoadTime && tool != nil && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
+	if isLoadTime && tool != nil && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
 		mkline.Warn1("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
 		done = true
 	}

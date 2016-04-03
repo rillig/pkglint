@@ -1,20 +1,22 @@
 package main
 
 import (
+	"path"
 	"strings"
 )
 
 // MkLines contains data for the Makefile (or *.mk) that is currently checked.
 type MkLines struct {
-	mklines   []*MkLine
-	lines     []*Line
-	forVars   map[string]bool    // The variables currently used in .for loops
-	target    string             // Current make(1) target
-	vardef    map[string]*MkLine // varname => line; for all variables that are defined in the current file
-	varuse    map[string]*MkLine // varname => line; for all variables that are used in the current file
-	buildDefs map[string]bool    // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
-	plistVars map[string]bool    // Variables that are registered in PLIST_VARS, to ensure that all user-defined variables are added to it.
-	tools     map[string]bool    // Set of tools that are declared to be used.
+	mklines        []*MkLine
+	lines          []*Line
+	forVars        map[string]bool    // The variables currently used in .for loops
+	target         string             // Current make(1) target
+	vardef         map[string]*MkLine // varname => line; for all variables that are defined in the current file
+	varuse         map[string]*MkLine // varname => line; for all variables that are used in the current file
+	buildDefs      map[string]bool    // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
+	plistVars      map[string]bool    // Variables that are registered in PLIST_VARS, to ensure that all user-defined variables are added to it.
+	tools          map[string]bool    // Set of tools that are declared to be used.
+	SeenBsdPrefsMk bool
 }
 
 func NewMkLines(lines []*Line) *MkLines {
@@ -38,7 +40,8 @@ func NewMkLines(lines []*Line) *MkLines {
 		make(map[string]*MkLine),
 		make(map[string]bool),
 		make(map[string]bool),
-		tools}
+		tools,
+		false}
 }
 
 func (mklines *MkLines) DefineVar(mkline *MkLine, varname string) {
@@ -111,6 +114,10 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsInclude():
 			mklines.target = ""
+			switch path.Base(mkline.Includefile()) {
+			case "bsd.prefs.mk", "bsd.fast.prefs.mk", "bsd.builtin.mk":
+				mklines.setSeenBsdPrefsMk()
+			}
 
 		case mkline.IsCond():
 			mkline.checkCond(&indentation, mklines.forVars)
@@ -200,6 +207,15 @@ func (mklines *MkLines) DetermineUsedVariables() {
 		varnames := mkline.determineUsedVariables()
 		for _, varname := range varnames {
 			mklines.UseVar(mkline, varname)
+		}
+	}
+}
+
+func (mklines *MkLines) setSeenBsdPrefsMk() {
+	if !mklines.SeenBsdPrefsMk {
+		mklines.SeenBsdPrefsMk = true
+		if G.opts.Debug {
+			traceStep("Mk.setSeenBsdPrefsMk")
 		}
 	}
 }

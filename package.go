@@ -66,6 +66,15 @@ func (pkg *Package) varValue(varname string) (string, bool) {
 	return "", false
 }
 
+func (pkg *Package) setSeenBsdPrefsMk() {
+	if !pkg.SeenBsdPrefsMk {
+		pkg.SeenBsdPrefsMk = true
+		if G.opts.Debug {
+			traceStep("Pkg.setSeenBsdPrefsMk")
+		}
+	}
+}
+
 func (pkg *Package) checkPossibleDowngrade() {
 	if G.opts.Debug {
 		defer tracecall0()()
