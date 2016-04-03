@@ -156,7 +156,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkglist("BUILD_ENV", lkShell, CheckvarShellWord)
 	sys("BUILD_MAKE_CMD", lkNone, CheckvarShellCommand)
 	pkglist("BUILD_MAKE_FLAGS", lkShell, CheckvarShellWord)
-	pkg("BUILD_TARGET", lkShell, CheckvarIdentifier)
+	pkglist("BUILD_TARGET", lkShell, CheckvarIdentifier)
 	pkg("BUILD_USES_MSGFMT", lkNone, CheckvarYes)
 	acl("BUILTIN_PKG", lkNone, CheckvarIdentifier, "builtin.mk: set, use-loadtime, use")
 	acl("BUILTIN_PKG.*", lkNone, CheckvarPkgName, "builtin.mk: set, use-loadtime, use")
