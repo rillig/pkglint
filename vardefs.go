@@ -92,8 +92,8 @@ func (gd *GlobalData) InitVartypes() {
 
 	// some other variables, sorted alphabetically
 
-	sys(".CURDIR", lkNone, CheckvarPathname)
-	sys(".TARGET", lkNone, CheckvarPathname)
+	acl(".CURDIR", lkNone, CheckvarPathname, "buildlink3.mk:; *: use, use-loadtime")
+	acl(".TARGET", lkNone, CheckvarPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl("ALL_ENV", lkShell, CheckvarShellWord, "")
 	acl("ALTERNATIVES_FILE", lkNone, CheckvarFilename, "")
 	acl("ALTERNATIVES_SRC", lkShell, CheckvarPathname, "")

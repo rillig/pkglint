@@ -451,6 +451,18 @@ func (s *Suite) TestMkLine_CheckVarusePermissions(c *check.C) {
 		"NOTE: options.mk:4: This variable value should be aligned to column 17.\n")
 }
 
+func (s *Suite) Test_MkLine_CheckVarusePermissions_LoadTime(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("options.mk",
+		"# $"+"NetBSD$",
+		"WRKSRC:=${.CURDIR}")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "") // Don’t warn that “.CURDIR should not be evaluated at load time.”
+}
+
 func (s *Suite) TestMkLine_WarnVaruseLocalbase(c *check.C) {
 	mkline := NewMkLine(NewLine("options.mk", 56, "PKGNAME=${LOCALBASE}", nil))
 
