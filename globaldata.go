@@ -120,9 +120,9 @@ func (gd *GlobalData) loadTools() {
 				}
 			}
 		}
-	}
-	if len(toolFiles) <= 1 {
-		NewLineWhole(toolFiles[0]).Fatalf("Too few tool files.")
+		if len(toolFiles) <= 1 {
+			NewLineWhole(fname).Fatalf("Too few tool files.")
+		}
 	}
 
 	reg := NewToolRegistry()
