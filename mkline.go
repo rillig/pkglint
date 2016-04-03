@@ -606,12 +606,14 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 		} else if vuc.quoting != vucQuotPlain {
 			mkline.Line.Warnf("Please move ${%s%s} outside of any quoting characters.", varname, mod)
 			Explain(
-				"The :Q modifier only works reliably when it is used without any",
+				"The :Q modifier only works reliably when it is used outside of any",
 				"quoting characters.",
 				"",
-				"Works often, but not always: CFLAGS=\"${CFLAGS:Q}\"",
-				"Works almost always: CFLAGS='${CFLAGS:Q}'",
-				"Works always: CFLAGS=${CFLAGS:Q}")
+				"Examples:",
+				"Instead of CFLAGS=\"${CFLAGS:Q}\",",
+				"     write CFLAGS=${CFLAGS:Q}.",
+				"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
+				"     write 's,@CFLAGS@,'${CFLAGS:Q}'.'")
 		}
 	}
 
