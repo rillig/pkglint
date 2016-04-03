@@ -499,19 +499,24 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 
 	done := false
 	tool := G.globalData.Tools.byVarname[varname]
-	if isLoadTime && tool != nil && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
-		mkline.Warn1("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
-		done = true
-	}
 
-	if !done && isLoadTime && tool != nil && G.Pkg != nil {
-		usable, defined := G.Pkg.loadTimeTools[tool.Name]
-		if usable {
+	if isLoadTime && tool != nil {
+		done = tool.Predefined && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk)
+
+		if !done && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
+			mkline.Warn1("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
 			done = true
 		}
-		if defined && !usable {
-			mkline.Warn1("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
-			done = true
+
+		if !done && G.Pkg != nil {
+			usable, defined := G.Pkg.loadTimeTools[tool.Name]
+			if usable {
+				done = true
+			}
+			if defined && !usable {
+				mkline.Warn1("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
+				done = true
+			}
 		}
 	}
 
