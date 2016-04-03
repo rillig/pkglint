@@ -158,3 +158,24 @@ func (s *Suite) Test_MkLines_Varalign_Misc(c *check.C) {
 
 	c.Check(s.Output(), equals, "NOTE: Makefile:3: Variable values should be aligned with tabs, not spaces.\n")
 }
+
+func (s *Suite) Test_MkLines_ForLoop_Multivar(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	s.RegisterTool(&Tool{Name: "echo", Varname: "ECHO", Predefined: true})
+	s.RegisterTool(&Tool{Name: "find", Varname: "FIND", Predefined: true})
+	s.RegisterTool(&Tool{Name: "pax", Varname: "PAX", Predefined: true})
+	mklines := s.NewMkLines("audio/squeezeboxserver/Makefile",
+		"# $"+"NetBSD$",
+		"",
+		".for _list_ _dir_ in ${SBS_COPY}",
+		"\tcd ${WRKSRC} && ${FIND} ${${_list_}} -type f ! -name '*.orig' 2>/dev/null "+
+			"| pax -rw -pm ${DESTDIR}${PREFIX}/${${_dir_}}",
+		".endfor")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: audio/squeezeboxserver/Makefile:3: Variable names starting with an underscore (_list_) are reserved for internal pkgsrc use.\n"+
+		"WARN: audio/squeezeboxserver/Makefile:3: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.\n"+
+		"WARN: audio/squeezeboxserver/Makefile:4: The exitcode of the left-hand-side command of the pipe operator is ignored.\n")
+}

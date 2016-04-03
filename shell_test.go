@@ -248,7 +248,11 @@ func (s *Suite) TestChecklineMkShellword(c *check.C) {
 
 	shline.CheckToken("${${list}}", false)
 
-	c.Check(s.Output(), equals, "WARN: fname:1: ${list} is used but not defined. Spelling mistake?\n")
+	c.Check(s.Output(), equals, "") // No warning for variables that are completely indirect.
+
+	shline.CheckToken("${SED_FILE.${id}}", false)
+
+	c.Check(s.Output(), equals, "WARN: fname:1: SED_FILE.${id} is used but not defined. Spelling mistake?\n")
 
 	shline.CheckToken("\"$@\"", false)
 
