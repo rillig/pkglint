@@ -113,6 +113,14 @@ func (vu *MkVarUse) Mod() string {
 	return mod
 }
 
+func (vu *MkVarUse) HasL() bool {
+	for _, mod := range vu.modifiers {
+		if mod == "L" {
+			return true
+		}
+	}
+	return false
+}
 func (vu *MkVarUse) IsQ() bool {
 	mlen := len(vu.modifiers)
 	return mlen > 0 && vu.modifiers[mlen-1] == "Q"

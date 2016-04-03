@@ -415,6 +415,12 @@ func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		defer tracecall(mkline, varuse, vuc)()
 	}
 
+	// The :L modifier interprets the variable name as the variable value,
+	// which makes the following checks useless.
+	if varuse.HasL() {
+		return
+	}
+
 	varname := varuse.varname
 	vartype := mkline.getVariableType(varname)
 	if G.opts.WarnExtra &&

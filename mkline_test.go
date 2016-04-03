@@ -628,3 +628,14 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_14(c *check.C) {
 	// Note: The :M* modifier is not necessary, since this is not a GNU Configure package.
 	c.Check(s.Output(), equals, "WARN: x11/qt5-qtbase/Makefile.common:1: Please use ${BUILDLINK_LDADD.dl:Q} instead of ${BUILDLINK_LDADD.dl:M*}.\n")
 }
+
+func (s *Suite) Test_MkLine_Varuse_Modifier_L(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("x11/xkeyboard-config/Makefile",
+		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}")
+
+	G.Mk.mklines[0].Check()
+
+	c.Check(s.Output(), equals, "") // Don’t warn that ${XKBBASE}/xkbcomp is used but not defined.
+}
