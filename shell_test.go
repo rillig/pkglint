@@ -89,7 +89,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: COMMENT may not be used in this file.\n"+
-		"WARN: fname:1: Please move ${COMMENT:Q} out of any quoting characters.\n")
+		"WARN: fname:1: Please move ${COMMENT:Q} outside of any quoting characters.\n")
 
 	shline.CheckShellCommandLine("echo $$@")
 

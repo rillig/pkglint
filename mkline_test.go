@@ -656,7 +656,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_11(c *check.C) {
 	G.Mk.mklines[1].Check()
 	G.Mk.mklines[2].Check()
 
-	c.Check(s.Output(), equals, "WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} out of any quoting characters.\n")
+	c.Check(s.Output(), equals, "WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} outside of any quoting characters.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_12(c *check.C) {
