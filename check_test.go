@@ -89,13 +89,15 @@ func (s *Suite) UseCommandLine(c *check.C, args ...string) {
 }
 
 func (s *Suite) RegisterMasterSite(varname string, urls ...string) {
-	if G.globalData.MasterSiteVars == nil {
-		G.globalData.MasterSiteVars = make(map[string]bool)
-		G.globalData.MasterSiteUrls = make(map[string]string)
+	name2url := &G.globalData.MasterSiteVarToUrl
+	url2name := &G.globalData.MasterSiteUrlToVar
+	if *name2url == nil {
+		*name2url = make(map[string]string)
+		*url2name = make(map[string]string)
 	}
-	G.globalData.MasterSiteVars[varname] = true
+	(*name2url)[varname] = urls[0]
 	for _, url := range urls {
-		G.globalData.MasterSiteUrls[url] = varname
+		(*url2name)[url] = varname
 	}
 }
 

@@ -1341,12 +1341,15 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	}
 
 	if G.opts.Debug {
-		trace("", "MkLine.variableNeedsQuoting", "wantList", wantList, "haveList", haveList)
+		traceStep("wantList", wantList, "haveList", haveList)
 	}
 	if wantList != haveList {
 		if vuc.vartype != nil && vartype != nil {
-			if vuc.vartype.checker == CheckvarFetchURL && vartype.checker == CheckvarURL {
+			if vuc.vartype.checker == CheckvarFetchURL && vartype.checker == CheckvarHomepage {
 				return nqNo
+			}
+			if vuc.vartype.checker == CheckvarHomepage && vartype.checker == CheckvarFetchURL {
+				return nqNo // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 			}
 		}
 		return nqYes

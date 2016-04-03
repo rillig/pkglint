@@ -344,7 +344,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 func (cv *VartypeCheck) FetchURL() {
 	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
 
-	for siteURL, siteName := range G.globalData.MasterSiteUrls {
+	for siteURL, siteName := range G.globalData.MasterSiteUrlToVar {
 		if hasPrefix(cv.value, siteURL) {
 			subdir := cv.value[len(siteURL):]
 			if hasPrefix(cv.value, "https://github.com/") {
@@ -359,8 +359,8 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 
 	if m, name, subdir := match2(cv.value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
-		if !G.globalData.MasterSiteVars[name] {
-			cv.line.Error1("%s does not exist.", name)
+		if G.globalData.MasterSiteVarToUrl[name] == "" {
+			cv.line.Error1("The site %s does not exist.", name)
 		}
 		if !hasSuffix(subdir, "/") {
 			cv.line.Error1("The subdirectory in %s must end with a slash.", name)
@@ -398,6 +398,22 @@ func (cv *VartypeCheck) FileMode() {
 		// Fine.
 	default:
 		cv.line.Warn1("Invalid file mode %q.", cv.value)
+	}
+}
+
+func (cv *VartypeCheck) Homepage() {
+	cv.mkline.CheckVartypePrimitive(cv.varname, CheckvarURL, cv.op, cv.value, cv.comment, cv.listContext, cv.guessed)
+
+	if m, site, subdir := match2(cv.value, `^\$\{(MASTER_SITE_\w+):=([\w\-/]+)\}$`); m {
+		fixedUrl := G.globalData.MasterSiteVarToUrl[site] + subdir
+		if !cv.line.AutofixReplace(cv.value, fixedUrl) {
+			cv.line.Warn1("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedUrl)
+			Explain(
+				"The HOMEPAGE is a single URL, while MASTER_SITES is a list of URLs.",
+				"As long as this list has exactly one element, this works, but as",
+				"soon as another site is added, the HOMEPAGE would not be a valid",
+				"URL anymore.")
+		}
 	}
 }
 

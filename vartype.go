@@ -172,6 +172,7 @@ var (
 	CheckvarFilename               = &VarChecker{"Filename", (*VartypeCheck).Filename}
 	CheckvarFilemask               = &VarChecker{"Filemask", (*VartypeCheck).Filemask}
 	CheckvarFileMode               = &VarChecker{"FileMode", (*VartypeCheck).FileMode}
+	CheckvarHomepage               = &VarChecker{"Homepage", (*VartypeCheck).Homepage}
 	CheckvarIdentifier             = &VarChecker{"Identifier", (*VartypeCheck).Identifier}
 	CheckvarInteger                = &VarChecker{"Integer", (*VartypeCheck).Integer}
 	CheckvarLdFlag                 = &VarChecker{"LdFlag", (*VartypeCheck).LdFlag}

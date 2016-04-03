@@ -192,7 +192,7 @@ func (s *Suite) TestVartypeCheck_FetchURL(c *check.C) {
 		"WARN: fname:1: Please use ${MASTER_SITE_GITHUB:=example/} instead of \"https://github.com/example/project/\" and run \""+confMake+" help topic=github\" for further tips.\n"+
 		"WARN: fname:2: Please use ${MASTER_SITE_GNU:=bison} instead of \"http://ftp.gnu.org/pub/gnu/bison\".\n"+
 		"ERROR: fname:3: The subdirectory in MASTER_SITE_GNU must end with a slash.\n"+
-		"ERROR: fname:4: MASTER_SITE_INVALID does not exist.\n")
+		"ERROR: fname:4: The site MASTER_SITE_INVALID does not exist.\n")
 
 	// PR 46570, keyword gimp-fix-ca
 	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).FetchURL,

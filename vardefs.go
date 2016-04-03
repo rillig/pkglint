@@ -332,7 +332,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("GNU_CONFIGURE_PREFIX", lkNone, CheckvarPathname, "Makefile: set")
 	acl("HAS_CONFIGURE", lkNone, CheckvarYes, "Makefile, Makefile.common: set")
 	pkglist("HEADER_TEMPLATES", lkShell, CheckvarPathname)
-	pkg("HOMEPAGE", lkNone, CheckvarURL)
+	pkg("HOMEPAGE", lkNone, CheckvarHomepage)
 	acl("IGNORE_PKG.*", lkNone, CheckvarYes, "*: set, use-loadtime")
 	acl("INCOMPAT_CURSES", lkSpace, CheckvarMachinePlatformPattern, "Makefile: set, append")
 	acl("INCOMPAT_ICONV", lkSpace, CheckvarMachinePlatformPattern, "")

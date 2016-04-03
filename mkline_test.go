@@ -520,7 +520,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_1(c *check.C) {
 func (s *Suite) TestMkLine_variableNeedsQuoting_2(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
-	G.globalData.MasterSiteVars = map[string]bool{"MASTER_SITE_SOURCEFORGE": true}
+	s.RegisterMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
 	mkline := NewMkLine(NewLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}", nil))
 
 	vuc := &VarUseContext{G.globalData.vartypes["MASTER_SITES"], vucTimeRun, vucQuotPlain, vucExtentWord}
@@ -537,7 +537,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_2(c *check.C) {
 func (s *Suite) TestMkLine_variableNeedsQuoting_3(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
-	G.globalData.MasterSiteVars = map[string]bool{"MASTER_SITE_SOURCEFORGE": true}
+	s.RegisterMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
 	mkline := NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))
 
 	mkline.checkVarassign()
@@ -669,7 +669,5 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_12(c *check.C) {
 
 	G.Mk.mklines[1].Check()
 
-	// This warning is ok, since the HOMEPAGE should be a single
-	// URL and MASTER_SITE_* is a list of URLs.
-	c.Check(s.Output(), equals, "WARN: devel/catch/Makefile:2: Please use ${MASTER_SITE_GITHUB:=philsquared/Catch/:Q} instead of ${MASTER_SITE_GITHUB:=philsquared/Catch/}.\n")
+	c.Check(s.Output(), equals, "WARN: devel/catch/Makefile:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. Use https://github.com/philsquared/Catch/ directly.\n")
 }

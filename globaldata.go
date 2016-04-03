@@ -10,8 +10,8 @@ import (
 // GlobalData contains data describing pkgsrc as a whole.
 type GlobalData struct {
 	Pkgsrcdir           string              // Relative to the current working directory.
-	MasterSiteUrls      map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
-	MasterSiteVars      map[string]bool     // "MASTER_SITE_GITHUB" => true
+	MasterSiteUrlToVar  map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
+	MasterSiteVarToUrl  map[string]string   // "MASTER_SITE_GITHUB" => "https://github.com/"
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
 	Tools               ToolRegistry        //
 	SystemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
@@ -67,14 +67,16 @@ func (gd *GlobalData) loadDistSites() {
 	fname := gd.Pkgsrcdir + "/mk/fetch/sites.mk"
 	lines := LoadExistingLines(fname, true)
 
-	names := make(map[string]bool)
+	name2url := make(map[string]string)
 	url2name := make(map[string]string)
 	for _, line := range lines {
 		if m, varname, _, _, urls, _ := MatchVarassign(line.Text); m {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
-				names[varname] = true
 				for _, url := range splitOnSpace(urls) {
 					if matches(url, `^(?:http://|https://|ftp://)`) {
+						if name2url[varname] == "" {
+							name2url[varname] = url
+						}
 						url2name[url] = varname
 					}
 				}
@@ -83,14 +85,13 @@ func (gd *GlobalData) loadDistSites() {
 	}
 
 	// Explicitly allowed, although not defined in mk/fetch/sites.mk.
-	names["MASTER_SITE_SUSE_UPD"] = true
-	names["MASTER_SITE_LOCAL"] = true
+	name2url["MASTER_SITE_LOCAL"] = "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/"
 
 	if G.opts.Debug {
 		traceStep("Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	}
-	gd.MasterSiteUrls = url2name
-	gd.MasterSiteVars = names
+	gd.MasterSiteUrlToVar = url2name
+	gd.MasterSiteVarToUrl = name2url
 }
 
 func (gd *GlobalData) loadPkgOptions() {
