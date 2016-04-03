@@ -142,6 +142,42 @@ func (vt *Vartype) IsShell() bool {
 		checker == CheckvarSedCommands
 }
 
+// The basic vartype consists only of characters that don’t
+// need escaping in most contexts, like A-Za-z0-9-_.
+func (vt *Vartype) IsBasicSafe() bool {
+	switch vt.checker {
+	case CheckvarBuildlinkDepmethod,
+		CheckvarCategory,
+		CheckvarDistSuffix,
+		CheckvarEmulPlatform,
+		CheckvarFileMode,
+		CheckvarFilename,
+		CheckvarIdentifier,
+		CheckvarInteger,
+		CheckvarMachineGnuPlatform,
+		CheckvarMachinePlatform,
+		CheckvarOption,
+		CheckvarPathname,
+		CheckvarPerl5Packlist,
+		CheckvarPkgName,
+		CheckvarPkgOptionsVar,
+		CheckvarPkgPath,
+		CheckvarPkgRevision,
+		CheckvarPrefixPathname,
+		CheckvarPythonDependency,
+		CheckvarRelativePkgDir,
+		CheckvarRelativePkgPath,
+		CheckvarStage,
+		CheckvarUserGroupName,
+		CheckvarVersion,
+		CheckvarWrkdirSubdirectory,
+		CheckvarYesNo,
+		CheckvarYesNoIndirectly:
+		return true
+	}
+	return false
+}
+
 type VarChecker struct {
 	name    string
 	checker func(*VartypeCheck)

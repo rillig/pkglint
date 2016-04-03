@@ -1238,38 +1238,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqDontKnow
 	}
 
-	isPlainWord := vartype.checker.IsEnum()
-	switch vartype.checker {
-	case CheckvarBuildlinkDepmethod,
-		CheckvarCategory,
-		CheckvarDistSuffix,
-		CheckvarEmulPlatform,
-		CheckvarFileMode,
-		CheckvarFilename,
-		CheckvarIdentifier,
-		CheckvarInteger,
-		CheckvarMachineGnuPlatform,
-		CheckvarMachinePlatform,
-		CheckvarOption,
-		CheckvarPathname,
-		CheckvarPerl5Packlist,
-		CheckvarPkgName,
-		CheckvarPkgOptionsVar,
-		CheckvarPkgPath,
-		CheckvarPkgRevision,
-		CheckvarPrefixPathname,
-		CheckvarPythonDependency,
-		CheckvarRelativePkgDir,
-		CheckvarRelativePkgPath,
-		CheckvarStage,
-		CheckvarUserGroupName,
-		CheckvarVersion,
-		CheckvarWrkdirSubdirectory,
-		CheckvarYesNo,
-		CheckvarYesNoIndirectly:
-		isPlainWord = true
-	}
-	if isPlainWord {
+	if vartype.checker.IsEnum() || vartype.IsBasicSafe() {
 		if vartype.kindOfList == lkNone {
 			return nqDoesntMatter
 		}
