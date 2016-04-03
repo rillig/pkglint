@@ -1309,6 +1309,11 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqYes
 	}
 
+    // SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
+	if vuc.vartype != nil && vuc.vartype.IsPlainString() {
+		return nqNo
+	}
+
 	// Assigning lists to lists does not require any quoting, though
 	// there may be cases like "CONFIGURE_ARGS+= -libs ${LDFLAGS:Q}"
 	// where quoting is necessary.

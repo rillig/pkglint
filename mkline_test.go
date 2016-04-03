@@ -629,6 +629,17 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_14(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: x11/qt5-qtbase/Makefile.common:1: Please use ${BUILDLINK_LDADD.dl:Q} instead of ${BUILDLINK_LDADD.dl:M*}.\n")
 }
 
+func (s *Suite) TestMkLine_variableNeedsQuoting_15(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("benchmarks/iozone/Makefile",
+		"SUBST_MESSAGE.crlf=\tStripping EOL CR in ${REPLACE_PERL}")
+
+	G.Mk.mklines[0].Check()
+
+	c.Check(s.Output(), equals, "") // Don’t suggest ${REPLACE_PERL:Q}.
+}
+
 func (s *Suite) Test_MkLine_Varuse_Modifier_L(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()

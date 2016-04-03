@@ -135,11 +135,14 @@ func (vt *Vartype) String() string {
 }
 
 func (vt *Vartype) IsShell() bool {
-	checker := vt.checker
-	return checker == CheckvarShellCommand ||
-		checker == CheckvarShellCommands ||
-		checker == CheckvarShellWord ||
-		checker == CheckvarSedCommands
+	switch vt.checker {
+	case CheckvarShellCommand,
+		CheckvarShellCommands,
+		CheckvarShellWord,
+		CheckvarSedCommands:
+		return true
+	}
+	return false
 }
 
 // The basic vartype consists only of characters that don’t
@@ -173,6 +176,14 @@ func (vt *Vartype) IsBasicSafe() bool {
 		CheckvarWrkdirSubdirectory,
 		CheckvarYesNo,
 		CheckvarYesNoIndirectly:
+		return true
+	}
+	return false
+}
+
+func (vt *Vartype) IsPlainString() bool {
+	switch vt.checker {
+	case CheckvarComment, CheckvarMessage, CheckvarString:
 		return true
 	}
 	return false
