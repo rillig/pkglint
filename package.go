@@ -79,7 +79,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	change := G.globalData.LastChange[pkg.Pkgpath]
 	if change == nil {
 		if G.opts.Debug {
-			traceStep("No change log for package %q", pkg.Pkgpath)
+			traceStep1("No change log for package %q", pkg.Pkgpath)
 		}
 		return
 	}
@@ -119,7 +119,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	if G.opts.Debug {
 		for packageBl3, _ := range pkg.bl3 {
 			if includedFiles[packageBl3] == nil {
-				traceStep("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
+				traceStep1("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 			}
 		}
 	}
@@ -229,10 +229,10 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	}
 
 	if G.opts.Debug {
-		traceStep("DISTINFO_FILE=%s", pkg.DistinfoFile)
-		traceStep("FILESDIR=%s", pkg.Filesdir)
-		traceStep("PATCHDIR=%s", pkg.Patchdir)
-		traceStep("PKGDIR=%s", pkg.Pkgdir)
+		traceStep1("DISTINFO_FILE=%s", pkg.DistinfoFile)
+		traceStep1("FILESDIR=%s", pkg.Filesdir)
+		traceStep1("PATCHDIR=%s", pkg.Patchdir)
+		traceStep1("PKGDIR=%s", pkg.Pkgdir)
 	}
 
 	return mainLines
@@ -279,7 +279,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.Pkg.bl3[bl3File] = line
 					if G.opts.Debug {
-						traceStep("Buildlink3 file in package: %q", bl3File)
+						traceStep1("Buildlink3 file in package: %q", bl3File)
 					}
 				}
 			}
@@ -295,7 +295,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 
 			if path.Base(fname) == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
 				if G.opts.Debug {
-					traceStep("Including %q sets seenMakefileCommon.", includeFile)
+					traceStep1("Including %q sets seenMakefileCommon.", includeFile)
 				}
 				G.Pkg.seenMakefileCommon = true
 			}
@@ -317,7 +317,7 @@ func readMakefile(fname string, mainLines *MkLines, allLines *MkLines, including
 				}
 
 				if G.opts.Debug {
-					traceStep("Including %q.", dirname+"/"+includeFile)
+					traceStep1("Including %q.", dirname+"/"+includeFile)
 				}
 				includingFname := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
 				if !readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {

@@ -412,6 +412,16 @@ func traceStep(format string, args ...interface{}) {
 		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s %s\n", strings.Repeat("| ", G.traceDepth), msg))
 	}
 }
+func traceStep1(format string, arg0 string) {
+	switch { // Prevent inlining
+	}
+	traceStep(format, arg0)
+}
+func traceStep2(format string, arg0, arg1 string) {
+	switch { //Prevent inlining
+	}
+	traceStep(format, arg0, arg1)
+}
 
 func tracecallInternal(args ...interface{}) func() {
 	if !G.opts.Debug {

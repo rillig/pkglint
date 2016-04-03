@@ -66,7 +66,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 		value = resolveVariableRefs(value)
 	}
 	if G.opts.Debug {
-		traceStep("Expanded %q to %q", varname, value)
+		traceStep2("Expanded %q to %q", varname, value)
 	}
 	return value
 }
@@ -256,7 +256,7 @@ func Checkfile(fname string) {
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
 		if G.opts.Debug {
-			traceStep("Unchecked file %q.", fname)
+			traceStep1("Unchecked file %q.", fname)
 		}
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
@@ -415,7 +415,7 @@ func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	}
 
 	if G.opts.Debug {
-		traceStep("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+		traceStep2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	}
 	return tmp
 }

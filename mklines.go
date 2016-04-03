@@ -149,7 +149,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, varname := range splitOnSpace(mkline.Value()) {
 				mklines.buildDefs[varname] = true
 				if G.opts.Debug {
-					traceStep("%q is added to BUILD_DEFS.", varname)
+					traceStep1("%q is added to BUILD_DEFS.", varname)
 				}
 			}
 
@@ -157,7 +157,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, id := range splitOnSpace(mkline.Value()) {
 				mklines.plistVars["PLIST."+id] = true
 				if G.opts.Debug {
-					traceStep("PLIST.%s is added to PLIST_VARS.", id)
+					traceStep1("PLIST.%s is added to PLIST_VARS.", id)
 				}
 				mklines.UseVar(mkline, "PLIST."+id)
 			}
@@ -174,7 +174,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 				tool = strings.Split(tool, ":")[0]
 				mklines.tools[tool] = true
 				if G.opts.Debug {
-					traceStep("%s is added to USE_TOOLS.", tool)
+					traceStep1("%s is added to USE_TOOLS.", tool)
 				}
 			}
 
@@ -182,7 +182,7 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, svar := range splitOnSpace(mkline.Value()) {
 				mklines.UseVar(mkline, varnameCanon(svar))
 				if G.opts.Debug {
-					traceStep("varuse %s", svar)
+					traceStep1("varuse %s", svar)
 				}
 			}
 

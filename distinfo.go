@@ -21,7 +21,7 @@ func ChecklinesDistinfo(lines []*Line) {
 		patchesDir = G.Pkg.Patchdir
 	}
 	if G.opts.Debug {
-		traceStep("patchesDir=%q", patchesDir)
+		traceStep1("patchesDir=%q", patchesDir)
 	}
 
 	ck := &distinfoLinesChecker{

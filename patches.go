@@ -310,7 +310,7 @@ func guessFileType(line *Line, fname string) (fileType FileType) {
 	}
 
 	if G.opts.Debug {
-		traceStep("Unknown file type for %q", fname)
+		traceStep1("Unknown file type for %q", fname)
 	}
 	return ftUnknown
 }
@@ -350,7 +350,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 	}
 	if matched, before, _, str := match3(text, `^(.*)(["'])(/\w[^"']*)["']`); matched {
 		if G.opts.Debug {
-			traceStep("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
+			traceStep2("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
 		}
 
 		switch {
@@ -384,7 +384,7 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
 		default:
 			if G.opts.Debug {
-				traceStep("before=%q", before)
+				traceStep1("before=%q", before)
 			}
 			checkwordAbsolutePathname(line, path)
 		}

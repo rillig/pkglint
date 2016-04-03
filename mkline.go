@@ -178,7 +178,7 @@ func (mkline *MkLine) checkInclude() {
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
 	if G.opts.Debug {
-		traceStep("includefile=%s", includefile)
+		traceStep1("includefile=%s", includefile)
 	}
 	mkline.CheckRelativePath(includefile, mustExist)
 
@@ -362,7 +362,7 @@ func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator
 	vartype := mkline.getVariableType(varname)
 	if vartype == nil {
 		if G.opts.Debug {
-			traceStep("No type definition found for %q.", varname)
+			traceStep1("No type definition found for %q.", varname)
 		}
 		return
 	}
@@ -383,7 +383,7 @@ func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator
 		break
 	case perms == aclpUnknown:
 		if G.opts.Debug {
-			traceStep("Unknown permissions for %q.", varname)
+			traceStep1("Unknown permissions for %q.", varname)
 		}
 	default:
 		alternativeActions := perms & aclpAllWrite
@@ -466,7 +466,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 	vartype := mkline.getVariableType(varname)
 	if vartype == nil {
 		if G.opts.Debug {
-			traceStep("No type definition found for %q.", varname)
+			traceStep1("No type definition found for %q.", varname)
 		}
 		return
 	}
@@ -683,7 +683,7 @@ func (mkline *MkLine) checkVarassign() {
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == opAssignEval && varname == strings.ToLower(varname) {
 		if G.opts.Debug {
-			traceStep("%s might be unused unless it is an argument to a procedure file.", varname)
+			traceStep1("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
 
 	} else if !varIsUsed(varname) {
@@ -947,12 +947,12 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 	case vartype == nil:
 		// Cannot check anything if the type is not known.
 		if G.opts.Debug {
-			traceStep("Unchecked variable assignment for %s.", varname)
+			traceStep1("Unchecked variable assignment for %s.", varname)
 		}
 
 	case op == opAssignShell:
 		if G.opts.Debug {
-			traceStep("Unchecked use of !=: %q", value)
+			traceStep1("Unchecked use of !=: %q", value)
 		}
 
 	case vartype.kindOfList == lkNone:
@@ -1344,7 +1344,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	}
 
 	if G.opts.Debug {
-		traceStep("Don't know whether :Q is needed for %q", varname)
+		traceStep1("Don't know whether :Q is needed for %q", varname)
 	}
 	return nqDontKnow
 }
@@ -1412,9 +1412,9 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 
 	if G.opts.Debug {
 		if gtype != nil {
-			traceStep("The guessed type of %q is %q.", varname, gtype.String())
+			traceStep2("The guessed type of %q is %q.", varname, gtype.String())
 		} else {
-			traceStep("No type definition found for %q.", varname)
+			traceStep1("No type definition found for %q.", varname)
 		}
 	}
 	return gtype
@@ -1438,7 +1438,7 @@ func (mkline *MkLine) extractUsedVariables(text string) []string {
 	}
 
 	if G.opts.Debug && rest != "" {
-		traceStep("extractUsedVariables: rest=%q", rest)
+		traceStep1("extractUsedVariables: rest=%q", rest)
 	}
 	return result
 }

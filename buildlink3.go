@@ -175,7 +175,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 		} else {
 			if G.opts.Debug {
-				traceStep("Unchecked line %s in third paragraph.", exp.CurrentLine().linenos())
+				traceStep1("Unchecked line %s in third paragraph.", exp.CurrentLine().linenos())
 			}
 			exp.Advance()
 		}
