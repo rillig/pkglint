@@ -1341,7 +1341,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	}
 
 	if G.opts.Debug {
-		traceStep("wantList", wantList, "haveList", haveList)
+		traceStep("wantList=%v haveList=%v", wantList, haveList)
 	}
 	if wantList != haveList {
 		if vuc.vartype != nil && vartype != nil {
