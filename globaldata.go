@@ -171,7 +171,7 @@ func (gd *GlobalData) loadTools() {
 					if G.opts.Debug {
 						traceStep("[condDepth=%d] %s", condDepth, value)
 					}
-					if condDepth == 0 {
+					if condDepth == 0 || condDepth == 1 && basename == "bsd.prefs.mk" {
 						for _, toolname := range splitOnSpace(value) {
 							if !containsVarRef(toolname) {
 								for _, tool := range []*Tool{reg.Register(toolname), reg.Register("TOOLS_" + toolname)} {
