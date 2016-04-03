@@ -144,7 +144,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("BUILDLINK_PASSTHRU_DIRS", lkShell, CheckvarPathname, "Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
 	acl("BUILDLINK_PASSTHRU_RPATHDIRS", lkShell, CheckvarPathname, "Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
 	acl("BUILDLINK_PKGSRCDIR.*", lkNone, CheckvarRelativePkgDir, "buildlink3.mk: default, use-loadtime")
-	acl("BUILDLINK_PREFIX.*", lkNone, CheckvarPathname, "builtin.mk: set, use; buildlink3.mk:; Makefile, Makefile.common, *.mk: use")
+	acl("BUILDLINK_PREFIX.*", lkNone, CheckvarPathname, "builtin.mk: set, use; buildlink3.mk: use; Makefile, Makefile.common, *.mk: use")
 	acl("BUILDLINK_RPATHDIRS.*", lkShell, CheckvarPathname, "buildlink3.mk: append")
 	acl("BUILDLINK_TARGETS", lkShell, CheckvarIdentifier, "")
 	acl("BUILDLINK_FNAME_TRANSFORM.*", lkNone, CheckvarSedCommands, "Makefile, buildlink3.mk, builtin.mk, hacks.mk: append")
