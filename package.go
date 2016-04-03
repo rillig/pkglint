@@ -27,6 +27,7 @@ type Package struct {
 	plistSubstCond     map[string]bool    // varname => true; list of all variables that are used as conditionals (@comment or nothing) in PLISTs.
 	included           map[string]*Line   // fname => line
 	seenMakefileCommon bool               // Does the package have any .includes?
+	loadTimeTools      map[string]bool    // true=ok, false=not ok, absent=not mentioned in USE_TOOLS.
 }
 
 func NewPackage(pkgpath string) *Package {
@@ -37,6 +38,7 @@ func NewPackage(pkgpath string) *Package {
 		bl3:            make(map[string]*Line),
 		plistSubstCond: make(map[string]bool),
 		included:       make(map[string]*Line),
+		loadTimeTools:  make(map[string]bool),
 	}
 	for varname, line := range G.globalData.UserDefinedVars {
 		pkg.vardef[varname] = line

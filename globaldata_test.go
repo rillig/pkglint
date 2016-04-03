@@ -31,20 +31,23 @@ func (s *Suite) TestParselinesSuggestedUpdates(c *check.C) {
 }
 
 func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
-	s.CreateTmpFile(c, "mk/tools/bsd.tools.mk", ""+
-		".include \"flex.mk\"\n"+
-		".include \"gettext.mk\"\n")
-	s.CreateTmpFile(c, "mk/tools/defaults.mk", ""+
-		"_TOOLS_VARNAME.chown=CHOWN\n"+
-		"_TOOLS_VARNAME.mv=MV\n"+
-		"_TOOLS_VARNAME.gawk=AWK\n")
-	s.CreateTmpFile(c, "mk/tools/flex.mk", ""+
-		"# empty\n")
-	s.CreateTmpFile(c, "mk/tools/gettext.mk", ""+
-		"USE_TOOLS+=msgfmt\n"+
-		"TOOLS_CREATE+=msgfmt\n")
-	s.CreateTmpFile(c, "mk/bsd.pkg.mk",
-		"USE_TOOLS+=\tmv\n")
+	s.CreateTmpFileLines(c, "mk/tools/bsd.tools.mk",
+		".include \"flex.mk\"",
+		".include \"gettext.mk\"")
+	s.CreateTmpFileLines(c, "mk/tools/defaults.mk",
+		"_TOOLS_VARNAME.chown=CHOWN",
+		"_TOOLS_VARNAME.gawk=AWK",
+		"_TOOLS_VARNAME.mv=MV",
+		"_TOOLS_VARNAME.pwd=PWD")
+	s.CreateTmpFileLines(c, "mk/tools/flex.mk",
+		"# empty")
+	s.CreateTmpFileLines(c, "mk/tools/gettext.mk",
+		"USE_TOOLS+=msgfmt",
+		"TOOLS_CREATE+=msgfmt")
+	s.CreateTmpFileLines(c, "mk/bsd.prefs.mk",
+		"USE_TOOLS+=\tpwd")
+	s.CreateTmpFileLines(c, "mk/bsd.pkg.mk",
+		"USE_TOOLS+=\tmv")
 	G.globalData.Pkgsrcdir = s.tmpdir
 	G.CurrentDir = s.tmpdir
 	G.CurPkgsrcdir = "."
@@ -56,16 +59,18 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"TRACE: + netbsd.org/pkglint.(*ToolRegistry).Trace()\n"+
-		"TRACE: |   tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true}\n"+
-		"TRACE: |   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false}\n"+
-		"TRACE: |   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |   tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |   tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false}\n"+
-		"TRACE: |   tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false}\n"+
-		"TRACE: |   tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true}\n"+
-		"TRACE: |   tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:false}\n"+
-		"TRACE: |   tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:false}\n"+
+		"TRACE: |   tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:false}\n"+
+		"TRACE: |   tool &{Name:TOOLS_pwd Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: |   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
+		"TRACE: |   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: |   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: |   tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:true UsableAtLoadtime:false}\n"+
+		"TRACE: |   tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
+		"TRACE: |   tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
+		"TRACE: |   tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true UsableAtLoadtime:false}\n"+
+		"TRACE: |   tool &{Name:pwd Varname:PWD MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: |   tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: |   tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
 		"TRACE: - netbsd.org/pkglint.(*ToolRegistry).Trace()\n")
 }
 

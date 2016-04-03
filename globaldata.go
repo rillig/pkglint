@@ -126,6 +126,12 @@ func (gd *GlobalData) loadTools() {
 	}
 
 	reg := NewToolRegistry()
+	reg.RegisterTool(&Tool{"echo", "ECHO", true, true, true})
+	reg.RegisterTool(&Tool{"echo -n", "ECHO_N", true, true, true})
+	reg.RegisterTool(&Tool{"false", "FALSE", true /*why?*/, true, false})
+	reg.RegisterTool(&Tool{"test", "TEST", true, true, true})
+	reg.RegisterTool(&Tool{"true", "TRUE", true /*why?*/, true, true})
+
 	systemBuildDefs := make(map[string]bool)
 
 	for _, basename := range toolFiles {
@@ -152,8 +158,7 @@ func (gd *GlobalData) loadTools() {
 		}
 	}
 
-	{
-		basename := "bsd.pkg.mk"
+	for _, basename := range []string{"bsd.prefs.mk", "bsd.pkg.mk"} {
 		fname := G.globalData.Pkgsrcdir + "/mk/" + basename
 		condDepth := 0
 
@@ -167,10 +172,14 @@ func (gd *GlobalData) loadTools() {
 						traceStep("[condDepth=%d] %s", condDepth, value)
 					}
 					if condDepth == 0 {
-						for _, tool := range splitOnSpace(value) {
-							if !containsVarRef(tool) {
-								reg.Register(tool).Predefined = true
-								reg.Register("TOOLS_" + tool).Predefined = true
+						for _, toolname := range splitOnSpace(value) {
+							if !containsVarRef(toolname) {
+								for _, tool := range []*Tool{reg.Register(toolname), reg.Register("TOOLS_" + toolname)} {
+									tool.Predefined = true
+									if basename == "bsd.prefs.mk" {
+										tool.UsableAtLoadtime = true
+									}
+								}
 							}
 						}
 					}
@@ -212,13 +221,6 @@ func (gd *GlobalData) loadTools() {
 	systemBuildDefs["GAMEMODE"] = true
 	systemBuildDefs["GAMEOWN"] = true
 	systemBuildDefs["GAMEGRP"] = true
-
-	reg.RegisterRequireVar("echo", "ECHO")
-	reg.RegisterRequireVar("echo -n", "ECHO_N")
-	reg.RegisterRequireVar("false", "FALSE")
-	reg.RegisterRequireVar("test", "TEST")
-	reg.RegisterRequireVar("true", "TRUE")
-	reg.byName["echo -n"].Predefined = reg.byName["echo"].Predefined
 
 	gd.Tools = reg
 	gd.SystemBuildDefs = systemBuildDefs
@@ -520,10 +522,11 @@ func (gd *GlobalData) loadDeprecatedVars() {
 
 // See `mk/tools/`.
 type Tool struct {
-	Name           string // e.g. "sed", "gzip"
-	Varname        string // e.g. "SED", "GZIP_CMD"
-	MustUseVarForm bool   // True for echo, because of many differing implementations.
-	Predefined     bool   // This tool is used by the pkgsrc infrastructure, therefore the package does not need to add it to USE_TOOLS explicitly.
+	Name             string // e.g. "sed", "gzip"
+	Varname          string // e.g. "SED", "GZIP_CMD"
+	MustUseVarForm   bool   // True for `echo`, because of many differing implementations.
+	Predefined       bool   // This tool is used by the pkgsrc infrastructure, therefore the package does not need to add it to `USE_TOOLS` explicitly.
+	UsableAtLoadtime bool   // May be used after including `bsd.prefs.mk`.
 }
 
 type ToolRegistry struct {
@@ -551,9 +554,13 @@ func (tr *ToolRegistry) RegisterVarname(toolname, varname string) *Tool {
 	return tool
 }
 
-func (tr *ToolRegistry) RegisterRequireVar(toolname, varname string) {
-	tool := tr.RegisterVarname(toolname, varname)
-	tool.MustUseVarForm = true
+func (tr *ToolRegistry) RegisterTool(tool *Tool) {
+	if tool.Name != "" && tr.byName[tool.Name] == nil {
+		tr.byName[tool.Name] = tool
+	}
+	if tool.Varname != "" && tr.byVarname[tool.Varname] == nil {
+		tr.byVarname[tool.Varname] = tool
+	}
 }
 
 func (tr *ToolRegistry) Trace() {

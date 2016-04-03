@@ -197,11 +197,17 @@ func (mkline *MkLine) checkInclude() {
 		}
 		if G.Pkg != nil {
 			G.Pkg.SeenBsdPrefsMk = true
+			if G.opts.Debug {
+				traceStep("SeenBsdPrefsMk")
+			}
 		}
 
 	case includefile == "../../mk/bsd.fast.prefs.mk":
 		if G.Pkg != nil {
 			G.Pkg.SeenBsdPrefsMk = true
+			if G.opts.Debug {
+				traceStep("SeenBsdPrefsMk")
+			}
 		}
 
 	case hasSuffix(includefile, "/x11-links/buildlink3.mk"):
@@ -431,7 +437,7 @@ func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		mkline.Warn1("%s is used but not defined. Spelling mistake?", varname)
 	}
 
-	mkline.CheckVarusePermissions(varname, vuc)
+	mkline.CheckVarusePermissions(varname, vartype, vuc)
 
 	if varname == "LOCALBASE" && !G.Infrastructure {
 		mkline.WarnVaruseLocalbase()
@@ -458,7 +464,7 @@ func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 }
 
-func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext) {
+func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
 	if !G.opts.WarnPerm {
 		return
 	}
@@ -470,7 +476,6 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vuc *VarUseContext)
 	// be confused with vuc.vartype, which is the type of the
 	// context in which the variable is used (often a ShellCommand
 	// or, in an assignment, the type of the left hand side variable).
-	vartype := mkline.getVariableType(varname)
 	if vartype == nil {
 		if G.opts.Debug {
 			traceStep1("No type definition found for %q.", varname)
@@ -721,6 +726,25 @@ func (mkline *MkLine) checkVarassign() {
 			// defined by find-prefix.mk. Therefore, they are marked
 			// as known in the current file.
 			G.Mk.vardef[evalVarname] = mkline
+		}
+	}
+
+	if varname == "USE_TOOLS" {
+		for _, fullToolname := range splitOnSpace(value) {
+			toolname := strings.Split(fullToolname, ":")[0]
+			if G.Pkg != nil {
+				if !G.Pkg.SeenBsdPrefsMk {
+					G.Pkg.loadTimeTools[toolname] = true
+					if G.opts.Debug {
+						traceStep1("loadTimeTool %q", toolname)
+					}
+				} else if !G.Pkg.loadTimeTools[toolname] {
+					G.Pkg.loadTimeTools[toolname] = false
+					if G.opts.Debug {
+						traceStep1("too late for loadTimeTool %q", toolname)
+					}
+				}
+			}
 		}
 	}
 
@@ -1362,8 +1386,25 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 		return vartype
 	}
 
-	if G.globalData.Tools.byVarname[varname] != nil {
-		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", aclpUse}}, false}
+	if tool := G.globalData.Tools.byVarname[varname]; tool != nil {
+		perms := aclpUse
+		if G.opts.Debug {
+			traceStep("Use of tool %+v", tool)
+		}
+		if tool.UsableAtLoadtime {
+			perms |= aclpUseLoadtime
+		} else if G.Pkg != nil {
+			usable, defined := G.Pkg.loadTimeTools[tool.Name]
+			if G.opts.Debug {
+				traceStep("usable=%v defined=%v", usable, defined)
+			}
+			if usable {
+				perms |= aclpUseLoadtime
+			} else if defined {
+				mkline.Warn1("To make the tool %q usable at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
+			}
+		}
+		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", perms}}, false}
 	}
 
 	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.Tools.byVarname[toolvarname] != nil {
