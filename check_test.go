@@ -77,6 +77,7 @@ func (s *Suite) NewMkLines(fname string, lines ...string) *MkLines {
 
 func (s *Suite) DebugToStdout() {
 	G.debugOut = os.Stdout
+	G.logOut = os.Stdout
 	G.opts.Debug = true
 }
 
