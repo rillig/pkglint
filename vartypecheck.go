@@ -72,7 +72,7 @@ const (
 	reMachineArch = "" +
 		reArch + "|" +
 		"aarch64eb|amd64|arm26|arm32|coldfire|earm|earmeb|earmhf|earmhfeb|earmv4|earmv4eb|earmv5|" +
-		"earmv5eb|earmv6|earmv6eb|earmv6hf|earmv6hfeb|earmv7|earmv7eb|earmv7hf|earmv7hfeb|" +
+		"earmv5eb|earmv6|earmv6eb|earmv6hf|earmv6hfeb|earmv7|earmv7eb|earmv7hf|earmv7hfeb|evbarm|" +
 		"i386|i586|i686|m68000|mips|mips64eb|sh3eb|sh3el"
 
 	// See mk/bsd.prefs.mk:/^GNU_ARCH\./
