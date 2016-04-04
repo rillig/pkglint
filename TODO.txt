@@ -1,0 +1,60 @@
+*** Grundlos verschwunden
+-WARN: chat/ircII/Makefile:28: Please use ${PKGMANDIR} instead of "man".
+
+*** Warnung ist falsch und außerdem doppelt
+>       ${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} \
+>               ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}
+WARN: chat/xchat/Makefile:55--56: Modifier ${GCONF_SCHEMAS:@.s.@...@} is missing the final "@".
+ERROR: chat/xchat/Makefile:55--56: Internal pkglint error: ShellLine.CheckToken state=plain, rest="${GCONF_SCHEMAS:@.s.@${INSTALL_DATA}", token="${GCONF_SCHEMAS:@.s.@${INSTALL_DATA}"
+
+*** Sollte passen
+> CONFIGURE_ARGS+=      ${CONFIGURE_ARGS.${ICONV_TYPE}-iconv}
+WARN: converters/wv2/Makefile:29: CONFIGURE_ARGS.${ICONV_TYPE}-iconv is used but not defined. Spelling mistake?
+> CONFIGURE_ARGS.gnu-iconv=     --with-libiconv=${BUILDLINK_PREFIX.iconv}
+WARN: converters/wv2/Makefile:31: CONFIGURE_ARGS.gnu-iconv is defined but not used. Spelling mistake?
+
+*** neu; warum?
++WARN: databases/libdbi-driver-sqlite3/Makefile_drivers:5: DISTNAME may not be used in this file.
+
+*** doch klar, warum auch nicht?
+> MASTER_SITES?=        https://www.kernel.org/pub/software/scm/git/
+WARN: devel/git/Makefile.common:13: The variable MASTER_SITES may not be given a default value (only set, appended to) in this file.
+
+*** ansehen
+> REQD_FILES+=          ${GIT_TEMPLATES:@.t.@\
+>                               ${EGDIR}/${GIT_TEMPLATEDIR}/${.t.}\
+>                               ${PREFIX}/${GIT_CORE_TEMPLATEDIR}/${.t.}\
+>                       @:M*}
+WARN: devel/git-base/Makefile:62--65: Modifier ${GIT_TEMPLATES:@.t.@...@} is missing the final "@".
+
+*** Leerzeichen in :D
+BRANDELF_CMD=   ${BRANDELF:D${BRANDELF} -t Linux ${DESTDIR}${LINUX_LDCONFIG}:U${TRUE}}
++ERROR: emulators/suse100_base/Makefile:38: Internal pkglint error: ShellLine.CheckToken state=plain, rest="${BRANDELF:D${BRANDELF}", token="${BRANDELF:D${BRANDELF}"
+
+*** :sh hat keinen Variablennamen
+PLIST_SUBST+=QORE_VERSION="${qore-version:sh}"
+lang/qore/module.mk
+
+*** Conditionals ohne Leerzeichen
+BUILD_TARGET=   solaris-sparc-${${PKGSRC_COMPILER}==gcc:?gcc:cc}
+security/john/Makefile
+
+*** Warnung falsch
+ONLY_FOR_PLATFORM=      #Darwin-*-i386 Darwin*-x86_64 # would need DirectIO
+sysutils/nvramtool/Makefile
+
+*** Internal error
+\t${RUN} ${RM} -f ${${FIND} ${WRKSRC} -type d:L:sh:=/.gitignore}
+textproc/docbook-xsl/Makefile.common
+
+*** Neu und falsch
++WARN: games/rocksndiamonds/options.mk:10: The variable BUILD_TARGET may not be set (only appended to) in this file; it would be ok in Makefile, Makefile.common.
++WARN: games/rocksndiamonds/options.mk:18: The variable BUILD_TARGET may not be set (only appended to) in this file; it would be ok in Makefile, Makefile.common.
+
+*** Neu und irreführend
+> MASTER_SITES=         ${MASTER_SITE_SOURCEFORGE:=viking/}${VERSION}/
+WARN: geography/viking/Makefile:8: Please use ${MASTER_SITE_SOURCEFORGE:=viking/:Q} instead of ${MASTER_SITE_SOURCEFORGE:=viking/}.
+
+*** Verschwunden, war aber wichtig
+-WARN: editors/emacs/modules.mk:341: ${EMACS_VERSION_MAJOR}>22 is used but not defined. Spelling mistake?
+-WARN: security/john/Makefile:23: ${PKGSRC_COMPILER}==gcc is used but not defined. Spelling mistake?
