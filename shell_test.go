@@ -222,7 +222,7 @@ func (s *Suite) TestShellLine_CheckShelltext_InternalError1(c *check.C) {
 		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
 		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
 		"WARN: fname:1: Unknown shell command \"echo\".\n"+
-		"ERROR: fname:1: Internal pkglint error: ShellLine.CheckToken state=plain, rest=\"\\\\foo\", token=\"\\\\foo\"\n"+
+		"ERROR: fname:1: Internal pkglint error: ShellLine.CheckWord state=plain, rest=\"\\\\foo\", token=\"\\\\foo\"\n"+
 		"ERROR: fname:1: Internal pkglint error: ShellLine.CheckShellCommand state=continuation rest=\"\\\\\" shellcmd=\"echo \\\\foo   bar\\\\\"\n")
 }
 

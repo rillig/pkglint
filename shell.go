@@ -281,7 +281,7 @@ outer:
 	}
 
 	if strings.TrimSpace(parser.Rest()) != "" {
-		line.Errorf("Internal pkglint error: ShellLine.CheckToken state=%s, rest=%q, token=%q", state, parser.Rest(), token)
+		line.Errorf("Internal pkglint error: ShellLine.CheckWord state=%s, rest=%q, token=%q", state, parser.Rest(), token)
 	}
 }
 
