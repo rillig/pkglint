@@ -94,6 +94,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	opts.AddFlagVar('h', "help", &gopts.PrintHelp, false, "print a detailed usage message")
 	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
 	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
+	opts.AddFlagVar('m', "log-verbose", &gopts.LogVerbose, false, "allow the same log message more than once")
 	opts.AddFlagVar('p', "profiling", &gopts.Profiling, false, "profile the executing program")
 	opts.AddFlagVar('q', "quiet", &gopts.Quiet, false, "don't print a summary line when finishing")
 	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")

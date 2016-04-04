@@ -23,6 +23,7 @@ type GlobalVars struct {
 
 	errors                int
 	warnings              int
+	logged                map[string]bool
 	explanationsAvailable bool
 	explanationsGiven     map[string]bool
 	autofixAvailable      bool
@@ -70,6 +71,7 @@ type CmdOpts struct {
 	PrintHelp,
 	DumpMakefile,
 	Import,
+	LogVerbose,
 	Profiling,
 	Quiet,
 	Recursive,

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"path"
 	"strings"
 )
 
@@ -21,9 +22,26 @@ var (
 
 var dummyLine = NewLine("", 0, "", nil)
 
+func shallBeLogged(fname, lineno, msg string) bool {
+	uniq := path.Clean(fname) + ":" + lineno + ":" + msg
+	if G.logged[uniq] {
+		return false
+	}
+
+	if G.logged == nil {
+		G.logged = make(map[string]bool)
+	}
+	G.logged[uniq] = true
+	return true
+}
+
 func logs(out io.Writer, level *LogLevel, fname, lineno, format, msg string) bool {
 	if fname != "" {
 		fname = cleanpath(fname)
+	}
+
+	if !G.opts.LogVerbose && !shallBeLogged(fname, lineno, msg) {
+		return false
 	}
 
 	var text, sep string

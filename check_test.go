@@ -86,6 +86,7 @@ func (s *Suite) UseCommandLine(c *check.C, args ...string) {
 	if exitcode != nil && *exitcode != 0 {
 		c.Fatalf("Cannot parse command line: %#v", args)
 	}
+	G.opts.LogVerbose = true // See SetUpTest
 }
 
 func (s *Suite) RegisterMasterSite(varname string, urls ...string) {
@@ -157,6 +158,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G = GlobalVars{Testing: true}
 	G.logOut, G.logErr, G.debugOut = &s.stdout, &s.stderr, &s.stdout
 	s.UseCommandLine(c /* no arguments */)
+	G.opts.LogVerbose = true // To detect duplicate work being done
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
