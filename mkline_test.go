@@ -650,3 +650,16 @@ func (s *Suite) Test_MkLine_Varuse_Modifier_L(c *check.C) {
 
 	c.Check(s.Output(), equals, "") // Don’t warn that ${XKBBASE}/xkbcomp is used but not defined.
 }
+
+func (s *Suite) Test_MkLine_Cond_ShellCommand(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("security/openssl/Makefile",
+		"# $"+"NetBSD$",
+		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
+		".endif")
+
+	G.Mk.Check()
+
+	c.Check(s.Output(), equals, "") // Don’t warn about unknown shell command "cc".
+}

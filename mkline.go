@@ -1107,7 +1107,7 @@ func (mkline *MkLine) checkText(text string) {
 
 func (mkline *MkLine) CheckCond() {
 	if G.opts.Debug {
-		defer tracecall0()()
+		defer tracecall1(mkline.Args())()
 	}
 
 	p := NewParser(mkline.Line, mkline.Args())
