@@ -875,7 +875,7 @@ func (cv *VartypeCheck) ShellCommands() {
 
 func (cv *VartypeCheck) ShellWord() {
 	if !cv.listContext {
-		NewShellLine(cv.mkline).CheckToken(cv.value, true)
+		NewShellLine(cv.mkline).CheckWord(cv.value, true)
 	}
 }
 

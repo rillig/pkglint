@@ -239,52 +239,52 @@ func (s *Suite) TestShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) TestChecklineMkShellword(c *check.C) {
+func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
-	shline.CheckToken("${${list}}", false)
+	shline.CheckWord("${${list}}", false)
 
 	c.Check(s.Output(), equals, "") // No warning for variables that are completely indirect.
 
-	shline.CheckToken("${SED_FILE.${id}}", false)
+	shline.CheckWord("${SED_FILE.${id}}", false)
 
 	c.Check(s.Output(), equals, "WARN: fname:1: SED_FILE.${id} is used but not defined. Spelling mistake?\n")
 
-	shline.CheckToken("\"$@\"", false)
+	shline.CheckWord("\"$@\"", false)
 
 	c.Check(s.Output(), equals, "WARN: fname:1: Please use \"${.TARGET}\" instead of \"$@\".\n")
 
-	shline.CheckToken("${COMMENT:Q}", true)
+	shline.CheckWord("${COMMENT:Q}", true)
 
 	c.Check(s.Output(), equals, "WARN: fname:1: COMMENT may not be used in this file.\n")
 
-	shline.CheckToken("\"${DISTINFO_FILE:Q}\"", true)
+	shline.CheckWord("\"${DISTINFO_FILE:Q}\"", true)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 
-	shline.CheckToken("embed${DISTINFO_FILE:Q}ded", true)
+	shline.CheckWord("embed${DISTINFO_FILE:Q}ded", true)
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 
-	shline.CheckToken("s,\\.,,", true)
+	shline.CheckWord("s,\\.,,", true)
 
 	c.Check(s.Output(), equals, "")
 
-	shline.CheckToken("\"s,\\.,,\"", true)
+	shline.CheckWord("\"s,\\.,,\"", true)
 
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) TestShellLine_CheckToken_DollarWithoutVariable(c *check.C) {
+func (s *Suite) Test_ShellLine_CheckWord_DollarWithoutVariable(c *check.C) {
 	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
-	shline.CheckToken("/.*~$$//g", false) // Typical argument to pax(1).
+	shline.CheckWord("/.*~$$//g", false) // Typical argument to pax(1).
 
 	c.Check(s.Output(), equals, "")
 }

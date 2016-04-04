@@ -141,7 +141,7 @@ func (st ShellwordState) ToVarUseContext() vucQuoting {
 var shellcommandsContextType = &Vartype{lkNone, CheckvarShellCommands, []AclEntry{{"*", aclpAllRuntime}}, false}
 var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
-func (shline *ShellLine) CheckToken(token string, checkQuoting bool) {
+func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 	if G.opts.Debug {
 		defer tracecall(token, checkQuoting)()
 	}
@@ -445,11 +445,11 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 		}
 
 		{
-			quotingNecessary := state != scstCase &&
-				state != scstForCont &&
-				state != scstSetCont &&
-				!(state == scstStart && matches(token, reShVarassign))
-			shline.CheckToken(token, quotingNecessary)
+			noQuotingNeeded := state == scstCase ||
+				state == scstForCont ||
+				state == scstSetCont ||
+				(state == scstStart && matches(token, reShVarassign))
+			shline.CheckWord(token, !noQuotingNeeded)
 		}
 
 		st := &ShelltextContext{shline, state, token}
