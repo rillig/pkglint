@@ -1037,9 +1037,8 @@ func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker,
 		defer tracecall(varname, checker.name, op, value, comment, isList, guessed)()
 	}
 
-	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, "", comment, isList, guessed}
-	ctx.valueNovar = mkline.withoutMakeVariables(value, isList)
-
+	valueNoVar := mkline.withoutMakeVariables(value, isList)
+	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, isList, guessed}
 	checker.checker(ctx)
 }
 
