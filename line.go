@@ -122,12 +122,12 @@ func (line *Line) printSource(out io.Writer) {
 
 func (line *Line) Fatalf(format string, args ...interface{}) {
 	line.printSource(G.logErr)
-	Fatals(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llFatal, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 }
 
 func (line *Line) Errorf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	Errors(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llError, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 func (line *Line) Error0(format string)             { line.Errorf(format) }
@@ -136,7 +136,7 @@ func (line *Line) Error2(format, arg1, arg2 string) { line.Errorf(format, arg1, 
 
 func (line *Line) Warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	Warns(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llWarn, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 func (line *Line) Warn0(format string)             { line.Warnf(format) }
@@ -145,7 +145,7 @@ func (line *Line) Warn2(format, arg1, arg2 string) { line.Warnf(format, arg1, ar
 
 func (line *Line) Notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	Notes(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llNote, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 func (line *Line) Note0(format string)             { line.Notef(format) }
@@ -158,7 +158,7 @@ func (line *Line) String() string {
 
 func (line *Line) logAutofix() {
 	if line.autofixMessage != nil {
-		autofixs(line.Fname, line.linenos(), "%s", *line.autofixMessage)
+		logs(llAutofix, line.Fname, line.linenos(), "%s", *line.autofixMessage)
 		line.autofixMessage = nil
 	}
 }
@@ -220,7 +220,7 @@ func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFi
 	}
 	line.changed = true
 	if G.opts.Autofix {
-		autofixs(line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+		logs(llAutofix, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 		return true
 	}
 	if G.opts.PrintAutofix {

@@ -35,7 +35,7 @@ func shallBeLogged(fname, lineno, msg string) bool {
 	return true
 }
 
-func logs(out io.Writer, level *LogLevel, fname, lineno, format, msg string) bool {
+func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 	if fname != "" {
 		fname = cleanpath(fname)
 	}
@@ -64,27 +64,23 @@ func logs(out io.Writer, level *LogLevel, fname, lineno, format, msg string) boo
 		G.loghisto.Add(format, 1)
 	}
 	text += sep + msg + "\n"
-	io.WriteString(out, text)
-	return true
-}
 
-func Fatals(fname, lineno, format, msg string) {
-	logs(G.logErr, llFatal, fname, lineno, format, msg)
-	panic(pkglintFatal{})
-}
-func Errors(fname, lineno, format, msg string) bool {
-	G.errors++
-	return logs(G.logOut, llError, fname, lineno, format, msg)
-}
-func Warns(fname, lineno, format, msg string) bool {
-	G.warnings++
-	return logs(G.logOut, llWarn, fname, lineno, format, msg)
-}
-func Notes(fname, lineno, format, msg string) bool {
-	return logs(G.logOut, llNote, fname, lineno, format, msg)
-}
-func autofixs(fname, lineno, format, msg string) bool {
-	return logs(G.logOut, llAutofix, fname, lineno, format, msg)
+	out := G.logOut
+	if level == llFatal {
+		out = G.logErr
+	}
+
+	io.WriteString(out, text)
+
+	switch level {
+	case llFatal:
+		panic(pkglintFatal{})
+	case llError:
+		G.errors++
+	case llWarn:
+		G.warnings++
+	}
+	return true
 }
 
 func Explain(explanation ...string) {

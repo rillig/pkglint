@@ -175,7 +175,7 @@ func SaveAutofixChanges(lines []*Line) (autofixed bool) {
 			continue
 		}
 		msg := "Has been auto-fixed. Please re-run pkglint."
-		autofixs(fname, "", msg, msg)
+		logs(llAutofix, fname, "", msg, msg)
 		autofixed = true
 	}
 	return
