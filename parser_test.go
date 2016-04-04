@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	check "gopkg.in/check.v1"
 )
 
@@ -231,4 +233,54 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 	varuse := &MkVarUse{"varname", []string{"Q"}}
 
 	c.Check(varuse.Mod(), equals, ":Q")
+}
+
+func (s *Suite) Test_Parser_ShTokens(c *check.C) {
+	parse := func(input string) (result string) {
+		p := NewParser(dummyLine, input)
+		for _, shtoken := range p.ShTokens() {
+			result += shtoken.Text
+			if shtoken.StateChange {
+				result += "[" + strings.Map(func(r rune) rune {
+					switch r {
+					case '"':
+						return 'd'
+					case '\'':
+						return 's'
+					case '`':
+						return 'b'
+					default:
+						return r
+					}
+				}, shtoken.NewState) + "]"
+			}
+		}
+		return
+	}
+
+	shtokens := NewParser(dummyLine, "hello, world").ShTokens()
+
+	c.Check(shtokens, deepEquals, []*ShToken{
+		{Text: "hello, world"},
+	})
+
+	c.Check(parse("hello, world"), equals, "hello, world")
+
+	shtokens = NewParser(dummyLine, "hello, \"world\"").ShTokens()
+
+	c.Check(shtokens, deepEquals, []*ShToken{
+		{Text: "hello, "},
+		{Text: "\"", StateChange: true, NewState: "\""},
+		{Text: "world", NewState: "\""},
+		{Text: "\"", StateChange: true, NewState: ""},
+	})
+
+	c.Check(parse("hello, \"world\""), equals, "hello, \"[d]world\"[]")
+
+	c.Check(parse("x\"x`x`x\"x'x\"x'"), equals, "x\"[d]x`[db]x`[d]x\"[]x'[s]x\"x'[]")
+	c.Check(parse("x\"x`x'x'x`x\""), equals, "x\"[d]x`[db]x'[dbs]x'[db]x`[d]x\"[]")
+	c.Check(parse("x\\\"x\\'x\\`x\\\\"), equals, "x\\\"x\\'x\\`x\\\\")
+	c.Check(parse("x\"x\\\"x\\'x\\`x\\\\"), equals, "x\"[d]x\\\"x\\'x\\`x\\\\")
+	c.Check(parse("x'x\\\"x\\'x\\`x\\\\"), equals, "x'[s]x\\\"x\\'[]x\\`x\\\\")
+	c.Check(parse("x`x\\\"x\\'x\\`x\\\\"), equals, "x`[b]x\\\"x\\'x\\`x\\\\")
 }

@@ -455,3 +455,108 @@ func (p *Parser) mkCondAtom() *Tree {
 	repl.Reset(mark)
 	return nil
 }
+
+type ShToken struct {
+	Text        string
+	StateChange bool
+	NewState    string
+}
+
+func (st *ShToken) String() string {
+	if st.StateChange {
+		return st.Text + "[" + st.NewState + "]"
+	}
+	return st.Text
+}
+
+// See ShQuote.Feed
+func (p *Parser) ShTokens() []*ShToken {
+	const (
+		reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
+		S      = "'"
+		D      = "\""
+		B      = "`"
+	)
+
+	var tokens []*ShToken
+	repl := p.repl
+	qstate := ""
+
+	emitText := func() {
+		tokens = append(tokens, &ShToken{repl.m[0], false, qstate})
+	}
+	emitState := func(newstate string) {
+		qstate = newstate
+		tokens = append(tokens, &ShToken{repl.s, true, qstate})
+	}
+
+	for repl.rest != "" {
+		mark := repl.Mark()
+		switch qstate {
+		case "":
+			switch {
+			case repl.AdvanceStr(D):
+				emitState(D)
+			case repl.AdvanceStr(S):
+				emitState(S)
+			case repl.AdvanceStr(B):
+				emitState(B)
+			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`):
+				emitText()
+			}
+
+		case D:
+			switch {
+			case repl.AdvanceStr(D):
+				emitState("")
+			case repl.AdvanceStr(B):
+				emitState(D + B)
+			case repl.AdvanceStr(S):
+				emitState(D + S)
+			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`):
+				emitText()
+			}
+
+		case S:
+			switch {
+			case repl.AdvanceStr(S):
+				emitState("")
+			case repl.AdvanceRegexp(`^[^']+`):
+				emitText()
+			}
+
+		case B:
+			switch {
+			case repl.AdvanceStr(B):
+				emitState("")
+			case repl.AdvanceStr(S):
+				emitState(B + S)
+			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`): // TODO: Lookup the exact rules
+				emitText()
+			}
+
+		case D + B:
+			switch {
+			case repl.AdvanceStr(B):
+				emitState(D)
+			case repl.AdvanceStr(S):
+				emitState(D + B + S)
+			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`): // TODO: Lookup the exact rules
+				emitText()
+			}
+		case D + B + S:
+			switch {
+			case repl.AdvanceStr(S):
+				emitState(D + B)
+			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`): // TODO: Lookup the exact rules
+				emitText()
+			}
+		}
+
+		if repl.Since(mark) == "" {
+			traceStep2("Parser.ShTokens.stuck qstate=%s rest=%s", qstate, repl.rest)
+			return append(tokens, &ShToken{repl.rest, true, "?"})
+		}
+	}
+	return tokens
+}
