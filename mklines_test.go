@@ -179,3 +179,17 @@ func (s *Suite) Test_MkLines_ForLoop_Multivar(c *check.C) {
 		"WARN: audio/squeezeboxserver/Makefile:3: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.\n"+
 		"WARN: audio/squeezeboxserver/Makefile:4: The exitcode of the left-hand-side command of the pipe operator is ignored.\n")
 }
+
+func (s *Suite) Test_MkLines_Cond_Compare_YesNo(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("databases/gdbm_compat/builtin.mk",
+		"# $"+"NetBSD$",
+		".if ${USE_BUILTIN.gdbm} == \"no\"",
+		".endif")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: databases/gdbm_compat/builtin.mk:2: "+
+		"USE_BUILTIN.gdbm should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not compared with \"no\".\n")
+}

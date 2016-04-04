@@ -1037,15 +1037,24 @@ func (cv *VartypeCheck) Yes() {
 }
 
 func (cv *VartypeCheck) YesNo() {
+	const (
+		yes1 = "[yY][eE][sS]"
+		yes2 = "[Yy][Ee][Ss]"
+		no1  = "[nN][oO]"
+		no2  = "[Nn][Oo]"
+	)
 	if cv.op == opUseMatch {
 		switch cv.value {
-		case "[yY][eE][sS]":
-		case "[Yy][Ee][Ss]":
-		case "[nN][oO]":
-		case "[Nn][Oo]":
+		case yes1, yes2, no1, no2:
 		default:
-			cv.line.Warnf("%s should be matched against %q or %q, not %q.", cv.varname, "[yY][eE][sS]", "[nN][oO]", cv.value)
+			cv.line.Warnf("%s should be matched against %q or %q, not %q.", cv.varname, yes1, no1, cv.value)
 		}
+	} else if cv.op == opUse {
+		cv.line.Warnf("%s should be matched against %q or %q, not compared with %q.", cv.varname, yes1, no1, cv.value)
+		Explain(
+			"The yes/no value can be written in either upper or lower case, and",
+			"both forms are actually used.  As long as this is the case, when",
+			"checking the variable value, both must be accepted.")
 	} else if !matches(cv.value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
 		cv.line.Warn1("%s should be set to YES, yes, NO, or no.", cv.varname)
 	}
