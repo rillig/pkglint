@@ -663,3 +663,16 @@ func (s *Suite) Test_MkLine_Cond_ShellCommand(c *check.C) {
 
 	c.Check(s.Output(), equals, "") // Don’t warn about unknown shell command "cc".
 }
+
+func (s *Suite) disabledTest_MkLine_Pkgmandir(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("chat/ircII/Makefile",
+		"# $"+"NetBSD$",
+		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/man",
+		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/${PKGMANDIR}")
+
+	G.Mk.Check()
+
+	c.Check(s.Output(), equals, "WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".\n")
+}
