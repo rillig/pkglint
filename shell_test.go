@@ -24,27 +24,21 @@ func (s *Suite) TestReShellToken(c *check.C) {
 }
 
 func (s *Suite) Test_SplitIntoShellTokens_LineContinuation(c *check.C) {
-	line := NewLine("fname", 10, "dummy", nil)
-
-	words, rest := splitIntoShellTokens(line, "if true; then \\")
+	words, rest := splitIntoShellTokens(dummyLine, "if true; then \\")
 
 	c.Check(words, check.DeepEquals, []string{"if", "true", ";", "then"})
 	c.Check(rest, equals, "\\")
 }
 
 func (s *Suite) Test_SplitIntoShellTokens_DollarSlash(c *check.C) {
-	line := NewLine("fname", 10, "dummy", nil)
-
-	words, rest := splitIntoShellTokens(line, "pax -s /.*~$$//g")
+	words, rest := splitIntoShellTokens(dummyLine, "pax -s /.*~$$//g")
 
 	c.Check(words, check.DeepEquals, []string{"pax", "-s", "/.*~$$//g"})
 	c.Check(rest, equals, "")
 }
 
 func (s *Suite) Test_SplitIntoShellTokens_DollarSubshell(c *check.C) {
-	line := NewLine("fname", 99, "dummy", nil)
-
-	words, rest := splitIntoShellTokens(line, "id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"")
+	words, rest := splitIntoShellTokens(dummyLine, "id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"")
 
 	c.Check(words, deepEquals, []string{"id=", "$$(", "${AWK}", "'{print}'", "<", "${WRKSRC}/idfile", ")", "&&", "echo", "\"$$id\""})
 	c.Check(rest, equals, "")
