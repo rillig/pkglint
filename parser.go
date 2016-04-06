@@ -97,8 +97,8 @@ func (p *Parser) Dependency() *DependencyPattern {
 }
 
 type MkToken struct {
-	Literal string
-	Varuse  MkVarUse
+	Text   string // Used for both literals and varuses.
+	Varuse *MkVarUse
 }
 type MkVarUse struct {
 	varname   string
@@ -134,12 +134,13 @@ func (p *Parser) MkTokens() []*MkToken {
 		if repl.AdvanceStr("#") {
 			repl.AdvanceRest()
 		}
+
+		mark := repl.Mark()
 		if varuse := p.VarUse(); varuse != nil {
-			tokens = append(tokens, &MkToken{Varuse: *varuse})
+			tokens = append(tokens, &MkToken{Text: repl.Since(mark), Varuse: varuse})
 			continue
 		}
 
-		mark := repl.Mark()
 		needsReplace := false
 	again:
 		dollar := strings.IndexByte(repl.rest, '$')
@@ -151,12 +152,12 @@ func (p *Parser) MkTokens() []*MkToken {
 			needsReplace = true
 			goto again
 		}
-		literal := repl.Since(mark)
+		text := repl.Since(mark)
 		if needsReplace {
-			literal = strings.Replace(literal, "$$", "$", -1)
+			text = strings.Replace(text, "$$", "$", -1)
 		}
-		if literal != "" {
-			tokens = append(tokens, &MkToken{Literal: literal})
+		if text != "" {
+			tokens = append(tokens, &MkToken{Text: text})
 			continue
 		}
 

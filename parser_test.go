@@ -68,11 +68,19 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token := func(input string, expectedToken *MkToken) {
 		parse(input, []*MkToken{expectedToken}, "")
 	}
-	literal := func(literal string) *MkToken {
-		return &MkToken{Literal: literal}
+	literal := func(text string) *MkToken {
+		return &MkToken{Text: text}
 	}
 	varuse := func(varname string, modifiers ...string) *MkToken {
-		return &MkToken{Varuse: MkVarUse{varname: varname, modifiers: modifiers}}
+		text := "${" + varname
+		for _, modifier := range modifiers {
+			text += ":" + modifier
+		}
+		text += "}"
+		return &MkToken{Text: text, Varuse: &MkVarUse{varname: varname, modifiers: modifiers}}
+	}
+	varuseText := func(text, varname string, modifiers ...string) *MkToken {
+		return &MkToken{Text: text, Varuse: &MkVarUse{varname: varname, modifiers: modifiers}}
 	}
 
 	token("literal", literal("literal"))
@@ -131,12 +139,12 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token("${empty(CFLAGS):?:-cflags ${CFLAGS:Q}}", varuse("empty(CFLAGS)", "?:-cflags ${CFLAGS:Q}"))
 	token("${${${PKG_INFO} -E ${d} || echo:L:sh}:L:C/[^[0-9]]*/ /g:[1..3]:ts.}",
 		varuse("${${PKG_INFO} -E ${d} || echo:L:sh}", "L", "C/[^[0-9]]*/ /g", "[1..3]", "ts."))
-	token("${VAR:S/-//S/.//}", varuse("VAR", "S/-//", "S/.//")) // For :S and :C, the colon can be left out.
-	token("${VAR:ts}", varuse("VAR", "ts"))                     // The separator character can be left out.
-	token("${VAR:ts\\000012}", varuse("VAR", "ts\\000012"))     // The separator character can be a long octal number.
-	token("${VAR:ts\\124}", varuse("VAR", "ts\\124"))           // Or even decimal.
+	token("${VAR:S/-//S/.//}", varuseText("${VAR:S/-//S/.//}", "VAR", "S/-//", "S/.//")) // For :S and :C, the colon can be left out.
+	token("${VAR:ts}", varuse("VAR", "ts"))                                              // The separator character can be left out.
+	token("${VAR:ts\\000012}", varuse("VAR", "ts\\000012"))                              // The separator character can be a long octal number.
+	token("${VAR:ts\\124}", varuse("VAR", "ts\\124"))                                    // Or even decimal.
 
-	token("$(GNUSTEP_USER_ROOT)", varuse("GNUSTEP_USER_ROOT"))
+	token("$(GNUSTEP_USER_ROOT)", varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"))
 	c.Check(s.Output(), equals, "WARN: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.\n")
 
 	parse("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
