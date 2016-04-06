@@ -575,6 +575,7 @@ const (
 	shlParenClose
 	shlBraceOpen
 	shlBraceClose
+	shlVaruse
 )
 
 type ShLexeme struct {
