@@ -560,3 +560,70 @@ func (p *Parser) ShTokens() []*ShToken {
 	}
 	return tokens
 }
+
+// @Beta
+type ShLexemeType uint8
+
+const (
+	shlSpace ShLexemeType = iota
+	shlPlain
+	shlDquot
+	shlSquot
+	shlBackt
+	shlSemicolon
+	shlParenOpen
+	shlParenClose
+	shlBraceOpen
+	shlBraceClose
+)
+
+type ShLexeme struct {
+	Type ShLexemeType
+	Text string
+	Data *interface{}
+}
+
+func (shl *ShLexeme) String() string {
+	return shl.Text
+}
+
+func (p *Parser) ShLexemes() []*ShLexeme {
+	var result []*ShLexeme
+	repl := p.repl
+	mark := repl.Mark()
+
+	emit := func(lextype ShLexemeType) {
+		result = append(result, &ShLexeme{lextype, repl.Since(mark), nil})
+	}
+
+	for !p.EOF() {
+		const rePlain = `^([\w-\[\]=/]|\$\$)+`
+		mark = repl.Mark()
+		switch {
+		case repl.AdvanceRegexp(rePlain) || p.VarUse() != nil:
+			for repl.AdvanceRegexp(rePlain) || p.VarUse() != nil {
+			}
+			emit(shlPlain)
+
+		case repl.AdvanceRegexp(`^[ \t]+`):
+			emit(shlSpace)
+
+		case repl.AdvanceStr(";"):
+			emit(shlSemicolon)
+		case repl.AdvanceStr("("):
+			emit(shlParenOpen)
+		case repl.AdvanceStr(")"):
+			emit(shlParenClose)
+
+		case repl.AdvanceRegexp("^\"(?:\\\\.|[^\"\\\\`$]|`[^\"\\\\`$']*`)*\""):
+			emit(shlDquot) // TODO: unescape
+
+		case repl.AdvanceRegexp("^`(?:\\\\.|[^\"\\\\`])*`"):
+			emit(shlBackt)
+
+		default:
+			return result
+		}
+	}
+	return result
+}
