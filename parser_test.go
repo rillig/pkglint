@@ -69,10 +69,10 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 		parse(input, []*MkToken{expectedToken}, "")
 	}
 	literal := func(literal string) *MkToken {
-		return &MkToken{literal: literal}
+		return &MkToken{Literal: literal}
 	}
 	varuse := func(varname string, modifiers ...string) *MkToken {
-		return &MkToken{varuse: MkVarUse{varname: varname, modifiers: modifiers}}
+		return &MkToken{Varuse: MkVarUse{varname: varname, modifiers: modifiers}}
 	}
 
 	token("literal", literal("literal"))

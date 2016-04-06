@@ -809,11 +809,11 @@ func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 
 			quoting := NewShQuote("")
 			for _, token := range p.MkTokens() {
-				if token.literal != "" {
-					quoting.Feed(token.literal)
+				if token.Literal != "" {
+					quoting.Feed(token.Literal)
 				} else {
 					vuc := &VarUseContext{vartype, time, quoting.ShellwordState().ToVarUseContext(), extent}
-					mkline.CheckVaruse(&token.varuse, vuc)
+					mkline.CheckVaruse(&token.Varuse, vuc)
 				}
 			}
 		}

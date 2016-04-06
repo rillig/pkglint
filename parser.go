@@ -97,8 +97,8 @@ func (p *Parser) Dependency() *DependencyPattern {
 }
 
 type MkToken struct {
-	literal string
-	varuse  MkVarUse
+	Literal string
+	Varuse  MkVarUse
 }
 type MkVarUse struct {
 	varname   string
@@ -135,7 +135,7 @@ func (p *Parser) MkTokens() []*MkToken {
 			repl.AdvanceRest()
 		}
 		if varuse := p.VarUse(); varuse != nil {
-			tokens = append(tokens, &MkToken{varuse: *varuse})
+			tokens = append(tokens, &MkToken{Varuse: *varuse})
 			continue
 		}
 
@@ -156,7 +156,7 @@ func (p *Parser) MkTokens() []*MkToken {
 			literal = strings.Replace(literal, "$$", "$", -1)
 		}
 		if literal != "" {
-			tokens = append(tokens, &MkToken{literal: literal})
+			tokens = append(tokens, &MkToken{Literal: literal})
 			continue
 		}
 
