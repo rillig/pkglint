@@ -568,21 +568,22 @@ type ShLexemeType uint8
 const (
 	shlSpace ShLexemeType = iota
 	shlPlain
-	shlDquot
-	shlSquot
-	shlBackt
-	shlSemicolon
-	shlParenOpen
-	shlParenClose
-	shlBraceOpen
-	shlBraceClose
-	shlVaruse
+	shlDquot        // "..."
+	shlSquot        // '...'
+	shlBackt        // `...`
+	shlSubshellOpen // $(
+	shlSemicolon    //
+	shlParenOpen    //
+	shlParenClose   //
+	shlBraceOpen    //
+	shlBraceClose   //
+	shlVaruse       // ${PREFIX}
 )
 
 type ShLexeme struct {
 	Type ShLexemeType
 	Text string
-	Data *interface{}
+	Data interface{}
 }
 
 func (shl *ShLexeme) String() string {

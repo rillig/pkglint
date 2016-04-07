@@ -299,45 +299,108 @@ func (s *Suite) Test_Parser_ShTokens(c *check.C) {
 
 // Shell code taken from x11/qt3-docs/Makefile.
 // @Beta
-func (s *Suite) Test_Parser_ShLexemes(c *check.C) {
-	checkParse := func(s string, expected ...*ShLexeme) {
-		c.Check(NewParser(dummyLine, s).ShLexemes(), deepEquals, expected)
+func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
+	checkParse := func(s string, expectedLexemes ...*ShLexeme) {
+		actualLexemes := NewParser(dummyLine, s).ShLexemes()
+		c.Check(actualLexemes, deepEquals, expectedLexemes)
+		for i, expectedLexeme := range expectedLexemes {
+			if i < len(actualLexemes) {
+				c.Check(*actualLexemes[i], deepEquals, *expectedLexeme)
+			} else {
+				c.Check(nil, deepEquals, *expectedLexeme)
+			}
+		}
 	}
 	plain := func(s string) *ShLexeme { return &ShLexeme{shlPlain, s, nil} }
 	dquot := func(s string) *ShLexeme { return &ShLexeme{shlDquot, s, nil} }
 	squot := func(s string) *ShLexeme { return &ShLexeme{shlSquot, s, nil} }
 	backt := func(s string) *ShLexeme { return &ShLexeme{shlBackt, s, nil} }
-	space := func(s string) *ShLexeme { return &ShLexeme{shlSpace, s, nil} }
+	varuse := func(varname string, modifiers ...string) *ShLexeme {
+		text := "${" + varname
+		for _, modifier := range modifiers {
+			text += ":" + modifier
+		}
+		text += "}"
+		varuse := &MkVarUse{varname: varname, modifiers: modifiers}
+		return &ShLexeme{shlVaruse, text, varuse}
+	}
+	whitespace := func(s string) *ShLexeme { return &ShLexeme{shlSpace, s, nil} }
+	space := &ShLexeme{shlSpace, " ", nil}
 	semicolon := &ShLexeme{shlSemicolon, ";", nil}
 
 	_, _ = squot, backt
 
-	_ = NewParser(dummyLine, ""+
-		"(for PAGE in $$PAGES; do "+
-		"    ${ECHO} installing ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; "+
-		"    set - X `head -1 $${PAGE}qt`; "+
-		"    if [ $$# -eq 3 ] && [ \"$$2\" = .so ]; then "+
-		"        ${LN} -fs `basename $$3 | ${SED} 's/qt$$//'` "+
-		"          ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; "+
-		"    else "+
-		"        ${INSTALL_MAN} $${PAGE}qt ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; "+
-		"    fi; "+
-		" done").ShLexemes()
-
 	checkParse("set -e;",
 		plain("set"),
-		space(" "),
+		space,
 		plain("-e"),
 		semicolon)
-	if false {
-		checkParse("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
-			plain("cd"),
-			space(" "),
-			plain("${WRKSRC}/doc/man/man3"),
-			semicolon,
-			space(" "),
-			plain("PAGES="),
-			dquot("`ls -1 | ${SED} -e 's,3qt$$,3,'`"),
-			semicolon)
-	}
+	checkParse("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
+		plain("cd"),
+		space,
+		plain("${WRKSRC}/doc/man/man3"),
+		semicolon,
+		space,
+		plain("PAGES="),
+		dquot("`ls -1 | ${SED} -e 's,3qt$$,3,'`"),
+		semicolon)
+
+	checkParse("(for PAGE in $$PAGES; do ",
+		&ShLexeme{shlParenOpen, "(", nil},
+		plain("for"),
+		space,
+		plain("PAGE"),
+		space,
+		plain("in"),
+		space,
+		plain("$PAGES"),
+		semicolon,
+		space,
+		plain("do"),
+		space)
+	checkParse("    ${ECHO} installing ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; ",
+		whitespace("    "),
+		varuse("ECHO"),
+		space,
+		plain("installing"),
+		space,
+		varuse("DESTDIR"),
+		varuse("QTPREFIX"),
+		plain("/man/man3/${PAGE}"),
+		semicolon,
+		space)
+	checkParse("    set - X `head -1 $${PAGE}qt`; ",
+		whitespace("    "),
+		plain("set"),
+		space,
+		plain("-"),
+		space,
+		plain("X"),
+		space,
+		backt("head -1 ${PAGE}qt"),
+		semicolon,
+		space)
+}
+
+// @Beta
+func (s *Suite) Test_Parser_ShAst(c *check.C) {
+	f := func(args ...interface{}) interface{} { return nil }
+	Commands := f
+	Command := f
+	Arg := f
+	Varuse := f
+	Varassign := f
+	Subshell := f
+	Pipe := f
+
+	_ = "cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";"
+
+	Commands(
+		Command("cd",
+			Arg(Varuse("WRKSRC"), "/doc/man/man3")),
+		Varassign("PAGES", Subshell(
+			Pipe(
+				Command("ls", "-1"),
+				Command(Varuse("SED"), "-e", "s,3qt$,3,")))))
+
 }
