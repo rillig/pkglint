@@ -327,6 +327,7 @@ func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
 	whitespace := func(s string) *ShLexeme { return &ShLexeme{shlSpace, s, nil} }
 	space := &ShLexeme{shlSpace, " ", nil}
 	semicolon := &ShLexeme{shlSemicolon, ";", nil}
+	pipe := &ShLexeme{shlPipe, "|", nil}
 
 	_, _ = squot, backt
 
@@ -338,12 +339,27 @@ func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
 	checkParse("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
 		plain("cd"),
 		space,
-		plain("${WRKSRC}/doc/man/man3"),
+		varuse("WRKSRC"),
+		plain("/doc/man/man3"),
 		semicolon,
 		space,
 		plain("PAGES="),
 		dquot("`ls -1 | ${SED} -e 's,3qt$$,3,'`"),
 		semicolon)
+	checkParse("`ls -1 | ${SED} -e 's,3qt$$,3,'`",
+		backt("ls -1 | ${SED} -e 's,3qt$$,3,'"))
+	checkParse("ls -1 | ${SED} -e 's,3qt$$,3,'",
+		plain("ls"),
+		space,
+		plain("-1"),
+		space,
+		pipe,
+		space,
+		varuse("SED"),
+		space,
+		plain("-e"),
+		space,
+		squot("s,3qt$$,3,"))
 
 	checkParse("(for PAGE in $$PAGES; do ",
 		&ShLexeme{shlParenOpen, "(", nil},
@@ -403,4 +419,21 @@ func (s *Suite) Test_Parser_ShAst(c *check.C) {
 				Command("ls", "-1"),
 				Command(Varuse("SED"), "-e", "s,3qt$,3,")))))
 
+}
+
+func (s *Suite) Test_Parser_ShCommand(c *check.C) {
+	plain := func(s string) *ShWord {
+		return &ShWord{[]*ShLexeme{&ShLexeme{shlPlain, s, nil}}}
+	}
+
+	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=/bin true")
+
+	shcmd := p.ShCommand()
+
+	expected := &ShCommand{
+		[]*ShVarassign{&ShVarassign{"PATH", plain("/nonexistent")}},
+		plain("env"),
+		[]*ShWord{plain("PATH=/bin"), plain("true")}}
+	c.Check(shcmd, deepEquals, expected)
+	c.Check(shcmd.String(), equals, "ShCommand([ShVarassign(PATH=ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=/bin\"]) ShWord([\"true\"])])")
 }
