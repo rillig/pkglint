@@ -573,6 +573,7 @@ const (
 	shlDquot        // "..."
 	shlSquot        // '...'
 	shlBackt        // `...`
+	shlBacktDquot   // `"..."`
 	shlSubshellOpen // $(
 	shlSemicolon    // ;
 	shlParenOpen    // (
@@ -589,7 +590,7 @@ func (t ShLexemeType) String() string {
 	return [...]string{
 		"space",
 		"varuse",
-		"dquot", "squot", "backt",
+		"dquot", "squot", "backt", "backtDquot",
 		"subshellOpen",
 		"semicolon",
 		"parenOpen", "parenClose",
@@ -636,10 +637,13 @@ func (p *Parser) ShLexeme() *ShLexeme {
 	case repl.AdvanceRegexp("^\"(?:\\\\.|[^\"\\\\`$]|`[^\"\\\\`$']*`)*\""):
 		return &ShLexeme{shlDquot, repl.m[0], nil} // TODO: unescape
 
-	case repl.AdvanceRegexp("^`(?:\\\\.|[^\"\\\\`])*`"):
+	case repl.AdvanceRegexp("^`(?:\\\\.|[^\"\\\\`$])*`"):
 		return &ShLexeme{shlBackt, repl.m[0], nil} // TODO: unescape
 
-	case repl.AdvanceRegexp(`^'[^']*'`):
+	case repl.AdvanceRegexp("^`\"([^\"'\\\\`$]*)\"`"):
+		return &ShLexeme{shlBacktDquot, repl.m[0], repl.m[1]}
+
+	case repl.AdvanceRegexp(`^'[^'$]*'`):
 		return &ShLexeme{shlSquot, repl.m[0], nil}
 	}
 	repl.Reset(mark)
@@ -729,7 +733,7 @@ nextlex:
 	lex := p.ShLexeme()
 	if lex != nil {
 		switch lex.Type {
-		case shlVaruse, shlPlain, shlDquot, shlSquot, shlBackt:
+		case shlVaruse, shlPlain, shlDquot, shlSquot, shlBackt, shlBacktDquot:
 			shword.Atoms = append(shword.Atoms, lex)
 			goto nextlex
 		}

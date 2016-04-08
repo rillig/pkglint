@@ -437,7 +437,9 @@ func (s *Suite) Test_Parser_ShCommand(c *check.C) {
 	checkParse := func(cmd, expected string) {
 		p := NewParser(dummyLine, cmd)
 		shcmd := p.ShCommand()
-		c.Check(shcmd.String(), equals, expected)
+		if c.Check(shcmd, check.NotNil) {
+			c.Check(shcmd.String(), equals, expected)
+		}
 		c.Check(p.Rest(), equals, "")
 	}
 
@@ -461,4 +463,10 @@ func (s *Suite) Test_Parser_ShCommand(c *check.C) {
 	checkParse("${ECHO} 'Single-quoted'",
 		"ShCommand([], ShWord([\"${ECHO}\"]), [ShWord([\"'Single-quoted'\"])])")
 
+	checkParse("`cat plain`",
+		"ShCommand([], ShWord([\"`cat plain`\"]), [])")
+	checkParse("\"`cat double`\"",
+		"ShCommand([], ShWord([\"\\\"`cat double`\\\"\"]), [])")
+	checkParse("`\"one word\"`",
+		"ShCommand([], ShWord([\"`\\\"one word\\\"`\"]), [])")
 }
