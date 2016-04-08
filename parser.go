@@ -634,10 +634,13 @@ func (p *Parser) ShLexeme() *ShLexeme {
 		return &ShLexeme{shlParenClose, ")", nil}
 
 	case repl.AdvanceRegexp("^\"(?:\\\\.|[^\"\\\\`$]|`[^\"\\\\`$']*`)*\""):
-		return &ShLexeme{shlDquot, ")", nil} // TODO: unescape
+		return &ShLexeme{shlDquot, repl.m[0], nil} // TODO: unescape
 
 	case repl.AdvanceRegexp("^`(?:\\\\.|[^\"\\\\`])*`"):
-		return &ShLexeme{shlBackt, ")", nil} // TODO: unescape
+		return &ShLexeme{shlBackt, repl.m[0], nil} // TODO: unescape
+
+	case repl.AdvanceRegexp(`^'[^']*'`):
+		return &ShLexeme{shlSquot, repl.m[0], nil}
 	}
 	repl.Reset(mark)
 	return nil

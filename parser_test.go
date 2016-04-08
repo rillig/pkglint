@@ -422,18 +422,43 @@ func (s *Suite) Test_Parser_ShAst(c *check.C) {
 }
 
 func (s *Suite) Test_Parser_ShCommand(c *check.C) {
-	plain := func(s string) *ShWord {
-		return &ShWord{[]*ShLexeme{&ShLexeme{shlPlain, s, nil}}}
+	word := func(lexemes ...*ShLexeme) *ShWord {
+		return &ShWord{lexemes}
+	}
+	plain := func(s string) *ShLexeme {
+		return &ShLexeme{shlPlain, s, nil}
+	}
+	tvaruse := func(s, varname string, modifiers ...string) *ShLexeme {
+		return &ShLexeme{shlVaruse, s, &MkVarUse{varname, modifiers}}
+	}
+	plainword := func(s string) *ShWord {
+		return &ShWord{[]*ShLexeme{plain(s)}}
+	}
+	checkParse := func(cmd, expected string) {
+		p := NewParser(dummyLine, cmd)
+		shcmd := p.ShCommand()
+		c.Check(shcmd.String(), equals, expected)
+		c.Check(p.Rest(), equals, "")
 	}
 
-	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=/bin true")
+	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
 
 	shcmd := p.ShCommand()
 
 	expected := &ShCommand{
-		[]*ShVarassign{&ShVarassign{"PATH", plain("/nonexistent")}},
-		plain("env"),
-		[]*ShWord{plain("PATH=/bin"), plain("true")}}
+		[]*ShVarassign{&ShVarassign{"PATH", plainword("/nonexistent")}},
+		plainword("env"),
+		[]*ShWord{word(plain("PATH="), tvaruse("${PATH:Q}", "PATH", "Q")), plainword("true")}}
 	c.Check(shcmd, deepEquals, expected)
-	c.Check(shcmd.String(), equals, "ShCommand([ShVarassign(PATH=ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=/bin\"]) ShWord([\"true\"])])")
+	c.Check(shcmd.String(), equals, "ShCommand([ShVarassign(PATH=ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=\" \"${PATH:Q}\"]) ShWord([\"true\"])])")
+
+	checkParse("echo ${PKGNAME:Q}",
+		"ShCommand([], ShWord([\"echo\"]), [ShWord([\"${PKGNAME:Q}\"])])")
+
+	checkParse("${ECHO} \"Double-quoted\"",
+		"ShCommand([], ShWord([\"${ECHO}\"]), [ShWord([\"\\\"Double-quoted\\\"\"])])")
+
+	checkParse("${ECHO} 'Single-quoted'",
+		"ShCommand([], ShWord([\"${ECHO}\"]), [ShWord([\"'Single-quoted'\"])])")
+
 }
