@@ -478,6 +478,8 @@ func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 		lex = p.shLexemeBackt()
 	case "\"`":
 		lex = p.shLexemeDquotBackt()
+	case "`\"":
+		lex = p.shLexemeBacktDquot()
 	case "\"`'":
 		lex = p.shLexemeDquotBacktSquot()
 	}
@@ -551,6 +553,8 @@ func (p *Parser) shLexemeBackt() *ShLexeme {
 	const q = "`"
 	repl := p.repl
 	switch {
+	case repl.AdvanceStr("\""):
+		return &ShLexeme{shlText, repl.s, "`\"", nil}
 	case repl.AdvanceStr("`"):
 		return &ShLexeme{shlText, repl.s, "", nil}
 	case repl.AdvanceStr("'"):
@@ -581,13 +585,25 @@ func (p *Parser) shLexemeDquotBackt() *ShLexeme {
 	return nil
 }
 
+func (p *Parser) shLexemeBacktDquot() *ShLexeme {
+	const q = "`\""
+	repl := p.repl
+	switch {
+	case repl.AdvanceStr("\""):
+		return &ShLexeme{shlText, repl.s, "`", nil}
+	case repl.AdvanceRegexp(`^(?:[\t !%*+,\-./0-9:=?@A-Z\[\]^_a-z{|}~]+|\\.)+`):
+		return &ShLexeme{shlText, repl.m[0], q, nil}
+	}
+	return nil
+}
+
 func (p *Parser) shLexemeDquotBacktSquot() *ShLexeme {
 	const q = "\"`'"
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
 		return &ShLexeme{shlText, repl.s, "\"`", nil}
-	case repl.AdvanceRegexp(`^(?:[!"#%*+,\-./0-9:=?@A-Z_a-z~]+|\\.|\$\$)+`):
+	case repl.AdvanceRegexp(`^(?:[!"#%*+,\-./0-9:=?@A-Z\[\]^_a-z~]+|\\.|\$\$)+`):
 		return &ShLexeme{shlText, repl.m[0], q, nil}
 	}
 	return nil
@@ -663,11 +679,12 @@ nextlex:
 	lex := p.ShLexeme(q)
 	if lex != nil {
 		switch {
-		case lex.Type == shlSpace && lex.Quoting == "":
+		case lex.Quoting == "" && (lex.Type == shlSpace || lex.Type == shlSemicolon):
 			break
 		case lex.Type == shlVaruse,
 			lex.Type == shlText,
-			lex.Type == shlSpace:
+			lex.Type == shlSpace,
+			lex.Quoting != "":
 			shword.Atoms = append(shword.Atoms, lex)
 			q = lex.Quoting
 			goto nextlex

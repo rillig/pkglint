@@ -262,7 +262,7 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 	lex := func(typ ShLexemeType, text string, quoting ShQuoting) *ShLexeme {
 		return &ShLexeme{typ, text, quoting, nil}
 	}
-	plain := func(s string) *ShLexeme { return lex(shlText, s, "") }
+	text := func(s string) *ShLexeme { return lex(shlText, s, "") }
 	dquot := func(s string) *ShLexeme { return lex(shlText, s, "\"") }
 	squot := func(s string) *ShLexeme { return lex(shlText, s, "'") }
 	backt := func(s string) *ShLexeme { return lex(shlText, s, "`") }
@@ -285,12 +285,12 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 	pipe := lex(shlPipe, "|", "")
 
 	checkParse("hello",
-		plain("hello"))
+		text("hello"))
 
 	checkParse("hello, world",
-		plain("hello,"),
+		text("hello,"),
 		space,
-		plain("world"))
+		text("world"))
 
 	checkParse("\"",
 		dquot("\""))
@@ -303,29 +303,29 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		backt("cat"),
 		lex(shlSpace, " ", "`"),
 		backt("fname"),
-		plain("`"))
+		text("`"))
 
 	checkParse("hello, \"world\"",
-		plain("hello,"),
+		text("hello,"),
 		space,
 		dquot("\""),
 		dquot("world"),
-		plain("\""))
+		text("\""))
 
 	checkParse("set -e;",
-		plain("set"),
+		text("set"),
 		space,
-		plain("-e"),
+		text("-e"),
 		semicolon)
 
 	checkParse("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
-		plain("cd"),
+		text("cd"),
 		space,
 		varuse("WRKSRC"),
-		plain("/doc/man/man3"),
+		text("/doc/man/man3"),
 		semicolon,
 		space,
-		plain("PAGES="),
+		text("PAGES="),
 		dquot("\""),
 		dquotBackt("`"),
 		dquotBackt("ls"),
@@ -336,61 +336,63 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		lex(shlSpace, " ", "\"`"),
 		q("\"`", varuse("SED")),
 		q("\"`", space),
-		dquotBackt("-e"),
+		q("\"`", text("-e")),
 		q("\"`", space),
-		lex(shlText, "'", "\"`'"),
-		lex(shlText, "s,3qt$$,3,", "\"`'"),
-		lex(shlText, "'", "\"`"),
-		lex(shlText, "`", "\""),
-		lex(shlText, "\"", ""),
+		q("\"`'", text("'")),
+		q("\"`'", text("s,3qt$$,3,")),
+		q("\"`", text("'")),
+		q("\"", text("`")),
+		q("", text("\"")),
 		semicolon)
 
 	checkParse("ls -1 | ${SED} -e 's,3qt$$,3,'",
-		plain("ls"),
+		text("ls"),
 		space,
-		plain("-1"),
+		text("-1"),
 		space,
 		pipe,
 		space,
 		varuse("SED"),
 		space,
-		plain("-e"),
+		text("-e"),
 		space,
 		squot("'"),
 		squot("s,3qt$$,3,"),
-		plain("'"))
+		text("'"))
 
 	checkParse("(for PAGE in $$PAGES; do ",
 		&ShLexeme{shlParenOpen, "(", "", nil},
-		plain("for"),
+		text("for"),
 		space,
-		plain("PAGE"),
+		text("PAGE"),
 		space,
-		plain("in"),
+		text("in"),
 		space,
-		plain("$$PAGES"),
+		text("$$PAGES"),
 		semicolon,
 		space,
-		plain("do"),
+		text("do"),
 		space)
+
 	checkParse("    ${ECHO} installing ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; ",
 		whitespace("    "),
 		varuse("ECHO"),
 		space,
-		plain("installing"),
+		text("installing"),
 		space,
 		varuse("DESTDIR"),
 		varuse("QTPREFIX"),
-		plain("/man/man3/$${PAGE}"),
+		text("/man/man3/$${PAGE}"),
 		semicolon,
 		space)
+
 	checkParse("    set - X `head -1 $${PAGE}qt`; ",
 		whitespace("    "),
-		plain("set"),
+		text("set"),
 		space,
-		plain("-"),
+		text("-"),
 		space,
-		plain("X"),
+		text("X"),
 		space,
 		backt("`"),
 		backt("head"),
@@ -398,9 +400,16 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		backt("-1"),
 		q("`", space),
 		backt("$${PAGE}qt"),
-		plain("`"),
+		text("`"),
 		semicolon,
 		space)
+
+	checkParse("`\"one word\"`",
+		backt("`"),
+		q("`\"", text("\"")),
+		q("`\"", text("one word")),
+		q("`", text("\"")),
+		text("`"))
 }
 
 // @Beta
@@ -451,6 +460,12 @@ func (s *Suite) Test_Parser_ShLexeme_Quoting(c *check.C) {
 }
 
 func (s *Suite) Test_Parser_ShWord(c *check.C) {
+	const (
+		B   ShQuoting = "`"
+		D             = "\""
+		DB            = "\"`"
+		DBS           = "\"`'"
+	)
 	checkParse := func(s string, expected ...*ShWord) {
 		p := NewParser(dummyLine, s)
 		for _, exp := range expected {
@@ -458,18 +473,45 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 		}
 		c.Check(p.Rest(), equals, "")
 	}
+	lex := func(typ ShLexemeType, s string, q ShQuoting) *ShLexeme {
+		return &ShLexeme{typ, s, q, nil}
+	}
 
 	checkParse("",
 		nil)
+
 	checkParse("echo",
-		&ShWord{[]*ShLexeme{{shlText, "echo", "", nil}}})
+		&ShWord{[]*ShLexeme{
+			{shlText, "echo", "", nil}}})
+
 	checkParse("`cat file`",
 		&ShWord{[]*ShLexeme{
-			{shlText, "`", "`", nil},
-			{shlText, "cat", "`", nil},
-			{shlSpace, " ", "`", nil},
-			{shlText, "file", "`", nil},
+			{shlText, "`", B, nil},
+			{shlText, "cat", B, nil},
+			{shlSpace, " ", B, nil},
+			{shlText, "file", B, nil},
 			{shlText, "`", "", nil}}})
+
+	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+		&ShWord{[]*ShLexeme{
+			{shlText, "PAGES=", "", nil},
+			{shlText, "\"", D, nil},
+			{shlText, "`", DB, nil},
+			{shlText, "ls", DB, nil},
+			{shlSpace, " ", DB, nil},
+			{shlText, "-1", DB, nil},
+			{shlSpace, " ", DB, nil},
+			{shlPipe, "|", DB, nil},
+			lex(shlSpace, " ", DB),
+			{shlVaruse, "${SED}", DB, &MkVarUse{"SED", nil}},
+			lex(shlSpace, " ", DB),
+			lex(shlText, "-e", DB),
+			lex(shlSpace, " ", DB),
+			lex(shlText, "'", DBS),
+			lex(shlText, "s,3qt$$,3,", DBS),
+			lex(shlText, "'", DB),
+			lex(shlText, "`", D),
+			lex(shlText, "\"", "")}})
 }
 
 func (s *Suite) Test_Parser_ShCommand_DataStructures(c *check.C) {
@@ -499,7 +541,7 @@ func (s *Suite) Test_Parser_ShCommand_DataStructures(c *check.C) {
 	c.Check(p.Rest(), equals, "")
 }
 
-func (s *Suite) disabled_Test_Parser_ShCommand_Practical(c *check.C) {
+func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
 	checkParse := func(cmd, expected string) {
 		p := NewParser(dummyLine, cmd)
 		shcmd := p.ShCommand()
@@ -514,41 +556,91 @@ func (s *Suite) disabled_Test_Parser_ShCommand_Practical(c *check.C) {
 	checkParse("${ECHO} \"Double-quoted\"",
 		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
 			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
-			"\"Double-quoted\" "+
-			"ShLexeme(text, \"\\\"\", \"\\\"\")"+
+			"ShLexeme(text, \"Double-quoted\", \"\\\"\") "+
+			"\"\\\"\""+
 			"])])")
 
 	checkParse("${ECHO} 'Single-quoted'",
 		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
 			"ShLexeme(text, \"'\", \"'\") "+
-			"\"Single-quoted\" "+
-			"ShLexeme(text, \"'\", \"'\")"+
+			"ShLexeme(text, \"Single-quoted\", \"'\") "+
+			"\"'\""+
 			"])])")
 
 	checkParse("`cat plain`",
-		"ShCommand([], ShWord([ShLexeme(text, \"`\", \"`\") \"cat...plain\" ShLexeme(text, \"`\", \"`\")])])")
+		"ShCommand([], ShWord(["+
+			"ShLexeme(text, \"`\", \"`\") "+
+			"ShLexeme(text, \"cat\", \"`\") "+
+			"ShLexeme(space, \" \", \"`\") "+
+			"ShLexeme(text, \"plain\", \"`\") "+
+			"\"`\""+
+			"]), [])")
 	checkParse("\"`cat double`\"",
-		"ShCommand([], ShWord([\"\\\"`cat double`\\\"\"]), [])")
+		"ShCommand([], ShWord(["+
+			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
+			"ShLexeme(text, \"`\", \"\\\"`\") "+
+			"ShLexeme(text, \"cat\", \"\\\"`\") "+
+			"ShLexeme(space, \" \", \"\\\"`\") "+
+			"ShLexeme(text, \"double\", \"\\\"`\") "+
+			"ShLexeme(text, \"`\", \"\\\"\") "+
+			"\"\\\"\""+
+			"]), [])")
 	checkParse("`\"one word\"`",
-		"ShCommand([], ShWord([\"`\\\"one word\\\"`\"]), [])")
+		"ShCommand([], ShWord(["+
+			"ShLexeme(text, \"`\", \"`\") "+
+			"ShLexeme(text, \"\\\"\", \"`\\\"\") "+
+			"ShLexeme(text, \"one word\", \"`\\\"\") "+
+			"ShLexeme(text, \"\\\"\", \"`\") "+
+			"\"`\""+
+			"]), [])")
 
-	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
-		"ShCommand([], ShVarassign(\"PAGES\", ...), [], [])")
+	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+		"ShCommand([ShVarassign(\"PAGES\", ShWord(["+
+			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
+			"ShLexeme(text, \"`\", \"\\\"`\") "+
+			"ShLexeme(text, \"ls\", \"\\\"`\") "+
+			"ShLexeme(space, \" \", \"\\\"`\") "+
+			"ShLexeme(text, \"-1\", \"\\\"`\") "+
+			"ShLexeme(space, \" \", \"\\\"`\") "+
+			"ShLexeme(pipe, \"|\", \"\\\"`\") "+
+			"ShLexeme(space, \" \", \"\\\"`\") "+
+			"varuse(\"SED\") "+
+			"ShLexeme(space, \" \", \"\\\"`\") "+
+			"ShLexeme(text, \"-e\", \"\\\"`\") "+
+			"ShLexeme(space, \" \", \"\\\"`\") "+
+			"ShLexeme(text, \"'\", \"\\\"`'\") "+
+			"ShLexeme(text, \"s,3qt$$,3,\", \"\\\"`'\") "+
+			"ShLexeme(text, \"'\", \"\\\"`\") "+
+			"ShLexeme(text, \"`\", \"\\\"\") "+
+			"\"\\\"\""+
+			"]))], <nil>, [])")
+
 	checkParse("var=Plain",
-		"ShCommand([ShVarassign(\"var\", ShWord([\"Plain\"]))], [], [])")
+		"ShCommand([ShVarassign(\"var\", ShWord([\"Plain\"]))], <nil>, [])")
+
 	checkParse("var=\"Dquot\"",
-		"ShCommand([ShVarassign(\"var\", ShWord([ShLexeme(text, \"Dquot\", \"\\\"\")])], [], [])")
+		"ShCommand([ShVarassign(\"var\", ShWord(["+
+			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
+			"ShLexeme(text, \"Dquot\", \"\\\"\") "+
+			"\"\\\"\""+
+			"]))], <nil>, [])")
+
 	checkParse("var='Squot'",
-		"ShCommand([ShVarassign(\"var\", ShWord([ShLexeme(text, \"'\", \"'\") \"Squot\" ShLexeme(text, \"'\", \"\")]))], <nil>, [])")
+		"ShCommand([ShVarassign(\"var\", ShWord(["+
+			"ShLexeme(text, \"'\", \"'\") "+
+			"ShLexeme(text, \"Squot\", \"'\") "+
+			"\"'\""+
+			"]))], <nil>, [])")
+
 	checkParse("var=Plain\"Dquot\"'Squot'",
 		"ShCommand([ShVarassign(\"var\", ShWord(["+
 			"\"Plain\" "+
 			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
-			"\"Dquot\" "+
-			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
+			"ShLexeme(text, \"Dquot\", \"\\\"\") "+
+			"\"\\\"\" "+
 			"ShLexeme(text, \"'\", \"'\") "+
-			"\"Squot\" "+
-			"ShLexeme(text, \"'\", \"'\")"+
+			"ShLexeme(text, \"Squot\", \"'\") "+
+			"\"'\""+
 			"]))], <nil>, [])")
 }
 
