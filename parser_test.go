@@ -261,10 +261,10 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		return &ShLexeme{typ, text, quoting, nil}
 	}
 	text := func(s string) *ShLexeme { return lex(shlText, s, shqPlain) }
-	dquot := func(s string) *ShLexeme { return lex(shlText, s, shqD) }
-	squot := func(s string) *ShLexeme { return lex(shlText, s, shqS) }
-	backt := func(s string) *ShLexeme { return lex(shlText, s, shqB) }
-	dquotBackt := func(s string) *ShLexeme { return lex(shlText, s, shqDB) }
+	dquot := func(s string) *ShLexeme { return lex(shlText, s, shqDquot) }
+	squot := func(s string) *ShLexeme { return lex(shlText, s, shqSquot) }
+	backt := func(s string) *ShLexeme { return lex(shlText, s, shqBackt) }
+	dquotBackt := func(s string) *ShLexeme { return lex(shlText, s, shqDquotBackt) }
 	varuse := func(varname string, modifiers ...string) *ShLexeme {
 		text := "${" + varname
 		for _, modifier := range modifiers {
@@ -299,7 +299,7 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 	checkParse("`cat fname`",
 		backt("`"),
 		backt("cat"),
-		lex(shlSpace, " ", shqB),
+		lex(shlSpace, " ", shqBackt),
 		backt("fname"),
 		text("`"))
 
@@ -327,19 +327,19 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		dquot("\""),
 		dquotBackt("`"),
 		dquotBackt("ls"),
-		lex(shlSpace, " ", shqDB),
+		lex(shlSpace, " ", shqDquotBackt),
 		dquotBackt("-1"),
-		lex(shlSpace, " ", shqDB),
-		lex(shlPipe, "|", shqDB),
-		lex(shlSpace, " ", shqDB),
-		q(shqDB, varuse("SED")),
-		q(shqDB, space),
-		q(shqDB, text("-e")),
-		q(shqDB, space),
-		q(shqDBS, text("'")),
-		q(shqDBS, text("s,3qt$$,3,")),
-		q(shqDB, text("'")),
-		q(shqD, text("`")),
+		lex(shlSpace, " ", shqDquotBackt),
+		lex(shlPipe, "|", shqDquotBackt),
+		lex(shlSpace, " ", shqDquotBackt),
+		q(shqDquotBackt, varuse("SED")),
+		q(shqDquotBackt, space),
+		q(shqDquotBackt, text("-e")),
+		q(shqDquotBackt, space),
+		q(shqDquotBacktSquot, text("'")),
+		q(shqDquotBacktSquot, text("s,3qt$$,3,")),
+		q(shqDquotBackt, text("'")),
+		q(shqDquot, text("`")),
 		q(shqPlain, text("\"")),
 		semicolon)
 
@@ -394,9 +394,9 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		space,
 		backt("`"),
 		backt("head"),
-		q(shqB, space),
+		q(shqBackt, space),
 		backt("-1"),
-		q(shqB, space),
+		q(shqBackt, space),
 		backt("$${PAGE}qt"),
 		text("`"),
 		semicolon,
@@ -404,9 +404,9 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 
 	checkParse("`\"one word\"`",
 		backt("`"),
-		q(shqBD, text("\"")),
-		q(shqBD, text("one word")),
-		q(shqB, text("\"")),
+		q(shqBacktDquot, text("\"")),
+		q(shqBacktDquot, text("one word")),
+		q(shqBackt, text("\"")),
 		text("`"))
 }
 
@@ -466,31 +466,31 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 
 	checkParse("`cat file`",
 		&ShWord{[]*ShLexeme{
-			{shlText, "`", shqB, nil},
-			{shlText, "cat", shqB, nil},
-			{shlSpace, " ", shqB, nil},
-			{shlText, "file", shqB, nil},
+			{shlText, "`", shqBackt, nil},
+			{shlText, "cat", shqBackt, nil},
+			{shlSpace, " ", shqBackt, nil},
+			{shlText, "file", shqBackt, nil},
 			{shlText, "`", shqPlain, nil}}})
 
 	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 		&ShWord{[]*ShLexeme{
 			{shlText, "PAGES=", shqPlain, nil},
-			{shlText, "\"", shqD, nil},
-			{shlText, "`", shqDB, nil},
-			{shlText, "ls", shqDB, nil},
-			{shlSpace, " ", shqDB, nil},
-			{shlText, "-1", shqDB, nil},
-			{shlSpace, " ", shqDB, nil},
-			{shlPipe, "|", shqDB, nil},
-			lex(shlSpace, " ", shqDB),
-			{shlVaruse, "${SED}", shqDB, &MkVarUse{"SED", nil}},
-			lex(shlSpace, " ", shqDB),
-			lex(shlText, "-e", shqDB),
-			lex(shlSpace, " ", shqDB),
-			lex(shlText, "'", shqDBS),
-			lex(shlText, "s,3qt$$,3,", shqDBS),
-			lex(shlText, "'", shqDB),
-			lex(shlText, "`", shqD),
+			{shlText, "\"", shqDquot, nil},
+			{shlText, "`", shqDquotBackt, nil},
+			{shlText, "ls", shqDquotBackt, nil},
+			{shlSpace, " ", shqDquotBackt, nil},
+			{shlText, "-1", shqDquotBackt, nil},
+			{shlSpace, " ", shqDquotBackt, nil},
+			{shlPipe, "|", shqDquotBackt, nil},
+			lex(shlSpace, " ", shqDquotBackt),
+			{shlVaruse, "${SED}", shqDquotBackt, &MkVarUse{"SED", nil}},
+			lex(shlSpace, " ", shqDquotBackt),
+			lex(shlText, "-e", shqDquotBackt),
+			lex(shlSpace, " ", shqDquotBackt),
+			lex(shlText, "'", shqDquotBacktSquot),
+			lex(shlText, "s,3qt$$,3,", shqDquotBacktSquot),
+			lex(shlText, "'", shqDquotBackt),
+			lex(shlText, "`", shqDquot),
 			lex(shlText, "\"", shqPlain)}})
 }
 

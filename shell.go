@@ -109,35 +109,6 @@ func NewShellLine(mkline *MkLine) *ShellLine {
 	return &ShellLine{mkline.Line, mkline}
 }
 
-type ShellwordState uint8
-
-const (
-	swstPlain ShellwordState = iota
-	swstSquot
-	swstDquot
-	swstDquotBackt
-	swstBackt
-	swstUnknown
-)
-
-func (st ShellwordState) String() string {
-	return [...]string{"plain", "squot", "dquot", "dquot+backt", "backt", "unknown"}[st]
-}
-
-func (st ShellwordState) ToVarUseContext() vucQuoting {
-	switch st {
-	case swstPlain:
-		return vucQuotPlain
-	case swstDquot:
-		return vucQuotDquot
-	case swstSquot:
-		return vucQuotSquot
-	case swstBackt:
-		return vucQuotBackt
-	}
-	return vucQuotUnknown
-}
-
 var shellcommandsContextType = &Vartype{lkNone, CheckvarShellCommands, []AclEntry{{"*", aclpAllRuntime}}, false}
 var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, vucExtentWord}
 
@@ -167,11 +138,11 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 
 	parser := NewParser(line, token)
 	repl := parser.repl
-	state := swstPlain
+	quoting := shqPlain
 outer:
 	for !parser.EOF() {
 		if G.opts.Debug {
-			traceStep("shell state %s: %q", state, parser.Rest())
+			traceStep("shell state %s: %q", quoting, parser.Rest())
 		}
 
 		switch {
@@ -179,26 +150,26 @@ outer:
 		// reasonable to check the whole shell command
 		// recursively, instead of splitting off the first
 		// make(1) variable.
-		case state == swstBackt || state == swstDquotBackt:
+		case quoting == shqBackt || quoting == shqDquotBackt:
 			var backtCommand string
-			backtCommand, state = shline.unescapeBackticks(token, repl, state)
+			backtCommand, quoting = shline.unescapeBackticks(token, repl, quoting)
 			setE := true
 			shline.CheckShellCommand(backtCommand, &setE)
 
 			// Make(1) variables have the same syntax, no matter in which state we are currently.
-		case shline.checkVaruseToken(parser, state):
+		case shline.checkVaruseToken(parser, quoting):
 			break
 
-		case state == swstPlain:
+		case quoting == shqPlain:
 			switch {
 			case repl.AdvanceRegexp(`^[!#\%&\(\)*+,\-.\/0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
 				repl.AdvanceRegexp(`^\\(?:[ !"#'\(\)*./;?\\^{|}]|\$\$)`):
 			case repl.AdvanceStr("'"):
-				state = swstSquot
+				quoting = shqSquot
 			case repl.AdvanceStr("\""):
-				state = swstDquot
+				quoting = shqDquot
 			case repl.AdvanceStr("`"):
-				state = swstBackt
+				quoting = shqBackt
 			case repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|#)`),
 				repl.AdvanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`),
 				repl.AdvanceRegexp(`^\$\$(\$)\$`):
@@ -245,10 +216,10 @@ outer:
 				break outer
 			}
 
-		case state == swstSquot:
+		case quoting == shqSquot:
 			switch {
 			case repl.AdvanceRegexp(`^'`):
-				state = swstPlain
+				quoting = shqPlain
 			case repl.AdvanceRegexp(`^[^\$\']+`):
 				// just skip
 			case repl.AdvanceRegexp(`^\$\$`):
@@ -257,12 +228,12 @@ outer:
 				break outer
 			}
 
-		case state == swstDquot:
+		case quoting == shqDquot:
 			switch {
 			case repl.AdvanceStr("\""):
-				state = swstPlain
+				quoting = shqPlain
 			case repl.AdvanceStr("`"):
-				state = swstDquotBackt
+				quoting = shqDquotBackt
 			case repl.AdvanceRegexp("^[^$\"\\\\`]+"):
 				break
 			case repl.AdvanceStr("\\$$"):
@@ -281,13 +252,13 @@ outer:
 	}
 
 	if strings.TrimSpace(parser.Rest()) != "" {
-		line.Errorf("Internal pkglint error: ShellLine.CheckWord state=%s, rest=%q, token=%q", state, parser.Rest(), token)
+		line.Errorf("Internal pkglint error: ShellLine.CheckWord quoting=%s, rest=%q, token=%q", quoting, parser.Rest(), token)
 	}
 }
 
-func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) bool {
+func (shline *ShellLine) checkVaruseToken(parser *Parser, quoting ShQuoting) bool {
 	if G.opts.Debug {
-		defer tracecall(parser.Rest(), state)()
+		defer tracecall(parser.Rest(), quoting)()
 	}
 
 	varuse := parser.VarUse()
@@ -306,13 +277,13 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 	}
 
 	switch {
-	case state == swstPlain && varuse.IsQ():
+	case quoting == shqPlain && varuse.IsQ():
 		// Fine.
-	case state == swstBackt:
+	case quoting == shqBackt:
 		// Don't check anything here, to avoid false positives for tool names.
-	case (state == swstSquot || state == swstDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
+	case (quoting == shqSquot || quoting == shqDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
 		// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
-	case state == swstDquot && varuse.IsQ():
+	case quoting == shqDquot && varuse.IsQ():
 		shline.line.Warn0("Please don't use the :Q operator in double quotes.")
 		Explain2(
 			"Either remove the :Q or the double quotes.  In most cases, it is",
@@ -320,7 +291,7 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 	}
 
 	if varname != "@" {
-		vucstate := state.ToVarUseContext()
+		vucstate := quoting.ToVarUseContext()
 		vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, vucExtentWordpart}
 		shline.mkline.CheckVaruse(varuse, vuc)
 	}
@@ -332,17 +303,17 @@ func (shline *ShellLine) checkVaruseToken(parser *Parser, state ShellwordState) 
 // before a dollar, a backslash or a backtick.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, state ShellwordState) (unescaped string, newState ShellwordState) {
+func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
 	line := shline.line
 	for repl.rest != "" {
 		switch {
 		case repl.AdvanceStr("`"):
-			if state == swstBackt {
-				state = swstPlain
+			if quoting == shqBackt {
+				quoting = shqPlain
 			} else {
-				state = swstDquot
+				quoting = shqDquot
 			}
-			return unescaped, state
+			return unescaped, quoting
 
 		case repl.AdvanceRegexp("^\\\\([\\\\`$])"):
 			unescaped += repl.m[1]
@@ -351,7 +322,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplace
 			line.Warn0("Backslashes should be doubled inside backticks.")
 			unescaped += "\\"
 
-		case state == swstDquotBackt && repl.AdvanceStr("\""):
+		case quoting == shqDquotBackt && repl.AdvanceStr("\""):
 			line.Warn0("Double quotes inside backticks inside double quotes are error prone.")
 			Explain4(
 				"According to the SUSv3, they produce undefined results.",
@@ -367,7 +338,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplace
 		}
 	}
 	line.Error1("Unfinished backquotes: rest=%q", repl.rest)
-	return unescaped, state
+	return unescaped, quoting
 }
 
 func (shline *ShellLine) variableNeedsQuoting(shvarname string) bool {
@@ -971,23 +942,6 @@ func NewShQuote(s string) *ShQuote {
 	return &ShQuote{NewPrefixReplacer(s), shqPlain}
 }
 
-func (sq *ShQuote) ShellwordState() ShellwordState {
-	switch sq.q {
-	case shqPlain:
-		return swstPlain
-	case shqD:
-		return swstDquot
-	case shqDB:
-		return swstDquotBackt
-	case shqS:
-		return swstSquot
-	case shqB:
-		return swstBackt
-	default:
-		return swstUnknown
-	}
-}
-
 func (sq *ShQuote) Feed(str string) {
 	const (
 		reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
@@ -1005,50 +959,50 @@ func (sq *ShQuote) Feed(str string) {
 		case shqPlain:
 			switch {
 			case repl.AdvanceStr("\""):
-				sq.q = shqD
+				sq.q = shqDquot
 			case repl.AdvanceStr("'"):
-				sq.q = shqS
+				sq.q = shqSquot
 			case repl.AdvanceStr("`"):
-				sq.q = shqB
+				sq.q = shqBackt
 			case repl.AdvanceRegexp(`^\\.`):
 			}
 
-		case shqD:
+		case shqDquot:
 			switch {
 			case repl.AdvanceStr("\""):
 				sq.q = shqPlain
 			case repl.AdvanceStr("`"):
-				sq.q = shqDB
+				sq.q = shqDquotBackt
 			case repl.AdvanceStr("'"):
 			case repl.AdvanceRegexp(`^\\.`):
 			}
-		case shqS:
+		case shqSquot:
 			switch {
 			case repl.AdvanceStr("'"):
 				sq.q = shqPlain
 			case repl.AdvanceRegexp(`^[^']+`):
 			}
-		case shqB:
+		case shqBackt:
 			switch {
 			case repl.AdvanceStr("`"):
 				sq.q = shqPlain
 			case repl.AdvanceStr("'"):
-				sq.q = shqBS
+				sq.q = shqBacktSquot
 			case repl.AdvanceRegexp(`^\\.`):
 			}
 
-		case shqDB:
+		case shqDquotBackt:
 			switch {
 			case repl.AdvanceStr("`"):
-				sq.q = shqD
+				sq.q = shqDquot
 			case repl.AdvanceStr("'"):
-				sq.q = shqDBS
+				sq.q = shqDquotBacktSquot
 			case repl.AdvanceRegexp(`^\\.`):
 			}
-		case shqDBS:
+		case shqDquotBacktSquot:
 			switch {
 			case repl.AdvanceStr("'"):
-				sq.q = shqDB
+				sq.q = shqDquotBackt
 			}
 		}
 

@@ -91,17 +91,31 @@ type ShQuoting uint8
 
 const (
 	shqPlain ShQuoting = iota
-	shqD
-	shqS
-	shqB
-	shqDS
-	shqDB
-	shqBD
-	shqBS
-	shqDBS
+	shqDquot
+	shqSquot
+	shqBackt
+	shqDquotSquot
+	shqDquotBackt
+	shqBacktDquot
+	shqBacktSquot
+	shqDquotBacktSquot
 	shqUnknown
 )
 
 func (q ShQuoting) String() string {
 	return [...]string{"plain", "d", "s", "b", "ds", "db", "bd", "bs", "dbs", "unknown"}[q]
+}
+
+func (q ShQuoting) ToVarUseContext() vucQuoting {
+	switch q {
+	case shqPlain:
+		return vucQuotPlain
+	case shqDquot:
+		return vucQuotDquot
+	case shqSquot:
+		return vucQuotSquot
+	case shqBackt:
+		return vucQuotBackt
+	}
+	return vucQuotUnknown
 }
