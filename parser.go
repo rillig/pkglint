@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -458,259 +457,186 @@ func (p *Parser) mkCondAtom() *Tree {
 	return nil
 }
 
-type ShToken struct {
-	Text        string
-	StateChange bool
-	NewState    string
-}
-
-func (st *ShToken) String() string {
-	if st.StateChange {
-		return st.Text + "[" + st.NewState + "]"
-	}
-	return st.Text
-}
-
 // See ShQuote.Feed
-func (p *Parser) ShTokens() []*ShToken {
-	const (
-		reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
-		S      = "'"
-		D      = "\""
-		B      = "`"
-	)
-
-	var tokens []*ShToken
-	repl := p.repl
-	qstate := ""
-
-	emitText := func() {
-		tokens = append(tokens, &ShToken{repl.m[0], false, qstate})
-	}
-	emitState := func(newstate string) {
-		qstate = newstate
-		tokens = append(tokens, &ShToken{repl.s, true, qstate})
-	}
-
-	for repl.rest != "" {
-		mark := repl.Mark()
-		switch qstate {
-		case "":
-			switch {
-			case repl.AdvanceStr(D):
-				emitState(D)
-			case repl.AdvanceStr(S):
-				emitState(S)
-			case repl.AdvanceStr(B):
-				emitState(B)
-			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`):
-				emitText()
-			}
-
-		case D:
-			switch {
-			case repl.AdvanceStr(D):
-				emitState("")
-			case repl.AdvanceStr(B):
-				emitState(D + B)
-			case repl.AdvanceStr(S):
-				emitState(D + S)
-			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`):
-				emitText()
-			}
-
-		case S:
-			switch {
-			case repl.AdvanceStr(S):
-				emitState("")
-			case repl.AdvanceRegexp(`^[^']+`):
-				emitText()
-			}
-
-		case B:
-			switch {
-			case repl.AdvanceStr(B):
-				emitState("")
-			case repl.AdvanceStr(S):
-				emitState(B + S)
-			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`): // TODO: Lookup the exact rules
-				emitText()
-			}
-
-		case D + B:
-			switch {
-			case repl.AdvanceStr(B):
-				emitState(D)
-			case repl.AdvanceStr(S):
-				emitState(D + B + S)
-			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`): // TODO: Lookup the exact rules
-				emitText()
-			}
-		case D + B + S:
-			switch {
-			case repl.AdvanceStr(S):
-				emitState(D + B)
-			case repl.AdvanceRegexp(`^(?:` + reSkip + `|\\.)+`): // TODO: Lookup the exact rules
-				emitText()
-			}
-		}
-
-		if repl.Since(mark) == "" {
-			traceStep2("Parser.ShTokens.stuck qstate=%s rest=%s", qstate, repl.rest)
-			return append(tokens, &ShToken{repl.rest, true, "?"})
-		}
-	}
-	return tokens
-}
-
-// @Beta
-type ShLexemeType uint8
-
-const (
-	shlSpace  ShLexemeType = iota
-	shlVaruse              // ${PREFIX}
-	shlPlain
-	shlDquot        // "..."
-	shlSquot        // '...'
-	shlBackt        // `...`
-	shlBacktDquot   // `"..."`
-	shlSubshellOpen // $(
-	shlSemicolon    // ;
-	shlParenOpen    // (
-	shlParenClose   // )
-	shlBraceOpen    // {
-	shlBraceClose   // }
-	shlPipe         // |
-	shlBackground   // &
-	shlOr           // ||
-	shlAnd          // &&
-)
-
-func (t ShLexemeType) String() string {
-	return [...]string{
-		"space",
-		"varuse",
-		"dquot", "squot", "backt", "backtDquot",
-		"subshellOpen",
-		"semicolon",
-		"parenOpen", "parenClose",
-		"braceOpen", "braceClose",
-		"pipe",
-		"background",
-		"or",
-		"and",
-	}[t]
-}
-
-type ShLexeme struct {
-	Type ShLexemeType
-	Text string
-	Data interface{}
-}
-
-func (shl *ShLexeme) String() string {
-	return shl.Text
-}
-
-func (p *Parser) ShLexeme() *ShLexeme {
-	const rePlain = `^([\w-\[\]=/]|\$\$)+`
+func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 	repl := p.repl
 	mark := repl.Mark()
 
 	if varuse := p.VarUse(); varuse != nil {
-		return &ShLexeme{shlVaruse, repl.Since(mark), varuse}
+		return &ShLexeme{shlVaruse, repl.Since(mark), quoting, varuse}
 	}
 
+	var lex *ShLexeme
+	switch quoting {
+	case "":
+		lex = p.shLexemePlain()
+	case "\"":
+		lex = p.shLexemeDquot()
+	case "'":
+		lex = p.shLexemeSquot()
+	case "`":
+		lex = p.shLexemeBackt()
+	case "\"`":
+		lex = p.shLexemeDquotBackt()
+	case "\"`'":
+		lex = p.shLexemeDquotBacktSquot()
+	}
+
+	if lex == nil {
+		p.repl.Reset(mark)
+		traceStep("Parser.ShLexeme.stuck qstate=%s rest=%s", quoting, repl.rest)
+	}
+	return lex
+}
+
+func (p *Parser) shLexemePlain() *ShLexeme {
+	repl := p.repl
 	switch {
-	case repl.AdvanceRegexp(rePlain):
-		return &ShLexeme{shlPlain, repl.Since(mark), nil}
 	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShLexeme{shlSpace, repl.Since(mark), nil}
-
+		return &ShLexeme{shlSpace, repl.m[0], "", nil}
 	case repl.AdvanceStr(";"):
-		return &ShLexeme{shlSemicolon, ";", nil}
+		return &ShLexeme{shlSemicolon, repl.s, "", nil}
 	case repl.AdvanceStr("("):
-		return &ShLexeme{shlParenOpen, "(", nil}
+		return &ShLexeme{shlParenOpen, repl.s, "", nil}
 	case repl.AdvanceStr(")"):
-		return &ShLexeme{shlParenClose, ")", nil}
-
-	case repl.AdvanceRegexp("^\"(?:\\\\.|[^\"\\\\`$]|`[^\"\\\\`$']*`)*\""):
-		return &ShLexeme{shlDquot, repl.m[0], nil} // TODO: unescape
-
-	case repl.AdvanceRegexp("^`(?:\\\\.|[^\"\\\\`$])*`"):
-		return &ShLexeme{shlBackt, repl.m[0], nil} // TODO: unescape
-
-	case repl.AdvanceRegexp("^`\"([^\"'\\\\`$]*)\"`"):
-		return &ShLexeme{shlBacktDquot, repl.m[0], repl.m[1]}
-
-	case repl.AdvanceRegexp(`^'[^'$]*'`):
-		return &ShLexeme{shlSquot, repl.m[0], nil}
+		return &ShLexeme{shlParenClose, repl.s, "", nil}
+	case repl.AdvanceStr("||"):
+		return &ShLexeme{shlOr, repl.s, "", nil}
+	case repl.AdvanceStr("&&"):
+		return &ShLexeme{shlAnd, repl.s, "", nil}
+	case repl.AdvanceStr("|"):
+		return &ShLexeme{shlPipe, repl.s, "", nil}
+	case repl.AdvanceStr("&"):
+		return &ShLexeme{shlBackground, repl.s, "", nil}
+	case repl.AdvanceStr("\""):
+		return &ShLexeme{shlText, repl.s, "\"", nil}
+	case repl.AdvanceStr("'"):
+		return &ShLexeme{shlText, repl.s, "'", nil}
+	case repl.AdvanceStr("`"):
+		return &ShLexeme{shlText, repl.s, "`", nil}
+	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z^_a-z~]+|\\.|\$\$\w+|\$\$\{\w+\})+`):
+		return &ShLexeme{shlText, repl.m[0], "", nil}
 	}
-	repl.Reset(mark)
 	return nil
 }
 
-func (p *Parser) ShLexemes() []*ShLexeme {
-	var result []*ShLexeme
-
-nextshlexeme:
-	if !p.EOF() {
-		shlexeme := p.ShLexeme()
-		if shlexeme != nil {
-			result = append(result, shlexeme)
-			goto nextshlexeme
-		}
+func (p *Parser) shLexemeDquot() *ShLexeme {
+	const q = "\""
+	repl := p.repl
+	switch {
+	case repl.AdvanceStr("\""):
+		return &ShLexeme{shlText, repl.s, "", nil}
+	case repl.AdvanceStr("`"):
+		return &ShLexeme{shlText, repl.s, q + "`", nil}
+	case repl.AdvanceStr("'"):
+		return &ShLexeme{shlText, repl.s, q + "'", nil}
+	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z^_a-z~]+|\\.)+`):
+		return &ShLexeme{shlText, repl.m[0], q, nil} // XXX: unescape?
 	}
-	return result
+	return nil
 }
 
-type ShCommand struct {
-	Varassigns []*ShVarassign
-	Command    *ShWord
-	Args       []*ShWord
+func (p *Parser) shLexemeSquot() *ShLexeme {
+	repl := p.repl
+	switch {
+	case repl.AdvanceStr("'"):
+		return &ShLexeme{shlText, repl.s, "", nil}
+	case repl.AdvanceRegexp(`^([!"#%&*+,\-./0-9:=?@A-Z\[\\\]^_` + "`" + `a-z~]+|\$\$)+`):
+		return &ShLexeme{shlText, repl.m[0], "'", nil}
+	}
+	return nil
 }
 
-func (shcmd *ShCommand) String() string {
-	return fmt.Sprintf("ShCommand(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
+func (p *Parser) shLexemeBackt() *ShLexeme {
+	const q = "`"
+	repl := p.repl
+	switch {
+	case repl.AdvanceStr("`"):
+		return &ShLexeme{shlText, repl.s, "", nil}
+	case repl.AdvanceStr("'"):
+		return &ShLexeme{shlText, repl.s, q + "'", nil}
+	case repl.AdvanceRegexp(`^[ \t]+`):
+		return &ShLexeme{shlSpace, repl.m[0], q, nil}
+	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z_a-z~]+|\\.|\$\$\w+|\$\$\{\w+\})+`):
+		return &ShLexeme{shlText, repl.m[0], q, nil}
+	}
+	return nil
 }
 
-type ShWord struct {
-	Atoms []*ShLexeme
+func (p *Parser) shLexemeDquotBackt() *ShLexeme {
+	const q = "\"`"
+	repl := p.repl
+	switch {
+	case repl.AdvanceStr("`"):
+		return &ShLexeme{shlText, repl.s, "\"", nil}
+	case repl.AdvanceStr("'"):
+		return &ShLexeme{shlText, repl.s, q + "'", nil}
+	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z_a-z~]+|\\.)+`):
+		return &ShLexeme{shlText, repl.m[0], q, nil}
+	case repl.AdvanceRegexp(`^[ \t]+`):
+		return &ShLexeme{shlSpace, repl.m[0], q, nil}
+	case repl.AdvanceStr("|"):
+		return &ShLexeme{shlPipe, repl.s, q, nil}
+	}
+	return nil
 }
 
-func (shword *ShWord) String() string {
-	return fmt.Sprintf("ShWord(%q)", shword.Atoms)
+func (p *Parser) shLexemeDquotBacktSquot() *ShLexeme {
+	const q = "\"`'"
+	repl := p.repl
+	switch {
+	case repl.AdvanceStr("'"):
+		return &ShLexeme{shlText, repl.s, "\"`", nil}
+	case repl.AdvanceRegexp(`^(?:[!"#%*+,\-./0-9:=?@A-Z_a-z~]+|\\.|\$\$)+`):
+		return &ShLexeme{shlText, repl.m[0], q, nil}
+	}
+	return nil
 }
 
-type ShVarassign struct {
-	Name  string
-	Value *ShWord // maybe
-}
-
-func (shva *ShVarassign) String() string {
-	return fmt.Sprintf("ShVarassign(%s=%v)", shva.Name, shva.Value)
+func (p *Parser) Hspace() bool {
+	return p.repl.AdvanceRegexp(`^[ \t]+`)
 }
 
 // @Beta
 func (p *Parser) ShCommand() *ShCommand {
+	repl := p.repl
+	mark := repl.Mark()
+
 	var varassigns []*ShVarassign
+	var command *ShWord
+	var args []*ShWord
+
+	_ = p.Hspace()
+
 nextvarassign:
 	if varassign := p.ShVarassign(); varassign != nil {
 		varassigns = append(varassigns, varassign)
+		if !p.Hspace() {
+			goto end
+		}
 		goto nextvarassign
 	}
 
-	command := p.ShWord()
+	command = p.ShWord()
+	if command == nil || !p.Hspace() {
+		goto end
+	}
 
-	var args []*ShWord
 nextarg:
 	if arg := p.ShWord(); arg != nil {
 		args = append(args, arg)
+		if !p.Hspace() {
+			goto end
+		}
 		goto nextarg
 	}
+
+end:
 	if len(varassigns) != 0 || command != nil {
 		return &ShCommand{varassigns, command, args}
 	}
+
+	p.repl.Reset(mark)
 	return nil
 }
 
@@ -719,9 +645,10 @@ func (p *Parser) ShVarassign() *ShVarassign {
 	if p.repl.AdvanceRegexp(`^(\w+)=`) {
 		varname := p.repl.m[1]
 		value := p.ShWord()
-		if value != nil {
-			return &ShVarassign{varname, value}
+		if value == nil {
+			value = &ShWord{} // Assignment of empty value
 		}
+		return &ShVarassign{varname, value}
 	}
 	p.repl.Reset(mark)
 	return nil
@@ -729,15 +656,29 @@ func (p *Parser) ShVarassign() *ShVarassign {
 
 func (p *Parser) ShWord() *ShWord {
 	shword := &ShWord{}
+	var q ShQuoting
+	inimark := p.repl.Mark()
+
 nextlex:
-	lex := p.ShLexeme()
+	mark := p.repl.Mark()
+	lex := p.ShLexeme(q)
 	if lex != nil {
-		switch lex.Type {
-		case shlVaruse, shlPlain, shlDquot, shlSquot, shlBackt, shlBacktDquot:
+		switch {
+		case lex.Type == shlVaruse,
+			lex.Type == shlText,
+			lex.Type == shlSpace && lex.Quoting != "":
 			shword.Atoms = append(shword.Atoms, lex)
 			goto nextlex
+		case lex.Type == shlSpace:
+			break
+		default:
+			dummyLine.Errorf("Parse error at %q", mark)
+			p.repl.Reset(inimark)
+			return nil
 		}
 	}
+	p.repl.Reset(mark)
+
 	if len(shword.Atoms) != 0 {
 		return shword
 	}

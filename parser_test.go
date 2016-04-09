@@ -247,74 +247,26 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 	c.Check(varuse.Mod(), equals, ":Q")
 }
 
-func (s *Suite) Test_Parser_ShTokens(c *check.C) {
-	parse := func(input string) (result string) {
-		p := NewParser(dummyLine, input)
-		for _, shtoken := range p.ShTokens() {
-			result += shtoken.Text
-			if shtoken.StateChange {
-				result += "[" + strings.Map(func(r rune) rune {
-					switch r {
-					case '"':
-						return 'd'
-					case '\'':
-						return 's'
-					case '`':
-						return 'b'
-					default:
-						return r
-					}
-				}, shtoken.NewState) + "]"
-			}
-		}
-		return
-	}
-
-	shtokens := NewParser(dummyLine, "hello, world").ShTokens()
-
-	c.Check(shtokens, deepEquals, []*ShToken{
-		{Text: "hello, world"},
-	})
-
-	c.Check(parse("hello, world"), equals, "hello, world")
-
-	shtokens = NewParser(dummyLine, "hello, \"world\"").ShTokens()
-
-	c.Check(shtokens, deepEquals, []*ShToken{
-		{Text: "hello, "},
-		{Text: "\"", StateChange: true, NewState: "\""},
-		{Text: "world", NewState: "\""},
-		{Text: "\"", StateChange: true, NewState: ""},
-	})
-
-	c.Check(parse("hello, \"world\""), equals, "hello, \"[d]world\"[]")
-
-	c.Check(parse("x\"x`x`x\"x'x\"x'"), equals, "x\"[d]x`[db]x`[d]x\"[]x'[s]x\"x'[]")
-	c.Check(parse("x\"x`x'x'x`x\""), equals, "x\"[d]x`[db]x'[dbs]x'[db]x`[d]x\"[]")
-	c.Check(parse("x\\\"x\\'x\\`x\\\\"), equals, "x\\\"x\\'x\\`x\\\\")
-	c.Check(parse("x\"x\\\"x\\'x\\`x\\\\"), equals, "x\"[d]x\\\"x\\'x\\`x\\\\")
-	c.Check(parse("x'x\\\"x\\'x\\`x\\\\"), equals, "x'[s]x\\\"x\\'[]x\\`x\\\\")
-	c.Check(parse("x`x\\\"x\\'x\\`x\\\\"), equals, "x`[b]x\\\"x\\'x\\`x\\\\")
-}
-
-// Shell code taken from x11/qt3-docs/Makefile.
 // @Beta
-func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
-	checkParse := func(s string, expectedLexemes ...*ShLexeme) {
-		actualLexemes := NewParser(dummyLine, s).ShLexemes()
-		c.Check(actualLexemes, deepEquals, expectedLexemes)
-		for i, expectedLexeme := range expectedLexemes {
-			if i < len(actualLexemes) {
-				c.Check(*actualLexemes[i], deepEquals, *expectedLexeme)
-			} else {
-				c.Check(nil, deepEquals, *expectedLexeme)
-			}
+func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
+	checkParse := func(s string, expected ...*ShLexeme) {
+		p := NewParser(dummyLine, s)
+		var q ShQuoting
+		for _, exp := range expected {
+			c.Check(p.ShLexeme(q), deepEquals, exp)
+			q = exp.Quoting
 		}
+		c.Check(p.Rest(), equals, "")
 	}
-	plain := func(s string) *ShLexeme { return &ShLexeme{shlPlain, s, nil} }
-	dquot := func(s string) *ShLexeme { return &ShLexeme{shlDquot, s, nil} }
-	squot := func(s string) *ShLexeme { return &ShLexeme{shlSquot, s, nil} }
-	backt := func(s string) *ShLexeme { return &ShLexeme{shlBackt, s, nil} }
+
+	lex := func(typ ShLexemeType, text string, quoting ShQuoting) *ShLexeme {
+		return &ShLexeme{typ, text, quoting, nil}
+	}
+	plain := func(s string) *ShLexeme { return lex(shlText, s, "") }
+	dquot := func(s string) *ShLexeme { return lex(shlText, s, "\"") }
+	squot := func(s string) *ShLexeme { return lex(shlText, s, "'") }
+	backt := func(s string) *ShLexeme { return lex(shlText, s, "`") }
+	dquotBackt := func(s string) *ShLexeme { return lex(shlText, s, "\"`") }
 	varuse := func(varname string, modifiers ...string) *ShLexeme {
 		text := "${" + varname
 		for _, modifier := range modifiers {
@@ -322,20 +274,50 @@ func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
 		}
 		text += "}"
 		varuse := &MkVarUse{varname: varname, modifiers: modifiers}
-		return &ShLexeme{shlVaruse, text, varuse}
+		return &ShLexeme{shlVaruse, text, "", varuse}
 	}
-	whitespace := func(s string) *ShLexeme { return &ShLexeme{shlSpace, s, nil} }
-	space := &ShLexeme{shlSpace, " ", nil}
-	semicolon := &ShLexeme{shlSemicolon, ";", nil}
-	pipe := &ShLexeme{shlPipe, "|", nil}
+	q := func(q ShQuoting, lex *ShLexeme) *ShLexeme {
+		return &ShLexeme{lex.Type, lex.Text, q, lex.Data}
+	}
+	whitespace := func(s string) *ShLexeme { return lex(shlSpace, s, "") }
+	space := lex(shlSpace, " ", "")
+	semicolon := lex(shlSemicolon, ";", "")
+	pipe := lex(shlPipe, "|", "")
 
-	_, _ = squot, backt
+	checkParse("hello",
+		plain("hello"))
+
+	checkParse("hello, world",
+		plain("hello,"),
+		space,
+		plain("world"))
+
+	checkParse("\"",
+		dquot("\""))
+
+	checkParse("`",
+		backt("`"))
+
+	checkParse("`cat fname`",
+		backt("`"),
+		backt("cat"),
+		lex(shlSpace, " ", "`"),
+		backt("fname"),
+		plain("`"))
+
+	checkParse("hello, \"world\"",
+		plain("hello,"),
+		space,
+		dquot("\""),
+		dquot("world"),
+		plain("\""))
 
 	checkParse("set -e;",
 		plain("set"),
 		space,
 		plain("-e"),
 		semicolon)
+
 	checkParse("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
 		plain("cd"),
 		space,
@@ -344,10 +326,25 @@ func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
 		semicolon,
 		space,
 		plain("PAGES="),
-		dquot("`ls -1 | ${SED} -e 's,3qt$$,3,'`"),
+		dquot("\""),
+		dquotBackt("`"),
+		dquotBackt("ls"),
+		lex(shlSpace, " ", "\"`"),
+		dquotBackt("-1"),
+		lex(shlSpace, " ", "\"`"),
+		lex(shlPipe, "|", "\"`"),
+		lex(shlSpace, " ", "\"`"),
+		q("\"`", varuse("SED")),
+		q("\"`", space),
+		dquotBackt("-e"),
+		q("\"`", space),
+		lex(shlText, "'", "\"`'"),
+		lex(shlText, "s,3qt$$,3,", "\"`'"),
+		lex(shlText, "'", "\"`"),
+		lex(shlText, "`", "\""),
+		lex(shlText, "\"", ""),
 		semicolon)
-	checkParse("`ls -1 | ${SED} -e 's,3qt$$,3,'`",
-		backt("ls -1 | ${SED} -e 's,3qt$$,3,'"))
+
 	checkParse("ls -1 | ${SED} -e 's,3qt$$,3,'",
 		plain("ls"),
 		space,
@@ -359,17 +356,19 @@ func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
 		space,
 		plain("-e"),
 		space,
-		squot("s,3qt$$,3,"))
+		squot("'"),
+		squot("s,3qt$$,3,"),
+		plain("'"))
 
 	checkParse("(for PAGE in $$PAGES; do ",
-		&ShLexeme{shlParenOpen, "(", nil},
+		&ShLexeme{shlParenOpen, "(", "", nil},
 		plain("for"),
 		space,
 		plain("PAGE"),
 		space,
 		plain("in"),
 		space,
-		plain("$PAGES"),
+		plain("$$PAGES"),
 		semicolon,
 		space,
 		plain("do"),
@@ -382,7 +381,7 @@ func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
 		space,
 		varuse("DESTDIR"),
 		varuse("QTPREFIX"),
-		plain("/man/man3/${PAGE}"),
+		plain("/man/man3/$${PAGE}"),
 		semicolon,
 		space)
 	checkParse("    set - X `head -1 $${PAGE}qt`; ",
@@ -393,9 +392,142 @@ func (s *Suite) disabled_Test_Parser_ShLexemes(c *check.C) {
 		space,
 		plain("X"),
 		space,
-		backt("head -1 ${PAGE}qt"),
+		backt("`"),
+		backt("head"),
+		q("`", space),
+		backt("-1"),
+		q("`", space),
+		backt("$${PAGE}qt"),
+		plain("`"),
 		semicolon,
 		space)
+}
+
+// @Beta
+func (s *Suite) Test_Parser_ShLexeme_Quoting(c *check.C) {
+	readableQuotes := func(r rune) rune {
+		switch r {
+		case '"':
+			return 'd'
+		case '\'':
+			return 's'
+		case '`':
+			return 'b'
+		default:
+			return r
+		}
+	}
+	checkQuotingChange := func(input, expectedOutput string) {
+		p := NewParser(dummyLine, input)
+		var q ShQuoting
+		result := ""
+		for {
+			shlexeme := p.ShLexeme(q)
+			if shlexeme == nil {
+				break
+			}
+			result += shlexeme.Text
+			if shlexeme.Quoting != q {
+				q = shlexeme.Quoting
+				result += "[" + strings.Map(readableQuotes, string(q)) + "]"
+			}
+		}
+		c.Check(result, equals, expectedOutput)
+		c.Check(p.Rest(), equals, "")
+	}
+
+	checkQuotingChange("hello, world", "hello, world")
+	checkQuotingChange("hello, \"world\"", "hello, \"[d]world\"[]")
+	checkQuotingChange("1 \"\" 2 '' 3 `` 4", "1 \"[d]\"[] 2 '[s]'[] 3 `[b]`[] 4")
+	checkQuotingChange("\"\"", "\"[d]\"[]")
+	checkQuotingChange("''", "'[s]'[]")
+	checkQuotingChange("``", "`[b]`[]")
+	checkQuotingChange("x\"x`x`x\"x'x\"x'", "x\"[d]x`[db]x`[d]x\"[]x'[s]x\"x'[]")
+	checkQuotingChange("x\"x`x'x'x`x\"", "x\"[d]x`[db]x'[dbs]x'[db]x`[d]x\"[]")
+	checkQuotingChange("x\\\"x\\'x\\`x\\\\", "x\\\"x\\'x\\`x\\\\")
+	checkQuotingChange("x\"x\\\"x\\'x\\`x\\\\", "x\"[d]x\\\"x\\'x\\`x\\\\")
+	checkQuotingChange("x'x\\\"x\\'x\\`x\\\\", "x'[s]x\\\"x\\'[]x\\`x\\\\")
+	checkQuotingChange("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
+}
+
+func (s *Suite) Test_Parser_ShCommand_DataStructures(c *check.C) {
+	word := func(lexemes ...*ShLexeme) *ShWord {
+		return &ShWord{lexemes}
+	}
+	plain := func(s string) *ShLexeme {
+		return &ShLexeme{shlText, s, "", nil}
+	}
+	tvaruse := func(s, varname string, modifiers ...string) *ShLexeme {
+		return &ShLexeme{shlVaruse, s, "", &MkVarUse{varname, modifiers}}
+	}
+	plainword := func(s string) *ShWord {
+		return &ShWord{[]*ShLexeme{plain(s)}}
+	}
+
+	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
+
+	shcmd := p.ShCommand()
+
+	expected := &ShCommand{
+		[]*ShVarassign{&ShVarassign{"PATH", plainword("/nonexistent")}},
+		plainword("env"),
+		[]*ShWord{word(plain("PATH="), tvaruse("${PATH:Q}", "PATH", "Q")), plainword("true")}}
+	c.Check(shcmd, deepEquals, expected)
+	c.Check(shcmd.String(), equals, "ShCommand([ShVarassign(\"PATH\", ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=\" varuse(\"PATH:Q\")]) ShWord([\"true\"])])")
+	c.Check(p.Rest(), equals, "")
+}
+
+func (s *Suite) disabled_Test_Parser_ShCommand_Practical(c *check.C) {
+	checkParse := func(cmd, expected string) {
+		p := NewParser(dummyLine, cmd)
+		shcmd := p.ShCommand()
+		if c.Check(shcmd, check.NotNil) {
+			c.Check(shcmd.String(), equals, expected)
+		}
+		c.Check(p.Rest(), equals, "")
+	}
+	checkParse("echo ${PKGNAME:Q}",
+		"ShCommand([], ShWord([\"echo\"]), [ShWord([varuse(\"PKGNAME:Q\")])])")
+
+	checkParse("${ECHO} \"Double-quoted\"",
+		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
+			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
+			"\"Double-quoted\" "+
+			"ShLexeme(text, \"\\\"\", \"\\\"\")"+
+			"])])")
+
+	checkParse("${ECHO} 'Single-quoted'",
+		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
+			"ShLexeme(text, \"'\", \"'\") "+
+			"\"Single-quoted\" "+
+			"ShLexeme(text, \"'\", \"'\")"+
+			"])])")
+
+	checkParse("`cat plain`",
+		"ShCommand([], ShWord([ShLexeme(text, \"`\", \"`\") \"cat...plain\" ShLexeme(text, \"`\", \"`\")])])")
+	checkParse("\"`cat double`\"",
+		"ShCommand([], ShWord([\"\\\"`cat double`\\\"\"]), [])")
+	checkParse("`\"one word\"`",
+		"ShCommand([], ShWord([\"`\\\"one word\\\"`\"]), [])")
+
+	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
+		"ShCommand([], ShVarassign(\"PAGES\", ...), [], [])")
+	checkParse("var=Plain",
+		"ShCommand([ShVarassign(\"var\", ShWord([\"Plain\"]))], [], [])")
+	checkParse("var=\"Dquot\"",
+		"ShCommand([ShVarassign(\"var\", ShWord([ShLexeme(text, \"Dquot\", \"\\\"\")])], [], [])")
+	checkParse("var='Squot'",
+		"ShCommand([ShVarassign(\"var\", ShWord([ShLexeme(text, \"'\", \"'\") \"Squot\" ShLexeme(text, \"'\", \"\")]))], <nil>, [])")
+	checkParse("var=Plain\"Dquot\"'Squot'",
+		"ShCommand([ShVarassign(\"var\", ShWord(["+
+			"\"Plain\" "+
+			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
+			"\"Dquot\" "+
+			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
+			"ShLexeme(text, \"'\", \"'\") "+
+			"\"Squot\" "+
+			"ShLexeme(text, \"'\", \"'\")"+
+			"]))], <nil>, [])")
 }
 
 // @Beta
@@ -419,54 +551,4 @@ func (s *Suite) Test_Parser_ShAst(c *check.C) {
 				Command("ls", "-1"),
 				Command(Varuse("SED"), "-e", "s,3qt$,3,")))))
 
-}
-
-func (s *Suite) Test_Parser_ShCommand(c *check.C) {
-	word := func(lexemes ...*ShLexeme) *ShWord {
-		return &ShWord{lexemes}
-	}
-	plain := func(s string) *ShLexeme {
-		return &ShLexeme{shlPlain, s, nil}
-	}
-	tvaruse := func(s, varname string, modifiers ...string) *ShLexeme {
-		return &ShLexeme{shlVaruse, s, &MkVarUse{varname, modifiers}}
-	}
-	plainword := func(s string) *ShWord {
-		return &ShWord{[]*ShLexeme{plain(s)}}
-	}
-	checkParse := func(cmd, expected string) {
-		p := NewParser(dummyLine, cmd)
-		shcmd := p.ShCommand()
-		if c.Check(shcmd, check.NotNil) {
-			c.Check(shcmd.String(), equals, expected)
-		}
-		c.Check(p.Rest(), equals, "")
-	}
-
-	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
-
-	shcmd := p.ShCommand()
-
-	expected := &ShCommand{
-		[]*ShVarassign{&ShVarassign{"PATH", plainword("/nonexistent")}},
-		plainword("env"),
-		[]*ShWord{word(plain("PATH="), tvaruse("${PATH:Q}", "PATH", "Q")), plainword("true")}}
-	c.Check(shcmd, deepEquals, expected)
-	c.Check(shcmd.String(), equals, "ShCommand([ShVarassign(PATH=ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=\" \"${PATH:Q}\"]) ShWord([\"true\"])])")
-
-	checkParse("echo ${PKGNAME:Q}",
-		"ShCommand([], ShWord([\"echo\"]), [ShWord([\"${PKGNAME:Q}\"])])")
-
-	checkParse("${ECHO} \"Double-quoted\"",
-		"ShCommand([], ShWord([\"${ECHO}\"]), [ShWord([\"\\\"Double-quoted\\\"\"])])")
-
-	checkParse("${ECHO} 'Single-quoted'",
-		"ShCommand([], ShWord([\"${ECHO}\"]), [ShWord([\"'Single-quoted'\"])])")
-
-	checkParse("`cat plain`",
-		"ShCommand([], ShWord([\"`cat plain`\"]), [])")
-	checkParse("\"`cat double`\"",
-		"ShCommand([], ShWord([\"\\\"`cat double`\\\"\"]), [])")
-	checkParse("`\"one word\"`",
-		"ShCommand([], ShWord([\"`\\\"one word\\\"`\"]), [])")
 }
