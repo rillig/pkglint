@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ShCommand struct {
@@ -47,7 +48,7 @@ func (shlex *ShLexeme) String() string {
 		varuse := shlex.Data.(*MkVarUse)
 		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
 	}
-	return fmt.Sprintf("ShLexeme(%v, %q, %q)", shlex.Type, shlex.Text, shlex.Quoting)
+	return fmt.Sprintf("ShLexeme(%v, %q, %s)", shlex.Type, shlex.Text, shlex.Quoting)
 }
 
 type ShLexemeType uint8
@@ -89,3 +90,22 @@ func (t ShLexemeType) String() string {
 // and how its literal value is retained.
 // It is a sequence of ", ', `; maybe ( for subshell.
 type ShQuoting string
+
+func (q ShQuoting) String() string {
+	if q == "" {
+		return "plain"
+	}
+	readableQuotes := func(r rune) rune {
+		switch r {
+		case '"':
+			return 'd'
+		case '\'':
+			return 's'
+		case '`':
+			return 'b'
+		default:
+			panic(string(q))
+		}
+	}
+	return strings.Map(readableQuotes, string(q))
+}

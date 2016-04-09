@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strings"
-
 	check "gopkg.in/check.v1"
 )
 
@@ -414,18 +412,6 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 
 // @Beta
 func (s *Suite) Test_Parser_ShLexeme_Quoting(c *check.C) {
-	readableQuotes := func(r rune) rune {
-		switch r {
-		case '"':
-			return 'd'
-		case '\'':
-			return 's'
-		case '`':
-			return 'b'
-		default:
-			return r
-		}
-	}
 	checkQuotingChange := func(input, expectedOutput string) {
 		p := NewParser(dummyLine, input)
 		var q ShQuoting
@@ -438,7 +424,7 @@ func (s *Suite) Test_Parser_ShLexeme_Quoting(c *check.C) {
 			result += shlexeme.Text
 			if shlexeme.Quoting != q {
 				q = shlexeme.Quoting
-				result += "[" + strings.Map(readableQuotes, string(q)) + "]"
+				result += "[" + q.String() + "]"
 			}
 		}
 		c.Check(result, equals, expectedOutput)
@@ -446,16 +432,16 @@ func (s *Suite) Test_Parser_ShLexeme_Quoting(c *check.C) {
 	}
 
 	checkQuotingChange("hello, world", "hello, world")
-	checkQuotingChange("hello, \"world\"", "hello, \"[d]world\"[]")
-	checkQuotingChange("1 \"\" 2 '' 3 `` 4", "1 \"[d]\"[] 2 '[s]'[] 3 `[b]`[] 4")
-	checkQuotingChange("\"\"", "\"[d]\"[]")
-	checkQuotingChange("''", "'[s]'[]")
-	checkQuotingChange("``", "`[b]`[]")
-	checkQuotingChange("x\"x`x`x\"x'x\"x'", "x\"[d]x`[db]x`[d]x\"[]x'[s]x\"x'[]")
-	checkQuotingChange("x\"x`x'x'x`x\"", "x\"[d]x`[db]x'[dbs]x'[db]x`[d]x\"[]")
+	checkQuotingChange("hello, \"world\"", "hello, \"[d]world\"[plain]")
+	checkQuotingChange("1 \"\" 2 '' 3 `` 4", "1 \"[d]\"[plain] 2 '[s]'[plain] 3 `[b]`[plain] 4")
+	checkQuotingChange("\"\"", "\"[d]\"[plain]")
+	checkQuotingChange("''", "'[s]'[plain]")
+	checkQuotingChange("``", "`[b]`[plain]")
+	checkQuotingChange("x\"x`x`x\"x'x\"x'", "x\"[d]x`[db]x`[d]x\"[plain]x'[s]x\"x'[plain]")
+	checkQuotingChange("x\"x`x'x'x`x\"", "x\"[d]x`[db]x'[dbs]x'[db]x`[d]x\"[plain]")
 	checkQuotingChange("x\\\"x\\'x\\`x\\\\", "x\\\"x\\'x\\`x\\\\")
 	checkQuotingChange("x\"x\\\"x\\'x\\`x\\\\", "x\"[d]x\\\"x\\'x\\`x\\\\")
-	checkQuotingChange("x'x\\\"x\\'x\\`x\\\\", "x'[s]x\\\"x\\'[]x\\`x\\\\")
+	checkQuotingChange("x'x\\\"x\\'x\\`x\\\\", "x'[s]x\\\"x\\'[plain]x\\`x\\\\")
 	checkQuotingChange("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
 }
 
@@ -555,63 +541,63 @@ func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
 
 	checkParse("${ECHO} \"Double-quoted\"",
 		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
-			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
-			"ShLexeme(text, \"Double-quoted\", \"\\\"\") "+
+			"ShLexeme(text, \"\\\"\", d) "+
+			"ShLexeme(text, \"Double-quoted\", d) "+
 			"\"\\\"\""+
 			"])])")
 
 	checkParse("${ECHO} 'Single-quoted'",
 		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
-			"ShLexeme(text, \"'\", \"'\") "+
-			"ShLexeme(text, \"Single-quoted\", \"'\") "+
+			"ShLexeme(text, \"'\", s) "+
+			"ShLexeme(text, \"Single-quoted\", s) "+
 			"\"'\""+
 			"])])")
 
 	checkParse("`cat plain`",
 		"ShCommand([], ShWord(["+
-			"ShLexeme(text, \"`\", \"`\") "+
-			"ShLexeme(text, \"cat\", \"`\") "+
-			"ShLexeme(space, \" \", \"`\") "+
-			"ShLexeme(text, \"plain\", \"`\") "+
+			"ShLexeme(text, \"`\", b) "+
+			"ShLexeme(text, \"cat\", b) "+
+			"ShLexeme(space, \" \", b) "+
+			"ShLexeme(text, \"plain\", b) "+
 			"\"`\""+
 			"]), [])")
 	checkParse("\"`cat double`\"",
 		"ShCommand([], ShWord(["+
-			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
-			"ShLexeme(text, \"`\", \"\\\"`\") "+
-			"ShLexeme(text, \"cat\", \"\\\"`\") "+
-			"ShLexeme(space, \" \", \"\\\"`\") "+
-			"ShLexeme(text, \"double\", \"\\\"`\") "+
-			"ShLexeme(text, \"`\", \"\\\"\") "+
+			"ShLexeme(text, \"\\\"\", d) "+
+			"ShLexeme(text, \"`\", db) "+
+			"ShLexeme(text, \"cat\", db) "+
+			"ShLexeme(space, \" \", db) "+
+			"ShLexeme(text, \"double\", db) "+
+			"ShLexeme(text, \"`\", d) "+
 			"\"\\\"\""+
 			"]), [])")
 	checkParse("`\"one word\"`",
 		"ShCommand([], ShWord(["+
-			"ShLexeme(text, \"`\", \"`\") "+
-			"ShLexeme(text, \"\\\"\", \"`\\\"\") "+
-			"ShLexeme(text, \"one word\", \"`\\\"\") "+
-			"ShLexeme(text, \"\\\"\", \"`\") "+
+			"ShLexeme(text, \"`\", b) "+
+			"ShLexeme(text, \"\\\"\", bd) "+
+			"ShLexeme(text, \"one word\", bd) "+
+			"ShLexeme(text, \"\\\"\", b) "+
 			"\"`\""+
 			"]), [])")
 
 	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 		"ShCommand([ShVarassign(\"PAGES\", ShWord(["+
-			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
-			"ShLexeme(text, \"`\", \"\\\"`\") "+
-			"ShLexeme(text, \"ls\", \"\\\"`\") "+
-			"ShLexeme(space, \" \", \"\\\"`\") "+
-			"ShLexeme(text, \"-1\", \"\\\"`\") "+
-			"ShLexeme(space, \" \", \"\\\"`\") "+
-			"ShLexeme(pipe, \"|\", \"\\\"`\") "+
-			"ShLexeme(space, \" \", \"\\\"`\") "+
+			"ShLexeme(text, \"\\\"\", d) "+
+			"ShLexeme(text, \"`\", db) "+
+			"ShLexeme(text, \"ls\", db) "+
+			"ShLexeme(space, \" \", db) "+
+			"ShLexeme(text, \"-1\", db) "+
+			"ShLexeme(space, \" \", db) "+
+			"ShLexeme(pipe, \"|\", db) "+
+			"ShLexeme(space, \" \", db) "+
 			"varuse(\"SED\") "+
-			"ShLexeme(space, \" \", \"\\\"`\") "+
-			"ShLexeme(text, \"-e\", \"\\\"`\") "+
-			"ShLexeme(space, \" \", \"\\\"`\") "+
-			"ShLexeme(text, \"'\", \"\\\"`'\") "+
-			"ShLexeme(text, \"s,3qt$$,3,\", \"\\\"`'\") "+
-			"ShLexeme(text, \"'\", \"\\\"`\") "+
-			"ShLexeme(text, \"`\", \"\\\"\") "+
+			"ShLexeme(space, \" \", db) "+
+			"ShLexeme(text, \"-e\", db) "+
+			"ShLexeme(space, \" \", db) "+
+			"ShLexeme(text, \"'\", dbs) "+
+			"ShLexeme(text, \"s,3qt$$,3,\", dbs) "+
+			"ShLexeme(text, \"'\", db) "+
+			"ShLexeme(text, \"`\", d) "+
 			"\"\\\"\""+
 			"]))], <nil>, [])")
 
@@ -620,26 +606,26 @@ func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
 
 	checkParse("var=\"Dquot\"",
 		"ShCommand([ShVarassign(\"var\", ShWord(["+
-			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
-			"ShLexeme(text, \"Dquot\", \"\\\"\") "+
+			"ShLexeme(text, \"\\\"\", d) "+
+			"ShLexeme(text, \"Dquot\", d) "+
 			"\"\\\"\""+
 			"]))], <nil>, [])")
 
 	checkParse("var='Squot'",
 		"ShCommand([ShVarassign(\"var\", ShWord(["+
-			"ShLexeme(text, \"'\", \"'\") "+
-			"ShLexeme(text, \"Squot\", \"'\") "+
+			"ShLexeme(text, \"'\", s) "+
+			"ShLexeme(text, \"Squot\", s) "+
 			"\"'\""+
 			"]))], <nil>, [])")
 
 	checkParse("var=Plain\"Dquot\"'Squot'",
 		"ShCommand([ShVarassign(\"var\", ShWord(["+
 			"\"Plain\" "+
-			"ShLexeme(text, \"\\\"\", \"\\\"\") "+
-			"ShLexeme(text, \"Dquot\", \"\\\"\") "+
+			"ShLexeme(text, \"\\\"\", d) "+
+			"ShLexeme(text, \"Dquot\", d) "+
 			"\"\\\"\" "+
-			"ShLexeme(text, \"'\", \"'\") "+
-			"ShLexeme(text, \"Squot\", \"'\") "+
+			"ShLexeme(text, \"'\", s) "+
+			"ShLexeme(text, \"Squot\", s) "+
 			"\"'\""+
 			"]))], <nil>, [])")
 }

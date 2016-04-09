@@ -414,26 +414,15 @@ func (s *Suite) Test_ShQuote(c *check.C) {
 		sq := NewShQuote("")
 		for _, part := range strings.Split(input, "x") {
 			sq.Feed(part)
-			result += part + "[" + strings.Map(func(r rune) rune {
-				switch r {
-				case '"':
-					return 'd'
-				case '\'':
-					return 's'
-				case '`':
-					return 'b'
-				default:
-					return r
-				}
-			}, sq.stack) + "]"
+			result += part + "[" + ShQuoting(sq.stack).String() + "]"
 		}
 		return
 	}
 
-	c.Check(traceQuoting("x\"x`x`x\"x'x\"x'"), equals, "[]\"[d]`[db]`[d]\"[]'[s]\"[s]'[]")
-	c.Check(traceQuoting("x\"x`x'x'x`x\""), equals, "[]\"[d]`[db]'[dbs]'[db]`[d]\"[]")
-	c.Check(traceQuoting("x\\\"x\\'x\\`x\\\\"), equals, "[]\\\"[]\\'[]\\`[]\\\\[]")
-	c.Check(traceQuoting("x\"x\\\"x\\'x\\`x\\\\"), equals, "[]\"[d]\\\"[d]\\'[d]\\`[d]\\\\[d]")
-	c.Check(traceQuoting("x'x\\\"x\\'x\\`x\\\\"), equals, "[]'[s]\\\"[s]\\'[]\\`[]\\\\[]")
-	c.Check(traceQuoting("x`x\\\"x\\'x\\`x\\\\"), equals, "[]`[b]\\\"[b]\\'[b]\\`[b]\\\\[b]")
+	c.Check(traceQuoting("x\"x`x`x\"x'x\"x'"), equals, "[plain]\"[d]`[db]`[d]\"[plain]'[s]\"[s]'[plain]")
+	c.Check(traceQuoting("x\"x`x'x'x`x\""), equals, "[plain]\"[d]`[db]'[dbs]'[db]`[d]\"[plain]")
+	c.Check(traceQuoting("x\\\"x\\'x\\`x\\\\"), equals, "[plain]\\\"[plain]\\'[plain]\\`[plain]\\\\[plain]")
+	c.Check(traceQuoting("x\"x\\\"x\\'x\\`x\\\\"), equals, "[plain]\"[d]\\\"[d]\\'[d]\\`[d]\\\\[d]")
+	c.Check(traceQuoting("x'x\\\"x\\'x\\`x\\\\"), equals, "[plain]'[s]\\\"[s]\\'[plain]\\`[plain]\\\\[plain]")
+	c.Check(traceQuoting("x`x\\\"x\\'x\\`x\\\\"), equals, "[plain]`[b]\\\"[b]\\'[b]\\`[b]\\\\[b]")
 }
