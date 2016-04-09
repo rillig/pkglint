@@ -450,6 +450,28 @@ func (s *Suite) Test_Parser_ShLexeme_Quoting(c *check.C) {
 	checkQuotingChange("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
 }
 
+func (s *Suite) Test_Parser_ShWord(c *check.C) {
+	checkParse := func(s string, expected ...*ShWord) {
+		p := NewParser(dummyLine, s)
+		for _, exp := range expected {
+			c.Check(p.ShWord(), deepEquals, exp)
+		}
+		c.Check(p.Rest(), equals, "")
+	}
+
+	checkParse("",
+		nil)
+	checkParse("echo",
+		&ShWord{[]*ShLexeme{{shlText, "echo", "", nil}}})
+	checkParse("`cat file`",
+		&ShWord{[]*ShLexeme{
+			{shlText, "`", "`", nil},
+			{shlText, "cat", "`", nil},
+			{shlSpace, " ", "`", nil},
+			{shlText, "file", "`", nil},
+			{shlText, "`", "", nil}}})
+}
+
 func (s *Suite) Test_Parser_ShCommand_DataStructures(c *check.C) {
 	word := func(lexemes ...*ShLexeme) *ShWord {
 		return &ShWord{lexemes}

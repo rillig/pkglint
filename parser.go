@@ -656,21 +656,21 @@ func (p *Parser) ShVarassign() *ShVarassign {
 
 func (p *Parser) ShWord() *ShWord {
 	shword := &ShWord{}
-	var q ShQuoting
 	inimark := p.repl.Mark()
-
+	var q ShQuoting
 nextlex:
 	mark := p.repl.Mark()
 	lex := p.ShLexeme(q)
 	if lex != nil {
 		switch {
+		case lex.Type == shlSpace && lex.Quoting == "":
+			break
 		case lex.Type == shlVaruse,
 			lex.Type == shlText,
-			lex.Type == shlSpace && lex.Quoting != "":
+			lex.Type == shlSpace:
 			shword.Atoms = append(shword.Atoms, lex)
+			q = lex.Quoting
 			goto nextlex
-		case lex.Type == shlSpace:
-			break
 		default:
 			dummyLine.Errorf("Parse error at %q", mark)
 			p.repl.Reset(inimark)
