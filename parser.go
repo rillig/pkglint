@@ -468,19 +468,19 @@ func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 
 	var lex *ShLexeme
 	switch quoting {
-	case "":
+	case shqPlain:
 		lex = p.shLexemePlain()
-	case "\"":
+	case shqD:
 		lex = p.shLexemeDquot()
-	case "'":
+	case shqS:
 		lex = p.shLexemeSquot()
-	case "`":
+	case shqB:
 		lex = p.shLexemeBackt()
-	case "\"`":
+	case shqDB:
 		lex = p.shLexemeDquotBackt()
-	case "`\"":
+	case shqBD:
 		lex = p.shLexemeBacktDquot()
-	case "\"`'":
+	case shqDBS:
 		lex = p.shLexemeDquotBacktSquot()
 	}
 
@@ -492,48 +492,48 @@ func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 }
 
 func (p *Parser) shLexemePlain() *ShLexeme {
+	q := shqPlain
 	repl := p.repl
 	switch {
 	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShLexeme{shlSpace, repl.m[0], "", nil}
+		return &ShLexeme{shlSpace, repl.m[0], q, nil}
 	case repl.AdvanceStr(";"):
-		return &ShLexeme{shlSemicolon, repl.s, "", nil}
+		return &ShLexeme{shlSemicolon, repl.s, q, nil}
 	case repl.AdvanceStr("("):
-		return &ShLexeme{shlParenOpen, repl.s, "", nil}
+		return &ShLexeme{shlParenOpen, repl.s, q, nil}
 	case repl.AdvanceStr(")"):
-		return &ShLexeme{shlParenClose, repl.s, "", nil}
+		return &ShLexeme{shlParenClose, repl.s, q, nil}
 	case repl.AdvanceStr("||"):
-		return &ShLexeme{shlOr, repl.s, "", nil}
+		return &ShLexeme{shlOr, repl.s, q, nil}
 	case repl.AdvanceStr("&&"):
-		return &ShLexeme{shlAnd, repl.s, "", nil}
+		return &ShLexeme{shlAnd, repl.s, q, nil}
 	case repl.AdvanceStr("|"):
-		return &ShLexeme{shlPipe, repl.s, "", nil}
+		return &ShLexeme{shlPipe, repl.s, q, nil}
 	case repl.AdvanceStr("&"):
-		return &ShLexeme{shlBackground, repl.s, "", nil}
+		return &ShLexeme{shlBackground, repl.s, q, nil}
 	case repl.AdvanceStr("\""):
-		return &ShLexeme{shlText, repl.s, "\"", nil}
+		return &ShLexeme{shlText, repl.s, shqD, nil}
 	case repl.AdvanceStr("'"):
-		return &ShLexeme{shlText, repl.s, "'", nil}
+		return &ShLexeme{shlText, repl.s, shqS, nil}
 	case repl.AdvanceStr("`"):
-		return &ShLexeme{shlText, repl.s, "`", nil}
+		return &ShLexeme{shlText, repl.s, shqB, nil}
 	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z^_a-z~]+|\\.|\$\$\w+|\$\$\{\w+\})+`):
-		return &ShLexeme{shlText, repl.m[0], "", nil}
+		return &ShLexeme{shlText, repl.m[0], q, nil}
 	}
 	return nil
 }
 
 func (p *Parser) shLexemeDquot() *ShLexeme {
-	const q = "\""
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
-		return &ShLexeme{shlText, repl.s, "", nil}
+		return &ShLexeme{shlText, repl.s, shqPlain, nil}
 	case repl.AdvanceStr("`"):
-		return &ShLexeme{shlText, repl.s, q + "`", nil}
+		return &ShLexeme{shlText, repl.s, shqDB, nil}
 	case repl.AdvanceStr("'"):
-		return &ShLexeme{shlText, repl.s, q + "'", nil}
+		return &ShLexeme{shlText, repl.s, shqDS, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z^_a-z~]+|\\.)+`):
-		return &ShLexeme{shlText, repl.m[0], q, nil} // XXX: unescape?
+		return &ShLexeme{shlText, repl.m[0], shqD, nil} // XXX: unescape?
 	}
 	return nil
 }
@@ -542,27 +542,26 @@ func (p *Parser) shLexemeSquot() *ShLexeme {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
-		return &ShLexeme{shlText, repl.s, "", nil}
+		return &ShLexeme{shlText, repl.s, shqPlain, nil}
 	case repl.AdvanceRegexp(`^([!"#%&*+,\-./0-9:=?@A-Z\[\\\]^_` + "`" + `a-z~]+|\$\$)+`):
-		return &ShLexeme{shlText, repl.m[0], "'", nil}
+		return &ShLexeme{shlText, repl.m[0], shqS, nil}
 	}
 	return nil
 }
 
 func (p *Parser) shLexemeBackt() *ShLexeme {
-	const q = "`"
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
-		return &ShLexeme{shlText, repl.s, "`\"", nil}
+		return &ShLexeme{shlText, repl.s, shqBD, nil}
 	case repl.AdvanceStr("`"):
-		return &ShLexeme{shlText, repl.s, "", nil}
+		return &ShLexeme{shlText, repl.s, shqPlain, nil}
 	case repl.AdvanceStr("'"):
-		return &ShLexeme{shlText, repl.s, q + "'", nil}
+		return &ShLexeme{shlText, repl.s, shqBS, nil}
 	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShLexeme{shlSpace, repl.m[0], q, nil}
+		return &ShLexeme{shlSpace, repl.m[0], shqB, nil}
 	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z_a-z~]+|\\.|\$\$\w+|\$\$\{\w+\})+`):
-		return &ShLexeme{shlText, repl.m[0], q, nil}
+		return &ShLexeme{shlText, repl.m[0], shqB, nil}
 	}
 	return nil
 }
@@ -572,39 +571,37 @@ func (p *Parser) shLexemeDquotBackt() *ShLexeme {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("`"):
-		return &ShLexeme{shlText, repl.s, "\"", nil}
+		return &ShLexeme{shlText, repl.s, shqD, nil}
 	case repl.AdvanceStr("'"):
-		return &ShLexeme{shlText, repl.s, q + "'", nil}
+		return &ShLexeme{shlText, repl.s, shqDBS, nil}
 	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z_a-z~]+|\\.)+`):
-		return &ShLexeme{shlText, repl.m[0], q, nil}
+		return &ShLexeme{shlText, repl.m[0], shqDB, nil}
 	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShLexeme{shlSpace, repl.m[0], q, nil}
+		return &ShLexeme{shlSpace, repl.m[0], shqDB, nil}
 	case repl.AdvanceStr("|"):
-		return &ShLexeme{shlPipe, repl.s, q, nil}
+		return &ShLexeme{shlPipe, repl.s, shqDB, nil}
 	}
 	return nil
 }
 
 func (p *Parser) shLexemeBacktDquot() *ShLexeme {
-	const q = "`\""
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
-		return &ShLexeme{shlText, repl.s, "`", nil}
+		return &ShLexeme{shlText, repl.s, shqB, nil}
 	case repl.AdvanceRegexp(`^(?:[\t !%*+,\-./0-9:=?@A-Z\[\]^_a-z{|}~]+|\\.)+`):
-		return &ShLexeme{shlText, repl.m[0], q, nil}
+		return &ShLexeme{shlText, repl.m[0], shqBD, nil}
 	}
 	return nil
 }
 
 func (p *Parser) shLexemeDquotBacktSquot() *ShLexeme {
-	const q = "\"`'"
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
-		return &ShLexeme{shlText, repl.s, "\"`", nil}
+		return &ShLexeme{shlText, repl.s, shqDB, nil}
 	case repl.AdvanceRegexp(`^(?:[!"#%*+,\-./0-9:=?@A-Z\[\]^_a-z~]+|\\.|\$\$)+`):
-		return &ShLexeme{shlText, repl.m[0], q, nil}
+		return &ShLexeme{shlText, repl.m[0], shqDBS, nil}
 	}
 	return nil
 }
@@ -673,18 +670,18 @@ func (p *Parser) ShVarassign() *ShVarassign {
 func (p *Parser) ShWord() *ShWord {
 	shword := &ShWord{}
 	inimark := p.repl.Mark()
-	var q ShQuoting
+	q := shqPlain
 nextlex:
 	mark := p.repl.Mark()
 	lex := p.ShLexeme(q)
 	if lex != nil {
 		switch {
-		case lex.Quoting == "" && (lex.Type == shlSpace || lex.Type == shlSemicolon):
+		case lex.Quoting == shqPlain && (lex.Type == shlSpace || lex.Type == shlSemicolon):
 			break
 		case lex.Type == shlVaruse,
 			lex.Type == shlText,
 			lex.Type == shlSpace,
-			lex.Quoting != "":
+			lex.Quoting != shqPlain:
 			shword.Atoms = append(shword.Atoms, lex)
 			q = lex.Quoting
 			goto nextlex

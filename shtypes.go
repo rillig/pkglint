@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 )
 
 type ShCommand struct {
@@ -41,7 +40,7 @@ type ShLexeme struct {
 }
 
 func (shlex *ShLexeme) String() string {
-	if shlex.Type == shlText && shlex.Quoting == "" && shlex.Data == nil {
+	if shlex.Type == shlText && shlex.Quoting == shqPlain && shlex.Data == nil {
 		return fmt.Sprintf("%q", shlex.Text)
 	}
 	if shlex.Type == shlVaruse {
@@ -87,25 +86,22 @@ func (t ShLexemeType) String() string {
 }
 
 // ShQuoting describes the context in which a string appears
-// and how its literal value is retained.
-// It is a sequence of ", ', `; maybe ( for subshell.
-type ShQuoting string
+// and how it must be unescaped to get its literal value.
+type ShQuoting uint8
+
+const (
+	shqPlain ShQuoting = iota
+	shqD
+	shqS
+	shqB
+	shqDS
+	shqDB
+	shqBD
+	shqBS
+	shqDBS
+	shqUnknown
+)
 
 func (q ShQuoting) String() string {
-	if q == "" {
-		return "plain"
-	}
-	readableQuotes := func(r rune) rune {
-		switch r {
-		case '"':
-			return 'd'
-		case '\'':
-			return 's'
-		case '`':
-			return 'b'
-		default:
-			panic(string(q))
-		}
-	}
-	return strings.Map(readableQuotes, string(q))
+	return [...]string{"plain", "d", "s", "b", "ds", "db", "bd", "bs", "dbs", "unknown"}[q]
 }

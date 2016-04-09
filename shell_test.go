@@ -414,7 +414,7 @@ func (s *Suite) Test_ShQuote(c *check.C) {
 		sq := NewShQuote("")
 		for _, part := range strings.Split(input, "x") {
 			sq.Feed(part)
-			result += part + "[" + ShQuoting(sq.stack).String() + "]"
+			result += part + "[" + sq.q.String() + "]"
 		}
 		return
 	}

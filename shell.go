@@ -963,25 +963,25 @@ func splitIntoShellWords(line *Line, text string) (words []string, rest string) 
 }
 
 type ShQuote struct {
-	repl  *PrefixReplacer
-	stack string
+	repl *PrefixReplacer
+	q    ShQuoting
 }
 
 func NewShQuote(s string) *ShQuote {
-	return &ShQuote{NewPrefixReplacer(s), ""}
+	return &ShQuote{NewPrefixReplacer(s), shqPlain}
 }
 
 func (sq *ShQuote) ShellwordState() ShellwordState {
-	switch sq.stack {
-	case "":
+	switch sq.q {
+	case shqPlain:
 		return swstPlain
-	case "\"":
+	case shqD:
 		return swstDquot
-	case "\"`":
+	case shqDB:
 		return swstDquotBackt
-	case "'":
+	case shqS:
 		return swstSquot
-	case "`":
+	case shqB:
 		return swstBackt
 	default:
 		return swstUnknown
@@ -991,9 +991,6 @@ func (sq *ShQuote) ShellwordState() ShellwordState {
 func (sq *ShQuote) Feed(str string) {
 	const (
 		reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
-		S      = "'"
-		D      = "\""
-		B      = "`"
 	)
 
 	repl := sq.repl
@@ -1004,61 +1001,61 @@ func (sq *ShQuote) Feed(str string) {
 		}
 
 		mark := repl.Mark()
-		switch sq.stack {
-		case "":
+		switch sq.q {
+		case shqPlain:
 			switch {
-			case repl.AdvanceStr(D):
-				sq.stack = D
-			case repl.AdvanceStr(S):
-				sq.stack = S
-			case repl.AdvanceStr(B):
-				sq.stack = B
+			case repl.AdvanceStr("\""):
+				sq.q = shqD
+			case repl.AdvanceStr("'"):
+				sq.q = shqS
+			case repl.AdvanceStr("`"):
+				sq.q = shqB
 			case repl.AdvanceRegexp(`^\\.`):
 			}
 
-		case D:
+		case shqD:
 			switch {
-			case repl.AdvanceStr(D):
-				sq.stack = ""
-			case repl.AdvanceStr(B):
-				sq.stack = D + B
-			case repl.AdvanceStr(S):
+			case repl.AdvanceStr("\""):
+				sq.q = shqPlain
+			case repl.AdvanceStr("`"):
+				sq.q = shqDB
+			case repl.AdvanceStr("'"):
 			case repl.AdvanceRegexp(`^\\.`):
 			}
-		case S:
+		case shqS:
 			switch {
-			case repl.AdvanceStr(S):
-				sq.stack = ""
+			case repl.AdvanceStr("'"):
+				sq.q = shqPlain
 			case repl.AdvanceRegexp(`^[^']+`):
 			}
-		case B:
+		case shqB:
 			switch {
-			case repl.AdvanceStr(B):
-				sq.stack = ""
-			case repl.AdvanceStr(S):
-				sq.stack = B + S
+			case repl.AdvanceStr("`"):
+				sq.q = shqPlain
+			case repl.AdvanceStr("'"):
+				sq.q = shqBS
 			case repl.AdvanceRegexp(`^\\.`):
 			}
 
-		case D + B:
+		case shqDB:
 			switch {
-			case repl.AdvanceStr(B):
-				sq.stack = D
-			case repl.AdvanceStr(S):
-				sq.stack = D + B + S
+			case repl.AdvanceStr("`"):
+				sq.q = shqD
+			case repl.AdvanceStr("'"):
+				sq.q = shqDBS
 			case repl.AdvanceRegexp(`^\\.`):
 			}
-		case D + B + S:
+		case shqDBS:
 			switch {
-			case repl.AdvanceStr(S):
-				sq.stack = D + B
+			case repl.AdvanceStr("'"):
+				sq.q = shqDB
 			}
 		}
 
 		if repl.Since(mark) == "" {
-			traceStep2("ShQuote.stuck stack=%s rest=%s", sq.stack, sq.repl.rest)
+			traceStep2("ShQuote.stuck stack=%s rest=%s", sq.q.String(), sq.repl.rest)
 			repl.AdvanceRest()
-			sq.stack += "?"
+			sq.q = shqUnknown
 		}
 	}
 }
