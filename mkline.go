@@ -792,11 +792,40 @@ func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 		vartype = shellcommandsContextType
 	}
 
-	words := mkline.mkwords
 	if vartype != nil && vartype.IsShell() {
-		words, _ = splitIntoShellTokens(mkline.Line, mkline.Value())
+		mkline.checkVarassignVaruseShell(vartype, time)
+	} else {
+		mkline.checkVarassignVaruseMk(vartype, time)
 	}
+}
 
+func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
+	words := mkline.mkwords
+	for _, word := range words {
+		if contains(word, "${") {
+			p := NewParser(mkline.Line, word)
+			mark := p.repl.Mark()
+			extent := vucExtentWordpart
+			if p.VarUse() != nil && p.EOF() {
+				extent = vucExtentWord
+			}
+			p.repl.Reset(mark)
+
+			quoting := NewShQuote("")
+			for _, token := range p.MkTokens() {
+				if token.Varuse == nil {
+					quoting.Feed(token.Text)
+				} else {
+					vuc := &VarUseContext{vartype, time, quoting.q.ToVarUseContext(), extent}
+					mkline.CheckVaruse(token.Varuse, vuc)
+				}
+			}
+		}
+	}
+}
+
+func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
+	words, _ := splitIntoShellTokens(mkline.Line, mkline.Value())
 	for _, word := range words {
 		if contains(word, "${") {
 			p := NewParser(mkline.Line, word)
