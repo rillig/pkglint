@@ -457,6 +457,19 @@ func (p *Parser) mkCondAtom() *Tree {
 	return nil
 }
 
+func (p *Parser) ShLexemes() []*ShLexeme {
+	var shlexemes []*ShLexeme
+	q := shqPlain
+	for {
+		lex := p.ShLexeme(q)
+		if lex == nil {
+			return shlexemes
+		}
+		shlexemes = append(shlexemes, lex)
+		q = lex.Quoting
+	}
+}
+
 // See ShQuote.Feed
 func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 	if p.EOF() {

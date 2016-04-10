@@ -800,6 +800,9 @@ func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 }
 
 func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
+	if G.opts.Debug {
+		defer tracecall(vartype, time)()
+	}
 	for _, word := range mkline.mkwords {
 		if contains(word, "${") {
 			tokens := NewParser(mkline.Line, word).MkTokens()
@@ -819,26 +822,32 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 }
 
 func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
-	words, _ := splitIntoShellTokens(mkline.Line, mkline.Value())
-	for _, word := range words {
-		if contains(word, "${") {
-			p := NewParser(mkline.Line, word)
-			mark := p.repl.Mark()
-			extent := vucExtentWordpart
-			if p.VarUse() != nil && p.EOF() {
-				extent = vucExtentWord
-			}
-			p.repl.Reset(mark)
+	if G.opts.Debug {
+		defer tracecall(vartype, time)()
+	}
 
-			quoting := NewShQuote("")
-			for _, token := range p.MkTokens() {
-				if token.Varuse == nil {
-					quoting.Feed(token.Text)
-				} else {
-					vuc := &VarUseContext{vartype, time, quoting.q.ToVarUseContext(), extent}
-					mkline.CheckVaruse(token.Varuse, vuc)
-				}
+	extent := func(tokens []*ShLexeme, i int) vucExtent {
+		if i-1 >= 0 {
+			typ := tokens[i-1].Type
+			if typ != shlSpace && typ != shlSemicolon {
+				return vucExtentWordpart
 			}
+		}
+		if i+1 < len(tokens) {
+			typ := tokens[i+1].Type
+			if typ != shlSpace && typ != shlSemicolon {
+				return vucExtentWordpart
+			}
+		}
+		return vucExtentWord
+	}
+
+	tokens := NewParser(mkline.Line, mkline.Value()).ShLexemes()
+	for i, token := range tokens {
+		if token.Type == shlVaruse {
+			extent := extent(tokens, i)
+			vuc := &VarUseContext{vartype, time, token.Quoting.ToVarUseContext(), extent}
+			mkline.CheckVaruse(token.Data.(*MkVarUse), vuc)
 		}
 	}
 }
