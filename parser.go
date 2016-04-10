@@ -503,7 +503,7 @@ func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 
 	if lex == nil {
 		p.repl.Reset(mark)
-		p.line.Warnf("Parser.ShLexeme.stuck qstate=%s rest=%s", quoting, repl.rest)
+		p.line.Warnf("Parser.ShLexeme.stuck quoting=%s rest=%s", quoting, repl.rest)
 	}
 	return lex
 }
@@ -547,9 +547,7 @@ func (p *Parser) shLexemeDquot() *ShLexeme {
 		return &ShLexeme{shlText, repl.s, shqPlain, nil}
 	case repl.AdvanceStr("`"):
 		return &ShLexeme{shlText, repl.s, shqDquotBackt, nil}
-	case repl.AdvanceStr("'"):
-		return &ShLexeme{shlText, repl.s, shqDquotSquot, nil}
-	case repl.AdvanceRegexp(`^(?:[\t !#%&()*+,\-./0-9:=?@A-Z^_a-z~]+|\\.)+`):
+	case repl.AdvanceRegexp(`^(?:[\t !#%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\.)+`):
 		return &ShLexeme{shlText, repl.m[0], shqDquot, nil} // XXX: unescape?
 	}
 	return nil
@@ -560,7 +558,7 @@ func (p *Parser) shLexemeSquot() *ShLexeme {
 	switch {
 	case repl.AdvanceStr("'"):
 		return &ShLexeme{shlText, repl.s, shqPlain, nil}
-	case repl.AdvanceRegexp(`^([\t !"#%&()*+,\-./0-9:=?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
+	case repl.AdvanceRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
 		return &ShLexeme{shlText, repl.m[0], shqSquot, nil}
 	}
 	return nil
@@ -606,7 +604,7 @@ func (p *Parser) shLexemeBacktDquot() *ShLexeme {
 	switch {
 	case repl.AdvanceStr("\""):
 		return &ShLexeme{shlText, repl.s, shqBackt, nil}
-	case repl.AdvanceRegexp(`^(?:[\t !%&()*+,\-./0-9:=?@A-Z\[\]^_a-z{|}~]+|\\.)+`):
+	case repl.AdvanceRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\.)+`):
 		return &ShLexeme{shlText, repl.m[0], shqBacktDquot, nil}
 	}
 	return nil
