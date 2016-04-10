@@ -408,6 +408,21 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		q(shqBacktDquot, text("one word")),
 		q(shqBackt, text("\"")),
 		text("`"))
+
+	checkParse("$$var \"$$var\" '$$var' `$$var`",
+		text("$$var"),
+		space,
+		dquot("\""),
+		dquot("$$var"),
+		text("\""),
+		space,
+		squot("'"),
+		squot("$$var"),
+		text("'"),
+		space,
+		backt("`"),
+		backt("$$var"),
+		text("`"))
 }
 
 // @Beta
