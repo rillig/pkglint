@@ -800,23 +800,17 @@ func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
 }
 
 func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
-	words := mkline.mkwords
-	for _, word := range words {
+	for _, word := range mkline.mkwords {
 		if contains(word, "${") {
-			p := NewParser(mkline.Line, word)
-			mark := p.repl.Mark()
+			tokens := NewParser(mkline.Line, word).MkTokens()
 			extent := vucExtentWordpart
-			if p.VarUse() != nil && p.EOF() {
+			if len(tokens) == 1 && tokens[0].Varuse != nil {
 				extent = vucExtentWord
 			}
-			p.repl.Reset(mark)
 
-			quoting := NewShQuote("")
-			for _, token := range p.MkTokens() {
-				if token.Varuse == nil {
-					quoting.Feed(token.Text)
-				} else {
-					vuc := &VarUseContext{vartype, time, quoting.q.ToVarUseContext(), extent}
+			for _, token := range tokens {
+				if token.Varuse != nil {
+					vuc := &VarUseContext{vartype, time, vucQuotPlain, extent}
 					mkline.CheckVaruse(token.Varuse, vuc)
 				}
 			}
