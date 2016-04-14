@@ -437,6 +437,13 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		text("cat"),
 		lex(shlRedirect, "<", shqPlain),
 		text("file"))
+
+	checkParse("-e \"s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g\"",
+		text("-e"),
+		space,
+		dquot("\""),
+		dquot("s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g"),
+		text("\""))
 }
 
 // @Beta
