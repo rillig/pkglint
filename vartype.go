@@ -136,10 +136,12 @@ func (vt *Vartype) String() string {
 
 func (vt *Vartype) IsShell() bool {
 	switch vt.checker {
-	case CheckvarShellCommand,
+	case CheckvarCFlag, // Subtype of ShellWord
+		CheckvarLdFlag, // Subtype of ShellWord
+		CheckvarSedCommands,
+		CheckvarShellCommand,
 		CheckvarShellCommands,
-		CheckvarShellWord,
-		CheckvarSedCommands:
+		CheckvarShellWord:
 		return true
 	}
 	return false

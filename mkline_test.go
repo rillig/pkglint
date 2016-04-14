@@ -640,6 +640,20 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_15(c *check.C) {
 	c.Check(s.Output(), equals, "") // Don’t suggest ${REPLACE_PERL:Q}.
 }
 
+func (s *Suite) TestMkLine_variableNeedsQuoting_16(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("audio/jack-rack/Makefile",
+		"# $"+"NetBSD$",
+		"LADSPA_PLUGIN_PATH?=\t${PREFIX}/lib/ladspa",
+		"CPPFLAGS+=\t\t-DLADSPA_PATH=\"\\\"${LADSPA_PLUGIN_PATH}\\\"\"")
+
+	G.Mk.Check()
+
+	c.Check(s.Output(), equals, "WARN: audio/jack-rack/Makefile:3: Please use ${LADSPA_PLUGIN_PATH:Q} instead of ${LADSPA_PLUGIN_PATH} "+
+		"and make sure the variable appears outside of any quoting characters.\n")
+}
+
 func (s *Suite) Test_MkLine_Varuse_Modifier_L(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
