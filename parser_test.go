@@ -423,6 +423,15 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		backt("`"),
 		backt("$$var"),
 		text("`"))
+
+	checkParse("\"`'echo;echo'`\"",
+		q(shqDquot, text("\"")),
+		q(shqDquotBackt, text("`")),
+		q(shqDquotBacktSquot, text("'")),
+		q(shqDquotBacktSquot, text("echo;echo")),
+		q(shqDquotBackt, text("'")),
+		q(shqDquot, text("`")),
+		q(shqPlain, text("\"")))
 }
 
 // @Beta
