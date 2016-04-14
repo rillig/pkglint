@@ -113,14 +113,16 @@ func (vu *MkVarUse) Mod() string {
 	return mod
 }
 
-func (vu *MkVarUse) HasL() bool {
-	for _, mod := range vu.modifiers {
-		if mod == "L" {
-			return true
-		}
+// Whether the varname is interpreted as a variable name (the usual case)
+// or as a full expression (rare).
+func (vu *MkVarUse) IsExpression() bool {
+	if len(vu.modifiers) == 0 {
+		return false
 	}
-	return false
+	mod := vu.modifiers[0]
+	return mod == "L" || hasPrefix(mod, "?")
 }
+
 func (vu *MkVarUse) IsQ() bool {
 	mlen := len(vu.modifiers)
 	return mlen > 0 && vu.modifiers[mlen-1] == "Q"
