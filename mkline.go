@@ -827,13 +827,13 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 	extent := func(tokens []*ShLexeme, i int) vucExtent {
 		if i-1 >= 0 {
 			typ := tokens[i-1].Type
-			if typ != shlSpace && typ != shlSemicolon {
+			if typ != shlSpace && typ != shlSemicolon && typ != shlParenOpen && typ != shlParenClose {
 				return vucExtentWordpart
 			}
 		}
 		if i+1 < len(tokens) {
 			typ := tokens[i+1].Type
-			if typ != shlSpace && typ != shlSemicolon {
+			if typ != shlSpace && typ != shlSemicolon && typ != shlParenOpen && typ != shlParenClose {
 				return vucExtentWordpart
 			}
 		}
