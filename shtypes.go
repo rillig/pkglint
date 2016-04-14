@@ -68,6 +68,7 @@ const (
 	shlBackground                // &
 	shlOr                        // ||
 	shlAnd                       // &&
+	shlRedirect                  // >, <, >>
 )
 
 func (t ShLexemeType) String() string {

@@ -432,6 +432,11 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		q(shqDquotBackt, text("'")),
 		q(shqDquot, text("`")),
 		q(shqPlain, text("\"")))
+
+	checkParse("cat<file",
+		text("cat"),
+		lex(shlRedirect, "<", shqPlain),
+		text("file"))
 }
 
 // @Beta

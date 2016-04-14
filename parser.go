@@ -536,6 +536,8 @@ func (p *Parser) shLexemePlain() *ShLexeme {
 		return &ShLexeme{shlText, repl.s, shqBackt, nil}
 	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z^_a-z~]+|\\.|\$\$\w+|\$\$\{\w+\})+`):
 		return &ShLexeme{shlText, repl.m[0], q, nil}
+	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
+		return &ShLexeme{shlRedirect, repl.m[0], q, nil}
 	}
 	return nil
 }
