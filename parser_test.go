@@ -444,6 +444,11 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		dquot("\""),
 		dquot("s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g"),
 		text("\""))
+
+	checkParse("echo $$,$$/",
+		text("echo"),
+		space,
+		text("$$,$$/"))
 }
 
 // @Beta

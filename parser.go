@@ -536,7 +536,7 @@ func (p *Parser) shLexemePlain() *ShLexeme {
 		return &ShLexeme{shlText, repl.s, shqSquot, nil}
 	case repl.AdvanceStr("`"):
 		return &ShLexeme{shlText, repl.s, shqBackt, nil}
-	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z^_a-z~]+|\\[^$]|\\\$\$|\$\$\w+|\$\$\{\w+\})+`):
+	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z^_a-z~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
 		return &ShLexeme{shlText, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
 		return &ShLexeme{shlRedirect, repl.m[0], q, nil}
@@ -551,7 +551,7 @@ func (p *Parser) shLexemeDquot() *ShLexeme {
 		return &ShLexeme{shlText, repl.s, shqPlain, nil}
 	case repl.AdvanceStr("`"):
 		return &ShLexeme{shlText, repl.s, shqDquotBackt, nil}
-	case repl.AdvanceRegexp(`^(?:[\t !#%&'()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|\$\$\w+|\$\$\{\w+\})+`):
+	case repl.AdvanceRegexp(`^(?:[\t !#%&'()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
 		return &ShLexeme{shlText, repl.m[0], shqDquot, nil} // XXX: unescape?
 	}
 	return nil
@@ -579,7 +579,7 @@ func (p *Parser) shLexemeBackt() *ShLexeme {
 		return &ShLexeme{shlText, repl.s, shqBacktSquot, nil}
 	case repl.AdvanceRegexp(`^[ \t]+`):
 		return &ShLexeme{shlSpace, repl.m[0], shqBackt, nil}
-	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$|\$\$\w+|\$\$\{\w+\})+`):
+	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
 		return &ShLexeme{shlText, repl.m[0], shqBackt, nil}
 	}
 	return nil
