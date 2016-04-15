@@ -58,6 +58,20 @@ func (s *Suite) Test_SplitIntoShellWords_Semicolons(c *check.C) {
 	c.Check(rest, equals, "")
 }
 
+func (s *Suite) Test_SplitIntoShellTokens_VaruseSpace(c *check.C) {
+	words, rest := splitIntoShellTokens(dummyLine, "${VAR:S/ /_/g}")
+
+	c.Check(words, deepEquals, []string{"${VAR:S/ /_/g}"})
+	c.Check(rest, equals, "")
+}
+
+func (s *Suite) Test_SplitIntoShellWords_VaruseSpace(c *check.C) {
+	words, rest := splitIntoShellWords(dummyLine, "${VAR:S/ /_/g}")
+
+	c.Check(words, deepEquals, []string{"${VAR:S/", "/_/g}"}) // FIXME
+	c.Check(rest, equals, "")
+}
+
 func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.Mk = s.NewMkLines("fname",
