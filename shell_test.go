@@ -44,6 +44,20 @@ func (s *Suite) Test_SplitIntoShellTokens_DollarSubshell(c *check.C) {
 	c.Check(rest, equals, "")
 }
 
+func (s *Suite) Test_SplitIntoShellTokens_Semicolons(c *check.C) {
+	words, rest := splitIntoShellTokens(dummyLine, "word1 word2;;;")
+
+	c.Check(words, deepEquals, []string{"word1", "word2", ";;", ";"})
+	c.Check(rest, equals, "")
+}
+
+func (s *Suite) Test_SplitIntoShellWords_Semicolons(c *check.C) {
+	words, rest := splitIntoShellWords(dummyLine, "word1 word2;;;")
+
+	c.Check(words, deepEquals, []string{"word1", "word2;;;"})
+	c.Check(rest, equals, "")
+}
+
 func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.Mk = s.NewMkLines("fname",
