@@ -295,6 +295,20 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 	semicolon := lex(shlSemicolon, ";", shqPlain)
 	pipe := lex(shlPipe, "|", shqPlain)
 
+	checkParse("" /* none */)
+	checkParse("$$var", text("$$var"))
+	checkParse("$$var$$var", text("$$var$$var"))
+	checkParse("$$var;;",
+		text("$$var"),
+		lex(shlCaseSeparator, ";;", shqPlain))
+	checkParse("'single-quoted'",
+		q(shqSquot, text("'")),
+		q(shqSquot, text("single-quoted")),
+		q(shqPlain, text("'")))
+	c.Check(checkParseRest("\"" /* none */), equals, "\"")
+	checkParse("$${file%.c}.o",
+		text("$${file%.c}.o"))
+
 	checkParse("hello",
 		text("hello"))
 
@@ -490,6 +504,21 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		q(shqBackt, lex(shlRedirect, ">", shqBackt)),
 		q(shqBackt, text("echo")),
 		q(shqPlain, text("`")))
+
+	checkParse("# comment",
+		lex(shlComment, "# comment", shqPlain))
+	checkParse("no#comment",
+		text("no#comment"))
+	checkParse("`# comment`continue",
+		lex(shlText, "`", shqBackt),
+		lex(shlComment, "# comment", shqBackt),
+		lex(shlText, "`", shqPlain),
+		lex(shlText, "continue", shqPlain))
+	checkParse("`no#comment`continue",
+		lex(shlText, "`", shqBackt),
+		lex(shlText, "no#comment", shqBackt),
+		lex(shlText, "`", shqPlain),
+		lex(shlText, "continue", shqPlain))
 }
 
 // @Beta

@@ -53,22 +53,24 @@ func (shlex *ShLexeme) String() string {
 type ShLexemeType uint8
 
 const (
-	shlSpace        ShLexemeType = iota
-	shlVaruse                    // ${PREFIX}
-	shlText                      //
-	shlSemicolon                 // ;
-	shlParenOpen                 // (
-	shlParenClose                // )
-	shlBraceOpen                 // {
-	shlBraceClose                // }
-	shlBacktOpen                 // `
-	shlBacktClose                // `
-	shlSubshellOpen              // $(
-	shlPipe                      // |
-	shlBackground                // &
-	shlOr                        // ||
-	shlAnd                       // &&
-	shlRedirect                  // >, <, >>
+	shlSpace         ShLexemeType = iota
+	shlVaruse                     // ${PREFIX}
+	shlText                       //
+	shlSemicolon                  // ;
+	shlCaseSeparator              // ;;
+	shlParenOpen                  // (
+	shlParenClose                 // )
+	shlBraceOpen                  // {
+	shlBraceClose                 // }
+	shlBacktOpen                  // `
+	shlBacktClose                 // `
+	shlSubshellOpen               // $(
+	shlPipe                       // |
+	shlBackground                 // &
+	shlOr                         // ||
+	shlAnd                        // &&
+	shlRedirect                   // >, <, >>
+	shlComment                    // # ...
 )
 
 func (t ShLexemeType) String() string {
@@ -77,12 +79,15 @@ func (t ShLexemeType) String() string {
 		"varuse",
 		"text",
 		"semicolon",
+		"caseSeparator",
 		"parenOpen", "parenClose",
 		"braceOpen", "braceClose",
 		"backtOpen", "backtClose",
 		"subshellOpen",
 		"pipe", "background",
 		"or", "and",
+		"redirect",
+		"comment",
 	}[t]
 }
 
