@@ -8,3 +8,7 @@ func (s *Suite) Test_ShLexeme_String(c *check.C) {
 	c.Check(shlBacktClose.String(), equals, "backtClose")
 	c.Check(shlComment.String(), equals, "comment")
 }
+
+func (s *Suite) Test_ShQuoting_String(c *check.C) {
+	c.Check(shqUnknown.String(), equals, "unknown")
+}

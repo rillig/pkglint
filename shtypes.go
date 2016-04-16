@@ -103,12 +103,19 @@ const (
 	shqDquotBackt
 	shqBacktDquot
 	shqBacktSquot
+	shqDquotBacktDquot
 	shqDquotBacktSquot
 	shqUnknown
 )
 
 func (q ShQuoting) String() string {
-	return [...]string{"plain", "d", "s", "b", "db", "bd", "bs", "dbs", "unknown"}[q]
+	return [...]string{
+		"plain",
+		"d", "s", "b",
+		"db", "bd", "bs",
+		"dbd", "dbs",
+		"unknown",
+	}[q]
 }
 
 func (q ShQuoting) ToVarUseContext() vucQuoting {

@@ -533,6 +533,18 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		lex(shlText, "a-z", shqBacktSquot),
 		lex(shlText, "'", shqBackt),
 		lex(shlText, "`", shqPlain))
+
+	checkParse("var=\"`echo \"\\`echo foo\\`\"`\"",
+		lex(shlText, "var=", shqPlain),
+		lex(shlText, "\"", shqDquot),
+		lex(shlText, "`", shqDquotBackt),
+		lex(shlText, "echo", shqDquotBackt),
+		lex(shlSpace, " ", shqDquotBackt),
+		lex(shlText, "\"", shqDquotBacktDquot),
+		lex(shlText, "\\`echo foo\\`", shqDquotBacktDquot), // One lexeme, since it doesn’t influence parsing.
+		lex(shlText, "\"", shqDquotBackt),
+		lex(shlText, "`", shqDquot),
+		lex(shlText, "\"", shqPlain))
 }
 
 // @Beta

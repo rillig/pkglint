@@ -501,6 +501,8 @@ func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 		lex = p.shLexemeBacktDquot()
 	case shqBacktSquot:
 		lex = p.shLexemeBacktSquot()
+	case shqDquotBacktDquot:
+		lex = p.shLexemeDquotBacktDquot()
 	case shqDquotBacktSquot:
 		lex = p.shLexemeDquotBacktSquot()
 	}
@@ -618,6 +620,8 @@ func (p *Parser) shLexemeDquotBackt() *ShLexeme {
 	switch {
 	case repl.AdvanceStr("`"):
 		return &ShLexeme{shlText, repl.s, shqDquot, nil}
+	case repl.AdvanceStr("\""):
+		return &ShLexeme{shlText, repl.s, shqDquotBacktDquot, nil}
 	case repl.AdvanceStr("'"):
 		return &ShLexeme{shlText, repl.s, shqDquotBacktSquot, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
@@ -655,12 +659,24 @@ func (p *Parser) shLexemeBacktSquot() *ShLexeme {
 	return nil
 }
 
+func (p *Parser) shLexemeDquotBacktDquot() *ShLexeme {
+	const q = shqDquotBacktDquot
+	repl := p.repl
+	switch {
+	case repl.AdvanceStr("\""):
+		return &ShLexeme{shlText, repl.s, shqDquotBackt, nil}
+	case repl.AdvanceRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|` + reShVaruse + `)+`):
+		return &ShLexeme{shlText, repl.m[0], q, nil}
+	}
+	return nil
+}
+
 func (p *Parser) shLexemeDquotBacktSquot() *ShLexeme {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
 		return &ShLexeme{shlText, repl.s, shqDquotBackt, nil}
-	case repl.AdvanceRegexp(`^(?:[\t !"#%*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|\$\$)+`):
+	case repl.AdvanceRegexp(`^(?:[\t !"#%()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|\$\$)+`):
 		return &ShLexeme{shlText, repl.m[0], shqDquotBacktSquot, nil}
 	}
 	return nil
