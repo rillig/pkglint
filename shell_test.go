@@ -68,7 +68,7 @@ func (s *Suite) Test_SplitIntoShellTokens_VaruseSpace(c *check.C) {
 func (s *Suite) Test_SplitIntoShellWords_VaruseSpace(c *check.C) {
 	words, rest := splitIntoShellWords(dummyLine, "${VAR:S/ /_/g}")
 
-	c.Check(words, deepEquals, []string{"${VAR:S/", "/_/g}"}) // FIXME
+	c.Check(words, deepEquals, []string{"${VAR:S/ /_/g}"})
 	c.Check(rest, equals, "")
 }
 

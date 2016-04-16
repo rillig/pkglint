@@ -248,14 +248,18 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 
 // @Beta
 func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
-	checkParse := func(s string, expected ...*ShLexeme) {
+	checkParseRest := func(s string, expected ...*ShLexeme) string {
 		p := NewParser(dummyLine, s)
 		q := shqPlain
 		for _, exp := range expected {
 			c.Check(p.ShLexeme(q), deepEquals, exp)
 			q = exp.Quoting
 		}
-		c.Check(p.Rest(), equals, "")
+		return p.Rest()
+	}
+	checkParse := func(s string, expected ...*ShLexeme) {
+		rest := checkParseRest(s, expected...)
+		c.Check(rest, equals, "")
 	}
 
 	lex := func(typ ShLexemeType, text string, quoting ShQuoting) *ShLexeme {
@@ -450,6 +454,16 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		text("echo"),
 		space,
 		text("$$,$$/"))
+
+	rest := checkParseRest("COMMENT=\t\\Make $$$$ fast\"",
+		text("COMMENT="),
+		whitespace("\t"),
+		text("\\Make"),
+		space,
+		text("$$$$"),
+		space,
+		text("fast"))
+	c.Check(rest, equals, "\"")
 }
 
 // @Beta

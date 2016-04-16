@@ -505,7 +505,7 @@ func (p *Parser) ShLexeme(quoting ShQuoting) *ShLexeme {
 
 	if lex == nil {
 		p.repl.Reset(mark)
-		p.line.Warnf("Parser.ShLexeme.stuck quoting=%s rest=%s", quoting, repl.rest)
+		p.line.Warnf("Pkglint parse error at %q (quoting=%s)", repl.rest, quoting)
 	}
 	return lex
 }

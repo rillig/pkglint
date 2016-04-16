@@ -343,10 +343,14 @@ func (mkline *MkLine) checkDependencyRule(allowedTargets map[string]bool) {
 }
 
 func (mkline *MkLine) Tokenize(s string) []*MkToken {
+	if G.opts.Debug {
+		defer tracecall(mkline, s)()
+	}
+
 	p := NewParser(mkline.Line, s)
 	tokens := p.MkTokens()
 	if p.Rest() != "" {
-		mkline.Error1("Invalid Makefile syntax at %q.", p.Rest())
+		mkline.Warn1("Pkglint parse error at %q.", p.Rest())
 	}
 	return tokens
 }

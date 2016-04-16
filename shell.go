@@ -41,7 +41,7 @@ const (
 		`|>>?` +
 		`|#.*)`
 	reShVarassign    = `^([A-Z_a-z]\w*)=`
-	reShVarname      = `(?:[!#$*\-\d?@]|[A-Za-z_]\w*)`
+	reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
 	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+)[^$\\{}]*)`
 	reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
 )
@@ -919,21 +919,26 @@ func splitIntoShellTokens(line *Line, text string) (words []string, rest string)
 // Example: "word1 word2;;;" => "word1", "word2;;;"
 // Compare devel/bmake/files/str.c, function brk_string.
 func splitIntoShellWords(line *Line, text string) (words []string, rest string) {
-	reShellWord := `^\s*(` +
-		`#.*` + // shell comment
-		`|(?:` +
-		`'[^']*'` + // single quoted string
-		`|"(?:\\.|[^"\\])*"` + // double quoted string
-		"|`[^`]*`" + // backticks command execution
-		"|[^\\s\"'`\\\\]+" + // normal characters
-		`|\\.` + // escaped character
-		`)+)` // any of the above may be repeated
-	repl := NewPrefixReplacer(text)
-	for repl.AdvanceRegexp(reShellWord) {
-		words = append(words, repl.m[1])
+	if G.opts.Debug {
+		defer tracecall(line, text)()
 	}
-	repl.AdvanceRegexp(`^\s+`)
-	return words, repl.rest
+
+	p := NewParser(line, text)
+	shlexemes := p.ShLexemes()
+	word := ""
+	for _, lex := range shlexemes {
+		if lex.Type == shlSpace {
+			words = append(words, word)
+			word = ""
+		} else {
+			word += lex.Text
+		}
+	}
+	if word != "" && shlexemes[len(shlexemes)-1].Quoting == shqPlain {
+		words = append(words, word)
+		word = ""
+	}
+	return words, word + p.Rest()
 }
 
 type ShQuote struct {
