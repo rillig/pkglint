@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	reMkShellvaruse = `(?:^|[^\$])\$\$\{?(\w+)\}?`
-	reShellToken    = `^\s*(` +
+	reShellToken = `^\s*(` +
 		`#.*` + // shell comment
 		`|(?:` +
 		`'[^']*'` + // single quoted string
@@ -668,7 +667,7 @@ func (ctx *ShelltextContext) checkAutoMkdirs() {
 			"relative to ${PREFIX}.")
 	}
 
-	if (state == scstInstallDir || state == scstInstallDir2) && !matches(shellword, reMkShellvaruse) {
+	if (state == scstInstallDir || state == scstInstallDir2) && !contains(shellword, "$$") {
 		if m, dirname := match1(shellword, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
 			line.Note1("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of this command.", dirname)
 			Explain(
