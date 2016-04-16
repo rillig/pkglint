@@ -519,6 +519,20 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		lex(shlText, "no#comment", shqBackt),
 		lex(shlText, "`", shqPlain),
 		lex(shlText, "continue", shqPlain))
+
+	checkParse("var=`tr 'A-Z' 'a-z'`",
+		lex(shlText, "var=", shqPlain),
+		lex(shlText, "`", shqBackt),
+		lex(shlText, "tr", shqBackt),
+		lex(shlSpace, " ", shqBackt),
+		lex(shlText, "'", shqBacktSquot),
+		lex(shlText, "A-Z", shqBacktSquot),
+		lex(shlText, "'", shqBackt),
+		lex(shlSpace, " ", shqBackt),
+		lex(shlText, "'", shqBacktSquot),
+		lex(shlText, "a-z", shqBacktSquot),
+		lex(shlText, "'", shqBackt),
+		lex(shlText, "`", shqPlain))
 }
 
 // @Beta
