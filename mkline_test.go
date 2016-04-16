@@ -428,8 +428,8 @@ func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
 	mkline.checkVarassign()
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: Makefile:93: Pkglint parse error at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
-		"WARN: Makefile:93: Pkglint parse error at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" (quoting=plain)\n"+
+		"WARN: Makefile:93: Pkglint parse error in MkLine.Tokenize at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
+		"WARN: Makefile:93: Pkglint parse error in Parser.ShLexeme at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" (quoting=plain)\n"+
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
 }
 

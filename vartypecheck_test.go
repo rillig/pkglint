@@ -19,7 +19,7 @@ func (s *Suite) TestVartypeCheck_BasicRegularExpression(c *check.C) {
 		".*\\.pl$",
 		".*\\.pl$$")
 
-	c.Check(s.Output(), equals, "WARN: fname:1: Pkglint parse error at \"$\".\n")
+	c.Check(s.Output(), equals, "WARN: fname:1: Pkglint parse error in MkLine.Tokenize at \"$\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_BuildlinkDepmethod(c *check.C) {
