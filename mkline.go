@@ -353,14 +353,16 @@ func (mkline *MkLine) Tokenize(s string) []*MkToken {
 	return tokens
 }
 
-func (mkline *MkLine) checkVarassignDefPermissions(varname string, op MkOperator) {
+func (mkline *MkLine) checkVarassignDefPermissions() {
 	if !G.opts.WarnPerm {
 		return
 	}
 	if G.opts.Debug {
-		defer tracecall(varname, op)()
+		defer tracecall()()
 	}
 
+	varname := mkline.Varname()
+	op := mkline.Op()
 	vartype := mkline.getVariableType(varname)
 	if vartype == nil {
 		if G.opts.Debug {
@@ -714,7 +716,7 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	defineVar(mkline, varname)
-	mkline.checkVarassignDefPermissions(varname, op)
+	mkline.checkVarassignDefPermissions()
 	mkline.checkVarassignBsdPrefs()
 
 	mkline.checkText(value)
@@ -774,20 +776,22 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	mkline.checkVarassignPlistComment(varname, value)
-	mkline.checkVarassignVaruse(varname, op)
+	mkline.checkVarassignVaruse()
 }
 
-func (mkline *MkLine) checkVarassignVaruse(varname string, op MkOperator) {
+func (mkline *MkLine) checkVarassignVaruse() {
 	if G.opts.Debug {
-		defer tracecall(varname, op)()
+		defer tracecall()()
 	}
+
+	op := mkline.Op()
 
 	time := vucTimeRun
 	if op == opAssignEval || op == opAssignShell {
 		time = vucTimeParse
 	}
 
-	vartype := mkline.getVariableType(varname)
+	vartype := mkline.getVariableType(mkline.Varname())
 	if op == opAssignShell {
 		vartype = shellcommandsContextType
 	}
