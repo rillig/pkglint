@@ -22,7 +22,6 @@ type MkLine struct {
 	xs3        string
 	xvalue     string
 	xcomment   string
-	mkwords    []string
 }
 
 func (mkline *MkLine) Error1(format, arg1 string)      { mkline.Line.Error1(format, arg1) }
@@ -58,7 +57,6 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xvalue = value
 		mkline.xcomment = comment
 		mkline.Tokenize(value)
-		mkline.mkwords, _ = splitIntoMkWords(mkline.Line, value)
 		return
 	}
 
@@ -805,11 +803,13 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 	if G.opts.Debug {
 		defer tracecall(vartype, time)()
 	}
-	for _, word := range mkline.mkwords {
-		if contains(word, "${") {
-			tokens := NewParser(mkline.Line, word).MkTokens()
+	tokens := NewParser(mkline.Line, mkline.Value()).MkTokens()
+	for i, token := range tokens {
+		if token.Varuse != nil {
+			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `\s$`)
+			spaceRight := i+1 >= len(tokens) || hasPrefix(tokens[i+1].Text, `^\s`)
 			extent := vucExtentWordpart
-			if len(tokens) == 1 && tokens[0].Varuse != nil {
+			if spaceLeft && spaceRight {
 				extent = vucExtentWord
 			}
 

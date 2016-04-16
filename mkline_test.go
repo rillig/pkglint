@@ -430,9 +430,7 @@ func (s *Suite) TestMkLine_UnfinishedVaruse(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:93: Pkglint parse error at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".\n"+
 		"WARN: Makefile:93: Pkglint parse error at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" (quoting=plain)\n"+
-		"WARN: Makefile:93: Pkglint parse error at \"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" (quoting=plain)\n"+
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
-	// The three duplicate lines above all come from NewMkLine (Tokenize and splitIntoMkWords).
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_1(c *check.C) {
