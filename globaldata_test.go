@@ -58,7 +58,7 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 	G.globalData.Tools.Trace()
 
 	c.Check(s.Output(), equals, ""+
-		"TRACE: + netbsd.org/pkglint.(*ToolRegistry).Trace()\n"+
+		"TRACE: + (*ToolRegistry).Trace()\n"+
 		"TRACE: |   tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:false}\n"+
 		"TRACE: |   tool &{Name:TOOLS_pwd Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
 		"TRACE: |   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
@@ -71,7 +71,7 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 		"TRACE: |   tool &{Name:pwd Varname:PWD MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
 		"TRACE: |   tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
 		"TRACE: |   tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
-		"TRACE: - netbsd.org/pkglint.(*ToolRegistry).Trace()\n")
+		"TRACE: - (*ToolRegistry).Trace()\n")
 }
 
 func (s *Suite) TestGlobalData_loadDocChanges(c *check.C) {

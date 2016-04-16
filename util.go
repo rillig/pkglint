@@ -425,7 +425,7 @@ func tracecallInternal(args ...interface{}) func() {
 	funcname := "?"
 	if pc, _, _, ok := runtime.Caller(2); ok {
 		if fn := runtime.FuncForPC(pc); fn != nil {
-			funcname = strings.TrimSuffix(fn.Name(), "main.")
+			funcname = strings.TrimPrefix(fn.Name(), "netbsd.org/pkglint.")
 		}
 	}
 	if G.opts.Debug {
