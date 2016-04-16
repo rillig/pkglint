@@ -655,6 +655,18 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_16(c *check.C) {
 		"and make sure the variable appears outside of any quoting characters.\n")
 }
 
+func (s *Suite) TestMkLine_variableNeedsQuoting_17(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("x11/eterm/Makefile",
+		"# $"+"NetBSD$",
+		"DISTFILES=\t${DEFAULT_DISTFILES} ${PIXMAP_FILES}")
+
+	G.Mk.Check()
+
+	c.Check(s.Output(), equals, "") // Don’t warn about needed :Q operators.
+}
+
 func (s *Suite) Test_MkLine_Varuse_Modifier_L(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()

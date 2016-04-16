@@ -807,7 +807,7 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 	for i, token := range tokens {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `\s$`)
-			spaceRight := i+1 >= len(tokens) || hasPrefix(tokens[i+1].Text, `^\s`)
+			spaceRight := i+1 >= len(tokens) || matches(tokens[i+1].Text, `^\s`)
 			extent := vucExtentWordpart
 			if spaceLeft && spaceRight {
 				extent = vucExtentWord
