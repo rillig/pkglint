@@ -158,7 +158,15 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 	token("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end
 	c.Check(s.Output(), equals, "WARN: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".\n")
 
-	parse("hello, ${W:L:tl}orld", []*MkToken{literal("hello, "), varuse("W", "L", "tl"), literal("orld")}, "")
+	parse("hello, ${W:L:tl}orld", []*MkToken{
+		literal("hello, "),
+		varuse("W", "L", "tl"),
+		literal("orld")}, "")
+	parse("ftp://${PKGNAME}/ ${MASTER_SITES:=subdir/}", []*MkToken{
+		literal("ftp://"),
+		varuse("PKGNAME"),
+		literal("/ "),
+		varuse("MASTER_SITES", "=subdir/")}, "")
 }
 
 func (s *Suite) TestParser_MkCond(c *check.C) {

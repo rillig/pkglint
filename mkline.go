@@ -817,12 +817,8 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 				extent = vucExtentWord
 			}
 
-			for _, token := range tokens {
-				if token.Varuse != nil {
-					vuc := &VarUseContext{vartype, time, vucQuotPlain, extent}
-					mkline.CheckVaruse(token.Varuse, vuc)
-				}
-			}
+			vuc := &VarUseContext{vartype, time, vucQuotPlain, extent}
+			mkline.CheckVaruse(token.Varuse, vuc)
 		}
 	}
 }

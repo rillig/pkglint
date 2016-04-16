@@ -664,7 +664,20 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_17(c *check.C) {
 
 	G.Mk.Check()
 
-	c.Check(s.Output(), equals, "") // Don’t warn about needed :Q operators.
+	c.Check(s.Output(), equals, "") // Don’t warn about missing :Q operators.
+}
+
+func (s *Suite) TestMkLine_variableNeedsQuoting_18(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	s.RegisterMasterSite("MASTER_SITE_GNOME", "http://ftp.gnome.org/")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("x11/gtk3/Makefile",
+		"# $"+"NetBSD$",
+		"MASTER_SITES=\tftp://ftp.gtk.org/${PKGNAME}/ ${MASTER_SITE_GNOME:=subdir/}")
+
+	G.Mk.mklines[1].checkVarassignVaruse()
+
+	c.Check(s.Output(), equals, "") // Don’t warn about missing :Q operators.
 }
 
 func (s *Suite) Test_MkLine_Varuse_Modifier_L(c *check.C) {
