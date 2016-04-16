@@ -918,7 +918,7 @@ func splitIntoShellTokens(line *Line, text string) (words []string, rest string)
 
 // Example: "word1 word2;;;" => "word1", "word2;;;"
 // Compare devel/bmake/files/str.c, function brk_string.
-func splitIntoShellWords(line *Line, text string) (words []string, rest string) {
+func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 	if G.opts.Debug {
 		defer tracecall(line, text)()
 	}

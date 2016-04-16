@@ -58,7 +58,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		mkline.xvalue = value
 		mkline.xcomment = comment
 		mkline.Tokenize(value)
-		mkline.mkwords, _ = splitIntoShellWords(mkline.Line, value)
+		mkline.mkwords, _ = splitIntoMkWords(mkline.Line, value)
 		return
 	}
 
@@ -1057,7 +1057,7 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		}
 
 	case vartype.kindOfList == lkShell:
-		words, _ := splitIntoShellWords(mkline.Line, value)
+		words, _ := splitIntoMkWords(mkline.Line, value)
 		for _, word := range words {
 			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
 		}

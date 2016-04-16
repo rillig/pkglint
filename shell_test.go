@@ -51,8 +51,8 @@ func (s *Suite) Test_SplitIntoShellTokens_Semicolons(c *check.C) {
 	c.Check(rest, equals, "")
 }
 
-func (s *Suite) Test_SplitIntoShellWords_Semicolons(c *check.C) {
-	words, rest := splitIntoShellWords(dummyLine, "word1 word2;;;")
+func (s *Suite) Test_SplitIntoMkWords_Semicolons(c *check.C) {
+	words, rest := splitIntoMkWords(dummyLine, "word1 word2;;;")
 
 	c.Check(words, deepEquals, []string{"word1", "word2;;;"})
 	c.Check(rest, equals, "")
@@ -65,8 +65,8 @@ func (s *Suite) Test_SplitIntoShellTokens_VaruseSpace(c *check.C) {
 	c.Check(rest, equals, "")
 }
 
-func (s *Suite) Test_SplitIntoShellWords_VaruseSpace(c *check.C) {
-	words, rest := splitIntoShellWords(dummyLine, "${VAR:S/ /_/g}")
+func (s *Suite) Test_SplitIntoMkWords_VaruseSpace(c *check.C) {
+	words, rest := splitIntoMkWords(dummyLine, "${VAR:S/ /_/g}")
 
 	c.Check(words, deepEquals, []string{"${VAR:S/ /_/g}"})
 	c.Check(rest, equals, "")
@@ -368,7 +368,7 @@ func (s *Suite) TestShellLine_checkCommandUse(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:1: ${CP} should not be used to install files.\n")
 }
 
-func (s *Suite) TestSplitIntoShellWords(c *check.C) {
+func (s *Suite) TestSplitIntoMkWords(c *check.C) {
 	url := "http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="
 
 	words, rest := splitIntoShellTokens(dummyLine, url) // Doesn’t really make sense
@@ -376,12 +376,12 @@ func (s *Suite) TestSplitIntoShellWords(c *check.C) {
 	c.Check(words, check.DeepEquals, []string{"http://registry.gimp.org/file/fix-ca.c?action=download", "&", "id=9884", "&", "file="})
 	c.Check(rest, equals, "")
 
-	words, rest = splitIntoShellWords(dummyLine, url)
+	words, rest = splitIntoMkWords(dummyLine, url)
 
 	c.Check(words, check.DeepEquals, []string{"http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="})
 	c.Check(rest, equals, "")
 
-	words, rest = splitIntoShellWords(dummyLine, "a b \"c  c  c\" d;;d;; \"e\"''`` 'rest")
+	words, rest = splitIntoMkWords(dummyLine, "a b \"c  c  c\" d;;d;; \"e\"''`` 'rest")
 
 	c.Check(words, check.DeepEquals, []string{"a", "b", "\"c  c  c\"", "d;;d;;", "\"e\"''``"})
 	c.Check(rest, equals, "'rest")
