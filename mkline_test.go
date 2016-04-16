@@ -703,3 +703,21 @@ func (s *Suite) disabledTest_MkLine_Pkgmandir(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".\n")
 }
+
+func (s *Suite) Test_MkLine_Check_Cflags_Backticks(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.Mk = s.NewMkLines("chat/pidgin-icb/Makefile",
+		"# $"+"NetBSD$",
+		"CFLAGS+=\t`pkg-config pidgin --cflags`")
+	mkline := G.Mk.mklines[1]
+
+	words, rest := splitIntoMkWords(mkline.Line, mkline.Value())
+
+	c.Check(words, deepEquals, []string{"`pkg-config pidgin --cflags`"})
+	c.Check(rest, equals, "")
+
+	G.Mk.mklines[1].CheckVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
+
+	c.Check(s.Output(), equals, "") // No warning about "`pkg-config" being an unknown CFlag.
+}

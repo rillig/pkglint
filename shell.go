@@ -927,7 +927,7 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 	shlexemes := p.ShLexemes()
 	word := ""
 	for _, lex := range shlexemes {
-		if lex.Type == shlSpace {
+		if lex.Type == shlSpace && lex.Quoting == shqPlain {
 			words = append(words, word)
 			word = ""
 		} else {
