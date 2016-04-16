@@ -59,18 +59,18 @@ func (s *Suite) TestGlobalData_LoadTools(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"TRACE: + (*ToolRegistry).Trace()\n"+
-		"TRACE: |   tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:false}\n"+
-		"TRACE: |   tool &{Name:TOOLS_pwd Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
-		"TRACE: |   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
-		"TRACE: |   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
-		"TRACE: |   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
-		"TRACE: |   tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:true UsableAtLoadtime:false}\n"+
-		"TRACE: |   tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
-		"TRACE: |   tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
-		"TRACE: |   tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true UsableAtLoadtime:false}\n"+
-		"TRACE: |   tool &{Name:pwd Varname:PWD MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
-		"TRACE: |   tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
-		"TRACE: |   tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: 1   tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:false}\n"+
+		"TRACE: 1   tool &{Name:TOOLS_pwd Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: 1   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
+		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:true UsableAtLoadtime:false}\n"+
+		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
+		"TRACE: 1   tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false UsableAtLoadtime:false}\n"+
+		"TRACE: 1   tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true UsableAtLoadtime:false}\n"+
+		"TRACE: 1   tool &{Name:pwd Varname:PWD MustUseVarForm:false Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
+		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:true UsableAtLoadtime:true}\n"+
 		"TRACE: - (*ToolRegistry).Trace()\n")
 }
 

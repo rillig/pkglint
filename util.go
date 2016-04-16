@@ -400,10 +400,18 @@ func argsStr(args ...interface{}) string {
 	return argsStr
 }
 
+func traceIndent() string {
+	indent := ""
+	for i := 0; i < G.traceDepth; i++ {
+		indent += fmt.Sprintf("%d ", i+1)
+	}
+	return indent
+}
+
 func traceStep(format string, args ...interface{}) {
 	if G.opts.Debug {
 		msg := fmt.Sprintf(format, args...)
-		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s  %s\n", strings.Repeat("| ", G.traceDepth), msg))
+		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s  %s\n", traceIndent(), msg))
 	}
 }
 func traceStep1(format string, arg0 string) {
@@ -428,16 +436,13 @@ func tracecallInternal(args ...interface{}) func() {
 			funcname = strings.TrimPrefix(fn.Name(), "netbsd.org/pkglint.")
 		}
 	}
-	if G.opts.Debug {
-		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s+ %s(%s)\n", strings.Repeat("| ", G.traceDepth), funcname, argsStr(args...)))
-	}
+	indent := traceIndent()
+	io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s+ %s(%s)\n", indent, funcname, argsStr(args...)))
 	G.traceDepth++
 
 	return func() {
 		G.traceDepth--
-		if G.opts.Debug {
-			io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s- %s(%s)\n", strings.Repeat("| ", G.traceDepth), funcname, argsStr(args...)))
-		}
+		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s- %s(%s)\n", indent, funcname, argsStr(args...)))
 	}
 }
 func tracecall0() func() {
