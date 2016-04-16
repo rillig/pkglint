@@ -464,6 +464,22 @@ func (s *Suite) Test_Parser_ShLexeme_Tokens(c *check.C) {
 		space,
 		text("fast"))
 	c.Check(rest, equals, "\"")
+
+	checkParse("var=`echo;echo|echo&echo||echo&&echo`",
+		q(shqPlain, text("var=")),
+		q(shqBackt, text("`")),
+		q(shqBackt, text("echo")),
+		q(shqBackt, semicolon),
+		q(shqBackt, text("echo")),
+		q(shqBackt, lex(shlPipe, "|", shqBackt)),
+		q(shqBackt, text("echo")),
+		q(shqBackt, lex(shlBackground, "&", shqBackt)),
+		q(shqBackt, text("echo")),
+		q(shqBackt, lex(shlOr, "||", shqBackt)),
+		q(shqBackt, text("echo")),
+		q(shqBackt, lex(shlAnd, "&&", shqBackt)),
+		q(shqBackt, text("echo")),
+		q(shqPlain, text("`")))
 }
 
 // @Beta

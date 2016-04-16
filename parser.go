@@ -569,6 +569,7 @@ func (p *Parser) shLexemeSquot() *ShLexeme {
 }
 
 func (p *Parser) shLexemeBackt() *ShLexeme {
+	q := shqBackt
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
@@ -579,6 +580,20 @@ func (p *Parser) shLexemeBackt() *ShLexeme {
 		return &ShLexeme{shlText, repl.s, shqBacktSquot, nil}
 	case repl.AdvanceRegexp(`^[ \t]+`):
 		return &ShLexeme{shlSpace, repl.m[0], shqBackt, nil}
+	case repl.AdvanceStr(";"):
+		return &ShLexeme{shlSemicolon, repl.s, q, nil}
+	case repl.AdvanceStr("("):
+		return &ShLexeme{shlParenOpen, repl.s, q, nil}
+	case repl.AdvanceStr(")"):
+		return &ShLexeme{shlParenClose, repl.s, q, nil}
+	case repl.AdvanceStr("||"):
+		return &ShLexeme{shlOr, repl.s, q, nil}
+	case repl.AdvanceStr("&&"):
+		return &ShLexeme{shlAnd, repl.s, q, nil}
+	case repl.AdvanceStr("|"):
+		return &ShLexeme{shlPipe, repl.s, q, nil}
+	case repl.AdvanceStr("&"):
+		return &ShLexeme{shlBackground, repl.s, q, nil}
 	case repl.AdvanceRegexp(`^(?:[!%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
 		return &ShLexeme{shlText, repl.m[0], shqBackt, nil}
 	}
