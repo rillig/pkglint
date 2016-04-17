@@ -5,23 +5,23 @@ import (
 )
 
 func (s *Suite) TestParser_PkgbasePattern(c *check.C) {
-	test := func(pattern, expected, rest string) {
+	checkRest := func(pattern, expected, rest string) {
 		parser := NewParser(dummyLine, pattern)
 		actual := parser.PkgbasePattern()
 		c.Check(actual, equals, expected)
 		c.Check(parser.Rest(), equals, rest)
 	}
 
-	test("fltk", "fltk", "")
-	test("fltk|", "fltk", "|")
-	test("boost-build-1.59.*", "boost-build", "-1.59.*")
-	test("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
-	test("${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*")
+	checkRest("fltk", "fltk", "")
+	checkRest("fltk|", "fltk", "|")
+	checkRest("boost-build-1.59.*", "boost-build", "-1.59.*")
+	checkRest("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
+	checkRest("${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*")
 }
 
 func (s *Suite) TestParser_Dependency(c *check.C) {
 
-	testDependencyRest := func(pattern string, expected DependencyPattern, rest string) {
+	checkRest := func(pattern string, expected DependencyPattern, rest string) {
 		parser := NewParser(dummyLine, pattern)
 		dp := parser.Dependency()
 		if c.Check(dp, check.NotNil) {
@@ -29,30 +29,30 @@ func (s *Suite) TestParser_Dependency(c *check.C) {
 			c.Check(parser.Rest(), equals, rest)
 		}
 	}
-	testDependency := func(pattern string, expected DependencyPattern) {
-		testDependencyRest(pattern, expected, "")
+	check := func(pattern string, expected DependencyPattern) {
+		checkRest(pattern, expected, "")
 	}
 
-	testDependency("fltk>=1.1.5rc1<1.3", DependencyPattern{"fltk", ">=", "1.1.5rc1", "<", "1.3", ""})
-	testDependency("libwcalc-1.0*", DependencyPattern{"libwcalc", "", "", "", "", "1.0*"})
-	testDependency("${PHP_PKG_PREFIX}-pdo-5.*", DependencyPattern{"${PHP_PKG_PREFIX}-pdo", "", "", "", "", "5.*"})
-	testDependency("${PYPKGPREFIX}-metakit-[0-9]*", DependencyPattern{"${PYPKGPREFIX}-metakit", "", "", "", "", "[0-9]*"})
-	testDependency("boost-build-1.59.*", DependencyPattern{"boost-build", "", "", "", "", "1.59.*"})
-	testDependency("${_EMACS_REQD}", DependencyPattern{"${_EMACS_REQD}", "", "", "", "", ""})
-	testDependency("{gcc46,gcc46-libs}>=4.6.0", DependencyPattern{"{gcc46,gcc46-libs}", ">=", "4.6.0", "", "", ""})
-	testDependency("perl5-*", DependencyPattern{"perl5", "", "", "", "", "*"})
-	testDependency("verilog{,-current}-[0-9]*", DependencyPattern{"verilog{,-current}", "", "", "", "", "[0-9]*"})
-	testDependency("mpg123{,-esound,-nas}>=0.59.18", DependencyPattern{"mpg123{,-esound,-nas}", ">=", "0.59.18", "", "", ""})
-	testDependency("mysql*-{client,server}-[0-9]*", DependencyPattern{"mysql*-{client,server}", "", "", "", "", "[0-9]*"})
-	testDependency("postgresql8[0-35-9]-${module}-[0-9]*", DependencyPattern{"postgresql8[0-35-9]-${module}", "", "", "", "", "[0-9]*"})
-	testDependency("ncurses-${NC_VERS}{,nb*}", DependencyPattern{"ncurses", "", "", "", "", "${NC_VERS}{,nb*}"})
-	testDependency("xulrunner10>=${MOZ_BRANCH}${MOZ_BRANCH_MINOR}", DependencyPattern{"xulrunner10", ">=", "${MOZ_BRANCH}${MOZ_BRANCH_MINOR}", "", "", ""})
-	testDependencyRest("gnome-control-center>=2.20.1{,nb*}", DependencyPattern{"gnome-control-center", ">=", "2.20.1", "", "", ""}, "{,nb*}")
+	check("fltk>=1.1.5rc1<1.3", DependencyPattern{"fltk", ">=", "1.1.5rc1", "<", "1.3", ""})
+	check("libwcalc-1.0*", DependencyPattern{"libwcalc", "", "", "", "", "1.0*"})
+	check("${PHP_PKG_PREFIX}-pdo-5.*", DependencyPattern{"${PHP_PKG_PREFIX}-pdo", "", "", "", "", "5.*"})
+	check("${PYPKGPREFIX}-metakit-[0-9]*", DependencyPattern{"${PYPKGPREFIX}-metakit", "", "", "", "", "[0-9]*"})
+	check("boost-build-1.59.*", DependencyPattern{"boost-build", "", "", "", "", "1.59.*"})
+	check("${_EMACS_REQD}", DependencyPattern{"${_EMACS_REQD}", "", "", "", "", ""})
+	check("{gcc46,gcc46-libs}>=4.6.0", DependencyPattern{"{gcc46,gcc46-libs}", ">=", "4.6.0", "", "", ""})
+	check("perl5-*", DependencyPattern{"perl5", "", "", "", "", "*"})
+	check("verilog{,-current}-[0-9]*", DependencyPattern{"verilog{,-current}", "", "", "", "", "[0-9]*"})
+	check("mpg123{,-esound,-nas}>=0.59.18", DependencyPattern{"mpg123{,-esound,-nas}", ">=", "0.59.18", "", "", ""})
+	check("mysql*-{client,server}-[0-9]*", DependencyPattern{"mysql*-{client,server}", "", "", "", "", "[0-9]*"})
+	check("postgresql8[0-35-9]-${module}-[0-9]*", DependencyPattern{"postgresql8[0-35-9]-${module}", "", "", "", "", "[0-9]*"})
+	check("ncurses-${NC_VERS}{,nb*}", DependencyPattern{"ncurses", "", "", "", "", "${NC_VERS}{,nb*}"})
+	check("xulrunner10>=${MOZ_BRANCH}${MOZ_BRANCH_MINOR}", DependencyPattern{"xulrunner10", ">=", "${MOZ_BRANCH}${MOZ_BRANCH_MINOR}", "", "", ""})
+	checkRest("gnome-control-center>=2.20.1{,nb*}", DependencyPattern{"gnome-control-center", ">=", "2.20.1", "", "", ""}, "{,nb*}")
 	// "{ssh{,6}-[0-9]*,openssh-[0-9]*}" is not representable using the current data structure
 }
 
 func (s *Suite) TestParser_MkTokens(c *check.C) {
-	parse := func(input string, expectedTokens []*MkToken, expectedRest string) {
+	checkRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
 		p := NewParser(dummyLine, input)
 		actualTokens := p.MkTokens()
 		c.Check(actualTokens, deepEquals, expectedTokens)
@@ -63,8 +63,8 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 		}
 		c.Check(p.Rest(), equals, expectedRest)
 	}
-	token := func(input string, expectedToken *MkToken) {
-		parse(input, []*MkToken{expectedToken}, "")
+	check := func(input string, expectedToken *MkToken) {
+		checkRest(input, []*MkToken{expectedToken}, "")
 	}
 	literal := func(text string) *MkToken {
 		return &MkToken{Text: text}
@@ -81,88 +81,88 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 		return &MkToken{Text: text, Varuse: &MkVarUse{varname: varname, modifiers: modifiers}}
 	}
 
-	token("literal", literal("literal"))
-	token("\\/share\\/ { print \"share directory\" }", literal("\\/share\\/ { print \"share directory\" }"))
-	token("find . -name \\*.orig -o -name \\*.pre", literal("find . -name \\*.orig -o -name \\*.pre"))
-	token("-e 's|\\$${EC2_HOME.*}|EC2_HOME}|g'", literal("-e 's|\\${EC2_HOME.*}|EC2_HOME}|g'"))
+	check("literal", literal("literal"))
+	check("\\/share\\/ { print \"share directory\" }", literal("\\/share\\/ { print \"share directory\" }"))
+	check("find . -name \\*.orig -o -name \\*.pre", literal("find . -name \\*.orig -o -name \\*.pre"))
+	check("-e 's|\\$${EC2_HOME.*}|EC2_HOME}|g'", literal("-e 's|\\${EC2_HOME.*}|EC2_HOME}|g'"))
 
-	token("${VARIABLE}", varuse("VARIABLE"))
-	token("${VARIABLE.param}", varuse("VARIABLE.param"))
-	token("${VARIABLE.${param}}", varuse("VARIABLE.${param}"))
-	token("${VARIABLE.hicolor-icon-theme}", varuse("VARIABLE.hicolor-icon-theme"))
-	token("${VARIABLE.gtk+extra}", varuse("VARIABLE.gtk+extra"))
-	token("${VARIABLE:S/old/new/}", varuse("VARIABLE", "S/old/new/"))
-	token("${GNUSTEP_LFLAGS:S/-L//g}", varuse("GNUSTEP_LFLAGS", "S/-L//g"))
-	token("${SUSE_VERSION:S/.//}", varuse("SUSE_VERSION", "S/.//"))
-	token("${MASTER_SITE_GNOME:=sources/alacarte/0.13/}", varuse("MASTER_SITE_GNOME", "=sources/alacarte/0.13/"))
-	token("${INCLUDE_DIRS:H:T}", varuse("INCLUDE_DIRS", "H", "T"))
-	token("${A.${B.${C.${D}}}}", varuse("A.${B.${C.${D}}}"))
-	token("${RUBY_VERSION:C/([0-9]+)\\.([0-9]+)\\.([0-9]+)/\\1/}", varuse("RUBY_VERSION", "C/([0-9]+)\\.([0-9]+)\\.([0-9]+)/\\1/"))
-	token("${PERL5_${_var_}:Q}", varuse("PERL5_${_var_}", "Q"))
-	token("${PKGNAME_REQD:C/(^.*-|^)py([0-9][0-9])-.*/\\2/}", varuse("PKGNAME_REQD", "C/(^.*-|^)py([0-9][0-9])-.*/\\2/"))
-	token("${PYLIB:S|/|\\\\/|g}", varuse("PYLIB", "S|/|\\\\/|g"))
-	token("${PKGNAME_REQD:C/ruby([0-9][0-9]+)-.*/\\1/}", varuse("PKGNAME_REQD", "C/ruby([0-9][0-9]+)-.*/\\1/"))
-	token("${RUBY_SHLIBALIAS:S/\\//\\\\\\//}", varuse("RUBY_SHLIBALIAS", "S/\\//\\\\\\//"))
-	token("${RUBY_VER_MAP.${RUBY_VER}:U${RUBY_VER}}", varuse("RUBY_VER_MAP.${RUBY_VER}", "U${RUBY_VER}"))
-	token("${RUBY_VER_MAP.${RUBY_VER}:U18}", varuse("RUBY_VER_MAP.${RUBY_VER}", "U18"))
-	token("${CONFIGURE_ARGS:S/ENABLE_OSS=no/ENABLE_OSS=yes/g}", varuse("CONFIGURE_ARGS", "S/ENABLE_OSS=no/ENABLE_OSS=yes/g"))
-	token("${PLIST_RUBY_DIRS:S,DIR=\"PREFIX/,DIR=\",}", varuse("PLIST_RUBY_DIRS", "S,DIR=\"PREFIX/,DIR=\","))
-	token("${LDFLAGS:S/-Wl,//g:Q}", varuse("LDFLAGS", "S/-Wl,//g", "Q"))
-	token("${_PERL5_REAL_PACKLIST:S/^/${DESTDIR}/}", varuse("_PERL5_REAL_PACKLIST", "S/^/${DESTDIR}/"))
-	token("${_PYTHON_VERSION:C/^([0-9])/\\1./1}", varuse("_PYTHON_VERSION", "C/^([0-9])/\\1./1"))
-	token("${PKGNAME:S/py${_PYTHON_VERSION}/py${i}/}", varuse("PKGNAME", "S/py${_PYTHON_VERSION}/py${i}/"))
-	token("${PKGNAME:C/-[0-9].*$/-[0-9]*/}", varuse("PKGNAME", "C/-[0-9].*$/-[0-9]*/"))
-	token("${PKGNAME:S/py${_PYTHON_VERSION}/py${i}/:C/-[0-9].*$/-[0-9]*/}", varuse("PKGNAME", "S/py${_PYTHON_VERSION}/py${i}/", "C/-[0-9].*$/-[0-9]*/"))
-	token("${_PERL5_VARS:tl:S/^/-V:/}", varuse("_PERL5_VARS", "tl", "S/^/-V:/"))
-	token("${_PERL5_VARS_OUT:M${_var_:tl}=*:S/^${_var_:tl}=${_PERL5_PREFIX:=/}//}", varuse("_PERL5_VARS_OUT", "M${_var_:tl}=*", "S/^${_var_:tl}=${_PERL5_PREFIX:=/}//"))
-	token("${RUBY${RUBY_VER}_PATCHLEVEL}", varuse("RUBY${RUBY_VER}_PATCHLEVEL"))
-	token("${DISTFILES:M*.gem}", varuse("DISTFILES", "M*.gem"))
-	token("${LOCALBASE:S^/^_^}", varuse("LOCALBASE", "S^/^_^"))
-	token("${SOURCES:%.c=%.o}", varuse("SOURCES", "%.c=%.o"))
-	token("${GIT_TEMPLATES:@.t.@ ${EGDIR}/${GIT_TEMPLATEDIR}/${.t.} ${PREFIX}/${GIT_CORE_TEMPLATEDIR}/${.t.} @:M*}",
+	check("${VARIABLE}", varuse("VARIABLE"))
+	check("${VARIABLE.param}", varuse("VARIABLE.param"))
+	check("${VARIABLE.${param}}", varuse("VARIABLE.${param}"))
+	check("${VARIABLE.hicolor-icon-theme}", varuse("VARIABLE.hicolor-icon-theme"))
+	check("${VARIABLE.gtk+extra}", varuse("VARIABLE.gtk+extra"))
+	check("${VARIABLE:S/old/new/}", varuse("VARIABLE", "S/old/new/"))
+	check("${GNUSTEP_LFLAGS:S/-L//g}", varuse("GNUSTEP_LFLAGS", "S/-L//g"))
+	check("${SUSE_VERSION:S/.//}", varuse("SUSE_VERSION", "S/.//"))
+	check("${MASTER_SITE_GNOME:=sources/alacarte/0.13/}", varuse("MASTER_SITE_GNOME", "=sources/alacarte/0.13/"))
+	check("${INCLUDE_DIRS:H:T}", varuse("INCLUDE_DIRS", "H", "T"))
+	check("${A.${B.${C.${D}}}}", varuse("A.${B.${C.${D}}}"))
+	check("${RUBY_VERSION:C/([0-9]+)\\.([0-9]+)\\.([0-9]+)/\\1/}", varuse("RUBY_VERSION", "C/([0-9]+)\\.([0-9]+)\\.([0-9]+)/\\1/"))
+	check("${PERL5_${_var_}:Q}", varuse("PERL5_${_var_}", "Q"))
+	check("${PKGNAME_REQD:C/(^.*-|^)py([0-9][0-9])-.*/\\2/}", varuse("PKGNAME_REQD", "C/(^.*-|^)py([0-9][0-9])-.*/\\2/"))
+	check("${PYLIB:S|/|\\\\/|g}", varuse("PYLIB", "S|/|\\\\/|g"))
+	check("${PKGNAME_REQD:C/ruby([0-9][0-9]+)-.*/\\1/}", varuse("PKGNAME_REQD", "C/ruby([0-9][0-9]+)-.*/\\1/"))
+	check("${RUBY_SHLIBALIAS:S/\\//\\\\\\//}", varuse("RUBY_SHLIBALIAS", "S/\\//\\\\\\//"))
+	check("${RUBY_VER_MAP.${RUBY_VER}:U${RUBY_VER}}", varuse("RUBY_VER_MAP.${RUBY_VER}", "U${RUBY_VER}"))
+	check("${RUBY_VER_MAP.${RUBY_VER}:U18}", varuse("RUBY_VER_MAP.${RUBY_VER}", "U18"))
+	check("${CONFIGURE_ARGS:S/ENABLE_OSS=no/ENABLE_OSS=yes/g}", varuse("CONFIGURE_ARGS", "S/ENABLE_OSS=no/ENABLE_OSS=yes/g"))
+	check("${PLIST_RUBY_DIRS:S,DIR=\"PREFIX/,DIR=\",}", varuse("PLIST_RUBY_DIRS", "S,DIR=\"PREFIX/,DIR=\","))
+	check("${LDFLAGS:S/-Wl,//g:Q}", varuse("LDFLAGS", "S/-Wl,//g", "Q"))
+	check("${_PERL5_REAL_PACKLIST:S/^/${DESTDIR}/}", varuse("_PERL5_REAL_PACKLIST", "S/^/${DESTDIR}/"))
+	check("${_PYTHON_VERSION:C/^([0-9])/\\1./1}", varuse("_PYTHON_VERSION", "C/^([0-9])/\\1./1"))
+	check("${PKGNAME:S/py${_PYTHON_VERSION}/py${i}/}", varuse("PKGNAME", "S/py${_PYTHON_VERSION}/py${i}/"))
+	check("${PKGNAME:C/-[0-9].*$/-[0-9]*/}", varuse("PKGNAME", "C/-[0-9].*$/-[0-9]*/"))
+	check("${PKGNAME:S/py${_PYTHON_VERSION}/py${i}/:C/-[0-9].*$/-[0-9]*/}", varuse("PKGNAME", "S/py${_PYTHON_VERSION}/py${i}/", "C/-[0-9].*$/-[0-9]*/"))
+	check("${_PERL5_VARS:tl:S/^/-V:/}", varuse("_PERL5_VARS", "tl", "S/^/-V:/"))
+	check("${_PERL5_VARS_OUT:M${_var_:tl}=*:S/^${_var_:tl}=${_PERL5_PREFIX:=/}//}", varuse("_PERL5_VARS_OUT", "M${_var_:tl}=*", "S/^${_var_:tl}=${_PERL5_PREFIX:=/}//"))
+	check("${RUBY${RUBY_VER}_PATCHLEVEL}", varuse("RUBY${RUBY_VER}_PATCHLEVEL"))
+	check("${DISTFILES:M*.gem}", varuse("DISTFILES", "M*.gem"))
+	check("${LOCALBASE:S^/^_^}", varuse("LOCALBASE", "S^/^_^"))
+	check("${SOURCES:%.c=%.o}", varuse("SOURCES", "%.c=%.o"))
+	check("${GIT_TEMPLATES:@.t.@ ${EGDIR}/${GIT_TEMPLATEDIR}/${.t.} ${PREFIX}/${GIT_CORE_TEMPLATEDIR}/${.t.} @:M*}",
 		varuse("GIT_TEMPLATES", "@.t.@ ${EGDIR}/${GIT_TEMPLATEDIR}/${.t.} ${PREFIX}/${GIT_CORE_TEMPLATEDIR}/${.t.} @", "M*"))
-	token("${DISTNAME:C:_:-:}", varuse("DISTNAME", "C:_:-:"))
-	token("${CF_FILES:H:O:u:S@^@${PKG_SYSCONFDIR}/@}", varuse("CF_FILES", "H", "O", "u", "S@^@${PKG_SYSCONFDIR}/@"))
-	token("${ALT_GCC_RTS:S%${LOCALBASE}%%:S%/%%}", varuse("ALT_GCC_RTS", "S%${LOCALBASE}%%", "S%/%%"))
-	token("${PREFIX:C;///*;/;g:C;/$;;}", varuse("PREFIX", "C;///*;/;g", "C;/$;;"))
-	token("${GZIP_CMD:[1]:Q}", varuse("GZIP_CMD", "[1]", "Q"))
-	token("${DISTNAME:C/-[0-9]+$$//:C/_/-/}", varuse("DISTNAME", "C/-[0-9]+$$//", "C/_/-/"))
-	token("${DISTNAME:slang%=slang2%}", varuse("DISTNAME", "slang%=slang2%"))
-	token("${OSMAP_SUBSTVARS:@v@-e 's,\\@${v}\\@,${${v}},g' @}", varuse("OSMAP_SUBSTVARS", "@v@-e 's,\\@${v}\\@,${${v}},g' @"))
-	token("${BRANDELF:D${BRANDELF} -t Linux ${LINUX_LDCONFIG}:U${TRUE}}", varuse("BRANDELF", "D${BRANDELF} -t Linux ${LINUX_LDCONFIG}", "U${TRUE}"))
+	check("${DISTNAME:C:_:-:}", varuse("DISTNAME", "C:_:-:"))
+	check("${CF_FILES:H:O:u:S@^@${PKG_SYSCONFDIR}/@}", varuse("CF_FILES", "H", "O", "u", "S@^@${PKG_SYSCONFDIR}/@"))
+	check("${ALT_GCC_RTS:S%${LOCALBASE}%%:S%/%%}", varuse("ALT_GCC_RTS", "S%${LOCALBASE}%%", "S%/%%"))
+	check("${PREFIX:C;///*;/;g:C;/$;;}", varuse("PREFIX", "C;///*;/;g", "C;/$;;"))
+	check("${GZIP_CMD:[1]:Q}", varuse("GZIP_CMD", "[1]", "Q"))
+	check("${DISTNAME:C/-[0-9]+$$//:C/_/-/}", varuse("DISTNAME", "C/-[0-9]+$$//", "C/_/-/"))
+	check("${DISTNAME:slang%=slang2%}", varuse("DISTNAME", "slang%=slang2%"))
+	check("${OSMAP_SUBSTVARS:@v@-e 's,\\@${v}\\@,${${v}},g' @}", varuse("OSMAP_SUBSTVARS", "@v@-e 's,\\@${v}\\@,${${v}},g' @"))
+	check("${BRANDELF:D${BRANDELF} -t Linux ${LINUX_LDCONFIG}:U${TRUE}}", varuse("BRANDELF", "D${BRANDELF} -t Linux ${LINUX_LDCONFIG}", "U${TRUE}"))
 
 	/* weird features */
-	token("${${EMACS_VERSION_MAJOR}>22:?@comment :}", varuse("${EMACS_VERSION_MAJOR}>22", "?@comment :"))
-	token("${empty(CFLAGS):?:-cflags ${CFLAGS:Q}}", varuse("empty(CFLAGS)", "?:-cflags ${CFLAGS:Q}"))
+	check("${${EMACS_VERSION_MAJOR}>22:?@comment :}", varuse("${EMACS_VERSION_MAJOR}>22", "?@comment :"))
+	check("${empty(CFLAGS):?:-cflags ${CFLAGS:Q}}", varuse("empty(CFLAGS)", "?:-cflags ${CFLAGS:Q}"))
 
-	token("${${XKBBASE}/xkbcomp:L:Q}", varuse("${XKBBASE}/xkbcomp", "L", "Q"))
-	token("${${PKGBASE} ${PKGVERSION}:L}", varuse("${PKGBASE} ${PKGVERSION}", "L"))
+	check("${${XKBBASE}/xkbcomp:L:Q}", varuse("${XKBBASE}/xkbcomp", "L", "Q"))
+	check("${${PKGBASE} ${PKGVERSION}:L}", varuse("${PKGBASE} ${PKGVERSION}", "L"))
 
-	token("${${${PKG_INFO} -E ${d} || echo:L:sh}:L:C/[^[0-9]]*/ /g:[1..3]:ts.}",
+	check("${${${PKG_INFO} -E ${d} || echo:L:sh}:L:C/[^[0-9]]*/ /g:[1..3]:ts.}",
 		varuse("${${PKG_INFO} -E ${d} || echo:L:sh}", "L", "C/[^[0-9]]*/ /g", "[1..3]", "ts."))
 
-	token("${VAR:S/-//S/.//}", varuseText("${VAR:S/-//S/.//}", "VAR", "S/-//", "S/.//")) // For :S and :C, the colon can be left out.
+	check("${VAR:S/-//S/.//}", varuseText("${VAR:S/-//S/.//}", "VAR", "S/-//", "S/.//")) // For :S and :C, the colon can be left out.
 
-	token("${VAR:ts}", varuse("VAR", "ts"))                 // The separator character can be left out.
-	token("${VAR:ts\\000012}", varuse("VAR", "ts\\000012")) // The separator character can be a long octal number.
-	token("${VAR:ts\\124}", varuse("VAR", "ts\\124"))       // Or even decimal.
+	check("${VAR:ts}", varuse("VAR", "ts"))                 // The separator character can be left out.
+	check("${VAR:ts\\000012}", varuse("VAR", "ts\\000012")) // The separator character can be a long octal number.
+	check("${VAR:ts\\124}", varuse("VAR", "ts\\124"))       // Or even decimal.
 
-	token("$(GNUSTEP_USER_ROOT)", varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"))
+	check("$(GNUSTEP_USER_ROOT)", varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"))
 	c.Check(s.Output(), equals, "WARN: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.\n")
 
-	parse("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
-	parse("$(VAR}", nil, "$(VAR}") // Opening parenthesis, closing brace
+	checkRest("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
+	checkRest("$(VAR}", nil, "$(VAR}") // Opening parenthesis, closing brace
 	c.Check(s.Output(), equals, "WARN: Please use curly braces {} instead of round parentheses () for VAR.\n")
 
-	token("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
-	token("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end
+	check("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
+	check("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end
 	c.Check(s.Output(), equals, "WARN: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".\n")
 
-	parse("hello, ${W:L:tl}orld", []*MkToken{
+	checkRest("hello, ${W:L:tl}orld", []*MkToken{
 		literal("hello, "),
 		varuse("W", "L", "tl"),
 		literal("orld")}, "")
-	parse("ftp://${PKGNAME}/ ${MASTER_SITES:=subdir/}", []*MkToken{
+	checkRest("ftp://${PKGNAME}/ ${MASTER_SITES:=subdir/}", []*MkToken{
 		literal("ftp://"),
 		varuse("PKGNAME"),
 		literal("/ "),
@@ -170,52 +170,52 @@ func (s *Suite) TestParser_MkTokens(c *check.C) {
 }
 
 func (s *Suite) TestParser_MkCond(c *check.C) {
-	condrest := func(input string, expectedTree *Tree, expectedRest string) {
+	checkRest := func(input string, expectedTree *Tree, expectedRest string) {
 		p := NewParser(dummyLine, input)
 		actualTree := p.MkCond()
 		c.Check(actualTree, deepEquals, expectedTree)
 		c.Check(p.Rest(), equals, expectedRest)
 	}
-	cond := func(input string, expectedTree *Tree) {
-		condrest(input, expectedTree, "")
+	check := func(input string, expectedTree *Tree) {
+		checkRest(input, expectedTree, "")
 	}
 	varuse := func(varname string, modifiers ...string) MkVarUse {
 		return MkVarUse{varname: varname, modifiers: modifiers}
 	}
 
-	cond("${OPSYS:MNetBSD}",
+	check("${OPSYS:MNetBSD}",
 		NewTree("not", NewTree("empty", varuse("OPSYS", "MNetBSD"))))
-	cond("defined(VARNAME)",
+	check("defined(VARNAME)",
 		NewTree("defined", "VARNAME"))
-	cond("empty(VARNAME)",
+	check("empty(VARNAME)",
 		NewTree("empty", varuse("VARNAME")))
-	cond("!empty(VARNAME)",
+	check("!empty(VARNAME)",
 		NewTree("not", NewTree("empty", varuse("VARNAME"))))
-	cond("!empty(VARNAME:M[yY][eE][sS])",
+	check("!empty(VARNAME:M[yY][eE][sS])",
 		NewTree("not", NewTree("empty", varuse("VARNAME", "M[yY][eE][sS]"))))
-	cond("${VARNAME} != \"Value\"",
+	check("${VARNAME} != \"Value\"",
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
-	cond("${VARNAME:Mi386} != \"Value\"",
+	check("${VARNAME:Mi386} != \"Value\"",
 		NewTree("compareVarStr", varuse("VARNAME", "Mi386"), "!=", "Value"))
-	cond("${VARNAME} != Value",
+	check("${VARNAME} != Value",
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
-	cond("\"${VARNAME}\" != Value",
+	check("\"${VARNAME}\" != Value",
 		NewTree("compareVarStr", varuse("VARNAME"), "!=", "Value"))
-	cond("(defined(VARNAME))",
+	check("(defined(VARNAME))",
 		NewTree("defined", "VARNAME"))
-	cond("exists(/etc/hosts)",
+	check("exists(/etc/hosts)",
 		NewTree("exists", "/etc/hosts"))
-	cond("exists(${PREFIX}/var)",
+	check("exists(${PREFIX}/var)",
 		NewTree("exists", "${PREFIX}/var"))
-	cond("${OPSYS} == \"NetBSD\" || ${OPSYS} == \"OpenBSD\"",
+	check("${OPSYS} == \"NetBSD\" || ${OPSYS} == \"OpenBSD\"",
 		NewTree("or",
 			NewTree("compareVarStr", varuse("OPSYS"), "==", "NetBSD"),
 			NewTree("compareVarStr", varuse("OPSYS"), "==", "OpenBSD")))
-	cond("${OPSYS} == \"NetBSD\" && ${MACHINE_ARCH} == \"i386\"",
+	check("${OPSYS} == \"NetBSD\" && ${MACHINE_ARCH} == \"i386\"",
 		NewTree("and",
 			NewTree("compareVarStr", varuse("OPSYS"), "==", "NetBSD"),
 			NewTree("compareVarStr", varuse("MACHINE_ARCH"), "==", "i386")))
-	cond("defined(A) && defined(B) || defined(C) && defined(D)",
+	check("defined(A) && defined(B) || defined(C) && defined(D)",
 		NewTree("or",
 			NewTree("and",
 				NewTree("defined", "A"),
@@ -223,27 +223,27 @@ func (s *Suite) TestParser_MkCond(c *check.C) {
 			NewTree("and",
 				NewTree("defined", "C"),
 				NewTree("defined", "D"))))
-	cond("${MACHINE_ARCH:Mi386} || ${MACHINE_OPSYS:MNetBSD}",
+	check("${MACHINE_ARCH:Mi386} || ${MACHINE_OPSYS:MNetBSD}",
 		NewTree("or",
 			NewTree("not", NewTree("empty", varuse("MACHINE_ARCH", "Mi386"))),
 			NewTree("not", NewTree("empty", varuse("MACHINE_OPSYS", "MNetBSD")))))
 
 	// Exotic cases
-	cond("0",
+	check("0",
 		NewTree("literalNum", "0"))
-	cond("! ( defined(A)  && empty(VARNAME) )",
+	check("! ( defined(A)  && empty(VARNAME) )",
 		NewTree("not", NewTree("and", NewTree("defined", "A"), NewTree("empty", varuse("VARNAME")))))
-	cond("${REQD_MAJOR} > ${MAJOR}",
+	check("${REQD_MAJOR} > ${MAJOR}",
 		NewTree("compareVarVar", varuse("REQD_MAJOR"), ">", varuse("MAJOR")))
-	cond("${OS_VERSION} >= 6.5",
+	check("${OS_VERSION} >= 6.5",
 		NewTree("compareVarNum", varuse("OS_VERSION"), ">=", "6.5"))
-	cond("${OS_VERSION} == 5.3",
+	check("${OS_VERSION} == 5.3",
 		NewTree("compareVarNum", varuse("OS_VERSION"), "==", "5.3"))
-	cond("!empty(${OS_VARIANT:MIllumos})", // Probably not intended
+	check("!empty(${OS_VARIANT:MIllumos})", // Probably not intended
 		NewTree("not", NewTree("empty", varuse("${OS_VARIANT:MIllumos}"))))
 
 	// Errors
-	condrest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
+	checkRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
 		NewTree("not", NewTree("empty", varuse("PKG_OPTIONS", "Msndfile"))),
 		" || defined(PKG_OPTIONS:Msamplerate)")
 }
@@ -256,7 +256,7 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 
 // @Beta
 func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
-	checkParseRest := func(s string, expected ...*ShToken) string {
+	checkRest := func(s string, expected ...*ShToken) string {
 		p := NewParser(dummyLine, s)
 		q := shqPlain
 		for _, exp := range expected {
@@ -265,8 +265,8 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		}
 		return p.Rest()
 	}
-	checkParse := func(s string, expected ...*ShToken) {
-		rest := checkParseRest(s, expected...)
+	check := func(s string, expected ...*ShToken) {
+		rest := checkRest(s, expected...)
 		c.Check(rest, equals, "")
 	}
 
@@ -295,55 +295,55 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 	semicolon := token(shtSemicolon, ";", shqPlain)
 	pipe := token(shtPipe, "|", shqPlain)
 
-	checkParse("" /* none */)
-	checkParse("$$var", text("$$var"))
-	checkParse("$$var$$var", text("$$var$$var"))
-	checkParse("$$var;;",
+	check("" /* none */)
+	check("$$var", text("$$var"))
+	check("$$var$$var", text("$$var$$var"))
+	check("$$var;;",
 		text("$$var"),
 		token(shtCaseSeparator, ";;", shqPlain))
-	checkParse("'single-quoted'",
+	check("'single-quoted'",
 		q(shqSquot, text("'")),
 		q(shqSquot, text("single-quoted")),
 		q(shqPlain, text("'")))
-	c.Check(checkParseRest("\"" /* none */), equals, "\"")
-	checkParse("$${file%.c}.o",
+	c.Check(checkRest("\"" /* none */), equals, "\"")
+	check("$${file%.c}.o",
 		text("$${file%.c}.o"))
 
-	checkParse("hello",
+	check("hello",
 		text("hello"))
 
-	checkParse("hello, world",
+	check("hello, world",
 		text("hello,"),
 		space,
 		text("world"))
 
-	checkParse("\"",
+	check("\"",
 		dquot("\""))
 
-	checkParse("`",
+	check("`",
 		backt("`"))
 
-	checkParse("`cat fname`",
+	check("`cat fname`",
 		backt("`"),
 		backt("cat"),
 		token(shtSpace, " ", shqBackt),
 		backt("fname"),
 		text("`"))
 
-	checkParse("hello, \"world\"",
+	check("hello, \"world\"",
 		text("hello,"),
 		space,
 		dquot("\""),
 		dquot("world"),
 		text("\""))
 
-	checkParse("set -e;",
+	check("set -e;",
 		text("set"),
 		space,
 		text("-e"),
 		semicolon)
 
-	checkParse("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
+	check("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
 		text("cd"),
 		space,
 		varuse("WRKSRC"),
@@ -370,7 +370,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		q(shqPlain, text("\"")),
 		semicolon)
 
-	checkParse("ls -1 | ${SED} -e 's,3qt$$,3,'",
+	check("ls -1 | ${SED} -e 's,3qt$$,3,'",
 		text("ls"),
 		space,
 		text("-1"),
@@ -385,7 +385,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		squot("s,3qt$$,3,"),
 		text("'"))
 
-	checkParse("(for PAGE in $$PAGES; do ",
+	check("(for PAGE in $$PAGES; do ",
 		&ShToken{shtParenOpen, "(", shqPlain, nil},
 		text("for"),
 		space,
@@ -399,7 +399,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		text("do"),
 		space)
 
-	checkParse("    ${ECHO} installing ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; ",
+	check("    ${ECHO} installing ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; ",
 		whitespace("    "),
 		varuse("ECHO"),
 		space,
@@ -411,7 +411,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		semicolon,
 		space)
 
-	checkParse("    set - X `head -1 $${PAGE}qt`; ",
+	check("    set - X `head -1 $${PAGE}qt`; ",
 		whitespace("    "),
 		text("set"),
 		space,
@@ -429,14 +429,14 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		semicolon,
 		space)
 
-	checkParse("`\"one word\"`",
+	check("`\"one word\"`",
 		backt("`"),
 		q(shqBacktDquot, text("\"")),
 		q(shqBacktDquot, text("one word")),
 		q(shqBackt, text("\"")),
 		text("`"))
 
-	checkParse("$$var \"$$var\" '$$var' `$$var`",
+	check("$$var \"$$var\" '$$var' `$$var`",
 		text("$$var"),
 		space,
 		dquot("\""),
@@ -451,7 +451,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		backt("$$var"),
 		text("`"))
 
-	checkParse("\"`'echo;echo'`\"",
+	check("\"`'echo;echo'`\"",
 		q(shqDquot, text("\"")),
 		q(shqDquotBackt, text("`")),
 		q(shqDquotBacktSquot, text("'")),
@@ -460,24 +460,24 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		q(shqDquot, text("`")),
 		q(shqPlain, text("\"")))
 
-	checkParse("cat<file",
+	check("cat<file",
 		text("cat"),
 		token(shtRedirect, "<", shqPlain),
 		text("file"))
 
-	checkParse("-e \"s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g\"",
+	check("-e \"s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g\"",
 		text("-e"),
 		space,
 		dquot("\""),
 		dquot("s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g"),
 		text("\""))
 
-	checkParse("echo $$,$$/",
+	check("echo $$,$$/",
 		text("echo"),
 		space,
 		text("$$,$$/"))
 
-	rest := checkParseRest("COMMENT=\t\\Make $$$$ fast\"",
+	rest := checkRest("COMMENT=\t\\Make $$$$ fast\"",
 		text("COMMENT="),
 		whitespace("\t"),
 		text("\\Make"),
@@ -487,7 +487,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		text("fast"))
 	c.Check(rest, equals, "\"")
 
-	checkParse("var=`echo;echo|echo&echo||echo&&echo>echo`",
+	check("var=`echo;echo|echo&echo||echo&&echo>echo`",
 		q(shqPlain, text("var=")),
 		q(shqBackt, text("`")),
 		q(shqBackt, text("echo")),
@@ -505,22 +505,22 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		q(shqBackt, text("echo")),
 		q(shqPlain, text("`")))
 
-	checkParse("# comment",
+	check("# comment",
 		token(shtComment, "# comment", shqPlain))
-	checkParse("no#comment",
+	check("no#comment",
 		text("no#comment"))
-	checkParse("`# comment`continue",
+	check("`# comment`continue",
 		token(shtWord, "`", shqBackt),
 		token(shtComment, "# comment", shqBackt),
 		token(shtWord, "`", shqPlain),
 		token(shtWord, "continue", shqPlain))
-	checkParse("`no#comment`continue",
+	check("`no#comment`continue",
 		token(shtWord, "`", shqBackt),
 		token(shtWord, "no#comment", shqBackt),
 		token(shtWord, "`", shqPlain),
 		token(shtWord, "continue", shqPlain))
 
-	checkParse("var=`tr 'A-Z' 'a-z'`",
+	check("var=`tr 'A-Z' 'a-z'`",
 		token(shtWord, "var=", shqPlain),
 		token(shtWord, "`", shqBackt),
 		token(shtWord, "tr", shqBackt),
@@ -534,7 +534,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		token(shtWord, "'", shqBackt),
 		token(shtWord, "`", shqPlain))
 
-	checkParse("var=\"`echo \"\\`echo foo\\`\"`\"",
+	check("var=\"`echo \"\\`echo foo\\`\"`\"",
 		token(shtWord, "var=", shqPlain),
 		token(shtWord, "\"", shqDquot),
 		token(shtWord, "`", shqDquotBackt),
@@ -583,7 +583,7 @@ func (s *Suite) Test_Parser_ShToken_Quoting(c *check.C) {
 }
 
 func (s *Suite) Test_Parser_ShWord(c *check.C) {
-	checkParse := func(s string, expected ...*ShWord) {
+	check := func(s string, expected ...*ShWord) {
 		p := NewParser(dummyLine, s)
 		for _, exp := range expected {
 			c.Check(p.ShWord(), deepEquals, exp)
@@ -594,14 +594,14 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 		return &ShToken{typ, s, q, nil}
 	}
 
-	checkParse("",
+	check("",
 		nil)
 
-	checkParse("echo",
+	check("echo",
 		&ShWord{[]*ShToken{
 			{shtWord, "echo", shqPlain, nil}}})
 
-	checkParse("`cat file`",
+	check("`cat file`",
 		&ShWord{[]*ShToken{
 			{shtWord, "`", shqBackt, nil},
 			{shtWord, "cat", shqBackt, nil},
@@ -609,7 +609,7 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 			{shtWord, "file", shqBackt, nil},
 			{shtWord, "`", shqPlain, nil}}})
 
-	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 		&ShWord{[]*ShToken{
 			{shtWord, "PAGES=", shqPlain, nil},
 			{shtWord, "\"", shqDquot, nil},
@@ -659,7 +659,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
 }
 
 func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
-	checkParse := func(cmd, expected string) {
+	check := func(cmd, expected string) {
 		p := NewParser(dummyLine, cmd)
 		shcmd := p.ShSimpleCmd()
 		if c.Check(shcmd, check.NotNil) {
@@ -667,24 +667,25 @@ func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
 		}
 		c.Check(p.Rest(), equals, "")
 	}
-	checkParse("echo ${PKGNAME:Q}",
+
+	check("echo ${PKGNAME:Q}",
 		"ShSimpleCmd([], ShWord([\"echo\"]), [ShWord([varuse(\"PKGNAME:Q\")])])")
 
-	checkParse("${ECHO} \"Double-quoted\"",
+	check("${ECHO} \"Double-quoted\"",
 		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"Double-quoted\", d) "+
 			"\"\\\"\""+
 			"])])")
 
-	checkParse("${ECHO} 'Single-quoted'",
+	check("${ECHO} 'Single-quoted'",
 		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
 			"ShToken(word, \"'\", s) "+
 			"ShToken(word, \"Single-quoted\", s) "+
 			"\"'\""+
 			"])])")
 
-	checkParse("`cat plain`",
+	check("`cat plain`",
 		"ShSimpleCmd([], ShWord(["+
 			"ShToken(word, \"`\", b) "+
 			"ShToken(word, \"cat\", b) "+
@@ -692,7 +693,8 @@ func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
 			"ShToken(word, \"plain\", b) "+
 			"\"`\""+
 			"]), [])")
-	checkParse("\"`cat double`\"",
+
+	check("\"`cat double`\"",
 		"ShSimpleCmd([], ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"`\", db) "+
@@ -702,7 +704,8 @@ func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
 			"ShToken(word, \"`\", d) "+
 			"\"\\\"\""+
 			"]), [])")
-	checkParse("`\"one word\"`",
+
+	check("`\"one word\"`",
 		"ShSimpleCmd([], ShWord(["+
 			"ShToken(word, \"`\", b) "+
 			"ShToken(word, \"\\\"\", bd) "+
@@ -711,7 +714,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
 			"\"`\""+
 			"]), [])")
 
-	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 		"ShSimpleCmd([ShVarassign(\"PAGES\", ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"`\", db) "+
@@ -732,24 +735,24 @@ func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
 			"\"\\\"\""+
 			"]))], <nil>, [])")
 
-	checkParse("var=Plain",
+	check("var=Plain",
 		"ShSimpleCmd([ShVarassign(\"var\", ShWord([\"Plain\"]))], <nil>, [])")
 
-	checkParse("var=\"Dquot\"",
+	check("var=\"Dquot\"",
 		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"Dquot\", d) "+
 			"\"\\\"\""+
 			"]))], <nil>, [])")
 
-	checkParse("var='Squot'",
+	check("var='Squot'",
 		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
 			"ShToken(word, \"'\", s) "+
 			"ShToken(word, \"Squot\", s) "+
 			"\"'\""+
 			"]))], <nil>, [])")
 
-	checkParse("var=Plain\"Dquot\"'Squot'",
+	check("var=Plain\"Dquot\"'Squot'",
 		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
 			"\"Plain\" "+
 			"ShToken(word, \"\\\"\", d) "+
