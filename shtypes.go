@@ -4,53 +4,6 @@ import (
 	"fmt"
 )
 
-type ShSimpleCmd struct {
-	Varassigns []*ShVarassign
-	Command    *ShWord
-	Args       []*ShWord
-}
-
-func (shcmd *ShSimpleCmd) String() string {
-	return fmt.Sprintf("ShSimpleCmd(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
-}
-
-// ShWord combines tokens to form (roughly speaking) space-separated items.
-type ShWord struct {
-	Atoms []*ShAtom
-}
-
-func (shword *ShWord) String() string {
-	return fmt.Sprintf("ShWord(%v)", shword.Atoms)
-}
-
-type ShVarassign struct {
-	Name  string
-	Value *ShWord // maybe
-}
-
-func (shva *ShVarassign) String() string {
-	return fmt.Sprintf("ShVarassign(%q, %v)", shva.Name, shva.Value)
-}
-
-// @Beta
-type ShAtom struct {
-	Type    ShAtomType
-	Text    string
-	Quoting ShQuoting
-	Data    interface{}
-}
-
-func (token *ShAtom) String() string {
-	if token.Type == shtWord && token.Quoting == shqPlain && token.Data == nil {
-		return fmt.Sprintf("%q", token.Text)
-	}
-	if token.Type == shtVaruse {
-		varuse := token.Data.(*MkVarUse)
-		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
-	}
-	return fmt.Sprintf("ShAtom(%v, %q, %s)", token.Type, token.Text, token.Quoting)
-}
-
 type ShAtomType uint8
 
 const (
@@ -92,6 +45,25 @@ func (t ShAtomType) String() string {
 	}[t]
 }
 
+// @Beta
+type ShAtom struct {
+	Type    ShAtomType
+	Text    string
+	Quoting ShQuoting
+	Data    interface{}
+}
+
+func (token *ShAtom) String() string {
+	if token.Type == shtWord && token.Quoting == shqPlain && token.Data == nil {
+		return fmt.Sprintf("%q", token.Text)
+	}
+	if token.Type == shtVaruse {
+		varuse := token.Data.(*MkVarUse)
+		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
+	}
+	return fmt.Sprintf("ShAtom(%v, %q, %s)", token.Type, token.Text, token.Quoting)
+}
+
 // ShQuoting describes the context in which a string appears
 // and how it must be unescaped to get its literal value.
 type ShQuoting uint8
@@ -131,4 +103,32 @@ func (q ShQuoting) ToVarUseContext() vucQuoting {
 		return vucQuotBackt
 	}
 	return vucQuotUnknown
+}
+
+// ShWord combines tokens to form (roughly speaking) space-separated items.
+type ShWord struct {
+	Atoms []*ShAtom
+}
+
+func (shword *ShWord) String() string {
+	return fmt.Sprintf("ShWord(%v)", shword.Atoms)
+}
+
+type ShVarassign struct {
+	Name  string
+	Value *ShWord // maybe
+}
+
+func (shva *ShVarassign) String() string {
+	return fmt.Sprintf("ShVarassign(%q, %v)", shva.Name, shva.Value)
+}
+
+type ShSimpleCmd struct {
+	Varassigns []*ShVarassign
+	Command    *ShWord
+	Args       []*ShWord
+}
+
+func (shcmd *ShSimpleCmd) String() string {
+	return fmt.Sprintf("ShSimpleCmd(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
 }
