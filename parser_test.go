@@ -631,7 +631,7 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 			token(shtWord, "\"", shqPlain)}})
 }
 
-func (s *Suite) Test_Parser_ShCommand_DataStructures(c *check.C) {
+func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
 	word := func(tokens ...*ShToken) *ShWord {
 		return &ShWord{tokens}
 	}
@@ -647,45 +647,45 @@ func (s *Suite) Test_Parser_ShCommand_DataStructures(c *check.C) {
 
 	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
 
-	shcmd := p.ShCommand()
+	shcmd := p.ShSimpleCmd()
 
-	expected := &ShCommand{
+	expected := &ShSimpleCmd{
 		[]*ShVarassign{&ShVarassign{"PATH", plainword("/nonexistent")}},
 		plainword("env"),
 		[]*ShWord{word(plain("PATH="), tvaruse("${PATH:Q}", "PATH", "Q")), plainword("true")}}
 	c.Check(shcmd, deepEquals, expected)
-	c.Check(shcmd.String(), equals, "ShCommand([ShVarassign(\"PATH\", ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=\" varuse(\"PATH:Q\")]) ShWord([\"true\"])])")
+	c.Check(shcmd.String(), equals, "ShSimpleCmd([ShVarassign(\"PATH\", ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=\" varuse(\"PATH:Q\")]) ShWord([\"true\"])])")
 	c.Check(p.Rest(), equals, "")
 }
 
-func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
+func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
 	checkParse := func(cmd, expected string) {
 		p := NewParser(dummyLine, cmd)
-		shcmd := p.ShCommand()
+		shcmd := p.ShSimpleCmd()
 		if c.Check(shcmd, check.NotNil) {
 			c.Check(shcmd.String(), equals, expected)
 		}
 		c.Check(p.Rest(), equals, "")
 	}
 	checkParse("echo ${PKGNAME:Q}",
-		"ShCommand([], ShWord([\"echo\"]), [ShWord([varuse(\"PKGNAME:Q\")])])")
+		"ShSimpleCmd([], ShWord([\"echo\"]), [ShWord([varuse(\"PKGNAME:Q\")])])")
 
 	checkParse("${ECHO} \"Double-quoted\"",
-		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
+		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"Double-quoted\", d) "+
 			"\"\\\"\""+
 			"])])")
 
 	checkParse("${ECHO} 'Single-quoted'",
-		"ShCommand([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
+		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
 			"ShToken(word, \"'\", s) "+
 			"ShToken(word, \"Single-quoted\", s) "+
 			"\"'\""+
 			"])])")
 
 	checkParse("`cat plain`",
-		"ShCommand([], ShWord(["+
+		"ShSimpleCmd([], ShWord(["+
 			"ShToken(word, \"`\", b) "+
 			"ShToken(word, \"cat\", b) "+
 			"ShToken(space, \" \", b) "+
@@ -693,7 +693,7 @@ func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
 			"\"`\""+
 			"]), [])")
 	checkParse("\"`cat double`\"",
-		"ShCommand([], ShWord(["+
+		"ShSimpleCmd([], ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"`\", db) "+
 			"ShToken(word, \"cat\", db) "+
@@ -703,7 +703,7 @@ func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
 			"\"\\\"\""+
 			"]), [])")
 	checkParse("`\"one word\"`",
-		"ShCommand([], ShWord(["+
+		"ShSimpleCmd([], ShWord(["+
 			"ShToken(word, \"`\", b) "+
 			"ShToken(word, \"\\\"\", bd) "+
 			"ShToken(word, \"one word\", bd) "+
@@ -712,7 +712,7 @@ func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
 			"]), [])")
 
 	checkParse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		"ShCommand([ShVarassign(\"PAGES\", ShWord(["+
+		"ShSimpleCmd([ShVarassign(\"PAGES\", ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"`\", db) "+
 			"ShToken(word, \"ls\", db) "+
@@ -733,24 +733,24 @@ func (s *Suite) Test_Parser_ShCommand_Practical(c *check.C) {
 			"]))], <nil>, [])")
 
 	checkParse("var=Plain",
-		"ShCommand([ShVarassign(\"var\", ShWord([\"Plain\"]))], <nil>, [])")
+		"ShSimpleCmd([ShVarassign(\"var\", ShWord([\"Plain\"]))], <nil>, [])")
 
 	checkParse("var=\"Dquot\"",
-		"ShCommand([ShVarassign(\"var\", ShWord(["+
+		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"Dquot\", d) "+
 			"\"\\\"\""+
 			"]))], <nil>, [])")
 
 	checkParse("var='Squot'",
-		"ShCommand([ShVarassign(\"var\", ShWord(["+
+		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
 			"ShToken(word, \"'\", s) "+
 			"ShToken(word, \"Squot\", s) "+
 			"\"'\""+
 			"]))], <nil>, [])")
 
 	checkParse("var=Plain\"Dquot\"'Squot'",
-		"ShCommand([ShVarassign(\"var\", ShWord(["+
+		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
 			"\"Plain\" "+
 			"ShToken(word, \"\\\"\", d) "+
 			"ShToken(word, \"Dquot\", d) "+

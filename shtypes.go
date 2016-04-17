@@ -4,14 +4,14 @@ import (
 	"fmt"
 )
 
-type ShCommand struct {
+type ShSimpleCmd struct {
 	Varassigns []*ShVarassign
 	Command    *ShWord
 	Args       []*ShWord
 }
 
-func (shcmd *ShCommand) String() string {
-	return fmt.Sprintf("ShCommand(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
+func (shcmd *ShSimpleCmd) String() string {
+	return fmt.Sprintf("ShSimpleCmd(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
 }
 
 // ShWord combines tokens to form (roughly speaking) space-separated items.

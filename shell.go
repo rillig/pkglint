@@ -411,7 +411,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 	if false {
 		p := NewParser(shline.line, shellcmd)
-		p.ShCommands()
+		p.ShSimpleCmds()
 		rest := p.Rest()
 		if rest != "" {
 			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", rest)

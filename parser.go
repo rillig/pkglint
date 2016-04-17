@@ -687,11 +687,11 @@ func (p *Parser) Hspace() bool {
 }
 
 // @Beta
-func (p *Parser) ShCommands() []*ShCommand {
-	var cmds []*ShCommand
+func (p *Parser) ShSimpleCmds() []*ShSimpleCmd {
+	var cmds []*ShSimpleCmd
 
 nextcommand:
-	cmd := p.ShCommand()
+	cmd := p.ShSimpleCmd()
 	if cmd == nil && p.repl.AdvanceRegexp(`^#.*`) {
 		goto nextcommand
 	}
@@ -715,7 +715,7 @@ nexttoken:
 }
 
 // @Beta
-func (p *Parser) ShCommand() *ShCommand {
+func (p *Parser) ShSimpleCmd() *ShSimpleCmd {
 	repl := p.repl
 	mark := repl.Mark()
 
@@ -750,7 +750,7 @@ nextarg:
 
 end:
 	if len(varassigns) != 0 || command != nil {
-		return &ShCommand{varassigns, command, args}
+		return &ShSimpleCmd{varassigns, command, args}
 	}
 
 	p.repl.Reset(mark)
