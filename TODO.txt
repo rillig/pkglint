@@ -58,3 +58,7 @@ WARN: geography/viking/Makefile:8: Please use ${MASTER_SITE_SOURCEFORGE:=viking/
 *** Verschwunden, war aber wichtig
 -WARN: editors/emacs/modules.mk:341: ${EMACS_VERSION_MAJOR}>22 is used but not defined. Spelling mistake?
 -WARN: security/john/Makefile:23: ${PKGSRC_COMPILER}==gcc is used but not defined. Spelling mistake?
+
+*** Falsch geworden
+-WARN: www/py-django14/Makefile:47: Please use ${BACKEND_PATH:Q} instead of ${BACKEND_PATH} and make sure the variable appears outside of any quoting characters.
++WARN: www/py-django14/Makefile:44: Please use ${BACKEND_PATH:Q} instead of ${BACKEND_PATH}.
