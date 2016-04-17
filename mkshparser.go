@@ -29,23 +29,6 @@ const (
 	msttLESSGREAT // <>
 	msttDLESSDASH // <<-
 	msttCLOBBER   // >|
-
-	msttIf
-	msttThen
-	msttElse
-	msttElif
-	msttFi
-	msttDo
-	msttDone
-	msttCase
-	msttEsac
-	msttWhile
-	msttUntil
-	msttFor
-	msttLbrace
-	msttRbrace
-	msttBang
-	msttIn
 )
 
 type MkShDummy struct {
