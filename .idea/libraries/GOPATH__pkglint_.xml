@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;pkglint&gt;">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/.." />
+      <root url="file://$PROJECT_DIR$/../../github.com" />
+      <root url="file://$PROJECT_DIR$/../../golang.org" />
+      <root url="file://$PROJECT_DIR$/../../9fans.net" />
+      <root url="file://$PROJECT_DIR$/../../roland-illig.de" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <excluded>
+      <root url="file://$PROJECT_DIR$" />
+    </excluded>
+  </library>
+</component>
