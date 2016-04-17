@@ -46,8 +46,8 @@ func (p *Parser) shAtomPlain() *ShAtom {
 	q := shqPlain
 	repl := p.repl
 	switch {
-	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShAtom{shtSpace, repl.m[0], q, nil}
+	case repl.AdvanceHspace():
+		return &ShAtom{shtSpace, repl.s, q, nil}
 	case repl.AdvanceStr(";;"):
 		return &ShAtom{shtCaseSeparator, repl.s, q, nil}
 	case repl.AdvanceStr(";"):
@@ -105,7 +105,7 @@ func (p *Parser) shAtomSquot() *ShAtom {
 }
 
 func (p *Parser) shAtomBackt() *ShAtom {
-	q := shqBackt
+	const q = shqBackt
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
@@ -114,8 +114,8 @@ func (p *Parser) shAtomBackt() *ShAtom {
 		return &ShAtom{shtWord, repl.s, shqPlain, nil}
 	case repl.AdvanceStr("'"):
 		return &ShAtom{shtWord, repl.s, shqBacktSquot, nil}
-	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShAtom{shtSpace, repl.m[0], shqBackt, nil}
+	case repl.AdvanceHspace():
+		return &ShAtom{shtSpace, repl.s, q, nil}
 	case repl.AdvanceStr(";;"):
 		return &ShAtom{shtCaseSeparator, repl.s, q, nil}
 	case repl.AdvanceStr(";"):
@@ -133,11 +133,11 @@ func (p *Parser) shAtomBackt() *ShAtom {
 	case repl.AdvanceStr("&"):
 		return &ShAtom{shtBackground, repl.s, q, nil}
 	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
-		return &ShAtom{shtRedirect, repl.m[0], q, nil}
+		return &ShAtom{shtRedirect, repl.s, q, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
-		return &ShAtom{shtComment, repl.m[0], q, nil}
+		return &ShAtom{shtComment, repl.s, q, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
-		return &ShAtom{shtWord, repl.m[0], q, nil}
+		return &ShAtom{shtWord, repl.s, q, nil}
 	}
 	return nil
 }
@@ -153,11 +153,11 @@ func (p *Parser) shAtomDquotBackt() *ShAtom {
 	case repl.AdvanceStr("'"):
 		return &ShAtom{shtWord, repl.s, shqDquotBacktSquot, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
-		return &ShAtom{shtComment, repl.m[0], q, nil}
+		return &ShAtom{shtComment, repl.s, q, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$)+`):
-		return &ShAtom{shtWord, repl.m[0], q, nil}
-	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShAtom{shtSpace, repl.m[0], q, nil}
+		return &ShAtom{shtWord, repl.s, q, nil}
+	case repl.AdvanceHspace():
+		return &ShAtom{shtSpace, repl.s, q, nil}
 	case repl.AdvanceStr("|"):
 		return &ShAtom{shtPipe, repl.s, q, nil}
 	}

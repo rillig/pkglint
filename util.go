@@ -291,13 +291,27 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 }
 
 func (pr *PrefixReplacer) AdvanceBytesFunc(fn func(c byte) bool) bool {
-	n := 0
-	for n < len(pr.rest) && fn(pr.rest[n]) {
-		n++
+	i := 0
+	for i < len(pr.rest) && fn(pr.rest[i]) {
+		i++
 	}
-	if n != 0 {
-		pr.s = pr.rest[:n]
-		pr.rest = pr.rest[n:]
+	if i != 0 {
+		pr.s = pr.rest[:i]
+		pr.rest = pr.rest[i:]
+		return true
+	}
+	return false
+}
+
+func (pr *PrefixReplacer) AdvanceHspace() bool {
+	i := 0
+	rest := pr.rest
+	for i < len(rest) && (rest[i] == ' ' || rest[i] == '\t') {
+		i++
+	}
+	if i != 0 {
+		pr.s = pr.rest[:i]
+		pr.rest = pr.rest[i:]
 		return true
 	}
 	return false
@@ -318,6 +332,7 @@ func (pr *PrefixReplacer) AdvanceRegexp(re string) bool {
 		}
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
+		pr.s = m[0]
 		return true
 	}
 	return false
