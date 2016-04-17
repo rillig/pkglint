@@ -7,7 +7,7 @@ import (
 // @Beta
 func (s *Suite) Test_Parser_ShAtom(c *check.C) {
 	checkRest := func(s string, expected ...*ShAtom) string {
-		p := NewParser(dummyLine, s)
+		p := NewShParser(dummyLine, s)
 		q := shqPlain
 		for _, exp := range expected {
 			c.Check(p.ShAtom(q), deepEquals, exp)
@@ -307,7 +307,7 @@ func (s *Suite) Test_Parser_ShAtom(c *check.C) {
 
 func (s *Suite) Test_Parser_ShAtom_Quoting(c *check.C) {
 	checkQuotingChange := func(input, expectedOutput string) {
-		p := NewParser(dummyLine, input)
+		p := NewShParser(dummyLine, input)
 		q := shqPlain
 		result := ""
 		for {
@@ -341,7 +341,7 @@ func (s *Suite) Test_Parser_ShAtom_Quoting(c *check.C) {
 
 func (s *Suite) Test_Parser_ShToken(c *check.C) {
 	check := func(s string, expected ...*ShToken) {
-		p := NewParser(dummyLine, s)
+		p := NewShParser(dummyLine, s)
 		for _, exp := range expected {
 			c.Check(p.ShToken(), deepEquals, exp)
 		}
@@ -386,7 +386,7 @@ func (s *Suite) Test_Parser_ShToken(c *check.C) {
 }
 
 func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
-	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
+	p := NewShParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
 
 	shcmd := p.ShSimpleCmd()
 
@@ -407,7 +407,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
 
 func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 	check := func(cmd string, expected *ShSimpleCmd) {
-		p := NewParser(dummyLine, cmd)
+		p := NewShParser(dummyLine, cmd)
 		shcmd := p.ShSimpleCmd()
 		if c.Check(shcmd, check.NotNil) {
 			c.Check(shcmd, deepEquals, expected)
@@ -507,4 +507,32 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 				NewShAtom(shtWord, "Squot", shqSquot),
 				NewShAtom(shtWord, "'", shqPlain)),
 		))
+
+	check("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
+		NewShSimpleCmd(0,
+			NewShToken("${RUN}",
+				NewShAtomVaruse("${RUN}", shqPlain, "RUN")),
+			NewShToken("subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
+				NewShAtom(shtWord, "subdir=", shqPlain),
+				NewShAtom(shtWord, "\"", shqDquot),
+				NewShAtom(shtWord, "`", shqDquotBackt),
+				NewShAtom(shtWord, "unzip", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "-c", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "\"", shqDquotBacktDquot),
+				NewShAtom(shtWord, "$$e", shqDquotBacktDquot),
+				NewShAtom(shtWord, "\"", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "install.rdf", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtPipe, "|", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "awk", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "'", shqDquotBacktSquot),
+				NewShAtom(shtWord, "/re/ { print \"hello\" }", shqDquotBacktSquot),
+				NewShAtom(shtWord, "'", shqDquotBackt),
+				NewShAtom(shtWord, "`", shqDquot),
+				NewShAtom(shtWord, "\"", shqPlain))))
 }

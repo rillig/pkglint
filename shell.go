@@ -410,10 +410,14 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 	if false {
-		p := NewParser(shline.line, shellcmd)
-		p.ShSimpleCmds()
+		p := NewShParser(shline.line, shellcmd)
+		cmds := p.ShSimpleCmds()
 		rest := p.Rest()
 		if rest != "" {
+			shline.line.Warnf("shellcmd=%q", shellcmd)
+			for _, cmd := range cmds {
+				shline.line.Warnf("Command %v", cmd)
+			}
 			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", rest)
 		}
 	}
@@ -931,7 +935,7 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 		defer tracecall(line, text)()
 	}
 
-	p := NewParser(line, text)
+	p := NewShParser(line, text)
 	tokens := p.ShAtoms()
 	word := ""
 	for _, token := range tokens {

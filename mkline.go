@@ -844,7 +844,7 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 		return vucExtentWord
 	}
 
-	tokens := NewParser(mkline.Line, mkline.Value()).ShAtoms()
+	tokens := NewShParser(mkline.Line, mkline.Value()).ShAtoms()
 	for i, token := range tokens {
 		if token.Type == shtVaruse {
 			extent := extent(tokens, i)

@@ -45,6 +45,22 @@ func (t ShAtomType) String() string {
 	}[t]
 }
 
+func (t ShAtomType) IsTokenDelimiter() bool {
+	switch t {
+	case shtSpace, shtSemicolon, shtCaseSeparator, shtParenOpen, shtParenClose, shtPipe, shtBackground, shtOr, shtAnd, shtRedirect:
+		return true
+	}
+	return false
+}
+
+func (t ShAtomType) IsCommandDelimiter() bool {
+	switch t {
+	case shtSemicolon, shtPipe, shtBackground, shtAnd, shtOr, shtCaseSeparator:
+		return true
+	}
+	return false
+}
+
 // @Beta
 type ShAtom struct {
 	Type    ShAtomType
@@ -125,6 +141,10 @@ func NewShToken(mkText string, atoms ...*ShAtom) *ShToken {
 
 func (token *ShToken) String() string {
 	return fmt.Sprintf("ShToken(%v)", token.Atoms)
+}
+
+func (token *ShToken) IsAssignment() bool {
+	return matches(token.MkText, `^[A-Za-z_]\w*=`)
 }
 
 type ShSimpleCmd struct {

@@ -1,7 +1,15 @@
 package main
 
+type ShParser struct {
+	*Parser
+}
+
+func NewShParser(line *Line, text string) *ShParser {
+	return &ShParser{NewParser(line, text)}
+}
+
 // See ShQuote.Feed
-func (p *Parser) ShAtom(quoting ShQuoting) *ShAtom {
+func (p *ShParser) ShAtom(quoting ShQuoting) *ShAtom {
 	if p.EOF() {
 		return nil
 	}
@@ -42,7 +50,7 @@ func (p *Parser) ShAtom(quoting ShQuoting) *ShAtom {
 	return atom
 }
 
-func (p *Parser) shAtomPlain() *ShAtom {
+func (p *ShParser) shAtomPlain() *ShAtom {
 	q := shqPlain
 	repl := p.repl
 	switch {
@@ -80,7 +88,7 @@ func (p *Parser) shAtomPlain() *ShAtom {
 	return nil
 }
 
-func (p *Parser) shAtomDquot() *ShAtom {
+func (p *ShParser) shAtomDquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
@@ -93,7 +101,7 @@ func (p *Parser) shAtomDquot() *ShAtom {
 	return nil
 }
 
-func (p *Parser) shAtomSquot() *ShAtom {
+func (p *ShParser) shAtomSquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
@@ -104,7 +112,7 @@ func (p *Parser) shAtomSquot() *ShAtom {
 	return nil
 }
 
-func (p *Parser) shAtomBackt() *ShAtom {
+func (p *ShParser) shAtomBackt() *ShAtom {
 	const q = shqBackt
 	repl := p.repl
 	switch {
@@ -142,7 +150,7 @@ func (p *Parser) shAtomBackt() *ShAtom {
 	return nil
 }
 
-func (p *Parser) shAtomDquotBackt() *ShAtom {
+func (p *ShParser) shAtomDquotBackt() *ShAtom {
 	const q = shqDquotBackt
 	repl := p.repl
 	switch {
@@ -154,17 +162,33 @@ func (p *Parser) shAtomDquotBackt() *ShAtom {
 		return &ShAtom{shtWord, repl.s, shqDquotBacktSquot, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
 		return &ShAtom{shtComment, repl.s, q, nil}
+	case repl.AdvanceStr(";;"):
+		return &ShAtom{shtCaseSeparator, repl.s, q, nil}
+	case repl.AdvanceStr(";"):
+		return &ShAtom{shtSemicolon, repl.s, q, nil}
+	case repl.AdvanceStr("("):
+		return &ShAtom{shtParenOpen, repl.s, q, nil}
+	case repl.AdvanceStr(")"):
+		return &ShAtom{shtParenClose, repl.s, q, nil}
+	case repl.AdvanceStr("||"):
+		return &ShAtom{shtOr, repl.s, q, nil}
+	case repl.AdvanceStr("&&"):
+		return &ShAtom{shtAnd, repl.s, q, nil}
+	case repl.AdvanceStr("|"):
+		return &ShAtom{shtPipe, repl.s, q, nil}
+	case repl.AdvanceStr("&"):
+		return &ShAtom{shtBackground, repl.s, q, nil}
+	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
+		return &ShAtom{shtRedirect, repl.s, q, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$)+`):
 		return &ShAtom{shtWord, repl.s, q, nil}
 	case repl.AdvanceHspace():
 		return &ShAtom{shtSpace, repl.s, q, nil}
-	case repl.AdvanceStr("|"):
-		return &ShAtom{shtPipe, repl.s, q, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shAtomBacktDquot() *ShAtom {
+func (p *ShParser) shAtomBacktDquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
@@ -175,7 +199,7 @@ func (p *Parser) shAtomBacktDquot() *ShAtom {
 	return nil
 }
 
-func (p *Parser) shAtomBacktSquot() *ShAtom {
+func (p *ShParser) shAtomBacktSquot() *ShAtom {
 	const q = shqBacktSquot
 	repl := p.repl
 	switch {
@@ -187,7 +211,7 @@ func (p *Parser) shAtomBacktSquot() *ShAtom {
 	return nil
 }
 
-func (p *Parser) shAtomDquotBacktDquot() *ShAtom {
+func (p *ShParser) shAtomDquotBacktDquot() *ShAtom {
 	const q = shqDquotBacktDquot
 	repl := p.repl
 	switch {
@@ -199,7 +223,7 @@ func (p *Parser) shAtomDquotBacktDquot() *ShAtom {
 	return nil
 }
 
-func (p *Parser) shAtomDquotBacktSquot() *ShAtom {
+func (p *ShParser) shAtomDquotBacktSquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
@@ -210,7 +234,7 @@ func (p *Parser) shAtomDquotBacktSquot() *ShAtom {
 	return nil
 }
 
-func (p *Parser) ShAtoms() []*ShAtom {
+func (p *ShParser) ShAtoms() []*ShAtom {
 	var atoms []*ShAtom
 	q := shqPlain
 	for {
@@ -223,7 +247,7 @@ func (p *Parser) ShAtoms() []*ShAtom {
 	}
 }
 
-func (p *Parser) ShToken() *ShToken {
+func (p *ShParser) ShToken() *ShToken {
 	inimark := p.repl.Mark()
 	q := shqPlain
 	var atoms []*ShAtom
@@ -232,14 +256,8 @@ nextatom:
 	mark := p.repl.Mark()
 	atom := p.ShAtom(q)
 
-	if atom == nil {
+	if atom == nil || atom.Quoting == shqPlain && atom.Type.IsTokenDelimiter() {
 		goto end
-	}
-	if atom.Quoting == shqPlain {
-		switch atom.Type {
-		case shtSpace, shtSemicolon, shtPipe, shtBackground, shtOr, shtAnd:
-			goto end
-		}
 	}
 
 	switch {
@@ -268,7 +286,7 @@ end:
 }
 
 // @Beta
-func (p *Parser) ShSimpleCmd() *ShSimpleCmd {
+func (p *ShParser) ShSimpleCmd() *ShSimpleCmd {
 	repl := p.repl
 	mark := repl.Mark()
 
@@ -287,7 +305,7 @@ nexttoken:
 end:
 	if len(tokens) != 0 {
 		i := 0
-		for i < len(tokens) && matches(tokens[i].MkText, `^[A-Za-z_]\w*=`) {
+		for i < len(tokens) && tokens[i].IsAssignment() {
 			i++
 		}
 		var cmd *ShToken
@@ -302,7 +320,7 @@ end:
 }
 
 // @Beta
-func (p *Parser) ShSimpleCmds() []*ShSimpleCmd {
+func (p *ShParser) ShSimpleCmds() []*ShSimpleCmd {
 	var cmds []*ShSimpleCmd
 
 nextcommand:
@@ -315,15 +333,10 @@ nextcommand:
 	}
 	cmds = append(cmds, cmd)
 	mark := p.repl.Mark()
-nextatom:
+	_ = p.Hspace()
 	atom := p.ShAtom(shqPlain)
-	if atom != nil {
-		switch atom.Type {
-		case shtSpace:
-			goto nextatom
-		case shtSemicolon, shtBackground, shtAnd, shtOr:
-			goto nextcommand
-		}
+	if atom != nil && atom.Type.IsCommandDelimiter() {
+		goto nextcommand
 	}
 	p.repl.Reset(mark)
 	return cmds
