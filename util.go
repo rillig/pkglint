@@ -266,6 +266,8 @@ func replaceFirst(s, re, replacement string) ([]string, string) {
 	return nil, s
 }
 
+type PrefixReplacerMark string
+
 type PrefixReplacer struct {
 	rest string
 	s    string   // The last match from a prefix
@@ -346,11 +348,11 @@ func (pr *PrefixReplacer) PeekByte() int {
 	return int(rest[0])
 }
 
-func (pr *PrefixReplacer) Mark() string {
-	return pr.rest
+func (pr *PrefixReplacer) Mark() PrefixReplacerMark {
+	return PrefixReplacerMark(pr.rest)
 }
-func (pr *PrefixReplacer) Reset(mark string) {
-	pr.rest = mark
+func (pr *PrefixReplacer) Reset(mark PrefixReplacerMark) {
+	pr.rest = string(mark)
 }
 func (pr *PrefixReplacer) Skip(n int) {
 	pr.rest = pr.rest[n:]
@@ -358,8 +360,8 @@ func (pr *PrefixReplacer) Skip(n int) {
 func (pr *PrefixReplacer) SkipSpace() {
 	pr.rest = strings.TrimLeft(pr.rest, " \t")
 }
-func (pr *PrefixReplacer) Since(mark string) string {
-	return mark[:len(mark)-len(pr.rest)]
+func (pr *PrefixReplacer) Since(mark PrefixReplacerMark) string {
+	return string(mark[:len(mark)-len(pr.rest)])
 }
 func (pr *PrefixReplacer) AdvanceRest() string {
 	rest := pr.rest
