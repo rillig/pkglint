@@ -687,6 +687,34 @@ func (p *Parser) Hspace() bool {
 }
 
 // @Beta
+func (p *Parser) ShCommands() []*ShCommand {
+	var cmds []*ShCommand
+
+nextcommand:
+	cmd := p.ShCommand()
+	if cmd == nil && p.repl.AdvanceRegexp(`^#.*`) {
+		goto nextcommand
+	}
+	if cmd == nil {
+		return cmds
+	}
+	cmds = append(cmds, cmd)
+	mark := p.repl.Mark()
+nextlex:
+	shlex := p.ShLexeme(shqPlain)
+	if shlex != nil {
+		switch shlex.Type {
+		case shlSpace:
+			goto nextlex
+		case shlSemicolon, shlBackground, shlAnd, shlOr:
+			goto nextcommand
+		}
+	}
+	p.repl.Reset(mark)
+	return cmds
+}
+
+// @Beta
 func (p *Parser) ShCommand() *ShCommand {
 	repl := p.repl
 	mark := repl.Mark()
@@ -750,26 +778,36 @@ func (p *Parser) ShWord() *ShWord {
 nextlex:
 	mark := p.repl.Mark()
 	lex := p.ShLexeme(q)
-	if lex != nil {
-		switch {
-		case lex.Quoting == shqPlain && (lex.Type == shlSpace || lex.Type == shlSemicolon):
-			break
-		case lex.Type == shlVaruse,
-			lex.Type == shlText,
-			lex.Type == shlSpace,
-			lex.Quoting != shqPlain:
-			shword.Atoms = append(shword.Atoms, lex)
-			q = lex.Quoting
-			goto nextlex
-		default:
-			p.repl.Reset(mark)
-			p.line.Warnf("Pkglint parse error in Parser.ShWord at %q", p.repl.rest)
-			p.repl.Reset(inimark)
-			return nil
+
+	if lex == nil {
+		goto end
+	}
+	if lex.Quoting == shqPlain {
+		switch lex.Type {
+		case shlSpace, shlSemicolon, shlPipe, shlBackground, shlOr, shlAnd:
+			goto end
 		}
 	}
-	p.repl.Reset(mark)
 
+	switch {
+	case lex.Type == shlComment:
+		goto nextlex
+	case lex.Type == shlVaruse,
+		lex.Type == shlText,
+		lex.Type == shlSpace,
+		lex.Quoting != shqPlain:
+		shword.Atoms = append(shword.Atoms, lex)
+		q = lex.Quoting
+		goto nextlex
+	default:
+		p.repl.Reset(mark)
+		p.line.Warnf("Pkglint parse error in Parser.ShWord at %q (lextype=%s quoting=%s)", p.repl.rest, lex.Type, lex.Quoting)
+		p.repl.Reset(inimark)
+		return nil
+	}
+
+end:
+	p.repl.Reset(mark)
 	if len(shword.Atoms) != 0 {
 		return shword
 	}

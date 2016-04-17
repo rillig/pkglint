@@ -243,9 +243,9 @@ func (s *Suite) TestShellLine_CheckShelltext_InternalError1(c *check.C) {
 		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
 		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
 		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
+		"WARN: fname:1: Pkglint parse error in ShellLine.CheckShellCommand at \"\\\\\" (state=start)\n"+
 		"WARN: fname:1: Unknown shell command \"echo\".\n"+
-		"ERROR: fname:1: Internal pkglint error: ShellLine.CheckWord quoting=plain, rest=\"\\\\foo\", token=\"\\\\foo\"\n"+
-		"ERROR: fname:1: Internal pkglint error: ShellLine.CheckShellCommand state=continuation rest=\"\\\\\" shellcmd=\"echo \\\\foo   bar\\\\\"\n")
+		"WARN: fname:1: Pkglint parse error in ShellLine.CheckWord at \"\\\\foo\" (quoting=plain, rest=\"\\\\foo\")\n")
 }
 
 func (s *Suite) TestShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {

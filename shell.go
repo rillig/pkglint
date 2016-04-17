@@ -254,7 +254,7 @@ outer:
 	}
 
 	if strings.TrimSpace(parser.Rest()) != "" {
-		line.Errorf("Internal pkglint error: ShellLine.CheckWord quoting=%s, rest=%q, token=%q", quoting, parser.Rest(), token)
+		line.Warnf("Pkglint parse error in ShellLine.CheckWord at %q (quoting=%s, rest=%q)", token, quoting, parser.Rest())
 	}
 }
 
@@ -336,7 +336,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplace
 			unescaped += repl.m[1]
 
 		default:
-			line.Errorf("Internal pkglint error: checklineMkShellword shellword=%q rest=%q", shellword, repl.rest)
+			line.Errorf("Internal pkglint error in ShellLine.unescapeBackticks at %q (rest=%q)", shellword, repl.rest)
 		}
 	}
 	line.Error1("Unfinished backquotes: rest=%q", repl.rest)
@@ -409,8 +409,21 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 }
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
+	if false {
+		p := NewParser(shline.line, shellcmd)
+		p.ShCommands()
+		rest := p.Rest()
+		if rest != "" {
+			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", rest)
+		}
+	}
+
 	state := scstStart
 	tokens, rest := splitIntoShellTokens(shline.line, shellcmd)
+	if rest != "" {
+		shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q (state=%s)", rest, state)
+	}
+
 	prevToken := ""
 	for _, token := range tokens {
 		if G.opts.Debug {
@@ -445,10 +458,6 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 
 		state = shline.nextState(state, token)
 		prevToken = token
-	}
-
-	if rest != "" {
-		shline.line.Errorf("Internal pkglint error: ShellLine.CheckShellCommand state=%s rest=%q shellcmd=%q", state, rest, shellcmd)
 	}
 }
 

@@ -14,6 +14,7 @@ func (shcmd *ShCommand) String() string {
 	return fmt.Sprintf("ShCommand(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
 }
 
+// ShWord combines lexemes to form (roughly speaking) space-separated items.
 type ShWord struct {
 	Atoms []*ShLexeme
 }
