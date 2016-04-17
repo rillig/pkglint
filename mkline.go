@@ -831,13 +831,13 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 	extent := func(tokens []*ShToken, i int) vucExtent {
 		if i-1 >= 0 {
 			typ := tokens[i-1].Type
-			if typ != shlSpace && typ != shlSemicolon && typ != shlParenOpen && typ != shlParenClose {
+			if typ != shtSpace && typ != shtSemicolon && typ != shtParenOpen && typ != shtParenClose {
 				return vucExtentWordpart
 			}
 		}
 		if i+1 < len(tokens) {
 			typ := tokens[i+1].Type
-			if typ != shlSpace && typ != shlSemicolon && typ != shlParenOpen && typ != shlParenClose {
+			if typ != shtSpace && typ != shtSemicolon && typ != shtParenOpen && typ != shtParenClose {
 				return vucExtentWordpart
 			}
 		}
@@ -846,7 +846,7 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 
 	tokens := NewParser(mkline.Line, mkline.Value()).ShTokens()
 	for i, token := range tokens {
-		if token.Type == shlVaruse {
+		if token.Type == shtVaruse {
 			extent := extent(tokens, i)
 			vuc := &VarUseContext{vartype, time, token.Quoting.ToVarUseContext(), extent}
 			mkline.CheckVaruse(token.Data.(*MkVarUse), vuc)

@@ -5,8 +5,8 @@ import (
 )
 
 func (s *Suite) Test_ShToken_String(c *check.C) {
-	c.Check(shlBacktClose.String(), equals, "backtClose")
-	c.Check(shlComment.String(), equals, "comment")
+	c.Check(shtBacktClose.String(), equals, "backtClose")
+	c.Check(shtComment.String(), equals, "comment")
 }
 
 func (s *Suite) Test_ShQuoting_String(c *check.C) {

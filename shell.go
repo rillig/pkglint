@@ -935,7 +935,7 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 	tokens := p.ShTokens()
 	word := ""
 	for _, token := range tokens {
-		if token.Type == shlSpace && token.Quoting == shqPlain {
+		if token.Type == shtSpace && token.Quoting == shqPlain {
 			words = append(words, word)
 			word = ""
 		} else {

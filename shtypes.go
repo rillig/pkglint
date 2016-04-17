@@ -41,10 +41,10 @@ type ShToken struct {
 }
 
 func (token *ShToken) String() string {
-	if token.Type == shlText && token.Quoting == shqPlain && token.Data == nil {
+	if token.Type == shtWord && token.Quoting == shqPlain && token.Data == nil {
 		return fmt.Sprintf("%q", token.Text)
 	}
-	if token.Type == shlVaruse {
+	if token.Type == shtVaruse {
 		varuse := token.Data.(*MkVarUse)
 		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
 	}
@@ -54,31 +54,31 @@ func (token *ShToken) String() string {
 type ShTokenType uint8
 
 const (
-	shlSpace         ShTokenType = iota
-	shlVaruse                    // ${PREFIX}
-	shlText                      //
-	shlSemicolon                 // ;
-	shlCaseSeparator             // ;;
-	shlParenOpen                 // (
-	shlParenClose                // )
-	shlBraceOpen                 // {
-	shlBraceClose                // }
-	shlBacktOpen                 // `
-	shlBacktClose                // `
-	shlSubshellOpen              // $(
-	shlPipe                      // |
-	shlBackground                // &
-	shlOr                        // ||
-	shlAnd                       // &&
-	shlRedirect                  // >, <, >>
-	shlComment                   // # ...
+	shtSpace         ShTokenType = iota
+	shtVaruse                    // ${PREFIX}
+	shtWord                      //
+	shtSemicolon                 // ;
+	shtCaseSeparator             // ;;
+	shtParenOpen                 // (
+	shtParenClose                // )
+	shtBraceOpen                 // {
+	shtBraceClose                // }
+	shtBacktOpen                 // `
+	shtBacktClose                // `
+	shtSubshellOpen              // $(
+	shtPipe                      // |
+	shtBackground                // &
+	shtOr                        // ||
+	shtAnd                       // &&
+	shtRedirect                  // >, <, >>
+	shtComment                   // # ...
 )
 
 func (t ShTokenType) String() string {
 	return [...]string{
 		"space",
 		"varuse",
-		"text",
+		"word",
 		"semicolon",
 		"caseSeparator",
 		"parenOpen", "parenClose",
