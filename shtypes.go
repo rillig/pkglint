@@ -53,6 +53,14 @@ type ShAtom struct {
 	Data    interface{}
 }
 
+func NewShAtom(typ ShAtomType, text string, quoting ShQuoting) *ShAtom {
+	return &ShAtom{typ, text, quoting, nil}
+}
+
+func NewShAtomVaruse(text string, quoting ShQuoting, varname string, modifiers ...string) *ShAtom {
+	return &ShAtom{shtVaruse, text, quoting, NewMkVarUse(varname, modifiers...)}
+}
+
 func (token *ShAtom) String() string {
 	if token.Type == shtWord && token.Quoting == shqPlain && token.Data == nil {
 		return fmt.Sprintf("%q", token.Text)
@@ -105,30 +113,33 @@ func (q ShQuoting) ToVarUseContext() vucQuoting {
 	return vucQuotUnknown
 }
 
-// ShWord combines tokens to form (roughly speaking) space-separated items.
-type ShWord struct {
-	Atoms []*ShAtom
+// See http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_10_02
+type ShToken struct {
+	MkText string // The text as it appeared in the Makefile, after replacing `\#` with `#`
+	Atoms  []*ShAtom
 }
 
-func (shword *ShWord) String() string {
-	return fmt.Sprintf("ShWord(%v)", shword.Atoms)
+func NewShToken(mkText string, atoms ...*ShAtom) *ShToken {
+	return &ShToken{mkText, atoms}
 }
 
-type ShVarassign struct {
-	Name  string
-	Value *ShWord // maybe
-}
-
-func (shva *ShVarassign) String() string {
-	return fmt.Sprintf("ShVarassign(%q, %v)", shva.Name, shva.Value)
+func (token *ShToken) String() string {
+	return fmt.Sprintf("ShToken(%v)", token.Atoms)
 }
 
 type ShSimpleCmd struct {
-	Varassigns []*ShVarassign
-	Command    *ShWord
-	Args       []*ShWord
+	Tokens  []*ShToken // Can be variable assignments, the command name, arguments, redirections.
+	Command *ShToken   // One of the above Tokens.
 }
 
-func (shcmd *ShSimpleCmd) String() string {
-	return fmt.Sprintf("ShSimpleCmd(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
+func NewShSimpleCmd(cmdindex int, tokens ...*ShToken) *ShSimpleCmd {
+	var cmd *ShToken
+	if cmdindex >= 0 {
+		cmd = tokens[cmdindex]
+	}
+	return &ShSimpleCmd{tokens, cmd}
+}
+
+func (cmd *ShSimpleCmd) String() string {
+	return fmt.Sprintf("ShSimpleCmd(%v)", cmd.Tokens)
 }

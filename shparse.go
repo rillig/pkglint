@@ -223,10 +223,11 @@ func (p *Parser) ShAtoms() []*ShAtom {
 	}
 }
 
-func (p *Parser) ShWord() *ShWord {
-	shword := &ShWord{}
+func (p *Parser) ShToken() *ShToken {
 	inimark := p.repl.Mark()
 	q := shqPlain
+	var atoms []*ShAtom
+
 nextatom:
 	mark := p.repl.Mark()
 	atom := p.ShAtom(q)
@@ -248,7 +249,7 @@ nextatom:
 		atom.Type == shtWord,
 		atom.Type == shtSpace,
 		atom.Quoting != shqPlain:
-		shword.Atoms = append(shword.Atoms, atom)
+		atoms = append(atoms, atom)
 		q = atom.Quoting
 		goto nextatom
 	default:
@@ -260,23 +261,9 @@ nextatom:
 
 end:
 	p.repl.Reset(mark)
-	if len(shword.Atoms) != 0 {
-		return shword
+	if len(atoms) != 0 {
+		return &ShToken{p.repl.Since(inimark), atoms}
 	}
-	return nil
-}
-
-func (p *Parser) ShVarassign() *ShVarassign {
-	mark := p.repl.Mark()
-	if p.repl.AdvanceRegexp(`^(\w+)=`) {
-		varname := p.repl.m[1]
-		value := p.ShWord()
-		if value == nil {
-			value = &ShWord{} // Assignment of empty value
-		}
-		return &ShVarassign{varname, value}
-	}
-	p.repl.Reset(mark)
 	return nil
 }
 
@@ -285,38 +272,29 @@ func (p *Parser) ShSimpleCmd() *ShSimpleCmd {
 	repl := p.repl
 	mark := repl.Mark()
 
-	var varassigns []*ShVarassign
-	var command *ShWord
-	var args []*ShWord
-
+	var tokens []*ShToken
 	_ = p.Hspace()
 
-nextvarassign:
-	if varassign := p.ShVarassign(); varassign != nil {
-		varassigns = append(varassigns, varassign)
+nexttoken:
+	if token := p.ShToken(); token != nil {
+		tokens = append(tokens, token)
 		if !p.Hspace() {
 			goto end
 		}
-		goto nextvarassign
-	}
-
-	command = p.ShWord()
-	if command == nil || !p.Hspace() {
-		goto end
-	}
-
-nextarg:
-	if arg := p.ShWord(); arg != nil {
-		args = append(args, arg)
-		if !p.Hspace() {
-			goto end
-		}
-		goto nextarg
+		goto nexttoken
 	}
 
 end:
-	if len(varassigns) != 0 || command != nil {
-		return &ShSimpleCmd{varassigns, command, args}
+	if len(tokens) != 0 {
+		i := 0
+		for i < len(tokens) && matches(tokens[i].MkText, `^[A-Za-z_]\w*=`) {
+			i++
+		}
+		var cmd *ShToken
+		if i < len(tokens) {
+			cmd = tokens[i]
+		}
+		return &ShSimpleCmd{tokens, cmd}
 	}
 
 	p.repl.Reset(mark)

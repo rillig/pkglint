@@ -339,184 +339,172 @@ func (s *Suite) Test_Parser_ShAtom_Quoting(c *check.C) {
 	checkQuotingChange("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
 }
 
-func (s *Suite) Test_Parser_ShWord(c *check.C) {
-	check := func(s string, expected ...*ShWord) {
+func (s *Suite) Test_Parser_ShToken(c *check.C) {
+	check := func(s string, expected ...*ShToken) {
 		p := NewParser(dummyLine, s)
 		for _, exp := range expected {
-			c.Check(p.ShWord(), deepEquals, exp)
+			c.Check(p.ShToken(), deepEquals, exp)
 		}
 		c.Check(p.Rest(), equals, "")
-	}
-	token := func(typ ShAtomType, s string, q ShQuoting) *ShAtom {
-		return &ShAtom{typ, s, q, nil}
 	}
 
 	check("",
 		nil)
 
 	check("echo",
-		&ShWord{[]*ShAtom{
-			{shtWord, "echo", shqPlain, nil}}})
+		NewShToken("echo",
+			NewShAtom(shtWord, "echo", shqPlain)))
 
 	check("`cat file`",
-		&ShWord{[]*ShAtom{
-			{shtWord, "`", shqBackt, nil},
-			{shtWord, "cat", shqBackt, nil},
-			{shtSpace, " ", shqBackt, nil},
-			{shtWord, "file", shqBackt, nil},
-			{shtWord, "`", shqPlain, nil}}})
+		NewShToken("`cat file`",
+			NewShAtom(shtWord, "`", shqBackt),
+			NewShAtom(shtWord, "cat", shqBackt),
+			NewShAtom(shtSpace, " ", shqBackt),
+			NewShAtom(shtWord, "file", shqBackt),
+			NewShAtom(shtWord, "`", shqPlain)))
 
 	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		&ShWord{[]*ShAtom{
-			{shtWord, "PAGES=", shqPlain, nil},
-			{shtWord, "\"", shqDquot, nil},
-			{shtWord, "`", shqDquotBackt, nil},
-			{shtWord, "ls", shqDquotBackt, nil},
-			{shtSpace, " ", shqDquotBackt, nil},
-			{shtWord, "-1", shqDquotBackt, nil},
-			{shtSpace, " ", shqDquotBackt, nil},
-			{shtPipe, "|", shqDquotBackt, nil},
-			token(shtSpace, " ", shqDquotBackt),
-			{shtVaruse, "${SED}", shqDquotBackt, &MkVarUse{"SED", nil}},
-			token(shtSpace, " ", shqDquotBackt),
-			token(shtWord, "-e", shqDquotBackt),
-			token(shtSpace, " ", shqDquotBackt),
-			token(shtWord, "'", shqDquotBacktSquot),
-			token(shtWord, "s,3qt$$,3,", shqDquotBacktSquot),
-			token(shtWord, "'", shqDquotBackt),
-			token(shtWord, "`", shqDquot),
-			token(shtWord, "\"", shqPlain)}})
+		NewShToken("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+			NewShAtom(shtWord, "PAGES=", shqPlain),
+			NewShAtom(shtWord, "\"", shqDquot),
+			NewShAtom(shtWord, "`", shqDquotBackt),
+			NewShAtom(shtWord, "ls", shqDquotBackt),
+			NewShAtom(shtSpace, " ", shqDquotBackt),
+			NewShAtom(shtWord, "-1", shqDquotBackt),
+			NewShAtom(shtSpace, " ", shqDquotBackt),
+			NewShAtom(shtPipe, "|", shqDquotBackt),
+			NewShAtom(shtSpace, " ", shqDquotBackt),
+			NewShAtomVaruse("${SED}", shqDquotBackt, "SED"),
+			NewShAtom(shtSpace, " ", shqDquotBackt),
+			NewShAtom(shtWord, "-e", shqDquotBackt),
+			NewShAtom(shtSpace, " ", shqDquotBackt),
+			NewShAtom(shtWord, "'", shqDquotBacktSquot),
+			NewShAtom(shtWord, "s,3qt$$,3,", shqDquotBacktSquot),
+			NewShAtom(shtWord, "'", shqDquotBackt),
+			NewShAtom(shtWord, "`", shqDquot),
+			NewShAtom(shtWord, "\"", shqPlain)))
 }
 
 func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
-	word := func(tokens ...*ShAtom) *ShWord {
-		return &ShWord{tokens}
-	}
-	plain := func(s string) *ShAtom {
-		return &ShAtom{shtWord, s, shqPlain, nil}
-	}
-	tvaruse := func(s, varname string, modifiers ...string) *ShAtom {
-		return &ShAtom{shtVaruse, s, shqPlain, &MkVarUse{varname, modifiers}}
-	}
-	plainword := func(s string) *ShWord {
-		return &ShWord{[]*ShAtom{plain(s)}}
-	}
-
 	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
 
 	shcmd := p.ShSimpleCmd()
 
-	expected := &ShSimpleCmd{
-		[]*ShVarassign{&ShVarassign{"PATH", plainword("/nonexistent")}},
-		plainword("env"),
-		[]*ShWord{word(plain("PATH="), tvaruse("${PATH:Q}", "PATH", "Q")), plainword("true")}}
+	expected := NewShSimpleCmd(1,
+		NewShToken("PATH=/nonexistent",
+			NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
+		NewShToken("env",
+			NewShAtom(shtWord, "env", shqPlain)),
+		NewShToken("PATH=${PATH:Q}",
+			NewShAtom(shtWord, "PATH=", shqPlain),
+			NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
+		NewShToken("true",
+			NewShAtom(shtWord, "true", shqPlain)))
 	c.Check(shcmd, deepEquals, expected)
-	c.Check(shcmd.String(), equals, "ShSimpleCmd([ShVarassign(\"PATH\", ShWord([\"/nonexistent\"]))], ShWord([\"env\"]), [ShWord([\"PATH=\" varuse(\"PATH:Q\")]) ShWord([\"true\"])])")
+	c.Check(shcmd.String(), equals, "ShSimpleCmd([ShToken([\"PATH=/nonexistent\"]) ShToken([\"env\"]) ShToken([\"PATH=\" varuse(\"PATH:Q\")]) ShToken([\"true\"])])")
 	c.Check(p.Rest(), equals, "")
 }
 
 func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
-	check := func(cmd, expected string) {
+	check := func(cmd string, expected *ShSimpleCmd) {
 		p := NewParser(dummyLine, cmd)
 		shcmd := p.ShSimpleCmd()
 		if c.Check(shcmd, check.NotNil) {
-			c.Check(shcmd.String(), equals, expected)
+			c.Check(shcmd, deepEquals, expected)
 		}
 		c.Check(p.Rest(), equals, "")
 	}
 
 	check("echo ${PKGNAME:Q}",
-		"ShSimpleCmd([], ShWord([\"echo\"]), [ShWord([varuse(\"PKGNAME:Q\")])])")
+		NewShSimpleCmd(0,
+			NewShToken("echo", NewShAtom(shtWord, "echo", shqPlain)),
+			NewShToken("${PKGNAME:Q}", NewShAtomVaruse("${PKGNAME:Q}", shqPlain, "PKGNAME", "Q"))))
 
-	check("${ECHO} \"Double-quoted\"",
-		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
-			"ShAtom(word, \"\\\"\", d) "+
-			"ShAtom(word, \"Double-quoted\", d) "+
-			"\"\\\"\""+
-			"])])")
+	check("${ECHO} \"Double-quoted\" 'Single-quoted'",
+		NewShSimpleCmd(0,
+			NewShToken("${ECHO}", NewShAtomVaruse("${ECHO}", shqPlain, "ECHO")),
+			NewShToken("\"Double-quoted\"",
+				NewShAtom(shtWord, "\"", shqDquot),
+				NewShAtom(shtWord, "Double-quoted", shqDquot),
+				NewShAtom(shtWord, "\"", shqPlain)),
+			NewShToken("'Single-quoted'",
+				NewShAtom(shtWord, "'", shqSquot),
+				NewShAtom(shtWord, "Single-quoted", shqSquot),
+				NewShAtom(shtWord, "'", shqPlain))))
 
-	check("${ECHO} 'Single-quoted'",
-		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
-			"ShAtom(word, \"'\", s) "+
-			"ShAtom(word, \"Single-quoted\", s) "+
-			"\"'\""+
-			"])])")
-
-	check("`cat plain`",
-		"ShSimpleCmd([], ShWord(["+
-			"ShAtom(word, \"`\", b) "+
-			"ShAtom(word, \"cat\", b) "+
-			"ShAtom(space, \" \", b) "+
-			"ShAtom(word, \"plain\", b) "+
-			"\"`\""+
-			"]), [])")
-
-	check("\"`cat double`\"",
-		"ShSimpleCmd([], ShWord(["+
-			"ShAtom(word, \"\\\"\", d) "+
-			"ShAtom(word, \"`\", db) "+
-			"ShAtom(word, \"cat\", db) "+
-			"ShAtom(space, \" \", db) "+
-			"ShAtom(word, \"double\", db) "+
-			"ShAtom(word, \"`\", d) "+
-			"\"\\\"\""+
-			"]), [])")
+	check("`cat plain` \"`cat double`\" '`cat single`'",
+		NewShSimpleCmd(0,
+			NewShToken("`cat plain`",
+				NewShAtom(shtWord, "`", shqBackt),
+				NewShAtom(shtWord, "cat", shqBackt),
+				NewShAtom(shtSpace, " ", shqBackt),
+				NewShAtom(shtWord, "plain", shqBackt),
+				NewShAtom(shtWord, "`", shqPlain)),
+			NewShToken("\"`cat double`\"",
+				NewShAtom(shtWord, "\"", shqDquot),
+				NewShAtom(shtWord, "`", shqDquotBackt),
+				NewShAtom(shtWord, "cat", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "double", shqDquotBackt),
+				NewShAtom(shtWord, "`", shqDquot),
+				NewShAtom(shtWord, "\"", shqPlain)),
+			NewShToken("'`cat single`'",
+				NewShAtom(shtWord, "'", shqSquot),
+				NewShAtom(shtWord, "`cat single`", shqSquot),
+				NewShAtom(shtWord, "'", shqPlain))))
 
 	check("`\"one word\"`",
-		"ShSimpleCmd([], ShWord(["+
-			"ShAtom(word, \"`\", b) "+
-			"ShAtom(word, \"\\\"\", bd) "+
-			"ShAtom(word, \"one word\", bd) "+
-			"ShAtom(word, \"\\\"\", b) "+
-			"\"`\""+
-			"]), [])")
+		NewShSimpleCmd(0,
+			NewShToken("`\"one word\"`",
+				NewShAtom(shtWord, "`", shqBackt),
+				NewShAtom(shtWord, "\"", shqBacktDquot),
+				NewShAtom(shtWord, "one word", shqBacktDquot),
+				NewShAtom(shtWord, "\"", shqBackt),
+				NewShAtom(shtWord, "`", shqPlain))))
 
 	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		"ShSimpleCmd([ShVarassign(\"PAGES\", ShWord(["+
-			"ShAtom(word, \"\\\"\", d) "+
-			"ShAtom(word, \"`\", db) "+
-			"ShAtom(word, \"ls\", db) "+
-			"ShAtom(space, \" \", db) "+
-			"ShAtom(word, \"-1\", db) "+
-			"ShAtom(space, \" \", db) "+
-			"ShAtom(pipe, \"|\", db) "+
-			"ShAtom(space, \" \", db) "+
-			"varuse(\"SED\") "+
-			"ShAtom(space, \" \", db) "+
-			"ShAtom(word, \"-e\", db) "+
-			"ShAtom(space, \" \", db) "+
-			"ShAtom(word, \"'\", dbs) "+
-			"ShAtom(word, \"s,3qt$$,3,\", dbs) "+
-			"ShAtom(word, \"'\", db) "+
-			"ShAtom(word, \"`\", d) "+
-			"\"\\\"\""+
-			"]))], <nil>, [])")
+		NewShSimpleCmd(-1,
+			NewShToken("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+				NewShAtom(shtWord, "PAGES=", shqPlain),
+				NewShAtom(shtWord, "\"", shqDquot),
+				NewShAtom(shtWord, "`", shqDquotBackt),
+				NewShAtom(shtWord, "ls", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "-1", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtPipe, "|", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtomVaruse("${SED}", shqDquotBackt, "SED"),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "-e", shqDquotBackt),
+				NewShAtom(shtSpace, " ", shqDquotBackt),
+				NewShAtom(shtWord, "'", shqDquotBacktSquot),
+				NewShAtom(shtWord, "s,3qt$$,3,", shqDquotBacktSquot),
+				NewShAtom(shtWord, "'", shqDquotBackt),
+				NewShAtom(shtWord, "`", shqDquot),
+				NewShAtom(shtWord, "\"", shqPlain))))
 
-	check("var=Plain",
-		"ShSimpleCmd([ShVarassign(\"var\", ShWord([\"Plain\"]))], <nil>, [])")
-
-	check("var=\"Dquot\"",
-		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
-			"ShAtom(word, \"\\\"\", d) "+
-			"ShAtom(word, \"Dquot\", d) "+
-			"\"\\\"\""+
-			"]))], <nil>, [])")
-
-	check("var='Squot'",
-		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
-			"ShAtom(word, \"'\", s) "+
-			"ShAtom(word, \"Squot\", s) "+
-			"\"'\""+
-			"]))], <nil>, [])")
-
-	check("var=Plain\"Dquot\"'Squot'",
-		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
-			"\"Plain\" "+
-			"ShAtom(word, \"\\\"\", d) "+
-			"ShAtom(word, \"Dquot\", d) "+
-			"\"\\\"\" "+
-			"ShAtom(word, \"'\", s) "+
-			"ShAtom(word, \"Squot\", s) "+
-			"\"'\""+
-			"]))], <nil>, [])")
+	check("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
+		NewShSimpleCmd(-1,
+			NewShToken("var=Plain",
+				NewShAtom(shtWord, "var=Plain", shqPlain)),
+			NewShToken("var=\"Dquot\"",
+				NewShAtom(shtWord, "var=", shqPlain),
+				NewShAtom(shtWord, "\"", shqDquot),
+				NewShAtom(shtWord, "Dquot", shqDquot),
+				NewShAtom(shtWord, "\"", shqPlain)),
+			NewShToken("var='Squot'",
+				NewShAtom(shtWord, "var=", shqPlain),
+				NewShAtom(shtWord, "'", shqSquot),
+				NewShAtom(shtWord, "Squot", shqSquot),
+				NewShAtom(shtWord, "'", shqPlain)),
+			NewShToken("var=Plain\"Dquot\"'Squot'",
+				NewShAtom(shtWord, "var=Plain", shqPlain),
+				NewShAtom(shtWord, "\"", shqDquot),
+				NewShAtom(shtWord, "Dquot", shqDquot),
+				NewShAtom(shtWord, "\"", shqPlain),
+				NewShAtom(shtWord, "'", shqSquot),
+				NewShAtom(shtWord, "Squot", shqSquot),
+				NewShAtom(shtWord, "'", shqPlain)),
+		))
 }
