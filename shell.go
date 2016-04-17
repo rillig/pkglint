@@ -932,17 +932,17 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 	}
 
 	p := NewParser(line, text)
-	shlexemes := p.ShLexemes()
+	tokens := p.ShTokens()
 	word := ""
-	for _, lex := range shlexemes {
-		if lex.Type == shlSpace && lex.Quoting == shqPlain {
+	for _, token := range tokens {
+		if token.Type == shlSpace && token.Quoting == shqPlain {
 			words = append(words, word)
 			word = ""
 		} else {
-			word += lex.Text
+			word += token.Text
 		}
 	}
-	if word != "" && shlexemes[len(shlexemes)-1].Quoting == shqPlain {
+	if word != "" && tokens[len(tokens)-1].Quoting == shqPlain {
 		words = append(words, word)
 		word = ""
 	}

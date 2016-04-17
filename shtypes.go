@@ -14,9 +14,9 @@ func (shcmd *ShCommand) String() string {
 	return fmt.Sprintf("ShCommand(%v, %v, %v)", shcmd.Varassigns, shcmd.Command, shcmd.Args)
 }
 
-// ShWord combines lexemes to form (roughly speaking) space-separated items.
+// ShWord combines tokens to form (roughly speaking) space-separated items.
 type ShWord struct {
-	Atoms []*ShLexeme
+	Atoms []*ShToken
 }
 
 func (shword *ShWord) String() string {
@@ -33,48 +33,48 @@ func (shva *ShVarassign) String() string {
 }
 
 // @Beta
-type ShLexeme struct {
-	Type    ShLexemeType
+type ShToken struct {
+	Type    ShTokenType
 	Text    string
 	Quoting ShQuoting
 	Data    interface{}
 }
 
-func (shlex *ShLexeme) String() string {
-	if shlex.Type == shlText && shlex.Quoting == shqPlain && shlex.Data == nil {
-		return fmt.Sprintf("%q", shlex.Text)
+func (token *ShToken) String() string {
+	if token.Type == shlText && token.Quoting == shqPlain && token.Data == nil {
+		return fmt.Sprintf("%q", token.Text)
 	}
-	if shlex.Type == shlVaruse {
-		varuse := shlex.Data.(*MkVarUse)
+	if token.Type == shlVaruse {
+		varuse := token.Data.(*MkVarUse)
 		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
 	}
-	return fmt.Sprintf("ShLexeme(%v, %q, %s)", shlex.Type, shlex.Text, shlex.Quoting)
+	return fmt.Sprintf("ShToken(%v, %q, %s)", token.Type, token.Text, token.Quoting)
 }
 
-type ShLexemeType uint8
+type ShTokenType uint8
 
 const (
-	shlSpace         ShLexemeType = iota
-	shlVaruse                     // ${PREFIX}
-	shlText                       //
-	shlSemicolon                  // ;
-	shlCaseSeparator              // ;;
-	shlParenOpen                  // (
-	shlParenClose                 // )
-	shlBraceOpen                  // {
-	shlBraceClose                 // }
-	shlBacktOpen                  // `
-	shlBacktClose                 // `
-	shlSubshellOpen               // $(
-	shlPipe                       // |
-	shlBackground                 // &
-	shlOr                         // ||
-	shlAnd                        // &&
-	shlRedirect                   // >, <, >>
-	shlComment                    // # ...
+	shlSpace         ShTokenType = iota
+	shlVaruse                    // ${PREFIX}
+	shlText                      //
+	shlSemicolon                 // ;
+	shlCaseSeparator             // ;;
+	shlParenOpen                 // (
+	shlParenClose                // )
+	shlBraceOpen                 // {
+	shlBraceClose                // }
+	shlBacktOpen                 // `
+	shlBacktClose                // `
+	shlSubshellOpen              // $(
+	shlPipe                      // |
+	shlBackground                // &
+	shlOr                        // ||
+	shlAnd                       // &&
+	shlRedirect                  // >, <, >>
+	shlComment                   // # ...
 )
 
-func (t ShLexemeType) String() string {
+func (t ShTokenType) String() string {
 	return [...]string{
 		"space",
 		"varuse",

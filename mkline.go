@@ -828,7 +828,7 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 		defer tracecall(vartype, time)()
 	}
 
-	extent := func(tokens []*ShLexeme, i int) vucExtent {
+	extent := func(tokens []*ShToken, i int) vucExtent {
 		if i-1 >= 0 {
 			typ := tokens[i-1].Type
 			if typ != shlSpace && typ != shlSemicolon && typ != shlParenOpen && typ != shlParenClose {
@@ -844,7 +844,7 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 		return vucExtentWord
 	}
 
-	tokens := NewParser(mkline.Line, mkline.Value()).ShLexemes()
+	tokens := NewParser(mkline.Line, mkline.Value()).ShTokens()
 	for i, token := range tokens {
 		if token.Type == shlVaruse {
 			extent := extent(tokens, i)
