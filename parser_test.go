@@ -277,7 +277,6 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 	dquot := func(s string) *ShToken { return token(shtWord, s, shqDquot) }
 	squot := func(s string) *ShToken { return token(shtWord, s, shqSquot) }
 	backt := func(s string) *ShToken { return token(shtWord, s, shqBackt) }
-	dquotBackt := func(s string) *ShToken { return token(shtWord, s, shqDquotBackt) }
 	varuse := func(varname string, modifiers ...string) *ShToken {
 		text := "${" + varname
 		for _, modifier := range modifiers {
@@ -296,16 +295,25 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 	pipe := token(shtPipe, "|", shqPlain)
 
 	check("" /* none */)
-	check("$$var", word("$$var"))
-	check("$$var$$var", word("$$var$$var"))
+
+	check("$$var",
+		word("$$var"))
+
+	check("$$var$$var",
+		word("$$var$$var"))
+
 	check("$$var;;",
 		word("$$var"),
 		token(shtCaseSeparator, ";;", shqPlain))
+
 	check("'single-quoted'",
 		q(shqSquot, word("'")),
 		q(shqSquot, word("single-quoted")),
 		q(shqPlain, word("'")))
-	c.Check(checkRest("\"" /* none */), equals, "\"")
+
+	rest := checkRest("\"" /* none */)
+	c.Check(rest, equals, "\"")
+
 	check("$${file%.c}.o",
 		word("$${file%.c}.o"))
 
@@ -352,13 +360,13 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		space,
 		word("PAGES="),
 		dquot("\""),
-		dquotBackt("`"),
-		dquotBackt("ls"),
-		token(shtSpace, " ", shqDquotBackt),
-		dquotBackt("-1"),
-		token(shtSpace, " ", shqDquotBackt),
+		q(shqDquotBackt, word("`")),
+		q(shqDquotBackt, word("ls")),
+		q(shqDquotBackt, space),
+		q(shqDquotBackt, word("-1")),
+		q(shqDquotBackt, space),
 		token(shtPipe, "|", shqDquotBackt),
-		token(shtSpace, " ", shqDquotBackt),
+		q(shqDquotBackt, space),
 		q(shqDquotBackt, varuse("SED")),
 		q(shqDquotBackt, space),
 		q(shqDquotBackt, word("-e")),
@@ -477,7 +485,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		space,
 		word("$$,$$/"))
 
-	rest := checkRest("COMMENT=\t\\Make $$$$ fast\"",
+	rest = checkRest("COMMENT=\t\\Make $$$$ fast\"",
 		word("COMMENT="),
 		whitespace("\t"),
 		word("\\Make"),
