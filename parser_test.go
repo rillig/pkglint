@@ -273,7 +273,7 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 	token := func(typ ShTokenType, text string, quoting ShQuoting) *ShToken {
 		return &ShToken{typ, text, quoting, nil}
 	}
-	text := func(s string) *ShToken { return token(shtWord, s, shqPlain) }
+	word := func(s string) *ShToken { return token(shtWord, s, shqPlain) }
 	dquot := func(s string) *ShToken { return token(shtWord, s, shqDquot) }
 	squot := func(s string) *ShToken { return token(shtWord, s, shqSquot) }
 	backt := func(s string) *ShToken { return token(shtWord, s, shqBackt) }
@@ -296,26 +296,26 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 	pipe := token(shtPipe, "|", shqPlain)
 
 	check("" /* none */)
-	check("$$var", text("$$var"))
-	check("$$var$$var", text("$$var$$var"))
+	check("$$var", word("$$var"))
+	check("$$var$$var", word("$$var$$var"))
 	check("$$var;;",
-		text("$$var"),
+		word("$$var"),
 		token(shtCaseSeparator, ";;", shqPlain))
 	check("'single-quoted'",
-		q(shqSquot, text("'")),
-		q(shqSquot, text("single-quoted")),
-		q(shqPlain, text("'")))
+		q(shqSquot, word("'")),
+		q(shqSquot, word("single-quoted")),
+		q(shqPlain, word("'")))
 	c.Check(checkRest("\"" /* none */), equals, "\"")
 	check("$${file%.c}.o",
-		text("$${file%.c}.o"))
+		word("$${file%.c}.o"))
 
 	check("hello",
-		text("hello"))
+		word("hello"))
 
 	check("hello, world",
-		text("hello,"),
+		word("hello,"),
 		space,
-		text("world"))
+		word("world"))
 
 	check("\"",
 		dquot("\""))
@@ -328,29 +328,29 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		backt("cat"),
 		token(shtSpace, " ", shqBackt),
 		backt("fname"),
-		text("`"))
+		word("`"))
 
 	check("hello, \"world\"",
-		text("hello,"),
+		word("hello,"),
 		space,
 		dquot("\""),
 		dquot("world"),
-		text("\""))
+		word("\""))
 
 	check("set -e;",
-		text("set"),
+		word("set"),
 		space,
-		text("-e"),
+		word("-e"),
 		semicolon)
 
 	check("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
-		text("cd"),
+		word("cd"),
 		space,
 		varuse("WRKSRC"),
-		text("/doc/man/man3"),
+		word("/doc/man/man3"),
 		semicolon,
 		space,
-		text("PAGES="),
+		word("PAGES="),
 		dquot("\""),
 		dquotBackt("`"),
 		dquotBackt("ls"),
@@ -361,63 +361,63 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		token(shtSpace, " ", shqDquotBackt),
 		q(shqDquotBackt, varuse("SED")),
 		q(shqDquotBackt, space),
-		q(shqDquotBackt, text("-e")),
+		q(shqDquotBackt, word("-e")),
 		q(shqDquotBackt, space),
-		q(shqDquotBacktSquot, text("'")),
-		q(shqDquotBacktSquot, text("s,3qt$$,3,")),
-		q(shqDquotBackt, text("'")),
-		q(shqDquot, text("`")),
-		q(shqPlain, text("\"")),
+		q(shqDquotBacktSquot, word("'")),
+		q(shqDquotBacktSquot, word("s,3qt$$,3,")),
+		q(shqDquotBackt, word("'")),
+		q(shqDquot, word("`")),
+		q(shqPlain, word("\"")),
 		semicolon)
 
 	check("ls -1 | ${SED} -e 's,3qt$$,3,'",
-		text("ls"),
+		word("ls"),
 		space,
-		text("-1"),
+		word("-1"),
 		space,
 		pipe,
 		space,
 		varuse("SED"),
 		space,
-		text("-e"),
+		word("-e"),
 		space,
 		squot("'"),
 		squot("s,3qt$$,3,"),
-		text("'"))
+		word("'"))
 
 	check("(for PAGE in $$PAGES; do ",
 		&ShToken{shtParenOpen, "(", shqPlain, nil},
-		text("for"),
+		word("for"),
 		space,
-		text("PAGE"),
+		word("PAGE"),
 		space,
-		text("in"),
+		word("in"),
 		space,
-		text("$$PAGES"),
+		word("$$PAGES"),
 		semicolon,
 		space,
-		text("do"),
+		word("do"),
 		space)
 
 	check("    ${ECHO} installing ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; ",
 		whitespace("    "),
 		varuse("ECHO"),
 		space,
-		text("installing"),
+		word("installing"),
 		space,
 		varuse("DESTDIR"),
 		varuse("QTPREFIX"),
-		text("/man/man3/$${PAGE}"),
+		word("/man/man3/$${PAGE}"),
 		semicolon,
 		space)
 
 	check("    set - X `head -1 $${PAGE}qt`; ",
 		whitespace("    "),
-		text("set"),
+		word("set"),
 		space,
-		text("-"),
+		word("-"),
 		space,
-		text("X"),
+		word("X"),
 		space,
 		backt("`"),
 		backt("head"),
@@ -425,90 +425,90 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		backt("-1"),
 		q(shqBackt, space),
 		backt("$${PAGE}qt"),
-		text("`"),
+		word("`"),
 		semicolon,
 		space)
 
 	check("`\"one word\"`",
 		backt("`"),
-		q(shqBacktDquot, text("\"")),
-		q(shqBacktDquot, text("one word")),
-		q(shqBackt, text("\"")),
-		text("`"))
+		q(shqBacktDquot, word("\"")),
+		q(shqBacktDquot, word("one word")),
+		q(shqBackt, word("\"")),
+		word("`"))
 
 	check("$$var \"$$var\" '$$var' `$$var`",
-		text("$$var"),
+		word("$$var"),
 		space,
 		dquot("\""),
 		dquot("$$var"),
-		text("\""),
+		word("\""),
 		space,
 		squot("'"),
 		squot("$$var"),
-		text("'"),
+		word("'"),
 		space,
 		backt("`"),
 		backt("$$var"),
-		text("`"))
+		word("`"))
 
 	check("\"`'echo;echo'`\"",
-		q(shqDquot, text("\"")),
-		q(shqDquotBackt, text("`")),
-		q(shqDquotBacktSquot, text("'")),
-		q(shqDquotBacktSquot, text("echo;echo")),
-		q(shqDquotBackt, text("'")),
-		q(shqDquot, text("`")),
-		q(shqPlain, text("\"")))
+		q(shqDquot, word("\"")),
+		q(shqDquotBackt, word("`")),
+		q(shqDquotBacktSquot, word("'")),
+		q(shqDquotBacktSquot, word("echo;echo")),
+		q(shqDquotBackt, word("'")),
+		q(shqDquot, word("`")),
+		q(shqPlain, word("\"")))
 
 	check("cat<file",
-		text("cat"),
+		word("cat"),
 		token(shtRedirect, "<", shqPlain),
-		text("file"))
+		word("file"))
 
 	check("-e \"s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g\"",
-		text("-e"),
+		word("-e"),
 		space,
 		dquot("\""),
 		dquot("s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g"),
-		text("\""))
+		word("\""))
 
 	check("echo $$,$$/",
-		text("echo"),
+		word("echo"),
 		space,
-		text("$$,$$/"))
+		word("$$,$$/"))
 
 	rest := checkRest("COMMENT=\t\\Make $$$$ fast\"",
-		text("COMMENT="),
+		word("COMMENT="),
 		whitespace("\t"),
-		text("\\Make"),
+		word("\\Make"),
 		space,
-		text("$$$$"),
+		word("$$$$"),
 		space,
-		text("fast"))
+		word("fast"))
 	c.Check(rest, equals, "\"")
 
 	check("var=`echo;echo|echo&echo||echo&&echo>echo`",
-		q(shqPlain, text("var=")),
-		q(shqBackt, text("`")),
-		q(shqBackt, text("echo")),
+		q(shqPlain, word("var=")),
+		q(shqBackt, word("`")),
+		q(shqBackt, word("echo")),
 		q(shqBackt, semicolon),
-		q(shqBackt, text("echo")),
+		q(shqBackt, word("echo")),
 		q(shqBackt, token(shtPipe, "|", shqBackt)),
-		q(shqBackt, text("echo")),
+		q(shqBackt, word("echo")),
 		q(shqBackt, token(shtBackground, "&", shqBackt)),
-		q(shqBackt, text("echo")),
+		q(shqBackt, word("echo")),
 		q(shqBackt, token(shtOr, "||", shqBackt)),
-		q(shqBackt, text("echo")),
+		q(shqBackt, word("echo")),
 		q(shqBackt, token(shtAnd, "&&", shqBackt)),
-		q(shqBackt, text("echo")),
+		q(shqBackt, word("echo")),
 		q(shqBackt, token(shtRedirect, ">", shqBackt)),
-		q(shqBackt, text("echo")),
-		q(shqPlain, text("`")))
+		q(shqBackt, word("echo")),
+		q(shqPlain, word("`")))
 
 	check("# comment",
 		token(shtComment, "# comment", shqPlain))
 	check("no#comment",
-		text("no#comment"))
+		word("no#comment"))
 	check("`# comment`continue",
 		token(shtWord, "`", shqBackt),
 		token(shtComment, "# comment", shqBackt),
