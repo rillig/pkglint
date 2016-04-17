@@ -5,7 +5,7 @@ import (
 )
 
 // @Beta
-func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
+func (s *Suite) Test_Parser_ShToken(c *check.C) {
 	checkRest := func(s string, expected ...*ShToken) string {
 		p := NewParser(dummyLine, s)
 		q := shqPlain
@@ -305,7 +305,6 @@ func (s *Suite) Test_Parser_ShToken_Tokens(c *check.C) {
 		token(shtWord, "\"", shqPlain))
 }
 
-// @Beta
 func (s *Suite) Test_Parser_ShToken_Quoting(c *check.C) {
 	checkQuotingChange := func(input, expectedOutput string) {
 		p := NewParser(dummyLine, input)
@@ -416,7 +415,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
 	c.Check(p.Rest(), equals, "")
 }
 
-func (s *Suite) Test_Parser_ShSimpleCmd_Practical(c *check.C) {
+func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 	check := func(cmd, expected string) {
 		p := NewParser(dummyLine, cmd)
 		shcmd := p.ShSimpleCmd()
