@@ -5,7 +5,6 @@ import (
 )
 
 func (s *Suite) Test_ShAtom_String(c *check.C) {
-	c.Check(shtBacktClose.String(), equals, "backtClose")
 	c.Check(shtComment.String(), equals, "comment")
 }
 

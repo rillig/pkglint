@@ -14,11 +14,6 @@ const (
 	shtCaseSeparator            // ;;
 	shtParenOpen                // (
 	shtParenClose               // )
-	shtBraceOpen                // {
-	shtBraceClose               // }
-	shtBacktOpen                // `
-	shtBacktClose               // `
-	shtSubshellOpen             // $(
 	shtPipe                     // |
 	shtBackground               // &
 	shtOr                       // ||
@@ -35,9 +30,6 @@ func (t ShAtomType) String() string {
 		"semicolon",
 		"caseSeparator",
 		"parenOpen", "parenClose",
-		"braceOpen", "braceClose",
-		"backtOpen", "backtClose",
-		"subshellOpen",
 		"pipe", "background",
 		"or", "and",
 		"redirect",
