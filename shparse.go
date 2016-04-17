@@ -1,7 +1,7 @@
 package main
 
 // See ShQuote.Feed
-func (p *Parser) ShToken(quoting ShQuoting) *ShToken {
+func (p *Parser) ShAtom(quoting ShQuoting) *ShAtom {
 	if p.EOF() {
 		return nil
 	}
@@ -10,216 +10,216 @@ func (p *Parser) ShToken(quoting ShQuoting) *ShToken {
 	mark := repl.Mark()
 
 	if varuse := p.VarUse(); varuse != nil {
-		return &ShToken{shtVaruse, repl.Since(mark), quoting, varuse}
+		return &ShAtom{shtVaruse, repl.Since(mark), quoting, varuse}
 	}
 
-	var token *ShToken
+	var atom *ShAtom
 	switch quoting {
 	case shqPlain:
-		token = p.shTokenPlain()
+		atom = p.shAtomPlain()
 	case shqDquot:
-		token = p.shTokenDquot()
+		atom = p.shAtomDquot()
 	case shqSquot:
-		token = p.shTokenSquot()
+		atom = p.shAtomSquot()
 	case shqBackt:
-		token = p.shTokenBackt()
+		atom = p.shAtomBackt()
 	case shqDquotBackt:
-		token = p.shTokenDquotBackt()
+		atom = p.shAtomDquotBackt()
 	case shqBacktDquot:
-		token = p.shTokenBacktDquot()
+		atom = p.shAtomBacktDquot()
 	case shqBacktSquot:
-		token = p.shTokenBacktSquot()
+		atom = p.shAtomBacktSquot()
 	case shqDquotBacktDquot:
-		token = p.shTokenDquotBacktDquot()
+		atom = p.shAtomDquotBacktDquot()
 	case shqDquotBacktSquot:
-		token = p.shTokenDquotBacktSquot()
+		atom = p.shAtomDquotBacktSquot()
 	}
 
-	if token == nil {
+	if atom == nil {
 		p.repl.Reset(mark)
-		p.line.Warnf("Pkglint parse error in Parser.ShToken at %q (quoting=%s)", repl.rest, quoting)
+		p.line.Warnf("Pkglint parse error in Parser.ShAtom at %q (quoting=%s)", repl.rest, quoting)
 	}
-	return token
+	return atom
 }
 
-func (p *Parser) shTokenPlain() *ShToken {
+func (p *Parser) shAtomPlain() *ShAtom {
 	q := shqPlain
 	repl := p.repl
 	switch {
 	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShToken{shtSpace, repl.m[0], q, nil}
+		return &ShAtom{shtSpace, repl.m[0], q, nil}
 	case repl.AdvanceStr(";;"):
-		return &ShToken{shtCaseSeparator, repl.s, q, nil}
+		return &ShAtom{shtCaseSeparator, repl.s, q, nil}
 	case repl.AdvanceStr(";"):
-		return &ShToken{shtSemicolon, repl.s, q, nil}
+		return &ShAtom{shtSemicolon, repl.s, q, nil}
 	case repl.AdvanceStr("("):
-		return &ShToken{shtParenOpen, repl.s, q, nil}
+		return &ShAtom{shtParenOpen, repl.s, q, nil}
 	case repl.AdvanceStr(")"):
-		return &ShToken{shtParenClose, repl.s, q, nil}
+		return &ShAtom{shtParenClose, repl.s, q, nil}
 	case repl.AdvanceStr("||"):
-		return &ShToken{shtOr, repl.s, q, nil}
+		return &ShAtom{shtOr, repl.s, q, nil}
 	case repl.AdvanceStr("&&"):
-		return &ShToken{shtAnd, repl.s, q, nil}
+		return &ShAtom{shtAnd, repl.s, q, nil}
 	case repl.AdvanceStr("|"):
-		return &ShToken{shtPipe, repl.s, q, nil}
+		return &ShAtom{shtPipe, repl.s, q, nil}
 	case repl.AdvanceStr("&"):
-		return &ShToken{shtBackground, repl.s, q, nil}
+		return &ShAtom{shtBackground, repl.s, q, nil}
 	case repl.AdvanceStr("\""):
-		return &ShToken{shtWord, repl.s, shqDquot, nil}
+		return &ShAtom{shtWord, repl.s, shqDquot, nil}
 	case repl.AdvanceStr("'"):
-		return &ShToken{shtWord, repl.s, shqSquot, nil}
+		return &ShAtom{shtWord, repl.s, shqSquot, nil}
 	case repl.AdvanceStr("`"):
-		return &ShToken{shtWord, repl.s, shqBackt, nil}
+		return &ShAtom{shtWord, repl.s, shqBackt, nil}
 	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
-		return &ShToken{shtRedirect, repl.m[0], q, nil}
+		return &ShAtom{shtRedirect, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^#.*`):
-		return &ShToken{shtComment, repl.m[0], q, nil}
+		return &ShAtom{shtComment, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], q, nil}
+		return &ShAtom{shtWord, repl.m[0], q, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shTokenDquot() *ShToken {
+func (p *Parser) shAtomDquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
-		return &ShToken{shtWord, repl.s, shqPlain, nil}
+		return &ShAtom{shtWord, repl.s, shqPlain, nil}
 	case repl.AdvanceStr("`"):
-		return &ShToken{shtWord, repl.s, shqDquotBackt, nil}
+		return &ShAtom{shtWord, repl.s, shqDquotBackt, nil}
 	case repl.AdvanceRegexp(`^(?:[\t !#%&'()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], shqDquot, nil} // XXX: unescape?
+		return &ShAtom{shtWord, repl.m[0], shqDquot, nil} // XXX: unescape?
 	}
 	return nil
 }
 
-func (p *Parser) shTokenSquot() *ShToken {
+func (p *Parser) shAtomSquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
-		return &ShToken{shtWord, repl.s, shqPlain, nil}
+		return &ShAtom{shtWord, repl.s, shqPlain, nil}
 	case repl.AdvanceRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], shqSquot, nil}
+		return &ShAtom{shtWord, repl.m[0], shqSquot, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shTokenBackt() *ShToken {
+func (p *Parser) shAtomBackt() *ShAtom {
 	q := shqBackt
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
-		return &ShToken{shtWord, repl.s, shqBacktDquot, nil}
+		return &ShAtom{shtWord, repl.s, shqBacktDquot, nil}
 	case repl.AdvanceStr("`"):
-		return &ShToken{shtWord, repl.s, shqPlain, nil}
+		return &ShAtom{shtWord, repl.s, shqPlain, nil}
 	case repl.AdvanceStr("'"):
-		return &ShToken{shtWord, repl.s, shqBacktSquot, nil}
+		return &ShAtom{shtWord, repl.s, shqBacktSquot, nil}
 	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShToken{shtSpace, repl.m[0], shqBackt, nil}
+		return &ShAtom{shtSpace, repl.m[0], shqBackt, nil}
 	case repl.AdvanceStr(";;"):
-		return &ShToken{shtCaseSeparator, repl.s, q, nil}
+		return &ShAtom{shtCaseSeparator, repl.s, q, nil}
 	case repl.AdvanceStr(";"):
-		return &ShToken{shtSemicolon, repl.s, q, nil}
+		return &ShAtom{shtSemicolon, repl.s, q, nil}
 	case repl.AdvanceStr("("):
-		return &ShToken{shtParenOpen, repl.s, q, nil}
+		return &ShAtom{shtParenOpen, repl.s, q, nil}
 	case repl.AdvanceStr(")"):
-		return &ShToken{shtParenClose, repl.s, q, nil}
+		return &ShAtom{shtParenClose, repl.s, q, nil}
 	case repl.AdvanceStr("||"):
-		return &ShToken{shtOr, repl.s, q, nil}
+		return &ShAtom{shtOr, repl.s, q, nil}
 	case repl.AdvanceStr("&&"):
-		return &ShToken{shtAnd, repl.s, q, nil}
+		return &ShAtom{shtAnd, repl.s, q, nil}
 	case repl.AdvanceStr("|"):
-		return &ShToken{shtPipe, repl.s, q, nil}
+		return &ShAtom{shtPipe, repl.s, q, nil}
 	case repl.AdvanceStr("&"):
-		return &ShToken{shtBackground, repl.s, q, nil}
+		return &ShAtom{shtBackground, repl.s, q, nil}
 	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
-		return &ShToken{shtRedirect, repl.m[0], q, nil}
+		return &ShAtom{shtRedirect, repl.m[0], q, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
-		return &ShToken{shtComment, repl.m[0], q, nil}
+		return &ShAtom{shtComment, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], q, nil}
+		return &ShAtom{shtWord, repl.m[0], q, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shTokenDquotBackt() *ShToken {
+func (p *Parser) shAtomDquotBackt() *ShAtom {
 	const q = shqDquotBackt
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("`"):
-		return &ShToken{shtWord, repl.s, shqDquot, nil}
+		return &ShAtom{shtWord, repl.s, shqDquot, nil}
 	case repl.AdvanceStr("\""):
-		return &ShToken{shtWord, repl.s, shqDquotBacktDquot, nil}
+		return &ShAtom{shtWord, repl.s, shqDquotBacktDquot, nil}
 	case repl.AdvanceStr("'"):
-		return &ShToken{shtWord, repl.s, shqDquotBacktSquot, nil}
+		return &ShAtom{shtWord, repl.s, shqDquotBacktSquot, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
-		return &ShToken{shtComment, repl.m[0], q, nil}
+		return &ShAtom{shtComment, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|\\\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], q, nil}
+		return &ShAtom{shtWord, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^[ \t]+`):
-		return &ShToken{shtSpace, repl.m[0], q, nil}
+		return &ShAtom{shtSpace, repl.m[0], q, nil}
 	case repl.AdvanceStr("|"):
-		return &ShToken{shtPipe, repl.s, q, nil}
+		return &ShAtom{shtPipe, repl.s, q, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shTokenBacktDquot() *ShToken {
+func (p *Parser) shAtomBacktDquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
-		return &ShToken{shtWord, repl.s, shqBackt, nil}
+		return &ShAtom{shtWord, repl.s, shqBackt, nil}
 	case repl.AdvanceRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], shqBacktDquot, nil}
+		return &ShAtom{shtWord, repl.m[0], shqBacktDquot, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shTokenBacktSquot() *ShToken {
+func (p *Parser) shAtomBacktSquot() *ShAtom {
 	const q = shqBacktSquot
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
-		return &ShToken{shtWord, repl.s, shqBackt, nil}
+		return &ShAtom{shtWord, repl.s, shqBackt, nil}
 	case repl.AdvanceRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], q, nil}
+		return &ShAtom{shtWord, repl.m[0], q, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shTokenDquotBacktDquot() *ShToken {
+func (p *Parser) shAtomDquotBacktDquot() *ShAtom {
 	const q = shqDquotBacktDquot
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("\""):
-		return &ShToken{shtWord, repl.s, shqDquotBackt, nil}
+		return &ShAtom{shtWord, repl.s, shqDquotBackt, nil}
 	case repl.AdvanceRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|` + reShVaruse + `)+`):
-		return &ShToken{shtWord, repl.m[0], q, nil}
+		return &ShAtom{shtWord, repl.m[0], q, nil}
 	}
 	return nil
 }
 
-func (p *Parser) shTokenDquotBacktSquot() *ShToken {
+func (p *Parser) shAtomDquotBacktSquot() *ShAtom {
 	repl := p.repl
 	switch {
 	case repl.AdvanceStr("'"):
-		return &ShToken{shtWord, repl.s, shqDquotBackt, nil}
+		return &ShAtom{shtWord, repl.s, shqDquotBackt, nil}
 	case repl.AdvanceRegexp(`^(?:[\t !"#%()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|\$\$)+`):
-		return &ShToken{shtWord, repl.m[0], shqDquotBacktSquot, nil}
+		return &ShAtom{shtWord, repl.m[0], shqDquotBacktSquot, nil}
 	}
 	return nil
 }
 
-func (p *Parser) ShTokens() []*ShToken {
-	var tokens []*ShToken
+func (p *Parser) ShAtoms() []*ShAtom {
+	var atoms []*ShAtom
 	q := shqPlain
 	for {
-		token := p.ShToken(q)
-		if token == nil {
-			return tokens
+		atom := p.ShAtom(q)
+		if atom == nil {
+			return atoms
 		}
-		tokens = append(tokens, token)
-		q = token.Quoting
+		atoms = append(atoms, atom)
+		q = atom.Quoting
 	}
 }
 
@@ -227,33 +227,33 @@ func (p *Parser) ShWord() *ShWord {
 	shword := &ShWord{}
 	inimark := p.repl.Mark()
 	q := shqPlain
-nexttoken:
+nextatom:
 	mark := p.repl.Mark()
-	token := p.ShToken(q)
+	atom := p.ShAtom(q)
 
-	if token == nil {
+	if atom == nil {
 		goto end
 	}
-	if token.Quoting == shqPlain {
-		switch token.Type {
+	if atom.Quoting == shqPlain {
+		switch atom.Type {
 		case shtSpace, shtSemicolon, shtPipe, shtBackground, shtOr, shtAnd:
 			goto end
 		}
 	}
 
 	switch {
-	case token.Type == shtComment:
-		goto nexttoken
-	case token.Type == shtVaruse,
-		token.Type == shtWord,
-		token.Type == shtSpace,
-		token.Quoting != shqPlain:
-		shword.Atoms = append(shword.Atoms, token)
-		q = token.Quoting
-		goto nexttoken
+	case atom.Type == shtComment:
+		goto nextatom
+	case atom.Type == shtVaruse,
+		atom.Type == shtWord,
+		atom.Type == shtSpace,
+		atom.Quoting != shqPlain:
+		shword.Atoms = append(shword.Atoms, atom)
+		q = atom.Quoting
+		goto nextatom
 	default:
 		p.repl.Reset(mark)
-		p.line.Warnf("Pkglint parse error in Parser.ShWord at %q (tokentype=%s quoting=%s)", p.repl.rest, token.Type, token.Quoting)
+		p.line.Warnf("Pkglint parse error in Parser.ShWord at %q (atomtype=%s quoting=%s)", p.repl.rest, atom.Type, atom.Quoting)
 		p.repl.Reset(inimark)
 		return nil
 	}
@@ -337,12 +337,12 @@ nextcommand:
 	}
 	cmds = append(cmds, cmd)
 	mark := p.repl.Mark()
-nexttoken:
-	token := p.ShToken(shqPlain)
-	if token != nil {
-		switch token.Type {
+nextatom:
+	atom := p.ShAtom(shqPlain)
+	if atom != nil {
+		switch atom.Type {
 		case shtSpace:
-			goto nexttoken
+			goto nextatom
 		case shtSemicolon, shtBackground, shtAnd, shtOr:
 			goto nextcommand
 		}

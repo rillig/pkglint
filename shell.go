@@ -932,7 +932,7 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 	}
 
 	p := NewParser(line, text)
-	tokens := p.ShTokens()
+	tokens := p.ShAtoms()
 	word := ""
 	for _, token := range tokens {
 		if token.Type == shtSpace && token.Quoting == shqPlain {

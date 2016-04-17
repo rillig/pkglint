@@ -5,41 +5,41 @@ import (
 )
 
 // @Beta
-func (s *Suite) Test_Parser_ShToken(c *check.C) {
-	checkRest := func(s string, expected ...*ShToken) string {
+func (s *Suite) Test_Parser_ShAtom(c *check.C) {
+	checkRest := func(s string, expected ...*ShAtom) string {
 		p := NewParser(dummyLine, s)
 		q := shqPlain
 		for _, exp := range expected {
-			c.Check(p.ShToken(q), deepEquals, exp)
+			c.Check(p.ShAtom(q), deepEquals, exp)
 			q = exp.Quoting
 		}
 		return p.Rest()
 	}
-	check := func(s string, expected ...*ShToken) {
+	check := func(s string, expected ...*ShAtom) {
 		rest := checkRest(s, expected...)
 		c.Check(rest, equals, "")
 	}
 
-	token := func(typ ShTokenType, text string, quoting ShQuoting) *ShToken {
-		return &ShToken{typ, text, quoting, nil}
+	token := func(typ ShAtomType, text string, quoting ShQuoting) *ShAtom {
+		return &ShAtom{typ, text, quoting, nil}
 	}
-	word := func(s string) *ShToken { return token(shtWord, s, shqPlain) }
-	dquot := func(s string) *ShToken { return token(shtWord, s, shqDquot) }
-	squot := func(s string) *ShToken { return token(shtWord, s, shqSquot) }
-	backt := func(s string) *ShToken { return token(shtWord, s, shqBackt) }
-	varuse := func(varname string, modifiers ...string) *ShToken {
+	word := func(s string) *ShAtom { return token(shtWord, s, shqPlain) }
+	dquot := func(s string) *ShAtom { return token(shtWord, s, shqDquot) }
+	squot := func(s string) *ShAtom { return token(shtWord, s, shqSquot) }
+	backt := func(s string) *ShAtom { return token(shtWord, s, shqBackt) }
+	varuse := func(varname string, modifiers ...string) *ShAtom {
 		text := "${" + varname
 		for _, modifier := range modifiers {
 			text += ":" + modifier
 		}
 		text += "}"
 		varuse := &MkVarUse{varname: varname, modifiers: modifiers}
-		return &ShToken{shtVaruse, text, shqPlain, varuse}
+		return &ShAtom{shtVaruse, text, shqPlain, varuse}
 	}
-	q := func(q ShQuoting, token *ShToken) *ShToken {
-		return &ShToken{token.Type, token.Text, q, token.Data}
+	q := func(q ShQuoting, token *ShAtom) *ShAtom {
+		return &ShAtom{token.Type, token.Text, q, token.Data}
 	}
-	whitespace := func(s string) *ShToken { return token(shtSpace, s, shqPlain) }
+	whitespace := func(s string) *ShAtom { return token(shtSpace, s, shqPlain) }
 	space := token(shtSpace, " ", shqPlain)
 	semicolon := token(shtSemicolon, ";", shqPlain)
 	pipe := token(shtPipe, "|", shqPlain)
@@ -144,7 +144,7 @@ func (s *Suite) Test_Parser_ShToken(c *check.C) {
 		word("'"))
 
 	check("(for PAGE in $$PAGES; do ",
-		&ShToken{shtParenOpen, "(", shqPlain, nil},
+		&ShAtom{shtParenOpen, "(", shqPlain, nil},
 		word("for"),
 		space,
 		word("PAGE"),
@@ -305,13 +305,13 @@ func (s *Suite) Test_Parser_ShToken(c *check.C) {
 		token(shtWord, "\"", shqPlain))
 }
 
-func (s *Suite) Test_Parser_ShToken_Quoting(c *check.C) {
+func (s *Suite) Test_Parser_ShAtom_Quoting(c *check.C) {
 	checkQuotingChange := func(input, expectedOutput string) {
 		p := NewParser(dummyLine, input)
 		q := shqPlain
 		result := ""
 		for {
-			token := p.ShToken(q)
+			token := p.ShAtom(q)
 			if token == nil {
 				break
 			}
@@ -347,19 +347,19 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 		}
 		c.Check(p.Rest(), equals, "")
 	}
-	token := func(typ ShTokenType, s string, q ShQuoting) *ShToken {
-		return &ShToken{typ, s, q, nil}
+	token := func(typ ShAtomType, s string, q ShQuoting) *ShAtom {
+		return &ShAtom{typ, s, q, nil}
 	}
 
 	check("",
 		nil)
 
 	check("echo",
-		&ShWord{[]*ShToken{
+		&ShWord{[]*ShAtom{
 			{shtWord, "echo", shqPlain, nil}}})
 
 	check("`cat file`",
-		&ShWord{[]*ShToken{
+		&ShWord{[]*ShAtom{
 			{shtWord, "`", shqBackt, nil},
 			{shtWord, "cat", shqBackt, nil},
 			{shtSpace, " ", shqBackt, nil},
@@ -367,7 +367,7 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 			{shtWord, "`", shqPlain, nil}}})
 
 	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		&ShWord{[]*ShToken{
+		&ShWord{[]*ShAtom{
 			{shtWord, "PAGES=", shqPlain, nil},
 			{shtWord, "\"", shqDquot, nil},
 			{shtWord, "`", shqDquotBackt, nil},
@@ -389,17 +389,17 @@ func (s *Suite) Test_Parser_ShWord(c *check.C) {
 }
 
 func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
-	word := func(tokens ...*ShToken) *ShWord {
+	word := func(tokens ...*ShAtom) *ShWord {
 		return &ShWord{tokens}
 	}
-	plain := func(s string) *ShToken {
-		return &ShToken{shtWord, s, shqPlain, nil}
+	plain := func(s string) *ShAtom {
+		return &ShAtom{shtWord, s, shqPlain, nil}
 	}
-	tvaruse := func(s, varname string, modifiers ...string) *ShToken {
-		return &ShToken{shtVaruse, s, shqPlain, &MkVarUse{varname, modifiers}}
+	tvaruse := func(s, varname string, modifiers ...string) *ShAtom {
+		return &ShAtom{shtVaruse, s, shqPlain, &MkVarUse{varname, modifiers}}
 	}
 	plainword := func(s string) *ShWord {
-		return &ShWord{[]*ShToken{plain(s)}}
+		return &ShWord{[]*ShAtom{plain(s)}}
 	}
 
 	p := NewParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
@@ -430,65 +430,65 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 
 	check("${ECHO} \"Double-quoted\"",
 		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
-			"ShToken(word, \"\\\"\", d) "+
-			"ShToken(word, \"Double-quoted\", d) "+
+			"ShAtom(word, \"\\\"\", d) "+
+			"ShAtom(word, \"Double-quoted\", d) "+
 			"\"\\\"\""+
 			"])])")
 
 	check("${ECHO} 'Single-quoted'",
 		"ShSimpleCmd([], ShWord([varuse(\"ECHO\")]), [ShWord(["+
-			"ShToken(word, \"'\", s) "+
-			"ShToken(word, \"Single-quoted\", s) "+
+			"ShAtom(word, \"'\", s) "+
+			"ShAtom(word, \"Single-quoted\", s) "+
 			"\"'\""+
 			"])])")
 
 	check("`cat plain`",
 		"ShSimpleCmd([], ShWord(["+
-			"ShToken(word, \"`\", b) "+
-			"ShToken(word, \"cat\", b) "+
-			"ShToken(space, \" \", b) "+
-			"ShToken(word, \"plain\", b) "+
+			"ShAtom(word, \"`\", b) "+
+			"ShAtom(word, \"cat\", b) "+
+			"ShAtom(space, \" \", b) "+
+			"ShAtom(word, \"plain\", b) "+
 			"\"`\""+
 			"]), [])")
 
 	check("\"`cat double`\"",
 		"ShSimpleCmd([], ShWord(["+
-			"ShToken(word, \"\\\"\", d) "+
-			"ShToken(word, \"`\", db) "+
-			"ShToken(word, \"cat\", db) "+
-			"ShToken(space, \" \", db) "+
-			"ShToken(word, \"double\", db) "+
-			"ShToken(word, \"`\", d) "+
+			"ShAtom(word, \"\\\"\", d) "+
+			"ShAtom(word, \"`\", db) "+
+			"ShAtom(word, \"cat\", db) "+
+			"ShAtom(space, \" \", db) "+
+			"ShAtom(word, \"double\", db) "+
+			"ShAtom(word, \"`\", d) "+
 			"\"\\\"\""+
 			"]), [])")
 
 	check("`\"one word\"`",
 		"ShSimpleCmd([], ShWord(["+
-			"ShToken(word, \"`\", b) "+
-			"ShToken(word, \"\\\"\", bd) "+
-			"ShToken(word, \"one word\", bd) "+
-			"ShToken(word, \"\\\"\", b) "+
+			"ShAtom(word, \"`\", b) "+
+			"ShAtom(word, \"\\\"\", bd) "+
+			"ShAtom(word, \"one word\", bd) "+
+			"ShAtom(word, \"\\\"\", b) "+
 			"\"`\""+
 			"]), [])")
 
 	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 		"ShSimpleCmd([ShVarassign(\"PAGES\", ShWord(["+
-			"ShToken(word, \"\\\"\", d) "+
-			"ShToken(word, \"`\", db) "+
-			"ShToken(word, \"ls\", db) "+
-			"ShToken(space, \" \", db) "+
-			"ShToken(word, \"-1\", db) "+
-			"ShToken(space, \" \", db) "+
-			"ShToken(pipe, \"|\", db) "+
-			"ShToken(space, \" \", db) "+
+			"ShAtom(word, \"\\\"\", d) "+
+			"ShAtom(word, \"`\", db) "+
+			"ShAtom(word, \"ls\", db) "+
+			"ShAtom(space, \" \", db) "+
+			"ShAtom(word, \"-1\", db) "+
+			"ShAtom(space, \" \", db) "+
+			"ShAtom(pipe, \"|\", db) "+
+			"ShAtom(space, \" \", db) "+
 			"varuse(\"SED\") "+
-			"ShToken(space, \" \", db) "+
-			"ShToken(word, \"-e\", db) "+
-			"ShToken(space, \" \", db) "+
-			"ShToken(word, \"'\", dbs) "+
-			"ShToken(word, \"s,3qt$$,3,\", dbs) "+
-			"ShToken(word, \"'\", db) "+
-			"ShToken(word, \"`\", d) "+
+			"ShAtom(space, \" \", db) "+
+			"ShAtom(word, \"-e\", db) "+
+			"ShAtom(space, \" \", db) "+
+			"ShAtom(word, \"'\", dbs) "+
+			"ShAtom(word, \"s,3qt$$,3,\", dbs) "+
+			"ShAtom(word, \"'\", db) "+
+			"ShAtom(word, \"`\", d) "+
 			"\"\\\"\""+
 			"]))], <nil>, [])")
 
@@ -497,26 +497,26 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 
 	check("var=\"Dquot\"",
 		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
-			"ShToken(word, \"\\\"\", d) "+
-			"ShToken(word, \"Dquot\", d) "+
+			"ShAtom(word, \"\\\"\", d) "+
+			"ShAtom(word, \"Dquot\", d) "+
 			"\"\\\"\""+
 			"]))], <nil>, [])")
 
 	check("var='Squot'",
 		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
-			"ShToken(word, \"'\", s) "+
-			"ShToken(word, \"Squot\", s) "+
+			"ShAtom(word, \"'\", s) "+
+			"ShAtom(word, \"Squot\", s) "+
 			"\"'\""+
 			"]))], <nil>, [])")
 
 	check("var=Plain\"Dquot\"'Squot'",
 		"ShSimpleCmd([ShVarassign(\"var\", ShWord(["+
 			"\"Plain\" "+
-			"ShToken(word, \"\\\"\", d) "+
-			"ShToken(word, \"Dquot\", d) "+
+			"ShAtom(word, \"\\\"\", d) "+
+			"ShAtom(word, \"Dquot\", d) "+
 			"\"\\\"\" "+
-			"ShToken(word, \"'\", s) "+
-			"ShToken(word, \"Squot\", s) "+
+			"ShAtom(word, \"'\", s) "+
+			"ShAtom(word, \"Squot\", s) "+
 			"\"'\""+
 			"]))], <nil>, [])")
 }

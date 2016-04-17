@@ -4,7 +4,7 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_ShToken_String(c *check.C) {
+func (s *Suite) Test_ShAtom_String(c *check.C) {
 	c.Check(shtBacktClose.String(), equals, "backtClose")
 	c.Check(shtComment.String(), equals, "comment")
 }

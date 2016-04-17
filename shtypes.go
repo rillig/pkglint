@@ -16,7 +16,7 @@ func (shcmd *ShSimpleCmd) String() string {
 
 // ShWord combines tokens to form (roughly speaking) space-separated items.
 type ShWord struct {
-	Atoms []*ShToken
+	Atoms []*ShAtom
 }
 
 func (shword *ShWord) String() string {
@@ -33,14 +33,14 @@ func (shva *ShVarassign) String() string {
 }
 
 // @Beta
-type ShToken struct {
-	Type    ShTokenType
+type ShAtom struct {
+	Type    ShAtomType
 	Text    string
 	Quoting ShQuoting
 	Data    interface{}
 }
 
-func (token *ShToken) String() string {
+func (token *ShAtom) String() string {
 	if token.Type == shtWord && token.Quoting == shqPlain && token.Data == nil {
 		return fmt.Sprintf("%q", token.Text)
 	}
@@ -48,33 +48,33 @@ func (token *ShToken) String() string {
 		varuse := token.Data.(*MkVarUse)
 		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
 	}
-	return fmt.Sprintf("ShToken(%v, %q, %s)", token.Type, token.Text, token.Quoting)
+	return fmt.Sprintf("ShAtom(%v, %q, %s)", token.Type, token.Text, token.Quoting)
 }
 
-type ShTokenType uint8
+type ShAtomType uint8
 
 const (
-	shtSpace         ShTokenType = iota
-	shtVaruse                    // ${PREFIX}
-	shtWord                      //
-	shtSemicolon                 // ;
-	shtCaseSeparator             // ;;
-	shtParenOpen                 // (
-	shtParenClose                // )
-	shtBraceOpen                 // {
-	shtBraceClose                // }
-	shtBacktOpen                 // `
-	shtBacktClose                // `
-	shtSubshellOpen              // $(
-	shtPipe                      // |
-	shtBackground                // &
-	shtOr                        // ||
-	shtAnd                       // &&
-	shtRedirect                  // >, <, >>
-	shtComment                   // # ...
+	shtSpace         ShAtomType = iota
+	shtVaruse                   // ${PREFIX}
+	shtWord                     //
+	shtSemicolon                // ;
+	shtCaseSeparator            // ;;
+	shtParenOpen                // (
+	shtParenClose               // )
+	shtBraceOpen                // {
+	shtBraceClose               // }
+	shtBacktOpen                // `
+	shtBacktClose               // `
+	shtSubshellOpen             // $(
+	shtPipe                     // |
+	shtBackground               // &
+	shtOr                       // ||
+	shtAnd                      // &&
+	shtRedirect                 // >, <, >>
+	shtComment                  // # ...
 )
 
-func (t ShTokenType) String() string {
+func (t ShAtomType) String() string {
 	return [...]string{
 		"space",
 		"varuse",
