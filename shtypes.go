@@ -125,10 +125,18 @@ func (q ShQuoting) ToVarUseContext() vucQuoting {
 type ShToken struct {
 	MkText string // The text as it appeared in the Makefile, after replacing `\#` with `#`
 	Atoms  []*ShAtom
+	Type   MkShTokenType
 }
 
 func NewShToken(mkText string, atoms ...*ShAtom) *ShToken {
-	return &ShToken{mkText, atoms}
+	typ := msttEOF
+	switch atoms[0].Type {
+	case shtVaruse, shtWord, shtRedirect:
+		typ = msttWORD
+	default:
+		dummyLine.Warnf("Pkglint internal error in NewShToken for %q: %s", mkText, atoms[0].Type)
+	}
+	return &ShToken{mkText, atoms, typ}
 }
 
 func (token *ShToken) String() string {

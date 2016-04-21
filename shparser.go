@@ -280,7 +280,7 @@ nextatom:
 end:
 	p.repl.Reset(mark)
 	if len(atoms) != 0 {
-		return &ShToken{p.repl.Since(inimark), atoms}
+		return NewShToken(p.repl.Since(inimark), atoms...)
 	}
 	return nil
 }

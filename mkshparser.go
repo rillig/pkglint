@@ -1,11 +1,13 @@
 package main
 
 type MkShParser struct {
-	*Parser
+	*ShParser
+	next *ShToken
 }
 
 func NewMkShParser(line *Line, text string) *MkShParser {
-	return &MkShParser{NewParser(line, text)}
+	shp := NewShParser(line, text)
+	return &MkShParser{shp, shp.ShToken()}
 }
 
 // See Shell Command Language grammar.
@@ -29,6 +31,9 @@ const (
 	msttLESSGREAT // <>
 	msttDLESSDASH // <<-
 	msttCLOBBER   // >|
+	msttEOF
+
+	msttSEMI // ;
 )
 
 type MkShDummy struct {
@@ -51,16 +56,32 @@ func (p *MkShParser) List() *MkShDummy {
 // ::= Pipeline
 // ::= AndOr msttAND_IF Linebreak Pipeline
 // ::= AndOr msttOR_IF Linebreak Pipeline
-func (p *MkShParser) AndOr() *MkShDummy {
-	p.Pipeline()
-	p.AndOr()
-	p.Linebreak()
-	return nil
+func (p *MkShParser) AndOr() *MkShAndOr {
+	var pipes []*MkShPipeline
+	var ops []MkShTokenType
+	pipe := p.Pipeline()
+	if pipe == nil {
+		return nil
+	}
+
+	pipes = append(pipes, pipe)
+nextpipe:
+	switch op := p.peek(); op {
+	case msttAND_IF, msttOR_IF:
+		p.Linebreak()
+		pipe := p.Pipeline()
+		if pipe != nil {
+			pipes = append(pipes, pipe)
+			ops = append(ops, op)
+			goto nextpipe
+		}
+	}
+	return &MkShAndOr{pipes, ops}
 }
 
 // ::= PipeSequence
 // ::= msttBang PipeSequence
-func (p *MkShParser) Pipeline() *MkShDummy {
+func (p *MkShParser) Pipeline() *MkShPipeline {
 	p.PipeSequence()
 	return nil
 }
@@ -318,13 +339,17 @@ func (p *MkShParser) IoHere() *MkShDummy {
 }
 
 // ::= "\n"+
-func (p *MkShParser) NewlineList() *MkShDummy {
-	return nil
+func (p *MkShParser) NewlineList() bool {
+	ok := false
+	for p.repl.AdvanceStr("\n") {
+		ok = true
+	}
+	return ok
 }
 
-// ::= "\n"*
-func (p *MkShParser) Linebreak() *MkShDummy {
-	return nil
+func (p *MkShParser) Linebreak() {
+	for p.repl.AdvanceStr("\n") {
+	}
 }
 
 // ::= "&" | ";"
@@ -341,10 +366,27 @@ func (p *MkShParser) Separator() *MkShDummy {
 	return nil
 }
 
-// ::= ";" Linebreak
-// ::= NewlineList
-func (p *MkShParser) SequentialSep() *MkShDummy {
-	p.Linebreak()
-	p.NewlineList()
-	return nil
+func (p *MkShParser) SequentialSep() bool {
+	if p.peek() == msttSEMI {
+		p.skip()
+		p.Linebreak()
+		return true
+	} else {
+		return p.NewlineList()
+	}
+}
+
+func (p *MkShParser) mark() PrefixReplacerMark {
+	return p.repl.Mark()
+}
+
+func (p *MkShParser) peek() MkShTokenType {
+	if p.next != nil {
+		return p.next.Type
+	}
+	return msttEOF
+}
+
+func (p *MkShParser) skip() {
+	p.next = p.ShToken()
 }
