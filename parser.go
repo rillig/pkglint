@@ -208,7 +208,7 @@ func (p *Parser) VarUse() *MkVarUse {
 		for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:`+closing+`]|\$\$)+`) {
 		}
 		rest := p.Rest()
-		if hasPrefix(rest, ":L") || hasPrefix(rest, ":sh") || hasPrefix(rest, ":?") {
+		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
 			varexpr := repl.Since(varnameMark)
 			modifiers := p.VarUseModifiers(varexpr, closing)
 			if repl.AdvanceStr(closing) {
