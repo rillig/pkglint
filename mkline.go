@@ -345,7 +345,7 @@ func (mkline *MkLine) Tokenize(s string) []*MkToken {
 		defer tracecall(mkline, s)()
 	}
 
-	p := NewParser(mkline.Line, s)
+	p := NewMkParser(mkline.Line, s)
 	tokens := p.MkTokens()
 	if p.Rest() != "" {
 		mkline.Warn1("Pkglint parse error in MkLine.Tokenize at %q.", p.Rest())
@@ -807,7 +807,7 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 	if G.opts.Debug {
 		defer tracecall(vartype, time)()
 	}
-	tokens := NewParser(mkline.Line, mkline.Value()).MkTokens()
+	tokens := NewMkParser(mkline.Line, mkline.Value()).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `\s$`)
@@ -1143,7 +1143,7 @@ func (mkline *MkLine) CheckCond() {
 		defer tracecall1(mkline.Args())()
 	}
 
-	p := NewParser(mkline.Line, mkline.Args())
+	p := NewMkParser(mkline.Line, mkline.Args())
 	cond := p.MkCond()
 	if !p.EOF() {
 		mkline.Warn1("Invalid conditional %q.", mkline.Args())

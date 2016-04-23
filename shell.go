@@ -125,7 +125,7 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 
 	line := shline.line
 
-	p := NewParser(line, token)
+	p := NewMkParser(line, token)
 	if varuse := p.VarUse(); varuse != nil && p.EOF() {
 		shline.mkline.CheckVaruse(varuse, shellwordVuc)
 		return
@@ -138,7 +138,7 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 		line.Warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	parser := NewParser(line, token)
+	parser := NewMkParser(line, token)
 	repl := parser.repl
 	quoting := shqPlain
 outer:
@@ -258,7 +258,7 @@ outer:
 	}
 }
 
-func (shline *ShellLine) checkVaruseToken(parser *Parser, quoting ShQuoting) bool {
+func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) bool {
 	if G.opts.Debug {
 		defer tracecall(parser.Rest(), quoting)()
 	}

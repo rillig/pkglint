@@ -8,7 +8,8 @@ type MkShParser struct {
 
 func NewMkShParser(line *Line, text string) *MkShParser {
 	p := NewParser(line, text)
-	shp := &ShParser{p}
+	mkp := &MkParser{p}
+	shp := &ShParser{p, mkp}
 	next := shp.ShToken()
 	return &MkShParser{p, shp, next}
 }

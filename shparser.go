@@ -2,10 +2,13 @@ package main
 
 type ShParser struct {
 	*Parser
+	*MkParser
 }
 
 func NewShParser(line *Line, text string) *ShParser {
-	return &ShParser{NewParser(line, text)}
+	p := NewParser(line, text)
+	mkp := &MkParser{p}
+	return &ShParser{p, mkp}
 }
 
 // See ShQuote.Feed
