@@ -7,3 +7,7 @@ type MkShAndOr struct {
 
 type MkShPipeline struct {
 }
+
+type MkShSimpleCmd struct {
+	Words []*ShToken
+}

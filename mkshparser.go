@@ -1,13 +1,16 @@
 package main
 
 type MkShParser struct {
+	*Parser
 	*ShParser
 	next *ShToken
 }
 
 func NewMkShParser(line *Line, text string) *MkShParser {
-	shp := NewShParser(line, text)
-	return &MkShParser{shp, shp.ShToken()}
+	p := NewParser(line, text)
+	shp := &ShParser{p}
+	next := shp.ShToken()
+	return &MkShParser{p, shp, next}
 }
 
 // See Shell Command Language grammar.
@@ -278,38 +281,18 @@ func (p *MkShParser) DoGroup() *MkShDummy {
 	return nil
 }
 
-// ::= CmdPrefix CmdWord CmdSuffix
-// ::= CmdPrefix CmdWord?
-// ::= CmdName CmdSuffix?
-func (p *MkShParser) SimpleCommand() *MkShDummy {
-	p.CmdPrefix()
-	p.CmdWord()
-	p.CmdSuffix()
-	p.CmdName()
-	return nil
-}
+func (p *MkShParser) SimpleCommand() *MkShSimpleCmd {
+	var words []*ShToken
 
-// ::= msttWORD
-func (p *MkShParser) CmdName() *MkShDummy {
-	// rule 7a
-	return nil
-}
-
-// ::= msttWORD
-func (p *MkShParser) CmdWord() *MkShDummy {
-	// rule 7b
-	return nil
-}
-
-// ::= (IoRedirect | msttASSIGNMENT_WORD)+
-func (p *MkShParser) CmdPrefix() *MkShDummy {
-	p.IoRedirect()
-	return nil
-}
-
-// ::= (IoRedirect | msttWORD)+
-func (p *MkShParser) CmdSuffix() *MkShDummy {
-	p.IoRedirect()
+nextword:
+	word := p.ShToken()
+	if word != nil {
+		words = append(words, word)
+		goto nextword
+	}
+	if len(words) > 0 {
+		return &MkShSimpleCmd{words}
+	}
 	return nil
 }
 
@@ -331,8 +314,8 @@ func (p *MkShParser) IoFile() *MkShDummy {
 	return nil
 }
 
-// ::= "<<" WORD
-// ::= "<<-" WORD
+// ::= "<<" msttWORD
+// ::= "<<-" msttWORD
 func (p *MkShParser) IoHere() *MkShDummy {
 	// rule 3
 	return nil
