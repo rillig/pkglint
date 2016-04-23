@@ -40,18 +40,15 @@ const (
 	msttSEMI // ;
 )
 
-type MkShDummy struct {
-}
-
 // ::= List Separator?
-func (p *MkShParser) CompleteCommand() *MkShDummy {
+func (p *MkShParser) CompleteCommand() *MkShCompleteCmd {
 	p.List()
 	p.Separator()
 	return nil
 }
 
 // ::= AndOr (SeparatorOp AndOr)*
-func (p *MkShParser) List() *MkShDummy {
+func (p *MkShParser) List() *MkShList {
 	p.AndOr()
 	p.SeparatorOp()
 	return nil
@@ -83,28 +80,17 @@ nextpipe:
 	return &MkShAndOr{pipes, ops}
 }
 
-// ::= PipeSequence
-// ::= msttBang PipeSequence
+// ::= msttBang?  Command (msttPipe Linebreak Command)*
 func (p *MkShParser) Pipeline() *MkShPipeline {
-	p.PipeSequence()
-	return nil
-}
-
-// ::= Command
-// ::= PipeSequence msttPipe Linebreak Command
-func (p *MkShParser) PipeSequence() *MkShDummy {
 	p.Command()
-	p.PipeSequence()
 	p.Linebreak()
-	p.Command()
 	return nil
 }
 
 // ::= SimpleCommand
-// ::= CompoundCommand
-// ::= CompoundCommand RedirectList
+// ::= CompoundCommand RedirectList?
 // ::= FunctionDefinition
-func (p *MkShParser) Command() *MkShDummy {
+func (p *MkShParser) Command() *MkShCommand {
 	p.SimpleCommand()
 	p.CompoundCommand()
 	p.RedirectList()
@@ -113,15 +99,15 @@ func (p *MkShParser) Command() *MkShDummy {
 }
 
 // ::= BraceGroup
-// ::= Subshell
+// ::= "(" CompoundList ")"
 // ::= ForClause
 // ::= CaseClause
 // ::= IfClause
 // ::= WhileClause
 // ::= UntilClause
-func (p *MkShParser) CompoundCommand() *MkShDummy {
+func (p *MkShParser) CompoundCommand() *MkShCompoundCmd {
 	p.BraceGroup()
-	p.Subshell()
+	p.CompoundList()
 	p.ForClause()
 	p.CaseClause()
 	p.IfClause()
@@ -130,14 +116,8 @@ func (p *MkShParser) CompoundCommand() *MkShDummy {
 	return nil
 }
 
-// ::= "(" CompoundList ")"
-func (p *MkShParser) Subshell() *MkShDummy {
-	p.CompoundList()
-	return nil
-}
-
 // ::= NewlineList? Term Separator?
-func (p *MkShParser) CompoundList() *MkShDummy {
+func (p *MkShParser) CompoundList() *MkShCompoundList {
 	p.NewlineList()
 	p.Term()
 	p.Separator()
@@ -146,18 +126,17 @@ func (p *MkShParser) CompoundList() *MkShDummy {
 
 // ::= Term Separator AndOr
 // ::= AndOr
-func (p *MkShParser) Term() *MkShDummy {
+func (p *MkShParser) Term() *MkShTerm {
 	p.Term()
 	p.Separator()
 	p.AndOr()
 	return nil
 }
 
-// ::= "for" Name Linebreak DoGroup
-// ::= "for" Name Linebreak "in" SequentialSep DoGroup
-// ::= "for" Name Linebreak "in" Wordlist SequentialSep DoGroup
-func (p *MkShParser) ForClause() *MkShDummy {
-	p.Name()
+// ::= "for" msttWORD Linebreak DoGroup
+// ::= "for" msttWORD Linebreak "in" SequentialSep DoGroup
+// ::= "for" msttWORD Linebreak "in" Wordlist SequentialSep DoGroup
+func (p *MkShParser) ForClause() *MkShForClause {
 	p.Linebreak()
 	p.DoGroup()
 	p.SequentialSep()
@@ -166,54 +145,21 @@ func (p *MkShParser) ForClause() *MkShDummy {
 	return nil
 }
 
-func (p *MkShParser) Name() *MkShDummy {
-	// See rule 5
-	return nil
-}
-
 // ::= Wordlist msttWord
 // ::= msttWord
-func (p *MkShParser) Wordlist() *MkShDummy {
+func (p *MkShParser) Wordlist() []*ShToken {
 	return nil
 }
 
-// ::= "case" msttWORD Linebreak "in" Linebreak CaseList "esac"
-// ::= "case" msttWORD Linebreak "in" Linebreak CaseListNs "esac"
-// ::= "case" msttWORD Linebreak "in" Linebreak "esac"
-func (p *MkShParser) CaseClause() *MkShDummy {
+// ::= "case" msttWORD Linebreak "in" Linebreak CaseItem* "esac"
+func (p *MkShParser) CaseClause() *MkShCaseClause {
 	p.Linebreak()
-	p.CaseList()
-	p.CaseListNs()
-	return nil
-}
-
-// ::= CaseList CaseItemNs
-// ::= CaseItemNs
-func (p *MkShParser) CaseListNs() *MkShDummy {
-	p.CaseList()
-	p.CaseItemNs()
-	return nil
-}
-
-// ::= CaseList CaseItem
-// ::= CaseItem
-func (p *MkShParser) CaseList() *MkShDummy {
-	p.CaseList()
 	p.CaseItem()
 	return nil
 }
 
-// ::= "("? Pattern ")" CompoundList? Linebreak
-func (p *MkShParser) CaseItemNs() *MkShDummy {
-	p.Pattern()
-	p.CompoundList()
-	p.Linebreak()
-	return nil
-}
-
-// ::= "("? Pattern ")" Linebreak msttDSEMI Linebreak
-// ::= "("? Pattern ")" CompoundList msttDSEMI Linebreak
-func (p *MkShParser) CaseItem() *MkShDummy {
+// ::= "("? Pattern ")" (CompoundList | Linebreak) msttDSEMI? Linebreak
+func (p *MkShParser) CaseItem() *MkShCaseItem {
 	p.Pattern()
 	p.Linebreak()
 	p.CompoundList()
@@ -222,41 +168,33 @@ func (p *MkShParser) CaseItem() *MkShDummy {
 
 // ::= msttWORD
 // ::= Pattern "|" msttWORD
-func (p *MkShParser) Pattern() *MkShDummy {
+func (p *MkShParser) Pattern() []*ShToken {
 	p.Pattern()
 	return nil
 }
 
-// ::= "if" CompoundList "then" CompoundList ElsePart? "fi"
-func (p *MkShParser) IfClause() *MkShDummy {
-	p.CompoundList()
-	p.ElsePart()
-	return nil
-}
-
-// ::= ("elif" CompoundList "then" CompoundList)+
-// ::= "else" CompoundList
-func (p *MkShParser) ElsePart() *MkShDummy {
+// ::= "if" CompoundList "then" CompoundList ("elif" CompoundList "then" CompoundList)* ("else" CompoundList)? "fi"
+func (p *MkShParser) IfClause() *MkShIfClause {
 	p.CompoundList()
 	return nil
 }
 
 // ::= "while" CompoundList DoGroup
-func (p *MkShParser) WhileClause() *MkShDummy {
+func (p *MkShParser) WhileClause() *MkShLoopClause {
 	p.CompoundList()
 	p.DoGroup()
 	return nil
 }
 
 // ::= "until" CompoundList DoGroup
-func (p *MkShParser) UntilClause() *MkShDummy {
+func (p *MkShParser) UntilClause() *MkShLoopClause {
 	p.CompoundList()
 	p.DoGroup()
 	return nil
 }
 
 // ::= msttNAME "(" ")" Linebreak FunctionBody
-func (p *MkShParser) FunctionDefinition() *MkShDummy {
+func (p *MkShParser) FunctionDefinition() *MkShFunctionDef {
 	p.Linebreak()
 	p.FunctionBody()
 	return nil
@@ -264,20 +202,20 @@ func (p *MkShParser) FunctionDefinition() *MkShDummy {
 
 // ::= CompoundCommand
 // ::= CompoundCommand RedirectList
-func (p *MkShParser) FunctionBody() *MkShDummy {
+func (p *MkShParser) FunctionBody() *MkShFunctionBody {
 	p.CompoundCommand()
 	p.RedirectList()
 	return nil
 }
 
 // ::= "{" CompoundList "}"
-func (p *MkShParser) BraceGroup() *MkShDummy {
+func (p *MkShParser) BraceGroup() *MkShCompoundList {
 	p.CompoundList()
 	return nil
 }
 
 // ::= "do" CompoundList "done"
-func (p *MkShParser) DoGroup() *MkShDummy {
+func (p *MkShParser) DoGroup() *MkShCompoundList {
 	p.CompoundList()
 	return nil
 }
@@ -298,26 +236,26 @@ nextword:
 }
 
 // ::= IoRedirect+
-func (p *MkShParser) RedirectList() *MkShDummy {
+func (p *MkShParser) RedirectList() []*ShToken {
 	p.IoRedirect()
 	return nil
 }
 
 // ::= msttIO_NUMBER? (IoFile | IoHere)
-func (p *MkShParser) IoRedirect() *MkShDummy {
+func (p *MkShParser) IoRedirect() *ShToken {
 	p.IoFile()
 	return nil
 }
 
 // ::= ("<"  | "<&" | ">" | ">&" | ">>" | "<>" | ">|") msttWORD
-func (p *MkShParser) IoFile() *MkShDummy {
+func (p *MkShParser) IoFile() *ShToken {
 	// rule 2
 	return nil
 }
 
 // ::= "<<" msttWORD
 // ::= "<<-" msttWORD
-func (p *MkShParser) IoHere() *MkShDummy {
+func (p *MkShParser) IoHere() *ShToken {
 	// rule 3
 	return nil
 }
@@ -337,13 +275,13 @@ func (p *MkShParser) Linebreak() {
 }
 
 // ::= "&" | ";"
-func (p *MkShParser) SeparatorOp() *MkShDummy {
+func (p *MkShParser) SeparatorOp() *MkShSeparator {
 	return nil
 }
 
 // ::= SeparatorOp Linebreak
 // ::= NewlineList
-func (p *MkShParser) Separator() *MkShDummy {
+func (p *MkShParser) Separator() *MkShSeparator {
 	p.SeparatorOp()
 	p.Linebreak()
 	p.NewlineList()
