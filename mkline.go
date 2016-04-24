@@ -844,12 +844,12 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 		return vucExtentWord
 	}
 
-	tokens := NewShParser(mkline.Line, mkline.Value()).ShAtoms()
-	for i, token := range tokens {
-		if token.Type == shtVaruse {
-			extent := extent(tokens, i)
-			vuc := &VarUseContext{vartype, time, token.Quoting.ToVarUseContext(), extent}
-			mkline.CheckVaruse(token.Data.(*MkVarUse), vuc)
+	atoms := NewShTokenizer(mkline.Line, mkline.Value()).ShAtoms()
+	for i, atom := range atoms {
+		if atom.Type == shtVaruse {
+			extent := extent(atoms, i)
+			vuc := &VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), extent}
+			mkline.CheckVaruse(atom.Data.(*MkVarUse), vuc)
 		}
 	}
 }

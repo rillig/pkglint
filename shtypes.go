@@ -37,9 +37,9 @@ func (t ShAtomType) String() string {
 	}[t]
 }
 
-func (t ShAtomType) IsTokenDelimiter() bool {
+func (t ShAtomType) IsWord() bool {
 	switch t {
-	case shtSpace, shtSemicolon, shtCaseSeparator, shtParenOpen, shtParenClose, shtPipe, shtBackground, shtOr, shtAnd, shtRedirect:
+	case shtVaruse, shtWord, shtRedirect:
 		return true
 	}
 	return false

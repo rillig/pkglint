@@ -1,17 +1,13 @@
 package main
 
 type MkShParser struct {
-	*Parser
-	*ShParser
-	next *ShToken
+	tok  *ShTokenizer
+	curr *ShToken
 }
 
 func NewMkShParser(line *Line, text string) *MkShParser {
-	p := NewParser(line, text)
-	mkp := &MkParser{p}
-	shp := &ShParser{p, mkp}
-	next := shp.ShToken()
-	return &MkShParser{p, shp, next}
+	tok := NewShTokenizer(line, text)
+	return &MkShParser{tok, nil}
 }
 
 // See Shell Command Language grammar.
@@ -67,7 +63,7 @@ func (p *MkShParser) AndOr() *MkShAndOr {
 
 	pipes = append(pipes, pipe)
 nextpipe:
-	switch op := p.peek(); op {
+	switch op := p.peekType(); op {
 	case msttAND_IF, msttOR_IF:
 		p.Linebreak()
 		pipe := p.Pipeline()
@@ -224,7 +220,7 @@ func (p *MkShParser) SimpleCommand() *MkShSimpleCmd {
 	var words []*ShToken
 
 nextword:
-	word := p.ShToken()
+	word := p.tok.ShToken()
 	if word != nil {
 		words = append(words, word)
 		goto nextword
@@ -263,14 +259,16 @@ func (p *MkShParser) IoHere() *ShToken {
 // ::= "\n"+
 func (p *MkShParser) NewlineList() bool {
 	ok := false
-	for p.repl.AdvanceStr("\n") {
+	for p.peekType() == msttNEWLINE {
 		ok = true
+		p.skip()
 	}
 	return ok
 }
 
 func (p *MkShParser) Linebreak() {
-	for p.repl.AdvanceStr("\n") {
+	for p.peekType() == msttNEWLINE {
+		p.skip()
 	}
 }
 
@@ -289,7 +287,7 @@ func (p *MkShParser) Separator() *MkShSeparator {
 }
 
 func (p *MkShParser) SequentialSep() bool {
-	if p.peek() == msttSEMI {
+	if p.peekType() == msttSEMI {
 		p.skip()
 		p.Linebreak()
 		return true
@@ -299,16 +297,23 @@ func (p *MkShParser) SequentialSep() bool {
 }
 
 func (p *MkShParser) mark() PrefixReplacerMark {
-	return p.repl.Mark()
+	return p.tok.Mark()
 }
 
-func (p *MkShParser) peek() MkShTokenType {
-	if p.next != nil {
-		return p.next.Type
+func (p *MkShParser) peek() *ShToken {
+	if p.curr == nil {
+		p.curr = p.tok.ShToken()
+	}
+	return p.curr
+}
+
+func (p *MkShParser) peekType() MkShTokenType {
+	if curr := p.peek(); curr != nil {
+		return curr.Type
 	}
 	return msttEOF
 }
 
 func (p *MkShParser) skip() {
-	p.next = p.ShToken()
+	p.curr = nil
 }

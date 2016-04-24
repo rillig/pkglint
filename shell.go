@@ -935,7 +935,7 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 		defer tracecall(line, text)()
 	}
 
-	p := NewShParser(line, text)
+	p := NewShTokenizer(line, text)
 	tokens := p.ShAtoms()
 	word := ""
 	for _, token := range tokens {
