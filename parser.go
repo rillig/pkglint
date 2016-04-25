@@ -95,7 +95,3 @@ func (p *Parser) Dependency() *DependencyPattern {
 	repl.Reset(mark)
 	return nil
 }
-
-func (p *Parser) Hspace() bool {
-	return p.repl.AdvanceRegexp(`^[ \t]+`)
-}
