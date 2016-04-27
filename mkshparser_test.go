@@ -4,27 +4,83 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
-	p := NewMkShParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
+func (s *Suite) Test_MkShParser_Program(c *check.C) {
 
-	shcmd := p.SimpleCommand()
-
-	expected := NewMkShSimpleCommand(
-		NewShToken("PATH=/nonexistent",
-			NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
-		NewShToken("env",
-			NewShAtom(shtWord, "env", shqPlain)),
-		NewShToken("PATH=${PATH:Q}",
-			NewShAtom(shtWord, "PATH=", shqPlain),
-			NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
-		NewShToken("true",
-			NewShAtom(shtWord, "true", shqPlain)))
-	c.Check(shcmd, deepEquals, expected)
-	c.Check(shcmd.String(), equals, "SimpleCommand(PATH=/nonexistent, env, PATH=${PATH:Q}, true")
-	c.Check(p.tok.parser.Rest(), equals, "")
 }
 
-func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
+func (s *Suite) Test_MkShParser_List(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_AndOr(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Pipeline(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Command(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_CompoundCommand(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Subshell(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_CompoundList(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_ForClause(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Wordlist(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_CaseClause(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_CaseItem(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Pattern(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_IfClause(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_WhileClause(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_UntilClause(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_FunctionDefinition(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_BraceGroup(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 	check := func(cmd string, expected *MkShSimpleCommand) {
 		p := NewMkShParser(dummyLine, cmd)
 		shcmd := p.SimpleCommand()
@@ -159,4 +215,56 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 				NewShAtom(shtWord, "'", shqDquotBackt),
 				NewShAtom(shtWord, "`", shqDquot),
 				NewShAtom(shtWord, "\"", shqPlain))))
+
+	check("PATH=/nonexistent env PATH=${PATH:Q} true",
+		NewMkShSimpleCommand(
+			NewShToken("PATH=/nonexistent",
+				NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
+			NewShToken("env",
+				NewShAtom(shtWord, "env", shqPlain)),
+			NewShToken("PATH=${PATH:Q}",
+				NewShAtom(shtWord, "PATH=", shqPlain),
+				NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
+			NewShToken("true",
+				NewShAtom(shtWord, "true", shqPlain))))
+}
+
+func (s *Suite) Test_MkShParser_RedirectList(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_IoRedirect(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_IoFile(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_IoHere(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_NewlineList(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Linebreak(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_SeparatorOp(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Separator(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_SequentialSep(c *check.C) {
+
+}
+
+func (s *Suite) Test_MkShParser_Word(c *check.C) {
+
 }

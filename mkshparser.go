@@ -11,30 +11,56 @@ func NewMkShParser(line *Line, text string) *MkShParser {
 }
 
 func (p *MkShParser) Program() *MkShList {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)()
 
 	list := p.List()
-	separator := p.Separator()
 	if list == nil {
 		return nil
 	}
-	ok = true
+	separator := p.Separator()
 	if separator == nil {
+		ok = true
 		return list
 	}
+
+	ok = true
 	return &MkShList{list.AndOrs, append(list.Separators, *separator)}
 }
 
 // ::= AndOr (SeparatorOp AndOr)*
 func (p *MkShParser) List() *MkShList {
-	panic("List")
-	p.AndOr()
-	p.SeparatorOp()
-	return nil
+	defer p.trace()()
+	ok := false
+	defer p.rollback(&ok)()
+
+	var andors []*MkShAndOr
+	var seps []MkShSeparator
+
+	if andor := p.AndOr(); andor != nil {
+		andors = append(andors, andor)
+	} else {
+		return nil
+	}
+
+next:
+	mark := p.mark()
+	if sep := p.SeparatorOp(); sep != nil {
+		if andor := p.AndOr(); andor != nil {
+			andors = append(andors, andor)
+			seps = append(seps, *sep)
+			goto next
+		}
+	}
+	p.reset(mark)
+
+	ok = true
+	return &MkShList{andors, seps}
 }
 
 func (p *MkShParser) AndOr() *MkShAndOr {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)
 
@@ -59,6 +85,7 @@ nextpipe:
 
 // ::= Command (msttPipe Linebreak Command)*
 func (p *MkShParser) Pipeline() *MkShPipeline {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -77,6 +104,7 @@ nextcmd:
 }
 
 func (p *MkShParser) Command() *MkShCommand {
+	defer p.trace()()
 	if simple := p.SimpleCommand(); simple != nil {
 		return &MkShCommand{Simple: simple}
 	}
@@ -91,6 +119,7 @@ func (p *MkShParser) Command() *MkShCommand {
 }
 
 func (p *MkShParser) CompoundCommand() *MkShCompoundCommand {
+	defer p.trace()()
 	if brace := p.BraceGroup(); brace != nil {
 		return &MkShCompoundCommand{Brace: brace}
 	}
@@ -116,21 +145,27 @@ func (p *MkShParser) CompoundCommand() *MkShCompoundCommand {
 }
 
 func (p *MkShParser) Subshell() *MkShList {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)()
 
-	ok1 := p.eat("(")
-	list := p.CompoundList()
-	ok2 := p.eat(")")
-	if ok1 && list != nil && ok2 {
-		ok = true
-		return list
+	if !p.eat("(") {
+		return nil
 	}
-	return nil
+	list := p.CompoundList()
+	if list == nil {
+		return nil
+	}
+	if !p.eat(")") {
+		return nil
+	}
+	ok = true
+	return list
 }
 
 // ::= Newline* AndOr (Separator AndOr)* Separator?
 func (p *MkShParser) CompoundList() *MkShList {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -157,6 +192,7 @@ nextandor:
 // ::= "for" msttWORD Linebreak "in" SequentialSep DoGroup
 // ::= "for" msttWORD Linebreak "in" Wordlist SequentialSep DoGroup
 func (p *MkShParser) ForClause() *MkShForClause {
+	defer p.trace()()
 	panic("ForClause")
 	p.Linebreak()
 	p.DoGroup()
@@ -169,12 +205,14 @@ func (p *MkShParser) ForClause() *MkShForClause {
 // ::= Wordlist msttWord
 // ::= msttWord
 func (p *MkShParser) Wordlist() []*ShToken {
+	defer p.trace()()
 	panic("Wordlist")
 	return nil
 }
 
 // ::= "case" msttWORD Linebreak "in" Linebreak CaseItem* "esac"
 func (p *MkShParser) CaseClause() *MkShCaseClause {
+	defer p.trace()()
 	panic("CaseClause")
 	p.Linebreak()
 	p.CaseItem()
@@ -183,6 +221,7 @@ func (p *MkShParser) CaseClause() *MkShCaseClause {
 
 // ::= "("? Pattern ")" (CompoundList | Linebreak) msttDSEMI? Linebreak
 func (p *MkShParser) CaseItem() *MkShCaseItem {
+	defer p.trace()()
 	panic("CaseItem")
 	p.Pattern()
 	p.Linebreak()
@@ -193,6 +232,7 @@ func (p *MkShParser) CaseItem() *MkShCaseItem {
 // ::= msttWORD
 // ::= Pattern "|" msttWORD
 func (p *MkShParser) Pattern() []*ShToken {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -212,6 +252,7 @@ nextword:
 }
 
 func (p *MkShParser) IfClause() *MkShIfClause {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -251,6 +292,7 @@ nextcond:
 
 // ::= "while" CompoundList DoGroup
 func (p *MkShParser) WhileClause() *MkShLoopClause {
+	defer p.trace()()
 	panic("WhileClause")
 	p.CompoundList()
 	p.DoGroup()
@@ -259,6 +301,7 @@ func (p *MkShParser) WhileClause() *MkShLoopClause {
 
 // ::= "until" CompoundList DoGroup
 func (p *MkShParser) UntilClause() *MkShLoopClause {
+	defer p.trace()()
 	panic("UntilClause")
 	p.CompoundList()
 	p.DoGroup()
@@ -267,6 +310,7 @@ func (p *MkShParser) UntilClause() *MkShLoopClause {
 
 // ::= msttNAME "(" ")" Linebreak CompoundCommand Redirect*
 func (p *MkShParser) FunctionDefinition() *MkShFunctionDef {
+	defer p.trace()()
 	panic("FunctionDefinition")
 	p.Linebreak()
 	p.CompoundCommand()
@@ -274,33 +318,54 @@ func (p *MkShParser) FunctionDefinition() *MkShFunctionDef {
 	return nil
 }
 
-// ::= "{" CompoundList "}"
 func (p *MkShParser) BraceGroup() *MkShList {
-	panic("BraceGroup")
-	p.CompoundList()
-	return nil
+	defer p.trace()()
+	ok := false
+	defer p.rollback(&ok)()
+
+	if !p.eat("{") {
+		return nil
+	}
+	list := p.CompoundList()
+	if list == nil {
+		return nil
+	}
+	if !p.eat("}") {
+		return nil
+	}
+	ok = true
+	return list
 }
 
-// ::= "do" CompoundList "done"
 func (p *MkShParser) DoGroup() *MkShList {
-	panic("DoGroup")
-	p.CompoundList()
-	return nil
+	ok := false
+	defer p.rollback(&ok)()
+
+	if !p.eat("do") {
+		return nil
+	}
+	list := p.CompoundList()
+	if list == nil {
+		return nil
+	}
+	if !p.eat("done") {
+		return nil
+	}
+	ok = true
+	return list
 }
 
 func (p *MkShParser) SimpleCommand() *MkShSimpleCommand {
+	defer p.trace()()
 	ok := false
 	defer p.rollback(&ok)()
 
 	var words []*ShToken
 nextword:
-	word := p.Word()
-	//dummyLine.Notef("words=%v word=%v",words,word)
-	if word != nil {
+	if word := p.Word(); word != nil {
 		words = append(words, word)
 		goto nextword
 	}
-	//dummyLine.Warnf("words=%v",words)
 	if len(words) == 0 {
 		return nil
 	}
@@ -310,6 +375,7 @@ nextword:
 
 // ::= IoRedirect+
 func (p *MkShParser) RedirectList() []*MkShRedirection {
+	defer p.trace()()
 	panic("RedirectList")
 	p.IoRedirect()
 	return nil
@@ -317,6 +383,7 @@ func (p *MkShParser) RedirectList() []*MkShRedirection {
 
 // ::= msttIO_NUMBER? (IoFile | IoHere)
 func (p *MkShParser) IoRedirect() *ShToken {
+	defer p.trace()()
 	panic("IoRedirect")
 	p.IoFile()
 	return nil
@@ -324,6 +391,7 @@ func (p *MkShParser) IoRedirect() *ShToken {
 
 // ::= ("<"  | "<&" | ">" | ">&" | ">>" | "<>" | ">|") msttWORD
 func (p *MkShParser) IoFile() *ShToken {
+	defer p.trace()()
 	panic("IoFile")
 	// rule 2
 	return nil
@@ -332,12 +400,14 @@ func (p *MkShParser) IoFile() *ShToken {
 // ::= "<<" msttWORD
 // ::= "<<-" msttWORD
 func (p *MkShParser) IoHere() *ShToken {
+	defer p.trace()()
 	panic("IoHere")
 	// rule 3
 	return nil
 }
 
 func (p *MkShParser) NewlineList() bool {
+	defer p.trace()()
 	ok := false
 	for p.eat("\n") {
 		ok = true
@@ -346,11 +416,13 @@ func (p *MkShParser) NewlineList() bool {
 }
 
 func (p *MkShParser) Linebreak() {
+	defer p.trace()()
 	for p.eat("\n") {
 	}
 }
 
 func (p *MkShParser) SeparatorOp() *MkShSeparator {
+	defer p.trace()()
 	if p.eat(";") {
 		op := MkShSeparator(';')
 		return &op
@@ -363,6 +435,7 @@ func (p *MkShParser) SeparatorOp() *MkShSeparator {
 }
 
 func (p *MkShParser) Separator() *MkShSeparator {
+	defer p.trace()()
 	op := p.SeparatorOp()
 	if op == nil && p.eat("\n") {
 		sep := MkShSeparator('\n')
@@ -375,6 +448,7 @@ func (p *MkShParser) Separator() *MkShSeparator {
 }
 
 func (p *MkShParser) SequentialSep() bool {
+	defer p.trace()()
 	if p.peekText() == ";" {
 		p.skip()
 		p.Linebreak()
@@ -385,6 +459,7 @@ func (p *MkShParser) SequentialSep() bool {
 }
 
 func (p *MkShParser) Word() *ShToken {
+	defer p.trace()()
 	if token := p.peek(); token != nil && token.IsWord() {
 		p.skip()
 		return token
@@ -399,6 +474,7 @@ func (p *MkShParser) peek() *ShToken {
 			panic("parse error at " + p.tok.parser.Rest())
 		}
 	}
+	traceStep("MkShParser.peek %v at %v", p.curr, p.tok.mkp.repl.rest)
 	return p.curr
 }
 
@@ -425,10 +501,32 @@ func (p *MkShParser) eat(s string) bool {
 }
 
 func (p *MkShParser) rollback(pok *bool) func() {
-	mark := p.tok.parser.repl.Mark()
+	mark := p.mark()
 	return func() {
 		if !*pok {
-			p.tok.parser.repl.Reset(mark)
+			p.reset(mark)
 		}
 	}
+}
+
+func (p *MkShParser) trace() func() {
+	if G.opts.Debug {
+		return tracecallInternal(p.peek(), p.tok.mkp.repl.rest)
+	} else {
+		return func() {}
+	}
+}
+
+func (p *MkShParser) mark() MkShParserMark {
+	return MkShParserMark{p.tok.parser.repl.Mark(), p.curr}
+}
+
+func (p *MkShParser) reset(mark MkShParserMark) {
+	p.tok.parser.repl.Reset(mark.rest)
+	p.curr = mark.curr
+}
+
+type MkShParserMark struct {
+	rest PrefixReplacerMark
+	curr *ShToken
 }
