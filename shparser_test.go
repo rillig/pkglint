@@ -5,11 +5,11 @@ import (
 )
 
 func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
-	p := NewShParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
+	p := NewMkShParser(dummyLine, "PATH=/nonexistent env PATH=${PATH:Q} true")
 
-	shcmd := p.ShSimpleCmd()
+	shcmd := p.SimpleCommand()
 
-	expected := NewShSimpleCmd(1,
+	expected := NewMkShSimpleCommand(
 		NewShToken("PATH=/nonexistent",
 			NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
 		NewShToken("env",
@@ -20,32 +20,32 @@ func (s *Suite) Test_Parser_ShSimpleCmd_DataStructures(c *check.C) {
 		NewShToken("true",
 			NewShAtom(shtWord, "true", shqPlain)))
 	c.Check(shcmd, deepEquals, expected)
-	c.Check(shcmd.String(), equals, "ShSimpleCmd([ShToken([\"PATH=/nonexistent\"]) ShToken([\"env\"]) ShToken([\"PATH=\" varuse(\"PATH:Q\")]) ShToken([\"true\"])])")
-	c.Check(p.Rest(), equals, "")
+	c.Check(shcmd.String(), equals, "SimpleCommand(PATH=/nonexistent, env, PATH=${PATH:Q}, true")
+	c.Check(p.tok.parser.Rest(), equals, "")
 }
 
 func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
-	check := func(cmd string, expected *ShSimpleCmd) {
-		p := NewShParser(dummyLine, cmd)
-		shcmd := p.ShSimpleCmd()
+	check := func(cmd string, expected *MkShSimpleCommand) {
+		p := NewMkShParser(dummyLine, cmd)
+		shcmd := p.SimpleCommand()
 		if c.Check(shcmd, check.NotNil) {
 			if !c.Check(shcmd, deepEquals, expected) {
-				for i, token := range shcmd.Tokens {
-					c.Check(token, deepEquals, expected.Tokens[i])
+				for i, word := range shcmd.Words {
+					c.Check(word, deepEquals, expected.Words[i])
 				}
 			}
 		}
-		c.Check(p.Rest(), equals, "")
+		c.Check(p.tok.parser.Rest(), equals, "")
 		c.Check(s.Output(), equals, "")
 	}
 
 	check("echo ${PKGNAME:Q}",
-		NewShSimpleCmd(0,
+		NewMkShSimpleCommand(
 			NewShToken("echo", NewShAtom(shtWord, "echo", shqPlain)),
 			NewShToken("${PKGNAME:Q}", NewShAtomVaruse("${PKGNAME:Q}", shqPlain, "PKGNAME", "Q"))))
 
 	check("${ECHO} \"Double-quoted\" 'Single-quoted'",
-		NewShSimpleCmd(0,
+		NewMkShSimpleCommand(
 			NewShToken("${ECHO}", NewShAtomVaruse("${ECHO}", shqPlain, "ECHO")),
 			NewShToken("\"Double-quoted\"",
 				NewShAtom(shtWord, "\"", shqDquot),
@@ -57,7 +57,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 				NewShAtom(shtWord, "'", shqPlain))))
 
 	check("`cat plain` \"`cat double`\" '`cat single`'",
-		NewShSimpleCmd(0,
+		NewMkShSimpleCommand(
 			NewShToken("`cat plain`",
 				NewShAtom(shtWord, "`", shqBackt),
 				NewShAtom(shtWord, "cat", shqBackt),
@@ -78,7 +78,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 				NewShAtom(shtWord, "'", shqPlain))))
 
 	check("`\"one word\"`",
-		NewShSimpleCmd(0,
+		NewMkShSimpleCommand(
 			NewShToken("`\"one word\"`",
 				NewShAtom(shtWord, "`", shqBackt),
 				NewShAtom(shtWord, "\"", shqBacktDquot),
@@ -87,7 +87,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 				NewShAtom(shtWord, "`", shqPlain))))
 
 	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		NewShSimpleCmd(-1,
+		NewMkShSimpleCommand(
 			NewShToken("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 				NewShAtom(shtWord, "PAGES=", shqPlain),
 				NewShAtom(shtWord, "\"", shqDquot),
@@ -109,7 +109,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 				NewShAtom(shtWord, "\"", shqPlain))))
 
 	check("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
-		NewShSimpleCmd(-1,
+		NewMkShSimpleCommand(
 			NewShToken("var=Plain",
 				NewShAtom(shtWord, "var=Plain", shqPlain)),
 			NewShToken("var=\"Dquot\"",
@@ -133,7 +133,7 @@ func (s *Suite) Test_Parser_ShSimpleCmd(c *check.C) {
 		))
 
 	check("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
-		NewShSimpleCmd(0,
+		NewMkShSimpleCommand(
 			NewShToken("${RUN}",
 				NewShAtomVaruse("${RUN}", shqPlain, "RUN")),
 			NewShToken("subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",

@@ -1,10 +1,5 @@
 package main
 
-type MkShCompleteCmd struct {
-	Lists      []*MkShList
-	Separators []MkShSeparator
-}
-
 type MkShList struct {
 	AndOrs     []*MkShAndOr
 	Separators []MkShSeparator
@@ -12,63 +7,35 @@ type MkShList struct {
 
 type MkShAndOr struct {
 	Pipes []*MkShPipeline
-	Ops   []MkShTokenType
+	Ops   string // Either '&' or '|'
 }
 
 type MkShPipeline struct {
+	Negated bool
+	Cmds    []*MkShCommand
 }
 
 type MkShCommand struct {
-	Simple    *MkShSimpleCmd
-	Compound  *MkShCompoundCmd
-	Redirects *MkShRedirectList // For Compound
+	Simple    *MkShSimpleCommand
+	Compound  *MkShCompoundCommand
+	Redirects []*MkShRedirection // For Compound
 	FuncDef   *MkShFunctionDef
 }
-
-type MkShRedirectList struct {
-}
-
-type MkShFunctionDef struct {
-	Name string
-	Body *MkShFunctionBody
-}
-
-type MkShSimpleCmd struct {
-	Words []*ShToken
-}
-
-type MkShCompoundCmd struct {
-	Brace    *MkShBraceGroup
-	Subshell *MkShCompoundList
-}
-
-type MkShBraceGroup struct {
-}
-
-type MkShCompoundList struct {
-}
-
-type MkShTerm struct {
-	AndOrs     []*MkShAndOr
-	Separators []MkShSeparator
+type MkShCompoundCommand struct {
+	Brace    *MkShList
+	Subshell *MkShList
+	For      *MkShForClause
+	Case     *MkShCaseClause
+	If       *MkShIfClause
+	While    *MkShLoopClause
+	Until    *MkShLoopClause
 }
 
 type MkShForClause struct {
 	Varname string
-	Ins     []*ShToken
-	Body    *MkShCompoundList
+	Values  []*ShToken
+	Body    *MkShList
 }
-type MkShSeparator uint8
-
-const (
-	mssSemicolon MkShSeparator = iota
-	mssAmpersand
-	mssNewlines
-)
-
-type MkShFunctionBody struct {
-}
-
 type MkShCaseClause struct {
 	Word  *ShToken
 	Cases []*MkShCaseItem
@@ -76,17 +43,47 @@ type MkShCaseClause struct {
 
 type MkShCaseItem struct {
 	Patterns []*ShToken
-	Action   *MkShCompoundList
+	Action   *MkShList
 }
 
 type MkShIfClause struct {
-	Conds   []*MkShCompoundList
-	Actions []*MkShCompoundList
-	Else    *MkShCompoundList
+	Conds   []*MkShList
+	Actions []*MkShList
+	Else    *MkShList
 }
 
 type MkShLoopClause struct {
-	Cond   *MkShCompoundList
-	Action *MkShCompoundList
+	Cond   *MkShList
+	Action *MkShList
 	Until  bool
 }
+
+type MkShFunctionDef struct {
+	Name      string
+	Body      *MkShCompoundCommand
+	Redirects []*MkShRedirection
+}
+
+type MkShSimpleCommand struct {
+	Words []*ShToken // Can be redirects, too.
+}
+
+func NewMkShSimpleCommand(words ...*ShToken) *MkShSimpleCommand {
+	return &MkShSimpleCommand{words}
+}
+
+func (scmd *MkShSimpleCommand) String() string {
+	str := "SimpleCommand("
+	for i, word := range scmd.Words {
+		if i != 0 {
+			str += ", "
+		}
+		str += word.MkText
+	}
+	return str
+}
+
+type MkShRedirection ShToken
+
+// One of ';', '&', '\n'
+type MkShSeparator rune

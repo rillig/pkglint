@@ -129,19 +129,10 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		semicolon)
 
 	check("ls -1 | ${SED} -e 's,3qt$$,3,'",
-		word("ls"),
-		space,
-		word("-1"),
-		space,
-		pipe,
-		space,
-		varuse("SED"),
-		space,
-		word("-e"),
-		space,
-		squot("'"),
-		squot("s,3qt$$,3,"),
-		word("'"))
+		word("ls"), space, word("-1"), space,
+		pipe, space,
+		varuse("SED"), space, word("-e"), space,
+		squot("'"), squot("s,3qt$$,3,"), word("'"))
 
 	check("(for PAGE in $$PAGES; do ",
 		&ShAtom{shtParenOpen, "(", shqPlain, nil},
@@ -303,6 +294,14 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		token(shtWord, "\"", shqDquotBackt),
 		token(shtWord, "`", shqDquot),
 		token(shtWord, "\"", shqPlain))
+
+	check("if cond1; then action1; elif cond2; then action2; else action3; fi",
+		word("if"), space, word("cond1"), semicolon, space,
+		word("then"), space, word("action1"), semicolon, space,
+		word("elif"), space, word("cond2"), semicolon, space,
+		word("then"), space, word("action2"), semicolon, space,
+		word("else"), space, word("action3"), semicolon, space,
+		word("fi"))
 }
 
 func (s *Suite) Test_Shtokenizer_ShAtom_Quoting(c *check.C) {
@@ -340,12 +339,13 @@ func (s *Suite) Test_Shtokenizer_ShAtom_Quoting(c *check.C) {
 }
 
 func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
-	check := func(s string, expected ...*ShToken) {
-		p := NewShTokenizer(dummyLine, s)
+	check := func(str string, expected ...*ShToken) {
+		p := NewShTokenizer(dummyLine, str)
 		for _, exp := range expected {
 			c.Check(p.ShToken(), deepEquals, exp)
 		}
 		c.Check(p.Rest(), equals, "")
+		c.Check(s.Output(), equals, "")
 	}
 
 	check("",
@@ -391,4 +391,30 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 			NewShAtom(shtWord, "hello,", shqPlain)),
 		NewShToken("world",
 			NewShAtom(shtWord, "world", shqPlain)))
+
+	check("if cond1; then action1; elif cond2; then action2; else action3; fi",
+		NewShToken("if", NewShAtom(shtWord, "if", shqPlain)),
+		NewShToken("cond1", NewShAtom(shtWord, "cond1", shqPlain)),
+		NewShToken(";", NewShAtom(shtSemicolon, ";", shqPlain)),
+		NewShToken("then", NewShAtom(shtWord, "then", shqPlain)),
+		NewShToken("action1", NewShAtom(shtWord, "action1", shqPlain)),
+		NewShToken(";", NewShAtom(shtSemicolon, ";", shqPlain)),
+		NewShToken("elif", NewShAtom(shtWord, "elif", shqPlain)),
+		NewShToken("cond2", NewShAtom(shtWord, "cond2", shqPlain)),
+		NewShToken(";", NewShAtom(shtSemicolon, ";", shqPlain)),
+		NewShToken("then", NewShAtom(shtWord, "then", shqPlain)),
+		NewShToken("action2", NewShAtom(shtWord, "action2", shqPlain)),
+		NewShToken(";", NewShAtom(shtSemicolon, ";", shqPlain)),
+		NewShToken("else", NewShAtom(shtWord, "else", shqPlain)),
+		NewShToken("action3", NewShAtom(shtWord, "action3", shqPlain)),
+		NewShToken(";", NewShAtom(shtSemicolon, ";", shqPlain)),
+		NewShToken("fi", NewShAtom(shtWord, "fi", shqPlain)))
+
+	check("PATH=/nonexistent env PATH=${PATH:Q} true",
+		NewShToken("PATH=/nonexistent", NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
+		NewShToken("env", NewShAtom(shtWord, "env", shqPlain)),
+		NewShToken("PATH=${PATH:Q}",
+			NewShAtom(shtWord, "PATH=", shqPlain),
+			NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
+		NewShToken("true", NewShAtom(shtWord, "true", shqPlain)))
 }

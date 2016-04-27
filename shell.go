@@ -410,13 +410,15 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 	if false {
-		p := NewShParser(shline.line, shellcmd)
-		cmds := p.ShSimpleCmds()
-		rest := p.Rest()
+		p := NewMkShParser(shline.line, shellcmd)
+		cmds := p.Program()
+		rest := p.tok.parser.Rest()
 		if rest != "" {
 			shline.line.Warnf("shellcmd=%q", shellcmd)
-			for _, cmd := range cmds {
-				shline.line.Warnf("Command %v", cmd)
+			if cmds != nil {
+				for _, andor := range cmds.AndOrs {
+					shline.line.Warnf("Command %v", andor)
+				}
 			}
 			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", rest)
 		}
@@ -936,21 +938,21 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 	}
 
 	p := NewShTokenizer(line, text)
-	tokens := p.ShAtoms()
+	atoms := p.ShAtoms()
 	word := ""
-	for _, token := range tokens {
-		if token.Type == shtSpace && token.Quoting == shqPlain {
+	for _, atom := range atoms {
+		if atom.Type == shtSpace && atom.Quoting == shqPlain {
 			words = append(words, word)
 			word = ""
 		} else {
-			word += token.Text
+			word += atom.Text
 		}
 	}
-	if word != "" && tokens[len(tokens)-1].Quoting == shqPlain {
+	if word != "" && atoms[len(atoms)-1].Quoting == shqPlain {
 		words = append(words, word)
 		word = ""
 	}
-	return words, word + p.Rest()
+	return words, word + p.mkp.Rest()
 }
 
 type ShQuote struct {

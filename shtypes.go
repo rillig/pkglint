@@ -125,18 +125,10 @@ func (q ShQuoting) ToVarUseContext() vucQuoting {
 type ShToken struct {
 	MkText string // The text as it appeared in the Makefile, after replacing `\#` with `#`
 	Atoms  []*ShAtom
-	Type   MkShTokenType
 }
 
 func NewShToken(mkText string, atoms ...*ShAtom) *ShToken {
-	typ := msttEOF
-	switch atoms[0].Type {
-	case shtVaruse, shtWord, shtRedirect:
-		typ = msttWORD
-	default:
-		dummyLine.Warnf("Pkglint internal error in NewShToken for %q: %s", mkText, atoms[0].Type)
-	}
-	return &ShToken{mkText, atoms, typ}
+	return &ShToken{mkText, atoms}
 }
 
 func (token *ShToken) String() string {
@@ -147,19 +139,6 @@ func (token *ShToken) IsAssignment() bool {
 	return matches(token.MkText, `^[A-Za-z_]\w*=`)
 }
 
-type ShSimpleCmd struct {
-	Tokens  []*ShToken // Can be variable assignments, the command name, arguments, redirections.
-	Command *ShToken   // One of the above Tokens.
-}
-
-func NewShSimpleCmd(cmdindex int, tokens ...*ShToken) *ShSimpleCmd {
-	var cmd *ShToken
-	if cmdindex >= 0 {
-		cmd = tokens[cmdindex]
-	}
-	return &ShSimpleCmd{tokens, cmd}
-}
-
-func (cmd *ShSimpleCmd) String() string {
-	return fmt.Sprintf("ShSimpleCmd(%v)", cmd.Tokens)
+func (token *ShToken) IsWord() bool {
+	return token.Atoms[0].Type.IsWord()
 }
