@@ -483,15 +483,15 @@ func tracecall(args ...interface{}) func() {
 	return tracecallInternal(args...)
 }
 
-type Returning struct {
+type Ref struct {
 	intf interface{}
 }
 
-func returning(rv interface{}) Returning {
-	return Returning{rv}
+func ref(rv interface{}) Ref {
+	return Ref{rv}
 }
 
-func (r Returning) String() string {
+func (r Ref) String() string {
 	ptr := reflect.ValueOf(r.intf)
 	ref := reflect.Indirect(ptr)
 	return fmt.Sprintf("%v", ref)

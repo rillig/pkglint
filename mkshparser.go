@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type MkShParser struct {
 	tok  *ShTokenizer
 	curr *ShToken
@@ -229,12 +231,17 @@ func (p *MkShParser) ForClause() (retval *MkShForClause) {
 	return &MkShForClause{varname, values, body}
 }
 
-// ::= Wordlist msttWord
-// ::= msttWord
 func (p *MkShParser) Wordlist() (retval []*ShToken) {
 	defer p.trace(&retval)()
-	panic("Wordlist")
-	return nil
+
+	var words []*ShToken
+nextword:
+	word := p.Word(false)
+	if word != nil {
+		words = append(words, word)
+		goto nextword
+	}
+	return words
 }
 
 // ::= "case" msttWORD Linebreak "in" Linebreak CaseItem* "esac"
@@ -570,7 +577,7 @@ func (p *MkShParser) skip() {
 
 func (p *MkShParser) eat(s string) bool {
 	if p.peek() == nil {
-		panic("p.peek is nil")
+		return false
 	}
 	if p.peek().MkText == s {
 		p.skip()
@@ -590,7 +597,7 @@ func (p *MkShParser) rollback(pok *bool) func() {
 
 func (p *MkShParser) trace(retval interface{}) func() {
 	if G.opts.Debug {
-		return tracecallInternal(p.peek(), "rest="+p.tok.mkp.repl.rest, "=>", returning(retval))
+		return tracecallInternal(p.peek(), p.restref(), "=>", ref(retval))
 	} else {
 		return func() {}
 	}
@@ -605,7 +612,19 @@ func (p *MkShParser) reset(mark MkShParserMark) {
 	p.curr = mark.curr
 }
 
+func (p *MkShParser) restref() MkShParserRest {
+	return MkShParserRest{&p.tok.mkp.repl.rest}
+}
+
 type MkShParserMark struct {
 	rest PrefixReplacerMark
 	curr *ShToken
+}
+
+type MkShParserRest struct {
+	restref *string
+}
+
+func (rest MkShParserRest) String() string {
+	return fmt.Sprintf("rest=%q", *rest.restref)
 }
