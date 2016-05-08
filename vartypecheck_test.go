@@ -32,15 +32,19 @@ func (s *Suite) TestVartypeCheck_BuildlinkDepmethod(c *check.C) {
 
 func (s *Suite) TestVartypeCheck_Category(c *check.C) {
 	s.CreateTmpFile(c, "filesyscategory/Makefile", "# empty\n")
+	s.CreateTmpFile(c, "wip/Makefile", "# empty\n")
 	G.CurrentDir = s.tmpdir
 	G.CurPkgsrcdir = "."
 
 	runVartypeChecks("CATEGORIES", opAssign, (*VartypeCheck).Category,
 		"chinese",
 		"arabic",
-		"filesyscategory")
+		"filesyscategory",
+		"wip")
 
-	c.Check(s.Output(), equals, "ERROR: fname:2: Invalid category \"arabic\".\n")
+	c.Check(s.Output(), equals, ""+
+		"ERROR: fname:2: Invalid category \"arabic\".\n"+
+		"ERROR: fname:4: Invalid category \"wip\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_CFlag(c *check.C) {

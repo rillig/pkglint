@@ -126,7 +126,7 @@ func (cv *VartypeCheck) BuildlinkDepmethod() {
 }
 
 func (cv *VartypeCheck) Category() {
-	if fileExists(G.CurrentDir + "/" + G.CurPkgsrcdir + "/" + cv.value + "/Makefile") {
+	if cv.value != "wip" && fileExists(G.CurrentDir+"/"+G.CurPkgsrcdir+"/"+cv.value+"/Makefile") {
 		return
 	}
 	switch cv.value {
