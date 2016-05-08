@@ -102,7 +102,6 @@ func (s *Suite) Test_MkShParser_BraceGroup(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
-	s.DebugToStdout()
 	tester := &MkShTester{c}
 	check := func(str string, expected *MkShList) {
 		p := NewMkShParser(dummyLine, str)
