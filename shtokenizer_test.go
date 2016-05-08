@@ -417,4 +417,27 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 			NewShAtom(shtWord, "PATH=", shqPlain),
 			NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
 		NewShToken("true", NewShAtom(shtWord, "true", shqPlain)))
+
+	if false { // Don’t know how to tokenize this correctly.
+		check("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
+			NewShToken("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
+				NewShAtom(shtWord, "id=", shqPlain),
+				NewShAtom(shtWord, "$$(", shqPlain),
+				NewShAtomVaruse("${AWK}", shqPlain, "AWK")))
+	}
+	check("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
+		NewShToken("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
+			NewShAtom(shtWord, "id=", shqPlain),
+			NewShAtom(shtWord, "`", shqBackt),
+			NewShAtomVaruse("${AWK}", shqBackt, "AWK"),
+			NewShAtom(shtSpace, " ", shqBackt),
+			NewShAtom(shtWord, "'", shqBacktSquot),
+			NewShAtom(shtWord, "{print}", shqBacktSquot),
+			NewShAtom(shtWord, "'", shqBackt),
+			NewShAtom(shtSpace, " ", shqBackt),
+			NewShAtom(shtRedirect, "<", shqBackt),
+			NewShAtom(shtSpace, " ", shqBackt),
+			NewShAtomVaruse("${WRKSRC}", shqBackt, "WRKSRC"),
+			NewShAtom(shtWord, "/idfile", shqBackt),
+			NewShAtom(shtWord, "`", shqPlain)))
 }
