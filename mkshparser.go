@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type MkShParser struct {
 	tok  *ShTokenizer
@@ -448,36 +451,32 @@ nextword:
 	return &MkShSimpleCommand{words}
 }
 
-// ::= IoRedirect+
 func (p *MkShParser) RedirectList() (retval []*MkShRedirection) {
 	defer p.trace(&retval)()
-	panic("RedirectList")
-	p.IoRedirect()
+
+nextredirect:
+	if redirect := p.IoRedirect(); redirect != nil {
+		retval = append(retval, redirect)
+		goto nextredirect
+	}
 	return nil
 }
 
-// ::= msttIO_NUMBER? (IoFile | IoHere)
-func (p *MkShParser) IoRedirect() (retval *ShToken) {
+func (p *MkShParser) IoRedirect() (retval *MkShRedirection) {
 	defer p.trace(&retval)()
-	panic("IoRedirect")
-	p.IoFile()
-	return nil
-}
 
-// ::= ("<"  | "<&" | ">" | ">&" | ">>" | "<>" | ">|") msttWORD
-func (p *MkShParser) IoFile() (retval *ShToken) {
-	defer p.trace(&retval)()
-	panic("IoFile")
-	// rule 2
-	return nil
-}
+	if m, redirect, fdstr, op := match3(p.peekText(), `^((\d*)\s*(<|<&|>|>&|>>|<>|>\||<<|<<-))`); m {
+		target := p.peekText()[len(redirect):]
+		_, _, _ = fdstr, op, target
 
-// ::= "<<" msttWORD
-// ::= "<<-" msttWORD
-func (p *MkShParser) IoHere() (retval *ShToken) {
-	defer p.trace(&retval)()
-	panic("IoHere")
-	// rule 3
+		fd, err := strconv.ParseInt(fdstr, 10, 32)
+		if err != nil {
+			fd = -1
+		}
+		p.skip()
+		targetToken := NewShTokenizer(p.tok.mkp.line, target).ShToken()
+		return &MkShRedirection{int(fd), op, targetToken}
+	}
 	return nil
 }
 
@@ -557,7 +556,9 @@ func (p *MkShParser) peek() *ShToken {
 	if p.curr == nil {
 		p.curr = p.tok.ShToken()
 		if p.curr == nil && !p.tok.parser.EOF() {
-			panic("parse error at " + p.tok.parser.Rest())
+			p.tok.mkp.line.Warnf("Pkglint tokenize error at " + p.tok.parser.Rest())
+			p.tok.mkp.Parser.repl.AdvanceRest()
+			return nil
 		}
 	}
 	//traceStep("MkShParser.peek %v rest=%q", p.curr, p.tok.mkp.repl.rest)

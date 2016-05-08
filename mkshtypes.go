@@ -161,7 +161,11 @@ func (scmd *MkShSimpleCommand) String() string {
 	return str
 }
 
-type MkShRedirection ShToken
+type MkShRedirection struct {
+	Fd     int // Or -1
+	Op     string
+	Target *ShToken
+}
 
 // One of ';', '&', '\n'
 type MkShSeparator rune

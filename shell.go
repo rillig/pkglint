@@ -414,13 +414,13 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 		cmds := p.Program()
 		rest := p.tok.parser.Rest()
 		if rest != "" {
-			shline.line.Warnf("shellcmd=%q", shellcmd)
+			traceStep("shellcmd=%q", shellcmd)
 			if cmds != nil {
 				for _, andor := range cmds.AndOrs {
-					shline.line.Warnf("Command %v", andor)
+					traceStep("AndOr %v", andor)
 				}
 			}
-			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", rest)
+			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", p.peekText()+rest)
 		}
 	}
 
