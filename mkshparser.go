@@ -10,8 +10,8 @@ func NewMkShParser(line *Line, text string) *MkShParser {
 	return &MkShParser{shp, nil}
 }
 
-func (p *MkShParser) Program() *MkShList {
-	defer p.trace()()
+func (p *MkShParser) Program() (retval *MkShList) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -30,8 +30,8 @@ func (p *MkShParser) Program() *MkShList {
 }
 
 // ::= AndOr (SeparatorOp AndOr)*
-func (p *MkShParser) List() *MkShList {
-	defer p.trace()()
+func (p *MkShParser) List() (retval *MkShList) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -59,8 +59,8 @@ next:
 	return &MkShList{andors, seps}
 }
 
-func (p *MkShParser) AndOr() *MkShAndOr {
-	defer p.trace()()
+func (p *MkShParser) AndOr() (retval *MkShAndOr) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)
 
@@ -84,8 +84,8 @@ nextpipe:
 }
 
 // ::= Command (msttPipe Linebreak Command)*
-func (p *MkShParser) Pipeline() *MkShPipeline {
-	defer p.trace()()
+func (p *MkShParser) Pipeline() (retval *MkShPipeline) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -96,15 +96,17 @@ nextcmd:
 	if cmd == nil {
 		return nil
 	}
+	cmds = append(cmds, cmd)
 	if p.eat("|") {
 		p.Linebreak()
 		goto nextcmd
 	}
+	ok = true
 	return &MkShPipeline{bang, cmds}
 }
 
-func (p *MkShParser) Command() *MkShCommand {
-	defer p.trace()()
+func (p *MkShParser) Command() (retval *MkShCommand) {
+	defer p.trace(&retval)()
 	if simple := p.SimpleCommand(); simple != nil {
 		return &MkShCommand{Simple: simple}
 	}
@@ -118,8 +120,8 @@ func (p *MkShParser) Command() *MkShCommand {
 	return nil
 }
 
-func (p *MkShParser) CompoundCommand() *MkShCompoundCommand {
-	defer p.trace()()
+func (p *MkShParser) CompoundCommand() (retval *MkShCompoundCommand) {
+	defer p.trace(&retval)()
 	if brace := p.BraceGroup(); brace != nil {
 		return &MkShCompoundCommand{Brace: brace}
 	}
@@ -144,8 +146,8 @@ func (p *MkShParser) CompoundCommand() *MkShCompoundCommand {
 	return nil
 }
 
-func (p *MkShParser) Subshell() *MkShList {
-	defer p.trace()()
+func (p *MkShParser) Subshell() (retval *MkShList) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -164,8 +166,8 @@ func (p *MkShParser) Subshell() *MkShList {
 }
 
 // ::= Newline* AndOr (Separator AndOr)* Separator?
-func (p *MkShParser) CompoundList() *MkShList {
-	defer p.trace()()
+func (p *MkShParser) CompoundList() (retval *MkShList) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -173,8 +175,7 @@ func (p *MkShParser) CompoundList() *MkShList {
 	var andors []*MkShAndOr
 	var separators []MkShSeparator
 nextandor:
-	andor := p.AndOr()
-	if andor != nil {
+	if andor := p.AndOr(); andor != nil {
 		andors = append(andors, andor)
 		if sep := p.Separator(); sep != nil {
 			separators = append(separators, *sep)
@@ -191,28 +192,61 @@ nextandor:
 // ::= "for" msttWORD Linebreak DoGroup
 // ::= "for" msttWORD Linebreak "in" SequentialSep DoGroup
 // ::= "for" msttWORD Linebreak "in" Wordlist SequentialSep DoGroup
-func (p *MkShParser) ForClause() *MkShForClause {
-	defer p.trace()()
-	panic("ForClause")
+func (p *MkShParser) ForClause() (retval *MkShForClause) {
+	defer p.trace(&retval)()
+	ok := false
+	defer p.rollback(&ok)()
+
+	if !p.eat("for") {
+		return nil
+	}
+	varword := p.Word(false)
+	if varword == nil || !matches(varword.MkText, `^[A-Z_a-z][0-9A-Za-z]*`) {
+		return nil
+	}
+	varname := varword.MkText
+
+	var values []*ShToken
+	if p.eat("in") {
+		values = p.Wordlist()
+		if values == nil || !p.SequentialSep() {
+			return nil
+		}
+	} else {
+		values = []*ShToken{NewShToken("\"$@\"",
+			NewShAtom(shtWord, "\"", shqDquot),
+			NewShAtom(shtWord, "$@", shqDquot),
+			NewShAtom(shtWord, "\"", shqPlain))}
+	}
+
 	p.Linebreak()
-	p.DoGroup()
-	p.SequentialSep()
-	p.Wordlist()
-	// See rule 6 for "in"
-	return nil
+	body := p.DoGroup()
+	if body == nil {
+		return nil
+	}
+
+	ok = true
+	return &MkShForClause{varname, values, body}
 }
 
 // ::= Wordlist msttWord
 // ::= msttWord
-func (p *MkShParser) Wordlist() []*ShToken {
-	defer p.trace()()
+func (p *MkShParser) Wordlist() (retval []*ShToken) {
+	defer p.trace(&retval)()
 	panic("Wordlist")
 	return nil
 }
 
 // ::= "case" msttWORD Linebreak "in" Linebreak CaseItem* "esac"
-func (p *MkShParser) CaseClause() *MkShCaseClause {
-	defer p.trace()()
+func (p *MkShParser) CaseClause() (retval *MkShCaseClause) {
+	defer p.trace(&retval)()
+	ok := false
+	defer p.rollback(&ok)()
+
+	if !p.eat("case") {
+		return nil
+	}
+
 	panic("CaseClause")
 	p.Linebreak()
 	p.CaseItem()
@@ -220,8 +254,8 @@ func (p *MkShParser) CaseClause() *MkShCaseClause {
 }
 
 // ::= "("? Pattern ")" (CompoundList | Linebreak) msttDSEMI? Linebreak
-func (p *MkShParser) CaseItem() *MkShCaseItem {
-	defer p.trace()()
+func (p *MkShParser) CaseItem() (retval *MkShCaseItem) {
+	defer p.trace(&retval)()
 	panic("CaseItem")
 	p.Pattern()
 	p.Linebreak()
@@ -231,14 +265,14 @@ func (p *MkShParser) CaseItem() *MkShCaseItem {
 
 // ::= msttWORD
 // ::= Pattern "|" msttWORD
-func (p *MkShParser) Pattern() []*ShToken {
-	defer p.trace()()
+func (p *MkShParser) Pattern() (retval []*ShToken) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
 	var words []*ShToken
 nextword:
-	word := p.Word()
+	word := p.Word(false)
 	if word == nil {
 		return nil
 	}
@@ -251,8 +285,8 @@ nextword:
 	return words
 }
 
-func (p *MkShParser) IfClause() *MkShIfClause {
-	defer p.trace()()
+func (p *MkShParser) IfClause() (retval *MkShIfClause) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -291,8 +325,15 @@ nextcond:
 }
 
 // ::= "while" CompoundList DoGroup
-func (p *MkShParser) WhileClause() *MkShLoopClause {
-	defer p.trace()()
+func (p *MkShParser) WhileClause() (retval *MkShLoopClause) {
+	defer p.trace(&retval)()
+	ok := false
+	defer p.rollback(&ok)()
+
+	if !p.eat("while") {
+		return nil
+	}
+
 	panic("WhileClause")
 	p.CompoundList()
 	p.DoGroup()
@@ -300,8 +341,15 @@ func (p *MkShParser) WhileClause() *MkShLoopClause {
 }
 
 // ::= "until" CompoundList DoGroup
-func (p *MkShParser) UntilClause() *MkShLoopClause {
-	defer p.trace()()
+func (p *MkShParser) UntilClause() (retval *MkShLoopClause) {
+	defer p.trace(&retval)()
+	ok := false
+	defer p.rollback(&ok)()
+
+	if !p.eat("until") {
+		return nil
+	}
+
 	panic("UntilClause")
 	p.CompoundList()
 	p.DoGroup()
@@ -309,17 +357,34 @@ func (p *MkShParser) UntilClause() *MkShLoopClause {
 }
 
 // ::= msttNAME "(" ")" Linebreak CompoundCommand Redirect*
-func (p *MkShParser) FunctionDefinition() *MkShFunctionDef {
-	defer p.trace()()
-	panic("FunctionDefinition")
+func (p *MkShParser) FunctionDefinition() (retval *MkShFunctionDef) {
+	defer p.trace(&retval)()
+	ok := false
+	defer p.rollback(&ok)()
+
+	funcname := p.Word(true)
+	if funcname == nil || !matches(funcname.MkText, `^[A-Z_a-z][0-9A-Z_a-z]*$`) {
+		return nil
+	}
+
+	if !p.eat("(") || !p.eat(")") {
+		return nil
+	}
+
 	p.Linebreak()
-	p.CompoundCommand()
-	p.RedirectList()
-	return nil
+
+	body := p.CompoundCommand()
+	if body == nil {
+		return nil
+	}
+
+	redirects := p.RedirectList()
+	ok = true
+	return &MkShFunctionDef{funcname.MkText, body, redirects}
 }
 
-func (p *MkShParser) BraceGroup() *MkShList {
-	defer p.trace()()
+func (p *MkShParser) BraceGroup() (retval *MkShList) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -337,7 +402,8 @@ func (p *MkShParser) BraceGroup() *MkShList {
 	return list
 }
 
-func (p *MkShParser) DoGroup() *MkShList {
+func (p *MkShParser) DoGroup() (retval *MkShList) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
@@ -355,14 +421,16 @@ func (p *MkShParser) DoGroup() *MkShList {
 	return list
 }
 
-func (p *MkShParser) SimpleCommand() *MkShSimpleCommand {
-	defer p.trace()()
+func (p *MkShParser) SimpleCommand() (retval *MkShSimpleCommand) {
+	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
 
 	var words []*ShToken
+	first := true
 nextword:
-	if word := p.Word(); word != nil {
+	if word := p.Word(first); word != nil {
+		first = false
 		words = append(words, word)
 		goto nextword
 	}
@@ -374,24 +442,24 @@ nextword:
 }
 
 // ::= IoRedirect+
-func (p *MkShParser) RedirectList() []*MkShRedirection {
-	defer p.trace()()
+func (p *MkShParser) RedirectList() (retval []*MkShRedirection) {
+	defer p.trace(&retval)()
 	panic("RedirectList")
 	p.IoRedirect()
 	return nil
 }
 
 // ::= msttIO_NUMBER? (IoFile | IoHere)
-func (p *MkShParser) IoRedirect() *ShToken {
-	defer p.trace()()
+func (p *MkShParser) IoRedirect() (retval *ShToken) {
+	defer p.trace(&retval)()
 	panic("IoRedirect")
 	p.IoFile()
 	return nil
 }
 
 // ::= ("<"  | "<&" | ">" | ">&" | ">>" | "<>" | ">|") msttWORD
-func (p *MkShParser) IoFile() *ShToken {
-	defer p.trace()()
+func (p *MkShParser) IoFile() (retval *ShToken) {
+	defer p.trace(&retval)()
 	panic("IoFile")
 	// rule 2
 	return nil
@@ -399,15 +467,15 @@ func (p *MkShParser) IoFile() *ShToken {
 
 // ::= "<<" msttWORD
 // ::= "<<-" msttWORD
-func (p *MkShParser) IoHere() *ShToken {
-	defer p.trace()()
+func (p *MkShParser) IoHere() (retval *ShToken) {
+	defer p.trace(&retval)()
 	panic("IoHere")
 	// rule 3
 	return nil
 }
 
-func (p *MkShParser) NewlineList() bool {
-	defer p.trace()()
+func (p *MkShParser) NewlineList() (retval bool) {
+	defer p.trace(&retval)()
 	ok := false
 	for p.eat("\n") {
 		ok = true
@@ -416,13 +484,12 @@ func (p *MkShParser) NewlineList() bool {
 }
 
 func (p *MkShParser) Linebreak() {
-	defer p.trace()()
 	for p.eat("\n") {
 	}
 }
 
-func (p *MkShParser) SeparatorOp() *MkShSeparator {
-	defer p.trace()()
+func (p *MkShParser) SeparatorOp() (retval *MkShSeparator) {
+	defer p.trace(&retval)()
 	if p.eat(";") {
 		op := MkShSeparator(';')
 		return &op
@@ -434,8 +501,8 @@ func (p *MkShParser) SeparatorOp() *MkShSeparator {
 	return nil
 }
 
-func (p *MkShParser) Separator() *MkShSeparator {
-	defer p.trace()()
+func (p *MkShParser) Separator() (retval *MkShSeparator) {
+	defer p.trace(&retval)()
 	op := p.SeparatorOp()
 	if op == nil && p.eat("\n") {
 		sep := MkShSeparator('\n')
@@ -447,8 +514,8 @@ func (p *MkShParser) Separator() *MkShSeparator {
 	return op
 }
 
-func (p *MkShParser) SequentialSep() bool {
-	defer p.trace()()
+func (p *MkShParser) SequentialSep() (retval bool) {
+	defer p.trace(&retval)()
 	if p.peekText() == ";" {
 		p.skip()
 		p.Linebreak()
@@ -458,13 +525,25 @@ func (p *MkShParser) SequentialSep() bool {
 	}
 }
 
-func (p *MkShParser) Word() *ShToken {
-	defer p.trace()()
+func (p *MkShParser) Word(cmdstart bool) (retval *ShToken) {
+	defer p.trace(&retval)()
 	if token := p.peek(); token != nil && token.IsWord() {
+		if cmdstart {
+			switch token.MkText {
+			case "while", "until", "for", "do", "done",
+				"if", "then", "else", "elif", "fi",
+				"{", "}":
+				return nil
+			}
+		}
 		p.skip()
 		return token
 	}
 	return nil
+}
+
+func (p *MkShParser) EOF() bool {
+	return p.peek() == nil
 }
 
 func (p *MkShParser) peek() *ShToken {
@@ -474,7 +553,7 @@ func (p *MkShParser) peek() *ShToken {
 			panic("parse error at " + p.tok.parser.Rest())
 		}
 	}
-	traceStep("MkShParser.peek %v at %v", p.curr, p.tok.mkp.repl.rest)
+	//traceStep("MkShParser.peek %v rest=%q", p.curr, p.tok.mkp.repl.rest)
 	return p.curr
 }
 
@@ -509,9 +588,9 @@ func (p *MkShParser) rollback(pok *bool) func() {
 	}
 }
 
-func (p *MkShParser) trace() func() {
+func (p *MkShParser) trace(retval interface{}) func() {
 	if G.opts.Debug {
-		return tracecallInternal(p.peek(), p.tok.mkp.repl.rest)
+		return tracecallInternal(p.peek(), "rest="+p.tok.mkp.repl.rest, "=>", returning(retval))
 	} else {
 		return func() {}
 	}

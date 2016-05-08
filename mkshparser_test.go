@@ -77,11 +77,29 @@ func (s *Suite) Test_MkShParser_BraceGroup(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
+	s.DebugToStdout()
+	tester := &MkShTester{c}
+	check := func(str string, expected *MkShList) {
+		p := NewMkShParser(dummyLine, str)
+		dogroup := p.DoGroup()
+		if c.Check(dogroup, check.NotNil) {
+			if !c.Check(dogroup, deepEquals, expected) {
+				for i, andor := range dogroup.AndOrs {
+					c.Check(andor, deepEquals, expected.AndOrs[i])
+				}
+			}
+		}
+		c.Check(p.tok.parser.Rest(), equals, "")
+		c.Check(s.Output(), equals, "")
+	}
 
+	andor := NewMkShAndOr1(NewMkShPipeline(false, tester.ParseCommand("action")))
+	check("do action; done",
+		&MkShList{[]*MkShAndOr{andor}, []MkShSeparator{';'}})
 }
 
 func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
-	check := func(cmd string, expected *MkShSimpleCommand) {
+	parse := func(cmd string, expected *MkShSimpleCommand) {
 		p := NewMkShParser(dummyLine, cmd)
 		shcmd := p.SimpleCommand()
 		if c.Check(shcmd, check.NotNil) {
@@ -95,12 +113,20 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 		c.Check(s.Output(), equals, "")
 	}
 
-	check("echo ${PKGNAME:Q}",
+	fail := func(noncmd string, expectedRest string) {
+		p := NewMkShParser(dummyLine, noncmd)
+		shcmd := p.SimpleCommand()
+		c.Check(shcmd, check.IsNil)
+		c.Check(p.tok.parser.Rest(), equals, expectedRest)
+		c.Check(s.Output(), equals, "")
+	}
+
+	parse("echo ${PKGNAME:Q}",
 		NewMkShSimpleCommand(
 			NewShToken("echo", NewShAtom(shtWord, "echo", shqPlain)),
 			NewShToken("${PKGNAME:Q}", NewShAtomVaruse("${PKGNAME:Q}", shqPlain, "PKGNAME", "Q"))))
 
-	check("${ECHO} \"Double-quoted\" 'Single-quoted'",
+	parse("${ECHO} \"Double-quoted\" 'Single-quoted'",
 		NewMkShSimpleCommand(
 			NewShToken("${ECHO}", NewShAtomVaruse("${ECHO}", shqPlain, "ECHO")),
 			NewShToken("\"Double-quoted\"",
@@ -112,7 +138,7 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 				NewShAtom(shtWord, "Single-quoted", shqSquot),
 				NewShAtom(shtWord, "'", shqPlain))))
 
-	check("`cat plain` \"`cat double`\" '`cat single`'",
+	parse("`cat plain` \"`cat double`\" '`cat single`'",
 		NewMkShSimpleCommand(
 			NewShToken("`cat plain`",
 				NewShAtom(shtWord, "`", shqBackt),
@@ -133,7 +159,7 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 				NewShAtom(shtWord, "`cat single`", shqSquot),
 				NewShAtom(shtWord, "'", shqPlain))))
 
-	check("`\"one word\"`",
+	parse("`\"one word\"`",
 		NewMkShSimpleCommand(
 			NewShToken("`\"one word\"`",
 				NewShAtom(shtWord, "`", shqBackt),
@@ -142,7 +168,7 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 				NewShAtom(shtWord, "\"", shqBackt),
 				NewShAtom(shtWord, "`", shqPlain))))
 
-	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+	parse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 		NewMkShSimpleCommand(
 			NewShToken("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 				NewShAtom(shtWord, "PAGES=", shqPlain),
@@ -164,7 +190,7 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 				NewShAtom(shtWord, "`", shqDquot),
 				NewShAtom(shtWord, "\"", shqPlain))))
 
-	check("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
+	parse("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
 		NewMkShSimpleCommand(
 			NewShToken("var=Plain",
 				NewShAtom(shtWord, "var=Plain", shqPlain)),
@@ -188,7 +214,7 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 				NewShAtom(shtWord, "'", shqPlain)),
 		))
 
-	check("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
+	parse("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
 		NewMkShSimpleCommand(
 			NewShToken("${RUN}",
 				NewShAtomVaruse("${RUN}", shqPlain, "RUN")),
@@ -216,7 +242,7 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 				NewShAtom(shtWord, "`", shqDquot),
 				NewShAtom(shtWord, "\"", shqPlain))))
 
-	check("PATH=/nonexistent env PATH=${PATH:Q} true",
+	parse("PATH=/nonexistent env PATH=${PATH:Q} true",
 		NewMkShSimpleCommand(
 			NewShToken("PATH=/nonexistent",
 				NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
@@ -227,30 +253,35 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 				NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
 			NewShToken("true",
 				NewShAtom(shtWord, "true", shqPlain))))
+
+	parse("{OpenGrok args",
+		NewMkShSimpleCommand(
+			NewShToken("{OpenGrok",
+				NewShAtom(shtWord, "{OpenGrok", shqPlain)),
+			NewShToken("args",
+				NewShAtom(shtWord, "args", shqPlain))))
+
+	fail("if clause", "if clause")
+	fail("{ group; }", "{ group; }")
+
 }
 
 func (s *Suite) Test_MkShParser_RedirectList(c *check.C) {
-
 }
 
 func (s *Suite) Test_MkShParser_IoRedirect(c *check.C) {
-
 }
 
 func (s *Suite) Test_MkShParser_IoFile(c *check.C) {
-
 }
 
 func (s *Suite) Test_MkShParser_IoHere(c *check.C) {
-
 }
 
 func (s *Suite) Test_MkShParser_NewlineList(c *check.C) {
-
 }
 
 func (s *Suite) Test_MkShParser_Linebreak(c *check.C) {
-
 }
 
 func (s *Suite) Test_MkShParser_SeparatorOp(c *check.C) {
@@ -267,4 +298,24 @@ func (s *Suite) Test_MkShParser_SequentialSep(c *check.C) {
 
 func (s *Suite) Test_MkShParser_Word(c *check.C) {
 
+}
+
+type MkShTester struct {
+	c *check.C
+}
+
+func (t *MkShTester) ParseCommand(str string) *MkShCommand {
+	p := NewMkShParser(dummyLine, str)
+	cmd := p.Command()
+	t.c.Check(cmd, check.NotNil)
+	t.c.Check(p.EOF(), equals, true)
+	return cmd
+}
+
+func (t *MkShTester) ParseSimpleCommand(str string) *MkShSimpleCommand {
+	p := NewMkShParser(dummyLine, str)
+	parsed := p.SimpleCommand()
+	t.c.Check(parsed, check.NotNil)
+	t.c.Check(p.EOF(), equals, true)
+	return parsed
 }

@@ -483,6 +483,20 @@ func tracecall(args ...interface{}) func() {
 	return tracecallInternal(args...)
 }
 
+type Returning struct {
+	intf interface{}
+}
+
+func returning(rv interface{}) Returning {
+	return Returning{rv}
+}
+
+func (r Returning) String() string {
+	ptr := reflect.ValueOf(r.intf)
+	ref := reflect.Indirect(ptr)
+	return fmt.Sprintf("%v", ref)
+}
+
 // Emulates make(1)’s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, all bool) string {
 	re := ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", "")
