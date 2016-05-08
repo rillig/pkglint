@@ -17,8 +17,6 @@ func NewMkShParser(line *Line, text string) *MkShParser {
 
 func (p *MkShParser) Program() (retval *MkShList) {
 	defer p.trace(&retval)()
-	ok := false
-	defer p.rollback(&ok)()
 
 	list := p.List()
 	if list == nil {
@@ -26,11 +24,8 @@ func (p *MkShParser) Program() (retval *MkShList) {
 	}
 	separator := p.Separator()
 	if separator == nil {
-		ok = true
 		return list
 	}
-
-	ok = true
 	return &MkShList{list.AndOrs, append(list.Separators, *separator)}
 }
 
@@ -214,14 +209,14 @@ func (p *MkShParser) ForClause() (retval *MkShForClause) {
 	var values []*ShToken
 	if p.eat("in") {
 		values = p.Wordlist()
-		if values == nil || !p.SequentialSep() {
-			return nil
-		}
 	} else {
 		values = []*ShToken{NewShToken("\"$@\"",
 			NewShAtom(shtWord, "\"", shqDquot),
 			NewShAtom(shtWord, "$@", shqDquot),
 			NewShAtom(shtWord, "\"", shqPlain))}
+	}
+	if values == nil || !p.SequentialSep() {
+		return nil
 	}
 
 	p.Linebreak()
@@ -554,11 +549,15 @@ func (p *MkShParser) EOF() bool {
 
 func (p *MkShParser) peek() *ShToken {
 	if p.curr == nil {
+	nexttoken:
 		p.curr = p.tok.ShToken()
 		if p.curr == nil && !p.tok.parser.EOF() {
 			p.tok.mkp.line.Warnf("Pkglint tokenize error at " + p.tok.parser.Rest())
 			p.tok.mkp.Parser.repl.AdvanceRest()
 			return nil
+		}
+		if p.curr != nil && hasPrefix(p.curr.MkText, "#") {
+			goto nexttoken
 		}
 	}
 	//traceStep("MkShParser.peek %v rest=%q", p.curr, p.tok.mkp.repl.rest)
@@ -615,6 +614,10 @@ func (p *MkShParser) reset(mark MkShParserMark) {
 
 func (p *MkShParser) restref() MkShParserRest {
 	return MkShParserRest{&p.tok.mkp.repl.rest}
+}
+
+func (p *MkShParser) Rest() string {
+	return p.peekText() + p.tok.mkp.repl.AdvanceRest()
 }
 
 type MkShParserMark struct {

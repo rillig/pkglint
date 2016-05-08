@@ -9,8 +9,18 @@ type MkShList struct {
 	Separators []MkShSeparator
 }
 
+func NewMkShList() *MkShList {
+	return &MkShList{nil, nil}
+}
+
 func (list *MkShList) String() string {
 	return fmt.Sprintf("MkShList(%v)", list.AndOrs)
+}
+
+func (list *MkShList) Add(andor *MkShAndOr, separator MkShSeparator) *MkShList {
+	list.AndOrs = append(list.AndOrs, andor)
+	list.Separators = append(list.Separators, separator)
+	return list
 }
 
 type MkShAndOr struct {
@@ -18,12 +28,18 @@ type MkShAndOr struct {
 	Ops   string // Either '&' or '|'
 }
 
-func NewMkShAndOr1(pipeline *MkShPipeline) *MkShAndOr {
+func NewMkShAndOr(pipeline *MkShPipeline) *MkShAndOr {
 	return &MkShAndOr{[]*MkShPipeline{pipeline}, ""}
 }
 
 func (andor *MkShAndOr) String() string {
 	return fmt.Sprintf("MkShAndOr(%v)", andor.Pipes)
+}
+
+func (andor *MkShAndOr) Add(pipeline *MkShPipeline, op rune) *MkShAndOr {
+	andor.Pipes = append(andor.Pipes, pipeline)
+	andor.Ops += string(op)
+	return andor
 }
 
 type MkShPipeline struct {
@@ -37,6 +53,11 @@ func NewMkShPipeline(negated bool, cmds ...*MkShCommand) *MkShPipeline {
 
 func (pipe *MkShPipeline) String() string {
 	return fmt.Sprintf("MkShPipeline(%v)", pipe.Cmds)
+}
+
+func (pipe *MkShPipeline) Add(cmd *MkShCommand) *MkShPipeline {
+	pipe.Cmds = append(pipe.Cmds, cmd)
+	return pipe
 }
 
 type MkShCommand struct {

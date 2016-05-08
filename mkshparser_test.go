@@ -5,7 +5,20 @@ import (
 )
 
 func (s *Suite) Test_MkShParser_Program(c *check.C) {
+	parse := func(cmd string, expected *MkShList) {
+		p := NewMkShParser(dummyLine, cmd)
+		program := p.Program()
+		c.Check(program, check.NotNil)
+		c.Check(p.tok.parser.Rest(), equals, "")
+		c.Check(s.Output(), equals, "")
+	}
 
+	if false {
+		parse(""+
+			"\tcd ${WRKSRC} && ${FIND} ${${_list_}} -type f ! -name '*.orig' 2>/dev/null "+
+			"| pax -rw -pm ${DESTDIR}${PREFIX}/${${_dir_}}",
+			NewMkShList())
+	}
 }
 
 func (s *Suite) Test_MkShParser_List(c *check.C) {
@@ -37,7 +50,19 @@ func (s *Suite) Test_MkShParser_CompoundList(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_ForClause(c *check.C) {
+	parse := func(cmd string, expected *MkShForClause) {
+		p := NewMkShParser(dummyLine, cmd)
+		forclause := p.ForClause()
+		c.Check(forclause, check.NotNil)
+		c.Check(p.tok.parser.Rest(), equals, "")
+		c.Check(s.Output(), equals, "")
+	}
+	tester := &MkShTester{c}
+	params := []*ShToken{tester.Token("\"$@\"")}
+	action := tester.ParseCompoundList("action;")
 
+	parse("for var; do action; done",
+		&MkShForClause{"var", params, action})
 }
 
 func (s *Suite) Test_MkShParser_Wordlist(c *check.C) {
@@ -93,7 +118,7 @@ func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
 		c.Check(s.Output(), equals, "")
 	}
 
-	andor := NewMkShAndOr1(NewMkShPipeline(false, tester.ParseCommand("action")))
+	andor := NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("action")))
 	check("do action; done",
 		&MkShList{[]*MkShAndOr{andor}, []MkShSeparator{';'}})
 }
@@ -308,7 +333,7 @@ func (t *MkShTester) ParseCommand(str string) *MkShCommand {
 	p := NewMkShParser(dummyLine, str)
 	cmd := p.Command()
 	t.c.Check(cmd, check.NotNil)
-	t.c.Check(p.EOF(), equals, true)
+	t.c.Check(p.Rest(), equals, "")
 	return cmd
 }
 
@@ -316,6 +341,23 @@ func (t *MkShTester) ParseSimpleCommand(str string) *MkShSimpleCommand {
 	p := NewMkShParser(dummyLine, str)
 	parsed := p.SimpleCommand()
 	t.c.Check(parsed, check.NotNil)
-	t.c.Check(p.EOF(), equals, true)
+	t.c.Check(p.Rest(), equals, "")
+	return parsed
+}
+
+func (t *MkShTester) ParseCompoundList(str string) *MkShList {
+	p := NewMkShParser(dummyLine, str)
+	parsed := p.CompoundList()
+	t.c.Check(parsed, check.NotNil)
+	t.c.Check(p.Rest(), equals, "")
+	return parsed
+}
+
+func (t *MkShTester) Token(str string) *ShToken {
+	p := NewMkShParser(dummyLine, str)
+	parsed := p.peek()
+	p.skip()
+	t.c.Check(parsed, check.NotNil)
+	t.c.Check(p.Rest(), equals, "")
 	return parsed
 }
