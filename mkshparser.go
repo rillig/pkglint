@@ -65,19 +65,21 @@ func (p *MkShParser) AndOr() (retval *MkShAndOr) {
 	defer p.rollback(&ok)
 
 	var pipes []*MkShPipeline
-	var ops string
+	var ops []string
 nextpipe:
-	pipe := p.Pipeline()
-	if pipe == nil {
-		return nil
+	if pipe := p.Pipeline(); pipe != nil {
+		pipes = append(pipes, pipe)
+		switch op := p.peekText(); op {
+		case "&&", "||":
+			p.skip()
+			p.Linebreak()
+			ops = append(ops, op)
+			goto nextpipe
+		}
 	}
 
-	pipes = append(pipes, pipe)
-	switch op := p.peekText(); op {
-	case "&&", "||":
-		p.Linebreak()
-		ops += ifelseStr(op == "&&", "&", "|")
-		goto nextpipe
+	if len(pipes) == len(ops) {
+		return nil
 	}
 	ok = true
 	return &MkShAndOr{pipes, ops}
@@ -107,6 +109,7 @@ nextcmd:
 
 func (p *MkShParser) Command() (retval *MkShCommand) {
 	defer p.trace(&retval)()
+
 	if simple := p.SimpleCommand(); simple != nil {
 		return &MkShCommand{Simple: simple}
 	}
@@ -122,6 +125,7 @@ func (p *MkShParser) Command() (retval *MkShCommand) {
 
 func (p *MkShParser) CompoundCommand() (retval *MkShCompoundCommand) {
 	defer p.trace(&retval)()
+
 	if brace := p.BraceGroup(); brace != nil {
 		return &MkShCompoundCommand{Brace: brace}
 	}
@@ -210,9 +214,9 @@ func (p *MkShParser) ForClause() (retval *MkShForClause) {
 	if p.eat("in") {
 		values = p.Wordlist()
 	} else {
-		values = []*ShToken{NewShToken("\"$@\"",
+		values = []*ShToken{NewShToken("\"$$@\"",
 			NewShAtom(shtWord, "\"", shqDquot),
-			NewShAtom(shtWord, "$@", shqDquot),
+			NewShAtom(shtWord, "$$@", shqDquot),
 			NewShAtom(shtWord, "\"", shqPlain))}
 	}
 	if values == nil || !p.SequentialSep() {
@@ -261,6 +265,7 @@ func (p *MkShParser) CaseClause() (retval *MkShCaseClause) {
 // ::= "("? Pattern ")" (CompoundList | Linebreak) msttDSEMI? Linebreak
 func (p *MkShParser) CaseItem() (retval *MkShCaseItem) {
 	defer p.trace(&retval)()
+
 	panic("CaseItem")
 	p.Pattern()
 	p.Linebreak()
@@ -477,6 +482,7 @@ func (p *MkShParser) IoRedirect() (retval *MkShRedirection) {
 
 func (p *MkShParser) NewlineList() (retval bool) {
 	defer p.trace(&retval)()
+
 	ok := false
 	for p.eat("\n") {
 		ok = true
@@ -491,12 +497,13 @@ func (p *MkShParser) Linebreak() {
 
 func (p *MkShParser) SeparatorOp() (retval *MkShSeparator) {
 	defer p.trace(&retval)()
+
 	if p.eat(";") {
-		op := MkShSeparator(';')
+		op := MkShSeparator(";")
 		return &op
 	}
 	if p.eat("&") {
-		op := MkShSeparator('&')
+		op := MkShSeparator("&")
 		return &op
 	}
 	return nil
@@ -504,6 +511,7 @@ func (p *MkShParser) SeparatorOp() (retval *MkShSeparator) {
 
 func (p *MkShParser) Separator() (retval *MkShSeparator) {
 	defer p.trace(&retval)()
+
 	op := p.SeparatorOp()
 	if op == nil && p.eat("\n") {
 		sep := MkShSeparator('\n')
@@ -517,6 +525,7 @@ func (p *MkShParser) Separator() (retval *MkShSeparator) {
 
 func (p *MkShParser) SequentialSep() (retval bool) {
 	defer p.trace(&retval)()
+
 	if p.peekText() == ";" {
 		p.skip()
 		p.Linebreak()
@@ -528,6 +537,7 @@ func (p *MkShParser) SequentialSep() (retval bool) {
 
 func (p *MkShParser) Word(cmdstart bool) (retval *ShToken) {
 	defer p.trace(&retval)()
+
 	if token := p.peek(); token != nil && token.IsWord() {
 		if cmdstart {
 			switch token.MkText {

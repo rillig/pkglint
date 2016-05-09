@@ -8,7 +8,7 @@ func (s *Suite) Test_MkShParser_Program(c *check.C) {
 	parse := func(cmd string, expected *MkShList) {
 		p := NewMkShParser(dummyLine, cmd)
 		program := p.Program()
-		c.Check(program, check.NotNil)
+		c.Check(program, deepEquals, expected)
 		c.Check(p.tok.parser.Rest(), equals, "")
 		c.Check(s.Output(), equals, "")
 	}
@@ -26,7 +26,21 @@ func (s *Suite) Test_MkShParser_List(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_AndOr(c *check.C) {
+	parse := func(cmd string, expected *MkShAndOr) {
+		p := NewMkShParser(dummyLine, cmd)
+		andor := p.AndOr()
+		c.Check(andor, deepEquals, expected)
+		c.Check(p.tok.parser.Rest(), equals, "")
+		c.Check(s.Output(), equals, "")
+	}
+	tester := &MkShTester{c}
 
+	parse("simplecmd",
+		NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("simplecmd"))))
+
+	expected := NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("simplecmd1")))
+	expected.Add("&&", NewMkShPipeline(false, tester.ParseCommand("simplecmd2")))
+	parse("simplecmd1 && simplecmd2", expected)
 }
 
 func (s *Suite) Test_MkShParser_Pipeline(c *check.C) {
@@ -34,7 +48,17 @@ func (s *Suite) Test_MkShParser_Pipeline(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_Command(c *check.C) {
+	parse := func(cmd string, expected *MkShCommand) {
+		p := NewMkShParser(dummyLine, cmd)
+		command := p.Command()
+		c.Check(command, deepEquals, expected)
+		c.Check(p.tok.parser.Rest(), equals, "")
+		c.Check(s.Output(), equals, "")
+	}
+	tester := &MkShTester{c}
 
+	parse("simple",
+		&MkShCommand{Simple: tester.ParseSimpleCommand("simple")})
 }
 
 func (s *Suite) Test_MkShParser_CompoundCommand(c *check.C) {
@@ -46,23 +70,46 @@ func (s *Suite) Test_MkShParser_Subshell(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_CompoundList(c *check.C) {
+	parse := func(cmd string, expected *MkShList) {
+		p := NewMkShParser(dummyLine, cmd)
+		compoundList := p.CompoundList()
+		c.Check(compoundList, deepEquals, expected)
+		c.Check(p.tok.parser.Rest(), equals, "")
+		c.Check(s.Output(), equals, "")
+	}
+	tester := &MkShTester{c}
 
+	parse("simplecmd",
+		NewMkShList().AddAndOr(NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("simplecmd")))))
+
+	simplecmd1 := NewMkShPipeline(false, tester.ParseCommand("simplecmd1"))
+	simplecmd2 := NewMkShPipeline(false, tester.ParseCommand("simplecmd2"))
+	expected := NewMkShList().AddAndOr(NewMkShAndOr(simplecmd1).Add("&&", simplecmd2))
+	parse("simplecmd1 && simplecmd2", expected)
 }
 
 func (s *Suite) Test_MkShParser_ForClause(c *check.C) {
 	parse := func(cmd string, expected *MkShForClause) {
 		p := NewMkShParser(dummyLine, cmd)
 		forclause := p.ForClause()
-		c.Check(forclause, check.NotNil)
+		c.Check(forclause, deepEquals, expected)
 		c.Check(p.tok.parser.Rest(), equals, "")
 		c.Check(s.Output(), equals, "")
 	}
 	tester := &MkShTester{c}
-	params := []*ShToken{tester.Token("\"$@\"")}
-	action := tester.ParseCompoundList("action;")
 
+	params := []*ShToken{tester.Token("\"$$@\"")}
+	action := tester.ParseCompoundList("action;")
 	parse("for var; do action; done",
 		&MkShForClause{"var", params, action})
+
+	abc := []*ShToken{tester.Token("a"), tester.Token("b"), tester.Token("c")}
+	parse("for var in a b c; do action; done",
+		&MkShForClause{"var", abc, action})
+
+	actions := tester.ParseCompoundList("action1 && action2;")
+	parse("for var in a b c; do action1 && action2; done",
+		&MkShForClause{"var", abc, actions})
 }
 
 func (s *Suite) Test_MkShParser_Wordlist(c *check.C) {
@@ -119,7 +166,7 @@ func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
 
 	andor := NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("action")))
 	check("do action; done",
-		&MkShList{[]*MkShAndOr{andor}, []MkShSeparator{';'}})
+		&MkShList{[]*MkShAndOr{andor}, []MkShSeparator{";"}})
 }
 
 func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {

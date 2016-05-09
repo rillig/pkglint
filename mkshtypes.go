@@ -23,22 +23,27 @@ func (list *MkShList) Add(andor *MkShAndOr, separator MkShSeparator) *MkShList {
 	return list
 }
 
+func (list *MkShList) AddAndOr(andor *MkShAndOr) *MkShList {
+	list.AndOrs = append(list.AndOrs, andor)
+	return list
+}
+
 type MkShAndOr struct {
 	Pipes []*MkShPipeline
-	Ops   string // Either '&' or '|'
+	Ops   []string // Either "&&" or "||"
 }
 
 func NewMkShAndOr(pipeline *MkShPipeline) *MkShAndOr {
-	return &MkShAndOr{[]*MkShPipeline{pipeline}, ""}
+	return &MkShAndOr{[]*MkShPipeline{pipeline}, nil}
 }
 
 func (andor *MkShAndOr) String() string {
 	return fmt.Sprintf("MkShAndOr(%v)", andor.Pipes)
 }
 
-func (andor *MkShAndOr) Add(pipeline *MkShPipeline, op rune) *MkShAndOr {
+func (andor *MkShAndOr) Add(op string, pipeline *MkShPipeline) *MkShAndOr {
 	andor.Pipes = append(andor.Pipes, pipeline)
-	andor.Ops += string(op)
+	andor.Ops = append(andor.Ops, op)
 	return andor
 }
 
@@ -179,7 +184,7 @@ func (scmd *MkShSimpleCommand) String() string {
 		}
 		str += word.MkText
 	}
-	return str
+	return str + ")"
 }
 
 type MkShRedirection struct {
@@ -188,8 +193,8 @@ type MkShRedirection struct {
 	Target *ShToken
 }
 
-// One of ';', '&', '\n'
-type MkShSeparator rune
+// One of ";", "&", "\n"
+type MkShSeparator string
 
 func (sep *MkShSeparator) String() string {
 	return fmt.Sprintf("%q", sep)
