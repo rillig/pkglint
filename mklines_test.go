@@ -227,3 +227,20 @@ func (s *Suite) Test_MkLines_Varuse_parameterized(c *check.C) {
 
 	c.Check(s.Output(), equals, "") // No warnings about defined but not used or vice versa
 }
+
+func (s *Suite) Test_MkLines_LoopModifier(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("chat/xchat/Makefile",
+		"# $"+"NetBSD$",
+		"GCONF_SCHEMAS=\tapps_xchat_url_handler.schemas",
+		"post-install:",
+		"\t${GCONF_SCHEMAS:@.s.@"+
+			"${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, ""+ // No warning about missing @ at the end
+		"WARN: chat/xchat/Makefile:4: Unknown shell command \"${GCONF_SCHEMAS:@.s.@"+
+		"${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}\".\n")
+}

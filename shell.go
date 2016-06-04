@@ -18,9 +18,6 @@ const (
 		`|\\\$\$` + // a shell-escaped dollar sign
 		`|\\[^\$]` + // other escaped characters
 		`|\$[\w_]` + // one-character make(1) variable
-		`|\$\{[^{}]+\}` + // make(1) variable, ${...}
-		`|\$\([^()]+\)` + // make(1) variable, $(...)
-		`|\$[/@<^]` + // special make(1) variables
 		`|\$\$[0-9A-Z_a-z]+` + // shell variable
 		`|\$\$[!#?@]` + // special shell variables
 		`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
@@ -306,6 +303,10 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
 func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
+	if G.opts.Debug {
+		defer tracecall(shellword, quoting, "=>", ref(&unescaped))()
+	}
+
 	line := shline.line
 	for repl.rest != "" {
 		switch {
@@ -317,7 +318,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplace
 			}
 			return unescaped, quoting
 
-		case repl.AdvanceRegexp("^\\\\([\\\\`$])"):
+		case repl.AdvanceRegexp("^\\\\([\"\\\\`$])"):
 			unescaped += repl.m[1]
 
 		case repl.AdvanceStr("\\"):
@@ -921,13 +922,34 @@ func (shline *ShellLine) nextState(state scState, shellword string) scState {
 }
 
 // Example: "word1 word2;;;" => "word1", "word2", ";;", ";"
-func splitIntoShellTokens(line *Line, text string) (words []string, rest string) {
-	repl := NewPrefixReplacer(text)
-	for repl.AdvanceRegexp(reShellToken) {
-		words = append(words, repl.m[1])
+func splitIntoShellTokens(line *Line, text string) (tokens []string, rest string) {
+	if G.opts.Debug {
+		defer tracecall(line, text)()
 	}
-	repl.AdvanceRegexp(`^\s+`)
-	return words, repl.rest
+
+	word := ""
+	emit := func() {
+		if word != "" {
+			tokens = append(tokens, word)
+			word = ""
+		}
+	}
+	p := NewShTokenizer(line, text)
+	atoms := p.ShAtoms()
+	q := shqPlain
+	for _, atom := range atoms {
+		q = atom.Quoting
+		if atom.Type == shtSpace && q == shqPlain {
+			emit()
+		} else if atom.Type == shtWord || atom.Type == shtVaruse || atom.Quoting != shqPlain {
+			word += atom.Text
+		} else {
+			emit()
+			tokens = append(tokens, atom.Text)
+		}
+	}
+	emit()
+	return tokens, word + p.mkp.Rest()
 }
 
 // Example: "word1 word2;;;" => "word1", "word2;;;"

@@ -1,12 +1,3 @@
-*** Grundlos verschwunden
--WARN: chat/ircII/Makefile:28: Please use ${PKGMANDIR} instead of "man".
-
-*** Warnung ist falsch und außerdem doppelt
->       ${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} \
->               ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}
-WARN: chat/xchat/Makefile:55--56: Modifier ${GCONF_SCHEMAS:@.s.@...@} is missing the final "@".
-ERROR: chat/xchat/Makefile:55--56: Internal pkglint error: ShellLine.CheckToken state=plain, rest="${GCONF_SCHEMAS:@.s.@${INSTALL_DATA}", token="${GCONF_SCHEMAS:@.s.@${INSTALL_DATA}"
-
 *** neu; warum?
 +WARN: databases/libdbi-driver-sqlite3/Makefile_drivers:5: DISTNAME may not be used in this file.
 

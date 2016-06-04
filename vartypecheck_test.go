@@ -344,8 +344,7 @@ func (s *Suite) TestVartypeCheck_SedCommands(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n"+
-		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n"+
-		"ERROR: fname:3: Invalid shell words \"\\\"s,\" in sed commands.\n")
+		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n")
 }
 
 func (s *Suite) TestVartypeCheck_ShellCommands(c *check.C) {

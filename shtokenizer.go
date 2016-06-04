@@ -48,7 +48,7 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 
 	if atom == nil {
 		repl.Reset(mark)
-		p.parser.line.Warnf("Pkglint parse error in Parser.ShAtom at %q (quoting=%s)", repl.rest, quoting)
+		p.parser.line.Warnf("Pkglint parse error in ShTokenizer.ShAtom at %q (quoting=%s)", repl.rest, quoting)
 	}
 	return atom
 }
@@ -85,7 +85,9 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 		return &ShAtom{shtRedirect, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^#.*`):
 		return &ShAtom{shtComment, repl.m[0], q, nil}
-	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$)+`):
+	case repl.AdvanceStr("$$("):
+		return &ShAtom{shtSubshell, repl.s, q, nil}
+	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|\\\$\$|` + reShVaruse + `|\$\$[,\-/|])+`):
 		return &ShAtom{shtWord, repl.m[0], q, nil}
 	}
 	return nil

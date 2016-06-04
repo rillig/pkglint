@@ -28,6 +28,8 @@ func (s *Suite) Test_SplitIntoShellTokens_LineContinuation(c *check.C) {
 
 	c.Check(words, check.DeepEquals, []string{"if", "true", ";", "then"})
 	c.Check(rest, equals, "\\")
+
+	c.Check(s.Output(), equals, "WARN: Pkglint parse error in ShTokenizer.ShAtom at \"\\\\\" (quoting=plain)\n")
 }
 
 func (s *Suite) Test_SplitIntoShellTokens_DollarSlash(c *check.C) {
@@ -48,6 +50,26 @@ func (s *Suite) Test_SplitIntoShellTokens_Semicolons(c *check.C) {
 	words, rest := splitIntoShellTokens(dummyLine, "word1 word2;;;")
 
 	c.Check(words, deepEquals, []string{"word1", "word2", ";;", ";"})
+	c.Check(rest, equals, "")
+}
+
+func (s *Suite) Test_SplitIntoShellTokens_Whitespace(c *check.C) {
+	text := "\t${RUN} cd ${WRKSRC}&&(${ECHO} ${PERL5:Q};${ECHO})|${BASH} ./install"
+	words, rest := splitIntoShellTokens(dummyLine, text)
+
+	c.Check(words, deepEquals, []string{
+		"${RUN}",
+		"cd", "${WRKSRC}",
+		"&&", "(", "${ECHO}", "${PERL5:Q}", ";", "${ECHO}", ")",
+		"|", "${BASH}", "./install"})
+	c.Check(rest, equals, "")
+}
+
+func (s *Suite) Test_SplitIntoShellTokens_MkVarUse(c *check.C) {
+	varuseWord := "${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}"
+	words, rest := splitIntoShellTokens(dummyLine, varuseWord)
+
+	c.Check(words, deepEquals, []string{varuseWord})
 	c.Check(rest, equals, "")
 }
 
@@ -236,16 +258,17 @@ func (s *Suite) TestShellLine_CheckShelltext_InternalError1(c *check.C) {
 	shline := NewShellLine(G.Mk.mklines[0])
 
 	// foobar="`echo \"foo   bar\"`"
-	shline.CheckShellCommandLine("foobar=\"`echo \\\"foo   bar\\\"`\"")
+	text := "foobar=\"`echo \\\"foo   bar\\\"`\""
 
-	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
-		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
-		"WARN: fname:1: Backslashes should be doubled inside backticks.\n"+
-		"WARN: fname:1: Double quotes inside backticks inside double quotes are error prone.\n"+
-		"WARN: fname:1: Pkglint parse error in ShellLine.CheckShellCommand at \"\\\\\" (state=start)\n"+
-		"WARN: fname:1: Unknown shell command \"echo\".\n"+
-		"WARN: fname:1: Pkglint parse error in ShellLine.CheckWord at \"\\\\foo\" (quoting=plain, rest=\"\\\\foo\")\n")
+	tokens, rest := splitIntoShellTokens(dummyLine, text)
+
+	c.Check(tokens, deepEquals, []string{text})
+	c.Check(rest, equals, "")
+
+	shline.CheckShellCommandLine(text)
+
+	c.Check(s.Output(), equals, ""+ // No parse errors
+		"WARN: fname:1: Unknown shell command \"echo\".\n")
 }
 
 func (s *Suite) TestShellLine_CheckShelltext_DollarWithoutVariable(c *check.C) {
@@ -336,6 +359,10 @@ func (s *Suite) TestShellLine_checklineMkShelltext(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
+		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.\n"+
@@ -453,4 +480,17 @@ func (s *Suite) Test_ShQuote(c *check.C) {
 	c.Check(traceQuoting("x\"x\\\"x\\'x\\`x\\\\"), equals, "[plain]\"[d]\\\"[d]\\'[d]\\`[d]\\\\[d]")
 	c.Check(traceQuoting("x'x\\\"x\\'x\\`x\\\\"), equals, "[plain]'[s]\\\"[s]\\'[plain]\\`[plain]\\\\[plain]")
 	c.Check(traceQuoting("x`x\\\"x\\'x\\`x\\\\"), equals, "[plain]`[b]\\\"[b]\\'[b]\\`[b]\\\\[b]")
+}
+
+func (s *Suite) Test_unescapeBackticks(c *check.C) {
+	shline := NewShellLine(NewMkLine(dummyLine))
+	// foobar="`echo \"foo   bar\"`"
+	text := "foobar=\"`echo \\\"foo   bar\\\"`\""
+	repl := NewPrefixReplacer(text)
+	repl.AdvanceStr("foobar=\"`")
+
+	backtCommand, newQuoting := shline.unescapeBackticks(text, repl, shqDquotBackt)
+	c.Check(backtCommand, equals, "echo \"foo   bar\"")
+	c.Check(newQuoting, equals, shqDquot)
+	c.Check(repl.rest, equals, "\"")
 }

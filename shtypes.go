@@ -22,6 +22,7 @@ const (
 	shtAnd                      // &&
 	shtRedirect                 // >, <, >>
 	shtComment                  // # ...
+	shtSubshell                 // $$(
 )
 
 func (t ShAtomType) String() string {
