@@ -1557,7 +1557,7 @@ func (mkline *MkLine) determineUsedVariables() (varnames []string) {
 		}
 		rest = rest[min:]
 
-		m := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([0-9+.A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
+		m := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([*+\-.0-9A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
 		if m == nil {
 			return
 		}

@@ -193,3 +193,37 @@ func (s *Suite) Test_MkLines_Cond_Compare_YesNo(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: databases/gdbm_compat/builtin.mk:2: "+
 		"USE_BUILTIN.gdbm should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not compared with \"no\".\n")
 }
+
+func (s *Suite) Test_MkLines_Varuse_sh_Modifier(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("lang/qore/module.mk",
+		"# $"+"NetBSD$",
+		"qore-version=\tqore --short-version | ${SED} -e s/-.*//",
+		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
+
+	vars2 := mklines.mklines[1].determineUsedVariables()
+
+	c.Check(vars2, deepEquals, []string{"SED"})
+
+	vars3 := mklines.mklines[2].determineUsedVariables()
+
+	c.Check(vars3, deepEquals, []string{"qore-version"})
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "") // No warnings about defined but not used or vice versa
+}
+
+func (s *Suite) Test_MkLines_Varuse_parameterized(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("converters/wv2/Makefile",
+		"# $"+"NetBSD$",
+		"CONFIGURE_ARGS+=\t\t${CONFIGURE_ARGS.${ICONV_TYPE}-iconv}",
+		"CONFIGURE_ARGS.gnu-iconv=\t--with-libiconv=${BUILDLINK_PREFIX.iconv}")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "") // No warnings about defined but not used or vice versa
+}
