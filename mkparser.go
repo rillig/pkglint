@@ -336,7 +336,7 @@ func (p *MkParser) Varname() string {
 	mark := repl.Mark()
 	repl.AdvanceStr(".")
 	isVarnameChar := func(c byte) bool {
-		return 'A' <= c && c <= 'Z' || c == '_' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' || c == '+' || c == '-' || c == '.'
+		return 'A' <= c && c <= 'Z' || c == '_' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' || c == '+' || c == '-' || c == '.' || c == '*'
 	}
 	for p.VarUse() != nil || repl.AdvanceBytesFunc(isVarnameChar) {
 	}

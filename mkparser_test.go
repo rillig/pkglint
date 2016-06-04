@@ -83,6 +83,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	check("${DISTNAME:slang%=slang2%}", varuse("DISTNAME", "slang%=slang2%"))
 	check("${OSMAP_SUBSTVARS:@v@-e 's,\\@${v}\\@,${${v}},g' @}", varuse("OSMAP_SUBSTVARS", "@v@-e 's,\\@${v}\\@,${${v}},g' @"))
 	check("${BRANDELF:D${BRANDELF} -t Linux ${LINUX_LDCONFIG}:U${TRUE}}", varuse("BRANDELF", "D${BRANDELF} -t Linux ${LINUX_LDCONFIG}", "U${TRUE}"))
+	check("${${_var_}.*}", varuse("${_var_}.*"))
 
 	/* weird features */
 	check("${${EMACS_VERSION_MAJOR}>22:?@comment :}", varuse("${EMACS_VERSION_MAJOR}>22", "?@comment :"))
