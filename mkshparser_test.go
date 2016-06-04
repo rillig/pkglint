@@ -170,13 +170,21 @@ func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
-	parse := func(cmd string, expected *MkShSimpleCommand) {
+	parse := func(cmd string, builder *SimpleCommandBuilder) {
+		expected := builder.Cmd
 		p := NewMkShParser(dummyLine, cmd)
 		shcmd := p.SimpleCommand()
 		if c.Check(shcmd, check.NotNil) {
 			if !c.Check(shcmd, deepEquals, expected) {
-				for i, word := range shcmd.Words {
-					c.Check(word, deepEquals, expected.Words[i])
+				for i, assignment := range shcmd.Assignments {
+					c.Check(assignment, deepEquals, expected.Assignments[i])
+				}
+				c.Check(shcmd.Name, deepEquals, expected.Name)
+				for i, word := range shcmd.Args {
+					c.Check(word, deepEquals, expected.Args[i])
+				}
+				for i, redirection := range shcmd.Redirections {
+					c.Check(redirection, deepEquals, expected.Redirections[i])
 				}
 			}
 		}
@@ -191,146 +199,56 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 		c.Check(p.tok.parser.Rest(), equals, expectedRest)
 		c.Check(s.Output(), equals, "")
 	}
+	tester := &MkShTester{c}
 
 	parse("echo ${PKGNAME:Q}",
-		NewMkShSimpleCommand(
-			NewShToken("echo", NewShAtom(shtWord, "echo", shqPlain)),
-			NewShToken("${PKGNAME:Q}", NewShAtomVaruse("${PKGNAME:Q}", shqPlain, "PKGNAME", "Q"))))
+		NewSimpleCommandBuilder().
+			Name(tester.Token("echo")).
+			Arg(tester.Token("${PKGNAME:Q}")))
 
 	parse("${ECHO} \"Double-quoted\" 'Single-quoted'",
-		NewMkShSimpleCommand(
-			NewShToken("${ECHO}", NewShAtomVaruse("${ECHO}", shqPlain, "ECHO")),
-			NewShToken("\"Double-quoted\"",
-				NewShAtom(shtWord, "\"", shqDquot),
-				NewShAtom(shtWord, "Double-quoted", shqDquot),
-				NewShAtom(shtWord, "\"", shqPlain)),
-			NewShToken("'Single-quoted'",
-				NewShAtom(shtWord, "'", shqSquot),
-				NewShAtom(shtWord, "Single-quoted", shqSquot),
-				NewShAtom(shtWord, "'", shqPlain))))
+		NewSimpleCommandBuilder().
+			Name(tester.Token("${ECHO}")).
+			Arg(tester.Token("\"Double-quoted\"")).
+			Arg(tester.Token("'Single-quoted'")))
 
 	parse("`cat plain` \"`cat double`\" '`cat single`'",
-		NewMkShSimpleCommand(
-			NewShToken("`cat plain`",
-				NewShAtom(shtWord, "`", shqBackt),
-				NewShAtom(shtWord, "cat", shqBackt),
-				NewShAtom(shtSpace, " ", shqBackt),
-				NewShAtom(shtWord, "plain", shqBackt),
-				NewShAtom(shtWord, "`", shqPlain)),
-			NewShToken("\"`cat double`\"",
-				NewShAtom(shtWord, "\"", shqDquot),
-				NewShAtom(shtWord, "`", shqDquotBackt),
-				NewShAtom(shtWord, "cat", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "double", shqDquotBackt),
-				NewShAtom(shtWord, "`", shqDquot),
-				NewShAtom(shtWord, "\"", shqPlain)),
-			NewShToken("'`cat single`'",
-				NewShAtom(shtWord, "'", shqSquot),
-				NewShAtom(shtWord, "`cat single`", shqSquot),
-				NewShAtom(shtWord, "'", shqPlain))))
+		NewSimpleCommandBuilder().
+			Name(tester.Token("`cat plain`")).
+			Arg(tester.Token("\"`cat double`\"")).
+			Arg(tester.Token("'`cat single`'")))
 
 	parse("`\"one word\"`",
-		NewMkShSimpleCommand(
-			NewShToken("`\"one word\"`",
-				NewShAtom(shtWord, "`", shqBackt),
-				NewShAtom(shtWord, "\"", shqBacktDquot),
-				NewShAtom(shtWord, "one word", shqBacktDquot),
-				NewShAtom(shtWord, "\"", shqBackt),
-				NewShAtom(shtWord, "`", shqPlain))))
+		NewSimpleCommandBuilder().
+			Name(tester.Token("`\"one word\"`")))
 
 	parse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		NewMkShSimpleCommand(
-			NewShToken("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-				NewShAtom(shtWord, "PAGES=", shqPlain),
-				NewShAtom(shtWord, "\"", shqDquot),
-				NewShAtom(shtWord, "`", shqDquotBackt),
-				NewShAtom(shtWord, "ls", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "-1", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtPipe, "|", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtomVaruse("${SED}", shqDquotBackt, "SED"),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "-e", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "'", shqDquotBacktSquot),
-				NewShAtom(shtWord, "s,3qt$$,3,", shqDquotBacktSquot),
-				NewShAtom(shtWord, "'", shqDquotBackt),
-				NewShAtom(shtWord, "`", shqDquot),
-				NewShAtom(shtWord, "\"", shqPlain))))
+		NewSimpleCommandBuilder().
+			Assignment(tester.Token("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"")))
 
 	parse("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
-		NewMkShSimpleCommand(
-			NewShToken("var=Plain",
-				NewShAtom(shtWord, "var=Plain", shqPlain)),
-			NewShToken("var=\"Dquot\"",
-				NewShAtom(shtWord, "var=", shqPlain),
-				NewShAtom(shtWord, "\"", shqDquot),
-				NewShAtom(shtWord, "Dquot", shqDquot),
-				NewShAtom(shtWord, "\"", shqPlain)),
-			NewShToken("var='Squot'",
-				NewShAtom(shtWord, "var=", shqPlain),
-				NewShAtom(shtWord, "'", shqSquot),
-				NewShAtom(shtWord, "Squot", shqSquot),
-				NewShAtom(shtWord, "'", shqPlain)),
-			NewShToken("var=Plain\"Dquot\"'Squot'",
-				NewShAtom(shtWord, "var=Plain", shqPlain),
-				NewShAtom(shtWord, "\"", shqDquot),
-				NewShAtom(shtWord, "Dquot", shqDquot),
-				NewShAtom(shtWord, "\"", shqPlain),
-				NewShAtom(shtWord, "'", shqSquot),
-				NewShAtom(shtWord, "Squot", shqSquot),
-				NewShAtom(shtWord, "'", shqPlain)),
-		))
+		NewSimpleCommandBuilder().
+			Assignment(tester.Token("var=Plain")).
+			Assignment(tester.Token("var=\"Dquot\"")).
+			Assignment(tester.Token("var='Squot'")).
+			Assignment(tester.Token("var=Plain\"Dquot\"'Squot'")))
 
 	parse("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
-		NewMkShSimpleCommand(
-			NewShToken("${RUN}",
-				NewShAtomVaruse("${RUN}", shqPlain, "RUN")),
-			NewShToken("subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
-				NewShAtom(shtWord, "subdir=", shqPlain),
-				NewShAtom(shtWord, "\"", shqDquot),
-				NewShAtom(shtWord, "`", shqDquotBackt),
-				NewShAtom(shtWord, "unzip", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "-c", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "\"", shqDquotBacktDquot),
-				NewShAtom(shtWord, "$$e", shqDquotBacktDquot),
-				NewShAtom(shtWord, "\"", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "install.rdf", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtPipe, "|", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "awk", shqDquotBackt),
-				NewShAtom(shtSpace, " ", shqDquotBackt),
-				NewShAtom(shtWord, "'", shqDquotBacktSquot),
-				NewShAtom(shtWord, "/re/ { print \"hello\" }", shqDquotBacktSquot),
-				NewShAtom(shtWord, "'", shqDquotBackt),
-				NewShAtom(shtWord, "`", shqDquot),
-				NewShAtom(shtWord, "\"", shqPlain))))
+		NewSimpleCommandBuilder().
+			Name(tester.Token("${RUN}")).
+			Arg(tester.Token("subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")))
 
 	parse("PATH=/nonexistent env PATH=${PATH:Q} true",
-		NewMkShSimpleCommand(
-			NewShToken("PATH=/nonexistent",
-				NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
-			NewShToken("env",
-				NewShAtom(shtWord, "env", shqPlain)),
-			NewShToken("PATH=${PATH:Q}",
-				NewShAtom(shtWord, "PATH=", shqPlain),
-				NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
-			NewShToken("true",
-				NewShAtom(shtWord, "true", shqPlain))))
+		NewSimpleCommandBuilder().
+			Assignment(tester.Token("PATH=/nonexistent")).
+			Name(tester.Token("env")).
+			Arg(tester.Token("PATH=${PATH:Q}")).
+			Arg(tester.Token("true")))
 
 	parse("{OpenGrok args",
-		NewMkShSimpleCommand(
-			NewShToken("{OpenGrok",
-				NewShAtom(shtWord, "{OpenGrok", shqPlain)),
-			NewShToken("args",
-				NewShAtom(shtWord, "args", shqPlain))))
+		NewSimpleCommandBuilder().
+			Name(tester.Token("{OpenGrok")).
+			Arg(tester.Token("args")))
 
 	fail("if clause", "if clause")
 	fail("{ group; }", "{ group; }")
@@ -406,4 +324,29 @@ func (t *MkShTester) Token(str string) *ShToken {
 	t.c.Check(parsed, check.NotNil)
 	t.c.Check(p.Rest(), equals, "")
 	return parsed
+}
+
+type SimpleCommandBuilder struct {
+	Cmd *MkShSimpleCommand
+}
+
+func NewSimpleCommandBuilder() *SimpleCommandBuilder {
+	cmd := &MkShSimpleCommand{}
+	return &SimpleCommandBuilder{cmd}
+}
+func (b *SimpleCommandBuilder) Name(name *ShToken) *SimpleCommandBuilder {
+	b.Cmd.Name = name
+	return b
+}
+func (b *SimpleCommandBuilder) Assignment(assignment *ShToken) *SimpleCommandBuilder {
+	b.Cmd.Assignments = append(b.Cmd.Assignments, assignment)
+	return b
+}
+func (b *SimpleCommandBuilder) Arg(arg *ShToken) *SimpleCommandBuilder {
+	b.Cmd.Args = append(b.Cmd.Args, arg)
+	return b
+}
+func (b *SimpleCommandBuilder) Redirection(redirection *MkShRedirection) *SimpleCommandBuilder {
+	b.Cmd.Redirections = append(b.Cmd.Redirections, redirection)
+	return b
 }

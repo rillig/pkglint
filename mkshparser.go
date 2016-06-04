@@ -367,7 +367,7 @@ func (p *MkShParser) UntilClause() (retval *MkShLoopClause) {
 }
 
 // ::= msttNAME "(" ")" Linebreak CompoundCommand Redirect*
-func (p *MkShParser) FunctionDefinition() (retval *MkShFunctionDef) {
+func (p *MkShParser) FunctionDefinition() (retval *MkShFunctionDefinition) {
 	defer p.trace(&retval)()
 	ok := false
 	defer p.rollback(&ok)()
@@ -390,7 +390,7 @@ func (p *MkShParser) FunctionDefinition() (retval *MkShFunctionDef) {
 
 	redirects := p.RedirectList()
 	ok = true
-	return &MkShFunctionDef{funcname.MkText, body, redirects}
+	return &MkShFunctionDefinition{funcname.MkText, body, redirects}
 }
 
 func (p *MkShParser) BraceGroup() (retval *MkShList) {
@@ -436,19 +436,30 @@ func (p *MkShParser) SimpleCommand() (retval *MkShSimpleCommand) {
 	ok := false
 	defer p.rollback(&ok)()
 
-	var words []*ShToken
+	var assignments []*ShToken
+	var name *ShToken
+	var args []*ShToken
+	var redirections []*MkShRedirection
 	first := true
+	seenName := false
 nextword:
 	if word := p.Word(first); word != nil {
 		first = false
-		words = append(words, word)
+		if !seenName && word.IsAssignment() {
+			assignments = append(assignments, word)
+		} else if !seenName {
+			name = word
+			seenName = true
+		} else {
+			args = append(args, word)
+		}
 		goto nextword
 	}
-	if len(words) == 0 {
+	if len(assignments) == 0 && name == nil && len(args) == 0 && len(redirections) == 0 {
 		return nil
 	}
 	ok = true
-	return &MkShSimpleCommand{words}
+	return &MkShSimpleCommand{assignments, name, args, redirections}
 }
 
 func (p *MkShParser) RedirectList() (retval []*MkShRedirection) {
