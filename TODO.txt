@@ -16,10 +16,6 @@ WARN: converters/wv2/Makefile:31: CONFIGURE_ARGS.gnu-iconv is defined but not us
 *** neu; warum?
 +WARN: databases/libdbi-driver-sqlite3/Makefile_drivers:5: DISTNAME may not be used in this file.
 
-*** doch klar, warum auch nicht?
-> MASTER_SITES?=        https://www.kernel.org/pub/software/scm/git/
-WARN: devel/git/Makefile.common:13: The variable MASTER_SITES may not be given a default value (only set, appended to) in this file.
-
 *** ansehen
 > REQD_FILES+=          ${GIT_TEMPLATES:@.t.@\
 >                               ${EGDIR}/${GIT_TEMPLATEDIR}/${.t.}\
