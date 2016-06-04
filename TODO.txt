@@ -62,3 +62,9 @@ WARN: geography/viking/Makefile:8: Please use ${MASTER_SITE_SOURCEFORGE:=viking/
 *** Falsch geworden
 -WARN: www/py-django14/Makefile:47: Please use ${BACKEND_PATH:Q} instead of ${BACKEND_PATH} and make sure the variable appears outside of any quoting characters.
 +WARN: www/py-django14/Makefile:44: Please use ${BACKEND_PATH:Q} instead of ${BACKEND_PATH}.
+
+case $var in esac
+case $var in pattern) action; esac
+case $var in pattern) action;; esac
+while cond; do action; done
+until cond; do action; done
