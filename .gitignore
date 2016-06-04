@@ -5,3 +5,5 @@
 /pkglint.test.exe
 /*.docx
 /.idea/
+/*yacc.go
+/*.log
