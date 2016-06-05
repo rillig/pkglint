@@ -369,9 +369,9 @@ func checklineOtherAbsolutePathname(line *Line, text string) {
 	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
 		switch {
 		case hasSuffix(before, "@"): // Example: @PREFIX@/bin
-		case matches(before, `[)}]$`): // Example: ${prefix}/bin
+		case matches(before, `[)}]$`) && !matches(before, `DESTDIR[)}]$`): // Example: ${prefix}/bin
 		case matches(before, `\+\s*["']$`): // Example: prefix + '/lib'
-		case matches(before, `\w$`): // Example: libdir=$prefix/lib
+		case matches(before, `\$\w$`): // Example: libdir=$prefix/lib
 		case hasSuffix(before, "."): // Example: ../dir
 		// XXX new: case matches(before, `s.$`): // Example: sed -e s,/usr,@PREFIX@,
 		default:
