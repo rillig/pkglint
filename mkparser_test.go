@@ -6,7 +6,7 @@ import (
 
 func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	checkRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
-		p := NewMkParser(dummyLine, input)
+		p := NewMkParser(dummyLine, input, true)
 		actualTokens := p.MkTokens()
 		c.Check(actualTokens, deepEquals, expectedTokens)
 		for i, expectedToken := range expectedTokens {
@@ -128,7 +128,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 
 func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	checkRest := func(input string, expectedTree *Tree, expectedRest string) {
-		p := NewMkParser(dummyLine, input)
+		p := NewMkParser(dummyLine, input, false)
 		actualTree := p.MkCond()
 		c.Check(actualTree, deepEquals, expectedTree)
 		c.Check(p.Rest(), equals, expectedRest)

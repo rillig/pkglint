@@ -7,7 +7,7 @@ import (
 // @Beta
 func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	checkRest := func(s string, expected ...*ShAtom) string {
-		p := NewShTokenizer(dummyLine, s)
+		p := NewShTokenizer(dummyLine, s, false)
 		q := shqPlain
 		for _, exp := range expected {
 			c.Check(p.ShAtom(q), deepEquals, exp)
@@ -306,7 +306,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 func (s *Suite) Test_Shtokenizer_ShAtom_Quoting(c *check.C) {
 	checkQuotingChange := func(input, expectedOutput string) {
-		p := NewShTokenizer(dummyLine, input)
+		p := NewShTokenizer(dummyLine, input, false)
 		q := shqPlain
 		result := ""
 		for {
@@ -340,7 +340,7 @@ func (s *Suite) Test_Shtokenizer_ShAtom_Quoting(c *check.C) {
 
 func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	check := func(str string, expected ...*ShToken) {
-		p := NewShTokenizer(dummyLine, str)
+		p := NewShTokenizer(dummyLine, str, false)
 		for _, exp := range expected {
 			c.Check(p.ShToken(), deepEquals, exp)
 		}

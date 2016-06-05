@@ -122,7 +122,7 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 
 	line := shline.line
 
-	p := NewMkParser(line, token)
+	p := NewMkParser(line, token, false)
 	if varuse := p.VarUse(); varuse != nil && p.EOF() {
 		shline.mkline.CheckVaruse(varuse, shellwordVuc)
 		return
@@ -135,7 +135,7 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 		line.Warn0("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
-	parser := NewMkParser(line, token)
+	parser := NewMkParser(line, token, false)
 	repl := parser.repl
 	quoting := shqPlain
 outer:
@@ -411,7 +411,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 	if false {
-		p := NewMkShParser(shline.line, shellcmd)
+		p := NewMkShParser(shline.line, shellcmd, false)
 		cmds := p.Program()
 		rest := p.tok.parser.Rest()
 		if rest != "" {
@@ -934,7 +934,7 @@ func splitIntoShellTokens(line *Line, text string) (tokens []string, rest string
 			word = ""
 		}
 	}
-	p := NewShTokenizer(line, text)
+	p := NewShTokenizer(line, text, false)
 	atoms := p.ShAtoms()
 	q := shqPlain
 	for _, atom := range atoms {
@@ -959,7 +959,7 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 		defer tracecall(line, text)()
 	}
 
-	p := NewShTokenizer(line, text)
+	p := NewShTokenizer(line, text, false)
 	atoms := p.ShAtoms()
 	word := ""
 	for _, atom := range atoms {

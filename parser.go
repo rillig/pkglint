@@ -5,12 +5,13 @@ import (
 )
 
 type Parser struct {
-	line *Line
-	repl *PrefixReplacer
+	Line         *Line
+	repl         *PrefixReplacer
+	EmitWarnings bool
 }
 
-func NewParser(line *Line, s string) *Parser {
-	return &Parser{line, NewPrefixReplacer(s)}
+func NewParser(line *Line, s string, emitWarnings bool) *Parser {
+	return &Parser{line, NewPrefixReplacer(s), emitWarnings}
 }
 
 func (p *Parser) EOF() bool {

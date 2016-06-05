@@ -6,7 +6,7 @@ import (
 
 func (s *Suite) TestParser_PkgbasePattern(c *check.C) {
 	checkRest := func(pattern, expected, rest string) {
-		parser := NewParser(dummyLine, pattern)
+		parser := NewParser(dummyLine, pattern, false)
 		actual := parser.PkgbasePattern()
 		c.Check(actual, equals, expected)
 		c.Check(parser.Rest(), equals, rest)
@@ -22,7 +22,7 @@ func (s *Suite) TestParser_PkgbasePattern(c *check.C) {
 func (s *Suite) TestParser_Dependency(c *check.C) {
 
 	checkRest := func(pattern string, expected DependencyPattern, rest string) {
-		parser := NewParser(dummyLine, pattern)
+		parser := NewParser(dummyLine, pattern, false)
 		dp := parser.Dependency()
 		if c.Check(dp, check.NotNil) {
 			c.Check(*dp, equals, expected)

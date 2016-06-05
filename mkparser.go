@@ -8,8 +8,8 @@ type MkParser struct {
 	*Parser
 }
 
-func NewMkParser(line *Line, text string) *MkParser {
-	return &MkParser{NewParser(line, text)}
+func NewMkParser(line *Line, text string, emitWarnings bool) *MkParser {
+	return &MkParser{NewParser(line, text, emitWarnings)}
 }
 
 func (p *MkParser) MkTokens() []*MkToken {
@@ -63,8 +63,8 @@ func (p *MkParser) VarUse() *MkVarUse {
 		varnameMark := repl.Mark()
 		varname := p.Varname()
 		if varname != "" {
-			if usingRoundParen {
-				p.line.Warn1("Please use curly braces {} instead of round parentheses () for %s.", varname)
+			if usingRoundParen && p.EmitWarnings {
+				p.Line.Warn1("Please use curly braces {} instead of round parentheses () for %s.", varname)
 			}
 			modifiers := p.VarUseModifiers(varname, closing)
 			if repl.AdvanceStr(closing) {
@@ -93,7 +93,9 @@ func (p *MkParser) VarUse() *MkVarUse {
 	}
 	if repl.AdvanceRegexp(`^\$(\w)`) {
 		varname := repl.m[1]
-		p.line.Warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
+		if p.EmitWarnings {
+			p.Line.Warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
+		}
 		return &MkVarUse{varname, nil}
 	}
 	return nil
@@ -160,8 +162,8 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 				loopvar := repl.m[1]
 				for p.VarUse() != nil || repl.AdvanceRegexp(`^([^$:@`+closing+`\\]|\$\$|\\.)+`) {
 				}
-				if !repl.AdvanceStr("@") {
-					p.line.Warn2("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
+				if !repl.AdvanceStr("@") && p.EmitWarnings {
+					p.Line.Warn2("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
 				}
 				modifiers = append(modifiers, repl.Since(modifierMark))
 				continue

@@ -10,8 +10,8 @@ type MkShParser struct {
 	curr *ShToken
 }
 
-func NewMkShParser(line *Line, text string) *MkShParser {
-	shp := NewShTokenizer(line, text)
+func NewMkShParser(line *Line, text string, emitWarnings bool) *MkShParser {
+	shp := NewShTokenizer(line, text, emitWarnings)
 	return &MkShParser{shp, nil}
 }
 
@@ -485,7 +485,7 @@ func (p *MkShParser) IoRedirect() (retval *MkShRedirection) {
 			fd = -1
 		}
 		p.skip()
-		targetToken := NewShTokenizer(p.tok.mkp.line, target).ShToken()
+		targetToken := NewShTokenizer(p.tok.mkp.Line, target, false).ShToken()
 		return &MkShRedirection{int(fd), op, targetToken}
 	}
 	return nil
@@ -573,7 +573,7 @@ func (p *MkShParser) peek() *ShToken {
 	nexttoken:
 		p.curr = p.tok.ShToken()
 		if p.curr == nil && !p.tok.parser.EOF() {
-			p.tok.mkp.line.Warnf("Pkglint tokenize error at " + p.tok.parser.Rest())
+			p.tok.mkp.Line.Warnf("Pkglint tokenize error at " + p.tok.parser.Rest())
 			p.tok.mkp.Parser.repl.AdvanceRest()
 			return nil
 		}

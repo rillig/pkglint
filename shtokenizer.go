@@ -5,8 +5,8 @@ type ShTokenizer struct {
 	mkp    *MkParser
 }
 
-func NewShTokenizer(line *Line, text string) *ShTokenizer {
-	p := NewParser(line, text)
+func NewShTokenizer(line *Line, text string, emitWarnings bool) *ShTokenizer {
+	p := NewParser(line, text, emitWarnings)
 	mkp := &MkParser{p}
 	return &ShTokenizer{p, mkp}
 }
@@ -48,7 +48,7 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 
 	if atom == nil {
 		repl.Reset(mark)
-		p.parser.line.Warnf("Pkglint parse error in ShTokenizer.ShAtom at %q (quoting=%s)", repl.rest, quoting)
+		p.parser.Line.Warnf("Pkglint parse error in ShTokenizer.ShAtom at %q (quoting=%s)", repl.rest, quoting)
 	}
 	return atom
 }

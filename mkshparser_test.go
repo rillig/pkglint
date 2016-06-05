@@ -6,7 +6,7 @@ import (
 
 func (s *Suite) Test_MkShParser_Program(c *check.C) {
 	parse := func(cmd string, expected *MkShList) {
-		p := NewMkShParser(dummyLine, cmd)
+		p := NewMkShParser(dummyLine, cmd, false)
 		program := p.Program()
 		c.Check(program, deepEquals, expected)
 		c.Check(p.tok.parser.Rest(), equals, "")
@@ -27,7 +27,7 @@ func (s *Suite) Test_MkShParser_List(c *check.C) {
 
 func (s *Suite) Test_MkShParser_AndOr(c *check.C) {
 	parse := func(cmd string, expected *MkShAndOr) {
-		p := NewMkShParser(dummyLine, cmd)
+		p := NewMkShParser(dummyLine, cmd, false)
 		andor := p.AndOr()
 		c.Check(andor, deepEquals, expected)
 		c.Check(p.tok.parser.Rest(), equals, "")
@@ -49,7 +49,7 @@ func (s *Suite) Test_MkShParser_Pipeline(c *check.C) {
 
 func (s *Suite) Test_MkShParser_Command(c *check.C) {
 	parse := func(cmd string, expected *MkShCommand) {
-		p := NewMkShParser(dummyLine, cmd)
+		p := NewMkShParser(dummyLine, cmd, false)
 		command := p.Command()
 		c.Check(command, deepEquals, expected)
 		c.Check(p.tok.parser.Rest(), equals, "")
@@ -71,7 +71,7 @@ func (s *Suite) Test_MkShParser_Subshell(c *check.C) {
 
 func (s *Suite) Test_MkShParser_CompoundList(c *check.C) {
 	parse := func(cmd string, expected *MkShList) {
-		p := NewMkShParser(dummyLine, cmd)
+		p := NewMkShParser(dummyLine, cmd, false)
 		compoundList := p.CompoundList()
 		c.Check(compoundList, deepEquals, expected)
 		c.Check(p.tok.parser.Rest(), equals, "")
@@ -90,7 +90,7 @@ func (s *Suite) Test_MkShParser_CompoundList(c *check.C) {
 
 func (s *Suite) Test_MkShParser_ForClause(c *check.C) {
 	parse := func(cmd string, expected *MkShForClause) {
-		p := NewMkShParser(dummyLine, cmd)
+		p := NewMkShParser(dummyLine, cmd, false)
 		forclause := p.ForClause()
 		c.Check(forclause, deepEquals, expected)
 		c.Check(p.tok.parser.Rest(), equals, "")
@@ -151,7 +151,7 @@ func (s *Suite) Test_MkShParser_BraceGroup(c *check.C) {
 func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
 	tester := &MkShTester{c}
 	check := func(str string, expected *MkShList) {
-		p := NewMkShParser(dummyLine, str)
+		p := NewMkShParser(dummyLine, str, false)
 		dogroup := p.DoGroup()
 		if c.Check(dogroup, check.NotNil) {
 			if !c.Check(dogroup, deepEquals, expected) {
@@ -172,7 +172,7 @@ func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
 func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 	parse := func(cmd string, builder *SimpleCommandBuilder) {
 		expected := builder.Cmd
-		p := NewMkShParser(dummyLine, cmd)
+		p := NewMkShParser(dummyLine, cmd, false)
 		shcmd := p.SimpleCommand()
 		if c.Check(shcmd, check.NotNil) {
 			if !c.Check(shcmd, deepEquals, expected) {
@@ -193,7 +193,7 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 	}
 
 	fail := func(noncmd string, expectedRest string) {
-		p := NewMkShParser(dummyLine, noncmd)
+		p := NewMkShParser(dummyLine, noncmd, false)
 		shcmd := p.SimpleCommand()
 		c.Check(shcmd, check.IsNil)
 		c.Check(p.tok.parser.Rest(), equals, expectedRest)
@@ -294,7 +294,7 @@ type MkShTester struct {
 }
 
 func (t *MkShTester) ParseCommand(str string) *MkShCommand {
-	p := NewMkShParser(dummyLine, str)
+	p := NewMkShParser(dummyLine, str, false)
 	cmd := p.Command()
 	t.c.Check(cmd, check.NotNil)
 	t.c.Check(p.Rest(), equals, "")
@@ -302,7 +302,7 @@ func (t *MkShTester) ParseCommand(str string) *MkShCommand {
 }
 
 func (t *MkShTester) ParseSimpleCommand(str string) *MkShSimpleCommand {
-	p := NewMkShParser(dummyLine, str)
+	p := NewMkShParser(dummyLine, str, false)
 	parsed := p.SimpleCommand()
 	t.c.Check(parsed, check.NotNil)
 	t.c.Check(p.Rest(), equals, "")
@@ -310,7 +310,7 @@ func (t *MkShTester) ParseSimpleCommand(str string) *MkShSimpleCommand {
 }
 
 func (t *MkShTester) ParseCompoundList(str string) *MkShList {
-	p := NewMkShParser(dummyLine, str)
+	p := NewMkShParser(dummyLine, str, false)
 	parsed := p.CompoundList()
 	t.c.Check(parsed, check.NotNil)
 	t.c.Check(p.Rest(), equals, "")
@@ -318,7 +318,7 @@ func (t *MkShTester) ParseCompoundList(str string) *MkShList {
 }
 
 func (t *MkShTester) Token(str string) *ShToken {
-	p := NewMkShParser(dummyLine, str)
+	p := NewMkShParser(dummyLine, str, false)
 	parsed := p.peek()
 	p.skip()
 	t.c.Check(parsed, check.NotNil)
