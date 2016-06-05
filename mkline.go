@@ -1066,6 +1066,9 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 	case vartype.kindOfList == lkNone:
 		mkline.CheckVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.IsConsideredList(), vartype.guessed)
 
+	case value == "":
+		break
+
 	case vartype.kindOfList == lkSpace:
 		for _, word := range splitOnSpace(value) {
 			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
