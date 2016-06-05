@@ -191,7 +191,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkg("CMAKE_ARG_PATH", lkNone, CheckvarPathname)
 	pkglist("CMAKE_ARGS", lkShell, CheckvarShellWord)
 	acl("COMMENT", lkNone, CheckvarComment, "Makefile, Makefile.common: set, append")
-	sys("COMPILER_RPATH_FLAG", lkNone, enum("-Wl,-rpath"))
+	acl("COMPILER_RPATH_FLAG", lkNone, enum("-Wl,-rpath"), "*: use")
 	pkglist("CONFIGURE_ARGS", lkShell, CheckvarShellWord)
 	pkglist("CONFIGURE_DIRS", lkShell, CheckvarWrksrcSubdirectory)
 	acl("CONFIGURE_ENV", lkShell, CheckvarShellWord, "Makefile, Makefile.common: append, set, use; buildlink3.mk, builtin.mk: append; *.mk: append, use")
