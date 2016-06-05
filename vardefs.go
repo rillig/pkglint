@@ -249,7 +249,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("DO_NADA", lkNone, CheckvarShellCommand)
 	pkg("DYNAMIC_SITES_CMD", lkNone, CheckvarShellCommand)
 	pkg("DYNAMIC_SITES_SCRIPT", lkNone, CheckvarPathname)
-	sys("ECHO", lkNone, CheckvarShellCommand)
+	acl("ECHO", lkNone, CheckvarShellCommand, "*: use")
 	sys("ECHO_MSG", lkNone, CheckvarShellCommand)
 	sys("ECHO_N", lkNone, CheckvarShellCommand)
 	pkg("EGDIR", lkNone, CheckvarPathname) // Not defined anywhere, but used in many places like this.
