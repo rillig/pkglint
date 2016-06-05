@@ -143,7 +143,9 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 
 	shline.CheckShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo "$"
 
-	c.Check(s.Output(), equals, "WARN: fname:1: Unescaped $ or strange shell variable found.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: Pkglint parse error in ShTokenizer.ShAtom at \"$$\\\"\" (quoting=d)\n"+
+		"WARN: fname:1: Pkglint parse error in ShellLine.CheckShellCommand at \"$$\\\"\" (state=start)\n")
 
 	shline.CheckShellCommandLine("echo \"\\n\"") // As seen by make(1); the shell sees: echo "\n"
 
