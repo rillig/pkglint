@@ -155,6 +155,10 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 
 	c.Check(s.Output(), equals, "")
 
+	shline.CheckShellCommandLine("${RUN} echo $${variable+set}")
+
+	c.Check(s.Output(), equals, "")
+
 	// Based on mail/thunderbird/Makefile, rev. 1.159
 	shline.CheckShellCommandLine("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
 

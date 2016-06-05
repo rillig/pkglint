@@ -38,7 +38,7 @@ const (
 		`|#.*)`
 	reShVarassign    = `^([A-Z_a-z]\w*)=`
 	reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
-	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+)[^$\\{}]*)`
+	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
 	reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
 	reShDollar       = `\\\$\$|` + reShVaruse + `|\$\$[,\-/|]`
 )
