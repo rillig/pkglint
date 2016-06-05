@@ -529,7 +529,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 			"incrementally.  Therefore it is generally unsafe to rely on their",
 			"value until it is clear that it will never change again.  This",
 			"point is reached when the whole package Makefile is loaded and",
-			"execution of the shell commands starts, in some cases earlier.",
+			"execution of the shell commands starts; in some cases earlier.",
 			"",
 			"Additionally, when using the \":=\" operator, each $$ is replaced",
 			"with a single $, so variables that have references to shell",
@@ -548,7 +548,22 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 	}
 
 	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
-		mkline.Warn1("%s may not be used in this file.", varname)
+		needed := aclpUse
+		if isLoadTime {
+			needed = aclpUseLoadtime
+		}
+		alternativeFiles := vartype.AllowedFiles(needed)
+		if alternativeFiles != "" {
+			mkline.Warn2("%s may not be used in this file; it would be ok in %s.",
+				varname, alternativeFiles)
+		} else {
+			mkline.Warn1("%s may not be used in any file; it is a write-only variable.", varname)
+		}
+		Explain4(
+			"The allowed actions for a variable are determined based on the file",
+			"name in which the variable is used or defined.  The exact rules are",
+			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
+			"on the tech-pkg@NetBSD.org mailing list.")
 	}
 }
 

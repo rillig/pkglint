@@ -121,20 +121,20 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	shline.CheckShellCommandLine("echo ${PKGNAME:Q}") // vucQuotPlain
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: PKGNAME may not be used in this file.\n"+
+		"WARN: fname:1: PKGNAME may not be used in this file; it would be ok in Makefile, Makefile.*, *.mk.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${PKGNAME} here.\n")
 
 	shline.CheckShellCommandLine("echo \"${CFLAGS:Q}\"") // vucQuotDquot
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Please don't use the :Q operator in double quotes.\n"+
-		"WARN: fname:1: CFLAGS may not be used in this file.\n"+
+		"WARN: fname:1: CFLAGS may not be used in this file; it would be ok in Makefile, Makefile.common, options.mk, *.mk.\n"+
 		"WARN: fname:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} and make sure the variable appears outside of any quoting characters.\n")
 
 	shline.CheckShellCommandLine("echo '${COMMENT:Q}'") // vucQuotSquot
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: COMMENT may not be used in this file.\n"+
+		"WARN: fname:1: COMMENT may not be used in any file; it is a write-only variable.\n"+
 		"WARN: fname:1: Please move ${COMMENT:Q} outside of any quoting characters.\n")
 
 	shline.CheckShellCommandLine("echo $$@")
@@ -189,7 +189,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"done")
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: WRKSRC may not be used in this file.\n"+
+		"WARN: fname:1: WRKSRC may not be used in this file; it would be ok in Makefile, Makefile.*, *.mk.\n"+
 		"WARN: fname:1: Unknown shell command \"[\".\n"+
 		"WARN: fname:1: Unknown shell command \"${TOOLS_PATH.msgfmt}\".\n")
 
@@ -303,18 +303,18 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 	shline.CheckWord("${COMMENT:Q}", true)
 
-	c.Check(s.Output(), equals, "WARN: fname:1: COMMENT may not be used in this file.\n")
+	c.Check(s.Output(), equals, "WARN: fname:1: COMMENT may not be used in any file; it is a write-only variable.\n")
 
 	shline.CheckWord("\"${DISTINFO_FILE:Q}\"", true)
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
+		"WARN: fname:1: DISTINFO_FILE may not be used in this file; it would be ok in Makefile, Makefile.*, *.mk.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 
 	shline.CheckWord("embed${DISTINFO_FILE:Q}ded", true)
 
 	c.Check(s.Output(), equals, ""+
-		"WARN: fname:1: DISTINFO_FILE may not be used in this file.\n"+
+		"WARN: fname:1: DISTINFO_FILE may not be used in this file; it would be ok in Makefile, Makefile.*, *.mk.\n"+
 		"NOTE: fname:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.\n")
 
 	shline.CheckWord("s,\\.,,", true)
