@@ -131,7 +131,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("BUILDLINK_CONTENTS_FILTER.*", lkNone, CheckvarShellCommand, "buildlink3.mk: set")
 	acl("BUILDLINK_DEPENDS", lkSpace, CheckvarIdentifier, "buildlink3.mk: append")
 	acl("BUILDLINK_DEPMETHOD.*", lkShell, CheckvarBuildlinkDepmethod, "buildlink3.mk: default, append; Makefile: set, append; Makefile.common, *.mk: append")
-	sys("BUILDLINK_DIR", lkNone, CheckvarPathname)
+	acl("BUILDLINK_DIR", lkNone, CheckvarPathname, "*: use")
 	bl3list("BUILDLINK_FILES.*", lkShell, CheckvarPathmask)
 	acl("BUILDLINK_FILES_CMD.*", lkNone, CheckvarShellCommand, "")
 	acl("BUILDLINK_INCDIRS.*", lkShell, CheckvarPathname, "buildlink3.mk: default, append")
