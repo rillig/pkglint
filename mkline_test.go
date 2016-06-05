@@ -490,7 +490,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
 
 	mkline.checkVarassign()
 
-	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
+	c.Check(s.Output(), equals, "WARN: Makefile:3: The list variable INSTALL should not be embedded in a word.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
@@ -651,8 +651,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_16(c *check.C) {
 
 	G.Mk.Check()
 
-	c.Check(s.Output(), equals, "WARN: audio/jack-rack/Makefile:3: Please use ${LADSPA_PLUGIN_PATH:Q} instead of ${LADSPA_PLUGIN_PATH} "+
-		"and make sure the variable appears outside of any quoting characters.\n")
+	c.Check(s.Output(), equals, "WARN: audio/jack-rack/Makefile:3: The list variable LADSPA_PLUGIN_PATH should not be embedded in a word.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_17(c *check.C) {
@@ -733,4 +732,17 @@ func (s *Suite) Test_MkLine_Check_Cflags_Backticks(c *check.C) {
 	G.Mk.mklines[1].CheckVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
 	c.Check(s.Output(), equals, "") // No warning about "`pkg-config" being an unknown CFlag.
+}
+
+func (s *Suite) Test_MkLine_MasterSites_WordPart(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("geography/viking/Makefile",
+		"# $"+"NetBSD$",
+		"MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=viking/}${VERSION}/")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: geography/viking/Makefile:2: "+
+		"The list variable MASTER_SITE_SOURCEFORGE should not be embedded in a word.\n")
 }

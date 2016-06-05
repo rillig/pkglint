@@ -639,7 +639,27 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
-		if mod != correctMod {
+		if correctMod == mod+":Q" && vuc.extent == vucExtentWordpart {
+			mkline.Line.Warnf("The list variable %s should not be embedded in a word.", varname)
+			Explain(
+				"When a list variable has multiple elements, this expression expands",
+				"to something unexpected:",
+				"",
+				"Example: ${MASTER_SITE_SOURCEFORGE}directory/ expands to",
+				"",
+				"\thttps://mirror1.sf.net/ https://mirror2.sf.net/directory/",
+				"",
+				"The first URL is missing the directory.  To fix this, write",
+				"\t${MASTER_SITE_SOURCEFORGE:=directory/}.",
+				"",
+				"Example: -l${LIBS} expands to",
+				"",
+				"\t-llib1 lib2",
+				"",
+				"The second library is missing the -l.  To fix this, write",
+				"${LIBS:@lib@-l${lib}@}.")
+
+		} else if mod != correctMod {
 			if vuc.quoting == vucQuotPlain {
 				if !mkline.Line.AutofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
 					mkline.Line.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
@@ -661,7 +681,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 				"Instead of CFLAGS=\"${CFLAGS:Q}\",",
 				"     write CFLAGS=${CFLAGS:Q}.",
 				"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
-				"     write 's,@CFLAGS@,'${CFLAGS:Q}'.'")
+				"     write 's,@CFLAGS@,'${CFLAGS:Q}','.")
 		}
 	}
 
@@ -1358,10 +1378,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	// Determine whether the context expects a list of shell words or not.
 	wantList := vuc.vartype.IsConsideredList()
 	haveList := vartype.IsConsideredList()
-
 	if G.opts.Debug {
-		traceStep("variableNeedsQuoting: varname=%q, context=%v, type=%v, wantList=%v, haveList=%v",
-			varname, vuc, vartype, wantList, haveList)
+		traceStep("wantList=%v, haveList=%v", wantList, haveList)
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
@@ -1415,9 +1433,6 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqDoesntMatter
 	}
 
-	if G.opts.Debug {
-		traceStep("wantList=%v haveList=%v", wantList, haveList)
-	}
 	if wantList != haveList {
 		if vuc.vartype != nil && vartype != nil {
 			if vuc.vartype.checker == CheckvarFetchURL && vartype.checker == CheckvarHomepage {
