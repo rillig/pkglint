@@ -758,3 +758,16 @@ func (s *Suite) Test_MkLine_ShellCommand_WordPart(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.\n")
 }
+
+func (s *Suite) Test_MkLine_shell_varuse_in_backt_dquot(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("x11/motif/Makefile",
+		"# $"+"NetBSD$",
+		"post-patch:",
+		"\tfiles=`${GREP} -l \".fB$${name}.fP(3)\" *.3`")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: x11/motif/Makefile:3: Unknown shell command \"${GREP}\".\n") // No parse errors.
+}
