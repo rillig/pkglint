@@ -490,7 +490,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_5(c *check.C) {
 
 	mkline.checkVarassign()
 
-	c.Check(s.Output(), equals, "WARN: Makefile:3: The list variable INSTALL should not be embedded in a word.\n")
+	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
 }
 
 func (s *Suite) TestMkLine_variableNeedsQuoting_6(c *check.C) {
@@ -745,4 +745,16 @@ func (s *Suite) Test_MkLine_MasterSites_WordPart(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: geography/viking/Makefile:2: "+
 		"The list variable MASTER_SITE_SOURCEFORGE should not be embedded in a word.\n")
+}
+
+func (s *Suite) Test_MkLine_ShellCommand_WordPart(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("x11/lablgtk1/Makefile",
+		"# $"+"NetBSD$",
+		"CONFIGURE_ENV+=\tCC=${CC}")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.\n")
 }

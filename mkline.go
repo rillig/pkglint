@@ -639,7 +639,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
-		if correctMod == mod+":Q" && vuc.extent == vucExtentWordpart {
+		if correctMod == mod+":Q" && vuc.extent == vucExtentWordpart && !vartype.IsShell() {
 			mkline.Line.Warnf("The list variable %s should not be embedded in a word.", varname)
 			Explain(
 				"When a list variable has multiple elements, this expression expands",
