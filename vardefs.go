@@ -139,7 +139,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("BUILDLINK_LDADD.*", lkShell, CheckvarLdFlag, "builtin.mk: set, default, append, use; buildlink3.mk: append; Makefile, Makefile.common, *.mk: use")
 	sys("BUILDLINK_LDFLAGS", lkShell, CheckvarLdFlag)
 	bl3list("BUILDLINK_LDFLAGS.*", lkShell, CheckvarLdFlag)
-	bl3list("BUILDLINK_LIBDIRS.*", lkShell, CheckvarPathname)
+	acl("BUILDLINK_LIBDIRS.*", lkShell, CheckvarPathname, "buildlink3.mk, builtin.mk: append; Makefile, Makefile.common, *.mk: use")
 	acl("BUILDLINK_LIBS.*", lkShell, CheckvarLdFlag, "buildlink3.mk: append")
 	acl("BUILDLINK_PASSTHRU_DIRS", lkShell, CheckvarPathname, "Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
 	acl("BUILDLINK_PASSTHRU_RPATHDIRS", lkShell, CheckvarPathname, "Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
