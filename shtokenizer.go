@@ -149,7 +149,7 @@ func (p *ShTokenizer) shAtomBackt() *ShAtom {
 		return &ShAtom{shtRedirect, repl.s, q, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
 		return &ShAtom{shtComment, repl.s, q, nil}
-	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|` + reShDollar + `)+`):
+	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]_a-z~]+|\\[^$]|` + reShDollar + `)+`):
 		return &ShAtom{shtWord, repl.s, q, nil}
 	}
 	return nil
@@ -185,7 +185,7 @@ func (p *ShTokenizer) shAtomDquotBackt() *ShAtom {
 		return &ShAtom{shtBackground, repl.s, q, nil}
 	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
 		return &ShAtom{shtRedirect, repl.s, q, nil}
-	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z_a-z~]+|\\[^$]|` + reShDollar + `)+`):
+	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]_a-z~]+|\\[^$]|` + reShDollar + `)+`):
 		return &ShAtom{shtWord, repl.s, q, nil}
 	case repl.AdvanceHspace():
 		return &ShAtom{shtSpace, repl.s, q, nil}
