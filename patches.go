@@ -201,16 +201,10 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 
 	line := ck.exp.PreviousLine()
 	switch patchedFileType {
-	case ftShell:
+	case ftShell, ftIgnore:
 		break
 	case ftMakefile:
-		// This check is not as accurate as the similar one in MkLine.checkShelltext.
-		shellTokens, _ := splitIntoShellTokens(line, addedText)
-		for _, shellToken := range shellTokens {
-			if !hasPrefix(shellToken, "#") {
-				line.CheckAbsolutePathname(shellToken)
-			}
-		}
+		checklineOtherAbsolutePathname(line, addedText)
 	case ftSource:
 		checklineSourceAbsolutePathname(line, addedText)
 	case ftConfigure:
@@ -222,8 +216,6 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 				"For more details, look for \"configure-scripts-override\" in",
 				"mk/configure/gnu-configure.mk.")
 		}
-	case ftIgnore:
-		break
 	default:
 		checklineOtherAbsolutePathname(line, addedText)
 	}
