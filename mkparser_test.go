@@ -91,6 +91,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	/* weird features */
 	check("${${EMACS_VERSION_MAJOR}>22:?@comment :}", varuse("${EMACS_VERSION_MAJOR}>22", "?@comment :"))
 	check("${empty(CFLAGS):?:-cflags ${CFLAGS:Q}}", varuse("empty(CFLAGS)", "?:-cflags ${CFLAGS:Q}"))
+	check("${${PKGSRC_COMPILER}==gcc:?gcc:cc}", varuse("${PKGSRC_COMPILER}==gcc", "?gcc:cc"))
 
 	check("${${XKBBASE}/xkbcomp:L:Q}", varuse("${XKBBASE}/xkbcomp", "L", "Q"))
 	check("${${PKGBASE} ${PKGVERSION}:L}", varuse("${PKGBASE} ${PKGVERSION}", "L"))
