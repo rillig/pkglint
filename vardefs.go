@@ -809,7 +809,7 @@ func pkg(varname string, kindOfList KindOfList, checker *VarChecker) {
 // A package-defined list may be appended to in all Makefiles except buildlink3.mk and builtin.mk.
 // Simple assignment (instead of appending) is only allowed in Makefile and Makefile.common.
 func pkglist(varname string, kindOfList KindOfList, checker *VarChecker) {
-	acl(varname, kindOfList, checker, "Makefile, Makefile.common: append, default, set, use; buildlink3.mk, builtin.mk:; *.mk: append, use")
+	acl(varname, kindOfList, checker, "Makefile, Makefile.common, options.mk: append, default, set, use; buildlink3.mk, builtin.mk:; *.mk: append, default, use")
 }
 
 // A user-defined or system-defined variable must not be set by any

@@ -24,10 +24,6 @@ sysutils/nvramtool/Makefile
 \t${RUN} ${RM} -f ${${FIND} ${WRKSRC} -type d:L:sh:=/.gitignore}
 textproc/docbook-xsl/Makefile.common
 
-*** Neu und falsch
-+WARN: games/rocksndiamonds/options.mk:10: The variable BUILD_TARGET may not be set (only appended to) in this file; it would be ok in Makefile, Makefile.common.
-+WARN: games/rocksndiamonds/options.mk:18: The variable BUILD_TARGET may not be set (only appended to) in this file; it would be ok in Makefile, Makefile.common.
-
 *** Neu und irreführend
 > MASTER_SITES=         ${MASTER_SITE_SOURCEFORGE:=viking/}${VERSION}/
 WARN: geography/viking/Makefile:8: Please use ${MASTER_SITE_SOURCEFORGE:=viking/:Q} instead of ${MASTER_SITE_SOURCEFORGE:=viking/}.
