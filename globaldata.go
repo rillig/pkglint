@@ -516,11 +516,6 @@ func (gd *GlobalData) loadDeprecatedVars() {
 
 		// January 2016
 		"SUBST_POSTCMD.*": "Has been removed, as it seemed unused.",
-
-		// June 2016
-		// https://mail-index.netbsd.org/pkgsrc-changes/2016/05/17/msg140804.html
-		"ROOT_USER":  "Use REAL_ROOT_USER instead.",
-		"ROOT_GROUP": "Use REAL_ROOT_GROUP instead.",
 	}
 }
 
