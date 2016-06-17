@@ -144,7 +144,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("BUILDLINK_PASSTHRU_DIRS", lkShell, CheckvarPathname, "Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
 	acl("BUILDLINK_PASSTHRU_RPATHDIRS", lkShell, CheckvarPathname, "Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
 	acl("BUILDLINK_PKGSRCDIR.*", lkNone, CheckvarRelativePkgDir, "buildlink3.mk: default, use-loadtime")
-	acl("BUILDLINK_PREFIX.*", lkNone, CheckvarPathname, "builtin.mk: set, use; buildlink3.mk: use; Makefile, Makefile.common, *.mk: use")
+	acl("BUILDLINK_PREFIX.*", lkNone, CheckvarPathname, "builtin.mk: set, use; Makefile, Makefile.common, *.mk: use")
 	acl("BUILDLINK_RPATHDIRS.*", lkShell, CheckvarPathname, "buildlink3.mk: append")
 	acl("BUILDLINK_TARGETS", lkShell, CheckvarIdentifier, "")
 	acl("BUILDLINK_FNAME_TRANSFORM.*", lkNone, CheckvarSedCommands, "Makefile, buildlink3.mk, builtin.mk, hacks.mk: append")
@@ -220,7 +220,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("DELAYED_WARNING_MSG", lkNone, CheckvarShellCommand)
 	pkglist("DEPENDS", lkSpace, CheckvarDependencyWithPath)
 	usr("DEPENDS_TARGET", lkShell, CheckvarIdentifier)
-	acl("DESCR_SRC", lkShell, CheckvarPathname, "Makefile: set; Makefile.common: default, set")
+	acl("DESCR_SRC", lkShell, CheckvarPathname, "Makefile: set, append; Makefile.common: default, set")
 	sys("DESTDIR", lkNone, CheckvarPathname)
 	acl("DESTDIR_VARNAME", lkNone, CheckvarVarname, "Makefile, Makefile.common: set")
 	sys("DEVOSSAUDIO", lkNone, CheckvarPathname)
@@ -385,8 +385,8 @@ func (gd *GlobalData) InitVartypes() {
 	sys("LIBTOOL", lkNone, CheckvarShellCommand)
 	acl("LIBTOOL_OVERRIDE", lkShell, CheckvarPathmask, "Makefile: set, append")
 	pkglist("LIBTOOL_REQD", lkShell, CheckvarVersion)
-	acl("LICENCE", lkNone, CheckvarLicense, "Makefile, Makefile.common: set; options.mk: set")
-	acl("LICENSE", lkNone, CheckvarLicense, "Makefile, Makefile.common: set; options.mk: set")
+	acl("LICENCE", lkNone, CheckvarLicense, "Makefile, Makefile.common, options.mk: set")
+	acl("LICENSE", lkNone, CheckvarLicense, "Makefile, Makefile.common, options.mk: set")
 	pkg("LICENSE_FILE", lkNone, CheckvarPathname)
 	sys("LINKER_RPATH_FLAG", lkNone, CheckvarShellWord)
 	sys("LOWER_OPSYS", lkNone, CheckvarIdentifier)
@@ -398,10 +398,10 @@ func (gd *GlobalData) InitVartypes() {
 	acl("MAINTAINER", lkNone, CheckvarMailAddress, "Makefile: set; Makefile.common: default")
 	sys("MAKE", lkNone, CheckvarShellCommand)
 	pkglist("MAKEFLAGS", lkShell, CheckvarShellWord)
-	acl("MAKEVARS", lkShell, CheckvarVarname, "builtin.mk: append; buildlink3.mk: append; hacks.mk: append")
+	acl("MAKEVARS", lkShell, CheckvarVarname, "buildlink3.mk, builtin.mk, hacks.mk: append")
 	pkglist("MAKE_DIRS", lkShell, CheckvarPathname)
 	pkglist("MAKE_DIRS_PERMS", lkShell, CheckvarPerms)
-	acl("MAKE_ENV", lkShell, CheckvarShellWord, "Makefile: append, set, use; Makefile.common: append, set, use; buildlink3.mk: append; builtin.mk: append; *.mk: append, use")
+	acl("MAKE_ENV", lkShell, CheckvarShellWord, "Makefile, Makefile.common: append, set, use; buildlink3.mk, builtin.mk: append; *.mk: append, use")
 	pkg("MAKE_FILE", lkNone, CheckvarPathname)
 	pkglist("MAKE_FLAGS", lkShell, CheckvarShellWord)
 	usr("MAKE_JOBS", lkNone, CheckvarInteger)
@@ -445,7 +445,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("MASTER_SITE_XCONTRIB", lkShell, CheckvarFetchURL)
 	sys("MASTER_SITE_XEMACS", lkShell, CheckvarFetchURL)
 	pkglist("MESSAGE_SRC", lkShell, CheckvarPathname)
-	acl("MESSAGE_SUBST", lkShell, CheckvarShellWord, "Makefile.common: append; Makefile: append; options.mk: append")
+	acl("MESSAGE_SUBST", lkShell, CheckvarShellWord, "Makefile, Makefile.common, options.mk: append")
 	pkg("META_PACKAGE", lkNone, CheckvarYes)
 	sys("MISSING_FEATURES", lkShell, CheckvarIdentifier)
 	acl("MYSQL_VERSIONS_ACCEPTED", lkShell, enum("51 55 56"), "Makefile: set")
@@ -485,8 +485,8 @@ func (gd *GlobalData) InitVartypes() {
 	acl("PATCH_ARGS", lkShell, CheckvarShellWord, "")
 	acl("PATCH_DIST_ARGS", lkShell, CheckvarShellWord, "Makefile: set, append")
 	acl("PATCH_DIST_CAT", lkNone, CheckvarShellCommand, "")
-	acl("PATCH_DIST_STRIP*", lkNone, CheckvarShellWord, "Makefile, Makefile.common: set; buildlink3.mk:; builtin.mk:; *.mk: set")
-	acl("PATCH_SITES", lkShell, CheckvarFetchURL, "Makefile: set; options.mk: set; Makefile.common: set")
+	acl("PATCH_DIST_STRIP*", lkNone, CheckvarShellWord, "buildlink3.mk, builtin.mk:; Makefile, Makefile.common, *.mk: set")
+	acl("PATCH_SITES", lkShell, CheckvarFetchURL, "Makefile, Makefile.common, options.mk: set")
 	acl("PATCH_STRIP", lkNone, CheckvarShellWord, "")
 	pkg("PERL5_USE_PACKLIST", lkNone, CheckvarYesNo)
 	acl("PERL5_PACKLIST", lkShell, CheckvarPerl5Packlist, "Makefile: set; options.mk: set, append")
@@ -548,21 +548,21 @@ func (gd *GlobalData) InitVartypes() {
 	acl("PKG_OPTIONS", lkSpace, CheckvarOption, "bsd.options.mk: set; *: use-loadtime, use")
 	usr("PKG_OPTIONS.*", lkSpace, CheckvarOption)
 	acl("PKG_OPTIONS_DEPRECATED_WARNINGS", lkShell, CheckvarShellWord, "")
-	acl("PKG_OPTIONS_GROUP.*", lkSpace, CheckvarOption, "options.mk: set; Makefile: set")
-	acl("PKG_OPTIONS_LEGACY_OPTS", lkSpace, CheckvarUnchecked, "Makefile, Makefile.common: append; options.mk: append")
-	acl("PKG_OPTIONS_LEGACY_VARS", lkSpace, CheckvarUnchecked, "Makefile, Makefile.common: append; options.mk: append")
+	acl("PKG_OPTIONS_GROUP.*", lkSpace, CheckvarOption, "Makefile, options.mk: set, append")
+	acl("PKG_OPTIONS_LEGACY_OPTS", lkSpace, CheckvarUnchecked, "Makefile, Makefile.common, options.mk: append")
+	acl("PKG_OPTIONS_LEGACY_VARS", lkSpace, CheckvarUnchecked, "Makefile, Makefile.common, options.mk: append")
 	acl("PKG_OPTIONS_NONEMPTY_SETS", lkSpace, CheckvarIdentifier, "")
 	acl("PKG_OPTIONS_OPTIONAL_GROUPS", lkSpace, CheckvarIdentifier, "options.mk: set, append")
-	acl("PKG_OPTIONS_REQUIRED_GROUPS", lkSpace, CheckvarIdentifier, "options.mk: set; Makefile: set")
+	acl("PKG_OPTIONS_REQUIRED_GROUPS", lkSpace, CheckvarIdentifier, "Makefile, options.mk: set")
 	acl("PKG_OPTIONS_SET.*", lkSpace, CheckvarOption, "")
-	acl("PKG_OPTIONS_VAR", lkNone, CheckvarPkgOptionsVar, "options.mk: set; Makefile, Makefile.common: set; bsd.options.mk: use-loadtime")
+	acl("PKG_OPTIONS_VAR", lkNone, CheckvarPkgOptionsVar, "Makefile, Makefile.common, options.mk: set; bsd.options.mk: use-loadtime")
 	acl("PKG_PRESERVE", lkNone, CheckvarYes, "Makefile: set")
 	acl("PKG_SHELL", lkNone, CheckvarPathname, "Makefile, Makefile.common: set")
 	acl("PKG_SHELL.*", lkNone, CheckvarPathname, "Makefile, Makefile.common: set")
 	acl("PKG_SHLIBTOOL", lkNone, CheckvarPathname, "")
 	pkglist("PKG_SKIP_REASON", lkShell, CheckvarShellWord)
-	acl("PKG_SUGGESTED_OPTIONS", lkShell, CheckvarOption, "options.mk: set, append; Makefile: set, append; Makefile.common: set")
-	acl("PKG_SUPPORTED_OPTIONS", lkShell, CheckvarOption, "options.mk: set, append, use; Makefile: set, append; Makefile.common: set")
+	acl("PKG_SUGGESTED_OPTIONS", lkShell, CheckvarOption, "Makefile, Makefile.common, options.mk: set, append")
+	acl("PKG_SUPPORTED_OPTIONS", lkShell, CheckvarOption, "Makefile: set, append; Makefile.common: set; options.mk: set, append, use")
 	pkg("PKG_SYSCONFDIR*", lkNone, CheckvarPathname)
 	pkglist("PKG_SYSCONFDIR_PERMS", lkShell, CheckvarPerms)
 	sys("PKG_SYSCONFBASEDIR", lkNone, CheckvarPathname)
@@ -586,7 +586,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("PTHREAD_CFLAGS", lkShell, CheckvarCFlag)
 	sys("PTHREAD_LDFLAGS", lkShell, CheckvarLdFlag)
 	sys("PTHREAD_LIBS", lkShell, CheckvarLdFlag)
-	acl("PTHREAD_OPTS", lkShell, enum("native optional require"), "Makefile: set, append; Makefile.common: append; buildlink3.mk: append")
+	acl("PTHREAD_OPTS", lkShell, enum("native optional require"), "Makefile: set, append; Makefile.common, buildlink3.mk: append")
 	sys("PTHREAD_TYPE", lkNone, CheckvarIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", lkNone, CheckvarYes)
 	acl("PYPKGPREFIX", lkNone, enum("py27 py33 py34 py35"), "pyversion.mk: set; *: use-loadtime, use")
@@ -638,7 +638,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("STEP_MSG", lkNone, CheckvarShellCommand)
 	acl("SUBDIR", lkShell, CheckvarFilename, "Makefile: append; *:")
 	acl("SUBST_CLASSES", lkShell, CheckvarIdentifier, "Makefile: set, append; *: append")
-	acl("SUBST_FILES.*", lkShell, CheckvarPathmask, "Makefile: set, append; Makefile.*, *.mk: set, append")
+	acl("SUBST_FILES.*", lkShell, CheckvarPathmask, "Makefile, Makefile.*, *.mk: set, append")
 	acl("SUBST_FILTER_CMD.*", lkNone, CheckvarShellCommand, "Makefile, Makefile.*, *.mk: set")
 	acl("SUBST_MESSAGE.*", lkNone, CheckvarMessage, "Makefile, Makefile.*, *.mk: set")
 	acl("SUBST_SED.*", lkNone, CheckvarSedCommands, "Makefile, Makefile.*, *.mk: set, append")
@@ -673,10 +673,10 @@ func (gd *GlobalData) InitVartypes() {
 	pkg("USE_CMAKE", lkNone, CheckvarYes)
 	acl("USE_CROSSBASE", lkNone, CheckvarYes, "Makefile: set")
 	usr("USE_DESTDIR", lkNone, CheckvarYes)
-	pkg("USE_FEATURES", lkShell, CheckvarIdentifier)
+	pkglist("USE_FEATURES", lkShell, CheckvarIdentifier)
 	pkg("USE_GCC_RUNTIME", lkNone, CheckvarYesNo)
 	pkg("USE_GNU_CONFIGURE_HOST", lkNone, CheckvarYesNo)
-	acl("USE_GNU_ICONV", lkNone, CheckvarYes, "Makefile, Makefile.common: set; options.mk: set")
+	acl("USE_GNU_ICONV", lkNone, CheckvarYes, "Makefile, Makefile.common, options.mk: set")
 	acl("USE_IMAKE", lkNone, CheckvarYes, "Makefile: set")
 	pkg("USE_JAVA", lkNone, enum("run yes build"))
 	pkg("USE_JAVA2", lkNone, enum("YES yes no 1.4 1.5 6 7 8"))
@@ -754,6 +754,7 @@ func parseAclEntries(varname string, aclentries string) []AclEntry {
 		return nil
 	}
 	var result []AclEntry
+	prevperms := "(first)"
 	for _, arg := range strings.Split(aclentries, "; ") {
 		var globs, perms string
 		if fields := strings.SplitN(arg, ": ", 2); len(fields) == 2 {
@@ -761,6 +762,10 @@ func parseAclEntries(varname string, aclentries string) []AclEntry {
 		} else {
 			globs = strings.TrimSuffix(arg, ":")
 		}
+		if perms == prevperms {
+			fmt.Printf("Repeated permissions for %s: %s\n", varname, perms)
+		}
+		prevperms = perms
 		var permissions AclPermissions
 		for _, perm := range strings.Split(perms, ", ") {
 			switch perm {
