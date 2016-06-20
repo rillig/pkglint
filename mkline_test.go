@@ -772,10 +772,27 @@ func (s *Suite) Test_MkLine_shell_varuse_in_backt_dquot(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: x11/motif/Makefile:3: Unknown shell command \"${GREP}\".\n") // No parse errors.
 }
 
+// See PR 46570, Ctrl+F "3. In lang/perl5".
 func (s *Suite) Test_MkLine_getVariableType(c *check.C) {
 	mkline := NewMkLine(dummyLine)
 
 	c.Check(mkline.getVariableType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR"), check.IsNil)
 	c.Check(mkline.getVariableType("SOME_DIR").guessed, equals, true)
 	c.Check(mkline.getVariableType("SOMEDIR").guessed, equals, true)
+}
+
+// See PR 46570, Ctrl+F "4. Shell quoting".
+// Pkglint is correct, since this definition for CPPFLAGS should be
+// seen by the shell as three words, not one word.
+func (s *Suite) Test_MkLine_Cflags(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"CPPFLAGS.SunOS+=\t-DPIPECOMMAND=\\\"/usr/sbin/sendmail -bs %s\\\"")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:2: Unknown compiler flag \"-bs\".\n"+
+		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" should start with a hyphen.\n")
 }
