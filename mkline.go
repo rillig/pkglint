@@ -1530,7 +1530,7 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 	switch {
 	case hasSuffix(varbase, "DIRS"):
 		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, true}
-	case hasSuffix(varbase, "DIR"), hasSuffix(varname, "_HOME"):
+	case hasSuffix(varbase, "DIR") && !hasSuffix(varbase, "DESTDIR"), hasSuffix(varname, "_HOME"):
 		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, true}
 	case hasSuffix(varbase, "FILES"):
 		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, true}

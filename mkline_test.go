@@ -771,3 +771,11 @@ func (s *Suite) Test_MkLine_shell_varuse_in_backt_dquot(c *check.C) {
 
 	c.Check(s.Output(), equals, "WARN: x11/motif/Makefile:3: Unknown shell command \"${GREP}\".\n") // No parse errors.
 }
+
+func (s *Suite) Test_MkLine_getVariableType(c *check.C) {
+	mkline := NewMkLine(dummyLine)
+
+	c.Check(mkline.getVariableType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR"), check.IsNil)
+	c.Check(mkline.getVariableType("SOME_DIR").guessed, equals, true)
+	c.Check(mkline.getVariableType("SOMEDIR").guessed, equals, true)
+}
