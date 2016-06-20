@@ -756,7 +756,8 @@ func (ctx *ShelltextContext) checkPipeExitcode() {
 }
 
 func (ctx *ShelltextContext) checkSetE(eflag *bool, prevToken string) {
-	if G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !*eflag {
+	// Disabled until the shell parser can recognize "command || exit 1" reliably.
+	if false && G.opts.WarnExtra && ctx.shellword == ";" && ctx.state != scstCondCont && ctx.state != scstForCont && !*eflag {
 		*eflag = true
 		ctx.shline.line.Warn1("Please switch to \"set -e\" mode before using a semicolon (the one after %q) to separate commands.", prevToken)
 		Explain(

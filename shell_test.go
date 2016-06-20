@@ -108,7 +108,6 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: fname:1: Unknown shell command \"uname\".\n"+
-		"WARN: fname:1: Please switch to \"set -e\" mode before using a semicolon (the one after \"uname=`uname`\") to separate commands.\n"+
 		"WARN: fname:1: Unknown shell command \"echo\".\n"+
 		"WARN: fname:1: Unquoted shell variable \"uname\".\n"+
 		"WARN: fname:1: Unknown shell command \"echo\".\n")
