@@ -684,6 +684,10 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 			"very last file, but PKG_OPTIONS_VAR is evaluated earlier.",
 			"Use ${PKGNAME:C/-[0-9].*//} instead.")
 	}
+	const good = "PKG_OPTIONS_VAR.${PKGNAME:C/-[0-9].*//}"
+	if cv.value != good {
+		cv.line.Error2("PKG_OPTIONS_VAR should be %q, not %q.", good, cv.value)
+	}
 }
 
 // A directory name relative to the top-level pkgsrc directory.
