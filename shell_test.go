@@ -146,7 +146,7 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"WARN: fname:1: Pkglint parse error in ShTokenizer.ShAtom at \"$$\\\"\" (quoting=d)\n"+
 		"WARN: fname:1: Pkglint parse error in ShellLine.CheckShellCommand at \"$$\\\"\" (state=start)\n")
 
-	shline.CheckShellCommandLine("echo \"\\n\"") // As seen by make(1); the shell sees: echo "\n"
+	shline.CheckShellCommandLine("echo \"\\n\"")
 
 	c.Check(s.Output(), equals, "")
 
