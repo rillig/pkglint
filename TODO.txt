@@ -7,14 +7,10 @@
  to check for un-CVS'd patches, for example) should let it check by
  timestamp.
 
- 12. (new) It doesn't know about the new per-OS settings, e.g:
-    CONFIGURE_ENV.SunOS is defined by not used. (archivers/libarchive)
-    CONFIGURE_ARGS.Darwin is defined but not used. (graphics/clutteR)
-    MAKE_ENV.Interix is defined but not used. (devel/bmake)
-
 
  15. net/uucp/Makefile has a make loop that's used to substitute
  variable names, and this confuses it.
+
 
 CONFIGURE_ENV+=         SYS_TAR_COMMAND_PATH=${TOOLS_TAR:Q}
 
