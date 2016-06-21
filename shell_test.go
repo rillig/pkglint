@@ -207,6 +207,11 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	shline.CheckShellCommandLine("${RUN} ${INSTALL_DATA_DIR} share/pkgbase ${PREFIX}/share/pkgbase")
 
 	c.Check(s.Output(), equals, "NOTE: fname:1: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= share/pkgbase\" instead of this command.\n")
+
+	// See PR 46570, item "1. It does not"
+	shline.CheckShellCommandLine("for x in 1 2 3; do echo \"$$x\" || exit 1; done")
+
+	c.Check(s.Output(), equals, "") // No warning about missing error checking.
 }
 
 func (s *Suite) TestShellLine_CheckShelltext_nofix(c *check.C) {
