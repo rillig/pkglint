@@ -44,14 +44,7 @@ until cond; do action; done
     MAKE_ENV.Interix is defined but not used. (devel/bmake)
 
 
- 13. It doesn't know about the BUILTIN_FIND_HEADERS mechnism:
-    BUILTIN_FIND_HEADERS_VAR is defined but not used. (archivers/libarchive)
-
-
- 14. It objects to using CHECK_BUILTIN from makefiles, although there's
- a couple dozen packages that do this -- maybe they're all abusive, but
- this seems like it ought to be discussed.
-
-
  15. net/uucp/Makefile has a make loop that's used to substitute
  variable names, and this confuses it.
+
+CONFIGURE_ENV+=         SYS_TAR_COMMAND_PATH=${TOOLS_TAR:Q}
