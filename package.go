@@ -510,6 +510,9 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 					newDistname = strings.ToLower(newDistname)
 				} else if hasPrefix(mod, "S") {
 					newDistname = subst(newDistname, mod)
+				} else {
+					newDistname = token.Text
+					break
 				}
 			}
 			result += newDistname
