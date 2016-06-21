@@ -37,3 +37,6 @@ until cond; do action; done
  variable names, and this confuses it.
 
 CONFIGURE_ENV+=         SYS_TAR_COMMAND_PATH=${TOOLS_TAR:Q}
+
+DISTNAME=       aspell-af-0.50-0
+PKGNAME=        ${DISTNAME:S/-0$/.0/1}
