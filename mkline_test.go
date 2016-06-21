@@ -679,6 +679,24 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_18(c *check.C) {
 	c.Check(s.Output(), equals, "") // Don’t warn about missing :Q operators.
 }
 
+func (s *Suite) Test_MkLine_variableNeedsQuoting_tool_in_CONFIGURE_ENV(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	G.globalData.InitVartypes()
+	G.globalData.Tools = NewToolRegistry()
+	G.globalData.Tools.RegisterVarname("tar", "TAR")
+
+	mklines := s.NewMkLines("Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"CONFIGURE_ENV+=\tSYS_TAR_COMMAND_PATH=${TOOLS_TAR:Q}")
+
+	mklines.mklines[2].checkVarassignVaruse()
+
+	// The TOOLS_* variables only contain the path to the tool,
+	// without any additional arguments that might be necessary.
+	c.Check(s.Output(), equals, "NOTE: Makefile:3: The :Q operator isn't necessary for ${TOOLS_TAR} here.\n")
+}
+
 func (s *Suite) Test_MkLine_Varuse_Modifier_L(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
