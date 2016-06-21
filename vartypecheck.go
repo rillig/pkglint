@@ -686,12 +686,8 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 	}
 
 	// PR 46570, item "6. It should complain in PKG_OPTIONS_VAR is wrong"
-	// Currently disabled to sort out the false positives.
-	if false && G.Pkg != nil && G.Pkg.EffectivePkgbase != "" {
-		good := "PKG_OPTIONS." + G.Pkg.EffectivePkgbase
-		if cv.value != good {
-			cv.line.Warn2("PKG_OPTIONS_VAR should be %q, not %q.", good, cv.value)
-		}
+	if !hasPrefix(cv.value, "PKG_OPTIONS.") {
+		cv.line.Error2("PKG_OPTIONS_VAR must be of the form %q, not %q.", "PKG_OPTIONS.*", cv.value)
 	}
 }
 
