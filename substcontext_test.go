@@ -53,14 +53,11 @@ func (s *Suite) Test_SubstContext_OPSYSVARS(c *check.C) {
 	G.opts.WarnExtra = true
 	ctx := new(SubstContext)
 
-	ctx.Varassign(newSubstLine(10, "PKGNAME=pkgname-1.0"))
-	ctx.Varassign(newSubstLine(11, "SUBST_CLASSES.SunOS+=p"))
-	ctx.Varassign(newSubstLine(12, "SUBST_FILES.p=Makefile"))
-	ctx.Varassign(newSubstLine(13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
-
-	c.Check(ctx.IsComplete(), equals, false)
-
-	ctx.Varassign(newSubstLine(14, "SUBST_STAGE.p=post-configure"))
+	ctx.Varassign(newSubstLine(11, "SUBST_CLASSES.SunOS+=prefix"))
+	ctx.Varassign(newSubstLine(12, "SUBST_CLASSES.NetBSD+=prefix"))
+	ctx.Varassign(newSubstLine(13, "SUBST_FILES.prefix=Makefile"))
+	ctx.Varassign(newSubstLine(14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
+	ctx.Varassign(newSubstLine(15, "SUBST_STAGE.prefix=post-configure"))
 
 	c.Check(ctx.IsComplete(), equals, true)
 
