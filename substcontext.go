@@ -20,7 +20,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	varname := mkline.Varname()
 	op := mkline.Op()
 	value := mkline.Value()
-	if varname == "SUBST_CLASSES" {
+	if varname == "SUBST_CLASSES" || hasPrefix(varname, "SUBST_CLASSES.") {
 		classes := splitOnSpace(value)
 		if len(classes) > 1 {
 			mkline.Warn0("Please add only one class at a time to SUBST_CLASSES.")
