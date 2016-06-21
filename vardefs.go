@@ -163,6 +163,8 @@ func (gd *GlobalData) InitVartypes() {
 	acl("BUILTIN_FIND_FILES_VAR", lkShell, CheckvarVarname, "builtin.mk: set")
 	acl("BUILTIN_FIND_FILES.*", lkShell, CheckvarPathname, "builtin.mk: set")
 	acl("BUILTIN_FIND_GREP.*", lkNone, CheckvarString, "builtin.mk: set")
+	acl("BUILTIN_FIND_HEADERS_VAR", lkShell, CheckvarVarname, "builtin.mk: set")
+	acl("BUILTIN_FIND_HEADERS.*", lkShell, CheckvarPathname, "builtin.mk: set")
 	acl("BUILTIN_FIND_LIBS", lkShell, CheckvarPathname, "builtin.mk: set")
 	acl("BUILTIN_IMAKE_CHECK", lkShell, CheckvarUnchecked, "builtin.mk: set")
 	acl("BUILTIN_IMAKE_CHECK.*", lkNone, CheckvarYesNo, "")
