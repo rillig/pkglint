@@ -3,3 +3,55 @@ case $var in pattern) action; esac
 case $var in pattern) action;; esac
 while cond; do action; done
 until cond; do action; done
+
+ 6. It should complain if PKG_OPTIONS_VAR is wrong. It should be
+ PKG_OPTIONS.pkgbase; currently you can both set it to e.g.
+ PKG_OPTIONZ.pkgbase or to PKG_OPTIONS.someotherpkg and pkglint doesn't
+ say anything. There are some potential problems with the latter, but
+ it won't generate any more false positives than we routinely get from
+ pkglint from other things and it's probably worth trying to enforce.
+
+
+ 7. It still demands a LICENSE for meta-packages, which is silly.
+
+
+ 8. apb@ suggested that pkglint should warn if a package with an OWNER
+ has been modified and the OWNER isn't the current user. And perhaps
+ also for MAINTAINER (if the MAINTAINER is not pkgsrc-users) but at a
+ lower level. This seems like a good idea and hasn't been done. Note
+ that while using cvs diff to check for modifications is unacceptably
+ expenssive, reading the CVS control files (which pkglint already does
+ to check for un-CVS'd patches, for example) should let it check by
+ timestamp.
+
+
+ 9. If LICENSE is no-commercial-use it should print something about
+ what to do instead (that is, extract the package's own specific
+ license) as well as saying that the setting is deprecated.
+
+
+ 10. It should stop demanding desktop.db unless the .desktop file
+ involved declares a MimeType. This is going to be a pain, but it's
+ fairly important. It's possible that this check should be migrated out
+ of pkglint and into the pkgsrc infrastructure as a check after
+ stage-install, because then the desktop files are at least available
+ for analysis.
+
+
+ 12. (new) It doesn't know about the new per-OS settings, e.g:
+    CONFIGURE_ENV.SunOS is defined by not used. (archivers/libarchive)
+    CONFIGURE_ARGS.Darwin is defined but not used. (graphics/clutteR)
+    MAKE_ENV.Interix is defined but not used. (devel/bmake)
+
+
+ 13. It doesn't know about the BUILTIN_FIND_HEADERS mechnism:
+    BUILTIN_FIND_HEADERS_VAR is defined but not used. (archivers/libarchive)
+
+
+ 14. It objects to using CHECK_BUILTIN from makefiles, although there's
+ a couple dozen packages that do this -- maybe they're all abusive, but
+ this seems like it ought to be discussed.
+
+
+ 15. net/uucp/Makefile has a make loop that's used to substitute
+ variable names, and this confuses it.

@@ -498,12 +498,16 @@ func (r Ref) String() string {
 }
 
 // Emulates make(1)’s :S substitution operator.
-func mkopSubst(s string, left bool, from string, right bool, to string, all bool) string {
+func mkopSubst(s string, left bool, from string, right bool, to string, flags string) string {
+	if G.opts.Debug {
+		defer tracecall(s, left, from, right, to, flags)()
+	}
 	re := ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", "")
 	done := false
+	gflag := contains(flags, "g")
 	return regcomp(re).ReplaceAllStringFunc(s, func(match string) string {
-		if all || !done {
-			done = !all
+		if gflag || !done {
+			done = !gflag
 			return to
 		}
 		return match

@@ -484,19 +484,40 @@ func (pkg *Package) determineEffectivePkgVars() {
 }
 
 func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
-	pkgname = strings.Replace(pkgname, "${DISTNAME}", distname, -1)
+	tokens := NewMkParser(dummyLine, pkgname, false).MkTokens()
 
-	if m, before, sep, subst, after := match4(pkgname, `^(.*)\$\{DISTNAME:S(.)([^\\}:]+)\}(.*)$`); m {
-		qsep := regexp.QuoteMeta(sep)
-		if m, left, from, right, to, mod := match5(subst, `^(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`(g?)$`); m {
-			newPkgname := before + mkopSubst(distname, left != "", from, right != "", to, mod != "") + after
+	subst := func(str, smod string) (result string) {
+		if G.opts.Debug {
+			defer tracecall(str, smod, ref(result))()
+		}
+		qsep := regexp.QuoteMeta(smod[1:2])
+		if m, left, from, right, to, flags := match5(smod, `^S`+qsep+`(\^?)([^:]*)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`); m {
+			result := mkopSubst(str, left != "", from, right != "", to, flags)
 			if G.opts.Debug {
-				traceStep("%s: pkgnameFromDistname %q => %q", pkg.vardef["PKGNAME"], pkgname, newPkgname)
+				traceStep("subst %q %q => %q", str, smod, result)
 			}
-			pkgname = newPkgname
+			return result
+		}
+		return str
+	}
+
+	result := ""
+	for _, token := range tokens {
+		if token.Varuse != nil && token.Varuse.varname == "DISTNAME" {
+			newDistname := distname
+			for _, mod := range token.Varuse.modifiers {
+				if mod == "tl" {
+					newDistname = strings.ToLower(newDistname)
+				} else if hasPrefix(mod, "S") {
+					newDistname = subst(newDistname, mod)
+				}
+			}
+			result += newDistname
+		} else {
+			result += token.Text
 		}
 	}
-	return pkgname
+	return result
 }
 
 func (pkg *Package) checkUpdate() {
