@@ -13,14 +13,6 @@
  license) as well as saying that the setting is deprecated.
 
 
- 10. It should stop demanding desktop.db unless the .desktop file
- involved declares a MimeType. This is going to be a pain, but it's
- fairly important. It's possible that this check should be migrated out
- of pkglint and into the pkgsrc infrastructure as a check after
- stage-install, because then the desktop files are at least available
- for analysis.
-
-
  12. (new) It doesn't know about the new per-OS settings, e.g:
     CONFIGURE_ENV.SunOS is defined by not used. (archivers/libarchive)
     CONFIGURE_ARGS.Darwin is defined but not used. (graphics/clutteR)
