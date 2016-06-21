@@ -4,14 +4,6 @@ case $var in pattern) action;; esac
 while cond; do action; done
 until cond; do action; done
 
- 6. It should complain if PKG_OPTIONS_VAR is wrong. It should be
- PKG_OPTIONS.pkgbase; currently you can both set it to e.g.
- PKG_OPTIONZ.pkgbase or to PKG_OPTIONS.someotherpkg and pkglint doesn't
- say anything. There are some potential problems with the latter, but
- it won't generate any more false positives than we routinely get from
- pkglint from other things and it's probably worth trying to enforce.
-
-
  7. It still demands a LICENSE for meta-packages, which is silly.
 
 
