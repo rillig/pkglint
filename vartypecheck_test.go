@@ -291,9 +291,17 @@ func (s *Suite) TestVartypeCheck_PkgOptionsVar(c *check.C) {
 	runVartypeChecks("PKG_OPTIONS_VAR.screen", opAssign, (*VartypeCheck).PkgOptionsVar,
 		"PKG_OPTIONS.${PKGBASE}")
 
+	c.Check(s.Output(), equals, "ERROR: fname:1: PKGBASE must not be used in PKG_OPTIONS_VAR.\n")
+
+	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg.EffectivePkgbase = "pkgbase"
+
+	runVartypeChecks("PKG_OPTIONS_VAR.screen", opAssign, (*VartypeCheck).PkgOptionsVar,
+		"PKG_OPTIONS.${PKGBASE}")
+
 	c.Check(s.Output(), equals, ""+
 		"ERROR: fname:1: PKGBASE must not be used in PKG_OPTIONS_VAR.\n"+
-		"ERROR: fname:1: PKG_OPTIONS_VAR should be \"PKG_OPTIONS_VAR.${PKGNAME:C/-[0-9].*//}\", not \"PKG_OPTIONS.${PKGBASE}\".\n")
+		"WARN: fname:1: PKG_OPTIONS_VAR should be \"PKG_OPTIONS.pkgbase\", not \"PKG_OPTIONS.${PKGBASE}\".\n")
 }
 
 func (s *Suite) TestVartypeCheck_PkgRevision(c *check.C) {

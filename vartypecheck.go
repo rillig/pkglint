@@ -684,9 +684,11 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 			"very last file, but PKG_OPTIONS_VAR is evaluated earlier.",
 			"Use ${PKGNAME:C/-[0-9].*//} instead.")
 	}
-	const good = "PKG_OPTIONS_VAR.${PKGNAME:C/-[0-9].*//}"
-	if cv.value != good {
-		cv.line.Error2("PKG_OPTIONS_VAR should be %q, not %q.", good, cv.value)
+	if G.Pkg != nil && G.Pkg.EffectivePkgbase != "" {
+		good := "PKG_OPTIONS." + G.Pkg.EffectivePkgbase
+		if cv.value != good {
+			cv.line.Warn2("PKG_OPTIONS_VAR should be %q, not %q.", good, cv.value)
+		}
 	}
 }
 
