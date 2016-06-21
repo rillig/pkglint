@@ -1380,7 +1380,7 @@ const (
 )
 
 func (nq NeedsQuoting) String() string {
-	return [...]string{"no", "yes", "doesn't matter", "don't known"}[nq]
+	return [...]string{"no", "yes", "doesn't matter", "don't know"}[nq]
 }
 
 func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
