@@ -258,3 +258,21 @@ func (s *Suite) Test_MkLines_Indentation_DependsOn(c *check.C) {
 
 	c.Check(s.Output(), equals, "NOTE: Makefile:4: Consider defining NOT_FOR_PLATFORM instead of setting PKG_SKIP_REASON depending on ${OPSYS}.\n")
 }
+
+// PR 46570, item "15. net/uucp/Makefile has a make loop"
+func (s *Suite) Test_MkLines_indirect_variables(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	mklines := s.NewMkLines("net/uucp/Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"post-configure:",
+		".for var in MAIL_PROGRAM CMDPATH",
+		"\t"+`${RUN} ${ECHO} "#define ${var} \""${UUCP_${var}}"\"`,
+		".endfor")
+
+	mklines.Check()
+
+	// No warning about UUCP_${var} being used but not defined.
+	c.Check(s.Output(), equals, ""+
+		"WARN: net/uucp/Makefile:5: Unknown shell command \"${ECHO}\".\n")
+}

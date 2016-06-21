@@ -430,7 +430,7 @@ func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		(vartype == nil || vartype.guessed) &&
 		!varIsUsed(varname) &&
 		!(G.Mk != nil && G.Mk.forVars[varname]) &&
-		!hasPrefix(varname, "${") {
+		!containsVarRef(varname) {
 		mkline.Warn1("%s is used but not defined. Spelling mistake?", varname)
 	}
 
