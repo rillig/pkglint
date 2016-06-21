@@ -117,7 +117,9 @@ func (s *Suite) Test_MkShParser_Wordlist(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_CaseClause(c *check.C) {
-
+	// TODO: case $var in esac
+	// TODO: case $var in pattern) action; esac
+	// TODO: case $var in pattern) action;; esac
 }
 
 func (s *Suite) Test_MkShParser_CaseItem(c *check.C) {
@@ -133,11 +135,11 @@ func (s *Suite) Test_MkShParser_IfClause(c *check.C) {
 }
 
 func (s *Suite) Test_MkShParser_WhileClause(c *check.C) {
-
+	// TODO: while cond; do action; done
 }
 
 func (s *Suite) Test_MkShParser_UntilClause(c *check.C) {
-
+	// TODO: until cond; do action; done
 }
 
 func (s *Suite) Test_MkShParser_FunctionDefinition(c *check.C) {
