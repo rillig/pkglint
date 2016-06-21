@@ -84,6 +84,34 @@ func isCommitted(fname string) bool {
 	return false
 }
 
+func isLocallyModified(fname string) bool {
+	basename := path.Base(fname)
+	lines, err := readLines(path.Dir(fname)+"/CVS/Entries", false)
+	if err != nil {
+		return false
+	}
+	for _, line := range lines {
+		if hasPrefix(line.Text, "/"+basename+"/") {
+			cvsModTime, err := time.Parse(time.ANSIC, strings.Split(line.Text, "/")[3])
+			if err != nil {
+				return false
+			}
+			st, err := os.Stat(fname)
+			if err != nil {
+				return false
+			}
+
+			// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724290(v=vs.85).aspx
+			delta := cvsModTime.Unix() - st.ModTime().Unix()
+			if G.opts.Debug {
+				traceStep("cvs.time=%v fs.time=%v delta=%v", cvsModTime, st.ModTime(), delta)
+			}
+			return !(-2 <= delta && delta <= 2)
+		}
+	}
+	return false
+}
+
 // Returns the number of columns that a string occupies when printed with
 // a tabulator size of 8.
 func tabLength(s string) int {

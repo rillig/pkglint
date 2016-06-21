@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os/user"
 	"path"
 	"regexp"
 	"strconv"
@@ -196,6 +197,7 @@ func checkdirPackage(pkgpath string) {
 		} else if hasSuffix(fname, "/distinfo") {
 			haveDistinfo = true
 		}
+		pkg.checkLocallyModified(fname)
 	}
 
 	if G.opts.CheckDistinfo && G.opts.CheckPatches {
@@ -781,4 +783,54 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 			"documenting its interface.")
 	}
 	SaveAutofixChanges(lines)
+}
+
+func (pkg *Package) checkLocallyModified(fname string) {
+	if G.opts.Debug {
+		defer tracecall(fname)()
+	}
+
+	ownerLine := pkg.vardef["OWNER"]
+	maintainerLine := pkg.vardef["MAINTAINER"]
+	owner := ""
+	maintainer := ""
+	if ownerLine != nil && !containsVarRef(ownerLine.Value()) {
+		owner = ownerLine.Value()
+	}
+	if maintainerLine != nil && !containsVarRef(maintainerLine.Value()) && maintainerLine.Value() != "pkgsrc-users@NetBSD.org" {
+		maintainer = maintainerLine.Value()
+	}
+	if owner == "" && maintainer == "" {
+		return
+	}
+
+	user, err := user.Current()
+	if err != nil || user.Username == "" {
+		return
+	}
+	// On Windows, this is `Computername\Username`.
+	username := regcomp(`^.*\\`).ReplaceAllString(user.Username, "")
+
+	if G.opts.Debug {
+		traceStep("user=%q owner=%q maintainer=%q", username, owner, maintainer)
+	}
+
+	if username == strings.Split(owner, "@")[0] || username == strings.Split(maintainer, "@")[0] {
+		return
+	}
+
+	if isLocallyModified(fname) {
+		if owner != "" {
+			NewLineWhole(fname).Warn1("Don't commit changes to this file without asking the OWNER, %s.", owner)
+			Explain2(
+				"See the pkgsrc guide, section \"Package components\",",
+				"keyword \"owner\", for more information.")
+		}
+		if maintainer != "" {
+			NewLineWhole(fname).Note1("Please only commit changes that %s would approve.", maintainer)
+			Explain2(
+				"See the pkgsrc guide, section \"Package components\",",
+				"keyword \"maintainer\", for more information.")
+		}
+	}
 }
