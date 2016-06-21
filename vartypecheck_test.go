@@ -293,6 +293,8 @@ func (s *Suite) TestVartypeCheck_PkgOptionsVar(c *check.C) {
 
 	c.Check(s.Output(), equals, "ERROR: fname:1: PKGBASE must not be used in PKG_OPTIONS_VAR.\n")
 
+	return // Currently there are too many false positives.
+
 	G.Pkg = NewPackage("category/pkgbase")
 	G.Pkg.EffectivePkgbase = "pkgbase"
 
