@@ -91,7 +91,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 	if repl.AdvanceStr("$<") {
 		return &MkVarUse{"<", nil}
 	}
-	if repl.AdvanceRegexp(`^\$(\w)`) {
+	if repl.PeekByte() == '$' && repl.AdvanceRegexp(`^\$(\w)`) {
 		varname := repl.m[1]
 		if p.EmitWarnings {
 			p.Line.Warn1("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
