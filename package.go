@@ -387,7 +387,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 		perlLine.Warn1("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s)", noconfLine.Line.ReferenceFrom(perlLine.Line))
 	}
 
-	if vardef["LICENSE"] == nil {
+	if vardef["LICENSE"] == nil && vardef["META_PACKAGE"] == nil {
 		NewLineWhole(fname).Error0("Each package must define its LICENSE.")
 	}
 

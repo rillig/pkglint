@@ -159,6 +159,19 @@ func (s *Suite) TestCheckdirPackage(c *check.C) {
 		"WARN: ~/Makefile: No COMMENT given.\n")
 }
 
+func (s *Suite) Test_Package_Meta_package_License(c *check.C) {
+	s.CreateTmpFileLines(c, "Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"META_PACKAGE=\tyes")
+	G.CurrentDir = s.tmpdir
+	G.globalData.InitVartypes()
+
+	checkdirPackage(s.tmpdir)
+
+	c.Check(s.Output(), equals, "WARN: ~/Makefile: No COMMENT given.\n") // No error about missing LICENSE.
+}
+
 func (s *Suite) Test_Package_Varuse_LoadTime(c *check.C) {
 	s.CreateTmpFileLines(c, "doc/CHANGES-2016",
 		"# dummy")

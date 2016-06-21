@@ -4,9 +4,6 @@ case $var in pattern) action;; esac
 while cond; do action; done
 until cond; do action; done
 
- 7. It still demands a LICENSE for meta-packages, which is silly.
-
-
  8. apb@ suggested that pkglint should warn if a package with an OWNER
  has been modified and the OWNER isn't the current user. And perhaps
  also for MAINTAINER (if the MAINTAINER is not pkgsrc-users) but at a
