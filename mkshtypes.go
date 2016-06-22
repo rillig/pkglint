@@ -61,8 +61,7 @@ type MkShCompoundCommand struct {
 	For      *MkShForClause
 	Case     *MkShCaseClause
 	If       *MkShIfClause
-	While    *MkShLoopClause
-	Until    *MkShLoopClause
+	Loop     *MkShLoopClause
 }
 
 type MkShForClause struct {
@@ -99,9 +98,8 @@ type MkShLoopClause struct {
 }
 
 type MkShFunctionDefinition struct {
-	Name      string
-	Body      *MkShCompoundCommand
-	Redirects []*MkShRedirection
+	Name string
+	Body *MkShCompoundCommand
 }
 
 type MkShSimpleCommand struct {

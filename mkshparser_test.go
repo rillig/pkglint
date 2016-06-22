@@ -1,357 +1,457 @@
 package main
 
 import (
-	check "gopkg.in/check.v1"
+	"encoding/json"
+	"gopkg.in/check.v1"
+	"strconv"
+	"strings"
 )
 
-func (s *Suite) Test_MkShParser_Program(c *check.C) {
-	parse := func(cmd string, expected *MkShList) {
-		p := NewMkShParser(dummyLine, cmd, false)
-		program := p.Program()
-		c.Check(program, deepEquals, expected)
-		c.Check(p.tok.parser.Rest(), equals, "")
-		c.Check(s.Output(), equals, "")
-	}
-
-	if false {
-		parse(""+
-			"\tcd ${WRKSRC} && ${FIND} ${${_list_}} -type f ! -name '*.orig' 2>/dev/null "+
-			"| pax -rw -pm ${DESTDIR}${PREFIX}/${${_dir_}}",
-			NewMkShList())
-	}
-}
-
-func (s *Suite) Test_MkShParser_List(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_AndOr(c *check.C) {
-	parse := func(cmd string, expected *MkShAndOr) {
-		p := NewMkShParser(dummyLine, cmd, false)
-		andor := p.AndOr()
-		c.Check(andor, deepEquals, expected)
-		c.Check(p.tok.parser.Rest(), equals, "")
-		c.Check(s.Output(), equals, "")
-	}
-	tester := &MkShTester{c}
-
-	parse("simplecmd",
-		NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("simplecmd"))))
-
-	expected := NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("simplecmd1")))
-	expected.Add("&&", NewMkShPipeline(false, tester.ParseCommand("simplecmd2")))
-	parse("simplecmd1 && simplecmd2", expected)
-}
-
-func (s *Suite) Test_MkShParser_Pipeline(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_Command(c *check.C) {
-	parse := func(cmd string, expected *MkShCommand) {
-		p := NewMkShParser(dummyLine, cmd, false)
-		command := p.Command()
-		c.Check(command, deepEquals, expected)
-		c.Check(p.tok.parser.Rest(), equals, "")
-		c.Check(s.Output(), equals, "")
-	}
-	tester := &MkShTester{c}
-
-	parse("simple",
-		&MkShCommand{Simple: tester.ParseSimpleCommand("simple")})
-}
-
-func (s *Suite) Test_MkShParser_CompoundCommand(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_Subshell(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_CompoundList(c *check.C) {
-	parse := func(cmd string, expected *MkShList) {
-		p := NewMkShParser(dummyLine, cmd, false)
-		compoundList := p.CompoundList()
-		c.Check(compoundList, deepEquals, expected)
-		c.Check(p.tok.parser.Rest(), equals, "")
-		c.Check(s.Output(), equals, "")
-	}
-	tester := &MkShTester{c}
-
-	parse("simplecmd",
-		NewMkShList().AddAndOr(NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("simplecmd")))))
-
-	simplecmd1 := NewMkShPipeline(false, tester.ParseCommand("simplecmd1"))
-	simplecmd2 := NewMkShPipeline(false, tester.ParseCommand("simplecmd2"))
-	expected := NewMkShList().AddAndOr(NewMkShAndOr(simplecmd1).Add("&&", simplecmd2))
-	parse("simplecmd1 && simplecmd2", expected)
-}
-
-func (s *Suite) Test_MkShParser_ForClause(c *check.C) {
-	parse := func(cmd string, expected *MkShForClause) {
-		p := NewMkShParser(dummyLine, cmd, false)
-		forclause := p.ForClause()
-		c.Check(forclause, deepEquals, expected)
-		c.Check(p.tok.parser.Rest(), equals, "")
-		c.Check(s.Output(), equals, "")
-	}
-	tester := &MkShTester{c}
-
-	params := []*ShToken{tester.Token("\"$$@\"")}
-	action := tester.ParseCompoundList("action;")
-	parse("for var; do action; done",
-		&MkShForClause{"var", params, action})
-
-	abc := []*ShToken{tester.Token("a"), tester.Token("b"), tester.Token("c")}
-	parse("for var in a b c; do action; done",
-		&MkShForClause{"var", abc, action})
-
-	actions := tester.ParseCompoundList("action1 && action2;")
-	parse("for var in a b c; do action1 && action2; done",
-		&MkShForClause{"var", abc, actions})
-}
-
-func (s *Suite) Test_MkShParser_Wordlist(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_CaseClause(c *check.C) {
-	// TODO: case $var in esac
-	// TODO: case $var in pattern) action; esac
-	// TODO: case $var in pattern) action;; esac
-}
-
-func (s *Suite) Test_MkShParser_CaseItem(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_Pattern(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_IfClause(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_WhileClause(c *check.C) {
-	// TODO: while cond; do action; done
-}
-
-func (s *Suite) Test_MkShParser_UntilClause(c *check.C) {
-	// TODO: until cond; do action; done
-}
-
-func (s *Suite) Test_MkShParser_FunctionDefinition(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_BraceGroup(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
-	tester := &MkShTester{c}
-	check := func(str string, expected *MkShList) {
-		p := NewMkShParser(dummyLine, str, false)
-		dogroup := p.DoGroup()
-		if c.Check(dogroup, check.NotNil) {
-			if !c.Check(dogroup, deepEquals, expected) {
-				for i, andor := range dogroup.AndOrs {
-					c.Check(andor, deepEquals, expected.AndOrs[i])
-				}
-			}
-		}
-		c.Check(p.tok.parser.Rest(), equals, "")
-		c.Check(s.Output(), equals, "")
-	}
-
-	andor := NewMkShAndOr(NewMkShPipeline(false, tester.ParseCommand("action")))
-	check("do action; done",
-		&MkShList{[]*MkShAndOr{andor}, []MkShSeparator{";"}})
-}
-
-func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
-	parse := func(cmd string, builder *SimpleCommandBuilder) {
-		expected := builder.cmd
-		p := NewMkShParser(dummyLine, cmd, false)
-		shcmd := p.SimpleCommand()
-		if c.Check(shcmd, check.NotNil) {
-			if !c.Check(shcmd, deepEquals, expected) {
-				for i, assignment := range shcmd.Assignments {
-					c.Check(assignment, deepEquals, expected.Assignments[i])
-				}
-				c.Check(shcmd.Name, deepEquals, expected.Name)
-				for i, word := range shcmd.Args {
-					c.Check(word, deepEquals, expected.Args[i])
-				}
-				for i, redirection := range shcmd.Redirections {
-					c.Check(redirection, deepEquals, expected.Redirections[i])
-				}
-			}
-		}
-		c.Check(p.tok.parser.Rest(), equals, "")
-		c.Check(s.Output(), equals, "")
-	}
-
-	fail := func(noncmd string, expectedRest string) {
-		p := NewMkShParser(dummyLine, noncmd, false)
-		shcmd := p.SimpleCommand()
-		c.Check(shcmd, check.IsNil)
-		c.Check(p.tok.parser.Rest(), equals, expectedRest)
-		c.Check(s.Output(), equals, "")
-	}
-
-	parse("echo ${PKGNAME:Q}",
-		NewSimpleCommandBuilder(c).
-			Name("echo").
-			Arg("${PKGNAME:Q}"))
-
-	parse("${ECHO} \"Double-quoted\" 'Single-quoted'",
-		NewSimpleCommandBuilder(c).
-			Name("${ECHO}").
-			Arg("\"Double-quoted\"").
-			Arg("'Single-quoted'"))
-
-	parse("`cat plain` \"`cat double`\" '`cat single`'",
-		NewSimpleCommandBuilder(c).
-			Name("`cat plain`").
-			Arg("\"`cat double`\"").
-			Arg("'`cat single`'"))
-
-	parse("`\"one word\"`",
-		NewSimpleCommandBuilder(c).
-			Name("`\"one word\"`"))
-
-	parse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		NewSimpleCommandBuilder(c).
-			Assignment("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\""))
-
-	parse("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
-		NewSimpleCommandBuilder(c).
-			Assignment("var=Plain").
-			Assignment("var=\"Dquot\"").
-			Assignment("var='Squot'").
-			Assignment("var=Plain\"Dquot\"'Squot'"))
-
-	parse("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
-		NewSimpleCommandBuilder(c).
-			Name("${RUN}").
-			Arg("subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\""))
-
-	parse("PATH=/nonexistent env PATH=${PATH:Q} true",
-		NewSimpleCommandBuilder(c).
-			Assignment("PATH=/nonexistent").
-			Name("env").
-			Arg("PATH=${PATH:Q}").
-			Arg("true"))
-
-	parse("{OpenGrok args",
-		NewSimpleCommandBuilder(c).
-			Name("{OpenGrok").
-			Arg("args"))
-
-	fail("if clause", "if clause")
-	fail("{ group; }", "{ group; }")
-
-}
-
-func (s *Suite) Test_MkShParser_RedirectList(c *check.C) {
-}
-
-func (s *Suite) Test_MkShParser_IoRedirect(c *check.C) {
-}
-
-func (s *Suite) Test_MkShParser_IoFile(c *check.C) {
-}
-
-func (s *Suite) Test_MkShParser_IoHere(c *check.C) {
-}
-
-func (s *Suite) Test_MkShParser_NewlineList(c *check.C) {
-}
-
-func (s *Suite) Test_MkShParser_Linebreak(c *check.C) {
-}
-
-func (s *Suite) Test_MkShParser_SeparatorOp(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_Separator(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_SequentialSep(c *check.C) {
-
-}
-
-func (s *Suite) Test_MkShParser_Word(c *check.C) {
-
-}
-
-type MkShTester struct {
+type ShSuite struct {
 	c *check.C
 }
 
-func (t *MkShTester) ParseCommand(str string) *MkShCommand {
-	p := NewMkShParser(dummyLine, str, false)
-	cmd := p.Command()
-	t.c.Check(cmd, check.NotNil)
-	t.c.Check(p.Rest(), equals, "")
-	return cmd
+var _ = check.Suite(&ShSuite{})
+
+func (s *ShSuite) init(c *check.C) *MkShBuilder {
+	s.c = c
+	return NewMkShBuilder()
 }
 
-func (t *MkShTester) ParseSimpleCommand(str string) *MkShSimpleCommand {
-	p := NewMkShParser(dummyLine, str, false)
-	parsed := p.SimpleCommand()
-	t.c.Check(parsed, check.NotNil)
-	t.c.Check(p.Rest(), equals, "")
-	return parsed
+func (s *ShSuite) test(program string, expected *MkShList) {
+	s.testWords(strings.Split(program, " "), expected)
 }
 
-func (t *MkShTester) ParseCompoundList(str string) *MkShList {
-	p := NewMkShParser(dummyLine, str, false)
-	parsed := p.CompoundList()
-	t.c.Check(parsed, check.NotNil)
-	t.c.Check(p.Rest(), equals, "")
-	return parsed
+func (s *ShSuite) testWords(program []string, expected *MkShList) {
+	lexer := &ShellLexer{
+		current:        "",
+		remaining:      program,
+		atCommandStart: true,
+		error:          ""}
+	parser := &shyyParserImpl{}
+
+	succeeded := parser.Parse(lexer)
+
+	c := s.c
+	if c.Check(succeeded, equals, 0) && c.Check(lexer.error, equals, "") {
+		if !c.Check(parser.stack[1].List, deepEquals, expected) {
+			actualJson, actualErr := json.MarshalIndent(parser.stack[1].List, "", "  ")
+			expectedJson, expectedErr := json.MarshalIndent(expected, "", "  ")
+			if c.Check(actualErr, check.IsNil) && c.Check(expectedErr, check.IsNil) {
+				c.Check(string(actualJson), deepEquals, string(expectedJson))
+			}
+		}
+	}
 }
 
-func (t *MkShTester) Token(str string) *ShToken {
-	p := NewMkShParser(dummyLine, str, false)
-	parsed := p.peek()
-	p.skip()
-	t.c.Check(parsed, check.NotNil)
-	t.c.Check(p.Rest(), equals, "")
-	return parsed
+func (s *ShSuite) Test_ShellParser_program(c *check.C) {
+	b := s.init(c)
+
+	s.test("echo ;",
+		b.List().AddCommand(b.SimpleCommand("echo")).AddSeparator(";"))
+
+	s.test("echo",
+		b.List().AddCommand(b.SimpleCommand("echo")))
+
+	s.test(""+
+		"cd ${WRKSRC} && ${FIND} ${${_list_}} -type f ! -name '*.orig' 2 > /dev/null "+
+		"| pax -rw -pm ${DESTDIR}${PREFIX}/${${_dir_}}",
+		b.List().AddAndOr(b.AndOr(
+			b.Pipeline(false, b.SimpleCommand("cd", "${WRKSRC}"))).Add("&&",
+			b.Pipeline(false,
+				b.SimpleCommand("${FIND}", "${${_list_}}", "-type", "f", "!", "-name", "'*.orig'", "2>/dev/null"),
+				b.SimpleCommand("pax", "-rw", "-pm", "${DESTDIR}${PREFIX}/${${_dir_}}")))))
 }
 
-type SimpleCommandBuilder struct {
-	cmd    *MkShSimpleCommand
-	tester *MkShTester
+func (s *ShSuite) Test_ShellParser_list(c *check.C) {
+	b := s.init(c)
+
+	s.test("echo1 && echo2",
+		b.List().AddAndOr(
+			b.AndOr(b.Pipeline(false, b.SimpleCommand("echo1"))).
+				Add("&&", b.Pipeline(false, b.SimpleCommand("echo2")))))
+
+	s.test("echo1 ; echo2",
+		b.List().
+			AddCommand(b.SimpleCommand("echo1")).
+			AddSeparator(";").
+			AddCommand(b.SimpleCommand("echo2")))
+
+	s.test("echo1 ; echo2 &",
+		b.List().
+			AddCommand(b.SimpleCommand("echo1")).
+			AddSeparator(";").
+			AddCommand(b.SimpleCommand("echo2")).
+			AddSeparator("&"))
 }
 
-func NewSimpleCommandBuilder(c *check.C) *SimpleCommandBuilder {
+func (s *ShSuite) Test_ShellParser_and_or(c *check.C) {
+	b := s.init(c)
+
+	s.test("echo1 | echo2",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
+			b.SimpleCommand("echo1"),
+			b.SimpleCommand("echo2")))))
+
+	s.test("echo1 | echo2 && echo3 | echo4",
+		b.List().AddAndOr(b.AndOr(
+			b.Pipeline(false,
+				b.SimpleCommand("echo1"),
+				b.SimpleCommand("echo2")),
+		).Add("&&",
+			b.Pipeline(false,
+				b.SimpleCommand("echo3"),
+				b.SimpleCommand("echo4")))))
+
+	s.test("echo1 | echo2 || ! echo3 | echo4",
+		b.List().AddAndOr(b.AndOr(
+			b.Pipeline(false,
+				b.SimpleCommand("echo1"),
+				b.SimpleCommand("echo2")),
+		).Add("||",
+			b.Pipeline(true,
+				b.SimpleCommand("echo3"),
+				b.SimpleCommand("echo4")))))
+}
+
+func (s *ShSuite) Test_ShellParser_pipeline(c *check.C) {
+	b := s.init(c)
+
+	s.test("command1 | command2",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
+			b.SimpleCommand("command1"),
+			b.SimpleCommand("command2")))))
+
+	s.test("! command1 | command2",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(true,
+			b.SimpleCommand("command1"),
+			b.SimpleCommand("command2")))))
+}
+
+func (s *ShSuite) Test_ShellParser_pipe_sequence(c *check.C) {
+	b := s.init(c)
+
+	s.test("command1 | if true ; then : ; fi",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
+			b.SimpleCommand("command1"),
+			b.If(
+				b.List().AddCommand(b.SimpleCommand("true")).AddSeparator(";"),
+				b.List().AddCommand(b.SimpleCommand(":")).AddSeparator(";"))))))
+}
+
+func (s *ShSuite) Test_ShellParser_command(c *check.C) {
+	b := s.init(c)
+
+	s.test("simple_command",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false, b.SimpleCommand("simple_command")))))
+
+	s.test("while 1 ; do 2 ; done",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
+			b.While(
+				b.List().AddCommand(b.SimpleCommand("1")).AddSeparator(";"),
+				b.List().AddCommand(b.SimpleCommand("2")).AddSeparator(";"))))))
+
+	s.test("while 1 ; do 2 ; done 1 >& 2",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
+			b.While(
+				b.List().AddCommand(b.SimpleCommand("1")).AddSeparator(";"),
+				b.List().AddCommand(b.SimpleCommand("2")).AddSeparator(";"),
+				b.Redirection(1, ">&", "2"))))))
+
+	s.test("func ( ) { echo hello ; } 2 >& 1",
+		b.List().AddCommand(b.Function(
+			"func",
+			b.Brace(b.List().AddCommand(b.SimpleCommand("echo", "hello")).AddSeparator(";")).Compound,
+			b.Redirection(2, ">&", "1"))))
+}
+
+func (s *ShSuite) Test_ShellParser_compound_command(c *check.C) {
+	b := s.init(c)
+
+	s.test("{ brace ; }",
+		b.List().AddCommand(b.Brace(
+			b.List().AddCommand(b.SimpleCommand("brace")).AddSeparator(";"))))
+
+	s.test("( subshell )",
+		b.List().AddCommand(b.Subshell(
+			b.List().AddCommand(b.SimpleCommand("subshell")))))
+
+	s.test("for i in * ; do echo $i ; done",
+		b.List().AddCommand(b.For(
+			"i",
+			b.Words("*"),
+			b.List().AddCommand(b.SimpleCommand("echo", "$i")).AddSeparator(";"))))
+
+	s.test("case $i in esac",
+		b.List().AddCommand(b.Case(
+			b.Token("$i"))))
+
+}
+
+func (s *ShSuite) Test_ShellParser_subshell(c *check.C) {
+	b := s.init(c)
+
+	sub3 := b.Subshell(b.List().AddCommand(b.SimpleCommand("sub3")))
+	sub2 := b.Subshell(b.List().AddCommand(sub3).AddSeparator(";").AddCommand(b.SimpleCommand("sub2")))
+	sub1 := b.Subshell(b.List().AddCommand(sub2).AddSeparator(";").AddCommand(b.SimpleCommand("sub1")))
+	s.test("( ( ( sub3 ) ; sub2 ) ; sub1 )", b.List().AddCommand(sub1))
+}
+
+func (s *ShSuite) Test_ShellParser_compound_list(c *check.C) {
+	b := s.init(c)
+
+	s.test("( \n echo )",
+		b.List().AddCommand(b.Subshell(
+			b.List().AddCommand(b.SimpleCommand("echo")))))
+}
+
+func (s *ShSuite) Test_ShellParser_term(c *check.C) {
+	b := s.init(c)
+
+	_ = b
+}
+
+func (s *ShSuite) Test_ShellParser_for_clause(c *check.C) {
+	b := s.init(c)
+
+	s.test("for var do echo $var ; done",
+		b.List().AddCommand(b.For(
+			"var",
+			b.Words("\"$$@\""),
+			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
+
+	// Only linebreak is allowed, but not semicolon.
+	s.test("for var \n do echo $var ; done",
+		b.List().AddCommand(b.For(
+			"var",
+			b.Words("\"$$@\""),
+			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
+
+	s.test("for var in a b c ; do echo $var ; done",
+		b.List().AddCommand(b.For(
+			"var",
+			b.Words("a", "b", "c"),
+			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
+
+	s.test("for var in in esac ; do echo $var ; done",
+		b.List().AddCommand(b.For(
+			"var",
+			b.Words("in", "esac"),
+			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
+}
+
+func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
+	b := s.init(c)
+
+	s.test("case $var in esac",
+		b.List().AddCommand(b.Case(b.Token("$var"))))
+
+	s.test("case $i in *.c | *.h ) echo C ;; * ) echo Other ; esac",
+		b.List().AddCommand(b.Case(
+			b.Token("$i"),
+			b.CaseItem(b.Words("*.c", "*.h"), b.List().AddCommand(b.SimpleCommand("echo", "C"))),
+			b.CaseItem(b.Words("*"), b.List().AddCommand(b.SimpleCommand("echo", "Other"))))))
+}
+
+func (s *ShSuite) Test_ShellParser_if_clause(c *check.C) {
+	b := s.init(c)
+
+	s.test(
+		"if true ; then echo yes ; else echo no ; fi",
+		b.List().AddCommand(b.If(
+			b.List().AddCommand(b.SimpleCommand("true")).AddSeparator(";"),
+			b.List().AddCommand(b.SimpleCommand("echo", "yes")).AddSeparator(";"),
+			b.List().AddCommand(b.SimpleCommand("echo", "no")).AddSeparator(";"))))
+}
+
+func (s *ShSuite) Test_ShellParser_while_clause(c *check.C) {
+	b := s.init(c)
+
+	s.test("while condition ; do action ; done",
+		b.List().AddCommand(b.While(
+			b.List().AddCommand(b.SimpleCommand("condition")).AddSeparator(";"),
+			b.List().AddCommand(b.SimpleCommand("action")).AddSeparator(";"))))
+}
+
+func (s *ShSuite) Test_ShellParser_until_clause(c *check.C) {
+	b := s.init(c)
+
+	s.test("until condition ; do action ; done",
+		b.List().AddCommand(b.Until(
+			b.List().AddCommand(b.SimpleCommand("condition")).AddSeparator(";"),
+			b.List().AddCommand(b.SimpleCommand("action")).AddSeparator(";"))))
+}
+
+func (s *ShSuite) Test_ShellParser_function_definition(c *check.C) {
+	b := s.init(c)
+
+	_ = b
+}
+
+func (s *ShSuite) Test_ShellParser_brace_group(c *check.C) {
+	b := s.init(c)
+
+	_ = b
+}
+
+func (s *ShSuite) Test_ShellParser_simple_command(c *check.C) {
+	b := s.init(c)
+
+	s.test(
+		"echo hello, world",
+		b.List().AddCommand(b.SimpleCommand("echo", "hello,", "world")))
+
+	s.test("echo ${PKGNAME:Q}",
+		b.List().AddCommand(b.SimpleCommand("echo", "${PKGNAME:Q}")))
+
+	s.test("${ECHO} \"Double-quoted\" 'Single-quoted'",
+		b.List().AddCommand(b.SimpleCommand("${ECHO}", "\"Double-quoted\"", "'Single-quoted'")))
+
+	s.testWords([]string{"`cat plain`", "\"`cat double`\"", "'`cat single`'"},
+		b.List().AddCommand(b.SimpleCommand("`cat plain`", "\"`cat double`\"", "'`cat single`'")))
+
+	s.testWords([]string{"`\"one word\"`"},
+		b.List().AddCommand(b.SimpleCommand("`\"one word\"`")))
+
+	s.testWords([]string{"PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\""},
+		b.List().AddCommand(b.SimpleCommand("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"")))
+
+	s.test("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
+		b.List().AddCommand(b.SimpleCommand("var=Plain", "var=\"Dquot\"", "var='Squot'", "var=Plain\"Dquot\"'Squot'")))
+
+	// RUN is a special Make variable since it ends with a semicolon;
+	// therefore it needs to be split off before passing the rest of
+	// the command to the shell command parser.
+	s.testWords([]string{"${RUN}", "subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\""},
+		b.List().AddCommand(b.SimpleCommand("${RUN}", "subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")))
+
+	s.test("PATH=/nonexistent env PATH=${PATH:Q} true",
+		b.List().AddCommand(b.SimpleCommand("PATH=/nonexistent", "env", "PATH=${PATH:Q}", "true")))
+
+	s.test("{OpenGrok args",
+		b.List().AddCommand(b.SimpleCommand("{OpenGrok", "args")))
+}
+
+func (s *ShSuite) Test_ShellParser_io_redirect(c *check.C) {
+	b := s.init(c)
+
+	_ = b
+}
+
+func (s *ShSuite) Test_ShellParser_io_here(c *check.C) {
+	b := s.init(c)
+
+	_ = b
+}
+
+type MkShBuilder struct {
+}
+
+func NewMkShBuilder() *MkShBuilder {
+	return &MkShBuilder{}
+}
+
+func (b *MkShBuilder) List() *MkShList {
+	return NewMkShList()
+}
+
+func (b *MkShBuilder) AndOr(pipeline *MkShPipeline) *MkShAndOr {
+	return NewMkShAndOr(pipeline)
+}
+
+func (b *MkShBuilder) Pipeline(negated bool, cmds ...*MkShCommand) *MkShPipeline {
+	return NewMkShPipeline(negated, cmds...)
+}
+
+func (b *MkShBuilder) SimpleCommand(words ...string) *MkShCommand {
 	cmd := &MkShSimpleCommand{}
-	return &SimpleCommandBuilder{cmd, &MkShTester{c}}
+	assignments := true
+	for _, word := range words {
+		if assignments && matches(word, `^\w+=`) {
+			cmd.Assignments = append(cmd.Assignments, b.Token(word))
+		} else if m, fdstr, op, rest := match3(word, `^(\d*)([<>])(.*)$`); m {
+			fd, _ := strconv.Atoi(fdstr)
+			cmd.Redirections = append(cmd.Redirections, b.Redirection(fd, op, rest))
+		} else {
+			assignments = false
+			if cmd.Name == nil {
+				cmd.Name = b.Token(word)
+			} else {
+				cmd.Args = append(cmd.Args, b.Token(word))
+			}
+		}
+	}
+	return &MkShCommand{Simple: cmd}
 }
-func (b *SimpleCommandBuilder) Name(name string) *SimpleCommandBuilder {
-	b.cmd.Name = b.tester.Token(name)
-	return b
+
+func (b *MkShBuilder) If(condActionElse ...*MkShList) *MkShCommand {
+	ifclause := &MkShIfClause{}
+	for i, part := range condActionElse {
+		if i%2 == 0 && i != len(condActionElse)-1 {
+			ifclause.Conds = append(ifclause.Conds, part)
+		} else if i%2 == 1 {
+			ifclause.Actions = append(ifclause.Actions, part)
+		} else {
+			ifclause.Else = part
+		}
+	}
+	return &MkShCommand{Compound: &MkShCompoundCommand{If: ifclause}}
 }
-func (b *SimpleCommandBuilder) Assignment(assignment string) *SimpleCommandBuilder {
-	b.cmd.Assignments = append(b.cmd.Assignments, b.tester.Token(assignment))
-	return b
+
+func (b *MkShBuilder) For(varname string, items []*ShToken, action *MkShList) *MkShCommand {
+	return &MkShCommand{Compound: &MkShCompoundCommand{For: &MkShForClause{varname, items, action}}}
 }
-func (b *SimpleCommandBuilder) Arg(arg string) *SimpleCommandBuilder {
-	b.cmd.Args = append(b.cmd.Args, b.tester.Token(arg))
-	return b
+
+func (b *MkShBuilder) Case(selector *ShToken, items ...*MkShCaseItem) *MkShCommand {
+	return &MkShCommand{Compound: &MkShCompoundCommand{Case: &MkShCaseClause{selector, items}}}
 }
-func (b *SimpleCommandBuilder) Redirection(redirection *MkShRedirection) *SimpleCommandBuilder {
-	b.cmd.Redirections = append(b.cmd.Redirections, redirection)
-	return b
+
+func (b *MkShBuilder) CaseItem(patterns []*ShToken, action *MkShList) *MkShCaseItem {
+	return &MkShCaseItem{patterns, action}
 }
-func (b *SimpleCommandBuilder) Build() *MkShSimpleCommand {
-	return b.cmd
+
+func (b *MkShBuilder) While(cond, action *MkShList, redirects ...*MkShRedirection) *MkShCommand {
+	return &MkShCommand{
+		Compound: &MkShCompoundCommand{
+			Loop: &MkShLoopClause{cond, action, false}},
+		Redirects: redirects}
+}
+
+func (b *MkShBuilder) Until(cond, action *MkShList, redirects ...*MkShRedirection) *MkShCommand {
+	return &MkShCommand{
+		Compound: &MkShCompoundCommand{
+			Loop: &MkShLoopClause{cond, action, true}},
+		Redirects: redirects}
+}
+
+func (b *MkShBuilder) Function(name string, body *MkShCompoundCommand, redirects ...*MkShRedirection) *MkShCommand {
+	return &MkShCommand{
+		FuncDef:   &MkShFunctionDefinition{name, body},
+		Redirects: redirects}
+}
+
+func (b *MkShBuilder) Brace(list *MkShList) *MkShCommand {
+	return &MkShCommand{Compound: &MkShCompoundCommand{Brace: list}}
+}
+
+func (b *MkShBuilder) Subshell(list *MkShList) *MkShCommand {
+	return &MkShCommand{Compound: &MkShCompoundCommand{Subshell: list}}
+}
+
+func (b *MkShBuilder) Token(mktext string) *ShToken {
+	tokenizer := NewShTokenizer(dummyLine, mktext, false)
+	token := tokenizer.ShToken()
+	return token
+}
+
+func (b *MkShBuilder) Words(words ...string) []*ShToken {
+	tokens := make([]*ShToken, len(words))
+	for i, word := range words {
+		tokens[i] = b.Token(word)
+	}
+	return tokens
+}
+
+func (b *MkShBuilder) Redirection(fd int, op string, target string) *MkShRedirection {
+	return &MkShRedirection{fd, op, b.Token(target)}
 }

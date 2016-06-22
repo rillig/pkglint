@@ -59,7 +59,7 @@ func (t ShAtomType) IsCommandDelimiter() bool {
 // @Beta
 type ShAtom struct {
 	Type    ShAtomType
-	Text    string
+	MkText  string
 	Quoting ShQuoting
 	Data    interface{}
 }
@@ -74,13 +74,13 @@ func NewShAtomVaruse(text string, quoting ShQuoting, varname string, modifiers .
 
 func (token *ShAtom) String() string {
 	if token.Type == shtWord && token.Quoting == shqPlain && token.Data == nil {
-		return fmt.Sprintf("%q", token.Text)
+		return fmt.Sprintf("%q", token.MkText)
 	}
 	if token.Type == shtVaruse {
 		varuse := token.Data.(*MkVarUse)
 		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
 	}
-	return fmt.Sprintf("ShAtom(%v, %q, %s)", token.Type, token.Text, token.Quoting)
+	return fmt.Sprintf("ShAtom(%v, %q, %s)", token.Type, token.MkText, token.Quoting)
 }
 
 // ShQuoting describes the context in which a string appears

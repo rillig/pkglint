@@ -27,7 +27,6 @@ func (p *MkParser) MkTokens() []*MkToken {
 			continue
 		}
 
-		needsReplace := false
 	again:
 		dollar := strings.IndexByte(repl.rest, '$')
 		if dollar == -1 {
@@ -35,13 +34,9 @@ func (p *MkParser) MkTokens() []*MkToken {
 		}
 		repl.Skip(dollar)
 		if repl.AdvanceStr("$$") {
-			needsReplace = true
 			goto again
 		}
 		text := repl.Since(mark)
-		if needsReplace {
-			text = strings.Replace(text, "$$", "$", -1)
-		}
 		if text != "" {
 			tokens = append(tokens, &MkToken{Text: text})
 			continue

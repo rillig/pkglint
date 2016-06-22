@@ -412,17 +412,10 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 	if false {
-		p := NewMkShParser(shline.line, shellcmd, false)
-		cmds := p.Program()
-		rest := p.tok.parser.Rest()
-		if rest != "" {
+		_, err := parseShellProgram(shellcmd)
+		if err != nil {
 			traceStep("shellcmd=%q", shellcmd)
-			if cmds != nil {
-				for _, andor := range cmds.AndOrs {
-					traceStep("AndOr %v", andor)
-				}
-			}
-			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", p.peekText()+rest)
+			shline.line.Warnf("Pkglint parse error in ShellLine.CheckShellCommand at %q", err)
 		}
 	}
 
@@ -944,10 +937,10 @@ func splitIntoShellTokens(line *Line, text string) (tokens []string, rest string
 		if atom.Type == shtSpace && q == shqPlain {
 			emit()
 		} else if atom.Type == shtWord || atom.Type == shtVaruse || atom.Quoting != shqPlain {
-			word += atom.Text
+			word += atom.MkText
 		} else {
 			emit()
-			tokens = append(tokens, atom.Text)
+			tokens = append(tokens, atom.MkText)
 		}
 	}
 	emit()
@@ -969,7 +962,7 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 			words = append(words, word)
 			word = ""
 		} else {
-			word += atom.Text
+			word += atom.MkText
 		}
 	}
 	if word != "" && atoms[len(atoms)-1].Quoting == shqPlain {

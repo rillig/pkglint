@@ -281,7 +281,7 @@ func (p *ShTokenizer) ShToken() *ShToken {
 		return nil
 	}
 	if atom := peek(); !atom.Type.IsWord() {
-		return NewShToken(atom.Text, atom)
+		return NewShToken(atom.MkText, atom)
 	}
 
 nextatom:

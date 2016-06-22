@@ -66,9 +66,10 @@ program : list {
 	$$ = $1
 }
 
-list : and_or {
+// Note: the linebreak is missing in the POSIX grammar.
+list : linebreak and_or {
 	$$ = NewMkShList()
-	$$.AddAndOr($1)
+	$$.AddAndOr($2)
 }
 list : list separator_op and_or {
 	$$.AddSeparator($2)
@@ -89,6 +90,7 @@ pipeline : pipe_sequence {
 	$$ = $1
 }
 pipeline : tkEXCLAM pipe_sequence {
+	$$ = $2
 	$$.Negated = true
 }
 
@@ -131,10 +133,10 @@ compound_command : if_clause {
 	$$ = &MkShCompoundCommand{If: $1}
 }
 compound_command : while_clause {
-	$$ = &MkShCompoundCommand{While: $1}
+	$$ = &MkShCompoundCommand{Loop: $1}
 }
 compound_command : until_clause {
-	$$ = &MkShCompoundCommand{Until: $1}
+	$$ = &MkShCompoundCommand{Loop: $1}
 }
 
 subshell : tkLPAREN compound_list tkRPAREN {
@@ -159,7 +161,11 @@ term : term separator and_or {
 }
 
 for_clause : tkFOR tkWORD linebreak do_group {
-	$$ = &MkShForClause{$2.MkText, []*ShToken{NewShToken("$@")}, $4}
+	args := NewShToken("\"$$@\"",
+		NewShAtom(shtWord, "\"",shqDquot),
+		NewShAtom(shtWord, "$$@",shqDquot),
+		NewShAtom(shtWord,"\"",shqPlain))
+	$$ = &MkShForClause{$2.MkText, []*ShToken{args}, $4}
 }
 for_clause : tkFOR tkWORD linebreak in sequential_sep do_group {
 	$$ = &MkShForClause{$2.MkText, nil, $6}
@@ -231,11 +237,11 @@ case_item : case_selector compound_list tkSEMISEMI linebreak {
 	$$ = &MkShCaseItem{$1, $2}
 }
 
-pattern : tkWORD { /* Apply rule 4 */
+pattern : tkWORD {
 	$$ = nil
 	$$ = append($$, $1)
 }
-pattern : pattern tkPIPE tkWORD { /* Do not apply rule 4 */
+pattern : pattern tkPIPE tkWORD {
 	$$ = append($$, $3)
 }
 
@@ -268,7 +274,7 @@ until_clause : tkUNTIL compound_list do_group {
 }
 
 function_definition : tkWORD tkLPAREN tkRPAREN linebreak compound_command { /* Apply rule 9 */
-	$$ = &MkShFunctionDefinition{$1.MkText, $5, nil}
+	$$ = &MkShFunctionDefinition{$1.MkText, $5}
 }
 
 brace_group : tkLBRACE compound_list tkRBRACE {
@@ -280,6 +286,7 @@ do_group : tkDO compound_list tkDONE { /* Apply rule 6 */
 }
 
 simple_command : cmd_prefix cmd_word cmd_suffix {
+	$$ = $1
 	$$.Name = $2
 	$$.Args = append($$.Args, $3.Args...)
 	$$.Redirections = append($$.Redirections, $3.Redirections...)
