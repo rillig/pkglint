@@ -173,7 +173,7 @@ func (s *Suite) Test_MkShParser_DoGroup(c *check.C) {
 
 func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 	parse := func(cmd string, builder *SimpleCommandBuilder) {
-		expected := builder.Cmd
+		expected := builder.cmd
 		p := NewMkShParser(dummyLine, cmd, false)
 		shcmd := p.SimpleCommand()
 		if c.Check(shcmd, check.NotNil) {
@@ -201,56 +201,55 @@ func (s *Suite) Test_MkShParser_SimpleCommand(c *check.C) {
 		c.Check(p.tok.parser.Rest(), equals, expectedRest)
 		c.Check(s.Output(), equals, "")
 	}
-	tester := &MkShTester{c}
 
 	parse("echo ${PKGNAME:Q}",
-		NewSimpleCommandBuilder().
-			Name(tester.Token("echo")).
-			Arg(tester.Token("${PKGNAME:Q}")))
+		NewSimpleCommandBuilder(c).
+			Name("echo").
+			Arg("${PKGNAME:Q}"))
 
 	parse("${ECHO} \"Double-quoted\" 'Single-quoted'",
-		NewSimpleCommandBuilder().
-			Name(tester.Token("${ECHO}")).
-			Arg(tester.Token("\"Double-quoted\"")).
-			Arg(tester.Token("'Single-quoted'")))
+		NewSimpleCommandBuilder(c).
+			Name("${ECHO}").
+			Arg("\"Double-quoted\"").
+			Arg("'Single-quoted'"))
 
 	parse("`cat plain` \"`cat double`\" '`cat single`'",
-		NewSimpleCommandBuilder().
-			Name(tester.Token("`cat plain`")).
-			Arg(tester.Token("\"`cat double`\"")).
-			Arg(tester.Token("'`cat single`'")))
+		NewSimpleCommandBuilder(c).
+			Name("`cat plain`").
+			Arg("\"`cat double`\"").
+			Arg("'`cat single`'"))
 
 	parse("`\"one word\"`",
-		NewSimpleCommandBuilder().
-			Name(tester.Token("`\"one word\"`")))
+		NewSimpleCommandBuilder(c).
+			Name("`\"one word\"`"))
 
 	parse("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		NewSimpleCommandBuilder().
-			Assignment(tester.Token("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"")))
+		NewSimpleCommandBuilder(c).
+			Assignment("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\""))
 
 	parse("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
-		NewSimpleCommandBuilder().
-			Assignment(tester.Token("var=Plain")).
-			Assignment(tester.Token("var=\"Dquot\"")).
-			Assignment(tester.Token("var='Squot'")).
-			Assignment(tester.Token("var=Plain\"Dquot\"'Squot'")))
+		NewSimpleCommandBuilder(c).
+			Assignment("var=Plain").
+			Assignment("var=\"Dquot\"").
+			Assignment("var='Squot'").
+			Assignment("var=Plain\"Dquot\"'Squot'"))
 
 	parse("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
-		NewSimpleCommandBuilder().
-			Name(tester.Token("${RUN}")).
-			Arg(tester.Token("subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")))
+		NewSimpleCommandBuilder(c).
+			Name("${RUN}").
+			Arg("subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\""))
 
 	parse("PATH=/nonexistent env PATH=${PATH:Q} true",
-		NewSimpleCommandBuilder().
-			Assignment(tester.Token("PATH=/nonexistent")).
-			Name(tester.Token("env")).
-			Arg(tester.Token("PATH=${PATH:Q}")).
-			Arg(tester.Token("true")))
+		NewSimpleCommandBuilder(c).
+			Assignment("PATH=/nonexistent").
+			Name("env").
+			Arg("PATH=${PATH:Q}").
+			Arg("true"))
 
 	parse("{OpenGrok args",
-		NewSimpleCommandBuilder().
-			Name(tester.Token("{OpenGrok")).
-			Arg(tester.Token("args")))
+		NewSimpleCommandBuilder(c).
+			Name("{OpenGrok").
+			Arg("args"))
 
 	fail("if clause", "if clause")
 	fail("{ group; }", "{ group; }")
@@ -329,26 +328,30 @@ func (t *MkShTester) Token(str string) *ShToken {
 }
 
 type SimpleCommandBuilder struct {
-	Cmd *MkShSimpleCommand
+	cmd    *MkShSimpleCommand
+	tester *MkShTester
 }
 
-func NewSimpleCommandBuilder() *SimpleCommandBuilder {
+func NewSimpleCommandBuilder(c *check.C) *SimpleCommandBuilder {
 	cmd := &MkShSimpleCommand{}
-	return &SimpleCommandBuilder{cmd}
+	return &SimpleCommandBuilder{cmd, &MkShTester{c}}
 }
-func (b *SimpleCommandBuilder) Name(name *ShToken) *SimpleCommandBuilder {
-	b.Cmd.Name = name
+func (b *SimpleCommandBuilder) Name(name string) *SimpleCommandBuilder {
+	b.cmd.Name = b.tester.Token(name)
 	return b
 }
-func (b *SimpleCommandBuilder) Assignment(assignment *ShToken) *SimpleCommandBuilder {
-	b.Cmd.Assignments = append(b.Cmd.Assignments, assignment)
+func (b *SimpleCommandBuilder) Assignment(assignment string) *SimpleCommandBuilder {
+	b.cmd.Assignments = append(b.cmd.Assignments, b.tester.Token(assignment))
 	return b
 }
-func (b *SimpleCommandBuilder) Arg(arg *ShToken) *SimpleCommandBuilder {
-	b.Cmd.Args = append(b.Cmd.Args, arg)
+func (b *SimpleCommandBuilder) Arg(arg string) *SimpleCommandBuilder {
+	b.cmd.Args = append(b.cmd.Args, b.tester.Token(arg))
 	return b
 }
 func (b *SimpleCommandBuilder) Redirection(redirection *MkShRedirection) *SimpleCommandBuilder {
-	b.Cmd.Redirections = append(b.Cmd.Redirections, redirection)
+	b.cmd.Redirections = append(b.cmd.Redirections, redirection)
 	return b
+}
+func (b *SimpleCommandBuilder) Build() *MkShSimpleCommand {
+	return b.cmd
 }

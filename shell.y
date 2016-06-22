@@ -4,7 +4,6 @@ package main
 
 %token <Word> tkWORD
 %token <Word> tkASSIGNMENT_WORD
-%token <Word> tkNAME
 %token tkNEWLINE
 %token <IONum> tkIO_NUMBER
 %token tkBACKGROUND
@@ -44,7 +43,7 @@ package main
 %type <Command> command
 %type <CompoundCommand> compound_command
 %type <CompoundList> compound_list do_group
-%type <Separator> separator separator_op
+%type <Separator> separator separator_op sequential_sep
 %type <Simple> simple_command cmd_prefix cmd_suffix
 %type <FuncDef> function_definition
 %type <For> for_clause
@@ -53,7 +52,7 @@ package main
 %type <CaseItem> case_item case_item_ns
 %type <Loop> while_clause until_clause
 %type <Words> wordlist case_selector pattern
-%type <Word> fname filename cmd_word cmd_name
+%type <Word> filename cmd_word cmd_name here_end
 %type <Redirections> redirect_list
 %type <Redirection> io_redirect io_file io_here
 
@@ -64,6 +63,7 @@ program : list separator {
 	$$.AddSeparator($2)
 }
 program : list {
+	$$ = $1
 }
 
 list : and_or {
@@ -86,6 +86,7 @@ and_or : and_or tkOR linebreak pipeline {
 }
 
 pipeline : pipe_sequence {
+	$$ = $1
 }
 pipeline : tkEXCLAM pipe_sequence {
 	$$.Negated = true
@@ -141,8 +142,10 @@ subshell : tkLPAREN compound_list tkRPAREN {
 }
 
 compound_list : linebreak term {
+	$$ = $2
 }
 compound_list : linebreak term separator {
+	$$ = $2
 	$$.AddSeparator($3)
 }
 
@@ -205,8 +208,10 @@ case_list : case_list case_item {
 }
 
 case_selector : tkLPAREN pattern tkRPAREN {
+	$$ = $2
 }
 case_selector : pattern tkRPAREN {
+	$$ = $1
 }
 
 case_item_ns : case_selector linebreak {
@@ -262,11 +267,8 @@ until_clause : tkUNTIL compound_list do_group {
 	$$ = &MkShLoopClause{$2, $3, true}
 }
 
-function_definition : fname tkLPAREN tkRPAREN linebreak compound_command { /* Apply rule 9 */
+function_definition : tkWORD tkLPAREN tkRPAREN linebreak compound_command { /* Apply rule 9 */
 	$$ = &MkShFunctionDefinition{$1.MkText, $5, nil}
-}
-
-fname : tkNAME { /* Apply rule 8 */
 }
 
 brace_group : tkLBRACE compound_list tkRBRACE {
@@ -286,6 +288,7 @@ simple_command : cmd_prefix cmd_word {
 	$$.Name = $2
 }
 simple_command : cmd_prefix {
+	$$ = $1
 }
 simple_command : cmd_name cmd_suffix {
 	$$ = $2
@@ -296,9 +299,11 @@ simple_command : cmd_name {
 }
 
 cmd_name : tkWORD { /* Apply rule 7a */
+	$$ = $1
 }
 
 cmd_word : tkWORD { /* Apply rule 7b */
+	$$ = $1
 }
 
 cmd_prefix : io_redirect {
@@ -322,7 +327,7 @@ cmd_suffix : io_redirect {
 }
 cmd_suffix : tkWORD {
 	$$ = &MkShSimpleCommand{}
-	$$.Assignments = append($$.Assignments, $1)
+	$$.Args = append($$.Args, $1)
 }
 cmd_suffix : cmd_suffix io_redirect {
 	$$.Redirections = append($$.Redirections, $2)
@@ -340,6 +345,7 @@ redirect_list : redirect_list io_redirect {
 }
 
 io_redirect : io_file {
+	$$ = $1
 }
 io_redirect : tkIO_NUMBER io_file {
 	$$ = $2
@@ -347,6 +353,7 @@ io_redirect : tkIO_NUMBER io_file {
 }
 
 io_redirect : io_here {
+	$$ = $1
 }
 io_redirect : tkIO_NUMBER io_here {
 	$$ = $2
@@ -376,37 +383,51 @@ io_file : tkGTPIPE filename {
 }
 
 filename : tkWORD { /* Apply rule 2 */
+	$$ = $1
 }
 
 io_here : tkLTLT here_end {
+	$$ = &MkShRedirection{-1, "<<", $2}
 }
 io_here : tkLTLTDASH here_end {
+	$$ = &MkShRedirection{-1, "<<-", $2}
 }
 
 here_end : tkWORD { /* Apply rule 3 */
+	$$ = $1
 }
 
 newline_list : tkNEWLINE {
+	/* empty */
 }
 newline_list : newline_list tkNEWLINE {
+	/* empty */
 }
 
 linebreak : newline_list {
+	/* empty */
 }
 linebreak : /* empty */ {
+	/* empty */
 }
 
 separator_op : tkBACKGROUND {
+	$$ = "&"
 }
 separator_op : tkSEMI {
+	$$ = ";"
 }
 
 separator : separator_op linebreak {
+	$$ = $1
 }
 separator : newline_list {
+	$$ = "\n"
 }
 
 sequential_sep : tkSEMI linebreak {
+	$$ = ";"
 }
 sequential_sep : tkNEWLINE linebreak {
+	$$ = "\n"
 }

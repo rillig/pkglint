@@ -9,3 +9,10 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 
 	c.Check(varuse.Mod(), equals, ":Q")
 }
+
+func (list *MkShList) AddSimple(simpleCommand *MkShSimpleCommand) *MkShList {
+	command := &MkShCommand{Simple: simpleCommand}
+	pipeline := NewMkShPipeline(false, command)
+	andOr := NewMkShAndOr(pipeline)
+	return list.AddAndOr(andOr)
+}
