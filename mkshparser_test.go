@@ -333,7 +333,8 @@ func (s *ShSuite) testWords(program []string, expected *MkShList) {
 	succeeded := parser.Parse(lexer)
 
 	c := s.c
-	if c.Check(succeeded, equals, 0) && c.Check(lexer.error, equals, "") {
+
+	if ok1, ok2 := c.Check(succeeded, equals, 0), c.Check(lexer.error, equals, ""); ok1 && ok2 {
 		if !c.Check(parser.stack[1].List, deepEquals, expected) {
 			actualJson, actualErr := json.MarshalIndent(parser.stack[1].List, "", "  ")
 			expectedJson, expectedErr := json.MarshalIndent(expected, "", "  ")

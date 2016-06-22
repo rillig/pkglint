@@ -49,11 +49,11 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 			tname := shyyTokname(shyyTok2[ttype-shyyPrivate])
 			switch ttype {
 			case tkWORD, tkASSIGNMENT_WORD:
-				traceStep("lex %v %q\n", tname, lval.Word.MkText)
+				traceStep("lex %v %q", tname, lval.Word.MkText)
 			case tkIO_NUMBER:
-				traceStep("lex %v %v\n", tname, lval.IONum)
+				traceStep("lex %v %v", tname, lval.IONum)
 			default:
-				traceStep("lex %v\n", tname)
+				traceStep("lex %v", tname)
 			}
 		}()
 	}
