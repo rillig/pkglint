@@ -13,37 +13,6 @@ type ShSuite struct {
 
 var _ = check.Suite(&ShSuite{})
 
-func (s *ShSuite) init(c *check.C) *MkShBuilder {
-	s.c = c
-	return NewMkShBuilder()
-}
-
-func (s *ShSuite) test(program string, expected *MkShList) {
-	s.testWords(strings.Split(program, " "), expected)
-}
-
-func (s *ShSuite) testWords(program []string, expected *MkShList) {
-	lexer := &ShellLexer{
-		current:        "",
-		remaining:      program,
-		atCommandStart: true,
-		error:          ""}
-	parser := &shyyParserImpl{}
-
-	succeeded := parser.Parse(lexer)
-
-	c := s.c
-	if c.Check(succeeded, equals, 0) && c.Check(lexer.error, equals, "") {
-		if !c.Check(parser.stack[1].List, deepEquals, expected) {
-			actualJson, actualErr := json.MarshalIndent(parser.stack[1].List, "", "  ")
-			expectedJson, expectedErr := json.MarshalIndent(expected, "", "  ")
-			if c.Check(actualErr, check.IsNil) && c.Check(expectedErr, check.IsNil) {
-				c.Check(string(actualJson), deepEquals, string(expectedJson))
-			}
-		}
-	}
-}
-
 func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 	b := s.init(c)
 
@@ -342,6 +311,37 @@ func (s *ShSuite) Test_ShellParser_io_here(c *check.C) {
 	b := s.init(c)
 
 	_ = b
+}
+
+func (s *ShSuite) init(c *check.C) *MkShBuilder {
+	s.c = c
+	return NewMkShBuilder()
+}
+
+func (s *ShSuite) test(program string, expected *MkShList) {
+	s.testWords(strings.Split(program, " "), expected)
+}
+
+func (s *ShSuite) testWords(program []string, expected *MkShList) {
+	lexer := &ShellLexer{
+		current:        "",
+		remaining:      program,
+		atCommandStart: true,
+		error:          ""}
+	parser := &shyyParserImpl{}
+
+	succeeded := parser.Parse(lexer)
+
+	c := s.c
+	if c.Check(succeeded, equals, 0) && c.Check(lexer.error, equals, "") {
+		if !c.Check(parser.stack[1].List, deepEquals, expected) {
+			actualJson, actualErr := json.MarshalIndent(parser.stack[1].List, "", "  ")
+			expectedJson, expectedErr := json.MarshalIndent(expected, "", "  ")
+			if c.Check(actualErr, check.IsNil) && c.Check(expectedErr, check.IsNil) {
+				c.Check(string(actualJson), deepEquals, string(expectedJson))
+			}
+		}
+	}
 }
 
 type MkShBuilder struct {
