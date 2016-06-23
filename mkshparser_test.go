@@ -278,6 +278,12 @@ func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
 	s.test("case $var in esac",
 		b.List().AddCommand(b.Case(b.Token("$var"))))
 
+	s.testTokenize("case selector in pattern) ;; pattern) esac",
+		b.List().AddCommand(b.Case(
+			b.Token("selector"),
+			b.CaseItem(b.Words("pattern"), b.List(), nil),
+			b.CaseItem(b.Words("pattern"), b.List(), nil))))
+
 	s.test("case $$i in *.c | *.h ) echo C ;; * ) echo Other ; esac",
 		b.List().AddCommand(b.Case(
 			b.Token("$$i"),

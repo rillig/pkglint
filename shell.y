@@ -201,7 +201,7 @@ case_selector : pattern tkRPAREN {
 }
 
 case_item_ns : case_selector linebreak {
-	$$ = &MkShCaseItem{$1, nil, nil}
+	$$ = &MkShCaseItem{$1, &MkShList{}, nil}
 }
 case_item_ns : case_selector linebreak term linebreak {
 	$$ = &MkShCaseItem{$1, $3, nil}
@@ -211,7 +211,7 @@ case_item_ns : case_selector linebreak term separator_op linebreak {
 }
 
 case_item : case_selector linebreak tkSEMISEMI linebreak {
-	$$ = &MkShCaseItem{$1, nil, nil}
+	$$ = &MkShCaseItem{$1, &MkShList{}, nil}
 }
 case_item : case_selector compound_list tkSEMISEMI linebreak {
 	$$ = &MkShCaseItem{$1, $2, nil}
