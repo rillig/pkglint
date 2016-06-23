@@ -81,7 +81,7 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 		return &ShAtom{shtWord, repl.s, shqSquot, nil}
 	case repl.AdvanceStr("`"):
 		return &ShAtom{shtWord, repl.s, shqBackt, nil}
-	case repl.AdvanceRegexp(`^(?:<|<<|>|>>|>&)`):
+	case repl.AdvanceRegexp(`^\d*(?:<<-|<<|<&|<>|>>|>&|>\||<|>)`):
 		return &ShAtom{shtRedirect, repl.m[0], q, nil}
 	case repl.AdvanceRegexp(`^#.*`):
 		return &ShAtom{shtComment, repl.m[0], q, nil}

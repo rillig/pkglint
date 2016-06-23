@@ -7,11 +7,7 @@ import (
 
 func parseShellProgram(program string) (list *MkShList, err error) {
 	tokens, rest := splitIntoShellTokens(dummyLine, program)
-	lexer := &ShellLexer{
-		current:        "",
-		remaining:      tokens,
-		atCommandStart: true,
-		error:          rest}
+	lexer := NewShellLexer(tokens, rest)
 	parser := &shyyParserImpl{}
 
 	succeeded := parser.Parse(lexer)
@@ -32,6 +28,7 @@ func (e *ParseError) Error() string {
 
 type ShellLexer struct {
 	current        string
+	ioredirect     string
 	remaining      []string
 	atCommandStart bool
 	sinceFor       int
@@ -40,6 +37,14 @@ type ShellLexer struct {
 	result         *MkShList
 }
 
+func NewShellLexer(tokens []string, rest string) *ShellLexer {
+	return &ShellLexer{
+		current:        "",
+		ioredirect:     "",
+		remaining:      tokens,
+		atCommandStart: true,
+		error:          rest}
+}
 func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 	if len(lex.remaining) == 0 {
 		return 0
@@ -59,9 +64,14 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		}()
 	}
 
-	token := lex.remaining[0]
-	lex.current = token
-	lex.remaining = lex.remaining[1:]
+	token := lex.ioredirect
+	lex.ioredirect = ""
+	if token == "" {
+		token = lex.remaining[0]
+		lex.current = token
+		lex.remaining = lex.remaining[1:]
+	}
+
 	switch token {
 	case ";":
 		lex.atCommandStart = true
@@ -118,6 +128,14 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		lex.atCommandStart = false
 		return tkGTPIPE
 	}
+
+	if m, fdstr, op := match2(token, `^(\d+)(<<-|<<|<>|<&|>>|>&|>\||<|>)$`); m {
+		fd, _ := strconv.Atoi(fdstr)
+		lval.IONum = fd
+		lex.ioredirect = op
+		return tkIO_NUMBER
+	}
+
 	if lex.atCommandStart {
 		lex.sinceCase = -1
 		lex.sinceFor = -1

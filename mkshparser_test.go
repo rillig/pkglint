@@ -352,7 +352,37 @@ func (s *ShSuite) Test_ShellParser_simple_command(c *check.C) {
 func (s *ShSuite) Test_ShellParser_io_redirect(c *check.C) {
 	b := s.init(c)
 
-	_ = b
+	s.test("echo >> ${PLIST_SRC}",
+		b.List().AddCommand(b.SimpleCommand("echo", ">>${PLIST_SRC}")))
+
+	s.testTokenize("echo >> ${PLIST_SRC}",
+		b.List().AddCommand(b.SimpleCommand("echo", ">>${PLIST_SRC}")))
+
+	s.testTokenize("echo 1>output 2>>append 3>|clobber 4>&5 6<input >>append",
+		b.List().AddCommand(&MkShCommand{Simple: &MkShSimpleCommand{
+			Assignments: nil,
+			Name:        b.Token("echo"),
+			Args:        nil,
+			Redirections: []*MkShRedirection{
+				{1, ">", b.Token("output")},
+				{2, ">>", b.Token("append")},
+				{3, ">|", b.Token("clobber")},
+				{4, ">&", b.Token("5")},
+				{6, "<", b.Token("input")},
+				{-1, ">>", b.Token("append")}}}}))
+
+	s.testTokenize("echo 1> output 2>> append 3>| clobber 4>& 5 6< input >> append",
+		b.List().AddCommand(&MkShCommand{Simple: &MkShSimpleCommand{
+			Assignments: nil,
+			Name:        b.Token("echo"),
+			Args:        nil,
+			Redirections: []*MkShRedirection{
+				{1, ">", b.Token("output")},
+				{2, ">>", b.Token("append")},
+				{3, ">|", b.Token("clobber")},
+				{4, ">&", b.Token("5")},
+				{6, "<", b.Token("input")},
+				{-1, ">>", b.Token("append")}}}}))
 }
 
 func (s *ShSuite) Test_ShellParser_io_here(c *check.C) {
@@ -368,6 +398,12 @@ func (s *ShSuite) init(c *check.C) *MkShBuilder {
 
 func (s *ShSuite) test(program string, expected *MkShList) {
 	s.testWords(strings.Split(program, " "), expected)
+}
+
+func (s *ShSuite) testTokenize(program string, expected *MkShList) {
+	tokens, rest := splitIntoShellTokens(dummyLine, program)
+	s.c.Check(rest, equals, "")
+	s.testWords(tokens, expected)
 }
 
 func (s *ShSuite) testWords(program []string, expected *MkShList) {
@@ -420,8 +456,11 @@ func (b *MkShBuilder) SimpleCommand(words ...string) *MkShCommand {
 	for _, word := range words {
 		if assignments && matches(word, `^\w+=`) {
 			cmd.Assignments = append(cmd.Assignments, b.Token(word))
-		} else if m, fdstr, op, rest := match3(word, `^(\d*)([<>])(.*)$`); m {
-			fd, _ := strconv.Atoi(fdstr)
+		} else if m, fdstr, op, rest := match3(word, `^(\d*)(<<-|<<|<&|>>|>&|>\||<|>)(.*)$`); m {
+			fd, err := strconv.Atoi(fdstr)
+			if err != nil {
+				fd = -1
+			}
 			cmd.Redirections = append(cmd.Redirections, b.Redirection(fd, op, rest))
 		} else {
 			assignments = false

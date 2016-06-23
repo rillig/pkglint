@@ -94,6 +94,32 @@ func (s *Suite) Test_SplitIntoMkWords_VaruseSpace(c *check.C) {
 	c.Check(rest, equals, "")
 }
 
+func (s *Suite) Test_splitIntoShellTokens_Redirect(c *check.C) {
+	words, rest := splitIntoShellTokens(dummyLine, "echo 1>output 2>>append 3>|clobber 4>&5 6<input >>append")
+
+	c.Check(words, deepEquals, []string{
+		"echo",
+		"1>", "output",
+		"2>>", "append",
+		"3>|", "clobber",
+		"4>&", "5",
+		"6<", "input",
+		">>", "append"})
+	c.Check(rest, equals, "")
+
+	words, rest = splitIntoShellTokens(dummyLine, "echo 1> output 2>> append 3>| clobber 4>& 5 6< input >> append")
+
+	c.Check(words, deepEquals, []string{
+		"echo",
+		"1>", "output",
+		"2>>", "append",
+		"3>|", "clobber",
+		"4>&", "5",
+		"6<", "input",
+		">>", "append"})
+	c.Check(rest, equals, "")
+}
+
 func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.Mk = s.NewMkLines("fname",
