@@ -5,8 +5,12 @@ import (
 	"strconv"
 )
 
-func parseShellProgram(program string) (list *MkShList, err error) {
-	tokens, rest := splitIntoShellTokens(dummyLine, program)
+func parseShellProgram(line *Line, program string) (list *MkShList, err error) {
+	if G.opts.Debug {
+		defer tracecall(program)()
+	}
+
+	tokens, rest := splitIntoShellTokens(line, program)
 	lexer := NewShellLexer(tokens, rest)
 	parser := &shyyParserImpl{}
 

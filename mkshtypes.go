@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type MkShList struct {
 	AndOrs     []*MkShAndOr
 	Separators []MkShSeparator
@@ -140,6 +142,19 @@ func (c *StrCommand) HasOption(opt string) bool {
 		}
 	}
 	return false
+}
+
+func (c *StrCommand) AnyArgMatches(pattern string) bool {
+	for _, arg := range c.Args {
+		if matches(arg, pattern) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *StrCommand) String() string {
+	return fmt.Sprintf("%v %v %v", c.Assignments, c.Name, c.Args)
 }
 
 type MkShRedirection struct {

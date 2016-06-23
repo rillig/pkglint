@@ -88,13 +88,22 @@ func (w *MkShWalker) walkCommand(command *MkShCommand, collector chan interface{
 		w.walkSimpleCommand(command.Simple, collector)
 	case command.Compound != nil:
 		w.walkCompoundCommand(command.Compound, collector)
+		w.walkRedirects(command.Redirects, collector)
 	case command.FuncDef != nil:
 		w.walkFunctionDefinition(command.FuncDef, collector)
+		w.walkRedirects(command.Redirects, collector)
 	}
 }
 
 func (w *MkShWalker) walkSimpleCommand(command *MkShSimpleCommand, collector chan interface{}) {
 	collector <- command
+
+	w.walkWords(command.Assignments, collector)
+	if command.Name != nil {
+		w.walkWord(command.Name, collector)
+	}
+	w.walkWords(command.Args, collector)
+	w.walkRedirects(command.Redirections, collector)
 }
 
 func (w *MkShWalker) walkCompoundCommand(command *MkShCompoundCommand, collector chan interface{}) {
@@ -104,24 +113,26 @@ func (w *MkShWalker) walkCompoundCommand(command *MkShCompoundCommand, collector
 	case command.Brace != nil:
 		w.walkList(command.Brace, collector)
 	case command.Case != nil:
-		for _, item := range command.Case.Cases {
-			w.walkList(item.Action, collector)
-		}
+		w.walkCase(command.Case, collector)
 	case command.For != nil:
-		w.walkList(command.For.Body, collector)
+		w.walkFor(command.For, collector)
 	case command.If != nil:
-		for i, cond := range command.If.Conds {
-			w.walkList(cond, collector)
-			w.walkList(command.If.Actions[i], collector)
-		}
-		if command.If.Else != nil {
-			w.walkList(command.If.Else, collector)
-		}
+		w.walkIf(command.If, collector)
 	case command.Loop != nil:
-		w.walkList(command.Loop.Cond, collector)
-		w.walkList(command.Loop.Action, collector)
+		w.walkLoop(command.Loop, collector)
 	case command.Subshell != nil:
 		w.walkList(command.Subshell, collector)
+	}
+}
+
+func (w *MkShWalker) walkCase(caseClause *MkShCaseClause, collector chan interface{}) {
+	collector <- caseClause
+
+	w.walkWord(caseClause.Word, collector)
+	for _, caseItem := range caseClause.Cases {
+		collector <- caseItem
+		w.walkWords(caseItem.Patterns, collector)
+		w.walkList(caseItem.Action, collector)
 	}
 }
 
@@ -129,4 +140,49 @@ func (w *MkShWalker) walkFunctionDefinition(funcdef *MkShFunctionDefinition, col
 	collector <- funcdef
 
 	w.walkCompoundCommand(funcdef.Body, collector)
+}
+
+func (w *MkShWalker) walkIf(ifClause *MkShIfClause, collector chan interface{}) {
+	collector <- ifClause
+	for i, cond := range ifClause.Conds {
+		w.walkList(cond, collector)
+		w.walkList(ifClause.Actions[i], collector)
+	}
+	if ifClause.Else != nil {
+		w.walkList(ifClause.Else, collector)
+	}
+}
+
+func (w *MkShWalker) walkLoop(loop *MkShLoopClause, collector chan interface{}) {
+	collector <- loop
+	w.walkList(loop.Cond, collector)
+	w.walkList(loop.Action, collector)
+}
+
+func (w *MkShWalker) walkWords(words []*ShToken, collector chan interface{}) {
+	collector <- words
+
+	for _, word := range words {
+		w.walkWord(word, collector)
+	}
+}
+
+func (w *MkShWalker) walkWord(word *ShToken, collector chan interface{}) {
+	collector <- word
+}
+
+func (w *MkShWalker) walkRedirects(redirects []*MkShRedirection, collector chan interface{}) {
+	collector <- redirects
+
+	for _, redirect := range redirects {
+		collector <- redirect
+	}
+}
+
+func (w *MkShWalker) walkFor(forClause *MkShForClause, collector chan interface{}) {
+	collector <- forClause
+
+	collector <- forClause.Varname
+	w.walkWords(forClause.Values, collector)
+	w.walkList(forClause.Body, collector)
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func (s *Suite) Test_MkShWalker_ForEachSimpleCommand(c *check.C) {
-	list, err := parseShellProgram("if condition; then action; else case selector in pattern) case-item-action ;; esac; fi")
+	list, err := parseShellProgram(dummyLine, "if condition; then action; else case selector in pattern) case-item-action ;; esac; fi")
 	if c.Check(err, check.IsNil) && c.Check(list, check.NotNil) {
 		var commands []string
 		(*MkShWalker).ForEachSimpleCommand(nil, list, func(cmd *MkShSimpleCommand) {
@@ -17,5 +17,28 @@ func (s *Suite) Test_MkShWalker_ForEachSimpleCommand(c *check.C) {
 			"&{[] ShToken([\"condition\"]) [] []}",
 			"&{[] ShToken([\"action\"]) [] []}",
 			"&{[] ShToken([\"case-item-action\"]) [] []}"})
+	}
+}
+
+func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
+	list, err := parseShellProgram(dummyLine, ""+
+		"set -e; cd ${WRKSRC}/locale; "+
+		"for lang in *.po; do "+
+		"  [ \"$${lang}\" = \"wxstd.po\" ] && continue; "+
+		"  ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"; "+
+		"done")
+	if c.Check(err, check.IsNil) && c.Check(list, check.NotNil) {
+		var commands []string
+		(*MkShWalker).Walk(nil, list, func(node interface{}) {
+			if cmd, ok := node.(*MkShSimpleCommand); ok {
+				commands = append(commands, NewStrCommand(cmd).String())
+			}
+		})
+		c.Check(commands, deepEquals, []string{
+			"[] set [-e]",
+			"[] cd [${WRKSRC}/locale]",
+			"[] [ [\"$${lang}\" = \"wxstd.po\" ]]",
+			"[] continue []",
+			"[] ${TOOLS_PATH.msgfmt} [-c -o \"$${lang%.po}.mo\" \"$${lang}\"]"})
 	}
 }
