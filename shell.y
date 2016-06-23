@@ -52,7 +52,7 @@ package main
 %type <CaseItem> case_item case_item_ns
 %type <Loop> while_clause until_clause
 %type <Words> wordlist case_selector pattern
-%type <Word> filename cmd_word cmd_name here_end
+%type <Word> filename cmd_word here_end
 %type <Redirections> redirect_list
 %type <Redirection> io_redirect io_file io_here
 
@@ -280,7 +280,7 @@ brace_group : tkLBRACE compound_list tkRBRACE {
 	$$ = $2
 }
 
-do_group : tkDO compound_list tkDONE { /* Apply rule 6 */
+do_group : tkDO compound_list tkDONE {
 	$$ = $2
 }
 
@@ -295,16 +295,12 @@ simple_command : cmd_prefix cmd_word {
 simple_command : cmd_prefix {
 	/* empty */
 }
-simple_command : cmd_name cmd_suffix {
+simple_command : tkWORD cmd_suffix {
 	$$ = $2
 	$$.Name = $1
 }
-simple_command : cmd_name {
+simple_command : tkWORD {
 	$$ = &MkShSimpleCommand{Name: $1}
-}
-
-cmd_name : tkWORD { /* Apply rule 7a */
-	/* empty */
 }
 
 cmd_word : tkWORD { /* Apply rule 7b */
