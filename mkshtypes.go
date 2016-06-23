@@ -110,6 +110,38 @@ type MkShSimpleCommand struct {
 	Redirections []*MkShRedirection
 }
 
+func NewStrCommand(cmd *MkShSimpleCommand) *StrCommand {
+	strcmd := &StrCommand{
+		make([]string, len(cmd.Assignments)),
+		"",
+		make([]string, len(cmd.Args))}
+	for i, assignment := range cmd.Assignments {
+		strcmd.Assignments[i] = assignment.MkText
+	}
+	if cmd.Name != nil {
+		strcmd.Name = cmd.Name.MkText
+	}
+	for i, arg := range cmd.Args {
+		strcmd.Args[i] = arg.MkText
+	}
+	return strcmd
+}
+
+type StrCommand struct {
+	Assignments []string
+	Name        string
+	Args        []string
+}
+
+func (c *StrCommand) HasOption(opt string) bool {
+	for _, arg := range c.Args {
+		if arg == opt {
+			return true
+		}
+	}
+	return false
+}
+
 type MkShRedirection struct {
 	Fd     int // Or -1
 	Op     string
