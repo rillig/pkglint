@@ -162,6 +162,12 @@ func (s *Suite) TestChecklineMkShellCommandLine(c *check.C) {
 		"WARN: fname:1: COMMENT may not be used in any file; it is a write-only variable.\n"+
 		"WARN: fname:1: Please move ${COMMENT:Q} outside of any quoting characters.\n")
 
+	shline.CheckShellCommandLine("echo target=$@ exitcode=$$? '$$' \"\\$$\"")
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: fname:1: Please use \"${.TARGET}\" instead of \"$@\".\n"+
+		"WARN: fname:1: The $? shell variable is often not available in \"set -e\" mode.\n")
+
 	shline.CheckShellCommandLine("echo $$@")
 
 	c.Check(s.Output(), equals, "WARN: fname:1: The $@ shell variable should only be used in double quotes.\n")
