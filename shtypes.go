@@ -23,6 +23,7 @@ const (
 	shtRedirect                 // >, <, >>
 	shtComment                  // # ...
 	shtSubshell                 // $$(
+	shtNewline                  // \n
 )
 
 func (t ShAtomType) String() string {
@@ -37,6 +38,7 @@ func (t ShAtomType) String() string {
 		"or", "and",
 		"redirect",
 		"comment",
+		"newline",
 	}[t]
 }
 
@@ -50,7 +52,7 @@ func (t ShAtomType) IsWord() bool {
 
 func (t ShAtomType) IsCommandDelimiter() bool {
 	switch t {
-	case shtSemicolon, shtPipe, shtBackground, shtAnd, shtOr, shtCaseSeparator:
+	case shtSemicolon, shtNewline, shtPipe, shtBackground, shtAnd, shtOr, shtCaseSeparator:
 		return true
 	}
 	return false

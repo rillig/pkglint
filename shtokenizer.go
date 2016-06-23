@@ -63,6 +63,8 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 	switch {
 	case repl.AdvanceHspace():
 		return &ShAtom{shtSpace, repl.s, q, nil}
+	case repl.AdvanceStr("\n"):
+		return &ShAtom{shtNewline, repl.s, q, nil}
 	case repl.AdvanceStr(";;"):
 		return &ShAtom{shtCaseSeparator, repl.s, q, nil}
 	case repl.AdvanceStr(";"):

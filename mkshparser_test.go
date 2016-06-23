@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"gopkg.in/check.v1"
 	"strconv"
-	"strings"
 )
 
 type ShSuite struct {
@@ -16,7 +15,7 @@ var _ = check.Suite(&ShSuite{})
 func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 	b := s.init(c)
 
-	s.testTokenize("",
+	s.test("",
 		b.List())
 
 	s.test("echo ;",
@@ -71,7 +70,7 @@ func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 			AddSeparator(SEP_NEWLINE).
 			AddCommand(b.SimpleCommand("command3")))
 
-	s.testTokenize("if condition; then action; else case selector in pattern) case-item-action ;; esac; fi",
+	s.test("if condition; then action; else case selector in pattern) case-item-action ;; esac; fi",
 		b.List().AddCommand(b.If(
 			b.List().AddCommand(b.SimpleCommand("condition")).AddSeparator(";"),
 			b.List().AddCommand(b.SimpleCommand("action")).AddSeparator(";"),
@@ -265,7 +264,7 @@ func (s *ShSuite) Test_ShellParser_for_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
 
 	// No semicolon necessary between the two “done”.
-	s.testTokenize("for i in 1; do for j in 1; do echo $$i$$j; done done",
+	s.test("for i in 1; do for j in 1; do echo $$i$$j; done done",
 		b.List().AddCommand(b.For(
 			"i",
 			b.Words("1"),
@@ -281,7 +280,7 @@ func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
 	s.test("case $var in esac",
 		b.List().AddCommand(b.Case(b.Token("$var"))))
 
-	s.testTokenize("case selector in pattern) ;; pattern) esac",
+	s.test("case selector in pattern) ;; pattern) esac",
 		b.List().AddCommand(b.Case(
 			b.Token("selector"),
 			b.CaseItem(b.Words("pattern"), b.List(), nil),
@@ -298,14 +297,14 @@ func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
 			b.Token("$$i"),
 			b.CaseItem(b.Words("*.c"), b.List().AddCommand(b.SimpleCommand("echo")), &SEP_SEMI))))
 
-	s.testTokenize("case selector in pattern) case-item-action ; esac",
+	s.test("case selector in pattern) case-item-action ; esac",
 		b.List().AddCommand(b.Case(
 			b.Token("selector"),
 			b.CaseItem(
 				b.Words("pattern"),
 				b.List().AddCommand(b.SimpleCommand("case-item-action")), &SEP_SEMI))))
 
-	s.testTokenize("case selector in pattern) case-item-action ;; esac",
+	s.test("case selector in pattern) case-item-action ;; esac",
 		b.List().AddCommand(b.Case(
 			b.Token("selector"),
 			b.CaseItem(
@@ -325,7 +324,7 @@ func (s *ShSuite) Test_ShellParser_if_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("echo", "no")).AddSeparator(";"))))
 
 	// No semicolon necessary between the two “fi”.
-	s.testTokenize("if cond1; then if cond2; then action; fi fi",
+	s.test("if cond1; then if cond2; then action; fi fi",
 		b.List().AddCommand(b.If(
 			b.List().AddCommand(b.SimpleCommand("cond1")).AddSeparator(";"),
 			b.List().AddCommand(b.If(
@@ -361,7 +360,7 @@ func (s *ShSuite) Test_ShellParser_brace_group(c *check.C) {
 	b := s.init(c)
 
 	// No semicolon necessary after the closing brace.
-	s.testTokenize("if true; then { echo yes; } fi",
+	s.test("if true; then { echo yes; } fi",
 		b.List().AddCommand(b.If(
 			b.List().AddCommand(b.SimpleCommand("true")).AddSeparator(";"),
 			b.List().AddCommand(b.Brace(
@@ -381,13 +380,13 @@ func (s *ShSuite) Test_ShellParser_simple_command(c *check.C) {
 	s.test("${ECHO} \"Double-quoted\" 'Single-quoted'",
 		b.List().AddCommand(b.SimpleCommand("${ECHO}", "\"Double-quoted\"", "'Single-quoted'")))
 
-	s.testWords([]string{"`cat plain`", "\"`cat double`\"", "'`cat single`'"},
+	s.test("`cat plain` \"`cat double`\" '`cat single`'",
 		b.List().AddCommand(b.SimpleCommand("`cat plain`", "\"`cat double`\"", "'`cat single`'")))
 
-	s.testWords([]string{"`\"one word\"`"},
+	s.test("`\"one word\"`",
 		b.List().AddCommand(b.SimpleCommand("`\"one word\"`")))
 
-	s.testWords([]string{"PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\""},
+	s.test("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
 		b.List().AddCommand(b.SimpleCommand("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"")))
 
 	s.test("var=Plain var=\"Dquot\" var='Squot' var=Plain\"Dquot\"'Squot'",
@@ -396,7 +395,7 @@ func (s *ShSuite) Test_ShellParser_simple_command(c *check.C) {
 	// RUN is a special Make variable since it ends with a semicolon;
 	// therefore it needs to be split off before passing the rest of
 	// the command to the shell command parser.
-	s.testWords([]string{"${RUN}", "subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\""},
+	s.test("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
 		b.List().AddCommand(b.SimpleCommand("${RUN}", "subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")))
 
 	s.test("PATH=/nonexistent env PATH=${PATH:Q} true",
@@ -412,10 +411,10 @@ func (s *ShSuite) Test_ShellParser_io_redirect(c *check.C) {
 	s.test("echo >> ${PLIST_SRC}",
 		b.List().AddCommand(b.SimpleCommand("echo", ">>${PLIST_SRC}")))
 
-	s.testTokenize("echo >> ${PLIST_SRC}",
+	s.test("echo >> ${PLIST_SRC}",
 		b.List().AddCommand(b.SimpleCommand("echo", ">>${PLIST_SRC}")))
 
-	s.testTokenize("echo 1>output 2>>append 3>|clobber 4>&5 6<input >>append",
+	s.test("echo 1>output 2>>append 3>|clobber 4>&5 6<input >>append",
 		b.List().AddCommand(&MkShCommand{Simple: &MkShSimpleCommand{
 			Assignments: nil,
 			Name:        b.Token("echo"),
@@ -428,7 +427,7 @@ func (s *ShSuite) Test_ShellParser_io_redirect(c *check.C) {
 				{6, "<", b.Token("input")},
 				{-1, ">>", b.Token("append")}}}}))
 
-	s.testTokenize("echo 1> output 2>> append 3>| clobber 4>& 5 6< input >> append",
+	s.test("echo 1> output 2>> append 3>| clobber 4>& 5 6< input >> append",
 		b.List().AddCommand(&MkShCommand{Simple: &MkShSimpleCommand{
 			Assignments: nil,
 			Name:        b.Token("echo"),
@@ -454,19 +453,11 @@ func (s *ShSuite) init(c *check.C) *MkShBuilder {
 }
 
 func (s *ShSuite) test(program string, expected *MkShList) {
-	s.testWords(strings.Split(program, " "), expected)
-}
-
-func (s *ShSuite) testTokenize(program string, expected *MkShList) {
 	tokens, rest := splitIntoShellTokens(dummyLine, program)
 	s.c.Check(rest, equals, "")
-	s.testWords(tokens, expected)
-}
-
-func (s *ShSuite) testWords(program []string, expected *MkShList) {
 	lexer := &ShellLexer{
 		current:        "",
-		remaining:      program,
+		remaining:      tokens,
 		atCommandStart: true,
 		error:          ""}
 	parser := &shyyParserImpl{}
