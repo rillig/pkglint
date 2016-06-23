@@ -250,6 +250,16 @@ func (s *ShSuite) Test_ShellParser_for_clause(c *check.C) {
 			"var",
 			b.Words("in", "esac"),
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
+
+	// No semicolon necessary between the two “done”.
+	s.testTokenize("for i in 1; do for j in 1; do echo $$i$$j; done done",
+		b.List().AddCommand(b.For(
+			"i",
+			b.Words("1"),
+			b.List().AddCommand(b.For(
+				"j",
+				b.Words("1"),
+				b.List().AddCommand(b.SimpleCommand("echo", "$$i$$j")).AddSeparator(";"))))))
 }
 
 func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
@@ -279,6 +289,14 @@ func (s *ShSuite) Test_ShellParser_if_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("true")).AddSeparator(";"),
 			b.List().AddCommand(b.SimpleCommand("echo", "yes")).AddSeparator(";"),
 			b.List().AddCommand(b.SimpleCommand("echo", "no")).AddSeparator(";"))))
+
+	// No semicolon necessary between the two “fi”.
+	s.testTokenize("if cond1; then if cond2; then action; fi fi",
+		b.List().AddCommand(b.If(
+			b.List().AddCommand(b.SimpleCommand("cond1")).AddSeparator(";"),
+			b.List().AddCommand(b.If(
+				b.List().AddCommand(b.SimpleCommand("cond2")).AddSeparator(";"),
+				b.List().AddCommand(b.SimpleCommand("action")).AddSeparator(";"))))))
 }
 
 func (s *ShSuite) Test_ShellParser_while_clause(c *check.C) {
@@ -308,7 +326,12 @@ func (s *ShSuite) Test_ShellParser_function_definition(c *check.C) {
 func (s *ShSuite) Test_ShellParser_brace_group(c *check.C) {
 	b := s.init(c)
 
-	_ = b
+	// No semicolon necessary after the closing brace.
+	s.testTokenize("if true; then { echo yes; } fi",
+		b.List().AddCommand(b.If(
+			b.List().AddCommand(b.SimpleCommand("true")).AddSeparator(";"),
+			b.List().AddCommand(b.Brace(
+				b.List().AddCommand(b.SimpleCommand("echo", "yes")).AddSeparator(";"))))))
 }
 
 func (s *ShSuite) Test_ShellParser_simple_command(c *check.C) {

@@ -149,7 +149,6 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		case "else":
 			return tkELSE
 		case "fi":
-			lex.atCommandStart = false
 			return tkFI
 		case "for":
 			lex.atCommandStart = false
@@ -162,7 +161,6 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		case "do":
 			return tkDO
 		case "done":
-			lex.atCommandStart = false
 			return tkDONE
 		case "in":
 			lex.atCommandStart = false
@@ -174,7 +172,6 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		case "{":
 			return tkLBRACE
 		case "}":
-			lex.atCommandStart = false
 			return tkRBRACE
 		case "!":
 			return tkEXCLAM
