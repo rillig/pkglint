@@ -16,6 +16,9 @@ var _ = check.Suite(&ShSuite{})
 func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 	b := s.init(c)
 
+	s.testTokenize("",
+		b.List())
+
 	s.test("echo ;",
 		b.List().AddCommand(b.SimpleCommand("echo")).AddSeparator(";"))
 

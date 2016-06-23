@@ -36,7 +36,7 @@ package main
 	Redirection *MkShRedirection
 }
 
-%type <List> start brace_group subshell term compound_list do_group
+%type <List> start program compound_list brace_group subshell term do_group
 %type <AndOr> and_or
 %type <Pipeline> pipeline pipe_sequence
 %type <Command> command
@@ -56,8 +56,15 @@ package main
 
 %%
 
-start : compound_list {
+start : program {
 	shyylex.(*ShellLexer).result = $$
+}
+
+program : compound_list {
+	$$ = $1
+}
+program : /* empty */ {
+	$$ = &MkShList{}
 }
 
 and_or : pipeline {
