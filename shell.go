@@ -486,7 +486,9 @@ func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) 
 		// Shell comments may be hidden, since they cannot have side effects.
 
 	default:
-		if m, cmd := match1(rest, reShellToken); m {
+		tokens, _ := splitIntoShellTokens(shline.line, rest)
+		if len(tokens) > 0 {
+			cmd := tokens[0]
 			switch cmd {
 			case "${DELAYED_ERROR_MSG}", "${DELAYED_WARNING_MSG}",
 				"${DO_NADA}",
