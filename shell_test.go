@@ -6,23 +6,6 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-func (s *Suite) TestReShellToken(c *check.C) {
-	re := `^(?:` + reShellToken + `)$`
-	matches := check.NotNil
-	doesntMatch := check.IsNil
-
-	c.Check(match("", re), doesntMatch)
-	c.Check(match("$var", re), matches)
-	c.Check(match("$var$var", re), matches)
-	c.Check(match("$var;;", re), doesntMatch) // More than one token
-	c.Check(match("'single-quoted'", re), matches)
-	c.Check(match("\"", re), doesntMatch)       // Incomplete string
-	c.Check(match("'...'\"...\"", re), matches) // Mixed strings
-	c.Check(match("\"...\"", re), matches)
-	c.Check(match("`cat file`", re), matches)
-	c.Check(match("${file%.c}.o", re), matches)
-}
-
 func (s *Suite) Test_SplitIntoShellTokens_LineContinuation(c *check.C) {
 	words, rest := splitIntoShellTokens(dummyLine, "if true; then \\")
 

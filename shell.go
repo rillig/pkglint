@@ -8,34 +8,6 @@ import (
 )
 
 const (
-	reShellToken = `^\s*(` +
-		`#.*` + // shell comment
-		`|(?:` +
-		`'[^']*'` + // single quoted string
-		"|\"`[^`]+`\"" + // backticks command execution in double quotes
-		`|"(?:\\.|[^"])*"` + // double quoted string
-		"|`[^`]*`" + // backticks command execution (very simple case)
-		`|\\\$\$` + // a shell-escaped dollar sign
-		`|\\[^\$]` + // other escaped characters
-		`|\$[\w_]` + // one-character make(1) variable
-		`|\$\$[0-9A-Z_a-z]+` + // shell variable
-		`|\$\$[!#?@]` + // special shell variables
-		`|\$\$[./]` + // unescaped dollar in shell, followed by punctuation
-		`|\$\$\$\$` + // the special pid shell variable
-		`|\$\$\{[0-9A-Z_a-z]+[#%:]?[^}]*\}` + // shell variable in braces
-		`|[^\(\)'\"\\\s;&\|<>` + "`" + `\$]` + // non-special character
-		`|\$\{[^\s\"'` + "`" + `]+` + // HACK: nested make(1) variables
-		`)+` + // any of the above may be repeated
-		`|\$\$\(` + // POSIX-style backticks replacement
-		`|;;?` +
-		`|&&?` +
-		`|\|\|?` +
-		`|\(` +
-		`|\)` +
-		`|>&` +
-		`|<<?` +
-		`|>>?` +
-		`|#.*)`
 	reShVarassign    = `^([A-Z_a-z]\w*)=`
 	reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
 	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
