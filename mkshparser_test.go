@@ -59,6 +59,14 @@ func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 						b.Words("pattern"),
 						b.List().AddCommand(b.SimpleCommand(":")),
 						&SEP_SEMI))).AddSeparator(";"))))))
+
+	s.test("command1 \n command2 \n command3",
+		b.List().
+			AddCommand(b.SimpleCommand("command1")).
+			AddSeparator(SEP_NEWLINE).
+			AddCommand(b.SimpleCommand("command2")).
+			AddSeparator(SEP_NEWLINE).
+			AddCommand(b.SimpleCommand("command3")))
 }
 
 func (s *ShSuite) Test_ShellParser_list(c *check.C) {

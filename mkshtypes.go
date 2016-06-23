@@ -120,7 +120,7 @@ type MkShRedirection struct {
 type MkShSeparator string
 
 var (
-	SEP_SEMI    MkShSeparator = ";"
-	SEP_AMP                   = "&"
-	SEP_NEWLINE               = "\n"
+	SEP_SEMI       MkShSeparator = ";"
+	SEP_BACKGROUND MkShSeparator = "&"
+	SEP_NEWLINE    MkShSeparator = "\n"
 )

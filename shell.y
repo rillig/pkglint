@@ -22,7 +22,6 @@ package main
 	Pipeline *MkShPipeline
 	Command *MkShCommand
 	CompoundCommand *MkShCompoundCommand
-	CompoundList *MkShList
 	Separator MkShSeparator
 	Simple *MkShSimpleCommand
 	FuncDef *MkShFunctionDefinition
@@ -37,12 +36,11 @@ package main
 	Redirection *MkShRedirection
 }
 
-%type <List> start program list brace_group subshell term
+%type <List> start brace_group subshell term compound_list do_group
 %type <AndOr> and_or
 %type <Pipeline> pipeline pipe_sequence
 %type <Command> command
 %type <CompoundCommand> compound_command
-%type <CompoundList> compound_list do_group
 %type <Separator> separator separator_op sequential_sep
 %type <Simple> simple_command cmd_prefix cmd_suffix
 %type <FuncDef> function_definition
@@ -58,25 +56,8 @@ package main
 
 %%
 
-start : program {
+start : compound_list {
 	shyylex.(*ShellLexer).result = $$
-}
-
-program : list separator {
-	$$.AddSeparator($2)
-}
-program : list {
-	/* empty */
-}
-
-// Note: the linebreak is missing in the POSIX grammar.
-list : linebreak and_or {
-	$$ = NewMkShList()
-	$$.AddAndOr($2)
-}
-list : list separator_op and_or {
-	$$.AddSeparator($2)
-	$$.AddAndOr($3)
 }
 
 and_or : pipeline {
