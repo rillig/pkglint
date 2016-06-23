@@ -292,16 +292,11 @@ func (s *Suite) TestMkLine_(c *check.C) {
 
 	G.Mk = s.NewMkLines("Makefile",
 		"# $"+"NetBSD$",
-		"ac_cv_libpari_libs+=\t-L${BUILDLINK_PREFIX.pari}/lib", // From math/clisp-pari/Makefile, rev. 1.8
-		"var+=value")
+		"ac_cv_libpari_libs+=\t-L${BUILDLINK_PREFIX.pari}/lib") // From math/clisp-pari/Makefile, rev. 1.8
 
 	G.Mk.mklines[1].checkVarassign()
-	G.Mk.mklines[2].checkVarassign()
 
-	c.Check(s.Output(), equals, ""+
-		"WARN: Makefile:2: ac_cv_libpari_libs is defined but not used. Spelling mistake?\n"+
-		"WARN: Makefile:3: As var is modified using \"+=\", its name should indicate plural.\n"+
-		"WARN: Makefile:3: var is defined but not used. Spelling mistake?\n")
+	c.Check(s.Output(), equals, "WARN: Makefile:2: ac_cv_libpari_libs is defined but not used. Spelling mistake?\n")
 }
 
 // In variable assignments, a plain '#' introduces a line comment, unless
