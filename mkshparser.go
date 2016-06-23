@@ -13,7 +13,7 @@ func parseShellProgram(program string) (list *MkShList, err error) {
 	succeeded := parser.Parse(lexer)
 
 	if succeeded == 0 && lexer.error == "" {
-		return parser.stack[1].List, nil
+		return lexer.result, nil
 	}
 	return nil, &ParseError{append([]string{lexer.current}, lexer.remaining...)}
 }

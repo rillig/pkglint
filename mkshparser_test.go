@@ -67,6 +67,16 @@ func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 			AddCommand(b.SimpleCommand("command2")).
 			AddSeparator(SEP_NEWLINE).
 			AddCommand(b.SimpleCommand("command3")))
+
+	s.testTokenize("if condition; then action; else case selector in pattern) case-item-action ;; esac; fi",
+		b.List().AddCommand(b.If(
+			b.List().AddCommand(b.SimpleCommand("condition")).AddSeparator(";"),
+			b.List().AddCommand(b.SimpleCommand("action")).AddSeparator(";"),
+			b.List().AddCommand(b.Case(
+				b.Token("selector"),
+				b.CaseItem(
+					b.Words("pattern"),
+					b.List().AddCommand(b.SimpleCommand("case-item-action")), nil))).AddSeparator(";"))))
 }
 
 func (s *ShSuite) Test_ShellParser_list(c *check.C) {
@@ -278,6 +288,21 @@ func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
 		b.List().AddCommand(b.Case(
 			b.Token("$$i"),
 			b.CaseItem(b.Words("*.c"), b.List().AddCommand(b.SimpleCommand("echo")), &SEP_SEMI))))
+
+	s.testTokenize("case selector in pattern) case-item-action ; esac",
+		b.List().AddCommand(b.Case(
+			b.Token("selector"),
+			b.CaseItem(
+				b.Words("pattern"),
+				b.List().AddCommand(b.SimpleCommand("case-item-action")), &SEP_SEMI))))
+
+	s.testTokenize("case selector in pattern) case-item-action ;; esac",
+		b.List().AddCommand(b.Case(
+			b.Token("selector"),
+			b.CaseItem(
+				b.Words("pattern"),
+				b.List().AddCommand(b.SimpleCommand("case-item-action")), nil))))
+
 }
 
 func (s *ShSuite) Test_ShellParser_if_clause(c *check.C) {
