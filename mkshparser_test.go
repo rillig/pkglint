@@ -30,6 +30,35 @@ func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 			b.Pipeline(false,
 				b.SimpleCommand("${FIND}", "${${_list_}}", "-type", "f", "!", "-name", "'*.orig'", "2>/dev/null"),
 				b.SimpleCommand("pax", "-rw", "-pm", "${DESTDIR}${PREFIX}/${${_dir_}}")))))
+
+	s.test("${CAT} ${PKGDIR}/PLIST | while read entry ; do : ; done",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
+			b.SimpleCommand("${CAT}", "${PKGDIR}/PLIST"),
+			b.While(
+				b.List().AddCommand(b.SimpleCommand("read", "entry")).AddSeparator(";"),
+				b.List().AddCommand(b.SimpleCommand(":")).AddSeparator(";"))))))
+
+	s.test("while read entry ; do case \"$$entry\" in include/c-client/* ) ${INSTALL_DATA} $$src $$dest ; esac ; done",
+		b.List().AddCommand(b.While(
+			b.List().AddCommand(b.SimpleCommand("read", "entry")).AddSeparator(";"),
+			b.List().AddCommand(b.Case(
+				b.Token("\"$$entry\""),
+				b.CaseItem(
+					b.Words("include/c-client/*"),
+					b.List().AddCommand(b.SimpleCommand("${INSTALL_DATA}", "$$src", "$$dest")),
+					&SEP_SEMI))).AddSeparator(";"))))
+
+	s.test("command | while condition ; do case selector in pattern ) : ; esac ; done",
+		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
+			b.SimpleCommand("command"),
+			b.While(
+				b.List().AddCommand(b.SimpleCommand("condition")).AddSeparator(";"),
+				b.List().AddCommand(b.Case(
+					b.Token("selector"),
+					b.CaseItem(
+						b.Words("pattern"),
+						b.List().AddCommand(b.SimpleCommand(":")),
+						&SEP_SEMI))).AddSeparator(";"))))))
 }
 
 func (s *ShSuite) Test_ShellParser_list(c *check.C) {
@@ -215,11 +244,16 @@ func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
 	s.test("case $var in esac",
 		b.List().AddCommand(b.Case(b.Token("$var"))))
 
-	s.test("case $i in *.c | *.h ) echo C ;; * ) echo Other ; esac",
+	s.test("case $$i in *.c | *.h ) echo C ;; * ) echo Other ; esac",
 		b.List().AddCommand(b.Case(
-			b.Token("$i"),
-			b.CaseItem(b.Words("*.c", "*.h"), b.List().AddCommand(b.SimpleCommand("echo", "C"))),
-			b.CaseItem(b.Words("*"), b.List().AddCommand(b.SimpleCommand("echo", "Other"))))))
+			b.Token("$$i"),
+			b.CaseItem(b.Words("*.c", "*.h"), b.List().AddCommand(b.SimpleCommand("echo", "C")), nil),
+			b.CaseItem(b.Words("*"), b.List().AddCommand(b.SimpleCommand("echo", "Other")), &SEP_SEMI))))
+
+	s.test("case $$i in *.c ) echo ; esac",
+		b.List().AddCommand(b.Case(
+			b.Token("$$i"),
+			b.CaseItem(b.Words("*.c"), b.List().AddCommand(b.SimpleCommand("echo")), &SEP_SEMI))))
 }
 
 func (s *ShSuite) Test_ShellParser_if_clause(c *check.C) {
@@ -335,13 +369,15 @@ func (s *ShSuite) testWords(program []string, expected *MkShList) {
 	c := s.c
 
 	if ok1, ok2 := c.Check(succeeded, equals, 0), c.Check(lexer.error, equals, ""); ok1 && ok2 {
-		if !c.Check(parser.stack[1].List, deepEquals, expected) {
-			actualJson, actualErr := json.MarshalIndent(parser.stack[1].List, "", "  ")
+		if !c.Check(lexer.result, deepEquals, expected) {
+			actualJson, actualErr := json.MarshalIndent(lexer.result, "", "  ")
 			expectedJson, expectedErr := json.MarshalIndent(expected, "", "  ")
 			if c.Check(actualErr, check.IsNil) && c.Check(expectedErr, check.IsNil) {
 				c.Check(string(actualJson), deepEquals, string(expectedJson))
 			}
 		}
+	} else {
+		c.Check(lexer.remaining, deepEquals, []string{})
 	}
 }
 
@@ -407,8 +443,8 @@ func (b *MkShBuilder) Case(selector *ShToken, items ...*MkShCaseItem) *MkShComma
 	return &MkShCommand{Compound: &MkShCompoundCommand{Case: &MkShCaseClause{selector, items}}}
 }
 
-func (b *MkShBuilder) CaseItem(patterns []*ShToken, action *MkShList) *MkShCaseItem {
-	return &MkShCaseItem{patterns, action}
+func (b *MkShBuilder) CaseItem(patterns []*ShToken, action *MkShList, separator *MkShSeparator) *MkShCaseItem {
+	return &MkShCaseItem{patterns, action, separator}
 }
 
 func (b *MkShBuilder) While(cond, action *MkShList, redirects ...*MkShRedirection) *MkShCommand {

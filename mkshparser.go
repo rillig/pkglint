@@ -37,6 +37,7 @@ type ShellLexer struct {
 	sinceFor       int
 	sinceCase      int
 	error          string
+	result         *MkShList
 }
 
 func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {

@@ -37,7 +37,7 @@ package main
 	Redirection *MkShRedirection
 }
 
-%type <List> program list brace_group subshell term
+%type <List> start program list brace_group subshell term
 %type <AndOr> and_or
 %type <Pipeline> pipeline pipe_sequence
 %type <Command> command
@@ -58,12 +58,15 @@ package main
 
 %%
 
+start : program {
+	shyylex.(*ShellLexer).result = $$
+}
+
 program : list separator {
-	$$ = $1
 	$$.AddSeparator($2)
 }
 program : list {
-	$$ = $1
+	/* empty */
 }
 
 // Note: the linebreak is missing in the POSIX grammar.
@@ -87,7 +90,7 @@ and_or : and_or tkOR linebreak pipeline {
 }
 
 pipeline : pipe_sequence {
-	$$ = $1
+	/* empty */
 }
 pipeline : tkEXCLAM pipe_sequence {
 	$$ = $2
@@ -198,7 +201,7 @@ case_clause : tkCASE tkWORD linebreak in linebreak tkESAC {
 }
 
 case_list_ns : case_item_ns {
-	$$ = nil
+	$$ = &MkShCaseClause{nil, nil}
 	$$.Cases = append($$.Cases, $1)
 }
 case_list_ns : case_list case_item_ns {
@@ -217,24 +220,24 @@ case_selector : tkLPAREN pattern tkRPAREN {
 	$$ = $2
 }
 case_selector : pattern tkRPAREN {
-	$$ = $1
+	/* empty */
 }
 
 case_item_ns : case_selector linebreak {
-	$$ = &MkShCaseItem{$1, nil}
+	$$ = &MkShCaseItem{$1, nil, nil}
 }
 case_item_ns : case_selector linebreak term linebreak {
-	$$ = &MkShCaseItem{$1, $3}
+	$$ = &MkShCaseItem{$1, $3, nil}
 }
 case_item_ns : case_selector linebreak term separator_op linebreak {
-	$$ = &MkShCaseItem{$1, $3} // TODO: separator_op
+	$$ = &MkShCaseItem{$1, $3, &$4}
 }
 
 case_item : case_selector linebreak tkSEMISEMI linebreak {
-	$$ = &MkShCaseItem{$1, nil}
+	$$ = &MkShCaseItem{$1, nil, nil}
 }
 case_item : case_selector compound_list tkSEMISEMI linebreak {
-	$$ = &MkShCaseItem{$1, $2}
+	$$ = &MkShCaseItem{$1, $2, nil}
 }
 
 pattern : tkWORD {
@@ -286,7 +289,6 @@ do_group : tkDO compound_list tkDONE { /* Apply rule 6 */
 }
 
 simple_command : cmd_prefix cmd_word cmd_suffix {
-	$$ = $1
 	$$.Name = $2
 	$$.Args = append($$.Args, $3.Args...)
 	$$.Redirections = append($$.Redirections, $3.Redirections...)
@@ -295,7 +297,7 @@ simple_command : cmd_prefix cmd_word {
 	$$.Name = $2
 }
 simple_command : cmd_prefix {
-	$$ = $1
+	/* empty */
 }
 simple_command : cmd_name cmd_suffix {
 	$$ = $2
@@ -306,11 +308,11 @@ simple_command : cmd_name {
 }
 
 cmd_name : tkWORD { /* Apply rule 7a */
-	$$ = $1
+	/* empty */
 }
 
 cmd_word : tkWORD { /* Apply rule 7b */
-	$$ = $1
+	/* empty */
 }
 
 cmd_prefix : io_redirect {
@@ -352,7 +354,7 @@ redirect_list : redirect_list io_redirect {
 }
 
 io_redirect : io_file {
-	$$ = $1
+	/* empty */
 }
 io_redirect : tkIO_NUMBER io_file {
 	$$ = $2
@@ -360,7 +362,7 @@ io_redirect : tkIO_NUMBER io_file {
 }
 
 io_redirect : io_here {
-	$$ = $1
+	/* empty */
 }
 io_redirect : tkIO_NUMBER io_here {
 	$$ = $2
@@ -390,7 +392,7 @@ io_file : tkGTPIPE filename {
 }
 
 filename : tkWORD { /* Apply rule 2 */
-	$$ = $1
+	/* empty */
 }
 
 io_here : tkLTLT here_end {
@@ -401,7 +403,7 @@ io_here : tkLTLTDASH here_end {
 }
 
 here_end : tkWORD { /* Apply rule 3 */
-	$$ = $1
+	/* empty */
 }
 
 newline_list : tkNEWLINE {
@@ -426,7 +428,7 @@ separator_op : tkSEMI {
 }
 
 separator : separator_op linebreak {
-	$$ = $1
+	/* empty */
 }
 separator : newline_list {
 	$$ = "\n"

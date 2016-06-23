@@ -76,8 +76,9 @@ type MkShCaseClause struct {
 }
 
 type MkShCaseItem struct {
-	Patterns []*ShToken
-	Action   *MkShList
+	Patterns  []*ShToken
+	Action    *MkShList
+	Separator *MkShSeparator
 }
 
 type MkShIfClause struct {
@@ -117,3 +118,9 @@ type MkShRedirection struct {
 
 // One of ";", "&", "\n"
 type MkShSeparator string
+
+var (
+	SEP_SEMI    MkShSeparator = ";"
+	SEP_AMP                   = "&"
+	SEP_NEWLINE               = "\n"
+)
