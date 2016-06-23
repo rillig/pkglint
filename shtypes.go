@@ -92,9 +92,11 @@ const (
 	shqDquot
 	shqSquot
 	shqBackt
+	shqSubsh
 	shqDquotBackt
 	shqBacktDquot
 	shqBacktSquot
+	shqSubshSquot
 	shqDquotBacktDquot
 	shqDquotBacktSquot
 	shqUnknown
@@ -103,8 +105,8 @@ const (
 func (q ShQuoting) String() string {
 	return [...]string{
 		"plain",
-		"d", "s", "b",
-		"db", "bd", "bs",
+		"d", "s", "b", "S",
+		"db", "bd", "bs", "Ss",
 		"dbd", "dbs",
 		"unknown",
 	}[q]
