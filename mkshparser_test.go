@@ -231,6 +231,12 @@ func (s *ShSuite) Test_ShellParser_for_clause(c *check.C) {
 			b.Words("a", "b", "c"),
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
 
+	s.test("for var \n \n \n in a b c ; do echo $var ; done",
+		b.List().AddCommand(b.For(
+			"var",
+			b.Words("a", "b", "c"),
+			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSeparator(";"))))
+
 	s.test("for var in in esac ; do echo $var ; done",
 		b.List().AddCommand(b.For(
 			"var",

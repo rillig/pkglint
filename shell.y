@@ -170,15 +170,11 @@ for_clause : tkFOR tkWORD linebreak do_group {
 		NewShAtom(shtWord,"\"",shqPlain))
 	$$ = &MkShForClause{$2.MkText, []*ShToken{args}, $4}
 }
-for_clause : tkFOR tkWORD linebreak in sequential_sep do_group {
+for_clause : tkFOR tkWORD linebreak tkIN sequential_sep do_group {
 	$$ = &MkShForClause{$2.MkText, nil, $6}
 }
-for_clause : tkFOR tkWORD linebreak in wordlist sequential_sep do_group {
+for_clause : tkFOR tkWORD linebreak tkIN wordlist sequential_sep do_group {
 	$$ = &MkShForClause{$2.MkText, $5, $7}
-}
-
-in : tkIN {
-	/* Apply rule 6 */
 }
 
 wordlist : tkWORD {
@@ -188,15 +184,15 @@ wordlist : wordlist tkWORD {
 	$$ = append($$, $2)
 }
 
-case_clause : tkCASE tkWORD linebreak in linebreak case_list tkESAC {
+case_clause : tkCASE tkWORD linebreak tkIN linebreak case_list tkESAC {
 	$$ = $6
 	$$.Word = $2
 }
-case_clause : tkCASE tkWORD linebreak in linebreak case_list_ns tkESAC {
+case_clause : tkCASE tkWORD linebreak tkIN linebreak case_list_ns tkESAC {
 	$$ = $6
 	$$.Word = $2
 }
-case_clause : tkCASE tkWORD linebreak in linebreak tkESAC {
+case_clause : tkCASE tkWORD linebreak tkIN linebreak tkESAC {
 	$$ = &MkShCaseClause{$2, nil}
 }
 
