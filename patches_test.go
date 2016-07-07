@@ -81,6 +81,24 @@ func (s *Suite) TestChecklinesPatch_WithoutComment(c *check.C) {
 	c.Check(s.Output(), equals, "ERROR: patch-WithoutComment:3: Each patch must be documented.\n")
 }
 
+func (s *Suite) Test_ChecklinesPatch_git_without_comment(c *check.C) {
+	s.UseCommandLine(c, "-Wall")
+	lines := s.NewLines("patch-aa",
+		"$"+"NetBSD$",
+		"",
+		"diff --git a/aa b/aa",
+		"index 1234567..1234567 100644",
+		"--- a/aa",
+		"+++ b/aa",
+		"@@ -1,1 +1,1 @@",
+		"-old",
+		"+new")
+
+	ChecklinesPatch(lines)
+
+	c.Check(s.Output(), equals, "ERROR: patch-aa:5: Each patch must be documented.\n")
+}
+
 func (s *Suite) TestChecklineOtherAbsolutePathname(c *check.C) {
 	line := NewLine("patch-ag", 1, "+$install -s -c ./bin/rosegarden ${DESTDIR}$BINDIR", nil)
 
