@@ -43,8 +43,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	}
 	whitespace := func(s string) *ShAtom { return token(shtSpace, s, shqPlain) }
 	space := token(shtSpace, " ", shqPlain)
-	semicolon := operator(";", shqPlain)
-	pipe := operator("|", shqPlain)
+	semicolon := operator(";")
+	pipe := operator("|")
 
 	check("" /* none */)
 
@@ -56,7 +56,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	check("$$var;;",
 		word("$$var"),
-		operator(";;", shqPlain))
+		operator(";;"))
 
 	check("'single-quoted'",
 		q(shqSquot, word("'")),
@@ -117,7 +117,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		q(shqDquotBackt, space),
 		q(shqDquotBackt, word("-1")),
 		q(shqDquotBackt, space),
-		operator("|", shqDquotBackt),
+		q(shqDquotBackt, operator("|")),
 		q(shqDquotBackt, space),
 		q(shqDquotBackt, varuse("SED")),
 		q(shqDquotBackt, space),
@@ -213,7 +213,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	check("cat<file",
 		word("cat"),
-		operator("<", shqPlain),
+		operator("<"),
 		word("file"))
 
 	check("-e \"s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g\"",
@@ -244,15 +244,15 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		q(shqBackt, word("echo")),
 		q(shqBackt, semicolon),
 		q(shqBackt, word("echo")),
-		q(shqBackt, operator("|", shqBackt)),
+		q(shqBackt, operator("|")),
 		q(shqBackt, word("echo")),
-		q(shqBackt, operator("&", shqBackt)),
+		q(shqBackt, operator("&")),
 		q(shqBackt, word("echo")),
-		q(shqBackt, operator("||", shqBackt)),
+		q(shqBackt, operator("||")),
 		q(shqBackt, word("echo")),
-		q(shqBackt, operator("&&", shqBackt)),
+		q(shqBackt, operator("&&")),
 		q(shqBackt, word("echo")),
-		q(shqBackt, operator(">", shqBackt)),
+		q(shqBackt, operator(">")),
 		q(shqBackt, word("echo")),
 		q(shqPlain, word("`")))
 
