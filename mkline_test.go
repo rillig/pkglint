@@ -282,9 +282,9 @@ func (s *Suite) TestVarUseContext_ToString(c *check.C) {
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
 	vartype := mkline.getVariableType("PKGNAME")
-	vuc := &VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, vucExtentWord}
+	vuc := &VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, false}
 
-	c.Check(vuc.String(), equals, "(PkgName time:unknown quoting:backt extent:word)")
+	c.Check(vuc.String(), equals, "(PkgName time:unknown quoting:backt wordpart:false)")
 }
 
 func (s *Suite) TestMkLine_(c *check.C) {
@@ -432,7 +432,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_1(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
 	G.globalData.InitVartypes()
 
-	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, vucExtentWord}
+	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, false}
 	nq := mkline.variableNeedsQuoting("UNKNOWN", nil, vuc)
 
 	c.Check(nq, equals, nqDontKnow)
@@ -444,7 +444,7 @@ func (s *Suite) TestMkLine_variableNeedsQuoting_2(c *check.C) {
 	s.RegisterMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
 	mkline := NewMkLine(NewLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}", nil))
 
-	vuc := &VarUseContext{G.globalData.vartypes["MASTER_SITES"], vucTimeRun, vucQuotPlain, vucExtentWord}
+	vuc := &VarUseContext{G.globalData.vartypes["MASTER_SITES"], vucTimeRun, vucQuotPlain, false}
 	nq := mkline.variableNeedsQuoting("HOMEPAGE", G.globalData.vartypes["HOMEPAGE"], vuc)
 
 	c.Check(nq, equals, nqNo)

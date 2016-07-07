@@ -295,7 +295,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 			}
 
 			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", aclpAllRead}}, guessed}
-			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, vucExtentWord}
+			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
 			for _, forLoopVar := range mkline.extractUsedVariables(values) {
 				mkline.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
 			}
@@ -640,7 +640,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
-		if correctMod == mod+":Q" && vuc.extent == vucExtentWordpart && !vartype.IsShell() {
+		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
 			mkline.Line.Warnf("The list variable %s should not be embedded in a word.", varname)
 			Explain(
 				"When a list variable has multiple elements, this expression expands",
@@ -848,12 +848,8 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `\s$`)
 			spaceRight := i+1 >= len(tokens) || matches(tokens[i+1].Text, `^\s`)
-			extent := vucExtentWordpart
-			if spaceLeft && spaceRight {
-				extent = vucExtentWord
-			}
-
-			vuc := &VarUseContext{vartype, time, vucQuotPlain, extent}
+			isWordPart := !(spaceLeft && spaceRight)
+			vuc := &VarUseContext{vartype, time, vucQuotPlain, isWordPart}
 			mkline.CheckVaruse(token.Varuse, vuc)
 		}
 	}
@@ -864,21 +860,21 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 		defer tracecall(vartype, time)()
 	}
 
-	extent := func(tokens []*ShAtom, i int) vucExtent {
+	isWordPart := func(tokens []*ShAtom, i int) bool {
 		if i-1 >= 0 && tokens[i-1].Type.IsWord() {
-			return vucExtentWordpart
+			return true
 		}
 		if i+1 < len(tokens) && tokens[i+1].Type.IsWord() {
-			return vucExtentWordpart
+			return true
 		}
-		return vucExtentWord
+		return false
 	}
 
 	atoms := NewShTokenizer(mkline.Line, mkline.Value(), false).ShAtoms()
 	for i, atom := range atoms {
 		if atom.Type == shtVaruse {
-			extent := extent(atoms, i)
-			vuc := &VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), extent}
+			isWordPart := isWordPart(atoms, i)
+			vuc := &VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), isWordPart}
 			mkline.CheckVaruse(atom.Data.(*MkVarUse), vuc)
 		}
 	}
@@ -1329,7 +1325,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		if vartype.kindOfList == lkNone {
 			return nqDoesntMatter
 		}
-		if vartype.kindOfList == lkShell && vuc.extent != vucExtentWordpart {
+		if vartype.kindOfList == lkShell && !vuc.IsWordPart {
 			return nqNo
 		}
 	}
@@ -1349,7 +1345,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
-	if vuc.extent == vucExtentWordpart && vuc.quoting == vucQuotPlain {
+	if vuc.IsWordPart && vuc.quoting == vucQuotPlain {
 		if vartype.kindOfList == lkNone && vartype.checker == CheckvarShellWord {
 			return nqNo
 		}
@@ -1358,7 +1354,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	// Both of these can be correct, depending on the situation:
 	// 1. echo ${PERL5:Q}
 	// 2. xargs ${PERL5}
-	if vuc.extent == vucExtentWord && vuc.quoting == vucQuotPlain {
+	if !vuc.IsWordPart && vuc.quoting == vucQuotPlain {
 		if wantList && haveList {
 			return nqDontKnow
 		}
@@ -1369,7 +1365,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	if G.globalData.Tools.byVarname[varname] != nil {
 		switch vuc.quoting {
 		case vucQuotPlain:
-			if vuc.extent != vucExtentWordpart {
+			if !vuc.IsWordPart {
 				return nqNo
 			}
 		case vucQuotBackt:
@@ -1383,7 +1379,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	// to be quoted. An exception is in the case of backticks,
 	// because the whole backticks expression is parsed as a single
 	// shell word by pkglint.
-	if vuc.extent == vucExtentWordpart && vuc.vartype != nil && vuc.vartype.IsShell() && vuc.quoting != vucQuotBackt {
+	if vuc.IsWordPart && vuc.vartype != nil && vuc.vartype.IsShell() && vuc.quoting != vucQuotBackt {
 		return nqYes
 	}
 
@@ -1395,7 +1391,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	// Assigning lists to lists does not require any quoting, though
 	// there may be cases like "CONFIGURE_ARGS+= -libs ${LDFLAGS:Q}"
 	// where quoting is necessary.
-	if wantList && haveList && vuc.extent != vucExtentWordpart {
+	if wantList && haveList && !vuc.IsWordPart {
 		return nqDoesntMatter
 	}
 
@@ -1413,7 +1409,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 
 	// Bad: LDADD += -l${LIBS}
 	// Good: LDADD += ${LIBS:@lib@-l${lib} @}
-	if wantList && haveList && vuc.extent == vucExtentWordpart {
+	if wantList && haveList && vuc.IsWordPart {
 		return nqYes
 	}
 
@@ -1580,10 +1576,10 @@ func (mkline *MkLine) determineUsedVariables() (varnames []string) {
 //   checked against the variable type. For example, comparing OPSYS to
 //   x86_64 doesn’t make sense.
 type VarUseContext struct {
-	vartype *Vartype
-	time    vucTime
-	quoting vucQuoting
-	extent  vucExtent
+	vartype    *Vartype
+	time       vucTime
+	quoting    vucQuoting
+	IsWordPart bool // Example: echo ${LOCALBASE} LOCALBASE=${LOCALBASE}
 }
 
 type vucTime uint8
@@ -1627,21 +1623,12 @@ func (q vucQuoting) String() string {
 	return [...]string{"unknown", "plain", "dquot", "squot", "backt", "mk-for"}[q]
 }
 
-type vucExtent uint8
-
-const (
-	vucExtentWord     vucExtent = iota // Example: echo ${LOCALBASE}
-	vucExtentWordpart                  // Example: echo LOCALBASE=${LOCALBASE}
-)
-
-func (e vucExtent) String() string { return [...]string{"word", "wordpart"}[e] }
-
 func (vuc *VarUseContext) String() string {
 	typename := "no-type"
 	if vuc.vartype != nil {
 		typename = vuc.vartype.String()
 	}
-	return fmt.Sprintf("(%s time:%s quoting:%s extent:%s)", typename, vuc.time, vuc.quoting, vuc.extent)
+	return fmt.Sprintf("(%s time:%s quoting:%s wordpart:%v)", typename, vuc.time, vuc.quoting, vuc.IsWordPart)
 }
 
 type Indentation struct {
