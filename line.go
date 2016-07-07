@@ -200,7 +200,7 @@ func (line *Line) AutofixReplace(from, to string) bool {
 	return false
 }
 
-func (line *Line) AutofixReplaceRegexp(from, to string) bool {
+func (line *Line) AutofixReplaceRegexp(from RegexPattern, to string) bool {
 	for _, rawLine := range line.raw {
 		if rawLine.Lineno != 0 {
 			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
@@ -259,7 +259,7 @@ func (line *Line) CheckLength(maxlength int) {
 	}
 }
 
-func (line *Line) CheckValidCharacters(reChar string) {
+func (line *Line) CheckValidCharacters(reChar RegexPattern) {
 	rest := regcomp(reChar).ReplaceAllString(line.Text, "")
 	if rest != "" {
 		uni := ""
@@ -281,9 +281,9 @@ func (line *Line) CheckTrailingWhitespace() {
 	}
 }
 
-func (line *Line) CheckRcsid(prefixRe, suggestedPrefix string) bool {
+func (line *Line) CheckRcsid(prefixRe RegexPattern, suggestedPrefix string) bool {
 	if G.opts.Debug {
-		defer tracecall2(prefixRe, suggestedPrefix)()
+		defer tracecall(prefixRe, suggestedPrefix)()
 	}
 
 	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {

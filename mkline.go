@@ -243,7 +243,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 		indentation.Push(indentation.Depth() + 2)
 	}
 
-	reDirectivesWithArgs := `^(?:if|ifdef|ifndef|elif|for|undef)$`
+	const reDirectivesWithArgs = `^(?:if|ifdef|ifndef|elif|for|undef)$`
 	if matches(directive, reDirectivesWithArgs) && args == "" {
 		mkline.Error1("\".%s\" requires arguments.", directive)
 
@@ -1192,7 +1192,7 @@ func (mkline *MkLine) rememberUsedVariables(cond *Tree) {
 	cond.Visit("compareVarVar", arg2varuse)
 }
 
-func (mkline *MkLine) CheckValidCharactersInValue(reValid string) {
+func (mkline *MkLine) CheckValidCharactersInValue(reValid RegexPattern) {
 	rest := regcomp(reValid).ReplaceAllString(mkline.Value(), "")
 	if rest != "" {
 		uni := ""
