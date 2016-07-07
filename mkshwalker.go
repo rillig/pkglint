@@ -9,14 +9,6 @@ func (w *MkShWalker) Walk(list *MkShList, callback func(node interface{})) {
 	}
 }
 
-func (w *MkShWalker) ForEachSimpleCommand(list *MkShList, callback func(cmd *MkShSimpleCommand)) {
-	for element := range w.iterate(list) {
-		if cmd, ok := element.(*MkShSimpleCommand); ok {
-			callback(cmd)
-		}
-	}
-}
-
 func (w *MkShWalker) ForEachConditionalSimpleCommand(list *MkShList, callback func(cmd *MkShSimpleCommand)) {
 	getSimple := func(list *MkShList) *MkShSimpleCommand {
 		if len(list.AndOrs) == 1 {
