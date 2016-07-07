@@ -591,13 +591,39 @@ func (c *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 		defer tracecall()()
 	}
 
-	(*MkShWalker).ForEachConditionalSimpleCommand(nil, list, func(cmd *MkShSimpleCommand) {
+	getSimple := func(list *MkShList) *MkShSimpleCommand {
+		if len(list.AndOrs) == 1 {
+			if len(list.AndOrs[0].Pipes) == 1 {
+				if len(list.AndOrs[0].Pipes[0].Cmds) == 1 {
+					return list.AndOrs[0].Pipes[0].Cmds[0].Simple
+				}
+			}
+		}
+		return nil
+	}
+
+	checkConditionalCd := func(cmd *MkShSimpleCommand) {
 		if NewStrCommand(cmd).Name == "cd" {
 			c.shline.line.Error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 			Explain3(
 				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 				"shell will exit, no matter if it is protected by an \"if\" or the",
 				"\"||\" operator.")
+		}
+	}
+
+	(*MkShWalker).Walk(nil, list, func(node interface{}) {
+		if cmd, ok := node.(*MkShIfClause); ok {
+			for _, cond := range cmd.Conds {
+				if simple := getSimple(cond); simple != nil {
+					checkConditionalCd(simple)
+				}
+			}
+		}
+		if cmd, ok := node.(*MkShLoopClause); ok {
+			if simple := getSimple(cmd.Cond); simple != nil {
+				checkConditionalCd(simple)
+			}
 		}
 	})
 }
