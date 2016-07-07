@@ -459,7 +459,7 @@ func (ctx *SimpleCommandChecker) checkCommandStart() {
 	case hasPrefix(shellword, "${PKGSRCDIR"): // With or without the :Q modifier
 	case ctx.handleComment():
 	default:
-		if G.opts.WarnExtra {
+		if G.opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
 			ctx.shline.line.Warn1("Unknown shell command %q.", shellword)
 			Explain3(
 				"If you want your package to be portable to all platforms that pkgsrc",

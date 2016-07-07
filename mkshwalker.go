@@ -176,6 +176,7 @@ func (w *MkShWalker) walkRedirects(redirects []*MkShRedirection, collector chan 
 
 	for _, redirect := range redirects {
 		collector <- redirect
+		w.walkWord(redirect.Target, collector)
 	}
 }
 
