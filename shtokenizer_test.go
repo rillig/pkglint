@@ -28,6 +28,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	dquot := func(s string) *ShAtom { return token(shtWord, s, shqDquot) }
 	squot := func(s string) *ShAtom { return token(shtWord, s, shqSquot) }
 	backt := func(s string) *ShAtom { return token(shtWord, s, shqBackt) }
+	operator := func(s string) *ShAtom { return token(shtOperator, s, shqPlain) }
 	varuse := func(varname string, modifiers ...string) *ShAtom {
 		text := "${" + varname
 		for _, modifier := range modifiers {
@@ -42,8 +43,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	}
 	whitespace := func(s string) *ShAtom { return token(shtSpace, s, shqPlain) }
 	space := token(shtSpace, " ", shqPlain)
-	semicolon := token(shtOperator, ";", shqPlain)
-	pipe := token(shtOperator, "|", shqPlain)
+	semicolon := operator(";", shqPlain)
+	pipe := operator("|", shqPlain)
 
 	check("" /* none */)
 
@@ -55,7 +56,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	check("$$var;;",
 		word("$$var"),
-		token(shtOperator, ";;", shqPlain))
+		operator(";;", shqPlain))
 
 	check("'single-quoted'",
 		q(shqSquot, word("'")),
@@ -116,7 +117,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		q(shqDquotBackt, space),
 		q(shqDquotBackt, word("-1")),
 		q(shqDquotBackt, space),
-		token(shtOperator, "|", shqDquotBackt),
+		operator("|", shqDquotBackt),
 		q(shqDquotBackt, space),
 		q(shqDquotBackt, varuse("SED")),
 		q(shqDquotBackt, space),
@@ -212,7 +213,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	check("cat<file",
 		word("cat"),
-		token(shtOperator, "<", shqPlain),
+		operator("<", shqPlain),
 		word("file"))
 
 	check("-e \"s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g\"",
@@ -243,15 +244,15 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		q(shqBackt, word("echo")),
 		q(shqBackt, semicolon),
 		q(shqBackt, word("echo")),
-		q(shqBackt, token(shtOperator, "|", shqBackt)),
+		q(shqBackt, operator("|", shqBackt)),
 		q(shqBackt, word("echo")),
-		q(shqBackt, token(shtOperator, "&", shqBackt)),
+		q(shqBackt, operator("&", shqBackt)),
 		q(shqBackt, word("echo")),
-		q(shqBackt, token(shtOperator, "||", shqBackt)),
+		q(shqBackt, operator("||", shqBackt)),
 		q(shqBackt, word("echo")),
-		q(shqBackt, token(shtOperator, "&&", shqBackt)),
+		q(shqBackt, operator("&&", shqBackt)),
 		q(shqBackt, word("echo")),
-		q(shqBackt, token(shtOperator, ">", shqBackt)),
+		q(shqBackt, operator(">", shqBackt)),
 		q(shqBackt, word("echo")),
 		q(shqPlain, word("`")))
 
