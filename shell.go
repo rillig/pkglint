@@ -687,17 +687,22 @@ func (ctx *SimpleCommandChecker) checkInstallMulti() {
 	cmd := ctx.strcmd
 
 	if hasPrefix(cmd.Name, "${INSTALL_") && hasSuffix(cmd.Name, "_DIR}") {
-		prevarg := ""
-		for _, arg := range cmd.Args {
-			if !hasPrefix(arg, "-") {
-				if prevarg != "" {
+		prevdir := ""
+		for i, arg := range cmd.Args {
+			switch {
+			case hasPrefix(arg, "-"):
+				break
+			case i > 0 && (cmd.Args[i-1] == "-m" || cmd.Args[i-1] == "-o" || cmd.Args[i-1] == "-g"):
+				break
+			default:
+				if prevdir != "" {
 					ctx.shline.line.Warn0("The INSTALL_*_DIR commands can only handle one directory at a time.")
 					Explain2(
 						"Many implementations of install(1) can handle more, but pkgsrc aims",
 						"at maximum portability.")
 					return
 				}
-				prevarg = arg
+				prevdir = arg
 			}
 		}
 	}

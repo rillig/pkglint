@@ -462,6 +462,19 @@ func (s *Suite) TestShellLine_CheckShellCommandLine_InstallDirs(c *check.C) {
 		"NOTE: Makefile:85: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= dir1\" instead of \"${INSTALL_DATA_DIR}\".\n"+
 		"NOTE: Makefile:85: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= dir2\" instead of \"${INSTALL_DATA_DIR}\".\n"+
 		"WARN: Makefile:85: The INSTALL_*_DIR commands can only handle one directory at a time.\n")
+
+	shline.CheckShellCommandLine("${INSTALL_DATA_DIR} -d -m 0755 ${DESTDIR}${PREFIX}/share/examples/gdchart")
+
+	// No warning about multiple directories, since 0755 is an option, not an argument.
+	c.Check(s.Output(), equals, ""+
+		"NOTE: Makefile:85: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= share/examples/gdchart\" instead of \"${INSTALL_DATA_DIR}\".\n")
+
+	shline.CheckShellCommandLine("${INSTALL_DATA_DIR} -d -m 0755 ${DESTDIR}${PREFIX}/dir1 ${PREFIX}/dir2")
+
+	c.Check(s.Output(), equals, ""+
+		"NOTE: Makefile:85: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= dir1\" instead of \"${INSTALL_DATA_DIR}\".\n"+
+		"NOTE: Makefile:85: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= dir2\" instead of \"${INSTALL_DATA_DIR}\".\n"+
+		"WARN: Makefile:85: The INSTALL_*_DIR commands can only handle one directory at a time.\n")
 }
 
 func (s *Suite) TestShellLine_CheckShellCommandLine_InstallD(c *check.C) {

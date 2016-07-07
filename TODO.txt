@@ -3,17 +3,6 @@
         ${RUN} ${_ULIMIT_CMD}                                           \
         for d in ${BUILD_DIRS}; do                                      \
 
--NOTE: games/knightcap-brain/Makefile:45--46: The :Q operator isn't necessary for ${FILESDIR} here.
-
-do-build:
-        ${SED} -e "s,@PREFIX@,${PREFIX},g" < ${FILESDIR:Q}/newbrain.sh \
-                > ${WRKSRC:Q}/newbrain.sh
-
-+WARN: graphics/gdchart/Makefile:31: The INSTALL_*_DIR commands can only handle one directory at a time.
-
-        ${INSTALL_DATA_DIR} -d -m 0755 \
-                ${DESTDIR}${PREFIX}/share/examples/gdchart
-
 +WARN: lang/ruby/gem.mk:307--325: Pkglint ShellLine.CheckShellCommand: parse error at [* ) continue ;; esac ; if [ -e ${WRKSRC:Q}"/$$file" ] ; then continue ; elif [ -d "$$file" ] ; then rfile=`echo $$file | ${SED} -e 's|^\./||'` ; ${ECHO} "rmdir "${GEM_NAME}"/$$rfile" ; rmdir $$file ; elif [ -f "$$file" ] ; then rfile=`echo $$file | ${SED} -e 's|^\./||'` ; ${ECHO} "rm "${GEM_NAME}"/$$rfile" ; rm -f $$file ; fi ; done]
 
                 case $$file in                                          \
