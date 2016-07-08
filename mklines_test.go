@@ -69,7 +69,9 @@ func (s *Suite) Test_MkLines_quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.\n"+
+		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.\n")
 }
 
 func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {

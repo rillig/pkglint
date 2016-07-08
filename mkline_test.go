@@ -363,7 +363,7 @@ func (s *Suite) Test_MkLine_CheckVarusePermissions(c *check.C) {
 		"NOTE: options.mk:4: This variable value should be aligned to column 17.\n")
 }
 
-func (s *Suite) Test_MkLine_CheckVarusePermissions_load_time(c *check.C) {
+func (s *Suite) Test_MkLine_CheckVarusePermissions__load_time(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	mklines := s.NewMkLines("options.mk",
@@ -383,7 +383,7 @@ func (s *Suite) Test_MkLine_WarnVaruseLocalbase(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: options.mk:56: The LOCALBASE variable should not be used by packages.\n")
 }
 
-func (s *Suite) Test_MkLines_Check_extra(c *check.C) {
+func (s *Suite) Test_MkLines_Check__extra(c *check.C) {
 	s.UseCommandLine(c, "-Wextra")
 	G.globalData.InitVartypes()
 	G.Pkg = NewPackage("category/pkgbase")
@@ -421,7 +421,7 @@ func (s *Suite) Test_MkLine_CheckRelativePkgdir(c *check.C) {
 }
 
 // PR pkg/46570, item 2
-func (s *Suite) Test_MkLine_unclosed_varuse(c *check.C) {
+func (s *Suite) Test_MkLine__unclosed_varuse(c *check.C) {
 	mkline := NewMkLine(NewLine("Makefile", 93, "EGDIRS=${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d", nil))
 
 	mkline.checkVarassign()
@@ -432,7 +432,7 @@ func (s *Suite) Test_MkLine_unclosed_varuse(c *check.C) {
 		"WARN: Makefile:93: EGDIRS is defined but not used. Spelling mistake?\n")
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_unknown_rhs(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__unknown_rhs(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
 	G.globalData.InitVartypes()
 
@@ -442,7 +442,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_unknown_rhs(c *check.C) {
 	c.Check(nq, equals, nqDontKnow)
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_append_URL_to_list_of_URLs(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__append_URL_to_list_of_URLs(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
@@ -459,7 +459,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_append_URL_to_list_of_URLs(c *c
 }
 
 // Assigning lists to lists is ok.
-func (s *Suite) Test_MkLine_variableNeedsQuoting_append_list_to_list(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__append_list_to_list(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
@@ -470,7 +470,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_append_list_to_list(c *check.C)
 	c.Check(s.Output(), equals, "")
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_eval_shell(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__eval_shell(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("builtin.mk", 3, "USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}", nil))
@@ -482,7 +482,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_eval_shell(c *check.C) {
 		"NOTE: builtin.mk:3: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.\n")
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_single_quotes(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__command_in_single_quotes(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("Makefile", 3, "SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'", nil))
@@ -492,7 +492,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_single_quotes(c *che
 	c.Check(s.Output(), equals, "WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.\n")
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_command(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__command_in_command(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterTool(&Tool{Name: "find", Varname: "FIND", Predefined: true})
@@ -509,7 +509,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_command(c *check.C) 
 		"WARN: Makefile:2: The exitcode of the left-hand-side command of the pipe operator is ignored.\n")
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_word_as_part_of_word(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__word_as_part_of_word(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("Makefile",
@@ -527,7 +527,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_word_as_part_of_word(c *check.C
 // therefore no warning is issued.
 //
 // Based on graphics/circos/Makefile.
-func (s *Suite) Test_MkLine_variableNeedsQuoting_command_as_command_argument(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__command_as_command_argument(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	s.RegisterTool(&Tool{Name: "perl", Varname: "PERL5", Predefined: true})
 	s.RegisterTool(&Tool{Name: "bash", Varname: "BASH", Predefined: true})
@@ -546,7 +546,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_command_as_command_argument(c *
 }
 
 // Based on mail/mailfront/Makefile.
-func (s *Suite) Test_MkLine_variableNeedsQuoting_URL_as_part_of_word_in_list(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__URL_as_part_of_word_in_list(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("Makefile",
@@ -563,7 +563,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_URL_as_part_of_word_in_list(c *
 // modifier.
 //
 // Based on www/firefox31/xpi.mk.
-func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_subshell(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__command_in_subshell(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterTool(&Tool{Name: "awk", Varname: "AWK", Predefined: true})
@@ -582,7 +582,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_subshell(c *check.C)
 // LDFLAGS (and even more so CPPFLAGS and CFLAGS) may contain special
 // shell characters like quotes or backslashes. Therefore, quoting them
 // correctly is more tricky than with other variables.
-func (s *Suite) Test_MkLine_variableNeedsQuoting_LDFLAGS_in_single_quotes(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__LDFLAGS_in_single_quotes(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("x11/mlterm/Makefile",
@@ -596,7 +596,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_LDFLAGS_in_single_quotes(c *che
 	c.Check(s.Output(), equals, "WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} outside of any quoting characters.\n")
 }
 
-func (s *Suite) Test_MkLines_Check_MASTER_SITE_in_HOMEPAGE(c *check.C) {
+func (s *Suite) Test_MkLines_Check__MASTER_SITE_in_HOMEPAGE(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	s.RegisterMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 	G.globalData.InitVartypes()
@@ -616,9 +616,10 @@ func (s *Suite) Test_MkLines_Check_MASTER_SITE_in_HOMEPAGE(c *check.C) {
 		"WARN: devel/catch/Makefile:5: HOMEPAGE should not be defined in terms of MASTER_SITEs.\n")
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_quotes_in_subshell_in_shellwords(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_quotes_in_subshell_in_shellwords(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
-	s.RegisterTool(&Tool{Varname: "SH", Predefined: true})
+	s.RegisterTool(&Tool{Name: "echo", Varname: "ECHO", Predefined: true})
+	s.RegisterTool(&Tool{Name: "sh", Varname: "SH", Predefined: true})
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("x11/labltk/Makefile",
 		"# $"+"NetBSD$",
@@ -629,7 +630,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting_command_in_quotes_in_subshell_i
 	c.Check(s.Output(), equals, "") // Don’t suggest ${ECHO:Q} here.
 }
 
-func (s *Suite) Test_MkLine_variableNeedsQuoting_LDADD_in_BUILDLINK_TRANSFORM(c *check.C) {
+func (s *Suite) Test_MkLine_variableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("x11/qt5-qtbase/Makefile.common",
@@ -785,7 +786,9 @@ func (s *Suite) Test_MkLine_Check_shell_command_as_wordpart_in_ENV_list(c *check
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, "WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.\n")
+	c.Check(s.Output(), equals, ""+
+		"WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.\n"+
+		"WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.\n")
 }
 
 func (s *Suite) Test_MkLine_shell_varuse_in_backt_dquot(c *check.C) {

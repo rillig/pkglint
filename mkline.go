@@ -1018,46 +1018,42 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		}
 
 	case vartype.kindOfList == lkNone:
-		mkline.CheckVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.IsConsideredList(), vartype.guessed)
+		mkline.CheckVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.guessed)
 
 	case value == "":
 		break
 
 	case vartype.kindOfList == lkSpace:
 		for _, word := range splitOnSpace(value) {
-			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
+			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, vartype.guessed)
 		}
 
 	case vartype.kindOfList == lkShell:
 		words, _ := splitIntoMkWords(mkline.Line, value)
 		for _, word := range words {
-			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, true, vartype.guessed)
+			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, vartype.guessed)
 		}
 	}
 }
 
 // For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op MkOperator, value, comment string, isList bool, guessed bool) {
+func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op MkOperator, value, comment string, guessed bool) {
 	if G.opts.Debug {
-		defer tracecall(varname, checker.name, op, value, comment, isList, guessed)()
+		defer tracecall(varname, checker.name, op, value, comment, guessed)()
 	}
 
-	valueNoVar := mkline.withoutMakeVariables(value, isList)
-	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, isList, guessed}
+	valueNoVar := mkline.withoutMakeVariables(value)
+	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, guessed}
 	checker.checker(ctx)
 }
 
-func (mkline *MkLine) withoutMakeVariables(value string, qModifierAllowed bool) string {
+func (mkline *MkLine) withoutMakeVariables(value string) string {
 	valueNovar := value
 	for {
 		var m []string
-		if m, valueNovar = replaceFirst(valueNovar, `\$\{([^{}]*)\}`, ""); m != nil {
-			varuse := m[1]
-			if !qModifierAllowed && hasSuffix(varuse, ":Q") {
-				mkline.Warn0("The :Q operator should only be used in lists and shell commands.")
-			}
-		} else {
+		m, valueNovar = replaceFirst(valueNovar, `\$\{[^{}]*\}`, "")
+		if m == nil {
 			return valueNovar
 		}
 	}
