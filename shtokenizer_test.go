@@ -4,7 +4,6 @@ import (
 	check "gopkg.in/check.v1"
 )
 
-// @Beta
 func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	checkRest := func(s string, expected ...*ShAtom) string {
 		p := NewShTokenizer(dummyLine, s, false)
@@ -322,7 +321,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_Shtokenizer_ShAtom_Quoting(c *check.C) {
+func (s *Suite) Test_Shtokenizer_ShAtom__quoting(c *check.C) {
 	checkQuotingChange := func(input, expectedOutput string) {
 		p := NewShTokenizer(dummyLine, input, false)
 		q := shqPlain
