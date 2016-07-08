@@ -257,7 +257,7 @@ var (
 	CheckvarUnchecked              = &VarChecker{"Unchecked", (*VartypeCheck).Unchecked}
 	CheckvarURL                    = &VarChecker{"URL", (*VartypeCheck).URL}
 	CheckvarUserGroupName          = &VarChecker{"UserGroupName", (*VartypeCheck).UserGroupName}
-	CheckvarVarname                = &VarChecker{"Varname", (*VartypeCheck).Varname}
+	CheckvarVarname                = &VarChecker{"VariableName", (*VartypeCheck).VariableName}
 	CheckvarVersion                = &VarChecker{"Version", (*VartypeCheck).Version}
 	CheckvarWrapperReorder         = &VarChecker{"WrapperReorder", (*VartypeCheck).WrapperReorder}
 	CheckvarWrapperTransform       = &VarChecker{"WrapperTransform", (*VartypeCheck).WrapperTransform}

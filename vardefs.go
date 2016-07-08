@@ -724,25 +724,25 @@ func enum(values string) *VarChecker {
 	}
 	name := "enum: " + values + " " // See IsEnum
 	return &VarChecker{name, func(cv *VartypeCheck) {
-		if cv.op == opUseMatch {
-			if !vmap[cv.value] && cv.value == cv.valueNovar {
+		if cv.Op == opUseMatch {
+			if !vmap[cv.Value] && cv.Value == cv.ValueNoVar {
 				canMatch := false
 				for value := range vmap {
-					if ok, err := path.Match(cv.value, value); err != nil {
-						cv.line.Warnf("Invalid match pattern %q.", cv.value)
+					if ok, err := path.Match(cv.Value, value); err != nil {
+						cv.Line.Warnf("Invalid match pattern %q.", cv.Value)
 					} else if ok {
 						canMatch = true
 					}
 				}
 				if !canMatch {
-					cv.line.Warnf("The pattern %q cannot match any of { %s } for %s.", cv.value, values, cv.varname)
+					cv.Line.Warnf("The pattern %q cannot match any of { %s } for %s.", cv.Value, values, cv.Varname)
 				}
 			}
 			return
 		}
 
-		if cv.value == cv.valueNovar && !vmap[cv.value] {
-			cv.line.Warnf("%q is not valid for %s. Use one of { %s } instead.", cv.value, cv.varname, values)
+		if cv.Value == cv.ValueNoVar && !vmap[cv.Value] {
+			cv.Line.Warnf("%q is not valid for %s. Use one of { %s } instead.", cv.Value, cv.Varname, values)
 		}
 	}}
 }

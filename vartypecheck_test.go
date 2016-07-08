@@ -376,8 +376,8 @@ func (s *Suite) Test_VartypeCheck_Stage(c *check.C) {
 	c.Check(s.Output(), equals, "WARN: fname:2: Invalid stage name \"post-modern\". Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.\n")
 }
 
-func (s *Suite) Test_VartypeCheck_Varname(c *check.C) {
-	runVartypeChecks("BUILD_DEFS", opAssign, (*VartypeCheck).Varname,
+func (s *Suite) Test_VartypeCheck_VariableName(c *check.C) {
+	runVartypeChecks("BUILD_DEFS", opAssign, (*VartypeCheck).VariableName,
 		"VARBASE",
 		"VarBase",
 		"PKG_OPTIONS_VAR.pkgbase",
