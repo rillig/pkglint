@@ -44,7 +44,13 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 			"white-space.")
 	}
 
-	if m, varname, op, valueAlign, value, comment := MatchVarassign(text); m {
+	if m, varname, spaceAfterVarname, op, valueAlign, value, comment := MatchVarassign(text); m {
+		if G.opts.WarnSpace && spaceAfterVarname != "" && !(hasSuffix(varname, "+") && op == "=") {
+			if !line.AutofixReplace(varname+spaceAfterVarname+op, varname+op) {
+				line.Warn1("Unnecessary space after variable name %q.", varname)
+			}
+		}
+
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 

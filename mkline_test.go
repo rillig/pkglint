@@ -150,6 +150,7 @@ func (s *Suite) Test_VaralignBlock_Check_only_spaces(c *check.C) {
 }
 
 func (s *Suite) Test_NewMkLine(c *check.C) {
+	s.UseCommandLine(c, "-Wspace")
 	mklines := NewMkLines(s.NewLines("test.mk",
 		"VARNAME.param?=value # varassign comment",
 		"\tshell command # shell comment",
@@ -206,6 +207,36 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 	c.Check(ln[9].Varparam(), equals, "")
 
 	c.Check(s.Output(), equals, "WARN: test.mk:9: Space before colon in dependency line.\n")
+}
+
+func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
+	s.UseCommandLine(c, "-Wspace")
+	fname := s.CreateTmpFileLines(c, "Makefile",
+		mkrcsid,
+		"VARNAME +=\t${VARNAME}",
+		"VARNAME+ =\t${VARNAME+}",
+		"VARNAME+ +=\t${VARNAME+}")
+
+	CheckfileMk(fname)
+
+	c.Check(s.Output(), equals, ""+
+		"WARN: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".\n"+
+		"WARN: ~/Makefile:4: Unnecessary space after variable name \"VARNAME+\".\n")
+
+	s.UseCommandLine(c, "-Wspace", "--autofix")
+
+	CheckfileMk(fname)
+
+	c.Check(s.Output(), equals, ""+
+		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".\n"+
+		"AUTOFIX: ~/Makefile:4: Replacing \"VARNAME+ +=\" with \"VARNAME++=\".\n"+
+		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.\n"+
+		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.\n")
+	c.Check(s.LoadTmpFile(c, "Makefile"), equals, ""+
+		"# $NetBSD$\n"+
+		"VARNAME+=\t${VARNAME}\n"+
+		"VARNAME+ =\t${VARNAME+}\n"+
+		"VARNAME++=\t${VARNAME+}\n")
 }
 
 // Pkglint once interpreted all lists as consisting of shell tokens,

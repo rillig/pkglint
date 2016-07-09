@@ -41,34 +41,34 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 }
 
 func (s *Suite) Test_MatchVarassign(c *check.C) {
-	checkVarassign := func(text string, ck check.Checker, varname, op, align, value, comment string) {
+	checkVarassign := func(text string, ck check.Checker, varname, spaceAfterVarname, op, align, value, comment string) {
 		type va struct {
-			varname, op, align, value, comment string
+			varname, spaceAfterVarname, op, align, value, comment string
 		}
-		expected := va{varname, op, align, value, comment}
-		am, avarname, aop, aalign, avalue, acomment := MatchVarassign(text)
+		expected := va{varname, spaceAfterVarname, op, align, value, comment}
+		am, avarname, aspaceAfterVarname, aop, aalign, avalue, acomment := MatchVarassign(text)
 		if !am {
 			c.Errorf("Text %q doesn’t match variable assignment", text)
 			return
 		}
-		actual := va{avarname, aop, aalign, avalue, acomment}
+		actual := va{avarname, aspaceAfterVarname, aop, aalign, avalue, acomment}
 		c.Check(actual, ck, expected)
 	}
 	checkNotVarassign := func(text string) {
-		m, _, _, _, _, _ := MatchVarassign(text)
+		m, _, _, _, _, _, _ := MatchVarassign(text)
 		if m {
 			c.Errorf("Text %q matches variable assignment, but shouldn’t.", text)
 		}
 	}
 
-	checkVarassign("C++=c11", equals, "C+", "+=", "C++=", "c11", "")
-	checkVarassign("V=v", equals, "V", "=", "V=", "v", "")
-	checkVarassign("VAR=#comment", equals, "VAR", "=", "VAR=", "", "#comment")
-	checkVarassign("VAR=\\#comment", equals, "VAR", "=", "VAR=", "#comment", "")
-	checkVarassign("VAR=\\\\\\##comment", equals, "VAR", "=", "VAR=", "\\\\#", "#comment")
-	checkVarassign("VAR=\\", equals, "VAR", "=", "VAR=", "\\", "")
-	checkVarassign("VAR += value", equals, "VAR", "+=", "VAR += ", "value", "")
-	checkVarassign(" VAR=value", equals, "VAR", "=", " VAR=", "value", "")
+	checkVarassign("C++=c11", equals, "C+", "", "+=", "C++=", "c11", "")
+	checkVarassign("V=v", equals, "V", "", "=", "V=", "v", "")
+	checkVarassign("VAR=#comment", equals, "VAR", "", "=", "VAR=", "", "#comment")
+	checkVarassign("VAR=\\#comment", equals, "VAR", "", "=", "VAR=", "#comment", "")
+	checkVarassign("VAR=\\\\\\##comment", equals, "VAR", "", "=", "VAR=", "\\\\#", "#comment")
+	checkVarassign("VAR=\\", equals, "VAR", "", "=", "VAR=", "\\", "")
+	checkVarassign("VAR += value", equals, "VAR", " ", "+=", "VAR += ", "value", "")
+	checkVarassign(" VAR=value", equals, "VAR", "", "=", " VAR=", "value", "")
 	checkNotVarassign("\tVAR=value")
 	checkNotVarassign("?=value")
 	checkNotVarassign("<=value")
