@@ -671,7 +671,7 @@ func (cv *VartypeCheck) PkgName() {
 }
 
 func (cv *VartypeCheck) PkgOptionsVar() {
-	cv.MkLine.CheckVartypePrimitive(cv.Varname, CheckvarVarname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	cv.MkLine.CheckVartypePrimitive(cv.Varname, CheckvarVariableName, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 	if matches(cv.Value, `\$\{PKGBASE[:\}]`) {
 		cv.Line.Error0("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		Explain3(
