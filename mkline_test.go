@@ -215,7 +215,8 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		mkrcsid,
 		"VARNAME +=\t${VARNAME}",
 		"VARNAME+ =\t${VARNAME+}",
-		"VARNAME+ +=\t${VARNAME+}")
+		"VARNAME+ +=\t${VARNAME+}",
+		"pkgbase := pkglint")
 
 	CheckfileMk(fname)
 
@@ -236,7 +237,8 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		"# $NetBSD$\n"+
 		"VARNAME+=\t${VARNAME}\n"+
 		"VARNAME+ =\t${VARNAME+}\n"+
-		"VARNAME++=\t${VARNAME+}\n")
+		"VARNAME++=\t${VARNAME+}\n"+
+		"pkgbase := pkglint\n")
 }
 
 // Pkglint once interpreted all lists as consisting of shell tokens,

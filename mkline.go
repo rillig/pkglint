@@ -45,9 +45,16 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 	}
 
 	if m, varname, spaceAfterVarname, op, valueAlign, value, comment := MatchVarassign(text); m {
-		if G.opts.WarnSpace && spaceAfterVarname != "" && !(hasSuffix(varname, "+") && op == "=") {
-			if !line.AutofixReplace(varname+spaceAfterVarname+op, varname+op) {
-				line.Warn1("Unnecessary space after variable name %q.", varname)
+		if G.opts.WarnSpace && spaceAfterVarname != "" {
+			switch {
+			case hasSuffix(varname, "+") && op == "=":
+				break
+			case matches(varname, `^[a-z]`) && op == ":=":
+				break
+			default:
+				if !line.AutofixReplace(varname+spaceAfterVarname+op, varname+op) {
+					line.Warn1("Unnecessary space after variable name %q.", varname)
+				}
 			}
 		}
 
