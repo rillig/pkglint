@@ -234,7 +234,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.\n"+
 		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.\n")
 	c.Check(s.LoadTmpFile(c, "Makefile"), equals, ""+
-		"# $NetBSD$\n"+
+		mkrcsid+"\n"+
 		"VARNAME+=\t${VARNAME}\n"+
 		"VARNAME+ =\t${VARNAME+}\n"+
 		"VARNAME++=\t${VARNAME+}\n"+
