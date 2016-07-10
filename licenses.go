@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"strings"
 )
 
 //go:generate go tool yacc -p liyy -o licenseyacc.go -v licenseyacc.log license.y
@@ -65,7 +64,7 @@ func (lexer *licenseLexer) Error(s string) {
 }
 
 func parseLicenses(licenses string) *LicenseCondition {
-	expanded := strings.Replace(licenses, "${PERL5_LICENSE}", "gnu-gpl-v2 OR artistic", -1)
+	expanded := resolveVariableRefs(licenses) // For ${PERL5_LICENSE}
 	lexer := &licenseLexer{repl: NewPrefixReplacer(expanded)}
 	result := liyyNewParser().Parse(lexer)
 	if result == 0 {
@@ -96,11 +95,15 @@ type LicenseChecker struct {
 	MkLine *MkLine
 }
 
-func (lc *LicenseChecker) Check(value string) {
-	licenses := parseLicenses(value)
+func (lc *LicenseChecker) Check(value string, op MkOperator) {
+	licenses := parseLicenses(ifelseStr(op == opAssignAppend, "append-placeholder ", "") + value)
 
 	if licenses == nil {
-		lc.MkLine.Line.Error1("Parse error for license condition %q.", value)
+		if op == opAssign {
+			lc.MkLine.Line.Error1("Parse error for license condition %q.", value)
+		} else {
+			lc.MkLine.Line.Error1("Parse error for appended license condition %q.", value)
+		}
 		return
 	}
 
@@ -109,7 +112,7 @@ func (lc *LicenseChecker) Check(value string) {
 
 func (lc *LicenseChecker) checkNode(cond *LicenseCondition) {
 	license := cond.Name
-	if license == "" {
+	if license == "" || license == "append-placeholder" {
 		return
 	}
 

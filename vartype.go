@@ -111,7 +111,7 @@ func (vt *Vartype) IsConsideredList() bool {
 		return false
 	}
 	switch vt.basicType {
-	case BtAwkCommand, BtSedCommands, BtShellCommand, BtShellCommands:
+	case BtAwkCommand, BtSedCommands, BtShellCommand, BtShellCommands, BtLicense:
 		return true
 	}
 	return false
