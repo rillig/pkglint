@@ -888,10 +888,6 @@ func (cv *VartypeCheck) Stage() {
 	}
 }
 
-func (cv *VartypeCheck) String() {
-	// No further checks possible.
-}
-
 func (cv *VartypeCheck) Tool() {
 	if cv.Varname == "TOOLS_NOOP" && cv.Op == opAssignAppend {
 		// no warning for package-defined tool definitions
@@ -910,8 +906,8 @@ func (cv *VartypeCheck) Tool() {
 	}
 }
 
-func (cv *VartypeCheck) Unchecked() {
-	// Do nothing, as the name says.
+func (cv *VartypeCheck) Unknown() {
+	// Do nothing.
 }
 
 func (cv *VartypeCheck) URL() {

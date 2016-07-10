@@ -307,7 +307,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 				}
 			}
 
-			forLoopType := &Vartype{lkSpace, BtUnchecked, []AclEntry{{"*", aclpAllRead}}, guessed}
+			forLoopType := &Vartype{lkSpace, BtUnknown, []AclEntry{{"*", aclpAllRead}}, guessed}
 			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
 			for _, forLoopVar := range mkline.extractUsedVariables(values) {
 				mkline.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
@@ -1493,7 +1493,7 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 	case hasSuffix(varname, "_LDFLAGS"):
 		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, true}
 	case hasSuffix(varbase, "_MK"):
-		gtype = &Vartype{lkNone, BtUnchecked, allowAll, true}
+		gtype = &Vartype{lkNone, BtUnknown, allowAll, true}
 	case hasPrefix(varbase, "PLIST."):
 		gtype = &Vartype{lkNone, BtYes, allowAll, true}
 	}

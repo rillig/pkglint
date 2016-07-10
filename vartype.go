@@ -185,7 +185,7 @@ func (vt *Vartype) IsBasicSafe() bool {
 
 func (vt *Vartype) IsPlainString() bool {
 	switch vt.basicType {
-	case BtComment, BtMessage, BtString:
+	case BtComment, BtMessage, BtUnknown:
 		return true
 	}
 	return false
@@ -252,9 +252,8 @@ var (
 	BtShellCommands          = &BasicType{"ShellCommands", nil}
 	BtShellWord              = &BasicType{"ShellWord", nil}
 	BtStage                  = &BasicType{"Stage", (*VartypeCheck).Stage}
-	BtString                 = &BasicType{"String", (*VartypeCheck).String}
 	BtTool                   = &BasicType{"Tool", (*VartypeCheck).Tool}
-	BtUnchecked              = &BasicType{"Unchecked", (*VartypeCheck).Unchecked}
+	BtUnknown                = &BasicType{"Unknown", (*VartypeCheck).Unknown}
 	BtURL                    = &BasicType{"URL", (*VartypeCheck).URL}
 	BtUserGroupName          = &BasicType{"UserGroupName", (*VartypeCheck).UserGroupName}
 	BtVariableName           = &BasicType{"VariableName", (*VartypeCheck).VariableName}
