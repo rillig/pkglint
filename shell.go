@@ -429,37 +429,37 @@ func NewSimpleCommandChecker(shline *ShellLine, cmd *MkShSimpleCommand) *SimpleC
 
 }
 
-func (c *SimpleCommandChecker) Check() {
+func (scc *SimpleCommandChecker) Check() {
 	if G.opts.Debug {
-		defer tracecall(c.strcmd)()
+		defer tracecall(scc.strcmd)()
 	}
 
-	c.checkCommandStart()
-	c.checkAbsolutePathnames()
-	c.checkAutoMkdirs()
-	c.checkInstallMulti()
-	c.checkPaxPe()
-	c.checkEchoN()
+	scc.checkCommandStart()
+	scc.checkAbsolutePathnames()
+	scc.checkAutoMkdirs()
+	scc.checkInstallMulti()
+	scc.checkPaxPe()
+	scc.checkEchoN()
 }
 
-func (ctx *SimpleCommandChecker) checkCommandStart() {
+func (scc *SimpleCommandChecker) checkCommandStart() {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	shellword := ctx.strcmd.Name
+	shellword := scc.strcmd.Name
 	switch {
 	case shellword == "${RUN}" || shellword == "":
-	case ctx.handleForbiddenCommand():
-	case ctx.handleTool():
-	case ctx.handleCommandVariable():
+	case scc.handleForbiddenCommand():
+	case scc.handleTool():
+	case scc.handleCommandVariable():
 	case matches(shellword, `^(?::|break|cd|continue|eval|exec|exit|export|read|set|shift|umask|unset)$`):
 	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
 	case hasPrefix(shellword, "${PKGSRCDIR"): // With or without the :Q modifier
-	case ctx.handleComment():
+	case scc.handleComment():
 	default:
 		if G.opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
-			ctx.shline.line.Warn1("Unknown shell command %q.", shellword)
+			scc.shline.line.Warn1("Unknown shell command %q.", shellword)
 			Explain3(
 				"If you want your package to be portable to all platforms that pkgsrc",
 				"supports, you should only use shell commands that are covered by the",
@@ -468,38 +468,38 @@ func (ctx *SimpleCommandChecker) checkCommandStart() {
 	}
 }
 
-func (ctx *SimpleCommandChecker) handleTool() bool {
+func (scc *SimpleCommandChecker) handleTool() bool {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	shellword := ctx.strcmd.Name
+	shellword := scc.strcmd.Name
 	tool := G.globalData.Tools.byName[shellword]
 	if tool == nil {
 		return false
 	}
 
 	if !G.Mk.tools[shellword] && !G.Mk.tools["g"+shellword] {
-		ctx.shline.line.Warn1("The %q tool is used but not added to USE_TOOLS.", shellword)
+		scc.shline.line.Warn1("The %q tool is used but not added to USE_TOOLS.", shellword)
 	}
 
 	if tool.MustUseVarForm {
-		ctx.shline.line.Warn2("Please use \"${%s}\" instead of %q.", tool.Varname, shellword)
+		scc.shline.line.Warn2("Please use \"${%s}\" instead of %q.", tool.Varname, shellword)
 	}
 
-	ctx.shline.checkCommandUse(shellword)
+	scc.shline.checkCommandUse(shellword)
 	return true
 }
 
-func (ctx *SimpleCommandChecker) handleForbiddenCommand() bool {
+func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	shellword := ctx.strcmd.Name
+	shellword := scc.strcmd.Name
 	switch path.Base(shellword) {
 	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
-		ctx.shline.line.Error1("%q must not be used in Makefiles.", shellword)
+		scc.shline.line.Error1("%q must not be used in Makefiles.", shellword)
 		Explain3(
 			"This command must appear in INSTALL scripts, not in the package",
 			"Makefile, so that the package also works if it is installed as a binary",
@@ -509,24 +509,24 @@ func (ctx *SimpleCommandChecker) handleForbiddenCommand() bool {
 	return false
 }
 
-func (ctx *SimpleCommandChecker) handleCommandVariable() bool {
+func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	shellword := ctx.strcmd.Name
+	shellword := scc.strcmd.Name
 	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
 
 		if tool := G.globalData.Tools.byVarname[varname]; tool != nil {
 			if !G.Mk.tools[tool.Name] {
-				ctx.shline.line.Warn1("The %q tool is used but not added to USE_TOOLS.", tool.Name)
+				scc.shline.line.Warn1("The %q tool is used but not added to USE_TOOLS.", tool.Name)
 			}
-			ctx.shline.checkCommandUse(shellword)
+			scc.shline.checkCommandUse(shellword)
 			return true
 		}
 
-		if vartype := ctx.shline.mkline.getVariableType(varname); vartype != nil && vartype.checker.name == "ShellCommand" {
-			ctx.shline.checkCommandUse(shellword)
+		if vartype := scc.shline.mkline.getVariableType(varname); vartype != nil && vartype.checker.name == "ShellCommand" {
+			scc.shline.checkCommandUse(shellword)
 			return true
 		}
 
@@ -539,12 +539,12 @@ func (ctx *SimpleCommandChecker) handleCommandVariable() bool {
 	return false
 }
 
-func (ctx *SimpleCommandChecker) handleComment() bool {
+func (scc *SimpleCommandChecker) handleComment() bool {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	shellword := ctx.strcmd.Name
+	shellword := scc.strcmd.Name
 	if G.opts.Debug {
 		defer tracecall1(shellword)()
 	}
@@ -554,13 +554,13 @@ func (ctx *SimpleCommandChecker) handleComment() bool {
 	}
 
 	semicolon := contains(shellword, ";")
-	multiline := ctx.shline.line.IsMultiline()
+	multiline := scc.shline.line.IsMultiline()
 
 	if semicolon {
-		ctx.shline.line.Warn0("A shell comment should not contain semicolons.")
+		scc.shline.line.Warn0("A shell comment should not contain semicolons.")
 	}
 	if multiline {
-		ctx.shline.line.Warn0("A shell comment does not stop at the end of line.")
+		scc.shline.line.Warn0("A shell comment does not stop at the end of line.")
 	}
 
 	if semicolon || multiline {
@@ -585,7 +585,7 @@ type ShellProgramChecker struct {
 	shline *ShellLine
 }
 
-func (c *ShellProgramChecker) checkConditionalCd(list *MkShList) {
+func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
@@ -603,7 +603,7 @@ func (c *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 
 	checkConditionalCd := func(cmd *MkShSimpleCommand) {
 		if NewStrCommand(cmd).Name == "cd" {
-			c.shline.line.Error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+			spc.shline.line.Error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 			Explain3(
 				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 				"shell will exit, no matter if it is protected by an \"if\" or the",
@@ -627,37 +627,37 @@ func (c *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	})
 }
 
-func (c *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool) {
+func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool) {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
 	for _, word := range words {
-		c.checkWord(word, checkQuoting)
+		spc.checkWord(word, checkQuoting)
 	}
 }
 
-func (c *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool) {
+func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool) {
 	if G.opts.Debug {
 		defer tracecall(word.MkText)()
 	}
 
-	c.shline.CheckWord(word.MkText, checkQuoting)
+	spc.shline.CheckWord(word.MkText, checkQuoting)
 }
 
-func (c *SimpleCommandChecker) checkAbsolutePathnames() {
+func (spc *SimpleCommandChecker) checkAbsolutePathnames() {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	cmdname := c.strcmd.Name
+	cmdname := spc.strcmd.Name
 	isSubst := false
-	for _, arg := range c.strcmd.Args {
+	for _, arg := range spc.strcmd.Args {
 		if !isSubst {
-			c.shline.line.CheckAbsolutePathname(arg)
+			spc.shline.line.CheckAbsolutePathname(arg)
 		}
 		if false && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
-			c.shline.line.Warn1("Substitution commands like %q should always be quoted.", arg)
+			spc.shline.line.Warn1("Substitution commands like %q should always be quoted.", arg)
 			Explain3(
 				"Usually these substitution commands contain characters like '*' or",
 				"other shell metacharacters that might lead to lookup of matching",
@@ -667,16 +667,16 @@ func (c *SimpleCommandChecker) checkAbsolutePathnames() {
 	}
 }
 
-func (ctx *SimpleCommandChecker) checkAutoMkdirs() {
+func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	cmdname := ctx.strcmd.Name
+	cmdname := scc.strcmd.Name
 	switch {
 	case cmdname == "${MKDIR}":
 		break
-	case cmdname == "${INSTALL}" && ctx.strcmd.HasOption("-d"):
+	case cmdname == "${INSTALL}" && scc.strcmd.HasOption("-d"):
 		cmdname = "${INSTALL} -d"
 	case matches(cmdname, `^\$\{INSTALL_.*_DIR\}$`):
 		break
@@ -684,10 +684,10 @@ func (ctx *SimpleCommandChecker) checkAutoMkdirs() {
 		return
 	}
 
-	for _, arg := range ctx.strcmd.Args {
+	for _, arg := range scc.strcmd.Args {
 		if !contains(arg, "$$") && !matches(arg, `\$\{[_.]*[a-z]`) {
 			if m, dirname := match1(arg, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
-				ctx.shline.line.Note2("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of %q.", dirname, cmdname)
+				scc.shline.line.Note2("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of %q.", dirname, cmdname)
 				Explain(
 					"Many packages include a list of all needed directories in their",
 					"PLIST file.  In such a case, you can just set AUTO_MKDIRS=yes and",
@@ -704,12 +704,12 @@ func (ctx *SimpleCommandChecker) checkAutoMkdirs() {
 	}
 }
 
-func (ctx *SimpleCommandChecker) checkInstallMulti() {
+func (scc *SimpleCommandChecker) checkInstallMulti() {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	cmd := ctx.strcmd
+	cmd := scc.strcmd
 
 	if hasPrefix(cmd.Name, "${INSTALL_") && hasSuffix(cmd.Name, "_DIR}") {
 		prevdir := ""
@@ -721,7 +721,7 @@ func (ctx *SimpleCommandChecker) checkInstallMulti() {
 				break
 			default:
 				if prevdir != "" {
-					ctx.shline.line.Warn0("The INSTALL_*_DIR commands can only handle one directory at a time.")
+					scc.shline.line.Warn0("The INSTALL_*_DIR commands can only handle one directory at a time.")
 					Explain2(
 						"Many implementations of install(1) can handle more, but pkgsrc aims",
 						"at maximum portability.")
@@ -733,13 +733,13 @@ func (ctx *SimpleCommandChecker) checkInstallMulti() {
 	}
 }
 
-func (ctx *SimpleCommandChecker) checkPaxPe() {
+func (scc *SimpleCommandChecker) checkPaxPe() {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	if ctx.strcmd.Name == "${PAX}" && ctx.strcmd.HasOption("-pe") {
-		ctx.shline.line.Warn0("Please use the -pp option to pax(1) instead of -pe.")
+	if scc.strcmd.Name == "${PAX}" && scc.strcmd.HasOption("-pe") {
+		scc.shline.line.Warn0("Please use the -pp option to pax(1) instead of -pe.")
 		Explain3(
 			"The -pe option tells pax to preserve the ownership of the files, which",
 			"means that the installed files will belong to the user that has built",
@@ -747,17 +747,17 @@ func (ctx *SimpleCommandChecker) checkPaxPe() {
 	}
 }
 
-func (ctx *SimpleCommandChecker) checkEchoN() {
+func (scc *SimpleCommandChecker) checkEchoN() {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	if ctx.strcmd.Name == "${ECHO}" && ctx.strcmd.HasOption("-n") {
-		ctx.shline.line.Warn0("Please use ${ECHO_N} instead of \"echo -n\".")
+	if scc.strcmd.Name == "${ECHO}" && scc.strcmd.HasOption("-n") {
+		scc.shline.line.Warn0("Please use ${ECHO_N} instead of \"echo -n\".")
 	}
 }
 
-func (ctx *ShellProgramChecker) checkPipeExitcode(line *Line, pipeline *MkShPipeline) {
+func (scc *ShellProgramChecker) checkPipeExitcode(line *Line, pipeline *MkShPipeline) {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
@@ -773,7 +773,7 @@ func (ctx *ShellProgramChecker) checkPipeExitcode(line *Line, pipeline *MkShPipe
 	}
 }
 
-func (ctx *ShellProgramChecker) checkSetE(list *MkShList, eflag *bool) {
+func (scc *ShellProgramChecker) checkSetE(list *MkShList, eflag *bool) {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
@@ -781,7 +781,7 @@ func (ctx *ShellProgramChecker) checkSetE(list *MkShList, eflag *bool) {
 	// Disabled until the shell parser can recognize "command || exit 1" reliably.
 	if false && G.opts.WarnExtra && !*eflag && "the current token" == ";" {
 		*eflag = true
-		ctx.shline.line.Warn1("Please switch to \"set -e\" mode before using a semicolon (the one after %q) to separate commands.", "previous token")
+		scc.shline.line.Warn1("Please switch to \"set -e\" mode before using a semicolon (the one after %q) to separate commands.", "previous token")
 		Explain(
 			"Normally, when a shell command fails (returns non-zero), the",
 			"remaining commands are still executed.  For example, the following",

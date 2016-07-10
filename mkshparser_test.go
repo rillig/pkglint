@@ -477,10 +477,10 @@ func (s *ShSuite) test(program string, expected *MkShList) {
 
 	if ok1, ok2 := c.Check(succeeded, equals, 0), c.Check(lexer.error, equals, ""); ok1 && ok2 {
 		if !c.Check(lexer.result, deepEquals, expected) {
-			actualJson, actualErr := json.MarshalIndent(lexer.result, "", "  ")
-			expectedJson, expectedErr := json.MarshalIndent(expected, "", "  ")
+			actualJSON, actualErr := json.MarshalIndent(lexer.result, "", "  ")
+			expectedJSON, expectedErr := json.MarshalIndent(expected, "", "  ")
 			if c.Check(actualErr, check.IsNil) && c.Check(expectedErr, check.IsNil) {
-				c.Check(string(actualJson), deepEquals, string(expectedJson))
+				c.Check(string(actualJSON), deepEquals, string(expectedJSON))
 			}
 		}
 	} else {

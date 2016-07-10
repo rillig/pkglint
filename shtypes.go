@@ -71,7 +71,6 @@ const (
 	shqSubshSquot
 	shqDquotBacktDquot
 	shqDquotBacktSquot
-	shqUnknown
 )
 
 func (q ShQuoting) String() string {
@@ -80,7 +79,6 @@ func (q ShQuoting) String() string {
 		"d", "s", "b", "S",
 		"db", "bd", "bs", "Ss",
 		"dbd", "dbs",
-		"unknown",
 	}[q]
 }
 

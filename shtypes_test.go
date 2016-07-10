@@ -17,5 +17,5 @@ func (s *Suite) Test_ShAtom_String(c *check.C) {
 }
 
 func (s *Suite) Test_ShQuoting_String(c *check.C) {
-	c.Check(shqUnknown.String(), equals, "unknown")
+	c.Check(shqDquotBacktSquot.String(), equals, "dbs")
 }
