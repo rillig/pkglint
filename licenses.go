@@ -86,55 +86,60 @@ func checkToplevelUnusedLicenses() {
 	}
 }
 
-func checklineLicense(line *MkLine, value string) {
+type LicenseChecker struct {
+	MkLine *MkLine
+}
+
+func (lc *LicenseChecker) Check(value string) {
 	licenses := parseLicenses(value)
 
 	if licenses == nil {
-		line.Error1("Parse error for license condition %q.", value)
+		lc.MkLine.Line.Error1("Parse error for license condition %q.", value)
 		return
 	}
 
-	checkLicenseNode := func(lc *LicenseCondition) {
-		license := lc.Name
-		var licenseFile string
-		if G.Pkg != nil {
-			if licenseFileValue, ok := G.Pkg.varValue("LICENSE_FILE"); ok {
-				licenseFile = G.CurrentDir + "/" + resolveVarsInRelativePath(licenseFileValue, false)
-			}
-		}
-		if licenseFile == "" {
-			licenseFile = G.globalData.Pkgsrcdir + "/licenses/" + license
-			if G.UsedLicenses != nil {
-				G.UsedLicenses[license] = true
-			}
-		}
+	licenses.Walk(lc.checkNode)
+}
 
-		if !fileExists(licenseFile) {
-			line.Warn1("License file %s does not exist.", cleanpath(licenseFile))
-		}
-
-		switch license {
-		case "fee-based-commercial-use",
-			"no-commercial-use",
-			"no-profit",
-			"no-redistribution",
-			"shareware":
-			line.Error1("License %q must not be used.", license)
-			Explain(
-				"Instead of using these deprecated licenses, extract the actual",
-				"license from the package into the pkgsrc/licenses/ directory",
-				"and define LICENSE to that file name.  See the pkgsrc guide,",
-				"keyword LICENSE, for more information.")
-		}
-
-		if len(lc.And) > 0 && len(lc.Or) > 0 {
-			line.Line.Error0("AND and OR operators in license conditions can only be combined using parentheses.")
-			Explain(
-				"Examples for valid license conditions are:",
-				"",
-				"\tlicense1 AND license2 AND (license3 OR license4)",
-				"\t(((license1 OR license2) AND (license3 OR license4)))")
+func (lc *LicenseChecker) checkNode(cond *LicenseCondition) {
+	license := cond.Name
+	var licenseFile string
+	if G.Pkg != nil {
+		if licenseFileValue, ok := G.Pkg.varValue("LICENSE_FILE"); ok {
+			licenseFile = G.CurrentDir + "/" + resolveVarsInRelativePath(licenseFileValue, false)
 		}
 	}
-	licenses.Walk(checkLicenseNode)
+	if licenseFile == "" {
+		licenseFile = G.globalData.Pkgsrcdir + "/licenses/" + license
+		if G.UsedLicenses != nil {
+			G.UsedLicenses[license] = true
+		}
+	}
+
+	if !fileExists(licenseFile) {
+		lc.MkLine.Warn1("License file %s does not exist.", cleanpath(licenseFile))
+	}
+
+	switch license {
+	case "fee-based-commercial-use",
+		"no-commercial-use",
+		"no-profit",
+		"no-redistribution",
+		"shareware":
+		lc.MkLine.Error1("License %q must not be used.", license)
+		Explain(
+			"Instead of using these deprecated licenses, extract the actual",
+			"license from the package into the pkgsrc/licenses/ directory",
+			"and define LICENSE to that file name.  See the pkgsrc guide,",
+			"keyword LICENSE, for more information.")
+	}
+
+	if len(cond.And) > 0 && len(cond.Or) > 0 {
+		lc.MkLine.Line.Error0("AND and OR operators in license conditions can only be combined using parentheses.")
+		Explain(
+			"Examples for valid license conditions are:",
+			"",
+			"\tlicense1 AND license2 AND (license3 OR license4)",
+			"\t(((license1 OR license2) AND (license3 OR license4)))")
+	}
 }

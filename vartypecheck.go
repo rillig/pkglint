@@ -486,7 +486,8 @@ func (cv *VartypeCheck) LdFlag() {
 }
 
 func (cv *VartypeCheck) License() {
-	checklineLicense(cv.MkLine, cv.Value)
+	licenseChecker := &LicenseChecker{cv.MkLine}
+	licenseChecker.Check(cv.Value)
 }
 
 func (cv *VartypeCheck) MachineGnuPlatform() {

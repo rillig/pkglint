@@ -15,15 +15,16 @@ func (s *Suite) Test_checklineLicense(c *check.C) {
 	G.globalData.Pkgsrcdir = s.tmpdir
 	G.CurrentDir = s.tmpdir
 
-	checklineLicense(mkline, "gpl-v2")
+	licenseChecker := &LicenseChecker{mkline}
+	licenseChecker.Check("gpl-v2")
 
 	c.Check(s.Output(), equals, "WARN: Makefile:7: License file ~/licenses/gpl-v2 does not exist.\n")
 
-	checklineLicense(mkline, "no-profit shareware")
+	licenseChecker.Check("no-profit shareware")
 
 	c.Check(s.Output(), equals, "ERROR: Makefile:7: Parse error for license condition \"no-profit shareware\".\n")
 
-	checklineLicense(mkline, "no-profit AND shareware")
+	licenseChecker.Check("no-profit AND shareware")
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:7: License file ~/licenses/no-profit does not exist.\n"+
@@ -31,11 +32,11 @@ func (s *Suite) Test_checklineLicense(c *check.C) {
 		"WARN: Makefile:7: License file ~/licenses/shareware does not exist.\n"+
 		"ERROR: Makefile:7: License \"shareware\" must not be used.\n")
 
-	checklineLicense(mkline, "gnu-gpl-v2")
+	licenseChecker.Check("gnu-gpl-v2")
 
 	c.Check(s.Output(), equals, "")
 
-	checklineLicense(mkline, "gnu-gpl-v2 AND gnu-gpl-v2 OR gnu-gpl-v2")
+	licenseChecker.Check("gnu-gpl-v2 AND gnu-gpl-v2 OR gnu-gpl-v2")
 
 	c.Check(s.Output(), equals, "ERROR: Makefile:7: AND and OR operators in license conditions can only be combined using parentheses.\n")
 }
