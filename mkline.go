@@ -99,17 +99,18 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		return
 	}
 
-	if m, directive, includefile := match2(text, reMkInclude); m {
+	if m, indent, directive, includefile := match3(text, reMkInclude); m {
 		mkline.xtype = 6
 		mkline.xmustexist = directive == "include"
-		mkline.xs1 = includefile
+		mkline.xs1 = indent
+		mkline.xs2 = includefile
 		return
 	}
 
 	if m, directive, includefile := match2(text, `^\.\s*(s?include)\s+<([^>]+)>\s*(?:#.*)?$`); m {
 		mkline.xtype = 7
 		mkline.xmustexist = directive == "include"
-		mkline.xs1 = includefile
+		mkline.xs2 = includefile
 		return
 	}
 
@@ -152,7 +153,7 @@ func (mkline *MkLine) Directive() string   { return mkline.xs2 }
 func (mkline *MkLine) Args() string        { return mkline.xs3 }
 func (mkline *MkLine) IsInclude() bool     { return mkline.xtype == 6 }
 func (mkline *MkLine) MustExist() bool     { return mkline.xmustexist }
-func (mkline *MkLine) Includefile() string { return mkline.xs1 }
+func (mkline *MkLine) Includefile() string { return mkline.xs2 }
 func (mkline *MkLine) IsSysinclude() bool  { return mkline.xtype == 7 }
 func (mkline *MkLine) IsDependency() bool  { return mkline.xtype == 8 }
 func (mkline *MkLine) Targets() string     { return mkline.xs1 }
@@ -186,7 +187,9 @@ func (mkline *MkLine) checkInclude() {
 		defer tracecall0()()
 	}
 
-	mkline.checkDirectiveIndentation()
+	if mkline.Indent() != "" {
+		mkline.checkDirectiveIndentation()
+	}
 
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
