@@ -5,8 +5,8 @@ import (
 )
 
 func (s *Suite) Test_parseLicenses(c *check.C) {
-	c.Check(parseLicenses("gnu-gpl-v2"), check.DeepEquals, []string{"gnu-gpl-v2"})
-	c.Check(parseLicenses("AND artistic"), check.DeepEquals, []string{"artistic"})
+	c.Check(parseLicenses("gnu-gpl-v2"), check.DeepEquals, &LicenseCondition{Name: "gnu-gpl-v2"})
+	c.Check(parseLicenses("AND artistic"), check.IsNil)
 }
 
 func (s *Suite) Test_checklineLicense(c *check.C) {
@@ -21,13 +21,21 @@ func (s *Suite) Test_checklineLicense(c *check.C) {
 
 	checklineLicense(mkline, "no-profit shareware")
 
+	c.Check(s.Output(), equals, "ERROR: Makefile:7: Parse error for license condition \"no-profit shareware\".\n")
+
+	checklineLicense(mkline, "no-profit AND shareware")
+
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:7: License file ~/licenses/no-profit does not exist.\n"+
-		"WARN: Makefile:7: License \"no-profit\" is deprecated.\n"+
+		"ERROR: Makefile:7: License \"no-profit\" must not be used.\n"+
 		"WARN: Makefile:7: License file ~/licenses/shareware does not exist.\n"+
-		"WARN: Makefile:7: License \"shareware\" is deprecated.\n")
+		"ERROR: Makefile:7: License \"shareware\" must not be used.\n")
 
 	checklineLicense(mkline, "gnu-gpl-v2")
 
 	c.Check(s.Output(), equals, "")
+
+	checklineLicense(mkline, "gnu-gpl-v2 AND gnu-gpl-v2 OR gnu-gpl-v2")
+
+	c.Check(s.Output(), equals, "ERROR: Makefile:7: AND and OR operators in license conditions can only be combined using parentheses.\n")
 }

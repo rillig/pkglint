@@ -5,13 +5,70 @@ import (
 	"strings"
 )
 
-func parseLicenses(licenses string) []string {
-	noPerl := strings.Replace(licenses, "${PERL5_LICENSE}", "gnu-gpl-v2 OR artistic", -1)
-	noOps := regcomp(`[()]|AND|OR`).ReplaceAllString(noPerl, "") // cheated
-	return splitOnSpace(strings.TrimSpace(noOps))
+//go:generate go tool yacc -p liyy -o licenseyacc.go -v licenseyacc.log license.y
+
+type LicenseCondition struct {
+	Name string
+	And  []LicenseCondition
+	Or   []LicenseCondition
 }
 
-func checktoplevelUnusedLicenses() {
+func (lc *LicenseCondition) Walk(callback func(*LicenseCondition)) {
+	callback(lc)
+	for _, and := range lc.And {
+		and.Walk(callback)
+	}
+	for _, or := range lc.Or {
+		or.Walk(callback)
+	}
+}
+
+type licenseLexer struct {
+	repl   *PrefixReplacer
+	result LicenseCondition
+	error  string
+}
+
+func (lexer *licenseLexer) Lex(llval *liyySymType) int {
+	repl := lexer.repl
+	repl.AdvanceHspace()
+	switch {
+	case repl.rest == "":
+		return 0
+	case repl.AdvanceStr("("):
+		return ltOPEN
+	case repl.AdvanceStr(")"):
+		return ltCLOSE
+	case repl.AdvanceRegexp(`^[\w-.]+`):
+		word := repl.m[0]
+		switch word {
+		case "AND":
+			return ltAND
+		case "OR":
+			return ltOR
+		default:
+			llval.Node.Name = word
+			return ltNAME
+		}
+	}
+	return -1
+}
+
+func (lexer *licenseLexer) Error(s string) {
+	lexer.error = s
+}
+
+func parseLicenses(licenses string) *LicenseCondition {
+	expanded := strings.Replace(licenses, "${PERL5_LICENSE}", "gnu-gpl-v2 OR artistic", -1)
+	lexer := &licenseLexer{repl: NewPrefixReplacer(expanded)}
+	result := liyyNewParser().Parse(lexer)
+	if result == 0 {
+		return &lexer.result
+	}
+	return nil
+}
+
+func checkToplevelUnusedLicenses() {
 	if G.UsedLicenses == nil {
 		return
 	}
@@ -31,7 +88,14 @@ func checktoplevelUnusedLicenses() {
 
 func checklineLicense(line *MkLine, value string) {
 	licenses := parseLicenses(value)
-	for _, license := range licenses {
+
+	if licenses == nil {
+		line.Error1("Parse error for license condition %q.", value)
+		return
+	}
+
+	checkLicenseNode := func(lc *LicenseCondition) {
+		license := lc.Name
 		var licenseFile string
 		if G.Pkg != nil {
 			if licenseFileValue, ok := G.Pkg.varValue("LICENSE_FILE"); ok {
@@ -55,12 +119,22 @@ func checklineLicense(line *MkLine, value string) {
 			"no-profit",
 			"no-redistribution",
 			"shareware":
-			line.Warn1("License %q is deprecated.", license)
+			line.Error1("License %q must not be used.", license)
 			Explain(
 				"Instead of using these deprecated licenses, extract the actual",
 				"license from the package into the pkgsrc/licenses/ directory",
 				"and define LICENSE to that file name.  See the pkgsrc guide,",
 				"keyword LICENSE, for more information.")
 		}
+
+		if len(lc.And) > 0 && len(lc.Or) > 0 {
+			line.Line.Error0("AND and OR operators in license conditions can only be combined using parentheses.")
+			Explain(
+				"Examples for valid license conditions are:",
+				"",
+				"\tlicense1 AND license2 AND (license3 OR license4)",
+				"\t(((license1 OR license2) AND (license3 OR license4)))")
+		}
 	}
+	licenses.Walk(checkLicenseNode)
 }
