@@ -186,6 +186,8 @@ func (mkline *MkLine) checkInclude() {
 		defer tracecall0()()
 	}
 
+	mkline.checkDirectiveIndentation()
+
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
 	if G.opts.Debug {
@@ -230,7 +232,8 @@ func (mkline *MkLine) checkInclude() {
 }
 
 func (mkline *MkLine) checkCond(forVars map[string]bool) {
-	indent, directive, args := mkline.Indent(), mkline.Directive(), mkline.Args()
+	directive := mkline.Directive()
+	args := mkline.Args()
 	indentation := &G.Mk.indentation
 
 	switch directive {
@@ -242,12 +245,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 		}
 	}
 
-	// Check the indentation
-	if expected := strings.Repeat(" ", indentation.Depth()); indent != expected {
-		if G.opts.WarnSpace && !mkline.Line.AutofixReplace("."+indent, "."+expected) {
-			mkline.Line.Notef("This directive should be indented by %d spaces.", indentation.Depth())
-		}
-	}
+	mkline.checkDirectiveIndentation()
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
 		indentation.Push(indentation.Depth())
@@ -256,27 +254,23 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 		indentation.Push(indentation.Depth() + 2)
 	}
 
-	const reDirectivesWithArgs = `^(?:if|ifdef|ifndef|elif|for|undef)$`
-	if matches(directive, reDirectivesWithArgs) && args == "" {
-		mkline.Error1("\".%s\" requires arguments.", directive)
-
-	} else if !matches(directive, reDirectivesWithArgs) && args != "" {
-		mkline.Error1("\".%s\" does not take arguments.", directive)
-
-		if directive == "else" {
-			mkline.Note0("If you meant \"else if\", use \".elif\".")
+	needsArgument := matches(directive, `^(?:if|ifdef|ifndef|elif|for|undef)$`)
+	if needsArgument != (args != "") {
+		if needsArgument {
+			mkline.Error1("\".%s\" requires arguments.", directive)
+		} else {
+			mkline.Error1("\".%s\" does not take arguments.", directive)
+			if directive == "else" {
+				mkline.Note0("If you meant \"else if\", use \".elif\".")
+			}
 		}
 
 	} else if directive == "if" || directive == "elif" {
 		mkline.CheckCond()
 
 	} else if directive == "ifdef" || directive == "ifndef" {
-		if matches(args, `\s`) {
-			mkline.Error1("The \".%s\" directive can only handle _one_ argument.", directive)
-		} else {
-			mkline.Line.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
-				directive, ifelseStr(directive == "ifdef", "", "!"), args)
-		}
+		mkline.Line.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
+			directive, ifelseStr(directive == "ifdef", "", "!"), args)
 
 	} else if directive == "for" {
 		if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
@@ -319,6 +313,19 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 			if forVars[uvar] {
 				mkline.Note0("Using \".undef\" after a \".for\" loop is unnecessary.")
 			}
+		}
+	}
+}
+
+func (mkline *MkLine) checkDirectiveIndentation() {
+	if G.Mk == nil {
+		return
+	}
+	indent := mkline.Indent()
+	indentation := G.Mk.indentation
+	if expected := strings.Repeat(" ", indentation.Depth()); indent != expected {
+		if G.opts.WarnSpace && !mkline.Line.AutofixReplace("."+indent, "."+expected) {
+			mkline.Line.Notef("This directive should be indented by %d spaces.", indentation.Depth())
 		}
 	}
 }
