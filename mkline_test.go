@@ -766,7 +766,7 @@ func (s *Suite) Test_MkLine_CheckCond_comparison_with_shell_command(c *check.C) 
 	c.Check(s.Output(), equals, "") // Don’t warn about unknown shell command "cc".
 }
 
-func (s *Suite) disabled_Test_MkLine_Pkgmandir(c *check.C) {
+func (s *Suite) Test_MkLine_Pkgmandir(c *check.C) {
 	s.UseCommandLine(c, "-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("chat/ircII/Makefile",
