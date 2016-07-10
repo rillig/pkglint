@@ -39,4 +39,8 @@ func (s *Suite) Test_checklineLicense(c *check.C) {
 	licenseChecker.Check("gnu-gpl-v2 AND gnu-gpl-v2 OR gnu-gpl-v2")
 
 	c.Check(s.Output(), equals, "ERROR: Makefile:7: AND and OR operators in license conditions can only be combined using parentheses.\n")
+
+	licenseChecker.Check("(gnu-gpl-v2 OR gnu-gpl-v2) AND gnu-gpl-v2")
+
+	c.Check(s.Output(), equals, "")
 }

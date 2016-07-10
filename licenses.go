@@ -7,14 +7,20 @@ import (
 
 //go:generate go tool yacc -p liyy -o licenseyacc.go -v licenseyacc.log license.y
 
+// LicenseCondition describes a complex license condition.
+// It has either `Name` or `Main` set.
 type LicenseCondition struct {
 	Name string
-	And  []LicenseCondition
-	Or   []LicenseCondition
+	Main *LicenseCondition
+	And  []*LicenseCondition
+	Or   []*LicenseCondition
 }
 
 func (lc *LicenseCondition) Walk(callback func(*LicenseCondition)) {
 	callback(lc)
+	if lc.Main != nil {
+		lc.Main.Walk(callback)
+	}
 	for _, and := range lc.And {
 		and.Walk(callback)
 	}
@@ -25,7 +31,7 @@ func (lc *LicenseCondition) Walk(callback func(*LicenseCondition)) {
 
 type licenseLexer struct {
 	repl   *PrefixReplacer
-	result LicenseCondition
+	result *LicenseCondition
 	error  string
 }
 
@@ -47,7 +53,7 @@ func (lexer *licenseLexer) Lex(llval *liyySymType) int {
 		case "OR":
 			return ltOR
 		default:
-			llval.Node.Name = word
+			llval.Node = &LicenseCondition{Name: word}
 			return ltNAME
 		}
 	}
@@ -63,7 +69,7 @@ func parseLicenses(licenses string) *LicenseCondition {
 	lexer := &licenseLexer{repl: NewPrefixReplacer(expanded)}
 	result := liyyNewParser().Parse(lexer)
 	if result == 0 {
-		return &lexer.result
+		return lexer.result
 	}
 	return nil
 }
@@ -103,6 +109,10 @@ func (lc *LicenseChecker) Check(value string) {
 
 func (lc *LicenseChecker) checkNode(cond *LicenseCondition) {
 	license := cond.Name
+	if license == "" {
+		return
+	}
+
 	var licenseFile string
 	if G.Pkg != nil {
 		if licenseFileValue, ok := G.Pkg.varValue("LICENSE_FILE"); ok {
