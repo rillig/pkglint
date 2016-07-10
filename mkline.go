@@ -307,7 +307,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 				}
 			}
 
-			forLoopType := &Vartype{lkSpace, CheckvarUnchecked, []AclEntry{{"*", aclpAllRead}}, guessed}
+			forLoopType := &Vartype{lkSpace, BtUnchecked, []AclEntry{{"*", aclpAllRead}}, guessed}
 			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
 			for _, forLoopVar := range mkline.extractUsedVariables(values) {
 				mkline.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
@@ -1031,27 +1031,27 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		}
 
 	case vartype.kindOfList == lkNone:
-		mkline.CheckVartypePrimitive(varname, vartype.checker, op, value, comment, vartype.guessed)
+		mkline.CheckVartypePrimitive(varname, vartype.basicType, op, value, comment, vartype.guessed)
 
 	case value == "":
 		break
 
 	case vartype.kindOfList == lkSpace:
 		for _, word := range splitOnSpace(value) {
-			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, vartype.guessed)
+			mkline.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
 
 	case vartype.kindOfList == lkShell:
 		words, _ := splitIntoMkWords(mkline.Line, value)
 		for _, word := range words {
-			mkline.CheckVartypePrimitive(varname, vartype.checker, op, word, comment, vartype.guessed)
+			mkline.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
 	}
 }
 
 // For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *VarChecker, op MkOperator, value, comment string, guessed bool) {
+func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *BasicType, op MkOperator, value, comment string, guessed bool) {
 	if G.opts.Debug {
 		defer tracecall(varname, checker.name, op, value, comment, guessed)()
 	}
@@ -1330,7 +1330,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqDontKnow
 	}
 
-	if vartype.checker.IsEnum() || vartype.IsBasicSafe() {
+	if vartype.basicType.IsEnum() || vartype.IsBasicSafe() {
 		if vartype.kindOfList == lkNone {
 			return nqDoesntMatter
 		}
@@ -1355,7 +1355,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.IsWordPart && vuc.quoting == vucQuotPlain {
-		if vartype.kindOfList == lkNone && vartype.checker == CheckvarShellWord {
+		if vartype.kindOfList == lkNone && vartype.basicType == BtShellWord {
 			return nqNo
 		}
 	}
@@ -1406,10 +1406,10 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 
 	if wantList != haveList {
 		if vuc.vartype != nil && vartype != nil {
-			if vuc.vartype.checker == CheckvarFetchURL && vartype.checker == CheckvarHomepage {
+			if vuc.vartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
 				return nqNo
 			}
-			if vuc.vartype.checker == CheckvarHomepage && vartype.checker == CheckvarFetchURL {
+			if vuc.vartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
 				return nqNo // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 			}
 		}
@@ -1452,11 +1452,11 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 				perms |= aclpUseLoadtime
 			}
 		}
-		return &Vartype{lkNone, CheckvarShellCommand, []AclEntry{{"*", perms}}, false}
+		return &Vartype{lkNone, BtShellCommand, []AclEntry{{"*", perms}}, false}
 	}
 
 	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.Tools.byVarname[toolvarname] != nil {
-		return &Vartype{lkNone, CheckvarPathname, []AclEntry{{"*", aclpUse}}, false}
+		return &Vartype{lkNone, BtPathname, []AclEntry{{"*", aclpUse}}, false}
 	}
 
 	allowAll := []AclEntry{{"*", aclpAll}}
@@ -1467,35 +1467,35 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 	var gtype *Vartype
 	switch {
 	case hasSuffix(varbase, "DIRS"):
-		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
 	case hasSuffix(varbase, "DIR") && !hasSuffix(varbase, "DESTDIR"), hasSuffix(varname, "_HOME"):
-		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtPathname, allowRuntime, true}
 	case hasSuffix(varbase, "FILES"):
-		gtype = &Vartype{lkShell, CheckvarPathmask, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
 	case hasSuffix(varbase, "FILE"):
-		gtype = &Vartype{lkNone, CheckvarPathname, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtPathname, allowRuntime, true}
 	case hasSuffix(varbase, "PATH"):
-		gtype = &Vartype{lkNone, CheckvarPathlist, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtPathlist, allowRuntime, true}
 	case hasSuffix(varbase, "PATHS"):
-		gtype = &Vartype{lkShell, CheckvarPathname, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtPathname, allowRuntime, true}
 	case hasSuffix(varbase, "_USER"):
-		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, true}
+		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, true}
 	case hasSuffix(varbase, "_GROUP"):
-		gtype = &Vartype{lkNone, CheckvarUserGroupName, allowAll, true}
+		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, true}
 	case hasSuffix(varbase, "_ENV"):
-		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, true}
 	case hasSuffix(varbase, "_CMD"):
-		gtype = &Vartype{lkNone, CheckvarShellCommand, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtShellCommand, allowRuntime, true}
 	case hasSuffix(varbase, "_ARGS"):
-		gtype = &Vartype{lkShell, CheckvarShellWord, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, true}
 	case hasSuffix(varbase, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"):
-		gtype = &Vartype{lkShell, CheckvarCFlag, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtCFlag, allowRuntime, true}
 	case hasSuffix(varname, "_LDFLAGS"):
-		gtype = &Vartype{lkShell, CheckvarLdFlag, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, true}
 	case hasSuffix(varbase, "_MK"):
-		gtype = &Vartype{lkNone, CheckvarUnchecked, allowAll, true}
+		gtype = &Vartype{lkNone, BtUnchecked, allowAll, true}
 	case hasPrefix(varbase, "PLIST."):
-		gtype = &Vartype{lkNone, CheckvarYes, allowAll, true}
+		gtype = &Vartype{lkNone, BtYes, allowAll, true}
 	}
 
 	if G.opts.Debug {

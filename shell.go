@@ -23,7 +23,7 @@ func NewShellLine(mkline *MkLine) *ShellLine {
 	return &ShellLine{mkline.Line, mkline}
 }
 
-var shellcommandsContextType = &Vartype{lkNone, CheckvarShellCommands, []AclEntry{{"*", aclpAllRuntime}}, false}
+var shellcommandsContextType = &Vartype{lkNone, BtShellCommands, []AclEntry{{"*", aclpAllRuntime}}, false}
 var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, false}
 
 func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
@@ -525,7 +525,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 			return true
 		}
 
-		if vartype := scc.shline.mkline.getVariableType(varname); vartype != nil && vartype.checker.name == "ShellCommand" {
+		if vartype := scc.shline.mkline.getVariableType(varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
 			scc.shline.checkCommandUse(shellword)
 			return true
 		}
@@ -581,83 +581,19 @@ func (scc *SimpleCommandChecker) handleComment() bool {
 	return true
 }
 
-type ShellProgramChecker struct {
-	shline *ShellLine
-}
-
-func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
+func (scc *SimpleCommandChecker) checkAbsolutePathnames() {
 	if G.opts.Debug {
 		defer tracecall()()
 	}
 
-	getSimple := func(list *MkShList) *MkShSimpleCommand {
-		if len(list.AndOrs) == 1 {
-			if len(list.AndOrs[0].Pipes) == 1 {
-				if len(list.AndOrs[0].Pipes[0].Cmds) == 1 {
-					return list.AndOrs[0].Pipes[0].Cmds[0].Simple
-				}
-			}
-		}
-		return nil
-	}
-
-	checkConditionalCd := func(cmd *MkShSimpleCommand) {
-		if NewStrCommand(cmd).Name == "cd" {
-			spc.shline.line.Error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
-			Explain3(
-				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
-				"shell will exit, no matter if it is protected by an \"if\" or the",
-				"\"||\" operator.")
-		}
-	}
-
-	(*MkShWalker).Walk(nil, list, func(node interface{}) {
-		if cmd, ok := node.(*MkShIfClause); ok {
-			for _, cond := range cmd.Conds {
-				if simple := getSimple(cond); simple != nil {
-					checkConditionalCd(simple)
-				}
-			}
-		}
-		if cmd, ok := node.(*MkShLoopClause); ok {
-			if simple := getSimple(cmd.Cond); simple != nil {
-				checkConditionalCd(simple)
-			}
-		}
-	})
-}
-
-func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool) {
-	if G.opts.Debug {
-		defer tracecall()()
-	}
-
-	for _, word := range words {
-		spc.checkWord(word, checkQuoting)
-	}
-}
-
-func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool) {
-	if G.opts.Debug {
-		defer tracecall(word.MkText)()
-	}
-
-	spc.shline.CheckWord(word.MkText, checkQuoting)
-}
-
-func (spc *SimpleCommandChecker) checkAbsolutePathnames() {
-	if G.opts.Debug {
-		defer tracecall()()
-	}
-
-	cmdname := spc.strcmd.Name
+	cmdname := scc.strcmd.Name
 	isSubst := false
-	for _, arg := range spc.strcmd.Args {
+	for _, arg := range scc.strcmd.Args {
 		if !isSubst {
-			spc.shline.line.CheckAbsolutePathname(arg)
+			scc.shline.line.CheckAbsolutePathname(arg)
 		}
 		if false && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
-			spc.shline.line.Warn1("Substitution commands like %q should always be quoted.", arg)
+			scc.shline.line.Warn1("Substitution commands like %q should always be quoted.", arg)
 			Explain3(
 				"Usually these substitution commands contain characters like '*' or",
 				"other shell metacharacters that might lead to lookup of matching",
@@ -755,6 +691,70 @@ func (scc *SimpleCommandChecker) checkEchoN() {
 	if scc.strcmd.Name == "${ECHO}" && scc.strcmd.HasOption("-n") {
 		scc.shline.line.Warn0("Please use ${ECHO_N} instead of \"echo -n\".")
 	}
+}
+
+type ShellProgramChecker struct {
+	shline *ShellLine
+}
+
+func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
+	if G.opts.Debug {
+		defer tracecall()()
+	}
+
+	getSimple := func(list *MkShList) *MkShSimpleCommand {
+		if len(list.AndOrs) == 1 {
+			if len(list.AndOrs[0].Pipes) == 1 {
+				if len(list.AndOrs[0].Pipes[0].Cmds) == 1 {
+					return list.AndOrs[0].Pipes[0].Cmds[0].Simple
+				}
+			}
+		}
+		return nil
+	}
+
+	checkConditionalCd := func(cmd *MkShSimpleCommand) {
+		if NewStrCommand(cmd).Name == "cd" {
+			spc.shline.line.Error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+			Explain3(
+				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
+				"shell will exit, no matter if it is protected by an \"if\" or the",
+				"\"||\" operator.")
+		}
+	}
+
+	(*MkShWalker).Walk(nil, list, func(node interface{}) {
+		if cmd, ok := node.(*MkShIfClause); ok {
+			for _, cond := range cmd.Conds {
+				if simple := getSimple(cond); simple != nil {
+					checkConditionalCd(simple)
+				}
+			}
+		}
+		if cmd, ok := node.(*MkShLoopClause); ok {
+			if simple := getSimple(cmd.Cond); simple != nil {
+				checkConditionalCd(simple)
+			}
+		}
+	})
+}
+
+func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool) {
+	if G.opts.Debug {
+		defer tracecall()()
+	}
+
+	for _, word := range words {
+		spc.checkWord(word, checkQuoting)
+	}
+}
+
+func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool) {
+	if G.opts.Debug {
+		defer tracecall(word.MkText)()
+	}
+
+	spc.shline.CheckWord(word.MkText, checkQuoting)
 }
 
 func (scc *ShellProgramChecker) checkPipeExitcode(line *Line, pipeline *MkShPipeline) {
