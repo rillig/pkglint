@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	reShVarassign    = `^([A-Z_a-z]\w*)=`
 	reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
 	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
 	reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
@@ -897,85 +896,4 @@ func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
 		word = ""
 	}
 	return words, word + p.mkp.Rest()
-}
-
-type ShQuote struct {
-	repl *PrefixReplacer
-	q    ShQuoting
-}
-
-func NewShQuote(s string) *ShQuote {
-	return &ShQuote{NewPrefixReplacer(s), shqPlain}
-}
-
-func (sq *ShQuote) Feed(str string) {
-	const (
-		reSkip = "^[^\"'`\\\\]+" // Characters that don’t influence the quoting mode.
-	)
-
-	repl := sq.repl
-	repl.rest += str
-	for repl.rest != "" {
-		if repl.AdvanceRegexp(reSkip) {
-			continue
-		}
-
-		mark := repl.Mark()
-		switch sq.q {
-		case shqPlain:
-			switch {
-			case repl.AdvanceStr("\""):
-				sq.q = shqDquot
-			case repl.AdvanceStr("'"):
-				sq.q = shqSquot
-			case repl.AdvanceStr("`"):
-				sq.q = shqBackt
-			case repl.AdvanceRegexp(`^\\.`):
-			}
-
-		case shqDquot:
-			switch {
-			case repl.AdvanceStr("\""):
-				sq.q = shqPlain
-			case repl.AdvanceStr("`"):
-				sq.q = shqDquotBackt
-			case repl.AdvanceStr("'"):
-			case repl.AdvanceRegexp(`^\\.`):
-			}
-		case shqSquot:
-			switch {
-			case repl.AdvanceStr("'"):
-				sq.q = shqPlain
-			case repl.AdvanceRegexp(`^[^']+`):
-			}
-		case shqBackt:
-			switch {
-			case repl.AdvanceStr("`"):
-				sq.q = shqPlain
-			case repl.AdvanceStr("'"):
-				sq.q = shqBacktSquot
-			case repl.AdvanceRegexp(`^\\.`):
-			}
-
-		case shqDquotBackt:
-			switch {
-			case repl.AdvanceStr("`"):
-				sq.q = shqDquot
-			case repl.AdvanceStr("'"):
-				sq.q = shqDquotBacktSquot
-			case repl.AdvanceRegexp(`^\\.`):
-			}
-		case shqDquotBacktSquot:
-			switch {
-			case repl.AdvanceStr("'"):
-				sq.q = shqDquotBackt
-			}
-		}
-
-		if repl.Since(mark) == "" {
-			traceStep2("ShQuote.stuck stack=%s rest=%s", sq.q.String(), sq.repl.rest)
-			repl.AdvanceRest()
-			sq.q = shqUnknown
-		}
-	}
 }
