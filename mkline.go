@@ -260,7 +260,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 	indentation := &G.Mk.indentation
 
 	switch directive {
-	case "endif", "endfor", "elif", "else":
+	case "endif", "endfor":
 		if indentation.Len() > 1 {
 			indentation.Pop()
 		} else {
@@ -273,7 +273,10 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
 		indentation.Push(indentation.Depth())
 
-	} else if matches(directive, `^(?:if|ifdef|ifndef|for|elif|else)$`) {
+	} else if directive == "elif" || directive == "else" {
+		// No change in indentation or conditional variables
+
+	} else if matches(directive, `^(?:if|ifdef|ifndef|for)$`) {
 		indentation.Push(indentation.Depth() + 2)
 	}
 
@@ -1699,7 +1702,18 @@ func (ind *Indentation) AddVar(varname string) {
 	if ind.conditionVars[level] == nil {
 		ind.conditionVars[level] = make(map[string]bool)
 	}
-	ind.conditionVars[level][varname] = true
+	if !hasSuffix(varname, "_MK") {
+		ind.conditionVars[level][varname] = true
+	}
+}
+
+func (ind *Indentation) IsConditional() bool {
+	for _, vars := range ind.conditionVars {
+		if len(vars) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (ind *Indentation) DependsOn(varname string) bool {
