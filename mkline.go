@@ -208,7 +208,7 @@ func (mkline *MkLine) checkInclude() {
 	}
 
 	if mkline.Indent() != "" {
-		mkline.checkDirectiveIndentation()
+		mkline.checkDirectiveIndentation(G.Mk.indentation.Depth())
 	}
 
 	includefile := mkline.Includefile()
@@ -268,7 +268,11 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 		}
 	}
 
-	mkline.checkDirectiveIndentation()
+	expectedDepth := indentation.Depth()
+	if directive == "elif" || directive == "else" {
+		expectedDepth = indentation.depth[len(indentation.depth)-2]
+	}
+	mkline.checkDirectiveIndentation(expectedDepth)
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
 		indentation.Push(indentation.Depth())
@@ -343,15 +347,14 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 	}
 }
 
-func (mkline *MkLine) checkDirectiveIndentation() {
+func (mkline *MkLine) checkDirectiveIndentation(expectedDepth int) {
 	if G.Mk == nil {
 		return
 	}
 	indent := mkline.Indent()
-	indentation := G.Mk.indentation
-	if expected := strings.Repeat(" ", indentation.Depth()); indent != expected {
+	if expected := strings.Repeat(" ", expectedDepth); indent != expected {
 		if G.opts.WarnSpace && !mkline.Line.AutofixReplace("."+indent, "."+expected) {
-			mkline.Line.Notef("This directive should be indented by %d spaces.", indentation.Depth())
+			mkline.Line.Notef("This directive should be indented by %d spaces.", expectedDepth)
 		}
 	}
 }
