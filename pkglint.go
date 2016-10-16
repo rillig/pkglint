@@ -321,7 +321,7 @@ func MatchVarassign(text string) (m bool, varname, spaceAfterVarname, op, valueA
 			'a' <= b && b <= 'z',
 			b == '_',
 			'0' <= b && b <= '9',
-			'$' <= b && b <= '.' && strings.ContainsRune("$*+-.", rune(b)),
+			'$' <= b && b <= '.' && (b == '$' || b == '*' || b == '+' || b == '-' || b == '.'),
 			b == '[',
 			b == '{', b == '}':
 			continue
