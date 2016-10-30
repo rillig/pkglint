@@ -244,6 +244,6 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"WARN: ~/category/package/options.mk:3: Unknown option \"zlib\".\n"+
-		"WARN: ~/category/package/options.mk:4: \"../../devel/zlib/buildlink3.mk\" is included conditionally here (depending on PKG_OPTIONS) and unconditionally in Makefile:5\n"+
-		"WARN: ~/category/package/options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is included unconditionally here and conditionally in Makefile:7 (depending on OPSYS)\n")
+		"WARN: ~/category/package/options.mk:4: \"../../devel/zlib/buildlink3.mk\" is included conditionally here (depending on PKG_OPTIONS) and unconditionally in Makefile:5.\n"+
+		"WARN: ~/category/package/options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is included unconditionally here and conditionally in Makefile:7 (depending on OPSYS).\n")
 }

@@ -852,14 +852,14 @@ func (pkg *Package) CheckInclude(mkline *MkLine, indentation *Indentation) {
 			pkg.conditionalIncludes[includefile] = mkline
 			if other := pkg.unconditionalIncludes[includefile]; other != nil {
 				dependingOn := mkline.data.(mkLineInclude).conditionVars
-				mkline.Line.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s",
+				mkline.Line.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
 					cleanpath(includefile), dependingOn, other.Line.ReferenceFrom(mkline.Line))
 			}
 		} else {
 			pkg.unconditionalIncludes[includefile] = mkline
 			if other := pkg.conditionalIncludes[includefile]; other != nil {
 				dependingOn := other.data.(mkLineInclude).conditionVars
-				mkline.Line.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s)",
+				mkline.Line.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
 					cleanpath(includefile), other.Line.ReferenceFrom(mkline.Line), dependingOn)
 			}
 		}
