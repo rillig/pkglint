@@ -34,9 +34,10 @@ type mkLineConditional struct {
 	args      string
 }
 type mkLineInclude struct {
-	mustexist   bool
-	indent      string
-	includeFile string
+	mustexist     bool
+	indent        string
+	includeFile   string
+	conditionVars string // (filled in later)
 }
 type mkLineDependency struct {
 	targets string
@@ -119,13 +120,13 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 	if m, indent, directive, includefile := match3(text, reMkInclude); m {
 		mkline.xtype = 6
-		mkline.data = mkLineInclude{directive == "include", indent, includefile}
+		mkline.data = mkLineInclude{directive == "include", indent, includefile, ""}
 		return
 	}
 
 	if m, indent, directive, includefile := match3(text, `^\.(\s*)(s?include)\s+<([^>]+)>\s*(?:#.*)?$`); m {
 		mkline.xtype = 7
-		mkline.data = mkLineInclude{directive == "include", indent, includefile}
+		mkline.data = mkLineInclude{directive == "include", indent, includefile, ""}
 		return
 	}
 
@@ -276,10 +277,6 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
 		indentation.Push(indentation.Depth())
-
-	} else if directive == "elif" || directive == "else" {
-		// No change in indentation or conditional variables
-
 	} else if matches(directive, `^(?:if|ifdef|ifndef|for)$`) {
 		indentation.Push(indentation.Depth() + 2)
 	}
@@ -1677,8 +1674,8 @@ func (vuc *VarUseContext) String() string {
 }
 
 type Indentation struct {
-	depth         []int             // Number of space characters; always a multiple of 2
-	conditionVars []map[string]bool // Variables on which the current path depends
+	depth         []int      // Number of space characters; always a multiple of 2
+	conditionVars [][]string // Variables on which the current path depends
 }
 
 func (ind *Indentation) Len() int {
@@ -1702,12 +1699,16 @@ func (ind *Indentation) Push(indent int) {
 
 func (ind *Indentation) AddVar(varname string) {
 	level := ind.Len() - 1
-	if ind.conditionVars[level] == nil {
-		ind.conditionVars[level] = make(map[string]bool)
+	if hasSuffix(varname, "_MK") {
+		return
 	}
-	if !hasSuffix(varname, "_MK") {
-		ind.conditionVars[level][varname] = true
+	for _, existingVarname := range ind.conditionVars[level] {
+		if varname == existingVarname {
+			return
+		}
 	}
+
+	ind.conditionVars[level] = append(ind.conditionVars[level], varname)
 }
 
 func (ind *Indentation) IsConditional() bool {
@@ -1720,10 +1721,24 @@ func (ind *Indentation) IsConditional() bool {
 }
 
 func (ind *Indentation) DependsOn(varname string) bool {
-	for _, vars := range ind.conditionVars {
-		if vars[varname] {
-			return true
+	for _, levelVarnames := range ind.conditionVars {
+		for _, levelVarname := range levelVarnames {
+			if varname == levelVarname {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func (ind *Indentation) Varnames() string {
+	sep := ""
+	varnames := ""
+	for _, levelVarnames := range ind.conditionVars {
+		for _, levelVarname := range levelVarnames {
+			varnames += sep + levelVarname
+			sep = ", "
+		}
+	}
+	return varnames
 }

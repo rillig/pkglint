@@ -840,20 +840,27 @@ func (pkg *Package) checkLocallyModified(fname string) {
 }
 
 func (pkg *Package) CheckInclude(mkline *MkLine, indentation *Indentation) {
+	if includeLine := mkline.data.(mkLineInclude); includeLine.conditionVars == "" {
+		includeLine.conditionVars = indentation.Varnames()
+		mkline.data = includeLine
+	}
+
 	if path.Dir(abspath(mkline.Line.Fname)) == abspath(G.CurrentDir) {
 		includefile := mkline.Includefile()
 
 		if indentation.IsConditional() {
 			pkg.conditionalIncludes[includefile] = mkline
 			if other := pkg.unconditionalIncludes[includefile]; other != nil {
-				mkline.Warn2("%q is included conditionally here and unconditionally in %s",
-					cleanpath(includefile), other.Line.ReferenceFrom(mkline.Line))
+				dependingOn := mkline.data.(mkLineInclude).conditionVars
+				mkline.Line.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s",
+					cleanpath(includefile), dependingOn, other.Line.ReferenceFrom(mkline.Line))
 			}
 		} else {
 			pkg.unconditionalIncludes[includefile] = mkline
 			if other := pkg.conditionalIncludes[includefile]; other != nil {
-				mkline.Warn2("%q is included unconditionally here and conditionally in %s",
-					cleanpath(includefile), other.Line.ReferenceFrom(mkline.Line))
+				dependingOn := other.data.(mkLineInclude).conditionVars
+				mkline.Line.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s)",
+					cleanpath(includefile), other.Line.ReferenceFrom(mkline.Line), dependingOn)
 			}
 		}
 	}
