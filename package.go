@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os/user"
 	"path"
 	"regexp"
 	"strconv"
@@ -808,13 +807,7 @@ func (pkg *Package) checkLocallyModified(fname string) {
 		return
 	}
 
-	user, err := user.Current()
-	if err != nil || user.Username == "" {
-		return
-	}
-	// On Windows, this is `Computername\Username`.
-	username := regcomp(`^.*\\`).ReplaceAllString(user.Username, "")
-
+	username := G.CurrentUsername
 	if G.opts.Debug {
 		traceStep("user=%q owner=%q maintainer=%q", username, owner, maintainer)
 	}
