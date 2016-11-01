@@ -18,6 +18,8 @@ type GlobalVars struct {
 	Infrastructure  bool     // Is the currently checked item from the pkgsrc infrastructure?
 	Testing         bool     // Is pkglint in self-testing mode (only during development)?
 	CurrentUsername string   // For checking against OWNER and MAINTAINER
+	CvsEntriesDir   string   // Cached to avoid I/O
+	CvsEntriesLines []*Line
 
 	Hash         map[string]*Hash // Maps "alg:fname" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
