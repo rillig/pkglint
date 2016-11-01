@@ -878,6 +878,8 @@ func (s *Suite) Test_Indentation(c *check.C) {
 	ind.AddVar("LEVEL1.VAR2")
 
 	c.Check(ind.Varnames(), equals, "LEVEL1.VAR1, LEVEL1.VAR2")
+	c.Check(ind.DependsOn("LEVEL1.VAR1"), equals, true)
+	c.Check(ind.DependsOn("OTHER_VAR"), equals, false)
 
 	ind.Push(2)
 

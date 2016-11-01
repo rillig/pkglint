@@ -1711,21 +1711,21 @@ func (ind *Indentation) AddVar(varname string) {
 	ind.conditionVars[level] = append(ind.conditionVars[level], varname)
 }
 
-func (ind *Indentation) IsConditional() bool {
-	for _, vars := range ind.conditionVars {
-		if len(vars) > 0 {
-			return true
-		}
-	}
-	return false
-}
-
 func (ind *Indentation) DependsOn(varname string) bool {
 	for _, levelVarnames := range ind.conditionVars {
 		for _, levelVarname := range levelVarnames {
 			if varname == levelVarname {
 				return true
 			}
+		}
+	}
+	return false
+}
+
+func (ind *Indentation) IsConditional() bool {
+	for _, vars := range ind.conditionVars {
+		if len(vars) > 0 {
+			return true
 		}
 	}
 	return false
