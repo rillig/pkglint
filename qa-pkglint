@@ -39,7 +39,9 @@ analyze() {
 
 netbsd() {
   echo "=> Copying files to NetBSD VM"
-  rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync --include="*.go" --exclude="*" ~/pkglint/ netbsd:proj/pkgsrc/pkgtools/pkglint/files/
+  rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync \
+    --exclude="*yacc.go" --include="*.go" --exclude="*" \
+    ~/pkglint/ netbsd:proj/pkgsrc/pkgtools/pkglint/files/
 
   echo "=> Installing NetBSD package"
   ssh netbsd ". .bash_profile && cd proj/pkgsrc/pkgtools/pkglint && bmake update"
