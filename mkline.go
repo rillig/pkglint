@@ -118,7 +118,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		return
 	}
 
-	if m, indent, directive, includefile := match3(text, reMkInclude); m {
+	if m, indent, directive, includefile := MatchMkInclude(text); m {
 		mkline.xtype = 6
 		mkline.data = mkLineInclude{directive == "include", indent, includefile, ""}
 		return
