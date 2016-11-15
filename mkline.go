@@ -11,7 +11,7 @@ import (
 )
 
 type MkLine struct {
-	Line *Line
+	*Line
 
 	xtype uint8
 	data  interface{} // One of the following mkLine* types
@@ -43,13 +43,6 @@ type mkLineDependency struct {
 	targets string
 	sources string
 }
-
-func (mkline *MkLine) Error1(format, arg1 string)      { mkline.Line.Error1(format, arg1) }
-func (mkline *MkLine) Warn0(format string)             { mkline.Line.Warn0(format) }
-func (mkline *MkLine) Warn1(format, arg1 string)       { mkline.Line.Warn1(format, arg1) }
-func (mkline *MkLine) Warn2(format, arg1, arg2 string) { mkline.Line.Warn2(format, arg1, arg2) }
-func (mkline *MkLine) Note0(format string)             { mkline.Line.Note0(format) }
-func (mkline *MkLine) Note2(format, arg1, arg2 string) { mkline.Line.Note2(format, arg1, arg2) }
 
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{Line: line}
