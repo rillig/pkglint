@@ -12,9 +12,7 @@ import (
 
 type MkLine struct {
 	*Line
-
-	xtype uint8
-	data  interface{} // One of the following mkLine* types
+	data interface{} // One of the following mkLine* types
 }
 type mkLineAssign struct {
 	varname    string
@@ -28,6 +26,8 @@ type mkLineAssign struct {
 type mkLineShell struct {
 	command string
 }
+type mkLineComment struct{}
+type mkLineEmpty struct{}
 type mkLineConditional struct {
 	indent    string
 	directive string
@@ -35,6 +35,7 @@ type mkLineConditional struct {
 }
 type mkLineInclude struct {
 	mustexist     bool
+	sys           bool
 	indent        string
 	includeFile   string
 	conditionVars string // (filled in later)
@@ -74,7 +75,6 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 
-		mkline.xtype = 1
 		mkline.data = mkLineAssign{
 			varname,
 			varnameCanon(varname),
@@ -89,42 +89,37 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 	if hasPrefix(text, "\t") {
 		shellcmd := text[1:]
-		mkline.xtype = 2
 		mkline.data = mkLineShell{shellcmd}
 		mkline.Tokenize(shellcmd)
 		return
 	}
 
 	if index := strings.IndexByte(text, '#'); index != -1 && strings.TrimSpace(text[:index]) == "" {
-		mkline.xtype = 3
+		mkline.data = mkLineComment{}
 		return
 	}
 
 	if strings.TrimSpace(text) == "" {
-		mkline.xtype = 4
+		mkline.data = mkLineEmpty{}
 		return
 	}
 
 	if m, indent, directive, args := matchMkCond(text); m {
-		mkline.xtype = 5
 		mkline.data = mkLineConditional{indent, directive, args}
 		return
 	}
 
 	if m, indent, directive, includefile := MatchMkInclude(text); m {
-		mkline.xtype = 6
-		mkline.data = mkLineInclude{directive == "include", indent, includefile, ""}
+		mkline.data = mkLineInclude{directive == "include", false, indent, includefile, ""}
 		return
 	}
 
 	if m, indent, directive, includefile := match3(text, `^\.(\s*)(s?include)\s+<([^>]+)>\s*(?:#.*)?$`); m {
-		mkline.xtype = 7
-		mkline.data = mkLineInclude{directive == "include", indent, includefile, ""}
+		mkline.data = mkLineInclude{directive == "include", true, indent, includefile, ""}
 		return
 	}
 
 	if m, targets, whitespace, sources := match3(text, `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`); m {
-		mkline.xtype = 8
 		mkline.data = mkLineDependency{targets, sources}
 		if whitespace != "" {
 			line.Warn0("Space before colon in dependency line.")
@@ -143,14 +138,20 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 func (mkline *MkLine) String() string {
 	return fmt.Sprintf("%s:%s", mkline.Line.Fname, mkline.Line.linenos())
 }
-func (mkline *MkLine) IsVarassign() bool        { return mkline.xtype == 1 }
-func (mkline *MkLine) IsShellcmd() bool         { return mkline.xtype == 2 }
-func (mkline *MkLine) IsComment() bool          { return mkline.xtype == 3 }
-func (mkline *MkLine) IsEmpty() bool            { return mkline.xtype == 4 }
-func (mkline *MkLine) IsCond() bool             { return mkline.xtype == 5 }
-func (mkline *MkLine) IsInclude() bool          { return mkline.xtype == 6 }
-func (mkline *MkLine) IsSysinclude() bool       { return mkline.xtype == 7 }
-func (mkline *MkLine) IsDependency() bool       { return mkline.xtype == 8 }
+func (mkline *MkLine) IsVarassign() bool { _, ok := mkline.data.(mkLineAssign); return ok }
+func (mkline *MkLine) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }
+func (mkline *MkLine) IsComment() bool   { _, ok := mkline.data.(mkLineComment); return ok }
+func (mkline *MkLine) IsEmpty() bool     { _, ok := mkline.data.(mkLineEmpty); return ok }
+func (mkline *MkLine) IsCond() bool      { _, ok := mkline.data.(mkLineConditional); return ok }
+func (mkline *MkLine) IsInclude() bool {
+	incl, ok := mkline.data.(mkLineInclude)
+	return ok && !incl.sys
+}
+func (mkline *MkLine) IsSysinclude() bool {
+	incl, ok := mkline.data.(mkLineInclude)
+	return ok && incl.sys
+}
+func (mkline *MkLine) IsDependency() bool       { _, ok := mkline.data.(mkLineDependency); return ok }
 func (mkline *MkLine) Varname() string          { return mkline.data.(mkLineAssign).varname }
 func (mkline *MkLine) Varcanon() string         { return mkline.data.(mkLineAssign).varcanon }
 func (mkline *MkLine) Varparam() string         { return mkline.data.(mkLineAssign).varparam }
