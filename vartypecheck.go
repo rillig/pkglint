@@ -25,8 +25,8 @@ const (
 	opAssignEval                      // :=
 	opAssignAppend                    // +=
 	opAssignDefault                   // ?=
-	opUse                             //
-	opUseMatch                        // Used in the :M operator
+	opUseCompare                      // A variable is compared to a value, e.g. in a conditional.
+	opUseMatch                        // A variable is matched using the :M or :N modifier.
 )
 
 func NewMkOperator(op string) MkOperator {
@@ -867,7 +867,7 @@ func (cv *VartypeCheck) SedCommands() {
 }
 
 func (cv *VartypeCheck) ShellCommand() {
-	if cv.Op == opUseMatch || cv.Op == opUse {
+	if cv.Op == opUseMatch || cv.Op == opUseCompare {
 		return
 	}
 	setE := true
@@ -1049,7 +1049,7 @@ func (cv *VartypeCheck) YesNo() {
 		default:
 			cv.Line.Warnf("%s should be matched against %q or %q, not %q.", cv.Varname, yes1, no1, cv.Value)
 		}
-	} else if cv.Op == opUse {
+	} else if cv.Op == opUseCompare {
 		cv.Line.Warnf("%s should be matched against %q or %q, not compared with %q.", cv.Varname, yes1, no1, cv.Value)
 		Explain(
 			"The yes/no value can be written in either upper or lower case, and",

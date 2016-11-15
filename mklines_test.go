@@ -188,6 +188,8 @@ func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	mklines := s.NewMkLines("databases/gdbm_compat/builtin.mk",
 		"# $"+"NetBSD$",
 		".if ${USE_BUILTIN.gdbm} == \"no\"",
+		".endif",
+		".if ${USE_BUILTIN.gdbm:tu} == \"no\"", // Can never be true, since "no" is not uppercase.
 		".endif")
 
 	mklines.Check()
