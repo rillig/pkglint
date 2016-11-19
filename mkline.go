@@ -1748,3 +1748,7 @@ func (ind *Indentation) Varnames() string {
 	}
 	return varnames
 }
+
+func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
+	return match3(text, `^\.(\s*)(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`)
+}

@@ -385,66 +385,6 @@ func MatchVarassign(text string) (m bool, varname, spaceAfterVarname, op, valueA
 	return
 }
 
-func MatchMkInclude(text string) (bool, string, string, string) {
-	goto start
-fail:
-	return false, "", "", ""
-
-start:
-	len := len(text)
-	if len == 0 || text[0] != '.' {
-		goto fail
-	}
-
-	i := 1
-
-	spaceStart := i
-	for i < len && (text[i] == ' ' || text[i] == '\t') {
-		i++
-	}
-	spaceEnd := i
-
-	directiveStart := i
-	if i < len && text[i] == 's' {
-		i++
-	}
-	if !(i+7 < len && text[i] == 'i' && text[i+1] == 'n' && text[i+2] == 'c' && text[i+3] == 'l' && text[i+4] == 'u' && text[i+5] == 'd' && text[i+6] == 'e') {
-		goto fail
-	}
-	i += 7
-	directiveEnd := i
-
-	for i < len && (text[i] == ' ' || text[i] == '\t') {
-		i++
-	}
-	if !(i < len && text[i] == '"') {
-		goto fail
-	}
-	i++
-
-	pathStart := i
-	for i < len && text[i] != '"' {
-		i++
-	}
-	pathEnd := i
-	if !(pathStart < pathEnd) {
-		goto fail
-	}
-
-	if !(i < len && text[i] == '"') {
-		goto fail
-	}
-	i++
-
-	for i < len && (text[i] == ' ' || text[i] == '\t') {
-		i++
-	}
-	if !(i == len || i < len && text[i] == '#') {
-		goto fail
-	}
-	return true, text[spaceStart:spaceEnd], text[directiveStart:directiveEnd], text[pathStart:pathEnd]
-}
-
 type DependencyPattern struct {
 	pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
 	lowerOp  string // ">=", ">"
