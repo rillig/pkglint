@@ -471,13 +471,9 @@ func traceStep(format string, args ...interface{}) {
 	}
 }
 func traceStep1(format string, arg0 string) {
-	switch { // Prevent inlining
-	}
 	traceStep(format, arg0)
 }
 func traceStep2(format string, arg0, arg1 string) {
-	switch { //Prevent inlining
-	}
 	traceStep(format, arg0, arg1)
 }
 
@@ -502,23 +498,15 @@ func tracecallInternal(args ...interface{}) func() {
 	}
 }
 func tracecall0() func() {
-	switch { // prevent inlining, for code size and performance
-	}
 	return tracecallInternal()
 }
 func tracecall1(arg1 string) func() {
-	switch { // prevent inlining, for code size and performance
-	}
 	return tracecallInternal(arg1)
 }
 func tracecall2(arg1, arg2 string) func() {
-	switch { // prevent inlining, for code size and performance
-	}
 	return tracecallInternal(arg1, arg2)
 }
 func tracecall(args ...interface{}) func() {
-	switch { // prevent inlining, for code size and performance
-	}
 	return tracecallInternal(args...)
 }
 

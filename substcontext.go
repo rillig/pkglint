@@ -109,8 +109,6 @@ func (ctx *SubstContext) Finish(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) varname(varbase string) string {
-	switch { // prevent inlining
-	}
 	if ctx.id != "" {
 		return varbase + "." + ctx.id
 	} else {
