@@ -203,13 +203,14 @@ func dirExists(fname string) bool {
 
 type RegexPattern string
 
-var res = make(map[RegexPattern]*regexp.Regexp)
-
 func regcomp(re RegexPattern) *regexp.Regexp {
-	cre := res[re]
+	if G.res == nil {
+		G.res = make(map[RegexPattern]*regexp.Regexp)
+	}
+	cre := G.res[re]
 	if cre == nil {
 		cre = regexp.MustCompile(string(re))
-		res[re] = cre
+		G.res[re] = cre
 	}
 	return cre
 }
