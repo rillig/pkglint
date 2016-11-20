@@ -1,2 +1,7 @@
+append_projloc_gopath=true
+build_targets=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<build_targets xmlns\="com.googlecode.goclipse.core">\r\n<target auto_enabled\="false" config\="build" n_enabled\="true" version2\="true"/>\r\n<target auto_enabled\="false" config\="build-tests" n_enabled\="false" version2\="true"/>\r\n<target auto_enabled\="false" config\="lint" n_enabled\="false" version2\="true"/>\r\n<target auto_enabled\="false" config\="[run-tests]" n_enabled\="false" version2\="true"/>\r\n</build_targets>\r\n
+com.googlecode.goclipse.gopath=
+com.googlecode.goclipse.goroot=C\:\\Program Files (x86)\\Go1.7.1
 eclipse.preferences.version=1
 prj_auto_build_disabled=true
+toolchain_prefs.use_project_settings=false
