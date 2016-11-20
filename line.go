@@ -130,27 +130,18 @@ func (line *Line) Errorf(format string, args ...interface{}) {
 	logs(llError, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
-func (line *Line) Error0(format string)             { line.Errorf(format) }
-func (line *Line) Error1(format, arg1 string)       { line.Errorf(format, arg1) }
-func (line *Line) Error2(format, arg1, arg2 string) { line.Errorf(format, arg1, arg2) }
 
 func (line *Line) Warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
 	logs(llWarn, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
-func (line *Line) Warn0(format string)             { line.Warnf(format) }
-func (line *Line) Warn1(format, arg1 string)       { line.Warnf(format, arg1) }
-func (line *Line) Warn2(format, arg1, arg2 string) { line.Warnf(format, arg1, arg2) }
 
 func (line *Line) Notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
 	logs(llNote, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
-func (line *Line) Note0(format string)             { line.Notef(format) }
-func (line *Line) Note1(format, arg1 string)       { line.Notef(format, arg1) }
-func (line *Line) Note2(format, arg1, arg2 string) { line.Notef(format, arg1, arg2) }
 
 func (line *Line) String() string {
 	return line.Fname + ":" + line.linenos() + ": " + line.Text
@@ -265,14 +256,14 @@ func (line *Line) CheckValidCharacters(reChar RegexPattern) {
 		for _, c := range rest {
 			uni += fmt.Sprintf(" %U", c)
 		}
-		line.Warn1("Line contains invalid characters (%s).", uni[1:])
+		line.Warnf("Line contains invalid characters (%s).", uni[1:])
 	}
 }
 
 func (line *Line) CheckTrailingWhitespace() {
 	if hasSuffix(line.Text, " ") || hasSuffix(line.Text, "\t") {
 		if !line.AutofixReplaceRegexp(`\s+\n$`, "\n") {
-			line.Note0("Trailing white-space.")
+			line.Notef("Trailing white-space.")
 			Explain(
 				"When a line ends with some white-space, that space is in most cases",
 				"irrelevant and can be removed.")
@@ -290,7 +281,7 @@ func (line *Line) CheckRcsid(prefixRe RegexPattern, suggestedPrefix string) bool
 	}
 
 	if !line.AutofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
-		line.Error1("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+		line.Errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 		Explain(
 			"Several files in pkgsrc must contain the CVS Id, so that their",
 			"current version can be traced back later from a binary package.",
