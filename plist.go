@@ -141,7 +141,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 	if hasPrefix(text, "${PKGMANDIR}/") {
 		if !line.AutofixReplace("${PKGMANDIR}/", "man/") {
 			line.Note0("PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
-			Explain2(
+			Explain(
 				"The pkgsrc infrastructure takes care of replacing the correct value",
 				"when generating the actual PLIST for the package.")
 		}
@@ -183,7 +183,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 	}
 	if hasSuffix(text, "/perllocal.pod") {
 		line.Warn0("perllocal.pod files should not be in the PLIST.")
-		Explain2(
+		Explain(
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts,",
 			"since its contents changes frequently.")
 	}
@@ -194,7 +194,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 		if ck.lastFname != "" {
 			if ck.lastFname > text && !G.opts.Autofix {
 				pline.line.Warn2("%q should be sorted before %q.", text, ck.lastFname)
-				Explain2(
+				Explain(
 					"The files in the PLIST should be sorted alphabetically.",
 					"To fix this, run \"pkglint -F PLIST\".")
 			}
@@ -313,7 +313,7 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 
 	if gz != "" {
 		line.Note0("The .gz extension is unnecessary for manual pages.")
-		Explain4(
+		Explain(
 			"Whether the manual pages are installed in compressed form or not is",
 			"configured by the pkgsrc user.  Compression and decompression takes",
 			"place automatically, no matter if the .gz extension is mentioned in",
@@ -343,7 +343,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		f := "../../sysutils/desktop-file-utils/desktopdb.mk"
 		if G.opts.WarnExtra && G.Pkg != nil && G.Pkg.included[f] == nil {
 			line.Warn1("Packages that install a .desktop entry should .include %q.", f)
-			Explain3(
+			Explain(
 				"If *.desktop files contain MimeType keys, the global MIME type",
 				"registry must be updated by desktop-file-utils.  Otherwise, this",
 				"warning is harmless.")
@@ -359,7 +359,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
 		if G.Pkg.included[f] == nil {
 			line.Error1("The package Makefile must include %q.", f)
-			Explain2(
+			Explain(
 				"Packages that install GNOME icons must maintain the icon theme",
 				"cache.")
 		}
@@ -375,14 +375,14 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 
 	case text == "share/icons/hicolor/icon-theme.cache" && G.Pkg != nil && G.Pkg.Pkgpath != "graphics/hicolor-icon-theme":
 		line.Error0("This file must not appear in any PLIST file.")
-		Explain3(
+		Explain(
 			"Remove this line and add the following line to the package Makefile.",
 			"",
 			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
 
 	case hasPrefix(text, "share/info/"):
 		line.Warn0("Info pages should be installed into info/, not share/info/.")
-		Explain1(
+		Explain(
 			"To fix this, you should add INFO_FILES=yes to the package Makefile.")
 
 	case hasPrefix(text, "share/locale/") && hasSuffix(text, ".mo"):
@@ -396,7 +396,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 func (pline *PlistLine) CheckTrailingWhitespace() {
 	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
 		pline.line.Error0("pkgsrc does not support filenames ending in white-space.")
-		Explain1(
+		Explain(
 			"Each character in the PLIST is relevant, even trailing white-space.")
 	}
 }
@@ -427,7 +427,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 
 	case "dirrm":
 		line.Warn0("@dirrm is obsolete. Please remove this line.")
-		Explain3(
+		Explain(
 			"Directories are removed automatically when they are empty.",
 			"When a package needs an empty directory, it can use the @pkgdir",
 			"command in the PLIST")

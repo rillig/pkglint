@@ -107,7 +107,7 @@ outer:
 				}
 			case repl.AdvanceStr("$@"):
 				line.Warn2("Please use %q instead of %q.", "${.TARGET}", "$@")
-				Explain2(
+				Explain(
 					"It is more readable and prevents confusion with the shell variable of",
 					"the same name.")
 
@@ -119,7 +119,7 @@ outer:
 
 			case repl.AdvanceStr("$$("):
 				line.Warn0("Invoking subshells via $(...) is not portable enough.")
-				Explain2(
+				Explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell.  Please use backticks (`...`) as a replacement.")
 
@@ -183,7 +183,7 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 
 	if varname == "@" {
 		shline.line.Warn0("Please use \"${.TARGET}\" instead of \"$@\".")
-		Explain2(
+		Explain(
 			"The variable $@ can easily be confused with the shell variable of",
 			"the same name, which has a completely different meaning.")
 		varname = ".TARGET"
@@ -199,7 +199,7 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 		// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
 	case quoting == shqDquot && varuse.IsQ():
 		shline.line.Warn0("Please don't use the :Q operator in double quotes.")
-		Explain2(
+		Explain(
 			"Either remove the :Q or the double quotes.  In most cases, it is",
 			"more appropriate to remove the double quotes.")
 	}
@@ -242,7 +242,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplace
 
 		case quoting == shqDquotBackt && repl.AdvanceStr("\""):
 			line.Warn0("Double quotes inside backticks inside double quotes are error prone.")
-			Explain4(
+			Explain(
 				"According to the SUSv3, they produce undefined results.",
 				"",
 				"See the paragraph starting \"Within the backquoted ...\" in",
@@ -411,7 +411,7 @@ func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) 
 
 	if contains(hiddenAndSuppress, "-") {
 		shline.line.Warn0("Using a leading \"-\" to suppress errors is deprecated.")
-		Explain2(
+		Explain(
 			"If you really want to ignore any errors from this command, append",
 			"\"|| ${TRUE}\" to the command.")
 	}
@@ -460,7 +460,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	default:
 		if G.opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
 			scc.shline.line.Warn1("Unknown shell command %q.", shellword)
-			Explain3(
+			Explain(
 				"If you want your package to be portable to all platforms that pkgsrc",
 				"supports, you should only use shell commands that are covered by the",
 				"tools framework.")
@@ -503,7 +503,7 @@ func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 	switch path.Base(shellword) {
 	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
 		scc.shline.line.Error1("%q must not be used in Makefiles.", shellword)
-		Explain3(
+		Explain(
 			"This command must appear in INSTALL scripts, not in the package",
 			"Makefile, so that the package also works if it is installed as a binary",
 			"package via pkg_add.")
@@ -597,7 +597,7 @@ func (scc *SimpleCommandChecker) checkAbsolutePathnames() {
 		}
 		if false && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
 			scc.shline.line.Warn1("Substitution commands like %q should always be quoted.", arg)
-			Explain3(
+			Explain(
 				"Usually these substitution commands contain characters like '*' or",
 				"other shell metacharacters that might lead to lookup of matching",
 				"filenames and then expand to more than one word.")
@@ -661,7 +661,7 @@ func (scc *SimpleCommandChecker) checkInstallMulti() {
 			default:
 				if prevdir != "" {
 					scc.shline.line.Warn0("The INSTALL_*_DIR commands can only handle one directory at a time.")
-					Explain2(
+					Explain(
 						"Many implementations of install(1) can handle more, but pkgsrc aims",
 						"at maximum portability.")
 					return
@@ -679,7 +679,7 @@ func (scc *SimpleCommandChecker) checkPaxPe() {
 
 	if scc.strcmd.Name == "${PAX}" && scc.strcmd.HasOption("-pe") {
 		scc.shline.line.Warn0("Please use the -pp option to pax(1) instead of -pe.")
-		Explain3(
+		Explain(
 			"The -pe option tells pax to preserve the ownership of the files, which",
 			"means that the installed files will belong to the user that has built",
 			"the package.")
@@ -719,7 +719,7 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	checkConditionalCd := func(cmd *MkShSimpleCommand) {
 		if NewStrCommand(cmd).Name == "cd" {
 			spc.shline.line.Error0("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
-			Explain3(
+			Explain(
 				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 				"shell will exit, no matter if it is protected by an \"if\" or the",
 				"\"||\" operator.")
@@ -827,7 +827,7 @@ func (shline *ShellLine) checkCommandUse(shellcmd string) {
 	case "sed", "${SED}",
 		"tr", "${TR}":
 		line.Warn1("The shell command %q should not be used in the install phase.", shellcmd)
-		Explain3(
+		Explain(
 			"In the install phase, the only thing that should be done is to",
 			"install the prepared files to their final location.  The file's",
 			"contents should not be changed anymore.")

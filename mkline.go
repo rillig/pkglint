@@ -52,7 +52,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 
 	if hasPrefix(text, " ") {
 		mkline.Warn0("Makefile lines should not start with space characters.")
-		Explain3(
+		Explain(
 			"If you want this line to contain a shell program, use a tab",
 			"character for indentation.  Otherwise please remove the leading",
 			"white-space.")
@@ -216,7 +216,7 @@ func (mkline *MkLine) checkInclude() {
 	switch {
 	case hasSuffix(includefile, "/Makefile"):
 		mkline.Line.Error0("Other Makefiles must not be included directly.")
-		Explain4(
+		Explain(
 			"If you want to include portions of another Makefile, extract",
 			"the common parts and put them into a Makefile.common.  After",
 			"that, both this one and the other package should include the",
@@ -373,7 +373,7 @@ func (mkline *MkLine) checkDependencyRule(allowedTargets map[string]bool) {
 
 		} else if !allowedTargets[target] {
 			mkline.Warn1("Unusual target %q.", target)
-			Explain3(
+			Explain(
 				"If you want to define your own targets, you can \"declare\"",
 				"them by inserting a \".PHONY: my-target\" line before this line.  This",
 				"will tell make(1) to not interpret this target's name as a filename.")
@@ -447,7 +447,7 @@ func (mkline *MkLine) checkVarassignDefPermissions() {
 			mkline.Line.Warnf("The variable %s may not be %s by any package.",
 				varname, needed.HumanString())
 		}
-		Explain4(
+		Explain(
 			"The allowed actions for a variable are determined based on the file",
 			"name in which the variable is used or defined.  The exact rules are",
 			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
@@ -580,7 +580,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 
 	if !done && isLoadTime && isIndirect {
 		mkline.Warn1("%s should not be evaluated indirectly at load time.", varname)
-		Explain4(
+		Explain(
 			"The variable on the left-hand side may be evaluated at load time,",
 			"but the variable on the right-hand side may not.  Because of the",
 			"assignment in this line, the variable might be used indirectly",
@@ -600,7 +600,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 		} else {
 			mkline.Warn1("%s may not be used in any file; it is a write-only variable.", varname)
 		}
-		Explain4(
+		Explain(
 			"The allowed actions for a variable are determined based on the file",
 			"name in which the variable is used or defined.  The exact rules are",
 			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
@@ -649,7 +649,7 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 		vartype.kindOfList != lkSpace &&
 		needsQuoting != nqDoesntMatter {
 		mkline.Warn1("The variable %s should not be used in .for loops.", varname)
-		Explain4(
+		Explain(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
 			"Therefore only variables that are split at whitespace or don't",
@@ -709,7 +709,7 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 				mkline.Line.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
 					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 			}
-			Explain1(
+			Explain(
 				"See the pkgsrc guide, section \"quoting guideline\", for details.")
 
 		} else if vuc.quoting != vucQuotPlain {
@@ -773,7 +773,7 @@ func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
 	for i, ver := range intversions {
 		if i > 0 && ver >= intversions[i-1] {
 			mkline.Warn1("The values for %s should be in decreasing order.", varname)
-			Explain2(
+			Explain(
 				"If they aren't, it may be possible that needless versions of",
 				"packages are installed.")
 		}
@@ -945,7 +945,7 @@ func (mkline *MkLine) checkVarassignSpecific() {
 
 	if varname == "CONFIGURE_ARGS" && contains(value, "=${PREFIX}/share/kde") {
 		mkline.Note0("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
-		Explain3(
+		Explain(
 			"That file does many things automatically and consistently that this",
 			"package also does.  When using kde3.mk, you can probably also leave",
 			"out some explicit dependencies.")
@@ -1248,7 +1248,7 @@ func (mkline *MkLine) CheckValidCharactersInValue(reValid RegexPattern) {
 }
 
 func (mkline *MkLine) explainRelativeDirs() {
-	Explain3(
+	Explain(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
 		"main pkgsrc repository.")
@@ -1265,7 +1265,7 @@ func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
 
 	} else if !containsVarRef(pkgdir) {
 		mkline.Warn1("%q is not a valid relative package directory.", pkgdir)
-		Explain3(
+		Explain(
 			"A relative pathname always starts with \"../../\", followed",
 			"by a category, a slash and a the directory name of the package.",
 			"For example, \"../../misc/screen\" is a valid relative pathname.")

@@ -293,7 +293,7 @@ func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 			changes = append(changes, change)
 		} else if len(line.Text) >= 2 && line.Text[0] == '\t' && 'A' <= line.Text[1] && line.Text[1] <= 'Z' {
 			line.Warn1("Unknown doc/CHANGES line: %q", line.Text)
-			Explain1("See mk/misc/developer.mk for the rules.")
+			Explain("See mk/misc/developer.mk for the rules.")
 		}
 	}
 	return changes

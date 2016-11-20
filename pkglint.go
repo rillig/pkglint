@@ -99,7 +99,7 @@ func ChecklinesDescr(lines []*Line) {
 		line := lines[maxlines]
 
 		line.Warnf("File too long (should be no more than %d lines).", maxlines)
-		Explain3(
+		Explain(
 			"The DESCR file should fit on a traditional terminal of 80x25",
 			"characters.  It is also intended to give a _brief_ summary about",
 			"the package's contents.")
@@ -114,7 +114,7 @@ func ChecklinesMessage(lines []*Line) {
 	}
 
 	explainMessage := func() {
-		Explain4(
+		Explain(
 			"A MESSAGE file should consist of a header line, having 75 \"=\"",
 			"characters, followed by a line containing only the RCS Id, then an",
 			"empty line, your text and finally the footer line, which is the",
@@ -182,7 +182,7 @@ func Checkfile(fname string) {
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, 0, "", nil)
 		line.Warn0("Should not be executable.")
-		Explain4(
+		Explain(
 			"No package file should ever be executable.  Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in",
 			"the package, as the pathnames get adjusted during installation.",

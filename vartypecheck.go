@@ -197,7 +197,7 @@ func (cv *VartypeCheck) Dependency() {
 	deppat := parser.Dependency()
 	if deppat != nil && deppat.wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
 		line.Warn0("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
-		Explain4(
+		Explain(
 			"The \"{,nb*}\" extension is only necessary for dependencies of the",
 			"form \"pkgbase-1.2\", since the pattern \"pkgbase-1.2\" doesn't match",
 			"the version \"pkgbase-1.2nb5\".  For dependency patterns using the",
@@ -224,21 +224,21 @@ func (cv *VartypeCheck) Dependency() {
 	} else if m, ver, suffix := match2(wildcard, `^(\d\w*(?:\.\w+)*)(\.\*|\{,nb\*\}|\{,nb\[0-9\]\*\}|\*|)$`); m {
 		if suffix == "" {
 			line.Warn2("Please use %q instead of %q as the version pattern.", ver+"{,nb*}", ver)
-			Explain3(
+			Explain(
 				"Without the \"{,nb*}\" suffix, this version pattern only matches",
 				"package versions that don't have a PKGREVISION (which is the part",
 				"after the \"nb\").")
 		}
 		if suffix == "*" {
 			line.Warn2("Please use %q instead of %q as the version pattern.", ver+".*", ver+"*")
-			Explain2(
+			Explain(
 				"For example, the version \"1*\" also matches \"10.0.0\", which is",
 				"probably not intended.")
 		}
 
 	} else if wildcard == "*" {
 		line.Warn1("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.pkgbase)
-		Explain3(
+		Explain(
 			"If you use a * alone, the package specification may match other",
 			"packages that have the same prefix, but a longer name.  For example,",
 			"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
@@ -285,7 +285,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	line.Warn1("Unknown dependency pattern with path %q.", value)
-	Explain4(
+	Explain(
 		"Examples for valid dependency patterns with path are:",
 		"  package-[0-9]*:../../category/package",
 		"  package>=3.41:../../category/package",
@@ -589,7 +589,7 @@ func (cv *VartypeCheck) Option() {
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z+]*)$`); m {
 		if _, found := G.globalData.PkgOptions[optname]; !found { // There’s a difference between empty and absent here.
 			line.Warn1("Unknown option \"%s\".", optname)
-			Explain4(
+			Explain(
 				"This option is not documented in the mk/defaults/options.description",
 				"file.  Please think of a brief but precise description and either",
 				"update that file yourself or suggest a description for this option",
@@ -675,7 +675,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 	cv.MkLine.CheckVartypePrimitive(cv.Varname, BtVariableName, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 	if matches(cv.Value, `\$\{PKGBASE[:\}]`) {
 		cv.Line.Error0("PKGBASE must not be used in PKG_OPTIONS_VAR.")
-		Explain3(
+		Explain(
 			"PKGBASE is defined in bsd.pkg.mk, which is included as the",
 			"very last file, but PKG_OPTIONS_VAR is evaluated earlier.",
 			"Use ${PKGNAME:C/-[0-9].*//} instead.")
@@ -776,7 +776,7 @@ func (cv *VartypeCheck) PythonDependency() {
 		cv.Line.Warn0("Python dependencies should not contain variables.")
 	} else if !matches(cv.ValueNoVar, `^[+\-.0-9A-Z_a-z]+(?:|:link|:build)$`) {
 		cv.Line.Warn1("Invalid Python dependency %q.", cv.Value)
-		Explain4(
+		Explain(
 			"Python dependencies must be an identifier for a package, as",
 			"specified in lang/python/versioned_dependencies.mk.  This",
 			"identifier may be followed by :build for a build-time only",
@@ -797,7 +797,7 @@ func (cv *VartypeCheck) RelativePkgPath() {
 func (cv *VartypeCheck) Restricted() {
 	if cv.Value != "${RESTRICTED}" {
 		cv.Line.Warn1("The only valid value for %s is ${RESTRICTED}.", cv.Varname)
-		Explain3(
+		Explain(
 			"These variables are used to control which files may be mirrored on",
 			"FTP servers or CD-ROM collections.  They are not intended to mark",
 			"packages whose only MASTER_SITES are on ftp.NetBSD.org.")
@@ -815,7 +815,7 @@ func (cv *VartypeCheck) SedCommands() {
 	if rest != "" {
 		if strings.Contains(line.Text, "#") {
 			line.Error1("Invalid shell words %q in sed commands.", rest)
-			Explain4(
+			Explain(
 				"When sed commands have embedded \"#\" characters, they need to be",
 				"escaped with a backslash, otherwise make(1) will interpret them as a",
 				"comment, no matter if they occur in single or double quotes or",
@@ -1001,7 +1001,7 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 			rest = "."
 		}
 		cv.Line.Note2("You can use %q instead of %q.", rest, cv.Value)
-		Explain1(
+		Explain(
 			"These directories are interpreted relative to ${WRKSRC}.")
 
 	} else if cv.Value != "" && cv.ValueNoVar == "" {
@@ -1027,7 +1027,7 @@ func (cv *VartypeCheck) Yes() {
 	default:
 		if !matches(cv.Value, `^(?:YES|yes)(?:\s+#.*)?$`) {
 			cv.Line.Warn1("%s should be set to YES or yes.", cv.Varname)
-			Explain4(
+			Explain(
 				"This variable means \"yes\" if it is defined, and \"no\" if it is",
 				"undefined.  Even when it has the value \"no\", this means \"yes\".",
 				"Therefore when it is defined, its value should correspond to its",

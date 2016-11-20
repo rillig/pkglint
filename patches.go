@@ -145,7 +145,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		line := ck.exp.CurrentLine()
 		if !ck.isEmptyLine(line.Text) && !matches(line.Text, rePatchUniFileDel) {
 			line.Warn0("Empty line or end of file expected.")
-			Explain3(
+			Explain(
 				"This empty line makes the end of the patch clearly visible.",
 				"Otherwise the reader would have to count lines to see where",
 				"the patch ends.")
@@ -210,7 +210,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	case ftConfigure:
 		if hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
 			line.Error0("This code must not be included in patches.")
-			Explain4(
+			Explain(
 				"It is generated automatically by pkgsrc after the patch phase.",
 				"",
 				"For more details, look for \"configure-scripts-override\" in",
@@ -230,7 +230,7 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 	if hasSuffix(line.Text, "\r") {
 		if !line.AutofixReplace("\r\n", "\n") {
 			line.Error0("The hunk header must not end with a CR character.")
-			Explain1(
+			Explain(
 				"The MacOS X patch utility cannot handle these.")
 		}
 	}
