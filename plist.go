@@ -187,6 +187,9 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts,",
 			"since its contents changes frequently.")
 	}
+	if contains(text, ".egg-info/") {
+		line.Warnf("Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
+	}
 }
 
 func (ck *PlistChecker) checkSorted(pline *PlistLine) {
