@@ -114,3 +114,36 @@ func (s *Suite) Test_ChecklinesMessage__malformed(c *check.C) {
 		"ERROR: MESSAGE:2: Expected \"$"+"NetBSD$\".\n"+
 		"WARN: MESSAGE:5: Expected a line of exactly 75 \"=\" characters.\n")
 }
+
+func (s *Suite) Test_GlobalData_Latest(c *check.C) {
+	G.globalData.Pkgsrcdir = s.TmpDir(c)
+
+	latest1 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest1, equals, "")
+	c.Check(s.Output(), equals, "ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~\".\n")
+
+	s.CreateTmpFile(c, "lang/Makefile", "")
+	G.globalData.latest = nil
+
+	latest2 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest2, equals, "")
+	c.Check(s.Output(), equals, "ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~\".\n")
+
+	s.CreateTmpFile(c, "lang/python27/Makefile", "")
+	G.globalData.latest = nil
+
+	latest3 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest3, equals, "../../lang/python27")
+	c.Check(s.Output(), equals, "")
+
+	s.CreateTmpFile(c, "lang/python35/Makefile", "")
+	G.globalData.latest = nil
+
+	latest4 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest4, equals, "../../lang/python35")
+	c.Check(s.Output(), equals, "")
+}

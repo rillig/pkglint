@@ -21,6 +21,7 @@ type GlobalData struct {
 	UserDefinedVars     map[string]*MkLine  // varname => line
 	Deprecated          map[string]string   //
 	vartypes            map[string]*Vartype // varcanon => type
+	latest              map[string]string   // "lang/php[0-9]*" => "lang/php70"
 }
 
 // Change is a change entry from the `doc/CHANGES-*` files.
@@ -61,6 +62,41 @@ func (gd *GlobalData) Initialize() {
 	gd.loadUserDefinedVars()
 	gd.loadTools()
 	gd.loadDeprecatedVars()
+}
+
+func (gd *GlobalData) Latest(category string, re RegexPattern, repl string) string {
+	key := category + "/" + string(re) + " => " + repl
+	if latest, found := gd.latest[key]; found {
+		return latest
+	}
+
+	if gd.latest == nil {
+		gd.latest = make(map[string]string)
+	}
+
+	error := func() string {
+		dummyLine.Errorf("Cannot find latest version of %q in %q.", re, gd.Pkgsrcdir)
+		gd.latest[key] = ""
+		return ""
+	}
+
+	all, err := ioutil.ReadDir(gd.Pkgsrcdir + "/" + category)
+	if err != nil {
+		return error()
+	}
+
+	latest := ""
+	for _, fileInfo := range all {
+		if matches(fileInfo.Name(), re) {
+			latest = regcomp(re).ReplaceAllString(fileInfo.Name(), repl)
+		}
+	}
+	if latest == "" {
+		return error()
+	}
+
+	gd.latest[key] = latest
+	return latest
 }
 
 func (gd *GlobalData) loadDistSites() {

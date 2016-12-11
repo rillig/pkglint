@@ -124,10 +124,7 @@ func (s *Suite) RegisterTool(tool *Tool) {
 }
 
 func (s *Suite) CreateTmpFile(c *check.C, relFname, content string) (absFname string) {
-	if s.tmpdir == "" {
-		s.tmpdir = filepath.ToSlash(c.MkDir())
-	}
-	absFname = s.tmpdir + "/" + relFname
+	absFname = s.TmpDir(c) + "/" + relFname
 	err := os.MkdirAll(path.Dir(absFname), 0777)
 	c.Assert(err, check.IsNil)
 
@@ -145,9 +142,16 @@ func (s *Suite) CreateTmpFileLines(c *check.C, relFname string, rawTexts ...stri
 }
 
 func (s *Suite) LoadTmpFile(c *check.C, relFname string) string {
-	bytes, err := ioutil.ReadFile(s.tmpdir + "/" + relFname)
+	bytes, err := ioutil.ReadFile(s.TmpDir(c) + "/" + relFname)
 	c.Assert(err, check.IsNil)
 	return string(bytes)
+}
+
+func (s *Suite) TmpDir(c *check.C) string {
+	if s.tmpdir == "" {
+		s.tmpdir = filepath.ToSlash(c.MkDir())
+	}
+	return s.tmpdir
 }
 
 func (s *Suite) ExpectFatalError(action func()) {
