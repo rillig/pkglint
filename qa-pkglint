@@ -3,9 +3,12 @@ set -eu
 
 srcdir="$HOME/pkglint"
 archivedir="$srcdir/archive"
-pkgsrcdir="$HOME/pkgsrc"
+pkgsrcdir="$HOME/git/pkgsrc"
 
 genrunid() {
+  if [ -n "${genrunid-}" ]; then
+    return
+  fi
   headcommit=$(cd "$srcdir" && git rev-parse --short HEAD)
   if (cd "$srcdir" && git diff --quiet && git diff --cached --quiet); then
     timestamp="$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print $1$2$3"-"$4$5}')"
