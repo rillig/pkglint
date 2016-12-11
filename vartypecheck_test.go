@@ -31,8 +31,9 @@ func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_Category(c *check.C) {
-	s.CreateTmpFile(c, "filesyscategory/Makefile", "# empty\n")
-	s.CreateTmpFile(c, "wip/Makefile", "# empty\n")
+	s.Init(c)
+	s.CreateTmpFile("filesyscategory/Makefile", "# empty\n")
+	s.CreateTmpFile("wip/Makefile", "# empty\n")
 	G.CurrentDir = s.tmpdir
 	G.CurPkgsrcdir = "."
 
@@ -115,8 +116,9 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
-	s.CreateTmpFile(c, "x11/alacarte/Makefile", "# empty\n")
-	s.CreateTmpFile(c, "category/package/Makefile", "# empty\n")
+	s.Init(c)
+	s.CreateTmpFile("x11/alacarte/Makefile", "# empty\n")
+	s.CreateTmpFile("category/package/Makefile", "# empty\n")
 	G.globalData.Pkgsrcdir = s.tmpdir
 	G.CurrentDir = s.tmpdir + "/category/package"
 	G.CurPkgsrcdir = "../.."
