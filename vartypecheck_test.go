@@ -68,14 +68,18 @@ func (s *Suite) Test_VartypeCheck_Comment(c *check.C) {
 		"Versatile Programming Language",
 		"TODO: Short description of the package",
 		"A great package.",
-		"some packages need a very very long comment to explain their basic usefulness")
+		"some packages need a very very long comment to explain their basic usefulness",
+		"\"Quoting the comment is wrong\"",
+		"'Quoting the comment is wrong'")
 
 	c.Check(s.Output(), equals, ""+
 		"ERROR: fname:2: COMMENT must be set.\n"+
 		"WARN: fname:3: COMMENT should not begin with \"A\".\n"+
 		"WARN: fname:3: COMMENT should not end with a period.\n"+
 		"WARN: fname:4: COMMENT should start with a capital letter.\n"+
-		"WARN: fname:4: COMMENT should not be longer than 70 characters.\n")
+		"WARN: fname:4: COMMENT should not be longer than 70 characters.\n"+
+		"WARN: fname:5: COMMENT should not be enclosed in quotes.\n"+
+		"WARN: fname:6: COMMENT should not be enclosed in quotes.\n")
 }
 
 func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
