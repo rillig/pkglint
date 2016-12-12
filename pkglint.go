@@ -305,7 +305,7 @@ func ChecklinesTrailingEmptyLines(lines []*Line) {
 	}
 }
 
-func MatchVarassign(text string) (m bool, varname, spaceAfterVarname, op, valueAlign, value, comment string) {
+func MatchVarassign(text string) (m bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
 	i, n := 0, len(text)
 
 	for i < n && text[i] == ' ' {
@@ -373,6 +373,11 @@ func MatchVarassign(text string) (m bool, varname, spaceAfterVarname, op, valueA
 	}
 
 	commentStart := i
+	for text[i-1] == ' ' || text[i-1] == '\t' {
+		i--
+	}
+	valueEnd := i
+
 	commentEnd := n
 
 	m = true
@@ -381,6 +386,7 @@ func MatchVarassign(text string) (m bool, varname, spaceAfterVarname, op, valueA
 	op = text[opStart:opEnd]
 	valueAlign = text[0:valueStart]
 	value = strings.TrimSpace(string(valuebuf[:j]))
+	spaceAfterValue = text[valueEnd:commentStart]
 	comment = text[commentStart:commentEnd]
 	return
 }

@@ -361,6 +361,7 @@ func (s *Suite) Test_NewMkLine_numbersign(c *check.C) {
 	mklineVarassignUnescaped := NewMkLine(NewLine("fname", 1, "SED_CMD=\t's,#,hash,'", nil))
 
 	c.Check(mklineVarassignUnescaped.Value(), equals, "'s,")
+	c.Check(s.Output(), equals, "WARN: fname:1: The # character starts a comment.\n")
 }
 
 func (s *Suite) Test_NewMkLine_leading_space(c *check.C) {
@@ -909,6 +910,18 @@ func (s *Suite) Test_MkLine_CheckVartype_CFLAGS(c *check.C) {
 	c.Check(s.Output(), equals, ""+
 		"WARN: Makefile:2: Unknown compiler flag \"-bs\".\n"+
 		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" should start with a hyphen.\n")
+}
+
+// PR 51696, security/py-pbkdf2/Makefile, r1.2
+func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
+	G.globalData.InitVartypes()
+	mklines := s.NewMkLines("Makefile",
+		mkrcsid,
+		"COMMENT=\tPKCS#5 v2.0 PBKDF2 Module")
+
+	mklines.Check()
+
+	c.Check(s.Output(), equals, "WARN: Makefile:2: The # character starts a comment.\n")
 }
 
 func (s *Suite) Test_Indentation(c *check.C) {

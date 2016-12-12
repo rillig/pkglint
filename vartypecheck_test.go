@@ -376,7 +376,8 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 
 	c.Check(s.Output(), equals, ""+
 		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.\n"+
-		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n")
+		"NOTE: fname:2: Each sed command should appear in an assignment of its own.\n"+
+		"WARN: fname:3: The # character starts a comment.\n")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommands(c *check.C) {
