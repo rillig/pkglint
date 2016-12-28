@@ -216,7 +216,7 @@ func (mkline *MkLine) checkInclude() {
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
 	if G.opts.Debug {
-		traceStep1("includefile=%s", includefile)
+		traceStep2("includingFile=%s includefile=%s", mkline.Fname, includefile)
 	}
 	mkline.CheckRelativePath(includefile, mustExist)
 
@@ -1262,6 +1262,10 @@ func (mkline *MkLine) explainRelativeDirs() {
 }
 
 func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
+	if G.opts.Debug {
+		defer tracecall1(pkgdir)()
+	}
+
 	mkline.CheckRelativePath(pkgdir, true)
 	pkgdir = resolveVarsInRelativePath(pkgdir, false)
 
@@ -1280,6 +1284,10 @@ func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
 }
 
 func (mkline *MkLine) CheckRelativePath(path string, mustExist bool) {
+	if G.opts.Debug {
+		defer tracecall(path, mustExist)()
+	}
+
 	if !G.Wip && contains(path, "/wip/") {
 		mkline.Line.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
