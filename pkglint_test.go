@@ -74,41 +74,6 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	c.Check(resolved, equals, "gst-plugins0.10-x11/distinfo")
 }
 
-func (s *Suite) Test_MatchVarassign(c *check.C) {
-	checkVarassign := func(text string, ck check.Checker, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
-		type va struct {
-			varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string
-		}
-		expected := va{varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment}
-		am, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment := MatchVarassign(text)
-		if !am {
-			c.Errorf("Text %q doesn’t match variable assignment", text)
-			return
-		}
-		actual := va{avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment}
-		c.Check(actual, ck, expected)
-	}
-	checkNotVarassign := func(text string) {
-		m, _, _, _, _, _, _, _ := MatchVarassign(text)
-		if m {
-			c.Errorf("Text %q matches variable assignment, but shouldn’t.", text)
-		}
-	}
-
-	checkVarassign("C++=c11", equals, "C+", "", "+=", "C++=", "c11", "", "")
-	checkVarassign("V=v", equals, "V", "", "=", "V=", "v", "", "")
-	checkVarassign("VAR=#comment", equals, "VAR", "", "=", "VAR=", "", "", "#comment")
-	checkVarassign("VAR=\\#comment", equals, "VAR", "", "=", "VAR=", "#comment", "", "")
-	checkVarassign("VAR=\\\\\\##comment", equals, "VAR", "", "=", "VAR=", "\\\\#", "", "#comment")
-	checkVarassign("VAR=\\", equals, "VAR", "", "=", "VAR=", "\\", "", "")
-	checkVarassign("VAR += value", equals, "VAR", " ", "+=", "VAR += ", "value", "", "")
-	checkVarassign(" VAR=value", equals, "VAR", "", "=", " VAR=", "value", "", "")
-	checkVarassign("VAR=value #comment", equals, "VAR", "", "=", "VAR=", "value", " ", "#comment")
-	checkNotVarassign("\tVAR=value")
-	checkNotVarassign("?=value")
-	checkNotVarassign("<=value")
-}
-
 func (s *Suite) Test_ChecklinesDescr(c *check.C) {
 	lines := s.NewLines("DESCR",
 		strings.Repeat("X", 90),
