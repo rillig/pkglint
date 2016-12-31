@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const rePkgname = `^([\w\-.+]+)-(\d(?:\w|\.\d)*)$`
+
 // Package contains data for the pkgsrc package that is currently checked.
 type Package struct {
 	Pkgpath              string  // e.g. "category/pkgdir"
