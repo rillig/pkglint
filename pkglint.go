@@ -69,7 +69,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	for len(G.Todo) != 0 {
 		item := G.Todo[0]
 		G.Todo = G.Todo[1:]
-		CheckDirent(item)
+		pkglint.CheckDirent(item)
 	}
 
 	checkToplevelUnusedLicenses()
@@ -177,7 +177,7 @@ func (pkglint *Pkglint) PrintSummary() {
 	}
 }
 
-func CheckDirent(fname string) {
+func (pkglint *Pkglint) CheckDirent(fname string) {
 	if G.opts.Debug {
 		defer tracecall1(fname)()
 	}
