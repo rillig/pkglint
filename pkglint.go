@@ -434,15 +434,6 @@ func MatchVarassign(text string) (m bool, varname, spaceAfterVarname, op, valueA
 	return
 }
 
-type DependencyPattern struct {
-	pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
-	lowerOp  string // ">=", ">"
-	lower    string // "2.5.0", "${PYVER}"
-	upperOp  string // "<", "<="
-	upper    string // "3.0", "${PYVER}"
-	wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
-}
-
 func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	tmp := relpath
 	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.CurPkgsrcdir, -1)
