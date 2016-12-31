@@ -35,11 +35,6 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		return *exitcode
 	}
 
-	if G.opts.PrintVersion {
-		fmt.Fprintf(G.logOut, "%s\n", confVersion)
-		return 0
-	}
-
 	if G.opts.Profiling {
 		f, err := os.Create("pkglint.pprof")
 		if err != nil {
@@ -146,6 +141,12 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 
 	if gopts.PrintHelp {
 		opts.Help(G.logOut, "pkglint [options] dir...")
+		exitcode := 0
+		return &exitcode
+	}
+
+	if G.opts.PrintVersion {
+		fmt.Fprintf(G.logOut, "%s\n", confVersion)
 		exitcode := 0
 		return &exitcode
 	}
