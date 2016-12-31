@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"netbsd.org/pkglint/pkgver"
 	"path"
 	"regexp"
 	"strconv"
@@ -104,7 +105,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 	if change.Action == "Updated" {
 		changeVersion := regcomp(`nb\d+$`).ReplaceAllString(change.Version, "")
-		if pkgverCmp(pkgversion, changeVersion) < 0 {
+		if pkgver.Compare(pkgversion, changeVersion) < 0 {
 			mkline.Line.Warnf("The package is being downgraded from %s (see %s) to %s", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
 			Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
@@ -543,7 +544,7 @@ func (pkg *Package) checkUpdate() {
 			}
 
 			pkgnameLine := pkg.EffectivePkgnameLine
-			cmp := pkgverCmp(pkg.EffectivePkgversion, suggver)
+			cmp := pkgver.Compare(pkg.EffectivePkgversion, suggver)
 			switch {
 			case cmp < 0:
 				pkgnameLine.Warnf("This package should be updated to %s%s.", sugg.Version, comment)

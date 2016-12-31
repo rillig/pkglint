@@ -28,6 +28,13 @@ func ifelseStr(cond bool, a, b string) string {
 	return b
 }
 
+func imax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func mustMatch(s string, re RegexPattern) []string {
 	if m := match(s, re); m != nil {
 		return m
