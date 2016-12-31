@@ -103,7 +103,7 @@ func expandVariableWithDefault(varname, defaultValue string) string {
 	}
 
 	value := mkline.Value()
-	value = resolveVarsInRelativePath(value, true)
+	value = mkline.resolveVarsInRelativePath(value, true)
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}

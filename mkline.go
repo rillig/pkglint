@@ -1106,7 +1106,7 @@ func (mkline *MkLine) withoutMakeVariables(value string) string {
 	}
 }
 
-func resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
+func (mkline *MkLine) resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	tmp := relpath
 	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.CurPkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
@@ -1305,7 +1305,7 @@ func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
 	}
 
 	mkline.CheckRelativePath(pkgdir, true)
-	pkgdir = resolveVarsInRelativePath(pkgdir, false)
+	pkgdir = mkline.resolveVarsInRelativePath(pkgdir, false)
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
 		if !fileExists(G.globalData.Pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
@@ -1330,7 +1330,7 @@ func (mkline *MkLine) CheckRelativePath(path string, mustExist bool) {
 		mkline.Line.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
-	resolvedPath := resolveVarsInRelativePath(path, true)
+	resolvedPath := mkline.resolveVarsInRelativePath(path, true)
 	if containsVarRef(resolvedPath) {
 		return
 	}
