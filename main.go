@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"netbsd.org/pkglint/getopt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -90,7 +91,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 
 func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	gopts := &G.opts
-	opts := NewOptions()
+	opts := getopt.NewOptions()
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
 	opts.AddFlagVar('d', "debug", &gopts.Debug, false, "log verbose call traces for debugging")
