@@ -96,23 +96,6 @@ func resolveVariableRefs(text string) string {
 	}
 }
 
-func expandVariableWithDefault(varname, defaultValue string) string {
-	mkline := G.Pkg.vardef[varname]
-	if mkline == nil {
-		return defaultValue
-	}
-
-	value := mkline.Value()
-	value = mkline.resolveVarsInRelativePath(value, true)
-	if containsVarRef(value) {
-		value = resolveVariableRefs(value)
-	}
-	if G.opts.Debug {
-		traceStep2("Expanded %q to %q", varname, value)
-	}
-	return value
-}
-
 func CheckfileExtra(fname string) {
 	if G.opts.Debug {
 		defer tracecall1(fname)()

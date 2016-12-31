@@ -234,10 +234,10 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 
 	allLines.DetermineUsedVariables()
 
-	pkg.Pkgdir = expandVariableWithDefault("PKGDIR", ".")
-	pkg.DistinfoFile = expandVariableWithDefault("DISTINFO_FILE", "distinfo")
-	pkg.Filesdir = expandVariableWithDefault("FILESDIR", "files")
-	pkg.Patchdir = expandVariableWithDefault("PATCHDIR", "patches")
+	pkg.Pkgdir = pkg.expandVariableWithDefault("PKGDIR", ".")
+	pkg.DistinfoFile = pkg.expandVariableWithDefault("DISTINFO_FILE", "distinfo")
+	pkg.Filesdir = pkg.expandVariableWithDefault("FILESDIR", "files")
+	pkg.Patchdir = pkg.expandVariableWithDefault("PATCHDIR", "patches")
 
 	if varIsDefined("PHPEXT_MK") {
 		if !varIsDefined("USE_PHP_EXT_PATCHES") {
@@ -529,6 +529,23 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 		}
 	}
 	return result
+}
+
+func (pkg *Package) expandVariableWithDefault(varname, defaultValue string) string {
+	mkline := G.Pkg.vardef[varname]
+	if mkline == nil {
+		return defaultValue
+	}
+
+	value := mkline.Value()
+	value = mkline.resolveVarsInRelativePath(value, true)
+	if containsVarRef(value) {
+		value = resolveVariableRefs(value)
+	}
+	if G.opts.Debug {
+		traceStep2("Expanded %q to %q", varname, value)
+	}
+	return value
 }
 
 func (pkg *Package) checkUpdate() {
