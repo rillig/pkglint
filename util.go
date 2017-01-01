@@ -427,7 +427,7 @@ func (r Ref) String() string {
 	return fmt.Sprintf("%v", ref)
 }
 
-// Emulates make(1)’s :S substitution operator.
+// Emulates make(1)'s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, flags string) string {
 	if G.opts.Debug {
 		defer tracecall(s, left, from, right, to, flags)()

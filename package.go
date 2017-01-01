@@ -329,7 +329,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 
 				// Only look in the directory relative to the
 				// current file and in the current working directory.
-				// Pkglint doesn’t have an include dir list, like make(1) does.
+				// Pkglint doesn't have an include dir list, like make(1) does.
 				if !fileExists(dirname + "/" + includeFile) {
 					if dirname != G.CurrentDir { // Prevent unnecessary syscalls
 						dirname = G.CurrentDir

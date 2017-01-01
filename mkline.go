@@ -1667,7 +1667,7 @@ func (mkline *MkLine) determineUsedVariables() (varnames []string) {
 // VarUseContext defines the context in which a variable is defined
 // or used. Whether that is allowed depends on:
 //
-// * The variable’s data type, as defined in vardefs.go.
+// * The variable's data type, as defined in vardefs.go.
 // * When used on the right-hand side of an assigment, the variable can
 //   represent a list of words, a single word or even only part of a
 //   word. This distinction decides upon the correct use of the :Q
@@ -1675,7 +1675,7 @@ func (mkline *MkLine) determineUsedVariables() (varnames []string) {
 // * When used in preprocessing statements like .if or .for, the other
 //   operands of that statement should fit to the variable and are
 //   checked against the variable type. For example, comparing OPSYS to
-//   x86_64 doesn’t make sense.
+//   x86_64 doesn't make sense.
 type VarUseContext struct {
 	vartype    *Vartype
 	time       vucTime
@@ -1695,7 +1695,7 @@ const (
 	vucTimeParse
 
 	// All files have been read, all variables can be referenced.
-	// Variable values don’t change anymore.
+	// Variable values don't change anymore.
 	vucTimeRun
 )
 
