@@ -102,7 +102,8 @@ func Explain(explanation ...string) {
 	} else if G.Testing {
 		for _, s := range explanation {
 			if l := tabLength(s); l > 68 && contains(s, " ") {
-				print(fmt.Sprintf("Long explanation line (%d): %s\n", l, s))
+				lastSpace := strings.LastIndexByte(s[:68], ' ')
+				print(fmt.Sprintf("Long explanation line: %s\nBreak after: %s\n", s, s[:lastSpace]))
 			}
 			if m, before := match1(s, `(.+)\. [^ ]`); m {
 				if !matches(before, `\d$|e\.g`) {

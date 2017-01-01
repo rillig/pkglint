@@ -17,6 +17,18 @@ type VartypeCheck struct {
 	Guessed    bool // Whether the type definition is guessed (based on the variable name) or explicitly defined (see vardefs.go).
 }
 
+// NewVartypeCheckValue creates a VartypeCheck context by copying all
+// fields except the value. This is typically used when checking parts
+// of composite types.
+func NewVartypeCheckValue(vc *VartypeCheck, value string) *VartypeCheck {
+	valueNoVar := vc.MkLine.withoutMakeVariables(value)
+
+	copy := *vc
+	copy.Value = value
+	copy.ValueNoVar = valueNoVar
+	return &copy
+}
+
 type MkOperator uint8
 
 const (
@@ -198,6 +210,19 @@ func (cv *VartypeCheck) ConfFiles() {
 	words, _ := splitIntoMkWords(cv.MkLine.Line, cv.Value)
 	if len(words)%2 != 0 {
 		cv.Line.Warnf("Values for %s should always be pairs of paths.", cv.Varname)
+	}
+
+	for i, word := range words {
+		NewVartypeCheckValue(cv, word).Pathname()
+
+		if i%2 == 1 && !hasPrefix(word, "${") {
+			cv.Line.Warnf("The destination file %q should start with a variable reference.", word)
+			Explain(
+				"Since pkgsrc can be installed in different locations, the",
+				"configuration files will also end up in different locations.",
+				"Typical variables that are used for configuration files are",
+				"PKG_SYSCONFDIR, PKG_SYSCONFBASE, PREFIX, VARBASE.")
+		}
 	}
 }
 
