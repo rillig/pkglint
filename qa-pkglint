@@ -43,11 +43,24 @@ analyze() {
 netbsd() {
   echo "=> Copying files to NetBSD VM"
   rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync \
-    --exclude="*yacc.go" --include="*.go" --exclude="*" \
+    --cvs-exclude \
+    --exclude="qa-pkglint" \
+    --exclude="**.[01]" \
+    --exclude=".git*" \
+    --exclude="/archive/" \
+    --exclude="/coverage.html" \
+    --exclude="/pkglint.cov" \
+    --exclude="/pkglint.exe" \
+    --exclude="/pkglint.test.exe" \
+    --exclude="*.docx" \
+    --exclude="/.idea/" \
+    --exclude="*.iml" \
+    --exclude="*yacc.go" \
+    --exclude="*.log" \
     ~/pkglint/ netbsd:proj/pkgsrc/pkgtools/pkglint/files/
 
   echo "=> Installing NetBSD package"
-  ssh netbsd ". ./.bash_profile && cd proj/pkgsrc/pkgtools/pkglint && bmake update"
+  ssh netbsd ". ./.bash_profile && cd proj/pkgsrc/pkgtools/pkglint && bmake clean update"
 }
 
 pkgsrc() {
