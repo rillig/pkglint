@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"netbsd.org/pkglint/getopt"
+	"netbsd.org/pkglint/histogram"
 	"os"
 	"os/user"
 	"path"
@@ -45,10 +46,10 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 
-		G.rematch = NewHistogram()
-		G.renomatch = NewHistogram()
-		G.retime = NewHistogram()
-		G.loghisto = NewHistogram()
+		G.rematch = histogram.New()
+		G.renomatch = histogram.New()
+		G.retime = histogram.New()
+		G.loghisto = histogram.New()
 	}
 
 	for _, arg := range G.opts.args {

@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -495,60 +494,6 @@ func reReplaceRepeatedly(from string, re RegexPattern, to string) string {
 		return reReplaceRepeatedly(replaced, re, to)
 	}
 	return replaced
-}
-
-type Histogram struct {
-	histo map[string]int
-}
-
-func NewHistogram() *Histogram {
-	h := new(Histogram)
-	h.histo = make(map[string]int)
-	return h
-}
-
-func (h *Histogram) Add(s string, n int) {
-	if G.opts.Profiling {
-		h.histo[s] += n
-	}
-}
-
-func (h *Histogram) PrintStats(caption string, out io.Writer, limit int) {
-	entries := make([]HistogramEntry, len(h.histo))
-
-	i := 0
-	for s, count := range h.histo {
-		entries[i] = HistogramEntry{s, count}
-		i++
-	}
-
-	sort.Sort(ByCountDesc(entries))
-
-	for i, entry := range entries {
-		fmt.Fprintf(out, "%s %6d %s\n", caption, entry.count, entry.s)
-		if limit > 0 && i >= limit {
-			break
-		}
-	}
-}
-
-type HistogramEntry struct {
-	s     string
-	count int
-}
-type ByCountDesc []HistogramEntry
-
-func (a ByCountDesc) Len() int {
-	return len(a)
-}
-func (a ByCountDesc) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-func (a ByCountDesc) Less(i, j int) bool {
-	if a[j].count < a[i].count {
-		return true
-	}
-	return a[i].count == a[j].count && a[i].s < a[j].s
 }
 
 func hasAlnumPrefix(s string) bool {

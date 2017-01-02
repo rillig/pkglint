@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"netbsd.org/pkglint/histogram"
 	"regexp"
 )
 
@@ -36,10 +37,10 @@ type GlobalVars struct {
 	debugOut              io.Writer
 
 	res       map[RegexPattern]*regexp.Regexp // Compiled regular expressions
-	rematch   *Histogram
-	renomatch *Histogram
-	retime    *Histogram // Total time taken by matching a regular expression
-	loghisto  *Histogram
+	rematch   *histogram.Histogram
+	renomatch *histogram.Histogram
+	retime    *histogram.Histogram // Total time taken by matching a regular expression
+	loghisto  *histogram.Histogram
 }
 
 type CmdOpts struct {
