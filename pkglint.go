@@ -5,6 +5,7 @@ import (
 	"io"
 	"netbsd.org/pkglint/getopt"
 	"netbsd.org/pkglint/histogram"
+	"netbsd.org/pkglint/regex"
 	"os"
 	"os/user"
 	"path"
@@ -64,7 +65,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	currentUser, err := user.Current()
 	if err == nil {
 		// On Windows, this is `Computername\Username`.
-		G.CurrentUsername = regcomp(`^.*\\`).ReplaceAllString(currentUser.Username, "")
+		G.CurrentUsername = regex.Compile(`^.*\\`).ReplaceAllString(currentUser.Username, "")
 	}
 
 	for len(G.Todo) != 0 {
@@ -240,7 +241,7 @@ func resolveVariableRefs(text string) string {
 
 	str := text
 	for {
-		replaced := regcomp(`\$\{([\w.]+)\}`).ReplaceAllStringFunc(str, func(m string) string {
+		replaced := regex.Compile(`\$\{([\w.]+)\}`).ReplaceAllStringFunc(str, func(m string) string {
 			varname := m[2 : len(m)-1]
 			if !visited[varname] {
 				visited[varname] = true

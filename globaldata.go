@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"netbsd.org/pkglint/regex"
 	"path"
 	"sort"
 	"strings"
@@ -64,7 +65,7 @@ func (gd *GlobalData) Initialize() {
 	gd.loadDeprecatedVars()
 }
 
-func (gd *GlobalData) Latest(category string, re RegexPattern, repl string) string {
+func (gd *GlobalData) Latest(category string, re regex.RegexPattern, repl string) string {
 	key := category + "/" + string(re) + " => " + repl
 	if latest, found := gd.latest[key]; found {
 		return latest
@@ -88,7 +89,7 @@ func (gd *GlobalData) Latest(category string, re RegexPattern, repl string) stri
 	latest := ""
 	for _, fileInfo := range all {
 		if matches(fileInfo.Name(), re) {
-			latest = regcomp(re).ReplaceAllString(fileInfo.Name(), repl)
+			latest = regex.Compile(re).ReplaceAllString(fileInfo.Name(), repl)
 		}
 	}
 	if latest == "" {

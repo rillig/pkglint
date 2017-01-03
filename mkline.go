@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"netbsd.org/pkglint/regex"
 	"os"
 	"path"
 	"strconv"
@@ -1099,7 +1100,7 @@ func (mkline *MkLine) withoutMakeVariables(value string) string {
 	valueNovar := value
 	for {
 		var m []string
-		m, valueNovar = replaceFirst(valueNovar, `\$\{[^{}]*\}`, "")
+		m, valueNovar = regex.ReplaceFirst(valueNovar, `\$\{[^{}]*\}`, "")
 		if m == nil {
 			return valueNovar
 		}
@@ -1172,7 +1173,7 @@ func (mkline *MkLine) checkText(text string) {
 
 	rest := text
 	for {
-		m, r := replaceFirst(rest, `(?:^|[^$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
+		m, r := regex.ReplaceFirst(rest, `(?:^|[^$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
 		if m == nil {
 			break
 		}
@@ -1281,8 +1282,8 @@ func (mkline *MkLine) rememberUsedVariables(cond *Tree) {
 	cond.Visit("compareVarVar", arg2varuse)
 }
 
-func (mkline *MkLine) CheckValidCharactersInValue(reValid RegexPattern) {
-	rest := regcomp(reValid).ReplaceAllString(mkline.Value(), "")
+func (mkline *MkLine) CheckValidCharactersInValue(reValid regex.RegexPattern) {
+	rest := regex.Compile(reValid).ReplaceAllString(mkline.Value(), "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -1602,7 +1603,7 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 
 // TODO: merge with determineUsedVariables
 func (mkline *MkLine) extractUsedVariables(text string) []string {
-	re := regcomp(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
+	re := regex.Compile(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
 	var result []string
 	for {
@@ -1653,7 +1654,7 @@ func (mkline *MkLine) determineUsedVariables() (varnames []string) {
 		}
 		rest = rest[min:]
 
-		m := regcomp(`(?:\$\{|\$\(|defined\(|empty\()([*+\-.0-9A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
+		m := regex.Compile(`(?:\$\{|\$\(|defined\(|empty\()([*+\-.0-9A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
 		if m == nil {
 			return
 		}

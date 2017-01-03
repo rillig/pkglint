@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"netbsd.org/pkglint/regex"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,9 +17,30 @@ import (
 )
 
 // Short names for commonly used functions.
-func contains(s, substr string) bool  { return strings.Contains(s, substr) }
-func hasPrefix(s, prefix string) bool { return strings.HasPrefix(s, prefix) }
-func hasSuffix(s, suffix string) bool { return strings.HasSuffix(s, suffix) }
+func contains(s, substr string) bool {
+	return strings.Contains(s, substr)
+}
+func hasPrefix(s, prefix string) bool {
+	return strings.HasPrefix(s, prefix)
+}
+func hasSuffix(s, suffix string) bool {
+	return strings.HasSuffix(s, suffix)
+}
+func matches(s string, re regex.RegexPattern) bool {
+	return regex.Matches(s, re)
+}
+func match1(s string, re regex.RegexPattern) (matched bool, m1 string) {
+	return regex.Match1(s, re)
+}
+func match2(s string, re regex.RegexPattern) (matched bool, m1, m2 string) {
+	return regex.Match2(s, re)
+}
+func match3(s string, re regex.RegexPattern) (matched bool, m1, m2, m3 string) {
+	return regex.Match3(s, re)
+}
+func match4(s string, re regex.RegexPattern) (matched bool, m1, m2, m3, m4 string) {
+	return regex.Match4(s, re)
+}
 
 func ifelseStr(cond bool, a, b string) string {
 	if cond {
@@ -34,8 +56,8 @@ func imax(a, b int) int {
 	return b
 }
 
-func mustMatch(s string, re RegexPattern) []string {
-	if m := match(s, re); m != nil {
+func mustMatch(s string, re regex.RegexPattern) []string {
+	if m := regex.Match(s, re); m != nil {
 		return m
 	}
 	panic(fmt.Sprintf("mustMatch %q %q", s, re))
@@ -194,7 +216,7 @@ func varIsUsed(varname string) bool {
 }
 
 func splitOnSpace(s string) []string {
-	return regcomp(`\s+`).Split(s, -1)
+	return regex.Compile(`\s+`).Split(s, -1)
 }
 
 func fileExists(fname string) bool {
@@ -260,7 +282,7 @@ func (pr *PrefixReplacer) AdvanceHspace() bool {
 	return false
 }
 
-func (pr *PrefixReplacer) AdvanceRegexp(re RegexPattern) bool {
+func (pr *PrefixReplacer) AdvanceRegexp(re regex.RegexPattern) bool {
 	pr.m = nil
 	pr.s = ""
 	if !hasPrefix(string(re), "^") {
@@ -269,7 +291,7 @@ func (pr *PrefixReplacer) AdvanceRegexp(re RegexPattern) bool {
 	if G.Testing && matches("", re) {
 		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
 	}
-	if m := match(pr.rest, re); m != nil {
+	if m := regex.Match(pr.rest, re); m != nil {
 		if G.opts.Debug {
 			traceStep("PrefixReplacer.AdvanceRegexp(%q, %q, %q)", pr.rest, re, m[0])
 		}
@@ -431,10 +453,10 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 	if G.opts.Debug {
 		defer tracecall(s, left, from, right, to, flags)()
 	}
-	re := RegexPattern(ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", ""))
+	re := regex.RegexPattern(ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", ""))
 	done := false
 	gflag := contains(flags, "g")
-	return regcomp(re).ReplaceAllStringFunc(s, func(match string) string {
+	return regex.Compile(re).ReplaceAllStringFunc(s, func(match string) string {
 		if gflag || !done {
 			done = !gflag
 			return to
@@ -488,8 +510,8 @@ func containsVarRef(s string) bool {
 	return contains(s, "${")
 }
 
-func reReplaceRepeatedly(from string, re RegexPattern, to string) string {
-	replaced := regcomp(re).ReplaceAllString(from, to)
+func reReplaceRepeatedly(from string, re regex.RegexPattern, to string) string {
+	replaced := regex.Compile(re).ReplaceAllString(from, to)
 	if replaced != from {
 		return reReplaceRepeatedly(replaced, re, to)
 	}

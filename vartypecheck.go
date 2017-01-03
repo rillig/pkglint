@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/regex"
 	"path"
 	"sort"
 	"strings"
@@ -280,7 +281,7 @@ func (cv *VartypeCheck) Dependency() {
 			"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
 	}
 
-	if nocclasses := regcomp(`\[[\d-]+\]`).ReplaceAllString(wildcard, ""); contains(nocclasses, "-") {
+	if nocclasses := regex.Compile(`\[[\d-]+\]`).ReplaceAllString(wildcard, ""); contains(nocclasses, "-") {
 		line.Warnf("The version pattern %q should not contain a hyphen.", wildcard)
 		Explain(
 			"Pkgsrc interprets package names with version numbers like this:",

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/regex"
 	"path"
 	"sort"
 	"strings"
@@ -290,7 +291,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 	line := pline.line
 
-	m, catOrMan, section, manpage, ext, gz := match5(pline.text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`)
+	m, catOrMan, section, manpage, ext, gz := regex.Match5(pline.text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`)
 	if !m {
 		// maybe: line.Warnf("Invalid filename %q for manual page.", text)
 		return

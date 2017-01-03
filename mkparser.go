@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/regex"
 	"strings"
 )
 
@@ -71,7 +72,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 			}
 		}
 
-		for p.VarUse() != nil || repl.AdvanceRegexp(RegexPattern(`^([^$:`+closing+`]|\$\$)+`)) {
+		for p.VarUse() != nil || repl.AdvanceRegexp(regex.RegexPattern(`^([^$:`+closing+`]|\$\$)+`)) {
 		}
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
@@ -130,7 +131,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 
 		case '=', 'D', 'M', 'N', 'U':
 			if repl.AdvanceRegexp(`^[=DMNU]`) {
-				for p.VarUse() != nil || repl.AdvanceRegexp(RegexPattern(`^([^$:`+closing+`]|\$\$)+`)) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(regex.RegexPattern(`^([^$:`+closing+`]|\$\$)+`)) {
 				}
 				modifiers = append(modifiers, repl.Since(modifierMark))
 				continue
@@ -140,7 +141,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 			if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
 				separator := repl.m[1]
 				repl.AdvanceStr("^")
-				re := RegexPattern(`^([^\` + separator + `$` + closing + `\\]|\$\$|\\.)+`)
+				re := regex.RegexPattern(`^([^\` + separator + `$` + closing + `\\]|\$\$|\\.)+`)
 				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 				}
 				repl.AdvanceStr("$")
@@ -159,7 +160,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 		case '@':
 			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
 				loopvar := repl.m[1]
-				for p.VarUse() != nil || repl.AdvanceRegexp(RegexPattern(`^([^$:@`+closing+`\\]|\$\$|\\.)+`)) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(regex.RegexPattern(`^([^$:@`+closing+`\\]|\$\$|\\.)+`)) {
 				}
 				if !repl.AdvanceStr("@") && p.EmitWarnings {
 					p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
@@ -176,7 +177,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 
 		case '?':
 			repl.AdvanceStr("?")
-			re := RegexPattern(`^([^$:` + closing + `]|\$\$)+`)
+			re := regex.RegexPattern(`^([^$:` + closing + `]|\$\$)+`)
 			for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 			}
 			if repl.AdvanceStr(":") {
@@ -188,7 +189,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 		}
 
 		repl.Reset(modifierMark)
-		for p.VarUse() != nil || repl.AdvanceRegexp(RegexPattern(`^([^:$`+closing+`]|\$\$)+`)) {
+		for p.VarUse() != nil || repl.AdvanceRegexp(regex.RegexPattern(`^([^:$`+closing+`]|\$\$)+`)) {
 		}
 		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
 			modifiers = append(modifiers, suffixSubst)

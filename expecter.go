@@ -1,5 +1,7 @@
 package main
 
+import "netbsd.org/pkglint/regex"
+
 // Expecter records the state when checking a list of lines from top to bottom.
 type Expecter struct {
 	lines []*Line
@@ -37,13 +39,13 @@ func (exp *Expecter) StepBack() {
 	exp.index--
 }
 
-func (exp *Expecter) AdvanceIfMatches(re RegexPattern) bool {
+func (exp *Expecter) AdvanceIfMatches(re regex.RegexPattern) bool {
 	if G.opts.Debug {
 		defer tracecall(exp.CurrentLine().Text, re)()
 	}
 
 	if !exp.EOF() {
-		if m := match(exp.lines[exp.index].Text, re); m != nil {
+		if m := regex.Match(exp.lines[exp.index].Text, re); m != nil {
 			exp.index++
 			exp.m = m
 			return true

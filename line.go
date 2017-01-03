@@ -16,6 +16,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"netbsd.org/pkglint/regex"
 	"path"
 	"strconv"
 	"strings"
@@ -191,10 +192,10 @@ func (line *Line) AutofixReplace(from, to string) bool {
 	return false
 }
 
-func (line *Line) AutofixReplaceRegexp(from RegexPattern, to string) bool {
+func (line *Line) AutofixReplaceRegexp(from regex.RegexPattern, to string) bool {
 	for _, rawLine := range line.raw {
 		if rawLine.Lineno != 0 {
-			if replaced := regcomp(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
+			if replaced := regex.Compile(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
@@ -249,8 +250,8 @@ func (line *Line) CheckLength(maxlength int) {
 	}
 }
 
-func (line *Line) CheckValidCharacters(reChar RegexPattern) {
-	rest := regcomp(reChar).ReplaceAllString(line.Text, "")
+func (line *Line) CheckValidCharacters(reChar regex.RegexPattern) {
+	rest := regex.Compile(reChar).ReplaceAllString(line.Text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -271,7 +272,7 @@ func (line *Line) CheckTrailingWhitespace() {
 	}
 }
 
-func (line *Line) CheckRcsid(prefixRe RegexPattern, suggestedPrefix string) bool {
+func (line *Line) CheckRcsid(prefixRe regex.RegexPattern, suggestedPrefix string) bool {
 	if G.opts.Debug {
 		defer tracecall(prefixRe, suggestedPrefix)()
 	}

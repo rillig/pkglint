@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/pkgver"
+	"netbsd.org/pkglint/regex"
 	"path"
 	"regexp"
 	"strconv"
@@ -106,7 +107,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	}
 
 	if change.Action == "Updated" {
-		changeVersion := regcomp(`nb\d+$`).ReplaceAllString(change.Version, "")
+		changeVersion := regex.Compile(`nb\d+$`).ReplaceAllString(change.Version, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
 			mkline.Line.Warnf("The package is being downgraded from %s (see %s) to %s", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
 			Explain(
@@ -501,7 +502,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 			defer tracecall(str, smod, ref(result))()
 		}
 		qsep := regexp.QuoteMeta(smod[1:2])
-		if m, left, from, right, to, flags := match5(smod, RegexPattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`)); m {
+		if m, left, from, right, to, flags := regex.Match5(smod, regex.RegexPattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`)); m {
 			result := mkopSubst(str, left != "", from, right != "", to, flags)
 			if G.opts.Debug {
 				traceStep("subst %q %q => %q", str, smod, result)
