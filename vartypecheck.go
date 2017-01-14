@@ -8,9 +8,22 @@ import (
 	"strings"
 )
 
+type ILine interface {
+	IFname() string
+	IText() string
+
+	Errorf(fmt string, args ...interface{})
+	Warnf(fmt string, args ...interface{})
+	Notef(fmt string, args ...interface{})
+
+	AutofixReplace(from, to string) bool
+	AutofixReplaceRegexp(from regex.RegexPattern, to string) bool
+	AutofixInsertBefore(text string) bool
+}
+
 type VartypeCheck struct {
 	MkLine     *MkLine
-	Line       *Line
+	Line       ILine
 	Varname    string
 	Op         MkOperator
 	Value      string
@@ -735,7 +748,7 @@ func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.Value, `^[1-9]\d*$`) {
 		cv.Line.Warnf("%s must be a positive integer number.", cv.Varname)
 	}
-	if path.Base(cv.Line.Fname) != "Makefile" {
+	if path.Base(cv.Line.IFname()) != "Makefile" {
 		cv.Line.Errorf("%s only makes sense directly in the package Makefile.", cv.Varname)
 		Explain(
 			"Usually, different packages using the same Makefile.common have",
@@ -851,7 +864,7 @@ func (cv *VartypeCheck) SedCommands() {
 
 	tokens, rest := splitIntoShellTokens(line, cv.Value)
 	if rest != "" {
-		if strings.Contains(line.Text, "#") {
+		if strings.Contains(line.IText(), "#") {
 			line.Errorf("Invalid shell words %q in sed commands.", rest)
 			Explain(
 				"When sed commands have embedded \"#\" characters, they need to be",

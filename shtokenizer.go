@@ -7,7 +7,7 @@ type ShTokenizer struct {
 	mkp    *MkParser
 }
 
-func NewShTokenizer(line *Line, text string, emitWarnings bool) *ShTokenizer {
+func NewShTokenizer(line ILine, text string, emitWarnings bool) *ShTokenizer {
 	p := NewParser(line, text, emitWarnings)
 	mkp := &MkParser{p}
 	return &ShTokenizer{p, mkp}

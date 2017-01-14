@@ -148,6 +148,14 @@ func (line *Line) String() string {
 	return line.Fname + ":" + line.linenos() + ": " + line.Text
 }
 
+func (line *Line) IFname() string {
+	return line.Fname
+}
+
+func (line *Line) IText() string {
+	return line.Text
+}
+
 func (line *Line) logAutofix() {
 	if line.autofixMessage != "" {
 		logs(llAutofix, line.Fname, line.linenos(), "%s", line.autofixMessage)

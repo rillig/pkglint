@@ -848,7 +848,7 @@ func (shline *ShellLine) checkCommandUse(shellcmd string) {
 }
 
 // Example: "word1 word2;;;" => "word1", "word2", ";;", ";"
-func splitIntoShellTokens(line *Line, text string) (tokens []string, rest string) {
+func splitIntoShellTokens(line ILine, text string) (tokens []string, rest string) {
 	if trace.Tracing {
 		defer trace.Call(line, text)()
 	}

@@ -316,7 +316,7 @@ func guessFileType(line *Line, fname string) (fileType FileType) {
 	return ftUnknown
 }
 
-func checkwordAbsolutePathname(line *Line, word string) {
+func checkwordAbsolutePathname(line ILine, word string) {
 	if trace.Tracing {
 		defer trace.Call1(word)()
 	}
