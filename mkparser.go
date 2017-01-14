@@ -30,9 +30,9 @@ func (p *MkParser) MkTokens() []*MkToken {
 		}
 
 	again:
-		dollar := strings.IndexByte(repl.rest, '$')
+		dollar := strings.IndexByte(repl.Rest(), '$')
 		if dollar == -1 {
-			dollar = len(repl.rest)
+			dollar = len(repl.Rest())
 		}
 		repl.Skip(dollar)
 		if repl.AdvanceStr("$$") {
@@ -93,7 +93,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 		return &MkVarUse{"<", nil}
 	}
 	if repl.PeekByte() == '$' && repl.AdvanceRegexp(`^\$(\w)`) {
-		varname := repl.m[1]
+		varname := repl.Group(1)
 		if p.EmitWarnings {
 			p.Line.Warnf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
 		}
@@ -118,7 +118,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 				continue
 			}
 			if repl.AdvanceStr("ts") {
-				rest := repl.rest
+				rest := repl.Rest()
 				if len(rest) >= 2 && (rest[1] == closing[0] || rest[1] == ':') {
 					repl.Skip(1)
 				} else if len(rest) >= 1 && (rest[0] == closing[0] || rest[0] == ':') {
@@ -140,7 +140,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 
 		case 'C', 'S':
 			if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
-				separator := repl.m[1]
+				separator := repl.Group(1)
 				repl.AdvanceStr("^")
 				re := regex.RegexPattern(`^([^\` + separator + `$` + closing + `\\]|\$\$|\\.)+`)
 				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
@@ -160,7 +160,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []string {
 
 		case '@':
 			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
-				loopvar := repl.m[1]
+				loopvar := repl.Group(1)
 				for p.VarUse() != nil || repl.AdvanceRegexp(regex.RegexPattern(`^([^$:@`+closing+`\\]|\$\$|\\.)+`)) {
 				}
 				if !repl.AdvanceStr("@") && p.EmitWarnings {
@@ -290,7 +290,7 @@ func (p *MkParser) mkCondAtom() *Tree {
 			}
 		}
 	case repl.AdvanceRegexp(`^(commands|exists|make|target)\s*\(`):
-		funcname := repl.m[1]
+		funcname := repl.Group(1)
 		argMark := repl.Mark()
 		for p.VarUse() != nil || repl.AdvanceRegexp(`^[^$)]+`) {
 		}
@@ -310,14 +310,14 @@ func (p *MkParser) mkCondAtom() *Tree {
 		}
 		if lhs != nil {
 			if repl.AdvanceRegexp(`^\s*(<|<=|==|!=|>=|>)\s*(\d+(?:\.\d+)?)`) {
-				return NewTree("compareVarNum", *lhs, repl.m[1], repl.m[2])
+				return NewTree("compareVarNum", *lhs, repl.Group(1), repl.Group(2))
 			}
 			if repl.AdvanceRegexp(`^\s*(<|<=|==|!=|>=|>)\s*`) {
-				op := repl.m[1]
+				op := repl.Group(1)
 				if (op == "!=" || op == "==") && repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
-					return NewTree("compareVarStr", *lhs, op, repl.m[1])
+					return NewTree("compareVarStr", *lhs, op, repl.Group(1))
 				} else if repl.AdvanceRegexp(`^\w+`) {
-					return NewTree("compareVarStr", *lhs, op, repl.m[0])
+					return NewTree("compareVarStr", *lhs, op, repl.Group(0))
 				} else if rhs := p.VarUse(); rhs != nil {
 					return NewTree("compareVarVar", *lhs, op, *rhs)
 				} else if repl.PeekByte() == '"' {
@@ -336,7 +336,7 @@ func (p *MkParser) mkCondAtom() *Tree {
 			}
 		}
 		if repl.AdvanceRegexp(`^\d+(?:\.\d+)?`) {
-			return NewTree("literalNum", repl.m[0])
+			return NewTree("literalNum", repl.Group(0))
 		}
 	}
 	repl.Reset(mark)

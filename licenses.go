@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"netbsd.org/pkglint/textproc"
 )
 
 //go:generate go tool yacc -p liyy -o licenseyacc.go -v licenseyacc.log license.y
@@ -29,7 +30,7 @@ func (lc *LicenseCondition) Walk(callback func(*LicenseCondition)) {
 }
 
 type licenseLexer struct {
-	repl   *PrefixReplacer
+	repl   *textproc.PrefixReplacer
 	result *LicenseCondition
 	error  string
 }
@@ -38,14 +39,14 @@ func (lexer *licenseLexer) Lex(llval *liyySymType) int {
 	repl := lexer.repl
 	repl.AdvanceHspace()
 	switch {
-	case repl.rest == "":
+	case repl.EOF():
 		return 0
 	case repl.AdvanceStr("("):
 		return ltOPEN
 	case repl.AdvanceStr(")"):
 		return ltCLOSE
 	case repl.AdvanceRegexp(`^[\w-.]+`):
-		word := repl.m[0]
+		word := repl.Group(0)
 		switch word {
 		case "AND":
 			return ltAND
@@ -65,7 +66,7 @@ func (lexer *licenseLexer) Error(s string) {
 
 func parseLicenses(licenses string) *LicenseCondition {
 	expanded := resolveVariableRefs(licenses) // For ${PERL5_LICENSE}
-	lexer := &licenseLexer{repl: NewPrefixReplacer(expanded)}
+	lexer := &licenseLexer{repl: textproc.NewPrefixReplacer(expanded)}
 	result := liyyNewParser().Parse(lexer)
 	if result == 0 {
 		return lexer.result

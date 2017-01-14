@@ -3,6 +3,7 @@ package main
 // Parsing and checking shell commands embedded in Makefiles
 
 import (
+	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
@@ -88,7 +89,7 @@ outer:
 			case repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|#)`),
 				repl.AdvanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`),
 				repl.AdvanceRegexp(`^\$\$(\$)\$`):
-				shvarname := repl.m[1]
+				shvarname := repl.Group(1)
 				if G.opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shvarname) {
 					line.Warnf("Unquoted shell variable %q.", shvarname)
 					Explain(
@@ -218,13 +219,13 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 // before a dollar, a backslash or a backtick.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
+func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
 	if trace.Tracing {
 		defer trace.Call(shellword, quoting, "=>", trace.Ref(&unescaped))()
 	}
 
 	line := shline.line
-	for repl.rest != "" {
+	for !repl.EOF() {
 		switch {
 		case repl.AdvanceStr("`"):
 			if quoting == shqBackt {
@@ -235,7 +236,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplace
 			return unescaped, quoting
 
 		case repl.AdvanceRegexp("^\\\\([\"\\\\`$])"):
-			unescaped += repl.m[1]
+			unescaped += repl.Group(1)
 
 		case repl.AdvanceStr("\\"):
 			line.Warnf("Backslashes should be doubled inside backticks.")
@@ -250,13 +251,13 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplace
 				"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
 
 		case repl.AdvanceRegexp("^([^\\\\`]+)"):
-			unescaped += repl.m[1]
+			unescaped += repl.Group(1)
 
 		default:
-			line.Errorf("Internal pkglint error in ShellLine.unescapeBackticks at %q (rest=%q)", shellword, repl.rest)
+			line.Errorf("Internal pkglint error in ShellLine.unescapeBackticks at %q (rest=%q)", shellword, repl.Rest())
 		}
 	}
-	line.Errorf("Unfinished backquotes: rest=%q", repl.rest)
+	line.Errorf("Unfinished backquotes: rest=%q", repl.Rest())
 	return unescaped, quoting
 }
 
@@ -304,10 +305,10 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		line.Notef("You don't need to use \"-\" before %q.", cmd)
 	}
 
-	repl := NewPrefixReplacer(shelltext)
+	repl := textproc.NewPrefixReplacer(shelltext)
 	repl.AdvanceRegexp(`^\s+`)
 	if repl.AdvanceRegexp(`^[-@]+`) {
-		shline.checkHiddenAndSuppress(repl.m[0], repl.rest)
+		shline.checkHiddenAndSuppress(repl.Group(0), repl.Rest())
 	}
 	setE := false
 	if repl.AdvanceStr("${RUN}") {
@@ -316,7 +317,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		repl.AdvanceStr("${_PKG_SILENT}${_PKG_DEBUG}")
 	}
 
-	shline.CheckShellCommand(repl.rest, &setE)
+	shline.CheckShellCommand(repl.Rest(), &setE)
 }
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {

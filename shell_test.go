@@ -2,6 +2,7 @@ package main
 
 import (
 	check "gopkg.in/check.v1"
+	"netbsd.org/pkglint/textproc"
 )
 
 func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {
@@ -510,11 +511,11 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	shline := NewShellLine(NewMkLine(dummyLine))
 	// foobar="`echo \"foo   bar\"`"
 	text := "foobar=\"`echo \\\"foo   bar\\\"`\""
-	repl := NewPrefixReplacer(text)
+	repl := textproc.NewPrefixReplacer(text)
 	repl.AdvanceStr("foobar=\"`")
 
 	backtCommand, newQuoting := shline.unescapeBackticks(text, repl, shqDquotBackt)
 	c.Check(backtCommand, equals, "echo \"foo   bar\"")
 	c.Check(newQuoting, equals, shqDquot)
-	c.Check(repl.rest, equals, "\"")
+	c.Check(repl.Rest(), equals, "\"")
 }

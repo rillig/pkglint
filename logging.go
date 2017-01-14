@@ -99,7 +99,9 @@ func Explain(explanation ...string) {
 			io.WriteString(G.logOut, "\t"+explanationLine+"\n")
 		}
 		io.WriteString(G.logOut, "\n")
-	} else if G.Testing {
+	}
+
+	if G.Testing {
 		for _, s := range explanation {
 			if l := tabLength(s); l > 68 && contains(s, " ") {
 				lastSpace := strings.LastIndexByte(s[:68], ' ')

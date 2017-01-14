@@ -1,25 +1,26 @@
 package main
 
 import (
+	"netbsd.org/pkglint/textproc"
 	"strings"
 )
 
 type Parser struct {
 	Line         *Line
-	repl         *PrefixReplacer
+	repl         *textproc.PrefixReplacer
 	EmitWarnings bool
 }
 
 func NewParser(line *Line, s string, emitWarnings bool) *Parser {
-	return &Parser{line, NewPrefixReplacer(s), emitWarnings}
+	return &Parser{line, textproc.NewPrefixReplacer(s), emitWarnings}
 }
 
 func (p *Parser) EOF() bool {
-	return p.repl.rest == ""
+	return p.repl.EOF()
 }
 
 func (p *Parser) Rest() string {
-	return p.repl.rest
+	return p.repl.Rest()
 }
 
 func (p *Parser) PkgbasePattern() (pkgbase string) {
@@ -29,7 +30,7 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 		if repl.AdvanceRegexp(`^\$\{\w+\}`) ||
 			repl.AdvanceRegexp(`^[\w.*+,{}]+`) ||
 			repl.AdvanceRegexp(`^\[[\d-]+\]`) {
-			pkgbase += repl.m[0]
+			pkgbase += repl.Group(0)
 			continue
 		}
 
@@ -69,19 +70,19 @@ func (p *Parser) Dependency() *DependencyPattern {
 
 	mark2 := repl.Mark()
 	if repl.AdvanceStr(">=") || repl.AdvanceStr(">") {
-		op := repl.s
+		op := repl.Str()
 		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
 			dp.lowerOp = op
-			dp.lower = repl.m[0]
+			dp.lower = repl.Group(0)
 		} else {
 			repl.Reset(mark2)
 		}
 	}
 	if repl.AdvanceStr("<=") || repl.AdvanceStr("<") {
-		op := repl.s
+		op := repl.Str()
 		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
 			dp.upperOp = op
-			dp.upper = repl.m[0]
+			dp.upper = repl.Group(0)
 		} else {
 			repl.Reset(mark2)
 		}
@@ -89,7 +90,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 	if dp.lowerOp != "" || dp.upperOp != "" {
 		return &dp
 	}
-	if repl.AdvanceStr("-") && repl.rest != "" {
+	if repl.AdvanceStr("-") && !repl.EOF() {
 		dp.wildcard = repl.AdvanceRest()
 		return &dp
 	}

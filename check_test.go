@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	check "gopkg.in/check.v1"
+	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 )
 
@@ -186,6 +187,7 @@ func (s *Suite) ExpectFatalError(action func()) {
 
 func (s *Suite) SetUpTest(c *check.C) {
 	G = GlobalVars{Testing: true}
+	textproc.Testing = true
 	G.logOut, G.logErr, trace.Out = &s.stdout, &s.stderr, &s.stdout
 	s.checkC = c
 	s.UseCommandLine( /* no arguments */ )
@@ -195,6 +197,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 func (s *Suite) TearDownTest(c *check.C) {
 	G = GlobalVars{}
+	textproc.Testing = false
 	if out := s.Output(); out != "" {
 		fmt.Fprintf(os.Stderr, "Unchecked output in %q; check with: c.Check(s.Output(), equals, %q)", c.TestName(), out)
 	}

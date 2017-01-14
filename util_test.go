@@ -3,6 +3,7 @@ package main
 import (
 	check "gopkg.in/check.v1"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/textproc"
 	"testing"
 )
 
@@ -84,7 +85,7 @@ func (s *Suite) Test_isEmptyDir_and_getSubdirs(c *check.C) {
 }
 
 func (s *Suite) Test_PrefixReplacer_Since(c *check.C) {
-	repl := NewPrefixReplacer("hello, world")
+	repl := textproc.NewPrefixReplacer("hello, world")
 	mark := repl.Mark()
 	repl.AdvanceRegexp(`^\w+`)
 	c.Check(repl.Since(mark), equals, "hello")
