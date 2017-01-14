@@ -33,10 +33,10 @@ func (rline *RawLine) String() string {
 }
 
 type Line struct {
-	Fname          string
+	fname          string
 	firstLine      int32 // Zero means not applicable, -1 means EOF
 	lastLine       int32 // Usually the same as firstLine, may differ in Makefiles
-	Text           string
+	text           string
 	raw            []*RawLine
 	changed        bool
 	before         []string
@@ -87,8 +87,8 @@ func (line *Line) linenos() string {
 }
 
 func (line *Line) ReferenceFrom(other *Line) string {
-	if line.Fname != other.Fname {
-		return cleanpath(relpath(path.Dir(other.Fname), line.Fname)) + ":" + line.linenos()
+	if line.fname != other.fname {
+		return cleanpath(relpath(path.Dir(other.fname), line.fname)) + ":" + line.linenos()
 	}
 	return "line " + line.linenos()
 }
@@ -123,42 +123,42 @@ func (line *Line) printSource(out io.Writer) {
 
 func (line *Line) Fatalf(format string, args ...interface{}) {
 	line.printSource(G.logErr)
-	logs(llFatal, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llFatal, line.fname, line.linenos(), format, fmt.Sprintf(format, args...))
 }
 
 func (line *Line) Errorf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	logs(llError, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llError, line.fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 
 func (line *Line) Warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	logs(llWarn, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llWarn, line.fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 
 func (line *Line) Notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	logs(llNote, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+	logs(llNote, line.fname, line.linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 
 func (line *Line) String() string {
-	return line.Fname + ":" + line.linenos() + ": " + line.Text
+	return line.fname + ":" + line.linenos() + ": " + line.text
 }
 
 func (line *Line) IFname() string {
-	return line.Fname
+	return line.fname
 }
 
 func (line *Line) IText() string {
-	return line.Text
+	return line.text
 }
 
 func (line *Line) logAutofix() {
 	if line.autofixMessage != "" {
-		logs(llAutofix, line.Fname, line.linenos(), "%s", line.autofixMessage)
+		logs(llAutofix, line.fname, line.linenos(), "%s", line.autofixMessage)
 		line.autofixMessage = ""
 	}
 }
@@ -220,7 +220,7 @@ func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFi
 	}
 	line.changed = true
 	if G.opts.Autofix {
-		logs(llAutofix, line.Fname, line.linenos(), format, fmt.Sprintf(format, args...))
+		logs(llAutofix, line.fname, line.linenos(), format, fmt.Sprintf(format, args...))
 		return true
 	}
 	if G.opts.PrintAutofix {

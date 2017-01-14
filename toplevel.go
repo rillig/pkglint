@@ -21,7 +21,7 @@ func CheckdirToplevel() {
 	}
 
 	for _, line := range lines {
-		if m, commentedOut, indentation, subdir, comment := match4(line.Text, `^(#?)SUBDIR\s*\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
+		if m, commentedOut, indentation, subdir, comment := match4(line.IText(), `^(#?)SUBDIR\s*\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
 			ctx.checkSubdir(line, commentedOut == "#", indentation, subdir, comment)
 		}
 	}

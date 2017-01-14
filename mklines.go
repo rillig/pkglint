@@ -78,7 +78,7 @@ func (mklines *MkLines) VarValue(varname string) (value string, found bool) {
 
 func (mklines *MkLines) Check() {
 	if trace.Tracing {
-		defer trace.Call1(mklines.lines[0].Fname)()
+		defer trace.Call1(mklines.lines[0].IFname())()
 	}
 
 	G.Mk = mklines

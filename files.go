@@ -152,9 +152,9 @@ func SaveAutofixChanges(lines []*Line) (autofixed bool) {
 	changed := make(map[string]bool)
 	for _, line := range lines {
 		if line.changed {
-			changed[line.Fname] = true
+			changed[line.IFname()] = true
 		}
-		changes[line.Fname] = append(changes[line.Fname], line.modifiedLines()...)
+		changes[line.IFname()] = append(changes[line.IFname()], line.modifiedLines()...)
 	}
 
 	for fname := range changed {

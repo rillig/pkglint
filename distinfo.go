@@ -11,10 +11,10 @@ import (
 
 func ChecklinesDistinfo(lines []*Line) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Fname)()
+		defer trace.Call1(lines[0].IFname())()
 	}
 
-	fname := lines[0].Fname
+	fname := lines[0].IFname()
 	patchesDir := "patches"
 	patchesDirSet := false
 	if G.Pkg != nil && contains(fname, "lang/php") {
@@ -54,7 +54,7 @@ type distinfoLinesChecker struct {
 
 func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 	LineChecker{lines[0]}.CheckRcsid(``, "")
-	if 1 < len(lines) && lines[1].Text != "" {
+	if 1 < len(lines) && lines[1].IText() != "" {
 		lines[1].Notef("Empty line expected.")
 	}
 
@@ -62,7 +62,7 @@ func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
 		if i < 2 {
 			continue
 		}
-		m, alg, filename, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
+		m, alg, filename, hash := match3(line.IText(), `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
 		if !m {
 			line.Errorf("Invalid line.")
 			continue

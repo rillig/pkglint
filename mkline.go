@@ -50,7 +50,7 @@ type mkLineDependency struct {
 func NewMkLine(line *Line) (mkline *MkLine) {
 	mkline = &MkLine{Line: line}
 
-	text := line.Text
+	text := line.IText()
 
 	if hasPrefix(text, " ") {
 		mkline.Warnf("Makefile lines should not start with space characters.")
@@ -145,7 +145,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 }
 
 func (mkline *MkLine) String() string {
-	return fmt.Sprintf("%s:%s", mkline.Line.Fname, mkline.Line.linenos())
+	return fmt.Sprintf("%s:%s", mkline.Line.IFname(), mkline.Line.linenos())
 }
 func (mkline *MkLine) IsVarassign() bool { _, ok := mkline.data.(mkLineAssign); return ok }
 func (mkline *MkLine) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }
@@ -197,7 +197,7 @@ func (mkline *MkLine) Check() {
 		NewShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 	case mkline.IsComment():
-		if hasPrefix(mkline.Line.Text, "# url2pkg-marker") {
+		if hasPrefix(mkline.Line.IText(), "# url2pkg-marker") {
 			mkline.Line.Errorf("This comment indicates unfinished work (url2pkg).")
 		}
 
@@ -218,7 +218,7 @@ func (mkline *MkLine) checkInclude() {
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
 	if trace.Tracing {
-		trace.Step2("includingFile=%s includefile=%s", mkline.Fname, includefile)
+		trace.Step2("includingFile=%s includefile=%s", mkline.IFname(), includefile)
 	}
 	mkline.CheckRelativePath(includefile, mustExist)
 
@@ -232,7 +232,7 @@ func (mkline *MkLine) checkInclude() {
 			"Makefile.common.")
 
 	case includefile == "../../mk/bsd.prefs.mk":
-		if path.Base(mkline.Line.Fname) == "buildlink3.mk" {
+		if path.Base(mkline.Line.IFname()) == "buildlink3.mk" {
 			mkline.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.Pkg != nil {
@@ -421,7 +421,7 @@ func (mkline *MkLine) checkVarassignDefPermissions() {
 		return
 	}
 
-	perms := vartype.EffectivePermissions(mkline.Line.Fname)
+	perms := vartype.EffectivePermissions(mkline.Line.IFname())
 	var needed AclPermissions
 	switch op {
 	case opAssign, opAssignShell, opAssignEval:
@@ -529,7 +529,7 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 		return
 	}
 
-	perms := vartype.EffectivePermissions(mkline.Line.Fname)
+	perms := vartype.EffectivePermissions(mkline.Line.IFname())
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -1626,7 +1626,7 @@ func (mkline *MkLine) extractUsedVariables(text string) []string {
 }
 
 func (mkline *MkLine) determineUsedVariables() (varnames []string) {
-	rest := mkline.Line.Text
+	rest := mkline.Line.IText()
 
 	if strings.HasPrefix(rest, "#") {
 		return
