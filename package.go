@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"netbsd.org/pkglint/pkgver"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"path"
 	"regexp"
 	"strconv"
@@ -80,15 +81,15 @@ func (pkg *Package) varValue(varname string) (string, bool) {
 func (pkg *Package) setSeenBsdPrefsMk() {
 	if !pkg.SeenBsdPrefsMk {
 		pkg.SeenBsdPrefsMk = true
-		if G.opts.Debug {
-			traceStep("Pkg.setSeenBsdPrefsMk")
+		if trace.Tracing {
+			trace.Stepf("Pkg.setSeenBsdPrefsMk")
 		}
 	}
 }
 
 func (pkg *Package) checkPossibleDowngrade() {
-	if G.opts.Debug {
-		defer tracecall0()()
+	if trace.Tracing {
+		defer trace.Call0()()
 	}
 
 	m, _, pkgversion := match2(pkg.EffectivePkgname, rePkgname)
@@ -100,8 +101,8 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 	change := G.globalData.LastChange[pkg.Pkgpath]
 	if change == nil {
-		if G.opts.Debug {
-			traceStep1("No change log for package %q", pkg.Pkgpath)
+		if trace.Tracing {
+			trace.Step1("No change log for package %q", pkg.Pkgpath)
 		}
 		return
 	}
@@ -120,8 +121,8 @@ func (pkg *Package) checkPossibleDowngrade() {
 }
 
 func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
-	if G.opts.Debug {
-		defer tracecall0()()
+	if trace.Tracing {
+		defer trace.Call0()()
 	}
 
 	// Collect all the included buildlink3.mk files from the file.
@@ -138,18 +139,18 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 		}
 	}
 
-	if G.opts.Debug {
+	if trace.Tracing {
 		for packageBl3 := range pkg.bl3 {
 			if includedFiles[packageBl3] == nil {
-				traceStep1("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
+				trace.Step1("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 			}
 		}
 	}
 }
 
 func checkdirPackage(pkgpath string) {
-	if G.opts.Debug {
-		defer tracecall1(pkgpath)()
+	if trace.Tracing {
+		defer trace.Call1(pkgpath)()
 	}
 
 	G.Pkg = NewPackage(pkgpath)
@@ -219,8 +220,8 @@ func checkdirPackage(pkgpath string) {
 }
 
 func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
-	if G.opts.Debug {
-		defer tracecall1(fname)()
+	if trace.Tracing {
+		defer trace.Call1(fname)()
 	}
 
 	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
@@ -251,19 +252,19 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 		}
 	}
 
-	if G.opts.Debug {
-		traceStep1("DISTINFO_FILE=%s", pkg.DistinfoFile)
-		traceStep1("FILESDIR=%s", pkg.Filesdir)
-		traceStep1("PATCHDIR=%s", pkg.Patchdir)
-		traceStep1("PKGDIR=%s", pkg.Pkgdir)
+	if trace.Tracing {
+		trace.Step1("DISTINFO_FILE=%s", pkg.DistinfoFile)
+		trace.Step1("FILESDIR=%s", pkg.Filesdir)
+		trace.Step1("PATCHDIR=%s", pkg.Patchdir)
+		trace.Step1("PKGDIR=%s", pkg.Pkgdir)
 	}
 
 	return mainLines
 }
 
 func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {
-	if G.opts.Debug {
-		defer tracecall1(fname)()
+	if trace.Tracing {
+		defer trace.Call1(fname)()
 	}
 
 	fileLines := LoadNonemptyLines(fname, true)
@@ -301,8 +302,8 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					G.Pkg.bl3[bl3File] = line
-					if G.opts.Debug {
-						traceStep1("Buildlink3 file in package: %q", bl3File)
+					if trace.Tracing {
+						trace.Step1("Buildlink3 file in package: %q", bl3File)
 					}
 				}
 			}
@@ -317,8 +318,8 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 			}
 
 			if path.Base(fname) == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
-				if G.opts.Debug {
-					traceStep1("Including %q sets seenMakefileCommon.", includeFile)
+				if trace.Tracing {
+					trace.Step1("Including %q sets seenMakefileCommon.", includeFile)
 				}
 				G.Pkg.seenMakefileCommon = true
 			}
@@ -341,8 +342,8 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 					}
 				}
 
-				if G.opts.Debug {
-					traceStep1("Including %q.", dirname+"/"+includeFile)
+				if trace.Tracing {
+					trace.Step1("Including %q.", dirname+"/"+includeFile)
 				}
 				includingFname := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
 				if !pkg.readMakefile(dirname+"/"+includeFile, mainLines, allLines, includingFname) {
@@ -355,8 +356,8 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 			varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
 
 			if op != opAssignDefault || G.Pkg.vardef[varname] == nil {
-				if G.opts.Debug {
-					traceStep("varassign(%q, %q, %q)", varname, op, value)
+				if trace.Tracing {
+					trace.Stepf("varassign(%q, %q, %q)", varname, op, value)
 				}
 				G.Pkg.vardef[varname] = mkline
 			}
@@ -371,8 +372,8 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 }
 
 func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
-	if G.opts.Debug {
-		defer tracecall1(fname)()
+	if trace.Tracing {
+		defer trace.Call1(fname)()
 	}
 
 	vardef := pkg.vardef
@@ -487,8 +488,8 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 	if pkg.EffectivePkgnameLine != nil {
-		if G.opts.Debug {
-			traceStep("Effective name=%q base=%q version=%q",
+		if trace.Tracing {
+			trace.Stepf("Effective name=%q base=%q version=%q",
 				pkg.EffectivePkgname, pkg.EffectivePkgbase, pkg.EffectivePkgversion)
 		}
 	}
@@ -498,14 +499,14 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 	tokens := NewMkParser(dummyLine, pkgname, false).MkTokens()
 
 	subst := func(str, smod string) (result string) {
-		if G.opts.Debug {
-			defer tracecall(str, smod, ref(result))()
+		if trace.Tracing {
+			defer trace.Call(str, smod, trace.Ref(result))()
 		}
 		qsep := regexp.QuoteMeta(smod[1:2])
 		if m, left, from, right, to, flags := regex.Match5(smod, regex.RegexPattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`)); m {
 			result := mkopSubst(str, left != "", from, right != "", to, flags)
-			if G.opts.Debug {
-				traceStep("subst %q %q => %q", str, smod, result)
+			if trace.Tracing {
+				trace.Stepf("subst %q %q => %q", str, smod, result)
 			}
 			return result
 		}
@@ -545,8 +546,8 @@ func (pkg *Package) expandVariableWithDefault(varname, defaultValue string) stri
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}
-	if G.opts.Debug {
-		traceStep2("Expanded %q to %q", varname, value)
+	if trace.Tracing {
+		trace.Step2("Expanded %q to %q", varname, value)
 	}
 	return value
 }
@@ -581,8 +582,8 @@ func (pkg *Package) checkUpdate() {
 }
 
 func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
-	if G.opts.Debug {
-		defer tracecall0()()
+	if trace.Tracing {
+		defer trace.Call0()()
 	}
 
 	if !G.opts.WarnOrder || pkg.seenMakefileCommon {
@@ -695,8 +696,8 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		line := mklines.lines[lineno]
 		text := line.Text
 
-		if G.opts.Debug {
-			traceStep("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
+		if trace.Tracing {
+			trace.Stepf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
 		}
 
 		if nextSection {
@@ -812,8 +813,8 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 }
 
 func (pkg *Package) checkLocallyModified(fname string) {
-	if G.opts.Debug {
-		defer tracecall(fname)()
+	if trace.Tracing {
+		defer trace.Call(fname)()
 	}
 
 	ownerLine := pkg.vardef["OWNER"]
@@ -831,8 +832,8 @@ func (pkg *Package) checkLocallyModified(fname string) {
 	}
 
 	username := G.CurrentUsername
-	if G.opts.Debug {
-		traceStep("user=%q owner=%q maintainer=%q", username, owner, maintainer)
+	if trace.Tracing {
+		trace.Stepf("user=%q owner=%q maintainer=%q", username, owner, maintainer)
 	}
 
 	if username == strings.Split(owner, "@")[0] || username == strings.Split(maintainer, "@")[0] {

@@ -32,10 +32,8 @@ type GlobalVars struct {
 	explanationsAvailable bool
 	explanationsGiven     map[string]bool
 	autofixAvailable      bool
-	traceDepth            int
 	logOut                io.Writer
 	logErr                io.Writer
-	debugOut              io.Writer
 
 	res       map[regex.RegexPattern]*regexp.Regexp // Compiled regular expressions
 	rematch   *histogram.Histogram
@@ -80,7 +78,6 @@ type CmdOpts struct {
 	Profiling,
 	Quiet,
 	Recursive,
-	Debug,
 	PrintAutofix,
 	PrintSource,
 	PrintVersion bool

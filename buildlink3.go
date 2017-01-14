@@ -2,12 +2,13 @@ package main
 
 import (
 	"netbsd.org/pkglint/pkgver"
+	"netbsd.org/pkglint/trace"
 	"strings"
 )
 
 func ChecklinesBuildlink3Mk(mklines *MkLines) {
-	if G.opts.Debug {
-		defer tracecall1(mklines.lines[0].Fname)()
+	if trace.Tracing {
+		defer trace.Call1(mklines.lines[0].Fname)()
 	}
 
 	mklines.Check()
@@ -175,8 +176,8 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 			}
 
 		} else {
-			if G.opts.Debug {
-				traceStep1("Unchecked line %s in third paragraph.", exp.CurrentLine().linenos())
+			if trace.Tracing {
+				trace.Step1("Unchecked line %s in third paragraph.", exp.CurrentLine().linenos())
 			}
 			exp.Advance()
 		}

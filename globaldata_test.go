@@ -2,6 +2,7 @@ package main
 
 import (
 	check "gopkg.in/check.v1"
+	"netbsd.org/pkglint/trace"
 )
 
 func (s *Suite) Test_GlobalData_InitVartypes(c *check.C) {
@@ -55,7 +56,7 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 
 	G.globalData.loadTools()
 
-	G.opts.Debug = true
+	trace.Tracing = true
 	G.globalData.Tools.Trace()
 
 	c.Check(s.Output(), equals, ""+

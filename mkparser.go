@@ -2,6 +2,7 @@ package main
 
 import (
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"strings"
 )
 
@@ -254,8 +255,8 @@ func (p *MkParser) mkCondAnd() *Tree {
 }
 
 func (p *MkParser) mkCondAtom() *Tree {
-	if G.opts.Debug {
-		defer tracecall1(p.Rest())()
+	if trace.Tracing {
+		defer trace.Call1(p.Rest())()
 	}
 
 	repl := p.repl

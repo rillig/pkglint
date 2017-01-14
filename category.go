@@ -1,12 +1,13 @@
 package main
 
 import (
+	"netbsd.org/pkglint/trace"
 	"sort"
 )
 
 func CheckdirCategory() {
-	if G.opts.Debug {
-		defer tracecall1(G.CurrentDir)()
+	if trace.Tracing {
+		defer trace.Call1(G.CurrentDir)()
 	}
 
 	lines := LoadNonemptyLines(G.CurrentDir+"/Makefile", true)

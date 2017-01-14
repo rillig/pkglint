@@ -5,12 +5,13 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
+	"netbsd.org/pkglint/trace"
 	"strings"
 )
 
 func ChecklinesDistinfo(lines []*Line) {
-	if G.opts.Debug {
-		defer tracecall1(lines[0].Fname)()
+	if trace.Tracing {
+		defer trace.Call1(lines[0].Fname)()
 	}
 
 	fname := lines[0].Fname
@@ -26,8 +27,8 @@ func ChecklinesDistinfo(lines []*Line) {
 	if G.Pkg != nil && !patchesDirSet && dirExists(G.CurrentDir+"/"+G.Pkg.Patchdir) {
 		patchesDir = G.Pkg.Patchdir
 	}
-	if G.opts.Debug {
-		traceStep1("patchesDir=%q", patchesDir)
+	if trace.Tracing {
+		trace.Step1("patchesDir=%q", patchesDir)
 	}
 
 	ck := &distinfoLinesChecker{
@@ -130,8 +131,8 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFname, distinfoS
 func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	files, err := ioutil.ReadDir(G.CurrentDir + "/" + ck.patchdir)
 	if err != nil {
-		if G.opts.Debug {
-			traceStep("Cannot read patchesDir %q: %s", ck.patchdir, err)
+		if trace.Tracing {
+			trace.Stepf("Cannot read patchesDir %q: %s", ck.patchdir, err)
 		}
 		return
 	}

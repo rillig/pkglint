@@ -1,13 +1,15 @@
 package main
 
+import "netbsd.org/pkglint/trace"
+
 type Toplevel struct {
 	previousSubdir string
 	subdirs        []string
 }
 
 func CheckdirToplevel() {
-	if G.opts.Debug {
-		defer tracecall1(G.CurrentDir)()
+	if trace.Tracing {
+		defer trace.Call1(G.CurrentDir)()
 	}
 
 	ctx := new(Toplevel)

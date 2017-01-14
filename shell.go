@@ -3,6 +3,7 @@ package main
 // Parsing and checking shell commands embedded in Makefiles
 
 import (
+	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
 )
@@ -27,8 +28,8 @@ var shellcommandsContextType = &Vartype{lkNone, BtShellCommands, []AclEntry{{"*"
 var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, false}
 
 func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
-	if G.opts.Debug {
-		defer tracecall(token, checkQuoting)()
+	if trace.Tracing {
+		defer trace.Call(token, checkQuoting)()
 	}
 
 	if token == "" || hasPrefix(token, "#") {
@@ -55,8 +56,8 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 	quoting := shqPlain
 outer:
 	for !parser.EOF() {
-		if G.opts.Debug {
-			traceStep("shell state %s: %q", quoting, parser.Rest())
+		if trace.Tracing {
+			trace.Stepf("shell state %s: %q", quoting, parser.Rest())
 		}
 
 		switch {
@@ -171,8 +172,8 @@ outer:
 }
 
 func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) bool {
-	if G.opts.Debug {
-		defer tracecall(parser.Rest(), quoting)()
+	if trace.Tracing {
+		defer trace.Call(parser.Rest(), quoting)()
 	}
 
 	varuse := parser.VarUse()
@@ -218,8 +219,8 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
 func (shline *ShellLine) unescapeBackticks(shellword string, repl *PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
-	if G.opts.Debug {
-		defer tracecall(shellword, quoting, "=>", ref(&unescaped))()
+	if trace.Tracing {
+		defer trace.Call(shellword, quoting, "=>", trace.Ref(&unescaped))()
 	}
 
 	line := shline.line
@@ -270,8 +271,8 @@ func (shline *ShellLine) variableNeedsQuoting(shvarname string) bool {
 }
 
 func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
-	if G.opts.Debug {
-		defer tracecall1(shelltext)()
+	if trace.Tracing {
+		defer trace.Call1(shelltext)()
 	}
 
 	line := shline.line
@@ -319,8 +320,8 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 }
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	program, err := parseShellProgram(shline.line, shellcmd)
@@ -368,8 +369,8 @@ func (shline *ShellLine) CheckShellCommands(shellcmds string) {
 }
 
 func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) {
-	if G.opts.Debug {
-		defer tracecall(hiddenAndSuppress, rest)()
+	if trace.Tracing {
+		defer trace.Call(hiddenAndSuppress, rest)()
 	}
 
 	switch {
@@ -430,8 +431,8 @@ func NewSimpleCommandChecker(shline *ShellLine, cmd *MkShSimpleCommand) *SimpleC
 }
 
 func (scc *SimpleCommandChecker) Check() {
-	if G.opts.Debug {
-		defer tracecall(scc.strcmd)()
+	if trace.Tracing {
+		defer trace.Call(scc.strcmd)()
 	}
 
 	scc.checkCommandStart()
@@ -443,8 +444,8 @@ func (scc *SimpleCommandChecker) Check() {
 }
 
 func (scc *SimpleCommandChecker) checkCommandStart() {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -469,8 +470,8 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 }
 
 func (scc *SimpleCommandChecker) handleTool() bool {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -495,8 +496,8 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 }
 
 func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -513,8 +514,8 @@ func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 }
 
 func (scc *SimpleCommandChecker) handleCommandVariable() bool {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -543,13 +544,13 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 }
 
 func (scc *SimpleCommandChecker) handleComment() bool {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	shellword := scc.strcmd.Name
-	if G.opts.Debug {
-		defer tracecall1(shellword)()
+	if trace.Tracing {
+		defer trace.Call1(shellword)()
 	}
 
 	if !hasPrefix(shellword, "#") {
@@ -585,8 +586,8 @@ func (scc *SimpleCommandChecker) handleComment() bool {
 }
 
 func (scc *SimpleCommandChecker) checkAbsolutePathnames() {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	cmdname := scc.strcmd.Name
@@ -607,8 +608,8 @@ func (scc *SimpleCommandChecker) checkAbsolutePathnames() {
 }
 
 func (scc *SimpleCommandChecker) checkAutoMkdirs() {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	cmdname := scc.strcmd.Name
@@ -644,8 +645,8 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 }
 
 func (scc *SimpleCommandChecker) checkInstallMulti() {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	cmd := scc.strcmd
@@ -673,8 +674,8 @@ func (scc *SimpleCommandChecker) checkInstallMulti() {
 }
 
 func (scc *SimpleCommandChecker) checkPaxPe() {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	if scc.strcmd.Name == "${PAX}" && scc.strcmd.HasOption("-pe") {
@@ -687,8 +688,8 @@ func (scc *SimpleCommandChecker) checkPaxPe() {
 }
 
 func (scc *SimpleCommandChecker) checkEchoN() {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	if scc.strcmd.Name == "${ECHO}" && scc.strcmd.HasOption("-n") {
@@ -701,8 +702,8 @@ type ShellProgramChecker struct {
 }
 
 func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	getSimple := func(list *MkShList) *MkShSimpleCommand {
@@ -743,8 +744,8 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 }
 
 func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool) {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	for _, word := range words {
@@ -753,16 +754,16 @@ func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool) 
 }
 
 func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool) {
-	if G.opts.Debug {
-		defer tracecall(word.MkText)()
+	if trace.Tracing {
+		defer trace.Call(word.MkText)()
 	}
 
 	spc.shline.CheckWord(word.MkText, checkQuoting)
 }
 
 func (scc *ShellProgramChecker) checkPipeExitcode(line *Line, pipeline *MkShPipeline) {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	if G.opts.WarnExtra && len(pipeline.Cmds) > 1 {
@@ -777,8 +778,8 @@ func (scc *ShellProgramChecker) checkPipeExitcode(line *Line, pipeline *MkShPipe
 }
 
 func (scc *ShellProgramChecker) checkSetE(list *MkShList, eflag *bool) {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	// Disabled until the shell parser can recognize "command || exit 1" reliably.
@@ -803,8 +804,8 @@ func (scc *ShellProgramChecker) checkSetE(list *MkShList, eflag *bool) {
 
 // Some shell commands should not be used in the install phase.
 func (shline *ShellLine) checkCommandUse(shellcmd string) {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	if G.Mk == nil || !matches(G.Mk.target, `^(?:pre|do|post)-install$`) {
@@ -847,8 +848,8 @@ func (shline *ShellLine) checkCommandUse(shellcmd string) {
 
 // Example: "word1 word2;;;" => "word1", "word2", ";;", ";"
 func splitIntoShellTokens(line *Line, text string) (tokens []string, rest string) {
-	if G.opts.Debug {
-		defer tracecall(line, text)()
+	if trace.Tracing {
+		defer trace.Call(line, text)()
 	}
 
 	word := ""
@@ -879,8 +880,8 @@ func splitIntoShellTokens(line *Line, text string) (tokens []string, rest string
 // Example: "word1 word2;;;" => "word1", "word2;;;"
 // Compare devel/bmake/files/str.c, function brk_string.
 func splitIntoMkWords(line *Line, text string) (words []string, rest string) {
-	if G.opts.Debug {
-		defer tracecall(line, text)()
+	if trace.Tracing {
+		defer trace.Call(line, text)()
 	}
 
 	p := NewShTokenizer(line, text, false)

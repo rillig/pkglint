@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"os"
 	"path"
 	"strconv"
@@ -206,8 +207,8 @@ func (mkline *MkLine) Check() {
 }
 
 func (mkline *MkLine) checkInclude() {
-	if G.opts.Debug {
-		defer tracecall0()()
+	if trace.Tracing {
+		defer trace.Call0()()
 	}
 
 	if mkline.Indent() != "" {
@@ -216,8 +217,8 @@ func (mkline *MkLine) checkInclude() {
 
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
-	if G.opts.Debug {
-		traceStep2("includingFile=%s includefile=%s", mkline.Fname, includefile)
+	if trace.Tracing {
+		trace.Step2("includingFile=%s includefile=%s", mkline.Fname, includefile)
 	}
 	mkline.CheckRelativePath(includefile, mustExist)
 
@@ -390,8 +391,8 @@ func (mkline *MkLine) checkDependencyRule(allowedTargets map[string]bool) {
 }
 
 func (mkline *MkLine) Tokenize(s string) []*MkToken {
-	if G.opts.Debug {
-		defer tracecall(mkline, s)()
+	if trace.Tracing {
+		defer trace.Call(mkline, s)()
 	}
 
 	p := NewMkParser(mkline.Line, s, true)
@@ -406,16 +407,16 @@ func (mkline *MkLine) checkVarassignDefPermissions() {
 	if !G.opts.WarnPerm {
 		return
 	}
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	varname := mkline.Varname()
 	op := mkline.Op()
 	vartype := mkline.getVariableType(varname)
 	if vartype == nil {
-		if G.opts.Debug {
-			traceStep1("No type definition found for %q.", varname)
+		if trace.Tracing {
+			trace.Step1("No type definition found for %q.", varname)
 		}
 		return
 	}
@@ -435,8 +436,8 @@ func (mkline *MkLine) checkVarassignDefPermissions() {
 	case perms.Contains(needed):
 		break
 	case perms == aclpUnknown:
-		if G.opts.Debug {
-			traceStep1("Unknown permissions for %q.", varname)
+		if trace.Tracing {
+			trace.Step1("Unknown permissions for %q.", varname)
 		}
 	default:
 		alternativeActions := perms & aclpAllWrite
@@ -464,8 +465,8 @@ func (mkline *MkLine) checkVarassignDefPermissions() {
 }
 
 func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
-	if G.opts.Debug {
-		defer tracecall(mkline, varuse, vuc)()
+	if trace.Tracing {
+		defer trace.Call(mkline, varuse, vuc)()
 	}
 
 	if varuse.IsExpression() {
@@ -513,8 +514,8 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 	if !G.opts.WarnPerm {
 		return
 	}
-	if G.opts.Debug {
-		defer tracecall(varname, vuc)()
+	if trace.Tracing {
+		defer trace.Call(varname, vuc)()
 	}
 
 	// This is the type of the variable that is being used. Not to
@@ -522,8 +523,8 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 	// context in which the variable is used (often a ShellCommand
 	// or, in an assignment, the type of the left hand side variable).
 	if vartype == nil {
-		if G.opts.Debug {
-			traceStep1("No type definition found for %q.", varname)
+		if trace.Tracing {
+			trace.Step1("No type definition found for %q.", varname)
 		}
 		return
 	}
@@ -648,8 +649,8 @@ func (mkline *MkLine) WarnVaruseLocalbase() {
 }
 
 func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
-	if G.opts.Debug {
-		defer tracecall(varname, vartype, needsQuoting)()
+	if trace.Tracing {
+		defer trace.Call(varname, vartype, needsQuoting)()
 	}
 
 	if false && // Too many false positives
@@ -666,8 +667,8 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 }
 
 func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
-	if G.opts.Debug {
-		defer tracecall(varname, vartype, vuc, mod, needsQuoting)()
+	if trace.Tracing {
+		defer trace.Call(varname, vartype, vuc, mod, needsQuoting)()
 	}
 
 	// In GNU configure scripts, a few variables need to be
@@ -763,8 +764,8 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 }
 
 func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
-	if G.opts.Debug {
-		defer tracecall2(varname, value)()
+	if trace.Tracing {
+		defer trace.Call2(varname, value)()
 	}
 
 	strversions := splitOnSpace(value)
@@ -795,8 +796,8 @@ func (mkline *MkLine) checkVarassign() {
 	comment := mkline.VarassignComment()
 	varcanon := varnameCanon(varname)
 
-	if G.opts.Debug {
-		defer tracecall(varname, op, value)()
+	if trace.Tracing {
+		defer trace.Call(varname, op, value)()
 	}
 
 	defineVar(mkline, varname)
@@ -808,8 +809,8 @@ func (mkline *MkLine) checkVarassign() {
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == opAssignEval && varname == strings.ToLower(varname) {
-		if G.opts.Debug {
-			traceStep1("%s might be unused unless it is an argument to a procedure file.", varname)
+		if trace.Tracing {
+			trace.Step1("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
 
 	} else if !varIsUsed(varname) {
@@ -840,13 +841,13 @@ func (mkline *MkLine) checkVarassign() {
 			if G.Pkg != nil {
 				if !G.Pkg.SeenBsdPrefsMk {
 					G.Pkg.loadTimeTools[toolname] = true
-					if G.opts.Debug {
-						traceStep1("loadTimeTool %q", toolname)
+					if trace.Tracing {
+						trace.Step1("loadTimeTool %q", toolname)
 					}
 				} else if !G.Pkg.loadTimeTools[toolname] {
 					G.Pkg.loadTimeTools[toolname] = false
-					if G.opts.Debug {
-						traceStep1("too late for loadTimeTool %q", toolname)
+					if trace.Tracing {
+						trace.Step1("too late for loadTimeTool %q", toolname)
 					}
 				}
 			}
@@ -864,8 +865,8 @@ func (mkline *MkLine) checkVarassign() {
 }
 
 func (mkline *MkLine) checkVarassignVaruse() {
-	if G.opts.Debug {
-		defer tracecall()()
+	if trace.Tracing {
+		defer trace.Call()()
 	}
 
 	op := mkline.Op()
@@ -888,8 +889,8 @@ func (mkline *MkLine) checkVarassignVaruse() {
 }
 
 func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
-	if G.opts.Debug {
-		defer tracecall(vartype, time)()
+	if trace.Tracing {
+		defer trace.Call(vartype, time)()
 	}
 	tokens := NewMkParser(mkline.Line, mkline.Value(), false).MkTokens()
 	for i, token := range tokens {
@@ -904,8 +905,8 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 }
 
 func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
-	if G.opts.Debug {
-		defer tracecall(vartype, time)()
+	if trace.Tracing {
+		defer trace.Call(vartype, time)()
 	}
 
 	isWordPart := func(tokens []*ShAtom, i int) bool {
@@ -1038,8 +1039,8 @@ func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
 }
 
 func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment string) {
-	if G.opts.Debug {
-		defer tracecall(varname, op, value, comment)()
+	if trace.Tracing {
+		defer trace.Call(varname, op, value, comment)()
 	}
 
 	if !G.opts.WarnTypes {
@@ -1056,13 +1057,13 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 
 	switch {
 	case vartype == nil:
-		if G.opts.Debug {
-			traceStep1("Unchecked variable assignment for %s.", varname)
+		if trace.Tracing {
+			trace.Step1("Unchecked variable assignment for %s.", varname)
 		}
 
 	case op == opAssignShell:
-		if G.opts.Debug {
-			traceStep1("Unchecked use of !=: %q", value)
+		if trace.Tracing {
+			trace.Step1("Unchecked use of !=: %q", value)
 		}
 
 	case vartype.kindOfList == lkNone:
@@ -1087,8 +1088,8 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 // For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *BasicType, op MkOperator, value, comment string, guessed bool) {
-	if G.opts.Debug {
-		defer tracecall(varname, checker.name, op, value, comment, guessed)()
+	if trace.Tracing {
+		defer trace.Call(varname, checker.name, op, value, comment, guessed)()
 	}
 
 	valueNoVar := mkline.withoutMakeVariables(value)
@@ -1139,15 +1140,15 @@ func (mkline *MkLine) resolveVarsInRelativePath(relpath string, adjustDepth bool
 		}
 	}
 
-	if G.opts.Debug {
-		traceStep2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+	if trace.Tracing {
+		trace.Step2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
 	}
 	return tmp
 }
 
 func (mkline *MkLine) checkText(text string) {
-	if G.opts.Debug {
-		defer tracecall1(text)()
+	if trace.Tracing {
+		defer trace.Call1(text)()
 	}
 
 	if contains(text, "${WRKSRC}/..") {
@@ -1193,8 +1194,8 @@ func (mkline *MkLine) checkText(text string) {
 }
 
 func (mkline *MkLine) CheckCond() {
-	if G.opts.Debug {
-		defer tracecall1(mkline.Args())()
+	if trace.Tracing {
+		defer trace.Call1(mkline.Args())()
 	}
 
 	p := NewMkParser(mkline.Line, mkline.Args(), false)
@@ -1301,8 +1302,8 @@ func (mkline *MkLine) explainRelativeDirs() {
 }
 
 func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
-	if G.opts.Debug {
-		defer tracecall1(pkgdir)()
+	if trace.Tracing {
+		defer trace.Call1(pkgdir)()
 	}
 
 	mkline.CheckRelativePath(pkgdir, true)
@@ -1323,8 +1324,8 @@ func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
 }
 
 func (mkline *MkLine) CheckRelativePath(path string, mustExist bool) {
-	if G.opts.Debug {
-		defer tracecall(path, mustExist)()
+	if trace.Tracing {
+		defer trace.Call(path, mustExist)()
 	}
 
 	if !G.Wip && contains(path, "/wip/") {
@@ -1415,8 +1416,8 @@ func (nq NeedsQuoting) String() string {
 }
 
 func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
-	if G.opts.Debug {
-		defer tracecall(varname, vartype, vuc, "=>", &needsQuoting)()
+	if trace.Tracing {
+		defer trace.Call(varname, vartype, vuc, "=>", &needsQuoting)()
 	}
 
 	if vartype == nil || vuc.vartype == nil {
@@ -1442,8 +1443,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 	// Determine whether the context expects a list of shell words or not.
 	wantList := vuc.vartype.IsConsideredList()
 	haveList := vartype.IsConsideredList()
-	if G.opts.Debug {
-		traceStep("wantList=%v, haveList=%v", wantList, haveList)
+	if trace.Tracing {
+		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
@@ -1515,8 +1516,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 		return nqYes
 	}
 
-	if G.opts.Debug {
-		traceStep1("Don't know whether :Q is needed for %q", varname)
+	if trace.Tracing {
+		trace.Step1("Don't know whether :Q is needed for %q", varname)
 	}
 	return nqDontKnow
 }
@@ -1524,8 +1525,8 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 // Returns the type of the variable (maybe guessed based on the variable name),
 // or nil if the type cannot even be guessed.
 func (mkline *MkLine) getVariableType(varname string) *Vartype {
-	if G.opts.Debug {
-		defer tracecall1(varname)()
+	if trace.Tracing {
+		defer trace.Call1(varname)()
 	}
 
 	if vartype := G.globalData.vartypes[varname]; vartype != nil {
@@ -1537,8 +1538,8 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 
 	if tool := G.globalData.Tools.byVarname[varname]; tool != nil {
 		perms := aclpUse
-		if G.opts.Debug {
-			traceStep("Use of tool %+v", tool)
+		if trace.Tracing {
+			trace.Stepf("Use of tool %+v", tool)
 		}
 		if tool.UsableAtLoadtime {
 			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.loadTimeTools[tool.Name] {
@@ -1591,11 +1592,11 @@ func (mkline *MkLine) getVariableType(varname string) *Vartype {
 		gtype = &Vartype{lkNone, BtYes, allowAll, true}
 	}
 
-	if G.opts.Debug {
+	if trace.Tracing {
 		if gtype != nil {
-			traceStep2("The guessed type of %q is %q.", varname, gtype.String())
+			trace.Step2("The guessed type of %q is %q.", varname, gtype.String())
 		} else {
-			traceStep1("No type definition found for %q.", varname)
+			trace.Step1("No type definition found for %q.", varname)
 		}
 	}
 	return gtype
@@ -1618,8 +1619,8 @@ func (mkline *MkLine) extractUsedVariables(text string) []string {
 		}
 	}
 
-	if G.opts.Debug && rest != "" {
-		traceStep1("extractUsedVariables: rest=%q", rest)
+	if trace.Tracing && rest != "" {
+		trace.Step1("extractUsedVariables: rest=%q", rest)
 	}
 	return result
 }

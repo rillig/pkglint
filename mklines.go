@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
 )
@@ -76,8 +77,8 @@ func (mklines *MkLines) VarValue(varname string) (value string, found bool) {
 }
 
 func (mklines *MkLines) Check() {
-	if G.opts.Debug {
-		defer tracecall1(mklines.lines[0].Fname)()
+	if trace.Tracing {
+		defer trace.Call1(mklines.lines[0].Fname)()
 	}
 
 	G.Mk = mklines
@@ -149,8 +150,8 @@ func (mklines *MkLines) Check() {
 }
 
 func (mklines *MkLines) determineDefinedVariables() {
-	if G.opts.Debug {
-		defer tracecall0()()
+	if trace.Tracing {
+		defer trace.Call0()()
 	}
 
 	for _, mkline := range mklines.mklines {
@@ -163,16 +164,16 @@ func (mklines *MkLines) determineDefinedVariables() {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
 			for _, varname := range splitOnSpace(mkline.Value()) {
 				mklines.buildDefs[varname] = true
-				if G.opts.Debug {
-					traceStep1("%q is added to BUILD_DEFS.", varname)
+				if trace.Tracing {
+					trace.Step1("%q is added to BUILD_DEFS.", varname)
 				}
 			}
 
 		case "PLIST_VARS":
 			for _, id := range splitOnSpace(mkline.Value()) {
 				mklines.plistVars["PLIST."+id] = true
-				if G.opts.Debug {
-					traceStep1("PLIST.%s is added to PLIST_VARS.", id)
+				if trace.Tracing {
+					trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
 				}
 				mklines.UseVar(mkline, "PLIST."+id)
 			}
@@ -188,16 +189,16 @@ func (mklines *MkLines) determineDefinedVariables() {
 			for _, tool := range splitOnSpace(tools) {
 				tool = strings.Split(tool, ":")[0]
 				mklines.tools[tool] = true
-				if G.opts.Debug {
-					traceStep1("%s is added to USE_TOOLS.", tool)
+				if trace.Tracing {
+					trace.Step1("%s is added to USE_TOOLS.", tool)
 				}
 			}
 
 		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(mkline.Value()) {
 				mklines.UseVar(mkline, varnameCanon(svar))
-				if G.opts.Debug {
-					traceStep1("varuse %s", svar)
+				if trace.Tracing {
+					trace.Step1("varuse %s", svar)
 				}
 			}
 
@@ -224,8 +225,8 @@ func (mklines *MkLines) DetermineUsedVariables() {
 func (mklines *MkLines) setSeenBsdPrefsMk() {
 	if !mklines.SeenBsdPrefsMk {
 		mklines.SeenBsdPrefsMk = true
-		if G.opts.Debug {
-			traceStep("Mk.setSeenBsdPrefsMk")
+		if trace.Tracing {
+			trace.Stepf("Mk.setSeenBsdPrefsMk")
 		}
 	}
 }

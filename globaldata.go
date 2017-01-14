@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"path"
 	"sort"
 	"strings"
@@ -124,8 +125,8 @@ func (gd *GlobalData) loadDistSites() {
 	// Explicitly allowed, although not defined in mk/fetch/sites.mk.
 	name2url["MASTER_SITE_LOCAL"] = "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/"
 
-	if G.opts.Debug {
-		traceStep("Loaded %d MASTER_SITE_* URLs.", len(url2name))
+	if trace.Tracing {
+		trace.Stepf("Loaded %d MASTER_SITE_* URLs.", len(url2name))
 	}
 	gd.MasterSiteURLToVar = url2name
 	gd.MasterSiteVarToURL = name2url
@@ -189,8 +190,8 @@ func (gd *GlobalData) loadTools() {
 
 			if m, varname, _, _, _, value, _, _ := MatchVarassign(text); m {
 				if varname == "USE_TOOLS" {
-					if G.opts.Debug {
-						traceStep("[condDepth=%d] %s", condDepth, value)
+					if trace.Tracing {
+						trace.Stepf("[condDepth=%d] %s", condDepth, value)
 					}
 					if condDepth == 0 || condDepth == 1 && basename == "bsd.prefs.mk" {
 						for _, toolname := range splitOnSpace(value) {
@@ -222,11 +223,11 @@ func (gd *GlobalData) loadTools() {
 		}
 	}
 
-	if G.opts.Debug {
+	if trace.Tracing {
 		reg.Trace()
 	}
-	if G.opts.Debug {
-		traceStep("systemBuildDefs: %v", systemBuildDefs)
+	if trace.Tracing {
+		trace.Stepf("systemBuildDefs: %v", systemBuildDefs)
 	}
 
 	// Some user-defined variables do not influence the binary
@@ -587,8 +588,8 @@ func (tr *ToolRegistry) RegisterTool(tool *Tool) {
 }
 
 func (tr *ToolRegistry) Trace() {
-	if G.opts.Debug {
-		defer tracecall0()()
+	if trace.Tracing {
+		defer trace.Call0()()
 	}
 
 	var keys []string
@@ -598,7 +599,7 @@ func (tr *ToolRegistry) Trace() {
 	sort.Strings(keys)
 
 	for _, toolname := range keys {
-		traceStep("tool %+v", tr.byName[toolname])
+		trace.Stepf("tool %+v", tr.byName[toolname])
 	}
 }
 

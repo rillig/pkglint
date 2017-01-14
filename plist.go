@@ -2,14 +2,15 @@ package main
 
 import (
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"path"
 	"sort"
 	"strings"
 )
 
 func ChecklinesPlist(lines []*Line) {
-	if G.opts.Debug {
-		defer tracecall1(lines[0].Fname)()
+	if trace.Tracing {
+		defer trace.Call1(lines[0].Fname)()
 	}
 
 	lines[0].CheckRcsid(`@comment `, "@comment ")

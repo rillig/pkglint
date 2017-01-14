@@ -2,6 +2,7 @@ package main
 
 import (
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"path"
 	"sort"
 	"strings"
@@ -120,14 +121,14 @@ var (
 )
 
 func (cv *VartypeCheck) AwkCommand() {
-	if G.opts.Debug {
-		traceStep1("Unchecked AWK command: %q", cv.Value)
+	if trace.Tracing {
+		trace.Step1("Unchecked AWK command: %q", cv.Value)
 	}
 }
 
 func (cv *VartypeCheck) BasicRegularExpression() {
-	if G.opts.Debug {
-		traceStep1("Unchecked basic regular expression: %q", cv.Value)
+	if trace.Tracing {
+		trace.Step1("Unchecked basic regular expression: %q", cv.Value)
 	}
 }
 
@@ -617,8 +618,8 @@ func (cv *VartypeCheck) Option() {
 	line, value, valueNovar := cv.Line, cv.Value, cv.ValueNoVar
 
 	if value != valueNovar {
-		if G.opts.Debug {
-			traceStep1("Unchecked option name: %q", value)
+		if trace.Tracing {
+			trace.Step1("Unchecked option name: %q", value)
 		}
 		return
 	}

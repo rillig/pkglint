@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	check "gopkg.in/check.v1"
+	"netbsd.org/pkglint/trace"
 )
 
 var equals = check.Equals
@@ -93,15 +94,15 @@ func (s *Suite) NewMkLines(fname string, lines ...string) *MkLines {
 }
 
 func (s *Suite) BeginDebugToStdout() {
-	G.debugOut = os.Stdout
 	G.logOut = os.Stdout
-	G.opts.Debug = true
+	trace.Out = os.Stdout
+	trace.Tracing = true
 }
 
 func (s *Suite) EndDebugToStdout() {
-	G.debugOut = &s.stdout
 	G.logOut = &s.stdout
-	G.opts.Debug = false
+	trace.Out = &s.stdout
+	trace.Tracing = false
 }
 
 func (s *Suite) UseCommandLine(args ...string) {
@@ -185,7 +186,7 @@ func (s *Suite) ExpectFatalError(action func()) {
 
 func (s *Suite) SetUpTest(c *check.C) {
 	G = GlobalVars{Testing: true}
-	G.logOut, G.logErr, G.debugOut = &s.stdout, &s.stderr, &s.stdout
+	G.logOut, G.logErr, trace.Out = &s.stdout, &s.stderr, &s.stdout
 	s.checkC = c
 	s.UseCommandLine( /* no arguments */ )
 	s.checkC = nil

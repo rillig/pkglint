@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"path"
 	"strconv"
 	"strings"
@@ -222,8 +223,8 @@ func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFi
 }
 
 func (line *Line) CheckAbsolutePathname(text string) {
-	if G.opts.Debug {
-		defer tracecall1(text)()
+	if trace.Tracing {
+		defer trace.Call1(text)()
 	}
 
 	// In the GNU coding standards, DESTDIR is defined as a (usually
@@ -273,8 +274,8 @@ func (line *Line) CheckTrailingWhitespace() {
 }
 
 func (line *Line) CheckRcsid(prefixRe regex.RegexPattern, suggestedPrefix string) bool {
-	if G.opts.Debug {
-		defer tracecall(prefixRe, suggestedPrefix)()
+	if trace.Tracing {
+		defer trace.Call(prefixRe, suggestedPrefix)()
 	}
 
 	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {

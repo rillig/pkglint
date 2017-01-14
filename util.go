@@ -2,15 +2,13 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"os"
 	"path"
 	"path/filepath"
-	"reflect"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -125,8 +123,8 @@ func isLocallyModified(fname string) bool {
 
 			// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724290(v=vs.85).aspx
 			delta := cvsModTime.Unix() - st.ModTime().Unix()
-			if G.opts.Debug {
-				traceStep("cvs.time=%v fs.time=%v delta=%v", cvsModTime, st.ModTime(), delta)
+			if trace.Tracing {
+				trace.Stepf("cvs.time=%v fs.time=%v delta=%v", cvsModTime, st.ModTime(), delta)
 			}
 			return !(-2 <= delta && delta <= 2)
 		}
@@ -245,8 +243,8 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.m = nil
 	pr.s = ""
 	if hasPrefix(pr.rest, prefix) {
-		if G.opts.Debug {
-			traceStep("PrefixReplacer.AdvanceStr(%q, %q)", pr.rest, prefix)
+		if trace.Tracing {
+			trace.Stepf("PrefixReplacer.AdvanceStr(%q, %q)", pr.rest, prefix)
 		}
 		pr.s = prefix
 		pr.rest = pr.rest[len(prefix):]
@@ -292,8 +290,8 @@ func (pr *PrefixReplacer) AdvanceRegexp(re regex.RegexPattern) bool {
 		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
 	}
 	if m := regex.Match(pr.rest, re); m != nil {
-		if G.opts.Debug {
-			traceStep("PrefixReplacer.AdvanceRegexp(%q, %q, %q)", pr.rest, re, m[0])
+		if trace.Tracing {
+			trace.Stepf("PrefixReplacer.AdvanceRegexp(%q, %q, %q)", pr.rest, re, m[0])
 		}
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
@@ -359,99 +357,10 @@ func dirglob(dirname string) []string {
 	return fnames
 }
 
-// http://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
-func isNil(a interface{}) bool {
-	defer func() { recover() }()
-	return a == nil || reflect.ValueOf(a).IsNil()
-}
-
-func argsStr(args ...interface{}) string {
-	argsStr := ""
-	for i, arg := range args {
-		if i != 0 {
-			argsStr += ", "
-		}
-		if str, ok := arg.(fmt.Stringer); ok && !isNil(str) {
-			argsStr += str.String()
-		} else {
-			argsStr += fmt.Sprintf("%#v", arg)
-		}
-	}
-	return argsStr
-}
-
-func traceIndent() string {
-	indent := ""
-	for i := 0; i < G.traceDepth; i++ {
-		indent += fmt.Sprintf("%d ", i+1)
-	}
-	return indent
-}
-
-func traceStep(format string, args ...interface{}) {
-	if G.opts.Debug {
-		msg := fmt.Sprintf(format, args...)
-		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s  %s\n", traceIndent(), msg))
-	}
-}
-func traceStep1(format string, arg0 string) {
-	traceStep(format, arg0)
-}
-func traceStep2(format string, arg0, arg1 string) {
-	traceStep(format, arg0, arg1)
-}
-
-func tracecallInternal(args ...interface{}) func() {
-	if !G.opts.Debug {
-		panic("Internal pkglint error: calls to tracecall must only occur in tracing mode")
-	}
-
-	funcname := "?"
-	if pc, _, _, ok := runtime.Caller(2); ok {
-		if fn := runtime.FuncForPC(pc); fn != nil {
-			funcname = strings.TrimPrefix(fn.Name(), "netbsd.org/pkglint.")
-		}
-	}
-	indent := traceIndent()
-	io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s+ %s(%s)\n", indent, funcname, argsStr(args...)))
-	G.traceDepth++
-
-	return func() {
-		G.traceDepth--
-		io.WriteString(G.debugOut, fmt.Sprintf("TRACE: %s- %s(%s)\n", indent, funcname, argsStr(args...)))
-	}
-}
-func tracecall0() func() {
-	return tracecallInternal()
-}
-func tracecall1(arg1 string) func() {
-	return tracecallInternal(arg1)
-}
-func tracecall2(arg1, arg2 string) func() {
-	return tracecallInternal(arg1, arg2)
-}
-func tracecall(args ...interface{}) func() {
-	return tracecallInternal(args...)
-}
-
-type Ref struct {
-	intf interface{}
-}
-
-func ref(rv interface{}) Ref {
-	return Ref{rv}
-}
-
-func (r Ref) String() string {
-	ptr := reflect.ValueOf(r.intf)
-	ref := reflect.Indirect(ptr)
-	return fmt.Sprintf("%v", ref)
-}
-
 // Emulates make(1)'s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, flags string) string {
-	if G.opts.Debug {
-		defer tracecall(s, left, from, right, to, flags)()
+	if trace.Tracing {
+		defer trace.Call(s, left, from, right, to, flags)()
 	}
 	re := regex.RegexPattern(ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", ""))
 	done := false
@@ -470,11 +379,12 @@ func relpath(from, to string) string {
 	absTo, err2 := filepath.Abs(to)
 	rel, err3 := filepath.Rel(absFrom, absTo)
 	if err1 != nil || err2 != nil || err3 != nil {
-		panic("relpath" + argsStr(from, to, err1, err2, err3))
+		trace.Stepf("relpath.panic", from, to, err1, err2, err3)
+		panic("relpath")
 	}
 	result := filepath.ToSlash(rel)
-	if G.opts.Debug {
-		traceStep("relpath from %q to %q = %q", from, to, result)
+	if trace.Tracing {
+		trace.Stepf("relpath from %q to %q = %q", from, to, result)
 	}
 	return result
 }

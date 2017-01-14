@@ -1,6 +1,9 @@
 package main
 
-import "netbsd.org/pkglint/regex"
+import (
+	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
+)
 
 // Expecter records the state when checking a list of lines from top to bottom.
 type Expecter struct {
@@ -40,8 +43,8 @@ func (exp *Expecter) StepBack() {
 }
 
 func (exp *Expecter) AdvanceIfMatches(re regex.RegexPattern) bool {
-	if G.opts.Debug {
-		defer tracecall(exp.CurrentLine().Text, re)()
+	if trace.Tracing {
+		defer trace.Call(exp.CurrentLine().Text, re)()
 	}
 
 	if !exp.EOF() {
@@ -55,16 +58,16 @@ func (exp *Expecter) AdvanceIfMatches(re regex.RegexPattern) bool {
 }
 
 func (exp *Expecter) AdvanceIfPrefix(prefix string) bool {
-	if G.opts.Debug {
-		defer tracecall2(exp.CurrentLine().Text, prefix)()
+	if trace.Tracing {
+		defer trace.Call2(exp.CurrentLine().Text, prefix)()
 	}
 
 	return !exp.EOF() && hasPrefix(exp.lines[exp.index].Text, prefix) && exp.Advance()
 }
 
 func (exp *Expecter) AdvanceIfEquals(text string) bool {
-	if G.opts.Debug {
-		defer tracecall2(exp.CurrentLine().Text, text)()
+	if trace.Tracing {
+		defer trace.Call2(exp.CurrentLine().Text, text)()
 	}
 
 	return !exp.EOF() && exp.lines[exp.index].Text == text && exp.Advance()

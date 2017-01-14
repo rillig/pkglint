@@ -6,6 +6,7 @@ import (
 	"netbsd.org/pkglint/getopt"
 	"netbsd.org/pkglint/histogram"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/trace"
 	"os"
 	"os/user"
 	"path"
@@ -18,7 +19,7 @@ const confMake = "@BMAKE@"
 const confVersion = "@VERSION@"
 
 func main() {
-	G.logOut, G.logErr, G.debugOut = os.Stdout, os.Stderr, os.Stdout
+	G.logOut, G.logErr, trace.Out = os.Stdout, os.Stderr, os.Stdout
 	os.Exit(new(Pkglint).Main(os.Args...))
 }
 
@@ -93,7 +94,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	opts := getopt.NewOptions()
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
-	opts.AddFlagVar('d', "debug", &gopts.Debug, false, "log verbose call traces for debugging")
+	opts.AddFlagVar('d', "debug", &trace.Tracing, false, "log verbose call traces for debugging")
 	opts.AddFlagVar('e', "explain", &gopts.Explain, false, "explain the diagnostics or give further help")
 	opts.AddFlagVar('f', "show-autofix", &gopts.PrintAutofix, false, "show what pkglint can fix automatically")
 	opts.AddFlagVar('F', "autofix", &gopts.Autofix, false, "try to automatically fix some errors (experimental)")
@@ -180,8 +181,8 @@ func (pkglint *Pkglint) PrintSummary() {
 }
 
 func (pkglint *Pkglint) CheckDirent(fname string) {
-	if G.opts.Debug {
-		defer tracecall1(fname)()
+	if trace.Tracing {
+		defer trace.Call1(fname)()
 	}
 
 	st, err := os.Lstat(fname)
@@ -233,8 +234,8 @@ func findPkgsrcTopdir(fname string) string {
 }
 
 func resolveVariableRefs(text string) string {
-	if G.opts.Debug {
-		defer tracecall1(text)()
+	if trace.Tracing {
+		defer trace.Call1(text)()
 	}
 
 	visited := make(map[string]bool) // To prevent endless loops
@@ -266,8 +267,8 @@ func resolveVariableRefs(text string) string {
 }
 
 func CheckfileExtra(fname string) {
-	if G.opts.Debug {
-		defer tracecall1(fname)()
+	if trace.Tracing {
+		defer trace.Call1(fname)()
 	}
 
 	if lines := LoadNonemptyLines(fname, false); lines != nil {
@@ -276,8 +277,8 @@ func CheckfileExtra(fname string) {
 }
 
 func ChecklinesDescr(lines []*Line) {
-	if G.opts.Debug {
-		defer tracecall1(lines[0].Fname)()
+	if trace.Tracing {
+		defer trace.Call1(lines[0].Fname)()
 	}
 
 	for _, line := range lines {
@@ -304,8 +305,8 @@ func ChecklinesDescr(lines []*Line) {
 }
 
 func ChecklinesMessage(lines []*Line) {
-	if G.opts.Debug {
-		defer tracecall1(lines[0].Fname)()
+	if trace.Tracing {
+		defer trace.Call1(lines[0].Fname)()
 	}
 
 	explainMessage := func() {
@@ -342,8 +343,8 @@ func ChecklinesMessage(lines []*Line) {
 }
 
 func CheckfileMk(fname string) {
-	if G.opts.Debug {
-		defer tracecall1(fname)()
+	if trace.Tracing {
+		defer trace.Call1(fname)()
 	}
 
 	lines := LoadNonemptyLines(fname, true)
@@ -356,8 +357,8 @@ func CheckfileMk(fname string) {
 }
 
 func Checkfile(fname string) {
-	if G.opts.Debug {
-		defer tracecall1(fname)()
+	if trace.Tracing {
+		defer trace.Call1(fname)()
 	}
 
 	basename := path.Base(fname)
@@ -449,8 +450,8 @@ func Checkfile(fname string) {
 		}
 
 	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
-		if G.opts.Debug {
-			traceStep1("Unchecked file %q.", fname)
+		if trace.Tracing {
+			trace.Step1("Unchecked file %q.", fname)
 		}
 
 	case matches(fname, `(?:^|/)patches/[^/]*$`):
