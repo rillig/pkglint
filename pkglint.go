@@ -48,10 +48,12 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 
-		G.rematch = histogram.New()
-		G.renomatch = histogram.New()
-		G.retime = histogram.New()
+		regex.Profiling = true
 		G.loghisto = histogram.New()
+		defer func() {
+			G.loghisto.PrintStats("loghisto", G.logOut, 0)
+			regex.PrintStats()
+		}()
 	}
 
 	for _, arg := range G.opts.args {
@@ -77,12 +79,6 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 
 	checkToplevelUnusedLicenses()
 	pkglint.PrintSummary()
-	if G.opts.Profiling {
-		G.loghisto.PrintStats("loghisto", G.logOut, 0)
-		G.rematch.PrintStats("rematch", G.logOut, 10)
-		G.renomatch.PrintStats("renomatch", G.logOut, 10)
-		G.retime.PrintStats("retime", G.logOut, 10)
-	}
 	if G.errors != 0 {
 		return 1
 	}

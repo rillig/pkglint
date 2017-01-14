@@ -3,34 +3,38 @@ package regex
 import (
 	"fmt"
 	"netbsd.org/pkglint/histogram"
+	"os"
 	"regexp"
 	"time"
 )
 
 type RegexPattern string
 
-var G struct {
+var (
+	Profiling bool
+)
+
+var (
 	res       map[RegexPattern]*regexp.Regexp
 	rematch   *histogram.Histogram
 	renomatch *histogram.Histogram
 	retime    *histogram.Histogram
-	Profiling bool
-}
+)
 
 func Compile(re RegexPattern) *regexp.Regexp {
-	if G.res == nil {
-		G.res = make(map[RegexPattern]*regexp.Regexp)
+	if res == nil {
+		res = make(map[RegexPattern]*regexp.Regexp)
 	}
-	cre := G.res[re]
+	cre := res[re]
 	if cre == nil {
 		cre = regexp.MustCompile(string(re))
-		G.res[re] = cre
+		res[re] = cre
 	}
 	return cre
 }
 
 func Match(s string, re RegexPattern) []string {
-	if !G.Profiling {
+	if !Profiling {
 		return Compile(re).FindStringSubmatch(s)
 	}
 
@@ -42,22 +46,28 @@ func Match(s string, re RegexPattern) []string {
 	delay := immediatelyBefore.UnixNano() - before.UnixNano()
 	timeTaken := after.UnixNano() - immediatelyBefore.UnixNano() - delay
 
-	G.retime.Add(string(re), int(timeTaken))
+	if retime == nil {
+		retime = histogram.New()
+		rematch = histogram.New()
+		renomatch = histogram.New()
+	}
+
+	retime.Add(string(re), int(timeTaken))
 	if m != nil {
-		G.rematch.Add(string(re), 1)
+		rematch.Add(string(re), 1)
 	} else {
-		G.renomatch.Add(string(re), 1)
+		renomatch.Add(string(re), 1)
 	}
 	return m
 }
 
 func Matches(s string, re RegexPattern) bool {
 	matches := Compile(re).MatchString(s)
-	if G.Profiling {
+	if Profiling {
 		if matches {
-			G.rematch.Add(string(re), 1)
+			rematch.Add(string(re), 1)
 		} else {
-			G.renomatch.Add(string(re), 1)
+			renomatch.Add(string(re), 1)
 		}
 	}
 	return matches
@@ -69,30 +79,35 @@ func Match1(s string, re RegexPattern) (matched bool, m1 string) {
 	}
 	return
 }
+
 func Match2(s string, re RegexPattern) (matched bool, m1, m2 string) {
 	if m := matchn(s, re, 2); m != nil {
 		return true, m[1], m[2]
 	}
 	return
 }
+
 func Match3(s string, re RegexPattern) (matched bool, m1, m2, m3 string) {
 	if m := matchn(s, re, 3); m != nil {
 		return true, m[1], m[2], m[3]
 	}
 	return
 }
+
 func Match4(s string, re RegexPattern) (matched bool, m1, m2, m3, m4 string) {
 	if m := matchn(s, re, 4); m != nil {
 		return true, m[1], m[2], m[3], m[4]
 	}
 	return
 }
+
 func Match5(s string, re RegexPattern) (matched bool, m1, m2, m3, m4, m5 string) {
 	if m := matchn(s, re, 5); m != nil {
 		return true, m[1], m[2], m[3], m[4], m[5]
 	}
 	return
 }
+
 func ReplaceFirst(s string, re RegexPattern, replacement string) ([]string, string) {
 	if m := Compile(re).FindStringSubmatchIndex(s); m != nil {
 		replaced := s[:m[0]] + replacement + s[m[1]:]
@@ -103,6 +118,14 @@ func ReplaceFirst(s string, re RegexPattern, replacement string) ([]string, stri
 		return mm, replaced
 	}
 	return nil, s
+}
+
+func PrintStats() {
+	if Profiling {
+		rematch.PrintStats("rematch", os.Stdout, 10)
+		renomatch.PrintStats("renomatch", os.Stdout, 10)
+		retime.PrintStats("retime", os.Stdout, 10)
+	}
 }
 
 func matchn(s string, re RegexPattern, n int) []string {

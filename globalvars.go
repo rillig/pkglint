@@ -3,8 +3,6 @@ package main
 import (
 	"io"
 	"netbsd.org/pkglint/histogram"
-	"netbsd.org/pkglint/regex"
-	"regexp"
 )
 
 type GlobalVars struct {
@@ -35,11 +33,7 @@ type GlobalVars struct {
 	logOut                io.Writer
 	logErr                io.Writer
 
-	res       map[regex.RegexPattern]*regexp.Regexp // Compiled regular expressions
-	rematch   *histogram.Histogram
-	renomatch *histogram.Histogram
-	retime    *histogram.Histogram // Total time taken by matching a regular expression
-	loghisto  *histogram.Histogram
+	loghisto *histogram.Histogram
 }
 
 type CmdOpts struct {
