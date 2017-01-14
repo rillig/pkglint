@@ -32,6 +32,19 @@ func (rline *RawLine) String() string {
 	return strconv.Itoa(rline.Lineno) + ":" + rline.textnl
 }
 
+type ILine interface {
+	Filename() string
+	Text() string
+
+	Errorf(fmt string, args ...interface{})
+	Warnf(fmt string, args ...interface{})
+	Notef(fmt string, args ...interface{})
+
+	AutofixReplace(from, to string) bool
+	AutofixReplaceRegexp(from regex.RegexPattern, to string) bool
+	AutofixInsertBefore(text string) bool
+}
+
 type Line struct {
 	fname          string
 	firstLine      int32 // Zero means not applicable, -1 means EOF

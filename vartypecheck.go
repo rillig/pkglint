@@ -8,19 +8,6 @@ import (
 	"strings"
 )
 
-type ILine interface {
-	Filename() string
-	Text() string
-
-	Errorf(fmt string, args ...interface{})
-	Warnf(fmt string, args ...interface{})
-	Notef(fmt string, args ...interface{})
-
-	AutofixReplace(from, to string) bool
-	AutofixReplaceRegexp(from regex.RegexPattern, to string) bool
-	AutofixInsertBefore(text string) bool
-}
-
 type VartypeCheck struct {
 	MkLine     *MkLine
 	Line       ILine
