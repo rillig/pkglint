@@ -100,7 +100,7 @@ func isCommitted(fname string) bool {
 	lines := loadCvsEntries(fname)
 	needle := "/" + path.Base(fname) + "/"
 	for _, line := range lines {
-		if hasPrefix(line.IText(), needle) {
+		if hasPrefix(line.Text(), needle) {
 			return true
 		}
 	}
@@ -111,8 +111,8 @@ func isLocallyModified(fname string) bool {
 	lines := loadCvsEntries(fname)
 	needle := "/" + path.Base(fname) + "/"
 	for _, line := range lines {
-		if hasPrefix(line.IText(), needle) {
-			cvsModTime, err := time.Parse(time.ANSIC, strings.Split(line.IText(), "/")[3])
+		if hasPrefix(line.Text(), needle) {
+			cvsModTime, err := time.Parse(time.ANSIC, strings.Split(line.Text(), "/")[3])
 			if err != nil {
 				return false
 			}

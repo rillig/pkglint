@@ -148,11 +148,11 @@ func (line *Line) String() string {
 	return line.fname + ":" + line.linenos() + ": " + line.text
 }
 
-func (line *Line) IFname() string {
+func (line *Line) Filename() string {
 	return line.fname
 }
 
-func (line *Line) IText() string {
+func (line *Line) Text() string {
 	return line.text
 }
 

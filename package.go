@@ -423,7 +423,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if imake, x11 := vardef["USE_IMAKE"], vardef["USE_X11"]; imake != nil && x11 != nil {
-		if !hasSuffix(x11.Line.IFname(), "/mk/x11.buildlink3.mk") {
+		if !hasSuffix(x11.Line.Filename(), "/mk/x11.buildlink3.mk") {
 			imake.Line.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", x11.Line.ReferenceFrom(imake.Line))
 		}
 	}
@@ -694,7 +694,7 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 	for lineno < len(mklines.lines) {
 		mkline := mklines.mklines[lineno]
 		line := mklines.lines[lineno]
-		text := line.IText()
+		text := line.Text()
 
 		if trace.Tracing {
 			trace.Stepf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
@@ -786,13 +786,13 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 
 	expected := "# used by " + relativeName
 	for _, line := range lines {
-		if line.IText() == expected {
+		if line.Text() == expected {
 			return
 		}
 	}
 
 	i := 0
-	for i < 2 && hasPrefix(lines[i].IText(), "#") {
+	for i < 2 && hasPrefix(lines[i].Text(), "#") {
 		i++
 	}
 
@@ -862,7 +862,7 @@ func (pkg *Package) CheckInclude(mkline *MkLine, indentation *Indentation) {
 		mkline.data = includeLine
 	}
 
-	if path.Dir(abspath(mkline.Line.IFname())) == abspath(G.CurrentDir) {
+	if path.Dir(abspath(mkline.Line.Filename())) == abspath(G.CurrentDir) {
 		includefile := mkline.Includefile()
 
 		if indentation.IsConditional() {
