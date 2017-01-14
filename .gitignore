@@ -1,9 +1,10 @@
+/.idea/
+
 /archive/
 /coverage.html
 /pkglint.cov
 /pkglint.exe
 /pkglint.test.exe
-/*.docx
-/.idea/
-/*yacc.go
-/*.log
+
+*yacc.go
+*yacc.log

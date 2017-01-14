@@ -1,12 +1,12 @@
 %{
-package main
+package licenses
 %}
 
 %token <Node> ltNAME
 %token ltAND ltOR ltOPEN ltCLOSE
 
 %union {
-	Node *LicenseCondition
+	Node *Condition
 }
 
 %type <Node> start list condition
@@ -31,5 +31,5 @@ condition : ltNAME {
 	$$ = $1
 }
 condition : ltOPEN list ltCLOSE {
-	$$ = &LicenseCondition{Main: $2}
+	$$ = &Condition{Main: $2}
 }
