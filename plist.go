@@ -13,7 +13,7 @@ func ChecklinesPlist(lines []*Line) {
 		defer trace.Call1(lines[0].Fname)()
 	}
 
-	lines[0].CheckRcsid(`@comment `, "@comment ")
+	LineChecker{lines[0]}.CheckRcsid(`@comment `, "@comment ")
 
 	if len(lines) == 1 {
 		lines[0].Warnf("PLIST files shouldn't be empty.")

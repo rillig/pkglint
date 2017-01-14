@@ -222,7 +222,11 @@ func (line *Line) RememberAutofix(format string, args ...interface{}) (hasBeenFi
 	return false
 }
 
-func (line *Line) CheckAbsolutePathname(text string) {
+type LineChecker struct {
+	Line *Line
+}
+
+func (ck LineChecker) CheckAbsolutePathname(text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
 	}
@@ -236,14 +240,14 @@ func (line *Line) CheckAbsolutePathname(text string) {
 	// assignments like "bindir=/bin".
 	if m, path := match1(text, `(?:^|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
 		if matches(path, `^/\w`) {
-			checkwordAbsolutePathname(line, path)
+			checkwordAbsolutePathname(ck.Line, path)
 		}
 	}
 }
 
-func (line *Line) CheckLength(maxlength int) {
-	if len(line.Text) > maxlength {
-		line.Warnf("Line too long (should be no more than %d characters).", maxlength)
+func (ck LineChecker) CheckLength(maxlength int) {
+	if len(ck.Line.Text) > maxlength {
+		ck.Line.Warnf("Line too long (should be no more than %d characters).", maxlength)
 		Explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
@@ -251,21 +255,21 @@ func (line *Line) CheckLength(maxlength int) {
 	}
 }
 
-func (line *Line) CheckValidCharacters(reChar regex.RegexPattern) {
-	rest := regex.Compile(reChar).ReplaceAllString(line.Text, "")
+func (ck LineChecker) CheckValidCharacters(reChar regex.RegexPattern) {
+	rest := regex.Compile(reChar).ReplaceAllString(ck.Line.Text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
 			uni += fmt.Sprintf(" %U", c)
 		}
-		line.Warnf("Line contains invalid characters (%s).", uni[1:])
+		ck.Line.Warnf("Line contains invalid characters (%s).", uni[1:])
 	}
 }
 
-func (line *Line) CheckTrailingWhitespace() {
-	if hasSuffix(line.Text, " ") || hasSuffix(line.Text, "\t") {
-		if !line.AutofixReplaceRegexp(`\s+\n$`, "\n") {
-			line.Notef("Trailing white-space.")
+func (ck LineChecker) CheckTrailingWhitespace() {
+	if hasSuffix(ck.Line.Text, " ") || hasSuffix(ck.Line.Text, "\t") {
+		if !ck.Line.AutofixReplaceRegexp(`\s+\n$`, "\n") {
+			ck.Line.Notef("Trailing white-space.")
 			Explain(
 				"When a line ends with some white-space, that space is in most cases",
 				"irrelevant and can be removed.")
@@ -273,17 +277,17 @@ func (line *Line) CheckTrailingWhitespace() {
 	}
 }
 
-func (line *Line) CheckRcsid(prefixRe regex.RegexPattern, suggestedPrefix string) bool {
+func (ck LineChecker) CheckRcsid(prefixRe regex.RegexPattern, suggestedPrefix string) bool {
 	if trace.Tracing {
 		defer trace.Call(prefixRe, suggestedPrefix)()
 	}
 
-	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
+	if matches(ck.Line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
 		return true
 	}
 
-	if !line.AutofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
-		line.Errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+	if !ck.Line.AutofixInsertBefore(suggestedPrefix + "$" + "NetBSD$") {
+		ck.Line.Errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 		Explain(
 			"Several files in pkgsrc must contain the CVS Id, so that their",
 			"current version can be traced back later from a binary package.",

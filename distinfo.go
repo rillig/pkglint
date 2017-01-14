@@ -53,7 +53,7 @@ type distinfoLinesChecker struct {
 }
 
 func (ck *distinfoLinesChecker) checkLines(lines []*Line) {
-	lines[0].CheckRcsid(``, "")
+	LineChecker{lines[0]}.CheckRcsid(``, "")
 	if 1 < len(lines) && lines[1].Text != "" {
 		lines[1].Notef("Empty line expected.")
 	}

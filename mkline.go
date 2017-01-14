@@ -184,8 +184,8 @@ func (mkline *MkLine) Targets() string     { return mkline.data.(mkLineDependenc
 func (mkline *MkLine) Sources() string     { return mkline.data.(mkLineDependency).sources }
 
 func (mkline *MkLine) Check() {
-	mkline.Line.CheckTrailingWhitespace()
-	mkline.Line.CheckValidCharacters(`[\t -~]`)
+	LineChecker{mkline.Line}.CheckTrailingWhitespace()
+	LineChecker{mkline.Line}.CheckValidCharacters(`[\t -~]`)
 
 	switch {
 	case mkline.IsVarassign():

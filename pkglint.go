@@ -282,9 +282,9 @@ func ChecklinesDescr(lines []*Line) {
 	}
 
 	for _, line := range lines {
-		line.CheckLength(80)
-		line.CheckTrailingWhitespace()
-		line.CheckValidCharacters(`[\t -~]`)
+		LineChecker{line}.CheckLength(80)
+		LineChecker{line}.CheckTrailingWhitespace()
+		LineChecker{line}.CheckValidCharacters(`[\t -~]`)
 		if contains(line.Text, "${") {
 			line.Notef("Variables are not expanded in the DESCR file.")
 		}
@@ -329,11 +329,11 @@ func ChecklinesMessage(lines []*Line) {
 		line.Warnf("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
-	lines[1].CheckRcsid(``, "")
+	LineChecker{lines[1]}.CheckRcsid(``, "")
 	for _, line := range lines {
-		line.CheckLength(80)
-		line.CheckTrailingWhitespace()
-		line.CheckValidCharacters(`[\t -~]`)
+		LineChecker{line}.CheckLength(80)
+		LineChecker{line}.CheckTrailingWhitespace()
+		LineChecker{line}.CheckValidCharacters(`[\t -~]`)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.Text != hline {
 		lastLine.Warnf("Expected a line of exactly 75 \"=\" characters.")

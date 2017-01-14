@@ -100,7 +100,7 @@ func (mklines *MkLines) Check() {
 
 	// In the second pass, the actual checks are done.
 
-	mklines.lines[0].CheckRcsid(`#\s+`, "# ")
+	LineChecker{mklines.lines[0]}.CheckRcsid(`#\s+`, "# ")
 
 	var substcontext SubstContext
 	var varalign VaralignBlock
