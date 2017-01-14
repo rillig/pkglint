@@ -31,7 +31,7 @@ func (s *Suite) Test_Pkglint_Main_no_args(c *check.C) {
 
 // go test -c -covermode count
 // pkgsrcdir=...
-// env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov -check.f TestRunPkglint
+// env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov
 // go tool cover -html=pkglint.cov -o coverage.html
 func (s *Suite) Test_Pkglint_coverage(c *check.C) {
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
