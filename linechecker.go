@@ -7,7 +7,7 @@ import (
 )
 
 type LineChecker struct {
-	Line ILine
+	Line Line
 }
 
 func (ck LineChecker) CheckAbsolutePathname(text string) {

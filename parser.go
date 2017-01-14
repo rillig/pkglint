@@ -6,12 +6,12 @@ import (
 )
 
 type Parser struct {
-	Line         ILine
+	Line         Line
 	repl         *textproc.PrefixReplacer
 	EmitWarnings bool
 }
 
-func NewParser(line ILine, s string, emitWarnings bool) *Parser {
+func NewParser(line Line, s string, emitWarnings bool) *Parser {
 	return &Parser{line, textproc.NewPrefixReplacer(s), emitWarnings}
 }
 

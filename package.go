@@ -28,9 +28,9 @@ type Package struct {
 
 	vardef                map[string]*MkLine // (varname, varcanon) => line
 	varuse                map[string]*MkLine // (varname, varcanon) => line
-	bl3                   map[string]*Line   // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+	bl3                   map[string]Line    // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
 	plistSubstCond        map[string]bool    // varname => true; list of all variables that are used as conditionals (@comment or nothing) in PLISTs.
-	included              map[string]*Line   // fname => line
+	included              map[string]Line    // fname => line
 	seenMakefileCommon    bool               // Does the package have any .includes?
 	loadTimeTools         map[string]bool    // true=ok, false=not ok, absent=not mentioned in USE_TOOLS.
 	conditionalIncludes   map[string]*MkLine
@@ -42,9 +42,9 @@ func NewPackage(pkgpath string) *Package {
 		Pkgpath:               pkgpath,
 		vardef:                make(map[string]*MkLine),
 		varuse:                make(map[string]*MkLine),
-		bl3:                   make(map[string]*Line),
+		bl3:                   make(map[string]Line),
 		plistSubstCond:        make(map[string]bool),
-		included:              make(map[string]*Line),
+		included:              make(map[string]Line),
 		loadTimeTools:         make(map[string]bool),
 		conditionalIncludes:   make(map[string]*MkLine),
 		unconditionalIncludes: make(map[string]*MkLine),
@@ -110,7 +110,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	if change.Action == "Updated" {
 		changeVersion := regex.Compile(`nb\d+$`).ReplaceAllString(change.Version, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
-			mkline.Line.Warnf("The package is being downgraded from %s (see %s) to %s", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
+			mkline.Warnf("The package is being downgraded from %s (see %s) to %s", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
 			Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
@@ -396,7 +396,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if perlLine, noconfLine := vardef["REPLACE_PERL"], vardef["NO_CONFIGURE"]; perlLine != nil && noconfLine != nil {
-		perlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s)", noconfLine.Line.ReferenceFrom(perlLine.Line))
+		perlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s)", noconfLine.ReferenceFrom(perlLine.Line))
 	}
 
 	if vardef["LICENSE"] == nil && vardef["META_PACKAGE"] == nil {
@@ -862,22 +862,22 @@ func (pkg *Package) CheckInclude(mkline *MkLine, indentation *Indentation) {
 		mkline.data = includeLine
 	}
 
-	if path.Dir(abspath(mkline.Line.Filename())) == abspath(G.CurrentDir) {
+	if path.Dir(abspath(mkline.Filename())) == abspath(G.CurrentDir) {
 		includefile := mkline.Includefile()
 
 		if indentation.IsConditional() {
 			pkg.conditionalIncludes[includefile] = mkline
 			if other := pkg.unconditionalIncludes[includefile]; other != nil {
 				dependingOn := mkline.data.(mkLineInclude).conditionVars
-				mkline.Line.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
-					cleanpath(includefile), dependingOn, other.Line.ReferenceFrom(mkline.Line))
+				mkline.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
+					cleanpath(includefile), dependingOn, other.ReferenceFrom(mkline.Line))
 			}
 		} else {
 			pkg.unconditionalIncludes[includefile] = mkline
 			if other := pkg.conditionalIncludes[includefile]; other != nil {
 				dependingOn := other.data.(mkLineInclude).conditionVars
-				mkline.Line.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
-					cleanpath(includefile), other.Line.ReferenceFrom(mkline.Line), dependingOn)
+				mkline.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
+					cleanpath(includefile), other.ReferenceFrom(mkline.Line), dependingOn)
 			}
 		}
 	}

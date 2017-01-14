@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func parseShellProgram(line *Line, program string) (list *MkShList, err error) {
+func parseShellProgram(line Line, program string) (list *MkShList, err error) {
 	if trace.Tracing {
 		defer trace.Call(program)()
 	}

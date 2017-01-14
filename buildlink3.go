@@ -32,7 +32,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	}
 
 	pkgbaseLine, pkgbase := exp.CurrentLine(), ""
-	var abiLine, apiLine *Line
+	var abiLine, apiLine Line
 	var abi, api *DependencyPattern
 
 	// First paragraph: Introduction of the package identifier
@@ -177,7 +177,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 		} else {
 			if trace.Tracing {
-				trace.Step1("Unchecked line %s in third paragraph.", exp.CurrentLine().linenos())
+				trace.Step1("Unchecked line %s in third paragraph.", exp.CurrentLine().Linenos())
 			}
 			exp.Advance()
 		}

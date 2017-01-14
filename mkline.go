@@ -13,7 +13,7 @@ import (
 )
 
 type MkLine struct {
-	*Line
+	Line
 	data interface{} // One of the following mkLine* types
 }
 type mkLineAssign struct {
@@ -47,7 +47,7 @@ type mkLineDependency struct {
 	sources string
 }
 
-func NewMkLine(line *Line) (mkline *MkLine) {
+func NewMkLine(line Line) (mkline *MkLine) {
 	mkline = &MkLine{Line: line}
 
 	text := line.Text()
@@ -145,7 +145,7 @@ func NewMkLine(line *Line) (mkline *MkLine) {
 }
 
 func (mkline *MkLine) String() string {
-	return fmt.Sprintf("%s:%s", mkline.Line.Filename(), mkline.Line.linenos())
+	return fmt.Sprintf("%s:%s", mkline.Line.Filename(), mkline.Line.Linenos())
 }
 func (mkline *MkLine) IsVarassign() bool { _, ok := mkline.data.(mkLineAssign); return ok }
 func (mkline *MkLine) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }

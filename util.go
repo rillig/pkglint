@@ -133,7 +133,7 @@ func isLocallyModified(fname string) bool {
 	return false
 }
 
-func loadCvsEntries(fname string) []*Line {
+func loadCvsEntries(fname string) []Line {
 	dir := path.Dir(fname)
 	if dir == G.CvsEntriesDir {
 		return G.CvsEntriesLines

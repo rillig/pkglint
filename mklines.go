@@ -9,7 +9,7 @@ import (
 // MkLines contains data for the Makefile (or *.mk) that is currently checked.
 type MkLines struct {
 	mklines        []*MkLine
-	lines          []*Line
+	lines          []Line
 	forVars        map[string]bool    // The variables currently used in .for loops
 	target         string             // Current make(1) target
 	vardef         map[string]*MkLine // varname => line; for all variables that are defined in the current file
@@ -22,7 +22,7 @@ type MkLines struct {
 	indentation    Indentation // Indentation depth of preprocessing directives
 }
 
-func NewMkLines(lines []*Line) *MkLines {
+func NewMkLines(lines []Line) *MkLines {
 	mklines := make([]*MkLine, len(lines))
 	for i, line := range lines {
 		mklines[i] = NewMkLine(line)
@@ -143,7 +143,7 @@ func (mklines *MkLines) Check() {
 	ChecklinesTrailingEmptyLines(mklines.lines)
 
 	if indentation.Len() != 1 && indentation.Depth() != 0 {
-		lastMkline.Line.Errorf("Directive indentation is not 0, but %d.", indentation.Depth())
+		lastMkline.Errorf("Directive indentation is not 0, but %d.", indentation.Depth())
 	}
 
 	SaveAutofixChanges(mklines.lines)
@@ -334,15 +334,15 @@ func (va *VaralignBlock) fixalign(mkline *MkLine, prefix, oldalign string) {
 		return
 	}
 
-	if !mkline.Line.AutofixReplace(prefix+oldalign, prefix+newalign) {
+	if !mkline.AutofixReplace(prefix+oldalign, prefix+newalign) {
 		wrongColumn := tabLength(prefix+oldalign) != tabLength(prefix+newalign)
 		switch {
 		case hasSpace && wrongColumn:
-			mkline.Line.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", goodWidth+1)
+			mkline.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", goodWidth+1)
 		case hasSpace:
-			mkline.Line.Notef("Variable values should be aligned with tabs, not spaces.")
+			mkline.Notef("Variable values should be aligned with tabs, not spaces.")
 		case wrongColumn:
-			mkline.Line.Notef("This variable value should be aligned to column %d.", goodWidth+1)
+			mkline.Notef("This variable value should be aligned to column %d.", goodWidth+1)
 		}
 		if wrongColumn {
 			Explain(

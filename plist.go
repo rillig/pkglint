@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func ChecklinesPlist(lines []*Line) {
+func ChecklinesPlist(lines []Line) {
 	if trace.Tracing {
 		defer trace.Call1(lines[0].Filename())()
 	}
@@ -43,12 +43,12 @@ type PlistChecker struct {
 }
 
 type PlistLine struct {
-	line        *Line
+	line        Line
 	conditional string // e.g. PLIST.docs
 	text        string // Like line.text, without the conditional
 }
 
-func (ck *PlistChecker) Check(plainLines []*Line) {
+func (ck *PlistChecker) Check(plainLines []Line) {
 	plines := ck.NewLines(plainLines)
 	ck.collectFilesAndDirs(plines)
 
@@ -76,7 +76,7 @@ func (ck *PlistChecker) Check(plainLines []*Line) {
 	}
 }
 
-func (ck *PlistChecker) NewLines(lines []*Line) []*PlistLine {
+func (ck *PlistChecker) NewLines(lines []Line) []*PlistLine {
 	plines := make([]*PlistLine, len(lines))
 	for i, line := range lines {
 		conditional, text := "", line.Text()
@@ -471,14 +471,14 @@ func (pline *PlistLine) warnImakeMannewsuffix() {
 type plistLineSorter struct {
 	first     *PlistLine
 	plines    []*PlistLine
-	lines     []*Line
-	after     map[*PlistLine][]*Line
+	lines     []Line
+	after     map[*PlistLine][]Line
 	swapped   bool
 	autofixed bool
 }
 
 func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
-	s := &plistLineSorter{first: plines[0], after: make(map[*PlistLine][]*Line)}
+	s := &plistLineSorter{first: plines[0], after: make(map[*PlistLine][]Line)}
 	prev := plines[0]
 	for _, pline := range plines[1:] {
 		if hasPrefix(pline.text, "@") || contains(pline.text, "$") {
@@ -512,10 +512,8 @@ func (s *plistLineSorter) Sort() {
 	}
 
 	firstLine := s.first.line
-	firstLine.RememberAutofix("Sorting the whole file.")
-	firstLine.logAutofix()
-	firstLine.changed = true // Otherwise the changes won't be saved
-	lines := []*Line{firstLine}
+	firstLine.AutofixMark("Sorting the whole file.")
+	lines := []Line{firstLine}
 	lines = append(lines, s.after[s.first]...)
 	for _, pline := range s.plines {
 		lines = append(lines, pline.line)

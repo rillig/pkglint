@@ -32,7 +32,7 @@ func CheckdirCategory() {
 
 	type subdir struct {
 		name   string
-		line   *Line
+		line   Line
 		active bool
 	}
 
@@ -96,7 +96,7 @@ func CheckdirCategory() {
 
 	var subdirs []string
 
-	var line *Line
+	var line Line
 	mActive := false
 
 	for !(mAtend && fAtend) {

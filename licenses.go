@@ -101,9 +101,9 @@ func (lc *LicenseChecker) Check(value string, op MkOperator) {
 
 	if licenses == nil {
 		if op == opAssign {
-			lc.MkLine.Line.Errorf("Parse error for license condition %q.", value)
+			lc.MkLine.Errorf("Parse error for license condition %q.", value)
 		} else {
-			lc.MkLine.Line.Errorf("Parse error for appended license condition %q.", value)
+			lc.MkLine.Errorf("Parse error for appended license condition %q.", value)
 		}
 		return
 	}
@@ -149,7 +149,7 @@ func (lc *LicenseChecker) checkNode(cond *LicenseCondition) {
 	}
 
 	if len(cond.And) > 0 && len(cond.Or) > 0 {
-		lc.MkLine.Line.Errorf("AND and OR operators in license conditions can only be combined using parentheses.")
+		lc.MkLine.Errorf("AND and OR operators in license conditions can only be combined using parentheses.")
 		Explain(
 			"Examples for valid license conditions are:",
 			"",

@@ -10,7 +10,7 @@ import (
 
 type VartypeCheck struct {
 	MkLine     *MkLine
-	Line       ILine
+	Line       Line
 	Varname    string
 	Op         MkOperator
 	Value      string

@@ -238,9 +238,6 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__nofix(c *check.C) {
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
 
-	c.Check(shline.line.raw[0].textnl, equals, "\techo ${PKGNAME:Q}\n")
-	c.Check(shline.line.raw[0].Lineno, equals, 1)
-
 	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
 	c.Check(s.Output(), equals, ""+

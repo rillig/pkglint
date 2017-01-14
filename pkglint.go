@@ -276,7 +276,7 @@ func CheckfileExtra(fname string) {
 	}
 }
 
-func ChecklinesDescr(lines []*Line) {
+func ChecklinesDescr(lines []Line) {
 	if trace.Tracing {
 		defer trace.Call1(lines[0].Filename())()
 	}
@@ -304,7 +304,7 @@ func ChecklinesDescr(lines []*Line) {
 	SaveAutofixChanges(lines)
 }
 
-func ChecklinesMessage(lines []*Line) {
+func ChecklinesMessage(lines []Line) {
 	if trace.Tracing {
 		defer trace.Call1(lines[0].Filename())()
 	}
@@ -490,7 +490,7 @@ func Checkfile(fname string) {
 	}
 }
 
-func ChecklinesTrailingEmptyLines(lines []*Line) {
+func ChecklinesTrailingEmptyLines(lines []Line) {
 	max := len(lines)
 	last := max
 	for last > 1 && lines[last-1].Text() == "" {

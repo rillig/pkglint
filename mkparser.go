@@ -10,7 +10,7 @@ type MkParser struct {
 	*Parser
 }
 
-func NewMkParser(line *Line, text string, emitWarnings bool) *MkParser {
+func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
 	return &MkParser{NewParser(line, text, emitWarnings)}
 }
 

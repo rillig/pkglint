@@ -8,7 +8,7 @@ func (s *Suite) Test_Line_modifications(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("--show-autofix")
 
-	line := NewLine("fname", 1, "dummy", s.NewRawLines(1, "original\n"))
+	line := NewLine("fname", 1, "dummy", s.NewRawLines(1, "original\n")).(*LineImpl)
 
 	c.Check(line.changed, equals, false)
 	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n"))

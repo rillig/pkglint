@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func ChecklinesPatch(lines []*Line) {
+func ChecklinesPatch(lines []Line) {
 	if trace.Tracing {
 		defer trace.Call1(lines[0].Filename())()
 	}
@@ -17,7 +17,7 @@ func ChecklinesPatch(lines []*Line) {
 }
 
 type PatchChecker struct {
-	lines             []*Line
+	lines             []Line
 	exp               *Expecter
 	seenDocumentation bool
 	previousLineEmpty bool
@@ -154,7 +154,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	}
 }
 
-func (ck *PatchChecker) checkBeginDiff(line *Line, patchedFiles int) {
+func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -283,7 +283,7 @@ func (ft FileType) String() string {
 }
 
 // This is used to select the proper subroutine for detecting absolute pathnames.
-func guessFileType(line *Line, fname string) (fileType FileType) {
+func guessFileType(line Line, fname string) (fileType FileType) {
 	if trace.Tracing {
 		defer trace.Call(fname, "=>", &fileType)()
 	}
@@ -316,7 +316,7 @@ func guessFileType(line *Line, fname string) (fileType FileType) {
 	return ftUnknown
 }
 
-func checkwordAbsolutePathname(line ILine, word string) {
+func checkwordAbsolutePathname(line Line, word string) {
 	if trace.Tracing {
 		defer trace.Call1(word)()
 	}
@@ -345,7 +345,7 @@ func checkwordAbsolutePathname(line ILine, word string) {
 }
 
 // Looks for strings like "/dev/cd0" appearing in source code
-func checklineSourceAbsolutePathname(line *Line, text string) {
+func checklineSourceAbsolutePathname(line Line, text string) {
 	if !strings.ContainsAny(text, "\"'") {
 		return
 	}
@@ -367,7 +367,7 @@ func checklineSourceAbsolutePathname(line *Line, text string) {
 	}
 }
 
-func checklineOtherAbsolutePathname(line *Line, text string) {
+func checklineOtherAbsolutePathname(line Line, text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
 	}

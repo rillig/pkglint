@@ -7,16 +7,16 @@ import (
 
 // Expecter records the state when checking a list of lines from top to bottom.
 type Expecter struct {
-	lines []*Line
+	lines []Line
 	index int
 	m     []string
 }
 
-func NewExpecter(lines []*Line) *Expecter {
+func NewExpecter(lines []Line) *Expecter {
 	return &Expecter{lines, 0, nil}
 }
 
-func (exp *Expecter) CurrentLine() *Line {
+func (exp *Expecter) CurrentLine() Line {
 	if exp.index < len(exp.lines) {
 		return exp.lines[exp.index]
 	}
@@ -24,7 +24,7 @@ func (exp *Expecter) CurrentLine() *Line {
 	return NewLineEOF(exp.lines[0].Filename())
 }
 
-func (exp *Expecter) PreviousLine() *Line {
+func (exp *Expecter) PreviousLine() Line {
 	return exp.lines[exp.index-1]
 }
 
