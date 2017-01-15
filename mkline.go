@@ -653,6 +653,10 @@ func (vuc *VarUseContext) String() string {
 	return fmt.Sprintf("(%s time:%s quoting:%s wordpart:%v)", typename, vuc.time, vuc.quoting, vuc.IsWordPart)
 }
 
+// Indentation remembers the stack of preprocessing directives and their
+// indentation.  By convention, each directive is indented by 2 spaces.
+// An excepting are multiple-inclusion guards, they don't increase the
+// indentation.
 type Indentation struct {
 	depth         []int      // Number of space characters; always a multiple of 2
 	conditionVars [][]string // Variables on which the current path depends
