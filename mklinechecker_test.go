@@ -52,7 +52,7 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 
 	c.Check(s.Stdout(), equals, "WARN: fname:1: The pattern \"mycc\" cannot match any of "+
 		"{ ccache ccc clang distcc f2c gcc hp icc ido "+
-		"gcc mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.\n")
+		"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.\n")
 
 	MkLineChecker{NewMkLine(NewLine("fname", 1, ".elif ${A} != ${B}", nil))}.CheckCond()
 
