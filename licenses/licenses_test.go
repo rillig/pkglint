@@ -46,6 +46,8 @@ func (s *Suite) Test_Parse(c *check.C) {
 	checkParse("a AND b OR c AND d", "{And:true,Or:true,Children:[{Name:a},{Name:b},{Name:c},{Name:d}]}")
 	checkParse("((a AND (b AND c)))", "{Children:[{Paren:{Children:[{Paren:{And:true,Children:[{Name:a},{Paren:{And:true,Children:[{Name:b},{Name:c}]}}]}}]}}]}")
 
+	c.Check(Parse("a AND b OR c AND d").String(), check.Equals, "a MIXED b MIXED c MIXED d")
+
 	c.Check(Parse("AND artistic"), check.IsNil)
 }
 
