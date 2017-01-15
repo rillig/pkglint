@@ -107,7 +107,8 @@ func (mklines *MkLines) Check() {
 	indentation := &mklines.indentation
 	indentation.Push(0)
 	for _, mkline := range mklines.mklines {
-		mkline.Check()
+		ck := MkLineChecker{mkline}
+		ck.Check()
 		varalign.Check(mkline)
 
 		switch {
@@ -129,10 +130,10 @@ func (mklines *MkLines) Check() {
 			}
 
 		case mkline.IsCond():
-			mkline.checkCond(mklines.forVars)
+			ck.checkCond(mklines.forVars)
 
 		case mkline.IsDependency():
-			mkline.checkDependencyRule(allowedTargets)
+			ck.checkDependencyRule(allowedTargets)
 			mklines.target = mkline.Targets()
 		}
 	}

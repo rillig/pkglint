@@ -41,7 +41,7 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 
 	p := NewMkParser(line, token, false)
 	if varuse := p.VarUse(); varuse != nil && p.EOF() {
-		shline.mkline.CheckVaruse(varuse, shellwordVuc)
+		MkLineChecker{shline.mkline}.CheckVaruse(varuse, shellwordVuc)
 		return
 	}
 
@@ -209,7 +209,7 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 	if varname != "@" {
 		vucstate := quoting.ToVarUseContext()
 		vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, true}
-		shline.mkline.CheckVaruse(varuse, vuc)
+		MkLineChecker{shline.mkline}.CheckVaruse(varuse, vuc)
 	}
 	return true
 }

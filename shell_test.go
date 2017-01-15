@@ -373,7 +373,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 		"# dummy")
 	mkline := NewMkLine(NewLine("fname", 3, "# dummy", nil))
 
-	mkline.checkText("echo \"hello, world\"")
+	MkLineChecker{mkline}.checkText("echo \"hello, world\"")
 
 	c.Check(s.Output(), equals, "")
 

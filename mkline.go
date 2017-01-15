@@ -183,17 +183,23 @@ func (mkline *MkLine) Includefile() string { return mkline.data.(mkLineInclude).
 func (mkline *MkLine) Targets() string     { return mkline.data.(mkLineDependency).targets }
 func (mkline *MkLine) Sources() string     { return mkline.data.(mkLineDependency).sources }
 
-func (mkline *MkLine) Check() {
+type MkLineChecker struct {
+	MkLine *MkLine
+}
+
+func (ck MkLineChecker) Check() {
+	mkline := ck.MkLine
+
 	LineChecker{mkline.Line}.CheckTrailingWhitespace()
 	LineChecker{mkline.Line}.CheckValidCharacters(`[\t -~]`)
 
 	switch {
 	case mkline.IsVarassign():
-		mkline.checkVarassign()
+		ck.checkVarassign()
 
 	case mkline.IsShellcmd():
 		shellcmd := mkline.Shellcmd()
-		mkline.checkText(shellcmd)
+		ck.checkText(shellcmd)
 		NewShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 	case mkline.IsComment():
@@ -202,17 +208,18 @@ func (mkline *MkLine) Check() {
 		}
 
 	case mkline.IsInclude():
-		mkline.checkInclude()
+		ck.checkInclude()
 	}
 }
 
-func (mkline *MkLine) checkInclude() {
+func (ck MkLineChecker) checkInclude() {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
 
+	mkline := ck.MkLine
 	if mkline.Indent() != "" {
-		mkline.checkDirectiveIndentation(G.Mk.indentation.Depth())
+		ck.checkDirectiveIndentation(G.Mk.indentation.Depth())
 	}
 
 	includefile := mkline.Includefile()
@@ -220,7 +227,7 @@ func (mkline *MkLine) checkInclude() {
 	if trace.Tracing {
 		trace.Step2("includingFile=%s includefile=%s", mkline.Filename(), includefile)
 	}
-	mkline.CheckRelativePath(includefile, mustExist)
+	ck.CheckRelativePath(includefile, mustExist)
 
 	switch {
 	case hasSuffix(includefile, "/Makefile"):
@@ -258,7 +265,9 @@ func (mkline *MkLine) checkInclude() {
 	}
 }
 
-func (mkline *MkLine) checkCond(forVars map[string]bool) {
+func (ck MkLineChecker) checkCond(forVars map[string]bool) {
+	mkline := ck.MkLine
+
 	directive := mkline.Directive()
 	args := mkline.Args()
 	indentation := &G.Mk.indentation
@@ -276,7 +285,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 	if directive == "elif" || directive == "else" {
 		expectedDepth = indentation.depth[len(indentation.depth)-2]
 	}
-	mkline.checkDirectiveIndentation(expectedDepth)
+	ck.checkDirectiveIndentation(expectedDepth)
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
 		indentation.Push(indentation.Depth())
@@ -296,7 +305,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 		}
 
 	} else if directive == "if" || directive == "elif" {
-		mkline.CheckCond()
+		ck.CheckCond()
 
 	} else if directive == "ifdef" || directive == "ifndef" {
 		mkline.Line.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
@@ -334,7 +343,7 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 			forLoopType := &Vartype{lkSpace, BtUnknown, []AclEntry{{"*", aclpAllRead}}, guessed}
 			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
 			for _, forLoopVar := range mkline.extractUsedVariables(values) {
-				mkline.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
+				ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
 			}
 		}
 
@@ -347,19 +356,21 @@ func (mkline *MkLine) checkCond(forVars map[string]bool) {
 	}
 }
 
-func (mkline *MkLine) checkDirectiveIndentation(expectedDepth int) {
+func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 	if G.Mk == nil {
 		return
 	}
+	mkline := ck.MkLine
 	indent := mkline.Indent()
 	if expected := strings.Repeat(" ", expectedDepth); indent != expected {
-		if G.opts.WarnSpace && !mkline.Line.AutofixReplace("."+indent, "."+expected) {
-			mkline.Line.Notef("This directive should be indented by %d spaces.", expectedDepth)
+		if G.opts.WarnSpace && !mkline.AutofixReplace("."+indent, "."+expected) {
+			mkline.Notef("This directive should be indented by %d spaces.", expectedDepth)
 		}
 	}
 }
 
-func (mkline *MkLine) checkDependencyRule(allowedTargets map[string]bool) {
+func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
+	mkline := ck.MkLine
 	targets := splitOnSpace(mkline.Targets())
 	sources := splitOnSpace(mkline.Sources())
 
@@ -403,7 +414,7 @@ func (mkline *MkLine) Tokenize(s string) []*MkToken {
 	return tokens
 }
 
-func (mkline *MkLine) checkVarassignDefPermissions() {
+func (ck MkLineChecker) checkVarassignDefPermissions() {
 	if !G.opts.WarnPerm {
 		return
 	}
@@ -411,6 +422,7 @@ func (mkline *MkLine) checkVarassignDefPermissions() {
 		defer trace.Call()()
 	}
 
+	mkline := ck.MkLine
 	varname := mkline.Varname()
 	op := mkline.Op()
 	vartype := mkline.getVariableType(varname)
@@ -464,7 +476,8 @@ func (mkline *MkLine) checkVarassignDefPermissions() {
 	}
 }
 
-func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
+func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
+	mkline := ck.MkLine
 	if trace.Tracing {
 		defer trace.Call(mkline, varuse, vuc)()
 	}
@@ -483,20 +496,20 @@ func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		mkline.Warnf("%s is used but not defined. Spelling mistake?", varname)
 	}
 
-	mkline.CheckVarusePermissions(varname, vartype, vuc)
+	ck.CheckVarusePermissions(varname, vartype, vuc)
 
 	if varname == "LOCALBASE" && !G.Infrastructure {
-		mkline.WarnVaruseLocalbase()
+		ck.WarnVaruseLocalbase()
 	}
 
 	needsQuoting := mkline.variableNeedsQuoting(varname, vartype, vuc)
 
 	if vuc.quoting == vucQuotFor {
-		mkline.checkVaruseFor(varname, vartype, needsQuoting)
+		ck.checkVaruseFor(varname, vartype, needsQuoting)
 	}
 
 	if G.opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
-		mkline.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
+		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
 	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.SystemBuildDefs[varname] && !G.Mk.buildDefs[varname] {
@@ -510,7 +523,7 @@ func (mkline *MkLine) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 }
 
-func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
+func (ck MkLineChecker) CheckVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
 	if !G.opts.WarnPerm {
 		return
 	}
@@ -529,7 +542,8 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 		return
 	}
 
-	perms := vartype.EffectivePermissions(mkline.Line.Filename())
+	mkline := ck.MkLine
+	perms := vartype.EffectivePermissions(mkline.Filename())
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -617,8 +631,8 @@ func (mkline *MkLine) CheckVarusePermissions(varname string, vartype *Vartype, v
 	}
 }
 
-func (mkline *MkLine) WarnVaruseLocalbase() {
-	mkline.Warnf("The LOCALBASE variable should not be used by packages.")
+func (ck MkLineChecker) WarnVaruseLocalbase() {
+	ck.MkLine.Warnf("The LOCALBASE variable should not be used by packages.")
 	Explain(
 		// from jlam via private mail.
 		"Currently, LOCALBASE is typically used in these cases:",
@@ -648,7 +662,7 @@ func (mkline *MkLine) WarnVaruseLocalbase() {
 		"	CONFIGURE_ENV+= --with-datafiles=${PREFIX}/share/pkgbase")
 }
 
-func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
+func (ck MkLineChecker) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, needsQuoting)()
 	}
@@ -657,7 +671,7 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 		vartype != nil &&
 		vartype.kindOfList != lkSpace &&
 		needsQuoting != nqDoesntMatter {
-		mkline.Warnf("The variable %s should not be used in .for loops.", varname)
+		ck.MkLine.Warnf("The variable %s should not be used in .for loops.", varname)
 		Explain(
 			"The .for loop splits its argument at sequences of white-space, as",
 			"opposed to all other places in make(1), which act like the shell.",
@@ -666,7 +680,7 @@ func (mkline *MkLine) checkVaruseFor(varname string, vartype *Vartype, needsQuot
 	}
 }
 
-func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
+func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, mod, needsQuoting)()
 	}
@@ -684,13 +698,14 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 		strippedMod = stripped
 	}
 
+	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
-		mkline.Line.Notef("The :M* modifier is not needed here.")
+		mkline.Notef("The :M* modifier is not needed here.")
 
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
-			mkline.Line.Warnf("The list variable %s should not be embedded in a word.", varname)
+			mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
 			Explain(
 				"When a list variable has multiple elements, this expression expands",
 				"to something unexpected:",
@@ -711,18 +726,18 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 
 		} else if mod != correctMod {
 			if vuc.quoting == vucQuotPlain {
-				if !mkline.Line.AutofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
-					mkline.Line.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+				if !mkline.AutofixReplace("${"+varname+mod+"}", "${"+varname+correctMod+"}") {
+					mkline.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
 				}
 			} else {
-				mkline.Line.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
+				mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
 					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 			}
 			Explain(
 				"See the pkgsrc guide, section \"quoting guideline\", for details.")
 
 		} else if vuc.quoting != vucQuotPlain {
-			mkline.Line.Warnf("Please move ${%s%s} outside of any quoting characters.", varname, mod)
+			mkline.Warnf("Please move ${%s%s} outside of any quoting characters.", varname, mod)
 			Explain(
 				"The :Q modifier only works reliably when it is used outside of any",
 				"quoting characters.",
@@ -739,13 +754,13 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 		bad := "${" + varname + mod + "}"
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 		needExplain := false
-		if needsQuoting == nqNo && !mkline.Line.AutofixReplace(bad, good) {
+		if needsQuoting == nqNo && !mkline.AutofixReplace(bad, good) {
 			needExplain = true
 			mkline.Warnf("The :Q operator should not be used for ${%s} here.", varname)
 		}
-		if needsQuoting == nqDoesntMatter && !mkline.Line.AutofixReplace(bad, good) {
+		if needsQuoting == nqDoesntMatter && !mkline.AutofixReplace(bad, good) {
 			needExplain = true
-			mkline.Line.Notef("The :Q operator isn't necessary for ${%s} here.", varname)
+			mkline.Notef("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
 		if needExplain {
 			Explain(
@@ -763,11 +778,12 @@ func (mkline *MkLine) CheckVaruseShellword(varname string, vartype *Vartype, vuc
 	}
 }
 
-func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
+func (ck MkLineChecker) checkVarassignPythonVersions(varname, value string) {
 	if trace.Tracing {
 		defer trace.Call2(varname, value)()
 	}
 
+	mkline := ck.MkLine
 	strversions := splitOnSpace(value)
 	intversions := make([]int, len(strversions))
 	for i, strversion := range strversions {
@@ -789,7 +805,8 @@ func (mkline *MkLine) checkVarassignPythonVersions(varname, value string) {
 	}
 }
 
-func (mkline *MkLine) checkVarassign() {
+func (ck MkLineChecker) checkVarassign() {
+	mkline := ck.MkLine
 	varname := mkline.Varname()
 	op := mkline.Op()
 	value := mkline.Value()
@@ -801,11 +818,11 @@ func (mkline *MkLine) checkVarassign() {
 	}
 
 	defineVar(mkline, varname)
-	mkline.checkVarassignDefPermissions()
-	mkline.checkVarassignBsdPrefs()
+	ck.checkVarassignDefPermissions()
+	ck.checkVarassignBsdPrefs()
 
-	mkline.checkText(value)
-	mkline.CheckVartype(varname, op, value, comment)
+	ck.checkText(value)
+	ck.CheckVartype(varname, op, value, comment)
 
 	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if op == opAssignEval && varname == strings.ToLower(varname) {
@@ -823,7 +840,7 @@ func (mkline *MkLine) checkVarassign() {
 		}
 	}
 
-	mkline.checkVarassignSpecific()
+	ck.checkVarassignSpecific()
 
 	if varname == "EVAL_PREFIX" {
 		if m, evalVarname := match1(value, `^([\w_]+)=`); m {
@@ -860,15 +877,16 @@ func (mkline *MkLine) checkVarassign() {
 		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
 	}
 
-	mkline.checkVarassignPlistComment(varname, value)
-	mkline.checkVarassignVaruse()
+	ck.checkVarassignPlistComment(varname, value)
+	ck.checkVarassignVaruse()
 }
 
-func (mkline *MkLine) checkVarassignVaruse() {
+func (ck MkLineChecker) checkVarassignVaruse() {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
 
+	mkline := ck.MkLine
 	op := mkline.Op()
 
 	time := vucTimeRun
@@ -882,16 +900,17 @@ func (mkline *MkLine) checkVarassignVaruse() {
 	}
 
 	if vartype != nil && vartype.IsShell() {
-		mkline.checkVarassignVaruseShell(vartype, time)
+		ck.checkVarassignVaruseShell(vartype, time)
 	} else {
-		mkline.checkVarassignVaruseMk(vartype, time)
+		ck.checkVarassignVaruseMk(vartype, time)
 	}
 }
 
-func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
+func (ck MkLineChecker) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 	if trace.Tracing {
 		defer trace.Call(vartype, time)()
 	}
+	mkline := ck.MkLine
 	tokens := NewMkParser(mkline.Line, mkline.Value(), false).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
@@ -899,12 +918,12 @@ func (mkline *MkLine) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 			spaceRight := i+1 >= len(tokens) || matches(tokens[i+1].Text, `^\s`)
 			isWordPart := !(spaceLeft && spaceRight)
 			vuc := &VarUseContext{vartype, time, vucQuotPlain, isWordPart}
-			mkline.CheckVaruse(token.Varuse, vuc)
+			ck.CheckVaruse(token.Varuse, vuc)
 		}
 	}
 }
 
-func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
+func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
 	if trace.Tracing {
 		defer trace.Call(vartype, time)()
 	}
@@ -919,17 +938,19 @@ func (mkline *MkLine) checkVarassignVaruseShell(vartype *Vartype, time vucTime) 
 		return false
 	}
 
+	mkline := ck.MkLine
 	atoms := NewShTokenizer(mkline.Line, mkline.Value(), false).ShAtoms()
 	for i, atom := range atoms {
 		if atom.Type == shtVaruse {
 			isWordPart := isWordPart(atoms, i)
 			vuc := &VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), isWordPart}
-			mkline.CheckVaruse(atom.Data.(*MkVarUse), vuc)
+			ck.CheckVaruse(atom.Data.(*MkVarUse), vuc)
 		}
 	}
 }
 
-func (mkline *MkLine) checkVarassignSpecific() {
+func (ck MkLineChecker) checkVarassignSpecific() {
+	mkline := ck.MkLine
 	varname := mkline.Varname()
 	value := mkline.Value()
 
@@ -961,7 +982,7 @@ func (mkline *MkLine) checkVarassignSpecific() {
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
-		mkline.checkVarassignPythonVersions(varname, value)
+		ck.checkVarassignPythonVersions(varname, value)
 	}
 
 	if mkline.VarassignComment() == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
@@ -989,7 +1010,8 @@ func (mkline *MkLine) checkVarassignSpecific() {
 	}
 }
 
-func (mkline *MkLine) checkVarassignBsdPrefs() {
+func (ck MkLineChecker) checkVarassignBsdPrefs() {
+	mkline := ck.MkLine
 	if G.opts.WarnExtra && mkline.Op() == opAssignDefault && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
 		switch mkline.Varcanon() {
 		case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
@@ -1010,10 +1032,10 @@ func (mkline *MkLine) checkVarassignBsdPrefs() {
 	}
 }
 
-func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
+func (ck MkLineChecker) checkVarassignPlistComment(varname, value string) {
 	if false && // This is currently neither correct nor helpful
 		contains(value, "@comment") && !matches(value, `="@comment "`) {
-		mkline.Warnf("Please don't use @comment in %s.", varname)
+		ck.MkLine.Warnf("Please don't use @comment in %s.", varname)
 		Explain(
 			"If you are defining a PLIST conditional here, use one of the",
 			"following patterns instead:",
@@ -1038,7 +1060,7 @@ func (mkline *MkLine) checkVarassignPlistComment(varname, value string) {
 	}
 }
 
-func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment string) {
+func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comment string) {
 	if trace.Tracing {
 		defer trace.Call(varname, op, value, comment)()
 	}
@@ -1047,6 +1069,7 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		return
 	}
 
+	mkline := ck.MkLine
 	vartype := mkline.getVariableType(varname)
 
 	if op == opAssignAppend {
@@ -1067,31 +1090,32 @@ func (mkline *MkLine) CheckVartype(varname string, op MkOperator, value, comment
 		}
 
 	case vartype.kindOfList == lkNone:
-		mkline.CheckVartypePrimitive(varname, vartype.basicType, op, value, comment, vartype.guessed)
+		ck.CheckVartypePrimitive(varname, vartype.basicType, op, value, comment, vartype.guessed)
 
 	case value == "":
 		break
 
 	case vartype.kindOfList == lkSpace:
 		for _, word := range splitOnSpace(value) {
-			mkline.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
+			ck.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
 
 	case vartype.kindOfList == lkShell:
 		words, _ := splitIntoMkWords(mkline.Line, value)
 		for _, word := range words {
-			mkline.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
+			ck.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
 	}
 }
 
 // For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func (mkline *MkLine) CheckVartypePrimitive(varname string, checker *BasicType, op MkOperator, value, comment string, guessed bool) {
+func (ck MkLineChecker) CheckVartypePrimitive(varname string, checker *BasicType, op MkOperator, value, comment string, guessed bool) {
 	if trace.Tracing {
 		defer trace.Call(varname, checker.name, op, value, comment, guessed)()
 	}
 
+	mkline := ck.MkLine
 	valueNoVar := mkline.withoutMakeVariables(value)
 	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, guessed}
 	checker.checker(ctx)
@@ -1146,11 +1170,12 @@ func (mkline *MkLine) resolveVarsInRelativePath(relpath string, adjustDepth bool
 	return tmp
 }
 
-func (mkline *MkLine) checkText(text string) {
+func (ck MkLineChecker) checkText(text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
 	}
 
+	mkline := ck.MkLine
 	if contains(text, "${WRKSRC}/..") {
 		mkline.Warnf("Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".")
 		Explain(
@@ -1193,7 +1218,8 @@ func (mkline *MkLine) checkText(text string) {
 	}
 }
 
-func (mkline *MkLine) CheckCond() {
+func (ck MkLineChecker) CheckCond() {
+	mkline := ck.MkLine
 	if trace.Tracing {
 		defer trace.Call1(mkline.Args())()
 	}
@@ -1225,7 +1251,7 @@ func (mkline *MkLine) CheckCond() {
 		}
 		for _, modifier := range varuse.modifiers {
 			if modifier[0] == 'M' || modifier[0] == 'N' {
-				mkline.CheckVartype(varname, opUseMatch, modifier[1:], "")
+				ck.CheckVartype(varname, opUseMatch, modifier[1:], "")
 			}
 		}
 	})
@@ -1236,20 +1262,20 @@ func (mkline *MkLine) CheckCond() {
 		varmods := varuse.modifiers
 		value := node.args[2].(string)
 		if len(varmods) == 0 {
-			mkline.checkCompareVarStr(varname, node.args[1].(string), value)
+			ck.checkCompareVarStr(varname, node.args[1].(string), value)
 		} else if len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
-			mkline.CheckVartype(varname, opUseMatch, value, "")
+			ck.CheckVartype(varname, opUseMatch, value, "")
 		}
 	})
 
 	mkline.rememberUsedVariables(cond)
 }
 
-func (mkline *MkLine) checkCompareVarStr(varname, op, value string) {
-	mkline.CheckVartype(varname, opUseCompare, value, "")
+func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
+	ck.CheckVartype(varname, opUseCompare, value, "")
 
 	if varname == "PKGSRC_COMPILER" {
-		mkline.Line.Warnf("Use ${PKGSRC_COMPILER:%s%s} instead of the %s operator.", ifelseStr(op == "==", "M", "N"), value, op)
+		ck.MkLine.Warnf("Use ${PKGSRC_COMPILER:%s%s} instead of the %s operator.", ifelseStr(op == "==", "M", "N"), value, op)
 		Explain(
 			"The PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache",
 			"distcc clang\".  Therefore, comparing it using == or != leads to",
@@ -1283,7 +1309,8 @@ func (mkline *MkLine) rememberUsedVariables(cond *Tree) {
 	cond.Visit("compareVarVar", arg2varuse)
 }
 
-func (mkline *MkLine) CheckValidCharactersInValue(reValid regex.RegexPattern) {
+func (ck MkLineChecker) CheckValidCharactersInValue(reValid regex.RegexPattern) {
+	mkline := ck.MkLine
 	rest := regex.Compile(reValid).ReplaceAllString(mkline.Value(), "")
 	if rest != "" {
 		uni := ""
@@ -1301,12 +1328,13 @@ func (mkline *MkLine) explainRelativeDirs() {
 		"main pkgsrc repository.")
 }
 
-func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
+func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	if trace.Tracing {
 		defer trace.Call1(pkgdir)()
 	}
 
-	mkline.CheckRelativePath(pkgdir, true)
+	mkline := ck.MkLine
+	ck.CheckRelativePath(pkgdir, true)
 	pkgdir = mkline.resolveVarsInRelativePath(pkgdir, false)
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
@@ -1323,13 +1351,14 @@ func (mkline *MkLine) CheckRelativePkgdir(pkgdir string) {
 	}
 }
 
-func (mkline *MkLine) CheckRelativePath(path string, mustExist bool) {
+func (ck MkLineChecker) CheckRelativePath(path string, mustExist bool) {
 	if trace.Tracing {
 		defer trace.Call(path, mustExist)()
 	}
 
+	mkline := ck.MkLine
 	if !G.Wip && contains(path, "/wip/") {
-		mkline.Line.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
 	resolvedPath := mkline.resolveVarsInRelativePath(path, true)

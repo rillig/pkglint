@@ -301,7 +301,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	if m, pattern, relpath, pkg := match3(value, `(.*):(\.\./\.\./[^/]+/([^/]+))$`); m {
-		cv.MkLine.CheckRelativePkgdir(relpath)
+		MkLineChecker{cv.MkLine}.CheckRelativePkgdir(relpath)
 
 		switch pkg {
 		case "msgfmt", "gettext":
@@ -312,7 +312,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			line.Warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		cv.MkLine.CheckVartypePrimitive(cv.Varname, BtDependency, cv.Op, pattern, cv.MkComment, cv.Guessed)
+		MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtDependency, cv.Op, pattern, cv.MkComment, cv.Guessed)
 		return
 	}
 
@@ -377,7 +377,7 @@ func (cv *VartypeCheck) EmulPlatform() {
 }
 
 func (cv *VartypeCheck) FetchURL() {
-	cv.MkLine.CheckVartypePrimitive(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 
 	for siteURL, siteName := range G.globalData.MasterSiteURLToVar {
 		if hasPrefix(cv.Value, siteURL) {
@@ -437,7 +437,7 @@ func (cv *VartypeCheck) FileMode() {
 }
 
 func (cv *VartypeCheck) Homepage() {
-	cv.MkLine.CheckVartypePrimitive(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 
 	if m, wrong, sitename, subdir := match3(cv.Value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`); m {
 		baseURL := G.globalData.MasterSiteVarToURL[sitename]
@@ -647,7 +647,7 @@ func (cv *VartypeCheck) Option() {
 // The PATH environment variable
 func (cv *VartypeCheck) Pathlist() {
 	if !contains(cv.Value, ":") && cv.Guessed {
-		cv.MkLine.CheckVartypePrimitive(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+		MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 		return
 	}
 
@@ -710,7 +710,7 @@ func (cv *VartypeCheck) PkgName() {
 }
 
 func (cv *VartypeCheck) PkgOptionsVar() {
-	cv.MkLine.CheckVartypePrimitive(cv.Varname, BtVariableName, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtVariableName, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 	if matches(cv.Value, `\$\{PKGBASE[:\}]`) {
 		cv.Line.Errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		Explain(
@@ -728,7 +728,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // A directory name relative to the top-level pkgsrc directory.
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
-	cv.MkLine.CheckRelativePkgdir(G.CurPkgsrcdir + "/" + cv.Value)
+	MkLineChecker{cv.MkLine}.CheckRelativePkgdir(G.CurPkgsrcdir + "/" + cv.Value)
 }
 
 func (cv *VartypeCheck) PkgRevision() {
@@ -824,12 +824,12 @@ func (cv *VartypeCheck) PythonDependency() {
 
 // Refers to a package directory, e.g. ../../category/pkgbase.
 func (cv *VartypeCheck) RelativePkgDir() {
-	cv.MkLine.CheckRelativePkgdir(cv.Value)
+	MkLineChecker{cv.MkLine}.CheckRelativePkgdir(cv.Value)
 }
 
 // Refers to a file or directory, e.g. ../../category/pkgbase, ../../category/pkgbase/Makefile.
 func (cv *VartypeCheck) RelativePkgPath() {
-	cv.MkLine.CheckRelativePath(cv.Value, true)
+	MkLineChecker{cv.MkLine}.CheckRelativePath(cv.Value, true)
 }
 
 func (cv *VartypeCheck) Restricted() {
@@ -847,7 +847,6 @@ func (cv *VartypeCheck) SedCommand() {
 
 func (cv *VartypeCheck) SedCommands() {
 	line := cv.Line
-	mkline := cv.MkLine
 
 	tokens, rest := splitIntoShellTokens(line, cv.Value)
 	if rest != "" {
@@ -885,7 +884,7 @@ func (cv *VartypeCheck) SedCommands() {
 						"",
 						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-				mkline.CheckVartypePrimitive(cv.Varname, BtSedCommand, cv.Op, tokens[i], cv.MkComment, cv.Guessed)
+				MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtSedCommand, cv.Op, tokens[i], cv.MkComment, cv.Guessed)
 			} else {
 				line.Errorf("The -e option to sed requires an argument.")
 			}
@@ -1029,7 +1028,7 @@ func (cv *VartypeCheck) WrapperTransform() {
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {
-	cv.MkLine.CheckVartypePrimitive(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 }
 
 // A directory relative to ${WRKSRC}, for use in CONFIGURE_DIRS and similar variables.
