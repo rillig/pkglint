@@ -9,7 +9,7 @@ package licenses
 	Node *Condition
 }
 
-%type <Node> start list condition
+%type <Node> start list node
 
 %%
 
@@ -17,19 +17,21 @@ start : list {
 	liyylex.(*licenseLexer).result = $$
 }
 
-list : condition {
-	$$ = $1
+list : node {
+	$$ = &Condition{Children: []*Condition{$1}}
 }
-list : list ltAND condition {
-	$$.And = append($$.And, $3)
+list : list ltAND node {
+	$$.Children = append($$.Children, $3)
+	$$.And = true
 }
-list : list ltOR condition {
-	$$.Or = append($$.Or, $3)
+list : list ltOR node {
+	$$.Children = append($$.Children, $3)
+	$$.Or = true
 }
 
-condition : ltNAME {
+node : ltNAME {
 	$$ = $1
 }
-condition : ltOPEN list ltCLOSE {
-	$$ = &Condition{Main: $2}
+node : ltOPEN list ltCLOSE {
+	$$ = &Condition{Paren: $2}
 }

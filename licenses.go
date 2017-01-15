@@ -43,12 +43,7 @@ func (lc *LicenseChecker) Check(value string, op MkOperator) {
 	licenses.Walk(lc.checkNode)
 }
 
-func (lc *LicenseChecker) checkNode(cond *licenses.Condition) {
-	license := cond.Name
-	if license == "" || license == "append-placeholder" {
-		return
-	}
-
+func (lc *LicenseChecker) checkLicenseName(license string) {
 	var licenseFile string
 	if G.Pkg != nil {
 		if licenseFileValue, ok := G.Pkg.varValue("LICENSE_FILE"); ok {
@@ -79,8 +74,15 @@ func (lc *LicenseChecker) checkNode(cond *licenses.Condition) {
 			"and define LICENSE to that file name.  See the pkgsrc guide,",
 			"keyword LICENSE, for more information.")
 	}
+}
 
-	if len(cond.And) > 0 && len(cond.Or) > 0 {
+func (lc *LicenseChecker) checkNode(cond *licenses.Condition) {
+	if license := cond.Name; license != "" && license != "append-placeholder" {
+		lc.checkLicenseName(license)
+		return
+	}
+
+	if cond.And && cond.Or {
 		lc.MkLine.Errorf("AND and OR operators in license conditions can only be combined using parentheses.")
 		Explain(
 			"Examples for valid license conditions are:",

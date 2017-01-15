@@ -1,65 +1,101 @@
 package licenses
 
 import (
+	"encoding/json"
 	"gopkg.in/check.v1"
+	"strings"
 	"testing"
 )
 
 type Suite struct{}
 
 func (s *Suite) Test_Parse(c *check.C) {
-	c.Check(Parse("gnu-gpl-v2"), check.DeepEquals, &Condition{Name: "gnu-gpl-v2"})
+	checkParse := func(cond string, expected string) {
+		c.Check(toJSON(Parse(cond)), check.Equals, expected)
+	}
 
-	c.Check(Parse("a AND b").String(), check.Equals, "(a AND b)")
-	c.Check(Parse("a OR b").String(), check.Equals, "(a OR b)")
+	c.Check(Parse("gnu-gpl-v2"), check.DeepEquals, NewSingleton(NewName("gnu-gpl-v2")))
 
-	c.Check(Parse("a OR (b AND c)").String(), check.Equals, "(a OR (b AND c))")
-	c.Check(Parse("(a OR b) AND c").String(), check.Equals, "((a OR b) AND c)")
+	checkParse("gnu-gpl-v2", "{Children:[{Name:gnu-gpl-v2}]}")
+	checkParse("a AND b", "{And:true,Children:[{Name:a},{Name:b}]}")
+	checkParse("a OR b", "{Or:true,Children:[{Name:a},{Name:b}]}")
 
-	c.Check(Parse("a AND b AND c AND d").String(), check.Equals, "(a AND b AND c AND d)")
+	checkParse("a OR (b AND c)", "{Or:true,Children:[{Name:a},{Paren:{And:true,Children:[{Name:b},{Name:c}]}}]}")
+	checkParse("(a OR b) AND c", "{And:true,Children:[{Paren:{Or:true,Children:[{Name:a},{Name:b}]}},{Name:c}]}")
+
+	checkParse("a AND b AND c AND d", "{And:true,Children:[{Name:a},{Name:b},{Name:c},{Name:d}]}")
 	c.Check(
 		Parse("a AND b AND c AND d"),
 		check.DeepEquals,
-		&Condition{Name: "a",
-			And: []*Condition{{Name: "b"}, {Name: "c"}, {Name: "d"}}})
+		NewAnd(NewName("a"), NewName("b"), NewName("c"), NewName("d")))
 
-	c.Check(Parse("a OR b OR c OR d").String(), check.Equals, "(a OR b OR c OR d)")
+	checkParse("a OR b OR c OR d", "{Or:true,Children:[{Name:a},{Name:b},{Name:c},{Name:d}]}")
 	c.Check(
 		Parse("a OR b OR c OR d"),
 		check.DeepEquals,
-		&Condition{Name: "a",
-			Or: []*Condition{{Name: "b"}, {Name: "c"}, {Name: "d"}}})
+		NewOr(NewName("a"), NewName("b"), NewName("c"), NewName("d")))
 
-	c.Check(Parse("(a OR b) AND (c AND d)").String(), check.Equals, "((a OR b) AND (c AND d))")
+	checkParse("(a OR b) AND (c AND d)", "{And:true,Children:[{Paren:{Or:true,Children:[{Name:a},{Name:b}]}},{Paren:{And:true,Children:[{Name:c},{Name:d}]}}]}")
 	c.Check(
 		(Parse("(a OR b) AND (c AND d)")),
 		check.DeepEquals,
-		&Condition{
-			Main: &Condition{
-				Name: "a",
-				Or:   []*Condition{{Name: "b"}}},
-			And: []*Condition{{Main: &Condition{
-				Name: "c",
-				And:  []*Condition{{Name: "d"}}}}}})
+		NewAnd(
+			NewParen(NewOr(NewName("a"), NewName("b"))),
+			NewParen(NewAnd(NewName("c"), NewName("d")))))
+
+	checkParse("a AND b OR c AND d", "{And:true,Or:true,Children:[{Name:a},{Name:b},{Name:c},{Name:d}]}")
+	checkParse("((a AND (b AND c)))", "{Children:[{Paren:{Children:[{Paren:{And:true,Children:[{Name:a},{Paren:{And:true,Children:[{Name:b},{Name:c}]}}]}}]}}]}")
 
 	c.Check(Parse("AND artistic"), check.IsNil)
 }
 
 func (s *Suite) Test_Condition_String(c *check.C) {
-	name := func(name string) *Condition {
-		return &Condition{Name: name}
-	}
-	and := func(parts ...*Condition) *Condition {
-		return &Condition{Main: parts[0], And: parts[1:]}
-	}
-	or := func(parts ...*Condition) *Condition {
-		return &Condition{Main: parts[0], Or: parts[1:]}
-	}
+	c.Check(
+		NewName("a").String(),
+		check.Equals,
+		"a")
 
-	c.Check(name("a").String(), check.Equals, "a")
-	c.Check(and(name("a"), name("b")).String(), check.Equals, "(a AND b)")
-	c.Check(or(name("a"), name("b")).String(), check.Equals, "(a OR b)")
-	c.Check(and(or(name("a"), name("b")), or(name("c"), name("d"))).String(), check.Equals, "((a OR b) AND (c OR d))")
+	c.Check(
+		NewAnd(NewName("a"), NewName("b")).String(),
+		check.Equals,
+		"a AND b")
+
+	c.Check(
+		NewOr(NewName("a"), NewName("b")).String(),
+		check.Equals,
+		"a OR b")
+
+	c.Check(
+		NewAnd(
+			NewParen(NewOr(NewName("a"), NewName("b"))),
+			NewParen(NewOr(NewName("c"), NewName("d")))).String(),
+		check.Equals,
+		"(a OR b) AND (c OR d)")
+
+	mixed := NewAnd(NewName("a"), NewName("b"), NewName("c"))
+	mixed.Or = true
+	c.Check(mixed.String(), check.Equals, "a MIXED b MIXED c")
+}
+
+func NewName(name string) *Condition {
+	return &Condition{Name: name}
+}
+func NewParen(child *Condition) *Condition {
+	return &Condition{Paren: child}
+}
+func NewSingleton(child *Condition) *Condition {
+	return &Condition{Children: []*Condition{child}}
+}
+func NewAnd(parts ...*Condition) *Condition {
+	return &Condition{Children: parts, And: true}
+}
+func NewOr(parts ...*Condition) *Condition {
+	return &Condition{Children: parts, Or: true}
+}
+
+func toJSON(cond *Condition) string {
+	json, _ := json.Marshal(cond)
+	return strings.Replace(string(json), "\"", "", -1)
 }
 
 func Test(t *testing.T) {

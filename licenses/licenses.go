@@ -3,13 +3,15 @@ package licenses
 import "netbsd.org/pkglint/textproc"
 
 // Condition describes a complex license condition.
-// It has either `Name` or `And` or `Or` set.
+// It has either `Name` or `Paren` or `Children` set.
+// In the `Children` case, `And` and `Or` specify the operators used.
 // Malformed license conditions can have both `And` and `Or` set.
 type Condition struct {
-	Name string
-	Main *Condition
-	And  []*Condition
-	Or   []*Condition
+	Name     string       `json:",omitempty"`
+	Paren    *Condition   `json:",omitempty"`
+	And      bool         `json:",omitempty"`
+	Or       bool         `json:",omitempty"`
+	Children []*Condition `json:",omitempty"`
 }
 
 func Parse(licenses string) *Condition {
@@ -21,35 +23,32 @@ func Parse(licenses string) *Condition {
 	return nil
 }
 
-func (lc *Condition) String() string {
-	s := lc.Name
-	if lc.Main != nil {
-		s += lc.Main.String()
+func (cond *Condition) String() string {
+	if cond.Name != "" {
+		return cond.Name
 	}
-	if len(lc.And) == 0 && len(lc.Or) == 0 {
-		return s
+	if cond.Paren != nil {
+		return "(" + cond.Paren.String() + ")"
 	}
-
-	for _, and := range lc.And {
-		s += " AND " + and.String()
+	s := ""
+	separator := [...]string{"", " AND ", " OR ", " MIXED "}[b2i(cond.And)+2*b2i(cond.Or)]
+	for i, child := range cond.Children {
+		if i != 0 {
+			s += separator
+		}
+		s += child.String()
 	}
-	for _, or := range lc.Or {
-		s += " OR " + or.String()
-	}
-	return "(" + s + ")"
+	return s
 }
 
-func (lc *Condition) Walk(callback func(*Condition)) {
-	callback(lc)
-	if lc.Main != nil {
-		lc.Main.Walk(callback)
+func (cond *Condition) Walk(callback func(*Condition)) {
+	if cond.Paren != nil {
+		cond.Paren.Walk(callback)
 	}
-	for _, and := range lc.And {
-		and.Walk(callback)
+	for _, child := range cond.Children {
+		child.Walk(callback)
 	}
-	for _, or := range lc.Or {
-		or.Walk(callback)
-	}
+	callback(cond)
 }
 
 //go:generate go tool yacc -p liyy -o licensesyacc.go -v licensesyacc.log licenses.y
@@ -87,4 +86,11 @@ func (lexer *licenseLexer) Lex(llval *liyySymType) int {
 
 func (lexer *licenseLexer) Error(s string) {
 	lexer.error = s
+}
+
+func b2i(x bool) int {
+	if x {
+		return 1
+	}
+	return 0
 }
