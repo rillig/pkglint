@@ -3,7 +3,8 @@ package licenses
 import "netbsd.org/pkglint/textproc"
 
 // Condition describes a complex license condition.
-// It has either `Name` or `Main` set.
+// It has either `Name` or `And` or `Or` set.
+// Malformed license conditions can have both `And` and `Or` set.
 type Condition struct {
 	Name string
 	Main *Condition
