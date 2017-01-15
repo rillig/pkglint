@@ -13,8 +13,6 @@ import (
 // * lkSpace is a list whose elements are split by whitespace
 //
 // See vartypecheck.go for how these types are checked.
-//
-// Last synced with mk/defaults/mk.conf revision 1.118
 
 func (gd *GlobalData) InitVartypes() {
 
@@ -46,6 +44,7 @@ func (gd *GlobalData) InitVartypes() {
 		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk:; *: use-loadtime, use")
 	}
 
+	// Last synced with mk/defaults/mk.conf revision 1.118
 	usr("ALLOW_VULNERABLE_PACKAGES", lkNone, BtYes)
 	usr("MANINSTALL", lkShell, enum("maninstall catinstall"))
 	usr("MANZ", lkNone, BtYes)
