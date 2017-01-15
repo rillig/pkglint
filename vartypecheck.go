@@ -233,7 +233,7 @@ func (cv *VartypeCheck) Dependency() {
 
 	parser := NewParser(line, value, false)
 	deppat := parser.Dependency()
-	if deppat != nil && deppat.wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
+	if deppat != nil && deppat.Wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
 		line.Warnf("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
 		Explain(
 			"The \"{,nb*}\" extension is only necessary for dependencies of the",
@@ -253,7 +253,7 @@ func (cv *VartypeCheck) Dependency() {
 		return
 	}
 
-	wildcard := deppat.wildcard
+	wildcard := deppat.Wildcard
 	if m, inside := match1(wildcard, `^\[(.*)\]\*$`); m {
 		if inside != "0-9" {
 			line.Warnf("Only [0-9]* is allowed in the numeric part of a dependency.")
@@ -275,7 +275,7 @@ func (cv *VartypeCheck) Dependency() {
 		}
 
 	} else if wildcard == "*" {
-		line.Warnf("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.pkgbase)
+		line.Warnf("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.Pkgbase)
 		Explain(
 			"If you use a * alone, the package specification may match other",
 			"packages that have the same prefix, but a longer name.  For example,",

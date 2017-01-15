@@ -134,16 +134,16 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 				}
 				doCheck = true
 			}
-			if doCheck && abi != nil && api != nil && abi.pkgbase != api.pkgbase && !hasPrefix(api.pkgbase, "{") {
+			if doCheck && abi != nil && api != nil && abi.Pkgbase != api.Pkgbase && !hasPrefix(api.Pkgbase, "{") {
 				abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
-					abi.pkgbase, api.pkgbase, apiLine.ReferenceFrom(abiLine))
+					abi.Pkgbase, api.Pkgbase, apiLine.ReferenceFrom(abiLine))
 			}
 			if doCheck {
-				if abi != nil && abi.lower != "" && !containsVarRef(abi.lower) {
-					if api != nil && api.lower != "" && !containsVarRef(api.lower) {
-						if pkgver.Compare(abi.lower, api.lower) < 0 {
+				if abi != nil && abi.Lower != "" && !containsVarRef(abi.Lower) {
+					if api != nil && api.Lower != "" && !containsVarRef(api.Lower) {
+						if pkgver.Compare(abi.Lower, api.Lower) < 0 {
 							abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
-								abi.lower, api.lower, apiLine.ReferenceFrom(abiLine))
+								abi.Lower, api.Lower, apiLine.ReferenceFrom(abiLine))
 						}
 					}
 				}

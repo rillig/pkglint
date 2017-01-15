@@ -50,12 +50,12 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 }
 
 type DependencyPattern struct {
-	pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
-	lowerOp  string // ">=", ">"
-	lower    string // "2.5.0", "${PYVER}"
-	upperOp  string // "<", "<="
-	upper    string // "3.0", "${PYVER}"
-	wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
+	Pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
+	LowerOp  string // ">=", ">"
+	Lower    string // "2.5.0", "${PYVER}"
+	UpperOp  string // "<", "<="
+	Upper    string // "3.0", "${PYVER}"
+	Wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
 }
 
 func (p *Parser) Dependency() *DependencyPattern {
@@ -63,8 +63,8 @@ func (p *Parser) Dependency() *DependencyPattern {
 
 	var dp DependencyPattern
 	mark := repl.Mark()
-	dp.pkgbase = p.PkgbasePattern()
-	if dp.pkgbase == "" {
+	dp.Pkgbase = p.PkgbasePattern()
+	if dp.Pkgbase == "" {
 		return nil
 	}
 
@@ -72,8 +72,8 @@ func (p *Parser) Dependency() *DependencyPattern {
 	if repl.AdvanceStr(">=") || repl.AdvanceStr(">") {
 		op := repl.Str()
 		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
-			dp.lowerOp = op
-			dp.lower = repl.Group(0)
+			dp.LowerOp = op
+			dp.Lower = repl.Group(0)
 		} else {
 			repl.Reset(mark2)
 		}
@@ -81,25 +81,25 @@ func (p *Parser) Dependency() *DependencyPattern {
 	if repl.AdvanceStr("<=") || repl.AdvanceStr("<") {
 		op := repl.Str()
 		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
-			dp.upperOp = op
-			dp.upper = repl.Group(0)
+			dp.UpperOp = op
+			dp.Upper = repl.Group(0)
 		} else {
 			repl.Reset(mark2)
 		}
 	}
-	if dp.lowerOp != "" || dp.upperOp != "" {
+	if dp.LowerOp != "" || dp.UpperOp != "" {
 		return &dp
 	}
 	if repl.AdvanceStr("-") && !repl.EOF() {
-		dp.wildcard = repl.AdvanceRest()
+		dp.Wildcard = repl.AdvanceRest()
 		return &dp
 	}
-	if hasPrefix(dp.pkgbase, "${") && hasSuffix(dp.pkgbase, "}") {
+	if hasPrefix(dp.Pkgbase, "${") && hasSuffix(dp.Pkgbase, "}") {
 		return &dp
 	}
-	if hasSuffix(dp.pkgbase, "-*") {
-		dp.pkgbase = strings.TrimSuffix(dp.pkgbase, "-*")
-		dp.wildcard = "*"
+	if hasSuffix(dp.Pkgbase, "-*") {
+		dp.Pkgbase = strings.TrimSuffix(dp.Pkgbase, "-*")
+		dp.Wildcard = "*"
 		return &dp
 	}
 
