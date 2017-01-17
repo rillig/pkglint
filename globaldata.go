@@ -180,7 +180,7 @@ func (gd *GlobalData) loadTools() {
 		}
 	}
 
-	for _, basename := range []string{"bsd.prefs.mk", "bsd.pkg.mk"} {
+	for _, basename := range [...]string{"bsd.prefs.mk", "bsd.pkg.mk"} {
 		fname := G.globalData.Pkgsrcdir + "/mk/" + basename
 		condDepth := 0
 
@@ -196,7 +196,7 @@ func (gd *GlobalData) loadTools() {
 					if condDepth == 0 || condDepth == 1 && basename == "bsd.prefs.mk" {
 						for _, toolname := range splitOnSpace(value) {
 							if !containsVarRef(toolname) {
-								for _, tool := range []*Tool{reg.Register(toolname), reg.Register("TOOLS_" + toolname)} {
+								for _, tool := range [...]*Tool{reg.Register(toolname), reg.Register("TOOLS_" + toolname)} {
 									tool.Predefined = true
 									if basename == "bsd.prefs.mk" {
 										tool.UsableAtLoadtime = true

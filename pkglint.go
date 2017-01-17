@@ -221,7 +221,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
 func findPkgsrcTopdir(fname string) string {
-	for _, dir := range []string{".", "..", "../..", "../../.."} {
+	for _, dir := range [...]string{".", "..", "../..", "../../.."} {
 		if fileExists(fname + "/" + dir + "/mk/bsd.pkg.mk") {
 			return dir
 		}

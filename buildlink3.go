@@ -43,7 +43,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	pkgbase = exp.m[1]
 	if containsVarRef(pkgbase) {
 		warned := false
-		for _, pair := range []struct{ varuse, simple string }{
+		for _, pair := range [...]struct{ varuse, simple string }{
 			{"${PYPKGPREFIX}", "py"},
 			{"${RUBY_BASE}", "ruby"},
 			{"${RUBY_PKGPREFIX}", "ruby"},
