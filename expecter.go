@@ -1,22 +1,23 @@
 package main
 
 import (
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 )
 
 // Expecter records the state when checking a list of lines from top to bottom.
 type Expecter struct {
-	lines []Line
+	lines []line.Line
 	index int
 	m     []string
 }
 
-func NewExpecter(lines []Line) *Expecter {
+func NewExpecter(lines []line.Line) *Expecter {
 	return &Expecter{lines, 0, nil}
 }
 
-func (exp *Expecter) CurrentLine() Line {
+func (exp *Expecter) CurrentLine() line.Line {
 	if exp.index < len(exp.lines) {
 		return exp.lines[exp.index]
 	}
@@ -24,7 +25,7 @@ func (exp *Expecter) CurrentLine() Line {
 	return NewLineEOF(exp.lines[0].Filename())
 }
 
-func (exp *Expecter) PreviousLine() Line {
+func (exp *Expecter) PreviousLine() line.Line {
 	return exp.lines[exp.index-1]
 }
 

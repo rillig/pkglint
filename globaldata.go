@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"path"
@@ -28,7 +29,7 @@ type GlobalData struct {
 
 // Change is a change entry from the `doc/CHANGES-*` files.
 type Change struct {
-	Line    Line
+	Line    line.Line
 	Action  string
 	Pkgpath string
 	Version string
@@ -38,7 +39,7 @@ type Change struct {
 
 // SuggestedUpdate is from the `doc/TODO` file.
 type SuggestedUpdate struct {
-	Line    Line
+	Line    line.Line
 	Pkgname string
 	Version string
 	Comment string
@@ -253,7 +254,7 @@ func loadSuggestedUpdates(fname string) []SuggestedUpdate {
 	return parselinesSuggestedUpdates(lines)
 }
 
-func parselinesSuggestedUpdates(lines []Line) []SuggestedUpdate {
+func parselinesSuggestedUpdates(lines []line.Line) []SuggestedUpdate {
 	var updates []SuggestedUpdate
 	state := 0
 	for _, line := range lines {
@@ -294,7 +295,7 @@ func (gd *GlobalData) loadSuggestedUpdates() {
 func (gd *GlobalData) loadDocChangesFromFile(fname string) []*Change {
 	lines := LoadExistingLines(fname, false)
 
-	parseChange := func(line Line) *Change {
+	parseChange := func(line line.Line) *Change {
 		text := line.Text()
 		if !hasPrefix(text, "\t") {
 			return nil
@@ -603,7 +604,7 @@ func (tr *ToolRegistry) Trace() {
 	}
 }
 
-func (tr *ToolRegistry) ParseToolLine(line Line) {
+func (tr *ToolRegistry) ParseToolLine(line line.Line) {
 	if m, varname, _, _, _, value, _, _ := MatchVarassign(line.Text()); m {
 		if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^?[-\w.]+$`)) {
 			tr.Register(value)

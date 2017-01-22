@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/trace"
 	"sort"
 )
@@ -32,7 +33,7 @@ func CheckdirCategory() {
 
 	type subdir struct {
 		name   string
-		line   Line
+		line   line.Line
 		active bool
 	}
 
@@ -96,7 +97,7 @@ func CheckdirCategory() {
 
 	var subdirs []string
 
-	var line Line
+	var line line.Line
 	mActive := false
 
 	for !(mAtend && fAtend) {

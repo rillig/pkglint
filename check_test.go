@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	check "gopkg.in/check.v1"
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 )
@@ -93,8 +94,8 @@ func (s *Suite) NewRawLines(args ...interface{}) []*RawLine {
 	return rawlines[:j]
 }
 
-func (s *Suite) NewLines(fname string, texts ...string) []Line {
-	result := make([]Line, len(texts))
+func (s *Suite) NewLines(fname string, texts ...string) []line.Line {
+	result := make([]line.Line, len(texts))
 	for i, text := range texts {
 		textnl := text + "\n"
 		result[i] = NewLine(fname, i+1, text, s.NewRawLines(i+1, textnl))

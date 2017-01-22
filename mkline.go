@@ -4,13 +4,14 @@ package main
 
 import (
 	"fmt"
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"strings"
 )
 
 type MkLine struct {
-	Line
+	line.Line
 	data interface{} // One of the following mkLine* types
 }
 type mkLineAssign struct {
@@ -44,7 +45,7 @@ type mkLineDependency struct {
 	sources string
 }
 
-func NewMkLine(line Line) (mkline *MkLine) {
+func NewMkLine(line line.Line) (mkline *MkLine) {
 	mkline = &MkLine{Line: line}
 
 	text := line.Text()

@@ -3,6 +3,7 @@ package main
 // Parsing and checking shell commands embedded in Makefiles
 
 import (
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"path"
@@ -17,7 +18,7 @@ const (
 )
 
 type ShellLine struct {
-	line   Line
+	line   line.Line
 	mkline *MkLine
 }
 
@@ -762,7 +763,7 @@ func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool) {
 	spc.shline.CheckWord(word.MkText, checkQuoting)
 }
 
-func (scc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipeline) {
+func (scc *ShellProgramChecker) checkPipeExitcode(line line.Line, pipeline *MkShPipeline) {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
@@ -848,7 +849,7 @@ func (shline *ShellLine) checkCommandUse(shellcmd string) {
 }
 
 // Example: "word1 word2;;;" => "word1", "word2", ";;", ";"
-func splitIntoShellTokens(line Line, text string) (tokens []string, rest string) {
+func splitIntoShellTokens(line line.Line, text string) (tokens []string, rest string) {
 	if trace.Tracing {
 		defer trace.Call(line, text)()
 	}
@@ -880,7 +881,7 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 
 // Example: "word1 word2;;;" => "word1", "word2;;;"
 // Compare devel/bmake/files/str.c, function brk_string.
-func splitIntoMkWords(line Line, text string) (words []string, rest string) {
+func splitIntoMkWords(line line.Line, text string) (words []string, rest string) {
 	if trace.Tracing {
 		defer trace.Call(line, text)()
 	}

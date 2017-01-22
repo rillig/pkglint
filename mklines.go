@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
@@ -9,7 +10,7 @@ import (
 // MkLines contains data for the Makefile (or *.mk) that is currently checked.
 type MkLines struct {
 	mklines        []*MkLine
-	lines          []Line
+	lines          []line.Line
 	forVars        map[string]bool    // The variables currently used in .for loops
 	target         string             // Current make(1) target
 	vardef         map[string]*MkLine // varname => line; for all variables that are defined in the current file
@@ -22,7 +23,7 @@ type MkLines struct {
 	indentation    Indentation // Indentation depth of preprocessing directives
 }
 
-func NewMkLines(lines []Line) *MkLines {
+func NewMkLines(lines []line.Line) *MkLines {
 	mklines := make([]*MkLine, len(lines))
 	for i, line := range lines {
 		mklines[i] = NewMkLine(line)

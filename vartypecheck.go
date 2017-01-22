@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"path"
@@ -10,7 +11,7 @@ import (
 
 type VartypeCheck struct {
 	MkLine     *MkLine
-	Line       Line
+	Line       line.Line
 	Varname    string
 	Op         MkOperator
 	Value      string
