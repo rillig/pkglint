@@ -44,10 +44,10 @@ func (s *Suite) Test_ChecklinesPatch__without_empty_line(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, ""+
-		"AUTOFIX: ~/patch-WithoutEmptyLines:2: Inserting a line \"\" before this line.\n"+
-		"AUTOFIX: ~/patch-WithoutEmptyLines:3: Inserting a line \"\" before this line.\n"+
-		"AUTOFIX: ~/patch-WithoutEmptyLines: Has been auto-fixed. Please re-run pkglint.\n")
+	s.CheckOutputLines(
+		"AUTOFIX: ~/patch-WithoutEmptyLines:2: Inserting a line \"\" before this line.",
+		"AUTOFIX: ~/patch-WithoutEmptyLines:3: Inserting a line \"\" before this line.",
+		"AUTOFIX: ~/patch-WithoutEmptyLines: Has been auto-fixed. Please re-run pkglint.")
 
 	fixed, err := ioutil.ReadFile(fname)
 	c.Assert(err, check.IsNil)
@@ -81,7 +81,8 @@ func (s *Suite) Test_ChecklinesPatch__without_comment(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "ERROR: patch-WithoutComment:3: Each patch must be documented.\n")
+	s.CheckOutputLines(
+		"ERROR: patch-WithoutComment:3: Each patch must be documented.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__git_without_comment(c *check.C) {
@@ -100,7 +101,8 @@ func (s *Suite) Test_ChecklinesPatch__git_without_comment(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "ERROR: patch-aa:5: Each patch must be documented.\n")
+	s.CheckOutputLines(
+		"ERROR: patch-aa:5: Each patch must be documented.")
 }
 
 func (s *Suite) Test_checklineOtherAbsolutePathname(c *check.C) {
@@ -152,7 +154,8 @@ func (s *Suite) Test_ChecklinesPatch__wrong_header_order(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "WARN: patch-WrongOrder:7: Unified diff headers should be first ---, then +++.\n")
+	s.CheckOutputLines(
+		"WARN: patch-WrongOrder:7: Unified diff headers should be first ---, then +++.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__context_diff(c *check.C) {
@@ -167,12 +170,13 @@ func (s *Suite) Test_ChecklinesPatch__context_diff(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, ""+
-		"ERROR: patch-ctx:4: Each patch must be documented.\n"+
-		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.\n")
+	s.CheckOutputLines(
+		"ERROR: patch-ctx:4: Each patch must be documented.",
+		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__no_patch(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -181,10 +185,12 @@ func (s *Suite) Test_ChecklinesPatch__no_patch(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "ERROR: patch-aa: Contains no patch.\n")
+	s.CheckOutputLines(
+		"ERROR: patch-aa: Contains no patch.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__two_patched_files(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -201,12 +207,13 @@ func (s *Suite) Test_ChecklinesPatch__two_patched_files(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, ""+
-		"ERROR: patch-aa:3: Each patch must be documented.\n"+
-		"WARN: patch-aa: Contains patches for 2 files, should be only one.\n")
+	s.CheckOutputLines(
+		"ERROR: patch-aa:3: Each patch must be documented.",
+		"WARN: patch-aa: Contains patches for 2 files, should be only one.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__documentation_that_looks_like_patch_lines(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -218,10 +225,12 @@ func (s *Suite) Test_ChecklinesPatch__documentation_that_looks_like_patch_lines(
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "ERROR: patch-aa: Contains no patch.\n")
+	s.CheckOutputLines(
+		"ERROR: patch-aa: Contains no patch.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__only_unified_header_but_no_content(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-unified",
 		"$"+"NetBSD$",
 		"",
@@ -232,10 +241,12 @@ func (s *Suite) Test_ChecklinesPatch__only_unified_header_but_no_content(c *chec
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "ERROR: patch-unified:EOF: No patch hunks for \"file\".\n")
+	s.CheckOutputLines(
+		"ERROR: patch-unified:EOF: No patch hunks for \"file\".")
 }
 
 func (s *Suite) Test_ChecklinesPatch__only_context_header_but_no_content(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-context",
 		"$"+"NetBSD$",
 		"",
@@ -248,10 +259,12 @@ func (s *Suite) Test_ChecklinesPatch__only_context_header_but_no_content(c *chec
 
 	// Context diffs are deprecated, therefore it is not worth
 	// adding extra code for checking them thoroughly.
-	c.Check(s.Output(), equals, "WARN: patch-context:5: Please use unified diffs (diff -u) for patches.\n")
+	s.CheckOutputLines(
+		"WARN: patch-context:5: Please use unified diffs (diff -u) for patches.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__Makefile_with_absolute_pathnames(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-unified",
 		"$"+"NetBSD$",
 		"",
@@ -271,22 +284,23 @@ func (s *Suite) Test_ChecklinesPatch__Makefile_with_absolute_pathnames(c *check.
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, ""+
-		"WARN: patch-unified:10: Found absolute pathname: /bin/cp\n"+
-		"WARN: patch-unified:13: Found absolute pathname: /bin/cp\n")
+	s.CheckOutputLines(
+		"WARN: patch-unified:10: Found absolute pathname: /bin/cp",
+		"WARN: patch-unified:13: Found absolute pathname: /bin/cp")
 
 	G.opts.WarnExtra = true
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, ""+
-		"WARN: patch-unified:8: Found absolute pathname: /bin/cp\n"+
-		"WARN: patch-unified:10: Found absolute pathname: /bin/cp\n"+
-		"WARN: patch-unified:13: Found absolute pathname: /bin/cp\n"+
-		"WARN: patch-unified:15: Found absolute pathname: /bin/cp\n")
+	s.CheckOutputLines(
+		"WARN: patch-unified:8: Found absolute pathname: /bin/cp",
+		"WARN: patch-unified:10: Found absolute pathname: /bin/cp",
+		"WARN: patch-unified:13: Found absolute pathname: /bin/cp",
+		"WARN: patch-unified:15: Found absolute pathname: /bin/cp")
 }
 
 func (s *Suite) Test_ChecklinesPatch__no_newline_with_text_following(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -303,7 +317,8 @@ func (s *Suite) Test_ChecklinesPatch__no_newline_with_text_following(c *check.C)
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "WARN: patch-aa:12: Empty line or end of file expected.\n")
+	s.CheckOutputLines(
+		"WARN: patch-aa:12: Empty line or end of file expected.")
 }
 
 func (s *Suite) Test_ChecklinesPatch__no_newline(c *check.C) {

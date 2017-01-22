@@ -65,6 +65,14 @@ func (s *Suite) CheckOutputEmpty() {
 	s.c().Check(s.Output(), equals, "")
 }
 
+func (s *Suite) CheckOutputLines(expectedLines ...string) {
+	expectedOutput := ""
+	for _, expectedLine := range expectedLines {
+		expectedOutput += expectedLine + "\n"
+	}
+	s.c().Check(s.Output(), equals, expectedOutput)
+}
+
 // Arguments are either (lineno, orignl) or (lineno, orignl, textnl).
 func (s *Suite) NewRawLines(args ...interface{}) []*RawLine {
 	rawlines := make([]*RawLine, len(args)/2)
