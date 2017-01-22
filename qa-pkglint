@@ -76,6 +76,35 @@ diffs() {
     cd "$archivedir"
     for out in *.out; do
       diff -u "reference" "$out" > "${out%.out}.diff" || true
+      perl -e '
+        use strict;
+        use warnings;
+
+        sub readhisto($) {
+          my ($fname) = @_;
+          my %histo = ();
+          open(my $f, "<", $fname) or die;
+          while (defined(my $line = <$f>)) {
+            if ($line =~ /^loghisto\s+(\d+)\s+(.*)$/) {
+              $histo{$2} = +$1;
+            }
+          }
+          return \%histo;
+        }
+
+        my $del = readhisto(shift());
+        my $add = readhisto(shift());
+        my %all = ();
+        foreach my $key (keys %$del) { $all{$key} += $del->{$key}; }
+        foreach my $key (keys %$add) { $all{$key} += $add->{$key}; }
+        foreach my $key (sort { $all{$b} <=> $all{$a} || $a cmp $b } keys %all) {
+          my $ndel = exists($del->{$key}) ? $del->{$key} : 0;
+          my $nadd = exists($add->{$key}) ? $add->{$key} : 0;
+          if ($ndel != $nadd) {
+            printf("%5d   %5d   %+5d   %s\n", $ndel, $nadd, $nadd - $ndel, $key);
+          }
+        }
+        ' "reference" "$out" >> "${out%.out}.diff"
     done
   )
 }
