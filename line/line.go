@@ -26,3 +26,5 @@ type Line interface {
 	AutofixDelete() bool
 	AutofixMark(reason string)
 }
+
+var NewLineEOF func(filename string) Line

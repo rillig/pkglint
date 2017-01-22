@@ -2,6 +2,7 @@ package main
 
 import (
 	"netbsd.org/pkglint/line"
+	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"sort"
 )
@@ -19,17 +20,17 @@ func CheckdirCategory() {
 	mklines := NewMkLines(lines)
 	mklines.Check()
 
-	exp := NewExpecter(lines)
+	exp := textproc.NewExpecter(lines)
 	for exp.AdvanceIfPrefix("#") {
 	}
-	exp.ExpectEmptyLine()
+	exp.ExpectEmptyLine(G.opts.WarnSpace)
 
 	if exp.AdvanceIfMatches(`^COMMENT=\t*(.*)`) {
-		MkLineChecker{mklines.mklines[exp.index-1]}.CheckValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
+		MkLineChecker{mklines.mklines[exp.Index()-1]}.CheckValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
 	} else {
 		exp.CurrentLine().Errorf("COMMENT= line expected.")
 	}
-	exp.ExpectEmptyLine()
+	exp.ExpectEmptyLine(G.opts.WarnSpace)
 
 	type subdir struct {
 		name   string
@@ -154,10 +155,10 @@ func CheckdirCategory() {
 	// the pkgsrc-wip category Makefile defines its own targets for
 	// generating indexes and READMEs. Just skip them.
 	if G.Wip {
-		exp.index = len(exp.lines) - 2
+		exp.SkipToFooter()
 	}
 
-	exp.ExpectEmptyLine()
+	exp.ExpectEmptyLine(G.opts.WarnSpace)
 	exp.ExpectText(".include \"../mk/misc/category.mk\"")
 	if !exp.EOF() {
 		exp.CurrentLine().Errorf("The file should end here.")

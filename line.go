@@ -239,3 +239,7 @@ func (line *LineImpl) AutofixMark(reason string) {
 	line.logAutofix()
 	line.changed = true
 }
+
+func init() {
+	line.NewLineEOF = NewLineEOF
+}

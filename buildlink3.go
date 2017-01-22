@@ -3,6 +3,7 @@ package main
 import (
 	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/pkgver"
+	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"strings"
 )
@@ -14,7 +15,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 	mklines.Check()
 
-	exp := NewExpecter(mklines.lines)
+	exp := textproc.NewExpecter(mklines.lines)
 
 	for exp.AdvanceIfPrefix("#") {
 		line := exp.PreviousLine()
@@ -24,7 +25,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		}
 	}
 
-	exp.ExpectEmptyLine()
+	exp.ExpectEmptyLine(G.opts.WarnSpace)
 
 	if exp.AdvanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) {
 		exp.PreviousLine().Warnf("This line belongs inside the .ifdef block.")
@@ -41,7 +42,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		exp.CurrentLine().Warnf("Expected a BUILDLINK_TREE line.")
 		return
 	}
-	pkgbase = exp.m[1]
+	pkgbase = exp.Group(1)
 	if containsVarRef(pkgbase) {
 		warned := false
 		for _, pair := range [...]struct{ varuse, simple string }{
@@ -71,19 +72,19 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		}
 	}
 
-	exp.ExpectEmptyLine()
+	exp.ExpectEmptyLine(G.opts.WarnSpace)
 
 	// Second paragraph: multiple inclusion protection and introduction
 	// of the uppercase package identifier.
 	if !exp.AdvanceIfMatches(`^\.if !defined\((\S+)_BUILDLINK3_MK\)$`) {
 		return
 	}
-	pkgupperLine, pkgupper := exp.PreviousLine(), exp.m[1]
+	pkgupperLine, pkgupper := exp.PreviousLine(), exp.Group(1)
 
 	if !exp.ExpectText(pkgupper + "_BUILDLINK3_MK:=") {
 		return
 	}
-	exp.ExpectEmptyLine()
+	exp.ExpectEmptyLine(G.opts.WarnSpace)
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
@@ -107,7 +108,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 		}
 
 		line := exp.CurrentLine()
-		mkline := mklines.mklines[exp.index]
+		mkline := mklines.mklines[exp.Index()]
 
 		if mkline.IsVarassign() {
 			exp.Advance()
@@ -186,7 +187,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	if apiLine == nil {
 		exp.CurrentLine().Warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
-	exp.ExpectEmptyLine()
+	exp.ExpectEmptyLine(G.opts.WarnSpace)
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
 	if !exp.ExpectText("BUILDLINK_TREE+=\t-" + pkgbase) {
