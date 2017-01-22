@@ -174,7 +174,7 @@ func (s *Suite) Test_GlobalData_Latest(c *check.C) {
 	latest3 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
 	c.Check(latest3, equals, "../../lang/python27")
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	s.CreateTmpFile("lang/python35/Makefile", "")
 	G.globalData.latest = nil
@@ -182,5 +182,5 @@ func (s *Suite) Test_GlobalData_Latest(c *check.C) {
 	latest4 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
 	c.Check(latest4, equals, "../../lang/python35")
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }

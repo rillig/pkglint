@@ -223,7 +223,7 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, "") // No warnings about defined but not used or vice versa
+	s.CheckOutputEmpty() // No warnings about defined but not used or vice versa
 }
 
 func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
@@ -237,7 +237,7 @@ func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, "") // No warnings about defined but not used or vice versa
+	s.CheckOutputEmpty() // No warnings about defined but not used or vice versa
 }
 
 func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
@@ -336,24 +336,24 @@ func (s *Suite) Test_MkLines_checkForUsedComment(c *check.C) {
 		"# used by sysutils/mc",
 	).checkForUsedComment("sysutils/mc")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	s.NewMkLines("Makefile.common").checkForUsedComment("category/package")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	s.NewMkLines("Makefile.common",
 		mkrcsid,
 	).checkForUsedComment("category/package")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	s.NewMkLines("Makefile.common",
 		mkrcsid,
 		"",
 	).checkForUsedComment("category/package")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	s.NewMkLines("Makefile.common",
 		mkrcsid,
@@ -428,7 +428,7 @@ func (s *Suite) Test_MkLines_PrivateTool_Defined(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check_indentation(c *check.C) {

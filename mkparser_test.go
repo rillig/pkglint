@@ -5,6 +5,7 @@ import (
 )
 
 func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
+	s.Init(c)
 	checkRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
 		p := NewMkParser(dummyLine, input, true)
 		actualTokens := p.MkTokens()
@@ -110,7 +111,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 
 	checkRest("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
 	checkRest("$(VAR}", nil, "$(VAR}") // Opening parenthesis, closing brace
-	c.Check(s.Output(), equals, "")    // Warnings are only printed for balanced expressions.
+	s.CheckOutputEmpty()               // Warnings are only printed for balanced expressions.
 
 	check("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
 	check("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end

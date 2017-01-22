@@ -61,6 +61,10 @@ func (s *Suite) Output() string {
 	return output
 }
 
+func (s *Suite) CheckOutputEmpty() {
+	s.c().Check(s.Output(), equals, "")
+}
+
 // Arguments are either (lineno, orignl) or (lineno, orignl, textnl).
 func (s *Suite) NewRawLines(args ...interface{}) []*RawLine {
 	rawlines := make([]*RawLine, len(args)/2)

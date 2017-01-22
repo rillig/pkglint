@@ -30,7 +30,7 @@ func (s *Suite) Test_checklineLicense(c *check.C) {
 
 	licenseChecker.Check("gnu-gpl-v2", opAssign)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	licenseChecker.Check("gnu-gpl-v2 AND gnu-gpl-v2 OR gnu-gpl-v2", opAssign)
 
@@ -38,5 +38,5 @@ func (s *Suite) Test_checklineLicense(c *check.C) {
 
 	licenseChecker.Check("(gnu-gpl-v2 OR gnu-gpl-v2) AND gnu-gpl-v2", opAssign)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }

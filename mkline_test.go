@@ -244,6 +244,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 // it is escaped by a backslash. In shell commands, on the other hand, it
 // is interpreted literally.
 func (s *Suite) Test_NewMkLine_numbersign(c *check.C) {
+	s.Init(c)
 	mklineVarassignEscaped := NewMkLine(NewLine("fname", 1, "SED_CMD=\t's,\\#,hash,g'", nil))
 
 	c.Check(mklineVarassignEscaped.Varname(), equals, "SED_CMD")
@@ -257,7 +258,7 @@ func (s *Suite) Test_NewMkLine_numbersign(c *check.C) {
 	mklineCommandUnescaped := NewMkLine(NewLine("fname", 1, "\t# $ sha1 patches/patch-ac", nil))
 
 	c.Check(mklineCommandUnescaped.Shellcmd(), equals, "# $ sha1 patches/patch-ac")
-	c.Check(s.Output(), equals, "") // No warning about parsing the lonely dollar sign.
+	s.CheckOutputEmpty() // No warning about parsing the lonely dollar sign.
 
 	mklineVarassignUnescaped := NewMkLine(NewLine("fname", 1, "SED_CMD=\t's,#,hash,'", nil))
 
@@ -323,7 +324,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__append_URL_to_list_of_URLs(c *
 
 	MkLineChecker{mkline}.checkVarassign()
 
-	c.Check(s.Output(), equals, "") // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
+	s.CheckOutputEmpty() // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
 }
 
 // Assigning lists to lists is ok.
@@ -336,7 +337,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__append_list_to_list(c *check.C
 
 	MkLineChecker{mkline}.checkVarassign()
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__eval_shell(c *check.C) {
@@ -391,7 +392,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__word_as_part_of_word(c *check.
 
 	MkLineChecker{G.Mk.mklines[1]}.Check()
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 // As an argument to ${ECHO}, the :Q modifier should be used, but pkglint
@@ -430,7 +431,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__URL_as_part_of_word_in_list(c 
 
 	MkLineChecker{G.Mk.mklines[1]}.Check()
 
-	c.Check(s.Output(), equals, "") // Don't suggest to use ${HOMEPAGE:Q}.
+	s.CheckOutputEmpty() // Don't suggest to use ${HOMEPAGE:Q}.
 }
 
 // Pkglint currently does not parse $$(subshell) commands very well. As
@@ -506,7 +507,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_quotes_in_subshell_in_
 
 	MkLineChecker{G.Mk.mklines[1]}.Check()
 
-	c.Check(s.Output(), equals, "") // Don't suggest ${ECHO:Q} here.
+	s.CheckOutputEmpty() // Don't suggest ${ECHO:Q} here.
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(c *check.C) {
@@ -531,7 +532,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__command_in_message(c *check.C)
 
 	MkLineChecker{G.Mk.mklines[0]}.Check()
 
-	c.Check(s.Output(), equals, "") // Don't suggest ${REPLACE_PERL:Q}.
+	s.CheckOutputEmpty() // Don't suggest ${REPLACE_PERL:Q}.
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__guessed_list_variable_in_quotes(c *check.C) {
@@ -558,7 +559,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__list_in_list(c *check.C) {
 
 	G.Mk.Check()
 
-	c.Check(s.Output(), equals, "") // Don't warn about missing :Q modifiers.
+	s.CheckOutputEmpty() // Don't warn about missing :Q modifiers.
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__PKGNAME_and_URL_list_in_URL_list(c *check.C) {
@@ -572,7 +573,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__PKGNAME_and_URL_list_in_URL_li
 
 	MkLineChecker{G.Mk.mklines[1]}.checkVarassignVaruse()
 
-	c.Check(s.Output(), equals, "") // Don't warn about missing :Q modifiers.
+	s.CheckOutputEmpty() // Don't warn about missing :Q modifiers.
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check.C) {

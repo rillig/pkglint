@@ -5,6 +5,7 @@ import (
 )
 
 func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
+	s.Init(c)
 	pkg := NewPackage("dummy")
 	pkg.vardef["PKGNAME"] = NewMkLine(NewLine("Makefile", 5, "PKGNAME=dummy", nil))
 
@@ -18,7 +19,7 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	c.Check(pkg.pkgnameFromDistname("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1"), equals, "${DISTNAME:C/beta/.0./}")
 	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S/-0$/.0/1}", "aspell-af-0.50-0"), equals, "aspell-af-0.50.0")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
@@ -32,7 +33,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 		"DISTNAME=9term",
 		"CATEGORIES=x11"))
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	pkg.ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
 		mkrcsid,
@@ -61,7 +62,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__MASTER_SITES(c *
 		"MASTER_SITES=\thttp://example.org/",
 		"MASTER_SITES+=\thttp://mirror.example.org/"))
 
-	c.Check(s.Output(), equals, "") // No warning that "MASTER_SITES appears too late"
+	s.CheckOutputEmpty() // No warning that "MASTER_SITES appears too late"
 }
 
 func (s *Suite) Test_Package_getNbpart(c *check.C) {
@@ -93,6 +94,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__precedence(c *check.C) {
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
+	s.Init(c)
 	G.Pkg = NewPackage("category/pkgbase")
 	G.CurPkgsrcdir = "../.."
 	G.Pkg.EffectivePkgname = "package-1.0nb15"
@@ -113,7 +115,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 
 	G.Pkg.checkPossibleDowngrade()
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_checkdirPackage(c *check.C) {
@@ -223,7 +225,7 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 
 	pkg.loadPackageMakefile(makefile)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {

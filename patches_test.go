@@ -24,7 +24,7 @@ func (s *Suite) Test_ChecklinesPatch__with_comment(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ChecklinesPatch__without_empty_line(c *check.C) {
@@ -104,11 +104,12 @@ func (s *Suite) Test_ChecklinesPatch__git_without_comment(c *check.C) {
 }
 
 func (s *Suite) Test_checklineOtherAbsolutePathname(c *check.C) {
+	s.Init(c)
 	line := NewLine("patch-ag", 1, "+$install -s -c ./bin/rosegarden ${DESTDIR}$BINDIR", nil)
 
 	checklineOtherAbsolutePathname(line, line.Text())
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ChecklinesPatch__error_code(c *check.C) {
@@ -129,7 +130,7 @@ func (s *Suite) Test_ChecklinesPatch__error_code(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ChecklinesPatch__wrong_header_order(c *check.C) {
@@ -306,6 +307,7 @@ func (s *Suite) Test_ChecklinesPatch__no_newline_with_text_following(c *check.C)
 }
 
 func (s *Suite) Test_ChecklinesPatch__no_newline(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -321,10 +323,11 @@ func (s *Suite) Test_ChecklinesPatch__no_newline(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ChecklinesPatch__empty_lines_left_out_at_eof(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -342,12 +345,13 @@ func (s *Suite) Test_ChecklinesPatch__empty_lines_left_out_at_eof(c *check.C) {
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 // In some context lines, the leading space character is missing.
 // Since this is no problem for patch(1), pkglint also doesn't complain.
 func (s *Suite) Test_ChecklinesPatch__context_lines_with_tab_instead_of_space(c *check.C) {
+	s.Init(c)
 	lines := s.NewLines("patch-aa",
 		"$"+"NetBSD$",
 		"",
@@ -363,5 +367,5 @@ func (s *Suite) Test_ChecklinesPatch__context_lines_with_tab_instead_of_space(c 
 
 	ChecklinesPatch(lines)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }

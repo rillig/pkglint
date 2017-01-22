@@ -34,13 +34,14 @@ func (s *Suite) Test_MkLineChecker_CheckVartype(c *check.C) {
 // Pkglint once interpreted all lists as consisting of shell tokens,
 // splitting this URL at the ampersands.
 func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_characters(c *check.C) {
+	s.Init(c)
 	G.Pkg = NewPackage("graphics/gimp-fix-ca")
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=", nil))
 
 	MkLineChecker{mkline}.checkVarassign()
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
@@ -68,7 +69,7 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 
 	MkLineChecker{NewMkLine(NewLine("fname", 1, ".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])", nil))}.CheckCond()
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	MkLineChecker{NewMkLine(NewLine("fname", 1, ".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})", nil))}.CheckCond()
 
@@ -145,7 +146,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions__load_time(c *check.C)
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, "") // Don't warn that ".CURDIR should not be evaluated at load time."
+	s.CheckOutputEmpty() // Don't warn that ".CURDIR should not be evaluated at load time."
 }
 
 func (s *Suite) Test_MkLineChecker_WarnVaruseLocalbase(c *check.C) {
@@ -187,7 +188,7 @@ func (s *Suite) Test_MkLineChecker__Varuse_Modifier_L(c *check.C) {
 
 	MkLineChecker{G.Mk.mklines[0]}.Check()
 
-	c.Check(s.Output(), equals, "") // Don't warn that ${XKBBASE}/xkbcomp is used but not defined.
+	s.CheckOutputEmpty() // Don't warn that ${XKBBASE}/xkbcomp is used but not defined.
 }
 
 func (s *Suite) Test_MkLineChecker_CheckCond__comparison_with_shell_command(c *check.C) {
@@ -235,7 +236,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 
 	MkLineChecker{G.Mk.mklines[1]}.CheckVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
-	c.Check(s.Output(), equals, "") // No warning about "`pkg-config" being an unknown CFlag.
+	s.CheckOutputEmpty() // No warning about "`pkg-config" being an unknown CFlag.
 }
 
 // See PR 46570, Ctrl+F "4. Shell quoting".

@@ -67,7 +67,7 @@ func (s *Suite) Test_ChecklinesPlist__commonEnd(c *check.C) {
 
 	ChecklinesPlist(LoadExistingLines(fname, false))
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ChecklinesPlist__conditional(c *check.C) {

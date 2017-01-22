@@ -203,6 +203,7 @@ func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
+	s.Init(c)
 	s.RegisterMasterSite("MASTER_SITE_GNU", "http://ftp.gnu.org/pub/gnu/")
 	s.RegisterMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 
@@ -222,7 +223,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).FetchURL,
 		"https://example.org/download.cgi?fname=fname&sha1=12341234")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	runVartypeChecks("MASTER_SITES", opAssign, (*VartypeCheck).FetchURL,
 		"http://example.org/distfiles/",
@@ -336,6 +337,7 @@ func (s *Suite) Test_VartypeCheck_PkgOptionsVar(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_PkgRevision(c *check.C) {
+	s.Init(c)
 	runVartypeChecks("PKGREVISION", opAssign, (*VartypeCheck).PkgRevision,
 		"3a")
 
@@ -346,7 +348,7 @@ func (s *Suite) Test_VartypeCheck_PkgRevision(c *check.C) {
 	runVartypeChecksFname("Makefile", "PKGREVISION", opAssign, (*VartypeCheck).PkgRevision,
 		"3")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {

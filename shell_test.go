@@ -111,7 +111,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	shline.CheckShellCommandLine("@# Comment")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	shline.CheckShellCommandLine("uname=`uname`; echo $$uname; echo")
 
@@ -162,15 +162,15 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	shline.CheckShellCommandLine("echo \"\\n\"")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	shline.CheckShellCommandLine("${RUN} for f in *.c; do echo $${f%.c}; done")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	shline.CheckShellCommandLine("${RUN} echo $${variable+set}")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	// Based on mail/thunderbird/Makefile, rev. 1.159
 	shline.CheckShellCommandLine("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
@@ -226,7 +226,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	// See PR 46570, item "1. It does not"
 	shline.CheckShellCommandLine("for x in 1 2 3; do echo \"$$x\" || exit 1; done")
 
-	c.Check(s.Output(), equals, "") // No warning about missing error checking.
+	s.CheckOutputEmpty() // No warning about missing error checking.
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__nofix(c *check.C) {
@@ -302,6 +302,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C)
 }
 
 func (s *Suite) Test_ShellLine_CheckShelltext__dollar_without_variable(c *check.C) {
+	s.Init(c)
 	G.globalData.InitVartypes()
 	G.Mk = s.NewMkLines("fname",
 		"# dummy")
@@ -311,7 +312,7 @@ func (s *Suite) Test_ShellLine_CheckShelltext__dollar_without_variable(c *check.
 
 	shline.CheckShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
@@ -322,11 +323,11 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 	shline.CheckWord("${${list}}", false)
 
-	c.Check(s.Output(), equals, "") // No warning for variables that are completely indirect.
+	s.CheckOutputEmpty() // No warning for variables that are completely indirect.
 
 	shline.CheckWord("${SED_FILE.${id}}", false)
 
-	c.Check(s.Output(), equals, "") // No warning for variables that are partly indirect.
+	s.CheckOutputEmpty() // No warning for variables that are partly indirect.
 
 	shline.CheckWord("\"$@\"", false)
 
@@ -350,19 +351,20 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 	shline.CheckWord("s,\\.,,", true)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	shline.CheckWord("\"s,\\.,,\"", true)
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ShellLine_CheckWord__dollar_without_variable(c *check.C) {
+	s.Init(c)
 	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
 
 	shline.CheckWord("/.*~$$//g", false) // Typical argument to pax(1).
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
@@ -375,7 +377,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 
 	MkLineChecker{mkline}.checkText("echo \"hello, world\"")
 
-	c.Check(s.Output(), equals, "")
+	s.CheckOutputEmpty()
 
 	NewShellLine(mkline).CheckShellCommandLine("echo \"hello, world\"")
 
