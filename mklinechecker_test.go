@@ -12,7 +12,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
 	c.Assert(vartype1, check.NotNil)
 	c.Check(vartype1.guessed, equals, false)
 
-	vartype := mkline.getVariableType("COMMENT")
+	vartype := mkline.VariableType("COMMENT")
 
 	c.Assert(vartype, check.NotNil)
 	c.Check(vartype.basicType.name, equals, "Comment")

@@ -444,7 +444,7 @@ func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc
 
 // Returns the type of the variable (maybe guessed based on the variable name),
 // or nil if the type cannot even be guessed.
-func (mkline *MkLine) getVariableType(varname string) *Vartype {
+func (mkline *MkLine) VariableType(varname string) *Vartype {
 	if trace.Tracing {
 		defer trace.Call1(varname)()
 	}

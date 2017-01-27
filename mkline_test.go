@@ -217,16 +217,16 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		"pkgbase := pkglint\n")
 }
 
-func (s *Suite) Test_MkLine_getVariableType_varparam(c *check.C) {
+func (s *Suite) Test_MkLine_VariableType_varparam(c *check.C) {
 	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
 	G.globalData.InitVartypes()
 
-	t1 := mkline.getVariableType("FONT_DIRS")
+	t1 := mkline.VariableType("FONT_DIRS")
 
 	c.Assert(t1, check.NotNil)
 	c.Check(t1.String(), equals, "ShellList of Pathmask")
 
-	t2 := mkline.getVariableType("FONT_DIRS.ttf")
+	t2 := mkline.VariableType("FONT_DIRS.ttf")
 
 	c.Assert(t2, check.NotNil)
 	c.Check(t2.String(), equals, "ShellList of Pathmask")
@@ -235,7 +235,7 @@ func (s *Suite) Test_MkLine_getVariableType_varparam(c *check.C) {
 func (s *Suite) Test_VarUseContext_String(c *check.C) {
 	G.globalData.InitVartypes()
 	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
-	vartype := mkline.getVariableType("PKGNAME")
+	vartype := mkline.VariableType("PKGNAME")
 	vuc := &VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, false}
 
 	c.Check(vuc.String(), equals, "(PkgName time:unknown quoting:backt wordpart:false)")
@@ -665,12 +665,12 @@ func (s *Suite) Test_MkLine_shell_varuse_in_backt_dquot(c *check.C) {
 }
 
 // See PR 46570, Ctrl+F "3. In lang/perl5".
-func (s *Suite) Test_MkLine_getVariableType(c *check.C) {
+func (s *Suite) Test_MkLine_VariableType(c *check.C) {
 	mkline := NewMkLine(dummyLine)
 
-	c.Check(mkline.getVariableType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR"), check.IsNil)
-	c.Check(mkline.getVariableType("SOME_DIR").guessed, equals, true)
-	c.Check(mkline.getVariableType("SOMEDIR").guessed, equals, true)
+	c.Check(mkline.VariableType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR"), check.IsNil)
+	c.Check(mkline.VariableType("SOME_DIR").guessed, equals, true)
+	c.Check(mkline.VariableType("SOMEDIR").guessed, equals, true)
 }
 
 // PR 51696, security/py-pbkdf2/Makefile, r1.2

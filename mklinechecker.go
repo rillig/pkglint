@@ -160,7 +160,7 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool) {
 			guessed := true
 			for _, value := range splitOnSpace(values) {
 				if m, vname := match1(value, `^\$\{(.*)\}`); m {
-					vartype := mkline.getVariableType(vname)
+					vartype := mkline.VariableType(vname)
 					if vartype != nil && !vartype.guessed {
 						guessed = false
 					}
@@ -239,7 +239,7 @@ func (ck MkLineChecker) checkVarassignDefPermissions() {
 	mkline := ck.MkLine
 	varname := mkline.Varname()
 	op := mkline.Op()
-	vartype := mkline.getVariableType(varname)
+	vartype := mkline.VariableType(varname)
 	if vartype == nil {
 		if trace.Tracing {
 			trace.Step1("No type definition found for %q.", varname)
@@ -301,7 +301,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 
 	varname := varuse.varname
-	vartype := mkline.getVariableType(varname)
+	vartype := mkline.VariableType(varname)
 	if G.opts.WarnExtra &&
 		(vartype == nil || vartype.guessed) &&
 		!varIsUsed(varname) &&
@@ -708,7 +708,7 @@ func (ck MkLineChecker) checkVarassignVaruse() {
 		time = vucTimeParse
 	}
 
-	vartype := mkline.getVariableType(mkline.Varname())
+	vartype := mkline.VariableType(mkline.Varname())
 	if op == opAssignShell {
 		vartype = shellcommandsContextType
 	}
@@ -884,7 +884,7 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 	}
 
 	mkline := ck.MkLine
-	vartype := mkline.getVariableType(varname)
+	vartype := mkline.VariableType(varname)
 
 	if op == opAssignAppend {
 		if vartype != nil && !vartype.MayBeAppendedTo() {

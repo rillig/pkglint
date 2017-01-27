@@ -531,7 +531,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 			return true
 		}
 
-		if vartype := scc.shline.mkline.getVariableType(varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
+		if vartype := scc.shline.mkline.VariableType(varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
 			scc.shline.checkCommandUse(shellword)
 			return true
 		}
