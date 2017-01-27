@@ -412,7 +412,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 
 		} else if !matches(useLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
 			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
-				useLine.Line.ReferenceFrom(gnuLine.Line))
+				useLine.ReferenceFrom(gnuLine))
 		}
 	}
 
@@ -424,8 +424,8 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	}
 
 	if imake, x11 := vardef["USE_IMAKE"], vardef["USE_X11"]; imake != nil && x11 != nil {
-		if !hasSuffix(x11.Line.Filename(), "/mk/x11.buildlink3.mk") {
-			imake.Line.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", x11.Line.ReferenceFrom(imake.Line))
+		if !hasSuffix(x11.Filename(), "/mk/x11.buildlink3.mk") {
+			imake.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", x11.ReferenceFrom(imake))
 		}
 	}
 
