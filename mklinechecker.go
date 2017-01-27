@@ -316,7 +316,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		ck.WarnVaruseLocalbase()
 	}
 
-	needsQuoting := mkline.variableNeedsQuoting(varname, vartype, vuc)
+	needsQuoting := mkline.VariableNeedsQuoting(varname, vartype, vuc)
 
 	if vuc.quoting == vucQuotFor {
 		ck.checkVaruseFor(varname, vartype, needsQuoting)
@@ -930,7 +930,7 @@ func (ck MkLineChecker) CheckVartypePrimitive(varname string, checker *BasicType
 	}
 
 	mkline := ck.MkLine
-	valueNoVar := mkline.withoutMakeVariables(value)
+	valueNoVar := mkline.WithoutMakeVariables(value)
 	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, guessed}
 	checker.checker(ctx)
 }
@@ -1033,7 +1033,7 @@ func (ck MkLineChecker) CheckCond() {
 		}
 	})
 
-	mkline.rememberUsedVariables(cond)
+	mkline.RememberUsedVariables(cond)
 }
 
 func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
@@ -1067,7 +1067,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 
 	mkline := ck.MkLine
 	ck.CheckRelativePath(pkgdir, true)
-	pkgdir = mkline.resolveVarsInRelativePath(pkgdir, false)
+	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, false)
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
 		if !fileExists(G.globalData.Pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
@@ -1093,7 +1093,7 @@ func (ck MkLineChecker) CheckRelativePath(path string, mustExist bool) {
 		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
-	resolvedPath := mkline.resolveVarsInRelativePath(path, true)
+	resolvedPath := mkline.ResolveVarsInRelativePath(path, true)
 	if containsVarRef(resolvedPath) {
 		return
 	}

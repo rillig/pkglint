@@ -536,7 +536,7 @@ func runVartypeChecks(varname string, op MkOperator, checker func(*VartypeCheck)
 	}
 	for i, value := range values {
 		mkline := NewMkLine(NewLine("fname", i+1, varname+op.String()+value, nil))
-		valueNovar := mkline.withoutMakeVariables(mkline.Value())
+		valueNovar := mkline.WithoutMakeVariables(mkline.Value())
 		vc := &VartypeCheck{mkline, mkline.Line, mkline.Varname(), mkline.Op(), mkline.Value(), valueNovar, "", false}
 		checker(vc)
 	}
@@ -546,7 +546,7 @@ func runVartypeMatchChecks(varname string, checker func(*VartypeCheck), values .
 	for i, value := range values {
 		text := fmt.Sprintf(".if ${%s:M%s} == \"\"", varname, value)
 		mkline := NewMkLine(NewLine("fname", i+1, text, nil))
-		valueNovar := mkline.withoutMakeVariables(value)
+		valueNovar := mkline.WithoutMakeVariables(value)
 		vc := &VartypeCheck{mkline, mkline.Line, varname, opUseMatch, value, valueNovar, "", false}
 		checker(vc)
 	}
@@ -555,7 +555,7 @@ func runVartypeMatchChecks(varname string, checker func(*VartypeCheck), values .
 func runVartypeChecksFname(fname, varname string, op MkOperator, checker func(*VartypeCheck), values ...string) {
 	for i, value := range values {
 		mkline := NewMkLine(NewLine(fname, i+1, varname+op.String()+value, nil))
-		valueNovar := mkline.withoutMakeVariables(value)
+		valueNovar := mkline.WithoutMakeVariables(value)
 		vc := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNovar, "", false}
 		checker(vc)
 	}

@@ -289,7 +289,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		var includeFile, incDir, incBase string
 		if mkline.IsInclude() {
 			inc := mkline.Includefile()
-			includeFile = resolveVariableRefs(mkline.resolveVarsInRelativePath(inc, true))
+			includeFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(inc, true))
 			if containsVarRef(includeFile) {
 				if !contains(fname, "/mk/") {
 					line.Notef("Skipping include file %q. This may result in false warnings.", includeFile)
@@ -315,7 +315,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
-				mkline.explainRelativeDirs()
+				mkline.ExplainRelativeDirs()
 			}
 
 			if path.Base(fname) == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
@@ -543,7 +543,7 @@ func (pkg *Package) expandVariableWithDefault(varname, defaultValue string) stri
 	}
 
 	value := mkline.Value()
-	value = mkline.resolveVarsInRelativePath(value, true)
+	value = mkline.ResolveVarsInRelativePath(value, true)
 	if containsVarRef(value) {
 		value = resolveVariableRefs(value)
 	}

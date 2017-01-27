@@ -309,7 +309,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__unknown_rhs(c *check.C) {
 	G.globalData.InitVartypes()
 
 	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, false}
-	nq := mkline.variableNeedsQuoting("UNKNOWN", nil, vuc)
+	nq := mkline.VariableNeedsQuoting("UNKNOWN", nil, vuc)
 
 	c.Check(nq, equals, nqDontKnow)
 }
@@ -322,7 +322,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	mkline := NewMkLine(NewLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}", nil))
 
 	vuc := &VarUseContext{G.globalData.vartypes["MASTER_SITES"], vucTimeRun, vucQuotPlain, false}
-	nq := mkline.variableNeedsQuoting("HOMEPAGE", G.globalData.vartypes["HOMEPAGE"], vuc)
+	nq := mkline.VariableNeedsQuoting("HOMEPAGE", G.globalData.vartypes["HOMEPAGE"], vuc)
 
 	c.Check(nq, equals, nqNo)
 

@@ -194,7 +194,7 @@ func (mkline *MkLine) Tokenize(s string) []*MkToken {
 	return tokens
 }
 
-func (mkline *MkLine) withoutMakeVariables(value string) string {
+func (mkline *MkLine) WithoutMakeVariables(value string) string {
 	valueNovar := value
 	for {
 		var m []string
@@ -205,7 +205,7 @@ func (mkline *MkLine) withoutMakeVariables(value string) string {
 	}
 }
 
-func (mkline *MkLine) resolveVarsInRelativePath(relpath string, adjustDepth bool) string {
+func (mkline *MkLine) ResolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	tmp := relpath
 	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.CurPkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
@@ -243,7 +243,7 @@ func (mkline *MkLine) resolveVarsInRelativePath(relpath string, adjustDepth bool
 	return tmp
 }
 
-func (mkline *MkLine) rememberUsedVariables(cond *Tree) {
+func (mkline *MkLine) RememberUsedVariables(cond *Tree) {
 	if G.Mk == nil {
 		return
 	}
@@ -269,7 +269,7 @@ func (mkline *MkLine) rememberUsedVariables(cond *Tree) {
 	cond.Visit("compareVarVar", arg2varuse)
 }
 
-func (mkline *MkLine) explainRelativeDirs() {
+func (mkline *MkLine) ExplainRelativeDirs() {
 	Explain(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
@@ -335,7 +335,7 @@ func (nq NeedsQuoting) String() string {
 	return [...]string{"no", "yes", "doesn't matter", "don't know"}[nq]
 }
 
-func (mkline *MkLine) variableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
+func (mkline *MkLine) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, "=>", &needsQuoting)()
 	}

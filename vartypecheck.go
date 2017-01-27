@@ -24,7 +24,7 @@ type VartypeCheck struct {
 // fields except the value. This is typically used when checking parts
 // of composite types.
 func NewVartypeCheckValue(vc *VartypeCheck, value string) *VartypeCheck {
-	valueNoVar := vc.MkLine.withoutMakeVariables(value)
+	valueNoVar := vc.MkLine.WithoutMakeVariables(value)
 
 	copy := *vc
 	copy.Value = value
@@ -319,7 +319,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 	if matches(value, `:\.\./[^/]+$`) {
 		line.Warnf("Dependencies should have the form \"../../category/package\".")
-		cv.MkLine.explainRelativeDirs()
+		cv.MkLine.ExplainRelativeDirs()
 		return
 	}
 
