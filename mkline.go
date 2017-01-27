@@ -143,7 +143,7 @@ func NewMkLine(line line.Line) (mkline *MkLine) {
 }
 
 func (mkline *MkLine) String() string {
-	return fmt.Sprintf("%s:%s", mkline.Line.Filename(), mkline.Line.Linenos())
+	return fmt.Sprintf("%s:%s", mkline.Filename(), mkline.Linenos())
 }
 func (mkline *MkLine) IsVarassign() bool { _, ok := mkline.data.(mkLineAssign); return ok }
 func (mkline *MkLine) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }
@@ -546,7 +546,7 @@ func (mkline *MkLine) extractUsedVariables(text string) []string {
 }
 
 func (mkline *MkLine) determineUsedVariables() (varnames []string) {
-	rest := mkline.Line.Text()
+	rest := mkline.Text()
 
 	if strings.HasPrefix(rest, "#") {
 		return
