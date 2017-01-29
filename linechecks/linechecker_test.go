@@ -1,13 +1,32 @@
-package main
+package linechecks
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
-	s.Init(c)
-	ck := LineChecker{NewLine("Makefile", 1, "# dummy", nil)}
+type Suite struct {
+	c *check.C
+}
 
-	ck.CheckAbsolutePathname("bindir=/bin")
-	ck.CheckAbsolutePathname("bindir=/../lib")
+func (s *Suite) SetUpTest(c *check.C) {
+	Explain = func(...string) {}
+}
+
+func (s *Suite) TearDownTest(c *check.C) {
+	Explain = nil
+}
+
+func (s *Suite) Init(c *check.C) {
+	s.c = c
+}
+
+func (s *Suite) CheckOutputLines(lines ...string) {
+
+}
+
+func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
+	line := NewLine("Makefile", 1, "# dummy", nil)
+
+	CheckAbsolutePathname(line, "bindir=/bin")
+	CheckAbsolutePathname(line, "bindir=/../lib")
 
 	s.CheckOutputLines(
 		"WARN: Makefile:1: Found absolute pathname: /bin")
@@ -15,9 +34,9 @@ func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
 
 func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
 	s.Init(c)
-	ck := LineChecker{NewLine("Makefile", 32, "The line must go on   ", nil)}
+	line := NewLine("Makefile", 32, "The line must go on   ", nil)
 
-	ck.CheckTrailingWhitespace()
+	CheckTrailingWhitespace(line)
 
 	s.CheckOutputLines(
 		"NOTE: Makefile:32: Trailing white-space.")
@@ -33,7 +52,7 @@ func (s *Suite) Test_LineChecker_CheckRcsid(c *check.C) {
 		"$"+"FreeBSD$")
 
 	for _, line := range lines {
-		LineChecker{line}.CheckRcsid(``, "")
+		CheckRcsid(line, ``, "")
 	}
 
 	s.CheckOutputLines(

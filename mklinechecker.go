@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"netbsd.org/pkglint/linechecks"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"os"
@@ -17,8 +18,8 @@ type MkLineChecker struct {
 func (ck MkLineChecker) Check() {
 	mkline := ck.MkLine
 
-	LineChecker{mkline}.CheckTrailingWhitespace()
-	LineChecker{mkline}.CheckValidCharacters(`[\t -~]`)
+	linechecks.CheckTrailingWhitespace(mkline)
+	linechecks.CheckValidCharacters(mkline, `[\t -~]`)
 
 	switch {
 	case mkline.IsVarassign():

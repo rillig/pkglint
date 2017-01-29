@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"netbsd.org/pkglint/line"
+	"netbsd.org/pkglint/linechecks"
 	"netbsd.org/pkglint/regex"
 	"path"
 	"strconv"
@@ -242,4 +243,5 @@ func (line *LineImpl) AutofixMark(reason string) {
 
 func init() {
 	line.NewLineEOF = NewLineEOF
+	linechecks.Explain = Explain
 }
