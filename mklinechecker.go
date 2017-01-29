@@ -1050,7 +1050,7 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 	}
 }
 
-func (ck MkLineChecker) CheckValidCharactersInValue(reValid regex.RegexPattern) {
+func (ck MkLineChecker) CheckValidCharactersInValue(reValid regex.Pattern) {
 	mkline := ck.MkLine
 	rest := regex.Compile(reValid).ReplaceAllString(mkline.Value(), "")
 	if rest != "" {

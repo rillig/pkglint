@@ -80,7 +80,7 @@ func (pr *PrefixReplacer) AdvanceHspace() bool {
 	return false
 }
 
-func (pr *PrefixReplacer) AdvanceRegexp(re regex.RegexPattern) bool {
+func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
 	pr.m = nil
 	pr.s = ""
 	if !strings.HasPrefix(string(re), "^") {

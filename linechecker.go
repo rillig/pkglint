@@ -40,7 +40,7 @@ func (ck LineChecker) CheckLength(maxlength int) {
 	}
 }
 
-func (ck LineChecker) CheckValidCharacters(reChar regex.RegexPattern) {
+func (ck LineChecker) CheckValidCharacters(reChar regex.Pattern) {
 	rest := regex.Compile(reChar).ReplaceAllString(ck.Line.Text(), "")
 	if rest != "" {
 		uni := ""
@@ -62,7 +62,7 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 	}
 }
 
-func (ck LineChecker) CheckRcsid(prefixRe regex.RegexPattern, suggestedPrefix string) bool {
+func (ck LineChecker) CheckRcsid(prefixRe regex.Pattern, suggestedPrefix string) bool {
 	if trace.Tracing {
 		defer trace.Call(prefixRe, suggestedPrefix)()
 	}
