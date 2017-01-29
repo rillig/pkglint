@@ -97,7 +97,7 @@ func (mklines *MkLines) Check() {
 	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
 	// are collected to make the order of the definitions irrelevant.
 	mklines.DetermineUsedVariables()
-	mklines.determineDefinedVariables()
+	mklines.DetermineDefinedVariables()
 
 	// In the second pass, the actual checks are done.
 
@@ -151,7 +151,7 @@ func (mklines *MkLines) Check() {
 	SaveAutofixChanges(mklines.lines)
 }
 
-func (mklines *MkLines) determineDefinedVariables() {
+func (mklines *MkLines) DetermineDefinedVariables() {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -211,13 +211,13 @@ func (mklines *MkLines) determineDefinedVariables() {
 			}
 		}
 
-		mklines.toolRegistry.ParseToolLine(mkline.Line)
+		mklines.toolRegistry.ParseToolLine(mkline)
 	}
 }
 
 func (mklines *MkLines) DetermineUsedVariables() {
 	for _, mkline := range mklines.mklines {
-		varnames := mkline.determineUsedVariables()
+		varnames := mkline.DetermineUsedVariables()
 		for _, varname := range varnames {
 			mklines.UseVar(mkline, varname)
 		}

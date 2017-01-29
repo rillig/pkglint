@@ -217,11 +217,11 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 		"qore-version=\tqore --short-version | ${SED} -e s/-.*//",
 		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
 
-	vars2 := mklines.mklines[1].determineUsedVariables()
+	vars2 := mklines.mklines[1].DetermineUsedVariables()
 
 	c.Check(vars2, deepEquals, []string{"SED"})
 
-	vars3 := mklines.mklines[2].determineUsedVariables()
+	vars3 := mklines.mklines[2].DetermineUsedVariables()
 
 	c.Check(vars3, deepEquals, []string{"qore-version"})
 

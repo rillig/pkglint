@@ -380,7 +380,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__command_in_command(c *check.C)
 		mkrcsid,
 		"GENERATE_PLIST= cd ${DESTDIR}${PREFIX}; ${FIND} * \\( -type f -or -type l \\) | ${SORT};")
 
-	G.Mk.determineDefinedVariables()
+	G.Mk.DetermineDefinedVariables()
 	MkLineChecker{G.Mk.mklines[1]}.Check()
 
 	s.CheckOutputLines(

@@ -111,7 +111,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	if change.Action == "Updated" {
 		changeVersion := regex.Compile(`nb\d+$`).ReplaceAllString(change.Version, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
-			mkline.Warnf("The package is being downgraded from %s (see %s) to %s", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
+			mkline.Warnf("The package is being downgraded from %s (see %s) to %s", change.Version, change.Line.ReferenceFrom(mkline), pkgversion)
 			Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
@@ -871,14 +871,14 @@ func (pkg *Package) CheckInclude(mkline *MkLine, indentation *Indentation) {
 			if other := pkg.unconditionalIncludes[includefile]; other != nil {
 				dependingOn := mkline.data.(mkLineInclude).conditionVars
 				mkline.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
-					cleanpath(includefile), dependingOn, other.ReferenceFrom(mkline.Line))
+					cleanpath(includefile), dependingOn, other.ReferenceFrom(mkline))
 			}
 		} else {
 			pkg.unconditionalIncludes[includefile] = mkline
 			if other := pkg.conditionalIncludes[includefile]; other != nil {
 				dependingOn := other.data.(mkLineInclude).conditionVars
 				mkline.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
-					cleanpath(includefile), other.ReferenceFrom(mkline.Line), dependingOn)
+					cleanpath(includefile), other.ReferenceFrom(mkline), dependingOn)
 			}
 		}
 	}

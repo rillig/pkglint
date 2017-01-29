@@ -210,7 +210,7 @@ func (cv *VartypeCheck) Comment() {
 }
 
 func (cv *VartypeCheck) ConfFiles() {
-	words, _ := splitIntoMkWords(cv.MkLine.Line, cv.Value)
+	words, _ := splitIntoMkWords(cv.MkLine, cv.Value)
 	if len(words)%2 != 0 {
 		cv.Line.Warnf("Values for %s should always be pairs of paths.", cv.Varname)
 	}

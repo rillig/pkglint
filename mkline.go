@@ -186,7 +186,7 @@ func (mkline *MkLine) Tokenize(s string) []*MkToken {
 		defer trace.Call(mkline, s)()
 	}
 
-	p := NewMkParser(mkline.Line, s, true)
+	p := NewMkParser(mkline, s, true)
 	tokens := p.MkTokens()
 	if p.Rest() != "" {
 		mkline.Warnf("Pkglint parse error in MkLine.Tokenize at %q.", p.Rest())
@@ -523,7 +523,7 @@ func (mkline *MkLine) VariableType(varname string) *Vartype {
 }
 
 // TODO: merge with determineUsedVariables
-func (mkline *MkLine) extractUsedVariables(text string) []string {
+func (mkline *MkLine) ExtractUsedVariables(text string) []string {
 	re := regex.Compile(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
 	var result []string
@@ -545,7 +545,7 @@ func (mkline *MkLine) extractUsedVariables(text string) []string {
 	return result
 }
 
-func (mkline *MkLine) determineUsedVariables() (varnames []string) {
+func (mkline *MkLine) DetermineUsedVariables() (varnames []string) {
 	rest := mkline.Text()
 
 	if strings.HasPrefix(rest, "#") {
