@@ -18,10 +18,10 @@ const (
 )
 
 type ShellLine struct {
-	mkline *MkLine
+	mkline MkLine
 }
 
-func NewShellLine(mkline *MkLine) *ShellLine {
+func NewShellLine(mkline MkLine) *ShellLine {
 	return &ShellLine{mkline}
 }
 

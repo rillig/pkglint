@@ -21,7 +21,7 @@ type GlobalData struct {
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	LastChange          map[string]*Change  //
-	UserDefinedVars     map[string]*MkLine  // varname => line
+	UserDefinedVars     map[string]MkLine   // varname => line
 	Deprecated          map[string]string   //
 	vartypes            map[string]*Vartype // varcanon => type
 	latest              map[string]string   // "lang/php[0-9]*" => "lang/php70"
@@ -375,7 +375,7 @@ func (gd *GlobalData) loadUserDefinedVars() {
 	lines := LoadExistingLines(G.globalData.Pkgsrcdir+"/mk/defaults/mk.conf", true)
 	mklines := NewMkLines(lines)
 
-	gd.UserDefinedVars = make(map[string]*MkLine)
+	gd.UserDefinedVars = make(map[string]MkLine)
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
 			gd.UserDefinedVars[mkline.Varname()] = mkline

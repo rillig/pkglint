@@ -11,7 +11,7 @@ import (
 )
 
 type MkLineChecker struct {
-	MkLine *MkLine
+	MkLine MkLine
 }
 
 func (ck MkLineChecker) Check() {
@@ -1033,7 +1033,9 @@ func (ck MkLineChecker) CheckCond() {
 		}
 	})
 
-	mkline.RememberUsedVariables(cond)
+	if G.Mk != nil {
+		G.Mk.indentation.RememberUsedVariables(cond)
+	}
 }
 
 func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {

@@ -185,7 +185,7 @@ func varnameParam(varname string) string {
 	return ""
 }
 
-func defineVar(mkline *MkLine, varname string) {
+func defineVar(mkline MkLine, varname string) {
 	if G.Mk != nil {
 		G.Mk.DefineVar(mkline, varname)
 	}

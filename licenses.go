@@ -24,7 +24,7 @@ func checkToplevelUnusedLicenses() {
 }
 
 type LicenseChecker struct {
-	MkLine *MkLine
+	MkLine MkLine
 }
 
 func (lc *LicenseChecker) Check(value string, op MkOperator) {

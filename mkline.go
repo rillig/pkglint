@@ -10,7 +10,52 @@ import (
 	"strings"
 )
 
-type MkLine struct {
+type MkLine interface {
+	line.Line
+
+	IsVarassign() bool
+	Varname() string
+	Varcanon() string
+	Varparam() string
+	Op() MkOperator
+	ValueAlign() string
+	Value() string
+	VarassignComment() string
+
+	IsShellcmd() bool
+	Shellcmd() string
+
+	IsComment() bool
+
+	IsEmpty() bool
+
+	IsCond() bool
+	Indent() string
+	Directive() string
+	Args() string
+
+	IsInclude() bool
+	IsSysinclude() bool
+	// Indent() works here, too.
+	MustExist() bool
+	Includefile() string
+	ConditionVars() string
+	SetConditionVars(varnames string) // Initialized lazily
+
+	IsDependency() bool
+	Targets() string
+	Sources() string
+
+	VariableType(varname string) *Vartype
+	ResolveVarsInRelativePath(relpath string, adjustDepth bool) string
+	ExtractUsedVariables(value string) []string
+	WithoutMakeVariables(value string) string
+	VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) NeedsQuoting
+	DetermineUsedVariables() []string
+	ExplainRelativeDirs()
+}
+
+type MkLineImpl struct {
 	line.Line
 	data interface{} // One of the following mkLine* types
 }
@@ -45,8 +90,8 @@ type mkLineDependency struct {
 	sources string
 }
 
-func NewMkLine(line line.Line) (mkline *MkLine) {
-	mkline = &MkLine{Line: line}
+func NewMkLine(line line.Line) (mkline *MkLineImpl) {
+	mkline = &MkLineImpl{Line: line}
 
 	text := line.Text()
 
@@ -142,46 +187,53 @@ func NewMkLine(line line.Line) (mkline *MkLine) {
 	return mkline
 }
 
-func (mkline *MkLine) String() string {
+func (mkline *MkLineImpl) String() string {
 	return fmt.Sprintf("%s:%s", mkline.Filename(), mkline.Linenos())
 }
-func (mkline *MkLine) IsVarassign() bool { _, ok := mkline.data.(mkLineAssign); return ok }
-func (mkline *MkLine) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }
-func (mkline *MkLine) IsComment() bool   { _, ok := mkline.data.(mkLineComment); return ok }
-func (mkline *MkLine) IsEmpty() bool     { _, ok := mkline.data.(mkLineEmpty); return ok }
-func (mkline *MkLine) IsCond() bool      { _, ok := mkline.data.(mkLineConditional); return ok }
-func (mkline *MkLine) IsInclude() bool {
+func (mkline *MkLineImpl) IsVarassign() bool { _, ok := mkline.data.(mkLineAssign); return ok }
+func (mkline *MkLineImpl) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }
+func (mkline *MkLineImpl) IsComment() bool   { _, ok := mkline.data.(mkLineComment); return ok }
+func (mkline *MkLineImpl) IsEmpty() bool     { _, ok := mkline.data.(mkLineEmpty); return ok }
+func (mkline *MkLineImpl) IsCond() bool      { _, ok := mkline.data.(mkLineConditional); return ok }
+func (mkline *MkLineImpl) IsInclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && !incl.sys
 }
-func (mkline *MkLine) IsSysinclude() bool {
+func (mkline *MkLineImpl) IsSysinclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && incl.sys
 }
-func (mkline *MkLine) IsDependency() bool       { _, ok := mkline.data.(mkLineDependency); return ok }
-func (mkline *MkLine) Varname() string          { return mkline.data.(mkLineAssign).varname }
-func (mkline *MkLine) Varcanon() string         { return mkline.data.(mkLineAssign).varcanon }
-func (mkline *MkLine) Varparam() string         { return mkline.data.(mkLineAssign).varparam }
-func (mkline *MkLine) Op() MkOperator           { return mkline.data.(mkLineAssign).op }
-func (mkline *MkLine) ValueAlign() string       { return mkline.data.(mkLineAssign).valueAlign }
-func (mkline *MkLine) Value() string            { return mkline.data.(mkLineAssign).value }
-func (mkline *MkLine) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
-func (mkline *MkLine) Shellcmd() string         { return mkline.data.(mkLineShell).command }
-func (mkline *MkLine) Indent() string {
+func (mkline *MkLineImpl) IsDependency() bool       { _, ok := mkline.data.(mkLineDependency); return ok }
+func (mkline *MkLineImpl) Varname() string          { return mkline.data.(mkLineAssign).varname }
+func (mkline *MkLineImpl) Varcanon() string         { return mkline.data.(mkLineAssign).varcanon }
+func (mkline *MkLineImpl) Varparam() string         { return mkline.data.(mkLineAssign).varparam }
+func (mkline *MkLineImpl) Op() MkOperator           { return mkline.data.(mkLineAssign).op }
+func (mkline *MkLineImpl) ValueAlign() string       { return mkline.data.(mkLineAssign).valueAlign }
+func (mkline *MkLineImpl) Value() string            { return mkline.data.(mkLineAssign).value }
+func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
+func (mkline *MkLineImpl) Shellcmd() string         { return mkline.data.(mkLineShell).command }
+func (mkline *MkLineImpl) Indent() string {
 	if mkline.IsCond() {
 		return mkline.data.(mkLineConditional).indent
 	} else {
 		return mkline.data.(mkLineInclude).indent
 	}
 }
-func (mkline *MkLine) Directive() string   { return mkline.data.(mkLineConditional).directive }
-func (mkline *MkLine) Args() string        { return mkline.data.(mkLineConditional).args }
-func (mkline *MkLine) MustExist() bool     { return mkline.data.(mkLineInclude).mustexist }
-func (mkline *MkLine) Includefile() string { return mkline.data.(mkLineInclude).includeFile }
-func (mkline *MkLine) Targets() string     { return mkline.data.(mkLineDependency).targets }
-func (mkline *MkLine) Sources() string     { return mkline.data.(mkLineDependency).sources }
+func (mkline *MkLineImpl) Directive() string   { return mkline.data.(mkLineConditional).directive }
+func (mkline *MkLineImpl) Args() string        { return mkline.data.(mkLineConditional).args }
+func (mkline *MkLineImpl) MustExist() bool     { return mkline.data.(mkLineInclude).mustexist }
+func (mkline *MkLineImpl) Includefile() string { return mkline.data.(mkLineInclude).includeFile }
+func (mkline *MkLineImpl) Targets() string     { return mkline.data.(mkLineDependency).targets }
+func (mkline *MkLineImpl) Sources() string     { return mkline.data.(mkLineDependency).sources }
 
-func (mkline *MkLine) Tokenize(s string) []*MkToken {
+func (mkline *MkLineImpl) ConditionVars() string { return mkline.data.(mkLineInclude).conditionVars }
+func (mkline *MkLineImpl) SetConditionVars(varnames string) {
+	include := mkline.data.(mkLineInclude)
+	include.conditionVars = varnames
+	mkline.data = include
+}
+
+func (mkline *MkLineImpl) Tokenize(s string) []*MkToken {
 	if trace.Tracing {
 		defer trace.Call(mkline, s)()
 	}
@@ -194,7 +246,7 @@ func (mkline *MkLine) Tokenize(s string) []*MkToken {
 	return tokens
 }
 
-func (mkline *MkLine) WithoutMakeVariables(value string) string {
+func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
 	valueNovar := value
 	for {
 		var m []string
@@ -205,7 +257,7 @@ func (mkline *MkLine) WithoutMakeVariables(value string) string {
 	}
 }
 
-func (mkline *MkLine) ResolveVarsInRelativePath(relpath string, adjustDepth bool) string {
+func (mkline *MkLineImpl) ResolveVarsInRelativePath(relpath string, adjustDepth bool) string {
 	tmp := relpath
 	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.CurPkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
@@ -243,23 +295,18 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relpath string, adjustDepth bool
 	return tmp
 }
 
-func (mkline *MkLine) RememberUsedVariables(cond *Tree) {
-	if G.Mk == nil {
-		return
-	}
-
-	indentation := &G.Mk.indentation
+func (ind *Indentation) RememberUsedVariables(cond *Tree) {
 	arg0varname := func(node *Tree) {
 		varname := node.args[0].(string)
-		indentation.AddVar(varname)
+		ind.AddVar(varname)
 	}
 	arg0varuse := func(node *Tree) {
 		varuse := node.args[0].(MkVarUse)
-		indentation.AddVar(varuse.varname)
+		ind.AddVar(varuse.varname)
 	}
 	arg2varuse := func(node *Tree) {
 		varuse := node.args[2].(MkVarUse)
-		indentation.AddVar(varuse.varname)
+		ind.AddVar(varuse.varname)
 	}
 	cond.Visit("defined", arg0varname)
 	cond.Visit("empty", arg0varuse)
@@ -269,7 +316,7 @@ func (mkline *MkLine) RememberUsedVariables(cond *Tree) {
 	cond.Visit("compareVarVar", arg2varuse)
 }
 
-func (mkline *MkLine) ExplainRelativeDirs() {
+func (mkline *MkLineImpl) ExplainRelativeDirs() {
 	Explain(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
@@ -335,7 +382,7 @@ func (nq NeedsQuoting) String() string {
 	return [...]string{"no", "yes", "doesn't matter", "don't know"}[nq]
 }
 
-func (mkline *MkLine) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
+func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, "=>", &needsQuoting)()
 	}
@@ -444,7 +491,7 @@ func (mkline *MkLine) VariableNeedsQuoting(varname string, vartype *Vartype, vuc
 
 // Returns the type of the variable (maybe guessed based on the variable name),
 // or nil if the type cannot even be guessed.
-func (mkline *MkLine) VariableType(varname string) *Vartype {
+func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 	if trace.Tracing {
 		defer trace.Call1(varname)()
 	}
@@ -523,7 +570,7 @@ func (mkline *MkLine) VariableType(varname string) *Vartype {
 }
 
 // TODO: merge with determineUsedVariables
-func (mkline *MkLine) ExtractUsedVariables(text string) []string {
+func (mkline *MkLineImpl) ExtractUsedVariables(text string) []string {
 	re := regex.Compile(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
 	var result []string
@@ -545,7 +592,7 @@ func (mkline *MkLine) ExtractUsedVariables(text string) []string {
 	return result
 }
 
-func (mkline *MkLine) DetermineUsedVariables() (varnames []string) {
+func (mkline *MkLineImpl) DetermineUsedVariables() (varnames []string) {
 	rest := mkline.Text()
 
 	if strings.HasPrefix(rest, "#") {

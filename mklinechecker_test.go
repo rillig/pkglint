@@ -130,7 +130,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions(c *check.C) {
 		"COMMENT=\t${GAMES_USER}",
 		"COMMENT:=\t${PKGBASE}",
 		"PYPKGPREFIX=${PKGBASE}")
-	G.globalData.UserDefinedVars = map[string]*MkLine{
+	G.globalData.UserDefinedVars = map[string]MkLine{
 		"GAMES_USER": mklines.mklines[0],
 	}
 

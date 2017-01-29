@@ -85,6 +85,6 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 		"WARN: Makefile:13: Incomplete SUBST block: SUBST_STAGE.repl missing.")
 }
 
-func newSubstLine(lineno int, text string) *MkLine {
+func newSubstLine(lineno int, text string) MkLine {
 	return NewMkLine(NewLine("Makefile", lineno, text, nil))
 }

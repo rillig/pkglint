@@ -687,6 +687,17 @@ func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
 		"WARN: Makefile:2: The # character starts a comment.")
 }
 
+func (s *Suite) Test_MkLine_ConditionVars(c *check.C) {
+	s.Init(c)
+	var mkline MkLine = NewMkLine(NewLine("Makefile", 45, ".include \"../../category/package/buildlink3.mk\"", nil))
+
+	c.Check(mkline.ConditionVars(), equals, "")
+
+	mkline.SetConditionVars("OPSYS")
+
+	c.Check(mkline.ConditionVars(), equals, "OPSYS")
+}
+
 func (s *Suite) Test_MatchVarassign(c *check.C) {
 	s.Init(c)
 	checkVarassign := func(text string, ck check.Checker, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
