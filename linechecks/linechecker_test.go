@@ -1,6 +1,12 @@
 package linechecks
 
-import "gopkg.in/check.v1"
+// Note: These tests are currently not run, since the dependencies
+// between the Go packages are not yet resolved properly.
+
+import (
+	"gopkg.in/check.v1"
+	"netbsd.org/pkglint/line"
+)
 
 type Suite struct {
 	c *check.C
@@ -19,7 +25,15 @@ func (s *Suite) Init(c *check.C) {
 }
 
 func (s *Suite) CheckOutputLines(lines ...string) {
+	panic("Not yet implemented")
+}
 
+func (s *Suite) NewLines(...string) []line.Line {
+	panic("Not yet implemented")
+}
+
+func NewLine(string, int, string, []string) line.Line {
+	panic("Not yet implemented")
 }
 
 func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
