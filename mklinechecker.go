@@ -788,14 +788,6 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 		}
 	}
 
-	if varname == "CONFIGURE_ARGS" && contains(value, "=${PREFIX}/share/kde") {
-		mkline.Notef("Please .include \"../../meta-pkgs/kde3/kde3.mk\" instead of this line.")
-		Explain(
-			"That file does many things automatically and consistently that this",
-			"package also does.  When using kde3.mk, you can probably also leave",
-			"out some explicit dependencies.")
-	}
-
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
 		ck.checkVarassignPythonVersions(varname, value)
 	}
