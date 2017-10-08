@@ -26,7 +26,7 @@ func (list *MkShList) AddSeparator(separator MkShSeparator) *MkShList {
 
 type MkShAndOr struct {
 	Pipes []*MkShPipeline
-	Ops   []string // Either "&&" or "||"
+	Ops   []string // Each element is either "&&" or "||"
 }
 
 func NewMkShAndOr(pipeline *MkShPipeline) *MkShAndOr {

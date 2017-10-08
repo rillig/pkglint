@@ -11,6 +11,8 @@ var Testing bool
 
 type PrefixReplacerMark string
 
+// PrefixReplacer parses an arbitrary string into its components by repeatedly
+// stripping off a prefix matched by a literal string or a regular expression.
 type PrefixReplacer struct {
 	rest string
 	s    string

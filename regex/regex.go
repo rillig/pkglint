@@ -1,3 +1,7 @@
+// Package regex provides a registry of precompiled regular expressions
+// to allow reusing them without the syntactic overhead of declaring
+// pattern variables everywhere in the code.
+// The registry is not thread-safe, but the precompiled patterns are.
 package regex
 
 import (
