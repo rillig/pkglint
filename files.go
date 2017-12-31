@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"netbsd.org/pkglint/line"
+	"netbsd.org/pkglint/trace"
 	"os"
 	"strings"
 )
@@ -140,6 +141,10 @@ func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool
 }
 
 func SaveAutofixChanges(lines []line.Line) (autofixed bool) {
+	if trace.Tracing {
+		defer trace.Call0()()
+	}
+
 	if !G.opts.Autofix {
 		for _, line := range lines {
 			if line.IsChanged() {
@@ -152,10 +157,18 @@ func SaveAutofixChanges(lines []line.Line) (autofixed bool) {
 	changes := make(map[string][]string)
 	changed := make(map[string]bool)
 	for _, line := range lines {
+		// The Line interface does not have access to the RawLine type,
+		// therefore the modifiedLines method must be called using these
+		// ugly type casts.
+		if _, ok := line.(*MkLineImpl); ok {
+			line = line.(*MkLineImpl).Line
+		}
+		line := line.(*LineImpl)
+
 		if line.IsChanged() {
 			changed[line.Filename()] = true
 		}
-		changes[line.Filename()] = append(changes[line.Filename()], line.(*LineImpl).modifiedLines()...)
+		changes[line.Filename()] = append(changes[line.Filename()], line.modifiedLines()...)
 	}
 
 	for fname := range changed {
