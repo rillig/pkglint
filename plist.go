@@ -510,7 +510,7 @@ func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 	var unsortable Line
 
 	for _, pline := range middle {
-		if unsortable == nil && hasPrefix(pline.text, "@") {
+		if unsortable == nil && (hasPrefix(pline.text, "@") || contains(pline.text, "$")) {
 			unsortable = pline.line
 		}
 	}
@@ -530,7 +530,9 @@ func (s *plistLineSorter) Swap(i, j int) {
 
 func (s *plistLineSorter) Sort() {
 	if line := s.unsortable; line != nil {
-		line.Notef("This line makes the PLIST unsortable.")
+		if G.opts.PrintAutofix || G.opts.Autofix {
+			line.Notef("This line prevents pkglint from sorting the PLIST automatically.")
+		}
 		return
 	}
 

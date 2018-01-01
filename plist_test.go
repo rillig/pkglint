@@ -45,8 +45,7 @@ func (s *Suite) Test_ChecklinesPlist(c *check.C) {
 		"WARN: PLIST:13: Manual page missing for sbin/clockctl.",
 		"ERROR: PLIST:14: The package Makefile must include \"../../graphics/gnome-icon-theme/buildlink3.mk\".",
 		"WARN: PLIST:14: Packages that install icon theme files should set ICON_THEMES.",
-		"ERROR: PLIST:16: Duplicate filename \"share/tzinfo\", already appeared in line 15.",
-		"NOTE: PLIST:5: This line makes the PLIST unsortable.")
+		"ERROR: PLIST:16: Duplicate filename \"share/tzinfo\", already appeared in line 15.")
 }
 
 func (s *Suite) Test_ChecklinesPlist__empty(c *check.C) {
@@ -122,7 +121,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"@exec echo \"after ddd\"", // Makes the PLIST unsortable
 		"sbin/program",
 		"${PLIST.one}bin/program",
-		"${PKGMANDIR}/man1/program.1",
+		"man/man1/program.1",
 		"${PLIST.two}bin/program2",
 		"lib/before.la",
 		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double conditional, see graphics/graphviz
@@ -132,9 +131,9 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 	plines := ck.NewLines(lines)
 
 	sorter1 := NewPlistLineSorter(plines)
-	c.Check(sorter1.unsortable, equals, lines[8])
+	c.Check(sorter1.unsortable, equals, lines[5])
 
-	cleanedLines := append(lines[0:8], lines[9:]...) // Remove the @exec in the middle
+	cleanedLines := append(append(lines[0:5], lines[6:8]...), lines[9:]...) // Remove ${UNKNOWN} and @exec
 
 	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, "", false}).NewLines(cleanedLines))
 
@@ -148,9 +147,6 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 	c.Check(s.LoadTmpFile("PLIST"), equals, ""+
 		"@comment $"+"NetBSD$\n"+
 		"@comment Do not remove\n"+ // The header ends here
-		// Since this test only sorts and does fix the other things,
-		// ${PKGMANDIR}/ is not replaced with man/ here; see PlistChecker.Check.
-		"${PKGMANDIR}/man1/program.1\n"+
 		"A\n"+
 		"C\n"+
 		"CCC\n"+
@@ -158,10 +154,10 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"${PLIST.one}bin/program\n"+ // Conditionals are ignored while sorting
 		"${PLIST.two}bin/program2\n"+
 		"ddd\n"+
-		"lib/${UNKNOWN}.la\n"+
 		"lib/after.la\n"+
 		"lib/before.la\n"+
 		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so\n"+
+		"man/man1/program.1\n"+
 		"sbin/program\n"+
 		"@exec echo \"after lib/after.la\"\n") // The footer starts here
 }
@@ -230,11 +226,11 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"lib/libvirt/lock-driver/lockd.la",
 		"${PKGMANDIR}/man1/sh.1",
 		"share/augeas/lenses/virtlockd.aug",
-		"share/doc/${PKGNAME}/html/32favicon.png",
-		"share/doc/${PKGNAME}/html/404.html",
-		"share/doc/${PKGNAME}/html/acl.html",
-		"share/doc/${PKGNAME}/html/aclpolkit.html",
-		"share/doc/${PKGNAME}/html/windows.html",
+		"share/doc/pkgname-1.0/html/32favicon.png",
+		"share/doc/pkgname-1.0/html/404.html",
+		"share/doc/pkgname-1.0/html/acl.html",
+		"share/doc/pkgname-1.0/html/aclpolkit.html",
+		"share/doc/pkgname-1.0/html/windows.html",
 		"share/examples/libvirt/libvirt.conf",
 		"share/locale/zh_CN/LC_MESSAGES/libvirt.mo",
 		"share/locale/zh_TW/LC_MESSAGES/libvirt.mo",
@@ -269,11 +265,11 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"lib/libvirt/lock-driver/lockd.la\n"+
 		"man/man1/sh.1\n"+
 		"share/augeas/lenses/virtlockd.aug\n"+
-		"share/doc/${PKGNAME}/html/32favicon.png\n"+
-		"share/doc/${PKGNAME}/html/404.html\n"+
-		"share/doc/${PKGNAME}/html/acl.html\n"+
-		"share/doc/${PKGNAME}/html/aclpolkit.html\n"+
-		"share/doc/${PKGNAME}/html/windows.html\n"+
+		"share/doc/pkgname-1.0/html/32favicon.png\n"+
+		"share/doc/pkgname-1.0/html/404.html\n"+
+		"share/doc/pkgname-1.0/html/acl.html\n"+
+		"share/doc/pkgname-1.0/html/aclpolkit.html\n"+
+		"share/doc/pkgname-1.0/html/windows.html\n"+
 		"share/examples/libvirt/libvirt.conf\n"+
 		"share/locale/zh_CN/LC_MESSAGES/libvirt.mo\n"+
 		"share/locale/zh_TW/LC_MESSAGES/libvirt.mo\n"+
