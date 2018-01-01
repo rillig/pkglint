@@ -45,7 +45,8 @@ func (s *Suite) Test_ChecklinesPlist(c *check.C) {
 		"WARN: PLIST:13: Manual page missing for sbin/clockctl.",
 		"ERROR: PLIST:14: The package Makefile must include \"../../graphics/gnome-icon-theme/buildlink3.mk\".",
 		"WARN: PLIST:14: Packages that install icon theme files should set ICON_THEMES.",
-		"ERROR: PLIST:16: Duplicate filename \"share/tzinfo\", already appeared in line 15.")
+		"ERROR: PLIST:16: Duplicate filename \"share/tzinfo\", already appeared in line 15.",
+		"NOTE: PLIST:5: This line makes the PLIST unsortable.")
 }
 
 func (s *Suite) Test_ChecklinesPlist__empty(c *check.C) {
@@ -118,7 +119,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"lib/${UNKNOWN}.la",
 		"C",
 		"ddd",
-		"@exec echo \"after ddd\"",
+		"@exec echo \"after ddd\"", // Makes the PLIST unsortable
 		"sbin/program",
 		"${PLIST.one}bin/program",
 		"${PKGMANDIR}/man1/program.1",
@@ -129,28 +130,38 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 	ck := &PlistChecker{nil, nil, "", false}
 	plines := ck.NewLines(lines)
 
-	NewPlistLineSorter(plines).Sort()
+	sorter1 := NewPlistLineSorter(plines)
+	c.Check(sorter1.unsortable, equals, lines[8])
+
+	cleanedLines := append(lines[0:8], lines[9:]...) // Remove the @exec in the middle
+
+	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, "", false}).NewLines(cleanedLines))
+
+	c.Check(sorter2.unsortable, check.IsNil)
+
+	sorter2.Sort()
 
 	s.CheckOutputLines(
-		"AUTOFIX: ~/PLIST:1: Sorting the whole file.",
+		"AUTOFIX: ~/PLIST:3: Sorting the whole file.",
 		"AUTOFIX: ~/PLIST: Has been auto-fixed. Please re-run pkglint.")
 	c.Check(s.LoadTmpFile("PLIST"), equals, ""+
 		"@comment $"+"NetBSD$\n"+
-		"@comment Do not remove\n"+
+		"@comment Do not remove\n"+ // The header ends here
+		// Since this test only sorts and does fix the other things,
+		// ${PKGMANDIR}/ is not replaced with man/ here; see PlistChecker.Check.
+		"${PKGMANDIR}/man1/program.1\n"+
 		"A\n"+
 		"C\n"+
 		"CCC\n"+
-		"lib/${UNKNOWN}.la\n"+ // Stays below the previous line
 		"b\n"+
 		"${PLIST.one}bin/program\n"+ // Conditionals are ignored while sorting
-		"${PKGMANDIR}/man1/program.1\n"+ // Stays below the previous line
 		"${PLIST.two}bin/program2\n"+
 		"ddd\n"+
-		"@exec echo \"after ddd\"\n"+ // Stays below the previous line
+		"lib/${UNKNOWN}.la\n"+
 		"lib/after.la\n"+
-		"@exec echo \"after lib/after.la\"\n"+
 		"lib/before.la\n"+
-		"sbin/program\n")
+		"sbin/program\n"+
+		"@exec echo \"after lib/after.la\"\n") // The footer starts here
 }
 
 func (s *Suite) Test_PlistChecker_checkpathShare_Desktop(c *check.C) {
@@ -245,7 +256,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 
 	s.CheckOutputLines(
 		"AUTOFIX: ~/PLIST:6: Replacing \"${PKGMANDIR}/\" with \"man/\".",
-		"AUTOFIX: ~/PLIST:1: Sorting the whole file.",
+		"AUTOFIX: ~/PLIST:2: Sorting the whole file.",
 		"AUTOFIX: ~/PLIST: Has been auto-fixed. Please re-run pkglint.")
 	c.Check(len(lines), equals, len(fixedLines))
 	c.Check(s.LoadTmpFile("PLIST"), equals, ""+
