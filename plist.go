@@ -83,7 +83,7 @@ func (ck *PlistChecker) NewLines(lines []Line) []*PlistLine {
 	for i, line := range lines {
 		conditional, text := "", line.Text
 		if hasPrefix(text, "${PLIST.") {
-			if m, cond, rest := match2(text, `^\$\{(PLIST\.[\w-.]+)\}(.*)`); m {
+			if m, cond, rest := match2(text, `^(?:\$\{(PLIST\.[\w-.]+)\})+(.*)`); m {
 				conditional, text = cond, rest
 			}
 		}

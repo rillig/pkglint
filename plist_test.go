@@ -125,6 +125,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"${PKGMANDIR}/man1/program.1",
 		"${PLIST.two}bin/program2",
 		"lib/before.la",
+		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double conditional, see graphics/graphviz
 		"lib/after.la",
 		"@exec echo \"after lib/after.la\"")
 	ck := &PlistChecker{nil, nil, "", false}
@@ -160,6 +161,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"lib/${UNKNOWN}.la\n"+
 		"lib/after.la\n"+
 		"lib/before.la\n"+
+		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so\n"+
 		"sbin/program\n"+
 		"@exec echo \"after lib/after.la\"\n") // The footer starts here
 }
