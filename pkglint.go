@@ -274,14 +274,14 @@ func CheckfileExtra(fname string) {
 
 func ChecklinesDescr(lines []Line) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename())()
+		defer trace.Call1(lines[0].Filename)()
 	}
 
 	for _, line := range lines {
 		CheckLineLength(line, 80)
 		CheckLineTrailingWhitespace(line)
 		CheckLineValidCharacters(line, `[\t -~]`)
-		if contains(line.Text(), "${") {
+		if contains(line.Text, "${") {
 			line.Notef("Variables are not expanded in the DESCR file.")
 		}
 	}
@@ -302,7 +302,7 @@ func ChecklinesDescr(lines []Line) {
 
 func ChecklinesMessage(lines []Line) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename())()
+		defer trace.Call1(lines[0].Filename)()
 	}
 
 	explainMessage := func() {
@@ -321,7 +321,7 @@ func ChecklinesMessage(lines []Line) {
 	}
 
 	hline := strings.Repeat("=", 75)
-	if line := lines[0]; line.Text() != hline {
+	if line := lines[0]; line.Text != hline {
 		line.Warnf("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
@@ -331,7 +331,7 @@ func ChecklinesMessage(lines []Line) {
 		CheckLineTrailingWhitespace(line)
 		CheckLineValidCharacters(line, `[\t -~]`)
 	}
-	if lastLine := lines[len(lines)-1]; lastLine.Text() != hline {
+	if lastLine := lines[len(lines)-1]; lastLine.Text != hline {
 		lastLine.Warnf("Expected a line of exactly 75 \"=\" characters.")
 		explainMessage()
 	}
@@ -489,7 +489,7 @@ func Checkfile(fname string) {
 func ChecklinesTrailingEmptyLines(lines []Line) {
 	max := len(lines)
 	last := max
-	for last > 1 && lines[last-1].Text() == "" {
+	for last > 1 && lines[last-1].Text == "" {
 		last--
 	}
 	if last != max {

@@ -10,7 +10,7 @@ import (
 
 func ChecklinesPlist(lines []Line) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename())()
+		defer trace.Call1(lines[0].Filename)()
 	}
 
 	CheckLineRcsid(lines[0], `@comment `, "@comment ")
@@ -54,7 +54,7 @@ func (ck *PlistChecker) Check(plainLines []Line) {
 	plines := ck.NewLines(plainLines)
 	ck.collectFilesAndDirs(plines)
 
-	if fname := plines[0].line.Filename(); path.Base(fname) == "PLIST.common_end" {
+	if fname := plines[0].line.Filename; path.Base(fname) == "PLIST.common_end" {
 		commonLines, err := readLines(strings.TrimSuffix(fname, "_end"), false)
 		if err == nil {
 			ck.collectFilesAndDirs(ck.NewLines(commonLines))
@@ -81,7 +81,7 @@ func (ck *PlistChecker) Check(plainLines []Line) {
 func (ck *PlistChecker) NewLines(lines []Line) []*PlistLine {
 	plines := make([]*PlistLine, len(lines))
 	for i, line := range lines {
-		conditional, text := "", line.Text()
+		conditional, text := "", line.Text
 		if hasPrefix(text, "${PLIST.") {
 			if m, cond, rest := match2(text, `^\$\{(PLIST\.[\w-.]+)\}(.*)`); m {
 				conditional, text = cond, rest

@@ -27,7 +27,7 @@ func CheckLineAbsolutePathname(line Line, text string) {
 }
 
 func CheckLineLength(line Line, maxlength int) {
-	if len(line.Text()) > maxlength {
+	if len(line.Text) > maxlength {
 		line.Warnf("Line too long (should be no more than %d characters).", maxlength)
 		Explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
@@ -37,7 +37,7 @@ func CheckLineLength(line Line, maxlength int) {
 }
 
 func CheckLineValidCharacters(line Line, reChar regex.Pattern) {
-	rest := regex.Compile(reChar).ReplaceAllString(line.Text(), "")
+	rest := regex.Compile(reChar).ReplaceAllString(line.Text, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -48,7 +48,7 @@ func CheckLineValidCharacters(line Line, reChar regex.Pattern) {
 }
 
 func CheckLineTrailingWhitespace(line Line) {
-	if strings.HasSuffix(line.Text(), " ") || strings.HasSuffix(line.Text(), "\t") {
+	if strings.HasSuffix(line.Text, " ") || strings.HasSuffix(line.Text, "\t") {
 		if !line.AutofixReplaceRegexp(`\s+\n$`, "\n") {
 			line.Notef("Trailing white-space.")
 			Explain(
@@ -63,7 +63,7 @@ func CheckLineRcsid(line Line, prefixRe regex.Pattern, suggestedPrefix string) b
 		defer trace.Call(prefixRe, suggestedPrefix)()
 	}
 
-	if regex.Matches(line.Text(), `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
+	if regex.Matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
 		return true
 	}
 

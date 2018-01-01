@@ -47,7 +47,7 @@ func CheckdirCategory() {
 	prevSubdir := ""
 	for !exp.EOF() {
 		line := exp.CurrentLine()
-		text := line.Text()
+		text := line.Text
 
 		if m, commentFlag, indentation, name, comment := match4(text, `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
 			commentedOut := commentFlag == "#"
@@ -72,7 +72,7 @@ func CheckdirCategory() {
 			exp.Advance()
 
 		} else {
-			if line.Text() != "" {
+			if line.Text != "" {
 				line.Errorf("SUBDIR+= line or empty line expected.")
 			}
 			break

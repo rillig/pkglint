@@ -35,10 +35,10 @@ func (rline *RawLine) String() string {
 }
 
 type LineImpl struct {
-	fname          string
+	Filename       string
 	firstLine      int32 // Zero means not applicable, -1 means EOF
 	lastLine       int32 // Usually the same as firstLine, may differ in Makefiles
-	text           string
+	Text           string
 	raw            []*RawLine
 	changed        bool
 	before         []string
@@ -63,14 +63,6 @@ func NewLineEOF(fname string) Line {
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
 func NewLineWhole(fname string) Line {
 	return NewLine(fname, 0, "", nil)
-}
-
-func (line *LineImpl) Filename() string {
-	return line.fname
-}
-
-func (line *LineImpl) Text() string {
-	return line.text
 }
 
 func (line *LineImpl) IsChanged() bool {
@@ -101,8 +93,8 @@ func (line *LineImpl) Linenos() string {
 }
 
 func (line *LineImpl) ReferenceFrom(other Line) string {
-	if line.fname != other.Filename() {
-		return cleanpath(relpath(path.Dir(other.Filename()), line.fname)) + ":" + line.Linenos()
+	if line.Filename != other.Filename {
+		return cleanpath(relpath(path.Dir(other.Filename), line.Filename)) + ":" + line.Linenos()
 	}
 	return "line " + line.Linenos()
 }
@@ -137,34 +129,34 @@ func (line *LineImpl) printSource(out io.Writer) {
 
 func (line *LineImpl) Fatalf(format string, args ...interface{}) {
 	line.printSource(G.logErr)
-	logs(llFatal, line.fname, line.Linenos(), format, fmt.Sprintf(format, args...))
+	logs(llFatal, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 }
 
 func (line *LineImpl) Errorf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	logs(llError, line.fname, line.Linenos(), format, fmt.Sprintf(format, args...))
+	logs(llError, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 
 func (line *LineImpl) Warnf(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	logs(llWarn, line.fname, line.Linenos(), format, fmt.Sprintf(format, args...))
+	logs(llWarn, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 
 func (line *LineImpl) Notef(format string, args ...interface{}) {
 	line.printSource(G.logOut)
-	logs(llNote, line.fname, line.Linenos(), format, fmt.Sprintf(format, args...))
+	logs(llNote, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	line.logAutofix()
 }
 
 func (line *LineImpl) String() string {
-	return line.fname + ":" + line.Linenos() + ": " + line.text
+	return line.Filename + ":" + line.Linenos() + ": " + line.Text
 }
 
 func (line *LineImpl) logAutofix() {
 	if line.autofixMessage != "" {
-		logs(llAutofix, line.fname, line.Linenos(), "%s", line.autofixMessage)
+		logs(llAutofix, line.Filename, line.Linenos(), "%s", line.autofixMessage)
 		line.autofixMessage = ""
 	}
 }
@@ -226,7 +218,7 @@ func (line *LineImpl) RememberAutofix(format string, args ...interface{}) (hasBe
 	}
 	line.changed = true
 	if G.opts.Autofix {
-		logs(llAutofix, line.fname, line.Linenos(), format, fmt.Sprintf(format, args...))
+		logs(llAutofix, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 		return true
 	}
 	if G.opts.PrintAutofix {

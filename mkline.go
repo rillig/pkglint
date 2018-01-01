@@ -49,7 +49,7 @@ type mkLineDependency struct {
 func NewMkLine(line Line) (mkline *MkLineImpl) {
 	mkline = &MkLineImpl{Line: line}
 
-	text := line.Text()
+	text := line.Text
 
 	if hasPrefix(text, " ") {
 		mkline.Warnf("Makefile lines should not start with space characters.")
@@ -144,7 +144,7 @@ func NewMkLine(line Line) (mkline *MkLineImpl) {
 }
 
 func (mkline *MkLineImpl) String() string {
-	return fmt.Sprintf("%s:%s", mkline.Filename(), mkline.Linenos())
+	return fmt.Sprintf("%s:%s", mkline.Filename, mkline.Linenos())
 }
 func (mkline *MkLineImpl) IsVarassign() bool { _, ok := mkline.data.(mkLineAssign); return ok }
 func (mkline *MkLineImpl) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }
@@ -550,7 +550,7 @@ func (mkline *MkLineImpl) ExtractUsedVariables(text string) []string {
 }
 
 func (mkline *MkLineImpl) DetermineUsedVariables() (varnames []string) {
-	rest := mkline.Text()
+	rest := mkline.Text
 
 	if strings.HasPrefix(rest, "#") {
 		return

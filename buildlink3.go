@@ -8,7 +8,7 @@ import (
 
 func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	if trace.Tracing {
-		defer trace.Call1(mklines.lines[0].Filename())()
+		defer trace.Call1(mklines.lines[0].Filename)()
 	}
 
 	mklines.Check()
@@ -18,7 +18,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	for exp.AdvanceIfPrefix("#") {
 		line := exp.PreviousLine()
 		// See pkgtools/createbuildlink/files/createbuildlink
-		if hasPrefix(line.Text(), "# XXX This file was created automatically") {
+		if hasPrefix(line.Text, "# XXX This file was created automatically") {
 			line.Errorf("This comment indicates unfinished work (url2pkg).")
 		}
 	}

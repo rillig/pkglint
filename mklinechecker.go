@@ -30,7 +30,7 @@ func (ck MkLineChecker) Check() {
 		NewShellLine(mkline).CheckShellCommandLine(shellcmd)
 
 	case mkline.IsComment():
-		if hasPrefix(mkline.Text(), "# url2pkg-marker") {
+		if hasPrefix(mkline.Text, "# url2pkg-marker") {
 			mkline.Errorf("This comment indicates unfinished work (url2pkg).")
 		}
 
@@ -52,7 +52,7 @@ func (ck MkLineChecker) checkInclude() {
 	includefile := mkline.Includefile()
 	mustExist := mkline.MustExist()
 	if trace.Tracing {
-		trace.Step2("includingFile=%s includefile=%s", mkline.Filename(), includefile)
+		trace.Step2("includingFile=%s includefile=%s", mkline.Filename, includefile)
 	}
 	ck.CheckRelativePath(includefile, mustExist)
 
@@ -66,7 +66,7 @@ func (ck MkLineChecker) checkInclude() {
 			"Makefile.common.")
 
 	case includefile == "../../mk/bsd.prefs.mk":
-		if path.Base(mkline.Filename()) == "buildlink3.mk" {
+		if path.Base(mkline.Filename) == "buildlink3.mk" {
 			mkline.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 		if G.Pkg != nil {
@@ -247,7 +247,7 @@ func (ck MkLineChecker) checkVarassignDefPermissions() {
 		return
 	}
 
-	perms := vartype.EffectivePermissions(mkline.Filename())
+	perms := vartype.EffectivePermissions(mkline.Filename)
 	var needed AclPermissions
 	switch op {
 	case opAssign, opAssignShell, opAssignEval:
@@ -357,7 +357,7 @@ func (ck MkLineChecker) CheckVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	mkline := ck.MkLine
-	perms := vartype.EffectivePermissions(mkline.Filename())
+	perms := vartype.EffectivePermissions(mkline.Filename)
 
 	isLoadTime := false // Will the variable be used at load time?
 
