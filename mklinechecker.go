@@ -17,8 +17,8 @@ type MkLineChecker struct {
 func (ck MkLineChecker) Check() {
 	mkline := ck.MkLine
 
-	CheckLineTrailingWhitespace(mkline)
-	CheckLineValidCharacters(mkline, `[\t -~]`)
+	CheckLineTrailingWhitespace(mkline.Line)
+	CheckLineValidCharacters(mkline.Line, `[\t -~]`)
 
 	switch {
 	case mkline.IsVarassign():
@@ -725,7 +725,7 @@ func (ck MkLineChecker) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 		defer trace.Call(vartype, time)()
 	}
 	mkline := ck.MkLine
-	tokens := NewMkParser(mkline, mkline.Value(), false).MkTokens()
+	tokens := NewMkParser(mkline.Line, mkline.Value(), false).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `\s$`)
@@ -753,7 +753,7 @@ func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime
 	}
 
 	mkline := ck.MkLine
-	atoms := NewShTokenizer(mkline, mkline.Value(), false).ShAtoms()
+	atoms := NewShTokenizer(mkline.Line, mkline.Value(), false).ShAtoms()
 	for i, atom := range atoms {
 		if atom.Type == shtVaruse {
 			isWordPart := isWordPart(atoms, i)
@@ -907,7 +907,7 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 		}
 
 	case vartype.kindOfList == lkShell:
-		words, _ := splitIntoMkWords(mkline, value)
+		words, _ := splitIntoMkWords(mkline.Line, value)
 		for _, word := range words {
 			ck.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
@@ -923,7 +923,7 @@ func (ck MkLineChecker) CheckVartypePrimitive(varname string, checker *BasicType
 
 	mkline := ck.MkLine
 	valueNoVar := mkline.WithoutMakeVariables(value)
-	ctx := &VartypeCheck{mkline, mkline, varname, op, value, valueNoVar, comment, guessed}
+	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, guessed}
 	checker.checker(ctx)
 }
 
@@ -981,7 +981,7 @@ func (ck MkLineChecker) CheckCond() {
 		defer trace.Call1(mkline.Args())()
 	}
 
-	p := NewMkParser(mkline, mkline.Args(), false)
+	p := NewMkParser(mkline.Line, mkline.Args(), false)
 	cond := p.MkCond()
 	if !p.EOF() {
 		mkline.Warnf("Invalid conditional %q.", mkline.Args())

@@ -210,7 +210,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 		}
 
-		mklines.toolRegistry.ParseToolLine(mkline)
+		mklines.toolRegistry.ParseToolLine(mkline.Line)
 	}
 }
 

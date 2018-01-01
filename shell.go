@@ -36,7 +36,7 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
 		return
 	}
 
-	var line Line = shline.mkline
+	var line = shline.mkline.Line
 
 	p := NewMkParser(line, token, false)
 	if varuse := p.VarUse(); varuse != nil && p.EOF() {
@@ -223,7 +223,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 		defer trace.Call(shellword, quoting, "=>", trace.Ref(&unescaped))()
 	}
 
-	var line Line = shline.mkline
+	line := shline.mkline.Line
 	for !repl.EOF() {
 		switch {
 		case repl.AdvanceStr("`"):
@@ -275,7 +275,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		defer trace.Call1(shelltext)()
 	}
 
-	var line Line = shline.mkline
+	line := shline.mkline.Line
 
 	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
 		line.Notef("Please use the SUBST framework instead of ${SED} and ${MV}.")
@@ -324,7 +324,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 		defer trace.Call()()
 	}
 
-	var line Line = shline.mkline
+	line := shline.mkline.Line
 	program, err := parseShellProgram(line, shellcmd)
 	if err != nil && contains(shellcmd, "$$(") { // Hack until the shell parser can handle subshells.
 		line.Warnf("Invoking subshells via $(...) is not portable enough.")
@@ -385,7 +385,7 @@ func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) 
 		// Shell comments may be hidden, since they cannot have side effects.
 
 	default:
-		tokens, _ := splitIntoShellTokens(shline.mkline, rest)
+		tokens, _ := splitIntoShellTokens(shline.mkline.Line, rest)
 		if len(tokens) > 0 {
 			cmd := tokens[0]
 			switch cmd {
@@ -595,7 +595,7 @@ func (scc *SimpleCommandChecker) checkAbsolutePathnames() {
 	isSubst := false
 	for _, arg := range scc.strcmd.Args {
 		if !isSubst {
-			CheckLineAbsolutePathname(scc.shline.mkline, arg)
+			CheckLineAbsolutePathname(scc.shline.mkline.Line, arg)
 		}
 		if false && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
 			scc.shline.mkline.Warnf("Substitution commands like %q should always be quoted.", arg)
@@ -813,7 +813,7 @@ func (shline *ShellLine) checkCommandUse(shellcmd string) {
 		return
 	}
 
-	var line Line = shline.mkline
+	line := shline.mkline.Line
 	switch shellcmd {
 	case "${INSTALL}",
 		"${INSTALL_DATA}", "${INSTALL_DATA_DIR}",
