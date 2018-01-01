@@ -40,7 +40,7 @@ type LineImpl struct {
 	lastLine       int32 // Usually the same as firstLine, may differ in Makefiles
 	Text           string
 	raw            []*RawLine
-	changed        bool
+	Changed        bool
 	before         []string
 	after          []string
 	autofixMessage string
@@ -63,10 +63,6 @@ func NewLineEOF(fname string) Line {
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
 func NewLineWhole(fname string) Line {
 	return NewLine(fname, 0, "", nil)
-}
-
-func (line *LineImpl) IsChanged() bool {
-	return line.changed
 }
 
 func (line *LineImpl) modifiedLines() []string {
@@ -216,7 +212,7 @@ func (line *LineImpl) RememberAutofix(format string, args ...interface{}) (hasBe
 	if line.firstLine < 1 {
 		return false
 	}
-	line.changed = true
+	line.Changed = true
 	if G.opts.Autofix {
 		logs(llAutofix, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 		return true
@@ -230,5 +226,5 @@ func (line *LineImpl) RememberAutofix(format string, args ...interface{}) (hasBe
 func (line *LineImpl) AutofixMark(reason string) {
 	line.RememberAutofix(reason)
 	line.logAutofix()
-	line.changed = true
+	line.Changed = true
 }

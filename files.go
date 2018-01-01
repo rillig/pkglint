@@ -146,7 +146,7 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 
 	if !G.opts.Autofix {
 		for _, line := range lines {
-			if line.IsChanged() {
+			if line.Changed {
 				G.autofixAvailable = true
 			}
 		}
@@ -156,7 +156,7 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 	changes := make(map[string][]string)
 	changed := make(map[string]bool)
 	for _, line := range lines {
-		if line.IsChanged() {
+		if line.Changed {
 			changed[line.Filename] = true
 		}
 		changes[line.Filename] = append(changes[line.Filename], line.modifiedLines()...)

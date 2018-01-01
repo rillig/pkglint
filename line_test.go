@@ -10,25 +10,25 @@ func (s *Suite) Test_Line_modifications(c *check.C) {
 
 	line := NewLine("fname", 1, "dummy", s.NewRawLines(1, "original\n"))
 
-	c.Check(line.changed, equals, false)
+	c.Check(line.Changed, equals, false)
 	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n"))
 
 	line.AutofixReplaceRegexp(`(.)(.*)(.)`, "$3$2$1")
 
-	c.Check(line.changed, equals, true)
+	c.Check(line.Changed, equals, true)
 	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n", "lriginao\n"))
 
-	line.changed = false
+	line.Changed = false
 	line.AutofixReplace("i", "u")
 
-	c.Check(line.changed, equals, true)
+	c.Check(line.Changed, equals, true)
 	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n", "lruginao\n"))
 	c.Check(line.raw[0].textnl, equals, "lruginao\n")
 
-	line.changed = false
+	line.Changed = false
 	line.AutofixReplace("lruginao", "middle")
 
-	c.Check(line.changed, equals, true)
+	c.Check(line.Changed, equals, true)
 	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n", "middle\n"))
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 
