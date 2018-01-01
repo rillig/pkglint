@@ -3,25 +3,22 @@ package main
 // Checks for patch files.
 
 import (
-	"netbsd.org/pkglint/line"
-	"netbsd.org/pkglint/linechecks"
-	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
 )
 
-func ChecklinesPatch(lines []line.Line) {
+func ChecklinesPatch(lines []Line) {
 	if trace.Tracing {
 		defer trace.Call1(lines[0].Filename())()
 	}
 
-	(&PatchChecker{lines, textproc.NewExpecter(lines), false, false}).Check()
+	(&PatchChecker{lines, NewExpecter(lines), false, false}).Check()
 }
 
 type PatchChecker struct {
-	lines             []line.Line
-	exp               *textproc.Expecter
+	lines             []Line
+	exp               *Expecter
 	seenDocumentation bool
 	previousLineEmpty bool
 }
@@ -37,7 +34,7 @@ func (ck *PatchChecker) Check() {
 		defer trace.Call0()()
 	}
 
-	if linechecks.CheckRcsid(ck.lines[0], ``, "") {
+	if CheckLineRcsid(ck.lines[0], ``, "") {
 		ck.exp.Advance()
 	}
 	ck.previousLineEmpty = ck.exp.ExpectEmptyLine(G.opts.WarnSpace)
@@ -157,7 +154,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	}
 }
 
-func (ck *PatchChecker) checkBeginDiff(line line.Line, patchedFiles int) {
+func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -286,7 +283,7 @@ func (ft FileType) String() string {
 }
 
 // This is used to select the proper subroutine for detecting absolute pathnames.
-func guessFileType(line line.Line, fname string) (fileType FileType) {
+func guessFileType(line Line, fname string) (fileType FileType) {
 	if trace.Tracing {
 		defer trace.Call(fname, "=>", &fileType)()
 	}
@@ -320,7 +317,7 @@ func guessFileType(line line.Line, fname string) (fileType FileType) {
 }
 
 // Looks for strings like "/dev/cd0" appearing in source code
-func checklineSourceAbsolutePathname(line line.Line, text string) {
+func checklineSourceAbsolutePathname(line Line, text string) {
 	if !strings.ContainsAny(text, "\"'") {
 		return
 	}
@@ -337,12 +334,12 @@ func checklineSourceAbsolutePathname(line line.Line, text string) {
 			// ok; Python example: libdir = prefix + '/lib'
 
 		default:
-			linechecks.CheckwordAbsolutePathname(line, str)
+			CheckwordAbsolutePathname(line, str)
 		}
 	}
 }
 
-func checklineOtherAbsolutePathname(line line.Line, text string) {
+func checklineOtherAbsolutePathname(line Line, text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
 	}
@@ -362,7 +359,7 @@ func checklineOtherAbsolutePathname(line line.Line, text string) {
 			if trace.Tracing {
 				trace.Step1("before=%q", before)
 			}
-			linechecks.CheckwordAbsolutePathname(line, path)
+			CheckwordAbsolutePathname(line, path)
 		}
 	}
 }

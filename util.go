@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"os"
@@ -134,7 +133,7 @@ func isLocallyModified(fname string) bool {
 	return false
 }
 
-func loadCvsEntries(fname string) []line.Line {
+func loadCvsEntries(fname string) []Line {
 	dir := path.Dir(fname)
 	if dir == G.CvsEntriesDir {
 		return G.CvsEntriesLines

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"netbsd.org/pkglint/line"
-	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"sort"
 )
@@ -20,7 +18,7 @@ func CheckdirCategory() {
 	mklines := NewMkLines(lines)
 	mklines.Check()
 
-	exp := textproc.NewExpecter(lines)
+	exp := NewExpecter(lines)
 	for exp.AdvanceIfPrefix("#") {
 	}
 	exp.ExpectEmptyLine(G.opts.WarnSpace)
@@ -34,7 +32,7 @@ func CheckdirCategory() {
 
 	type subdir struct {
 		name   string
-		line   line.Line
+		line   Line
 		active bool
 	}
 
@@ -98,7 +96,7 @@ func CheckdirCategory() {
 
 	var subdirs []string
 
-	var line line.Line
+	var line Line
 	mActive := false
 
 	for !(mAtend && fAtend) {

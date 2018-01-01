@@ -1,16 +1,13 @@
-package linechecks
+package main
 
 import (
 	"fmt"
-	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"strings"
 )
 
-var Explain func(...string)
-
-func CheckAbsolutePathname(line line.Line, text string) {
+func CheckLineAbsolutePathname(line Line, text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
 	}
@@ -29,7 +26,7 @@ func CheckAbsolutePathname(line line.Line, text string) {
 	}
 }
 
-func CheckLength(line line.Line, maxlength int) {
+func CheckLineLength(line Line, maxlength int) {
 	if len(line.Text()) > maxlength {
 		line.Warnf("Line too long (should be no more than %d characters).", maxlength)
 		Explain(
@@ -39,7 +36,7 @@ func CheckLength(line line.Line, maxlength int) {
 	}
 }
 
-func CheckValidCharacters(line line.Line, reChar regex.Pattern) {
+func CheckLineValidCharacters(line Line, reChar regex.Pattern) {
 	rest := regex.Compile(reChar).ReplaceAllString(line.Text(), "")
 	if rest != "" {
 		uni := ""
@@ -50,7 +47,7 @@ func CheckValidCharacters(line line.Line, reChar regex.Pattern) {
 	}
 }
 
-func CheckTrailingWhitespace(line line.Line) {
+func CheckLineTrailingWhitespace(line Line) {
 	if strings.HasSuffix(line.Text(), " ") || strings.HasSuffix(line.Text(), "\t") {
 		if !line.AutofixReplaceRegexp(`\s+\n$`, "\n") {
 			line.Notef("Trailing white-space.")
@@ -61,7 +58,7 @@ func CheckTrailingWhitespace(line line.Line) {
 	}
 }
 
-func CheckRcsid(line line.Line, prefixRe regex.Pattern, suggestedPrefix string) bool {
+func CheckLineRcsid(line Line, prefixRe regex.Pattern, suggestedPrefix string) bool {
 	if trace.Tracing {
 		defer trace.Call(prefixRe, suggestedPrefix)()
 	}
@@ -80,7 +77,7 @@ func CheckRcsid(line line.Line, prefixRe regex.Pattern, suggestedPrefix string) 
 	return false
 }
 
-func CheckwordAbsolutePathname(line line.Line, word string) {
+func CheckwordAbsolutePathname(line Line, word string) {
 	if trace.Tracing {
 		defer trace.Call1(word)()
 	}

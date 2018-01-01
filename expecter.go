@@ -1,7 +1,6 @@
-package textproc
+package main
 
 import (
-	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"strings"
@@ -9,24 +8,24 @@ import (
 
 // Expecter records the state when checking a list of lines from top to bottom.
 type Expecter struct {
-	lines []line.Line
+	lines []Line
 	index int
 	m     []string
 }
 
-func NewExpecter(lines []line.Line) *Expecter {
+func NewExpecter(lines []Line) *Expecter {
 	return &Expecter{lines, 0, nil}
 }
 
-func (exp *Expecter) CurrentLine() line.Line {
+func (exp *Expecter) CurrentLine() Line {
 	if exp.index < len(exp.lines) {
 		return exp.lines[exp.index]
 	}
 
-	return line.NewLineEOF(exp.lines[0].Filename())
+	return NewLineEOF(exp.lines[0].Filename())
 }
 
-func (exp *Expecter) PreviousLine() line.Line {
+func (exp *Expecter) PreviousLine() Line {
 	return exp.lines[exp.index-1]
 }
 

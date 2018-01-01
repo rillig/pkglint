@@ -1,9 +1,7 @@
 package main
 
 import (
-	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/pkgver"
-	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"strings"
 )
@@ -15,7 +13,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 	mklines.Check()
 
-	exp := textproc.NewExpecter(mklines.lines)
+	exp := NewExpecter(mklines.lines)
 
 	for exp.AdvanceIfPrefix("#") {
 		line := exp.PreviousLine()
@@ -34,7 +32,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	}
 
 	pkgbaseLine, pkgbase := exp.CurrentLine(), ""
-	var abiLine, apiLine line.Line
+	var abiLine, apiLine Line
 	var abi, api *DependencyPattern
 
 	// First paragraph: Introduction of the package identifier

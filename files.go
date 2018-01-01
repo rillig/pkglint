@@ -2,13 +2,12 @@ package main
 
 import (
 	"io/ioutil"
-	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/trace"
 	"os"
 	"strings"
 )
 
-func LoadNonemptyLines(fname string, joinBackslashLines bool) []line.Line {
+func LoadNonemptyLines(fname string, joinBackslashLines bool) []Line {
 	lines, err := readLines(fname, joinBackslashLines)
 	if err != nil {
 		NewLineWhole(fname).Errorf("Cannot be read.")
@@ -21,7 +20,7 @@ func LoadNonemptyLines(fname string, joinBackslashLines bool) []line.Line {
 	return lines
 }
 
-func LoadExistingLines(fname string, joinBackslashLines bool) []line.Line {
+func LoadExistingLines(fname string, joinBackslashLines bool) []Line {
 	lines, err := readLines(fname, joinBackslashLines)
 	if err != nil {
 		NewLineWhole(fname).Fatalf("Cannot be read.")
@@ -32,7 +31,7 @@ func LoadExistingLines(fname string, joinBackslashLines bool) []line.Line {
 	return lines
 }
 
-func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) line.Line {
+func getLogicalLine(fname string, rawLines []*RawLine, pindex *int) Line {
 	{ // Handle the common case efficiently
 		index := *pindex
 		rawLine := rawLines[index]
@@ -103,7 +102,7 @@ func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, c
 	return
 }
 
-func readLines(fname string, joinBackslashLines bool) ([]line.Line, error) {
+func readLines(fname string, joinBackslashLines bool) ([]Line, error) {
 	rawText, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return nil, err
@@ -112,7 +111,7 @@ func readLines(fname string, joinBackslashLines bool) ([]line.Line, error) {
 	return convertToLogicalLines(fname, string(rawText), joinBackslashLines), nil
 }
 
-func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool) []line.Line {
+func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool) []Line {
 	var rawLines []*RawLine
 	for lineno, rawLine := range strings.SplitAfter(rawText, "\n") {
 		if rawLine != "" {
@@ -120,7 +119,7 @@ func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool
 		}
 	}
 
-	var loglines []line.Line
+	var loglines []Line
 	if joinBackslashLines {
 		for lineno := 0; lineno < len(rawLines); {
 			loglines = append(loglines, getLogicalLine(fname, rawLines, &lineno))
@@ -140,7 +139,7 @@ func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool
 	return loglines
 }
 
-func SaveAutofixChanges(lines []line.Line) (autofixed bool) {
+func SaveAutofixChanges(lines []Line) (autofixed bool) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}

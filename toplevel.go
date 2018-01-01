@@ -1,7 +1,6 @@
 package main
 
 import (
-	"netbsd.org/pkglint/line"
 	"netbsd.org/pkglint/trace"
 )
 
@@ -40,7 +39,7 @@ func CheckdirToplevel() {
 	}
 }
 
-func (ctx *Toplevel) checkSubdir(line line.Line, commentedOut bool, indentation, subdir, comment string) {
+func (ctx *Toplevel) checkSubdir(line Line, commentedOut bool, indentation, subdir, comment string) {
 	if commentedOut && comment == "" {
 		line.Warnf("%q commented out without giving a reason.", subdir)
 	}
