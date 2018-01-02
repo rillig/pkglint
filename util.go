@@ -333,3 +333,20 @@ func hasAlnumPrefix(s string) bool {
 	b := s[0]
 	return '0' <= b && b <= '9' || 'A' <= b && b <= 'Z' || b == '_' || 'a' <= b && b <= 'z'
 }
+
+// Once remembers with which arguments its FirstTime method has been called
+// and only returns true on each first call.
+type Once struct {
+	seen map[string]bool
+}
+
+func (o *Once) FirstTime(what string) bool {
+	if o.seen == nil {
+		o.seen = make(map[string]bool)
+	}
+	if _, ok := o.seen[what]; ok {
+		return false
+	}
+	o.seen[what] = true
+	return true
+}
