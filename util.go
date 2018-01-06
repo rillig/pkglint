@@ -68,7 +68,7 @@ func isEmptyDir(fname string) bool {
 	}
 	for _, dirent := range dirents {
 		name := dirent.Name()
-		if name == "." || name == ".." || name == "CVS" {
+		if isIgnoredFilename(name) {
 			continue
 		}
 		if dirent.IsDir() && isEmptyDir(fname+"/"+name) {
@@ -88,11 +88,19 @@ func getSubdirs(fname string) []string {
 	var subdirs []string
 	for _, dirent := range dirents {
 		name := dirent.Name()
-		if name != "." && name != ".." && name != "CVS" && dirent.IsDir() && !isEmptyDir(fname+"/"+name) {
+		if dirent.IsDir() && !isIgnoredFilename(name) && !isEmptyDir(fname+"/"+name) {
 			subdirs = append(subdirs, name)
 		}
 	}
 	return subdirs
+}
+
+func isIgnoredFilename(fileName string) bool {
+	switch fileName {
+	case ".", "..", "CVS", ".svn", ".git", ".hg":
+		return true
+	}
+	return false
 }
 
 // Checks whether a file is already committed to the CVS repository.
