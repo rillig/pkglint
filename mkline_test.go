@@ -133,7 +133,7 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 		"\tshell command # shell comment",
 		"# whole line comment",
 		"",
-		".  if !empty(PKGNAME:M*-*) # cond comment",
+		".  if !empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[\\#]} == 1 # cond comment",
 		".    include \"../../mk/bsd.prefs.mk\" # include comment",
 		".    include <subdir.mk> # sysinclude comment",
 		"target1 target2: source1 source2",
@@ -159,7 +159,7 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 	c.Check(ln[4].IsCond(), equals, true)
 	c.Check(ln[4].Indent(), equals, "  ")
 	c.Check(ln[4].Directive(), equals, "if")
-	c.Check(ln[4].Args(), equals, "!empty(PKGNAME:M*-*)")
+	c.Check(ln[4].Args(), equals, "!empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[#]} == 1")
 
 	c.Check(ln[5].IsInclude(), equals, true)
 	c.Check(ln[5].Indent(), equals, "    ")
