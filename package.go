@@ -414,6 +414,9 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 			// probably contains a statement that C is
 			// really not needed.
 
+		} else if !G.Infrastructure && useLine.Filename == "../../mk/compiler.mk" {
+			// Ignore this one
+
 		} else if !matches(useLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
 			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
 				useLine.ReferenceFrom(gnuLine.Line))
