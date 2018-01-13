@@ -18,6 +18,7 @@ type Autofix struct {
 	linesBefore []string      // Newly inserted lines, including \n
 	lines       []*RawLine    // Original lines, available for diff
 	linesAfter  []string      // Newly inserted lines, including \n
+	modified    bool          // Modified in memory, but not necessarily written back to disk
 	descrFormat string        // Human-readable description of the latest modification
 	descrArgs   []interface{} //
 	level       *LogLevel     //
@@ -39,6 +40,7 @@ func (fix *Autofix) Replace(from string, to string) {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
+				fix.modified = true
 				fix.Describef("Replacing %q with %q.", from, to)
 			}
 		}
@@ -52,6 +54,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
+				fix.modified = true
 				fix.Describef("Replacing regular expression %q with %q.", from, to)
 			}
 		}
@@ -60,17 +63,20 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
 
 func (fix *Autofix) InsertBefore(text string) {
 	fix.linesBefore = append(fix.linesBefore, text+"\n")
+	fix.modified = true
 	fix.Describef("Inserting a line %q before this line.", text)
 }
 
 func (fix *Autofix) InsertAfter(text string) {
 	fix.linesAfter = append(fix.linesAfter, text+"\n")
+	fix.modified = true
 	fix.Describef("Inserting a line %q after this line.", text)
 }
 
 func (fix *Autofix) Delete() {
 	for _, line := range fix.lines {
 		line.textnl = ""
+		fix.modified = true
 	}
 	fix.Describef("Deleting this line.")
 }
@@ -132,6 +138,7 @@ func (fix *Autofix) Apply() {
 	fix.diagFormat = ""
 	fix.diagArgs = nil
 	fix.explanation = nil
+	// Don't reset fix.modified here.
 }
 
 // SaveAutofixChanges writes the given lines back into their files,
@@ -145,7 +152,7 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 
 	if !G.opts.Autofix {
 		for _, line := range lines {
-			if line.autofix != nil && line.autofix.descrFormat != "" {
+			if line.autofix != nil && line.autofix.modified {
 				G.autofixAvailable = true
 			}
 		}

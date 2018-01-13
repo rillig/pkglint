@@ -380,6 +380,8 @@ func (s *Suite) Test_MkLines_checkForUsedComment(c *check.C) {
 	s.CheckOutputLines(
 		"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.",
 		"AUTOFIX: Makefile.common:3: Inserting a line \"# used by category/package\" before this line.")
+
+	c.Check(G.autofixAvailable, equals, true)
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
