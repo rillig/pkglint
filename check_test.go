@@ -93,6 +93,10 @@ func (s *Suite) NewRawLines(args ...interface{}) []*RawLine {
 	return rawlines[:j]
 }
 
+// NewLines generates a slice of simple lines,
+// i.e. each logical line has exactly one physical line.
+// To work with line continuations like in Makefiles,
+// use Suite.CreateTmpFileLines together with Suite.LoadExistingLines.
 func (s *Suite) NewLines(fname string, texts ...string) []Line {
 	result := make([]Line, len(texts))
 	for i, text := range texts {
@@ -107,13 +111,13 @@ func (s *Suite) NewMkLines(fname string, lines ...string) *MkLines {
 }
 
 func (s *Suite) BeginDebugToStdout() {
-	G.logOut = os.Stdout
+	G.logOut = NewSeparatorWriter(os.Stdout)
 	trace.Out = os.Stdout
 	trace.Tracing = true
 }
 
 func (s *Suite) EndDebugToStdout() {
-	G.logOut = &s.stdout
+	G.logOut = NewSeparatorWriter(&s.stdout)
 	trace.Out = &s.stdout
 	trace.Tracing = false
 }
@@ -203,7 +207,7 @@ func (s *Suite) ExpectFatalError(action func()) {
 func (s *Suite) SetUpTest(c *check.C) {
 	G = GlobalVars{Testing: true}
 	textproc.Testing = true
-	G.logOut, G.logErr, trace.Out = &s.stdout, &s.stderr, &s.stdout
+	G.logOut, G.logErr, trace.Out = NewSeparatorWriter(&s.stdout), NewSeparatorWriter(&s.stderr), &s.stdout
 	s.checkC = c
 	s.UseCommandLine( /* no arguments */ )
 	s.checkC = nil

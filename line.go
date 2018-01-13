@@ -15,7 +15,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"path"
 	"strconv"
 )
@@ -84,57 +83,76 @@ func (line *LineImpl) IsMultiline() bool {
 	return line.firstLine > 0 && line.firstLine != line.lastLine
 }
 
-func (line *LineImpl) printSource(out io.Writer) {
-	if G.opts.PrintSource {
-		io.WriteString(out, "\n")
+func (line *LineImpl) printSource(out *SeparatorWriter) {
+	if !G.opts.PrintSource {
+		return
+	}
 
-		printDiff := func(rawLines []*RawLine) {
-			for _, rawLine := range rawLines {
-				if rawLine.textnl != rawLine.orignl {
-					if rawLine.orignl != "" {
-						io.WriteString(out, "- "+rawLine.orignl)
-					}
-					if rawLine.textnl != "" {
-						io.WriteString(out, "+ "+rawLine.textnl)
-					}
-				} else {
-					io.WriteString(out, "> "+rawLine.orignl)
+	printDiff := func(rawLines []*RawLine) {
+		for _, rawLine := range rawLines {
+			if rawLine.textnl != rawLine.orignl {
+				if rawLine.orignl != "" {
+					out.Write("- " + rawLine.orignl)
 				}
+				if rawLine.textnl != "" {
+					out.Write("+ " + rawLine.textnl)
+				}
+			} else {
+				out.Write("> " + rawLine.orignl)
 			}
 		}
+	}
 
-		if line.autofix != nil {
-			for _, before := range line.autofix.linesBefore {
-				io.WriteString(out, "+ "+before)
-			}
-			printDiff(line.autofix.lines)
-			for _, after := range line.autofix.linesAfter {
-				io.WriteString(out, "+ "+after)
-			}
-		} else {
-			printDiff(line.raw)
+	if line.autofix != nil {
+		for _, before := range line.autofix.linesBefore {
+			out.Write("+ " + before)
 		}
+		printDiff(line.autofix.lines)
+		for _, after := range line.autofix.linesAfter {
+			out.Write("+ " + after)
+		}
+	} else {
+		printDiff(line.raw)
+	}
+}
+
+func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
+	if G.opts.PrintAutofix || G.opts.Autofix {
+		// In these two cases, the only interesting diagnostics are
+		// those that can be fixed automatically.
+		// These are logged by Autofix.Apply.
+		return
+	}
+	if !shallBeLogged(format) {
+		return
+	}
+
+	out := G.logOut
+	if level == llError {
+		out = G.logErr
+	}
+
+	logs(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	if !G.opts.PrintAutofix && G.opts.PrintSource {
+		line.printSource(out)
+		out.Separate()
 	}
 }
 
 func (line *LineImpl) Fatalf(format string, args ...interface{}) {
-	line.printSource(G.logErr)
-	logs(llFatal, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	line.log(llFatal, format, args)
 }
 
 func (line *LineImpl) Errorf(format string, args ...interface{}) {
-	line.printSource(G.logOut)
-	logs(llError, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	line.log(llError, format, args)
 }
 
 func (line *LineImpl) Warnf(format string, args ...interface{}) {
-	line.printSource(G.logOut)
-	logs(llWarn, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	line.log(llWarn, format, args)
 }
 
 func (line *LineImpl) Notef(format string, args ...interface{}) {
-	line.printSource(G.logOut)
-	logs(llNote, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	line.log(llNote, format, args)
 }
 
 func (line *LineImpl) String() string {

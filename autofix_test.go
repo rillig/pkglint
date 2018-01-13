@@ -193,13 +193,12 @@ func (s *Suite) Test_Autofix_show_source_code(c *check.C) {
 	}
 
 	s.CheckOutputLines(
-		"",
+		"WARN: Makefile:27--29: Using \"old\" is deprecated.",
+		"AUTOFIX: Makefile:27--29: Replacing \"old\" with \"new\".",
 		"> before",
 		"- The old song",
 		"+ The new song",
-		"> after",
-		"WARN: Makefile:27--29: Using \"old\" is deprecated.",
-		"AUTOFIX: Makefile:27--29: Replacing \"old\" with \"new\".")
+		"> after")
 }
 
 func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
@@ -213,11 +212,10 @@ func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
 	fix.Apply()
 
 	s.CheckOutputLines(
-		"",
-		"+ inserted",
-		"> original",
 		"WARN: Makefile:30: Dummy",
-		"AUTOFIX: Makefile:30: Inserting a line \"inserted\" before this line.")
+		"AUTOFIX: Makefile:30: Inserting a line \"inserted\" before this line.",
+		"+ inserted",
+		"> original")
 }
 
 func (s *Suite) Test_Autofix_Delete(c *check.C) {
@@ -231,8 +229,7 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 	fix.Apply()
 
 	s.CheckOutputLines(
-		"",
-		"- to be deleted",
 		"WARN: Makefile:30: Dummy",
-		"AUTOFIX: Makefile:30: Deleting this line.")
+		"AUTOFIX: Makefile:30: Deleting this line.",
+		"- to be deleted")
 }

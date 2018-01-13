@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"netbsd.org/pkglint/histogram"
 )
 
@@ -30,8 +29,8 @@ type GlobalVars struct {
 	explanationsAvailable bool
 	explanationsGiven     map[string]bool
 	autofixAvailable      bool
-	logOut                io.Writer
-	logErr                io.Writer
+	logOut                *SeparatorWriter
+	logErr                *SeparatorWriter
 
 	loghisto *histogram.Histogram
 }

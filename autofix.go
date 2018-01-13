@@ -141,15 +141,20 @@ func (fix *Autofix) Apply() {
 
 	if fix.diagFormat != "" && !G.opts.Autofix && fix.diagFormat != "Silent-Magic-Diagnostic" {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
-		line.printSource(G.logOut)
 		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 		if len(fix.explanation) != 0 {
 			Explain(fix.explanation...)
 		}
 	}
+
 	if fix.descrFormat != "" && (G.opts.Autofix || G.opts.PrintAutofix) {
 		msg := fmt.Sprintf(fix.descrFormat, fix.descrArgs...)
 		logs(llAutofix, line.Filename, line.Linenos(), "", msg)
+	}
+
+	if G.opts.PrintSource {
+		line.printSource(G.logOut)
+		G.logOut.Separate()
 	}
 
 	fix.descrFormat = ""
