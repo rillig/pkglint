@@ -24,9 +24,9 @@ func (s *Suite) Test_Autofix_ReplaceRegex(c *check.C) {
 		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".")
 }
 
-func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
+func (s *Suite) Test_Autofix_ReplaceRegex_with_autofix(c *check.C) {
 	s.Init(c)
-	s.UseCommandLine("--autofix")
+	s.UseCommandLine("--autofix", "--source")
 	fname := s.CreateTmpFile("Makefile", ""+
 		"line1\n"+
 		"line2\n"+
@@ -38,12 +38,58 @@ func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
 	fix.ReplaceRegex(`.`, "X")
 	fix.Apply()
 
+	fix.Warnf("Use Y instead of X.")
+	fix.Replace("X", "Y")
+	fix.Apply()
+
 	SaveAutofixChanges(lines)
 
-	c.Check(s.LoadTmpFile("Makefile"), equals, "line1\nXXXXX\nline3\n")
+	c.Check(s.LoadTmpFile("Makefile"), equals, ""+
+		"line1\n"+
+		"YXXXX\n"+
+		"line3\n")
 	s.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".",
+		"- line2",
+		"+ XXXXX",
+		"",
+		"AUTOFIX: ~/Makefile:2: Replacing \"X\" with \"Y\".",
+		"- line2",
+		"+ YXXXX",
+		"",
 		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
+}
+
+func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
+	s.Init(c)
+	s.UseCommandLine("--show-autofix", "--source")
+	fname := s.CreateTmpFile("Makefile", ""+
+		"line1\n"+
+		"line2\n"+
+		"line3\n")
+	lines := LoadExistingLines(fname, true)
+
+	fix := lines[1].Autofix()
+	fix.Warnf("Something's wrong here.")
+	fix.ReplaceRegex(`.`, "X")
+	fix.Apply()
+
+	fix.Warnf("Use Y instead of X.")
+	fix.Replace("X", "Y")
+	fix.Apply()
+
+	SaveAutofixChanges(lines)
+
+	s.CheckOutputLines(
+		"WARN: ~/Makefile:2: Something's wrong here.",
+		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".",
+		"- line2",
+		"+ XXXXX",
+		"",
+		"WARN: ~/Makefile:2: Use Y instead of X.",
+		"AUTOFIX: ~/Makefile:2: Replacing \"X\" with \"Y\".",
+		"- line2",
+		"+ YXXXX")
 }
 
 func (s *Suite) Test_autofix_MkLines(c *check.C) {
