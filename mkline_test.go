@@ -113,7 +113,7 @@ func (s *Suite) Test_VaralignBlock_Check_only_spaces(c *check.C) {
 func (s *Suite) Test_NewMkLine(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("-Wspace")
-	mklines := NewMkLines(T.NewLines("test.mk",
+	mklines := T.NewMkLines("test.mk",
 		"VARNAME.param?=value # varassign comment",
 		"\tshell command # shell comment",
 		"# whole line comment",
@@ -123,7 +123,7 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 		".    include <subdir.mk> # sysinclude comment",
 		"target1 target2: source1 source2",
 		"target : source",
-		"VARNAME+=value"))
+		"VARNAME+=value")
 	ln := mklines.mklines
 
 	c.Check(ln[0].IsVarassign(), equals, true)
@@ -203,7 +203,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 }
 
 func (s *Suite) Test_MkLine_VariableType_varparam(c *check.C) {
-	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
+	mkline := T.NewMkLine("fname", 1, "# dummy")
 	G.globalData.InitVartypes()
 
 	t1 := mkline.VariableType("FONT_DIRS")
@@ -219,7 +219,7 @@ func (s *Suite) Test_MkLine_VariableType_varparam(c *check.C) {
 
 func (s *Suite) Test_VarUseContext_String(c *check.C) {
 	G.globalData.InitVartypes()
-	mkline := NewMkLine(NewLine("fname", 1, "# dummy", nil))
+	mkline := T.NewMkLine("fname", 1, "# dummy")
 	vartype := mkline.VariableType("PKGNAME")
 	vuc := &VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, false}
 
@@ -231,22 +231,22 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 // is interpreted literally.
 func (s *Suite) Test_NewMkLine_numbersign(c *check.C) {
 	s.Init(c)
-	mklineVarassignEscaped := NewMkLine(NewLine("fname", 1, "SED_CMD=\t's,\\#,hash,g'", nil))
+	mklineVarassignEscaped := T.NewMkLine("fname", 1, "SED_CMD=\t's,\\#,hash,g'")
 
 	c.Check(mklineVarassignEscaped.Varname(), equals, "SED_CMD")
 	c.Check(mklineVarassignEscaped.Value(), equals, "'s,#,hash,g'")
 
-	mklineCommandEscaped := NewMkLine(NewLine("fname", 1, "\tsed -e 's,\\#,hash,g'", nil))
+	mklineCommandEscaped := T.NewMkLine("fname", 1, "\tsed -e 's,\\#,hash,g'")
 
 	c.Check(mklineCommandEscaped.Shellcmd(), equals, "sed -e 's,\\#,hash,g'")
 
 	// From shells/zsh/Makefile.common, rev. 1.78
-	mklineCommandUnescaped := NewMkLine(NewLine("fname", 1, "\t# $ sha1 patches/patch-ac", nil))
+	mklineCommandUnescaped := T.NewMkLine("fname", 1, "\t# $ sha1 patches/patch-ac")
 
 	c.Check(mklineCommandUnescaped.Shellcmd(), equals, "# $ sha1 patches/patch-ac")
 	s.CheckOutputEmpty() // No warning about parsing the lonely dollar sign.
 
-	mklineVarassignUnescaped := NewMkLine(NewLine("fname", 1, "SED_CMD=\t's,#,hash,'", nil))
+	mklineVarassignUnescaped := T.NewMkLine("fname", 1, "SED_CMD=\t's,#,hash,'")
 
 	c.Check(mklineVarassignUnescaped.Value(), equals, "'s,")
 	s.CheckOutputLines(
@@ -255,7 +255,7 @@ func (s *Suite) Test_NewMkLine_numbersign(c *check.C) {
 
 func (s *Suite) Test_NewMkLine_leading_space(c *check.C) {
 	s.Init(c)
-	_ = NewMkLine(NewLine("rubyversion.mk", 427, " _RUBYVER=\t2.15", nil))
+	_ = T.NewMkLine("rubyversion.mk", 427, " _RUBYVER=\t2.15")
 
 	s.CheckOutputLines(
 		"WARN: rubyversion.mk:427: Makefile lines should not start with space characters.")
@@ -289,7 +289,7 @@ func (s *Suite) Test_MkLines_Check__extra(c *check.C) {
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__unknown_rhs(c *check.C) {
-	mkline := NewMkLine(NewLine("fname", 1, "PKGNAME := ${UNKNOWN}", nil))
+	mkline := T.NewMkLine("fname", 1, "PKGNAME := ${UNKNOWN}")
 	G.globalData.InitVartypes()
 
 	vuc := &VarUseContext{G.globalData.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, false}
@@ -303,7 +303,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
-	mkline := NewMkLine(NewLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}", nil))
+	mkline := T.NewMkLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}")
 
 	vuc := &VarUseContext{G.globalData.vartypes["MASTER_SITES"], vucTimeRun, vucQuotPlain, false}
 	nq := mkline.VariableNeedsQuoting("HOMEPAGE", G.globalData.vartypes["HOMEPAGE"], vuc)
@@ -321,7 +321,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__append_list_to_list(c *check.C
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
-	mkline := NewMkLine(NewLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}", nil))
+	mkline := T.NewMkLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}")
 
 	MkLineChecker{mkline}.checkVarassign()
 
@@ -332,7 +332,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__eval_shell(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mkline := NewMkLine(NewLine("builtin.mk", 3, "USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}", nil))
+	mkline := T.NewMkLine("builtin.mk", 3, "USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}")
 
 	MkLineChecker{mkline}.checkVarassign()
 
@@ -345,7 +345,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__command_in_single_quotes(c *ch
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mkline := NewMkLine(NewLine("Makefile", 3, "SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'", nil))
+	mkline := T.NewMkLine("Makefile", 3, "SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'")
 
 	MkLineChecker{mkline}.checkVarassign()
 
@@ -692,7 +692,7 @@ func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
 
 func (s *Suite) Test_MkLine_ConditionVars(c *check.C) {
 	s.Init(c)
-	var mkline MkLine = NewMkLine(NewLine("Makefile", 45, ".include \"../../category/package/buildlink3.mk\"", nil))
+	mkline := T.NewMkLine("Makefile", 45, ".include \"../../category/package/buildlink3.mk\"")
 
 	c.Check(mkline.ConditionVars(), equals, "")
 

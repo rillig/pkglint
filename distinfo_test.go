@@ -1,8 +1,6 @@
 package main
 
-import (
-	check "gopkg.in/check.v1"
-)
+import "gopkg.in/check.v1"
 
 func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 	s.Init(c)
@@ -31,7 +29,7 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 
 func (s *Suite) Test_ChecklinesDistinfo_global_hash_mismatch(c *check.C) {
 	s.Init(c)
-	otherLine := NewLine("other/distinfo", 7, "dummy", nil)
+	otherLine := T.NewLine("other/distinfo", 7, "dummy")
 	G.Hash = make(map[string]*Hash)
 	G.Hash["SHA512:pkgname-1.0.tar.gz"] = &Hash{"asdfasdf", otherLine}
 

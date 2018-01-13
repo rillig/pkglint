@@ -123,7 +123,7 @@ func (s *Suite) Test_ChecklinesPatch__git_without_comment(c *check.C) {
 
 func (s *Suite) Test_checklineOtherAbsolutePathname(c *check.C) {
 	s.Init(c)
-	line := NewLine("patch-ag", 1, "+$install -s -c ./bin/rosegarden ${DESTDIR}$BINDIR", nil)
+	line := T.NewLine("patch-ag", 1, "+$install -s -c ./bin/rosegarden ${DESTDIR}$BINDIR")
 
 	checklineOtherAbsolutePathname(line, line.Text)
 

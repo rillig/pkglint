@@ -37,6 +37,7 @@ func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
 	fix.Warnf("Something's wrong here.")
 	fix.ReplaceRegex(`.`, "X")
 	fix.Apply()
+
 	SaveAutofixChanges(lines)
 
 	c.Check(s.LoadTmpFile("Makefile"), equals, "line1\nXXXXX\nline3\n")

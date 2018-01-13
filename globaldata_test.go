@@ -102,9 +102,9 @@ func (s *Suite) Test_GlobalData_loadDocChangesFromFile(c *check.C) {
 func (s *Suite) Test_GlobalData_deprecated(c *check.C) {
 	s.Init(c)
 	G.globalData.loadDeprecatedVars()
+	mkline := T.NewMkLine("Makefile", 5, "USE_PERL5=\tyes")
 
-	line := NewLine("Makefile", 5, "USE_PERL5=\tyes", nil)
-	MkLineChecker{NewMkLine(line)}.checkVarassign()
+	MkLineChecker{mkline}.checkVarassign()
 
 	s.CheckOutputLines(
 		"WARN: Makefile:5: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.")

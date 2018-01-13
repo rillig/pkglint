@@ -1,7 +1,7 @@
 package main
 
 import (
-	check "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/textproc"
 )
 
@@ -368,7 +368,7 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
+	shline := T.NewShellLine("fname", 1, "# dummy")
 
 	shline.CheckWord("${${list}}", false)
 
@@ -411,7 +411,7 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 func (s *Suite) Test_ShellLine_CheckWord__dollar_without_variable(c *check.C) {
 	s.Init(c)
-	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "# dummy", nil)))
+	shline := T.NewShellLine("fname", 1, "# dummy")
 
 	shline.CheckWord("/.*~$$//g", false) // Typical argument to pax(1).
 
@@ -424,7 +424,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	s.RegisterTool(&Tool{Name: "echo", Varname: "ECHO", MustUseVarForm: true, Predefined: true})
 	G.Mk = T.NewMkLines("fname",
 		"# dummy")
-	mkline := NewMkLine(NewLine("fname", 3, "# dummy", nil))
+	mkline := T.NewMkLine("fname", 3, "# dummy")
 
 	MkLineChecker{mkline}.checkText("echo \"hello, world\"")
 
@@ -440,7 +440,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C
 	s.Init(c)
 	text := "\tfor f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done"
 
-	shline := NewShellLine(NewMkLine(NewLine("Makefile", 3, text, nil)))
+	shline := T.NewShellLine("Makefile", 3, text)
 	shline.CheckShellCommandLine(text)
 
 	s.CheckOutputLines(
@@ -467,7 +467,7 @@ func (s *Suite) Test_ShellLine_checkCommandUse(c *check.C) {
 		"# dummy")
 	G.Mk.target = "do-install"
 
-	shline := NewShellLine(NewMkLine(NewLine("fname", 1, "\tdummy", nil)))
+	shline := T.NewShellLine("fname", 1, "\tdummy")
 
 	shline.checkCommandUse("sed")
 
@@ -501,7 +501,7 @@ func (s *Suite) Test_splitIntoMkWords(c *check.C) {
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__sed_and_mv(c *check.C) {
 	s.Init(c)
-	shline := NewShellLine(NewMkLine(NewLine("Makefile", 85, "\t${RUN} ${SED} 's,#,// comment:,g' fname > fname.tmp; ${MV} fname.tmp fname", nil)))
+	shline := T.NewShellLine("Makefile", 85, "\t${RUN} ${SED} 's,#,// comment:,g' fname > fname.tmp; ${MV} fname.tmp fname")
 
 	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
 
@@ -511,7 +511,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__sed_and_mv(c *check.C) {
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__subshell(c *check.C) {
 	s.Init(c)
-	shline := NewShellLine(NewMkLine(NewLine("Makefile", 85, "\t${RUN} uname=$$(uname)", nil)))
+	shline := T.NewShellLine("Makefile", 85, "\t${RUN} uname=$$(uname)")
 
 	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
 
@@ -521,7 +521,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__subshell(c *check.C) {
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_dir(c *check.C) {
 	s.Init(c)
-	shline := NewShellLine(NewMkLine(NewLine("Makefile", 85, "\t${RUN} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2", nil)))
+	shline := T.NewShellLine("Makefile", 85, "\t${RUN} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
 
 	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
 
@@ -546,7 +546,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_dir(c *check.C) {
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_option_d(c *check.C) {
 	s.Init(c)
-	shline := NewShellLine(NewMkLine(NewLine("Makefile", 85, "\t${RUN} ${INSTALL} -d ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2", nil)))
+	shline := T.NewShellLine("Makefile", 85, "\t${RUN} ${INSTALL} -d ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
 
 	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
 
@@ -571,13 +571,14 @@ func (s *Suite) Test_ShellLine__shell_comment_with_line_continuation(c *check.C)
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
-	shline := NewShellLine(NewMkLine(dummyLine))
+	shline := T.NewShellLine("dummy.mk", 13, "# dummy")
 	// foobar="`echo \"foo   bar\"`"
 	text := "foobar=\"`echo \\\"foo   bar\\\"`\""
 	repl := textproc.NewPrefixReplacer(text)
 	repl.AdvanceStr("foobar=\"`")
 
 	backtCommand, newQuoting := shline.unescapeBackticks(text, repl, shqDquotBackt)
+
 	c.Check(backtCommand, equals, "echo \"foo   bar\"")
 	c.Check(newQuoting, equals, shqDquot)
 	c.Check(repl.Rest(), equals, "\"")

@@ -53,7 +53,7 @@ func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 
 func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
 	s.Init(c)
-	mkline := NewMkLine(NewLine("Makefile", 2, ".include \"../../other/package/Makefile\"", nil))
+	mkline := T.NewMkLine("Makefile", 2, ".include \"../../other/package/Makefile\"")
 
 	MkLineChecker{mkline}.checkInclude()
 
