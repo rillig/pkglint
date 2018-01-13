@@ -135,10 +135,10 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 		fix.Apply()
 
 		fix.Notef("This diagnostic is necessary for the following explanation.")
-		fix.InsertAfter("after")
 		fix.Explain(
 			"When inserting multiple lines, Apply must be called in-between.",
 			"Otherwise the changes are not described to the human reader.")
+		fix.InsertAfter("after")
 		fix.Apply()
 	}
 

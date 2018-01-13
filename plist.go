@@ -129,8 +129,8 @@ func (ck *PlistChecker) checkline(pline *PlistLine) {
 		ck.checkpath(pline)
 	} else if text == "" {
 		fix := pline.line.Autofix()
-		fix.Delete()
 		fix.Warnf("PLISTs should not contain empty lines.")
+		fix.Delete()
 		fix.Apply()
 	} else {
 		pline.line.Warnf("Unknown line type.")

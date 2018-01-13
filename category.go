@@ -128,8 +128,8 @@ func CheckdirCategory() {
 		if !fAtend && (mAtend || fCurrent < mCurrent) {
 			if !mCheck[fCurrent] {
 				fix := line.Autofix()
-				fix.InsertBefore("SUBDIR+=\t" + fCurrent)
 				fix.Errorf("%q exists in the file system, but not in the Makefile.", fCurrent)
+				fix.InsertBefore("SUBDIR+=\t" + fCurrent)
 				fix.Apply()
 			}
 			fNeednext = true

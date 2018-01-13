@@ -130,9 +130,9 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFname, distinfoSh
 	}
 	if distinfoSha1Hex != fileSha1Hex {
 		fix := line.Autofix()
-		fix.Replace(distinfoSha1Hex, fileSha1Hex)
 		fix.Errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".",
 			"SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
+		fix.Replace(distinfoSha1Hex, fileSha1Hex)
 		fix.Apply()
 	}
 }

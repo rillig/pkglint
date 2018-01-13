@@ -237,10 +237,10 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 	line := ck.exp.PreviousLine()
 	if hasSuffix(line.Text, "\r") {
 		fix := line.Autofix()
-		fix.Replace("\r\n", "\n")
 		fix.Errorf("The hunk header must not end with a CR character.")
 		fix.Explain(
 			"The MacOS X patch utility cannot handle these.")
+		fix.Replace("\r\n", "\n")
 		fix.Apply()
 	}
 }
