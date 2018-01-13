@@ -320,7 +320,7 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 			"configured by the pkgsrc user.  Compression and decompression takes",
 			"place automatically, no matter if the .gz extension is mentioned in",
 			"the PLIST or not.")
-		fix.ReplaceRegex(`\.gz$`, "")
+		fix.ReplaceRegex(`\.gz\n`, "\n")
 		fix.Apply()
 	}
 }

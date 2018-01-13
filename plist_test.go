@@ -182,10 +182,11 @@ func (s *Suite) Test_PlistChecker_checkpathShare_Desktop(c *check.C) {
 func (s *Suite) Test_PlistChecker_checkpathMan_gz(c *check.C) {
 	s.Init(c)
 	G.Pkg = NewPackage("category/pkgbase")
-
-	ChecklinesPlist(T.NewLines("PLIST",
+	lines := T.NewLines("PLIST",
 		"@comment $"+"NetBSD$",
-		"man/man3/strerror.3.gz"))
+		"man/man3/strerror.3.gz")
+
+	ChecklinesPlist(lines)
 
 	s.CheckOutputLines(
 		"NOTE: PLIST:2: The .gz extension is unnecessary for manual pages.")
