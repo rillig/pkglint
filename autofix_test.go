@@ -315,3 +315,24 @@ func (s *Suite) Test_Autofix_suppress_unfixable_warnings(c *check.C) {
 		"- line2",
 		"+ TODOXX")
 }
+
+func (s *Suite) Test_SaveAutofixChanges(c *check.C) {
+	s.Init(c)
+	s.UseCommandLine("--autofix")
+	filename := s.CreateTmpFileLines("DESCR",
+		"Line 1",
+		"Line 2")
+	lines := LoadExistingLines(filename, false)
+
+	fix := lines[0].Autofix()
+	fix.Warnf("Dummy warning.")
+	fix.Replace("X", "Y")
+	fix.Apply()
+
+	// Since nothing has been effectively changed,
+	// nothing needs to be saved.
+	SaveAutofixChanges(lines)
+
+	// And therefore, no AUTOFIX action must appear in the log.
+	s.CheckOutputEmpty()
+}

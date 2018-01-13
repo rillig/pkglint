@@ -197,7 +197,9 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 	for _, line := range lines {
 		chlines := changes[line.Filename]
 		if fix := line.autofix; fix != nil {
-			changed[line.Filename] = true
+			if fix.modified {
+				changed[line.Filename] = true
+			}
 			chlines = append(chlines, fix.linesBefore...)
 			for _, raw := range line.raw {
 				chlines = append(chlines, raw.textnl)
