@@ -27,7 +27,7 @@ func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
 
 func (s *Suite) Test_LineChecker_CheckRcsid(c *check.C) {
 	s.Init(c)
-	lines := s.NewLines("fname",
+	lines := T.NewLines("fname",
 		"$"+"NetBSD: dummy $",
 		"$"+"NetBSD$",
 		"$"+"Id: dummy $",

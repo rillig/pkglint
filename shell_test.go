@@ -107,7 +107,7 @@ func (s *Suite) Test_splitIntoShellTokens__redirect(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("-Wall")
-	G.Mk = s.NewMkLines("fname",
+	G.Mk = T.NewMkLines("fname",
 		"# dummy")
 	shline := NewShellLine(G.Mk.mklines[0])
 
@@ -123,7 +123,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 		"WARN: fname:1: Unknown shell command \"echo\".")
 
 	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
-	G.Mk = s.NewMkLines("fname",
+	G.Mk = T.NewMkLines("fname",
 		"# dummy")
 	G.globalData.InitVartypes()
 
@@ -249,7 +249,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__nofix(c *check.C) {
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
-	G.Mk = s.NewMkLines("Makefile",
+	G.Mk = T.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
 
@@ -264,7 +264,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__show_autofix(c *check.C) {
 	s.UseCommandLine("-Wall", "--show-autofix")
 	G.globalData.InitVartypes()
 	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
-	G.Mk = s.NewMkLines("Makefile",
+	G.Mk = T.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
 
@@ -285,7 +285,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__exitcode(c *check.C) {
 	s.RegisterTool(&Tool{Name: "printf", Predefined: true})
 	s.RegisterTool(&Tool{Name: "sed", Predefined: true})
 	s.RegisterTool(&Tool{Name: "right-side", Predefined: true})
-	G.Mk = s.NewMkLines("Makefile",
+	G.Mk = T.NewMkLines("Makefile",
 		"\t echo | right-side",
 		"\t sed s,s,s, | right-side",
 		"\t printf | sed s,s,s, | right-side ",
@@ -313,7 +313,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
 	s.UseCommandLine("-Wall", "--autofix")
 	G.globalData.InitVartypes()
 	s.RegisterTool(&Tool{Name: "echo", Predefined: true})
-	G.Mk = s.NewMkLines("Makefile",
+	G.Mk = T.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
 
@@ -327,7 +327,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C)
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	G.Mk = s.NewMkLines("fname",
+	G.Mk = T.NewMkLines("fname",
 		"# dummy")
 	shline := NewShellLine(G.Mk.mklines[0])
 
@@ -353,7 +353,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C)
 func (s *Suite) Test_ShellLine_CheckShelltext__dollar_without_variable(c *check.C) {
 	s.Init(c)
 	G.globalData.InitVartypes()
-	G.Mk = s.NewMkLines("fname",
+	G.Mk = T.NewMkLines("fname",
 		"# dummy")
 	shline := NewShellLine(G.Mk.mklines[0])
 	s.RegisterTool(&Tool{Name: "pax", Varname: "PAX"})
@@ -422,7 +422,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	s.RegisterTool(&Tool{Name: "echo", Varname: "ECHO", MustUseVarForm: true, Predefined: true})
-	G.Mk = s.NewMkLines("fname",
+	G.Mk = T.NewMkLines("fname",
 		"# dummy")
 	mkline := NewMkLine(NewLine("fname", 3, "# dummy", nil))
 
@@ -463,7 +463,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C
 
 func (s *Suite) Test_ShellLine_checkCommandUse(c *check.C) {
 	s.Init(c)
-	G.Mk = s.NewMkLines("fname",
+	G.Mk = T.NewMkLines("fname",
 		"# dummy")
 	G.Mk.target = "do-install"
 

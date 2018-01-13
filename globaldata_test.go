@@ -1,7 +1,7 @@
 package main
 
 import (
-	check "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/trace"
 )
 
@@ -13,7 +13,7 @@ func (s *Suite) Test_GlobalData_InitVartypes(c *check.C) {
 }
 
 func (s *Suite) Test_parselinesSuggestedUpdates(c *check.C) {
-	lines := s.NewLines("doc/TODO",
+	lines := T.NewLines("doc/TODO",
 		"",
 		"Suggested package updates",
 		"==============",

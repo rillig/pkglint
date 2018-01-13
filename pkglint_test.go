@@ -117,7 +117,7 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 
 func (s *Suite) Test_ChecklinesDescr(c *check.C) {
 	s.Init(c)
-	lines := s.NewLines("DESCR",
+	lines := T.NewLines("DESCR",
 		strings.Repeat("X", 90),
 		"", "", "", "", "", "", "", "", "10",
 		"Try ${PREFIX}",
@@ -134,7 +134,7 @@ func (s *Suite) Test_ChecklinesDescr(c *check.C) {
 
 func (s *Suite) Test_ChecklinesMessage__short(c *check.C) {
 	s.Init(c)
-	lines := s.NewLines("MESSAGE",
+	lines := T.NewLines("MESSAGE",
 		"one line")
 
 	ChecklinesMessage(lines)
@@ -145,7 +145,7 @@ func (s *Suite) Test_ChecklinesMessage__short(c *check.C) {
 
 func (s *Suite) Test_ChecklinesMessage__malformed(c *check.C) {
 	s.Init(c)
-	lines := s.NewLines("MESSAGE",
+	lines := T.NewLines("MESSAGE",
 		"1",
 		"2",
 		"3",

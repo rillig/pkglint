@@ -27,7 +27,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 	s.UseCommandLine("-Worder")
 	pkg := NewPackage("x11/9term")
 
-	pkg.ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
+	pkg.ChecklinesPackageMakefileVarorder(T.NewMkLines("Makefile",
 		mkrcsid,
 		"",
 		"DISTNAME=9term",
@@ -35,7 +35,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 
 	s.CheckOutputEmpty()
 
-	pkg.ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
+	pkg.ChecklinesPackageMakefileVarorder(T.NewMkLines("Makefile",
 		mkrcsid,
 		"",
 		"DISTNAME=9term",
@@ -83,7 +83,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__MASTER_SITES(c *
 	s.UseCommandLine("-Worder")
 	pkg := NewPackage("category/package")
 
-	pkg.ChecklinesPackageMakefileVarorder(s.NewMkLines("Makefile",
+	pkg.ChecklinesPackageMakefileVarorder(T.NewMkLines("Makefile",
 		mkrcsid,
 		"",
 		"PKGNAME=\tpackage-1.0",

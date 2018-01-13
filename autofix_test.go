@@ -76,10 +76,10 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("--show-autofix", "--explain")
 
-	line := NewLine("fname", 1, "dummy", s.NewRawLines(1, "original\n"))
+	line := NewLine("fname", 1, "dummy", T.NewRawLines(1, "original\n"))
 
 	c.Check(line.autofix, check.IsNil)
-	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n"))
+	c.Check(line.raw, check.DeepEquals, T.NewRawLines(1, "original\n"))
 
 	{
 		fix := line.Autofix()
@@ -89,7 +89,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n", "lriginao\n"))
+	c.Check(line.raw, check.DeepEquals, T.NewRawLines(1, "original\n", "lriginao\n"))
 	s.CheckOutputLines(
 		"AUTOFIX: fname:1: Replacing regular expression \"(.)(.*)(.)\" with \"$3$2$1\".")
 
@@ -101,7 +101,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n", "lruginao\n"))
+	c.Check(line.raw, check.DeepEquals, T.NewRawLines(1, "original\n", "lruginao\n"))
 	c.Check(line.raw[0].textnl, equals, "lruginao\n")
 	s.CheckOutputLines(
 		"AUTOFIX: fname:1: Replacing \"i\" with \"u\".")
@@ -114,7 +114,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	c.Check(line.raw, check.DeepEquals, s.NewRawLines(1, "original\n", "middle\n"))
+	c.Check(line.raw, check.DeepEquals, T.NewRawLines(1, "original\n", "middle\n"))
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 	s.CheckOutputLines(
 		"AUTOFIX: fname:1: Replacing \"lruginao\" with \"middle\".")
@@ -180,7 +180,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 func (s *Suite) Test_Autofix_show_source_code(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("--show-autofix", "--source")
-	line := NewLineMulti("Makefile", 27, 29, "# old", s.NewRawLines(
+	line := NewLineMulti("Makefile", 27, 29, "# old", T.NewRawLines(
 		27, "before\n",
 		28, "The old song\n",
 		29, "after\n"))
@@ -204,7 +204,7 @@ func (s *Suite) Test_Autofix_show_source_code(c *check.C) {
 func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("--show-autofix", "--source")
-	line := NewLine("Makefile", 30, "original", s.NewRawLines(30, "original\n"))
+	line := NewLine("Makefile", 30, "original", T.NewRawLines(30, "original\n"))
 
 	fix := line.Autofix()
 	fix.Warnf("Dummy")
@@ -221,7 +221,7 @@ func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
 func (s *Suite) Test_Autofix_Delete(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("--show-autofix", "--source")
-	line := NewLine("Makefile", 30, "to be deleted", s.NewRawLines(30, "to be deleted\n"))
+	line := NewLine("Makefile", 30, "to be deleted", T.NewRawLines(30, "to be deleted\n"))
 
 	fix := line.Autofix()
 	fix.Warnf("Dummy")

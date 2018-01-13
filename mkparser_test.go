@@ -7,7 +7,7 @@ import (
 func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	s.Init(c)
 	checkRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
-		line := s.NewLines("Test_MkParser_MkTokens.mk", input)[0]
+		line := T.NewLines("Test_MkParser_MkTokens.mk", input)[0]
 		p := NewMkParser(line, input, true)
 		actualTokens := p.MkTokens()
 		c.Check(actualTokens, deepEquals, expectedTokens)
@@ -221,7 +221,7 @@ func (s *Suite) Test_MkParser__varuse_parentheses_autofix(c *check.C) {
 	s.UseCommandLine("--autofix")
 	G.globalData.InitVartypes()
 	filename := s.CreateTmpFile("Makefile", "")
-	mklines := s.NewMkLines(filename,
+	mklines := T.NewMkLines(filename,
 		mkrcsid,
 		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES}")
 

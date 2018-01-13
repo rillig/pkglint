@@ -99,7 +99,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 	s.Init(c)
 	G.globalData.InitVartypes()
 
-	G.Mk = s.NewMkLines("Makefile",
+	G.Mk = T.NewMkLines("Makefile",
 		mkrcsid,
 		"ac_cv_libpari_libs+=\t-L${BUILDLINK_PREFIX.pari}/lib") // From math/clisp-pari/Makefile, rev. 1.8
 
@@ -125,7 +125,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := s.NewMkLines("options.mk",
+	mklines := T.NewMkLines("options.mk",
 		mkrcsid,
 		"COMMENT=\t${GAMES_USER}",
 		"COMMENT:=\t${PKGBASE}",
@@ -148,7 +148,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions__load_time(c *check.C)
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := s.NewMkLines("options.mk",
+	mklines := T.NewMkLines("options.mk",
 		mkrcsid,
 		"WRKSRC:=${.CURDIR}")
 
@@ -195,7 +195,7 @@ func (s *Suite) Test_MkLineChecker__Varuse_Modifier_L(c *check.C) {
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	G.Mk = s.NewMkLines("x11/xkeyboard-config/Makefile",
+	G.Mk = T.NewMkLines("x11/xkeyboard-config/Makefile",
 		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}")
 
 	MkLineChecker{G.Mk.mklines[0]}.Check()
@@ -207,7 +207,7 @@ func (s *Suite) Test_MkLineChecker_CheckCond__comparison_with_shell_command(c *c
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	G.Mk = s.NewMkLines("security/openssl/Makefile",
+	G.Mk = T.NewMkLines("security/openssl/Makefile",
 		mkrcsid,
 		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
 		".endif")
@@ -223,7 +223,7 @@ func (s *Suite) Test_MkLine_CheckCond_comparing_PKGSRC_COMPILER_with_eqeq(c *che
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	G.Mk = s.NewMkLines("audio/pulseaudio/Makefile",
+	G.Mk = T.NewMkLines("audio/pulseaudio/Makefile",
 		mkrcsid,
 		".if ${OPSYS} == \"Darwin\" && ${PKGSRC_COMPILER} == \"clang\"",
 		".endif")
@@ -238,7 +238,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 	s.Init(c)
 	s.UseCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	G.Mk = s.NewMkLines("chat/pidgin-icb/Makefile",
+	G.Mk = T.NewMkLines("chat/pidgin-icb/Makefile",
 		mkrcsid,
 		"CFLAGS+=\t`pkg-config pidgin --cflags`")
 	mkline := G.Mk.mklines[1]
@@ -259,7 +259,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 func (s *Suite) Test_MkLineChecker_CheckVartype_CFLAGS(c *check.C) {
 	s.Init(c)
 	G.globalData.InitVartypes()
-	mklines := s.NewMkLines("Makefile",
+	mklines := T.NewMkLines("Makefile",
 		mkrcsid,
 		"CPPFLAGS.SunOS+=\t-DPIPECOMMAND=\\\"/usr/sbin/sendmail -bs %s\\\"")
 
