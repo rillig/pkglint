@@ -186,8 +186,8 @@ func AutofixDistinfo(oldSha1, newSha1 string) {
 	if lines, err := readLines(distinfoFilename, false); err == nil {
 		for _, line := range lines {
 			fix := line.Autofix()
+			fix.Warnf("Silent-Magic-Diagnostic")
 			fix.Replace(oldSha1, newSha1)
-			// No warning or other diagnostic here since the primary change was in the PLIST
 			fix.Apply()
 		}
 		SaveAutofixChanges(lines)

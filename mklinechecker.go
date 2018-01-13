@@ -190,8 +190,8 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 	indent := mkline.Indent()
 	if expected := strings.Repeat(" ", expectedDepth); indent != expected {
 		fix := mkline.Line.Autofix()
-		fix.Replace("."+indent, "."+expected)
 		fix.Notef("This directive should be indented by %d spaces.", expectedDepth)
+		fix.Replace("."+indent, "."+expected)
 		fix.Apply()
 	}
 }
@@ -549,8 +549,8 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 		} else if mod != correctMod {
 			if vuc.quoting == vucQuotPlain {
 				fix := mkline.Line.Autofix()
-				fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
 				fix.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+				fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
 				fix.Apply()
 			} else {
 				mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
@@ -578,7 +578,6 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 
 		fix := mkline.Line.Autofix()
-		fix.Replace(bad, good)
 		if needsQuoting == nqNo {
 			fix.Warnf("The :Q operator should not be used for ${%s} here.", varname)
 		} else {
@@ -595,6 +594,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 			"\t* tool names and tool paths",
 			"\t* variable names",
 			"\t* PKGNAME")
+		fix.Replace(bad, good)
 		fix.Apply()
 	}
 }

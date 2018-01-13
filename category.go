@@ -137,8 +137,8 @@ func CheckdirCategory() {
 		} else if !mAtend && (fAtend || mCurrent < fCurrent) {
 			if !fCheck[mCurrent] {
 				fix := line.Autofix()
-				fix.Delete()
 				fix.Errorf("%q exists in the Makefile, but not in the file system.", mCurrent)
+				fix.Delete()
 				fix.Apply()
 			}
 			mNeednext = true

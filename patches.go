@@ -182,8 +182,8 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 	}
 	if G.opts.WarnSpace && !ck.previousLineEmpty {
 		fix := line.Autofix()
-		fix.InsertBefore("")
 		fix.Notef("Empty line expected.")
+		fix.InsertBefore("")
 		fix.Apply()
 	}
 }

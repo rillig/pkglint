@@ -34,6 +34,10 @@ func NewAutofix(line Line) *Autofix {
 }
 
 func (fix *Autofix) Replace(from string, to string) {
+	if fix.skip() {
+		return
+	}
+
 	for _, rawLine := range fix.lines {
 		if rawLine.Lineno != 0 {
 			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
@@ -48,6 +52,10 @@ func (fix *Autofix) Replace(from string, to string) {
 }
 
 func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
+	if fix.skip() {
+		return
+	}
+
 	for _, rawLine := range fix.lines {
 		if rawLine.Lineno != 0 {
 			if replaced := regex.Compile(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
@@ -62,18 +70,30 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
 }
 
 func (fix *Autofix) InsertBefore(text string) {
+	if fix.skip() {
+		return
+	}
+
 	fix.linesBefore = append(fix.linesBefore, text+"\n")
 	fix.modified = true
 	fix.Describef("Inserting a line %q before this line.", text)
 }
 
 func (fix *Autofix) InsertAfter(text string) {
+	if fix.skip() {
+		return
+	}
+
 	fix.linesAfter = append(fix.linesAfter, text+"\n")
 	fix.modified = true
 	fix.Describef("Inserting a line %q after this line.", text)
 }
 
 func (fix *Autofix) Delete() {
+	if fix.skip() {
+		return
+	}
+
 	for _, line := range fix.lines {
 		line.textnl = ""
 		fix.modified = true
@@ -119,7 +139,7 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
-	if fix.diagFormat != "" && !G.opts.Autofix {
+	if fix.diagFormat != "" && !G.opts.Autofix && fix.diagFormat != "Silent-Magic-Diagnostic" {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		line.printSource(G.logOut)
 		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
@@ -139,6 +159,13 @@ func (fix *Autofix) Apply() {
 	fix.diagArgs = nil
 	fix.explanation = nil
 	// Don't reset fix.modified here.
+}
+
+func (fix *Autofix) skip() bool {
+	if fix.diagFormat == "" {
+		panic("Autofix: The diagnostic must be given before the action.")
+	}
+	return !shallBeLogged(fix.diagFormat)
 }
 
 // SaveAutofixChanges writes the given lines back into their files,

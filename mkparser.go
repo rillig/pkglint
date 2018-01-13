@@ -66,8 +66,8 @@ func (p *MkParser) VarUse() *MkVarUse {
 					parenVaruse := repl.Since(mark)
 					bracesVaruse := "${" + parenVaruse[2:len(parenVaruse)-1] + "}"
 					fix := p.Line.Autofix()
-					fix.Replace(parenVaruse, bracesVaruse)
 					fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varname)
+					fix.Replace(parenVaruse, bracesVaruse)
 					fix.Apply()
 				}
 				return &MkVarUse{varname, modifiers}

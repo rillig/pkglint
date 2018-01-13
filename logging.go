@@ -22,17 +22,21 @@ var (
 
 var dummyLine = NewLine("", 0, "", nil)
 
-func shallBeLogged(fname, lineno, msg string) bool {
+func shallBeLogged(msg string) bool {
+	return true
+}
+
+func loggedAlready(fname, lineno, msg string) bool {
 	uniq := path.Clean(fname) + ":" + lineno + ":" + msg
 	if G.logged[uniq] {
-		return false
+		return true
 	}
 
 	if G.logged == nil {
 		G.logged = make(map[string]bool)
 	}
 	G.logged[uniq] = true
-	return true
+	return false
 }
 
 func logs(level *LogLevel, fname, lineno, format, msg string) bool {
@@ -40,7 +44,7 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 		fname = cleanpath(fname)
 	}
 
-	if !G.opts.LogVerbose && !shallBeLogged(fname, lineno, msg) {
+	if !G.opts.LogVerbose && loggedAlready(fname, lineno, msg) {
 		return false
 	}
 

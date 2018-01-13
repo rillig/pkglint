@@ -50,11 +50,11 @@ func CheckLineValidCharacters(line Line, reChar regex.Pattern) {
 func CheckLineTrailingWhitespace(line Line) {
 	if strings.HasSuffix(line.Text, " ") || strings.HasSuffix(line.Text, "\t") {
 		fix := line.Autofix()
-		fix.ReplaceRegex(`\s+\n$`, "\n")
 		fix.Notef("Trailing white-space.")
 		fix.Explain(
 			"When a line ends with some white-space, that space is in most cases",
 			"irrelevant and can be removed.")
+		fix.ReplaceRegex(`\s+\n$`, "\n")
 		fix.Apply()
 	}
 }
@@ -69,12 +69,12 @@ func CheckLineRcsid(line Line, prefixRe regex.Pattern, suggestedPrefix string) b
 	}
 
 	fix := line.Autofix()
-	fix.InsertBefore(suggestedPrefix + "$" + "NetBSD$")
 	fix.Errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 	fix.Explain(
 		"Several files in pkgsrc must contain the CVS Id, so that their",
 		"current version can be traced back later from a binary package.",
 		"This is to ensure reproducible builds, for example for finding bugs.")
+	fix.InsertBefore(suggestedPrefix + "$" + "NetBSD$")
 	fix.Apply()
 
 	return false

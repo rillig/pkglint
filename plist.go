@@ -149,13 +149,14 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 	}
 	if hasPrefix(text, "${PKGMANDIR}/") {
 		fix := pline.line.Autofix()
-		fix.Replace("${PKGMANDIR}/", "man/")
-		pline.text = strings.Replace(pline.text, "${PKGMANDIR}/", "man/", 1)
 		fix.Notef("PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
 		fix.Explain(
 			"The pkgsrc infrastructure takes care of replacing the correct value",
 			"when generating the actual PLIST for the package.")
+		fix.Replace("${PKGMANDIR}/", "man/")
 		fix.Apply()
+
+		pline.text = strings.Replace(pline.text, "${PKGMANDIR}/", "man/", 1)
 	}
 
 	topdir := ""
@@ -212,8 +213,8 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
 				fix := pline.line.Autofix()
-				fix.Delete()
 				fix.Errorf("Duplicate filename %q, already appeared in %s.", text, prev.line.ReferenceFrom(pline.line))
+				fix.Delete()
 				fix.Apply()
 			}
 		}
@@ -313,13 +314,13 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 
 	if gz != "" {
 		fix := line.Autofix()
-		fix.ReplaceRegex(`\.gz$`, "")
 		fix.Notef("The .gz extension is unnecessary for manual pages.")
 		fix.Explain(
 			"Whether the manual pages are installed in compressed form or not is",
 			"configured by the pkgsrc user.  Compression and decompression takes",
 			"place automatically, no matter if the .gz extension is mentioned in",
 			"the PLIST or not.")
+		fix.ReplaceRegex(`\.gz$`, "")
 		fix.Apply()
 	}
 }

@@ -808,7 +808,6 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 	}
 
 	fix := lines[i].Autofix()
-	fix.InsertBefore(expected)
 	fix.Warnf("Please add a line %q here.", expected)
 	fix.Explain(
 		"Since Makefile.common files usually don't have any comments and",
@@ -819,6 +818,7 @@ func (mklines *MkLines) checkForUsedComment(relativeName string) {
 		"If there are more than five packages that use a Makefile.common,",
 		"you should think about giving it a proper name (maybe plugin.mk) and",
 		"documenting its interface.")
+	fix.InsertBefore(expected)
 	fix.Apply()
 
 	SaveAutofixChanges(lines)

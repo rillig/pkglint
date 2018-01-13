@@ -12,8 +12,8 @@ func (s *Suite) Test_Autofix_ReplaceRegex(c *check.C) {
 	lines := LoadExistingLines(fname, true)
 
 	fix := lines[1].Autofix()
+	fix.Warnf("Something's wrong here.")
 	fix.ReplaceRegex(`.`, "X")
-	fix.Warnf("Something's wrong here.") // Prints the autofix NOTE afterwards
 	fix.Apply()
 	SaveAutofixChanges(lines)
 
@@ -34,8 +34,8 @@ func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
 	lines := LoadExistingLines(fname, true)
 
 	fix := lines[1].Autofix()
-	fix.ReplaceRegex(`.`, "X")
 	fix.Warnf("Something's wrong here.")
+	fix.ReplaceRegex(`.`, "X")
 	fix.Apply()
 	SaveAutofixChanges(lines)
 
@@ -58,8 +58,8 @@ func (s *Suite) Test_autofix_MkLines(c *check.C) {
 	G.Pkg = nil
 
 	fix := mklines.mklines[1].Autofix()
-	fix.ReplaceRegex(`.`, "X")
 	fix.Warnf("Something's wrong here.")
+	fix.ReplaceRegex(`.`, "X")
 	fix.Apply()
 	SaveAutofixChanges(mklines.lines)
 
@@ -83,6 +83,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
+		fix.Warnf("Silent-Magic-Diagnostic")
 		fix.ReplaceRegex(`(.)(.*)(.)`, "$3$2$1")
 		fix.Apply()
 	}
@@ -94,6 +95,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
+		fix.Warnf("Silent-Magic-Diagnostic")
 		fix.Replace("i", "u")
 		fix.Apply()
 	}
@@ -106,6 +108,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
+		fix.Warnf("Silent-Magic-Diagnostic")
 		fix.Replace("lruginao", "middle")
 		fix.Apply()
 	}
@@ -118,14 +121,20 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
+		fix.Warnf("Silent-Magic-Diagnostic")
 		fix.InsertBefore("before")
 		fix.Apply()
+
+		fix.Warnf("Silent-Magic-Diagnostic")
 		fix.InsertBefore("between before and middle")
 		fix.Apply()
+
+		fix.Warnf("Silent-Magic-Diagnostic")
 		fix.InsertAfter("between middle and after")
 		fix.Apply()
-		fix.InsertAfter("after")
+
 		fix.Notef("This diagnostic is necessary for the following explanation.")
+		fix.InsertAfter("after")
 		fix.Explain(
 			"When inserting multiple lines, Apply must be called in-between.",
 			"Otherwise the changes are not described to the human reader.")
@@ -152,6 +161,7 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
+		fix.Warnf("Silent-Magic-Diagnostic")
 		fix.Delete()
 		fix.Apply()
 	}
@@ -177,8 +187,8 @@ func (s *Suite) Test_Autofix_show_source_code(c *check.C) {
 
 	{
 		fix := line.Autofix()
-		fix.Replace("old", "new")
 		fix.Warnf("Using \"old\" is deprecated.")
+		fix.Replace("old", "new")
 		fix.Apply()
 	}
 
@@ -198,8 +208,8 @@ func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
 	line := NewLine("Makefile", 30, "original", s.NewRawLines(30, "original\n"))
 
 	fix := line.Autofix()
-	fix.InsertBefore("inserted")
 	fix.Warnf("Dummy")
+	fix.InsertBefore("inserted")
 	fix.Apply()
 
 	s.CheckOutputLines(
@@ -216,8 +226,8 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 	line := NewLine("Makefile", 30, "to be deleted", s.NewRawLines(30, "to be deleted\n"))
 
 	fix := line.Autofix()
-	fix.Delete()
 	fix.Warnf("Dummy")
+	fix.Delete()
 	fix.Apply()
 
 	s.CheckOutputLines(

@@ -337,7 +337,6 @@ func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string) {
 	}
 
 	fix := mkline.Line.Autofix()
-	fix.Replace(prefix+oldalign, prefix+newalign)
 	wrongColumn := tabLength(prefix+oldalign) != tabLength(prefix+newalign)
 	switch {
 	case hasSpace && wrongColumn:
@@ -362,5 +361,6 @@ func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string) {
 			"When the block contains something else than variable definitions,",
 			"it is not checked at all.")
 	}
+	fix.Replace(prefix+oldalign, prefix+newalign)
 	fix.Apply()
 }
