@@ -60,7 +60,7 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 		text += sep + level.GccName + ":"
 		sep = " "
 	}
-	if G.opts.Profiling {
+	if G.opts.Profiling && format != "" {
 		G.loghisto.Add(format, 1)
 	}
 	text += sep + msg + "\n"
