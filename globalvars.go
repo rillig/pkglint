@@ -75,6 +75,8 @@ type CmdOpts struct {
 	PrintSource,
 	PrintVersion bool
 
+	LogOnly []string
+
 	args []string
 }
 

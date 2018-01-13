@@ -110,3 +110,31 @@ func (s *Suite) Test_show_source_separator_autofix(c *check.C) {
 		"- The third line",
 		"+ The bronze medal line")
 }
+
+// Demonstrates how to filter log messages.
+// This is useful in combination with the --autofix option,
+// to restrict the fixes to exactly one group or topic.
+func (s *Suite) Test_Line_log_only(c *check.C) {
+	s.Init(c)
+	s.UseCommandLine("--autofix", "--source", "--only", "interesting")
+	line := NewLineMulti("Makefile", 27, 29, "Dummy text", T.NewRawLines(
+		27, "before\n",
+		28, "The old song\n",
+		29, "after\n"))
+
+	fix := line.Autofix()
+	fix.Warnf("Using \"old\" is deprecated.")
+	fix.Replace("old", "new1")
+	fix.Apply()
+
+	fix.Warnf("Using \"old\" is interesting.")
+	fix.Replace("old", "new2")
+	fix.Apply()
+
+	s.CheckOutputLines(
+		"AUTOFIX: Makefile:27--29: Replacing \"old\" with \"new2\".",
+		"> before",
+		"- The old song",
+		"+ The new2 song",
+		"> after")
+}

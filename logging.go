@@ -23,6 +23,19 @@ var (
 var dummyLine = NewLine("", 0, "", nil)
 
 func shallBeLogged(msg string) bool {
+	if len(G.opts.LogOnly) > 0 {
+		found := false
+		for _, substr := range G.opts.LogOnly {
+			if contains(msg, substr) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
 	return true
 }
 
