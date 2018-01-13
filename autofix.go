@@ -44,7 +44,6 @@ func (fix *Autofix) Replace(from string, to string) {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				fix.modified = true
 				fix.Describef("Replacing %q with %q.", from, to)
 			}
 		}
@@ -62,7 +61,6 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				fix.modified = true
 				fix.Describef("Replacing regular expression %q with %q.", from, to)
 			}
 		}
@@ -75,7 +73,6 @@ func (fix *Autofix) InsertBefore(text string) {
 	}
 
 	fix.linesBefore = append(fix.linesBefore, text+"\n")
-	fix.modified = true
 	fix.Describef("Inserting a line %q before this line.", text)
 }
 
@@ -85,7 +82,6 @@ func (fix *Autofix) InsertAfter(text string) {
 	}
 
 	fix.linesAfter = append(fix.linesAfter, text+"\n")
-	fix.modified = true
 	fix.Describef("Inserting a line %q after this line.", text)
 }
 
@@ -96,7 +92,6 @@ func (fix *Autofix) Delete() {
 
 	for _, line := range fix.lines {
 		line.textnl = ""
-		fix.modified = true
 	}
 	fix.Describef("Deleting this line.")
 }
@@ -139,23 +134,30 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
-	if fix.diagFormat != "" && !G.opts.Autofix && fix.diagFormat != "Silent-Magic-Diagnostic" {
-		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
-		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
-		if len(fix.explanation) != 0 {
-			Explain(fix.explanation...)
+	if shallBeLogged(fix.diagFormat) && fix.descrFormat != "" {
+		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" && !G.opts.Autofix
+		if logDiagnostic {
+			msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
+			logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
+		}
+
+		logRepair := G.opts.Autofix || G.opts.PrintAutofix
+		if logRepair {
+			msg := fmt.Sprintf(fix.descrFormat, fix.descrArgs...)
+			logs(llAutofix, line.Filename, line.Linenos(), "", msg)
+		}
+
+		if logDiagnostic || logRepair {
+			line.printSource(G.logOut)
+			if logDiagnostic && len(fix.explanation) != 0 {
+				Explain(fix.explanation...)
+			} else if G.opts.PrintSource {
+				G.logOut.Separate()
+			}
 		}
 	}
 
-	if fix.descrFormat != "" && (G.opts.Autofix || G.opts.PrintAutofix) {
-		msg := fmt.Sprintf(fix.descrFormat, fix.descrArgs...)
-		logs(llAutofix, line.Filename, line.Linenos(), "", msg)
-	}
-
-	if G.opts.PrintSource {
-		line.printSource(G.logOut)
-		G.logOut.Separate()
-	}
+	fix.modified = fix.modified || fix.descrFormat != ""
 
 	fix.descrFormat = ""
 	fix.descrArgs = nil
@@ -163,7 +165,6 @@ func (fix *Autofix) Apply() {
 	fix.diagFormat = ""
 	fix.diagArgs = nil
 	fix.explanation = nil
-	// Don't reset fix.modified here.
 }
 
 func (fix *Autofix) skip() bool {

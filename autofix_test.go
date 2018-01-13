@@ -154,11 +154,11 @@ func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
 		"AUTOFIX: fname:1: Inserting a line \"between before and middle\" before this line.",
 		"AUTOFIX: fname:1: Inserting a line \"between middle and after\" after this line.",
 		"NOTE: fname:1: This diagnostic is necessary for the following explanation.",
+		"AUTOFIX: fname:1: Inserting a line \"after\" after this line.",
 		"",
 		"\tWhen inserting multiple lines, Apply must be called in-between.",
 		"\tOtherwise the changes are not described to the human reader.",
-		"",
-		"AUTOFIX: fname:1: Inserting a line \"after\" after this line.")
+		"")
 
 	{
 		fix := line.Autofix()
@@ -233,4 +233,39 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 		"WARN: Makefile:30: Dummy",
 		"AUTOFIX: Makefile:30: Deleting this line.",
 		"- to be deleted")
+}
+
+// Demonstrates that the --show-autofix option only shows those diagnostics
+// that would be fixed.
+func (s *Suite) Test_Autofix_suppress_unfixable_warnings(c *check.C) {
+	s.Init(c)
+	s.UseCommandLine("--show-autofix", "--source")
+	lines := T.NewLines("Makefile",
+		"line1",
+		"line2",
+		"line3")
+
+	lines[0].Warnf("This warning is not shown since it is not automatically fixed.")
+
+	fix := lines[1].Autofix()
+	fix.Warnf("Something's wrong here.")
+	fix.ReplaceRegex(`.`, "X")
+	fix.Apply()
+
+	fix.Warnf("The XXX marks are usually not fixed, use TODO instead.")
+	fix.Replace("XXX", "TODO")
+	fix.Apply()
+
+	lines[2].Warnf("Neither is this warning shown.")
+
+	s.CheckOutputLines(
+		"WARN: Makefile:2: Something's wrong here.",
+		"AUTOFIX: Makefile:2: Replacing regular expression \".\" with \"X\".",
+		"- line2",
+		"+ XXXXX",
+		"",
+		"WARN: Makefile:2: The XXX marks are usually not fixed, use TODO instead.",
+		"AUTOFIX: Makefile:2: Replacing \"XXX\" with \"TODO\".",
+		"- line2",
+		"+ TODOXX")
 }
