@@ -129,9 +129,11 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFname, distinfoSh
 		return
 	}
 	if distinfoSha1Hex != fileSha1Hex {
-		if !line.AutofixReplace(distinfoSha1Hex, fileSha1Hex) {
-			line.Errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".", "SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
-		}
+		fix := line.Autofix()
+		fix.Replace(distinfoSha1Hex, fileSha1Hex)
+		fix.Errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".",
+			"SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
+		fix.Apply()
 	}
 }
 
@@ -183,7 +185,10 @@ func AutofixDistinfo(oldSha1, newSha1 string) {
 	distinfoFilename := G.CurrentDir + "/" + G.Pkg.DistinfoFile
 	if lines, err := readLines(distinfoFilename, false); err == nil {
 		for _, line := range lines {
-			line.AutofixReplace(oldSha1, newSha1)
+			fix := line.Autofix()
+			fix.Replace(oldSha1, newSha1)
+			// No warning or other diagnostic here since the primary change was in the PLIST
+			fix.Apply()
 		}
 		SaveAutofixChanges(lines)
 	}

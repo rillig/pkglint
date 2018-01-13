@@ -118,9 +118,12 @@ func (s *Suite) EndDebugToStdout() {
 	trace.Tracing = false
 }
 
+// UseCommandLine simulates a command line for the remainder of the test.
+// See Pkglint.ParseCommandLine
 func (s *Suite) UseCommandLine(args ...string) {
 	exitcode := new(Pkglint).ParseCommandLine(append([]string{"pkglint"}, args...))
 	if exitcode != nil && *exitcode != 0 {
+		s.CheckOutputEmpty()
 		s.c().Fatalf("Cannot parse command line: %#v", args)
 	}
 	G.opts.LogVerbose = true // See SetUpTest

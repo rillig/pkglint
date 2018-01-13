@@ -128,9 +128,10 @@ func (ck *PlistChecker) checkline(pline *PlistLine) {
 	} else if hasPrefix(text, "$") {
 		ck.checkpath(pline)
 	} else if text == "" {
-		if !pline.line.AutofixDelete() {
-			pline.line.Warnf("PLISTs should not contain empty lines.")
-		}
+		fix := pline.line.Autofix()
+		fix.Delete()
+		fix.Warnf("PLISTs should not contain empty lines.")
+		fix.Apply()
 	} else {
 		pline.line.Warnf("Unknown line type.")
 	}
@@ -147,14 +148,14 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 		pline.warnImakeMannewsuffix()
 	}
 	if hasPrefix(text, "${PKGMANDIR}/") {
-		if line.AutofixReplace("${PKGMANDIR}/", "man/") {
-			pline.text = strings.Replace(pline.text, "${PKGMANDIR}/", "man/", 1)
-		} else {
-			line.Notef("PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
-			Explain(
-				"The pkgsrc infrastructure takes care of replacing the correct value",
-				"when generating the actual PLIST for the package.")
-		}
+		fix := pline.line.Autofix()
+		fix.Replace("${PKGMANDIR}/", "man/")
+		pline.text = strings.Replace(pline.text, "${PKGMANDIR}/", "man/", 1)
+		fix.Notef("PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
+		fix.Explain(
+			"The pkgsrc infrastructure takes care of replacing the correct value",
+			"when generating the actual PLIST for the package.")
+		fix.Apply()
 	}
 
 	topdir := ""
@@ -210,9 +211,10 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 					"To fix this, run \"pkglint -F PLIST\".")
 			}
 			if prev := ck.allFiles[text]; prev != nil && prev != pline {
-				if !pline.line.AutofixDelete() {
-					pline.line.Errorf("Duplicate filename %q, already appeared in %s.", text, prev.line.ReferenceFrom(pline.line))
-				}
+				fix := pline.line.Autofix()
+				fix.Delete()
+				fix.Errorf("Duplicate filename %q, already appeared in %s.", text, prev.line.ReferenceFrom(pline.line))
+				fix.Apply()
 			}
 		}
 		ck.lastFname = text
@@ -309,13 +311,16 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 		}
 	}
 
-	if gz != "" && !line.AutofixReplaceRegexp(`\.gz$`, "") {
-		line.Notef("The .gz extension is unnecessary for manual pages.")
-		Explain(
+	if gz != "" {
+		fix := line.Autofix()
+		fix.ReplaceRegex(`\.gz$`, "")
+		fix.Notef("The .gz extension is unnecessary for manual pages.")
+		fix.Explain(
 			"Whether the manual pages are installed in compressed form or not is",
 			"configured by the pkgsrc user.  Compression and decompression takes",
 			"place automatically, no matter if the .gz extension is mentioned in",
 			"the PLIST or not.")
+		fix.Apply()
 	}
 }
 
@@ -516,7 +521,10 @@ func (s *plistLineSorter) Sort() {
 		return
 	}
 
-	firstLine.AutofixMark("Sorting the whole file.")
+	fix := firstLine.Autofix()
+	fix.Describef("Sorting the whole file.")
+	fix.Apply()
+
 	var lines []Line
 	for _, pline := range s.header {
 		lines = append(lines, pline.line)
@@ -527,6 +535,6 @@ func (s *plistLineSorter) Sort() {
 	for _, pline := range s.footer {
 		lines = append(lines, pline.line)
 	}
-	lines[0].Changed = true // Without this, autofix doesn't know that anything changed
+
 	s.autofixed = SaveAutofixChanges(lines)
 }
