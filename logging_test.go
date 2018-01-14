@@ -118,11 +118,9 @@ func (s *Suite) Test_Line_log_only(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix", "--source", "--only", "interesting")
-	line := NewLineMulti("Makefile", 27, 29, "Dummy text", t.NewRawLines(
-		27, "before\n",
-		28, "The old song\n",
-		29, "after\n"))
+	line := t.NewLine("Makefile", 27, "The old song")
 
+	// Is completely ignored, including any autofixes.
 	fix := line.Autofix()
 	fix.Warnf("Using \"old\" is deprecated.")
 	fix.Replace("old", "new1")
@@ -133,9 +131,7 @@ func (s *Suite) Test_Line_log_only(c *check.C) {
 	fix.Apply()
 
 	t.CheckOutputLines(
-		"AUTOFIX: Makefile:27--29: Replacing \"old\" with \"new2\".",
-		"> before",
+		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new2\".",
 		"- The old song",
-		"+ The new2 song",
-		"> after")
+		"+ The new2 song")
 }
