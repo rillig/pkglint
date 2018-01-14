@@ -250,27 +250,33 @@ type VaralignBlock struct {
 }
 
 func (va *VaralignBlock) Check(mkline MkLine) {
-	if !G.opts.WarnSpace || mkline.IsMultiline() || mkline.IsComment() || mkline.IsCond() {
+	if !G.opts.WarnSpace || mkline.IsComment() || mkline.IsCond() {
 		return
 	}
 	if mkline.IsEmpty() {
 		va.Finish()
 		return
 	}
-	if !mkline.IsVarassign() {
+	if !mkline.IsVarassign() || mkline.IsMultiline() {
+		trace.Stepf("Skipping")
 		va.skip = true
 		return
+	}
+
+	if trace.Tracing {
+		defer trace.Call(mkline)()
 	}
 
 	valueAlign := mkline.ValueAlign()
 	prefix := strings.TrimRight(valueAlign, " \t")
 	align := valueAlign[len(prefix):]
 
-	va.info = append(va.info, struct {
+	info := struct {
 		mkline MkLine
 		prefix string
 		align  string
-	}{mkline, prefix, align})
+	}{mkline, prefix, align}
+	va.info = append(va.info, info)
 
 	alignedWidth := tabLength(valueAlign)
 	if contains(align, " ") {
@@ -290,10 +296,14 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	}
 
 	va.maxPrefixWidth = imax(va.maxPrefixWidth, tabLength(prefix))
+	trace.Stepf("%+v", va)
 }
 
 func (va *VaralignBlock) Finish() {
 	if !va.skip {
+		if trace.Tracing {
+			defer trace.Call0()()
+		}
 		for _, info := range va.info {
 			if !info.mkline.IsMultiline() {
 				va.fixalign(info.mkline, info.prefix, info.align)
@@ -361,8 +371,8 @@ func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string) {
 			"Variable definitions that span multiple lines are not checked for",
 			"alignment at all.",
 			"",
-			"When the block contains something else than variable definitions,",
-			"it is not checked at all.")
+			"When the block contains something else than variable definitions",
+			"and conditionals, it is not checked at all.")
 	}
 	fix.Replace(prefix+oldalign, prefix+newalign)
 	fix.Apply()

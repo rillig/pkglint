@@ -16,12 +16,12 @@ type MkLineImpl struct {
 	data interface{} // One of the following mkLine* types
 }
 type mkLineAssign struct {
-	varname    string
-	varcanon   string
-	varparam   string
-	op         MkOperator
-	valueAlign string
-	value      string
+	varname    string     // e.g. "HOMEPAGE", "SUBST_SED.perl"
+	varcanon   string     // e.g. "HOMEPAGE", "SUBST_SED.*"
+	varparam   string     // e.g. "", "perl"
+	op         MkOperator //
+	valueAlign string     // The text up to and including the assignment operator, e.g. VARNAME+=\t
+	value      string     // The trimmed value
 	comment    string
 }
 type mkLineShell struct {

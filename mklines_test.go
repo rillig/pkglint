@@ -194,6 +194,39 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 		"WARN: Makefile:4: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
+func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--show-autofix", "-Wall")
+
+	// The SITES.* definition is indented less than the other lines.
+	// In the multiline definition for DISTFILES, the second line is
+	// indented the same as all the other lines but pkglint (at least up
+	// to 5.5.1) doesn't notice this because in multiline definitions it
+	// discards the physical lines early and only works with the logical
+	// line, in which the line continuation has been replaced with a
+	// single space.
+	//
+	// To prevent pkglint from damaging this carefully chosen layout,
+	// sections with line continuations are not fixed at all for now.
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"",
+		"DIST_SUBDIR=            asc",
+		"DISTFILES=              ${DISTNAME}${EXTRACT_SUFX} frontiers.mp3 \\",
+		"                        machine_wars.mp3 time_to_strike.mp3",
+		".for file in frontiers.mp3 machine_wars.mp3 time_to_strike.mp3",
+		"SITES.${file}=  http://asc-hq.org/",
+		".endfor",
+		"WRKSRC=                 ${WRKDIR}/${PKGNAME_NOREV}")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	// No output at all because of the continuation line
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t := s.Init(c)
 
