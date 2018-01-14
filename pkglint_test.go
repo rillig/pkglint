@@ -37,6 +37,17 @@ func (s *Suite) Test_Pkglint_Main_no_args(c *check.C) {
 		"FATAL: \".\" is not inside a pkgsrc tree.")
 }
 
+func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
+	t := s.Init(c)
+
+	exitcode := new(Pkglint).ParseCommandLine([]string{"pkglint", "-Wall", "-o", ":Q", "--version"})
+
+	c.Check(exitcode, deepEquals, new(int))
+	c.Check(G.opts.LogOnly, deepEquals, []string{":Q"})
+	t.CheckOutputLines(
+		"@VERSION@")
+}
+
 // go test -c -covermode count
 // pkgsrcdir=...
 // env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov
