@@ -4,13 +4,15 @@ import (
 	"gopkg.in/check.v1"
 )
 
+const rcsid = "$" + "NetBSD$"
 const mkrcsid = "# $" + "NetBSD$"
+const PlistRcsId = "@comment $" + "NetBSD$"
 
 func (s *Suite) Test_MkLines_Check__autofix_conditional_indentation(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("--autofix", "-Wspace")
-	tmpfile := s.CreateTmpFile("fname.mk", "")
-	mklines := T.NewMkLines(tmpfile,
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix", "-Wspace")
+	lines := t.SetupFileLines("fname.mk",
 		mkrcsid,
 		".if defined(A)",
 		".for a in ${A}",
@@ -18,28 +20,30 @@ func (s *Suite) Test_MkLines_Check__autofix_conditional_indentation(c *check.C) 
 		".endif",
 		".endfor",
 		".endif")
+	mklines := NewMkLines(lines)
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"AUTOFIX: ~/fname.mk:3: Replacing \".\" with \".  \".",
 		"AUTOFIX: ~/fname.mk:4: Replacing \".\" with \".    \".",
 		"AUTOFIX: ~/fname.mk:5: Replacing \".\" with \".    \".",
 		"AUTOFIX: ~/fname.mk:6: Replacing \".\" with \".  \".",
 		"AUTOFIX: ~/fname.mk: Has been auto-fixed. Please re-run pkglint.")
-	c.Check(s.LoadTmpFile("fname.mk"), equals, ""+
-		"# $"+"NetBSD$\n"+
-		".if defined(A)\n"+
-		".  for a in ${A}\n"+
-		".    if defined(C)\n"+
-		".    endif\n"+
-		".  endfor\n"+
-		".endif\n")
+	t.CheckFileLines("fname.mk",
+		"# $"+"NetBSD$",
+		".if defined(A)",
+		".  for a in ${A}",
+		".    if defined(C)",
+		".    endif",
+		".  endfor",
+		".endif")
 }
 
 func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
-	s.Init(c)
-	mklines := T.NewMkLines("Makefile",
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
 		mkrcsid,
 		"",
 		"echo: echo.c",
@@ -47,42 +51,45 @@ func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: Makefile:3: Unusual target \"echo\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
-	s.Init(c)
-	mkline := T.NewMkLine("Makefile", 2, ".include \"../../other/package/Makefile\"")
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 2, ".include \"../../other/package/Makefile\"")
 
 	MkLineChecker{mkline}.checkInclude()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"ERROR: Makefile:2: \"/other/package/Makefile\" does not exist.",
 		"ERROR: Makefile:2: Other Makefiles must not be included directly.")
 }
 
 func (s *Suite) Test_MkLines_quoting_LDFLAGS_for_GNU_configure(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	G.Pkg = NewPackage("category/pkgbase")
-	mklines := T.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		mkrcsid,
 		"GNU_CONFIGURE=\tyes",
 		"CONFIGURE_ENV+=\tX_LIBS=${X11_LDFLAGS:Q}")
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
 
 func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wspace")
-	fname := s.CreateTmpFileLines("Makefile",
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace")
+	lines := t.SetupFileLinesContinuation("Makefile",
 		mkrcsid,
 		"",
 		"VAR= \\", // In continuation lines, indenting with spaces is ok
@@ -104,11 +111,11 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 		"",
 		"VAR=\t${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables",
 		"VAR=\t${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}")
-	mklines := NewMkLines(LoadExistingLines(fname, true))
+	mklines := NewMkLines(lines)
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"NOTE: ~/Makefile:6: This variable value should be aligned with tabs, not spaces, to column 9.",
 		"NOTE: ~/Makefile:7: This variable value should be aligned with tabs, not spaces, to column 9.",
 		"NOTE: ~/Makefile:12: This variable value should be aligned to column 17.",
@@ -117,11 +124,11 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 		"NOTE: ~/Makefile:17: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:18: This variable value should be aligned with tabs, not spaces, to column 17.")
 
-	s.UseCommandLine("-Wspace", "--autofix")
+	t.SetupCommandLine("-Wspace", "--autofix")
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:6: Replacing \"VAR= \" with \"VAR=\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"VAR=  \" with \"VAR=\\t\".",
 		"AUTOFIX: ~/Makefile:12: Replacing \"BLOCK=\\t\" with \"BLOCK=\\t\\t\".",
@@ -130,34 +137,35 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 		"AUTOFIX: ~/Makefile:17: Replacing \"GRP_AAA= \" with \"GRP_AAA=\\t\".",
 		"AUTOFIX: ~/Makefile:18: Replacing \"GRP_AAAA= \" with \"GRP_AAAA=\\t\".",
 		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
-	c.Check(s.LoadTmpFile("Makefile"), equals, ""+
-		"# $"+"NetBSD$\n"+
-		"\n"+
-		"VAR= \\\n"+
-		"\tvalue\n"+
-		"\n"+
-		"VAR=\tindented with one space\n"+
-		"VAR=\tindented with two spaces\n"+
-		"\n"+
-		"BLOCK=\tindented with tab\n"+
-		"BLOCK_LONGVAR= indented with space\n"+
-		"\n"+
-		"BLOCK=\t\tshort\n"+
-		"BLOCK_LONGVAR=\tlong\n"+
-		"\n"+
-		"GRP_A=\t\tavalue\n"+
-		"GRP_AA=\t\tvalue\n"+
-		"GRP_AAA=\tvalue\n"+
-		"GRP_AAAA=\tvalue\n"+
-		"\n"+
-		"VAR=\t${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables\n"+
-		"VAR=\t${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}\n")
+	t.CheckFileLines("Makefile",
+		"# $"+"NetBSD$",
+		"",
+		"VAR= \\",
+		"\tvalue",
+		"",
+		"VAR=\tindented with one space",
+		"VAR=\tindented with two spaces",
+		"",
+		"BLOCK=\tindented with tab",
+		"BLOCK_LONGVAR= indented with space",
+		"",
+		"BLOCK=\t\tshort",
+		"BLOCK_LONGVAR=\tlong",
+		"",
+		"GRP_A=\t\tavalue",
+		"GRP_AA=\t\tvalue",
+		"GRP_AAA=\tvalue",
+		"GRP_AAAA=\tvalue",
+		"",
+		"VAR=\t${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables",
+		"VAR=\t${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}")
 }
 
 func (s *Suite) Test_MkLines__variable_alignment_space_and_tab(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wspace")
-	mklines := T.NewMkLines("Makefile",
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace")
+	mklines := t.NewMkLines("Makefile",
 		mkrcsid,
 		"",
 		"VAR=    space",
@@ -165,17 +173,18 @@ func (s *Suite) Test_MkLines__variable_alignment_space_and_tab(c *check.C) {
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"NOTE: Makefile:3: Variable values should be aligned with tabs, not spaces.")
 }
 
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
-	s.RegisterTool(&Tool{Name: "echo", Varname: "ECHO", Predefined: true})
-	s.RegisterTool(&Tool{Name: "find", Varname: "FIND", Predefined: true})
-	s.RegisterTool(&Tool{Name: "pax", Varname: "PAX", Predefined: true})
-	mklines := T.NewMkLines("audio/squeezeboxserver/Makefile",
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupTool(&Tool{Name: "echo", Varname: "ECHO", Predefined: true})
+	t.SetupTool(&Tool{Name: "find", Varname: "FIND", Predefined: true})
+	t.SetupTool(&Tool{Name: "pax", Varname: "PAX", Predefined: true})
+	mklines := t.NewMkLines("Makefile", // From audio/squeezeboxserver
 		mkrcsid,
 		"",
 		".for _list_ _dir_ in ${SBS_COPY}",
@@ -185,17 +194,18 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 
 	mklines.Check()
 
-	s.CheckOutputLines(
-		"WARN: audio/squeezeboxserver/Makefile:3: Variable names starting with an underscore (_list_) are reserved for internal pkgsrc use.",
-		"WARN: audio/squeezeboxserver/Makefile:3: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.",
-		"WARN: audio/squeezeboxserver/Makefile:4: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Variable names starting with an underscore (_list_) are reserved for internal pkgsrc use.",
+		"WARN: Makefile:3: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.",
+		"WARN: Makefile:4: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("databases/gdbm_compat/builtin.mk",
+	mklines := t.NewMkLines("databases/gdbm_compat/builtin.mk",
 		mkrcsid,
 		".if ${USE_BUILTIN.gdbm} == \"no\"",
 		".endif",
@@ -204,15 +214,17 @@ func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, "WARN: databases/gdbm_compat/builtin.mk:2: "+
-		"USE_BUILTIN.gdbm should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not compared with \"no\".\n")
+	t.CheckOutputLines(
+		"WARN: databases/gdbm_compat/builtin.mk:2: " +
+			"USE_BUILTIN.gdbm should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not compared with \"no\".")
 }
 
 func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("lang/qore/module.mk",
+	mklines := t.NewMkLines("lang/qore/module.mk",
 		mkrcsid,
 		"qore-version=\tqore --short-version | ${SED} -e s/-.*//",
 		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
@@ -227,28 +239,32 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 
 	mklines.Check()
 
-	s.CheckOutputEmpty() // No warnings about defined but not used or vice versa
+	// No warnings about defined but not used or vice versa
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("converters/wv2/Makefile",
+	mklines := t.NewMkLines("converters/wv2/Makefile",
 		mkrcsid,
 		"CONFIGURE_ARGS+=\t\t${CONFIGURE_ARGS.${ICONV_TYPE}-iconv}",
 		"CONFIGURE_ARGS.gnu-iconv=\t--with-libiconv=${BUILDLINK_PREFIX.iconv}")
 
 	mklines.Check()
 
-	s.CheckOutputEmpty() // No warnings about defined but not used or vice versa
+	// No warnings about defined but not used or vice versa
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("chat/xchat/Makefile",
+	mklines := t.NewMkLines("chat/xchat/Makefile",
 		mkrcsid,
 		"GCONF_SCHEMAS=\tapps_xchat_url_handler.schemas",
 		"post-install:",
@@ -257,16 +273,19 @@ func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, ""+ // No warning about missing @ at the end
-		"WARN: chat/xchat/Makefile:4: Unknown shell command \"${GCONF_SCHEMAS:@.s.@"+
-		"${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}\".\n")
+	t.CheckOutputLines(
+		// No warning about missing @ at the end
+		"WARN: chat/xchat/Makefile:4: " +
+			"Unknown shell command \"${GCONF_SCHEMAS:@.s.@" +
+			"${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}\".")
 }
 
 // PR 46570
 func (s *Suite) Test_MkLines__PKG_SKIP_REASON_depending_on_OPSYS(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		mkrcsid,
 		"PKG_SKIP_REASON+=\t\"Fails everywhere\"",
 		".if ${OPSYS} == \"Cygwin\"",
@@ -275,15 +294,16 @@ func (s *Suite) Test_MkLines__PKG_SKIP_REASON_depending_on_OPSYS(c *check.C) {
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"NOTE: Makefile:4: Consider defining NOT_FOR_PLATFORM instead of setting PKG_SKIP_REASON depending on ${OPSYS}.")
 }
 
 // PR 46570, item "15. net/uucp/Makefile has a make loop"
 func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
-	mklines := T.NewMkLines("net/uucp/Makefile",
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	mklines := t.NewMkLines("net/uucp/Makefile",
 		mkrcsid,
 		"",
 		"post-configure:",
@@ -294,29 +314,31 @@ func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
 	mklines.Check()
 
 	// No warning about UUCP_${var} being used but not defined.
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: net/uucp/Makefile:5: Unknown shell command \"${ECHO}\".")
 }
 
 func (s *Suite) Test_MkLines_Check__list_variable_as_part_of_word(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
-	mklines := T.NewMkLines("converters/chef/Makefile",
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	mklines := t.NewMkLines("converters/chef/Makefile",
 		mkrcsid,
 		"\tcd ${WRKSRC} && tr '\\r' '\\n' < ${DISTDIR}/${DIST_SUBDIR}/${DISTFILES} > chef.l")
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: converters/chef/Makefile:2: Unknown shell command \"tr\".",
 		"WARN: converters/chef/Makefile:2: The list variable DISTFILES should not be embedded in a word.")
 }
 
 func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("games/heretic2-demo/Makefile",
+	mklines := t.NewMkLines("games/heretic2-demo/Makefile",
 		mkrcsid,
 		".if ${OPSYS} == \"DragonFly\"",
 		"TOOLS_PLATFORM.gtar=\t/usr/bin/bsdtar",
@@ -327,57 +349,58 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 
 	// No warning about an unknown shell command in line 3,
 	// since that line depends on OPSYS.
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: games/heretic2-demo/Makefile:3: The variable TOOLS_PLATFORM.gtar may not be set by any package.",
 		"WARN: games/heretic2-demo/Makefile:5: The variable TOOLS_PLATFORM.gtar may not be set by any package.",
 		"WARN: games/heretic2-demo/Makefile:5: Unknown shell command \"/usr/bin/bsdtar\".")
 }
 
 func (s *Suite) Test_MkLines_checkForUsedComment(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("--show-autofix")
-	T.NewMkLines("Makefile.common",
+	t := s.Init(c)
+
+	t.SetupCommandLine("--show-autofix")
+	t.NewMkLines("Makefile.common",
 		mkrcsid,
 		"",
 		"# used by sysutils/mc",
 	).checkForUsedComment("sysutils/mc")
 
-	s.CheckOutputEmpty()
+	t.CheckOutputEmpty()
 
-	T.NewMkLines("Makefile.common").checkForUsedComment("category/package")
+	t.NewMkLines("Makefile.common").checkForUsedComment("category/package")
 
-	s.CheckOutputEmpty()
+	t.CheckOutputEmpty()
 
-	T.NewMkLines("Makefile.common",
+	t.NewMkLines("Makefile.common",
 		mkrcsid,
 	).checkForUsedComment("category/package")
 
-	s.CheckOutputEmpty()
+	t.CheckOutputEmpty()
 
-	T.NewMkLines("Makefile.common",
+	t.NewMkLines("Makefile.common",
 		mkrcsid,
 		"",
 	).checkForUsedComment("category/package")
 
-	s.CheckOutputEmpty()
+	t.CheckOutputEmpty()
 
-	T.NewMkLines("Makefile.common",
+	t.NewMkLines("Makefile.common",
 		mkrcsid,
 		"",
 		"VARNAME=\tvalue",
 	).checkForUsedComment("category/package")
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here.",
 		"AUTOFIX: Makefile.common:2: Inserting a line \"# used by category/package\" before this line.")
 
-	T.NewMkLines("Makefile.common",
+	t.NewMkLines("Makefile.common",
 		mkrcsid,
 		"#",
 		"#",
 	).checkForUsedComment("category/package")
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.",
 		"AUTOFIX: Makefile.common:3: Inserting a line \"# used by category/package\" before this line.")
 
@@ -385,7 +408,9 @@ func (s *Suite) Test_MkLines_checkForUsedComment(c *check.C) {
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
-	mklines := T.NewMkLines("fname",
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("fname",
 		"\t${VAR}")
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
@@ -397,7 +422,9 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
-	mklines := T.NewMkLines("fname",
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("fname",
 		"\t${outer.${inner}}")
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
@@ -411,25 +438,27 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 }
 
 func (s *Suite) Test_MkLines_PrivateTool_Undefined(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("fname",
+	mklines := t.NewMkLines("fname",
 		mkrcsid,
 		"",
 		"\tmd5sum filename")
 
 	mklines.Check()
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: fname:3: Unknown shell command \"md5sum\".")
 }
 
 func (s *Suite) Test_MkLines_PrivateTool_Defined(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("fname",
+	mklines := t.NewMkLines("fname",
 		mkrcsid,
 		"TOOLS_CREATE+=\tmd5sum",
 		"",
@@ -437,13 +466,14 @@ func (s *Suite) Test_MkLines_PrivateTool_Defined(c *check.C) {
 
 	mklines.Check()
 
-	s.CheckOutputEmpty()
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check_indentation(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
-	mklines := T.NewMkLines("options.mk",
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	mklines := t.NewMkLines("options.mk",
 		mkrcsid,
 		". if !defined(GUARD_MK)",
 		". if ${OPSYS} == ${OPSYS}",
@@ -462,33 +492,34 @@ func (s *Suite) Test_MkLines_Check_indentation(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, ""+
-		"NOTE: options.mk:2: This directive should be indented by 0 spaces.\n"+
-		"NOTE: options.mk:3: This directive should be indented by 0 spaces.\n"+
-		"NOTE: options.mk:4: This directive should be indented by 2 spaces.\n"+
-		"NOTE: options.mk:5: This directive should be indented by 4 spaces.\n"+
-		"NOTE: options.mk:6: This directive should be indented by 4 spaces.\n"+
-		"NOTE: options.mk:7: This directive should be indented by 4 spaces.\n"+
-		"NOTE: options.mk:8: This directive should be indented by 2 spaces.\n"+
-		"NOTE: options.mk:9: This directive should be indented by 2 spaces.\n"+
-		"NOTE: options.mk:10: This directive should be indented by 2 spaces.\n"+
-		"NOTE: options.mk:11: This directive should be indented by 2 spaces.\n"+
-		"ERROR: options.mk:11: \".else\" does not take arguments.\n"+
-		"NOTE: options.mk:11: If you meant \"else if\", use \".elif\".\n"+
-		"NOTE: options.mk:12: This directive should be indented by 2 spaces.\n"+
-		"NOTE: options.mk:13: This directive should be indented by 0 spaces.\n"+
-		"NOTE: options.mk:14: This directive should be indented by 0 spaces.\n"+
-		"ERROR: options.mk:15: Unmatched .endif.\n"+
-		"NOTE: options.mk:15: This directive should be indented by 0 spaces.\n")
+	t.CheckOutputLines(""+
+		"NOTE: options.mk:2: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:3: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:4: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:5: This directive should be indented by 4 spaces.",
+		"NOTE: options.mk:6: This directive should be indented by 4 spaces.",
+		"NOTE: options.mk:7: This directive should be indented by 4 spaces.",
+		"NOTE: options.mk:8: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:9: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:10: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:11: This directive should be indented by 2 spaces.",
+		"ERROR: options.mk:11: \".else\" does not take arguments.",
+		"NOTE: options.mk:11: If you meant \"else if\", use \".elif\".",
+		"NOTE: options.mk:12: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:13: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:14: This directive should be indented by 0 spaces.",
+		"ERROR: options.mk:15: Unmatched .endif.",
+		"NOTE: options.mk:15: This directive should be indented by 0 spaces.")
 }
 
 // Demonstrates how to define your own make(1) targets.
 func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	s.RegisterTool(&Tool{Name: "rm", Varname: "RM", Predefined: true})
-	mklines := T.NewMkLines("Makefile",
+	t.SetupTool(&Tool{Name: "rm", Varname: "RM", Predefined: true})
+	mklines := t.NewMkLines("Makefile",
 		mkrcsid,
 		"",
 		"COMMENT=\tWIP pkgsrc packages",
@@ -506,6 +537,6 @@ func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 
 	mklines.Check()
 
-	c.Check(s.Output(), equals, ""+
-		"ERROR: Makefile:14: \"/mk/misc/category.mk\" does not exist.\n")
+	t.CheckOutputLines(
+		"ERROR: Makefile:14: \"/mk/misc/category.mk\" does not exist.")
 }

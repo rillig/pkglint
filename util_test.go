@@ -1,7 +1,7 @@
 package main
 
 import (
-	check "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
 	"testing"
@@ -63,21 +63,23 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 }
 
 func (s *Suite) Test_isEmptyDir_and_getSubdirs(c *check.C) {
-	s.Init(c)
-	s.CreateTmpFile("CVS/Entries", "dummy\n")
+	t := s.Init(c)
 
-	c.Check(isEmptyDir(s.tmpdir), equals, true)
-	c.Check(getSubdirs(s.tmpdir), check.DeepEquals, []string(nil))
+	t.SetupFileLines("CVS/Entries",
+		"dummy")
 
-	s.CreateTmpFile("somedir/file", "")
+	c.Check(isEmptyDir(t.TmpDir()), equals, true)
+	c.Check(getSubdirs(t.TmpDir()), check.DeepEquals, []string(nil))
 
-	c.Check(isEmptyDir(s.tmpdir), equals, false)
-	c.Check(getSubdirs(s.tmpdir), check.DeepEquals, []string{"somedir"})
+	t.SetupFileLines("somedir/file")
 
-	if nodir := s.tmpdir + "/nonexistent"; true {
+	c.Check(isEmptyDir(t.TmpDir()), equals, false)
+	c.Check(getSubdirs(t.TmpDir()), check.DeepEquals, []string{"somedir"})
+
+	if nodir := t.TmpDir() + "/nonexistent"; true {
 		c.Check(isEmptyDir(nodir), equals, true) // Counts as empty.
-		defer s.ExpectFatalError(func() {
-			c.Check(s.Output(), check.Matches, `FATAL: (.+): Cannot be read: open (.+): (.+)\n`)
+		defer t.ExpectFatalError(func() {
+			c.Check(t.Output(), check.Matches, `FATAL: (.+): Cannot be read: open (.+): (.+)\n`)
 		})
 		c.Check(getSubdirs(nodir), check.DeepEquals, []string(nil))
 		c.FailNow()

@@ -233,6 +233,9 @@ func (mklines *MkLines) setSeenBsdPrefsMk() {
 	}
 }
 
+// VaralignBlock checks that all variable assignments from a paragraph
+// use the same indentation depth for their values.
+// It also checks that the indentation uses tabs instead of spaces.
 type VaralignBlock struct {
 	info []struct {
 		mkline MkLine

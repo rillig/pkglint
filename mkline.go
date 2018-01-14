@@ -448,7 +448,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	return nqDontKnow
 }
 
-// Returns the type of the variable (maybe guessed based on the variable name),
+// Returns the type of the variable (possibly guessed based on the variable name),
 // or nil if the type cannot even be guessed.
 func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 	if trace.Tracing {
@@ -596,14 +596,16 @@ func (mkline *MkLineImpl) DetermineUsedVariables() (varnames []string) {
 // or used. Whether that is allowed depends on:
 //
 // * The variable's data type, as defined in vardefs.go.
+//
 // * When used on the right-hand side of an assigment, the variable can
-//   represent a list of words, a single word or even only part of a
-//   word. This distinction decides upon the correct use of the :Q
-//   operator.
+// represent a list of words, a single word or even only part of a
+// word. This distinction decides upon the correct use of the :Q
+// operator.
+//
 // * When used in preprocessing statements like .if or .for, the other
-//   operands of that statement should fit to the variable and are
-//   checked against the variable type. For example, comparing OPSYS to
-//   x86_64 doesn't make sense.
+// operands of that statement should fit to the variable and are
+// checked against the variable type. For example, comparing OPSYS to
+// x86_64 doesn't make sense.
 type VarUseContext struct {
 	vartype    *Vartype
 	time       vucTime

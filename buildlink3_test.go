@@ -3,9 +3,10 @@ package main
 import "gopkg.in/check.v1"
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"# XXX This file was created automatically using createbuildlink-@PKGVERSION@",
 		"",
@@ -26,7 +27,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"ERROR: buildlink3.mk:12: \"/x11/Xbae\" does not exist.",
 		"ERROR: buildlink3.mk:12: There is no package in \"x11/Xbae\".",
 		"ERROR: buildlink3.mk:14: \"/mk/motif.buildlink3.mk\" does not exist.",
@@ -37,12 +38,13 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk(c *check.C) {
 // The mk/haskell.mk file takes care of constructing the correct PKGNAME,
 // but pkglint had not looked at that file.
 func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
 	G.Pkg = NewPackage("x11/hs-X11")
 	G.Pkg.EffectivePkgbase = "X11"
-	G.Pkg.EffectivePkgnameLine = T.NewMkLine("Makefile", 3, "DISTNAME=\tX11-1.0")
-	mklines := T.NewMkLines("buildlink3.mk",
+	G.Pkg.EffectivePkgnameLine = t.NewMkLine("Makefile", 3, "DISTNAME=\tX11-1.0")
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
@@ -59,14 +61,15 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" in this file and \"X11\" from Makefile:3.")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch_multiple_inclusion(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\tpkgbase1",
@@ -80,15 +83,16 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch_multiple_inclusion(c *
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"ERROR: buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"PKGBASE2\" (expected \"PKGBASE1\") and package name \"pkgbase1\" (from line 3).",
 		"WARN: buildlink3.mk:9: Definition of BUILDLINK_API_DEPENDS is missing.")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch_abi_api(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
@@ -105,14 +109,15 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch_abi_api(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:9: Package name mismatch between ABI \"hs-X12\" and API \"hs-X11\" (from line 8).")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_abi_api_versions(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
@@ -129,14 +134,15 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_abi_api_versions(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:9: ABI version \"1.6.0\" should be at least API version \"1.6.1\" (see line 8).")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_no_BUILDLINK_TREE_at_beginning(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		".if !defined(HS_X11_BUILDLINK3_MK)",
@@ -152,14 +158,15 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_no_BUILDLINK_TREE_at_beginning(c *ch
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:3: Expected a BUILDLINK_TREE line.")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_no_BUILDLINK_TREE_at_end(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_DEPMETHOD.hs-X11?=\tfull",
@@ -179,15 +186,16 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_no_BUILDLINK_TREE_at_end(c *check.C)
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:3: This line belongs inside the .ifdef block.",
 		"WARN: buildlink3.mk:15: This line should contain the following text: BUILDLINK_TREE+=\t-hs-X11")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_multiple_inclusion_wrong(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
@@ -197,15 +205,16 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_multiple_inclusion_wrong(c *check.C)
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:6: UNRELATED_BUILDLINK3_MK is defined but not used. Spelling mistake?",
 		"WARN: buildlink3.mk:6: This line should contain the following text: HS_X11_BUILDLINK3_MK:=")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_missing_endif(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\tpkgbase1",
@@ -215,14 +224,15 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_missing_endif(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:EOF: Expected .endif")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_unknown_dependency_patterns(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+= hs-X11",
@@ -240,15 +250,16 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_unknown_dependency_patterns(c *check
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:9: Unknown dependency pattern \"hs-X11!=1.6.1\".",
 		"WARN: buildlink3.mk:10: Unknown dependency pattern \"hs-X11!=1.6.1.2nb2\".")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_PKGBASE_with_variable(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\t${PYPKGPREFIX}-wxWidgets",
@@ -265,14 +276,15 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_PKGBASE_with_variable(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:3: Please use \"py\" instead of \"${PYPKGPREFIX}\" (also in other variables in this file).")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_PKGBASE_with_unknown_variable(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
+
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		"BUILDLINK_TREE+=\t${LICENSE}-wxWidgets",
@@ -289,7 +301,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_PKGBASE_with_unknown_variable(c *che
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).",
 		"WARN: buildlink3.mk:13: This line should contain the following text: BUILDLINK_TREE+=\t-${LICENSE}-wxWidgets")
 }
@@ -299,10 +311,11 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_PKGBASE_with_unknown_variable(c *che
 // but ideally should be handled like everywhere else.
 // See MkLineChecker.checkInclude.
 func (s *Suite) Test_ChecklinesBuildlink3Mk_indentation(c *check.C) {
-	s.Init(c)
-	s.UseCommandLine("-Wall")
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
-	mklines := T.NewMkLines("buildlink3.mk",
+	mklines := t.NewMkLines("buildlink3.mk",
 		mkrcsid,
 		"",
 		".if ${VAAPI_AVAILABLE} == \"yes\"",
@@ -326,7 +339,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_indentation(c *check.C) {
 	ChecklinesBuildlink3Mk(mklines)
 
 	// No warning about the indentation of the .include lines.
-	s.CheckOutputLines(
+	t.CheckOutputLines(
 		"ERROR: buildlink3.mk:11: \"/multimedia/libva\" does not exist.",
 		"ERROR: buildlink3.mk:11: There is no package in \"multimedia/libva\".",
 		"ERROR: buildlink3.mk:13: \"/x11/libX11/buildlink3.mk\" does not exist.",
