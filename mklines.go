@@ -242,19 +242,16 @@ func (mklines *MkLines) setSeenBsdPrefsMk() {
 // A typical example is a SITES.very-long-filename.tar.gz variable
 // between HOMEPAGE and DISTFILES.
 type VaralignBlock struct {
-	info           []*varalignBlockInfo
-	skip           bool
-	differ         bool
-	maxPrefixWidth int
-	maxSpaceWidth  int
-	maxTabWidth    int
+	info []*varalignBlockInfo
+	skip bool
 }
 
 type varalignBlockInfo struct {
-	mkline MkLine
-	prefix string
-	align  string
-	ignore bool
+	mkline    MkLine
+	varnameOp string // Variable name + assignment operator
+	space     string // Whitespace between varnameOp and the variable value
+	width     int    // Screen width of varnameOp + space
+	ignore    bool
 }
 
 func (va *VaralignBlock) Check(mkline MkLine) {
@@ -276,30 +273,11 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	}
 
 	valueAlign := mkline.ValueAlign()
-	prefix := strings.TrimRight(valueAlign, " \t")
-	align := valueAlign[len(prefix):]
+	varnameOp := strings.TrimRight(valueAlign, " \t")
+	space := valueAlign[len(varnameOp):]
 
-	va.info = append(va.info, &varalignBlockInfo{mkline, prefix, align, false})
-
-	alignedWidth := tabLength(valueAlign)
-	if contains(align, " ") {
-		if va.maxSpaceWidth != 0 && alignedWidth != va.maxSpaceWidth {
-			va.differ = true
-		}
-		if alignedWidth > va.maxSpaceWidth {
-			va.maxSpaceWidth = alignedWidth
-		}
-	} else {
-		if va.maxTabWidth != 0 && alignedWidth != va.maxTabWidth {
-			va.differ = true
-		}
-		if alignedWidth > va.maxTabWidth {
-			va.maxTabWidth = alignedWidth
-		}
-	}
-
-	va.maxPrefixWidth = imax(va.maxPrefixWidth, tabLength(prefix))
-	trace.Stepf("%+v", va)
+	width := tabLength(valueAlign)
+	va.info = append(va.info, &varalignBlockInfo{mkline, varnameOp, space, width, false})
 }
 
 func (va *VaralignBlock) Finish() {
@@ -312,9 +290,9 @@ func (va *VaralignBlock) Finish() {
 
 		if width != 0 {
 			for _, info := range va.info {
-				if !(info.align == " " && tabLength(info.mkline.ValueAlign()) > width) {
+				if !(info.space == " " && info.width > width) {
 					if !(info.mkline.Op() == opAssignEval && matches(info.mkline.Varname(), `^[a-z]`)) {
-						va.fixalign(info.mkline, info.prefix, info.align, width)
+						va.fixalign(info.mkline, info.varnameOp, info.space, width)
 					}
 				}
 			}
@@ -326,8 +304,8 @@ func (va *VaralignBlock) Finish() {
 func (va *VaralignBlock) calculateOptimalWidth() int {
 	maxSingleSpaceAlignWidth := 0
 	for _, info := range va.info {
-		if info.align == " " {
-			maxSingleSpaceAlignWidth = imax(maxSingleSpaceAlignWidth, tabLength(info.mkline.ValueAlign()))
+		if info.space == " " {
+			maxSingleSpaceAlignWidth = imax(maxSingleSpaceAlignWidth, info.width)
 		}
 	}
 
@@ -336,75 +314,76 @@ func (va *VaralignBlock) calculateOptimalWidth() int {
 	minTabAlignWidth := 0
 	maxTabAlignWidth := 0
 
-	maxPrefixWidth := 0
+	maxVarnameOpWidth := 0
 	for _, info := range va.info {
 		if info.mkline.Value() == "" && info.mkline.VarassignComment() == "" {
 			continue
 		}
-		if info.align == " " && tabLength(info.mkline.ValueAlign()) == maxSingleSpaceAlignWidth {
+		prefixAlignLength := info.width
+		if info.space == " " && prefixAlignLength == maxSingleSpaceAlignWidth {
 			continue
 		}
 		if info.mkline.Op() == opAssignEval && matches(info.mkline.Varname(), `^[a-z]`) {
 			continue
 		}
-		maxPrefixWidth = imax(maxPrefixWidth, tabLength(info.prefix))
-		if contains(info.align, " ") {
-			maxSpaceAlignWidth = imax(maxSpaceAlignWidth, tabLength(info.mkline.ValueAlign()))
-			if minSpaceAlignWidth == 0 || tabLength(info.mkline.ValueAlign()) < minSpaceAlignWidth {
-				minSpaceAlignWidth = tabLength(info.mkline.ValueAlign())
+		maxVarnameOpWidth = imax(maxVarnameOpWidth, tabLength(info.varnameOp))
+		if contains(info.space, " ") {
+			maxSpaceAlignWidth = imax(maxSpaceAlignWidth, prefixAlignLength)
+			if minSpaceAlignWidth == 0 || prefixAlignLength < minSpaceAlignWidth {
+				minSpaceAlignWidth = prefixAlignLength
 			}
 		} else {
-			maxTabAlignWidth = imax(maxTabAlignWidth, tabLength(info.mkline.ValueAlign()))
-			if minTabAlignWidth == 0 || tabLength(info.mkline.ValueAlign()) < minTabAlignWidth {
-				minTabAlignWidth = tabLength(info.mkline.ValueAlign())
+			maxTabAlignWidth = imax(maxTabAlignWidth, prefixAlignLength)
+			if minTabAlignWidth == 0 || prefixAlignLength < minTabAlignWidth {
+				minTabAlignWidth = prefixAlignLength
 			}
 		}
 	}
-	if maxPrefixWidth == 0 {
+	if maxVarnameOpWidth == 0 {
 		return 0
 	}
-	if len(va.info) == 1 && va.info[0].align == "" {
+	if len(va.info) == 1 && va.info[0].space == "" {
 		return 0
 	}
 
 	// Test_MkLines__alignment_space
-	if maxSpaceAlignWidth == 0 && minTabAlignWidth == maxTabAlignWidth && minTabAlignWidth > maxPrefixWidth &&
-		(maxSingleSpaceAlignWidth == 0 || maxSingleSpaceAlignWidth >= maxPrefixWidth+4) {
+	if maxSpaceAlignWidth == 0 && minTabAlignWidth == maxTabAlignWidth && minTabAlignWidth > maxVarnameOpWidth &&
+		(maxSingleSpaceAlignWidth == 0 || maxSingleSpaceAlignWidth >= maxVarnameOpWidth+4) {
 		return 0
 	}
 
-	maxPrefixWidth = (maxPrefixWidth + 7) & -8
+	maxVarnameOpWidth = (maxVarnameOpWidth + 7) & -8
 
 	if maxSingleSpaceAlignWidth != 0 &&
-		maxPrefixWidth <= maxSingleSpaceAlignWidth &&
-		maxSingleSpaceAlignWidth < maxPrefixWidth+4 {
+		maxVarnameOpWidth <= maxSingleSpaceAlignWidth &&
+		maxSingleSpaceAlignWidth < maxVarnameOpWidth+4 {
 
-		maxPrefixWidth += 8
+		maxVarnameOpWidth += 8
 	}
 
-	return maxPrefixWidth
+	return maxVarnameOpWidth
 }
 
-func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string, goodWidth int) {
-	hasSpace := contains(oldalign, " ")
+func (va *VaralignBlock) fixalign(mkline MkLine, varnameOp, oldSpace string, newSpaceLength int) {
+	hasSpace := contains(oldSpace, " ")
 
-	newalign := ""
-	for tabLength(prefix+newalign) < goodWidth {
-		newalign += "\t"
+	newSpace := ""
+	for tabLength(varnameOp+newSpace) < newSpaceLength {
+		newSpace += "\t"
 	}
-	if newalign == oldalign {
+	if newSpace == oldSpace {
 		return
 	}
 
 	fix := mkline.Line.Autofix()
-	wrongColumn := tabLength(prefix+oldalign) != tabLength(prefix+newalign)
+	wrongColumn := tabLength(varnameOp+oldSpace) != tabLength(varnameOp+newSpace)
 	switch {
 	case hasSpace && wrongColumn:
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", goodWidth+1)
+		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", newSpaceLength+1)
 	case hasSpace:
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	case wrongColumn:
-		fix.Notef("This variable value should be aligned to column %d.", goodWidth+1)
+		fix.Notef("This variable value should be aligned to column %d.", newSpaceLength+1)
 	}
 	if wrongColumn {
 		fix.Explain(
@@ -421,6 +400,6 @@ func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string, goodWi
 			"When the block contains something else than variable definitions",
 			"and conditionals, it is not checked at all.")
 	}
-	fix.Replace(prefix+oldalign, prefix+newalign)
+	fix.Replace(varnameOp+oldSpace, varnameOp+newSpace)
 	fix.Apply()
 }
