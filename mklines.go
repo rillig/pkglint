@@ -308,63 +308,81 @@ func (va *VaralignBlock) Finish() {
 			defer trace.Call0()()
 		}
 
-		width := 0
-		for _, info := range va.info {
-			width = imax(width, va.calculateOptimalWidth(&width, info))
-		}
+		width := va.calculateOptimalWidth()
 
-		for _, info := range va.info {
-			if !info.mkline.IsMultiline() && !info.ignore {
-				va.fixalign(info.mkline, info.prefix, info.align, width)
+		if width != 0 {
+			for _, info := range va.info {
+				if !(info.align == " " && tabLength(info.mkline.ValueAlign()) > width) {
+					if !(info.mkline.Op() == opAssignEval && matches(info.mkline.Varname(), `^[a-z]`)) {
+						va.fixalign(info.mkline, info.prefix, info.align, width)
+					}
+				}
 			}
 		}
 	}
 	*va = VaralignBlock{}
 }
 
-func (va *VaralignBlock) calculateOptimalWidth(width *int, info *varalignBlockInfo) int {
-	mkline := info.mkline
-	oldalign := info.align
-	prefix := info.prefix
+func (va *VaralignBlock) calculateOptimalWidth() int {
+	maxSingleSpaceAlignWidth := 0
+	for _, info := range va.info {
+		if info.align == " " {
+			maxSingleSpaceAlignWidth = imax(maxSingleSpaceAlignWidth, tabLength(info.mkline.ValueAlign()))
+		}
+	}
 
-	if mkline.Value() == "" && mkline.VarassignComment() == "" {
-		info.ignore = true
+	minSpaceAlignWidth := 0
+	maxSpaceAlignWidth := 0
+	minTabAlignWidth := 0
+	maxTabAlignWidth := 0
+
+	maxPrefixWidth := 0
+	for _, info := range va.info {
+		if info.mkline.Value() == "" && info.mkline.VarassignComment() == "" {
+			continue
+		}
+		if info.align == " " && tabLength(info.mkline.ValueAlign()) == maxSingleSpaceAlignWidth {
+			continue
+		}
+		if info.mkline.Op() == opAssignEval && matches(info.mkline.Varname(), `^[a-z]`) {
+			continue
+		}
+		maxPrefixWidth = imax(maxPrefixWidth, tabLength(info.prefix))
+		if contains(info.align, " ") {
+			maxSpaceAlignWidth = imax(maxSpaceAlignWidth, tabLength(info.mkline.ValueAlign()))
+			if minSpaceAlignWidth == 0 || tabLength(info.mkline.ValueAlign()) < minSpaceAlignWidth {
+				minSpaceAlignWidth = tabLength(info.mkline.ValueAlign())
+			}
+		} else {
+			maxTabAlignWidth = imax(maxTabAlignWidth, tabLength(info.mkline.ValueAlign()))
+			if minTabAlignWidth == 0 || tabLength(info.mkline.ValueAlign()) < minTabAlignWidth {
+				minTabAlignWidth = tabLength(info.mkline.ValueAlign())
+			}
+		}
+	}
+	if maxPrefixWidth == 0 {
+		return 0
+	}
+	if len(va.info) == 1 && va.info[0].align == "" {
 		return 0
 	}
 
-	hasSpace := contains(oldalign, " ")
-	if hasSpace &&
-		va.maxTabWidth != 0 &&
-		va.maxSpaceWidth > va.maxTabWidth &&
-		tabLength(prefix+oldalign) == va.maxSpaceWidth {
-		info.ignore = true
+	// Test_MkLines__alignment_space
+	if maxSpaceAlignWidth == 0 && minTabAlignWidth == maxTabAlignWidth && minTabAlignWidth > maxPrefixWidth &&
+		(maxSingleSpaceAlignWidth == 0 || maxSingleSpaceAlignWidth >= maxPrefixWidth+4) {
 		return 0
 	}
 
-	// Don't warn about procedure parameters
-	if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
-		info.ignore = true
-		return 0
+	maxPrefixWidth = (maxPrefixWidth + 7) & -8
+
+	if maxSingleSpaceAlignWidth != 0 &&
+		maxPrefixWidth <= maxSingleSpaceAlignWidth &&
+		maxSingleSpaceAlignWidth < maxPrefixWidth+4 {
+
+		maxPrefixWidth += 8
 	}
 
-	goodWidth := va.maxTabWidth
-	if goodWidth == 0 && va.differ {
-		goodWidth = va.maxSpaceWidth
-	}
-	minWidth := va.maxPrefixWidth + 1
-	if goodWidth == 0 || minWidth < goodWidth && va.differ {
-		goodWidth = minWidth
-	}
-
-	// TODO: only allow space-indented values that stick far to the right
-	if goodWidth != 0 &&
-		va.maxSpaceWidth > va.maxPrefixWidth && va.maxSpaceWidth < va.maxPrefixWidth+4 &&
-		va.maxSpaceWidth > goodWidth && goodWidth < va.maxSpaceWidth+4 {
-		//goodWidth += 8
-	}
-
-	goodWidth = (goodWidth + 7) & -8
-	return goodWidth
+	return maxPrefixWidth
 }
 
 func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string, goodWidth int) {

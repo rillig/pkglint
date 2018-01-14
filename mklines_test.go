@@ -227,6 +227,30 @@ func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines__alignment_space(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+
+	lines := t.SetupFileLines("Makefile",
+		MkRcsId,
+		"RESTRICTED=\tDo not sell, do not rent",
+		"NO_BIN_ON_CDROM= ${RESTRICTED}",
+		"NO_BIN_ON_FTP=\t${RESTRICTED}",
+		"NO_SRC_ON_CDROM= ${RESTRICTED}",
+		"NO_SRC_ON_FTP=\t${RESTRICTED}")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:2: Replacing \"RESTRICTED=\\t\" with \"RESTRICTED=\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"NO_BIN_ON_CDROM= \" with \"NO_BIN_ON_CDROM=\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"NO_BIN_ON_FTP=\\t\" with \"NO_BIN_ON_FTP=\\t\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \"NO_SRC_ON_CDROM= \" with \"NO_SRC_ON_CDROM=\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing \"NO_SRC_ON_FTP=\\t\" with \"NO_SRC_ON_FTP=\\t\\t\".")
+}
+
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t := s.Init(c)
 
