@@ -134,14 +134,14 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
-	if shallBeLogged(fix.diagFormat) && fix.descrFormat != "" {
+	if shallBeLogged(fix.diagFormat) {
 		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" && !G.opts.Autofix
 		if logDiagnostic {
 			msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 			logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 		}
 
-		logRepair := G.opts.Autofix || G.opts.PrintAutofix
+		logRepair := fix.descrFormat != "" && (G.opts.Autofix || G.opts.PrintAutofix)
 		if logRepair {
 			msg := fmt.Sprintf(fix.descrFormat, fix.descrArgs...)
 			logs(llAutofix, line.Filename, line.Linenos(), "", msg)
