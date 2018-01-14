@@ -161,11 +161,13 @@ func (mkline *MkLineImpl) IsSysinclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && incl.sys
 }
-func (mkline *MkLineImpl) IsDependency() bool       { _, ok := mkline.data.(mkLineDependency); return ok }
-func (mkline *MkLineImpl) Varname() string          { return mkline.data.(mkLineAssign).varname }
-func (mkline *MkLineImpl) Varcanon() string         { return mkline.data.(mkLineAssign).varcanon }
-func (mkline *MkLineImpl) Varparam() string         { return mkline.data.(mkLineAssign).varparam }
-func (mkline *MkLineImpl) Op() MkOperator           { return mkline.data.(mkLineAssign).op }
+func (mkline *MkLineImpl) IsDependency() bool { _, ok := mkline.data.(mkLineDependency); return ok }
+func (mkline *MkLineImpl) Varname() string    { return mkline.data.(mkLineAssign).varname }
+func (mkline *MkLineImpl) Varcanon() string   { return mkline.data.(mkLineAssign).varcanon }
+func (mkline *MkLineImpl) Varparam() string   { return mkline.data.(mkLineAssign).varparam }
+func (mkline *MkLineImpl) Op() MkOperator     { return mkline.data.(mkLineAssign).op }
+
+// For a variable assignment, the text up to and including the assignment operator, e.g. VARNAME+=\t
 func (mkline *MkLineImpl) ValueAlign() string       { return mkline.data.(mkLineAssign).valueAlign }
 func (mkline *MkLineImpl) Value() string            { return mkline.data.(mkLineAssign).value }
 func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLineAssign).comment }

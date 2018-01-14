@@ -236,17 +236,25 @@ func (mklines *MkLines) setSeenBsdPrefsMk() {
 // VaralignBlock checks that all variable assignments from a paragraph
 // use the same indentation depth for their values.
 // It also checks that the indentation uses tabs instead of spaces.
+//
+// In general, all values should be indented using tabs.
+// As an exception, very long lines may be indented with a single space.
+// A typical example is a SITES.very-long-filename.tar.gz variable
+// between HOMEPAGE and DISTFILES.
 type VaralignBlock struct {
-	info []struct {
-		mkline MkLine
-		prefix string
-		align  string
-	}
+	info           []*varalignBlockInfo
 	skip           bool
 	differ         bool
 	maxPrefixWidth int
 	maxSpaceWidth  int
 	maxTabWidth    int
+}
+
+type varalignBlockInfo struct {
+	mkline MkLine
+	prefix string
+	align  string
+	ignore bool
 }
 
 func (va *VaralignBlock) Check(mkline MkLine) {
@@ -271,12 +279,7 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	prefix := strings.TrimRight(valueAlign, " \t")
 	align := valueAlign[len(prefix):]
 
-	info := struct {
-		mkline MkLine
-		prefix string
-		align  string
-	}{mkline, prefix, align}
-	va.info = append(va.info, info)
+	va.info = append(va.info, &varalignBlockInfo{mkline, prefix, align, false})
 
 	alignedWidth := tabLength(valueAlign)
 	if contains(align, " ") {
@@ -304,18 +307,29 @@ func (va *VaralignBlock) Finish() {
 		if trace.Tracing {
 			defer trace.Call0()()
 		}
+
+		width := 0
 		for _, info := range va.info {
-			if !info.mkline.IsMultiline() {
-				va.fixalign(info.mkline, info.prefix, info.align)
+			width = imax(width, va.calculateOptimalWidth(&width, info))
+		}
+
+		for _, info := range va.info {
+			if !info.mkline.IsMultiline() && !info.ignore {
+				va.fixalign(info.mkline, info.prefix, info.align, width)
 			}
 		}
 	}
 	*va = VaralignBlock{}
 }
 
-func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string) {
+func (va *VaralignBlock) calculateOptimalWidth(width *int, info *varalignBlockInfo) int {
+	mkline := info.mkline
+	oldalign := info.align
+	prefix := info.prefix
+
 	if mkline.Value() == "" && mkline.VarassignComment() == "" {
-		return
+		info.ignore = true
+		return 0
 	}
 
 	hasSpace := contains(oldalign, " ")
@@ -323,12 +337,14 @@ func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string) {
 		va.maxTabWidth != 0 &&
 		va.maxSpaceWidth > va.maxTabWidth &&
 		tabLength(prefix+oldalign) == va.maxSpaceWidth {
-		return
+		info.ignore = true
+		return 0
 	}
 
 	// Don't warn about procedure parameters
 	if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
-		return
+		info.ignore = true
+		return 0
 	}
 
 	goodWidth := va.maxTabWidth
@@ -339,7 +355,20 @@ func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string) {
 	if goodWidth == 0 || minWidth < goodWidth && va.differ {
 		goodWidth = minWidth
 	}
+
+	// TODO: only allow space-indented values that stick far to the right
+	if goodWidth != 0 &&
+		va.maxSpaceWidth > va.maxPrefixWidth && va.maxSpaceWidth < va.maxPrefixWidth+4 &&
+		va.maxSpaceWidth > goodWidth && goodWidth < va.maxSpaceWidth+4 {
+		//goodWidth += 8
+	}
+
 	goodWidth = (goodWidth + 7) & -8
+	return goodWidth
+}
+
+func (va *VaralignBlock) fixalign(mkline MkLine, prefix, oldalign string, goodWidth int) {
+	hasSpace := contains(oldalign, " ")
 
 	newalign := ""
 	for tabLength(prefix+newalign) < goodWidth {
