@@ -38,7 +38,7 @@ func (s *Suite) Test_CheckdirCategory_invalid_comment(c *check.C) {
 
 	G.globalData.InitVartypes()
 	t.SetupFileLines("archivers/Makefile",
-		"# $"+"NetBSD$",
+		MkRcsId,
 		"COMMENT=\t\\Make $$$$ fast\"",
 		"",
 		"SUBDIR+=\tpackage",

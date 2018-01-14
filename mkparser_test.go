@@ -223,7 +223,7 @@ func (s *Suite) Test_MkParser__varuse_parentheses_autofix(c *check.C) {
 	t.SetupCommandLine("--autofix")
 	G.globalData.InitVartypes()
 	lines := t.SetupFileLines("Makefile",
-		mkrcsid,
+		MkRcsId,
 		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES}")
 	mklines := NewMkLines(lines)
 
@@ -235,6 +235,6 @@ func (s *Suite) Test_MkParser__varuse_parentheses_autofix(c *check.C) {
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".",
 		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
 	t.CheckFileLines("Makefile",
-		mkrcsid,
+		MkRcsId,
 		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES}")
 }

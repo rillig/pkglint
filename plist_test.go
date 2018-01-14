@@ -54,7 +54,7 @@ func (s *Suite) Test_ChecklinesPlist__empty(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		"@comment $"+"NetBSD$")
+		PlistRcsId)
 
 	ChecklinesPlist(lines)
 
@@ -178,7 +178,7 @@ func (s *Suite) Test_PlistChecker_checkpathShare_Desktop(c *check.C) {
 	G.Pkg = NewPackage("category/pkgpath")
 
 	ChecklinesPlist(t.NewLines("PLIST",
-		"@comment $"+"NetBSD$",
+		PlistRcsId,
 		"share/applications/pkgbase.desktop"))
 
 	t.CheckOutputLines(
@@ -191,7 +191,7 @@ func (s *Suite) Test_PlistChecker_checkpathMan_gz(c *check.C) {
 
 	G.Pkg = NewPackage("category/pkgbase")
 	lines := t.NewLines("PLIST",
-		"@comment $"+"NetBSD$",
+		PlistRcsId,
 		"man/man3/strerror.3.gz")
 
 	ChecklinesPlist(lines)
@@ -204,7 +204,7 @@ func (s *Suite) TestPlistChecker_checkpath__PKGMANDIR(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		"@comment $"+"NetBSD$",
+		PlistRcsId,
 		"${PKGMANDIR}/man1/sh.1")
 
 	ChecklinesPlist(lines)
@@ -217,7 +217,7 @@ func (s *Suite) TestPlistChecker_checkpath__python_egg(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		"@comment $"+"NetBSD$",
+		PlistRcsId,
 		"${PYSITELIB}/gdspy-${PKGVERSION}-py${PYVERSSUFFIX}.egg-info/PKG-INFO")
 
 	ChecklinesPlist(lines)
@@ -232,7 +232,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 	t.SetupCommandLine("-Wall")
 
 	fname := t.CreateFileLines("PLIST",
-		"@comment $"+"NetBSD$",
+		PlistRcsId,
 		"lib/libvirt/connection-driver/libvirt_driver_storage.la",
 		"${PLIST.hal}lib/libvirt/connection-driver/libvirt_driver_nodedev.la",
 		"${PLIST.xen}lib/libvirt/connection-driver/libvirt_driver_libxl.la",

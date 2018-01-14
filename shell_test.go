@@ -589,7 +589,7 @@ func (s *Suite) Test_ShellLine__shell_comment_with_line_continuation(c *check.C)
 	t := s.Init(c)
 
 	lines := t.SetupFileLinesContinuation("Makefile",
-		mkrcsid,
+		MkRcsId,
 		"pre-install:",
 		"\t"+"# comment\\",
 		"\t"+"echo \"hello\"")

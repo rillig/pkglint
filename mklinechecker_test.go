@@ -136,7 +136,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 	G.globalData.InitVartypes()
 
 	G.Mk = t.NewMkLines("Makefile",
-		mkrcsid,
+		MkRcsId,
 		"ac_cv_libpari_libs+=\t-L${BUILDLINK_PREFIX.pari}/lib") // From math/clisp-pari/Makefile, rev. 1.8
 
 	MkLineChecker{G.Mk.mklines[1]}.checkVarassign()
@@ -164,7 +164,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions(c *check.C) {
 	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	mklines := t.NewMkLines("options.mk",
-		mkrcsid,
+		MkRcsId,
 		"COMMENT=\t${GAMES_USER}",
 		"COMMENT:=\t${PKGBASE}",
 		"PYPKGPREFIX=${PKGBASE}")
@@ -188,7 +188,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions__load_time(c *check.C)
 	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	mklines := t.NewMkLines("options.mk",
-		mkrcsid,
+		MkRcsId,
 		"WRKSRC:=${.CURDIR}")
 
 	mklines.Check()
@@ -256,7 +256,7 @@ func (s *Suite) Test_MkLineChecker_CheckCond__comparison_with_shell_command(c *c
 	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = t.NewMkLines("security/openssl/Makefile",
-		mkrcsid,
+		MkRcsId,
 		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
 		".endif")
 
@@ -273,7 +273,7 @@ func (s *Suite) Test_MkLine_CheckCond_comparing_PKGSRC_COMPILER_with_eqeq(c *che
 	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = t.NewMkLines("audio/pulseaudio/Makefile",
-		mkrcsid,
+		MkRcsId,
 		".if ${OPSYS} == \"Darwin\" && ${PKGSRC_COMPILER} == \"clang\"",
 		".endif")
 
@@ -289,7 +289,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 	t.SetupCommandLine("-Wall")
 	G.globalData.InitVartypes()
 	G.Mk = t.NewMkLines("chat/pidgin-icb/Makefile",
-		mkrcsid,
+		MkRcsId,
 		"CFLAGS+=\t`pkg-config pidgin --cflags`")
 	mkline := G.Mk.mklines[1]
 
@@ -312,7 +312,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype_CFLAGS(c *check.C) {
 
 	G.globalData.InitVartypes()
 	mklines := t.NewMkLines("Makefile",
-		mkrcsid,
+		MkRcsId,
 		"CPPFLAGS.SunOS+=\t-DPIPECOMMAND=\\\"/usr/sbin/sendmail -bs %s\\\"")
 
 	mklines.Check()

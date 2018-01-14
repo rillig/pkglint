@@ -18,7 +18,9 @@ const confMake = "@BMAKE@"
 const confVersion = "@VERSION@"
 
 func main() {
-	G.logOut, G.logErr, trace.Out = NewSeparatorWriter(os.Stdout), NewSeparatorWriter(os.Stderr), os.Stdout
+	G.logOut = NewSeparatorWriter(os.Stdout)
+	G.logErr = NewSeparatorWriter(os.Stderr)
+	trace.Out = os.Stdout
 	os.Exit(new(Pkglint).Main(os.Args...))
 }
 
