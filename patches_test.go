@@ -52,10 +52,8 @@ func (s *Suite) Test_ChecklinesPatch__without_empty_line__autofix(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: ~/patch-WithoutEmptyLines:2: Inserting a line \"\" before this line.",
 		"AUTOFIX: ~/patch-WithoutEmptyLines:3: Inserting a line \"\" before this line.",
-		"AUTOFIX: ~/patch-WithoutEmptyLines: Has been auto-fixed. Please re-run pkglint.",
 		"AUTOFIX: ~/distinfo:3: Replacing \"87ffcaaa0b0677ec679fff612b44df1af05f04df\" "+
-			"with \"a7c35294b3853da0acedf8a972cb266baa9582a3\".",
-		"AUTOFIX: ~/distinfo: Has been auto-fixed. Please re-run pkglint.")
+			"with \"a7c35294b3853da0acedf8a972cb266baa9582a3\".")
 
 	t.CheckFileLines("patch-WithoutEmptyLines",
 		RcsId,

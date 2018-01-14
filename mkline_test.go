@@ -197,9 +197,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
-		"AUTOFIX: ~/Makefile:4: Replacing \"VARNAME+ +=\" with \"VARNAME++=\".",
-		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.",
-		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
+		"AUTOFIX: ~/Makefile:4: Replacing \"VARNAME+ +=\" with \"VARNAME++=\".")
 	t.CheckFileLines("Makefile",
 		MkRcsId+"",
 		"VARNAME+=\t${VARNAME}",

@@ -230,8 +230,6 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 			NewLineWhole(fname).Errorf("Cannot overwrite with auto-fixed content.")
 			continue
 		}
-		msg := "Has been auto-fixed. Please re-run pkglint."
-		logs(llAutofix, fname, "", msg, msg)
 		autofixed = true
 	}
 	return

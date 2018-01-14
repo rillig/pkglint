@@ -58,9 +58,7 @@ func (s *Suite) Test_Autofix_ReplaceRegex_with_autofix(c *check.C) {
 		"",
 		"AUTOFIX: ~/Makefile:2: Replacing \"X\" with \"Y\".",
 		"- line2",
-		"+ YXXXX",
-		"",
-		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
+		"+ YXXXX")
 }
 
 func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
@@ -120,8 +118,7 @@ func (s *Suite) Test_autofix_MkLines(c *check.C) {
 		"XXXXXXXXXXXXXXX",
 		"line3 := value3")
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".",
-		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
+		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".")
 }
 
 func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {

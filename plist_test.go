@@ -148,8 +148,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 	sorter2.Sort()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/PLIST:3: Sorting the whole file.",
-		"AUTOFIX: ~/PLIST: Has been auto-fixed. Please re-run pkglint.")
+		"AUTOFIX: ~/PLIST:3: Sorting the whole file.")
 	t.CheckFileLines("PLIST",
 		PlistRcsId,
 		"@comment Do not remove", // The header ends here
@@ -269,8 +268,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/PLIST:6: Replacing \"${PKGMANDIR}/\" with \"man/\".",
-		"AUTOFIX: ~/PLIST:2: Sorting the whole file.",
-		"AUTOFIX: ~/PLIST: Has been auto-fixed. Please re-run pkglint.")
+		"AUTOFIX: ~/PLIST:2: Sorting the whole file.")
 	c.Check(len(lines), equals, len(fixedLines))
 	t.CheckFileLines("PLIST",
 		PlistRcsId,

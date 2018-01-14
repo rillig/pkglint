@@ -24,8 +24,7 @@ func (s *Suite) Test_MkLines_Check__autofix_conditional_indentation(c *check.C) 
 		"AUTOFIX: ~/fname.mk:3: Replacing \".\" with \".  \".",
 		"AUTOFIX: ~/fname.mk:4: Replacing \".\" with \".    \".",
 		"AUTOFIX: ~/fname.mk:5: Replacing \".\" with \".    \".",
-		"AUTOFIX: ~/fname.mk:6: Replacing \".\" with \".  \".",
-		"AUTOFIX: ~/fname.mk: Has been auto-fixed. Please re-run pkglint.")
+		"AUTOFIX: ~/fname.mk:6: Replacing \".\" with \".  \".")
 	t.CheckFileLines("fname.mk",
 		"# $"+"NetBSD$",
 		".if defined(A)",
@@ -131,8 +130,7 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 		"AUTOFIX: ~/Makefile:15: Replacing \"GRP_A= \" with \"GRP_A=\\t\\t\".",
 		"AUTOFIX: ~/Makefile:16: Replacing \"GRP_AA= \" with \"GRP_AA=\\t\\t\".",
 		"AUTOFIX: ~/Makefile:17: Replacing \"GRP_AAA= \" with \"GRP_AAA=\\t\".",
-		"AUTOFIX: ~/Makefile:18: Replacing \"GRP_AAAA= \" with \"GRP_AAAA=\\t\".",
-		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
+		"AUTOFIX: ~/Makefile:18: Replacing \"GRP_AAAA= \" with \"GRP_AAAA=\\t\".")
 	t.CheckFileLines("Makefile",
 		MkRcsId,
 		"",

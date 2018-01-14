@@ -232,8 +232,7 @@ func (s *Suite) Test_MkParser__varuse_parentheses_autofix(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P1)\" with \"${P1}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P2)\" with \"${P2}\".",
-		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".",
-		"AUTOFIX: ~/Makefile: Has been auto-fixed. Please re-run pkglint.")
+		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".")
 	t.CheckFileLines("Makefile",
 		MkRcsId,
 		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES}")
