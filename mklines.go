@@ -251,7 +251,6 @@ type varalignBlockInfo struct {
 	varnameOp string // Variable name + assignment operator
 	space     string // Whitespace between varnameOp and the variable value
 	width     int    // Screen width of varnameOp + space
-	ignore    bool
 }
 
 func (va *VaralignBlock) Check(mkline MkLine) {
@@ -277,16 +276,12 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	space := valueAlign[len(varnameOp):]
 
 	width := tabLength(valueAlign)
-	va.info = append(va.info, &varalignBlockInfo{mkline, varnameOp, space, width, false})
+	va.info = append(va.info, &varalignBlockInfo{mkline, varnameOp, space, width})
 }
 
 func (va *VaralignBlock) Finish() {
-	if !va.skip {
-		if trace.Tracing {
-			defer trace.Call0()()
-		}
-
-		width := va.calculateOptimalWidth()
+	if len(va.info) != 0 && !va.skip {
+		width := va.optimalWidth()
 
 		if width != 0 {
 			for _, info := range va.info {
@@ -301,67 +296,80 @@ func (va *VaralignBlock) Finish() {
 	*va = VaralignBlock{}
 }
 
-func (va *VaralignBlock) calculateOptimalWidth() int {
-	maxSingleSpaceAlignWidth := 0
+func (va *VaralignBlock) optimalWidth() int {
+
+	// There may be a single space-indented variable value that
+	// sticks out from the rest of the variables. It must stick
+	// out further than to the next tab, otherwise the other
+	// variables of that block have to align to this one.
+	outlier := 0
 	for _, info := range va.info {
 		if info.space == " " {
-			maxSingleSpaceAlignWidth = imax(maxSingleSpaceAlignWidth, info.width)
+			outlier = imax(outlier, info.width)
 		}
 	}
 
-	minSpaceAlignWidth := 0
-	maxSpaceAlignWidth := 0
-	minTabAlignWidth := 0
-	maxTabAlignWidth := 0
+	maxSpace := 0 // Maximum width of space-indented values
+	minTab := 0   // Minimum width of tab-indented values
+	maxTab := 0   // Maximum width of tab-indented values
 
-	maxVarnameOpWidth := 0
+	// Maximum width of varnameOp, except for the outlier.
+	min := 0
+
 	for _, info := range va.info {
-		if info.mkline.Value() == "" && info.mkline.VarassignComment() == "" {
+		width := info.width
+		mkline := info.mkline
+
+		// Multiple-inclusion guards usually appear in a block of
+		// their own and therefore do not need alignment.
+		if mkline.Value() == "" && mkline.VarassignComment() == "" {
 			continue
 		}
-		prefixAlignLength := info.width
-		if info.space == " " && prefixAlignLength == maxSingleSpaceAlignWidth {
+
+		if info.space == " " && width == outlier {
 			continue
 		}
-		if info.mkline.Op() == opAssignEval && matches(info.mkline.Varname(), `^[a-z]`) {
+
+		// Arguments to procedures do not take part in block alignment.
+		if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
 			continue
 		}
-		maxVarnameOpWidth = imax(maxVarnameOpWidth, tabLength(info.varnameOp))
+
+		min = imax(min, tabLength(info.varnameOp))
+
 		if contains(info.space, " ") {
-			maxSpaceAlignWidth = imax(maxSpaceAlignWidth, prefixAlignLength)
-			if minSpaceAlignWidth == 0 || prefixAlignLength < minSpaceAlignWidth {
-				minSpaceAlignWidth = prefixAlignLength
-			}
+			maxSpace = imax(maxSpace, width)
 		} else {
-			maxTabAlignWidth = imax(maxTabAlignWidth, prefixAlignLength)
-			if minTabAlignWidth == 0 || prefixAlignLength < minTabAlignWidth {
-				minTabAlignWidth = prefixAlignLength
+			maxTab = imax(maxTab, width)
+			if minTab == 0 || width < minTab {
+				minTab = width
 			}
 		}
 	}
-	if maxVarnameOpWidth == 0 {
+
+	if min == 0 {
 		return 0
 	}
+
 	if len(va.info) == 1 && va.info[0].space == "" {
 		return 0
 	}
 
 	// Test_MkLines__alignment_space
-	if maxSpaceAlignWidth == 0 && minTabAlignWidth == maxTabAlignWidth && minTabAlignWidth > maxVarnameOpWidth &&
-		(maxSingleSpaceAlignWidth == 0 || maxSingleSpaceAlignWidth >= maxVarnameOpWidth+4) {
+	if maxSpace == 0 && minTab == maxTab && minTab > min && (outlier == 0 || outlier >= min+4) {
 		return 0
 	}
 
-	maxVarnameOpWidth = (maxVarnameOpWidth + 7) & -8
+	min = (min + 7) & -8
 
-	if maxSingleSpaceAlignWidth != 0 &&
-		maxVarnameOpWidth <= maxSingleSpaceAlignWidth &&
-		maxSingleSpaceAlignWidth < maxVarnameOpWidth+4 {
+	if outlier != 0 &&
+		min <= outlier &&
+		outlier < min+4 {
 
-		maxVarnameOpWidth += 8
+		min += 8
 	}
 
-	return maxVarnameOpWidth
+	return min
 }
 
 func (va *VaralignBlock) fixalign(mkline MkLine, varnameOp, oldSpace string, newSpaceLength int) {
