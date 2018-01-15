@@ -219,6 +219,12 @@ func (s *Suite) Test_MkLines__variable_alignment_outlier(c *check.C) {
 		"V.000000000000000000025= 36", // Keep at 25 (outlier)
 		"V.000010=\tvalue",            // Keep at 16 (would require + 2 tabs)
 		"",
+		"V.00008=\t39",          // Keep at 16
+		"V.00008=\t\t\t\tvalue", // Adjust from 40 to 16 (removes 3 tabs)
+		"",
+		"V.00008=\t\t42",        // Adjust from 24 to 16 (removes 1 tab)
+		"V.00008=\t\t\t\tvalue", // Adjust from 40 to 16 (removes 3 tabs)
+		"",
 		"X=\t${X} ${V} ${V.*}") // To avoid "defined but not used" warnings
 	mklines := NewMkLines(lines)
 
@@ -239,7 +245,26 @@ func (s *Suite) Test_MkLines__variable_alignment_outlier(c *check.C) {
 		"NOTE: ~/Makefile:30: This variable value should be aligned with tabs, not spaces, to column 25.",
 		"NOTE: ~/Makefile:31: This variable value should be aligned to column 25.",
 		"NOTE: ~/Makefile:33: Variable values should be aligned with tabs, not spaces.",
-		"NOTE: ~/Makefile:34: This variable value should be aligned to column 25.")
+		"NOTE: ~/Makefile:34: This variable value should be aligned to column 25.",
+		"NOTE: ~/Makefile:40: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:42: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:43: This variable value should be aligned to column 17.")
+}
+
+func (s *Suite) Test_MkLines__variable_alignment__nospace(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"PKG_FAIL_REASON+=\"Message\"")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
 }
 
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {

@@ -318,7 +318,9 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	minTab := 0   // Minimum width of tab-indented values
 	maxTab := 0   // Maximum width of tab-indented values
 
-	// Maximum width of varnameOp, except for the outlier.
+	// Maximum width of varnameOp, without the trailing whitespace.
+	// The outlier line is ignored in the first pass.
+	// In some cases it is adjusted to the outlier in a second pass.
 	min := 0
 
 	for _, info := range infos {
@@ -335,8 +337,6 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 			continue
 		}
 
-		// It would look more beautiful if there were a +1 to the
-		// tabWidth, but this is the strictly necessary minimum.
 		min = imax(min, tabWidth(info.varnameOp))
 
 		if contains(info.space, " ") {
@@ -357,7 +357,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	// indentation.
 	if outlier != 0 && maxTab != 0 && outlier <= maxTab+8 {
 		maxSpace = imax(maxSpace, outlier)
-		min = imax(min, outlier)
+		min = imax(min, outlier-1)
 		outlier = 0
 	}
 
@@ -365,13 +365,19 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	// on the space-indented lines.
 	if outlier != 0 && maxTab == 0 && outlier < maxSpace+8 {
 		maxSpace = outlier
-		min = imax(min, outlier)
+		min = imax(min, outlier-1)
 		outlier = 0
 	}
 
 	// Indentation with tabs only, though deeper than strictly necessary.
-	if maxTab == minTab && maxSpace == 0 && outlier == 0 {
+	if maxTab == minTab && maxSpace == 0 && outlier == 0 && minTab > min {
 		return 0
+	}
+
+	// If there's something to fix, insert at least a single space
+	// between the operator and the variable value.
+	if maxTab != minTab || maxSpace != 0 {
+		min++
 	}
 
 	return (min + 7) & -8
