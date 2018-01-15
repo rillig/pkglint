@@ -268,6 +268,7 @@ func (s *Suite) Test_MkLines__variable_alignment__nospace(c *check.C) {
 }
 
 // Continuation lines without any content on the first line are ignored.
+// Even when they appear in a paragraph of their own.
 func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C) {
 	t := s.Init(c)
 
@@ -279,7 +280,10 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 		"DISTFILES+= \\",
 		"\t\t\tvalue",
 		"DISTFILES+=\t\t\tvalue",
-		"DISTFILES+= value")
+		"DISTFILES+= value",
+		"",
+		"DISTFILES= \\",
+		"value")
 	mklines := NewMkLines(lines)
 
 	mklines.Check()
@@ -293,7 +297,10 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 		"DISTFILES+= \\",
 		"\t\t\tvalue",
 		"DISTFILES+=\tvalue",
-		"DISTFILES+=\tvalue")
+		"DISTFILES+=\tvalue",
+		"",
+		"DISTFILES= \\",
+		"value")
 }
 
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
