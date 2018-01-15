@@ -391,6 +391,24 @@ func (s *Suite) Test_MkLines__alignment_space(c *check.C) {
 		"AUTOFIX: ~/Makefile:6: Replacing \"NO_SRC_ON_FTP=\\t\" with \"NO_SRC_ON_FTP=\\t\\t\".")
 }
 
+func (s *Suite) Test_MkLines__alignment__only_space(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+
+	lines := t.SetupFileLines("Makefile",
+		MkRcsId,
+		"DISTFILES+= space",
+		"DISTFILES+= space")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:2: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".")
+}
+
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t := s.Init(c)
 

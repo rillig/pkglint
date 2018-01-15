@@ -359,10 +359,6 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 		}
 	}
 
-	if min == 0 {
-		return 0
-	}
-
 	// An outlier that is not really outside is just a normal spaced
 	// indentation.
 	if outlier != 0 && maxTab != 0 && outlier <= maxTab+8 {
@@ -382,6 +378,11 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	// Indentation with tabs only, though deeper than strictly necessary.
 	if maxTab == minTab && maxSpace == 0 && outlier == 0 && minTab > min {
 		return 0
+	}
+
+	// Indentation with single spaces only, should be replaced with tabs.
+	if min == 0 && outlier != 0 {
+		min = outlier - 1
 	}
 
 	// If there's something to fix, insert at least a single space
