@@ -158,7 +158,7 @@ func loadCvsEntries(fname string) []Line {
 
 // Returns the number of columns that a string occupies when printed with
 // a tabulator size of 8.
-func tabLength(s string) int {
+func tabWidth(s string) int {
 	length := 0
 	for _, r := range s {
 		if r == '\t' {

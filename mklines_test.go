@@ -93,8 +93,8 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 		"VAR= indented with one space",   // Exactly one space is ok in general
 		"VAR=  indented with two spaces", // Two spaces are uncommon
 		"",
-		"BLOCK=\tindented with tab",
-		"BLOCK_LONGVAR= indented with space", // This is ok, to prevent the block from being indented further
+		"BLOCK=\tindented with tab",          // To align these two lines, this line needs more more tab.
+		"BLOCK_LONGVAR= indented with space", // This still keeps the indentation at an acceptable level.
 		"",
 		"BLOCK=\tshort",
 		"BLOCK_LONGVAR=\tlong",
@@ -113,6 +113,8 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: ~/Makefile:6: This variable value should be aligned with tabs, not spaces, to column 9.",
 		"NOTE: ~/Makefile:7: This variable value should be aligned with tabs, not spaces, to column 9.",
+		"NOTE: ~/Makefile:9: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:10: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:12: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:15: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:16: This variable value should be aligned with tabs, not spaces, to column 17.",
@@ -126,6 +128,8 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:6: Replacing \"VAR= \" with \"VAR=\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"VAR=  \" with \"VAR=\\t\".",
+		"AUTOFIX: ~/Makefile:9: Replacing \"BLOCK=\\t\" with \"BLOCK=\\t\\t\".",
+		"AUTOFIX: ~/Makefile:10: Replacing \"BLOCK_LONGVAR= \" with \"BLOCK_LONGVAR=\\t\".",
 		"AUTOFIX: ~/Makefile:12: Replacing \"BLOCK=\\t\" with \"BLOCK=\\t\\t\".",
 		"AUTOFIX: ~/Makefile:15: Replacing \"GRP_A= \" with \"GRP_A=\\t\\t\".",
 		"AUTOFIX: ~/Makefile:16: Replacing \"GRP_AA= \" with \"GRP_AA=\\t\\t\".",
@@ -140,8 +144,8 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 		"VAR=\tindented with one space",
 		"VAR=\tindented with two spaces",
 		"",
-		"BLOCK=\tindented with tab",
-		"BLOCK_LONGVAR= indented with space",
+		"BLOCK=\t\tindented with tab",
+		"BLOCK_LONGVAR=\tindented with space",
 		"",
 		"BLOCK=\t\tshort",
 		"BLOCK_LONGVAR=\tlong",
@@ -169,6 +173,73 @@ func (s *Suite) Test_MkLines__variable_alignment_space_and_tab(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:3: Variable values should be aligned with tabs, not spaces.")
+}
+
+func (s *Suite) Test_MkLines__variable_alignment_outlier(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"",
+		"V= 3",  // Adjust from 3 to 8 (+ 1 tab)
+		"V=\t4", // Keep at 8
+		"",
+		"V.0008= 6", // Keep at 8 (space to tab)
+		"V=\t7",     // Keep at 8
+		"",
+		"V.00009= 9", // Adjust from 9 to 16 (+ 1 tab)
+		"V=\t10",     // Adjust from 8 to 16 (+1 tab)
+		"",
+		"V.000000000016= 12", // Keep at 16 (space to tab)
+		"V=\tvalue",          // Adjust from 8 to 16 (+ 1 tab)
+		"",
+		"V.0000000000017= 15", // Keep at 17 (outlier)
+		"V=\tvalue",           // Keep at 8 (would require + 2 tabs)
+		"",
+		"V= 18",            // Adjust from 3 to 16 (+ 2 tabs)
+		"V.000010=\tvalue", // Keep at 16
+		"",
+		"V.00009= 21",      // Adjust from 9 to 16 (+ 1 tab)
+		"V.000010=\tvalue", // Keep at 16
+		"",
+		"V.000000000016= 24", // Keep at 16 (space to tab)
+		"V.000010=\tvalue",   // Keep at 16
+		"",
+		"V.0000000000017= 27", // Adjust from 17 to 24 (+ 1 tab)
+		"V.000010=\tvalue",    // Adjust from 16 to 24 (+ 1 tab)
+		"",
+		"V.0000000000000000023= 30", // Adjust from 23 to 24 (+ 1 tab)
+		"V.000010=\tvalue",          // Adjust from 16 to 24 (+ 1 tab)
+		"",
+		"V.00000000000000000024= 33", // Keep at 24 (space to tab)
+		"V.000010=\tvalue",           // Adjust from 16 to 24 (+ 1 tab)
+		"",
+		"V.000000000000000000025= 36", // Keep at 25 (outlier)
+		"V.000010=\tvalue",            // Keep at 16 (would require + 2 tabs)
+		"",
+		"X=\t${X} ${V} ${V.*}") // To avoid "defined but not used" warnings
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 9.",
+		"NOTE: ~/Makefile:6: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: ~/Makefile:9: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:10: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:12: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: ~/Makefile:13: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:18: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:21: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:24: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: ~/Makefile:27: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:28: This variable value should be aligned to column 25.",
+		"NOTE: ~/Makefile:30: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:31: This variable value should be aligned to column 25.",
+		"NOTE: ~/Makefile:33: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: ~/Makefile:34: This variable value should be aligned to column 25.")
 }
 
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {

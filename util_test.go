@@ -43,11 +43,11 @@ func (s *Suite) Test_replaceFirst(c *check.C) {
 }
 
 func (s *Suite) Test_tabLength(c *check.C) {
-	c.Check(tabLength("12345"), equals, 5)
-	c.Check(tabLength("\t"), equals, 8)
-	c.Check(tabLength("123\t"), equals, 8)
-	c.Check(tabLength("1234567\t"), equals, 8)
-	c.Check(tabLength("12345678\t"), equals, 16)
+	c.Check(tabWidth("12345"), equals, 5)
+	c.Check(tabWidth("\t"), equals, 8)
+	c.Check(tabWidth("123\t"), equals, 8)
+	c.Check(tabWidth("1234567\t"), equals, 8)
+	c.Check(tabWidth("12345678\t"), equals, 16)
 }
 
 func (s *Suite) Test_cleanpath(c *check.C) {

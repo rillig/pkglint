@@ -242,8 +242,8 @@ func (mklines *MkLines) setSeenBsdPrefsMk() {
 // A typical example is a SITES.very-long-filename.tar.gz variable
 // between HOMEPAGE and DISTFILES.
 type VaralignBlock struct {
-	info []*varalignBlockInfo
-	skip bool
+	infos []*varalignBlockInfo
+	skip  bool
 }
 
 type varalignBlockInfo struct {
@@ -267,43 +267,48 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 		return
 	}
 
-	if trace.Tracing {
-		defer trace.Call(mkline)()
+	// Arguments to procedures do not take part in block alignment.
+	if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
+		return
 	}
 
 	valueAlign := mkline.ValueAlign()
 	varnameOp := strings.TrimRight(valueAlign, " \t")
 	space := valueAlign[len(varnameOp):]
 
-	width := tabLength(valueAlign)
-	va.info = append(va.info, &varalignBlockInfo{mkline, varnameOp, space, width})
+	width := tabWidth(valueAlign)
+	va.infos = append(va.infos, &varalignBlockInfo{mkline, varnameOp, space, width})
 }
 
 func (va *VaralignBlock) Finish() {
-	if len(va.info) != 0 && !va.skip {
-		width := va.optimalWidth()
+	infos := va.infos
+	skip := va.skip
+	*va = VaralignBlock{}
 
-		if width != 0 {
-			for _, info := range va.info {
-				if !(info.space == " " && info.width > width) {
-					if !(info.mkline.Op() == opAssignEval && matches(info.mkline.Varname(), `^[a-z]`)) {
-						va.fixalign(info.mkline, info.varnameOp, info.space, width)
-					}
-				}
-			}
+	if len(infos) == 0 || skip {
+		return
+	}
+
+	width := va.optimalWidth(infos)
+	if width == 0 {
+		return
+	}
+
+	for _, info := range infos {
+		if !(info.space == " " && info.width > width) {
+			va.realign(info.mkline, info.varnameOp, info.space, width)
 		}
 	}
-	*va = VaralignBlock{}
 }
 
-func (va *VaralignBlock) optimalWidth() int {
+func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 
 	// There may be a single space-indented variable value that
 	// sticks out from the rest of the variables. It must stick
 	// out further than to the next tab, otherwise the other
 	// variables of that block have to align to this one.
 	outlier := 0
-	for _, info := range va.info {
+	for _, info := range infos {
 		if info.space == " " {
 			outlier = imax(outlier, info.width)
 		}
@@ -316,7 +321,7 @@ func (va *VaralignBlock) optimalWidth() int {
 	// Maximum width of varnameOp, except for the outlier.
 	min := 0
 
-	for _, info := range va.info {
+	for _, info := range infos {
 		width := info.width
 		mkline := info.mkline
 
@@ -330,20 +335,17 @@ func (va *VaralignBlock) optimalWidth() int {
 			continue
 		}
 
-		// Arguments to procedures do not take part in block alignment.
-		if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
-			continue
-		}
-
-		min = imax(min, tabLength(info.varnameOp))
+		// It would look more beautiful if there were a +1 to the
+		// tabWidth, but this is the strictly necessary minimum.
+		min = imax(min, tabWidth(info.varnameOp))
 
 		if contains(info.space, " ") {
 			maxSpace = imax(maxSpace, width)
 		} else {
-			maxTab = imax(maxTab, width)
 			if minTab == 0 || width < minTab {
 				minTab = width
 			}
+			maxTab = imax(maxTab, width)
 		}
 	}
 
@@ -351,32 +353,41 @@ func (va *VaralignBlock) optimalWidth() int {
 		return 0
 	}
 
-	if len(va.info) == 1 && va.info[0].space == "" {
+	// An outlier that is not really outside is just a normal spaced
+	// indentation.
+	if outlier != 0 && maxTab != 0 && outlier <= maxTab+8 {
+		maxSpace = imax(maxSpace, outlier)
+		min = imax(min, outlier)
+		outlier = 0
+	}
+
+	// If there are no tab-indented lines, do the calculation based
+	// on the space-indented lines.
+	if outlier != 0 && maxTab == 0 && outlier < maxSpace+8 {
+		maxSpace = outlier
+		min = imax(min, outlier)
+		outlier = 0
+	}
+
+	// Indentation without any whitespace.
+	// Not the most beautiful but still acceptable.
+	if maxTab == min && maxSpace == 0 {
 		return 0
 	}
 
-	// Test_MkLines__alignment_space
-	if maxSpace == 0 && minTab == maxTab && minTab > min && (outlier == 0 || outlier >= min+4) {
+	// Indentation with tabs only, though deeper than strictly necessary.
+	if maxTab == minTab && maxSpace == 0 && outlier == 0 {
 		return 0
 	}
 
-	min = (min + 7) & -8
-
-	if outlier != 0 &&
-		min <= outlier &&
-		outlier < min+4 {
-
-		min += 8
-	}
-
-	return min
+	return (min + 7) & -8
 }
 
-func (va *VaralignBlock) fixalign(mkline MkLine, varnameOp, oldSpace string, newSpaceLength int) {
+func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newWidth int) {
 	hasSpace := contains(oldSpace, " ")
 
 	newSpace := ""
-	for tabLength(varnameOp+newSpace) < newSpaceLength {
+	for tabWidth(varnameOp+newSpace) < newWidth {
 		newSpace += "\t"
 	}
 	if newSpace == oldSpace {
@@ -384,14 +395,14 @@ func (va *VaralignBlock) fixalign(mkline MkLine, varnameOp, oldSpace string, new
 	}
 
 	fix := mkline.Line.Autofix()
-	wrongColumn := tabLength(varnameOp+oldSpace) != tabLength(varnameOp+newSpace)
+	wrongColumn := tabWidth(varnameOp+oldSpace) != tabWidth(varnameOp+newSpace)
 	switch {
 	case hasSpace && wrongColumn:
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", newSpaceLength+1)
+		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", newWidth+1)
 	case hasSpace:
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	case wrongColumn:
-		fix.Notef("This variable value should be aligned to column %d.", newSpaceLength+1)
+		fix.Notef("This variable value should be aligned to column %d.", newWidth+1)
 	}
 	if wrongColumn {
 		fix.Explain(
