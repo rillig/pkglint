@@ -369,7 +369,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 
 	// If there are no tab-indented lines, do the calculation based
 	// on the space-indented lines.
-	if outlier != 0 && maxTab == 0 && outlier < maxSpace+8 {
+	if outlier != 0 && maxTab == 0 && (maxSpace == 0 || outlier < maxSpace+8) {
 		maxSpace = outlier
 		min = imax(min, outlier-1)
 		outlier = 0

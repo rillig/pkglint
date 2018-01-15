@@ -399,14 +399,21 @@ func (s *Suite) Test_MkLines__alignment__only_space(c *check.C) {
 	lines := t.SetupFileLines("Makefile",
 		MkRcsId,
 		"DISTFILES+= space",
-		"DISTFILES+= space")
+		"DISTFILES+= space",
+		"",
+		"REPLACE_PYTHON+= *.py",
+		"REPLACE_PYTHON+= lib/*.py",
+		"REPLACE_PYTHON+= src/*.py")
 	mklines := NewMkLines(lines)
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".",
-		"AUTOFIX: ~/Makefile:3: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".")
+		"AUTOFIX: ~/Makefile:3: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \"REPLACE_PYTHON+= \" with \"REPLACE_PYTHON+=\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing \"REPLACE_PYTHON+= \" with \"REPLACE_PYTHON+=\\t\".",
+		"AUTOFIX: ~/Makefile:7: Replacing \"REPLACE_PYTHON+= \" with \"REPLACE_PYTHON+=\\t\".")
 }
 
 // The indentation is deeper than necessary, but all lines agree on
