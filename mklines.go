@@ -385,6 +385,11 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 		min = outlier - 1
 	}
 
+	// Same indentation width, only differs between tabs and spaces.
+	if minTab != 0 && minTab == maxTab && maxTab == maxSpace && outlier == 0 {
+		min = maxTab - 1
+	}
+
 	// If there's something to fix, insert at least a single space
 	// between the operator and the variable value.
 	if maxTab != minTab || maxSpace != 0 {

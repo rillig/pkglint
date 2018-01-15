@@ -409,6 +409,25 @@ func (s *Suite) Test_MkLines__alignment__only_space(c *check.C) {
 		"AUTOFIX: ~/Makefile:3: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".")
 }
 
+// The indentation is deeper than necessary, but all lines agree on
+// the same column. Therefore this column should be kept.
+func (s *Suite) Test_MkLines__alignment__mixed_tabs_and_spaces_same_column(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+
+	lines := t.SetupFileLines("Makefile",
+		MkRcsId,
+		"DISTFILES+=             space",
+		"DISTFILES+=\t\tspace")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:2: Replacing \"DISTFILES+=             \" with \"DISTFILES+=\\t\\t\".")
+}
+
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t := s.Init(c)
 
