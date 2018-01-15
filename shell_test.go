@@ -615,3 +615,20 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	c.Check(newQuoting, equals, shqDquot)
 	c.Check(repl.Rest(), equals, "\"")
 }
+
+func (s *Suite) Test_ShellLine__variable_outside_quotes(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	G.globalData.InitVartypes()
+	mklines := t.NewMkLines("dummy.mk",
+		MkRcsId,
+		"GZIP=\t${ECHO} $$comment")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: dummy.mk:2: The variable GZIP may not be set by any package.",
+		"WARN: dummy.mk:2: Unquoted shell variable \"comment\".",
+		"WARN: dummy.mk:2: ECHO should not be evaluated indirectly at load time.")
+}
