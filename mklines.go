@@ -369,12 +369,6 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 		outlier = 0
 	}
 
-	// Indentation without any whitespace.
-	// Not the most beautiful but still acceptable.
-	if maxTab == min && maxSpace == 0 {
-		return 0
-	}
-
 	// Indentation with tabs only, though deeper than strictly necessary.
 	if maxTab == minTab && maxSpace == 0 && outlier == 0 {
 		return 0
