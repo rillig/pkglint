@@ -261,7 +261,7 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 		va.Finish()
 		return
 	}
-	if !mkline.IsVarassign() || mkline.IsMultiline() {
+	if !mkline.IsVarassign() {
 		trace.Stepf("Skipping")
 		va.skip = true
 		return
@@ -270,6 +270,16 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	// Arguments to procedures do not take part in block alignment.
 	if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
 		return
+	}
+	if mkline.IsMultiline() {
+		m, _, _, _, _, value, _, _ := MatchVarassign(mkline.raw[0].orignl)
+
+		// If the first line of the continuation is a variable assignment
+		// that includes part of the value (and not just the line
+		// continuation), it takes part in the realignment.
+		if !m || value == "\\" {
+			return
+		}
 	}
 
 	valueAlign := mkline.ValueAlign()

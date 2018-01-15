@@ -267,6 +267,35 @@ func (s *Suite) Test_MkLines__variable_alignment__nospace(c *check.C) {
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
 }
 
+// Continuation lines without any content on the first line are ignored.
+func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace", "--autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"DISTFILES+=\tvalue",
+		"DISTFILES+= \\",
+		"\t\t\tvalue",
+		"DISTFILES+=\t\t\tvalue",
+		"DISTFILES+= value")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:5: Replacing \"DISTFILES+=\\t\\t\\t\" with \"DISTFILES+=\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".")
+	t.CheckFileLines("Makefile",
+		MkRcsId,
+		"DISTFILES+=\tvalue",
+		"DISTFILES+= \\",
+		"\t\t\tvalue",
+		"DISTFILES+=\tvalue",
+		"DISTFILES+=\tvalue")
+}
+
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	t := s.Init(c)
 
@@ -293,9 +322,11 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("--show-autofix", "-Wall")
+	t.SetupCommandLine("--autofix", "-Wall")
 
-	// The SITES.* definition is indented less than the other lines.
+	// The SITES.* definition is indented less than the other lines,
+	// therefore the whole block will be realigned.
+	//
 	// In the multiline definition for DISTFILES, the second line is
 	// indented the same as all the other lines but pkglint (at least up
 	// to 5.5.1) doesn't notice this because in multiline definitions it
@@ -303,8 +334,8 @@ func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 	// line, in which the line continuation has been replaced with a
 	// single space.
 	//
-	// To prevent pkglint from damaging this carefully chosen layout,
-	// sections with line continuations are not fixed at all for now.
+	// Because of this limited knowledge, pkglint only realigns the
+	// first physical line of the continued line.
 	lines := t.SetupFileLinesContinuation("Makefile",
 		MkRcsId,
 		"",
@@ -319,8 +350,21 @@ func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 
 	mklines.Check()
 
-	// No output at all because of the continuation line
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:3: Replacing \"DIST_SUBDIR=            \" with \"DIST_SUBDIR=\\t\".",
+		"AUTOFIX: ~/Makefile:4--5: Replacing \"DISTFILES=              \" with \"DISTFILES=\\t\".",
+		"AUTOFIX: ~/Makefile:7: Replacing \"SITES.${file}=  \" with \"SITES.${file}=\\t\".",
+		"AUTOFIX: ~/Makefile:9: Replacing \"WRKSRC=                 \" with \"WRKSRC=\\t\\t\".")
+	t.CheckFileLinesDetab("Makefile",
+		"# $NetBSD$",
+		"",
+		"DIST_SUBDIR=    asc",
+		"DISTFILES=      ${DISTNAME}${EXTRACT_SUFX} frontiers.mp3 \\",
+		"                        machine_wars.mp3 time_to_strike.mp3",
+		".for file in frontiers.mp3 machine_wars.mp3 time_to_strike.mp3",
+		"SITES.${file}=  http://asc-hq.org/",
+		".endfor",
+		"WRKSRC=         ${WRKDIR}/${PKGNAME_NOREV}")
 }
 
 func (s *Suite) Test_MkLines__alignment_space(c *check.C) {

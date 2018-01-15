@@ -152,7 +152,9 @@ func (mkline *MkLineImpl) IsVarassign() bool { _, ok := mkline.data.(mkLineAssig
 func (mkline *MkLineImpl) IsShellcmd() bool  { _, ok := mkline.data.(mkLineShell); return ok }
 func (mkline *MkLineImpl) IsComment() bool   { _, ok := mkline.data.(mkLineComment); return ok }
 func (mkline *MkLineImpl) IsEmpty() bool     { _, ok := mkline.data.(mkLineEmpty); return ok }
-func (mkline *MkLineImpl) IsCond() bool      { _, ok := mkline.data.(mkLineConditional); return ok }
+
+// IsCond checks whether the line is a conditional (.if/.ifelse/.else/.if) or a loop (.for/.endfor).
+func (mkline *MkLineImpl) IsCond() bool { _, ok := mkline.data.(mkLineConditional); return ok }
 func (mkline *MkLineImpl) IsInclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && !incl.sys

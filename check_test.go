@@ -305,3 +305,25 @@ func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 	}
 	t.c().Check(actual, equals, expected)
 }
+
+// CheckFileLinesDetab loads the lines from the temporary file and checks
+// that they equal the given lines. Tabs in the file are replaced with the
+// appropriate number of space characters, so that the file contents can
+// be checked visually using any fixed-width font.
+func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
+	actualLines, err := readLines(t.TempFilename(relativeFileName), false)
+	if !t.c().Check(err, check.IsNil) {
+		return
+	}
+
+	detabbed := ""
+	for _, line := range actualLines {
+		detabbed += detab(line.raw[0].orignl)
+	}
+
+	expected := ""
+	for _, line := range lines {
+		expected += line + "\n"
+	}
+	t.c().Check(detabbed, equals, expected)
+}

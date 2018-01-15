@@ -170,6 +170,18 @@ func tabWidth(s string) int {
 	return length
 }
 
+func detab(s string) string {
+	detabbed := ""
+	for _, r := range s {
+		if r == '\t' {
+			detabbed += "        "[:8-len(detabbed)%8]
+		} else {
+			detabbed += string(r)
+		}
+	}
+	return detabbed
+}
+
 func varnameBase(varname string) string {
 	dot := strings.IndexByte(varname, '.')
 	if dot != -1 {

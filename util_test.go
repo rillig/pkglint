@@ -93,6 +93,14 @@ func (s *Suite) Test_PrefixReplacer_Since(c *check.C) {
 	c.Check(repl.Since(mark), equals, "hello")
 }
 
+func (s *Suite) Test_detab(c *check.C) {
+	c.Check(detab(""), equals, "")
+	c.Check(detab("\t"), equals, "        ")
+	c.Check(detab("1234\t9"), equals, "1234    9")
+	c.Check(detab("1234567\t"), equals, "1234567 ")
+	c.Check(detab("12345678\t"), equals, "12345678        ")
+}
+
 const reMkIncludeBenchmark = `^\.(\s*)(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
 const reMkIncludeBenchmarkPositive = `^\.(\s*)(s?include)\s+\"(.+)\"\s*(?:#.*)?$`
 
