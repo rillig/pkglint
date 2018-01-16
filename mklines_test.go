@@ -303,6 +303,33 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 		"value")
 }
 
+// When there is an outlier, no matter whether indented using space or tab,
+// fix the whole block to use the indentation of the second-longest line.
+// Since all of the remaining lines have the same indentation (there is
+// only 1 line at all), that existing indentation is used instead of the
+// minimum necessary, which would only be a single tab.
+func (s *Suite) Test_MkLines__variable_alignment__autofix_tab_outlier(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace", "--autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"DISTFILES=\t\tvery-very-very-very-long-distfile-name",
+		"SITES.very-very-very-very-long-distfile-name=\t${MASTER_SITE_LOCAL}")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:3: Replacing \"SITES.very-very-very-very-long-distfile-name=\\t\" " +
+			"with \"SITES.very-very-very-very-long-distfile-name= \".")
+	t.CheckFileLines("Makefile",
+		MkRcsId,
+		"DISTFILES=\t\tvery-very-very-very-long-distfile-name",
+		"SITES.very-very-very-very-long-distfile-name= ${MASTER_SITE_LOCAL}")
+}
+
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	t := s.Init(c)
 

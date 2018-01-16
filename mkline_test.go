@@ -18,7 +18,7 @@ func (s *Suite) Test_VaralignBlock_Check_autofix(c *check.C) {
 		"",                //
 		"VAR=   \tvalue",  // Mixed indentation 8, fixed to 8.
 		"",                //
-		"VAR=    \tvalue", // Mixed indentation 16, fixed to 8.
+		"VAR=    \tvalue", // Mixed indentation 16, fixed to 16.
 		"",                //
 		"VAR=\tvalue")     // Already aligned with tabs only, left unchanged.
 
@@ -39,8 +39,8 @@ func (s *Suite) Test_VaralignBlock_Check_autofix(c *check.C) {
 		"AUTOFIX: file.mk:7: Replacing \"VAR= \\t\" with \"VAR=\\t\".",
 		"NOTE: file.mk:9: Variable values should be aligned with tabs, not spaces.",
 		"AUTOFIX: file.mk:9: Replacing \"VAR=   \\t\" with \"VAR=\\t\".",
-		"NOTE: file.mk:11: This variable value should be aligned with tabs, not spaces, to column 9.",
-		"AUTOFIX: file.mk:11: Replacing \"VAR=    \\t\" with \"VAR=\\t\".")
+		"NOTE: file.mk:11: Variable values should be aligned with tabs, not spaces.",
+		"AUTOFIX: file.mk:11: Replacing \"VAR=    \\t\" with \"VAR=\\t\\t\".")
 }
 
 func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {
@@ -657,7 +657,9 @@ func (s *Suite) Test_MkLine_Pkgmandir(c *check.C) {
 	G.Mk.Check()
 
 	t.CheckOutputLines(
-		"WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".")
+		"WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".",
+		"NOTE: chat/ircII/Makefile:2: This variable value should be aligned to column 25.",
+		"NOTE: chat/ircII/Makefile:3: This variable value should be aligned to column 25.")
 }
 
 func (s *Suite) Test_MkLines_Check__VERSION_as_wordpart_in_MASTER_SITES(c *check.C) {

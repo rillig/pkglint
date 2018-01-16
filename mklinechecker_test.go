@@ -194,7 +194,8 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions__load_time(c *check.C)
 	mklines.Check()
 
 	// Don't warn that ".CURDIR should not be evaluated at load time."
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
 }
 
 func (s *Suite) Test_MkLineChecker_WarnVaruseLocalbase(c *check.C) {

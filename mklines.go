@@ -247,10 +247,11 @@ type VaralignBlock struct {
 }
 
 type varalignBlockInfo struct {
-	mkline    MkLine
-	varnameOp string // Variable name + assignment operator
-	space     string // Whitespace between varnameOp and the variable value
-	width     int    // Screen width of varnameOp + space
+	mkline         MkLine
+	varnameOp      string // Variable name + assignment operator
+	varnameOpWidth int    // Screen width of varnameOp + space
+	space          string // Whitespace between varnameOp and the variable value
+	totalWidth     int    // Screen width of varnameOp + space
 }
 
 func (va *VaralignBlock) Check(mkline MkLine) {
@@ -271,6 +272,13 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
 		return
 	}
+
+	// Multiple-inclusion guards usually appear in a block of
+	// their own and therefore do not need alignment.
+	if mkline.Value() == "" && mkline.VarassignComment() == "" {
+		return
+	}
+
 	if mkline.IsMultiline() {
 		m, _, _, _, _, value, _, _ := MatchVarassign(mkline.raw[0].orignl)
 
@@ -287,7 +295,7 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	space := valueAlign[len(varnameOp):]
 
 	width := tabWidth(valueAlign)
-	va.infos = append(va.infos, &varalignBlockInfo{mkline, varnameOp, space, width})
+	va.infos = append(va.infos, &varalignBlockInfo{mkline, varnameOp, tabWidth(varnameOp), space, width})
 }
 
 func (va *VaralignBlock) Finish() {
@@ -299,104 +307,60 @@ func (va *VaralignBlock) Finish() {
 		return
 	}
 
-	width := va.optimalWidth(infos)
-	if width == 0 {
+	newWidth := va.optimalWidth(infos)
+	if newWidth == 0 {
 		return
 	}
 
 	for _, info := range infos {
-		if !(info.space == " " && info.width > width) {
-			va.realign(info.mkline, info.varnameOp, info.space, width)
-		}
+		va.realign(info.mkline, info.varnameOp, info.space, newWidth)
 	}
 }
 
+// optimalWidth computes the minimum necessary screen width for the
+// variable assignment lines. There may be a single line sticking out
+// from the others (called outlier). This is to prevent a single SITES.*
+// variable from forcing the rest of the paragraph to be indented too
+// far to the right.
 func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 
-	// There may be a single space-indented variable value that
-	// sticks out from the rest of the variables. It must stick
-	// out further than to the next tab, otherwise the other
-	// variables of that block have to align to this one.
-	outlier := 0
+	longest := 0
+	secondLongest := 0
 	for _, info := range infos {
-		if info.space == " " {
-			outlier = imax(outlier, info.width)
+		width := info.varnameOpWidth
+		if width >= longest {
+			secondLongest = longest
+			longest = width
+		} else if width > secondLongest {
+			secondLongest = width
 		}
 	}
-
-	maxSpace := 0 // Maximum width of space-indented values
-	minTab := 0   // Minimum width of tab-indented values
-	maxTab := 0   // Maximum width of tab-indented values
 
 	// Maximum width of varnameOp, without the trailing whitespace.
-	// The outlier line is ignored in the first pass.
-	// In some cases it is adjusted to the outlier in a second pass.
-	min := 0
+	minVarnameOpWidth := longest
+	outlier := 0
+	if secondLongest != 0 && secondLongest/8+1 < longest/8 {
+		minVarnameOpWidth = secondLongest
+		outlier = longest
+	}
 
+	// Widths of the current indentation (including whitespace)
+	minTotalWidth := 0
+	maxTotalWidth := 0
 	for _, info := range infos {
-		width := info.width
-		mkline := info.mkline
-
-		// Multiple-inclusion guards usually appear in a block of
-		// their own and therefore do not need alignment.
-		if mkline.Value() == "" && mkline.VarassignComment() == "" {
-			continue
-		}
-
-		if info.space == " " && width == outlier {
-			continue
-		}
-
-		min = imax(min, tabWidth(info.varnameOp))
-
-		if contains(info.space, " ") {
-			maxSpace = imax(maxSpace, width)
-		} else {
-			if minTab == 0 || width < minTab {
-				minTab = width
+		if width := info.totalWidth; info.varnameOpWidth != outlier {
+			if minTotalWidth == 0 || width < minTotalWidth {
+				minTotalWidth = width
 			}
-			maxTab = imax(maxTab, width)
+			maxTotalWidth = imax(maxTotalWidth, width)
 		}
 	}
 
-	// An outlier that is not really outside is just a normal spaced
-	// indentation.
-	if outlier != 0 && maxTab != 0 && outlier <= maxTab+8 {
-		maxSpace = imax(maxSpace, outlier)
-		min = imax(min, outlier-1)
-		outlier = 0
+	if minTotalWidth > minVarnameOpWidth && minTotalWidth == maxTotalWidth && minTotalWidth%8 == 0 {
+		return minTotalWidth
 	}
 
-	// If there are no tab-indented lines, do the calculation based
-	// on the space-indented lines.
-	if outlier != 0 && maxTab == 0 && (maxSpace == 0 || outlier < maxSpace+8) {
-		maxSpace = outlier
-		min = imax(min, outlier-1)
-		outlier = 0
-	}
-
-	// Indentation with tabs only, though deeper than strictly necessary.
-	if maxTab == minTab && maxSpace == 0 && outlier == 0 && minTab > min {
-		return 0
-	}
-
-	// Indentation with single spaces only, should be replaced with tabs.
-	if min == 0 && outlier != 0 {
-		min = outlier - 1
-	}
-
-	// Same indentation width, only differs between tabs and spaces.
-	if minTab != 0 && minTab == maxTab && maxTab == maxSpace && outlier == 0 {
-		min = maxTab - 1
-	}
-
-	// If there's something to fix, insert at least a single space
-	// between the operator and the variable value.
-	if maxTab != minTab || maxSpace != 0 {
-		min++
-	}
-
-	return (min + 7) & -8
+	return (minVarnameOpWidth & -8) + 8
 }
 
 func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newWidth int) {
@@ -405,6 +369,10 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newW
 	newSpace := ""
 	for tabWidth(varnameOp+newSpace) < newWidth {
 		newSpace += "\t"
+	}
+	// Indent the outlier with a space instead of a tab to keep the line short.
+	if newSpace == "" {
+		newSpace = " "
 	}
 	if newSpace == oldSpace {
 		return
