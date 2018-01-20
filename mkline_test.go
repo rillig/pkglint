@@ -30,17 +30,17 @@ func (s *Suite) Test_VaralignBlock_Check_autofix(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: file.mk:1: This variable value should be aligned with tabs, not spaces, to column 9.",
-		"AUTOFIX: file.mk:1: Replacing \"VAR=   \" with \"VAR=\\t\".",
+		"AUTOFIX: file.mk:1: Replacing \"   \" with \"\\t\".",
 		"NOTE: file.mk:3: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:3: Replacing \"VAR=    \" with \"VAR=\\t\".",
+		"AUTOFIX: file.mk:3: Replacing \"    \" with \"\\t\".",
 		"NOTE: file.mk:5: This variable value should be aligned with tabs, not spaces, to column 9.",
-		"AUTOFIX: file.mk:5: Replacing \"VAR=     \" with \"VAR=\\t\".",
+		"AUTOFIX: file.mk:5: Replacing \"     \" with \"\\t\".",
 		"NOTE: file.mk:7: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:7: Replacing \"VAR= \\t\" with \"VAR=\\t\".",
+		"AUTOFIX: file.mk:7: Replacing \" \\t\" with \"\\t\".",
 		"NOTE: file.mk:9: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:9: Replacing \"VAR=   \\t\" with \"VAR=\\t\".",
+		"AUTOFIX: file.mk:9: Replacing \"   \\t\" with \"\\t\".",
 		"NOTE: file.mk:11: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:11: Replacing \"VAR=    \\t\" with \"VAR=\\t\\t\".")
+		"AUTOFIX: file.mk:11: Replacing \"    \\t\" with \"\\t\\t\".")
 }
 
 func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {

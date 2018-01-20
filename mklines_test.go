@@ -126,15 +126,15 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:6: Replacing \"VAR= \" with \"VAR=\\t\".",
-		"AUTOFIX: ~/Makefile:7: Replacing \"VAR=  \" with \"VAR=\\t\".",
-		"AUTOFIX: ~/Makefile:9: Replacing \"BLOCK=\\t\" with \"BLOCK=\\t\\t\".",
-		"AUTOFIX: ~/Makefile:10: Replacing \"BLOCK_LONGVAR= \" with \"BLOCK_LONGVAR=\\t\".",
-		"AUTOFIX: ~/Makefile:12: Replacing \"BLOCK=\\t\" with \"BLOCK=\\t\\t\".",
-		"AUTOFIX: ~/Makefile:15: Replacing \"GRP_A= \" with \"GRP_A=\\t\\t\".",
-		"AUTOFIX: ~/Makefile:16: Replacing \"GRP_AA= \" with \"GRP_AA=\\t\\t\".",
-		"AUTOFIX: ~/Makefile:17: Replacing \"GRP_AAA= \" with \"GRP_AAA=\\t\".",
-		"AUTOFIX: ~/Makefile:18: Replacing \"GRP_AAAA= \" with \"GRP_AAAA=\\t\".")
+		"AUTOFIX: ~/Makefile:6: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:7: Replacing \"  \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:9: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:10: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:12: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:15: Replacing \" \" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:16: Replacing \" \" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:17: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:18: Replacing \" \" with \"\\t\".")
 	t.CheckFileLines("Makefile",
 		MkRcsId,
 		"",
@@ -289,8 +289,8 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:5: Replacing \"DISTFILES+=\\t\\t\\t\" with \"DISTFILES+=\\t\".",
-		"AUTOFIX: ~/Makefile:6: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".")
+		"AUTOFIX: ~/Makefile:5: Replacing \"\\t\\t\\t\" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing \" \" with \"\\t\".")
 	t.CheckFileLines("Makefile",
 		MkRcsId,
 		"DISTFILES+=\tvalue",
@@ -322,8 +322,7 @@ func (s *Suite) Test_MkLines__variable_alignment__autofix_tab_outlier(c *check.C
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:3: Replacing \"SITES.very-very-very-very-long-distfile-name=\\t\" " +
-			"with \"SITES.very-very-very-very-long-distfile-name= \".")
+		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\" with \" \".")
 	t.CheckFileLines("Makefile",
 		MkRcsId,
 		"DISTFILES=\t\tvery-very-very-very-long-distfile-name",
@@ -385,10 +384,10 @@ func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:3: Replacing \"DIST_SUBDIR=            \" with \"DIST_SUBDIR=\\t\".",
-		"AUTOFIX: ~/Makefile:4--5: Replacing \"DISTFILES=              \" with \"DISTFILES=\\t\".",
-		"AUTOFIX: ~/Makefile:7: Replacing \"SITES.${file}=  \" with \"SITES.${file}=\\t\".",
-		"AUTOFIX: ~/Makefile:9: Replacing \"WRKSRC=                 \" with \"WRKSRC=\\t\\t\".")
+		"AUTOFIX: ~/Makefile:3: Replacing \"            \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:4--5: Replacing \"              \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:7: Replacing \"  \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:9: Replacing \"                 \" with \"\\t\\t\".")
 	t.CheckFileLinesDetab("Makefile",
 		"# $NetBSD$",
 		"",
@@ -418,11 +417,11 @@ func (s *Suite) Test_MkLines__alignment_space(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing \"RESTRICTED=\\t\" with \"RESTRICTED=\\t\\t\".",
-		"AUTOFIX: ~/Makefile:3: Replacing \"NO_BIN_ON_CDROM= \" with \"NO_BIN_ON_CDROM=\\t\".",
-		"AUTOFIX: ~/Makefile:4: Replacing \"NO_BIN_ON_FTP=\\t\" with \"NO_BIN_ON_FTP=\\t\\t\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \"NO_SRC_ON_CDROM= \" with \"NO_SRC_ON_CDROM=\\t\".",
-		"AUTOFIX: ~/Makefile:6: Replacing \"NO_SRC_ON_FTP=\\t\" with \"NO_SRC_ON_FTP=\\t\\t\".")
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing \"\\t\" with \"\\t\\t\".")
 }
 
 func (s *Suite) Test_MkLines__alignment__only_space(c *check.C) {
@@ -443,11 +442,11 @@ func (s *Suite) Test_MkLines__alignment__only_space(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".",
-		"AUTOFIX: ~/Makefile:3: Replacing \"DISTFILES+= \" with \"DISTFILES+=\\t\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \"REPLACE_PYTHON+= \" with \"REPLACE_PYTHON+=\\t\".",
-		"AUTOFIX: ~/Makefile:6: Replacing \"REPLACE_PYTHON+= \" with \"REPLACE_PYTHON+=\\t\".",
-		"AUTOFIX: ~/Makefile:7: Replacing \"REPLACE_PYTHON+= \" with \"REPLACE_PYTHON+=\\t\".")
+		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:7: Replacing \" \" with \"\\t\".")
 }
 
 // The indentation is deeper than necessary, but all lines agree on
@@ -466,7 +465,7 @@ func (s *Suite) Test_MkLines__alignment__mixed_tabs_and_spaces_same_column(c *ch
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing \"DISTFILES+=             \" with \"DISTFILES+=\\t\\t\".")
+		"AUTOFIX: ~/Makefile:2: Replacing \"             \" with \"\\t\\t\".")
 }
 
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {

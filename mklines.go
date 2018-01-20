@@ -403,6 +403,6 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newW
 			"When the block contains something else than variable definitions",
 			"and conditionals, it is not checked at all.")
 	}
-	fix.Replace(varnameOp+oldSpace, varnameOp+newSpace)
+	fix.ReplaceAfter(varnameOp, oldSpace, newSpace)
 	fix.Apply()
 }

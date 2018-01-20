@@ -34,13 +34,20 @@ func NewAutofix(line Line) *Autofix {
 }
 
 func (fix *Autofix) Replace(from string, to string) {
+	fix.ReplaceAfter("", from, to)
+}
+
+// ReplaceAfter replaces the text "prefix+from" with "prefix+to",
+// but in the diagnostic, only the replacement of "from" with "to"
+// is mentioned.
+func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 	if fix.skip() {
 		return
 	}
 
 	for _, rawLine := range fix.lines {
 		if rawLine.Lineno != 0 {
-			if replaced := strings.Replace(rawLine.textnl, from, to, 1); replaced != rawLine.textnl {
+			if replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
