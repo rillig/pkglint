@@ -79,7 +79,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
 	}
 }
 
-func (fix *Autofix) Realign(mkline MkLine, newIndentation int) {
+func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	if fix.skip() || !mkline.IsMultiline() || !mkline.IsVarassign() {
 		return
 	}
@@ -97,13 +97,19 @@ func (fix *Autofix) Realign(mkline MkLine, newIndentation int) {
 		}
 	}
 
-	if normalized && newIndentation == oldWidth {
+	if normalized && newWidth == oldWidth {
+		return
+	}
+
+	// Shell commands can become very long, therefore it's ok
+	// to indent them as little as possible.
+	if mkline.Op() == opAssignShell && oldWidth == 8 {
 		return
 	}
 
 	for _, rawLine := range fix.lines[1:] {
 		_, oldSpace := regex.Match1(rawLine.textnl, `^(\s*)`)
-		newWidth := tabWidth(oldSpace) - oldWidth + newIndentation
+		newWidth := tabWidth(oldSpace) - oldWidth + newWidth
 		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
 		if replaced := strings.Replace(rawLine.textnl, oldSpace, newSpace, 1); replaced != rawLine.textnl {
 			if G.opts.PrintAutofix || G.opts.Autofix {

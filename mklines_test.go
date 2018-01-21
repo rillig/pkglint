@@ -328,6 +328,25 @@ func (s *Suite) Test_MkLines__variable_alignment__single_continuation_line(c *ch
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines__variable_alignment__shell_command(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace", "--autofix", "--show-autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"",
+		"USE_BUILTIN.Xfixes=\tyes",
+		"USE_BUILTIN.Xfixes!=\t\t\t\t\t\t\t\\",
+		"\tif ${PKG_ADMIN} pmatch ...; then\t\t\t\t\t\\",
+		"\t\t:; else :; fi")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *check.C) {
 	t := s.Init(c)
 
