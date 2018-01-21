@@ -135,28 +135,28 @@ func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
 		"AUTOFIX: ~/Makefile:16: Replacing \" \" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:17: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:18: Replacing \" \" with \"\\t\".")
-	t.CheckFileLines("Makefile",
+	t.CheckFileLinesDetab("Makefile",
 		MkRcsId,
 		"",
 		"VAR= \\",
-		"\tvalue",
+		"        value",
 		"",
-		"VAR=\tindented with one space",
-		"VAR=\tindented with two spaces",
+		"VAR=    indented with one space",
+		"VAR=    indented with two spaces",
 		"",
-		"BLOCK=\t\tindented with tab",
-		"BLOCK_LONGVAR=\tindented with space",
+		"BLOCK=          indented with tab",
+		"BLOCK_LONGVAR=  indented with space",
 		"",
-		"BLOCK=\t\tshort",
-		"BLOCK_LONGVAR=\tlong",
+		"BLOCK=          short",
+		"BLOCK_LONGVAR=  long",
 		"",
-		"GRP_A=\t\tavalue",
-		"GRP_AA=\t\tvalue",
-		"GRP_AAA=\tvalue",
-		"GRP_AAAA=\tvalue",
+		"GRP_A=          avalue",
+		"GRP_AA=         value",
+		"GRP_AAA=        value",
+		"GRP_AAAA=       value",
 		"",
-		"VAR=\t${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables",
-		"VAR=\t${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}")
+		"VAR=    ${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables",
+		"VAR=    ${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}")
 }
 
 func (s *Suite) Test_MkLines__variable_alignment_space_and_tab(c *check.C) {
@@ -267,17 +267,18 @@ func (s *Suite) Test_MkLines__variable_alignment__nospace(c *check.C) {
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
 }
 
-// Continuation lines without any content on the first line are ignored.
-// Even when they appear in a paragraph of their own.
+// Continuation lines without any content on the first line may use
+// a space for variable value alignment.
+// They are ignored when calculating the preferred alignment depth.
 func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wspace", "--autofix")
+	t.SetupCommandLine("-Wspace", "--autofix", "--show-autofix")
 	G.globalData.InitVartypes()
 	lines := t.SetupFileLinesContinuation("Makefile",
 		MkRcsId,
 		"DISTFILES+=\tvalue",
-		"DISTFILES+= \\",
+		"DISTFILES+= \\", // Continuation lines with small indentation must be aligned.
 		"\t\t\tvalue",
 		"DISTFILES+=\t\t\tvalue",
 		"DISTFILES+= value",
@@ -289,15 +290,21 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"NOTE: ~/Makefile:3--4: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: ~/Makefile:3--4: Replacing \" \" with \"\\t\".",
+		"WARN: ~/Makefile:3--4: This line should be indented with \"\\t\".",
+		"AUTOFIX: ~/Makefile:3--4: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"NOTE: ~/Makefile:5: This variable value should be aligned to column 17.",
 		"AUTOFIX: ~/Makefile:5: Replacing \"\\t\\t\\t\" with \"\\t\".",
+		"NOTE: ~/Makefile:6: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"AUTOFIX: ~/Makefile:6: Replacing \" \" with \"\\t\".")
-	t.CheckFileLines("Makefile",
+	t.CheckFileLinesDetab("Makefile",
 		MkRcsId,
-		"DISTFILES+=\tvalue",
-		"DISTFILES+= \\",
-		"\t\t\tvalue",
-		"DISTFILES+=\tvalue",
-		"DISTFILES+=\tvalue",
+		"DISTFILES+=     value",
+		"DISTFILES+=     \\",
+		"                value",
+		"DISTFILES+=     value",
+		"DISTFILES+=     value",
 		"",
 		"DISTFILES= \\",
 		"value")
@@ -342,6 +349,14 @@ func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *
 		"\t\t\t\t    action(); \\",
 		"\t\t\t\t  }",
 		"",
+		// Continuation lines may also start their values in the
+		// first line.
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"AWK_PROGRAM+=\t\t\t  /search/ { \\",
+		"\t\t\t\t    action(); \\",
+		"\t\t\t\t  }",
+		"",
 		"WRKSRC=\t${WRKDIR}")
 	mklines := NewMkLines(lines)
 
@@ -349,29 +364,46 @@ func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/autofix.mk:3: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:5--7: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:5--7: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/autofix.mk:9: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/autofix.mk:11--12: Replacing \"\\t\" with \" \".",
-		"AUTOFIX: ~/autofix.mk:14: Replacing \"\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/autofix.mk:11--12: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:14: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:16--19: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/autofix.mk:16--19: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:16--19: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/autofix.mk:16--19: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:21: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:23--25: Replacing \"\\t\\t\\t  \" with \"\\t\".",
+		"AUTOFIX: ~/autofix.mk:23--25: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/autofix.mk:23--25: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
 	t.CheckFileLinesDetab("autofix.mk",
 		"# $NetBSD$",
 		"",
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz= \\",
-		"                        ${MASTER_SITES_SOURCEFORGE} \\", // FIXME: align these lines to column 17
-		"                        ${MASTER_SITES_GITHUB}",         // FIXME: align these lines to column 17
+		"                ${MASTER_SITES_SOURCEFORGE} \\",
+		"                ${MASTER_SITES_GITHUB}",
 		"",
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
-		"SITES.distfile-1.0.0.tar.gz= ${MASTER_SITES_SOURCEFORGE} \\", // FIXME: align both physical lines
-		"                                ${MASTER_SITES_GITHUB}",      // FIXME: to the same indentation (one space)
+		"SITES.distfile-1.0.0.tar.gz= ${MASTER_SITES_SOURCEFORGE} \\",
+		"                ${MASTER_SITES_GITHUB}",
 		"",
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
-		"AWK_PROGRAM+= \\",
-		"                                  /search/ { \\",  // FIXME: align this line to column 17,
-		"                                    action(); \\", // FIXME: as well as both
-		"                                  }",              // FIXME: continuation lines
+		"AWK_PROGRAM+=   \\",
+		"                /search/ { \\",
+		"                  action(); \\",
+		"                }",
+		"",
+		"WRKSRC=         ${WRKDIR}",
+		"DISTFILES=      distfile-1.0.0.tar.gz",
+		"AWK_PROGRAM+=   /search/ { \\",
+		"                  action(); \\",
+		"                }",
 		"",
 		"WRKSRC= ${WRKDIR}")
 }
@@ -459,6 +491,7 @@ func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:3: Replacing \"            \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:4--5: Replacing \"              \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:4--5: Replacing indentation \"                        \" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"  \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:9: Replacing \"                 \" with \"\\t\\t\".")
 	t.CheckFileLinesDetab("Makefile",
@@ -466,7 +499,7 @@ func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 		"",
 		"DIST_SUBDIR=    asc",
 		"DISTFILES=      ${DISTNAME}${EXTRACT_SUFX} frontiers.mp3 \\",
-		"                        machine_wars.mp3 time_to_strike.mp3",
+		"                machine_wars.mp3 time_to_strike.mp3",
 		".for file in frontiers.mp3 machine_wars.mp3 time_to_strike.mp3",
 		"SITES.${file}=  http://asc-hq.org/",
 		".endfor",

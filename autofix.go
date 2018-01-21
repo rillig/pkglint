@@ -19,8 +19,7 @@ type Autofix struct {
 	lines       []*RawLine    // Original lines, available for diff
 	linesAfter  []string      // Newly inserted lines, including \n
 	modified    bool          // Modified in memory, but not necessarily written back to disk
-	descrFormat string        // Human-readable description of the latest modification
-	descrArgs   []interface{} //
+	actions     []string      // Human-readable description of the actual autofix actions
 	level       *LogLevel     //
 	diagFormat  string        // Is printed only if it couldn't be fixed automatically
 	diagArgs    []interface{} //
@@ -74,6 +73,41 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
 	}
 }
 
+func (fix *Autofix) Realign(mkline MkLine, newIndentation int) {
+	if fix.skip() || !mkline.IsMultiline() || !mkline.IsVarassign() {
+		return
+	}
+
+	normalized := true
+	oldWidth := 0
+	for _, rawLine := range fix.lines[1:] {
+		_, space := regex.Match1(rawLine.textnl, `^(\s*)`)
+		width := tabWidth(space)
+		if oldWidth == 0 || width < oldWidth {
+			oldWidth = width
+		}
+		if !regex.Matches(space, `^\t*\s{0,7}`) {
+			normalized = false
+		}
+	}
+
+	if normalized && newIndentation == oldWidth {
+		return
+	}
+
+	for _, rawLine := range fix.lines[1:] {
+		_, oldSpace := regex.Match1(rawLine.textnl, `^(\s*)`)
+		newWidth := tabWidth(oldSpace) - oldWidth + newIndentation
+		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
+		if replaced := strings.Replace(rawLine.textnl, oldSpace, newSpace, 1); replaced != rawLine.textnl {
+			if G.opts.PrintAutofix || G.opts.Autofix {
+				rawLine.textnl = replaced
+			}
+			fix.Describef("Replacing indentation %q with %q.", oldSpace, newSpace)
+		}
+	}
+}
+
 func (fix *Autofix) InsertBefore(text string) {
 	if fix.skip() {
 		return
@@ -104,8 +138,7 @@ func (fix *Autofix) Delete() {
 }
 
 func (fix *Autofix) Describef(format string, args ...interface{}) {
-	fix.descrFormat = format
-	fix.descrArgs = args
+	fix.actions = append(fix.actions, fmt.Sprintf(format, args...))
 }
 
 func (fix *Autofix) Notef(format string, args ...interface{}) {
@@ -142,16 +175,18 @@ func (fix *Autofix) Apply() {
 	}
 
 	if shallBeLogged(fix.diagFormat) {
-		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" && !G.opts.Autofix
+		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" &&
+			!(G.opts.Autofix && !G.opts.PrintAutofix)
 		if logDiagnostic {
 			msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 			logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 		}
 
-		logRepair := fix.descrFormat != "" && (G.opts.Autofix || G.opts.PrintAutofix)
+		logRepair := len(fix.actions) > 0 && (G.opts.Autofix || G.opts.PrintAutofix)
 		if logRepair {
-			msg := fmt.Sprintf(fix.descrFormat, fix.descrArgs...)
-			logs(llAutofix, line.Filename, line.Linenos(), "", msg)
+			for _, action := range fix.actions {
+				logs(llAutofix, line.Filename, line.Linenos(), "", action)
+			}
 		}
 
 		if logDiagnostic || logRepair {
@@ -164,10 +199,9 @@ func (fix *Autofix) Apply() {
 		}
 	}
 
-	fix.modified = fix.modified || fix.descrFormat != ""
+	fix.modified = fix.modified || len(fix.actions) > 0
 
-	fix.descrFormat = ""
-	fix.descrArgs = nil
+	fix.actions = nil
 	fix.level = nil
 	fix.diagFormat = ""
 	fix.diagArgs = nil
@@ -175,6 +209,7 @@ func (fix *Autofix) Apply() {
 }
 
 func (fix *Autofix) skip() bool {
+	// This check is necessary for the --only command line option.
 	if fix.diagFormat == "" {
 		panic("Autofix: The diagnostic must be given before the action.")
 	}

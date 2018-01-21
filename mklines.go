@@ -252,6 +252,7 @@ type varalignBlockInfo struct {
 	varnameOpWidth int    // Screen width of varnameOp + space
 	space          string // Whitespace between varnameOp and the variable value
 	totalWidth     int    // Screen width of varnameOp + space
+	continuation   bool   // A continuation line with no value in the first line.
 }
 
 func (va *VaralignBlock) Check(mkline MkLine) {
@@ -279,15 +280,12 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 		return
 	}
 
+	continuation := false
 	if mkline.IsMultiline() {
+		// Interpreting the continuation marker as variable value
+		// is cheating, but works well.
 		m, _, _, _, _, value, _, _ := MatchVarassign(mkline.raw[0].orignl)
-
-		// If the first line of the continuation is a variable assignment
-		// that includes part of the value (and not just the line
-		// continuation), it takes part in the realignment.
-		if !m || value == "\\" {
-			return
-		}
+		continuation = m && value == "\\"
 	}
 
 	valueAlign := mkline.ValueAlign()
@@ -295,7 +293,7 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	space := valueAlign[len(varnameOp):]
 
 	width := tabWidth(valueAlign)
-	va.infos = append(va.infos, &varalignBlockInfo{mkline, varnameOp, tabWidth(varnameOp), space, width})
+	va.infos = append(va.infos, &varalignBlockInfo{mkline, varnameOp, tabWidth(varnameOp), space, width, continuation})
 }
 
 func (va *VaralignBlock) Finish() {
@@ -313,7 +311,7 @@ func (va *VaralignBlock) Finish() {
 	}
 
 	for _, info := range infos {
-		va.realign(info.mkline, info.varnameOp, info.space, newWidth)
+		va.realign(info.mkline, info.varnameOp, info.space, info.continuation, newWidth)
 	}
 }
 
@@ -323,10 +321,13 @@ func (va *VaralignBlock) Finish() {
 // variable from forcing the rest of the paragraph to be indented too
 // far to the right.
 func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
-
 	longest := 0
 	secondLongest := 0
 	for _, info := range infos {
+		if info.continuation {
+			continue
+		}
+
 		width := info.varnameOpWidth
 		if width >= longest {
 			secondLongest = longest
@@ -348,6 +349,10 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	minTotalWidth := 0
 	maxTotalWidth := 0
 	for _, info := range infos {
+		if info.continuation {
+			continue
+		}
+
 		if width := info.totalWidth; info.varnameOpWidth != outlier {
 			if minTotalWidth == 0 || width < minTotalWidth {
 				minTotalWidth = width
@@ -360,10 +365,15 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 		return minTotalWidth
 	}
 
+	if minVarnameOpWidth == 0 {
+		// Only continuation lines in this paragraph.
+		return 0
+	}
+
 	return (minVarnameOpWidth & -8) + 8
 }
 
-func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newWidth int) {
+func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, continuation bool, newWidth int) {
 	hasSpace := contains(oldSpace, " ")
 
 	newSpace := ""
@@ -375,7 +385,7 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newW
 		newSpace = " "
 	}
 
-	fix := mkline.Line.Autofix()
+	fix := mkline.Autofix()
 	wrongColumn := tabWidth(varnameOp+oldSpace) != tabWidth(varnameOp+newSpace)
 	switch {
 	case hasSpace && wrongColumn:
@@ -404,4 +414,11 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newW
 	}
 	fix.ReplaceAfter(varnameOp, oldSpace, newSpace)
 	fix.Apply()
+
+	if mkline.IsMultiline() {
+		fix := mkline.Autofix()
+		fix.Warnf("This line should be indented with %q.", newSpace)
+		fix.Realign(mkline, newWidth)
+		fix.Apply()
+	}
 }
