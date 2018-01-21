@@ -347,7 +347,11 @@ func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *
 
 	mklines.Check()
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"AUTOFIX: ~/autofix.mk:3: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:9: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:11--12: Replacing \"\\t\" with \" \".",
+		"AUTOFIX: ~/autofix.mk:14: Replacing \"\\t\" with \"\\t\\t\".")
 	t.CheckFileLinesDetab("autofix.mk",
 		"# $NetBSD$",
 		"",
