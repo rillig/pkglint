@@ -247,7 +247,7 @@ func (s *Suite) Test_Autofix_show_source_code(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:2--4: Using \"old\" is deprecated.",
-		"AUTOFIX: ~/Makefile:2--4: Replacing \"old\" with \"new\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"old\" with \"new\".",
 		"> before \\",
 		"- The old song \\",
 		"+ The new song \\",

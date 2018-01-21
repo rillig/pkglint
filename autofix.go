@@ -6,6 +6,7 @@ import (
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -15,15 +16,20 @@ import (
 // until they are written to disk by SaveAutofixChanges.
 type Autofix struct {
 	line        Line
-	linesBefore []string      // Newly inserted lines, including \n
-	lines       []*RawLine    // Original lines, available for diff
-	linesAfter  []string      // Newly inserted lines, including \n
-	modified    bool          // Modified in memory, but not necessarily written back to disk
-	actions     []string      // Human-readable description of the actual autofix actions
-	level       *LogLevel     //
-	diagFormat  string        // Is printed only if it couldn't be fixed automatically
-	diagArgs    []interface{} //
-	explanation []string      // Is printed together with the diagnostic
+	linesBefore []string        // Newly inserted lines, including \n
+	lines       []*RawLine      // Original lines, available for diff
+	linesAfter  []string        // Newly inserted lines, including \n
+	modified    bool            // Modified in memory, but not necessarily written back to disk
+	actions     []autofixAction // Human-readable description of the actual autofix actions
+	level       *LogLevel       //
+	diagFormat  string          // Is printed only if it couldn't be fixed automatically
+	diagArgs    []interface{}   //
+	explanation []string        // Is printed together with the diagnostic
+}
+
+type autofixAction struct {
+	description string
+	lineno      int
 }
 
 func NewAutofix(line Line) *Autofix {
@@ -50,7 +56,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				fix.Describef("Replacing %q with %q.", from, to)
+				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
 			}
 		}
 	}
@@ -67,7 +73,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				fix.Describef("Replacing regular expression %q with %q.", from, to)
+				fix.Describef(rawLine.Lineno, "Replacing regular expression %q with %q.", from, to)
 			}
 		}
 	}
@@ -103,7 +109,7 @@ func (fix *Autofix) Realign(mkline MkLine, newIndentation int) {
 			if G.opts.PrintAutofix || G.opts.Autofix {
 				rawLine.textnl = replaced
 			}
-			fix.Describef("Replacing indentation %q with %q.", oldSpace, newSpace)
+			fix.Describef(rawLine.Lineno, "Replacing indentation %q with %q.", oldSpace, newSpace)
 		}
 	}
 }
@@ -114,7 +120,7 @@ func (fix *Autofix) InsertBefore(text string) {
 	}
 
 	fix.linesBefore = append(fix.linesBefore, text+"\n")
-	fix.Describef("Inserting a line %q before this line.", text)
+	fix.Describef(fix.lines[0].Lineno, "Inserting a line %q before this line.", text)
 }
 
 func (fix *Autofix) InsertAfter(text string) {
@@ -123,7 +129,7 @@ func (fix *Autofix) InsertAfter(text string) {
 	}
 
 	fix.linesAfter = append(fix.linesAfter, text+"\n")
-	fix.Describef("Inserting a line %q after this line.", text)
+	fix.Describef(fix.lines[len(fix.lines)-1].Lineno, "Inserting a line %q after this line.", text)
 }
 
 func (fix *Autofix) Delete() {
@@ -132,13 +138,13 @@ func (fix *Autofix) Delete() {
 	}
 
 	for _, line := range fix.lines {
+		fix.Describef(line.Lineno, "Deleting this line.")
 		line.textnl = ""
 	}
-	fix.Describef("Deleting this line.")
 }
 
-func (fix *Autofix) Describef(format string, args ...interface{}) {
-	fix.actions = append(fix.actions, fmt.Sprintf(format, args...))
+func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
+	fix.actions = append(fix.actions, autofixAction{fmt.Sprintf(format, args...), lineno})
 }
 
 func (fix *Autofix) Notef(format string, args ...interface{}) {
@@ -185,7 +191,7 @@ func (fix *Autofix) Apply() {
 		logRepair := len(fix.actions) > 0 && (G.opts.Autofix || G.opts.PrintAutofix)
 		if logRepair {
 			for _, action := range fix.actions {
-				logs(llAutofix, line.Filename, line.Linenos(), "", action)
+				logs(llAutofix, line.Filename, strconv.Itoa(action.lineno), "", action.description)
 			}
 		}
 

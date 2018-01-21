@@ -291,9 +291,9 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 
 	t.CheckOutputLines(
 		"NOTE: ~/Makefile:3--4: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"AUTOFIX: ~/Makefile:3--4: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
 		"WARN: ~/Makefile:3--4: This line should be indented with \"\\t\".",
-		"AUTOFIX: ~/Makefile:3--4: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
 		"NOTE: ~/Makefile:5: This variable value should be aligned to column 17.",
 		"AUTOFIX: ~/Makefile:5: Replacing \"\\t\\t\\t\" with \"\\t\".",
 		"NOTE: ~/Makefile:6: This variable value should be aligned with tabs, not spaces, to column 17.",
@@ -364,20 +364,20 @@ func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/autofix.mk:3: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:5--7: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:5--7: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:6: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:7: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/autofix.mk:9: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:11--12: Replacing \"\\t\" with \" \".",
-		"AUTOFIX: ~/autofix.mk:11--12: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:11: Replacing \"\\t\" with \" \".",
+		"AUTOFIX: ~/autofix.mk:12: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/autofix.mk:14: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:16--19: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/autofix.mk:16--19: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:16--19: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
-		"AUTOFIX: ~/autofix.mk:16--19: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:16: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/autofix.mk:17: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:18: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/autofix.mk:19: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
 		"AUTOFIX: ~/autofix.mk:21: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:23--25: Replacing \"\\t\\t\\t  \" with \"\\t\".",
-		"AUTOFIX: ~/autofix.mk:23--25: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
-		"AUTOFIX: ~/autofix.mk:23--25: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
+		"AUTOFIX: ~/autofix.mk:23: Replacing \"\\t\\t\\t  \" with \"\\t\".",
+		"AUTOFIX: ~/autofix.mk:24: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/autofix.mk:25: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
 	t.CheckFileLinesDetab("autofix.mk",
 		"# $NetBSD$",
 		"",
@@ -490,8 +490,8 @@ func (s *Suite) Test_MkLines__alignment_autofix_multiline(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:3: Replacing \"            \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:4--5: Replacing \"              \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:4--5: Replacing indentation \"                        \" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"              \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing indentation \"                        \" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"  \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:9: Replacing \"                 \" with \"\\t\\t\".")
 	t.CheckFileLinesDetab("Makefile",
