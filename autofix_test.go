@@ -325,29 +325,19 @@ func (s *Suite) Test_Autofix_suppress_unfixable_warnings(c *check.C) {
 		"+ TODOXX")
 }
 
-// Even if an autofixable replacement doesn't apply (for whatever reason),
-// the diagnostic should be printed nevertheless.
-//
-// One instance where this occurred was a bug in pkglint: Instead of
-// replacing `\.gz\n` with "\n" in PLISTs for manual pages, I had only
-// written `\.gz$`, which could not be found since the raw lines still
-// contain the newlines. In such a case, the warning should still be shown.
+// If an Autofix doesn't do anything it must not log any diagnostics.
 func (s *Suite) Test_Autofix_failed_replace(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("Makefile", 14, "Original text")
 
-	// An Autofix block is usually enclosed in an if block,
-	// so when this code is reached, the warning should be logged
-	// unless in --autofix mode, which only repairs without giving
-	// the warnings again.
 	fix := line.Autofix()
 	fix.Warnf("All-uppercase words should not be used at all.")
 	fix.ReplaceRegex(`\b[A-Z]{3,}\b`, "---censored---")
 	fix.Apply()
 
-	t.CheckOutputLines(
-		"WARN: Makefile:14: All-uppercase words should not be used at all.")
+	// No output since there was no all-uppercase word in the text.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SaveAutofixChanges(c *check.C) {

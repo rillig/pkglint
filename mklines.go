@@ -237,8 +237,8 @@ func (mklines *MkLines) setSeenBsdPrefsMk() {
 // use the same indentation depth for their values.
 // It also checks that the indentation uses tabs instead of spaces.
 //
-// In general, all values should be indented using tabs.
-// As an exception, very long lines may be indented with a single space.
+// In general, all values should be aligned using tabs.
+// As an exception, very long lines may be aligned with a single space.
 // A typical example is a SITES.very-long-filename.tar.gz variable
 // between HOMEPAGE and DISTFILES.
 type VaralignBlock struct {
@@ -416,8 +416,9 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 	fix.Apply()
 
 	if mkline.IsMultiline() {
+		indentation := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
 		fix := mkline.Autofix()
-		fix.Warnf("This line should be indented with %q.", newSpace)
+		fix.Warnf("This line should be aligned with %q.", indentation)
 		fix.Realign(mkline, newWidth)
 		fix.Apply()
 	}

@@ -292,7 +292,7 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 	t.CheckOutputLines(
 		"NOTE: ~/Makefile:3--4: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
-		"WARN: ~/Makefile:3--4: This line should be indented with \"\\t\".",
+		"WARN: ~/Makefile:3--4: This line should be aligned with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
 		"NOTE: ~/Makefile:5: This variable value should be aligned to column 17.",
 		"AUTOFIX: ~/Makefile:5: Replacing \"\\t\\t\\t\" with \"\\t\".",
@@ -308,6 +308,24 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 		"",
 		"DISTFILES= \\",
 		"value")
+}
+
+// Ensures that a wrong warning introduced in ccb56a5 is not logged.
+func (s *Suite) Test_MkLines__variable_alignment__single_continuation_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wspace", "--autofix", "--show-autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"",
+		"USE_TOOLS+=\t[ awk \\",
+		"\t\tsed")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *check.C) {

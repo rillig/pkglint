@@ -143,28 +143,35 @@ func (fix *Autofix) Delete() {
 	}
 }
 
+// Describef remembers a description of the actual fix
+// for logging it later when Apply is called.
+// There may be multiple fixes in one pass.
 func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
 	fix.actions = append(fix.actions, autofixAction{fmt.Sprintf(format, args...), lineno})
 }
 
+// Notef remembers the note for logging it later when Apply is called.
 func (fix *Autofix) Notef(format string, args ...interface{}) {
 	fix.level = llNote
 	fix.diagFormat = format
 	fix.diagArgs = args
 }
 
+// Notef remembers the warning for logging it later when Apply is called.
 func (fix *Autofix) Warnf(format string, args ...interface{}) {
 	fix.level = llWarn
 	fix.diagFormat = format
 	fix.diagArgs = args
 }
 
+// Notef remembers the error for logging it later when Apply is called.
 func (fix *Autofix) Errorf(format string, args ...interface{}) {
 	fix.level = llError
 	fix.diagFormat = format
 	fix.diagArgs = args
 }
 
+// Explain remembers the explanation for logging it later when Apply is called.
 func (fix *Autofix) Explain(explanation ...string) {
 	fix.explanation = explanation
 }
@@ -183,7 +190,7 @@ func (fix *Autofix) Apply() {
 	if shallBeLogged(fix.diagFormat) {
 		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" &&
 			!(G.opts.Autofix && !G.opts.PrintAutofix)
-		if logDiagnostic {
+		if logDiagnostic && len(fix.actions) > 0 {
 			msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 			logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 		}

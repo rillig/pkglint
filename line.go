@@ -159,12 +159,6 @@ func (line *LineImpl) String() string {
 	return line.Filename + ":" + line.Linenos() + ": " + line.Text
 }
 
-// Autofix returns a builder object for automatically fixing the line.
-// After building the object, call Apply to actually apply the changes to the line.
-//
-// The changed lines are not written back to disk immediately.
-// This is done by SaveAutofixChanges.
-//
 func (line *LineImpl) Autofix() *Autofix {
 	if line.autofix == nil {
 		line.autofix = NewAutofix(line)
