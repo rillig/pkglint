@@ -80,83 +80,99 @@ func (s *Suite) Test_MkLines_quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
 
-func (s *Suite) Test_MkLines__variable_alignment_advanced(c *check.C) {
+func (s *Suite) Test_MkLines__variable_alignment_advanced_1(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wspace")
+	t.SetupCommandLine("-Wall", "--show-autofix")
 	lines := t.SetupFileLinesContinuation("Makefile",
 		MkRcsId,
-		"",
 		"VAR= \\", // In continuation lines, indenting with spaces is ok
-		"\tvalue",
-		"",
+		"\tvalue")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLines__variable_alignment_advanced_2(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--show-autofix")
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
 		"VAR= indented with one space",   // Exactly one space is ok in general
-		"VAR=  indented with two spaces", // Two spaces are uncommon
-		"",
-		"BLOCK=\tindented with tab",          // To align these two lines, this line needs more more tab.
-		"BLOCK_LONGVAR= indented with space", // This still keeps the indentation at an acceptable level.
-		"",
-		"BLOCK=\tshort",
-		"BLOCK_LONGVAR=\tlong",
-		"",
-		"GRP_A= avalue", // The values in a block should be aligned
-		"GRP_AA= value",
-		"GRP_AAA= value",
-		"GRP_AAAA= value",
-		"",
-		"VAR=\t${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables",
-		"VAR=\t${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}")
+		"VAR=  indented with two spaces") // Two spaces are uncommon
 	mklines := NewMkLines(lines)
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: ~/Makefile:6: This variable value should be aligned with tabs, not spaces, to column 9.",
-		"NOTE: ~/Makefile:7: This variable value should be aligned with tabs, not spaces, to column 9.",
-		"NOTE: ~/Makefile:9: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:10: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:12: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:15: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:16: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:17: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:18: This variable value should be aligned with tabs, not spaces, to column 17.")
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 9.",
+		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".",
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 9.",
+		"AUTOFIX: ~/Makefile:3: Replacing \"  \" with \"\\t\".")
+}
 
-	t.SetupCommandLine("-Wspace", "--autofix")
+func (s *Suite) Test_MkLines__variable_alignment_advanced_3(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--show-autofix")
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"BLOCK=\tindented with tab",          // To align these two lines, this line needs more more tab.
+		"BLOCK_LONGVAR= indented with space") // This still keeps the indentation at an acceptable level.
+	mklines := NewMkLines(lines)
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:6: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:7: Replacing \"  \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:9: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:10: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:12: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:15: Replacing \" \" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:16: Replacing \" \" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:17: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:18: Replacing \" \" with \"\\t\".")
-	t.CheckFileLinesDetab("Makefile",
+		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.",
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".")
+}
+
+func (s *Suite) Test_MkLines__variable_alignment_advanced_4(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--show-autofix")
+	lines := t.SetupFileLinesContinuation("Makefile",
 		MkRcsId,
-		"",
-		"VAR= \\",
-		"        value",
-		"",
-		"VAR=    indented with one space",
-		"VAR=    indented with two spaces",
-		"",
-		"BLOCK=          indented with tab",
-		"BLOCK_LONGVAR=  indented with space",
-		"",
-		"BLOCK=          short",
-		"BLOCK_LONGVAR=  long",
-		"",
-		"GRP_A=          avalue",
-		"GRP_AA=         value",
-		"GRP_AAA=        value",
-		"GRP_AAAA=       value",
-		"",
-		"VAR=    ${VAR}${BLOCK}${BLOCK_LONGVAR} # suppress warnings about unused variables",
-		"VAR=    ${GRP_A}${GRP_AA}${GRP_AAA}${GRP_AAAA}")
+		"BLOCK=\tshort",
+		"BLOCK_LONGVAR=\tlong")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.",
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
+}
+
+func (s *Suite) Test_MkLines__variable_alignment_advanced_5(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--show-autofix")
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"GRP_A= avalue", // The values in a block should be aligned
+		"GRP_AA= value",
+		"GRP_AAA= value",
+		"GRP_AAAA= value")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\\t\".",
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\\t\".",
+		"NOTE: ~/Makefile:4: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: ~/Makefile:4: Replacing \" \" with \"\\t\".",
+		"NOTE: ~/Makefile:5: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: ~/Makefile:5: Replacing \" \" with \"\\t\".")
 }
 
 func (s *Suite) Test_MkLines__variable_alignment_space_and_tab(c *check.C) {
@@ -165,14 +181,13 @@ func (s *Suite) Test_MkLines__variable_alignment_space_and_tab(c *check.C) {
 	t.SetupCommandLine("-Wspace")
 	mklines := t.NewMkLines("Makefile",
 		MkRcsId,
-		"",
 		"VAR=    space",
 		"VAR=\ttab ${VAR}")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:3: Variable values should be aligned with tabs, not spaces.")
+		"NOTE: Makefile:2: Variable values should be aligned with tabs, not spaces.")
 }
 
 func (s *Suite) Test_MkLines__variable_alignment_outlier(c *check.C) {
@@ -347,102 +362,137 @@ func (s *Suite) Test_MkLines__variable_alignment__shell_command(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *check.C) {
+// The most common pattern is to have all values in the
+// continuation lines, all indented to the same depth.
+// The depth is either a single tab or aligns with the
+// other variables in the paragraph.
+func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines_1(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall", "--autofix")
 	G.globalData.InitVartypes()
 	lines := t.SetupFileLinesContinuation("autofix.mk",
 		MkRcsId,
-		"",
-		// The most common pattern is to have all values in the
-		// continuation lines, all indented to the same depth.
-		// The depth is either a single tab or aligns with the
-		// other variables in the paragraph.
 		"WRKSRC=\t${WRKDIR}",
 		"DISTFILES=\tdistfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz= \\",
 		"\t\t\t${MASTER_SITES_SOURCEFORGE} \\",
-		"\t\t\t${MASTER_SITES_GITHUB}",
-		"",
-		// Another common pattern is to have the first value
-		// in the first line and subsequent values indented to
-		// the same depth as the value in the first line.
-		"WRKSRC=\t${WRKDIR}",
-		"DISTFILES=\tdistfile-1.0.0.tar.gz",
-		"SITES.distfile-1.0.0.tar.gz=\t${MASTER_SITES_SOURCEFORGE} \\",
-		"\t\t\t\t${MASTER_SITES_GITHUB}",
-		"",
-		// Continued lines that have mixed indentation are
-		// probably on purpose. Their minimum indentation should
-		// be aligned to the indentation of the other lines. The
-		// lines that are indented further should keep their
-		// relative indentation depth, no matter if that is done
-		// with spaces or with tabs.
-		"WRKSRC=\t${WRKDIR}",
-		"DISTFILES=\tdistfile-1.0.0.tar.gz",
-		"AWK_PROGRAM+= \\",
-		"\t\t\t\t  /search/ { \\",
-		"\t\t\t\t    action(); \\",
-		"\t\t\t\t  }",
-		"",
-		// Continuation lines may also start their values in the
-		// first line.
-		"WRKSRC=\t${WRKDIR}",
-		"DISTFILES=\tdistfile-1.0.0.tar.gz",
-		"AWK_PROGRAM+=\t\t\t  /search/ { \\",
-		"\t\t\t\t    action(); \\",
-		"\t\t\t\t  }",
-		"",
-		"WRKSRC=\t${WRKDIR}")
+		"\t\t\t${MASTER_SITES_GITHUB}")
 	mklines := NewMkLines(lines)
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/autofix.mk:3: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:6: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:7: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:9: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:11: Replacing \"\\t\" with \" \".",
-		"AUTOFIX: ~/autofix.mk:12: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:14: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:16: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/autofix.mk:17: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:18: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
-		"AUTOFIX: ~/autofix.mk:19: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:21: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/autofix.mk:23: Replacing \"\\t\\t\\t  \" with \"\\t\".",
-		"AUTOFIX: ~/autofix.mk:24: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
-		"AUTOFIX: ~/autofix.mk:25: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
+		"AUTOFIX: ~/autofix.mk:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:5: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:6: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".")
 	t.CheckFileLinesDetab("autofix.mk",
 		"# $NetBSD$",
-		"",
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz= \\",
 		"                ${MASTER_SITES_SOURCEFORGE} \\",
-		"                ${MASTER_SITES_GITHUB}",
-		"",
+		"                ${MASTER_SITES_GITHUB}")
+}
+
+// Another common pattern is to have the first value
+// in the first line and subsequent values indented to
+// the same depth as the value in the first line.
+func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines_2(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("autofix.mk",
+		MkRcsId,
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz=\t${MASTER_SITES_SOURCEFORGE} \\",
+		"\t\t\t\t${MASTER_SITES_GITHUB}")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/autofix.mk:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:4: Replacing \"\\t\" with \" \".",
+		"AUTOFIX: ~/autofix.mk:5: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".")
+	t.CheckFileLinesDetab("autofix.mk",
+		"# $NetBSD$",
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz= ${MASTER_SITES_SOURCEFORGE} \\",
-		"                ${MASTER_SITES_GITHUB}",
-		"",
+		"                ${MASTER_SITES_GITHUB}")
+}
+
+// Continued lines that have mixed indentation are
+// probably on purpose. Their minimum indentation should
+// be aligned to the indentation of the other lines. The
+// lines that are indented further should keep their
+// relative indentation depth, no matter if that is done
+// with spaces or with tabs.
+func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines_3(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("autofix.mk",
+		MkRcsId,
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"AWK_PROGRAM+= \\",
+		"\t\t\t\t  /search/ { \\",
+		"\t\t\t\t    action(); \\",
+		"\t\t\t\t  }")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/autofix.mk:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:4: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/autofix.mk:5: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:6: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/autofix.mk:7: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
+	t.CheckFileLinesDetab("autofix.mk",
+		"# $NetBSD$",
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"AWK_PROGRAM+=   \\",
 		"                /search/ { \\",
 		"                  action(); \\",
-		"                }",
-		"",
+		"                }")
+}
+
+// Continuation lines may also start their values in the first line.
+func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines_4(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("autofix.mk",
+		MkRcsId,
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"AWK_PROGRAM+=\t\t\t  /search/ { \\",
+		"\t\t\t\t    action(); \\",
+		"\t\t\t\t  }")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/autofix.mk:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/autofix.mk:4: Replacing \"\\t\\t\\t  \" with \"\\t\".",
+		"AUTOFIX: ~/autofix.mk:5: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/autofix.mk:6: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
+	t.CheckFileLinesDetab("autofix.mk",
+		"# $NetBSD$",
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"AWK_PROGRAM+=   /search/ { \\",
 		"                  action(); \\",
-		"                }",
-		"",
-		"WRKSRC= ${WRKDIR}")
+		"                }")
 }
 
 // When there is an outlier, no matter whether indented using space or tab,
