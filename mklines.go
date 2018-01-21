@@ -374,19 +374,18 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, newW
 	if newSpace == "" {
 		newSpace = " "
 	}
-	if newSpace == oldSpace {
-		return
-	}
 
 	fix := mkline.Line.Autofix()
 	wrongColumn := tabWidth(varnameOp+oldSpace) != tabWidth(varnameOp+newSpace)
 	switch {
 	case hasSpace && wrongColumn:
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", newWidth+1)
-	case hasSpace:
+	case hasSpace && oldSpace != newSpace:
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	case wrongColumn:
 		fix.Notef("This variable value should be aligned to column %d.", newWidth+1)
+	default:
+		fix.Notef("Silent-Magic-Diagnostic")
 	}
 	if wrongColumn {
 		fix.Explain(
