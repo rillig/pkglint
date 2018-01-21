@@ -303,6 +303,75 @@ func (s *Suite) Test_MkLines__variable_alignment__continuation_lines(c *check.C)
 		"value")
 }
 
+func (s *Suite) Test_MkLines__variable_alignment__autofix_continuation_lines(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("autofix.mk",
+		MkRcsId,
+		"",
+		// The most common pattern is to have all values in the
+		// continuation lines, all indented to the same depth.
+		// The depth is either a single tab or aligns with the
+		// other variables in the paragraph.
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz= \\",
+		"\t\t\t${MASTER_SITES_SOURCEFORGE} \\",
+		"\t\t\t${MASTER_SITES_GITHUB}",
+		"",
+		// Another common pattern is to have the first value
+		// in the first line and subsequent values indented to
+		// the same depth as the value in the first line.
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz=\t${MASTER_SITES_SOURCEFORGE} \\",
+		"\t\t\t\t${MASTER_SITES_GITHUB}",
+		"",
+		// Continued lines that have mixed indentation are
+		// probably on purpose. Their minimum indentation should
+		// be aligned to the indentation of the other lines. The
+		// lines that are indented further should keep their
+		// relative indentation depth, no matter if that is done
+		// with spaces or with tabs.
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"AWK_PROGRAM+= \\",
+		"\t\t\t\t  /search/ { \\",
+		"\t\t\t\t    action(); \\",
+		"\t\t\t\t  }",
+		"",
+		"WRKSRC=\t${WRKDIR}")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+	t.CheckFileLinesDetab("autofix.mk",
+		"# $NetBSD$",
+		"",
+		"WRKSRC=         ${WRKDIR}",
+		"DISTFILES=      distfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz= \\",
+		"                        ${MASTER_SITES_SOURCEFORGE} \\", // FIXME: align these lines to column 17
+		"                        ${MASTER_SITES_GITHUB}",         // FIXME: align these lines to column 17
+		"",
+		"WRKSRC=         ${WRKDIR}",
+		"DISTFILES=      distfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz= ${MASTER_SITES_SOURCEFORGE} \\", // FIXME: align both physical lines
+		"                                ${MASTER_SITES_GITHUB}",      // FIXME: to the same indentation (one space)
+		"",
+		"WRKSRC=         ${WRKDIR}",
+		"DISTFILES=      distfile-1.0.0.tar.gz",
+		"AWK_PROGRAM+= \\",
+		"                                  /search/ { \\",  // FIXME: align this line to column 17,
+		"                                    action(); \\", // FIXME: as well as both
+		"                                  }",              // FIXME: continuation lines
+		"",
+		"WRKSRC= ${WRKDIR}")
+}
+
 // When there is an outlier, no matter whether indented using space or tab,
 // fix the whole block to use the indentation of the second-longest line.
 // Since all of the remaining lines have the same indentation (there is

@@ -307,9 +307,9 @@ func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 }
 
 // CheckFileLinesDetab loads the lines from the temporary file and checks
-// that they equal the given lines. Tabs in the file are replaced with the
-// appropriate number of space characters, so that the file contents can
-// be checked visually using any fixed-width font.
+// that they equal the given lines. The loaded file may use tabs or spaces
+// for indentation, while the lines in the code use spaces exclusively,
+// in order to make the depth of the indentation clearly visible.
 func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 	actualLines, err := readLines(t.TempFilename(relativeFileName), false)
 	if !t.c().Check(err, check.IsNil) {
