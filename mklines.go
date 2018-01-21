@@ -305,6 +305,10 @@ func (va *VaralignBlock) Finish() {
 		return
 	}
 
+	if trace.Tracing {
+		defer trace.Call(infos[0].mkline.Line)()
+	}
+
 	newWidth := va.optimalWidth(infos)
 	if newWidth == 0 {
 		return
@@ -337,7 +341,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 		}
 	}
 
-	// Maximum width of varnameOp, without the trailing whitespace.
+	// Minimum required width of varnameOp, without the trailing whitespace.
 	minVarnameOpWidth := longest
 	outlier := 0
 	if secondLongest != 0 && secondLongest/8+1 < longest/8 {
@@ -358,6 +362,16 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 				minTotalWidth = width
 			}
 			maxTotalWidth = imax(maxTotalWidth, width)
+		}
+	}
+
+	if trace.Tracing {
+		trace.Stepf("Indentation including whitespace is between %d and %d.",
+			minTotalWidth, maxTotalWidth)
+		trace.Stepf("Minimum required indentation is %d + 1.",
+			minVarnameOpWidth)
+		if outlier != 0 {
+			trace.Stepf("The outlier is at indentation %d.", outlier)
 		}
 	}
 
