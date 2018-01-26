@@ -2,15 +2,15 @@ package main
 
 import "gopkg.in/check.v1"
 
-// VaralignTester reduces the amount of test code for variable
-// aligning in Makefiles.
+// VaralignTester reduces the amount of test code for aligning variable
+// assignments in Makefiles.
 type VaralignTester struct {
-	suite               *Suite
-	tester              *Tester
-	actualInput         []string
-	expectedAutofixes   []string
-	expectedDiagnostics []string
-	expectedResult      []string
+	suite       *Suite
+	tester      *Tester
+	input       []string // The actual input lines
+	diagnostics []string // The expected diagnostics in default mode
+	autofixes   []string // The expected diagnostics in --autofix mode
+	fixed       []string // The expected fixed lines, with spaces instead of tabs
 }
 
 func NewVaralignTester(s *Suite, c *check.C) *VaralignTester {
@@ -19,22 +19,23 @@ func NewVaralignTester(s *Suite, c *check.C) *VaralignTester {
 	return &VaralignTester{suite: s, tester: t}
 }
 
-func (vt *VaralignTester) Input(lines ...string) {
-	vt.actualInput = lines
-}
+// Input remembers the input lines that are checked and possibly realigned.
+func (vt *VaralignTester) Input(lines ...string) { vt.input = lines }
 
-func (vt *VaralignTester) Diagnostics(diagnostics ...string) {
-	vt.expectedDiagnostics = diagnostics
-}
+// Diagnostics remembers the expected diagnostics.
+func (vt *VaralignTester) Diagnostics(diagnostics ...string) { vt.diagnostics = diagnostics }
 
-func (vt *VaralignTester) Autofixes(diagnostics ...string) {
-	vt.expectedAutofixes = diagnostics
-}
+// Autofixes remembers the expected diagnostics when pkglint is
+// run with the --autofix option.
+func (vt *VaralignTester) Autofixes(autofixes ...string) { vt.autofixes = autofixes }
 
-func (vt *VaralignTester) Result(lines ...string) {
-	vt.expectedResult = lines
-}
+// Fixed remembers the expected fixed lines. To make the layout changes
+// clearly visible, tabs are replaced with spaces in these expected lines.
+// The fixed lines that have been written to the file are still using tabs.
+func (vt *VaralignTester) Fixed(lines ...string) { vt.fixed = lines }
 
+// Run is called after setting up the data and runs the varalign checks twice.
+// Once for getting the diagnostics and once for automatically fixing them.
 func (vt *VaralignTester) Run() {
 	vt.runDefault()
 	vt.runAutofix()
@@ -43,7 +44,7 @@ func (vt *VaralignTester) Run() {
 func (vt *VaralignTester) runDefault() {
 	vt.tester.SetupCommandLine("-Wall")
 
-	lines := vt.tester.SetupFileLinesContinuation("Makefile", vt.actualInput...)
+	lines := vt.tester.SetupFileLinesContinuation("Makefile", vt.input...)
 	mklines := NewMkLines(lines)
 
 	varalign := VaralignBlock{}
@@ -52,13 +53,13 @@ func (vt *VaralignTester) runDefault() {
 	}
 	varalign.Finish()
 
-	vt.tester.CheckOutputLines(vt.expectedDiagnostics...)
+	vt.tester.CheckOutputLines(vt.diagnostics...)
 }
 
 func (vt *VaralignTester) runAutofix() {
 	vt.tester.SetupCommandLine("-Wall", "--autofix")
 
-	lines := vt.tester.SetupFileLinesContinuation("Makefile", vt.actualInput...)
+	lines := vt.tester.SetupFileLinesContinuation("Makefile", vt.input...)
 
 	mklines := NewMkLines(lines)
 
@@ -68,34 +69,42 @@ func (vt *VaralignTester) runAutofix() {
 	}
 	varalign.Finish()
 
-	vt.tester.CheckOutputLines(vt.expectedAutofixes...)
+	vt.tester.CheckOutputLines(vt.autofixes...)
 
 	SaveAutofixChanges(mklines.lines)
-	vt.tester.CheckFileLinesDetab("Makefile", vt.expectedResult...)
+	vt.tester.CheckFileLinesDetab("Makefile", vt.fixed...)
 }
 
+// Generally, the value in variable assignments is aligned
+// at the next tab.
 func (s *Suite) Test_Varalign__one_var_tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\tone tab")
 	vt.Diagnostics()
 	vt.Autofixes()
-	vt.Result(
+	vt.Fixed(
 		"VAR=    one tab")
 	vt.Run()
 }
 
+// Having more tabs than necessary is allowed. This can be for aesthetic
+// reasons to align this paragraph with the others in the same file.
 func (s *Suite) Test_Varalign__one_var_tabs(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\t\t\tseveral tabs")
 	vt.Diagnostics()
 	vt.Autofixes()
-	vt.Result(
+	vt.Fixed(
 		"VAR=                    several tabs")
 	vt.Run()
 }
 
+// Indentations with a single space are only allowed in some very few
+// places, such as continuation lines or very long variable names.
+// In a single paragraph of its own, indentation with a single space
+// doesn't make sense, therefore it is replaced with a tab.
 func (s *Suite) Test_Varalign__one_var_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -104,11 +113,14 @@ func (s *Suite) Test_Varalign__one_var_space(c *check.C) {
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"VAR=    indented with one space")
 	vt.Run()
 }
 
+// While indentation with a single space is allowed in a few cases,
+// indentation with several spaces is never allowed and is replaced
+// with tabs.
 func (s *Suite) Test_Varalign__one_var_spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -117,13 +129,13 @@ func (s *Suite) Test_Varalign__one_var_spaces(c *check.C) {
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"   \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"VAR=    several spaces")
 	vt.Run()
 }
 
 // Inconsistently aligned lines for variables of the same length are
-// autofixed to the next tab.
+// replaced with tabs, so that they nicely align.
 func (s *Suite) Test_Varalign__two_vars__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -135,13 +147,13 @@ func (s *Suite) Test_Varalign__two_vars__spaces(c *check.C) {
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"  \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"VAR=    indented with one space",
 		"VAR=    indented with two spaces")
 	vt.Run()
 }
 
-// The values in a block should be aligned.
+// All variables in a block are aligned to the same depth.
 func (s *Suite) Test_Varalign__several_vars__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -159,7 +171,7 @@ func (s *Suite) Test_Varalign__several_vars__spaces(c *check.C) {
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing \" \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"GRP_A=          value",
 		"GRP_AA=         value",
 		"GRP_AAA=        value",
@@ -175,7 +187,7 @@ func (s *Suite) Test_Varalign__continuation(c *check.C) {
 		"\tvalue")
 	vt.Diagnostics()
 	vt.Autofixes()
-	vt.Result(
+	vt.Fixed(
 		"VAR= \\",
 		"        value")
 	vt.Run()
@@ -196,12 +208,14 @@ func (s *Suite) Test_Varalign__short_tab__long_space(c *check.C) {
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"BLOCK=          indented with tab",
 		"BLOCK_LONGVAR=  indented with space")
 	vt.Run()
 }
 
+// When the indentation differs, the indentation is adjusted to the
+// minimum necessary.
 func (s *Suite) Test_Varalign__short_long__tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -211,12 +225,15 @@ func (s *Suite) Test_Varalign__short_long__tab(c *check.C) {
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"BLOCK=          short",
 		"BLOCK_LONGVAR=  long")
 	vt.Run()
 }
 
+// For differing indentation, it doesn't matter whether the indentation
+// is done with tabs or with spaces. It is aligned to the minimum
+// necessary depth.
 func (s *Suite) Test_Varalign__space_and_tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -226,12 +243,14 @@ func (s *Suite) Test_Varalign__space_and_tab(c *check.C) {
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"    \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"VAR=    space",
 		"VAR=    tab ${VAR}")
 	vt.Run()
 }
 
+// There must always be a visible space between the assignment operator
+// and the value.
 func (s *Suite) Test_Varalign__no_space_at_all(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -240,7 +259,7 @@ func (s *Suite) Test_Varalign__no_space_at_all(c *check.C) {
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"PKG_FAIL_REASON+=       \"Message\"")
 	vt.Run()
 }
@@ -252,8 +271,8 @@ func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES+=\tvalue",
-		"DISTFILES+= \\", // Continuation lines with small indentation must be aligned.
-		"\t\t\tvalue",
+		"DISTFILES+= \\", // The continuation backslash must be aligned.
+		"\t\t\tvalue",    // The value is already aligned.
 		"DISTFILES+=\t\t\tvalue",
 		"DISTFILES+= value",
 		"",
@@ -269,7 +288,7 @@ func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 		"AUTOFIX: ~/Makefile:3: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\\t\\t\" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing \" \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"DISTFILES+=     value",
 		"DISTFILES+=     \\",
 		"                value",
@@ -289,14 +308,15 @@ func (s *Suite) Test_Varalign__aligned_continuation(c *check.C) {
 		"\t\tsed")
 	vt.Diagnostics()
 	vt.Autofixes()
-	vt.Result(
+	vt.Fixed(
 		"USE_TOOLS+=     [ awk \\",
 		"                sed")
 	vt.Run()
 }
 
 // Shell commands are assumed to be already nicely indented.
-// This particular example is not, but pkglint cannot decide this.
+// This particular example is not, but pkglint cannot decide this as of
+// version 5.5.2.
 func (s *Suite) Test_Varalign__shell_command(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -306,7 +326,7 @@ func (s *Suite) Test_Varalign__shell_command(c *check.C) {
 		"\t\t:; else :; fi")
 	vt.Diagnostics()
 	vt.Autofixes()
-	vt.Result(
+	vt.Fixed(
 		"USE_BUILTIN.Xfixes=     yes",
 		"USE_BUILTIN.Xfixes!=                                                    \\",
 		"        if ${PKG_ADMIN} pmatch ...; then                                        \\",
@@ -314,10 +334,11 @@ func (s *Suite) Test_Varalign__shell_command(c *check.C) {
 	vt.Run()
 }
 
-// The most common pattern is to have all values in the
-// continuation lines, all indented to the same depth.
-// The depth is either a single tab or aligns with the
-// other variables in the paragraph.
+// The most common pattern for laying out continuation lines is to have all
+// values in the continuation lines, one value per line, all indented to the
+// same depth.
+// The depth is either a single tab or aligns with the other variables in the
+// paragraph.
 func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -333,7 +354,7 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz= \\",
@@ -342,9 +363,9 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check
 	vt.Run()
 }
 
-// Another common pattern is to have the first value
-// in the first line and subsequent values indented to
-// the same depth as the value in the first line.
+// Another common pattern is to write the first value in the first line and
+// subsequent values indented to the same depth as the value in the first
+// line.
 func (s *Suite) Test_Varalign__continuation_value_starts_in_first_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -360,7 +381,7 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_first_line(c *check.
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\" with \" \".",
 		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz= ${MASTER_SITES_SOURCEFORGE} \\",
@@ -368,12 +389,11 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_first_line(c *check.
 	vt.Run()
 }
 
-// Continued lines that have mixed indentation are
-// probably on purpose. Their minimum indentation should
-// be aligned to the indentation of the other lines. The
-// lines that are indented further should keep their
-// relative indentation depth, no matter if that is done
-// with spaces or with tabs.
+// Continued lines that have mixed indentation are probably on purpose.
+// Their minimum indentation should be aligned to the indentation of the
+// other lines. The lines that are indented further should keep their
+// relative indentation depth, no matter if that is done with spaces or
+// with tabs.
 func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_second_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -393,7 +413,7 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_second_line(c *
 		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
 		"AUTOFIX: ~/Makefile:6: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"AWK_PROGRAM+=   \\",
@@ -421,7 +441,7 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_first_line(c *c
 		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\\t  \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
 		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
 		"AWK_PROGRAM+=   /search/ { \\",
@@ -432,9 +452,9 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_first_line(c *c
 
 // When there is an outlier, no matter whether indented using space or tab,
 // fix the whole block to use the indentation of the second-longest line.
-// Since all of the remaining lines have the same indentation (there is
-// only 1 line at all), that existing indentation is used instead of the
-// minimum necessary, which would only be a single tab.
+// Since all of the remaining lines have the same indentation (in this case,
+// there is only 1 line at all), that existing indentation is used instead of
+// the minimum necessary, which would only be a single tab.
 func (s *Suite) Test_Varalign__tab_outlier(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -444,24 +464,14 @@ func (s *Suite) Test_Varalign__tab_outlier(c *check.C) {
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \" \".")
-	vt.Result(
+	vt.Fixed(
 		"DISTFILES=              very-very-very-very-long-distfile-name",
 		"SITES.very-very-very-very-long-distfile-name= ${MASTER_SITE_LOCAL}")
 	vt.Run()
 }
 
 // The SITES.* definition is indented less than the other lines,
-// therefore the whole block will be realigned.
-//
-// In the multiline definition for DISTFILES, the second line is
-// indented the same as all the other lines but pkglint (at least up
-// to 5.5.1) doesn't notice this because in multiline definitions it
-// discards the physical lines early and only works with the logical
-// line, in which the line continuation has been replaced with a
-// single space.
-//
-// Because of this limited knowledge, pkglint only realigns the
-// first physical line of the continued line.
+// therefore the whole paragraph will be realigned to that depth.
 func (s *Suite) Test_Varalign__multiline(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -484,7 +494,7 @@ func (s *Suite) Test_Varalign__multiline(c *check.C) {
 		"AUTOFIX: ~/Makefile:3: Replacing indentation \"                        \" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing \"  \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"                 \" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"DIST_SUBDIR=    asc",
 		"DISTFILES=      ${DISTNAME}${EXTRACT_SUFX} frontiers.mp3 \\",
 		"                machine_wars.mp3 time_to_strike.mp3",
@@ -518,7 +528,7 @@ func (s *Suite) Test_Varalign__single_space(c *check.C) {
 		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing \"\\t\" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"RESTRICTED=             Do not sell, do not rent",
 		"NO_BIN_ON_CDROM=        ${RESTRICTED}",
 		"NO_BIN_ON_FTP=          ${RESTRICTED}",
@@ -551,7 +561,7 @@ func (s *Suite) Test_Varalign__only_space(c *check.C) {
 		"AUTOFIX: ~/Makefile:4: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:6: Replacing \" \" with \"\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"DISTFILES+=     space",
 		"DISTFILES+=     space",
 		"",
@@ -572,161 +582,131 @@ func (s *Suite) Test_Varalign__mixed_tabs_and_spaces_same_column(c *check.C) {
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"             \" with \"\\t\\t\".")
-	vt.Result(
+	vt.Fixed(
 		"DISTFILES+=             space",
 		"DISTFILES+=             tab")
 	vt.Run()
 }
 
+// Both lines are indented to the same column. This is a very simple case.
 func (s *Suite) Test_Varalign__outlier_1(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V= 3",  // Adjust from 3 to 8 (+ 1 tab)
-		"V=\t4") // Keep at 8
+		"V= value",
+		"V=\tvalue")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
-	vt.Result("V=      3",
-		"V=      4")
+	vt.Fixed(
+		"V=      value",
+		"V=      value")
 	vt.Run()
 }
 
+// A single space that ends at the same depth as a tab is replaced with a
+// tab, for consistency.
 func (s *Suite) Test_Varalign__outlier_2(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.0008= 6", // Keep at 8 (space to tab)
-		"V=\t7")     // Keep at 8
+		"V.0008= value",
+		"V=\tvalue")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
-	vt.Result(
-		"V.0008= 6",
-		"V=      7")
+	vt.Fixed(
+		"V.0008= value",
+		"V=      value")
 	vt.Run()
 }
 
+// A short line that is indented with spaces is aligned to a longer line
+// that is indented with tabs. This is because space-indented lines are
+// only special when their indentation is much deeper than the tab-indented
+// ones.
 func (s *Suite) Test_Varalign__outlier_3(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.00009= 9", // Adjust from 9 to 16 (+ 1 tab)
-		"V=\t10")     // Adjust from 8 to 16 (+1 tab)
+		"V.00009= value",
+		"V=\tvalue")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
-	vt.Result(
-		"V.00009=        9",
-		"V=              10")
+	vt.Fixed(
+		"V.00009=        value",
+		"V=              value")
 	vt.Run()
 }
 
+// This space-indented line doesn't count as an outlier yet because it
+// is only a single tab away. The limit is two tabs.
 func (s *Suite) Test_Varalign__outlier_4(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.000000000016= 12", // Keep at 16 (space to tab)
-		"V=\tvalue")          // Adjust from 8 to 16 (+ 1 tab)
+		"V.000000000016= value",
+		"V=\tvalue")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
-	vt.Result(
-		"V.000000000016= 12",
+	vt.Fixed(
+		"V.000000000016= value",
 		"V=              value")
 	vt.Run()
 }
 
+// This space-indented line is an outlier since it is far enough from the
+// tab-indented line. The latter would require 2 tabs to align to the former.
 func (s *Suite) Test_Varalign__outlier_5(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.0000000000017= 15", // Keep at 17 (outlier)
-		"V=\tvalue")           // Keep at 8 (would require + 2 tabs)
+		"V.0000000000017= value",
+		"V=\tvalue")
 	vt.Diagnostics()
 	vt.Autofixes()
-	vt.Result(
-		"V.0000000000017= 15",
+	vt.Fixed(
+		"V.0000000000017= value",
 		"V=      value")
 	vt.Run()
 }
 
+// Short space-indented lines are expanded to the tab-depth.
 func (s *Suite) Test_Varalign__outlier_6(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V= 18",            // Adjust from 3 to 16 (+ 2 tabs)
-		"V.000010=\tvalue") // Keep at 16
+		"V= value",
+		"V.000010=\tvalue")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.")
-	vt.Autofixes("AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\\t\".")
-	vt.Result(
-		"V=              18",
-		"V.000010=       value")
-	vt.Run()
-}
-
-func (s *Suite) Test_Varalign__outlier_7(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"V.00009= 21",      // Adjust from 9 to 16 (+ 1 tab)
-		"V.000010=\tvalue") // Keep at 16
-	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.")
-	vt.Autofixes("AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
-	vt.Result(
-		"V.00009=        21",
-		"V.000010=       value")
-	vt.Run()
-}
-
-func (s *Suite) Test_Varalign__outlier_8(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"V.000000000016= 24", // Keep at 16 (space to tab)
-		"V.000010=\tvalue")   // Keep at 16
-	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
-	vt.Result(
-		"V.000000000016= 24",
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\\t\".")
+	vt.Fixed(
+		"V=              value",
 		"V.000010=       value")
 	vt.Run()
 }
 
-func (s *Suite) Test_Varalign__outlier_9(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"V.0000000000017= 27", // Adjust from 17 to 24 (+ 1 tab)
-		"V.000010=\tvalue")    // Adjust from 16 to 24 (+ 1 tab)
-	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
-		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
-	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
-	vt.Result(
-		"V.0000000000017=        27",
-		"V.000010=               value")
-	vt.Run()
-}
-
+// The long line is not an outlier, but very close. One more space, and
+// it would count.
 func (s *Suite) Test_Varalign__outlier_10(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.0000000000000000023= 30", // Adjust from 23 to 24 (+ 1 tab)
-		"V.000010=\tvalue")          // Adjust from 16 to 24 (+ 1 tab)
+		"V.0000000000000000023= value", // Adjust from 23 to 24 (+ 1 tab)
+		"V.000010=\tvalue")             // Adjust from 16 to 24 (+ 1 tab)
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
-	vt.Result(
-		"V.0000000000000000023=  30",
+	vt.Fixed(
+		"V.0000000000000000023=  value",
 		"V.000010=               value")
 	vt.Run()
 }
@@ -734,16 +714,16 @@ func (s *Suite) Test_Varalign__outlier_10(c *check.C) {
 func (s *Suite) Test_Varalign__outlier_11(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.00000000000000000024= 33", // Keep at 24 (space to tab)
-		"V.000010=\tvalue")           // Adjust from 16 to 24 (+ 1 tab)
+		"V.00000000000000000024= value", // Keep at 24 (space to tab)
+		"V.000010=\tvalue")              // Adjust from 16 to 24 (+ 1 tab)
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
-	vt.Result(
-		"V.00000000000000000024= 33",
+	vt.Fixed(
+		"V.00000000000000000024= value",
 		"V.000010=               value")
 	vt.Run()
 }
@@ -751,35 +731,22 @@ func (s *Suite) Test_Varalign__outlier_11(c *check.C) {
 func (s *Suite) Test_Varalign__outlier_12(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.000000000000000000025= 36", // Keep at 25 (outlier)
-		"V.000010=\tvalue")            // Keep at 16 (would require + 2 tabs)
+		"V.000000000000000000025= value", // Keep at 25 (outlier)
+		"V.000010=\tvalue")               // Keep at 16 (would require + 2 tabs)
 	vt.Diagnostics()
 	vt.Autofixes()
-	vt.Result(
-		"V.000000000000000000025= 36",
+	vt.Fixed(
+		"V.000000000000000000025= value",
 		"V.000010=       value")
 	vt.Run()
 }
 
-func (s *Suite) Test_Varalign__outlier_13(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"V.00008=\t39",          // Keep at 16
-		"V.00008=\t\t\t\tvalue") // Adjust from 40 to 16 (removes 3 tabs)
-	vt.Diagnostics(
-		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
-	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".")
-	vt.Result(
-		"V.00008=        39",
-		"V.00008=        value")
-	vt.Run()
-}
-
+// When the lines are indented inconsistently, the indentation is reduced
+// to the required minimum.
 func (s *Suite) Test_Varalign__outlier_14(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"V.00008=\t\t42",        // Adjust from 24 to 16 (removes 1 tab)
+		"V.00008=\t\tvalue",     // Adjust from 24 to 16 (removes 1 tab)
 		"V.00008=\t\t\t\tvalue") // Adjust from 40 to 16 (removes 3 tabs)
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
@@ -787,8 +754,8 @@ func (s *Suite) Test_Varalign__outlier_14(c *check.C) {
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".")
-	vt.Result(
-		"V.00008=        42",
+	vt.Fixed(
+		"V.00008=        value",
 		"V.00008=        value")
 	vt.Run()
 }
