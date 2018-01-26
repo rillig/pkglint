@@ -806,13 +806,13 @@ func (s *Suite) Test_Varalign__indented_continuation_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"CONF_FILES_PERMS=\tsource \\",
-		"\t\t\t\tdestination",
+		"\t\t\t\tdestination \\",
 		"\t\t\t\tuser group 0644")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
 		"CONF_FILES_PERMS=       source \\",
-		"                                destination",
+		"                                destination \\",
 		"                                user group 0644")
 	vt.Run()
 }

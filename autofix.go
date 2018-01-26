@@ -84,8 +84,18 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		return
 	}
 
-	normalized := true
-	oldWidth := 0
+	normalized := true // Whether all indentation is tabs, followed by spaces.
+	oldWidth := 0      // The minimum required indentation in the original lines.
+
+	{
+		// Interpreting the continuation marker as variable value
+		// is cheating, but works well.
+		m, _, _, _, valueAlign, value, _, _ := MatchVarassign(mkline.raw[0].orignl)
+		if m && value != "\\" {
+			oldWidth = tabWidth(valueAlign)
+		}
+	}
+
 	for _, rawLine := range fix.lines[1:] {
 		_, space := regex.Match1(rawLine.textnl, `^(\s*)`)
 		width := tabWidth(space)
