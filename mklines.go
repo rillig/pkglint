@@ -256,27 +256,32 @@ type varalignBlockInfo struct {
 }
 
 func (va *VaralignBlock) Check(mkline MkLine) {
-	if !G.opts.WarnSpace || mkline.IsComment() || mkline.IsCond() {
+	switch {
+	case !G.opts.WarnSpace:
 		return
-	}
-	if mkline.IsEmpty() {
+
+	case mkline.IsComment():
+		return
+
+	case mkline.IsCond():
+		return
+
+	case mkline.IsEmpty():
 		va.Finish()
 		return
-	}
-	if !mkline.IsVarassign() {
+
+	case !mkline.IsVarassign():
 		trace.Stepf("Skipping")
 		va.skip = true
 		return
-	}
 
-	// Arguments to procedures do not take part in block alignment.
-	if mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`) {
+	case mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`):
+		// Arguments to procedures do not take part in block alignment.
 		return
-	}
 
-	// Multiple-inclusion guards usually appear in a block of
-	// their own and therefore do not need alignment.
-	if mkline.Value() == "" && mkline.VarassignComment() == "" {
+	case mkline.Value() == "" && mkline.VarassignComment() == "":
+		// Multiple-inclusion guards usually appear in a block of
+		// their own and therefore do not need alignment.
 		return
 	}
 
