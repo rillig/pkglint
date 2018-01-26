@@ -111,9 +111,10 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		return
 	}
 
-	// Shell commands can become very long, therefore it's ok
-	// to indent them as little as possible.
-	if mkline.Op() == opAssignShell && oldWidth == 8 {
+	// Continuation lines with the minimal unambiguous indentation
+	// attempt to keep the indentation as small as possible, so don't
+	// realign them.
+	if oldWidth == 8 {
 		return
 	}
 

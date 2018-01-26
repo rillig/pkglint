@@ -816,3 +816,26 @@ func (s *Suite) Test_Varalign__indented_continuation_line(c *check.C) {
 		"                                user group 0644")
 	vt.Run()
 }
+
+func (s *Suite) Test_Varalign__indented_continuation_line_in_paragraph(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SUBST_CLASSES+=\t\tfix",
+		"SUBST_STAGE.fix=\tpost-patch",
+		"SUBST_SED.fix= \\",
+		"\t-e 's,1,one,g' \\",
+		"\t-e 's,2,two,g' \\",
+		"\t-e 's,3,three,g'")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:3--6: This variable value should be aligned with tabs, not spaces, to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\\t\".")
+	vt.Fixed(
+		"SUBST_CLASSES+=         fix",
+		"SUBST_STAGE.fix=        post-patch",
+		"SUBST_SED.fix=          \\",
+		"        -e 's,1,one,g' \\",
+		"        -e 's,2,two,g' \\",
+		"        -e 's,3,three,g'")
+	vt.Run()
+}
