@@ -401,7 +401,14 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 	}
 	// Indent the outlier with a space instead of a tab to keep the line short.
 	if newSpace == "" {
-		newSpace = " "
+		if hasPrefix(oldSpace, "\t") {
+			// Even though it is an outlier, it uses a tab and therefore
+			// didn't seem to be too long to the original developer.
+			// Therefore, leave it as-is, but still fix any continuation lines.
+			newSpace = oldSpace
+		} else {
+			newSpace = " "
+		}
 	}
 
 	fix := mkline.Autofix()

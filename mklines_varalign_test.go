@@ -4,6 +4,9 @@ import "gopkg.in/check.v1"
 
 // VaralignTester reduces the amount of test code for aligning variable
 // assignments in Makefiles.
+//
+// The most interesting breakpoint for looking at these tests is
+// VaralignBlock.optimalWidth.
 type VaralignTester struct {
 	suite       *Suite
 	tester      *Tester
@@ -375,16 +378,14 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_first_line(c *check.
 		"\t\t\t\t${MASTER_SITES_GITHUB}")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:3--4: This variable value should be aligned to column 17.",
 		"WARN: ~/Makefile:3--4: This line should be aligned with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\" with \" \".",
 		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
-		"SITES.distfile-1.0.0.tar.gz= ${MASTER_SITES_SOURCEFORGE} \\",
+		"SITES.distfile-1.0.0.tar.gz=    ${MASTER_SITES_SOURCEFORGE} \\",
 		"                ${MASTER_SITES_GITHUB}")
 	vt.Run()
 }
@@ -460,13 +461,11 @@ func (s *Suite) Test_Varalign__tab_outlier(c *check.C) {
 	vt.Input(
 		"DISTFILES=\t\tvery-very-very-very-long-distfile-name",
 		"SITES.very-very-very-very-long-distfile-name=\t${MASTER_SITE_LOCAL}")
-	vt.Diagnostics(
-		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
-	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \" \".")
+	vt.Diagnostics()
+	vt.Autofixes()
 	vt.Fixed(
 		"DISTFILES=              very-very-very-very-long-distfile-name",
-		"SITES.very-very-very-very-long-distfile-name= ${MASTER_SITE_LOCAL}")
+		"SITES.very-very-very-very-long-distfile-name=   ${MASTER_SITE_LOCAL}")
 	vt.Run()
 }
 
@@ -757,5 +756,46 @@ func (s *Suite) Test_Varalign__outlier_14(c *check.C) {
 	vt.Fixed(
 		"V.00008=        value",
 		"V.00008=        value")
+	vt.Run()
+}
+
+// The INSTALLATION_DIRS line is so long that it is considered an outlier,
+// since compared to the DIST line, it is at least two tabs away.
+// Pkglint before 2018-26-01 suggested that it "should be aligned to column 9",
+// which is not possible since the variable name is already longer.
+func (s *Suite) Test_MkLines__variable_alignment__long_short(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"INSTALLATION_DIRS=\tbin",
+		"DIST=\t${WRKSRC}/dist")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"INSTALLATION_DIRS=      bin",
+		"DIST=   ${WRKSRC}/dist")
+	vt.Run()
+}
+
+// Before 2018-01-26, pkglint wanted to replace the tab in the outlier with
+// a space. After this change, the space-indented line would not look like an
+// outlier anymore because the other values are aligned very close to the
+// outlier value. To fix this case, the indentation of the other lines needs
+// to be adjusted to the minimum required.
+func (s *Suite) Test_Varalign__tabbed_outlier(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		".if !empty(PKG_OPTIONS:Minspircd-sqloper)",
+		"INSPIRCD_STORAGE_DRIVER?=\tmysql",
+		"MODULES+=\t\tm_sqloper.cpp m_sqlutils.cpp",
+		"HEADERS+=\t\tm_sqlutils.h",
+		".endif")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		".if !empty(PKG_OPTIONS:Minspircd-sqloper)",
+		"INSPIRCD_STORAGE_DRIVER?=       mysql",
+		"MODULES+=               m_sqloper.cpp m_sqlutils.cpp",
+		"HEADERS+=               m_sqlutils.h",
+		".endif")
 	vt.Run()
 }
