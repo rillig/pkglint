@@ -884,22 +884,15 @@ func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
 		"",
 		"NEXT_VAR=\tmust not be indented")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--5: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:1--5: This line should be aligned with \"\\t\\t\".")
+		"NOTE: ~/Makefile:1--5: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
-		// FIXME: Pkglint must not suggest indentation with several spaces.
-		// FIXME: The indentation of the space-backslash must have
-		// FIXME: nothing to do with the continuation lines.
-		"AUTOFIX: ~/Makefile:2: Replacing indentation \"\\t\" with \"\\t\\t       \".",
-		"AUTOFIX: ~/Makefile:3: Replacing indentation \"\\t\" with \"\\t\\t       \".",
-		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\" with \"\\t\\t       \".",
-		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\n\" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
 		"DISTFILES=      \\",
-		"                       a \\",
-		"                       b \\",
-		"                       c \\",
-		"                NEXT_VAR=       must not be indented") // FIXME
+		"        a \\",
+		"        b \\",
+		"        c \\",
+		"",
+		"NEXT_VAR=       must not be indented")
 	vt.Run()
 }

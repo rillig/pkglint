@@ -97,12 +97,12 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	}
 
 	for _, rawLine := range fix.lines[1:] {
-		_, space := regex.Match1(rawLine.textnl, `^(\s*)`)
+		_, space := regex.Match1(rawLine.textnl, `^([ \t]*)`)
 		width := tabWidth(space)
-		if oldWidth == 0 || width < oldWidth {
+		if (oldWidth == 0 || width < oldWidth) && rawLine.textnl != "\n" {
 			oldWidth = width
 		}
-		if !regex.Matches(space, `^\t*\s{0,7}`) {
+		if !regex.Matches(space, `^\t* {0,7}`) {
 			normalized = false
 		}
 	}
@@ -119,7 +119,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	}
 
 	for _, rawLine := range fix.lines[1:] {
-		_, oldSpace := regex.Match1(rawLine.textnl, `^(\s*)`)
+		_, oldSpace := regex.Match1(rawLine.textnl, `^([ \t]*)`)
 		newWidth := tabWidth(oldSpace) - oldWidth + newWidth
 		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
 		if replaced := strings.Replace(rawLine.textnl, oldSpace, newSpace, 1); replaced != rawLine.textnl {

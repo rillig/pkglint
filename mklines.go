@@ -330,8 +330,8 @@ func (va *VaralignBlock) Finish() {
 // variable from forcing the rest of the paragraph to be indented too
 // far to the right.
 func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
-	longest := 0
-	secondLongest := 0
+	longest := 0       // The longest seen varnameOpWidth
+	secondLongest := 0 // The second-longest seen varnameOpWidth
 	for _, info := range infos {
 		if info.continuation {
 			continue
