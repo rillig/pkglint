@@ -270,12 +270,10 @@ func (t *Tester) CheckOutputEmpty() {
 // After the comparison, the output buffers are cleared so that later
 // calls only check against the newly added output.
 func (t *Tester) CheckOutputLines(expectedLines ...string) {
-	actualOutput := t.Output()
-	expectedOutput := ""
-	for _, expectedLine := range expectedLines {
-		expectedOutput += expectedLine + "\n"
-	}
-	t.c().Check(actualOutput, equals, expectedOutput)
+	output := t.Output()
+	actualLines := strings.Split(output, "\n")
+	actualLines = actualLines[:len(actualLines)-1]
+	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
 }
 
 // BeginDebugToStdout redirects all logging output to stdout instead of
@@ -298,12 +296,10 @@ func (t *Tester) EndDebugToStdout() {
 // CheckFileLines loads the lines from the temporary file and checks that
 // they equal the given lines.
 func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
-	actual := t.LoadTmpFile(relativeFileName)
-	expected := ""
-	for _, line := range lines {
-		expected += line + "\n"
-	}
-	t.c().Check(actual, equals, expected)
+	text := t.LoadTmpFile(relativeFileName)
+	actualLines := strings.Split(text, "\n")
+	actualLines = actualLines[:len(actualLines)-1]
+	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(lines))
 }
 
 // CheckFileLinesDetab loads the lines from the temporary file and checks
@@ -316,14 +312,11 @@ func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 		return
 	}
 
-	detabbed := ""
+	var detabbed []string
 	for _, line := range actualLines {
-		detabbed += detab(line.raw[0].orignl)
+		rawText := strings.TrimRight(detab(line.raw[0].orignl), "\n")
+		detabbed = append(detabbed, rawText)
 	}
 
-	expected := ""
-	for _, line := range lines {
-		expected += line + "\n"
-	}
-	t.c().Check(detabbed, equals, expected)
+	t.c().Check(detabbed, deepEquals, lines)
 }

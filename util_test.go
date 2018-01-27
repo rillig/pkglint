@@ -157,3 +157,10 @@ func Benchmark_match3_explicit(b *testing.B) {
 		MatchMkInclude(".include \"../../mk/bsd.pkg.mk\"          # infrastructure     ")
 	}
 }
+
+func emptyToNil(slice []string) []string {
+	if len(slice) == 0 {
+		return nil
+	}
+	return slice
+}
