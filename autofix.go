@@ -206,8 +206,8 @@ func (fix *Autofix) Apply() {
 
 	if shallBeLogged(fix.diagFormat) {
 		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" &&
-			!(G.opts.Autofix && !G.opts.PrintAutofix)
-		if logDiagnostic && len(fix.actions) > 0 {
+			!(G.opts.Autofix && !G.opts.PrintAutofix) && len(fix.actions) > 0
+		if logDiagnostic {
 			msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 			logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 		}

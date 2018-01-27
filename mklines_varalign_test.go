@@ -14,6 +14,7 @@ type VaralignTester struct {
 	diagnostics []string // The expected diagnostics in default mode
 	autofixes   []string // The expected diagnostics in --autofix mode
 	fixed       []string // The expected fixed lines, with spaces instead of tabs
+	source      bool
 }
 
 func NewVaralignTester(s *Suite, c *check.C) *VaralignTester {
@@ -45,7 +46,11 @@ func (vt *VaralignTester) Run() {
 }
 
 func (vt *VaralignTester) runDefault() {
-	vt.tester.SetupCommandLine("-Wall")
+	cmdline := []string{"-Wall"}
+	if vt.source {
+		cmdline = append(cmdline, "--source")
+	}
+	vt.tester.SetupCommandLine(cmdline...)
 
 	lines := vt.tester.SetupFileLinesContinuation("Makefile", vt.input...)
 	mklines := NewMkLines(lines)
@@ -60,7 +65,11 @@ func (vt *VaralignTester) runDefault() {
 }
 
 func (vt *VaralignTester) runAutofix() {
-	vt.tester.SetupCommandLine("-Wall", "--autofix")
+	cmdline := []string{"-Wall", "--autofix"}
+	if vt.source {
+		cmdline = append(cmdline, "--source")
+	}
+	vt.tester.SetupCommandLine(cmdline...)
 
 	lines := vt.tester.SetupFileLinesContinuation("Makefile", vt.input...)
 
@@ -837,5 +846,27 @@ func (s *Suite) Test_Varalign__indented_continuation_line_in_paragraph(c *check.
 		"        -e 's,1,one,g' \\",
 		"        -e 's,2,two,g' \\",
 		"        -e 's,3,three,g'")
+	vt.Run()
+}
+
+// Up to 2018-01-27, it could happen that some source code was logged
+// without a corresponding diagnostic. This was unintented and confusing.
+func (s *Suite) Test_Varalign__bla(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"MESSAGE_SUBST+=\t\tRUBY_DISTNAME=${RUBY_DISTNAME}",
+		"PLIST_SUBST+=\t\tRUBY_SHLIBVER=${RUBY_SHLIBVER:Q} \\",
+		"\t\t\tRUBY_SHLIBMAJOR=${RUBY_SHLIBMAJOR:Q} \\",
+		"\t\t\tRUBY_NOSHLIBMAJOR=${RUBY_NOSHLIBMAJOR} \\",
+		"\t\t\tRUBY_NAME=${RUBY_NAME:Q}")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"MESSAGE_SUBST+=         RUBY_DISTNAME=${RUBY_DISTNAME}",
+		"PLIST_SUBST+=           RUBY_SHLIBVER=${RUBY_SHLIBVER:Q} \\",
+		"                        RUBY_SHLIBMAJOR=${RUBY_SHLIBMAJOR:Q} \\",
+		"                        RUBY_NOSHLIBMAJOR=${RUBY_NOSHLIBMAJOR} \\",
+		"                        RUBY_NAME=${RUBY_NAME:Q}")
+	vt.source = true
 	vt.Run()
 }
