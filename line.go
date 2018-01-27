@@ -92,24 +92,24 @@ func (line *LineImpl) printSource(out *SeparatorWriter) {
 		for _, rawLine := range rawLines {
 			if rawLine.textnl != rawLine.orignl {
 				if rawLine.orignl != "" {
-					out.Write("- " + rawLine.orignl)
+					out.Write("-\t" + rawLine.orignl)
 				}
 				if rawLine.textnl != "" {
-					out.Write("+ " + rawLine.textnl)
+					out.Write("+\t" + rawLine.textnl)
 				}
 			} else {
-				out.Write("> " + rawLine.orignl)
+				out.Write(">\t" + rawLine.orignl)
 			}
 		}
 	}
 
 	if line.autofix != nil {
 		for _, before := range line.autofix.linesBefore {
-			out.Write("+ " + before)
+			out.Write("+\t" + before)
 		}
 		printDiff(line.autofix.lines)
 		for _, after := range line.autofix.linesAfter {
-			out.Write("+ " + after)
+			out.Write("+\t" + after)
 		}
 	} else {
 		printDiff(line.raw)

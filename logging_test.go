@@ -38,13 +38,13 @@ func (s *Suite) Test_show_source_separator(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
-		"> The second line",
+		">\tThe second line",
 		"",
 		"WARN: ~/DESCR:3: Dummy warning.",
-		"> The third line",
+		">\tThe third line",
 		"",
 		"WARN: ~/DESCR:3: Using \"third\" is deprecated.",
-		"> The third line")
+		">\tThe third line")
 }
 
 func (s *Suite) Test_show_source_separator_show_autofix(c *check.C) {
@@ -71,13 +71,13 @@ func (s *Suite) Test_show_source_separator_show_autofix(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
 		"AUTOFIX: ~/DESCR:2: Replacing \"second\" with \"silver medal\".",
-		"- The second line",
-		"+ The silver medal line",
+		"-\tThe second line",
+		"+\tThe silver medal line",
 		"",
 		"WARN: ~/DESCR:3: Using \"third\" is deprecated.",
 		"AUTOFIX: ~/DESCR:3: Replacing \"third\" with \"bronze medal\".",
-		"- The third line",
-		"+ The bronze medal line")
+		"-\tThe third line",
+		"+\tThe bronze medal line")
 }
 
 func (s *Suite) Test_show_source_separator_autofix(c *check.C) {
@@ -103,12 +103,12 @@ func (s *Suite) Test_show_source_separator_autofix(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/DESCR:2: Replacing \"second\" with \"silver medal\".",
-		"- The second line",
-		"+ The silver medal line",
+		"-\tThe second line",
+		"+\tThe silver medal line",
 		"",
 		"AUTOFIX: ~/DESCR:3: Replacing \"third\" with \"bronze medal\".",
-		"- The third line",
-		"+ The bronze medal line")
+		"-\tThe third line",
+		"+\tThe bronze medal line")
 }
 
 // Demonstrates how to filter log messages.
@@ -132,6 +132,6 @@ func (s *Suite) Test_Line_log_only(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new2\".",
-		"- The old song",
-		"+ The new2 song")
+		"-\tThe old song",
+		"+\tThe new2 song")
 }

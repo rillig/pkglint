@@ -53,12 +53,12 @@ func (s *Suite) Test_Autofix_ReplaceRegex_with_autofix(c *check.C) {
 		"line3")
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".",
-		"- line2",
-		"+ XXXXX",
+		"-\tline2",
+		"+\tXXXXX",
 		"",
 		"AUTOFIX: ~/Makefile:2: Replacing \"X\" with \"Y\".",
-		"- line2",
-		"+ YXXXX")
+		"-\tline2",
+		"+\tYXXXX")
 }
 
 func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
@@ -84,13 +84,13 @@ func (s *Suite) Test_Autofix_ReplaceRegex_with_show_autofix(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:2: Something's wrong here.",
 		"AUTOFIX: ~/Makefile:2: Replacing regular expression \".\" with \"X\".",
-		"- line2",
-		"+ XXXXX",
+		"-\tline2",
+		"+\tXXXXX",
 		"",
 		"WARN: ~/Makefile:2: Use Y instead of X.",
 		"AUTOFIX: ~/Makefile:2: Replacing \"X\" with \"Y\".",
-		"- line2",
-		"+ YXXXX")
+		"-\tline2",
+		"+\tYXXXX")
 }
 
 func (s *Suite) Test_autofix_MkLines(c *check.C) {
@@ -248,10 +248,10 @@ func (s *Suite) Test_Autofix_show_source_code(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:2--4: Using \"old\" is deprecated.",
 		"AUTOFIX: ~/Makefile:3: Replacing \"old\" with \"new\".",
-		"> before \\",
-		"- The old song \\",
-		"+ The new song \\",
-		"> after")
+		">\tbefore \\",
+		"-\tThe old song \\",
+		"+\tThe new song \\",
+		">\tafter")
 }
 
 func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
@@ -268,8 +268,8 @@ func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:30: Dummy",
 		"AUTOFIX: Makefile:30: Inserting a line \"inserted\" before this line.",
-		"+ inserted",
-		"> original")
+		"+\tinserted",
+		">\toriginal")
 }
 
 func (s *Suite) Test_Autofix_Delete(c *check.C) {
@@ -286,7 +286,7 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:30: Dummy",
 		"AUTOFIX: Makefile:30: Deleting this line.",
-		"- to be deleted")
+		"-\tto be deleted")
 }
 
 // Demonstrates that the --show-autofix option only shows those diagnostics
@@ -316,13 +316,13 @@ func (s *Suite) Test_Autofix_suppress_unfixable_warnings(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Something's wrong here.",
 		"AUTOFIX: Makefile:2: Replacing regular expression \".\" with \"X\".",
-		"- line2",
-		"+ XXXXX",
+		"-\tline2",
+		"+\tXXXXX",
 		"",
 		"WARN: Makefile:2: The XXX marks are usually not fixed, use TODO instead.",
 		"AUTOFIX: Makefile:2: Replacing \"XXX\" with \"TODO\".",
-		"- line2",
-		"+ TODOXX")
+		"-\tline2",
+		"+\tTODOXX")
 }
 
 // If an Autofix doesn't do anything it must not log any diagnostics.
