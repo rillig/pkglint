@@ -444,7 +444,7 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 	if mkline.IsMultiline() {
 		indentation := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
 		fix := mkline.Autofix()
-		fix.Warnf("This line should be aligned with %q.", indentation)
+		fix.Notef("This line should be aligned with %q.", indentation)
 		fix.Realign(mkline, newWidth)
 		fix.Apply()
 	}
