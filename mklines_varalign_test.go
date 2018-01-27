@@ -850,8 +850,8 @@ func (s *Suite) Test_Varalign__indented_continuation_line_in_paragraph(c *check.
 }
 
 // Up to 2018-01-27, it could happen that some source code was logged
-// without a corresponding diagnostic. This was unintented and confusing.
-func (s *Suite) Test_Varalign__bla(c *check.C) {
+// without a corresponding diagnostic. This was unintended and confusing.
+func (s *Suite) Test_Varalign__fix_without_diagnostic(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"MESSAGE_SUBST+=\t\tRUBY_DISTNAME=${RUBY_DISTNAME}",
@@ -868,5 +868,38 @@ func (s *Suite) Test_Varalign__bla(c *check.C) {
 		"                        RUBY_NOSHLIBMAJOR=${RUBY_NOSHLIBMAJOR} \\",
 		"                        RUBY_NAME=${RUBY_NAME:Q}")
 	vt.source = true
+	vt.Run()
+}
+
+// The two variables look like they were in two separate paragraphs, but
+// they aren't. This is because the continuation line from the DISTFILES
+// eats up the empty line that would otherwise separate the paragraphs.
+func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"DISTFILES= \\",
+		"\ta \\",
+		"\tb \\",
+		"\tc \\",
+		"",
+		"NEXT_VAR=\tmust not be indented")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1--5: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:1--5: This line should be aligned with \"\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
+		// FIXME: Pkglint must not suggest indentation with several spaces.
+		// FIXME: The indentation of the space-backslash must have
+		// FIXME: nothing to do with the continuation lines.
+		"AUTOFIX: ~/Makefile:2: Replacing indentation \"\\t\" with \"\\t\\t       \".",
+		"AUTOFIX: ~/Makefile:3: Replacing indentation \"\\t\" with \"\\t\\t       \".",
+		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\" with \"\\t\\t       \".",
+		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\n\" with \"\\t\\t\".")
+	vt.Fixed(
+		"DISTFILES=      \\",
+		"                       a \\",
+		"                       b \\",
+		"                       c \\",
+		"                NEXT_VAR=       must not be indented") // FIXME
 	vt.Run()
 }
