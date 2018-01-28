@@ -260,14 +260,17 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	case !G.opts.WarnSpace:
 		return
 
+	case mkline.IsEmpty():
+		va.Finish()
+		return
+
+	case mkline.IsCommentedVarassign():
+		break
+
 	case mkline.IsComment():
 		return
 
 	case mkline.IsCond():
-		return
-
-	case mkline.IsEmpty():
-		va.Finish()
 		return
 
 	case !mkline.IsVarassign():
@@ -289,7 +292,7 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	if mkline.IsMultiline() {
 		// Interpreting the continuation marker as variable value
 		// is cheating, but works well.
-		m, _, _, _, _, value, _, _ := MatchVarassign(mkline.raw[0].orignl)
+		m, _, _, _, _, _, value, _, _ := MatchVarassign(mkline.raw[0].orignl)
 		continuation = m && value == "\\"
 	}
 

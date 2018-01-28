@@ -898,9 +898,8 @@ func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
 }
 
 // Commented-out variables take part in the realignment.
-// Care is taken of continuation lines since the CONFIGURE_ENV value
-// below looks like a Makefile variable definition but is not.
-// Therefore it must be skipped.
+// The TZ=UTC below is part of the two-line comment since make(1)
+// interprets it in the same way.
 func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -909,17 +908,44 @@ func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 		"#CONTINUATION= \\",
 		"#\t\tcontinued",
 		"#CONFIGURE_ENV+= \\",
-		"# TZ=UTC",
+		"#TZ=UTC",
 		"SHORT=\tvalue")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:3--4: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:7: This variable value should be aligned to column 17.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:7: Replacing \"\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"SHORT=          value",
+		"#DISTFILES=     distfile-1.0.0.tar.gz",
+		"#CONTINUATION=  \\",
+		"#               continued",
+		"#CONFIGURE_ENV+= \\",
+		"#TZ=UTC",
+		"SHORT=          value")
+	vt.Run()
+}
+
+func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"BEFORE=\tvalue",
+		"#COMMENTED= \\",
+		"#\tvalue1 \\",
+		"#\tvalue2 \\",
+		"#\tvalue3 \\",
+		"AFTER=\tafter") // This line continues the comment.
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
-		"SHORT=  value", // TODO: align with #DISTFILES
-		"#DISTFILES=     distfile-1.0.0.tar.gz",
-		"#CONTINUATION= \\",
-		"#               continued",
-		"#CONFIGURE_ENV+= \\",
-		"# TZ=UTC",
-		"SHORT=  value") // TODO: align with #DISTFILES
+		"BEFORE= value",
+		"#COMMENTED= \\",
+		"#       value1 \\",
+		"#       value2 \\",
+		"#       value3 \\",
+		"AFTER=  after")
 	vt.Run()
 }

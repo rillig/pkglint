@@ -1,5 +1,3 @@
-Align commented variable assignments
-
 In some continuation lines, the continuation backslashes are right-aligned in column 72.
 If they are before, they must also be like that afterwards.
 

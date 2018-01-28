@@ -750,38 +750,46 @@ func (s *Suite) Test_MkLine_ConditionVars(c *check.C) {
 func (s *Suite) Test_MatchVarassign(c *check.C) {
 	s.Init(c)
 
-	checkVarassign := func(text string, ck check.Checker, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
+	checkVarassign := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
 		type VarAssign struct {
+			commented                                                              bool
 			varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string
 		}
-		expected := VarAssign{varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment}
-		am, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment := MatchVarassign(text)
+		expected := VarAssign{commented, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment}
+		am, acommented, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment := MatchVarassign(text)
 		if !am {
 			c.Errorf("Text %q doesn't match variable assignment", text)
 			return
 		}
-		actual := VarAssign{avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment}
-		c.Check(actual, ck, expected)
+		actual := VarAssign{acommented, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment}
+		c.Check(actual, equals, expected)
 	}
 	checkNotVarassign := func(text string) {
-		m, _, _, _, _, _, _, _ := MatchVarassign(text)
+		m, _, _, _, _, _, _, _, _ := MatchVarassign(text)
 		if m {
 			c.Errorf("Text %q matches variable assignment, but shouldn't.", text)
 		}
 	}
 
-	checkVarassign("C++=c11", equals, "C+", "", "+=", "C++=", "c11", "", "")
-	checkVarassign("V=v", equals, "V", "", "=", "V=", "v", "", "")
-	checkVarassign("VAR=#comment", equals, "VAR", "", "=", "VAR=", "", "", "#comment")
-	checkVarassign("VAR=\\#comment", equals, "VAR", "", "=", "VAR=", "#comment", "", "")
-	checkVarassign("VAR=\\\\\\##comment", equals, "VAR", "", "=", "VAR=", "\\\\#", "", "#comment")
-	checkVarassign("VAR=\\", equals, "VAR", "", "=", "VAR=", "\\", "", "")
-	checkVarassign("VAR += value", equals, "VAR", " ", "+=", "VAR += ", "value", "", "")
-	checkVarassign(" VAR=value", equals, "VAR", "", "=", " VAR=", "value", "", "")
-	checkVarassign("VAR=value #comment", equals, "VAR", "", "=", "VAR=", "value", " ", "#comment")
+	checkVarassign("C++=c11", false, "C+", "", "+=", "C++=", "c11", "", "")
+	checkVarassign("V=v", false, "V", "", "=", "V=", "v", "", "")
+	checkVarassign("VAR=#comment", false, "VAR", "", "=", "VAR=", "", "", "#comment")
+	checkVarassign("VAR=\\#comment", false, "VAR", "", "=", "VAR=", "#comment", "", "")
+	checkVarassign("VAR=\\\\\\##comment", false, "VAR", "", "=", "VAR=", "\\\\#", "", "#comment")
+	checkVarassign("VAR=\\", false, "VAR", "", "=", "VAR=", "\\", "", "")
+	checkVarassign("VAR += value", false, "VAR", " ", "+=", "VAR += ", "value", "", "")
+	checkVarassign(" VAR=value", false, "VAR", "", "=", " VAR=", "value", "", "")
+	checkVarassign("VAR=value #comment", false, "VAR", "", "=", "VAR=", "value", " ", "#comment")
+	checkVarassign("#VAR=value", true, "VAR", "", "=", "#VAR=", "value", "", "")
+
 	checkNotVarassign("\tVAR=value")
 	checkNotVarassign("?=value")
 	checkNotVarassign("<=value")
+	checkNotVarassign("#")
+
+	// A single space is typically used for writing documentation,
+	// not for commenting out code.
+	checkNotVarassign("# VAR=value")
 }
 
 func (s *Suite) Test_Indentation(c *check.C) {
