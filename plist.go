@@ -30,7 +30,7 @@ func ChecklinesPlist(lines []Line) {
 	}
 
 	ck := &PlistChecker{
-		make(map[string][]*PlistLine),
+		make(map[string]*PlistLine),
 		make(map[string]*PlistLine),
 		"",
 		Once{}}
@@ -38,7 +38,7 @@ func ChecklinesPlist(lines []Line) {
 }
 
 type PlistChecker struct {
-	allFiles  map[string][]*PlistLine
+	allFiles  map[string]*PlistLine
 	allDirs   map[string]*PlistLine
 	lastFname string
 	once      Once
@@ -101,7 +101,9 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 				first == '$',
 				'A' <= first && first <= 'Z',
 				'0' <= first && first <= '9':
-				ck.allFiles[text] = append(ck.allFiles[text], pline)
+				if prev := ck.allFiles[text]; prev == nil || pline.conditional < prev.conditional {
+					ck.allFiles[text] = pline
+				}
 				for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
 					ck.allDirs[dir] = pline
 				}
@@ -114,12 +116,6 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 			}
 
 		}
-	}
-
-	for _, allFiles := range ck.allFiles {
-		sort.SliceStable(allFiles, func(i, j int) bool {
-			return allFiles[i].conditional < allFiles[j].conditional
-		})
 	}
 }
 
@@ -227,14 +223,14 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 		return
 	}
 
-	allFiles := ck.allFiles[text]
-	if pline == allFiles[0] || allFiles[0].conditional != "" {
+	prev := ck.allFiles[text]
+	if prev == pline || prev.conditional != "" {
 		return
 	}
 
 	fix := pline.line.Autofix()
 	fix.Errorf("Duplicate filename %q, already appeared in %s.",
-		text, allFiles[0].line.ReferenceFrom(pline.line))
+		text, prev.line.ReferenceFrom(pline.line))
 	fix.Delete()
 	fix.Apply()
 }
@@ -295,9 +291,9 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 
 	if contains(basename, ".a") || contains(basename, ".so") {
 		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
-			if laLines := ck.allFiles[noext+".la"]; len(laLines) != 0 {
+			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
 				pline.line.Warnf("Redundant library found. The libtool library is in %s.",
-					laLines[0].line.ReferenceFrom(pline.line))
+					laLine.line.ReferenceFrom(pline.line))
 			}
 		}
 	}
