@@ -277,14 +277,25 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 		trace.Stepf("Skipping")
 		va.skip = true
 		return
+	}
 
+	switch {
 	case mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`):
 		// Arguments to procedures do not take part in block alignment.
+		//
+		// Example:
+		// pkgpath := ${PKGPATH}
 		return
 
 	case mkline.Value() == "" && mkline.VarassignComment() == "":
 		// Multiple-inclusion guards usually appear in a block of
 		// their own and therefore do not need alignment.
+		//
+		// Example:
+		// .if !defined(INCLUSION_GUARD_MK)
+		// INCLUSION_GUARD_MK:=
+		// # ...
+		// .endif
 		return
 	}
 

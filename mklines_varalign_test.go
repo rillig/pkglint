@@ -949,3 +949,18 @@ func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
 		"AFTER=  after")
 	vt.Run()
 }
+
+// The HOMEPAGE is completely ignored. Since its value is empty it doesn't
+// need any alignment. Whether it is commented out doesn't matter.
+func (s *Suite) Test_Varalign__realign_variable_without_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"COMMENT=\t\tShort description of the package",
+		"#HOMEPAGE=")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"COMMENT=                Short description of the package",
+		"#HOMEPAGE=")
+	vt.Run()
+}
