@@ -644,6 +644,38 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 		"NOTE: Makefile:3: The :Q operator isn't necessary for ${TOOLS_TAR} here.")
 }
 
+// For some well-known directory variables like WRKDIR, PREFIX, LOCALBASE,
+// the :Q modifier can be safely removed since pkgsrc will never support
+// having special characters in these directory names.
+// For guessed variable types be cautious and don't autofix them.
+func (s *Suite) Test_MkLine_variableNeedsQuoting__only_remove_known(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+	G.globalData.InitVartypes()
+
+	lines := t.SetupFileLinesContinuation("Makefile",
+		MkRcsId,
+		"",
+		"demo: .PHONY",
+		"\t${ECHO} ${WRKSRC:Q}",
+		"\t${ECHO} ${FOODIR:Q}")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	// FIXME: FOODIR should not be autofixed since its type is guessed.
+	t.CheckOutputLines(
+		"NOTE: ~/Makefile:4: The :Q operator isn't necessary for ${WRKSRC} here.",
+		"NOTE: ~/Makefile:5: The :Q operator isn't necessary for ${FOODIR} here.")
+	t.CheckFileLines("Makefile",
+		MkRcsId,
+		"",
+		"demo: .PHONY",
+		"\t${ECHO} ${WRKSRC}",
+		"\t${ECHO} ${FOODIR}")
+}
+
 func (s *Suite) Test_MkLine_Pkgmandir(c *check.C) {
 	t := s.Init(c)
 
