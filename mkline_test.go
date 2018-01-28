@@ -664,16 +664,14 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__only_remove_known(c *check.C) 
 
 	mklines.Check()
 
-	// FIXME: FOODIR should not be autofixed since its type is guessed.
 	t.CheckOutputLines(
-		"NOTE: ~/Makefile:4: The :Q operator isn't necessary for ${WRKSRC} here.",
-		"NOTE: ~/Makefile:5: The :Q operator isn't necessary for ${FOODIR} here.")
+		"AUTOFIX: ~/Makefile:4: Replacing \"${WRKSRC:Q}\" with \"${WRKSRC}\".")
 	t.CheckFileLines("Makefile",
 		MkRcsId,
 		"",
 		"demo: .PHONY",
 		"\t${ECHO} ${WRKSRC}",
-		"\t${ECHO} ${FOODIR}")
+		"\t${ECHO} ${FOODIR:Q}")
 }
 
 func (s *Suite) Test_MkLine_Pkgmandir(c *check.C) {

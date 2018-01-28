@@ -395,6 +395,9 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	if vartype.basicType.IsEnum() || vartype.IsBasicSafe() {
 		if vartype.kindOfList == lkNone {
+			if vartype.guessed {
+				return nqDontKnow
+			}
 			return nqDoesntMatter
 		}
 		if vartype.kindOfList == lkShell && !vuc.IsWordPart {
