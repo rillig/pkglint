@@ -300,28 +300,39 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall", "--autofix")
+	t.SetupCommandLine("-Wall")
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsId,
 		"${PLIST.option1}bin/true",
 		"bin/true",
 		"${PLIST.option1}bin/true",
 		"bin/true",
-		"${PLIST.option2}bin/false",
 		"${PLIST.option3}bin/false",
+		"${PLIST.option2}bin/false",
 		"bin/true")
 
 	ChecklinesPlist(lines)
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/PLIST:3: Deleting this line.", // FIXME: must stay; instead line 2 must go
+		"ERROR: ~/PLIST:2: Duplicate filename \"bin/true\", already appeared in line 3.",
+		"ERROR: ~/PLIST:4: Duplicate filename \"bin/true\", already appeared in line 3.",
+		"ERROR: ~/PLIST:5: Duplicate filename \"bin/true\", already appeared in line 3.",
+		"WARN: ~/PLIST:6: \"bin/false\" should be sorted before \"bin/true\".",
+		"ERROR: ~/PLIST:8: Duplicate filename \"bin/true\", already appeared in line 3.")
+
+	t.SetupCommandLine("-Wall", "--autofix")
+
+	ChecklinesPlist(lines)
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/PLIST:2: Deleting this line.",
 		"AUTOFIX: ~/PLIST:4: Deleting this line.",
 		"AUTOFIX: ~/PLIST:5: Deleting this line.",
-		"AUTOFIX: ~/PLIST:7: Deleting this line.", // FIXME: different conditionals; must stay
 		"AUTOFIX: ~/PLIST:8: Deleting this line.",
 		"AUTOFIX: ~/PLIST:2: Sorting the whole file.")
 	t.CheckFileLines("PLIST",
 		PlistRcsId,
-		"${PLIST.option2}bin/false", // FIXME: both options must stay
-		"${PLIST.option1}bin/true")
+		"${PLIST.option2}bin/false",
+		"${PLIST.option3}bin/false",
+		"bin/true")
 }
