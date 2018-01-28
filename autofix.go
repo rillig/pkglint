@@ -97,7 +97,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 }
 
 func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
-	if fix.skip() || !mkline.IsMultiline() || !mkline.IsVarassign() {
+	if fix.skip() || !mkline.IsMultiline() || !(mkline.IsVarassign() || mkline.IsCommentedVarassign()) {
 		return
 	}
 
@@ -114,9 +114,9 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	}
 
 	for _, rawLine := range fix.lines[1:] {
-		_, space := regex.Match1(rawLine.textnl, `^([ \t]*)`)
-		width := tabWidth(space)
-		if (oldWidth == 0 || width < oldWidth) && rawLine.textnl != "\n" {
+		_, comment, space := regex.Match2(rawLine.textnl, `^(#?)([ \t]*)`)
+		width := tabWidth(comment + space)
+		if (oldWidth == 0 || width < oldWidth) && width >= 8 && rawLine.textnl != "\n" {
 			oldWidth = width
 		}
 		if !regex.Matches(space, `^\t* {0,7}`) {
@@ -136,10 +136,11 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	}
 
 	for _, rawLine := range fix.lines[1:] {
-		_, oldSpace := regex.Match1(rawLine.textnl, `^([ \t]*)`)
+		_, comment, oldSpace := regex.Match2(rawLine.textnl, `^(#?)([ \t]*)`)
 		newWidth := tabWidth(oldSpace) - oldWidth + newWidth
 		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
-		if replaced := strings.Replace(rawLine.textnl, oldSpace, newSpace, 1); replaced != rawLine.textnl {
+		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
+		if replaced != rawLine.textnl {
 			if G.opts.PrintAutofix || G.opts.Autofix {
 				rawLine.textnl = replaced
 			}

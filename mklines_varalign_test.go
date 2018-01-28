@@ -913,10 +913,12 @@ func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:3--4: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:5--6: This line should be aligned with \"\\t\\t\".",
 		"NOTE: ~/Makefile:7: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing indentation \"\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"SHORT=          value",
@@ -924,7 +926,7 @@ func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 		"#CONTINUATION=  \\",
 		"#               continued",
 		"#CONFIGURE_ENV+= \\",
-		"#TZ=UTC",
+		"#               TZ=UTC",
 		"SHORT=          value")
 	vt.Run()
 }
@@ -962,5 +964,20 @@ func (s *Suite) Test_Varalign__realign_variable_without_value(c *check.C) {
 	vt.Fixed(
 		"COMMENT=                Short description of the package",
 		"#HOMEPAGE=")
+	vt.Run()
+}
+
+// This commented multiline variable is already perfectly aligned.
+// Nothing needs to be fixed.
+func (s *Suite) Test_Varalign__realign_commented_multiline(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"#CONF_FILES+=\t\tfile1 \\",
+		"#\t\t\tfile2")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"#CONF_FILES+=           file1 \\",
+		"#                       file2")
 	vt.Run()
 }
