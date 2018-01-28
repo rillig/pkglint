@@ -292,3 +292,36 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"@pkgdir        etc/logrotate.d",
 		"@pkgdir        etc/sasl2")
 }
+
+// When the same entry appears both with and without a conditional,
+// the one with the conditional can be removed.
+// When the same entry appears with several different conditionals,
+// all of them must stay.
+func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--autofix")
+	lines := t.SetupFileLines("PLIST",
+		PlistRcsId,
+		"${PLIST.option1}bin/true",
+		"bin/true",
+		"${PLIST.option1}bin/true",
+		"bin/true",
+		"${PLIST.option2}bin/false",
+		"${PLIST.option3}bin/false",
+		"bin/true")
+
+	ChecklinesPlist(lines)
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/PLIST:3: Deleting this line.", // FIXME: must stay; instead line 2 must go
+		"AUTOFIX: ~/PLIST:4: Deleting this line.",
+		"AUTOFIX: ~/PLIST:5: Deleting this line.",
+		"AUTOFIX: ~/PLIST:7: Deleting this line.", // FIXME: different conditionals; must stay
+		"AUTOFIX: ~/PLIST:8: Deleting this line.",
+		"AUTOFIX: ~/PLIST:2: Sorting the whole file.")
+	t.CheckFileLines("PLIST",
+		PlistRcsId,
+		"${PLIST.option2}bin/false", // FIXME: both options must stay
+		"${PLIST.option1}bin/true")
+}
