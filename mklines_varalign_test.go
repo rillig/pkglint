@@ -896,3 +896,30 @@ func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
 		"NEXT_VAR=       must not be indented")
 	vt.Run()
 }
+
+// Commented-out variables take part in the realignment.
+// Care is taken of continuation lines since the CONFIGURE_ENV value
+// below looks like a Makefile variable definition but is not.
+// Therefore it must be skipped.
+func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SHORT=\tvalue",
+		"#DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"#CONTINUATION= \\",
+		"#\t\tcontinued",
+		"#CONFIGURE_ENV+= \\",
+		"# TZ=UTC",
+		"SHORT=\tvalue")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"SHORT=  value", // TODO: align with #DISTFILES
+		"#DISTFILES=     distfile-1.0.0.tar.gz",
+		"#CONTINUATION= \\",
+		"#               continued",
+		"#CONFIGURE_ENV+= \\",
+		"# TZ=UTC",
+		"SHORT=  value") // TODO: align with #DISTFILES
+	vt.Run()
+}
