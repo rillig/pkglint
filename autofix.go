@@ -62,18 +62,35 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 	}
 }
 
-func (fix *Autofix) ReplaceRegex(from regex.Pattern, to string) {
+// ReplaceRegex replaces the first or all occurrences of the `from` pattern
+// with the fixed string `toText`. Placeholders like `$1` are _not_ expanded.
+// (If you know how to do the expansion correctly, feel free to implement it.)
+func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int) {
 	if fix.skip() {
 		return
 	}
 
+	done := 0
 	for _, rawLine := range fix.lines {
 		if rawLine.Lineno != 0 {
-			if replaced := regex.Compile(from).ReplaceAllString(rawLine.textnl, to); replaced != rawLine.textnl {
+			var froms []string // The strings that have actually changed
+
+			replace := func(fromText string) string {
+				if howOften >= 0 && done >= howOften {
+					return fromText
+				}
+				froms = append(froms, fromText)
+				done++
+				return toText
+			}
+
+			if replaced := regex.Compile(from).ReplaceAllStringFunc(rawLine.textnl, replace); replaced != rawLine.textnl {
 				if G.opts.PrintAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
-				fix.Describef(rawLine.Lineno, "Replacing regular expression %q with %q.", from, to)
+				for _, fromText := range froms {
+					fix.Describef(rawLine.Lineno, "Replacing %q with %q.", fromText, toText)
+				}
 			}
 		}
 	}

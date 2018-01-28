@@ -343,14 +343,13 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation_autofix(c *check.C)
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/options.mk:3: Replacing \".\" with \".  \".",
-		"AUTOFIX: ~/options.mk:4: Replacing \".\" with \".  \".",
 		"AUTOFIX: ~/options.mk:5: Replacing \".\" with \".  \".")
 
 	t.CheckFileLines("options.mk",
 		MkRcsId,
 		".if ${PKGNAME} == pkgname",
 		".  if \\",
-		"   ${PLATFORM:MNetBSD-4.  *}", // FIXME
+		"   ${PLATFORM:MNetBSD-4.*}",
 		".  endif",
 		".endif")
 }
