@@ -149,6 +149,8 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	}
 }
 
+// InsertBefore prepends a line before the current line.
+// The newline is added internally.
 func (fix *Autofix) InsertBefore(text string) {
 	if fix.skip() {
 		return
@@ -158,6 +160,8 @@ func (fix *Autofix) InsertBefore(text string) {
 	fix.Describef(fix.lines[0].Lineno, "Inserting a line %q before this line.", text)
 }
 
+// InsertBefore appends a line after the current line.
+// The newline is added internally.
 func (fix *Autofix) InsertAfter(text string) {
 	if fix.skip() {
 		return
