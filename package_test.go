@@ -30,6 +30,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
 		MkRcsId,
 		"",
+		"GITHUB_PROJECT=project",
 		"DISTNAME=9term",
 		"CATEGORIES=x11"))
 
