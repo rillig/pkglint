@@ -529,24 +529,31 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 	} else if needsQuoting == nqYes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
-			mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
-			Explain(
-				"When a list variable has multiple elements, this expression expands",
-				"to something unexpected:",
-				"",
-				"Example: ${MASTER_SITE_SOURCEFORGE}directory/ expands to",
-				"",
-				"\thttps://mirror1.sf.net/ https://mirror2.sf.net/directory/",
-				"",
-				"The first URL is missing the directory.  To fix this, write",
-				"\t${MASTER_SITE_SOURCEFORGE:=directory/}.",
-				"",
-				"Example: -l${LIBS} expands to",
-				"",
-				"\t-llib1 lib2",
-				"",
-				"The second library is missing the -l.  To fix this, write",
-				"${LIBS:@lib@-l${lib}@}.")
+			if vartype.IsConsideredList() {
+				mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
+				Explain(
+					"When a list variable has multiple elements, this expression expands",
+					"to something unexpected:",
+					"",
+					"Example: ${MASTER_SITE_SOURCEFORGE}directory/ expands to",
+					"",
+					"\thttps://mirror1.sf.net/ https://mirror2.sf.net/directory/",
+					"",
+					"The first URL is missing the directory.  To fix this, write",
+					"\t${MASTER_SITE_SOURCEFORGE:=directory/}.",
+					"",
+					"Example: -l${LIBS} expands to",
+					"",
+					"\t-llib1 lib2",
+					"",
+					"The second library is missing the -l.  To fix this, write",
+					"${LIBS:@lib@-l${lib}@}.")
+			} else {
+				mkline.Warnf("The variable %s should be quoted as part of a shell word.", varname)
+				Explain(
+					"This variable can contain spaces or other special characters.",
+					"Therefore it should be quoted by replacing ${VAR} with ${VAR:Q}.")
+			}
 
 		} else if mod != correctMod {
 			if vuc.quoting == vucQuotPlain {

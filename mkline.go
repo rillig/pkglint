@@ -431,18 +431,18 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		return nqNo
 	}
 
-	// Determine whether the context expects a list of shell words or not.
-	wantList := vuc.vartype.IsConsideredList()
-	haveList := vartype.IsConsideredList()
-	if trace.Tracing {
-		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
-	}
-
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.IsWordPart && vuc.quoting == vucQuotPlain {
 		if vartype.kindOfList == lkNone && vartype.basicType == BtShellWord {
 			return nqNo
 		}
+	}
+
+	// Determine whether the context expects a list of shell words or not.
+	wantList := vuc.vartype.IsConsideredList()
+	haveList := vartype.IsConsideredList()
+	if trace.Tracing {
+		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
 	}
 
 	// Both of these can be correct, depending on the situation:

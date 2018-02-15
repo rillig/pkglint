@@ -590,7 +590,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__guessed_list_variable_in_quote
 	G.Mk.Check()
 
 	t.CheckOutputLines(
-		"WARN: audio/jack-rack/Makefile:3: The list variable LADSPA_PLUGIN_PATH should not be embedded in a word.")
+		"WARN: audio/jack-rack/Makefile:3: The variable LADSPA_PLUGIN_PATH should be quoted as part of a shell word.")
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__list_in_list(c *check.C) {

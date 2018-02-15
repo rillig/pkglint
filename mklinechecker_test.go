@@ -368,7 +368,13 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: PATH is not a list variable.
+	// For WRKSRC and GOPATH, no quoting is necessary since pkgsrc directories by
+	// definition don't contain special characters. Therefore they don't need the
+	// :Q, not even when used as part of a shell word.
+
+	// For PATH, the quoting is necessary because it may contain directories outside
+	// of pkgsrc, and these may contain special characters.
+
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:4: The list variable PATH should not be embedded in a word.")
+		"WARN: ~/options.mk:4: The variable PATH should be quoted as part of a shell word.")
 }
