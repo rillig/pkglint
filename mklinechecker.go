@@ -502,6 +502,8 @@ func (ck MkLineChecker) checkVaruseFor(varname string, vartype *Vartype, needsQu
 	}
 }
 
+// CheckVaruseShellword checks whether a variable use of the form ${VAR}
+// or ${VAR:Modifier} is allowed in a certain context.
 func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, mod, needsQuoting)()

@@ -353,3 +353,23 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation_autofix(c *check.C)
 		".  endif",
 		".endif")
 }
+
+func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	G.globalData.InitVartypes()
+	lines := t.SetupFileLinesContinuation("options.mk",
+		MkRcsId,
+		"GOPATH=\t${WRKDIR}",
+		"do-build:",
+		"\tcd ${WRKSRC} && GOPATH=${GOPATH} PATH=${PATH} :")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	// FIXME: PATH and GOPATH are no list variables.
+	t.CheckOutputLines(
+		"WARN: ~/options.mk:4: The list variable GOPATH should not be embedded in a word.",
+		"WARN: ~/options.mk:4: The list variable PATH should not be embedded in a word.")
+}
