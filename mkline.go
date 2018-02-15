@@ -203,14 +203,33 @@ func (mkline *MkLineImpl) IsDependency() bool {
 	return ok
 }
 
-func (mkline *MkLineImpl) Varname() string  { return mkline.data.(mkLineAssign).varname }
+// Varname applies to variable assignments and returns the variable name, exactly as given in the Makefile.
+func (mkline *MkLineImpl) Varname() string { return mkline.data.(mkLineAssign).varname }
+
+// Varcanon applies to variable assignments and returns the canonicalized variable name for parameterized variables.
+// Examples:
+//  HOMEPAGE           => HOMEPAGE
+//  SUBST_SED.anything => SUBST_SED.*
 func (mkline *MkLineImpl) Varcanon() string { return mkline.data.(mkLineAssign).varcanon }
+
+// Varparam applies to variable assignments and returns the parameter for parameterized variables.
+// Examples:
+//  HOMEPAGE           => ""
+//  SUBST_SED.anything => anything
 func (mkline *MkLineImpl) Varparam() string { return mkline.data.(mkLineAssign).varparam }
-func (mkline *MkLineImpl) Op() MkOperator   { return mkline.data.(mkLineAssign).op }
+
+// Op applies to variable assignments and returns the assignment operator.
+func (mkline *MkLineImpl) Op() MkOperator { return mkline.data.(mkLineAssign).op }
 
 // For a variable assignment, the text up to and including the assignment operator, e.g. VARNAME+=\t
-func (mkline *MkLineImpl) ValueAlign() string       { return mkline.data.(mkLineAssign).valueAlign }
-func (mkline *MkLineImpl) Value() string            { return mkline.data.(mkLineAssign).value }
+func (mkline *MkLineImpl) ValueAlign() string { return mkline.data.(mkLineAssign).valueAlign }
+func (mkline *MkLineImpl) Value() string      { return mkline.data.(mkLineAssign).value }
+
+// VarassignComment applies to variable assignments and returns the comment.
+// Example:
+//  VAR=value # comment
+// In the above line, the comment is "# comment".
+// The leading "#" is included so that pkglint can distinguish between no comment at all and an empty comment.
 func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
 func (mkline *MkLineImpl) Shellcmd() string         { return mkline.data.(mkLineShell).command }
 func (mkline *MkLineImpl) Indent() string {

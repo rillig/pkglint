@@ -27,7 +27,11 @@ type Suite struct {
 }
 
 // Init initializes the suite with the check.C instance for the actual
-// test run. See https://github.com/go-check/check/issues/22
+// test run.
+// The returned tester can be used to easily setup the test environment
+// and check the results using a high-level API.
+//
+// See https://github.com/go-check/check/issues/22
 func (s *Suite) Init(c *check.C) *Tester {
 	t := s.Tester // Has been initialized by SetUpTest
 	if t.checkC != nil {

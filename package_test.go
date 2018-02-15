@@ -49,6 +49,24 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 		"WARN: Makefile:6: The canonical position for the required variable LICENSE is here.")
 }
 
+func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder_GitHub(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Worder")
+	pkg := NewPackage("x11/9term")
+
+	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+		MkRcsId,
+		"",
+		"DISTNAME=\t\tautocutsel-0.10.0",
+		"CATEGORIES=\t\tx11",
+		"MASTER_SITES=\t\t${MASTER_SITE_GITHUB:=sigmike/}",
+		"GITHUB_PROJECT=\t\tautocutsel",
+		"GITHUB_TAG=\t\t${PKGVERSION_NOREV}"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_varorder_license(c *check.C) {
 	t := s.Init(c)
 

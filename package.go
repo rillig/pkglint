@@ -597,98 +597,78 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 		return
 	}
 
-	type OccCount uint8
+	type Repetition uint8
 	const (
-		once OccCount = iota
-		optional
+		optional Repetition = iota
+		once
 		many
 	)
-	type OccDef struct {
-		varname string
-		count   OccCount
+	type Variable struct {
+		varname    string
+		repetition Repetition
 	}
-	type OccGroup struct {
-		name  string
-		count OccCount
-		occ   []OccDef
+	type Section struct {
+		repetition Repetition
+		vars       []Variable
+	}
+	variable := func(name string, repetition Repetition) Variable { return Variable{name, repetition} }
+	section := func(repetition Repetition, vars ...Variable) Section { return Section{repetition, vars} }
+
+	var sections = []Section{
+		section(once), // Comments
+		section(once,
+			variable("GITHUB_PROJECT", optional), // either here or below MASTER_SITES
+			variable("GITHUB_TAG", optional),
+			variable("DISTNAME", optional),
+			variable("PKGNAME", optional),
+			variable("PKGREVISION", optional),
+			variable("CATEGORIES", once),
+			variable("MASTER_SITES", many),
+			variable("GITHUB_PROJECT", optional),
+			variable("GITHUB_TAG", optional),
+			variable("DIST_SUBDIR", optional),
+			variable("EXTRACT_SUFX", optional),
+			variable("DISTFILES", many),
+			variable("SITES.*", many)),
+		section(optional,
+			variable("PATCH_SITES", optional), // or once?
+			variable("PATCH_SITE_SUBDIR", optional),
+			variable("PATCHFILES", optional), // or once?
+			variable("PATCH_DIST_ARGS", optional),
+			variable("PATCH_DIST_STRIP", optional),
+			variable("PATCH_DIST_CAT", optional)),
+		section(once,
+			variable("MAINTAINER", optional),
+			variable("OWNER", optional),
+			variable("HOMEPAGE", optional),
+			variable("COMMENT", once),
+			variable("LICENSE", once)),
+		section(optional,
+			variable("LICENSE_FILE", optional),
+			variable("RESTRICTED", optional),
+			variable("NO_BIN_ON_CDROM", optional),
+			variable("NO_BIN_ON_FTP", optional),
+			variable("NO_SRC_ON_CDROM", optional),
+			variable("NO_SRC_ON_FTP", optional)),
+		section(optional,
+			variable("BROKEN_EXCEPT_ON_PLATFORM", many),
+			variable("BROKEN_ON_PLATFORM", many),
+			variable("NOT_FOR_PLATFORM", many),
+			variable("ONLY_FOR_PLATFORM", many),
+			variable("NOT_FOR_COMPILER", many),
+			variable("ONLY_FOR_COMPILER", many),
+			variable("NOT_FOR_UNPRIVILEGED", optional),
+			variable("ONLY_FOR_UNPRIVILEGED", optional)),
+		section(optional,
+			variable("BUILD_DEPENDS", many),
+			variable("TOOL_DEPENDS", many),
+			variable("DEPENDS", many)),
 	}
 
-	var sections = []OccGroup{
-		{"Initial comments", once,
-			[]OccDef{},
-		},
-		{"Unsorted stuff, part 1", once,
-			[]OccDef{
-				{"GITHUB_PROJECT", optional},
-				{"GITHUB_TAG", optional},
-				{"DISTNAME", optional},
-				{"PKGNAME", optional},
-				{"PKGREVISION", optional},
-				{"CATEGORIES", once},
-				{"MASTER_SITES", many},
-				{"GITHUB_PROJECT", optional},
-				{"GITHUB_TAG", optional},
-				{"DIST_SUBDIR", optional},
-				{"EXTRACT_SUFX", optional},
-				{"DISTFILES", many},
-				{"SITES.*", many},
-			},
-		},
-		{"Distribution patches", optional,
-			[]OccDef{
-				{"PATCH_SITES", optional}, // or once?
-				{"PATCH_SITE_SUBDIR", optional},
-				{"PATCHFILES", optional}, // or once?
-				{"PATCH_DIST_ARGS", optional},
-				{"PATCH_DIST_STRIP", optional},
-				{"PATCH_DIST_CAT", optional},
-			},
-		},
-		{"Unsorted stuff, part 2", once,
-			[]OccDef{
-				{"MAINTAINER", optional},
-				{"OWNER", optional},
-				{"HOMEPAGE", optional},
-				{"COMMENT", once},
-				{"LICENSE", once},
-			},
-		},
-		{"Legal issues", optional,
-			[]OccDef{
-				{"LICENSE_FILE", optional},
-				{"RESTRICTED", optional},
-				{"NO_BIN_ON_CDROM", optional},
-				{"NO_BIN_ON_FTP", optional},
-				{"NO_SRC_ON_CDROM", optional},
-				{"NO_SRC_ON_FTP", optional},
-			},
-		},
-		{"Technical restrictions", optional,
-			[]OccDef{
-				{"BROKEN_EXCEPT_ON_PLATFORM", many},
-				{"BROKEN_ON_PLATFORM", many},
-				{"NOT_FOR_PLATFORM", many},
-				{"ONLY_FOR_PLATFORM", many},
-				{"NOT_FOR_COMPILER", many},
-				{"ONLY_FOR_COMPILER", many},
-				{"NOT_FOR_UNPRIVILEGED", optional},
-				{"ONLY_FOR_UNPRIVILEGED", optional},
-			},
-		},
-		{"Dependencies", optional,
-			[]OccDef{
-				{"BUILD_DEPENDS", many},
-				{"TOOL_DEPENDS", many},
-				{"DEPENDS", many},
-			},
-		},
-	}
-
-	lineno := 0
-	sectindex := -1
-	varindex := 0
+	lineIndex := 0
+	sectionIndex := -1
 	nextSection := true
-	var vars []OccDef
+	var vars []Variable // Remaining variables in the current section
 	below := make(map[string]string)
 	var belowWhat string
 
@@ -698,78 +678,82 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 	maySkipSection := false
 
 	// In each iteration, one of the following becomes true:
-	// - new lineno > old lineno
-	// - new sectindex > old sectindex
-	// - new sectindex == old sectindex && new varindex > old varindex
+	// - new lineIndex > old lineIndex
+	// - new sectionIndex > old sectionIndex
+	// - new sectionIndex == old sectionIndex && new len(vars) > old len(vars)
 	// - new nextSection == true && old nextSection == false
-	for lineno < len(mklines.lines) {
-		mkline := mklines.mklines[lineno]
-		line := mklines.lines[lineno]
-		text := line.Text
+	for lineIndex < len(mklines.lines) {
+		mkline := mklines.mklines[lineIndex]
+		line := mklines.lines[lineIndex]
 
 		if trace.Tracing {
-			trace.Stepf("[varorder] section %d variable %d vars %v", sectindex, varindex, vars)
+			varname := "(none)"
+			if mkline.IsVarassign() {
+				varname = mkline.Varname()
+			}
+			trace.Stepf("[varorder] line %s varname %s section %d vars %v",
+				line.Linenos(), varname, sectionIndex, vars)
 		}
 
 		if nextSection {
 			nextSection = false
-			sectindex++
-			if !(sectindex < len(sections)) {
+			sectionIndex++
+			if !(sectionIndex < len(sections)) {
 				break
 			}
-			vars = sections[sectindex].occ
-			maySkipSection = sections[sectindex].count == optional
-			varindex = 0
+			vars = sections[sectionIndex].vars
+			maySkipSection = sections[sectionIndex].repetition == optional
 		}
 
 		switch {
-		case hasPrefix(text, "#"):
-			lineno++
+		case hasPrefix(line.Text, "#"):
+			lineIndex++
 
 		case mkline.IsVarassign():
 			varcanon := mkline.Varcanon()
 
-			if belowText, exists := below[varcanon]; exists {
+			for len(vars) > 0 && varcanon != vars[0].varname && (vars[0].repetition != once || maySkipSection) {
+				if vars[0].repetition == once {
+					maySkipSection = false
+				}
+				below[vars[0].varname] = belowWhat
+				vars = vars[1:]
+			}
+
+			if belowText, exists := below[varcanon]; exists && !(len(vars) > 0 && varcanon == vars[0].varname) {
 				if belowText != "" {
 					line.Warnf("%s appears too late. Please put it below %s.", varcanon, belowText)
 				} else {
 					line.Warnf("%s appears too late. It should be the very first definition.", varcanon)
 				}
-				lineno++
+				lineIndex++
 				continue
 			}
 
-			for varindex < len(vars) && varcanon != vars[varindex].varname && (vars[varindex].count != once || maySkipSection) {
-				if vars[varindex].count == once {
-					maySkipSection = false
-				}
-				below[vars[varindex].varname] = belowWhat
-				varindex++
-			}
 			switch {
-			case !(varindex < len(vars)):
-				if sections[sectindex].count != optional {
+			case len(vars) == 0:
+				if sections[sectionIndex].repetition != optional {
 					line.Warnf("Empty line expected.")
 				}
 				nextSection = true
 
-			case varcanon != vars[varindex].varname:
-				line.Warnf("Expected %s, but found %s.", vars[varindex].varname, varcanon)
-				lineno++
+			case varcanon != vars[0].varname:
+				line.Warnf("Expected %s, but found %s.", vars[0].varname, varcanon)
+				lineIndex++
 
 			default:
-				if vars[varindex].count != many {
-					below[vars[varindex].varname] = belowWhat
-					varindex++
+				if vars[0].repetition != many {
+					below[vars[0].varname] = belowWhat
+					vars = vars[1:]
 				}
-				lineno++
+				lineIndex++
 			}
 			belowWhat = varcanon
 
 		default:
-			for varindex < len(vars) {
-				varname := vars[varindex].varname
-				if vars[varindex].count == once && !maySkipSection {
+			for len(vars) > 0 {
+				varname := vars[0].varname
+				if vars[0].repetition == once && !maySkipSection {
 					if varname != "LICENSE" || pkg.once.FirstTime("LICENSE") {
 						line.Warnf("The canonical position for the required variable %s is here.", varname)
 						Explain(
@@ -781,12 +765,12 @@ func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
 					}
 				}
 				below[varname] = belowWhat
-				varindex++
+				vars = vars[1:]
 			}
 			nextSection = true
-			if text == "" {
+			if line.Text == "" {
 				belowWhat = "the previous empty line"
-				lineno++
+				lineIndex++
 			}
 		}
 	}
