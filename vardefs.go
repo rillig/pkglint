@@ -585,6 +585,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkg("GNU_CONFIGURE_LIBSUBDIR", lkNone, BtPathname)
 	acl("GNU_CONFIGURE_MANDIR", lkNone, BtPathname, "Makefile, Makefile.common: set")
 	acl("GNU_CONFIGURE_PREFIX", lkNone, BtPathname, "Makefile: set")
+	pkg("GOPATH", lkNone, BtPathname)
 	acl("HAS_CONFIGURE", lkNone, BtYes, "Makefile, Makefile.common: set")
 	pkglist("HEADER_TEMPLATES", lkShell, BtPathname)
 	pkg("HOMEPAGE", lkNone, BtHomepage)

@@ -368,8 +368,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: PATH and GOPATH are no list variables.
+	// FIXME: PATH is not a list variable.
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:4: The list variable GOPATH should not be embedded in a word.",
 		"WARN: ~/options.mk:4: The list variable PATH should not be embedded in a word.")
 }
