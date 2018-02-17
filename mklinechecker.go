@@ -166,7 +166,7 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 				}
 			}
 
-			forLoopType := &Vartype{lkSpace, BtUnknown, []AclEntry{{"*", aclpAllRead}}, guessed}
+			forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, guessed}
 			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
 			for _, forLoopVar := range mkline.ExtractUsedVariables(values) {
 				ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
@@ -256,7 +256,7 @@ func (ck MkLineChecker) checkVarassignDefPermissions() {
 	}
 
 	perms := vartype.EffectivePermissions(mkline.Filename)
-	var needed AclPermissions
+	var needed ACLPermissions
 	switch op {
 	case opAssign, opAssignShell, opAssignEval:
 		needed = aclpSet

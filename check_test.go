@@ -18,9 +18,9 @@ import (
 var equals = check.Equals
 var deepEquals = check.DeepEquals
 
-const RcsId = "$" + "NetBSD$"
-const MkRcsId = "# $" + "NetBSD$"
-const PlistRcsId = "@comment $" + "NetBSD$"
+const RcsID = "$" + "NetBSD$"
+const MkRcsID = "# $" + "NetBSD$"
+const PlistRcsID = "@comment $" + "NetBSD$"
 
 type Suite struct {
 	Tester *Tester

@@ -28,7 +28,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 	pkg := NewPackage("x11/9term")
 
 	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"GITHUB_PROJECT=project",
 		"DISTNAME=9term",
@@ -37,7 +37,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 	t.CheckOutputEmpty()
 
 	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"DISTNAME=9term",
 		"CATEGORIES=x11",
@@ -56,7 +56,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder_GitHub(c *check.C
 	pkg := NewPackage("x11/9term")
 
 	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"DISTNAME=\t\tautocutsel-0.10.0",
 		"CATEGORIES=\t\tx11",
@@ -73,11 +73,11 @@ func (s *Suite) Test_Package_varorder_license(c *check.C) {
 	t.SetupCommandLine("-Worder")
 
 	t.CreateFileLines("mk/bsd.pkg.mk", "# dummy")
-	t.CreateFileLines("x11/Makefile", MkRcsId)
-	t.CreateFileLines("x11/9term/PLIST", PlistRcsId, "bin/9term")
-	t.CreateFileLines("x11/9term/distinfo", RcsId)
+	t.CreateFileLines("x11/Makefile", MkRcsID)
+	t.CreateFileLines("x11/9term/PLIST", PlistRcsID, "bin/9term")
+	t.CreateFileLines("x11/9term/distinfo", RcsID)
 	t.CreateFileLines("x11/9term/Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"DISTNAME=9term-1.0",
 		"CATEGORIES=x11",
@@ -105,7 +105,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__MASTER_SITES(c *
 	pkg := NewPackage("category/package")
 
 	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"PKGNAME=\tpackage-1.0",
 		"CATEGORIES=\tcategory",
@@ -179,7 +179,7 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("Makefile",
-		MkRcsId)
+		MkRcsID)
 	G.CurrentDir = t.TmpDir()
 
 	checkdirPackage(t.TmpDir())
@@ -195,7 +195,7 @@ func (s *Suite) Test_checkdirPackage__meta_package_without_license(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"META_PACKAGE=\tyes")
 	G.CurrentDir = t.TmpDir()
@@ -235,7 +235,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 		"# dummy")
 
 	t.CreateFileLines("category/pkgbase/Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"COMMENT= Unit test",
 		"LICENSE= bsd-2",
@@ -260,7 +260,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 	t.CreateFileLines("category/pkgbase/distinfo",
-		RcsId)
+		RcsID)
 
 	(&Pkglint{}).Main("pkglint", "-q", "-Wperm", t.TmpDir()+"/category/pkgbase")
 
@@ -275,7 +275,7 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("category/package/Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"PKGNAME=pkgname-1.67",
 		"DISTNAME=distfile_1_67",
@@ -297,7 +297,7 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 
 	G.globalData.InitVartypes()
 	t.CreateFileLines("category/package/Makefile",
-		MkRcsId,
+		MkRcsID,
 		"",
 		"COMMENT\t=Description",
 		"LICENSE\t= gnu-gpl-v2",
@@ -307,17 +307,17 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 		".endif",
 		".include \"../../mk/bsd.pkg.mk\"")
 	t.CreateFileLines("category/package/options.mk",
-		MkRcsId,
+		MkRcsID,
 		"",
 		".if !empty(PKG_OPTIONS:Mzlib)",
 		".  include \"../../devel/zlib/buildlink3.mk\"",
 		".endif",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"")
 	t.CreateFileLines("category/package/PLIST",
-		PlistRcsId,
+		PlistRcsID,
 		"bin/program")
 	t.CreateFileLines("category/package/distinfo",
-		RcsId)
+		RcsID)
 
 	t.CreateFileLines("devel/zlib/buildlink3.mk", "")
 	t.CreateFileLines("licenses/gnu-gpl-v2", "")

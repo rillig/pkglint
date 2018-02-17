@@ -537,15 +537,15 @@ func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 				perms |= aclpUseLoadtime
 			}
 		}
-		return &Vartype{lkNone, BtShellCommand, []AclEntry{{"*", perms}}, false}
+		return &Vartype{lkNone, BtShellCommand, []ACLEntry{{"*", perms}}, false}
 	}
 
 	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.Tools.byVarname[toolvarname] != nil {
-		return &Vartype{lkNone, BtPathname, []AclEntry{{"*", aclpUse}}, false}
+		return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
 	}
 
-	allowAll := []AclEntry{{"*", aclpAll}}
-	allowRuntime := []AclEntry{{"*", aclpAllRuntime}}
+	allowAll := []ACLEntry{{"*", aclpAll}}
+	allowRuntime := []ACLEntry{{"*", aclpAllRuntime}}
 
 	// Guess the datatype of the variable based on naming conventions.
 	varbase := varnameBase(varname)

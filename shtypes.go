@@ -56,9 +56,9 @@ func (token *ShAtom) String() string {
 }
 
 // Returns nil for plain shell tokens.
-func (atom *ShAtom) VarUse() *MkVarUse {
-	if atom.Type == shtVaruse {
-		return atom.Data.(*MkVarUse)
+func (token *ShAtom) VarUse() *MkVarUse {
+	if token.Type == shtVaruse {
+		return token.Data.(*MkVarUse)
 	}
 	return nil
 }
