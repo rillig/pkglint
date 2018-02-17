@@ -654,7 +654,6 @@ func (mkline *MkLineImpl) DetermineUsedVariables() (varnames []string) {
 		varnames = append(varnames, varname)
 		rest = rest[:m[0]] + rest[m[1]:]
 	}
-	return
 }
 
 // VarUseContext defines the context in which a variable is defined

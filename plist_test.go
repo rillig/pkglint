@@ -167,24 +167,6 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"@exec echo \"after lib/after.la\"") // The footer starts here
 }
 
-func (s *Suite) Test_PlistChecker_checkpathShare_Desktop(c *check.C) {
-	// Disabled due to PR 46570, item "10. It should stop".
-	return
-
-	t := s.Init(c)
-
-	t.SetupCommandLine("-Wextra")
-	G.Pkg = NewPackage("category/pkgpath")
-
-	ChecklinesPlist(t.NewLines("PLIST",
-		PlistRcsId,
-		"share/applications/pkgbase.desktop"))
-
-	t.CheckOutputLines(
-		"WARN: PLIST:2: Packages that install a .desktop entry " +
-			"should .include \"../../sysutils/desktop-file-utils/desktopdb.mk\".")
-}
-
 func (s *Suite) Test_PlistChecker_checkpathMan_gz(c *check.C) {
 	t := s.Init(c)
 
