@@ -280,18 +280,18 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
 }
 
-// BeginDebugToStdout redirects all logging output to stdout instead of
+// EnableTracing redirects all logging output to stdout instead of
 // the buffer. This is useful when stepping through the code, especially
 // in combination with SetupCommandLine("--debug").
-func (t *Tester) BeginDebugToStdout() {
+func (t *Tester) EnableTracing() {
 	G.logOut = NewSeparatorWriter(os.Stdout)
 	trace.Out = os.Stdout
 	trace.Tracing = true
 }
 
-// EndDebugToStdout logs the output to the buffers again, ready to be
+// DisableTracing logs the output to the buffers again, ready to be
 // checked with CheckOutputLines.
-func (t *Tester) EndDebugToStdout() {
+func (t *Tester) DisableTracing() {
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	trace.Out = &t.stdout
 	trace.Tracing = false
