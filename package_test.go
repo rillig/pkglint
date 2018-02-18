@@ -116,6 +116,152 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__MASTER_SITES(c *
 	t.CheckOutputEmpty()
 }
 
+// The diagnostics must be helpful.
+// In the case of wip/ioping, they were ambiguous and wrong.
+func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__diagnostics(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Worder")
+	pkg := NewPackage("category/package")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"CATEGORIES=     net",
+		"",
+		"COMMENT=        Comment",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		"GITHUB_PROJECT= pkgbase",
+		"DISTNAME=       v1.0",
+		"PKGNAME=        ${GITHUB_PROJECT}-${DISTNAME}",
+		"MASTER_SITES=   ${MASTER_SITE_GITHUB:=project/}",
+		"DIST_SUBDIR=    ${GITHUB_PROJECT}",
+		"",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	G.globalData.Pkgsrcdir = t.TmpDir()
+	G.globalData.InitVartypes()
+	mklines.Check() // To make the defined variables known
+
+	t.CheckOutputLines(
+		"ERROR: Makefile:3: Invalid category \"net\".",
+		"WARN: Makefile:6: License file ~/licenses/gnu-gpl-v3 does not exist.",
+		"ERROR: Makefile:11: The site MASTER_SITE_GITHUB does not exist.",
+		"ERROR: Makefile:17: \"/mk/bsd.pkg.mk\" does not exist.")
+
+	pkg.ChecklinesPackageMakefileVarorder(mklines)
+
+	t.CheckOutputLines(
+		"WARN: Makefile:8: GITHUB_PROJECT appears too late. Please put it below CATEGORIES.",
+		"WARN: Makefile:9: DISTNAME appears too late. Please put it below the previous empty line.",
+		"WARN: Makefile:10: PKGNAME appears too late. Please put it below the previous empty line.",
+		"WARN: Makefile:11: MASTER_SITES appears too late. Please put it below CATEGORIES.",
+		"WARN: Makefile:12: DIST_SUBDIR appears too late. Please put it below CATEGORIES.",
+		"WARN: Makefile:14: MAINTAINER appears too late. Please put it below COMMENT.",
+		"WARN: Makefile:15: HOMEPAGE appears too late. Please put it below COMMENT.")
+
+	// The above diagnostics are ambiguous since it is not possible
+	// to put two variables below another at the same time.
+	// Which of MASTER_SITES and DIST_SUBDIR belongs below CATEGORIES?
+	//
+	// After fixing the above warnings by reordering the lines:
+	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"CATEGORIES=     net",
+		"GITHUB_PROJECT= pkgbase",
+		"MASTER_SITES=   ${MASTER_SITE_GITHUB:=project/}",
+		"",
+		"COMMENT=        Comment",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		"DISTNAME=       v1.0",
+		"PKGNAME=        ${GITHUB_PROJECT}-${DISTNAME}",
+		"DIST_SUBDIR=    ${GITHUB_PROJECT}",
+		"",
+		".include \"../../mk/bsd.pkg.mk\""))
+
+	t.CheckOutputLines(
+		"WARN: Makefile:5: MASTER_SITES appears too late. Please put it below CATEGORIES.",
+		"WARN: Makefile:8: MAINTAINER appears too late. Please put it below COMMENT.",
+		"WARN: Makefile:9: HOMEPAGE appears too late. Please put it below COMMENT.",
+		"WARN: Makefile:12: DISTNAME appears too late. Please put it below the previous empty line.",
+		"WARN: Makefile:13: PKGNAME appears too late. Please put it below the previous empty line.",
+		"WARN: Makefile:14: DIST_SUBDIR appears too late. Please put it below GITHUB_PROJECT.")
+
+	// Well, at least one of the warnings disappeared.
+	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"CATEGORIES=     net",
+		"MASTER_SITES=   ${MASTER_SITE_GITHUB:=koct9i/}",
+		"GITHUB_PROJECT= pkgbase",
+		"DIST_SUBDIR=    ${GITHUB_PROJECT}",
+		"",
+		"DISTNAME=       v1.0",
+		"PKGNAME=        ${GITHUB_PROJECT}-${DISTNAME}",
+		"COMMENT=        Comment",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		".include \"../../mk/bsd.pkg.mk\""))
+
+	t.CheckOutputLines(
+		"WARN: Makefile:8: DISTNAME appears too late. Please put it below the previous empty line.",
+		"WARN: Makefile:9: PKGNAME appears too late. Please put it below the previous empty line.",
+		"WARN: Makefile:11: MAINTAINER appears too late. Please put it below COMMENT.",
+		"WARN: Makefile:12: HOMEPAGE appears too late. Please put it below COMMENT.")
+
+	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=       v1.0",
+		"PKGNAME=        ${GITHUB_PROJECT}-${DISTNAME}",
+		"CATEGORIES=     net",
+		"MASTER_SITES=   ${MASTER_SITE_GITHUB:=project/}",
+		"GITHUB_PROJECT= pkgbase",
+		"DIST_SUBDIR=    ${GITHUB_PROJECT}",
+		"",
+		"COMMENT=        Comment",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		".include \"../../mk/bsd.pkg.mk\""))
+
+	// FIXME: These warnings are completely wrong.
+	// Especially since the canonical order is MAINTAINER, HOMEPAGE, COMMENT.
+	// Therefore these variables must go _above_ COMMENT, not _below_ it.
+	t.CheckOutputLines(
+		"WARN: Makefile:11: MAINTAINER appears too late. Please put it below COMMENT.",
+		"WARN: Makefile:12: HOMEPAGE appears too late. Please put it below COMMENT.")
+
+	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=       v1.0",
+		"PKGNAME=        ${GITHUB_PROJECT}-${DISTNAME}",
+		"CATEGORIES=     net",
+		"MASTER_SITES=   ${MASTER_SITE_GITHUB:=project/}",
+		"GITHUB_PROJECT= pkgbase",
+		"DIST_SUBDIR=    ${GITHUB_PROJECT}",
+		"",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"COMMENT=        Comment",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		".include \"../../mk/bsd.pkg.mk\""))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_getNbpart(c *check.C) {
 	t := s.Init(c)
 
