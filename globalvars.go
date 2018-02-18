@@ -25,9 +25,9 @@ type GlobalVars struct {
 
 	errors                int
 	warnings              int
-	logged                map[string]bool
+	logged                map[uint64]struct{}
 	explanationsAvailable bool
-	explanationsGiven     map[string]bool
+	explanationsGiven     map[uint64]struct{}
 	autofixAvailable      bool
 	logOut                *SeparatorWriter
 	logErr                *SeparatorWriter
