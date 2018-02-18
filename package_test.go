@@ -52,7 +52,7 @@ func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
 }
 
 // Ensure that comments and empty lines do not lead to panics.
-func (s *Suite) Test_Package_CheckVarorder__comments(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
@@ -66,11 +66,33 @@ func (s *Suite) Test_Package_CheckVarorder__comments(c *check.C) {
 		"# comment",
 		"",
 		"DISTNAME=9term",
+		"# comment",
 		"CATEGORIES=x11"))
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
 			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, COMMENT, LICENSE.")
+}
+
+func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Worder")
+
+	pkg := NewPackage("x11/9term")
+
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=\tdistname-1.0",
+		"CATEGORIES=\tsysutils",
+		"",
+		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		"# comment",
+		"COMMENT=\tComment",
+		"LICENSE=\tgnu-gpl-v2"))
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_CheckVarorder_GitHub(c *check.C) {
@@ -155,14 +177,7 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	G.globalData.InitVartypes()
 	pkg := NewPackage("category/package")
 
-	newMkLines := func(fileName string, lines ...string) *MkLines {
-		mklines := t.NewMkLines(fileName, lines...)
-		mklines.Check() // To make the defined variables known; see Package.checkfilePackageMakefile
-		t.Output()      // Just discard the output; this test is concerned with other things
-		return mklines
-	}
-
-	pkg.CheckVarorder(newMkLines("Makefile",
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"CATEGORIES=     net",
@@ -187,7 +202,7 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 
 	// After moving the variables according to the warning:
-	pkg.CheckVarorder(newMkLines("Makefile",
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"GITHUB_PROJECT= pkgbase",

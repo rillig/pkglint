@@ -705,6 +705,9 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 		interesting := mklines.mklines[firstRelevant : lastRelevant+1]
 
 		varcanon := func() string {
+			for len(interesting) != 0 && interesting[0].IsComment() {
+				interesting = interesting[1:]
+			}
 			if len(interesting) != 0 && (interesting[0].IsVarassign() || interesting[0].IsCommentedVarassign()) {
 				return interesting[0].Varcanon()
 			}
