@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"hash/crc64"
 	"io"
 	"path"
 	"strings"
@@ -41,19 +40,15 @@ func shallBeLogged(msg string) bool {
 }
 
 func loggedAlready(fname, lineno, msg string) bool {
-	crc := crc64.New(crc64.MakeTable(crc64.ECMA))
-	crc.Write([]byte(path.Clean(fname)))
-	crc.Write([]byte(lineno))
-	crc.Write([]byte(msg))
-	key := crc.Sum64()
-	if _, ok := G.logged[key]; ok {
+	uniq := path.Clean(fname) + ":" + lineno + ":" + msg
+	if G.logged[uniq] {
 		return true
 	}
 
 	if G.logged == nil {
-		G.logged = make(map[uint64]struct{})
+		G.logged = make(map[string]bool)
 	}
-	G.logged[key] = struct{}{}
+	G.logged[uniq] = true
 	return false
 }
 
@@ -107,18 +102,14 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 
 func Explain(explanation ...string) {
 	if G.opts.Explain {
-		crc := crc64.New(crc64.MakeTable(crc64.ECMA))
-		for _, line := range explanation {
-			crc.Write([]byte(line))
-		}
-		key := crc.Sum64()
-		if _, ok := G.explanationsGiven[key]; ok {
+		complete := strings.Join(explanation, "\n")
+		if G.explanationsGiven[complete] {
 			return
 		}
 		if G.explanationsGiven == nil {
-			G.explanationsGiven = make(map[uint64]struct{})
+			G.explanationsGiven = make(map[string]bool)
 		}
-		G.explanationsGiven[key] = struct{}{}
+		G.explanationsGiven[complete] = true
 
 		G.logOut.WriteLine("")
 		for _, explanationLine := range explanation {
