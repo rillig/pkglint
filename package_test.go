@@ -21,13 +21,13 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
 	pkg := NewPackage("x11/9term")
 
-	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"GITHUB_PROJECT=project",
@@ -38,7 +38,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 		"WARN: Makefile:3: The canonical order of the variables is " +
 			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, COMMENT, LICENSE.")
 
-	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"DISTNAME=9term",
@@ -51,13 +51,35 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder(c *check.C) {
 			"DISTNAME, CATEGORIES, empty line, COMMENT, LICENSE.")
 }
 
-func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder_GitHub(c *check.C) {
+// Ensure that comments and empty lines do not lead to panics.
+func (s *Suite) Test_Package_CheckVarorder__comments(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
 	pkg := NewPackage("x11/9term")
 
-	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"GITHUB_PROJECT=project",
+		"",
+		"# comment",
+		"",
+		"DISTNAME=9term",
+		"CATEGORIES=x11"))
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, COMMENT, LICENSE.")
+}
+
+func (s *Suite) Test_Package_CheckVarorder_GitHub(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Worder")
+	pkg := NewPackage("x11/9term")
+
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"DISTNAME=\t\tautocutsel-0.10.0",
@@ -103,13 +125,13 @@ func (s *Suite) Test_Package_varorder_license(c *check.C) {
 }
 
 // https://mail-index.netbsd.org/tech-pkg/2017/01/18/msg017698.html
-func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__MASTER_SITES(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder__MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
 	pkg := NewPackage("category/package")
 
-	pkg.ChecklinesPackageMakefileVarorder(t.NewMkLines("Makefile",
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"PKGNAME=\tpackage-1.0",
@@ -126,7 +148,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__MASTER_SITES(c *
 
 // The diagnostics must be helpful.
 // In the case of wip/ioping, they were ambiguous and wrong.
-func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__diagnostics(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
@@ -140,7 +162,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__diagnostics(c *c
 		return mklines
 	}
 
-	pkg.ChecklinesPackageMakefileVarorder(newMkLines("Makefile",
+	pkg.CheckVarorder(newMkLines("Makefile",
 		MkRcsID,
 		"",
 		"CATEGORIES=     net",
@@ -165,7 +187,7 @@ func (s *Suite) Test_Package_ChecklinesPackageMakefileVarorder__diagnostics(c *c
 			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 
 	// After moving the variables according to the warning:
-	pkg.ChecklinesPackageMakefileVarorder(newMkLines("Makefile",
+	pkg.CheckVarorder(newMkLines("Makefile",
 		MkRcsID,
 		"",
 		"GITHUB_PROJECT= pkgbase",

@@ -437,7 +437,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 
 	pkg.checkUpdate()
 	mklines.Check()
-	pkg.ChecklinesPackageMakefileVarorder(mklines)
+	pkg.CheckVarorder(mklines)
 	SaveAutofixChanges(mklines.lines)
 }
 
@@ -588,7 +588,11 @@ func (pkg *Package) checkUpdate() {
 	}
 }
 
-func (pkg *Package) ChecklinesPackageMakefileVarorder(mklines *MkLines) {
+// CheckVarorder checks that in simple package Makefiles,
+// the most common variables appear in a fixed order.
+// The order itself is a little arbitrary but provides
+// at least a bit of consistency.
+func (pkg *Package) CheckVarorder(mklines *MkLines) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
