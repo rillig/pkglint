@@ -680,7 +680,8 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 
 		firstIrrelevant := -1
 		for i, mkline := range mklines.mklines {
-			if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
+			switch {
+			case mkline.IsVarassign(), mkline.IsCommentedVarassign():
 				varcanon := mkline.Varcanon()
 				if relevantVars[varcanon] {
 					if firstRelevant == -1 {
@@ -688,8 +689,8 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 					}
 					if firstIrrelevant != -1 {
 						if trace.Tracing {
-							trace.Stepf("Skipping varorder because %s is in-between.",
-								mklines.mklines[firstIrrelevant].Varname())
+							trace.Stepf("Skipping varorder because of line %s.",
+								mklines.mklines[firstIrrelevant].Linenos())
 						}
 						return true
 					}
@@ -698,6 +699,14 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 					if firstIrrelevant == -1 {
 						firstIrrelevant = i
 					}
+				}
+
+			case mkline.IsComment(), mkline.IsEmpty():
+				break
+
+			default:
+				if firstIrrelevant == -1 {
+					firstIrrelevant = i
 				}
 			}
 		}

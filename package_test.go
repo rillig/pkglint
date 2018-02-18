@@ -95,6 +95,29 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_CheckVarorder__conditionals_skip(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Worder")
+
+	pkg := NewPackage("x11/9term")
+
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=\tdistname-1.0",
+		"CATEGORIES=\tsysutils",
+		"",
+		".if ${DISTNAME:Mdistname-*}",
+		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		".endif",
+		"LICENSE=\tgnu-gpl-v2"))
+
+	// No warning about the missing COMMENT since the conditional
+	// skips the whole check.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_CheckVarorder_GitHub(c *check.C) {
 	t := s.Init(c)
 
