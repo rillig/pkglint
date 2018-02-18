@@ -792,17 +792,6 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 		mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
-	if varname == "PERL5_PACKLIST" && G.Pkg != nil {
-		if m, p5pkgname := match1(G.Pkg.EffectivePkgbase, `^p5-(.*)`); m {
-			guess := "auto/" + strings.Replace(p5pkgname, "-", "/", -1) + "/.packlist"
-
-			ucvalue, ucguess := strings.ToUpper(value), strings.ToUpper(guess)
-			if ucvalue != ucguess && ucvalue != "${PERL5_SITEARCH}/"+ucguess {
-				mkline.Warnf("Unusual value for PERL5_PACKLIST -- %q expected.", guess)
-			}
-		}
-	}
-
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
 		ck.checkVarassignPythonVersions(varname, value)
 	}
