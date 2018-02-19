@@ -26,6 +26,8 @@ func main() {
 
 type Pkglint struct{}
 
+// Main runs the main program with the given arguments.
+// args[0] is the program name.
 func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	defer func() {
 		if r := recover(); r != nil {

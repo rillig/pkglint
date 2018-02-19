@@ -113,6 +113,151 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"  (Prefix a flag with \"no-\" to disable it.)")
 }
 
+// Demonstrates which infrastructure files are necessary to actually run
+// pkglint in a realistic scenario.
+// For most tests, this setup is too much work, therefore they
+// initialize only those parts of the infrastructure they really
+// need.
+//
+// Especially covers Pkglint.PrintSummary and Pkglint.Checkfile.
+func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
+	t := s.Init(c)
+
+	// This file is needed to locate the pkgsrc root directory.
+	// See findPkgsrcTopdir.
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		"# dummy")
+
+	// See GlobalData.loadDocChanges.
+	// FIXME: pkglint should warn that the latest version in this file
+	// (1.10) doesn't match the current version in the package (1.11).
+	t.CreateFileLines("doc/CHANGES-2018",
+		RcsID,
+		"",
+		"Changes to the packages collection and infrastructure in 2018:",
+		"",
+		"\tUpdated sysutils/checkperms to 1.10 [rillig 2018-01-05]")
+
+	// See GlobalData.loadSuggestedUpdates.
+	t.CreateFileLines("doc/TODO",
+		RcsID,
+		"",
+		"Suggested package updates",
+		"",
+		"\to checkperms-1.13 [supports more file formats]")
+
+	// The LICENSE in the package Makefile is searched here.
+	t.CreateFileLines("licenses/bsd-2",
+		"# dummy")
+
+	// The MASTER_SITES in the package Makefile are searched here.
+	// See GlobalData.loadDistSites.
+	t.CreateFileLines("mk/fetch/sites.mk",
+		MkRcsID,
+		"",
+		"MASTER_SITE_GITHUB+=\thttps://github.com/")
+
+	// The options for the PKG_OPTIONS framework must be readable.
+	// See GlobalData.loadPkgOptions.
+	t.CreateFileLines("mk/defaults/options.description",
+		"option Description")
+
+	// The user-defined variables are read in to check for missing
+	// BUILD_DEFS declarations in the package Makefile.
+	t.CreateFileLines("mk/defaults/mk.conf",
+		"# dummy")
+
+	// The tool definitions are read in to check for missing
+	// USE_TOOLS declarations in the package Makefile.
+	// They spread over several files from the pkgsrc infrastructure.
+	t.CreateFileLines("mk/tools/bsd.tools.mk",
+		".include \"defaults.mk\"")
+	t.CreateFileLines("mk/tools/defaults.mk",
+		"# dummy")
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		"# dummy")
+
+	// The existence of this file makes the category "sysutils" valid.
+	// The category "tools" on the other hand is not valid.
+	t.CreateFileLines("sysutils/Makefile",
+		"# dummy")
+
+	// The package Makefile is quite simple, containing just the
+	// standard variable definitions. The data for checking the variable
+	// values is partly defined in the pkgsrc infrastructure files
+	// (as defined in the previous lines), and partly in the pkglint
+	// code directly. Many details can be found in vartypecheck.go.
+	t.CreateFileLines("sysutils/checkperms/Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=\tcheckperms-1.11",
+		"CATEGORIES=\tsysutils tools",
+		"MASTER_SITES=\t${MASTER_SITE_GITHUB:=rillig/}",
+		"",
+		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		"HOMEPAGE=\thttps://github.com/rillig/checkperms/",
+		"COMMENT=\tCheck file permissions",
+		"LICENSE=\tbsd-2",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	t.CreateFileLines("sysutils/checkperms/MESSAGE",
+		"===========================================================================",
+		RcsID,
+		"",
+		"After installation, this package has to be configured in a special way.",
+		"",
+		"===========================================================================")
+
+	t.CreateFileLines("sysutils/checkperms/PLIST",
+		PlistRcsID,
+		"bin/checkperms",
+		"man/man1/checkperms.1")
+
+	t.CreateFileLines("sysutils/checkperms/README",
+		"When updating this package, test the pkgsrc bootstrap.")
+
+	t.CreateFileLines("sysutils/checkperms/TODO",
+		"Make the package work on MS-DOS")
+
+	t.CreateFileLines("sysutils/checkperms/patches/patch-checkperms.c",
+		RcsID,
+		"",
+		"A simple patch demonstrating that pkglint checks for missing",
+		"removed lines. The hunk headers says that one line is to be",
+		"removed, but in fact, there is no deletion line below it.",
+		"",
+		"--- a/checkperms.c",
+		"+++ b/checkperms.c",
+		"@@ -1,1 +1,3 @@", // at line 1, delete 1 line; at line 1, add 3 lines
+		"+// Header 1",
+		"+// Header 2",
+		"+// Header 3")
+	t.CreateFileLines("sysutils/checkperms/distinfo",
+		RcsID,
+		"",
+		"SHA1 (checkperms-1.12.tar.gz) = 34c084b4d06bcd7a8bba922ff57677e651eeced5",
+		"RMD160 (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",
+		"SHA512 (checkperms-1.12.tar.gz) = 43e37b5963c63fdf716acdb470928d7e21a7bdfddd6c85cf626a11acc7f45fa52a53d4bcd83d543150328fe8cec5587987d2d9a7c5f0aaeb02ac1127ab41f8ae",
+		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
+		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
+
+	new(Pkglint).Main("pkglint", "-Wall", "-Call", t.TempFilename("sysutils/checkperms"))
+
+	t.CheckOutputLines(
+		"WARN: ~/sysutils/checkperms/Makefile:3: This package should be updated to 1.13 ([supports more file formats]).",
+		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
+		"ERROR: ~/sysutils/checkperms/distinfo:7: SHA1 hash of patches/patch-checkperms.c differs "+
+			"(distinfo has asdfasdf, patch file has e775969de639ec703866c0336c4c8e0fdd96309c). "+
+			"Run \"@BMAKE@ makepatchsum\".",
+		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
+			"(expected 1 lines to be deleted and 0 lines to be added)",
+		"2 errors and 2 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)",
+		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
+		"(Run \"pkglint -F\" to automatically fix some issues.)")
+}
+
 // go test -c -covermode count
 // pkgsrcdir=...
 // env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov

@@ -9,12 +9,12 @@ import (
 type ShAtomType uint8
 
 const (
-	shtSpace  ShAtomType = iota
-	shtVaruse            // ${PREFIX}
-	shtWord              //
-	shtOperator
-	shtComment  // # ...
-	shtSubshell // $$(
+	shtSpace    ShAtomType = iota
+	shtVaruse              // ${PREFIX}
+	shtWord                // while, cat, ENV=value
+	shtOperator            // (, ;, |
+	shtComment             // # ...
+	shtSubshell            // $$(
 )
 
 func (t ShAtomType) String() string {
