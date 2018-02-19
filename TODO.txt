@@ -3,3 +3,6 @@ If they are before, they must also be like that afterwards.
 
 When running "pkglint --autofix --only aligned", the PLISTs are nevertheless re-sorted
 and autofixed. This is unexpected.
+
+pkglint -Wall -r -o "The canonical order" tr2latex/ -e
+The above command reports "looks fine" but still offers an explanation.
