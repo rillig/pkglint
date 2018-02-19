@@ -481,7 +481,7 @@ func Checkfile(fname string) {
 
 	case hasPrefix(basename, "CHANGES-"):
 		// This only checks the file, but doesn't register the changes globally.
-		G.globalData.loadDocChangesFromFile(fname)
+		_ = G.globalData.loadDocChangesFromFile(fname)
 
 	case matches(fname, `(?:^|/)files/[^/]*$`):
 		// Skip

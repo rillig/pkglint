@@ -42,10 +42,75 @@ func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
 
 	exitcode := new(Pkglint).ParseCommandLine([]string{"pkglint", "-Wall", "-o", ":Q", "--version"})
 
-	c.Check(exitcode, deepEquals, new(int))
+	if c.Check(exitcode, check.NotNil) {
+		c.Check(*exitcode, equals, 0)
+	}
 	c.Check(G.opts.LogOnly, deepEquals, []string{":Q"})
 	t.CheckOutputLines(
 		"@VERSION@")
+}
+
+func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
+	t := s.Init(c)
+
+	exitcode := new(Pkglint).Main("pkglint", "--unknown-option")
+
+	c.Check(exitcode, equals, 1)
+	t.CheckOutputLines(
+		"pkglint: unknown option: --unknown-option",
+		"",
+		"usage: pkglint [options] dir...",
+		"",
+		"  -C, --check=check,...       enable or disable specific checks",
+		"  -d, --debug                 log verbose call traces for debugging",
+		"  -e, --explain               explain the diagnostics or give further help",
+		"  -f, --show-autofix          show what pkglint can fix automatically",
+		"  -F, --autofix               try to automatically fix some errors (experimental)",
+		"  -g, --gcc-output-format     mimic the gcc output format",
+		"  -h, --help                  print a detailed usage message",
+		"  -I, --dumpmakefile          dump the Makefile after parsing",
+		"  -i, --import                prepare the import of a wip package",
+		"  -m, --log-verbose           allow the same log message more than once",
+		"  -o, --only                  only log messages containing the given text",
+		"  -p, --profiling             profile the executing program",
+		"  -q, --quiet                 don't print a summary line when finishing",
+		"  -r, --recursive             check subdirectories, too",
+		"  -s, --source                show the source lines together with diagnostics",
+		"  -V, --version               print the version number of pkglint",
+		"  -W, --warning=warning,...   enable or disable groups of warnings",
+		"",
+		"  Flags for -C, --check:",
+		"    all            all of the following",
+		"    none           none of the following",
+		"    ALTERNATIVES   check ALTERNATIVES files (enabled)",
+		"    bl3            check buildlink3.mk files (enabled)",
+		"    DESCR          check DESCR file (enabled)",
+		"    distinfo       check distinfo file (enabled)",
+		"    extra          check various additional files (disabled)",
+		"    global         inter-package checks (disabled)",
+		"    INSTALL        check INSTALL and DEINSTALL scripts (enabled)",
+		"    Makefile       check Makefiles (enabled)",
+		"    MESSAGE        check MESSAGE file (enabled)",
+		"    mk             check other .mk files (enabled)",
+		"    patches        check patches (enabled)",
+		"    PLIST          check PLIST files (enabled)",
+		"",
+		"  Flags for -W, --warning:",
+		"    all          all of the following",
+		"    none         none of the following",
+		"    absname      warn about use of absolute file names (enabled)",
+		"    directcmd    warn about use of direct command names instead of Make variables (enabled)",
+		"    extra        enable some extra warnings (disabled)",
+		"    order        warn if Makefile entries are unordered (disabled)",
+		"    perm         warn about unforeseen variable definition and use (disabled)",
+		"    plist-depr   warn about deprecated paths in PLISTs (disabled)",
+		"    plist-sort   warn about unsorted entries in PLISTs (disabled)",
+		"    quoting      warn about quoting issues (disabled)",
+		"    space        warn about inconsistent use of white-space (disabled)",
+		"    style        warn about stylistic issues (disabled)",
+		"    types        do some simple type checking in Makefiles (enabled)",
+		"",
+		"  (Prefix a flag with \"no-\" to disable it.)")
 }
 
 // go test -c -covermode count
