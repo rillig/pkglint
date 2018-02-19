@@ -49,6 +49,7 @@ netbsd() {
     --exclude=".git*" \
     --exclude="/COPYING" \
     --exclude="/README.md" \
+    --exclude="/TODO.txt" \
     --exclude="/archive/" \
     --exclude="/coverage.html" \
     --exclude="/pkglint.cov" \
@@ -56,6 +57,7 @@ netbsd() {
     --exclude="/pkglint.test.exe" \
     --exclude="*.docx" \
     --exclude="/.idea/" \
+    --exclude="/.vscode/" \
     --exclude="*.iml" \
     --exclude="*yacc.go" \
     --exclude="*.log" \
