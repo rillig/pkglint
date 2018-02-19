@@ -117,11 +117,3 @@ func NewShToken(mkText string, atoms ...*ShAtom) *ShToken {
 func (token *ShToken) String() string {
 	return fmt.Sprintf("ShToken(%v)", token.Atoms)
 }
-
-func (token *ShToken) IsAssignment() bool {
-	return matches(token.MkText, `^[A-Za-z_]\w*=`)
-}
-
-func (token *ShToken) IsWord() bool {
-	return token.Atoms[0].Type.IsWord()
-}

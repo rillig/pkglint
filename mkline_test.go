@@ -644,6 +644,31 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 		"NOTE: Makefile:3: The :Q operator isn't necessary for ${TOOLS_TAR} here.")
 }
 
+func (s *Suite) Test_MkLine_variableNeedsQuoting__backticks(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	G.globalData.InitVartypes()
+	G.globalData.Tools = NewToolRegistry()
+	G.globalData.Tools.RegisterVarname("cat", "CAT")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"COMPILE_CMD=\tcc `${CAT} ${WRKDIR}/compileflags`",
+		"COMMENT_CMD=\techo `echo ${COMMENT}`")
+
+	MkLineChecker{mklines.mklines[2]}.checkVarassignVaruse()
+	MkLineChecker{mklines.mklines[3]}.checkVarassignVaruse()
+
+	// Both CAT and WRKDIR are safe from quoting, therefore no warnings.
+	// But COMMENT may contain arbitrary characters and therefore must
+	// only appear completely unquoted. There is no practical way of
+	// using it inside backticks, and luckily there is no need for it.
+	t.CheckOutputLines(
+		"WARN: Makefile:4: COMMENT may not be used in any file; it is a write-only variable.",
+		"WARN: Makefile:4: The variable COMMENT should be quoted as part of a shell word.")
+}
+
 // For some well-known directory variables like WRKDIR, PREFIX, LOCALBASE,
 // the :Q modifier can be safely removed since pkgsrc will never support
 // having special characters in these directory names.
