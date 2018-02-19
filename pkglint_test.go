@@ -414,14 +414,16 @@ func (s *Suite) Test_ChecklinesMessage__autofix(c *check.C) {
 	ChecklinesMessage(lines)
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/MESSAGE:1: Inserting a line \"===================================="+
-			"=======================================\" before this line.",
-		"AUTOFIX: ~/MESSAGE:1: Inserting a line \"$NetBSD$\" before this line.",
-		"AUTOFIX: ~/MESSAGE:5: Inserting a line \"===================================="+
-			"=======================================\" after this line.")
+		"AUTOFIX: ~/MESSAGE:1: Inserting a line "+
+			"\"===========================================================================\" "+
+			"before this line.",
+		"AUTOFIX: ~/MESSAGE:1: Inserting a line \"$"+"NetBSD$\" before this line.",
+		"AUTOFIX: ~/MESSAGE:5: Inserting a line "+
+			"\"===========================================================================\" "+
+			"after this line.")
 	t.CheckFileLines("MESSAGE",
 		"===========================================================================",
-		"$NetBSD$",
+		RcsID,
 		"1",
 		"2",
 		"3",
