@@ -466,6 +466,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C
 	text := "\tfor f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done"
 
 	shline := t.NewShellLine("Makefile", 3, text)
+	shline.mkline.Tokenize(shline.mkline.Shellcmd())
 	shline.CheckShellCommandLine(text)
 
 	t.CheckOutputLines(

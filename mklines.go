@@ -117,6 +117,7 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsVarassign():
 			mklines.target = ""
+			mkline.Tokenize(mkline.Value())
 			substcontext.Varassign(mkline)
 
 		case mkline.IsInclude():
@@ -136,6 +137,9 @@ func (mklines *MkLines) Check() {
 		case mkline.IsDependency():
 			ck.checkDependencyRule(allowedTargets)
 			mklines.target = mkline.Targets()
+
+		case mkline.IsShellcmd():
+			mkline.Tokenize(mkline.Shellcmd())
 		}
 	}
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]

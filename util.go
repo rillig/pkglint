@@ -182,6 +182,18 @@ func detab(s string) string {
 	return detabbed
 }
 
+func shorten(s string, maxChars int) string {
+	chars := 0
+	for i := range s {
+		if chars >= maxChars {
+			return s[:i] + "..."
+			break
+		}
+		chars++
+	}
+	return s
+}
+
 func varnameBase(varname string) string {
 	dot := strings.IndexByte(varname, '.')
 	if dot != -1 {
