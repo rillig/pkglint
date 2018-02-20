@@ -2,6 +2,8 @@
 
 Note: I wish there were a tool for nicely rendering the below codewalk blocks.
 If you know of such a tool, please tell me.
+`godoc` doesn't count since [it is only supported for the Go distribution 
+itself](https://github.com/golang/go/issues/14369).
 
 ## The entry points
 
@@ -37,9 +39,10 @@ end    ^\}
 
 ## Basic ingredients
 
-Pkglint checks packages.
-A package consists of several different files.
-Each file consists of several lines.
+Pkglint checks packages, and a package consists of several different files.
+All pkgsrc files are text files, which are organized in lines.
+Most pkglint diagnostics refer to a specific line,
+therefore the `Line` type is responsible for producing the diagnostics.
 
 ### Line
 
@@ -51,6 +54,8 @@ of the following form:
 ```text
 WARN: Makefile:3: COMMENT should not start with "A" or "An".
 ```
+
+The definition for the `Line` type is:
 
 ```codewalk
 file   line.go
