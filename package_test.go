@@ -315,7 +315,7 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?",
-		"WARN: ~/distinfo: File not found. Please run \"@BMAKE@ makesum\".",
+		"WARN: ~/distinfo: File not found. Please run \""+confMake+" makesum\".",
 		"ERROR: ~/Makefile: Each package must define its LICENSE.",
 		"WARN: ~/Makefile: No COMMENT given.")
 }

@@ -47,7 +47,7 @@ func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
 	}
 	c.Check(G.opts.LogOnly, deepEquals, []string{":Q"})
 	t.CheckOutputLines(
-		"@VERSION@")
+		confVersion)
 }
 
 func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
@@ -249,7 +249,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
 		"ERROR: ~/sysutils/checkperms/distinfo:7: SHA1 hash of patches/patch-checkperms.c differs "+
 			"(distinfo has asdfasdf, patch file has e775969de639ec703866c0336c4c8e0fdd96309c). "+
-			"Run \"@BMAKE@ makepatchsum\".",
+			"Run \""+confMake+" makepatchsum\".",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added)",
 		"2 errors and 2 warnings found.",
