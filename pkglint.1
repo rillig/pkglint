@@ -1,0 +1,191 @@
+.\"	$NetBSD: pkglint.1,v 1.52 2018/01/13 23:56:14 rillig Exp $
+.\"	From FreeBSD: portlint.1,v 1.8 1997/11/25 14:53:14 itojun Exp
+.\"
+.\" Copyright (c) 1997 by Jun-ichiro Itoh <itojun@itojun.org>.
+.\" All Rights Reserved.  Absolutely no warranty.
+.\"
+.\" Roland Illig <roland.illig@gmx.de>, 2004, 2005.
+.\" Thomas Klausner <wiz@NetBSD.org>, 2012.
+.\" Roland Illig <rillig@NetBSD.org>, 2015-2018.
+.\"
+.Dd January 14, 2018
+.Dt PKGLINT 1
+.Os
+.Sh NAME
+.Nm pkglint
+.Nd static analyzer for pkgsrc packages
+.Sh SYNOPSIS
+.Nm pkglint
+.Op Fl options
+.Op Ar dir ...
+.Sh DESCRIPTION
+.Nm
+attempts to detect features of the named pkgsrc packages that are likely
+to be bugs, or that are simply deprecated.
+.Pp
+.\" =======================================================================
+.Ss Options
+.Bl -tag -width 18n
+.It Fl C{[no-]check,...}
+Enable or disable specific checks.
+For a list of checks, see below.
+.It Fl d Ns | Ns Fl -debug
+Enable or disable verbose log for debugging pkglint.
+.It Fl e Ns | Ns Fl -explain
+Print verbose explanations for diagnostics.
+.It Fl F Ns | Ns Fl -autofix
+Repair some of the warnings automatically.
+.It Fl g Ns | Ns Fl -gcc-output-format
+Use a format for the diagnostics that is understood by most programs,
+especially editors, so they can provide a point-and-goto interface.
+.It Fl h Ns | Ns Fl -help
+Show the summary of command line options, then exit.
+.It Fl I
+Show the
+.Pa Makefile
+that is constructed by including all the files that
+are slurped in via
+.Ql .include
+directives.
+This flag is mainly for debugging.
+.It Fl i Ns | Ns Fl -import
+Check if a package is ready to be imported into pkgsrc.
+This is especially useful for packages from the pkgsrc-wip project.
+.It Fl o Ns | Ns Fl -only Ar substring
+Only handle those diagnostics that have
+.Ar substring
+in their text.
+This is useful in combination with
+.Fl -autofix
+and
+.Fl -recursive,
+to fix only a single kind of warning in a large number of files.
+.It Fl q Ns | Ns Fl -quiet
+Don't print the errors and warnings summary before terminating.
+.It Fl r Ns | Ns Fl -recursive
+Check subdirectories, too.
+The subdirectories are those that are mentioned in a
+.Ql SUBDIR+=
+line.
+.It Fl s Ns | Ns Fl -source
+For all diagnostics having file and line number information, show the
+source code along with the diagnostics.
+This is especially useful together with the
+.Fl f Ns | Ns Fl -show-autofix
+option.
+.It Fl V Ns | Ns Fl -version
+Print the current
+.Nm
+version number and exit.
+.It Fl W{[no-]warn,...}
+Enable or disable specific warnings.
+For a list of warnings, see below.
+.El
+.\" =======================================================================
+.Ss Checks
+.Bl -tag -width 18n
+.It Cm all
+Enable all checks.
+.It Cm none
+Disable all checks.
+.It Cm [no-]ALTERNATIVES
+Check the alternatives file.
+.It Cm [no-]DESCR
+Check the DESCR file.
+.It Cm [no-]INSTALL
+Check the INSTALL and DEINSTALL scripts.
+.It Cm [no-]Makefile
+Check the package Makefile, including all included files.
+.It Cm [no-]MESSAGE
+Check MESSAGE files.
+.It Cm [no-]PLIST
+Check PLIST files.
+.It Cm [no-]bl3
+Check buildlink3 Makefiles.
+.It Cm [no-]distinfo
+Check the distinfo file.
+.It Cm [no-]extra
+Check remaining files in the package directory.
+.It Cm [no-]mk
+Check Makefile fragments besides buildlink3.
+.It Cm [no-]patches
+Check the pkgsrc specific patch files.
+.El
+.\" =======================================================================
+.Ss Warnings
+.Bl -tag -width 18n
+.It Cm all
+Enable all warnings.
+.It Cm none
+Disable all warnings.
+.It Cm [no-]absname
+Warn if a file contains an absolute pathname.
+.It Cm [no-]directcmd
+Warn if a system command name is used instead of a variable (e.g. sed
+instead of ${SED}).
+.It Cm [no-]extra
+Emit some additional warnings that are not enabled by default.
+.It Cm [no-]order
+Warn if Makefile variables are not in the preferred order.
+.It Cm [no-]perm
+Warn if a variable is used or modified outside its specified scope.
+.It Cm [no-]plist-depr
+Warn if deprecated pathnames are used in
+.Pa PLIST
+files.
+This warning is disabled by default.
+.It Cm [no-]plist-sort
+Warn if items of a PLIST file are not sorted alphabetically.
+This warning is disabled by default.
+.It Cm [no-]quoting
+Warn for possibly invalid quoting of make variables in shell programs
+and shell variables themselves.
+.It Cm [no-]space
+Emit notes for inconsistent use of white-space.
+.It Cm [no-]style
+Warn for stylistic issues that don't affect the build process.
+.It Cm [no-]types
+Warn for some
+.Pa Makefile
+variables if their assigned values do not match
+their type.
+.It Cm [no-]varorder
+Warn if the variables in a package
+.Pa Makefile Ns
+s are not ordered in the way it is described the pkgsrc guide.
+.El
+.\" =======================================================================
+.Ss Other arguments
+.Bl -tag -width 18n -offset indent
+.It Ar dir ...
+The pkgsrc directories to be checked.
+If omitted, the current directory is checked.
+.El
+.Sh FILES
+.Bl -tag -width pkgsrc/mk/* -compact
+.It Pa pkgsrc/mk/*
+Files from the pkgsrc infrastructure.
+.El
+.Sh EXAMPLES
+.Bl -tag -width Fl
+.It Ic pkglint \-Cnone,patches \&.
+Checks the patches of the package in the current directory.
+.It Ic pkglint \-Wall /usr/pkgsrc/devel
+Checks the category Makefile and reports any warnings it can find.
+.El
+.Sh DIAGNOSTICS
+Diagnostics are written to the standard output.
+.Bl -tag -width "WARN: foobaa"
+.It ERROR: ...
+Errors should be fixed before a package is committed to pkgsrc.
+.It WARN: ...
+Warnings generally should be fixed, but they are not as critical as
+errors.
+.El
+.Sh AUTHORS
+.An Roland Illig Aq Mt rillig@NetBSD.org
+.Sh BUGS
+If you don't understand the messages, feel free to ask the author or
+on the
+.Aq pkgsrc-users@pkgsrc.org
+mailing list.
