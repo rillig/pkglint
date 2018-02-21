@@ -80,6 +80,66 @@ start  func CheckDirent
 
 Since `DESCR` is a regular file, the next method to call is `Checkfile`.
 
+```codewalk
+file   pkglint.go
+start  func Checkfile
+```
+
+```codewalk
+file   pkglint.go
+start  /basename, "DESCR"/
+end    ^$
+```
+
+When compared to the code blocks around this one, it looks strange that
+this one uses `hasPrefix` and the others use a direct string comparison.
+But indeed, there are a few packages that actually have `DESCR.common`
+files. So everything's fine here.
+
+At this point, the file is loaded and converted to lines.
+For DESCR files, this is very simple, so there's no need to dive into that.
+The actual checks usually work on `Line` objects instead of files
+because the lines offer nice methods for logging the diagnostics
+and for automatically fixing the text (in pkglint's `--autofix` mode).
+
+```codewalk
+file   pkglint.go
+start  func ChecklinesDescr
+end    ^\}
+```
+
+Now we are where the actual action takes place.
+The code looks straight-forward here.
+First, each line is checked on its own,
+and the final check is for too long files. 
+
+The call to `SaveAutofixChanges` at the end looks a bit strange
+since none of the visible checks fixes anything.
+On example for such a simple fix is in `CheckLineTrailingWhitespace`:
+
+```codewalk
+file   linechecker.go
+start  ^func CheckLineTrailingWhitespace
+end    ^\}
+```
+
+This code is a typical example for using the autofix feature.
+Some more details are described at the `Autofix` type itself:
+
+```codewalk
+file   linechecker.go
+start  /^type Autofix/ upwhile /^\/\//
+end    /^type Autofix/
+```
+
+The journey ends here, and it hasn't been that difficult.
+If that was too easy, have a look at the complex cases here:
+
+```codewalk
+file   mkline.go
+start  /^func .* VariableNeedsQuoting
+```
+
 ## Basic ingredients
 
 Pkglint checks packages, and a package consists of several different files.
