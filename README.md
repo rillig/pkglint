@@ -11,4 +11,4 @@ See https://www.pkgsrc.org/.
 ----
 
 For an introduction to programming and extending pkglint,
-see [the codewalk](codewalk.md).
+see [The pkglint tour](codewalk.md).

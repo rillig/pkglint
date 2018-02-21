@@ -67,11 +67,16 @@ end    ^\}
 ```
 
 The argument `DESCR` is saved in the `TODO` list, and then the pkgsrc
-infrastructure data is loaded by `Initialize`. This must happen in this
-order because pkglint needs to determine the pkgsrc root directory,
-just in case there are two or more pkgsrc trees in the local system.
-Then, all items from the TODO list are worked off and handed over to
-`CheckDirent`.
+infrastructure data is loaded by `Initialize`.
+This must happen in this order because pkglint needs to determine the
+pkgsrc root directory, just in case there are two or more pkgsrc trees
+in the local system.
+The path of the pkgsrc directory is determined from the first command
+line argument, which in this file is `DESCR`. From there, the pkgsrc
+root is usually reachable via `../../`, and this is what pkglint tries.
+
+After the initialization of everything,
+all items from the TODO list are worked off and handed over to `CheckDirent`.
 
 ```codewalk
 file   pkglint.go
@@ -115,7 +120,8 @@ and the final check is for too long files.
 
 The call to `SaveAutofixChanges` at the end looks a bit strange
 since none of the visible checks fixes anything.
-On example for such a simple fix is in `CheckLineTrailingWhitespace`:
+The autofix feature must be hidden in one of the line checks,
+and indeed, the code for `CheckLineTrailingWhitespace` says:
 
 ```codewalk
 file   linechecker.go
