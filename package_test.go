@@ -162,7 +162,7 @@ func (s *Suite) Test_Package_varorder_license(c *check.C) {
 	G.globalData.Pkgsrcdir = t.TmpDir()
 	G.CurrentDir = t.TmpDir()
 
-	(&Pkglint{}).CheckDirent(t.TmpDir() + "/x11/9term")
+	G.CheckDirent(t.TmpDir() + "/x11/9term")
 
 	// Since the error is grave enough, the warning about the correct position is suppressed.
 	t.CheckOutputLines(
@@ -311,7 +311,7 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 		MkRcsID)
 	G.CurrentDir = t.TmpDir()
 
-	checkdirPackage(t.TmpDir())
+	G.checkdirPackage(t.TmpDir())
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset. Are you sure PLIST handling is ok?",
@@ -330,7 +330,7 @@ func (s *Suite) Test_checkdirPackage__meta_package_without_license(c *check.C) {
 	G.CurrentDir = t.TmpDir()
 	G.globalData.InitVartypes()
 
-	checkdirPackage(t.TmpDir())
+	G.checkdirPackage(t.TmpDir())
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile: No COMMENT given.") // No error about missing LICENSE.
@@ -391,7 +391,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t.CreateFileLines("category/pkgbase/distinfo",
 		RcsID)
 
-	(&Pkglint{}).Main("pkglint", "-q", "-Wperm", t.TmpDir()+"/category/pkgbase")
+	G.Main("pkglint", "-q", "-Wperm", t.TmpDir()+"/category/pkgbase")
 
 	t.CheckOutputLines(
 		"WARN: ~/category/pkgbase/Makefile:8: To use the tool \"FALSE\" at load time, bsd.prefs.mk has to be included before.",
@@ -459,7 +459,7 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 	G.CurPkgsrcdir = "../.."
 	G.Pkg = pkg
 
-	checkdirPackage("category/package")
+	G.checkdirPackage("category/package")
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:3: Unknown option \"zlib\".",

@@ -43,11 +43,12 @@ To learn how pkglint works internally, it is a good idea to start with
 a very simple example.
 Since the `DESCR` files have a very simple structure (they only contain
 text for human consumption), they are the ideal target.
-
+Let's trace an invocation of the command `pkglint DESCR` down to where
+the actual checks happen.
 
 ```codewalk
 file   pkglint.go
-start  /^func main/ upwhile /^\/\//
+start  func main
 ```
 
 ```codewalk
@@ -56,13 +57,28 @@ start  ^[\t]if exitcode
 end    ^\t\}$
 ```
 
+Since there are no command line options starting with a hyphen, we can
+skip the command line parsing for this example.
+
 ```codewalk
 file   pkglint.go
 start  ^[\t]for _, arg
-end    ^\}$
+end    ^\}
 ```
 
-TODO
+The argument `DESCR` is saved in the `TODO` list, and then the pkgsrc
+infrastructure data is loaded by `Initialize`. This must happen in this
+order because pkglint needs to determine the pkgsrc root directory,
+just in case there are two or more pkgsrc trees in the local system.
+Then, all items from the TODO list are worked off and handed over to
+`CheckDirent`.
+
+```codewalk
+file   pkglint.go
+start  func CheckDirent
+```
+
+Since `DESCR` is a regular file, the next method to call is `Checkfile`.
 
 ## Basic ingredients
 

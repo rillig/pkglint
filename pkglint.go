@@ -114,7 +114,7 @@ func main() {
 	G.logOut = NewSeparatorWriter(os.Stdout)
 	G.logErr = NewSeparatorWriter(os.Stderr)
 	trace.Out = os.Stdout
-	os.Exit(new(Pkglint).Main(os.Args...))
+	os.Exit(G.Main(os.Args...))
 }
 
 // Main runs the main program with the given arguments.
@@ -134,7 +134,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		return *exitcode
 	}
 
-	if G.opts.Profiling {
+	if pkglint.opts.Profiling {
 		f, err := os.Create("pkglint.pprof")
 		if err != nil {
 			dummyLine.Fatalf("Cannot create profiling file: %s", err)
@@ -143,45 +143,45 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		defer pprof.StopCPUProfile()
 
 		regex.Profiling = true
-		G.loghisto = histogram.New()
+		pkglint.loghisto = histogram.New()
 		defer func() {
-			G.logOut.Write("")
-			G.loghisto.PrintStats("loghisto", G.logOut.out, 0)
+			pkglint.logOut.Write("")
+			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, 0)
 			regex.PrintStats()
 		}()
 	}
 
-	for _, arg := range G.opts.args {
-		G.Todo = append(G.Todo, filepath.ToSlash(arg))
+	for _, arg := range pkglint.opts.args {
+		pkglint.Todo = append(pkglint.Todo, filepath.ToSlash(arg))
 	}
-	if len(G.Todo) == 0 {
-		G.Todo = []string{"."}
+	if len(pkglint.Todo) == 0 {
+		pkglint.Todo = []string{"."}
 	}
 
-	G.globalData.Initialize()
+	pkglint.globalData.Initialize()
 
 	currentUser, err := user.Current()
 	if err == nil {
 		// On Windows, this is `Computername\Username`.
-		G.CurrentUsername = regex.Compile(`^.*\\`).ReplaceAllString(currentUser.Username, "")
+		pkglint.CurrentUsername = regex.Compile(`^.*\\`).ReplaceAllString(currentUser.Username, "")
 	}
 
-	for len(G.Todo) != 0 {
-		item := G.Todo[0]
-		G.Todo = G.Todo[1:]
+	for len(pkglint.Todo) != 0 {
+		item := pkglint.Todo[0]
+		pkglint.Todo = pkglint.Todo[1:]
 		pkglint.CheckDirent(item)
 	}
 
 	checkToplevelUnusedLicenses()
 	pkglint.PrintSummary()
-	if G.errors != 0 {
+	if pkglint.errors != 0 {
 		return 1
 	}
 	return 0
 }
 
 func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
-	gopts := &G.opts
+	gopts := &pkglint.opts
 	opts := getopt.NewOptions()
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
@@ -229,21 +229,21 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {
-		fmt.Fprintf(G.logErr.out, "%s\n\n", err)
-		opts.Help(G.logErr.out, "pkglint [options] dir...")
+		fmt.Fprintf(pkglint.logErr.out, "%s\n\n", err)
+		opts.Help(pkglint.logErr.out, "pkglint [options] dir...")
 		exitcode := 1
 		return &exitcode
 	}
 	gopts.args = remainingArgs
 
 	if gopts.PrintHelp {
-		opts.Help(G.logOut.out, "pkglint [options] dir...")
+		opts.Help(pkglint.logOut.out, "pkglint [options] dir...")
 		exitcode := 0
 		return &exitcode
 	}
 
-	if G.opts.PrintVersion {
-		fmt.Fprintf(G.logOut.out, "%s\n", confVersion)
+	if pkglint.opts.PrintVersion {
+		fmt.Fprintf(pkglint.logOut.out, "%s\n", confVersion)
 		exitcode := 0
 		return &exitcode
 	}
@@ -252,22 +252,22 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 }
 
 func (pkglint *Pkglint) PrintSummary() {
-	if !G.opts.Quiet && !G.opts.Autofix {
-		if G.errors != 0 || G.warnings != 0 {
-			G.logOut.Printf("%d %s and %d %s found.\n",
-				G.errors, ifelseStr(G.errors == 1, "error", "errors"),
-				G.warnings, ifelseStr(G.warnings == 1, "warning", "warnings"))
+	if !pkglint.opts.Quiet && !pkglint.opts.Autofix {
+		if pkglint.errors != 0 || pkglint.warnings != 0 {
+			pkglint.logOut.Printf("%d %s and %d %s found.\n",
+				pkglint.errors, ifelseStr(pkglint.errors == 1, "error", "errors"),
+				pkglint.warnings, ifelseStr(pkglint.warnings == 1, "warning", "warnings"))
 		} else {
-			G.logOut.WriteLine("Looks fine.")
+			pkglint.logOut.WriteLine("Looks fine.")
 		}
-		if G.explanationsAvailable && !G.opts.Explain {
-			G.logOut.WriteLine("(Run \"pkglint -e\" to show explanations.)")
+		if pkglint.explanationsAvailable && !pkglint.opts.Explain {
+			pkglint.logOut.WriteLine("(Run \"pkglint -e\" to show explanations.)")
 		}
-		if G.autofixAvailable && !G.opts.PrintAutofix {
-			G.logOut.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
+		if pkglint.autofixAvailable && !pkglint.opts.PrintAutofix {
+			pkglint.logOut.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
 		}
-		if G.autofixAvailable && !G.opts.Autofix {
-			G.logOut.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
+		if pkglint.autofixAvailable && !pkglint.opts.Autofix {
+			pkglint.logOut.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
 		}
 	}
 }
@@ -285,13 +285,14 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	G.CurrentDir = ifelseStr(isReg, path.Dir(fname), fname)
-	absCurrentDir := abspath(G.CurrentDir)
-	G.Wip = !G.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
-	G.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)
-	G.CurPkgsrcdir = findPkgsrcTopdir(G.CurrentDir)
-	if G.CurPkgsrcdir == "" {
-		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", G.CurrentDir)
+	currentDir := ifelseStr(isReg, path.Dir(fname), fname)
+	pkglint.CurrentDir = currentDir
+	absCurrentDir := abspath(currentDir)
+	pkglint.Wip = !pkglint.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
+	pkglint.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)
+	pkglint.CurPkgsrcdir = findPkgsrcTopdir(currentDir)
+	if pkglint.CurPkgsrcdir == "" {
+		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", currentDir)
 		return
 	}
 
@@ -299,13 +300,13 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	case isDir && isEmptyDir(fname):
 		return
 	case isReg:
-		Checkfile(fname)
+		pkglint.Checkfile(fname)
 		return
 	}
 
-	switch G.CurPkgsrcdir {
+	switch pkglint.CurPkgsrcdir {
 	case "../..":
-		checkdirPackage(relpath(G.globalData.Pkgsrcdir, G.CurrentDir))
+		pkglint.checkdirPackage(relpath(pkglint.globalData.Pkgsrcdir, currentDir))
 	case "..":
 		CheckdirCategory()
 	case ".":
@@ -456,14 +457,14 @@ func CheckfileMk(fname string) {
 	SaveAutofixChanges(lines)
 }
 
-func Checkfile(fname string) {
+func (pkglint *Pkglint) Checkfile(fname string) {
 	if trace.Tracing {
 		defer trace.Call1(fname)()
 	}
 
 	basename := path.Base(fname)
 	if hasPrefix(basename, "work") || hasSuffix(basename, "~") || hasSuffix(basename, ".orig") || hasSuffix(basename, ".rej") {
-		if G.opts.Import {
+		if pkglint.opts.Import {
 			NewLineWhole(fname).Errorf("Must be cleaned up before committing the package.")
 		}
 		return
@@ -505,45 +506,45 @@ func Checkfile(fname string) {
 		NewLineWhole(fname).Errorf("Only files and directories are allowed in pkgsrc.")
 
 	case basename == "ALTERNATIVES":
-		if G.opts.CheckAlternatives {
+		if pkglint.opts.CheckAlternatives {
 			CheckfileExtra(fname)
 		}
 
 	case basename == "buildlink3.mk":
-		if G.opts.CheckBuildlink3 {
+		if pkglint.opts.CheckBuildlink3 {
 			if lines := LoadNonemptyLines(fname, true); lines != nil {
 				ChecklinesBuildlink3Mk(NewMkLines(lines))
 			}
 		}
 
 	case hasPrefix(basename, "DESCR"):
-		if G.opts.CheckDescr {
+		if pkglint.opts.CheckDescr {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
 				ChecklinesDescr(lines)
 			}
 		}
 
 	case basename == "distinfo":
-		if G.opts.CheckDistinfo {
+		if pkglint.opts.CheckDistinfo {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
 				ChecklinesDistinfo(lines)
 			}
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
-		if G.opts.CheckInstall {
+		if pkglint.opts.CheckInstall {
 			CheckfileExtra(fname)
 		}
 
 	case hasPrefix(basename, "MESSAGE"):
-		if G.opts.CheckMessage {
+		if pkglint.opts.CheckMessage {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
 				ChecklinesMessage(lines)
 			}
 		}
 
 	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
-		if G.opts.CheckPatches {
+		if pkglint.opts.CheckPatches {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
 				ChecklinesPatch(lines)
 			}
@@ -558,12 +559,12 @@ func Checkfile(fname string) {
 		NewLineWhole(fname).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
-		if G.opts.CheckMk {
+		if pkglint.opts.CheckMk {
 			CheckfileMk(fname)
 		}
 
 	case hasPrefix(basename, "PLIST"):
-		if G.opts.CheckPlist {
+		if pkglint.opts.CheckPlist {
 			if lines := LoadNonemptyLines(fname, false); lines != nil {
 				ChecklinesPlist(lines)
 			}
@@ -574,7 +575,7 @@ func Checkfile(fname string) {
 
 	case hasPrefix(basename, "CHANGES-"):
 		// This only checks the file, but doesn't register the changes globally.
-		_ = G.globalData.loadDocChangesFromFile(fname)
+		_ = pkglint.globalData.loadDocChangesFromFile(fname)
 
 	case matches(fname, `(?:^|/)files/[^/]*$`):
 		// Skip
@@ -584,7 +585,7 @@ func Checkfile(fname string) {
 
 	default:
 		NewLineWhole(fname).Warnf("Unexpected file found.")
-		if G.opts.CheckExtra {
+		if pkglint.opts.CheckExtra {
 			CheckfileExtra(fname)
 		}
 	}

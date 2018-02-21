@@ -11,7 +11,7 @@ import (
 func (s *Suite) Test_Pkglint_Main_help(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := new(Pkglint).Main("pkglint", "-h")
+	exitcode := G.Main("pkglint", "-h")
 
 	c.Check(exitcode, equals, 0)
 	c.Check(t.Output(), check.Matches, `^\Qusage: pkglint [options] dir...\E\n(?s).+`)
@@ -20,7 +20,7 @@ func (s *Suite) Test_Pkglint_Main_help(c *check.C) {
 func (s *Suite) Test_Pkglint_Main_version(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := new(Pkglint).Main("pkglint", "--version")
+	exitcode := G.Main("pkglint", "--version")
 
 	c.Check(exitcode, equals, 0)
 	t.CheckOutputLines(
@@ -30,7 +30,7 @@ func (s *Suite) Test_Pkglint_Main_version(c *check.C) {
 func (s *Suite) Test_Pkglint_Main_no_args(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := new(Pkglint).Main("pkglint")
+	exitcode := G.Main("pkglint")
 
 	c.Check(exitcode, equals, 1)
 	t.CheckOutputLines(
@@ -40,7 +40,7 @@ func (s *Suite) Test_Pkglint_Main_no_args(c *check.C) {
 func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := new(Pkglint).ParseCommandLine([]string{"pkglint", "-Wall", "-o", ":Q", "--version"})
+	exitcode := G.ParseCommandLine([]string{"pkglint", "-Wall", "-o", ":Q", "--version"})
 
 	if c.Check(exitcode, check.NotNil) {
 		c.Check(*exitcode, equals, 0)
@@ -53,7 +53,7 @@ func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
 func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := new(Pkglint).Main("pkglint", "--unknown-option")
+	exitcode := G.Main("pkglint", "--unknown-option")
 
 	c.Check(exitcode, equals, 1)
 	t.CheckOutputLines(
@@ -242,7 +242,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
 		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
 
-	new(Pkglint).Main("pkglint", "-Wall", "-Call", t.TempFilename("sysutils/checkperms"))
+	G.Main("pkglint", "-Wall", "-Call", t.TempFilename("sysutils/checkperms"))
 
 	t.CheckOutputLines(
 		"WARN: ~/sysutils/checkperms/Makefile:3: This package should be updated to 1.13 ([supports more file formats]).",
@@ -266,7 +266,7 @@ func (s *Suite) Test_Pkglint_coverage(c *check.C) {
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
 	if cmdline != "" {
 		G.logOut, G.logErr, trace.Out = NewSeparatorWriter(os.Stdout), NewSeparatorWriter(os.Stderr), os.Stdout
-		new(Pkglint).Main(append([]string{"pkglint"}, splitOnSpace(cmdline)...)...)
+		G.Main(append([]string{"pkglint"}, splitOnSpace(cmdline)...)...)
 	}
 }
 
@@ -275,7 +275,7 @@ func (s *Suite) Test_Pkglint_CheckDirent__outside(c *check.C) {
 
 	t.SetupFileLines("empty")
 
-	new(Pkglint).CheckDirent(t.TmpDir())
+	G.CheckDirent(t.TmpDir())
 
 	t.CheckOutputLines(
 		"ERROR: ~: Cannot determine the pkgsrc root directory for \"~\".")
@@ -289,24 +289,23 @@ func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 	t.SetupFileLines("category/Makefile")
 	t.SetupFileLines("Makefile")
 	G.globalData.Pkgsrcdir = t.TmpDir()
-	pkglint := new(Pkglint)
 
-	pkglint.CheckDirent(t.TmpDir())
+	G.CheckDirent(t.TmpDir())
 
 	t.CheckOutputLines(
 		"ERROR: ~/Makefile: Must not be empty.")
 
-	pkglint.CheckDirent(t.TempFilename("category"))
+	G.CheckDirent(t.TempFilename("category"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/Makefile: Must not be empty.")
 
-	pkglint.CheckDirent(t.TempFilename("category/package"))
+	G.CheckDirent(t.TempFilename("category/package"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile: Must not be empty.")
 
-	pkglint.CheckDirent(t.TempFilename("category/package/nonexistent"))
+	G.CheckDirent(t.TempFilename("category/package/nonexistent"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/nonexistent: No such file or directory.")

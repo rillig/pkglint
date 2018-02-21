@@ -150,7 +150,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	}
 }
 
-func checkdirPackage(pkgpath string) {
+func (pkglint *Pkglint) checkdirPackage(pkgpath string) {
 	if trace.Tracing {
 		defer trace.Call1(pkgpath)()
 	}
@@ -203,7 +203,7 @@ func checkdirPackage(pkgpath string) {
 				pkg.checkfilePackageMakefile(fname, lines)
 			}
 		} else {
-			Checkfile(fname)
+			pkglint.Checkfile(fname)
 		}
 		if contains(fname, "/patches/patch-") {
 			havePatches = true
