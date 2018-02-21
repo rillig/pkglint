@@ -7,3 +7,8 @@ pkglint should be run in the package's directory to check for common
 errors.
 
 See https://www.pkgsrc.org/.
+
+----
+
+For an introduction to programming and extending pkglint,
+see [the codewalk](codewalk.md).
