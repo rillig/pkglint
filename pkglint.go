@@ -17,14 +17,105 @@ import (
 const confMake = "@BMAKE@"
 const confVersion = "@VERSION@"
 
+// Pkglint contains all global variables of this Go package.
+// The rest of the global state is in the other packages:
+//  regex.Profiling    (not thread-local)
+//  regex.res          (and related variables; not thread-safe)
+//  textproc.Testing   (not thread-local; harmless)
+//  tracing.Tracing    (not thread-safe)
+//  tracing.Out        (not thread-safe)
+//  tracing.traceDepth (not thread-safe)
+type Pkglint struct {
+	opts       CmdOpts    //
+	globalData GlobalData //
+	Pkg        *Package   // The package that is currently checked.
+	Mk         *MkLines   // The Makefile (or fragment) that is currently checked.
+
+	Todo            []string // The files or directories that still need to be checked.
+	CurrentDir      string   // The currently checked directory, relative to the cwd
+	CurPkgsrcdir    string   // The pkgsrc directory, relative to currentDir
+	Wip             bool     // Is the currently checked directory from pkgsrc-wip?
+	Infrastructure  bool     // Is the currently checked item from the pkgsrc infrastructure?
+	Testing         bool     // Is pkglint in self-testing mode (only during development)?
+	CurrentUsername string   // For checking against OWNER and MAINTAINER
+	CvsEntriesDir   string   // Cached to avoid I/O
+	CvsEntriesLines []Line
+
+	Hash         map[string]*Hash // Maps "alg:fname" => hash (inter-package check).
+	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
+
+	errors                int
+	warnings              int
+	logged                map[string]bool
+	explanationsAvailable bool
+	explanationsGiven     map[string]bool
+	autofixAvailable      bool
+	logOut                *SeparatorWriter
+	logErr                *SeparatorWriter
+
+	loghisto *histogram.Histogram
+}
+
+type CmdOpts struct {
+	CheckAlternatives,
+	CheckBuildlink3,
+	CheckDescr,
+	CheckDistinfo,
+	CheckExtra,
+	CheckGlobal,
+	CheckInstall,
+	CheckMakefile,
+	CheckMessage,
+	CheckMk,
+	CheckPatches,
+	CheckPlist bool
+
+	WarnAbsname,
+	WarnDirectcmd,
+	WarnExtra,
+	WarnOrder,
+	WarnPerm,
+	WarnPlistDepr,
+	WarnPlistSort,
+	WarnQuoting,
+	WarnSpace,
+	WarnStyle,
+	WarnTypes bool
+
+	Explain,
+	Autofix,
+	GccOutput,
+	PrintHelp,
+	DumpMakefile,
+	Import,
+	LogVerbose,
+	Profiling,
+	Quiet,
+	Recursive,
+	PrintAutofix,
+	PrintSource,
+	PrintVersion bool
+
+	LogOnly []string
+
+	args []string
+}
+
+type Hash struct {
+	hash string
+	line Line
+}
+
+// G is the abbreviation for "global state";
+// it is the only global variable in this Go package
+var G Pkglint
+
 func main() {
 	G.logOut = NewSeparatorWriter(os.Stdout)
 	G.logErr = NewSeparatorWriter(os.Stderr)
 	trace.Out = os.Stdout
 	os.Exit(new(Pkglint).Main(os.Args...))
 }
-
-type Pkglint struct{}
 
 // Main runs the main program with the given arguments.
 // args[0] is the program name.

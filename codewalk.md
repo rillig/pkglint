@@ -37,6 +37,33 @@ start  ^func .* TearDownTest
 end    ^\}
 ```
 
+## First contact: checking a single DESCR files
+
+To learn how pkglint works internally, it is a good idea to start with
+a very simple example.
+Since the `DESCR` files have a very simple structure (they only contain
+text for human consumption), they are the ideal target.
+
+
+```codewalk
+file   pkglint.go
+start  /^func main/ upwhile /^\/\//
+```
+
+```codewalk
+file   pkglint.go
+start  ^[\t]if exitcode
+end    ^\t\}$
+```
+
+```codewalk
+file   pkglint.go
+start  ^[\t]for _, arg
+end    ^\}$
+```
+
+TODO
+
 ## Basic ingredients
 
 Pkglint checks packages, and a package consists of several different files.

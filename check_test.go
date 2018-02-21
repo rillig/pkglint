@@ -45,7 +45,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t := &Tester{checkC: c}
 	s.Tester = t
 
-	G = GlobalVars{Testing: true}
+	G = Pkglint{Testing: true}
 	textproc.Testing = true
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	G.logErr = NewSeparatorWriter(&t.stderr)
@@ -62,7 +62,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	t := s.Tester
 	t.checkC = nil // No longer usable; see https://github.com/go-check/check/issues/22
 
-	G = GlobalVars{}
+	G = Pkglint{}
 	textproc.Testing = false
 	if out := t.Output(); out != "" {
 		fmt.Fprintf(os.Stderr, "Unchecked output in %q; check with: t.CheckOutputLines(%v)",
