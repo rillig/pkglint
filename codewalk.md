@@ -42,7 +42,7 @@ start  ^func .* TearDownTest
 end    ^\}
 ```
 
-## First contact: checking a single DESCR files
+## First contact: checking a single DESCR file
 
 To learn how pkglint works internally, it is a good idea to start with
 a very simple example.
