@@ -46,6 +46,7 @@ type Pkglint struct {
 
 	errors                int
 	warnings              int
+	explainNext           bool
 	logged                map[string]bool
 	explanationsAvailable bool
 	explanationsGiven     map[string]bool
