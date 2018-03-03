@@ -109,6 +109,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
+	G.globalData.InitVartypes()
 
 	checkShellCommandLine := func(shellCommand string) {
 		G.Mk = t.NewMkLines("fname",
@@ -122,7 +123,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputEmpty()
 
-	checkShellCommandLine("uname=`uname`; echo $$uname; echo")
+	checkShellCommandLine("uname=`uname`; echo $$uname; echo; ${PREFIX}/bin/command")
 
 	t.CheckOutputLines(
 		"WARN: fname:1: Unknown shell command \"uname\".",

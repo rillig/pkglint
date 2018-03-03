@@ -457,7 +457,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	case scc.handleCommandVariable():
 	case matches(shellword, `^(?::|break|cd|continue|eval|exec|exit|export|read|set|shift|umask|unset)$`):
 	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
-	case hasPrefix(shellword, "${PKGSRCDIR"): // With or without the :Q modifier
+	case matches(shellword, `\$\{(PKGSRCDIR|PREFIX)(:Q)?\}`):
 	case scc.handleComment():
 	default:
 		if G.opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
