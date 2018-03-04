@@ -6,7 +6,7 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage("dummy")
-	pkg.vardef["PKGNAME"] = t.NewMkLine("Makefile", 5, "PKGNAME=dummy")
+	pkg.vars.Define("PKGNAME", t.NewMkLine("Makefile", 5, "PKGNAME=dummy"))
 
 	c.Check(pkg.pkgnameFromDistname("pkgname-1.0", "whatever"), equals, "pkgname-1.0")
 	c.Check(pkg.pkgnameFromDistname("${DISTNAME}", "distname-1.0"), equals, "distname-1.0")
@@ -249,11 +249,12 @@ func (s *Suite) Test_Package_getNbpart(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage("category/pkgbase")
-	pkg.vardef["PKGREVISION"] = t.NewMkLine("Makefile", 1, "PKGREVISION=14")
+	pkg.vars.Define("PKGREVISION", t.NewMkLine("Makefile", 1, "PKGREVISION=14"))
 
 	c.Check(pkg.getNbpart(), equals, "nb14")
 
-	pkg.vardef["PKGREVISION"] = t.NewMkLine("Makefile", 1, "PKGREVISION=asdf")
+	pkg.vars = NewScope()
+	pkg.vars.Define("PKGREVISION", t.NewMkLine("Makefile", 1, "PKGREVISION=asdf"))
 
 	c.Check(pkg.getNbpart(), equals, "")
 }
@@ -266,9 +267,9 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__precedence(c *check.C) {
 	distnameLine := t.NewMkLine("Makefile", 4, "DISTNAME=distname-1.0")
 	pkgrevisionLine := t.NewMkLine("Makefile", 5, "PKGREVISION=13")
 
-	pkg.defineVar(pkgnameLine, pkgnameLine.Varname())
-	pkg.defineVar(distnameLine, distnameLine.Varname())
-	pkg.defineVar(pkgrevisionLine, pkgrevisionLine.Varname())
+	pkg.vars.Define(pkgnameLine.Varname(), pkgnameLine)
+	pkg.vars.Define(distnameLine.Varname(), distnameLine)
+	pkg.vars.Define(pkgrevisionLine.Varname(), pkgrevisionLine)
 
 	pkg.determineEffectivePkgVars()
 

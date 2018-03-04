@@ -515,7 +515,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 	//
 	// When doing checks outside a package, the :M* operator is needed for safety.
 	needMstar := matches(varname, `^(?:.*_)?(?:CFLAGS||CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`) &&
-		(G.Pkg == nil || G.Pkg.vardef["GNU_CONFIGURE"] != nil)
+		(G.Pkg == nil || G.Pkg.vars.Defined("GNU_CONFIGURE"))
 
 	strippedMod := mod
 	if m, stripped := match1(mod, `(.*?)(?::M\*)?(?::Q)?$`); m {
@@ -678,7 +678,7 @@ func (ck MkLineChecker) checkVarassign() {
 			// The variables mentioned in EVAL_PREFIX will later be
 			// defined by find-prefix.mk. Therefore, they are marked
 			// as known in the current file.
-			G.Mk.vardef[evalVarname] = mkline
+			G.Mk.vars.Define(evalVarname, mkline)
 		}
 	}
 

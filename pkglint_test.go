@@ -316,7 +316,7 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 
 	mkline := t.NewMkLine("fname", 1, "GCC_VERSION=${GCC_VERSION}")
 	G.Pkg = NewPackage(".")
-	G.Pkg.vardef["GCC_VERSION"] = mkline
+	G.Pkg.vars.Define("GCC_VERSION", mkline)
 
 	resolved := resolveVariableRefs("gcc-${GCC_VERSION}")
 
@@ -339,12 +339,15 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	c.Check(resolved, equals, "you got it")
 }
 
+// Usually, a dot in a variable name means a parameterized form.
+// In this case, it is part of a version number. Resolving these
+// variables from the scope works nevertheless.
 func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("fname", 10, "_=x11")
 	G.Pkg = NewPackage("category/pkg")
-	G.Pkg.vardef["GST_PLUGINS0.10_TYPE"] = mkline
+	G.Pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
 
 	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
 

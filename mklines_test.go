@@ -320,8 +320,8 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 
 	mklines.DetermineUsedVariables()
 
-	c.Check(len(mklines.varuse), equals, 1)
-	c.Check(mklines.varuse["VAR"], equals, mkline)
+	c.Check(len(mklines.vars.used), equals, 1)
+	c.Check(mklines.vars.FirstUse("VAR"), equals, mkline)
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
@@ -334,10 +334,10 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 
 	mklines.DetermineUsedVariables()
 
-	c.Check(len(mklines.varuse), equals, 3)
-	c.Check(mklines.varuse["inner"], equals, mkline)
-	c.Check(mklines.varuse["outer."], equals, mkline)
-	c.Check(mklines.varuse["outer.*"], equals, mkline)
+	c.Check(len(mklines.vars.used), equals, 3)
+	c.Check(mklines.vars.FirstUse("inner"), equals, mkline)
+	c.Check(mklines.vars.FirstUse("outer."), equals, mkline) // XXX: why the . at the end?
+	c.Check(mklines.vars.FirstUse("outer.*"), equals, mkline)
 }
 
 func (s *Suite) Test_MkLines_PrivateTool_Undefined(c *check.C) {

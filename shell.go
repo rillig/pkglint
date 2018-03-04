@@ -537,7 +537,9 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 
 		// When the package author has explicitly defined a command
 		// variable, assume it to be valid.
-		if G.Pkg != nil && G.Pkg.vardef[varname] != nil {
+		// TODO: Check G.Mk as well.
+		// TODO: Maybe use DefinedSimilar here
+		if G.Pkg != nil && G.Pkg.vars.Defined(varname) {
 			return true
 		}
 	}
