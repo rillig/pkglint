@@ -980,6 +980,14 @@ func (gd *GlobalData) InitVartypes() {
 	usr("XAW_TYPE", lkNone, enum("3d neXtaw standard xpm"))
 	acl("XMKMF_FLAGS", lkShell, BtShellWord, "")
 	pkglist("_WRAP_EXTRA_ARGS.*", lkShell, BtShellWord)
+
+	// Only for infrastructure files; see mk/misc/show.mk
+	acl("_VARGROUPS", lkSpace, BtIdentifier, "*: append")
+	acl("_USER_VARS.*", lkSpace, BtIdentifier, "*: append")
+	acl("_PKG_VARS.*", lkSpace, BtIdentifier, "*: append")
+	acl("_SYS_VARS.*", lkSpace, BtIdentifier, "*: append")
+	acl("_DEF_VARS.*", lkSpace, BtIdentifier, "*: append")
+	acl("_USE_VARS.*", lkSpace, BtIdentifier, "*: append")
 }
 
 func enum(values string) *BasicType {
