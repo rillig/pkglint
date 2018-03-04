@@ -579,6 +579,7 @@ func (gd *GlobalData) InitVartypes() {
 	pkg("GITHUB_TYPE", lkNone, enum("tag release"))
 	pkg("GMAKE_REQD", lkNone, BtVersion)
 	acl("GNU_ARCH", lkNone, enum("mips"), "")
+	acl("GNU_ARCH.*", lkNone, BtIdentifier, "buildlink3.mk:; *: set, use")
 	acl("GNU_CONFIGURE", lkNone, BtYes, "Makefile, Makefile.common: set")
 	acl("GNU_CONFIGURE_INFODIR", lkNone, BtPathname, "Makefile, Makefile.common: set")
 	acl("GNU_CONFIGURE_LIBDIR", lkNone, BtPathname, "Makefile, Makefile.common: set")
