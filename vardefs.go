@@ -362,6 +362,7 @@ func (gd *GlobalData) InitVartypes() {
 	sys("BSD_MAKE_ENV", lkShell, BtShellWord)
 	acl("BUILDLINK_ABI_DEPENDS.*", lkSpace, BtDependency, "builtin.mk: append, use-loadtime; *: append")
 	acl("BUILDLINK_API_DEPENDS.*", lkSpace, BtDependency, "builtin.mk: append, use-loadtime; *: append")
+	acl("BUILDLINK_AUTO_DIRS.*", lkNone, BtYesNo, "buildlink3.mk: append")
 	acl("BUILDLINK_CONTENTS_FILTER", lkNone, BtShellCommand, "")
 	sys("BUILDLINK_CFLAGS", lkShell, BtCFlag)
 	bl3list("BUILDLINK_CFLAGS.*", lkShell, BtCFlag)
