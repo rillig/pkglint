@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"gopkg.in/check.v1"
+	"sort"
 )
 
 func (s *Suite) Test_MkLines_Check__autofix_conditional_indentation(c *check.C) {
@@ -443,4 +445,51 @@ func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: Makefile:14: \"/mk/misc/category.mk\" does not exist.")
+}
+
+func (s *Suite) Test_MkLines_ExtractDocumentedVariables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	G.globalData.InitVartypes()
+	t.SetupTool(&Tool{Name: "rm", Varname: "RM", Predefined: true})
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"#",
+		"# User-settable variables:",
+		"#",
+		"# PKG_DEBUG_LEVEL",
+		"#\tHow verbose should pkgsrc be when running shell commands?",
+		"#",
+		"#\t* 0:\tdon't show most shell ...",
+		"",
+		"# PKG_VERBOSE",
+		"#\tWhen this variable is defined, pkgsrc gets a bit more verbose",
+		"#\t(i.e. \"-v\" option is passed to some commands ...",
+		"",
+		"# VARIABLE",
+		"#\tA paragraph of a single line is not enough to be recognized as \"relevant\".",
+		"",
+		"# VARBASE1.<param1>",
+		"# VARBASE2.*",
+		"# VARBASE3.${id}")
+
+	// The variables that appear in the documentation are marked as
+	// used, to prevent the "defined but not used" warnings.
+	mklines.determineDocumentedVariables()
+
+	var varnames []string
+	for varname, mkline := range mklines.vars.used {
+		varnames = append(varnames, fmt.Sprintf("%s (line %s)", varname, mkline.Linenos()))
+	}
+	sort.Strings(varnames)
+
+	expected := []string{
+		"PKG_DEBUG_LEVEL (line 5)",
+		"PKG_VERBOSE (line 10)",
+		"VARBASE1.* (line 17)",
+		"VARBASE2.* (line 18)",
+		"VARBASE3.${id} (line 19)",
+		"VARBASE3.* (line 19)"}
+	c.Check(varnames, deepEquals, expected)
 }

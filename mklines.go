@@ -211,6 +211,57 @@ func (mklines *MkLines) DetermineUsedVariables() {
 			mklines.UseVar(mkline, varname)
 		}
 	}
+	mklines.determineDocumentedVariables()
+}
+
+// Loosely based on mk/help/help.awk, revision 1.28
+func (mklines *MkLines) determineDocumentedVariables() {
+	scope := NewScope()
+	commentLines := 0
+	relevant := true
+
+	finish := func() {
+		if commentLines >= 3 && relevant {
+			for varname, mkline := range scope.used {
+				mklines.vars.Use(varname, mkline)
+			}
+		}
+
+		scope = NewScope()
+		commentLines = 0
+		relevant = true
+	}
+
+	for _, mkline := range mklines.mklines {
+		text := mkline.Text
+		words := splitOnSpace(text)
+
+		if 1 < len(words) && words[0] == "#" {
+			commentLines++
+
+			parser := NewMkParser(mkline.Line, words[1], false)
+			varname := parser.Varname()
+			if hasSuffix(varname, ".") && parser.repl.AdvanceRegexp(`^<\w+>`) {
+				varname += "*"
+			}
+			parser.repl.AdvanceStr(":")
+
+			varbase := varnameBase(varname)
+			if varbase == strings.ToUpper(varbase) && matches(varbase, `[A-Z]`) && parser.EOF() {
+				scope.Use(varname, mkline)
+			}
+
+			if 1 < len(words) && words[1] == "Copyright" {
+				relevant = false
+			}
+		}
+
+		if text == "" {
+			finish()
+		}
+	}
+
+	finish()
 }
 
 func (mklines *MkLines) setSeenBsdPrefsMk() {
