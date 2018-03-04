@@ -279,9 +279,6 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 
 	switch ext := path.Ext(basename); ext {
 	case ".a", ".la", ".so":
-		if G.opts.WarnExtra && dirname == "lib" && !hasPrefix(basename, "lib") {
-			pline.line.Warnf("Library filename %q should start with \"lib\".", basename)
-		}
 		if ext == "la" {
 			if G.Pkg != nil && !G.Pkg.vars.Defined("USE_LIBTOOL") {
 				pline.line.Warnf("Packages that install libtool libraries should define USE_LIBTOOL.")
