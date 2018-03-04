@@ -162,6 +162,10 @@ func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// Even very complicated shell commands are parsed correctly.
+// Since the variable is defined in this same Makefile, it is
+// assumed to be a known shell command and therefore does not need
+// USE_TOOLS or a similar declaration.
 func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
 	t := s.Init(c)
 
@@ -176,11 +180,8 @@ func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		// No warning about missing @ at the end
-		"WARN: chat/xchat/Makefile:4: " +
-			"Unknown shell command \"${GCONF_SCHEMAS:@.s.@" +
-			"${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}\".")
+	// Earlier versions of pkglint warned about a missing @ at the end.
+	t.CheckOutputEmpty()
 }
 
 // PR 46570

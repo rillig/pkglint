@@ -396,10 +396,16 @@ func NewScope() Scope {
 func (s *Scope) Define(varname string, line MkLine) {
 	if s.defined[varname] == nil {
 		s.defined[varname] = line
+		if trace.Tracing {
+			trace.Step2("Defining %q in line %s", varname, line.Linenos())
+		}
 	}
 	varcanon := varnameCanon(varname)
-	if s.defined[varcanon] == nil {
+	if varcanon != varname && s.defined[varcanon] == nil {
 		s.defined[varcanon] = line
+		if trace.Tracing {
+			trace.Step2("Defining %q in line %s", varcanon, line.Linenos())
+		}
 	}
 }
 
@@ -407,10 +413,16 @@ func (s *Scope) Define(varname string, line MkLine) {
 func (s *Scope) Use(varname string, line MkLine) {
 	if s.used[varname] == nil {
 		s.used[varname] = line
+		if trace.Tracing {
+			trace.Step2("Using %q in line %s", varname, line.Linenos())
+		}
 	}
 	varcanon := varnameCanon(varname)
-	if s.used[varcanon] == nil {
+	if varcanon != varname && s.used[varcanon] == nil {
 		s.used[varcanon] = line
+		if trace.Tracing {
+			trace.Step2("Using %q in line %s", varcanon, line.Linenos())
+		}
 	}
 }
 
@@ -423,9 +435,19 @@ func (s *Scope) Defined(varname string) bool {
 // DefinedSimilar tests whether the variable or its canonicalized form is defined.
 func (s *Scope) DefinedSimilar(varname string) bool {
 	if s.defined[varname] != nil {
+		if trace.Tracing {
+			trace.Step1("Variable %q is defined", varname)
+		}
 		return true
 	}
-	return s.defined[varnameCanon(varname)] != nil
+	varcanon := varnameCanon(varname)
+	if s.defined[varcanon] != nil {
+		if trace.Tracing {
+			trace.Step2("Variable %q (similar to %q) is defined", varcanon, varname)
+		}
+		return true
+	}
+	return false
 }
 
 // Used tests whether the variable is used.

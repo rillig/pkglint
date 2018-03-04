@@ -520,7 +520,9 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	}
 
 	shellword := scc.strcmd.Name
-	if m, varname := match1(shellword, `^\$\{([\w_]+)\}$`); m {
+	parser := NewMkParser(scc.shline.mkline.Line, shellword, false)
+	if varuse := parser.VarUse(); varuse != nil && parser.EOF() {
+		varname := varuse.varname
 
 		if tool := G.globalData.Tools.byVarname[varname]; tool != nil {
 			if !G.Mk.tools[tool.Name] {
@@ -537,9 +539,10 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 
 		// When the package author has explicitly defined a command
 		// variable, assume it to be valid.
-		// TODO: Check G.Mk as well.
-		// TODO: Maybe use DefinedSimilar here
-		if G.Pkg != nil && G.Pkg.vars.Defined(varname) {
+		if G.Mk != nil && G.Mk.vars.DefinedSimilar(varname) {
+			return true
+		}
+		if G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname) {
 			return true
 		}
 	}
