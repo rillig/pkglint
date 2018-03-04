@@ -206,7 +206,7 @@ func (s *Suite) Test_MkLineChecker_WarnVaruseLocalbase(c *check.C) {
 	MkLineChecker{mkline}.WarnVaruseLocalbase()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:56: The LOCALBASE variable should not be used by packages.")
+		"WARN: options.mk:56: Please use PREFIX instead of LOCALBASE.")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {

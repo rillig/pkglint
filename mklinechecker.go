@@ -454,7 +454,7 @@ func (ck MkLineChecker) CheckVarusePermissions(varname string, vartype *Vartype,
 }
 
 func (ck MkLineChecker) WarnVaruseLocalbase() {
-	ck.MkLine.Warnf("The LOCALBASE variable should not be used by packages.")
+	ck.MkLine.Warnf("Please use PREFIX instead of LOCALBASE.")
 	Explain(
 		// from jlam via private mail.
 		"Currently, LOCALBASE is typically used in these cases:",
@@ -465,6 +465,7 @@ func (ck MkLineChecker) WarnVaruseLocalbase() {
 		"Example for (1):",
 		"",
 		"	STRLIST=        ${LOCALBASE}/bin/strlist",
+		"",
 		"	do-build:",
 		"		cd ${WRKSRC} && ${STRLIST} *.str",
 		"",
@@ -472,6 +473,7 @@ func (ck MkLineChecker) WarnVaruseLocalbase() {
 		"",
 		"	EVAL_PREFIX=    STRLIST_PREFIX=strlist",
 		"	STRLIST=        ${STRLIST_PREFIX}/bin/strlist",
+		"",
 		"	do-build:",
 		"		cd ${WRKSRC} && ${STRLIST} *.str",
 		"",
