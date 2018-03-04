@@ -969,6 +969,7 @@ func (gd *GlobalData) InitVartypes() {
 	acl("USE_TOOLS", lkShell, BtTool, "*: append")
 	acl("USE_TOOLS.*", lkShell, BtTool, "*: append")
 	pkg("USE_X11", lkNone, BtYes)
+	sys("WARNINGS", lkShell, BtShellWord)
 	sys("WARNING_MSG", lkNone, BtShellCommand)
 	sys("WARNING_CAT", lkNone, BtShellCommand)
 	acl("WRAPPER_REORDER_CMDS", lkShell, BtWrapperReorder, "Makefile, Makefile.common, buildlink3.mk: append")
