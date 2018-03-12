@@ -318,6 +318,10 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		mkline.Warnf("%s is used but not defined. Spelling mistake?", varname)
 	}
 
+	if hasPrefix(varuse.Mod(), ":=") && !vartype.IsConsideredList() {
+		mkline.Warnf("The :from=to modifier should only be used with lists.")
+	}
+
 	ck.CheckVarusePermissions(varname, vartype, vuc)
 
 	if varname == "LOCALBASE" && !G.Infrastructure {

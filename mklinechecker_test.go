@@ -379,3 +379,23 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:4: The variable PATH should be quoted as part of a shell word.")
 }
+
+// The ${VARNAME:=suffix} should only be used with lists.
+// It typically appears in MASTER_SITE definitions.
+func (s *Suite) Test_MkLineChecker_CheckVaruse_eq_nonlist(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	G.globalData.InitVartypes()
+	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+	lines := t.SetupFileLinesContinuation("options.mk",
+		MkRcsID,
+		"WRKSRC=\t\t${WRKDIR:=/subdir}",
+		"MASTER_SITES=\t${MASTER_SITE_GITHUB:=organization/}")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/options.mk:2: The :from=to modifier should only be used with lists.")
+}
