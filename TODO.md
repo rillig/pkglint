@@ -1,6 +1,3 @@
-* warn about the use of ${WRKDIR:=...}, as this construct should only
-  be used with lists.
-
 * Of the user-defined variables, some may be used at load-time and some
   don't. Find out how pkglint can distinguish them.
 

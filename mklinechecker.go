@@ -320,6 +320,14 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 
 	if hasPrefix(varuse.Mod(), ":=") && vartype != nil && !vartype.IsConsideredList() {
 		mkline.Warnf("The :from=to modifier should only be used with lists.")
+		Explain(
+			"Instead of:",
+			"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
+			"",
+			"Write:",
+			"\tMASTER_SITES=\t${HOMEPAGE}repository/",
+			"",
+			"This is a much clearer expression of the same thought.")
 	}
 
 	ck.CheckVarusePermissions(varname, vartype, vuc)
