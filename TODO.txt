@@ -1,5 +1,2 @@
 In some continuation lines, the continuation backslashes are right-aligned in column 72.
 If they are before, they must also be like that afterwards.
-
-When running "pkglint --autofix --only aligned", the PLISTs are nevertheless re-sorted
-and autofixed. This is unexpected.

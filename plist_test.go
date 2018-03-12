@@ -336,6 +336,6 @@ func (s *Suite) Test_PlistChecker__autofix_with_only(c *check.C) {
 	t.CheckOutputEmpty()
 	t.CheckFileLines("PLIST",
 		PlistRcsID,
-		"bin/program",  // FIXME: pkglint must not fix anything silently.
-		"sbin/program") // FIXME: pkglint must not fix anything silently.
+		"sbin/program",
+		"bin/program")
 }

@@ -227,6 +227,9 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
+	if fix.diagFormat == "" {
+		panic("Each autofix must have a diagnostic.")
+	}
 	G.explainNext = shallBeLogged(fix.diagFormat)
 	if G.explainNext {
 		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" &&
