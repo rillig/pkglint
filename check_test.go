@@ -107,8 +107,8 @@ func (t *Tester) SetupCommandLine(args ...string) {
 }
 
 func (t *Tester) SetupMasterSite(varname string, urls ...string) {
-	name2url := &G.globalData.MasterSiteVarToURL
-	url2name := &G.globalData.MasterSiteURLToVar
+	name2url := &G.Pkgsrc.MasterSiteVarToURL
+	url2name := &G.Pkgsrc.MasterSiteURLToVar
 	if *name2url == nil {
 		*name2url = make(map[string]string)
 		*url2name = make(map[string]string)

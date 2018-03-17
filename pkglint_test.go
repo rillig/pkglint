@@ -151,7 +151,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"# dummy")
 
 	// The MASTER_SITES in the package Makefile are searched here.
-	// See GlobalData.loadDistSites.
+	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",
 		MkRcsID,
 		"",

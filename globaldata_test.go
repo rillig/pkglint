@@ -113,28 +113,3 @@ func (s *Suite) Test_GlobalData_deprecated(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:5: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.")
 }
-
-// Ensures that pkglint can handle MASTER_SITES definitions with and
-// without line continuations.
-//
-// See https://mail-index.netbsd.org/tech-pkg/2017/01/18/msg017698.html.
-func (s *Suite) Test_GlobalData_loadDistSites(c *check.C) {
-	t := s.Init(c)
-
-	t.CreateFileLines("mk/fetch/sites.mk",
-		MkRcsID,
-		"",
-		"MASTER_SITE_A+= https://example.org/distfiles/",
-		"MASTER_SITE_B+= https://b.example.org/distfiles/ \\",
-		"  https://b2.example.org/distfiles/",
-		"MASTER_SITE_A+= https://a.example.org/distfiles/")
-
-	G.globalData.loadDistSites()
-
-	c.Check(G.globalData.MasterSiteURLToVar["https://example.org/distfiles/"], equals, "MASTER_SITE_A")
-	c.Check(G.globalData.MasterSiteURLToVar["https://b.example.org/distfiles/"], equals, "MASTER_SITE_B")
-	c.Check(G.globalData.MasterSiteURLToVar["https://b2.example.org/distfiles/"], equals, "MASTER_SITE_B")
-	c.Check(G.globalData.MasterSiteURLToVar["https://a.example.org/distfiles/"], equals, "MASTER_SITE_A")
-	c.Check(G.globalData.MasterSiteVarToURL["MASTER_SITE_A"], equals, "https://example.org/distfiles/")
-	c.Check(G.globalData.MasterSiteVarToURL["MASTER_SITE_B"], equals, "https://b.example.org/distfiles/")
-}

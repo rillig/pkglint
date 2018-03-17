@@ -12,8 +12,6 @@ import (
 // GlobalData contains data describing pkgsrc as a whole.
 type GlobalData struct {
 	Pkgsrc              Pkgsrc              //
-	MasterSiteURLToVar  map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
-	MasterSiteVarToURL  map[string]string   // "MASTER_SITE_GITHUB" => "https://github.com/"
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
@@ -58,7 +56,7 @@ func (gd *GlobalData) Initialize() {
 
 	gd.vartypes = make(map[string]*Vartype)
 	gd.InitVartypes()
-	gd.loadDistSites()
+	gd.Pkgsrc.loadMasterSites()
 	gd.loadPkgOptions()
 	gd.loadDocChanges()
 	gd.loadSuggestedUpdates()
@@ -111,36 +109,6 @@ func (gd *GlobalData) Latest(category string, re regex.Pattern, repl string) str
 
 	gd.latest[key] = latest
 	return latest
-}
-
-func (gd *GlobalData) loadDistSites() {
-	lines := gd.Pkgsrc.LoadExistingLines("mk/fetch/sites.mk", true)
-
-	nameToUrl := make(map[string]string)
-	urlToName := make(map[string]string)
-	for _, line := range lines {
-		if m, commented, varname, _, _, _, urls, _, _ := MatchVarassign(line.Text); m {
-			if !commented && hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
-				for _, url := range splitOnSpace(urls) {
-					if matches(url, `^(?:http://|https://|ftp://)`) {
-						if nameToUrl[varname] == "" {
-							nameToUrl[varname] = url
-						}
-						urlToName[url] = varname
-					}
-				}
-			}
-		}
-	}
-
-	// Explicitly allowed, although not defined in mk/fetch/sites.mk.
-	nameToUrl["MASTER_SITE_LOCAL"] = "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/"
-
-	if trace.Tracing {
-		trace.Stepf("Loaded %d MASTER_SITE_* URLs.", len(urlToName))
-	}
-	gd.MasterSiteURLToVar = urlToName
-	gd.MasterSiteVarToURL = nameToUrl
 }
 
 func (gd *GlobalData) loadPkgOptions() {
