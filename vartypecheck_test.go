@@ -378,10 +378,8 @@ func (s *Suite) Test_VartypeCheck_Message(c *check.C) {
 func (s *Suite) Test_VartypeCheck_Option(c *check.C) {
 	t := s.Init(c)
 
-	G.globalData.PkgOptions = map[string]string{
-		"documented":   "Option description",
-		"undocumented": "",
-	}
+	G.Pkgsrc.PkgOptions["documented"] = "Option description"
+	G.Pkgsrc.PkgOptions["undocumented"] = ""
 
 	runVartypeChecks(t, "PKG_OPTIONS.pkgbase", opAssign, (*VartypeCheck).Option,
 		"documented",

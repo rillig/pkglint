@@ -21,6 +21,8 @@ type PkgsrcImpl struct {
 
 	MasterSiteURLToVar map[string]string // "https://github.com/" => "MASTER_SITE_GITHUB"
 	MasterSiteVarToURL map[string]string // "MASTER_SITE_GITHUB" => "https://github.com/"
+
+	PkgOptions map[string]string // "x11" => "Provides X11 support"
 }
 
 func NewPkgsrc(dir string) Pkgsrc {
@@ -28,6 +30,7 @@ func NewPkgsrc(dir string) Pkgsrc {
 		dir,
 		make(map[string]bool),
 		NewToolRegistry(),
+		make(map[string]string),
 		make(map[string]string),
 		make(map[string]string)}
 
@@ -106,5 +109,17 @@ func (src *PkgsrcImpl) loadMasterSites() {
 
 	if trace.Tracing {
 		trace.Stepf("Loaded %d MASTER_SITE_* URLs.", len(urlToName))
+	}
+}
+
+func (src *PkgsrcImpl) loadPkgOptions() {
+	lines := src.LoadExistingLines("mk/defaults/options.description", false)
+
+	for _, line := range lines {
+		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
+			src.PkgOptions[optname] = optdescr
+		} else {
+			line.Fatalf("Unknown line format.")
+		}
 	}
 }

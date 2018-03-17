@@ -12,7 +12,6 @@ import (
 // GlobalData contains data describing pkgsrc as a whole.
 type GlobalData struct {
 	Pkgsrc              Pkgsrc              //
-	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	LastChange          map[string]*Change  //
@@ -57,7 +56,7 @@ func (gd *GlobalData) Initialize() {
 	gd.vartypes = make(map[string]*Vartype)
 	gd.InitVartypes()
 	gd.Pkgsrc.loadMasterSites()
-	gd.loadPkgOptions()
+	gd.Pkgsrc.loadPkgOptions()
 	gd.loadDocChanges()
 	gd.loadSuggestedUpdates()
 	gd.loadUserDefinedVars()
@@ -109,19 +108,6 @@ func (gd *GlobalData) Latest(category string, re regex.Pattern, repl string) str
 
 	gd.latest[key] = latest
 	return latest
-}
-
-func (gd *GlobalData) loadPkgOptions() {
-	lines := gd.Pkgsrc.LoadExistingLines("mk/defaults/options.description", false)
-
-	gd.PkgOptions = make(map[string]string)
-	for _, line := range lines {
-		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
-			gd.PkgOptions[optname] = optdescr
-		} else {
-			line.Fatalf("Unknown line format.")
-		}
-	}
 }
 
 func (gd *GlobalData) loadTools() {
