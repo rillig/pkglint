@@ -4,6 +4,7 @@ import (
 	"netbsd.org/pkglint/pkgver"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -192,6 +193,9 @@ func (pkglint *Pkglint) checkdirPackage(pkgpath string) {
 			continue
 		}
 		if fname == G.CurrentDir+"/Makefile" {
+			if st, err := os.Lstat(fname); err == nil {
+				pkglint.checkExecutable(st, fname)
+			}
 			if G.opts.CheckMakefile {
 				pkg.checkfilePackageMakefile(fname, lines)
 			}
