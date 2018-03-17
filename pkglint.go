@@ -26,11 +26,10 @@ const confVersion = "@VERSION@"
 //  tracing.Out        (not thread-safe)
 //  tracing.traceDepth (not thread-safe)
 type Pkglint struct {
-	opts       CmdOpts    //
-	globalData GlobalData //
-	Pkgsrc     Pkgsrc     //
-	Pkg        *Package   // The package that is currently checked.
-	Mk         *MkLines   // The Makefile (or fragment) that is currently checked.
+	opts   CmdOpts  // Command line options.
+	Pkgsrc Pkgsrc   // Global data, mostly extracted from mk/*.
+	Pkg    *Package // The package that is currently checked.
+	Mk     *MkLines // The Makefile (or fragment) that is currently checked.
 
 	Todo            []string // The files or directories that still need to be checked.
 	CurrentDir      string   // The currently checked directory, relative to the cwd
@@ -160,8 +159,17 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 		pkglint.Todo = []string{"."}
 	}
 
-	pkglint.globalData.Initialize()
-	pkglint.Pkgsrc = pkglint.globalData.Pkgsrc
+	firstArg := G.Todo[0]
+	if fileExists(firstArg) {
+		firstArg = path.Dir(firstArg)
+	}
+	relTopdir := findPkgsrcTopdir(firstArg)
+	if relTopdir == "" {
+		dummyLine.Fatalf("%q is not inside a pkgsrc tree.", firstArg)
+	}
+
+	pkglint.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
+	pkglint.Pkgsrc.Load()
 
 	currentUser, err := user.Current()
 	if err == nil {
@@ -309,7 +317,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 
 	switch pkglint.CurPkgsrcdir {
 	case "../..":
-		pkglint.checkdirPackage(pkglint.globalData.Pkgsrc.ToRel(currentDir))
+		pkglint.checkdirPackage(pkglint.Pkgsrc.ToRel(currentDir))
 	case "..":
 		CheckdirCategory()
 	case ".":
@@ -578,7 +586,7 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 
 	case hasPrefix(basename, "CHANGES-"):
 		// This only checks the file, but doesn't register the changes globally.
-		_ = pkglint.globalData.loadDocChangesFromFile(fname)
+		_ = pkglint.Pkgsrc.loadDocChangesFromFile(fname)
 
 	case matches(fname, `(?:^|/)files/[^/]*$`):
 		// Skip

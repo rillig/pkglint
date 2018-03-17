@@ -158,7 +158,7 @@ func (s *Suite) Test_Package_varorder_license(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.globalData.InitVartypes()
+	t.SetupVartypes()
 	G.CurrentDir = t.TmpDir()
 
 	G.CheckDirent(t.TmpDir() + "/x11/9term")
@@ -196,7 +196,7 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
-	G.globalData.InitVartypes()
+	t.SetupVartypes()
 	pkg := NewPackage("category/package")
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
@@ -284,7 +284,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	G.CurPkgsrcdir = "../.."
 	G.Pkg.EffectivePkgname = "package-1.0nb15"
 	G.Pkg.EffectivePkgnameLine = t.NewMkLine("category/pkgbase/Makefile", 5, "PKGNAME=dummy")
-	G.globalData.LastChange = map[string]*Change{
+	G.Pkgsrc.LastChange = map[string]*Change{
 		"category/pkgbase": {
 			Action:  "Updated",
 			Version: "1.8",
@@ -297,7 +297,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: category/pkgbase/Makefile:5: The package is being downgraded from 1.8 (see ../../doc/CHANGES:116) to 1.0nb15")
 
-	G.globalData.LastChange["category/pkgbase"].Version = "1.0nb22"
+	G.Pkgsrc.LastChange["category/pkgbase"].Version = "1.0nb22"
 
 	G.Pkg.checkPossibleDowngrade()
 
@@ -328,7 +328,7 @@ func (s *Suite) Test_checkdirPackage__meta_package_without_license(c *check.C) {
 		"",
 		"META_PACKAGE=\tyes")
 	G.CurrentDir = t.TmpDir()
-	G.globalData.InitVartypes()
+	t.SetupVartypes()
 
 	G.checkdirPackage(t.TmpDir())
 
@@ -424,7 +424,7 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 	t := s.Init(c)
 
-	G.globalData.InitVartypes()
+	t.SetupVartypes()
 	t.CreateFileLines("category/package/Makefile",
 		MkRcsID,
 		"",

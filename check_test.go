@@ -51,7 +51,6 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.logErr = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
 	G.Pkgsrc = NewPkgsrc(t.TmpDir())
-	G.globalData.Pkgsrc = G.Pkgsrc
 
 	t.checkC = c
 	t.SetupCommandLine( /* no arguments */ )
@@ -104,6 +103,12 @@ func (t *Tester) SetupCommandLine(args ...string) {
 		t.c().Fatalf("Cannot parse command line: %#v", args)
 	}
 	G.opts.LogVerbose = true // See SetUpTest
+}
+
+// SetupVartypes registers a few hundred variables like MASTER_SITES,
+// WRKSRC, SUBST_SED.*, so that their data types are known to pkglint.
+func (t *Tester) SetupVartypes() {
+	G.Pkgsrc.InitVartypes()
 }
 
 func (t *Tester) SetupMasterSite(varname string, urls ...string) {

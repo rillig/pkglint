@@ -49,7 +49,7 @@ func NewPackage(pkgpath string) *Package {
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
 	}
-	for varname, line := range G.globalData.UserDefinedVars {
+	for varname, line := range G.Pkgsrc.UserDefinedVars {
 		pkg.vars.Define(varname, line)
 	}
 	return pkg
@@ -89,7 +89,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 	mkline := pkg.EffectivePkgnameLine
 
-	change := G.globalData.LastChange[pkg.Pkgpath]
+	change := G.Pkgsrc.LastChange[pkg.Pkgpath]
 	if change == nil {
 		if trace.Tracing {
 			trace.Step1("No change log for package %q", pkg.Pkgpath)
@@ -554,7 +554,7 @@ func (pkg *Package) expandVariableWithDefault(varname, defaultValue string) stri
 
 func (pkg *Package) checkUpdate() {
 	if pkg.EffectivePkgbase != "" {
-		for _, sugg := range G.globalData.GetSuggestedPackageUpdates() {
+		for _, sugg := range G.Pkgsrc.GetSuggestedPackageUpdates() {
 			if pkg.EffectivePkgbase != sugg.Pkgname {
 				continue
 			}

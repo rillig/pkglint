@@ -346,7 +346,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
-	if G.globalData.UserDefinedVars[varname] != nil && !G.Pkgsrc.IsBuildDef(varname) && !G.Mk.buildDefs[varname] {
+	if G.Pkgsrc.UserDefinedVars[varname] != nil && !G.Pkgsrc.IsBuildDef(varname) && !G.Mk.buildDefs[varname] {
 		mkline.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		Explain(
 			"When a pkgsrc package is built, many things can be configured by the",
@@ -675,9 +675,9 @@ func (ck MkLineChecker) checkVarassign() {
 		}
 
 	} else if !varIsUsed(varname) {
-		if vartypes := G.globalData.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
+		if vartypes := G.Pkgsrc.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
 			// Ok
-		} else if deprecated := G.globalData.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
+		} else if deprecated := G.Pkgsrc.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
 		} else {
 			mkline.Warnf("%s is defined but not used. Spelling mistake?", varname)
@@ -715,9 +715,9 @@ func (ck MkLineChecker) checkVarassign() {
 		}
 	}
 
-	if fix := G.globalData.Deprecated[varname]; fix != "" {
+	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
 		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix := G.globalData.Deprecated[varcanon]; fix != "" {
+	} else if fix := G.Pkgsrc.Deprecated[varcanon]; fix != "" {
 		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
 	}
 
@@ -984,9 +984,9 @@ func (ck MkLineChecker) checkText(text string) {
 		varbase, varext := m[1], m[2]
 		varname := varbase + varext
 		varcanon := varnameCanon(varname)
-		instead := G.globalData.Deprecated[varname]
+		instead := G.Pkgsrc.Deprecated[varname]
 		if instead == "" {
-			instead = G.globalData.Deprecated[varcanon]
+			instead = G.Pkgsrc.Deprecated[varcanon]
 		}
 		if instead != "" {
 			mkline.Warnf("Use of %q is deprecated. %s", varname, instead)
