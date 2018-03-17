@@ -175,7 +175,6 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:2: The user-defined variable GAMES_USER is used but not added to BUILD_DEFS.",
 		"WARN: options.mk:3: PKGBASE should not be evaluated at load time.",
 		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.",
 		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.",

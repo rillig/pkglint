@@ -346,7 +346,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
-	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.SystemBuildDefs[varname] && !G.Mk.buildDefs[varname] {
+	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.Pkgsrc.IsBuildDef(varname) && !G.Mk.buildDefs[varname] {
 		mkline.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		Explain(
 			"When a pkgsrc package is built, many things can be configured by the",

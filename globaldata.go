@@ -16,7 +16,6 @@ type GlobalData struct {
 	MasterSiteVarToURL  map[string]string   // "MASTER_SITE_GITHUB" => "https://github.com/"
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
 	Tools               ToolRegistry        //
-	SystemBuildDefs     map[string]bool     // The set of user-defined variables that are added to BUILD_DEFS within the bsd.pkg.mk file.
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	LastChange          map[string]*Change  //
@@ -181,8 +180,6 @@ func (gd *GlobalData) loadTools() {
 	reg.RegisterTool(&Tool{"test", "TEST", true, true, true})
 	reg.RegisterTool(&Tool{"true", "TRUE", true /*why?*/, true, true})
 
-	systemBuildDefs := make(map[string]bool)
-
 	for _, basename := range toolFiles {
 		lines := G.globalData.Pkgsrc.LoadExistingLines("mk/tools/"+basename, true)
 		for _, line := range lines {
@@ -220,7 +217,7 @@ func (gd *GlobalData) loadTools() {
 
 				} else if varname == "_BUILD_DEFS" {
 					for _, bdvar := range splitOnSpace(value) {
-						systemBuildDefs[bdvar] = true
+						gd.Pkgsrc.AddBuildDef(bdvar)
 					}
 				}
 
@@ -238,26 +235,8 @@ func (gd *GlobalData) loadTools() {
 	if trace.Tracing {
 		reg.Trace()
 	}
-	if trace.Tracing {
-		trace.Stepf("systemBuildDefs: %v", systemBuildDefs)
-	}
-
-	// Some user-defined variables do not influence the binary
-	// package at all and therefore do not have to be added to
-	// BUILD_DEFS; therefore they are marked as "already added".
-	systemBuildDefs["DISTDIR"] = true
-	systemBuildDefs["FETCH_CMD"] = true
-	systemBuildDefs["FETCH_OUTPUT_ARGS"] = true
-	systemBuildDefs["GAMES_USER"] = true
-	systemBuildDefs["GAMES_GROUP"] = true
-	systemBuildDefs["GAMEDATAMODE"] = true
-	systemBuildDefs["GAMEDIRMODE"] = true
-	systemBuildDefs["GAMEMODE"] = true
-	systemBuildDefs["GAMEOWN"] = true
-	systemBuildDefs["GAMEGRP"] = true
 
 	gd.Tools = reg
-	gd.SystemBuildDefs = systemBuildDefs
 }
 
 func loadSuggestedUpdates(fname string) []SuggestedUpdate {
