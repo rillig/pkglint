@@ -27,7 +27,7 @@ func NewMkLines(lines []Line) *MkLines {
 		mklines[i] = NewMkLine(line)
 	}
 	tools := make(map[string]bool)
-	G.globalData.Pkgsrc.Tools.ForEach(func(tool *Tool) {
+	G.Pkgsrc.Tools.ForEach(func(tool *Tool) {
 		if tool.Predefined {
 			tools[tool.Name] = true
 		}

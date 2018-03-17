@@ -346,7 +346,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
-	if G.globalData.UserDefinedVars[varname] != nil && !G.globalData.Pkgsrc.IsBuildDef(varname) && !G.Mk.buildDefs[varname] {
+	if G.globalData.UserDefinedVars[varname] != nil && !G.Pkgsrc.IsBuildDef(varname) && !G.Mk.buildDefs[varname] {
 		mkline.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 		Explain(
 			"When a pkgsrc package is built, many things can be configured by the",
@@ -398,7 +398,7 @@ func (ck MkLineChecker) CheckVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	done := false
-	tool := G.globalData.Pkgsrc.Tools.ByVarname(varname)
+	tool := G.Pkgsrc.Tools.ByVarname(varname)
 
 	if isLoadTime && tool != nil {
 		done = tool.Predefined && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk)
@@ -1083,7 +1083,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, false)
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
-		if !fileExists(G.globalData.Pkgsrc.File(otherpkgpath + "/Makefile")) {
+		if !fileExists(G.Pkgsrc.File(otherpkgpath + "/Makefile")) {
 			mkline.Errorf("There is no package in %q.", otherpkgpath)
 		}
 

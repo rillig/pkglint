@@ -50,8 +50,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	G.logErr = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
-	G.globalData.Pkgsrc = NewPkgsrc(t.TmpDir())
-	G.Pkgsrc = G.globalData.Pkgsrc
+	G.Pkgsrc = NewPkgsrc(t.TmpDir())
+	G.globalData.Pkgsrc = G.Pkgsrc
 
 	t.checkC = c
 	t.SetupCommandLine( /* no arguments */ )
@@ -120,11 +120,11 @@ func (t *Tester) SetupMasterSite(varname string, urls ...string) {
 }
 
 func (t *Tester) SetupTool(tool *Tool) {
-	reg := G.globalData.Pkgsrc.Tools
+	reg := G.Pkgsrc.Tools
 
 	if len(reg.byName) == 0 && len(reg.byVarname) == 0 {
 		reg = NewToolRegistry()
-		G.globalData.Pkgsrc.Tools = reg
+		G.Pkgsrc.Tools = reg
 	}
 	if tool.Name != "" {
 		reg.byName[tool.Name] = tool

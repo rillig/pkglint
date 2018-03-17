@@ -476,7 +476,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 	}
 
 	shellword := scc.strcmd.Name
-	tool, localTool := G.globalData.Pkgsrc.Tools.ByName(shellword), false
+	tool, localTool := G.Pkgsrc.Tools.ByName(shellword), false
 	if tool == nil && G.Mk != nil {
 		tool, localTool = G.Mk.toolRegistry.byName[shellword], true
 	}
@@ -524,7 +524,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	if varuse := parser.VarUse(); varuse != nil && parser.EOF() {
 		varname := varuse.varname
 
-		if tool := G.globalData.Pkgsrc.Tools.ByVarname(varname); tool != nil {
+		if tool := G.Pkgsrc.Tools.ByVarname(varname); tool != nil {
 			if !G.Mk.tools[tool.Name] {
 				scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", tool.Name)
 			}
@@ -806,7 +806,7 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 			if len(simple.Redirections) != 0 {
 				return true, simple.Name.MkText
 			}
-			tool := G.globalData.Pkgsrc.Tools.FindByCommand(simple.Name)
+			tool := G.Pkgsrc.Tools.FindByCommand(simple.Name)
 			switch {
 			case tool == nil:
 				return true, simple.Name.MkText

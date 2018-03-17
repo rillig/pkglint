@@ -362,7 +362,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 	}
 
 	if includingFnameForUsedCheck != "" {
-		fileMklines.checkForUsedComment(G.globalData.Pkgsrc.ToRel(includingFnameForUsedCheck))
+		fileMklines.checkForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))
 	}
 
 	return true

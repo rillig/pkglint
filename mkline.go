@@ -448,7 +448,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if G.globalData.Pkgsrc.Tools.ByVarname(varname) != nil {
+	if G.Pkgsrc.Tools.ByVarname(varname) != nil {
 		switch vuc.quoting {
 		case vucQuotPlain:
 			if !vuc.IsWordPart {
@@ -519,7 +519,7 @@ func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 		return vartype
 	}
 
-	if tool := G.globalData.Pkgsrc.Tools.ByVarname(varname); tool != nil {
+	if tool := G.Pkgsrc.Tools.ByVarname(varname); tool != nil {
 		perms := aclpUse
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
@@ -533,7 +533,7 @@ func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 	}
 
 	m, toolvarname := match1(varname, `^TOOLS_(.*)`)
-	if m && G.globalData.Pkgsrc.Tools.ByVarname(toolvarname) != nil {
+	if m && G.Pkgsrc.Tools.ByVarname(toolvarname) != nil {
 		return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
 	}
 
