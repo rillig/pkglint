@@ -288,7 +288,6 @@ func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 	t.SetupFileLines("category/package/Makefile")
 	t.SetupFileLines("category/Makefile")
 	t.SetupFileLines("Makefile")
-	G.globalData.Pkgsrcdir = t.TmpDir()
 
 	G.CheckDirent(t.TmpDir())
 
@@ -436,8 +435,6 @@ func (s *Suite) Test_ChecklinesMessage__autofix(c *check.C) {
 
 func (s *Suite) Test_GlobalData_Latest(c *check.C) {
 	t := s.Init(c)
-
-	G.globalData.Pkgsrcdir = t.TmpDir()
 
 	latest1 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 

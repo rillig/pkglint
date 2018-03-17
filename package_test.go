@@ -159,7 +159,6 @@ func (s *Suite) Test_Package_varorder_license(c *check.C) {
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	G.globalData.InitVartypes()
-	G.globalData.Pkgsrcdir = t.TmpDir()
 	G.CurrentDir = t.TmpDir()
 
 	G.CheckDirent(t.TmpDir() + "/x11/9term")
@@ -455,7 +454,6 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
 
 	pkg := NewPackage("category/package")
-	G.globalData.Pkgsrcdir = t.TmpDir()
 	G.CurrentDir = t.TmpDir() + "/category/package"
 	G.CurPkgsrcdir = "../.."
 	G.Pkg = pkg

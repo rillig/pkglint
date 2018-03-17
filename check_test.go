@@ -50,6 +50,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	G.logErr = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
+	G.globalData.Pkgsrc = NewPkgsrc(t.TmpDir())
 
 	t.checkC = c
 	t.SetupCommandLine( /* no arguments */ )

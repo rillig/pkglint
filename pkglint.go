@@ -307,7 +307,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 
 	switch pkglint.CurPkgsrcdir {
 	case "../..":
-		pkglint.checkdirPackage(relpath(pkglint.globalData.Pkgsrcdir, currentDir))
+		pkglint.checkdirPackage(pkglint.globalData.Pkgsrc.ToRel(currentDir))
 	case "..":
 		CheckdirCategory()
 	case ".":

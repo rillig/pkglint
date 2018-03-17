@@ -138,6 +138,11 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	}
 }
 
+// Given the package path relative to the pkgsrc top directory,
+// checks a complete pkgsrc package.
+//
+// Example:
+//  checkdirPackage("category/pkgbase")
 func (pkglint *Pkglint) checkdirPackage(pkgpath string) {
 	if trace.Tracing {
 		defer trace.Call1(pkgpath)()
@@ -357,7 +362,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 	}
 
 	if includingFnameForUsedCheck != "" {
-		fileMklines.checkForUsedComment(relpath(G.globalData.Pkgsrcdir, includingFnameForUsedCheck))
+		fileMklines.checkForUsedComment(G.globalData.Pkgsrc.ToRel(includingFnameForUsedCheck))
 	}
 
 	return true

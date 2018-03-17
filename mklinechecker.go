@@ -1083,7 +1083,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, false)
 
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
-		if !fileExists(G.globalData.Pkgsrcdir + "/" + otherpkgpath + "/Makefile") {
+		if !fileExists(G.globalData.Pkgsrc.File(otherpkgpath + "/Makefile")) {
 			mkline.Errorf("There is no package in %q.", otherpkgpath)
 		}
 

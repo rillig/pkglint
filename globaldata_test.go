@@ -53,7 +53,6 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 		"USE_TOOLS+=\tpwd")
 	t.SetupFileLines("mk/bsd.pkg.mk",
 		"USE_TOOLS+=\tmv")
-	G.globalData.Pkgsrcdir = t.TmpDir()
 	G.CurrentDir = t.TmpDir()
 	G.CurPkgsrcdir = "."
 
@@ -122,7 +121,6 @@ func (s *Suite) Test_GlobalData_deprecated(c *check.C) {
 func (s *Suite) Test_GlobalData_loadDistSites(c *check.C) {
 	t := s.Init(c)
 
-	G.globalData.Pkgsrcdir = t.TmpDir()
 	t.CreateFileLines("mk/fetch/sites.mk",
 		MkRcsID,
 		"",

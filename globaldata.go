@@ -11,7 +11,7 @@ import (
 
 // GlobalData contains data describing pkgsrc as a whole.
 type GlobalData struct {
-	Pkgsrcdir           string              // Relative to the current working directory.
+	Pkgsrc              Pkgsrc              //
 	MasterSiteURLToVar  map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
 	MasterSiteVarToURL  map[string]string   // "MASTER_SITE_GITHUB" => "https://github.com/"
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
@@ -53,7 +53,7 @@ func (gd *GlobalData) Initialize() {
 		firstArg = path.Dir(firstArg)
 	}
 	if relTopdir := findPkgsrcTopdir(firstArg); relTopdir != "" {
-		gd.Pkgsrcdir = firstArg + "/" + relTopdir
+		gd.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
 	} else {
 		dummyLine.Fatalf("%q is not inside a pkgsrc tree.", firstArg)
 	}
@@ -86,7 +86,7 @@ func (gd *GlobalData) Latest(category string, re regex.Pattern, repl string) str
 		gd.latest = make(map[string]string)
 	}
 
-	categoryDir := gd.Pkgsrcdir + "/" + category
+	categoryDir := gd.Pkgsrc.File(category)
 	error := func() string {
 		dummyLine.Errorf("Cannot find latest version of %q in %q.", re, categoryDir)
 		gd.latest[key] = ""
@@ -116,8 +116,7 @@ func (gd *GlobalData) Latest(category string, re regex.Pattern, repl string) str
 }
 
 func (gd *GlobalData) loadDistSites() {
-	fname := gd.Pkgsrcdir + "/mk/fetch/sites.mk"
-	lines := LoadExistingLines(fname, true)
+	lines := gd.Pkgsrc.LoadExistingLines("mk/fetch/sites.mk", true)
 
 	nameToUrl := make(map[string]string)
 	urlToName := make(map[string]string)
@@ -147,8 +146,7 @@ func (gd *GlobalData) loadDistSites() {
 }
 
 func (gd *GlobalData) loadPkgOptions() {
-	fname := gd.Pkgsrcdir + "/mk/defaults/options.description"
-	lines := LoadExistingLines(fname, false)
+	lines := gd.Pkgsrc.LoadExistingLines("mk/defaults/options.description", false)
 
 	gd.PkgOptions = make(map[string]string)
 	for _, line := range lines {
@@ -163,8 +161,7 @@ func (gd *GlobalData) loadPkgOptions() {
 func (gd *GlobalData) loadTools() {
 	toolFiles := []string{"defaults.mk"}
 	{
-		fname := G.globalData.Pkgsrcdir + "/mk/tools/bsd.tools.mk"
-		lines := LoadExistingLines(fname, true)
+		lines := G.globalData.Pkgsrc.LoadExistingLines("mk/tools/bsd.tools.mk", true)
 		for _, line := range lines {
 			if m, _, _, includefile := MatchMkInclude(line.Text); m {
 				if !contains(includefile, "/") {
@@ -173,7 +170,7 @@ func (gd *GlobalData) loadTools() {
 			}
 		}
 		if len(toolFiles) <= 1 {
-			NewLineWhole(fname).Fatalf("Too few tool files.")
+			lines[0].Fatalf("Too few tool files.")
 		}
 	}
 
@@ -187,18 +184,16 @@ func (gd *GlobalData) loadTools() {
 	systemBuildDefs := make(map[string]bool)
 
 	for _, basename := range toolFiles {
-		fname := G.globalData.Pkgsrcdir + "/mk/tools/" + basename
-		lines := LoadExistingLines(fname, true)
+		lines := G.globalData.Pkgsrc.LoadExistingLines("mk/tools/"+basename, true)
 		for _, line := range lines {
 			reg.ParseToolLine(line)
 		}
 	}
 
 	for _, relativeName := range [...]string{"mk/bsd.prefs.mk", "mk/bsd.pkg.mk"} {
-		fname := G.globalData.Pkgsrcdir + "/" + relativeName
 		condDepth := 0
 
-		lines := LoadExistingLines(fname, true)
+		lines := G.globalData.Pkgsrc.LoadExistingLines(relativeName, true)
 		for _, line := range lines {
 			text := line.Text
 			if hasPrefix(text, "#") {
@@ -302,8 +297,8 @@ func parselinesSuggestedUpdates(lines []Line) []SuggestedUpdate {
 }
 
 func (gd *GlobalData) loadSuggestedUpdates() {
-	gd.suggestedUpdates = loadSuggestedUpdates(G.globalData.Pkgsrcdir + "/doc/TODO")
-	if wipFilename := G.globalData.Pkgsrcdir + "/wip/TODO"; fileExists(wipFilename) {
+	gd.suggestedUpdates = loadSuggestedUpdates(G.globalData.Pkgsrc.File("doc/TODO"))
+	if wipFilename := G.globalData.Pkgsrc.File("wip/TODO"); fileExists(wipFilename) {
 		gd.suggestedWipUpdates = loadSuggestedUpdates(wipFilename)
 	}
 }
@@ -363,7 +358,7 @@ func (gd *GlobalData) GetSuggestedPackageUpdates() []SuggestedUpdate {
 }
 
 func (gd *GlobalData) loadDocChanges() {
-	docdir := G.globalData.Pkgsrcdir + "/doc"
+	docdir := G.globalData.Pkgsrc.File("doc")
 	files, err := ioutil.ReadDir(docdir)
 	if err != nil {
 		NewLineWhole(docdir).Fatalf("Cannot be read.")
@@ -388,7 +383,7 @@ func (gd *GlobalData) loadDocChanges() {
 }
 
 func (gd *GlobalData) loadUserDefinedVars() {
-	lines := LoadExistingLines(G.globalData.Pkgsrcdir+"/mk/defaults/mk.conf", true)
+	lines := G.globalData.Pkgsrc.LoadExistingLines("mk/defaults/mk.conf", true)
 	mklines := NewMkLines(lines)
 
 	gd.UserDefinedVars = make(map[string]MkLine)
