@@ -443,7 +443,7 @@ func (s *Suite) Test_GlobalData_Latest(c *check.C) {
 
 	c.Check(latest1, equals, "")
 	t.CheckOutputLines(
-		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~\".")
+		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
 
 	t.SetupFileLines("lang/Makefile")
 	G.globalData.latest = nil
@@ -452,7 +452,7 @@ func (s *Suite) Test_GlobalData_Latest(c *check.C) {
 
 	c.Check(latest2, equals, "")
 	t.CheckOutputLines(
-		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~\".")
+		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
 
 	t.SetupFileLines("lang/python27/Makefile")
 	G.globalData.latest = nil
@@ -468,5 +468,16 @@ func (s *Suite) Test_GlobalData_Latest(c *check.C) {
 	latest4 := G.globalData.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
 	c.Check(latest4, equals, "../../lang/python35")
+	t.CheckOutputEmpty()
+
+	t.SetupFileLines("databases/postgresql95/Makefile")
+	t.SetupFileLines("databases/postgresql97/Makefile")
+	t.SetupFileLines("databases/postgresql100/Makefile")
+	t.SetupFileLines("databases/postgresql104/Makefile")
+	G.globalData.latest = nil
+
+	latest5 := G.globalData.Latest("databases", `^postgresql[0-9]+$`, "$0")
+
+	c.Check(latest5, equals, "postgresql104")
 	t.CheckOutputEmpty()
 }

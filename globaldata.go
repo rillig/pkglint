@@ -69,6 +69,13 @@ func (gd *GlobalData) Initialize() {
 	gd.loadDeprecatedVars()
 }
 
+// Latest returns the latest package matching the given pattern.
+// It searches the `category` for subdirectories matching the given
+// regular expression, and returns the `repl` string, in which the
+// placeholder is filled with the best result.
+//
+// Example:
+//  Latest("lang", `^php[0-9]+$`, "../../lang/$0") => "../../lang/php72"
 func (gd *GlobalData) Latest(category string, re regex.Pattern, repl string) string {
 	key := category + "/" + string(re) + " => " + repl
 	if latest, found := gd.latest[key]; found {
@@ -79,13 +86,17 @@ func (gd *GlobalData) Latest(category string, re regex.Pattern, repl string) str
 		gd.latest = make(map[string]string)
 	}
 
+	categoryDir := gd.Pkgsrcdir + "/" + category
 	error := func() string {
-		dummyLine.Errorf("Cannot find latest version of %q in %q.", re, gd.Pkgsrcdir)
+		dummyLine.Errorf("Cannot find latest version of %q in %q.", re, categoryDir)
 		gd.latest[key] = ""
 		return ""
 	}
 
-	all, err := ioutil.ReadDir(gd.Pkgsrcdir + "/" + category)
+	all, err := ioutil.ReadDir(categoryDir)
+	sort.SliceStable(all, func(i, j int) bool {
+		return naturalLess(all[i].Name(), all[j].Name())
+	})
 	if err != nil {
 		return error()
 	}
