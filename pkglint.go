@@ -489,12 +489,22 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, 0, "", nil)
-		line.Warnf("Should not be executable.")
-		Explain(
+		fix := line.Autofix()
+		fix.Warnf("Should not be executable.")
+		fix.Explain(
 			"No package file should ever be executable.  Even the INSTALL and",
 			"DEINSTALL scripts are usually not usable in the form they have in",
 			"the package, as the pathnames get adjusted during installation.",
 			"So there is no need to have any file executable.")
+		fix.Custom(func(printAutofix, autofix bool) {
+			fix.Describef(0, "Clearing executable bits")
+			if autofix {
+				if err := os.Chmod(line.Filename, st.Mode()&^0111); err != nil {
+					line.Errorf("Cannot clear executable bits: %s", err)
+				}
+			}
+		})
+		fix.Apply()
 	}
 
 	switch {
