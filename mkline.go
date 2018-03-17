@@ -446,9 +446,9 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		}
 	}
 
-	// Assuming the tool definitions don't include very special characters,
-	// so they can safely be used inside any quotes.
-	if G.globalData.Tools.byVarname[varname] != nil {
+	// Pkglint assumes that the tool definitions don't include very
+	// special characters, so they can safely be used inside any quotes.
+	if G.globalData.Pkgsrc.Tools.ByVarname(varname) != nil {
 		switch vuc.quoting {
 		case vucQuotPlain:
 			if !vuc.IsWordPart {
@@ -519,7 +519,7 @@ func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 		return vartype
 	}
 
-	if tool := G.globalData.Tools.byVarname[varname]; tool != nil {
+	if tool := G.globalData.Pkgsrc.Tools.ByVarname(varname); tool != nil {
 		perms := aclpUse
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
@@ -532,14 +532,15 @@ func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 		return &Vartype{lkNone, BtShellCommand, []ACLEntry{{"*", perms}}, false}
 	}
 
-	if m, toolvarname := match1(varname, `^TOOLS_(.*)`); m && G.globalData.Tools.byVarname[toolvarname] != nil {
+	m, toolvarname := match1(varname, `^TOOLS_(.*)`)
+	if m && G.globalData.Pkgsrc.Tools.ByVarname(toolvarname) != nil {
 		return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
 	}
 
 	allowAll := []ACLEntry{{"*", aclpAll}}
 	allowRuntime := []ACLEntry{{"*", aclpAllRuntime}}
 
-	// Guess the datatype of the variable based on naming conventions.
+	// Guess the data type of the variable based on naming conventions.
 	varbase := varnameBase(varname)
 	var gtype *Vartype
 	switch {

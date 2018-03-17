@@ -14,12 +14,15 @@ type PkgsrcImpl struct {
 	// The set of user-defined variables that are added to BUILD_DEFS
 	// within the bsd.pkg.mk file.
 	buildDefs map[string]bool
+
+	Tools ToolRegistry
 }
 
 func NewPkgsrc(dir string) Pkgsrc {
 	src := &PkgsrcImpl{
 		dir,
-		make(map[string]bool)}
+		make(map[string]bool),
+		NewToolRegistry()}
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to

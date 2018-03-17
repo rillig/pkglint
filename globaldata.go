@@ -15,7 +15,6 @@ type GlobalData struct {
 	MasterSiteURLToVar  map[string]string   // "https://github.com/" => "MASTER_SITE_GITHUB"
 	MasterSiteVarToURL  map[string]string   // "MASTER_SITE_GITHUB" => "https://github.com/"
 	PkgOptions          map[string]string   // "x11" => "Provides X11 support"
-	Tools               ToolRegistry        //
 	suggestedUpdates    []SuggestedUpdate   //
 	suggestedWipUpdates []SuggestedUpdate   //
 	LastChange          map[string]*Change  //
@@ -173,7 +172,7 @@ func (gd *GlobalData) loadTools() {
 		}
 	}
 
-	reg := NewToolRegistry()
+	reg := gd.Pkgsrc.Tools
 	reg.RegisterTool(&Tool{"echo", "ECHO", true, true, true})
 	reg.RegisterTool(&Tool{"echo -n", "ECHO_N", true, true, true})
 	reg.RegisterTool(&Tool{"false", "FALSE", true /*why?*/, true, false})
@@ -235,8 +234,6 @@ func (gd *GlobalData) loadTools() {
 	if trace.Tracing {
 		reg.Trace()
 	}
-
-	gd.Tools = reg
 }
 
 func loadSuggestedUpdates(fname string) []SuggestedUpdate {
@@ -628,5 +625,19 @@ func (tr *ToolRegistry) ParseToolLine(line Line) {
 				tr.Register(tool)
 			}
 		}
+	}
+}
+
+func (tr *ToolRegistry) ByVarname(varname string) *Tool {
+	return tr.byVarname[varname]
+}
+
+func (tr *ToolRegistry) ByName(name string) *Tool {
+	return tr.byName[name]
+}
+
+func (tr *ToolRegistry) ForEach(action func(tool *Tool)) {
+	for _, tool := range tr.byName {
+		action(tool)
 	}
 }

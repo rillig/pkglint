@@ -398,7 +398,7 @@ func (ck MkLineChecker) CheckVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	done := false
-	tool := G.globalData.Tools.byVarname[varname]
+	tool := G.globalData.Pkgsrc.Tools.ByVarname(varname)
 
 	if isLoadTime && tool != nil {
 		done = tool.Predefined && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk)

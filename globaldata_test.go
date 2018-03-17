@@ -59,7 +59,7 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 	G.globalData.loadTools()
 
 	trace.Tracing = true
-	G.globalData.Tools.Trace()
+	G.globalData.Pkgsrc.Tools.Trace()
 
 	t.CheckOutputLines(
 		"TRACE: + (*ToolRegistry).Trace()",

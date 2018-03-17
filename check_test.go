@@ -119,11 +119,11 @@ func (t *Tester) SetupMasterSite(varname string, urls ...string) {
 }
 
 func (t *Tester) SetupTool(tool *Tool) {
-	reg := G.globalData.Tools
+	reg := G.globalData.Pkgsrc.Tools
 
 	if len(reg.byName) == 0 && len(reg.byVarname) == 0 {
 		reg = NewToolRegistry()
-		G.globalData.Tools = reg
+		G.globalData.Pkgsrc.Tools = reg
 	}
 	if tool.Name != "" {
 		reg.byName[tool.Name] = tool
