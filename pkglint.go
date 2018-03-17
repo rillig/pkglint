@@ -28,6 +28,7 @@ const confVersion = "@VERSION@"
 type Pkglint struct {
 	opts       CmdOpts    //
 	globalData GlobalData //
+	Pkgsrc     Pkgsrc     //
 	Pkg        *Package   // The package that is currently checked.
 	Mk         *MkLines   // The Makefile (or fragment) that is currently checked.
 
@@ -160,6 +161,7 @@ func (pkglint *Pkglint) Main(args ...string) (exitcode int) {
 	}
 
 	pkglint.globalData.Initialize()
+	pkglint.Pkgsrc = pkglint.globalData.Pkgsrc
 
 	currentUser, err := user.Current()
 	if err == nil {
