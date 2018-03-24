@@ -392,7 +392,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 		}
 	} else {
 		if distinfoFile := G.CurrentDir + "/" + pkg.DistinfoFile; !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
-			NewLineWhole(distinfoFile).Warnf("File not found. Please run \"%s makesum\".", confMake)
+			NewLineWhole(distinfoFile).Warnf("File not found. Please run \"%s makesum\" or define NO_CHECKSUM=yes in the package Makefile.", confMake)
 		}
 	}
 
