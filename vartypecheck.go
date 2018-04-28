@@ -945,13 +945,13 @@ func (cv *VartypeCheck) Tool() {
 		// no warning for package-defined tool definitions
 
 	} else if m, toolname, tooldep := match2(cv.Value, `^([-\w]+|\[)(?::(\w+))?$`); m {
-		if G.Pkgsrc.Tools.ByName(toolname) == nil && (G.Mk == nil || G.Mk.toolRegistry.byName[toolname] == nil) {
+		if G.Pkgsrc.Tools.ByName(toolname) == nil && (G.Mk == nil || G.Mk.toolRegistry.ByName(toolname) == nil) {
 			cv.Line.Errorf("Unknown tool %q.", toolname)
 		}
 		switch tooldep {
 		case "", "bootstrap", "build", "pkgsrc", "run":
 		default:
-			cv.Line.Errorf("Unknown tool dependency %q. Use one of \"build\", \"pkgsrc\" or \"run\".", tooldep)
+			cv.Line.Errorf("Unknown tool dependency %q. Use one of \"bootstrap\", \"build\", \"pkgsrc\" or \"run\".", tooldep)
 		}
 	} else if cv.Op != opUseMatch {
 		cv.Line.Errorf("Invalid tool syntax: %q.", cv.Value)
