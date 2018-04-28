@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"netbsd.org/pkglint/trace"
 	"sort"
 )
@@ -122,6 +121,6 @@ func (tr *ToolRegistry) ForEach(action func(tool *Tool)) {
 
 func (tr *ToolRegistry) validateToolName(toolName string, line Line) {
 	if toolName != "echo -n" && !matches(toolName, `^([-\w.]+|\[)$`) {
-		panic(fmt.Sprintf("Invalid tool name %q in %s", toolName, line))
+		line.Errorf("Invalid tool name %q", toolName)
 	}
 }
