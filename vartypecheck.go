@@ -940,6 +940,7 @@ func (cv *VartypeCheck) Stage() {
 	}
 }
 
+// Tool checks for tool names like "awk", "m4:pkgsrc", "digest:bootstrap".
 func (cv *VartypeCheck) Tool() {
 	if cv.Varname == "TOOLS_NOOP" && cv.Op == opAssignAppend {
 		// no warning for package-defined tool definitions

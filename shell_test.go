@@ -277,9 +277,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine_strip(c *check.C) {
 
 	checkShellCommandLine("${STRIP} executable")
 
-	t.CheckOutputLines(
-		"WARN: fname:1: Unknown shell command \"${STRIP}\".",
-		"WARN: fname:1: STRIP is used but not defined. Spelling mistake?")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__nofix(c *check.C) {
