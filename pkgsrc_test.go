@@ -67,7 +67,8 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 	t.SetupFileLines("mk/tools/bsd.tools.mk",
 		".include \"flex.mk\"",
 		".include \"gettext.mk\"",
-		".include \"strip.mk\"")
+		".include \"strip.mk\"",
+		".include \"replace.mk\"")
 	t.SetupFileLines("mk/tools/defaults.mk",
 		"_TOOLS_VARNAME.chown=CHOWN",
 		"_TOOLS_VARNAME.gawk=AWK",
@@ -86,6 +87,10 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 		"TOOLS_PATH.strip=       ${TOOLS_PLATFORM.strip}",
 		".endif",
 		"STRIP?=         strip")
+	t.SetupFileLines("mk/tools/replace.mk",
+		"_TOOLS.bzip2=\tbzip2 bzcat",
+		"#TOOLS_CREATE+=commented out",
+		"_UNRELATED_VAR=\t# empty")
 	t.SetupFileLines("mk/bsd.prefs.mk",
 		"USE_TOOLS+=\tpwd",
 		"USE_TOOLS+=\tm4:pkgsrc")
@@ -101,6 +106,8 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 
 	t.CheckOutputLines(
 		"TRACE: + (*ToolRegistry).Trace()",
+		"TRACE: 1   tool &{Name:bzcat Varname: MustUseVarForm:false Predefined:false UsableAtLoadtime:false}",
+		"TRACE: 1   tool &{Name:bzip2 Varname: MustUseVarForm:false Predefined:false UsableAtLoadtime:false}",
 		"TRACE: 1   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false UsableAtLoadtime:false}",
 		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:true UsableAtLoadtime:true}",
 		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:true UsableAtLoadtime:true}",

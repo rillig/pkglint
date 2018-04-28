@@ -88,6 +88,8 @@ func (tr *ToolRegistry) Trace() {
 	}
 }
 
+// ParseToolLine parses a tool definition from the pkgsrc infrastructure,
+// e.g. in mk/tools/replace.mk.
 func (tr *ToolRegistry) ParseToolLine(line Line) {
 	if m, commented, varname, _, _, _, value, _, _ := MatchVarassign(line.Text); m {
 		if commented {
@@ -102,7 +104,7 @@ func (tr *ToolRegistry) ParseToolLine(line Line) {
 		} else if m, toolname := match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
 			tr.Register(toolname, line)
 
-		} else if m, toolname := match1(varname, `_TOOLS\.(.*)`); m {
+		} else if m, toolname := match1(varname, `^_TOOLS\.(.*)`); m {
 			tr.Register(toolname, line)
 			for _, tool := range splitOnSpace(value) {
 				tr.Register(tool, line)
