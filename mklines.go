@@ -19,6 +19,7 @@ type MkLines struct {
 	toolRegistry   ToolRegistry    // Tools defined in file scope.
 	SeenBsdPrefsMk bool
 	indentation    Indentation // Indentation depth of preprocessing directives
+	// XXX: Why both tools and toolRegistry?
 }
 
 func NewMkLines(lines []Line) *MkLines {

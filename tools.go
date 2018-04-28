@@ -3,6 +3,7 @@ package main
 import (
 	"netbsd.org/pkglint/trace"
 	"sort"
+	"strings"
 )
 
 // See `mk/tools/`.
@@ -23,13 +24,18 @@ func NewToolRegistry() ToolRegistry {
 	return ToolRegistry{make(map[string]*Tool), make(map[string]*Tool)}
 }
 
+// Register registers the tool by its name.
+// The tool may then be used by this name (e.g. "awk"),
+// but not by a corresponding variable (e.g. ${AWK}).
+// The toolname may include the scope (:pkgsrc, :run, etc.).
 func (tr *ToolRegistry) Register(toolname string, line Line) *Tool {
-	tr.validateToolName(toolname, line)
+	name := strings.SplitN(toolname, ":", 2)[0]
+	tr.validateToolName(name, line)
 
-	tool := tr.byName[toolname]
+	tool := tr.byName[name]
 	if tool == nil {
-		tool = &Tool{Name: toolname}
-		tr.byName[toolname] = tool
+		tool = &Tool{Name: name}
+		tr.byName[name] = tool
 	}
 	return tool
 }

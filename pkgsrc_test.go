@@ -87,7 +87,8 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 		".endif",
 		"STRIP?=         strip")
 	t.SetupFileLines("mk/bsd.prefs.mk",
-		"USE_TOOLS+=\tpwd")
+		"USE_TOOLS+=\tpwd",
+		"USE_TOOLS+=\tm4:pkgsrc")
 	t.SetupFileLines("mk/bsd.pkg.mk",
 		"USE_TOOLS+=\tmv")
 	G.CurrentDir = t.TmpDir()
@@ -105,6 +106,7 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:true UsableAtLoadtime:true}",
 		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:true UsableAtLoadtime:false}",
 		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false UsableAtLoadtime:false}",
+		"TRACE: 1   tool &{Name:m4 Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:true}",
 		"TRACE: 1   tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false UsableAtLoadtime:false}",
 		"TRACE: 1   tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true UsableAtLoadtime:false}",
 		"TRACE: 1   tool &{Name:pwd Varname:PWD MustUseVarForm:false Predefined:true UsableAtLoadtime:true}",
