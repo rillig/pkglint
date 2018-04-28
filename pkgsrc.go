@@ -14,7 +14,6 @@ import (
 type Pkgsrc = *PkgsrcImpl
 
 type PkgsrcImpl struct {
-
 	// The top directory (PKGSRCDIR), either absolute or relative to
 	// the current working directory.
 	topdir string
@@ -159,11 +158,11 @@ func (src *PkgsrcImpl) loadTools() {
 	}
 
 	reg := src.Tools
-	reg.RegisterTool(&Tool{"echo", "ECHO", true, true, true})
-	reg.RegisterTool(&Tool{"echo -n", "ECHO_N", true, true, true})
-	reg.RegisterTool(&Tool{"false", "FALSE", true /*why?*/, true, false})
-	reg.RegisterTool(&Tool{"test", "TEST", true, true, true})
-	reg.RegisterTool(&Tool{"true", "TRUE", true /*why?*/, true, true})
+	reg.RegisterTool(&Tool{"echo", "ECHO", true, true, true}, dummyLine)
+	reg.RegisterTool(&Tool{"echo -n", "ECHO_N", true, true, true}, dummyLine)
+	reg.RegisterTool(&Tool{"false", "FALSE", true /*why?*/, true, false}, dummyLine)
+	reg.RegisterTool(&Tool{"test", "TEST", true, true, true}, dummyLine)
+	reg.RegisterTool(&Tool{"true", "TRUE", true /*why?*/, true, true}, dummyLine)
 
 	for _, basename := range toolFiles {
 		lines := G.Pkgsrc.LoadExistingLines("mk/tools/"+basename, true)
@@ -190,7 +189,10 @@ func (src *PkgsrcImpl) loadTools() {
 					if condDepth == 0 || condDepth == 1 && relativeName == "mk/bsd.prefs.mk" {
 						for _, toolname := range splitOnSpace(value) {
 							if !containsVarRef(toolname) {
-								for _, tool := range [...]*Tool{reg.Register(toolname), reg.Register("TOOLS_" + toolname)} {
+								tools := [...]*Tool{
+									reg.Register(toolname, line),
+									reg.Register("TOOLS_"+toolname, line)}
+								for _, tool := range tools {
 									tool.Predefined = true
 									if relativeName == "mk/bsd.prefs.mk" {
 										tool.UsableAtLoadtime = true
@@ -357,7 +359,6 @@ func (src *PkgsrcImpl) loadUserDefinedVars() {
 
 func (src *PkgsrcImpl) initDeprecatedVars() {
 	src.Deprecated = map[string]string{
-
 		// December 2003
 		"FIX_RPATH": "It has been removed from pkgsrc in 2003.",
 
