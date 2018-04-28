@@ -190,8 +190,7 @@ func (src *PkgsrcImpl) loadTools() {
 						for _, toolname := range splitOnSpace(value) {
 							if !containsVarRef(toolname) {
 								tools := [...]*Tool{
-									reg.Register(toolname, line),
-									reg.Register("TOOLS_"+toolname, line)}
+									reg.Register(toolname, line)}
 								for _, tool := range tools {
 									tool.Predefined = true
 									if relativeName == "mk/bsd.prefs.mk" {

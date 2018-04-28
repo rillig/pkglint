@@ -120,7 +120,7 @@ func (tr *ToolRegistry) ForEach(action func(tool *Tool)) {
 }
 
 func (tr *ToolRegistry) validateToolName(toolName string, line Line) {
-	if toolName != "echo -n" && !matches(toolName, `^([-\w.]+|\[)$`) {
+	if toolName != "echo -n" && !matches(toolName, `^([-a-z0-9.]+|\[)$`) {
 		line.Errorf("Invalid tool name %q", toolName)
 	}
 }

@@ -100,8 +100,6 @@ func (s *Suite) Test_GlobalData_loadTools(c *check.C) {
 
 	t.CheckOutputLines(
 		"TRACE: + (*ToolRegistry).Trace()",
-		"TRACE: 1   tool &{Name:TOOLS_mv Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:false}",
-		"TRACE: 1   tool &{Name:TOOLS_pwd Varname: MustUseVarForm:false Predefined:true UsableAtLoadtime:true}",
 		"TRACE: 1   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false UsableAtLoadtime:false}",
 		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:true UsableAtLoadtime:true}",
 		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:true UsableAtLoadtime:true}",
