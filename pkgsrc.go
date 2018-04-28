@@ -144,7 +144,8 @@ func (src *PkgsrcImpl) Latest(category string, re regex.Pattern, repl string) st
 func (src *PkgsrcImpl) loadTools() {
 	toolFiles := []string{"defaults.mk"}
 	{
-		lines := G.Pkgsrc.LoadExistingLines("mk/tools/bsd.tools.mk", true)
+		toc := G.Pkgsrc.File("mk/tools/bsd.tools.mk")
+		lines := LoadExistingLines(toc, true)
 		for _, line := range lines {
 			if m, _, _, includefile := MatchMkInclude(line.Text); m {
 				if !contains(includefile, "/") {
@@ -153,7 +154,7 @@ func (src *PkgsrcImpl) loadTools() {
 			}
 		}
 		if len(toolFiles) <= 1 {
-			lines[0].Fatalf("Too few tool files.")
+			NewLine(toc, 0, "", nil).Fatalf("Too few tool files.")
 		}
 	}
 
@@ -516,7 +517,7 @@ func (src *PkgsrcImpl) initDeprecatedVars() {
 
 // LoadExistingLines loads the file relative to the pkgsrc top directory.
 func (src *PkgsrcImpl) LoadExistingLines(fileName string, joinBackslashLines bool) []Line {
-	return LoadExistingLines(src.topdir+"/"+fileName, joinBackslashLines)
+	return LoadExistingLines(src.File(fileName), joinBackslashLines)
 }
 
 // File resolves a file name relative to the pkgsrc top directory.
