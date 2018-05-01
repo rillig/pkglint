@@ -469,3 +469,26 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 		"WARN: ~/category/package/options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is "+
 			"included unconditionally here and conditionally in Makefile:7 (depending on OPSYS).")
 }
+
+// See https://github.com/rillig/pkglint/issues/1
+func (s *Suite) Test_Package_includeAfterExists(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.CreateFileLines("mk/bsd.pkg.mk")
+	t.CreateFileLines("category/package/Makefile",
+		MkRcsID,
+		"",
+		".if exists(options.mk)",
+		".  include \"options.mk\"",
+		".endif",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	G.CurrentDir = t.TempFilename("category/package")
+	G.checkdirPackage(G.CurrentDir)
+
+	// FIXME: Don't complain about missing file, as the inclusion is guarded.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/options.mk: Cannot be read.")
+}
