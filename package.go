@@ -356,7 +356,11 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				// current file and in the current working directory.
 				// Pkglint doesn't have an include dir list, like make(1) does.
 				if !fileExists(dirname + "/" + includeFile) {
-					if dirname != G.CurrentDir { // Prevent unnecessary syscalls
+
+					if fileMklines.indentation.IsCheckedFile(includeFile) {
+						continue // See https://github.com/rillig/pkglint/issues/1
+
+					} else if dirname != G.CurrentDir { // Prevent unnecessary syscalls
 						dirname = G.CurrentDir
 						if !fileExists(dirname + "/" + includeFile) {
 							mkline.Errorf("Cannot read %q.", dirname+"/"+includeFile)
@@ -370,9 +374,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				}
 				absIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
 				absIncluded := dirname + "/" + includeFile
-				if fileMklines.indentation.IsCheckedFile(includeFile) && !fileExists(absIncluded) {
-					// Just skip it, see https://github.com/rillig/pkglint/issues/1
-				} else if !pkg.readMakefile(absIncluded, mainLines, allLines, absIncluding) {
+				if !pkg.readMakefile(absIncluded, mainLines, allLines, absIncluding) {
 					return false
 				}
 			}
