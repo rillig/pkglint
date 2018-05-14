@@ -998,6 +998,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkg("SUBST_STAGE.*", lkNone, BtStage)
 	pkglist("SUBST_VARS.*", lkShell, BtVariableName)
 	pkglist("SUPERSEDES", lkSpace, BtDependency)
+	acl("TEST_DEPENDS", lkSpace, BtDependencyWithPath, "Makefile, Makefile.common, *.mk: append")
 	pkglist("TEST_DIRS", lkShell, BtWrksrcSubdirectory)
 	pkglist("TEST_ENV", lkShell, BtShellWord)
 	acl("TEST_TARGET", lkShell, BtIdentifier, "Makefile: set; Makefile.common: default, set; options.mk: set, append")
