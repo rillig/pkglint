@@ -8,10 +8,12 @@ func (s *Suite) Test_Alternatives_PLIST(c *check.C) {
 	t.SetupFileLines("ALTERNATIVES",
 		"sbin/sendmail @PREFIX@/sbin/sendmail.postfix@POSTFIXVER@",
 		"sbin/sendmail @PREFIX@/sbin/sendmail.exim@EXIMVER@",
-		"bin/echo bin/gnu-echo")
+		"bin/echo bin/gnu-echo",
+		"bin/editor bin/vim -e")
 
 	G.Pkg = NewPackage("")
 	G.Pkg.PlistFiles["bin/echo"] = true
+	G.Pkg.PlistFiles["bin/vim"] = true
 	G.Pkg.PlistFiles["sbin/sendmail.exim${EXIMVER}"] = true
 
 	CheckfileAlternatives(t.TempFilename("ALTERNATIVES"), G.Pkg.PlistFiles)
