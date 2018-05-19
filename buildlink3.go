@@ -101,7 +101,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	indentLevel := 1 // The first .if is from the second paragraph.
 	for {
 		if exp.EOF() {
-			exp.CurrentLine().Warnf("Expected .endif")
+			exp.CurrentLine().Warnf("Expected \".endif\".")
 			return
 		}
 

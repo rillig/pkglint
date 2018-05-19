@@ -56,6 +56,10 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 	if fname != "" {
 		fname = cleanpath(fname)
 	}
+	// FIXME: investigate in which cases format can be ""
+	if G.Testing && format != "" && !hasSuffix(format, ".") && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
+		panic(fmt.Sprintf("Format %q must end in a period.", format))
+	}
 
 	if !G.opts.LogVerbose && loggedAlready(fname, lineno, msg) {
 		return false

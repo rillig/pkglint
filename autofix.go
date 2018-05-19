@@ -281,6 +281,10 @@ func (fix *Autofix) Apply() {
 }
 
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
+	if G.Testing && format != "Silent-Magic-Diagnostic" && !hasSuffix(format, ".") {
+		panic(fmt.Sprintf("Autofix: format %q must end with a period.", format))
+	}
+
 	fix.level = level
 	fix.diagFormat = format
 	fix.diagArgs = args

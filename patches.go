@@ -156,7 +156,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		// this by looking only at the patch file.
 		if linesToAdd != linesToDel {
 			line := ck.exp.PreviousLine()
-			line.Warnf("Premature end of patch hunk (expected %d lines to be deleted and %d lines to be added)",
+			line.Warnf("Premature end of patch hunk (expected %d lines to be deleted and %d lines to be added).",
 				linesToDel, linesToAdd)
 		}
 	}

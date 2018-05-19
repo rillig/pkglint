@@ -309,7 +309,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		!varIsUsed(varname) &&
 		!(G.Mk != nil && G.Mk.forVars[varname]) &&
 		!containsVarRef(varname) {
-		mkline.Warnf("%s is used but not defined. Spelling mistake?", varname)
+		mkline.Warnf("%s is used but not defined.", varname)
 	}
 
 	if hasPrefix(varuse.Mod(), ":=") && vartype != nil && !vartype.IsConsideredList() {
@@ -674,7 +674,7 @@ func (ck MkLineChecker) checkVarassign() {
 		} else if deprecated := G.Pkgsrc.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
 		} else {
-			mkline.Warnf("%s is defined but not used. Spelling mistake?", varname)
+			mkline.Warnf("%s is defined but not used.", varname)
 		}
 	}
 
