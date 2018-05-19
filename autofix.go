@@ -211,23 +211,17 @@ func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
 
 // Notef remembers the note for logging it later when Apply is called.
 func (fix *Autofix) Notef(format string, args ...interface{}) {
-	fix.level = llNote
-	fix.diagFormat = format
-	fix.diagArgs = args
+	fix.setDiag(llNote, format, args)
 }
 
 // Warnf remembers the warning for logging it later when Apply is called.
 func (fix *Autofix) Warnf(format string, args ...interface{}) {
-	fix.level = llWarn
-	fix.diagFormat = format
-	fix.diagArgs = args
+	fix.setDiag(llWarn, format, args)
 }
 
 // Errorf remembers the error for logging it later when Apply is called.
 func (fix *Autofix) Errorf(format string, args ...interface{}) {
-	fix.level = llError
-	fix.diagFormat = format
-	fix.diagArgs = args
+	fix.setDiag(llError, format, args)
 }
 
 // Explain remembers the explanation for logging it later when Apply is called.
@@ -284,6 +278,12 @@ func (fix *Autofix) Apply() {
 	fix.diagFormat = ""
 	fix.diagArgs = nil
 	fix.explanation = nil
+}
+
+func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
+	fix.level = level
+	fix.diagFormat = format
+	fix.diagArgs = args
 }
 
 func (fix *Autofix) skip() bool {
