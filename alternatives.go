@@ -19,7 +19,7 @@ func CheckfileAlternatives(filename string, plistFiles map[string]bool) {
 
 			relImplementation := strings.Replace(implementation, "@PREFIX@/", "", 1)
 			plistName := regex.Compile(`@(\w+)@`).ReplaceAllString(relImplementation, "${$1}")
-			if !plistFiles[plistName] {
+			if !plistFiles[plistName] && !G.Pkg.vars.Defined("ALTERNATIVES_SRC") {
 				if plistName != implementation {
 					line.Errorf("Alternative implementation %q must appear in the PLIST as %q.", implementation, plistName)
 				} else {
