@@ -257,7 +257,7 @@ func (fix *Autofix) Apply() {
 				if action.lineno != 0 {
 					lineno = strconv.Itoa(action.lineno)
 				}
-				logs(llAutofix, line.Filename, lineno, "", action.description)
+				logs(llAutofix, line.Filename, lineno, "Magic-Autofix-Format", action.description)
 			}
 		}
 

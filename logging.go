@@ -56,8 +56,7 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 	if fname != "" {
 		fname = cleanpath(fname)
 	}
-	// FIXME: investigate in which cases format can be ""
-	if G.Testing && format != "" && !hasSuffix(format, ".") && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
+	if G.Testing && format != "Magic-Autofix-Format" && !hasSuffix(format, ".") && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
 		panic(fmt.Sprintf("Format %q must end in a period.", format))
 	}
 
@@ -81,7 +80,7 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 		text += sep + level.GccName + ":"
 		sep = " "
 	}
-	if G.opts.Profiling && format != "" {
+	if G.opts.Profiling && format != "Magic-Autofix-Format" {
 		G.loghisto.Add(format, 1)
 	}
 	text += sep + msg + "\n"
