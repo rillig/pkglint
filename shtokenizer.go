@@ -39,7 +39,7 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 	case shqBackt:
 		atom = p.shAtomBackt()
 	case shqSubsh:
-		atom = p.shAtomSub()
+		atom = p.shAtomSubsh()
 	case shqDquotBackt:
 		atom = p.shAtomDquotBackt()
 	case shqBacktDquot:
@@ -137,7 +137,9 @@ func (p *ShTokenizer) shAtomBackt() *ShAtom {
 	return nil
 }
 
-func (p *ShTokenizer) shAtomSub() *ShAtom {
+// In pkgsrc, the $(...) subshell syntax is not used to preserve
+// compatibility with /bin/sh from Solaris 7.
+func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	const q = shqSubsh
 	if op := p.shOperator(q); op != nil {
 		return op
