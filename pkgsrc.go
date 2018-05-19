@@ -55,8 +55,8 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		make(map[string]MkLine),
 		make(map[string]string),
 		make(map[string]*Vartype),
-		make(map[string]*Hash),
-		make(map[string]bool)}
+		nil, // Only initialized when pkglint is run for a whole pkgsrc installation
+		nil}
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
