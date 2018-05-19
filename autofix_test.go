@@ -433,3 +433,19 @@ func (s *Suite) Test_Autofix_CustomFix(c *check.C) {
 		"AUTOFIX: Makefile:3: Converting to uppercase")
 	c.Check(lines[2].Text, equals, "LINE3")
 }
+
+func (s *Suite) Test_Autofix_Explain(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("Makefile", 74, "line1")
+
+	fix := line.Autofix()
+	fix.Warnf("Please write row instead of line.")
+	fix.Replace("line", "row")
+	fix.Explain("Explanation")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:74: Please write row instead of line.")
+	c.Check(G.explanationsAvailable, equals, false) // FIXME
+}
