@@ -447,5 +447,5 @@ func (s *Suite) Test_Autofix_Explain(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:74: Please write row instead of line.")
-	c.Check(G.explanationsAvailable, equals, false) // FIXME
+	c.Check(G.explanationsAvailable, equals, true)
 }
