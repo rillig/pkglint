@@ -419,12 +419,13 @@ func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
 	runVartypeChecks(t, "PKGNAME", opAssign, (*VartypeCheck).PkgName,
 		"pkgbase-0",
 		"pkgbase-1.0",
-		"pkgbase-3.1.4.1.5.9.2.6.5.3.5.8.9.7.9",
 		"pkgbase-1.1234567890",
 		"pkgbase-1z",
 		"pkgbase-client-11a",
 		"pkgbase-client-1.a",
-		"pkgbase-z1")
+		"pkgbase-client-1_20180101",
+		"pkgbase-z1",
+		"pkgbase-3.1.4.1.5.9.2.6.5.3.5.8.9.7.9")
 
 	t.CheckOutputLines(
 		"WARN: fname:8: \"pkgbase-z1\" is not a valid package name. " +

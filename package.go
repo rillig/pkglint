@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Za-z]*)$`
+const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 
 // Package contains data for the pkgsrc package that is currently checked.
 type Package struct {
