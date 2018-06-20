@@ -116,7 +116,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 			"\t"+shellCommand)
 		shline := NewShellLine(G.Mk.mklines[0])
 
-		shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+		shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 	}
 
 	checkShellCommandLine("@# Comment")
@@ -264,7 +264,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine_strip(c *check.C) {
 			"\t"+shellCommand)
 		shline := NewShellLine(G.Mk.mklines[0])
 
-		shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+		shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 	}
 
 	checkShellCommandLine("${STRIP} executable")
@@ -336,7 +336,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__exitcode(c *check.C) {
 
 	for _, mkline := range G.Mk.mklines {
 		shline := NewShellLine(mkline)
-		shline.CheckShellCommandLine(mkline.Shellcmd())
+		shline.CheckShellCommandLine(mkline.ShellCommand())
 	}
 
 	t.CheckOutputLines(
@@ -493,7 +493,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C
 	text := "\tfor f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done"
 
 	shline := t.NewShellLine("Makefile", 3, text)
-	shline.mkline.Tokenize(shline.mkline.Shellcmd())
+	shline.mkline.Tokenize(shline.mkline.ShellCommand())
 	shline.CheckShellCommandLine(text)
 
 	t.CheckOutputLines(
@@ -558,7 +558,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__sed_and_mv(c *check.C) {
 
 	shline := t.NewShellLine("Makefile", 85, "\t${RUN} ${SED} 's,#,// comment:,g' fname > fname.tmp; ${MV} fname.tmp fname")
 
-	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:85: Please use the SUBST framework instead of ${SED} and ${MV}.")
@@ -569,7 +569,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__subshell(c *check.C) {
 
 	shline := t.NewShellLine("Makefile", 85, "\t${RUN} uname=$$(uname)")
 
-	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 
 	t.CheckOutputLines(
 		"WARN: Makefile:85: Invoking subshells via $(...) is not portable enough.")
@@ -580,7 +580,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_dir(c *check.C) {
 
 	shline := t.NewShellLine("Makefile", 85, "\t${RUN} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
 
-	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:85: You can use \"INSTALLATION_DIRS+= dir1\" instead of \"${INSTALL_DATA_DIR}\".",
@@ -606,7 +606,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_option_d(c *check.
 
 	shline := t.NewShellLine("Makefile", 85, "\t${RUN} ${INSTALL} -d ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
 
-	shline.CheckShellCommandLine(shline.mkline.Shellcmd())
+	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:85: You can use \"INSTALLATION_DIRS+= dir1\" instead of \"${INSTALL} -d\".",

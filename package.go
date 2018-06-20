@@ -122,7 +122,7 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	includedFiles := make(map[string]MkLine)
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
-			file := mkline.Includefile()
+			file := mkline.IncludeFile()
 			if m, bl3 := match1(file, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
 				includedFiles[bl3] = mkline
 				if pkg.bl3[bl3] == nil {
@@ -320,7 +320,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 
 		var includeFile, incDir, incBase string
 		if mkline.IsInclude() {
-			inc := mkline.Includefile()
+			inc := mkline.IncludeFile()
 			includeFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(inc, true))
 			if containsVarRef(includeFile) {
 				if !contains(fname, "/mk/") {
@@ -918,7 +918,7 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 	}
 
 	if path.Dir(abspath(mkline.Filename)) == abspath(G.CurrentDir) {
-		includefile := mkline.Includefile()
+		includefile := mkline.IncludeFile()
 
 		if indentation.IsConditional() {
 			pkg.conditionalIncludes[includefile] = mkline

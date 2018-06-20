@@ -110,7 +110,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		defer trace.Call0()()
 	}
 
-	patchedFileType := guessFileType(ck.exp.CurrentLine(), patchedFile)
+	patchedFileType := guessFileType(patchedFile)
 	if trace.Tracing {
 		trace.Stepf("guessFileType(%q) = %s", patchedFile, patchedFileType)
 	}
@@ -306,7 +306,7 @@ func (ft FileType) String() string {
 }
 
 // This is used to select the proper subroutine for detecting absolute pathnames.
-func guessFileType(line Line, fname string) (fileType FileType) {
+func guessFileType(fname string) (fileType FileType) {
 	if trace.Tracing {
 		defer trace.Call(fname, "=>", &fileType)()
 	}

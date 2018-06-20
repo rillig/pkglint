@@ -24,10 +24,10 @@ func (ck MkLineChecker) Check() {
 	case mkline.IsVarassign():
 		ck.checkVarassign()
 
-	case mkline.IsShellcmd():
-		shellcmd := mkline.Shellcmd()
-		ck.checkText(shellcmd)
-		NewShellLine(mkline).CheckShellCommandLine(shellcmd)
+	case mkline.IsShellCommand():
+		shellCommand := mkline.ShellCommand()
+		ck.checkText(shellCommand)
+		NewShellLine(mkline).CheckShellCommandLine(shellCommand)
 
 	case mkline.IsComment():
 		if hasPrefix(mkline.Text, "# url2pkg-marker") {
@@ -49,7 +49,7 @@ func (ck MkLineChecker) checkInclude() {
 		ck.checkDirectiveIndentation(G.Mk.indentation.Depth("include"))
 	}
 
-	includefile := mkline.Includefile()
+	includefile := mkline.IncludeFile()
 	mustExist := mkline.MustExist()
 	if trace.Tracing {
 		trace.Step2("includingFile=%s includefile=%s", mkline.Filename, includefile)
