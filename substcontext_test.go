@@ -173,6 +173,28 @@ func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
 		"WARN: Makefile:25: Incomplete SUBST block: SUBST_FILES.os missing.")
 }
 
+func (s *Suite) Test_SubstContext__patch(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wextra,no-space")
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("os.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         post-patch",
+		"SUBST_FILES.os=         guess-os.h",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin,")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: os.mk:4: Substitutions should not happen in the patch phase.")
+}
+
+// simulateSubstLines only tests some of the inner workings of SubstContext.
+// It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
 	ctx := NewSubstContext()
 	for _, lineText := range texts {

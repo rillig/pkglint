@@ -97,6 +97,17 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 	switch varbase {
 	case "SUBST_STAGE":
 		ctx.dupString(mkline, &ctx.stage, varname, value)
+		if hasSuffix(value, "-patch") {
+			mkline.Warnf("Substitutions should not happen in the patch phase.")
+			Explain(
+				"Performing substitutions during post-patch breaks tools such as",
+				"mkpatches, making it very difficult to regenerate correct patches",
+				"after making changes, and often leading to substituted string",
+				"replacements being committed.",
+				"",
+				"Instead of pre-patch, use post-extract.",
+				"Instead of post-patch, use pre-configure.")
+		}
 	case "SUBST_MESSAGE":
 		ctx.dupString(mkline, &ctx.message, varname, value)
 	case "SUBST_FILES":
