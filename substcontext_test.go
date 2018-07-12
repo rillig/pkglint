@@ -194,6 +194,31 @@ func (s *Suite) Test_SubstContext__post_patch(c *check.C) {
 		"AUTOFIX: os.mk:4: Replacing \"post-patch\" with \"pre-configure\".")
 }
 
+func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wextra")
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("os.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=         1",
+		"SUBST_STAGE.1=          pre-configure",
+		"SUBST_FILES.1=          file1",
+		"SUBST_SED.1=            -e s,subst1,repl1,",
+		"SUBST_CLASSES+=         2",
+		"SUBST_SED.1+=           -e s,subst1b,repl1b,", // Misplaced
+		"SUBST_STAGE.2=          pre-configure",
+		"SUBST_FILES.2=          file2",
+		"SUBST_SED.2=            -e s,subst2,repl2,")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: os.mk:8: Variable \"SUBST_SED.1\" does not match SUBST class \"2\".")
+}
+
 func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 	t := s.Init(c)
 

@@ -60,7 +60,11 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
 		}
 		if ctx.id != "" && ctx.id != classes[0] {
-			mkline.Warnf("SUBST_CLASSES should only appear once in a SUBST block.")
+			if ctx.IsComplete() {
+				ctx.Finish(mkline)
+			} else {
+				mkline.Warnf("SUBST_CLASSES should only appear once in a SUBST block.")
+			}
 		}
 		ctx.id = classes[0]
 		return
