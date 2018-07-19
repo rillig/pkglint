@@ -493,3 +493,21 @@ func (s *Suite) Test_MkLines_ExtractDocumentedVariables(c *check.C) {
 		"VARBASE3.* (line 19)"}
 	c.Check(varnames, deepEquals, expected)
 }
+
+func (s *Suite) Test_MkLines__shell_command_indentation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"#",
+		"pre-configure:",
+		"\tcd 'indented correctly'",
+		"\t\tcd 'indented needlessly'")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: Makefile:5: Shell programs should be indented with a single tab.")
+}
