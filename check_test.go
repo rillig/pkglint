@@ -124,6 +124,11 @@ func (t *Tester) SetupMasterSite(varname string, urls ...string) {
 	}
 }
 
+// SetupOption pretends that the package option is defined in mk/defaults/options.description.
+func (t *Tester) SetupOption(name, description string) {
+	G.Pkgsrc.PkgOptions[name] = description
+}
+
 func (t *Tester) SetupTool(tool *Tool) {
 	reg := G.Pkgsrc.Tools
 

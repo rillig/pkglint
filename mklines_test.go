@@ -511,3 +511,22 @@ func (s *Suite) Test_MkLines__shell_command_indentation(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: Makefile:5: Shell programs should be indented with a single tab.")
 }
+
+func (s *Suite) Test_MkLines__unknown_options(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	t.SetupOption("known", "")
+	mklines := t.NewMkLines("options.mk",
+		MkRcsID,
+		"#",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.pkgbase",
+		"PKG_SUPPORTED_OPTIONS=\tknown unknown",
+		"PKG_SUGGESTED_OPTIONS=\tknown unknown")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: options.mk:4: Unknown option \"unknown\".")
+}
