@@ -259,7 +259,11 @@ func (t *Tester) NewLinesAt(fileName string, firstLine int, texts ...string) []L
 }
 
 func (t *Tester) NewMkLines(fileName string, lines ...string) *MkLines {
-	return NewMkLines(t.NewLines(fileName, lines...))
+	rawText := ""
+	for _, line := range lines {
+		rawText += line + "\n"
+	}
+	return NewMkLines(convertToLogicalLines(fileName, rawText, true))
 }
 
 // Returns and consumes the output from both stdout and stderr.

@@ -504,7 +504,9 @@ func (s *Suite) Test_MkLines__shell_command_indentation(c *check.C) {
 		"#",
 		"pre-configure:",
 		"\tcd 'indented correctly'",
-		"\t\tcd 'indented needlessly'")
+		"\t\tcd 'indented needlessly'",
+		"\tcd 'indented correctly' \\",
+		"\t\t&& cd 'with indented continuation'")
 
 	mklines.Check()
 
