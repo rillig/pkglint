@@ -958,8 +958,10 @@ func (cv *VartypeCheck) Tool() {
 		default:
 			cv.Line.Errorf("Unknown tool dependency %q. Use one of \"bootstrap\", \"build\", \"pkgsrc\" or \"run\" or \"test\".", tooldep)
 		}
-	} else if cv.Op != opUseMatch {
-		cv.Line.Errorf("Invalid tool syntax: %q.", cv.Value)
+	} else if cv.Op != opUseMatch && cv.Value == cv.ValueNoVar {
+		cv.Line.Errorf("Malformed tool dependency: %q.", cv.Value)
+		Explain(
+			"A tool dependency typically looks like \"sed\" or \"sed:run\".")
 	}
 }
 
