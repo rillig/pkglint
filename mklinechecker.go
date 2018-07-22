@@ -110,15 +110,30 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 
 	directive := mkline.Directive()
 	args := mkline.Args()
+	comment := mkline.CondComment()
 
 	expectedDepth := indentation.Depth(directive)
 	ck.checkDirectiveIndentation(expectedDepth)
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
+		_, varname := match1(args, `^!defined\(([\w]+_MK)\)$`)
 		indentation.Push(indentation.Depth(directive))
+		indentation.AddVar(varname)
 	} else if matches(directive, `^(?:if|ifdef|ifndef|for)$`) {
 		indentation.Push(indentation.Depth(directive) + 2)
 	} else if directive == "endfor" || directive == "endif" {
+		if directive == "endif" && comment != "" {
+			if !indentation.DependsOnLevel(comment) {
+				mkline.Warnf("Comment %q does not match condition variables %q.", comment, indentation.LevelVarnames())
+			}
+		}
+
+		if directive == "endfor" && comment != "" {
+			if !indentation.DependsOnLevel(comment) {
+				mkline.Warnf("Comment %q does not match variable %q.", comment, indentation.LevelVarnames())
+			}
+		}
+
 		if indentation.Len() > 1 {
 			indentation.Pop()
 		} else {
@@ -147,6 +162,7 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 	} else if directive == "for" {
 		if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
 			for _, forvar := range splitOnSpace(vars) {
+				indentation.AddVar(forvar)
 				if !G.Infrastructure && hasPrefix(forvar, "_") {
 					mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
 				}

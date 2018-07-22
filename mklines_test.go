@@ -418,6 +418,30 @@ func (s *Suite) Test_MkLines_Check_indentation(c *check.C) {
 		"ERROR: options.mk:15: Unmatched .endif.")
 }
 
+func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	mklines := t.NewMkLines("opsys.mk",
+		MkRcsID,
+		"",
+		".for i in 1 2 3 4 5",
+		".  if ${OPSYS} == NetBSD",
+		".    if ${ARCH} == x86_64",
+		".      if ${OS_VERSION:M8.*}",
+		".      endif # ARCH",     // Wrong, should be OS_VERSION.
+		".    endif # OS_VERSION", // Wrong, should be ARCH.
+		".  endif # OPSYS",        // Correct.
+		".endfor # j")             // Wrong, should be i.
+
+	mklines.Check()
+
+	t.CheckOutputLines(""+
+		"WARN: opsys.mk:7: Comment \"ARCH\" does not match condition variables \"OS_VERSION\".",
+		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition variables \"ARCH\".",
+		"WARN: opsys.mk:10: Comment \"j\" does not match variable \"i\".")
+}
+
 // Demonstrates how to define your own make(1) targets.
 func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 	t := s.Init(c)

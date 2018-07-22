@@ -38,6 +38,7 @@ type mkLineConditional struct {
 	indent    string
 	directive string
 	args      string
+	comment   string
 }
 type mkLineInclude struct {
 	mustExist     bool
@@ -112,8 +113,8 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, mkLineEmpty{}}
 	}
 
-	if m, indent, directive, args := matchMkCond(text); m {
-		return &MkLineImpl{line, mkLineConditional{indent, directive, args}}
+	if m, indent, directive, args, comment := matchMkCond(text); m {
+		return &MkLineImpl{line, mkLineConditional{indent, directive, args, comment}}
 	}
 
 	if m, indent, directive, includefile := MatchMkInclude(text); m {
@@ -217,7 +218,8 @@ func (mkline *MkLineImpl) Varparam() string { return mkline.data.(mkLineAssign).
 // Op applies to variable assignments and returns the assignment operator.
 func (mkline *MkLineImpl) Op() MkOperator { return mkline.data.(mkLineAssign).op }
 
-// For a variable assignment, the text up to and including the assignment operator, e.g. VARNAME+=\t
+// ValueAlign applies to variable assignments and returns all the text
+// before the variable value, e.g. "VARNAME+=\t".
 func (mkline *MkLineImpl) ValueAlign() string { return mkline.data.(mkLineAssign).valueAlign }
 func (mkline *MkLineImpl) Value() string      { return mkline.data.(mkLineAssign).value }
 
@@ -235,14 +237,22 @@ func (mkline *MkLineImpl) Indent() string {
 		return mkline.data.(mkLineInclude).indent
 	}
 }
-func (mkline *MkLineImpl) Directive() string   { return mkline.data.(mkLineConditional).directive }
-func (mkline *MkLineImpl) Args() string        { return mkline.data.(mkLineConditional).args }
+
+func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineConditional).directive }
+func (mkline *MkLineImpl) Args() string      { return mkline.data.(mkLineConditional).args }
+
+// CondComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
+func (mkline *MkLineImpl) CondComment() string { return mkline.data.(mkLineConditional).comment }
+
 func (mkline *MkLineImpl) MustExist() bool     { return mkline.data.(mkLineInclude).mustExist }
 func (mkline *MkLineImpl) IncludeFile() string { return mkline.data.(mkLineInclude).includeFile }
-func (mkline *MkLineImpl) Targets() string     { return mkline.data.(mkLineDependency).targets }
-func (mkline *MkLineImpl) Sources() string     { return mkline.data.(mkLineDependency).sources }
 
-// Initialized step by step, when parsing other lines
+func (mkline *MkLineImpl) Targets() string { return mkline.data.(mkLineDependency).targets }
+func (mkline *MkLineImpl) Sources() string { return mkline.data.(mkLineDependency).sources }
+
+// ConditionVars is a space-separated list of those variable names
+// on which the inclusion depends. It is initialized later,
+// step by step, when parsing other lines
 func (mkline *MkLineImpl) ConditionVars() string { return mkline.data.(mkLineInclude).conditionVars }
 func (mkline *MkLineImpl) SetConditionVars(varnames string) {
 	include := mkline.data.(mkLineInclude)
@@ -340,7 +350,7 @@ func (mkline *MkLineImpl) ExplainRelativeDirs() {
 		"main pkgsrc repository.")
 }
 
-func matchMkCond(text string) (m bool, indent, directive, args string) {
+func matchMkCond(text string) (m bool, indent, directive, args, comment string) {
 	i, n := 0, len(text)
 	if i < n && text[i] == '.' {
 		i++
@@ -375,6 +385,13 @@ func matchMkCond(text string) (m bool, indent, directive, args string) {
 	for i < n && (text[i] != '#' || text[i-1] == '\\') {
 		i++
 	}
+	commentStart := i
+	if commentStart < n {
+		commentStart++
+		for commentStart < n && (text[commentStart] == ' ' || text[commentStart] == '\t') {
+			commentStart++
+		}
+	}
 	for i > argsStart && (text[i-1] == ' ' || text[i-1] == '\t') {
 		i--
 	}
@@ -383,6 +400,7 @@ func matchMkCond(text string) (m bool, indent, directive, args string) {
 	m = true
 	indent = text[indentStart:indentEnd]
 	args = strings.Replace(text[argsStart:argsEnd], "\\#", "#", -1)
+	comment = text[commentStart:]
 	return
 }
 
@@ -764,9 +782,6 @@ func (ind *Indentation) Push(indent int) {
 
 func (ind *Indentation) AddVar(varname string) {
 	level := ind.Len() - 1
-	if hasSuffix(varname, "_MK") {
-		return
-	}
 	for _, existingVarname := range ind.conditionVars[level] {
 		if varname == existingVarname {
 			return
@@ -787,20 +802,54 @@ func (ind *Indentation) DependsOn(varname string) bool {
 	return false
 }
 
-func (ind *Indentation) IsConditional() bool {
-	for _, vars := range ind.conditionVars {
-		if len(vars) > 0 {
-			return true
+// DependsOnLevel checks whether the condition or loop at the current level
+// mentions the given variable name.
+func (ind *Indentation) DependsOnLevel(varname string) bool {
+	if last := len(ind.conditionVars) - 1; last >= 0 {
+		for _, levelVarname := range ind.conditionVars[last] {
+			if varname == levelVarname {
+				return true
+			}
 		}
 	}
 	return false
 }
 
+func (ind *Indentation) IsConditional() bool {
+	for _, vars := range ind.conditionVars {
+		for _, varname := range vars {
+			if !hasSuffix(varname, "_MK") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Varnames returns the list of all variables that are mentioned in any
+// condition or loop surrounding the current line.
+// Variables named *_MK are excluded since they are usually not interesting.
 func (ind *Indentation) Varnames() string {
 	sep := ""
 	varnames := ""
 	for _, levelVarnames := range ind.conditionVars {
 		for _, levelVarname := range levelVarnames {
+			if !hasSuffix(levelVarname, "_MK") {
+				varnames += sep + levelVarname
+				sep = ", "
+			}
+		}
+	}
+	return varnames
+}
+
+// LevelVarnames returns those variables that are mentioned in the
+// innermost condition or loop.
+func (ind *Indentation) LevelVarnames() string {
+	sep := ""
+	varnames := ""
+	if last := len(ind.conditionVars) - 1; last >= 0 {
+		for _, levelVarname := range ind.conditionVars[last] {
 			varnames += sep + levelVarname
 			sep = ", "
 		}
