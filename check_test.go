@@ -299,6 +299,10 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 // EnableTracing redirects all logging output to stdout instead of
 // the buffer. This is useful when stepping through the code, especially
 // in combination with SetupCommandLine("--debug").
+//
+// As long as this tracing is enabled, no diagnostics are written to
+// the buffer that is later checked with Tester.CheckOutputLines.
+// FIXME: Write diagnostics to both stdout and the buffer.
 func (t *Tester) EnableTracing() {
 	G.logOut = NewSeparatorWriter(os.Stdout)
 	trace.Out = os.Stdout

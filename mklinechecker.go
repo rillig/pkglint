@@ -115,15 +115,7 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 	expectedDepth := indentation.Depth(directive)
 	ck.checkDirectiveIndentation(expectedDepth)
 
-	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
-		_, varname := match1(args, `^!defined\(([\w]+_MK)\)$`)
-		indentation.Push(indentation.Depth(directive), args)
-		indentation.AddVar(varname)
-	} else if directive == "elif" {
-		indentation.top().condition = args
-	} else if matches(directive, `^(?:if|ifdef|ifndef|for)$`) {
-		indentation.Push(indentation.Depth(directive)+2, args)
-	} else if directive == "endfor" || directive == "endif" {
+	if directive == "endfor" || directive == "endif" {
 		if directive == "endif" && comment != "" {
 			if condition := indentation.Condition(); !contains(condition, comment) {
 				mkline.Warnf("Comment %q does not match condition %q.", comment, condition)
@@ -136,22 +128,25 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 			}
 		}
 
-		if indentation.Len() > 1 {
-			indentation.Pop()
-		} else {
+		if indentation.Len() <= 1 {
 			mkline.Errorf("Unmatched .%s.", directive)
 		}
 	}
 
-	needsArgument := matches(directive, `^(?:if|ifdef|ifndef|elif|for|undef)$`)
-	if needsArgument != (args != "") {
-		if needsArgument {
-			mkline.Errorf("\".%s\" requires arguments.", directive)
-		} else {
-			mkline.Errorf("\".%s\" does not take arguments.", directive)
-			if directive == "else" {
-				mkline.Notef("If you meant \"else if\", use \".elif\".")
-			}
+	needsArgument := false
+	switch directive {
+	case "if", "ifdef", "ifndef", "elif", "for", "undef":
+		needsArgument = true
+	}
+
+	if needsArgument && args == "" {
+		mkline.Errorf("\".%s\" requires arguments.", directive)
+
+	} else if !needsArgument && args != "" {
+		mkline.Errorf("\".%s\" does not take arguments.", directive)
+		if directive == "else" {
+			// TODO: combine with the above error.
+			mkline.Notef("If you meant \"else if\", use \".elif\".")
 		}
 
 	} else if directive == "if" || directive == "elif" {

@@ -288,7 +288,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 	isMainMakefile := len(mainLines.mklines) == 0
 
 	result := true
-	fileMklines.ForEach(func(mkline MkLine) bool {
+	lineAction := func(mkline MkLine) bool {
 		if isMainMakefile {
 			mainLines.mklines = append(mainLines.mklines, mkline)
 			mainLines.lines = append(mainLines.lines, mkline.Line)
@@ -381,7 +381,9 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 			}
 		}
 		return true
-	})
+	}
+	atEnd := func(mkline MkLine) {}
+	fileMklines.ForEach(lineAction, atEnd)
 
 	if includingFnameForUsedCheck != "" {
 		fileMklines.checkForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))

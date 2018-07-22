@@ -93,7 +93,8 @@ func (mklines *MkLines) Check() {
 	substcontext := NewSubstContext()
 	var varalign VaralignBlock
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
-	mklines.ForEach(func(mkline MkLine) bool {
+
+	lineAction := func(mkline MkLine) bool {
 		ck := MkLineChecker{mkline}
 		ck.Check()
 		varalign.Check(mkline)
@@ -129,14 +130,18 @@ func (mklines *MkLines) Check() {
 			mkline.Tokenize(mkline.ShellCommand())
 		}
 
-		if mkline == lastMkline {
-			ind := mklines.indentation
-			if ind.Len() != 1 && ind.Depth("") != 0 {
-				lastMkline.Errorf("Directive indentation is not 0, but %d.", ind.Depth(""))
-			}
-		}
 		return true
-	})
+	}
+
+	atEnd := func(mkline MkLine) {
+		ind := mklines.indentation
+		if ind.Len() != 1 && ind.Depth("") != 0 {
+			mkline.Errorf("Directive indentation is not 0, but %d.", ind.Depth(""))
+		}
+	}
+
+	mklines.ForEach(lineAction, atEnd)
+
 	substcontext.Finish(lastMkline)
 	varalign.Finish()
 
@@ -147,8 +152,9 @@ func (mklines *MkLines) Check() {
 
 // ForEach calls the action for each line, until the action returns false.
 // It keeps track of the indentation and all conditionals.
-func (mklines *MkLines) ForEach(action func(mkline MkLine) bool) {
+func (mklines *MkLines) ForEach(action func(mkline MkLine) bool, atEnd func(mkline MkLine)) {
 	mklines.indentation = NewIndentation()
+
 	for _, mkline := range mklines.mklines {
 		mklines.indentation.TrackBefore(mkline)
 		if !action(mkline) {
@@ -156,6 +162,8 @@ func (mklines *MkLines) ForEach(action func(mkline MkLine) bool) {
 		}
 		mklines.indentation.TrackAfter(mkline)
 	}
+
+	atEnd(mklines.mklines[len(mklines.mklines)-1])
 	mklines.indentation = nil
 }
 

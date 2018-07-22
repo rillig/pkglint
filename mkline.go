@@ -777,9 +777,11 @@ func (ind *Indentation) top() *indentationLevel {
 	return &ind.levels[ind.Len()-1]
 }
 
+// Depth returns the number of space characters by which the directive
+// should be indented.
 func (ind *Indentation) Depth(directive string) int {
 	switch directive {
-	case "elif", "else", "endfor", "endif":
+	case "if", "elif", "else", "endfor", "endif":
 		return ind.levels[imax(0, ind.Len()-2)].depth
 	}
 	return ind.top().depth
@@ -865,35 +867,68 @@ func (ind *Indentation) IsCheckedFile(filename string) bool {
 }
 
 func (ind *Indentation) TrackBefore(mkline MkLine) {
-	if mkline.IsCond() {
-		directive := mkline.Directive()
-		args := mkline.Args()
+	if !mkline.IsCond() {
+		return
+	}
+	if trace.Tracing {
+		trace.Stepf("Indentation before line %s: %+v", mkline.Linenos(), ind.levels)
+	}
 
-		switch directive {
-		case "if":
-			ind.Push(ind.Depth(directive), args)
-			if contains(args, "exists") {
-				cond := NewMkParser(mkline.Line, args, false).MkCond()
-				cond.Visit("exists", func(node *Tree) {
-					ind.AddCheckedFile(node.args[0].(string))
-				})
-			}
-		case "ifdef", "ifndef", "for":
-			ind.Push(ind.Depth(directive), args)
-		case "elif":
-			ind.top().condition = args
+	directive := mkline.Directive()
+	args := mkline.Args()
+
+	switch directive {
+	case "if":
+		ind.Push(ind.top().depth, args)
+
+		if m, varname := match1(args, `^!defined\(([\w]+_MK)\)$`); m {
+			ind.AddVar(varname)
+			return
 		}
+
+		// TODO: For symmetry, call AddVar here too.
+		if contains(args, "exists") {
+			cond := NewMkParser(mkline.Line, args, false).MkCond()
+			cond.Visit("exists", func(node *Tree) {
+				ind.AddCheckedFile(node.args[0].(string))
+			})
+		}
+
+	case "for", "ifdef", "ifndef":
+		ind.Push(ind.top().depth, args)
 	}
 }
 
 func (ind *Indentation) TrackAfter(mkline MkLine) {
-	if mkline.IsCond() {
-		switch mkline.Directive() {
-		case "endfor", "endif":
-			if ind.Len() > 1 { // Can only be false in unbalanced files.
-				ind.Pop()
-			}
+	if !mkline.IsCond() {
+		return
+	}
+
+	directive := mkline.Directive()
+	args := mkline.Args()
+
+	switch directive {
+	case "if":
+		// For multiple-inclusion guards, the indentation stays at the same level.
+		if !matches(args, `^!defined\(([\w]+_MK)\)$`) {
+			ind.top().depth += 2
 		}
+
+	case "for", "ifdef", "ifndef":
+		ind.top().depth += 2
+
+	case "elif":
+		// Handled here instead of TrackAfter to allow the action to access the previous condition.
+		ind.top().condition = args
+
+	case "endfor", "endif":
+		if ind.Len() > 1 { // Can only be false in unbalanced files.
+			ind.Pop()
+		}
+	}
+
+	if trace.Tracing {
+		trace.Stepf("Indentation after line %s: %+v", mkline.Linenos(), ind.levels)
 	}
 }
 
