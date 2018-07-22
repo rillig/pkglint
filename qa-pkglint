@@ -78,8 +78,8 @@ diffs() {
   echo "=> Generating diffs"
   (
     cd "$archivedir"
-    for out in *.out; do
-      diff -u "reference" "$out" > "${out%.out}.diff" || true
+    for out in 20*.out; do
+      diff -u "reference.out" "$out" > "${out%.out}.diff" || true
       perl -e '
         use strict;
         use warnings;
@@ -108,7 +108,7 @@ diffs() {
             printf("%5d   %5d   %+5d   %s\n", $ndel, $nadd, $nadd - $ndel, $key);
           }
         }
-        ' "reference" "$out" >> "${out%.out}.diff"
+        ' "reference.out" "$out" >> "${out%.out}.diff"
     done
   )
 }
