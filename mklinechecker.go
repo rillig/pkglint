@@ -143,10 +143,10 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 		mkline.Errorf("\".%s\" requires arguments.", directive)
 
 	} else if !needsArgument && args != "" {
-		mkline.Errorf("\".%s\" does not take arguments.", directive)
 		if directive == "else" {
-			// TODO: combine with the above error.
-			mkline.Notef("If you meant \"else if\", use \".elif\".")
+			mkline.Errorf("\".%s\" does not take arguments. If you meant \"else if\", use \".elif\".", directive)
+		} else {
+			mkline.Errorf("\".%s\" does not take arguments.", directive)
 		}
 
 	} else if directive == "if" || directive == "elif" {
