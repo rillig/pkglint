@@ -878,23 +878,7 @@ func (ind *Indentation) TrackBefore(mkline MkLine) {
 	args := mkline.Args()
 
 	switch directive {
-	case "if":
-		ind.Push(ind.top().depth, args)
-
-		if m, varname := match1(args, `^!defined\(([\w]+_MK)\)$`); m {
-			ind.AddVar(varname)
-			return
-		}
-
-		// TODO: For symmetry, call AddVar here too.
-		if contains(args, "exists") {
-			cond := NewMkParser(mkline.Line, args, false).MkCond()
-			cond.Visit("exists", func(node *Tree) {
-				ind.AddCheckedFile(node.args[0].(string))
-			})
-		}
-
-	case "for", "ifdef", "ifndef":
+	case "for", "if", "ifdef", "ifndef":
 		ind.Push(ind.top().depth, args)
 	}
 }
@@ -910,8 +894,18 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	switch directive {
 	case "if":
 		// For multiple-inclusion guards, the indentation stays at the same level.
-		if !matches(args, `^!defined\(([\w]+_MK)\)$`) {
+		if m, varname := match1(args, `^!defined\(([\w]+_MK)\)$`); m {
+			ind.AddVar(varname)
+		} else {
 			ind.top().depth += 2
+		}
+
+		// TODO: For symmetry with the !defined case, call AddVar for arbitrary conditions, too.
+		if contains(args, "exists") {
+			cond := NewMkParser(mkline.Line, args, false).MkCond()
+			cond.Visit("exists", func(node *Tree) {
+				ind.AddCheckedFile(node.args[0].(string))
+			})
 		}
 
 	case "for", "ifdef", "ifndef":
