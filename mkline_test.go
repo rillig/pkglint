@@ -849,12 +849,12 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 func (s *Suite) Test_Indentation(c *check.C) {
 	ind := &Indentation{}
 
-	ind.Push(0)
+	ind.Push(0, "")
 
 	c.Check(ind.Depth("if"), equals, 0)
 	c.Check(ind.DependsOn("VARNAME"), equals, false)
 
-	ind.Push(2)
+	ind.Push(2, "")
 
 	c.Check(ind.Depth("if"), equals, 2)
 	c.Check(ind.Depth("endfor"), equals, 0)
@@ -869,7 +869,7 @@ func (s *Suite) Test_Indentation(c *check.C) {
 	c.Check(ind.DependsOn("LEVEL1.VAR1"), equals, true)
 	c.Check(ind.DependsOn("OTHER_VAR"), equals, false)
 
-	ind.Push(2)
+	ind.Push(2, "")
 
 	ind.AddVar("LEVEL2.VAR")
 

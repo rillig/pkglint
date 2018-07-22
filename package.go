@@ -300,7 +300,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 			ind := &fileMklines.indentation
 			switch mkline.Directive() {
 			case "if", "ifdef", "ifndef", "for":
-				ind.Push(0) // Dummy indentation, only the checkedFiles are interesting
+				ind.Push(0, "") // Dummy indentation, only the checkedFiles are interesting
 			case "endfor", "endif":
 				if ind.Len() > 1 {
 					ind.Pop()

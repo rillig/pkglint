@@ -751,6 +751,7 @@ type Indentation struct {
 
 type indentationLevel struct {
 	depth         int      // Number of space characters; always a multiple of 2
+	condition     string   // The corresponding condition from the .if or .elif
 	conditionVars []string // Variables on which the current path depends
 
 	// Files whose existence has been checked in a related path.
@@ -763,24 +764,28 @@ func (ind *Indentation) Len() int {
 	return len(ind.levels)
 }
 
+func (ind *Indentation) top() *indentationLevel {
+	return &ind.levels[ind.Len()-1]
+}
+
 func (ind *Indentation) Depth(directive string) int {
 	switch directive {
 	case "elif", "else", "endfor", "endif":
-		return ind.levels[imax(0, len(ind.levels)-2)].depth
+		return ind.levels[imax(0, ind.Len()-2)].depth
 	}
-	return ind.levels[len(ind.levels)-1].depth
+	return ind.top().depth
 }
 
 func (ind *Indentation) Pop() {
 	ind.levels = ind.levels[:ind.Len()-1]
 }
 
-func (ind *Indentation) Push(indent int) {
-	ind.levels = append(ind.levels, indentationLevel{indent, nil, nil})
+func (ind *Indentation) Push(indent int, condition string) {
+	ind.levels = append(ind.levels, indentationLevel{indent, condition, nil, nil})
 }
 
 func (ind *Indentation) AddVar(varname string) {
-	vars := &ind.levels[ind.Len()-1].conditionVars
+	vars := &ind.top().conditionVars
 	for _, existingVarname := range *vars {
 		if varname == existingVarname {
 			return
@@ -796,21 +801,6 @@ func (ind *Indentation) DependsOn(varname string) bool {
 			if varname == levelVarname {
 				return true
 			}
-		}
-	}
-	return false
-}
-
-// DependsOnLevel checks whether the condition or loop at the current level
-// mentions the given variable name.
-func (ind *Indentation) DependsOnLevel(varname string) bool {
-	lastIndex := ind.Len() - 1
-	if lastIndex < 0 {
-		return false
-	}
-	for _, levelVarname := range ind.levels[lastIndex].conditionVars {
-		if varname == levelVarname {
-			return true
 		}
 	}
 	return false
@@ -844,23 +834,14 @@ func (ind *Indentation) Varnames() string {
 	return varnames
 }
 
-// LevelVarnames returns those variables that are mentioned in the
-// innermost condition or loop.
-func (ind *Indentation) LevelVarnames() string {
-	sep := ""
-	varnames := ""
-	if lastIndex := ind.Len() - 1; lastIndex >= 0 {
-		for _, levelVarname := range ind.levels[lastIndex].conditionVars {
-			varnames += sep + levelVarname
-			sep = ", "
-		}
-	}
-	return varnames
+// Condition returns the condition for the innermost .if, .elif or .for.
+func (ind *Indentation) Condition() string {
+	return ind.top().condition
 }
 
 func (ind *Indentation) AddCheckedFile(filename string) {
-	level := &ind.levels[ind.Len()-1]
-	level.checkedFiles = append(level.checkedFiles, filename)
+	top := ind.top()
+	top.checkedFiles = append(top.checkedFiles, filename)
 }
 
 func (ind *Indentation) IsCheckedFile(filename string) bool {

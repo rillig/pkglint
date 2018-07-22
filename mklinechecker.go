@@ -117,20 +117,22 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 
 	if directive == "if" && matches(args, `^!defined\([\w]+_MK\)$`) {
 		_, varname := match1(args, `^!defined\(([\w]+_MK)\)$`)
-		indentation.Push(indentation.Depth(directive))
+		indentation.Push(indentation.Depth(directive), args)
 		indentation.AddVar(varname)
+	} else if directive == "elif" {
+		indentation.top().condition = args
 	} else if matches(directive, `^(?:if|ifdef|ifndef|for)$`) {
-		indentation.Push(indentation.Depth(directive) + 2)
+		indentation.Push(indentation.Depth(directive)+2, args)
 	} else if directive == "endfor" || directive == "endif" {
 		if directive == "endif" && comment != "" {
-			if !indentation.DependsOnLevel(comment) {
-				mkline.Warnf("Comment %q does not match condition variables %q.", comment, indentation.LevelVarnames())
+			if condition := indentation.Condition(); !contains(condition, comment) {
+				mkline.Warnf("Comment %q does not match condition %q.", comment, condition)
 			}
 		}
 
 		if directive == "endfor" && comment != "" {
-			if !indentation.DependsOnLevel(comment) {
-				mkline.Warnf("Comment %q does not match variable %q.", comment, indentation.LevelVarnames())
+			if condition := indentation.Condition(); !contains(condition, comment) {
+				mkline.Warnf("Comment %q does not match loop %q.", comment, condition)
 			}
 		}
 

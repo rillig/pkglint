@@ -93,7 +93,7 @@ func (mklines *MkLines) Check() {
 	substcontext := NewSubstContext()
 	var varalign VaralignBlock
 	indentation := &mklines.indentation
-	indentation.Push(0)
+	indentation.Push(0, "") // Dummy
 	for _, mkline := range mklines.mklines {
 		ck := MkLineChecker{mkline}
 		ck.Check()

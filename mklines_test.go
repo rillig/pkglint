@@ -432,14 +432,26 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 		".      endif # ARCH",     // Wrong, should be OS_VERSION.
 		".    endif # OS_VERSION", // Wrong, should be ARCH.
 		".  endif # OPSYS",        // Correct.
-		".endfor # j")             // Wrong, should be i.
+		".endfor # j",             // Wrong, should be i.
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif # option",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif # opti", // This typo gets unnoticed since "opti" is a substring of the condition.
+		"",
+		".if ${OPSYS} == NetBSD",
+		".elif ${OPSYS} == FreeBSD",
+		".endif # NetBSD") // Wrong, should be FreeBSD from the .elif.
 
+	// See MkLineChecker.checkCond
 	mklines.Check()
 
 	t.CheckOutputLines(""+
-		"WARN: opsys.mk:7: Comment \"ARCH\" does not match condition variables \"OS_VERSION\".",
-		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition variables \"ARCH\".",
-		"WARN: opsys.mk:10: Comment \"j\" does not match variable \"i\".")
+		"WARN: opsys.mk:7: Comment \"ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
+		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition \"${ARCH} == x86_64\".",
+		"WARN: opsys.mk:10: Comment \"j\" does not match loop \"i in 1 2 3 4 5\".",
+		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".")
 }
 
 // Demonstrates how to define your own make(1) targets.
