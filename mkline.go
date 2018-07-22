@@ -238,6 +238,9 @@ func (mkline *MkLineImpl) Indent() string {
 	}
 }
 
+// Directive returns one of "if", "ifdef", "ifndef", "else", "elif", "endif", "for", "endfor", "undef".
+//
+// See matchMkCond.
 func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineConditional).directive }
 func (mkline *MkLineImpl) Args() string      { return mkline.data.(mkLineConditional).args }
 
@@ -749,6 +752,12 @@ type Indentation struct {
 	levels []indentationLevel
 }
 
+func NewIndentation() *Indentation {
+	ind := &Indentation{}
+	ind.Push(0, "") // Dummy
+	return ind
+}
+
 type indentationLevel struct {
 	depth         int      // Number of space characters; always a multiple of 2
 	condition     string   // The corresponding condition from the .if or .elif
@@ -853,6 +862,39 @@ func (ind *Indentation) IsCheckedFile(filename string) bool {
 		}
 	}
 	return false
+}
+
+func (ind *Indentation) TrackBefore(mkline MkLine) {
+	if mkline.IsCond() {
+		directive := mkline.Directive()
+		args := mkline.Args()
+
+		switch directive {
+		case "if":
+			ind.Push(ind.Depth(directive), args)
+			if contains(args, "exists") {
+				cond := NewMkParser(mkline.Line, args, false).MkCond()
+				cond.Visit("exists", func(node *Tree) {
+					ind.AddCheckedFile(node.args[0].(string))
+				})
+			}
+		case "ifdef", "ifndef", "for":
+			ind.Push(ind.Depth(directive), args)
+		case "elif":
+			ind.top().condition = args
+		}
+	}
+}
+
+func (ind *Indentation) TrackAfter(mkline MkLine) {
+	if mkline.IsCond() {
+		switch mkline.Directive() {
+		case "endfor", "endif":
+			if ind.Len() > 1 { // Can only be false in unbalanced files.
+				ind.Pop()
+			}
+		}
+	}
 }
 
 func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {

@@ -18,7 +18,7 @@ type MkLines struct {
 	tools          map[string]bool // Set of tools that are declared to be used.
 	toolRegistry   ToolRegistry    // Tools defined in file scope.
 	SeenBsdPrefsMk bool
-	indentation    Indentation // Indentation depth of preprocessing directives
+	indentation    *Indentation // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
 	Once
 	// XXX: Why both tools and toolRegistry?
 }
@@ -46,7 +46,7 @@ func NewMkLines(lines []Line) *MkLines {
 		tools,
 		NewToolRegistry(),
 		false,
-		Indentation{},
+		nil,
 		Once{}}
 }
 
@@ -92,9 +92,8 @@ func (mklines *MkLines) Check() {
 
 	substcontext := NewSubstContext()
 	var varalign VaralignBlock
-	indentation := &mklines.indentation
-	indentation.Push(0, "") // Dummy
-	for _, mkline := range mklines.mklines {
+	lastMkline := mklines.mklines[len(mklines.mklines)-1]
+	mklines.ForEach(func(mkline MkLine) bool {
 		ck := MkLineChecker{mkline}
 		ck.Check()
 		varalign.Check(mkline)
@@ -115,11 +114,11 @@ func (mklines *MkLines) Check() {
 				mklines.setSeenBsdPrefsMk()
 			}
 			if G.Pkg != nil {
-				G.Pkg.CheckInclude(mkline, indentation)
+				G.Pkg.CheckInclude(mkline, mklines.indentation)
 			}
 
 		case mkline.IsCond():
-			ck.checkCond(mklines.forVars, indentation)
+			ck.checkCond(mklines.forVars, mklines.indentation)
 			substcontext.Conditional(mkline)
 
 		case mkline.IsDependency():
@@ -129,18 +128,35 @@ func (mklines *MkLines) Check() {
 		case mkline.IsShellCommand():
 			mkline.Tokenize(mkline.ShellCommand())
 		}
-	}
-	lastMkline := mklines.mklines[len(mklines.mklines)-1]
+
+		if mkline == lastMkline {
+			ind := mklines.indentation
+			if ind.Len() != 1 && ind.Depth("") != 0 {
+				lastMkline.Errorf("Directive indentation is not 0, but %d.", ind.Depth(""))
+			}
+		}
+		return true
+	})
 	substcontext.Finish(lastMkline)
 	varalign.Finish()
 
 	ChecklinesTrailingEmptyLines(mklines.lines)
 
-	if indentation.Len() != 1 && indentation.Depth("") != 0 {
-		lastMkline.Errorf("Directive indentation is not 0, but %d.", indentation.Depth(""))
-	}
-
 	SaveAutofixChanges(mklines.lines)
+}
+
+// ForEach calls the action for each line, until the action returns false.
+// It keeps track of the indentation and all conditionals.
+func (mklines *MkLines) ForEach(action func(mkline MkLine) bool) {
+	mklines.indentation = NewIndentation()
+	for _, mkline := range mklines.mklines {
+		mklines.indentation.TrackBefore(mkline)
+		if !action(mkline) {
+			break
+		}
+		mklines.indentation.TrackAfter(mkline)
+	}
+	mklines.indentation = nil
 }
 
 func (mklines *MkLines) DetermineDefinedVariables() {
