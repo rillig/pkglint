@@ -538,3 +538,42 @@ func (s *Suite) Test_Package_includeOtherAfterExists(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/another.mk: Cannot be read.")
 }
+
+// See https://mail-index.netbsd.org/tech-pkg/2018/07/22/msg020092.html
+func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.SetupMasterSite("MASTER_SITE_R_CRAN", "http://cran.r-project.org/src/")
+	t.CreateFileLines("mk/bsd.pkg.mk")
+	t.CreateFileLines("licenses/gnu-gpl-v2",
+		"The licenses for most software are designed to take away ...")
+	t.CreateFileLines("math/R/Makefile.extension",
+		MkRcsID,
+		"",
+		"PKGNAME?=\tR-${R_PKGNAME}-${R_PKGVER}",
+		"MASTER_SITES?=\t${MASTER_SITE_R_CRAN:=contrib/}",
+		"GENERATE_PLIST+=\techo \"bin/r-package\";",
+		"NO_CHECKSUM=\tyes",
+		"LICENSE?=\tgnu-gpl-v2")
+	t.CreateFileLines("math/R-date/Makefile",
+		MkRcsID,
+		"",
+		"R_PKGNAME=\tdate",
+		"R_PKGVER=\t1.2.3",
+		"COMMENT=\tR package for handling date arithmetic",
+		"MASTER_SITES=\t${MASTER_SITE_R_CRAN:=contrib/}", // Redundant; see math/R/Makefile.extension.
+		"",
+		".include \"../../math/R/Makefile.extension\"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	G.CurrentDir = t.TempFilename("math/R-date")
+	G.CurPkgsrcdir = "../.."
+
+	// See Package.checkfilePackageMakefile
+	// See Scope.uncond
+	G.checkdirPackage(G.CurrentDir)
+
+	// TODO: MASTER_SITES in Makefile:6 is redundant and should be marked as such
+	t.CheckOutputEmpty()
+}
