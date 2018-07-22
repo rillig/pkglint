@@ -900,7 +900,9 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 			ind.top().depth += 2
 		}
 
-		// TODO: For symmetry with the !defined case, call AddVar for arbitrary conditions, too.
+		// Note: adding the used variables for arbitrary conditions
+		// happens in MkLineChecker.CheckCond for performance reasons.
+
 		if contains(args, "exists") {
 			cond := NewMkParser(mkline.Line, args, false).MkCond()
 			cond.Visit("exists", func(node *Tree) {
