@@ -746,54 +746,53 @@ func (vuc *VarUseContext) String() string {
 // An excepting are multiple-inclusion guards, they don't increase the
 // indentation.
 type Indentation struct {
-	depth         []int      // Number of space characters; always a multiple of 2
-	conditionVars [][]string // Variables on which the current path depends
+	levels []indentationLevel
+}
+
+type indentationLevel struct {
+	depth         int      // Number of space characters; always a multiple of 2
+	conditionVars []string // Variables on which the current path depends
 
 	// Files whose existence has been checked in a related path.
 	// The check counts for both the "if" and the "else" branch,
 	// but that sloppiness will be discovered by functional tests.
-	checkedFiles [][]string
+	checkedFiles []string
 }
 
 func (ind *Indentation) Len() int {
-	return len(ind.depth)
+	return len(ind.levels)
 }
 
 func (ind *Indentation) Depth(directive string) int {
 	switch directive {
 	case "elif", "else", "endfor", "endif":
-		return ind.depth[imax(0, len(ind.depth)-2)]
+		return ind.levels[imax(0, len(ind.levels)-2)].depth
 	}
-	return ind.depth[len(ind.depth)-1]
+	return ind.levels[len(ind.levels)-1].depth
 }
 
 func (ind *Indentation) Pop() {
-	newlen := ind.Len() - 1
-	ind.depth = ind.depth[:newlen]
-	ind.conditionVars = ind.conditionVars[:newlen]
-	ind.checkedFiles = ind.checkedFiles[:newlen]
+	ind.levels = ind.levels[:ind.Len()-1]
 }
 
 func (ind *Indentation) Push(indent int) {
-	ind.depth = append(ind.depth, indent)
-	ind.conditionVars = append(ind.conditionVars, nil)
-	ind.checkedFiles = append(ind.checkedFiles, nil)
+	ind.levels = append(ind.levels, indentationLevel{indent, nil, nil})
 }
 
 func (ind *Indentation) AddVar(varname string) {
-	level := ind.Len() - 1
-	for _, existingVarname := range ind.conditionVars[level] {
+	vars := &ind.levels[ind.Len()-1].conditionVars
+	for _, existingVarname := range *vars {
 		if varname == existingVarname {
 			return
 		}
 	}
 
-	ind.conditionVars[level] = append(ind.conditionVars[level], varname)
+	*vars = append(*vars, varname)
 }
 
 func (ind *Indentation) DependsOn(varname string) bool {
-	for _, levelVarnames := range ind.conditionVars {
-		for _, levelVarname := range levelVarnames {
+	for _, level := range ind.levels {
+		for _, levelVarname := range level.conditionVars {
 			if varname == levelVarname {
 				return true
 			}
@@ -805,19 +804,21 @@ func (ind *Indentation) DependsOn(varname string) bool {
 // DependsOnLevel checks whether the condition or loop at the current level
 // mentions the given variable name.
 func (ind *Indentation) DependsOnLevel(varname string) bool {
-	if last := len(ind.conditionVars) - 1; last >= 0 {
-		for _, levelVarname := range ind.conditionVars[last] {
-			if varname == levelVarname {
-				return true
-			}
+	lastIndex := ind.Len() - 1
+	if lastIndex < 0 {
+		return false
+	}
+	for _, levelVarname := range ind.levels[lastIndex].conditionVars {
+		if varname == levelVarname {
+			return true
 		}
 	}
 	return false
 }
 
 func (ind *Indentation) IsConditional() bool {
-	for _, vars := range ind.conditionVars {
-		for _, varname := range vars {
+	for _, level := range ind.levels {
+		for _, varname := range level.conditionVars {
 			if !hasSuffix(varname, "_MK") {
 				return true
 			}
@@ -832,8 +833,8 @@ func (ind *Indentation) IsConditional() bool {
 func (ind *Indentation) Varnames() string {
 	sep := ""
 	varnames := ""
-	for _, levelVarnames := range ind.conditionVars {
-		for _, levelVarname := range levelVarnames {
+	for _, level := range ind.levels {
+		for _, levelVarname := range level.conditionVars {
 			if !hasSuffix(levelVarname, "_MK") {
 				varnames += sep + levelVarname
 				sep = ", "
@@ -848,8 +849,8 @@ func (ind *Indentation) Varnames() string {
 func (ind *Indentation) LevelVarnames() string {
 	sep := ""
 	varnames := ""
-	if last := len(ind.conditionVars) - 1; last >= 0 {
-		for _, levelVarname := range ind.conditionVars[last] {
+	if lastIndex := ind.Len() - 1; lastIndex >= 0 {
+		for _, levelVarname := range ind.levels[lastIndex].conditionVars {
 			varnames += sep + levelVarname
 			sep = ", "
 		}
@@ -858,13 +859,13 @@ func (ind *Indentation) LevelVarnames() string {
 }
 
 func (ind *Indentation) AddCheckedFile(filename string) {
-	level := ind.Len() - 1
-	ind.checkedFiles[level] = append(ind.checkedFiles[level], filename)
+	level := &ind.levels[ind.Len()-1]
+	level.checkedFiles = append(level.checkedFiles, filename)
 }
 
 func (ind *Indentation) IsCheckedFile(filename string) bool {
-	for _, levelFilenames := range ind.checkedFiles {
-		for _, levelFilename := range levelFilenames {
+	for _, level := range ind.levels {
+		for _, levelFilename := range level.checkedFiles {
 			if filename == levelFilename {
 				return true
 			}
