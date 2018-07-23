@@ -286,6 +286,7 @@ func (s *Suite) Test_MkLines_Check__extra(c *check.C) {
 		"COMMENT=\t# defined",
 		".endfor",
 		"GAMES_USER?=pkggames",
+		"GAMES_GROUP?=pkggames",
 		"PLIST_SUBST+= CONDITIONAL=${CONDITIONAL}",
 		"CONDITIONAL=\"@comment\"",
 		"BUILD_DIRS=\t${WRKSRC}/../build")
@@ -296,8 +297,8 @@ func (s *Suite) Test_MkLines_Check__extra(c *check.C) {
 		"WARN: options.mk:3: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.",
 		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".",
 		"WARN: options.mk:7: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
-		"WARN: options.mk:10: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
-		"NOTE: options.mk:10: You can use \"../build\" instead of \"${WRKSRC}/../build\".")
+		"WARN: options.mk:11: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
+		"NOTE: options.mk:11: You can use \"../build\" instead of \"${WRKSRC}/../build\".")
 }
 
 func (s *Suite) Test_MkLine_variableNeedsQuoting__unknown_rhs(c *check.C) {

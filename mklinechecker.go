@@ -863,6 +863,10 @@ func (ck MkLineChecker) checkVarassignBsdPrefs() {
 			return
 		}
 
+		if G.Mk != nil && !G.Mk.FirstTime("include-bsd.prefs.mk") {
+			return
+		}
+
 		mkline.Warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 		Explain(
 			"The ?= operator is used to provide a default value to a variable.",
