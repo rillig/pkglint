@@ -584,6 +584,6 @@ func (s *Suite) Test_MkLines_CheckRedundantVariables(c *check.C) {
 	mklines.CheckRedundantVariables()
 
 	t.CheckOutputLines(
-		"NOTE: module.mk:1: Is redundant because of line 2.",
-		"NOTE: module.mk:1: Is overwritten at line 3.")
+		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.",
+		"NOTE: module.mk:1: Variable VAR is overwritten in line 3.")
 }

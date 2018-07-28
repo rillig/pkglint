@@ -422,8 +422,8 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	// A file including itself does not lead to an endless loop while parsing
 	// but may still produce unexpected warnings, such as redundant definitions.
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:3: Is overwritten at Makefile:3.",
-		"NOTE: ~/category/package/Makefile:4: Is overwritten at Makefile:4.")
+		"NOTE: ~/category/package/Makefile:3: Variable PKGNAME is overwritten in Makefile:3.",
+		"NOTE: ~/category/package/Makefile:4: Variable DISTNAME is overwritten in Makefile:4.")
 }
 
 func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
@@ -579,5 +579,5 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	G.checkdirPackage(G.CurrentDir)
 
 	t.CheckOutputLines(
-		"NOTE: ~/math/R-date/Makefile:6: Is redundant because of ../R/Makefile.extension:4.")
+		"NOTE: ~/math/R-date/Makefile:6: Definition of MASTER_SITES is redundant because of ../R/Makefile.extension:4.")
 }
