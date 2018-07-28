@@ -575,7 +575,7 @@ func (s *Suite) Test_MkLines_CheckRedundantVariables(c *check.C) {
 		"VAR?=\tvalue ${OTHER}",
 		"VAR=\tnew value")
 	makefile := t.NewMkLines("Makefile",
-		"VAR=\tthe package may override")
+		"VAR=\tthe package may overwrite variables from other files")
 	allLines := append(append([]Line(nil), included.lines...), makefile.lines...)
 	mklines := NewMkLines(allLines)
 
@@ -586,4 +586,16 @@ func (s *Suite) Test_MkLines_CheckRedundantVariables(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.",
 		"NOTE: module.mk:1: Variable VAR is overwritten in line 3.")
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantVariables__procedure_call(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("mk/pthread.buildlink3.mk",
+		"CHECK_BUILTIN.pthread:=\tyes",
+		".include \"../../mk/pthread.builtin.mk\"",
+		"CHECK_BUILTIN.pthread:=\tno")
+
+	mklines.CheckRedundantVariables()
+
+	t.CheckOutputEmpty()
 }

@@ -302,19 +302,22 @@ func (mklines *MkLines) setSeenBsdPrefsMk() {
 
 func (mklines *MkLines) CheckRedundantVariables() {
 	scope := NewRedundantScope()
+	isRelevant := func(old, new MkLine) bool {
+		if path.Base(old.Filename) != "Makefile" && path.Base(new.Filename) == "Makefile" {
+			return false
+		}
+		if new.Op() == opAssignEval {
+			return false
+		}
+		return true
+	}
 	scope.OnIgnore = func(old, new MkLine) {
-		if old.Value() == new.Value() {
-			if path.Base(old.Filename) != "Makefile" && path.Base(new.Filename) == "Makefile" {
-				// No warning since the package Makefile may overwrite variables from more generic files.
-			} else {
-				old.Notef("Definition of %s is redundant because of %s.", new.Varname(), new.ReferenceFrom(old.Line))
-			}
+		if isRelevant(old, new) {
+			old.Notef("Definition of %s is redundant because of %s.", new.Varname(), new.ReferenceFrom(old.Line))
 		}
 	}
 	scope.OnOverwrite = func(old, new MkLine) {
-		if path.Base(old.Filename) != "Makefile" && path.Base(new.Filename) == "Makefile" {
-			// No warning since the package Makefile may overwrite variables from more generic files.
-		} else {
+		if isRelevant(old, new) {
 			old.Notef("Variable %s is overwritten in %s.", new.Varname(), new.ReferenceFrom(old.Line))
 		}
 	}
