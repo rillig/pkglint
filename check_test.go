@@ -297,8 +297,9 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
 }
 
-// EnableTracing redirects all logging output to stdout instead of
-// the buffer. This is useful when stepping through the code, especially
+// EnableTracing redirects all logging output (which is normally captured
+// in an in-memory buffer) additionally to stdout.
+// This is useful when stepping through the code, especially
 // in combination with SetupCommandLine("--debug").
 func (t *Tester) EnableTracing() {
 	G.logOut = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
