@@ -318,7 +318,12 @@ func (mklines *MkLines) CheckRedundantVariables() {
 	}
 	scope.OnOverwrite = func(old, new MkLine) {
 		if isRelevant(old, new) {
-			old.Notef("Variable %s is overwritten in %s.", new.Varname(), new.ReferenceFrom(old.Line))
+			old.Warnf("Variable %s is overwritten in %s.", new.Varname(), new.ReferenceFrom(old.Line))
+			Explain(
+				"The variable definition in this line does not have an effect since",
+				"it is overwritten elsewhere.  This typically happens because of a",
+				"typo (writing = instead of +=) or because the line that overwrites",
+				"is in another file that is used by several packages.")
 		}
 	}
 
