@@ -300,6 +300,25 @@ func (mklines *MkLines) setSeenBsdPrefsMk() {
 	}
 }
 
+func (mklines *MkLines) CheckRedundantVariables() {
+	scope := NewRedundantScope()
+	scope.OnIgnore = func(old, new MkLine) {
+		if old.Value() == new.Value() {
+			old.Warnf("Is redundant because of %s.", new.ReferenceFrom(old.Line))
+		}
+	}
+	scope.OnOverwrite = func(old, new MkLine) {
+		old.Notef("Is overwritten at %s.", new.ReferenceFrom(old.Line))
+	}
+
+	mklines.ForEach(
+		func(mkline MkLine) bool {
+			scope.Handle(mkline)
+			return true
+		},
+		func(mkline MkLine) {})
+}
+
 // VaralignBlock checks that all variable assignments from a paragraph
 // use the same indentation depth for their values.
 // It also checks that the indentation uses tabs instead of spaces.

@@ -249,6 +249,7 @@ func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
 	}
 
 	allLines.DetermineUsedVariables()
+	allLines.CheckRedundantVariables()
 
 	pkg.Pkgdir = pkg.expandVariableWithDefault("PKGDIR", ".")
 	pkg.DistinfoFile = pkg.expandVariableWithDefault("DISTINFO_FILE", "distinfo")

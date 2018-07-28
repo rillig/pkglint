@@ -419,7 +419,11 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 
 	// Including a package Makefile directly is an error (in the last line),
 	// but that is checked later.
-	t.CheckOutputEmpty()
+	// A file including itself does not lead to an endless loop while parsing
+	// but may still produce unexpected warnings, such as redundant definitions.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:3: Is overwritten at Makefile:3.",
+		"NOTE: ~/category/package/Makefile:4: Is overwritten at Makefile:4.")
 }
 
 func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
@@ -574,6 +578,6 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	// See Scope.uncond
 	G.checkdirPackage(G.CurrentDir)
 
-	// TODO: MASTER_SITES in Makefile:6 is redundant and should be marked as such
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/math/R-date/Makefile:6: Is redundant because of ../R/Makefile.extension:4.")
 }

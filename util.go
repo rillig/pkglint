@@ -483,6 +483,9 @@ func (s *Scope) FirstDefinition(varname string) MkLine {
 func (s *Scope) FirstUse(varname string) MkLine {
 	return s.used[varname]
 }
+func (s *Scope) IsConditional(varname string) bool {
+	return false
+}
 
 // The MIT License (MIT)
 //
@@ -560,4 +563,77 @@ func naturalLess(str1, str2 string) bool {
 	// So far they are identical. At least one is ended. If the other continues,
 	// it sorts last.
 	return len1 < len2
+}
+
+type RedundantScope struct {
+	vars        map[string]*redundantScopeVarinfo
+	condLevel   int
+	OnIgnore    func(old, new MkLine)
+	OnOverwrite func(old, new MkLine)
+}
+type redundantScopeVarinfo struct {
+	mkline MkLine
+	value  string
+}
+
+func NewRedundantScope() *RedundantScope {
+	return &RedundantScope{vars: make(map[string]*redundantScopeVarinfo)}
+}
+
+func (s *RedundantScope) Handle(mkline MkLine) {
+	switch {
+	case mkline.IsVarassign():
+		varname := mkline.Varname()
+		if s.condLevel != 0 {
+			s.vars[varname] = nil
+			break
+		}
+
+		op := mkline.Op()
+		value := mkline.Value()
+		valueNovar := mkline.WithoutMakeVariables(value)
+		if op == opAssignEval && value == valueNovar {
+			op = opAssign // They are effectively the same in this case.
+		}
+		existing, found := s.vars[varname]
+		if !found {
+			if op == opAssignShell || op == opAssignEval {
+				s.vars[varname] = nil
+			} else {
+				if op == opAssignAppend {
+					value = " " + value
+				}
+				s.vars[varname] = &redundantScopeVarinfo{mkline, value}
+			}
+		} else if existing != nil {
+			switch op {
+			case opAssign:
+				if s.OnOverwrite != nil {
+					s.OnOverwrite(existing.mkline, mkline)
+				}
+				existing.value = value
+			case opAssignAppend:
+				existing.value += " " + value
+			case opAssignDefault:
+				if s.OnIgnore != nil {
+					s.OnIgnore(existing.mkline, mkline)
+				}
+			case opAssignShell:
+			case opAssignEval:
+				s.vars[varname] = nil
+			}
+		}
+
+	case mkline.IsCond():
+		switch mkline.Directive() {
+		case "for", "if", "ifdef", "ifndef":
+			s.condLevel++
+		case "endfor", "endif":
+			s.condLevel--
+		}
+	}
+}
+
+func (s *RedundantScope) IsConditional(varname string) bool {
+	return s.vars[varname] != nil
 }
