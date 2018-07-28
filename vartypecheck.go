@@ -964,7 +964,7 @@ func (cv *VartypeCheck) Tool() {
 		switch tooldep {
 		case "", "bootstrap", "build", "pkgsrc", "run", "test":
 		default:
-			cv.Line.Errorf("Unknown tool dependency %q. Use one of \"bootstrap\", \"build\", \"pkgsrc\" or \"run\" or \"test\".", tooldep)
+			cv.Line.Errorf("Unknown tool dependency %q. Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".", tooldep)
 		}
 	} else if cv.Op != opUseMatch && cv.Value == cv.ValueNoVar {
 		cv.Line.Errorf("Malformed tool dependency: %q.", cv.Value)
