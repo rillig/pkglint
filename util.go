@@ -483,9 +483,6 @@ func (s *Scope) FirstDefinition(varname string) MkLine {
 func (s *Scope) FirstUse(varname string) MkLine {
 	return s.used[varname]
 }
-func (s *Scope) IsConditional(varname string) bool {
-	return false
-}
 
 // The MIT License (MIT)
 //
@@ -565,6 +562,13 @@ func naturalLess(str1, str2 string) bool {
 	return len1 < len2
 }
 
+// RedundantScope checks for redundant variable definitions and accidentally
+// overwriting variables. It tries to be as correct as possible by not flagging
+// anything that is defined conditionally. There may be some edge cases though
+// like defining PKGNAME, then evaluating it using :=, then defining it again.
+// This pattern is so error-prone that it should not appear in pkgsrc at all,
+// thus pkglint doesn't even expect it. (Well, except for the PKGNAME case,
+// but that's deep in the infrastructure and only affects the "nb13" extension.
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
 	condLevel   int
