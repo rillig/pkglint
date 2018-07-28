@@ -610,6 +610,9 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 				s.vars[varname] = &redundantScopeVarinfo{mkline, value}
 			}
 		} else if existing != nil {
+			if op == opAssign && existing.value == value {
+				op = opAssignDefault
+			}
 			switch op {
 			case opAssign:
 				if s.OnOverwrite != nil {

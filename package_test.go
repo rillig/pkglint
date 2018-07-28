@@ -422,8 +422,8 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	// A file including itself does not lead to an endless loop while parsing
 	// but may still produce unexpected warnings, such as redundant definitions.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:3: Variable PKGNAME is overwritten in Makefile:3.",
-		"WARN: ~/category/package/Makefile:4: Variable DISTNAME is overwritten in Makefile:4.")
+		"NOTE: ~/category/package/Makefile:3: Definition of PKGNAME is redundant because of Makefile:3.",
+		"NOTE: ~/category/package/Makefile:4: Definition of DISTNAME is redundant because of Makefile:4.")
 }
 
 func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
