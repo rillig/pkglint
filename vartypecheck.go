@@ -274,6 +274,14 @@ func (cv *VartypeCheck) Dependency() {
 	if m, inside := match1(wildcard, `^\[(.*)\]\*$`); m {
 		if inside != "0-9" {
 			line.Warnf("Only [0-9]* is allowed in the numeric part of a dependency.")
+			Explain(
+				"The pattern -[0-9] means any version.  All other version patterns",
+				"should be expressed using the comparison operators like < or >= or",
+				"even >=2<3.",
+				"",
+				"Patterns like -[0-7] will only match the first digit of the version",
+				"number and will not do the correct thing when the package reaches",
+				"version 10.")
 		}
 
 	} else if m, ver, suffix := match2(wildcard, `^(\d\w*(?:\.\w+)*)(\.\*|\{,nb\*\}|\{,nb\[0-9\]\*\}|\*|)$`); m {
