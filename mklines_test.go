@@ -567,3 +567,23 @@ func (s *Suite) Test_MkLines__unknown_options(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: options.mk:4: Unknown option \"unknown\".")
 }
+
+func (s *Suite) Test_MkLines_CheckRedundantVariables(c *check.C) {
+	t := s.Init(c)
+	included := t.NewMkLines("module.mk",
+		"VAR=\tvalue ${OTHER}",
+		"VAR?=\tvalue ${OTHER}",
+		"VAR=\tnew value")
+	makefile := t.NewMkLines("Makefile",
+		"VAR=\tthe package may override")
+	allLines := append(append([]Line(nil), included.lines...), makefile.lines...)
+	mklines := NewMkLines(allLines)
+
+	// XXX: The warnings from here are not in the same order as the other warnings.
+	// XXX: There may be some warnings for the same file separated by warnings for other files.
+	mklines.CheckRedundantVariables()
+
+	t.CheckOutputLines(
+		"NOTE: module.mk:1: Is redundant because of line 2.",
+		"NOTE: module.mk:1: Is overwritten at line 3.")
+}

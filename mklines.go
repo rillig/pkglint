@@ -304,11 +304,19 @@ func (mklines *MkLines) CheckRedundantVariables() {
 	scope := NewRedundantScope()
 	scope.OnIgnore = func(old, new MkLine) {
 		if old.Value() == new.Value() {
-			old.Warnf("Is redundant because of %s.", new.ReferenceFrom(old.Line))
+			if path.Base(old.Filename) != "Makefile" && path.Base(new.Filename) == "Makefile" {
+				// No warning since the package Makefile may overwrite variables from more generic files.
+			} else {
+				old.Notef("Is redundant because of %s.", new.ReferenceFrom(old.Line))
+			}
 		}
 	}
 	scope.OnOverwrite = func(old, new MkLine) {
-		old.Notef("Is overwritten at %s.", new.ReferenceFrom(old.Line))
+		if path.Base(old.Filename) != "Makefile" && path.Base(new.Filename) == "Makefile" {
+			// No warning since the package Makefile may overwrite variables from more generic files.
+		} else {
+			old.Notef("Is overwritten at %s.", new.ReferenceFrom(old.Line))
+		}
 	}
 
 	mklines.ForEach(

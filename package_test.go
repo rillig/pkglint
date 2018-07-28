@@ -579,5 +579,5 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	G.checkdirPackage(G.CurrentDir)
 
 	t.CheckOutputLines(
-		"WARN: ~/math/R-date/Makefile:6: Is redundant because of ../R/Makefile.extension:4.")
+		"NOTE: ~/math/R-date/Makefile:6: Is redundant because of ../R/Makefile.extension:4.")
 }

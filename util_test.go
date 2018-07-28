@@ -171,20 +171,3 @@ func (s *Suite) Test_splitOnSpace(c *check.C) {
 	c.Check(splitOnSpace("     "), check.IsNil)
 	c.Check(splitOnSpace(""), check.IsNil)
 }
-
-func (s *Suite) Test_Scope__unconditional(c *check.C) {
-	t := s.Init(c)
-	mklines := t.NewMkLines("conditional.mk",
-		MkRcsID,
-		"VAR=\tvalue ${OTHER}",
-		"VAR?=\tvalue ${OTHER}",
-		"VAR=\tnew value")
-
-	// XXX: The warnings from here are not in the same order as the other warnings.
-	// XXX: There may be some warnings for the same file separated by warnings for other files.
-	mklines.CheckRedundantVariables()
-
-	t.CheckOutputLines(
-		"WARN: conditional.mk:2: Is redundant because of line 3.",
-		"NOTE: conditional.mk:2: Is overwritten at line 4.")
-}
