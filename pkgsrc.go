@@ -301,13 +301,21 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 		return nil
 	}
 
+	year := ""
+	if m, yyyy := match1(fname, `-(\d+)$`); m && yyyy >= "2018" {
+		year = yyyy
+	}
+
 	var changes []*Change
 	for _, line := range lines {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
-			if len(changes) >= 2 {
-				if prev, curr := changes[len(changes)-2], changes[len(changes)-1]; curr.Date < prev.Date {
-					line.Warnf("Date %s for %s is earlier than %s for %s.", curr.Date, curr.Pkgpath, prev.Date, prev.Pkgpath)
+			if year != "" && change.Date[0:4] != year {
+				line.Warnf("Year %s for %s does not match the file name %s.", change.Date[0:4], change.Pkgpath, fname)
+			}
+			if len(changes) >= 2 && year != "" {
+				if prev := changes[len(changes)-2]; change.Date < prev.Date {
+					line.Warnf("Date %s for %s is earlier than %s for %s.", change.Date, change.Pkgpath, prev.Date, prev.Pkgpath)
 					Explain(
 						"The entries in doc/CHANGES should be in chronological order, and",
 						"all dates are assumed to be in the UTC timezone, to prevent time",
