@@ -314,7 +314,11 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 						"warps.",
 						"",
 						"To fix this, determine which of the involved dates are correct",
-						"and which aren't.")
+						"and which aren't.",
+						"",
+						"To prevent this kind of mistakes in the future, make sure that",
+						"your system time is correct and use \""+confMake+" cce\" to commit",
+						"the changes entry.")
 				}
 			}
 		} else if text := line.Text; len(text) >= 2 && text[0] == '\t' && 'A' <= text[1] && text[1] <= 'Z' {
