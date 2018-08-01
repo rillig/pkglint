@@ -147,7 +147,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	c.Check(*changes[6], equals, Change{changes[6].Line, "Downgraded", "category/package", "1.2", "author7", "2015-01-07"})
 
 	t.CheckOutputLines(
-		"WARN: ~/doc/CHANGES-2015:6: Unordered date (2015-01-06 < 2015-01-09).")
+		"WARN: ~/doc/CHANGES-2015:6: Date 2015-01-06 for category/package is earlier than 2015-01-09 for category/package.")
 }
 
 func (s *Suite) Test_Pkgsrc_deprecated(c *check.C) {

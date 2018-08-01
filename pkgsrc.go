@@ -307,7 +307,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 			changes = append(changes, change)
 			if len(changes) >= 2 {
 				if prev, curr := changes[len(changes)-2], changes[len(changes)-1]; curr.Date < prev.Date {
-					line.Warnf("Unordered date (%s < %s).", curr.Date, prev.Date)
+					line.Warnf("Date %s for %s is earlier than %s for %s.", curr.Date, curr.Pkgpath, prev.Date, prev.Pkgpath)
 					Explain(
 						"The entries in doc/CHANGES should be in chronological order, and",
 						"all dates are assumed to be in the UTC timezone, to prevent time",
