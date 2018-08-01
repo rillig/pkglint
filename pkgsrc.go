@@ -305,6 +305,18 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 	for _, line := range lines {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
+			if len(changes) >= 2 {
+				if prev, curr := changes[len(changes)-2], changes[len(changes)-1]; curr.Date < prev.Date {
+					line.Warnf("Unordered date (%s < %s).", curr.Date, prev.Date)
+					Explain(
+						"The entries in doc/CHANGES should be in chronological order, and",
+						"all dates are assumed to be in the UTC timezone, to prevent time",
+						"warps.",
+						"",
+						"To fix this, determine which of the involved dates are correct",
+						"and which aren't.")
+				}
+			}
 		} else if text := line.Text; len(text) >= 2 && text[0] == '\t' && 'A' <= text[1] && text[1] <= 'Z' {
 			line.Warnf("Unknown doc/CHANGES line: %q", text)
 			Explain("See mk/misc/developer.mk for the rules.")
