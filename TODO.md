@@ -15,6 +15,10 @@
 
 * if package A conflicts with B, then B should also conflict with A.
 
+* The options.mk pretty much always look the same. Describe the common
+  structure for them and check for it. Also check whether the option names
+  in the .if clauses match PKG_SUPPORTED_OPTIONS.
+
 # Case-sensitive file systems
 
 * Check for parallel files/dirs whose names differ only in case.
