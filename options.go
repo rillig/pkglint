@@ -82,16 +82,17 @@ loop:
 	next()
 
 	for mkline != nil {
-		switch {
-		case mkline.IsCond() && mkline.Directive() == "if":
+		if mkline.IsCond() && mkline.Directive() == "if" {
 			cond := NewMkParser(mkline.Line, mkline.Args(), false).MkCond()
-			cond.Visit("empty", func(t *Tree) {
-				varuse := t.args[0].(MkVarUse)
-				if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
-					option := varuse.modifiers[0][1:]
-					handledOptions[option] = mkline
-				}
-			})
+			if cond != nil {
+				cond.Visit("empty", func(t *Tree) {
+					varuse := t.args[0].(MkVarUse)
+					if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
+						option := varuse.modifiers[0][1:]
+						handledOptions[option] = mkline
+					}
+				})
+			}
 		}
 		next()
 	}
