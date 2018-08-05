@@ -471,7 +471,8 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 		"WARN: ~/category/package/options.mk:4: \"../../devel/zlib/buildlink3.mk\" is "+
 			"included conditionally here (depending on PKG_OPTIONS) and unconditionally in Makefile:5.",
 		"WARN: ~/category/package/options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is "+
-			"included unconditionally here and conditionally in Makefile:7 (depending on OPSYS).")
+			"included unconditionally here and conditionally in Makefile:7 (depending on OPSYS).",
+		"WARN: ~/category/package/options.mk:3: Expected definition of PKG_OPTIONS_VAR.")
 }
 
 // See https://github.com/rillig/pkglint/issues/1
