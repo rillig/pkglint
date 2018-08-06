@@ -53,8 +53,10 @@ loop:
 			varname := mkline.Varname()
 			if varname == "PKG_SUPPORTED_OPTIONS" || hasPrefix(varname, "PKG_OPTIONS_GROUP.") {
 				for _, option := range splitOnSpace(mkline.Value()) {
-					declaredOptions[option] = mkline
-					optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
+					if option == mkline.WithoutMakeVariables(option) {
+						declaredOptions[option] = mkline
+						optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
+					}
 				}
 			}
 		case mkline.IsCond():

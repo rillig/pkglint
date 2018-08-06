@@ -21,7 +21,7 @@ func (s *Suite) Test_ChecklinesOptionsMk__well_formed(c *check.C) {
 		"PKG_OPTIONS_VAR=                PKG_OPTIONS.mc",
 		"PKG_OPTIONS_REQUIRED_GROUPS=    screen",
 		"PKG_OPTIONS_GROUP.screen=       ncurses slang",
-		"PKG_SUPPORTED_OPTIONS=          mc-charset x11",
+		"PKG_SUPPORTED_OPTIONS=          mc-charset x11 lang-${l}",
 		"PKG_SUGGESTED_OPTIONS=          mc-charset slang",
 		"",
 		".include \"../../mk/bsd.options.mk\"",
