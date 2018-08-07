@@ -9,35 +9,14 @@ func ChecklinesOptionsMk(mklines *MkLines) {
 
 	mklines.Check()
 
-	lines := mklines.mklines
-	var mkline MkLine
-	var logLine Line
+	exp := NewMkExpecter(mklines)
+	exp.AdvanceWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
 
-	next := func() {
-		if len(lines) == 0 {
-			logLine = NewLineEOF(mkline.Filename)
-			mkline = nil
-		} else {
-			mkline = lines[0]
-			logLine = mkline.Line
-			lines = lines[1:]
-		}
-	}
-	next()
-
-	skipWhile := func(pred func(MkLine) bool) {
-		for mkline != nil && pred(mkline) {
-			next()
-		}
-	}
-
-	skipWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
-
-	if !(mkline != nil && mkline.IsVarassign() && mkline.Varname() == "PKG_OPTIONS_VAR") {
-		logLine.Warnf("Expected definition of PKG_OPTIONS_VAR.")
+	if exp.EOF() || !(exp.CurrentMkLine().IsVarassign() && exp.CurrentMkLine().Varname() == "PKG_OPTIONS_VAR") {
+		exp.CurrentLine().Warnf("Expected definition of PKG_OPTIONS_VAR.")
 		return
 	}
-	next()
+	exp.Advance()
 
 	declaredOptions := make(map[string]MkLine)
 	handledOptions := make(map[string]MkLine)
@@ -45,7 +24,8 @@ func ChecklinesOptionsMk(mklines *MkLines) {
 
 	// The conditionals are typically for OPSYS and MACHINE_ARCH.
 loop:
-	for mkline != nil {
+	for ; !exp.EOF(); exp.Advance() {
+		mkline := exp.CurrentMkLine()
 		switch {
 		case mkline.IsComment():
 		case mkline.IsEmpty():
@@ -71,19 +51,18 @@ loop:
 				break loop
 			}
 		default:
-			logLine.Warnf("Unexpected line type.")
+			exp.CurrentLine().Warnf("Unexpected line type.")
 		}
-
-		next()
 	}
 
-	if !(mkline != nil && mkline.IsInclude() && mkline.IncludeFile() == "../../mk/bsd.options.mk") {
-		logLine.Warnf("Expected inclusion of bsd.options.mk.")
+	if !(!exp.EOF() && exp.CurrentMkLine().IsInclude() && exp.CurrentMkLine().IncludeFile() == "../../mk/bsd.options.mk") {
+		exp.CurrentLine().Warnf("Expected inclusion of bsd.options.mk.")
 		return
 	}
-	next()
+	exp.Advance()
 
-	for mkline != nil {
+	for ; !exp.EOF(); exp.Advance() {
+		mkline := exp.CurrentMkLine()
 		if mkline.IsCond() && mkline.Directive() == "if" {
 			cond := NewMkParser(mkline.Line, mkline.Args(), false).MkCond()
 			if cond != nil {
@@ -96,7 +75,6 @@ loop:
 				})
 			}
 		}
-		next()
 	}
 
 	for _, option := range optionsInDeclarationOrder {
