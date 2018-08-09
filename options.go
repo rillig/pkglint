@@ -14,6 +14,11 @@ func ChecklinesOptionsMk(mklines *MkLines) {
 
 	if exp.EOF() || !(exp.CurrentMkLine().IsVarassign() && exp.CurrentMkLine().Varname() == "PKG_OPTIONS_VAR") {
 		exp.CurrentLine().Warnf("Expected definition of PKG_OPTIONS_VAR.")
+		Explain(
+			"The input variables in an options.mk file should always be",
+			"mentioned in the same order: PKG_OPTIONS_VAR, ",
+			"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.  This way, the",
+			"options.mk files have the same structure and are easy to understand.")
 		return
 	}
 	exp.Advance()
@@ -47,19 +52,21 @@ loop:
 			case matches(includedFile, `/[^/]+\.builtin\.mk$`):
 			case includedFile == "../../mk/bsd.prefs.mk":
 			case includedFile == "../../mk/bsd.fast.prefs.mk":
+
 			case includedFile == "../../mk/bsd.options.mk":
+				exp.Advance()
 				break loop
 			}
 		default:
-			exp.CurrentLine().Warnf("Unexpected line type.")
+			exp.CurrentLine().Warnf("Expected inclusion of \"../../mk/bsd.options.mk\".")
+			Explain(
+				"After defining the input variables (PKG_OPTIONS_VAR, etc.),",
+				"bsd.options.mk should be included to do the actual processing.",
+				"No other actions should take place in this part of the file",
+				"in order to have the same structure in all options.mk files.")
+			return
 		}
 	}
-
-	if !(!exp.EOF() && exp.CurrentMkLine().IsInclude() && exp.CurrentMkLine().IncludeFile() == "../../mk/bsd.options.mk") {
-		exp.CurrentLine().Warnf("Expected inclusion of bsd.options.mk.")
-		return
-	}
-	exp.Advance()
 
 	for ; !exp.EOF(); exp.Advance() {
 		mkline := exp.CurrentMkLine()
@@ -71,6 +78,7 @@ loop:
 					if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
 						option := varuse.modifiers[0][1:]
 						handledOptions[option] = mkline
+						optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
 					}
 				})
 			}
@@ -82,9 +90,15 @@ loop:
 		handled := handledOptions[option]
 		if declared != nil && handled == nil {
 			declared.Warnf("Option %q should be handled below in an .if block.", option)
+			Explain(
+				"If an option is not processed in this file, it may either be a",
+				"typo, or the option does not have any effect.")
 		}
 		if declared == nil && handled != nil {
 			handled.Warnf("Option %q is handled but not declared above.", option)
+			Explain(
+				"This block of code will never be run since PKG_OPTIONS cannot",
+				"contain this value.  This is most probably a typo.")
 		}
 	}
 
