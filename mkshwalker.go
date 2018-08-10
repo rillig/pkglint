@@ -14,7 +14,9 @@ func (w *MkShWalker) Walk(list *MkShList, callback *MkShWalkCallback) {
 }
 
 func (w *MkShWalker) walkList(list *MkShList, callback *MkShWalkCallback) {
-	callback.List(list)
+	if callback.List != nil {
+		callback.List(list)
+	}
 
 	for _, andor := range list.AndOrs {
 		w.walkAndOr(andor, callback)
@@ -22,7 +24,9 @@ func (w *MkShWalker) walkList(list *MkShList, callback *MkShWalkCallback) {
 }
 
 func (w *MkShWalker) walkAndOr(andor *MkShAndOr, callback *MkShWalkCallback) {
-	callback.AndOr(andor)
+	if callback.AndOr != nil {
+		callback.AndOr(andor)
+	}
 
 	for _, pipeline := range andor.Pipes {
 		w.walkPipeline(pipeline, callback)
@@ -30,7 +34,9 @@ func (w *MkShWalker) walkAndOr(andor *MkShAndOr, callback *MkShWalkCallback) {
 }
 
 func (w *MkShWalker) walkPipeline(pipeline *MkShPipeline, callback *MkShWalkCallback) {
-	callback.Pipeline(pipeline)
+	if callback.Pipeline != nil {
+		callback.Pipeline(pipeline)
+	}
 
 	for _, command := range pipeline.Cmds {
 		w.walkCommand(command, callback)
@@ -38,7 +44,9 @@ func (w *MkShWalker) walkPipeline(pipeline *MkShPipeline, callback *MkShWalkCall
 }
 
 func (w *MkShWalker) walkCommand(command *MkShCommand, callback *MkShWalkCallback) {
-	callback.Command(command)
+	if callback.Command != nil {
+		callback.Command(command)
+	}
 
 	switch {
 	case command.Simple != nil:
@@ -53,7 +61,9 @@ func (w *MkShWalker) walkCommand(command *MkShCommand, callback *MkShWalkCallbac
 }
 
 func (w *MkShWalker) walkSimpleCommand(command *MkShSimpleCommand, callback *MkShWalkCallback) {
-	callback.SimpleCommand(command)
+	if callback.SimpleCommand != nil {
+		callback.SimpleCommand(command)
+	}
 
 	w.walkWords(command.Assignments, callback)
 	if command.Name != nil {
@@ -64,7 +74,9 @@ func (w *MkShWalker) walkSimpleCommand(command *MkShSimpleCommand, callback *MkS
 }
 
 func (w *MkShWalker) walkCompoundCommand(command *MkShCompoundCommand, callback *MkShWalkCallback) {
-	callback.CompoundCommand(command)
+	if callback.CompoundCommand != nil {
+		callback.CompoundCommand(command)
+	}
 
 	switch {
 	case command.Brace != nil:
@@ -83,24 +95,33 @@ func (w *MkShWalker) walkCompoundCommand(command *MkShCompoundCommand, callback 
 }
 
 func (w *MkShWalker) walkCase(caseClause *MkShCaseClause, callback *MkShWalkCallback) {
-	callback.Case(caseClause)
+	if callback.Case != nil {
+		callback.Case(caseClause)
+	}
 
 	w.walkWord(caseClause.Word, callback)
 	for _, caseItem := range caseClause.Cases {
-		callback.CaseItem(caseItem)
+		if callback.CaseItem != nil {
+			callback.CaseItem(caseItem)
+		}
 		w.walkWords(caseItem.Patterns, callback)
 		w.walkList(caseItem.Action, callback)
 	}
 }
 
 func (w *MkShWalker) walkFunctionDefinition(funcdef *MkShFunctionDefinition, callback *MkShWalkCallback) {
-	callback.FunctionDefinition(funcdef)
+	if callback.FunctionDefinition != nil {
+		callback.FunctionDefinition(funcdef)
+	}
 
 	w.walkCompoundCommand(funcdef.Body, callback)
 }
 
 func (w *MkShWalker) walkIf(ifClause *MkShIfClause, callback *MkShWalkCallback) {
-	callback.If(ifClause)
+	if callback.If != nil {
+		callback.If(ifClause)
+	}
+
 	for i, cond := range ifClause.Conds {
 		w.walkList(cond, callback)
 		w.walkList(ifClause.Actions[i], callback)
@@ -111,14 +132,19 @@ func (w *MkShWalker) walkIf(ifClause *MkShIfClause, callback *MkShWalkCallback) 
 }
 
 func (w *MkShWalker) walkLoop(loop *MkShLoopClause, callback *MkShWalkCallback) {
-	callback.Loop(loop)
+	if callback.Loop != nil {
+		callback.Loop(loop)
+	}
+
 	w.walkList(loop.Cond, callback)
 	w.walkList(loop.Action, callback)
 }
 
 func (w *MkShWalker) walkWords(words []*ShToken, callback *MkShWalkCallback) {
 	if len(words) != 0 {
-		callback.Words(words)
+		if callback.Words != nil {
+			callback.Words(words)
+		}
 
 		for _, word := range words {
 			w.walkWord(word, callback)
@@ -127,24 +153,35 @@ func (w *MkShWalker) walkWords(words []*ShToken, callback *MkShWalkCallback) {
 }
 
 func (w *MkShWalker) walkWord(word *ShToken, callback *MkShWalkCallback) {
-	callback.Word(word)
+	if callback.Word != nil {
+		callback.Word(word)
+	}
 }
 
 func (w *MkShWalker) walkRedirects(redirects []*MkShRedirection, callback *MkShWalkCallback) {
 	if len(redirects) != 0 {
-		callback.Redirects(redirects)
+		if callback.Redirects != nil {
+			callback.Redirects(redirects)
+		}
 
 		for _, redirect := range redirects {
-			callback.Redirect(redirect)
+			if callback.Redirect != nil {
+				callback.Redirect(redirect)
+			}
+
 			w.walkWord(redirect.Target, callback)
 		}
 	}
 }
 
 func (w *MkShWalker) walkFor(forClause *MkShForClause, callback *MkShWalkCallback) {
-	callback.For(forClause)
+	if callback.For != nil {
+		callback.For(forClause)
+	}
+	if callback.Varname != nil {
+		callback.Varname(forClause.Varname)
+	}
 
-	callback.Varname(forClause.Varname)
 	w.walkWords(forClause.Values, callback)
 	w.walkList(forClause.Body, callback)
 }
@@ -170,22 +207,5 @@ type MkShWalkCallback struct {
 }
 
 func NewMkShWalkCallback() *MkShWalkCallback {
-	return &MkShWalkCallback{
-		func(list *MkShList) {},
-		func(andor *MkShAndOr) {},
-		func(pipeline *MkShPipeline) {},
-		func(command *MkShCommand) {},
-		func(command *MkShSimpleCommand) {},
-		func(command *MkShCompoundCommand) {},
-		func(caseClause *MkShCaseClause) {},
-		func(caseItem *MkShCaseItem) {},
-		func(funcdef *MkShFunctionDefinition) {},
-		func(ifClause *MkShIfClause) {},
-		func(loop *MkShLoopClause) {},
-		func(words []*ShToken) {},
-		func(word *ShToken) {},
-		func(redirects []*MkShRedirection) {},
-		func(redirect *MkShRedirection) {},
-		func(forClause *MkShForClause) {},
-		func(varname string) {}}
+	return &MkShWalkCallback{}
 }
