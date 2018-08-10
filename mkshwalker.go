@@ -117,10 +117,12 @@ func (w *MkShWalker) walkLoop(loop *MkShLoopClause, callback *MkShWalkCallback) 
 }
 
 func (w *MkShWalker) walkWords(words []*ShToken, callback *MkShWalkCallback) {
-	callback.Words(words)
+	if len(words) != 0 {
+		callback.Words(words)
 
-	for _, word := range words {
-		w.walkWord(word, callback)
+		for _, word := range words {
+			w.walkWord(word, callback)
+		}
 	}
 }
 
@@ -129,11 +131,13 @@ func (w *MkShWalker) walkWord(word *ShToken, callback *MkShWalkCallback) {
 }
 
 func (w *MkShWalker) walkRedirects(redirects []*MkShRedirection, callback *MkShWalkCallback) {
-	callback.Redirects(redirects)
+	if len(redirects) != 0 {
+		callback.Redirects(redirects)
 
-	for _, redirect := range redirects {
-		callback.Redirect(redirect)
-		w.walkWord(redirect.Target, callback)
+		for _, redirect := range redirects {
+			callback.Redirect(redirect)
+			w.walkWord(redirect.Target, callback)
+		}
 	}
 }
 
