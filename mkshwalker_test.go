@@ -15,11 +15,13 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 
 	if c.Check(err, check.IsNil) && c.Check(list, check.NotNil) {
 		var commands []string
-		(*MkShWalker).Walk(nil, list, func(node interface{}) {
-			if cmd, ok := node.(*MkShSimpleCommand); ok {
-				commands = append(commands, NewStrCommand(cmd).String())
-			}
-		})
+
+		callback := NewMkShWalkCallback()
+		callback.SimpleCommand = func(command *MkShSimpleCommand) {
+			commands = append(commands, NewStrCommand(command).String())
+		}
+		NewMkShWalker().Walk(list, callback)
+
 		c.Check(commands, deepEquals, []string{
 			"[] condition []",
 			"[] action []",
