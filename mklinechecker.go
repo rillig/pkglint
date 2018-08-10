@@ -257,7 +257,7 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 }
 
 func (ck MkLineChecker) checkVarassignDefPermissions() {
-	if !G.opts.WarnPerm {
+	if !G.opts.WarnPerm || G.Infrastructure {
 		return
 	}
 	if trace.Tracing {

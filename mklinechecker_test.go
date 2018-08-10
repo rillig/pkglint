@@ -158,6 +158,25 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions(c *check.C) {
 		"WARN: options.mk:2: The variable PKG_DEVELOPER may not be given a default value by any package.")
 }
 
+// Don't check the permissions for infrastructure files since they have their own rules.
+func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions__infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	t.SetupFileMkLines("mk/infra.mk",
+		MkRcsID,
+		"",
+		"PKG_DEVELOPER?=\tyes")
+	t.SetupFileMkLines("mk/bsd.pkg.mk")
+
+	G.CurrentDir = t.TmpDir()
+	G.CurPkgsrcdir = "."
+	G.CheckDirent(t.TempFilename("mk/infra.mk"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_CheckVarusePermissions(c *check.C) {
 	t := s.Init(c)
 
