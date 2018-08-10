@@ -754,6 +754,15 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 			checkConditionalCd(simple)
 		}
 	}
+	callback.Pipeline = func(pipeline *MkShPipeline) {
+		if pipeline.Negated {
+			spc.shline.mkline.Warnf("The Solaris /bin/sh does not support negation of shell commands.")
+			Explain(
+				"The GNU Autoconf manual has many more details of what shell",
+				"features to avoid for portable programs.  It can be read at:",
+				"https://www.gnu.org/software/autoconf/manual/autoconf.html#Limitations-of-Builtins")
+		}
+	}
 	NewMkShWalker().Walk(list, callback)
 }
 
