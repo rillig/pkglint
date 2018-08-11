@@ -38,7 +38,7 @@ loop:
 			switch mkline.Varcanon() {
 			case "PKG_SUPPORTED_OPTIONS", "PKG_OPTIONS_GROUP.*", "PKG_OPTIONS_SET.*":
 				for _, option := range splitOnSpace(mkline.Value()) {
-					if option == mkline.WithoutMakeVariables(option) {
+					if !containsVarRef(option) {
 						declaredOptions[option] = mkline
 						optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
 					}
@@ -84,8 +84,10 @@ loop:
 				Empty: func(varuse *MkVarUse) {
 					if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
 						option := varuse.modifiers[0][1:]
-						handledOptions[option] = mkline
-						optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
+						if !containsVarRef(option) {
+							handledOptions[option] = mkline
+							optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
+						}
 					}
 				}})
 
