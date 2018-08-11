@@ -82,6 +82,15 @@ loop:
 						}
 					}})
 			}
+
+			if cond.Empty != nil && mkline.HasElseBranch() {
+				mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")
+				Explain(
+					"For consistency among packages, the upper branch of this",
+					".if/.else statement should always handle the case where the",
+					"option is activated.  A missing exclamation mark at this",
+					"point can easily be overlooked.")
+			}
 		}
 	}
 

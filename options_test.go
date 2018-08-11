@@ -9,6 +9,7 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 	t.SetupVartypes()
 	t.SetupOption("mc-charset", "")
 	t.SetupOption("ncurses", "")
+	t.SetupOption("negative", "Demonstrates negated .if/.else")
 	t.SetupOption("slang", "")
 	t.SetupOption("x11", "")
 
@@ -21,7 +22,7 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 		"PKG_OPTIONS_VAR=                PKG_OPTIONS.mc",
 		"PKG_OPTIONS_REQUIRED_GROUPS=    screen",
 		"PKG_OPTIONS_GROUP.screen=       ncurses slang",
-		"PKG_SUPPORTED_OPTIONS=          mc-charset x11 lang-${l}",
+		"PKG_SUPPORTED_OPTIONS=          mc-charset x11 lang-${l} negative",
 		"PKG_SUGGESTED_OPTIONS=          mc-charset slang",
 		"",
 		".include \"../../mk/bsd.options.mk\"",
@@ -30,6 +31,10 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 		".endif",
 		"",
 		".if !empty(PKG_OPTIONS:Mundeclared)",
+		".endif",
+		"",
+		".if empty(PKG_OPTIONS:Mnegative)",
+		".else",
 		".endif",
 		"",
 		".if !empty(PKG_OPTIONS:Mncurses)",
@@ -43,6 +48,7 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:14: Unknown option \"undeclared\".",
+		"NOTE: ~/category/package/options.mk:17: The positive branch of the .if/.else should be the one where the option is set.",
 		"WARN: ~/category/package/options.mk:6: Option \"mc-charset\" should be handled below in an .if block.",
 		"WARN: ~/category/package/options.mk:14: Option \"undeclared\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }

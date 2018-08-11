@@ -39,6 +39,7 @@ type mkLineConditional struct {
 	directive string
 	args      string
 	comment   string
+	elseLine  MkLine // (filled in later)
 }
 type mkLineInclude struct {
 	mustExist     bool
@@ -114,7 +115,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, indent, directive, args, comment := matchMkCond(text); m {
-		return &MkLineImpl{line, mkLineConditional{indent, directive, args, comment}}
+		return &MkLineImpl{line, mkLineConditional{indent, directive, args, comment, nil}}
 	}
 
 	if m, indent, directive, includefile := MatchMkInclude(text); m {
@@ -246,6 +247,7 @@ func (mkline *MkLineImpl) Args() string      { return mkline.data.(mkLineConditi
 
 // CondComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
 func (mkline *MkLineImpl) CondComment() string { return mkline.data.(mkLineConditional).comment }
+func (mkline *MkLineImpl) HasElseBranch() bool { return mkline.data.(mkLineConditional).elseLine != nil }
 
 func (mkline *MkLineImpl) MustExist() bool     { return mkline.data.(mkLineInclude).mustExist }
 func (mkline *MkLineImpl) IncludeFile() string { return mkline.data.(mkLineInclude).includeFile }
@@ -788,11 +790,12 @@ type Indentation struct {
 
 func NewIndentation() *Indentation {
 	ind := &Indentation{}
-	ind.Push(0, "") // Dummy
+	ind.Push(nil, 0, "") // Dummy
 	return ind
 }
 
 type indentationLevel struct {
+	mkline        MkLine   // The line in which the indentation started; the .if/.for
 	depth         int      // Number of space characters; always a multiple of 2
 	condition     string   // The corresponding condition from the .if or .elif
 	conditionVars []string // Variables on which the current path depends
@@ -825,8 +828,8 @@ func (ind *Indentation) Pop() {
 	ind.levels = ind.levels[:ind.Len()-1]
 }
 
-func (ind *Indentation) Push(indent int, condition string) {
-	ind.levels = append(ind.levels, indentationLevel{indent, condition, nil, nil})
+func (ind *Indentation) Push(mkline MkLine, indent int, condition string) {
+	ind.levels = append(ind.levels, indentationLevel{mkline, indent, condition, nil, nil})
 }
 
 func (ind *Indentation) AddVar(varname string) {
@@ -913,7 +916,7 @@ func (ind *Indentation) TrackBefore(mkline MkLine) {
 
 	switch directive {
 	case "for", "if", "ifdef", "ifndef":
-		ind.Push(ind.top().depth, args)
+		ind.Push(mkline, ind.top().depth, args)
 	}
 }
 
@@ -939,12 +942,14 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 
 		if contains(args, "exists") {
 			cond := NewMkParser(mkline.Line, args, false).MkCond()
-			NewMkCondWalker().Walk(cond, &MkCondCallback{
-				Call: func(name string, arg string) {
-					if name == "exists" {
-						ind.AddCheckedFile(arg)
-					}
-				}})
+			if cond != nil {
+				NewMkCondWalker().Walk(cond, &MkCondCallback{
+					Call: func(name string, arg string) {
+						if name == "exists" {
+							ind.AddCheckedFile(arg)
+						}
+					}})
+			}
 		}
 
 	case "for", "ifdef", "ifndef":
@@ -953,6 +958,14 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	case "elif":
 		// Handled here instead of TrackAfter to allow the action to access the previous condition.
 		ind.top().condition = args
+
+	case "else":
+		top := ind.top()
+		if top.mkline != nil {
+			data := top.mkline.data.(mkLineConditional)
+			data.elseLine = mkline
+			top.mkline.data = data
+		}
 
 	case "endfor", "endif":
 		if ind.Len() > 1 { // Can only be false in unbalanced files.

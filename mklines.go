@@ -88,6 +88,7 @@ func (mklines *MkLines) Check() {
 	mklines.DetermineUsedVariables()
 	mklines.DetermineDefinedVariables()
 	mklines.collectPlistVars()
+	mklines.collectElse()
 
 	// In the second pass, the actual checks are done.
 
@@ -260,6 +261,13 @@ func (mklines *MkLines) collectPlistVars() {
 			}
 		}
 	}
+}
+
+func (mklines *MkLines) collectElse() {
+	// Make a dry-run over the lines, which sets data.elseLine (in mkline.go) as a side-effect.
+	mklines.ForEach(
+		func(mkline MkLine) bool { return true },
+		func(mkline MkLine) {})
 }
 
 func (mklines *MkLines) DetermineUsedVariables() {

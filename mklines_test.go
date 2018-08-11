@@ -631,7 +631,6 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t.SetupOption("both", "")
 	t.SetupOption("only-added", "")
 	t.SetupOption("only-defined", "")
-	t.SetupFileMkLines("mk/bsd.options.mk")
 
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
@@ -658,4 +657,31 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 		"ERROR: options.mk:7: \"/mk/bsd.options.mk\" does not exist.", // Not relevant for this test.
 		"WARN: options.mk:9: \"only-added\" is added to PLIST_VARS, but PLIST.only-added is not defined in this file.",
 		"WARN: options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
+}
+
+func (s *Suite) Test_MkLines_Check__if_else(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wno-space")
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("module.mk",
+		MkRcsID,
+		"",
+		".if 0",
+		".endif",
+		"",
+		".if 0",
+		".else",
+		".endif",
+		"",
+		".if 0",
+		".elif 0",
+		".endif")
+
+	mklines.collectElse()
+
+	c.Check(mklines.mklines[2].HasElseBranch(), equals, false)
+	c.Check(mklines.mklines[5].HasElseBranch(), equals, true)
+	c.Check(mklines.mklines[9].HasElseBranch(), equals, false)
 }
