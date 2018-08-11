@@ -254,6 +254,26 @@ func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
 		"WARN: fname:3: The pattern \"sun-jdk*\" cannot match any of { jdk1 jdk2 jdk4 } for JDK.")
 }
 
+func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("module.mk",
+		MkRcsID,
+		"",
+		".if !empty(MACHINE_ARCH:Mi386) || ${MACHINE_ARCH} == i386",
+		".endif",
+		".if !empty(PKGSRC_COMPILER:Mclang) || ${PKGSRC_COMPILER} == clang",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: module.mk:3: MACHINE_ARCH should be compared using == instead of the :M or :N modifier without wildcards.",
+		"WARN: module.mk:5: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.")
+}
+
 func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	t := s.Init(c)
 
