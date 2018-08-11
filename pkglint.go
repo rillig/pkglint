@@ -323,7 +323,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	case "..":
 		CheckdirCategory(currentDir)
 	case ".":
-		CheckdirToplevel()
+		CheckdirToplevel(currentDir)
 	default:
 		NewLineWhole(fname).Errorf("Cannot check directories outside a pkgsrc tree.")
 	}
