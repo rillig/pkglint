@@ -27,13 +27,13 @@ func ChecklinesOptionsMk(mklines *MkLines) {
 	handledOptions := make(map[string]MkLine)
 	var optionsInDeclarationOrder []string
 
-	// The conditionals are typically for OPSYS and MACHINE_ARCH.
 loop:
 	for ; !exp.EOF(); exp.Advance() {
 		mkline := exp.CurrentMkLine()
 		switch {
 		case mkline.IsComment():
 		case mkline.IsEmpty():
+
 		case mkline.IsVarassign():
 			varname := mkline.Varname()
 			if varname == "PKG_SUPPORTED_OPTIONS" || hasPrefix(varname, "PKG_OPTIONS_GROUP.") {
@@ -44,7 +44,10 @@ loop:
 					}
 				}
 			}
+
 		case mkline.IsCond():
+			// The conditionals are typically for OPSYS and MACHINE_ARCH.
+
 		case mkline.IsInclude():
 			includedFile := mkline.IncludeFile()
 			switch {
@@ -57,6 +60,7 @@ loop:
 				exp.Advance()
 				break loop
 			}
+
 		default:
 			exp.CurrentLine().Warnf("Expected inclusion of \"../../mk/bsd.options.mk\".")
 			Explain(

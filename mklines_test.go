@@ -659,6 +659,36 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 		"WARN: options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
 }
 
+func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wno-space")
+	t.SetupVartypes()
+	t.SetupOption("option1", "")
+	t.SetupOption("option2", "")
+
+	mklines := t.SetupFileMkLines("module.mk",
+		MkRcsID,
+		"",
+		"MY_PLIST_VARS=  option1 option2",
+		"PLIST_VARS+=    ${MY_PLIST_VARS}",
+		"",
+		".if 0",
+		"PLIST.option1=  yes",
+		".endif",
+		"",
+		".if 1",
+		"PLIST.option2=  yes",
+		".endif")
+
+	G.CurrentDir = t.TmpDir()
+	G.CurPkgsrcdir = "."
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_Check__if_else(c *check.C) {
 	t := s.Init(c)
 
