@@ -52,6 +52,7 @@ type Pkglint struct {
 	logErr                *SeparatorWriter
 
 	loghisto *histogram.Histogram
+	loaded   *histogram.Histogram
 }
 
 type CmdOpts struct {
@@ -143,10 +144,12 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 
 		regex.Profiling = true
 		pkglint.loghisto = histogram.New()
+		pkglint.loaded = histogram.New()
 		defer func() {
 			pkglint.logOut.Write("")
-			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, 0)
+			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, -1)
 			regex.PrintStats()
+			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, 20)
 		}()
 	}
 
