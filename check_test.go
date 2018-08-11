@@ -160,6 +160,50 @@ func (t *Tester) SetupFileMkLines(relativeFilename string, lines ...string) *MkL
 	return NewMkLines(plainLines)
 }
 
+// SetupPkgsrc sets up a minimal but complete pkgsrc installation in the
+// temporary folder, so that pkglint runs without any errors.
+// Individual files may be overwritten by calling other Setup* methods.
+// This setup is especially interesting for testing Pkglint.Main.
+func (t *Tester) SetupPkgsrc() {
+
+	// This file is needed to locate the pkgsrc root directory.
+	// See findPkgsrcTopdir.
+	t.SetupFileMkLines("mk/bsd.pkg.mk",
+		MkRcsID)
+
+	// See Pkgsrc.loadDocChanges.
+	t.SetupFileLines("doc/CHANGES-2018",
+		RcsID)
+
+	// See Pkgsrc.loadSuggestedUpdates.
+	t.SetupFileLines("doc/TODO",
+		RcsID)
+
+	// The MASTER_SITES in the package Makefile are searched here.
+	// See Pkgsrc.loadMasterSites.
+	t.SetupFileMkLines("mk/fetch/sites.mk",
+		MkRcsID)
+
+	// The options for the PKG_OPTIONS framework must be readable.
+	// See Pkgsrc.loadPkgOptions.
+	t.SetupFileLines("mk/defaults/options.description")
+
+	// The user-defined variables are read in to check for missing
+	// BUILD_DEFS declarations in the package Makefile.
+	t.SetupFileMkLines("mk/defaults/mk.conf",
+		MkRcsID)
+
+	// The tool definitions are read in to check for missing
+	// USE_TOOLS declarations in the package Makefile.
+	// They spread over several files from the pkgsrc infrastructure.
+	t.SetupFileMkLines("mk/tools/bsd.tools.mk",
+		".include \"defaults.mk\"")
+	t.SetupFileMkLines("mk/tools/defaults.mk",
+		MkRcsID)
+	t.SetupFileMkLines("mk/bsd.prefs.mk", // Some tools are defined here.
+		MkRcsID)
+}
+
 func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (filename string) {
 	content := ""
 	for _, line := range lines {

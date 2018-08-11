@@ -512,7 +512,7 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 
 	case basename == "ALTERNATIVES":
 		if pkglint.opts.CheckAlternatives {
-			CheckfileExtra(fname)
+			CheckfileAlternatives(fname, nil)
 		}
 
 	case basename == "buildlink3.mk":
