@@ -51,7 +51,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	G.logErr = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
-	G.Pkgsrc = NewPkgsrc(t.TmpDir())
+	G.Pkgsrc = NewPkgsrc(t.File("."))
 
 	t.checkC = c
 	t.SetupCommandLine( /* no arguments */ )
@@ -168,39 +168,39 @@ func (t *Tester) SetupPkgsrc() {
 
 	// This file is needed to locate the pkgsrc root directory.
 	// See findPkgsrcTopdir.
-	t.SetupFileMkLines("mk/bsd.pkg.mk",
+	t.CreateFileLines("mk/bsd.pkg.mk",
 		MkRcsID)
 
 	// See Pkgsrc.loadDocChanges.
-	t.SetupFileLines("doc/CHANGES-2018",
+	t.CreateFileLines("doc/CHANGES-2018",
 		RcsID)
 
 	// See Pkgsrc.loadSuggestedUpdates.
-	t.SetupFileLines("doc/TODO",
+	t.CreateFileLines("doc/TODO",
 		RcsID)
 
 	// The MASTER_SITES in the package Makefile are searched here.
 	// See Pkgsrc.loadMasterSites.
-	t.SetupFileMkLines("mk/fetch/sites.mk",
+	t.CreateFileLines("mk/fetch/sites.mk",
 		MkRcsID)
 
 	// The options for the PKG_OPTIONS framework must be readable.
 	// See Pkgsrc.loadPkgOptions.
-	t.SetupFileLines("mk/defaults/options.description")
+	t.CreateFileLines("mk/defaults/options.description")
 
 	// The user-defined variables are read in to check for missing
 	// BUILD_DEFS declarations in the package Makefile.
-	t.SetupFileMkLines("mk/defaults/mk.conf",
+	t.CreateFileLines("mk/defaults/mk.conf",
 		MkRcsID)
 
 	// The tool definitions are read in to check for missing
 	// USE_TOOLS declarations in the package Makefile.
 	// They spread over several files from the pkgsrc infrastructure.
-	t.SetupFileMkLines("mk/tools/bsd.tools.mk",
+	t.CreateFileLines("mk/tools/bsd.tools.mk",
 		".include \"defaults.mk\"")
-	t.SetupFileMkLines("mk/tools/defaults.mk",
+	t.CreateFileLines("mk/tools/defaults.mk",
 		MkRcsID)
-	t.SetupFileMkLines("mk/bsd.prefs.mk", // Some tools are defined here.
+	t.CreateFileLines("mk/bsd.prefs.mk", // Some tools are defined here.
 		MkRcsID)
 }
 
@@ -221,30 +221,28 @@ func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (file
 }
 
 func (t *Tester) LoadTmpFile(relFname string) (absFname string) {
-	bytes, err := ioutil.ReadFile(t.TmpDir() + "/" + relFname)
+	bytes, err := ioutil.ReadFile(t.File(relFname))
 	t.c().Assert(err, check.IsNil)
 	return string(bytes)
-}
-
-func (t *Tester) TmpDir() string {
-	if t.tmpdir == "" {
-		t.tmpdir = filepath.ToSlash(t.c().MkDir())
-	}
-	return t.tmpdir
 }
 
 // File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
 func (t *Tester) File(relativeFilename string) string {
-	return t.TmpDir() + "/" + relativeFilename
+	if t.tmpdir == "" {
+		t.tmpdir = filepath.ToSlash(t.c().MkDir())
+	}
+	return t.tmpdir + "/" + relativeFilename
 }
 
+// ExpectFatalError, when run in a defer statement, runs the action
+// if the current function panics with a pkglintFatal
+// (typically from line.Fatalf).
 func (t *Tester) ExpectFatalError(action func()) {
-	if r := recover(); r != nil {
-		if _, ok := r.(pkglintFatal); ok {
-			action()
-			return
-		}
+	r := recover()
+	if _, ok := r.(pkglintFatal); ok {
+		action()
+	} else {
 		panic(r)
 	}
 }

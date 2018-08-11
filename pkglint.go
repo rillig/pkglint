@@ -305,7 +305,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	pkglint.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)
 	pkglint.CurPkgsrcdir = findPkgsrcTopdir(currentDir)
 	if pkglint.CurPkgsrcdir == "" {
-		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", currentDir)
+		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(currentDir))
 		return
 	}
 

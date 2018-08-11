@@ -10,7 +10,7 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 		"patch contents")
 	t.SetupFileLines("patches/patch-ab",
 		"patch contents")
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 
 	ChecklinesDistinfo(t.NewLines("distinfo",
 		"should be the RCS ID",
@@ -62,7 +62,7 @@ func (s *Suite) Test_ChecklinesDistinfo_uncommitted_patch(c *check.C) {
 		RcsID,
 		"",
 		"SHA1 (patch-aa) = 5ad1fb9b3c328fff5caa1a23e8f330e707dd50c0")
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 
 	ChecklinesDistinfo(lines)
 
@@ -83,7 +83,7 @@ func (s *Suite) Test_ChecklinesDistinfo_unrecorded_patches(c *check.C) {
 		"RMD160 (distfile.tar.gz) = ...",
 		"SHA512 (distfile.tar.gz) = ...",
 		"Size (distfile.tar.gz) = 1024 bytes")
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 
 	ChecklinesDistinfo(lines)
 
@@ -100,7 +100,7 @@ func (s *Suite) Test_ChecklinesDistinfo_manual_patches(c *check.C) {
 		RcsID,
 		"",
 		"SHA1 (patch-aa) = ...")
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 
 	ChecklinesDistinfo(lines)
 

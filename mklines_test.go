@@ -684,7 +684,7 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {
 		"PLIST.option2=  yes",
 		".endif")
 
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 	G.CurPkgsrcdir = "."
 
 	mklines.Check()

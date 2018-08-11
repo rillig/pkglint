@@ -48,7 +48,7 @@ func (s *Suite) Test_ChecklinesPatch__without_empty_line__autofix(c *check.C) {
 		"SHA1 (some patch) = 49abd735b7e706ea9ed6671628bb54e91f7f5ffb")
 
 	t.SetupCommandLine("-Wall", "--autofix")
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 	G.Pkg = &Package{DistinfoFile: "distinfo"}
 
 	ChecklinesPatch(patchLines)

@@ -49,7 +49,7 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 		".elif !empty(PKG_OPTIONS:Msqlite)",
 		".endif")
 
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 	G.CurPkgsrcdir = "."
 
 	ChecklinesOptionsMk(mklines)
@@ -84,7 +84,7 @@ func (s *Suite) Test_ChecklinesOptionsMk__unexpected_line(c *check.C) {
 		"pre-configure:",
 		"\techo \"In the pre-configure stage.\"")
 
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 	G.CurPkgsrcdir = "."
 
 	ChecklinesOptionsMk(mklines)
@@ -118,7 +118,7 @@ func (s *Suite) Test_ChecklinesOptionsMk__malformed_conditional(c *check.C) {
 		".if ${OPSYS} == 'Darwin'",
 		".endif")
 
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 	G.CurPkgsrcdir = "."
 
 	ChecklinesOptionsMk(mklines)

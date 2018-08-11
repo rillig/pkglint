@@ -159,9 +159,9 @@ func (s *Suite) Test_Package_varorder_license(c *check.C) {
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	t.SetupVartypes()
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 
-	G.CheckDirent(t.TmpDir() + "/x11/9term")
+	G.CheckDirent(t.File("x11/9term"))
 
 	// Since the error is grave enough, the warning about the correct position is suppressed.
 	t.CheckOutputLines(
@@ -309,9 +309,9 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 
 	t.SetupFileLines("Makefile",
 		MkRcsID)
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 
-	G.checkdirPackage(t.TmpDir())
+	G.checkdirPackage(t.File("."))
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
@@ -320,17 +320,17 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 		"WARN: ~/Makefile: No COMMENT given.")
 }
 
-func (s *Suite) Test_checkdirPackage__meta_package_without_license(c *check.C) {
+func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("Makefile",
 		MkRcsID,
 		"",
 		"META_PACKAGE=\tyes")
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 	t.SetupVartypes()
 
-	G.checkdirPackage(t.TmpDir())
+	G.checkdirPackage(t.File("."))
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile: No COMMENT given.") // No error about missing LICENSE.
@@ -339,29 +339,14 @@ func (s *Suite) Test_checkdirPackage__meta_package_without_license(c *check.C) {
 func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("doc/CHANGES-2016",
-		"# dummy")
-	t.CreateFileLines("doc/TODO",
-		"# dummy")
+	t.SetupPkgsrc()
 	t.CreateFileLines("licenses/bsd-2",
 		"# dummy")
-	t.CreateFileLines("mk/fetch/sites.mk",
-		"# dummy")
-	t.CreateFileLines("mk/bsd.pkg.mk",
-		"# dummy")
-	t.CreateFileLines("mk/defaults/options.description",
-		"option Description")
-	t.CreateFileLines("mk/defaults/mk.conf",
-		"# dummy")
-	t.CreateFileLines("mk/tools/bsd.tools.mk",
-		".include \"defaults.mk\"")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"TOOLS_CREATE+=false",
 		"TOOLS_CREATE+=nice",
 		"TOOLS_CREATE+=true",
 		"_TOOLS_VARNAME.nice=NICE")
-	t.CreateFileLines("mk/bsd.prefs.mk",
-		"# dummy")
 
 	t.CreateFileLines("category/pkgbase/Makefile",
 		MkRcsID,
@@ -391,7 +376,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t.CreateFileLines("category/pkgbase/distinfo",
 		RcsID)
 
-	G.Main("pkglint", "-q", "-Wperm", t.TmpDir()+"/category/pkgbase")
+	G.Main("pkglint", "-q", "-Wperm", t.File("category/pkgbase"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/pkgbase/Makefile:8: To use the tool \"FALSE\" at load time, bsd.prefs.mk has to be included before.",
@@ -459,7 +444,7 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
 
 	pkg := NewPackage("category/package")
-	G.CurrentDir = t.TmpDir() + "/category/package"
+	G.CurrentDir = t.File("category/package")
 	G.CurPkgsrcdir = "../.."
 	G.Pkg = pkg
 

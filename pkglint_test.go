@@ -252,7 +252,7 @@ func (s *Suite) Test_Pkglint_CheckDirent__outside(c *check.C) {
 
 	t.SetupFileLines("empty")
 
-	G.CheckDirent(t.TmpDir())
+	G.CheckDirent(t.File("."))
 
 	t.CheckOutputLines(
 		"ERROR: ~: Cannot determine the pkgsrc root directory for \"~\".")
@@ -266,7 +266,7 @@ func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 	t.SetupFileLines("category/Makefile")
 	t.SetupFileLines("Makefile")
 
-	G.CheckDirent(t.TmpDir())
+	G.CheckDirent(t.File("."))
 
 	t.CheckOutputLines(
 		"ERROR: ~/Makefile: Must not be empty.")

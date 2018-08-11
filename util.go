@@ -348,6 +348,9 @@ func cleanpath(fname string) string {
 	for contains(tmp, "/./") {
 		tmp = strings.Replace(tmp, "/./", "/", -1)
 	}
+	if len(tmp) > 2 && hasSuffix(tmp, "/.") {
+		tmp = tmp[:len(tmp)-2]
+	}
 	for contains(tmp, "//") {
 		tmp = strings.Replace(tmp, "//", "/", -1)
 	}

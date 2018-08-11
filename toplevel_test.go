@@ -21,7 +21,7 @@ func (s *Suite) Test_CheckdirToplevel(c *check.C) {
 	t.SetupFileLines("x11/Makefile")
 	t.SetupVartypes()
 
-	G.CurrentDir = t.TmpDir()
+	G.CurrentDir = t.File(".")
 	CheckdirToplevel()
 
 	t.CheckOutputLines(
