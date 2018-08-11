@@ -73,14 +73,14 @@ loop:
 		if mkline.IsCond() && (mkline.Directive() == "if" || mkline.Directive() == "elif") {
 			cond := NewMkParser(mkline.Line, mkline.Args(), false).MkCond()
 			if cond != nil {
-				cond.Visit("empty", func(t *Tree) {
-					varuse := t.args[0].(MkVarUse)
-					if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
-						option := varuse.modifiers[0][1:]
-						handledOptions[option] = mkline
-						optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
-					}
-				})
+				NewMkCondWalker().Walk(cond, &MkCondCallback{
+					Empty: func(varuse *MkVarUse) {
+						if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
+							option := varuse.modifiers[0][1:]
+							handledOptions[option] = mkline
+							optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
+						}
+					}})
 			}
 		}
 	}

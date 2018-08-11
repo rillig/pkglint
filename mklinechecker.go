@@ -1031,8 +1031,7 @@ func (ck MkLineChecker) CheckCond() {
 		return
 	}
 
-	cond.Visit("empty", func(node *Tree) {
-		varuse := node.args[0].(MkVarUse)
+	checkEmpty := func(varuse *MkVarUse) {
 		varname := varuse.varname
 		if matches(varname, `^\$.*:[MN]`) {
 			mkline.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
@@ -1054,19 +1053,21 @@ func (ck MkLineChecker) CheckCond() {
 				ck.CheckVartype(varname, opUseMatch, modifier[1:], "")
 			}
 		}
-	})
+	}
 
-	cond.Visit("compareVarStr", func(node *Tree) {
-		varuse := node.args[0].(MkVarUse)
+	checkCompareVarStr := func(varuse *MkVarUse, op string, value string) {
 		varname := varuse.varname
 		varmods := varuse.modifiers
-		value := node.args[2].(string)
 		if len(varmods) == 0 {
-			ck.checkCompareVarStr(varname, node.args[1].(string), value)
+			ck.checkCompareVarStr(varname, op, value)
 		} else if len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
 			ck.CheckVartype(varname, opUseMatch, value, "")
 		}
-	})
+	}
+
+	NewMkCondWalker().Walk(cond, &MkCondCallback{
+		Empty:         checkEmpty,
+		CompareVarStr: checkCompareVarStr})
 
 	if G.Mk != nil {
 		G.Mk.indentation.RememberUsedVariables(cond)

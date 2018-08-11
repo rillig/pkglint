@@ -360,25 +360,24 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relpath string, adjustDepth 
 	return tmp
 }
 
-func (ind *Indentation) RememberUsedVariables(cond *Tree) {
-	arg0varname := func(node *Tree) {
-		varname := node.args[0].(string)
-		ind.AddVar(varname)
-	}
-	arg0varuse := func(node *Tree) {
-		varuse := node.args[0].(MkVarUse)
-		ind.AddVar(varuse.varname)
-	}
-	arg2varuse := func(node *Tree) {
-		varuse := node.args[2].(MkVarUse)
-		ind.AddVar(varuse.varname)
-	}
-	cond.Visit("defined", arg0varname)
-	cond.Visit("empty", arg0varuse)
-	cond.Visit("compareVarNum", arg0varuse)
-	cond.Visit("compareVarStr", arg0varuse)
-	cond.Visit("compareVarVar", arg0varuse)
-	cond.Visit("compareVarVar", arg2varuse)
+func (ind *Indentation) RememberUsedVariables(cond MkCond) {
+	NewMkCondWalker().Walk(cond, &MkCondCallback{
+		Defined: func(varname string) {
+			ind.AddVar(varname)
+		},
+		Empty: func(varuse *MkVarUse) {
+			ind.AddVar(varuse.varname)
+		},
+		CompareVarNum: func(varuse *MkVarUse, op string, num string) {
+			ind.AddVar(varuse.varname)
+		},
+		CompareVarStr: func(varuse *MkVarUse, op string, str string) {
+			ind.AddVar(varuse.varname)
+		},
+		CompareVarVar: func(left *MkVarUse, op string, right *MkVarUse) {
+			ind.AddVar(left.varname)
+			ind.AddVar(right.varname)
+		}})
 }
 
 func (mkline *MkLineImpl) ExplainRelativeDirs() {
@@ -940,9 +939,12 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 
 		if contains(args, "exists") {
 			cond := NewMkParser(mkline.Line, args, false).MkCond()
-			cond.Visit("exists", func(node *Tree) {
-				ind.AddCheckedFile(node.args[0].(string))
-			})
+			NewMkCondWalker().Walk(cond, &MkCondCallback{
+				Call: func(name string, arg string) {
+					if name == "exists" {
+						ind.AddCheckedFile(arg)
+					}
+				}})
 		}
 
 	case "for", "ifdef", "ifndef":
