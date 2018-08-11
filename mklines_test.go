@@ -718,3 +718,25 @@ func (s *Suite) Test_MkLines_Check__if_else(c *check.C) {
 	c.Check(mklines.mklines[5].HasElseBranch(), equals, true)
 	c.Check(mklines.mklines[9].HasElseBranch(), equals, false)
 }
+
+func (s *Suite) Test_MkLines_Check__defined_and_used_variables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wno-space")
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("module.mk",
+		MkRcsID,
+		"",
+		".for lang in de fr",
+		"PLIST_VARS+= ${lang}",
+		".endif",
+		"",
+		".for language in de fr",
+		"PLIST.${language}= yes",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
