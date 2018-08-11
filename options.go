@@ -35,8 +35,8 @@ loop:
 		case mkline.IsEmpty():
 
 		case mkline.IsVarassign():
-			varname := mkline.Varname()
-			if varname == "PKG_SUPPORTED_OPTIONS" || hasPrefix(varname, "PKG_OPTIONS_GROUP.") {
+			switch mkline.Varcanon() {
+			case "PKG_SUPPORTED_OPTIONS", "PKG_OPTIONS_GROUP.*", "PKG_OPTIONS_SET.*":
 				for _, option := range splitOnSpace(mkline.Value()) {
 					if option == mkline.WithoutMakeVariables(option) {
 						declaredOptions[option] = mkline
