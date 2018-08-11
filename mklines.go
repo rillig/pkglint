@@ -16,6 +16,7 @@ type MkLines struct {
 	buildDefs      map[string]bool   // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
 	plistVarAdded  map[string]MkLine // Identifiers that are added to PLIST_VARS.
 	plistVarSet    map[string]MkLine // Identifiers for which PLIST.${id} is defined.
+	plistIndirect  bool              // True if any of the PLIST_VARS identifiers is a variable.
 	tools          map[string]bool   // Set of tools that are declared to be used.
 	toolRegistry   ToolRegistry      // Tools defined in file scope.
 	SeenBsdPrefsMk bool
@@ -45,6 +46,7 @@ func NewMkLines(lines []Line) *MkLines {
 		make(map[string]bool),
 		make(map[string]MkLine),
 		make(map[string]MkLine),
+		false,
 		tools,
 		NewToolRegistry(),
 		false,
@@ -116,14 +118,14 @@ func (mklines *MkLines) Check() {
 			case "PLIST_VARS":
 				value := mkline.ValueSplit(resolveVariableRefs(mkline.Value()), "")
 				for _, id := range value {
-					if !containsVarRef(id) && mklines.plistVarSet[id] == nil {
+					if !mklines.plistIndirect && mklines.plistVarSet[id] == nil {
 						mkline.Warnf("%q is added to PLIST_VARS, but PLIST.%s is not defined in this file.", id, id)
 					}
 				}
 
 			case "PLIST.*":
 				id := mkline.Varparam()
-				if !containsVarRef(id) && mklines.plistVarAdded[id] == nil {
+				if !mklines.plistIndirect && mklines.plistVarAdded[id] == nil {
 					mkline.Warnf("PLIST.%s is defined, but %q is not added to PLIST_VARS in this file.", id, id)
 				}
 			}
@@ -264,10 +266,19 @@ func (mklines *MkLines) collectPlistVars() {
 			case "PLIST_VARS":
 				value := mkline.ValueSplit(resolveVariableRefs(mkline.Value()), "")
 				for _, id := range value {
-					mklines.plistVarAdded[id] = mkline
+					if containsVarRef(id) {
+						mklines.plistIndirect = true
+					} else {
+						mklines.plistVarAdded[id] = mkline
+					}
 				}
 			case "PLIST.*":
-				mklines.plistVarSet[mkline.Varparam()] = mkline
+				id := mkline.Varparam()
+				if containsVarRef(id) {
+					mklines.plistIndirect = true
+				} else {
+					mklines.plistVarSet[id] = mkline
+				}
 			}
 		}
 	}

@@ -729,14 +729,19 @@ func (s *Suite) Test_MkLines_Check__defined_and_used_variables(c *check.C) {
 		MkRcsID,
 		"",
 		".for lang in de fr",
-		"PLIST_VARS+= ${lang}",
+		"PLIST_VARS+=            ${lang}",
 		".endif",
 		"",
 		".for language in de fr",
-		"PLIST.${language}= yes",
-		".endif")
+		"PLIST.${language}=      yes",
+		".endif",
+		"",
+		"PLIST.other=            yes")
 
 	mklines.Check()
 
+	// If there are variable involved in the definition of PLIST_VARS or PLIST.*,
+	// it becomes too difficult for pkglint to decide whether the IDs can still match.
+	// Therefore, in such a case, no diagnostics are logged at all.
 	t.CheckOutputEmpty()
 }
