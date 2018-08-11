@@ -112,7 +112,7 @@ func readLines(fname string, joinBackslashLines bool) ([]Line, error) {
 	}
 
 	if G.opts.Profiling {
-		G.loaded.Add(fname, 1)
+		G.loaded.Add(cleanpath(fname), 1)
 	}
 	return convertToLogicalLines(fname, string(rawText), joinBackslashLines), nil
 }

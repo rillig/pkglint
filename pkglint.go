@@ -149,7 +149,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 			pkglint.logOut.Write("")
 			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, -1)
 			regex.PrintStats()
-			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, -1)
+			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, 50)
 		}()
 	}
 
