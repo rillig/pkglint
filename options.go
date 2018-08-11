@@ -95,7 +95,7 @@ loop:
 				"typo, or the option does not have any effect.")
 		}
 		if declared == nil && handled != nil {
-			handled.Warnf("Option %q is handled but not declared above.", option)
+			handled.Warnf("Option %q is handled but not added to PKG_SUPPORTED_OPTIONS.", option)
 			Explain(
 				"This block of code will never be run since PKG_OPTIONS cannot",
 				"contain this value.  This is most probably a typo.")

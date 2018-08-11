@@ -42,7 +42,7 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 		"WARN: ~/category/package/options.mk:5: Option \"ncurses\" should be handled below in an .if block.",
 		"WARN: ~/category/package/options.mk:5: Option \"slang\" should be handled below in an .if block.",
 		"WARN: ~/category/package/options.mk:6: Option \"mc-charset\" should be handled below in an .if block.",
-		"WARN: ~/category/package/options.mk:14: Option \"undeclared\" is handled but not declared above.")
+		"WARN: ~/category/package/options.mk:14: Option \"undeclared\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }
 
 func (s *Suite) Test_ChecklinesOptionsMk__unexpected_line(c *check.C) {
