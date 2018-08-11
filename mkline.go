@@ -248,6 +248,11 @@ func (mkline *MkLineImpl) Args() string      { return mkline.data.(mkLineConditi
 // CondComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
 func (mkline *MkLineImpl) CondComment() string { return mkline.data.(mkLineConditional).comment }
 func (mkline *MkLineImpl) HasElseBranch() bool { return mkline.data.(mkLineConditional).elseLine != nil }
+func (mkline *MkLineImpl) SetHasElseBranch(elseLine MkLine) {
+	data := mkline.data.(mkLineConditional)
+	data.elseLine = elseLine
+	mkline.data = data
+}
 
 func (mkline *MkLineImpl) MustExist() bool     { return mkline.data.(mkLineInclude).mustExist }
 func (mkline *MkLineImpl) IncludeFile() string { return mkline.data.(mkLineInclude).includeFile }
@@ -962,9 +967,7 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	case "else":
 		top := ind.top()
 		if top.mkline != nil {
-			data := top.mkline.data.(mkLineConditional)
-			data.elseLine = mkline
-			top.mkline.data = data
+			top.mkline.SetHasElseBranch(mkline)
 		}
 
 	case "endfor", "endif":
