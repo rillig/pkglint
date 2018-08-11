@@ -106,38 +106,6 @@ func (ck *distinfoLinesChecker) onFilenameChange(line Line, nextFname string) {
 	ck.algorithms = nil
 }
 
-// Same as in mk/checksum/distinfo.awk:/function patchsum/
-func computePatchSha1Hex(patchFilename string) (string, error) {
-	patchBytes, err := ioutil.ReadFile(patchFilename)
-	if err != nil {
-		return "", err
-	}
-
-	hash := sha1.New()
-	netbsd := []byte("$" + "NetBSD")
-	for _, patchLine := range bytes.SplitAfter(patchBytes, []byte("\n")) {
-		if !bytes.Contains(patchLine, netbsd) {
-			hash.Write(patchLine)
-		}
-	}
-	return fmt.Sprintf("%x", hash.Sum(nil)), nil
-}
-
-func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFname, distinfoSha1Hex string) {
-	fileSha1Hex, err := computePatchSha1Hex(G.CurrentDir + "/" + patchFname)
-	if err != nil {
-		line.Errorf("%s does not exist.", patchFname)
-		return
-	}
-	if distinfoSha1Hex != fileSha1Hex {
-		fix := line.Autofix()
-		fix.Errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".",
-			"SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
-		fix.Replace(distinfoSha1Hex, fileSha1Hex)
-		fix.Apply()
-	}
-}
-
 func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	files, err := ioutil.ReadDir(G.CurrentDir + "/" + ck.patchdir)
 	if err != nil {
@@ -181,6 +149,38 @@ func (ck *distinfoLinesChecker) checkUncommittedPatch(line Line, patchName, sha1
 		ck.checkPatchSha1(line, patchFname, sha1Hash)
 		ck.patches[patchName] = true
 	}
+}
+
+func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFname, distinfoSha1Hex string) {
+	fileSha1Hex, err := computePatchSha1Hex(G.CurrentDir + "/" + patchFname)
+	if err != nil {
+		line.Errorf("%s does not exist.", patchFname)
+		return
+	}
+	if distinfoSha1Hex != fileSha1Hex {
+		fix := line.Autofix()
+		fix.Errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".",
+			"SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
+		fix.Replace(distinfoSha1Hex, fileSha1Hex)
+		fix.Apply()
+	}
+}
+
+// Same as in mk/checksum/distinfo.awk:/function patchsum/
+func computePatchSha1Hex(patchFilename string) (string, error) {
+	patchBytes, err := ioutil.ReadFile(patchFilename)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha1.New()
+	netbsd := []byte("$" + "NetBSD")
+	for _, patchLine := range bytes.SplitAfter(patchBytes, []byte("\n")) {
+		if !bytes.Contains(patchLine, netbsd) {
+			hash.Write(patchLine)
+		}
+	}
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
 func AutofixDistinfo(oldSha1, newSha1 string) {
