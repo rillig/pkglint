@@ -72,16 +72,18 @@ loop:
 		mkline := exp.CurrentMkLine()
 		if mkline.IsCond() && (mkline.Directive() == "if" || mkline.Directive() == "elif") {
 			cond := NewMkParser(mkline.Line, mkline.Args(), false).MkCond()
-			if cond != nil {
-				NewMkCondWalker().Walk(cond, &MkCondCallback{
-					Empty: func(varuse *MkVarUse) {
-						if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
-							option := varuse.modifiers[0][1:]
-							handledOptions[option] = mkline
-							optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
-						}
-					}})
+			if cond == nil {
+				continue
 			}
+
+			NewMkCondWalker().Walk(cond, &MkCondCallback{
+				Empty: func(varuse *MkVarUse) {
+					if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 && hasPrefix(varuse.modifiers[0], "M") {
+						option := varuse.modifiers[0][1:]
+						handledOptions[option] = mkline
+						optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
+					}
+				}})
 
 			if cond.Empty != nil && mkline.HasElseBranch() {
 				mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")

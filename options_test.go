@@ -84,3 +84,37 @@ func (s *Suite) Test_ChecklinesOptionsMk__unexpected_line(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:7: Expected inclusion of \"../../mk/bsd.options.mk\".")
 }
+
+func (s *Suite) Test_ChecklinesOptionsMk__malformed_conditional(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wno-space")
+	t.SetupVartypes()
+	t.SetupOption("mc-charset", "")
+	t.SetupOption("ncurses", "")
+	t.SetupOption("slang", "")
+	t.SetupOption("x11", "")
+
+	t.SetupFileMkLines("mk/bsd.options.mk",
+		MkRcsID)
+
+	mklines := t.SetupFileMkLines("category/package/options.mk",
+		MkRcsID,
+		"",
+		"PKG_OPTIONS_VAR=                PKG_OPTIONS.mc",
+		"PKG_SUPPORTED_OPTIONS=          # none",
+		"PKG_SUGGESTED_OPTIONS=          # none",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${OPSYS} == 'Darwin'",
+		".endif")
+
+	G.CurrentDir = t.TmpDir()
+	G.CurPkgsrcdir = "."
+
+	ChecklinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:9: Invalid conditional \"${OPSYS} == 'Darwin'\".")
+}
