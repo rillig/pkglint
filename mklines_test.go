@@ -622,3 +622,40 @@ func (s *Suite) Test_MkLines_CheckRedundantVariables__procedure_call(c *check.C)
 
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wno-space")
+	t.SetupVartypes()
+	t.SetupOption("both", "")
+	t.SetupOption("only-added", "")
+	t.SetupOption("only-defined", "")
+	t.SetupFileMkLines("mk/bsd.options.mk")
+
+	mklines := t.NewMkLines("options.mk",
+		MkRcsID,
+		"",
+		"PKG_OPTIONS_VAR=        PKG_OPTIONS.pkg",
+		"PKG_SUPPORTED_OPTIONS=  both only-added only-defined",
+		"PKG_SUGGESTED_OPTIONS=  # none",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		"PLIST_VARS+=            both only-added",
+		"",
+		".if !empty(PKG_OPTIONS:Mboth)",
+		"PLIST.both=             yes",
+		".endif",
+		"",
+		".if !empty(PKG_OPTIONS:Monly-defined)",
+		"PLIST.only-defined=     yes",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: options.mk:7: \"/mk/bsd.options.mk\" does not exist.", // Not relevant for this test.
+		"WARN: options.mk:9: \"only-added\" is added to PLIST_VARS, but PLIST.only-added is not defined in this file.",
+		"WARN: options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
+}

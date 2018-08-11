@@ -263,6 +263,11 @@ func (mkline *MkLineImpl) SetConditionVars(varnames string) {
 	mkline.data = include
 }
 
+// Tokenize extracts variable uses and other text from the string.
+//
+// Example:
+//  input:  ${PREFIX}/bin abc
+//  output: [MkToken("${PREFIX}", MkVarUse("PREFIX")), MkToken("/bin abc")]
 func (mkline *MkLineImpl) Tokenize(s string) []*MkToken {
 	if trace.Tracing {
 		defer trace.Call(mkline, s)()
@@ -280,6 +285,8 @@ func (mkline *MkLineImpl) Tokenize(s string) []*MkToken {
 // taking care of variable references. For example, when the value
 // "/bin:${PATH:S,::,::,}" is split at ":", it results in
 // {"/bin", "${PATH:S,::,::,}"}.
+//
+// If the separator is empty, splitting is done on whitespace.
 func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
 	tokens := mkline.Tokenize(value)
 	var split []string
@@ -288,7 +295,12 @@ func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
 			split = []string{""}
 		}
 		if token.Varuse == nil && contains(token.Text, separator) {
-			subs := strings.Split(token.Text, separator)
+			var subs []string
+			if separator == "" {
+				subs = splitOnSpace(token.Text)
+			} else {
+				subs = strings.Split(token.Text, separator)
+			}
 			split[len(split)-1] += subs[0]
 			split = append(split, subs[1:]...)
 		} else {
