@@ -139,7 +139,7 @@ func (cv *VartypeCheck) BuildlinkDepmethod() {
 }
 
 func (cv *VartypeCheck) Category() {
-	if cv.Value != "wip" && fileExists(G.CurrentDir+"/"+G.CurPkgsrcdir+"/"+cv.Value+"/Makefile") {
+	if cv.Value != "wip" && fileExists(G.Pkgsrc.File(cv.Value+"/Makefile")) {
 		return
 	}
 	switch cv.Value {

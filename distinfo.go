@@ -24,7 +24,7 @@ func ChecklinesDistinfo(lines []Line) {
 			patchesDirSet = true
 		}
 	}
-	if G.Pkg != nil && !patchesDirSet && dirExists(G.CurrentDir+"/"+G.Pkg.Patchdir) {
+	if G.Pkg != nil && !patchesDirSet && dirExists(G.Pkg.File(G.Pkg.Patchdir)) {
 		patchesDir = G.Pkg.Patchdir
 	}
 	if trace.Tracing {
