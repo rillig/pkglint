@@ -321,7 +321,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	case "../..":
 		pkglint.checkdirPackage(pkglint.Pkgsrc.ToRel(currentDir))
 	case "..":
-		CheckdirCategory()
+		CheckdirCategory(currentDir)
 	case ".":
 		CheckdirToplevel()
 	default:

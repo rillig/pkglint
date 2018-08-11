@@ -15,7 +15,7 @@ func (s *Suite) Test_CheckdirCategory_totally_broken(c *check.C) {
 		".include \"../mk/category.mk\"")
 	G.CurrentDir = t.File("archivers")
 
-	CheckdirCategory()
+	CheckdirCategory(t.File("archivers"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".",
@@ -51,7 +51,7 @@ func (s *Suite) Test_CheckdirCategory_invalid_comment(c *check.C) {
 	G.CurrentDir = t.File("archivers")
 	G.CurPkgsrcdir = ".."
 
-	CheckdirCategory()
+	CheckdirCategory(t.File("archivers"))
 
 	t.CheckOutputLines(
 		"WARN: ~/archivers/Makefile:2: COMMENT contains invalid characters (U+005C U+0024 U+0024 U+0024 U+0024 U+0022).")
