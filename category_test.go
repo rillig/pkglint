@@ -13,7 +13,7 @@ func (s *Suite) Test_CheckdirCategory_totally_broken(c *check.C) {
 		"SUBDIR-=unknown #doesn\u2019t work",
 		"",
 		".include \"../mk/category.mk\"")
-	G.CurrentDir = t.TempFilename("archivers")
+	G.CurrentDir = t.File("archivers")
 
 	CheckdirCategory()
 
@@ -48,7 +48,7 @@ func (s *Suite) Test_CheckdirCategory_invalid_comment(c *check.C) {
 		"# dummy")
 	t.SetupFileLines("mk/misc/category.mk",
 		"# dummy")
-	G.CurrentDir = t.TempFilename("archivers")
+	G.CurrentDir = t.File("archivers")
 	G.CurPkgsrcdir = ".."
 
 	CheckdirCategory()

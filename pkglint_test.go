@@ -219,7 +219,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
 		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
 
-	G.Main("pkglint", "-Wall", "-Call", t.TempFilename("sysutils/checkperms"))
+	G.Main("pkglint", "-Wall", "-Call", t.File("sysutils/checkperms"))
 
 	t.CheckOutputLines(
 		"WARN: ~/sysutils/checkperms/Makefile:3: This package should be updated to 1.13 ([supports more file formats]).",
@@ -271,17 +271,17 @@ func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/Makefile: Must not be empty.")
 
-	G.CheckDirent(t.TempFilename("category"))
+	G.CheckDirent(t.File("category"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/Makefile: Must not be empty.")
 
-	G.CheckDirent(t.TempFilename("category/package"))
+	G.CheckDirent(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile: Must not be empty.")
 
-	G.CheckDirent(t.TempFilename("category/package/nonexistent"))
+	G.CheckDirent(t.File("category/package/nonexistent"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/nonexistent: No such file or directory.")

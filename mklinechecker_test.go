@@ -174,7 +174,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions__infrastructure(
 
 	G.CurrentDir = t.TmpDir()
 	G.CurPkgsrcdir = "."
-	G.CheckDirent(t.TempFilename("mk/infra.mk"))
+	G.CheckDirent(t.File("mk/infra.mk"))
 
 	t.CheckOutputEmpty()
 }

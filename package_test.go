@@ -411,11 +411,11 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 		"DISTNAME=distfile_1_67",
 		".include \"../../category/package/Makefile\"")
 	pkg := NewPackage("category/package")
-	G.CurrentDir = t.TempFilename("category/package")
+	G.CurrentDir = t.File("category/package")
 	G.CurPkgsrcdir = "../.."
 	G.Pkg = pkg
 
-	pkg.loadPackageMakefile(t.TempFilename("category/package/Makefile"))
+	pkg.loadPackageMakefile(t.File("category/package/Makefile"))
 
 	// Including a package Makefile directly is an error (in the last line),
 	// but that is checked later.
@@ -488,7 +488,7 @@ func (s *Suite) Test_Package_includeWithoutExists(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CurrentDir = t.TempFilename("category/package")
+	G.CurrentDir = t.File("category/package")
 	G.checkdirPackage(G.CurrentDir)
 
 	t.CheckOutputLines(
@@ -510,7 +510,7 @@ func (s *Suite) Test_Package_includeAfterExists(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CurrentDir = t.TempFilename("category/package")
+	G.CurrentDir = t.File("category/package")
 	G.checkdirPackage(G.CurrentDir)
 
 	t.CheckOutputLines(
@@ -537,7 +537,7 @@ func (s *Suite) Test_Package_includeOtherAfterExists(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CurrentDir = t.TempFilename("category/package")
+	G.CurrentDir = t.File("category/package")
 	G.checkdirPackage(G.CurrentDir)
 
 	t.CheckOutputLines(
@@ -572,7 +572,7 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 		".include \"../../math/R/Makefile.extension\"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CurrentDir = t.TempFilename("math/R-date")
+	G.CurrentDir = t.File("math/R-date")
 	G.CurPkgsrcdir = "../.."
 
 	// See Package.checkfilePackageMakefile

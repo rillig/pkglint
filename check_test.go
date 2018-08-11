@@ -210,7 +210,7 @@ func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (file
 		content += line + "\n"
 	}
 
-	filename = t.TempFilename(relativeFilename)
+	filename = t.File(relativeFilename)
 	err := os.MkdirAll(path.Dir(filename), 0777)
 	t.c().Assert(err, check.IsNil)
 
@@ -233,9 +233,9 @@ func (t *Tester) TmpDir() string {
 	return t.tmpdir
 }
 
-// TempFilename returns the absolute path to the given file in the
+// File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
-func (t *Tester) TempFilename(relativeFilename string) string {
+func (t *Tester) File(relativeFilename string) string {
 	return t.TmpDir() + "/" + relativeFilename
 }
 
@@ -374,7 +374,7 @@ func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 // for indentation, while the lines in the code use spaces exclusively,
 // in order to make the depth of the indentation clearly visible.
 func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
-	actualLines, err := readLines(t.TempFilename(relativeFileName), false)
+	actualLines, err := readLines(t.File(relativeFileName), false)
 	if !t.c().Check(err, check.IsNil) {
 		return
 	}
