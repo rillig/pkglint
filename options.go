@@ -70,7 +70,7 @@ loop:
 
 	for ; !exp.EOF(); exp.Advance() {
 		mkline := exp.CurrentMkLine()
-		if mkline.IsCond() && mkline.Directive() == "if" {
+		if mkline.IsCond() && (mkline.Directive() == "if" || mkline.Directive() == "elif") {
 			cond := NewMkParser(mkline.Line, mkline.Args(), false).MkCond()
 			if cond != nil {
 				cond.Visit("empty", func(t *Tree) {

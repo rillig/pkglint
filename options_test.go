@@ -30,6 +30,10 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 		".endif",
 		"",
 		".if !empty(PKG_OPTIONS:Mundeclared)",
+		".endif",
+		"",
+		".if !empty(PKG_OPTIONS:Mncurses)",
+		".elif !empty(PKG_OPTIONS:Mslang)",
 		".endif")
 
 	G.CurrentDir = t.TmpDir()
@@ -39,8 +43,6 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:14: Unknown option \"undeclared\".",
-		"WARN: ~/category/package/options.mk:5: Option \"ncurses\" should be handled below in an .if block.",
-		"WARN: ~/category/package/options.mk:5: Option \"slang\" should be handled below in an .if block.",
 		"WARN: ~/category/package/options.mk:6: Option \"mc-charset\" should be handled below in an .if block.",
 		"WARN: ~/category/package/options.mk:14: Option \"undeclared\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }
