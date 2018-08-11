@@ -58,6 +58,12 @@ func NewPackage(pkgpath string) *Package {
 	return pkg
 }
 
+// File returns the (possibly absolute) path to relativeFilename,
+// as resolved from the package's directory.
+func (pkg *Package) File(relativeFilename string) string {
+	return G.Pkgsrc.File(pkg.Pkgpath + "/" + relativeFilename)
+}
+
 func (pkg *Package) varValue(varname string) (string, bool) {
 	switch varname {
 	case "KRB5_TYPE":
@@ -151,12 +157,16 @@ func (pkglint *Pkglint) checkdirPackage(pkgpath string) {
 		defer trace.Call1(pkgpath)()
 	}
 
+	if strings.Count(pkgpath, "/") != 1 {
+		dummyLine.Fatalf("Internal pkglint error: Wrong pkgpath %q.", pkgpath)
+	}
+
 	G.Pkg = NewPackage(pkgpath)
 	defer func() { G.Pkg = nil }()
 	pkg := G.Pkg
 
 	// we need to handle the Makefile first to get some variables
-	lines := pkg.loadPackageMakefile(G.CurrentDir + "/Makefile")
+	lines := pkg.loadPackageMakefile()
 	if lines == nil {
 		return
 	}
@@ -231,7 +241,8 @@ func (pkglint *Pkglint) checkdirPackage(pkgpath string) {
 	}
 }
 
-func (pkg *Package) loadPackageMakefile(fname string) *MkLines {
+func (pkg *Package) loadPackageMakefile() *MkLines {
+	fname := pkg.File("Makefile")
 	if trace.Tracing {
 		defer trace.Call1(fname)()
 	}
