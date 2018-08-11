@@ -215,6 +215,8 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		&mkCond{Not: &mkCond{Empty: varuse("${OS_VARIANT:MIllumos}")}})
 	check("defined (VARNAME)", // There may be whitespace before the parenthesis; see devel/bmake/files/cond.c:^compare_function.
 		&mkCond{Defined: "VARNAME"})
+	check("${\"${PKG_OPTIONS:Moption}\":?--enable-option:--disable-option}",
+		&mkCond{Not: &mkCond{Empty: varuse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")}})
 
 	// Errors
 	checkRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
