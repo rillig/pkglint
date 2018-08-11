@@ -116,14 +116,14 @@ func (mklines *MkLines) Check() {
 			case "PLIST_VARS":
 				value := mkline.ValueSplit(resolveVariableRefs(mkline.Value()), "")
 				for _, id := range value {
-					if mklines.plistVarSet[id] == nil {
+					if !contains(id, "$") && mklines.plistVarSet[id] == nil {
 						mkline.Warnf("%q is added to PLIST_VARS, but PLIST.%s is not defined in this file.", id, id)
 					}
 				}
 
 			case "PLIST.*":
 				id := mkline.Varparam()
-				if mklines.plistVarAdded[id] == nil {
+				if !contains(id, "$") && mklines.plistVarAdded[id] == nil {
 					mkline.Warnf("PLIST.%s is defined, but %q is not added to PLIST_VARS in this file.", id, id)
 				}
 			}
@@ -215,7 +215,9 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 				if trace.Tracing {
 					trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
 				}
-				mklines.UseVar(mkline, "PLIST."+id)
+				if !contains(id, "$") {
+					mklines.UseVar(mkline, "PLIST."+id)
+				}
 			}
 
 		case "USE_TOOLS":
@@ -260,7 +262,9 @@ func (mklines *MkLines) collectPlistVars() {
 			case "PLIST_VARS":
 				value := mkline.ValueSplit(resolveVariableRefs(mkline.Value()), "")
 				for _, id := range value {
-					mklines.plistVarAdded[id] = mkline
+					if !contains(id, "$") {
+						mklines.plistVarAdded[id] = mkline
+					}
 				}
 			case "PLIST.*":
 				mklines.plistVarSet[mkline.Varparam()] = mkline
