@@ -272,6 +272,8 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 		".if !empty(MACHINE_ARCH:Mi386) || ${MACHINE_ARCH} == i386",
 		".endif",
 		".if !empty(PKGSRC_COMPILER:Mclang) || ${PKGSRC_COMPILER} == clang",
+		".endif",
+		".if ${MACHINE_ARCH:Ni386:Nx86_64:Nsparc64}",
 		".endif")
 
 	mklines.Check()

@@ -941,18 +941,6 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 	case vartype.kindOfList == lkNone:
 		ck.CheckVartypePrimitive(varname, vartype.basicType, op, value, comment, vartype.guessed)
 
-		if op == opUseMatch && matches(value, `^[\w-/]+$`) && !vartype.IsConsideredList() {
-			mkline.Notef("%s should be compared using == instead of the :M or :N modifier without wildcards.", varname)
-			Explain(
-				"This variable has a single value, not a list of values.  Therefore",
-				"it feels strange to apply list operators like :M and :N onto it.",
-				"A more direct approach is to use the == and != operators.",
-				"",
-				"An entirely different case is when the pattern contains wildcards",
-				"like ^, *, $.  In such a case, using the :M or :N modifiers is",
-				"useful and preferred.")
-		}
-
 	case value == "":
 		break
 
@@ -1060,9 +1048,25 @@ func (ck MkLineChecker) CheckCond() {
 				"\t!empty(VARNAME:Mpattern)",
 				"\t${VARNAME:Mpattern}")
 		}
-		for _, modifier := range varuse.modifiers {
-			if modifier[0] == 'M' || modifier[0] == 'N' {
+
+		modifiers := varuse.modifiers
+		for _, modifier := range modifiers {
+			if modifier[0] == 'M' || (modifier[0] == 'N' && len(modifiers) == 1) {
 				ck.CheckVartype(varname, opUseMatch, modifier[1:], "")
+
+				value := modifier[1:]
+				vartype := mkline.VariableType(varname)
+				if matches(value, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
+					mkline.Notef("%s should be compared using == instead of the :M or :N modifier without wildcards.", varname)
+					Explain(
+						"This variable has a single value, not a list of values.  Therefore",
+						"it feels strange to apply list operators like :M and :N onto it.",
+						"A more direct approach is to use the == and != operators.",
+						"",
+						"An entirely different case is when the pattern contains wildcards",
+						"like ^, *, $.  In such a case, using the :M or :N modifiers is",
+						"useful and preferred.")
+				}
 			}
 		}
 	}
