@@ -1,9 +1,19 @@
 language: go
+
 go:
 - "1.10"
+
 go_import_path: netbsd.org/pkglint
+
 install:
 - go get -d -t -v ./...
+
 before_script:
 - go get golang.org/x/tools/cmd/goyacc
 - go generate -x ./...
+
+script:
+- go test -coverprofile=coverage.txt -covermode=count
+
+after_success:
+- bash <(curl -s https://codecov.io/bash)
