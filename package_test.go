@@ -159,7 +159,6 @@ func (s *Suite) Test_Package_varorder_license(c *check.C) {
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	t.SetupVartypes()
-	G.CurrentDir = t.File(".")
 
 	G.CheckDirent(t.File("x11/9term"))
 

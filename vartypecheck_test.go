@@ -46,7 +46,6 @@ func (s *Suite) Test_VartypeCheck_Category(c *check.C) {
 		"# empty")
 	t.SetupFileLines("wip/Makefile",
 		"# empty")
-	G.CurrentDir = t.File(".")
 
 	runVartypeChecks(t, "CATEGORIES", opAssign, (*VartypeCheck).Category,
 		"chinese",

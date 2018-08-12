@@ -172,7 +172,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions__infrastructure(
 		"PKG_DEVELOPER?=\tyes")
 	t.SetupFileMkLines("mk/bsd.pkg.mk")
 
-	G.CurrentDir = t.File(".")
 	G.CheckDirent(t.File("mk/infra.mk"))
 
 	t.CheckOutputEmpty()
