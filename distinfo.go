@@ -82,7 +82,7 @@ func (ck *distinfoLinesChecker) onFilenameChange(line Line, nextFname string) {
 				line.Errorf("Expected SHA1 hash for %s, got %s.", currentFname, algorithms)
 			}
 		} else if ck.isPatch == unknown {
-			// TODO: } else if G.Pkg != nil && G.Pkg.IgnoreMissingPatches {
+		} else if G.Pkg != nil && G.Pkg.IgnoreMissingPatches {
 		} else if hasPrefix(currentFname, "patch-") && algorithms == "SHA1" {
 			pathToPatchdir := relpath(path.Dir(ck.currentFirstLine.Filename), G.Pkg.File(ck.patchdir))
 			ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", currentFname, pathToPatchdir)

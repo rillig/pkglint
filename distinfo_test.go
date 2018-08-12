@@ -174,6 +174,5 @@ func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
 	G.CheckDirent(t.File("archivers/php-bz2"))
 	G.CheckDirent(t.File("archivers/php-zlib"))
 
-	t.CheckOutputLines(
-		"WARN: ~/lang/php72/distinfo:3: Patch file \"patch-php72\" does not exist in directory \"../../archivers/php-zlib/patches\".")
+	t.CheckOutputEmpty()
 }
