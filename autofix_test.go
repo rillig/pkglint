@@ -147,7 +147,7 @@ func (s *Suite) Test_autofix_MkLines(c *check.C) {
 		"XXXe3 := value3")
 }
 
-func (s *Suite) Test_Autofix_multiple_modifications(c *check.C) {
+func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--show-autofix", "--explain")
@@ -448,4 +448,33 @@ func (s *Suite) Test_Autofix_Explain(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:74: Please write row instead of line.")
 	c.Check(G.explanationsAvailable, equals, true)
+}
+
+// Since the diagnostic doesn't contain the string "few", nothing happens.
+func (s *Suite) Test_Autofix__skip(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--only", "few", "--autofix")
+
+	lines := t.SetupFileLines("fname",
+		"111 222 333 444 555")
+
+	fix := lines[0].Autofix()
+	fix.Warnf("Many.")
+	fix.Explain(
+		"Explanation.")
+	fix.Replace("111", "___")
+	fix.ReplaceAfter(" ", "222", "___")
+	fix.ReplaceRegex(`\d+`, "___", 1)
+	fix.InsertBefore("before")
+	fix.InsertAfter("after")
+	fix.Delete()
+	fix.Apply()
+
+	SaveAutofixChanges(lines)
+
+	t.CheckOutputEmpty()
+	t.CheckFileLines("fname",
+		"111 222 333 444 555")
+	c.Check(lines[0].raw[0].textnl, equals, "111 222 333 444 555\n")
 }

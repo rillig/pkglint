@@ -220,12 +220,6 @@ func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (file
 	return filename
 }
 
-func (t *Tester) LoadTmpFile(relFname string) (absFname string) {
-	bytes, err := ioutil.ReadFile(t.File(relFname))
-	t.c().Assert(err, check.IsNil)
-	return string(bytes)
-}
-
 // File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
 func (t *Tester) File(relativeFilename string) string {
@@ -361,7 +355,9 @@ func (t *Tester) DisableTracing() {
 // CheckFileLines loads the lines from the temporary file and checks that
 // they equal the given lines.
 func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
-	text := t.LoadTmpFile(relativeFileName)
+	content, err := ioutil.ReadFile(t.File(relativeFileName))
+	t.c().Assert(err, check.IsNil)
+	text := string(content)
 	actualLines := strings.Split(text, "\n")
 	actualLines = actualLines[:len(actualLines)-1]
 	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(lines))
