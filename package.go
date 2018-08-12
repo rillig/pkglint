@@ -37,6 +37,7 @@ type Package struct {
 	conditionalIncludes   map[string]MkLine
 	unconditionalIncludes map[string]MkLine
 	once                  Once
+	IgnoreMissingPatches  bool // In distinfo, don't warn about patches that cannot be found.
 }
 
 func NewPackage(pkgpath string) *Package {
@@ -270,13 +271,19 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 	pkg.Filesdir = pkg.expandVariableWithDefault("FILESDIR", "files")
 	pkg.Patchdir = pkg.expandVariableWithDefault("PATCHDIR", "patches")
 
+	// See lang/php/ext.mk
 	if varIsDefined("PHPEXT_MK") {
 		if !varIsDefined("USE_PHP_EXT_PATCHES") {
 			pkg.Patchdir = "patches"
 		}
 		if varIsDefined("PECL_VERSION") {
 			pkg.DistinfoFile = "distinfo"
+		} else {
+			pkg.IgnoreMissingPatches = true
 		}
+
+		// For PHP modules that are not PECL, this combination means that
+		// the patches in the distinfo cannot be found in PATCHDIR.
 	}
 
 	if trace.Tracing {

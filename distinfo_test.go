@@ -117,3 +117,63 @@ func (s *Suite) Test_ChecklinesDistinfo_manual_patches(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/distinfo:3: Patch file \"patch-aa\" does not exist in directory \"patches\".")
 }
+
+// PHP modules that are not PECL use the distinfo file from lang/php* but
+// their own patches directory. Therefore the distinfo file refers to missing
+// patches. Since this strange situation is caused by the pkgsrc
+// infrastructure, there is nothing a package author can do about.
+func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupCommandLine("-Wall,no-space")
+	t.CreateFileLines("licenses/unknown-license")
+	t.CreateFileLines("lang/php/ext.mk",
+		MkRcsID,
+		"",
+		"PHPEXT_MK=      # defined",
+		"PHPPKGSRCDIR=   lang/php72",
+		"LICENSE?=        unknown-license",
+		"COMMENT?=       Some PHP package",
+		"GENERATE_PLIST+=# none",
+		"",
+		".if !defined(PECL_VERSION)",
+		"DISTINFO_FILE=  ${.CURDIR}/${PHPPKGSRCDIR}/distinfo",
+		".endif",
+		".if defined(USE_PHP_EXT_PATCHES)",
+		"PATCHDIR=       ${.CURDIR}/${PHPPKGSRCDIR}/patches",
+		".endif")
+	t.CreateFileLines("lang/php72/patches/patch-php72",
+		RcsID,
+		"",
+		"Documentation",
+		"",
+		"--- old file",
+		"+++ new file",
+		"@@ -1,1 +1,1 @@",
+		"-old",
+		"+new")
+	t.SetupFileLines("lang/php72/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-php72) = c109b2089f5ddbc5372b2ab28115ff558ee4187d")
+
+	t.CreateFileLines("archivers/php-bz2/Makefile",
+		MkRcsID,
+		"",
+		"USE_PHP_EXT_PATCHES=    yes",
+		"",
+		".include \"../../lang/php/ext.mk\"",
+		".include \"../../mk/bsd.pkg.mk\"")
+	t.CreateFileLines("archivers/php-zlib/Makefile",
+		MkRcsID,
+		"",
+		".include \"../../lang/php/ext.mk\"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	G.CheckDirent(t.File("archivers/php-bz2"))
+	G.CheckDirent(t.File("archivers/php-zlib"))
+
+	t.CheckOutputLines(
+		"WARN: ~/lang/php72/distinfo:3: Patch file \"patch-php72\" does not exist in directory \"../../archivers/php-zlib/patches\".")
+}
