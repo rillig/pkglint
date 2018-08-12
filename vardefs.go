@@ -71,30 +71,6 @@ func (src *Pkgsrc) InitVartypes() {
 		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk:; *: use-loadtime, use")
 	}
 
-	jvms := enum(func() string {
-		lines, _ := readLines(src.File("mk/java-vm.mk"), true)
-		mklines := NewMkLines(lines)
-		jvms := make(map[string]bool)
-		for _, mkline := range mklines.mklines {
-			if mkline.IsVarassign() && mkline.Varcanon() == "_PKG_JVMS.*" {
-				words, _ := splitIntoMkWords(mkline.Line, mkline.Value())
-				for _, word := range words {
-					if !contains(word, "$") {
-						jvms[word] = true
-					}
-				}
-			}
-		}
-		if len(jvms) == 0 {
-			return "openjdk8 oracle-jdk8 openjdk7 sun-jdk7 sun-jdk6 jdk16 jdk15 kaffe"
-		}
-		joined := keysJoined(jvms)
-		if trace.Tracing {
-			trace.Stepf("JVMs from mk/java-vm.mk: %s", joined)
-		}
-		return joined
-	}())
-
 	languages := enum(
 		func() string {
 			lines, _ := readLines(src.File("mk/compiler.mk"), true)
@@ -121,16 +97,66 @@ func (src *Pkgsrc) InitVartypes() {
 			return joined
 		}())
 
-	enumFrom := func(fileName, varname, defval string) *BasicType {
+	enumFrom := func(fileName string, defval string, varcanons ...string) *BasicType {
 		lines, _ := readLines(src.File(fileName), true)
 		mklines := NewMkLines(lines)
+		values := make(map[string]bool)
+
 		for _, mkline := range mklines.mklines {
-			if mkline.IsVarassign() && mkline.Varname() == varname {
-				return enum(mkline.Value())
+			if mkline.IsVarassign() {
+				varcanon := mkline.Varcanon()
+				for _, vc := range varcanons {
+					if vc == varcanon {
+						words, _ := splitIntoMkWords(mkline.Line, mkline.Value())
+						for _, word := range words {
+							if !contains(word, "$") {
+								values[word] = true
+							}
+						}
+					}
+				}
 			}
+		}
+
+		if len(values) != 0 {
+			joined := keysJoined(values)
+			if trace.Tracing {
+				trace.Stepf("Enum from %s in: %s", strings.Join(varcanons, " "), fileName, joined)
+			}
+			return enum(joined)
+		}
+
+		if trace.Tracing {
+			trace.Stepf("Enum from default value: %s", defval)
 		}
 		return enum(defval)
 	}
+
+	compilers := enumFrom(
+		"mk/compiler.mk",
+		"ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc",
+		"_COMPILERS",
+		"_PSEUDO_COMPILERS")
+
+	emacsVersions := enumFrom(
+		"editors/emacs/modules.mk",
+		"emacs25 emacs21 emacs21nox emacs20 xemacs215 xemacs215nox xemacs214 xemacs214nox",
+		"_EMACS_VERSIONS_ALL")
+
+	mysqlVersions := enumFrom(
+		"mk/mysql.buildlink3.mk",
+		"57 56 55 51 MARIADB55",
+		"MYSQL_VERSIONS_ACCEPTED")
+
+	pgsqlVersions := enumFrom(
+		"mk/pgsql.buildlink3.mk",
+		"10 96 95 94 93",
+		"PGSQL_VERSIONS_ACCEPTED")
+
+	jvms := enumFrom(
+		"mk/java-vm.mk",
+		"openjdk8 oracle-jdk8 openjdk7 sun-jdk7 sun-jdk6 jdk16 jdk15 kaffe",
+		"_PKG_JVMS.*")
 
 	// Last synced with mk/defaults/mk.conf revision 1.269
 	usr("USE_CWRAPPERS", lkNone, enum("yes no auto"))
@@ -153,7 +179,7 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("PKG_DEVELOPER", lkNone, BtYesNo)
 	usr("USE_ABI_DEPENDS", lkNone, BtYesNo)
 	usr("PKG_REGISTER_SHELLS", lkNone, enum("YES NO"))
-	usr("PKGSRC_COMPILER", lkShell, enum("ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc"))
+	usr("PKGSRC_COMPILER", lkShell, compilers)
 	usr("PKGSRC_KEEP_BIN_PKGS", lkNone, BtYesNo)
 	usr("PKGSRC_MESSAGE_RECIPIENTS", lkShell, BtMailAddress)
 	usr("PKGSRC_SHOW_BUILD_DEFS", lkNone, BtYesNo)
@@ -599,10 +625,10 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("EMACS_PKGNAME_PREFIX", lkNone, BtIdentifier) // Or the empty string.
 	sys("EMACS_TYPE", lkNone, enum("emacs xemacs"))
 	acl("EMACS_USE_LEIM", lkNone, BtYes, "")
-	acl("EMACS_VERSIONS_ACCEPTED", lkShell, enumFrom("editors/emacs/modules.mk", "_EMACS_VERSIONS_ALL", "emacs25 emacs21 emacs21nox emacs20 xemacs215 xemacs215nox xemacs214 xemacs214nox"), "Makefile: set")
+	acl("EMACS_VERSIONS_ACCEPTED", lkShell, emacsVersions, "Makefile: set")
 	sys("EMACS_VERSION_MAJOR", lkNone, BtInteger)
 	sys("EMACS_VERSION_MINOR", lkNone, BtInteger)
-	acl("EMACS_VERSION_REQD", lkShell, enum("emacs25 emacs25nox emacs21 emacs21nox emacs20 xemacs215 xemacs214"), "Makefile: set, append")
+	acl("EMACS_VERSION_REQD", lkShell, emacsVersions, "Makefile: set, append")
 	sys("EMULDIR", lkNone, BtPathname)
 	sys("EMULSUBDIR", lkNone, BtPathname)
 	sys("OPSYS_EMULDIR", lkNone, BtPathname)
@@ -796,11 +822,11 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("MESSAGE_SUBST", lkShell, BtShellWord, "Makefile, Makefile.common, options.mk: append")
 	pkg("META_PACKAGE", lkNone, BtYes)
 	sys("MISSING_FEATURES", lkShell, BtIdentifier)
-	acl("MYSQL_VERSIONS_ACCEPTED", lkShell, enumFrom("mk/mysql.buildlink3.mk", "MYSQL_VERSIONS_ACCEPTED", "57 56 55 51 MARIADB55"), "Makefile: set")
+	acl("MYSQL_VERSIONS_ACCEPTED", lkShell, mysqlVersions, "Makefile: set")
 	usr("MYSQL_VERSION_DEFAULT", lkNone, BtVersion)
 	sys("NM", lkNone, BtShellCommand)
 	sys("NONBINMODE", lkNone, BtFileMode)
-	pkg("NOT_FOR_COMPILER", lkShell, enum("ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc"))
+	pkg("NOT_FOR_COMPILER", lkShell, compilers)
 	pkglist("NOT_FOR_BULK_PLATFORM", lkSpace, BtMachinePlatformPattern)
 	pkglist("NOT_FOR_PLATFORM", lkSpace, BtMachinePlatformPattern)
 	pkg("NOT_FOR_UNPRIVILEGED", lkNone, BtYesNo)
@@ -817,7 +843,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("NO_PKGTOOLS_REQD_CHECK", lkNone, BtYes, "Makefile: set")
 	acl("NO_SRC_ON_CDROM", lkNone, BtRestricted, "Makefile, Makefile.common: set")
 	acl("NO_SRC_ON_FTP", lkNone, BtRestricted, "Makefile, Makefile.common: set")
-	pkglist("ONLY_FOR_COMPILER", lkShell, enum("ccc clang gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc"))
+	pkglist("ONLY_FOR_COMPILER", lkShell, compilers)
 	pkglist("ONLY_FOR_PLATFORM", lkSpace, BtMachinePlatformPattern)
 	pkg("ONLY_FOR_UNPRIVILEGED", lkNone, BtYesNo)
 	sys("OPSYS", lkNone, BtIdentifier)
@@ -844,7 +870,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkg("PERL5_REQD", lkShell, BtVersion)
 	pkg("PERL5_USE_PACKLIST", lkNone, BtYesNo)
 	sys("PGSQL_PREFIX", lkNone, BtPathname)
-	acl("PGSQL_VERSIONS_ACCEPTED", lkShell, enumFrom("mk/pgsql.buildlink3.mk", "PGSQL_VERSIONS_ACCEPTED", "10 96 95 94 93"), "")
+	acl("PGSQL_VERSIONS_ACCEPTED", lkShell, pgsqlVersions, "")
 	usr("PGSQL_VERSION_DEFAULT", lkNone, BtVersion)
 	sys("PG_LIB_EXT", lkNone, enum("dylib so"))
 	sys("PGSQL_TYPE", lkNone, enum("postgresql81-client postgresql80-client"))
