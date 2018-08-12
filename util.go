@@ -15,6 +15,18 @@ import (
 	"time"
 )
 
+type YesNoUnknown uint8
+
+const (
+	no YesNoUnknown = iota
+	yes
+	unknown
+)
+
+func (ynu YesNoUnknown) String() string {
+	return [...]string{"no", "yes", "unknown"}[ynu]
+}
+
 // Short names for commonly used functions.
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)

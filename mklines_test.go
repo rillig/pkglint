@@ -55,13 +55,13 @@ func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("Makefile", 2, ".include \"../../other/package/Makefile\"")
+	mkline := t.NewMkLine(t.File("Makefile"), 2, ".include \"../../other/package/Makefile\"")
 
 	MkLineChecker{mkline}.checkInclude()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:2: \"other/package/Makefile\" does not exist.",
-		"ERROR: Makefile:2: Other Makefiles must not be included directly.")
+		"ERROR: ~/Makefile:2: \"other/package/Makefile\" does not exist.",
+		"ERROR: ~/Makefile:2: Other Makefiles must not be included directly.")
 }
 
 func (s *Suite) Test_MkLines_quoting_LDFLAGS_for_GNU_configure(c *check.C) {
@@ -453,14 +453,17 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".")
 }
 
-// Demonstrates how to define your own make(1) targets.
+// Demonstrates how to define your own make(1) targets for creating
+// files in the current directory. The pkgsrc-wip category Makefile
+// does this, while all other categories don't need any custom code.
 func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
+	t.SetupCommandLine("-Wall", "--explain")
 	t.SetupVartypes()
 	t.SetupTool(&Tool{Name: "rm", Varname: "RM", Predefined: true})
-	mklines := t.NewMkLines("Makefile",
+	t.CreateFileLines("mk/misc/category.mk")
+	mklines := t.SetupFileMkLines("wip/Makefile",
 		MkRcsID,
 		"",
 		"COMMENT=\tWIP pkgsrc packages",
@@ -474,12 +477,25 @@ func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 		"${.CURDIR}/INDEX:",
 		"\t${RM} -f ${.CURDIR}/INDEX",
 		"",
-		".include \"../../mk/misc/category.mk\"")
+		"clean-tmpdir:",
+		"\t${RUN} rm -rf tmpdir",
+		"",
+		".include \"../mk/misc/category.mk\"")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:14: \"mk/misc/category.mk\" does not exist.")
+		"WARN: ~/wip/Makefile:14: Unusual target \"clean-tmpdir\".",
+		"",
+		"\tIf you want to define your own target, declare it like this:",
+		"\t",
+		"\t\t.PHONY: my-target",
+		"\t",
+		"\tIn the rare case that you actually want a file-based make(1)",
+		"\ttarget, write it like this:",
+		"\t",
+		"\t\t${.CURDIR}/my-filename:",
+		"")
 }
 
 func (s *Suite) Test_MkLines_ExtractDocumentedVariables(c *check.C) {
@@ -632,7 +648,7 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t.SetupOption("only-added", "")
 	t.SetupOption("only-defined", "")
 
-	mklines := t.NewMkLines("options.mk",
+	mklines := t.SetupFileMkLines("options.mk",
 		MkRcsID,
 		"",
 		"PKG_OPTIONS_VAR=        PKG_OPTIONS.pkg",
@@ -654,9 +670,9 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: options.mk:7: \"mk/bsd.options.mk\" does not exist.", // Not relevant for this test.
-		"WARN: options.mk:9: \"only-added\" is added to PLIST_VARS, but PLIST.only-added is not defined in this file.",
-		"WARN: options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
+		"ERROR: ~/options.mk:7: \"mk/bsd.options.mk\" does not exist.", // Not relevant for this test.
+		"WARN: ~/options.mk:9: \"only-added\" is added to PLIST_VARS, but PLIST.only-added is not defined in this file.",
+		"WARN: ~/options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
 }
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {

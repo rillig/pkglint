@@ -32,7 +32,6 @@ type Pkglint struct {
 	Mk     *MkLines // The Makefile (or fragment) that is currently checked.
 
 	Todo            []string // The files or directories that still need to be checked.
-	CurrentDir      string   // The currently checked directory, relative to the cwd
 	Wip             bool     // Is the currently checked item from pkgsrc-wip?
 	Infrastructure  bool     // Is the currently checked item from the pkgsrc infrastructure?
 	Testing         bool     // Is pkglint in self-testing mode (only during development)?
@@ -298,7 +297,6 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	isReg := st.Mode().IsRegular()
 
 	currentDir := ifelseStr(isReg, path.Dir(fname), fname)
-	pkglint.CurrentDir = currentDir
 	absCurrentDir := abspath(currentDir)
 	pkglint.Wip = !pkglint.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	pkglint.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)

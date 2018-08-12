@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
+	"path"
 	"strings"
 )
 
@@ -330,8 +331,16 @@ func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
 }
 
 func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustDepth bool) string {
+
+	var basedir string
+	if G.Pkg != nil {
+		basedir = G.Pkg.File(".")
+	} else {
+		basedir = path.Dir(mkline.Filename)
+	}
+	pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
+
 	tmp := relativePath
-	pkgsrcdir := relpath(G.CurrentDir, G.Pkgsrc.File("."))
 	tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)

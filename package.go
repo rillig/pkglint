@@ -42,6 +42,9 @@ type Package struct {
 func NewPackage(pkgpath string) *Package {
 	pkg := &Package{
 		Pkgpath:               pkgpath,
+		Pkgdir:                ".",
+		Filesdir:              "files",
+		Patchdir:              "patches",
 		PlistDirs:             make(map[string]bool),
 		PlistFiles:            make(map[string]bool),
 		vars:                  NewScope(),

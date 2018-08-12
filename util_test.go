@@ -7,6 +7,12 @@ import (
 	"testing"
 )
 
+func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
+	c.Check(yes.String(), equals, "yes")
+	c.Check(no.String(), equals, "no")
+	c.Check(unknown.String(), equals, "unknown")
+}
+
 func (s *Suite) Test_MkopSubst__middle(c *check.C) {
 	c.Check(mkopSubst("pkgname", false, "kgna", false, "ri", ""), equals, "prime")
 	c.Check(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), equals, "replacement")

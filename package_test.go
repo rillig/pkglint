@@ -307,7 +307,6 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 
 	t.SetupFileLines("category/package/Makefile",
 		MkRcsID)
-	G.CurrentDir = t.File("category/package")
 
 	G.checkdirPackage("category/package")
 
@@ -325,7 +324,6 @@ func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *ch
 		MkRcsID,
 		"",
 		"META_PACKAGE=\tyes")
-	G.CurrentDir = t.File("category/package")
 	t.SetupVartypes()
 
 	G.checkdirPackage("category/package")
@@ -394,7 +392,6 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 		"DISTNAME=distfile_1_67",
 		".include \"../../category/package/Makefile\"")
 	pkg := NewPackage("category/package")
-	G.CurrentDir = t.File("category/package")
 	G.Pkg = pkg
 
 	pkg.loadPackageMakefile()
@@ -441,7 +438,6 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
 
 	pkg := NewPackage("category/package")
-	G.CurrentDir = t.File("category/package")
 	G.Pkg = pkg
 
 	G.checkdirPackage("category/package")
@@ -469,7 +465,6 @@ func (s *Suite) Test_Package_includeWithoutExists(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CurrentDir = t.File("category/package")
 	G.checkdirPackage("category/package")
 
 	t.CheckOutputLines(
@@ -491,7 +486,6 @@ func (s *Suite) Test_Package_includeAfterExists(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CurrentDir = t.File("category/package")
 	G.checkdirPackage("category/package")
 
 	t.CheckOutputLines(
@@ -517,7 +511,6 @@ func (s *Suite) Test_Package_includeOtherAfterExists(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CurrentDir = t.File("category/package")
 	G.checkdirPackage("category/package")
 
 	t.CheckOutputLines(
@@ -551,8 +544,6 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 		"",
 		".include \"../../math/R/Makefile.extension\"",
 		".include \"../../mk/bsd.pkg.mk\"")
-
-	G.CurrentDir = t.File("math/R-date")
 
 	// See Package.checkfilePackageMakefile
 	// See Scope.uncond

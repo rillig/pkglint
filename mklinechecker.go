@@ -1133,24 +1133,24 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	}
 }
 
-func (ck MkLineChecker) CheckRelativePath(path string, mustExist bool) {
+func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 	if trace.Tracing {
-		defer trace.Call(path, mustExist)()
+		defer trace.Call(relativePath, mustExist)()
 	}
 
 	mkline := ck.MkLine
-	if !G.Wip && contains(path, "/wip/") {
+	if !G.Wip && contains(relativePath, "/wip/") {
 		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
-	resolvedPath := mkline.ResolveVarsInRelativePath(path, true)
+	resolvedPath := mkline.ResolveVarsInRelativePath(relativePath, true)
 	if containsVarRef(resolvedPath) {
 		return
 	}
 
 	abs := resolvedPath
 	if !hasPrefix(abs, "/") {
-		abs = G.CurrentDir + "/" + abs
+		abs = path.Dir(mkline.Filename) + "/" + abs
 	}
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
@@ -1160,14 +1160,14 @@ func (ck MkLineChecker) CheckRelativePath(path string, mustExist bool) {
 	}
 
 	switch {
-	case !hasPrefix(path, "../"):
-	case matches(path, `^\.\./\.\./[^/]+/[^/]`):
+	case !hasPrefix(relativePath, "../"):
+	case matches(relativePath, `^\.\./\.\./[^/]+/[^/]`):
 		// From a package to another package.
-	case hasPrefix(path, "../../mk/"):
+	case hasPrefix(relativePath, "../../mk/"):
 		// From a package to the infrastructure.
-	case hasPrefix(path, "../mk/") && relpath(G.CurrentDir, G.Pkgsrc.File(".")) == "..":
+	case hasPrefix(relativePath, "../mk/") && relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(".")) == "..":
 		// For category Makefiles.
 	default:
-		mkline.Warnf("Invalid relative path %q.", path)
+		mkline.Warnf("Invalid relative path %q.", relativePath)
 	}
 }
