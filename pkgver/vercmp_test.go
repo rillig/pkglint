@@ -53,23 +53,25 @@ func (s *Suite) Test_Compare(c *check.C) {
 		{"20151110"},
 	}
 
+	checkVersion := func(i int, iversion string, j int, jversion string) {
+		actual := Compare(iversion, jversion)
+		switch {
+		case i < j && !(actual < 0):
+			c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, "<0"})
+		case i == j && !(actual == 0):
+			c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, "==0"})
+		case i > j && !(actual > 0):
+			c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, ">0"})
+		}
+	}
+
 	for i, iversions := range versions {
-		for _, iversion := range iversions {
-			for j, jversions := range versions {
+		for j, jversions := range versions {
+			for _, iversion := range iversions {
 				for _, jversion := range jversions {
-					actual := Compare(iversion, jversion)
-					if i < j && !(actual < 0) {
-						c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, "<0"})
-					}
-					if i == j && !(actual == 0) {
-						c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, "==0"})
-					}
-					if i > j && !(actual > 0) {
-						c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, ">0"})
-					}
+					checkVersion(i, iversion, j, jversion)
 				}
 			}
-
 		}
 	}
 }
