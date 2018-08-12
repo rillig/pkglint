@@ -69,7 +69,7 @@ netbsd() {
 
 pkgsrc() {
   genrunid
-  echo "=> Running pkglint on the pkgsrc tree"
+  echo "=> Running pkglint on the pkgsrc tree (at $(date +'%H:%M:%S'))"
   time (cd "$pkgsrcdir" && "$archivedir/$runid.exe" -pr -Wall -Call . wip) > "$archivedir/$runid.tmp" || true
   mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
 }
