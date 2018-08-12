@@ -811,6 +811,17 @@ func NewIndentation() *Indentation {
 	return ind
 }
 
+func (ind *Indentation) String() string {
+	s := ""
+	for _, level := range ind.levels[1:] {
+		s += fmt.Sprintf(" %d", level.depth)
+		if len(level.conditionVars) != 0 {
+			s += " (" + strings.Join(level.conditionVars, " ") + ")"
+		}
+	}
+	return "[" + strings.TrimSpace(s) + "]"
+}
+
 type indentationLevel struct {
 	mkline        MkLine   // The line in which the indentation started; the .if/.for
 	depth         int      // Number of space characters; always a multiple of 2
@@ -925,7 +936,7 @@ func (ind *Indentation) TrackBefore(mkline MkLine) {
 		return
 	}
 	if trace.Tracing {
-		trace.Stepf("Indentation before line %s: %+v", mkline.Linenos(), ind.levels)
+		trace.Stepf("Indentation before line %s: %s", mkline.Linenos(), ind)
 	}
 
 	directive := mkline.Directive()
@@ -989,7 +1000,7 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	}
 
 	if trace.Tracing {
-		trace.Stepf("Indentation after line %s: %+v", mkline.Linenos(), ind.levels)
+		trace.Stepf("Indentation after line %s: %s", mkline.Linenos(), ind)
 	}
 }
 

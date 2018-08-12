@@ -905,6 +905,7 @@ func (s *Suite) Test_Indentation(c *check.C) {
 	ind.AddVar("LEVEL2.VAR")
 
 	c.Check(ind.Varnames(), equals, "LEVEL1.VAR1, LEVEL1.VAR2, LEVEL2.VAR")
+	c.Check(ind.String(), equals, "[2 (LEVEL1.VAR1 LEVEL1.VAR2) 2 (LEVEL2.VAR)]")
 
 	ind.Pop()
 
@@ -915,4 +916,5 @@ func (s *Suite) Test_Indentation(c *check.C) {
 
 	c.Check(ind.Varnames(), equals, "")
 	c.Check(ind.IsConditional(), equals, false)
+	c.Check(ind.String(), equals, "[]")
 }
