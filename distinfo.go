@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"netbsd.org/pkglint/trace"
+	"path"
 	"strings"
 )
 
@@ -15,25 +16,17 @@ func ChecklinesDistinfo(lines []Line) {
 	}
 
 	fname := lines[0].Filename
-	patchesDir := "patches"
-	patchesDirSet := false
-	if G.Pkg != nil && contains(fname, "lang/php") {
-		phpdir := G.Pkgsrc.Latest("lang", `^php[0-9]+$`, "/lang/$0")
-		if hasSuffix(fname, phpdir+"/distinfo") {
-			patchesDir = G.Pkgsrc.File(phpdir + "/patches")
-			patchesDirSet = true
-		}
-	}
-	if G.Pkg != nil && !patchesDirSet && dirExists(G.Pkg.File(G.Pkg.Patchdir)) {
-		patchesDir = G.Pkg.Patchdir
+	patchdir := "patches"
+	if G.Pkg != nil && dirExists(G.Pkg.File(G.Pkg.Patchdir)) {
+		patchdir = G.Pkg.Patchdir
 	}
 	if trace.Tracing {
-		trace.Step1("patchesDir=%q", patchesDir)
+		trace.Step1("patchdir=%q", patchdir)
 	}
 
 	distinfoIsCommitted := isCommitted(fname)
 	ck := &distinfoLinesChecker{
-		fname, patchesDir, distinfoIsCommitted,
+		fname, patchdir, distinfoIsCommitted,
 		make(map[string]bool), nil, "", unknown, nil}
 	ck.checkLines(lines)
 	ChecklinesTrailingEmptyLines(lines)
@@ -43,7 +36,7 @@ func ChecklinesDistinfo(lines []Line) {
 
 type distinfoLinesChecker struct {
 	distinfoFilename    string
-	patchdir            string // Relative to G.currentDir
+	patchdir            string // Relative to G.Pkg
 	distinfoIsCommitted bool
 
 	patches          map[string]bool // "patch-aa" => true
@@ -90,7 +83,8 @@ func (ck *distinfoLinesChecker) onFilenameChange(line Line, nextFname string) {
 			}
 		} else if ck.isPatch == unknown {
 		} else if hasPrefix(currentFname, "patch-") && algorithms == "SHA1" {
-			ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", currentFname, cleanpath(ck.patchdir))
+			pathToPatchdir := relpath(path.Dir(ck.currentFirstLine.Filename), G.Pkg.File(ck.patchdir))
+			ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", currentFname, pathToPatchdir)
 			Explain(
 				"If the patches directory looks correct, the patch may have been",
 				"removed without updating the distinfo file.  In such a case please",
