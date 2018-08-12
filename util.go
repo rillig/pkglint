@@ -169,8 +169,8 @@ func loadCvsEntries(fname string) []Line {
 		return G.CvsEntriesLines
 	}
 
-	lines, err := readLines(dir+"/CVS/Entries", false)
-	if err != nil {
+	lines := Load(dir+"/CVS/Entries", 0)
+	if lines == nil {
 		return nil
 	}
 	G.CvsEntriesDir = dir

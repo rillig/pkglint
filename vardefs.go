@@ -73,15 +73,16 @@ func (src *Pkgsrc) InitVartypes() {
 
 	languages := enum(
 		func() string {
-			lines, _ := readLines(src.File("mk/compiler.mk"), true)
-			mklines := NewMkLines(lines)
+			mklines := LoadMk(src.File("mk/compiler.mk"), NotEmpty)
 			languages := make(map[string]bool)
-			for _, mkline := range mklines.mklines {
-				if mkline.IsCond() && mkline.Directive() == "for" {
-					words := splitOnSpace(mkline.Args())
-					if len(words) > 2 && words[0] == "_version_" {
-						for _, word := range words[2:] {
-							languages[word] = true
+			if mklines != nil {
+				for _, mkline := range mklines.mklines {
+					if mkline.IsCond() && mkline.Directive() == "for" {
+						words := splitOnSpace(mkline.Args())
+						if len(words) > 2 && words[0] == "_version_" {
+							for _, word := range words[2:] {
+								languages[word] = true
+							}
 						}
 					}
 				}
@@ -98,19 +99,20 @@ func (src *Pkgsrc) InitVartypes() {
 		}())
 
 	enumFrom := func(fileName string, defval string, varcanons ...string) *BasicType {
-		lines, _ := readLines(src.File(fileName), true)
-		mklines := NewMkLines(lines)
+		mklines := LoadMk(src.File(fileName), NotEmpty)
 		values := make(map[string]bool)
 
-		for _, mkline := range mklines.mklines {
-			if mkline.IsVarassign() {
-				varcanon := mkline.Varcanon()
-				for _, vc := range varcanons {
-					if vc == varcanon {
-						words, _ := splitIntoMkWords(mkline.Line, mkline.Value())
-						for _, word := range words {
-							if !contains(word, "$") {
-								values[word] = true
+		if mklines != nil {
+			for _, mkline := range mklines.mklines {
+				if mkline.IsVarassign() {
+					varcanon := mkline.Varcanon()
+					for _, vc := range varcanons {
+						if vc == varcanon {
+							words, _ := splitIntoMkWords(mkline.Line, mkline.Value())
+							for _, word := range words {
+								if !contains(word, "$") {
+									values[word] = true
+								}
 							}
 						}
 					}

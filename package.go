@@ -195,8 +195,8 @@ func (pkglint *Pkglint) checkdirPackage(pkgpath string) {
 			!matches(fname, `patch-`) &&
 			!contains(fname, pkg.Pkgdir+"/") &&
 			!contains(fname, pkg.Filesdir+"/") {
-			if lines, err := readLines(fname, true); err == nil && lines != nil {
-				NewMkLines(lines).DetermineUsedVariables()
+			if mklines := LoadMk(fname, MustSucceed); mklines != nil {
+				mklines.DetermineUsedVariables()
 			}
 		}
 		if hasPrefix(path.Base(fname), "PLIST") {
@@ -301,11 +301,10 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		defer trace.Call1(fname)()
 	}
 
-	fileLines := LoadNonemptyLines(fname, true)
-	if fileLines == nil {
+	fileMklines := LoadMk(fname, NotEmpty|LogErrors)
+	if fileMklines == nil {
 		return false
 	}
-	fileMklines := NewMkLines(fileLines)
 
 	isMainMakefile := len(mainLines.mklines) == 0
 
@@ -942,11 +941,7 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 }
 
 func (pkg *Package) loadPlistDirs(plistFilename string) {
-	lines, err := readLines(plistFilename, false)
-	if err != nil {
-		return
-	}
-
+	lines := Load(plistFilename, MustSucceed|NotEmpty)
 	for _, line := range lines {
 		text := line.Text
 		pkg.PlistFiles[text] = true // XXX: ignores PLIST conditionals for now

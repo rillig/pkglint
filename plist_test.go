@@ -211,7 +211,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 
-	fname := t.CreateFileLines("PLIST",
+	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
 		"lib/libvirt/connection-driver/libvirt_driver_storage.la",
 		"${PLIST.hal}lib/libvirt/connection-driver/libvirt_driver_nodedev.la",
@@ -232,7 +232,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"@pkgdir        etc/libvirt/qemu/networks/autostart",
 		"@pkgdir        etc/logrotate.d",
 		"@pkgdir        etc/sasl2")
-	lines := LoadExistingLines(fname, false)
+
 	ChecklinesPlist(lines)
 
 	t.CheckOutputLines(
@@ -245,12 +245,9 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 	t.SetupCommandLine("-Wall", "--autofix")
 	ChecklinesPlist(lines)
 
-	fixedLines := LoadExistingLines(fname, false)
-
 	t.CheckOutputLines(
 		"AUTOFIX: ~/PLIST:6: Replacing \"${PKGMANDIR}/\" with \"man/\".",
 		"AUTOFIX: ~/PLIST:2: Sorting the whole file.")
-	c.Check(len(lines), equals, len(fixedLines))
 	t.CheckFileLines("PLIST",
 		PlistRcsID,
 		"${PLIST.xen}lib/libvirt/connection-driver/libvirt_driver_libxl.la",

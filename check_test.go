@@ -149,15 +149,14 @@ func (t *Tester) SetupTool(tool *Tool) {
 // The file is then read in, without considering line continuations.
 func (t *Tester) SetupFileLines(relativeFilename string, lines ...string) []Line {
 	filename := t.CreateFileLines(relativeFilename, lines...)
-	return LoadExistingLines(filename, false)
+	return Load(filename, MustSucceed)
 }
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, handling line continuations for Makefiles.
 func (t *Tester) SetupFileMkLines(relativeFilename string, lines ...string) *MkLines {
 	filename := t.CreateFileLines(relativeFilename, lines...)
-	plainLines := LoadExistingLines(filename, true)
-	return NewMkLines(plainLines)
+	return LoadMk(filename, MustSucceed)
 }
 
 // SetupPkgsrc sets up a minimal but complete pkgsrc installation in the
@@ -368,10 +367,7 @@ func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 // for indentation, while the lines in the code use spaces exclusively,
 // in order to make the depth of the indentation clearly visible.
 func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
-	actualLines, err := readLines(t.File(relativeFileName), false)
-	if !t.c().Check(err, check.IsNil) {
-		return
-	}
+	actualLines := Load(t.File(relativeFileName), MustSucceed)
 
 	var detabbed []string
 	for _, line := range actualLines {

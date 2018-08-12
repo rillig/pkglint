@@ -256,7 +256,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 		}
 
-		mklines.toolRegistry.ParseToolLine(mkline.Line)
+		mklines.toolRegistry.ParseToolLine(mkline)
 	}
 }
 
@@ -394,6 +394,10 @@ func (mklines *MkLines) CheckRedundantVariables() {
 			return true
 		},
 		func(mkline MkLine) {})
+}
+
+func (mklines *MkLines) SaveAutofixChanges() {
+	SaveAutofixChanges(mklines.lines)
 }
 
 // VaralignBlock checks that all variable assignments from a paragraph

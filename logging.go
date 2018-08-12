@@ -21,6 +21,7 @@ var (
 )
 
 var dummyLine = NewLine("", 0, "", nil)
+var dummyMkLine = NewMkLine(dummyLine)
 
 func shallBeLogged(msg string) bool {
 	if len(G.opts.LogOnly) > 0 {

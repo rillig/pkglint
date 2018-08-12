@@ -194,7 +194,7 @@ func computePatchSha1Hex(patchFilename string) (string, error) {
 
 func AutofixDistinfo(oldSha1, newSha1 string) {
 	distinfoFilename := G.Pkg.File(G.Pkg.DistinfoFile)
-	if lines, err := readLines(distinfoFilename, false); err == nil {
+	if lines := Load(distinfoFilename, NotEmpty|LogErrors); lines != nil {
 		for _, line := range lines {
 			fix := line.Autofix()
 			fix.Warnf("Silent-Magic-Diagnostic")

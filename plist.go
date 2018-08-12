@@ -55,8 +55,8 @@ func (ck *PlistChecker) Check(plainLines []Line) {
 	ck.collectFilesAndDirs(plines)
 
 	if fname := plines[0].line.Filename; path.Base(fname) == "PLIST.common_end" {
-		commonLines, err := readLines(strings.TrimSuffix(fname, "_end"), false)
-		if err == nil {
+		commonLines := Load(strings.TrimSuffix(fname, "_end"), NotEmpty)
+		if commonLines != nil {
 			ck.collectFilesAndDirs(ck.NewLines(commonLines))
 		}
 	}
