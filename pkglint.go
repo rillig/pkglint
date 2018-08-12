@@ -33,8 +33,7 @@ type Pkglint struct {
 
 	Todo            []string // The files or directories that still need to be checked.
 	CurrentDir      string   // The currently checked directory, relative to the cwd
-	CurPkgsrcdir    string   // The pkgsrc directory, relative to currentDir
-	Wip             bool     // Is the currently checked directory from pkgsrc-wip?
+	Wip             bool     // Is the currently checked item from pkgsrc-wip?
 	Infrastructure  bool     // Is the currently checked item from the pkgsrc infrastructure?
 	Testing         bool     // Is pkglint in self-testing mode (only during development)?
 	CurrentUsername string   // For checking against OWNER and MAINTAINER
@@ -303,8 +302,8 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	absCurrentDir := abspath(currentDir)
 	pkglint.Wip = !pkglint.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	pkglint.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)
-	pkglint.CurPkgsrcdir = findPkgsrcTopdir(currentDir)
-	if pkglint.CurPkgsrcdir == "" {
+	pkgsrcdir := findPkgsrcTopdir(currentDir)
+	if pkgsrcdir == "" {
 		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(currentDir))
 		return
 	}
@@ -317,7 +316,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 		return
 	}
 
-	switch pkglint.CurPkgsrcdir {
+	switch pkgsrcdir {
 	case "../..":
 		pkglint.checkdirPackage(pkglint.Pkgsrc.ToRel(currentDir))
 	case "..":

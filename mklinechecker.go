@@ -1159,10 +1159,15 @@ func (ck MkLineChecker) CheckRelativePath(path string, mustExist bool) {
 		return
 	}
 
-	if hasPrefix(path, "../") &&
-		!matches(path, `^\.\./\.\./[^/]+/[^/]`) &&
-		!(G.CurPkgsrcdir == ".." && hasPrefix(path, "../mk/")) && // For category Makefiles.
-		!hasPrefix(path, "../../mk/") {
+	switch {
+	case !hasPrefix(path, "../"):
+	case matches(path, `^\.\./\.\./[^/]+/[^/]`):
+		// From a package to another package.
+	case hasPrefix(path, "../../mk/"):
+		// From a package to the infrastructure.
+	case hasPrefix(path, "../mk/") && relpath(G.CurrentDir, G.Pkgsrc.File(".")) == "..":
+		// For category Makefiles.
+	default:
 		mkline.Warnf("Invalid relative path %q.", path)
 	}
 }

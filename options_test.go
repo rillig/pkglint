@@ -50,7 +50,6 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 		".endif")
 
 	G.CurrentDir = t.File(".")
-	G.CurPkgsrcdir = "."
 
 	ChecklinesOptionsMk(mklines)
 
@@ -85,7 +84,6 @@ func (s *Suite) Test_ChecklinesOptionsMk__unexpected_line(c *check.C) {
 		"\techo \"In the pre-configure stage.\"")
 
 	G.CurrentDir = t.File(".")
-	G.CurPkgsrcdir = "."
 
 	ChecklinesOptionsMk(mklines)
 
@@ -119,7 +117,6 @@ func (s *Suite) Test_ChecklinesOptionsMk__malformed_conditional(c *check.C) {
 		".endif")
 
 	G.CurrentDir = t.File(".")
-	G.CurPkgsrcdir = "."
 
 	ChecklinesOptionsMk(mklines)
 

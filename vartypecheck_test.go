@@ -47,7 +47,6 @@ func (s *Suite) Test_VartypeCheck_Category(c *check.C) {
 	t.SetupFileLines("wip/Makefile",
 		"# empty")
 	G.CurrentDir = t.File(".")
-	G.CurPkgsrcdir = "."
 
 	runVartypeChecks(t, "CATEGORIES", opAssign, (*VartypeCheck).Category,
 		"chinese",
@@ -173,7 +172,6 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	t.SetupFileLines("category/package/Makefile",
 		"# empty")
 	G.CurrentDir = t.File("category/package")
-	G.CurPkgsrcdir = "../.."
 
 	runVartypeChecks(t, "DEPENDS", opAssignAppend, (*VartypeCheck).DependencyWithPath,
 		"Perl",

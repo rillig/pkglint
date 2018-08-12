@@ -20,7 +20,7 @@ func ChecklinesDistinfo(lines []Line) {
 	if G.Pkg != nil && contains(fname, "lang/php") {
 		phpdir := G.Pkgsrc.Latest("lang", `^php[0-9]+$`, "/lang/$0")
 		if hasSuffix(fname, phpdir+"/distinfo") {
-			patchesDir = G.CurPkgsrcdir + phpdir + "/patches"
+			patchesDir = G.Pkgsrc.File(phpdir + "/patches")
 			patchesDirSet = true
 		}
 	}

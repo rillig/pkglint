@@ -313,7 +313,6 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 }
 
 // relpath returns the relative path from `from` to `to`.
-// If `to` is not within `from`, it panics.
 func relpath(from, to string) string {
 	absFrom, err1 := filepath.Abs(from)
 	absTo, err2 := filepath.Abs(to)

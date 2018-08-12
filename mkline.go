@@ -329,9 +329,10 @@ func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
 	}
 }
 
-func (mkline *MkLineImpl) ResolveVarsInRelativePath(relpath string, adjustDepth bool) string {
-	tmp := relpath
-	tmp = strings.Replace(tmp, "${PKGSRCDIR}", G.CurPkgsrcdir, -1)
+func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustDepth bool) string {
+	tmp := relativePath
+	pkgsrcdir := relpath(G.CurrentDir, G.Pkgsrc.File("."))
+	tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
 	if contains(tmp, "${LUA_PKGSRCDIR}") {
@@ -357,12 +358,14 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relpath string, adjustDepth 
 
 	if adjustDepth {
 		if m, pkgpath := match1(tmp, `^\.\./\.\./([^.].*)$`); m {
-			tmp = G.CurPkgsrcdir + "/" + pkgpath
+			tmp = pkgsrcdir + "/" + pkgpath
 		}
 	}
 
+	tmp = cleanpath(tmp)
+
 	if trace.Tracing {
-		trace.Step2("resolveVarsInRelativePath: %q => %q", relpath, tmp)
+		trace.Step2("resolveVarsInRelativePath: %q => %q", relativePath, tmp)
 	}
 	return tmp
 }

@@ -281,7 +281,6 @@ func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	t := s.Init(c)
 
 	G.Pkg = NewPackage("category/pkgbase")
-	G.CurPkgsrcdir = "../.."
 	G.Pkg.EffectivePkgname = "package-1.0nb15"
 	G.Pkg.EffectivePkgnameLine = t.NewMkLine("category/pkgbase/Makefile", 5, "PKGNAME=dummy")
 	G.Pkgsrc.LastChange = map[string]*Change{
@@ -397,7 +396,6 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 		".include \"../../category/package/Makefile\"")
 	pkg := NewPackage("category/package")
 	G.CurrentDir = t.File("category/package")
-	G.CurPkgsrcdir = "../.."
 	G.Pkg = pkg
 
 	pkg.loadPackageMakefile()
@@ -445,7 +443,6 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 
 	pkg := NewPackage("category/package")
 	G.CurrentDir = t.File("category/package")
-	G.CurPkgsrcdir = "../.."
 	G.Pkg = pkg
 
 	G.checkdirPackage("category/package")
@@ -503,8 +500,7 @@ func (s *Suite) Test_Package_includeAfterExists(c *check.C) {
 		"WARN: ~/category/package/distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
 		"ERROR: ~/category/package/Makefile: Each package must define its LICENSE.",
 		"WARN: ~/category/package/Makefile: No COMMENT given.",
-		"ERROR: ~/category/package/Makefile:4: \"options.mk\" does not exist.",
-		"ERROR: ~/category/package/Makefile:7: \"/mk/bsd.pkg.mk\" does not exist.")
+		"ERROR: ~/category/package/Makefile:4: \"options.mk\" does not exist.")
 }
 
 // See https://github.com/rillig/pkglint/issues/1
@@ -558,7 +554,6 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	G.CurrentDir = t.File("math/R-date")
-	G.CurPkgsrcdir = "../.."
 
 	// See Package.checkfilePackageMakefile
 	// See Scope.uncond

@@ -49,7 +49,6 @@ func (s *Suite) Test_CheckdirCategory_invalid_comment(c *check.C) {
 	t.SetupFileLines("mk/misc/category.mk",
 		"# dummy")
 	G.CurrentDir = t.File("archivers")
-	G.CurPkgsrcdir = ".."
 
 	CheckdirCategory(t.File("archivers"))
 

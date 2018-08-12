@@ -97,7 +97,6 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t.SetupFileLines("mk/bsd.pkg.mk",
 		"USE_TOOLS+=\tmv")
 	G.CurrentDir = t.File(".")
-	G.CurPkgsrcdir = "."
 
 	G.Pkgsrc.loadTools()
 

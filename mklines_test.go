@@ -60,7 +60,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
 	MkLineChecker{mkline}.checkInclude()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:2: \"/other/package/Makefile\" does not exist.",
+		"ERROR: Makefile:2: \"other/package/Makefile\" does not exist.",
 		"ERROR: Makefile:2: Other Makefiles must not be included directly.")
 }
 
@@ -479,7 +479,7 @@ func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:14: \"/mk/misc/category.mk\" does not exist.")
+		"ERROR: Makefile:14: \"mk/misc/category.mk\" does not exist.")
 }
 
 func (s *Suite) Test_MkLines_ExtractDocumentedVariables(c *check.C) {
@@ -654,7 +654,7 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: options.mk:7: \"/mk/bsd.options.mk\" does not exist.", // Not relevant for this test.
+		"ERROR: options.mk:7: \"mk/bsd.options.mk\" does not exist.", // Not relevant for this test.
 		"WARN: options.mk:9: \"only-added\" is added to PLIST_VARS, but PLIST.only-added is not defined in this file.",
 		"WARN: options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
 }
@@ -685,7 +685,6 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {
 		".endif")
 
 	G.CurrentDir = t.File(".")
-	G.CurPkgsrcdir = "."
 
 	mklines.Check()
 
