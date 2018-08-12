@@ -413,9 +413,9 @@ func (s *Suite) Test_ChecklinesMessage__autofix(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Latest_no_basedir(c *check.C) {
 	t := s.Init(c)
 
-	latest1 := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(latest1, equals, "")
+	c.Check(latest, equals, "")
 	t.CheckOutputLines(
 		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
 }
@@ -425,9 +425,9 @@ func (s *Suite) Test_Pkgsrc_Latest_no_subdirs(c *check.C) {
 
 	t.SetupFileLines("lang/Makefile")
 
-	latest2 := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(latest2, equals, "")
+	c.Check(latest, equals, "")
 	t.CheckOutputLines(
 		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
 }
@@ -438,9 +438,9 @@ func (s *Suite) Test_Pkgsrc_Latest_single(c *check.C) {
 	t.SetupFileLines("lang/Makefile")
 	t.SetupFileLines("lang/python27/Makefile")
 
-	latest3 := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(latest3, equals, "../../lang/python27")
+	c.Check(latest, equals, "../../lang/python27")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest_multi(c *check.C) {
@@ -450,9 +450,9 @@ func (s *Suite) Test_Pkgsrc_Latest_multi(c *check.C) {
 	t.SetupFileLines("lang/python27/Makefile")
 	t.SetupFileLines("lang/python35/Makefile")
 
-	latest4 := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(latest4, equals, "../../lang/python35")
+	c.Check(latest, equals, "../../lang/python35")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest_numeric(c *check.C) {
