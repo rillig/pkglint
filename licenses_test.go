@@ -81,3 +81,36 @@ func (s *Suite) Test_checkToplevelUnusedLicenses(c *check.C) {
 		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
 		"0 errors and 1 warning found.")
 }
+
+func (s *Suite) Test_LicenseChecker_checkLicenseName__LICENSE_FILE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupCommandLine("-Wno-space")
+	t.SetupFileLines("category/package/DESCR",
+		"Package description")
+	t.SetupFileMkLines("category/package/Makefile",
+		MkRcsID,
+		"",
+		"CATEGORIES=     chinese",
+		"",
+		"COMMENT=        Useful tools",
+		"LICENSE=        my-license",
+		"",
+		"LICENSE_FILE=   my-license",
+		"NO_CHECKSUM=    yes",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+	t.SetupFileLines("category/package/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.SetupFileLines("category/package/my-license",
+		"An individual license file.")
+
+	G.Main("pkglint", t.File("category/package"))
+
+	// FIXME: It should be allowed to place a license file directly into
+	// the package directory.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/my-license: Unexpected file found.", "0 errors and 1 warning found.")
+}
