@@ -918,3 +918,16 @@ func (s *Suite) Test_Indentation(c *check.C) {
 	c.Check(ind.IsConditional(), equals, false)
 	c.Check(ind.String(), equals, "[]")
 }
+
+func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 123, ".if ${PKGREVISION} > 0")
+	ind := NewIndentation()
+	cond := NewMkParser(mkline.Line, mkline.Args(), false)
+
+	ind.RememberUsedVariables(cond.MkCond())
+
+	t.CheckOutputEmpty()
+	c.Check(ind.Varnames(), equals, "PKGREVISION")
+}

@@ -226,6 +226,15 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	checkRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
 		&mkCond{Not: &mkCond{Empty: varuse("PKG_OPTIONS", "Msndfile")}},
 		" || defined(PKG_OPTIONS:Msamplerate)")
+	checkRest("${LEFT} &&",
+		&mkCond{Not: &mkCond{Empty: varuse("LEFT")}},
+		" &&")
+	checkRest("\"unfinished string literal",
+		nil,
+		"\"unfinished string literal")
+	checkRest("${VAR} == \"unfinished string literal",
+		nil, // Not even the ${VAR} gets through here, although that can be expected.
+		"${VAR} == \"unfinished string literal")
 }
 
 func (s *Suite) Test_MkParser__varuse_parentheses_autofix(c *check.C) {
