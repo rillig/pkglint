@@ -110,7 +110,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	check("${VAR:ts\\000012}", varuse("VAR", "ts\\000012")) // The separator character can be a long octal number.
 	check("${VAR:ts\\124}", varuse("VAR", "ts\\124"))       // Or even decimal.
 
-	check("${VAR:ts---}", varuseText("${VAR:ts---}", "VAR")) // FIXME: Should be a parse error.
+	checkRest("${VAR:ts---}", nil, "${VAR:ts---}") // The :ts modifier only takes single-character separators.
 
 	check("$<", varuseText("$<", "<")) // Same as ${.IMPSRC}
 
