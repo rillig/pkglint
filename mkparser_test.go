@@ -110,6 +110,10 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	check("${VAR:ts\\000012}", varuse("VAR", "ts\\000012")) // The separator character can be a long octal number.
 	check("${VAR:ts\\124}", varuse("VAR", "ts\\124"))       // Or even decimal.
 
+	check("${VAR:ts---}", varuseText("${VAR:ts---}", "VAR")) // FIXME: Should be a parse error.
+
+	check("$<", varuseText("$<", "<")) // Same as ${.IMPSRC}
+
 	check("$(GNUSTEP_USER_ROOT)", varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"))
 	t.CheckOutputLines(
 		"WARN: Test_MkParser_MkTokens.mk:1: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
