@@ -6,13 +6,17 @@ import (
 	"strings"
 )
 
+// Tool is one of the many standard shell utilities that are typically
+// provided by the operating system, or, if missing, are installed via
+// pkgsrc.
+//
 // See `mk/tools/`.
 type Tool struct {
 	Name             string // e.g. "sed", "gzip"
 	Varname          string // e.g. "SED", "GZIP_CMD"
 	MustUseVarForm   bool   // True for `echo`, because of many differing implementations.
 	Predefined       bool   // This tool is used by the pkgsrc infrastructure, therefore the package does not need to add it to `USE_TOOLS` explicitly.
-	UsableAtLoadtime bool   // May be used after including `bsd.prefs.mk`.
+	UsableAtLoadTime bool   // May be used after including `bsd.prefs.mk`.
 }
 
 type ToolRegistry struct {
@@ -100,10 +104,10 @@ func (tr *ToolRegistry) ParseToolLine(mkline MkLine) {
 		} else if m, toolname := match1(varname, `^_TOOLS_VARNAME\.([-\w.]+|\[)$`); m {
 			tr.RegisterVarname(toolname, value, mkline)
 
-		} else if m, toolname := match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
+		} else if m, toolname = match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
 			tr.Register(toolname, mkline)
 
-		} else if m, toolname := match1(varname, `^_TOOLS\.(.*)`); m {
+		} else if m, toolname = match1(varname, `^_TOOLS\.(.*)`); m {
 			tr.Register(toolname, mkline)
 			for _, tool := range splitOnSpace(value) {
 				tr.Register(tool, mkline)

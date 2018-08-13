@@ -194,7 +194,7 @@ func (src *Pkgsrc) loadTools() {
 								tool := reg.Register(toolname, mkline)
 								tool.Predefined = true
 								if relativeName == "mk/bsd.prefs.mk" {
-									tool.UsableAtLoadtime = true
+									tool.UsableAtLoadTime = true
 								}
 							}
 						}

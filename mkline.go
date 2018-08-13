@@ -602,7 +602,7 @@ func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
 		}
-		if tool.UsableAtLoadtime {
+		if tool.UsableAtLoadTime {
 			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.loadTimeTools[tool.Name] {
 				perms |= aclpUseLoadtime
 			}
