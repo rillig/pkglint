@@ -184,7 +184,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputEmpty()
 
-	checkShellCommandLine("${RUN} echo $${variable+set}")
+	checkShellCommandLine("${RUN} set +x; echo $${variable+set}")
 
 	t.CheckOutputEmpty()
 
