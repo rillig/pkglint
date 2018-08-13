@@ -230,14 +230,23 @@ func (t *Tester) File(relativeFilename string) string {
 	return t.tmpdir + "/" + relativeFilename
 }
 
-// ExpectFatalError, when run in a defer statement, runs the action
-// if the current function panics with a pkglintFatal
-// (typically from line.Fatalf).
-func (t *Tester) ExpectFatalError(action func()) {
+// ExpectFatalError promises that in the remainder of the current function
+// call, a panic with a pkglintFatal will occur (typically from Line.Fatalf).
+//
+// Usage:
+// 	func() {
+//      defer t.ExpectFatalError()
+//
+//      // The code that causes the fatal error.
+//      Load(t.File("nonexistent"), MustSucceed)
+//  }()
+//  t.CheckOutputLines(
+//      "FATAL: ~/nonexistent: Does not exist.")
+func (t *Tester) ExpectFatalError() {
 	r := recover()
-	if _, ok := r.(pkglintFatal); ok {
-		action()
-	} else {
+	if r == nil {
+		panic("Expected a pkglint fatal error, but didn't get one.")
+	} else if _, ok := r.(pkglintFatal); !ok {
 		panic(r)
 	}
 }
