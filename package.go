@@ -941,7 +941,7 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 }
 
 func (pkg *Package) loadPlistDirs(plistFilename string) {
-	lines := Load(plistFilename, MustSucceed|NotEmpty)
+	lines := Load(plistFilename, MustSucceed)
 	for _, line := range lines {
 		text := line.Text
 		pkg.PlistFiles[text] = true // XXX: ignores PLIST conditionals for now
