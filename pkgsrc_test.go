@@ -1,9 +1,6 @@
 package main
 
-import (
-	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/trace"
-)
+import "gopkg.in/check.v1"
 
 // Ensures that pkglint can handle MASTER_SITES definitions with and
 // without line continuations.
@@ -99,8 +96,9 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 
 	G.Pkgsrc.loadTools()
 
-	trace.Tracing = true
+	t.EnableTracingToLog()
 	G.Pkgsrc.Tools.Trace()
+	t.DisableTracing()
 
 	t.CheckOutputLines(
 		"TRACE: + (*ToolRegistry).Trace()",

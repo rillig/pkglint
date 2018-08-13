@@ -58,6 +58,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t.checkC = nil
 
 	G.opts.LogVerbose = true // To detect duplicate work being done
+	t.EnableSilentTracing()
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
@@ -71,6 +72,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 			c.TestName(), strings.Split(out, "\n"))
 	}
 	t.tmpdir = ""
+	t.DisableTracing()
 }
 
 var _ = check.Suite(new(Suite))
@@ -343,12 +345,28 @@ func (t *Tester) EnableTracing() {
 	trace.Tracing = true
 }
 
+// EnableTracingToLog enables the tracing and writes the tracing output
+// to the test log that can be examined with Tester.Output.
+func (t *Tester) EnableTracingToLog() {
+	G.logOut = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
+	trace.Out = &t.stdout
+	trace.Tracing = true
+}
+
+// EnableSilentTracing enables tracing mode, but discards any tracing output.
+// This can be used to improve code coverage without any side-effects,
+// since tracing output is quite large.
+func (t *Tester) EnableSilentTracing() {
+	trace.Out = ioutil.Discard
+	trace.Tracing = true
+}
+
 // DisableTracing logs the output to the buffers again, ready to be
 // checked with CheckOutputLines.
 func (t *Tester) DisableTracing() {
 	G.logOut = NewSeparatorWriter(&t.stdout)
-	trace.Out = &t.stdout
 	trace.Tracing = false
+	trace.Out = nil
 }
 
 // CheckFileLines loads the lines from the temporary file and checks that
