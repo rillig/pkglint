@@ -484,3 +484,23 @@ func (s *Suite) Test_Pkglint_Checkfile__alternatives(c *check.C) {
 		"Looks fine.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
+
+func (s *Suite) Test_Pkglint__profiling(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	G.Main("pkglint", "--profiling", t.File("."))
+
+	// Pkglint always writes the profiling data into the current directory.
+	// Luckily, this directory is usually writable.
+	c.Check(fileExists("pkglint.pprof"), equals, true)
+
+	err := os.Remove("pkglint.pprof")
+	c.Check(err, check.IsNil)
+
+	// Everything but the first few lines of output is not easily testable
+	// or not interesting enough, since that info includes the exact timing
+	// that the top time-consuming regular expressions took.
+	firstOutput := strings.Split(t.Output(), "\n")[0]
+	c.Check(firstOutput, equals, "ERROR: ~/Makefile: Cannot be read.")
+}
