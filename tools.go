@@ -132,6 +132,6 @@ func (tr *ToolRegistry) ForEach(action func(tool *Tool)) {
 
 func (tr *ToolRegistry) validateToolName(toolName string, mkline MkLine) {
 	if toolName != "echo -n" && !matches(toolName, `^([-a-z0-9.]+|\[)$`) {
-		mkline.Errorf("Invalid tool name %q", toolName)
+		mkline.Errorf("Invalid tool name %q.", toolName)
 	}
 }
