@@ -952,7 +952,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PKG_USERS", lkShell, BtShellWord, "Makefile: set, append")
 	pkg("PKG_USERS_VARS", lkShell, BtVariableName)
 	acl("PKG_USE_KERBEROS", lkNone, BtYes, "Makefile, Makefile.common: set")
-	// PLIST.* has special handling code
+	pkg("PLIST.*", lkNone, BtYes)
 	pkglist("PLIST_VARS", lkShell, BtIdentifier)
 	pkglist("PLIST_SRC", lkShell, BtRelativePkgPath)
 	pkglist("PLIST_SUBST", lkShell, BtShellWord)

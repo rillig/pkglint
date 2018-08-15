@@ -128,7 +128,8 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 		".    include <subdir.mk> # sysinclude comment",
 		"target1 target2: source1 source2",
 		"target : source",
-		"VARNAME+=value")
+		"VARNAME+=value",
+		"<<<<<<<<<<<<<<<<<")
 	ln := mklines.mklines
 
 	c.Check(ln[0].IsVarassign(), equals, true)
@@ -171,6 +172,16 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 	c.Check(ln[9].Varcanon(), equals, "VARNAME")
 	c.Check(ln[9].Varparam(), equals, "")
 
+	// Merge conflicts are of neither type.
+	c.Check(ln[10].IsVarassign(), equals, false)
+	c.Check(ln[10].IsCond(), equals, false)
+	c.Check(ln[10].IsInclude(), equals, false)
+	c.Check(ln[10].IsEmpty(), equals, false)
+	c.Check(ln[10].IsComment(), equals, false)
+	c.Check(ln[10].IsDependency(), equals, false)
+	c.Check(ln[10].IsShellCommand(), equals, false)
+	c.Check(ln[10].IsSysinclude(), equals, false)
+
 	t.CheckOutputLines(
 		"WARN: test.mk:9: Space before colon in dependency line.")
 }
@@ -207,6 +218,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		"pkgbase := pkglint")
 }
 
+// Guessing the variable type works for both plain and parameterized variable names.
 func (s *Suite) Test_MkLine_VariableType_varparam(c *check.C) {
 	t := s.Init(c)
 
@@ -216,12 +228,12 @@ func (s *Suite) Test_MkLine_VariableType_varparam(c *check.C) {
 	t1 := mkline.VariableType("FONT_DIRS")
 
 	c.Assert(t1, check.NotNil)
-	c.Check(t1.String(), equals, "ShellList of Pathmask")
+	c.Check(t1.String(), equals, "ShellList of Pathmask (guessed)")
 
 	t2 := mkline.VariableType("FONT_DIRS.ttf")
 
 	c.Assert(t2, check.NotNil)
-	c.Check(t2.String(), equals, "ShellList of Pathmask")
+	c.Check(t2.String(), equals, "ShellList of Pathmask (guessed)")
 }
 
 func (s *Suite) Test_VarUseContext_String(c *check.C) {
@@ -698,6 +710,68 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__only_remove_known(c *check.C) 
 		"\t${ECHO} ${FOODIR:Q}")
 }
 
+// TODO: COMPILER_RPATH_FLAG and LINKER_RPATH_FLAG have different types
+// defined in vardefs.go; examine why.
+func (s *Suite) Test_MkLine_variableNeedsQuoting__shellword_part(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+
+	mklines := t.SetupFileMkLines("Makefile",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=    class",
+		"SUBST_STAGE.class= pre-configure",
+		"SUBST_FILES.class= files",
+		"SUBST_SED.class=-e s:@LINKER_RPATH_FLAG@:${LINKER_RPATH_FLAG}:g")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
+// Tools, when used in a shell command, must not be quoted.
+func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_shell_command(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+
+	mklines := t.SetupFileMkLines("Makefile",
+		MkRcsID,
+		"",
+		"CONFIG_SHELL= ${BASH}")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
+// These examples from real pkgsrc end up in the final nqDontKnow case.
+func (s *Suite) Test_MkLine_variableNeedsQuoting__uncovered_cases(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+
+	mklines := t.SetupFileMkLines("Makefile",
+		MkRcsID,
+		"",
+		"GO_SRCPATH=             ${HOMEPAGE:S,https://,,}",
+		"LINKER_RPATH_FLAG:=     ${LINKER_RPATH_FLAG:S/-rpath/& /}",
+		"HOMEPAGE=               http://godoc.org/${GO_SRCPATH}",
+		"PATH:=                  ${PREFIX}/cross/bin:${PATH}",
+		"NO_SRC_ON_FTP=          ${RESTRICTED}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/Makefile:4: The variable LINKER_RPATH_FLAG may not be set by any package.",
+		"WARN: ~/Makefile:4: Please use ${LINKER_RPATH_FLAG:S/-rpath/& /:Q} instead of ${LINKER_RPATH_FLAG:S/-rpath/& /}.",
+		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be evaluated at load time.")
+}
+
 func (s *Suite) Test_MkLine_Pkgmandir(c *check.C) {
 	t := s.Init(c)
 
@@ -767,11 +841,31 @@ func (s *Suite) Test_MkLine_shell_varuse_in_backt_dquot(c *check.C) {
 
 // See PR 46570, Ctrl+F "3. In lang/perl5".
 func (s *Suite) Test_MkLine_VariableType(c *check.C) {
-	mkline := NewMkLine(dummyLine)
+	t := s.Init(c)
 
-	c.Check(mkline.VariableType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR"), check.IsNil)
-	c.Check(mkline.VariableType("SOME_DIR").guessed, equals, true)
-	c.Check(mkline.VariableType("SOMEDIR").guessed, equals, true)
+	t.SetupVartypes()
+
+	checkType := func(varname string, vartype string) {
+		actualType := dummyMkLine.VariableType(varname)
+		if vartype == "" {
+			c.Check(actualType, check.IsNil)
+		} else {
+			if c.Check(actualType, check.NotNil) {
+				c.Check(actualType.String(), equals, vartype)
+			}
+		}
+	}
+
+	checkType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR", "")
+	checkType("SOME_DIR", "Pathname (guessed)")
+	checkType("SOMEDIR", "Pathname (guessed)")
+	checkType("SEARCHPATHS", "ShellList of Pathname (guessed)")
+	checkType("APACHE_USER", "UserGroupName (guessed)")
+	checkType("APACHE_GROUP", "UserGroupName (guessed)")
+	checkType("MY_CMD_ENV", "ShellList of ShellWord (guessed)")
+	checkType("MY_CMD_ARGS", "ShellList of ShellWord (guessed)")
+	checkType("MY_CMD_CFLAGS", "ShellList of CFlag (guessed)")
+	checkType("PLIST.abcde", "Yes")
 }
 
 // PR 51696, security/py-pbkdf2/Makefile, r1.2
@@ -828,6 +922,33 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 		"/bin",
 		"${DESTDIR}${PREFIX}",
 		"${DESTDIR:S,/,\\:,:S,:,:,}/sbin")
+}
+
+func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
+	t := s.Init(c)
+
+	checkResolve := func(before string, after string) {
+		c.Check(dummyMkLine.ResolveVarsInRelativePath(before, false), equals, after)
+	}
+
+	t.CreateFileLines("lang/lua53/Makefile")
+	t.CreateFileLines("lang/php72/Makefile")
+	t.CreateFileLines("emulators/suse100_base/Makefile")
+	t.CreateFileLines("lang/python36/Makefile")
+
+	checkResolve("", "")
+	checkResolve("${LUA_PKGSRCDIR}", "../../lang/lua53")
+	checkResolve("${PHPPKGSRCDIR}", "../../lang/php72")
+	checkResolve("${SUSE_DIR_PREFIX}", "suse100")
+	checkResolve("${PYPKGSRCDIR}", "../../lang/python36")
+	checkResolve("${PYPACKAGE}", "python36")
+	checkResolve("${FILESDIR}", "${FILESDIR}")
+	checkResolve("${PKGDIR}", "${PKGDIR}")
+
+	G.Pkg = NewPackage("category/package")
+
+	checkResolve("${FILESDIR}", "files")
+	checkResolve("${PKGDIR}", ".")
 }
 
 func (s *Suite) Test_MatchVarassign(c *check.C) {

@@ -100,6 +100,11 @@ func (t *Tester) c() *check.C {
 // SetupCommandLine simulates a command line for the remainder of the test.
 // See Pkglint.ParseCommandLine.
 func (t *Tester) SetupCommandLine(args ...string) {
+
+	// Prevent tracing from being disabled; see EnableSilentTracing.
+	prevTracing := trace.Tracing
+	defer func() { trace.Tracing = prevTracing }()
+
 	exitcode := G.ParseCommandLine(append([]string{"pkglint"}, args...))
 	if exitcode != nil && *exitcode != 0 {
 		t.CheckOutputEmpty()

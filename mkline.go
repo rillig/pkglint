@@ -643,8 +643,6 @@ func (mkline *MkLineImpl) VariableType(varname string) *Vartype {
 		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, true}
 	case hasSuffix(varbase, "_MK"):
 		gtype = &Vartype{lkNone, BtUnknown, allowAll, true}
-	case hasPrefix(varbase, "PLIST."):
-		gtype = &Vartype{lkNone, BtYes, allowAll, true}
 	}
 
 	if trace.Tracing {
