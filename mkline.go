@@ -552,13 +552,6 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		return nqNo
 	}
 
-	// Assigning lists to lists does not require any quoting, though
-	// there may be cases like "CONFIGURE_ARGS+= -libs ${LDFLAGS:Q}"
-	// where quoting is necessary.
-	if wantList && haveList && !vuc.IsWordPart {
-		return nqDoesntMatter
-	}
-
 	if wantList != haveList {
 		if vuc.vartype != nil && vartype != nil {
 			if vuc.vartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
