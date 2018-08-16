@@ -504,3 +504,32 @@ func (s *Suite) Test_Pkglint__profiling(c *check.C) {
 	firstOutput := strings.Split(t.Output(), "\n")[0]
 	c.Check(firstOutput, equals, "ERROR: ~/Makefile: Cannot be read.")
 }
+
+func (s *Suite) Test_Pkglint_Checkfile__in_current_working_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupVartypes()
+	t.CreateFileLines("licenses/mit")
+	t.Chdir("category/package")
+	t.CreateFileLines("log")
+	t.CreateFileLines("Makefile",
+		MkRcsID,
+		"",
+		"NO_CHECKSUM=    yes",
+		"COMMENT=        Useful utilities",
+		"LICENSE=        mit",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+	t.CreateFileLines("PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines("DESCR",
+		"Package description")
+
+	G.CheckDirent(".")
+
+	// FIXME: Prefer the direct name of the file, which is simply "log".
+	t.CheckOutputLines(
+		"WARN: ~/category/package/log: Unexpected file found.")
+}

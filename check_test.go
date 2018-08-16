@@ -59,11 +59,22 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	G.opts.LogVerbose = true // To detect duplicate work being done
 	t.EnableSilentTracing()
+
+	prevdir, err := os.Getwd()
+	if err != nil {
+		c.Fatalf("Cannot get current working directory: %s", err)
+	}
+	t.prevdir = prevdir
+	t.relcwd = "."
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
 	t := s.Tester
 	t.checkC = nil // No longer usable; see https://github.com/go-check/check/issues/22
+
+	if err := os.Chdir(t.prevdir); err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
+	}
 
 	G = Pkglint{} // unusable because of missing logOut and logErr
 	textproc.Testing = false
@@ -84,10 +95,12 @@ func Test(t *testing.T) { check.TestingT(t) }
 // all the test methods, which makes it difficult to find
 // a method by auto-completion.
 type Tester struct {
-	stdout bytes.Buffer
-	stderr bytes.Buffer
-	tmpdir string
-	checkC *check.C
+	stdout  bytes.Buffer
+	stderr  bytes.Buffer
+	tmpdir  string
+	checkC  *check.C // Only usable during the test method itself
+	prevdir string   // The current working directory before the test started
+	relcwd  string
 }
 
 func (t *Tester) c() *check.C {
@@ -228,11 +241,28 @@ func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (file
 
 // File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
+// Calls to Tester.Chdir change the base directory for the relative file name.
 func (t *Tester) File(relativeFilename string) string {
 	if t.tmpdir == "" {
 		t.tmpdir = filepath.ToSlash(t.c().MkDir())
 	}
-	return t.tmpdir + "/" + relativeFilename
+	return cleanpath(t.tmpdir + "/" + t.relcwd + "/" + relativeFilename)
+}
+
+// Chdir changes the current working directory to a subdirectory of the
+// temporary directory. The directory is created if necessary.
+//
+// After the test, the previous working directory is restored, so that
+// the other tests are unaffected.
+//
+// Before this method is called the first time in the test, the current
+// working directory is unspecified.
+func (t *Tester) Chdir(relativeFilename string) {
+	_ = os.MkdirAll(t.File(relativeFilename), 0700)
+	if err := os.Chdir(t.File(relativeFilename)); err != nil {
+		t.checkC.Fatalf("Cannot chdir: %s", err)
+	}
+	t.relcwd = relativeFilename
 }
 
 // ExpectFatalError promises that in the remainder of the current function
