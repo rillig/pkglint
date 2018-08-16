@@ -177,7 +177,7 @@ func (src *Pkgsrc) loadTools() {
 	}
 
 	for _, relativeName := range [...]string{"mk/bsd.prefs.mk", "mk/bsd.pkg.mk"} {
-		condDepth := 0
+		dirDepth := 0
 
 		mklines := G.Pkgsrc.LoadMk(relativeName, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
@@ -186,9 +186,9 @@ func (src *Pkgsrc) loadTools() {
 				value := mkline.Value()
 				if varname == "USE_TOOLS" {
 					if trace.Tracing {
-						trace.Stepf("[condDepth=%d] %s", condDepth, value)
+						trace.Stepf("[dirDepth=%d] %s", dirDepth, value)
 					}
-					if condDepth == 0 || condDepth == 1 && relativeName == "mk/bsd.prefs.mk" {
+					if dirDepth == 0 || dirDepth == 1 && relativeName == "mk/bsd.prefs.mk" {
 						for _, toolname := range splitOnSpace(value) {
 							if !containsVarRef(toolname) {
 								tool := reg.Register(toolname, mkline)
@@ -206,12 +206,12 @@ func (src *Pkgsrc) loadTools() {
 					}
 				}
 
-			} else if mkline.IsCond() {
+			} else if mkline.IsDirective() {
 				switch mkline.Directive() {
 				case "if", "ifdef", "ifndef", "for":
-					condDepth++
+					dirDepth++
 				case "endif", "endfor":
-					condDepth--
+					dirDepth--
 				}
 			}
 		}

@@ -123,7 +123,7 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 		"\tshell command # shell comment",
 		"# whole line comment",
 		"",
-		".  if !empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[\\#]} == 1 # cond comment",
+		".  if !empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[\\#]} == 1 # directive comment",
 		".    include \"../../mk/bsd.prefs.mk\" # include comment",
 		".    include <subdir.mk> # sysinclude comment",
 		"target1 target2: source1 source2",
@@ -147,11 +147,11 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 
 	c.Check(ln[3].IsEmpty(), equals, true)
 
-	c.Check(ln[4].IsCond(), equals, true)
+	c.Check(ln[4].IsDirective(), equals, true)
 	c.Check(ln[4].Indent(), equals, "  ")
 	c.Check(ln[4].Directive(), equals, "if")
 	c.Check(ln[4].Args(), equals, "!empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[#]} == 1")
-	c.Check(ln[4].CondComment(), equals, "cond comment")
+	c.Check(ln[4].DirectiveComment(), equals, "directive comment")
 
 	c.Check(ln[5].IsInclude(), equals, true)
 	c.Check(ln[5].Indent(), equals, "    ")
@@ -174,7 +174,7 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 
 	// Merge conflicts are of neither type.
 	c.Check(ln[10].IsVarassign(), equals, false)
-	c.Check(ln[10].IsCond(), equals, false)
+	c.Check(ln[10].IsDirective(), equals, false)
 	c.Check(ln[10].IsInclude(), equals, false)
 	c.Check(ln[10].IsEmpty(), equals, false)
 	c.Check(ln[10].IsComment(), equals, false)
@@ -884,16 +884,16 @@ func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
 		"WARN: Makefile:2: The # character starts a comment.")
 }
 
-func (s *Suite) Test_MkLine_ConditionVars(c *check.C) {
+func (s *Suite) Test_MkLine_ConditionalVars(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("Makefile", 45, ".include \"../../category/package/buildlink3.mk\"")
 
-	c.Check(mkline.ConditionVars(), equals, "")
+	c.Check(mkline.ConditionalVars(), equals, "")
 
-	mkline.SetConditionVars("OPSYS")
+	mkline.SetConditionalVars("OPSYS")
 
-	c.Check(mkline.ConditionVars(), equals, "OPSYS")
+	c.Check(mkline.ConditionalVars(), equals, "OPSYS")
 }
 
 func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {

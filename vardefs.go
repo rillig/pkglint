@@ -77,7 +77,7 @@ func (src *Pkgsrc) InitVartypes() {
 			languages := make(map[string]bool)
 			if mklines != nil {
 				for _, mkline := range mklines.mklines {
-					if mkline.IsCond() && mkline.Directive() == "for" {
+					if mkline.IsDirective() && mkline.Directive() == "for" {
 						words := splitOnSpace(mkline.Args())
 						if len(words) > 2 && words[0] == "_version_" {
 							for _, word := range words[2:] {

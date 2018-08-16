@@ -76,7 +76,7 @@ func (s *Suite) Test_ChecklinesPlist__commonEnd(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ChecklinesPlist__conditional(c *check.C) {
+func (s *Suite) Test_ChecklinesPlist__condition(c *check.C) {
 	t := s.Init(c)
 
 	G.Pkg = NewPackage("category/pkgbase")
@@ -101,7 +101,7 @@ func (s *Suite) Test_ChecklinesPlist__sorting(c *check.C) {
 		"sbin/i386/6c",
 		"sbin/program",
 		"bin/otherprogram",
-		"${PLIST.conditional}bin/cat")
+		"${PLIST.condition}bin/cat")
 
 	ChecklinesPlist(lines)
 
@@ -129,7 +129,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"man/man1/program.1",
 		"${PLIST.two}bin/program2",
 		"lib/before.la",
-		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double conditional, see graphics/graphviz
+		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
 		"lib/after.la",
 		"@exec echo \"after lib/after.la\"")
 	ck := &PlistChecker{nil, nil, "", Once{}}
@@ -155,7 +155,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 		"C",
 		"CCC",
 		"b",
-		"${PLIST.one}bin/program", // Conditionals are ignored while sorting
+		"${PLIST.one}bin/program", // Conditional lines are ignored during sorting
 		"${PLIST.two}bin/program2",
 		"ddd",
 		"lib/after.la",
@@ -271,9 +271,9 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"@pkgdir        etc/sasl2")
 }
 
-// When the same entry appears both with and without a conditional,
-// the one with the conditional can be removed.
-// When the same entry appears with several different conditionals,
+// When the same entry appears both with and without a condition,
+// the one with the condition can be removed.
+// When the same entry appears with several different conditions,
 // all of them must stay.
 func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 	t := s.Init(c)

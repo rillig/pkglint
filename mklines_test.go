@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-func (s *Suite) Test_MkLines_Check__autofix_conditional_indentation(c *check.C) {
+func (s *Suite) Test_MkLines_Check__autofix_directive_indentation(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix", "-Wspace")
@@ -443,7 +443,7 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 		".elif ${OPSYS} == FreeBSD",
 		".endif # NetBSD") // Wrong, should be FreeBSD from the .elif.
 
-	// See MkLineChecker.checkCond
+	// See MkLineChecker.checkDirective
 	mklines.Check()
 
 	t.CheckOutputLines(""+

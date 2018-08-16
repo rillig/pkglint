@@ -30,7 +30,7 @@ type Package struct {
 
 	vars                  Scope
 	bl3                   map[string]Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
-	plistSubstCond        map[string]bool // varname => true; list of all variables that are used as conditionals (@comment or nothing) in PLISTs.
+	plistSubstCond        map[string]bool // varname => true; all variables that are used as conditions (@comment or nothing) in PLISTs.
 	included              map[string]Line // fname => line
 	seenMakefileCommon    bool            // Does the package have any .includes?
 	loadTimeTools         map[string]bool // true=ok, false=not ok, absent=not mentioned in USE_TOOLS.
@@ -915,10 +915,10 @@ func (pkg *Package) checkLocallyModified(fname string) {
 }
 
 func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
-	conditionVars := mkline.ConditionVars()
-	if conditionVars == "" {
-		conditionVars = indentation.Varnames()
-		mkline.SetConditionVars(conditionVars)
+	conditionalVars := mkline.ConditionalVars()
+	if conditionalVars == "" {
+		conditionalVars = indentation.Varnames()
+		mkline.SetConditionalVars(conditionalVars)
 	}
 
 	if path.Dir(abspath(mkline.Filename)) == abspath(pkg.File(".")) {
@@ -928,13 +928,13 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 			pkg.conditionalIncludes[includefile] = mkline
 			if other := pkg.unconditionalIncludes[includefile]; other != nil {
 				mkline.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
-					cleanpath(includefile), mkline.ConditionVars(), other.ReferenceFrom(mkline.Line))
+					cleanpath(includefile), mkline.ConditionalVars(), other.ReferenceFrom(mkline.Line))
 			}
 		} else {
 			pkg.unconditionalIncludes[includefile] = mkline
 			if other := pkg.conditionalIncludes[includefile]; other != nil {
 				mkline.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
-					cleanpath(includefile), other.ReferenceFrom(mkline.Line), other.ConditionVars())
+					cleanpath(includefile), other.ReferenceFrom(mkline.Line), other.ConditionalVars())
 			}
 		}
 	}
@@ -944,7 +944,7 @@ func (pkg *Package) loadPlistDirs(plistFilename string) {
 	lines := Load(plistFilename, MustSucceed)
 	for _, line := range lines {
 		text := line.Text
-		pkg.PlistFiles[text] = true // XXX: ignores PLIST conditionals for now
+		pkg.PlistFiles[text] = true // XXX: ignores PLIST conditions for now
 		// Keep in sync with PlistChecker.collectFilesAndDirs
 		if !contains(text, "$") && !contains(text, "@") {
 			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {

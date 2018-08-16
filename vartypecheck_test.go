@@ -663,9 +663,9 @@ func (s *Suite) Test_VartypeCheck_Yes(c *check.C) {
 		"${YESVAR}")
 
 	t.CheckOutputLines(
-		"WARN: fname:1: PKG_DEVELOPER should only be used in a \".if defined(...)\" conditional.",
-		"WARN: fname:2: PKG_DEVELOPER should only be used in a \".if defined(...)\" conditional.",
-		"WARN: fname:3: PKG_DEVELOPER should only be used in a \".if defined(...)\" conditional.")
+		"WARN: fname:1: PKG_DEVELOPER should only be used in a \".if defined(...)\" condition.",
+		"WARN: fname:2: PKG_DEVELOPER should only be used in a \".if defined(...)\" condition.",
+		"WARN: fname:3: PKG_DEVELOPER should only be used in a \".if defined(...)\" condition.")
 }
 
 func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {

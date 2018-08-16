@@ -95,7 +95,7 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_CheckVarorder__conditionals_skip(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
@@ -113,8 +113,8 @@ func (s *Suite) Test_Package_CheckVarorder__conditionals_skip(c *check.C) {
 		".endif",
 		"LICENSE=\tgnu-gpl-v2"))
 
-	// No warning about the missing COMMENT since the conditional
-	// skips the whole check.
+	// No warning about the missing COMMENT since the directive
+	// causes the whole check to be skipped.
 	t.CheckOutputEmpty()
 }
 

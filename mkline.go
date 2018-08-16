@@ -35,7 +35,7 @@ type mkLineShell struct {
 }
 type mkLineComment struct{}
 type mkLineEmpty struct{}
-type mkLineConditional struct {
+type mkLineDirective struct {
 	indent    string
 	directive string
 	args      string
@@ -43,11 +43,11 @@ type mkLineConditional struct {
 	elseLine  MkLine // (filled in later)
 }
 type mkLineInclude struct {
-	mustExist     bool
-	sys           bool
-	indent        string
-	includeFile   string
-	conditionVars string // (filled in later)
+	mustExist       bool
+	sys             bool
+	indent          string
+	includeFile     string
+	conditionalVars string // (filled in later)
 }
 type mkLineDependency struct {
 	targets string
@@ -115,8 +115,8 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, mkLineEmpty{}}
 	}
 
-	if m, indent, directive, args, comment := matchMkCond(text); m {
-		return &MkLineImpl{line, mkLineConditional{indent, directive, args, comment, nil}}
+	if m, indent, directive, args, comment := matchMkDirective(text); m {
+		return &MkLineImpl{line, mkLineDirective{indent, directive, args, comment, nil}}
 	}
 
 	if m, indent, directive, includefile := MatchMkInclude(text); m {
@@ -179,9 +179,9 @@ func (mkline *MkLineImpl) IsEmpty() bool {
 	return ok
 }
 
-// IsCond checks whether the line is a conditional (.if/.ifelse/.else/.if) or a loop (.for/.endfor).
-func (mkline *MkLineImpl) IsCond() bool {
-	_, ok := mkline.data.(mkLineConditional)
+// IsDirective checks whether the line is a conditional (.if/.elif/.else/.if) or a loop (.for/.endfor).
+func (mkline *MkLineImpl) IsDirective() bool {
+	_, ok := mkline.data.(mkLineDirective)
 	return ok
 }
 
@@ -233,8 +233,8 @@ func (mkline *MkLineImpl) Value() string      { return mkline.data.(mkLineAssign
 func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
 func (mkline *MkLineImpl) ShellCommand() string     { return mkline.data.(mkLineShell).command }
 func (mkline *MkLineImpl) Indent() string {
-	if mkline.IsCond() {
-		return mkline.data.(mkLineConditional).indent
+	if mkline.IsDirective() {
+		return mkline.data.(mkLineDirective).indent
 	} else {
 		return mkline.data.(mkLineInclude).indent
 	}
@@ -242,17 +242,17 @@ func (mkline *MkLineImpl) Indent() string {
 
 // Directive returns one of "if", "ifdef", "ifndef", "else", "elif", "endif", "for", "endfor", "undef".
 //
-// See matchMkCond.
-func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineConditional).directive }
+// See matchMkDirective.
+func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineDirective).directive }
 
 // Args returns the arguments from an .if, .ifdef, .ifndef, .elif, .for, .undef.
-func (mkline *MkLineImpl) Args() string { return mkline.data.(mkLineConditional).args }
+func (mkline *MkLineImpl) Args() string { return mkline.data.(mkLineDirective).args }
 
-// CondComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
-func (mkline *MkLineImpl) CondComment() string { return mkline.data.(mkLineConditional).comment }
-func (mkline *MkLineImpl) HasElseBranch() bool { return mkline.data.(mkLineConditional).elseLine != nil }
+// DirectiveComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
+func (mkline *MkLineImpl) DirectiveComment() string { return mkline.data.(mkLineDirective).comment }
+func (mkline *MkLineImpl) HasElseBranch() bool      { return mkline.data.(mkLineDirective).elseLine != nil }
 func (mkline *MkLineImpl) SetHasElseBranch(elseLine MkLine) {
-	data := mkline.data.(mkLineConditional)
+	data := mkline.data.(mkLineDirective)
 	data.elseLine = elseLine
 	mkline.data = data
 }
@@ -263,13 +263,13 @@ func (mkline *MkLineImpl) IncludeFile() string { return mkline.data.(mkLineInclu
 func (mkline *MkLineImpl) Targets() string { return mkline.data.(mkLineDependency).targets }
 func (mkline *MkLineImpl) Sources() string { return mkline.data.(mkLineDependency).sources }
 
-// ConditionVars is a space-separated list of those variable names
+// ConditionalVars is a space-separated list of those variable names
 // on which the inclusion depends. It is initialized later,
 // step by step, when parsing other lines
-func (mkline *MkLineImpl) ConditionVars() string { return mkline.data.(mkLineInclude).conditionVars }
-func (mkline *MkLineImpl) SetConditionVars(varnames string) {
+func (mkline *MkLineImpl) ConditionalVars() string { return mkline.data.(mkLineInclude).conditionalVars }
+func (mkline *MkLineImpl) SetConditionalVars(varnames string) {
 	include := mkline.data.(mkLineInclude)
-	include.conditionVars = varnames
+	include.conditionalVars = varnames
 	mkline.data = include
 }
 
@@ -408,7 +408,7 @@ func (mkline *MkLineImpl) ExplainRelativeDirs() {
 		"main pkgsrc repository.")
 }
 
-func matchMkCond(text string) (m bool, indent, directive, args, comment string) {
+func matchMkDirective(text string) (m bool, indent, directive, args, comment string) {
 	i, n := 0, len(text)
 	if i < n && text[i] == '.' {
 		i++
@@ -746,8 +746,8 @@ type vucTime uint8
 const (
 	vucTimeUnknown vucTime = iota
 
-	// When Makefiles are loaded, the operators := and != are evaluated,
-	// as well as the conditionals .if, .elif and .for.
+	// When Makefiles are loaded, the operators := and != evaluate their
+	// right-hand side, as well as the directives .if, .elif and .for.
 	// During loading, not all variables are available yet.
 	// Variable values are still subject to change, especially lists.
 	vucTimeParse
@@ -808,18 +808,18 @@ func (ind *Indentation) String() string {
 	s := ""
 	for _, level := range ind.levels[1:] {
 		s += fmt.Sprintf(" %d", level.depth)
-		if len(level.conditionVars) != 0 {
-			s += " (" + strings.Join(level.conditionVars, " ") + ")"
+		if len(level.conditionalVars) != 0 {
+			s += " (" + strings.Join(level.conditionalVars, " ") + ")"
 		}
 	}
 	return "[" + strings.TrimSpace(s) + "]"
 }
 
 type indentationLevel struct {
-	mkline        MkLine   // The line in which the indentation started; the .if/.for
-	depth         int      // Number of space characters; always a multiple of 2
-	condition     string   // The corresponding condition from the .if or .elif
-	conditionVars []string // Variables on which the current path depends
+	mkline          MkLine   // The line in which the indentation started; the .if/.for
+	depth           int      // Number of space characters; always a multiple of 2
+	condition       string   // The corresponding condition from the .if or latest .elif
+	conditionalVars []string // Variables on which the current path depends
 
 	// Files whose existence has been checked in a related path.
 	// The check counts for both the "if" and the "else" branch,
@@ -854,7 +854,7 @@ func (ind *Indentation) Push(mkline MkLine, indent int, condition string) {
 }
 
 func (ind *Indentation) AddVar(varname string) {
-	vars := &ind.top().conditionVars
+	vars := &ind.top().conditionalVars
 	for _, existingVarname := range *vars {
 		if varname == existingVarname {
 			return
@@ -866,7 +866,7 @@ func (ind *Indentation) AddVar(varname string) {
 
 func (ind *Indentation) DependsOn(varname string) bool {
 	for _, level := range ind.levels {
-		for _, levelVarname := range level.conditionVars {
+		for _, levelVarname := range level.conditionalVars {
 			if varname == levelVarname {
 				return true
 			}
@@ -875,9 +875,11 @@ func (ind *Indentation) DependsOn(varname string) bool {
 	return false
 }
 
+// IsConditional returns whether the current line depends on evaluating
+// any variable in an .if or .elif expression or from a .for loop.
 func (ind *Indentation) IsConditional() bool {
 	for _, level := range ind.levels {
-		for _, varname := range level.conditionVars {
+		for _, varname := range level.conditionalVars {
 			if !hasSuffix(varname, "_MK") {
 				return true
 			}
@@ -893,7 +895,7 @@ func (ind *Indentation) Varnames() string {
 	sep := ""
 	varnames := ""
 	for _, level := range ind.levels {
-		for _, levelVarname := range level.conditionVars {
+		for _, levelVarname := range level.conditionalVars {
 			if !hasSuffix(levelVarname, "_MK") {
 				varnames += sep + levelVarname
 				sep = ", "
@@ -903,7 +905,7 @@ func (ind *Indentation) Varnames() string {
 	return varnames
 }
 
-// Condition returns the condition for the innermost .if, .elif or .for.
+// Condition returns the condition of the innermost .if, .elif or .for.
 func (ind *Indentation) Condition() string {
 	return ind.top().condition
 }
@@ -925,7 +927,7 @@ func (ind *Indentation) IsCheckedFile(filename string) bool {
 }
 
 func (ind *Indentation) TrackBefore(mkline MkLine) {
-	if !mkline.IsCond() {
+	if !mkline.IsDirective() {
 		return
 	}
 	if trace.Tracing {
@@ -942,7 +944,7 @@ func (ind *Indentation) TrackBefore(mkline MkLine) {
 }
 
 func (ind *Indentation) TrackAfter(mkline MkLine) {
-	if !mkline.IsCond() {
+	if !mkline.IsDirective() {
 		return
 	}
 
@@ -959,7 +961,7 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 		}
 
 		// Note: adding the used variables for arbitrary conditions
-		// happens in MkLineChecker.CheckCond for performance reasons.
+		// happens in MkLineChecker.checkDirectiveCond for performance reasons.
 
 		if contains(args, "exists") {
 			cond := NewMkParser(mkline.Line, args, false).MkCond()
@@ -977,7 +979,7 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 		ind.top().depth += 2
 
 	case "elif":
-		// Handled here instead of TrackAfter to allow the action to access the previous condition.
+		// Handled here instead of TrackBefore to allow the action to access the previous condition.
 		ind.top().condition = args
 
 	case "else":

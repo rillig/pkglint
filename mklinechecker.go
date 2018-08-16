@@ -105,32 +105,17 @@ func (ck MkLineChecker) checkInclude() {
 	}
 }
 
-func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentation) {
+func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation) {
 	mkline := ck.MkLine
 
 	directive := mkline.Directive()
 	args := mkline.Args()
-	comment := mkline.CondComment()
 
-	expectedDepth := indentation.Depth(directive)
+	expectedDepth := ind.Depth(directive)
 	ck.checkDirectiveIndentation(expectedDepth)
 
 	if directive == "endfor" || directive == "endif" {
-		if directive == "endif" && comment != "" {
-			if condition := indentation.Condition(); !contains(condition, comment) {
-				mkline.Warnf("Comment %q does not match condition %q.", comment, condition)
-			}
-		}
-
-		if directive == "endfor" && comment != "" {
-			if condition := indentation.Condition(); !contains(condition, comment) {
-				mkline.Warnf("Comment %q does not match loop %q.", comment, condition)
-			}
-		}
-
-		if indentation.Len() <= 1 {
-			mkline.Errorf("Unmatched .%s.", directive)
-		}
+		ck.checkDirectiveEnd(ind)
 	}
 
 	needsArgument := false
@@ -150,25 +135,45 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 		}
 
 	} else if directive == "if" || directive == "elif" {
-		ck.CheckCond()
+		ck.checkDirectiveCond()
 
 	} else if directive == "ifdef" || directive == "ifndef" {
 		mkline.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
 			directive, ifelseStr(directive == "ifdef", "", "!"), args)
 
 	} else if directive == "for" {
-		ck.checkCondFor(forVars, indentation)
+		ck.checkDirectiveFor(forVars, ind)
 
 	} else if directive == "undef" && args != "" {
-		for _, uvar := range splitOnSpace(args) {
-			if forVars[uvar] {
+		for _, varname := range splitOnSpace(args) {
+			if forVars[varname] {
 				mkline.Notef("Using \".undef\" after a \".for\" loop is unnecessary.")
 			}
 		}
 	}
 }
 
-func (ck MkLineChecker) checkCondFor(forVars map[string]bool, indentation *Indentation) {
+func (ck MkLineChecker) checkDirectiveEnd(ind *Indentation) {
+	mkline := ck.MkLine
+	directive := mkline.Directive()
+	comment := mkline.DirectiveComment()
+
+	if directive == "endif" && comment != "" {
+		if condition := ind.Condition(); !contains(condition, comment) {
+			mkline.Warnf("Comment %q does not match condition %q.", comment, condition)
+		}
+	}
+	if directive == "endfor" && comment != "" {
+		if condition := ind.Condition(); !contains(condition, comment) {
+			mkline.Warnf("Comment %q does not match loop %q.", comment, condition)
+		}
+	}
+	if ind.Len() <= 1 {
+		mkline.Errorf("Unmatched .%s.", directive)
+	}
+}
+
+func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *Indentation) {
 	mkline := ck.MkLine
 	args := mkline.Args()
 
@@ -896,7 +901,7 @@ func (ck MkLineChecker) checkVarassignPlistComment(varname, value string) {
 		contains(value, "@comment") && !matches(value, `="@comment "`) {
 		ck.MkLine.Warnf("Please don't use @comment in %s.", varname)
 		Explain(
-			"If you are defining a PLIST conditional here, use one of the",
+			"If you are defining a PLIST condition here, use one of the",
 			"following patterns instead:",
 			"",
 			"1. The direct way, without intermediate variable",
@@ -1028,7 +1033,7 @@ func (ck MkLineChecker) checkText(text string) {
 	}
 }
 
-func (ck MkLineChecker) CheckCond() {
+func (ck MkLineChecker) checkDirectiveCond() {
 	mkline := ck.MkLine
 	if trace.Tracing {
 		defer trace.Call1(mkline.Args())()
@@ -1037,7 +1042,7 @@ func (ck MkLineChecker) CheckCond() {
 	p := NewMkParser(mkline.Line, mkline.Args(), false)
 	cond := p.MkCond()
 	if !p.EOF() {
-		mkline.Warnf("Invalid conditional %q.", mkline.Args())
+		mkline.Warnf("Invalid condition, unrecognized part: %q.", p.Rest())
 		return
 	}
 
