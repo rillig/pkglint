@@ -737,6 +737,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_shell_command(c *check
 
 	t.SetupCommandLine("-Wall,no-space")
 	t.SetupVartypes()
+	t.SetupTool(&Tool{Varname: "BASH"})
 
 	mklines := t.SetupFileMkLines("Makefile",
 		MkRcsID,
