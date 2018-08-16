@@ -244,7 +244,9 @@ func (mkline *MkLineImpl) Indent() string {
 //
 // See matchMkCond.
 func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineConditional).directive }
-func (mkline *MkLineImpl) Args() string      { return mkline.data.(mkLineConditional).args }
+
+// Args returns the arguments from an .if, .ifdef, .ifndef, .elif, .for, .undef.
+func (mkline *MkLineImpl) Args() string { return mkline.data.(mkLineConditional).args }
 
 // CondComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
 func (mkline *MkLineImpl) CondComment() string { return mkline.data.(mkLineConditional).comment }
