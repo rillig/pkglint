@@ -527,9 +527,10 @@ func (s *Suite) Test_Pkglint_Checkfile__in_current_working_directory(c *check.C)
 	t.CreateFileLines("DESCR",
 		"Package description")
 
-	G.CheckDirent(".")
+	G.Main("pkglint")
 
 	// FIXME: Prefer the direct name of the file, which is simply "log".
 	t.CheckOutputLines(
-		"WARN: ~/category/package/log: Unexpected file found.")
+		"WARN: ../../category/package/log: Unexpected file found.",
+		"0 errors and 1 warning found.")
 }
