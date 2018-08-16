@@ -301,7 +301,7 @@ func dirglob(dirname string) []string {
 	var fnames []string
 	for _, fi := range fis {
 		if !(isIgnoredFilename(fi.Name())) {
-			fnames = append(fnames, dirname+"/"+fi.Name())
+			fnames = append(fnames, cleanpath(dirname+"/"+fi.Name()))
 		}
 	}
 	return fnames

@@ -299,13 +299,13 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	currentDir := ifelseStr(isReg, path.Dir(fname), fname)
-	absCurrentDir := abspath(currentDir)
+	dir := ifelseStr(isReg, path.Dir(fname), fname)
+	absCurrentDir := abspath(dir)
 	pkglint.Wip = !pkglint.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
 	pkglint.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)
-	pkgsrcdir := findPkgsrcTopdir(currentDir)
+	pkgsrcdir := findPkgsrcTopdir(dir)
 	if pkgsrcdir == "" {
-		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(currentDir))
+		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
 		return
 	}
 
@@ -319,11 +319,11 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 
 	switch pkgsrcdir {
 	case "../..":
-		pkglint.checkdirPackage(pkglint.Pkgsrc.ToRel(currentDir))
+		pkglint.checkdirPackage(dir)
 	case "..":
-		CheckdirCategory(currentDir)
+		CheckdirCategory(dir)
 	case ".":
-		CheckdirToplevel(currentDir)
+		CheckdirToplevel(dir)
 	default:
 		NewLineWhole(fname).Errorf("Cannot check directories outside a pkgsrc tree.")
 	}

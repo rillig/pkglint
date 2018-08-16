@@ -65,7 +65,6 @@ func (s *Suite) SetUpTest(c *check.C) {
 		c.Fatalf("Cannot get current working directory: %s", err)
 	}
 	t.prevdir = prevdir
-	t.relcwd = "."
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
@@ -246,18 +245,33 @@ func (t *Tester) File(relativeFilename string) string {
 	if t.tmpdir == "" {
 		t.tmpdir = filepath.ToSlash(t.c().MkDir())
 	}
-	return cleanpath(t.tmpdir + "/" + t.relcwd + "/" + relativeFilename)
+	if t.relcwd != "" {
+		return cleanpath(relativeFilename)
+	}
+	return cleanpath(t.tmpdir + "/" + relativeFilename)
 }
 
-// Chdir changes the current working directory to a subdirectory of the
-// temporary directory. The directory is created if necessary.
+// Chdir changes the current working directory to the given subdirectory
+// of the temporary directory, creating it if necessary.
+//
+// After this call, all files loaded from the temporary directory via
+// SetupFileLines or CreateFileLines or similar methods will use path names
+// relative to this directory.
 //
 // After the test, the previous working directory is restored, so that
 // the other tests are unaffected.
 //
-// Before this method is called the first time in the test, the current
-// working directory is unspecified.
+// As long as this method is not called in a test, the current working
+// directory is indeterminate.
 func (t *Tester) Chdir(relativeFilename string) {
+	if t.relcwd != "" {
+		// When multiple calls of Chdir are mixed with calls to CreateFileLines,
+		// the resulting []Line and MkLines variables will use relative file names,
+		// and these will point to different areas in the file system. This is
+		// usually not indented and therefore prevented.
+		t.checkC.Fatalf("Chdir must only be called once per test; already in %q.", t.relcwd)
+	}
+
 	_ = os.MkdirAll(t.File(relativeFilename), 0700)
 	if err := os.Chdir(t.File(relativeFilename)); err != nil {
 		t.checkC.Fatalf("Cannot chdir: %s", err)

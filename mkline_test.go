@@ -289,7 +289,7 @@ func (s *Suite) Test_MkLines_Check__extra(c *check.C) {
 
 	t.SetupCommandLine("-Wextra")
 	t.SetupVartypes()
-	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Mk = t.NewMkLines("options.mk",
 		MkRcsID,
 		".for word in ${PKG_FAIL_REASON}",
@@ -391,7 +391,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__command_in_command(c *check.C)
 	t.SetupVartypes()
 	t.SetupTool(&Tool{Name: "find", Varname: "FIND", Predefined: true})
 	t.SetupTool(&Tool{Name: "sort", Varname: "SORT", Predefined: true})
-	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Mk = t.NewMkLines("Makefile",
 		MkRcsID,
 		"GENERATE_PLIST= cd ${DESTDIR}${PREFIX}; ${FIND} * \\( -type f -or -type l \\) | ${SORT};")
@@ -946,7 +946,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	checkResolve("${FILESDIR}", "${FILESDIR}")
 	checkResolve("${PKGDIR}", "${PKGDIR}")
 
-	G.Pkg = NewPackage("category/package")
+	G.Pkg = NewPackage(t.File("category/package"))
 
 	checkResolve("${FILESDIR}", "files")
 	checkResolve("${PKGDIR}", ".")

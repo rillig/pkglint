@@ -117,7 +117,7 @@ func (s *Suite) Test_autofix_MkLines(c *check.C) {
 		"line1 := value1",
 		"line2 := value2",
 		"line3 := value3")
-	pkg := NewPackage("category/basename")
+	pkg := NewPackage(t.File("category/basename"))
 	G.Pkg = pkg
 	mklines := pkg.loadPackageMakefile()
 	G.Pkg = nil

@@ -15,6 +15,7 @@ const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 
 // Package contains data for the pkgsrc package that is currently checked.
 type Package struct {
+	dir                  string          // The directory of the package, for resolving files
 	Pkgpath              string          // e.g. "category/pkgdir"
 	Pkgdir               string          // PKGDIR from the package Makefile
 	Filesdir             string          // FILESDIR from the package Makefile
@@ -40,12 +41,19 @@ type Package struct {
 	IgnoreMissingPatches  bool // In distinfo, don't warn about patches that cannot be found.
 }
 
-func NewPackage(pkgpath string) *Package {
+func NewPackage(dir string) *Package {
+	pkgpath := G.Pkgsrc.ToRel(dir)
+	if strings.Count(pkgpath, "/") != 1 {
+		NewLineWhole(dir).Errorf("Package directory %q must be two subdirectories below the pkgsrc root %q.", dir, G.Pkgsrc.File("."))
+	}
+
 	pkg := &Package{
+		dir:                   dir,
 		Pkgpath:               pkgpath,
 		Pkgdir:                ".",
 		Filesdir:              "files",
 		Patchdir:              "patches",
+		DistinfoFile:          "distinfo",
 		PlistDirs:             make(map[string]bool),
 		PlistFiles:            make(map[string]bool),
 		vars:                  NewScope(),
@@ -65,7 +73,7 @@ func NewPackage(pkgpath string) *Package {
 // File returns the (possibly absolute) path to relativeFilename,
 // as resolved from the package's directory.
 func (pkg *Package) File(relativeFilename string) string {
-	return G.Pkgsrc.File(pkg.Pkgpath + "/" + relativeFilename)
+	return cleanpath(pkg.dir + "/" + relativeFilename)
 }
 
 func (pkg *Package) varValue(varname string) (string, bool) {
@@ -151,21 +159,14 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
 	}
 }
 
-// Given the package path relative to the pkgsrc top directory,
-// checks a complete pkgsrc package.
-//
-// Example:
-//  checkdirPackage("category/pkgbase")
-func (pkglint *Pkglint) checkdirPackage(pkgpath string) {
+// checkdirPackage checks a complete pkgsrc package, including each
+// of the files individually, and also when seen in combination.
+func (pkglint *Pkglint) checkdirPackage(dir string) {
 	if trace.Tracing {
-		defer trace.Call1(pkgpath)()
+		defer trace.Call1(dir)()
 	}
 
-	if strings.Count(pkgpath, "/") != 1 {
-		dummyLine.Fatalf("Internal pkglint error: Wrong pkgpath %q.", pkgpath)
-	}
-
-	G.Pkg = NewPackage(pkgpath)
+	G.Pkg = NewPackage(dir)
 	defer func() { G.Pkg = nil }()
 	pkg := G.Pkg
 

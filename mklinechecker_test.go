@@ -42,7 +42,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_characters(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkg = NewPackage("graphics/gimp-fix-ca")
+	G.Pkg = NewPackage(t.File("graphics/gimp-fix-ca"))
 	t.SetupVartypes()
 	mkline := t.NewMkLine("fname", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=")
 

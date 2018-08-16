@@ -69,7 +69,7 @@ func (s *Suite) Test_MkLines_quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"GNU_CONFIGURE=\tyes",

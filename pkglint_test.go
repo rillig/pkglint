@@ -291,7 +291,7 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("fname", 1, "GCC_VERSION=${GCC_VERSION}")
-	G.Pkg = NewPackage(".")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Pkg.vars.Define("GCC_VERSION", mkline)
 
 	resolved := resolveVariableRefs("gcc-${GCC_VERSION}")
@@ -305,7 +305,7 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	mkline1 := t.NewMkLine("fname", 10, "_=${SECOND}")
 	mkline2 := t.NewMkLine("fname", 11, "_=${THIRD}")
 	mkline3 := t.NewMkLine("fname", 12, "_=got it")
-	G.Pkg = NewPackage(".")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	defineVar(mkline1, "FIRST")
 	defineVar(mkline2, "SECOND")
 	defineVar(mkline3, "THIRD")
@@ -322,7 +322,7 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("fname", 10, "_=x11")
-	G.Pkg = NewPackage("category/pkg")
+	G.Pkg = NewPackage(t.File("category/pkg"))
 	G.Pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
 
 	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
@@ -529,8 +529,7 @@ func (s *Suite) Test_Pkglint_Checkfile__in_current_working_directory(c *check.C)
 
 	G.Main("pkglint")
 
-	// FIXME: Prefer the direct name of the file, which is simply "log".
 	t.CheckOutputLines(
-		"WARN: ../../category/package/log: Unexpected file found.",
+		"WARN: log: Unexpected file found.",
 		"0 errors and 1 warning found.")
 }

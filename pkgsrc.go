@@ -259,7 +259,6 @@ func (src *Pkgsrc) loadSuggestedUpdates() {
 }
 
 func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
-	lines := Load(fname, MustSucceed|NotEmpty)
 
 	parseChange := func(line Line) *Change {
 		text := line.Text
@@ -297,6 +296,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 		year = yyyy
 	}
 
+	lines := Load(fname, MustSucceed|NotEmpty)
 	var changes []*Change
 	for _, line := range lines {
 		if change := parseChange(line); change != nil {

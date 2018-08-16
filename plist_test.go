@@ -6,7 +6,7 @@ func (s *Suite) Test_ChecklinesPlist(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
-	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
 		"bin/i386/6c",
 		"bin/program",
@@ -79,7 +79,7 @@ func (s *Suite) Test_ChecklinesPlist__commonEnd(c *check.C) {
 func (s *Suite) Test_ChecklinesPlist__condition(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Pkg.plistSubstCond["PLIST.bincmds"] = true
 	lines := t.NewLines("PLIST",
 		PlistRcsID,
@@ -169,7 +169,7 @@ func (s *Suite) Test_PlistLineSorter_Sort(c *check.C) {
 func (s *Suite) Test_PlistChecker_checkpathMan_gz(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkg = NewPackage("category/pkgbase")
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
 		PlistRcsID,
 		"man/man3/strerror.3.gz")
