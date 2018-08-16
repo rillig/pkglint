@@ -6,7 +6,7 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("category/package/patches/patch-aa",
-		"$"+"NetBSD$ line is ignored",
+		RcsID+" line is ignored for computing the SHA1 hash",
 		"patch contents")
 	t.SetupFileLines("category/package/patches/patch-ab",
 		"patch contents")
@@ -16,7 +16,9 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 		"MD5 (distfile.tar.gz) = 12345678901234567890123456789012",
 		"SHA1 (distfile.tar.gz) = 1234567890123456789012345678901234567890",
 		"SHA1 (patch-aa) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7",
+		"Size (patch-aa) = 104",
 		"SHA1 (patch-ab) = 6b98dd609f85a9eb9c4c1e4e7055a6aaa62b7cc7",
+		"Another invalid line",
 		"SHA1 (patch-nonexistent) = 1234")
 	G.Pkg = NewPackage("category/package")
 
@@ -26,7 +28,9 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 		"ERROR: ~/category/package/distinfo:1: Expected \"$"+"NetBSD$\".",
 		"NOTE: ~/category/package/distinfo:2: Empty line expected.",
 		"ERROR: ~/category/package/distinfo:5: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.",
-		"WARN: ~/category/package/distinfo:7: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
+		"ERROR: ~/category/package/distinfo:7: Expected SHA1 hash for patch-aa, got SHA1, Size.",
+		"ERROR: ~/category/package/distinfo:8: Invalid line.",
+		"WARN: ~/category/package/distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
 func (s *Suite) Test_ChecklinesDistinfo_global_hash_mismatch(c *check.C) {

@@ -68,7 +68,7 @@ func (ck *distinfoLinesChecker) checkLines(lines []Line) {
 		ck.algorithms = append(ck.algorithms, alg)
 
 		ck.checkGlobalMismatch(line, filename, alg, hash)
-		ck.checkUncommittedPatch(line, filename, hash)
+		ck.checkUncommittedPatch(line, filename, alg, hash)
 	}
 	ck.onFilenameChange(NewLineEOF(ck.distinfoFilename), "")
 }
@@ -149,13 +149,15 @@ func (ck *distinfoLinesChecker) checkGlobalMismatch(line Line, fname, alg, hash 
 	}
 }
 
-func (ck *distinfoLinesChecker) checkUncommittedPatch(line Line, patchName, sha1Hash string) {
+func (ck *distinfoLinesChecker) checkUncommittedPatch(line Line, patchName, alg, hash string) {
 	if ck.isPatch == yes {
 		patchFname := ck.patchdir + "/" + patchName
 		if ck.distinfoIsCommitted && !isCommitted(G.Pkg.File(patchFname)) {
 			line.Warnf("%s is registered in distinfo but not added to CVS.", patchFname)
 		}
-		ck.checkPatchSha1(line, patchFname, sha1Hash)
+		if alg == "SHA1" {
+			ck.checkPatchSha1(line, patchFname, hash)
+		}
 		ck.patches[patchName] = true
 	}
 }
