@@ -157,47 +157,54 @@ func (ck MkLineChecker) checkCond(forVars map[string]bool, indentation *Indentat
 			directive, ifelseStr(directive == "ifdef", "", "!"), args)
 
 	} else if directive == "for" {
-		if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
-			for _, forvar := range splitOnSpace(vars) {
-				indentation.AddVar(forvar)
-				if !G.Infrastructure && hasPrefix(forvar, "_") {
-					mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
-				}
-
-				if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
-					// Fine.
-				} else if matches(forvar, `[A-Z]`) {
-					mkline.Warnf(".for variable names should not contain uppercase letters.")
-				} else {
-					mkline.Errorf("Invalid variable name %q.", forvar)
-				}
-
-				forVars[forvar] = true
-			}
-
-			// Check if any of the value's types is not guessed.
-			guessed := true
-			for _, value := range splitOnSpace(values) {
-				if m, vname := match1(value, `^\$\{(.*)\}`); m {
-					vartype := mkline.VariableType(vname)
-					if vartype != nil && !vartype.guessed {
-						guessed = false
-					}
-				}
-			}
-
-			forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, guessed}
-			forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
-			for _, forLoopVar := range mkline.ExtractUsedVariables(values) {
-				ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
-			}
-		}
+		ck.checkCondFor(forVars, indentation)
 
 	} else if directive == "undef" && args != "" {
 		for _, uvar := range splitOnSpace(args) {
 			if forVars[uvar] {
 				mkline.Notef("Using \".undef\" after a \".for\" loop is unnecessary.")
 			}
+		}
+	}
+}
+
+func (ck MkLineChecker) checkCondFor(forVars map[string]bool, indentation *Indentation) {
+	mkline := ck.MkLine
+	args := mkline.Args()
+
+	if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
+		for _, forvar := range splitOnSpace(vars) {
+			indentation.AddVar(forvar)
+			if !G.Infrastructure && hasPrefix(forvar, "_") {
+				mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
+			}
+
+			if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
+				// Fine.
+			} else if matches(forvar, `[A-Z]`) {
+				mkline.Warnf(".for variable names should not contain uppercase letters.")
+			} else {
+				mkline.Errorf("Invalid variable name %q.", forvar)
+			}
+
+			forVars[forvar] = true
+		}
+
+		// Check if any of the value's types is not guessed.
+		guessed := true
+		for _, value := range splitOnSpace(values) {
+			if m, vname := match1(value, `^\$\{(.*)\}`); m {
+				vartype := mkline.VariableType(vname)
+				if vartype != nil && !vartype.guessed {
+					guessed = false
+				}
+			}
+		}
+
+		forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, guessed}
+		forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
+		for _, forLoopVar := range mkline.ExtractUsedVariables(values) {
+			ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
 		}
 	}
 }
