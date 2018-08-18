@@ -554,7 +554,7 @@ func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkLines_ExtractDocumentedVariables(c *check.C) {
+func (s *Suite) Test_MkLines_determineDocumentedVariables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -563,6 +563,10 @@ func (s *Suite) Test_MkLines_ExtractDocumentedVariables(c *check.C) {
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"#",
+		"# Copyright 2000-2018",
+		"#",
+		"# This whole comment is ignored, until the next empty line.",
+		"",
 		"# User-settable variables:",
 		"#",
 		"# PKG_DEBUG_LEVEL",
@@ -592,12 +596,12 @@ func (s *Suite) Test_MkLines_ExtractDocumentedVariables(c *check.C) {
 	sort.Strings(varnames)
 
 	expected := []string{
-		"PKG_DEBUG_LEVEL (line 5)",
-		"PKG_VERBOSE (line 10)",
-		"VARBASE1.* (line 17)",
-		"VARBASE2.* (line 18)",
-		"VARBASE3.${id} (line 19)",
-		"VARBASE3.* (line 19)"}
+		"PKG_DEBUG_LEVEL (line 9)",
+		"PKG_VERBOSE (line 14)",
+		"VARBASE1.* (line 21)",
+		"VARBASE2.* (line 22)",
+		"VARBASE3.${id} (line 23)",
+		"VARBASE3.* (line 23)"}
 	c.Check(varnames, deepEquals, expected)
 }
 
