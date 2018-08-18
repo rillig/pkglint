@@ -428,13 +428,12 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__command_as_command_argument(c 
 	t.SetupTool(&Tool{Name: "perl", Varname: "PERL5", Predefined: true})
 	t.SetupTool(&Tool{Name: "bash", Varname: "BASH", Predefined: true})
 	t.SetupVartypes()
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"\t${RUN} cd ${WRKSRC} && ( ${ECHO} ${PERL5:Q} ; ${ECHO} ) | ${BASH} ./install",
 		"\t${RUN} cd ${WRKSRC} && ( ${ECHO} ${PERL5} ; ${ECHO} ) | ${BASH} ./install")
 
-	MkLineChecker{G.Mk.mklines[1]}.Check()
-	MkLineChecker{G.Mk.mklines[2]}.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:2: The exitcode of the command at the left of the | operator is ignored.",

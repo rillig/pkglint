@@ -985,7 +985,7 @@ func (cv *VartypeCheck) Tool() {
 		// no warning for package-defined tool definitions
 
 	} else if m, toolname, tooldep := match2(cv.Value, `^([-\w]+|\[)(?::(\w+))?$`); m {
-		if G.Pkgsrc.Tools.ByName(toolname) == nil && (G.Mk == nil || G.Mk.toolRegistry.ByName(toolname) == nil) {
+		if G.Pkgsrc.Tools.ByName(toolname) == nil && (G.Mk == nil || G.Mk.Tools.ByName(toolname) == nil) {
 			cv.Line.Errorf("Unknown tool %q.", toolname)
 		}
 		switch tooldep {

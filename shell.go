@@ -468,30 +468,42 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	}
 }
 
+// handleTool tests whether the shell command is one of the recognized pkgsrc tools
+// and whether the package has added it to USE_TOOLS.
 func (scc *SimpleCommandChecker) handleTool() bool {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
 
 	shellword := scc.strcmd.Name
-	tool, localTool := G.Pkgsrc.Tools.ByName(shellword), false
-	if tool == nil && G.Mk != nil {
-		tool, localTool = G.Mk.toolRegistry.byName[shellword], true
-	}
-	if tool == nil {
-		return false
+
+	pkgsrcTool := G.Pkgsrc.Tools.ByName(shellword)
+	if pkgsrcTool == nil {
+		pkgsrcTool = G.Pkgsrc.Tools.ByName("g" + shellword)
 	}
 
-	if !localTool && !G.Mk.tools[shellword] && !G.Mk.tools["g"+shellword] {
+	var mkTool *Tool
+	if G.Mk != nil {
+		mkTool = G.Mk.Tools.ByName(shellword)
+		if mkTool == nil {
+			mkTool = G.Mk.Tools.ByName("g" + shellword)
+		}
+	}
+
+	if pkgsrcTool != nil && mkTool == nil {
 		scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", shellword)
 	}
 
-	if tool.MustUseVarForm {
+	tool := mkTool
+	if tool == nil {
+		tool = pkgsrcTool
+	}
+	if tool != nil && tool.MustUseVarForm {
 		scc.shline.mkline.Warnf("Please use \"${%s}\" instead of %q.", tool.Varname, shellword)
 	}
 
 	scc.shline.checkCommandUse(shellword)
-	return true
+	return tool != nil
 }
 
 func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
@@ -523,7 +535,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 		varname := varuse.varname
 
 		if tool := G.Pkgsrc.Tools.ByVarname(varname); tool != nil {
-			if !G.Mk.tools[tool.Name] {
+			if G.Mk.Tools.ByName(tool.Name) == nil {
 				scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", tool.Name)
 			}
 			scc.shline.checkCommandUse(shellword)

@@ -98,7 +98,7 @@ func (tr *ToolRegistry) ParseToolLine(mkline MkLine) {
 	if mkline.IsVarassign() {
 		varname := mkline.Varname()
 		value := mkline.Value()
-		if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^?[-\w.]+$`)) {
+		if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^[-\w.]+$`)) {
 			tr.Register(value, mkline)
 
 		} else if m, toolname := match1(varname, `^_TOOLS_VARNAME\.([-\w.]+|\[)$`); m {
@@ -131,7 +131,7 @@ func (tr *ToolRegistry) ForEach(action func(tool *Tool)) {
 }
 
 func (tr *ToolRegistry) validateToolName(toolName string, mkline MkLine) {
-	if toolName != "echo -n" && !matches(toolName, `^([-a-z0-9.]+|\[)$`) {
+	if mkline != nil && toolName != "echo -n" && !matches(toolName, `^([-a-z0-9.]+|\[)$`) {
 		mkline.Errorf("Invalid tool name %q.", toolName)
 	}
 }
