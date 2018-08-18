@@ -454,6 +454,9 @@ func (s *Scope) Use(varname string, line MkLine) {
 
 // Defined tests whether the variable is defined.
 // It does NOT test the canonicalized variable name.
+//
+// Even if Defined returns true, FirstDefinition doesn't necessarily return true
+// since the latter ignores the default definitions from vardefs.go, keyword dummyVardefMkline.
 func (s *Scope) Defined(varname string) bool {
 	return s.defined[varname] != nil
 }
@@ -510,6 +513,12 @@ func (s *Scope) Value(varname string) (value string, found bool) {
 		return mkline.Value(), true
 	}
 	return "", false
+}
+
+func (s *Scope) DefineAll(other Scope) {
+	for varname, mkline := range other.defined {
+		s.Define(varname, mkline)
+	}
 }
 
 // The MIT License (MIT)

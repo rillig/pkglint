@@ -64,9 +64,7 @@ func NewPackage(dir string) *Package {
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
 	}
-	for varname, mkline := range G.Pkgsrc.UserDefinedVars {
-		pkg.vars.Define(varname, mkline)
-	}
+	pkg.vars.DefineAll(G.Pkgsrc.UserDefinedVars)
 	return pkg
 }
 

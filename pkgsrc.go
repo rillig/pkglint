@@ -32,7 +32,7 @@ type Pkgsrc struct {
 	LastChange          map[string]*Change //
 	latest              map[string]string  // "lang/php[0-9]*" => "lang/php70"
 
-	UserDefinedVars map[string]MkLine   // varname => line; used for checking BUILD_DEFS
+	UserDefinedVars Scope               // Used for checking BUILD_DEFS
 	Deprecated      map[string]string   //
 	vartypes        map[string]*Vartype // varcanon => type
 
@@ -52,7 +52,7 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		nil,
 		make(map[string]*Change),
 		make(map[string]string),
-		make(map[string]MkLine),
+		NewScope(),
 		make(map[string]string),
 		make(map[string]*Vartype),
 		nil, // Only initialized when pkglint is run for a whole pkgsrc installation
@@ -399,7 +399,7 @@ func (src *Pkgsrc) loadUserDefinedVars() {
 
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
-			src.UserDefinedVars[mkline.Varname()] = mkline
+			src.UserDefinedVars.Define(mkline.Varname(), mkline)
 		}
 	}
 }

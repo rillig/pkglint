@@ -65,7 +65,7 @@ func (src *Pkgsrc) InitVartypes() {
 	}
 	usr := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk:; *: use-loadtime, use")
-		src.UserDefinedVars[varname] = dummyVardefMkline
+		src.UserDefinedVars.Define(varname, dummyVardefMkline)
 	}
 	bl3list := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk: append")
