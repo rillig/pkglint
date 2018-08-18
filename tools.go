@@ -33,6 +33,10 @@ func NewToolRegistry() ToolRegistry {
 // but not by a corresponding variable (e.g. ${AWK}).
 // The toolname may include the scope (:pkgsrc, :run, etc.).
 func (tr *ToolRegistry) Register(toolname string, mkline MkLine) *Tool {
+	if trace.Tracing {
+		defer trace.Call(toolname, mkline)()
+	}
+
 	name := strings.SplitN(toolname, ":", 2)[0]
 	tr.validateToolName(name, mkline)
 
@@ -45,6 +49,10 @@ func (tr *ToolRegistry) Register(toolname string, mkline MkLine) *Tool {
 }
 
 func (tr *ToolRegistry) RegisterVarname(toolname, varname string, mkline MkLine) *Tool {
+	if trace.Tracing {
+		defer trace.Call(toolname, varname, mkline)()
+	}
+
 	tool := tr.Register(toolname, mkline)
 	tool.Varname = varname
 	tr.byVarname[varname] = tool
@@ -52,6 +60,10 @@ func (tr *ToolRegistry) RegisterVarname(toolname, varname string, mkline MkLine)
 }
 
 func (tr *ToolRegistry) RegisterTool(tool *Tool, mkline MkLine) {
+	if trace.Tracing {
+		defer trace.Call(tool, mkline)()
+	}
+
 	tr.validateToolName(tool.Name, mkline)
 
 	if tool.Name != "" && tr.byName[tool.Name] == nil {

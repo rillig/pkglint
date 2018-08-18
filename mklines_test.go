@@ -313,6 +313,28 @@ func (s *Suite) Test_MkLines_checkForUsedComment(c *check.C) {
 	c.Check(G.autofixAvailable, equals, true)
 }
 
+func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+	t.SetupTool(&Tool{Name: "autoconf213"})
+	t.SetupTool(&Tool{Name: "autoconf"})
+	mklines := t.NewMkLines("determine-defined-variables.mk",
+		MkRcsID,
+		"",
+		"USE_TOOLS+= autoconf213 autoconf",
+		"",
+		"pre-configure:",
+		"\t${RUN} autoreconf; autoheader-2.13; unknown-command")
+
+	mklines.Check()
+
+	// The tools autoreconf and autoheader213 are known at this point because of the USE_TOOLS line.
+	t.CheckOutputLines(
+		"WARN: determine-defined-variables.mk:6: Unknown shell command \"unknown-command\".")
+}
+
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 	t := s.Init(c)
 

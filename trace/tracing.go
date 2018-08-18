@@ -53,6 +53,13 @@ func Call2(arg1, arg2 string) func() {
 	return traceCall(arg1, arg2)
 }
 
+// Call records a function call in the tracing log, both when entering and
+// when leaving the function.
+//
+// Usage:
+//  if trace.Tracing {
+//      defer trace.Call(arg1, arg2, "=>", result1, result2)()
+// }
 func Call(args ...interface{}) func() {
 	return traceCall(args...)
 }
