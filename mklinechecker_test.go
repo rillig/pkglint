@@ -395,7 +395,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 		"WARN: ~/options.mk:4: The variable PATH should be quoted as part of a shell word.")
 }
 
-// The ${VARNAME:=suffix} should only be used with lists.
+// The ${VARNAME:=suffix} expression should only be used with lists.
 // It typically appears in MASTER_SITE definitions.
 func (s *Suite) Test_MkLineChecker_CheckVaruse_eq_nonlist(c *check.C) {
 	t := s.Init(c)
@@ -412,4 +412,27 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse_eq_nonlist(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:2: The :from=to modifier should only be used with lists.")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
+	t := s.Init(c)
+
+	// XXX: This paragraph should not be necessary since VARBASE and X11_TYPE
+	// are also defined in vardefs.go.
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/defaults/mk.conf",
+		"VARBASE?= /usr/pkg/var")
+	G.Pkgsrc.LoadInfrastructure()
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+	mklines := t.SetupFileMkLines("options.mk",
+		MkRcsID,
+		"COMMENT=        ${VARBASE} ${X11_TYPE}",
+		"BUILD_DEFS+=    X11_TYPE")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
