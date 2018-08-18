@@ -27,13 +27,23 @@ type Suite struct {
 	Tester *Tester
 }
 
-// Init initializes the suite with the check.C instance for the actual
-// test run.
-// The returned tester can be used to easily setup the test environment
-// and check the results using a high-level API.
+// Init creates and returns a test helper that allows to:
 //
-// See https://github.com/go-check/check/issues/22
+// * create files for the test
+//
+// * load these files into Line and MkLine objects (for tests spanning multiple files)
+//
+// * create new in-memory Line and MkLine objects (for simple tests)
+//
+// * check the files that have been changed by the --autofix feature
+//
+// * check the pkglint diagnostics
 func (s *Suite) Init(c *check.C) *Tester {
+
+	// Note: the check.C object from SetUpTest cannot be used here,
+	// and the parameter given here cannot be used in TearDownTest;
+	// see https://github.com/go-check/check/issues/22.
+
 	t := s.Tester // Has been initialized by SetUpTest
 	if t.checkC != nil {
 		panic("Suite.Init must only be called once.")
