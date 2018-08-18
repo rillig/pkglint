@@ -362,7 +362,7 @@ func resolveVariableRefs(text string) string {
 					}
 				}
 				if G.Mk != nil {
-					if value, ok := G.Mk.VarValue(varname); ok {
+					if value, ok := G.Mk.vars.Value(varname); ok {
 						return value
 					}
 				}

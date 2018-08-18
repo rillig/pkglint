@@ -419,18 +419,18 @@ func NewScope() Scope {
 }
 
 // Define marks the variable and its canonicalized form as defined.
-func (s *Scope) Define(varname string, line MkLine) {
+func (s *Scope) Define(varname string, mkline MkLine) {
 	if s.defined[varname] == nil {
-		s.defined[varname] = line
+		s.defined[varname] = mkline
 		if trace.Tracing {
-			trace.Step2("Defining %q in line %s", varname, line.Linenos())
+			trace.Step2("Defining %q in line %s", varname, mkline.Linenos())
 		}
 	}
 	varcanon := varnameCanon(varname)
 	if varcanon != varname && s.defined[varcanon] == nil {
-		s.defined[varcanon] = line
+		s.defined[varcanon] = mkline
 		if trace.Tracing {
-			trace.Step2("Defining %q in line %s", varcanon, line.Linenos())
+			trace.Step2("Defining %q in line %s", varcanon, mkline.Linenos())
 		}
 	}
 }
@@ -490,12 +490,26 @@ func (s *Scope) UsedSimilar(varname string) bool {
 	return s.used[varnameCanon(varname)] != nil
 }
 
+// FirstDefinition returns the line in which the variable has been defined first.
+// Having multiple definitions is typical in the branches of "if" statements.
 func (s *Scope) FirstDefinition(varname string) MkLine {
-	return s.defined[varname]
+	mkline := s.defined[varname]
+	if mkline != nil && mkline.IsVarassign() {
+		return mkline
+	}
+	return nil // See NewPackage and G.Pkgsrc.UserDefinedVars
 }
 
 func (s *Scope) FirstUse(varname string) MkLine {
 	return s.used[varname]
+}
+
+func (s *Scope) Value(varname string) (value string, found bool) {
+	mkline := s.FirstDefinition(varname)
+	if mkline != nil {
+		return mkline.Value(), true
+	}
+	return "", false
 }
 
 // The MIT License (MIT)

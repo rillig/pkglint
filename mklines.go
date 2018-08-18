@@ -58,13 +58,6 @@ func (mklines *MkLines) UseVar(mkline MkLine, varname string) {
 	}
 }
 
-func (mklines *MkLines) VarValue(varname string) (value string, found bool) {
-	if mkline := mklines.vars.FirstDefinition(varname); mkline != nil {
-		return mkline.Value(), true
-	}
-	return "", false
-}
-
 func (mklines *MkLines) Check() {
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines[0].Filename)()

@@ -1,9 +1,5 @@
 package main
 
-import (
-	"netbsd.org/pkglint/textproc"
-)
-
 type ShTokenizer struct {
 	parser *Parser
 	mkp    *MkParser
@@ -15,6 +11,9 @@ func NewShTokenizer(line Line, text string, emitWarnings bool) *ShTokenizer {
 	return &ShTokenizer{p, mkp}
 }
 
+// ShAtom parses a basic building block of a shell program.
+// Examples for such atoms are: variable reference, operator, text, quote.
+//
 // See ShQuote.Feed
 func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 	if p.parser.EOF() {
@@ -298,12 +297,12 @@ func (p *ShTokenizer) ShToken() *ShToken {
 	}
 
 	repl := p.parser.repl
-	inimark := repl.Mark()
+	initialMark := repl.Mark()
 	var atoms []*ShAtom
 
 	for peek() != nil && peek().Type == shtSpace {
 		skip()
-		inimark = repl.Mark()
+		initialMark = repl.Mark()
 	}
 
 	if peek() == nil {
@@ -313,28 +312,20 @@ func (p *ShTokenizer) ShToken() *ShToken {
 		return NewShToken(atom.MkText, atom)
 	}
 
-nextatom:
+nextAtom:
 	mark := repl.Mark()
 	atom := peek()
 	if atom != nil && (atom.Type.IsWord() || atom.Quoting != shqPlain) {
 		skip()
 		atoms = append(atoms, atom)
-		goto nextatom
+		goto nextAtom
 	}
 	repl.Reset(mark)
 
 	if len(atoms) == 0 {
 		return nil
 	}
-	return NewShToken(repl.Since(inimark), atoms...)
-}
-
-func (p *ShTokenizer) Mark() textproc.PrefixReplacerMark {
-	return p.parser.repl.Mark()
-}
-
-func (p *ShTokenizer) Reset(mark textproc.PrefixReplacerMark) {
-	p.parser.repl.Reset(mark)
+	return NewShToken(repl.Since(initialMark), atoms...)
 }
 
 func (p *ShTokenizer) Rest() string {

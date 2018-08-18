@@ -64,8 +64,8 @@ func NewPackage(dir string) *Package {
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
 	}
-	for varname, line := range G.Pkgsrc.UserDefinedVars {
-		pkg.vars.Define(varname, line)
+	for varname, mkline := range G.Pkgsrc.UserDefinedVars {
+		pkg.vars.Define(varname, mkline)
 	}
 	return pkg
 }
@@ -481,11 +481,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 }
 
 func (pkg *Package) getNbpart() string {
-	line := pkg.vars.FirstDefinition("PKGREVISION")
-	if line == nil {
-		return ""
-	}
-	pkgrevision := line.Value()
+	pkgrevision, _ := pkg.vars.Value("PKGREVISION")
 	if rev, err := strconv.Atoi(pkgrevision); err == nil {
 		return "nb" + strconv.Itoa(rev)
 	}
@@ -876,15 +872,13 @@ func (pkg *Package) checkLocallyModified(fname string) {
 		defer trace.Call(fname)()
 	}
 
-	ownerLine := pkg.vars.FirstDefinition("OWNER")
-	maintainerLine := pkg.vars.FirstDefinition("MAINTAINER")
-	owner := ""
-	maintainer := ""
-	if ownerLine != nil && !containsVarRef(ownerLine.Value()) {
-		owner = ownerLine.Value()
+	owner, _ := pkg.vars.Value("OWNER")
+	maintainer, _ := pkg.vars.Value("MAINTAINER")
+	if containsVarRef(owner) {
+		owner = ""
 	}
-	if maintainerLine != nil && !containsVarRef(maintainerLine.Value()) && maintainerLine.Value() != "pkgsrc-users@NetBSD.org" {
-		maintainer = maintainerLine.Value()
+	if containsVarRef(maintainer) || maintainer == "pkgsrc-users@NetBSD.org" {
+		maintainer = ""
 	}
 	if owner == "" && maintainer == "" {
 		return
