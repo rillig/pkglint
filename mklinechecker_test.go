@@ -415,6 +415,13 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse_eq_nonlist(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 	t := s.Init(c)
 
+	// XXX: This paragraph should not be necessary since VARBASE and X11_TYPE
+	// are also defined in vardefs.go.
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/defaults/mk.conf",
+		"VARBASE?= /usr/pkg/var")
+	G.Pkgsrc.LoadInfrastructure()
+
 	t.SetupCommandLine("-Wall,no-space")
 	t.SetupVartypes()
 	mklines := t.SetupFileMkLines("options.mk",

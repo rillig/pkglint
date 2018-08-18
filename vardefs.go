@@ -20,8 +20,6 @@ import (
 // can be used in Makefiles without triggering warnings about typos.
 func (src *Pkgsrc) InitVartypes() {
 
-	dummyVardefMkline := NewMkLine(NewLineWhole("pkglint/vardefs.go"))
-
 	acl := func(varname string, kindOfList KindOfList, checker *BasicType, aclentries string) {
 		m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`)
 		varbase, varparam := m[1], m[2]
@@ -65,7 +63,6 @@ func (src *Pkgsrc) InitVartypes() {
 	}
 	usr := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk:; *: use-loadtime, use")
-		src.UserDefinedVars.Define(varname, dummyVardefMkline)
 	}
 	bl3list := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk: append")

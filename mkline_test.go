@@ -517,8 +517,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__package_options(c *check.C) {
 
 	MkLineChecker{G.Mk.mklines[1]}.Check()
 
-	t.CheckOutputLines(
-		"WARN: Makefile:2: The user-defined variable PKG_DEFAULT_OPTIONS is used but not added to BUILD_DEFS.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__MASTER_SITE_in_HOMEPAGE(c *check.C) {
