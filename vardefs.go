@@ -1112,28 +1112,11 @@ func enum(values string) *BasicType {
 		vmap[value] = true
 	}
 	name := "enum: " + values + " " // See IsEnum
-	return &BasicType{name, func(cv *VartypeCheck) {
-		if cv.Op == opUseMatch {
-			if !vmap[cv.Value] && cv.Value == cv.ValueNoVar {
-				canMatch := false
-				for value := range vmap {
-					if ok, err := path.Match(cv.Value, value); err != nil {
-						cv.Line.Warnf("Invalid match pattern %q.", cv.Value)
-					} else if ok {
-						canMatch = true
-					}
-				}
-				if !canMatch {
-					cv.Line.Warnf("The pattern %q cannot match any of { %s } for %s.", cv.Value, values, cv.Varname)
-				}
-			}
-			return
-		}
-
-		if cv.Value == cv.ValueNoVar && !vmap[cv.Value] {
-			cv.Line.Warnf("%q is not valid for %s. Use one of { %s } instead.", cv.Value, cv.Varname, values)
-		}
-	}}
+	basicType := &BasicType{name, nil}
+	basicType.checker = func(check *VartypeCheck) {
+		check.Enum(vmap, basicType)
+	}
+	return basicType
 }
 
 func parseACLEntries(varname string, aclentries string) []ACLEntry {

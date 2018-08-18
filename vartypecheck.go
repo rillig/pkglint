@@ -401,6 +401,29 @@ func (cv *VartypeCheck) EmulPlatform() {
 	}
 }
 
+func (cv *VartypeCheck) Enum(vmap map[string]bool, basicType *BasicType) {
+	if cv.Op == opUseMatch {
+		if !vmap[cv.Value] && cv.Value == cv.ValueNoVar {
+			canMatch := false
+			for value := range vmap {
+				if ok, err := path.Match(cv.Value, value); err != nil {
+					cv.Line.Warnf("Invalid match pattern %q.", cv.Value)
+				} else if ok {
+					canMatch = true
+				}
+			}
+			if !canMatch {
+				cv.Line.Warnf("The pattern %q cannot match any of { %s } for %s.", cv.Value, basicType.AllowedEnums(), cv.Varname)
+			}
+		}
+		return
+	}
+
+	if cv.Value == cv.ValueNoVar && !vmap[cv.Value] {
+		cv.Line.Warnf("%q is not valid for %s. Use one of { %s } instead.", cv.Value, cv.Varname, basicType.AllowedEnums())
+	}
+}
+
 func (cv *VartypeCheck) FetchURL() {
 	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 
