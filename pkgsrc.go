@@ -61,20 +61,53 @@ func NewPkgsrc(dir string) *Pkgsrc {
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
 	// BUILD_DEFS; therefore they are marked as "already added".
-	src.AddBuildDef("DISTDIR")
-	src.AddBuildDef("FETCH_CMD")
-	src.AddBuildDef("FETCH_OUTPUT_ARGS")
+	src.AddBuildDefs("DISTDIR", "FETCH_CMD", "FETCH_OUTPUT_ARGS")
 
-	// The following variables are not expected to be modified
-	// by the pkgsrc user. They are added here to prevent unnecessary
-	// warnings by pkglint.
-	src.AddBuildDef("GAMES_USER")
-	src.AddBuildDef("GAMES_GROUP")
-	src.AddBuildDef("GAMEDATAMODE")
-	src.AddBuildDef("GAMEDIRMODE")
-	src.AddBuildDef("GAMEMODE")
-	src.AddBuildDef("GAMEOWN")
-	src.AddBuildDef("GAMEGRP")
+	// The following variables are added to _BUILD_DEFS by the pkgsrc
+	// infrastructure and thus don't need to be added by the package again.
+	// To regenerate the below list:
+	//  grep -hr '^_BUILD_DEFS+=' mk/ | tr ' \t' '\n\n' | sed -e 's,.*=,,' -e '/^_/d' -e '/^$/d' -e 's,.*,"&"\,,' | sort -u
+	src.AddBuildDefs("PKG_HACKS")
+	src.AddBuildDefs(
+		"ABI",
+		"BUILTIN_PKGS",
+		"CFLAGS",
+		"CMAKE_ARGS",
+		"CONFIGURE_ARGS",
+		"CONFIGURE_ENV",
+		"CPPFLAGS",
+		"FFLAGS",
+		"GAMEDATAMODE",
+		"GAMEDIRMODE",
+		"GAMEMODE",
+		"GAMES_GROUP",
+		"GAMES_USER",
+		"GLIBC_VERSION",
+		"INIT_SYSTEM",
+		"LDFLAGS",
+		"LICENSE",
+		"LOCALBASE",
+		"MACHINE_ARCH",
+		"MACHINE_GNU_ARCH",
+		"MULTI",
+		"NO_BIN_ON_CDROM",
+		"NO_BIN_ON_FTP",
+		"NO_SRC_ON_CDROM",
+		"NO_SRC_ON_FTP",
+		"OBJECT_FMT",
+		"OPSYS",
+		"OS_VERSION",
+		"OSVERSION_SPECIFIC",
+		"PKG_HACKS",
+		"PKG_OPTIONS",
+		"PKG_SYSCONFBASEDIR",
+		"PKG_SYSCONFDIR",
+		"PKGGNUDIR",
+		"PKGINFODIR",
+		"PKGMANDIR",
+		"PKGPATH",
+		"RESTRICTED",
+		"USE_ABI_DEPENDS")
 
 	return src
 }
@@ -202,7 +235,7 @@ func (src *Pkgsrc) loadTools() {
 
 				} else if varname == "_BUILD_DEFS" {
 					for _, bdvar := range splitOnSpace(value) {
-						src.AddBuildDef(bdvar)
+						src.AddBuildDefs(bdvar)
 					}
 				}
 
@@ -558,8 +591,10 @@ func (src *Pkgsrc) ToRel(fileName string) string {
 	return relpath(src.topdir, fileName)
 }
 
-func (src *Pkgsrc) AddBuildDef(varname string) {
-	src.buildDefs[varname] = true
+func (src *Pkgsrc) AddBuildDefs(varnames ...string) {
+	for _, varname := range varnames {
+		src.buildDefs[varname] = true
+	}
 }
 
 func (src *Pkgsrc) IsBuildDef(varname string) bool {
