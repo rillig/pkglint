@@ -398,7 +398,7 @@ func (s *Suite) Test_MkLines_Check_indentation(c *check.C) {
 
 	mklines.Check()
 
-	t.CheckOutputLines(""+
+	t.CheckOutputLines(
 		"NOTE: options.mk:2: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:3: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:4: This directive should be indented by 2 spaces.",
@@ -446,11 +446,29 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 	// See MkLineChecker.checkDirective
 	mklines.Check()
 
-	t.CheckOutputLines(""+
+	t.CheckOutputLines(
 		"WARN: opsys.mk:7: Comment \"ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
 		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition \"${ARCH} == x86_64\".",
 		"WARN: opsys.mk:10: Comment \"j\" does not match loop \"i in 1 2 3 4 5\".",
 		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".")
+}
+
+func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	mklines := t.NewMkLines("opsys.mk",
+		MkRcsID,
+		"",
+		".for i in 1 2 3 4 5",
+		".  if ${OPSYS} == NetBSD",
+		".    if ${ARCH} == x86_64",
+		".      if ${OS_VERSION:M8.*}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: opsys.mk:6: Directive indentation is not 0, but 8.")
 }
 
 // Demonstrates how to define your own make(1) targets for creating
