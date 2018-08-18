@@ -44,3 +44,14 @@ func (s *Suite) Test_AclPermissions_String(c *check.C) {
 	c.Check(aclpAll.String(), equals, "set, set-default, append, use-loadtime, use")
 	c.Check(aclpUnknown.String(), equals, "unknown")
 }
+
+func (s *Suite) Test_Vartype_IsConsideredList(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	c.Check(G.Pkgsrc.VariableType("COMMENT").IsConsideredList(), equals, false)
+	c.Check(G.Pkgsrc.VariableType("DEPENDS").IsConsideredList(), equals, false)
+	c.Check(G.Pkgsrc.VariableType("PKG_FAIL_REASON").IsConsideredList(), equals, true)
+	c.Check(G.Pkgsrc.VariableType("CONF_FILES").IsConsideredList(), equals, true)
+}
