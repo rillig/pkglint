@@ -117,6 +117,10 @@ func main() {
 
 // Main runs the main program with the given arguments.
 // argv[0] is the program name.
+//
+// Note: during tests, calling this method disables tracing
+// because the command line option --debug sets trace.Tracing
+// back to false.
 func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	defer func() {
 		if r := recover(); r != nil {

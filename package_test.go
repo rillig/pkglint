@@ -372,7 +372,9 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t.CreateFileLines("category/pkgbase/distinfo",
 		RcsID)
 
-	G.Main("pkglint", "-q", "-Wperm", t.File("category/pkgbase"))
+	t.SetupCommandLine("-q", "-Wperm")
+	G.Pkgsrc.LoadInfrastructure()
+	G.CheckDirent(t.File("category/pkgbase"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/pkgbase/Makefile:8: To use the tool \"FALSE\" at load time, bsd.prefs.mk has to be included before.",
