@@ -323,16 +323,32 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 	mklines := t.NewMkLines("determine-defined-variables.mk",
 		MkRcsID,
 		"",
-		"USE_TOOLS+= autoconf213 autoconf",
+		"USE_TOOLS+=             autoconf213 autoconf",
+		"",
+		"OPSYSVARS+=             OSV",
+		"OSV.NetBSD=             NetBSD-specific value",
+		"",
+		"SUBST_CLASSES+=         subst",
+		"SUBST_STAGE.subst=      pre-configure",
+		"SUBST_FILES.subst=      file",
+		"SUBST_VARS.subst=       SUV",
+		"SUV=                    value for substitution",
 		"",
 		"pre-configure:",
-		"\t${RUN} autoreconf; autoheader-2.13; unknown-command")
+		"\t${RUN} autoreconf; autoheader-2.13; unknown-command",
+		"\t${ECHO} ${OSV:Q}")
 
 	mklines.Check()
 
 	// The tools autoreconf and autoheader213 are known at this point because of the USE_TOOLS line.
+	// The SUV variable is used implicitly by the SUBST framework, therefore no warning.
+	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
 	t.CheckOutputLines(
-		"WARN: determine-defined-variables.mk:6: Unknown shell command \"unknown-command\".")
+		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files, maybe except buildlink3.mk.
+		"WARN: determine-defined-variables.mk:11: The variable SUBST_VARS.subst may not be set (only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
+		// FIXME: the below warning is wrong; variables mentioned in SUBST_VARS should be allowed in that block.
+		"WARN: determine-defined-variables.mk:12: Foreign variable \"SUV\" in SUBST block.",
+		"WARN: determine-defined-variables.mk:15: Unknown shell command \"unknown-command\".")
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
