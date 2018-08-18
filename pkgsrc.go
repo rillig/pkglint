@@ -503,7 +503,7 @@ func (src *Pkgsrc) initDeprecatedVars() {
 		"LICENCE":     "Use LICENSE instead.",
 
 		// November 2007
-		//USE_NCURSES		Include "../../devel/ncurses/buildlink3.mk" instead.
+		//USE_NCURSES: Include "../../devel/ncurses/buildlink3.mk" instead.
 
 		// December 2007
 		"INSTALLATION_DIRS_FROM_PLIST": "Use AUTO_MKDIRS instead.",
@@ -605,6 +605,86 @@ func (src *Pkgsrc) loadPkgOptions() {
 			line.Fatalf("Unknown line format.")
 		}
 	}
+}
+
+// VariableType returns the type of the variable
+// (possibly guessed based on the variable name),
+// or nil if the type cannot even be guessed.
+func (src *Pkgsrc) VariableType(varname string) *Vartype {
+	if trace.Tracing {
+		defer trace.Call1(varname)()
+	}
+
+	if vartype := src.vartypes[varname]; vartype != nil {
+		return vartype
+	}
+	if vartype := src.vartypes[varnameCanon(varname)]; vartype != nil {
+		return vartype
+	}
+
+	if tool := src.Tools.ByVarname(varname); tool != nil {
+		perms := aclpUse
+		if trace.Tracing {
+			trace.Stepf("Use of tool %+v", tool)
+		}
+		if tool.UsableAtLoadTime {
+			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.loadTimeTools[tool.Name] {
+				perms |= aclpUseLoadtime
+			}
+		}
+		return &Vartype{lkNone, BtShellCommand, []ACLEntry{{"*", perms}}, false}
+	}
+
+	m, toolvarname := match1(varname, `^TOOLS_(.*)`)
+	if m && src.Tools.ByVarname(toolvarname) != nil {
+		return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
+	}
+
+	allowAll := []ACLEntry{{"*", aclpAll}}
+	allowRuntime := []ACLEntry{{"*", aclpAllRuntime}}
+
+	// Guess the data type of the variable based on naming conventions.
+	varbase := varnameBase(varname)
+	var gtype *Vartype
+	switch {
+	case hasSuffix(varbase, "DIRS"):
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
+	case hasSuffix(varbase, "DIR") && !hasSuffix(varbase, "DESTDIR"), hasSuffix(varname, "_HOME"):
+		gtype = &Vartype{lkNone, BtPathname, allowRuntime, true}
+	case hasSuffix(varbase, "FILES"):
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
+	case hasSuffix(varbase, "FILE"):
+		gtype = &Vartype{lkNone, BtPathname, allowRuntime, true}
+	case hasSuffix(varbase, "PATH"):
+		gtype = &Vartype{lkNone, BtPathlist, allowRuntime, true}
+	case hasSuffix(varbase, "PATHS"):
+		gtype = &Vartype{lkShell, BtPathname, allowRuntime, true}
+	case hasSuffix(varbase, "_USER"):
+		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, true}
+	case hasSuffix(varbase, "_GROUP"):
+		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, true}
+	case hasSuffix(varbase, "_ENV"):
+		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, true}
+	case hasSuffix(varbase, "_CMD"):
+		gtype = &Vartype{lkNone, BtShellCommand, allowRuntime, true}
+	case hasSuffix(varbase, "_ARGS"):
+		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, true}
+	case hasSuffix(varbase, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"):
+		gtype = &Vartype{lkShell, BtCFlag, allowRuntime, true}
+	case hasSuffix(varname, "_LDFLAGS"):
+		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, true}
+	case hasSuffix(varbase, "_MK"):
+		gtype = &Vartype{lkNone, BtUnknown, allowAll, true}
+	}
+
+	if trace.Tracing {
+		if gtype != nil {
+			trace.Step2("The guessed type of %q is %q.", varname, gtype.String())
+		} else {
+			trace.Step1("No type definition found for %q.", varname)
+		}
+	}
+	return gtype
 }
 
 // Change is a change entry from the `doc/CHANGES-*` files.

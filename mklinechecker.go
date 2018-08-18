@@ -199,7 +199,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		guessed := true
 		for _, value := range splitOnSpace(values) {
 			if m, vname := match1(value, `^\$\{(.*)\}`); m {
-				vartype := mkline.VariableType(vname)
+				vartype := G.Pkgsrc.VariableType(vname)
 				if vartype != nil && !vartype.guessed {
 					guessed = false
 				}
@@ -279,7 +279,7 @@ func (ck MkLineChecker) checkVarassignDefPermissions() {
 	mkline := ck.MkLine
 	varname := mkline.Varname()
 	op := mkline.Op()
-	vartype := mkline.VariableType(varname)
+	vartype := G.Pkgsrc.VariableType(varname)
 	if vartype == nil {
 		if trace.Tracing {
 			trace.Step1("No type definition found for %q.", varname)
@@ -341,7 +341,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 
 	varname := varuse.varname
-	vartype := mkline.VariableType(varname)
+	vartype := G.Pkgsrc.VariableType(varname)
 	switch {
 	case !G.opts.WarnExtra:
 	case vartype != nil && !vartype.guessed:
@@ -773,7 +773,7 @@ func (ck MkLineChecker) checkVarassignVaruse() {
 		time = vucTimeParse
 	}
 
-	vartype := mkline.VariableType(mkline.Varname())
+	vartype := G.Pkgsrc.VariableType(mkline.Varname())
 	if op == opAssignShell {
 		vartype = shellcommandsContextType
 	}
@@ -934,7 +934,7 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 	}
 
 	mkline := ck.MkLine
-	vartype := mkline.VariableType(varname)
+	vartype := G.Pkgsrc.VariableType(varname)
 
 	if op == opAssignAppend {
 		if vartype != nil && !vartype.MayBeAppendedTo() {
@@ -1070,7 +1070,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 				ck.CheckVartype(varname, opUseMatch, modifier[1:], "")
 
 				value := modifier[1:]
-				vartype := mkline.VariableType(varname)
+				vartype := G.Pkgsrc.VariableType(varname)
 				if matches(value, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
 					mkline.Notef("%s should be compared using == instead of the :M or :N modifier without wildcards.", varname)
 					Explain(

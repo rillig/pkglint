@@ -222,15 +222,14 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 func (s *Suite) Test_MkLine_VariableType_varparam(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("fname", 1, "# dummy")
 	t.SetupVartypes()
 
-	t1 := mkline.VariableType("FONT_DIRS")
+	t1 := G.Pkgsrc.VariableType("FONT_DIRS")
 
 	c.Assert(t1, check.NotNil)
 	c.Check(t1.String(), equals, "ShellList of Pathmask (guessed)")
 
-	t2 := mkline.VariableType("FONT_DIRS.ttf")
+	t2 := G.Pkgsrc.VariableType("FONT_DIRS.ttf")
 
 	c.Assert(t2, check.NotNil)
 	c.Check(t2.String(), equals, "ShellList of Pathmask (guessed)")
@@ -240,8 +239,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mkline := t.NewMkLine("fname", 1, "# dummy")
-	vartype := mkline.VariableType("PKGNAME")
+	vartype := G.Pkgsrc.VariableType("PKGNAME")
 	vuc := &VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, false}
 
 	c.Check(vuc.String(), equals, "(PkgName time:unknown quoting:backt wordpart:false)")
@@ -847,7 +845,7 @@ func (s *Suite) Test_MkLine_VariableType(c *check.C) {
 	t.SetupVartypes()
 
 	checkType := func(varname string, vartype string) {
-		actualType := dummyMkLine.VariableType(varname)
+		actualType := G.Pkgsrc.VariableType(varname)
 		if vartype == "" {
 			c.Check(actualType, check.IsNil)
 		} else {

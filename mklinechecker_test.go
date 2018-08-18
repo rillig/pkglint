@@ -7,23 +7,22 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
 
 	t.SetupCommandLine("-Wtypes")
 	t.SetupVartypes()
-	mkline := t.NewMkLine("fname", 1, "COMMENT=\tA nice package")
 
 	vartype1 := G.Pkgsrc.vartypes["COMMENT"]
 	c.Assert(vartype1, check.NotNil)
 	c.Check(vartype1.guessed, equals, false)
 
-	vartype := mkline.VariableType("COMMENT")
+	vartype := G.Pkgsrc.VariableType("COMMENT")
 
 	c.Assert(vartype, check.NotNil)
 	c.Check(vartype.basicType.name, equals, "Comment")
 	c.Check(vartype.guessed, equals, false)
 	c.Check(vartype.kindOfList, equals, lkNone)
 
-	MkLineChecker{mkline}.CheckVartype("COMMENT", opAssign, "A nice package", "")
+	MkLineChecker{dummyMkLine}.CheckVartype("COMMENT", opAssign, "A nice package", "")
 
 	t.CheckOutputLines(
-		"WARN: fname:1: COMMENT should not begin with \"A\".")
+		"WARN: COMMENT should not begin with \"A\".")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVartype(c *check.C) {
