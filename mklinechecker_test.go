@@ -146,14 +146,14 @@ func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 		"WARN: Makefile:2: ac_cv_libpari_libs is defined but not used.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarassignPermissions(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mkline := t.NewMkLine("options.mk", 2, "PKG_DEVELOPER?=\tyes")
 
-	MkLineChecker{mkline}.checkVarassignDefPermissions()
+	MkLineChecker{mkline}.checkVarassignPermissions()
 
 	t.CheckOutputLines(
 		"WARN: options.mk:2: The variable PKG_DEVELOPER may not be given a default value by any package.")

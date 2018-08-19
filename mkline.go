@@ -278,14 +278,14 @@ func (mkline *MkLineImpl) SetConditionalVars(varnames string) {
 // Example:
 //  input:  ${PREFIX}/bin abc
 //  output: [MkToken("${PREFIX}", MkVarUse("PREFIX")), MkToken("/bin abc")]
-func (mkline *MkLineImpl) Tokenize(s string) []*MkToken {
+func (mkline *MkLineImpl) Tokenize(s string, warn bool) []*MkToken {
 	if trace.Tracing {
 		defer trace.Call(mkline, s)()
 	}
 
 	p := NewMkParser(mkline.Line, s, true)
 	tokens := p.MkTokens()
-	if p.Rest() != "" {
+	if warn && p.Rest() != "" {
 		mkline.Warnf("Pkglint parse error in MkLine.Tokenize at %q.", p.Rest())
 	}
 	return tokens
@@ -298,7 +298,7 @@ func (mkline *MkLineImpl) Tokenize(s string) []*MkToken {
 //
 // If the separator is empty, splitting is done on whitespace.
 func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
-	tokens := mkline.Tokenize(value)
+	tokens := mkline.Tokenize(value, false)
 	var split []string
 	for _, token := range tokens {
 		if split == nil {
@@ -318,6 +318,10 @@ func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
 		}
 	}
 	return split
+}
+
+func (mkline *MkLineImpl) ValueTokens() []*MkToken {
+	return mkline.Tokenize(mkline.Value(), false)
 }
 
 func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {

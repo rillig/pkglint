@@ -101,7 +101,7 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsVarassign():
 			mklines.target = ""
-			mkline.Tokenize(mkline.Value()) // Just for the side-effect of the warning.
+			mkline.Tokenize(mkline.Value(), true) // Just for the side-effect of the warnings.
 			substcontext.Varassign(mkline)
 
 			switch mkline.Varcanon() {
@@ -139,7 +139,7 @@ func (mklines *MkLines) Check() {
 			mklines.target = mkline.Targets()
 
 		case mkline.IsShellCommand():
-			mkline.Tokenize(mkline.ShellCommand())
+			mkline.Tokenize(mkline.ShellCommand(), true) // Just for the side-effect of the warnings.
 		}
 
 		return true

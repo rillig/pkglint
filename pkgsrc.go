@@ -645,9 +645,9 @@ func (src *Pkgsrc) loadPkgOptions() {
 // VariableType returns the type of the variable
 // (possibly guessed based on the variable name),
 // or nil if the type cannot even be guessed.
-func (src *Pkgsrc) VariableType(varname string) *Vartype {
+func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 	if trace.Tracing {
-		defer trace.Call1(varname)()
+		defer trace.Call(varname, trace.Result(&vartype))()
 	}
 
 	if vartype := src.vartypes[varname]; vartype != nil {

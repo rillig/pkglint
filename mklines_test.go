@@ -346,7 +346,6 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
 	t.CheckOutputLines(
 		// FIXME: For most lists, using the := operator to exclude an item is ok.
-		"WARN: determine-defined-variables.mk:4: The variable USE_TOOLS may not be set (only appended to) in this file.",
 		"WARN: determine-defined-variables.mk:4: USE_TOOLS should not be evaluated at load time.",
 		"WARN: determine-defined-variables.mk:4: USE_TOOLS may not be used in any file; it is a write-only variable.",
 		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files, maybe except buildlink3.mk.

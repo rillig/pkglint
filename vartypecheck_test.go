@@ -175,7 +175,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	runChecks := func(values ...string) {
 		for i, value := range values {
 			mkline := t.NewMkLine(G.Pkg.File("fname.mk"), i+1, "DEPENDS+=\t"+value)
-			mkline.Tokenize(mkline.Value())
+			mkline.Tokenize(mkline.Value(), true)
 			valueNovar := mkline.WithoutMakeVariables(mkline.Value())
 			vc := &VartypeCheck{mkline, mkline.Line, mkline.Varname(), mkline.Op(), mkline.Value(), valueNovar, "", false}
 			(*VartypeCheck).DependencyWithPath(vc)
@@ -701,7 +701,7 @@ func runVartypeChecks(t *Tester, varname string, op MkOperator, checker func(*Va
 	}
 	for i, value := range values {
 		mkline := t.NewMkLine("fname", i+1, varname+op.String()+value)
-		mkline.Tokenize(mkline.Value())
+		mkline.Tokenize(mkline.Value(), true)
 		valueNovar := mkline.WithoutMakeVariables(mkline.Value())
 		vc := &VartypeCheck{mkline, mkline.Line, mkline.Varname(), mkline.Op(), mkline.Value(), valueNovar, "", false}
 		checker(vc)

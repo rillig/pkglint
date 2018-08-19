@@ -268,7 +268,11 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 	}
 }
 
-func (ck MkLineChecker) checkVarassignDefPermissions() {
+// checkVarassignPermissions checks the permissions for the left-hand side
+// of a variable assignment line.
+//
+// See checkVarusePermissions.
+func (ck MkLineChecker) checkVarassignPermissions() {
 	if !G.opts.WarnPerm || G.Infrastructure {
 		return
 	}
@@ -288,6 +292,15 @@ func (ck MkLineChecker) checkVarassignDefPermissions() {
 	}
 
 	perms := vartype.EffectivePermissions(mkline.Filename)
+
+	// E.g. USE_TOOLS:= ${USE_TOOLS:Nunwanted-tool}
+	if op == opAssignEval && perms&aclpAppend != 0 {
+		tokens := mkline.ValueTokens()
+		if len(tokens) == 1 && tokens[0].Varuse != nil && tokens[0].Varuse.varname == varname {
+			return
+		}
+	}
+
 	var needed ACLPermissions
 	switch op {
 	case opAssign, opAssignShell, opAssignEval:
@@ -365,7 +378,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 			"This is a much clearer expression of the same thought.")
 	}
 
-	ck.CheckVarusePermissions(varname, vartype, vuc)
+	ck.checkVarusePermissions(varname, vartype, vuc)
 
 	if varname == "LOCALBASE" && !G.Infrastructure {
 		ck.WarnVaruseLocalbase()
@@ -392,7 +405,11 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 }
 
-func (ck MkLineChecker) CheckVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
+// checkVarusePermissions checks the permissions for the right-hand side
+// of a variable assignment line.
+//
+// See checkVarassignPermissions.
+func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
 	if !G.opts.WarnPerm {
 		return
 	}
@@ -697,7 +714,7 @@ func (ck MkLineChecker) checkVarassign() {
 	}
 
 	defineVar(mkline, varname)
-	ck.checkVarassignDefPermissions()
+	ck.checkVarassignPermissions()
 	ck.checkVarassignBsdPrefs()
 
 	ck.checkText(value)
