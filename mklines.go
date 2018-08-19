@@ -216,7 +216,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 
 		case "USE_TOOLS":
-			tools := mkline.Value()
+			tools := mkline.WithoutMakeVariables(mkline.Value())
 			if matches(tools, `\bautoconf213\b`) {
 				tools += " autoconf autoheader-2.13 autom4te-2.13 autoreconf-2.13 autoscan-2.13 autoupdate-2.13 ifnames-2.13"
 			}

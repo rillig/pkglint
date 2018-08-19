@@ -324,6 +324,7 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 		MkRcsID,
 		"",
 		"USE_TOOLS+=             autoconf213 autoconf",
+		"USE_TOOLS:=             ${USE_TOOLS:Ntbl}",
 		"",
 		"OPSYSVARS+=             OSV",
 		"OSV.NetBSD=             NetBSD-specific value",
@@ -344,11 +345,16 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 	// The SUV variable is used implicitly by the SUBST framework, therefore no warning.
 	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
 	t.CheckOutputLines(
+		// FIXME: For most lists, using the := operator to exclude an item is ok.
+		"WARN: determine-defined-variables.mk:4: The variable USE_TOOLS may not be set (only appended to) in this file.",
+		"WARN: determine-defined-variables.mk:4: USE_TOOLS should not be evaluated at load time.",
+		"WARN: determine-defined-variables.mk:4: USE_TOOLS may not be used in any file; it is a write-only variable.",
 		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files, maybe except buildlink3.mk.
-		"WARN: determine-defined-variables.mk:11: The variable SUBST_VARS.subst may not be set (only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
+		"WARN: determine-defined-variables.mk:12: The variable SUBST_VARS.subst may not be set (only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
 		// FIXME: the below warning is wrong; variables mentioned in SUBST_VARS should be allowed in that block.
-		"WARN: determine-defined-variables.mk:12: Foreign variable \"SUV\" in SUBST block.",
-		"WARN: determine-defined-variables.mk:15: Unknown shell command \"unknown-command\".")
+		"WARN: determine-defined-variables.mk:13: Foreign variable \"SUV\" in SUBST block.",
+		"WARN: determine-defined-variables.mk:16: Unknown shell command \"unknown-command\".")
+
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
