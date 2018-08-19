@@ -162,6 +162,8 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		&mkCond{Not: &mkCond{Empty: varuse("VARNAME")}})
 	check("!empty(VARNAME:M[yY][eE][sS])",
 		&mkCond{Not: &mkCond{Empty: varuse("VARNAME", "M[yY][eE][sS]")}})
+	check("!empty(USE_TOOLS:Mautoconf\\:run)",
+		&mkCond{Not: &mkCond{Empty: varuse("USE_TOOLS", "Mautoconf:run")}})
 	check("${VARNAME} != \"Value\"",
 		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
 	check("${VARNAME:Mi386} != \"Value\"",
