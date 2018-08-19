@@ -449,9 +449,32 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		isIndirect = true
 	}
 
+	ck.checkToolUseLoadTime(varname, isLoadTime, isIndirect)
+
+	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
+		needed := aclpUse
+		if isLoadTime {
+			needed = aclpUseLoadtime
+		}
+		alternativeFiles := vartype.AllowedFiles(needed)
+		if alternativeFiles != "" {
+			mkline.Warnf("%s may not be used in this file; it would be ok in %s.",
+				varname, alternativeFiles)
+		} else {
+			mkline.Warnf("%s may not be used in any file; it is a write-only variable.", varname)
+		}
+		Explain(
+			"The allowed actions for a variable are determined based on the file",
+			"name in which the variable is used or defined.  The exact rules are",
+			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
+			"on the tech-pkg@NetBSD.org mailing list.")
+	}
+}
+
+func (ck MkLineChecker) checkToolUseLoadTime(varname string, isLoadTime bool, isIndirect bool) {
+	mkline := ck.MkLine
 	done := false
 	tool, usable := G.ToolByVarname(varname)
-
 	if isLoadTime && tool != nil {
 		done = usable && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk)
 
@@ -471,7 +494,6 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 			}
 		}
 	}
-
 	if !done && isLoadTime && !isIndirect {
 		mkline.Warnf("%s should not be evaluated at load time.", varname)
 		Explain(
@@ -486,7 +508,6 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 			"variables or regular expressions are modified in a subtle way.")
 		done = true
 	}
-
 	if !done && isLoadTime && isIndirect {
 		mkline.Warnf("%s should not be evaluated indirectly at load time.", varname)
 		Explain(
@@ -495,25 +516,6 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 			"assignment in this line, the variable might be used indirectly",
 			"at load time, before it is guaranteed to be properly initialized.")
 		done = true
-	}
-
-	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
-		needed := aclpUse
-		if isLoadTime {
-			needed = aclpUseLoadtime
-		}
-		alternativeFiles := vartype.AllowedFiles(needed)
-		if alternativeFiles != "" {
-			mkline.Warnf("%s may not be used in this file; it would be ok in %s.",
-				varname, alternativeFiles)
-		} else {
-			mkline.Warnf("%s may not be used in any file; it is a write-only variable.", varname)
-		}
-		Explain(
-			"The allowed actions for a variable are determined based on the file",
-			"name in which the variable is used or defined.  The exact rules are",
-			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
-			"on the tech-pkg@NetBSD.org mailing list.")
 	}
 }
 
