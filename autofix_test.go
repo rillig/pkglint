@@ -469,6 +469,8 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	fix.InsertBefore("before")
 	fix.InsertAfter("after")
 	fix.Delete()
+	fix.Custom(func(printAutofix, autofix bool) {})
+	fix.Realign(dummyMkLine, 32)
 	fix.Apply()
 
 	SaveAutofixChanges(lines)
