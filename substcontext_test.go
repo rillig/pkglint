@@ -102,11 +102,11 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 		"13: SUBST_SED.one=          s,one,1,g",
 		"14: SUBST_STAGE.two=        post-configure",
 		"15: SUBST_FILES.two=        two.txt",
-		"16: SUBST_SED.two=          s,two,2,g",
 		"17: ")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:10: Please add only one class at a time to SUBST_CLASSES.")
+		"WARN: Makefile:10: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: Makefile:17: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
