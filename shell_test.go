@@ -135,7 +135,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 		"WARN: fname:1: Unknown shell command \"echo\".",
 		"WARN: fname:1: Unknown shell command \"echo\".")
 
-	t.SetupTool(&Tool{Name: "echo", Predefined: true})
+	t.SetupToolUsable("echo", "")
 	t.SetupVartypes()
 
 	checkShellCommandLine("echo ${PKGNAME:Q}") // vucQuotPlain
@@ -295,7 +295,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__nofix(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupTool(&Tool{Name: "echo", Predefined: true})
+	t.SetupToolUsable("echo", "")
 	G.Mk = t.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
@@ -311,7 +311,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__show_autofix(c *check.C) {
 
 	t.SetupCommandLine("-Wall", "--show-autofix")
 	t.SetupVartypes()
-	t.SetupTool(&Tool{Name: "echo", Predefined: true})
+	t.SetupToolUsable("echo", "")
 	G.Mk = t.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
@@ -329,11 +329,11 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__exitcode(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupTool(&Tool{Name: "cat", Predefined: true})
-	t.SetupTool(&Tool{Name: "echo", Predefined: true})
-	t.SetupTool(&Tool{Name: "printf", Predefined: true})
-	t.SetupTool(&Tool{Name: "sed", Predefined: true})
-	t.SetupTool(&Tool{Name: "right-side", Predefined: true})
+	t.SetupToolUsable("cat", "")
+	t.SetupToolUsable("echo", "")
+	t.SetupToolUsable("printf", "")
+	t.SetupToolUsable("sed", "")
+	t.SetupToolUsable("right-side", "")
 	G.Mk = t.NewMkLines("Makefile",
 		"\t echo | right-side",
 		"\t sed s,s,s, | right-side",
@@ -362,7 +362,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
 
 	t.SetupCommandLine("-Wall", "--autofix")
 	t.SetupVartypes()
-	t.SetupTool(&Tool{Name: "echo", Predefined: true})
+	t.SetupToolUsable("echo", "")
 	G.Mk = t.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
 	shline := NewShellLine(G.Mk.mklines[0])
@@ -420,7 +420,7 @@ func (s *Suite) Test_ShellLine_CheckShelltext__dollar_without_variable(c *check.
 		"# dummy")
 	shline := NewShellLine(G.Mk.mklines[0])
 	t.SetupTool(&Tool{Name: "pax", Varname: "PAX"})
-	G.Mk.Tools.Register("pax", nil)
+	G.Mk.Tools.DefineName("pax", nil)
 
 	shline.CheckShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 
@@ -492,7 +492,9 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
-	t.SetupTool(&Tool{Name: "echo", Varname: "ECHO", MustUseVarForm: true, Predefined: true})
+	echo := &Tool{Name: "echo", Varname: "ECHO", MustUseVarForm: true}
+	t.SetupTool(echo)
+	G.Pkgsrc.Tools.MakeUsable(echo)
 	G.Mk = t.NewMkLines("fname",
 		"# dummy")
 	mkline := t.NewMkLine("fname", 3, "# dummy")

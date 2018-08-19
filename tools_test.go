@@ -5,7 +5,7 @@ import "gopkg.in/check.v1"
 func (s *Suite) Test_ToolRegistry_ParseToolLine(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupTool(&Tool{Name: "tool1", Predefined: true})
+	t.SetupToolUsable("tool1", "")
 	t.SetupVartypes()
 	t.SetupFileLines("Makefile",
 		MkRcsID,
@@ -23,7 +23,7 @@ func (s *Suite) Test_ToolRegistry_validateToolName__invalid(c *check.C) {
 
 	reg := NewToolRegistry()
 
-	reg.Register("tool_name", dummyMkLine)
+	reg.DefineName("tool_name", dummyMkLine)
 
 	// Currently, the underscore is not used in any tool name.
 	// If there should ever be such a case, just use a different character.

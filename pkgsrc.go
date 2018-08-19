@@ -20,7 +20,7 @@ type Pkgsrc struct {
 	// within the bsd.pkg.mk file.
 	buildDefs map[string]bool
 
-	Tools ToolRegistry
+	Tools Tools
 
 	MasterSiteURLToVar map[string]string // "https://github.com/" => "MASTER_SITE_GITHUB"
 	MasterSiteVarToURL map[string]string // "MASTER_SITE_GITHUB" => "https://github.com/"
@@ -196,11 +196,16 @@ func (src *Pkgsrc) loadTools() {
 	}
 
 	reg := src.Tools
-	reg.RegisterTool(&Tool{"echo", "ECHO", true, true, true}, dummyMkLine)
-	reg.RegisterTool(&Tool{"echo -n", "ECHO_N", true, true, true}, dummyMkLine)
-	reg.RegisterTool(&Tool{"false", "FALSE", true /*why?*/, true, false}, dummyMkLine)
-	reg.RegisterTool(&Tool{"test", "TEST", true, true, true}, dummyMkLine)
-	reg.RegisterTool(&Tool{"true", "TRUE", true /*why?*/, true, true}, dummyMkLine)
+	for _, tool := range []*Tool{
+		{"echo", "ECHO", true, true},
+		{"echo -n", "ECHO_N", true, true},
+		{"false", "FALSE", true /*why?*/, false},
+		{"test", "TEST", true, true},
+		{"true", "TRUE", true /*why?*/, true}} {
+
+		reg.DefineTool(tool, dummyMkLine)
+		reg.MakeUsable(tool)
+	}
 
 	for _, basename := range toolFiles {
 		mklines := G.Pkgsrc.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
@@ -224,8 +229,8 @@ func (src *Pkgsrc) loadTools() {
 					if dirDepth == 0 || dirDepth == 1 && relativeName == "mk/bsd.prefs.mk" {
 						for _, toolname := range splitOnSpace(value) {
 							if !containsVarRef(toolname) {
-								tool := reg.Register(toolname, mkline)
-								tool.Predefined = true
+								tool := reg.DefineName(toolname, mkline)
+								reg.MakeUsable(tool)
 								if relativeName == "mk/bsd.prefs.mk" {
 									tool.UsableAtLoadTime = true
 								}

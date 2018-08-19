@@ -17,7 +17,7 @@ type MkLines struct {
 	plistVarAdded  map[string]MkLine // Identifiers that are added to PLIST_VARS.
 	plistVarSet    map[string]MkLine // Identifiers for which PLIST.${id} is defined.
 	plistVarSkip   bool              // True if any of the PLIST_VARS identifiers refers to a variable.
-	Tools          ToolRegistry      // Tools defined in file scope.
+	Tools          Tools             // Tools defined in file scope.
 	SeenBsdPrefsMk bool
 	indentation    *Indentation // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
 	Once
@@ -29,11 +29,7 @@ func NewMkLines(lines []Line) *MkLines {
 		mklines[i] = NewMkLine(line)
 	}
 	tools := NewToolRegistry()
-	G.Pkgsrc.Tools.ForEach(func(tool *Tool) {
-		if tool.Predefined {
-			tools.RegisterTool(tool, nil)
-		}
-	})
+	G.Pkgsrc.Tools.ForEachUsable(func(tool *Tool) { tools.DefineTool(tool, nil) })
 
 	return &MkLines{
 		mklines,
@@ -225,7 +221,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 			for _, tool := range splitOnSpace(tools) {
 				tool = strings.Split(tool, ":")[0]
-				mklines.Tools.Register(tool, mkline)
+				mklines.Tools.DefineName(tool, mkline)
 				if trace.Tracing {
 					trace.Step1("%s is added to USE_TOOLS.", tool)
 				}

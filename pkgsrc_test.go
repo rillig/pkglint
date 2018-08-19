@@ -101,22 +101,22 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t.DisableTracing()
 
 	t.CheckOutputLines(
-		"TRACE: + (*ToolRegistry).Trace()",
-		"TRACE: 1   tool &{Name:bzcat Varname: MustUseVarForm:false Predefined:false UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:bzip2 Varname: MustUseVarForm:false Predefined:false UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Predefined:false UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Predefined:true UsableAtLoadTime:true}",
-		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Predefined:true UsableAtLoadTime:true}",
-		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true Predefined:true UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Predefined:false UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:m4 Varname: MustUseVarForm:false Predefined:true UsableAtLoadTime:true}",
-		"TRACE: 1   tool &{Name:msgfmt Varname: MustUseVarForm:false Predefined:false UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:mv Varname:MV MustUseVarForm:false Predefined:true UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:pwd Varname:PWD MustUseVarForm:false Predefined:true UsableAtLoadTime:true}",
-		"TRACE: 1   tool &{Name:strip Varname: MustUseVarForm:false Predefined:false UsableAtLoadTime:false}",
-		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Predefined:true UsableAtLoadTime:true}",
-		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true Predefined:true UsableAtLoadTime:true}",
-		"TRACE: - (*ToolRegistry).Trace()")
+		"TRACE: + (*Tools).Trace()",
+		"TRACE: 1   tool &{Name:bzcat Varname: MustUseVarForm:false UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:bzip2 Varname: MustUseVarForm:false UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:chown Varname:CHOWN MustUseVarForm:false UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true UsableAtLoadTime:true}",
+		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true UsableAtLoadTime:true}",
+		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:m4 Varname: MustUseVarForm:false UsableAtLoadTime:true}",
+		"TRACE: 1   tool &{Name:msgfmt Varname: MustUseVarForm:false UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:mv Varname:MV MustUseVarForm:false UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:pwd Varname:PWD MustUseVarForm:false UsableAtLoadTime:true}",
+		"TRACE: 1   tool &{Name:strip Varname: MustUseVarForm:false UsableAtLoadTime:false}",
+		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true UsableAtLoadTime:true}",
+		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true UsableAtLoadTime:true}",
+		"TRACE: - (*Tools).Trace()")
 }
 
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {

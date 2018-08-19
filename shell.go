@@ -825,7 +825,7 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 			if len(simple.Redirections) != 0 {
 				return true, simple.Name.MkText
 			}
-			tool := G.Pkgsrc.Tools.FindByCommand(simple.Name)
+			tool := G.Pkgsrc.Tools.ByCommand(simple.Name)
 			switch {
 			case tool == nil:
 				return true, simple.Name.MkText

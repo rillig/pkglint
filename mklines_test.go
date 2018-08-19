@@ -86,9 +86,9 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
-	t.SetupTool(&Tool{Name: "echo", Varname: "ECHO", Predefined: true})
-	t.SetupTool(&Tool{Name: "find", Varname: "FIND", Predefined: true})
-	t.SetupTool(&Tool{Name: "pax", Varname: "PAX", Predefined: true})
+	t.SetupToolUsable("echo", "ECHO")
+	t.SetupToolUsable("find", "FIND")
+	t.SetupToolUsable("pax", "PAX")
 	mklines := t.NewMkLines("Makefile", // From audio/squeezeboxserver
 		MkRcsID,
 		"",
@@ -522,7 +522,7 @@ func (s *Suite) Test_MkLines_wip_category_Makefile(c *check.C) {
 
 	t.SetupCommandLine("-Wall", "--explain")
 	t.SetupVartypes()
-	t.SetupTool(&Tool{Name: "rm", Varname: "RM", Predefined: true})
+	t.SetupToolUsable("rm", "RM")
 	t.CreateFileLines("mk/misc/category.mk")
 	mklines := t.SetupFileMkLines("wip/Makefile",
 		MkRcsID,
@@ -564,7 +564,7 @@ func (s *Suite) Test_MkLines_determineDocumentedVariables(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupTool(&Tool{Name: "rm", Varname: "RM", Predefined: true})
+	t.SetupToolUsable("rm", "RM")
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"#",

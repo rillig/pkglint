@@ -594,9 +594,9 @@ func (s *Suite) Test_VartypeCheck_Stage(c *check.C) {
 func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupTool(&Tool{Name: "tool1", Predefined: true})
-	t.SetupTool(&Tool{Name: "tool2", Predefined: true})
-	t.SetupTool(&Tool{Name: "tool3", Predefined: true})
+	t.SetupToolUsable("tool1", "")
+	t.SetupToolUsable("tool2", "")
+	t.SetupToolUsable("tool3", "")
 
 	runVartypeChecks(t, "USE_TOOLS", opAssignAppend, (*VartypeCheck).Tool,
 		"tool3:run",
