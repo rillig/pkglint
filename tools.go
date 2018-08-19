@@ -39,18 +39,7 @@ func NewTools() Tools {
 //
 // See MakeUsable.
 func (tr *Tools) DefineName(name string, mkline MkLine) *Tool {
-	if trace.Tracing {
-		defer trace.Call(name, mkline)()
-	}
-
-	tr.validateToolName(name, mkline)
-
-	tool := tr.byName[name]
-	if tool == nil {
-		tool = &Tool{Name: name}
-		tr.byName[name] = tool
-	}
-	return tool
+	return tr.DefineVarname(name, "", mkline)
 }
 
 // DefineVarname registers the tool by its name and the corresponding
@@ -59,29 +48,32 @@ func (tr *Tools) DefineName(name string, mkline MkLine) *Tool {
 //
 // The toolname may include the scope (:pkgsrc, :run, etc.).
 func (tr *Tools) DefineVarname(name, varname string, mkline MkLine) *Tool {
-	if trace.Tracing {
-		defer trace.Call(name, varname, mkline)()
-	}
-
-	tool := tr.DefineName(name, mkline)
-	tool.Varname = varname
-	tr.byVarname[varname] = tool
-	return tool
+	return tr.DefineTool(&Tool{name, varname, false, false}, mkline)
 }
 
-func (tr *Tools) DefineTool(tool *Tool, mkline MkLine) {
+func (tr *Tools) DefineTool(tool *Tool, mkline MkLine) *Tool {
 	if trace.Tracing {
-		defer trace.Call(tool, mkline)()
+		trace.Stepf("Tools.DefineTool: %+v in %s", tool, mkline)
 	}
 
 	tr.validateToolName(tool.Name, mkline)
 
-	if tool.Name != "" && tr.byName[tool.Name] == nil {
-		tr.byName[tool.Name] = tool
+	rv := tool
+	if tool.Name != "" {
+		if existing := tr.byName[tool.Name]; existing != nil {
+			rv = existing
+		} else {
+			tr.byName[tool.Name] = tool
+		}
 	}
-	if tool.Varname != "" && tr.byVarname[tool.Varname] == nil {
-		tr.byVarname[tool.Varname] = tool
+	if tool.Varname != "" {
+		if existing := tr.byVarname[tool.Varname]; existing != nil {
+			rv = existing
+		} else {
+			tr.byVarname[tool.Varname] = tool
+		}
 	}
+	return rv
 }
 
 func (tr *Tools) Trace() {
