@@ -473,28 +473,30 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 
 func (ck MkLineChecker) checkToolUseLoadTime(varname string, isLoadTime bool, isIndirect bool) {
 	mkline := ck.MkLine
-	done := false
+
 	tool, usable := G.ToolByVarname(varname)
 	if isLoadTime && tool != nil {
-		done = usable && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk)
-
-		if !done && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
-			mkline.Warnf("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
-			done = true
+		if usable && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk) {
+			return
 		}
 
-		if !done && G.Pkg != nil {
+		if G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
+			mkline.Warnf("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
+			return
+		}
+
+		if G.Pkg != nil {
 			usable, defined := G.Pkg.loadTimeTools[tool.Name]
-			if usable {
-				done = true
-			}
 			if defined && !usable {
 				mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
-				done = true
+			}
+			if defined || usable {
+				return
 			}
 		}
 	}
-	if !done && isLoadTime && !isIndirect {
+
+	if isLoadTime && !isIndirect {
 		mkline.Warnf("%s should not be evaluated at load time.", varname)
 		Explain(
 			"Many variables, especially lists of something, get their values",
@@ -506,16 +508,16 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isLoadTime bool, is
 			"Additionally, when using the \":=\" operator, each $$ is replaced",
 			"with a single $, so variables that have references to shell",
 			"variables or regular expressions are modified in a subtle way.")
-		done = true
+		return
 	}
-	if !done && isLoadTime && isIndirect {
+
+	if isLoadTime && isIndirect {
 		mkline.Warnf("%s should not be evaluated indirectly at load time.", varname)
 		Explain(
 			"The variable on the left-hand side may be evaluated at load time,",
 			"but the variable on the right-hand side may not.  Because of the",
 			"assignment in this line, the variable might be used indirectly",
 			"at load time, before it is guaranteed to be properly initialized.")
-		done = true
 	}
 }
 
