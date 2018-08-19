@@ -44,7 +44,7 @@ func NewPkgsrc(dir string) *Pkgsrc {
 	src := &Pkgsrc{
 		dir,
 		make(map[string]bool),
-		NewToolRegistry(),
+		NewTools(),
 		make(map[string]string),
 		make(map[string]string),
 		make(map[string]string),

@@ -26,7 +26,7 @@ type Tools struct {
 	usable    map[*Tool]bool
 }
 
-func NewToolRegistry() Tools {
+func NewTools() Tools {
 	return Tools{
 		make(map[string]*Tool),
 		make(map[string]*Tool),

@@ -28,7 +28,7 @@ func NewMkLines(lines []Line) *MkLines {
 	for i, line := range lines {
 		mklines[i] = NewMkLine(line)
 	}
-	tools := NewToolRegistry()
+	tools := NewTools()
 	G.Pkgsrc.Tools.ForEachUsable(func(tool *Tool) { tools.DefineTool(tool, nil) })
 
 	return &MkLines{
