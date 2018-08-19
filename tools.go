@@ -56,6 +56,10 @@ func (tr *Tools) DefineTool(tool *Tool, mkline MkLine) *Tool {
 		trace.Stepf("Tools.DefineTool: %+v in %s", tool, mkline)
 	}
 
+	return tr.defineTool(tool, mkline)
+}
+
+func (tr *Tools) defineTool(tool *Tool, mkline MkLine) *Tool {
 	tr.validateToolName(tool.Name, mkline)
 
 	rv := tool
@@ -143,6 +147,10 @@ func (tr *Tools) ByCommand(cmd *ShToken) *Tool {
 // MakeUsable declares the tool as usable in the current scope.
 // This usually happens because the tool is mentioned in USE_TOOLS.
 func (tr *Tools) MakeUsable(tool *Tool) {
+	if trace.Tracing && !tr.usable[tool] {
+		trace.Stepf("Tools.MakeUsable %s", tool.Name)
+	}
+
 	tr.usable[tool] = true
 }
 
@@ -152,9 +160,9 @@ func (tr *Tools) Usable(tool *Tool) bool {
 
 func (tr *Tools) AddAll(other Tools) {
 	for _, tool := range other.byName {
-		tr.DefineTool(tool, nil)
+		tr.defineTool(tool, nil)
 		if other.Usable(tool) {
-			tr.MakeUsable(tool)
+			tr.usable[tool] = true
 		}
 	}
 }
