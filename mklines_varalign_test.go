@@ -41,30 +41,15 @@ func (vt *VaralignTester) Fixed(lines ...string) { vt.fixed = lines }
 // Run is called after setting up the data and runs the varalign checks twice.
 // Once for getting the diagnostics and once for automatically fixing them.
 func (vt *VaralignTester) Run() {
-	vt.runDefault()
-	vt.runAutofix()
+	vt.run(false)
+	vt.run(true)
 }
 
-func (vt *VaralignTester) runDefault() {
+func (vt *VaralignTester) run(autofix bool) {
 	cmdline := []string{"-Wall"}
-	if vt.source {
-		cmdline = append(cmdline, "--source")
+	if autofix {
+		cmdline = append(cmdline, "--autofix")
 	}
-	vt.tester.SetupCommandLine(cmdline...)
-
-	mklines := vt.tester.SetupFileMkLines("Makefile", vt.input...)
-
-	varalign := VaralignBlock{}
-	for _, mkline := range mklines.mklines {
-		varalign.Check(mkline)
-	}
-	varalign.Finish()
-
-	vt.tester.CheckOutputLines(vt.diagnostics...)
-}
-
-func (vt *VaralignTester) runAutofix() {
-	cmdline := []string{"-Wall", "--autofix"}
 	if vt.source {
 		cmdline = append(cmdline, "--source")
 	}
@@ -78,10 +63,14 @@ func (vt *VaralignTester) runAutofix() {
 	}
 	varalign.Finish()
 
-	vt.tester.CheckOutputLines(vt.autofixes...)
+	if autofix {
+		vt.tester.CheckOutputLines(vt.autofixes...)
 
-	SaveAutofixChanges(mklines.lines)
-	vt.tester.CheckFileLinesDetab("Makefile", vt.fixed...)
+		SaveAutofixChanges(mklines.lines)
+		vt.tester.CheckFileLinesDetab("Makefile", vt.fixed...)
+	} else {
+		vt.tester.CheckOutputLines(vt.diagnostics...)
+	}
 }
 
 // Generally, the value in variable assignments is aligned
