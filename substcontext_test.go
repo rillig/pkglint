@@ -90,7 +90,7 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 		"WARN: Makefile:13: Incomplete SUBST block: SUBST_STAGE.repl missing.")
 }
 
-func (s *Suite) Test_SubstContext__multiple_classes(c *check.C) {
+func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wextra")
@@ -107,6 +107,30 @@ func (s *Suite) Test_SubstContext__multiple_classes(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:10: Please add only one class at a time to SUBST_CLASSES.")
+}
+
+func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wextra")
+
+	simulateSubstLines(t,
+		"10: SUBST_CLASSES+=         one",
+		"11: SUBST_STAGE.one=        post-configure",
+		"12: SUBST_STAGE.one=        post-configure",
+		"13: SUBST_FILES.one=        one.txt",
+		"14: SUBST_CLASSES+=         two", // The block "one" is not finished yet.
+		"15: SUBST_SED.one=          s,one,1,g",
+		"16: SUBST_STAGE.two=        post-configure",
+		"17: SUBST_FILES.two=        two.txt",
+		"18: SUBST_SED.two=          s,two,2,g",
+		"19: ")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:12: Duplicate definition of \"SUBST_STAGE.one\".",
+		"WARN: Makefile:14: Incomplete SUBST block: SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.",
+		"WARN: Makefile:14: Subst block \"one\" should be finished before adding the next class to SUBST_CLASSES.",
+		"WARN: Makefile:15: Variable \"SUBST_SED.one\" does not match SUBST class \"two\".")
 }
 
 func (s *Suite) Test_SubstContext__directives(c *check.C) {

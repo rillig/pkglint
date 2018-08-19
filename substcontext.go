@@ -62,10 +62,11 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
 		}
 		if ctx.id != "" && ctx.id != classes[0] {
-			if ctx.IsComplete() {
-				ctx.Finish(mkline)
-			} else {
-				mkline.Warnf("SUBST_CLASSES should only appear once in a SUBST block.")
+			complete := ctx.IsComplete()
+			id := ctx.id
+			ctx.Finish(mkline)
+			if !complete {
+				mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
 			}
 		}
 		ctx.id = classes[0]
@@ -138,8 +139,6 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 	case "SUBST_FILTER_CMD.*":
 		ctx.dupString(mkline, &ctx.filterCmd, varname, value)
 		ctx.curr.seenTransform = true
-	default:
-		mkline.Warnf("Foreign variable %q in SUBST block.", varname)
 	}
 }
 
@@ -183,29 +182,21 @@ func (ctx *SubstContext) Finish(mkline MkLine) {
 	if ctx.id == "" || !G.opts.WarnExtra {
 		return
 	}
+	id := ctx.id
 	if ctx.stage == "" {
-		mkline.Warnf("Incomplete SUBST block: %s missing.", ctx.varname("SUBST_STAGE"))
+		mkline.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
 	if !ctx.curr.seenFiles {
-		mkline.Warnf("Incomplete SUBST block: %s missing.", ctx.varname("SUBST_FILES"))
+		mkline.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
 	if !ctx.curr.seenTransform {
-		mkline.Warnf("Incomplete SUBST block: %s, %s or %s missing.",
-			ctx.varname("SUBST_SED"), ctx.varname("SUBST_VARS"), ctx.varname("SUBST_FILTER_CMD"))
+		mkline.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 	ctx.id = ""
 	ctx.stage = ""
 	ctx.message = ""
 	ctx.curr = &SubstContextStats{}
 	ctx.filterCmd = ""
-}
-
-func (ctx *SubstContext) varname(varbase string) string {
-	if ctx.id != "" {
-		return varbase + "." + ctx.id
-	} else {
-		return varbase
-	}
 }
 
 func (ctx *SubstContext) dupString(mkline MkLine, pstr *string, varname, value string) {
