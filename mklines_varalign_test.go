@@ -967,3 +967,21 @@ func (s *Suite) Test_Varalign__realign_commented_multiline(c *check.C) {
 		"#                       file2")
 	vt.Run()
 }
+
+// FIXME: The diagnostic does not correspond to the autofix; see "if oldWidth == 8".
+func (s *Suite) Test_Varalign__mixed_indentation(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR1=\tvalue1",
+		"VAR2=\tvalue2 \\",
+		" \t \t value2 continued")
+	vt.Diagnostics(
+	/*"NOTE: ~/Makefile:2--3: This line should be aligned with \"\\t\"."*/ )
+	vt.Autofixes(
+	/*"AUTOFIX: ~/Makefile:3: Replacing indentation \" \\t \\t \" with \"\\t\\t \"."*/ )
+	vt.Fixed(
+		"VAR1=   value1",
+		"VAR2=   value2 \\",
+		"                 value2 continued")
+	vt.Run()
+}

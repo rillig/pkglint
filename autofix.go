@@ -139,7 +139,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		if (oldWidth == 0 || width < oldWidth) && width >= 8 && rawLine.textnl != "\n" {
 			oldWidth = width
 		}
-		if !regex.Matches(space, `^\t* {0,7}`) {
+		if !regex.Matches(space, `^\t* {0,7}$`) {
 			normalized = false
 		}
 	}
