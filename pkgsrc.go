@@ -222,18 +222,25 @@ func (src *Pkgsrc) loadTools() {
 			if mkline.IsVarassign() {
 				varname := mkline.Varname()
 				value := mkline.Value()
+
+				// Since this line is in the pkgsrc infrastructure, each tool mentioned
+				// in USE_TOOLS is trusted to be also defined somewhere in the actual
+				// list of available tools.
+				//
+				// This assumption does not work for processing USE_TOOLS in packages, though.
 				if varname == "USE_TOOLS" {
 					if trace.Tracing {
 						trace.Stepf("[dirDepth=%d] %s", dirDepth, value)
 					}
 					if dirDepth == 0 || dirDepth == 1 && relativeName == "mk/bsd.prefs.mk" {
-						for _, toolname := range splitOnSpace(value) {
-							if !containsVarRef(toolname) {
-								tool := reg.DefineName(toolname, mkline)
-								reg.MakeUsable(tool)
+						for _, usedTool := range splitOnSpace(value) {
+							if !containsVarRef(usedTool) {
+								name := strings.Split(usedTool, ":")[0]
+								tool := reg.DefineName(name, mkline)
 								if relativeName == "mk/bsd.prefs.mk" {
 									tool.UsableAtLoadTime = true
 								}
+								reg.MakeUsable(tool)
 							}
 						}
 					}

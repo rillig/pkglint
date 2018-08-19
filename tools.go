@@ -3,7 +3,6 @@ package main
 import (
 	"netbsd.org/pkglint/trace"
 	"sort"
-	"strings"
 )
 
 // Tool is one of the many standard shell utilities that are typically
@@ -38,13 +37,12 @@ func NewToolRegistry() Tools {
 // USE_TOOLS, it may be used by this name (e.g. "awk"), but not by a
 // corresponding variable (e.g. ${AWK}).
 //
-// The toolname may include the scope (:pkgsrc, :run, etc.).
-func (tr *Tools) DefineName(toolname string, mkline MkLine) *Tool {
+// See MakeUsable.
+func (tr *Tools) DefineName(name string, mkline MkLine) *Tool {
 	if trace.Tracing {
-		defer trace.Call(toolname, mkline)()
+		defer trace.Call(name, mkline)()
 	}
 
-	name := strings.SplitN(toolname, ":", 2)[0]
 	tr.validateToolName(name, mkline)
 
 	tool := tr.byName[name]
@@ -60,12 +58,12 @@ func (tr *Tools) DefineName(toolname string, mkline MkLine) *Tool {
 // by this name (e.g. "awk") or by its variable (e.g. ${AWK}).
 //
 // The toolname may include the scope (:pkgsrc, :run, etc.).
-func (tr *Tools) DefineVarname(toolname, varname string, mkline MkLine) *Tool {
+func (tr *Tools) DefineVarname(name, varname string, mkline MkLine) *Tool {
 	if trace.Tracing {
-		defer trace.Call(toolname, varname, mkline)()
+		defer trace.Call(name, varname, mkline)()
 	}
 
-	tool := tr.DefineName(toolname, mkline)
+	tool := tr.DefineName(name, mkline)
 	tool.Varname = varname
 	tr.byVarname[varname] = tool
 	return tool
@@ -150,6 +148,8 @@ func (tr *Tools) ByCommand(cmd *ShToken) *Tool {
 	return nil
 }
 
+// MakeUsable declares the tool as usable in the current scope.
+// This usually happens because the tool is mentioned in USE_TOOLS.
 func (tr *Tools) MakeUsable(tool *Tool) {
 	tr.usable[tool] = true
 }
