@@ -72,3 +72,18 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 		"0 errors and 1 warning found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
+
+func (s *Suite) Test_Tools__define_varname_later(c *check.C) {
+
+	tools := NewTools()
+	tool := tools.DefineName("tool", dummyMkLine, true)
+
+	c.Check(tool.Name, equals, "tool")
+	c.Check(tool.Varname, equals, "")
+
+	// Should update the existing tool definition.
+	tools.DefineVarname("tool", "TOOL", dummyMkLine, true)
+
+	c.Check(tool.Name, equals, "tool")
+	c.Check(tool.Varname, equals, "TOOL")
+}

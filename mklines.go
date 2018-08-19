@@ -180,7 +180,12 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 		defer trace.Call0()()
 	}
 
+	seenPrefs := false
 	for _, mkline := range mklines.mklines {
+		if mkline.IsInclude() && path.Base(mkline.IncludeFile()) == "bsd.prefs.mk" {
+			seenPrefs = true
+		}
+
 		if !mkline.IsVarassign() {
 			continue
 		}
@@ -221,7 +226,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 			for _, toolDependency := range splitOnSpace(tools) {
 				toolName := strings.Split(toolDependency, ":")[0]
-				mklines.Tools.DefineName(toolName, mkline, true)
+				mklines.Tools.DefineName(toolName, mkline, !seenPrefs)
 			}
 
 		case "SUBST_VARS.*":

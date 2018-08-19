@@ -49,6 +49,9 @@ func (tr *Tools) DefineName(name string, mkline MkLine, makeUsable bool) *Tool {
 // The toolname may include the scope (:pkgsrc, :run, etc.).
 func (tr *Tools) DefineVarname(name, varname string, mkline MkLine, makeUsable bool) *Tool {
 	tool := tr.DefineTool(&Tool{name, varname, false, false}, mkline)
+	if varname != "" {
+		tool.Varname = varname
+	}
 	if makeUsable {
 		tr.MakeUsable(tool)
 	}
