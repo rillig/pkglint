@@ -34,3 +34,14 @@ func (s *Suite) Test_Tools_validateToolName__invalid(c *check.C) {
 		"ERROR: Invalid tool name \"tool:dependency\".",
 		"ERROR: Invalid tool name \"tool:build\".")
 }
+
+func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {
+	t := s.Init(c)
+
+	t.DisableTracing()
+
+	reg := NewTools()
+	reg.Trace()
+
+	t.CheckOutputEmpty()
+}
