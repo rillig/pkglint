@@ -654,16 +654,31 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	t := s.Init(c)
 
 	shline := t.NewShellLine("dummy.mk", 13, "# dummy")
-	// foobar="`echo \"foo   bar\"`"
-	text := "foobar=\"`echo \\\"foo   bar\\\"`\""
+	// foobar="`echo \"foo   bar\" "\ " "three"`"
+	text := "foobar=\"`echo \\\"foo   bar\\\" \"\\ \" \"three\"`\""
 	repl := textproc.NewPrefixReplacer(text)
 	repl.AdvanceStr("foobar=\"`")
 
 	backtCommand, newQuoting := shline.unescapeBackticks(text, repl, shqDquotBackt)
 
-	c.Check(backtCommand, equals, "echo \"foo   bar\"")
+	c.Check(backtCommand, equals, "echo \"foo   bar\" \"\\ \" \"three\"")
 	c.Check(newQuoting, equals, shqDquot)
 	c.Check(repl.Rest(), equals, "\"")
+
+	t.CheckOutputLines(
+		"WARN: dummy.mk:13: Backslashes should be doubled inside backticks.")
+}
+
+func (s *Suite) Test_ShellLine_unescapeBackticks__dquotBacktDquot(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("dummy.mk", 13, "\t var=\"`\"\"`\"")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"WARN: dummy.mk:13: Double quotes inside backticks inside double quotes are error prone.",
+		"WARN: dummy.mk:13: Double quotes inside backticks inside double quotes are error prone.")
 }
 
 func (s *Suite) Test_ShellLine__variable_outside_quotes(c *check.C) {

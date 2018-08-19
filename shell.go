@@ -247,7 +247,9 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 				"According to the SUSv3, they produce undefined results.",
 				"",
 				"See the paragraph starting \"Within the backquoted ...\" in",
-				"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html")
+				"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html.",
+				"",
+				"To avoid this uncertainty, escape the double quotes using \\\".")
 
 		case repl.AdvanceRegexp("^([^\\\\`]+)"):
 			unescaped += repl.Group(1)
