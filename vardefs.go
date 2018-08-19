@@ -247,11 +247,16 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("BIN_INSTALL_FLAGS", lkShell, BtShellWord)
 	usr("LOCALPATCHES", lkNone, BtPathname)
 
-	// The remaining variables from mk/defaults/mk.conf follow the
-	// naming conventions from MkLine.VariableType, furthermore
-	// they may be redefined by packages. Therefore they cannot be
-	// defined as user-defined.
 	if false {
+		// The remaining variables from mk/defaults/mk.conf may be overridden by packages.
+		// Therefore they need a separate definition of "user-settable".
+		usr := func(varname string, kindOfList KindOfList, checker *BasicType) {
+			acl(varname, kindOfList, checker, ""+
+				"Makefile: set, use; "+
+				"buildlink3.mk, builtin.mk:; "+
+				"Makefile.*, *.mk: default, set, use; "+
+				"*: use-loadtime, use")
+		}
 		usr("ACROREAD_FONTPATH", lkNone, BtPathlist)
 		usr("AMANDA_USER", lkNone, BtUserGroupName)
 		usr("AMANDA_TMP", lkNone, BtPathname)
