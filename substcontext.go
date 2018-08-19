@@ -52,9 +52,11 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 	}
 
 	varname := mkline.Varname()
+	varcanon := mkline.Varcanon()
+	varparam := mkline.Varparam()
 	op := mkline.Op()
 	value := mkline.Value()
-	if varname == "SUBST_CLASSES" || hasPrefix(varname, "SUBST_CLASSES.") {
+	if varcanon == "SUBST_CLASSES" || varcanon == "SUBST_CLASSES.*" {
 		classes := splitOnSpace(value)
 		if len(classes) > 1 {
 			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
@@ -70,8 +72,15 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 		return
 	}
 
-	m, varbase, varparam := match2(varname, `^(SUBST_(?:STAGE|MESSAGE|FILES|SED|VARS|FILTER_CMD))\.([\-\w_]+)$`)
-	if !m {
+	switch varcanon {
+	case "SUBST_STAGE.*":
+	case "SUBST_MESSAGE.*":
+	case "SUBST_FILES.*":
+	case "SUBST_SED.*":
+	case "SUBST_VARS.*":
+	case "SUBST_FILTER_CMD.*":
+
+	default:
 		if ctx.id != "" {
 			mkline.Warnf("Foreign variable %q in SUBST block.", varname)
 		}
@@ -98,8 +107,8 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 		}
 	}
 
-	switch varbase {
-	case "SUBST_STAGE":
+	switch varcanon {
+	case "SUBST_STAGE.*":
 		ctx.dupString(mkline, &ctx.stage, varname, value)
 		if value == "pre-patch" || value == "post-patch" {
 			fix := mkline.Autofix()
@@ -116,17 +125,17 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 			fix.Replace("post-patch", "pre-configure")
 			fix.Apply()
 		}
-	case "SUBST_MESSAGE":
+	case "SUBST_MESSAGE.*":
 		ctx.dupString(mkline, &ctx.message, varname, value)
-	case "SUBST_FILES":
+	case "SUBST_FILES.*":
 		ctx.dupBool(mkline, &ctx.curr.seenFiles, varname, op, value)
-	case "SUBST_SED":
+	case "SUBST_SED.*":
 		ctx.dupBool(mkline, &ctx.curr.seenSed, varname, op, value)
 		ctx.curr.seenTransform = true
-	case "SUBST_VARS":
+	case "SUBST_VARS.*":
 		ctx.dupBool(mkline, &ctx.curr.seenVars, varname, op, value)
 		ctx.curr.seenTransform = true
-	case "SUBST_FILTER_CMD":
+	case "SUBST_FILTER_CMD.*":
 		ctx.dupString(mkline, &ctx.filterCmd, varname, value)
 		ctx.curr.seenTransform = true
 	default:
