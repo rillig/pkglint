@@ -54,6 +54,10 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 		MkRcsID,
 		"",
 		"USE_TOOLS+=\tsed:pkgsrc")
+	t.CreateFileLines("mk/tools/defaults.mk",
+		MkRcsID,
+		"",
+		"_TOOLS_VARNAME.sed=\tSED")
 	t.SetupFileMkLines("module.mk",
 		MkRcsID,
 		"",
@@ -64,8 +68,7 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 	G.Main("pkglint", "-Wall", t.File("module.mk"))
 
 	t.CheckOutputLines(
-		"WARN: ~/module.mk:4: Unknown shell command \"${SED}\".", // FIXME: sed is added to USE_TOOLS.
 		"WARN: ~/module.mk:5: Unknown shell command \"${AWK}\".",
-		"0 errors and 2 warnings found.",
+		"0 errors and 1 warning found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }

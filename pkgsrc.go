@@ -236,7 +236,7 @@ func (src *Pkgsrc) loadTools() {
 						for _, usedTool := range splitOnSpace(value) {
 							if !containsVarRef(usedTool) {
 								name := strings.Split(usedTool, ":")[0]
-								tool := reg.DefineName(name, mkline, false)
+								tool := reg.DefineName(name, mkline, true)
 								if relativeName == "mk/bsd.prefs.mk" {
 									tool.UsableAtLoadTime = true
 								}
