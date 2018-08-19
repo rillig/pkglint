@@ -675,7 +675,7 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 			trace.Stepf("Use of tool %+v", tool)
 		}
 		if tool.UsableAtLoadTime {
-			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.loadTimeTools[tool.Name] {
+			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.loadTimeTools[tool.Name] == BeforePrefs {
 				perms |= aclpUseLoadtime
 			}
 		}

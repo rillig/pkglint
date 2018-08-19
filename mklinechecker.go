@@ -449,7 +449,9 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		isIndirect = true
 	}
 
-	ck.checkToolUseLoadTime(varname, isLoadTime, isIndirect)
+	if isLoadTime {
+		ck.checkToolUseLoadTime(varname, isIndirect)
+	}
 
 	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
 		needed := aclpUse
@@ -471,11 +473,11 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 }
 
-func (ck MkLineChecker) checkToolUseLoadTime(varname string, isLoadTime bool, isIndirect bool) {
+func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
 	mkline := ck.MkLine
 
 	tool, usable := G.ToolByVarname(varname)
-	if isLoadTime && tool != nil {
+	if tool != nil {
 		if usable && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk) {
 			return
 		}
@@ -486,17 +488,17 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isLoadTime bool, is
 		}
 
 		if G.Pkg != nil {
-			usable, defined := G.Pkg.loadTimeTools[tool.Name]
-			if defined && !usable {
+			loaded := G.Pkg.loadTimeTools[tool.Name]
+			if loaded == AfterPrefs {
 				mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
 			}
-			if defined || usable {
+			if loaded != NotAddedToUseTools {
 				return
 			}
 		}
 	}
 
-	if isLoadTime && !isIndirect {
+	if !isIndirect {
 		mkline.Warnf("%s should not be evaluated at load time.", varname)
 		Explain(
 			"Many variables, especially lists of something, get their values",
@@ -511,7 +513,7 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isLoadTime bool, is
 		return
 	}
 
-	if isLoadTime && isIndirect {
+	if isIndirect {
 		mkline.Warnf("%s should not be evaluated indirectly at load time.", varname)
 		Explain(
 			"The variable on the left-hand side may be evaluated at load time,",
@@ -757,14 +759,14 @@ func (ck MkLineChecker) checkVarassign() {
 			toolname := strings.Split(fullToolname, ":")[0]
 			if G.Pkg != nil {
 				if !G.Pkg.SeenBsdPrefsMk {
-					G.Pkg.loadTimeTools[toolname] = true
+					G.Pkg.loadTimeTools[toolname] = BeforePrefs
 					if trace.Tracing {
-						trace.Step1("loadTimeTool %q", toolname)
+						trace.Step1("Tool %q is added to USE_TOOLS early enough, before including bsd.prefs.mk.", toolname)
 					}
-				} else if !G.Pkg.loadTimeTools[toolname] {
-					G.Pkg.loadTimeTools[toolname] = false
+				} else if G.Pkg.loadTimeTools[toolname] != BeforePrefs {
+					G.Pkg.loadTimeTools[toolname] = AfterPrefs
 					if trace.Tracing {
-						trace.Step1("too late for loadTimeTool %q", toolname)
+						trace.Step1("Tool %q is added to USE_TOOLS after including bsd.prefs.mk (too late).", toolname)
 					}
 				}
 			}

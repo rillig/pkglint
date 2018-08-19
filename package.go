@@ -34,7 +34,7 @@ type Package struct {
 	plistSubstCond        map[string]bool // varname => true; all variables that are used as conditions (@comment or nothing) in PLISTs.
 	included              map[string]Line // fname => line
 	seenMakefileCommon    bool            // Does the package have any .includes?
-	loadTimeTools         map[string]bool // true=ok, false=not ok, absent=not mentioned in USE_TOOLS.
+	loadTimeTools         map[string]ToolLoadTime
 	conditionalIncludes   map[string]MkLine
 	unconditionalIncludes map[string]MkLine
 	once                  Once
@@ -60,7 +60,7 @@ func NewPackage(dir string) *Package {
 		bl3:                   make(map[string]Line),
 		plistSubstCond:        make(map[string]bool),
 		included:              make(map[string]Line),
-		loadTimeTools:         make(map[string]bool),
+		loadTimeTools:         make(map[string]ToolLoadTime),
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
 	}
@@ -946,3 +946,21 @@ func (pkg *Package) loadPlistDirs(plistFilename string) {
 		}
 	}
 }
+
+type ToolLoadTime uint8
+
+const (
+	// NotAddedToUseTools means that the tool has not been added
+	// to USE_TOOLS and therefore cannot be used at load time.
+	NotAddedToUseTools ToolLoadTime = iota
+
+	// BeforePrefs means that the tool has been added to USE_TOOLS
+	// before including bsd.prefs.mk and therefore can be used at
+	// load time after bsd.prefs.mk has been included.
+	BeforePrefs
+
+	// AfterPrefs means that the tool has been added to USE_TOOLS
+	// after including bsd.prefs.mk and therefore cannot be used
+	// at load time.
+	AfterPrefs
+)
