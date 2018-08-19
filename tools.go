@@ -38,8 +38,8 @@ func NewTools() Tools {
 // corresponding variable (e.g. ${AWK}).
 //
 // See MakeUsable.
-func (tr *Tools) DefineName(name string, mkline MkLine) *Tool {
-	return tr.DefineVarname(name, "", mkline)
+func (tr *Tools) DefineName(name string, mkline MkLine, makeUsable bool) *Tool {
+	return tr.DefineVarname(name, "", mkline, makeUsable)
 }
 
 // DefineVarname registers the tool by its name and the corresponding
@@ -47,8 +47,12 @@ func (tr *Tools) DefineName(name string, mkline MkLine) *Tool {
 // by this name (e.g. "awk") or by its variable (e.g. ${AWK}).
 //
 // The toolname may include the scope (:pkgsrc, :run, etc.).
-func (tr *Tools) DefineVarname(name, varname string, mkline MkLine) *Tool {
-	return tr.DefineTool(&Tool{name, varname, false, false}, mkline)
+func (tr *Tools) DefineVarname(name, varname string, mkline MkLine, makeUsable bool) *Tool {
+	tool := tr.DefineTool(&Tool{name, varname, false, false}, mkline)
+	if makeUsable {
+		tr.MakeUsable(tool)
+	}
+	return tool
 }
 
 func (tr *Tools) DefineTool(tool *Tool, mkline MkLine) *Tool {
@@ -100,48 +104,44 @@ func (tr *Tools) Trace() {
 
 // ParseToolLine parses a tool definition from the pkgsrc infrastructure,
 // e.g. in mk/tools/replace.mk.
-func (tr *Tools) ParseToolLine(mkline MkLine) {
+func (tr *Tools) ParseToolLine(mkline MkLine, makeUsable bool) {
 	if mkline.IsVarassign() {
 		varname := mkline.Varname()
 		value := mkline.Value()
 		if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^[-\w.]+$`)) {
-			tr.DefineName(value, mkline)
+			tr.DefineName(value, mkline, makeUsable)
 
 		} else if m, toolname := match1(varname, `^_TOOLS_VARNAME\.([-\w.]+|\[)$`); m {
-			tr.DefineVarname(toolname, value, mkline)
+			tool := tr.DefineVarname(toolname, value, mkline, makeUsable)
+			if makeUsable {
+				tr.MakeUsable(tool)
+			}
 
 		} else if m, toolname = match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
-			tr.DefineName(toolname, mkline)
+			tool := tr.DefineName(toolname, mkline, makeUsable)
+			if makeUsable {
+				tr.MakeUsable(tool)
+			}
 
 		} else if m, toolname = match1(varname, `^_TOOLS\.(.*)`); m {
-			tr.DefineName(toolname, mkline)
+			tr.DefineName(toolname, mkline, makeUsable)
 			for _, tool := range splitOnSpace(value) {
-				tr.DefineName(tool, mkline)
+				tr.DefineName(tool, mkline, makeUsable)
 			}
 		}
 	}
 }
 
-func (tr *Tools) ByVarname(varname string) *Tool {
-	return tr.byVarname[varname]
+func (tr *Tools) ByVarname(varname string) (tool *Tool, usable bool) {
+	tool = tr.byVarname[varname]
+	usable = tr.Usable(tool)
+	return
 }
 
-func (tr *Tools) ByName(name string) *Tool {
-	return tr.byName[name]
-}
-
-func (tr *Tools) ByCommand(cmd *ShToken) *Tool {
-	if tool := tr.byName[cmd.MkText]; tool != nil {
-		return tool
-	}
-	if len(cmd.Atoms) == 1 {
-		if varuse := cmd.Atoms[0].VarUse(); varuse != nil {
-			if tool := tr.byVarname[varuse.varname]; tool != nil {
-				return tool
-			}
-		}
-	}
-	return nil
+func (tr *Tools) ByName(name string) (tool *Tool, usable bool) {
+	tool = tr.byName[name]
+	usable = tr.Usable(tool)
+	return
 }
 
 // MakeUsable declares the tool as usable in the current scope.

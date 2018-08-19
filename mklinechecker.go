@@ -450,10 +450,10 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	done := false
-	tool := G.Pkgsrc.Tools.ByVarname(varname)
+	tool, usable := G.ToolByVarname(varname)
 
 	if isLoadTime && tool != nil {
-		done = G.Pkgsrc.Tools.Usable(tool) && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk)
+		done = usable && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk)
 
 		if !done && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
 			mkline.Warnf("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)

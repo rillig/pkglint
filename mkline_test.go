@@ -638,7 +638,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	G.Pkgsrc.Tools.DefineVarname("tar", "TAR", dummyMkLine)
+	G.Pkgsrc.Tools.DefineVarname("tar", "TAR", dummyMkLine, true)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -659,7 +659,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__backticks(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	G.Pkgsrc.Tools.DefineVarname("cat", "CAT", dummyMkLine)
+	G.Pkgsrc.Tools.DefineVarname("cat", "CAT", dummyMkLine, true)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",

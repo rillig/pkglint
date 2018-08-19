@@ -353,7 +353,6 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 		// FIXME: the below warning is wrong; variables mentioned in SUBST_VARS should be allowed in that block.
 		"WARN: determine-defined-variables.mk:13: Foreign variable \"SUV\" in SUBST block.",
 		"WARN: determine-defined-variables.mk:16: Unknown shell command \"unknown-command\".")
-
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {

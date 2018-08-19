@@ -639,3 +639,82 @@ func ChecklinesTrailingEmptyLines(lines []Line) {
 		lines[last].Notef("Trailing empty lines.")
 	}
 }
+
+// Tool returns the tool definition from the closest scope (file, global), or nil.
+// The command can be "sed" or "gsed" or "${SED}".
+// If a tool is returned, usable tells whether that tool has been added
+// to USE_TOOLS in the current scope.
+func (pkglint *Pkglint) Tool(command string) (tool *Tool, usable bool) {
+	gnuCommand := "g" + command
+	varname := ""
+	if m, toolVarname := match1(command, `^\$\{(\w+)\}$`); m {
+		varname = toolVarname
+	}
+
+	if G.Mk != nil {
+		if t, u := G.Mk.Tools.ByName(command); t != nil {
+			if u {
+				return t, u
+			}
+			tool, usable = t, u
+		}
+
+		if t, u := G.Mk.Tools.ByName(gnuCommand); t != nil {
+			if u {
+				return t, u
+			}
+			tool, usable = t, u
+		}
+
+		if t, u := G.Mk.Tools.ByVarname(varname); t != nil {
+			if u {
+				return t, u
+			}
+			tool, usable = t, u
+		}
+	}
+
+	if t, u := G.Pkgsrc.Tools.ByName(command); t != nil {
+		if u {
+			return t, u
+		}
+		tool, usable = t, u
+	}
+
+	if t, u := G.Pkgsrc.Tools.ByName(gnuCommand); t != nil {
+		if u {
+			return t, u
+		}
+		tool, usable = t, u
+	}
+
+	if t, u := G.Pkgsrc.Tools.ByVarname(varname); t != nil {
+		if u {
+			return t, u
+		}
+		tool, usable = t, u
+	}
+
+	return
+}
+
+func (pkglint *Pkglint) ToolByVarname(varname string) (tool *Tool, usable bool) {
+
+	if G.Mk != nil {
+		if t, u := G.Mk.Tools.ByVarname(varname); t != nil {
+			if u {
+				return t, u
+			}
+			tool, usable = t, u
+		}
+	}
+
+	if t, u := G.Pkgsrc.Tools.ByVarname(varname); t != nil {
+		if u {
+			return t, u
+		}
+		tool, usable = t, u
+	}
+
+	return
+}

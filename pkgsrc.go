@@ -210,7 +210,7 @@ func (src *Pkgsrc) loadTools() {
 	for _, basename := range toolFiles {
 		mklines := G.Pkgsrc.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
-			reg.ParseToolLine(mkline)
+			reg.ParseToolLine(mkline, false)
 		}
 	}
 
@@ -232,11 +232,11 @@ func (src *Pkgsrc) loadTools() {
 					if trace.Tracing {
 						trace.Stepf("[dirDepth=%d] %s", dirDepth, value)
 					}
-					if dirDepth == 0 || dirDepth == 1 && relativeName == "mk/bsd.prefs.mk" {
+					if dirDepth == 0 || (dirDepth == 1 && relativeName == "mk/bsd.prefs.mk") {
 						for _, usedTool := range splitOnSpace(value) {
 							if !containsVarRef(usedTool) {
 								name := strings.Split(usedTool, ":")[0]
-								tool := reg.DefineName(name, mkline)
+								tool := reg.DefineName(name, mkline, false)
 								if relativeName == "mk/bsd.prefs.mk" {
 									tool.UsableAtLoadTime = true
 								}
@@ -669,7 +669,7 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		return vartype
 	}
 
-	if tool := src.Tools.ByVarname(varname); tool != nil {
+	if tool, _ := G.ToolByVarname(varname); tool != nil {
 		perms := aclpUse
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
@@ -682,9 +682,10 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		return &Vartype{lkNone, BtShellCommand, []ACLEntry{{"*", perms}}, false}
 	}
 
-	m, toolvarname := match1(varname, `^TOOLS_(.*)`)
-	if m && src.Tools.ByVarname(toolvarname) != nil {
-		return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
+	if m, toolVarname := match1(varname, `^TOOLS_(.*)`); m {
+		if tool, _ := G.ToolByVarname(toolVarname); tool != nil {
+			return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
+		}
 	}
 
 	allowAll := []ACLEntry{{"*", aclpAll}}

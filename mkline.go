@@ -138,7 +138,7 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, nil}
 	}
 
-	line.Errorf("Unknown Makefile line format.")
+	line.Errorf("Unknown Makefile line format: %q.", text)
 	return &MkLineImpl{line, nil}
 }
 
@@ -532,7 +532,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if G.Pkgsrc.Tools.ByVarname(varname) != nil {
+	if tool, _ := G.ToolByVarname(varname); tool != nil {
 		switch vuc.quoting {
 		case vucQuotPlain:
 			if !vuc.IsWordPart {

@@ -116,9 +116,9 @@ func (s *Suite) Test_convertToLogicalLines__comments(c *check.C) {
 
 	// This is just a side-effect and not relevant for this particular test.
 	t.CheckOutputLines(
-		"ERROR: ~/comment.mk:15: Unknown Makefile line format.",
-		"ERROR: ~/comment.mk:19: Unknown Makefile line format.",
-		"ERROR: ~/comment.mk:23: Unknown Makefile line format.")
+		"ERROR: ~/comment.mk:15: Unknown Makefile line format: \"This is no comment\".",
+		"ERROR: ~/comment.mk:19: Unknown Makefile line format: \"This is no comment\".",
+		"ERROR: ~/comment.mk:23: Unknown Makefile line format: \"This is no comment\".")
 }
 
 func (s *Suite) Test_convertToLogicalLines_continuationInLastLine(c *check.C) {

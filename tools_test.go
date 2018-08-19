@@ -23,9 +23,9 @@ func (s *Suite) Test_Tools_validateToolName__invalid(c *check.C) {
 
 	reg := NewTools()
 
-	reg.DefineName("tool_name", dummyMkLine)
-	reg.DefineName("tool:dependency", dummyMkLine)
-	reg.DefineName("tool:build", dummyMkLine)
+	reg.DefineName("tool_name", dummyMkLine, false)
+	reg.DefineName("tool:dependency", dummyMkLine, false)
+	reg.DefineName("tool:build", dummyMkLine, false)
 
 	// Currently, the underscore is not used in any tool name.
 	// If there should ever be such a case, just use a different character for testing.

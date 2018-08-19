@@ -416,11 +416,10 @@ func (s *Suite) Test_ShellLine_CheckShelltext__dollar_without_variable(c *check.
 	t := s.Init(c)
 
 	t.SetupVartypes()
+	t.SetupToolUsable("pax", "")
 	G.Mk = t.NewMkLines("fname",
 		"# dummy")
 	shline := NewShellLine(G.Mk.mklines[0])
-	t.SetupTool(&Tool{Name: "pax", Varname: "PAX"})
-	G.Mk.Tools.DefineName("pax", nil)
 
 	shline.CheckShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 

@@ -336,8 +336,10 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
-	t.CreateFileLines("licenses/bsd-2",
+	t.SetupToolUsable("printf", "")
+	t.CreateFileLines("licenses/2-clause-bsd",
 		"# dummy")
+	t.CreateFileLines("misc/Makefile")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"TOOLS_CREATE+=false",
 		"TOOLS_CREATE+=nice",
@@ -347,41 +349,66 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t.CreateFileLines("category/pkgbase/Makefile",
 		MkRcsID,
 		"",
-		"COMMENT= Unit test",
-		"LICENSE= bsd-2",
-		"PLIST_SRC=#none",
+		"PKGNAME=        loadtime-vartest-1.0",
+		"CATEGORIES=     misc",
 		"",
-		"USE_TOOLS+= echo false",
-		"FALSE_BEFORE!= echo false=${FALSE}",
-		"NICE_BEFORE!= echo nice=${NICE}",
-		"TRUE_BEFORE!= echo true=${TRUE}",
+		"COMMENT=        Demonstrate variable values during parsing",
+		"LICENSE=        2-clause-bsd",
+		"",
+		"PLIST_SRC=      # none",
+		"NO_CHECKSUM=    yes",
+		"NO_CONFIGURE=   yes",
+		"",
+		"USE_TOOLS+=     echo false",
+		"FALSE_BEFORE!=  echo false=${FALSE:Q}", // false=
+		"NICE_BEFORE!=   echo nice=${NICE:Q}",   // nice=
+		"TRUE_BEFORE!=   echo true=${TRUE:Q}",   // true=
+		//
+		// All three variables above are empty since the tool
+		// variables are initialized by bsd.prefs.mk. The variables
+		// from share/mk/sys.mk are available, though.
+		//
 		"",
 		".include \"../../mk/bsd.prefs.mk\"",
+		//
+		// Now all tools from USE_TOOLS are defined with their variables.
+		// ${FALSE} works, but a plain "false" might call the wrong tool.
+		// That's because the tool wrappers are not set up yet. This
+		// happens between the post-depends and pre-fetch stages. Even
+		// then, the plain tool names may only be used in the
+		// {pre,do,post}-* targets, since a recursive make(1) needs to be
+		// run to set up the correct PATH.
+		//
 		"",
-		"USE_TOOLS+= nice",
-		"FALSE_AFTER!= echo false=${FALSE}",
-		"NICE_AFTER!= echo nice=${NICE}",
-		"TRUE_AFTER!= echo true=${TRUE}",
+		"USE_TOOLS+=     nice",
+		//
+		// The "nice" tool will only be available as ${NICE} after bsd.pkg.mk
+		// has been included. Even including bsd.prefs.mk another time does
+		// not have any effect since it is guarded against multiple inclusion.
+		//
+		"",
+		".include \"../../mk/bsd.prefs.mk\"", // Has no effect.
+		"",
+		"FALSE_AFTER!=   echo false=${FALSE:Q}", // false=false
+		"NICE_AFTER!=    echo nice=${NICE:Q}",   // nice=
+		"TRUE_AFTER!=    echo true=${TRUE:Q}",   // true=true
 		"",
 		"do-build:",
-		"\t${ECHO} before: ${FALSE_BEFORE} ${NICE_BEFORE} ${TRUE_BEFORE}",
-		"\t${ECHO} after: ${FALSE_AFTER} ${NICE_AFTER} ${TRUE_AFTER}",
-		"\t${ECHO}; ${FALSE}; ${NICE}; ${TRUE}",
+		"\t${RUN} printf 'before:  %-20s  %-20s  %-20s\\n' ${FALSE_BEFORE} ${NICE_BEFORE} ${TRUE_BEFORE}",
+		"\t${RUN} printf 'after:   %-20s  %-20s  %-20s\\n' ${FALSE_AFTER} ${NICE_AFTER} ${TRUE_AFTER}",
+		"\t${RUN} printf 'runtime: %-20s  %-20s  %-20s\\n' false=${FALSE:Q} nice=${NICE:Q} true=${TRUE:Q}",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
-	t.CreateFileLines("category/pkgbase/distinfo",
-		RcsID)
 
-	t.SetupCommandLine("-q", "-Wperm")
+	t.SetupCommandLine("-q", "-Wall,no-space")
 	G.Pkgsrc.LoadInfrastructure()
 	G.CheckDirent(t.File("category/pkgbase"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/pkgbase/Makefile:8: To use the tool \"FALSE\" at load time, bsd.prefs.mk has to be included before.",
-		"WARN: ~/category/pkgbase/Makefile:9: To use the tool \"NICE\" at load time, bsd.prefs.mk has to be included before.",
-		"WARN: ~/category/pkgbase/Makefile:10: To use the tool \"TRUE\" at load time, bsd.prefs.mk has to be included before.",
-		"WARN: ~/category/pkgbase/Makefile:16: To use the tool \"NICE\" at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.",
-		"WARN: ~/category/pkgbase/Makefile:3: The canonical order of the variables is CATEGORIES, empty line, COMMENT, LICENSE.")
+		"WARN: ~/category/pkgbase/Makefile:14: To use the tool \"FALSE\" at load time, bsd.prefs.mk has to be included before.",
+		"WARN: ~/category/pkgbase/Makefile:15: To use the tool \"NICE\" at load time, bsd.prefs.mk has to be included before.",
+		"WARN: ~/category/pkgbase/Makefile:16: To use the tool \"TRUE\" at load time, bsd.prefs.mk has to be included before.",
+		"WARN: ~/category/pkgbase/Makefile:25: To use the tool \"NICE\" at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {

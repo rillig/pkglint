@@ -219,12 +219,9 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			if matches(tools, `\bautoconf\b`) {
 				tools += " autoheader autom4te autoreconf autoscan autoupdate ifnames"
 			}
-			for _, tool := range splitOnSpace(tools) {
-				tool = strings.Split(tool, ":")[0]
-				mklines.Tools.DefineName(tool, mkline)
-				if trace.Tracing {
-					trace.Step1("%s is added to USE_TOOLS.", tool)
-				}
+			for _, toolDependency := range splitOnSpace(tools) {
+				toolName := strings.Split(toolDependency, ":")[0]
+				mklines.Tools.DefineName(toolName, mkline, true)
 			}
 
 		case "SUBST_VARS.*":
@@ -242,7 +239,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 		}
 
-		mklines.Tools.ParseToolLine(mkline)
+		mklines.Tools.ParseToolLine(mkline, true)
 	}
 }
 

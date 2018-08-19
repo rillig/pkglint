@@ -477,34 +477,19 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 		defer trace.Call()()
 	}
 
-	shellword := scc.strcmd.Name
+	command := scc.strcmd.Name
 
-	pkgsrcTool := G.Pkgsrc.Tools.ByName(shellword)
-	if pkgsrcTool == nil {
-		pkgsrcTool = G.Pkgsrc.Tools.ByName("g" + shellword)
+	tool, usable := G.Tool(command)
+
+	if tool != nil && !usable {
+		scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", command)
 	}
 
-	var mkTool *Tool
-	if G.Mk != nil {
-		mkTool = G.Mk.Tools.ByName(shellword)
-		if mkTool == nil {
-			mkTool = G.Mk.Tools.ByName("g" + shellword)
-		}
+	if tool != nil && !containsVarRef(command) && tool.MustUseVarForm {
+		scc.shline.mkline.Warnf("Please use \"${%s}\" instead of %q.", tool.Varname, command)
 	}
 
-	if pkgsrcTool != nil && mkTool == nil {
-		scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", shellword)
-	}
-
-	tool := mkTool
-	if tool == nil {
-		tool = pkgsrcTool
-	}
-	if tool != nil && tool.MustUseVarForm {
-		scc.shline.mkline.Warnf("Please use \"${%s}\" instead of %q.", tool.Varname, shellword)
-	}
-
-	scc.shline.checkCommandUse(shellword)
+	scc.shline.checkCommandUse(command)
 	return tool != nil
 }
 
@@ -536,8 +521,8 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	if varuse := parser.VarUse(); varuse != nil && parser.EOF() {
 		varname := varuse.varname
 
-		if tool := G.Pkgsrc.Tools.ByVarname(varname); tool != nil {
-			if G.Mk.Tools.ByName(tool.Name) == nil {
+		if tool, usable := G.ToolByVarname(varname); tool != nil {
+			if !usable {
 				scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", tool.Name)
 			}
 			scc.shline.checkCommandUse(shellword)
@@ -824,18 +809,19 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 			if simple == nil {
 				return true, ""
 			}
+			commandName := simple.Name.MkText
 			if len(simple.Redirections) != 0 {
-				return true, simple.Name.MkText
+				return true, commandName
 			}
-			tool := G.Pkgsrc.Tools.ByCommand(simple.Name)
+			tool, _ := G.Tool(commandName)
 			switch {
 			case tool == nil:
-				return true, simple.Name.MkText
+				return true, commandName
 			case oneOf(tool.Name, "echo", "printf"):
 			case oneOf(tool.Name, "sed", "gsed", "grep", "ggrep") && len(simple.Args) == 1:
 				break
 			default:
-				return true, simple.Name.MkText
+				return true, commandName
 			}
 		}
 		return false, ""
