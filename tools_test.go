@@ -45,3 +45,27 @@ func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {
 
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		MkRcsID,
+		"",
+		"USE_TOOLS+=\tsed:pkgsrc")
+	t.SetupFileMkLines("module.mk",
+		MkRcsID,
+		"",
+		"do-build:",
+		"\t${SED} < input > output",
+		"\t${AWK} < input > output")
+
+	G.Main("pkglint", "-Wall", t.File("module.mk"))
+
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:4: Unknown shell command \"${SED}\".", // FIXME: sed is added to USE_TOOLS.
+		"WARN: ~/module.mk:5: Unknown shell command \"${AWK}\".",
+		"0 errors and 2 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
