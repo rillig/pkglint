@@ -1,7 +1,7 @@
 package main
 
 import (
-	check "gopkg.in/check.v1"
+	"gopkg.in/check.v1"
 )
 
 func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {

@@ -315,7 +315,7 @@ func (ft FileType) String() string {
 // This is used to select the proper subroutine for detecting absolute pathnames.
 func guessFileType(fname string) (fileType FileType) {
 	if trace.Tracing {
-		defer trace.Call(fname, "=>", &fileType)()
+		defer trace.Call(fname, trace.Result(&fileType))()
 	}
 
 	basename := path.Base(fname)

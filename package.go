@@ -540,7 +540,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 
 	subst := func(str, smod string) (result string) {
 		if trace.Tracing {
-			defer trace.Call(str, smod, trace.Ref(result))()
+			defer trace.Call(str, smod, trace.Result(&result))()
 		}
 		qsep := regexp.QuoteMeta(smod[1:2])
 		if m, left, from, right, to, flags := regex.Match5(smod, regex.Pattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`)); m {

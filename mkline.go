@@ -477,7 +477,7 @@ func (nq NeedsQuoting) String() string {
 
 func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
 	if trace.Tracing {
-		defer trace.Call(varname, vartype, vuc, "=>", &needsQuoting)()
+		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
 	}
 
 	if vartype == nil || vuc.vartype == nil {

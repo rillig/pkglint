@@ -220,7 +220,7 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
 func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
 	if trace.Tracing {
-		defer trace.Call(shellword, quoting, "=>", trace.Ref(&unescaped))()
+		defer trace.Call(shellword, quoting, trace.Result(&unescaped))()
 	}
 
 	line := shline.mkline.Line
