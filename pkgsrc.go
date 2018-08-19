@@ -197,11 +197,11 @@ func (src *Pkgsrc) loadTools() {
 
 	reg := src.Tools
 	for _, tool := range []*Tool{
-		{"echo", "ECHO", true, true},
-		{"echo -n", "ECHO_N", true, true},
-		{"false", "FALSE", true /*why?*/, false},
-		{"test", "TEST", true, true},
-		{"true", "TRUE", true /*why?*/, true}} {
+		{"echo", "ECHO", true, AfterPrefsMk},
+		{"echo -n", "ECHO_N", true, AfterPrefsMk},
+		{"false", "FALSE", true /*why?*/, NeverValid /* see bsd.prefs.mk */},
+		{"test", "TEST", true, AfterPrefsMk},
+		{"true", "TRUE", true /*why?*/, AfterPrefsMk}} {
 
 		reg.DefineTool(tool, dummyMkLine)
 		reg.MakeUsable(tool)
@@ -238,7 +238,7 @@ func (src *Pkgsrc) loadTools() {
 								name := strings.Split(usedTool, ":")[0]
 								tool := reg.DefineName(name, mkline, true)
 								if relativeName == "mk/bsd.prefs.mk" {
-									tool.UsableAtLoadTime = true
+									tool.Validity = AfterPrefsMk
 								}
 								reg.MakeUsable(tool)
 							}
@@ -674,8 +674,8 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
 		}
-		if tool.UsableAtLoadTime {
-			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.loadTimeTools[tool.Name] == BeforePrefs {
+		if tool.Validity == AfterPrefsMk {
+			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.toolValidity[tool.Name] == AfterPrefsMk {
 				perms |= aclpUseLoadtime
 			}
 		}

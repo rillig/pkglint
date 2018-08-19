@@ -488,11 +488,11 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
 		}
 
 		if G.Pkg != nil {
-			loaded := G.Pkg.loadTimeTools[tool.Name]
-			if loaded == AfterPrefs {
+			validity := G.Pkg.toolValidity[tool.Name]
+			if validity == AtRunTime {
 				mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
 			}
-			if loaded != NotAddedToUseTools {
+			if validity != NeverValid {
 				return
 			}
 		}
@@ -759,12 +759,12 @@ func (ck MkLineChecker) checkVarassign() {
 			toolname := strings.Split(fullToolname, ":")[0]
 			if G.Pkg != nil {
 				if !G.Pkg.SeenBsdPrefsMk {
-					G.Pkg.loadTimeTools[toolname] = BeforePrefs
+					G.Pkg.toolValidity[toolname] = AfterPrefsMk
 					if trace.Tracing {
 						trace.Step1("Tool %q is added to USE_TOOLS early enough, before including bsd.prefs.mk.", toolname)
 					}
-				} else if G.Pkg.loadTimeTools[toolname] != BeforePrefs {
-					G.Pkg.loadTimeTools[toolname] = AfterPrefs
+				} else if G.Pkg.toolValidity[toolname] != AfterPrefsMk {
+					G.Pkg.toolValidity[toolname] = AtRunTime
 					if trace.Tracing {
 						trace.Step1("Tool %q is added to USE_TOOLS after including bsd.prefs.mk (too late).", toolname)
 					}

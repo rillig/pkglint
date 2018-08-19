@@ -11,10 +11,10 @@ import (
 //
 // See `mk/tools/`.
 type Tool struct {
-	Name             string // e.g. "sed", "gzip"
-	Varname          string // e.g. "SED", "GZIP_CMD"
-	MustUseVarForm   bool   // True for `echo`, because of many differing implementations.
-	UsableAtLoadTime bool   // May be used after including `bsd.prefs.mk`.
+	Name           string // e.g. "sed", "gzip"
+	Varname        string // e.g. "SED", "GZIP_CMD"
+	MustUseVarForm bool   // True for `echo`, because of many differing implementations.
+	Validity       Validity
 }
 
 // Tools collects all tools for a certain scope (global, package, file)
@@ -48,7 +48,7 @@ func (tr *Tools) DefineName(name string, mkline MkLine, makeUsable bool) *Tool {
 //
 // The toolname may include the scope (:pkgsrc, :run, etc.).
 func (tr *Tools) DefineVarname(name, varname string, mkline MkLine, makeUsable bool) *Tool {
-	tool := tr.DefineTool(&Tool{name, varname, false, false}, mkline)
+	tool := tr.DefineTool(&Tool{name, varname, false, NeverValid}, mkline)
 	if varname != "" {
 		tool.Varname = varname
 	}
@@ -174,4 +174,26 @@ func (tr *Tools) validateToolName(toolName string, mkline MkLine) {
 	if mkline != nil && toolName != "echo -n" && !matches(toolName, `^([-a-z0-9.]+|\[)$`) {
 		mkline.Errorf("Invalid tool name %q.", toolName)
 	}
+}
+
+type Validity uint8
+
+const (
+	// NeverValid means that the tool has not been added
+	// to USE_TOOLS and therefore cannot be used at all.
+	NeverValid Validity = iota
+
+	// AfterPrefsMk means that the tool has been added to USE_TOOLS
+	// before including bsd.prefs.mk and therefore can be used at
+	// load time after bsd.prefs.mk has been included.
+	AfterPrefsMk
+
+	// AtRunTime means that the tool has been added to USE_TOOLS
+	// after including bsd.prefs.mk and therefore cannot be used
+	// at load time.
+	AtRunTime
+)
+
+func (time Validity) String() string {
+	return [...]string{"NeverValid", "AfterPrefsMk", "AtRunTime"}[time]
 }
