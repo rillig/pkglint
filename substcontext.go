@@ -94,8 +94,8 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 			ctx.id = varparam
 		} else {
 			mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.id)
+			return
 		}
-		return
 	}
 
 	switch varbase {

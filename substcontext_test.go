@@ -90,6 +90,25 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 		"WARN: Makefile:13: Incomplete SUBST block: SUBST_STAGE.repl missing.")
 }
 
+func (s *Suite) Test_SubstContext__multiple_classes(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wextra")
+
+	simulateSubstLines(t,
+		"10: SUBST_CLASSES+=         one two",
+		"11: SUBST_STAGE.one=        post-configure",
+		"12: SUBST_FILES.one=        one.txt",
+		"13: SUBST_SED.one=          s,one,1,g",
+		"14: SUBST_STAGE.two=        post-configure",
+		"15: SUBST_FILES.two=        two.txt",
+		"16: SUBST_SED.two=          s,two,2,g",
+		"17: ")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:10: Please add only one class at a time to SUBST_CLASSES.")
+}
+
 func (s *Suite) Test_SubstContext__directives(c *check.C) {
 	t := s.Init(c)
 
