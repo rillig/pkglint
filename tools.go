@@ -158,10 +158,11 @@ func (tr *Tools) Usable(tool *Tool) bool {
 	return tr.usable[tool]
 }
 
-func (tr *Tools) ForEachUsable(action func(tool *Tool)) {
-	for _, tool := range tr.byName {
-		if tr.Usable(tool) {
-			action(tool)
+func (tr *Tools) AddAll(other Tools) {
+	for _, tool := range other.byName {
+		tr.DefineTool(tool, nil)
+		if other.Usable(tool) {
+			tr.MakeUsable(tool)
 		}
 	}
 }
