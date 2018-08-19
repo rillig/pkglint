@@ -234,8 +234,8 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 			}
 			return unescaped, quoting
 
-		case repl.AdvanceRegexp("^\\\\([\"\\\\`$])"):
-			unescaped += repl.Group(1)
+		case repl.AdvanceStr("\\\""), repl.AdvanceStr("\\\\"), repl.AdvanceStr("\\`"), repl.AdvanceStr("\\$"):
+			unescaped += repl.Str()[1:]
 
 		case repl.AdvanceStr("\\"):
 			line.Warnf("Backslashes should be doubled inside backticks.")
@@ -253,7 +253,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 			unescaped += repl.Group(1)
 
 		default:
-			line.Errorf("Internal pkglint error in ShellLine.unescapeBackticks at %q (rest=%q)", shellword, repl.Rest())
+			line.Errorf("Internal pkglint error in ShellLine.unescapeBackticks at %q (rest=%q).", shellword, repl.AdvanceRest())
 		}
 	}
 	line.Errorf("Unfinished backquotes: rest=%q", repl.Rest())

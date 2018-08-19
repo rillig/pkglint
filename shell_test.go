@@ -174,7 +174,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: fname:1: Pkglint parse error in ShTokenizer.ShAtom at \"$$\\\"\" (quoting=d).",
-		"WARN: fname:1: Pkglint ShellLine.CheckShellCommand: parse error at [\"]")
+		"WARN: fname:1: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\\\"\"}")
 
 	checkShellCommandLine("echo \"\\n\"")
 
