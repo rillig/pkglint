@@ -226,7 +226,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 			for _, toolDependency := range splitOnSpace(tools) {
 				toolName := strings.Split(toolDependency, ":")[0]
-				mklines.Tools.DefineName(toolName, mkline, !seenPrefs)
+				mklines.Tools.Define(toolName, "", mkline, !seenPrefs)
 			}
 
 		case "SUBST_VARS.*":

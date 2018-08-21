@@ -23,9 +23,9 @@ func (s *Suite) Test_Tools_validateToolName__invalid(c *check.C) {
 
 	reg := NewTools()
 
-	reg.DefineName("tool_name", dummyMkLine, false)
-	reg.DefineName("tool:dependency", dummyMkLine, false)
-	reg.DefineName("tool:build", dummyMkLine, false)
+	reg.Define("tool_name", "", dummyMkLine, false)
+	reg.Define("tool:dependency", "", dummyMkLine, false)
+	reg.Define("tool:build", "", dummyMkLine, false)
 
 	// Currently, the underscore is not used in any tool name.
 	// If there should ever be such a case, just use a different character for testing.
@@ -73,16 +73,16 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
-func (s *Suite) Test_Tools__define_varname_later(c *check.C) {
+func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
 
 	tools := NewTools()
-	tool := tools.DefineName("tool", dummyMkLine, true)
+	tool := tools.Define("tool", "", dummyMkLine, true)
 
 	c.Check(tool.Name, equals, "tool")
 	c.Check(tool.Varname, equals, "")
 
 	// Should update the existing tool definition.
-	tools.DefineVarname("tool", "TOOL", dummyMkLine, true)
+	tools.Define("tool", "TOOL", dummyMkLine, true)
 
 	c.Check(tool.Name, equals, "tool")
 	c.Check(tool.Varname, equals, "TOOL")

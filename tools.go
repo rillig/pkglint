@@ -33,21 +33,12 @@ func NewTools() Tools {
 		make(map[*Tool]bool)}
 }
 
-// DefineName registers the tool by its name. After this tool is added to
-// USE_TOOLS, it may be used by this name (e.g. "awk"), but not by a
-// corresponding variable (e.g. ${AWK}).
+// Define registers the tool by its name and the corresponding
+// variable name (if nonempty). After this tool is added to USE_TOOLS, it
+// may be used by this name (e.g. "awk") or by its variable (e.g. ${AWK}).
 //
 // See MakeUsable.
-func (tr *Tools) DefineName(name string, mkline MkLine, makeUsable bool) *Tool {
-	return tr.DefineVarname(name, "", mkline, makeUsable)
-}
-
-// DefineVarname registers the tool by its name and the corresponding
-// variable name. After this tool is added to USE_TOOLS, it may be used
-// by this name (e.g. "awk") or by its variable (e.g. ${AWK}).
-//
-// The toolname may include the scope (:pkgsrc, :run, etc.).
-func (tr *Tools) DefineVarname(name, varname string, mkline MkLine, makeUsable bool) *Tool {
+func (tr *Tools) Define(name, varname string, mkline MkLine, makeUsable bool) *Tool {
 	tool := tr.DefineTool(&Tool{name, varname, false, NeverValid}, mkline)
 	if varname != "" {
 		tool.Varname = varname
@@ -112,24 +103,24 @@ func (tr *Tools) ParseToolLine(mkline MkLine, makeUsable bool) {
 		varname := mkline.Varname()
 		value := mkline.Value()
 		if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^[-\w.]+$`)) {
-			tr.DefineName(value, mkline, makeUsable)
+			tr.Define(value, "", mkline, makeUsable)
 
 		} else if m, toolname := match1(varname, `^_TOOLS_VARNAME\.([-\w.]+|\[)$`); m {
-			tool := tr.DefineVarname(toolname, value, mkline, makeUsable)
+			tool := tr.Define(toolname, value, mkline, makeUsable)
 			if makeUsable {
 				tr.MakeUsable(tool)
 			}
 
 		} else if m, toolname = match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
-			tool := tr.DefineName(toolname, mkline, makeUsable)
+			tool := tr.Define(toolname, "", mkline, makeUsable)
 			if makeUsable {
 				tr.MakeUsable(tool)
 			}
 
 		} else if m, toolname = match1(varname, `^_TOOLS\.(.*)`); m {
-			tr.DefineName(toolname, mkline, makeUsable)
+			tr.Define(toolname, "", mkline, makeUsable)
 			for _, tool := range splitOnSpace(value) {
-				tr.DefineName(tool, mkline, makeUsable)
+				tr.Define(tool, "", mkline, makeUsable)
 			}
 		}
 	}
