@@ -47,8 +47,9 @@ netbsd() {
     --exclude="qa-pkglint" \
     --exclude="**.[01]" \
     --exclude=".git*" \
+    --exclude="/.travis.yml" \
     --exclude="/COPYING" \
-    --exclude="/README.md" \
+    --exclude="/*.md" \
     --exclude="/TODO.txt" \
     --exclude="/archive/" \
     --exclude="/coverage.html" \
