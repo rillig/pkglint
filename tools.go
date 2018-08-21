@@ -39,7 +39,7 @@ func NewTools() Tools {
 //
 // See MakeUsable.
 func (tr *Tools) Define(name, varname string, mkline MkLine, makeUsable bool) *Tool {
-	tool := tr.DefineTool(&Tool{name, varname, false, NeverValid}, mkline)
+	tool := tr.DefineTool(&Tool{name, varname, false, Nowhere}, mkline)
 	if varname != "" {
 		tool.Varname = varname
 	}
@@ -170,21 +170,27 @@ func (tr *Tools) validateToolName(toolName string, mkline MkLine) {
 type Validity uint8
 
 const (
-	// NeverValid means that the tool has not been added
+	// Nowhere means that the tool has not been added
 	// to USE_TOOLS and therefore cannot be used at all.
-	NeverValid Validity = iota
+	Nowhere Validity = iota
 
 	// AfterPrefsMk means that the tool has been added to USE_TOOLS
 	// before including bsd.prefs.mk and therefore can be used at
 	// load time after bsd.prefs.mk has been included.
+	//
+	// The tool may be used as ${TOOL} everywhere.
+	// The tool may be used by its plain name in {pre,do,post}-* targets.
 	AfterPrefsMk
 
 	// AtRunTime means that the tool has been added to USE_TOOLS
 	// after including bsd.prefs.mk and therefore cannot be used
 	// at load time.
+	//
+	// The tool may be used as ${TOOL} in all targets.
+	// The tool may be used by its plain name in {pre,do,post}-* targets.
 	AtRunTime
 )
 
 func (time Validity) String() string {
-	return [...]string{"NeverValid", "AfterPrefsMk", "AtRunTime"}[time]
+	return [...]string{"Nowhere", "AfterPrefsMk", "AtRunTime"}[time]
 }

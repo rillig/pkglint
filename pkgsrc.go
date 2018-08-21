@@ -199,7 +199,7 @@ func (src *Pkgsrc) loadTools() {
 	for _, tool := range []*Tool{
 		{"echo", "ECHO", true, AfterPrefsMk},
 		{"echo -n", "ECHO_N", true, AfterPrefsMk},
-		{"false", "FALSE", true /*why?*/, NeverValid /* see bsd.prefs.mk */},
+		{"false", "FALSE", true /*why?*/, Nowhere /* see bsd.prefs.mk */},
 		{"test", "TEST", true, AfterPrefsMk},
 		{"true", "TRUE", true /*why?*/, AfterPrefsMk}} {
 

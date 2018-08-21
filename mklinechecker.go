@@ -492,7 +492,7 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
 			if validity == AtRunTime {
 				mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
 			}
-			if validity != NeverValid {
+			if validity != Nowhere {
 				return
 			}
 		}
