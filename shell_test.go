@@ -116,12 +116,9 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 			"\t"+shellCommand)
 		shline := NewShellLine(G.Mk.mklines[0])
 
-		G.Mk.ForEach(
-			func(mkline MkLine) bool {
-				shline.CheckShellCommandLine(shline.mkline.ShellCommand())
-				return true
-			},
-			func(mkline MkLine) {})
+		G.Mk.ForEach(func(mkline MkLine) {
+			shline.CheckShellCommandLine(shline.mkline.ShellCommand())
+		})
 	}
 
 	checkShellCommandLine("@# Comment")
@@ -268,13 +265,10 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine_strip(c *check.C) {
 		G.Mk = t.NewMkLines("fname",
 			"\t"+shellCommand)
 
-		G.Mk.ForEach(
-			func(mkline MkLine) bool {
-				shline := NewShellLine(mkline)
-				shline.CheckShellCommandLine(mkline.ShellCommand())
-				return true
-			},
-			func(mkline MkLine) {})
+		G.Mk.ForEach(func(mkline MkLine) {
+			shline := NewShellLine(mkline)
+			shline.CheckShellCommandLine(mkline.ShellCommand())
+		})
 	}
 
 	checkShellCommandLine("${STRIP} executable")
@@ -390,22 +384,12 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C)
 	c.Check(tokens, deepEquals, []string{text})
 	c.Check(rest, equals, "")
 
-	G.Mk.ForEach(
-		func(mkline MkLine) bool {
-			shline.CheckWord(text, false)
-			return true
-		},
-		func(mkline MkLine) {})
+	G.Mk.ForEach(func(mkline MkLine) { shline.CheckWord(text, false) })
 
 	t.CheckOutputLines(
 		"WARN: fname:1: Unknown shell command \"echo\".")
 
-	G.Mk.ForEach(
-		func(mkline MkLine) bool {
-			shline.CheckShellCommandLine(text)
-			return true
-		},
-		func(mkline MkLine) {})
+	G.Mk.ForEach(func(mkline MkLine) { shline.CheckShellCommandLine(text) })
 
 	// No parse errors
 	t.CheckOutputLines(

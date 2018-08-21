@@ -403,7 +403,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		return true
 	}
 	atEnd := func(mkline MkLine) {}
-	fileMklines.ForEach(lineAction, atEnd)
+	fileMklines.ForEachEnd(lineAction, atEnd)
 
 	if includingFnameForUsedCheck != "" {
 		fileMklines.checkForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))

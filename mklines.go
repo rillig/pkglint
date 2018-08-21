@@ -148,7 +148,7 @@ func (mklines *MkLines) Check() {
 		}
 	}
 
-	mklines.ForEach(lineAction, atEnd)
+	mklines.ForEachEnd(lineAction, atEnd)
 
 	substcontext.Finish(lastMkline)
 	varalign.Finish()
@@ -160,7 +160,16 @@ func (mklines *MkLines) Check() {
 
 // ForEach calls the action for each line, until the action returns false.
 // It keeps track of the indentation and all conditional variables.
-func (mklines *MkLines) ForEach(action func(mkline MkLine) bool, atEnd func(mkline MkLine)) {
+func (mklines *MkLines) ForEach(action func(mkline MkLine)) {
+	mklines.ForEachEnd(
+		func(mkline MkLine) bool { action(mkline); return true },
+		func(mkline MkLine) {})
+}
+
+// ForEachEnd calls the action for each line, until the action returns false.
+// It keeps track of the indentation and all conditional variables.
+// At the end, atEnd is called with the last line as its argument.
+func (mklines *MkLines) ForEachEnd(action func(mkline MkLine) bool, atEnd func(lastMkline MkLine)) {
 	mklines.indentation = NewIndentation()
 
 	for _, mkline := range mklines.mklines {
@@ -275,9 +284,7 @@ func (mklines *MkLines) collectPlistVars() {
 
 func (mklines *MkLines) collectElse() {
 	// Make a dry-run over the lines, which sets data.elseLine (in mkline.go) as a side-effect.
-	mklines.ForEach(
-		func(mkline MkLine) bool { return true },
-		func(mkline MkLine) {})
+	mklines.ForEach(func(mkline MkLine) {})
 }
 
 func (mklines *MkLines) DetermineUsedVariables() {
@@ -376,12 +383,7 @@ func (mklines *MkLines) CheckRedundantVariables() {
 		}
 	}
 
-	mklines.ForEach(
-		func(mkline MkLine) bool {
-			scope.Handle(mkline)
-			return true
-		},
-		func(mkline MkLine) {})
+	mklines.ForEach(scope.Handle)
 }
 
 func (mklines *MkLines) SaveAutofixChanges() {
