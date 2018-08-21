@@ -30,3 +30,52 @@
   scheme. Enforcing PYPKGPREFIX for those is most likely a good idea.
 
 * Warn about using REPLACE_PYTHON without including application.mk.
+
+# Tools
+
+```no-highlighting
+# anfangs sind keine Tools definiert
+
+read mk/tools/defaults.mk:
+TOOLS_CREATE+= cat:CAT (+ weitere Eigenschaften?)
+TOOLS_CREATE+= pax:PAX
+TOOLS_CREATE+= grep:GREP_CMD
+
+# cat ist ein pkgsrc-Tool mit Variable CAT
+# pax ist ein pkgsrc-Tool mit Variable PAX
+# grep ist ein pkgsrc-Tool mit Variable GREP_CMD
+
+read mk/bsd.prefs.mk:
+USE_TOOLS+= cat
+
+# ${CAT} darf preproc-genutzt werden,
+# sobald bsd.prefs.mk includiert wurde;
+# pax und grep dürfen nicht
+
+read mk/bsd.pkg.mk:
+USE_TOOLS+= pax
+
+# pax oder ${PAX} darf runtime-genutzt werden.
+
+Makefile:
+
+# pkgsrc-nutzbare Tools dürfen als ${VAR} runtime-genutzt werden
+# pkgsrc-nutzbare Tools dürfen mit Namen in {pre,do,post}-* genutzt werden
+
+USE_TOOLS += cat
+
+# ${CAT} darf preproc-genutzt werden, nachdem bsd.prefs.mk includiert wurde
+
+.include bsd.prefs.mk
+
+# ab jetzt darf ${CAT} preproc-genutzt werden
+
+USE_TOOLS += dog
+
+# dog darf als ${DOG} runtime-genutzt werden
+# dog darf als dog in {pre,do,post}-* genutzt werden
+
+.include bsd.pkg.mk
+
+# Schluss, Ende, aus
+```
