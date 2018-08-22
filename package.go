@@ -34,7 +34,6 @@ type Package struct {
 	plistSubstCond        map[string]bool // varname => true; all variables that are used as conditions (@comment or nothing) in PLISTs.
 	included              map[string]Line // fname => line
 	seenMakefileCommon    bool            // Does the package have any .includes?
-	toolValidity          map[string]Validity
 	conditionalIncludes   map[string]MkLine
 	unconditionalIncludes map[string]MkLine
 	once                  Once
@@ -60,7 +59,6 @@ func NewPackage(dir string) *Package {
 		bl3:                   make(map[string]Line),
 		plistSubstCond:        make(map[string]bool),
 		included:              make(map[string]Line),
-		toolValidity:          make(map[string]Validity),
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
 	}

@@ -318,8 +318,8 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 
 	t.SetupCommandLine("-Wall,no-space")
 	t.SetupVartypes()
-	t.SetupTool(&Tool{Name: "autoconf213"})
-	t.SetupTool(&Tool{Name: "autoconf"})
+	t.SetupTool("autoconf213", "")
+	t.SetupTool("autoconf", "")
 	mklines := t.NewMkLines("determine-defined-variables.mk",
 		MkRcsID,
 		"",
@@ -414,7 +414,9 @@ func (s *Suite) Test_MkLines_PrivateTool_Defined(c *check.C) {
 
 	mklines.Check()
 
-	t.CheckOutputEmpty()
+	// TODO: Is it necessary to add the tool to USE_TOOLS? If not, why not?
+	t.CheckOutputLines(
+		"WARN: fname:4: The \"md5sum\" tool is used but not added to USE_TOOLS.")
 }
 
 func (s *Suite) Test_MkLines_Check_indentation(c *check.C) {

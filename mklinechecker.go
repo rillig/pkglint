@@ -476,10 +476,12 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
 	mkline := ck.MkLine
 
-	tool, usable := G.ToolByVarname(varname)
+	tool := G.ToolByVarname(varname, LoadTime)
 	if tool != nil {
-		if usable && (G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk) {
-			return
+		if tool.UsableAtLoadTime(G.Mk == nil || G.Mk.Tools.SeenPrefs) {
+			if G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk {
+				return
+			}
 		}
 
 		if G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
@@ -487,8 +489,8 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
 			return
 		}
 
-		if G.Pkg != nil {
-			validity := G.Pkg.toolValidity[tool.Name]
+		if G.Mk != nil {
+			validity := tool.Validity
 			if validity == AtRunTime {
 				mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
 			}
@@ -751,25 +753,6 @@ func (ck MkLineChecker) checkVarassign() {
 			// defined by find-prefix.mk. Therefore, they are marked
 			// as known in the current file.
 			G.Mk.vars.Define(evalVarname, mkline)
-		}
-	}
-
-	if varname == "USE_TOOLS" {
-		for _, fullToolname := range splitOnSpace(value) {
-			toolname := strings.Split(fullToolname, ":")[0]
-			if G.Pkg != nil {
-				if !G.Pkg.SeenBsdPrefsMk {
-					G.Pkg.toolValidity[toolname] = AfterPrefsMk
-					if trace.Tracing {
-						trace.Step1("Tool %q is added to USE_TOOLS early enough, before including bsd.prefs.mk.", toolname)
-					}
-				} else if G.Pkg.toolValidity[toolname] != AfterPrefsMk {
-					G.Pkg.toolValidity[toolname] = AtRunTime
-					if trace.Tracing {
-						trace.Step1("Tool %q is added to USE_TOOLS after including bsd.prefs.mk (too late).", toolname)
-					}
-				}
-			}
 		}
 	}
 

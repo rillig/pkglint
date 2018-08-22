@@ -961,16 +961,16 @@ func (cv *VartypeCheck) ShellCommand() {
 		return
 	}
 	setE := true
-	NewShellLine(cv.MkLine).CheckShellCommand(cv.Value, &setE)
+	NewShellLine(cv.MkLine).CheckShellCommand(cv.Value, &setE, RunTime)
 }
 
 // Zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
-	NewShellLine(cv.MkLine).CheckShellCommands(cv.Value)
+	NewShellLine(cv.MkLine).CheckShellCommands(cv.Value, RunTime)
 }
 
 func (cv *VartypeCheck) ShellWord() {
-	NewShellLine(cv.MkLine).CheckWord(cv.Value, true)
+	NewShellLine(cv.MkLine).CheckWord(cv.Value, true, RunTime)
 }
 
 func (cv *VartypeCheck) Stage() {
@@ -985,7 +985,7 @@ func (cv *VartypeCheck) Tool() {
 		// no warning for package-defined tool definitions
 
 	} else if m, toolname, tooldep := match2(cv.Value, `^([-\w]+|\[)(?::(\w+))?$`); m {
-		if tool, _ := G.Tool(toolname); tool == nil {
+		if tool, _ := G.Tool(toolname, RunTime); tool == nil {
 			cv.Line.Errorf("Unknown tool %q.", toolname)
 		}
 

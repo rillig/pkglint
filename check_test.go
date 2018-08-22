@@ -159,23 +159,17 @@ func (t *Tester) SetupOption(name, description string) {
 	G.Pkgsrc.PkgOptions[name] = description
 }
 
-func (t *Tester) SetupTool(tool *Tool) {
-	reg := G.Pkgsrc.Tools
-
-	if tool.Name != "" {
-		reg.byName[tool.Name] = tool
-	}
-	if tool.Varname != "" {
-		reg.byVarname[tool.Varname] = tool
-	}
+func (t *Tester) SetupTool(name, varname string) *Tool {
+	tools := G.Pkgsrc.Tools
+	return tools.Define(name, varname, dummyMkLine)
 }
 
 // SetupToolUsable registers a tool and immediately makes it usable,
 // as if the tool were predefined globally in pkgsrc.
-func (t *Tester) SetupToolUsable(name, varname string) {
-	tool := &Tool{Name: name, Varname: varname}
-	t.SetupTool(tool)
-	G.Pkgsrc.Tools.MakeUsable(tool)
+func (t *Tester) SetupToolUsable(name, varname string) *Tool {
+	tool := t.SetupTool(name, varname)
+	tool.SetValidity(AtRunTime, G.Pkgsrc.Tools.TraceName)
+	return tool
 }
 
 // SetupFileLines creates a temporary file and writes the given lines to it.

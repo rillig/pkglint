@@ -21,11 +21,11 @@ func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
 func (s *Suite) Test_Tools_validateToolName__invalid(c *check.C) {
 	t := s.Init(c)
 
-	reg := NewTools()
+	reg := NewTools("")
 
-	reg.Define("tool_name", "", dummyMkLine, false)
-	reg.Define("tool:dependency", "", dummyMkLine, false)
-	reg.Define("tool:build", "", dummyMkLine, false)
+	reg.Define("tool_name", "", dummyMkLine)
+	reg.Define("tool:dependency", "", dummyMkLine)
+	reg.Define("tool:build", "", dummyMkLine)
 
 	// Currently, the underscore is not used in any tool name.
 	// If there should ever be such a case, just use a different character for testing.
@@ -40,7 +40,7 @@ func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {
 
 	t.DisableTracing()
 
-	reg := NewTools()
+	reg := NewTools("")
 	reg.Trace()
 
 	t.CheckOutputEmpty()
@@ -75,14 +75,14 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 
 func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
 
-	tools := NewTools()
-	tool := tools.Define("tool", "", dummyMkLine, true)
+	tools := NewTools("")
+	tool := tools.Define("tool", "", dummyMkLine)
 
 	c.Check(tool.Name, equals, "tool")
 	c.Check(tool.Varname, equals, "")
 
 	// Should update the existing tool definition.
-	tools.Define("tool", "TOOL", dummyMkLine, true)
+	tools.Define("tool", "TOOL", dummyMkLine)
 
 	c.Check(tool.Name, equals, "tool")
 	c.Check(tool.Varname, equals, "TOOL")
@@ -91,14 +91,14 @@ func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
 func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	t := s.Init(c)
 
-	tools := NewTools()
+	tools := NewTools("")
 
 	t.NewMkLines("create.mk",
 		"TOOLS_CREATE+= load",
 		"TOOLS_CREATE+= run",
 		"TOOLS_CREATE+= nowhere",
 	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline, false)
+		tools.ParseToolLine(mkline)
 	})
 
 	// The references to the tools are stable,
@@ -118,7 +118,7 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 		"_TOOLS_VARNAME.run=     RUN_CMD", // To avoid a collision with ${RUN}.
 		"_TOOLS_VARNAME.nowhere= NOWHERE",
 	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline, false)
+		tools.ParseToolLine(mkline)
 	})
 
 	// At this point the tools can be found by their variable names, too.
@@ -142,7 +142,7 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	t.NewMkLines("bsd.prefs.mk",
 		"USE_TOOLS+= load",
 	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline, false)
+		tools.ParseToolLine(mkline)
 	})
 
 	// Tools that are added to USE_TOOLS in bsd.prefs.mk may be used afterwards.
@@ -156,7 +156,7 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	t.NewMkLines("bsd.pkg.mk",
 		"USE_TOOLS+= run",
 	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline, false)
+		tools.ParseToolLine(mkline)
 	})
 
 	// Tools that are added to USE_TOOLS in bsd.pkg.mk may be used afterwards at run time.
@@ -193,7 +193,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 		"USE_TOOLS+=     run")
 	G.Pkgsrc.LoadInfrastructure()
 
-	tools := NewTools()
+	tools := NewTools("")
 	tools.AddAll(G.Pkgsrc.Tools)
 
 	load := tools.ByNameTool("load")
@@ -202,8 +202,8 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	before := tools.ByNameTool("pkg-before-prefs")
 	after := tools.ByNameTool("pkg-after-prefs")
 
-	c.Check(load.UsableAtRunTime(), equals, false) // FIXME: must be true, since it is added in bsd.prefs.mk.
-	c.Check(run.UsableAtRunTime(), equals, false)  // FIXME: must be true, since it is added in bsd.pkg.mk.
+	c.Check(load.UsableAtRunTime(), equals, true)
+	c.Check(run.UsableAtRunTime(), equals, false) // FIXME: must be true, since it is added in bsd.pkg.mk.
 	c.Check(nowhere.UsableAtRunTime(), equals, false)
 
 	// The seenPrefs variable is only relevant for the package Makefile.
@@ -213,12 +213,12 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	t.NewMkLines("Makefile",
 		"USE_TOOLS+=     pkg-before-prefs",
 	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline, false)
+		tools.ParseToolLine(mkline)
 	})
 
-	c.Check(before.Validity, equals, AtRunTime) // FIXME: must be AfterPrefsMk
+	c.Check(before.Validity, equals, AfterPrefsMk)
 	c.Check(before.UsableAtLoadTime(false), equals, false)
-	c.Check(before.UsableAtLoadTime(true), equals, false) // FIXME: must be true
+	c.Check(before.UsableAtLoadTime(true), equals, true)
 	c.Check(before.UsableAtRunTime(), equals, true)
 
 	c.Check(tools.SeenPrefs, equals, false)
@@ -226,7 +226,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	t.NewMkLines("Makefile",
 		".include \"../../mk/bsd.prefs.mk\"",
 	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline, false)
+		tools.ParseToolLine(mkline)
 	})
 
 	c.Check(tools.SeenPrefs, equals, true)
@@ -234,11 +234,16 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	t.NewMkLines("Makefile",
 		"USE_TOOLS+=     pkg-after-prefs",
 	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline, false)
+		tools.ParseToolLine(mkline)
 	})
 
 	c.Check(after.Validity, equals, AtRunTime)
 	c.Check(after.UsableAtLoadTime(false), equals, false)
 	c.Check(after.UsableAtLoadTime(true), equals, false)
 	c.Check(after.UsableAtRunTime(), equals, true)
+}
+
+func (s *Suite) Test_ToolTime_String(c *check.C) {
+	c.Check(LoadTime.String(), equals, "LoadTime")
+	c.Check(RunTime.String(), equals, "RunTime")
 }

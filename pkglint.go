@@ -644,7 +644,7 @@ func ChecklinesTrailingEmptyLines(lines []Line) {
 // The command can be "sed" or "gsed" or "${SED}".
 // If a tool is returned, usable tells whether that tool has been added
 // to USE_TOOLS in the current scope.
-func (pkglint *Pkglint) Tool(command string) (tool *Tool, usable bool) {
+func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable bool) {
 	gnuCommand := "g" + command
 	varname := ""
 	if m, toolVarname := match1(command, `^\$\{(\w+)\}$`); m {
@@ -652,69 +652,86 @@ func (pkglint *Pkglint) Tool(command string) (tool *Tool, usable bool) {
 	}
 
 	if G.Mk != nil {
-		if t, u := G.Mk.Tools.ByName(command); t != nil {
-			if u {
-				return t, u
+		tools := G.Mk.Tools
+		if t := G.Mk.Tools.ByNameTool(command); t != nil {
+			if tools.Usable(t, time) {
+				return t, true
 			}
-			tool, usable = t, u
+			tool = t
 		}
 
-		if t, u := G.Mk.Tools.ByName(gnuCommand); t != nil {
-			if u {
-				return t, u
+		if t := tools.ByNameTool(gnuCommand); t != nil {
+			if tools.Usable(t, time) {
+				return t, true
 			}
-			tool, usable = t, u
+			if tool == nil {
+				tool = t
+			}
 		}
 
-		if t, u := G.Mk.Tools.ByVarname(varname); t != nil {
-			if u {
-				return t, u
+		if t := tools.ByVarnameTool(varname); t != nil {
+			if tools.Usable(t, time) {
+				return t, true
 			}
-			tool, usable = t, u
+			if tool == nil {
+				tool = t
+			}
 		}
 	}
 
-	if t, u := G.Pkgsrc.Tools.ByName(command); t != nil {
-		if u {
-			return t, u
+	tools := G.Pkgsrc.Tools
+	if t := tools.ByNameTool(command); t != nil {
+		if tools.Usable(t, time) {
+			return t, true
 		}
-		tool, usable = t, u
+		if tool == nil {
+			tool = t
+		}
 	}
 
-	if t, u := G.Pkgsrc.Tools.ByName(gnuCommand); t != nil {
-		if u {
-			return t, u
+	if t := tools.ByNameTool(gnuCommand); t != nil {
+		if tools.Usable(t, time) {
+			return t, true
 		}
-		tool, usable = t, u
+		if tool == nil {
+			tool = t
+		}
 	}
 
-	if t, u := G.Pkgsrc.Tools.ByVarname(varname); t != nil {
-		if u {
-			return t, u
+	if t := tools.ByVarnameTool(varname); t != nil {
+		if tools.Usable(t, time) {
+			return t, true
 		}
-		tool, usable = t, u
+		if tool == nil {
+			tool = t
+		}
 	}
 
 	return
 }
 
-func (pkglint *Pkglint) ToolByVarname(varname string) (tool *Tool, usable bool) {
+func (pkglint *Pkglint) ToolByVarname(varname string, time ToolTime) *Tool {
 
+	var tool *Tool
 	if G.Mk != nil {
-		if t, u := G.Mk.Tools.ByVarname(varname); t != nil {
-			if u {
-				return t, u
+		tools := G.Mk.Tools
+		if t := tools.ByVarnameTool(varname); t != nil {
+			if tools.Usable(t, time) {
+				return t
 			}
-			tool, usable = t, u
+			tool = t
 		}
 	}
 
-	if t, u := G.Pkgsrc.Tools.ByVarname(varname); t != nil {
-		if u {
-			return t, u
+	tools := G.Pkgsrc.Tools
+	if t := tools.ByVarnameTool(varname); t != nil {
+		if tools.Usable(t, time) {
+			return t
 		}
-		tool, usable = t, u
+		if tool == nil {
+			tool = t
+		}
 	}
 
-	return
+	return tool
 }

@@ -18,177 +18,11 @@ type Tool struct {
 	Validity       Validity
 }
 
-// Tools collects all tools for a certain scope (global, package, file)
-// and remembers whether these tools are defined at all,
-// and whether they are declared to be used via USE_TOOLS.
-type Tools struct {
-	byName    map[string]*Tool
-	byVarname map[string]*Tool
-	usable    map[*Tool]bool
-	SeenPrefs bool
-}
-
-func NewTools() Tools {
-	return Tools{
-		make(map[string]*Tool),
-		make(map[string]*Tool),
-		make(map[*Tool]bool),
-		false}
-}
-
-// Define registers the tool by its name and the corresponding
-// variable name (if nonempty). After this tool is added to USE_TOOLS, it
-// may be used by this name (e.g. "awk") or by its variable (e.g. ${AWK}).
-//
-// See MakeUsable.
-func (tr *Tools) Define(name, varname string, mkline MkLine, makeUsable bool) *Tool {
-	if trace.Tracing {
-		trace.Stepf("Tools.Define: %q %q in %s", name, varname, mkline)
+func (tool *Tool) SetValidity(validity Validity, traceName string) {
+	if trace.Tracing && validity != tool.Validity {
+		trace.Stepf("%s: Setting validity of %q to %s", traceName, tool.Name, validity)
 	}
-
-	tool := tr.def(name, varname, mkline)
-	if varname != "" {
-		tool.Varname = varname
-	}
-	if makeUsable {
-		tr.MakeUsable(tool)
-	}
-	return tool
-}
-
-func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
-	if mkline != nil && !tr.IsValidToolName(name) {
-		mkline.Errorf("Invalid tool name %q.", name)
-	}
-
-	validity := Nowhere
-	if mkline != nil && path.Base(mkline.Filename) == "bsd.prefs.mk" {
-		validity = AfterPrefsMk
-	}
-	tool := &Tool{name, varname, false, validity}
-
-	if name != "" {
-		if existing := tr.byName[name]; existing != nil {
-			tool = existing
-		} else {
-			tr.byName[name] = tool
-		}
-	}
-
-	if varname != "" {
-		if existing := tr.byVarname[varname]; existing != nil {
-			tool = existing
-		} else {
-			tr.byVarname[varname] = tool
-		}
-	}
-
-	return tool
-}
-
-func (tr *Tools) Trace() {
-	if trace.Tracing {
-		defer trace.Call0()()
-	} else {
-		return
-	}
-
-	var keys []string
-	for k := range tr.byName {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, toolname := range keys {
-		trace.Stepf("tool %+v", tr.byName[toolname])
-	}
-}
-
-// ParseToolLine parses a tool definition from the pkgsrc infrastructure,
-// e.g. in mk/tools/replace.mk.
-func (tr *Tools) ParseToolLine(mkline MkLine, makeUsable bool) {
-	switch {
-
-	case mkline.IsVarassign():
-		varparam := mkline.Varparam()
-		value := mkline.Value()
-
-		switch mkline.Varcanon() {
-		case "TOOLS_CREATE":
-			if tr.IsValidToolName(value) {
-				tr.Define(value, "", mkline, makeUsable)
-			}
-
-		case "_TOOLS_VARNAME.*":
-			if !containsVarRef(varparam) {
-				tr.Define(varparam, value, mkline, makeUsable)
-			}
-
-		case "TOOLS_PATH.*", "_TOOLS_DEPMETHOD.*":
-			if !containsVarRef(varparam) {
-				tr.Define(varparam, "", mkline, makeUsable)
-			}
-
-		case "_TOOLS.*":
-			if !containsVarRef(varparam) {
-				tr.Define(varparam, "", mkline, makeUsable)
-				for _, tool := range splitOnSpace(value) {
-					tr.Define(tool, "", mkline, makeUsable)
-				}
-			}
-
-		case "USE_TOOLS":
-			if !containsVarRef(value) {
-				for _, name := range splitOnSpace(value) {
-					if tool := tr.ByNameTool(name); tool != nil {
-						if path.Base(mkline.Filename) == "bsd.prefs.mk" {
-							tool.Validity = AfterPrefsMk
-						} else {
-							tool.Validity = AtRunTime
-						}
-					}
-				}
-			}
-		}
-
-	case mkline.IsInclude():
-		if path.Base(mkline.IncludeFile()) == "bsd.prefs.mk" {
-			tr.SeenPrefs = true
-		}
-	}
-}
-
-// @deprecated
-func (tr *Tools) ByVarname(varname string) (tool *Tool, usable bool) {
-	tool = tr.byVarname[varname]
-	usable = tr.Usable(tool)
-	return
-}
-
-func (tr *Tools) ByVarnameTool(varname string) (tool *Tool) { return tr.byVarname[varname] }
-
-// @deprecated
-func (tr *Tools) ByName(name string) (tool *Tool, usable bool) {
-	tool = tr.byName[name]
-	usable = tr.Usable(tool)
-	return
-}
-
-func (tr *Tools) ByNameTool(name string) (tool *Tool) { return tr.byName[name] }
-
-// MakeUsable declares the tool as usable in the current scope.
-// This usually happens because the tool is mentioned in USE_TOOLS.
-func (tr *Tools) MakeUsable(tool *Tool) {
-	if trace.Tracing && !tr.usable[tool] {
-		trace.Stepf("Tools.MakeUsable %s", tool.Name)
-	}
-
-	tr.usable[tool] = true
-}
-
-// @deprecated
-func (tr *Tools) Usable(tool *Tool) bool {
-	return tr.usable[tool]
+	tool.Validity = validity
 }
 
 // UsableAtLoadTime means that the tool may be used by its variable
@@ -239,14 +73,192 @@ func (tool *Tool) UsableAtRunTime() bool {
 	return tool.Validity == AtRunTime || tool.Validity == AfterPrefsMk
 }
 
-func (tr *Tools) AddAll(other Tools) {
-	for _, tool := range other.byName {
-		tr.def(tool.Name, tool.Varname, nil)
-		if other.Usable(tool) {
-			tr.usable[tool] = true
+// Tools collects all tools for a certain scope (global or file)
+// and remembers whether these tools are defined at all,
+// and whether they are declared to be used via USE_TOOLS.
+type Tools struct {
+	TraceName string           // Only for the trace log
+	byName    map[string]*Tool // "sed" => tool
+	byVarname map[string]*Tool // "GREP_CMD" => tool
+	SeenPrefs bool             // Determines the effect of adding the tool to USE_TOOLS
+}
+
+func NewTools(traceName string) Tools {
+	return Tools{
+		traceName,
+		make(map[string]*Tool),
+		make(map[string]*Tool),
+		false}
+}
+
+// Define registers the tool by its name and the corresponding
+// variable name (if nonempty). After this tool is added to USE_TOOLS, it
+// may be used by this name (e.g. "awk") or by its variable (e.g. ${AWK}).
+//
+// See MakeUsable.
+func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
+	if trace.Tracing {
+		trace.Stepf("Tools.Define for %s: %q %q in %s", tr.TraceName, name, varname, mkline)
+	}
+
+	tool := tr.def(name, varname, mkline)
+	if varname != "" {
+		tool.Varname = varname
+	}
+	return tool
+}
+
+func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
+	if mkline != nil && !tr.IsValidToolName(name) {
+		mkline.Errorf("Invalid tool name %q.", name)
+	}
+
+	validity := Nowhere
+	if mkline != nil && path.Base(mkline.Filename) == "bsd.prefs.mk" {
+		validity = AfterPrefsMk
+	}
+	tool := &Tool{name, varname, false, validity}
+
+	if name != "" {
+		if existing := tr.byName[name]; existing != nil {
+			tool = existing
+		} else {
+			tr.byName[name] = tool
+		}
+	}
+
+	if varname != "" {
+		if existing := tr.byVarname[varname]; existing != nil {
+			tool = existing
+		} else {
+			tr.byVarname[varname] = tool
+		}
+	}
+
+	return tool
+}
+
+func (tr *Tools) Trace() {
+	if trace.Tracing {
+		defer trace.Call1(tr.TraceName)()
+	} else {
+		return
+	}
+
+	var keys []string
+	for k := range tr.byName {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, toolname := range keys {
+		trace.Stepf("tool %+v", tr.byName[toolname])
+	}
+}
+
+// ParseToolLine parses a tool definition from the pkgsrc infrastructure,
+// e.g. in mk/tools/replace.mk.
+func (tr *Tools) ParseToolLine(mkline MkLine) {
+	switch {
+
+	case mkline.IsVarassign():
+		varparam := mkline.Varparam()
+		value := mkline.Value()
+
+		switch mkline.Varcanon() {
+		case "TOOLS_CREATE":
+			if tr.IsValidToolName(value) {
+				tr.Define(value, "", mkline)
+			}
+
+		case "_TOOLS_VARNAME.*":
+			if !containsVarRef(varparam) {
+				tr.Define(varparam, value, mkline)
+			}
+
+		case "TOOLS_PATH.*", "_TOOLS_DEPMETHOD.*":
+			if !containsVarRef(varparam) {
+				tr.Define(varparam, "", mkline)
+			}
+
+		case "_TOOLS.*":
+			if !containsVarRef(varparam) {
+				tr.Define(varparam, "", mkline)
+				for _, tool := range splitOnSpace(value) {
+					tr.Define(tool, "", mkline)
+				}
+			}
+
+		case "USE_TOOLS":
+			if !containsVarRef(value) {
+				names := splitOnSpace(value)
+
+				// See mk/tools/autoconf.mk:/^\.if !defined/
+				if matches(value, `\bautoconf213\b`) {
+					for _, name := range [...]string{"autoconf-2.13", "autoheader-2.13", "autoreconf-2.13", "autoscan-2.13", "autoupdate-2.13", "ifnames-2.13"} {
+						tr.Define(name, "", mkline)
+						names = append(names, name)
+					}
+				}
+				if matches(value, `\bautoconf\b`) {
+					for _, name := range [...]string{"autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames"} {
+						tr.Define(name, "", mkline)
+						names = append(names, name)
+					}
+				}
+
+				for _, name := range names {
+					if tool := tr.ByNameTool(name); tool != nil {
+
+						var validity Validity
+						switch path.Base(mkline.Filename) {
+						case "bsd.prefs.mk":
+							validity = AfterPrefsMk
+						case "Makefile":
+							if tr.SeenPrefs {
+								validity = AtRunTime
+							} else {
+								validity = AfterPrefsMk
+							}
+						default:
+							validity = AtRunTime
+						}
+
+						if validity != tool.Validity {
+							tool.SetValidity(validity, tr.TraceName)
+						}
+					}
+				}
+			}
+		}
+
+	case mkline.IsInclude():
+		if path.Base(mkline.IncludeFile()) == "bsd.prefs.mk" {
+			tr.SeenPrefs = true
 		}
 	}
 }
+
+func (tr *Tools) ByVarnameTool(varname string) (tool *Tool) { return tr.byVarname[varname] }
+
+func (tr *Tools) ByNameTool(name string) (tool *Tool) { return tr.byName[name] }
+
+func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
+	if time == LoadTime {
+		return tool.UsableAtLoadTime(tr.SeenPrefs)
+	} else {
+		return tool.UsableAtRunTime()
+	}
+}
+
+func (tr *Tools) AddAll(other Tools) {
+	for _, otherTool := range other.byName {
+		tool := tr.def(otherTool.Name, otherTool.Varname, nil)
+		tool.MustUseVarForm = otherTool.MustUseVarForm
+		tool.SetValidity(otherTool.Validity, tr.TraceName)
+	}
+}
+
 func (tr *Tools) IsValidToolName(name string) bool {
 	return name == "[" || name == "echo -n" || matches(name, `^[-0-9a-z.]+$`)
 }
@@ -278,3 +290,12 @@ const (
 func (time Validity) String() string {
 	return [...]string{"Nowhere", "AfterPrefsMk", "AtRunTime"}[time]
 }
+
+type ToolTime uint8
+
+const (
+	LoadTime ToolTime = iota
+	RunTime
+)
+
+func (t ToolTime) String() string { return [...]string{"LoadTime", "RunTime"}[t] }

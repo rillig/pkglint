@@ -27,7 +27,7 @@ func NewShellLine(mkline MkLine) *ShellLine {
 var shellcommandsContextType = &Vartype{lkNone, BtShellCommands, []ACLEntry{{"*", aclpAllRuntime}}, false}
 var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, false}
 
-func (shline *ShellLine) CheckWord(token string, checkQuoting bool) {
+func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
 		defer trace.Call(token, checkQuoting)()
 	}
@@ -69,7 +69,7 @@ outer:
 			var backtCommand string
 			backtCommand, quoting = shline.unescapeBackticks(token, repl, quoting)
 			setE := true
-			shline.CheckShellCommand(backtCommand, &setE)
+			shline.CheckShellCommand(backtCommand, &setE, time)
 
 			// Make(1) variables have the same syntax, no matter in which state we are currently.
 		case shline.checkVaruseToken(parser, quoting):
@@ -318,10 +318,10 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		repl.AdvanceStr("${_PKG_SILENT}${_PKG_DEBUG}")
 	}
 
-	shline.CheckShellCommand(repl.Rest(), &setE)
+	shline.CheckShellCommand(repl.Rest(), &setE, RunTime)
 }
 
-func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
+func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time ToolTime) {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
@@ -342,7 +342,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 
 	callback := NewMkShWalkCallback()
 	callback.SimpleCommand = func(command *MkShSimpleCommand) {
-		scc := NewSimpleCommandChecker(shline, command)
+		scc := NewSimpleCommandChecker(shline, command, time)
 		scc.Check()
 		if scc.strcmd.Name == "set" && scc.strcmd.AnyArgMatches(`^-.*e`) {
 			*pSetE = true
@@ -355,15 +355,15 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool) {
 		spc.checkPipeExitcode(line, pipeline)
 	}
 	callback.Word = func(word *ShToken) {
-		spc.checkWord(word, false)
+		spc.checkWord(word, false, time)
 	}
 
 	NewMkShWalker().Walk(program, callback)
 }
 
-func (shline *ShellLine) CheckShellCommands(shellcmds string) {
+func (shline *ShellLine) CheckShellCommands(shellcmds string, time ToolTime) {
 	setE := true
-	shline.CheckShellCommand(shellcmds, &setE)
+	shline.CheckShellCommand(shellcmds, &setE, time)
 	if !hasSuffix(shellcmds, ";") {
 		shline.mkline.Warnf("This shell command list should end with a semicolon.")
 	}
@@ -423,11 +423,12 @@ type SimpleCommandChecker struct {
 	shline *ShellLine
 	cmd    *MkShSimpleCommand
 	strcmd *StrCommand
+	time   ToolTime
 }
 
-func NewSimpleCommandChecker(shline *ShellLine, cmd *MkShSimpleCommand) *SimpleCommandChecker {
+func NewSimpleCommandChecker(shline *ShellLine, cmd *MkShSimpleCommand, time ToolTime) *SimpleCommandChecker {
 	strcmd := NewStrCommand(cmd)
-	return &SimpleCommandChecker{shline, cmd, strcmd}
+	return &SimpleCommandChecker{shline, cmd, strcmd, time}
 
 }
 
@@ -479,7 +480,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 
 	command := scc.strcmd.Name
 
-	tool, usable := G.Tool(command)
+	tool, usable := G.Tool(command, scc.time)
 
 	if tool != nil && !usable {
 		scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", command)
@@ -521,8 +522,8 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	if varuse := parser.VarUse(); varuse != nil && parser.EOF() {
 		varname := varuse.varname
 
-		if tool, usable := G.ToolByVarname(varname); tool != nil {
-			if !usable {
+		if tool := G.ToolByVarname(varname, RunTime /* LoadTime would also work */); tool != nil {
+			if tool.Validity == Nowhere {
 				scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", tool.Name)
 			}
 			scc.shline.checkCommandUse(shellword)
@@ -765,22 +766,22 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	NewMkShWalker().Walk(list, callback)
 }
 
-func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool) {
+func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
 
 	for _, word := range words {
-		spc.checkWord(word, checkQuoting)
+		spc.checkWord(word, checkQuoting, time)
 	}
 }
 
-func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool) {
+func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
 		defer trace.Call(word.MkText)()
 	}
 
-	spc.shline.CheckWord(word.MkText, checkQuoting)
+	spc.shline.CheckWord(word.MkText, checkQuoting, time)
 }
 
 func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipeline) {
@@ -813,7 +814,7 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 			if len(simple.Redirections) != 0 {
 				return true, commandName
 			}
-			tool, _ := G.Tool(commandName)
+			tool, _ := G.Tool(commandName, RunTime)
 			switch {
 			case tool == nil:
 				return true, commandName

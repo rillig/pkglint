@@ -101,7 +101,7 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t.DisableTracing()
 
 	t.CheckOutputLines(
-		"TRACE: + (*Tools).Trace()",
+		"TRACE: + (*Tools).Trace(\"Pkgsrc\")",
 		"TRACE: 1   tool &{Name:bzcat Varname: MustUseVarForm:false Validity:Nowhere}",
 		"TRACE: 1   tool &{Name:bzip2 Varname: MustUseVarForm:false Validity:Nowhere}",
 		"TRACE: 1   tool &{Name:chown Varname:CHOWN MustUseVarForm:false Validity:Nowhere}",
@@ -116,7 +116,7 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 		"TRACE: 1   tool &{Name:strip Varname: MustUseVarForm:false Validity:Nowhere}",
 		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",
 		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: - (*Tools).Trace()")
+		"TRACE: - (*Tools).Trace(\"Pkgsrc\")")
 }
 
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {

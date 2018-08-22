@@ -18,8 +18,8 @@ type MkLines struct {
 	plistVarSet    map[string]MkLine // Identifiers for which PLIST.${id} is defined.
 	plistVarSkip   bool              // True if any of the PLIST_VARS identifiers refers to a variable.
 	Tools          Tools             // Tools defined in file scope.
-	SeenBsdPrefsMk bool
-	indentation    *Indentation // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
+	SeenBsdPrefsMk bool              // TODO: @deprecated; See Tools.SeenPrefs
+	indentation    *Indentation      // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
 	Once
 }
 
@@ -28,7 +28,13 @@ func NewMkLines(lines []Line) *MkLines {
 	for i, line := range lines {
 		mklines[i] = NewMkLine(line)
 	}
-	tools := NewTools()
+
+	traceName := "MkLines"
+	if len(lines) != 0 {
+		traceName = lines[0].Filename
+	}
+
+	tools := NewTools(traceName)
 	tools.AddAll(G.Pkgsrc.Tools)
 
 	return &MkLines{
@@ -90,6 +96,7 @@ func (mklines *MkLines) Check() {
 		ck := MkLineChecker{mkline}
 		ck.Check()
 		varalign.Check(mkline)
+		mklines.Tools.ParseToolLine(mkline)
 
 		switch {
 		case mkline.IsEmpty():
@@ -148,6 +155,10 @@ func (mklines *MkLines) Check() {
 		}
 	}
 
+	// TODO: Extract this code so that it is clearly visible in the stack trace.
+	if trace.Tracing {
+		trace.Stepf("Starting main checking loop")
+	}
 	mklines.ForEachEnd(lineAction, atEnd)
 
 	substcontext.Finish(lastMkline)
@@ -171,6 +182,7 @@ func (mklines *MkLines) ForEach(action func(mkline MkLine)) {
 // At the end, atEnd is called with the last line as its argument.
 func (mklines *MkLines) ForEachEnd(action func(mkline MkLine) bool, atEnd func(lastMkline MkLine)) {
 	mklines.indentation = NewIndentation()
+	mklines.Tools.SeenPrefs = false
 
 	for _, mkline := range mklines.mklines {
 		mklines.indentation.TrackBefore(mkline)
@@ -189,12 +201,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 		defer trace.Call0()()
 	}
 
-	seenPrefs := false
 	for _, mkline := range mklines.mklines {
-		if mkline.IsInclude() && path.Base(mkline.IncludeFile()) == "bsd.prefs.mk" {
-			seenPrefs = true
-		}
-
 		if !mkline.IsVarassign() {
 			continue
 		}
@@ -225,19 +232,6 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 				}
 			}
 
-		case "USE_TOOLS":
-			tools := mkline.WithoutMakeVariables(mkline.Value())
-			if matches(tools, `\bautoconf213\b`) {
-				tools += " autoconf autoheader-2.13 autom4te-2.13 autoreconf-2.13 autoscan-2.13 autoupdate-2.13 ifnames-2.13"
-			}
-			if matches(tools, `\bautoconf\b`) {
-				tools += " autoheader autom4te autoreconf autoscan autoupdate ifnames"
-			}
-			for _, toolDependency := range splitOnSpace(tools) {
-				toolName := strings.Split(toolDependency, ":")[0]
-				mklines.Tools.Define(toolName, "", mkline, !seenPrefs)
-			}
-
 		case "SUBST_VARS.*":
 			for _, svar := range splitOnSpace(mkline.Value()) {
 				mklines.UseVar(mkline, varnameCanon(svar))
@@ -253,7 +247,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 		}
 
-		mklines.Tools.ParseToolLine(mkline, true)
+		mklines.Tools.ParseToolLine(mkline)
 	}
 }
 

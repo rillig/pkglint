@@ -384,7 +384,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C)
 	c.Check(tokens, deepEquals, []string{text})
 	c.Check(rest, equals, "")
 
-	G.Mk.ForEach(func(mkline MkLine) { shline.CheckWord(text, false) })
+	G.Mk.ForEach(func(mkline MkLine) { shline.CheckWord(text, false, RunTime) })
 
 	t.CheckOutputLines(
 		"WARN: fname:1: Unknown shell command \"echo\".")
@@ -419,7 +419,7 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 	checkWord := func(shellWord string, checkQuoting bool) {
 		shline := t.NewShellLine("dummy.mk", 1, "\t echo "+shellWord)
 
-		shline.CheckWord(shellWord, checkQuoting)
+		shline.CheckWord(shellWord, checkQuoting, RunTime)
 	}
 
 	checkWord("${${list}}", false)
@@ -466,7 +466,7 @@ func (s *Suite) Test_ShellLine_CheckWord__dollar_without_variable(c *check.C) {
 
 	shline := t.NewShellLine("fname", 1, "# dummy")
 
-	shline.CheckWord("/.*~$$//g", false) // Typical argument to pax(1).
+	shline.CheckWord("/.*~$$//g", false, RunTime) // Typical argument to pax(1).
 
 	t.CheckOutputEmpty()
 }
@@ -475,9 +475,8 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
-	echo := &Tool{Name: "echo", Varname: "ECHO", MustUseVarForm: true}
-	t.SetupTool(echo)
-	G.Pkgsrc.Tools.MakeUsable(echo)
+	echo := t.SetupToolUsable("echo", "ECHO")
+	echo.MustUseVarForm = true
 	G.Mk = t.NewMkLines("fname",
 		"# dummy")
 	mkline := t.NewMkLine("fname", 3, "# dummy")

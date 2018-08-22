@@ -533,3 +533,36 @@ func (s *Suite) Test_Pkglint_Checkfile__in_current_working_directory(c *check.C)
 		"WARN: log: Unexpected file found.",
 		"0 errors and 1 warning found.")
 }
+
+func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
+	t := s.Init(c)
+
+	G.Mk = t.NewMkLines("Makefile", MkRcsID)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
+	local := G.Mk.Tools.Define("tool", "TOOL", dummyMkLine)
+
+	global.Validity = Nowhere
+	local.Validity = AtRunTime
+
+	loadTimeTool, loadTimeUsable := G.Tool("tool", LoadTime)
+	runTimeTool, runTimeUsable := G.Tool("tool", RunTime)
+
+	c.Check(loadTimeTool, equals, local)
+	c.Check(loadTimeUsable, equals, false)
+	c.Check(runTimeTool, equals, local)
+	c.Check(runTimeUsable, equals, true)
+}
+
+func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
+	t := s.Init(c)
+
+	G.Mk = t.NewMkLines("Makefile", MkRcsID)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
+	local := G.Mk.Tools.Define("tool", "TOOL", dummyMkLine)
+
+	global.Validity = Nowhere
+	local.Validity = AtRunTime
+
+	c.Check(G.ToolByVarname("TOOL", LoadTime), equals, local)
+	c.Check(G.ToolByVarname("TOOL", RunTime), equals, local)
+}

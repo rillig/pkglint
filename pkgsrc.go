@@ -44,7 +44,7 @@ func NewPkgsrc(dir string) *Pkgsrc {
 	src := &Pkgsrc{
 		dir,
 		make(map[string]bool),
-		NewTools(),
+		NewTools("Pkgsrc"),
 		make(map[string]string),
 		make(map[string]string),
 		make(map[string]string),
@@ -208,18 +208,17 @@ func (src *Pkgsrc) loadTools() {
 
 	reg := src.Tools
 	for _, toolDef := range toolDefs {
-		tool := reg.Define(toolDef.Name, toolDef.Varname, dummyMkLine, false)
+		tool := reg.Define(toolDef.Name, toolDef.Varname, dummyMkLine)
 		tool.MustUseVarForm = true
 		if toolDef.Name != "false" {
-			tool.Validity = AfterPrefsMk
-			reg.MakeUsable(tool)
+			tool.SetValidity(AfterPrefsMk, reg.TraceName)
 		}
 	}
 
 	for _, basename := range toolFiles {
 		mklines := G.Pkgsrc.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
-			reg.ParseToolLine(mkline, false)
+			reg.ParseToolLine(mkline)
 		}
 	}
 
@@ -245,11 +244,10 @@ func (src *Pkgsrc) loadTools() {
 						for _, usedTool := range splitOnSpace(value) {
 							if !containsVarRef(usedTool) {
 								name := strings.Split(usedTool, ":")[0]
-								tool := reg.Define(name, "", mkline, true)
+								tool := reg.Define(name, "", mkline)
 								if relativeName == "mk/bsd.prefs.mk" {
-									tool.Validity = AfterPrefsMk
+									tool.SetValidity(AfterPrefsMk, reg.TraceName)
 								}
-								reg.MakeUsable(tool)
 							}
 						}
 					}
@@ -678,13 +676,13 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		return vartype
 	}
 
-	if tool, _ := G.ToolByVarname(varname); tool != nil {
+	if tool := G.ToolByVarname(varname, RunTime); tool != nil {
 		perms := aclpUse
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
 		}
 		if tool.Validity == AfterPrefsMk {
-			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk || G.Pkg.toolValidity[tool.Name] == AfterPrefsMk {
+			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk {
 				perms |= aclpUseLoadtime
 			}
 		}
@@ -692,7 +690,7 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 	}
 
 	if m, toolVarname := match1(varname, `^TOOLS_(.*)`); m {
-		if tool, _ := G.ToolByVarname(toolVarname); tool != nil {
+		if tool := G.ToolByVarname(toolVarname, RunTime); tool != nil {
 			return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
 		}
 	}
