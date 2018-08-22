@@ -114,7 +114,7 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 	}
 
 	validity := Nowhere
-	if mkline != nil && path.Base(mkline.Filename) == "bsd.prefs.mk" {
+	if mkline != nil && IsPrefs(mkline.Filename) {
 		validity = AfterPrefsMk
 	}
 	tool := &Tool{name, varname, false, validity}
@@ -233,7 +233,7 @@ func (tr *Tools) ParseToolLine(mkline MkLine) {
 		}
 
 	case mkline.IsInclude():
-		if path.Base(mkline.IncludeFile()) == "bsd.prefs.mk" {
+		if IsPrefs(mkline.IncludeFile()) {
 			tr.SeenPrefs = true
 		}
 	}

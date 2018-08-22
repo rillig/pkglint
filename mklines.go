@@ -8,18 +8,17 @@ import (
 
 // MkLines contains data for the Makefile (or *.mk) that is currently checked.
 type MkLines struct {
-	mklines        []MkLine
-	lines          []Line
-	forVars        map[string]bool // The variables currently used in .for loops
-	target         string          // Current make(1) target
-	vars           Scope
-	buildDefs      map[string]bool   // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
-	plistVarAdded  map[string]MkLine // Identifiers that are added to PLIST_VARS.
-	plistVarSet    map[string]MkLine // Identifiers for which PLIST.${id} is defined.
-	plistVarSkip   bool              // True if any of the PLIST_VARS identifiers refers to a variable.
-	Tools          Tools             // Tools defined in file scope.
-	SeenBsdPrefsMk bool              // TODO: @deprecated; See Tools.SeenPrefs
-	indentation    *Indentation      // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
+	mklines       []MkLine
+	lines         []Line
+	forVars       map[string]bool // The variables currently used in .for loops
+	target        string          // Current make(1) target
+	vars          Scope
+	buildDefs     map[string]bool   // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
+	plistVarAdded map[string]MkLine // Identifiers that are added to PLIST_VARS.
+	plistVarSet   map[string]MkLine // Identifiers for which PLIST.${id} is defined.
+	plistVarSkip  bool              // True if any of the PLIST_VARS identifiers refers to a variable.
+	Tools         Tools             // Tools defined in file scope.
+	indentation   *Indentation      // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
 	Once
 }
 
@@ -48,7 +47,6 @@ func NewMkLines(lines []Line) *MkLines {
 		make(map[string]MkLine),
 		false,
 		tools,
-		false,
 		nil,
 		Once{}}
 }
@@ -125,10 +123,6 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsInclude():
 			mklines.target = ""
-			switch path.Base(mkline.IncludeFile()) {
-			case "bsd.prefs.mk", "bsd.fast.prefs.mk", "bsd.builtin.mk":
-				mklines.setSeenBsdPrefsMk()
-			}
 			if G.Pkg != nil {
 				G.Pkg.CheckInclude(mkline, mklines.indentation)
 			}
@@ -339,15 +333,6 @@ func (mklines *MkLines) determineDocumentedVariables() {
 	}
 
 	finish()
-}
-
-func (mklines *MkLines) setSeenBsdPrefsMk() {
-	if !mklines.SeenBsdPrefsMk {
-		mklines.SeenBsdPrefsMk = true
-		if trace.Tracing {
-			trace.Stepf("Mk.setSeenBsdPrefsMk")
-		}
-	}
 }
 
 func (mklines *MkLines) CheckRedundantVariables() {

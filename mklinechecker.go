@@ -69,6 +69,10 @@ func (ck MkLineChecker) checkInclude() {
 	}
 	ck.CheckRelativePath(includefile, mustExist)
 
+	if G.Pkg != nil && IsPrefs(includefile) {
+		G.Pkg.setSeenBsdPrefsMk()
+	}
+
 	switch {
 	case hasSuffix(includefile, "/Makefile"):
 		mkline.Errorf("Other Makefiles must not be included directly.")
@@ -78,17 +82,9 @@ func (ck MkLineChecker) checkInclude() {
 			"that, both this one and the other package should include the",
 			"Makefile.common.")
 
-	case includefile == "../../mk/bsd.prefs.mk":
-		if path.Base(mkline.Filename) == "buildlink3.mk" {
+	case IsPrefs(includefile):
+		if path.Base(mkline.Filename) == "buildlink3.mk" && includefile == "../../mk/bsd.prefs.mk" {
 			mkline.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
-		}
-		if G.Pkg != nil {
-			G.Pkg.setSeenBsdPrefsMk()
-		}
-
-	case includefile == "../../mk/bsd.fast.prefs.mk", includefile == "../../mk/buildlink3/bsd.builtin.mk":
-		if G.Pkg != nil {
-			G.Pkg.setSeenBsdPrefsMk()
 		}
 
 	case hasSuffix(includefile, "/x11-links/buildlink3.mk"):
@@ -479,12 +475,12 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
 	tool := G.ToolByVarname(varname, LoadTime)
 	if tool != nil {
 		if tool.UsableAtLoadTime(G.Mk == nil || G.Mk.Tools.SeenPrefs) {
-			if G.Mk == nil || G.Mk.SeenBsdPrefsMk || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk {
+			if G.Mk == nil || G.Mk.Tools.SeenPrefs || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk {
 				return
 			}
 		}
 
-		if G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.SeenBsdPrefsMk {
+		if G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.Tools.SeenPrefs {
 			mkline.Warnf("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
 			return
 		}

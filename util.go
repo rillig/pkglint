@@ -681,3 +681,11 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 func (s *RedundantScope) IsConditional(varname string) bool {
 	return s.vars[varname] != nil
 }
+
+func IsPrefs(fileName string) bool {
+	switch path.Base(fileName) {
+	case "bsd.prefs.mk", "bsd.fast.prefs.mk", "bsd.builtin.mk":
+		return true
+	}
+	return false
+}

@@ -353,7 +353,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				G.Pkg.seenMakefileCommon = true
 			}
 
-			skip := contains(fname, "/mk/") || hasSuffix(includeFile, "/bsd.pkg.mk") || hasSuffix(includeFile, "/bsd.prefs.mk")
+			skip := contains(fname, "/mk/") || hasSuffix(includeFile, "/bsd.pkg.mk") || IsPrefs(includeFile)
 			if !skip {
 				dirname, _ := path.Split(fname)
 				dirname = cleanpath(dirname)
