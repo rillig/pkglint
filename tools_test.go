@@ -229,7 +229,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 		tools.ParseToolLine(mkline, false)
 	})
 
-	c.Check(tools.SeenPrefs, equals, false) // FIXME: must be true
+	c.Check(tools.SeenPrefs, equals, true)
 
 	t.NewMkLines("Makefile",
 		"USE_TOOLS+=     pkg-after-prefs",

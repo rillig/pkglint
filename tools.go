@@ -107,7 +107,9 @@ func (tr *Tools) Trace() {
 // ParseToolLine parses a tool definition from the pkgsrc infrastructure,
 // e.g. in mk/tools/replace.mk.
 func (tr *Tools) ParseToolLine(mkline MkLine, makeUsable bool) {
-	if mkline.IsVarassign() {
+	switch {
+
+	case mkline.IsVarassign():
 		varparam := mkline.Varparam()
 		value := mkline.Value()
 
@@ -147,6 +149,11 @@ func (tr *Tools) ParseToolLine(mkline MkLine, makeUsable bool) {
 					}
 				}
 			}
+		}
+
+	case mkline.IsInclude():
+		if path.Base(mkline.IncludeFile()) == "bsd.prefs.mk" {
+			tr.SeenPrefs = true
 		}
 	}
 }
