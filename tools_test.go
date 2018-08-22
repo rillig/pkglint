@@ -247,3 +247,28 @@ func (s *Suite) Test_ToolTime_String(c *check.C) {
 	c.Check(LoadTime.String(), equals, "LoadTime")
 	c.Check(RunTime.String(), equals, "RunTime")
 }
+
+func (s *Suite) Test_Tools__var(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/tools/defaults.mk",
+		"TOOLS_CREATE+=          ln",
+		"_TOOLS_VARNAME.ln=      LN")
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		"USE_TOOLS+=             ln")
+	G.Pkgsrc.LoadInfrastructure()
+
+	mklines := t.NewMkLines("module.mk",
+		MkRcsID,
+		"",
+		"pre-configure:",
+		"\t${LN} from to")
+
+	mklines.Check()
+
+	// FIXME: The ln tool is added in bsd.pkg.mk.
+	t.CheckOutputLines(
+		"WARN: module.mk:4: The \"${LN}\" tool is used but not added to USE_TOOLS.")
+}
