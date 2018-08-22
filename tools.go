@@ -25,13 +25,15 @@ type Tools struct {
 	byName    map[string]*Tool
 	byVarname map[string]*Tool
 	usable    map[*Tool]bool
+	SeenPrefs bool
 }
 
 func NewTools() Tools {
 	return Tools{
 		make(map[string]*Tool),
 		make(map[string]*Tool),
-		make(map[*Tool]bool)}
+		make(map[*Tool]bool),
+		false}
 }
 
 // Define registers the tool by its name and the corresponding
@@ -182,10 +184,50 @@ func (tr *Tools) Usable(tool *Tool) bool {
 	return tr.usable[tool]
 }
 
+// UsableAtLoadTime means that the tool may be used by its variable
+// name after bsd.prefs.mk has been included.
+//
+// Additionally, all allowed cases from UsableAtRunTime are allowed.
+//
+//  VAR:=   ${TOOL}           # Not allowed since bsd.prefs.mk is not
+//                            # included yet.
+//
+//  .include "../../bsd.prefs.mk"
+//
+//  VAR:=   ${TOOL}           # Allowed.
+//  VAR!=   ${TOOL}           # Allowed.
+//
+//  VAR=    ${${TOOL}:sh}     # Allowed; the :sh modifier is evaluated
+//                            # lazily, but when VAR should ever be
+//                            # evaluated at load time, this still means
+//                            # load time.
+//
+//  .if ${TOOL:T} == "tool"   # Allowed.
+//  .endif
 func (tool *Tool) UsableAtLoadTime(seenPrefs bool) bool {
 	return seenPrefs && tool.Validity == AfterPrefsMk
 }
 
+// UsableAtRunTime means that the tool may be used by its simple name
+// in all {pre,do,post}-* targets, and by its variable name in all
+// runtime contexts.
+//
+//  VAR:=   ${TOOL}           # Not allowed; TOOL might not be initialized yet.
+//  VAR!=   ${TOOL}           # Not allowed; TOOL might not be initialized yet.
+//
+//  VAR=    ${${TOOL}:sh}     # Tricky; pkglint doesn't know enough context
+//                            # to check this reliably, therefore it doesn't
+//                            # produce any warnings. This pattern fails if
+//                            # VAR is evaluated at load time.
+//
+//  own-target:
+//          ${TOOL}           # Allowed.
+//          tool              # Not allowed because the PATH might not be set
+//                            # up for this target.
+//
+//  pre-configure:
+//          ${TOOL}           # Allowed.
+//          tool              # Allowed.
 func (tool *Tool) UsableAtRunTime() bool {
 	return tool.Validity == AtRunTime || tool.Validity == AfterPrefsMk
 }

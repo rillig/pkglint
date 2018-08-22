@@ -30,30 +30,3 @@
   scheme. Enforcing PYPKGPREFIX for those is most likely a good idea.
 
 * Warn about using REPLACE_PYTHON without including application.mk.
-
-# Tools
-
-```no-highlighting
-
-Makefile:
-
-# pkgsrc-nutzbare Tools dürfen als ${VAR} runtime-genutzt werden
-# pkgsrc-nutzbare Tools dürfen mit Namen in {pre,do,post}-* genutzt werden
-
-USE_TOOLS += cat
-
-# ${CAT} darf preproc-genutzt werden, nachdem bsd.prefs.mk includiert wurde
-
-.include bsd.prefs.mk
-
-# ab jetzt darf ${CAT} preproc-genutzt werden
-
-USE_TOOLS += dog
-
-# dog darf als ${DOG} runtime-genutzt werden
-# dog darf als dog in {pre,do,post}-* genutzt werden
-
-.include bsd.pkg.mk
-
-# Schluss, Ende, aus
-```

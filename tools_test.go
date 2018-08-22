@@ -169,3 +169,76 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 
 	// That's all for parsing tool definitions from the pkgsrc infrastructure.
 }
+
+func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
+	t := s.Init(c)
+
+	// The same tools as in Test_Tools__load_from_infrastructure.
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/tools/defaults.mk",
+		"TOOLS_CREATE+=  load",
+		"TOOLS_CREATE+=  run",
+		"TOOLS_CREATE+=  nowhere",
+		"TOOLS_CREATE+=  pkg-before-prefs",
+		"TOOLS_CREATE+=  pkg-after-prefs",
+		"_TOOLS_VARNAME.load=                    LOAD",
+		"_TOOLS_VARNAME.run=                     RUN_CMD",
+		"_TOOLS_VARNAME.nowhere=                 NOWHERE",
+		"_TOOLS_VARNAME.pkg-before-prefs=        PKG_BEFORE_PREFS",
+		"_TOOLS_VARNAME.pkg-after-prefs=         PKG_AFTER_PREFS",
+	)
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		"USE_TOOLS+=     load")
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		"USE_TOOLS+=     run")
+	G.Pkgsrc.LoadInfrastructure()
+
+	tools := NewTools()
+	tools.AddAll(G.Pkgsrc.Tools)
+
+	load := tools.ByNameTool("load")
+	run := tools.ByNameTool("run")
+	nowhere := tools.ByNameTool("nowhere")
+	before := tools.ByNameTool("pkg-before-prefs")
+	after := tools.ByNameTool("pkg-after-prefs")
+
+	c.Check(load.UsableAtRunTime(), equals, false) // FIXME: must be true, since it is added in bsd.prefs.mk.
+	c.Check(run.UsableAtRunTime(), equals, false)  // FIXME: must be true, since it is added in bsd.pkg.mk.
+	c.Check(nowhere.UsableAtRunTime(), equals, false)
+
+	// The seenPrefs variable is only relevant for the package Makefile.
+	// All other files must not use the tools at load time.
+	// For them, seenPrefs can be though of as being true from the beginning.
+
+	t.NewMkLines("Makefile",
+		"USE_TOOLS+=     pkg-before-prefs",
+	).ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(mkline, false)
+	})
+
+	c.Check(before.Validity, equals, AtRunTime) // FIXME: must be AfterPrefsMk
+	c.Check(before.UsableAtLoadTime(false), equals, false)
+	c.Check(before.UsableAtLoadTime(true), equals, false) // FIXME: must be true
+	c.Check(before.UsableAtRunTime(), equals, true)
+
+	c.Check(tools.SeenPrefs, equals, false)
+
+	t.NewMkLines("Makefile",
+		".include \"../../mk/bsd.prefs.mk\"",
+	).ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(mkline, false)
+	})
+
+	c.Check(tools.SeenPrefs, equals, false) // FIXME: must be true
+
+	t.NewMkLines("Makefile",
+		"USE_TOOLS+=     pkg-after-prefs",
+	).ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(mkline, false)
+	})
+
+	c.Check(after.Validity, equals, AtRunTime)
+	c.Check(after.UsableAtLoadTime(false), equals, false)
+	c.Check(after.UsableAtLoadTime(true), equals, false)
+	c.Check(after.UsableAtRunTime(), equals, true)
+}
