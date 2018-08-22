@@ -34,28 +34,6 @@
 # Tools
 
 ```no-highlighting
-# anfangs sind keine Tools definiert
-
-read mk/tools/defaults.mk:
-TOOLS_CREATE+= cat:CAT (+ weitere Eigenschaften?)
-TOOLS_CREATE+= pax:PAX
-TOOLS_CREATE+= grep:GREP_CMD
-
-# cat ist ein pkgsrc-Tool mit Variable CAT
-# pax ist ein pkgsrc-Tool mit Variable PAX
-# grep ist ein pkgsrc-Tool mit Variable GREP_CMD
-
-read mk/bsd.prefs.mk:
-USE_TOOLS+= cat
-
-# ${CAT} darf preproc-genutzt werden,
-# sobald bsd.prefs.mk includiert wurde;
-# pax und grep dürfen nicht
-
-read mk/bsd.pkg.mk:
-USE_TOOLS+= pax
-
-# pax oder ${PAX} darf runtime-genutzt werden.
 
 Makefile:
 

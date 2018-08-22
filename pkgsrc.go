@@ -195,16 +195,25 @@ func (src *Pkgsrc) loadTools() {
 		}
 	}
 
-	reg := src.Tools
-	for _, tool := range []*Tool{
-		{"echo", "ECHO", true, AfterPrefsMk},
-		{"echo -n", "ECHO_N", true, AfterPrefsMk},
-		{"false", "FALSE", true /*why?*/, Nowhere /* see bsd.prefs.mk */},
-		{"test", "TEST", true, AfterPrefsMk},
-		{"true", "TRUE", true /*why?*/, AfterPrefsMk}} {
+	// TODO: parse bsd.prefs.mk instead of hardcoding this.
+	toolDefs := []struct {
+		Name    string
+		Varname string
+	}{
+		{"echo", "ECHO"},
+		{"echo -n", "ECHO_N"},
+		{"false", "FALSE"},
+		{"test", "TEST"},
+		{"true", "TRUE"}}
 
-		reg.DefineTool(tool, dummyMkLine)
-		reg.MakeUsable(tool)
+	reg := src.Tools
+	for _, toolDef := range toolDefs {
+		tool := reg.Define(toolDef.Name, toolDef.Varname, dummyMkLine, false)
+		tool.MustUseVarForm = true
+		if toolDef.Name != "false" {
+			tool.Validity = AfterPrefsMk
+			reg.MakeUsable(tool)
+		}
 	}
 
 	for _, basename := range toolFiles {

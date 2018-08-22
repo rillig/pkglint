@@ -2,6 +2,7 @@ package main
 
 import (
 	"netbsd.org/pkglint/trace"
+	"path"
 	"sort"
 )
 
@@ -39,7 +40,11 @@ func NewTools() Tools {
 //
 // See MakeUsable.
 func (tr *Tools) Define(name, varname string, mkline MkLine, makeUsable bool) *Tool {
-	tool := tr.DefineTool(&Tool{name, varname, false, Nowhere}, mkline)
+	if trace.Tracing {
+		trace.Stepf("Tools.Define: %q %q in %s", name, varname, mkline)
+	}
+
+	tool := tr.def(name, varname, mkline)
 	if varname != "" {
 		tool.Varname = varname
 	}
@@ -49,33 +54,34 @@ func (tr *Tools) Define(name, varname string, mkline MkLine, makeUsable bool) *T
 	return tool
 }
 
-func (tr *Tools) DefineTool(tool *Tool, mkline MkLine) *Tool {
-	if trace.Tracing {
-		trace.Stepf("Tools.DefineTool: %+v in %s", tool, mkline)
+func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
+	if mkline != nil && !tr.IsValidToolName(name) {
+		mkline.Errorf("Invalid tool name %q.", name)
 	}
 
-	return tr.defineTool(tool, mkline)
-}
+	validity := Nowhere
+	if mkline != nil && path.Base(mkline.Filename) == "bsd.prefs.mk" {
+		validity = AfterPrefsMk
+	}
+	tool := &Tool{name, varname, false, validity}
 
-func (tr *Tools) defineTool(tool *Tool, mkline MkLine) *Tool {
-	tr.validateToolName(tool.Name, mkline)
-
-	rv := tool
-	if tool.Name != "" {
-		if existing := tr.byName[tool.Name]; existing != nil {
-			rv = existing
+	if name != "" {
+		if existing := tr.byName[name]; existing != nil {
+			tool = existing
 		} else {
-			tr.byName[tool.Name] = tool
+			tr.byName[name] = tool
 		}
 	}
-	if tool.Varname != "" {
-		if existing := tr.byVarname[tool.Varname]; existing != nil {
-			rv = existing
+
+	if varname != "" {
+		if existing := tr.byVarname[varname]; existing != nil {
+			tool = existing
 		} else {
-			tr.byVarname[tool.Varname] = tool
+			tr.byVarname[varname] = tool
 		}
 	}
-	return rv
+
+	return tool
 }
 
 func (tr *Tools) Trace() {
@@ -100,43 +106,66 @@ func (tr *Tools) Trace() {
 // e.g. in mk/tools/replace.mk.
 func (tr *Tools) ParseToolLine(mkline MkLine, makeUsable bool) {
 	if mkline.IsVarassign() {
-		varname := mkline.Varname()
+		varparam := mkline.Varparam()
 		value := mkline.Value()
-		if varname == "TOOLS_CREATE" && (value == "[" || matches(value, `^[-\w.]+$`)) {
-			tr.Define(value, "", mkline, makeUsable)
 
-		} else if m, toolname := match1(varname, `^_TOOLS_VARNAME\.([-\w.]+|\[)$`); m {
-			tool := tr.Define(toolname, value, mkline, makeUsable)
-			if makeUsable {
-				tr.MakeUsable(tool)
+		switch mkline.Varcanon() {
+		case "TOOLS_CREATE":
+			if tr.IsValidToolName(value) {
+				tr.Define(value, "", mkline, makeUsable)
 			}
 
-		} else if m, toolname = match1(varname, `^(?:TOOLS_PATH|_TOOLS_DEPMETHOD)\.([-\w.]+|\[)$`); m {
-			tool := tr.Define(toolname, "", mkline, makeUsable)
-			if makeUsable {
-				tr.MakeUsable(tool)
+		case "_TOOLS_VARNAME.*":
+			if !containsVarRef(varparam) {
+				tr.Define(varparam, value, mkline, makeUsable)
 			}
 
-		} else if m, toolname = match1(varname, `^_TOOLS\.(.*)`); m {
-			tr.Define(toolname, "", mkline, makeUsable)
-			for _, tool := range splitOnSpace(value) {
-				tr.Define(tool, "", mkline, makeUsable)
+		case "TOOLS_PATH.*", "_TOOLS_DEPMETHOD.*":
+			if !containsVarRef(varparam) {
+				tr.Define(varparam, "", mkline, makeUsable)
+			}
+
+		case "_TOOLS.*":
+			if !containsVarRef(varparam) {
+				tr.Define(varparam, "", mkline, makeUsable)
+				for _, tool := range splitOnSpace(value) {
+					tr.Define(tool, "", mkline, makeUsable)
+				}
+			}
+
+		case "USE_TOOLS":
+			if !containsVarRef(value) {
+				for _, name := range splitOnSpace(value) {
+					if tool := tr.ByNameTool(name); tool != nil {
+						if path.Base(mkline.Filename) == "bsd.prefs.mk" {
+							tool.Validity = AfterPrefsMk
+						} else {
+							tool.Validity = AtRunTime
+						}
+					}
+				}
 			}
 		}
 	}
 }
 
+// @deprecated
 func (tr *Tools) ByVarname(varname string) (tool *Tool, usable bool) {
 	tool = tr.byVarname[varname]
 	usable = tr.Usable(tool)
 	return
 }
 
+func (tr *Tools) ByVarnameTool(varname string) (tool *Tool) { return tr.byVarname[varname] }
+
+// @deprecated
 func (tr *Tools) ByName(name string) (tool *Tool, usable bool) {
 	tool = tr.byName[name]
 	usable = tr.Usable(tool)
 	return
 }
+
+func (tr *Tools) ByNameTool(name string) (tool *Tool) { return tr.byName[name] }
 
 // MakeUsable declares the tool as usable in the current scope.
 // This usually happens because the tool is mentioned in USE_TOOLS.
@@ -148,23 +177,29 @@ func (tr *Tools) MakeUsable(tool *Tool) {
 	tr.usable[tool] = true
 }
 
+// @deprecated
 func (tr *Tools) Usable(tool *Tool) bool {
 	return tr.usable[tool]
 }
 
+func (tool *Tool) UsableAtLoadTime(seenPrefs bool) bool {
+	return seenPrefs && tool.Validity == AfterPrefsMk
+}
+
+func (tool *Tool) UsableAtRunTime() bool {
+	return tool.Validity == AtRunTime || tool.Validity == AfterPrefsMk
+}
+
 func (tr *Tools) AddAll(other Tools) {
 	for _, tool := range other.byName {
-		tr.defineTool(tool, nil)
+		tr.def(tool.Name, tool.Varname, nil)
 		if other.Usable(tool) {
 			tr.usable[tool] = true
 		}
 	}
 }
-
-func (tr *Tools) validateToolName(toolName string, mkline MkLine) {
-	if mkline != nil && toolName != "echo -n" && !matches(toolName, `^([-a-z0-9.]+|\[)$`) {
-		mkline.Errorf("Invalid tool name %q.", toolName)
-	}
+func (tr *Tools) IsValidToolName(name string) bool {
+	return name == "[" || name == "echo -n" || matches(name, `^[-0-9a-z.]+$`)
 }
 
 type Validity uint8

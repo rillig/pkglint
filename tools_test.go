@@ -87,3 +87,85 @@ func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
 	c.Check(tool.Name, equals, "tool")
 	c.Check(tool.Varname, equals, "TOOL")
 }
+
+func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	tools := NewTools()
+
+	t.NewMkLines("create.mk",
+		"TOOLS_CREATE+= load",
+		"TOOLS_CREATE+= run",
+		"TOOLS_CREATE+= nowhere",
+	).ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(mkline, false)
+	})
+
+	// The references to the tools are stable,
+	// the lookup methods always return the same objects.
+	load := tools.ByNameTool("load")
+	run := tools.ByNameTool("run")
+	nowhere := tools.ByNameTool("nowhere")
+
+	// All tools are defined by name, but their variable names are not yet known.
+	// At this point they may not be used, neither by the pkgsrc infrastructure nor by a package.
+	c.Check(load, deepEquals, &Tool{"load", "", false, Nowhere})
+	c.Check(run, deepEquals, &Tool{"run", "", false, Nowhere})
+	c.Check(nowhere, deepEquals, &Tool{"nowhere", "", false, Nowhere})
+
+	t.NewMkLines("varnames.mk",
+		"_TOOLS_VARNAME.load=    LOAD",
+		"_TOOLS_VARNAME.run=     RUN_CMD", // To avoid a collision with ${RUN}.
+		"_TOOLS_VARNAME.nowhere= NOWHERE",
+	).ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(mkline, false)
+	})
+
+	// At this point the tools can be found by their variable names, too.
+	// They still may not be used.
+	c.Check(load, deepEquals, &Tool{"load", "LOAD", false, Nowhere})
+	c.Check(run, deepEquals, &Tool{"run", "RUN_CMD", false, Nowhere})
+	c.Check(nowhere, deepEquals, &Tool{"nowhere", "NOWHERE", false, Nowhere})
+	c.Check(tools.ByVarnameTool("LOAD"), equals, load)
+	c.Check(tools.ByVarnameTool("RUN_CMD"), equals, run)
+	c.Check(tools.ByVarnameTool("NOWHERE"), equals, nowhere)
+	c.Check(load.UsableAtLoadTime(false), equals, false)
+	c.Check(load.UsableAtLoadTime(true), equals, false)
+	c.Check(load.UsableAtRunTime(), equals, false)
+	c.Check(run.UsableAtLoadTime(false), equals, false)
+	c.Check(run.UsableAtLoadTime(true), equals, false)
+	c.Check(run.UsableAtRunTime(), equals, false)
+	c.Check(nowhere.UsableAtLoadTime(false), equals, false)
+	c.Check(nowhere.UsableAtLoadTime(true), equals, false)
+	c.Check(nowhere.UsableAtRunTime(), equals, false)
+
+	t.NewMkLines("bsd.prefs.mk",
+		"USE_TOOLS+= load",
+	).ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(mkline, false)
+	})
+
+	// Tools that are added to USE_TOOLS in bsd.prefs.mk may be used afterwards.
+	// By variable name, they may be used both at load time as well as run time.
+	// By plain name, they may be used only in {pre,do,post}-* targets.
+	c.Check(load, deepEquals, &Tool{"load", "LOAD", false, AfterPrefsMk})
+	c.Check(load.UsableAtLoadTime(false), equals, false)
+	c.Check(load.UsableAtLoadTime(true), equals, true)
+	c.Check(load.UsableAtRunTime(), equals, true)
+
+	t.NewMkLines("bsd.pkg.mk",
+		"USE_TOOLS+= run",
+	).ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(mkline, false)
+	})
+
+	// Tools that are added to USE_TOOLS in bsd.pkg.mk may be used afterwards at run time.
+	// The {pre,do,post}-* targets may use both forms (${CAT} and cat).
+	// All other targets must use the variable form (${CAT}).
+	c.Check(run, deepEquals, &Tool{"run", "RUN_CMD", false, AtRunTime})
+	c.Check(run.UsableAtLoadTime(false), equals, false)
+	c.Check(run.UsableAtLoadTime(false), equals, false)
+	c.Check(run.UsableAtRunTime(), equals, true)
+
+	// That's all for parsing tool definitions from the pkgsrc infrastructure.
+}
