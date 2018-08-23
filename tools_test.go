@@ -265,6 +265,27 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 		"WARN: builtin.mk:13: The tool ${NOWHERE} cannot be used at load time.")
 }
 
+func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupCommandLine("-Wall,no-space")
+	t.CreateFileLines("mk/tools/defaults.mk",
+		MkRcsID) // None
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		"USE_TOOLS+=     load")
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		"USE_TOOLS+=     run")
+
+	// It's practically impossible that a tool is added to USE_TOOLS in
+	// bsd.pkg.mk and not defined earlier in mk/tools/defaults.mk, but
+	// the pkglint code is even prepared for these rare cases.
+	// In other words, this test is only there for the code coverage.
+	G.Pkgsrc.LoadInfrastructure()
+
+	c.Check(G.Pkgsrc.Tools.ByNameTool("run"), deepEquals, &Tool{"run", "", false, AtRunTime})
+}
+
 func (s *Suite) Test_ToolTime_String(c *check.C) {
 	c.Check(LoadTime.String(), equals, "LoadTime")
 	c.Check(RunTime.String(), equals, "RunTime")
