@@ -302,7 +302,7 @@ func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
 	// grants more use cases (load time + run time), therefore it wins.
 	G.Pkgsrc.LoadInfrastructure()
 
-	c.Check(G.Pkgsrc.Tools.ByNameTool("both").Validity, equals, AtRunTime) // FIXME: Must be AfterPrefsMk
+	c.Check(G.Pkgsrc.Tools.ByNameTool("both").Validity, equals, AfterPrefsMk)
 }
 
 func (s *Suite) Test_ToolTime_String(c *check.C) {

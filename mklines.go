@@ -196,6 +196,8 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 	}
 
 	for _, mkline := range mklines.mklines {
+		mklines.Tools.ParseToolLine(mkline)
+
 		if !mkline.IsVarassign() {
 			continue
 		}
@@ -240,8 +242,6 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 				defineVar(mkline, osvar)
 			}
 		}
-
-		mklines.Tools.ParseToolLine(mkline)
 	}
 }
 

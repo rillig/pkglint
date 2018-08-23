@@ -227,7 +227,7 @@ func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
 					}
 					if tool != nil {
 						validity := tr.validity(mkline.Filename)
-						if validity != tool.Validity {
+						if validity > tool.Validity {
 							tool.SetValidity(validity, tr.TraceName)
 						}
 					}
@@ -284,14 +284,6 @@ const (
 	// to USE_TOOLS and therefore cannot be used at all.
 	Nowhere Validity = iota
 
-	// AfterPrefsMk means that the tool has been added to USE_TOOLS
-	// before including bsd.prefs.mk and therefore can be used at
-	// load time after bsd.prefs.mk has been included.
-	//
-	// The tool may be used as ${TOOL} everywhere.
-	// The tool may be used by its plain name in {pre,do,post}-* targets.
-	AfterPrefsMk
-
 	// AtRunTime means that the tool has been added to USE_TOOLS
 	// after including bsd.prefs.mk and therefore cannot be used
 	// at load time.
@@ -299,10 +291,18 @@ const (
 	// The tool may be used as ${TOOL} in all targets.
 	// The tool may be used by its plain name in {pre,do,post}-* targets.
 	AtRunTime
+
+	// AfterPrefsMk means that the tool has been added to USE_TOOLS
+	// before including bsd.prefs.mk and therefore can be used at
+	// load time after bsd.prefs.mk has been included.
+	//
+	// The tool may be used as ${TOOL} everywhere.
+	// The tool may be used by its plain name in {pre,do,post}-* targets.
+	AfterPrefsMk
 )
 
 func (time Validity) String() string {
-	return [...]string{"Nowhere", "AfterPrefsMk", "AtRunTime"}[time]
+	return [...]string{"Nowhere", "AtRunTime", "AfterPrefsMk"}[time]
 }
 
 type ToolTime uint8
