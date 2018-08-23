@@ -30,3 +30,13 @@
   scheme. Enforcing PYPKGPREFIX for those is most likely a good idea.
 
 * Warn about using REPLACE_PYTHON without including application.mk.
+
+# Misc
+
+```
+do-install:
+	${ECHO} ${prog}   # Undefined variable ${prog}.
+.for msg in message1
+	${ECHO} ${prog}
+.endfor
+```
