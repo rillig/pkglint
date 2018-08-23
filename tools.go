@@ -57,10 +57,11 @@ func (tool *Tool) UsableAtLoadTime(seenPrefs bool) bool {
 //  VAR:=   ${TOOL}           # Not allowed; TOOL might not be initialized yet.
 //  VAR!=   ${TOOL}           # Not allowed; TOOL might not be initialized yet.
 //
-//  VAR=    ${${TOOL}:sh}     # Tricky; pkglint doesn't know enough context
-//                            # to check this reliably, therefore it doesn't
-//                            # produce any warnings. This pattern fails if
-//                            # VAR is evaluated at load time.
+//  VAR=    ${${TOOL}:sh}     # Probably ok; the :sh modifier is evaluated at
+//                            # run time. But if VAR should ever be evaluated
+//                            # at load time (see the "Not allowed" cases
+//                            # above), it doesn't work. Currently pkglint
+//                            # cannot detect these cases reliably.
 //
 //  own-target:
 //          ${TOOL}           # Allowed.
