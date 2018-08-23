@@ -654,14 +654,12 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 	}
 
 	if tool := G.ToolByVarname(varname, RunTime); tool != nil {
-		perms := aclpUse
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
 		}
-		if tool.Validity == AfterPrefsMk {
-			if G.Pkg == nil || G.Pkg.SeenBsdPrefsMk {
-				perms |= aclpUseLoadtime
-			}
+		perms := aclpUse
+		if tool.Validity == AfterPrefsMk && G.Mk.Tools.SeenPrefs {
+			perms |= aclpUseLoadtime
 		}
 		return &Vartype{lkNone, BtShellCommand, []ACLEntry{{"*", perms}}, false}
 	}

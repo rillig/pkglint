@@ -595,7 +595,7 @@ func (s *Suite) Test_MkLine_variableNeedsQuoting__guessed_list_variable_in_quote
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("audio/jack-rack/Makefile",
 		MkRcsID,
-		"LADSPA_PLUGIN_PATH?=\t${PREFIX}/lib/ladspa",
+		"LADSPA_PLUGIN_PATH=\t${PREFIX}/lib/ladspa",
 		"CPPFLAGS+=\t\t-DLADSPA_PATH=\"\\\"${LADSPA_PLUGIN_PATH}\\\"\"")
 
 	G.Mk.Check()

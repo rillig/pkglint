@@ -69,10 +69,6 @@ func (ck MkLineChecker) checkInclude() {
 	}
 	ck.CheckRelativePath(includefile, mustExist)
 
-	if G.Pkg != nil && IsPrefs(includefile) {
-		G.Pkg.setSeenBsdPrefsMk()
-	}
-
 	switch {
 	case hasSuffix(includefile, "/Makefile"):
 		mkline.Errorf("Other Makefiles must not be included directly.")
@@ -474,25 +470,22 @@ func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
 
 	tool := G.ToolByVarname(varname, LoadTime)
 	if tool != nil {
-		if tool.UsableAtLoadTime(G.Mk == nil || G.Mk.Tools.SeenPrefs) {
-			if G.Mk == nil || G.Mk.Tools.SeenPrefs || G.Pkg == nil || G.Pkg.SeenBsdPrefsMk {
-				return
-			}
+		seenPrefs := G.Mk.Tools.SeenPrefs
+		if tool.UsableAtLoadTime(seenPrefs) {
+			return
 		}
 
-		if G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk && G.Mk != nil && !G.Mk.Tools.SeenPrefs {
+		if !seenPrefs {
 			mkline.Warnf("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
 			return
 		}
 
-		if G.Mk != nil {
-			validity := tool.Validity
-			if validity == AtRunTime {
-				mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
-			}
-			if validity != Nowhere {
-				return
-			}
+		validity := tool.Validity
+		if validity == AtRunTime {
+			mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
+		}
+		if validity != Nowhere {
+			return
 		}
 	}
 
@@ -874,28 +867,31 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 
 func (ck MkLineChecker) checkVarassignBsdPrefs() {
 	mkline := ck.MkLine
-	if G.opts.WarnExtra && mkline.Op() == opAssignDefault && G.Pkg != nil && !G.Pkg.SeenBsdPrefsMk {
-		switch mkline.Varcanon() {
-		case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
-			return
-		}
 
-		if G.Mk != nil && !G.Mk.FirstTime("include-bsd.prefs.mk") {
-			return
-		}
-
-		mkline.Warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
-		Explain(
-			"The ?= operator is used to provide a default value to a variable.",
-			"In pkgsrc, many variables can be set by the pkgsrc user in the",
-			"mk.conf file.  This file must be included explicitly.  If a ?=",
-			"operator appears before mk.conf has been included, it will not care",
-			"about the user's preferences, which can result in unexpected",
-			"behavior.",
-			"",
-			"The easiest way to include the mk.conf file is by including the",
-			"bsd.prefs.mk file, which will take care of everything.")
+	switch mkline.Varcanon() {
+	case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
+		return
 	}
+
+	if !G.opts.WarnExtra ||
+		G.Infrastructure ||
+		mkline.Op() != opAssignDefault ||
+		G.Mk.Tools.SeenPrefs ||
+		!G.Mk.FirstTime("include bsd.prefs.mk before using ?=") {
+		return
+	}
+
+	mkline.Warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+	Explain(
+		"The ?= operator is used to provide a default value to a variable.",
+		"In pkgsrc, many variables can be set by the pkgsrc user in the",
+		"mk.conf file.  This file must be included explicitly.  If a ?=",
+		"operator appears before mk.conf has been included, it will not care",
+		"about the user's preferences, which can result in unexpected",
+		"behavior.",
+		"",
+		"The easiest way to include the mk.conf file is by including the",
+		"bsd.prefs.mk file, which will take care of everything.")
 }
 
 func (ck MkLineChecker) checkVarassignPlistComment(varname, value string) {

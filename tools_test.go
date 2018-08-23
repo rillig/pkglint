@@ -257,10 +257,15 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: RUN_CMD must not be used at load time, except in the package Makefile.
-		"WARN: builtin.mk:5: To use the tool \"RUN_CMD\" at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.",
-		"WARN: builtin.mk:6: NOWHERE should not be evaluated at load time.",
+		"WARN: builtin.mk:3: To use the tool \"ECHO\" at load time, bsd.prefs.mk has to be included before.",
+		"WARN: builtin.mk:4: To use the tool \"LOAD\" at load time, bsd.prefs.mk has to be included before.",
+		// FIXME: RUN_CMD is not usable at load time.
+		"WARN: builtin.mk:5: To use the tool \"RUN_CMD\" at load time, bsd.prefs.mk has to be included before.",
+		// FIXME: NOWHERE is not usable at load time.
+		"WARN: builtin.mk:6: To use the tool \"NOWHERE\" at load time, bsd.prefs.mk has to be included before.",
+		// FIXME: RUN_CMD is not usable at load time.
 		"WARN: builtin.mk:12: To use the tool \"RUN_CMD\" at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.",
+		// FIXME: NOWHERE is not usable at load time.
 		"WARN: builtin.mk:13: NOWHERE should not be evaluated at load time.")
 }
 

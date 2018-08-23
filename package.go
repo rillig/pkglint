@@ -25,7 +25,6 @@ type Package struct {
 	EffectivePkgbase     string          // The effective PKGNAME without the version
 	EffectivePkgversion  string          // The version part of the effective PKGNAME, excluding nb13
 	EffectivePkgnameLine MkLine          // The origin of the three effective_* values
-	SeenBsdPrefsMk       bool            // Has bsd.prefs.mk already been included?
 	PlistDirs            map[string]bool // Directories mentioned in the PLIST files
 	PlistFiles           map[string]bool // Regular files mentioned in the PLIST files
 
@@ -83,15 +82,6 @@ func (pkg *Package) varValue(varname string) (string, bool) {
 		return mkline.Value(), true
 	}
 	return "", false
-}
-
-func (pkg *Package) setSeenBsdPrefsMk() {
-	if !pkg.SeenBsdPrefsMk {
-		pkg.SeenBsdPrefsMk = true
-		if trace.Tracing {
-			trace.Stepf("Pkg.setSeenBsdPrefsMk")
-		}
-	}
 }
 
 func (pkg *Package) checkPossibleDowngrade() {
