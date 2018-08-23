@@ -286,6 +286,25 @@ func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {
 	c.Check(G.Pkgsrc.Tools.ByNameTool("run"), deepEquals, &Tool{"run", "", false, AtRunTime})
 }
 
+func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupCommandLine("-Wall,no-space")
+	t.CreateFileLines("mk/tools/defaults.mk",
+		MkRcsID)
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		"USE_TOOLS+=     both")
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		"USE_TOOLS+=     both")
+
+	// The echo tool is mentioned in both files. The file bsd.prefs.mk
+	// grants more use cases (load time + run time), therefore it wins.
+	G.Pkgsrc.LoadInfrastructure()
+
+	c.Check(G.Pkgsrc.Tools.ByNameTool("both").Validity, equals, AtRunTime) // FIXME: Must be AfterPrefsMk
+}
+
 func (s *Suite) Test_ToolTime_String(c *check.C) {
 	c.Check(LoadTime.String(), equals, "LoadTime")
 	c.Check(RunTime.String(), equals, "RunTime")
