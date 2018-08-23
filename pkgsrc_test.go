@@ -111,7 +111,7 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Validity:Nowhere}",
 		"TRACE: 1   tool &{Name:m4 Varname: MustUseVarForm:false Validity:AfterPrefsMk}",
 		"TRACE: 1   tool &{Name:msgfmt Varname: MustUseVarForm:false Validity:Nowhere}",
-		"TRACE: 1   tool &{Name:mv Varname:MV MustUseVarForm:false Validity:Nowhere}",
+		"TRACE: 1   tool &{Name:mv Varname:MV MustUseVarForm:false Validity:AtRunTime}",
 		"TRACE: 1   tool &{Name:pwd Varname:PWD MustUseVarForm:false Validity:AfterPrefsMk}",
 		"TRACE: 1   tool &{Name:strip Varname: MustUseVarForm:false Validity:Nowhere}",
 		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",

@@ -203,7 +203,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	after := tools.ByNameTool("pkg-after-prefs")
 
 	c.Check(load.UsableAtRunTime(), equals, true)
-	c.Check(run.UsableAtRunTime(), equals, false) // FIXME: must be true, since it is added in bsd.pkg.mk.
+	c.Check(run.UsableAtRunTime(), equals, true)
 	c.Check(nowhere.UsableAtRunTime(), equals, false)
 
 	// The seenPrefs variable is only relevant for the package Makefile.
@@ -268,7 +268,5 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: The ln tool is added in bsd.pkg.mk.
-	t.CheckOutputLines(
-		"WARN: module.mk:4: The \"${LN}\" tool is used but not added to USE_TOOLS.")
+	t.CheckOutputEmpty()
 }

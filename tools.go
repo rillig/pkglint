@@ -114,8 +114,12 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 	}
 
 	validity := Nowhere
-	if mkline != nil && IsPrefs(mkline.Filename) {
-		validity = AfterPrefsMk
+	if mkline != nil {
+		if IsPrefs(mkline.Filename) {
+			validity = AfterPrefsMk
+		} else if path.Base(mkline.Filename) == "bsd.pkg.mk" {
+			validity = AtRunTime
+		}
 	}
 	tool := &Tool{name, varname, false, validity}
 

@@ -236,6 +236,8 @@ func (src *Pkgsrc) loadTools() {
 				// list of available tools.
 				//
 				// This assumption does not work for processing USE_TOOLS in packages, though.
+				//
+				// TODO: Remove redundancy; the same validity logic is also in Tools.def.
 				if varname == "USE_TOOLS" {
 					if trace.Tracing {
 						trace.Stepf("[dirDepth=%d] %s", dirDepth, value)
@@ -245,9 +247,11 @@ func (src *Pkgsrc) loadTools() {
 							if !containsVarRef(usedTool) {
 								name := strings.Split(usedTool, ":")[0]
 								tool := reg.Define(name, "", mkline)
+								validity := AtRunTime
 								if relativeName == "mk/bsd.prefs.mk" {
-									tool.SetValidity(AfterPrefsMk, reg.TraceName)
+									validity = AfterPrefsMk
 								}
+								tool.SetValidity(validity, reg.TraceName)
 							}
 						}
 					}
