@@ -173,7 +173,6 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	t := s.Init(c)
 
-	// The same tools as in Test_Tools__load_from_infrastructure.
 	t.SetupPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"TOOLS_CREATE+=  load",
@@ -185,8 +184,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 		"_TOOLS_VARNAME.run=                     RUN_CMD",
 		"_TOOLS_VARNAME.nowhere=                 NOWHERE",
 		"_TOOLS_VARNAME.pkg-before-prefs=        PKG_BEFORE_PREFS",
-		"_TOOLS_VARNAME.pkg-after-prefs=         PKG_AFTER_PREFS",
-	)
+		"_TOOLS_VARNAME.pkg-after-prefs=         PKG_AFTER_PREFS")
 	t.CreateFileLines("mk/bsd.prefs.mk",
 		"USE_TOOLS+=     load")
 	t.CreateFileLines("mk/bsd.pkg.mk",
@@ -210,11 +208,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	// All other files must not use the tools at load time.
 	// For them, seenPrefs can be though of as being true from the beginning.
 
-	t.NewMkLines("Makefile",
-		"USE_TOOLS+=     pkg-before-prefs",
-	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline)
-	})
+	tools.ParseToolLine(t.NewMkLine("Makefile", 2, "USE_TOOLS+=     pkg-before-prefs"))
 
 	c.Check(before.Validity, equals, AfterPrefsMk)
 	c.Check(before.UsableAtLoadTime(false), equals, false)
@@ -223,24 +217,65 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 
 	c.Check(tools.SeenPrefs, equals, false)
 
-	t.NewMkLines("Makefile",
-		".include \"../../mk/bsd.prefs.mk\"",
-	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline)
-	})
+	tools.ParseToolLine(t.NewMkLine("Makefile", 3, ".include \"../../mk/bsd.prefs.mk\""))
 
 	c.Check(tools.SeenPrefs, equals, true)
 
-	t.NewMkLines("Makefile",
-		"USE_TOOLS+=     pkg-after-prefs",
-	).ForEach(func(mkline MkLine) {
-		tools.ParseToolLine(mkline)
-	})
+	tools.ParseToolLine(t.NewMkLine("Makefile", 4, "USE_TOOLS+=     pkg-after-prefs"))
 
 	c.Check(after.Validity, equals, AtRunTime)
 	c.Check(after.UsableAtLoadTime(false), equals, false)
 	c.Check(after.UsableAtLoadTime(true), equals, false)
 	c.Check(after.UsableAtRunTime(), equals, true)
+}
+
+func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupCommandLine("-Wall,no-space")
+	t.CreateFileLines("mk/tools/defaults.mk",
+		"TOOLS_CREATE+=  load",
+		"TOOLS_CREATE+=  run",
+		"TOOLS_CREATE+=  nowhere",
+		"_TOOLS_VARNAME.load=                    LOAD",
+		"_TOOLS_VARNAME.run=                     RUN_CMD",
+		"_TOOLS_VARNAME.nowhere=                 NOWHERE")
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		"USE_TOOLS+=     load")
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		"USE_TOOLS+=     run")
+	t.CreateFileLines("mk/buildlink3/bsd.builtin.mk")
+	G.Pkgsrc.LoadInfrastructure()
+
+	// Tools that are defined by pkgsrc as load-time tools
+	// may be used in any file at load time.
+
+	mklines := t.NewMkLines("builtin.mk",
+		MkRcsID,
+		"",
+		"VAR!=   ${ECHO} 'too early'",
+		"VAR!=   ${LOAD} 'too early'",
+		"VAR!=   ${RUN_CMD} 'never allowed'",
+		"VAR!=   ${NOWHERE} 'never allowed'",
+		"",
+		".include \"../../mk/buildlink3/bsd.builtin.mk\"",
+		"",
+		"VAR!=   ${ECHO} 'valid'",
+		"VAR!=   ${LOAD} 'valid'",
+		"VAR!=   ${RUN_CMD} 'never allowed'",
+		"VAR!=   ${NOWHERE} 'never allowed'",
+		"",
+		"VAR!=   ${VAR}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: RUN_CMD must not be used at load time, except in the package Makefile.
+		"WARN: builtin.mk:5: To use the tool \"RUN_CMD\" at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.",
+		"WARN: builtin.mk:6: NOWHERE should not be evaluated at load time.",
+		"WARN: builtin.mk:12: To use the tool \"RUN_CMD\" at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.",
+		"WARN: builtin.mk:13: NOWHERE should not be evaluated at load time.")
 }
 
 func (s *Suite) Test_ToolTime_String(c *check.C) {
