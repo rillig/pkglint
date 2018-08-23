@@ -442,7 +442,11 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	if isLoadTime {
-		ck.checkToolUseLoadTime(varname, isIndirect)
+		if tool := G.ToolByVarname(varname, LoadTime); tool != nil {
+			ck.checkVaruseToolLoadTime(varname, tool)
+		} else {
+			ck.checkVaruseLoadTime(varname, isIndirect)
+		}
 	}
 
 	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
@@ -465,29 +469,43 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 }
 
-func (ck MkLineChecker) checkToolUseLoadTime(varname string, isIndirect bool) {
-	mkline := ck.MkLine
+// checkVaruseToolLoadTime checks whether the tool ${varname} may be used at load time.
+func (ck MkLineChecker) checkVaruseToolLoadTime(varname string, tool *Tool) {
+	if tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
+		return
+	}
 
-	tool := G.ToolByVarname(varname, LoadTime)
-	if tool != nil {
-		seenPrefs := G.Mk.Tools.SeenPrefs
-		if tool.UsableAtLoadTime(seenPrefs) {
-			return
-		}
+	if tool.Validity == AfterPrefsMk {
+		ck.MkLine.Warnf("To use the tool ${%s} at load time, bsd.prefs.mk has to be included before.", varname)
+		return
+	}
 
-		if !seenPrefs {
-			mkline.Warnf("To use the tool %q at load time, bsd.prefs.mk has to be included before.", varname)
-			return
-		}
-
-		validity := tool.Validity
-		if validity == AtRunTime {
-			mkline.Warnf("To use the tool %q at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
-		}
-		if validity != Nowhere {
+	if path.Base(ck.MkLine.Filename) == "Makefile" {
+		pkgsrcTool := G.Pkgsrc.Tools.ByNameTool(tool.Name)
+		if pkgsrcTool != nil && pkgsrcTool.Validity == Nowhere {
+			// The tool must have been added too late to USE_TOOLS,
+			// i.e. after bsd.prefs.mk has been included.
+			ck.MkLine.Warnf("To use the tool ${%s} at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.", varname)
 			return
 		}
 	}
+
+	ck.MkLine.Warnf("The tool ${%s} cannot be used at load time.", varname)
+	Explain(
+		"To use a tool at load time, it must be declared in the package",
+		"Makefile by adding it to USE_TOOLS.  After that, bsd.prefs.mk must",
+		"be included.  Adding the tool to USE_TOOLS at any later time has",
+		"no effect, which means that the tool can only be used at run time.",
+		"That's the rule for the package Makefiles.",
+		"",
+		"Since any other .mk file can be included from anywhere else, there",
+		"is no guarantee that the tool is properly defined for using it at",
+		"load time (see above for the tricky rules).  Therefore the tools can",
+		"only be used at run time, except in the package Makefile itself.")
+}
+
+func (ck MkLineChecker) checkVaruseLoadTime(varname string, isIndirect bool) {
+	mkline := ck.MkLine
 
 	if !isIndirect {
 		mkline.Warnf("%s should not be evaluated at load time.", varname)
