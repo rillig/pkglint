@@ -4,6 +4,7 @@ import (
 	"netbsd.org/pkglint/trace"
 	"path"
 	"sort"
+	"strings"
 )
 
 // Tool is one of the many standard shell utilities that are typically
@@ -160,9 +161,15 @@ func (tr *Tools) Trace() {
 	}
 }
 
-// ParseToolLine parses a tool definition from the pkgsrc infrastructure,
-// e.g. in mk/tools/replace.mk.
+// ParseToolLine updates the tool definitions according to the given
+// line from a Makefile.
 func (tr *Tools) ParseToolLine(mkline MkLine) {
+	tr.ParseToolLineCreate(mkline, false)
+}
+
+// ParseToolLineCreate updates the tool definitions according to the given
+// line from a Makefile, registering the tools if necessary.
+func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
 	switch {
 
 	case mkline.IsVarassign():
@@ -195,39 +202,30 @@ func (tr *Tools) ParseToolLine(mkline MkLine) {
 
 		case "USE_TOOLS":
 			if !containsVarRef(value) {
-				names := splitOnSpace(value)
+				deps := splitOnSpace(value)
 
 				// See mk/tools/autoconf.mk:/^\.if !defined/
 				if matches(value, `\bautoconf213\b`) {
 					for _, name := range [...]string{"autoconf-2.13", "autoheader-2.13", "autoreconf-2.13", "autoscan-2.13", "autoupdate-2.13", "ifnames-2.13"} {
 						tr.Define(name, "", mkline)
-						names = append(names, name)
+						deps = append(deps, name)
 					}
 				}
 				if matches(value, `\bautoconf\b`) {
 					for _, name := range [...]string{"autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames"} {
 						tr.Define(name, "", mkline)
-						names = append(names, name)
+						deps = append(deps, name)
 					}
 				}
 
-				for _, name := range names {
-					if tool := tr.ByNameTool(name); tool != nil {
-
-						var validity Validity
-						switch path.Base(mkline.Filename) {
-						case "bsd.prefs.mk":
-							validity = AfterPrefsMk
-						case "Makefile":
-							if tr.SeenPrefs {
-								validity = AtRunTime
-							} else {
-								validity = AfterPrefsMk
-							}
-						default:
-							validity = AtRunTime
-						}
-
+				for _, dep := range deps {
+					name := strings.Split(dep, ":")[0]
+					tool := tr.ByNameTool(name)
+					if tool == nil && createIfAbsent {
+						tr.Define(name, "", mkline)
+					}
+					if tool != nil {
+						validity := tr.validity(mkline.Filename)
 						if validity != tool.Validity {
 							tool.SetValidity(validity, tr.TraceName)
 						}
@@ -241,6 +239,17 @@ func (tr *Tools) ParseToolLine(mkline MkLine) {
 			tr.SeenPrefs = true
 		}
 	}
+}
+
+func (tr *Tools) validity(fileName string) Validity {
+	basename := path.Base(fileName)
+	if basename == "Makefile" && tr.SeenPrefs {
+		return AtRunTime
+	}
+	if basename == "bsd.prefs.mk" || basename == "Makefile" {
+		return AfterPrefsMk
+	}
+	return AtRunTime
 }
 
 func (tr *Tools) ByVarnameTool(varname string) (tool *Tool) { return tr.byVarname[varname] }

@@ -178,6 +178,8 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 
 // loadTools loads the tool definitions from `mk/tools/*`.
 func (src *Pkgsrc) loadTools() {
+	tools := src.Tools
+
 	toolFiles := []string{"defaults.mk"}
 	{
 		toc := G.Pkgsrc.File("mk/tools/bsd.tools.mk")
@@ -206,75 +208,46 @@ func (src *Pkgsrc) loadTools() {
 		{"test", "TEST"},
 		{"true", "TRUE"}}
 
-	reg := src.Tools
 	for _, toolDef := range toolDefs {
-		tool := reg.Define(toolDef.Name, toolDef.Varname, dummyMkLine)
+		tool := tools.Define(toolDef.Name, toolDef.Varname, dummyMkLine)
 		tool.MustUseVarForm = true
 		if toolDef.Name != "false" {
-			tool.SetValidity(AfterPrefsMk, reg.TraceName)
+			tool.SetValidity(AfterPrefsMk, tools.TraceName)
 		}
 	}
 
 	for _, basename := range toolFiles {
 		mklines := G.Pkgsrc.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
-			reg.ParseToolLine(mkline)
+			tools.ParseToolLine(mkline)
 		}
 	}
 
 	for _, relativeName := range [...]string{"mk/bsd.prefs.mk", "mk/bsd.pkg.mk"} {
-		dirDepth := 0
 
 		mklines := G.Pkgsrc.LoadMk(relativeName, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
 			if mkline.IsVarassign() {
-				varname := mkline.Varname()
-				value := mkline.Value()
+				switch mkline.Varname() {
+				case "USE_TOOLS":
+					// Since this line is in the pkgsrc infrastructure, each tool mentioned
+					// in USE_TOOLS is trusted to be also defined somewhere in the actual
+					// list of available tools.
+					//
+					// This assumption does not work for processing USE_TOOLS in packages, though.
+					tools.ParseToolLineCreate(mkline, true)
 
-				// Since this line is in the pkgsrc infrastructure, each tool mentioned
-				// in USE_TOOLS is trusted to be also defined somewhere in the actual
-				// list of available tools.
-				//
-				// This assumption does not work for processing USE_TOOLS in packages, though.
-				//
-				// TODO: Remove redundancy; the same validity logic is also in Tools.def.
-				if varname == "USE_TOOLS" {
-					if trace.Tracing {
-						trace.Stepf("[dirDepth=%d] %s", dirDepth, value)
-					}
-					if dirDepth == 0 || (dirDepth == 1 && relativeName == "mk/bsd.prefs.mk") {
-						for _, usedTool := range splitOnSpace(value) {
-							if !containsVarRef(usedTool) {
-								name := strings.Split(usedTool, ":")[0]
-								tool := reg.Define(name, "", mkline)
-								validity := AtRunTime
-								if relativeName == "mk/bsd.prefs.mk" {
-									validity = AfterPrefsMk
-								}
-								tool.SetValidity(validity, reg.TraceName)
-							}
-						}
-					}
-
-				} else if varname == "_BUILD_DEFS" {
-					for _, bdvar := range splitOnSpace(value) {
+				case "_BUILD_DEFS":
+					for _, bdvar := range mkline.ValueSplit(mkline.Value(), "") {
 						src.AddBuildDefs(bdvar)
 					}
-				}
-
-			} else if mkline.IsDirective() {
-				switch mkline.Directive() {
-				case "if", "ifdef", "ifndef", "for":
-					dirDepth++
-				case "endif", "endfor":
-					dirDepth--
 				}
 			}
 		}
 	}
 
 	if trace.Tracing {
-		reg.Trace()
+		tools.Trace()
 	}
 }
 
