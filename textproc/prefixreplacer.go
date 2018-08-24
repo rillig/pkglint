@@ -137,3 +137,7 @@ func (pr *PrefixReplacer) AdvanceRest() string {
 	pr.rest = ""
 	return rest
 }
+
+func (pr *PrefixReplacer) HasPrefix(str string) bool {
+	return strings.HasPrefix(pr.rest, str)
+}

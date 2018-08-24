@@ -13,7 +13,7 @@ const (
 	reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
 	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
 	reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
-	reShDollar       = `\\\$\$|` + reShVaruse + `|\$\$[,\-/|]`
+	reShDollar       = `\\\$\$|` + reShVaruse + `|\$\$[,\-/]`
 )
 
 type ShellLine struct {

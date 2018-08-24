@@ -12,7 +12,7 @@ func NewShTokenizer(line Line, text string, emitWarnings bool) *ShTokenizer {
 }
 
 // ShAtom parses a basic building block of a shell program.
-// Examples for such atoms are: variable reference, operator, text, quote.
+// Examples for such atoms are: variable reference, operator, text, quote, space.
 //
 // See ShQuote.Feed
 func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
@@ -83,9 +83,23 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 		return &ShAtom{shtComment, repl.Group(0), q, nil}
 	case repl.AdvanceStr("$$("):
 		return &ShAtom{shtSubshell, repl.Str(), q, nil}
-	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Group(0), q, nil}
 	}
+
+	mark := repl.Mark()
+loop:
+	for {
+		switch {
+		case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)`):
+		case repl.HasPrefix("$$;"), repl.HasPrefix("$$|"):
+			repl.AdvanceStr("$$")
+		default:
+			break loop
+		}
+	}
+	if token := repl.Since(mark); token != "" {
+		return &ShAtom{shtWord, token, q, nil}
+	}
+
 	return nil
 }
 
