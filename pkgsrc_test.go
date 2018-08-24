@@ -158,3 +158,61 @@ func (s *Suite) Test_Pkgsrc_deprecated(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:5: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.")
 }
+
+func (s *Suite) Test_Pkgsrc_Latest_no_basedir(c *check.C) {
+	t := s.Init(c)
+
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest, equals, "")
+	t.CheckOutputLines(
+		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
+}
+
+func (s *Suite) Test_Pkgsrc_Latest_no_subdirs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("lang/Makefile")
+
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest, equals, "")
+	t.CheckOutputLines(
+		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
+}
+
+func (s *Suite) Test_Pkgsrc_Latest_single(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("lang/Makefile")
+	t.SetupFileLines("lang/python27/Makefile")
+
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest, equals, "../../lang/python27")
+}
+
+func (s *Suite) Test_Pkgsrc_Latest_multi(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("lang/Makefile")
+	t.SetupFileLines("lang/python27/Makefile")
+	t.SetupFileLines("lang/python35/Makefile")
+
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest, equals, "../../lang/python35")
+}
+
+func (s *Suite) Test_Pkgsrc_Latest_numeric(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("databases/postgresql95/Makefile")
+	t.SetupFileLines("databases/postgresql97/Makefile")
+	t.SetupFileLines("databases/postgresql100/Makefile")
+	t.SetupFileLines("databases/postgresql104/Makefile")
+
+	latest := G.Pkgsrc.Latest("databases", `^postgresql[0-9]+$`, "$0")
+
+	c.Check(latest, equals, "postgresql104")
+}
