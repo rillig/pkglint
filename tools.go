@@ -223,7 +223,7 @@ func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
 
 				for _, dep := range deps {
 					name := strings.Split(dep, ":")[0]
-					tool := tr.ByNameTool(name)
+					tool := tr.ByName(name)
 					if tool == nil && createIfAbsent {
 						tr.Define(name, "", mkline)
 					}
@@ -255,9 +255,9 @@ func (tr *Tools) validity(fileName string) Validity {
 	return AtRunTime
 }
 
-func (tr *Tools) ByVarnameTool(varname string) (tool *Tool) { return tr.byVarname[varname] }
+func (tr *Tools) ByVarname(varname string) (tool *Tool) { return tr.byVarname[varname] }
 
-func (tr *Tools) ByNameTool(name string) (tool *Tool) { return tr.byName[name] }
+func (tr *Tools) ByName(name string) (tool *Tool) { return tr.byName[name] }
 
 func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 	if time == LoadTime {

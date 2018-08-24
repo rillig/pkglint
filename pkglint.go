@@ -653,14 +653,14 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 
 	if G.Mk != nil {
 		tools := G.Mk.Tools
-		if t := G.Mk.Tools.ByNameTool(command); t != nil {
+		if t := G.Mk.Tools.ByName(command); t != nil {
 			if tools.Usable(t, time) {
 				return t, true
 			}
 			tool = t
 		}
 
-		if t := tools.ByNameTool(gnuCommand); t != nil {
+		if t := tools.ByName(gnuCommand); t != nil {
 			if tools.Usable(t, time) {
 				return t, true
 			}
@@ -669,7 +669,7 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 			}
 		}
 
-		if t := tools.ByVarnameTool(varname); t != nil {
+		if t := tools.ByVarname(varname); t != nil {
 			if tools.Usable(t, time) {
 				return t, true
 			}
@@ -680,7 +680,7 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 	}
 
 	tools := G.Pkgsrc.Tools
-	if t := tools.ByNameTool(command); t != nil {
+	if t := tools.ByName(command); t != nil {
 		if tools.Usable(t, time) {
 			return t, true
 		}
@@ -689,7 +689,7 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 		}
 	}
 
-	if t := tools.ByNameTool(gnuCommand); t != nil {
+	if t := tools.ByName(gnuCommand); t != nil {
 		if tools.Usable(t, time) {
 			return t, true
 		}
@@ -698,7 +698,7 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 		}
 	}
 
-	if t := tools.ByVarnameTool(varname); t != nil {
+	if t := tools.ByVarname(varname); t != nil {
 		if tools.Usable(t, time) {
 			return t, true
 		}
@@ -715,7 +715,7 @@ func (pkglint *Pkglint) ToolByVarname(varname string, time ToolTime) *Tool {
 	var tool *Tool
 	if G.Mk != nil {
 		tools := G.Mk.Tools
-		if t := tools.ByVarnameTool(varname); t != nil {
+		if t := tools.ByVarname(varname); t != nil {
 			if tools.Usable(t, time) {
 				return t
 			}
@@ -724,7 +724,7 @@ func (pkglint *Pkglint) ToolByVarname(varname string, time ToolTime) *Tool {
 	}
 
 	tools := G.Pkgsrc.Tools
-	if t := tools.ByVarnameTool(varname); t != nil {
+	if t := tools.ByVarname(varname); t != nil {
 		if tools.Usable(t, time) {
 			return t
 		}

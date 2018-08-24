@@ -481,7 +481,7 @@ func (ck MkLineChecker) checkVaruseToolLoadTime(varname string, tool *Tool) {
 	}
 
 	if path.Base(ck.MkLine.Filename) == "Makefile" {
-		pkgsrcTool := G.Pkgsrc.Tools.ByNameTool(tool.Name)
+		pkgsrcTool := G.Pkgsrc.Tools.ByName(tool.Name)
 		if pkgsrcTool != nil && pkgsrcTool.Validity == Nowhere {
 			// The tool must have been added too late to USE_TOOLS,
 			// i.e. after bsd.prefs.mk has been included.

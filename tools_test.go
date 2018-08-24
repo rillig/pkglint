@@ -99,9 +99,9 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 
 	// The references to the tools are stable,
 	// the lookup methods always return the same objects.
-	load := tools.ByNameTool("load")
-	run := tools.ByNameTool("run")
-	nowhere := tools.ByNameTool("nowhere")
+	load := tools.ByName("load")
+	run := tools.ByName("run")
+	nowhere := tools.ByName("nowhere")
 
 	// All tools are defined by name, but their variable names are not yet known.
 	// At this point they may not be used, neither by the pkgsrc infrastructure nor by a package.
@@ -119,9 +119,9 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	c.Check(load, deepEquals, &Tool{"load", "LOAD", false, Nowhere})
 	c.Check(run, deepEquals, &Tool{"run", "RUN_CMD", false, Nowhere})
 	c.Check(nowhere, deepEquals, &Tool{"nowhere", "NOWHERE", false, Nowhere})
-	c.Check(tools.ByVarnameTool("LOAD"), equals, load)
-	c.Check(tools.ByVarnameTool("RUN_CMD"), equals, run)
-	c.Check(tools.ByVarnameTool("NOWHERE"), equals, nowhere)
+	c.Check(tools.ByVarname("LOAD"), equals, load)
+	c.Check(tools.ByVarname("RUN_CMD"), equals, run)
+	c.Check(tools.ByVarname("NOWHERE"), equals, nowhere)
 	c.Check(load.UsableAtLoadTime(false), equals, false)
 	c.Check(load.UsableAtLoadTime(true), equals, false)
 	c.Check(load.UsableAtRunTime(), equals, false)
@@ -180,11 +180,11 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	tools := NewTools("")
 	tools.AddAll(G.Pkgsrc.Tools)
 
-	load := tools.ByNameTool("load")
-	run := tools.ByNameTool("run")
-	nowhere := tools.ByNameTool("nowhere")
-	before := tools.ByNameTool("pkg-before-prefs")
-	after := tools.ByNameTool("pkg-after-prefs")
+	load := tools.ByName("load")
+	run := tools.ByName("run")
+	nowhere := tools.ByName("nowhere")
+	before := tools.ByName("pkg-before-prefs")
+	after := tools.ByName("pkg-after-prefs")
 
 	c.Check(load.UsableAtRunTime(), equals, true)
 	c.Check(run.UsableAtRunTime(), equals, true)
@@ -283,7 +283,7 @@ func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {
 	// In other words, this test is only there for the code coverage.
 	G.Pkgsrc.LoadInfrastructure()
 
-	c.Check(G.Pkgsrc.Tools.ByNameTool("run"), deepEquals, &Tool{"run", "", false, AtRunTime})
+	c.Check(G.Pkgsrc.Tools.ByName("run"), deepEquals, &Tool{"run", "", false, AtRunTime})
 }
 
 func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
@@ -302,7 +302,7 @@ func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
 	// grants more use cases (load time + run time), therefore it wins.
 	G.Pkgsrc.LoadInfrastructure()
 
-	c.Check(G.Pkgsrc.Tools.ByNameTool("both").Validity, equals, AfterPrefsMk)
+	c.Check(G.Pkgsrc.Tools.ByName("both").Validity, equals, AfterPrefsMk)
 }
 
 func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
@@ -320,10 +320,10 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 
 	G.Pkgsrc.LoadInfrastructure()
 
-	c.Check(G.Pkgsrc.Tools.ByNameTool("awk").Validity, equals, AfterPrefsMk)
-	c.Check(G.Pkgsrc.Tools.ByNameTool("sed").Validity, equals, AfterPrefsMk)
-	c.Check(G.Pkgsrc.Tools.ByNameTool("gawk").Validity, equals, Nowhere)
-	c.Check(G.Pkgsrc.Tools.ByNameTool("gsed").Validity, equals, Nowhere)
+	c.Check(G.Pkgsrc.Tools.ByName("awk").Validity, equals, AfterPrefsMk)
+	c.Check(G.Pkgsrc.Tools.ByName("sed").Validity, equals, AfterPrefsMk)
+	c.Check(G.Pkgsrc.Tools.ByName("gawk").Validity, equals, Nowhere)
+	c.Check(G.Pkgsrc.Tools.ByName("gsed").Validity, equals, Nowhere)
 
 	t.EnableTracingToLog()
 	G.Pkgsrc.Tools.Trace()
