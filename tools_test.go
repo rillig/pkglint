@@ -390,3 +390,53 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 
 	t.CheckOutputEmpty()
 }
+
+// Demonstrates how the Tools type handles tool that share the same
+// variable name. Of these tools, the GNU variant is preferred.
+//
+// See also Pkglint.Tool.
+func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name(c *check.C) {
+	nonGnu := NewTools("non-gnu")
+	nonGnu.Define("sed", "SED", dummyMkLine).SetValidity(AfterPrefsMk, "")
+
+	gnu := NewTools("gnu")
+	gnu.Define("gsed", "SED", dummyMkLine)
+
+	local1 := NewTools("local")
+	local1.AddAll(nonGnu)
+	local1.AddAll(gnu)
+
+	c.Check(local1.ByName("sed").Validity, equals, AfterPrefsMk)
+	c.Check(local1.ByName("gsed").Validity, equals, Nowhere)
+	local1.Trace()
+
+	local2 := NewTools("local")
+	local2.AddAll(gnu)
+	local2.AddAll(nonGnu)
+
+	c.Check(local2.ByName("sed").Validity, equals, AfterPrefsMk)
+	c.Check(local2.ByName("gsed").Validity, equals, Nowhere)
+	local2.Trace()
+
+	nonGnu.ByName("sed").Validity = Nowhere
+	gnu.ByName("gsed").Validity = AfterPrefsMk
+
+	local3 := NewTools("local")
+	local3.AddAll(nonGnu)
+	local3.AddAll(gnu)
+
+	c.Check(local3.ByName("sed").Validity, equals, Nowhere)
+	c.Check(local3.ByName("gsed").Validity, equals, AfterPrefsMk)
+	local3.Trace()
+
+	local4 := NewTools("local")
+	local4.AddAll(gnu)
+	local4.AddAll(nonGnu)
+
+	c.Check(local4.ByName("sed").Validity, equals, Nowhere)
+	c.Check(local4.ByName("gsed").Validity, equals, AfterPrefsMk)
+	local4.Trace()
+
+	c.Check(local1, deepEquals, local2)
+	c.Check(local4, deepEquals, local4)
+}

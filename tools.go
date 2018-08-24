@@ -134,7 +134,7 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 	}
 
 	if varname != "" {
-		if existing := tr.byVarname[varname]; existing != nil {
+		if existing := tr.byVarname[varname]; existing != nil && len(existing.Name) <= len(name) {
 			if tool == nil {
 				tool = existing
 			}
