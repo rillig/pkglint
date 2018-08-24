@@ -219,7 +219,7 @@ func (src *Pkgsrc) loadTools() {
 	for _, basename := range toolFiles {
 		mklines := G.Pkgsrc.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
-			tools.ParseToolLine(mkline)
+			tools.ParseToolLineCreate(mkline, true)
 		}
 	}
 

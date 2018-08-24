@@ -94,10 +94,10 @@ func NewTools(traceName string) Tools {
 }
 
 // Define registers the tool by its name and the corresponding
-// variable name (if nonempty). After this tool is added to USE_TOOLS, it
-// may be used by this name (e.g. "awk") or by its variable (e.g. ${AWK}).
+// variable name (if nonempty).
 //
-// See MakeUsable.
+// After this tool is added to USE_TOOLS, it may be used by this name
+// (e.g. "awk") or by its variable (e.g. ${AWK}).
 func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 	if trace.Tracing {
 		trace.Stepf("Tools.Define for %s: %q %q in %s", tr.TraceName, name, varname, mkline)
@@ -229,13 +229,17 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 	// See mk/tools/autoconf.mk:/^\.if !defined/
 	if matches(value, `\bautoconf213\b`) {
 		for _, name := range [...]string{"autoconf-2.13", "autoheader-2.13", "autoreconf-2.13", "autoscan-2.13", "autoupdate-2.13", "ifnames-2.13"} {
-			tr.Define(name, "", mkline)
+			if createIfAbsent {
+				tr.Define(name, "", mkline)
+			}
 			deps = append(deps, name)
 		}
 	}
 	if matches(value, `\bautoconf\b`) {
 		for _, name := range [...]string{"autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames"} {
-			tr.Define(name, "", mkline)
+			if createIfAbsent {
+				tr.Define(name, "", mkline)
+			}
 			deps = append(deps, name)
 		}
 	}

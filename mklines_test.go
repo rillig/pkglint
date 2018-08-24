@@ -317,9 +317,10 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall,no-space")
-	t.SetupVartypes()
-	t.SetupTool("autoconf213", "")
-	t.SetupTool("autoconf", "")
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/tools/defaults.mk",
+		"USE_TOOLS+=     autoconf autoconf213")
+	G.Pkgsrc.LoadInfrastructure()
 	mklines := t.NewMkLines("determine-defined-variables.mk",
 		MkRcsID,
 		"",

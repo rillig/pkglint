@@ -653,7 +653,7 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 
 	if G.Mk != nil {
 		tools := G.Mk.Tools
-		if t := G.Mk.Tools.ByName(command); t != nil {
+		if t := tools.ByName(command); t != nil {
 			if tools.Usable(t, time) {
 				return t, true
 			}
