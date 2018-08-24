@@ -865,6 +865,6 @@ func (s *Suite) Test_MkLines_Check__hacks_mk(c *check.C) {
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		"WARN: hacks.mk:3: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+	// No warning about including bsd.prefs.mk before using the ?= operator.
+	t.CheckOutputEmpty()
 }
