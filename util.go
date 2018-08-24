@@ -684,7 +684,13 @@ func (s *RedundantScope) IsConditional(varname string) bool {
 
 func IsPrefs(fileName string) bool {
 	switch path.Base(fileName) {
-	case "bsd.prefs.mk", "bsd.fast.prefs.mk", "bsd.builtin.mk" /* (in mk/buildlink3) */ :
+	case "bsd.prefs.mk":
+		return true
+	case "bsd.fast.prefs.mk":
+		return true
+	case "bsd.builtin.mk": // mk/buildlink3/bsd.builtin.mk
+		return true
+	case "bsd.options.mk":
 		return true
 	}
 	return false

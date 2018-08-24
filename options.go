@@ -53,11 +53,10 @@ loop:
 			switch {
 			case matches(includedFile, `/[^/]+\.buildlink3\.mk$`):
 			case matches(includedFile, `/[^/]+\.builtin\.mk$`):
-			case IsPrefs(includedFile):
-
 			case includedFile == "../../mk/bsd.options.mk":
 				exp.Advance()
 				break loop
+			case IsPrefs(includedFile):
 			}
 
 		default:
