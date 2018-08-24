@@ -887,7 +887,11 @@ func (ck MkLineChecker) checkVarassignBsdPrefs() {
 	mkline := ck.MkLine
 
 	switch mkline.Varcanon() {
-	case "BUILDLINK_PKGSRCDIR.*", "BUILDLINK_DEPMETHOD.*", "BUILDLINK_ABI_DEPENDS.*":
+	case "BUILDLINK_PKGSRCDIR.*",
+		"BUILDLINK_DEPMETHOD.*",
+		"BUILDLINK_ABI_DEPENDS.*",
+		"BUILDLINK_INCDIRS.*",
+		"BUILDLINK_LIBDIRS.*":
 		return
 	}
 

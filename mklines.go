@@ -89,7 +89,7 @@ func (mklines *MkLines) Check() {
 	substcontext := NewSubstContext()
 	var varalign VaralignBlock
 	lastMkline := mklines.mklines[len(mklines.mklines)-1]
-	isHacksMk := path.Base(mklines.lines[0].Filename) == "hacks.mk"
+	isHacksMk := mklines.lines[0].Basename == "hacks.mk"
 
 	lineAction := func(mkline MkLine) bool {
 		if isHacksMk {
