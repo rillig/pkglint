@@ -852,3 +852,19 @@ func (s *Suite) Test_MkLines_Check__indirect_PLIST_VARS(c *check.C) {
 	// Therefore, in such a case, no diagnostics are logged at all.
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_MkLines_Check__hacks_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+	mklines := t.NewMkLines("hacks.mk",
+		MkRcsID,
+		"",
+		"PKGNAME?=       pkgbase-1.0")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: hacks.mk:3: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+}
