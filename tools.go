@@ -135,7 +135,9 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 
 	if varname != "" {
 		if existing := tr.byVarname[varname]; existing != nil {
-			tool = existing
+			if tool == nil {
+				tool = existing
+			}
 		} else {
 			tr.byVarname[varname] = tool
 		}
@@ -266,10 +268,19 @@ func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 }
 
 func (tr *Tools) AddAll(other Tools) {
+	if trace.Tracing {
+		defer trace.Call(other.TraceName, "to", tr.TraceName)()
+	}
+
 	for _, otherTool := range other.byName {
+		if trace.Tracing {
+			trace.Stepf("Tools.AddAll %+v", *otherTool)
+		}
 		tool := tr.def(otherTool.Name, otherTool.Varname, nil)
-		tool.MustUseVarForm = otherTool.MustUseVarForm
-		tool.SetValidity(otherTool.Validity, tr.TraceName)
+		tool.MustUseVarForm = tool.MustUseVarForm || otherTool.MustUseVarForm
+		if otherTool.Validity > tool.Validity {
+			tool.SetValidity(otherTool.Validity, tr.TraceName)
+		}
 	}
 }
 

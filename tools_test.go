@@ -305,6 +305,64 @@ func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
 	c.Check(G.Pkgsrc.Tools.ByNameTool("both").Validity, equals, AfterPrefsMk)
 }
 
+func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupCommandLine("-Wall,no-space")
+	t.CreateFileLines("mk/tools/defaults.mk",
+		"_TOOLS_VARNAME.awk=     AWK",
+		"_TOOLS_VARNAME.gawk=    AWK",
+		"_TOOLS_VARNAME.gsed=    SED",
+		"_TOOLS_VARNAME.sed=     SED")
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		"USE_TOOLS+=     awk sed")
+
+	G.Pkgsrc.LoadInfrastructure()
+
+	c.Check(G.Pkgsrc.Tools.ByNameTool("awk").Validity, equals, AfterPrefsMk)
+	c.Check(G.Pkgsrc.Tools.ByNameTool("sed").Validity, equals, AfterPrefsMk)
+	c.Check(G.Pkgsrc.Tools.ByNameTool("gawk").Validity, equals, Nowhere)
+	c.Check(G.Pkgsrc.Tools.ByNameTool("gsed").Validity, equals, Nowhere)
+
+	t.EnableTracingToLog()
+	G.Pkgsrc.Tools.Trace()
+	t.DisableTracing()
+
+	t.CheckOutputLines(
+		"TRACE: + (*Tools).Trace(\"Pkgsrc\")",
+		"TRACE: 1   tool &{Name:awk Varname:AWK MustUseVarForm:false Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true Validity:Nowhere}",
+		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Validity:Nowhere}",
+		"TRACE: 1   tool &{Name:gsed Varname:SED MustUseVarForm:false Validity:Nowhere}",
+		"TRACE: 1   tool &{Name:sed Varname:SED MustUseVarForm:false Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: - (*Tools).Trace(\"Pkgsrc\")")
+
+	tools := NewTools("module.mk")
+	tools.AddAll(G.Pkgsrc.Tools)
+
+	t.EnableTracingToLog()
+	tools.Trace()
+	t.DisableTracing()
+
+	t.CheckOutputLines(
+		"TRACE: + (*Tools).Trace(\"module.mk\")",
+		"TRACE: 1   tool &{Name:awk Varname:AWK MustUseVarForm:false Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true Validity:Nowhere}",
+		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Validity:Nowhere}",
+		"TRACE: 1   tool &{Name:gsed Varname:SED MustUseVarForm:false Validity:Nowhere}",
+		"TRACE: 1   tool &{Name:sed Varname:SED MustUseVarForm:false Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: - (*Tools).Trace(\"module.mk\")")
+}
+
 func (s *Suite) Test_ToolTime_String(c *check.C) {
 	c.Check(LoadTime.String(), equals, "LoadTime")
 	c.Check(RunTime.String(), equals, "RunTime")
