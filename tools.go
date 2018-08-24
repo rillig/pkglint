@@ -204,42 +204,53 @@ func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
 			}
 
 		case "USE_TOOLS":
-			if !containsVarRef(value) {
-				deps := splitOnSpace(value)
-
-				// See mk/tools/autoconf.mk:/^\.if !defined/
-				if matches(value, `\bautoconf213\b`) {
-					for _, name := range [...]string{"autoconf-2.13", "autoheader-2.13", "autoreconf-2.13", "autoscan-2.13", "autoupdate-2.13", "ifnames-2.13"} {
-						tr.Define(name, "", mkline)
-						deps = append(deps, name)
-					}
-				}
-				if matches(value, `\bautoconf\b`) {
-					for _, name := range [...]string{"autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames"} {
-						tr.Define(name, "", mkline)
-						deps = append(deps, name)
-					}
-				}
-
-				for _, dep := range deps {
-					name := strings.Split(dep, ":")[0]
-					tool := tr.ByName(name)
-					if tool == nil && createIfAbsent {
-						tr.Define(name, "", mkline)
-					}
-					if tool != nil {
-						validity := tr.validity(mkline.Filename)
-						if validity > tool.Validity {
-							tool.SetValidity(validity, tr.TraceName)
-						}
-					}
-				}
-			}
+			tr.parseUseTools(mkline, createIfAbsent)
 		}
 
 	case mkline.IsInclude():
 		if IsPrefs(mkline.IncludeFile()) {
 			tr.SeenPrefs = true
+		}
+	}
+}
+
+// parseUseTools interprets a "USE_TOOLS+=" line from a Makefile fragment.
+// It determines the validity of the tool, i.e. in which places it may be used.
+//
+// If createIfAbsent is true and the tools is unknown, it is registered.
+func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
+	value := mkline.Value()
+	if containsVarRef(value) {
+		return
+	}
+
+	deps := splitOnSpace(value)
+
+	// See mk/tools/autoconf.mk:/^\.if !defined/
+	if matches(value, `\bautoconf213\b`) {
+		for _, name := range [...]string{"autoconf-2.13", "autoheader-2.13", "autoreconf-2.13", "autoscan-2.13", "autoupdate-2.13", "ifnames-2.13"} {
+			tr.Define(name, "", mkline)
+			deps = append(deps, name)
+		}
+	}
+	if matches(value, `\bautoconf\b`) {
+		for _, name := range [...]string{"autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames"} {
+			tr.Define(name, "", mkline)
+			deps = append(deps, name)
+		}
+	}
+
+	for _, dep := range deps {
+		name := strings.Split(dep, ":")[0]
+		tool := tr.ByName(name)
+		if tool == nil && createIfAbsent {
+			tr.Define(name, "", mkline)
+		}
+		if tool != nil {
+			validity := tr.validity(mkline.Filename)
+			if validity > tool.Validity {
+				tool.SetValidity(validity, tr.TraceName)
+			}
 		}
 	}
 }
