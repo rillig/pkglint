@@ -51,12 +51,8 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 
 	t.SetupPkgsrc()
 	t.CreateFileLines("mk/bsd.prefs.mk",
-		MkRcsID,
-		"",
 		"USE_TOOLS+=\tsed:pkgsrc")
 	t.CreateFileLines("mk/tools/defaults.mk",
-		MkRcsID,
-		"",
 		"_TOOLS_VARNAME.sed=\tSED")
 	t.SetupFileMkLines("module.mk",
 		MkRcsID,
