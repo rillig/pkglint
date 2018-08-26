@@ -2,6 +2,7 @@ package main
 
 import (
 	"gopkg.in/check.v1"
+	"os"
 	"strings"
 )
 
@@ -479,4 +480,48 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	t.CheckFileLines("fname",
 		"111 222 333 444 555")
 	c.Check(lines[0].raw[0].textnl, equals, "111 222 333 444 555\n")
+}
+
+func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename", 123, "text")
+
+	c.Assert(func() {
+		fix := line.Autofix()
+		fix.Apply()
+	}, check.Panics, "Each autofix must have a diagnostic.")
+
+	c.Assert(func() {
+		fix := line.Autofix()
+		fix.Replace("from", "to")
+		fix.Apply()
+	}, check.Panics, "Autofix: The diagnostic must be given before the action.")
+
+	c.Assert(func() {
+		fix := line.Autofix()
+		fix.Warnf("Warning without period")
+		fix.Apply()
+	}, check.Panics, "Autofix: format \"Warning without period\" must end with a period.")
+}
+
+func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix")
+	lines := t.SetupFileLines("subdir/file.txt",
+		"line 1")
+	os.RemoveAll(t.File("subdir"))
+
+	fix := lines[0].Autofix()
+	fix.Warnf("Should start with an uppercase letter.")
+	fix.Replace("line", "Line")
+	fix.Apply()
+
+	SaveAutofixChanges(lines)
+
+	// FIXME: The error "Cannot write file" is not logged since --autofix suppresses it.
+	// (See Line.log.)
+	t.CheckOutputLines(
+		"AUTOFIX: ~/subdir/file.txt:1: Replacing \"line\" with \"Line\".")
 }
