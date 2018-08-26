@@ -179,3 +179,29 @@ func (s *Suite) Test_explain_with_only(c *check.C) {
 		"\tThis explanation is logged.",
 		"")
 }
+
+func (s *Suite) Test_logs__duplicate_messages(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	G.opts.LogVerbose = false
+	line := t.NewLine("README.txt", 123, "text")
+
+	// In rare cases, the explanations for the same warning may differ
+	// when they appear in different contexts. In such a case, if the
+	// warning is suppressed, the explanation most not appear on its own.
+	line.Warnf("The warning.") // Is logged
+	Explain("Explanation 1")
+	line.Warnf("The warning.") // Is suppressed
+	Explain("Explanation 2")
+
+	t.CheckOutputLines(
+		"WARN: README.txt:123: The warning.",
+		"",
+		"\tExplanation 1",
+		"",
+		// FIXME: Explanation 2 should not be shown.
+		"",
+		"\tExplanation 2",
+		"")
+}
