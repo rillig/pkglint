@@ -199,9 +199,5 @@ func (s *Suite) Test_logs__duplicate_messages(c *check.C) {
 		"WARN: README.txt:123: The warning.",
 		"",
 		"\tExplanation 1",
-		"",
-		// FIXME: Explanation 2 should not be shown.
-		"",
-		"\tExplanation 2",
 		"")
 }

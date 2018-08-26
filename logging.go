@@ -62,6 +62,7 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 	}
 
 	if !G.opts.LogVerbose && loggedAlready(fname, lineno, msg) {
+		G.explainNext = false
 		return false
 	}
 
