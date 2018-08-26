@@ -520,8 +520,7 @@ func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
 
 	SaveAutofixChanges(lines)
 
-	// FIXME: The error "Cannot write file" is not logged since --autofix suppresses it.
-	// (See Line.log.)
-	t.CheckOutputLines(
-		"AUTOFIX: ~/subdir/file.txt:1: Replacing \"line\" with \"Line\".")
+	c.Check(t.Output(), check.Matches, ""+
+		"AUTOFIX: ~/subdir/file.txt:1: Replacing \"line\" with \"Line\".\n"+
+		"ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot write: .*\n")
 }
