@@ -201,3 +201,29 @@ func (s *Suite) Test_logs__duplicate_messages(c *check.C) {
 		"\tExplanation 1",
 		"")
 }
+
+func (s *Suite) Test_logs__duplicate_explanations(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	line := t.NewLine("README.txt", 123, "text")
+
+	// In rare cases, different diagnostics may have the same explanation.
+	line.Warnf("Warning 1.")
+	Explain("Explanation")
+	line.Warnf("Warning 2.")
+	Explain("Explanation") // Is suppressed.
+
+	t.CheckOutputLines(
+		"WARN: README.txt:123: Warning 1.",
+		"",
+		"\tExplanation",
+		"",
+		"WARN: README.txt:123: Warning 2.")
+}
+
+func (s *Suite) Test_logs__panic(c *check.C) {
+	c.Check(func() {
+		logs(llError, "filename", "13", "No period", "No period")
+	}, check.Panics, "Diagnostic format \"No period\" must end in a period.")
+}
