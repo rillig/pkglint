@@ -3,6 +3,7 @@ package main
 import (
 	"gopkg.in/check.v1"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -523,4 +524,32 @@ func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
 	c.Check(t.Output(), check.Matches, ""+
 		"AUTOFIX: ~/subdir/file.txt:1: Replacing \"line\" with \"Line\".\n"+
 		"ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot write: .*\n")
+}
+
+func (s *Suite) Test_Autofix_Apply__file_busy_Windows(c *check.C) {
+	t := s.Init(c)
+
+	if runtime.GOOS != "windows" {
+		return
+	}
+
+	t.SetupCommandLine("--autofix")
+	lines := t.SetupFileLines("subdir/file.txt",
+		"line 1")
+
+	// As long as the file is kept open, it cannot be overwritten or deleted.
+	openFile, err := os.OpenFile(t.File("subdir/file.txt"), 0, 0666)
+	defer openFile.Close()
+	c.Check(err, check.IsNil)
+
+	fix := lines[0].Autofix()
+	fix.Warnf("Should start with an uppercase letter.")
+	fix.Replace("line", "Line")
+	fix.Apply()
+
+	SaveAutofixChanges(lines)
+
+	c.Check(t.Output(), check.Matches, ""+
+		"AUTOFIX: ~/subdir/file.txt:1: Replacing \"line\" with \"Line\".\n"+
+		"ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot overwrite with auto-fixed content: .*\n")
 }
