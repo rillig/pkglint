@@ -56,52 +56,41 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 	t.SetupCommandLine("-Wtypes")
 	t.SetupVartypes()
 
-	MkLineChecker{t.NewMkLine("fname", 1, ".if !empty(PKGSRC_COMPILER:Mmycc)")}.checkDirectiveCond()
+	testCond := func(cond string, output ...string) {
+		MkLineChecker{t.NewMkLine("fname", 1, cond)}.checkDirectiveCond()
+		t.CheckOutputLines(output...)
+	}
 
-	t.CheckOutputLines(
-		"WARN: fname:1: The pattern \"mycc\" cannot match any of " +
-			"{ ccache ccc clang distcc f2c gcc hp icc ido " +
+	testCond(".if !empty(PKGSRC_COMPILER:Mmycc)",
+		"WARN: fname:1: The pattern \"mycc\" cannot match any of "+
+			"{ ccache ccc clang distcc f2c gcc hp icc ido "+
 			"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.")
 
-	MkLineChecker{t.NewMkLine("fname", 1, ".elif ${A} != ${B}")}.checkDirectiveCond()
+	testCond(".elif ${A} != ${B}")
 
-	t.CheckOutputEmpty()
-
-	MkLineChecker{t.NewMkLine("fname", 1, ".if ${HOMEPAGE} == \"mailto:someone@example.org\"")}.checkDirectiveCond()
-
-	t.CheckOutputLines(
+	testCond(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
 		"WARN: fname:1: \"mailto:someone@example.org\" is not a valid URL.")
 
-	MkLineChecker{t.NewMkLine("fname", 1, ".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])")}.checkDirectiveCond()
-
-	t.CheckOutputLines(
+	testCond(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
 		"WARN: fname:1: PKGSRC_RUN_TEST should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
-	MkLineChecker{t.NewMkLine("fname", 1, ".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")}.checkDirectiveCond()
+	testCond(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
-	t.CheckOutputEmpty()
-
-	MkLineChecker{t.NewMkLine("fname", 1, ".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})")}.checkDirectiveCond()
-
-	t.CheckOutputLines(
+	testCond(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
 		"WARN: fname:1: The empty() function takes a variable name as parameter, not a variable expression.")
 
-	MkLineChecker{t.NewMkLine("fname", 1, ".if ${EMUL_PLATFORM} == \"linux-x386\"")}.checkDirectiveCond()
-
-	t.CheckOutputLines(
-		"WARN: fname:1: " +
-			"\"x386\" is not valid for the hardware architecture part of EMUL_PLATFORM. " +
-			"Use one of " +
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex " +
-			"dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb " +
-			"earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 " +
-			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 " +
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 " +
+	testCond(".if ${EMUL_PLATFORM} == \"linux-x386\"",
+		"WARN: fname:1: "+
+			"\"x386\" is not valid for the hardware architecture part of EMUL_PLATFORM. "+
+			"Use one of "+
+			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex "+
+			"dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb "+
+			"earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
+			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} instead.")
 
-	MkLineChecker{t.NewMkLine("fname", 1, ".if ${EMUL_PLATFORM:Mlinux-x386}")}.checkDirectiveCond()
-
-	t.CheckOutputLines(
+	testCond(".if ${EMUL_PLATFORM:Mlinux-x386}",
 		"WARN: fname:1: "+
 			"The pattern \"x386\" cannot match any of { aarch64 aarch64eb alpha amd64 arc arm arm26 "+
 			"arm32 cobalt coldfire convex dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
@@ -112,15 +101,13 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 			"for the hardware architecture part of EMUL_PLATFORM.",
 		"NOTE: fname:1: EMUL_PLATFORM should be compared using == instead of the :M or :N modifier without wildcards.")
 
-	MkLineChecker{t.NewMkLine("fname", 98, ".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}")}.checkDirectiveCond()
-
-	t.CheckOutputLines(
-		"WARN: fname:98: "+
+	testCond(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
+		"WARN: fname:1: "+
 			"The pattern \"UnknownOS\" cannot match any of "+
 			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
 			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
 			"} for the operating system part of MACHINE_PLATFORM.",
-		"WARN: fname:98: "+
+		"WARN: fname:1: "+
 			"The pattern \"x86\" cannot match any of "+
 			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast earm "+
 			"earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb "+
@@ -128,7 +115,9 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 			"m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax "+
 			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
-		"NOTE: fname:98: MACHINE_ARCH should be compared using == instead of the :M or :N modifier without wildcards.")
+		"NOTE: fname:1: MACHINE_ARCH should be compared using == instead of the :M or :N modifier without wildcards.")
+
+	testCond(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
