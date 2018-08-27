@@ -79,6 +79,13 @@ func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 				b.CaseItem(
 					b.Words("pattern"),
 					b.List().AddCommand(b.SimpleCommand("case-item-action")), sepNone))).AddSemicolon())))
+
+	s.test("if condition; then action; elif condition2; then action2; fi",
+		b.List().AddCommand(b.If(
+			b.List().AddCommand(b.SimpleCommand("condition")).AddSemicolon(),
+			b.List().AddCommand(b.SimpleCommand("action")).AddSemicolon(),
+			b.List().AddCommand(b.SimpleCommand("condition2")).AddSemicolon(),
+			b.List().AddCommand(b.SimpleCommand("action2")).AddSemicolon())))
 }
 
 func (s *ShSuite) Test_ShellParser_list(c *check.C) {
@@ -489,19 +496,13 @@ func (s *ShSuite) test(program string, expected *MkShList) {
 }
 
 func (s *ShSuite) Test_ShellLexer_Lex__redirects(c *check.C) {
-	tokens, rest := splitIntoShellTokens(dummyLine, "${MAKE} print-summary-data  2>&1 > /dev/stderr")
+	tokens, rest := splitIntoShellTokens(dummyLine, "2>&1 <& <>file >>file <<EOF <<-EOF > /dev/stderr")
 
-	c.Check(tokens, deepEquals, []string{"${MAKE}", "print-summary-data", "2>&", "1", ">", "/dev/stderr"})
+	c.Check(tokens, deepEquals, []string{"2>&", "1", "<&", "<>", "file", ">>", "file", "<<", "EOF", "<<-", "EOF", ">", "/dev/stderr"})
 	c.Check(rest, equals, "")
 
 	lexer := NewShellLexer(tokens, rest)
 	var llval shyySymType
-
-	c.Check(lexer.Lex(&llval), equals, tkWORD)
-	c.Check(llval.Word.MkText, equals, "${MAKE}")
-
-	c.Check(lexer.Lex(&llval), equals, tkWORD)
-	c.Check(llval.Word.MkText, equals, "print-summary-data")
 
 	c.Check(lexer.Lex(&llval), equals, tkIO_NUMBER)
 	c.Check(llval.IONum, equals, 2)
@@ -510,6 +511,28 @@ func (s *ShSuite) Test_ShellLexer_Lex__redirects(c *check.C) {
 
 	c.Check(lexer.Lex(&llval), equals, tkWORD)
 	c.Check(llval.Word.MkText, equals, "1")
+
+	c.Check(lexer.Lex(&llval), equals, tkLTAND)
+
+	c.Check(lexer.Lex(&llval), equals, tkLTGT)
+
+	c.Check(lexer.Lex(&llval), equals, tkWORD)
+	c.Check(llval.Word.MkText, equals, "file")
+
+	c.Check(lexer.Lex(&llval), equals, tkGTGT)
+
+	c.Check(lexer.Lex(&llval), equals, tkWORD)
+	c.Check(llval.Word.MkText, equals, "file")
+
+	c.Check(lexer.Lex(&llval), equals, tkLTLT)
+
+	c.Check(lexer.Lex(&llval), equals, tkWORD)
+	c.Check(llval.Word.MkText, equals, "EOF")
+
+	c.Check(lexer.Lex(&llval), equals, tkLTLTDASH)
+
+	c.Check(lexer.Lex(&llval), equals, tkWORD)
+	c.Check(llval.Word.MkText, equals, "EOF")
 
 	c.Check(lexer.Lex(&llval), equals, tkGT)
 
