@@ -1028,7 +1028,7 @@ func (ck MkLineChecker) checkText(text string) {
 	}
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.
-	if m, flag := match1(text, `\b(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R)\b`); m {
+	if m, flag := match1(text, `(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R\b)`); m {
 		mkline.Warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
 	}
 

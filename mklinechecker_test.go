@@ -434,3 +434,50 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
+
+func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	G.Pkgsrc.LoadInfrastructure()
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+	mklines := t.SetupFileMkLines("module.mk",
+		MkRcsID,
+		"EGDIR=                  ${PREFIX}/etc/rc.d",
+		"_TOOLS_VARNAME.sed=     SED",
+		"DIST_SUBDIR=            ${PKGNAME}",
+		"WRKSRC=                 ${PKGNAME}",
+		"SITES_distfile.tar.gz=  ${MASTER_SITES_GITHUB:=user/}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:2: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.",
+		"WARN: ~/module.mk:3: _TOOLS_VARNAME.sed is defined but not used.",
+		"WARN: ~/module.mk:3: Variable names starting with an underscore (_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
+		"WARN: ~/module.mk:4: PKGNAME should not be used in DIST_SUBDIR, as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC, as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
+		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	G.Pkgsrc.LoadInfrastructure()
+
+	t.SetupCommandLine("-Wall,no-space")
+	mklines := t.SetupFileMkLines("module.mk",
+		MkRcsID,
+		"CFLAGS+=                -Wl,--rpath,${PREFIX}/lib",
+		"PKG_FAIL_REASON+=       \"Group ${GAMEGRP} doesn't exist.\"")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
+		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
+}
