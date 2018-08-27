@@ -1200,10 +1200,10 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 
 	switch {
 	case !hasPrefix(relativePath, "../"):
-	case matches(relativePath, `^\.\./\.\./[^/]+/[^/]`):
-		// From a package to another package.
 	case hasPrefix(relativePath, "../../mk/"):
 		// From a package to the infrastructure.
+	case matches(relativePath, `^\.\./\.\./[^/]+/[^/]`):
+		// From a package to another package.
 	case hasPrefix(relativePath, "../mk/") && relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(".")) == "..":
 		// For category Makefiles.
 	default:

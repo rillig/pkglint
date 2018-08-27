@@ -470,3 +470,31 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	G.Pkgsrc.LoadInfrastructure()
+	t.CreateFileLines("wip/package/Makefile")
+	t.CreateFileLines("wip/package/module.mk")
+	mklines := t.SetupFileMkLines("category/package/module.mk",
+		MkRcsID,
+		"DEPENDS+=       wip-package-[0-9]*:../../wip/package",
+		".include \"../../wip/package/module.mk\"",
+		"",
+		"DEPENDS+=       unresolvable-[0-9]*:../../lang/${LATEST_PYTHON}",
+		".include \"../../lang/${LATEST_PYTHON}/module.mk\"",
+		"",
+		".include \"module.mk\"",
+		".include \"../../category/../category/package/module.mk\"", // Oops
+		".include \"../../mk/bsd.prefs.mk\"",
+		".include \"../package/module.mk\"")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
+		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
+		"WARN: ~/category/package/module.mk:11: Invalid relative path \"../package/module.mk\".")
+}
