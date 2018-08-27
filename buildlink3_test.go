@@ -102,6 +102,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch_abi_api(c *check.C) {
 		"",
 		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
 		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X12>=1.6.1.2nb2",
+		"BUILDLINK_ABI_DEPENDS.hs-X12+=\ths-X11>=1.6.1.2nb2",
 		"",
 		".endif\t# HS_X11_BUILDLINK3_MK",
 		"",
@@ -110,7 +111,8 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_name_mismatch_abi_api(c *check.C) {
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:9: Package name mismatch between ABI \"hs-X12\" and API \"hs-X11\" (from line 8).")
+		"WARN: buildlink3.mk:9: Package name mismatch between ABI \"hs-X12\" and API \"hs-X11\" (from line 8).",
+		"WARN: buildlink3.mk:10: Only buildlink variables for \"hs-X11\", not \"hs-X12\" may be set in this file.")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk_abi_api_versions(c *check.C) {
@@ -344,4 +346,32 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_indentation(c *check.C) {
 		"ERROR: ~/buildlink3.mk:11: There is no package in \"multimedia/libva\".",
 		"ERROR: ~/buildlink3.mk:13: \"x11/libX11/buildlink3.mk\" does not exist.",
 		"WARN: ~/buildlink3.mk:3: Expected a BUILDLINK_TREE line.")
+}
+
+func (s *Suite) Test_ChecklinesBuildlink3Mk__pkg_build_options(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.CreateFileLines("mk/pkg-build-options.mk")
+	mklines := t.NewMkLines("buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\ths-X11",
+		"",
+		".if !defined(HS_X11_BUILDLINK3_MK)",
+		"HS_X11_BUILDLINK3_MK:=",
+		"",
+		"pkgbase := dependency",
+		".include \"../../mk/pkg-build-options.mk\"",
+		"",
+		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
+		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
+		"",
+		".endif\t# HS_X11_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-hs-X11")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	t.CheckOutputEmpty()
 }
