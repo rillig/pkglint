@@ -113,11 +113,11 @@ func Explain(explanation ...string) {
 		for _, s := range explanation {
 			if l := tabWidth(s); l > 68 && contains(s, " ") {
 				lastSpace := strings.LastIndexByte(s[:68], ' ')
-				print(fmt.Sprintf("Long explanation line: %s\nBreak after: %s\n", s, s[:lastSpace]))
+				G.logErr.Write(fmt.Sprintf("Long explanation line: %s\nBreak after: %s\n", s, s[:lastSpace]))
 			}
 			if m, before := match1(s, `(.+)\. [^ ]`); m {
 				if !matches(before, `\d$|e\.g`) {
-					print(fmt.Sprintf("Short space after period: %s\n", s))
+					G.logErr.Write(fmt.Sprintf("Short space after period: %s\n", s))
 				}
 			}
 		}
@@ -151,8 +151,8 @@ func Explain(explanation ...string) {
 type pkglintFatal struct{}
 
 // SeparatorWriter writes output, occasionally separated by an
-// empty line. This is used for layouting the diagnostics in
-// --source mode combined with --show-autofix, where each
+// empty line. This is used for separating the diagnostics when
+// --source is combined with --show-autofix, where each
 // log message consists of multiple lines.
 type SeparatorWriter struct {
 	out            io.Writer
