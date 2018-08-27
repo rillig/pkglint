@@ -348,12 +348,13 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk_indentation(c *check.C) {
 		"WARN: ~/buildlink3.mk:3: Expected a BUILDLINK_TREE line.")
 }
 
-func (s *Suite) Test_ChecklinesBuildlink3Mk__pkg_build_options(c *check.C) {
+func (s *Suite) Test_ChecklinesBuildlink3Mk__coverage(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
 	t.CreateFileLines("mk/pkg-build-options.mk")
-	mklines := t.NewMkLines("buildlink3.mk",
+	t.CreateFileLines("category/dependency/buildlink3.mk")
+	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
 		MkRcsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
@@ -367,11 +368,22 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__pkg_build_options(c *check.C) {
 		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
 		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
 		"",
+		".include \"../../category/dependency/buildlink3.mk\"",
+		"",
+		".if ${OPSYS} == \"NetBSD\"",
+		".endif",
+		"",
+		".for var in value",
+		".endfor",
+		"",
 		".endif\t# HS_X11_BUILDLINK3_MK",
 		"",
-		"BUILDLINK_TREE+=\t-hs-X11")
+		"BUILDLINK_TREE+=\t-hs-X11",
+		"",
+		"# the end")
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:25: The file should end here.")
 }
