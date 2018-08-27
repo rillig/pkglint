@@ -272,10 +272,10 @@ func (src *Pkgsrc) parseSuggestedUpdates(lines []Line) []SuggestedUpdate {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
-					line.Warnf("Invalid package name %q", pkgname)
+					line.Warnf("Invalid package name %q.", pkgname)
 				}
 			} else {
-				line.Warnf("Invalid line format %q", text)
+				line.Warnf("Invalid line format %q.", text)
 			}
 		}
 	}
