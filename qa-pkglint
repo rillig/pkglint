@@ -114,10 +114,17 @@ diffs() {
   )
 }
 
-if [ $# -eq 0 ]; then
+case "$*" in
+"")
   set -- genrunid install pkgsrc diffs
-fi
+  ;;
+"notest")
+  set -- genrunid install_notest pkgsrc diffs
+  ;;
+esac
+
 for cmd in "$@"; do
   "$cmd"
 done
+
 echo "=> OK"
