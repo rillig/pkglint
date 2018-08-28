@@ -350,31 +350,33 @@ func resolveVariableRefs(text string) string {
 
 	visited := make(map[string]bool) // To prevent endless loops
 
-	str := text
-	for {
-		replaced := regex.Compile(`\$\{([\w.]+)\}`).ReplaceAllStringFunc(str, func(m string) string {
-			varname := m[2 : len(m)-1]
-			if !visited[varname] {
-				visited[varname] = true
-				if G.Pkg != nil {
-					switch varname {
-					case "KRB5_TYPE":
-						return "heimdal"
-					case "PGSQL_VERSION":
-						return "95"
-					}
-					if mkline := G.Pkg.vars.FirstDefinition(varname); mkline != nil {
-						return mkline.Value()
-					}
+	replacer := func(m string) string {
+		varname := m[2 : len(m)-1]
+		if !visited[varname] {
+			visited[varname] = true
+			if G.Pkg != nil {
+				switch varname {
+				case "KRB5_TYPE":
+					return "heimdal"
+				case "PGSQL_VERSION":
+					return "95"
 				}
-				if G.Mk != nil {
-					if value, ok := G.Mk.vars.Value(varname); ok {
-						return value
-					}
+				if mkline := G.Pkg.vars.FirstDefinition(varname); mkline != nil {
+					return mkline.Value()
 				}
 			}
-			return "${" + varname + "}"
-		})
+			if G.Mk != nil {
+				if value, ok := G.Mk.vars.Value(varname); ok {
+					return value
+				}
+			}
+		}
+		return "${" + varname + "}"
+	}
+
+	str := text
+	for {
+		replaced := regex.Compile(`\$\{([\w.]+)\}`).ReplaceAllStringFunc(str, replacer)
 		if replaced == str {
 			return replaced
 		}
@@ -495,7 +497,7 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 
 	st, err := os.Lstat(fname)
 	if err != nil {
-		NewLineWhole(fname).Errorf("%s", err)
+		NewLineWhole(fname).Errorf("Cannot determine file type: %s", err)
 		return
 	}
 

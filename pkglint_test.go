@@ -508,3 +508,115 @@ func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	c.Check(G.ToolByVarname("TOOL", LoadTime), equals, local)
 	c.Check(G.ToolByVarname("TOOL", RunTime), equals, local)
 }
+
+func (s *Suite) Test_Pkglint_Checkfile__CheckExtra(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Call", "-Wall,no-space")
+	t.SetupPkgsrc()
+	G.Pkgsrc.LoadInfrastructure()
+	t.CreateFileLines("licenses/gnu-gpl-2.0")
+	t.CreateFileLines("category/Makefile")
+	t.CreateFileLines("category/package/Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=       pkgname-1.0",
+		"CATEGORIES=     category",
+		"",
+		"COMMENT=        Comment",
+		"LICENSE=        gnu-gpl-2.0",
+		"",
+		"NO_CHECKSUM=    yes",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+	t.CreateFileLines("category/package/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines("category/package/INSTALL",
+		"#! /bin/sh")
+	t.CreateFileLines("category/package/DEINSTALL",
+		"#! /bin/sh")
+
+	G.CheckDirent(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Pkglint_Checkfile__before_import(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Call", "-Wall,no-space", "--import")
+	t.SetupPkgsrc()
+	G.Pkgsrc.LoadInfrastructure()
+	t.CreateFileLines("licenses/gnu-gpl-2.0")
+	t.CreateFileLines("category/Makefile")
+	t.CreateFileLines("category/package/Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=       pkgname-1.0",
+		"CATEGORIES=     category",
+		"",
+		"COMMENT=        Comment",
+		"LICENSE=        gnu-gpl-2.0",
+		"",
+		"NO_CHECKSUM=    yes",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+	t.CreateFileLines("category/package/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines("category/package/work/log")
+	t.CreateFileLines("category/package/Makefile~")
+	t.CreateFileLines("category/package/Makefile.orig")
+	t.CreateFileLines("category/package/Makefile.rej")
+
+	G.CheckDirent(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/Makefile.orig: Must be cleaned up before committing the package.",
+		"ERROR: ~/category/package/Makefile.rej: Must be cleaned up before committing the package.",
+		"ERROR: ~/category/package/Makefile~: Must be cleaned up before committing the package.",
+		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
+}
+
+func (s *Suite) Test_Pkglint_Checkfile__errors(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Call", "-Wall,no-space")
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/package/files/subdir/file")
+	t.CreateFileLines("category/package/files/subdir/subsub/file")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Checkfile(t.File("category/package/options.mk"))
+	G.Checkfile(t.File("category/package/files/subdir"))
+	G.Checkfile(t.File("category/package/files/subdir/subsub"))
+	G.Checkfile(t.File("category/package/files"))
+
+	c.Check(t.Output(), check.Matches, `^`+
+		`ERROR: ~/category/package/options.mk: Cannot determine file type: .*\n`+
+		`WARN: ~/category/package/files/subdir/subsub: Unknown directory name\.\n`+
+		`$`)
+}
+
+func (s *Suite) Test_Pkglint_Checkfile__file_selection(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Call", "-Wall,no-space")
+	t.SetupPkgsrc()
+	t.CreateFileLines("doc/CHANGES-2018",
+		RcsID)
+	t.CreateFileLines("category/package/buildlink3.mk",
+		MkRcsID)
+	t.CreateFileLines("category/package/unexpected.txt",
+		RcsID)
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Checkfile(t.File("doc/CHANGES-2018"))
+	G.Checkfile(t.File("category/package/buildlink3.mk"))
+	G.Checkfile(t.File("category/package/unexpected.txt"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
+		"WARN: ~/category/package/unexpected.txt: Unexpected file found.")
+}
