@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"netbsd.org/pkglint/pkgver"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
@@ -42,7 +43,7 @@ type Package struct {
 func NewPackage(dir string) *Package {
 	pkgpath := G.Pkgsrc.ToRel(dir)
 	if strings.Count(pkgpath, "/") != 1 {
-		NewLineWhole(dir).Errorf("Package directory %q must be two subdirectories below the pkgsrc root %q.", dir, G.Pkgsrc.File("."))
+		panic(fmt.Sprintf("Package directory %q must be two subdirectories below the pkgsrc root %q.", dir, G.Pkgsrc.File(".")))
 	}
 
 	pkg := &Package{
@@ -69,19 +70,6 @@ func NewPackage(dir string) *Package {
 // as resolved from the package's directory.
 func (pkg *Package) File(relativeFilename string) string {
 	return cleanpath(pkg.dir + "/" + relativeFilename)
-}
-
-func (pkg *Package) varValue(varname string) (string, bool) {
-	switch varname {
-	case "KRB5_TYPE":
-		return "heimdal", true
-	case "PGSQL_VERSION":
-		return "95", true
-	}
-	if mkline := pkg.vars.FirstDefinition(varname); mkline != nil {
-		return mkline.Value(), true
-	}
-	return "", false
 }
 
 func (pkg *Package) checkPossibleDowngrade() {

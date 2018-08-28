@@ -637,3 +637,16 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"0 errors and 10 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
+
+func (s *Suite) Test_NewPackage(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/Makefile",
+		MkRcsID)
+
+	c.Check(
+		func() { NewPackage("category") },
+		check.PanicMatches,
+		`Package directory "category" must be two subdirectories below the pkgsrc root ".*".`)
+}

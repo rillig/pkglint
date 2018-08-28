@@ -490,9 +490,10 @@ func (cv *VartypeCheck) Homepage() {
 	if m, wrong, sitename, subdir := match3(cv.Value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`); m {
 		baseURL := G.Pkgsrc.MasterSiteVarToURL[sitename]
 		if sitename == "MASTER_SITES" && G.Pkg != nil {
-			masterSites, _ := G.Pkg.varValue("MASTER_SITES")
-			if !containsVarRef(masterSites) {
-				baseURL = masterSites
+			if mkline := G.Pkg.vars.FirstDefinition("MASTER_SITES"); mkline != nil {
+				if masterSites := mkline.Value(); !containsVarRef(masterSites) {
+					baseURL = masterSites
+				}
 			}
 		}
 		fixedURL := baseURL + subdir
