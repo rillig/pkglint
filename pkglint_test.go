@@ -579,6 +579,18 @@ func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	c.Check(G.ToolByVarname("TOOL", RunTime), equals, local)
 }
 
+func (s *Suite) Test_Pkglint_ToolByVarname__fallback(c *check.C) {
+	t := s.Init(c)
+
+	G.Mk = t.NewMkLines("Makefile", MkRcsID)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
+
+	global.Validity = AtRunTime
+
+	c.Check(G.ToolByVarname("TOOL", LoadTime), equals, global)
+	c.Check(G.ToolByVarname("TOOL", RunTime), equals, global)
+}
+
 func (s *Suite) Test_Pkglint_Checkfile__CheckExtra(c *check.C) {
 	t := s.Init(c)
 
