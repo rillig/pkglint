@@ -405,6 +405,9 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 // in an in-memory buffer) additionally to stdout.
 // This is useful when stepping through the code, especially
 // in combination with SetupCommandLine("--debug").
+//
+// In JetBrains GoLand, the tracing output is suppressed after the first
+// failed check, see https://youtrack.jetbrains.com/issue/GO-6154.
 func (t *Tester) EnableTracing() {
 	G.logOut = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
 	trace.Out = os.Stdout
