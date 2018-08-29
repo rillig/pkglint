@@ -6,7 +6,7 @@ archivedir="$srcdir/archive"
 pkgsrcdir="$HOME/git/pkgsrc"
 
 genrunid() {
-  if [ -n "${genrunid-}" ]; then
+  if [ -n "${runid-}" ]; then
     return
   fi
   headcommit=$(cd "$srcdir" && git rev-parse --short HEAD)
@@ -116,10 +116,10 @@ diffs() {
 
 case "$*" in
 "")
-  set -- genrunid install pkgsrc diffs
+  set -- install pkgsrc diffs
   ;;
 "notest")
-  set -- genrunid install_notest pkgsrc diffs
+  set -- install_notest pkgsrc diffs
   ;;
 esac
 
