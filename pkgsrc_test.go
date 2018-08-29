@@ -216,3 +216,17 @@ func (s *Suite) Test_Pkgsrc_Latest_numeric(c *check.C) {
 
 	c.Check(latest, equals, "postgresql104")
 }
+
+func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("mk/defaults/options.description",
+		"option-name      Description of the option",
+		"<<<<< Merge conflict",
+		"===== Merge conflict",
+		">>>>> Merge conflict")
+
+	c.Check(G.Pkgsrc.loadPkgOptions, check.Panics, pkglintFatal{})
+	t.CheckOutputLines(
+		"FATAL: ~/mk/defaults/options.description:2: Unknown line format.")
+}
