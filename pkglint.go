@@ -653,7 +653,6 @@ func ChecklinesTrailingEmptyLines(lines []Line) {
 // If a tool is returned, usable tells whether that tool has been added
 // to USE_TOOLS in the current scope.
 func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable bool) {
-	gnuCommand := "g" + command
 	varname := ""
 	if m, toolVarname := match1(command, `^\$\{(\w+)\}$`); m {
 		varname = toolVarname
@@ -668,15 +667,6 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 			tool = t
 		}
 
-		if t := tools.ByName(gnuCommand); t != nil {
-			if tools.Usable(t, time) {
-				return t, true
-			}
-			if tool == nil {
-				tool = t
-			}
-		}
-
 		if t := tools.ByVarname(varname); t != nil {
 			if tools.Usable(t, time) {
 				return t, true
@@ -689,15 +679,6 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 
 	tools := G.Pkgsrc.Tools
 	if t := tools.ByName(command); t != nil {
-		if tools.Usable(t, time) {
-			return t, true
-		}
-		if tool == nil {
-			tool = t
-		}
-	}
-
-	if t := tools.ByName(gnuCommand); t != nil {
 		if tools.Usable(t, time) {
 			return t, true
 		}
