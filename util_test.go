@@ -96,6 +96,17 @@ func (s *Suite) Test_isEmptyDir_and_getSubdirs(c *check.C) {
 	}
 }
 
+func (s *Suite) Test_isEmptyDir__empty_subdir(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("CVS/Entries",
+		"dummy")
+	t.CreateFileLines("subdir/CVS/Entries",
+		"dummy")
+
+	c.Check(isEmptyDir(t.File(".")), equals, true)
+}
+
 func (s *Suite) Test_PrefixReplacer_Since(c *check.C) {
 	repl := textproc.NewPrefixReplacer("hello, world")
 	mark := repl.Mark()
