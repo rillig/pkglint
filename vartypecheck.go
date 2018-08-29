@@ -9,8 +9,10 @@ import (
 )
 
 type VartypeCheck struct {
-	MkLine     MkLine
-	Line       Line
+	MkLine MkLine
+	Line   Line
+
+	// The name of the variable being checked. In some cases it may also be the "description" of the variable.
 	Varname    string
 	Op         MkOperator
 	Value      string
