@@ -38,6 +38,8 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTim
 
 	var line = shline.mkline.Line
 
+	// Delegate check for shell words consisting of a single variable use
+	// to the MkLineChecker. Examples for these are ${VAR:Mpattern} or $@.
 	p := NewMkParser(line, token, false)
 	if varuse := p.VarUse(); varuse != nil && p.EOF() {
 		MkLineChecker{shline.mkline}.CheckVaruse(varuse, shellwordVuc)
