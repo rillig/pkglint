@@ -495,6 +495,25 @@ func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
 	c.Check(runTimeUsable, equals, true)
 }
 
+func (s *Suite) Test_Pkglint_Tool__prefer_plain_over_varname(c *check.C) {
+	t := s.Init(c)
+
+	G.Mk = t.NewMkLines("Makefile", MkRcsID)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
+	local := G.Mk.Tools.Define("tool", "TOOL", dummyMkLine)
+
+	global.Validity = Nowhere
+	local.Validity = AtRunTime
+
+	loadTimeTool, loadTimeUsable := G.Tool("${TOOL}", LoadTime)
+	runTimeTool, runTimeUsable := G.Tool("${TOOL}", RunTime)
+
+	c.Check(loadTimeTool, equals, local)
+	c.Check(loadTimeUsable, equals, false)
+	c.Check(runTimeTool, equals, local)
+	c.Check(runTimeUsable, equals, true)
+}
+
 func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	t := s.Init(c)
 
