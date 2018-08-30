@@ -733,3 +733,69 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__negated_pipe(c *check.C) {
 		"WARN: Makefile:3: The Solaris /bin/sh does not support negation of shell commands.",
 		"WARN: Makefile:3: Found absolute pathname: /etc/passwd")
 }
+
+func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"\t${RUN} ktrace; mktexlsr; strace; texconfig; truss")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: Makefile:3: \"ktrace\" must not be used in Makefiles.",
+		"ERROR: Makefile:3: \"mktexlsr\" must not be used in Makefiles.",
+		"ERROR: Makefile:3: \"strace\" must not be used in Makefiles.",
+		"ERROR: Makefile:3: \"texconfig\" must not be used in Makefiles.",
+		"ERROR: Makefile:3: \"truss\" must not be used in Makefiles.")
+}
+
+func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"do-install:",
+		"\t${RUN} pax -pe ${WRKSRC} ${DESTDIR}${PREFIX}",
+		"\t${RUN} ${PAX} -pe ${WRKSRC} ${DESTDIR}${PREFIX}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: Please use the -pp option to pax(1) instead of -pe.",
+		"WARN: Makefile:5: Please use the -pp option to pax(1) instead of -pe.")
+}
+
+func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"do-install:",
+		"\t${RUN} ${ECHO} -n 'Computing...'",
+		"\t${RUN} ${ECHO_N} 'Computing...'",
+		"\t${RUN} ${ECHO} 'Computing...'")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: Please use ${ECHO_N} instead of \"echo -n\".")
+}
+
+func (s *Suite) Test_SimpleCommandChecker_checkConditionalCd(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"pre-configure:",
+		"\t${RUN} while cd ..; do printf .; done")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+}

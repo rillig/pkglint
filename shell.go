@@ -503,8 +503,8 @@ func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 		scc.shline.mkline.Errorf("%q must not be used in Makefiles.", shellword)
 		Explain(
 			"This command must appear in INSTALL scripts, not in the package",
-			"Makefile, so that the package also works if it is installed as a binary",
-			"package via pkg_add.")
+			"Makefile, so that the package also works if it is installed as a",
+			"binary package via pkg_add.")
 		return true
 	}
 	return false
@@ -690,12 +690,12 @@ func (scc *SimpleCommandChecker) checkPaxPe() {
 		defer trace.Call()()
 	}
 
-	if scc.strcmd.Name == "${PAX}" && scc.strcmd.HasOption("-pe") {
+	if (scc.strcmd.Name == "${PAX}" || scc.strcmd.Name == "pax") && scc.strcmd.HasOption("-pe") {
 		scc.shline.mkline.Warnf("Please use the -pp option to pax(1) instead of -pe.")
 		Explain(
-			"The -pe option tells pax to preserve the ownership of the files, which",
-			"means that the installed files will belong to the user that has built",
-			"the package.")
+			"The -pe option tells pax to preserve the ownership of the files,",
+			"which means that the installed files will belong to the user that",
+			"has built the package.")
 	}
 }
 
