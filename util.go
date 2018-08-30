@@ -139,25 +139,27 @@ func isCommitted(fname string) bool {
 
 func isLocallyModified(fname string) bool {
 	lines := loadCvsEntries(fname)
-	needle := "/" + path.Base(fname) + "/"
+	if len(lines) == 0 {
+		return false
+	}
+
+	baseName := path.Base(fname)
 	for _, line := range lines {
-		if hasPrefix(line.Text, needle) {
-			cvsModTime, err := time.Parse(time.ANSIC, strings.Split(line.Text, "/")[3])
-			if err != nil {
-				return false
-			}
+		fields := strings.Split(line.Text, "/")
+		if 3 < len(fields) && fields[1] == baseName {
 			st, err := os.Stat(fname)
 			if err != nil {
-				return false
+				return true
 			}
 
-			// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724290(v=vs.85).aspx
-			// (System Services > Windows System Information > Time > About Time > File Times)
-			delta := cvsModTime.Unix() - st.ModTime().Unix()
+			// According to http://cvsman.com/cvs-1.12.12/cvs_19.php, format both timestamps.
+			cvsModTime := fields[3]
+			fsModTime := st.ModTime().Format(time.ANSIC)
 			if trace.Tracing {
-				trace.Stepf("cvs.time=%v fs.time=%v delta=%v", cvsModTime, st.ModTime(), delta)
+				trace.Stepf("cvs.time=%q fs.time=%q", cvsModTime, st.ModTime())
 			}
-			return !(-2 <= delta && delta <= 2)
+
+			return cvsModTime != fsModTime
 		}
 	}
 	return false

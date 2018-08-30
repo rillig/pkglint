@@ -4,7 +4,9 @@ import (
 	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
+	"os"
 	"testing"
+	"time"
 )
 
 func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
@@ -191,4 +193,32 @@ func (s *Suite) Test_splitOnSpace(c *check.C) {
 	c.Check(splitOnSpace(" a b\tc\n"), deepEquals, []string{"a", "b", "c"})
 	c.Check(splitOnSpace("     "), check.IsNil)
 	c.Check(splitOnSpace(""), check.IsNil)
+}
+
+func (s *Suite) Test_isLocallyModified(c *check.C) {
+	t := s.Init(c)
+
+	unmodified := t.CreateFileLines("unmodified")
+	modTime := time.Unix(1136239445, 0)
+
+	err := os.Chtimes(unmodified, modTime, modTime)
+	c.Check(err, check.IsNil)
+
+	st, err := os.Lstat(unmodified)
+	c.Check(err, check.IsNil)
+
+	// Make sure that the file system has second precision and accuracy.
+	c.Check(st.ModTime(), check.DeepEquals, modTime)
+
+	modified := t.CreateFileLines("modified")
+
+	t.CreateFileLines("CVS/Entries",
+		"/unmodified//"+modTime.Format(time.ANSIC)+"//",
+		"/modified//"+modTime.Format(time.ANSIC)+"//",
+		"/enoent//"+modTime.Format(time.ANSIC)+"//")
+
+	c.Check(isLocallyModified(unmodified), equals, false)
+	c.Check(isLocallyModified(modified), equals, true)
+	c.Check(isLocallyModified(t.File("enoent")), equals, true)
+	c.Check(isLocallyModified(t.File("not_mentioned")), equals, false)
 }
