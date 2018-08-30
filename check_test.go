@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"netbsd.org/pkglint/regex"
 	"os"
 	"path"
 	"path/filepath"
@@ -287,25 +288,49 @@ func (t *Tester) Chdir(relativeFilename string) {
 	t.relcwd = relativeFilename
 }
 
-// ExpectFatalError promises that in the remainder of the current function
-// call, a panic with a pkglintFatal will occur (typically from Line.Fatalf).
+// ExpectFatal runs the given action and expects that this action calls
+// Line.Fatalf or uses some other way to panic with a pkglintFatal.
 //
 // Usage:
-// 	func() {
-//      defer t.ExpectFatalError()
+//  t.ExpectFatal(
+//      func() { /* do something that panics */ },
+//      "FATAL: ~/Makefile:1: Must not be empty")
+func (t *Tester) ExpectFatal(action func(), expectedLines ...string) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			panic("Expected a pkglint fatal error, but didn't get one.")
+		} else if _, ok := r.(pkglintFatal); ok {
+			t.CheckOutputLines(expectedLines...)
+		} else {
+			panic(r)
+		}
+	}()
+
+	action()
+}
+
+// ExpectFatalMatches runs the given action and expects that this action
+// calls Line.Fatalf or uses some other way to panic with a pkglintFatal.
+// It then matches the output against a regular expression.
 //
-//      // The code that causes the fatal error.
-//      Load(t.File("nonexistent"), MustSucceed)
-//  }()
-//  t.CheckOutputLines(
-//      "FATAL: ~/nonexistent: Does not exist.")
-func (t *Tester) ExpectFatalError() {
-	r := recover()
-	if r == nil {
-		panic("Expected a pkglint fatal error, but didn't get one.")
-	} else if _, ok := r.(pkglintFatal); !ok {
-		panic(r)
-	}
+// Usage:
+//  t.ExpectFatalMatches(
+//      func() { /* do something that panics */ },
+//      `FATAL: ~/Makefile:1: .*\n`)
+func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			panic("Expected a pkglint fatal error, but didn't get one.")
+		} else if _, ok := r.(pkglintFatal); ok {
+			t.c().Check(t.Output(), check.Matches, string(expected))
+		} else {
+			panic(r)
+		}
+	}()
+
+	action()
 }
 
 // Arguments are either (lineno, orignl) or (lineno, orignl, textnl).

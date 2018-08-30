@@ -156,17 +156,11 @@ func (s *Suite) Test_Load(c *check.C) {
 
 	t.CreateFileLines("empty")
 
-	func() {
-		defer t.ExpectFatalError()
-		Load(t.File("does-not-exist"), MustSucceed)
-	}()
+	t.ExpectFatal(
+		func() { Load(t.File("does-not-exist"), MustSucceed) },
+		"FATAL: ~/does-not-exist: Cannot be read.")
 
-	func() {
-		defer t.ExpectFatalError()
-		Load(t.File("empty"), MustSucceed|NotEmpty)
-	}()
-
-	t.CheckOutputLines(
-		"FATAL: ~/does-not-exist: Cannot be read.",
+	t.ExpectFatal(
+		func() { Load(t.File("empty"), MustSucceed|NotEmpty) },
 		"FATAL: ~/empty: Must not be empty.")
 }

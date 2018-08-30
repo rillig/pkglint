@@ -230,3 +230,24 @@ func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 	t.CheckOutputLines(
 		"FATAL: ~/mk/defaults/options.description:2: Unknown line format.")
 }
+
+func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectFatal(
+		G.Pkgsrc.loadTools,
+		"FATAL: ~/mk/tools/bsd.tools.mk: Cannot be read.")
+
+	t.CreateFileLines("mk/tools/bsd.tools.mk")
+
+	t.ExpectFatal(
+		G.Pkgsrc.loadTools,
+		"FATAL: ~/mk/tools/bsd.tools.mk: Must not be empty.")
+
+	t.CreateFileLines("mk/tools/bsd.tools.mk",
+		MkRcsID)
+
+	t.ExpectFatal(
+		G.Pkgsrc.loadTools,
+		"FATAL: ~/mk/tools/bsd.tools.mk: Too few tool files.")
+}
