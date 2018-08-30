@@ -432,6 +432,19 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 	t.CheckOutputEmpty() // No warning for variables that are partly indirect.
 
+	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
+	checkWord("$@", false)
+
+	t.CheckOutputLines(
+		"WARN: dummy.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
+
+	// When $@ appears as part of a shell token, it takes another code path in pkglint.
+	checkWord("-$@-", false)
+
+	t.CheckOutputLines(
+		"WARN: dummy.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
+
+	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
 	checkWord("\"$@\"", false)
 
 	t.CheckOutputLines(

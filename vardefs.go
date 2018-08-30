@@ -21,7 +21,7 @@ import (
 func (src *Pkgsrc) InitVartypes() {
 
 	acl := func(varname string, kindOfList KindOfList, checker *BasicType, aclEntries string) {
-		m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*)(|\*|\.\*)$`)
+		m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
 		varbase, varparam := m[1], m[2]
 
 		vartype := &Vartype{kindOfList, checker, parseACLEntries(varname, aclEntries), false}
@@ -449,6 +449,7 @@ func (src *Pkgsrc) InitVartypes() {
 
 	acl(".CURDIR", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl(".TARGET", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
+	acl("@", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl("ALL_ENV", lkShell, BtShellWord, "")
 	acl("ALTERNATIVES_FILE", lkNone, BtFilename, "")
 	acl("ALTERNATIVES_SRC", lkShell, BtPathname, "")

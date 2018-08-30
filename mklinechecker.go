@@ -370,6 +370,13 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 			"This is a much clearer expression of the same thought.")
 	}
 
+	if varuse.varname == "@" {
+		ck.MkLine.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
+		Explain(
+			"It is more readable and prevents confusion with the shell variable",
+			"of the same name.")
+	}
+
 	ck.checkVarusePermissions(varname, vartype, vuc)
 
 	if varname == "LOCALBASE" && !G.Infrastructure {

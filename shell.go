@@ -108,11 +108,6 @@ outer:
 						"\tcp \"$fname\" /tmp",
 						"\t# copies one file, as intended")
 				}
-			case repl.AdvanceStr("$@"):
-				line.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
-				Explain(
-					"It is more readable and prevents confusion with the shell variable of",
-					"the same name.")
 
 			case repl.AdvanceStr("$$@"):
 				line.Warnf("The $@ shell variable should only be used in double quotes.")
