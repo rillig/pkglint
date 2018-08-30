@@ -484,6 +484,17 @@ func (s *Suite) Test_ShellLine_CheckWord__dollar_without_variable(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {
+	t := s.Init(c)
+
+	shline := t.NewShellLine("fname", 1, "\t$$(echo output)")
+
+	shline.CheckWord(shline.mkline.ShellCommand(), false, RunTime)
+
+	t.CheckOutputLines(
+		"WARN: fname:1: Invoking subshells via $(...) is not portable enough.")
+}
+
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	t := s.Init(c)
 

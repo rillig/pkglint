@@ -120,6 +120,7 @@ outer:
 				Explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell.  Please use backticks (`...`) as a replacement.")
+				return // To avoid internal parse errors
 
 			case repl.AdvanceStr("$$"): // Not part of a variable.
 				break
@@ -164,7 +165,7 @@ outer:
 	}
 
 	if strings.TrimSpace(parser.Rest()) != "" {
-		line.Warnf("Pkglint parse error in ShellLine.CheckWord at %q (quoting=%s, rest=%q)", token, quoting, parser.Rest())
+		line.Warnf("Pkglint parse error in ShellLine.CheckWord at %q (quoting=%s), rest: %s", token, quoting, parser.Rest())
 	}
 }
 
