@@ -645,6 +645,38 @@ func (mkline *MkLineImpl) DetermineUsedVariables() (varnames []string) {
 	}
 }
 
+type MkOperator uint8
+
+const (
+	opAssign        MkOperator = iota // =
+	opAssignShell                     // !=
+	opAssignEval                      // :=
+	opAssignAppend                    // +=
+	opAssignDefault                   // ?=
+	opUseCompare                      // A variable is compared to a value, e.g. in a condition.
+	opUseMatch                        // A variable is matched using the :M or :N modifier.
+)
+
+func NewMkOperator(op string) MkOperator {
+	switch op {
+	case "=":
+		return opAssign
+	case "!=":
+		return opAssignShell
+	case ":=":
+		return opAssignEval
+	case "+=":
+		return opAssignAppend
+	case "?=":
+		return opAssignDefault
+	}
+	panic("Invalid operator: " + op)
+}
+
+func (op MkOperator) String() string {
+	return [...]string{"=", "!=", ":=", "+=", "?=", "use", "use-loadtime", "use-match"}[op]
+}
+
 // VarUseContext defines the context in which a variable is defined
 // or used. Whether that is allowed depends on:
 //

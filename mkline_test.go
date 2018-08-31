@@ -994,6 +994,13 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	checkNotVarassign("# VAR=value")
 }
 
+func (s *Suite) Test_NewMkOperator(c *check.C) {
+	c.Check(NewMkOperator(":="), equals, opAssignEval)
+	c.Check(NewMkOperator("="), equals, opAssign)
+
+	c.Check(func() { NewMkOperator("???") }, check.Panics, "Invalid operator: ???")
+}
+
 func (s *Suite) Test_Indentation(c *check.C) {
 	t := s.Init(c)
 

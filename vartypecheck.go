@@ -33,38 +33,6 @@ func NewVartypeCheckValue(vc *VartypeCheck, value string) *VartypeCheck {
 	return &copy
 }
 
-type MkOperator uint8
-
-const (
-	opAssign        MkOperator = iota // =
-	opAssignShell                     // !=
-	opAssignEval                      // :=
-	opAssignAppend                    // +=
-	opAssignDefault                   // ?=
-	opUseCompare                      // A variable is compared to a value, e.g. in a condition.
-	opUseMatch                        // A variable is matched using the :M or :N modifier.
-)
-
-func NewMkOperator(op string) MkOperator {
-	switch op {
-	case "=":
-		return opAssign
-	case "!=":
-		return opAssignShell
-	case ":=":
-		return opAssignEval
-	case "+=":
-		return opAssignAppend
-	case "?=":
-		return opAssignDefault
-	}
-	return opAssign
-}
-
-func (op MkOperator) String() string {
-	return [...]string{"=", "!=", ":=", "+=", "?=", "use", "use-loadtime", "use-match"}[op]
-}
-
 const (
 	reMachineOpsys = "" + // See mk/platform
 		"AIX|BSDOS|Bitrig|Cygwin|Darwin|DragonFly|FreeBSD|FreeMiNT|GNUkFreeBSD|" +

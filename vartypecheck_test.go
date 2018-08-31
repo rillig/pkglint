@@ -752,13 +752,6 @@ func (s *Suite) Test_VartypeCheck_YesNoIndirectly(c *check.C) {
 		"WARN: fname:3: GNU_CONFIGURE should be set to YES, yes, NO, or no.")
 }
 
-func (s *Suite) Test_NewMkOperator(c *check.C) {
-	c.Check(NewMkOperator(":="), equals, opAssignEval)
-	c.Check(NewMkOperator("="), equals, opAssign)
-
-	c.Check(func() { NewMkOperator("???") }, check.Panics, "Invalid operator: ???")
-}
-
 // VartypeCheckTester helps to test the many different checks in VartypeCheck.
 // It keeps track of the current variable, operator, file name, line number,
 // so that the test can focus on the interesting details.
