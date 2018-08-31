@@ -566,7 +566,7 @@ func (cv *VartypeCheck) LdFlag() {
 	case hasPrefix(ldflag, "-"):
 		cv.Line.Warnf("Unknown linker flag %q.", cv.Value)
 	default:
-		cv.Line.Warnf("Linker flag %q should start with a hypen.", cv.Value)
+		cv.Line.Warnf("Linker flag %q should start with a hyphen.", cv.Value)
 	}
 }
 

@@ -337,10 +337,12 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 		"-lc",
 		"-L/usr/lib64",
 		"`pkg-config pidgin --ldflags`",
-		"-unknown")
+		"-unknown",
+		"no-hyphen")
 
 	t.CheckOutputLines(
-		"WARN: fname:4: Unknown linker flag \"-unknown\".")
+		"WARN: fname:4: Unknown linker flag \"-unknown\".",
+		"WARN: fname:5: Linker flag \"no-hyphen\" should start with a hyphen.")
 }
 
 func (s *Suite) Test_VartypeCheck_License(c *check.C) {
