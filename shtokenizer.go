@@ -85,7 +85,7 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 		return &ShAtom{shtSubshell, repl.Str(), q, nil}
 	}
 
-	return p.shAtomInternal(q, false, false, false)
+	return p.shAtomInternal(q, false, false)
 }
 
 func (p *ShTokenizer) shAtomDquot() *ShAtom {
@@ -95,10 +95,8 @@ func (p *ShTokenizer) shAtomDquot() *ShAtom {
 		return &ShAtom{shtWord, repl.Str(), shqPlain, nil}
 	case repl.AdvanceStr("`"):
 		return &ShAtom{shtWord, repl.Str(), shqDquotBackt, nil}
-	case repl.AdvanceRegexp(`^(?:[\t !#%&'()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Group(0), shqDquot, nil} // XXX: unescape?
 	}
-	return nil
+	return p.shAtomInternal(shqDquot, true, false)
 }
 
 func (p *ShTokenizer) shAtomSquot() *ShAtom {
@@ -106,10 +104,8 @@ func (p *ShTokenizer) shAtomSquot() *ShAtom {
 	switch {
 	case repl.AdvanceStr("'"):
 		return &ShAtom{shtWord, repl.Str(), shqPlain, nil}
-	case repl.AdvanceRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
-		return &ShAtom{shtWord, repl.Group(0), shqSquot, nil}
 	}
-	return nil
+	return p.shAtomInternal(shqSquot, false, true)
 }
 
 func (p *ShTokenizer) shAtomBackt() *ShAtom {
@@ -247,21 +243,36 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 	return nil
 }
 
-func (p *ShTokenizer) shAtomInternal(q ShQuoting, allowSpace, allowDquot, allowSquot bool) *ShAtom {
+// shAtomInternal advances the parser over the next "word",
+// which is everything that does not change the quoting and is not a Make(1) variable.
+// Shell variables may appear as part of a word.
+//
+// Examples:
+//  while$var
+//  $$,
+//  $$!$$$$
+//  echo
+//  text${var:=default}text
+func (p *ShTokenizer) shAtomInternal(q ShQuoting, dquot, squot bool) *ShAtom {
 	repl := p.parser.repl
 
 	mark := repl.Mark()
 loop:
 	for {
+		_ = `^[\t "$&'();<>\\|]+` // These are not allowed in shqPlain.
+
 		switch {
-		//case allowSpace && repl.AdvanceHspace():
-		//case allowDquot && repl.AdvanceByte('"'):
-		//case allowSquot && repl.AdvanceByte('\''):
 		case repl.AdvanceRegexp(`^[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+`):
+		case dquot && repl.AdvanceRegexp(`^[\t &'();<>|]+`):
+		case squot && repl.AdvanceByte('`'):
+		case squot && repl.AdvanceRegexp(`^[\t "&();<>\\|]+`):
+		case squot && repl.AdvanceStr("$$"):
+		case squot:
+			break loop
 		case repl.AdvanceRegexp(`^\\[^$]`):
-		case repl.AdvanceRegexp(`^(?:` + reShDollar + `)`):
-		case repl.HasPrefix("$$;"), repl.HasPrefix("$$|"):
+		case repl.HasPrefixRegexp(`^\$\$[^!#(*\-0-9?@A-Z_a-z]`):
 			repl.AdvanceStr("$$")
+		case repl.AdvanceRegexp(`^(?:` + reShDollar + `)`):
 		default:
 			break loop
 		}

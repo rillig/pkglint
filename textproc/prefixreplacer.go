@@ -151,3 +151,7 @@ func (pr *PrefixReplacer) AdvanceRest() string {
 func (pr *PrefixReplacer) HasPrefix(str string) bool {
 	return strings.HasPrefix(pr.rest, str)
 }
+
+func (pr *PrefixReplacer) HasPrefixRegexp(re regex.Pattern) bool {
+	return regex.Matches(pr.rest, re)
+}

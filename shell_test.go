@@ -72,10 +72,10 @@ func (s *Suite) Test_splitIntoShellTokens__unescaped_dollar_in_dquot(c *check.C)
 	text := "echo \"$$\""
 	words, rest := splitIntoShellTokens(dummyLine, text)
 
-	c.Check(words, deepEquals, []string{"echo", "\""}) // FIXME: must be "echo", "\"$$\""
-	c.Check(rest, equals, "$$\"")                      // FIXME: must be empty
+	c.Check(words, deepEquals, []string{"echo", "\"$$\""})
+	c.Check(rest, equals, "")
 
-	t.CheckOutputLines("WARN: Pkglint parse error in ShTokenizer.ShAtom at \"$$\\\"\" (quoting=d).")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_splitIntoShellTokens__varuse_with_embedded_space_and_other_vars(c *check.C) {
@@ -198,8 +198,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	checkShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo "$"
 
 	t.CheckOutputLines(
-		"WARN: fname:1: Pkglint parse error in ShTokenizer.ShAtom at \"$$\\\"\" (quoting=d).",
-		"WARN: fname:1: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\\\"\"}")
+		"WARN: fname:1: Unescaped $ or strange shell variable found.")
 
 	checkShellCommandLine("echo \"\\n\"")
 
