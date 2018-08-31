@@ -55,6 +55,15 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	return false
 }
 
+func (pr *PrefixReplacer) AdvanceByte(b byte) bool {
+	if len(pr.rest) != 0 && pr.rest[0] == b {
+		pr.s = pr.rest[:1]
+		pr.rest = pr.rest[1:]
+		return true
+	}
+	return false
+}
+
 func (pr *PrefixReplacer) AdvanceBytesFunc(fn func(c byte) bool) bool {
 	i := 0
 	for i < len(pr.rest) && fn(pr.rest[i]) {
@@ -68,6 +77,7 @@ func (pr *PrefixReplacer) AdvanceBytesFunc(fn func(c byte) bool) bool {
 	return false
 }
 
+// AdvanceHspace advances over as many spaces and tabs as possible.
 func (pr *PrefixReplacer) AdvanceHspace() bool {
 	i := 0
 	rest := pr.rest

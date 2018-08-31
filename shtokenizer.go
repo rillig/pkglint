@@ -85,22 +85,7 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 		return &ShAtom{shtSubshell, repl.Str(), q, nil}
 	}
 
-	mark := repl.Mark()
-loop:
-	for {
-		switch {
-		case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)`):
-		case repl.HasPrefix("$$;"), repl.HasPrefix("$$|"):
-			repl.AdvanceStr("$$")
-		default:
-			break loop
-		}
-	}
-	if token := repl.Since(mark); token != "" {
-		return &ShAtom{shtWord, token, q, nil}
-	}
-
-	return nil
+	return p.shAtomInternal(q, false, false, false)
 }
 
 func (p *ShTokenizer) shAtomDquot() *ShAtom {
@@ -258,6 +243,32 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 		return &ShAtom{shtWord, repl.Str(), shqDquotBackt, nil}
 	case repl.AdvanceRegexp(`^(?:[\t !"#%()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|\$\$)+`):
 		return &ShAtom{shtWord, repl.Group(0), shqDquotBacktSquot, nil}
+	}
+	return nil
+}
+
+func (p *ShTokenizer) shAtomInternal(q ShQuoting, allowSpace, allowDquot, allowSquot bool) *ShAtom {
+	repl := p.parser.repl
+
+	mark := repl.Mark()
+loop:
+	for {
+		switch {
+		//case allowSpace && repl.AdvanceHspace():
+		//case allowDquot && repl.AdvanceByte('"'):
+		//case allowSquot && repl.AdvanceByte('\''):
+		case repl.AdvanceRegexp(`^[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+`):
+		case repl.AdvanceRegexp(`^\\[^$]`):
+		case repl.AdvanceRegexp(`^(?:` + reShDollar + `)`):
+		case repl.HasPrefix("$$;"), repl.HasPrefix("$$|"):
+			repl.AdvanceStr("$$")
+		default:
+			break loop
+		}
+	}
+
+	if token := repl.Since(mark); token != "" {
+		return &ShAtom{shtWord, token, q, nil}
 	}
 	return nil
 }
