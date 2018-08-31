@@ -125,10 +125,8 @@ func (p *ShTokenizer) shAtomBackt() *ShAtom {
 		return &ShAtom{shtSpace, repl.Str(), q, nil}
 	case repl.AdvanceRegexp("^#[^`]*"):
 		return &ShAtom{shtComment, repl.Str(), q, nil}
-	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]_a-z~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Str(), q, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, false, false)
 }
 
 // In pkgsrc, the $(...) subshell syntax is not used to preserve
