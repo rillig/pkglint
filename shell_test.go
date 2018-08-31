@@ -50,6 +50,34 @@ func (s *Suite) Test_splitIntoShellTokens__whitespace(c *check.C) {
 	c.Check(rest, equals, "")
 }
 
+func (s *Suite) Test_splitIntoShellTokens__finished_dquot(c *check.C) {
+	text := "\"\""
+	words, rest := splitIntoShellTokens(dummyLine, text)
+
+	c.Check(words, deepEquals, []string{"\"\""})
+	c.Check(rest, equals, "")
+}
+
+func (s *Suite) Test_splitIntoShellTokens__unfinished_dquot(c *check.C) {
+	text := "\t\""
+	words, rest := splitIntoShellTokens(dummyLine, text)
+
+	c.Check(words, deepEquals, []string{"\""}) // FIXME: must be nil
+	c.Check(rest, equals, "")                  // FIXME: must be "\""
+}
+
+func (s *Suite) Test_splitIntoShellTokens__unescaped_dollar_in_dquot(c *check.C) {
+	t := s.Init(c)
+
+	text := "echo \"$$\""
+	words, rest := splitIntoShellTokens(dummyLine, text)
+
+	c.Check(words, deepEquals, []string{"echo", "\""}) // FIXME: must be "echo", "\"$$\""
+	c.Check(rest, equals, "$$\"")                      // FIXME: must be empty
+
+	t.CheckOutputLines("WARN: Pkglint parse error in ShTokenizer.ShAtom at \"$$\\\"\" (quoting=d).")
+}
+
 func (s *Suite) Test_splitIntoShellTokens__varuse_with_embedded_space_and_other_vars(c *check.C) {
 	varuseWord := "${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}"
 	words, rest := splitIntoShellTokens(dummyLine, varuseWord)
