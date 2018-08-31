@@ -357,6 +357,117 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 	vt.Output(
 		"WARN: fname:1: \"Filename with spaces.docx\" is not a valid filename.",
 		"WARN: fname:2: A filename should not contain a slash.")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"Filename with spaces.docx")
+
+	// There's no guarantee that a file name only contains [A-Za-z0-9.].
+	// Therefore there are no useful checks in this situation.
+	vt.OutputEmpty()
+}
+
+func (s *Suite) Test_VartypeCheck_Filemask(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Filemask)
+
+	vt.Varname("FNAME")
+	vt.Values(
+		"Filemask with spaces.docx",
+		"OS/2-manual.txt")
+
+	vt.Output(
+		"WARN: fname:1: \"Filemask with spaces.docx\" is not a valid filename mask.",
+		"WARN: fname:2: A filename mask should not contain a slash.")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"Filemask with spaces.docx")
+
+	// There's no guarantee that a file name only contains [A-Za-z0-9.].
+	// Therefore there are no useful checks in this situation.
+	vt.OutputEmpty()
+}
+
+func (s *Suite) Test_VartypeCheck_FileMode(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).FileMode)
+
+	vt.Varname("HIGHSCORE_PERMS")
+	vt.Values(
+		"u+rwx",
+		"0600",
+		"1234",
+		"12345",
+		"${OTHER_PERMS}")
+
+	vt.Output(
+		"WARN: fname:1: Invalid file mode \"u+rwx\".",
+		"WARN: fname:4: Invalid file mode \"12345\".")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"u+rwx")
+
+	// There's no guarantee that a file name only contains [A-Za-z0-9.].
+	// Therefore there are no useful checks in this situation.
+	vt.Output(
+		"WARN: fname:11: Invalid file mode \"u+rwx\".")
+}
+
+func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).Homepage)
+
+	vt.Varname("HOMEPAGE")
+	vt.Values(
+		"${MASTER_SITES}")
+
+	vt.Output(
+		"WARN: fname:1: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+
+	G.Pkg = NewPackage(t.File("category/package"))
+	G.Pkg.vars.Define("MASTER_SITES", t.NewMkLine(G.Pkg.File("Makefile"), 5, "MASTER_SITES=\thttps://cdn.NetBSD.org/pub/pkgsrc/distfiles/"))
+
+	vt.Values(
+		"${MASTER_SITES}")
+
+	vt.Output(
+		"WARN: fname:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. Use https://cdn.NetBSD.org/pub/pkgsrc/distfiles/ directly.")
+}
+
+func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).Identifier)
+
+	vt.Varname("SUBST_CLASSES")
+	vt.Values(
+		"${OTHER_VAR}",
+		"identifiers cannot contain spaces",
+		"id/cannot/contain/slashes")
+	vt.Op(opUseMatch)
+	vt.Values(
+		"[A-Z]",
+		"A*B")
+
+	vt.Output(
+		"WARN: fname:2: Invalid identifier \"identifiers cannot contain spaces\".",
+		"WARN: fname:3: Invalid identifier \"id/cannot/contain/slashes\".",
+		"WARN: fname:11: Invalid identifier pattern \"[A-Z]\" for SUBST_CLASSES.")
+}
+
+func (s *Suite) Test_VartypeCheck_Integer(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).Integer)
+
+	vt.Varname("NUMBER")
+	vt.Values(
+		"${OTHER_VAR}",
+		"123",
+		"-13",
+		"11111111111111111111111111111111111111111111111")
+
+	vt.Output(
+		"WARN: fname:1: Invalid integer \"${OTHER_VAR}\".",
+		"WARN: fname:3: Invalid integer \"-13\".")
 }
 
 func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
@@ -369,11 +480,16 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 		"-L/usr/lib64",
 		"`pkg-config pidgin --ldflags`",
 		"-unknown",
-		"no-hyphen")
+		"no-hyphen",
+		"-Wl,--rpath,/usr/lib64")
+	vt.Op(opUseMatch)
+	vt.Values(
+		"anything")
 
 	vt.Output(
 		"WARN: fname:4: Unknown linker flag \"-unknown\".",
-		"WARN: fname:5: Linker flag \"no-hyphen\" should start with a hyphen.")
+		"WARN: fname:5: Linker flag \"no-hyphen\" should start with a hyphen.",
+		"WARN: fname:6: Please use \"${COMPILER_RPATH_FLAG}\" instead of \"-Wl,--rpath\".")
 }
 
 func (s *Suite) Test_VartypeCheck_License(c *check.C) {
@@ -405,7 +521,10 @@ func (s *Suite) Test_VartypeCheck_MachineGnuPlatform(c *check.C) {
 	vt.Op(opUseMatch)
 	vt.Values(
 		"x86_64-pc-cygwin",
-		"Cygwin-*-amd64")
+		"Cygwin-*-amd64",
+		"x86_64-*",
+		"*-*-*-*",
+		"${OTHER_VAR}")
 
 	vt.Output(
 		"WARN: fname:2: The pattern \"Cygwin\" cannot match any of "+
@@ -417,7 +536,8 @@ func (s *Suite) Test_VartypeCheck_MachineGnuPlatform(c *check.C) {
 		"WARN: fname:2: The pattern \"amd64\" cannot match any of "+
 			"{ bitrig bsdos cygwin darwin dragonfly freebsd haiku hpux interix irix linux mirbsd "+
 			"netbsd openbsd osf1 solaris sunos } "+
-			"for the operating system part of MACHINE_GNU_PLATFORM.")
+			"for the operating system part of MACHINE_GNU_PLATFORM.",
+		"WARN: fname:4: \"*-*-*-*\" is not a valid platform pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_MailAddress(c *check.C) {
@@ -425,10 +545,16 @@ func (s *Suite) Test_VartypeCheck_MailAddress(c *check.C) {
 
 	vt.Varname("MAINTAINER")
 	vt.Values(
-		"pkgsrc-users@netbsd.org")
+		"pkgsrc-users@netbsd.org",
+		"tech-pkg@NetBSD.org",
+		"packages@NetBSD.org",
+		"user1@example.org,user2@example.org")
 
 	vt.Output(
-		"WARN: fname:1: Please write \"NetBSD.org\" instead of \"netbsd.org\".")
+		"WARN: fname:1: Please write \"NetBSD.org\" instead of \"netbsd.org\".",
+		"ERROR: fname:2: This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.",
+		"ERROR: fname:3: This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.",
+		"WARN: fname:4: \"user1@example.org,user2@example.org\" is not a valid mail address.")
 }
 
 func (s *Suite) Test_VartypeCheck_Message(c *check.C) {
@@ -453,10 +579,15 @@ func (s *Suite) Test_VartypeCheck_Option(c *check.C) {
 	vt.Values(
 		"documented",
 		"undocumented",
-		"unknown")
+		"unknown",
+		"underscore_is_deprecated",
+		"UPPER")
 
 	vt.Output(
-		"WARN: fname:3: Unknown option \"unknown\".")
+		"WARN: fname:3: Unknown option \"unknown\".",
+		"WARN: fname:4: Use of the underscore character in option names is deprecated.",
+		"ERROR: fname:5: Invalid option name \"UPPER\". "+
+			"Option names must start with a lowercase letter and be all-lowercase.")
 }
 
 func (s *Suite) Test_VartypeCheck_Pathlist(c *check.C) {
@@ -464,11 +595,57 @@ func (s *Suite) Test_VartypeCheck_Pathlist(c *check.C) {
 
 	vt.Varname("PATH")
 	vt.Values(
-		"/usr/bin:/usr/sbin:.::${LOCALBASE}/bin:${HOMEPAGE:S,https://,,}")
+		"/usr/bin:/usr/sbin:.::${LOCALBASE}/bin:${HOMEPAGE:S,https://,,}",
+		"/directory with spaces")
 
 	vt.Output(
 		"WARN: fname:1: All components of PATH (in this case \".\") should be absolute paths.",
-		"WARN: fname:1: All components of PATH (in this case \"\") should be absolute paths.")
+		"WARN: fname:1: All components of PATH (in this case \"\") should be absolute paths.",
+		"WARN: fname:2: \"/directory with spaces\" is not a valid pathname.")
+}
+
+func (s *Suite) Test_VartypeCheck_Pathmask(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Pathmask)
+
+	vt.Varname("DISTDIRS")
+	vt.Values(
+		"/home/user/*",
+		"src/*&*",
+		"src/*/*")
+
+	vt.Output(
+		"WARN: fname:1: Found absolute pathname: /home/user/*",
+		"WARN: fname:2: \"src/*&*\" is not a valid pathname mask.")
+}
+
+func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Pathname)
+
+	vt.Varname("EGDIR")
+	vt.Values(
+		"${PREFIX}/*",
+		"${PREFIX}/share/locale",
+		"share/locale",
+		"/bin")
+	vt.Op(opUseMatch)
+	vt.Values(
+		"anything")
+
+	vt.Output(
+		"WARN: fname:1: \"${PREFIX}/*\" is not a valid pathname.",
+		"WARN: fname:4: Found absolute pathname: /bin")
+}
+
+func (s *Suite) Test_VartypeCheck_Perl5Packlist(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Perl5Packlist)
+
+	vt.Varname("PERL5_PACKLIST")
+	vt.Values(
+		"${PKGBASE}",
+		"anything else")
+
+	vt.Output(
+		"WARN: fname:1: PERL5_PACKLIST should not depend on other variables.")
 }
 
 func (s *Suite) Test_VartypeCheck_Perms(c *check.C) {
@@ -513,10 +690,33 @@ func (s *Suite) Test_VartypeCheck_PkgOptionsVar(c *check.C) {
 	vt.Varname("PKG_OPTIONS_VAR.screen")
 	vt.Values(
 		"PKG_OPTIONS.${PKGBASE}",
-		"PKG_OPTIONS.anypkgbase")
+		"PKG_OPTIONS.anypkgbase",
+		"PKG_OPTS.mc")
 
 	vt.Output(
-		"ERROR: fname:1: PKGBASE must not be used in PKG_OPTIONS_VAR.")
+		"ERROR: fname:1: PKGBASE must not be used in PKG_OPTIONS_VAR.",
+		"ERROR: fname:3: PKG_OPTIONS_VAR must be of the form \"PKG_OPTIONS.*\", not \"PKG_OPTS.mc\".")
+}
+
+func (s *Suite) Test_VartypeCheck_PkgPath(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).PkgPath)
+
+	t.CreateFileLines("category/other-package/Makefile")
+	t.Chdir("category/package")
+
+	vt.Varname("PKGPATH")
+	vt.Values(
+		"category/other-package",
+		"${OTHER_VAR}",
+		"invalid",
+		"../../invalid/relative")
+
+	vt.Output(
+		"ERROR: fname:3: \"../../invalid\" does not exist.",
+		"WARN: fname:3: \"../../invalid\" is not a valid relative package directory.",
+		"ERROR: fname:4: \"../../../../invalid/relative\" does not exist.",
+		"WARN: fname:4: \"../../../../invalid/relative\" is not a valid relative package directory.")
 }
 
 func (s *Suite) Test_VartypeCheck_PkgRevision(c *check.C) {
@@ -592,6 +792,39 @@ func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
 		"WARN: fname:3: Invalid Python dependency \"cairo,X\".")
 }
 
+func (s *Suite) Test_VartypeCheck_PrefixPathname(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PrefixPathname)
+
+	vt.Varname("PKGMANDIR")
+	vt.Values(
+		"man/man1",
+		"share/locale")
+
+	vt.Output(
+		"WARN: fname:1: Please use \"${PKGMANDIR}/man1\" instead of \"man/man1\".")
+}
+
+func (s *Suite) Test_VartypeCheck_RelativePkgPath(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).RelativePkgPath)
+
+	t.CreateFileLines("category/other-package/Makefile")
+	t.Chdir("category/package")
+
+	vt.Varname("DISTINFO_FILE")
+	vt.Values(
+		"category/other-package",
+		"../../category/other-package",
+		"${OTHER_VAR}",
+		"invalid",
+		"../../invalid/relative")
+
+	vt.Output(
+		"ERROR: fname:1: \"category/other-package\" does not exist.",
+		"ERROR: fname:4: \"invalid\" does not exist.",
+		"ERROR: fname:5: \"../../invalid/relative\" does not exist.")
+}
+
 func (s *Suite) Test_VartypeCheck_Restricted(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Restricted)
 
@@ -613,6 +846,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		"-e \"s,#,comment ,\"",
 		"-e \"s,\\#,comment ,\"")
 
+	// FIXME: In line 3, the tokens are not split correctly.
 	vt.Output(
 		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
 		"NOTE: fname:2: Each sed command should appear in an assignment of its own.",
@@ -827,8 +1061,13 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 			mkline.Tokenize(value, true) // Produce some warnings as side-effects.
 		}
 
-		valueNovar := mkline.WithoutMakeVariables(value)
-		vc := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNovar, "", false}
+		effectiveValue := value
+		if mkline.IsVarassign() {
+			effectiveValue = mkline.Value()
+		}
+
+		valueNovar := mkline.WithoutMakeVariables(effectiveValue)
+		vc := &VartypeCheck{mkline, mkline.Line, varname, op, effectiveValue, valueNovar, "", false}
 		vt.checker(vc)
 
 		vt.lineno++

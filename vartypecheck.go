@@ -422,7 +422,8 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 }
 
-// See Pathname
+// See Pathname.
+//
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
 	switch {
@@ -436,10 +437,12 @@ func (cv *VartypeCheck) Filename() {
 }
 
 func (cv *VartypeCheck) Filemask() {
-	if cv.Op == opUseMatch {
-		return
-	}
-	if !matches(cv.ValueNoVar, `^[-0-9A-Za-z._~+%*?]*$`) {
+	switch {
+	case cv.Op == opUseMatch:
+		break
+	case contains(cv.ValueNoVar, "/"):
+		cv.Line.Warnf("A filename mask should not contain a slash.")
+	case !matches(cv.ValueNoVar, `^[-0-9A-Za-z._~+%*?]*$`):
 		cv.Line.Warnf("%q is not a valid filename mask.", cv.Value)
 	}
 }
@@ -448,7 +451,7 @@ func (cv *VartypeCheck) FileMode() {
 	switch {
 	case cv.Value != "" && cv.ValueNoVar == "":
 		// Fine.
-	case matches(cv.Value, `^[0-7]{3,4}`):
+	case matches(cv.Value, `^[0-7]{3,4}$`):
 		// Fine.
 	default:
 		cv.Line.Warnf("Invalid file mode %q.", cv.Value)
@@ -695,7 +698,7 @@ func (cv *VartypeCheck) Pathmask() {
 	if cv.Op == opUseMatch {
 		return
 	}
-	if !matches(cv.ValueNoVar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*`) {
+	if !matches(cv.ValueNoVar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*$`) {
 		cv.Line.Warnf("%q is not a valid pathname mask.", cv.Value)
 	}
 	CheckLineAbsolutePathname(cv.Line, cv.Value)
