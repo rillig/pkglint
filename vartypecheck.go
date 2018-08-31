@@ -299,7 +299,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		MkLineChecker{cv.MkLine}.CheckRelativePkgdir(relpath)
 
 		switch pkg {
-		case "msgfmt", "gettext":
+		case "gettext":
 			line.Warnf("Please use USE_TOOLS+=msgfmt instead of this dependency.")
 		case "perl5":
 			line.Warnf("Please use USE_TOOLS+=perl:run instead of this dependency.")
@@ -378,6 +378,7 @@ func (cv *VartypeCheck) Enum(vmap map[string]bool, basicType *BasicType) {
 			for value := range vmap {
 				if ok, err := path.Match(cv.Value, value); err != nil {
 					cv.Line.Warnf("Invalid match pattern %q.", cv.Value)
+					break
 				} else if ok {
 					canMatch = true
 				}

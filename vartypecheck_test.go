@@ -190,6 +190,8 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 
 	t.CreateFileLines("x11/alacarte/Makefile")
 	t.CreateFileLines("category/package/Makefile")
+	t.CreateFileLines("devel/gettext/Makefile")
+	t.CreateFileLines("devel/gmake/Makefile")
 	G.Pkg = NewPackage(t.File("category/package"))
 
 	vt.Varname("DEPENDS")
@@ -207,7 +209,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"broken=:../../x11/alacarte",
 		"broken-:../../x11/alacarte",
 		"broken>:../../x11/alacarte",
-		"gtk2+>=2.16:../../x11/alacarte")
+		"gtk2+>=2.16:../../x11/alacarte",
+		"gettext-[0-9]*:../../devel/gettext",
+		"gmake-[0-9]*:../../devel/gmake")
 
 	vt.Output(
 		"WARN: ~/category/package/fname.mk:1: Unknown dependency pattern with path \"Perl\".",
@@ -222,7 +226,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"WARN: ~/category/package/fname.mk:8: Unknown dependency pattern \"broken=0\".",
 		"WARN: ~/category/package/fname.mk:9: Unknown dependency pattern \"broken=\".",
 		"WARN: ~/category/package/fname.mk:10: Unknown dependency pattern \"broken-\".",
-		"WARN: ~/category/package/fname.mk:11: Unknown dependency pattern \"broken>\".")
+		"WARN: ~/category/package/fname.mk:11: Unknown dependency pattern \"broken>\".",
+		"WARN: ~/category/package/fname.mk:13: Please use USE_TOOLS+=msgfmt instead of this dependency.",
+		"WARN: ~/category/package/fname.mk:14: Please use USE_TOOLS+=gmake instead of this dependency.")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
@@ -272,10 +278,13 @@ func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
 		"*",
 		"jdk*",
 		"sun-jdk*",
-		"${JDKNAME}")
+		"${JDKNAME}",
+		"[")
 
 	vt.Output(
-		"WARN: fname:3: The pattern \"sun-jdk*\" cannot match any of { jdk1 jdk2 jdk4 } for JDK.")
+		"WARN: fname:3: The pattern \"sun-jdk*\" cannot match any of { jdk1 jdk2 jdk4 } for JDK.",
+		"WARN: fname:5: Invalid match pattern \"[\".",
+		"WARN: fname:5: The pattern \"[\" cannot match any of { jdk1 jdk2 jdk4 } for JDK.")
 }
 
 func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
