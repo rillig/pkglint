@@ -214,7 +214,7 @@ func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
 		"",
 		"post-configure:",
 		".for var in MAIL_PROGRAM CMDPATH",
-		"\t"+`${RUN} ${ECHO} "#define ${var} \""${UUCP_${var}}"\"`,
+		"\t"+`${RUN} ${ECHO} "#define ${var} \""${UUCP_${var}}"\""`,
 		".endfor")
 
 	mklines.Check()
