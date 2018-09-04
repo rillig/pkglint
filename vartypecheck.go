@@ -442,7 +442,7 @@ func (cv *VartypeCheck) Filemask() {
 		break
 	case contains(cv.ValueNoVar, "/"):
 		cv.Line.Warnf("A filename mask should not contain a slash.")
-	case !matches(cv.ValueNoVar, `^[-0-9A-Za-z._~+%*?]*$`):
+	case !matches(cv.ValueNoVar, `^[#%*+\-./0-9?@A-Z\[\]_a-z~]*$`):
 		cv.Line.Warnf("%q is not a valid filename mask.", cv.Value)
 	}
 }
@@ -698,7 +698,7 @@ func (cv *VartypeCheck) Pathmask() {
 	if cv.Op == opUseMatch {
 		return
 	}
-	if !matches(cv.ValueNoVar, `^[#\-0-9A-Za-z._~+%*?/\[\]]*$`) {
+	if !matches(cv.ValueNoVar, `^[#%*+\-./0-9?@A-Z\[\]_a-z~]*$`) {
 		cv.Line.Warnf("%q is not a valid pathname mask.", cv.Value)
 	}
 	CheckLineAbsolutePathname(cv.Line, cv.Value)
