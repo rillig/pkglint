@@ -1036,6 +1036,9 @@ func (vt *VartypeCheckTester) Op(op MkOperator) {
 	vt.nextSection()
 }
 
+// Values feeds each of the values to the actual check.
+// Each value is interpreted as if it were written verbatim into a Makefile line.
+// That is, # starts a comment, and for the opUseMatch operator, all closing braces must be escaped.
 func (vt *VartypeCheckTester) Values(values ...string) {
 	for _, value := range values {
 		op := vt.op
@@ -1045,12 +1048,12 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		var text string
 		switch {
 		case contains(opStr, "="):
-			if hasSuffix(varname, "+") {
+			if hasSuffix(varname, "+") && opStr == "=" {
 				text = varname + " " + opStr + value
 			} else {
-				text = varname + " " + opStr + value
+				text = varname + opStr + value
 			}
-		case vt.op == opUseMatch:
+		case op == opUseMatch:
 			text = fmt.Sprintf(".if ${%s:M%s} == \"\"", varname, value)
 		default:
 			panic("Invalid operator: " + opStr)
