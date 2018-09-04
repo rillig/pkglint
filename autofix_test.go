@@ -553,3 +553,30 @@ func (s *Suite) Test_Autofix_Apply__file_busy_Windows(c *check.C) {
 		"AUTOFIX: ~/subdir/file.txt:1: Replacing \"line\" with \"Line\".\n"+
 		"ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot overwrite with auto-fixed content: .*\n")
 }
+
+// This test tests the highly unlikely situation in which a file is loaded
+// by pkglint, and just before writing the autofixed content back, another
+// process takes the file and replaces it with a directory of the same name.
+//
+// 100% code coverage sometimes requires creativity. :)
+func (s *Suite) Test_Autofix_Apply__file_converted_to_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix")
+	lines := t.SetupFileLines("file.txt",
+		"line 1")
+
+	c.Check(os.RemoveAll(t.File("file.txt")), check.IsNil)
+	c.Check(os.MkdirAll(t.File("file.txt"), 0777), check.IsNil)
+
+	fix := lines[0].Autofix()
+	fix.Warnf("Should start with an uppercase letter.")
+	fix.Replace("line", "Line")
+	fix.Apply()
+
+	SaveAutofixChanges(lines)
+
+	c.Check(t.Output(), check.Matches, ""+
+		"AUTOFIX: ~/file.txt:1: Replacing \"line\" with \"Line\".\n"+
+		"ERROR: ~/file.txt.pkglint.tmp: Cannot overwrite with auto-fixed content: .*\n")
+}
