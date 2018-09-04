@@ -616,6 +616,11 @@ func (s *Suite) Test_VartypeCheck_Pathmask(c *check.C) {
 	vt.Output(
 		"WARN: fname:1: Found absolute pathname: /home/user/*",
 		"WARN: fname:2: \"src/*&*\" is not a valid pathname mask.")
+
+	vt.Op(opUseMatch)
+	vt.Values("any")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
