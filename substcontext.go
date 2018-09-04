@@ -44,9 +44,6 @@ func (st *SubstContextStats) Or(other SubstContextStats) {
 }
 
 func (ctx *SubstContext) Varassign(mkline MkLine) {
-	if !G.opts.WarnExtra {
-		return
-	}
 	if trace.Tracing {
 		trace.Stepf("SubstContext.Varassign %#v %v#", ctx.curr, ctx.inAllBranches)
 	}
@@ -153,7 +150,7 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 }
 
 func (ctx *SubstContext) Directive(mkline MkLine) {
-	if ctx.id == "" || !G.opts.WarnExtra {
+	if ctx.id == "" {
 		return
 	}
 
@@ -189,9 +186,10 @@ func (ctx *SubstContext) IsComplete() bool {
 }
 
 func (ctx *SubstContext) Finish(mkline MkLine) {
-	if ctx.id == "" || !G.opts.WarnExtra {
+	if ctx.id == "" {
 		return
 	}
+
 	id := ctx.id
 	if ctx.stage == "" {
 		mkline.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
@@ -202,6 +200,7 @@ func (ctx *SubstContext) Finish(mkline MkLine) {
 	if !ctx.curr.seenTransform {
 		mkline.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
+
 	ctx.id = ""
 	ctx.stage = ""
 	ctx.message = ""
