@@ -126,6 +126,16 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 			fix.Replace("post-patch", "pre-configure")
 			fix.Apply()
 		}
+
+		if G.Pkg != nil && (value == "pre-configure" || value == "post-configure") {
+			if noConfigureLine := G.Pkg.vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
+				mkline.Warnf("SUBST_STAGE %s has no effect when NO_CONFIGURE is set (in %s).",
+					value, noConfigureLine.ReferenceFrom(mkline.Line))
+				Explain(
+					"To fix this properly, remove the definition of NO_CONFIGURE.")
+			}
+		}
+
 	case "SUBST_MESSAGE.*":
 		ctx.dupString(mkline, &ctx.message, varname, value)
 	case "SUBST_FILES.*":
