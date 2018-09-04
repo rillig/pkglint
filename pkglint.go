@@ -141,11 +141,10 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		if err != nil {
 			dummyLine.Fatalf("Cannot create profiling file: %s", err)
 		}
+		defer f.Close()
+
 		pprof.StartCPUProfile(f)
-		defer func() {
-			pprof.StopCPUProfile()
-			f.Close()
-		}()
+		defer pprof.StopCPUProfile()
 
 		regex.Profiling = true
 		pkglint.loghisto = histogram.New()
@@ -154,7 +153,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 			pkglint.logOut.Write("")
 			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, -1)
 			regex.PrintStats(pkglint.logOut.out)
-			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, 50)
+			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, 10)
 		}()
 	}
 
