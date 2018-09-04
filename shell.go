@@ -920,17 +920,28 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 	}
 
 	word := ""
+	p := NewShTokenizer(line, text, false)
 	emit := func() {
 		if word != "" {
 			tokens = append(tokens, word)
 			word = ""
 		}
+		rest = p.mkp.Rest()
 	}
-	p := NewShTokenizer(line, text, false)
-	atoms := p.ShAtoms()
+
 	q := shqPlain
-	for _, atom := range atoms {
+	var prevAtom *ShAtom
+	for {
+		atom := p.ShAtom(q)
+		if atom == nil {
+			if prevAtom == nil || prevAtom.Quoting == shqPlain {
+				emit()
+			}
+			break
+		}
+
 		q = atom.Quoting
+		prevAtom = atom
 		if atom.Type == shtSpace && q == shqPlain {
 			emit()
 		} else if atom.Type == shtWord || atom.Type == shtVaruse || atom.Quoting != shqPlain {
@@ -940,8 +951,8 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 			tokens = append(tokens, atom.MkText)
 		}
 	}
-	emit()
-	return tokens, word + p.mkp.Rest()
+
+	return
 }
 
 // Example: "word1 word2;;;" => "word1", "word2;;;"

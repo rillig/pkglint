@@ -846,11 +846,11 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		"-e \"s,#,comment ,\"",
 		"-e \"s,\\#,comment ,\"")
 
-	// FIXME: In line 3, the tokens are not split correctly.
 	vt.Output(
 		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
 		"NOTE: fname:2: Each sed command should appear in an assignment of its own.",
-		"WARN: fname:3: The # character starts a comment.")
+		"WARN: fname:3: The # character starts a comment.",
+		"ERROR: fname:3: Invalid shell words \"\\\"s,\" in sed commands.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommands(c *check.C) {

@@ -62,8 +62,8 @@ func (s *Suite) Test_splitIntoShellTokens__unfinished_dquot(c *check.C) {
 	text := "\t\""
 	words, rest := splitIntoShellTokens(dummyLine, text)
 
-	c.Check(words, deepEquals, []string{"\""}) // FIXME: must be nil
-	c.Check(rest, equals, "")                  // FIXME: must be "\""
+	c.Check(words, check.IsNil)
+	c.Check(rest, equals, "\"")
 }
 
 func (s *Suite) Test_splitIntoShellTokens__unescaped_dollar_in_dquot(c *check.C) {
