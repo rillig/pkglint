@@ -844,13 +844,30 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		"s,@COMPILER@,gcc,g",
 		"-e s,a,b, -e a,b,c,",
 		"-e \"s,#,comment ,\"",
-		"-e \"s,\\#,comment ,\"")
+		"-e \"s,\\#,comment ,\"",
+		"-E",
+		"-n",
+		"-e 1d",
+		"1d",
+		"-e")
 
 	vt.Output(
 		"NOTE: fname:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
 		"NOTE: fname:2: Each sed command should appear in an assignment of its own.",
 		"WARN: fname:3: The # character starts a comment.",
-		"ERROR: fname:3: Invalid shell words \"\\\"s,\" in sed commands.")
+		"ERROR: fname:3: Invalid shell words \"\\\"s,\" in sed commands.",
+		"WARN: fname:8: Unknown sed command \"1d\".",
+		"ERROR: fname:9: The -e option to sed requires an argument.")
+}
+
+func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).ShellCommand)
+
+	vt.Varname("INSTALL_CMD")
+	vt.Values(
+		"${INSTALL_DATA} -m 0644 ${WRKDIR}/source ${DESTDIR}${PREFIX}/target")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommands(c *check.C) {
@@ -893,12 +910,14 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 		"tool3:run",
 		"tool2:unknown",
 		"${t}",
-		"mal:formed:tool")
+		"mal:formed:tool",
+		"unknown")
 
 	vt.Output(
 		"ERROR: fname:2: Unknown tool dependency \"unknown\". "+
 			"Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".",
-		"ERROR: fname:4: Malformed tool dependency: \"mal:formed:tool\".")
+		"ERROR: fname:4: Malformed tool dependency: \"mal:formed:tool\".",
+		"ERROR: fname:5: Unknown tool \"unknown\".")
 
 	vt.Varname("USE_TOOLS.NetBSD")
 	vt.Op(opAssignAppend)
@@ -909,6 +928,54 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 	vt.Output(
 		"ERROR: fname:12: Unknown tool dependency \"unknown\". " +
 			"Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".")
+
+	vt.Varname("TOOLS_NOOP")
+	vt.Op(opAssignAppend)
+	vt.Values(
+		"gmake:run")
+
+	vt.OutputEmpty()
+}
+
+func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).URL)
+
+	vt.Varname("HOMEPAGE")
+	vt.Values(
+		"# none",
+		"${OTHER_VAR}",
+		"https://www.netbsd.org/",
+		"mailto:someone@example.org",
+		"httpxs://www.example.org",
+		"https://www.example.org",
+		"https://www.example.org/path with spaces",
+		"string with spaces")
+
+	vt.Output(
+		"WARN: fname:3: Please write NetBSD.org instead of www.netbsd.org.",
+		"WARN: fname:4: \"mailto:someone@example.org\" is not a valid URL.",
+		"WARN: fname:5: \"httpxs://www.example.org\" is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.",
+		"NOTE: fname:6: For consistency, please add a trailing slash to \"https://www.example.org\".",
+		"WARN: fname:7: \"https://www.example.org/path with spaces\" is not a valid URL.",
+		"WARN: fname:8: \"string with spaces\" is not a valid URL.")
+}
+
+func (s *Suite) Test_VartypeCheck_UserGroupName(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).UserGroupName)
+
+	vt.Varname("APACHE_USER")
+	vt.Values(
+		"user with spaces",
+		"typical_username",
+		"user123",
+		"domain\\user",
+		"${OTHER_VAR}")
+
+	vt.Output(
+		"WARN: fname:1: Invalid user or group name \"user with spaces\".",
+		"WARN: fname:4: Invalid user or group name \"domain\\\\user\".")
 }
 
 func (s *Suite) Test_VartypeCheck_VariableName(c *check.C) {
@@ -938,6 +1005,70 @@ func (s *Suite) Test_VartypeCheck_Version(c *check.C) {
 		"4pre7")
 	vt.Output(
 		"WARN: fname:4: Invalid version number \"4.1-SNAPSHOT\".")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"a*",
+		"1.2/456",
+		"[0-9]*")
+	vt.Output(
+		"WARN: fname:11: Invalid version number pattern \"a*\".",
+		"WARN: fname:12: Invalid version number pattern \"1.2/456\".")
+}
+
+func (s *Suite) Test_VartypeCheck_WrapperReorder(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).WrapperReorder)
+
+	vt.Varname("WRAPPER_REORDER")
+	vt.Op(opAssignAppend)
+	vt.Values(
+		"reorder:l:first:second",
+		"reorder:l:first",
+		"omit:first")
+	vt.Output(
+		"WARN: fname:2: Unknown wrapper reorder command \"reorder:l:first\".",
+		"WARN: fname:3: Unknown wrapper reorder command \"omit:first\".")
+}
+
+func (s *Suite) Test_VartypeCheck_WrapperTransform(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).WrapperTransform)
+
+	vt.Varname("WRAPPER_TRANSFORM")
+	vt.Op(opAssignAppend)
+	vt.Values(
+		"rm:-O3",
+		"opt:-option",
+		"rename:src:dst",
+		"rm-optarg:-option",
+		"rmdir:/usr/include",
+		"rpath:/usr/lib:/usr/pkg/lib",
+		"rpath:/usr/lib",
+		"unknown")
+	vt.Output(
+		"WARN: fname:7: Unknown wrapper transform command \"rpath:/usr/lib\".",
+		"WARN: fname:8: Unknown wrapper transform command \"unknown\".")
+}
+
+func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).WrksrcSubdirectory)
+
+	vt.Varname("BUILD_DIRS")
+	vt.Op(opAssignAppend)
+	vt.Values(
+		"${WRKSRC}",
+		"${WRKSRC}/",
+		"${WRKSRC}/.",
+		"${WRKSRC}/subdir",
+		"${CONFIGURE_DIRS}",
+		"${WRKSRC}/directory with spaces",
+		"directory with spaces")
+	vt.Output(
+		"NOTE: fname:1: You can use \".\" instead of \"${WRKSRC}\".",
+		"NOTE: fname:2: You can use \".\" instead of \"${WRKSRC}/\".",
+		"NOTE: fname:3: You can use \".\" instead of \"${WRKSRC}/.\".",
+		"NOTE: fname:4: You can use \"subdir\" instead of \"${WRKSRC}/subdir\".",
+		"NOTE: fname:6: You can use \"directory with spaces\" instead of \"${WRKSRC}/directory with spaces\".",
+		"WARN: fname:7: \"directory with spaces\" is not a valid subdirectory of ${WRKSRC}.")
 }
 
 func (s *Suite) Test_VartypeCheck_Yes(c *check.C) {
@@ -1060,8 +1191,10 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		}
 
 		mkline := vt.tester.NewMkLine(vt.fileName, vt.lineno, text)
+		comment := ""
 		if mkline.IsVarassign() {
 			mkline.Tokenize(value, true) // Produce some warnings as side-effects.
+			comment = mkline.VarassignComment()
 		}
 
 		effectiveValue := value
@@ -1070,7 +1203,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		}
 
 		valueNovar := mkline.WithoutMakeVariables(effectiveValue)
-		vc := &VartypeCheck{mkline, mkline.Line, varname, op, effectiveValue, valueNovar, "", false}
+		vc := &VartypeCheck{mkline, mkline.Line, varname, op, effectiveValue, valueNovar, comment, false}
 		vt.checker(vc)
 
 		vt.lineno++

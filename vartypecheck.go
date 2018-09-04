@@ -991,7 +991,10 @@ func (cv *VartypeCheck) URL() {
 
 	} else if m, _, host, _, _ := match4(value, `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:;=?@A-Z_a-z~]|#)*$`); m {
 		if matches(host, `(?i)\.NetBSD\.org$`) && !matches(host, `\.NetBSD\.org$`) {
-			line.Warnf("Please write NetBSD.org instead of %s.", host)
+			fix := line.Autofix()
+			fix.Warnf("Please write NetBSD.org instead of %s.", host)
+			fix.ReplaceRegex(`(?i)NetBSD\.org`, "NetBSD.org", 1)
+			fix.Apply()
 		}
 
 	} else if m, scheme, _, absPath := match3(value, `^([0-9A-Za-z]+)://([^/]+)(.*)$`); m {
