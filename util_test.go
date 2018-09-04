@@ -5,6 +5,7 @@ import (
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
 	"os"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -18,6 +19,7 @@ func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
 func (s *Suite) Test_MkopSubst__middle(c *check.C) {
 	c.Check(mkopSubst("pkgname", false, "kgna", false, "ri", ""), equals, "prime")
 	c.Check(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), equals, "replacement")
+	c.Check(mkopSubst("aaaaaaa", false, "a", false, "b", ""), equals, "baaaaaa")
 }
 
 func (s *Suite) Test_MkopSubst__left(c *check.C) {
@@ -50,6 +52,19 @@ func (s *Suite) Test_replaceFirst(c *check.C) {
 	c.Check(rest, equals, "X+c+d")
 }
 
+func (s *Suite) Test_mustMatch(c *check.C) {
+	c.Check(
+		func() { mustMatch("aaa", `b`) },
+		check.Panics,
+		"mustMatch \"aaa\" \"b\"")
+}
+
+func (s *Suite) Test_shorten(c *check.C) {
+	c.Check(shorten("aaaaa", 3), equals, "aaa...")
+	c.Check(shorten("aaaaa", 5), equals, "aaaaa")
+	c.Check(shorten("aaa", 5), equals, "aaa")
+}
+
 func (s *Suite) Test_tabLength(c *check.C) {
 	c.Check(tabWidth("12345"), equals, 5)
 	c.Check(tabWidth("\t"), equals, 8)
@@ -68,6 +83,22 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 	c.Check(cleanpath("111/222/../../333/444/../../555/666/../../777/888/9"), equals, "111/222/../../777/888/9")
 	c.Check(cleanpath("cat/pkg.v1/../../cat/pkg.v2/Makefile"), equals, "cat/pkg.v1/../../cat/pkg.v2/Makefile")
 	c.Check(cleanpath("dir/"), equals, "dir")
+}
+
+func (s *Suite) Test_relpath(c *check.C) {
+	if runtime.GOOS == "windows" {
+		c.Check(func() { relpath("c:/", "d:/") }, check.Panics, "relpath \"c:/\", \"d:/\"")
+	}
+}
+
+func (s *Suite) Test_abspath(c *check.C) {
+	t := s.Init(c)
+
+	if runtime.GOOS == "windows" {
+		t.ExpectFatal(
+			func() { abspath("file\u0000name") },
+			"FATAL: file\x00name: Cannot determine absolute path.")
+	}
 }
 
 func (s *Suite) Test_isEmptyDir_and_getSubdirs(c *check.C) {
@@ -219,4 +250,59 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	c.Check(isLocallyModified(modified), equals, true)
 	c.Check(isLocallyModified(t.File("enoent")), equals, true)
 	c.Check(isLocallyModified(t.File("not_mentioned")), equals, false)
+}
+
+func (s *Suite) Test_Scope_Defined(c *check.C) {
+	t := s.Init(c)
+
+	scope := NewScope()
+	scope.Define("VAR.param", t.NewMkLine("file.mk", 1, "VAR.param=value"))
+
+	c.Check(scope.Defined("VAR.param"), equals, true)
+	c.Check(scope.Defined("VAR.other"), equals, false)
+	c.Check(scope.Defined("VARIABLE.*"), equals, false)
+
+	c.Check(scope.DefinedSimilar("VAR.param"), equals, true)
+	c.Check(scope.DefinedSimilar("VAR.other"), equals, true)
+	c.Check(scope.DefinedSimilar("VARIABLE.*"), equals, false)
+}
+
+func (s *Suite) Test_Scope_Used(c *check.C) {
+	t := s.Init(c)
+
+	scope := NewScope()
+	scope.Use("VAR.param", t.NewMkLine("file.mk", 1, "\techo ${VAR.param}"))
+
+	c.Check(scope.Used("VAR.param"), equals, true)
+	c.Check(scope.Used("VAR.other"), equals, false)
+	c.Check(scope.Used("VARIABLE.*"), equals, false)
+
+	c.Check(scope.UsedSimilar("VAR.param"), equals, true)
+	c.Check(scope.UsedSimilar("VAR.other"), equals, true)
+	c.Check(scope.UsedSimilar("VARIABLE.*"), equals, false)
+}
+
+func (s *Suite) Test_Scope_DefineAll(c *check.C) {
+	t := s.Init(c)
+
+	src := NewScope()
+
+	dst := NewScope()
+	dst.DefineAll(src)
+
+	c.Check(dst.defined, check.HasLen, 0)
+	c.Check(dst.used, check.HasLen, 0)
+
+	src.Define("VAR", t.NewMkLine("file.mk", 1, "VAR=value"))
+	dst.DefineAll(src)
+
+	c.Check(dst.Defined("VAR"), equals, true)
+}
+
+func (s *Suite) Test_naturalLess(c *check.C) {
+	c.Check(naturalLess("0", "a"), equals, true)
+	c.Check(naturalLess("a", "0"), equals, false)
+	c.Check(naturalLess("000", "0000"), equals, true)
+	c.Check(naturalLess("0000", "000"), equals, false)
+	c.Check(naturalLess("000", "000"), equals, false)
 }

@@ -636,12 +636,12 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 		value := mkline.Value()
 		valueNovar := mkline.WithoutMakeVariables(value)
 		if op == opAssignEval && value == valueNovar {
-			op = opAssign // They are effectively the same in this case.
+			op = opAssign // The two operators are effectively the same in this case.
 		}
 		existing, found := s.vars[varname]
 		if !found {
 			if op == opAssignShell || op == opAssignEval {
-				s.vars[varname] = nil
+				s.vars[varname] = nil // Won't be checked further.
 			} else {
 				if op == opAssignAppend {
 					value = " " + value
@@ -664,9 +664,8 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 				if s.OnIgnore != nil {
 					s.OnIgnore(existing.mkline, mkline)
 				}
-			case opAssignShell:
-			case opAssignEval:
-				s.vars[varname] = nil
+			case opAssignShell, opAssignEval:
+				s.vars[varname] = nil // Won't be checked further.
 			}
 		}
 

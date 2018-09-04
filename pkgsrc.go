@@ -143,10 +143,6 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 		return latest
 	}
 
-	if src.latest == nil {
-		src.latest = make(map[string]string)
-	}
-
 	categoryDir := src.File(category)
 	error := func() string {
 		dummyLine.Errorf("Cannot find latest version of %q in %q.", re, categoryDir)

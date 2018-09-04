@@ -706,6 +706,34 @@ func (s *Suite) Test_MkLines_CheckRedundantVariables__procedure_call(c *check.C)
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantVariables__shell_and_eval(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("module.mk",
+		"VAR:=\tvalue ${OTHER}",
+		"VAR!=\tvalue ${OTHER}")
+
+	mklines.CheckRedundantVariables()
+
+	// Combining := and != is too complicated to be analyzed by pkglint,
+	// therefore no warning.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantVariables__shell_and_eval_literal(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("module.mk",
+		"VAR:=\tvalue",
+		"VAR!=\tvalue")
+
+	mklines.CheckRedundantVariables()
+
+	// Even when := is used with a literal value (which is usually
+	// only done for procedure calls), the shell evaluation can have
+	// so many different side effects that pkglint cannot reliably
+	// help in this situation.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
