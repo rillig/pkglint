@@ -268,7 +268,7 @@ loop:
 		case squot:
 			break loop
 		case repl.AdvanceRegexp(`^\\[^$]`):
-		case repl.HasPrefixRegexp(`^\$\$[^!#(*\-0-9?@A-Z_a-z]`):
+		case repl.HasPrefixRegexp(`^\$\$[^!#(*\-0-9?@A-Z_a-z{]`):
 			repl.AdvanceStr("$$")
 		case repl.AdvanceRegexp(`^(?:` + reShDollar + `)`):
 		default:
