@@ -226,8 +226,8 @@ func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 		"===== Merge conflict",
 		">>>>> Merge conflict")
 
-	c.Check(G.Pkgsrc.loadPkgOptions, check.Panics, pkglintFatal{})
-	t.CheckOutputLines(
+	t.ExpectFatal(
+		G.Pkgsrc.loadPkgOptions,
 		"FATAL: ~/mk/defaults/options.description:2: Unknown line format.")
 }
 
