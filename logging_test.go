@@ -189,7 +189,7 @@ func (s *Suite) Test_logs__duplicate_messages(c *check.C) {
 
 	// In rare cases, the explanations for the same warning may differ
 	// when they appear in different contexts. In such a case, if the
-	// warning is suppressed, the explanation most not appear on its own.
+	// warning is suppressed, the explanation must not appear on its own.
 	line.Warnf("The warning.") // Is logged
 	Explain("Explanation 1")
 	line.Warnf("The warning.") // Is suppressed
