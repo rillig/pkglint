@@ -706,7 +706,7 @@ func (ck MkLineChecker) checkVarassign() {
 
 	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
 		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix := G.Pkgsrc.Deprecated[varcanon]; fix != "" {
+	} else if fix = G.Pkgsrc.Deprecated[varcanon]; fix != "" {
 		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
 	}
 

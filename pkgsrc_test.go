@@ -151,12 +151,16 @@ func (s *Suite) Test_Pkgsrc_deprecated(c *check.C) {
 	t := s.Init(c)
 
 	G.Pkgsrc.initDeprecatedVars()
-	mkline := t.NewMkLine("Makefile", 5, "USE_PERL5=\tyes")
+	mklines := t.NewMkLines("Makefile",
+		"USE_PERL5=\tyes",
+		"SUBST_POSTCMD.class=${ECHO}")
 
-	MkLineChecker{mkline}.checkVarassign()
+	MkLineChecker{mklines.mklines[0]}.checkVarassign()
+	MkLineChecker{mklines.mklines[1]}.checkVarassign()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:5: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.")
+		"WARN: Makefile:1: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.",
+		"WARN: Makefile:2: Definition of SUBST_POSTCMD.class is deprecated. Has been removed, as it seemed unused.")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest_no_basedir(c *check.C) {
