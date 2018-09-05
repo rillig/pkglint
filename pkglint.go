@@ -303,9 +303,9 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	isReg := st.Mode().IsRegular()
 
 	dir := ifelseStr(isReg, path.Dir(fname), fname)
-	absCurrentDir := abspath(dir)
-	pkglint.Wip = !pkglint.opts.Import && matches(absCurrentDir, `/wip/|/wip$`)
-	pkglint.Infrastructure = matches(absCurrentDir, `/mk/|/mk$`)
+	pkgsrcRel := G.Pkgsrc.ToRel(dir)
+	pkglint.Wip = matches(pkgsrcRel, `^wip(/|$)`)
+	pkglint.Infrastructure = matches(pkgsrcRel, `^mk(/|$)`)
 	pkgsrcdir := findPkgsrcTopdir(dir)
 	if pkgsrcdir == "" {
 		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
@@ -487,7 +487,23 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 	}
 
 	basename := path.Base(fname)
-	if hasPrefix(basename, "work") || hasSuffix(basename, "~") || hasSuffix(basename, ".orig") || hasSuffix(basename, ".rej") {
+	pkgsrcRel := G.Pkgsrc.ToRel(fname)
+	depth := strings.Count(pkgsrcRel, "/")
+
+	if depth == 2 && !G.Wip {
+		if contains(basename, "README") || contains(basename, "TODO") {
+			NewLineWhole(fname).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
+			return
+		}
+	}
+
+	switch {
+	case hasPrefix(basename, "work"),
+		hasSuffix(basename, "~"),
+		hasSuffix(basename, ".orig"),
+		hasSuffix(basename, ".rej"),
+		contains(basename, "README") && depth == 2,
+		contains(basename, "TODO") && depth == 2:
 		if pkglint.opts.Import {
 			NewLineWhole(fname).Errorf("Must be cleaned up before committing the package.")
 		}

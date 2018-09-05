@@ -225,12 +225,14 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/sysutils/checkperms/Makefile:3: This package should be updated to 1.13 ([supports more file formats]).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
+		"ERROR: ~/sysutils/checkperms/README: Packages in main pkgsrc must not have a README file.",
+		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"ERROR: ~/sysutils/checkperms/distinfo:7: SHA1 hash of patches/patch-checkperms.c differs "+
 			"(distinfo has asdfasdf, patch file has e775969de639ec703866c0336c4c8e0fdd96309c). "+
 			"Run \""+confMake+" makepatchsum\".",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
-		"2 errors and 2 warnings found.",
+		"4 errors and 2 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)",
 		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
 		"(Run \"pkglint -F\" to automatically fix some issues.)")
@@ -755,17 +757,21 @@ func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
 
 	G.Main("pkglint", "category/package", "wip/package")
 
-	// FIXME: category/package/README should not be allowed
-	// FIXME: category/package/TODO should not be allowed
 	t.CheckOutputLines(
-		"Looks fine.")
+		"ERROR: category/package/README: Packages in main pkgsrc must not have a README file.",
+		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
+		"2 errors and 0 warnings found.")
 
+	// FIXME: Do this resetting properly
+	G.errors = 0
+	G.warnings = 0
+	G.logged = make(map[string]bool)
 	G.Main("pkglint", "--import", "category/package", "wip/package")
 
-	// FIXME: category/package/README should not be allowed
-	// FIXME: category/package/TODO should not be allowed
-	// FIXME: wip/package/README should not be allowed
-	// FIXME: wip/package/TODO should not be allowed
 	t.CheckOutputLines(
-		"Looks fine.")
+		"ERROR: category/package/README: Packages in main pkgsrc must not have a README file.",
+		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
+		"ERROR: wip/package/README: Must be cleaned up before committing the package.",
+		"ERROR: wip/package/TODO: Must be cleaned up before committing the package.",
+		"4 errors and 0 warnings found.")
 }
