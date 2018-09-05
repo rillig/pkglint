@@ -81,7 +81,6 @@ func (s *Suite) Test_ChecklinesPlist__condition(c *check.C) {
 	t := s.Init(c)
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Pkg.plistSubstCond["PLIST.bincmds"] = true
 	lines := t.NewLines("PLIST",
 		PlistRcsID,
 		"${PLIST.bincmds}bin/subdir/command")

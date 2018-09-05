@@ -775,7 +775,6 @@ func (ck MkLineChecker) checkVarassign() {
 		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
 	}
 
-	ck.checkVarassignPlistComment(varname, value)
 	ck.checkVarassignVaruse()
 }
 
@@ -920,34 +919,6 @@ func (ck MkLineChecker) checkVarassignBsdPrefs() {
 		"",
 		"The easiest way to include the mk.conf file is by including the",
 		"bsd.prefs.mk file, which will take care of everything.")
-}
-
-func (ck MkLineChecker) checkVarassignPlistComment(varname, value string) {
-	if false && // This is currently neither correct nor helpful
-		contains(value, "@comment") && !matches(value, `="@comment "`) {
-		ck.MkLine.Warnf("Please don't use @comment in %s.", varname)
-		Explain(
-			"If you are defining a PLIST condition here, use one of the",
-			"following patterns instead:",
-			"",
-			"1. The direct way, without intermediate variable",
-			"",
-			"\tPLIST_SUBST+=\tMY_VAR=\"@comment \"",
-			"",
-			"2. The indirect way, with a separate variable",
-			"",
-			"\tPLIST_VARS+=\tMY_VAR",
-			"\t.if ...",
-			"\tMY_VAR?=\tyes",
-			"\t.endif")
-	}
-
-	// Mark the variable as PLIST condition. This is later used in checkfile_PLIST.
-	if G.Pkg != nil {
-		if m, plistVarname := match1(value, `(.+)=.*@comment.*`); m {
-			G.Pkg.plistSubstCond[plistVarname] = true
-		}
-	}
 }
 
 func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comment string) {

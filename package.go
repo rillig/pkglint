@@ -31,7 +31,6 @@ type Package struct {
 
 	vars                  Scope
 	bl3                   map[string]Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
-	plistSubstCond        map[string]bool // varname => true; all variables that are used as conditions (@comment or nothing) in PLISTs.
 	included              map[string]Line // fname => line
 	seenMakefileCommon    bool            // Does the package have any .includes?
 	conditionalIncludes   map[string]MkLine
@@ -57,7 +56,6 @@ func NewPackage(dir string) *Package {
 		PlistFiles:            make(map[string]bool),
 		vars:                  NewScope(),
 		bl3:                   make(map[string]Line),
-		plistSubstCond:        make(map[string]bool),
 		included:              make(map[string]Line),
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
