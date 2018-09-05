@@ -384,7 +384,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
 // It typically appears in MASTER_SITE definitions.
-func (s *Suite) Test_MkLineChecker_CheckVaruse_eq_nonlist(c *check.C) {
+func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -399,6 +399,23 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse_eq_nonlist(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:2: The :from=to modifier should only be used with lists.")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+	mklines := t.SetupFileMkLines("options.mk",
+		MkRcsID,
+		".for var in a b c",
+		"\t: ${var}",
+		".endfor")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {

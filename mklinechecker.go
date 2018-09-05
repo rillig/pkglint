@@ -352,7 +352,6 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
 	case varIsUsed(varname):
-	case G.Mk != nil && G.Mk.forVars[varname]:
 	case containsVarRef(varname):
 	default:
 		mkline.Warnf("%s is used but not defined.", varname)
