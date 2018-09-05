@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"strings"
 
 	"gopkg.in/check.v1"
@@ -701,4 +702,70 @@ func (s *Suite) Test_Pkglint_Checkfile__file_selection(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
 		"WARN: ~/category/package/unexpected.txt: Unexpected file found.")
+}
+
+func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/Makefile",
+		MkRcsID)
+
+	t.CreateFileLines("category/package/files/README",
+		"Extra file that is installed later.")
+	t.CreateFileLines("category/package/patches/patch-README",
+		RcsID,
+		"",
+		"Documentation",
+		"",
+		"--- old",
+		"+++ new",
+		"@@ -1,1 +1,1 @@",
+		"-old",
+		"+new")
+	t.CreateFileLines("category/package/Makefile",
+		MkRcsID,
+		"CATEGORIES=category",
+		"",
+		"COMMENT=Comment",
+		"LICENSE=2-clause-bsd")
+	t.CreateFileLines("category/package/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines("category/package/README",
+		"This package ...")
+	t.CreateFileLines("category/package/TODO",
+		"Make this package work.")
+	t.CreateFileLines("category/package/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-README) = b9101ebf0bca8ce243ed6433b65555fa6a5ecd52")
+
+	// Copy category/package to wip/package.
+	for _, basename := range []string{"files/README", "patches/patch-README", "Makefile", "PLIST", "README", "TODO", "distinfo"} {
+		src := "category/package/" + basename
+		dst := "wip/package/" + basename
+		text, err := ioutil.ReadFile(t.File(src))
+		c.Check(err, check.IsNil)
+		t.CreateFileLines(dst, strings.TrimSpace(string(text)))
+	}
+
+	t.SetupPkgsrc()
+	G.Pkgsrc.LoadInfrastructure()
+	t.Chdir(".")
+
+	G.Main("pkglint", "category/package", "wip/package")
+
+	// FIXME: category/package/README should not be allowed
+	// FIXME: category/package/TODO should not be allowed
+	t.CheckOutputLines(
+		"Looks fine.")
+
+	G.Main("pkglint", "--import", "category/package", "wip/package")
+
+	// FIXME: category/package/README should not be allowed
+	// FIXME: category/package/TODO should not be allowed
+	// FIXME: wip/package/README should not be allowed
+	// FIXME: wip/package/TODO should not be allowed
+	t.CheckOutputLines(
+		"Looks fine.")
 }

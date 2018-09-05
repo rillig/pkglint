@@ -206,6 +206,13 @@ func (t *Tester) SetupPkgsrc() {
 	t.CreateFileLines("doc/TODO",
 		RcsID)
 
+	// Some example licenses so that the tests for whole packages
+	// don't need to define them on their own.
+	t.CreateFileLines("licenses/2-clause-bsd",
+		"Redistribution and use in source and binary forms ...")
+	t.CreateFileLines("licenses/gnu-gpl-v2",
+		"The licenses for most software ...")
+
 	// The MASTER_SITES in the package Makefile are searched here.
 	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",
