@@ -654,7 +654,6 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("EMUL_TYPE.*", lkNone, enum("native builtin suse suse-9.1 suse-9.x suse-10.0 suse-10.x"))
 	sys("ERROR_CAT", lkNone, BtShellCommand)
 	sys("ERROR_MSG", lkNone, BtShellCommand)
-	acl("EVAL_PREFIX", lkSpace, BtShellWord, "Makefile, Makefile.common: append") // XXX: Combining ShellWord with lkSpace looks weird.
 	sys("EXPORT_SYMBOLS_LDFLAGS", lkShell, BtLdFlag)
 	sys("EXTRACT_CMD", lkNone, BtShellCommand)
 	pkg("EXTRACT_DIR", lkNone, BtPathname)

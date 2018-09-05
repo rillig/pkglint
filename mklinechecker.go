@@ -379,7 +379,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	ck.checkVarusePermissions(varname, vartype, vuc)
 
 	if varname == "LOCALBASE" && !G.Infrastructure {
-		ck.WarnVaruseLocalbase()
+		ck.MkLine.Warnf("Please use PREFIX instead of LOCALBASE.")
 	}
 
 	needsQuoting := mkline.VariableNeedsQuoting(varname, vartype, vuc)
@@ -536,39 +536,6 @@ func (ck MkLineChecker) checkVaruseLoadTime(varname string, isIndirect bool) {
 			"assignment in this line, the variable might be used indirectly",
 			"at load time, before it is guaranteed to be properly initialized.")
 	}
-}
-
-func (ck MkLineChecker) WarnVaruseLocalbase() {
-	ck.MkLine.Warnf("Please use PREFIX instead of LOCALBASE.")
-	Explain(
-		// from jlam via private mail.
-		"Currently, LOCALBASE is typically used in these cases:",
-		"",
-		"(1) To locate a file or directory from another package.",
-		"(2) To refer to own files after installation.",
-		"",
-		"Example for (1):",
-		"",
-		"	STRLIST=        ${LOCALBASE}/bin/strlist",
-		"",
-		"	do-build:",
-		"		cd ${WRKSRC} && ${STRLIST} *.str",
-		"",
-		"This should better be:",
-		"",
-		"	EVAL_PREFIX=    STRLIST_PREFIX=strlist",
-		"	STRLIST=        ${STRLIST_PREFIX}/bin/strlist",
-		"",
-		"	do-build:",
-		"		cd ${WRKSRC} && ${STRLIST} *.str",
-		"",
-		"Example for (2):",
-		"",
-		"	CONFIGURE_ENV+= --with-datafiles=${LOCALBASE}/share/pkgbase",
-		"",
-		"This should better be:",
-		"",
-		"	CONFIGURE_ENV+= --with-datafiles=${PREFIX}/share/pkgbase")
 }
 
 func (ck MkLineChecker) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
@@ -758,16 +725,6 @@ func (ck MkLineChecker) checkVarassign() {
 	}
 
 	ck.checkVarassignSpecific()
-
-	if varname == "EVAL_PREFIX" {
-		if m, evalVarname := match1(value, `^([\w_]+)=`); m {
-
-			// The variables mentioned in EVAL_PREFIX will later be
-			// defined by find-prefix.mk. Therefore, they are marked
-			// as known in the current file.
-			G.Mk.vars.Define(evalVarname, mkline)
-		}
-	}
 
 	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
 		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)

@@ -205,9 +205,10 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions__load_time(c *check.C)
 func (s *Suite) Test_MkLineChecker_WarnVaruseLocalbase(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
 	mkline := t.NewMkLine("options.mk", 56, "PKGNAME=${LOCALBASE}")
 
-	MkLineChecker{mkline}.WarnVaruseLocalbase()
+	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
 		"WARN: options.mk:56: Please use PREFIX instead of LOCALBASE.")

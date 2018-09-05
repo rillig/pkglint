@@ -549,6 +549,9 @@ func (src *Pkgsrc) initDeprecatedVars() {
 		"SVR4_PKGNAME":           "Just remove it.",
 		"PKG_INSTALLATION_TYPES": "Just remove it.",
 
+		// November 2015, commit abccb56
+		"EVAL_PREFIX": "All packages are installed in PREFIX now.",
+
 		// January 2016
 		"SUBST_POSTCMD.*": "Has been removed, as it seemed unused.",
 
