@@ -295,7 +295,7 @@ func (src *Pkgsrc) InitVartypes() {
 		usr("DIALER_GROUP", lkNone, BtUserGroupName)
 		usr("DT_LAYOUT", lkNone, enum("US FI FR GER DV"))
 		usr("ELK_GUI", lkShell, enum("none xaw motif"))
-		usr("EMACS_TYPE", lkNone, enum("emacs25 emacs25nox emacs21 emacs21nox emacs20 xemacs214 xemacs215"))
+		usr("EMACS_TYPE", lkNone, emacsVersions)
 		usr("EXIM_GROUP", lkNone, BtUserGroupName)
 		usr("EXIM_USER", lkNone, BtUserGroupName)
 		usr("FLUXBOX_USE_XINERAMA", lkNone, enum("YES NO"))
