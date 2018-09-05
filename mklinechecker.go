@@ -384,10 +384,6 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 
 	needsQuoting := mkline.VariableNeedsQuoting(varname, vartype, vuc)
 
-	if vuc.quoting == vucQuotFor {
-		ck.checkVaruseFor(varname, vartype, needsQuoting)
-	}
-
 	if G.opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
@@ -535,24 +531,6 @@ func (ck MkLineChecker) checkVaruseLoadTime(varname string, isIndirect bool) {
 			"but the variable on the right-hand side may not.  Because of the",
 			"assignment in this line, the variable might be used indirectly",
 			"at load time, before it is guaranteed to be properly initialized.")
-	}
-}
-
-func (ck MkLineChecker) checkVaruseFor(varname string, vartype *Vartype, needsQuoting NeedsQuoting) {
-	if trace.Tracing {
-		defer trace.Call(varname, vartype, needsQuoting)()
-	}
-
-	if false && // Too many false positives
-		vartype != nil &&
-		vartype.kindOfList != lkSpace &&
-		needsQuoting != nqDoesntMatter {
-		ck.MkLine.Warnf("The variable %s should not be used in .for loops.", varname)
-		Explain(
-			"The .for loop splits its argument at sequences of white-space, as",
-			"opposed to all other places in make(1), which act like the shell.",
-			"Therefore only variables that are split at whitespace or don't",
-			"contain any special characters should be used here.")
 	}
 }
 
