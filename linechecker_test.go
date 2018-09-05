@@ -17,6 +17,7 @@ func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
 	CheckLineAbsolutePathname(line, "cat /dev/stdin")
 	CheckLineAbsolutePathname(line, "cat /dev/stdout")
 	CheckLineAbsolutePathname(line, "cat /dev/stderr")
+	CheckLineAbsolutePathname(line, "printf '#! /bin/sh\\nexit 0'")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Found absolute pathname: /bin",

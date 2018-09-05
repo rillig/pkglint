@@ -19,7 +19,7 @@ func CheckLineAbsolutePathname(line Line, text string) {
 	//
 	// Another context where absolute pathnames usually appear is in
 	// assignments like "bindir=/bin".
-	if m, path := regex.Match1(text, `(?:^|\s|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
+	if m, path := regex.Match1(text, `(?:^|\s|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s\\]|"[^"*]"|'[^']*')*)`); m {
 		if regex.Matches(path, `^/\w`) {
 			CheckwordAbsolutePathname(line, path)
 		}
@@ -87,11 +87,14 @@ func CheckwordAbsolutePathname(line Line, word string) {
 
 	switch {
 	case regex.Matches(word, `^/dev/(?:null|tty|zero)$`):
-	// These are defined by POSIX.
+		// These are defined by POSIX.
+
 	case word == "/bin/sh":
-	// This is usually correct, although on Solaris, it's pretty feature-crippled.
+		// This is usually correct, although on Solaris, it's pretty feature-crippled.
+
 	case regex.Matches(word, `^/s\W`):
-	// Probably a sed(1) command
+		// Probably a sed(1) command
+
 	case regex.Matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
 		line.Warnf("Found absolute pathname: %s", word)
