@@ -11,15 +11,18 @@ func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
 
 	CheckLineAbsolutePathname(line, "bindir=/bin")
 	CheckLineAbsolutePathname(line, "bindir=/../lib")
-	CheckLineAbsolutePathname(line, "cat /dev/null")   // FIXME: Not classified as absolute path.
-	CheckLineAbsolutePathname(line, "cat /dev//tty")   // FIXME: Not classified as absolute patFIXMEh.
-	CheckLineAbsolutePathname(line, "cat /dev/zero")   // FIXME: Not classified as absolute path.
-	CheckLineAbsolutePathname(line, "cat /dev/stdin")  // FIXME: Not classified as absolute path.
-	CheckLineAbsolutePathname(line, "cat /dev/stdout") // FIXME: Not classified as absolute path.
-	CheckLineAbsolutePathname(line, "cat /dev/stderr") // FIXME: Not classified as absolute path.
+	CheckLineAbsolutePathname(line, "cat /dev/null")
+	CheckLineAbsolutePathname(line, "cat /dev/tty")
+	CheckLineAbsolutePathname(line, "cat /dev/zero")
+	CheckLineAbsolutePathname(line, "cat /dev/stdin")
+	CheckLineAbsolutePathname(line, "cat /dev/stdout")
+	CheckLineAbsolutePathname(line, "cat /dev/stderr")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:1: Found absolute pathname: /bin")
+		"WARN: Makefile:1: Found absolute pathname: /bin",
+		"WARN: Makefile:1: Found absolute pathname: /dev/stdin",
+		"WARN: Makefile:1: Found absolute pathname: /dev/stdout",
+		"WARN: Makefile:1: Found absolute pathname: /dev/stderr")
 }
 
 func (s *Suite) Test_CheckLineTrailingWhitespace(c *check.C) {

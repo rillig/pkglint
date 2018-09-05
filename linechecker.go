@@ -19,7 +19,7 @@ func CheckLineAbsolutePathname(line Line, text string) {
 	//
 	// Another context where absolute pathnames usually appear is in
 	// assignments like "bindir=/bin".
-	if m, path := regex.Match1(text, `(?:^|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
+	if m, path := regex.Match1(text, `(?:^|\s|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s]|"[^"*]"|'[^']*')*)`); m {
 		if regex.Matches(path, `^/\w`) {
 			CheckwordAbsolutePathname(line, path)
 		}
