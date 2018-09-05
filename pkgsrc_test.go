@@ -232,7 +232,7 @@ func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 
 	t.ExpectFatal(
 		G.Pkgsrc.loadPkgOptions,
-		"FATAL: ~/mk/defaults/options.description:2: Unknown line format.")
+		"FATAL: ~/mk/defaults/options.description:2: Unknown line format: <<<<< Merge conflict")
 }
 
 func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {

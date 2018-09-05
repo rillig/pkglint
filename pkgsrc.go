@@ -632,7 +632,7 @@ func (src *Pkgsrc) loadPkgOptions() {
 		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
 			src.PkgOptions[optname] = optdescr
 		} else {
-			line.Fatalf("Unknown line format.")
+			line.Fatalf("Unknown line format: %s", line.Text)
 		}
 	}
 }

@@ -976,6 +976,7 @@ func (cv *VartypeCheck) Tool() {
 	}
 }
 
+// Unknown doesn't check for anything.
 func (cv *VartypeCheck) Unknown() {
 	// Do nothing.
 }

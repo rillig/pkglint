@@ -41,3 +41,23 @@ func (s *Suite) Test_InitVartypes__enumFrom(c *check.C) {
 	checkEnumValues("USE_LANGUAGES", "ShellList of enum: ada c c++ c++03 c++0x c++11 c++14 c99 fortran fortran77 gnu++03 gnu++0x gnu++11 gnu++14 java obj-c++ objc ")
 	checkEnumValues("PKGSRC_COMPILER", "ShellList of enum: ccache distcc f2c g95 gcc ido mipspro-ucode sunpro ")
 }
+
+func (s *Suite) Test_parseACLEntries(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectFatal(
+		func() { parseACLEntries("VARNAME", "buildlink3.mk: *; *: *") },
+		"FATAL: Invalid ACL permission \"*\" for \"VARNAME\".")
+
+	t.ExpectFatal(
+		func() { parseACLEntries("VARNAME", "buildlink3.mk: use; *: use") },
+		"FATAL: Repeated permissions \"use\" for \"VARNAME\".")
+
+	t.ExpectFatal(
+		func() { parseACLEntries("VARNAME", "*.txt: use") },
+		"FATAL: Invalid ACL glob \"*.txt\" for \"VARNAME\".")
+
+	t.ExpectFatal(
+		func() { parseACLEntries("VARNAME", "*.mk: use; buildlink3.mk: append") },
+		"FATAL: Ineffective ACL glob \"buildlink3.mk\" for \"VARNAME\".")
+}

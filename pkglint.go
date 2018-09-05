@@ -139,7 +139,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	if pkglint.opts.Profiling {
 		f, err := os.Create("pkglint.pprof")
 		if err != nil {
-			dummyLine.Fatalf("Cannot create profiling file: %s", err)
+			G.Panicf("Cannot create profiling file: %s", err)
 		}
 		defer f.Close()
 
@@ -170,7 +170,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	}
 	relTopdir := findPkgsrcTopdir(firstArg)
 	if relTopdir == "" {
-		dummyLine.Fatalf("%q is not inside a pkgsrc tree.", firstArg)
+		G.Panicf("%q is not inside a pkgsrc tree.", firstArg)
 	}
 
 	pkglint.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
@@ -330,6 +330,12 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	default:
 		NewLineWhole(fname).Errorf("Cannot check directories outside a pkgsrc tree.")
 	}
+}
+
+func (pkglint *Pkglint) Panicf(format string, args ...interface{}) {
+	prefix := ifelseStr(G.opts.GccOutput, llFatal.GccName, llFatal.TraditionalName)
+	pkglint.logErr.Write(prefix + ": " + fmt.Sprintf(format, args...) + "\n")
+	panic(pkglintFatal{})
 }
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
