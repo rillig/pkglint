@@ -546,7 +546,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 	// configure scripts.
 	//
 	// When doing checks outside a package, the :M* operator is needed for safety.
-	needMstar := matches(varname, `^(?:.*_)?(?:CFLAGS||CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`) &&
+	needMstar := matches(varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`) &&
 		(G.Pkg == nil || G.Pkg.vars.Defined("GNU_CONFIGURE"))
 
 	strippedMod := mod

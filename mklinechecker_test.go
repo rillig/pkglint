@@ -2,6 +2,127 @@ package main
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mkline := t.NewMkLine("fname.mk", 1, "# url2pkg-marker")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"ERROR: fname.mk:1: This comment indicates unfinished work (url2pkg).")
+}
+
+func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	t.CreateFileLines("mk/bsd.prefs.mk")
+	mkline := t.NewMkLine("category/package/buildlink3.mk", 1, ".include \"../../mk/bsd.prefs.mk\"")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"NOTE: category/package/buildlink3.mk:1: For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	t.CreateFileLines("pkgtools/x11-links/buildlink3.mk")
+	t.CreateFileLines("graphics/jpeg/buildlink3.mk")
+	t.CreateFileLines("devel/intltool/buildlink3.mk")
+	t.CreateFileLines("devel/intltool/builtin.mk")
+	mklines := t.NewMkLines("category/package/fname.mk",
+		MkRcsID,
+		"",
+		".include \"../../pkgtools/x11-links/buildlink3.mk\"",
+		".include \"../../graphics/jpeg/buildlink3.mk\"",
+		".include \"../../devel/intltool/buildlink3.mk\"",
+		".include \"../../devel/intltool/builtin.mk\"")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: category/package/fname.mk:3: ../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
+			"Include \"../../mk/x11.buildlink3.mk\" instead.",
+		"ERROR: category/package/fname.mk:4: ../../graphics/jpeg/buildlink3.mk must not be included directly. "+
+			"Include \"../../mk/jpeg.buildlink3.mk\" instead.",
+		"WARN: category/package/fname.mk:5: Please write \"USE_TOOLS+= intltool\" instead of this line.",
+		"ERROR: category/package/fname.mk:6: ../../devel/intltool/builtin.mk must not be included directly. "+
+			"Include \"../../devel/intltool/buildlink3.mk\" instead.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("category/package/fname.mk",
+		MkRcsID,
+		"",
+		".for",
+		".endfor",
+		"",
+		".if",
+		".else don't",
+		".endif invalid-arg",
+		"",
+		".ifdef FNAME_MK",
+		".endif",
+		".ifndef FNAME_MK",
+		".endif",
+		"",
+		".for var in a b c",
+		".endfor",
+		".undef var",
+		"",
+		".for VAR in a b c",
+		".endfor",
+		"",
+		".for $ in a b c",
+		".endfor")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: category/package/fname.mk:3: \".for\" requires arguments.",
+		"ERROR: category/package/fname.mk:6: \".if\" requires arguments.",
+		"ERROR: category/package/fname.mk:7: \".else\" does not take arguments. If you meant \"else if\", use \".elif\".",
+		"ERROR: category/package/fname.mk:8: \".endif\" does not take arguments.",
+		"WARN: category/package/fname.mk:10: The \".ifdef\" directive is deprecated. Please use \".if defined(FNAME_MK)\" instead.",
+		"WARN: category/package/fname.mk:12: The \".ifndef\" directive is deprecated. Please use \".if !defined(FNAME_MK)\" instead.",
+		"NOTE: category/package/fname.mk:17: Using \".undef\" after a \".for\" loop is unnecessary.",
+		"WARN: category/package/fname.mk:19: .for variable names should not contain uppercase letters.",
+		"ERROR: category/package/fname.mk:22: Invalid variable name \"$\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("category/package/fname.mk",
+		MkRcsID,
+		"",
+		".PHONY: target-1",
+		"target-2: .PHONY",
+		".ORDER: target-1 target-2",
+		"target-1:",
+		"target-2:",
+		"target-3:")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: category/package/fname.mk:8: Unusual target \"target-3\".")
+}
+
 func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
 	t := s.Init(c)
 
@@ -34,6 +155,30 @@ func (s *Suite) Test_MkLineChecker_CheckVartype(c *check.C) {
 	MkLineChecker{mkline}.CheckVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
 
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_CheckVartype__skip(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wno-types")
+	t.SetupVartypes()
+	mkline := t.NewMkLine("fname", 1, "DISTNAME=invalid:::distname")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_CheckVartype__append_to_non_list(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	mkline := t.NewMkLine("fname", 1, "DISTNAME+=suffix")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"WARN: fname:1: The \"+=\" operator should only be used with lists.")
 }
 
 // Pkglint once interpreted all lists as consisting of shell tokens,
@@ -138,14 +283,19 @@ func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarassignPermissions(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
+	t.SetupCommandLine("-Wall,no-space")
 	t.SetupVartypes()
-	mkline := t.NewMkLine("options.mk", 2, "PKG_DEVELOPER?=\tyes")
+	mklines := t.NewMkLines("options.mk",
+		MkRcsID,
+		"PKG_DEVELOPER?= yes",
+		"BUILD_DEFS?=    VARBASE")
 
-	MkLineChecker{mkline}.checkVarassignPermissions()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:2: The variable PKG_DEVELOPER may not be given a default value by any package.")
+		"WARN: options.mk:2: The variable PKG_DEVELOPER may not be given a default value by any package.",
+		"WARN: options.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
+		"WARN: options.mk:3: The variable BUILD_DEFS may not be given a default value (only appended to) in this file.")
 }
 
 // Don't check the permissions for infrastructure files since they have their own rules.
@@ -381,6 +531,28 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:4: The variable PATH should be quoted as part of a shell word.")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+	mklines := t.SetupFileMkLines("options.mk",
+		MkRcsID,
+		"CONFIGURE_ARGS+=        ${CFLAGS:Q}",
+		"CONFIGURE_ARGS+=        ${CFLAGS:M*:Q}",
+		"CONFIGURE_ARGS+=        ${ADA_FLAGS:Q}",
+		"CONFIGURE_ARGS+=        ${ADA_FLAGS:M*:Q}",
+		"CONFIGURE_ENV+=         ${CFLAGS:Q}",
+		"CONFIGURE_ENV+=         ${CFLAGS:M*:Q}",
+		"CONFIGURE_ENV+=         ${ADA_FLAGS:Q}",
+		"CONFIGURE_ENV+=         ${ADA_FLAGS:M*:Q}")
+
+	mklines.Check()
+
+	// FIXME: There should be some notes and warnings; prevented by the PERL5 case in VariableNeedsQuoting.
+	t.CheckOutputEmpty()
 }
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
