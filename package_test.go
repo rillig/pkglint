@@ -2,6 +2,40 @@ package main
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__file_but_not_package(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/dependency/buildlink3.mk")
+	G.Pkg = NewPackage(t.File("category/package"))
+	mklines := t.NewMkLines("category/package/buildlink3.mk",
+		MkRcsID,
+		"",
+		".include \"../../category/dependency/buildlink3.mk\"")
+
+	G.Pkg.checklinesBuildlink3Inclusion(mklines)
+
+	t.CheckOutputLines(
+		"WARN: category/package/buildlink3.mk:3: category/dependency/buildlink3.mk is included by this file but not by the package.")
+}
+
+func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__package_but_not_file(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/dependency/buildlink3.mk")
+	G.Pkg = NewPackage(t.File("category/package"))
+	G.Pkg.bl3["../../category/dependency/buildlink3.mk"] = t.NewLine("fname", 1, "")
+	mklines := t.NewMkLines("category/package/buildlink3.mk",
+		MkRcsID)
+
+	t.EnableTracingToLog()
+	G.Pkg.checklinesBuildlink3Inclusion(mklines)
+
+	t.CheckOutputLines(
+		"TRACE: + (*Package).checklinesBuildlink3Inclusion()",
+		"TRACE: 1   ../../category/dependency/buildlink3.mk/buildlink3.mk is included by the package but not by the buildlink3.mk file.",
+		"TRACE: - (*Package).checklinesBuildlink3Inclusion()")
+}
+
 func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	t := s.Init(c)
 
