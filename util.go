@@ -412,12 +412,13 @@ func (o *Once) FirstTime(what string) bool {
 // Scope remembers which variables are defined and which are used
 // in a certain scope, such as a package or a file.
 type Scope struct {
-	defined map[string]MkLine
-	used    map[string]MkLine
+	defined  map[string]MkLine
+	fallback map[string]string
+	used     map[string]MkLine
 }
 
 func NewScope() Scope {
-	return Scope{make(map[string]MkLine), make(map[string]MkLine)}
+	return Scope{make(map[string]MkLine), make(map[string]string), make(map[string]MkLine)}
 }
 
 // Define marks the variable and its canonicalized form as defined.
@@ -435,6 +436,10 @@ func (s *Scope) Define(varname string, mkline MkLine) {
 			trace.Step2("Defining %q in line %s", varcanon, mkline.Linenos())
 		}
 	}
+}
+
+func (s *Scope) Fallback(varname string, value string) {
+	s.fallback[varname] = value
 }
 
 // Use marks the variable and its canonicalized form as used.
@@ -513,6 +518,9 @@ func (s *Scope) Value(varname string) (value string, found bool) {
 	mkline := s.FirstDefinition(varname)
 	if mkline != nil {
 		return mkline.Value(), true
+	}
+	if fallback, ok := s.fallback[varname]; ok {
+		return fallback, true
 	}
 	return "", false
 }

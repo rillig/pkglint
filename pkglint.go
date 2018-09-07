@@ -360,14 +360,8 @@ func resolveVariableRefs(text string) string {
 		if !visited[varname] {
 			visited[varname] = true
 			if G.Pkg != nil {
-				switch varname {
-				case "KRB5_TYPE":
-					return "heimdal"
-				case "PGSQL_VERSION":
-					return "95"
-				}
-				if mkline := G.Pkg.vars.FirstDefinition(varname); mkline != nil {
-					return mkline.Value()
+				if value, ok := G.Pkg.vars.Value(varname); ok {
+					return value
 				}
 			}
 			if G.Mk != nil {

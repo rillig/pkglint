@@ -113,5 +113,6 @@ func (s *Suite) Test_LicenseChecker_checkLicenseName__LICENSE_FILE(c *check.C) {
 	// FIXME: It should be allowed to place a license file directly into
 	// the package directory.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/my-license: Unexpected file found.", "0 errors and 1 warning found.")
+		"WARN: ~/category/package/my-license: Unexpected file found.",
+		"0 errors and 1 warning found.")
 }

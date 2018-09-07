@@ -350,6 +350,41 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 		"WARN: Makefile: No COMMENT given.")
 }
 
+func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/Makefile")
+	t.CreateFileLines("other/package/Makefile",
+		MkRcsID)
+	t.CreateFileLines("other/package/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines("other/package/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = asdf")
+	t.CreateFileLines("category/package/patches/patch-aa",
+		RcsID)
+	t.Chdir("category/package")
+	t.SetupFileLines("Makefile",
+		MkRcsID,
+		"",
+		"CATEGORIES=category",
+		"",
+		"COMMENT=\tComment",
+		"LICENSE=\t2-clause-bsd",
+		"PKGDIR=\t../../other/package")
+
+	// DISTINFO_FILES is resolved relative to PKGDIR, the other places
+	// are resolved relative to the package base directory.
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"WARN: ../../other/package/distinfo:3: Patch file \"patch-aa\" does not exist in directory \"../../category/package/patches\".")
+}
+
 func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
 	t := s.Init(c)
 

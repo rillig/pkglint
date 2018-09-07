@@ -51,7 +51,7 @@ func NewPackage(dir string) *Package {
 		Pkgdir:                ".",
 		Filesdir:              "files",
 		Patchdir:              "patches",
-		DistinfoFile:          "distinfo",
+		DistinfoFile:          "${PKGDIR}/distinfo",
 		PlistDirs:             make(map[string]bool),
 		PlistFiles:            make(map[string]bool),
 		vars:                  NewScope(),
@@ -61,13 +61,22 @@ func NewPackage(dir string) *Package {
 		unconditionalIncludes: make(map[string]MkLine),
 	}
 	pkg.vars.DefineAll(G.Pkgsrc.UserDefinedVars)
+
+	pkg.vars.Fallback("PKGDIR", ".")
+	pkg.vars.Fallback("DISTINFO_FILE", "${PKGDIR}/distinfo")
+	pkg.vars.Fallback("FILESDIR", "files")
+	pkg.vars.Fallback("PATCHDIR", "patches")
+	pkg.vars.Fallback("KRB5_TYPE", "heimdal")
+	pkg.vars.Fallback("PGSQL_VERSION", "95")
+
 	return pkg
 }
 
 // File returns the (possibly absolute) path to relativeFilename,
 // as resolved from the package's directory.
+// Variables that are known in the package are resolved, e.g. ${PKGDIR}.
 func (pkg *Package) File(relativeFilename string) string {
-	return cleanpath(pkg.dir + "/" + relativeFilename)
+	return cleanpath(resolveVariableRefs(pkg.dir + "/" + relativeFilename))
 }
 
 func (pkg *Package) checkPossibleDowngrade() {
@@ -156,7 +165,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 		files = append(files, dirglob(pkg.File(pkg.Filesdir))...)
 	}
 	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
-	if pkg.DistinfoFile != "distinfo" && pkg.DistinfoFile != "./distinfo" {
+	if pkg.DistinfoFile != pkg.vars.fallback["DISTINFO_FILE"] {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
 	haveDistinfo := false
@@ -199,7 +208,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 		pkg.checkLocallyModified(fname)
 	}
 
-	if G.opts.CheckDistinfo && G.opts.CheckPatches {
+	if pkg.Pkgdir == "." && G.opts.CheckDistinfo && G.opts.CheckPatches {
 		if havePatches && !haveDistinfo {
 			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run \"%s makepatchsum\".", confMake)
 		}
@@ -239,10 +248,10 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 	allLines.DetermineUsedVariables()
 	allLines.CheckRedundantVariables()
 
-	pkg.Pkgdir = pkg.expandVariableWithDefault("PKGDIR", ".")
-	pkg.DistinfoFile = pkg.expandVariableWithDefault("DISTINFO_FILE", "distinfo")
-	pkg.Filesdir = pkg.expandVariableWithDefault("FILESDIR", "files")
-	pkg.Patchdir = pkg.expandVariableWithDefault("PATCHDIR", "patches")
+	pkg.Pkgdir, _ = pkg.vars.Value("PKGDIR")
+	pkg.DistinfoFile, _ = pkg.vars.Value("DISTINFO_FILE")
+	pkg.Filesdir, _ = pkg.vars.Value("FILESDIR")
+	pkg.Patchdir, _ = pkg.vars.Value("PATCHDIR")
 
 	// See lang/php/ext.mk
 	if varIsDefined("PHPEXT_MK") {
