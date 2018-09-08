@@ -49,14 +49,9 @@ loop:
 			// The conditionals are typically for OPSYS and MACHINE_ARCH.
 
 		case mkline.IsInclude():
-			includedFile := mkline.IncludeFile()
-			switch {
-			case matches(includedFile, `/[^/]+\.buildlink3\.mk$`):
-			case matches(includedFile, `/[^/]+\.builtin\.mk$`):
-			case includedFile == "../../mk/bsd.options.mk":
+			if mkline.IncludeFile() == "../../mk/bsd.options.mk" {
 				exp.Advance()
 				break loop
-			case IsPrefs(includedFile):
 			}
 
 		default:

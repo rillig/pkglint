@@ -109,6 +109,10 @@ func (s *Suite) Test_ChecklinesOptionsMk__malformed_condition(c *check.C) {
 		"PKG_SUPPORTED_OPTIONS=          # none",
 		"PKG_SUGGESTED_OPTIONS=          # none",
 		"",
+		"# Comment",
+		".if ${OPSYS} == NetBSD",
+		".endif",
+		"",
 		".include \"../../mk/bsd.options.mk\"",
 		"",
 		".if ${OPSYS} == 'Darwin'",
@@ -117,5 +121,5 @@ func (s *Suite) Test_ChecklinesOptionsMk__malformed_condition(c *check.C) {
 	ChecklinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:9: Invalid condition, unrecognized part: \"${OPSYS} == 'Darwin'\".")
+		"WARN: ~/category/package/options.mk:13: Invalid condition, unrecognized part: \"${OPSYS} == 'Darwin'\".")
 }
