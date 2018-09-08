@@ -773,10 +773,10 @@ func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime
 	mkline := ck.MkLine
 	atoms := NewShTokenizer(mkline.Line, mkline.Value(), false).ShAtoms()
 	for i, atom := range atoms {
-		if atom.Type == shtVaruse {
+		if varuse := atom.VarUse(); varuse != nil {
 			isWordPart := isWordPart(atoms, i)
 			vuc := &VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), isWordPart}
-			ck.CheckVaruse(atom.Data.(*MkVarUse), vuc)
+			ck.CheckVaruse(varuse, vuc)
 		}
 	}
 }

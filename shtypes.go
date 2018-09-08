@@ -40,15 +40,15 @@ type ShAtom struct {
 	Type    ShAtomType
 	MkText  string
 	Quoting ShQuoting // The quoting state at the end of the token
-	Data    interface{}
+	data    interface{}
 }
 
 func (atom *ShAtom) String() string {
-	if atom.Type == shtWord && atom.Quoting == shqPlain && atom.Data == nil {
+	if atom.Type == shtWord && atom.Quoting == shqPlain && atom.data == nil {
 		return fmt.Sprintf("%q", atom.MkText)
 	}
 	if atom.Type == shtVaruse {
-		varuse := atom.Data.(*MkVarUse)
+		varuse := atom.VarUse()
 		return fmt.Sprintf("varuse(%q)", varuse.varname+varuse.Mod())
 	}
 	return fmt.Sprintf("ShAtom(%v, %q, %s)", atom.Type, atom.MkText, atom.Quoting)
@@ -57,7 +57,7 @@ func (atom *ShAtom) String() string {
 // VarUse returns a read access to a Makefile variable, or nil for plain shell tokens.
 func (atom *ShAtom) VarUse() *MkVarUse {
 	if atom.Type == shtVaruse {
-		return atom.Data.(*MkVarUse)
+		return atom.data.(*MkVarUse)
 	}
 	return nil
 }

@@ -38,7 +38,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		return &ShAtom{shtVaruse, text, shqPlain, varuse}
 	}
 	q := func(q ShQuoting, token *ShAtom) *ShAtom {
-		return &ShAtom{token.Type, token.MkText, q, token.Data}
+		return &ShAtom{token.Type, token.MkText, q, token.data}
 	}
 	whitespace := func(s string) *ShAtom { return token(shtSpace, s, shqPlain) }
 	space := token(shtSpace, " ", shqPlain)
