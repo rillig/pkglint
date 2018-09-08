@@ -221,10 +221,6 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			}
 		}
 	}
-
-	if !isEmptyDir(pkg.File("scripts")) {
-		NewLineWhole(pkg.File("scripts")).Warnf("This directory and its contents are deprecated! Please call the script(s) explicitly from the corresponding target(s) in the pkg's Makefile.")
-	}
 }
 
 func (pkg *Package) loadPackageMakefile() *MkLines {
