@@ -632,7 +632,10 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 		"_TOOLS_VARNAME.sed=     SED",
 		"DIST_SUBDIR=            ${PKGNAME}",
 		"WRKSRC=                 ${PKGNAME}",
-		"SITES_distfile.tar.gz=  ${MASTER_SITES_GITHUB:=user/}")
+		"SITES_distfile.tar.gz=  ${MASTER_SITES_GITHUB:=user/}",
+		// TODO: The first of the below assignments should be flagged as redundant by RedundantScope.
+		"PYTHON_VERSIONS_ACCEPTED= -13",
+		"PYTHON_VERSIONS_ACCEPTED= 27 36")
 
 	mklines.Check()
 
@@ -643,7 +646,10 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 		"WARN: ~/module.mk:4: PKGNAME should not be used in DIST_SUBDIR, as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC, as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
-		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.")
+		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.",
+		"WARN: ~/module.mk:7: Invalid version number \"-13\".",
+		"ERROR: ~/module.mk:7: All values for PYTHON_VERSIONS_ACCEPTED must be positive integers.",
+		"WARN: ~/module.mk:8: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {

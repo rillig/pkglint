@@ -232,10 +232,20 @@ func (s *Suite) Test_Explain__long_lines(c *check.C) {
 	t := s.Init(c)
 
 	Explain(
-		"123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789 ")
+		"123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789")
 
 	t.CheckOutputLines(
-		"Long explanation line: 123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789 ",
+		"Long explanation line: 123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789",
 		"Break after: 123456789 12345678. abcdefghi. 123456789 123456789 123456789",
-		"Short space after period: 123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789 ")
+		"Short space after period: 123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789")
+}
+
+func (s *Suite) Test_Explain__trailing_whitespace(c *check.C) {
+	t := s.Init(c)
+
+	Explain(
+		"This is a space: ")
+
+	t.CheckOutputLines(
+		"Trailing whitespace: \"This is a space: \"")
 }
