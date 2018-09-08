@@ -92,8 +92,8 @@ func CheckwordAbsolutePathname(line Line, word string) {
 	case word == "/bin/sh":
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
 
-	case regex.Matches(word, `^/s\W`):
-		// Probably a sed(1) command
+	case regex.Matches(word, `/s\W`):
+		// Probably a sed(1) command, e.g. /find/s,replace,with,
 
 	case regex.Matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.

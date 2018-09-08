@@ -4,7 +4,7 @@ import (
 	"gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
+func (s *Suite) Test_CheckLineAbsolutePathname(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("Makefile", 1, "# dummy")
@@ -18,6 +18,10 @@ func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
 	CheckLineAbsolutePathname(line, "cat /dev/stdout")
 	CheckLineAbsolutePathname(line, "cat /dev/stderr")
 	CheckLineAbsolutePathname(line, "printf '#! /bin/sh\\nexit 0'")
+
+	// This is not a file name at all, but certainly looks like one.
+	// Nevertheless, pkglint doesn't fall into the trap.
+	CheckLineAbsolutePathname(line, "sed -e /usr/s/usr/var/g")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Found absolute pathname: /bin",
