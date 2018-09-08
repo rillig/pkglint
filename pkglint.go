@@ -609,9 +609,6 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 			}
 		}
 
-	case basename == "TODO" || basename == "README":
-		// Ok
-
 	case hasPrefix(basename, "CHANGES-"):
 		// This only checks the file, but doesn't register the changes globally.
 		_ = pkglint.Pkgsrc.loadDocChangesFromFile(fname)

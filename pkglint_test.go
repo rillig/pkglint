@@ -261,6 +261,48 @@ func (s *Suite) Test_Pkglint_CheckDirent__outside(c *check.C) {
 		"ERROR: ~: Cannot determine the pkgsrc root directory for \"~\".")
 }
 
+func (s *Suite) Test_Pkglint_CheckDirent__empty_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/package/CVS/Entries")
+
+	G.CheckDirent(t.File("category/package"))
+
+	// Empty directories are silently skipped.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Pkglint_CheckDirent__files_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/package/files/README.md")
+
+	G.CheckDirent(t.File("category/package/files"))
+
+	// This diagnostic is not really correct, but it's an edge case anyway.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/files: Cannot check directories outside a pkgsrc tree.")
+}
+
+func (s *Suite) Test_Pkglint_CheckDirent__manual_patch(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/package/patches/manual-configure")
+	t.CreateFileLines("category/package/Makefile",
+		MkRcsID)
+
+	G.CheckDirent(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
+		"WARN: ~/category/package/distinfo: File not found. Please run \"@BMAKE@ makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
+		"ERROR: ~/category/package/Makefile: Each package must define its LICENSE.",
+		"WARN: ~/category/package/Makefile: No COMMENT given.")
+}
+
 func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 	t := s.Init(c)
 
