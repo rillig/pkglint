@@ -192,7 +192,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 		}
 		if fname == pkg.File("Makefile") {
 			if st, err := os.Lstat(fname); err == nil {
-				pkglint.checkExecutable(st, fname)
+				pkglint.checkExecutable(st)
 			}
 			if G.opts.CheckMakefile {
 				pkg.checkfilePackageMakefile(fname, lines)

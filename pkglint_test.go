@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/trace"
@@ -817,3 +818,42 @@ func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
 		"ERROR: wip/package/TODO: Must be cleaned up before committing the package.",
 		"4 errors and 0 warnings found.")
 }
+
+func (s *Suite) Test_CheckfileMk__enoent(c *check.C) {
+	t := s.Init(c)
+
+	CheckfileMk(t.File("fname.mk"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/fname.mk: Cannot be read.")
+}
+
+func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
+	t := s.Init(c)
+
+	G.checkExecutable(ExecutableFileInfo{t.File("fname.mk")})
+
+	t.CheckOutputLines(
+		"WARN: ~/fname.mk: Should not be executable.")
+
+	t.SetupCommandLine("--autofix")
+
+	G.checkExecutable(ExecutableFileInfo{t.File("fname.mk")})
+
+	// FIXME: The error message "Cannot clear executable bits" is swallowed.
+	t.CheckOutputLines(
+		"AUTOFIX: ~/fname.mk: Clearing executable bits")
+}
+
+// ExecutableFileInfo mocks a FileInfo because on Windows,
+// regular files don't have the executable bit.
+type ExecutableFileInfo struct {
+	name string
+}
+
+func (i ExecutableFileInfo) Name() string       { return i.name }
+func (i ExecutableFileInfo) Size() int64        { return 13 }
+func (i ExecutableFileInfo) Mode() os.FileMode  { return 0777 }
+func (i ExecutableFileInfo) ModTime() time.Time { return time.Unix(0, 0) }
+func (i ExecutableFileInfo) IsDir() bool        { return false }
+func (i ExecutableFileInfo) Sys() interface{}   { return nil }

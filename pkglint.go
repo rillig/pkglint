@@ -516,7 +516,7 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 		return
 	}
 
-	pkglint.checkExecutable(st, fname)
+	pkglint.checkExecutable(st)
 
 	switch {
 	case st.Mode().IsDir():
@@ -627,7 +627,8 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 	}
 }
 
-func (pkglint *Pkglint) checkExecutable(st os.FileInfo, fname string) {
+func (pkglint *Pkglint) checkExecutable(st os.FileInfo) {
+	fname := st.Name()
 	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
 		line := NewLine(fname, 0, "", nil)
 		fix := line.Autofix()
@@ -640,7 +641,7 @@ func (pkglint *Pkglint) checkExecutable(st os.FileInfo, fname string) {
 		fix.Custom(func(printAutofix, autofix bool) {
 			fix.Describef(0, "Clearing executable bits")
 			if autofix {
-				if err := os.Chmod(line.Filename, st.Mode()&^0111); err != nil {
+				if err := os.Chmod(fname, st.Mode()&^0111); err != nil {
 					line.Errorf("Cannot clear executable bits: %s", err)
 				}
 			}
