@@ -21,12 +21,16 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 	t.SetupVartypes()
 
 	t.CreateFileLines("mk/bsd.prefs.mk")
-	mkline := t.NewMkLine("category/package/buildlink3.mk", 1, ".include \"../../mk/bsd.prefs.mk\"")
+	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
+		".include \"../../mk/bsd.prefs.mk\"")
+	// If the buildlink3.mk file is not actually created, resolving the
+	// relative path fails since that depends on the actual file system,
+	// not on syntactical paths; see os.Stat in CheckRelativePath.
 
-	MkLineChecker{mkline}.Check()
+	MkLineChecker{mklines.mklines[0]}.Check()
 
 	t.CheckOutputLines(
-		"NOTE: category/package/buildlink3.mk:1: For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+		"NOTE: ~/category/package/buildlink3.mk:1: For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
@@ -38,7 +42,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 	t.CreateFileLines("graphics/jpeg/buildlink3.mk")
 	t.CreateFileLines("devel/intltool/buildlink3.mk")
 	t.CreateFileLines("devel/intltool/builtin.mk")
-	mklines := t.NewMkLines("category/package/fname.mk",
+	mklines := t.SetupFileMkLines("category/package/fname.mk",
 		MkRcsID,
 		"",
 		".include \"../../pkgtools/x11-links/buildlink3.mk\"",
@@ -49,12 +53,12 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: category/package/fname.mk:3: ../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
+		"ERROR: ~/category/package/fname.mk:3: ../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
 			"Include \"../../mk/x11.buildlink3.mk\" instead.",
-		"ERROR: category/package/fname.mk:4: ../../graphics/jpeg/buildlink3.mk must not be included directly. "+
+		"ERROR: ~/category/package/fname.mk:4: ../../graphics/jpeg/buildlink3.mk must not be included directly. "+
 			"Include \"../../mk/jpeg.buildlink3.mk\" instead.",
-		"WARN: category/package/fname.mk:5: Please write \"USE_TOOLS+= intltool\" instead of this line.",
-		"ERROR: category/package/fname.mk:6: ../../devel/intltool/builtin.mk must not be included directly. "+
+		"WARN: ~/category/package/fname.mk:5: Please write \"USE_TOOLS+= intltool\" instead of this line.",
+		"ERROR: ~/category/package/fname.mk:6: ../../devel/intltool/builtin.mk must not be included directly. "+
 			"Include \"../../devel/intltool/buildlink3.mk\" instead.")
 }
 
