@@ -334,6 +334,43 @@ func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--dumpmakefile")
+	t.SetupVartypes()
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/Makefile")
+	t.CreateFileLines("category/package/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines("category/package/distinfo",
+		RcsID,
+		"",
+		"SHA1 (distfile-1.0.tar.gz) = 12341234...",
+		"RMD160 (distfile-1.0.tar.gz) = 12341234...",
+		"SHA512 (distfile-1.0.tar.gz) = 12341234...",
+		"Size (distfile-1.0.tar.gz) = 12341234...")
+	t.SetupFileLines("category/package/Makefile",
+		MkRcsID,
+		"",
+		"CATEGORIES=category",
+		"",
+		"COMMENT=\tComment",
+		"LICENSE=\t2-clause-bsd")
+
+	G.checkdirPackage(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"Whole Makefile (with all included files) follows:",
+		"~/category/package/Makefile:1: # $NetBSD$",
+		"~/category/package/Makefile:2: ",
+		"~/category/package/Makefile:3: CATEGORIES=category",
+		"~/category/package/Makefile:4: ",
+		"~/category/package/Makefile:5: COMMENT=\tComment",
+		"~/category/package/Makefile:6: LICENSE=\t2-clause-bsd")
+}
+
 func (s *Suite) Test_checkdirPackage(c *check.C) {
 	t := s.Init(c)
 
@@ -377,7 +414,7 @@ func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
 		"LICENSE=\t2-clause-bsd",
 		"PKGDIR=\t../../other/package")
 
-	// DISTINFO_FILES is resolved relative to PKGDIR, the other places
+	// DISTINFO_FILE is resolved relative to PKGDIR, the other places
 	// are resolved relative to the package base directory.
 	G.checkdirPackage(".")
 
