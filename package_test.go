@@ -364,7 +364,7 @@ func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
 	t.CreateFileLines("other/package/distinfo",
 		RcsID,
 		"",
-		"SHA1 (patch-aa) = asdf")
+		"SHA1 (patch-aa) = da39a3ee5e6b4b0d3255bfef95601890afd80709")
 	t.CreateFileLines("category/package/patches/patch-aa",
 		RcsID)
 	t.Chdir("category/package")
@@ -382,7 +382,7 @@ func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: ../../other/package/distinfo:3: Patch file \"patch-aa\" does not exist in directory \"../../category/package/patches\".")
+		"ERROR: patches/patch-aa:1: Patch files must not be empty.")
 }
 
 func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
