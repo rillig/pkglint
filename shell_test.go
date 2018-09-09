@@ -138,6 +138,10 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
+	t.SetupToolUsable("awk", "AWK")
+	t.SetupToolUsable("cp", "CP")
+	t.SetupToolUsable("mkdir", "MKDIR") // This is actually "mkdir -p".
+	t.SetupToolUsable("unzip", "UNZIP_CMD")
 
 	checkShellCommandLine := func(shellCommand string) {
 		G.Mk = t.NewMkLines("fname",
@@ -216,9 +220,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	checkShellCommandLine("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
 
 	t.CheckOutputLines(
-		"WARN: fname:1: The exitcode of \"unzip\" at the left of the | operator is ignored.",
-		"WARN: fname:1: Unknown shell command \"unzip\".",
-		"WARN: fname:1: Unknown shell command \"awk\".")
+		"WARN: fname:1: The exitcode of \"unzip\" at the left of the | operator is ignored.")
 
 	// From mail/thunderbird/Makefile, rev. 1.159
 	checkShellCommandLine("" +
@@ -232,12 +234,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: fname:1: XPI_FILES is used but not defined.",
-		"WARN: fname:1: The exitcode of \"${UNZIP_CMD}\" at the left of the | operator is ignored.",
-		"WARN: fname:1: UNZIP_CMD is used but not defined.",
-		"WARN: fname:1: Unknown shell command \"awk\".",
-		"WARN: fname:1: Unknown shell command \"${MKDIR}\".",
-		"WARN: fname:1: MKDIR is used but not defined.",
-		"WARN: fname:1: UNZIP_CMD is used but not defined.")
+		"WARN: fname:1: The exitcode of \"${UNZIP_CMD}\" at the left of the | operator is ignored.")
 
 	// From x11/wxGTK28/Makefile
 	checkShellCommandLine("" +
@@ -255,8 +252,18 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	checkShellCommandLine("@cp from to")
 
 	t.CheckOutputLines(
-		"WARN: fname:1: The shell command \"cp\" should not be hidden.",
-		"WARN: fname:1: Unknown shell command \"cp\".")
+		"WARN: fname:1: The shell command \"cp\" should not be hidden.")
+
+	checkShellCommandLine("-cp from to")
+
+	t.CheckOutputLines(
+		"WARN: fname:1: Using a leading \"-\" to suppress errors is deprecated.")
+
+	checkShellCommandLine("-${MKDIR} deeply/nested/subdir")
+
+	t.CheckOutputLines(
+		"NOTE: fname:1: You don't need to use \"-\" before \"${MKDIR} deeply/nested/subdir\".",
+		"WARN: fname:1: Using a leading \"-\" to suppress errors is deprecated.")
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Pkg.PlistDirs["share/pkgbase"] = true
