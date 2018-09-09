@@ -764,16 +764,6 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	NewMkShWalker().Walk(list, callback)
 }
 
-func (spc *ShellProgramChecker) checkWords(words []*ShToken, checkQuoting bool, time ToolTime) {
-	if trace.Tracing {
-		defer trace.Call()()
-	}
-
-	for _, word := range words {
-		spc.checkWord(word, checkQuoting, time)
-	}
-}
-
 func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
 		defer trace.Call(word.MkText)()
