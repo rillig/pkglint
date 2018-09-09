@@ -26,7 +26,8 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 			commands = append(commands, fmt.Sprintf("%16s %s", kind, detail))
 		}
 
-		callback := NewMkShWalkCallback()
+		walker := NewMkShWalker()
+		callback := &walker.Callback
 		callback.List = func(list *MkShList) { add("List", "with %d andOrs", len(list.AndOrs)) }
 		callback.AndOr = func(andor *MkShAndOr) { add("AndOr", "with %d pipelines", len(andor.Pipes)) }
 		callback.Pipeline = func(pipeline *MkShPipeline) { add("Pipeline", "with %d commands", len(pipeline.Cmds)) }
@@ -45,7 +46,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		callback.For = func(forClause *MkShForClause) { add("For", "variable %s", forClause.Varname) }
 		callback.Varname = func(varname string) { add("Varname", "%s", varname) }
 
-		NewMkShWalker().Walk(list, callback)
+		walker.Walk(list)
 
 		c.Check(commands, deepEquals, []string{
 			"            List with 5 andOrs",

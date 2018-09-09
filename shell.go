@@ -338,25 +338,25 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 	spc := &ShellProgramChecker{shline}
 	spc.checkConditionalCd(program)
 
-	callback := NewMkShWalkCallback()
-	callback.SimpleCommand = func(command *MkShSimpleCommand) {
+	walker := NewMkShWalker()
+	walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
 		scc := NewSimpleCommandChecker(shline, command, time)
 		scc.Check()
 		if scc.strcmd.Name == "set" && scc.strcmd.AnyArgMatches(`^-.*e`) {
 			*pSetE = true
 		}
 	}
-	callback.List = func(list *MkShList) {
+	walker.Callback.List = func(list *MkShList) {
 		spc.checkSetE(list, pSetE)
 	}
-	callback.Pipeline = func(pipeline *MkShPipeline) {
+	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
 		spc.checkPipeExitcode(line, pipeline)
 	}
-	callback.Word = func(word *ShToken) {
+	walker.Callback.Word = func(word *ShToken) {
 		spc.checkWord(word, false, time)
 	}
 
-	NewMkShWalker().Walk(program, callback)
+	walker.Walk(program)
 }
 
 func (shline *ShellLine) CheckShellCommands(shellcmds string, time ToolTime) {
@@ -739,20 +739,20 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 		}
 	}
 
-	callback := NewMkShWalkCallback()
-	callback.If = func(ifClause *MkShIfClause) {
+	walker := NewMkShWalker()
+	walker.Callback.If = func(ifClause *MkShIfClause) {
 		for _, cond := range ifClause.Conds {
 			if simple := getSimple(cond); simple != nil {
 				checkConditionalCd(simple)
 			}
 		}
 	}
-	callback.Loop = func(loop *MkShLoopClause) {
+	walker.Callback.Loop = func(loop *MkShLoopClause) {
 		if simple := getSimple(loop.Cond); simple != nil {
 			checkConditionalCd(simple)
 		}
 	}
-	callback.Pipeline = func(pipeline *MkShPipeline) {
+	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
 		if pipeline.Negated {
 			spc.shline.mkline.Warnf("The Solaris /bin/sh does not support negation of shell commands.")
 			Explain(
@@ -761,7 +761,7 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 				"https://www.gnu.org/software/autoconf/manual/autoconf.html#Limitations-of-Builtins")
 		}
 	}
-	NewMkShWalker().Walk(list, callback)
+	walker.Walk(list)
 }
 
 func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool, time ToolTime) {
