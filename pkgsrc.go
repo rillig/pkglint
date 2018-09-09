@@ -139,8 +139,10 @@ func (src *Pkgsrc) LoadInfrastructure() {
 // Example:
 //  Latest("lang", `^php[0-9]+$`, "../../lang/$0") => "../../lang/php72"
 func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string {
-	if G.Testing && !(hasPrefix(string(re), "^") && hasSuffix(string(re), "$")) {
-		G.Panicf("Regular expression %q must be anchored at both ends.", re)
+	if G.Testing {
+		G.Assertf(
+			hasPrefix(string(re), "^") && hasSuffix(string(re), "$"),
+			"Regular expression %q must be anchored at both ends.", re)
 	}
 
 	cacheKey := category + "/" + string(re) + " => " + repl

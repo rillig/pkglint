@@ -338,6 +338,17 @@ func (pkglint *Pkglint) Panicf(format string, args ...interface{}) {
 	panic(pkglintFatal{})
 }
 
+// Assertf checks that the condition is true. Otherwise it terminates the
+// process with a fatal error message.
+//
+// This method must only be used for programming errors.
+// For runtime errors, use Panicf.
+func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
+	if !cond {
+		pkglint.Panicf(format, args...)
+	}
+}
+
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
 func findPkgsrcTopdir(fname string) string {
 	for _, dir := range [...]string{".", "..", "../..", "../../.."} {
