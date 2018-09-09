@@ -372,8 +372,8 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 	}
 
 	if adjustDepth {
-		if m, pkgpath := match1(tmp, `^\.\./\.\./([^.].*)$`); m {
-			tmp = pkgsrcdir + "/" + pkgpath
+		if hasPrefix(tmp, "../../") && !hasPrefix(tmp[6:], ".") {
+			tmp = pkgsrcdir + "/" + tmp[6:]
 		}
 	}
 
