@@ -918,9 +918,14 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	switch directive {
 	case "if":
 		// For multiple-inclusion guards, the indentation stays at the same level.
-		if m, varname := match1(args, `^!defined\(([\w]+_MK)\)$`); m {
-			ind.AddVar(varname)
-		} else {
+		guard := false
+		if hasPrefix(args, "!defined") && hasSuffix(args, "_MK)") {
+			if m, varname := match1(args, `^!defined\((\w+_MK)\)$`); m {
+				ind.AddVar(varname)
+				guard = true
+			}
+		}
+		if !guard {
 			ind.top().depth += 2
 		}
 
