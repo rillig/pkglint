@@ -67,17 +67,17 @@ func (atom *ShAtom) VarUse() *MkVarUse {
 type ShQuoting uint8
 
 const (
-	shqPlain ShQuoting = iota
-	shqDquot
-	shqSquot
-	shqBackt
-	shqSubsh
-	shqDquotBackt
-	shqBacktDquot
-	shqBacktSquot
-	shqSubshSquot
-	shqDquotBacktDquot
-	shqDquotBacktSquot
+	shqPlain           ShQuoting = iota // e.g. word
+	shqDquot                            // e.g. "word"
+	shqSquot                            // e.g. 'word'
+	shqBackt                            // e.g. `word`
+	shqSubsh                            // e.g. $(word)
+	shqDquotBackt                       // e.g. "`word`"
+	shqBacktDquot                       // e.g. `"word"`
+	shqBacktSquot                       // e.g. `'word'`
+	shqSubshSquot                       // e.g. $('word')
+	shqDquotBacktDquot                  // e.g. "`"word"`"
+	shqDquotBacktSquot                  // e.g. "`'word'`"
 )
 
 func (q ShQuoting) String() string {

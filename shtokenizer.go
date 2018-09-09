@@ -12,7 +12,8 @@ func NewShTokenizer(line Line, text string, emitWarnings bool) *ShTokenizer {
 }
 
 // ShAtom parses a basic building block of a shell program.
-// Examples for such atoms are: variable reference, operator, text, quote, space.
+// Examples for such atoms are: variable reference (both make and shell),
+// operator, text, quote, space.
 //
 // See ShQuote.Feed
 func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
