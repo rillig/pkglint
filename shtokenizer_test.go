@@ -60,6 +60,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	backtDquot := func(atom *ShAtom) *ShAtom { return q(shqBacktDquot, atom) }
 	backtSquot := func(atom *ShAtom) *ShAtom { return q(shqBacktSquot, atom) }
 	dquotBackt := func(atom *ShAtom) *ShAtom { return q(shqDquotBackt, atom) }
+	subshDquot := func(atom *ShAtom) *ShAtom { return q(shqSubshDquot, atom) }
 	subshSquot := func(atom *ShAtom) *ShAtom { return q(shqSubshSquot, atom) }
 	dquotBacktDquot := func(atom *ShAtom) *ShAtom { return q(shqDquotBacktDquot, atom) }
 	dquotBacktSquot := func(atom *ShAtom) *ShAtom { return q(shqDquotBacktSquot, atom) }
@@ -70,7 +71,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	use(operator, comment, varuse, text, whitespace)
 	use(space, semicolon, pipe)
 	use(backt, dquot, squot, subsh)
-	use(backtDquot, backtSquot, dquotBackt)
+	use(backtDquot, backtSquot, dquotBackt, subshDquot, subshSquot)
 	use(dquotBacktDquot, dquotBacktSquot)
 
 	check("" /* none */)
@@ -366,6 +367,19 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		text(")"),
 		space,
 		text("arg"))
+
+	check("$$(echo \"first\" 'second')",
+		subsh(subshell),
+		subsh(text("echo")),
+		subsh(space),
+		subshDquot(text("\"")),
+		subshDquot(text("first")),
+		subsh(text("\"")),
+		subsh(space),
+		subshSquot(text("'")),
+		subshSquot(text("second")),
+		subsh(text("'")),
+		text(")"))
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {

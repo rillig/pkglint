@@ -75,6 +75,7 @@ const (
 	shqDquotBackt                       // e.g. "`word`"
 	shqBacktDquot                       // e.g. `"word"`
 	shqBacktSquot                       // e.g. `'word'`
+	shqSubshDquot                       // e.g. $("word")
 	shqSubshSquot                       // e.g. $('word')
 	shqDquotBacktDquot                  // e.g. "`"word"`"
 	shqDquotBacktSquot                  // e.g. "`'word'`"
@@ -84,7 +85,7 @@ func (q ShQuoting) String() string {
 	return [...]string{
 		"plain",
 		"d", "s", "b", "S",
-		"db", "bd", "bs", "Ss",
+		"db", "bd", "bs", "Sd", "Ss",
 		"dbd", "dbs",
 	}[q]
 }
