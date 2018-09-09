@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
@@ -1060,5 +1061,27 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 }
 
 func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
-	return match3(text, `^\.(\s*)(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`)
+	repl := textproc.NewPrefixReplacer(text)
+	if repl.AdvanceStr(".") {
+		if repl.AdvanceHspace() {
+			indentation = repl.Str()
+		}
+		if repl.AdvanceStr("include") || repl.AdvanceStr("sinclude") {
+			directive = repl.Str()
+			repl.AdvanceHspace()
+			if repl.AdvanceByte('"') {
+				if repl.AdvanceBytesFunc(func(c byte) bool { return c != '"' }) {
+					filename = repl.Str()
+					if repl.AdvanceByte('"') {
+						repl.AdvanceHspace()
+						if repl.EOF() || repl.PeekByte() == '#' {
+							m = true
+							return
+						}
+					}
+				}
+			}
+		}
+	}
+	return false, "", "", ""
 }
