@@ -306,3 +306,21 @@ func (s *Suite) Test_naturalLess(c *check.C) {
 	c.Check(naturalLess("0000", "000"), equals, false)
 	c.Check(naturalLess("000", "000"), equals, false)
 }
+
+func (s *Suite) Test_varnameBase(c *check.C) {
+	c.Check(varnameBase("VAR"), equals, "VAR")
+	c.Check(varnameBase("VAR.param"), equals, "VAR")
+	c.Check(varnameBase(".CURDIR"), equals, ".CURDIR")
+}
+
+func (s *Suite) Test_varnameParam(c *check.C) {
+	c.Check(varnameParam("VAR"), equals, "")
+	c.Check(varnameParam("VAR.param"), equals, "param")
+	c.Check(varnameParam(".CURDIR"), equals, "")
+}
+
+func (s *Suite) Test_varnameCanon(c *check.C) {
+	c.Check(varnameCanon("VAR"), equals, "VAR")
+	c.Check(varnameCanon("VAR.param"), equals, "VAR.*")
+	c.Check(varnameCanon(".CURDIR"), equals, ".CURDIR")
+}

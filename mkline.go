@@ -379,7 +379,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 
 	tmp = cleanpath(tmp)
 
-	if trace.Tracing {
+	if trace.Tracing && relativePath != tmp {
 		trace.Step2("resolveVarsInRelativePath: %q => %q", relativePath, tmp)
 	}
 	return tmp

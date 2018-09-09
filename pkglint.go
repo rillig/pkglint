@@ -348,11 +348,7 @@ func findPkgsrcTopdir(fname string) string {
 	return ""
 }
 
-func resolveVariableRefs(text string) string {
-	if trace.Tracing {
-		defer trace.Call1(text)()
-	}
-
+func resolveVariableRefs(text string) (resolved string) {
 	visited := make(map[string]bool) // To prevent endless loops
 
 	replacer := func(m string) string {
@@ -377,6 +373,9 @@ func resolveVariableRefs(text string) string {
 	for {
 		replaced := regex.Compile(`\$\{([\w.]+)\}`).ReplaceAllStringFunc(str, replacer)
 		if replaced == str {
+			if trace.Tracing && str != text {
+				trace.Stepf("resolveVariableRefs %q => %q", text, replaced)
+			}
 			return replaced
 		}
 		str = replaced

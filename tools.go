@@ -279,8 +279,8 @@ func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 }
 
 func (tr *Tools) AddAll(other Tools) {
-	if trace.Tracing {
-		defer trace.Call(other.TraceName, "to", tr.TraceName)()
+	if trace.Tracing && len(other.byName) != 0 {
+		defer trace.Call(other.TraceName+" to "+tr.TraceName, len(other.byName))()
 	}
 
 	for _, otherTool := range other.byName {

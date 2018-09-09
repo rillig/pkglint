@@ -220,21 +220,21 @@ func shorten(s string, maxChars int) string {
 
 func varnameBase(varname string) string {
 	dot := strings.IndexByte(varname, '.')
-	if dot != -1 {
+	if dot > 0 {
 		return varname[:dot]
 	}
 	return varname
 }
 func varnameCanon(varname string) string {
 	dot := strings.IndexByte(varname, '.')
-	if dot != -1 {
+	if dot > 0 {
 		return varname[:dot] + ".*"
 	}
 	return varname
 }
 func varnameParam(varname string) string {
 	dot := strings.IndexByte(varname, '.')
-	if dot != -1 {
+	if dot > 0 {
 		return varname[dot+1:]
 	}
 	return ""

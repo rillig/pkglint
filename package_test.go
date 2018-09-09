@@ -756,3 +756,38 @@ func (s *Suite) Test_NewPackage(c *check.C) {
 		check.PanicMatches,
 		`Package directory "category" must be two subdirectories below the pkgsrc root ".*".`)
 }
+
+// Before 2018-09-09, the .CURDIR variable did not have a fallback value.
+// When resolving the relative path x11/gst-x11/${.CURDIR}/../../multimedia/gst-base/distinfo,
+// "gst-x11/${.CURDIR}" was interpreted as "category/package", and the whole
+// path was resolved to "x11/multimedia/gst-base/distinfo, which of course
+// could not be found.
+func (s *Suite) Test__distinfo_from_other_package(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupPkgsrc()
+	t.Chdir(".")
+	t.CreateFileLines("x11/gst-x11/Makefile",
+		MkRcsID,
+		".include \"../../multimedia/gst-base/Makefile.common\"",
+		".include \"../../mk/bsd.pkg.mk\"")
+	t.CreateFileLines("multimedia/gst-base/Makefile.common",
+		MkRcsID,
+		".include \"plugins.mk\"")
+	t.CreateFileLines("multimedia/gst-base/plugins.mk",
+		MkRcsID,
+		"DISTINFO_FILE=\t${.CURDIR}/../../multimedia/gst-base/distinfo")
+	t.CreateFileLines("multimedia/gst-base/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = 1234")
+
+	G.CheckDirent("x11/gst-x11")
+
+	t.CheckOutputLines(
+		"WARN: x11/gst-x11/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
+		"ERROR: x11/gst-x11/Makefile: Each package must define its LICENSE.",
+		"WARN: x11/gst-x11/Makefile: No COMMENT given.",
+		"WARN: x11/gst-x11/../../multimedia/gst-base/distinfo:3: Patch file \"patch-aa\" does not exist in directory \"../../x11/gst-x11/patches\".")
+}

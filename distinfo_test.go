@@ -142,7 +142,7 @@ func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
 		MkRcsID,
 		"",
 		"PHPEXT_MK=      # defined",
-		"PHPPKGSRCDIR=   lang/php72",
+		"PHPPKGSRCDIR=   ../../lang/php72",
 		"LICENSE?=        unknown-license",
 		"COMMENT?=       Some PHP package",
 		"GENERATE_PLIST+=# none",

@@ -68,6 +68,7 @@ func NewPackage(dir string) *Package {
 	pkg.vars.Fallback("PATCHDIR", "patches")
 	pkg.vars.Fallback("KRB5_TYPE", "heimdal")
 	pkg.vars.Fallback("PGSQL_VERSION", "95")
+	pkg.vars.Fallback(".CURDIR", ".")
 
 	return pkg
 }
