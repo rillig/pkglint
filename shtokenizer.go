@@ -83,7 +83,7 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 	case repl.AdvanceRegexp(`^#.*`):
 		return &ShAtom{shtComment, repl.Group(0), q, nil}
 	case repl.AdvanceStr("$$("):
-		return &ShAtom{shtSubshell, repl.Str(), q, nil}
+		return &ShAtom{shtSubshell, repl.Str(), shqSubsh, nil}
 	}
 
 	return p.shAtomInternal(q, false, false)
@@ -134,29 +134,25 @@ func (p *ShTokenizer) shAtomBackt() *ShAtom {
 // compatibility with /bin/sh from Solaris 7.
 func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	const q = shqSubsh
-	if op := p.shOperator(q); op != nil {
-		return op
-	}
 	repl := p.parser.repl
-	mark := repl.Mark()
-	atom := func(typ ShAtomType) *ShAtom {
-		return &ShAtom{typ, repl.Since(mark), shqSubsh, nil}
-	}
 	switch {
 	case repl.AdvanceHspace():
-		return atom(shtSpace)
+		return &ShAtom{shtSpace, repl.Str(), q, nil}
 	case repl.AdvanceStr("\""):
 	//return &ShAtom{shtWord, repl.Str(), shqDquot, nil}
 	case repl.AdvanceStr("'"):
 		return &ShAtom{shtWord, repl.Str(), shqSubshSquot, nil}
 	case repl.AdvanceStr("`"):
 	//return &ShAtom{shtWord, repl.Str(), shqBackt, nil}
-	case repl.AdvanceRegexp(`^#.*`):
+	case repl.AdvanceRegexp(`^#[^)]*`):
 		return &ShAtom{shtComment, repl.Group(0), q, nil}
 	case repl.AdvanceStr(")"):
 		return &ShAtom{shtWord, repl.Str(), shqPlain, nil}
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)+`):
 		return &ShAtom{shtWord, repl.Group(0), q, nil}
+	}
+	if op := p.shOperator(q); op != nil {
+		return op
 	}
 	return nil
 }

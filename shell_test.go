@@ -27,7 +27,7 @@ func (s *Suite) Test_splitIntoShellTokens__dollar_slash(c *check.C) {
 func (s *Suite) Test_splitIntoShellTokens__dollar_subshell(c *check.C) {
 	words, rest := splitIntoShellTokens(dummyLine, "id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"")
 
-	c.Check(words, deepEquals, []string{"id=", "$$(", "${AWK}", "'{print}'", "<", "${WRKSRC}/idfile", ")", "&&", "echo", "\"$$id\""})
+	c.Check(words, deepEquals, []string{"id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)", "&&", "echo", "\"$$id\""})
 	c.Check(rest, equals, "")
 }
 

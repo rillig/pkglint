@@ -48,6 +48,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	space := whitespace(" ")
 	semicolon := operator(";")
 	pipe := operator("|")
+	subshell := token(shtSubshell, "$$(")
 
 	q := func(q ShQuoting, atom *ShAtom) *ShAtom {
 		return &ShAtom{atom.Type, atom.MkText, q, atom.data}
@@ -62,6 +63,15 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	subshSquot := func(atom *ShAtom) *ShAtom { return q(shqSubshSquot, atom) }
 	dquotBacktDquot := func(atom *ShAtom) *ShAtom { return q(shqDquotBacktDquot, atom) }
 	dquotBacktSquot := func(atom *ShAtom) *ShAtom { return q(shqDquotBacktSquot, atom) }
+
+	// Ignore unused functions; useful for deleting some of the tests during debugging.
+	use := func(args ...interface{}) {}
+	use(checkRest, check)
+	use(operator, comment, varuse, text, whitespace)
+	use(space, semicolon, pipe)
+	use(backt, dquot, squot, subsh)
+	use(backtDquot, backtSquot, dquotBackt)
+	use(dquotBacktDquot, dquotBacktSquot)
 
 	check("" /* none */)
 
@@ -336,21 +346,26 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		text("else"), space, text("action3"), semicolon, space,
 		text("fi"))
 
-	if false {
-		check("$$(cat)",
-			subsh(text("$$(")),
-			subsh(text("cat")),
-			text(")"))
+	check("$$(cat)",
+		subsh(subshell),
+		subsh(text("cat")),
+		text(")"))
 
-		check("$$(cat 'file')",
-			subsh(text("$$(")),
-			subsh(text("cat")),
-			subsh(space),
-			subshSquot(text("'")),
-			subshSquot(text("file")),
-			subsh(text("'")),
-			text(")"))
-	}
+	check("$$(cat 'file')",
+		subsh(subshell),
+		subsh(text("cat")),
+		subsh(space),
+		subshSquot(text("'")),
+		subshSquot(text("file")),
+		subsh(text("'")),
+		text(")"))
+
+	check("$$(# comment) arg",
+		subsh(subshell),
+		subsh(comment("# comment")),
+		text(")"),
+		space,
+		text("arg"))
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
