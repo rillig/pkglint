@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"netbsd.org/pkglint/regex"
+	"strings"
 )
 
 // MkShList is a list of shell commands, separated by newlines or semicolons.
@@ -207,7 +207,17 @@ func (c *StrCommand) AnyArgMatches(pattern regex.Pattern) bool {
 }
 
 func (c *StrCommand) String() string {
-	return fmt.Sprintf("%v %v %v", c.Assignments, c.Name, c.Args)
+	var strs []string
+	for _, assignment := range c.Assignments {
+		strs = append(strs, assignment)
+	}
+	if c.Name != "" {
+		strs = append(strs, c.Name)
+	}
+	for _, arg := range c.Args {
+		strs = append(strs, arg)
+	}
+	return strings.Join(strs, " ")
 }
 
 // MkShRedirection is a single file descriptor redirection.
