@@ -221,6 +221,20 @@ func (s *Suite) Test_Pkgsrc_Latest_numeric(c *check.C) {
 	c.Check(latest, equals, "postgresql104")
 }
 
+func (s *Suite) Test_Pkgsrc_Latest_postgresql(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("databases/postgresql95/Makefile")
+	t.SetupFileLines("databases/postgresql97/Makefile")
+	t.SetupFileLines("databases/postgresql10/Makefile")
+	t.SetupFileLines("databases/postgresql11/Makefile")
+
+	latest := G.Pkgsrc.Latest("databases", `^postgresql[0-9]+$`, "$0")
+
+	// FIXME: must be postgresql11
+	c.Check(latest, equals, "postgresql97")
+}
+
 func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 	t := s.Init(c)
 
