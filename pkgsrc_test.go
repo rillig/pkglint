@@ -163,7 +163,7 @@ func (s *Suite) Test_Pkgsrc_deprecated(c *check.C) {
 		"WARN: Makefile:2: Definition of SUBST_POSTCMD.class is deprecated. Has been removed, as it seemed unused.")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest_no_basedir(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Latest__no_basedir(c *check.C) {
 	t := s.Init(c)
 
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
@@ -173,7 +173,7 @@ func (s *Suite) Test_Pkgsrc_Latest_no_basedir(c *check.C) {
 		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest_no_subdirs(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Latest__no_subdirs(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("lang/Makefile")
@@ -185,7 +185,7 @@ func (s *Suite) Test_Pkgsrc_Latest_no_subdirs(c *check.C) {
 		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest_single(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Latest__single(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("lang/Makefile")
@@ -194,9 +194,13 @@ func (s *Suite) Test_Pkgsrc_Latest_single(c *check.C) {
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
 	c.Check(latest, equals, "../../lang/python27")
+
+	cached := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(cached, equals, "../../lang/python27")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest_multi(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Latest__multi(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("lang/Makefile")
@@ -208,7 +212,7 @@ func (s *Suite) Test_Pkgsrc_Latest_multi(c *check.C) {
 	c.Check(latest, equals, "../../lang/python35")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest_numeric(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Latest__numeric(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("databases/postgresql95/Makefile")
@@ -221,7 +225,24 @@ func (s *Suite) Test_Pkgsrc_Latest_numeric(c *check.C) {
 	c.Check(latest, equals, "postgresql104")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest_postgresql(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Latest__numeric_multiple_numbers(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupFileLines("emulators/suse_131_32_gtk2/Makefile")
+	t.SetupFileLines("emulators/suse_131_32_qt5/Makefile")
+	t.SetupFileLines("emulators/suse_131_gtk2/Makefile")
+	t.SetupFileLines("emulators/suse_131_qt5/Makefile")
+
+	latest := G.Pkgsrc.Latest("emulators", `^suse_(\d+).*$`, "$1")
+
+	c.Check(latest, equals, "131")
+}
+
+// In 2017, PostgreSQL changed their versioning scheme to SemVer,
+// and since the pkgsrc directory contains the major version,
+// without any separating dots, the case of version 10 being
+// later than 95 needs to be handled specially.
+func (s *Suite) Test_Pkgsrc_Latest__postgresql(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupFileLines("databases/postgresql95/Makefile")
@@ -231,8 +252,15 @@ func (s *Suite) Test_Pkgsrc_Latest_postgresql(c *check.C) {
 
 	latest := G.Pkgsrc.Latest("databases", `^postgresql[0-9]+$`, "$0")
 
-	// FIXME: must be postgresql11
-	c.Check(latest, equals, "postgresql97")
+	c.Check(latest, equals, "postgresql11")
+}
+
+func (s *Suite) Test_Pkgsrc_Latest__invalid_argument(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectFatal(
+		func() { G.Pkgsrc.Latest("databases", `postgresql[0-9]+`, "$0") },
+		"FATAL: Regular expression \"postgresql[0-9]+\" must be anchored at both ends.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {

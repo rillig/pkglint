@@ -357,7 +357,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 		tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", G.Pkgsrc.Latest("lang", `^php[0-9]+$`, "../../lang/$0"), -1)
 	}
 	if contains(tmp, "${SUSE_DIR_PREFIX}") {
-		suseDirPrefix := G.Pkgsrc.Latest("emulators", `^(suse[0-9]+)_base`, "$1")
+		suseDirPrefix := G.Pkgsrc.Latest("emulators", `^(suse[0-9]+)_base$`, "$1")
 		tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", suseDirPrefix, -1)
 	}
 	if contains(tmp, "${PYPKGSRCDIR}") {

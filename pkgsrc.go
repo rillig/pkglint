@@ -5,6 +5,7 @@ import (
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -138,37 +139,62 @@ func (src *Pkgsrc) LoadInfrastructure() {
 // Example:
 //  Latest("lang", `^php[0-9]+$`, "../../lang/$0") => "../../lang/php72"
 func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string {
-	key := category + "/" + string(re) + " => " + repl
-	if latest, found := src.latest[key]; found {
+	if G.Testing && !(hasPrefix(string(re), "^") && hasSuffix(string(re), "$")) {
+		G.Panicf("Regular expression %q must be anchored at both ends.", re)
+	}
+
+	cacheKey := category + "/" + string(re) + " => " + repl
+	if latest, found := src.latest[cacheKey]; found {
 		return latest
 	}
 
 	categoryDir := src.File(category)
 	error := func() string {
 		dummyLine.Errorf("Cannot find latest version of %q in %q.", re, categoryDir)
-		src.latest[key] = ""
+		src.latest[cacheKey] = ""
 		return ""
 	}
 
-	all, err := ioutil.ReadDir(categoryDir)
-	sort.SliceStable(all, func(i, j int) bool {
-		return naturalLess(all[i].Name(), all[j].Name())
-	})
+	fileInfos, err := ioutil.ReadDir(categoryDir)
 	if err != nil {
 		return error()
 	}
 
-	latest := ""
-	for _, fileInfo := range all {
-		if matches(fileInfo.Name(), re) {
-			latest = regex.Compile(re).ReplaceAllString(fileInfo.Name(), repl)
+	var names []string
+	for _, fileInfo := range fileInfos {
+		name := fileInfo.Name()
+		if matches(name, re) {
+			names = append(names, name)
 		}
+	}
+
+	keys := make(map[string]int)
+	for _, name := range names {
+		if m, pkgbase, versionStr := match2(name, `^(\D+)(\d+)$`); m {
+			version, _ := strconv.Atoi(versionStr)
+			if pkgbase == "postgresql" && version < 60 {
+				version = 10 * version
+			}
+			keys[name] = version
+		}
+	}
+
+	sort.SliceStable(names, func(i, j int) bool {
+		if keyI, keyJ := keys[names[i]], keys[names[j]]; keyI != 0 && keyJ != 0 {
+			return keyI < keyJ
+		}
+		return naturalLess(names[i], names[j])
+	})
+
+	latest := ""
+	for _, name := range names {
+		latest = regex.Compile(re).ReplaceAllString(name, repl)
 	}
 	if latest == "" {
 		return error()
 	}
 
-	src.latest[key] = latest
+	src.latest[cacheKey] = latest
 	return latest
 }
 
