@@ -876,3 +876,40 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 	t.CheckOutputLines(
 		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon (after \"touch file\") to separate commands.")
 }
+
+func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	t.SetupToolUsable("echo", "")
+	t.SetupToolUsable("grep", "GREP")
+	t.SetupToolUsable("sed", "")
+	t.SetupToolUsable("touch", "")
+	t.SetupToolUsable("true", "TRUE")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"pre-configure:",
+		"\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h`; echo 'done.'",
+		"\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`; echo 'done.'",
+		"\t${ECHO_MSG} \"Message\"; echo 'done.'",
+		"\t${FAIL_MSG} \"Failure\"; echo 'done.'",
+		"\tset -x; echo 'done.'",
+		"\techo 'input' | sed -e s,in,out,; echo 'done.'",
+		"\tsed -e s,in,out,; echo 'done.'",
+		"\tsed s,in,out,; echo 'done.'",
+		"\tgrep input; echo 'done.'",
+		"\ttouch file; echo 'done.'",
+		"\techo 'starting'; echo 'done.'",
+		"\techo 'logging' > log; echo 'done.'",
+		"\techo 'to stderr' 1>&2; echo 'done.'")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon (after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.",
+		"WARN: Makefile:6: Please switch to \"set -e\" mode before using a semicolon (after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.",
+		"WARN: Makefile:7: Please switch to \"set -e\" mode before using a semicolon (after \"set -x\") to separate commands.",
+		"WARN: Makefile:12: Please switch to \"set -e\" mode before using a semicolon (after \"touch file\") to separate commands.",
+		"WARN: Makefile:14: Please switch to \"set -e\" mode before using a semicolon (after \"echo 'logging'\") to separate commands.")
+}

@@ -832,19 +832,33 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	if simple.Name == nil {
 		for _, assignment := range simple.Assignments {
 			if contains(assignment.MkText, "`") || contains(assignment.MkText, "$(") {
-				return true
+				if !contains(assignment.MkText, "|| ${TRUE}") {
+					return true
+				}
 			}
 		}
 		return false
 	}
 
 	for _, redirect := range simple.Redirections {
-		if redirect.Target != nil && !hasPrefix(redirect.Target.MkText, "&") {
+		if redirect.Target != nil && !hasSuffix(redirect.Op, "&") {
 			return true
 		}
 	}
 
-	tool, _ := G.Tool(simple.Name.MkText, RunTime)
+	cmdName := simple.Name.MkText
+	switch cmdName {
+	case "${ECHO_MSG}", "${PHASE_MSG}", "${STEP_MSG}",
+		"${INFO_MSG}", "${WARNING_MSG}", "${ERROR_MSG}",
+		"${WARNING_CAT}", "${ERROR_CAT}",
+		"${DO_NADA}":
+		return false
+	case "${FAIL_MSG}":
+		return true
+	case "set":
+	}
+
+	tool, _ := G.Tool(cmdName, RunTime)
 	if tool == nil {
 		return true
 	}
@@ -853,7 +867,12 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	switch toolName {
 	case "echo", "printf":
 		return false
-	case "sed", "gsed", "grep", "ggrep":
+	case "sed", "gsed":
+		if len(simple.Args) == 2 && simple.Args[0].MkText == "-e" {
+			return false
+		}
+		return len(simple.Args) != 1
+	case "grep", "ggrep":
 		return len(simple.Args) != 1
 	}
 
