@@ -777,40 +777,13 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 		defer trace.Call()()
 	}
 
-	oneOf := func(s string, others ...string) bool {
-		for _, other := range others {
-			if s == other {
-				return true
-			}
-		}
-		return false
-	}
-
-	// canFail tests whether one of the left-hand side commands of a
-	// shell pipeline can fail.
-	//
-	// Examples:
-	//  echo "hello" | sed 's,$, world,,'   => cannot fail
-	//  find . -print | xargs cat | wc -l   => can fail
 	canFail := func() (bool, string) {
 		for _, cmd := range pipeline.Cmds[:len(pipeline.Cmds)-1] {
-			simple := cmd.Simple
-			if simple == nil {
+			if spc.canFail(cmd) {
+				if cmd.Simple != nil && cmd.Simple.Name != nil {
+					return true, cmd.Simple.Name.MkText
+				}
 				return true, ""
-			}
-			commandName := simple.Name.MkText
-			if len(simple.Redirections) != 0 {
-				return true, commandName
-			}
-			tool, _ := G.Tool(commandName, RunTime)
-			switch {
-			case tool == nil:
-				return true, commandName
-			case oneOf(tool.Name, "echo", "printf"):
-			case oneOf(tool.Name, "sed", "gsed", "grep", "ggrep") && len(simple.Args) == 1:
-				break
-			default:
-				return true, commandName
 			}
 		}
 		return false, ""
@@ -832,6 +805,48 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 				"create those files is in ${WRKDIR}.")
 		}
 	}
+}
+
+// canFail returns true if the given shell command can fail.
+// Most shell commands can fail for various reasons, such as missing
+// files or invalid arguments.
+//
+// Commands that can fail:
+//  echo "hello" > file
+//  sed 's,$, world,,' < input > output
+//  find . -print
+//  wc -l *
+//
+// Commands that cannot fail:
+//  echo "hello"
+//  sed 's,$, world,,'
+//  wc -l
+func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
+	simple := cmd.Simple
+	if simple == nil || simple.Name == nil {
+		return true
+	}
+
+	for _, redirect := range simple.Redirections {
+		if redirect.Target != nil && !hasPrefix(redirect.Target.MkText, "&") {
+			return true
+		}
+	}
+
+	tool, _ := G.Tool(simple.Name.MkText, RunTime)
+	if tool == nil {
+		return true
+	}
+
+	toolName := tool.Name
+	switch toolName {
+	case "echo", "printf":
+		return false
+	case "sed", "gsed", "grep", "ggrep":
+		return len(simple.Args) != 1
+	}
+
+	return true
 }
 
 func (spc *ShellProgramChecker) checkSetE(list *MkShList, eflag *bool) {

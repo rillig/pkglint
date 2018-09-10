@@ -351,8 +351,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__show_autofix(c *check.C) {
 		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".")
 }
 
-// Simple commands like echo(1) or printf(1) are assumed to never fail.
-func (s *Suite) Test_ShellLine_CheckShellCommandLine__exitcode(c *check.C) {
+func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -370,7 +369,9 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__exitcode(c *check.C) {
 		"\t cat | echo | right-side",
 		"\t echo | cat | right-side",
 		"\t sed s,s,s, filename | right-side",
-		"\t sed s,s,s < input | right-side")
+		"\t sed s,s,s < input | right-side",
+		"\t ./unknown | right-side",
+		"\t var=value | right-side")
 
 	for _, mkline := range G.Mk.mklines {
 		shline := NewShellLine(mkline)
@@ -382,7 +383,9 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__exitcode(c *check.C) {
 		"WARN: Makefile:5: The exitcode of \"cat\" at the left of the | operator is ignored.",
 		"WARN: Makefile:6: The exitcode of \"cat\" at the left of the | operator is ignored.",
 		"WARN: Makefile:7: The exitcode of \"sed\" at the left of the | operator is ignored.",
-		"WARN: Makefile:8: The exitcode of \"sed\" at the left of the | operator is ignored.")
+		"WARN: Makefile:8: The exitcode of \"sed\" at the left of the | operator is ignored.",
+		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.",
+		"WARN: Makefile:10: The exitcode of the command at the left of the | operator is ignored.")
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
