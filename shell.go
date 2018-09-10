@@ -346,8 +346,10 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 			*pSetE = true
 		}
 	}
-	walker.Callback.List = func(list *MkShList) {
-		spc.checkSetE(list, pSetE)
+	walker.Callback.AndOr = func(andor *MkShAndOr) {
+		if G.opts.WarnExtra && !*pSetE && walker.Current().Index != 0 {
+			spc.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index, andor)
+		}
 	}
 	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
 		spc.checkPipeExitcode(line, pipeline)
@@ -823,8 +825,17 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 //  wc -l
 func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	simple := cmd.Simple
-	if simple == nil || simple.Name == nil {
+	if simple == nil {
 		return true
+	}
+
+	if simple.Name == nil {
+		for _, assignment := range simple.Assignments {
+			if contains(assignment.MkText, "`") || contains(assignment.MkText, "$(") {
+				return true
+			}
+		}
+		return false
 	}
 
 	for _, redirect := range simple.Redirections {
@@ -849,29 +860,38 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	return true
 }
 
-func (spc *ShellProgramChecker) checkSetE(list *MkShList, eflag *bool) {
+func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkShAndOr) {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
 
-	// Disabled until the shell parser can recognize "command || exit 1" reliably.
-	if false && G.opts.WarnExtra && !*eflag && "the current token" == ";" {
-		*eflag = true
-		spc.shline.mkline.Warnf("Please switch to \"set -e\" mode before using a semicolon (the one after %q) to separate commands.", "previous token")
-		Explain(
-			"Normally, when a shell command fails (returns non-zero), the",
-			"remaining commands are still executed.  For example, the following",
-			"commands would remove all files from the HOME directory:",
-			"",
-			"\tcd \"$HOME\"; cd /nonexistent; rm -rf *",
-			"",
-			"To fix this warning, you can:",
-			"",
-			"* insert ${RUN} at the beginning of the line",
-			"  (which among other things does \"set -e\")",
-			"* insert \"set -e\" explicitly at the beginning of the line",
-			"* use \"&&\" instead of \";\" to separate the commands")
+	command := list.AndOrs[index-1].Pipes[0].Cmds[0]
+	if !spc.canFail(command) {
+		return
 	}
+
+	line := spc.shline.mkline.Line
+	if !line.FirstTime("switch to set -e") {
+		return
+	}
+
+	line.Warnf("Please switch to \"set -e\" mode before using a semicolon (after %q) to separate commands.",
+		NewStrCommand(command.Simple).String())
+	Explain(
+		"Normally, when a shell command fails (returns non-zero), the",
+		"remaining commands are still executed.  For example, the following",
+		"commands would remove all files from the HOME directory:",
+		"",
+		"\tcd \"$HOME\"; cd /nonexistent; rm -rf *",
+		"",
+		"In \"set -e\" mode, the shell stops when a command fails.",
+		"",
+		"To fix this warning, you can:",
+		"",
+		"* insert ${RUN} at the beginning of the line",
+		"  (which among other things does \"set -e\")",
+		"* insert \"set -e\" explicitly at the beginning of the line",
+		"* use \"&&\" instead of \";\" to separate the commands")
 }
 
 // Some shell commands should not be used in the install phase.

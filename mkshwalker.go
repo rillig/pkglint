@@ -303,6 +303,17 @@ func (w *MkShWalker) Current() MkShWalkerPathElement {
 	return w.Context[len(w.Context)-1]
 }
 
+// Parent returns an ancestor element from the currently visited path.
+// Parent(0) is the element that is currently visited,
+// Parent(1) is its direct parent, and so on.
+func (w *MkShWalker) Parent(steps int) interface{} {
+	index := len(w.Context) - 1 - steps
+	if index >= 0 {
+		return w.Context[index].Element
+	}
+	return nil
+}
+
 func (w *MkShWalker) push(index int, element interface{}) {
 	w.Context = append(w.Context, MkShWalkerPathElement{index, element})
 }

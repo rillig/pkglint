@@ -161,6 +161,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: fname:1: Unknown shell command \"uname\".",
+		"WARN: fname:1: Please switch to \"set -e\" mode before using a semicolon (after \"uname=`uname`\") to separate commands.",
 		"WARN: fname:1: Unknown shell command \"echo\".",
 		"WARN: fname:1: Unknown shell command \"echo\".")
 
@@ -384,8 +385,7 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"WARN: Makefile:6: The exitcode of \"cat\" at the left of the | operator is ignored.",
 		"WARN: Makefile:7: The exitcode of \"sed\" at the left of the | operator is ignored.",
 		"WARN: Makefile:8: The exitcode of \"sed\" at the left of the | operator is ignored.",
-		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.",
-		"WARN: Makefile:10: The exitcode of the command at the left of the | operator is ignored.")
+		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.")
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
@@ -835,4 +835,41 @@ func (s *Suite) Test_SimpleCommandChecker_checkConditionalCd(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+}
+
+func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupToolUsable("echo", "")
+	t.SetupToolUsable("rm", "")
+	t.SetupToolUsable("touch", "")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"pre-configure:",
+		"\techo 1; echo 2; echo 3",
+		"\techo 1; touch file; rm file",
+		"\techo 1; var=value; echo 3")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: Please switch to \"set -e\" mode before using a semicolon (after \"touch file\") to separate commands.")
+}
+
+func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupToolUsable("echo", "")
+	t.SetupToolUsable("touch", "")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"pre-configure:",
+		"\ttouch file; for f in file; do echo \"$$f\"; done")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon (after \"touch file\") to separate commands.")
 }
