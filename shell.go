@@ -866,7 +866,7 @@ func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkSh
 	}
 
 	command := list.AndOrs[index-1].Pipes[0].Cmds[0]
-	if !spc.canFail(command) {
+	if command.Simple == nil || !spc.canFail(command) {
 		return
 	}
 

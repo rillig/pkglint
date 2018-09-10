@@ -372,7 +372,8 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"\t sed s,s,s, filename | right-side",
 		"\t sed s,s,s < input | right-side",
 		"\t ./unknown | right-side",
-		"\t var=value | right-side")
+		"\t var=value | right-side",
+		"\t if :; then :; fi | right-side")
 
 	for _, mkline := range G.Mk.mklines {
 		shline := NewShellLine(mkline)
@@ -385,7 +386,8 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"WARN: Makefile:6: The exitcode of \"cat\" at the left of the | operator is ignored.",
 		"WARN: Makefile:7: The exitcode of \"sed\" at the left of the | operator is ignored.",
 		"WARN: Makefile:8: The exitcode of \"sed\" at the left of the | operator is ignored.",
-		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.")
+		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.",
+		"WARN: Makefile:11: The exitcode of the command at the left of the | operator is ignored.")
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
@@ -866,7 +868,8 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"pre-configure:",
-		"\ttouch file; for f in file; do echo \"$$f\"; done")
+		"\ttouch file; for f in file; do echo \"$$f\"; done",
+		"\tfor f in file; do echo \"$$f\"; done; touch file")
 
 	mklines.Check()
 
