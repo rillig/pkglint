@@ -805,3 +805,30 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C)
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:20: GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in line 21.")
 }
+
+func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE_ok(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	pkg := t.SetupPackage("category/package",
+		"GNU_CONFIGURE=\tyes",
+		"USE_LANGUAGES=\t# none, really")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkfilePackageMakefile__REPLACE_PERL(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	pkg := t.SetupPackage("category/package",
+		"REPLACE_PERL=\t*.pl",
+		"NO_CONFIGURE=\tyes")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: REPLACE_PERL is ignored when NO_CONFIGURE is set (in line 21).")
+}
