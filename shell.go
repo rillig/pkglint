@@ -864,16 +864,18 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	}
 
 	toolName := tool.Name
+	args := simple.Args
+	argc := len(args)
 	switch toolName {
-	case "echo", "printf":
+	case "echo", "printf", "tr":
 		return false
 	case "sed", "gsed":
-		if len(simple.Args) == 2 && simple.Args[0].MkText == "-e" {
+		if argc == 2 && args[0].MkText == "-e" {
 			return false
 		}
-		return len(simple.Args) != 1
+		return argc != 1
 	case "grep", "ggrep":
-		return len(simple.Args) != 1
+		return argc != 1
 	}
 
 	return true

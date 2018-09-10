@@ -886,6 +886,7 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	t.SetupToolUsable("grep", "GREP")
 	t.SetupToolUsable("sed", "")
 	t.SetupToolUsable("touch", "")
+	t.SetupToolUsable("tr", "tr")
 	t.SetupToolUsable("true", "TRUE")
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
@@ -902,7 +903,8 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 		"\ttouch file; echo 'done.'",
 		"\techo 'starting'; echo 'done.'",
 		"\techo 'logging' > log; echo 'done.'",
-		"\techo 'to stderr' 1>&2; echo 'done.'")
+		"\techo 'to stderr' 1>&2; echo 'done.'",
+		"\techo 'hello' | tr -d 'aeiou'")
 
 	mklines.Check()
 
