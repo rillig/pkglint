@@ -238,6 +238,63 @@ func (t *Tester) SetupPkgsrc() {
 		MkRcsID)
 }
 
+// SetupCategory makes the given category valid by creating a dummy Makefile.
+func (t *Tester) SetupCategory(name string) {
+	if _, err := os.Stat(name + "/Makefile"); os.IsNotExist(err) {
+		t.CreateFileLines(name+"/Makefile",
+			MkRcsID)
+	}
+}
+
+// SetupPackage sets up all files for a package so that it does not produce
+// any warnings.
+//
+// Returns the path to the package, ready to be used with Pkglint.CheckDirent.
+func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
+	category := path.Dir(pkgpath)
+
+	t.SetupPkgsrc()
+	t.SetupVartypes()
+	t.SetupCategory(category)
+
+	t.CreateFileLines(pkgpath+"/DESCR",
+		"Package description")
+	t.CreateFileLines(pkgpath+"/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines(pkgpath+"/distinfo",
+		RcsID,
+		"",
+		"SHA1 (distfile-1.0.tar.gz) = 12341234...",
+		"RMD160 (distfile-1.0.tar.gz) = 12341234...",
+		"SHA512 (distfile-1.0.tar.gz) = 12341234...",
+		"Size (distfile-1.0.tar.gz) = 12341234")
+
+	var mlines []string
+	mlines = append(mlines,
+		MkRcsID,
+		"",
+		"DISTNAME=\tdistname-1.0",
+		"CATEGORIES=\t"+category,
+		"MASTER_SITES=\t# none",
+		"",
+		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		"HOMEPAGE=\t# none",
+		"COMMENT=\tDummy package",
+		"LICENSE=\t2-clause-bsd",
+		"")
+	mlines = append(mlines,
+		makefileLines...)
+	mlines = append(mlines,
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	t.CreateFileLines(pkgpath+"/Makefile",
+		mlines...)
+
+	return t.File(pkgpath)
+}
+
 func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (filename string) {
 	content := ""
 	for _, line := range lines {

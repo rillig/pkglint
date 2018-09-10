@@ -791,3 +791,17 @@ func (s *Suite) Test__distinfo_from_other_package(c *check.C) {
 		"WARN: x11/gst-x11/Makefile: No COMMENT given.",
 		"WARN: x11/gst-x11/../../multimedia/gst-base/distinfo:3: Patch file \"patch-aa\" does not exist in directory \"../../x11/gst-x11/patches\".")
 }
+
+func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	pkg := t.SetupPackage("category/package",
+		"GNU_CONFIGURE=\tyes",
+		"USE_LANGUAGES=\t#")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:12: GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in line 13.")
+}
