@@ -555,23 +555,6 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 	return result
 }
 
-func (pkg *Package) expandVariableWithDefault(varname, defaultValue string) string {
-	mkline := G.Pkg.vars.FirstDefinition(varname)
-	if mkline == nil {
-		return defaultValue
-	}
-
-	value := mkline.Value()
-	value = mkline.ResolveVarsInRelativePath(value, true)
-	if containsVarRef(value) {
-		value = resolveVariableRefs(value)
-	}
-	if trace.Tracing {
-		trace.Step2("Expanded %q to %q", varname, value)
-	}
-	return value
-}
-
 func (pkg *Package) checkUpdate() {
 	if pkg.EffectivePkgbase != "" {
 		for _, sugg := range G.Pkgsrc.GetSuggestedPackageUpdates() {
