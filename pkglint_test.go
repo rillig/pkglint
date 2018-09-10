@@ -655,31 +655,13 @@ func (s *Suite) Test_Pkglint_Checkfile__CheckExtra(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
-	t.SetupPkgsrc()
-	G.Pkgsrc.LoadInfrastructure()
-	t.CreateFileLines("licenses/gnu-gpl-2.0")
-	t.CreateFileLines("category/Makefile")
-	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
-		"",
-		"DISTNAME=       pkgname-1.0",
-		"CATEGORIES=     category",
-		"",
-		"COMMENT=        Comment",
-		"LICENSE=        gnu-gpl-2.0",
-		"",
-		"NO_CHECKSUM=    yes",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-	t.CreateFileLines("category/package/PLIST",
-		PlistRcsID,
-		"bin/program")
+	pkg := t.SetupPackage("category/package")
 	t.CreateFileLines("category/package/INSTALL",
 		"#! /bin/sh")
 	t.CreateFileLines("category/package/DEINSTALL",
 		"#! /bin/sh")
 
-	G.CheckDirent(t.File("category/package"))
+	G.CheckDirent(pkg)
 
 	t.CheckOutputEmpty()
 }
@@ -688,31 +670,13 @@ func (s *Suite) Test_Pkglint_Checkfile__before_import(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space", "--import")
-	t.SetupPkgsrc()
-	G.Pkgsrc.LoadInfrastructure()
-	t.CreateFileLines("licenses/gnu-gpl-2.0")
-	t.CreateFileLines("category/Makefile")
-	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
-		"",
-		"DISTNAME=       pkgname-1.0",
-		"CATEGORIES=     category",
-		"",
-		"COMMENT=        Comment",
-		"LICENSE=        gnu-gpl-2.0",
-		"",
-		"NO_CHECKSUM=    yes",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-	t.CreateFileLines("category/package/PLIST",
-		PlistRcsID,
-		"bin/program")
+	pkg := t.SetupPackage("category/package")
 	t.CreateFileLines("category/package/work/log")
 	t.CreateFileLines("category/package/Makefile~")
 	t.CreateFileLines("category/package/Makefile.orig")
 	t.CreateFileLines("category/package/Makefile.rej")
 
-	G.CheckDirent(t.File("category/package"))
+	G.CheckDirent(pkg)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile.orig: Must be cleaned up before committing the package.",

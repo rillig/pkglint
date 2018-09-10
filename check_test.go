@@ -249,6 +249,8 @@ func (t *Tester) SetupCategory(name string) {
 // SetupPackage sets up all files for a package so that it does not produce
 // any warnings.
 //
+// The given makefileLines start in line 20.
+//
 // Returns the path to the package, ready to be used with Pkglint.CheckDirent.
 func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
 	category := path.Dir(pkgpath)
@@ -283,6 +285,9 @@ func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
 		"COMMENT=\tDummy package",
 		"LICENSE=\t2-clause-bsd",
 		"")
+	for len(mlines) < 19 {
+		mlines = append(mlines, "# empty")
+	}
 	mlines = append(mlines,
 		makefileLines...)
 	mlines = append(mlines,

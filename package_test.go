@@ -803,5 +803,5 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C)
 	G.CheckDirent(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:12: GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in line 13.")
+		"WARN: ~/category/package/Makefile:20: GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in line 21.")
 }
