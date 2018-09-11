@@ -33,7 +33,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	}
 	operator := func(s string) *ShAtom { return atom(shtOperator, s) }
 	comment := func(s string) *ShAtom { return atom(shtComment, s) }
-	varuse := func(varname string, modifiers ...string) *ShAtom {
+	mkvar := func(varname string, modifiers ...string) *ShAtom {
 		text := "${" + varname
 		for _, modifier := range modifiers {
 			text += ":" + regex.Compile(`[:\\]`).ReplaceAllString(modifier, "\\\\$1")
@@ -68,7 +68,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	// Ignore unused functions; useful for deleting some of the tests during debugging.
 	use := func(args ...interface{}) {}
 	use(checkRest, check)
-	use(operator, comment, varuse, text, whitespace)
+	use(operator, comment, mkvar, text, whitespace)
 	use(space, semicolon, pipe)
 	use(backt, dquot, squot, subsh)
 	use(backtDquot, backtSquot, dquotBackt, subshDquot, subshSquot)
@@ -134,7 +134,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	check("cd ${WRKSRC}/doc/man/man3; PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\";",
 		text("cd"),
 		space,
-		varuse("WRKSRC"),
+		mkvar("WRKSRC"),
 		text("/doc/man/man3"),
 		semicolon,
 		space,
@@ -147,7 +147,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		dquotBackt(space),
 		dquotBackt(operator("|")),
 		dquotBackt(space),
-		dquotBackt(varuse("SED")),
+		dquotBackt(mkvar("SED")),
 		dquotBackt(space),
 		dquotBackt(text("-e")),
 		dquotBackt(space),
@@ -161,7 +161,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	check("ls -1 | ${SED} -e 's,3qt$$,3,'",
 		text("ls"), space, text("-1"), space,
 		pipe, space,
-		varuse("SED"), space, text("-e"), space,
+		mkvar("SED"), space, text("-e"), space,
 		squot(text("'")), squot(text("s,3qt$$,3,")), text("'"))
 
 	check("(for PAGE in $$PAGES; do ",
@@ -180,12 +180,12 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	check("    ${ECHO} installing ${DESTDIR}${QTPREFIX}/man/man3/$${PAGE}; ",
 		whitespace("    "),
-		varuse("ECHO"),
+		mkvar("ECHO"),
 		space,
 		text("installing"),
 		space,
-		varuse("DESTDIR"),
-		varuse("QTPREFIX"),
+		mkvar("DESTDIR"),
+		mkvar("QTPREFIX"),
 		text("/man/man3/$${PAGE}"),
 		semicolon,
 		space)
