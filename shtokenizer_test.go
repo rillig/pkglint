@@ -28,11 +28,11 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		t.CheckOutputEmpty()
 	}
 
-	token := func(typ ShAtomType, text string) *ShAtom {
+	atom := func(typ ShAtomType, text string) *ShAtom {
 		return &ShAtom{typ, text, shqPlain, nil}
 	}
-	operator := func(s string) *ShAtom { return token(shtOperator, s) }
-	comment := func(s string) *ShAtom { return token(shtComment, s) }
+	operator := func(s string) *ShAtom { return atom(shtOperator, s) }
+	comment := func(s string) *ShAtom { return atom(shtComment, s) }
 	varuse := func(varname string, modifiers ...string) *ShAtom {
 		text := "${" + varname
 		for _, modifier := range modifiers {
@@ -42,13 +42,13 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		varuse := &MkVarUse{varname: varname, modifiers: modifiers}
 		return &ShAtom{shtVaruse, text, shqPlain, varuse}
 	}
-	text := func(s string) *ShAtom { return token(shtWord, s) }
-	whitespace := func(s string) *ShAtom { return token(shtSpace, s) }
+	text := func(s string) *ShAtom { return atom(shtWord, s) }
+	whitespace := func(s string) *ShAtom { return atom(shtSpace, s) }
 
 	space := whitespace(" ")
 	semicolon := operator(";")
 	pipe := operator("|")
-	subshell := token(shtSubshell, "$$(")
+	subshell := atom(shtSubshell, "$$(")
 
 	q := func(q ShQuoting, atom *ShAtom) *ShAtom {
 		return &ShAtom{atom.Type, atom.MkText, q, atom.data}
