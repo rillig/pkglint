@@ -169,5 +169,9 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 			"       Redirects with 1 redirects",
 			"        Redirect >&",
 			"            Word 2"})
+
+		// After parsing, there is not a single level of indentation,
+		// therefore even Parent(0) returns nil.
+		c.Check(walker.Parent(0), equals, nil)
 	}
 }
