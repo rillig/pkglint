@@ -138,12 +138,9 @@ func isCommitted(fname string) bool {
 }
 
 func isLocallyModified(fname string) bool {
-	lines := loadCvsEntries(fname)
-	if len(lines) == 0 {
-		return false
-	}
-
 	baseName := path.Base(fname)
+
+	lines := loadCvsEntries(fname)
 	for _, line := range lines {
 		fields := strings.Split(line.Text, "/")
 		if 3 < len(fields) && fields[1] == baseName {
