@@ -327,6 +327,7 @@ func (p *ShTokenizer) ShAtoms() []*ShAtom {
 func (p *ShTokenizer) ShToken() *ShToken {
 	var curr *ShAtom
 	q := shqPlain
+
 	peek := func() *ShAtom {
 		if curr == nil {
 			curr = p.ShAtom(q)
@@ -366,9 +367,7 @@ nextAtom:
 	}
 	repl.Reset(mark)
 
-	if len(atoms) == 0 {
-		return nil
-	}
+	G.Assertf(len(atoms) != 0, "Internal pkglint error: no shell atoms found.")
 	return NewShToken(repl.Since(initialMark), atoms...)
 }
 
