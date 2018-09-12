@@ -31,6 +31,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	atom := func(typ ShAtomType, text string) *ShAtom {
 		return &ShAtom{typ, text, shqPlain, nil}
 	}
+
 	operator := func(s string) *ShAtom { return atom(shtOperator, s) }
 	comment := func(s string) *ShAtom { return atom(shtComment, s) }
 	mkvar := func(varname string, modifiers ...string) *ShAtom {
@@ -69,7 +70,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	use := func(args ...interface{}) {}
 	use(checkRest, check)
 	use(operator, comment, mkvar, text, whitespace)
-	use(space, semicolon, pipe)
+	use(space, semicolon, pipe, subshell)
 	use(backt, dquot, squot, subsh)
 	use(backtDquot, backtSquot, dquotBackt, subshDquot, subshSquot)
 	use(dquotBacktDquot, dquotBacktSquot)
@@ -419,105 +420,71 @@ func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
 func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	t := s.Init(c)
 
-	check := func(str string, expected ...*ShToken) {
+	// testRest ensures that the given string is parsed to the expected
+	// tokens, and returns the remaining text.
+	testRest := func(str string, expected ...string) string {
 		p := NewShTokenizer(dummyLine, str, false)
 		for _, exp := range expected {
-			c.Check(p.ShToken(), deepEquals, exp)
+			c.Check(p.ShToken().MkText, equals, exp)
+		}
+		return p.Rest()
+	}
+	test := func(str string, expected ...string) {
+		p := NewShTokenizer(dummyLine, str, false)
+		for _, exp := range expected {
+			c.Check(p.ShToken().MkText, equals, exp)
 		}
 		c.Check(p.Rest(), equals, "")
 		t.CheckOutputEmpty()
 	}
+	checkNil := func(str string) {
+		p := NewShTokenizer(dummyLine, str, false)
+		c.Check(p.ShToken(), check.IsNil)
+		c.Check(p.Rest(), equals, "")
+		t.CheckOutputEmpty()
+	}
 
-	check("",
-		nil)
+	checkNil("")
+	checkNil(" ")
+	rest := testRest("\t\t\t\n\n\n\n\t ",
+		"\n",
+		"\n", // TODO: Why three separators? One should be enough. What does the grammar say?
+		"\n")
+	c.Check(rest, equals, "\n\t ") // TODO: Why is the newline still here?
 
-	check("echo",
-		NewShToken("echo",
-			NewShAtom(shtWord, "echo", shqPlain)))
+	test("echo",
+		"echo")
 
-	check("`cat file`",
-		NewShToken("`cat file`",
-			NewShAtom(shtWord, "`", shqBackt),
-			NewShAtom(shtWord, "cat", shqBackt),
-			NewShAtom(shtSpace, " ", shqBackt),
-			NewShAtom(shtWord, "file", shqBackt),
-			NewShAtom(shtWord, "`", shqPlain)))
+	test("`cat file`",
+		"`cat file`")
 
-	check("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-		NewShToken("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
-			NewShAtom(shtWord, "PAGES=", shqPlain),
-			NewShAtom(shtWord, "\"", shqDquot),
-			NewShAtom(shtWord, "`", shqDquotBackt),
-			NewShAtom(shtWord, "ls", shqDquotBackt),
-			NewShAtom(shtSpace, " ", shqDquotBackt),
-			NewShAtom(shtWord, "-1", shqDquotBackt),
-			NewShAtom(shtSpace, " ", shqDquotBackt),
-			NewShAtom(shtOperator, "|", shqDquotBackt),
-			NewShAtom(shtSpace, " ", shqDquotBackt),
-			NewShAtomVaruse("${SED}", shqDquotBackt, "SED"),
-			NewShAtom(shtSpace, " ", shqDquotBackt),
-			NewShAtom(shtWord, "-e", shqDquotBackt),
-			NewShAtom(shtSpace, " ", shqDquotBackt),
-			NewShAtom(shtWord, "'", shqDquotBacktSquot),
-			NewShAtom(shtWord, "s,3qt$$,3,", shqDquotBacktSquot),
-			NewShAtom(shtWord, "'", shqDquotBackt),
-			NewShAtom(shtWord, "`", shqDquot),
-			NewShAtom(shtWord, "\"", shqPlain)))
+	test("PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"",
+		"PAGES=\"`ls -1 | ${SED} -e 's,3qt$$,3,'`\"")
 
-	check("echo hello, world",
-		NewShToken("echo",
-			NewShAtom(shtWord, "echo", shqPlain)),
-		NewShToken("hello,",
-			NewShAtom(shtWord, "hello,", shqPlain)),
-		NewShToken("world",
-			NewShAtom(shtWord, "world", shqPlain)))
+	test("echo hello, world",
+		"echo",
+		"hello,",
+		"world")
 
-	check("if cond1; then action1; elif cond2; then action2; else action3; fi",
-		NewShToken("if", NewShAtom(shtWord, "if", shqPlain)),
-		NewShToken("cond1", NewShAtom(shtWord, "cond1", shqPlain)),
-		NewShToken(";", NewShAtom(shtOperator, ";", shqPlain)),
-		NewShToken("then", NewShAtom(shtWord, "then", shqPlain)),
-		NewShToken("action1", NewShAtom(shtWord, "action1", shqPlain)),
-		NewShToken(";", NewShAtom(shtOperator, ";", shqPlain)),
-		NewShToken("elif", NewShAtom(shtWord, "elif", shqPlain)),
-		NewShToken("cond2", NewShAtom(shtWord, "cond2", shqPlain)),
-		NewShToken(";", NewShAtom(shtOperator, ";", shqPlain)),
-		NewShToken("then", NewShAtom(shtWord, "then", shqPlain)),
-		NewShToken("action2", NewShAtom(shtWord, "action2", shqPlain)),
-		NewShToken(";", NewShAtom(shtOperator, ";", shqPlain)),
-		NewShToken("else", NewShAtom(shtWord, "else", shqPlain)),
-		NewShToken("action3", NewShAtom(shtWord, "action3", shqPlain)),
-		NewShToken(";", NewShAtom(shtOperator, ";", shqPlain)),
-		NewShToken("fi", NewShAtom(shtWord, "fi", shqPlain)))
+	test("if cond1; then action1; elif cond2; then action2; else action3; fi",
+		"if", "cond1", ";", "then",
+		"action1", ";",
+		"elif", "cond2", ";", "then",
+		"action2", ";",
+		"else", "action3", ";",
+		"fi")
 
-	check("PATH=/nonexistent env PATH=${PATH:Q} true",
-		NewShToken("PATH=/nonexistent", NewShAtom(shtWord, "PATH=/nonexistent", shqPlain)),
-		NewShToken("env", NewShAtom(shtWord, "env", shqPlain)),
-		NewShToken("PATH=${PATH:Q}",
-			NewShAtom(shtWord, "PATH=", shqPlain),
-			NewShAtomVaruse("${PATH:Q}", shqPlain, "PATH", "Q")),
-		NewShToken("true", NewShAtom(shtWord, "true", shqPlain)))
+	test("PATH=/nonexistent env PATH=${PATH:Q} true",
+		"PATH=/nonexistent",
+		"env",
+		"PATH=${PATH:Q}",
+		"true")
 
 	if false { // Don't know how to tokenize this correctly.
-		check("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
-			NewShToken("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
-				NewShAtom(shtWord, "id=", shqPlain),
-				NewShAtom(shtWord, "$$(", shqPlain),
-				NewShAtomVaruse("${AWK}", shqPlain, "AWK")))
+		test("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
+			"id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)")
 	}
-	check("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
-		NewShToken("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
-			NewShAtom(shtWord, "id=", shqPlain),
-			NewShAtom(shtWord, "`", shqBackt),
-			NewShAtomVaruse("${AWK}", shqBackt, "AWK"),
-			NewShAtom(shtSpace, " ", shqBackt),
-			NewShAtom(shtWord, "'", shqBacktSquot),
-			NewShAtom(shtWord, "{print}", shqBacktSquot),
-			NewShAtom(shtWord, "'", shqBackt),
-			NewShAtom(shtSpace, " ", shqBackt),
-			NewShAtom(shtOperator, "<", shqBackt),
-			NewShAtom(shtSpace, " ", shqBackt),
-			NewShAtomVaruse("${WRKSRC}", shqBackt, "WRKSRC"),
-			NewShAtom(shtWord, "/idfile", shqBackt),
-			NewShAtom(shtWord, "`", shqPlain)))
+
+	test("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
+		"id=`${AWK} '{print}' < ${WRKSRC}/idfile`")
 }
