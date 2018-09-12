@@ -799,6 +799,23 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__subshell(c *check.C) {
 		"WARN: Makefile:6: Invoking subshells via $(...) is not portable enough.")
 }
 
+func (s *Suite) Test_ShellLine_CheckShellCommand__case_patterns_from_variable(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"pre-configure:",
+		"\tcase $$file in ${CHECK_PERMS_SKIP:@pattern@${pattern}) ;;@} *) continue; esac")
+
+	mklines.Check()
+
+	// FIXME: Support the above variable expansion.
+	t.CheckOutputLines(
+		"WARN: Makefile:4: Pkglint ShellLine.CheckShellCommand: " +
+			"parse error at []string{\"*\", \")\", \"continue\", \";\", \"esac\"}")
+}
+
 func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	t := s.Init(c)
 
