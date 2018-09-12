@@ -129,7 +129,12 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"\tMoved category/package to other/package [author4 2018-01-04]",
 		"\tRemoved category/package [author5 2018-01-09]", // Too far in the future
 		"\tRemoved category/package successor category/package2 [author6 2018-01-06]",
-		"\tDowngraded category/package to 1.2 [author7 2018-01-07]")
+		"\tDowngraded category/package to 1.2 [author7 2018-01-07]",
+		"",
+		"\ttoo few fields",
+		"\ttoo many many many many many fields",
+		"\tmissing brackets around author",
+		"\tAdded another [new package]")
 
 	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"))
 
@@ -144,7 +149,8 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/doc/CHANGES-2018:1: Year 2015 for category/package does not match the file name ~/doc/CHANGES-2018.",
-		"WARN: ~/doc/CHANGES-2018:6: Date 2018-01-06 for category/package is earlier than 2018-01-09 for category/package.")
+		"WARN: ~/doc/CHANGES-2018:6: Date 2018-01-06 for category/package is earlier than 2018-01-09 for category/package.",
+		"WARN: ~/doc/CHANGES-2018:12: Unknown doc/CHANGES line: \tAdded another [new package]")
 }
 
 func (s *Suite) Test_Pkgsrc_deprecated(c *check.C) {

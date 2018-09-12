@@ -374,7 +374,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 				}
 			}
 		} else if text := line.Text; len(text) >= 2 && text[0] == '\t' && 'A' <= text[1] && text[1] <= 'Z' {
-			line.Warnf("Unknown doc/CHANGES line: %q", text)
+			line.Warnf("Unknown doc/CHANGES line: %s", text)
 			Explain("See mk/misc/developer.mk for the rules.")
 		}
 	}
