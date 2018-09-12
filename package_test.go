@@ -832,3 +832,18 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__REPLACE_PERL(c *check.C) 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:20: REPLACE_PERL is ignored when NO_CONFIGURE is set (in line 21).")
 }
+
+func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	pkg := t.SetupPackage("category/package",
+		".include \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\"")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: " +
+			"Skipping include file \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\". " +
+			"This may result in false warnings.")
+}
