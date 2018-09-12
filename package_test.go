@@ -917,6 +917,19 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_distinf
 			"This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("category/package",
+		"USE_X11=\tyes",
+		"USE_IMAKE=\tyes")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:21: USE_IMAKE makes USE_X11 in line 20 superfluous.")
+}
+
 func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 	t := s.Init(c)
 
