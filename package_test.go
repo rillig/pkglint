@@ -121,7 +121,7 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 		"DISTNAME=\tdistname-1.0",
 		"CATEGORIES=\tsysutils",
 		"",
-		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		"# comment",
 		"COMMENT=\tComment",
 		"LICENSE=\tgnu-gpl-v2"))
@@ -143,7 +143,7 @@ func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *chec
 		"CATEGORIES=\tsysutils",
 		"",
 		".if ${DISTNAME:Mdistname-*}",
-		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		".endif",
 		"LICENSE=\tgnu-gpl-v2"))
 
@@ -846,4 +846,62 @@ func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 		"NOTE: ~/category/package/Makefile:20: " +
 			"Skipping include file \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\". " +
 			"This may result in false warnings.")
+}
+
+func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-order")
+	G.CurrentUsername = "example-user"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+
+	// Since MAINTAINER= pkgsrc-users@NetBSD.org, everyone may commit changes.
+
+	pkg := t.SetupPackage("category/package")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputEmpty()
+
+	// A package with a MAINTAINER may be edited with care.
+
+	t.CreateFileLines("category/package/Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=\tdistname-1.0",
+		"CATEGORIES=\tcategory",
+		"MASTER_SITES=\t# none",
+		"",
+		"MAINTAINER=\tmaintainer@example.org", // Different from default value
+		"HOMEPAGE=\t# none",
+		"COMMENT=\tDummy package",
+		"LICENSE=\t2-clause-bsd",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile: " +
+			"Please only commit changes that maintainer@example.org would approve.")
+
+	// A package with an OWNER may NOT be edited by others.
+
+	pkg = t.SetupPackage("category/package",
+		"OWNER=\towner@example.org")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile: " +
+			"Don't commit changes to this file without asking the OWNER, owner@example.org.")
+
+	// ... unless you are the owner, of course.
+
+	G.CurrentUsername = "owner"
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputEmpty()
 }

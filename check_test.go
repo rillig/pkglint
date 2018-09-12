@@ -280,7 +280,7 @@ func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
 		"CATEGORIES=\t"+category,
 		"MASTER_SITES=\t# none",
 		"",
-		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		"HOMEPAGE=\t# none",
 		"COMMENT=\tDummy package",
 		"LICENSE=\t2-clause-bsd",

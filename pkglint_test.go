@@ -173,7 +173,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"CATEGORIES=\tsysutils tools",
 		"MASTER_SITES=\t${MASTER_SITE_GITHUB:=rillig/}",
 		"",
-		"MAINTAINER=\tpkgsrc-users@pkgsrc.org",
+		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		"HOMEPAGE=\thttps://github.com/rillig/checkperms/",
 		"COMMENT=\tCheck file permissions",
 		"LICENSE=\tbsd-2",
