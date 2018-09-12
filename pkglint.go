@@ -722,6 +722,11 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 	return
 }
 
+// ToolByVarname looks up the tool by its variable name, e.g. "SED".
+//
+// The returned tool may come either from the current Makefile or the
+// current package. It is not guaranteed to be usable; that must be
+// checked by the calling code.
 func (pkglint *Pkglint) ToolByVarname(varname string, time ToolTime) *Tool {
 
 	var tool *Tool
