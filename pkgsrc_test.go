@@ -119,6 +119,30 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 		"TRACE: - (*Tools).Trace(\"Pkgsrc\")")
 }
 
+// As a side-benefit, loadTools also loads the _BUILD_DEFS.
+func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupToolUsable("echo", "ECHO")
+	pkg := t.SetupPackage("category/package",
+		"pre-configure:",
+		"\t@${ECHO} ${PKG_SYSCONFDIR} ${VARBASE}")
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		MkRcsID,
+		"_BUILD_DEFS+=\tPKG_SYSCONFBASEDIR PKG_SYSCONFDIR")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.CheckDirent(pkg)
+
+	c.Check(G.Pkgsrc.IsBuildDef("PKG_SYSCONFDIR"), equals, true)
+	c.Check(G.Pkgsrc.IsBuildDef("VARBASE"), equals, false)
+
+	// FIXME: There should be a warning for VARBASE, but G.Pkgsrc.UserDefinedVars
+	// does not contain anything at mklinechecker.go:/UserDefinedVars/.
+	t.CheckOutputLines()
+}
+
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	t := s.Init(c)
 
