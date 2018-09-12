@@ -773,6 +773,32 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__negated_pipe(c *check.C) {
 		"WARN: Makefile:3: Found absolute pathname: /etc/passwd")
 }
 
+func (s *Suite) Test_ShellLine_CheckShellCommand__subshell(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"pre-configure:",
+		"\t@(echo ok)",
+		"\techo $$(uname -r); echo $$(expr 4 '*' $$(echo 1024))",
+		"\t@(echo nb$$(uname -r) $$(${EXPR} 4 \\* $$(echo 1024)))")
+
+	mklines.Check()
+
+	// FIXME: Fix the parse errors (nested subshells).
+	// FIXME: Fix the duplicate diagnostic in line 6.
+	// FIXME: "(" is not a shell command, it's an operator.
+	t.CheckOutputLines(
+		"WARN: Makefile:4: The shell command \"(\" should not be hidden.",
+		"WARN: Makefile:5: Pkglint parse error in ShTokenizer.ShAtom at \"$$(echo 1024))\" (quoting=S).",
+		"WARN: Makefile:5: Invoking subshells via $(...) is not portable enough.",
+		"WARN: Makefile:6: Pkglint parse error in ShTokenizer.ShAtom at \"$$(echo 1024)))\" (quoting=S).",
+		"WARN: Makefile:6: The shell command \"(\" should not be hidden.",
+		"WARN: Makefile:6: Pkglint parse error in ShTokenizer.ShAtom at \"$$(echo 1024)))\" (quoting=S).",
+		"WARN: Makefile:6: Invoking subshells via $(...) is not portable enough.")
+}
+
 func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	t := s.Init(c)
 
