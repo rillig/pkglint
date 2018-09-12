@@ -581,6 +581,20 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *che
 		"NOTE: ~/category/package/Makefile:21: The :M* modifier is not needed here.")
 }
 
+func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	pkg := t.SetupPackage("category/package",
+		"MASTER_SITES=\t${HOMEPAGE:Q}")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:5: The :Q operator should not be used for ${HOMEPAGE} here.")
+}
+
 // The ${VARNAME:=suffix} expression should only be used with lists.
 // It typically appears in MASTER_SITE definitions.
 func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
