@@ -249,7 +249,8 @@ func (t *Tester) SetupCategory(name string) {
 // SetupPackage sets up all files for a package so that it does not produce
 // any warnings.
 //
-// The given makefileLines start in line 20.
+// The given makefileLines start in line 20. Except if they are variable
+// definitions for already existing variables, then they replace that line.
 //
 // Returns the path to the package, ready to be used with Pkglint.CheckDirent.
 func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
@@ -288,8 +289,20 @@ func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
 	for len(mlines) < 19 {
 		mlines = append(mlines, "# empty")
 	}
-	mlines = append(mlines,
-		makefileLines...)
+
+line:
+	for _, line := range makefileLines {
+		if m, prefix := match1(line, `^(\w+=)`); m {
+			for i, existingLine := range mlines {
+				if hasPrefix(existingLine, prefix) {
+					mlines[i] = line
+					continue line
+				}
+			}
+		}
+		mlines = append(mlines, line)
+	}
+
 	mlines = append(mlines,
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")

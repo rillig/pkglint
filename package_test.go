@@ -315,13 +315,28 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
 
 	t.SetupCommandLine("-Wall,no-order")
 	pkg := t.SetupPackage("category/package",
-		"PKGNAME=\tdistname-1.0") // Same as DISTNAME in SetupPackage.
+		"DISTNAME=\tdistname-1.0",
+		"PKGNAME=\tdistname-1.0")
 
 	G.CheckDirent(pkg)
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:20: " +
 			"PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+}
+
+func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-order")
+	pkg := t.SetupPackage("category/package",
+		"DISTNAME=\tpkgname-version")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:3: " +
+			"As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
