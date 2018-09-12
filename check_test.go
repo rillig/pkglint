@@ -329,6 +329,21 @@ func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (file
 	return filename
 }
 
+// CreateFileDummyPatch creates a patch file with the given name in the
+// temporary directory.
+func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
+	t.CreateFileLines(relativeFileName,
+		RcsID,
+		"",
+		"Documentation",
+		"",
+		"--- oldfile",
+		"+++ newfile",
+		"@@ -1 +1 @@",
+		"-old",
+		"+new")
+}
+
 // File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
 // Calls to Tester.Chdir change the base directory for the relative file name.
@@ -368,6 +383,12 @@ func (t *Tester) Chdir(relativeFilename string) {
 		t.checkC.Fatalf("Cannot chdir: %s", err)
 	}
 	t.relcwd = relativeFilename
+}
+
+// Remove removes the file from the temporary directory. The file must exist.
+func (t *Tester) Remove(relativeFilename string) {
+	err := os.Remove(t.File(relativeFilename))
+	t.c().Check(err, check.IsNil)
 }
 
 // ExpectFatal runs the given action and expects that this action calls

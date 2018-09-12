@@ -451,6 +451,21 @@ func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
 		"ERROR: patches/patch-aa:1: Patch files must not be empty.")
 }
 
+func (s *Suite) Test_checkdirPackage__patch_without_distinfo(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("category/package")
+	t.CreateFileDummyPatch("category/package/patches/patch-aa")
+	t.Remove("category/package/distinfo")
+
+	G.CheckDirent(pkg)
+
+	// FIXME: One of the below warnings is redundant.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/distinfo: File not found. Please run \"@BMAKE@ makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
+		"WARN: ~/category/package/distinfo: File not found. Please run \"@BMAKE@ makepatchsum\".")
+}
+
 func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
 	t := s.Init(c)
 
