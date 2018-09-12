@@ -889,6 +889,22 @@ func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 			"This may result in false warnings.")
 }
 
+func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/package/extra.mk",
+		MkRcsID)
+	pkg := t.SetupPackage("category/package",
+		".include \"../package/extra.mk\"")
+
+	G.CheckDirent(pkg)
+
+	// FIXME: One of the below warnings is redundant.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: References to other packages should look like \"../../category/package\", not \"../package\".",
+		"WARN: ~/category/package/Makefile:20: Invalid relative path \"../package/extra.mk\".")
+}
+
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t := s.Init(c)
 
