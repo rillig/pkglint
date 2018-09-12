@@ -797,6 +797,21 @@ func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
 		"4 errors and 0 warnings found.")
 }
 
+func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	pkg := t.SetupPackage("category/package")
+	t.CreateFileLines("category/package/ALTERNATIVES",
+		"bin/wrapper bin/wrapper-impl")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/ALTERNATIVES:1: " +
+			"Alternative implementation \"bin/wrapper-impl\" must appear in the PLIST.")
+}
+
 func (s *Suite) Test_CheckfileMk__enoent(c *check.C) {
 	t := s.Init(c)
 
