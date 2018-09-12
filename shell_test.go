@@ -857,12 +857,16 @@ func (s *Suite) Test_SimpleCommandChecker_checkConditionalCd(c *check.C) {
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"pre-configure:",
-		"\t${RUN} while cd ..; do printf .; done")
+		"\t${RUN} while cd ..; do printf .; done",
+		// TODO: "\t${RUN} if ls | tr -d $$; then :; fi",
+		"\t${RUN} if ls | tr -d shell$$; then :; fi")
 
 	mklines.Check()
 
+	// FIXME: Fix the parse error.
 	t.CheckOutputLines(
-		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
+		"WARN: Pkglint parse error in ShTokenizer.ShAtom at \"$$\" (quoting=plain).")
 }
 
 func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) {
