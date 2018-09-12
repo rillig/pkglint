@@ -305,6 +305,8 @@ func (s *Suite) Test_naturalLess(c *check.C) {
 	c.Check(naturalLess("000", "0000"), equals, true)
 	c.Check(naturalLess("0000", "000"), equals, false)
 	c.Check(naturalLess("000", "000"), equals, false)
+	c.Check(naturalLess("00011", "000111"), equals, true)
+	c.Check(naturalLess("00011", "00012"), equals, true)
 }
 
 func (s *Suite) Test_varnameBase(c *check.C) {
