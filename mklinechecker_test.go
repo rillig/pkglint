@@ -559,6 +559,28 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	pkg := t.SetupPackage("category/package",
+		"MAKE_FLAGS+=\tCFLAGS=${CFLAGS:M*:Q}",
+		"MAKE_FLAGS+=\tLFLAGS=${LDFLAGS:M*:Q}")
+	G.Pkgsrc.LoadInfrastructure()
+	// FIXME: It is too easy to forget this important call.
+
+	// This package is guaranteed to not use GNU_CONFIGURE.
+	// Since the :M* hack is only needed for GNU_CONFIGURE, it is not necessary here.
+	G.CheckDirent(pkg)
+
+	// FIXME: Duplicate diagnostics.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: The :M* modifier is not needed here.",
+		"NOTE: ~/category/package/Makefile:20: The :M* modifier is not needed here.",
+		"NOTE: ~/category/package/Makefile:21: The :M* modifier is not needed here.",
+		"NOTE: ~/category/package/Makefile:21: The :M* modifier is not needed here.")
+}
+
 // The ${VARNAME:=suffix} expression should only be used with lists.
 // It typically appears in MASTER_SITE definitions.
 func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
