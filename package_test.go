@@ -904,6 +904,19 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__REPLACE_PERL(c *check.C) 
 		"WARN: ~/category/package/Makefile:20: REPLACE_PERL is ignored when NO_CONFIGURE is set (in line 21).")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_distinfo(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("category/package",
+		"META_PACKAGE=\tyes")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/distinfo: " +
+			"This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
+}
+
 func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 	t := s.Init(c)
 
