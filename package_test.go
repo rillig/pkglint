@@ -553,6 +553,33 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 		"NOTE: ~/category/package/Makefile:4: Definition of DISTNAME is redundant because of Makefile:4.")
 }
 
+func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/php/ext.mk",
+		MkRcsID,
+		"",
+		"PHPEXT_MK=      # defined",
+		"PHPPKGSRCDIR=   ../../lang/php72",
+		"LICENSE?=        unknown-license",
+		"COMMENT?=       Some PHP package",
+		"GENERATE_PLIST+=# none",
+		"",
+		".if !defined(PECL_VERSION)",
+		"DISTINFO_FILE=  ${.CURDIR}/${PHPPKGSRCDIR}/distinfo",
+		".endif",
+		".if defined(USE_PHP_EXT_PATCHES)",
+		"PATCHDIR=       ${.CURDIR}/${PHPPKGSRCDIR}/patches",
+		".endif")
+	pkg := t.SetupPackage("category/package",
+		"PECL_VERSION=\t1.1.2",
+		".include \"../../lang/php/ext.mk\"")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines()
+}
+
 func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 	t := s.Init(c)
 
