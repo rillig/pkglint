@@ -177,6 +177,34 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:12: Unknown doc/CHANGES line: \tAdded another [new package]")
 }
 
+func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectFatal(
+		func() { G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018")) },
+		"FATAL: ~/doc/CHANGES-2018: Cannot be read.")
+}
+
+func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("wip/package",
+		"DISTNAME=\tpackage-1.11",
+		"CATEGORIES=\tlocal")
+	t.SetupFileLines("wip/TODO",
+		RcsID,
+		"",
+		"Suggested package updates",
+		"",
+		"\to package-1.13 [cool new features]")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/wip/package/Makefile:3: This package should be updated to 1.13 ([cool new features]).")
+}
+
 func (s *Suite) Test_Pkgsrc_deprecated(c *check.C) {
 	t := s.Init(c)
 
