@@ -310,6 +310,20 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__precedence(c *check.C) {
 	c.Check(pkg.EffectivePkgversion, equals, "1.0")
 }
 
+func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-order")
+	pkg := t.SetupPackage("category/package",
+		"PKGNAME=\tdistname-1.0") // Same as DISTNAME in SetupPackage.
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: " +
+			"PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+}
+
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	t := s.Init(c)
 
