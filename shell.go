@@ -438,7 +438,7 @@ func (scc *SimpleCommandChecker) Check() {
 	}
 
 	scc.checkCommandStart()
-	scc.checkAbsolutePathnames()
+	scc.checkRegexReplace()
 	scc.checkAutoMkdirs()
 	scc.checkInstallMulti()
 	scc.checkPaxPe()
@@ -589,7 +589,7 @@ func (scc *SimpleCommandChecker) handleComment() bool {
 	return true
 }
 
-func (scc *SimpleCommandChecker) checkAbsolutePathnames() {
+func (scc *SimpleCommandChecker) checkRegexReplace() {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
@@ -600,7 +600,7 @@ func (scc *SimpleCommandChecker) checkAbsolutePathnames() {
 		if !isSubst {
 			CheckLineAbsolutePathname(scc.shline.mkline.Line, arg)
 		}
-		if false && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
+		if G.Testing && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
 			scc.shline.mkline.Warnf("Substitution commands like %q should always be quoted.", arg)
 			Explain(
 				"Usually these substitution commands contain characters like '*' or",

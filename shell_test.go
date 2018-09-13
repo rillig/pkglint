@@ -931,6 +931,31 @@ func (s *Suite) Test_SimpleCommandChecker_checkConditionalCd(c *check.C) {
 		"WARN: Pkglint parse error in ShTokenizer.ShAtom at \"$$\" (quoting=plain).")
 }
 
+func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"pre-configure:",
+		"\t${PAX} -s s,.*,, src dst",
+		"\tpax -s s,.*,, src dst",
+		"\t${SED} -e s,.*,, src dst",
+		"\tsed -e s,.*,, src dst",
+		"\tpax -s s,\\.orig,, src dst",
+		"\tsed -e s,a,b,g src dst")
+
+	mklines.Check()
+
+	// FIXME: warn for "pax -s".
+	// FIXME: warn for "sed -e".
+	// TODO: don't warn for "pax .orig".
+	// TODO: don't warn for "s,a,b,g".
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Substitution commands like \"s,.*,,\" should always be quoted.",
+		"WARN: Makefile:5: Substitution commands like \"s,.*,,\" should always be quoted.")
+
+}
+
 func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) {
 	t := s.Init(c)
 
