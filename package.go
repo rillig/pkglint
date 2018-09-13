@@ -841,10 +841,7 @@ func (pkg *Package) checkLocallyModified(fname string) {
 
 	owner, _ := pkg.vars.Value("OWNER")
 	maintainer, _ := pkg.vars.Value("MAINTAINER")
-	if containsVarRef(owner) {
-		owner = ""
-	}
-	if containsVarRef(maintainer) || maintainer == "pkgsrc-users@NetBSD.org" {
+	if maintainer == "pkgsrc-users@NetBSD.org" {
 		maintainer = ""
 	}
 	if owner == "" && maintainer == "" {
