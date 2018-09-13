@@ -833,6 +833,21 @@ func (s *Suite) Test_Pkglint_Checkfile__spec(c *check.C) {
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
 }
 
+func (s *Suite) Test_Pkglint_checkMode__skipped(c *check.C) {
+	t := s.Init(c)
+
+	G.checkMode("work", os.ModeSymlink)
+	G.checkMode("work.i386", os.ModeSymlink)
+	G.checkMode("work.hostname", os.ModeSymlink)
+	G.checkMode("other", os.ModeSymlink)
+
+	G.checkMode("device", os.ModeDevice)
+
+	t.CheckOutputLines(
+		"WARN: other: Unknown symlink name.",
+		"ERROR: device: Only files and directories are allowed in pkgsrc.")
+}
+
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	t := s.Init(c)
 

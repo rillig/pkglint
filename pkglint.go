@@ -529,9 +529,15 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 	}
 
 	pkglint.checkExecutable(st)
+	pkglint.checkMode(fname, st.Mode())
+}
 
+// checkMode checks a directory entry based on its file name and its mode
+// (regular file, directory, symlink).
+func (pkglint *Pkglint) checkMode(fname string, mode os.FileMode) {
+	basename := path.Base(fname)
 	switch {
-	case st.Mode().IsDir():
+	case mode.IsDir():
 		switch {
 		case basename == "files" || basename == "patches" || isIgnoredFilename(basename):
 			// Ok
@@ -541,12 +547,12 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 			NewLineWhole(fname).Warnf("Unknown directory name.")
 		}
 
-	case st.Mode()&os.ModeSymlink != 0:
+	case mode&os.ModeSymlink != 0:
 		if !hasPrefix(basename, "work") {
 			NewLineWhole(fname).Warnf("Unknown symlink name.")
 		}
 
-	case !st.Mode().IsRegular():
+	case !mode.IsRegular():
 		NewLineWhole(fname).Errorf("Only files and directories are allowed in pkgsrc.")
 
 	case basename == "ALTERNATIVES":
