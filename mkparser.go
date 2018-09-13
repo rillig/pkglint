@@ -193,6 +193,7 @@ loop:
 		}
 
 		repl.Reset(modifierMark)
+		// FIXME: Why AdvanceRegexp? This accepts :S,a,b,c,d,e,f but shouldn't.
 		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^:$`+closing+`]|\$\$)+`)) {
 		}
 		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {

@@ -52,6 +52,9 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	c.Check(pkg.pkgnameFromDistname("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1"), equals, "${DISTNAME:C/beta/.0./}")
 	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S/-0$/.0/1}", "aspell-af-0.50-0"), equals, "aspell-af-0.50.0")
 
+	// FIXME: Should produce a parse error since the :S modifier is malformed; see Test_MkParser_MkTokens.
+	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S,a,b,c,d}", "aspell-af-0.50-0"), equals, "bspell-af-0.50-0")
+
 	t.CheckOutputEmpty()
 }
 

@@ -523,20 +523,17 @@ func (pkg *Package) determineEffectivePkgVars() {
 func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 	tokens := NewMkParser(dummyLine, pkgname, false).MkTokens()
 
-	subst := func(str, smod string) (result string) {
-		if trace.Tracing {
-			defer trace.Call(str, smod, trace.Result(&result))()
-		}
+	// Example:
+	//  subst("distname-1.0", "S,name,file,g") => "distfile-1.0"
+	subst := func(str, smod string) string {
 		qsep := regexp.QuoteMeta(smod[1:2])
-		if m, left, from, right, to, flags := regex.Match5(smod, regex.Pattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`)); m {
-			result := mkopSubst(str, left != "", from, right != "", to, flags)
-			if trace.Tracing {
-				trace.Stepf("subst %q %q => %q", str, smod, result)
-			}
-			return result
+		m, left, from, right, to, flags := regex.Match5(smod, regex.Pattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`))
+		G.Assertf(m, "Internal pkglint error: pkgnameFromDistname %q", smod)
+		result := mkopSubst(str, left != "", from, right != "", to, flags)
+		if trace.Tracing && result != str {
+			trace.Stepf("pkgnameFromDistname.subst: %q %q => %q", str, smod, result)
 		}
-		dummyLine.Notef("package.go:546")
-		return str
+		return result
 	}
 
 	result := ""
