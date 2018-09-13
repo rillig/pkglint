@@ -480,10 +480,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 		"PATH=${PATH:Q}",
 		"true")
 
-	if false { // Don't know how to tokenize this correctly.
-		test("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
-			"id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)")
-	}
+	test("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
+		"id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)")
 
 	test("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
 		"id=`${AWK} '{print}' < ${WRKSRC}/idfile`")
