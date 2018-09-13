@@ -945,6 +945,21 @@ func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 			"This may result in false warnings.")
 }
 
+func (s *Suite) Test_Package_readMakefile__not_found(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("category/package",
+		".include \"../../devel/zlib/buildlink3.mk\"")
+	t.CreateFileLines("devel/zlib/buildlink3.mk",
+		".include \"../../enoent/enoent/buildlink3.mk\"")
+
+	G.checkdirPackage(pkg)
+
+	// FIXME: The "~/category/package/../../" is unnecessary.
+	t.CheckOutputLines(
+		"ERROR: ~/devel/zlib/buildlink3.mk:1: Cannot read \"~/category/package/../../enoent/enoent/buildlink3.mk\".")
+}
+
 func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
 	t := s.Init(c)
 
