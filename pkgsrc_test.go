@@ -177,6 +177,19 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:12: Unknown doc/CHANGES line: \tAdded another [new package]")
 }
 
+func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.Remove("doc/CHANGES-2018")
+	t.Remove("doc/TODO")
+	t.Remove("doc")
+
+	t.ExpectFatal(
+		G.Pkgsrc.loadDocChanges,
+		"FATAL: ~/doc: Cannot be read.")
+}
+
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {
 	t := s.Init(c)
 
