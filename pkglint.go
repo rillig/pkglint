@@ -108,11 +108,13 @@ type Hash struct {
 // it is the only global variable in this Go package
 var G Pkglint
 
+var exit = os.Exit // Indirect access, to allow main() to be tested.
+
 func main() {
 	G.logOut = NewSeparatorWriter(os.Stdout)
 	G.logErr = NewSeparatorWriter(os.Stderr)
 	trace.Out = os.Stdout
-	os.Exit(G.Main(os.Args...))
+	exit(G.Main(os.Args...))
 }
 
 // Main runs the main program with the given arguments.

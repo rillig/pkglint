@@ -177,8 +177,10 @@ func (wr *SeparatorWriter) Write(text string) {
 		io.WriteString(wr.out, "\n")
 		wr.needSeparator = false
 	}
-	io.WriteString(wr.out, text)
-	wr.wroteSomething = true
+	n, err := io.WriteString(wr.out, text)
+	if err == nil && n > 0 {
+		wr.wroteSomething = true
+	}
 }
 
 func (wr *SeparatorWriter) Printf(format string, args ...interface{}) {

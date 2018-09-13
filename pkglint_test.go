@@ -861,6 +861,43 @@ func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 		"AUTOFIX: ~/fname.mk: Clearing executable bits")
 }
 
+func (s *Suite) Test_main(c *check.C) {
+	t := s.Init(c)
+
+	out, err := os.Create(t.CreateFileLines("out"))
+	c.Check(err, check.IsNil)
+
+	pkg := t.SetupPackage("category/package")
+
+	func() {
+		args := os.Args
+		stdout := os.Stdout
+		stderr := os.Stderr
+		prevExit := exit
+		defer func() {
+			os.Stderr = stderr
+			os.Stdout = stdout
+			os.Args = args
+			exit = prevExit
+		}()
+		os.Args = []string{"pkglint", pkg}
+		os.Stdout = out
+		os.Stderr = out
+		exit = func(code int) {
+			c.Check(code, equals, 0)
+		}
+
+		main()
+	}()
+
+	err = out.Close()
+	c.Check(err, check.IsNil)
+
+	t.CheckOutputEmpty()
+	t.CheckFileLines("out",
+		"Looks fine.")
+}
+
 // ExecutableFileInfo mocks a FileInfo because on Windows,
 // regular files don't have the executable bit.
 type ExecutableFileInfo struct {
