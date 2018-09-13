@@ -797,6 +797,18 @@ func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
 		"4 errors and 0 warnings found.")
 }
 
+func (s *Suite) Test_Pkglint_Checkfile__unknown_file_in_patches(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileDummyPatch("category/Makefile/patches/index")
+
+	G.Checkfile(t.File("category/Makefile/patches/index"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/Makefile/patches/index: " +
+			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
+}
+
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	t := s.Init(c)
 
