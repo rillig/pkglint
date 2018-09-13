@@ -809,6 +809,17 @@ func (s *Suite) Test_Pkglint_Checkfile__unknown_file_in_patches(c *check.C) {
 			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
+func (s *Suite) Test_Pkglint_Checkfile__file_in_files(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/Makefile/files/index")
+
+	G.Checkfile(t.File("category/Makefile/files/index"))
+
+	// These files are ignored since they could contain anything.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	t := s.Init(c)
 
