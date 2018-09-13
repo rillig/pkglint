@@ -828,6 +828,21 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__case_patterns_from_variable(c 
 			"parse error at []string{\"*\", \")\", \"continue\", \";\", \"esac\"}")
 }
 
+func (s *Suite) Test_ShellLine_checkHiddenAndSuppress(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"show-all-targets: .PHONY",
+		"\t@echo 'hello'",
+		"\t@ls -l")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	t := s.Init(c)
 
