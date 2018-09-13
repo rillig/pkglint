@@ -629,7 +629,9 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 		// Skip
 
 	case basename == "spec":
-		// Ok in regression tests
+		if !hasPrefix(G.Pkgsrc.ToRel(fname), "regress/") {
+			NewLineWhole(fname).Warnf("Only packages in regress/ may have spec files.")
+		}
 
 	default:
 		NewLineWhole(fname).Warnf("Unexpected file found.")

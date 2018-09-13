@@ -812,12 +812,25 @@ func (s *Suite) Test_Pkglint_Checkfile__unknown_file_in_patches(c *check.C) {
 func (s *Suite) Test_Pkglint_Checkfile__file_in_files(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("category/Makefile/files/index")
+	t.CreateFileLines("category/package/files/index")
 
-	G.Checkfile(t.File("category/Makefile/files/index"))
+	G.Checkfile(t.File("category/package/files/index"))
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Pkglint_Checkfile__spec(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/package/spec")
+	t.CreateFileLines("regress/package/spec")
+
+	G.Checkfile(t.File("category/package/spec"))
+	G.Checkfile(t.File("regress/package/spec"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
 }
 
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
