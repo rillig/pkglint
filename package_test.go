@@ -1018,3 +1018,27 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_Package_checkdirPackage__filename_with_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-order")
+	pkg := t.SetupPackage("category/package",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"RUBY_VERSIONS_ACCEPTED=\t22 23 24 25", // As of 2018.
+		".for rv in ${RUBY_VERSIONS_ACCEPTED}",
+		"RUBY_VER?=\t\t${rv}",
+		".endfor",
+		"",
+		"RUBY_PKGDIR=\t../../lang/ruby-${RUBY_VER}-base",
+		"DISTINFO_FILE=\t${RUBY_PKGDIR}/distinfo")
+
+	// Pkglint cannot currently resolve the location of DISTINFO_FILE completely
+	// because the variable \"rv\" comes from a .for loop.
+	//
+	// TODO: resolve variables in simple .for loops like the above.
+	G.CheckDirent(pkg)
+
+	t.CheckOutputEmpty()
+}

@@ -189,6 +189,9 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 
 	for _, fname := range files {
 		if containsVarRef(fname) {
+			if trace.Tracing {
+				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", fname)
+			}
 			continue
 		}
 		if fname == pkg.File("Makefile") {
