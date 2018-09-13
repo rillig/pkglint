@@ -523,6 +523,18 @@ func (s *Suite) Test_ShellLine_CheckWord__dollar_without_variable(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_ShellLine_CheckWord__backslash_plus(c *check.C) {
+	t := s.Init(c)
+
+	shline := t.NewShellLine("fname", 1, "\tfind . -exec rm -rf {} \\+")
+
+	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
+
+	// FIXME: A backslash before any other character than "\` keeps its original meaning.
+	t.CheckOutputLines(
+		"WARN: fname:1: Pkglint parse error in ShellLine.CheckWord at \"\\\\+\" (quoting=plain), rest: \\+")
+}
+
 func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {
 	t := s.Init(c)
 
