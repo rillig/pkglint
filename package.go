@@ -456,10 +456,6 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 			// probably contains a statement that C is
 			// really not needed.
 
-		} else if !G.Infrastructure && useLine.Filename == "../../mk/compiler.mk" {
-			// Ignore this one
-			dummyLine.Notef("package.go:443")
-
 		} else if !matches(useLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
 			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
 				useLine.ReferenceFrom(gnuLine.Line))
@@ -539,6 +535,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 			}
 			return result
 		}
+		dummyLine.Notef("package.go:546")
 		return str
 	}
 
