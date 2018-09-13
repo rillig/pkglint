@@ -427,21 +427,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 		NewLineWhole(fname).Errorf("Each package must define its LICENSE.")
 	}
 
-	if gnuLine, useLine := vars.FirstDefinition("GNU_CONFIGURE"), vars.FirstDefinition("USE_LANGUAGES"); gnuLine != nil && useLine != nil {
-		if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
-			// Don't emit a warning, since the comment
-			// probably contains a statement that C is
-			// really not needed.
-
-		} else if !G.Infrastructure && useLine.Filename == "../../mk/compiler.mk" {
-			// Ignore this one
-
-		} else if !matches(useLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
-			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
-				useLine.ReferenceFrom(gnuLine.Line))
-		}
-	}
-
+	pkg.checkGnuConfigureUseLanguages()
 	pkg.determineEffectivePkgVars()
 	pkg.checkPossibleDowngrade()
 
@@ -459,6 +445,26 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
 	mklines.Check()
 	pkg.CheckVarorder(mklines)
 	SaveAutofixChanges(mklines.lines)
+}
+
+func (pkg *Package) checkGnuConfigureUseLanguages() {
+	vars := pkg.vars
+
+	if gnuLine, useLine := vars.FirstDefinition("GNU_CONFIGURE"), vars.FirstDefinition("USE_LANGUAGES"); gnuLine != nil && useLine != nil {
+		if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
+			// Don't emit a warning, since the comment
+			// probably contains a statement that C is
+			// really not needed.
+
+		} else if !G.Infrastructure && useLine.Filename == "../../mk/compiler.mk" {
+			// Ignore this one
+			dummyLine.Notef("package.go:443")
+
+		} else if !matches(useLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
+			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
+				useLine.ReferenceFrom(gnuLine.Line))
+		}
+	}
 }
 
 func (pkg *Package) getNbpart() string {
