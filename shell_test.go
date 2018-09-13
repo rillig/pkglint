@@ -834,6 +834,28 @@ func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 		"ERROR: Makefile:3: \"truss\" must not be used in Makefiles.")
 }
 
+func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupToolUsable("perl", "PERL5")
+	t.SetupTool("perl6", "PERL6")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"PERL5_VARS_CMD=\t${PERL5:Q}",
+		"PERL5_VARS_CMD=\t${PERL6:Q}")
+
+	mklines.Check()
+
+	// FIXME: Warn about using _PERL5_VARS because it starts with an underscore.
+	// FIXME: Omit the redundant PERL5_VARS_CMD warning in line 4.
+	// FIXME: In PERL5:Q and PERL6:Q, the :Q is wrong.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: PERL5_VARS_CMD is defined but not used.",
+		"WARN: Makefile:4: The \"perl6\" tool is used but not added to USE_TOOLS.",
+		"WARN: Makefile:4: PERL5_VARS_CMD is defined but not used.")
+}
+
 func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 	t := s.Init(c)
 
