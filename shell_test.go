@@ -883,6 +883,33 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 		"WARN: Makefile:4: PERL5_VARS_CMD is defined but not used.")
 }
 
+// The package Makefile and other .mk files in a package directory
+// may use any shell commands defined by any included files.
+// But only if the package is checked as a whole.
+//
+// On the contrary, when pkglint checks a single .mk file, these
+// commands are not guaranteed to be defined, not even when the
+// .mk file includes the file defining the command.
+// FIXME: This paragraph sounds wrong. All commands from included files should be valid.
+//
+// The variable must not be called *_CMD, or another code path is taken.
+func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("category/package",
+		"post-install:",
+		"\t${PYTHON_BIN}",
+		"",
+		".include \"extra.mk\"")
+	t.CreateFileLines("category/package/extra.mk",
+		MkRcsID,
+		"PYTHON_BIN= my_cmd")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
 	t := s.Init(c)
 
