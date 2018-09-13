@@ -116,6 +116,18 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"  (Prefix a flag with \"no-\" to disable it.)")
 }
 
+func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("category/package")
+
+	G.logOut = nil // Force an error that cannot happen in practice.
+
+	c.Check(
+		func() { G.Main("pkglint", pkg) },
+		check.PanicMatches, `(?s).*\bnil pointer\b.*`)
+}
+
 // Demonstrates which infrastructure files are necessary to actually run
 // pkglint in a realistic scenario.
 // For most tests, this setup is too much work, therefore they
