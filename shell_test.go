@@ -856,6 +856,17 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 		"WARN: Makefile:4: PERL5_VARS_CMD is defined but not used.")
 }
 
+func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("file.mk", 3, "\t# comment; continuation")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"WARN: file.mk:3: A shell comment should not contain semicolons.")
+}
+
 func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 	t := s.Init(c)
 
