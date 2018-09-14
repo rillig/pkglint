@@ -249,11 +249,9 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 				"",
 				"To avoid this uncertainty, escape the double quotes using \\\".")
 
-		case repl.AdvanceRegexp("^([^\\\\`]+)"):
-			unescaped += repl.Group(1)
-
 		default:
-			line.Errorf("Internal pkglint error in ShellLine.unescapeBackticks at %q (rest=%q).", shellword, repl.AdvanceRest())
+			G.Assertf(repl.AdvanceRegexp("^([^\\\\`]+)"), "incomplete switch")
+			unescaped += repl.Group(1)
 		}
 	}
 	line.Errorf("Unfinished backquotes: rest=%q", repl.Rest())
