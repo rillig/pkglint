@@ -255,7 +255,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 			unescaped += repl.Group(1)
 		}
 	}
-	line.Errorf("Unfinished backquotes: rest=%q", repl.Rest())
+	line.Errorf("Unfinished backquotes: %s", repl.Rest())
 	return unescaped, quoting
 }
 

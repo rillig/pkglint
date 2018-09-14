@@ -594,6 +594,22 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished(c *check.C) {
 		"WARN: fname.mk:5: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"echo\"}")
 }
 
+func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+
+	// This call is unrealistic. It doesn't happen in practice, and this
+	// direct, forcing test is only to reach the code coverage.
+	NewShellLine(dummyMkLine).unescapeBackticks(
+		"dummy",
+		textproc.NewPrefixReplacer(""),
+		shqBackt)
+
+	t.CheckOutputLines(
+		"ERROR: Unfinished backquotes: ")
+}
+
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	t := s.Init(c)
 
