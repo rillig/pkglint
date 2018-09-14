@@ -192,10 +192,10 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 	switch {
 	case quoting == shqPlain && varuse.IsQ():
 		// Fine.
-	case quoting == shqBackt:
-		// Don't check anything here, to avoid false positives for tool names.
+
 	case (quoting == shqSquot || quoting == shqDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
 		// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
+
 	case quoting == shqDquot && varuse.IsQ():
 		shline.mkline.Warnf("Please don't use the :Q operator in double quotes.")
 		Explain(
