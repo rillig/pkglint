@@ -325,13 +325,10 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 
 // relpath returns the relative path from `from` to `to`.
 func relpath(from, to string) string {
-	absFrom, err1 := filepath.Abs(from)
-	absTo, err2 := filepath.Abs(to)
-	rel, err3 := filepath.Rel(absFrom, absTo)
-	if err1 != nil || err2 != nil || err3 != nil {
-		trace.Stepf("relpath.panic", from, to, err1, err2, err3)
-		panic(fmt.Sprintf("relpath %q, %q", from, to))
-	}
+	absFrom := abspath(from)
+	absTo := abspath(to)
+	rel, err := filepath.Rel(absFrom, absTo)
+	G.Assertf(err == nil, "relpath %q %q.", from, to)
 	result := filepath.ToSlash(rel)
 	if trace.Tracing {
 		trace.Stepf("relpath from %q to %q = %q", from, to, result)
@@ -341,9 +338,7 @@ func relpath(from, to string) string {
 
 func abspath(fname string) string {
 	abs, err := filepath.Abs(fname)
-	if err != nil {
-		NewLineWhole(fname).Fatalf("Cannot determine absolute path.")
-	}
+	G.Assertf(err == nil, "abspath %q.", fname)
 	return filepath.ToSlash(abs)
 }
 

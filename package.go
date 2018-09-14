@@ -528,7 +528,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 	subst := func(str, smod string) string {
 		qsep := regexp.QuoteMeta(smod[1:2])
 		m, left, from, right, to, flags := regex.Match5(smod, regex.Pattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`))
-		G.Assertf(m, "Internal pkglint error: pkgnameFromDistname %q", smod)
+		G.Assertf(m, "pkgnameFromDistname %q", smod)
 		result := mkopSubst(str, left != "", from, right != "", to, flags)
 		if trace.Tracing && result != str {
 			trace.Stepf("pkgnameFromDistname.subst: %q %q => %q", str, smod, result)

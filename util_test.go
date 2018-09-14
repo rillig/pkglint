@@ -86,8 +86,12 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 }
 
 func (s *Suite) Test_relpath(c *check.C) {
+	t := s.Init(c)
+
 	if runtime.GOOS == "windows" {
-		c.Check(func() { relpath("c:/", "d:/") }, check.Panics, "relpath \"c:/\", \"d:/\"")
+		t.ExpectFatal(
+			func() { relpath("c:/", "d:/") },
+			"FATAL: Pkglint internal error: relpath \"c:/\" \"d:/\".")
 	}
 }
 
@@ -97,7 +101,7 @@ func (s *Suite) Test_abspath(c *check.C) {
 	if runtime.GOOS == "windows" {
 		t.ExpectFatal(
 			func() { abspath("file\u0000name") },
-			"FATAL: file\x00name: Cannot determine absolute path.")
+			"FATAL: Pkglint internal error: abspath \"file\\x00name\".")
 	}
 }
 

@@ -367,7 +367,7 @@ nextAtom:
 	}
 	repl.Reset(mark)
 
-	G.Assertf(len(atoms) != 0, "Internal pkglint error: no shell atoms found.")
+	G.Assertf(len(atoms) != 0, "ShTokenizer.ShToken")
 	return NewShToken(repl.Since(initialMark), atoms...)
 }
 

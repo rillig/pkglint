@@ -341,13 +341,13 @@ func (pkglint *Pkglint) Panicf(format string, args ...interface{}) {
 }
 
 // Assertf checks that the condition is true. Otherwise it terminates the
-// process with a fatal error message.
+// process with a fatal error message, prefixed with "Pkglint internal error".
 //
 // This method must only be used for programming errors.
 // For runtime errors, use Panicf.
 func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
-		pkglint.Panicf(format, args...)
+		pkglint.Panicf("Pkglint internal error: "+format, args...)
 	}
 }
 

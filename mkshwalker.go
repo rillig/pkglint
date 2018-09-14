@@ -59,7 +59,7 @@ func (w *MkShWalker) Path() string {
 func (w *MkShWalker) Walk(list *MkShList) {
 	w.walkList(-1, list)
 
-	G.Assertf(len(w.Context) == 0, "Internal MkShWalker error: %v", w.Context)
+	G.Assertf(len(w.Context) == 0, "MkShWalker.Walk %v", w.Context)
 }
 
 func (w *MkShWalker) walkList(index int, list *MkShList) {
