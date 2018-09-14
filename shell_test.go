@@ -610,6 +610,29 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) 
 		"ERROR: Unfinished backquotes: ")
 }
 
+func (s *Suite) Test_ShellLine_variableNeedsQuoting(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	t.SetupToolUsable("cp", "")
+	mklines := t.NewMkLines("fname.mk",
+		MkRcsID,
+		"",
+		// It's a bit silly to use shell variables in CONFIGURE_ARGS,
+		// but currently that's the only way to run ShellLine.variableNeedsQuoting.
+		"CONFIGURE_ARGS+=\t; cp $$dir $$\\# $$target",
+		"pre-configure:",
+		"\tcp $$dir $$\\# $$target")
+
+	mklines.Check()
+
+	// Quoting check is currently disabled for real shell commands.
+	// See ShellLine.CheckShellCommand, spc.checkWord.
+	t.CheckOutputLines(
+		"WARN: fname.mk:3: Unquoted shell variable \"target\".")
+}
+
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	t := s.Init(c)
 

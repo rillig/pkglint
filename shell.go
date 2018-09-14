@@ -80,8 +80,8 @@ outer:
 		case quoting == shqPlain:
 			switch {
 			// FIXME: These regular expressions don't belong here, they are the job of the tokenizer.
-			case repl.AdvanceRegexp(`^[!#\%&\(\)*+,\-.\/0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
-				repl.AdvanceRegexp(`^\\(?:[ !"#'\(\)*./;?\\^{|}]|\$\$)`):
+			case repl.AdvanceRegexp(`^[!#%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
+				repl.AdvanceRegexp(`^\\(?:[ !"#'()*./;?\\^{|}]|\$\$)`):
 			case repl.AdvanceStr("'"):
 				quoting = shqSquot
 			case repl.AdvanceStr("\""):
@@ -354,6 +354,8 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 		spc.checkPipeExitcode(line, pipeline)
 	}
 	walker.Callback.Word = func(word *ShToken) {
+		// TODO: Try to replace false with true here; it had been set to false
+		// TODO: in 2016 for no apparent reason.
 		spc.checkWord(word, false, time)
 	}
 
