@@ -283,7 +283,14 @@ func (tr *Tools) AddAll(other Tools) {
 		defer trace.Call(other.TraceName+" to "+tr.TraceName, len(other.byName))()
 	}
 
-	for _, otherTool := range other.byName {
+	var names []string
+	for name := range other.byName {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		otherTool := other.byName[name]
 		if trace.Tracing {
 			trace.Stepf("Tools.AddAll %+v", *otherTool)
 		}
