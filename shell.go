@@ -79,6 +79,7 @@ outer:
 
 		case quoting == shqPlain:
 			switch {
+			// FIXME: These regular expressions don't belong here, they are the job of the tokenizer.
 			case repl.AdvanceRegexp(`^[!#\%&\(\)*+,\-.\/0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
 				repl.AdvanceRegexp(`^\\(?:[ !"#'\(\)*./;?\\^{|}]|\$\$)`):
 			case repl.AdvanceStr("'"):
@@ -964,6 +965,7 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 	}
 
 	word := ""
+	rest = text
 	p := NewShTokenizer(line, text, false)
 	emit := func() {
 		if word != "" {

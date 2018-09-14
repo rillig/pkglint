@@ -590,7 +590,7 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished(c *check.C) {
 
 	// FIXME: Mention the unfinished backquote.
 	t.CheckOutputLines(
-		// FIXME: "WARN: fname.mk:4: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
+		"WARN: fname.mk:4: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
 		"WARN: fname.mk:5: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"echo\"}")
 }
 
