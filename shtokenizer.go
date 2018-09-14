@@ -153,10 +153,7 @@ func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	case repl.AdvanceRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)+`):
 		return &ShAtom{shtWord, repl.Group(0), q, nil}
 	}
-	if op := p.shOperator(q); op != nil {
-		return op
-	}
-	return nil
+	return p.shOperator(q)
 }
 
 func (p *ShTokenizer) shAtomDquotBackt() *ShAtom {

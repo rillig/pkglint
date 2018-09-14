@@ -627,7 +627,7 @@ func (src *Pkgsrc) IsBuildDef(varname string) bool {
 func (src *Pkgsrc) loadMasterSites() {
 	mklines := src.LoadMk("mk/fetch/sites.mk", MustSucceed|NotEmpty)
 
-	nameToUrl := src.MasterSiteVarToURL
+	nameToURL := src.MasterSiteVarToURL
 	urlToName := src.MasterSiteURLToVar
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
@@ -635,8 +635,8 @@ func (src *Pkgsrc) loadMasterSites() {
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
 				for _, url := range splitOnSpace(mkline.Value()) {
 					if matches(url, `^(?:http://|https://|ftp://)`) {
-						if nameToUrl[varname] == "" {
-							nameToUrl[varname] = url
+						if nameToURL[varname] == "" {
+							nameToURL[varname] = url
 						}
 						urlToName[url] = varname
 					}
@@ -646,7 +646,7 @@ func (src *Pkgsrc) loadMasterSites() {
 	}
 
 	// Explicitly allowed, although not defined in mk/fetch/sites.mk.
-	nameToUrl["MASTER_SITE_LOCAL"] = "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/"
+	nameToURL["MASTER_SITE_LOCAL"] = "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/"
 
 	if trace.Tracing {
 		trace.Stepf("Loaded %d MASTER_SITE_* URLs.", len(urlToName))
