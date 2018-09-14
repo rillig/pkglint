@@ -535,7 +535,33 @@ func (s *Suite) Test_ShellLine_CheckWord__backslash_plus(c *check.C) {
 		"WARN: fname:1: Pkglint parse error in ShellLine.CheckWord at \"\\\\+\" (quoting=plain), rest: \\+")
 }
 
-func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {
+func (s *Suite) Test_ShellLine_CheckWord__squot_dollar(c *check.C) {
+	t := s.Init(c)
+
+	shline := t.NewShellLine("fname", 1, "\t'$")
+
+	shline.CheckWord(shline.mkline.ShellCommand(), false, RunTime)
+
+	// FIXME: Should be parsed correctly. Make passes the dollar through (probably),
+	// and the shell parser should complain about the unfinished string literal.
+	t.CheckOutputLines(
+		"WARN: fname:1: Pkglint parse error in ShellLine.CheckWord at \"'$\" (quoting=s), rest: $")
+}
+
+func (s *Suite) Test_ShellLine_CheckWord__dquot_dollar(c *check.C) {
+	t := s.Init(c)
+
+	shline := t.NewShellLine("fname", 1, "\t\"$")
+
+	shline.CheckWord(shline.mkline.ShellCommand(), false, RunTime)
+
+	// FIXME: Should be parsed correctly. Make passes the dollar through (probably),
+	// and the shell parser should complain about the unfinished string literal.
+	t.CheckOutputLines(
+		"WARN: fname:1: Pkglint parse error in ShellLine.CheckWord at \"\\\"$\" (quoting=d), rest: $")
+}
+
+func (s *Suite) Test_ShellLine_CheckToken__dollar_subshell(c *check.C) {
 	t := s.Init(c)
 
 	shline := t.NewShellLine("fname", 1, "\t$$(echo output)")
@@ -544,6 +570,28 @@ func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: fname:1: Invoking subshells via $(...) is not portable enough.")
+}
+
+func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	mklines := t.NewMkLines("fname.mk",
+		MkRcsID,
+		"",
+		"pre-configure:",
+		"\t`${VAR}",      // Error in first shell word
+		"\techo `${VAR}") // Error after first shell word
+
+	// Breakpoint in ShellLine.CheckShellCommand
+	// Breakpoint in ShellLine.CheckToken
+	// Breakpoint in ShellLine.unescapeBackticks
+	mklines.Check()
+
+	// FIXME: Mention the unfinished backquote.
+	t.CheckOutputLines(
+		// FIXME: "WARN: fname.mk:4: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
+		"WARN: fname.mk:5: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"echo\"}")
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
