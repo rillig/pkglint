@@ -521,7 +521,10 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 		"\t"+"$$(`",
 
 		// Covers shAtomSubshSquot: return nil
-		"\t"+"$$('$)")
+		"\t"+"$$('$)",
+
+		// Covers shAtomDquotBackt: case repl.AdvanceRegexp("^#[^`]*")
+		"\t"+"\"`# comment")
 
 	mklines.Check()
 
@@ -552,14 +555,16 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 
 		"WARN: fuzzing.mk:11: Pkglint parse error in ShTokenizer.ShAtom at \"$)\" (quoting=Ss).",
 		"WARN: fuzzing.mk:11: Invoking subshells via $(...) is not portable enough.",
-		"WARN: fuzzing.mk:11: Pkglint parse error in MkLine.Tokenize at \"$)\".")
+		"WARN: fuzzing.mk:11: Pkglint parse error in MkLine.Tokenize at \"$)\".",
+
+		"WARN: fuzzing.mk:12: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}")
 }
 
 func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	t := s.Init(c)
 
 	fuzzer := NewFuzzer()
-	fuzzer.Char("\"'`$();|_", 10)
+	fuzzer.Char("\"'`$();|_#", 10)
 	fuzzer.Range('a', 'z', 5)
 
 	defer fuzzer.CheckOk()
