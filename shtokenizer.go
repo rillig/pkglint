@@ -145,7 +145,7 @@ func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	case repl.AdvanceStr("'"):
 		return &ShAtom{shtWord, repl.Str(), shqSubshSquot, nil}
 	case repl.AdvanceStr("`"):
-	//return &ShAtom{shtWord, repl.Str(), shqBackt, nil}
+		// FIXME: return &ShAtom{shtWord, repl.Str(), shqBackt, nil}
 	case repl.AdvanceRegexp(`^#[^)]*`):
 		return &ShAtom{shtComment, repl.Group(0), q, nil}
 	case repl.AdvanceStr(")"):

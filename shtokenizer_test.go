@@ -486,3 +486,87 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	test("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
 		"id=`${AWK} '{print}' < ${WRKSRC}/idfile`")
 }
+
+func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("fuzzing.mk",
+		MkRcsID,
+		"",
+		"pre-configure:",
+
+		// Covers shAtomBacktDquot: return nil.
+		// These are nested backticks with double quotes,
+		// which should be avoided since POSIX marks them as unspecified.
+		"\t"+"`\"`",
+
+		// Covers shAtomBacktSquot: return nil
+		"\t"+"`'$`",
+
+		// Covers shAtomDquotBacktSquot: return nil
+		"\t"+"\"`'`y",
+
+		// Covers shAtomDquotBackt: return nil
+		// FIXME: Pkglint must parse unescpaed dollar in the same way, everywhere.
+		"\t"+"\"`$|",
+
+		// Covers shAtomDquotBacktDquot: return nil
+		// FIXME: Pkglint must support unlimited nesting.
+		"\t"+"\"`\"`",
+
+		// Covers shAtomSubshDquot: return nil
+		"\t"+"$$(\"'",
+
+		// Covers shAtomSubsh: case repl.AdvanceStr("`")
+		"\t"+"$$(`",
+
+		// Covers shAtomSubshSquot: return nil
+		"\t"+"$$('$)")
+
+	mklines.Check()
+
+	// Just good that these redundant error messages don't occur every day.
+	t.CheckOutputLines(
+		"WARN: fuzzing.mk:4: Pkglint parse error in ShTokenizer.ShAtom at \"`\" (quoting=bd).",
+		"WARN: fuzzing.mk:4: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
+
+		"WARN: fuzzing.mk:5: Pkglint parse error in ShTokenizer.ShAtom at \"$`\" (quoting=bs).",
+		"WARN: fuzzing.mk:5: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
+		"WARN: fuzzing.mk:5: Pkglint parse error in MkLine.Tokenize at \"$`\".",
+
+		"WARN: fuzzing.mk:6: Pkglint parse error in ShTokenizer.ShAtom at \"`y\" (quoting=dbs).",
+		"WARN: fuzzing.mk:6: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
+
+		"WARN: fuzzing.mk:7: Pkglint parse error in ShTokenizer.ShAtom at \"$|\" (quoting=db).",
+		"WARN: fuzzing.mk:7: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
+		"WARN: fuzzing.mk:7: Pkglint parse error in MkLine.Tokenize at \"$|\".",
+
+		"WARN: fuzzing.mk:8: Pkglint parse error in ShTokenizer.ShAtom at \"`\" (quoting=dbd).",
+		"WARN: fuzzing.mk:8: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
+
+		"WARN: fuzzing.mk:9: Pkglint parse error in ShTokenizer.ShAtom at \"'\" (quoting=Sd).",
+		"WARN: fuzzing.mk:9: Invoking subshells via $(...) is not portable enough.",
+
+		"WARN: fuzzing.mk:10: Pkglint parse error in ShTokenizer.ShAtom at \"`\" (quoting=S).",
+		"WARN: fuzzing.mk:10: Invoking subshells via $(...) is not portable enough.",
+
+		"WARN: fuzzing.mk:11: Pkglint parse error in ShTokenizer.ShAtom at \"$)\" (quoting=Ss).",
+		"WARN: fuzzing.mk:11: Invoking subshells via $(...) is not portable enough.",
+		"WARN: fuzzing.mk:11: Pkglint parse error in MkLine.Tokenize at \"$)\".")
+}
+
+func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
+	t := s.Init(c)
+
+	fuzzer := NewFuzzer()
+	fuzzer.Char("\"'`$();|_", 10)
+	fuzzer.Range('a', 'z', 5)
+
+	defer fuzzer.CheckOk()
+	for i := 0; i < 1000; i++ {
+		tokenizer := NewShTokenizer(dummyLine, fuzzer.Generate(50), false)
+		tokenizer.ShAtoms()
+		t.Output() // Discard the output, only react on fatal errors.
+	}
+	fuzzer.Ok()
+}
