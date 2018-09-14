@@ -89,7 +89,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	G = Pkglint{} // unusable because of missing logOut and logErr
 	textproc.Testing = false
 	if out := t.Output(); out != "" {
-		fmt.Fprintf(os.Stderr, "Unchecked output in %q; check with: t.CheckOutputLines(%v)",
+		fmt.Fprintf(os.Stderr, "Unchecked output in %q; check with: t.CheckOutputLines(%#v)",
 			c.TestName(), strings.Split(out, "\n"))
 	}
 	t.tmpdir = ""
