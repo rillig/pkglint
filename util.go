@@ -518,8 +518,14 @@ func (s *Scope) Value(varname string) (value string, found bool) {
 }
 
 func (s *Scope) DefineAll(other Scope) {
-	for varname, mkline := range other.defined {
-		s.Define(varname, mkline)
+	var varnames []string
+	for varname := range other.defined {
+		varnames = append(varnames, varname)
+	}
+	sort.Strings(varnames)
+
+	for _, varname := range varnames {
+		s.Define(varname, other.defined[varname])
 	}
 }
 
