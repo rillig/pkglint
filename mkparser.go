@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// MkParser wraps a Parser and provides methods for parsing
+// things related to Makefiles.
 type MkParser struct {
 	*Parser
 }
