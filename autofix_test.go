@@ -115,7 +115,7 @@ func (s *Suite) Test_autofix_MkLines(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix")
-	t.SetupFileLines("category/basename/Makefile",
+	t.CreateFileLines("category/basename/Makefile",
 		"line1 := value1",
 		"line2 := value2",
 		"line3 := value3")

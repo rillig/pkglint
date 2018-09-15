@@ -383,7 +383,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
 		"RMD160 (distfile-1.0.tar.gz) = 12341234...",
 		"SHA512 (distfile-1.0.tar.gz) = 12341234...",
 		"Size (distfile-1.0.tar.gz) = 12341234...")
-	t.SetupFileLines("category/package/Makefile",
+	t.CreateFileLines("category/package/Makefile",
 		MkRcsID,
 		"",
 		"CATEGORIES=category",
@@ -407,7 +407,7 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
-	t.SetupFileLines("Makefile",
+	t.CreateFileLines("Makefile",
 		MkRcsID)
 
 	G.checkdirPackage(".")
@@ -437,7 +437,7 @@ func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
 	t.CreateFileLines("category/package/patches/patch-aa",
 		RcsID)
 	t.Chdir("category/package")
-	t.SetupFileLines("Makefile",
+	t.CreateFileLines("Makefile",
 		MkRcsID,
 		"",
 		"CATEGORIES=category",
@@ -567,7 +567,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("category/package/Makefile",
+	t.CreateFileLines("category/package/Makefile",
 		MkRcsID,
 		"",
 		"PKGNAME=pkgname-1.67",

@@ -42,7 +42,7 @@ func (s *Suite) Test_ChecklinesPatch__without_empty_line__autofix(c *check.C) {
 		"-old line",
 		"+new line",
 		" context after")
-	t.SetupFileLines("distinfo",
+	t.CreateFileLines("distinfo",
 		RcsID,
 		"",
 		// The hash is taken from a breakpoint at the beginning of AutofixDistinfo, oldSha1

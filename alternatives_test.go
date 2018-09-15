@@ -7,7 +7,7 @@ func (s *Suite) Test_CheckfileAlternatives__PLIST(c *check.C) {
 
 	t.SetupPackage("category/package")
 	t.Chdir("category/package")
-	t.SetupFileLines("ALTERNATIVES",
+	t.CreateFileLines("ALTERNATIVES",
 		"sbin/sendmail @PREFIX@/sbin/sendmail.postfix@POSTFIXVER@",
 		"sbin/sendmail @PREFIX@/sbin/sendmail.exim@EXIMVER@",
 		"bin/echo bin/gnu-echo",
@@ -38,7 +38,7 @@ func (s *Suite) Test_CheckfileAlternatives__empty(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
-	t.SetupFileLines("ALTERNATIVES")
+	t.CreateFileLines("ALTERNATIVES")
 
 	G.Pkg = NewPackage(".")
 

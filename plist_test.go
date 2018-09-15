@@ -65,7 +65,7 @@ func (s *Suite) Test_ChecklinesPlist__empty(c *check.C) {
 func (s *Suite) Test_ChecklinesPlist__commonEnd(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("PLIST.common",
+	t.CreateFileLines("PLIST.common",
 		PlistRcsID,
 		"bin/common")
 	lines := t.SetupFileLines("PLIST.common_end",

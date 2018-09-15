@@ -308,11 +308,11 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions__infrastructure(
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupFileMkLines("mk/infra.mk",
+	t.CreateFileLines("mk/infra.mk",
 		MkRcsID,
 		"",
 		"PKG_DEVELOPER?=\tyes")
-	t.SetupFileMkLines("mk/bsd.pkg.mk")
+	t.CreateFileLines("mk/bsd.pkg.mk")
 
 	G.CheckDirent(t.File("mk/infra.mk"))
 

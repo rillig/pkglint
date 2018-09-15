@@ -108,14 +108,14 @@ func (s *Suite) Test_abspath(c *check.C) {
 func (s *Suite) Test_isEmptyDir_and_getSubdirs(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("CVS/Entries",
+	t.CreateFileLines("CVS/Entries",
 		"dummy")
 
 	if dir := t.File("."); true {
 		c.Check(isEmptyDir(dir), equals, true)
 		c.Check(getSubdirs(dir), check.DeepEquals, []string(nil))
 
-		t.SetupFileLines("somedir/file")
+		t.CreateFileLines("somedir/file")
 
 		c.Check(isEmptyDir(dir), equals, false)
 		c.Check(getSubdirs(dir), check.DeepEquals, []string{"somedir"})
@@ -134,7 +134,7 @@ func (s *Suite) Test_isEmptyDir_and_getSubdirs(c *check.C) {
 func (s *Suite) Test_isEmptyDir__empty_subdir(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("CVS/Entries",
+	t.CreateFileLines("CVS/Entries",
 		"dummy")
 	t.CreateFileLines("subdir/CVS/Entries",
 		"dummy")

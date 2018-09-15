@@ -15,7 +15,7 @@ func (s *Suite) Test_ChecklinesOptionsMk(c *check.C) {
 	t.SetupOption("sqlite", "")
 	t.SetupOption("x11", "")
 
-	t.SetupFileMkLines("mk/bsd.options.mk",
+	t.CreateFileLines("mk/bsd.options.mk",
 		MkRcsID)
 
 	mklines := t.SetupFileMkLines("category/package/options.mk",
@@ -70,7 +70,7 @@ func (s *Suite) Test_ChecklinesOptionsMk__unexpected_line(c *check.C) {
 	t.SetupOption("slang", "")
 	t.SetupOption("x11", "")
 
-	t.SetupFileMkLines("mk/bsd.options.mk",
+	t.CreateFileLines("mk/bsd.options.mk",
 		MkRcsID)
 
 	mklines := t.SetupFileMkLines("category/package/options.mk",
@@ -99,7 +99,7 @@ func (s *Suite) Test_ChecklinesOptionsMk__malformed_condition(c *check.C) {
 	t.SetupOption("slang", "")
 	t.SetupOption("x11", "")
 
-	t.SetupFileMkLines("mk/bsd.options.mk",
+	t.CreateFileLines("mk/bsd.options.mk",
 		MkRcsID)
 
 	mklines := t.SetupFileMkLines("category/package/options.mk",

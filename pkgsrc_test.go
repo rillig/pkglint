@@ -61,22 +61,22 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("mk/tools/bsd.tools.mk",
+	t.CreateFileLines("mk/tools/bsd.tools.mk",
 		".include \"flex.mk\"",
 		".include \"gettext.mk\"",
 		".include \"strip.mk\"",
 		".include \"replace.mk\"")
-	t.SetupFileLines("mk/tools/defaults.mk",
+	t.CreateFileLines("mk/tools/defaults.mk",
 		"_TOOLS_VARNAME.chown=CHOWN",
 		"_TOOLS_VARNAME.gawk=AWK",
 		"_TOOLS_VARNAME.mv=MV",
 		"_TOOLS_VARNAME.pwd=PWD")
-	t.SetupFileLines("mk/tools/flex.mk",
+	t.CreateFileLines("mk/tools/flex.mk",
 		"# empty")
-	t.SetupFileLines("mk/tools/gettext.mk",
+	t.CreateFileLines("mk/tools/gettext.mk",
 		"USE_TOOLS+=msgfmt",
 		"TOOLS_CREATE+=msgfmt")
-	t.SetupFileLines("mk/tools/strip.mk",
+	t.CreateFileLines("mk/tools/strip.mk",
 		".if defined(_INSTALL_UNSTRIPPED) || !defined(TOOLS_PLATFORM.strip)",
 		"TOOLS_NOOP+=            strip",
 		".else",
@@ -84,14 +84,14 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 		"TOOLS_PATH.strip=       ${TOOLS_PLATFORM.strip}",
 		".endif",
 		"STRIP?=         strip")
-	t.SetupFileLines("mk/tools/replace.mk",
+	t.CreateFileLines("mk/tools/replace.mk",
 		"_TOOLS.bzip2=\tbzip2 bzcat",
 		"#TOOLS_CREATE+=commented out",
 		"_UNRELATED_VAR=\t# empty")
-	t.SetupFileLines("mk/bsd.prefs.mk",
+	t.CreateFileLines("mk/bsd.prefs.mk",
 		"USE_TOOLS+=\tpwd",
 		"USE_TOOLS+=\tm4:pkgsrc")
-	t.SetupFileLines("mk/bsd.pkg.mk",
+	t.CreateFileLines("mk/bsd.pkg.mk",
 		"USE_TOOLS+=\tmv")
 
 	G.Pkgsrc.loadTools()
@@ -146,7 +146,7 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("doc/CHANGES-2018",
+	t.CreateFileLines("doc/CHANGES-2018",
 		"\tAdded category/package version 1.0 [author1 2015-01-01]", // Wrong year
 		"\tUpdated category/package to 1.5 [author2 2018-01-02]",
 		"\tRenamed category/package to category/pkg [author3 2018-01-03]",
@@ -204,7 +204,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 	pkg := t.SetupPackage("wip/package",
 		"DISTNAME=\tpackage-1.11",
 		"CATEGORIES=\tlocal")
-	t.SetupFileLines("wip/TODO",
+	t.CreateFileLines("wip/TODO",
 		RcsID,
 		"",
 		"Suggested package updates",
@@ -247,7 +247,7 @@ func (s *Suite) Test_Pkgsrc_Latest__no_basedir(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Latest__no_subdirs(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("lang/Makefile")
+	t.CreateFileLines("lang/Makefile")
 
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
@@ -259,8 +259,8 @@ func (s *Suite) Test_Pkgsrc_Latest__no_subdirs(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Latest__single(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("lang/Makefile")
-	t.SetupFileLines("lang/python27/Makefile")
+	t.CreateFileLines("lang/Makefile")
+	t.CreateFileLines("lang/python27/Makefile")
 
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
@@ -274,9 +274,9 @@ func (s *Suite) Test_Pkgsrc_Latest__single(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Latest__multi(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("lang/Makefile")
-	t.SetupFileLines("lang/python27/Makefile")
-	t.SetupFileLines("lang/python35/Makefile")
+	t.CreateFileLines("lang/Makefile")
+	t.CreateFileLines("lang/python27/Makefile")
+	t.CreateFileLines("lang/python35/Makefile")
 
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
@@ -286,10 +286,10 @@ func (s *Suite) Test_Pkgsrc_Latest__multi(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Latest__numeric(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("databases/postgresql95/Makefile")
-	t.SetupFileLines("databases/postgresql97/Makefile")
-	t.SetupFileLines("databases/postgresql100/Makefile")
-	t.SetupFileLines("databases/postgresql104/Makefile")
+	t.CreateFileLines("databases/postgresql95/Makefile")
+	t.CreateFileLines("databases/postgresql97/Makefile")
+	t.CreateFileLines("databases/postgresql100/Makefile")
+	t.CreateFileLines("databases/postgresql104/Makefile")
 
 	latest := G.Pkgsrc.Latest("databases", `^postgresql[0-9]+$`, "$0")
 
@@ -299,10 +299,10 @@ func (s *Suite) Test_Pkgsrc_Latest__numeric(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Latest__numeric_multiple_numbers(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("emulators/suse_131_32_gtk2/Makefile")
-	t.SetupFileLines("emulators/suse_131_32_qt5/Makefile")
-	t.SetupFileLines("emulators/suse_131_gtk2/Makefile")
-	t.SetupFileLines("emulators/suse_131_qt5/Makefile")
+	t.CreateFileLines("emulators/suse_131_32_gtk2/Makefile")
+	t.CreateFileLines("emulators/suse_131_32_qt5/Makefile")
+	t.CreateFileLines("emulators/suse_131_gtk2/Makefile")
+	t.CreateFileLines("emulators/suse_131_qt5/Makefile")
 
 	latest := G.Pkgsrc.Latest("emulators", `^suse_(\d+).*$`, "$1")
 
@@ -316,10 +316,10 @@ func (s *Suite) Test_Pkgsrc_Latest__numeric_multiple_numbers(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Latest__postgresql(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("databases/postgresql95/Makefile")
-	t.SetupFileLines("databases/postgresql97/Makefile")
-	t.SetupFileLines("databases/postgresql10/Makefile")
-	t.SetupFileLines("databases/postgresql11/Makefile")
+	t.CreateFileLines("databases/postgresql95/Makefile")
+	t.CreateFileLines("databases/postgresql97/Makefile")
+	t.CreateFileLines("databases/postgresql10/Makefile")
+	t.CreateFileLines("databases/postgresql11/Makefile")
 
 	latest := G.Pkgsrc.Latest("databases", `^postgresql[0-9]+$`, "$0")
 
@@ -337,7 +337,7 @@ func (s *Suite) Test_Pkgsrc_Latest__invalid_argument(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("mk/defaults/options.description",
+	t.CreateFileLines("mk/defaults/options.description",
 		"option-name      Description of the option",
 		"<<<<< Merge conflict",
 		"===== Merge conflict",

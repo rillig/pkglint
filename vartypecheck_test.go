@@ -48,9 +48,9 @@ func (s *Suite) Test_VartypeCheck_Category(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).Category)
 
-	t.SetupFileLines("filesyscategory/Makefile",
+	t.CreateFileLines("filesyscategory/Makefile",
 		"# empty")
-	t.SetupFileLines("wip/Makefile",
+	t.CreateFileLines("wip/Makefile",
 		"# empty")
 
 	vt.Varname("CATEGORIES")

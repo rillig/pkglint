@@ -6,10 +6,10 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
-	t.SetupFileLines("patches/patch-aa",
+	t.CreateFileLines("patches/patch-aa",
 		RcsID+" line is ignored for computing the SHA1 hash",
 		"patch contents")
-	t.SetupFileLines("patches/patch-ab",
+	t.CreateFileLines("patches/patch-ab",
 		"patch contents")
 	lines := t.SetupFileLines("distinfo",
 		"should be the RCS ID",
@@ -57,7 +57,7 @@ func (s *Suite) Test_ChecklinesDistinfo_uncommitted_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
-	t.SetupFileLines("patches/patch-aa",
+	t.CreateFileLines("patches/patch-aa",
 		RcsID,
 		"",
 		"--- oldfile",
@@ -65,7 +65,7 @@ func (s *Suite) Test_ChecklinesDistinfo_uncommitted_patch(c *check.C) {
 		"@@ -1,1 +1,1 @@",
 		"-old",
 		"+new")
-	t.SetupFileLines("CVS/Entries",
+	t.CreateFileLines("CVS/Entries",
 		"/distinfo/...")
 	lines := t.SetupFileLines("distinfo",
 		RcsID,
@@ -83,9 +83,9 @@ func (s *Suite) Test_ChecklinesDistinfo_unrecorded_patches(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
-	t.SetupFileLines("patches/CVS/Entries")
-	t.SetupFileLines("patches/patch-aa")
-	t.SetupFileLines("patches/patch-src-Makefile")
+	t.CreateFileLines("patches/CVS/Entries")
+	t.CreateFileLines("patches/patch-aa")
+	t.CreateFileLines("patches/patch-src-Makefile")
 	lines := t.SetupFileLines("distinfo",
 		RcsID,
 		"",
@@ -163,7 +163,7 @@ func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
 		"@@ -1,1 +1,1 @@",
 		"-old",
 		"+new")
-	t.SetupFileLines("lang/php72/distinfo",
+	t.CreateFileLines("lang/php72/distinfo",
 		RcsID,
 		"",
 		"SHA1 (patch-php72) = c109b2089f5ddbc5372b2ab28115ff558ee4187d")

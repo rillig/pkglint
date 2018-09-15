@@ -5,18 +5,18 @@ import "gopkg.in/check.v1"
 func (s *Suite) Test_InitVartypes__enumFrom(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileMkLines("editors/emacs/modules.mk",
+	t.CreateFileLines("editors/emacs/modules.mk",
 		MkRcsID,
 		"",
 		"_EMACS_VERSIONS_ALL=    emacs31",
 		"_EMACS_VERSIONS_ALL+=   emacs29")
-	t.SetupFileMkLines("mk/java-vm.mk",
+	t.CreateFileLines("mk/java-vm.mk",
 		MkRcsID,
 		"",
 		"_PKG_JVMS.8=            openjdk8 oracle-jdk8",
 		"_PKG_JVMS.7=            ${_PKG_JVMS.8} openjdk7 sun-jdk7",
 		"_PKG_JVMS.6=            ${_PKG_JVMS.7} sun-jdk6 jdk16")
-	t.SetupFileMkLines("mk/compiler.mk",
+	t.CreateFileLines("mk/compiler.mk",
 		MkRcsID,
 		"",
 		"_COMPILERS=             gcc ido mipspro-ucode \\",

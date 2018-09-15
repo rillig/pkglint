@@ -142,7 +142,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 
 	// FIXME: pkglint should warn that the latest version in this file
 	// (1.10) doesn't match the current version in the package (1.11).
-	t.SetupFileLines("doc/CHANGES-2018",
+	t.CreateFileLines("doc/CHANGES-2018",
 		RcsID,
 		"",
 		"Changes to the packages collection and infrastructure in 2018:",
@@ -150,7 +150,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"\tUpdated sysutils/checkperms to 1.10 [rillig 2018-01-05]")
 
 	// See Pkgsrc.loadSuggestedUpdates.
-	t.SetupFileLines("doc/TODO",
+	t.CreateFileLines("doc/TODO",
 		RcsID,
 		"",
 		"Suggested package updates",
@@ -158,19 +158,19 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"\to checkperms-1.13 [supports more file formats]")
 
 	// The LICENSE in the package Makefile is searched here.
-	t.SetupFileLines("licenses/bsd-2",
+	t.CreateFileLines("licenses/bsd-2",
 		"# dummy")
 
 	// The MASTER_SITES in the package Makefile are searched here.
 	// See Pkgsrc.loadMasterSites.
-	t.SetupFileMkLines("mk/fetch/sites.mk",
+	t.CreateFileLines("mk/fetch/sites.mk",
 		MkRcsID,
 		"",
 		"MASTER_SITE_GITHUB+=\thttps://github.com/")
 
 	// The existence of this file makes the category "sysutils" valid.
 	// The category "tools" on the other hand is not valid.
-	t.SetupFileMkLines("sysutils/Makefile",
+	t.CreateFileLines("sysutils/Makefile",
 		MkRcsID)
 
 	// The package Makefile is quite simple, containing just the
@@ -178,7 +178,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// values is partly defined in the pkgsrc infrastructure files
 	// (as defined in the previous lines), and partly in the pkglint
 	// code directly. Many details can be found in vartypecheck.go.
-	t.SetupFileMkLines("sysutils/checkperms/Makefile",
+	t.CreateFileLines("sysutils/checkperms/Makefile",
 		MkRcsID,
 		"",
 		"DISTNAME=\tcheckperms-1.11",
@@ -192,7 +192,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	t.SetupFileLines("sysutils/checkperms/MESSAGE",
+	t.CreateFileLines("sysutils/checkperms/MESSAGE",
 		"===========================================================================",
 		RcsID,
 		"",
@@ -200,18 +200,18 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"",
 		"===========================================================================")
 
-	t.SetupFileLines("sysutils/checkperms/PLIST",
+	t.CreateFileLines("sysutils/checkperms/PLIST",
 		PlistRcsID,
 		"bin/checkperms",
 		"man/man1/checkperms.1")
 
-	t.SetupFileLines("sysutils/checkperms/README",
+	t.CreateFileLines("sysutils/checkperms/README",
 		"When updating this package, test the pkgsrc bootstrap.")
 
-	t.SetupFileLines("sysutils/checkperms/TODO",
+	t.CreateFileLines("sysutils/checkperms/TODO",
 		"Make the package work on MS-DOS")
 
-	t.SetupFileLines("sysutils/checkperms/patches/patch-checkperms.c",
+	t.CreateFileLines("sysutils/checkperms/patches/patch-checkperms.c",
 		RcsID,
 		"",
 		"A simple patch demonstrating that pkglint checks for missing",
@@ -224,7 +224,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"+// Header 1",
 		"+// Header 2",
 		"+// Header 3")
-	t.SetupFileLines("sysutils/checkperms/distinfo",
+	t.CreateFileLines("sysutils/checkperms/distinfo",
 		RcsID,
 		"",
 		"SHA1 (checkperms-1.12.tar.gz) = 34c084b4d06bcd7a8bba922ff57677e651eeced5",
@@ -266,7 +266,7 @@ func (s *Suite) Test_Pkglint_coverage(c *check.C) {
 func (s *Suite) Test_Pkglint_CheckDirent__outside(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("empty")
+	t.CreateFileLines("empty")
 
 	G.CheckDirent(t.File("."))
 
@@ -319,10 +319,10 @@ func (s *Suite) Test_Pkglint_CheckDirent__manual_patch(c *check.C) {
 func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupFileLines("mk/bsd.pkg.mk")
-	t.SetupFileLines("category/package/Makefile")
-	t.SetupFileLines("category/Makefile")
-	t.SetupFileLines("Makefile")
+	t.CreateFileLines("mk/bsd.pkg.mk")
+	t.CreateFileLines("category/package/Makefile")
+	t.CreateFileLines("category/Makefile")
+	t.CreateFileLines("Makefile")
 
 	G.CheckDirent(t.File("."))
 

@@ -7,7 +7,7 @@ func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
 
 	t.SetupToolUsable("tool1", "")
 	t.SetupVartypes()
-	t.SetupFileLines("Makefile",
+	t.CreateFileLines("Makefile",
 		MkRcsID,
 		"",
 		"USE_TOOLS.NetBSD+=\ttool1")
@@ -54,7 +54,7 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 		"USE_TOOLS+=\tsed:pkgsrc")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"_TOOLS_VARNAME.sed=\tSED")
-	t.SetupFileMkLines("module.mk",
+	t.CreateFileLines("module.mk",
 		MkRcsID,
 		"",
 		"do-build:",
