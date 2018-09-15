@@ -46,8 +46,9 @@ func NewAutofix(line Line) *Autofix {
 // If printAutofix or autofix is true, the fix should be done in
 // memory as far as possible (e.g. changes to the text of the line).
 //
-// If autofix is true, the fix should be done permanently
-// (e.g. direct changes to the file system).
+// If autofix is true, the fix should be done persistently
+// (e.g. direct changes to the file system). Except if the fix only
+// affects the current line, then SaveAutofixChanges will do that.
 func (fix *Autofix) Custom(fixer func(printAutofix, autofix bool)) {
 	if fix.skip() {
 		return
