@@ -291,7 +291,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t.CheckOutputEmpty() // No warning about missing error checking.
 }
 
-func (s *Suite) Test_ShellLine_CheckShellCommandLine_strip(c *check.C) {
+func (s *Suite) Test_ShellLine_CheckShellCommandLine__strip(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -435,7 +435,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C)
 		"WARN: fname:1: Unknown shell command \"echo\".")
 }
 
-func (s *Suite) Test_ShellLine_CheckShelltext__dollar_without_variable(c *check.C) {
+func (s *Suite) Test_ShellLine_CheckShellCommandLine__dollar_without_variable(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -561,7 +561,7 @@ func (s *Suite) Test_ShellLine_CheckWord__dquot_dollar(c *check.C) {
 		"WARN: fname:1: Pkglint parse error in ShellLine.CheckWord at \"\\\"$\" (quoting=d), rest: $")
 }
 
-func (s *Suite) Test_ShellLine_CheckToken__dollar_subshell(c *check.C) {
+func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {
 	t := s.Init(c)
 
 	shline := t.NewShellLine("fname", 1, "\t$$(echo output)")
@@ -1042,7 +1042,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 		"WARN: Makefile:4: Please use ${ECHO_N} instead of \"echo -n\".")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkConditionalCd(c *check.C) {
+func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",

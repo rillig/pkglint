@@ -155,7 +155,7 @@ func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *chec
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_CheckVarorder_GitHub(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder__GitHub(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
@@ -176,7 +176,7 @@ func (s *Suite) Test_Package_CheckVarorder_GitHub(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_varorder_license(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
@@ -403,7 +403,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
 		"~/category/package/Makefile:6: LICENSE=\t2-clause-bsd")
 }
 
-func (s *Suite) Test_checkdirPackage(c *check.C) {
+func (s *Suite) Test_Pkglint_checkdirPackage(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
@@ -419,7 +419,7 @@ func (s *Suite) Test_checkdirPackage(c *check.C) {
 		"WARN: Makefile: No COMMENT given.")
 }
 
-func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
+func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -454,7 +454,7 @@ func (s *Suite) Test_checkdirPackage__PKGDIR(c *check.C) {
 		"ERROR: patches/patch-aa:1: Patch files must not be empty.")
 }
 
-func (s *Suite) Test_checkdirPackage__patch_without_distinfo(c *check.C) {
+func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetupPackage("category/package")
@@ -613,7 +613,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
 	t.CheckOutputLines()
 }
 
-func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
+func (s *Suite) Test_Package_CheckInclude__conditional_and_unconditional_include(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -659,7 +659,7 @@ func (s *Suite) Test_Package_conditionalAndUnconditionalInclude(c *check.C) {
 }
 
 // See https://github.com/rillig/pkglint/issues/1
-func (s *Suite) Test_Package_includeWithoutExists(c *check.C) {
+func (s *Suite) Test_Package__include_without_exists(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -678,7 +678,7 @@ func (s *Suite) Test_Package_includeWithoutExists(c *check.C) {
 }
 
 // See https://github.com/rillig/pkglint/issues/1
-func (s *Suite) Test_Package_includeAfterExists(c *check.C) {
+func (s *Suite) Test_Package__include_after_exists(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -704,7 +704,7 @@ func (s *Suite) Test_Package_includeAfterExists(c *check.C) {
 }
 
 // See https://github.com/rillig/pkglint/issues/1
-func (s *Suite) Test_Package_includeOtherAfterExists(c *check.C) {
+func (s *Suite) Test_Package_readMakefile__include_other_after_exists(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -1037,7 +1037,7 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_checkdirPackage__filename_with_variable(c *check.C) {
+func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall,no-order")

@@ -730,7 +730,7 @@ func (cv *VartypeCheck) Perms() {
 	}
 }
 
-func (cv *VartypeCheck) PkgName() {
+func (cv *VartypeCheck) Pkgname() {
 	if cv.Op != opUseMatch && cv.Value == cv.ValueNoVar && !matches(cv.Value, rePkgname) {
 		cv.Line.Warnf("%q is not a valid package name. A valid package name has the form packagename-version, where version consists only of digits, letters and dots.", cv.Value)
 	}

@@ -303,7 +303,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignPermissions(c *check.C) {
 }
 
 // Don't check the permissions for infrastructure files since they have their own rules.
-func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions__infrastructure(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarassignPermissions__infrastructure(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -319,7 +319,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDefPermissions__infrastructure(
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVarusePermissions(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -340,7 +340,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions(c *check.C) {
 		"NOTE: options.mk:4: This variable value should be aligned to column 17.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVarusePermissions__load_time(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -356,7 +356,7 @@ func (s *Suite) Test_MkLineChecker_CheckVarusePermissions__load_time(c *check.C)
 		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
 }
 
-func (s *Suite) Test_MkLineChecker_WarnVaruseLocalbase(c *check.C) {
+func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -411,7 +411,7 @@ func (s *Suite) Test_MkLineChecker__Varuse_Modifier_L(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_CheckCond__comparison_with_shell_command(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -428,7 +428,7 @@ func (s *Suite) Test_MkLineChecker_CheckCond__comparison_with_shell_command(c *c
 		"WARN: security/openssl/Makefile:2: Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.")
 }
 
-func (s *Suite) Test_MkLine_CheckCond_comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
@@ -468,7 +468,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 // See PR 46570, Ctrl+F "4. Shell quoting".
 // Pkglint is correct, since the shell sees this definition for
 // CPPFLAGS as three words, not one word.
-func (s *Suite) Test_MkLineChecker_CheckVartype_CFLAGS(c *check.C) {
+func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -485,7 +485,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype_CFLAGS(c *check.C) {
 
 // Up to 2018-01-28, pkglint applied the autofix also to the continuation
 // lines, which is incorrect. It replaced the dot in "4.*" with spaces.
-func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation_autofix(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall", "--autofix")

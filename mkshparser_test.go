@@ -27,7 +27,7 @@ type ShSuite struct {
 
 var _ = check.Suite(&ShSuite{})
 
-func (s *ShSuite) Test_ShellParser_program(c *check.C) {
+func (s *ShSuite) Test_ShellParser__program(c *check.C) {
 	b := s.init(c)
 
 	s.test("",
@@ -103,7 +103,7 @@ func (s *ShSuite) Test_ShellParser_program(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("action2")).AddSemicolon())))
 }
 
-func (s *ShSuite) Test_ShellParser_list(c *check.C) {
+func (s *ShSuite) Test_ShellParser__list(c *check.C) {
 	b := s.init(c)
 
 	s.test("echo1 && echo2",
@@ -125,7 +125,7 @@ func (s *ShSuite) Test_ShellParser_list(c *check.C) {
 			AddBackground())
 }
 
-func (s *ShSuite) Test_ShellParser_and_or(c *check.C) {
+func (s *ShSuite) Test_ShellParser__and_or(c *check.C) {
 	b := s.init(c)
 
 	s.test("echo1 | echo2",
@@ -154,7 +154,7 @@ func (s *ShSuite) Test_ShellParser_and_or(c *check.C) {
 				b.SimpleCommand("echo4")))))
 }
 
-func (s *ShSuite) Test_ShellParser_pipeline(c *check.C) {
+func (s *ShSuite) Test_ShellParser__pipeline(c *check.C) {
 	b := s.init(c)
 
 	s.test("command1 | command2",
@@ -168,7 +168,7 @@ func (s *ShSuite) Test_ShellParser_pipeline(c *check.C) {
 			b.SimpleCommand("command2")))))
 }
 
-func (s *ShSuite) Test_ShellParser_pipe_sequence(c *check.C) {
+func (s *ShSuite) Test_ShellParser__pipe_sequence(c *check.C) {
 	b := s.init(c)
 
 	s.test("command1 | if true ; then : ; fi",
@@ -179,7 +179,7 @@ func (s *ShSuite) Test_ShellParser_pipe_sequence(c *check.C) {
 				b.List().AddCommand(b.SimpleCommand(":")).AddSemicolon())))))
 }
 
-func (s *ShSuite) Test_ShellParser_command(c *check.C) {
+func (s *ShSuite) Test_ShellParser__command(c *check.C) {
 	b := s.init(c)
 
 	s.test("simple_command",
@@ -205,7 +205,7 @@ func (s *ShSuite) Test_ShellParser_command(c *check.C) {
 			b.Redirection(2, ">&", "1"))))
 }
 
-func (s *ShSuite) Test_ShellParser_compound_command(c *check.C) {
+func (s *ShSuite) Test_ShellParser__compound_command(c *check.C) {
 	b := s.init(c)
 
 	s.test("{ brace ; }",
@@ -228,7 +228,7 @@ func (s *ShSuite) Test_ShellParser_compound_command(c *check.C) {
 
 }
 
-func (s *ShSuite) Test_ShellParser_subshell(c *check.C) {
+func (s *ShSuite) Test_ShellParser__subshell(c *check.C) {
 	b := s.init(c)
 
 	sub3 := b.Subshell(b.List().AddCommand(b.SimpleCommand("sub3")))
@@ -237,7 +237,7 @@ func (s *ShSuite) Test_ShellParser_subshell(c *check.C) {
 	s.test("( ( ( sub3 ) ; sub2 ) ; sub1 )", b.List().AddCommand(sub1))
 }
 
-func (s *ShSuite) Test_ShellParser_compound_list(c *check.C) {
+func (s *ShSuite) Test_ShellParser__compound_list(c *check.C) {
 	b := s.init(c)
 
 	s.test("( \n echo )",
@@ -245,13 +245,13 @@ func (s *ShSuite) Test_ShellParser_compound_list(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("echo")))))
 }
 
-func (s *ShSuite) Test_ShellParser_term(c *check.C) {
+func (s *ShSuite) Test_ShellParser__term(c *check.C) {
 	b := s.init(c)
 
 	_ = b
 }
 
-func (s *ShSuite) Test_ShellParser_for_clause(c *check.C) {
+func (s *ShSuite) Test_ShellParser__for_clause(c *check.C) {
 	b := s.init(c)
 
 	s.test("for var do echo $var ; done",
@@ -296,7 +296,7 @@ func (s *ShSuite) Test_ShellParser_for_clause(c *check.C) {
 				b.List().AddCommand(b.SimpleCommand("echo", "$$i$$j")).AddSemicolon())))))
 }
 
-func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
+func (s *ShSuite) Test_ShellParser__case_clause(c *check.C) {
 	b := s.init(c)
 
 	s.test("case $var in esac",
@@ -335,7 +335,7 @@ func (s *ShSuite) Test_ShellParser_case_clause(c *check.C) {
 
 }
 
-func (s *ShSuite) Test_ShellParser_if_clause(c *check.C) {
+func (s *ShSuite) Test_ShellParser__if_clause(c *check.C) {
 	b := s.init(c)
 
 	s.test(
@@ -354,7 +354,7 @@ func (s *ShSuite) Test_ShellParser_if_clause(c *check.C) {
 				b.List().AddCommand(b.SimpleCommand("action")).AddSemicolon())))))
 }
 
-func (s *ShSuite) Test_ShellParser_while_clause(c *check.C) {
+func (s *ShSuite) Test_ShellParser__while_clause(c *check.C) {
 	b := s.init(c)
 
 	s.test("while condition ; do action ; done",
@@ -363,7 +363,7 @@ func (s *ShSuite) Test_ShellParser_while_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("action")).AddSemicolon())))
 }
 
-func (s *ShSuite) Test_ShellParser_until_clause(c *check.C) {
+func (s *ShSuite) Test_ShellParser__until_clause(c *check.C) {
 	b := s.init(c)
 
 	s.test("until condition ; do action ; done",
@@ -372,13 +372,13 @@ func (s *ShSuite) Test_ShellParser_until_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("action")).AddSemicolon())))
 }
 
-func (s *ShSuite) Test_ShellParser_function_definition(c *check.C) {
+func (s *ShSuite) Test_ShellParser__function_definition(c *check.C) {
 	b := s.init(c)
 
 	_ = b
 }
 
-func (s *ShSuite) Test_ShellParser_brace_group(c *check.C) {
+func (s *ShSuite) Test_ShellParser__brace_group(c *check.C) {
 	b := s.init(c)
 
 	// No semicolon necessary after the closing brace.
@@ -389,7 +389,7 @@ func (s *ShSuite) Test_ShellParser_brace_group(c *check.C) {
 				b.List().AddCommand(b.SimpleCommand("echo", "yes")).AddSemicolon())))))
 }
 
-func (s *ShSuite) Test_ShellParser_simple_command(c *check.C) {
+func (s *ShSuite) Test_ShellParser__simple_command(c *check.C) {
 	b := s.init(c)
 
 	s.test(
@@ -427,7 +427,7 @@ func (s *ShSuite) Test_ShellParser_simple_command(c *check.C) {
 		b.List().AddCommand(b.SimpleCommand("{OpenGrok", "args")))
 }
 
-func (s *ShSuite) Test_ShellParser_io_redirect(c *check.C) {
+func (s *ShSuite) Test_ShellParser__io_redirect(c *check.C) {
 	b := s.init(c)
 
 	s.test("echo >> ${PLIST_SRC}",
@@ -472,7 +472,7 @@ func (s *ShSuite) Test_ShellParser_io_redirect(c *check.C) {
 				{-1, ">", b.Token("/dev/stderr")}}}}))
 }
 
-func (s *ShSuite) Test_ShellParser_io_here(c *check.C) {
+func (s *ShSuite) Test_ShellParser__io_here(c *check.C) {
 	b := s.init(c)
 
 	_ = b

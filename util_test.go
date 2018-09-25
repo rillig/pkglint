@@ -16,35 +16,35 @@ func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
 	c.Check(unknown.String(), equals, "unknown")
 }
 
-func (s *Suite) Test_MkopSubst__middle(c *check.C) {
+func (s *Suite) Test_mkopSubst__middle(c *check.C) {
 	c.Check(mkopSubst("pkgname", false, "kgna", false, "ri", ""), equals, "prime")
 	c.Check(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), equals, "replacement")
 	c.Check(mkopSubst("aaaaaaa", false, "a", false, "b", ""), equals, "baaaaaa")
 }
 
-func (s *Suite) Test_MkopSubst__left(c *check.C) {
+func (s *Suite) Test_mkopSubst__left(c *check.C) {
 	c.Check(mkopSubst("pkgname", true, "kgna", false, "ri", ""), equals, "pkgname")
 	c.Check(mkopSubst("pkgname", true, "pkgname", false, "replacement", ""), equals, "replacement")
 }
 
-func (s *Suite) Test_MkopSubst__right(c *check.C) {
+func (s *Suite) Test_mkopSubst__right(c *check.C) {
 	c.Check(mkopSubst("pkgname", false, "kgna", true, "ri", ""), equals, "pkgname")
 	c.Check(mkopSubst("pkgname", false, "pkgname", true, "replacement", ""), equals, "replacement")
 }
 
-func (s *Suite) Test_MkopSubst__leftRight(c *check.C) {
+func (s *Suite) Test_mkopSubst__left_and_right(c *check.C) {
 	c.Check(mkopSubst("pkgname", true, "kgna", true, "ri", ""), equals, "pkgname")
 	c.Check(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), equals, "replacement")
 }
 
-func (s *Suite) Test_MkopSubst__gflag(c *check.C) {
+func (s *Suite) Test_mkopSubst__gflag(c *check.C) {
 	c.Check(mkopSubst("aaaaa", false, "a", false, "b", "g"), equals, "bbbbb")
 	c.Check(mkopSubst("aaaaa", true, "a", false, "b", "g"), equals, "baaaa")
 	c.Check(mkopSubst("aaaaa", false, "a", true, "b", "g"), equals, "aaaab")
 	c.Check(mkopSubst("aaaaa", true, "a", true, "b", "g"), equals, "aaaaa")
 }
 
-func (s *Suite) Test_replaceFirst(c *check.C) {
+func (s *Suite) Test__regex_ReplaceFirst(c *check.C) {
 	m, rest := regex.ReplaceFirst("a+b+c+d", `(\w)(.)(\w)`, "X")
 
 	c.Assert(m, check.NotNil)
@@ -65,7 +65,7 @@ func (s *Suite) Test_shorten(c *check.C) {
 	c.Check(shorten("aaa", 5), equals, "aaa")
 }
 
-func (s *Suite) Test_tabLength(c *check.C) {
+func (s *Suite) Test_tabWidth(c *check.C) {
 	c.Check(tabWidth("12345"), equals, 5)
 	c.Check(tabWidth("\t"), equals, 8)
 	c.Check(tabWidth("123\t"), equals, 8)
@@ -105,7 +105,7 @@ func (s *Suite) Test_abspath(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_isEmptyDir_and_getSubdirs(c *check.C) {
+func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("CVS/Entries",
@@ -142,7 +142,7 @@ func (s *Suite) Test_isEmptyDir__empty_subdir(c *check.C) {
 	c.Check(isEmptyDir(t.File(".")), equals, true)
 }
 
-func (s *Suite) Test_PrefixReplacer_Since(c *check.C) {
+func (s *Suite) Test__PrefixReplacer_Since(c *check.C) {
 	repl := textproc.NewPrefixReplacer("hello, world")
 	mark := repl.Mark()
 	repl.AdvanceRegexp(`^\w+`)
@@ -172,7 +172,7 @@ func Benchmark_match3_bsd_pkg_mk(b *testing.B) {
 	}
 }
 
-func Benchmark_match3_samedir(b *testing.B) {
+func Benchmark_match3_same_dir(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		match3(".include \"options.mk\"", reMkIncludeBenchmark)
 	}
@@ -196,7 +196,7 @@ func Benchmark_match3_bsd_pkg_mk_positive(b *testing.B) {
 	}
 }
 
-func Benchmark_match3_samedir_positive(b *testing.B) {
+func Benchmark_match3_same_dir_positive(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		match3(".include \"options.mk\"", reMkIncludeBenchmarkPositive)
 	}

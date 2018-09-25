@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func (s *Suite) Test_Pkglint_Main_help(c *check.C) {
+func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 	t := s.Init(c)
 
 	exitcode := G.Main("pkglint", "-h")
@@ -19,7 +19,7 @@ func (s *Suite) Test_Pkglint_Main_help(c *check.C) {
 	c.Check(t.Output(), check.Matches, `^\Qusage: pkglint [options] dir...\E\n(?s).+`)
 }
 
-func (s *Suite) Test_Pkglint_Main_version(c *check.C) {
+func (s *Suite) Test_Pkglint_Main__version(c *check.C) {
 	t := s.Init(c)
 
 	exitcode := G.Main("pkglint", "--version")
@@ -29,7 +29,7 @@ func (s *Suite) Test_Pkglint_Main_version(c *check.C) {
 		confVersion)
 }
 
-func (s *Suite) Test_Pkglint_Main_no_args(c *check.C) {
+func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
 	t := s.Init(c)
 
 	exitcode := G.Main("pkglint")
@@ -255,7 +255,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 // pkgsrcdir=...
 // env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov
 // go tool cover -html=pkglint.cov -o coverage.html
-func (s *Suite) Test_Pkglint_coverage(c *check.C) {
+func (s *Suite) Test_Pkglint__coverage(c *check.C) {
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
 	if cmdline != "" {
 		G.logOut, G.logErr, trace.Out = NewSeparatorWriter(os.Stdout), NewSeparatorWriter(os.Stderr), os.Stdout
@@ -663,7 +663,7 @@ func (s *Suite) Test_Pkglint_ToolByVarname__fallback(c *check.C) {
 	c.Check(G.ToolByVarname("TOOL", RunTime), equals, global)
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__CheckExtra(c *check.C) {
+func (s *Suite) Test_CheckfileExtra(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")

@@ -669,7 +669,7 @@ func (s *Suite) Test_VartypeCheck_Perms(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PkgName)
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Pkgname)
 
 	vt.Varname("PKGNAME")
 	vt.Values(

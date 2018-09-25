@@ -2,7 +2,7 @@ package main
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_InitVartypes__enumFrom(c *check.C) {
+func (s *Suite) Test_Pkgsrc_InitVartypes__enumFrom(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("editors/emacs/modules.mk",

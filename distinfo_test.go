@@ -34,7 +34,7 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
-func (s *Suite) Test_ChecklinesDistinfo_global_hash_mismatch(c *check.C) {
+func (s *Suite) Test_ChecklinesDistinfo__global_hash_mismatch(c *check.C) {
 	t := s.Init(c)
 
 	otherLine := t.NewLine("other/distinfo", 7, "dummy")
@@ -53,7 +53,7 @@ func (s *Suite) Test_ChecklinesDistinfo_global_hash_mismatch(c *check.C) {
 		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"pkgname-1.1.tar.gz\", got SHA512.")
 }
 
-func (s *Suite) Test_ChecklinesDistinfo_uncommitted_patch(c *check.C) {
+func (s *Suite) Test_ChecklinesDistinfo__uncommitted_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
@@ -79,7 +79,7 @@ func (s *Suite) Test_ChecklinesDistinfo_uncommitted_patch(c *check.C) {
 		"WARN: distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.")
 }
 
-func (s *Suite) Test_ChecklinesDistinfo_unrecorded_patches(c *check.C) {
+func (s *Suite) Test_ChecklinesDistinfo__unrecorded_patches(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
@@ -102,7 +102,7 @@ func (s *Suite) Test_ChecklinesDistinfo_unrecorded_patches(c *check.C) {
 		"ERROR: distinfo: patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
-func (s *Suite) Test_ChecklinesDistinfo_manual_patches(c *check.C) {
+func (s *Suite) Test_ChecklinesDistinfo__manual_patches(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")

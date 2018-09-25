@@ -18,7 +18,7 @@ func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Tools_validateToolName__invalid(c *check.C) {
+func (s *Suite) Test_Tools_def__invalid_tool_name(c *check.C) {
 	t := s.Init(c)
 
 	reg := NewTools("")

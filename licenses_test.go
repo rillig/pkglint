@@ -4,7 +4,7 @@ import (
 	"gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_checklineLicense(c *check.C) {
+func (s *Suite) Test_LicenseChecker_Check(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("licenses/gnu-gpl-v2",

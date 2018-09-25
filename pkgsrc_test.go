@@ -218,7 +218,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 		"WARN: ~/wip/package/Makefile:3: This package should be updated to 1.13 ([cool new features]).")
 }
 
-func (s *Suite) Test_Pkgsrc_deprecated(c *check.C) {
+func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
 	t := s.Init(c)
 
 	G.Pkgsrc.initDeprecatedVars()
