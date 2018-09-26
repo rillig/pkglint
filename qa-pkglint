@@ -34,7 +34,14 @@ install_notest() {
 
 analyze() {
   echo "=> Analyzing test coverage"
-  (cd ~/pkglint && gocover)
+  (
+    cd ~/pkglint \
+    && tmpfile=$(cygpath -w "/tmp/gocover-$$.html") \
+    && go test -coverprofile=coverage.out -covermode=count -timeout 30m -coverpkg ./... ./... \
+    && go tool cover -html=coverage.out -o "$tmpfile" \
+    && rm coverage.out \
+    && cygstart "$tmpfile"
+  )
 
   echo "=> Analyzing code style"
   (cd ~/pkglint && gometalinter --exclude "exported method|unexported|drop this else") | less
