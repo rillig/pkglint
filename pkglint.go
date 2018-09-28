@@ -376,6 +376,10 @@ func findPkgsrcTopdir(fname string) string {
 }
 
 func resolveVariableRefs(text string) (resolved string) {
+	if !contains(text, "${") {
+		return text
+	}
+
 	visited := make(map[string]bool) // To prevent endless loops
 
 	replacer := func(m string) string {
