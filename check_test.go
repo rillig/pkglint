@@ -327,8 +327,6 @@ func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (file
 	err = ioutil.WriteFile(fileName, []byte(content), 0666)
 	t.c().Check(err, check.IsNil)
 
-	G.loadingCache.Evict(fileName)
-
 	return fileName
 }
 
@@ -393,7 +391,6 @@ func (t *Tester) Remove(relativeFilename string) {
 	fileName := t.File(relativeFilename)
 	err := os.Remove(fileName)
 	t.c().Check(err, check.IsNil)
-	G.loadingCache.Evict(fileName)
 }
 
 // ExpectFatal runs the given action and expects that this action calls
