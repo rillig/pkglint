@@ -283,6 +283,18 @@ func (tr *Tools) AddAll(other Tools) {
 		defer trace.Call(other.TraceName+" to "+tr.TraceName, len(other.byName))()
 	}
 
+	// Same as the code below, just a little faster.
+	if !trace.Tracing {
+		for _, otherTool := range other.byName {
+			tool := tr.def(otherTool.Name, otherTool.Varname, nil)
+			tool.MustUseVarForm = tool.MustUseVarForm || otherTool.MustUseVarForm
+			if otherTool.Validity > tool.Validity {
+				tool.SetValidity(otherTool.Validity, tr.TraceName)
+			}
+		}
+		return
+	}
+
 	var names []string
 	for name := range other.byName {
 		names = append(names, name)
