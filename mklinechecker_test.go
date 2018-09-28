@@ -683,8 +683,12 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC, as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
 		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.",
+		"WARN: ~/module.mk:7: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
+			"(only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
 		"WARN: ~/module.mk:7: Invalid version number \"-13\".",
 		"ERROR: ~/module.mk:7: All values for PYTHON_VERSIONS_ACCEPTED must be positive integers.",
+		"WARN: ~/module.mk:8: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
+			"(only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
 		"WARN: ~/module.mk:8: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.")
 }
 
