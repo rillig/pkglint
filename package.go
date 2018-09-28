@@ -315,7 +315,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		if includeFile != "" {
 			if path.Base(fname) != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
-					G.Pkg.bl3[bl3File] = mkline.Line
+					pkg.bl3[bl3File] = mkline.Line
 					if trace.Tracing {
 						trace.Step1("Buildlink3 file in package: %q", bl3File)
 					}
@@ -323,8 +323,8 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 			}
 		}
 
-		if includeFile != "" && G.Pkg.included[includeFile] == nil {
-			G.Pkg.included[includeFile] = mkline.Line
+		if includeFile != "" && pkg.included[includeFile] == nil {
+			pkg.included[includeFile] = mkline.Line
 
 			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
 				mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
@@ -335,7 +335,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				if trace.Tracing {
 					trace.Step1("Including %q sets seenMakefileCommon.", includeFile)
 				}
-				G.Pkg.seenMakefileCommon = true
+				pkg.seenMakefileCommon = true
 			}
 
 			skip := contains(fname, "/mk/") || hasSuffix(includeFile, "/bsd.pkg.mk") || IsPrefs(includeFile)
@@ -351,10 +351,11 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 					if fileMklines.indentation.IsCheckedFile(includeFile) {
 						return true // See https://github.com/rillig/pkglint/issues/1
 
-					} else if dirname != pkg.File(".") { // Prevent unnecessary syscalls
-						dirname = pkg.File(".")
-						if !fileExists(dirname + "/" + includeFile) {
-							mkline.Errorf("Cannot read %q.", dirname+"/"+includeFile)
+					} else if pkgBasedir := pkg.File("."); dirname != pkgBasedir { // Prevent unnecessary syscalls
+						dirname = pkgBasedir
+						fullIncluded := dirname + "/" + includeFile
+						if !fileExists(fullIncluded) {
+							mkline.Errorf("Cannot read %q.", fullIncluded)
 							result = false
 							return false
 						}
@@ -364,9 +365,9 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				if trace.Tracing {
 					trace.Step1("Including %q.", dirname+"/"+includeFile)
 				}
-				absIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
-				absIncluded := dirname + "/" + includeFile
-				if !pkg.readMakefile(absIncluded, mainLines, allLines, absIncluding) {
+				fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
+				fullIncluded := dirname + "/" + includeFile
+				if !pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding) {
 					result = false
 					return false
 				}
@@ -376,11 +377,11 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		if mkline.IsVarassign() {
 			varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
 
-			if op != opAssignDefault || !G.Pkg.vars.Defined(varname) {
+			if op != opAssignDefault || !pkg.vars.Defined(varname) {
 				if trace.Tracing {
 					trace.Stepf("varassign(%q, %q, %q)", varname, op, value)
 				}
-				G.Pkg.vars.Define(varname, mkline)
+				pkg.vars.Define(varname, mkline)
 			}
 		}
 		return true
