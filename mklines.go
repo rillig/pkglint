@@ -310,9 +310,13 @@ func (mklines *MkLines) determineDocumentedVariables() {
 
 	for _, mkline := range mklines.mklines {
 		text := mkline.Text
-		words := splitOnSpace(text)
+		switch {
+		case hasPrefix(text, "#"):
+			words := splitOnSpace(text)
+			if len(words) <= 1 {
+				break
+			}
 
-		if 1 < len(words) && words[0] == "#" {
 			commentLines++
 
 			parser := NewMkParser(mkline.Line, words[1], false)
@@ -330,9 +334,8 @@ func (mklines *MkLines) determineDocumentedVariables() {
 			if 1 < len(words) && words[1] == "Copyright" {
 				relevant = false
 			}
-		}
 
-		if text == "" {
+		case mkline.IsEmpty():
 			finish()
 		}
 	}
