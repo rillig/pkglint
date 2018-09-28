@@ -314,20 +314,22 @@ line:
 	return t.File(pkgpath)
 }
 
-func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (filename string) {
+func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (fileName string) {
 	content := ""
 	for _, line := range lines {
 		content += line + "\n"
 	}
 
-	filename = t.File(relativeFilename)
-	err := os.MkdirAll(path.Dir(filename), 0777)
+	fileName = t.File(relativeFilename)
+	err := os.MkdirAll(path.Dir(fileName), 0777)
 	t.c().Assert(err, check.IsNil)
 
-	err = ioutil.WriteFile(filename, []byte(content), 0666)
+	err = ioutil.WriteFile(fileName, []byte(content), 0666)
 	t.c().Check(err, check.IsNil)
 
-	return filename
+	G.loadingCache.Evict(fileName)
+
+	return fileName
 }
 
 // CreateFileDummyPatch creates a patch file with the given name in the
@@ -388,8 +390,10 @@ func (t *Tester) Chdir(relativeFilename string) {
 
 // Remove removes the file from the temporary directory. The file must exist.
 func (t *Tester) Remove(relativeFilename string) {
-	err := os.Remove(t.File(relativeFilename))
+	fileName := t.File(relativeFilename)
+	err := os.Remove(fileName)
 	t.c().Check(err, check.IsNil)
+	G.loadingCache.Evict(fileName)
 }
 
 // ExpectFatal runs the given action and expects that this action calls

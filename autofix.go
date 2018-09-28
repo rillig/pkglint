@@ -312,6 +312,7 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 		for _, line := range lines {
 			if line.autofix != nil && line.autofix.modified {
 				G.autofixAvailable = true
+				G.loadingCache.Evict(line.Filename)
 			}
 		}
 		return
@@ -339,6 +340,7 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 	}
 
 	for fname := range changed {
+		G.loadingCache.Evict(fname)
 		changedLines := changes[fname]
 		tmpname := fname + ".pkglint.tmp"
 		text := ""
