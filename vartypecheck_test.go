@@ -755,7 +755,7 @@ func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
 		"FreeBSD*",
 		"FreeBSD-*",
 		"${LINUX}",
-		"NetBSD-[0-1]*-*") // FIXME: This will soon match NetBSD-10.0-amd64.
+		"NetBSD-[0-1]*-*")
 
 	vt.Output(
 		"WARN: fname:1: \"linux-i386\" is not a valid platform pattern.",
@@ -781,7 +781,8 @@ func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
 			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
 			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
-		"WARN: fname:5: \"FreeBSD*\" is not a valid platform pattern.")
+		"WARN: fname:5: \"FreeBSD*\" is not a valid platform pattern.",
+		"WARN: fname:8: Please use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
@@ -1016,14 +1017,16 @@ func (s *Suite) Test_VartypeCheck_Version(c *check.C) {
 	vt.Values(
 		"a*",
 		"1.2/456",
-		"4*", // FIXME: Unintentionally matches 43.2.
+		"4*",
 		"?.??",
-		"1.[234]*", // FIXME: Matches 1.4 but also 1.42.
+		"1.[234]*",
 		"1.[2-7].*",
 		"[0-9]*")
 	vt.Output(
 		"WARN: fname:11: Invalid version number pattern \"a*\".",
-		"WARN: fname:12: Invalid version number pattern \"1.2/456\".")
+		"WARN: fname:12: Invalid version number pattern \"1.2/456\".",
+		"WARN: fname:13: Please use \"4.*\" instead of \"4*\" as the version pattern.",
+		"WARN: fname:15: Please use \"1.[234].*\" instead of \"1.[234]*\" as the version pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_WrapperReorder(c *check.C) {
