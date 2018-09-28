@@ -2,6 +2,7 @@ package main
 
 import (
 	"gopkg.in/check.v1"
+	"strings"
 )
 
 func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
@@ -36,7 +37,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	mkvar := func(varname string, modifiers ...string) *ShAtom {
 		text := "${" + varname
 		for _, modifier := range modifiers {
-			text += ":" + replaceAll(modifier, `[:\\]`, "\\\\$1")
+			text += ":" + strings.Replace(strings.Replace(modifier, "\\", "\\\\", -1), ":", "\\:", -1)
 		}
 		text += "}"
 		varuse := &MkVarUse{varname: varname, modifiers: modifiers}
