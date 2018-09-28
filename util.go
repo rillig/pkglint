@@ -372,21 +372,30 @@ func cleanpath(fname string) string {
 	for contains(tmp, "//") {
 		tmp = strings.Replace(tmp, "//", "/", -1)
 	}
-	tmp = reReplaceRepeatedly(tmp, `/[^.][^/]*/[^.][^/]*/\.\./\.\./`, "/")
+
+	// Repeatedly replace `/[^.][^/]*/[^.][^/]*/\.\./\.\./` with "/"
+again:
+	slash0 := -1
+	slash1 := -1
+	slash2 := -1
+	for i, ch := range []byte(tmp) {
+		if ch == '/' {
+			slash0 = slash1
+			slash1 = slash2
+			slash2 = i
+			if slash0 != -1 && tmp[slash0+1:slash1] != ".." && tmp[slash1+1:slash2] != ".." && hasPrefix(tmp[i:], "/../../") {
+				tmp = tmp[:slash0] + tmp[i+6:]
+				goto again
+			}
+		}
+	}
+
 	tmp = strings.TrimSuffix(tmp, "/")
 	return tmp
 }
 
 func containsVarRef(s string) bool {
 	return contains(s, "${")
-}
-
-func reReplaceRepeatedly(from string, re regex.Pattern, to string) string {
-	replaced := replaceAll(from, re, to)
-	if replaced != from {
-		return reReplaceRepeatedly(replaced, re, to)
-	}
-	return replaced
 }
 
 func hasAlnumPrefix(s string) bool {
