@@ -754,7 +754,8 @@ func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
 		"NetBSD-1.6.2-i386",
 		"FreeBSD*",
 		"FreeBSD-*",
-		"${LINUX}")
+		"${LINUX}",
+		"NetBSD-[0-1]*-*") // FIXME: This will soon match NetBSD-10.0-amd64.
 
 	vt.Output(
 		"WARN: fname:1: \"linux-i386\" is not a valid platform pattern.",
