@@ -234,7 +234,7 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 	}
 
 	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
-	if !pkg.readMakefile(fname, mainLines, allLines, "") {
+	if _, result := pkg.readMakefile(fname, mainLines, allLines, ""); !result {
 		return nil
 	}
 
@@ -278,19 +278,20 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 	return mainLines
 }
 
-func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) bool {
+func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) (exists bool, result bool) {
 	if trace.Tracing {
 		defer trace.Call1(fname)()
 	}
 
 	fileMklines := LoadMk(fname, NotEmpty|LogErrors)
 	if fileMklines == nil {
-		return false
+		return false, false
 	}
+	exists = true
 
 	isMainMakefile := len(mainLines.mklines) == 0
 
-	result := true
+	result = true
 	lineAction := func(mkline MkLine) bool {
 		if isMainMakefile {
 			mainLines.mklines = append(mainLines.mklines, mkline)
@@ -367,7 +368,8 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				}
 				fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
 				fullIncluded := dirname + "/" + includeFile
-				if !pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding) {
+				if innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding); !innerResult {
+					_ = innerExists // TODO
 					result = false
 					return false
 				}
@@ -393,7 +395,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		fileMklines.checkForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))
 	}
 
-	return result
+	return
 }
 
 func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
