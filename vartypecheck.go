@@ -276,7 +276,8 @@ func (cv *VartypeCheck) Dependency() {
 			"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
 	}
 
-	if nocclasses := replaceAll(wildcard, `\[[\d-]+\]`, ""); contains(nocclasses, "-") {
+	withoutCharClasses := replaceAll(wildcard, `\[[\d-]+\]`, "")
+	if contains(withoutCharClasses, "-") {
 		line.Warnf("The version pattern %q should not contain a hyphen.", wildcard)
 		Explain(
 			"Pkgsrc interprets package names with version numbers like this:",
