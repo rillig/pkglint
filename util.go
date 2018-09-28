@@ -719,6 +719,15 @@ func IsPrefs(fileName string) bool {
 	return false
 }
 
+func isalnum(s string) bool {
+	for _, ch := range []byte(s) {
+		if !('0' <= ch && ch <= '9' || 'A' <= ch && ch <= 'Z' || ch == '_' || 'a' <= ch && ch <= 'z') {
+			return false
+		}
+	}
+	return true
+}
+
 type LoadingCache struct {
 	lines    map[string][]Line
 	fileName map[string]string

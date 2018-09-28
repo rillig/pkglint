@@ -919,9 +919,12 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 		// For multiple-inclusion guards, the indentation stays at the same level.
 		guard := false
 		if hasPrefix(args, "!defined") && hasSuffix(args, "_MK)") {
-			if m, varname := match1(args, `^!defined\((\w+_MK)\)$`); m {
-				ind.AddVar(varname)
-				guard = true
+			if hasPrefix(args, "!defined(") && hasSuffix(args, ")") {
+				varname := args[9 : len(args)-1]
+				if varname != "" && isalnum(varname) {
+					ind.AddVar(varname)
+					guard = true
+				}
 			}
 		}
 		if !guard {

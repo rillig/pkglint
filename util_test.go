@@ -329,3 +329,22 @@ func (s *Suite) Test_varnameCanon(c *check.C) {
 	c.Check(varnameCanon("VAR.param"), equals, "VAR.*")
 	c.Check(varnameCanon(".CURDIR"), equals, ".CURDIR")
 }
+
+func (s *Suite) Test_isalnum(c *check.C) {
+	c.Check(isalnum(""), equals, true)
+	c.Check(isalnum("/"), equals, false)
+	c.Check(isalnum("0"), equals, true)
+	c.Check(isalnum("9"), equals, true)
+	c.Check(isalnum(":"), equals, false)
+	c.Check(isalnum("@"), equals, false)
+	c.Check(isalnum("A"), equals, true)
+	c.Check(isalnum("Z"), equals, true)
+	c.Check(isalnum("["), equals, false)
+	c.Check(isalnum("_"), equals, true)
+	c.Check(isalnum("`"), equals, false)
+	c.Check(isalnum("a"), equals, true)
+	c.Check(isalnum("z"), equals, true)
+	c.Check(isalnum("{"), equals, false)
+	c.Check(isalnum("Hello_world005"), equals, true)
+	c.Check(isalnum("Hello,world005"), equals, false)
+}
