@@ -167,7 +167,7 @@ func isLocallyModified(fname string) bool {
 			cvsModTime := fields[3]
 			fsModTime := st.ModTime().Format(time.ANSIC)
 			if trace.Tracing {
-				trace.Stepf("cvs.time=%q fs.time=%q", cvsModTime, st.ModTime())
+				trace.Stepf("cvs.time=%q fs.time=%q", cvsModTime, fsModTime)
 			}
 
 			return cvsModTime != fsModTime
