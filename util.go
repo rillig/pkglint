@@ -728,6 +728,8 @@ func NewLinesCache() *LoadingCache {
 }
 
 func (c *LoadingCache) Put(fileName string, options LoadOptions, lines []Line) {
+	return // Disabled
+
 	key := c.key(fileName)
 	c.lines[key] = lines
 	c.fileName[key] = fileName
@@ -735,6 +737,8 @@ func (c *LoadingCache) Put(fileName string, options LoadOptions, lines []Line) {
 }
 
 func (c *LoadingCache) Get(fileName string, options LoadOptions) []Line {
+	return nil // Disabled
+
 	key := c.key(fileName)
 	lines := c.lines[key]
 	if c.options[key] == options {
@@ -746,6 +750,8 @@ func (c *LoadingCache) Get(fileName string, options LoadOptions) []Line {
 }
 
 func (c *LoadingCache) Evict(fileName string) {
+	return // Disabled
+
 	key := c.key(fileName)
 	delete(c.lines, key)
 	delete(c.options, key)
