@@ -792,25 +792,34 @@ func (cv *VartypeCheck) MachinePlatformPattern() {
 		pattern += "-*"
 	}
 
-	if m, opsysPattern, _, archPattern := match3(pattern, reTriple); m {
+	if m, opsysPattern, versionPattern, archPattern := match3(pattern, reTriple); m {
 		opsysCv := &VartypeCheck{
 			cv.MkLine,
 			cv.Line,
 			"the operating system part of " + cv.Varname,
-			opUseMatch, // Always allow patterns, since this is a PlatformPattern.
+			opUseMatch, // Always allow patterns, since this is a platform pattern.
 			opsysPattern,
 			opsysPattern,
 			cv.MkComment,
 			cv.Guessed}
 		enumMachineOpsys.checker(opsysCv)
 
-		// no check for os_version
+		versionCv := &VartypeCheck{
+			cv.MkLine,
+			cv.Line,
+			"the version part of " + cv.Varname,
+			opUseMatch, // Always allow patterns, since this is a platform pattern.
+			versionPattern,
+			versionPattern,
+			cv.MkComment,
+			cv.Guessed}
+		versionCv.Version()
 
 		archCv := &VartypeCheck{
 			cv.MkLine,
 			cv.Line,
 			"the hardware architecture part of " + cv.Varname,
-			opUseMatch, // Always allow patterns, since this is a PlatformPattern.
+			opUseMatch, // Always allow patterns, since this is a platform pattern.
 			archPattern,
 			archPattern,
 			cv.MkComment,
@@ -1037,10 +1046,13 @@ func (cv *VartypeCheck) VariableName() {
 
 func (cv *VartypeCheck) Version() {
 	if cv.Op == opUseMatch {
-		if !matches(cv.Value, `^[\d?\[][\w\-.*?\[\]]+$`) {
+		if cv.Value != "*" && !matches(cv.Value, `^[\d?\[][\w\-.*?\[\]]+$`) {
 			cv.Line.Warnf("Invalid version number pattern %q.", cv.Value)
 		}
-	} else if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^\d[\w.]*$`) {
+		return
+	}
+
+	if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^\d[\w.]*$`) {
 		cv.Line.Warnf("Invalid version number %q.", cv.Value)
 	}
 }

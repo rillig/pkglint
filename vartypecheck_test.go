@@ -1016,6 +1016,10 @@ func (s *Suite) Test_VartypeCheck_Version(c *check.C) {
 	vt.Values(
 		"a*",
 		"1.2/456",
+		"4*", // FIXME: Unintentionally matches 43.2.
+		"?.??",
+		"1.[234]*", // FIXME: Matches 1.4 but also 1.42.
+		"1.[2-7].*",
 		"[0-9]*")
 	vt.Output(
 		"WARN: fname:11: Invalid version number pattern \"a*\".",
