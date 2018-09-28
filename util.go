@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type YesNoUnknown uint8
@@ -277,7 +278,28 @@ func varIsUsed(varname string) bool {
 }
 
 func splitOnSpace(s string) []string {
-	return G.res.Compile(`\S+`).FindAllString(s, -1)
+	i := 0
+	n := len(s)
+
+	for i < n && unicode.IsSpace(rune(s[i])) {
+		i++
+	}
+
+	var parts []string
+	for i < n {
+		start := i
+		for i < n && !unicode.IsSpace(rune(s[i])) {
+			i++
+		}
+		if start != i {
+			parts = append(parts, s[start:i])
+		}
+		for i < n && unicode.IsSpace(rune(s[i])) {
+			i++
+		}
+	}
+
+	return parts
 }
 
 func fileExists(fname string) bool {
