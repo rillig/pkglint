@@ -957,7 +957,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PKG_SYSCONFVAR", lkNone, BtIdentifier, "")
 	acl("PKG_UID", lkNone, BtInteger, "Makefile: set")
 	acl("PKG_USERS", lkShell, BtShellWord, "Makefile: set, append")
-	pkg("PKG_USERS_VARS", lkShell, BtVariableName)
+	pkglist("PKG_USERS_VARS", lkShell, BtVariableName)
 	acl("PKG_USE_KERBEROS", lkNone, BtYes, "Makefile, Makefile.common: set")
 	pkg("PLIST.*", lkNone, BtYes)
 	pkglist("PLIST_VARS", lkShell, BtIdentifier)
