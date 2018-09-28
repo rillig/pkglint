@@ -674,7 +674,7 @@ func (s *Suite) Test_Package__include_without_exists(c *check.C) {
 	G.checkdirPackage(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/options.mk: Cannot be read.")
+		"ERROR: ~/category/package/Makefile:3: Cannot read \"options.mk\".")
 }
 
 // See https://github.com/rillig/pkglint/issues/1
@@ -721,7 +721,7 @@ func (s *Suite) Test_Package_readMakefile__include_other_after_exists(c *check.C
 	G.checkdirPackage(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/another.mk: Cannot be read.")
+		"ERROR: ~/category/package/Makefile:4: Cannot read \"another.mk\".")
 }
 
 // See https://mail-index.netbsd.org/tech-pkg/2018/07/22/msg020092.html
@@ -958,9 +958,8 @@ func (s *Suite) Test_Package_readMakefile__not_found(c *check.C) {
 
 	G.checkdirPackage(pkg)
 
-	// FIXME: The "~/category/package/../../" is unnecessary.
 	t.CheckOutputLines(
-		"ERROR: ~/devel/zlib/buildlink3.mk:1: Cannot read \"~/category/package/../../enoent/enoent/buildlink3.mk\".")
+		"ERROR: ~/devel/zlib/buildlink3.mk:1: Cannot read \"../../enoent/enoent/buildlink3.mk\".")
 }
 
 func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {

@@ -235,6 +235,7 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 
 	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
 	if _, result := pkg.readMakefile(fname, mainLines, allLines, ""); !result {
+		LoadMk(fname, NotEmpty|LogErrors) // Just for the LogErrors.
 		return nil
 	}
 
@@ -283,7 +284,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		defer trace.Call1(fname)()
 	}
 
-	fileMklines := LoadMk(fname, NotEmpty|LogErrors)
+	fileMklines := LoadMk(fname, NotEmpty)
 	if fileMklines == nil {
 		return false, false
 	}
@@ -344,32 +345,37 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				dirname, _ := path.Split(fname)
 				dirname = cleanpath(dirname)
 
-				// Only look in the directory relative to the
-				// current file and in the current working directory.
-				// Pkglint doesn't have an include dir list, like make(1) does.
-				if !fileExists(dirname + "/" + includeFile) {
+				fullIncluded := dirname + "/" + includeFile
+				if trace.Tracing {
+					trace.Step1("Including %q.", fullIncluded)
+				}
+				fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
+				innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding)
 
+				if !innerExists {
 					if fileMklines.indentation.IsCheckedFile(includeFile) {
 						return true // See https://github.com/rillig/pkglint/issues/1
+					}
 
-					} else if pkgBasedir := pkg.File("."); dirname != pkgBasedir { // Prevent unnecessary syscalls
+					// Only look in the directory relative to the
+					// current file and in the package directory.
+					// Make(1) has a list of include directories, but pkgsrc
+					// doesn't make use of that, so pkglint also doesn't
+					// need this extra complexity.
+					pkgBasedir := pkg.File(".")
+					if dirname != pkgBasedir { // Prevent unnecessary syscalls
 						dirname = pkgBasedir
-						fullIncluded := dirname + "/" + includeFile
-						if !fileExists(fullIncluded) {
-							mkline.Errorf("Cannot read %q.", fullIncluded)
-							result = false
-							return false
-						}
+
+						fullIncludedFallback := dirname + "/" + includeFile
+						innerExists, innerResult = pkg.readMakefile(fullIncludedFallback, mainLines, allLines, fullIncluding)
+					}
+
+					if !innerExists {
+						mkline.Errorf("Cannot read %q.", includeFile)
 					}
 				}
 
-				if trace.Tracing {
-					trace.Step1("Including %q.", dirname+"/"+includeFile)
-				}
-				fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
-				fullIncluded := dirname + "/" + includeFile
-				if innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding); !innerResult {
-					_ = innerExists // TODO
+				if !innerResult {
 					result = false
 					return false
 				}
