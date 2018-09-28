@@ -431,7 +431,7 @@ func ChecklinesDescr(lines []Line) {
 	for _, line := range lines {
 		CheckLineLength(line, 80)
 		CheckLineTrailingWhitespace(line)
-		CheckLineValidCharacters(line, `[\t -~]`)
+		CheckLineValidCharacters(line)
 		if contains(line.Text, "${") {
 			line.Notef("Variables are not expanded in the DESCR file.")
 		}
@@ -483,7 +483,7 @@ func ChecklinesMessage(lines []Line) {
 	for _, line := range lines {
 		CheckLineLength(line, 80)
 		CheckLineTrailingWhitespace(line)
-		CheckLineValidCharacters(line, `[\t -~]`)
+		CheckLineValidCharacters(line)
 	}
 	if lastLine := lines[len(lines)-1]; lastLine.Text != hline {
 		fix := lastLine.Autofix()

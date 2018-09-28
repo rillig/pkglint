@@ -18,7 +18,7 @@ func (ck MkLineChecker) Check() {
 	mkline := ck.MkLine
 
 	CheckLineTrailingWhitespace(mkline.Line)
-	CheckLineValidCharacters(mkline.Line, `[\t -~]`)
+	CheckLineValidCharacters(mkline.Line)
 
 	switch {
 	case mkline.IsVarassign():

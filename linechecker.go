@@ -36,13 +36,14 @@ func CheckLineLength(line Line, maxlength int) {
 	}
 }
 
-func CheckLineValidCharacters(line Line, reChar regex.Pattern) {
-	rest := replaceAll(line.Text, reChar, "")
-	if rest != "" {
-		uni := ""
-		for _, c := range rest {
-			uni += fmt.Sprintf(" %U", c)
+func CheckLineValidCharacters(line Line) {
+	uni := ""
+	for _, r := range line.Text {
+		if r != '\t' && !(' ' <= r && r <= '~') {
+			uni += fmt.Sprintf(" %U", r)
 		}
+	}
+	if uni != "" {
 		line.Warnf("Line contains invalid characters (%s).", uni[1:])
 	}
 }
