@@ -84,6 +84,7 @@ pkgsrc() {
     && printf 'pkgsrc-wip HEAD commit: %s\n' "$(git -C wip show-ref -s HEAD)" \
     && printf '\n' \
     && "$archivedir/$runid.exe" -pr -Wall -Call . wip
+    && cp "pkglint.pprof" "$archivedir/$runid.pprof"
     ) > "$archivedir/$runid.tmp" || true
   mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
 }
