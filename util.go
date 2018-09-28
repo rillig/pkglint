@@ -737,7 +737,7 @@ func (c *LoadingCache) Put(fileName string, options LoadOptions, lines []Line) {
 func (c *LoadingCache) Get(fileName string, options LoadOptions) []Line {
 	key := c.key(fileName)
 	lines := c.lines[key]
-	if c.fileName[key] == fileName && c.options[key] == options {
+	if c.options[key] == options {
 		c.hits++
 		return lines
 	}
