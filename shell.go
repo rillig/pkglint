@@ -303,7 +303,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		line.Notef("You don't need to use \"-\" before %q.", cmd)
 	}
 
-	repl := textproc.NewPrefixReplacer(shelltext)
+	repl := G.NewPrefixReplacer(shelltext)
 	repl.AdvanceRegexp(`^\s+`)
 	if repl.AdvanceRegexp(`^[-@]+`) {
 		shline.checkHiddenAndSuppress(repl.Group(0), repl.Rest())

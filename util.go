@@ -38,19 +38,32 @@ func hasSuffix(s, suffix string) bool {
 	return strings.HasSuffix(s, suffix)
 }
 func matches(s string, re regex.Pattern) bool {
-	return regex.Matches(s, re)
+	return G.res.Matches(s, re)
 }
 func match1(s string, re regex.Pattern) (matched bool, m1 string) {
-	return regex.Match1(s, re)
+	return G.res.Match1(s, re)
 }
 func match2(s string, re regex.Pattern) (matched bool, m1, m2 string) {
-	return regex.Match2(s, re)
+	return G.res.Match2(s, re)
 }
 func match3(s string, re regex.Pattern) (matched bool, m1, m2, m3 string) {
-	return regex.Match3(s, re)
+	return G.res.Match3(s, re)
 }
 func match4(s string, re regex.Pattern) (matched bool, m1, m2, m3, m4 string) {
-	return regex.Match4(s, re)
+	return G.res.Match4(s, re)
+}
+func match5(s string, re regex.Pattern) (matched bool, m1, m2, m3, m4, m5 string) {
+	return G.res.Match5(s, re)
+}
+func replaceFirst(s string, re regex.Pattern, repl string) string {
+	m, replaced := G.res.ReplaceFirst(s, re, repl)
+	return ifelseStr(m != nil, replaced, s)
+}
+func replaceAll(s string, re regex.Pattern, repl string) string {
+	return G.res.Compile(re).ReplaceAllString(s, repl)
+}
+func replaceAllFunc(s string, re regex.Pattern, repl func(string) string) string {
+	return G.res.Compile(re).ReplaceAllStringFunc(s, repl)
 }
 
 func ifelseStr(cond bool, a, b string) string {
@@ -77,7 +90,7 @@ func imax(a, b int) int {
 }
 
 func mustMatch(s string, re regex.Pattern) []string {
-	if m := regex.Match(s, re); m != nil {
+	if m := G.res.Match(s, re); m != nil {
 		return m
 	}
 	panic(fmt.Sprintf("mustMatch %q %q", s, re))
@@ -264,7 +277,7 @@ func varIsUsed(varname string) bool {
 }
 
 func splitOnSpace(s string) []string {
-	return regex.Compile(`\S+`).FindAllString(s, -1)
+	return G.res.Compile(`\S+`).FindAllString(s, -1)
 }
 
 func fileExists(fname string) bool {
@@ -314,7 +327,7 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 	re := regex.Pattern(ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", ""))
 	done := false
 	gflag := contains(flags, "g")
-	return regex.Compile(re).ReplaceAllStringFunc(s, func(match string) string {
+	return replaceAllFunc(s, re, func(match string) string {
 		if gflag || !done {
 			done = !gflag
 			return to
@@ -369,7 +382,7 @@ func containsVarRef(s string) bool {
 }
 
 func reReplaceRepeatedly(from string, re regex.Pattern, to string) string {
-	replaced := regex.Compile(re).ReplaceAllString(from, to)
+	replaced := replaceAll(from, re, to)
 	if replaced != from {
 		return reReplaceRepeatedly(replaced, re, to)
 	}

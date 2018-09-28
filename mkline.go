@@ -4,8 +4,6 @@ package main
 
 import (
 	"fmt"
-	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
@@ -328,12 +326,12 @@ func (mkline *MkLineImpl) ValueTokens() []*MkToken {
 func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
 	valueNovar := value
 	for {
-		var m []string
 		// TODO: properly parse nested variables
-		m, valueNovar = regex.ReplaceFirst(valueNovar, `\$\{[^{}]*\}`, "")
-		if m == nil {
+		replaced := replaceFirst(valueNovar, `\$\{[^{}]*\}`, "")
+		if replaced == valueNovar {
 			return valueNovar
 		}
+		valueNovar = replaced
 	}
 }
 
@@ -585,7 +583,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 // TODO: merge with determineUsedVariables
 func (mkline *MkLineImpl) ExtractUsedVariables(text string) []string {
-	re := regex.Compile(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
+	re := G.res.Compile(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
 	rest := text
 	var result []string
 	for {
@@ -636,7 +634,7 @@ func (mkline *MkLineImpl) DetermineUsedVariables() (varnames []string) {
 		}
 		rest = rest[min:]
 
-		m := regex.Compile(`(?:\$\{|\$\(|defined\(|empty\()([*+\-.0-9A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
+		m := G.res.Compile(`(?:\$\{|\$\(|defined\(|empty\()([*+\-.0-9A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
 		if m == nil {
 			return
 		}
@@ -1061,7 +1059,7 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 }
 
 func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
-	repl := textproc.NewPrefixReplacer(text)
+	repl := G.NewPrefixReplacer(text)
 	if repl.AdvanceStr(".") {
 		if repl.AdvanceHspace() {
 			indentation = repl.Str()

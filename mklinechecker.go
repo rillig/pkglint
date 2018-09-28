@@ -946,7 +946,7 @@ func (ck MkLineChecker) checkText(text string) {
 
 	rest := text
 	for {
-		m, r := regex.ReplaceFirst(rest, `(?:^|[^$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
+		m, r := G.res.ReplaceFirst(rest, `(?:^|[^$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
 		if m == nil {
 			break
 		}
@@ -1051,7 +1051,7 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 
 func (ck MkLineChecker) CheckValidCharactersInValue(reValid regex.Pattern) {
 	mkline := ck.MkLine
-	rest := regex.Compile(reValid).ReplaceAllString(mkline.Value(), "")
+	rest := replaceAll(mkline.Value(), reValid, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {

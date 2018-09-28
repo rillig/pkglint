@@ -2,7 +2,6 @@ package main
 
 import (
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/regex"
 )
 
 func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
@@ -37,7 +36,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	mkvar := func(varname string, modifiers ...string) *ShAtom {
 		text := "${" + varname
 		for _, modifier := range modifiers {
-			text += ":" + regex.Compile(`[:\\]`).ReplaceAllString(modifier, "\\\\$1")
+			text += ":" + replaceAll(modifier, `[:\\]`, "\\\\$1")
 		}
 		text += "}"
 		varuse := &MkVarUse{varname: varname, modifiers: modifiers}

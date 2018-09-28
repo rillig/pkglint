@@ -19,8 +19,8 @@ func CheckLineAbsolutePathname(line Line, text string) {
 	//
 	// Another context where absolute pathnames usually appear is in
 	// assignments like "bindir=/bin".
-	if m, path := regex.Match1(text, `(?:^|\s|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s\\]|"[^"*]"|'[^']*')*)`); m {
-		if regex.Matches(path, `^/\w`) {
+	if m, path := match1(text, `(?:^|\s|\$[{(]DESTDIR[)}]|[\w_]+\s*=\s*)(/(?:[^"'\s\\]|"[^"*]"|'[^']*')*)`); m {
+		if matches(path, `^/\w`) {
 			CheckwordAbsolutePathname(line, path)
 		}
 	}
@@ -37,7 +37,7 @@ func CheckLineLength(line Line, maxlength int) {
 }
 
 func CheckLineValidCharacters(line Line, reChar regex.Pattern) {
-	rest := regex.Compile(reChar).ReplaceAllString(line.Text, "")
+	rest := replaceAll(line.Text, reChar, "")
 	if rest != "" {
 		uni := ""
 		for _, c := range rest {
@@ -64,7 +64,7 @@ func CheckLineRcsid(line Line, prefixRe regex.Pattern, suggestedPrefix string) b
 		defer trace.Call(prefixRe, suggestedPrefix)()
 	}
 
-	if regex.Matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
+	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
 		return true
 	}
 
@@ -86,16 +86,16 @@ func CheckwordAbsolutePathname(line Line, word string) {
 	}
 
 	switch {
-	case regex.Matches(word, `^/dev/(?:null|tty|zero)$`):
+	case matches(word, `^/dev/(?:null|tty|zero)$`):
 		// These are defined by POSIX.
 
 	case word == "/bin/sh":
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
 
-	case regex.Matches(word, `/s\W`):
+	case matches(word, `/s\W`):
 		// Probably a sed(1) command, e.g. /find/s,replace,with,
 
-	case regex.Matches(word, `^/(?:[a-z]|\$[({])`):
+	case matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
 		line.Warnf("Found absolute pathname: %s", word)
 		if contains(line.Text, "DESTDIR") {

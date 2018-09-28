@@ -2,7 +2,6 @@ package main
 
 import (
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/textproc"
 )
 
 func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {
@@ -603,7 +602,7 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) 
 	// direct, forcing test is only to reach the code coverage.
 	NewShellLine(dummyMkLine).unescapeBackticks(
 		"dummy",
-		textproc.NewPrefixReplacer(""),
+		G.NewPrefixReplacer(""),
 		shqBackt)
 
 	t.CheckOutputLines(
@@ -800,7 +799,7 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	shline := t.NewShellLine("dummy.mk", 13, "# dummy")
 	// foobar="`echo \"foo   bar\" "\ " "three"`"
 	text := "foobar=\"`echo \\\"foo   bar\\\" \"\\ \" \"three\"`\""
-	repl := textproc.NewPrefixReplacer(text)
+	repl := G.NewPrefixReplacer(text)
 	repl.AdvanceStr("foobar=\"`")
 
 	backtCommand, newQuoting := shline.unescapeBackticks(text, repl, shqDquotBackt)

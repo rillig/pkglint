@@ -101,7 +101,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	}
 
 	if change.Action == "Updated" {
-		changeVersion := regex.Compile(`nb\d+$`).ReplaceAllString(change.Version, "")
+		changeVersion := replaceAll(change.Version, `nb\d+$`, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
 			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
 			Explain(
@@ -527,7 +527,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 	//  subst("distname-1.0", "S,name,file,g") => "distfile-1.0"
 	subst := func(str, smod string) string {
 		qsep := regexp.QuoteMeta(smod[1:2])
-		m, left, from, right, to, flags := regex.Match5(smod, regex.Pattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`))
+		m, left, from, right, to, flags := match5(smod, regex.Pattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`))
 		G.Assertf(m, "pkgnameFromDistname %q", smod)
 		result := mkopSubst(str, left != "", from, right != "", to, flags)
 		if trace.Tracing && result != str {

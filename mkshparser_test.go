@@ -27,6 +27,14 @@ type ShSuite struct {
 
 var _ = check.Suite(&ShSuite{})
 
+func (s *ShSuite) SetUpTest(c *check.C) {
+	G = NewPkglint()
+}
+
+func (s *ShSuite) TearDownTest(c *check.C) {
+	G = Pkglint{} // Make it unusable
+}
+
 func (s *ShSuite) Test_ShellParser__program(c *check.C) {
 	b := s.init(c)
 

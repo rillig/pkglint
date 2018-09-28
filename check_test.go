@@ -57,7 +57,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t := &Tester{checkC: c}
 	s.Tester = t
 
-	G = Pkglint{Testing: true}
+	G = NewPkglint()
+	G.Testing = true
 	textproc.Testing = true
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	G.logErr = NewSeparatorWriter(&t.stderr)

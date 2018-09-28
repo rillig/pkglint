@@ -5,6 +5,7 @@ import (
 	"netbsd.org/pkglint/getopt"
 	"netbsd.org/pkglint/histogram"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"os"
 	"os/user"
@@ -51,6 +52,11 @@ type Pkglint struct {
 
 	loghisto *histogram.Histogram
 	loaded   *histogram.Histogram
+	res      regex.Registry
+}
+
+func NewPkglint() Pkglint {
+	return Pkglint{res: regex.NewRegistry()}
 }
 
 type CmdOpts struct {
@@ -106,7 +112,7 @@ type Hash struct {
 
 // G is the abbreviation for "global state";
 // it is the only global variable in this Go package
-var G Pkglint
+var G = NewPkglint()
 
 var exit = os.Exit // Indirect access, to allow main() to be tested.
 
@@ -148,13 +154,13 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 
-		regex.Profiling = true
+		pkglint.res.Profiling()
 		pkglint.loghisto = histogram.New()
 		pkglint.loaded = histogram.New()
 		defer func() {
 			pkglint.logOut.Write("")
 			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, -1)
-			regex.PrintStats(pkglint.logOut.out)
+			G.res.PrintStats(pkglint.logOut.out)
 			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, 10)
 		}()
 	}
@@ -181,7 +187,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	currentUser, err := user.Current()
 	if err == nil {
 		// On Windows, this is `Computername\Username`.
-		pkglint.CurrentUsername = regex.Compile(`^.*\\`).ReplaceAllString(currentUser.Username, "")
+		pkglint.CurrentUsername = replaceAll(currentUser.Username, `^.*\\`, "")
 	}
 
 	for len(pkglint.Todo) != 0 {
@@ -351,6 +357,10 @@ func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	}
 }
 
+func (pkglint *Pkglint) NewPrefixReplacer(s string) *textproc.PrefixReplacer {
+	return textproc.NewPrefixReplacer(s, &pkglint.res)
+}
+
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
 func findPkgsrcTopdir(fname string) string {
 	for _, dir := range [...]string{".", "..", "../..", "../../.."} {
@@ -384,7 +394,7 @@ func resolveVariableRefs(text string) (resolved string) {
 
 	str := text
 	for {
-		replaced := regex.Compile(`\$\{([\w.]+)\}`).ReplaceAllStringFunc(str, replacer)
+		replaced := replaceAllFunc(str, `\$\{([\w.]+)\}`, replacer)
 		if replaced == str {
 			if trace.Tracing && str != text {
 				trace.Stepf("resolveVariableRefs %q => %q", text, replaced)

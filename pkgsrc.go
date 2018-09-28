@@ -190,7 +190,7 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 
 	latest := ""
 	for _, name := range names {
-		latest = regex.Compile(re).ReplaceAllString(name, repl)
+		latest = replaceAll(name, re, repl)
 	}
 	if latest == "" {
 		return error()

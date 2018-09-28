@@ -8,8 +8,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-
-	"netbsd.org/pkglint/regex"
 )
 
 // Ensures that all test names follow a common naming scheme:
@@ -89,7 +87,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 					break
 				}
 				descr := refAndDescr[1]
-				if regex.Compile(`\p{Ll}\p{Lu}`).MatchString(descr) {
+				if matches(descr, `\p{Ll}\p{Lu}`) {
 					switch descr {
 					case "comparing_YesNo_variable_to_string",
 						"GitHub",
