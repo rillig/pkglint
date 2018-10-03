@@ -750,6 +750,10 @@ func isalnum(s string) bool {
 	return true
 }
 
+// FileCache reduces the IO load for commonly loaded files, especially
+// buildlink3.mk and *.buildlink3.mk files.
+//
+// It saves about 15% CPU time.
 type FileCache struct {
 	table   []*fileCacheEntry
 	mapping map[string]*fileCacheEntry // Pointers into FileCache.table
