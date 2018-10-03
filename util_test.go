@@ -348,3 +348,55 @@ func (s *Suite) Test_isalnum(c *check.C) {
 	c.Check(isalnum("Hello_world005"), equals, true)
 	c.Check(isalnum("Hello,world005"), equals, false)
 }
+
+func (s *Suite) Test_FileCache(c *check.C) {
+	t := s.Init(c)
+
+	cache := NewFileCache(3)
+
+	lines := t.NewLines("Makefile",
+		MkRcsID,
+		"# line 2")
+
+	c.Check(cache.Get("Makefile", 0), check.IsNil)
+	c.Check(cache.hits, equals, 0)
+	c.Check(cache.misses, equals, 1)
+
+	cache.Put("Makefile", 0, lines)
+	c.Check(cache.Get("Makefile", MustSucceed|LogErrors), check.IsNil) // Wrong LoadOptions.
+
+	linesFromCache := cache.Get("Makefile", 0)
+	c.Check(linesFromCache, check.HasLen, 2)
+	c.Check(linesFromCache[1].Filename, equals, "Makefile")
+
+	// Cache keys are normalized using path.Clean.
+	linesFromCache2 := cache.Get("./Makefile", 0)
+	c.Check(linesFromCache2, check.HasLen, 2)
+	c.Check(linesFromCache2[1].Filename, equals, "./Makefile")
+
+	cache.Put("file1.mk", 0, lines)
+	cache.Put("file2.mk", 0, lines)
+
+	// Now the cache is full. All three entries can be retrieved.
+	c.Check(cache.Get("Makefile", 0), check.NotNil)
+	c.Check(cache.Get("file1.mk", 0), check.NotNil)
+	c.Check(cache.Get("file2.mk", 0), check.NotNil)
+
+	// Adding another entry removes all entries with minimum count,
+	// which currently are file1.mk and file2.mk.
+	// Makefile is still in the cache because it was accessed once.
+	cache.Put("file3.mk", 0, lines)
+
+	c.Check(cache.Get("Makefile", 0), check.NotNil)
+	c.Check(cache.Get("file1.mk", 0), check.IsNil)
+	c.Check(cache.Get("file2.mk", 0), check.IsNil)
+	c.Check(cache.Get("file3.mk", 0), check.NotNil)
+
+	cache.Evict("Makefile")
+
+	c.Check(cache.Get("Makefile", 0), check.IsNil)
+	c.Check(cache.table, check.HasLen, 1)
+	c.Check(cache.mapping, check.HasLen, 1)
+	c.Check(cache.hits, equals, 7)
+	c.Check(cache.misses, equals, 5)
+}

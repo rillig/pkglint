@@ -16,6 +16,11 @@ const (
 )
 
 func Load(fileName string, options LoadOptions) []Line {
+	fromCache := G.fileCache.Get(fileName, options)
+	if fromCache != nil {
+		return fromCache
+	}
+
 	rawBytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		switch {
@@ -43,6 +48,7 @@ func Load(fileName string, options LoadOptions) []Line {
 	}
 
 	result := convertToLogicalLines(fileName, rawText, options&Makefile != 0)
+	G.fileCache.Put(fileName, options, result)
 	return result
 }
 

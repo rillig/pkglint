@@ -50,13 +50,16 @@ type Pkglint struct {
 	logOut                *SeparatorWriter
 	logErr                *SeparatorWriter
 
-	loghisto *histogram.Histogram
-	loaded   *histogram.Histogram
-	res      regex.Registry
+	loghisto  *histogram.Histogram
+	loaded    *histogram.Histogram
+	res       regex.Registry
+	fileCache *FileCache
 }
 
 func NewPkglint() Pkglint {
-	return Pkglint{res: regex.NewRegistry()}
+	return Pkglint{
+		res:       regex.NewRegistry(),
+		fileCache: NewFileCache(100)}
 }
 
 type CmdOpts struct {
@@ -162,6 +165,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, -1)
 			G.res.PrintStats(pkglint.logOut.out)
 			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, 10)
+			pkglint.logOut.WriteLine(fmt.Sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
 		}()
 	}
 

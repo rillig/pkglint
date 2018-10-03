@@ -749,3 +749,86 @@ func isalnum(s string) bool {
 	}
 	return true
 }
+
+type FileCache struct {
+	table   []*fileCacheEntry
+	mapping map[string]*fileCacheEntry // Pointers into FileCache.table
+	hits    int
+	misses  int
+}
+
+type fileCacheEntry struct {
+	count    int
+	fileName string
+	options  LoadOptions
+	lines    []Line
+}
+
+func NewFileCache(size int) *FileCache {
+	return &FileCache{
+		make([]*fileCacheEntry, 0, size),
+		make(map[string]*fileCacheEntry),
+		0,
+		0}
+}
+
+func (c *FileCache) Put(fileName string, options LoadOptions, lines []Line) {
+	key := c.key(fileName)
+
+	entry := c.mapping[key]
+	if entry == nil {
+		if len(c.table) == cap(c.table) {
+			sort.Slice(c.table, func(i, j int) bool { return c.table[j].count < c.table[i].count })
+			minCount := c.table[len(c.table)-1].count
+			newLen := len(c.table)
+			for newLen > 0 && c.table[newLen-1].count == minCount {
+				delete(c.mapping, c.key(c.table[newLen-1].fileName))
+				newLen--
+			}
+			c.table = c.table[0:newLen]
+		}
+
+		entry = &fileCacheEntry{0, fileName, options, lines}
+		c.table = append(c.table, entry)
+		c.mapping[key] = entry
+	}
+
+	entry.count = 0
+	entry.fileName = fileName
+	entry.options = options
+	entry.lines = lines
+}
+
+func (c *FileCache) Get(fileName string, options LoadOptions) []Line {
+	key := c.key(fileName)
+	entry, found := c.mapping[key]
+	if found && entry.options == options {
+		c.hits++
+		entry.count++
+
+		lines := make([]Line, len(entry.lines))
+		for i, line := range entry.lines {
+			lines[i] = NewLineMulti(fileName, int(line.firstLine), int(line.lastLine), line.Text, line.raw)
+		}
+		return lines
+	}
+	c.misses++
+	return nil
+}
+
+func (c *FileCache) Evict(fileName string) {
+	key := c.key(fileName)
+	entry, found := c.mapping[key]
+	if found {
+		delete(c.mapping, key)
+
+		sort.Slice(c.table, func(i, j int) bool {
+			return c.table[j] == entry && c.table[i] != entry
+		})
+		c.table = c.table[0 : len(c.table)-1]
+	}
+}
+
+func (c *FileCache) key(fileName string) string {
+	return path.Clean(fileName)
+}
