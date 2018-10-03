@@ -135,6 +135,7 @@ case "$*" in
 "pprof "*)
   cd "$archivedir"
   go tool pprof -http :1$2 *$2*.exe *$2*.pprof &
+  exit 0
   ;;
 "notest")
   set -- install_notest pkgsrc diffs
