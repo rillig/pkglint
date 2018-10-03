@@ -132,6 +132,10 @@ case "$*" in
 "")
   set -- install pkgsrc diffs
   ;;
+"pprof "*)
+  cd "$archivedir"
+  go tool pprof -http :1$2 *$2*.exe *$2*.pprof &
+  ;;
 "notest")
   set -- install_notest pkgsrc diffs
   ;;
