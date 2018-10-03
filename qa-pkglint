@@ -63,6 +63,7 @@ netbsd() {
     --exclude="/pkglint.cov" \
     --exclude="/pkglint.exe" \
     --exclude="/pkglint.test.exe" \
+    --exclude="/shell/" \
     --exclude="*.docx" \
     --exclude="/.idea/" \
     --exclude="/.vscode/" \
