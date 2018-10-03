@@ -790,6 +790,11 @@ func (c *FileCache) Put(fileName string, options LoadOptions, lines []Line) {
 				newLen--
 			}
 			c.table = c.table[0:newLen]
+
+			// To avoid files from getting stuck in the cache.
+			for _, e := range c.table {
+				e.count /= 2
+			}
 		}
 
 		entry = &fileCacheEntry{0, fileName, options, lines}
