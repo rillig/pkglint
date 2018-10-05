@@ -81,6 +81,32 @@ func (s *Suite) Test_Condition_String(c *check.C) {
 	c.Check(mixed.String(), check.Equals, "a MIXED b MIXED c")
 }
 
+func (s *Suite) Test_Walk(c *check.C) {
+	res := regex.NewRegistry()
+
+	condition := Parse("(a OR b) AND (c AND d)", &res)
+
+	var out []string
+	condition.Walk(func(condition *Condition) {
+		switch {
+		case condition.Name != "":
+			out = append(out, condition.Name)
+		case condition.Paren != nil:
+			out = append(out, "()")
+		case condition.And && condition.Or:
+			out = append(out, "MIXED")
+		case condition.And:
+			out = append(out, "AND")
+		case condition.Or:
+			out = append(out, "OR")
+		default:
+			panic("unexpected")
+		}
+	})
+
+	c.Check(out, check.DeepEquals, []string{"a", "b", "OR", "()", "c", "d", "AND", "()", "AND"})
+}
+
 func NewName(name string) *Condition {
 	return &Condition{Name: name}
 }
