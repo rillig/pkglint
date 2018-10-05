@@ -51,6 +51,9 @@ func (s *Suite) Test_Parse(c *check.C) {
 	c.Check(Parse("a AND b OR c AND d", &res).String(), check.Equals, "a MIXED b MIXED c MIXED d")
 
 	c.Check(Parse("AND artistic", &res), check.IsNil)
+
+	// FIXME: Must be a parse error
+	c.Check(Parse("invalid/character", &res).String(), check.Equals, "invalid")
 }
 
 func (s *Suite) Test_Condition_String(c *check.C) {
