@@ -19,7 +19,8 @@ type MkLineImpl struct {
 	Line
 	data interface{} // One of the following mkLine* types
 }
-type mkLineAssign struct {
+type mkLineAssign = *mkLineAssignImpl
+type mkLineAssignImpl struct {
 	commented  bool       // Whether the whole variable assignment is commented out
 	varname    string     // e.g. "HOMEPAGE", "SUBST_SED.perl"
 	varcanon   string     // e.g. "HOMEPAGE", "SUBST_SED.*"
@@ -34,14 +35,16 @@ type mkLineShell struct {
 }
 type mkLineComment struct{}
 type mkLineEmpty struct{}
-type mkLineDirective struct {
+type mkLineDirective = *mkLineDirectiveImpl
+type mkLineDirectiveImpl struct {
 	indent    string
 	directive string
 	args      string
 	comment   string
 	elseLine  MkLine // (filled in later)
 }
-type mkLineInclude struct {
+type mkLineInclude = *mkLineIncludeImpl
+type mkLineIncludeImpl struct {
 	mustExist       bool
 	sys             bool
 	indent          string
@@ -89,7 +92,7 @@ func NewMkLine(line Line) *MkLineImpl {
 		value = strings.Replace(value, "\\#", "#", -1)
 		varparam := varnameParam(varname)
 
-		return &MkLineImpl{line, mkLineAssign{
+		return &MkLineImpl{line, &mkLineAssignImpl{
 			commented,
 			varname,
 			varnameCanon(varname),
@@ -115,15 +118,15 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, indent, directive, args, comment := matchMkDirective(text); m {
-		return &MkLineImpl{line, mkLineDirective{indent, directive, args, comment, nil}}
+		return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, comment, nil}}
 	}
 
 	if m, indent, directive, includefile := MatchMkInclude(text); m {
-		return &MkLineImpl{line, mkLineInclude{directive == "include", false, indent, includefile, ""}}
+		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includefile, ""}}
 	}
 
 	if m, indent, directive, includefile := match3(text, `^\.(\s*)(s?include)\s+<([^>]+)>\s*(?:#.*)?$`); m {
-		return &MkLineImpl{line, mkLineInclude{directive == "include", true, indent, includefile, ""}}
+		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includefile, ""}}
 	}
 
 	if m, targets, whitespace, sources := match3(text, `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`); m {
