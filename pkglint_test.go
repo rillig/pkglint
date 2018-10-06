@@ -607,16 +607,14 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback(c *check.C) {
 	t := s.Init(c)
 
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
-
-	global.Validity = Nowhere
+	G.Pkgsrc.Tools.defTool("tool", "TOOL", false, Nowhere)
 
 	loadTimeTool, loadTimeUsable := G.Tool("${TOOL}", LoadTime)
 	runTimeTool, runTimeUsable := G.Tool("${TOOL}", RunTime)
 
-	c.Check(loadTimeTool, equals, global)
+	c.Check(loadTimeTool.String(), equals, "tool:TOOL::Nowhere")
 	c.Check(loadTimeUsable, equals, false)
-	c.Check(runTimeTool, equals, global)
+	c.Check(runTimeTool.String(), equals, "tool:TOOL::Nowhere")
 	c.Check(runTimeUsable, equals, false)
 }
 
@@ -624,16 +622,14 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback_runtime(c *check.C
 	t := s.Init(c)
 
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
-
-	global.Validity = AtRunTime
+	G.Pkgsrc.Tools.defTool("tool", "TOOL", false, AtRunTime)
 
 	loadTimeTool, loadTimeUsable := G.Tool("${TOOL}", LoadTime)
 	runTimeTool, runTimeUsable := G.Tool("${TOOL}", RunTime)
 
-	c.Check(loadTimeTool, equals, global)
+	c.Check(loadTimeTool.String(), equals, "tool:TOOL::AtRunTime")
 	c.Check(loadTimeUsable, equals, false)
-	c.Check(runTimeTool, equals, global)
+	c.Check(runTimeTool.String(), equals, "tool:TOOL::AtRunTime")
 	c.Check(runTimeUsable, equals, true)
 }
 
@@ -651,16 +647,14 @@ func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	c.Check(G.ToolByVarname("TOOL", RunTime), equals, local)
 }
 
-func (s *Suite) Test_Pkglint_ToolByVarname__fallback(c *check.C) {
+func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
 	t := s.Init(c)
 
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
+	G.Pkgsrc.Tools.defTool("tool", "TOOL", false, AtRunTime)
 
-	global.Validity = AtRunTime
-
-	c.Check(G.ToolByVarname("TOOL", LoadTime), equals, global)
-	c.Check(G.ToolByVarname("TOOL", RunTime), equals, global)
+	c.Check(G.ToolByVarname("TOOL", LoadTime).String(), equals, "tool:TOOL::AtRunTime")
+	c.Check(G.ToolByVarname("TOOL", RunTime).String(), equals, "tool:TOOL::AtRunTime")
 }
 
 func (s *Suite) Test_CheckfileExtra(c *check.C) {
