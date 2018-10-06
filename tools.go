@@ -248,20 +248,10 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 
 	// See mk/tools/autoconf.mk:/^\.if !defined/
 	if matches(value, `\bautoconf213\b`) {
-		for _, name := range [...]string{"autoconf-2.13", "autoheader-2.13", "autoreconf-2.13", "autoscan-2.13", "autoupdate-2.13", "ifnames-2.13"} {
-			if createIfAbsent {
-				tr.Define(name, "", mkline)
-			}
-			deps = append(deps, name)
-		}
+		deps = append(deps, "autoconf-2.13", "autoheader-2.13", "autoreconf-2.13", "autoscan-2.13", "autoupdate-2.13", "ifnames-2.13")
 	}
 	if matches(value, `\bautoconf\b`) {
-		for _, name := range [...]string{"autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames"} {
-			if createIfAbsent {
-				tr.Define(name, "", mkline)
-			}
-			deps = append(deps, name)
-		}
+		deps = append(deps, "autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames")
 	}
 
 	for _, dep := range deps {
