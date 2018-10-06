@@ -127,10 +127,22 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 	}
 	tool := &Tool{name, varname, false, validity}
 
+	return tr.defTool(tool)
+}
+
+func (tr *Tools) defTool(tool *Tool) *Tool {
+	name := tool.Name
+	varname := tool.Varname
+
 	if name != "" {
 		if existing := tr.byName[name]; existing != nil {
 			tool = existing
 		} else {
+			if tr.fallback != nil {
+				if fallback := tr.fallback.ByName(name); fallback != nil {
+					tr.merge(tool, fallback)
+				}
+			}
 			tr.byName[name] = tool
 		}
 	}
@@ -142,6 +154,19 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 	}
 
 	return tool
+}
+
+func (tr *Tools) merge(target, source *Tool) {
+	if target.Name == "" {
+		target.Name = source.Name
+	}
+	if target.Varname == "" {
+		target.Varname = source.Varname
+	}
+	target.MustUseVarForm = target.MustUseVarForm || source.MustUseVarForm
+	if source.Validity > target.Validity {
+		target.Validity = source.Validity
+	}
 }
 
 func (tr *Tools) Trace() {
@@ -159,6 +184,10 @@ func (tr *Tools) Trace() {
 
 	for _, toolname := range keys {
 		trace.Stepf("tool %+v", tr.byName[toolname])
+	}
+
+	if tr.fallback != nil {
+		tr.fallback.Trace()
 	}
 }
 
@@ -270,7 +299,17 @@ func (tr *Tools) validity(fileName string) Validity {
 
 func (tr *Tools) ByVarname(varname string) (tool *Tool) { return tr.byVarname[varname] }
 
-func (tr *Tools) ByName(name string) (tool *Tool) { return tr.byName[name] }
+func (tr *Tools) ByName(name string) *Tool {
+	tool := tr.byName[name]
+	if tool == nil && tr.fallback != nil {
+		fallback := tr.fallback.ByName(name)
+		if fallback != nil {
+			copied := *fallback
+			return tr.defTool(&copied)
+		}
+	}
+	return tool
+}
 
 func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 	if time == LoadTime {
@@ -280,41 +319,9 @@ func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 	}
 }
 
-func (tr *Tools) AddAll(other *Tools) {
+func (tr *Tools) Fallback(other *Tools) {
+	G.Assertf(tr.fallback == nil, "Tools.Fallback must only be called once.")
 	tr.fallback = other
-	if trace.Tracing && len(other.byName) != 0 {
-		defer trace.Call(other.TraceName+" to "+tr.TraceName, len(other.byName))()
-	}
-
-	// Same as the code below, just a little faster.
-	if !trace.Tracing {
-		for _, otherTool := range other.byName {
-			tool := tr.def(otherTool.Name, otherTool.Varname, nil)
-			tool.MustUseVarForm = tool.MustUseVarForm || otherTool.MustUseVarForm
-			if otherTool.Validity > tool.Validity {
-				tool.SetValidity(otherTool.Validity, tr.TraceName)
-			}
-		}
-		return
-	}
-
-	var names []string
-	for name := range other.byName {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	for _, name := range names {
-		otherTool := other.byName[name]
-		if trace.Tracing {
-			trace.Stepf("Tools.AddAll %+v", *otherTool)
-		}
-		tool := tr.def(otherTool.Name, otherTool.Varname, nil)
-		tool.MustUseVarForm = tool.MustUseVarForm || otherTool.MustUseVarForm
-		if otherTool.Validity > tool.Validity {
-			tool.SetValidity(otherTool.Validity, tr.TraceName)
-		}
-	}
 }
 
 func (tr *Tools) IsValidToolName(name string) bool {

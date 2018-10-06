@@ -174,7 +174,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	G.Pkgsrc.LoadInfrastructure()
 
 	tools := NewTools("")
-	tools.AddAll(G.Pkgsrc.Tools)
+	tools.Fallback(G.Pkgsrc.Tools)
 
 	load := tools.ByName("load")
 	run := tools.ByName("run")
@@ -339,7 +339,7 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 		"TRACE: - (*Tools).Trace(\"Pkgsrc\")")
 
 	tools := NewTools("module.mk")
-	tools.AddAll(G.Pkgsrc.Tools)
+	tools.Fallback(G.Pkgsrc.Tools)
 
 	t.EnableTracingToLog()
 	tools.Trace()
@@ -347,15 +347,17 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 
 	t.CheckOutputLines(
 		"TRACE: + (*Tools).Trace(\"module.mk\")",
-		"TRACE: 1   tool &{Name:awk Varname:AWK MustUseVarForm:false Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true Validity:Nowhere}",
-		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Validity:Nowhere}",
-		"TRACE: 1   tool &{Name:gsed Varname:SED MustUseVarForm:false Validity:Nowhere}",
-		"TRACE: 1   tool &{Name:sed Varname:SED MustUseVarForm:false Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1 + (*Tools).Trace(\"Pkgsrc\")",
+		"TRACE: 1 2   tool &{Name:awk Varname:AWK MustUseVarForm:false Validity:AfterPrefsMk}",
+		"TRACE: 1 2   tool &{Name:echo Varname:ECHO MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1 2   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1 2   tool &{Name:false Varname:FALSE MustUseVarForm:true Validity:Nowhere}",
+		"TRACE: 1 2   tool &{Name:gawk Varname:AWK MustUseVarForm:false Validity:Nowhere}",
+		"TRACE: 1 2   tool &{Name:gsed Varname:SED MustUseVarForm:false Validity:Nowhere}",
+		"TRACE: 1 2   tool &{Name:sed Varname:SED MustUseVarForm:false Validity:AfterPrefsMk}",
+		"TRACE: 1 2   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1 2   tool &{Name:true Varname:TRUE MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1 - (*Tools).Trace(\"Pkgsrc\")",
 		"TRACE: - (*Tools).Trace(\"module.mk\")")
 }
 
@@ -394,7 +396,7 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 // and the GNU tool is only defined but not made available.
 //
 // See also Pkglint.Tool.
-func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name_realistic(c *check.C) {
+func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realistic(c *check.C) {
 	t := s.Init(c)
 
 	prefsMk := t.NewMkLine("bsd.prefs.mk", 2, "") // Makes the tool valid AfterPrefsMk
@@ -407,20 +409,23 @@ func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name_realistic
 	gnu.Define("gsed", "SED", otherMk)
 
 	local1 := NewTools("local")
-	local1.AddAll(nonGnu)
-	local1.AddAll(gnu)
+	local1.defTool(nonGnu.ByName("sed"))
+	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, AfterPrefsMk)
 	c.Check(local1.ByName("gsed").Validity, equals, Nowhere)
 	local1.Trace()
 
 	local2 := NewTools("local")
-	local2.AddAll(gnu)
-	local2.AddAll(nonGnu)
+	local2.defTool(gnu.ByName("gsed"))
+	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, AfterPrefsMk)
 	c.Check(local2.ByName("gsed").Validity, equals, Nowhere)
 	local2.Trace()
+
+	// TODO: What about local1.ByVarname("SED")?
+	// TODO: What about local2.ByVarname("SED")?
 
 	// The fallbacks are different, but this is an unrealistic case
 	// since in practice there is always only a single fallback,
@@ -437,7 +442,7 @@ func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name_realistic
 // and the non-GNU tool is only defined but not made available.
 //
 // See also Pkglint.Tool.
-func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name_unrealistic(c *check.C) {
+func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unrealistic(c *check.C) {
 	t := s.Init(c)
 
 	prefsMk := t.NewMkLine("bsd.prefs.mk", 2, "") // Makes the tool valid AfterPrefsMk
@@ -450,20 +455,23 @@ func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name_unrealist
 	gnu.Define("gsed", "SED", prefsMk)
 
 	local1 := NewTools("local")
-	local1.AddAll(nonGnu)
-	local1.AddAll(gnu)
+	local1.defTool(nonGnu.ByName("sed"))
+	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, Nowhere)
 	c.Check(local1.ByName("gsed").Validity, equals, AfterPrefsMk)
 	local1.Trace()
 
 	local2 := NewTools("local")
-	local2.AddAll(gnu)
-	local2.AddAll(nonGnu)
+	local2.defTool(gnu.ByName("gsed"))
+	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, Nowhere)
 	c.Check(local2.ByName("gsed").Validity, equals, AfterPrefsMk)
 	local2.Trace()
+
+	// TODO: What about local1.ByVarname("SED")?
+	// TODO: What about local2.ByVarname("SED")?
 
 	// The fallbacks are different, but this is an unrealistic case
 	// since in practice there is always only a single fallback,

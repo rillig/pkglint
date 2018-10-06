@@ -578,9 +578,9 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_name_fallback(c *check.C) {
 	loadTimeTool, loadTimeUsable := G.Tool("tool", LoadTime)
 	runTimeTool, runTimeUsable := G.Tool("tool", RunTime)
 
-	c.Check(loadTimeTool, equals, global)
+	c.Check(*loadTimeTool, equals, *global)
 	c.Check(loadTimeUsable, equals, false)
-	c.Check(runTimeTool, equals, global)
+	c.Check(*runTimeTool, equals, *global)
 	c.Check(runTimeUsable, equals, false)
 }
 
