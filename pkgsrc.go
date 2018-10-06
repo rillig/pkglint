@@ -21,7 +21,7 @@ type Pkgsrc struct {
 	// within the bsd.pkg.mk file.
 	buildDefs map[string]bool
 
-	Tools Tools
+	Tools *Tools
 
 	MasterSiteURLToVar map[string]string // "https://github.com/" => "MASTER_SITE_GITHUB"
 	MasterSiteVarToURL map[string]string // "MASTER_SITE_GITHUB" => "https://github.com/"

@@ -433,6 +433,13 @@ func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name(c *check.
 	c.Check(local4.ByName("gsed").Validity, equals, AfterPrefsMk)
 	local4.Trace()
 
+	// The fallbacks are different, but this is an unrealistic case
+	// since in practice there is always only a single fallback,
+	// which is G.Pkgsrc.Tools.
+	local1.fallback = nil
+	local2.fallback = nil
+	local3.fallback = nil
+	local4.fallback = nil
 	c.Check(local1, deepEquals, local2)
 	c.Check(local4, deepEquals, local4)
 }

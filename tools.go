@@ -82,14 +82,16 @@ type Tools struct {
 	TraceName string           // Only for the trace log
 	byName    map[string]*Tool // "sed" => tool
 	byVarname map[string]*Tool // "GREP_CMD" => tool
-	SeenPrefs bool             // Determines the effect of adding the tool to USE_TOOLS
+	fallback  *Tools
+	SeenPrefs bool // Determines the effect of adding the tool to USE_TOOLS
 }
 
-func NewTools(traceName string) Tools {
-	return Tools{
+func NewTools(traceName string) *Tools {
+	return &Tools{
 		traceName,
 		make(map[string]*Tool),
 		make(map[string]*Tool),
+		nil,
 		false}
 }
 
@@ -278,7 +280,8 @@ func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 	}
 }
 
-func (tr *Tools) AddAll(other Tools) {
+func (tr *Tools) AddAll(other *Tools) {
+	tr.fallback = other
 	if trace.Tracing && len(other.byName) != 0 {
 		defer trace.Call(other.TraceName+" to "+tr.TraceName, len(other.byName))()
 	}
