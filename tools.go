@@ -111,14 +111,6 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 		trace.Stepf("Tools.Define for %s: %q %q in %s", tr.TraceName, name, varname, mkline)
 	}
 
-	tool := tr.def(name, varname, mkline)
-	if varname != "" {
-		tool.Varname = varname
-	}
-	return tool
-}
-
-func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 	if mkline != nil && !tr.IsValidToolName(name) {
 		mkline.Errorf("Invalid tool name %q.", name)
 	}
@@ -132,7 +124,11 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 		}
 	}
 
-	return tr.defTool(name, varname, false, validity)
+	tool := tr.defTool(name, varname, false, validity)
+	if varname != "" {
+		tool.Varname = varname
+	}
+	return tool
 }
 
 func (tr *Tools) defTool(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
