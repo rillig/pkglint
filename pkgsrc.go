@@ -222,22 +222,19 @@ func (src *Pkgsrc) loadTools() {
 	}
 
 	// TODO: parse bsd.prefs.mk instead of hardcoding this.
-	toolDefs := []struct {
-		Name    string
-		Varname string
+	toolDefs := [...]struct {
+		Name     string
+		Varname  string
+		Validity Validity
 	}{
-		{"echo", "ECHO"},
-		{"echo -n", "ECHO_N"},
-		{"false", "FALSE"},
-		{"test", "TEST"},
-		{"true", "TRUE"}}
+		{"echo", "ECHO", AfterPrefsMk},
+		{"echo -n", "ECHO_N", AfterPrefsMk},
+		{"false", "FALSE", Nowhere}, // FIXME: AtRunTime, since it is from bsd.pkg.mk
+		{"test", "TEST", AfterPrefsMk},
+		{"true", "TRUE", AfterPrefsMk}}
 
 	for _, toolDef := range toolDefs {
-		tool := tools.Define(toolDef.Name, toolDef.Varname, dummyMkLine)
-		tool.MustUseVarForm = true
-		if toolDef.Name != "false" {
-			tool.SetValidity(AfterPrefsMk, tools.TraceName)
-		}
+		tools.defTool(toolDef.Name, toolDef.Varname, true, toolDef.Validity)
 	}
 
 	for _, basename := range toolFiles {
