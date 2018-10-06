@@ -221,7 +221,7 @@ func (src *Pkgsrc) loadTools() {
 		}
 	}
 
-	// TODO: parse bsd.prefs.mk instead of hardcoding this.
+	// TODO: parse bsd.prefs.mk and bsd.pkg.mk instead of hardcoding this.
 	toolDefs := [...]struct {
 		Name     string
 		Varname  string
@@ -229,7 +229,7 @@ func (src *Pkgsrc) loadTools() {
 	}{
 		{"echo", "ECHO", AfterPrefsMk},
 		{"echo -n", "ECHO_N", AfterPrefsMk},
-		{"false", "FALSE", Nowhere}, // FIXME: AtRunTime, since it is from bsd.pkg.mk
+		{"false", "FALSE", AtRunTime}, // from bsd.pkg.mk
 		{"test", "TEST", AfterPrefsMk},
 		{"true", "TRUE", AfterPrefsMk}}
 

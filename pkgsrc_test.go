@@ -107,7 +107,7 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 		"TRACE: 1   tool chown:CHOWN::Nowhere",
 		"TRACE: 1   tool echo:ECHO:var:AfterPrefsMk",
 		"TRACE: 1   tool echo -n:ECHO_N:var:AfterPrefsMk",
-		"TRACE: 1   tool false:FALSE:var:Nowhere",
+		"TRACE: 1   tool false:FALSE:var:AtRunTime",
 		"TRACE: 1   tool gawk:AWK::Nowhere",
 		"TRACE: 1   tool m4:::AfterPrefsMk",
 		"TRACE: 1   tool msgfmt:::Nowhere",
