@@ -387,16 +387,24 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// Demonstrates how the Tools type handles tool that share the same
+// Demonstrates how the Tools type handles tools that share the same
 // variable name. Of these tools, the GNU variant is preferred.
 //
+// In this realistic variant, the non-GNU tool is defined in bsd.prefs.mk
+// and the GNU tool is only defined but not made available.
+//
 // See also Pkglint.Tool.
-func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name(c *check.C) {
+func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name_realistic(c *check.C) {
+	t := s.Init(c)
+
+	prefsMk := t.NewMkLine("bsd.prefs.mk", 2, "") // Makes the tool valid AfterPrefsMk
+	otherMk := t.NewMkLine("other.mk", 2, "")     // Makes the tool valid Nowhere
+
 	nonGnu := NewTools("non-gnu")
-	nonGnu.Define("sed", "SED", dummyMkLine).SetValidity(AfterPrefsMk, "")
+	nonGnu.Define("sed", "SED", prefsMk)
 
 	gnu := NewTools("gnu")
-	gnu.Define("gsed", "SED", dummyMkLine)
+	gnu.Define("gsed", "SED", otherMk)
 
 	local1 := NewTools("local")
 	local1.AddAll(nonGnu)
@@ -414,32 +422,53 @@ func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name(c *check.
 	c.Check(local2.ByName("gsed").Validity, equals, Nowhere)
 	local2.Trace()
 
-	nonGnu.ByName("sed").Validity = Nowhere
-	gnu.ByName("gsed").Validity = AfterPrefsMk
+	// The fallbacks are different, but this is an unrealistic case
+	// since in practice there is always only a single fallback,
+	// which is G.Pkgsrc.Tools.
+	local1.fallback = nil
+	local2.fallback = nil
+	c.Check(local1, deepEquals, local2)
+}
 
-	local3 := NewTools("local")
-	local3.AddAll(nonGnu)
-	local3.AddAll(gnu)
+// Demonstrates how the Tools type handles tools that share the same
+// variable name. Of these tools, the GNU variant is preferred.
+//
+// In this unrealistic variant, the non-GNU tool is defined in bsd.prefs.mk
+// and the non-GNU tool is only defined but not made available.
+//
+// See also Pkglint.Tool.
+func (s *Suite) Test_Tools_AddAll__tools_having_the_same_variable_name_unrealistic(c *check.C) {
+	t := s.Init(c)
 
-	c.Check(local3.ByName("sed").Validity, equals, Nowhere)
-	c.Check(local3.ByName("gsed").Validity, equals, AfterPrefsMk)
-	local3.Trace()
+	prefsMk := t.NewMkLine("bsd.prefs.mk", 2, "") // Makes the tool valid AfterPrefsMk
+	otherMk := t.NewMkLine("other.mk", 2, "")     // Makes the tool valid Nowhere
 
-	local4 := NewTools("local")
-	local4.AddAll(gnu)
-	local4.AddAll(nonGnu)
+	nonGnu := NewTools("non-gnu")
+	nonGnu.Define("sed", "SED", otherMk)
 
-	c.Check(local4.ByName("sed").Validity, equals, Nowhere)
-	c.Check(local4.ByName("gsed").Validity, equals, AfterPrefsMk)
-	local4.Trace()
+	gnu := NewTools("gnu")
+	gnu.Define("gsed", "SED", prefsMk)
+
+	local1 := NewTools("local")
+	local1.AddAll(nonGnu)
+	local1.AddAll(gnu)
+
+	c.Check(local1.ByName("sed").Validity, equals, Nowhere)
+	c.Check(local1.ByName("gsed").Validity, equals, AfterPrefsMk)
+	local1.Trace()
+
+	local2 := NewTools("local")
+	local2.AddAll(gnu)
+	local2.AddAll(nonGnu)
+
+	c.Check(local2.ByName("sed").Validity, equals, Nowhere)
+	c.Check(local2.ByName("gsed").Validity, equals, AfterPrefsMk)
+	local2.Trace()
 
 	// The fallbacks are different, but this is an unrealistic case
 	// since in practice there is always only a single fallback,
 	// which is G.Pkgsrc.Tools.
 	local1.fallback = nil
 	local2.fallback = nil
-	local3.fallback = nil
-	local4.fallback = nil
-	c.Check(local1, deepEquals, local2)
-	c.Check(local4, deepEquals, local4)
+	c.Check(local2, deepEquals, local2)
 }

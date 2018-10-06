@@ -729,13 +729,16 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 	}
 }
 
+// IsPrefs returns whether the given file, when included, loads the user
+// preferences.
 func IsPrefs(fileName string) bool {
 	switch path.Base(fileName) {
-	case "bsd.prefs.mk",
-		"bsd.fast.prefs.mk",
-		"bsd.builtin.mk", // mk/buildlink3/bsd.builtin.mk
-		"pkgconfig-builtin.mk",
-		"bsd.options.mk":
+	case // See https://github.com/golang/go/issues/28057
+		"bsd.prefs.mk",         // in mk/
+		"bsd.fast.prefs.mk",    // in mk/
+		"bsd.builtin.mk",       // in mk/buildlink3/
+		"pkgconfig-builtin.mk", // in mk/buildlink3/
+		"bsd.options.mk":       // in mk/
 		return true
 	}
 	return false
