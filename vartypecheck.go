@@ -763,7 +763,7 @@ func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.Value, `^[1-9]\d*$`) {
 		cv.Line.Warnf("%s must be a positive integer number.", cv.Varname)
 	}
-	if path.Base(cv.Line.Filename) != "Makefile" {
+	if cv.Line.Basename != "Makefile" {
 		cv.Line.Errorf("%s only makes sense directly in the package Makefile.", cv.Varname)
 		Explain(
 			"Usually, different packages using the same Makefile.common have",

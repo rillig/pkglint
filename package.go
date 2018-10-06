@@ -174,7 +174,8 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
 	for _, fname := range files {
-		if (hasPrefix(path.Base(fname), "Makefile.") || hasSuffix(fname, ".mk")) &&
+		basename := path.Base(fname)
+		if (hasPrefix(basename, "Makefile.") || hasSuffix(fname, ".mk")) &&
 			!matches(fname, `patch-`) &&
 			!contains(fname, pkg.Pkgdir+"/") &&
 			!contains(fname, pkg.Filesdir+"/") {
@@ -182,7 +183,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 				mklines.DetermineUsedVariables()
 			}
 		}
-		if hasPrefix(path.Base(fname), "PLIST") {
+		if hasPrefix(basename, "PLIST") {
 			pkg.loadPlistDirs(fname)
 		}
 	}
@@ -315,7 +316,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 		}
 
 		if includeFile != "" {
-			if path.Base(fname) != "buildlink3.mk" {
+			if mkline.Basename != "buildlink3.mk" {
 				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					pkg.bl3[bl3File] = mkline.Line
 					if trace.Tracing {
@@ -333,7 +334,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 				mkline.ExplainRelativeDirs()
 			}
 
-			if path.Base(fname) == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
+			if mkline.Basename == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
 				if trace.Tracing {
 					trace.Step1("Including %q sets seenMakefileCommon.", includeFile)
 				}

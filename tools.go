@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/trace"
-	"path"
 	"sort"
 	"strings"
 )
@@ -272,7 +271,7 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 			tr.Define(name, "", mkline)
 		}
 		if tool != nil {
-			validity := tr.validity(mkline.Filename)
+			validity := tr.validity(mkline.Basename)
 			if validity > tool.Validity {
 				tool.SetValidity(validity, tr.TraceName)
 			}
@@ -280,15 +279,15 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 	}
 }
 
-func (tr *Tools) validity(fileName string) Validity {
-	basename := path.Base(fileName)
-	if basename == "Makefile" && tr.SeenPrefs {
+func (tr *Tools) validity(basename string) Validity {
+	switch {
+	case basename == "Makefile" && tr.SeenPrefs:
+		return AtRunTime
+	case basename == "Makefile" || basename == "bsd.prefs.mk":
+		return AfterPrefsMk
+	default:
 		return AtRunTime
 	}
-	if basename == "bsd.prefs.mk" || basename == "Makefile" {
-		return AfterPrefsMk
-	}
-	return AtRunTime
 }
 
 func (tr *Tools) ByVarname(varname string) (tool *Tool) { return tr.byVarname[varname] }

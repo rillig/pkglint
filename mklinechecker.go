@@ -79,7 +79,7 @@ func (ck MkLineChecker) checkInclude() {
 			"Makefile.common.")
 
 	case IsPrefs(includefile):
-		if path.Base(mkline.Filename) == "buildlink3.mk" && includefile == "../../mk/bsd.prefs.mk" {
+		if mkline.Basename == "buildlink3.mk" && includefile == "../../mk/bsd.prefs.mk" {
 			mkline.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 
@@ -283,7 +283,7 @@ func (ck MkLineChecker) checkVarassignPermissions() {
 		return
 	}
 
-	perms := vartype.EffectivePermissions(mkline.Filename)
+	perms := vartype.EffectivePermissions(mkline.Basename)
 
 	// E.g. USE_TOOLS:= ${USE_TOOLS:Nunwanted-tool}
 	if op == opAssignEval && perms&aclpAppend != 0 {
@@ -423,7 +423,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	mkline := ck.MkLine
-	perms := vartype.EffectivePermissions(mkline.Filename)
+	perms := vartype.EffectivePermissions(mkline.Basename)
 
 	isLoadTime := false // Will the variable be used at load time?
 
@@ -482,7 +482,7 @@ func (ck MkLineChecker) checkVaruseToolLoadTime(varname string, tool *Tool) {
 		return
 	}
 
-	if path.Base(ck.MkLine.Filename) == "Makefile" {
+	if ck.MkLine.Basename == "Makefile" {
 		pkgsrcTool := G.Pkgsrc.Tools.ByName(tool.Name)
 		if pkgsrcTool != nil && pkgsrcTool.Validity == Nowhere {
 			// The tool must have been added too late to USE_TOOLS,

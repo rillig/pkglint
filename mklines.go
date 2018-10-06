@@ -2,7 +2,6 @@ package main
 
 import (
 	"netbsd.org/pkglint/trace"
-	"path"
 	"strings"
 )
 
@@ -346,7 +345,7 @@ func (mklines *MkLines) determineDocumentedVariables() {
 func (mklines *MkLines) CheckRedundantVariables() {
 	scope := NewRedundantScope()
 	isRelevant := func(old, new MkLine) bool {
-		if path.Base(old.Filename) != "Makefile" && path.Base(new.Filename) == "Makefile" {
+		if old.Basename != "Makefile" && new.Basename == "Makefile" {
 			return false
 		}
 		if new.Op() == opAssignEval {
