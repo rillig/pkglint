@@ -124,26 +124,23 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 		}
 	}
 
-	tool := tr.defTool(name, varname, false, validity)
-	if varname != "" {
-		tool.Varname = varname
-	}
-	return tool
+	return tr.defTool(name, varname, false, validity)
 }
 
 func (tr *Tools) defTool(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
-	tool := &Tool{name, varname, mustUseVarForm, validity}
+	fresh := &Tool{name, varname, mustUseVarForm, validity}
 
-	if name != "" {
-		if existing := tr.byName[name]; existing != nil {
-			tool = existing
-		} else {
-			if tr.fallback != nil {
-				if fallback := tr.fallback.ByName(name); fallback != nil {
-					tr.merge(tool, fallback)
-				}
-			}
-			tr.byName[name] = tool
+	tool := tr.byName[name]
+	if tool == nil {
+		tool = fresh
+		tr.byName[name] = tool
+	} else {
+		tr.merge(tool, fresh)
+	}
+
+	if tr.fallback != nil {
+		if fallback := tr.fallback.ByName(name); fallback != nil {
+			tr.merge(tool, fallback)
 		}
 	}
 
@@ -157,9 +154,6 @@ func (tr *Tools) defTool(name, varname string, mustUseVarForm bool, validity Val
 }
 
 func (tr *Tools) merge(target, source *Tool) {
-	if target.Name == "" {
-		target.Name = source.Name
-	}
 	if target.Varname == "" {
 		target.Varname = source.Varname
 	}
