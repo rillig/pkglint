@@ -327,15 +327,15 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 
 	t.CheckOutputLines(
 		"TRACE: + (*Tools).Trace(\"Pkgsrc\")",
-		"TRACE: 1   tool &{Name:awk Varname:AWK MustUseVarForm:false Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:echo Varname:ECHO MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:false Varname:FALSE MustUseVarForm:true Validity:Nowhere}",
-		"TRACE: 1   tool &{Name:gawk Varname:AWK MustUseVarForm:false Validity:Nowhere}",
-		"TRACE: 1   tool &{Name:gsed Varname:SED MustUseVarForm:false Validity:Nowhere}",
-		"TRACE: 1   tool &{Name:sed Varname:SED MustUseVarForm:false Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1   tool &{Name:true Varname:TRUE MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1   tool awk:AWK::AfterPrefsMk",
+		"TRACE: 1   tool echo:ECHO:var:AfterPrefsMk",
+		"TRACE: 1   tool echo -n:ECHO_N:var:AfterPrefsMk",
+		"TRACE: 1   tool false:FALSE:var:Nowhere",
+		"TRACE: 1   tool gawk:AWK::Nowhere",
+		"TRACE: 1   tool gsed:SED::Nowhere",
+		"TRACE: 1   tool sed:SED::AfterPrefsMk",
+		"TRACE: 1   tool test:TEST:var:AfterPrefsMk",
+		"TRACE: 1   tool true:TRUE:var:AfterPrefsMk",
 		"TRACE: - (*Tools).Trace(\"Pkgsrc\")")
 
 	tools := NewTools("module.mk")
@@ -348,15 +348,15 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 	t.CheckOutputLines(
 		"TRACE: + (*Tools).Trace(\"module.mk\")",
 		"TRACE: 1 + (*Tools).Trace(\"Pkgsrc\")",
-		"TRACE: 1 2   tool &{Name:awk Varname:AWK MustUseVarForm:false Validity:AfterPrefsMk}",
-		"TRACE: 1 2   tool &{Name:echo Varname:ECHO MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1 2   tool &{Name:echo -n Varname:ECHO_N MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1 2   tool &{Name:false Varname:FALSE MustUseVarForm:true Validity:Nowhere}",
-		"TRACE: 1 2   tool &{Name:gawk Varname:AWK MustUseVarForm:false Validity:Nowhere}",
-		"TRACE: 1 2   tool &{Name:gsed Varname:SED MustUseVarForm:false Validity:Nowhere}",
-		"TRACE: 1 2   tool &{Name:sed Varname:SED MustUseVarForm:false Validity:AfterPrefsMk}",
-		"TRACE: 1 2   tool &{Name:test Varname:TEST MustUseVarForm:true Validity:AfterPrefsMk}",
-		"TRACE: 1 2   tool &{Name:true Varname:TRUE MustUseVarForm:true Validity:AfterPrefsMk}",
+		"TRACE: 1 2   tool awk:AWK::AfterPrefsMk",
+		"TRACE: 1 2   tool echo:ECHO:var:AfterPrefsMk",
+		"TRACE: 1 2   tool echo -n:ECHO_N:var:AfterPrefsMk",
+		"TRACE: 1 2   tool false:FALSE:var:Nowhere",
+		"TRACE: 1 2   tool gawk:AWK::Nowhere",
+		"TRACE: 1 2   tool gsed:SED::Nowhere",
+		"TRACE: 1 2   tool sed:SED::AfterPrefsMk",
+		"TRACE: 1 2   tool test:TEST:var:AfterPrefsMk",
+		"TRACE: 1 2   tool true:TRUE:var:AfterPrefsMk",
 		"TRACE: 1 - (*Tools).Trace(\"Pkgsrc\")",
 		"TRACE: - (*Tools).Trace(\"module.mk\")")
 }
@@ -397,19 +397,14 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 //
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realistic(c *check.C) {
-	t := s.Init(c)
-
-	prefsMk := t.NewMkLine("bsd.prefs.mk", 2, "") // Makes the tool valid AfterPrefsMk
-	otherMk := t.NewMkLine("other.mk", 2, "")     // Makes the tool valid Nowhere
-
 	nonGnu := NewTools("non-gnu")
-	nonGnu.Define("sed", "SED", prefsMk)
+	nonGnu.defTool("sed", "SED", false, AfterPrefsMk)
 
 	gnu := NewTools("gnu")
-	gnu.Define("gsed", "SED", otherMk)
+	gnu.defTool("gsed", "SED", false, Nowhere)
 
 	local1 := NewTools("local")
-	local1.defTool(nonGnu.ByName("sed"))
+	local1.defTool("sed", "SED", false, AfterPrefsMk)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, AfterPrefsMk)
@@ -417,45 +412,36 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realist
 	local1.Trace()
 
 	local2 := NewTools("local")
-	local2.defTool(gnu.ByName("gsed"))
+	local2.defTool("gsed", "SED", false, Nowhere)
 	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, AfterPrefsMk)
 	c.Check(local2.ByName("gsed").Validity, equals, Nowhere)
 	local2.Trace()
 
-	// TODO: What about local1.ByVarname("SED")?
-	// TODO: What about local2.ByVarname("SED")?
-
-	// The fallbacks are different, but this is an unrealistic case
-	// since in practice there is always only a single fallback,
-	// which is G.Pkgsrc.Tools.
-	local1.fallback = nil
-	local2.fallback = nil
-	c.Check(local1, deepEquals, local2)
+	// No matter in which order the tool definitions are encountered,
+	// the non-GNU version is always chosen since the GNU version is
+	// not available at all.
+	c.Check(local1.ByVarname("SED").String(), equals, "sed:SED::AfterPrefsMk")
+	c.Check(local2.ByVarname("SED").String(), equals, "sed:SED::AfterPrefsMk")
 }
 
 // Demonstrates how the Tools type handles tools that share the same
 // variable name. Of these tools, the GNU variant is preferred.
 //
-// In this unrealistic variant, the non-GNU tool is defined in bsd.prefs.mk
+// In this unrealistic variant, the GNU tool is defined in bsd.prefs.mk
 // and the non-GNU tool is only defined but not made available.
 //
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unrealistic(c *check.C) {
-	t := s.Init(c)
-
-	prefsMk := t.NewMkLine("bsd.prefs.mk", 2, "") // Makes the tool valid AfterPrefsMk
-	otherMk := t.NewMkLine("other.mk", 2, "")     // Makes the tool valid Nowhere
-
 	nonGnu := NewTools("non-gnu")
-	nonGnu.Define("sed", "SED", otherMk)
+	nonGnu.defTool("sed", "SED", false, Nowhere)
 
 	gnu := NewTools("gnu")
-	gnu.Define("gsed", "SED", prefsMk)
+	gnu.defTool("gsed", "SED", false, AfterPrefsMk)
 
 	local1 := NewTools("local")
-	local1.defTool(nonGnu.ByName("sed"))
+	local1.defTool("sed", "SED", false, Nowhere)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, Nowhere)
@@ -463,20 +449,14 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	local1.Trace()
 
 	local2 := NewTools("local")
-	local2.defTool(gnu.ByName("gsed"))
+	local2.defTool("gsed", "SED", false, AfterPrefsMk)
 	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, Nowhere)
 	c.Check(local2.ByName("gsed").Validity, equals, AfterPrefsMk)
 	local2.Trace()
 
-	// TODO: What about local1.ByVarname("SED")?
-	// TODO: What about local2.ByVarname("SED")?
-
-	// The fallbacks are different, but this is an unrealistic case
-	// since in practice there is always only a single fallback,
-	// which is G.Pkgsrc.Tools.
-	local1.fallback = nil
-	local2.fallback = nil
-	c.Check(local2, deepEquals, local2)
+	// FIXME: Must both be gsed:SED::AfterPrefsMk
+	c.Check(local1.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
+	c.Check(local2.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
 }

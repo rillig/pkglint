@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"sort"
@@ -17,6 +18,11 @@ type Tool struct {
 	Varname        string // e.g. "SED", "GZIP_CMD"
 	MustUseVarForm bool   // True for `echo`, because of many differing implementations.
 	Validity       Validity
+}
+
+func (tool *Tool) String() string {
+	return fmt.Sprintf("%s:%s:%s:%s",
+		tool.Name, tool.Varname, ifelseStr(tool.MustUseVarForm, "var", ""), tool.Validity)
 }
 
 func (tool *Tool) SetValidity(validity Validity, traceName string) {
@@ -125,14 +131,12 @@ func (tr *Tools) def(name, varname string, mkline MkLine) *Tool {
 			validity = AtRunTime
 		}
 	}
-	tool := &Tool{name, varname, false, validity}
 
-	return tr.defTool(tool)
+	return tr.defTool(name, varname, false, validity)
 }
 
-func (tr *Tools) defTool(tool *Tool) *Tool {
-	name := tool.Name
-	varname := tool.Varname
+func (tr *Tools) defTool(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
+	tool := &Tool{name, varname, mustUseVarForm, validity}
 
 	if name != "" {
 		if existing := tr.byName[name]; existing != nil {
@@ -304,8 +308,7 @@ func (tr *Tools) ByName(name string) *Tool {
 	if tool == nil && tr.fallback != nil {
 		fallback := tr.fallback.ByName(name)
 		if fallback != nil {
-			copied := *fallback
-			return tr.defTool(&copied)
+			return tr.defTool(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
 		}
 	}
 	return tool
