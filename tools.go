@@ -272,7 +272,16 @@ func (tr *Tools) validity(mkline MkLine, useTools bool) Validity {
 	}
 }
 
-func (tr *Tools) ByVarname(varname string) (tool *Tool) { return tr.byVarname[varname] }
+func (tr *Tools) ByVarname(varname string) *Tool {
+	tool := tr.byVarname[varname]
+	if tool == nil && tr.fallback != nil {
+		fallback := tr.fallback.ByVarname(varname)
+		if fallback != nil {
+			return tr.defTool(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
+		}
+	}
+	return tool
+}
 
 func (tr *Tools) ByName(name string) *Tool {
 	tool := tr.byName[name]

@@ -709,33 +709,18 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 		varname = toolVarname
 	}
 
+	var tools *Tools
 	if G.Mk != nil {
-		tools := G.Mk.Tools
-		if t := tools.ByName(command); t != nil {
-			if tools.Usable(t, time) {
-				return t, true
-			}
-			tool = t
-		}
-
-		if t := tools.ByVarname(varname); t != nil {
-			if tools.Usable(t, time) {
-				return t, true
-			}
-			if tool == nil {
-				tool = t
-			}
-		}
+		tools = G.Mk.Tools
+	} else {
+		tools = G.Pkgsrc.Tools
 	}
 
-	tools := G.Pkgsrc.Tools
 	if t := tools.ByName(command); t != nil {
 		if tools.Usable(t, time) {
 			return t, true
 		}
-		if tool == nil {
-			tool = t
-		}
+		tool = t
 	}
 
 	if t := tools.ByVarname(varname); t != nil {
@@ -746,7 +731,6 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 			tool = t
 		}
 	}
-
 	return
 }
 
