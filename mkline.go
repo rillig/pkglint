@@ -42,6 +42,7 @@ type mkLineDirectiveImpl struct {
 	args      string
 	comment   string
 	elseLine  MkLine // (filled in later)
+	cond      MkCond // (filled in later, as needed)
 }
 type mkLineInclude = *mkLineIncludeImpl
 type mkLineIncludeImpl struct {
@@ -118,7 +119,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, indent, directive, args, comment := matchMkDirective(text); m {
-		return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, comment, nil}}
+		return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, comment, nil, nil}}
 	}
 
 	if m, indent, directive, includefile := MatchMkInclude(text); m {
@@ -250,6 +251,19 @@ func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineDirecti
 // Args returns the arguments from an .if, .ifdef, .ifndef, .elif, .for, .undef.
 func (mkline *MkLineImpl) Args() string { return mkline.data.(mkLineDirective).args }
 
+// Cond applies to an .if or .elif line and returns the parsed condition.
+//
+// If a parse error occurs, it is silently swallowed, returning a
+// best-effort part of the condition, or even nil.
+func (mkline *MkLineImpl) Cond() MkCond {
+	cond := mkline.data.(mkLineDirective).cond
+	if cond == nil {
+		cond = NewMkParser(mkline.Line, mkline.Args(), false).MkCond()
+		mkline.data.(mkLineDirective).cond = cond
+	}
+	return cond
+}
+
 // DirectiveComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
 func (mkline *MkLineImpl) DirectiveComment() string { return mkline.data.(mkLineDirective).comment }
 func (mkline *MkLineImpl) HasElseBranch() bool      { return mkline.data.(mkLineDirective).elseLine != nil }
@@ -265,9 +279,9 @@ func (mkline *MkLineImpl) IncludeFile() string { return mkline.data.(mkLineInclu
 func (mkline *MkLineImpl) Targets() string { return mkline.data.(mkLineDependency).targets }
 func (mkline *MkLineImpl) Sources() string { return mkline.data.(mkLineDependency).sources }
 
-// ConditionalVars is a space-separated list of those variable names
-// on which the inclusion depends. It is initialized later,
-// step by step, when parsing other lines
+// ConditionalVars applies to .include lines and is a space-separated
+// list of those variable names on which the inclusion depends.
+// It is initialized later, step by step, when parsing other lines.
 func (mkline *MkLineImpl) ConditionalVars() string { return mkline.data.(mkLineInclude).conditionalVars }
 func (mkline *MkLineImpl) SetConditionalVars(varnames string) {
 	include := mkline.data.(mkLineInclude)
@@ -933,16 +947,13 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 		// happens in MkLineChecker.checkDirectiveCond for performance reasons.
 		// TODO: Move that code here.
 
-		if contains(args, "exists") {
-			cond := NewMkParser(mkline.Line, args, false).MkCond()
-			if cond != nil {
-				NewMkCondWalker().Walk(cond, &MkCondCallback{
-					Call: func(name string, arg string) {
-						if name == "exists" {
-							ind.AddCheckedFile(arg)
-						}
-					}})
-			}
+		if cond := mkline.Cond(); cond != nil {
+			NewMkCondWalker().Walk(cond, &MkCondCallback{
+				Call: func(name string, arg string) {
+					if name == "exists" {
+						ind.AddCheckedFile(arg)
+					}
+				}})
 		}
 
 	case "for", "ifdef", "ifndef":

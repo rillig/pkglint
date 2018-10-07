@@ -218,6 +218,18 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		"pkgbase := pkglint")
 }
 
+func (s *Suite) Test_MkLine_Cond(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 2, ".if ${VAR} == Value")
+
+	cond := mkline.Cond()
+
+	c.Check(cond.CompareVarStr.Var.varname, equals, "VAR")
+	c.Check(cond.CompareVarStr.Str, equals, "Value")
+	c.Check(mkline.Cond(), equals, cond)
+}
+
 // Guessing the variable type works for both plain and parameterized variable names.
 func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 	t := s.Init(c)

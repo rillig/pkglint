@@ -402,6 +402,7 @@ type MkCondCallback struct {
 	CompareVarStr func(varuse *MkVarUse, op string, str string)
 	CompareVarVar func(left *MkVarUse, op string, right *MkVarUse)
 	Call          func(name string, arg string)
+	VarUse        func(varuse *MkVarUse)
 }
 
 type MkCondWalker struct{}
@@ -425,24 +426,41 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		if callback.Defined != nil {
 			callback.Defined(cond.Defined)
 		}
+		if callback.VarUse != nil {
+			callback.VarUse(&MkVarUse{cond.Defined, nil})
+		}
 	case cond.Empty != nil:
 		if callback.Empty != nil {
 			callback.Empty(cond.Empty)
+		}
+		if callback.VarUse != nil {
+			callback.VarUse(cond.Empty)
 		}
 	case cond.CompareVarVar != nil:
 		if callback.CompareVarVar != nil {
 			cvv := cond.CompareVarVar
 			callback.CompareVarVar(cvv.Left, cvv.Op, cvv.Right)
 		}
+		if callback.VarUse != nil {
+			cvv := cond.CompareVarVar
+			callback.VarUse(cvv.Left)
+			callback.VarUse(cvv.Right)
+		}
 	case cond.CompareVarStr != nil:
 		if callback.CompareVarStr != nil {
 			cvs := cond.CompareVarStr
 			callback.CompareVarStr(cvs.Var, cvs.Op, cvs.Str)
 		}
+		if callback.VarUse != nil {
+			callback.VarUse(cond.CompareVarStr.Var)
+		}
 	case cond.CompareVarNum != nil:
 		if callback.CompareVarNum != nil {
 			cvn := cond.CompareVarNum
 			callback.CompareVarNum(cvn.Var, cvn.Op, cvn.Num)
+		}
+		if callback.VarUse != nil {
+			callback.VarUse(cond.CompareVarNum.Var)
 		}
 	case cond.Call != nil:
 		if callback.Call != nil {
