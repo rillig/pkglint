@@ -403,21 +403,8 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 
 func (ind *Indentation) RememberUsedVariables(cond MkCond) {
 	NewMkCondWalker().Walk(cond, &MkCondCallback{
-		Defined: func(varname string) {
-			ind.AddVar(varname)
-		},
-		Empty: func(varuse *MkVarUse) {
+		VarUse: func(varuse *MkVarUse) {
 			ind.AddVar(varuse.varname)
-		},
-		CompareVarNum: func(varuse *MkVarUse, op string, num string) {
-			ind.AddVar(varuse.varname)
-		},
-		CompareVarStr: func(varuse *MkVarUse, op string, str string) {
-			ind.AddVar(varuse.varname)
-		},
-		CompareVarVar: func(left *MkVarUse, op string, right *MkVarUse) {
-			ind.AddVar(left.varname)
-			ind.AddVar(right.varname)
 		}})
 }
 
