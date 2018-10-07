@@ -487,3 +487,33 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	c.Check(local1.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
 	c.Check(local2.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
 }
+
+// The cmake tool is included conditionally. The condition is so simple that
+// pkglint could parse it but it depends on the particular package.
+// This is something that pkglint cannot do right now, since the global tools
+// are loaded once for all packages.
+//
+// Therefore there is a workaround for USE_CMAKE.
+//
+// See mk/tools/cmake.mk.
+func (s *Suite) Test_Tools__cmake(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupPackage("category/package",
+		"USE_CMAKE=\tyes",
+		"",
+		"do-test:",
+		"\tcd ${WRKSRC} && cmake")
+	t.CreateFileLines("mk/tools/defaults.mk",
+		".if defined(USE_CMAKE)",
+		"USE_TOOLS+=\tcmake cpack",
+		".endif")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.CheckDirent(t.File("category/package"))
+
+	// FIXME: USE_CMAKE implies USE_TOOLS+=cmake
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:23: The \"cmake\" tool is used but not added to USE_TOOLS.")
+}
