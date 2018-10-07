@@ -283,7 +283,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 			"to understand, since all the complexity of using sed and mv is",
 			"hidden behind the scenes.",
 			"",
-			"Run \"bmake help topic=subst\" for more information.")
+			"Run \""+confMake+" help topic=subst\" for more information.")
 		if contains(shelltext, "#") {
 			Explain(
 				"When migrating to the SUBST framework, pay attention to \"#\"",
@@ -304,7 +304,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 	}
 
 	repl := G.NewPrefixReplacer(shelltext)
-	repl.AdvanceRegexp(`^\s+`)
+	repl.AdvanceHspace()
 	if repl.AdvanceRegexp(`^[-@]+`) {
 		shline.checkHiddenAndSuppress(repl.Group(0), repl.Rest())
 	}
