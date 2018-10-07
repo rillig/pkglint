@@ -341,15 +341,13 @@ func (mkline *MkLineImpl) ValueTokens() []*MkToken {
 }
 
 func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
-	valueNovar := value
-	for {
-		// TODO: properly parse nested variables
-		replaced := replaceFirst(valueNovar, `\$\{[^{}]*\}`, "")
-		if replaced == valueNovar {
-			return valueNovar
+	valueNovar := ""
+	for _, token := range NewMkParser(nil, value, false).MkTokens() {
+		if token.Varuse == nil {
+			valueNovar += token.Text
 		}
-		valueNovar = replaced
 	}
+	return valueNovar
 }
 
 func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustDepth bool) string {

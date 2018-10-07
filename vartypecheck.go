@@ -24,12 +24,10 @@ type VartypeCheck struct {
 // fields except the value. This is typically used when checking parts
 // of composite types.
 func NewVartypeCheckValue(vc *VartypeCheck, value string) *VartypeCheck {
-	valueNoVar := vc.MkLine.WithoutMakeVariables(value)
-
-	copy := *vc
-	copy.Value = value
-	copy.ValueNoVar = valueNoVar
-	return &copy
+	newVc := *vc
+	newVc.Value = value
+	newVc.ValueNoVar = vc.MkLine.WithoutMakeVariables(value)
+	return &newVc
 }
 
 const (
