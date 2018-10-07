@@ -775,24 +775,33 @@ func (c *FileCache) Put(fileName string, options LoadOptions, lines []Line) {
 }
 
 func (c *FileCache) removeOldEntries() {
+	printStats := func() bool { return false }()
+
 	sort.Slice(c.table, func(i, j int) bool { return c.table[j].count < c.table[i].count })
 
-	for _, e := range c.table {
-		G.logOut.Printf("FileCache %q with count %d.\n", e.key, e.count)
+	if printStats {
+		for _, e := range c.table {
+			G.logOut.Printf("FileCache %q with count %d.\n", e.key, e.count)
+		}
 	}
 
 	minCount := c.table[len(c.table)-1].count
 	newLen := len(c.table)
 	for newLen > 0 && c.table[newLen-1].count == minCount {
 		e := c.table[newLen-1]
-		G.logOut.Printf("FileCache.Evict %q with count %d.\n", e.key, e.count)
+		if printStats {
+			G.logOut.Printf("FileCache.Evict %q with count %d.\n", e.key, e.count)
+		}
 		delete(c.mapping, e.key)
 		newLen--
 	}
 	c.table = c.table[0:newLen]
+
 	// To avoid files getting stuck in the cache.
 	for _, e := range c.table {
-		G.logOut.Printf("FileCache.Halve %q with count %d.\n", e.key, e.count)
+		if printStats {
+			G.logOut.Printf("FileCache.Halve %q with count %d.\n", e.key, e.count)
+		}
 		e.count /= 2
 	}
 }
