@@ -64,6 +64,10 @@ func NewPkgsrc(dir string) *Pkgsrc {
 	// BUILD_DEFS; therefore they are marked as "already added".
 	src.AddBuildDefs("DISTDIR", "FETCH_CMD", "FETCH_OUTPUT_ARGS")
 
+	// The following variables are used so often that not every
+	// package should need to add it to BUILD_DEFS manually.
+	src.AddBuildDefs("PKGSRC_COMPILER")
+
 	// The following variables are added to _BUILD_DEFS by the pkgsrc
 	// infrastructure and thus don't need to be added by the package again.
 	// To regenerate the below list:
