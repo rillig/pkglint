@@ -217,7 +217,8 @@ func (p *MkParser) MkCond() MkCond {
 	ands := []MkCond{and}
 	for {
 		mark := p.repl.Mark()
-		if !p.repl.AdvanceRegexp(`^\s*\|\|\s*`) {
+		p.repl.SkipSpace()
+		if !p.repl.AdvanceStr("||") {
 			break
 		}
 		next := p.mkCondAnd()

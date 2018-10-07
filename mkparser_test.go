@@ -243,7 +243,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		" || defined(PKG_OPTIONS:Msamplerate)")
 	checkRest("${LEFT} &&",
 		&mkCond{Not: &mkCond{Empty: varuse("LEFT")}},
-		" &&")
+		"&&")
 	checkRest("\"unfinished string literal",
 		nil,
 		"\"unfinished string literal")
