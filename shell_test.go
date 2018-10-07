@@ -960,7 +960,6 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: Warn about using _PERL5_VARS because it starts with an underscore.
 	// FIXME: In PERL5:Q and PERL6:Q, the :Q is wrong.
 	t.CheckOutputLines(
 		"WARN: Makefile:3: PERL5_VARS_CMD is defined but not used.",
