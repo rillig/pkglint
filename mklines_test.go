@@ -365,6 +365,33 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 		"WARN: determine-defined-variables.mk:16: Unknown shell command \"unknown-command\".")
 }
 
+func (s *Suite) Test_MkLines_DetermineDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupPackage("category/package")
+	t.CreateFileLines("mk/buildlink3/bsd.builtin.mk",
+		MkRcsID)
+	mklines := t.SetupFileMkLines("category/package/builtin.mk",
+		MkRcsID,
+		"",
+		"BUILTIN_FIND_FILES_VAR:=        H_XFT2",
+		"BUILTIN_FIND_FILES.H_XFT2=      ${X11BASE}/include/X11/Xft/Xft.h",
+		"",
+		".include \"../../mk/buildlink3/bsd.builtin.mk\"",
+		"",
+		".if ${H_XFT2:N__nonexistent__} && ${H_UNDEF:N__nonexistent__}",
+		".endif")
+	G.Pkgsrc.LoadInfrastructure()
+
+	mklines.Check()
+
+	// FIXME: The VarUse for H_UNDEF in the .if clause must be warned about,
+	// but MkLineChecker.CheckVaruse is only called for variable assignments,
+	// not for conditionals.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 	t := s.Init(c)
 
