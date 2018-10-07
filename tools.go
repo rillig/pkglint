@@ -232,6 +232,9 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 // It determines the validity of the tool, i.e. in which places it may be used.
 //
 // If createIfAbsent is true and the tools is unknown, it is registered.
+// This can be done only in the pkgsrc infrastructure files, where the
+// actual definition is assumed to be in some other file. In packages
+// though, this assumption cannot be made and pkglint needs to be strict.
 func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool, addToUseTools bool) {
 	value := mkline.Value()
 	if containsVarRef(value) {
