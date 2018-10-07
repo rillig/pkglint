@@ -763,12 +763,12 @@ func (c *FileCache) Put(fileName string, options LoadOptions, lines []Line) {
 			c.removeOldEntries()
 		}
 
-		entry = &fileCacheEntry{1, fileName, options, lines}
+		entry = new(fileCacheEntry)
 		c.table = append(c.table, entry)
 		c.mapping[key] = entry
 	}
 
-	entry.count = 0
+	entry.count = 1
 	entry.key = key
 	entry.options = options
 	entry.lines = lines
