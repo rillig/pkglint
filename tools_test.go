@@ -513,7 +513,5 @@ func (s *Suite) Test_Tools__cmake(c *check.C) {
 
 	G.CheckDirent(t.File("category/package"))
 
-	// FIXME: USE_CMAKE implies USE_TOOLS+=cmake
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:23: The \"cmake\" tool is used but not added to USE_TOOLS.")
+	t.CheckOutputEmpty()
 }

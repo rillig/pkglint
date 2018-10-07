@@ -247,6 +247,11 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 		}
 	}
 
+	if pkg.vars.Defined("USE_CMAKE") {
+		mainLines.Tools.defTool("cmake", "", false, AtRunTime)
+		mainLines.Tools.defTool("cpack", "", false, AtRunTime)
+	}
+
 	allLines.DetermineUsedVariables()
 	allLines.CheckRedundantVariables()
 
