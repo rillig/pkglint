@@ -97,7 +97,7 @@ func (mklines *MkLines) Check() {
 		ck := MkLineChecker{mkline}
 		ck.Check()
 		varalign.Check(mkline)
-		mklines.Tools.ParseToolLine(mkline)
+		mklines.Tools.ParseToolLine(mkline, false, false)
 
 		switch {
 		case mkline.IsEmpty():
@@ -200,7 +200,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 	}
 
 	for _, mkline := range mklines.mklines {
-		mklines.Tools.ParseToolLine(mkline)
+		mklines.Tools.ParseToolLine(mkline, false, true)
 
 		if !mkline.IsVarassign() {
 			continue

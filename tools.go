@@ -178,13 +178,15 @@ func (tr *Tools) Trace() {
 
 // ParseToolLine updates the tool definitions according to the given
 // line from a Makefile.
-func (tr *Tools) ParseToolLine(mkline MkLine) {
-	tr.ParseToolLineCreate(mkline, false)
-}
-
-// ParseToolLineCreate updates the tool definitions according to the given
-// line from a Makefile, registering the tools if necessary.
-func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
+//
+// If fromInfrastructure is true, the tool is defined even when it is only
+// added to USE_TOOLS (which normally doesn't define anything). This way,
+// pkglint also finds those tools whose definitions are too difficult to
+// parse from the code.
+//
+// If addToUseTools is true, a USE_TOOLS line makes a tool immediately
+// usable. This should only be done if the current line is unconditional.
+func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseTools bool) {
 	switch {
 
 	case mkline.IsVarassign():
@@ -216,7 +218,7 @@ func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
 			}
 
 		case "USE_TOOLS":
-			tr.parseUseTools(mkline, createIfAbsent)
+			tr.parseUseTools(mkline, fromInfrastructure, addToUseTools)
 		}
 
 	case mkline.IsInclude():
@@ -230,7 +232,7 @@ func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
 // It determines the validity of the tool, i.e. in which places it may be used.
 //
 // If createIfAbsent is true and the tools is unknown, it is registered.
-func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
+func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool, addToUseTools bool) {
 	value := mkline.Value()
 	if containsVarRef(value) {
 		return
@@ -246,14 +248,11 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 		deps = append(deps, "autoheader", "autom4te", "autoreconf", "autoscan", "autoupdate", "ifnames")
 	}
 
+	validity := tr.validity(mkline, addToUseTools)
 	for _, dep := range deps {
 		name := strings.Split(dep, ":")[0]
-		tool := tr.ByName(name)
-		if tool != nil {
-			validity := tr.validity(mkline, true)
+		if createIfAbsent || tr.ByName(name) != nil {
 			tr.defTool(name, "", false, validity)
-		} else if createIfAbsent {
-			tr.Define(name, "", mkline)
 		}
 	}
 }

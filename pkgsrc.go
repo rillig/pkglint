@@ -239,24 +239,19 @@ func (src *Pkgsrc) loadTools() {
 
 	for _, basename := range toolFiles {
 		mklines := G.Pkgsrc.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
-		for _, mkline := range mklines.mklines {
-			tools.ParseToolLineCreate(mkline, true)
-		}
+		mklines.ForEach(func(mkline MkLine) {
+			tools.ParseToolLine(mkline, true, !mklines.indentation.IsConditional())
+		})
 	}
 
 	for _, relativeName := range [...]string{"mk/bsd.prefs.mk", "mk/bsd.pkg.mk"} {
 
 		mklines := G.Pkgsrc.LoadMk(relativeName, MustSucceed|NotEmpty)
-		for _, mkline := range mklines.mklines {
+		mklines.ForEach(func(mkline MkLine) {
 			if mkline.IsVarassign() {
 				switch mkline.Varname() {
 				case "USE_TOOLS":
-					// Since this line is in the pkgsrc infrastructure, each tool mentioned
-					// in USE_TOOLS is trusted to be also defined somewhere in the actual
-					// list of available tools.
-					//
-					// This assumption does not work for processing USE_TOOLS in packages, though.
-					tools.ParseToolLineCreate(mkline, true)
+					tools.ParseToolLine(mkline, true, !mklines.indentation.IsConditional())
 
 				case "_BUILD_DEFS":
 					for _, bdvar := range mkline.ValueSplit(mkline.Value(), "") {
@@ -264,7 +259,7 @@ func (src *Pkgsrc) loadTools() {
 					}
 				}
 			}
-		}
+		})
 	}
 
 	if trace.Tracing {

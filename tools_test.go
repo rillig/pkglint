@@ -116,9 +116,9 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 
 	tools := NewTools("")
 
-	tools.ParseToolLine(t.NewMkLine("create.mk", 2, "TOOLS_CREATE+= load"))
-	tools.ParseToolLine(t.NewMkLine("create.mk", 3, "TOOLS_CREATE+= run"))
-	tools.ParseToolLine(t.NewMkLine("create.mk", 4, "TOOLS_CREATE+= nowhere"))
+	tools.ParseToolLine(t.NewMkLine("create.mk", 2, "TOOLS_CREATE+= load"), true, false)
+	tools.ParseToolLine(t.NewMkLine("create.mk", 3, "TOOLS_CREATE+= run"), true, false)
+	tools.ParseToolLine(t.NewMkLine("create.mk", 4, "TOOLS_CREATE+= nowhere"), true, false)
 
 	// The references to the tools are stable,
 	// the lookup methods always return the same objects.
@@ -133,9 +133,9 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	c.Check(nowhere, deepEquals, &Tool{"nowhere", "", false, Nowhere})
 
 	// The name RUN_CMD avoids conflicts with RUN.
-	tools.ParseToolLine(t.NewMkLine("varnames.mk", 2, "_TOOLS_VARNAME.load=    LOAD"))
-	tools.ParseToolLine(t.NewMkLine("varnames.mk", 3, "_TOOLS_VARNAME.run=     RUN_CMD"))
-	tools.ParseToolLine(t.NewMkLine("varnames.mk", 4, "_TOOLS_VARNAME.nowhere= NOWHERE"))
+	tools.ParseToolLine(t.NewMkLine("varnames.mk", 2, "_TOOLS_VARNAME.load=    LOAD"), true, false)
+	tools.ParseToolLine(t.NewMkLine("varnames.mk", 3, "_TOOLS_VARNAME.run=     RUN_CMD"), true, false)
+	tools.ParseToolLine(t.NewMkLine("varnames.mk", 4, "_TOOLS_VARNAME.nowhere= NOWHERE"), true, false)
 
 	// At this point the tools can be found by their variable names, too.
 	// They still may not be used.
@@ -155,7 +155,7 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	c.Check(nowhere.UsableAtLoadTime(true), equals, false)
 	c.Check(nowhere.UsableAtRunTime(), equals, false)
 
-	tools.ParseToolLine(t.NewMkLine("bsd.prefs.mk", 2, "USE_TOOLS+= load"))
+	tools.ParseToolLine(t.NewMkLine("bsd.prefs.mk", 2, "USE_TOOLS+= load"), true, true)
 
 	// Tools that are added to USE_TOOLS in bsd.prefs.mk may be used afterwards.
 	// By variable name, they may be used both at load time as well as run time.
@@ -165,7 +165,7 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	c.Check(load.UsableAtLoadTime(true), equals, true)
 	c.Check(load.UsableAtRunTime(), equals, true)
 
-	tools.ParseToolLine(t.NewMkLine("bsd.pkg.mk", 2, "USE_TOOLS+= run"))
+	tools.ParseToolLine(t.NewMkLine("bsd.pkg.mk", 2, "USE_TOOLS+= run"), true, true)
 
 	// Tools that are added to USE_TOOLS in bsd.pkg.mk may be used afterwards at run time.
 	// The {pre,do,post}-* targets may use both forms (${CAT} and cat).
@@ -217,7 +217,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	// All other files must not use the tools at load time.
 	// For them, seenPrefs can be though of as being true from the beginning.
 
-	tools.ParseToolLine(t.NewMkLine("Makefile", 2, "USE_TOOLS+=     pkg-before-prefs"))
+	tools.ParseToolLine(t.NewMkLine("Makefile", 2, "USE_TOOLS+=     pkg-before-prefs"), false, true)
 
 	c.Check(before.Validity, equals, AfterPrefsMk)
 	c.Check(before.UsableAtLoadTime(false), equals, false)
@@ -226,11 +226,11 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 
 	c.Check(tools.SeenPrefs, equals, false)
 
-	tools.ParseToolLine(t.NewMkLine("Makefile", 3, ".include \"../../mk/bsd.prefs.mk\""))
+	tools.ParseToolLine(t.NewMkLine("Makefile", 3, ".include \"../../mk/bsd.prefs.mk\""), false, true)
 
 	c.Check(tools.SeenPrefs, equals, true)
 
-	tools.ParseToolLine(t.NewMkLine("Makefile", 4, "USE_TOOLS+=     pkg-after-prefs"))
+	tools.ParseToolLine(t.NewMkLine("Makefile", 4, "USE_TOOLS+=     pkg-after-prefs"), false, true)
 
 	c.Check(after.Validity, equals, AtRunTime)
 	c.Check(after.UsableAtLoadTime(false), equals, false)

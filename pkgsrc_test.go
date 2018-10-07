@@ -74,7 +74,9 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t.CreateFileLines("mk/tools/flex.mk",
 		"# empty")
 	t.CreateFileLines("mk/tools/gettext.mk",
-		"USE_TOOLS+=msgfmt",
+		".if ${USE_TOOLS:Mgettext}", // This conditional prevents msgfmt from
+		"USE_TOOLS+=msgfmt",         // being added to the default USE_TOOLS.
+		".endif",
 		"TOOLS_CREATE+=msgfmt")
 	t.CreateFileLines("mk/tools/strip.mk",
 		".if defined(_INSTALL_UNSTRIPPED) || !defined(TOOLS_PLATFORM.strip)",
