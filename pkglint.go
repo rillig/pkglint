@@ -59,7 +59,7 @@ type Pkglint struct {
 func NewPkglint() Pkglint {
 	return Pkglint{
 		res:       regex.NewRegistry(),
-		fileCache: NewFileCache(100)}
+		fileCache: NewFileCache(200)}
 }
 
 type CmdOpts struct {
