@@ -64,7 +64,7 @@ type licenseLexer struct {
 
 func (lexer *licenseLexer) Lex(llval *liyySymType) int {
 	repl := lexer.repl
-	repl.AdvanceHspace()
+	repl.SkipHspace()
 	switch {
 	case repl.EOF():
 		return 0

@@ -217,7 +217,7 @@ func (p *MkParser) MkCond() MkCond {
 	ands := []MkCond{and}
 	for {
 		mark := p.repl.Mark()
-		p.repl.SkipSpace()
+		p.repl.SkipHspace()
 		if !p.repl.AdvanceStr("||") {
 			break
 		}
@@ -266,7 +266,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 
 	repl := p.repl
 	mark := repl.Mark()
-	repl.SkipSpace()
+	repl.SkipHspace()
 	switch {
 	case repl.AdvanceStr("!"):
 		cond := p.mkCondAtom()
@@ -276,7 +276,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 	case repl.AdvanceStr("("):
 		cond := p.MkCond()
 		if cond != nil {
-			repl.SkipSpace()
+			repl.SkipHspace()
 			if repl.AdvanceStr(")") {
 				return cond
 			}

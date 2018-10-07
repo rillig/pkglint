@@ -130,7 +130,7 @@ func (pr *PrefixReplacer) Skip(n int) {
 	pr.rest = pr.rest[n:]
 }
 
-func (pr *PrefixReplacer) SkipSpace() {
+func (pr *PrefixReplacer) SkipHspace() {
 	pr.rest = pr.rest[initialHspace(pr.rest):]
 }
 

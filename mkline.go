@@ -1064,12 +1064,12 @@ func MatchMkInclude(text string) (m bool, indentation, directive, filename strin
 		}
 		if repl.AdvanceStr("include") || repl.AdvanceStr("sinclude") {
 			directive = repl.Str()
-			repl.AdvanceHspace()
+			repl.SkipHspace()
 			if repl.AdvanceByte('"') {
 				if repl.AdvanceBytesFunc(func(c byte) bool { return c != '"' }) {
 					filename = repl.Str()
 					if repl.AdvanceByte('"') {
-						repl.AdvanceHspace()
+						repl.SkipHspace()
 						if repl.EOF() || repl.PeekByte() == '#' {
 							m = true
 							return

@@ -304,7 +304,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 	}
 
 	repl := G.NewPrefixReplacer(shelltext)
-	repl.AdvanceHspace()
+	repl.SkipHspace()
 	if repl.AdvanceRegexp(`^[-@]+`) {
 		shline.checkHiddenAndSuppress(repl.Group(0), repl.Rest())
 	}
