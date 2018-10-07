@@ -872,7 +872,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("NO_PKGTOOLS_REQD_CHECK", lkNone, BtYes, "Makefile: set")
 	acl("NO_SRC_ON_CDROM", lkNone, BtRestricted, "Makefile, Makefile.common: set")
 	acl("NO_SRC_ON_FTP", lkNone, BtRestricted, "Makefile, Makefile.common: set")
-	sys("OBJECT_FMT", lkNone, enum("COFF ECOFF ELF SOM XCOFF Mach-O PE a.out"))
+	sysload("OBJECT_FMT", lkNone, enum("COFF ECOFF ELF SOM XCOFF Mach-O PE a.out"))
 	pkglist("ONLY_FOR_COMPILER", lkShell, compilers)
 	pkglist("ONLY_FOR_PLATFORM", lkSpace, BtMachinePlatformPattern)
 	pkg("ONLY_FOR_UNPRIVILEGED", lkNone, BtYesNo)
@@ -927,7 +927,7 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("PKGLOCALEDIR", lkNone, BtPathname)
 	pkg("PKGNAME", lkNone, BtPkgName)
 	sys("PKGNAME_NOREV", lkNone, BtPkgName)
-	sys("PKGPATH", lkNone, BtPathname)
+	sysload("PKGPATH", lkNone, BtPathname)
 	acl("PKGREPOSITORY", lkNone, BtUnknown, "")
 	acl("PKGREVISION", lkNone, BtPkgRevision, "Makefile: set")
 	sys("PKGSRCDIR", lkNone, BtPathname)
@@ -941,7 +941,7 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("PKG_APACHE", lkNone, enum("apache24"))
 	pkg("PKG_APACHE_ACCEPTED", lkShell, enum("apache24"))
 	usr("PKG_APACHE_DEFAULT", lkNone, enum("apache24"))
-	sys("PKG_BUILD_OPTIONS.*", lkSpace, BtOption)
+	sysload("PKG_BUILD_OPTIONS.*", lkShell, BtOption)
 	usr("PKG_CONFIG", lkNone, BtYes)
 	// ^^ No, this is not the popular command from GNOME, but the setting
 	// whether the pkgsrc user wants configuration files automatically

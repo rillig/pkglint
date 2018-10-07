@@ -62,17 +62,25 @@ func NewPkgsrc(dir string) *Pkgsrc {
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
 	// BUILD_DEFS; therefore they are marked as "already added".
-	src.AddBuildDefs("DISTDIR", "FETCH_CMD", "FETCH_OUTPUT_ARGS")
+	src.AddBuildDefs(
+		"DISTDIR",
+		"FETCH_CMD",
+		"FETCH_OUTPUT_ARGS",
+		"FETCH_USING",
+		"PKGSRC_RUN_TEST")
 
 	// The following variables are used so often that not every
 	// package should need to add it to BUILD_DEFS manually.
-	src.AddBuildDefs("PKGSRC_COMPILER")
+	src.AddBuildDefs(
+		"PKGSRC_COMPILER",
+		"PKGSRC_USE_SSP",
+		"UNPRIVILEGED",
+		"USE_CROSS_COMPILE")
 
 	// The following variables are added to _BUILD_DEFS by the pkgsrc
 	// infrastructure and thus don't need to be added by the package again.
 	// To regenerate the below list:
 	//  grep -hr '^_BUILD_DEFS+=' mk/ | tr ' \t' '\n\n' | sed -e 's,.*=,,' -e '/^_/d' -e '/^$/d' -e 's,.*,"&"\,,' | sort -u
-	src.AddBuildDefs("PKG_HACKS")
 	src.AddBuildDefs(
 		"ABI",
 		"BUILTIN_PKGS",
