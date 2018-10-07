@@ -12,6 +12,10 @@ import (
 // pkgsrc.
 //
 // See `mk/tools/`.
+//
+// TODO: MustUseVarForm does not really depend on the tool but only depends
+// on where the tool is used (load time, run time). This had already been
+// modeled wrong in pkglint 4, more than 10 years ago.
 type Tool struct {
 	Name           string // e.g. "sed", "gzip"
 	Varname        string // e.g. "SED", "GZIP_CMD"
@@ -101,7 +105,8 @@ func NewTools(traceName string) *Tools {
 }
 
 // Define registers the tool by its name and the corresponding
-// variable name (if nonempty).
+// variable name (if nonempty). Depending on the given mkline,
+// it may be added to USE_TOOLS automatically.
 //
 // After this tool is added to USE_TOOLS, it may be used by this name
 // (e.g. "awk") or by its variable (e.g. ${AWK}).
