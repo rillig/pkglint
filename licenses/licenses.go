@@ -20,7 +20,7 @@ type Condition struct {
 func Parse(licenses string, res *regex.Registry) *Condition {
 	lexer := &licenseLexer{repl: textproc.NewPrefixReplacer(licenses, res)}
 	result := liyyNewParser().Parse(lexer)
-	if result == 0 {
+	if result == 0 && lexer.repl.EOF() {
 		return lexer.result
 	}
 	return nil
