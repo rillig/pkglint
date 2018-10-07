@@ -28,13 +28,6 @@ func (tool *Tool) String() string {
 		tool.Name, tool.Varname, ifelseStr(tool.MustUseVarForm, "var", ""), tool.Validity)
 }
 
-func (tool *Tool) SetValidity(validity Validity, traceName string) {
-	if trace.Tracing && validity != tool.Validity {
-		trace.Stepf("%s: Setting validity of %q to %s", traceName, tool.Name, validity)
-	}
-	tool.Validity = validity
-}
-
 // UsableAtLoadTime means that the tool may be used by its variable
 // name after bsd.prefs.mk has been included.
 //
