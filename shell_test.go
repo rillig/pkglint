@@ -961,12 +961,10 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 	mklines.Check()
 
 	// FIXME: Warn about using _PERL5_VARS because it starts with an underscore.
-	// FIXME: Omit the redundant PERL5_VARS_CMD warning in line 4.
 	// FIXME: In PERL5:Q and PERL6:Q, the :Q is wrong.
 	t.CheckOutputLines(
 		"WARN: Makefile:3: PERL5_VARS_CMD is defined but not used.",
-		"WARN: Makefile:4: The \"perl6\" tool is used but not added to USE_TOOLS.",
-		"WARN: Makefile:4: PERL5_VARS_CMD is defined but not used.")
+		"WARN: Makefile:4: The \"perl6\" tool is used but not added to USE_TOOLS.")
 }
 
 // The package Makefile and other .mk files in a package directory

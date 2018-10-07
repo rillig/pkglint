@@ -80,7 +80,6 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:3: X11_LDFLAGS is used but not defined.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.",
-		"WARN: Makefile:3: X11_LDFLAGS is used but not defined.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
 

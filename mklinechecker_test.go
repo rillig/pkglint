@@ -557,16 +557,8 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
 
 	// FIXME: There should be some notes and warnings about missing :M*;
 	// these are currently prevented by the PERL5 case in VariableNeedsQuoting.
-	// FIXME: One of these warnings per variable and file is enough.
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:5: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:5: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:8: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:8: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:9: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:9: ADA_FLAGS is used but not defined.")
+		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *check.C) {
