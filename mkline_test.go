@@ -1069,17 +1069,26 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	c.Check(ind.Varnames(), equals, "PKGREVISION")
 }
 
-func (s *Suite) Test_MkLine_ExtractUsedVariables(c *check.C) {
-	t := s.Init(c)
+func (s *Suite) Test_MkLine_UsedVars(c *check.C) {
+	text := "" +
+		"${VAR.${param}}" +
+		"${VAR}and${VAR2}" +
+		"${VAR:M${pattern}}" +
+		"$(ROUND_PARENTHESES)" +
+		"$<$@$x" +
+		"$$shellvar"
 
-	mkline := t.NewMkLine("Makefile", 123, "")
+	varnames := dummyMkLine.UsedVars(text)
 
-	nestedVarnames := mkline.ExtractUsedVariables("${VAR.${param}}")
-
-	// ExtractUsedVariables is very old code, should be more advanced.
-	c.Check(nestedVarnames, check.IsNil)
-
-	plainVarnames := mkline.ExtractUsedVariables("${VAR}and${VAR2}")
-
-	c.Check(plainVarnames, deepEquals, []string{"VAR", "VAR2"})
+	c.Check(varnames, deepEquals, []string{
+		"VAR.${param}",
+		"param",
+		"VAR",
+		"VAR2",
+		"VAR",
+		"pattern",
+		"ROUND_PARENTHESES",
+		"<",
+		"@",
+		"x"})
 }

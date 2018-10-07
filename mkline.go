@@ -583,67 +583,22 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	return nqDontKnow
 }
 
-// TODO: merge with determineUsedVariables
-func (mkline *MkLineImpl) ExtractUsedVariables(text string) []string {
-	re := G.res.Compile(`^(?:[^\$]+|\$[\$*<>?@]|\$\{([.0-9A-Z_a-z]+)(?::(?:[^\${}]|\$[^{])+)?\})`)
-	rest := text
-	var result []string
-	for {
-		m := re.FindStringSubmatchIndex(rest)
-		if m == nil {
-			break
-		}
-		varname := rest[negToZero(m[2]):negToZero(m[3])]
-		rest = rest[:m[0]] + rest[m[1]:]
-		if varname != "" {
-			result = append(result, varname)
-		}
+func (mkline *MkLineImpl) UsedVars(text string) (varnames []string) {
+	if !contains(text, "$") {
+		return nil
 	}
 
-	if trace.Tracing && rest != "" {
-		trace.Step1("extractUsedVariables: rest=%q", rest)
+	for _, token := range NewMkParser(nil, text, false).MkTokens() {
+		if varuse := token.Varuse; varuse != nil {
+			varname := varuse.varname
+			varnames = append(varnames, varname)
+			varnames = append(varnames, mkline.UsedVars(varname)...)
+			for _, mod := range varuse.modifiers {
+				varnames = append(varnames, mkline.UsedVars(mod)...)
+			}
+		}
 	}
-	return result
-}
-
-func (mkline *MkLineImpl) DetermineUsedVariables() (varnames []string) {
-	rest := mkline.Text
-
-	if strings.HasPrefix(rest, "#") {
-		return
-	}
-
-	for {
-		p1 := strings.Index(rest, "${")
-		p2 := strings.Index(rest, "$(")
-		p3 := strings.Index(rest, "defined(")
-		p4 := strings.Index(rest, "empty(")
-		if p1 == -1 && p2 == -1 && p3 == -1 && p4 == -1 {
-			return
-		}
-		min := -1
-		if min == -1 || (p1 != -1 && p1 < min) {
-			min = p1
-		}
-		if min == -1 || (p2 != -1 && p2 < min) {
-			min = p2
-		}
-		if min == -1 || (p3 != -1 && p3 < min) {
-			min = p3
-		}
-		if min == -1 || (p4 != -1 && p4 < min) {
-			min = p4
-		}
-		rest = rest[min:]
-
-		m := G.res.Compile(`(?:\$\{|\$\(|defined\(|empty\()([*+\-.0-9A-Z_a-z]+)[:})]`).FindStringSubmatchIndex(rest)
-		if m == nil {
-			return
-		}
-		varname := rest[m[2]:m[3]]
-		varnames = append(varnames, varname)
-		rest = rest[:m[0]] + rest[m[1]:]
-	}
+	return
 }
 
 type MkOperator uint8

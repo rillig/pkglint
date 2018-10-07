@@ -281,11 +281,35 @@ func (mklines *MkLines) collectElse() {
 
 func (mklines *MkLines) DetermineUsedVariables() {
 	for _, mkline := range mklines.mklines {
-		varnames := mkline.DetermineUsedVariables()
+		var varnames []string
+
+		switch {
+
+		case mkline.IsVarassign():
+			varnames = mkline.UsedVars(mkline.Value())
+
+		case mkline.IsDirective() && mkline.Cond() != nil:
+			NewMkCondWalker().Walk(mkline.Cond(), &MkCondCallback{
+				VarUse: func(varuse *MkVarUse) {
+					varnames = append(varnames, varuse.varname)
+				}})
+
+		case mkline.IsShellCommand():
+			varnames = mkline.UsedVars(mkline.ShellCommand())
+
+		case mkline.IsDependency():
+			varnames = mkline.UsedVars(mkline.Targets())
+			varnames = append(varnames, mkline.UsedVars(mkline.Sources())...)
+
+		case mkline.IsInclude():
+			varnames = mkline.UsedVars(mkline.IncludeFile())
+		}
+
 		for _, varname := range varnames {
 			mklines.UseVar(mkline, varname)
 		}
 	}
+
 	mklines.determineDocumentedVariables()
 }
 

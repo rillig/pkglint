@@ -102,6 +102,7 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:3: Variable names starting with an underscore (_list_) are reserved for internal pkgsrc use.",
 		"WARN: Makefile:3: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.",
+		"WARN: Makefile:3: SBS_COPY is used but not defined.",
 		"WARN: Makefile:4: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
@@ -134,11 +135,11 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 		"qore-version=\tqore --short-version | ${SED} -e s/-.*//",
 		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
 
-	vars2 := mklines.mklines[1].DetermineUsedVariables()
+	vars2 := mklines.mklines[1].UsedVars(mklines.mklines[1].Text)
 
 	c.Check(vars2, deepEquals, []string{"SED"})
 
-	vars3 := mklines.mklines[2].DetermineUsedVariables()
+	vars3 := mklines.mklines[2].UsedVars(mklines.mklines[2].Text)
 
 	c.Check(vars3, deepEquals, []string{"qore-version"})
 
@@ -382,8 +383,8 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 
 	c.Check(len(mklines.vars.used), equals, 3)
 	c.Check(mklines.vars.FirstUse("inner"), equals, mkline)
-	c.Check(mklines.vars.FirstUse("outer."), equals, mkline) // XXX: why the . at the end?
 	c.Check(mklines.vars.FirstUse("outer.*"), equals, mkline)
+	c.Check(mklines.vars.FirstUse("outer.${inner}"), equals, mkline)
 }
 
 func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
@@ -447,6 +448,7 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 		"NOTE: options.mk:2: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:3: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:4: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:4: FILES is used but not defined.",
 		"NOTE: options.mk:5: This directive should be indented by 4 spaces.",
 		"NOTE: options.mk:6: This directive should be indented by 4 spaces.",
 		"NOTE: options.mk:7: This directive should be indented by 4 spaces.",

@@ -200,7 +200,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 
 		forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, guessed}
 		forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
-		for _, forLoopVar := range mkline.ExtractUsedVariables(values) {
+		for _, forLoopVar := range mkline.UsedVars(values) {
 			ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
 		}
 	}
