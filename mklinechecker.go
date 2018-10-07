@@ -351,7 +351,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	case !G.opts.WarnExtra:
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
-	case varIsUsed(varname):
+	case varIsUsedSimilar(varname): // FIXME: Should really be varIsDefinedSimilar, to match the below warning.
 	case containsVarRef(varname):
 	default:
 		mkline.Warnf("%s is used but not defined.", varname)
@@ -692,7 +692,7 @@ func (ck MkLineChecker) checkVarassign() {
 			trace.Step1("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
 
-	} else if !varIsUsed(varname) {
+	} else if !varIsUsedSimilar(varname) {
 		if vartypes := G.Pkgsrc.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
 			// Ok
 		} else if deprecated := G.Pkgsrc.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {

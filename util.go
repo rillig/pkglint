@@ -259,18 +259,16 @@ func defineVar(mkline MkLine, varname string) {
 	}
 }
 
-// varIsDefined tests whether the variable (or its canonicalized form)
+// varIsDefinedSimilar tests whether the variable (or its canonicalized form)
 // is defined in the current package or in the current file.
-// TODO: rename to similar
-func varIsDefined(varname string) bool {
+func varIsDefinedSimilar(varname string) bool {
 	return G.Mk != nil && G.Mk.vars.DefinedSimilar(varname) ||
 		G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname)
 }
 
-// varIsUsed tests whether the variable (or its canonicalized form)
+// varIsUsedSimilar tests whether the variable (or its canonicalized form)
 // is used in the current package or in the current file.
-// TODO: rename to similar
-func varIsUsed(varname string) bool {
+func varIsUsedSimilar(varname string) bool {
 	return G.Mk != nil && G.Mk.vars.UsedSimilar(varname) ||
 		G.Pkg != nil && G.Pkg.vars.UsedSimilar(varname)
 }

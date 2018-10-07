@@ -255,11 +255,11 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 	pkg.Patchdir, _ = pkg.vars.Value("PATCHDIR")
 
 	// See lang/php/ext.mk
-	if varIsDefined("PHPEXT_MK") {
-		if !varIsDefined("USE_PHP_EXT_PATCHES") {
+	if varIsDefinedSimilar("PHPEXT_MK") {
+		if !varIsDefinedSimilar("USE_PHP_EXT_PATCHES") {
 			pkg.Patchdir = "patches"
 		}
-		if varIsDefined("PECL_VERSION") {
+		if varIsDefinedSimilar("PECL_VERSION") {
 			pkg.DistinfoFile = "distinfo"
 		} else {
 			pkg.IgnoreMissingPatches = true
