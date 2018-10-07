@@ -68,7 +68,7 @@ loop:
 	for ; !exp.EOF(); exp.Advance() {
 		mkline := exp.CurrentMkLine()
 		if mkline.IsDirective() && (mkline.Directive() == "if" || mkline.Directive() == "elif") {
-			cond := NewMkParser(mkline.Line, mkline.Args(), false).MkCond()
+			cond := mkline.Cond()
 			if cond == nil {
 				continue
 			}

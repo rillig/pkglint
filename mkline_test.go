@@ -1062,9 +1062,8 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 
 	mkline := t.NewMkLine("Makefile", 123, ".if ${PKGREVISION} > 0")
 	ind := NewIndentation()
-	cond := NewMkParser(mkline.Line, mkline.Args(), false)
 
-	ind.RememberUsedVariables(cond.MkCond())
+	ind.RememberUsedVariables(mkline.Cond())
 
 	t.CheckOutputEmpty()
 	c.Check(ind.Varnames(), equals, "PKGREVISION")

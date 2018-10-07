@@ -971,7 +971,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		defer trace.Call1(mkline.Args())()
 	}
 
-	p := NewMkParser(mkline.Line, mkline.Args(), false)
+	p := NewMkParser(mkline.Line, mkline.Args(), false) // XXX: Why false?
 	cond := p.MkCond()
 	if !p.EOF() {
 		mkline.Warnf("Invalid condition, unrecognized part: %q.", p.Rest())
