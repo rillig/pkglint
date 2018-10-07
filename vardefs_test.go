@@ -71,7 +71,7 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {
 
 	G.CheckDirent(pkg)
 
-	// FIXME: No warning about a missing :Q operator.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:20: Please use ${LP64PLATFORMS:Q} instead of ${LP64PLATFORMS}.")
+	// No warning about a missing :Q operator.
+	// All PLATFORM variables must be either lkNone or lkSpace.
+	t.CheckOutputEmpty()
 }
