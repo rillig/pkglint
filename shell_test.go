@@ -679,7 +679,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C
 		"WARN: Makefile:3: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 }
 
-func (s *Suite) Test_ShellLine_checkCommandUse(c *check.C) {
+func (s *Suite) Test_ShellLine_checkInstallCommand(c *check.C) {
 	t := s.Init(c)
 
 	G.Mk = t.NewMkLines("fname",
@@ -688,12 +688,12 @@ func (s *Suite) Test_ShellLine_checkCommandUse(c *check.C) {
 
 	shline := t.NewShellLine("fname", 1, "\tdummy")
 
-	shline.checkCommandUse("sed")
+	shline.checkInstallCommand("sed")
 
 	t.CheckOutputLines(
 		"WARN: fname:1: The shell command \"sed\" should not be used in the install phase.")
 
-	shline.checkCommandUse("cp")
+	shline.checkInstallCommand("cp")
 
 	t.CheckOutputLines(
 		"WARN: fname:1: ${CP} should not be used to install files.")

@@ -452,6 +452,8 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	}
 
 	shellword := scc.strcmd.Name
+	scc.shline.checkInstallCommand(shellword)
+
 	switch {
 	case shellword == "${RUN}" || shellword == "":
 	case scc.handleForbiddenCommand():
@@ -487,11 +489,10 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 		scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", command)
 	}
 
-	if tool != nil && !containsVarRef(command) && tool.MustUseVarForm {
+	if tool != nil && tool.MustUseVarForm && !containsVarRef(command) {
 		scc.shline.mkline.Warnf("Please use \"${%s}\" instead of %q.", tool.Varname, command)
 	}
 
-	scc.shline.checkCommandUse(command)
 	return tool != nil
 }
 
@@ -527,12 +528,12 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 			if tool.Validity == Nowhere {
 				scc.shline.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", tool.Name)
 			}
-			scc.shline.checkCommandUse(shellword)
+			scc.shline.checkInstallCommand(shellword)
 			return true
 		}
 
 		if vartype := G.Pkgsrc.VariableType(varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
-			scc.shline.checkCommandUse(shellword)
+			scc.shline.checkInstallCommand(shellword)
 			return true
 		}
 
@@ -917,7 +918,7 @@ func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkSh
 }
 
 // Some shell commands should not be used in the install phase.
-func (shline *ShellLine) checkCommandUse(shellcmd string) {
+func (shline *ShellLine) checkInstallCommand(shellcmd string) {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
