@@ -387,8 +387,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_command(c *check.C)
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupToolUsable("find", "FIND")
-	t.SetupToolUsable("sort", "SORT")
+	t.SetupTool("find", "FIND", AtRunTime)
+	t.SetupTool("sort", "SORT", AtRunTime)
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Mk = t.NewMkLines("Makefile",
 		MkRcsID,
@@ -425,8 +425,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_as_command_argument(c 
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
-	t.SetupToolUsable("perl", "PERL5")
-	t.SetupToolUsable("bash", "BASH")
+	t.SetupTool("perl", "PERL5", AtRunTime)
+	t.SetupTool("bash", "BASH", AtRunTime)
 	t.SetupVartypes()
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
@@ -465,8 +465,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_subshell(c *check.C
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupToolUsable("awk", "AWK")
-	t.SetupToolUsable("echo", "ECHO")
+	t.SetupTool("awk", "AWK", AtRunTime)
+	t.SetupTool("echo", "ECHO", AtRunTime)
 	G.Mk = t.NewMkLines("xpi.mk",
 		MkRcsID,
 		"\t id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"",
@@ -546,8 +546,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quotes_in_subshell_in_
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
-	t.SetupToolUsable("echo", "ECHO")
-	t.SetupToolUsable("sh", "SH")
+	t.SetupTool("echo", "ECHO", AtRunTime)
+	t.SetupTool("sh", "SH", AtRunTime)
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("x11/labltk/Makefile",
 		MkRcsID,
@@ -638,7 +638,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupToolUsable("tar", "TAR")
+	t.SetupTool("tar", "TAR", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -659,7 +659,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	t.SetupToolUsable("cat", "CAT")
+	t.SetupTool("cat", "CAT", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -734,7 +734,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check
 
 	t.SetupCommandLine("-Wall,no-space")
 	t.SetupVartypes()
-	t.SetupToolUsable("bash", "BASH")
+	t.SetupTool("bash", "BASH", AtRunTime)
 
 	mklines := t.SetupFileMkLines("Makefile",
 		MkRcsID,

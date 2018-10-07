@@ -489,7 +489,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
-	t.SetupToolUsable("printf", "")
+	t.SetupTool("printf", "", AtRunTime)
 	t.CreateFileLines("licenses/2-clause-bsd",
 		"# dummy")
 	t.CreateFileLines("misc/Makefile")

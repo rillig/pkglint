@@ -5,7 +5,7 @@ import "gopkg.in/check.v1"
 func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupToolUsable("tool1", "")
+	t.SetupTool("tool1", "", Nowhere)
 	t.SetupVartypes()
 	t.CreateFileLines("Makefile",
 		MkRcsID,
