@@ -87,7 +87,6 @@ func (mklines *MkLines) Check() {
 
 	substcontext := NewSubstContext()
 	var varalign VaralignBlock
-	lastMkline := mklines.mklines[len(mklines.mklines)-1]
 	isHacksMk := mklines.lines[0].Basename == "hacks.mk"
 
 	lineAction := func(mkline MkLine) bool {
@@ -159,7 +158,7 @@ func (mklines *MkLines) Check() {
 	}
 	mklines.ForEachEnd(lineAction, atEnd)
 
-	substcontext.Finish(lastMkline)
+	substcontext.Finish(NewMkLine(NewLineEOF(mklines.lines[0].Filename)))
 	varalign.Finish()
 
 	ChecklinesTrailingEmptyLines(mklines.lines)

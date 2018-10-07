@@ -516,6 +516,24 @@ func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 		"ERROR: opsys.mk:6: Directive indentation is not 0, but 8.")
 }
 
+func (s *Suite) Test_MkLines_Check__incomplete_subst_at_end(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	mklines := t.NewMkLines("subst.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=\tclass")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_STAGE.class missing.",
+		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_FILES.class missing.",
+		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_SED.class, SUBST_VARS.class or SUBST_FILTER_CMD.class missing.")
+}
+
 // Demonstrates how to define your own make(1) targets for creating
 // files in the current directory. The pkgsrc-wip category Makefile
 // does this, while all other categories don't need any custom code.
