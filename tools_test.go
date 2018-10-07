@@ -92,7 +92,8 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:5: Unknown shell command \"${AWK}\".",
-		"0 errors and 1 warning found.",
+		"WARN: ~/module.mk:5: AWK is used but not defined.",
+		"0 errors and 2 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 

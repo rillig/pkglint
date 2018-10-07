@@ -262,7 +262,7 @@ func defineVar(mkline MkLine, varname string) {
 // varIsDefinedSimilar tests whether the variable (or its canonicalized form)
 // is defined in the current package or in the current file.
 func varIsDefinedSimilar(varname string) bool {
-	return G.Mk != nil && G.Mk.vars.DefinedSimilar(varname) ||
+	return G.Mk != nil && (G.Mk.vars.DefinedSimilar(varname) || G.Mk.forVars[varname]) ||
 		G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname)
 }
 

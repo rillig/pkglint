@@ -555,8 +555,18 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: There should be some notes and warnings; prevented by the PERL5 case in VariableNeedsQuoting.
-	t.CheckOutputEmpty()
+	// FIXME: There should be some notes and warnings about missing :M*;
+	// these are currently prevented by the PERL5 case in VariableNeedsQuoting.
+	// FIXME: One of these warnings per variable and file is enough.
+	t.CheckOutputLines(
+		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:5: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:5: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:8: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:8: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:9: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:9: ADA_FLAGS is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *check.C) {
@@ -668,8 +678,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 		"_TOOLS_VARNAME.sed=     SED",
 		"DIST_SUBDIR=            ${PKGNAME}",
 		"WRKSRC=                 ${PKGNAME}",
-		"SITES_distfile.tar.gz=  ${MASTER_SITES_GITHUB:=user/}",
-		// TODO: The first of the below assignments should be flagged as redundant by RedundantScope.
+		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}",
+		// TODO: The first of the below assignments should be flagged as redundant by RedundantScope;
+		// that check is currently only implemented for package Makefiles, not for other files.
 		"PYTHON_VERSIONS_ACCEPTED= -13",
 		"PYTHON_VERSIONS_ACCEPTED= 27 36")
 

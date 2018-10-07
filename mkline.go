@@ -583,22 +583,63 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	return nqDontKnow
 }
 
-func (mkline *MkLineImpl) UsedVars(text string) (varnames []string) {
-	if !contains(text, "$") {
-		return nil
+func (mkline *MkLineImpl) DetermineUsedVariables() []string {
+	var varnames []string
+
+	add := func(varname string) {
+		varnames = append(varnames, varname)
 	}
 
-	for _, token := range NewMkParser(nil, text, false).MkTokens() {
-		if varuse := token.Varuse; varuse != nil {
-			varname := varuse.varname
-			varnames = append(varnames, varname)
-			varnames = append(varnames, mkline.UsedVars(varname)...)
-			for _, mod := range varuse.modifiers {
-				varnames = append(varnames, mkline.UsedVars(mod)...)
+	var searchIn func(text string)
+
+	searchInVarUse := func(varuse *MkVarUse) {
+		varname := varuse.varname
+		if !varuse.IsExpression() {
+			add(varname)
+		}
+		searchIn(varname)
+		for _, mod := range varuse.modifiers {
+			searchIn(mod)
+		}
+	}
+
+	searchIn = func(text string) {
+		if !contains(text, "$") {
+			return
+		}
+
+		for _, token := range NewMkParser(nil, text, false).MkTokens() {
+			if token.Varuse != nil {
+				searchInVarUse(token.Varuse)
 			}
 		}
 	}
-	return
+
+	switch {
+
+	case mkline.IsVarassign():
+		searchIn(mkline.Value())
+
+	case mkline.IsDirective() && mkline.Directive() == "for":
+		searchIn(mkline.Args())
+
+	case mkline.IsDirective() && mkline.Cond() != nil:
+		NewMkCondWalker().Walk(
+			mkline.Cond(),
+			&MkCondCallback{VarUse: searchInVarUse})
+
+	case mkline.IsShellCommand():
+		searchIn(mkline.ShellCommand())
+
+	case mkline.IsDependency():
+		searchIn(mkline.Targets())
+		searchIn(mkline.Sources())
+
+	case mkline.IsInclude():
+		searchIn(mkline.IncludeFile())
+	}
+
+	return varnames
 }
 
 type MkOperator uint8

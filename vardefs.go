@@ -586,6 +586,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkglist("CXXFLAGS", lkShell, BtCFlag)
 	pkglist("CXXFLAGS.*", lkShell, BtCFlag)
 	pkglist("CWRAPPERS_APPEND.*", lkShell, BtShellWord)
+	sys("DEFAULT_DISTFILES", lkShell, BtFetchURL) // From mk/fetch/bsd.fetch-vars.mk.
 	acl("DEINSTALL_FILE", lkNone, BtPathname, "Makefile: set")
 	acl("DEINSTALL_SRC", lkShell, BtPathname, "Makefile: set; Makefile.common: default, set")
 	acl("DEINSTALL_TEMPLATES", lkShell, BtPathname, "Makefile: set, append; Makefile.common: set, default, append")
@@ -874,6 +875,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PATCH_DIST_STRIP*", lkNone, BtShellWord, "buildlink3.mk, builtin.mk:; Makefile, Makefile.common, *.mk: set")
 	acl("PATCH_SITES", lkShell, BtFetchURL, "Makefile, Makefile.common, options.mk: set")
 	acl("PATCH_STRIP", lkNone, BtShellWord, "")
+	sys("PATH", lkNone, BtPathlist) // From the PATH environment variable.
 	acl("PERL5_PACKLIST", lkShell, BtPerl5Packlist, "Makefile: set; options.mk: set, append")
 	acl("PERL5_PACKLIST_DIR", lkNone, BtPathname, "")
 	pkg("PERL5_REQD", lkShell, BtVersion)

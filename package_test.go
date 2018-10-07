@@ -1057,8 +1057,5 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 	// TODO: iterate over variables in simple .for loops like the above.
 	G.CheckDirent(pkg)
 
-	// FIXME: These two diagnostics contradict each other.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:22: RUBY_VERSIONS_ACCEPTED is defined but not used.",
-		"WARN: ~/category/package/Makefile:23: RUBY_VERSIONS_ACCEPTED is used but not defined.")
+	t.CheckOutputEmpty()
 }

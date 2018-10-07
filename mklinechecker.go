@@ -200,7 +200,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 
 		forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, guessed}
 		forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
-		for _, forLoopVar := range mkline.UsedVars(values) {
+		for _, forLoopVar := range mkline.DetermineUsedVariables() {
 			ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
 		}
 	}
@@ -351,7 +351,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	case !G.opts.WarnExtra:
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
-	case varIsUsedSimilar(varname): // FIXME: Should really be varIsDefinedSimilar, to match the below warning.
+	case varIsDefinedSimilar(varname):
 	case containsVarRef(varname):
 	default:
 		mkline.Warnf("%s is used but not defined.", varname)

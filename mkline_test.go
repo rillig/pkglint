@@ -627,7 +627,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__list_in_list(c *check.C) {
 
 	G.Mk.Check()
 
-	t.CheckOutputEmpty() // Don't warn about missing :Q modifiers.
+	// Don't warn about missing :Q modifiers.
+	t.CheckOutputLines(
+		"WARN: x11/eterm/Makefile:2: PIXMAP_FILES is used but not defined.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_list(c *check.C) {
@@ -779,7 +781,10 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:4: The variable LINKER_RPATH_FLAG may not be set by any package.",
 		"WARN: ~/Makefile:4: Please use ${LINKER_RPATH_FLAG:S/-rpath/& /:Q} instead of ${LINKER_RPATH_FLAG:S/-rpath/& /}.",
-		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be evaluated at load time.")
+		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be evaluated at load time.",
+		"WARN: ~/Makefile:6: The variable PATH may not be set by any package.",
+		"WARN: ~/Makefile:6: PREFIX should not be evaluated at load time.",
+		"WARN: ~/Makefile:6: PATH should not be evaluated at load time.")
 }
 
 func (s *Suite) Test_ShellLine_CheckWord__PKGMANDIR(c *check.C) {
@@ -812,8 +817,9 @@ func (s *Suite) Test_MkLines_Check__VERSION_as_wordpart_in_MASTER_SITES(c *check
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: geography/viking/Makefile:2: " +
-			"The list variable MASTER_SITE_SOURCEFORGE should not be embedded in a word.")
+		"WARN: geography/viking/Makefile:2: "+
+			"The list variable MASTER_SITE_SOURCEFORGE should not be embedded in a word.",
+		"WARN: geography/viking/Makefile:2: VERSION is used but not defined.")
 }
 
 func (s *Suite) Test_MkLines_Check__shell_command_as_wordpart_in_ENV_list(c *check.C) {
@@ -837,6 +843,7 @@ func (s *Suite) Test_MkLine__shell_varuse_in_backt_dquot(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
+	t.SetupTool("grep", "GREP", AtRunTime)
 	mklines := t.NewMkLines("x11/motif/Makefile",
 		MkRcsID,
 		"post-patch:",
@@ -845,8 +852,7 @@ func (s *Suite) Test_MkLine__shell_varuse_in_backt_dquot(c *check.C) {
 	mklines.Check()
 
 	// Just ensure that there are no parse errors.
-	t.CheckOutputLines(
-		"WARN: x11/motif/Makefile:3: Unknown shell command \"${GREP}\".")
+	t.CheckOutputEmpty()
 }
 
 // See PR 46570, Ctrl+F "3. In lang/perl5".
@@ -1069,18 +1075,41 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	c.Check(ind.Varnames(), equals, "PKGREVISION")
 }
 
-func (s *Suite) Test_MkLine_UsedVars(c *check.C) {
-	text := "" +
-		"${VAR.${param}}" +
-		"${VAR}and${VAR2}" +
-		"${VAR:M${pattern}}" +
-		"$(ROUND_PARENTHESES)" +
-		"$<$@$x" +
-		"$$shellvar"
+func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
+	t := s.Init(c)
 
-	varnames := dummyMkLine.UsedVars(text)
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"VAR=\t${VALUE} # ${varassign.comment}",
+		".if ${OPSYS:M${endianness}} == ${Hello:L} # ${if.comment}",
+		".for var in one ${two} three # ${for.comment}",
+		"# ${empty.comment}",
+		"${TARGETS}: ${SOURCES} # ${dependency.comment}",
+		".include \"${OTHER_FILE}\"",
+		"",
+		"\t"+
+			"${VAR.${param}}"+
+			"${VAR}and${VAR2}"+
+			"${VAR:M${pattern}}"+
+			"$(ROUND_PARENTHESES)"+
+			"$$shellvar"+
+			"$<$@$x")
+
+	var varnames []string
+	for _, mkline := range mklines.mklines {
+		varnames = append(varnames, mkline.DetermineUsedVariables()...)
+	}
 
 	c.Check(varnames, deepEquals, []string{
+		"VALUE",
+		"OPSYS",
+		"endianness",
+		// "Hello" is not a variable name, the :L modifier makes it an expression.
+		"two",
+		"TARGETS",
+		"SOURCES",
+		"OTHER_FILE",
+
 		"VAR.${param}",
 		"param",
 		"VAR",
@@ -1088,6 +1117,7 @@ func (s *Suite) Test_MkLine_UsedVars(c *check.C) {
 		"VAR",
 		"pattern",
 		"ROUND_PARENTHESES",
+		// Shell variables are ignored here.
 		"<",
 		"@",
 		"x"})

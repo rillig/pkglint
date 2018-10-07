@@ -78,7 +78,9 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: Makefile:3: X11_LDFLAGS is used but not defined.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.",
+		"WARN: Makefile:3: X11_LDFLAGS is used but not defined.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
 
@@ -86,6 +88,7 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
 	t.SetupTool("echo", "ECHO", AtRunTime)
 	t.SetupTool("find", "FIND", AtRunTime)
 	t.SetupTool("pax", "PAX", AtRunTime)
@@ -130,16 +133,17 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 
 	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
+	t.SetupTool("sed", "SED", AfterPrefsMk)
 	mklines := t.NewMkLines("lang/qore/module.mk",
 		MkRcsID,
 		"qore-version=\tqore --short-version | ${SED} -e s/-.*//",
 		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
 
-	vars2 := mklines.mklines[1].UsedVars(mklines.mklines[1].Text)
+	vars2 := mklines.mklines[1].DetermineUsedVariables()
 
 	c.Check(vars2, deepEquals, []string{"SED"})
 
-	vars3 := mklines.mklines[2].UsedVars(mklines.mklines[2].Text)
+	vars3 := mklines.mklines[2].DetermineUsedVariables()
 
 	c.Check(vars3, deepEquals, []string{"qore-version"})
 
@@ -210,6 +214,7 @@ func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
+	t.SetupTool("echo", "ECHO", AfterPrefsMk)
 	mklines := t.NewMkLines("net/uucp/Makefile",
 		MkRcsID,
 		"",
@@ -221,14 +226,18 @@ func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
 	mklines.Check()
 
 	// No warning about UUCP_${var} being used but not defined.
-	t.CheckOutputLines(
-		"WARN: net/uucp/Makefile:5: Unknown shell command \"${ECHO}\".")
+	// Normally, parameterized variables use a dot instead of an
+	// underscore as separator. This is one of the other cases,
+	// and pkglint just doesn't warn about dynamic variable names
+	// like UUCP_${var} or SITES_${distfile}.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__list_variable_as_part_of_word(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
 	mklines := t.NewMkLines("converters/chef/Makefile",
 		MkRcsID,
 		"\tcd ${WRKSRC} && tr '\\r' '\\n' < ${DISTDIR}/${DIST_SUBDIR}/${DISTFILES} > chef.l")
