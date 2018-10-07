@@ -224,10 +224,9 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 				}
 			}
 
-		case "FIXME: BUILTIN_FIND_FILES_VAR":
-			// FIXME: See Test_MkLines_DetermineDefinedVariables__BUILTIN_FIND_FILES_VAR
+		case "BUILTIN_FIND_FILES_VAR":
 			for _, varname := range fields(mkline.Value()) {
-				mklines.UseVar(mkline, varname)
+				mklines.vars.Define(varname, mkline)
 			}
 
 		case "PLIST_VARS":

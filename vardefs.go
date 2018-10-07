@@ -57,9 +57,15 @@ func (src *Pkgsrc) InitVartypes() {
 	sys := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk:; *: use")
 	}
+
 	usr := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk:; *: use-loadtime, use")
 	}
+
+	// sysload defines a system-provided variable that may already be used
+	// at load time.
+	sysload := usr // Coincidentally the same.
+
 	bl3list := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk: append")
 	}
@@ -535,8 +541,8 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("BUILTIN_X11_TYPE", lkNone, BtUnknown)
 	sys("BUILTIN_X11_VERSION", lkNone, BtUnknown)
 	acl("CATEGORIES", lkShell, BtCategory, "Makefile: set, append; Makefile.common: set, default, append")
-	sys("CC_VERSION", lkNone, BtMessage)
-	sys("CC", lkNone, BtShellCommand)
+	sysload("CC_VERSION", lkNone, BtMessage)
+	sysload("CC", lkNone, BtShellCommand)
 	pkglist("CFLAGS", lkShell, BtCFlag)   // may also be changed by the user
 	pkglist("CFLAGS.*", lkShell, BtCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", lkNone, BtYesNo, "builtin.mk: default; Makefile: set")
@@ -780,12 +786,12 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("LOWER_VENDOR", lkNone, BtIdentifier)
 	sys("LP64PLATFORMS", lkShell, BtMachinePlatformPattern)
 	acl("LTCONFIG_OVERRIDE", lkShell, BtPathmask, "Makefile: set, append; Makefile.common: append")
-	sys("MACHINE_ARCH", lkNone, enumMachineArch)
-	sys("MACHINE_GNU_ARCH", lkNone, enumMachineGnuArch)
-	sys("MACHINE_GNU_PLATFORM", lkNone, BtMachineGnuPlatform)
-	sys("MACHINE_PLATFORM", lkNone, BtMachinePlatform)
+	sysload("MACHINE_ARCH", lkNone, enumMachineArch)
+	sysload("MACHINE_GNU_ARCH", lkNone, enumMachineGnuArch)
+	sysload("MACHINE_GNU_PLATFORM", lkNone, BtMachineGnuPlatform)
+	sysload("MACHINE_PLATFORM", lkNone, BtMachinePlatform)
 	acl("MAINTAINER", lkNone, BtMailAddress, "Makefile: set; Makefile.common: default")
-	sys("MAKE", lkNone, BtShellCommand)
+	sysload("MAKE", lkNone, BtShellCommand)
 	pkglist("MAKEFLAGS", lkShell, BtShellWord)
 	acl("MAKEVARS", lkShell, BtVariableName, "buildlink3.mk, builtin.mk, hacks.mk: append")
 	pkglist("MAKE_DIRS", lkShell, BtPathname)
@@ -866,11 +872,11 @@ func (src *Pkgsrc) InitVartypes() {
 	pkglist("ONLY_FOR_COMPILER", lkShell, compilers)
 	pkglist("ONLY_FOR_PLATFORM", lkSpace, BtMachinePlatformPattern)
 	pkg("ONLY_FOR_UNPRIVILEGED", lkNone, BtYesNo)
-	sys("OPSYS", lkNone, BtIdentifier)
+	sysload("OPSYS", lkNone, BtIdentifier)
 	acl("OPSYSVARS", lkShell, BtVariableName, "Makefile, Makefile.common: append")
 	acl("OSVERSION_SPECIFIC", lkNone, BtYes, "Makefile, Makefile.common: set")
-	sys("OS_VERSION", lkNone, BtVersion)
-	sys("OSX_VERSION", lkNone, BtVersion) // See mk/platform/Darwin.mk.
+	sysload("OS_VERSION", lkNone, BtVersion)
+	sysload("OSX_VERSION", lkNone, BtVersion) // See mk/platform/Darwin.mk.
 	pkg("OVERRIDE_DIRDEPTH*", lkNone, BtInteger)
 	pkg("OVERRIDE_GNU_CONFIG_SCRIPTS", lkNone, BtYes)
 	acl("OWNER", lkNone, BtMailAddress, "Makefile: set; Makefile.common: default")
@@ -1095,7 +1101,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkg("USERGROUP_PHASE", lkNone, enum("configure build pre-install"))
 	usr("USER_ADDITIONAL_PKGS", lkShell, BtPkgPath)
 	pkg("USE_BSD_MAKEFILE", lkNone, BtYes)
-	acl("USE_BUILTIN.*", lkNone, BtYesNoIndirectly, "builtin.mk: set")
+	acl("USE_BUILTIN.*", lkNone, BtYesNoIndirectly, "builtin.mk: set, use, use-loadtime")
 	pkg("USE_CMAKE", lkNone, BtYes)
 	usr("USE_DESTDIR", lkNone, BtYes)
 	pkglist("USE_FEATURES", lkShell, BtIdentifier)

@@ -386,10 +386,8 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables__BUILTIN_FIND_FILES_VAR(c
 
 	mklines.Check()
 
-	// FIXME: The VarUse for H_UNDEF in the .if clause must be warned about,
-	// but MkLineChecker.CheckVaruse is only called for variable assignments,
-	// not for conditionals.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/builtin.mk:8: H_UNDEF is used but not defined.")
 }
 
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
@@ -460,6 +458,7 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
 		". if !defined(GUARD_MK)",
@@ -481,15 +480,19 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: options.mk:2: This directive should be indented by 0 spaces.",
+		"WARN: options.mk:2: GUARD_MK is used but not defined.",
 		"NOTE: options.mk:3: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:4: This directive should be indented by 2 spaces.",
 		"WARN: options.mk:4: FILES is used but not defined.",
 		"NOTE: options.mk:5: This directive should be indented by 4 spaces.",
+		"WARN: options.mk:5: GUARD2_MK is used but not defined.",
 		"NOTE: options.mk:6: This directive should be indented by 4 spaces.",
 		"NOTE: options.mk:7: This directive should be indented by 4 spaces.",
 		"NOTE: options.mk:8: This directive should be indented by 2 spaces.",
 		"NOTE: options.mk:9: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:9: COND1 is used but not defined.",
 		"NOTE: options.mk:10: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:10: COND2 is used but not defined.",
 		"NOTE: options.mk:11: This directive should be indented by 2 spaces.",
 		"ERROR: options.mk:11: \".else\" does not take arguments. If you meant \"else if\", use \".elif\".",
 		"NOTE: options.mk:12: This directive should be indented by 2 spaces.",
@@ -503,17 +506,18 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
 	mklines := t.NewMkLines("opsys.mk",
 		MkRcsID,
 		"",
 		".for i in 1 2 3 4 5",
 		".  if ${OPSYS} == NetBSD",
-		".    if ${ARCH} == x86_64",
+		".    if ${MACHINE_ARCH} == x86_64",
 		".      if ${OS_VERSION:M8.*}",
-		".      endif # ARCH",     // Wrong, should be OS_VERSION.
-		".    endif # OS_VERSION", // Wrong, should be ARCH.
-		".  endif # OPSYS",        // Correct.
-		".endfor # j",             // Wrong, should be i.
+		".      endif # MACHINE_ARCH", // Wrong, should be OS_VERSION.
+		".    endif # OS_VERSION",     // Wrong, should be MACHINE_ARCH.
+		".  endif # OPSYS",            // Correct.
+		".endfor # j",                 // Wrong, should be i.
 		"",
 		".if ${PKG_OPTIONS:Moption}",
 		".endif # option",
@@ -529,9 +533,10 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: opsys.mk:7: Comment \"ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
-		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition \"${ARCH} == x86_64\".",
+		"WARN: opsys.mk:7: Comment \"MACHINE_ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
+		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition \"${MACHINE_ARCH} == x86_64\".",
 		"WARN: opsys.mk:10: Comment \"j\" does not match loop \"i in 1 2 3 4 5\".",
+		"WARN: opsys.mk:12: Unknown option \"option\".",
 		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".")
 }
 
@@ -539,12 +544,13 @@ func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
 	mklines := t.NewMkLines("opsys.mk",
 		MkRcsID,
 		"",
 		".for i in 1 2 3 4 5",
 		".  if ${OPSYS} == NetBSD",
-		".    if ${ARCH} == x86_64",
+		".    if ${MACHINE_ARCH} == x86_64",
 		".      if ${OS_VERSION:M8.*}")
 
 	mklines.Check()

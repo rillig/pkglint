@@ -1031,9 +1031,16 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		}
 	}
 
+	checkVarUse := func(varuse *MkVarUse) {
+		var vartype *Vartype // TODO: Insert a better type guess here.
+		vuc := &VarUseContext{vartype, vucTimeParse, vucQuotPlain, false}
+		ck.CheckVaruse(varuse, vuc)
+	}
+
 	NewMkCondWalker().Walk(cond, &MkCondCallback{
 		Empty:         checkEmpty,
-		CompareVarStr: checkCompareVarStr})
+		CompareVarStr: checkCompareVarStr,
+		VarUse:        checkVarUse})
 }
 
 func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
