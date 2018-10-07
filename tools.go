@@ -256,14 +256,11 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 	for _, dep := range deps {
 		name := strings.Split(dep, ":")[0]
 		tool := tr.ByName(name)
-		if tool == nil && createIfAbsent {
-			tr.Define(name, "", mkline)
-		}
 		if tool != nil {
 			validity := tr.validity(mkline, true)
-			if validity > tool.Validity {
-				tool.SetValidity(validity, tr.TraceName)
-			}
+			tr.defTool(name, "", false, validity)
+		} else if createIfAbsent {
+			tr.Define(name, "", mkline)
 		}
 	}
 }
