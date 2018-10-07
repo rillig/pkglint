@@ -58,10 +58,6 @@ func match4(s string, re regex.Pattern) (matched bool, m1, m2, m3, m4 string) {
 func match5(s string, re regex.Pattern) (matched bool, m1, m2, m3, m4, m5 string) {
 	return G.res.Match5(s, re)
 }
-func replaceFirst(s string, re regex.Pattern, repl string) string {
-	m, replaced := G.res.ReplaceFirst(s, re, repl)
-	return ifelseStr(m != nil, replaced, s)
-}
 func replaceAll(s string, re regex.Pattern, repl string) string {
 	return G.res.Compile(re).ReplaceAllString(s, repl)
 }
@@ -287,14 +283,6 @@ func fileExists(fname string) bool {
 func dirExists(fname string) bool {
 	st, err := os.Stat(fname)
 	return err == nil && st.Mode().IsDir()
-}
-
-// Useful in combination with regex.Find*Index
-func negToZero(i int) int {
-	if i >= 0 {
-		return i
-	}
-	return 0
 }
 
 func toInt(s string, def int) int {
