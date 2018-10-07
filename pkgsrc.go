@@ -633,6 +633,8 @@ func (src *Pkgsrc) loadMasterSites() {
 						urlToName[url] = varname
 					}
 				}
+				// TODO: register variable type, to avoid redundant
+				// definitions in vardefs.go.
 			}
 		}
 	}
