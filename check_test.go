@@ -247,8 +247,9 @@ func (t *Tester) SetupCategory(name string) {
 	}
 }
 
-// SetupPackage sets up all files for a package so that it does not produce
-// any warnings.
+// SetupPackage sets up all files for a package (including the pkgsrc
+// infrastructure) so that it does not produce any warnings. After calling
+// this method, individual files can be overwritten as necessary.
 //
 // The given makefileLines start in line 20. Except if they are variable
 // definitions for already existing variables, then they replace that line.
