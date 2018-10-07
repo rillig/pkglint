@@ -65,15 +65,6 @@ func (mklines *MkLines) Check() {
 	G.Mk = mklines
 	defer func() { G.Mk = nil }()
 
-	allowedTargets := make(map[string]bool)
-	prefixes := [...]string{"pre", "do", "post"}
-	actions := [...]string{"fetch", "extract", "patch", "tools", "wrapper", "configure", "build", "test", "install", "package", "clean"}
-	for _, prefix := range prefixes {
-		for _, action := range actions {
-			allowedTargets[prefix+"-"+action] = true
-		}
-	}
-
 	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
 	// are collected to make the order of the definitions irrelevant.
 	mklines.DetermineUsedVariables()
@@ -82,10 +73,27 @@ func (mklines *MkLines) Check() {
 	mklines.collectElse()
 
 	// In the second pass, the actual checks are done.
+	mklines.checkAll()
+
+	SaveAutofixChanges(mklines.lines)
+}
+
+func (mklines *MkLines) checkAll() {
+	allowedTargets := func() map[string]bool {
+		targets := make(map[string]bool)
+		prefixes := [...]string{"pre", "do", "post"}
+		actions := [...]string{"fetch", "extract", "patch", "tools", "wrapper", "configure", "build", "test", "install", "package", "clean"}
+		for _, prefix := range prefixes {
+			for _, action := range actions {
+				targets[prefix+"-"+action] = true
+			}
+		}
+		return targets
+	}()
 
 	CheckLineRcsid(mklines.lines[0], `#\s+`, "# ")
 
-	substcontext := NewSubstContext()
+	substContext := NewSubstContext()
 	var varalign VaralignBlock
 	isHacksMk := mklines.lines[0].Basename == "hacks.mk"
 
@@ -101,12 +109,12 @@ func (mklines *MkLines) Check() {
 
 		switch {
 		case mkline.IsEmpty():
-			substcontext.Finish(mkline)
+			substContext.Finish(mkline)
 
 		case mkline.IsVarassign():
 			mklines.target = ""
 			mkline.Tokenize(mkline.Value(), true) // Just for the side-effect of the warnings.
-			substcontext.Varassign(mkline)
+			substContext.Varassign(mkline)
 
 			switch mkline.Varcanon() {
 			case "PLIST_VARS":
@@ -132,7 +140,7 @@ func (mklines *MkLines) Check() {
 
 		case mkline.IsDirective():
 			ck.checkDirective(mklines.forVars, mklines.indentation)
-			substcontext.Directive(mkline)
+			substContext.Directive(mkline)
 
 		case mkline.IsDependency():
 			ck.checkDependencyRule(allowedTargets)
@@ -158,12 +166,10 @@ func (mklines *MkLines) Check() {
 	}
 	mklines.ForEachEnd(lineAction, atEnd)
 
-	substcontext.Finish(NewMkLine(NewLineEOF(mklines.lines[0].Filename)))
+	substContext.Finish(NewMkLine(NewLineEOF(mklines.lines[0].Filename)))
 	varalign.Finish()
 
 	ChecklinesTrailingEmptyLines(mklines.lines)
-
-	SaveAutofixChanges(mklines.lines)
 }
 
 // ForEach calls the action for each line, until the action returns false.
