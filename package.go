@@ -169,6 +169,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	if pkg.DistinfoFile != pkg.vars.fallback["DISTINFO_FILE"] {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
+
 	haveDistinfo := false
 	havePatches := false
 
@@ -195,7 +196,8 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			}
 			continue
 		}
-		if fname == pkg.File("Makefile") {
+
+		if path.Base(fname) == "Makefile" {
 			if st, err := os.Lstat(fname); err == nil {
 				pkglint.checkExecutable(st)
 			}
@@ -216,14 +218,6 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	if pkg.Pkgdir == "." && G.opts.CheckDistinfo && G.opts.CheckPatches {
 		if havePatches && !haveDistinfo {
 			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run \"%s makepatchsum\".", confMake)
-		}
-	}
-
-	if G.opts.CheckAlternatives {
-		for _, fname := range files {
-			if path.Base(fname) == "ALTERNATIVES" {
-				CheckfileAlternatives(fname, pkg.PlistFiles)
-			}
 		}
 	}
 }
