@@ -64,7 +64,9 @@ func (src *Pkgsrc) InitVartypes() {
 
 	// sysload defines a system-provided variable that may already be used
 	// at load time.
-	sysload := usr // Coincidentally the same.
+	sysload := func(varname string, kindOfList KindOfList, checker *BasicType) {
+		acl(varname, kindOfList, checker, "*: use-loadtime, use")
+	}
 
 	bl3list := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk: append")
