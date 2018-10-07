@@ -153,10 +153,12 @@ func (tr *Tools) defTool(name, varname string, mustUseVarForm bool, validity Val
 }
 
 func (tr *Tools) merge(target, source *Tool) {
-	if target.Varname == "" {
+	if target.Varname == "" && source.Varname != "" {
 		target.Varname = source.Varname
 	}
-	target.MustUseVarForm = target.MustUseVarForm || source.MustUseVarForm
+	if !target.MustUseVarForm && source.MustUseVarForm {
+		target.MustUseVarForm = true
+	}
 	if source.Validity > target.Validity {
 		target.Validity = source.Validity
 	}
