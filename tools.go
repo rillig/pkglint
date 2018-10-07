@@ -114,15 +114,7 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 		mkline.Errorf("Invalid tool name %q.", name)
 	}
 
-	validity := Nowhere
-	if mkline != nil {
-		if IsPrefs(mkline.Basename) { // IsPrefs is not 100% accurate here, but good enough
-			validity = AfterPrefsMk
-		} else if mkline.Basename == "bsd.pkg.mk" {
-			validity = AtRunTime
-		}
-	}
-
+	validity := tr.validity(mkline, false)
 	return tr.defTool(name, varname, false, validity)
 }
 
@@ -263,7 +255,7 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 			tr.Define(name, "", mkline)
 		}
 		if tool != nil {
-			validity := tr.validity(mkline.Basename)
+			validity := tr.validity(mkline, true)
 			if validity > tool.Validity {
 				tool.SetValidity(validity, tr.TraceName)
 			}
@@ -271,14 +263,18 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 	}
 }
 
-func (tr *Tools) validity(basename string) Validity {
+func (tr *Tools) validity(mkline MkLine, useTools bool) Validity {
 	switch {
-	case basename == "Makefile" && tr.SeenPrefs:
-		return AtRunTime
-	case basename == "Makefile" || basename == "bsd.prefs.mk":
+	case mkline == nil:
+		return Nowhere
+	case IsPrefs(mkline.Basename): // IsPrefs is not 100% accurate here, but good enough
 		return AfterPrefsMk
-	default:
+	case mkline.Basename == "Makefile" && !tr.SeenPrefs:
+		return AfterPrefsMk
+	case useTools, mkline.Basename == "bsd.pkg.mk":
 		return AtRunTime
+	default:
+		return Nowhere
 	}
 }
 
