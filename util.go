@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 )
 
 type YesNoUnknown uint8
@@ -37,6 +36,9 @@ func hasPrefix(s, prefix string) bool {
 }
 func hasSuffix(s, suffix string) bool {
 	return strings.HasSuffix(s, suffix)
+}
+func fields(s string) []string {
+	return strings.Fields(s)
 }
 func matches(s string, re regex.Pattern) bool {
 	return G.res.Matches(s, re)
@@ -275,31 +277,6 @@ func varIsDefined(varname string) bool {
 func varIsUsed(varname string) bool {
 	return G.Mk != nil && G.Mk.vars.UsedSimilar(varname) ||
 		G.Pkg != nil && G.Pkg.vars.UsedSimilar(varname)
-}
-
-func splitOnSpace(s string) []string {
-	i := 0
-	n := len(s)
-
-	for i < n && unicode.IsSpace(rune(s[i])) {
-		i++
-	}
-
-	var parts []string
-	for i < n {
-		start := i
-		for i < n && !unicode.IsSpace(rune(s[i])) {
-			i++
-		}
-		if start != i {
-			parts = append(parts, s[start:i])
-		}
-		for i < n && unicode.IsSpace(rune(s[i])) {
-			i++
-		}
-	}
-
-	return parts
 }
 
 func fileExists(fname string) bool {

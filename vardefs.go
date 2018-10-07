@@ -74,7 +74,7 @@ func (src *Pkgsrc) InitVartypes() {
 			if mklines != nil {
 				for _, mkline := range mklines.mklines {
 					if mkline.IsDirective() && mkline.Directive() == "for" {
-						words := splitOnSpace(mkline.Args())
+						words := fields(mkline.Args())
 						if len(words) > 2 && words[0] == "_version_" {
 							for _, word := range words[2:] {
 								languages[word] = true
@@ -83,7 +83,7 @@ func (src *Pkgsrc) InitVartypes() {
 					}
 				}
 			}
-			for _, language := range splitOnSpace("ada c c99 c++ c++11 fortran fortran77 java objc obj-c++") {
+			for _, language := range [...]string{"ada", "c", "c99", "c++", "c++11", "fortran", "fortran77", "java", "objc", "obj-c++"} {
 				languages[language] = true
 			}
 
@@ -1115,7 +1115,7 @@ func (src *Pkgsrc) InitVartypes() {
 
 func enum(values string) *BasicType {
 	valueMap := make(map[string]bool)
-	for _, value := range splitOnSpace(values) {
+	for _, value := range fields(values) {
 		valueMap[value] = true
 	}
 	name := "enum: " + values + " " // See IsEnum

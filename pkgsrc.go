@@ -630,7 +630,7 @@ func (src *Pkgsrc) loadMasterSites() {
 		if mkline.IsVarassign() {
 			varname := mkline.Varname()
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
-				for _, url := range splitOnSpace(mkline.Value()) {
+				for _, url := range fields(mkline.Value()) {
 					if matches(url, `^(?:http://|https://|ftp://)`) {
 						if nameToURL[varname] == "" {
 							nameToURL[varname] = url

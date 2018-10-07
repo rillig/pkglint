@@ -217,7 +217,7 @@ func (tr *Tools) ParseToolLineCreate(mkline MkLine, createIfAbsent bool) {
 		case "_TOOLS.*":
 			if !containsVarRef(varparam) {
 				tr.Define(varparam, "", mkline)
-				for _, tool := range splitOnSpace(value) {
+				for _, tool := range fields(value) {
 					tr.Define(tool, "", mkline)
 				}
 			}
@@ -243,7 +243,7 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool) {
 		return
 	}
 
-	deps := splitOnSpace(value)
+	deps := fields(value)
 
 	// See mk/tools/autoconf.mk:/^\.if !defined/
 	if matches(value, `\bautoconf213\b`) {

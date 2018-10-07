@@ -211,7 +211,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 		varcanon := mkline.Varcanon()
 		switch varcanon {
 		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
-			for _, varname := range splitOnSpace(mkline.Value()) {
+			for _, varname := range fields(mkline.Value()) {
 				mklines.buildDefs[varname] = true
 				if trace.Tracing {
 					trace.Step1("%q is added to BUILD_DEFS.", varname)
@@ -233,7 +233,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 
 		case "SUBST_VARS.*":
-			for _, svar := range splitOnSpace(mkline.Value()) {
+			for _, svar := range fields(mkline.Value()) {
 				mklines.UseVar(mkline, varnameCanon(svar))
 				if trace.Tracing {
 					trace.Step1("varuse %s", svar)
@@ -241,7 +241,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 			}
 
 		case "OPSYSVARS":
-			for _, osvar := range splitOnSpace(mkline.Value()) {
+			for _, osvar := range fields(mkline.Value()) {
 				mklines.UseVar(mkline, osvar+".*")
 				defineVar(mkline, osvar)
 			}
@@ -311,7 +311,7 @@ func (mklines *MkLines) determineDocumentedVariables() {
 		text := mkline.Text
 		switch {
 		case hasPrefix(text, "#"):
-			words := splitOnSpace(text)
+			words := fields(text)
 			if len(words) <= 1 {
 				break
 			}

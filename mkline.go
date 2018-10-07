@@ -309,7 +309,7 @@ func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
 		if token.Varuse == nil && contains(token.Text, separator) {
 			var subs []string
 			if separator == "" {
-				subs = splitOnSpace(token.Text)
+				subs = fields(token.Text)
 			} else {
 				subs = strings.Split(token.Text, separator)
 			}

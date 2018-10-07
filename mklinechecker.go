@@ -136,8 +136,8 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 	} else if directive == "for" {
 		ck.checkDirectiveFor(forVars, ind)
 
-	} else if directive == "undef" && args != "" {
-		for _, varname := range splitOnSpace(args) {
+	} else if directive == "undef" {
+		for _, varname := range fields(args) {
 			if forVars[varname] {
 				mkline.Notef("Using \".undef\" after a \".for\" loop is unnecessary.")
 			}
@@ -170,7 +170,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 	args := mkline.Args()
 
 	if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
-		for _, forvar := range splitOnSpace(vars) {
+		for _, forvar := range fields(vars) {
 			indentation.AddVar(forvar)
 			if !G.Infrastructure && hasPrefix(forvar, "_") {
 				mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
@@ -189,7 +189,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 
 		// Check if any of the value's types is not guessed.
 		guessed := true
-		for _, value := range splitOnSpace(values) {
+		for _, value := range fields(values) {
 			if m, vname := match1(value, `^\$\{(.*)\}`); m {
 				vartype := G.Pkgsrc.VariableType(vname)
 				if vartype != nil && !vartype.guessed {
@@ -222,8 +222,8 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 
 func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 	mkline := ck.MkLine
-	targets := splitOnSpace(mkline.Targets())
-	sources := splitOnSpace(mkline.Sources())
+	targets := fields(mkline.Targets())
+	sources := fields(mkline.Sources())
 
 	for _, source := range sources {
 		if source == ".PHONY" {
@@ -646,7 +646,7 @@ func (ck MkLineChecker) checkVarassignPythonVersions(varname, value string) {
 	}
 
 	mkline := ck.MkLine
-	strversions := splitOnSpace(value)
+	strversions := fields(value)
 	intversions := make([]int, len(strversions))
 	for i, strversion := range strversions {
 		iver, err := strconv.Atoi(strversion)
@@ -892,7 +892,7 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 		break
 
 	case vartype.kindOfList == lkSpace:
-		for _, word := range splitOnSpace(value) {
+		for _, word := range fields(value) {
 			ck.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
 

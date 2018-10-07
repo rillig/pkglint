@@ -429,7 +429,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 			"command in the PLIST")
 
 	case "imake-man":
-		args := splitOnSpace(arg)
+		args := fields(arg)
 		switch {
 		case len(args) != 3:
 			pline.Warnf("Invalid number of arguments for imake-man.")
