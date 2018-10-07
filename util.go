@@ -763,7 +763,7 @@ func (c *FileCache) Put(fileName string, options LoadOptions, lines []Line) {
 			c.removeOldEntries()
 		}
 
-		entry = &fileCacheEntry{0, fileName, options, lines}
+		entry = &fileCacheEntry{1, fileName, options, lines}
 		c.table = append(c.table, entry)
 		c.mapping[key] = entry
 	}
@@ -775,6 +775,8 @@ func (c *FileCache) Put(fileName string, options LoadOptions, lines []Line) {
 }
 
 func (c *FileCache) removeOldEntries() {
+	dummyLine.Notef("FileCache.Size %d.", cap(c.table))
+
 	sort.Slice(c.table, func(i, j int) bool { return c.table[j].count < c.table[i].count })
 
 	for _, e := range c.table {
