@@ -281,20 +281,20 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return cond
 			}
 		}
-	case repl.AdvanceRegexp(`^defined\s*\(`):
+	case repl.HasPrefix("defined") && repl.AdvanceRegexp(`^defined\s*\(`):
 		if varname := p.Varname(); varname != "" {
 			if repl.AdvanceStr(")") {
 				return &mkCond{Defined: varname}
 			}
 		}
-	case repl.AdvanceRegexp(`^empty\s*\(`):
+	case repl.HasPrefix("empty") && repl.AdvanceRegexp(`^empty\s*\(`):
 		if varname := p.Varname(); varname != "" {
 			modifiers := p.VarUseModifiers(varname, ")")
 			if repl.AdvanceStr(")") {
 				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
 			}
 		}
-	case repl.AdvanceRegexp(`^(commands|exists|make|target)\s*\(`):
+	case uint(repl.PeekByte()-'a') <= 'z'-'a' && repl.AdvanceRegexp(`^(commands|exists|make|target)\s*\(`):
 		funcname := repl.Group(1)
 		argMark := repl.Mark()
 		for p.VarUse() != nil || repl.AdvanceRegexp(`^[^$)]+`) {
