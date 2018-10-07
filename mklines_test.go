@@ -914,3 +914,39 @@ func (s *Suite) Test_MkLines_Check__hacks_mk(c *check.C) {
 	// No warning about including bsd.prefs.mk before using the ?= operator.
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-space")
+	t.SetupVartypes()
+	mklines := t.NewMkLines("conditional.mk",
+		MkRcsID,
+		"",
+		".if defined(PKG_DEVELOPER)",
+		"DEVELOPER=\tyes",
+		".endif",
+		"",
+		".if ${USE_TOOLS:Mgettext}",
+		"USES_GETTEXT=\tyes",
+		".endif")
+
+	seenDeveloper := false
+	seenUsesGettext := false
+
+	mklines.ForEach(func(mkline MkLine) {
+		if mkline.IsVarassign() {
+			switch mkline.Varname() {
+			case "DEVELOPER":
+				c.Check(mklines.indentation.IsConditional(), equals, false) // FIXME: Must be true.
+				seenDeveloper = true
+			case "USES_GETTEXT":
+				c.Check(mklines.indentation.IsConditional(), equals, false) // FIXME: Must be true.
+				seenUsesGettext = true
+			}
+		}
+	})
+
+	c.Check(seenDeveloper, equals, true)
+	c.Check(seenUsesGettext, equals, true)
+}

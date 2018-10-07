@@ -900,12 +900,9 @@ func (ind *Indentation) TrackBefore(mkline MkLine) {
 		trace.Stepf("Indentation before line %s: %s", mkline.Linenos(), ind)
 	}
 
-	directive := mkline.Directive()
-	args := mkline.Args()
-
-	switch directive {
+	switch mkline.Directive() {
 	case "for", "if", "ifdef", "ifndef":
-		ind.Push(mkline, ind.top().depth, args)
+		ind.Push(mkline, ind.top().depth, mkline.Args())
 	}
 }
 
@@ -921,13 +918,11 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	case "if":
 		// For multiple-inclusion guards, the indentation stays at the same level.
 		guard := false
-		if hasPrefix(args, "!defined") && hasSuffix(args, "_MK)") {
-			if hasPrefix(args, "!defined(") && hasSuffix(args, ")") {
-				varname := args[9 : len(args)-1]
-				if varname != "" && isalnum(varname) {
-					ind.AddVar(varname)
-					guard = true
-				}
+		if hasPrefix(args, "!defined(") && hasSuffix(args, "_MK)") {
+			varname := args[9 : len(args)-1]
+			if varname != "" && isalnum(varname) {
+				ind.AddVar(varname)
+				guard = true
 			}
 		}
 		if !guard {
@@ -936,6 +931,7 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 
 		// Note: adding the used variables for arbitrary conditions
 		// happens in MkLineChecker.checkDirectiveCond for performance reasons.
+		// TODO: Move that code here.
 
 		if contains(args, "exists") {
 			cond := NewMkParser(mkline.Line, args, false).MkCond()

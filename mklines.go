@@ -167,7 +167,8 @@ func (mklines *MkLines) Check() {
 }
 
 // ForEach calls the action for each line, until the action returns false.
-// It keeps track of the indentation and all conditional variables.
+// It keeps track of the indentation (see MkLines.indentation)
+// and all conditional variables (see Indentation.IsConditional).
 func (mklines *MkLines) ForEach(action func(mkline MkLine)) {
 	mklines.ForEachEnd(
 		func(mkline MkLine) bool { action(mkline); return true },
