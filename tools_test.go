@@ -2,6 +2,33 @@ package main
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_Tool_UsableAtLoadTime(c *check.C) {
+
+	nowhere := Tool{"nowhere", "", false, Nowhere}
+	c.Check(nowhere.UsableAtLoadTime(false), equals, false)
+	c.Check(nowhere.UsableAtLoadTime(true), equals, false)
+
+	load := Tool{"load", "", false, AfterPrefsMk}
+	c.Check(load.UsableAtLoadTime(false), equals, false)
+	c.Check(load.UsableAtLoadTime(true), equals, true)
+
+	run := Tool{"run", "", false, AtRunTime}
+	c.Check(run.UsableAtLoadTime(false), equals, false)
+	c.Check(run.UsableAtLoadTime(true), equals, false)
+}
+
+func (s *Suite) Test_Tool_UsableAtRunTime(c *check.C) {
+
+	nowhere := Tool{"nowhere", "", false, Nowhere}
+	c.Check(nowhere.UsableAtRunTime(), equals, false)
+
+	load := Tool{"load", "", false, AfterPrefsMk}
+	c.Check(load.UsableAtRunTime(), equals, true)
+
+	run := Tool{"run", "", false, AtRunTime}
+	c.Check(run.UsableAtRunTime(), equals, true)
+}
+
 func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
 	t := s.Init(c)
 
