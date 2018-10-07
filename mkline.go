@@ -930,11 +930,9 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 			ind.top().depth += 2
 		}
 
-		// Note: adding the used variables for arbitrary conditions
-		// happens in MkLineChecker.checkDirectiveCond for performance reasons.
-		// TODO: Move that code here.
-
 		if cond := mkline.Cond(); cond != nil {
+			ind.RememberUsedVariables(cond)
+
 			NewMkCondWalker().Walk(cond, &MkCondCallback{
 				Call: func(name string, arg string) {
 					if name == "exists" {

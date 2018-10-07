@@ -1031,10 +1031,6 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	NewMkCondWalker().Walk(cond, &MkCondCallback{
 		Empty:         checkEmpty,
 		CompareVarStr: checkCompareVarStr})
-
-	if G.Mk != nil {
-		G.Mk.indentation.RememberUsedVariables(cond)
-	}
 }
 
 func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {

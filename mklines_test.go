@@ -938,10 +938,10 @@ func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
 		if mkline.IsVarassign() {
 			switch mkline.Varname() {
 			case "DEVELOPER":
-				c.Check(mklines.indentation.IsConditional(), equals, false) // FIXME: Must be true.
+				c.Check(mklines.indentation.IsConditional(), equals, true)
 				seenDeveloper = true
 			case "USES_GETTEXT":
-				c.Check(mklines.indentation.IsConditional(), equals, false) // FIXME: Must be true.
+				c.Check(mklines.indentation.IsConditional(), equals, true)
 				seenUsesGettext = true
 			}
 		}
