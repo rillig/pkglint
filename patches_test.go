@@ -691,9 +691,9 @@ func (s *Suite) Test_PatchChecker_checktextRcsid(c *check.C) {
 	ChecklinesPatch(lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/patch-aa:7: Found RCS tag \"$Id$\". Please remove it.",
-		"WARN: ~/patch-aa:8: Found RCS tag \"$Id$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".",
-		"WARN: ~/patch-aa:11: Found RCS tag \"$Author$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
+		"WARN: ~/patch-aa:7: Found RCS tag \"$"+"Id$\". Please remove it.",
+		"WARN: ~/patch-aa:8: Found RCS tag \"$"+"Id$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".",
+		"WARN: ~/patch-aa:11: Found RCS tag \"$"+"Author$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
 }
 
 func (s *Suite) Test_FileType_String(c *check.C) {
