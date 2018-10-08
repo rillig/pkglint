@@ -300,11 +300,11 @@ func (src *Pkgsrc) loadUnknownVars() {
 
 			switch {
 			case
-				src.vartypes[varcanon] != nil,     // Already defined
-				src.Tools.ByName(varcanon) != nil, // Already known as a tool
-				hasPrefix(varcanon, "_"),          // Skip internal variables
-				contains(varcanon, "$"),           // Indirect or parameterized
-				hasSuffix(varcanon, "_MK"):        // Multiple-inclusion guard
+				src.vartypes[varcanon] != nil,        // Already defined
+				src.Tools.ByVarname(varcanon) != nil, // Already known as a tool
+				hasPrefix(varcanon, "_"),             // Skip internal variables
+				contains(varcanon, "$"),              // Indirect or parameterized
+				hasSuffix(varcanon, "_MK"):           // Multiple-inclusion guard
 
 			default:
 				if trace.Tracing {
