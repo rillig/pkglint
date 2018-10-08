@@ -428,15 +428,20 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 	indentEnd := i
 
 	directiveStart := i
-	for i < n && 'a' <= text[i] && text[i] <= 'z' {
+	for i < n && ('a' <= text[i] && text[i] <= 'z' || text[i] == '-') {
 		i++
 	}
 	directiveEnd := i
 	directive = text[directiveStart:directiveEnd]
 	switch directive {
-	case "if", "ifdef", "ifndef", "else", "elif", "endif", "for", "endfor", "undef":
+	case "if", "else", "elif", "endif",
+		"ifdef", "ifndef",
+		"for", "endfor", "undef",
+		"error", "warning", "info",
+		"export", "export-env", "unexport", "unexport-env":
 		break
 	default:
+		// Intentionally not supported are: ifmake ifnmake elifdef elifndef elifmake elifnmake.
 		return
 	}
 
@@ -975,13 +980,23 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 	for ; i < n; i++ {
 		b := text[i]
 		switch {
+
 		case 'A' <= b && b <= 'Z',
 			'a' <= b && b <= 'z',
 			b == '_',
 			'0' <= b && b <= '9',
-			'$' <= b && b <= '.' && (b == '$' || b == '*' || b == '+' || b == '-' || b == '.'),
-			b == '[',
-			b == '{', b == '}':
+			'*' <= b && b <= '.' && (b == '*' || b == '+' || b == '-' || b == '.'),
+			b == '[': // For the tool of the same name, e.g. "TOOLS_PATH.[".
+			continue
+
+		case b == '$':
+			parser := NewMkParser(nil, text[i:], false)
+			varuse := parser.VarUse()
+			if varuse == nil {
+				return
+			}
+			varuseLen := len(text[i:]) - len(parser.Rest())
+			i += varuseLen - 1
 			continue
 		}
 		break

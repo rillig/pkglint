@@ -297,6 +297,31 @@ func (s *Suite) Test_NewMkLine__leading_space(c *check.C) {
 		"WARN: rubyversion.mk:427: Makefile lines should not start with space characters.")
 }
 
+// Exotic test cases from the pkgsrc infrastructure.
+// Hopefully, pkgsrc packages don't need such complicated code.
+func (s *Suite) Test_NewMkLine__infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("infra.mk",
+		"         USE_BUILTIN.${_pkg_:S/^-//}:=no",
+		".error \"Something went wrong\"",
+		".export WRKDIR",
+		".unexport-env WRKDIR",
+		"",
+		".ifmake target1",    // Luckily, this is not used in the wild.
+		".elifnmake target2", // Neither is this.
+		".endif")
+
+	c.Check(mklines.mklines[0].Varcanon(), equals, "USE_BUILTIN.*")
+	c.Check(mklines.mklines[1].Directive(), equals, "error")
+	c.Check(mklines.mklines[2].Directive(), equals, "export")
+
+	t.CheckOutputLines(
+		"WARN: infra.mk:1: Makefile lines should not start with space characters.",
+		"ERROR: infra.mk:6: Unknown Makefile line format: \".ifmake target1\".",
+		"ERROR: infra.mk:7: Unknown Makefile line format: \".elifnmake target2\".")
+}
+
 func (s *Suite) Test_MkLines_Check__extra(c *check.C) {
 	t := s.Init(c)
 
