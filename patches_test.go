@@ -686,7 +686,7 @@ func (s *Suite) Test_PatchChecker_checktextRcsid(c *check.C) {
 		" $"+"Id$",
 		"-old line",
 		"+new line",
-		" $Author: authorship $")
+		" $"+"Author: authorship $")
 
 	ChecklinesPatch(lines)
 
