@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -141,6 +143,7 @@ func (src *Pkgsrc) LoadInfrastructure() {
 	src.loadUserDefinedVars()
 	src.loadTools()
 	src.initDeprecatedVars()
+	src.loadUnknownVars()
 }
 
 // Latest returns the latest package matching the given pattern.
@@ -256,9 +259,6 @@ func (src *Pkgsrc) loadTools() {
 		})
 	}
 
-	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
-	unknownType := &Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
-
 	for _, relativeName := range [...]string{"mk/bsd.prefs.mk", "mk/bsd.pkg.mk"} {
 
 		mklines := G.Pkgsrc.LoadMk(relativeName, MustSucceed|NotEmpty)
@@ -274,12 +274,6 @@ func (src *Pkgsrc) loadTools() {
 						src.AddBuildDefs(bdvar)
 					}
 				}
-
-				// Even if pkglint cannot guess the type of each variable,
-				// at least prevent the "used but not defined" warnings.
-				if src.vartypes[varname] == nil {
-					src.vartypes[varname] = unknownType
-				}
 			}
 		})
 	}
@@ -287,6 +281,44 @@ func (src *Pkgsrc) loadTools() {
 	if trace.Tracing {
 		tools.Trace()
 	}
+}
+
+// loadUnknownVars scans all pkgsrc infrastructure files in mk/
+// to find variable definitions that are not yet covered in
+// Pkgsrc.InitVartypes.
+func (src *Pkgsrc) loadUnknownVars() {
+
+	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
+	unknownType := &Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
+
+	handleLine := func(mkline MkLine) {
+		if mkline.IsVarassign() {
+			varname := mkline.Varname()
+
+			// Even if pkglint cannot guess the type of each variable,
+			// at least prevent the "used but not defined" warnings.
+			if src.vartypes[varname] == nil {
+				src.vartypes[varname] = unknownType
+			}
+		}
+	}
+
+	handleMkFile := func(path string) {
+		mklines := LoadMk(path, 0)
+		if mklines != nil {
+			mklines.ForEach(handleLine)
+		}
+	}
+
+	handleFile := func(path string, info os.FileInfo, err error) error {
+		baseName := info.Name()
+		if hasSuffix(baseName, ".mk") || baseName == "mk.conf" {
+			handleMkFile(path)
+		}
+		return nil
+	}
+
+	_ = filepath.Walk(src.File("mk"), handleFile)
 }
 
 func (src *Pkgsrc) parseSuggestedUpdates(lines []Line) []SuggestedUpdate {

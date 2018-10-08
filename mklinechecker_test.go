@@ -639,13 +639,13 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_bsd_pkg_mk(c *check.C) {
+func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_infrastructure(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall")
 	t.SetupPkgsrc()
 	t.SetupVartypes()
-	t.CreateFileLines("mk/bsd.pkg.mk",
+	t.CreateFileLines("mk/deeply/nested/infra.mk",
 		MkRcsID,
 		"INFRA_VAR?=\tvalue")
 	G.Pkgsrc.LoadInfrastructure()
