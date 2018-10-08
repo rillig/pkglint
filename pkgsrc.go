@@ -79,6 +79,11 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		"UNPRIVILEGED",
 		"USE_CROSS_COMPILE")
 
+	// The following variables are so obscure that they are
+	// probably not used in practice.
+	src.AddBuildDefs(
+		"MANINSTALL")
+
 	// The following variables are added to _BUILD_DEFS by the pkgsrc
 	// infrastructure and thus don't need to be added by the package again.
 	// To regenerate the below list:
