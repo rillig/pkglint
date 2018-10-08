@@ -286,6 +286,9 @@ func (src *Pkgsrc) loadTools() {
 // loadUnknownVars scans all pkgsrc infrastructure files in mk/
 // to find variable definitions that are not yet covered in
 // Pkgsrc.InitVartypes.
+//
+// Even if pkglint cannot guess the type of each variable,
+// at least prevent the "used but not defined" warnings.
 func (src *Pkgsrc) loadUnknownVars() {
 
 	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
@@ -293,15 +296,21 @@ func (src *Pkgsrc) loadUnknownVars() {
 
 	handleLine := func(mkline MkLine) {
 		if mkline.IsVarassign() {
-			varname := mkline.Varname()
+			varcanon := mkline.Varcanon()
 
-			// Even if pkglint cannot guess the type of each variable,
-			// at least prevent the "used but not defined" warnings.
-			if src.vartypes[varname] == nil {
+			switch {
+			case
+				src.vartypes[varcanon] != nil,     // Already defined
+				src.Tools.ByName(varcanon) != nil, // Already known as a tool
+				hasPrefix(varcanon, "_"),          // Skip internal variables
+				contains(varcanon, "$"),           // Indirect or parameterized
+				hasSuffix(varcanon, "_MK"):        // Multiple-inclusion guard
+
+			default:
 				if trace.Tracing {
-					trace.Stepf("Unknown variable %q in %s", varname, mkline)
+					trace.Stepf("Unknown variable %q in %s", varcanon, mkline)
 				}
-				src.vartypes[varname] = unknownType
+				src.vartypes[varcanon] = unknownType
 			}
 		}
 	}
