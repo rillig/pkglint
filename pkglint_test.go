@@ -769,13 +769,13 @@ func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
 		"",
 		"SHA1 (patch-README) = b9101ebf0bca8ce243ed6433b65555fa6a5ecd52")
 
-	// Copy category/package to wip/package.
+	// Copy category/package/** to wip/package.
 	for _, basename := range []string{"files/README", "patches/patch-README", "Makefile", "PLIST", "README", "TODO", "distinfo"} {
 		src := "category/package/" + basename
 		dst := "wip/package/" + basename
 		text, err := ioutil.ReadFile(t.File(src))
 		c.Check(err, check.IsNil)
-		t.CreateFileLines(dst, strings.TrimSpace(string(text)))
+		t.CreateFileLines(dst, strings.TrimSuffix(string(text), "\n"))
 	}
 
 	t.SetupPkgsrc()

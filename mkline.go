@@ -109,7 +109,7 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, mkLineShell{shellcmd}}
 	}
 
-	trimmedText := strings.TrimSpace(text)
+	trimmedText := trimHspace(text)
 	if strings.HasPrefix(trimmedText, "#") {
 		return &MkLineImpl{line, mkLineComment{}}
 	}
@@ -778,7 +778,7 @@ func (ind *Indentation) String() string {
 			s += " (" + strings.Join(level.conditionalVars, " ") + ")"
 		}
 	}
-	return "[" + strings.TrimSpace(s) + "]"
+	return "[" + trimHspace(s) + "]"
 }
 
 type indentationLevel struct {
@@ -1062,7 +1062,7 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 	spaceAfterVarname = text[varnameEnd:opStart]
 	op = text[opStart:opEnd]
 	valueAlign = text[0:valueStart]
-	value = strings.TrimSpace(string(valuebuf[:j]))
+	value = trimHspace(string(valuebuf[:j]))
 	spaceAfterValue = text[valueEnd:commentStart]
 	comment = text[commentStart:commentEnd]
 	return

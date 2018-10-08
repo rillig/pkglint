@@ -6,7 +6,6 @@ import (
 	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"path"
-	"strings"
 )
 
 const (
@@ -165,7 +164,7 @@ outer:
 		}
 	}
 
-	if strings.TrimSpace(parser.Rest()) != "" {
+	if trimHspace(parser.Rest()) != "" {
 		line.Warnf("Pkglint parse error in ShellLine.CheckWord at %q (quoting=%s), rest: %s", token, quoting, parser.Rest())
 	}
 }

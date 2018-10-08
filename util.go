@@ -65,6 +65,22 @@ func replaceAllFunc(s string, re regex.Pattern, repl func(string) string) string
 	return G.res.Compile(re).ReplaceAllStringFunc(s, repl)
 }
 
+// trimHspace returns str, with leading and trailing space (U+0020)
+// and tab (U+0009) removed.
+//
+// It is simpler and faster than strings.TrimSpace.
+func trimHspace(str string) string {
+	start := 0
+	end := len(str)
+	for start < end && (str[start] == ' ' || str[start] == '\t') {
+		start++
+	}
+	for start < end && (str[end-1] == ' ' || str[end-1] == '\t') {
+		end--
+	}
+	return str[start:end]
+}
+
 func ifelseStr(cond bool, a, b string) string {
 	if cond {
 		return a
