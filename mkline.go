@@ -981,6 +981,9 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 		b := text[i]
 		switch {
 
+		// As of go1.11.1 (October 2018), the Go compiler doesn't emit good
+		// code for these kinds of comparisons.
+		// See https://github.com/golang/go/issues/17372.
 		case 'A' <= b && b <= 'Z',
 			'a' <= b && b <= 'z',
 			b == '_',
