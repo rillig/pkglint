@@ -289,7 +289,10 @@ func (s *Suite) Test_NewMkLine__leading_space(c *check.C) {
 	t := s.Init(c)
 
 	_ = t.NewMkLine("rubyversion.mk", 427, " _RUBYVER=\t2.15")
+	_ = t.NewMkLine("bsd.buildlink3.mk", 132, "   ok:=yes")
 
+	// In mk/buildlink3/bsd.buildlink3.mk, the leading space is really helpful,
+	// therefore no warnings for that file.
 	t.CheckOutputLines(
 		"WARN: rubyversion.mk:427: Makefile lines should not start with space characters.")
 }

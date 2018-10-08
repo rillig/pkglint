@@ -60,7 +60,7 @@ type mkLineDependency struct {
 func NewMkLine(line Line) *MkLineImpl {
 	text := line.Text
 
-	if hasPrefix(text, " ") {
+	if hasPrefix(text, " ") && line.Basename != "bsd.buildlink3.mk" {
 		line.Warnf("Makefile lines should not start with space characters.")
 		Explain(
 			"If you want this line to contain a shell program, use a tab",
