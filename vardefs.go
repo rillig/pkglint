@@ -41,6 +41,14 @@ func (src *Pkgsrc) InitVartypes() {
 			"Makefile.*, *.mk: default, set, use")
 	}
 
+	// pkgload is the same as pkg, except that the variable may be accessed at load time.
+	pkgload := func(varname string, kindOfList KindOfList, checker *BasicType) {
+		acl(varname, kindOfList, checker, ""+
+			"Makefile: set, use, use-loadtime; "+
+			"buildlink3.mk, builtin.mk:; "+
+			"Makefile.*, *.mk: default, set, use, use-loadtime")
+	}
+
 	// A package-defined list may be appended to in all Makefiles except buildlink3.mk and builtin.mk.
 	// Simple assignment (instead of appending) is only allowed in Makefile and Makefile.common.
 	pkglist := func(varname string, kindOfList KindOfList, checker *BasicType) {
@@ -1014,7 +1022,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PKG_USERS", lkShell, BtShellWord, "Makefile: set, append")
 	pkglist("PKG_USERS_VARS", lkShell, BtVariableName)
 	acl("PKG_USE_KERBEROS", lkNone, BtYes, "Makefile, Makefile.common: set")
-	pkg("PLIST.*", lkNone, BtYes)
+	pkgload("PLIST.*", lkNone, BtYes)
 	pkglist("PLIST_VARS", lkShell, BtIdentifier)
 	pkglist("PLIST_SRC", lkShell, BtRelativePkgPath)
 	pkglist("PLIST_SUBST", lkShell, BtShellWord)
