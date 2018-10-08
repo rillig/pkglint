@@ -395,7 +395,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
 
 	t.CheckOutputLines(
 		"Whole Makefile (with all included files) follows:",
-		"~/category/package/Makefile:1: # $NetBSD$",
+		"~/category/package/Makefile:1: "+MkRcsID,
 		"~/category/package/Makefile:2: ",
 		"~/category/package/Makefile:3: CATEGORIES=category",
 		"~/category/package/Makefile:4: ",
