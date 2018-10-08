@@ -148,7 +148,7 @@ func (src *Pkgsrc) LoadInfrastructure() {
 	src.loadUserDefinedVars()
 	src.loadTools()
 	src.initDeprecatedVars()
-	src.loadUnknownVars()
+	src.loadUntypedVars()
 }
 
 // Latest returns the latest package matching the given pattern.
@@ -288,13 +288,13 @@ func (src *Pkgsrc) loadTools() {
 	}
 }
 
-// loadUnknownVars scans all pkgsrc infrastructure files in mk/
+// loadUntypedVars scans all pkgsrc infrastructure files in mk/
 // to find variable definitions that are not yet covered in
 // Pkgsrc.InitVartypes.
 //
 // Even if pkglint cannot guess the type of each variable,
 // at least prevent the "used but not defined" warnings.
-func (src *Pkgsrc) loadUnknownVars() {
+func (src *Pkgsrc) loadUntypedVars() {
 
 	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
 	unknownType := &Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
@@ -327,10 +327,10 @@ func (src *Pkgsrc) loadUnknownVars() {
 		}
 	}
 
-	handleFile := func(path string, info os.FileInfo, err error) error {
+	handleFile := func(pathName string, info os.FileInfo, err error) error {
 		baseName := info.Name()
 		if hasSuffix(baseName, ".mk") || baseName == "mk.conf" {
-			handleMkFile(path)
+			handleMkFile(filepath.ToSlash(pathName))
 		}
 		return nil
 	}
