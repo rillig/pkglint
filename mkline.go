@@ -485,7 +485,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
 	}
 
-	if vartype == nil || vuc.vartype == nil {
+	if vartype == nil || vuc.vartype == nil || vartype.basicType == BtUnknown {
 		return nqDontKnow
 	}
 

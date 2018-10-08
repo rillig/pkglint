@@ -256,12 +256,16 @@ func (src *Pkgsrc) loadTools() {
 		})
 	}
 
+	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
+	unknownType := &Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
+
 	for _, relativeName := range [...]string{"mk/bsd.prefs.mk", "mk/bsd.pkg.mk"} {
 
 		mklines := G.Pkgsrc.LoadMk(relativeName, MustSucceed|NotEmpty)
 		mklines.ForEach(func(mkline MkLine) {
 			if mkline.IsVarassign() {
-				switch mkline.Varname() {
+				varname := mkline.Varname()
+				switch varname {
 				case "USE_TOOLS":
 					tools.ParseToolLine(mkline, true, !mklines.indentation.IsConditional())
 
@@ -269,6 +273,12 @@ func (src *Pkgsrc) loadTools() {
 					for _, bdvar := range mkline.ValueSplit(mkline.Value(), "") {
 						src.AddBuildDefs(bdvar)
 					}
+				}
+
+				// Even if pkglint cannot guess the type of each variable,
+				// at least prevent the "used but not defined" warnings.
+				if src.vartypes[varname] == nil {
+					src.vartypes[varname] = unknownType
 				}
 			}
 		})

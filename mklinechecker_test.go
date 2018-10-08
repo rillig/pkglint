@@ -639,6 +639,27 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_bsd_pkg_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupPkgsrc()
+	t.SetupVartypes()
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		MkRcsID,
+		"INFRA_VAR?=\tvalue")
+	G.Pkgsrc.LoadInfrastructure()
+	mklines := t.SetupFileMkLines("category/package/module.mk",
+		MkRcsID,
+		"do-fetch:",
+		"\t: ${INFRA_VAR} ${UNDEFINED}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/module.mk:3: UNDEFINED is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 	t := s.Init(c)
 
