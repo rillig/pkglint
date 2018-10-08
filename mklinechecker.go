@@ -426,35 +426,35 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	mkline := ck.MkLine
 	perms := vartype.EffectivePermissions(mkline.Basename)
 
-	isLoadTime := false // Will the variable be used at load time?
+	warnLoadTime := false // Will the variable be used at load time?
 
 	// Might the variable be used indirectly at load time, for example
 	// by assigning it to another variable which then gets evaluated?
-	isIndirect := false
+	warnIndirect := false
 
 	switch {
 	case vuc.vartype != nil && vuc.vartype.guessed:
-	// Don't warn about unknown variables.
+		// Don't warn about unknown variables.
 
 	case vuc.time == vucTimeParse && !perms.Contains(aclpUseLoadtime):
-		isLoadTime = true
+		warnLoadTime = true
 
 	case vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) && !perms.Contains(aclpUseLoadtime):
-		isLoadTime = true
-		isIndirect = true
+		warnLoadTime = true
+		warnIndirect = true
 	}
 
-	if isLoadTime {
+	if warnLoadTime {
 		if tool := G.ToolByVarname(varname, LoadTime); tool != nil {
 			ck.checkVaruseToolLoadTime(varname, tool)
 		} else {
-			ck.checkVaruseLoadTime(varname, isIndirect)
+			ck.warnVaruseLoadTime(varname, warnIndirect)
 		}
 	}
 
 	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
 		needed := aclpUse
-		if isLoadTime {
+		if warnLoadTime {
 			needed = aclpUseLoadtime
 		}
 		alternativeFiles := vartype.AllowedFiles(needed)
@@ -507,7 +507,7 @@ func (ck MkLineChecker) checkVaruseToolLoadTime(varname string, tool *Tool) {
 		"only be used at run time, except in the package Makefile itself.")
 }
 
-func (ck MkLineChecker) checkVaruseLoadTime(varname string, isIndirect bool) {
+func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 	mkline := ck.MkLine
 
 	if !isIndirect {

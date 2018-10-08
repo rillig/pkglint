@@ -347,11 +347,17 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 	t.SetupVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
-		"WRKSRC:=${.CURDIR}")
+		"WRKSRC:=${.CURDIR}",
+		".if ${PKG_SYSCONFDIR.gdm} != \"etc\"",
+		".endif")
 
 	mklines.Check()
 
-	// Don't warn that ".CURDIR should not be evaluated at load time."
+	// Evaluating PKG_SYSCONFDIR.* at load time is probably ok, though
+	// pkglint cannot prove anything here.
+	//
+	// Evaluating .CURDIR at load time is ok since it is defined from
+	// the beginning.
 	t.CheckOutputLines(
 		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
 }

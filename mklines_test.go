@@ -78,7 +78,6 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: X11_LDFLAGS is used but not defined.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
@@ -355,9 +354,6 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 	// The SUV variable is used implicitly by the SUBST framework, therefore no warning.
 	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
 	t.CheckOutputLines(
-		// FIXME: For most lists, using the := operator to exclude an item is ok.
-		"WARN: determine-defined-variables.mk:4: USE_TOOLS should not be evaluated at load time.",
-		"WARN: determine-defined-variables.mk:4: USE_TOOLS may not be used in any file; it is a write-only variable.",
 		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files, maybe except buildlink3.mk.
 		"WARN: determine-defined-variables.mk:12: The variable SUBST_VARS.subst may not be set (only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
 		// FIXME: the below warning is wrong; variables mentioned in SUBST_VARS should be allowed in that block.
