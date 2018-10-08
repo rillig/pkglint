@@ -298,6 +298,9 @@ func (src *Pkgsrc) loadUnknownVars() {
 			// Even if pkglint cannot guess the type of each variable,
 			// at least prevent the "used but not defined" warnings.
 			if src.vartypes[varname] == nil {
+				if trace.Tracing {
+					trace.Stepf("Unknown variable %q in %s", varname, mkline)
+				}
 				src.vartypes[varname] = unknownType
 			}
 		}
