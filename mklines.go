@@ -216,7 +216,10 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 
 		varcanon := mkline.Varcanon()
 		switch varcanon {
-		case "BUILD_DEFS", "PKG_GROUPS_VARS", "PKG_USERS_VARS":
+		case
+			"BUILD_DEFS",
+			"PKG_GROUPS_VARS",
+			"PKG_USERS_VARS":
 			for _, varname := range fields(mkline.Value()) {
 				mklines.buildDefs[varname] = true
 				if trace.Tracing {
@@ -224,7 +227,9 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 				}
 			}
 
-		case "BUILTIN_FIND_FILES_VAR":
+		case
+			"BUILTIN_FIND_FILES_VAR",
+			"BUILTIN_FIND_HEADERS_VAR":
 			for _, varname := range fields(mkline.Value()) {
 				mklines.vars.Define(varname, mkline)
 			}
