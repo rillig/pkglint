@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"path"
 	"strings"
 	"time"
 
@@ -881,18 +882,21 @@ func (s *Suite) Test_CheckfileMk__enoent(c *check.C) {
 func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
-	G.checkExecutable(ExecutableFileInfo{t.File("fname.mk")})
+	fileName := t.File("file.mk")
+	fileInfo := ExecutableFileInfo{path.Base(fileName)}
+
+	G.checkExecutable(fileName, fileInfo)
 
 	t.CheckOutputLines(
-		"WARN: ~/fname.mk: Should not be executable.")
+		"WARN: ~/file.mk: Should not be executable.")
 
 	t.SetupCommandLine("--autofix")
 
-	G.checkExecutable(ExecutableFileInfo{t.File("fname.mk")})
+	G.checkExecutable(fileName, fileInfo)
 
 	// FIXME: The error message "Cannot clear executable bits" is swallowed.
 	t.CheckOutputLines(
-		"AUTOFIX: ~/fname.mk: Clearing executable bits")
+		"AUTOFIX: ~/file.mk: Clearing executable bits")
 }
 
 func (s *Suite) Test_main(c *check.C) {

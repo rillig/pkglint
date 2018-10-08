@@ -546,7 +546,7 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 		return
 	}
 
-	pkglint.checkExecutable(st)
+	pkglint.checkExecutable(fname, st)
 	pkglint.checkMode(fname, st.Mode())
 }
 
@@ -669,9 +669,20 @@ func (pkglint *Pkglint) checkMode(fname string, mode os.FileMode) {
 	}
 }
 
-func (pkglint *Pkglint) checkExecutable(st os.FileInfo) {
-	fname := st.Name()
-	if st.Mode().IsRegular() && st.Mode().Perm()&0111 != 0 && !isCommitted(fname) {
+func (pkglint *Pkglint) checkExecutable(fname string, st os.FileInfo) {
+	switch {
+	case !st.Mode().IsRegular():
+		// Directories and other entries may be executable.
+
+	case st.Mode().Perm()&0111 == 0:
+		// Good.
+
+	case isCommitted(fname):
+		// Too late to be fixed by the package developer, since
+		// CVS remembers the executable bit in the repo file.
+		// At this point, it can only be reset by the CVS admins.
+
+	default:
 		line := NewLine(fname, 0, "", nil)
 		fix := line.Autofix()
 		fix.Warnf("Should not be executable.")

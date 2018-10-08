@@ -199,7 +199,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 
 		if path.Base(fname) == "Makefile" {
 			if st, err := os.Lstat(fname); err == nil {
-				pkglint.checkExecutable(st)
+				pkglint.checkExecutable(fname, st)
 			}
 			if G.opts.CheckMakefile {
 				pkg.checkfilePackageMakefile(fname, lines)
