@@ -182,7 +182,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__append_to_non_list(c *check.C) 
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"WARN: fname:1: The \"+=\" operator should only be used with lists.")
+		"WARN: fname:1: The \"+=\" operator should only be used with lists, not with DISTNAME.")
 }
 
 // Pkglint once interpreted all lists as consisting of shell tokens,
@@ -619,7 +619,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:2: The :from=to modifier should only be used with lists.")
+		"WARN: ~/options.mk:2: The :from=to modifier should only be used with lists, not with WRKDIR.")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {

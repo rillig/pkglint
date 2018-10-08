@@ -359,7 +359,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 
 	if hasPrefix(varuse.Mod(), ":=") && vartype != nil && !vartype.IsConsideredList() {
-		mkline.Warnf("The :from=to modifier should only be used with lists.")
+		mkline.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
 		Explain(
 			"Instead of:",
 			"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
@@ -873,7 +873,7 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 
 	if op == opAssignAppend {
 		if vartype != nil && !vartype.MayBeAppendedTo() {
-			mkline.Warnf("The \"+=\" operator should only be used with lists.")
+			mkline.Warnf("The \"+=\" operator should only be used with lists, not with %s.", varname)
 		}
 	}
 
