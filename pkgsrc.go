@@ -308,7 +308,7 @@ func (src *Pkgsrc) loadUnknownVars() {
 
 			default:
 				if trace.Tracing {
-					trace.Stepf("Unknown variable %q in %s", varcanon, mkline)
+					trace.Stepf("Untyped variable %q in %s", varcanon, mkline)
 				}
 				src.vartypes[varcanon] = unknownType
 			}
