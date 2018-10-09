@@ -395,7 +395,12 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 }
 
 func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
-	if hasPrefix(varuse.Mod(), ":=") && vartype != nil && !vartype.IsConsideredList() {
+	mods := varuse.modifiers
+	if len(mods) == 0 {
+		return
+	}
+
+	if hasPrefix(mods[0], "=") && vartype != nil && !vartype.IsConsideredList() {
 		ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
 		Explain(
 			"Instead of:",
@@ -405,6 +410,23 @@ func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
 			"\tMASTER_SITES=\t${HOMEPAGE}repository/",
 			"",
 			"This is a much clearer expression of the same thought.")
+	}
+
+	if len(mods) == 3 {
+		if m, magic := match1(mods[0], `^[CS]/\^/(\w+)/1$`); m {
+			if mods[1] == "M"+magic+"*" {
+				if matches(mods[2], regex.Pattern(`^[CS]/\^`+magic+`//$`)) {
+					fix := ck.MkLine.Autofix()
+					fix.Notef("The modifier %q can be written as %q.", varuse.Mod(), ":[1]")
+					fix.Explain(
+						"The range modifier is much easier to understand than the",
+						"complicated regular expressions, which were needed before",
+						"the year 2006.")
+					fix.Replace(varuse.Mod(), ":[1]")
+					fix.Apply()
+				}
+			}
+		}
 	}
 }
 
