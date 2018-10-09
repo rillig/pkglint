@@ -362,17 +362,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		mkline.Warnf("%s is used but not defined.", varname)
 	}
 
-	if hasPrefix(varuse.Mod(), ":=") && vartype != nil && !vartype.IsConsideredList() {
-		mkline.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
-		Explain(
-			"Instead of:",
-			"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
-			"",
-			"Write:",
-			"\tMASTER_SITES=\t${HOMEPAGE}repository/",
-			"",
-			"This is a much clearer expression of the same thought.")
-	}
+	ck.checkVaruseMod(varuse, vartype)
 
 	if varuse.varname == "@" {
 		ck.MkLine.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
@@ -401,6 +391,20 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 			"recorded in the binary package, so the package can be reliably",
 			"rebuilt.  The BUILD_DEFS variable contains a list of all these",
 			"user-settable variables, so please add your variable to it, too.")
+	}
+}
+
+func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
+	if hasPrefix(varuse.Mod(), ":=") && vartype != nil && !vartype.IsConsideredList() {
+		ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
+		Explain(
+			"Instead of:",
+			"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
+			"",
+			"Write:",
+			"\tMASTER_SITES=\t${HOMEPAGE}repository/",
+			"",
+			"This is a much clearer expression of the same thought.")
 	}
 }
 
