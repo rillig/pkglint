@@ -118,7 +118,7 @@ func (vt *Vartype) IsConsideredList() bool {
 }
 
 func (vt *Vartype) MayBeAppendedTo() bool {
-	return vt.kindOfList != lkNone || vt.IsConsideredList()
+	return vt.kindOfList != lkNone || vt.IsConsideredList() || vt.basicType == BtComment
 }
 
 func (vt *Vartype) String() string {

@@ -176,13 +176,19 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__skip(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVartype__append_to_non_list(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
-	mkline := t.NewMkLine("fname", 1, "DISTNAME+=suffix")
+	mklines := t.NewMkLines("fname.mk",
+		MkRcsID,
+		"DISTNAME+=\tsuffix",
+		"COMMENT=\tComment for",
+		"COMMENT+=\tthe package")
 
-	MkLineChecker{mkline}.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: fname:1: The \"+=\" operator should only be used with lists, not with DISTNAME.")
+		"WARN: fname.mk:2: The variable DISTNAME may not be appended to (only set, given a default value) in this file.",
+		"WARN: fname.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.")
 }
 
 // Pkglint once interpreted all lists as consisting of shell tokens,

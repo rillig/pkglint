@@ -150,7 +150,7 @@ func (cv *VartypeCheck) CFlag() {
 	}
 }
 
-// The single-line description of the package.
+// Comment checks for the single-line description of the package.
 func (cv *VartypeCheck) Comment() {
 	line, value := cv.Line, cv.Value
 
@@ -177,7 +177,7 @@ func (cv *VartypeCheck) Comment() {
 				"provide additional information instead.")
 		}
 	}
-	if matches(value, `^[a-z]`) {
+	if matches(value, `^[a-z]`) && cv.Op == opAssign {
 		line.Warnf("COMMENT should start with a capital letter.")
 	}
 	if hasSuffix(value, ".") {
