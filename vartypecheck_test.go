@@ -702,9 +702,7 @@ func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
 		"pkgbase-3.1.4.1.5.9.2.6.5.3.5.8.9.7.9")
 
 	vt.Output(
-		"WARN: fname:8: \"pkgbase-z1\" is not a valid package name. " +
-			"A valid package name has the form packagename-version, " +
-			"where version consists only of digits, letters and dots.")
+		"WARN: fname:8: \"pkgbase-z1\" is not a valid package name.")
 }
 
 func (s *Suite) Test_VartypeCheck_PkgOptionsVar(c *check.C) {
