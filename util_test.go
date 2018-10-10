@@ -392,4 +392,12 @@ func (s *Suite) Test_FileCache(c *check.C) {
 	c.Check(cache.mapping, check.HasLen, 1)
 	c.Check(cache.hits, equals, 7)
 	c.Check(cache.misses, equals, 5)
+
+	t.CheckOutputLines(
+		"FileCache \"Makefile\" with count 4.",
+		"FileCache \"file1.mk\" with count 2.",
+		"FileCache \"file2.mk\" with count 2.",
+		"FileCache.Evict \"file2.mk\" with count 2.",
+		"FileCache.Evict \"file1.mk\" with count 2.",
+		"FileCache.Halve \"Makefile\" with count 4.")
 }
