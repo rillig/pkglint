@@ -480,6 +480,7 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 		"NOTE: options.mk:3: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:4: This directive should be indented by 2 spaces.",
 		"WARN: options.mk:4: FILES is used but not defined.",
+		"WARN: options.mk:4: FILES should not be evaluated at load time.",
 		"NOTE: options.mk:5: This directive should be indented by 4 spaces.",
 		"WARN: options.mk:5: GUARD2_MK is used but not defined.",
 		"NOTE: options.mk:6: This directive should be indented by 4 spaces.",

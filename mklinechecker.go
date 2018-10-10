@@ -456,29 +456,31 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	mkline := ck.MkLine
 	perms := vartype.EffectivePermissions(mkline.Basename)
 
-	warnLoadTime := false // Will the variable be used at load time?
-
-	// Might the variable be used indirectly at load time, for example
-	// by assigning it to another variable which then gets evaluated?
-	warnIndirect := false
-
-	switch {
-	case vuc.vartype != nil && vuc.vartype.guessed:
-		// Don't warn about unknown variables.
-
-	case vuc.time == vucTimeParse && !perms.Contains(aclpUseLoadtime):
-		warnLoadTime = true
-
-	case vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) && !perms.Contains(aclpUseLoadtime):
-		warnLoadTime = true
-		warnIndirect = true
+	// Is the variable used at load time although that is not allowed?
+	warnLoadTime := false
+	if !perms.Contains(aclpUseLoadtime) { // May not be used at load time.
+		if vuc.time == vucTimeParse { // Directly used at load time.
+			warnLoadTime = true
+		}
+		if vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) {
+			warnLoadTime = true // Possibly used indirectly at load time.
+		}
 	}
 
 	if warnLoadTime {
 		if tool := G.ToolByVarname(varname, LoadTime); tool != nil {
-			ck.checkVaruseToolLoadTime(varname, tool)
+			if !tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
+				ck.warnVaruseToolLoadTime(varname, tool)
+			}
+
 		} else {
-			ck.warnVaruseLoadTime(varname, warnIndirect)
+			// Might the variable be used indirectly at load time, for example
+			// by assigning it to another variable which then gets evaluated?
+			isIndirect := vuc.time != vucTimeParse && // Otherwise it would be directly.
+				// The context might be used at load time somewhere.
+				vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime)
+
+			ck.warnVaruseLoadTime(varname, isIndirect)
 		}
 	}
 
@@ -502,12 +504,9 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 }
 
-// checkVaruseToolLoadTime checks whether the tool ${varname} may be used at load time.
-func (ck MkLineChecker) checkVaruseToolLoadTime(varname string, tool *Tool) {
-	if tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
-		return
-	}
-
+// warnVaruseToolLoadTime logs a warning that the tool ${varname}
+// may not be used at load time.
+func (ck MkLineChecker) warnVaruseToolLoadTime(varname string, tool *Tool) {
 	if tool.Validity == AfterPrefsMk {
 		ck.MkLine.Warnf("To use the tool ${%s} at load time, bsd.prefs.mk has to be included before.", varname)
 		return
@@ -555,14 +554,12 @@ func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 		return
 	}
 
-	if isIndirect {
-		mkline.Warnf("%s should not be evaluated indirectly at load time.", varname)
-		Explain(
-			"The variable on the left-hand side may be evaluated at load time,",
-			"but the variable on the right-hand side may not.  Because of the",
-			"assignment in this line, the variable might be used indirectly",
-			"at load time, before it is guaranteed to be properly initialized.")
-	}
+	mkline.Warnf("%s should not be evaluated indirectly at load time.", varname)
+	Explain(
+		"The variable on the left-hand side may be evaluated at load time,",
+		"but the variable on the right-hand side may not.  Because of the",
+		"assignment in this line, the variable might be used indirectly",
+		"at load time, before it is guaranteed to be properly initialized.")
 }
 
 // CheckVaruseShellword checks whether a variable use of the form ${VAR}
