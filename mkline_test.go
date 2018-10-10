@@ -464,10 +464,10 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__word_as_part_of_word(c *check.
 	t.CheckOutputEmpty()
 }
 
-// As an argument to ${ECHO}, the :Q modifier should be used, but pkglint
-// currently does not know all shell commands and how they handle their
-// arguments. As an argument to xargs(1), the :Q modifier would be misplaced,
-// therefore no warning is issued in both these cases.
+// As an argument to ${ECHO}, the :Q modifier should be used, but as of
+// October 2018, pkglint does not know all shell commands and how they
+// handle their arguments. As an argument to xargs(1), the :Q modifier
+// would be misplaced, therefore no warning is issued in both these cases.
 //
 // Based on graphics/circos/Makefile.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_as_command_argument(c *check.C) {
