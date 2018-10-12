@@ -45,8 +45,8 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__enumFrom(c *check.C) {
 func (s *Suite) Test_Pkgsrc_InitVartypes__enumFromDirs(c *check.C) {
 	t := s.Init(c)
 
-	// These directories must be different from the default
-	// value for PYPKGPREFIX in vardefs.go.
+	// To make the test useful, these directories must differ from the
+	// PYPKGPREFIX default value in vardefs.go.
 	t.CreateFileLines("lang/python28/Makefile", MkRcsID)
 	t.CreateFileLines("lang/python33/Makefile", MkRcsID)
 
