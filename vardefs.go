@@ -110,6 +110,12 @@ func (src *Pkgsrc) InitVartypes() {
 			return joined
 		}())
 
+	// enumFrom parses all variable definitions for the given file,
+	// and for all variables matching one of the varcanons, all values
+	// are added as allowed values.
+	//
+	// If the file cannot be found, the allowed values are taken from
+	// defval. This is mostly useful when testing pkglint.
 	enumFrom := func(fileName string, defval string, varcanons ...string) *BasicType {
 		mklines := LoadMk(src.File(fileName), NotEmpty)
 		values := make(map[string]bool)
