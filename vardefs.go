@@ -1043,7 +1043,7 @@ func (src *Pkgsrc) InitVartypes() {
 	sysload("PTHREAD_TYPE", lkNone, BtIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", lkNone, BtYes)
 	acl("PYPKGPREFIX", lkNone, enum("py27 py34 py35 py36"), "pyversion.mk: set; *: use-loadtime, use")
-	pkg("PYTHON_FOR_BUILD_ONLY", lkNone, BtYes)
+	pkg("PYTHON_FOR_BUILD_ONLY", lkNone, enum("yes no test tool YES")) // See lang/python/pyversion.mk
 	pkglist("REPLACE_PYTHON", lkShell, BtPathmask)
 	pkglist("PYTHON_VERSIONS_ACCEPTED", lkShell, BtVersion)
 	pkglist("PYTHON_VERSIONS_INCOMPATIBLE", lkShell, BtVersion)
