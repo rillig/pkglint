@@ -236,29 +236,46 @@ func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
 		"WARN: Makefile:2: Definition of SUBST_POSTCMD.class is deprecated. Has been removed, as it seemed unused.")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__no_basedir(c *check.C) {
+func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {
 	t := s.Init(c)
 
-	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	c.Check(latest, equals, "")
+	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
 		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__no_subdirs(c *check.C) {
+func (s *Suite) Test_Pkgsrc_ListVersions__no_subdirs(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("lang/Makefile")
 
-	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	c.Check(latest, equals, "")
+	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
 		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__single(c *check.C) {
+// Ensures that failed lookups are also cached since they can be assumed
+// not to change during a single pkglint run.
+func (s *Suite) Test_Pkgsrc_ListVersions__error_is_cached(c *check.C) {
+	t := s.Init(c)
+
+	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
+
+	c.Check(versions, check.HasLen, 0)
+	t.CheckOutputLines(
+		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+
+	versions2 := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
+
+	c.Check(versions2, check.HasLen, 0)
+	t.CheckOutputEmpty() // No repeated error message
+}
+
+func (s *Suite) Test_Pkgsrc__caching(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("lang/Makefile")
@@ -285,20 +302,28 @@ func (s *Suite) Test_Pkgsrc_Latest__multi(c *check.C) {
 	c.Check(latest, equals, "../../lang/python35")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__numeric(c *check.C) {
+// In 2017, PostgreSQL changed their versioning scheme to SemVer,
+// and since the pkgsrc directory contains the major version,
+// without any separating dots, the case of version 10 being
+// later than 95 needs to be handled specially.
+func (s *Suite) Test_Pkgsrc_ListVersions__postgresql(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("databases/postgresql95/Makefile")
 	t.CreateFileLines("databases/postgresql97/Makefile")
-	t.CreateFileLines("databases/postgresql100/Makefile")
-	t.CreateFileLines("databases/postgresql104/Makefile")
+	t.CreateFileLines("databases/postgresql10/Makefile")
+	t.CreateFileLines("databases/postgresql11/Makefile")
 
-	latest := G.Pkgsrc.Latest("databases", `^postgresql[0-9]+$`, "$0")
+	versions := G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+$`, "$0", true)
 
-	c.Check(latest, equals, "postgresql104")
+	c.Check(versions, check.DeepEquals, []string{
+		"postgresql95",
+		"postgresql97",
+		"postgresql10",
+		"postgresql11"})
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__numeric_multiple_numbers(c *check.C) {
+func (s *Suite) Test_Pkgsrc_ListVersions__numeric_multiple_numbers(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("emulators/suse_131_32_gtk2/Makefile")
@@ -306,12 +331,16 @@ func (s *Suite) Test_Pkgsrc_Latest__numeric_multiple_numbers(c *check.C) {
 	t.CreateFileLines("emulators/suse_131_gtk2/Makefile")
 	t.CreateFileLines("emulators/suse_131_qt5/Makefile")
 
-	latest := G.Pkgsrc.Latest("emulators", `^suse_(\d+).*$`, "$1")
+	versions := G.Pkgsrc.ListVersions("emulators", `^suse_(\d+).*$`, "$1", true)
 
-	c.Check(latest, equals, "131")
+	c.Check(versions, deepEquals, []string{
+		"131",
+		"131",
+		"131",
+		"131"})
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__go(c *check.C) {
+func (s *Suite) Test_Pkgsrc_ListVersions__go(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("lang/go14/Makefile")
@@ -319,7 +348,9 @@ func (s *Suite) Test_Pkgsrc_Latest__go(c *check.C) {
 	t.CreateFileLines("lang/go111/Makefile")
 	t.CreateFileLines("lang/go2/Makefile")
 
-	c.Check(G.Pkgsrc.Latest("lang", `^go[0-9]+$`, "$0"), equals, "go2")
+	versionsUpTo2 := G.Pkgsrc.ListVersions("lang", `^go[0-9]+$`, "$0", true)
+
+	c.Check(versionsUpTo2, deepEquals, []string{"go14", "go19", "go111", "go2"})
 
 	t.CreateFileLines("lang/go37/Makefile")
 
@@ -328,31 +359,16 @@ func (s *Suite) Test_Pkgsrc_Latest__go(c *check.C) {
 		delete(G.Pkgsrc.listVersions, k)
 	}
 
-	c.Check(G.Pkgsrc.Latest("lang", `^go[0-9]+$`, "$0"), equals, "go37")
+	versionsUpTo37 := G.Pkgsrc.ListVersions("lang", `^go[0-9]+$`, "$0", true)
+
+	c.Check(versionsUpTo37, deepEquals, []string{"go14", "go19", "go111", "go2", "go37"})
 }
 
-// In 2017, PostgreSQL changed their versioning scheme to SemVer,
-// and since the pkgsrc directory contains the major version,
-// without any separating dots, the case of version 10 being
-// later than 95 needs to be handled specially.
-func (s *Suite) Test_Pkgsrc_Latest__postgresql(c *check.C) {
-	t := s.Init(c)
-
-	t.CreateFileLines("databases/postgresql95/Makefile")
-	t.CreateFileLines("databases/postgresql97/Makefile")
-	t.CreateFileLines("databases/postgresql10/Makefile")
-	t.CreateFileLines("databases/postgresql11/Makefile")
-
-	latest := G.Pkgsrc.Latest("databases", `^postgresql[0-9]+$`, "$0")
-
-	c.Check(latest, equals, "postgresql11")
-}
-
-func (s *Suite) Test_Pkgsrc_Latest__invalid_argument(c *check.C) {
+func (s *Suite) Test_Pkgsrc_ListVersions__invalid_argument(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectFatal(
-		func() { G.Pkgsrc.Latest("databases", `postgresql[0-9]+`, "$0") },
+		func() { G.Pkgsrc.ListVersions("databases", `postgresql[0-9]+`, "$0", true) },
 		"FATAL: Pkglint internal error: Regular expression \"postgresql[0-9]+\" must be anchored at both ends.")
 }
 
