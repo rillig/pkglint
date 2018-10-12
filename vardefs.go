@@ -1,6 +1,7 @@
 package main
 
 import (
+	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
@@ -150,6 +151,20 @@ func (src *Pkgsrc) InitVartypes() {
 			trace.Stepf("Enum from default value: %s", defval)
 		}
 		return enum(defval)
+	}
+
+	// enumFromDirs reads the directories from category, takes all
+	// that have a single number in them and ranks them from earliest
+	// to latest.
+	//
+	// If the directories cannot be found, the allowed values are taken
+	// from defval. This is mostly useful when testing pkglint.
+	enumFromDirs := func(category string, re regex.Pattern, repl string, defval string) *BasicType {
+		versions := src.ListVersions(category, re, repl, false)
+		if len(versions) == 0 {
+			return enum(defval)
+		}
+		return enum(strings.Join(versions, " "))
 	}
 
 	compilers := enumFrom(
@@ -1048,7 +1063,9 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PTHREAD_OPTS", lkShell, enum("native optional require"), "Makefile: set, append; Makefile.common, buildlink3.mk: append")
 	sysload("PTHREAD_TYPE", lkNone, BtIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", lkNone, BtYes)
-	acl("PYPKGPREFIX", lkNone, enum("py27 py34 py35 py36"), "pyversion.mk: set; *: use-loadtime, use")
+	acl("PYPKGPREFIX", lkNone, enumFromDirs("lang", `^python(\d+)$`, "py$1", "py27 py36"), ""+
+		"pyversion.mk: set; "+
+		"*: use-loadtime, use")
 	pkg("PYTHON_FOR_BUILD_ONLY", lkNone, enum("yes no test tool YES")) // See lang/python/pyversion.mk
 	pkglist("REPLACE_PYTHON", lkShell, BtPathmask)
 	pkglist("PYTHON_VERSIONS_ACCEPTED", lkShell, BtVersion)

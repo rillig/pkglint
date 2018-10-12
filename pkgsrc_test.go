@@ -243,7 +243,7 @@ func (s *Suite) Test_Pkgsrc_Latest__no_basedir(c *check.C) {
 
 	c.Check(latest, equals, "")
 	t.CheckOutputLines(
-		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest__no_subdirs(c *check.C) {
@@ -255,7 +255,7 @@ func (s *Suite) Test_Pkgsrc_Latest__no_subdirs(c *check.C) {
 
 	c.Check(latest, equals, "")
 	t.CheckOutputLines(
-		"ERROR: Cannot find latest version of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest__single(c *check.C) {
@@ -309,6 +309,26 @@ func (s *Suite) Test_Pkgsrc_Latest__numeric_multiple_numbers(c *check.C) {
 	latest := G.Pkgsrc.Latest("emulators", `^suse_(\d+).*$`, "$1")
 
 	c.Check(latest, equals, "131")
+}
+
+func (s *Suite) Test_Pkgsrc_Latest__go(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/go14/Makefile")
+	t.CreateFileLines("lang/go19/Makefile")
+	t.CreateFileLines("lang/go111/Makefile")
+	t.CreateFileLines("lang/go2/Makefile")
+
+	c.Check(G.Pkgsrc.Latest("lang", `^go[0-9]+$`, "$0"), equals, "go2")
+
+	t.CreateFileLines("lang/go37/Makefile")
+
+	// Clear the cache; pkglint doesn't expect file system changes during the scan.
+	for k := range G.Pkgsrc.listVersions {
+		delete(G.Pkgsrc.listVersions, k)
+	}
+
+	c.Check(G.Pkgsrc.Latest("lang", `^go[0-9]+$`, "$0"), equals, "go37")
 }
 
 // In 2017, PostgreSQL changed their versioning scheme to SemVer,

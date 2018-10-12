@@ -30,10 +30,10 @@ type Pkgsrc struct {
 
 	PkgOptions map[string]string // "x11" => "Provides X11 support"
 
-	suggestedUpdates    []SuggestedUpdate  //
-	suggestedWipUpdates []SuggestedUpdate  //
-	LastChange          map[string]*Change //
-	latest              map[string]string  // "lang/php[0-9]*" => "lang/php70"
+	suggestedUpdates    []SuggestedUpdate   //
+	suggestedWipUpdates []SuggestedUpdate   //
+	LastChange          map[string]*Change  //
+	listVersions        map[string][]string // See ListVersions
 
 	UserDefinedVars Scope               // Used for checking BUILD_DEFS
 	Deprecated      map[string]string   //
@@ -54,7 +54,7 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		nil,
 		nil,
 		make(map[string]*Change),
-		make(map[string]string),
+		make(map[string][]string),
 		NewScope(),
 		make(map[string]string),
 		make(map[string]*Vartype),
@@ -152,13 +152,30 @@ func (src *Pkgsrc) LoadInfrastructure() {
 }
 
 // Latest returns the latest package matching the given pattern.
-// It searches the `category` for subdirectories matching the given
-// regular expression, and returns the `repl` string, in which the
-// placeholder is filled with the best result.
+// It searches the category for subdirectories matching the given
+// regular expression, takes the latest of them and replaces its
+// name with repl.
 //
 // Example:
-//  Latest("lang", `^php[0-9]+$`, "../../lang/$0") => "../../lang/php72"
+//  Latest("lang", `^php[0-9]+$`, "../../lang/$0")
+//      => "../../lang/php72"
 func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string {
+	versions := src.ListVersions(category, re, repl, true)
+
+	if len(versions) > 0 {
+		return versions[len(versions)-1]
+	}
+	return ""
+}
+
+// ListVersions searches the category for subdirectories matching the given
+// regular expression, replaces their names with repl and returns a slice
+// of them, properly sorted from early to late.
+//
+// Example:
+//  ListVersions("lang", `^php[0-9]+$`, "php-$0")
+//      => {"php-53", "php-56", "php-73"}
+func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, errorIfEmpty bool) []string {
 	if G.Testing {
 		G.Assertf(
 			hasPrefix(string(re), "^") && hasSuffix(string(re), "$"),
@@ -166,15 +183,17 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 	}
 
 	cacheKey := category + "/" + string(re) + " => " + repl
-	if latest, found := src.latest[cacheKey]; found {
+	if latest, found := src.listVersions[cacheKey]; found {
 		return latest
 	}
 
 	categoryDir := src.File(category)
-	error := func() string {
-		dummyLine.Errorf("Cannot find latest version of %q in %q.", re, categoryDir)
-		src.latest[cacheKey] = ""
-		return ""
+	error := func() []string {
+		if errorIfEmpty {
+			dummyLine.Errorf("Cannot find package versions of %q in %q.", re, categoryDir)
+		}
+		src.listVersions[cacheKey] = nil
+		return nil
 	}
 
 	fileInfos, err := ioutil.ReadDir(categoryDir)
@@ -190,6 +209,11 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 		}
 	}
 
+	// In the pkgsrc directories, the major versions of packages are
+	// written without dots, which leads to ambiguities:
+	//
+	// databases/postgresql: 94 < 95 < 96 < 10 < 11
+	// lang/go: go19 < go110 < go111 < go2
 	keys := make(map[string]int)
 	for _, name := range names {
 		if m, pkgbase, versionStr := match2(name, `^(\D+)(\d+)$`); m {
@@ -197,8 +221,17 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 			if pkgbase == "postgresql" && version < 60 {
 				version = 10 * version
 			}
+			if pkgbase == "go" {
+				major, _ := strconv.Atoi(versionStr[:1])
+				minor, _ := strconv.Atoi(versionStr[1:])
+				version = 100*major + minor
+			}
 			keys[name] = version
 		}
+	}
+
+	if len(names) == 0 {
+		return error()
 	}
 
 	sort.SliceStable(names, func(i, j int) bool {
@@ -208,16 +241,13 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 		return naturalLess(names[i], names[j])
 	})
 
-	latest := ""
-	for _, name := range names {
-		latest = replaceAll(name, re, repl)
-	}
-	if latest == "" {
-		return error()
+	var repls = make([]string, len(names), len(names))
+	for i, name := range names {
+		repls[i] = replaceAll(name, re, repl)
 	}
 
-	src.latest[cacheKey] = latest
-	return latest
+	src.listVersions[cacheKey] = repls
+	return repls
 }
 
 // loadTools loads the tool definitions from `mk/tools/*`.

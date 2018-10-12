@@ -87,6 +87,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 			case "comparing_YesNo_variable_to_string",
 				"GitHub",
 				"enumFrom",
+				"enumFromDirs",
 				"dquotBacktDquot",
 				"and_getSubdirs":
 				// These exceptions are ok.
