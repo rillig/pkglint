@@ -457,17 +457,17 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	perms := vartype.EffectivePermissions(mkline.Basename)
 
 	// Is the variable used at load time although that is not allowed?
-	warnLoadTime := false
+	directly := false
+	indirectly := false
 	if !perms.Contains(aclpUseLoadtime) { // May not be used at load time.
-		if vuc.time == vucTimeParse { // Directly used at load time.
-			warnLoadTime = true
-		}
-		if vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) {
-			warnLoadTime = true // Possibly used indirectly at load time.
+		if vuc.time == vucTimeParse {
+			directly = true
+		} else if vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) {
+			indirectly = true
 		}
 	}
 
-	if warnLoadTime {
+	if directly || indirectly {
 		if tool := G.ToolByVarname(varname, LoadTime); tool != nil {
 			if !tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
 				ck.warnVaruseToolLoadTime(varname, tool)
@@ -486,7 +486,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 
 	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
 		needed := aclpUse
-		if warnLoadTime {
+		if directly || indirectly {
 			needed = aclpUseLoadtime
 		}
 		alternativeFiles := vartype.AllowedFiles(needed)
