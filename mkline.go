@@ -1069,23 +1069,25 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 }
 
 func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
-	repl := G.NewPrefixReplacer(text)
-	if repl.AdvanceStr(".") {
-		if repl.AdvanceHspace() {
-			indentation = repl.Str()
+	lexer := NewLexer(text)
+	if lexer.NextString(".") != "" {
+		indentation = lexer.NextHspace()
+		directive = lexer.NextString("include")
+		if directive == "" {
+			directive = lexer.NextString("sinclude")
 		}
-		if repl.AdvanceStr("include") || repl.AdvanceStr("sinclude") {
-			directive = repl.Str()
-			repl.SkipHspace()
-			if repl.AdvanceByte('"') {
-				if repl.AdvanceBytesFunc(func(c byte) bool { return c != '"' }) {
-					filename = repl.Str()
-					if repl.AdvanceByte('"') {
-						repl.SkipHspace()
-						if repl.EOF() || repl.PeekByte() == '#' {
-							m = true
-							return
-						}
+		if directive != "" {
+			lexer.NextHspace()
+			if lexer.NextByte('"') {
+				// Note: strictly speaking, the full MkVarUse would have to be parsed
+				// here. But since these usually don't contain double quotes, it has
+				// worked fine up to now.
+				filename = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
+				if filename != "" && lexer.NextByte('"') {
+					lexer.NextHspace()
+					if lexer.EOF() || lexer.NextByte('#') {
+						m = true
+						return
 					}
 				}
 			}
