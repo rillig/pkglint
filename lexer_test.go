@@ -11,15 +11,31 @@ func (s *Suite) Test_NewLexer(c *check.C) {
 	c.Check(lexer.EOF(), equals, false)
 }
 
-func (s *Suite) Test_Lexer_Rest(c *check.C) {
-	c.Check(NewLexer("").Rest(), equals, "")
-	c.Check(NewLexer("text").Rest(), equals, "text")
+func (s *Suite) Test_Lexer_Rest__end(c *check.C) {
+	lexer := NewLexer("")
+
+	c.Check(lexer.Rest(), equals, "")
 }
 
-func (s *Suite) Test_Lexer_EOF(c *check.C) {
-	c.Check(NewLexer("").EOF(), equals, true)
-	c.Check(NewLexer("text").EOF(), equals, false)
+func (s *Suite) Test_Lexer_Rest__middle(c *check.C) {
+	lexer := NewLexer("text")
 
+	c.Check(lexer.Rest(), equals, "text")
+}
+
+func (s *Suite) Test_Lexer_EOF__end(c *check.C) {
+	lexer := NewLexer("")
+
+	c.Check(lexer.EOF(), equals, true)
+}
+
+func (s *Suite) Test_Lexer_EOF__middle(c *check.C) {
+	lexer := NewLexer("text")
+
+	c.Check(lexer.EOF(), equals, false)
+}
+
+func (s *Suite) Test_Lexer_EOF__reached(c *check.C) {
 	lexer := NewLexer("text")
 	lexer.NextString("text")
 

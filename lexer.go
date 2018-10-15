@@ -9,8 +9,8 @@ type Lexer struct {
 
 type LexerMark string
 
-func NewLexer(text string) *Lexer {
-	return &Lexer{text}
+func NewLexer(text string) Lexer {
+	return Lexer{text}
 }
 
 // Rest returns the part of the string that has not yet been chopped off.
