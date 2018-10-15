@@ -2,10 +2,15 @@ package main
 
 import "strings"
 
-func CheckfileAlternatives(filename string, plistFiles map[string]bool) {
+func CheckfileAlternatives(filename string) {
 	lines := Load(filename, NotEmpty|LogErrors)
 	if lines == nil {
 		return
+	}
+
+	var plistFiles map[string]bool
+	if G.Pkg != nil {
+		plistFiles = G.Pkg.PlistFiles
 	}
 
 	for _, line := range lines {

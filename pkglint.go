@@ -575,11 +575,7 @@ func (pkglint *Pkglint) checkMode(fname string, mode os.FileMode) {
 
 	case basename == "ALTERNATIVES":
 		if pkglint.opts.CheckAlternatives {
-			var plistFiles map[string]bool
-			if G.Pkg != nil {
-				plistFiles = G.Pkg.PlistFiles
-			}
-			CheckfileAlternatives(fname, plistFiles)
+			CheckfileAlternatives(fname)
 		}
 
 	case basename == "buildlink3.mk":
