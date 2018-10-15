@@ -44,7 +44,17 @@ func (l *Lexer) NextString(prefix string) string {
 // NextHspace chops off the longest prefix consisting solely of horizontal
 // whitespace, which is space (U+0020) and tabs (U+0009).
 func (l *Lexer) NextHspace() string {
-	return l.NextBytesFunc(func(b byte) bool { return b == ' ' || b == '\t' })
+	// The same code as in NextBytesFunc, inlined here for performance reasons.
+	// The Go 1.11 compiler does not inline constant function arguments.
+	i := 0
+	rest := l.rest
+	for len(rest) > i && (rest[i] == ' ' || rest[i] == '\t') {
+		i++
+	}
+	if i != 0 {
+		l.rest = rest[i:]
+	}
+	return rest[:i]
 }
 
 // NextByte chops off a single byte and returns true if the rest starts
