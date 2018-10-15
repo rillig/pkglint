@@ -302,19 +302,18 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		line.Notef("You don't need to use \"-\" before %q.", cmd)
 	}
 
-	repl := G.NewPrefixReplacer(shelltext)
-	repl.SkipHspace()
-	if repl.AdvanceRegexp(`^[-@]+`) {
-		shline.checkHiddenAndSuppress(repl.Group(0), repl.Rest())
+	lexer := NewLexer(shelltext)
+	lexer.NextHspace()
+	hiddenAndSuppress := lexer.NextBytesFunc(func(b byte) bool { return b == '-' || b == '@' })
+	if hiddenAndSuppress != "" {
+		shline.checkHiddenAndSuppress(hiddenAndSuppress, lexer.Rest())
 	}
-	setE := false
-	if repl.AdvanceStr("${RUN}") {
-		setE = true
-	} else {
-		repl.AdvanceStr("${_PKG_SILENT}${_PKG_DEBUG}")
+	setE := lexer.NextString("${RUN}") != ""
+	if !setE {
+		lexer.NextString("${_PKG_SILENT}${_PKG_DEBUG}")
 	}
 
-	shline.CheckShellCommand(repl.Rest(), &setE, RunTime)
+	shline.CheckShellCommand(lexer.Rest(), &setE, RunTime)
 }
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time ToolTime) {
