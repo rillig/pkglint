@@ -161,12 +161,7 @@ func NewByteSet(chars string) *ByteSet {
 
 // Inverse returns a byte set that matches the inverted set of bytes.
 func (bs *ByteSet) Inverse() *ByteSet {
-	return &ByteSet{
-		[4]uint64{
-			^bs.bits[0],
-			^bs.bits[1],
-			^bs.bits[2],
-			^bs.bits[3]}}
+	return &ByteSet{[4]uint64{^bs.bits[0], ^bs.bits[1], ^bs.bits[2], ^bs.bits[3]}}
 }
 
 // Predefined byte classes for parsing ASCII text.
