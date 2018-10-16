@@ -1,7 +1,6 @@
 package licenses
 
 import (
-	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
 )
 
@@ -17,10 +16,10 @@ type Condition struct {
 	Children []*Condition `json:",omitempty"`
 }
 
-func Parse(licenses string, res *regex.Registry) *Condition {
-	lexer := &licenseLexer{repl: textproc.NewPrefixReplacer(licenses, res)}
+func Parse(licenses string) *Condition {
+	lexer := &licenseLexer{lexer: textproc.NewLexer(licenses)}
 	result := liyyNewParser().Parse(lexer)
-	if result == 0 && lexer.repl.EOF() {
+	if result == 0 && lexer.lexer.EOF() {
 		return lexer.result
 	}
 	return nil
@@ -57,34 +56,37 @@ func (cond *Condition) Walk(callback func(*Condition)) {
 //go:generate goyacc -p liyy -o licensesyacc.go -v licensesyacc.log licenses.y
 
 type licenseLexer struct {
-	repl   *textproc.PrefixReplacer
+	lexer  *textproc.Lexer
 	result *Condition
 	error  string
 }
 
 func (lexer *licenseLexer) Lex(llval *liyySymType) int {
-	repl := lexer.repl
-	repl.SkipHspace()
+	repl := lexer.lexer
+	repl.NextHspace()
 	switch {
 	case repl.EOF():
 		return 0
-	case repl.AdvanceStr("("):
+	case repl.NextByte('('):
 		return ltOPEN
-	case repl.AdvanceStr(")"):
+	case repl.NextByte(')'):
 		return ltCLOSE
-	case repl.AdvanceRegexp(`^[\w-.]+`):
-		word := repl.Group(0)
-		switch word {
-		case "AND":
-			return ltAND
-		case "OR":
-			return ltOR
-		default:
-			llval.Node = &Condition{Name: word}
-			return ltNAME
-		}
 	}
-	return -1
+
+	word := repl.NextBytesFunc(func(b byte) bool {
+		return 'a' <= b && b <= 'z' || '0' <= b && b <= '9' || 'A' <= b && b <= 'Z' || b == '-' || b == '.'
+	})
+	switch word {
+	case "AND":
+		return ltAND
+	case "OR":
+		return ltOR
+	case "":
+		return -1
+	default:
+		llval.Node = &Condition{Name: word}
+		return ltNAME
+	}
 }
 
 func (lexer *licenseLexer) Error(s string) {
