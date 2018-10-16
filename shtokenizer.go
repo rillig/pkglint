@@ -82,8 +82,8 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 		return &ShAtom{shtWord, repl.Str(), shqSquot, nil}
 	case repl.AdvanceStr("`"):
 		return &ShAtom{shtWord, repl.Str(), shqBackt, nil}
-	case repl.AdvanceRegexp(`^#.*`):
-		return &ShAtom{shtComment, repl.Group(0), q, nil}
+	case repl.PeekByte() == '#':
+		return &ShAtom{shtComment, repl.AdvanceRest(), q, nil}
 	case repl.AdvanceStr("$$("):
 		return &ShAtom{shtSubshell, repl.Str(), shqSubsh, nil}
 	}
@@ -132,7 +132,7 @@ func (p *ShTokenizer) shAtomBackt() *ShAtom {
 	return p.shAtomInternal(q, false, false)
 }
 
-// In pkgsrc, the $(...) subshell syntax is not used to preserve
+// In pkgsrc, the $(...) subshell syntax is not used, in order to preserve
 // compatibility with /bin/sh from Solaris 7.
 func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	const q = shqSubsh
