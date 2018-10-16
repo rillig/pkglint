@@ -137,6 +137,15 @@ func (l *Lexer) Since(mark LexerMark) string {
 	return string(mark)[0 : len(mark)-len(l.rest)]
 }
 
+// Copy returns a copy of this lexer.
+// It can be used to try one path of parsing and then either discard the
+// result or commit it back by calling Commit.
+func (l *Lexer) Copy() *Lexer { return &Lexer{l.rest} }
+
+// Commit copies the state of the other lexer into this lexer.
+// It always returns true so that it can be used in conditions.
+func (l *Lexer) Commit(other *Lexer) bool { l.rest = other.rest; return true }
+
 // NewByteSet creates a bit mask out of a string like "0-9A-Za-z_".
 // The bit mask can be used with Lexer.NextBytesSet.
 func NewByteSet(chars string) *ByteSet {

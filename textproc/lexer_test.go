@@ -213,6 +213,30 @@ func (s *Suite) Test_Lexer_Since(c *check.C) {
 	c.Check(lexer.Since(mark), equals, "text")
 }
 
+func (s *Suite) Test_Lexer_Copy(c *check.C) {
+	lexer := NewLexer("text")
+	copied := lexer.Copy()
+
+	c.Check(copied.Rest(), equals, lexer.Rest())
+
+	copied.NextString("te")
+
+	c.Check(copied.Rest(), equals, "xt")
+	c.Check(lexer.Rest(), equals, "text") // The original is not yet affected.
+}
+
+func (s *Suite) Test_Lexer_Commit(c *check.C) {
+	lexer := NewLexer("text")
+	copied := lexer.Copy()
+	copied.NextString("te")
+
+	c.Check(lexer.Rest(), equals, "text") // The original is not yet affected.
+
+	lexer.Commit(copied)
+
+	c.Check(lexer.Rest(), equals, "xt")
+}
+
 func (s *Suite) Test_NewByteSet(c *check.C) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 
