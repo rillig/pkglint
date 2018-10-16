@@ -1,9 +1,19 @@
-package main
+package textproc
 
 import (
 	"gopkg.in/check.v1"
+	"testing"
 	"unicode"
 )
+
+type Suite struct{}
+
+var equals = check.Equals
+
+func Test(t *testing.T) {
+	check.Suite(Suite{})
+	check.TestingT(t)
+}
 
 func (s *Suite) Test_NewLexer(c *check.C) {
 	lexer := NewLexer("text")

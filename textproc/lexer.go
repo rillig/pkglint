@@ -1,4 +1,6 @@
-package main
+package textproc
+
+import "strings"
 
 // Lexer provides a flexible way of splitting a string into several parts
 // by repeatedly chopping off a prefix that matches a string, a function
@@ -34,7 +36,7 @@ func (l *Lexer) Reset(mark LexerMark) {
 // NextString tests whether the remaining text has the given prefix,
 // and if so, chops it.
 func (l *Lexer) NextString(prefix string) string {
-	if hasPrefix(l.rest, prefix) {
+	if strings.HasPrefix(l.rest, prefix) {
 		l.rest = l.rest[len(prefix):]
 		return prefix
 	}

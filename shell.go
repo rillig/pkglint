@@ -302,7 +302,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		line.Notef("You don't need to use \"-\" before %q.", cmd)
 	}
 
-	lexer := NewLexer(shelltext)
+	lexer := textproc.NewLexer(shelltext)
 	lexer.NextHspace()
 	hiddenAndSuppress := lexer.NextBytesFunc(func(b byte) bool { return b == '-' || b == '@' })
 	if hiddenAndSuppress != "" {

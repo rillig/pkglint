@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"netbsd.org/pkglint/textproc"
 	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
@@ -1069,7 +1070,7 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 }
 
 func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
-	lexer := NewLexer(text)
+	lexer := textproc.NewLexer(text)
 	if lexer.NextString(".") != "" {
 		indentation = lexer.NextHspace()
 		directive = lexer.NextString("include")
