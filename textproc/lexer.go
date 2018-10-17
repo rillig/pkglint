@@ -155,20 +155,19 @@ func NewByteSet(chars string) *ByteSet {
 	for i < len(chars) {
 		switch {
 		case i+2 < len(chars) && chars[i+1] == '-':
-			minIncl := uint(chars[i])
-			maxIncl := uint(chars[i+2])
+			min := uint(chars[i])
+			max := uint(chars[i+2]) // inclusive
 			for j := uint(0); j < 4; j++ {
-				lminIncl := 64 * j
-				lmaxIncl := lminIncl + 63
-				if lminIncl <= maxIncl && minIncl <= lmaxIncl {
+				minBit := 64 * j
+				if min < minBit+64 && minBit <= max {
 					loMask := ^uint64(0)
-					if minIncl > lminIncl {
-						loMask <<= minIncl - lminIncl
+					if minBit < min {
+						loMask <<= min - minBit
 					}
 
-					var hiMask = ^uint64(0)
-					if maxIncl < lmaxIncl {
-						hiMask >>= 63 - (maxIncl - lminIncl)
+					hiMask := ^uint64(0)
+					if minBit+63 > max {
+						hiMask >>= minBit + 63 - max
 					}
 
 					set.bits[j] |= loMask & hiMask
