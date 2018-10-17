@@ -244,7 +244,7 @@ func (s *Suite) Test_NewByteSet(c *check.C) {
 		0x03ff000000000000, // 9-0
 		0x07fffffe87fffffe, // z-a _ Z-A
 		0x0000000000000000,
-		0x1000000000000000}) // ü
+		0x1000000000000000}) // \xFC
 }
 
 func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
