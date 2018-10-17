@@ -155,8 +155,26 @@ func NewByteSet(chars string) *ByteSet {
 	for i < len(chars) {
 		switch {
 		case i+2 < len(chars) && chars[i+1] == '-':
-			for ch := uint16(chars[i]); ch <= uint16(chars[i+2]); ch++ {
-				set.bits[ch/64] |= 1 << (ch % 64)
+			minIncl := uint(chars[i])
+			maxIncl := uint(chars[i+2])
+			for j := uint(0); j < 4; j++ {
+				lminIncl := 64 * j
+				lmaxIncl := lminIncl + 63
+				if lminIncl <= maxIncl && minIncl <= lmaxIncl {
+					startIncl := lminIncl
+					if minIncl > lminIncl {
+						startIncl = minIncl
+					}
+					endIncl := lmaxIncl
+					if maxIncl < lmaxIncl {
+						endIncl = maxIncl
+					}
+
+					loMask := ^uint64(0) << (startIncl - lminIncl)
+					hiMask := ^uint64(0) >> (63 - (endIncl - lminIncl))
+
+					set.bits[j] |= loMask & hiMask
+				}
 			}
 			i += 3
 		default:
