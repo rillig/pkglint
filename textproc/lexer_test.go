@@ -247,6 +247,17 @@ func (s *Suite) Test_NewByteSet(c *check.C) {
 		0x1000000000000000}) // \xFC
 }
 
+//
+func (s *Suite) Test_NewByteSet__large_range(c *check.C) {
+	set := NewByteSet("\x01-\xFE")
+
+	c.Check(set.bits, equals, [4]uint64{
+		0xfffffffffffffffe,
+		0xffffffffffffffff,
+		0xffffffffffffffff,
+		0x7fffffffffffffff})
+}
+
 func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 	inverse := set.Inverse()
