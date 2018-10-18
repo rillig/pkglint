@@ -173,12 +173,12 @@ func NewSeparatorWriter(out io.Writer) *SeparatorWriter {
 
 func (wr *SeparatorWriter) WriteLine(text string) {
 	wr.Write(text)
-	io.WriteString(wr.out, "\n")
+	_, _ = io.WriteString(wr.out, "\n")
 }
 
 func (wr *SeparatorWriter) Write(text string) {
 	if wr.needSeparator && wr.wroteSomething {
-		io.WriteString(wr.out, "\n")
+		_, _ = io.WriteString(wr.out, "\n")
 		wr.needSeparator = false
 	}
 	n, err := io.WriteString(wr.out, text)
