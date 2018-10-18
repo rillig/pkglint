@@ -61,6 +61,8 @@ type licenseLexer struct {
 	error  string
 }
 
+var licenseNameChars = textproc.NewByteSet("A-Za-z0-9---.")
+
 func (lexer *licenseLexer) Lex(llval *liyySymType) int {
 	repl := lexer.lexer
 	repl.NextHspace()
@@ -73,9 +75,7 @@ func (lexer *licenseLexer) Lex(llval *liyySymType) int {
 		return ltCLOSE
 	}
 
-	word := repl.NextBytesFunc(func(b byte) bool {
-		return 'a' <= b && b <= 'z' || '0' <= b && b <= '9' || 'A' <= b && b <= 'Z' || b == '-' || b == '.'
-	})
+	word := repl.NextBytesSet(licenseNameChars)
 	switch word {
 	case "AND":
 		return ltAND
