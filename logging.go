@@ -23,11 +23,15 @@ var (
 var dummyLine = NewLine("", 0, "", nil)
 var dummyMkLine = NewMkLine(dummyLine)
 
-func shallBeLogged(msg string) bool {
+// shallBeLogged tests whether a diagnostic with the given format should
+// be logged. It only inspects the --only arguments.
+//
+// Duplicates are handled in main.logs.
+func shallBeLogged(format string) bool {
 	if len(G.opts.LogOnly) > 0 {
 		found := false
 		for _, substr := range G.opts.LogOnly {
-			if contains(msg, substr) {
+			if contains(format, substr) {
 				found = true
 				break
 			}
