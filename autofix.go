@@ -32,6 +32,9 @@ type autofixAction struct {
 	lineno      int
 }
 
+// TODO: Document me
+const SilentMagicDiagnostic = "Silent-Magic-Diagnostic"
+
 func NewAutofix(line Line) *Autofix {
 	return &Autofix{
 		line:  line,
@@ -261,7 +264,7 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
-	logDiagnostic := fix.diagFormat != "Silent-Magic-Diagnostic" &&
+	logDiagnostic := fix.diagFormat != SilentMagicDiagnostic &&
 		!(G.opts.Autofix && !G.opts.PrintAutofix) && len(fix.actions) > 0
 	if logDiagnostic {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
@@ -290,7 +293,7 @@ func (fix *Autofix) Apply() {
 }
 
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
-	if G.Testing && format != "Silent-Magic-Diagnostic" {
+	if G.Testing && format != SilentMagicDiagnostic {
 		G.Assertf(
 			hasSuffix(format, "."),
 			"Autofix: format %q must end with a period.",

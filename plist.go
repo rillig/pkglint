@@ -524,7 +524,7 @@ func (s *plistLineSorter) Sort() {
 	}
 
 	fix := firstLine.Autofix()
-	fix.Notef("Silent-Magic-Diagnostic")
+	fix.Notef(SilentMagicDiagnostic)
 	fix.Describef(int(firstLine.firstLine), "Sorting the whole file.")
 	fix.Apply()
 

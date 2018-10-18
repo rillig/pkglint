@@ -199,7 +199,7 @@ func AutofixDistinfo(oldSha1, newSha1 string) {
 	if lines := Load(distinfoFilename, NotEmpty|LogErrors); lines != nil {
 		for _, line := range lines {
 			fix := line.Autofix()
-			fix.Warnf("Silent-Magic-Diagnostic")
+			fix.Warnf(SilentMagicDiagnostic)
 			fix.Replace(oldSha1, newSha1)
 			fix.Apply()
 		}
