@@ -20,9 +20,14 @@ genrunid() {
 
 install() {
   genrunid
-  echo "=> Installing pkglint"
   (cd "$srcdir" && chmod 644 *.go)
-  (cd "$srcdir" && go fmt netbsd.org/pkglint/... && go test -vet=off netbsd.org/pkglint/... && go install && cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe")
+  echo "=> Formatting pkglint"
+  (cd "$srcdir" && go fmt netbsd.org/pkglint/...)
+  echo "=> Testing pkglint"
+  (cd "$srcdir" && go test -vet=off netbsd.org/pkglint/...)
+  echo "=> Installing pkglint"
+  (cd "$srcdir" && go install)
+  cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
 }
 
 install_notest() {
