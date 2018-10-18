@@ -490,22 +490,28 @@ func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 
 	line := t.NewLine("filename", 123, "text")
 
-	c.Assert(func() {
-		fix := line.Autofix()
-		fix.Apply()
-	}, check.Panics, "Each autofix must have a diagnostic.")
+	t.ExpectFatal(
+		func() {
+			fix := line.Autofix()
+			fix.Apply()
+		},
+		"FATAL: Pkglint internal error: Each autofix must have a log level and a diagnostic.")
 
-	c.Assert(func() {
-		fix := line.Autofix()
-		fix.Replace("from", "to")
-		fix.Apply()
-	}, check.Panics, "Autofix: The diagnostic must be given before the action.")
+	t.ExpectFatal(
+		func() {
+			fix := line.Autofix()
+			fix.Replace("from", "to")
+			fix.Apply()
+		},
+		"FATAL: Pkglint internal error: Autofix: The diagnostic must be given before the action.")
 
-	c.Assert(func() {
-		fix := line.Autofix()
-		fix.Warnf("Warning without period")
-		fix.Apply()
-	}, check.Panics, "Autofix: format \"Warning without period\" must end with a period.")
+	t.ExpectFatal(
+		func() {
+			fix := line.Autofix()
+			fix.Warnf("Warning without period")
+			fix.Apply()
+		},
+		"FATAL: Pkglint internal error: Autofix: format \"Warning without period\" must end with a period.")
 }
 
 func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
@@ -514,7 +520,7 @@ func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
 	t.SetupCommandLine("--autofix")
 	lines := t.SetupFileLines("subdir/file.txt",
 		"line 1")
-	os.RemoveAll(t.File("subdir"))
+	_ = os.RemoveAll(t.File("subdir"))
 
 	fix := lines[0].Autofix()
 	fix.Warnf("Should start with an uppercase letter.")

@@ -240,9 +240,12 @@ func (fix *Autofix) Explain(explanation ...string) {
 func (fix *Autofix) Apply() {
 	line := fix.line
 
-	if fix.diagFormat == "" {
-		panic("Each autofix must have a diagnostic.")
-	}
+	// To fix this assertion, call one of Autofix.Errorf, Autofix.Warnf
+	// or Autofix.Notef before calling Apply.
+	G.Assertf(
+		fix.level != nil && fix.diagFormat != "",
+		"Each autofix must have a log level and a diagnostic.")
+
 	G.explainNext = shallBeLogged(fix.diagFormat)
 	if G.explainNext {
 		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" &&
@@ -283,8 +286,11 @@ func (fix *Autofix) Apply() {
 }
 
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
-	if G.Testing && format != "Silent-Magic-Diagnostic" && !hasSuffix(format, ".") {
-		panic(fmt.Sprintf("Autofix: format %q must end with a period.", format))
+	if G.Testing && format != "Silent-Magic-Diagnostic" {
+		G.Assertf(
+			hasSuffix(format, "."),
+			"Autofix: format %q must end with a period.",
+			format)
 	}
 
 	fix.level = level
@@ -294,9 +300,9 @@ func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) 
 
 func (fix *Autofix) skip() bool {
 	// This check is necessary for the --only command line option.
-	if fix.diagFormat == "" {
-		panic("Autofix: The diagnostic must be given before the action.")
-	}
+	G.Assertf(
+		fix.diagFormat != "",
+		"Autofix: The diagnostic must be given before the action.")
 	return !shallBeLogged(fix.diagFormat)
 }
 
