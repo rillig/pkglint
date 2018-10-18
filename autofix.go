@@ -267,16 +267,16 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
-	logDiagnostic := fix.diagFormat != SilentMagicDiagnostic &&
-		!(G.opts.Autofix && !G.opts.ShowAutofix)
-	logRepair := G.opts.Autofix || G.opts.ShowAutofix
+	logDiagnostic := (G.opts.ShowAutofix || !G.opts.Autofix) &&
+		fix.diagFormat != SilentMagicDiagnostic
+	logFix := G.opts.Autofix || G.opts.ShowAutofix
 
 	if logDiagnostic {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 	}
 
-	if logRepair {
+	if logFix {
 		for _, action := range fix.actions {
 			lineno := ""
 			if action.lineno != 0 {
@@ -286,7 +286,7 @@ func (fix *Autofix) Apply() {
 		}
 	}
 
-	if logDiagnostic || logRepair {
+	if logDiagnostic || logFix {
 		line.showSource(G.logOut)
 		if logDiagnostic && len(fix.explanation) != 0 {
 			Explain(fix.explanation...)
