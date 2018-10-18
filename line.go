@@ -130,11 +130,12 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 		return
 	}
 
+	if G.opts.ShowSource {
+		line.showSource(G.logOut)
+	}
 	logs(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
-	if !G.opts.ShowAutofix && G.opts.ShowSource {
-		out := G.logOut
-		line.showSource(out)
-		out.Separate()
+	if G.opts.ShowSource {
+		G.logOut.Separate()
 	}
 }
 

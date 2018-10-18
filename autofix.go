@@ -272,6 +272,9 @@ func (fix *Autofix) Apply() {
 	logFix := G.opts.Autofix || G.opts.ShowAutofix
 
 	if logDiagnostic {
+		if !logFix {
+			line.showSource(G.logOut)
+		}
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 	}
@@ -287,7 +290,9 @@ func (fix *Autofix) Apply() {
 	}
 
 	if logDiagnostic || logFix {
-		line.showSource(G.logOut)
+		if logFix {
+			line.showSource(G.logOut)
+		}
 		if logDiagnostic && len(fix.explanation) != 0 {
 			Explain(fix.explanation...)
 		} else if G.opts.ShowSource {

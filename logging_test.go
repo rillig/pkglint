@@ -5,16 +5,16 @@ import "gopkg.in/check.v1"
 // Since the --source option generates multi-line diagnostics,
 // they are separated by an empty line.
 //
-// The quoted source code is written below the diagnostics.
-// In the --show-autofix and --autofix modes, this order
-// is the most useful since it first states the general rule,
-// then states how to fix this instance and then shows a concrete
-// example. Understanding the general rule is considered most
-// important of these three.
+// Whether the quoted source code is written above or below the
+// diagnostics depends on the --show-autofix and --autofix options.
+// When any of them is given, the general rule is given first, followed
+// by a description of the fix ("replacing A with B"), finally followed
+// by the actual changes to the code.
 //
-// To keep the output layout consistent between all these
-// modes, the source code is written below the diagnostic
-// also in the default (check-only) mode.
+// In default mode, without any autofix options, the usual order is
+// to first show the code and then show the diagnostic. This allows
+// the diagnostics to underline the relevant part of the source code
+// and reminds of the squiggly line used for spellchecking.
 func (s *Suite) Test__show_source_separator(c *check.C) {
 	t := s.Init(c)
 
@@ -37,14 +37,14 @@ func (s *Suite) Test__show_source_separator(c *check.C) {
 	fix.Apply()
 
 	t.CheckOutputLines(
-		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
 		">\tThe second line",
+		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
 		"",
-		"WARN: ~/DESCR:3: Dummy warning.",
 		">\tThe third line",
+		"WARN: ~/DESCR:3: Dummy warning.",
 		"",
-		"WARN: ~/DESCR:3: Using \"third\" is deprecated.",
-		">\tThe third line")
+		">\tThe third line",
+		"WARN: ~/DESCR:3: Using \"third\" is deprecated.")
 }
 
 func (s *Suite) Test__show_source_separator_show_autofix(c *check.C) {
