@@ -130,13 +130,9 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 		return
 	}
 
-	out := G.logOut
-	if level == llError {
-		out = G.logErr
-	}
-
 	logs(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	if !G.opts.PrintAutofix && G.opts.PrintSource {
+		out := G.logOut
 		line.printSource(out)
 		out.Separate()
 	}
