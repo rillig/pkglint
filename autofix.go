@@ -35,6 +35,9 @@ type autofixAction struct {
 // TODO: Document me
 const SilentMagicDiagnostic = "Silent-Magic-Diagnostic"
 
+// TODO: Document me
+const MagicAutofixFormat = "Magic-Autofix-Format"
+
 func NewAutofix(line Line) *Autofix {
 	return &Autofix{
 		line:  line,
@@ -278,7 +281,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			logs(llAutofix, line.Filename, lineno, "Magic-Autofix-Format", action.description)
+			logs(llAutofix, line.Filename, lineno, MagicAutofixFormat, action.description)
 		}
 	}
 
