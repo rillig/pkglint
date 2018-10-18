@@ -12,6 +12,8 @@ type MkParser struct {
 	*Parser
 }
 
+// NewMkParser creates a new parser for the given text.
+// If emitWarnings is false, line may be nil.
 func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
 	return &MkParser{NewParser(line, text, emitWarnings)}
 }
