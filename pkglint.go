@@ -92,16 +92,16 @@ type CmdOpts struct {
 	Explain,
 	Autofix,
 	GccOutput,
-	PrintHelp,
+	ShowHelp,
 	DumpMakefile,
 	Import,
 	LogVerbose,
 	Profiling,
 	Quiet,
 	Recursive,
-	PrintAutofix,
-	PrintSource,
-	PrintVersion bool
+	ShowAutofix,
+	ShowSource,
+	ShowVersion bool
 
 	LogOnly []string
 
@@ -201,7 +201,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	}
 
 	checkToplevelUnusedLicenses()
-	pkglint.PrintSummary()
+	pkglint.ShowSummary()
 	if pkglint.errors != 0 {
 		return 1
 	}
@@ -215,19 +215,19 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
 	opts.AddFlagVar('d', "debug", &trace.Tracing, false, "log verbose call traces for debugging")
 	opts.AddFlagVar('e', "explain", &gopts.Explain, false, "explain the diagnostics or give further help")
-	opts.AddFlagVar('f', "show-autofix", &gopts.PrintAutofix, false, "show what pkglint can fix automatically")
+	opts.AddFlagVar('f', "show-autofix", &gopts.ShowAutofix, false, "show what pkglint can fix automatically")
 	opts.AddFlagVar('F', "autofix", &gopts.Autofix, false, "try to automatically fix some errors (experimental)")
 	opts.AddFlagVar('g', "gcc-output-format", &gopts.GccOutput, false, "mimic the gcc output format")
-	opts.AddFlagVar('h', "help", &gopts.PrintHelp, false, "print a detailed usage message")
+	opts.AddFlagVar('h', "help", &gopts.ShowHelp, false, "show a detailed usage message")
 	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
 	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
 	opts.AddFlagVar('m', "log-verbose", &gopts.LogVerbose, false, "allow the same log message more than once")
 	opts.AddStrList('o', "only", &gopts.LogOnly, "only log messages containing the given text")
 	opts.AddFlagVar('p', "profiling", &gopts.Profiling, false, "profile the executing program")
-	opts.AddFlagVar('q', "quiet", &gopts.Quiet, false, "don't print a summary line when finishing")
+	opts.AddFlagVar('q', "quiet", &gopts.Quiet, false, "don't show a summary line when finishing")
 	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")
-	opts.AddFlagVar('s', "source", &gopts.PrintSource, false, "show the source lines together with diagnostics")
-	opts.AddFlagVar('V', "version", &gopts.PrintVersion, false, "print the version number of pkglint")
+	opts.AddFlagVar('s', "source", &gopts.ShowSource, false, "show the source lines together with diagnostics")
+	opts.AddFlagVar('V', "version", &gopts.ShowVersion, false, "show the version number of pkglint")
 	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
 
 	check.AddFlagVar("ALTERNATIVES", &gopts.CheckAlternatives, true, "check ALTERNATIVES files")
@@ -265,14 +265,14 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	}
 	gopts.args = remainingArgs
 
-	if gopts.PrintHelp {
+	if gopts.ShowHelp {
 		opts.Help(pkglint.logOut.out, "pkglint [options] dir...")
 		exitcode := 0
 		return &exitcode
 	}
 
-	if pkglint.opts.PrintVersion {
-		fmt.Fprintf(pkglint.logOut.out, "%s\n", confVersion)
+	if pkglint.opts.ShowVersion {
+		_, _ = fmt.Fprintf(pkglint.logOut.out, "%s\n", confVersion)
 		exitcode := 0
 		return &exitcode
 	}
@@ -280,7 +280,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	return nil
 }
 
-func (pkglint *Pkglint) PrintSummary() {
+func (pkglint *Pkglint) ShowSummary() {
 	if !pkglint.opts.Quiet && !pkglint.opts.Autofix {
 		if pkglint.errors != 0 || pkglint.warnings != 0 {
 			pkglint.logOut.Printf("%d %s and %d %s found.\n",
@@ -292,7 +292,7 @@ func (pkglint *Pkglint) PrintSummary() {
 		if pkglint.explanationsAvailable && !pkglint.opts.Explain {
 			pkglint.logOut.WriteLine("(Run \"pkglint -e\" to show explanations.)")
 		}
-		if pkglint.autofixAvailable && !pkglint.opts.PrintAutofix {
+		if pkglint.autofixAvailable && !pkglint.opts.ShowAutofix {
 			pkglint.logOut.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
 		}
 		if pkglint.autofixAvailable && !pkglint.opts.Autofix {

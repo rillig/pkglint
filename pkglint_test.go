@@ -70,16 +70,16 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"  -f, --show-autofix          show what pkglint can fix automatically",
 		"  -F, --autofix               try to automatically fix some errors (experimental)",
 		"  -g, --gcc-output-format     mimic the gcc output format",
-		"  -h, --help                  print a detailed usage message",
+		"  -h, --help                  show a detailed usage message",
 		"  -I, --dumpmakefile          dump the Makefile after parsing",
 		"  -i, --import                prepare the import of a wip package",
 		"  -m, --log-verbose           allow the same log message more than once",
 		"  -o, --only                  only log messages containing the given text",
 		"  -p, --profiling             profile the executing program",
-		"  -q, --quiet                 don't print a summary line when finishing",
+		"  -q, --quiet                 don't show a summary line when finishing",
 		"  -r, --recursive             check subdirectories, too",
 		"  -s, --source                show the source lines together with diagnostics",
-		"  -V, --version               print the version number of pkglint",
+		"  -V, --version               show the version number of pkglint",
 		"  -W, --warning=warning,...   enable or disable groups of warnings",
 		"",
 		"  Flags for -C, --check:",
@@ -135,7 +135,7 @@ func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 // initialize only those parts of the infrastructure they really
 // need.
 //
-// Especially covers Pkglint.PrintSummary and Pkglint.Checkfile.
+// Especially covers Pkglint.ShowSummary and Pkglint.Checkfile.
 func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t := s.Init(c)
 

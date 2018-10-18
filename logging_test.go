@@ -136,7 +136,7 @@ func (s *Suite) Test_Line_log__only(c *check.C) {
 		"+\tThe new2 song")
 }
 
-func (s *Suite) Test_Pkglint_PrintSummary__explanations_with_only(c *check.C) {
+func (s *Suite) Test_Pkglint_ShowSummary__explanations_with_only(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--only", "interesting")
@@ -144,7 +144,7 @@ func (s *Suite) Test_Pkglint_PrintSummary__explanations_with_only(c *check.C) {
 
 	line.Warnf("Filtered warning.")               // Is not logged.
 	Explain("Explanation for the above warning.") // Neither would this explanation be logged.
-	G.PrintSummary()
+	G.ShowSummary()
 
 	c.Check(G.explanationsAvailable, equals, false)
 	t.CheckOutputLines(
@@ -152,7 +152,7 @@ func (s *Suite) Test_Pkglint_PrintSummary__explanations_with_only(c *check.C) {
 
 	line.Warnf("What an interesting line.")
 	Explain("This explanation is available.")
-	G.PrintSummary()
+	G.ShowSummary()
 
 	c.Check(G.explanationsAvailable, equals, true)
 	t.CheckOutputLines(

@@ -60,7 +60,7 @@ func (fix *Autofix) Custom(fixer func(printAutofix, autofix bool)) {
 		return
 	}
 
-	fixer(G.opts.PrintAutofix, G.opts.Autofix)
+	fixer(G.opts.ShowAutofix, G.opts.Autofix)
 }
 
 func (fix *Autofix) Replace(from string, to string) {
@@ -78,7 +78,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 	for _, rawLine := range fix.lines {
 		if rawLine.Lineno != 0 {
 			if replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1); replaced != rawLine.textnl {
-				if G.opts.PrintAutofix || G.opts.Autofix {
+				if G.opts.ShowAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
 				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
@@ -112,7 +112,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 			}
 
 			if replaced := replaceAllFunc(rawLine.textnl, from, replace); replaced != rawLine.textnl {
-				if G.opts.PrintAutofix || G.opts.Autofix {
+				if G.opts.ShowAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
 				for _, fromText := range froms {
@@ -169,7 +169,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
 		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
 		if replaced != rawLine.textnl {
-			if G.opts.PrintAutofix || G.opts.Autofix {
+			if G.opts.ShowAutofix || G.opts.Autofix {
 				rawLine.textnl = replaced
 			}
 			fix.Describef(rawLine.Lineno, "Replacing indentation %q with %q.", oldSpace, newSpace)
@@ -263,18 +263,19 @@ func (fix *Autofix) Apply() {
 	}()
 
 	G.explainNext = shallBeLogged(fix.diagFormat)
-	if !G.explainNext {
+	if !G.explainNext || len(fix.actions) == 0 {
 		return
 	}
 
 	logDiagnostic := fix.diagFormat != SilentMagicDiagnostic &&
-		!(G.opts.Autofix && !G.opts.PrintAutofix) && len(fix.actions) > 0
+		!(G.opts.Autofix && !G.opts.ShowAutofix)
+	logRepair := G.opts.Autofix || G.opts.ShowAutofix
+
 	if logDiagnostic {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 	}
 
-	logRepair := len(fix.actions) > 0 && (G.opts.Autofix || G.opts.PrintAutofix)
 	if logRepair {
 		for _, action := range fix.actions {
 			lineno := ""
@@ -286,10 +287,10 @@ func (fix *Autofix) Apply() {
 	}
 
 	if logDiagnostic || logRepair {
-		line.printSource(G.logOut)
+		line.showSource(G.logOut)
 		if logDiagnostic && len(fix.explanation) != 0 {
 			Explain(fix.explanation...)
-		} else if G.opts.PrintSource {
+		} else if G.opts.ShowSource {
 			G.logOut.Separate()
 		}
 	}

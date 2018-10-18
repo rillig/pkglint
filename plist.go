@@ -494,7 +494,7 @@ func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 
 func (s *plistLineSorter) Sort() {
 	if line := s.unsortable; line != nil {
-		if G.opts.PrintAutofix || G.opts.Autofix {
+		if G.opts.ShowAutofix || G.opts.Autofix {
 			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", line)
 		}
 		return
