@@ -368,6 +368,33 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	t.SetupTool("install", "", AtRunTime)
+	mklines := t.NewMkLines("install-docfiles.mk",
+		MkRcsID,
+		"DOCFILES=\ta b c",
+		"do-install:",
+		".for f in ${DOCFILES}",
+		"\tinstall -c ${WRKSRC}/${f} ${DESTDIR}${PREFIX}/${f}",
+		".endfor")
+
+	mklines.Check()
+
+	// No warning for using DOCFILES at compile-time. Since the variable
+	// name is not one of the predefined names from vardefs.go, the
+	// variable's type is guessed based on the name (see
+	// Pkgsrc.VariableType).
+	//
+	// These guessed variables are typically defined and used only in
+	// a single file, and in this context, mistakes are usually found
+	// quickly.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
