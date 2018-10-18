@@ -16,26 +16,31 @@ import (
 //  Test_${Type}_${Method}__${description_using_underscores}
 func (s *Suite) Test__test_names(c *check.C) {
 
-	type Testee struct {
+	type Element struct {
 		Type string
 		Func string
 		File string
 	}
 
-	elementString := func(testee Testee) string {
-		return fmt.Sprintf("%s: %s", testee.File, strings.Join([]string{testee.Type, testee.Func}, "."))
+	elementString := func(e Element) string {
+		sep := ifelseStr(e.Type != "" && e.Func != "", ".", "")
+		return fmt.Sprintf("%s: %s%s%s", e.File, e.Type, sep, e.Func)
 	}
 
-	// addTestee adds a single type or function declaration
-	// to the testees.
-	addTestee := func(testees *[]Testee, decl ast.Decl, fileName string) {
+	isTest := func(e Element) bool {
+		return hasSuffix(e.File, "_test.go") && e.Type != "" && hasPrefix(e.Func, "Test")
+	}
+
+	// addElement adds a single type or function declaration
+	// to the known elements.
+	addElement := func(elements *[]Element, decl ast.Decl, fileName string) {
 		switch decl := decl.(type) {
 
 		case *ast.GenDecl:
 			for _, spec := range decl.Specs {
 				switch spec := spec.(type) {
 				case *ast.TypeSpec:
-					*testees = append(*testees, Testee{spec.Name.Name, "", fileName})
+					*elements = append(*elements, Element{spec.Name.Name, "", fileName})
 				}
 			}
 
@@ -50,30 +55,30 @@ func (s *Suite) Test__test_names(c *check.C) {
 				}
 				typeName = strings.TrimSuffix(typeName, "Impl")
 			}
-			*testees = append(*testees, Testee{typeName, decl.Name.Name, fileName})
+			*elements = append(*elements, Element{typeName, decl.Name.Name, fileName})
 		}
 	}
 
-	// loadAllTestees returns all type, function and method names
+	// loadAllElements returns all type, function and method names
 	// from the current package, in the form FunctionName or
 	// TypeName.MethodName (omitting the * from the type name).
-	loadAllTestees := func() []Testee {
-		fset := token.NewFileSet()
-		pkgs, err := parser.ParseDir(fset, ".", func(fi os.FileInfo) bool { return true }, 0)
+	loadAllElements := func() []Element {
+		fileSet := token.NewFileSet()
+		pkgs, err := parser.ParseDir(fileSet, ".", func(fi os.FileInfo) bool { return true }, 0)
 		if err != nil {
 			panic(err)
 		}
 
-		var testees []Testee
+		var elements []Element
 		for fileName, file := range pkgs["main"].Files {
 			for _, decl := range file.Decls {
-				addTestee(&testees, decl, fileName)
+				addElement(&elements, decl, fileName)
 			}
 		}
 
-		sort.Slice(testees, func(i, j int) bool {
-			ti := testees[i]
-			tj := testees[j]
+		sort.Slice(elements, func(i, j int) bool {
+			ti := elements[i]
+			tj := elements[j]
 			switch {
 			case ti.Type != tj.Type:
 				return ti.Type < tj.Type
@@ -83,7 +88,8 @@ func (s *Suite) Test__test_names(c *check.C) {
 				return ti.File < tj.File
 			}
 		})
-		return testees
+
+		return elements
 	}
 
 	// generateTesteeNames generates a map containing all names for
@@ -92,17 +98,14 @@ func (s *Suite) Test__test_names(c *check.C) {
 	//  Autofix
 	//  Line_Warnf
 	//  match5
-	generateTesteeNames := func(testees []Testee) map[string]bool {
+	generateTesteeNames := func(elements []Element) map[string]bool {
 		prefixes := make(map[string]bool)
-		for _, testee := range testees {
-			var prefix string
-			switch {
-			case testee.Type != "" && testee.Func != "":
-				prefix = testee.Type + "_" + testee.Func
-			default:
-				prefix = testee.Type + testee.Func
+		for _, element := range elements {
+			if !isTest(element) {
+				sep := ifelseStr(element.Type != "" && element.Func != "", "_", "")
+				prefix := element.Type + sep + element.Func
+				prefixes[prefix] = true
 			}
-			prefixes[prefix] = true
 		}
 
 		// Allow some special test name prefixes.
@@ -111,7 +114,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 		return prefixes
 	}
 
-	checkTestName := func(test Testee, testee string, descr string, prefixes map[string]bool) {
+	checkTestName := func(test Element, testee string, descr string, prefixes map[string]bool) {
 		if !prefixes[testee] {
 			c.Errorf("%s: Testee %q not found.\n", elementString(test), testee)
 		}
@@ -131,14 +134,11 @@ func (s *Suite) Test__test_names(c *check.C) {
 		}
 	}
 
-	checkAll := func(testees []Testee, prefixes map[string]bool) {
+	checkAll := func(testees []Element, prefixes map[string]bool) {
 		for _, test := range testees {
-			if test.Type != "" && test.Func != "" {
+			if isTest(test) {
 				method := test.Func
 				switch {
-				case !hasPrefix(method, "Test"):
-					// Ignore
-
 				case hasPrefix(method, "Test__"):
 					// OK
 
@@ -157,7 +157,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 		}
 	}
 
-	testees := loadAllTestees()
+	testees := loadAllElements()
 	prefixes := generateTesteeNames(testees)
 	checkAll(testees, prefixes)
 }
