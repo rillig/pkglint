@@ -246,43 +246,47 @@ func (fix *Autofix) Apply() {
 		fix.level != nil && fix.diagFormat != "",
 		"Each autofix must have a log level and a diagnostic.")
 
+	defer func() {
+		fix.modified = fix.modified || len(fix.actions) > 0
+
+		fix.actions = nil
+		fix.level = nil
+		fix.diagFormat = ""
+		fix.diagArgs = nil
+		fix.explanation = nil
+	}()
+
 	G.explainNext = shallBeLogged(fix.diagFormat)
-	if G.explainNext {
-		logDiagnostic := fix.level != nil && fix.diagFormat != "Silent-Magic-Diagnostic" &&
-			!(G.opts.Autofix && !G.opts.PrintAutofix) && len(fix.actions) > 0
-		if logDiagnostic {
-			msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
-			logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
-		}
+	if !G.explainNext {
+		return
+	}
 
-		logRepair := len(fix.actions) > 0 && (G.opts.Autofix || G.opts.PrintAutofix)
-		if logRepair {
-			for _, action := range fix.actions {
-				lineno := ""
-				if action.lineno != 0 {
-					lineno = strconv.Itoa(action.lineno)
-				}
-				logs(llAutofix, line.Filename, lineno, "Magic-Autofix-Format", action.description)
-			}
-		}
+	logDiagnostic := fix.diagFormat != "Silent-Magic-Diagnostic" &&
+		!(G.opts.Autofix && !G.opts.PrintAutofix) && len(fix.actions) > 0
+	if logDiagnostic {
+		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
+		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
+	}
 
-		if logDiagnostic || logRepair {
-			line.printSource(G.logOut)
-			if logDiagnostic && len(fix.explanation) != 0 {
-				Explain(fix.explanation...)
-			} else if G.opts.PrintSource {
-				G.logOut.Separate()
+	logRepair := len(fix.actions) > 0 && (G.opts.Autofix || G.opts.PrintAutofix)
+	if logRepair {
+		for _, action := range fix.actions {
+			lineno := ""
+			if action.lineno != 0 {
+				lineno = strconv.Itoa(action.lineno)
 			}
+			logs(llAutofix, line.Filename, lineno, "Magic-Autofix-Format", action.description)
 		}
 	}
 
-	fix.modified = fix.modified || len(fix.actions) > 0
-
-	fix.actions = nil
-	fix.level = nil
-	fix.diagFormat = ""
-	fix.diagArgs = nil
-	fix.explanation = nil
+	if logDiagnostic || logRepair {
+		line.printSource(G.logOut)
+		if logDiagnostic && len(fix.explanation) != 0 {
+			Explain(fix.explanation...)
+		} else if G.opts.PrintSource {
+			G.logOut.Separate()
+		}
+	}
 }
 
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
