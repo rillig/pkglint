@@ -4,7 +4,7 @@ import "strings"
 
 // Lexer provides a flexible way of splitting a string into several parts
 // by repeatedly chopping off a prefix that matches a string, a function
-// or a regular expression.
+// or a set of byte values.
 type Lexer struct {
 	rest string
 }
@@ -15,7 +15,10 @@ type Lexer struct {
 type LexerMark string
 
 // ByteSet is a subset of all 256 possible byte values.
-// It is used for matching character classes efficiently.
+// It is used for matching byte strings efficiently.
+//
+// It cannot match Unicode code points individually and is therefore
+// usually used with ASCII characters.
 type ByteSet struct {
 	bits [4]uint64
 }
@@ -30,7 +33,7 @@ func (l *Lexer) Rest() string { return l.rest }
 // EOF returns whether the whole input has been consumed.
 func (l *Lexer) EOF() bool { return l.rest == "" }
 
-// PeekByte returns the next byte, or -1 at the end.
+// PeekByte returns the next byte without chopping it off, or -1 at the end.
 func (l *Lexer) PeekByte() int {
 	if l.rest != "" {
 		return int(l.rest[0])
@@ -43,8 +46,8 @@ func (l *Lexer) Skip(n int) {
 	l.rest = l.rest[n:]
 }
 
-// NextString tests whether the remaining text has the given prefix,
-// and if so, chops it.
+// NextString tests whether the remaining string has the given prefix,
+// and if so, chops and returns it. Otherwise, returns the empty string.
 func (l *Lexer) NextString(prefix string) string {
 	if strings.HasPrefix(l.rest, prefix) {
 		l.rest = l.rest[len(prefix):]
@@ -53,11 +56,12 @@ func (l *Lexer) NextString(prefix string) string {
 	return ""
 }
 
-// NextHspace chops off the longest prefix consisting solely of horizontal
-// whitespace, which is space (U+0020) and tabs (U+0009).
+// NextHspace chops off the longest prefix (possibly empty) consisting
+// solely of horizontal whitespace, which is the ASCII space (U+0020)
+// and tab (U+0009).
 func (l *Lexer) NextHspace() string {
 	// The same code as in NextBytesFunc, inlined here for performance reasons.
-	// The Go 1.11 compiler does not inline constant function arguments.
+	// As of Go 1.11, the compiler does not inline constant function arguments.
 	i := 0
 	rest := l.rest
 	for i < len(rest) && (rest[i] == ' ' || rest[i] == '\t') {
@@ -69,8 +73,8 @@ func (l *Lexer) NextHspace() string {
 	return rest[:i]
 }
 
-// NextByte chops off a single byte and returns true if the rest starts
-// with the given byte.
+// NextByte returns true if the remaining string starts with the given byte,
+// and in that case, chops it off.
 //
 // The return type differs from the other methods since creating a string
 // would be too much work for such a simple operation.
@@ -82,8 +86,8 @@ func (l *Lexer) NextByte(b byte) bool {
 	return false
 }
 
-// NextBytesFunc chops off the longest prefix consisting solely of bytes
-// for which fn returns true.
+// NextBytesFunc chops off the longest prefix (possibly empty) consisting
+// solely of bytes for which fn returns true.
 func (l *Lexer) NextBytesFunc(fn func(b byte) bool) string {
 	i := 0
 	rest := l.rest
@@ -96,19 +100,22 @@ func (l *Lexer) NextBytesFunc(fn func(b byte) bool) string {
 	return rest[:i]
 }
 
-// NextByteSet chops off and returns the first byte if the set contains it, otherwise -1.
-func (l *Lexer) NextByteSet(bytes *ByteSet) int {
+// NextByteSet chops off and returns the first byte if the set contains it,
+// otherwise -1.
+func (l *Lexer) NextByteSet(set *ByteSet) int {
 	rest := l.rest
-	if 0 < len(rest) && bytes.bits[rest[0]/64]&(1<<(rest[0]%64)) != 0 {
+	if 0 < len(rest) && set.bits[rest[0]/64]&(1<<(rest[0]%64)) != 0 {
 		l.rest = rest[1:]
 		return int(rest[0])
 	}
 	return -1
 }
 
-// NextBytesSet chops off the longest prefix consisting solely of bytes
-// from the given set.
+// NextBytesSet chops off the longest prefix (possibly empty) consisting
+// solely of bytes from the given set.
 func (l *Lexer) NextBytesSet(bytes *ByteSet) string {
+	// The same code as in NextBytesFunc, inlined here for performance reasons.
+	// As of Go 1.11, the compiler does not inline variable function arguments.
 	i := 0
 	rest := l.rest
 	for i < len(rest) && bytes.bits[rest[i]/64]&(1<<(rest[i]%64)) != 0 {
@@ -188,7 +195,7 @@ func (bs *ByteSet) Inverse() *ByteSet {
 	return &ByteSet{[4]uint64{^bs.bits[0], ^bs.bits[1], ^bs.bits[2], ^bs.bits[3]}}
 }
 
-// Predefined byte classes for parsing ASCII text.
+// Predefined byte sets for parsing ASCII text.
 var (
 	Alnum  = NewByteSet("A-Za-z0-9")  // Alphanumerical, without underscore
 	AlnumU = NewByteSet("A-Za-z0-9_") // Alphanumerical, including underscore
