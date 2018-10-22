@@ -2,6 +2,7 @@ package main
 
 import (
 	"netbsd.org/pkglint/textproc"
+	"netbsd.org/pkglint/trace"
 	"unicode"
 )
 
@@ -65,14 +66,41 @@ func (m MkVarUseModifier) MatchSubst() (ok bool, regex bool, from string, to str
 				}
 				to = l.Since(toStart)
 				if l.NextByte(byte(separator)) {
-					options = l.Rest()
-					ok = true
+					options = l.NextBytesFunc(func(b byte) bool {
+						return b == '1' || b == 'g' || b == 'W'
+					})
+					ok = l.EOF()
 					return
 				}
 			}
 		}
 	}
 	return
+}
+
+// Subst evaluates an S/from/to/ modifier.
+//
+// Example:
+//  MkVarUseModifier{"S,name,file,g"}.Subst("distname-1.0") => "distfile-1.0"
+func (m MkVarUseModifier) Subst(str string) string {
+	// XXX: The call to MatchSubst is usually redundant because MatchSubst
+	// is typically called directly before calling Subst.
+	ok, regex, from, to, options := m.MatchSubst()
+	G.Assertf(ok && !regex, "Subst must only be called after MatchSubst.")
+	leftAnchor := hasPrefix(from, "^")
+	if leftAnchor {
+		from = from[1:]
+	}
+	rightAnchor := hasSuffix(from, "$")
+	if rightAnchor {
+		from = from[:len(from)-1]
+	}
+
+	result := mkopSubst(str, leftAnchor, from, rightAnchor, to, options)
+	if trace.Tracing && result != str {
+		trace.Stepf("Subst: %q %q => %q", str, m.Text, result)
+	}
+	return result
 }
 
 func (m MkVarUseModifier) MatchMatch() (ok bool, positive bool, pattern string) {

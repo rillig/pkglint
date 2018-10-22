@@ -3,11 +3,9 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/pkgver"
-	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/trace"
 	"os"
 	"path"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -532,20 +530,6 @@ func (pkg *Package) determineEffectivePkgVars() {
 func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 	tokens := NewMkParser(dummyLine, pkgname, false).MkTokens()
 
-	// Example:
-	//  subst("distname-1.0", "S,name,file,g") => "distfile-1.0"
-	// TODO: Move to MkVarUseModifier
-	subst := func(str string, smod MkVarUseModifier) string {
-		qsep := regexp.QuoteMeta(smod.Text[1:2])
-		m, left, from, right, to, flags := match5(smod.Text, regex.Pattern(`^S`+qsep+`(\^?)([^:]*?)(\$?)`+qsep+`([^:]*)`+qsep+`([1g]*)$`))
-		G.Assertf(m, "pkgnameFromDistname %q", smod)
-		result := mkopSubst(str, left != "", from, right != "", to, flags)
-		if trace.Tracing && result != str {
-			trace.Stepf("pkgnameFromDistname.subst: %q %q => %q", str, smod, result)
-		}
-		return result
-	}
-
 	result := ""
 	for _, token := range tokens {
 		if token.Varuse != nil && token.Varuse.varname == "DISTNAME" {
@@ -554,7 +538,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 				if mod.IsToLower() {
 					newDistname = strings.ToLower(newDistname)
 				} else if m, regex, _, _, _ := mod.MatchSubst(); m && !regex {
-					newDistname = subst(newDistname, mod)
+					newDistname = mod.Subst(newDistname)
 				} else {
 					newDistname = token.Text
 					break
