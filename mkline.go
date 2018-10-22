@@ -605,7 +605,7 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 		}
 		searchIn(varname)
 		for _, mod := range varuse.modifiers {
-			searchIn(mod)
+			searchIn(mod.Text)
 		}
 	}
 

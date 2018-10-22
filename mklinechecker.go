@@ -400,7 +400,7 @@ func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
 		return
 	}
 
-	if hasPrefix(mods[0], "=") && vartype != nil && !vartype.IsConsideredList() {
+	if mods[0].IsSuffixSubst() && vartype != nil && !vartype.IsConsideredList() {
 		ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
 		Explain(
 			"Instead of:",
@@ -413,9 +413,10 @@ func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
 	}
 
 	if len(mods) == 3 {
-		if m, magic := match1(mods[0], `^[CS]/\^/(\w+)/1$`); m {
-			if mods[1] == "M"+magic+"*" {
-				if matches(mods[2], regex.Pattern(`^[CS]/\^`+magic+`//$`)) {
+		if m, _, from, to, options := mods[0].MatchSubst(); m && from == "^" && matches(to, `^\w+$`) && options == "1" {
+			magic := to
+			if m, positive, pattern := mods[1].MatchMatch(); m && positive && pattern == magic+"*" {
+				if m, _, from, to, options = mods[2].MatchSubst(); m && from == "^"+magic && to == "" && options == "" {
 					fix := ck.MkLine.Autofix()
 					fix.Notef("The modifier %q can be written as %q.", varuse.Mod(), ":[1]")
 					fix.Explain(
@@ -1028,12 +1029,11 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 		modifiers := varuse.modifiers
 		for _, modifier := range modifiers {
-			if modifier[0] == 'M' || (modifier[0] == 'N' && len(modifiers) == 1) {
-				ck.CheckVartype(varname, opUseMatch, modifier[1:], "")
+			if m, positive, pattern := modifier.MatchMatch(); m && (positive || len(modifiers) == 1) {
+				ck.CheckVartype(varname, opUseMatch, pattern, "")
 
-				value := modifier[1:]
 				vartype := G.Pkgsrc.VariableType(varname)
-				if matches(value, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
+				if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
 					mkline.Notef("%s should be compared using == instead of the :M or :N modifier without wildcards.", varname)
 					Explain(
 						"This variable has a single value, not a list of values.  Therefore",
@@ -1053,8 +1053,10 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		varmods := varuse.modifiers
 		if len(varmods) == 0 {
 			ck.checkCompareVarStr(varname, op, value)
-		} else if len(varmods) == 1 && matches(varmods[0], `^[MN]`) && value != "" {
-			ck.CheckVartype(varname, opUseMatch, value, "")
+		} else if len(varmods) == 1 {
+			if m, _, _ := varmods[0].MatchMatch(); m && value != "" {
+				ck.CheckVartype(varname, opUseMatch, value, "")
+			}
 		}
 	}
 

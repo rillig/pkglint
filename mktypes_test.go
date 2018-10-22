@@ -5,11 +5,15 @@ import (
 )
 
 func NewMkVarUse(varname string, modifiers ...string) *MkVarUse {
-	return &MkVarUse{varname, modifiers}
+	var mods []MkVarUseModifier
+	for _, modifier := range modifiers {
+		mods = append(mods, MkVarUseModifier{modifier})
+	}
+	return &MkVarUse{varname, mods}
 }
 
 func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
-	varuse := &MkVarUse{"varname", []string{"Q"}}
+	varuse := NewMkVarUse("varname", "Q")
 
 	c.Check(varuse.Mod(), equals, ":Q")
 }

@@ -107,10 +107,11 @@ func (p *MkParser) VarUse() *MkVarUse {
 	return nil
 }
 
-func (p *MkParser) VarUseModifiers(varname, closing string) []string {
+func (p *MkParser) VarUseModifiers(varname, closing string) []MkVarUseModifier {
 	repl := p.repl
 
-	var modifiers []string
+	var modifiers []MkVarUseModifier
+	appendModifier := func(s string) { modifiers = append(modifiers, MkVarUseModifier{s}) }
 	mayOmitColon := false
 loop:
 	for repl.AdvanceStr(":") || mayOmitColon {
@@ -120,7 +121,7 @@ loop:
 		switch repl.PeekByte() {
 		case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
 			if repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`) {
-				modifiers = append(modifiers, repl.Since(modifierMark))
+				appendModifier(repl.Since(modifierMark))
 				continue
 			}
 			if repl.AdvanceStr("ts") {
@@ -132,7 +133,7 @@ loop:
 				} else {
 					break loop
 				}
-				modifiers = append(modifiers, repl.Since(modifierMark))
+				appendModifier(repl.Since(modifierMark))
 				continue
 			}
 
@@ -141,7 +142,7 @@ loop:
 				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:\\`+closing+`]|\$\$|\\.)+`)) {
 				}
 				arg := repl.Since(modifierMark)
-				modifiers = append(modifiers, strings.Replace(arg, "\\:", ":", -1))
+				appendModifier(strings.Replace(arg, "\\:", ":", -1))
 				continue
 			}
 
@@ -158,7 +159,7 @@ loop:
 					}
 					if repl.AdvanceStr(separator) {
 						repl.AdvanceRegexp(`^[1gW]`)
-						modifiers = append(modifiers, repl.Since(modifierMark))
+						appendModifier(repl.Since(modifierMark))
 						mayOmitColon = true
 						continue
 					}
@@ -173,13 +174,13 @@ loop:
 				if !repl.AdvanceStr("@") && p.EmitWarnings {
 					p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
 				}
-				modifiers = append(modifiers, repl.Since(modifierMark))
+				appendModifier(repl.Since(modifierMark))
 				continue
 			}
 
 		case '[':
 			if repl.AdvanceRegexp(`^\[(?:[-.\d]+|#)\]`) {
-				modifiers = append(modifiers, repl.Since(modifierMark))
+				appendModifier(repl.Since(modifierMark))
 				continue
 			}
 
@@ -191,7 +192,7 @@ loop:
 			if repl.AdvanceStr(":") {
 				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 				}
-				modifiers = append(modifiers, repl.Since(modifierMark))
+				appendModifier(repl.Since(modifierMark))
 				continue
 			}
 		}
@@ -201,7 +202,7 @@ loop:
 		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^:$`+closing+`]|\$\$)+`)) {
 		}
 		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
-			modifiers = append(modifiers, suffixSubst)
+			appendModifier(suffixSubst)
 			continue
 		}
 	}
