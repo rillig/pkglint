@@ -47,24 +47,25 @@ func (m MkVarUseModifier) MatchSubst() (ok bool, regex bool, from string, to str
 		separator := l.PeekByte()
 		l.Skip(1)
 		if unicode.IsPunct(rune(separator)) || separator == '|' {
-			fromStart := l.Mark()
 			noSeparator := func(b byte) bool { return int(b) != separator && b != '\\' }
-			for l.NextBytesFunc(noSeparator) != "" {
-				if l.PeekByte() == '\\' && len(l.Rest()) >= 2 {
-					// TODO: Compare with devel/bmake for the exact behavior
-					l.Skip(2)
-				}
-			}
-			from = l.Since(fromStart)
-			if from != "" && l.NextByte(byte(separator)) {
-				toStart := l.Mark()
-				for l.NextBytesFunc(noSeparator) != "" {
-					if l.PeekByte() == '\\' && len(l.Rest()) >= 2 {
+			nextToken := func() string {
+				start := l.Mark()
+				for {
+					switch {
+					case l.NextBytesFunc(noSeparator) != "":
+						continue
+					case l.PeekByte() == '\\' && len(l.Rest()) >= 2:
 						// TODO: Compare with devel/bmake for the exact behavior
 						l.Skip(2)
+					default:
+						return l.Since(start)
 					}
 				}
-				to = l.Since(toStart)
+			}
+
+			from = nextToken()
+			if from != "" && l.NextByte(byte(separator)) {
+				to = nextToken()
 				if l.NextByte(byte(separator)) {
 					options = l.NextBytesFunc(func(b byte) bool {
 						return b == '1' || b == 'g' || b == 'W'
