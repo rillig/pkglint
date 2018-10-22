@@ -356,8 +356,6 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 	t.CheckOutputLines(
 		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files, maybe except buildlink3.mk.
 		"WARN: determine-defined-variables.mk:12: The variable SUBST_VARS.subst may not be set (only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
-		// FIXME: the below warning is wrong; variables mentioned in SUBST_VARS should be allowed in that block.
-		"WARN: determine-defined-variables.mk:13: Foreign variable \"SUV\" in SUBST block.",
 		"WARN: determine-defined-variables.mk:16: Unknown shell command \"unknown-command\".")
 }
 

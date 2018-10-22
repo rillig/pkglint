@@ -11,6 +11,7 @@ type SubstContext struct {
 	curr          *SubstContextStats
 	inAllBranches SubstContextStats
 	filterCmd     string
+	vars          map[string]bool
 }
 
 func NewSubstContext() *SubstContext {
@@ -70,15 +71,23 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 		return
 	}
 
+	foreign := true
 	switch varcanon {
-	case "SUBST_STAGE.*":
-	case "SUBST_MESSAGE.*":
-	case "SUBST_FILES.*":
-	case "SUBST_SED.*":
-	case "SUBST_VARS.*":
-	case "SUBST_FILTER_CMD.*":
+	case
+		"SUBST_STAGE.*",
+		"SUBST_MESSAGE.*",
+		"SUBST_FILES.*",
+		"SUBST_SED.*",
+		"SUBST_VARS.*",
+		"SUBST_FILTER_CMD.*":
+		foreign = false
+	}
 
-	default:
+	if foreign && ctx.vars[varname] {
+		foreign = false
+	}
+
+	if foreign {
 		if ctx.id != "" {
 			mkline.Warnf("Foreign variable %q in SUBST block.", varname)
 		}
@@ -90,7 +99,7 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 		ctx.id = varparam
 	}
 
-	if varparam != ctx.id {
+	if hasPrefix(varname, "SUBST_") && varparam != ctx.id {
 		if ctx.IsComplete() {
 			// XXX: This code sometimes produces weird warnings. See
 			// meta-pkgs/xorg/Makefile.common 1.41 for an example.
@@ -143,6 +152,12 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 	case "SUBST_VARS.*":
 		ctx.dupBool(mkline, &ctx.curr.seenVars, varname, op, value)
 		ctx.curr.seenTransform = true
+		for _, substVar := range mkline.ValueSplit(value, "") {
+			if ctx.vars == nil {
+				ctx.vars = make(map[string]bool)
+			}
+			ctx.vars[substVar] = true
+		}
 	case "SUBST_FILTER_CMD.*":
 		ctx.dupString(mkline, &ctx.filterCmd, varname, value)
 		ctx.curr.seenTransform = true

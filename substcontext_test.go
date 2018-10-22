@@ -315,16 +315,14 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 		"SUBST_CLASSES+=         os",
 		"SUBST_STAGE.os=         pre-configure",
 		"SUBST_FILES.os=         guess-os.h",
-		"SUBST_VARS.os=          TODAY1 TODAY2",
-		"TODAY1!=                date", // FIXME
+		"SUBST_VARS.os=          TODAY1",
+		"TODAY1!=                date",
 		"TODAY2!=                date")
 
 	mklines.Check()
 
-	// No warning, since there is nothing to fix automatically.
-	// This case also doesn't occur in practice.
 	t.CheckOutputLines(
-		"WARN: os.mk:7: Foreign variable \"TODAY1\" in SUBST block.",
+		"WARN: os.mk:8: TODAY2 is defined but not used.",
 		"WARN: os.mk:8: Foreign variable \"TODAY2\" in SUBST block.")
 }
 
