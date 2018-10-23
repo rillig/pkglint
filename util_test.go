@@ -401,3 +401,7 @@ func (s *Suite) Test_FileCache(c *check.C) {
 		"FileCache.Evict \"file1.mk\" with count 2.",
 		"FileCache.Halve \"Makefile\" with count 4.")
 }
+
+func (s *Suite) Test_makeHelp(c *check.C) {
+	c.Check(makeHelp("subst"), equals, confMake+" help topic=subst")
+}

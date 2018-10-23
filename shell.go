@@ -282,7 +282,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 			"to understand, since all the complexity of using sed and mv is",
 			"hidden behind the scenes.",
 			"",
-			"Run \""+confMake+" help topic=subst\" for more information.")
+			sprintf("Run %q for more information.", makeHelp("subst")))
 		if contains(shelltext, "#") {
 			Explain(
 				"When migrating to the SUBST framework, pay attention to \"#\"",

@@ -446,8 +446,8 @@ func (cv *VartypeCheck) FetchURL() {
 			subdir := cv.Value[len(siteURL):]
 			if hasPrefix(cv.Value, "https://github.com/") {
 				subdir = strings.SplitAfter(subdir, "/")[0]
-				cv.Warnf("Please use ${%s:=%s} instead of %q and run \"%s help topic=github\" for further tips.",
-					siteName, subdir, cv.Value, confMake)
+				cv.Warnf("Please use ${%s:=%s} instead of %q and run %q for further tips.",
+					siteName, subdir, cv.Value, makeHelp("github"))
 			} else {
 				cv.Warnf("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.Value)
 			}

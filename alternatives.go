@@ -41,7 +41,7 @@ func CheckfileAlternatives(fileName string) {
 		} else {
 			line.Errorf("Invalid ALTERNATIVES line %q.", line.Text)
 			Explain(
-				"Run \"" + confMake + " help topic=alternatives\" for more information.")
+				sprintf("Run %q for more information.", makeHelp("alternatives")))
 		}
 	}
 }

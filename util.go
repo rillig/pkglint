@@ -37,6 +37,9 @@ func hasPrefix(s, prefix string) bool {
 func hasSuffix(s, suffix string) bool {
 	return strings.HasSuffix(s, suffix)
 }
+func sprintf(format string, args ...interface{}) string {
+	return fmt.Sprintf(format, args...)
+}
 func fields(s string) []string {
 	return strings.Fields(s)
 }
@@ -839,3 +842,5 @@ func (c *FileCache) Evict(fileName string) {
 func (c *FileCache) key(fileName string) string {
 	return path.Clean(fileName)
 }
+
+func makeHelp(topic string) string { return sprintf("%s help topic=%s", confMake, topic) }
