@@ -631,7 +631,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 	for _, arg := range scc.strcmd.Args {
 		if !contains(arg, "$$") && !matches(arg, `\$\{[_.]*[a-z]`) {
 			if m, dirname := match1(arg, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
-				if G.Pkg != nil && G.Pkg.PlistDirs[dirname] {
+				if G.Pkg != nil && G.Pkg.Plist.Dirs[dirname] {
 					scc.shline.mkline.Notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of %q.", dirname, cmdname)
 					Explain(
 						"Many packages include a list of all needed directories in their",

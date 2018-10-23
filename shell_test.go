@@ -266,7 +266,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 		"WARN: fname:1: Using a leading \"-\" to suppress errors is deprecated.")
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Pkg.PlistDirs["share/pkgbase"] = true
+	G.Pkg.Plist.Dirs["share/pkgbase"] = true
 
 	// A directory that is found in the PLIST.
 	checkShellCommandLine("${RUN} ${INSTALL_DATA_DIR} share/pkgbase ${PREFIX}/share/pkgbase")

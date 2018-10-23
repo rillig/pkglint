@@ -14,18 +14,17 @@ const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 
 // Package contains data for the pkgsrc package that is currently checked.
 type Package struct {
-	dir                  string          // The directory of the package, for resolving files
-	Pkgpath              string          // e.g. "category/pkgdir"
-	Pkgdir               string          // PKGDIR from the package Makefile
-	Filesdir             string          // FILESDIR from the package Makefile
-	Patchdir             string          // PATCHDIR from the package Makefile
-	DistinfoFile         string          // DISTINFO_FILE from the package Makefile
-	EffectivePkgname     string          // PKGNAME or DISTNAME from the package Makefile, including nb13
-	EffectivePkgbase     string          // The effective PKGNAME without the version
-	EffectivePkgversion  string          // The version part of the effective PKGNAME, excluding nb13
-	EffectivePkgnameLine MkLine          // The origin of the three effective_* values
-	PlistDirs            map[string]bool // Directories mentioned in the PLIST files
-	PlistFiles           map[string]bool // Regular files mentioned in the PLIST files
+	dir                  string       // The directory of the package, for resolving files
+	Pkgpath              string       // e.g. "category/pkgdir"
+	Pkgdir               string       // PKGDIR from the package Makefile
+	Filesdir             string       // FILESDIR from the package Makefile
+	Patchdir             string       // PATCHDIR from the package Makefile
+	DistinfoFile         string       // DISTINFO_FILE from the package Makefile
+	EffectivePkgname     string       // PKGNAME or DISTNAME from the package Makefile, including nb13
+	EffectivePkgbase     string       // The effective PKGNAME without the version
+	EffectivePkgversion  string       // The version part of the effective PKGNAME, excluding nb13
+	EffectivePkgnameLine MkLine       // The origin of the three effective_* values
+	Plist                PlistContent // Files and directories mentioned in the PLIST files
 
 	vars                  Scope
 	bl3                   map[string]Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
@@ -50,8 +49,7 @@ func NewPackage(dir string) *Package {
 		Filesdir:              "files",
 		Patchdir:              "patches",
 		DistinfoFile:          "${PKGDIR}/distinfo",
-		PlistDirs:             make(map[string]bool),
-		PlistFiles:            make(map[string]bool),
+		Plist:                 NewPlistContent(),
 		vars:                  NewScope(),
 		bl3:                   make(map[string]Line),
 		included:              make(map[string]Line),
@@ -894,12 +892,23 @@ func (pkg *Package) loadPlistDirs(plistFilename string) {
 	lines := Load(plistFilename, MustSucceed)
 	for _, line := range lines {
 		text := line.Text
-		pkg.PlistFiles[text] = true // XXX: ignores PLIST conditions for now
+		pkg.Plist.Files[text] = true // XXX: ignores PLIST conditions for now
 		// Keep in sync with PlistChecker.collectFilesAndDirs
 		if !contains(text, "$") && !contains(text, "@") {
 			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
-				pkg.PlistDirs[dir] = true
+				pkg.Plist.Dirs[dir] = true
 			}
 		}
 	}
+}
+
+type PlistContent struct {
+	Dirs  map[string]bool
+	Files map[string]bool
+}
+
+func NewPlistContent() PlistContent {
+	return PlistContent{
+		make(map[string]bool),
+		make(map[string]bool)}
 }

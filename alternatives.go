@@ -8,21 +8,21 @@ func CheckfileAlternatives(fileName string) {
 		return
 	}
 
-	var plistFiles map[string]bool
+	var plist PlistContent
 	if G.Pkg != nil {
-		plistFiles = G.Pkg.PlistFiles
+		plist = G.Pkg.Plist
 	}
 
 	for _, line := range lines {
 		if m, wrapper, space, implementation := match3(line.Text, `^(\S+)([ \t]+)(\S+)`); m {
-			if plistFiles != nil {
-				if plistFiles[wrapper] {
+			if plist.Files != nil {
+				if plist.Files[wrapper] {
 					line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
 				}
 
 				relImplementation := strings.Replace(implementation, "@PREFIX@/", "", 1)
 				plistName := replaceAll(relImplementation, `@(\w+)@`, "${$1}")
-				if !plistFiles[plistName] && !G.Pkg.vars.Defined("ALTERNATIVES_SRC") {
+				if !plist.Files[plistName] && !G.Pkg.vars.Defined("ALTERNATIVES_SRC") {
 					if plistName != implementation {
 						line.Errorf("Alternative implementation %q must appear in the PLIST as %q.", implementation, plistName)
 					} else {
