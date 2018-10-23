@@ -14,19 +14,19 @@ func CheckfileAlternatives(fileName string) {
 	}
 
 	for _, line := range lines {
-		if m, wrapper, space, implementation := match3(line.Text, `^(\S+)([ \t]+)(\S+)`); m {
+		if m, wrapper, space, alternative := match3(line.Text, `^(\S+)([ \t]+)(\S+)`); m {
 			if plist.Files != nil {
 				if plist.Files[wrapper] {
 					line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
 				}
 
-				relImplementation := strings.Replace(implementation, "@PREFIX@/", "", 1)
+				relImplementation := strings.Replace(alternative, "@PREFIX@/", "", 1)
 				plistName := replaceAll(relImplementation, `@(\w+)@`, "${$1}")
 				if !plist.Files[plistName] && !G.Pkg.vars.Defined("ALTERNATIVES_SRC") {
-					if plistName != implementation {
-						line.Errorf("Alternative implementation %q must appear in the PLIST as %q.", implementation, plistName)
+					if plistName != alternative {
+						line.Errorf("Alternative implementation %q must appear in the PLIST as %q.", alternative, plistName)
 					} else {
-						line.Errorf("Alternative implementation %q must appear in the PLIST.", implementation)
+						line.Errorf("Alternative implementation %q must appear in the PLIST.", alternative)
 					}
 				}
 			}
