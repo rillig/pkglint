@@ -140,43 +140,43 @@ func (s *Suite) Test_Options_Parse_string_list(c *check.C) {
 }
 
 func (s *Suite) Test_Options_Parse__long_flags(c *check.C) {
-	var aflag, bflag, cflag, dflag, eflag, fflag, gflag, hflag, iflag, jflag bool
+	var posFlags [5]bool
+	var negFlags [5]bool
+	var otherFlags [2]bool
 
 	opts := NewOptions()
-	opts.AddFlagVar('a', "aflag", &aflag, false, "")
-	opts.AddFlagVar('b', "bflag", &bflag, false, "")
-	opts.AddFlagVar('c', "cflag", &cflag, false, "")
-	opts.AddFlagVar('d', "dflag", &dflag, false, "")
-	opts.AddFlagVar('e', "eflag", &eflag, true, "")
-	opts.AddFlagVar('f', "fflag", &fflag, true, "")
-	opts.AddFlagVar('g', "gflag", &gflag, true, "")
-	opts.AddFlagVar('h', "hflag", &hflag, true, "")
-	opts.AddFlagVar('i', "iflag", &iflag, false, "")
-	opts.AddFlagVar('j', "jflag", &jflag, false, "")
+	opts.AddFlagVar(0, "pos0", &posFlags[0], false, "")
+	opts.AddFlagVar(0, "pos1", &posFlags[1], false, "")
+	opts.AddFlagVar(0, "pos2", &posFlags[2], false, "")
+	opts.AddFlagVar(0, "pos3", &posFlags[3], false, "")
+	opts.AddFlagVar(0, "pos4", &posFlags[4], false, "")
+	opts.AddFlagVar(0, "neg0", &negFlags[0], true, "")
+	opts.AddFlagVar(0, "neg1", &negFlags[1], true, "")
+	opts.AddFlagVar(0, "neg2", &negFlags[2], true, "")
+	opts.AddFlagVar(0, "neg3", &negFlags[3], true, "")
+	opts.AddFlagVar(0, "neg4", &negFlags[4], true, "")
+	opts.AddFlagVar(0, "other0", &otherFlags[0], false, "")
+	opts.AddFlagVar(0, "other1", &otherFlags[1], false, "")
 
 	args, err := opts.Parse([]string{"progname",
-		"--aflag=true",
-		"--bflag=on",
-		"--cflag=enabled",
-		"--dflag=1",
-		"--eflag=false",
-		"--fflag=off",
-		"--gflag=disabled",
-		"--hflag=0",
-		"--iflag",
-		"--jflag=unknown"})
+		"--pos0=true",
+		"--pos1=on",
+		"--pos2=enabled",
+		"--pos3=1",
+		"--pos4=yes",
+		"--neg0=false",
+		"--neg1=off",
+		"--neg2=disabled",
+		"--neg3=0",
+		"--neg4=no",
+		"--other0",
+		"--other1=unknown"})
 
 	c.Check(args, check.HasLen, 0)
-	c.Check(aflag, check.Equals, true)
-	c.Check(bflag, check.Equals, true)
-	c.Check(cflag, check.Equals, true)
-	c.Check(dflag, check.Equals, true)
-	c.Check(eflag, check.Equals, false)
-	c.Check(fflag, check.Equals, false)
-	c.Check(gflag, check.Equals, false)
-	c.Check(hflag, check.Equals, false)
-	c.Check(iflag, check.Equals, true)
-	c.Check(err, check.ErrorMatches, `^progname: invalid argument for option --jflag$`)
+	c.Check(posFlags, check.Equals, [5]bool{true, true, true, true, true})
+	c.Check(negFlags, check.Equals, [5]bool{false, false, false, false, false})
+	c.Check(otherFlags, check.Equals, [2]bool{true, false})
+	c.Check(err, check.ErrorMatches, `^progname: invalid argument for option --other1$`)
 }
 
 func (s *Suite) Test_Options_handleLongOption__flag_group_without_argument(c *check.C) {

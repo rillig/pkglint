@@ -108,9 +108,9 @@ func (o *Options) handleLongOption(args []string, i int, opt *option, argval *st
 			*data = true
 		} else {
 			switch *argval {
-			case "true", "on", "enabled", "1":
+			case "true", "on", "enabled", "1", "yes":
 				*data = true
-			case "false", "off", "disabled", "0":
+			case "false", "off", "disabled", "0", "no":
 				*data = false
 			default:
 				return 0, optErr("invalid argument for option --" + opt.longName)
