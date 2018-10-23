@@ -92,8 +92,16 @@ func (s *Suite) Test__test_names(c *check.C) {
 		return elements
 	}
 
-	// generateTesteeNames generates a map containing all names for
-	// testees as used in the test names. Examples:
+	testName := func(element Element) string {
+		if isTest(element) {
+			return ""
+		}
+		sep := ifelseStr(element.Type != "" && element.Func != "", "_", "")
+		return element.Type + sep + element.Func
+	}
+
+	// generateTesteeNames generates a map containing the names of all
+	// testable elements, as used in the test names. Examples:
 	//
 	//  Autofix
 	//  Line_Warnf
@@ -101,9 +109,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 	generateTesteeNames := func(elements []Element) map[string]bool {
 		prefixes := make(map[string]bool)
 		for _, element := range elements {
-			if !isTest(element) {
-				sep := ifelseStr(element.Type != "" && element.Func != "", "_", "")
-				prefix := element.Type + sep + element.Func
+			if prefix := testName(element); prefix != "" {
 				prefixes[prefix] = true
 			}
 		}
@@ -134,8 +140,10 @@ func (s *Suite) Test__test_names(c *check.C) {
 		}
 	}
 
-	checkAll := func(testees []Element, prefixes map[string]bool) {
-		for _, test := range testees {
+	checkAll := func(elements []Element, prefixes map[string]bool) {
+		testNames := make(map[string]bool)
+
+		for _, test := range elements {
 			if isTest(test) {
 				method := test.Func
 				switch {
@@ -148,6 +156,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 					if len(refAndDescr) > 1 {
 						descr = refAndDescr[1]
 					}
+					testNames[refAndDescr[0]] = true
 					checkTestName(test, refAndDescr[0], descr, prefixes)
 
 				default:
@@ -155,9 +164,18 @@ func (s *Suite) Test__test_names(c *check.C) {
 				}
 			}
 		}
+
+		for _, testee := range elements {
+			if !isTest(testee) && !hasSuffix(testee.File, "_test.go") && !hasSuffix(testee.File, "yacc.go") {
+				testNamePrefix := testName(testee)
+				if false && !testNames[testNamePrefix] {
+					fmt.Printf("%s: Does not have a unit test (Test_%s).\n", elementString(testee), testNamePrefix)
+				}
+			}
+		}
 	}
 
-	testees := loadAllElements()
-	prefixes := generateTesteeNames(testees)
-	checkAll(testees, prefixes)
+	elements := loadAllElements()
+	prefixes := generateTesteeNames(elements)
+	checkAll(elements, prefixes)
 }
