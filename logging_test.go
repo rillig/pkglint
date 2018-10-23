@@ -222,6 +222,25 @@ func (s *Suite) Test_logs__duplicate_explanations(c *check.C) {
 		"WARN: README.txt:123: Warning 2.")
 }
 
+// Even if verbose logging is disabled, the "Replacing" diagnostics
+// must not be filtered for duplicates since each of them modifies the line.
+func (s *Suite) Test_logs__duplicate_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain", "--autofix")
+	G.opts.LogVerbose = false // See SetUpTest
+	line := t.NewLine("README.txt", 123, "text")
+
+	fix := line.Autofix()
+	fix.Warnf("T should always be uppercase.")
+	fix.ReplaceRegex(`t`, "T", -1)
+	fix.Apply()
+
+	// FIXME: "Replacing must occur 2 times.
+	t.CheckOutputLines(
+		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".")
+}
+
 func (s *Suite) Test_logs__panic(c *check.C) {
 	c.Check(func() {
 		logs(llError, "fileName", "13", "No period", "No period")
