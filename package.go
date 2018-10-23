@@ -69,11 +69,11 @@ func NewPackage(dir string) *Package {
 	return pkg
 }
 
-// File returns the (possibly absolute) path to relativeFilename,
+// File returns the (possibly absolute) path to relativeFileName,
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
-func (pkg *Package) File(relativeFilename string) string {
-	return cleanpath(resolveVariableRefs(pkg.dir + "/" + relativeFilename))
+func (pkg *Package) File(relativeFileName string) string {
+	return cleanpath(resolveVariableRefs(pkg.dir + "/" + relativeFileName))
 }
 
 func (pkg *Package) checkPossibleDowngrade() {

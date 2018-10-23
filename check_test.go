@@ -167,15 +167,15 @@ func (t *Tester) SetupTool(name, varname string, validity Validity) *Tool {
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, without considering line continuations.
-func (t *Tester) SetupFileLines(relativeFilename string, lines ...string) []Line {
-	fileName := t.CreateFileLines(relativeFilename, lines...)
+func (t *Tester) SetupFileLines(relativeFileName string, lines ...string) []Line {
+	fileName := t.CreateFileLines(relativeFileName, lines...)
 	return Load(fileName, MustSucceed)
 }
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, handling line continuations for Makefiles.
-func (t *Tester) SetupFileMkLines(relativeFilename string, lines ...string) *MkLines {
-	fileName := t.CreateFileLines(relativeFilename, lines...)
+func (t *Tester) SetupFileMkLines(relativeFileName string, lines ...string) *MkLines {
+	fileName := t.CreateFileLines(relativeFileName, lines...)
 	return LoadMk(fileName, MustSucceed)
 }
 
@@ -306,13 +306,13 @@ line:
 	return t.File(pkgpath)
 }
 
-func (t *Tester) CreateFileLines(relativeFilename string, lines ...string) (fileName string) {
+func (t *Tester) CreateFileLines(relativeFileName string, lines ...string) (fileName string) {
 	content := ""
 	for _, line := range lines {
 		content += line + "\n"
 	}
 
-	fileName = t.File(relativeFilename)
+	fileName = t.File(relativeFileName)
 	err := os.MkdirAll(path.Dir(fileName), 0777)
 	t.c().Assert(err, check.IsNil)
 
@@ -342,14 +342,14 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
 // File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
 // Calls to Tester.Chdir change the base directory for the relative file name.
-func (t *Tester) File(relativeFilename string) string {
+func (t *Tester) File(relativeFileName string) string {
 	if t.tmpdir == "" {
 		t.tmpdir = filepath.ToSlash(t.c().MkDir())
 	}
 	if t.relcwd != "" {
-		return cleanpath(relativeFilename)
+		return cleanpath(relativeFileName)
 	}
-	return cleanpath(t.tmpdir + "/" + relativeFilename)
+	return cleanpath(t.tmpdir + "/" + relativeFileName)
 }
 
 // Chdir changes the current working directory to the given subdirectory
@@ -364,7 +364,7 @@ func (t *Tester) File(relativeFilename string) string {
 //
 // As long as this method is not called in a test, the current working
 // directory is indeterminate.
-func (t *Tester) Chdir(relativeFilename string) {
+func (t *Tester) Chdir(relativeFileName string) {
 	if t.relcwd != "" {
 		// When multiple calls of Chdir are mixed with calls to CreateFileLines,
 		// the resulting []Line and MkLines variables will use relative file names,
@@ -373,16 +373,16 @@ func (t *Tester) Chdir(relativeFilename string) {
 		t.checkC.Fatalf("Chdir must only be called once per test; already in %q.", t.relcwd)
 	}
 
-	_ = os.MkdirAll(t.File(relativeFilename), 0700)
-	if err := os.Chdir(t.File(relativeFilename)); err != nil {
+	_ = os.MkdirAll(t.File(relativeFileName), 0700)
+	if err := os.Chdir(t.File(relativeFileName)); err != nil {
 		t.checkC.Fatalf("Cannot chdir: %s", err)
 	}
-	t.relcwd = relativeFilename
+	t.relcwd = relativeFileName
 }
 
 // Remove removes the file from the temporary directory. The file must exist.
-func (t *Tester) Remove(relativeFilename string) {
-	fileName := t.File(relativeFilename)
+func (t *Tester) Remove(relativeFileName string) {
+	fileName := t.File(relativeFileName)
 	err := os.Remove(fileName)
 	t.c().Check(err, check.IsNil)
 	G.fileCache.Evict(fileName)
