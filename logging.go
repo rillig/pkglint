@@ -61,8 +61,8 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 	if fname != "" {
 		fname = cleanpath(fname)
 	}
-	if G.Testing && format != MagicAutofixFormat && !hasSuffix(format, ".") && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
-		panic(fmt.Sprintf("Diagnostic format %q must end in a period.", format))
+	if G.Testing && format != MagicAutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
+		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
 	}
 
 	if !G.opts.LogVerbose && format != MagicAutofixFormat && loggedAlready(fname, lineno, msg) {

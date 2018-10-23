@@ -242,9 +242,11 @@ func (s *Suite) Test_logs__duplicate_autofix(c *check.C) {
 }
 
 func (s *Suite) Test_logs__panic(c *check.C) {
-	c.Check(func() {
-		logs(llError, "fileName", "13", "No period", "No period")
-	}, check.Panics, "Diagnostic format \"No period\" must end in a period.")
+	t := s.Init(c)
+
+	t.ExpectFatal(
+		func() { logs(llError, "fileName", "13", "No period", "No period") },
+		"FATAL: Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 
 func (s *Suite) Test_Explain__long_lines(c *check.C) {
