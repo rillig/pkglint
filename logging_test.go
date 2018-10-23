@@ -236,8 +236,8 @@ func (s *Suite) Test_logs__duplicate_autofix(c *check.C) {
 	fix.ReplaceRegex(`t`, "T", -1)
 	fix.Apply()
 
-	// FIXME: "Replacing must occur 2 times.
 	t.CheckOutputLines(
+		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".",
 		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".")
 }
 

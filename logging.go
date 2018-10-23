@@ -65,7 +65,7 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 		panic(fmt.Sprintf("Diagnostic format %q must end in a period.", format))
 	}
 
-	if !G.opts.LogVerbose && loggedAlready(fname, lineno, msg) {
+	if !G.opts.LogVerbose && format != MagicAutofixFormat && loggedAlready(fname, lineno, msg) {
 		G.explainNext = false
 		return false
 	}
