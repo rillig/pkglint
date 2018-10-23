@@ -122,7 +122,7 @@ func (ck *PlistChecker) checkline(pline *PlistLine) {
 	text := pline.text
 	if hasAlnumPrefix(text) {
 		ck.checkpath(pline)
-	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)\s*(.*)`); m {
+	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)[\t ]*(.*)`); m {
 		pline.CheckDirective(cmd, arg)
 	} else if hasPrefix(text, "$") {
 		ck.checkpath(pline)

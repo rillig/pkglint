@@ -127,11 +127,11 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includefile, ""}}
 	}
 
-	if m, indent, directive, includefile := match3(text, `^\.(\s*)(s?include)\s+<([^>]+)>\s*(?:#.*)?$`); m {
+	if m, indent, directive, includefile := match3(text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`); m {
 		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includefile, ""}}
 	}
 
-	if m, targets, whitespace, sources := match3(text, `^([^\s:]+(?:\s*[^\s:]+)*)(\s*):\s*([^#]*?)(?:\s*#.*)?$`); m {
+	if m, targets, whitespace, sources := match3(text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`); m {
 		if whitespace != "" {
 			line.Warnf("Space before colon in dependency line.")
 		}

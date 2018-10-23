@@ -461,7 +461,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 			// probably contains a statement that C is
 			// really not needed.
 
-		} else if !matches(useLine.Value(), `(?:^|\s+)(?:c|c99|objc)(?:\s+|$)`) {
+		} else if !matches(useLine.Value(), `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
 			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
 				useLine.ReferenceFrom(gnuLine.Line))
 		}

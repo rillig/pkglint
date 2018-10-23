@@ -156,8 +156,8 @@ func (s *Suite) Test_detab(c *check.C) {
 	c.Check(detab("12345678\t"), equals, "12345678        ")
 }
 
-const reMkIncludeBenchmark = `^\.(\s*)(s?include)\s+\"([^\"]+)\"\s*(?:#.*)?$`
-const reMkIncludeBenchmarkPositive = `^\.(\s*)(s?include)\s+\"(.+)\"\s*(?:#.*)?$`
+const reMkIncludeBenchmark = `^\.([\t ]*)(s?include)[\t ]+\"([^\"]+)\"[\t ]*(?:#.*)?$`
+const reMkIncludeBenchmarkPositive = `^\.([\t ]*)(s?include)[\t ]+\"(.+)\"[\t ]*(?:#.*)?$`
 
 func Benchmark_match3_buildlink3(b *testing.B) {
 	for i := 0; i < b.N; i++ {

@@ -385,7 +385,7 @@ func (src *Pkgsrc) parseSuggestedUpdates(lines []Line) []SuggestedUpdate {
 		}
 
 		if state == 3 {
-			if m, pkgname, comment := match2(text, `^\to\s(\S+)(?:\s*(.+))?$`); m {
+			if m, pkgname, comment := match2(text, `^\to[\t ]([^\t ]+)(?:[\t ]*(.+))?$`); m {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
 					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
 				} else {
@@ -752,7 +752,7 @@ func (src *Pkgsrc) loadPkgOptions() {
 	lines := src.Load("mk/defaults/options.description", MustSucceed)
 
 	for _, line := range lines {
-		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:\s+(.*))?$`); m {
+		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:[\t ]+(.*))?$`); m {
 			src.PkgOptions[optname] = optdescr
 		} else {
 			line.Fatalf("Unknown line format: %s", line.Text)

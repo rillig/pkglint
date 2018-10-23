@@ -91,7 +91,7 @@ func (mklines *MkLines) checkAll() {
 		return targets
 	}()
 
-	CheckLineRcsid(mklines.lines[0], `#\s+`, "# ")
+	CheckLineRcsid(mklines.lines[0], `#[\t ]+`, "# ")
 
 	substContext := NewSubstContext()
 	var varalign VaralignBlock

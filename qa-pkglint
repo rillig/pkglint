@@ -110,7 +110,7 @@ diffs() {
           my %histo = ();
           open(my $f, "<", $fname) or die;
           while (defined(my $line = <$f>)) {
-            if ($line =~ /^loghisto\s+(\d+)\s+(.*)$/) {
+            if ($line =~ /^loghisto[\t ]+(\d+)[\t ]+(.*)$/) {
               $histo{$2} = +$1;
             }
           }

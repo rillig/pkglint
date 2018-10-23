@@ -43,7 +43,7 @@ func (cv *VartypeCheck) Notef(format string, args ...interface{})  { cv.Line.Not
 //
 //  fix.Replace("from", "to")
 //  fix.ReplaceAfter("prefix", "from", "to")
-//  fix.ReplaceRegex(`\s+`, "space", -1)
+//  fix.ReplaceRegex(`[\t ]+`, "space", -1)
 //  fix.InsertBefore("new line")
 //  fix.InsertAfter("new line")
 //  fix.Delete()
@@ -216,7 +216,7 @@ func (cv *VartypeCheck) Comment() {
 	if value == "TODO: Short description of the package" { // See pkgtools/url2pkg/files/url2pkg.pl, keyword "COMMENT".
 		cv.Errorf("COMMENT must be set.")
 	}
-	if m, first := match1(value, `^(?i)(a|an)\s`); m {
+	if m, first := match1(value, `^(?i)(a|an)[\t ]`); m {
 		cv.Warnf("COMMENT should not begin with %q.", first)
 	}
 	if m, isA := match1(value, ` (is a|is an) `); m {
@@ -1168,7 +1168,7 @@ func (cv *VartypeCheck) Yes() {
 			"but using \".if defined(VARNAME)\" alone.")
 
 	default:
-		if !matches(cv.Value, `^(?:YES|yes)(?:\s+#.*)?$`) {
+		if !matches(cv.Value, `^(?:YES|yes)(?:[\t ]+#.*)?$`) {
 			cv.Warnf("%s should be set to YES or yes.", cv.Varname)
 			Explain(
 				"This variable means \"yes\" if it is defined, and \"no\" if it is",
@@ -1198,7 +1198,7 @@ func (cv *VartypeCheck) YesNo() {
 			"The yes/no value can be written in either upper or lower case, and",
 			"both forms are actually used.  As long as this is the case, when",
 			"checking the variable value, both must be accepted.")
-	} else if !matches(cv.Value, `^(?:YES|yes|NO|no)(?:\s+#.*)?$`) {
+	} else if !matches(cv.Value, `^(?:YES|yes|NO|no)(?:[\t ]+#.*)?$`) {
 		cv.Warnf("%s should be set to YES, yes, NO, or no.", cv.Varname)
 	}
 }

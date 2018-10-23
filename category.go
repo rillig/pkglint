@@ -48,7 +48,7 @@ func CheckdirCategory(dir string) {
 		line := exp.CurrentLine()
 		text := line.Text
 
-		if m, commentFlag, indentation, name, comment := match4(text, `^(#?)SUBDIR\+=(\s*)(\S+)\s*(?:#\s*(.*?)\s*|)$`); m {
+		if m, commentFlag, indentation, name, comment := match4(text, `^(#?)SUBDIR\+=([\t ]*)([^\t ]+)[\t ]*(?:#[\t ]*(.*?)[\t ]*|)$`); m {
 			commentedOut := commentFlag == "#"
 			if commentedOut && comment == "" {
 				line.Warnf("%q commented out without giving a reason.", name)

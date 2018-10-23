@@ -173,7 +173,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 	mkline := ck.MkLine
 	args := mkline.Args()
 
-	if m, vars, values := match2(args, `^(\S+(?:\s*\S+)*?)\s+in\s+(.*)$`); m {
+	if m, vars, values := match2(args, `^([^\t ]+(?:[\t ]*[^\t ]+)*?)[\t ]+in[\t ]+(.*)$`); m {
 		for _, forvar := range fields(vars) {
 			indentation.AddVar(forvar)
 			if !G.Infrastructure && hasPrefix(forvar, "_") {
@@ -777,8 +777,8 @@ func (ck MkLineChecker) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 	tokens := NewMkParser(mkline.Line, mkline.Value(), false).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
-			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `\s$`)
-			spaceRight := i+1 >= len(tokens) || matches(tokens[i+1].Text, `^\s`)
+			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `[\t ]$`)
+			spaceRight := i+1 >= len(tokens) || matches(tokens[i+1].Text, `^[\t ]`)
 			isWordPart := !(spaceLeft && spaceRight)
 			vuc := &VarUseContext{vartype, time, vucQuotPlain, isWordPart}
 			ck.CheckVaruse(token.Varuse, vuc)

@@ -25,7 +25,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 	exp.ExpectEmptyLine(G.opts.WarnSpace)
 
-	if exp.AdvanceIfMatches(`^BUILDLINK_DEPMETHOD\.(\S+)\?=.*$`) {
+	if exp.AdvanceIfMatches(`^BUILDLINK_DEPMETHOD\.([^\t ]+)\?=.*$`) {
 		exp.PreviousLine().Warnf("This line belongs inside the .ifdef block.")
 		for exp.AdvanceIfEquals("") {
 		}
@@ -36,7 +36,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 	var abi, api *DependencyPattern
 
 	// First paragraph: Introduction of the package identifier
-	if !exp.AdvanceIfMatches(`^BUILDLINK_TREE\+=\s*(\S+)$`) {
+	if !exp.AdvanceIfMatches(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`) {
 		exp.CurrentLine().Warnf("Expected a BUILDLINK_TREE line.")
 		return
 	}
@@ -74,7 +74,7 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 
 	// Second paragraph: multiple inclusion protection and introduction
 	// of the uppercase package identifier.
-	if !exp.AdvanceIfMatches(`^\.if !defined\((\S+)_BUILDLINK3_MK\)$`) {
+	if !exp.AdvanceIfMatches(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`) {
 		return
 	}
 	pkgupperLine, pkgupper := exp.PreviousLine(), exp.Group(1)
@@ -151,17 +151,17 @@ func ChecklinesBuildlink3Mk(mklines *MkLines) {
 			}
 
 			if varname == "pkgbase" {
-				exp.AdvanceIfMatches(`^\.\s*include "../../mk/pkg-build-options\.mk"$`)
+				exp.AdvanceIfMatches(`^\.[\t ]*include "../../mk/pkg-build-options\.mk"$`)
 			}
 
 		} else if exp.AdvanceIfEquals("") || exp.AdvanceIfPrefix("#") {
 			// Comments and empty lines are fine here.
 
-		} else if exp.AdvanceIfMatches(`^\.\s*include "\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk"$`) ||
-			exp.AdvanceIfMatches(`^\.\s*include "\.\./\.\./mk/(\S+)\.buildlink3\.mk"$`) {
+		} else if exp.AdvanceIfMatches(`^\.[\t ]*include "\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk"$`) ||
+			exp.AdvanceIfMatches(`^\.[\t ]*include "\.\./\.\./mk/([^\t ]+)\.buildlink3\.mk"$`) {
 			// TODO: Maybe check dependency lines.
 
-		} else if exp.AdvanceIfMatches(`^\.if\s`) {
+		} else if exp.AdvanceIfMatches(`^\.if[\t ]`) {
 			indentLevel++
 
 		} else if exp.AdvanceIfMatches(`^\.endif.*$`) {

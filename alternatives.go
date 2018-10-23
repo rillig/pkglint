@@ -14,7 +14,7 @@ func CheckfileAlternatives(fileName string) {
 	}
 
 	for _, line := range lines {
-		if m, wrapper, space, alternative := match3(line.Text, `^(\S+)([ \t]+)(\S+)`); m {
+		if m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+)`); m {
 			if plist.Files != nil {
 				if plist.Files[wrapper] {
 					line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)

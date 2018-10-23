@@ -175,7 +175,7 @@ func (line *LineImpl) String() string {
 //
 //  fix.Replace("from", "to")
 //  fix.ReplaceAfter("prefix", "from", "to")
-//  fix.ReplaceRegex(`\s+`, "space", -1)
+//  fix.ReplaceRegex(`[\t ]+`, "space", -1)
 //  fix.InsertBefore("new line")
 //  fix.InsertAfter("new line")
 //  fix.Delete()

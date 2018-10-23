@@ -24,8 +24,8 @@ type PatchChecker struct {
 }
 
 const (
-	rePatchUniFileDel = `^---\s(\S+)(?:\s+(.*))?$`
-	rePatchUniFileAdd = `^\+\+\+\s(\S+)(?:\s+(.*))?$`
+	rePatchUniFileDel = `^---[\t ]([^\t ]+)(?:[\t ]+(.*))?$`
+	rePatchUniFileAdd = `^\+\+\+[\t ]([^\t ]+)(?:[\t ]+(.*))?$`
 	rePatchUniHunk    = `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`
 )
 
@@ -71,8 +71,8 @@ func (ck *PatchChecker) Check() {
 			ck.exp.StepBack()
 		}
 
-		if ck.exp.AdvanceIfMatches(`^\*\*\*\s(\S+)(.*)$`) {
-			if ck.exp.AdvanceIfMatches(`^---\s(\S+)(.*)$`) {
+		if ck.exp.AdvanceIfMatches(`^\*\*\*[\t ]([^\t ]+)(.*)$`) {
+			if ck.exp.AdvanceIfMatches(`^---[\t ]([^\t ]+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
 				line.Warnf("Please use unified diffs (diff -u) for patches.")
 				return
@@ -359,10 +359,10 @@ func (ck *PatchChecker) checklineSourceAbsolutePathname(line Line, text string) 
 		}
 
 		switch {
-		case matches(before, `[A-Z_]\s*$`):
+		case matches(before, `[A-Z_][\t ]*$`):
 			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
 
-		case matches(before, `\+\s*$`):
+		case matches(before, `\+[\t ]*$`):
 			// ok; Python example: libdir = prefix + '/lib'
 
 		default:
@@ -388,7 +388,7 @@ func (ck *PatchChecker) checklineOtherAbsolutePathname(line Line, text string) {
 			// Example: @prefix@/bin
 			// Example: ${prefix}/bin
 
-		case matches(before, `\+\s*["']$`):
+		case matches(before, `\+[\t ]*["']$`):
 			// Example: prefix + '/lib'
 
 		// XXX new: case matches(before, `\bs.$`): // Example: sed -e s,/usr,@PREFIX@,

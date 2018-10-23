@@ -246,7 +246,7 @@ func (p *MkParser) mkCondAnd() MkCond {
 	atoms := []MkCond{atom}
 	for {
 		mark := p.repl.Mark()
-		if !p.repl.AdvanceRegexp(`^\s*&&\s*`) {
+		if !p.repl.AdvanceRegexp(`^[\t ]*&&[\t ]*`) {
 			break
 		}
 		next := p.mkCondAtom()
@@ -284,20 +284,20 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return cond
 			}
 		}
-	case repl.HasPrefix("defined") && repl.AdvanceRegexp(`^defined\s*\(`):
+	case repl.HasPrefix("defined") && repl.AdvanceRegexp(`^defined[\t ]*\(`):
 		if varname := p.Varname(); varname != "" {
 			if repl.AdvanceStr(")") {
 				return &mkCond{Defined: varname}
 			}
 		}
-	case repl.HasPrefix("empty") && repl.AdvanceRegexp(`^empty\s*\(`):
+	case repl.HasPrefix("empty") && repl.AdvanceRegexp(`^empty[\t ]*\(`):
 		if varname := p.Varname(); varname != "" {
 			modifiers := p.VarUseModifiers(varname, ")")
 			if repl.AdvanceStr(")") {
 				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
 			}
 		}
-	case uint(repl.PeekByte()-'a') <= 'z'-'a' && repl.AdvanceRegexp(`^(commands|exists|make|target)\s*\(`):
+	case uint(repl.PeekByte()-'a') <= 'z'-'a' && repl.AdvanceRegexp(`^(commands|exists|make|target)[\t ]*\(`):
 		funcname := repl.Group(1)
 		argMark := repl.Mark()
 		for p.VarUse() != nil || repl.AdvanceRegexp(`^[^$)]+`) {
@@ -317,10 +317,10 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 		}
 		if lhs != nil {
-			if repl.AdvanceRegexp(`^\s*(<|<=|==|!=|>=|>)\s*(\d+(?:\.\d+)?)`) {
+			if repl.AdvanceRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(\d+(?:\.\d+)?)`) {
 				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, repl.Group(1), repl.Group(2)}}
 			}
-			if repl.AdvanceRegexp(`^\s*(<|<=|==|!=|>=|>)\s*`) {
+			if repl.AdvanceRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`) {
 				op := repl.Group(1)
 				if (op == "!=" || op == "==") && repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
 					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Group(1)}}
