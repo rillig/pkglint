@@ -35,7 +35,10 @@ type autofixAction struct {
 // TODO: Document me
 const SilentMagicDiagnostic = "Silent-Magic-Diagnostic"
 
-// TODO: Document me
+// MagicAutofixFormat is a special value that is used for logging
+// diagnostics like "Replacing \"old\" with \"new\".".
+//
+// Since these are not really diagnostics, duplicates are not suppressed.
 const MagicAutofixFormat = "Magic-Autofix-Format"
 
 func NewAutofix(line Line) *Autofix {
@@ -63,13 +66,13 @@ func (fix *Autofix) Custom(fixer func(printAutofix, autofix bool)) {
 	fixer(G.opts.ShowAutofix, G.opts.Autofix)
 }
 
+// ReplaceAfter replaces "from" with "to", a single time.
 func (fix *Autofix) Replace(from string, to string) {
 	fix.ReplaceAfter("", from, to)
 }
 
-// ReplaceAfter replaces the text "prefix+from" with "prefix+to",
-// but in the diagnostic, only the replacement of "from" with "to"
-// is mentioned.
+// ReplaceAfter replaces the text "prefix+from" with "prefix+to", a single time.
+// In the diagnostic, only the replacement of "from" with "to" is mentioned.
 func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 	if fix.skip() {
 		return
