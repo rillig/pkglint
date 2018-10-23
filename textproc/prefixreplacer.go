@@ -110,6 +110,20 @@ func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
 	return false
 }
 
+// NextBytesFunc chops off the longest prefix (possibly empty) consisting
+// solely of bytes for which fn returns true.
+func (pr *PrefixReplacer) NextBytesFunc(fn func(b byte) bool) string {
+	i := 0
+	rest := pr.rest
+	for i < len(rest) && fn(rest[i]) {
+		i++
+	}
+	if i != 0 {
+		pr.rest = rest[i:]
+	}
+	return rest[:i]
+}
+
 func (pr *PrefixReplacer) PeekByte() int {
 	rest := pr.rest
 	if rest == "" {

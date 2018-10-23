@@ -131,11 +131,11 @@ outer:
 
 		case quoting == shqSquot:
 			switch {
-			case repl.AdvanceRegexp(`^'`):
+			case repl.AdvanceStr("'"):
 				quoting = shqPlain
-			case repl.AdvanceRegexp(`^[^\$\']+`):
+			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '\'' }) != "":
 				// just skip
-			case repl.AdvanceRegexp(`^\$\$`):
+			case repl.AdvanceStr("$$"):
 				// just skip
 			default:
 				break outer
@@ -147,7 +147,7 @@ outer:
 				quoting = shqPlain
 			case repl.AdvanceStr("`"):
 				quoting = shqDquotBackt
-			case repl.AdvanceRegexp("^[^$\"\\\\`]+"):
+			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '"' && b != '\\' && b != '`' }) != "":
 				break
 			case repl.AdvanceStr("\\$$"):
 				break

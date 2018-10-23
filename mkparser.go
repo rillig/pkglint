@@ -300,7 +300,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 	case uint(repl.PeekByte()-'a') <= 'z'-'a' && repl.AdvanceRegexp(`^(commands|exists|make|target)[\t ]*\(`):
 		funcname := repl.Group(1)
 		argMark := repl.Mark()
-		for p.VarUse() != nil || repl.AdvanceRegexp(`^[^$)]+`) {
+		for p.VarUse() != nil || repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) != "" {
 		}
 		arg := repl.Since(argMark)
 		if repl.AdvanceStr(")") {
