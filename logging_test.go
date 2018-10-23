@@ -224,7 +224,7 @@ func (s *Suite) Test_logs__duplicate_explanations(c *check.C) {
 
 func (s *Suite) Test_logs__panic(c *check.C) {
 	c.Check(func() {
-		logs(llError, "filename", "13", "No period", "No period")
+		logs(llError, "fileName", "13", "No period", "No period")
 	}, check.Panics, "Diagnostic format \"No period\" must end in a period.")
 }
 

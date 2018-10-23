@@ -259,7 +259,7 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 				"In the rare case that you actually want a file-based make(1)",
 				"target, write it like this:",
 				"",
-				"\t${.CURDIR}/my-filename:")
+				"\t${.CURDIR}/my-file:")
 		}
 	}
 }

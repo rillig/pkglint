@@ -168,15 +168,15 @@ func (t *Tester) SetupTool(name, varname string, validity Validity) *Tool {
 // SetupFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, without considering line continuations.
 func (t *Tester) SetupFileLines(relativeFilename string, lines ...string) []Line {
-	filename := t.CreateFileLines(relativeFilename, lines...)
-	return Load(filename, MustSucceed)
+	fileName := t.CreateFileLines(relativeFilename, lines...)
+	return Load(fileName, MustSucceed)
 }
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, handling line continuations for Makefiles.
 func (t *Tester) SetupFileMkLines(relativeFilename string, lines ...string) *MkLines {
-	filename := t.CreateFileLines(relativeFilename, lines...)
-	return LoadMk(filename, MustSucceed)
+	fileName := t.CreateFileLines(relativeFilename, lines...)
+	return LoadMk(fileName, MustSucceed)
 }
 
 // SetupPkgsrc sets up a minimal but complete pkgsrc installation in the
@@ -453,10 +453,10 @@ func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
 	return rawlines[:j]
 }
 
-func (t *Tester) NewLine(filename string, lineno int, text string) Line {
+func (t *Tester) NewLine(fileName string, lineno int, text string) Line {
 	textnl := text + "\n"
 	rawLine := RawLine{lineno, textnl, textnl}
-	return NewLine(filename, lineno, text, []*RawLine{&rawLine})
+	return NewLine(fileName, lineno, text, []*RawLine{&rawLine})
 }
 
 func (t *Tester) NewMkLine(fileName string, lineno int, text string) MkLine {

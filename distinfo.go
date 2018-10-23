@@ -56,19 +56,19 @@ func (ck *distinfoLinesChecker) checkLines(lines []Line) {
 		if i < 2 {
 			continue
 		}
-		m, alg, filename, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
+		m, alg, fileName, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
 		if !m {
 			line.Errorf("Invalid line.")
 			continue
 		}
 
-		if filename != ck.currentFilename {
-			ck.onFilenameChange(line, filename)
+		if fileName != ck.currentFilename {
+			ck.onFilenameChange(line, fileName)
 		}
 		ck.algorithms = append(ck.algorithms, alg)
 
-		ck.checkGlobalMismatch(line, filename, alg, hash)
-		ck.checkUncommittedPatch(line, filename, alg, hash)
+		ck.checkGlobalMismatch(line, fileName, alg, hash)
+		ck.checkUncommittedPatch(line, fileName, alg, hash)
 	}
 	ck.onFilenameChange(NewLineEOF(ck.distinfoFilename), "")
 }
@@ -135,7 +135,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 // Inter-package check for differing distfile checksums.
 func (ck *distinfoLinesChecker) checkGlobalMismatch(line Line, fname, alg, hash string) {
 	hashes := G.Pkgsrc.Hashes
-	if hashes != nil && !hasPrefix(fname, "patch-") { // Intentionally checking the filename instead of ck.isPatch
+	if hashes != nil && !hasPrefix(fname, "patch-") { // Intentionally checking the file name instead of ck.isPatch
 		key := alg + ":" + fname
 		otherHash := hashes[key]
 		if otherHash != nil {

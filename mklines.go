@@ -398,7 +398,7 @@ func (mklines *MkLines) SaveAutofixChanges() {
 //
 // In general, all values should be aligned using tabs.
 // As an exception, very long lines may be aligned with a single space.
-// A typical example is a SITES.very-long-filename.tar.gz variable
+// A typical example is a SITES.very-long-file-name.tar.gz variable
 // between HOMEPAGE and DISTFILES.
 type VaralignBlock struct {
 	infos []*varalignBlockInfo

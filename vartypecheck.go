@@ -473,9 +473,9 @@ func (cv *VartypeCheck) Filename() {
 	case cv.Op == opUseMatch:
 		break
 	case contains(cv.ValueNoVar, "/"):
-		cv.Warnf("A filename should not contain a slash.")
+		cv.Warnf("A file name should not contain a slash.")
 	case !matches(cv.ValueNoVar, `^[-0-9@A-Za-z.,_~+%]*$`):
-		cv.Warnf("%q is not a valid filename.", cv.Value)
+		cv.Warnf("%q is not a valid file name.", cv.Value)
 	}
 }
 
@@ -484,9 +484,9 @@ func (cv *VartypeCheck) Filemask() {
 	case cv.Op == opUseMatch:
 		break
 	case contains(cv.ValueNoVar, "/"):
-		cv.Warnf("A filename mask should not contain a slash.")
+		cv.Warnf("A file name mask should not contain a slash.")
 	case !matches(cv.ValueNoVar, `^[#%*+\-./0-9?@A-Z\[\]_a-z~]*$`):
-		cv.Warnf("%q is not a valid filename mask.", cv.Value)
+		cv.Warnf("%q is not a valid file name mask.", cv.Value)
 	}
 }
 

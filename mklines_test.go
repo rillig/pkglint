@@ -422,7 +422,7 @@ func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
 	mklines := t.NewMkLines("fname",
 		MkRcsID,
 		"",
-		"\tmd5sum filename")
+		"\tmd5sum fileName")
 
 	mklines.Check()
 
@@ -439,7 +439,7 @@ func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 		MkRcsID,
 		"TOOLS_CREATE+=\tmd5sum",
 		"",
-		"\tmd5sum filename")
+		"\tmd5sum fileName")
 
 	mklines.Check()
 
@@ -612,7 +612,7 @@ func (s *Suite) Test_MkLines__wip_category_Makefile(c *check.C) {
 		"\tIn the rare case that you actually want a file-based make(1)",
 		"\ttarget, write it like this:",
 		"\t",
-		"\t\t${.CURDIR}/my-filename:",
+		"\t\t${.CURDIR}/my-file:",
 		"")
 }
 

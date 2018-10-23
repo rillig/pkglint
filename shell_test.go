@@ -368,7 +368,7 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"\t cat | right-side",
 		"\t cat | echo | right-side",
 		"\t echo | cat | right-side",
-		"\t sed s,s,s, filename | right-side",
+		"\t sed s,s,s, fileName | right-side",
 		"\t sed s,s,s < input | right-side",
 		"\t ./unknown | right-side",
 		"\t var=value | right-side",

@@ -877,15 +877,15 @@ func (ind *Indentation) Condition() string {
 	return ind.top().condition
 }
 
-func (ind *Indentation) AddCheckedFile(filename string) {
+func (ind *Indentation) AddCheckedFile(fileName string) {
 	top := ind.top()
-	top.checkedFiles = append(top.checkedFiles, filename)
+	top.checkedFiles = append(top.checkedFiles, fileName)
 }
 
-func (ind *Indentation) IsCheckedFile(filename string) bool {
+func (ind *Indentation) IsCheckedFile(fileName string) bool {
 	for _, level := range ind.levels {
 		for _, levelFilename := range level.checkedFiles {
-			if filename == levelFilename {
+			if fileName == levelFilename {
 				return true
 			}
 		}
@@ -1069,7 +1069,7 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 	return
 }
 
-func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
+func MatchMkInclude(text string) (m bool, indentation, directive, fileName string) {
 	lexer := textproc.NewLexer(text)
 	if lexer.NextString(".") != "" {
 		indentation = lexer.NextHspace()
@@ -1083,8 +1083,8 @@ func MatchMkInclude(text string) (m bool, indentation, directive, filename strin
 				// Note: strictly speaking, the full MkVarUse would have to be parsed
 				// here. But since these usually don't contain double quotes, it has
 				// worked fine up to now.
-				filename = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
-				if filename != "" && lexer.NextByte('"') {
+				fileName = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
+				if fileName != "" && lexer.NextByte('"') {
 					lexer.NextHspace()
 					if lexer.EOF() || lexer.NextByte('#') {
 						m = true

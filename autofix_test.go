@@ -488,7 +488,7 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 	t := s.Init(c)
 
-	line := t.NewLine("filename", 123, "text")
+	line := t.NewLine("fileName", 123, "text")
 
 	t.ExpectFatal(
 		func() {

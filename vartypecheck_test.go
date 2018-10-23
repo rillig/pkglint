@@ -355,8 +355,8 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: fname:1: \"Filename with spaces.docx\" is not a valid filename.",
-		"WARN: fname:2: A filename should not contain a slash.")
+		"WARN: fname:1: \"Filename with spaces.docx\" is not a valid file name.",
+		"WARN: fname:2: A file name should not contain a slash.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -376,8 +376,8 @@ func (s *Suite) Test_VartypeCheck_Filemask(c *check.C) {
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: fname:1: \"Filemask with spaces.docx\" is not a valid filename mask.",
-		"WARN: fname:2: A filename mask should not contain a slash.")
+		"WARN: fname:1: \"Filemask with spaces.docx\" is not a valid file name mask.",
+		"WARN: fname:2: A file name mask should not contain a slash.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
