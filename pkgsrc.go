@@ -687,7 +687,7 @@ func (src *Pkgsrc) Load(fileName string, options LoadOptions) []Line {
 }
 
 // LoadMk loads the Makefile relative to the pkgsrc top directory.
-func (src *Pkgsrc) LoadMk(fileName string, options LoadOptions) *MkLines {
+func (src *Pkgsrc) LoadMk(fileName string, options LoadOptions) MkLines {
 	return LoadMk(src.File(fileName), options)
 }
 

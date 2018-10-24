@@ -2,7 +2,7 @@ package main
 
 import "netbsd.org/pkglint/trace"
 
-func ChecklinesOptionsMk(mklines *MkLines) {
+func ChecklinesOptionsMk(mklines MkLines) {
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines[0].Filename)()
 	}

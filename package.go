@@ -109,7 +109,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	}
 }
 
-func (pkg *Package) checklinesBuildlink3Inclusion(mklines *MkLines) {
+func (pkg *Package) checklinesBuildlink3Inclusion(mklines MkLines) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -149,6 +149,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	pkg := G.Pkg
 
 	// we need to handle the Makefile first to get some variables
+	// TODO: rename to mklines
 	lines := pkg.loadPackageMakefile()
 	if lines == nil {
 		return
@@ -218,7 +219,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	}
 }
 
-func (pkg *Package) loadPackageMakefile() *MkLines {
+func (pkg *Package) loadPackageMakefile() MkLines {
 	fname := pkg.File("Makefile")
 	if trace.Tracing {
 		defer trace.Call1(fname)()
@@ -275,7 +276,7 @@ func (pkg *Package) loadPackageMakefile() *MkLines {
 	return mainLines
 }
 
-func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkLines, includingFnameForUsedCheck string) (exists bool, result bool) {
+func (pkg *Package) readMakefile(fname string, mainLines MkLines, allLines MkLines, includingFnameForUsedCheck string) (exists bool, result bool) {
 	if trace.Tracing {
 		defer trace.Call1(fname)()
 	}
@@ -400,7 +401,7 @@ func (pkg *Package) readMakefile(fname string, mainLines *MkLines, allLines *MkL
 	return
 }
 
-func (pkg *Package) checkfilePackageMakefile(fname string, mklines *MkLines) {
+func (pkg *Package) checkfilePackageMakefile(fname string, mklines MkLines) {
 	if trace.Tracing {
 		defer trace.Call1(fname)()
 	}
@@ -583,7 +584,7 @@ func (pkg *Package) checkUpdate() {
 // the most common variables appear in a fixed order.
 // The order itself is a little arbitrary but provides
 // at least a bit of consistency.
-func (pkg *Package) CheckVarorder(mklines *MkLines) {
+func (pkg *Package) CheckVarorder(mklines MkLines) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -788,7 +789,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 		"\"Package components\", subsection \"Makefile\" for more information.")
 }
 
-func (mklines *MkLines) checkForUsedComment(relativeName string) {
+func (mklines *MkLinesImpl) checkForUsedComment(relativeName string) {
 	lines := mklines.lines
 	if len(lines) < 3 {
 		return

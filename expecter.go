@@ -113,11 +113,11 @@ func (exp *Expecter) SkipToFooter() {
 
 // MkExpecter records the state when checking a list of Makefile lines from top to bottom.
 type MkExpecter struct {
-	mklines *MkLines
+	mklines MkLines
 	Expecter
 }
 
-func NewMkExpecter(mklines *MkLines) *MkExpecter {
+func NewMkExpecter(mklines MkLines) *MkExpecter {
 	return &MkExpecter{mklines, *NewExpecter(mklines.lines)}
 }
 

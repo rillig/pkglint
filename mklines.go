@@ -6,7 +6,9 @@ import (
 )
 
 // MkLines contains data for the Makefile (or *.mk) that is currently checked.
-type MkLines struct {
+type MkLines = *MkLinesImpl
+
+type MkLinesImpl struct {
 	mklines       []MkLine
 	lines         []Line
 	forVars       map[string]bool // The variables currently used in .for loops
@@ -21,7 +23,7 @@ type MkLines struct {
 	Once
 }
 
-func NewMkLines(lines []Line) *MkLines {
+func NewMkLines(lines []Line) MkLines {
 	mklines := make([]MkLine, len(lines))
 	for i, line := range lines {
 		mklines[i] = NewMkLine(line)
@@ -35,7 +37,7 @@ func NewMkLines(lines []Line) *MkLines {
 	tools := NewTools(traceName)
 	tools.Fallback(G.Pkgsrc.Tools)
 
-	return &MkLines{
+	return &MkLinesImpl{
 		mklines,
 		lines,
 		make(map[string]bool),
@@ -50,14 +52,14 @@ func NewMkLines(lines []Line) *MkLines {
 		Once{}}
 }
 
-func (mklines *MkLines) UseVar(mkline MkLine, varname string) {
+func (mklines *MkLinesImpl) UseVar(mkline MkLine, varname string) {
 	mklines.vars.Use(varname, mkline)
 	if G.Pkg != nil {
 		G.Pkg.vars.Use(varname, mkline)
 	}
 }
 
-func (mklines *MkLines) Check() {
+func (mklines *MkLinesImpl) Check() {
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines[0].Filename)()
 	}
@@ -78,7 +80,7 @@ func (mklines *MkLines) Check() {
 	SaveAutofixChanges(mklines.lines)
 }
 
-func (mklines *MkLines) checkAll() {
+func (mklines *MkLinesImpl) checkAll() {
 	allowedTargets := func() map[string]bool {
 		targets := make(map[string]bool)
 		prefixes := [...]string{"pre", "do", "post"}
@@ -175,7 +177,7 @@ func (mklines *MkLines) checkAll() {
 // ForEach calls the action for each line, until the action returns false.
 // It keeps track of the indentation (see MkLines.indentation)
 // and all conditional variables (see Indentation.IsConditional).
-func (mklines *MkLines) ForEach(action func(mkline MkLine)) {
+func (mklines *MkLinesImpl) ForEach(action func(mkline MkLine)) {
 	mklines.ForEachEnd(
 		func(mkline MkLine) bool { action(mkline); return true },
 		func(mkline MkLine) {})
@@ -184,7 +186,7 @@ func (mklines *MkLines) ForEach(action func(mkline MkLine)) {
 // ForEachEnd calls the action for each line, until the action returns false.
 // It keeps track of the indentation and all conditional variables.
 // At the end, atEnd is called with the last line as its argument.
-func (mklines *MkLines) ForEachEnd(action func(mkline MkLine) bool, atEnd func(lastMkline MkLine)) {
+func (mklines *MkLinesImpl) ForEachEnd(action func(mkline MkLine) bool, atEnd func(lastMkline MkLine)) {
 	mklines.indentation = NewIndentation()
 	mklines.Tools.SeenPrefs = false
 
@@ -200,7 +202,7 @@ func (mklines *MkLines) ForEachEnd(action func(mkline MkLine) bool, atEnd func(l
 	mklines.indentation = nil
 }
 
-func (mklines *MkLines) DetermineDefinedVariables() {
+func (mklines *MkLinesImpl) DetermineDefinedVariables() {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -265,7 +267,7 @@ func (mklines *MkLines) DetermineDefinedVariables() {
 	}
 }
 
-func (mklines *MkLines) collectPlistVars() {
+func (mklines *MkLinesImpl) collectPlistVars() {
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
 			switch mkline.Varcanon() {
@@ -290,12 +292,12 @@ func (mklines *MkLines) collectPlistVars() {
 	}
 }
 
-func (mklines *MkLines) collectElse() {
+func (mklines *MkLinesImpl) collectElse() {
 	// Make a dry-run over the lines, which sets data.elseLine (in mkline.go) as a side-effect.
 	mklines.ForEach(func(mkline MkLine) {})
 }
 
-func (mklines *MkLines) DetermineUsedVariables() {
+func (mklines *MkLinesImpl) DetermineUsedVariables() {
 	for _, mkline := range mklines.mklines {
 		for _, varname := range mkline.DetermineUsedVariables() {
 			mklines.UseVar(mkline, varname)
@@ -306,7 +308,7 @@ func (mklines *MkLines) DetermineUsedVariables() {
 }
 
 // Loosely based on mk/help/help.awk, revision 1.28
-func (mklines *MkLines) determineDocumentedVariables() {
+func (mklines *MkLinesImpl) determineDocumentedVariables() {
 	scope := NewScope()
 	commentLines := 0
 	relevant := true
@@ -358,7 +360,7 @@ func (mklines *MkLines) determineDocumentedVariables() {
 	finish()
 }
 
-func (mklines *MkLines) CheckRedundantVariables() {
+func (mklines *MkLinesImpl) CheckRedundantVariables() {
 	scope := NewRedundantScope()
 	isRelevant := func(old, new MkLine) bool {
 		if old.Basename != "Makefile" && new.Basename == "Makefile" {
@@ -388,7 +390,7 @@ func (mklines *MkLines) CheckRedundantVariables() {
 	mklines.ForEach(scope.Handle)
 }
 
-func (mklines *MkLines) SaveAutofixChanges() {
+func (mklines *MkLinesImpl) SaveAutofixChanges() {
 	SaveAutofixChanges(mklines.lines)
 }
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func ChecklinesBuildlink3Mk(mklines *MkLines) {
+func ChecklinesBuildlink3Mk(mklines MkLines) {
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines[0].Filename)()
 	}

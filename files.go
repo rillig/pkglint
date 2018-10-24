@@ -54,7 +54,7 @@ func Load(fileName string, options LoadOptions) []Line {
 	return result
 }
 
-func LoadMk(fileName string, options LoadOptions) *MkLines {
+func LoadMk(fileName string, options LoadOptions) MkLines {
 	lines := Load(fileName, options|Makefile)
 	if lines == nil {
 		return nil
