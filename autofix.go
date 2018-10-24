@@ -127,7 +127,10 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 }
 
 func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
-	if fix.skip() || !mkline.IsMultiline() || !(mkline.IsVarassign() || mkline.IsCommentedVarassign()) {
+	G.Assertf(mkline.IsMultiline(), "Line must be a multiline.")
+	G.Assertf(mkline.IsVarassign() || mkline.IsCommentedVarassign(), "Line must be a variable assignment.")
+
+	if fix.skip() {
 		return
 	}
 

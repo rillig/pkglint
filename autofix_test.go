@@ -460,8 +460,10 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 
 	t.SetupCommandLine("--only", "few", "--autofix")
 
-	lines := t.SetupFileLines("fname",
-		"111 222 333 444 555")
+	mklines := t.SetupFileMkLines("fname",
+		"VAR=\t111 222 333 444 555 \\",
+		"666")
+	lines := mklines.lines
 
 	fix := lines[0].Autofix()
 	fix.Warnf("Many.")
@@ -474,15 +476,17 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	fix.InsertAfter("after")
 	fix.Delete()
 	fix.Custom(func(printAutofix, autofix bool) {})
-	fix.Realign(dummyMkLine, 32)
+	fix.Realign(mklines.mklines[0], 32)
 	fix.Apply()
 
 	SaveAutofixChanges(lines)
 
 	t.CheckOutputEmpty()
 	t.CheckFileLines("fname",
-		"111 222 333 444 555")
-	c.Check(lines[0].raw[0].textnl, equals, "111 222 333 444 555\n")
+		"VAR=\t111 222 333 444 555 \\",
+		"666")
+	c.Check(lines[0].raw[0].textnl, equals, "VAR=\t111 222 333 444 555 \\\n")
+	c.Check(lines[0].raw[1].textnl, equals, "666\n")
 }
 
 func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
