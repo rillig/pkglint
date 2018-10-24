@@ -149,9 +149,8 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	pkg := G.Pkg
 
 	// we need to handle the Makefile first to get some variables
-	// TODO: rename to mklines
-	lines := pkg.loadPackageMakefile()
-	if lines == nil {
+	mklines := pkg.loadPackageMakefile()
+	if mklines == nil {
 		return
 	}
 
@@ -177,8 +176,8 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			!matches(fname, `patch-`) &&
 			!contains(fname, pkg.Pkgdir+"/") &&
 			!contains(fname, pkg.Filesdir+"/") {
-			if mklines := LoadMk(fname, MustSucceed); mklines != nil {
-				mklines.DetermineUsedVariables()
+			if fragmentMklines := LoadMk(fname, MustSucceed); fragmentMklines != nil {
+				fragmentMklines.DetermineUsedVariables()
 			}
 		}
 		if hasPrefix(basename, "PLIST") {
@@ -199,7 +198,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 				pkglint.checkExecutable(fname, st)
 			}
 			if G.opts.CheckMakefile {
-				pkg.checkfilePackageMakefile(fname, lines)
+				pkg.checkfilePackageMakefile(fname, mklines)
 			}
 		} else {
 			pkglint.Checkfile(fname)
