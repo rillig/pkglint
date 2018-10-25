@@ -325,7 +325,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 				if (op == "!=" || op == "==") && repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
 					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Group(1)}}
 				} else if repl.AdvanceRegexp(`^\w+`) {
-					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Group(0)}}
+					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Str()}}
 				} else if rhs := p.VarUse(); rhs != nil {
 					return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
 				} else if repl.PeekByte() == '"' {
@@ -344,7 +344,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 		}
 		if repl.AdvanceRegexp(`^\d+(?:\.\d+)?`) {
-			return &mkCond{Num: repl.Group(0)}
+			return &mkCond{Num: repl.Str()}
 		}
 	}
 	repl.Reset(mark)
