@@ -395,6 +395,24 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	mklines := t.NewMkLines("any.mk",
+		MkRcsID,
+		// PKGREVISION may only be set in Makefile, not used at load time; see vardefs.go.
+		".if defined(PKGREVISION)",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: any.mk:2: PKGREVISION should not be evaluated at load time.",
+		"WARN: any.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
+}
+
 func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 

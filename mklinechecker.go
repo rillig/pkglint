@@ -489,10 +489,6 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		needed := aclpUse
 		if directly || indirectly {
 			needed = aclpUseLoadtime
-			if trace.Tracing {
-				trace.Stepf("Uncovered code")
-			}
-			panic("Uncovered code")
 		}
 		alternativeFiles := vartype.AllowedFiles(needed)
 		if alternativeFiles != "" {
