@@ -167,7 +167,7 @@ func (t *Tester) SetupTool(name, varname string, validity Validity) *Tool {
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, without considering line continuations.
-func (t *Tester) SetupFileLines(relativeFileName string, lines ...string) []Line {
+func (t *Tester) SetupFileLines(relativeFileName string, lines ...string) Lines {
 	fileName := t.CreateFileLines(relativeFileName, lines...)
 	return Load(fileName, MustSucceed)
 }
@@ -367,7 +367,7 @@ func (t *Tester) File(relativeFileName string) string {
 func (t *Tester) Chdir(relativeFileName string) {
 	if t.relcwd != "" {
 		// When multiple calls of Chdir are mixed with calls to CreateFileLines,
-		// the resulting []Line and MkLines variables will use relative file names,
+		// the resulting Lines and MkLines variables will use relative file names,
 		// and these will point to different areas in the file system. This is
 		// usually not indented and therefore prevented.
 		t.checkC.Fatalf("Chdir must only be called once per test; already in %q.", t.relcwd)
@@ -471,7 +471,7 @@ func (t *Tester) NewShellLine(fileName string, lineno int, text string) *ShellLi
 // i.e. each logical line has exactly one physical line.
 // To work with line continuations like in Makefiles,
 // use CreateFileLines together with LoadExistingLines.
-func (t *Tester) NewLines(fileName string, lines ...string) []Line {
+func (t *Tester) NewLines(fileName string, lines ...string) Lines {
 	return t.NewLinesAt(fileName, 1, lines...)
 }
 
@@ -479,13 +479,13 @@ func (t *Tester) NewLines(fileName string, lines ...string) []Line {
 // i.e. each logical line has exactly one physical line.
 // To work with line continuations like in Makefiles,
 // use Suite.CreateFileLines together with Suite.LoadExistingLines.
-func (t *Tester) NewLinesAt(fileName string, firstLine int, texts ...string) []Line {
+func (t *Tester) NewLinesAt(fileName string, firstLine int, texts ...string) Lines {
 	result := make([]Line, len(texts))
 	for i, text := range texts {
 		textnl := text + "\n"
 		result[i] = NewLine(fileName, i+firstLine, text, t.NewRawLines(i+firstLine, textnl))
 	}
-	return result
+	return NewLines(fileName, result)
 }
 
 func (t *Tester) NewMkLines(fileName string, lines ...string) MkLines {
@@ -582,7 +582,7 @@ func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 	actualLines := Load(t.File(relativeFileName), MustSucceed)
 
 	var detabbed []string
-	for _, line := range actualLines {
+	for _, line := range actualLines.Lines {
 		rawText := strings.TrimRight(detab(line.raw[0].orignl), "\n")
 		detabbed = append(detabbed, rawText)
 	}

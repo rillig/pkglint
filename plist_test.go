@@ -136,11 +136,11 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 	plines := ck.NewLines(lines)
 
 	sorter1 := NewPlistLineSorter(plines)
-	c.Check(sorter1.unsortable, equals, lines[5])
+	c.Check(sorter1.unsortable, equals, lines.Lines[5])
 
-	cleanedLines := append(append(lines[0:5], lines[6:8]...), lines[9:]...) // Remove ${UNKNOWN} and @exec
+	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
 
-	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, "", Once{}}).NewLines(cleanedLines))
+	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, "", Once{}}).NewLines(NewLines(lines.FileName, cleanedLines)))
 
 	c.Check(sorter2.unsortable, check.IsNil)
 

@@ -11,9 +11,9 @@ func (s *Suite) Test_convertToLogicalLines__no_continuation(c *check.C) {
 
 	lines := convertToLogicalLines("fname_nocont", rawText, false)
 
-	c.Check(lines, check.HasLen, 2)
-	c.Check(lines[0].String(), equals, "fname_nocont:1: first line")
-	c.Check(lines[1].String(), equals, "fname_nocont:2: second line")
+	c.Check(lines.Len(), equals, 2)
+	c.Check(lines.Lines[0].String(), equals, "fname_nocont:1: first line")
+	c.Check(lines.Lines[1].String(), equals, "fname_nocont:2: second line")
 }
 
 func (s *Suite) Test_convertToLogicalLines__continuation(c *check.C) {
@@ -24,9 +24,9 @@ func (s *Suite) Test_convertToLogicalLines__continuation(c *check.C) {
 
 	lines := convertToLogicalLines("fname_cont", rawText, true)
 
-	c.Check(lines, check.HasLen, 2)
-	c.Check(lines[0].String(), equals, "fname_cont:1--2: first line second line")
-	c.Check(lines[1].String(), equals, "fname_cont:3: third")
+	c.Check(lines.Len(), equals, 2)
+	c.Check(lines.Lines[0].String(), equals, "fname_cont:1--2: first line second line")
+	c.Check(lines.Lines[1].String(), equals, "fname_cont:3: third")
 }
 
 // In Makefiles, comment lines can also have continuations.
@@ -60,7 +60,7 @@ func (s *Suite) Test_convertToLogicalLines__comments(c *check.C) {
 		"This is no comment")
 
 	var texts []string
-	for _, line := range mklines.lines {
+	for _, line := range mklines.lines.Lines {
 		texts = append(texts, line.Text)
 	}
 
@@ -83,7 +83,7 @@ func (s *Suite) Test_convertToLogicalLines__comments(c *check.C) {
 		"This is no comment"})
 
 	var rawTexts []string
-	for _, line := range mklines.lines {
+	for _, line := range mklines.lines.Lines {
 		for _, rawLine := range line.raw {
 			rawTexts = append(rawTexts, rawLine.textnl)
 		}
@@ -129,8 +129,8 @@ func (s *Suite) Test_convertToLogicalLines__continuation_in_last_line(c *check.C
 
 	lines := convertToLogicalLines("fname_contlast", rawText, true)
 
-	c.Check(lines, check.HasLen, 1)
-	c.Check(lines[0].String(), equals, "fname_contlast:1: last line\\")
+	c.Check(lines.Len(), equals, 1)
+	c.Check(lines.Lines[0].String(), equals, "fname_contlast:1: last line\\")
 	t.CheckOutputLines(
 		"ERROR: fname_contlast:EOF: File must end with a newline.")
 }

@@ -224,7 +224,8 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 		defer trace.Call1(fname)()
 	}
 
-	mainLines, allLines := NewMkLines(nil), NewMkLines(nil)
+	mainLines := NewMkLines(NewLines(fname, nil))
+	allLines := NewMkLines(NewLines("", nil))
 	if _, result := pkg.readMakefile(fname, mainLines, allLines, ""); !result {
 		LoadMk(fname, NotEmpty|LogErrors) // Just for the LogErrors.
 		return nil
@@ -232,7 +233,7 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 
 	if G.opts.DumpMakefile {
 		G.logOut.WriteLine("Whole Makefile (with all included files) follows:")
-		for _, line := range allLines.lines {
+		for _, line := range allLines.lines.Lines {
 			G.logOut.WriteLine(line.String())
 		}
 	}
@@ -292,10 +293,10 @@ func (pkg *Package) readMakefile(fname string, mainLines MkLines, allLines MkLin
 	lineAction := func(mkline MkLine) bool {
 		if isMainMakefile {
 			mainLines.mklines = append(mainLines.mklines, mkline)
-			mainLines.lines = append(mainLines.lines, mkline.Line)
+			mainLines.lines.Lines = append(mainLines.lines.Lines, mkline.Line)
 		}
 		allLines.mklines = append(allLines.mklines, mkline)
-		allLines.lines = append(allLines.lines, mkline.Line)
+		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
 		var includeFile, incDir, incBase string
 		if mkline.IsInclude() {
@@ -790,23 +791,23 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 func (mklines *MkLinesImpl) checkForUsedComment(relativeName string) {
 	lines := mklines.lines
-	if len(lines) < 3 {
+	if lines.Len() < 3 {
 		return
 	}
 
 	expected := "# used by " + relativeName
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		if line.Text == expected {
 			return
 		}
 	}
 
 	i := 0
-	for i < 2 && hasPrefix(lines[i].Text, "#") {
+	for i < 2 && hasPrefix(lines.Lines[i].Text, "#") {
 		i++
 	}
 
-	fix := lines[i].Autofix()
+	fix := lines.Lines[i].Autofix()
 	fix.Warnf("Please add a line %q here.", expected)
 	fix.Explain(
 		"Since Makefile.common files usually don't have any comments and",
@@ -890,7 +891,7 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 
 func (pkg *Package) loadPlistDirs(plistFilename string) {
 	lines := Load(plistFilename, MustSucceed)
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		text := line.Text
 		pkg.Plist.Files[text] = true // XXX: ignores PLIST conditions for now
 		// Keep in sync with PlistChecker.collectFilesAndDirs

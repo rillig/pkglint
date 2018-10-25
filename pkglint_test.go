@@ -478,7 +478,7 @@ func (s *Suite) Test_Pkglint_Checkfile__alternatives(c *check.C) {
 	lines := t.SetupFileLines("category/package/ALTERNATIVES",
 		"bin/tar @PREFIX@/bin/gnu-tar")
 
-	G.Main("pkglint", lines[0].Filename)
+	G.Main("pkglint", lines.FileName)
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/ALTERNATIVES:1: @PREFIX@/ can be omitted from the file name.",

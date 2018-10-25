@@ -15,7 +15,7 @@ const (
 	LogErrors                           //
 )
 
-func Load(fileName string, options LoadOptions) []Line {
+func Load(fileName string, options LoadOptions) Lines {
 	fromCache := G.fileCache.Get(fileName, options)
 	if fromCache != nil {
 		return fromCache
@@ -137,7 +137,7 @@ func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, c
 	return
 }
 
-func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool) []Line {
+func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool) Lines {
 	var rawLines []*RawLine
 	for lineno, rawLine := range strings.SplitAfter(rawText, "\n") {
 		if rawLine != "" {
@@ -162,5 +162,5 @@ func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool
 		NewLineEOF(fname).Errorf("File must end with a newline.")
 	}
 
-	return loglines
+	return NewLines(fname, loglines)
 }

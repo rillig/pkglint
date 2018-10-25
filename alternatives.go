@@ -13,7 +13,7 @@ func CheckfileAlternatives(fileName string) {
 		plist = G.Pkg.Plist
 	}
 
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		if m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+)`); m {
 			if plist.Files != nil {
 				if plist.Files[wrapper] {

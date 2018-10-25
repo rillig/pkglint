@@ -8,25 +8,25 @@ import (
 
 // Expecter records the state when checking a list of lines from top to bottom.
 type Expecter struct {
-	lines []Line
+	lines Lines
 	index int
 	m     []string
 }
 
-func NewExpecter(lines []Line) *Expecter {
+func NewExpecter(lines Lines) *Expecter {
 	return &Expecter{lines, 0, nil}
 }
 
 func (exp *Expecter) CurrentLine() Line {
-	if exp.index < len(exp.lines) {
-		return exp.lines[exp.index]
+	if exp.index < exp.lines.Len() {
+		return exp.lines.Lines[exp.index]
 	}
 
-	return NewLineEOF(exp.lines[0].Filename)
+	return NewLineEOF(exp.lines.FileName)
 }
 
 func (exp *Expecter) PreviousLine() Line {
-	return exp.lines[exp.index-1]
+	return exp.lines.Lines[exp.index-1]
 }
 
 func (exp *Expecter) Index() int {
@@ -34,7 +34,7 @@ func (exp *Expecter) Index() int {
 }
 
 func (exp *Expecter) EOF() bool {
-	return !(exp.index < len(exp.lines))
+	return !(exp.index < exp.lines.Len())
 }
 
 func (exp *Expecter) Group(index int) string {
@@ -57,7 +57,7 @@ func (exp *Expecter) AdvanceIfMatches(re regex.Pattern) bool {
 	}
 
 	if !exp.EOF() {
-		if m := G.res.Match(exp.lines[exp.index].Text, re); m != nil {
+		if m := G.res.Match(exp.lines.Lines[exp.index].Text, re); m != nil {
 			exp.index++
 			exp.m = m
 			return true
@@ -71,7 +71,7 @@ func (exp *Expecter) AdvanceIfPrefix(prefix string) bool {
 		defer trace.Call2(exp.CurrentLine().Text, prefix)()
 	}
 
-	return !exp.EOF() && strings.HasPrefix(exp.lines[exp.index].Text, prefix) && exp.Advance()
+	return !exp.EOF() && strings.HasPrefix(exp.lines.Lines[exp.index].Text, prefix) && exp.Advance()
 }
 
 func (exp *Expecter) AdvanceIfEquals(text string) bool {
@@ -79,7 +79,7 @@ func (exp *Expecter) AdvanceIfEquals(text string) bool {
 		defer trace.Call2(exp.CurrentLine().Text, text)()
 	}
 
-	return !exp.EOF() && exp.lines[exp.index].Text == text && exp.Advance()
+	return !exp.EOF() && exp.lines.Lines[exp.index].Text == text && exp.Advance()
 }
 
 func (exp *Expecter) ExpectEmptyLine(warnSpace bool) bool {
@@ -97,7 +97,7 @@ func (exp *Expecter) ExpectEmptyLine(warnSpace bool) bool {
 }
 
 func (exp *Expecter) ExpectText(text string) bool {
-	if !exp.EOF() && exp.lines[exp.index].Text == text {
+	if !exp.EOF() && exp.lines.Lines[exp.index].Text == text {
 		exp.index++
 		exp.m = nil
 		return true
@@ -108,7 +108,7 @@ func (exp *Expecter) ExpectText(text string) bool {
 }
 
 func (exp *Expecter) SkipToFooter() {
-	exp.index = len(exp.lines) - 2
+	exp.index = exp.lines.Len() - 2
 }
 
 // MkExpecter records the state when checking a list of Makefile lines from top to bottom.

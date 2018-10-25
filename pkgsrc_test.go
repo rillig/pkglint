@@ -54,8 +54,8 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 	todo := G.Pkgsrc.parseSuggestedUpdates(lines)
 
 	c.Check(todo, check.DeepEquals, []SuggestedUpdate{
-		{lines[5], "CSP", "0.34", ""},
-		{lines[6], "freeciv-client", "2.5.0", "(urgent)"}})
+		{lines.Lines[5], "CSP", "0.34", ""},
+		{lines.Lines[6], "freeciv-client", "2.5.0", "(urgent)"}})
 }
 
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {

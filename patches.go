@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-func ChecklinesPatch(lines []Line) {
+func ChecklinesPatch(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename)()
+		defer trace.Call1(lines.FileName)()
 	}
 
 	(&PatchChecker{lines, NewExpecter(lines), false, false}).Check()
 }
 
 type PatchChecker struct {
-	lines             []Line
+	lines             Lines
 	exp               *Expecter
 	seenDocumentation bool
 	previousLineEmpty bool
@@ -34,11 +34,11 @@ func (ck *PatchChecker) Check() {
 		defer trace.Call0()()
 	}
 
-	if CheckLineRcsid(ck.lines[0], ``, "") {
+	if CheckLineRcsid(ck.lines.Lines[0], ``, "") {
 		ck.exp.Advance()
 	}
 	if ck.exp.EOF() {
-		ck.lines[0].Errorf("Patch files must not be empty.")
+		ck.lines.Lines[0].Errorf("Patch files must not be empty.")
 		return
 	}
 
@@ -89,15 +89,15 @@ func (ck *PatchChecker) Check() {
 	}
 
 	if patchedFiles > 1 {
-		NewLineWhole(ck.lines[0].Filename).Warnf("Contains patches for %d files, should be only one.", patchedFiles)
+		ck.lines.Warnf("Contains patches for %d files, should be only one.", patchedFiles)
 	} else if patchedFiles == 0 {
-		NewLineWhole(ck.lines[0].Filename).Errorf("Contains no patch.")
+		ck.lines.Errorf("Contains no patch.")
 	}
 
 	ChecklinesTrailingEmptyLines(ck.lines)
-	sha1Before, err := computePatchSha1Hex(ck.lines[0].Filename)
+	sha1Before, err := computePatchSha1Hex(ck.lines.FileName)
 	if SaveAutofixChanges(ck.lines) && G.Pkg != nil && err == nil {
-		sha1After, err := computePatchSha1Hex(ck.lines[0].Filename)
+		sha1After, err := computePatchSha1Hex(ck.lines.FileName)
 		if err == nil {
 			AutofixDistinfo(sha1Before, sha1After)
 		}

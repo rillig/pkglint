@@ -352,7 +352,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 
 	handleMkFile := func(path string) {
 		mklines := LoadMk(path, 0)
-		if mklines != nil {
+		if mklines != nil && len(mklines.mklines) > 0 {
 			mklines.ForEach(handleLine)
 		}
 	}
@@ -368,10 +368,14 @@ func (src *Pkgsrc) loadUntypedVars() {
 	_ = filepath.Walk(src.File("mk"), handleFile)
 }
 
-func (src *Pkgsrc) parseSuggestedUpdates(lines []Line) []SuggestedUpdate {
+func (src *Pkgsrc) parseSuggestedUpdates(lines Lines) []SuggestedUpdate {
+	if lines == nil {
+		return nil
+	}
+
 	var updates []SuggestedUpdate
 	state := 0
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		text := line.Text
 
 		if state == 0 && text == "Suggested package updates" {
@@ -444,7 +448,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 
 	lines := Load(fname, MustSucceed|NotEmpty)
 	var changes []*Change
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
 			if year != "" && change.Date[0:4] != year {
@@ -682,7 +686,7 @@ func (src *Pkgsrc) initDeprecatedVars() {
 }
 
 // Load loads the file relative to the pkgsrc top directory.
-func (src *Pkgsrc) Load(fileName string, options LoadOptions) []Line {
+func (src *Pkgsrc) Load(fileName string, options LoadOptions) Lines {
 	return Load(src.File(fileName), options)
 }
 
@@ -751,7 +755,7 @@ func (src *Pkgsrc) loadMasterSites() {
 func (src *Pkgsrc) loadPkgOptions() {
 	lines := src.Load("mk/defaults/options.description", MustSucceed)
 
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:[\t ]+(.*))?$`); m {
 			src.PkgOptions[optname] = optdescr
 		} else {

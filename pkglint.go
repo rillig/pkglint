@@ -38,7 +38,7 @@ type Pkglint struct {
 	Testing         bool     // Is pkglint in self-testing mode (only during development)?
 	CurrentUsername string   // For checking against OWNER and MAINTAINER
 	CvsEntriesDir   string   // Cached to avoid I/O
-	CvsEntriesLines []Line
+	CvsEntriesLines Lines
 
 	errors                int
 	warnings              int
@@ -423,12 +423,12 @@ func CheckfileExtra(fname string) {
 	}
 }
 
-func ChecklinesDescr(lines []Line) {
+func ChecklinesDescr(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename)()
+		defer trace.Call1(lines.FileName)()
 	}
 
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		CheckLineLength(line, 80)
 		CheckLineTrailingWhitespace(line)
 		CheckLineValidCharacters(line)
@@ -438,10 +438,10 @@ func ChecklinesDescr(lines []Line) {
 	}
 	ChecklinesTrailingEmptyLines(lines)
 
-	if maxlines := 24; len(lines) > maxlines {
-		line := lines[maxlines]
+	if maxLines := 24; lines.Len() > maxLines {
+		line := lines.Lines[maxLines]
 
-		line.Warnf("File too long (should be no more than %d lines).", maxlines)
+		line.Warnf("File too long (should be no more than %d lines).", maxLines)
 		Explain(
 			"The DESCR file should fit on a traditional terminal of 80x25",
 			"characters.  It is also intended to give a _brief_ summary about",
@@ -451,9 +451,9 @@ func ChecklinesDescr(lines []Line) {
 	SaveAutofixChanges(lines)
 }
 
-func ChecklinesMessage(lines []Line) {
+func ChecklinesMessage(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename)()
+		defer trace.Call1(lines.FileName)()
 	}
 
 	explanation := []string{
@@ -462,30 +462,29 @@ func ChecklinesMessage(lines []Line) {
 		"empty line, your text and finally the footer line, which is the",
 		"same as the header line."}
 
-	if len(lines) < 3 {
-		lastLine := lines[len(lines)-1]
-		lastLine.Warnf("File too short.")
+	if lines.Len() < 3 {
+		lines.LastLine().Warnf("File too short.")
 		Explain(explanation...)
 		return
 	}
 
 	hline := strings.Repeat("=", 75)
-	if line := lines[0]; line.Text != hline {
+	if line := lines.Lines[0]; line.Text != hline {
 		fix := line.Autofix()
 		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
 		fix.Explain(explanation...)
 		fix.InsertBefore(hline)
 		fix.Apply()
-		CheckLineRcsid(lines[0], ``, "")
-	} else if 1 < len(lines) {
-		CheckLineRcsid(lines[1], ``, "")
+		CheckLineRcsid(lines.Lines[0], ``, "")
+	} else if 1 < lines.Len() {
+		CheckLineRcsid(lines.Lines[1], ``, "")
 	}
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		CheckLineLength(line, 80)
 		CheckLineTrailingWhitespace(line)
 		CheckLineValidCharacters(line)
 	}
-	if lastLine := lines[len(lines)-1]; lastLine.Text != hline {
+	if lastLine := lines.LastLine(); lastLine.Text != hline {
 		fix := lastLine.Autofix()
 		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
 		fix.Explain(explanation...)
@@ -699,14 +698,14 @@ func (pkglint *Pkglint) checkExecutable(fname string, st os.FileInfo) {
 	}
 }
 
-func ChecklinesTrailingEmptyLines(lines []Line) {
-	max := len(lines)
+func ChecklinesTrailingEmptyLines(lines Lines) {
+	max := lines.Len()
 	last := max
-	for last > 1 && lines[last-1].Text == "" {
+	for last > 1 && lines.Lines[last-1].Text == "" {
 		last--
 	}
 	if last != max {
-		lines[last].Notef("Trailing empty lines.")
+		lines.Lines[last].Notef("Trailing empty lines.")
 	}
 }
 

@@ -7,15 +7,15 @@ import (
 	"strings"
 )
 
-func ChecklinesPlist(lines []Line) {
+func ChecklinesPlist(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename)()
+		defer trace.Call1(lines.FileName)()
 	}
 
-	CheckLineRcsid(lines[0], `@comment `, "@comment ")
+	CheckLineRcsid(lines.Lines[0], `@comment `, "@comment ")
 
-	if len(lines) == 1 {
-		lines[0].Warnf("PLIST files shouldn't be empty.")
+	if lines.Len() == 1 {
+		lines.Lines[0].Warnf("PLIST files shouldn't be empty.")
 		Explain(
 			"One reason for empty PLISTs is that this is a newly created package",
 			"and that the author didn't run \"bmake print-PLIST\" after installing",
@@ -49,7 +49,7 @@ type PlistLine struct {
 	text      string // Line.Text without any conditions of the form ${PLIST.cond}
 }
 
-func (ck *PlistChecker) Check(plainLines []Line) {
+func (ck *PlistChecker) Check(plainLines Lines) {
 	plines := ck.NewLines(plainLines)
 	ck.collectFilesAndDirs(plines)
 
@@ -77,9 +77,9 @@ func (ck *PlistChecker) Check(plainLines []Line) {
 	}
 }
 
-func (ck *PlistChecker) NewLines(lines []Line) []*PlistLine {
-	plines := make([]*PlistLine, len(lines))
-	for i, line := range lines {
+func (ck *PlistChecker) NewLines(lines Lines) []*PlistLine {
+	plines := make([]*PlistLine, lines.Len())
+	for i, line := range lines.Lines {
 		condition, text := "", line.Text
 		if hasPrefix(text, "${PLIST.") {
 			if m, cond, rest := match2(text, `^(?:\$\{(PLIST\.[\w-.]+)\})+(.*)`); m {
@@ -539,5 +539,5 @@ func (s *plistLineSorter) Sort() {
 		lines = append(lines, pline.Line)
 	}
 
-	s.autofixed = SaveAutofixChanges(lines)
+	s.autofixed = SaveAutofixChanges(NewLines(lines[0].Filename, lines))
 }

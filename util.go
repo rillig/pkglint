@@ -159,8 +159,11 @@ func isIgnoredFilename(fileName string) bool {
 // Checks whether a file is already committed to the CVS repository.
 func isCommitted(fname string) bool {
 	lines := loadCvsEntries(fname)
+	if lines == nil {
+		return false
+	}
 	needle := "/" + path.Base(fname) + "/"
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		if hasPrefix(line.Text, needle) {
 			return true
 		}
@@ -172,7 +175,7 @@ func isLocallyModified(fname string) bool {
 	baseName := path.Base(fname)
 
 	lines := loadCvsEntries(fname)
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		fields := strings.Split(line.Text, "/")
 		if 3 < len(fields) && fields[1] == baseName {
 			st, err := os.Stat(fname)
@@ -193,7 +196,7 @@ func isLocallyModified(fname string) bool {
 	return false
 }
 
-func loadCvsEntries(fname string) []Line {
+func loadCvsEntries(fname string) Lines {
 	dir := path.Dir(fname)
 	if dir == G.CvsEntriesDir {
 		return G.CvsEntriesLines
@@ -748,7 +751,7 @@ type fileCacheEntry struct {
 	count   int
 	key     string
 	options LoadOptions
-	lines   []Line
+	lines   Lines
 }
 
 func NewFileCache(size int) *FileCache {
@@ -759,7 +762,7 @@ func NewFileCache(size int) *FileCache {
 		0}
 }
 
-func (c *FileCache) Put(fileName string, options LoadOptions, lines []Line) {
+func (c *FileCache) Put(fileName string, options LoadOptions, lines Lines) {
 	key := c.key(fileName)
 
 	entry := c.mapping[key]
@@ -809,18 +812,18 @@ func (c *FileCache) removeOldEntries() {
 	}
 }
 
-func (c *FileCache) Get(fileName string, options LoadOptions) []Line {
+func (c *FileCache) Get(fileName string, options LoadOptions) Lines {
 	key := c.key(fileName)
 	entry, found := c.mapping[key]
 	if found && entry.options == options {
 		c.hits++
 		entry.count++
 
-		lines := make([]Line, len(entry.lines))
-		for i, line := range entry.lines {
+		lines := make([]Line, entry.lines.Len())
+		for i, line := range entry.lines.Lines {
 			lines[i] = NewLineMulti(fileName, int(line.firstLine), int(line.lastLine), line.Text, line.raw)
 		}
-		return lines
+		return NewLines(fileName, lines)
 	}
 	c.misses++
 	return nil

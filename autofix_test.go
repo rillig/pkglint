@@ -16,13 +16,13 @@ func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix(c *check.C) {
 		"line2",
 		"line3")
 
-	fix := lines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Something's wrong here.")
 	fix.ReplaceRegex(`.`, "X", -1)
 	fix.Apply()
 	SaveAutofixChanges(lines)
 
-	c.Check(lines[1].raw[0].textnl, equals, "XXXXX\n")
+	c.Check(lines.Lines[1].raw[0].textnl, equals, "XXXXX\n")
 	t.CheckFileLines("Makefile",
 		"line1",
 		"line2",
@@ -45,7 +45,7 @@ func (s *Suite) Test_Autofix_ReplaceRegex__autofix(c *check.C) {
 		"line2",
 		"line3")
 
-	fix := lines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Something's wrong here.")
 	fix.ReplaceRegex(`.`, "X", 3)
 	fix.Apply()
@@ -84,7 +84,7 @@ func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix_and_source(c *check.C) {
 		"line2",
 		"line3")
 
-	fix := lines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Something's wrong here.")
 	fix.ReplaceRegex(`.`, "X", -1)
 	fix.Apply()
@@ -157,7 +157,7 @@ func (s *Suite) Test_SaveAutofixChanges__no_changes_necessary(c *check.C) {
 		"Line 1",
 		"Line 2")
 
-	fix := lines[0].Autofix()
+	fix := lines.Lines[0].Autofix()
 	fix.Warnf("Dummy warning.")
 	fix.Replace("X", "Y")
 	fix.Apply()
@@ -285,7 +285,7 @@ func (s *Suite) Test_Autofix__show_autofix_and_source(c *check.C) {
 		"# before \\",
 		"The old song \\",
 		"after")
-	line := mklines.lines[1]
+	line := mklines.lines.Lines[1]
 
 	{
 		fix := line.Autofix()
@@ -349,9 +349,9 @@ func (s *Suite) Test_Autofix__suppress_unfixable_warnings(c *check.C) {
 		"line2",
 		"line3")
 
-	lines[0].Warnf("This warning is not shown since it is not part of a fix.")
+	lines.Lines[0].Warnf("This warning is not shown since it is not part of a fix.")
 
-	fix := lines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Something's wrong here.")
 	fix.ReplaceRegex(`.`, "X", -1)
 	fix.Apply()
@@ -360,7 +360,7 @@ func (s *Suite) Test_Autofix__suppress_unfixable_warnings(c *check.C) {
 	fix.Replace("XXX", "TODO")
 	fix.Apply()
 
-	lines[2].Warnf("Neither is this warning shown.")
+	lines.Lines[2].Warnf("Neither is this warning shown.")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Something's wrong here.",
@@ -415,27 +415,27 @@ func (s *Suite) Test_Autofix_Custom(c *check.C) {
 		fix.Apply()
 	}
 
-	doFix(lines[0])
+	doFix(lines.Lines[0])
 
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Please write in ALL-UPPERCASE.")
 
 	t.SetupCommandLine("--show-autofix")
 
-	doFix(lines[1])
+	doFix(lines.Lines[1])
 
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Please write in ALL-UPPERCASE.",
 		"AUTOFIX: Makefile:2: Converting to uppercase")
-	c.Check(lines[1].Text, equals, "LINE2")
+	c.Check(lines.Lines[1].Text, equals, "LINE2")
 
 	t.SetupCommandLine("--autofix")
 
-	doFix(lines[2])
+	doFix(lines.Lines[2])
 
 	t.CheckOutputLines(
 		"AUTOFIX: Makefile:3: Converting to uppercase")
-	c.Check(lines[2].Text, equals, "LINE3")
+	c.Check(lines.Lines[2].Text, equals, "LINE3")
 }
 
 func (s *Suite) Test_Autofix_Explain(c *check.C) {
@@ -465,7 +465,7 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 		"666")
 	lines := mklines.lines
 
-	fix := lines[0].Autofix()
+	fix := lines.Lines[0].Autofix()
 	fix.Warnf("Many.")
 	fix.Explain(
 		"Explanation.")
@@ -485,8 +485,8 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	t.CheckFileLines("fname",
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
-	c.Check(lines[0].raw[0].textnl, equals, "VAR=\t111 222 333 444 555 \\\n")
-	c.Check(lines[0].raw[1].textnl, equals, "666\n")
+	c.Check(lines.Lines[0].raw[0].textnl, equals, "VAR=\t111 222 333 444 555 \\\n")
+	c.Check(lines.Lines[0].raw[1].textnl, equals, "666\n")
 }
 
 func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
@@ -526,7 +526,7 @@ func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
 		"line 1")
 	_ = os.RemoveAll(t.File("subdir"))
 
-	fix := lines[0].Autofix()
+	fix := lines.Lines[0].Autofix()
 	fix.Warnf("Should start with an uppercase letter.")
 	fix.Replace("line", "Line")
 	fix.Apply()
@@ -554,7 +554,7 @@ func (s *Suite) Test_Autofix_Apply__file_busy_Windows(c *check.C) {
 	defer openFile.Close()
 	c.Check(err, check.IsNil)
 
-	fix := lines[0].Autofix()
+	fix := lines.Lines[0].Autofix()
 	fix.Warnf("Should start with an uppercase letter.")
 	fix.Replace("line", "Line")
 	fix.Apply()
@@ -581,7 +581,7 @@ func (s *Suite) Test_Autofix_Apply__file_converted_to_directory(c *check.C) {
 	c.Check(os.RemoveAll(t.File("file.txt")), check.IsNil)
 	c.Check(os.MkdirAll(t.File("file.txt"), 0777), check.IsNil)
 
-	fix := lines[0].Autofix()
+	fix := lines.Lines[0].Autofix()
 	fix.Warnf("Should start with an uppercase letter.")
 	fix.Replace("line", "Line")
 	fix.Apply()

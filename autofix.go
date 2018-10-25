@@ -332,13 +332,13 @@ func (fix *Autofix) skip() bool {
 // applying the autofix changes.
 // The lines may come from different files.
 // Only files that actually have changed lines are saved.
-func SaveAutofixChanges(lines []Line) (autofixed bool) {
+func SaveAutofixChanges(lines Lines) (autofixed bool) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
 
 	if !G.opts.Autofix {
-		for _, line := range lines {
+		for _, line := range lines.Lines {
 			if line.autofix != nil && line.autofix.modified {
 				G.autofixAvailable = true
 				G.fileCache.Evict(line.Filename)
@@ -349,7 +349,7 @@ func SaveAutofixChanges(lines []Line) (autofixed bool) {
 
 	changes := make(map[string][]string)
 	changed := make(map[string]bool)
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		chlines := changes[line.Filename]
 		if fix := line.autofix; fix != nil {
 			if fix.modified {

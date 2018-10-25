@@ -10,7 +10,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	t := s.Init(c)
 
 	checkRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
-		line := t.NewLines("Test_MkParser_MkTokens.mk", input)[0]
+		line := t.NewLines("Test_MkParser_MkTokens.mk", input).Lines[0]
 		p := NewMkParser(line, input, true)
 		actualTokens := p.MkTokens()
 		c.Check(actualTokens, deepEquals, expectedTokens)

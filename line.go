@@ -19,8 +19,6 @@ import (
 	"strconv"
 )
 
-type Line = *LineImpl
-
 type RawLine struct {
 	Lineno int
 	orignl string
@@ -30,6 +28,8 @@ type RawLine struct {
 func (rline *RawLine) String() string {
 	return strconv.Itoa(rline.Lineno) + ":" + rline.textnl
 }
+
+type Line = *LineImpl
 
 type LineImpl struct {
 	Filename  string

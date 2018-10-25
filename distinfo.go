@@ -10,12 +10,12 @@ import (
 	"strings"
 )
 
-func ChecklinesDistinfo(lines []Line) {
+func ChecklinesDistinfo(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines[0].Filename)()
+		defer trace.Call1(lines.FileName)()
 	}
 
-	fname := lines[0].Filename
+	fname := lines.FileName
 	patchdir := "patches"
 	if G.Pkg != nil && dirExists(G.Pkg.File(G.Pkg.Patchdir)) {
 		patchdir = G.Pkg.Patchdir
@@ -46,13 +46,13 @@ type distinfoLinesChecker struct {
 	algorithms       []string
 }
 
-func (ck *distinfoLinesChecker) checkLines(lines []Line) {
-	CheckLineRcsid(lines[0], ``, "")
-	if 1 < len(lines) && lines[1].Text != "" {
-		lines[1].Notef("Empty line expected.")
+func (ck *distinfoLinesChecker) checkLines(lines Lines) {
+	CheckLineRcsid(lines.Lines[0], ``, "")
+	if 1 < len(lines.Lines) && lines.Lines[1].Text != "" {
+		lines.Lines[1].Notef("Empty line expected.")
 	}
 
-	for i, line := range lines {
+	for i, line := range lines.Lines {
 		if i < 2 {
 			continue
 		}
@@ -197,7 +197,7 @@ func computePatchSha1Hex(patchFilename string) (string, error) {
 func AutofixDistinfo(oldSha1, newSha1 string) {
 	distinfoFilename := G.Pkg.File(G.Pkg.DistinfoFile)
 	if lines := Load(distinfoFilename, NotEmpty|LogErrors); lines != nil {
-		for _, line := range lines {
+		for _, line := range lines.Lines {
 			fix := line.Autofix()
 			fix.Warnf(SilentMagicDiagnostic)
 			fix.Replace(oldSha1, newSha1)

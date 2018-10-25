@@ -8,7 +8,7 @@ import (
 
 func ChecklinesBuildlink3Mk(mklines MkLines) {
 	if trace.Tracing {
-		defer trace.Call1(mklines.lines[0].Filename)()
+		defer trace.Call1(mklines.lines.FileName)()
 	}
 
 	mklines.Check()

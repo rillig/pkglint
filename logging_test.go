@@ -24,14 +24,14 @@ func (s *Suite) Test__show_source_separator(c *check.C) {
 		"The second line",
 		"The third line")
 
-	fix := lines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Using \"second\" is deprecated.")
 	fix.Replace("second", "silver medal")
 	fix.Apply()
 
-	lines[2].Warnf("Dummy warning.")
+	lines.Lines[2].Warnf("Dummy warning.")
 
-	fix = lines[2].Autofix()
+	fix = lines.Lines[2].Autofix()
 	fix.Warnf("Using \"third\" is deprecated.")
 	fix.Replace("third", "bronze medal")
 	fix.Apply()
@@ -56,14 +56,14 @@ func (s *Suite) Test__show_source_separator_show_autofix(c *check.C) {
 		"The second line",
 		"The third line")
 
-	fix := lines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Using \"second\" is deprecated.")
 	fix.Replace("second", "silver medal")
 	fix.Apply()
 
-	lines[2].Warnf("Dummy warning.")
+	lines.Lines[2].Warnf("Dummy warning.")
 
-	fix = lines[2].Autofix()
+	fix = lines.Lines[2].Autofix()
 	fix.Warnf("Using \"third\" is deprecated.")
 	fix.Replace("third", "bronze medal")
 	fix.Apply()
@@ -89,14 +89,14 @@ func (s *Suite) Test__show_source_separator_autofix(c *check.C) {
 		"The second line",
 		"The third line")
 
-	fix := lines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Using \"second\" is deprecated.")
 	fix.Replace("second", "silver medal")
 	fix.Apply()
 
-	lines[2].Warnf("Dummy warning.")
+	lines.Lines[2].Warnf("Dummy warning.")
 
-	fix = lines[2].Autofix()
+	fix = lines.Lines[2].Autofix()
 	fix.Warnf("Using \"third\" is deprecated.")
 	fix.Replace("third", "bronze medal")
 	fix.Apply()

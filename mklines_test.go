@@ -714,8 +714,8 @@ func (s *Suite) Test_MkLines_CheckRedundantVariables(c *check.C) {
 		"VAR=\tnew value")
 	makefile := t.NewMkLines("Makefile",
 		"VAR=\tthe package may overwrite variables from other files")
-	allLines := append(append([]Line(nil), included.lines...), makefile.lines...)
-	mklines := NewMkLines(allLines)
+	allLines := append(append([]Line(nil), included.lines.Lines...), makefile.lines.Lines...)
+	mklines := NewMkLines(NewLines(included.lines.FileName, allLines))
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.

@@ -23,7 +23,7 @@ func (s *Suite) Test_VaralignBlock_Check__autofix(c *check.C) {
 		"VAR=\tvalue")     // Already aligned with tabs only, left unchanged.
 
 	varalign := &VaralignBlock{}
-	for _, line := range lines {
+	for _, line := range lines.Lines {
 		varalign.Check(NewMkLine(line))
 	}
 	varalign.Finish()

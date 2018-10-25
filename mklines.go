@@ -10,7 +10,7 @@ type MkLines = *MkLinesImpl
 
 type MkLinesImpl struct {
 	mklines       []MkLine
-	lines         []Line
+	lines         Lines
 	forVars       map[string]bool // The variables currently used in .for loops
 	target        string          // Current make(1) target
 	vars          Scope
@@ -23,18 +23,13 @@ type MkLinesImpl struct {
 	Once
 }
 
-func NewMkLines(lines []Line) MkLines {
-	mklines := make([]MkLine, len(lines))
-	for i, line := range lines {
+func NewMkLines(lines Lines) MkLines {
+	mklines := make([]MkLine, lines.Len())
+	for i, line := range lines.Lines {
 		mklines[i] = NewMkLine(line)
 	}
 
-	traceName := "MkLines"
-	if len(lines) != 0 {
-		traceName = lines[0].Filename
-	}
-
-	tools := NewTools(traceName)
+	tools := NewTools(lines.FileName)
 	tools.Fallback(G.Pkgsrc.Tools)
 
 	return &MkLinesImpl{
@@ -61,7 +56,7 @@ func (mklines *MkLinesImpl) UseVar(mkline MkLine, varname string) {
 
 func (mklines *MkLinesImpl) Check() {
 	if trace.Tracing {
-		defer trace.Call1(mklines.lines[0].Filename)()
+		defer trace.Call1(mklines.lines.FileName)()
 	}
 
 	G.Mk = mklines
@@ -93,11 +88,11 @@ func (mklines *MkLinesImpl) checkAll() {
 		return targets
 	}()
 
-	CheckLineRcsid(mklines.lines[0], `#[\t ]+`, "# ")
+	CheckLineRcsid(mklines.lines.Lines[0], `#[\t ]+`, "# ")
 
 	substContext := NewSubstContext()
 	var varalign VaralignBlock
-	isHacksMk := mklines.lines[0].Basename == "hacks.mk"
+	isHacksMk := mklines.lines.BaseName == "hacks.mk"
 
 	lineAction := func(mkline MkLine) bool {
 		if isHacksMk {
@@ -168,7 +163,7 @@ func (mklines *MkLinesImpl) checkAll() {
 	}
 	mklines.ForEachEnd(lineAction, atEnd)
 
-	substContext.Finish(NewMkLine(NewLineEOF(mklines.lines[0].Filename)))
+	substContext.Finish(NewMkLine(mklines.lines.EOFLine())) // TODO: mklines.EOFLine()
 	varalign.Finish()
 
 	ChecklinesTrailingEmptyLines(mklines.lines)
