@@ -326,6 +326,33 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 		"WARN: os.mk:8: Foreign variable \"TODAY2\" in SUBST block.")
 }
 
+// Variables mentioned in SUBST_VARS may appear in the same paragraph,
+// or alternatively anywhere else in the file.
+func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wextra,no-space")
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("os.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         pre-configure",
+		"SUBST_FILES.os=         guess-os.h",
+		"SUBST_VARS.os=          TODAY1",
+		"",
+		"TODAY1!=                date",
+		"TODAY2!=                date")
+
+	mklines.Check()
+
+	// FIXME: The above code is fine. The warning about SUBST_CLASSES should disappear.
+	t.CheckOutputLines(
+		"WARN: os.mk:8: SUBST_CLASSES should come before the definition of \"TODAY1\".",
+		"WARN: os.mk:9: TODAY2 is defined but not used.")
+}
+
 // simulateSubstLines only tests some of the inner workings of SubstContext.
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
