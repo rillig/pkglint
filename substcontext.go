@@ -216,11 +216,7 @@ func (ctx *SubstContext) Finish(mkline MkLine) {
 		mkline.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
-	ctx.id = ""
-	ctx.stage = ""
-	ctx.message = ""
-	ctx.curr = &SubstContextStats{}
-	ctx.filterCmd = ""
+	*ctx = *NewSubstContext()
 }
 
 func (ctx *SubstContext) dupString(mkline MkLine, pstr *string, varname, value string) {

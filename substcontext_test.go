@@ -347,9 +347,7 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: The above code is fine. The warning about SUBST_CLASSES should disappear.
 	t.CheckOutputLines(
-		"WARN: os.mk:8: SUBST_CLASSES should come before the definition of \"TODAY1\".",
 		"WARN: os.mk:9: TODAY2 is defined but not used.")
 }
 
