@@ -16,7 +16,7 @@ func NewParser(line Line, s string, emitWarnings bool) *Parser {
 }
 
 func (p *Parser) EOF() bool {
-	return p.repl.EOF()
+	return p.repl.Rest() == ""
 }
 
 func (p *Parser) Rest() string {
@@ -90,7 +90,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 	if dp.LowerOp != "" || dp.UpperOp != "" {
 		return &dp
 	}
-	if repl.AdvanceStr("-") && !repl.EOF() {
+	if repl.AdvanceStr("-") && repl.Rest() != "" {
 		dp.Wildcard = repl.AdvanceRest()
 		return &dp
 	}

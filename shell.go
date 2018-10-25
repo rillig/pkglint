@@ -222,7 +222,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 	}
 
 	line := shline.mkline.Line
-	for !repl.EOF() {
+	for repl.Rest() != "" {
 		switch {
 		case repl.AdvanceStr("`"):
 			if quoting == shqBackt {

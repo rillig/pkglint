@@ -24,10 +24,6 @@ func NewPrefixReplacer(s string, res *regex.Registry) *PrefixReplacer {
 	return &PrefixReplacer{s, "", nil, res}
 }
 
-func (pr *PrefixReplacer) EOF() bool {
-	return pr.rest == ""
-}
-
 func (pr *PrefixReplacer) Rest() string {
 	return pr.rest
 }
