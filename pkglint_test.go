@@ -899,6 +899,20 @@ func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 		"AUTOFIX: ~/file.mk: Clearing executable bits")
 }
 
+func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("CVS/Entries",
+		"/file.mk/modified////")
+	fileName := t.File("file.mk")
+	fileInfo := ExecutableFileInfo{path.Base(fileName)}
+
+	G.checkExecutable(fileName, fileInfo)
+
+	// See the "Too late" comment in Pkglint.checkExecutable.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_main(c *check.C) {
 	t := s.Init(c)
 
