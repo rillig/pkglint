@@ -918,6 +918,7 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 	checkType("MY_CMD_ENV", "ShellList of ShellWord (guessed)")
 	checkType("MY_CMD_ARGS", "ShellList of ShellWord (guessed)")
 	checkType("MY_CMD_CFLAGS", "ShellList of CFlag (guessed)")
+	checkType("MY_CMD_LDFLAGS", "ShellList of LdFlag (guessed)")
 	checkType("PLIST.abcde", "Yes")
 }
 

@@ -302,6 +302,19 @@ func (s *Suite) Test_Pkgsrc_Latest__multi(c *check.C) {
 	c.Check(latest, equals, "../../lang/python35")
 }
 
+func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/Makefile")
+
+	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
+
+	c.Check(latest, equals, "")
+
+	t.CheckOutputLines(
+		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+}
+
 // In 2017, PostgreSQL changed their versioning scheme to SemVer,
 // and since the pkgsrc directory contains the major version,
 // without any separating dots, the case of version 10 being
