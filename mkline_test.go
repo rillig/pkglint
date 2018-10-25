@@ -1043,6 +1043,7 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	checkNotVarassign("?=value")
 	checkNotVarassign("<=value")
 	checkNotVarassign("#")
+	checkNotVarassign("VAR.$$=value")
 
 	// A single space is typically used for writing documentation,
 	// not for commenting out code.
