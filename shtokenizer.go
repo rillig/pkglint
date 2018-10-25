@@ -269,7 +269,7 @@ loop:
 		switch {
 		case repl.AdvanceRegexp(`^[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+`):
 		case dquot && repl.AdvanceRegexp(`^[\t &'();<>|]+`):
-		case squot && repl.AdvanceByte('`'):
+		case squot && repl.AdvanceStr("`"):
 		case squot && repl.AdvanceRegexp(`^[\t "&();<>\\|]+`):
 		case squot && repl.AdvanceStr("$$"):
 		case squot:
