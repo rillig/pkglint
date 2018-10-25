@@ -359,7 +359,7 @@ func (p *MkParser) Varname() string {
 	isVarnameChar := func(c byte) bool {
 		return 'A' <= c && c <= 'Z' || c == '_' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' || c == '+' || c == '-' || c == '.' || c == '*'
 	}
-	for p.VarUse() != nil || repl.AdvanceBytesFunc(isVarnameChar) {
+	for p.VarUse() != nil || repl.NextBytesFunc(isVarnameChar) != "" {
 	}
 	return repl.Since(mark)
 }
