@@ -175,6 +175,10 @@ func isLocallyModified(fname string) bool {
 	baseName := path.Base(fname)
 
 	lines := loadCvsEntries(fname)
+	if lines == nil {
+		return false
+	}
+
 	for _, line := range lines.Lines {
 		fields := strings.Split(line.Text, "/")
 		if 3 < len(fields) && fields[1] == baseName {

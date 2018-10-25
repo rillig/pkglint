@@ -246,6 +246,7 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	c.Check(isLocallyModified(modified), equals, true)
 	c.Check(isLocallyModified(t.File("enoent")), equals, true)
 	c.Check(isLocallyModified(t.File("not_mentioned")), equals, false)
+	c.Check(isLocallyModified(t.File("subdir/file")), equals, false)
 }
 
 func (s *Suite) Test_Scope_Defined(c *check.C) {
