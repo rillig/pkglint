@@ -47,31 +47,24 @@ func NewAutofix(line Line) *Autofix {
 		lines: append([]*RawLine{}, line.raw...)}
 }
 
-// Custom runs a custom fix action, unless the fix is skipped anyway
-// because of the --only option.
-//
-// The fixer function must check whether it can actually fix something,
-// and if so, call Describef to describe the actual fix.
-//
-// If printAutofix and autofix are both false, the fix must only be
-// described by calling Describef. No observable modification must be done,
-// not even in memory.
-//
-// If printAutofix is true but autofix is false, the fix should be done in
-// memory as far as possible. For example, changing the text of Line.raw
-// is appropriate, but changing files in the file system is not.
-//
-// Only if autofix is true, fixes other than modifying the current Line
-// should be done persistently, such as changes to the file system.
-//
-// In any case, changes to the current Line will be written back to disk
-// by SaveAutofixChanges, after fixing all the lines in the file at once.
-func (fix *Autofix) Custom(fixer func(printAutofix, autofix bool)) {
-	if fix.skip() {
-		return
-	}
+// Errorf remembers the error for logging it later when Apply is called.
+func (fix *Autofix) Errorf(format string, args ...interface{}) {
+	fix.setDiag(llError, format, args)
+}
 
-	fixer(G.opts.ShowAutofix, G.opts.Autofix)
+// Warnf remembers the warning for logging it later when Apply is called.
+func (fix *Autofix) Warnf(format string, args ...interface{}) {
+	fix.setDiag(llWarn, format, args)
+}
+
+// Notef remembers the note for logging it later when Apply is called.
+func (fix *Autofix) Notef(format string, args ...interface{}) {
+	fix.setDiag(llNote, format, args)
+}
+
+// Explain remembers the explanation for logging it later when Apply is called.
+func (fix *Autofix) Explain(explanation ...string) {
+	fix.explanation = explanation
 }
 
 // ReplaceAfter replaces "from" with "to", a single time.
@@ -135,61 +128,38 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 	}
 }
 
-func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
-	G.Assertf(mkline.IsMultiline(), "Line must be a multiline.")
-	G.Assertf(mkline.IsVarassign() || mkline.IsCommentedVarassign(), "Line must be a variable assignment.")
-
+// Custom runs a custom fix action, unless the fix is skipped anyway
+// because of the --only option.
+//
+// The fixer function must check whether it can actually fix something,
+// and if so, call Describef to describe the actual fix.
+//
+// If printAutofix and autofix are both false, the fix must only be
+// described by calling Describef. No observable modification must be done,
+// not even in memory.
+//
+// If printAutofix is true but autofix is false, the fix should be done in
+// memory as far as possible. For example, changing the text of Line.raw
+// is appropriate, but changing files in the file system is not.
+//
+// Only if autofix is true, fixes other than modifying the current Line
+// should be done persistently, such as changes to the file system.
+//
+// In any case, changes to the current Line will be written back to disk
+// by SaveAutofixChanges, after fixing all the lines in the file at once.
+func (fix *Autofix) Custom(fixer func(printAutofix, autofix bool)) {
 	if fix.skip() {
 		return
 	}
 
-	normalized := true // Whether all indentation is tabs, followed by spaces.
-	oldWidth := 0      // The minimum required indentation in the original lines.
+	fixer(G.opts.ShowAutofix, G.opts.Autofix)
+}
 
-	{
-		// Interpreting the continuation marker as variable value
-		// is cheating, but works well.
-		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
-		m, _, _, _, _, valueAlign, value, _, _ := MatchVarassign(text)
-		if m && value != "\\" {
-			oldWidth = tabWidth(valueAlign)
-		}
-	}
-
-	for _, rawLine := range fix.lines[1:] {
-		_, comment, space := match2(rawLine.textnl, `^(#?)([ \t]*)`)
-		width := tabWidth(comment + space)
-		if (oldWidth == 0 || width < oldWidth) && width >= 8 && rawLine.textnl != "\n" {
-			oldWidth = width
-		}
-		if !matches(space, `^\t* {0,7}$`) {
-			normalized = false
-		}
-	}
-
-	if normalized && newWidth == oldWidth {
-		return
-	}
-
-	// Continuation lines with the minimal unambiguous indentation
-	// attempt to keep the indentation as small as possible, so don't
-	// realign them.
-	if oldWidth == 8 {
-		return
-	}
-
-	for _, rawLine := range fix.lines[1:] {
-		_, comment, oldSpace := match2(rawLine.textnl, `^(#?)([ \t]*)`)
-		newWidth := tabWidth(oldSpace) - oldWidth + newWidth
-		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
-		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
-		if replaced != rawLine.textnl {
-			if G.opts.ShowAutofix || G.opts.Autofix {
-				rawLine.textnl = replaced
-			}
-			fix.Describef(rawLine.Lineno, "Replacing indentation %q with %q.", oldSpace, newSpace)
-		}
-	}
+// Describef is used while Autofix.Custom is called to remember a description
+// of the actual fix for logging it later when Apply is called.
+// Describef may be called multiple times before calling Apply.
+func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
+	fix.actions = append(fix.actions, autofixAction{fmt.Sprintf(format, args...), lineno})
 }
 
 // InsertBefore prepends a line before the current line.
@@ -214,6 +184,9 @@ func (fix *Autofix) InsertAfter(text string) {
 	fix.Describef(fix.lines[len(fix.lines)-1].Lineno, "Inserting a line %q after this line.", text)
 }
 
+// Delete removes the current line completely.
+// It can be combined with InsertAfter or InsertBefore to
+// replace the complete line with some different text.
 func (fix *Autofix) Delete() {
 	if fix.skip() {
 		return
@@ -223,33 +196,6 @@ func (fix *Autofix) Delete() {
 		fix.Describef(line.Lineno, "Deleting this line.")
 		line.textnl = ""
 	}
-}
-
-// Describef remembers a description of the actual fix
-// for logging it later when Apply is called.
-// There may be multiple fixes in one pass.
-func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
-	fix.actions = append(fix.actions, autofixAction{fmt.Sprintf(format, args...), lineno})
-}
-
-// Notef remembers the note for logging it later when Apply is called.
-func (fix *Autofix) Notef(format string, args ...interface{}) {
-	fix.setDiag(llNote, format, args)
-}
-
-// Warnf remembers the warning for logging it later when Apply is called.
-func (fix *Autofix) Warnf(format string, args ...interface{}) {
-	fix.setDiag(llWarn, format, args)
-}
-
-// Errorf remembers the error for logging it later when Apply is called.
-func (fix *Autofix) Errorf(format string, args ...interface{}) {
-	fix.setDiag(llError, format, args)
-}
-
-// Explain remembers the explanation for logging it later when Apply is called.
-func (fix *Autofix) Explain(explanation ...string) {
-	fix.explanation = explanation
 }
 
 // Apply does the actual work.
@@ -312,6 +258,63 @@ func (fix *Autofix) Apply() {
 			Explain(fix.explanation...)
 		} else if G.opts.ShowSource {
 			G.logOut.Separate()
+		}
+	}
+}
+
+func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
+	G.Assertf(mkline.IsMultiline(), "Line must be a multiline.")
+	G.Assertf(mkline.IsVarassign() || mkline.IsCommentedVarassign(), "Line must be a variable assignment.")
+
+	if fix.skip() {
+		return
+	}
+
+	normalized := true // Whether all indentation is tabs, followed by spaces.
+	oldWidth := 0      // The minimum required indentation in the original lines.
+
+	{
+		// Interpreting the continuation marker as variable value
+		// is cheating, but works well.
+		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
+		m, _, _, _, _, valueAlign, value, _, _ := MatchVarassign(text)
+		if m && value != "\\" {
+			oldWidth = tabWidth(valueAlign)
+		}
+	}
+
+	for _, rawLine := range fix.lines[1:] {
+		_, comment, space := match2(rawLine.textnl, `^(#?)([ \t]*)`)
+		width := tabWidth(comment + space)
+		if (oldWidth == 0 || width < oldWidth) && width >= 8 && rawLine.textnl != "\n" {
+			oldWidth = width
+		}
+		if !matches(space, `^\t* {0,7}$`) {
+			normalized = false
+		}
+	}
+
+	if normalized && newWidth == oldWidth {
+		return
+	}
+
+	// Continuation lines with the minimal unambiguous indentation
+	// attempt to keep the indentation as small as possible, so don't
+	// realign them.
+	if oldWidth == 8 {
+		return
+	}
+
+	for _, rawLine := range fix.lines[1:] {
+		_, comment, oldSpace := match2(rawLine.textnl, `^(#?)([ \t]*)`)
+		newWidth := tabWidth(oldSpace) - oldWidth + newWidth
+		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
+		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
+		if replaced != rawLine.textnl {
+			if G.opts.ShowAutofix || G.opts.Autofix {
+				rawLine.textnl = replaced
+			}
+			fix.Describef(rawLine.Lineno, "Replacing indentation %q with %q.", oldSpace, newSpace)
 		}
 	}
 }
