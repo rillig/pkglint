@@ -68,7 +68,7 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"  -d, --debug                 log verbose call traces for debugging",
 		"  -e, --explain               explain the diagnostics or give further help",
 		"  -f, --show-autofix          show what pkglint can fix automatically",
-		"  -F, --autofix               try to automatically fix some errors (experimental)",
+		"  -F, --autofix               try to automatically fix some errors",
 		"  -g, --gcc-output-format     mimic the gcc output format",
 		"  -h, --help                  show a detailed usage message",
 		"  -I, --dumpmakefile          dump the Makefile after parsing",
