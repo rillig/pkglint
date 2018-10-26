@@ -330,10 +330,10 @@ func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) 
 }
 
 func (fix *Autofix) skip() bool {
-	// This check is necessary for the --only command line option.
 	G.Assertf(
 		fix.diagFormat != "",
 		"Autofix: The diagnostic must be given before the action.")
+	// This check is necessary for the --only command line option.
 	return !shallBeLogged(fix.diagFormat)
 }
 
