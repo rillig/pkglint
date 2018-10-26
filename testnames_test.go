@@ -17,9 +17,33 @@ import (
 func (s *Suite) Test__test_names(c *check.C) {
 
 	type Element struct {
-		Type string
-		Func string
-		File string
+		Type string // The type, e.g. MkLine
+		Func string // The function or method name, e.g. Warnf
+		File string // The file containing the element
+
+		FullName string // Type + separator + Func
+
+		// Whether the element is a test or a testee
+		Test bool
+		// For a test, its name without the description,
+		// otherwise the prefix for the corresponding tests
+		Prefix string
+	}
+
+	newElement := func(typeName, funcName, fileName string) *Element {
+		e := &Element{File: fileName, Type: typeName, Func: funcName}
+
+		sep := ifelseStr(e.Type != "" && e.Func != "", ".", "")
+		e.FullName = e.Type + sep + e.Func
+
+		e.Test = hasSuffix(e.File, "_test.go") && e.Type != "" && hasPrefix(e.Func, "Test")
+		if e.Test {
+			e.Prefix = strings.Split(strings.TrimPrefix(e.Func, "Test"), "__")[0]
+		} else {
+			sep := ifelseStr(e.Type != "" && e.Func != "", "_", "")
+			e.Prefix = e.Type + sep + e.Func
+		}
+		return e
 	}
 
 	var errors []string
@@ -31,15 +55,6 @@ func (s *Suite) Test__test_names(c *check.C) {
 		warnings = append(warnings, "W: "+sprintf(format, args...))
 	}
 
-	elementString := func(e *Element) string {
-		sep := ifelseStr(e.Type != "" && e.Func != "", ".", "")
-		return fmt.Sprintf("%s: %s%s%s", e.File, e.Type, sep, e.Func)
-	}
-
-	isTest := func(e *Element) bool {
-		return hasSuffix(e.File, "_test.go") && e.Type != "" && hasPrefix(e.Func, "Test")
-	}
-
 	// addElement adds a single type or function declaration
 	// to the known elements.
 	addElement := func(elements *[]*Element, decl ast.Decl, fileName string) {
@@ -49,7 +64,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 			for _, spec := range decl.Specs {
 				switch spec := spec.(type) {
 				case *ast.TypeSpec:
-					*elements = append(*elements, &Element{spec.Name.Name, "", fileName})
+					*elements = append(*elements, newElement(spec.Name.Name, "", fileName))
 				}
 			}
 
@@ -64,7 +79,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 				}
 				typeName = strings.TrimSuffix(typeName, "Impl")
 			}
-			*elements = append(*elements, &Element{typeName, decl.Name.Name, fileName})
+			*elements = append(*elements, newElement(typeName, decl.Name.Name, fileName))
 		}
 	}
 
@@ -101,14 +116,6 @@ func (s *Suite) Test__test_names(c *check.C) {
 		return elements
 	}
 
-	testName := func(element *Element) string {
-		if isTest(element) {
-			return ""
-		}
-		sep := ifelseStr(element.Type != "" && element.Func != "", "_", "")
-		return element.Type + sep + element.Func
-	}
-
 	// collectTesteeByName generates a map containing the names of all
 	// testable elements, as used in the test names. Examples:
 	//
@@ -118,21 +125,30 @@ func (s *Suite) Test__test_names(c *check.C) {
 	collectTesteeByName := func(elements []*Element) map[string]*Element {
 		prefixes := make(map[string]*Element)
 		for _, element := range elements {
-			if prefix := testName(element); prefix != "" {
-				prefixes[prefix] = element
+			if element.Prefix != "" {
+				prefixes[element.Prefix] = element
 			}
 		}
 
 		// Allow some special test name testeeByName.
-		prefixes["Varalign"] = &Element{"Varalign", "", "mklines_varalign.go"}
-		prefixes["ShellParser"] = &Element{"ShellParser", "", "mkshparser.go"}
+		prefixes["Varalign"] = newElement("Varalign", "", "mklines_varalign.go")
+		prefixes["ShellParser"] = newElement("ShellParser", "", "mkshparser.go")
 		return prefixes
 	}
 
-	checkTestName := func(test *Element, testee string, descr string, testeeByName map[string]*Element) {
-		if testeeByName[testee] == nil {
-			addError("%s: Testee %q not found.", elementString(test), testee)
+	checkTestName := func(test *Element, prefix string, descr string, testeeByName map[string]*Element) {
+		testee := testeeByName[prefix]
+		if testee == nil {
+			addError("Test %q for missing testee %q.", test.FullName, prefix)
+
+		} else if !hasSuffix(testee.File, "_test.go") {
+			correctTestFile := strings.TrimSuffix(testee.File, ".go") + "_test.go"
+			if correctTestFile != test.File {
+				addWarning("Test %q for %q should be in %s instead of %s.",
+					test.FullName, testee.FullName, correctTestFile, test.File)
+			}
 		}
+
 		if matches(descr, `\p{Ll}\p{Lu}`) {
 			switch descr {
 			case "comparing_YesNo_variable_to_string",
@@ -144,7 +160,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 				// These exceptions are ok.
 
 			default:
-				addError("%s: Test description must not use CamelCase.", elementString(test))
+				addError("%s: Test description must not use CamelCase.", test.FullName)
 			}
 		}
 	}
@@ -152,9 +168,9 @@ func (s *Suite) Test__test_names(c *check.C) {
 	checkAll := func(elements []*Element, testeeByName map[string]*Element) {
 		testNames := make(map[string]bool)
 
-		for _, test := range elements {
-			if isTest(test) {
-				method := test.Func
+		for _, element := range elements {
+			if element.Test {
+				method := element.Func
 				switch {
 				case hasPrefix(method, "Test__"):
 					// OK
@@ -166,19 +182,19 @@ func (s *Suite) Test__test_names(c *check.C) {
 						descr = refAndDescr[1]
 					}
 					testNames[refAndDescr[0]] = true
-					checkTestName(test, refAndDescr[0], descr, testeeByName)
+					checkTestName(element, refAndDescr[0], descr, testeeByName)
 
 				default:
-					addError("%s: Missing underscore.", elementString(test))
+					addError("Test name %q must contain an underscore.", element.FullName)
 				}
 			}
 		}
 
 		for _, element := range elements {
 			if !hasSuffix(element.File, "_test.go") && !hasSuffix(element.File, "yacc.go") {
-				testNamePrefix := testName(element)
-				if !testNames[testNamePrefix] {
-					addWarning("%s: Does not have a unit test (Test_%s).", elementString(element), testNamePrefix)
+				if !testNames[element.Prefix] {
+					addWarning("Missing unit test %q for %q.",
+						"Test_"+element.FullName, element.Prefix)
 				}
 			}
 		}
