@@ -7,6 +7,28 @@ import (
 	"strings"
 )
 
+func (s *Suite) Test_Autofix_ReplaceAfter__autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix", "--source")
+	mklines := t.SetupFileMkLines("Makefile",
+		"# line 1 \\",
+		"continuation 1 \\",
+		"continuation 2")
+
+	fix := mklines.lines.Lines[0].Autofix()
+	fix.Warnf("N should be replaced with V.")
+	fix.ReplaceAfter("", "n", "v")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:1: Replacing \"n\" with \"v\".",
+		"-\t# line 1 \\",
+		"+\t# live 1 \\",
+		">\tcontinuation 1 \\",
+		">\tcontinuation 2")
+}
+
 func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix(c *check.C) {
 	t := s.Init(c)
 

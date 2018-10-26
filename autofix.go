@@ -50,14 +50,22 @@ func NewAutofix(line Line) *Autofix {
 // Custom runs a custom fix action, unless the fix is skipped anyway
 // because of the --only option.
 //
-// The fixer function must always call Describef.
+// The fixer function must check whether it can actually fix something,
+// and if so, call Describef to describe the actual fix.
 //
-// If printAutofix or autofix is true, the fix should be done in
-// memory as far as possible (e.g. changes to the text of the line).
+// If printAutofix and autofix are both false, the fix must only be
+// described by calling Describef. No observable modification must be done,
+// not even in memory.
 //
-// If autofix is true, the fix should be done persistently
-// (e.g. direct changes to the file system). Except if the fix only
-// affects the current line, then SaveAutofixChanges will do that.
+// If printAutofix is true but autofix is false, the fix should be done in
+// memory as far as possible. For example, changing the text of Line.raw
+// is appropriate, but changing files in the file system is not.
+//
+// Only if autofix is true, fixes other than modifying the current Line
+// should be done persistently, such as changes to the file system.
+//
+// In any case, changes to the current Line will be written back to disk
+// by SaveAutofixChanges, after fixing all the lines in the file at once.
 func (fix *Autofix) Custom(fixer func(printAutofix, autofix bool)) {
 	if fix.skip() {
 		return
@@ -85,6 +93,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 					rawLine.textnl = replaced
 				}
 				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
+				return
 			}
 		}
 	}
