@@ -360,6 +360,29 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 		"-\tto be deleted")
 }
 
+func (s *Suite) Test_Autofix_Delete__combined_with_insert(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--show-autofix", "--source")
+	line := t.NewLine("Makefile", 30, "to be deleted")
+
+	fix := line.Autofix()
+	fix.Warnf("This line should be replaced completely.")
+	fix.Delete()
+	fix.InsertAfter("below")
+	fix.InsertBefore("above")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:30: This line should be replaced completely.",
+		"AUTOFIX: Makefile:30: Deleting this line.",
+		"AUTOFIX: Makefile:30: Inserting a line \"below\" after this line.",
+		"AUTOFIX: Makefile:30: Inserting a line \"above\" before this line.",
+		"+\tabove",
+		"-\tto be deleted",
+		"+\tbelow")
+}
+
 // Demonstrates that the --show-autofix option only shows those diagnostics
 // that would be fixed.
 func (s *Suite) Test_Autofix__suppress_unfixable_warnings(c *check.C) {
