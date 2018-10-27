@@ -230,7 +230,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 	testeeByName := collectTesteeByName(elements)
 	checkAll(elements, testeeByName)
 
-	printWarnings := "no"[0] == 'y' // Set this to "yes" to enable warnings.
+	printWarnings := func() bool { return true }()
 
 	for _, err := range errors {
 		fmt.Println(err)
