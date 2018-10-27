@@ -7,6 +7,18 @@ import (
 	"strings"
 )
 
+func (s *Suite) Test_Autofix_Warnf__duplicate(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("DESCR", 1, "Description of the package")
+
+	fix := line.Autofix()
+	fix.Warnf("Warning 1.")
+	t.ExpectFatal(
+		func() { fix.Warnf("Warning 2.") },
+		"FATAL: Pkglint internal error: Autofix can only have a single diagnostic.")
+}
+
 func (s *Suite) Test_Autofix__default_leaves_line_unchanged(c *check.C) {
 	t := s.Init(c)
 

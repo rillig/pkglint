@@ -343,6 +343,8 @@ func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) 
 			"Autofix: format %q must end with a period.",
 			format)
 	}
+	G.Assertf(fix.level == nil, "Autofix can only have a single diagnostic.")
+	G.Assertf(fix.diagFormat == "", "Autofix can only have a single diagnostic.")
 
 	fix.level = level
 	fix.diagFormat = format
