@@ -601,7 +601,7 @@ func (va *VaralignBlock) realignInitialLine(mkline MkLine, varnameOp string, old
 	case wrongColumn:
 		fix.Notef("This variable value should be aligned to column %d.", newWidth+1)
 	default:
-		fix.Notef(SilentMagicDiagnostic) // TODO: why?
+		return
 	}
 
 	if wrongColumn {
