@@ -279,7 +279,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
-		fix.Warnf(SilentMagicDiagnostic)
+		fix.Warnf(SilentAutofixFormat)
 		fix.ReplaceRegex(`(.)(.*)(.)`, "lriginao", 1) // XXX: the replacement should be "$3$2$1"
 		fix.Apply()
 	}
@@ -291,7 +291,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
-		fix.Warnf(SilentMagicDiagnostic)
+		fix.Warnf(SilentAutofixFormat)
 		fix.Replace("i", "u")
 		fix.Apply()
 	}
@@ -304,7 +304,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
-		fix.Warnf(SilentMagicDiagnostic)
+		fix.Warnf(SilentAutofixFormat)
 		fix.Replace("lruginao", "middle")
 		fix.Apply()
 	}
@@ -317,15 +317,15 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
-		fix.Warnf(SilentMagicDiagnostic)
+		fix.Warnf(SilentAutofixFormat)
 		fix.InsertBefore("before")
 		fix.Apply()
 
-		fix.Warnf(SilentMagicDiagnostic)
+		fix.Warnf(SilentAutofixFormat)
 		fix.InsertBefore("between before and middle")
 		fix.Apply()
 
-		fix.Warnf(SilentMagicDiagnostic)
+		fix.Warnf(SilentAutofixFormat)
 		fix.InsertAfter("between middle and after")
 		fix.Apply()
 
@@ -357,7 +357,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 
 	{
 		fix := line.Autofix()
-		fix.Warnf(SilentMagicDiagnostic)
+		fix.Warnf(SilentAutofixFormat)
 		fix.Delete()
 		fix.Apply()
 	}

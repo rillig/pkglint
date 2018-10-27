@@ -32,18 +32,18 @@ type autofixAction struct {
 	lineno      int
 }
 
-// SilentMagicDiagnostic is used in exceptional situations when an
+// SilentAutofixFormat is used in exceptional situations when an
 // autofix action is not directly related to a diagnostic.
 //
 // To prevent confusion, the code using this magic value must ensure
 // to log a diagnostic by other means.
-const SilentMagicDiagnostic = "Silent-Magic-Diagnostic"
+const SilentAutofixFormat = "SilentAutofixFormat"
 
-// MagicAutofixFormat is a special value that is used for logging
+// AutofixFormat is a special value that is used for logging
 // diagnostics like "Replacing \"old\" with \"new\".".
 //
 // Since these are not really diagnostics, duplicates are not suppressed.
-const MagicAutofixFormat = "Magic-Autofix-Format"
+const AutofixFormat = "AutofixFormat"
 
 func NewAutofix(line Line) *Autofix {
 	return &Autofix{
@@ -245,7 +245,7 @@ func (fix *Autofix) Apply() {
 	}
 
 	logDiagnostic := (G.opts.ShowAutofix || !G.opts.Autofix) &&
-		fix.diagFormat != SilentMagicDiagnostic
+		fix.diagFormat != SilentAutofixFormat
 	logFix := G.opts.Autofix || G.opts.ShowAutofix
 
 	if logDiagnostic {
@@ -262,7 +262,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			logs(AutofixLogLevel, line.Filename, lineno, MagicAutofixFormat, action.description)
+			logs(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
 		}
 	}
 
@@ -337,7 +337,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 }
 
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
-	if G.Testing && format != SilentMagicDiagnostic {
+	if G.Testing && format != SilentAutofixFormat {
 		G.Assertf(
 			hasSuffix(format, "."),
 			"Autofix: format %q must end with a period.",
