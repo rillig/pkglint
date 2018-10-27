@@ -214,38 +214,25 @@ func (s *Suite) Test_SaveAutofixChanges(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix")
-	t.CreateFileLines("category/basename/Makefile",
+	lines := t.SetupFileLines("example.txt",
 		"line1 := value1",
 		"line2 := value2",
 		"line3 := value3")
-	pkg := NewPackage(t.File("category/basename"))
-	G.Pkg = pkg
-	mklines := pkg.loadPackageMakefile()
-	G.Pkg = nil
 
-	fix := mklines.mklines[1].Autofix()
+	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Something's wrong here.")
-	fix.ReplaceRegex(`...`, "XXX", -1)
+	fix.ReplaceRegex(`...`, "XXX", 2)
 	fix.Apply()
 
-	fix = mklines.mklines[2].Autofix()
-	fix.Warnf("Something's wrong here.")
-	fix.ReplaceRegex(`...`, "XXX", 1)
-	fix.Apply()
-
-	SaveAutofixChanges(mklines.lines)
+	SaveAutofixChanges(lines)
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/category/basename/Makefile:2: Replacing \"lin\" with \"XXX\".",
-		"AUTOFIX: ~/category/basename/Makefile:2: Replacing \"e2 \" with \"XXX\".",
-		"AUTOFIX: ~/category/basename/Makefile:2: Replacing \":= \" with \"XXX\".",
-		"AUTOFIX: ~/category/basename/Makefile:2: Replacing \"val\" with \"XXX\".",
-		"AUTOFIX: ~/category/basename/Makefile:2: Replacing \"ue2\" with \"XXX\".",
-		"AUTOFIX: ~/category/basename/Makefile:3: Replacing \"lin\" with \"XXX\".")
-	t.CheckFileLines("category/basename/Makefile",
+		"AUTOFIX: ~/example.txt:2: Replacing \"lin\" with \"XXX\".",
+		"AUTOFIX: ~/example.txt:2: Replacing \"e2 \" with \"XXX\".")
+	t.CheckFileLines("example.txt",
 		"line1 := value1",
-		"XXXXXXXXXXXXXXX",
-		"XXXe3 := value3")
+		"XXXXXX:= value2",
+		"line3 := value3")
 }
 
 func (s *Suite) Test_SaveAutofixChanges__no_changes_necessary(c *check.C) {
