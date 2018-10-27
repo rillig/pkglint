@@ -233,7 +233,7 @@ func (fix *Autofix) Apply() {
 		fix.level != nil && fix.diagFormat != "",
 		"Each autofix must have a log level and a diagnostic.")
 
-	defer func() {
+	reset := func() {
 		if len(fix.actions) > 0 {
 			fix.modified = true
 		}
@@ -243,10 +243,11 @@ func (fix *Autofix) Apply() {
 		fix.diagFormat = ""
 		fix.diagArgs = nil
 		fix.explanation = nil
-	}()
+	}
 
 	G.explainNext = shallBeLogged(fix.diagFormat)
 	if !G.explainNext || len(fix.actions) == 0 {
+		reset()
 		return
 	}
 
@@ -285,6 +286,8 @@ func (fix *Autofix) Apply() {
 			}
 		}
 	}
+
+	reset()
 }
 
 func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
