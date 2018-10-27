@@ -34,6 +34,8 @@ func (s *Suite) Test__test_names(c *check.C) {
 	}
 
 	newElement := func(typeName, funcName, fileName string) *Element {
+		typeName = strings.TrimSuffix(typeName, "Impl")
+
 		e := &Element{File: fileName, Type: typeName, Func: funcName}
 
 		sep := ifelseStr(e.Type != "" && e.Func != "", ".", "")
@@ -67,7 +69,8 @@ func (s *Suite) Test__test_names(c *check.C) {
 			for _, spec := range decl.Specs {
 				switch spec := spec.(type) {
 				case *ast.TypeSpec:
-					*elements = append(*elements, newElement(spec.Name.Name, "", fileName))
+					typeName := spec.Name.Name
+					*elements = append(*elements, newElement(typeName, "", fileName))
 				}
 			}
 
@@ -80,7 +83,6 @@ func (s *Suite) Test__test_names(c *check.C) {
 				} else {
 					typeName = typeExpr.(*ast.Ident).Name
 				}
-				typeName = strings.TrimSuffix(typeName, "Impl")
 			}
 			*elements = append(*elements, newElement(typeName, decl.Name.Name, fileName))
 		}
