@@ -228,7 +228,9 @@ func (fix *Autofix) Apply() {
 		"Each autofix must have a log level and a diagnostic.")
 
 	defer func() {
-		fix.modified = fix.modified || len(fix.actions) > 0
+		if len(fix.actions) > 0 {
+			fix.modified = true
+		}
 
 		fix.actions = nil
 		fix.level = nil
