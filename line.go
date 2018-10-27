@@ -140,19 +140,19 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 }
 
 func (line *LineImpl) Fatalf(format string, args ...interface{}) {
-	line.log(llFatal, format, args)
+	line.log(Fatal, format, args)
 }
 
 func (line *LineImpl) Errorf(format string, args ...interface{}) {
-	line.log(llError, format, args)
+	line.log(Error, format, args)
 }
 
 func (line *LineImpl) Warnf(format string, args ...interface{}) {
-	line.log(llWarn, format, args)
+	line.log(Warn, format, args)
 }
 
 func (line *LineImpl) Notef(format string, args ...interface{}) {
-	line.log(llNote, format, args)
+	line.log(Note, format, args)
 }
 
 func (line *LineImpl) String() string {

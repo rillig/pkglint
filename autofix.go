@@ -49,17 +49,17 @@ func NewAutofix(line Line) *Autofix {
 
 // Errorf remembers the error for logging it later when Apply is called.
 func (fix *Autofix) Errorf(format string, args ...interface{}) {
-	fix.setDiag(llError, format, args)
+	fix.setDiag(Error, format, args)
 }
 
 // Warnf remembers the warning for logging it later when Apply is called.
 func (fix *Autofix) Warnf(format string, args ...interface{}) {
-	fix.setDiag(llWarn, format, args)
+	fix.setDiag(Warn, format, args)
 }
 
 // Notef remembers the note for logging it later when Apply is called.
 func (fix *Autofix) Notef(format string, args ...interface{}) {
-	fix.setDiag(llNote, format, args)
+	fix.setDiag(Note, format, args)
 }
 
 // Explain remembers the explanation for logging it later when Apply is called.
@@ -256,7 +256,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			logs(llAutofix, line.Filename, lineno, MagicAutofixFormat, action.description)
+			logs(AutofixLogLevel, line.Filename, lineno, MagicAutofixFormat, action.description)
 		}
 	}
 
@@ -401,12 +401,12 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		}
 		err := ioutil.WriteFile(tmpname, []byte(text), 0666)
 		if err != nil {
-			logs(llError, tmpname, "", "Cannot write: %s", "Cannot write: "+err.Error())
+			logs(Error, tmpname, "", "Cannot write: %s", "Cannot write: "+err.Error())
 			continue
 		}
 		err = os.Rename(tmpname, fname)
 		if err != nil {
-			logs(llError, tmpname, "",
+			logs(Error, tmpname, "",
 				"Cannot overwrite with auto-fixed content: %s",
 				"Cannot overwrite with auto-fixed content: "+err.Error())
 			continue

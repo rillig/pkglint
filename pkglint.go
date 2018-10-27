@@ -345,7 +345,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 }
 
 func (pkglint *Pkglint) Panicf(format string, args ...interface{}) {
-	prefix := ifelseStr(G.opts.GccOutput, llFatal.GccName, llFatal.TraditionalName)
+	prefix := ifelseStr(G.opts.GccOutput, Fatal.GccName, Fatal.TraditionalName)
 	pkglint.logErr.Write(prefix + ": " + fmt.Sprintf(format, args...) + "\n")
 	panic(pkglintFatal{})
 }

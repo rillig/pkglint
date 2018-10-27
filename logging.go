@@ -13,11 +13,11 @@ type LogLevel struct {
 }
 
 var (
-	llFatal   = &LogLevel{"FATAL", "fatal"}
-	llError   = &LogLevel{"ERROR", "error"}
-	llWarn    = &LogLevel{"WARN", "warning"}
-	llNote    = &LogLevel{"NOTE", "note"}
-	llAutofix = &LogLevel{"AUTOFIX", "autofix"}
+	Fatal           = &LogLevel{"FATAL", "fatal"}
+	Error           = &LogLevel{"ERROR", "error"}
+	Warn            = &LogLevel{"WARN", "warning"}
+	Note            = &LogLevel{"NOTE", "note"}
+	AutofixLogLevel = &LogLevel{"AUTOFIX", "autofix"}
 )
 
 var dummyLine = NewLine("", 0, "", nil)
@@ -92,18 +92,18 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 	text += sep + msg + "\n"
 
 	out := G.logOut
-	if level == llFatal {
+	if level == Fatal {
 		out = G.logErr
 	}
 
 	out.Write(text)
 
 	switch level {
-	case llFatal:
+	case Fatal:
 		panic(pkglintFatal{})
-	case llError:
+	case Error:
 		G.errors++
-	case llWarn:
+	case Warn:
 		G.warnings++
 	}
 	return true
