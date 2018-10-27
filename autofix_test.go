@@ -736,6 +736,32 @@ func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 		"FATAL: Pkglint internal error: Autofix: format \"Warning without period\" must end with a period.")
 }
 
+// Ensures that empty lines are logged between the diagnostics,
+// even when combining normal warnings and autofix warnings.
+//
+// Up to 2018-10-27, pkglint didn't insert the required empty line in this case.
+func (s *Suite) Test_Autofix_Apply__explanation_followed_by_note(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--source")
+	line := t.NewLine("README.txt", 123, "text")
+
+	fix := line.Autofix()
+	fix.Warnf("A warning with autofix.")
+	fix.Explain("Explanation.")
+	fix.Replace("text", "Text")
+	fix.Apply()
+
+	line.Notef("A note without fix.")
+
+	t.CheckOutputLines(
+		">\ttext",
+		"WARN: README.txt:123: A warning with autofix.",
+		"",
+		">\ttext",
+		"NOTE: README.txt:123: A note without fix.")
+}
+
 func (s *Suite) Test_SaveAutofixChanges__file_removed(c *check.C) {
 	t := s.Init(c)
 

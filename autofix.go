@@ -278,8 +278,11 @@ func (fix *Autofix) Apply() {
 		}
 		if logDiagnostic && len(fix.explanation) > 0 {
 			Explain(fix.explanation...)
-		} else if G.opts.ShowSource {
-			G.logOut.Separate()
+		}
+		if G.opts.ShowSource {
+			if !G.opts.Explain || !logDiagnostic || len(fix.explanation) == 0 {
+				G.logOut.Separate()
+			}
 		}
 	}
 }
