@@ -7,49 +7,67 @@ import (
 	"strings"
 )
 
-func (s *Suite) Test_Autofix_ReplaceAfter__default_leaves_line_unchanged(c *check.C) {
+func (s *Suite) Test_Autofix__default_leaves_line_unchanged(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--source")
 	mklines := t.SetupFileMkLines("Makefile",
 		"# row 1 \\",
-		"continuation")
+		"continuation of row 1")
 	line := mklines.lines.Lines[0]
 
 	fix := line.Autofix()
 	fix.Warnf("Row should be replaced with line.")
-	fix.ReplaceAfter("", "row", "line")
+	fix.Replace("row", "line")
+	fix.ReplaceRegex(`row \d+`, "the above line", -1)
+	fix.InsertBefore("above")
+	fix.InsertAfter("below")
+	fix.Delete()
 	fix.Apply()
 
-	c.Check(line.raw[0].textnl, equals, "# row 1 \\\n")
+	c.Check(fix.RawText(), equals, ""+
+		"# row 1 \\\n"+
+		"continuation of row 1\n")
 	t.CheckOutputLines(
 		">\t# row 1 \\",
-		">\tcontinuation",
-		"WARN: ~/Makefile:1--2: Row should be replaced with line.")
+		">\tcontinuation of row 1",
+		"WARN: ~/Makefile:1--2: Row should be replaced with line.",
+	)
 }
 
-func (s *Suite) Test_Autofix_ReplaceAfter__show_autofix_modifies_line(c *check.C) {
+func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--source", "--show-autofix")
 	mklines := t.SetupFileMkLines("Makefile",
 		"# row 1 \\",
-		"continuation")
+		"continuation of row 1")
 	line := mklines.lines.Lines[0]
 
 	fix := line.Autofix()
 	fix.Warnf("Row should be replaced with line.")
 	fix.ReplaceAfter("", "row", "line")
+	fix.ReplaceRegex(`row \d+`, "the above line", -1)
+	fix.InsertBefore("above")
+	fix.InsertAfter("below")
+	fix.Delete()
 	fix.Apply()
 
-	c.Check(line.raw[0].textnl, equals, "# line 1 \\\n")
-
+	c.Check(fix.RawText(), equals, ""+
+		"above\n"+
+		"below\n")
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:1--2: Row should be replaced with line.",
 		"AUTOFIX: ~/Makefile:1: Replacing \"row\" with \"line\".",
+		"AUTOFIX: ~/Makefile:2: Replacing \"row 1\" with \"the above line\".",
+		"AUTOFIX: ~/Makefile:1: Inserting a line \"above\" before this line.",
+		"AUTOFIX: ~/Makefile:2: Inserting a line \"below\" after this line.",
+		"AUTOFIX: ~/Makefile:1: Deleting this line.",
+		"AUTOFIX: ~/Makefile:2: Deleting this line.",
+		"+\tabove",
 		"-\t# row 1 \\",
-		"+\t# line 1 \\",
-		">\tcontinuation")
+		"-\tcontinuation of row 1",
+		"+\tbelow")
 }
 
 func (s *Suite) Test_Autofix_ReplaceAfter__autofix(c *check.C) {
@@ -681,4 +699,21 @@ func (s *Suite) Test_Autofix_Apply__file_converted_to_directory(c *check.C) {
 	c.Check(t.Output(), check.Matches, ""+
 		"AUTOFIX: ~/file.txt:1: Replacing \"line\" with \"Line\".\n"+
 		"ERROR: ~/file.txt.pkglint.tmp: Cannot overwrite with auto-fixed content: .*\n")
+}
+
+// RawText returns the raw text of the fixed line, including line ends.
+// This may differ from the original text when the --show-autofix
+// or --autofix options are enabled.
+func (fix *Autofix) RawText() string {
+	text := ""
+	for _, lineBefore := range fix.linesBefore {
+		text += lineBefore
+	}
+	for _, raw := range fix.lines {
+		text += raw.textnl
+	}
+	for _, lineAfter := range fix.linesAfter {
+		text += lineAfter
+	}
+	return text
 }

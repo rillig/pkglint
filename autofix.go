@@ -171,7 +171,9 @@ func (fix *Autofix) InsertBefore(text string) {
 		return
 	}
 
-	fix.linesBefore = append(fix.linesBefore, text+"\n")
+	if G.opts.ShowAutofix || G.opts.Autofix {
+		fix.linesBefore = append(fix.linesBefore, text+"\n")
+	}
 	fix.Describef(fix.lines[0].Lineno, "Inserting a line %q before this line.", text)
 }
 
@@ -182,7 +184,9 @@ func (fix *Autofix) InsertAfter(text string) {
 		return
 	}
 
-	fix.linesAfter = append(fix.linesAfter, text+"\n")
+	if G.opts.ShowAutofix || G.opts.Autofix {
+		fix.linesAfter = append(fix.linesAfter, text+"\n")
+	}
 	fix.Describef(fix.lines[len(fix.lines)-1].Lineno, "Inserting a line %q after this line.", text)
 }
 
@@ -195,8 +199,10 @@ func (fix *Autofix) Delete() {
 	}
 
 	for _, line := range fix.lines {
+		if G.opts.ShowAutofix || G.opts.Autofix {
+			line.textnl = ""
+		}
 		fix.Describef(line.Lineno, "Deleting this line.")
-		line.textnl = ""
 	}
 }
 
