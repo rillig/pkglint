@@ -370,11 +370,15 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		defer trace.Call0()()
 	}
 
+	// Fast lane for the case that nothing is written back to disk.
 	if !G.opts.Autofix {
 		for _, line := range lines.Lines {
 			if line.autofix != nil && line.autofix.modified {
 				G.autofixAvailable = true
-				G.fileCache.Evict(line.FileName)
+				if G.opts.ShowAutofix {
+					// Only in this case can the loaded lines be modified.
+					G.fileCache.Evict(line.FileName)
+				}
 			}
 		}
 		return
