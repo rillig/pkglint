@@ -256,7 +256,7 @@ func (s *Suite) Test_SaveAutofixChanges__no_changes_necessary(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
+func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--show-autofix", "--explain")
