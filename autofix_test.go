@@ -718,15 +718,15 @@ func (s *Suite) Test_Autofix_Apply__file_converted_to_directory(c *check.C) {
 // This may differ from the original text when the --show-autofix
 // or --autofix options are enabled.
 func (fix *Autofix) RawText() string {
-	text := ""
+	var text strings.Builder
 	for _, lineBefore := range fix.linesBefore {
-		text += lineBefore
+		text.WriteString(lineBefore)
 	}
 	for _, raw := range fix.line.raw {
-		text += raw.textnl
+		text.WriteString(raw.textnl)
 	}
 	for _, lineAfter := range fix.linesAfter {
-		text += lineAfter
+		text.WriteString(lineAfter)
 	}
-	return text
+	return text.String()
 }
