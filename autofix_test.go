@@ -423,6 +423,30 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 		"-\tto be deleted")
 }
 
+// Deleting a line from a Makefile also deletes its continuation lines.
+func (s *Suite) Test_Autofix_Delete__continuation_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--show-autofix", "--source")
+	mklines := t.SetupFileMkLines("Makefile",
+		MkRcsID,
+		"# line 1 \\",
+		"continued")
+	line := mklines.lines.Lines[1]
+
+	fix := line.Autofix()
+	fix.Warnf("Dummy warning.")
+	fix.Delete()
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: ~/Makefile:2--3: Dummy warning.",
+		"AUTOFIX: ~/Makefile:2: Deleting this line.",
+		"AUTOFIX: ~/Makefile:3: Deleting this line.",
+		"-\t# line 1 \\",
+		"-\tcontinued")
+}
+
 func (s *Suite) Test_Autofix_Delete__combined_with_insert(c *check.C) {
 	t := s.Init(c)
 
