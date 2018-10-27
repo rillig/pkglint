@@ -67,6 +67,13 @@ func (fix *Autofix) Notef(format string, args ...interface{}) {
 
 // Explain remembers the explanation for logging it later when Apply is called.
 func (fix *Autofix) Explain(explanation ...string) {
+	// Since a silent fix doesn't have a diagnostic, its explanation would
+	// not provide any clue as to what diagnostic it belongs. That would
+	// be confusing, therefore this case is not allowed.
+	G.Assertf(
+		fix.diagFormat != SilentAutofixFormat,
+		"Autofix: Silent fixes cannot have an explanation.")
+
 	fix.explanation = explanation
 }
 

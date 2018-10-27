@@ -180,10 +180,12 @@ func (s *Suite) Test__test_names(c *check.C) {
 				"enumFrom",
 				"enumFromDirs",
 				"dquotBacktDquot",
-				"and_getSubdirs":
+				"and_getSubdirs",
+				"SilentAutofixFormat":
 				// These exceptions are ok.
 
 			default:
+				// See above for the list of exceptional test descriptions.
 				addError("%s: Test description must not use CamelCase.", test.FullName)
 			}
 		}

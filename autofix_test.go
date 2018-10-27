@@ -304,45 +304,8 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: fileName:1: Replacing \"lruginao\" with \"middle\".")
 
-	{
-		fix := line.Autofix()
-		fix.Warnf(SilentAutofixFormat)
-		fix.InsertBefore("before")
-		fix.Apply()
-
-		fix.Warnf(SilentAutofixFormat)
-		fix.InsertBefore("between before and middle")
-		fix.Apply()
-
-		fix.Warnf(SilentAutofixFormat)
-		fix.InsertAfter("between middle and after")
-		fix.Apply()
-
-		fix.Notef("This diagnostic is necessary for the following explanation.")
-		fix.Explain(
-			"When inserting multiple lines, Apply must be called in-between.",
-			"Otherwise the changes are not described to the human reader.")
-		fix.InsertAfter("after")
-		fix.Apply()
-	}
-
-	c.Check(line.autofix.linesBefore, check.DeepEquals, []string{
-		"before\n",
-		"between before and middle\n"})
 	c.Check(line.raw[0].textnl, equals, "middle\n")
-	c.Check(line.autofix.linesAfter, deepEquals, []string{
-		"between middle and after\n",
-		"after\n"})
-	t.CheckOutputLines(
-		"AUTOFIX: fileName:1: Inserting a line \"before\" before this line.",
-		"AUTOFIX: fileName:1: Inserting a line \"between before and middle\" before this line.",
-		"AUTOFIX: fileName:1: Inserting a line \"between middle and after\" after this line.",
-		"NOTE: fileName:1: This diagnostic is necessary for the following explanation.",
-		"AUTOFIX: fileName:1: Inserting a line \"after\" after this line.",
-		"",
-		"\tWhen inserting multiple lines, Apply must be called in-between.",
-		"\tOtherwise the changes are not described to the human reader.",
-		"")
+	t.CheckOutputEmpty()
 
 	{
 		fix := line.Autofix()
@@ -351,15 +314,51 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.autofix.linesBefore, check.DeepEquals, []string{
-		"before\n",
-		"between before and middle\n"})
-	c.Check(line.raw[0].textnl, equals, "")
-	c.Check(line.autofix.linesAfter, deepEquals, []string{
-		"between middle and after\n",
-		"after\n"})
+	c.Check(line.Autofix().RawText(), equals, "")
 	t.CheckOutputLines(
 		"AUTOFIX: fileName:1: Deleting this line.")
+}
+
+func (s *Suite) Test_Autofix_Explain__SilentAutofixFormat(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	line := t.NewLine("example.txt", 1, "Text")
+
+	fix := line.Autofix()
+	fix.Warnf(SilentAutofixFormat)
+	t.ExpectFatal(
+		func() { fix.Explain("Explanation for inserting a line before.") },
+		"FATAL: Pkglint internal error: Autofix: Silent fixes cannot have an explanation.")
+}
+
+// To combine a silent diagnostic with an explanation, two separate autofixes
+// are necessary.
+func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	line := t.NewLine("example.txt", 1, "Text")
+
+	fix := line.Autofix()
+	fix.Warnf(SilentAutofixFormat)
+	fix.InsertBefore("before")
+	fix.Apply()
+
+	fix.Notef("This diagnostic is necessary for the following explanation.")
+	fix.Explain(
+		"When inserting multiple lines, Apply must be called in-between.",
+		"Otherwise the changes are not described to the human reader.")
+	fix.InsertAfter("after")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: example.txt:1: This diagnostic is necessary for the following explanation.",
+		"",
+		"\tWhen inserting multiple lines, Apply must be called in-between.",
+		"\tOtherwise the changes are not described to the human reader.",
+		"")
+	c.Check(fix.RawText(), equals, "Text\n")
 }
 
 func (s *Suite) Test_Autofix__show_autofix_and_source(c *check.C) {
