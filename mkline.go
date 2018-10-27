@@ -147,7 +147,7 @@ func NewMkLine(line Line) *MkLineImpl {
 }
 
 func (mkline *MkLineImpl) String() string {
-	return fmt.Sprintf("%s:%s", mkline.Filename, mkline.Linenos())
+	return fmt.Sprintf("%s:%s", mkline.FileName, mkline.Linenos())
 }
 
 func (mkline *MkLineImpl) IsVarassign() bool {
@@ -357,7 +357,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 	if G.Pkg != nil {
 		basedir = G.Pkg.File(".")
 	} else {
-		basedir = path.Dir(mkline.Filename)
+		basedir = path.Dir(mkline.FileName)
 	}
 	pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
 

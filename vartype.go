@@ -213,7 +213,7 @@ var (
 	BtDistSuffix             = &BasicType{"DistSuffix", (*VartypeCheck).DistSuffix}
 	BtEmulPlatform           = &BasicType{"EmulPlatform", (*VartypeCheck).EmulPlatform}
 	BtFetchURL               = &BasicType{"FetchURL", (*VartypeCheck).FetchURL}
-	BtFilename               = &BasicType{"Filename", (*VartypeCheck).Filename}
+	BtFilename               = &BasicType{"FileName", (*VartypeCheck).FileName}
 	BtFilemask               = &BasicType{"Filemask", (*VartypeCheck).Filemask}
 	BtFileMode               = &BasicType{"FileMode", (*VartypeCheck).FileMode}
 	BtGccReqd                = &BasicType{"GccReqd", (*VartypeCheck).GccReqd}

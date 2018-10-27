@@ -84,7 +84,7 @@ func (ck *distinfoLinesChecker) onFilenameChange(line Line, nextFname string) {
 		} else if ck.isPatch == unknown {
 		} else if G.Pkg != nil && G.Pkg.IgnoreMissingPatches {
 		} else if hasPrefix(currentFname, "patch-") && algorithms == "SHA1" {
-			pathToPatchdir := relpath(path.Dir(ck.currentFirstLine.Filename), G.Pkg.File(ck.patchdir))
+			pathToPatchdir := relpath(path.Dir(ck.currentFirstLine.FileName), G.Pkg.File(ck.patchdir))
 			ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", currentFname, pathToPatchdir)
 			Explain(
 				"If the patches directory looks correct, the patch may have been",

@@ -255,7 +255,7 @@ func (fix *Autofix) Apply() {
 			line.showSource(G.logOut)
 		}
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
-		logs(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
+		logs(fix.level, line.FileName, line.Linenos(), fix.diagFormat, msg)
 	}
 
 	if logFix {
@@ -264,7 +264,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			logs(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
+			logs(AutofixLogLevel, line.FileName, lineno, AutofixFormat, action.description)
 		}
 	}
 
@@ -374,7 +374,7 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		for _, line := range lines.Lines {
 			if line.autofix != nil && line.autofix.modified {
 				G.autofixAvailable = true
-				G.fileCache.Evict(line.Filename)
+				G.fileCache.Evict(line.FileName)
 			}
 		}
 		return
@@ -383,10 +383,10 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 	changes := make(map[string][]string)
 	changed := make(map[string]bool)
 	for _, line := range lines.Lines {
-		chlines := changes[line.Filename]
+		chlines := changes[line.FileName]
 		if fix := line.autofix; fix != nil {
 			if fix.modified {
-				changed[line.Filename] = true
+				changed[line.FileName] = true
 			}
 			chlines = append(chlines, fix.linesBefore...)
 			for _, raw := range line.raw {
@@ -398,7 +398,7 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 				chlines = append(chlines, raw.textnl)
 			}
 		}
-		changes[line.Filename] = chlines
+		changes[line.FileName] = chlines
 	}
 
 	for fileName := range changed {

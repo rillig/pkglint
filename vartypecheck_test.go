@@ -346,21 +346,21 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"WARN: fileName:8: \"http://example.org/download?fileName=<distfile>;version=<version>\" is not a valid URL.")
 }
 
-func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Filename)
+func (s *Suite) Test_VartypeCheck_FileName(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).FileName)
 
 	vt.Varname("FNAME")
 	vt.Values(
-		"Filename with spaces.docx",
+		"FileName with spaces.docx",
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: fileName:1: \"Filename with spaces.docx\" is not a valid file name.",
+		"WARN: fileName:1: \"FileName with spaces.docx\" is not a valid file name.",
 		"WARN: fileName:2: A file name should not contain a slash.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
-		"Filename with spaces.docx")
+		"FileName with spaces.docx")
 
 	// There's no guarantee that a file name only contains [A-Za-z0-9.].
 	// Therefore there are no useful checks in this situation.

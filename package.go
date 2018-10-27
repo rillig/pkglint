@@ -442,7 +442,7 @@ func (pkg *Package) checkfilePackageMakefile(fileName string, mklines MkLines) {
 	}
 
 	if imake, x11 := vars.FirstDefinition("USE_IMAKE"), vars.FirstDefinition("USE_X11"); imake != nil && x11 != nil {
-		if !hasSuffix(x11.Filename, "/mk/x11.buildlink3.mk") {
+		if !hasSuffix(x11.FileName, "/mk/x11.buildlink3.mk") {
 			imake.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", x11.ReferenceFrom(imake.Line))
 		}
 	}
@@ -870,7 +870,7 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 		mkline.SetConditionalVars(conditionalVars)
 	}
 
-	if path.Dir(abspath(mkline.Filename)) == abspath(pkg.File(".")) {
+	if path.Dir(abspath(mkline.FileName)) == abspath(pkg.File(".")) {
 		includefile := mkline.IncludeFile()
 
 		if indentation.IsConditional() {

@@ -33,7 +33,7 @@ func (rline *RawLine) String() string {
 type Line = *LineImpl
 
 type LineImpl struct {
-	Filename  string
+	FileName  string
 	Basename  string
 	firstLine int32 // Zero means not applicable, -1 means EOF
 	lastLine  int32 // Usually the same as firstLine, may differ in Makefiles
@@ -76,8 +76,8 @@ func (line *LineImpl) Linenos() string {
 }
 
 func (line *LineImpl) ReferenceFrom(other Line) string {
-	if line.Filename != other.Filename {
-		return cleanpath(relpath(path.Dir(other.Filename), line.Filename)) + ":" + line.Linenos()
+	if line.FileName != other.FileName {
+		return cleanpath(relpath(path.Dir(other.FileName), line.FileName)) + ":" + line.Linenos()
 	}
 	return "line " + line.Linenos()
 }
@@ -134,7 +134,7 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 	if G.opts.ShowSource {
 		line.showSource(G.logOut)
 	}
-	logs(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	logs(level, line.FileName, line.Linenos(), format, fmt.Sprintf(format, args...))
 	if G.opts.ShowSource {
 		G.logOut.Separate()
 	}
@@ -157,7 +157,7 @@ func (line *LineImpl) Notef(format string, args ...interface{}) {
 }
 
 func (line *LineImpl) String() string {
-	return line.Filename + ":" + line.Linenos() + ": " + line.Text
+	return line.FileName + ":" + line.Linenos() + ": " + line.Text
 }
 
 // Autofix returns the autofix instance belonging to the line.

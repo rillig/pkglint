@@ -468,7 +468,7 @@ func (cv *VartypeCheck) FetchURL() {
 // See Pathname.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
-func (cv *VartypeCheck) Filename() {
+func (cv *VartypeCheck) FileName() {
 	switch {
 	case cv.Op == opUseMatch:
 		break
@@ -757,7 +757,7 @@ func (cv *VartypeCheck) Pathmask() {
 
 // Pathname checks for pathnames.
 //
-// Like Filename, but including slashes.
+// Like FileName, but including slashes.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
 func (cv *VartypeCheck) Pathname() {
@@ -817,7 +817,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // PkgPath checks a directory name relative to the top-level pkgsrc directory.
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
-	pkgsrcdir := relpath(path.Dir(cv.MkLine.Filename), G.Pkgsrc.File("."))
+	pkgsrcdir := relpath(path.Dir(cv.MkLine.FileName), G.Pkgsrc.File("."))
 	MkLineChecker{cv.MkLine}.CheckRelativePkgdir(pkgsrcdir + "/" + cv.Value)
 }
 

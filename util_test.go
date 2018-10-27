@@ -362,13 +362,13 @@ func (s *Suite) Test_FileCache(c *check.C) {
 	linesFromCache := cache.Get("Makefile", 0)
 	c.Check(linesFromCache.FileName, equals, "Makefile")
 	c.Check(linesFromCache.Lines, check.HasLen, 2)
-	c.Check(linesFromCache.Lines[0].Filename, equals, "Makefile")
+	c.Check(linesFromCache.Lines[0].FileName, equals, "Makefile")
 
 	// Cache keys are normalized using path.Clean.
 	linesFromCache2 := cache.Get("./Makefile", 0)
 	c.Check(linesFromCache2.FileName, equals, "./Makefile")
 	c.Check(linesFromCache2.Lines, check.HasLen, 2)
-	c.Check(linesFromCache2.Lines[0].Filename, equals, "./Makefile")
+	c.Check(linesFromCache2.Lines[0].FileName, equals, "./Makefile")
 
 	cache.Put("file1.mk", 0, lines)
 	cache.Put("file2.mk", 0, lines)
