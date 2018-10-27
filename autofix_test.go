@@ -7,6 +7,51 @@ import (
 	"strings"
 )
 
+func (s *Suite) Test_Autofix_ReplaceAfter__default_leaves_line_unchanged(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--source")
+	mklines := t.SetupFileMkLines("Makefile",
+		"# row 1 \\",
+		"continuation")
+	line := mklines.lines.Lines[0]
+
+	fix := line.Autofix()
+	fix.Warnf("Row should be replaced with line.")
+	fix.ReplaceAfter("", "row", "line")
+	fix.Apply()
+
+	c.Check(line.raw[0].textnl, equals, "# row 1 \\\n")
+	t.CheckOutputLines(
+		">\t# row 1 \\",
+		">\tcontinuation",
+		"WARN: ~/Makefile:1--2: Row should be replaced with line.")
+}
+
+func (s *Suite) Test_Autofix_ReplaceAfter__show_autofix_modifies_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--source", "--show-autofix")
+	mklines := t.SetupFileMkLines("Makefile",
+		"# row 1 \\",
+		"continuation")
+	line := mklines.lines.Lines[0]
+
+	fix := line.Autofix()
+	fix.Warnf("Row should be replaced with line.")
+	fix.ReplaceAfter("", "row", "line")
+	fix.Apply()
+
+	c.Check(line.raw[0].textnl, equals, "# line 1 \\\n")
+
+	t.CheckOutputLines(
+		"WARN: ~/Makefile:1--2: Row should be replaced with line.",
+		"AUTOFIX: ~/Makefile:1: Replacing \"row\" with \"line\".",
+		"-\t# row 1 \\",
+		"+\t# line 1 \\",
+		">\tcontinuation")
+}
+
 func (s *Suite) Test_Autofix_ReplaceAfter__autofix(c *check.C) {
 	t := s.Init(c)
 

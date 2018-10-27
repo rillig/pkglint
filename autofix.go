@@ -81,7 +81,8 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 
 	for _, rawLine := range fix.lines {
 		if rawLine.Lineno != 0 {
-			if replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1); replaced != rawLine.textnl {
+			replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1)
+			if replaced != rawLine.textnl {
 				if G.opts.ShowAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
@@ -116,7 +117,8 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 				return toText
 			}
 
-			if replaced := replaceAllFunc(rawLine.textnl, from, replace); replaced != rawLine.textnl {
+			replaced := replaceAllFunc(rawLine.textnl, from, replace)
+			if replaced != rawLine.textnl {
 				if G.opts.ShowAutofix || G.opts.Autofix {
 					rawLine.textnl = replaced
 				}
@@ -201,9 +203,11 @@ func (fix *Autofix) Delete() {
 // Apply does the actual work.
 // Depending on the pkglint mode, it either:
 //
-// * logs the associated message (default)
-// * logs what would be fixed (--show-autofix)
-// * records the fixes in the line (--autofix)
+// * logs the associated message (default) but does not record the fixes in the line
+//
+// * logs what would be fixed (--show-autofix) and records the fixes in the line
+//
+// * records the fixes in the line (--autofix), ready for SaveAutofixChanges
 func (fix *Autofix) Apply() {
 	line := fix.line
 
@@ -274,7 +278,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	oldWidth := 0      // The minimum required indentation in the original lines.
 
 	{
-		// Interpreting the continuation marker as variable value
+		// Parsing the continuation marker as variable value
 		// is cheating, but works well.
 		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
 		m, _, _, _, _, valueAlign, value, _, _ := MatchVarassign(text)
@@ -298,9 +302,10 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		return
 	}
 
-	// Continuation lines with the minimal unambiguous indentation
-	// attempt to keep the indentation as small as possible, so don't
-	// realign them.
+	// 8 spaces is the minimum possible indentation that can be
+	// distinguished from an initial line, by looking only at the
+	// beginning of the line. Therefore, this indentation is always
+	// regarded as intentional and is not realigned.
 	if oldWidth == 8 {
 		return
 	}
