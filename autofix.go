@@ -425,8 +425,8 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		err = os.Rename(tmpName, fileName)
 		if err != nil {
 			logf(Error, tmpName, "",
-				"Cannot overwrite with auto-fixed content: %s",
-				"Cannot overwrite with auto-fixed content: "+err.Error())
+				"Cannot overwrite with autofixed content: %s",
+				"Cannot overwrite with autofixed content: "+err.Error())
 			continue
 		}
 		autofixed = true

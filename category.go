@@ -20,14 +20,14 @@ func CheckdirCategory(dir string) {
 	exp := NewMkExpecter(mklines)
 	for exp.AdvanceIfPrefix("#") {
 	}
-	exp.ExpectEmptyLine(G.opts.WarnSpace)
+	exp.ExpectEmptyLine()
 
 	if exp.AdvanceIfMatches(`^COMMENT=\t*(.*)`) {
 		MkLineChecker{mklines.mklines[exp.Index()-1]}.CheckValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
 	} else {
 		exp.CurrentLine().Errorf("COMMENT= line expected.")
 	}
-	exp.ExpectEmptyLine(G.opts.WarnSpace)
+	exp.ExpectEmptyLine()
 
 	type subdir struct {
 		name   string
@@ -157,7 +157,7 @@ func CheckdirCategory(dir string) {
 		exp.SkipToFooter()
 	}
 
-	exp.ExpectEmptyLine(G.opts.WarnSpace)
+	exp.ExpectEmptyLine()
 	exp.ExpectText(".include \"../mk/misc/category.mk\"")
 	if !exp.EOF() {
 		exp.CurrentLine().Errorf("The file should end here.")

@@ -42,7 +42,7 @@ func (ck *PatchChecker) Check() {
 		return
 	}
 
-	ck.previousLineEmpty = ck.exp.ExpectEmptyLine(G.opts.WarnSpace)
+	ck.previousLineEmpty = ck.exp.ExpectEmptyLine()
 
 	patchedFiles := 0
 	for !ck.exp.EOF() {

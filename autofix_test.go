@@ -319,7 +319,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		"AUTOFIX: fileName:1: Deleting this line.")
 }
 
-func (s *Suite) Test_Autofix_Explain(c *check.C) {
+func (s *Suite) Test_Autofix_Explain__without_explain_option(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("Makefile", 74, "line1")
@@ -333,6 +333,64 @@ func (s *Suite) Test_Autofix_Explain(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:74: Please write row instead of line.")
 	c.Check(G.explanationsAvailable, equals, true)
+}
+
+func (s *Suite) Test_Autofix_Explain__default(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	line := t.NewLine("Makefile", 74, "line1")
+
+	fix := line.Autofix()
+	fix.Warnf("Please write row instead of line.")
+	fix.Replace("line", "row")
+	fix.Explain("Explanation")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:74: Please write row instead of line.",
+		"",
+		"\tExplanation",
+		"")
+	c.Check(G.explanationsAvailable, equals, true)
+}
+
+func (s *Suite) Test_Autofix_Explain__show_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--show-autofix", "--explain")
+	line := t.NewLine("Makefile", 74, "line1")
+
+	fix := line.Autofix()
+	fix.Warnf("Please write row instead of line.")
+	fix.Replace("line", "row")
+	fix.Explain("Explanation")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:74: Please write row instead of line.",
+		"AUTOFIX: Makefile:74: Replacing \"line\" with \"row\".",
+		"",
+		"\tExplanation",
+		"")
+	c.Check(G.explanationsAvailable, equals, true)
+}
+
+func (s *Suite) Test_Autofix_Explain__autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix", "--explain")
+	line := t.NewLine("Makefile", 74, "line1")
+
+	fix := line.Autofix()
+	fix.Warnf("Please write row instead of line.")
+	fix.Replace("line", "row")
+	fix.Explain("Explanation")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"AUTOFIX: Makefile:74: Replacing \"line\" with \"row\".")
+	c.Check(G.explanationsAvailable, equals, false) // Not necessary.
 }
 
 func (s *Suite) Test_Autofix_Explain__SilentAutofixFormat(c *check.C) {
@@ -587,7 +645,7 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 }
 
 // Since the diagnostic doesn't contain the string "few", nothing happens.
-func (s *Suite) Test_Autofix__skip(c *check.C) {
+func (s *Suite) Test_Autofix_skip(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--only", "few", "--autofix")
@@ -601,6 +659,8 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	fix.Warnf("Many.")
 	fix.Explain(
 		"Explanation.")
+
+	// None of the following actions has any effect because of the --only option above.
 	fix.Replace("111", "___")
 	fix.ReplaceAfter(" ", "222", "___")
 	fix.ReplaceRegex(`\d+`, "___", 1)
@@ -609,6 +669,7 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	fix.Delete()
 	fix.Custom(func(showAutofix, autofix bool) {})
 	fix.Realign(mklines.mklines[0], 32)
+
 	fix.Apply()
 
 	SaveAutofixChanges(lines)
@@ -617,8 +678,9 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	t.CheckFileLines("fileName",
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
-	c.Check(lines.Lines[0].raw[0].textnl, equals, "VAR=\t111 222 333 444 555 \\\n")
-	c.Check(lines.Lines[0].raw[1].textnl, equals, "666\n")
+	c.Check(fix.RawText(), equals, ""+
+		"VAR=\t111 222 333 444 555 \\\n"+
+		"666\n")
 }
 
 // Demonstrates how to filter log messages.
@@ -674,7 +736,7 @@ func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 		"FATAL: Pkglint internal error: Autofix: format \"Warning without period\" must end with a period.")
 }
 
-func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
+func (s *Suite) Test_SaveAutofixChanges__file_removed(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix")
@@ -694,7 +756,7 @@ func (s *Suite) Test_Autofix_Apply__file_removed(c *check.C) {
 		"ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot write: .*\n")
 }
 
-func (s *Suite) Test_Autofix_Apply__file_busy_Windows(c *check.C) {
+func (s *Suite) Test_SaveAutofixChanges__file_busy_Windows(c *check.C) {
 	t := s.Init(c)
 
 	if runtime.GOOS != "windows" {
@@ -719,15 +781,15 @@ func (s *Suite) Test_Autofix_Apply__file_busy_Windows(c *check.C) {
 
 	c.Check(t.Output(), check.Matches, ""+
 		"AUTOFIX: ~/subdir/file.txt:1: Replacing \"line\" with \"Line\".\n"+
-		"ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot overwrite with auto-fixed content: .*\n")
+		"ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot overwrite with autofixed content: .*\n")
 }
 
-// This test tests the highly unlikely situation in which a file is loaded
+// This test covers the highly unlikely situation in which a file is loaded
 // by pkglint, and just before writing the autofixed content back, another
 // process takes the file and replaces it with a directory of the same name.
 //
 // 100% code coverage sometimes requires creativity. :)
-func (s *Suite) Test_Autofix_Apply__file_converted_to_directory(c *check.C) {
+func (s *Suite) Test_SaveAutofixChanges__cannot_overwrite(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix")
@@ -746,7 +808,7 @@ func (s *Suite) Test_Autofix_Apply__file_converted_to_directory(c *check.C) {
 
 	c.Check(t.Output(), check.Matches, ""+
 		"AUTOFIX: ~/file.txt:1: Replacing \"line\" with \"Line\".\n"+
-		"ERROR: ~/file.txt.pkglint.tmp: Cannot overwrite with auto-fixed content: .*\n")
+		"ERROR: ~/file.txt.pkglint.tmp: Cannot overwrite with autofixed content: .*\n")
 }
 
 // RawText returns the raw text of the fixed line, including line ends.

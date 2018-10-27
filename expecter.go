@@ -41,6 +41,7 @@ func (exp *Expecter) Group(index int) string {
 	return exp.m[index]
 }
 
+// Advance skips the current line and returns true.
 func (exp *Expecter) Advance() bool {
 	exp.index++
 	exp.m = nil
@@ -82,12 +83,12 @@ func (exp *Expecter) AdvanceIfEquals(text string) bool {
 	return !exp.EOF() && exp.lines.Lines[exp.index].Text == text && exp.Advance()
 }
 
-func (exp *Expecter) ExpectEmptyLine(warnSpace bool) bool {
+func (exp *Expecter) ExpectEmptyLine() bool {
 	if exp.AdvanceIfEquals("") {
 		return true
 	}
 
-	if warnSpace {
+	if G.opts.WarnSpace {
 		fix := exp.CurrentLine().Autofix()
 		fix.Notef("Empty line expected.")
 		fix.InsertBefore("")
@@ -133,4 +134,8 @@ func (exp *MkExpecter) AdvanceWhile(pred func(mkline MkLine) bool) {
 	for !exp.EOF() && pred(exp.CurrentMkLine()) {
 		exp.Advance()
 	}
+}
+
+func (exp *MkExpecter) AdvanceIf(pred func(mkline MkLine) bool) bool {
+	return !exp.EOF() && pred(exp.CurrentMkLine()) && exp.Advance()
 }

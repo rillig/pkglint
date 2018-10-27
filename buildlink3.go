@@ -15,7 +15,7 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 
 	exp := NewMkExpecter(mklines)
 
-	for exp.AdvanceIfPrefix("#") {
+	for exp.AdvanceIf(MkLine.IsComment) {
 		line := exp.PreviousLine()
 		// See pkgtools/createbuildlink/files/createbuildlink
 		if hasPrefix(line.Text, "# XXX This file was created automatically") {
@@ -23,7 +23,7 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 		}
 	}
 
-	exp.ExpectEmptyLine(G.opts.WarnSpace)
+	exp.ExpectEmptyLine()
 
 	if exp.AdvanceIfMatches(`^BUILDLINK_DEPMETHOD\.([^\t ]+)\?=.*$`) {
 		exp.PreviousLine().Warnf("This line belongs inside the .ifdef block.")
@@ -70,7 +70,7 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 		}
 	}
 
-	exp.ExpectEmptyLine(G.opts.WarnSpace)
+	exp.ExpectEmptyLine()
 
 	// Second paragraph: multiple inclusion protection and introduction
 	// of the uppercase package identifier.
@@ -82,7 +82,7 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 	if !exp.ExpectText(pkgupper + "_BUILDLINK3_MK:=") {
 		return
 	}
-	exp.ExpectEmptyLine(G.opts.WarnSpace)
+	exp.ExpectEmptyLine()
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
@@ -180,7 +180,7 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 	if apiLine == nil {
 		exp.CurrentLine().Warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
-	exp.ExpectEmptyLine(G.opts.WarnSpace)
+	exp.ExpectEmptyLine()
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
 	if !exp.ExpectText("BUILDLINK_TREE+=\t-" + pkgbase) {
