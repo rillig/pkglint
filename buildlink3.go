@@ -6,7 +6,18 @@ import (
 	"strings"
 )
 
+type Buildlink3Checker struct {
+	mklines          MkLines
+	abiLine, apiLine Line
+	abi, api         *DependencyPattern
+}
+
 func ChecklinesBuildlink3Mk(mklines MkLines) {
+	(&Buildlink3Checker{mklines: mklines}).Check()
+}
+
+func (ck *Buildlink3Checker) Check() {
+	mklines := ck.mklines
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines.FileName)()
 	}
@@ -32,8 +43,6 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 	}
 
 	pkgbaseLine, pkgbase := exp.CurrentLine(), ""
-	var abiLine, apiLine Line
-	var abi, api *DependencyPattern
 
 	// First paragraph: Introduction of the package identifier
 	if !exp.AdvanceIfMatches(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`) {
@@ -42,32 +51,7 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 	}
 	pkgbase = exp.Group(1)
 	if containsVarRef(pkgbase) {
-		warned := false
-		for _, pair := range [...]struct{ varuse, simple string }{
-			{"${PYPKGPREFIX}", "py"},
-			{"${RUBY_BASE}", "ruby"},
-			{"${RUBY_PKGPREFIX}", "ruby"},
-			{"${PHP_PKG_PREFIX}", "php"},
-		} {
-			if contains(pkgbase, pair.varuse) {
-				pkgbaseLine.Warnf("Please use %q instead of %q (also in other variables in this file).", pair.simple, pair.varuse)
-				warned = true
-			}
-		}
-		if !warned {
-			if m, varuse := match1(pkgbase, `(\$\{\w+\})`); m {
-				pkgbaseLine.Warnf("Please replace %q with a simple string (also in other variables in this file).", varuse)
-				warned = true
-			}
-		}
-		if warned {
-			Explain(
-				"Having variable package names in the BUILDLINK_TREE is not",
-				"necessary, since other packages depend on this package only for",
-				"a specific version of Python, Ruby or PHP.  Since these",
-				"package identifiers are only used at build time, they should",
-				"not include the specific version of the language interpreter.")
-		}
+		ck.checkVaruseInPkgbase(pkgbase, pkgbaseLine)
 	}
 
 	exp.ExpectEmptyLine()
@@ -114,31 +98,31 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 			doCheck := false
 
 			if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
-				abiLine = line
+				ck.abiLine = line
 				parser := NewParser(line, value, false)
 				if dp := parser.Dependency(); dp != nil && parser.EOF() {
-					abi = dp
+					ck.abi = dp
 				}
 				doCheck = true
 			}
 			if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
-				apiLine = line
+				ck.apiLine = line
 				parser := NewParser(line, value, false)
 				if dp := parser.Dependency(); dp != nil && parser.EOF() {
-					api = dp
+					ck.api = dp
 				}
 				doCheck = true
 			}
-			if doCheck && abi != nil && api != nil && abi.Pkgbase != api.Pkgbase && !hasPrefix(api.Pkgbase, "{") {
-				abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
-					abi.Pkgbase, api.Pkgbase, apiLine.ReferenceFrom(abiLine))
+			if doCheck && ck.abi != nil && ck.api != nil && ck.abi.Pkgbase != ck.api.Pkgbase && !hasPrefix(ck.api.Pkgbase, "{") {
+				ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
+					ck.abi.Pkgbase, ck.api.Pkgbase, ck.apiLine.ReferenceFrom(ck.abiLine))
 			}
 			if doCheck {
-				if abi != nil && abi.Lower != "" && !containsVarRef(abi.Lower) {
-					if api != nil && api.Lower != "" && !containsVarRef(api.Lower) {
-						if pkgver.Compare(abi.Lower, api.Lower) < 0 {
-							abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
-								abi.Lower, api.Lower, apiLine.ReferenceFrom(abiLine))
+				if ck.abi != nil && ck.abi.Lower != "" && !containsVarRef(ck.abi.Lower) {
+					if ck.api != nil && ck.api.Lower != "" && !containsVarRef(ck.api.Lower) {
+						if pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
+							ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
+								ck.abi.Lower, ck.api.Lower, ck.apiLine.ReferenceFrom(ck.abiLine))
 						}
 					}
 				}
@@ -177,7 +161,7 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 			exp.Advance()
 		}
 	}
-	if apiLine == nil {
+	if ck.apiLine == nil {
 		exp.CurrentLine().Warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
 	exp.ExpectEmptyLine()
@@ -196,4 +180,33 @@ func ChecklinesBuildlink3Mk(mklines MkLines) {
 	}
 
 	SaveAutofixChanges(mklines.lines)
+}
+
+func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine Line) {
+	warned := false
+	for _, pair := range [...]struct{ varuse, simple string }{
+		{"${PYPKGPREFIX}", "py"},
+		{"${RUBY_BASE}", "ruby"},
+		{"${RUBY_PKGPREFIX}", "ruby"},
+		{"${PHP_PKG_PREFIX}", "php"},
+	} {
+		if contains(pkgbase, pair.varuse) {
+			pkgbaseLine.Warnf("Please use %q instead of %q (also in other variables in this file).", pair.simple, pair.varuse)
+			warned = true
+		}
+	}
+	if !warned {
+		if m, varuse := match1(pkgbase, `(\$\{\w+\})`); m {
+			pkgbaseLine.Warnf("Please replace %q with a simple string (also in other variables in this file).", varuse)
+			warned = true
+		}
+	}
+	if warned {
+		Explain(
+			"Having variable package names in the BUILDLINK_TREE is not",
+			"necessary, since other packages depend on this package only for",
+			"a specific version of Python, Ruby or PHP.  Since these",
+			"package identifiers are only used at build time, they should",
+			"not include the specific version of the language interpreter.")
+	}
 }
