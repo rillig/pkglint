@@ -364,7 +364,7 @@ nextAtom:
 	}
 	repl.Reset(mark)
 
-	G.Assertf(len(atoms) != 0, "ShTokenizer.ShToken")
+	G.Assertf(len(atoms) > 0, "ShTokenizer.ShToken")
 	return NewShToken(repl.Since(initialMark), atoms...)
 }
 

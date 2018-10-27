@@ -775,7 +775,7 @@ func (ind *Indentation) String() string {
 	s := ""
 	for _, level := range ind.levels[1:] {
 		s += fmt.Sprintf(" %d", level.depth)
-		if len(level.conditionalVars) != 0 {
+		if len(level.conditionalVars) > 0 {
 			s += " (" + strings.Join(level.conditionalVars, " ") + ")"
 		}
 	}

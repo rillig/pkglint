@@ -268,7 +268,7 @@ func (fix *Autofix) Apply() {
 		if logFix {
 			line.showSource(G.logOut)
 		}
-		if logDiagnostic && len(fix.explanation) != 0 {
+		if logDiagnostic && len(fix.explanation) > 0 {
 			Explain(fix.explanation...)
 		} else if G.opts.ShowSource {
 			G.logOut.Separate()

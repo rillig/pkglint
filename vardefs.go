@@ -139,7 +139,7 @@ func (src *Pkgsrc) InitVartypes() {
 			}
 		}
 
-		if len(values) != 0 {
+		if len(values) > 0 {
 			joined := keysJoined(values)
 			if trace.Tracing {
 				trace.Stepf("Enum from %s in: %s", strings.Join(varcanons, " "), fileName, joined)

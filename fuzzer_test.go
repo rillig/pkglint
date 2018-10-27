@@ -19,7 +19,7 @@ type Fuzzer struct {
 
 func NewFuzzer(seed ...int64) *Fuzzer {
 	var actualSeed int64
-	if len(seed) != 0 {
+	if len(seed) > 0 {
 		actualSeed = seed[0]
 	} else {
 		actualSeed = rand.Int63()

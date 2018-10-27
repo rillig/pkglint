@@ -194,7 +194,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		pkglint.CurrentUsername = replaceAll(currentUser.Username, `^.*\\`, "")
 	}
 
-	for len(pkglint.Todo) != 0 {
+	for len(pkglint.Todo) > 0 {
 		item := pkglint.Todo[0]
 		pkglint.Todo = pkglint.Todo[1:]
 		pkglint.CheckDirent(item)
