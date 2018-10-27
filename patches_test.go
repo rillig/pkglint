@@ -160,8 +160,7 @@ func (s *Suite) Test_PatchChecker_checklineSourceAbsolutePathname(c *check.C) {
 		"@@ -0,0 +1,3 @@",
 		"+const char abspath[] = PREFIX \"/bin/program\";",
 		"+val abspath = libdir + \"/libiconv.so.1.0\"",
-		"+const char abspath[] = \"/dev/scd0\";",
-	)
+		"+const char abspath[] = \"/dev/scd0\";")
 
 	ChecklinesPatch(lines)
 

@@ -16,10 +16,12 @@ import (
 // until they are written to disk by SaveAutofixChanges.
 type Autofix struct {
 	line        Line
-	linesBefore []string        // Newly inserted lines, including \n
-	lines       []*RawLine      // Original lines, available for diff
-	linesAfter  []string        // Newly inserted lines, including \n
-	modified    bool            // Modified in memory, but not necessarily written back to disk
+	linesBefore []string   // Newly inserted lines, including \n
+	lines       []*RawLine // Original lines, available for diff
+	linesAfter  []string   // Newly inserted lines, including \n
+	// Whether an actual fix has been applied (or, without --show-autofix,
+	// whether a fix is applicable)
+	modified    bool
 	actions     []autofixAction // Human-readable description of the actual autofix actions
 	level       *LogLevel       //
 	diagFormat  string          // Is logged only if it couldn't be fixed automatically

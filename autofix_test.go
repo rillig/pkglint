@@ -43,8 +43,8 @@ func (s *Suite) Test_Autofix__default_leaves_line_unchanged(c *check.C) {
 	t.CheckOutputLines(
 		">\t# row 1 \\",
 		">\tcontinuation of row 1",
-		"WARN: ~/Makefile:1--2: Row should be replaced with line.",
-	)
+		"WARN: ~/Makefile:1--2: Row should be replaced with line.")
+	c.Check(fix.modified, equals, true)
 }
 
 func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
@@ -80,6 +80,7 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 		"-\t# row 1 \\",
 		"-\tcontinuation of row 1",
 		"+\tbelow")
+	c.Check(fix.modified, equals, true)
 }
 
 func (s *Suite) Test_Autofix_ReplaceAfter__autofix(c *check.C) {
