@@ -8,7 +8,7 @@ import (
 
 type Buildlink3Checker struct {
 	mklines          MkLines
-	abiLine, apiLine Line
+	abiLine, apiLine MkLine
 	abi, api         *DependencyPattern
 }
 
@@ -89,54 +89,10 @@ func (ck *Buildlink3Checker) Check() {
 			return
 		}
 
-		line := exp.CurrentLine()
-		mkline := mklines.mklines[exp.Index()]
+		mkline := exp.CurrentMkLine()
 
 		if mkline.IsVarassign() {
-			exp.Advance()
-			varname, value := mkline.Varname(), mkline.Value()
-			doCheck := false
-
-			if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
-				ck.abiLine = line
-				parser := NewParser(line, value, false)
-				if dp := parser.Dependency(); dp != nil && parser.EOF() {
-					ck.abi = dp
-				}
-				doCheck = true
-			}
-			if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
-				ck.apiLine = line
-				parser := NewParser(line, value, false)
-				if dp := parser.Dependency(); dp != nil && parser.EOF() {
-					ck.api = dp
-				}
-				doCheck = true
-			}
-			if doCheck && ck.abi != nil && ck.api != nil && ck.abi.Pkgbase != ck.api.Pkgbase && !hasPrefix(ck.api.Pkgbase, "{") {
-				ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
-					ck.abi.Pkgbase, ck.api.Pkgbase, ck.apiLine.ReferenceFrom(ck.abiLine))
-			}
-			if doCheck {
-				if ck.abi != nil && ck.abi.Lower != "" && !containsVarRef(ck.abi.Lower) {
-					if ck.api != nil && ck.api.Lower != "" && !containsVarRef(ck.api.Lower) {
-						if pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
-							ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
-								ck.abi.Lower, ck.api.Lower, ck.apiLine.ReferenceFrom(ck.abiLine))
-						}
-					}
-				}
-			}
-
-			if varparam := mkline.Varparam(); varparam != "" && varparam != pkgbase {
-				if hasPrefix(varname, "BUILDLINK_") && mkline.Varcanon() != "BUILDLINK_API_DEPENDS.*" {
-					line.Warnf("Only buildlink variables for %q, not %q may be set in this file.", pkgbase, varparam)
-				}
-			}
-
-			if varname == "pkgbase" {
-				exp.AdvanceIfMatches(`^\.[\t ]*include "../../mk/pkg-build-options\.mk"$`)
-			}
+			ck.checkVarassign(exp, pkgbase)
 
 		} else if exp.AdvanceIfEquals("") || exp.AdvanceIfPrefix("#") {
 			// Comments and empty lines are fine here.
@@ -180,6 +136,51 @@ func (ck *Buildlink3Checker) Check() {
 	}
 
 	SaveAutofixChanges(mklines.lines)
+}
+
+func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, pkgbase string) {
+	mkline := exp.CurrentMkLine()
+	exp.Advance()
+	varname, value := mkline.Varname(), mkline.Value()
+	doCheck := false
+	if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
+		ck.abiLine = mkline
+		parser := NewParser(mkline.Line, value, false)
+		if dp := parser.Dependency(); dp != nil && parser.EOF() {
+			ck.abi = dp
+		}
+		doCheck = true
+	}
+	if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
+		ck.apiLine = mkline
+		parser := NewParser(mkline.Line, value, false)
+		if dp := parser.Dependency(); dp != nil && parser.EOF() {
+			ck.api = dp
+		}
+		doCheck = true
+	}
+	if doCheck && ck.abi != nil && ck.api != nil && ck.abi.Pkgbase != ck.api.Pkgbase && !hasPrefix(ck.api.Pkgbase, "{") {
+		ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
+			ck.abi.Pkgbase, ck.api.Pkgbase, ck.apiLine.ReferenceFrom(ck.abiLine.Line))
+	}
+	if doCheck {
+		if ck.abi != nil && ck.abi.Lower != "" && !containsVarRef(ck.abi.Lower) {
+			if ck.api != nil && ck.api.Lower != "" && !containsVarRef(ck.api.Lower) {
+				if pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
+					ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
+						ck.abi.Lower, ck.api.Lower, ck.apiLine.ReferenceFrom(ck.abiLine.Line))
+				}
+			}
+		}
+	}
+	if varparam := mkline.Varparam(); varparam != "" && varparam != pkgbase {
+		if hasPrefix(varname, "BUILDLINK_") && mkline.Varcanon() != "BUILDLINK_API_DEPENDS.*" {
+			mkline.Warnf("Only buildlink variables for %q, not %q may be set in this file.", pkgbase, varparam)
+		}
+	}
+	if varname == "pkgbase" {
+		exp.AdvanceIfMatches(`^\.[\t ]*include "../../mk/pkg-build-options\.mk"$`)
+	}
 }
 
 func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine Line) {
