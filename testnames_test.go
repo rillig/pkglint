@@ -230,7 +230,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 	testeeByName := collectTesteeByName(elements)
 	checkAll(elements, testeeByName)
 
-	printWarnings := func() bool { return true }()
+	printWarnings := func() bool { return false }()
 
 	for _, err := range errors {
 		fmt.Println(err)
