@@ -341,7 +341,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 	c.Check(line.autofix.linesBefore, check.DeepEquals, []string{
 		"before\n",
 		"between before and middle\n"})
-	c.Check(line.autofix.lines[0].textnl, equals, "middle\n")
+	c.Check(line.raw[0].textnl, equals, "middle\n")
 	c.Check(line.autofix.linesAfter, deepEquals, []string{
 		"between middle and after\n",
 		"after\n"})
@@ -366,7 +366,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 	c.Check(line.autofix.linesBefore, check.DeepEquals, []string{
 		"before\n",
 		"between before and middle\n"})
-	c.Check(line.autofix.lines[0].textnl, equals, "")
+	c.Check(line.raw[0].textnl, equals, "")
 	c.Check(line.autofix.linesAfter, deepEquals, []string{
 		"between middle and after\n",
 		"after\n"})
@@ -722,7 +722,7 @@ func (fix *Autofix) RawText() string {
 	for _, lineBefore := range fix.linesBefore {
 		text += lineBefore
 	}
-	for _, raw := range fix.lines {
+	for _, raw := range fix.line.raw {
 		text += raw.textnl
 	}
 	for _, lineAfter := range fix.linesAfter {

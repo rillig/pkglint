@@ -16,9 +16,8 @@ import (
 // until they are written to disk by SaveAutofixChanges.
 type Autofix struct {
 	line        Line
-	linesBefore []string   // Newly inserted lines, including \n
-	lines       []*RawLine // Original lines, available for diff
-	linesAfter  []string   // Newly inserted lines, including \n
+	linesBefore []string // Newly inserted lines, including \n
+	linesAfter  []string // Newly inserted lines, including \n
 	// Whether an actual fix has been applied (or, without --show-autofix,
 	// whether a fix is applicable)
 	modified    bool
@@ -48,9 +47,7 @@ const SilentAutofixFormat = "SilentAutofixFormat"
 const AutofixFormat = "AutofixFormat"
 
 func NewAutofix(line Line) *Autofix {
-	return &Autofix{
-		line:  line,
-		lines: append([]*RawLine{}, line.raw...)}
+	return &Autofix{line: line}
 }
 
 // Errorf remembers the error for logging it later when Apply is called.
@@ -85,7 +82,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 		return
 	}
 
-	for _, rawLine := range fix.lines {
+	for _, rawLine := range fix.line.raw {
 		if rawLine.Lineno != 0 {
 			replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1)
 			if replaced != rawLine.textnl {
@@ -110,7 +107,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 	}
 
 	done := 0
-	for _, rawLine := range fix.lines {
+	for _, rawLine := range fix.line.raw {
 		if rawLine.Lineno != 0 {
 			var froms []string // The strings that have actually changed
 
@@ -180,7 +177,7 @@ func (fix *Autofix) InsertBefore(text string) {
 	if G.opts.ShowAutofix || G.opts.Autofix {
 		fix.linesBefore = append(fix.linesBefore, text+"\n")
 	}
-	fix.Describef(fix.lines[0].Lineno, "Inserting a line %q before this line.", text)
+	fix.Describef(fix.line.raw[0].Lineno, "Inserting a line %q before this line.", text)
 }
 
 // InsertAfter appends a line after the current line.
@@ -193,7 +190,7 @@ func (fix *Autofix) InsertAfter(text string) {
 	if G.opts.ShowAutofix || G.opts.Autofix {
 		fix.linesAfter = append(fix.linesAfter, text+"\n")
 	}
-	fix.Describef(fix.lines[len(fix.lines)-1].Lineno, "Inserting a line %q after this line.", text)
+	fix.Describef(fix.line.raw[len(fix.line.raw)-1].Lineno, "Inserting a line %q after this line.", text)
 }
 
 // Delete removes the current line completely.
@@ -204,7 +201,7 @@ func (fix *Autofix) Delete() {
 		return
 	}
 
-	for _, line := range fix.lines {
+	for _, line := range fix.line.raw {
 		if G.opts.ShowAutofix || G.opts.Autofix {
 			line.textnl = ""
 		}
@@ -301,7 +298,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		}
 	}
 
-	for _, rawLine := range fix.lines[1:] {
+	for _, rawLine := range fix.line.raw[1:] {
 		_, comment, space := match2(rawLine.textnl, `^(#?)([ \t]*)`)
 		width := tabWidth(comment + space)
 		if (oldWidth == 0 || width < oldWidth) && width >= 8 && rawLine.textnl != "\n" {
@@ -324,7 +321,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		return
 	}
 
-	for _, rawLine := range fix.lines[1:] {
+	for _, rawLine := range fix.line.raw[1:] {
 		_, comment, oldSpace := match2(rawLine.textnl, `^(#?)([ \t]*)`)
 		newWidth := tabWidth(oldSpace) - oldWidth + newWidth
 		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)

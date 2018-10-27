@@ -110,7 +110,7 @@ func (line *LineImpl) showSource(out *SeparatorWriter) {
 		for _, before := range line.autofix.linesBefore {
 			out.Write("+\t" + before)
 		}
-		printDiff(line.autofix.lines)
+		printDiff(line.raw)
 		for _, after := range line.autofix.linesAfter {
 			out.Write("+\t" + after)
 		}
