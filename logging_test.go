@@ -180,7 +180,7 @@ func (s *Suite) Test_Explain__only(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_logs__duplicate_messages(c *check.C) {
+func (s *Suite) Test_logf__duplicate_messages(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain")
@@ -202,7 +202,7 @@ func (s *Suite) Test_logs__duplicate_messages(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_logs__duplicate_explanations(c *check.C) {
+func (s *Suite) Test_logf__duplicate_explanations(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain")
@@ -224,7 +224,7 @@ func (s *Suite) Test_logs__duplicate_explanations(c *check.C) {
 
 // Even if verbose logging is disabled, the "Replacing" diagnostics
 // must not be filtered for duplicates since each of them modifies the line.
-func (s *Suite) Test_logs__duplicate_autofix(c *check.C) {
+func (s *Suite) Test_logf__duplicate_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain", "--autofix")
@@ -241,11 +241,11 @@ func (s *Suite) Test_logs__duplicate_autofix(c *check.C) {
 		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".")
 }
 
-func (s *Suite) Test_logs__panic(c *check.C) {
+func (s *Suite) Test_logf__panic(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectFatal(
-		func() { logs(Error, "fileName", "13", "No period", "No period") },
+		func() { logf(Error, "fileName", "13", "No period", "No period") },
 		"FATAL: Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 

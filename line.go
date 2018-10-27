@@ -134,7 +134,7 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 	if G.opts.ShowSource {
 		line.showSource(G.logOut)
 	}
-	logs(level, line.FileName, line.Linenos(), format, fmt.Sprintf(format, args...))
+	logf(level, line.FileName, line.Linenos(), format, fmt.Sprintf(format, args...))
 	if G.opts.ShowSource {
 		G.logOut.Separate()
 	}

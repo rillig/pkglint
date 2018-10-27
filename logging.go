@@ -26,7 +26,7 @@ var dummyMkLine = NewMkLine(dummyLine)
 // shallBeLogged tests whether a diagnostic with the given format should
 // be logged. It only inspects the --only arguments.
 //
-// Duplicates are handled in main.logs.
+// Duplicates are handled in main.logf.
 func shallBeLogged(format string) bool {
 	if len(G.opts.LogOnly) > 0 {
 		found := false
@@ -57,7 +57,7 @@ func loggedAlready(fileName, lineno, msg string) bool {
 	return false
 }
 
-func logs(level *LogLevel, fileName, lineno, format, msg string) bool {
+func logf(level *LogLevel, fileName, lineno, format, msg string) bool {
 	if fileName != "" {
 		fileName = cleanpath(fileName)
 	}
