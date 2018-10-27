@@ -155,6 +155,7 @@ func (s *Suite) Test_Autofix_ReplaceRegex__autofix(c *check.C) {
 		"-\tline2",
 		"+\tXXXe2")
 
+	// After calling fix.Apply above, the autofix is ready to be used again.
 	fix.Warnf("Use Y instead of X.")
 	fix.Replace("X", "Y")
 	fix.Apply()
