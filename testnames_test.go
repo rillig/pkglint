@@ -15,6 +15,9 @@ import (
 //
 //  Test_${Type}_${Method}__${description_using_underscores}
 func (s *Suite) Test__test_names(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix") // For fixTabs.
 
 	type Element struct {
 		Type string // The type, e.g. MkLine
@@ -83,6 +86,26 @@ func (s *Suite) Test__test_names(c *check.C) {
 		}
 	}
 
+	// Replace tabs with spaces, except for the indentation tabs.
+	fixTabs := func(fileName string) {
+		if hasSuffix(fileName, "yacc.go") {
+			return
+		}
+
+		lines := Load(fileName, MustSucceed|NotEmpty|LogErrors)
+		for _, line := range lines.Lines {
+			_, rest := match1(line.Text, `^\t*(.*)`)
+			if contains(rest, "\t") {
+				fix := line.Autofix()
+				fix.Warnf("Tabs should only be used for indentation.")
+				fix.Replace(rest, detab(rest))
+				fix.Apply()
+			}
+		}
+
+		SaveAutofixChanges(lines)
+	}
+
 	// loadAllElements returns all type, function and method names
 	// from the current package, in the form FunctionName or
 	// TypeName.MethodName (omitting the * from the type name).
@@ -95,6 +118,7 @@ func (s *Suite) Test__test_names(c *check.C) {
 
 		var elements []*Element
 		for fileName, file := range pkgs["main"].Files {
+			fixTabs(fileName)
 			for _, decl := range file.Decls {
 				addElement(&elements, decl, fileName)
 			}
