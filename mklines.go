@@ -582,8 +582,17 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 		}
 	}
 
-	fix := mkline.Autofix()
+	va.realignInitialLine(mkline, varnameOp, oldSpace, newSpace, hasSpace, newWidth)
+	if mkline.IsMultiline() {
+		va.realignContinuationLines(mkline, newWidth)
+	}
+}
+
+func (va *VaralignBlock) realignInitialLine(mkline MkLine, varnameOp string, oldSpace string, newSpace string, hasSpace bool, newWidth int) {
 	wrongColumn := tabWidth(varnameOp+oldSpace) != tabWidth(varnameOp+newSpace)
+
+	fix := mkline.Autofix()
+
 	switch {
 	case hasSpace && wrongColumn:
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", newWidth+1)
@@ -592,8 +601,9 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 	case wrongColumn:
 		fix.Notef("This variable value should be aligned to column %d.", newWidth+1)
 	default:
-		fix.Notef(SilentMagicDiagnostic)
+		fix.Notef(SilentMagicDiagnostic) // TODO: why?
 	}
+
 	if wrongColumn {
 		fix.Explain(
 			"Normally, all variable values in a block should start at the same",
@@ -609,14 +619,15 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 			"When the block contains something else than variable definitions",
 			"and directives like .if or .for, it is not checked at all.")
 	}
+
 	fix.ReplaceAfter(varnameOp, oldSpace, newSpace)
 	fix.Apply()
+}
 
-	if mkline.IsMultiline() {
-		indentation := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
-		fix := mkline.Autofix()
-		fix.Notef("This line should be aligned with %q.", indentation)
-		fix.Realign(mkline, newWidth)
-		fix.Apply()
-	}
+func (va *VaralignBlock) realignContinuationLines(mkline MkLine, newWidth int) {
+	indentation := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
+	fix := mkline.Autofix()
+	fix.Notef("This line should be aligned with %q.", indentation)
+	fix.Realign(mkline, newWidth)
+	fix.Apply()
 }
