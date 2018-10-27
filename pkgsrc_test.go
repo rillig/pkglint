@@ -27,16 +27,6 @@ func (s *Suite) Test_Pkgsrc_loadMasterSites(c *check.C) {
 	c.Check(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_B"], equals, "https://b.example.org/distfiles/")
 }
 
-func (s *Suite) Test_Pkgsrc_InitVartypes(c *check.C) {
-	t := s.Init(c)
-
-	src := NewPkgsrc(t.File("."))
-	src.InitVartypes()
-
-	c.Check(src.vartypes["BSD_MAKE_ENV"].basicType.name, equals, "ShellWord")
-	c.Check(src.vartypes["USE_BUILTIN.*"].basicType.name, equals, "YesNoIndirectly")
-}
-
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 	t := s.Init(c)
 
@@ -418,4 +408,51 @@ func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {
 	t.ExpectFatal(
 		G.Pkgsrc.loadTools,
 		"FATAL: ~/mk/tools/bsd.tools.mk: Too few tool files.")
+}
+
+// See PR 46570, Ctrl+F "3. In lang/perl5".
+func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	checkType := func(varname string, vartype string) {
+		actualType := G.Pkgsrc.VariableType(varname)
+		if vartype == "" {
+			c.Check(actualType, check.IsNil)
+		} else {
+			if c.Check(actualType, check.NotNil) {
+				c.Check(actualType.String(), equals, vartype)
+			}
+		}
+	}
+
+	checkType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR", "")
+	checkType("SOME_DIR", "Pathname (guessed)")
+	checkType("SOMEDIR", "Pathname (guessed)")
+	checkType("SEARCHPATHS", "ShellList of Pathname (guessed)")
+	checkType("MYPACKAGE_USER", "UserGroupName (guessed)")
+	checkType("MYPACKAGE_GROUP", "UserGroupName (guessed)")
+	checkType("MY_CMD_ENV", "ShellList of ShellWord (guessed)")
+	checkType("MY_CMD_ARGS", "ShellList of ShellWord (guessed)")
+	checkType("MY_CMD_CFLAGS", "ShellList of CFlag (guessed)")
+	checkType("MY_CMD_LDFLAGS", "ShellList of LdFlag (guessed)")
+	checkType("PLIST.abcde", "Yes")
+}
+
+// Guessing the variable type works for both plain and parameterized variable names.
+func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	t1 := G.Pkgsrc.VariableType("FONT_DIRS")
+
+	c.Assert(t1, check.NotNil)
+	c.Check(t1.String(), equals, "ShellList of Pathmask (guessed)")
+
+	t2 := G.Pkgsrc.VariableType("FONT_DIRS.ttf")
+
+	c.Assert(t2, check.NotNil)
+	c.Check(t2.String(), equals, "ShellList of Pathmask (guessed)")
 }

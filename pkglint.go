@@ -344,6 +344,87 @@ func (pkglint *Pkglint) CheckDirent(fileName string) {
 	}
 }
 
+// checkdirPackage checks a complete pkgsrc package, including each
+// of the files individually, and also when seen in combination.
+func (pkglint *Pkglint) checkdirPackage(dir string) {
+	if trace.Tracing {
+		defer trace.Call1(dir)()
+	}
+
+	G.Pkg = NewPackage(dir)
+	defer func() { G.Pkg = nil }()
+	pkg := G.Pkg
+
+	// we need to handle the Makefile first to get some variables
+	mklines := pkg.loadPackageMakefile()
+	if mklines == nil {
+		return
+	}
+
+	files := dirglob(pkg.File("."))
+	if pkg.Pkgdir != "." {
+		files = append(files, dirglob(pkg.File(pkg.Pkgdir))...)
+	}
+	if G.opts.CheckExtra {
+		files = append(files, dirglob(pkg.File(pkg.Filesdir))...)
+	}
+	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
+	if pkg.DistinfoFile != pkg.vars.fallback["DISTINFO_FILE"] {
+		files = append(files, pkg.File(pkg.DistinfoFile))
+	}
+
+	haveDistinfo := false
+	havePatches := false
+
+	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
+	for _, fileName := range files {
+		basename := path.Base(fileName)
+		if (hasPrefix(basename, "Makefile.") || hasSuffix(fileName, ".mk")) &&
+			!matches(fileName, `patch-`) &&
+			!contains(fileName, pkg.Pkgdir+"/") &&
+			!contains(fileName, pkg.Filesdir+"/") {
+			if fragmentMklines := LoadMk(fileName, MustSucceed); fragmentMklines != nil {
+				fragmentMklines.DetermineUsedVariables()
+			}
+		}
+		if hasPrefix(basename, "PLIST") {
+			pkg.loadPlistDirs(fileName)
+		}
+	}
+
+	for _, fileName := range files {
+		if containsVarRef(fileName) {
+			if trace.Tracing {
+				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", fileName)
+			}
+			continue
+		}
+
+		if path.Base(fileName) == "Makefile" {
+			if st, err := os.Lstat(fileName); err == nil {
+				pkglint.checkExecutable(fileName, st)
+			}
+			if G.opts.CheckMakefile {
+				pkg.checkfilePackageMakefile(fileName, mklines)
+			}
+		} else {
+			pkglint.Checkfile(fileName)
+		}
+		if contains(fileName, "/patches/patch-") {
+			havePatches = true
+		} else if hasSuffix(fileName, "/distinfo") {
+			haveDistinfo = true
+		}
+		pkg.checkLocallyModified(fileName)
+	}
+
+	if pkg.Pkgdir == "." && G.opts.CheckDistinfo && G.opts.CheckPatches {
+		if havePatches && !haveDistinfo {
+			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run \"%s makepatchsum\".", confMake)
+		}
+	}
+}
+
 func (pkglint *Pkglint) Panicf(format string, args ...interface{}) {
 	prefix := ifelseStr(G.opts.GccOutput, Fatal.GccName, Fatal.TraditionalName)
 	pkglint.logErr.Write(prefix + ": " + fmt.Sprintf(format, args...) + "\n")

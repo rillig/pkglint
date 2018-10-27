@@ -385,6 +385,41 @@ func (mklines *MkLinesImpl) CheckRedundantVariables() {
 	mklines.ForEach(scope.Handle)
 }
 
+func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
+	lines := mklines.lines
+	if lines.Len() < 3 {
+		return
+	}
+
+	expected := "# used by " + relativeName
+	for _, line := range lines.Lines {
+		if line.Text == expected {
+			return
+		}
+	}
+
+	i := 0
+	for i < 2 && hasPrefix(lines.Lines[i].Text, "#") {
+		i++
+	}
+
+	fix := lines.Lines[i].Autofix()
+	fix.Warnf("Please add a line %q here.", expected)
+	fix.Explain(
+		"Since Makefile.common files usually don't have any comments and",
+		"therefore not a clearly defined interface, they should at least",
+		"contain references to all files that include them, so that it is",
+		"easier to see what effects future changes may have.",
+		"",
+		"If there are more than five packages that use a Makefile.common,",
+		"you should think about giving it a proper name (maybe plugin.mk) and",
+		"documenting its interface.")
+	fix.InsertBefore(expected)
+	fix.Apply()
+
+	SaveAutofixChanges(lines)
+}
+
 func (mklines *MkLinesImpl) SaveAutofixChanges() {
 	SaveAutofixChanges(mklines.lines)
 }

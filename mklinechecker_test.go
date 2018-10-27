@@ -62,6 +62,18 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 			"Include \"../../devel/intltool/buildlink3.mk\" instead.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine(t.File("Makefile"), 2, ".include \"../../other/package/Makefile\"")
+
+	MkLineChecker{mkline}.checkInclude()
+
+	t.CheckOutputLines(
+		"ERROR: ~/Makefile:2: \"other/package/Makefile\" does not exist.",
+		"ERROR: ~/Makefile:2: Other Makefiles must not be included directly.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 	t := s.Init(c)
 

@@ -758,7 +758,7 @@ func (s *Suite) Test_Varalign__outlier_14(c *check.C) {
 // since compared to the DIST line, it is at least two tabs away.
 // Pkglint before 2018-26-01 suggested that it "should be aligned to column 9",
 // which is not possible since the variable name is already longer.
-func (s *Suite) Test_MkLines__variable_alignment__long_short(c *check.C) {
+func (s *Suite) Test_Varalign__long_short(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"INSTALLATION_DIRS=\tbin",

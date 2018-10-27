@@ -2,6 +2,16 @@ package main
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_Pkgsrc_InitVartypes(c *check.C) {
+	t := s.Init(c)
+
+	src := NewPkgsrc(t.File("."))
+	src.InitVartypes()
+
+	c.Check(src.vartypes["BSD_MAKE_ENV"].basicType.name, equals, "ShellWord")
+	c.Check(src.vartypes["USE_BUILTIN.*"].basicType.name, equals, "YesNoIndirectly")
+}
+
 func (s *Suite) Test_Pkgsrc_InitVartypes__enumFrom(c *check.C) {
 	t := s.Init(c)
 

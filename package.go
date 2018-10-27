@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"netbsd.org/pkglint/pkgver"
 	"netbsd.org/pkglint/trace"
-	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -133,87 +132,6 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines MkLines) {
 			if includedFiles[packageBl3] == nil {
 				trace.Step1("%s/buildlink3.mk is included by the package but not by the buildlink3.mk file.", packageBl3)
 			}
-		}
-	}
-}
-
-// checkdirPackage checks a complete pkgsrc package, including each
-// of the files individually, and also when seen in combination.
-func (pkglint *Pkglint) checkdirPackage(dir string) {
-	if trace.Tracing {
-		defer trace.Call1(dir)()
-	}
-
-	G.Pkg = NewPackage(dir)
-	defer func() { G.Pkg = nil }()
-	pkg := G.Pkg
-
-	// we need to handle the Makefile first to get some variables
-	mklines := pkg.loadPackageMakefile()
-	if mklines == nil {
-		return
-	}
-
-	files := dirglob(pkg.File("."))
-	if pkg.Pkgdir != "." {
-		files = append(files, dirglob(pkg.File(pkg.Pkgdir))...)
-	}
-	if G.opts.CheckExtra {
-		files = append(files, dirglob(pkg.File(pkg.Filesdir))...)
-	}
-	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
-	if pkg.DistinfoFile != pkg.vars.fallback["DISTINFO_FILE"] {
-		files = append(files, pkg.File(pkg.DistinfoFile))
-	}
-
-	haveDistinfo := false
-	havePatches := false
-
-	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
-	for _, fileName := range files {
-		basename := path.Base(fileName)
-		if (hasPrefix(basename, "Makefile.") || hasSuffix(fileName, ".mk")) &&
-			!matches(fileName, `patch-`) &&
-			!contains(fileName, pkg.Pkgdir+"/") &&
-			!contains(fileName, pkg.Filesdir+"/") {
-			if fragmentMklines := LoadMk(fileName, MustSucceed); fragmentMklines != nil {
-				fragmentMklines.DetermineUsedVariables()
-			}
-		}
-		if hasPrefix(basename, "PLIST") {
-			pkg.loadPlistDirs(fileName)
-		}
-	}
-
-	for _, fileName := range files {
-		if containsVarRef(fileName) {
-			if trace.Tracing {
-				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", fileName)
-			}
-			continue
-		}
-
-		if path.Base(fileName) == "Makefile" {
-			if st, err := os.Lstat(fileName); err == nil {
-				pkglint.checkExecutable(fileName, st)
-			}
-			if G.opts.CheckMakefile {
-				pkg.checkfilePackageMakefile(fileName, mklines)
-			}
-		} else {
-			pkglint.Checkfile(fileName)
-		}
-		if contains(fileName, "/patches/patch-") {
-			havePatches = true
-		} else if hasSuffix(fileName, "/distinfo") {
-			haveDistinfo = true
-		}
-		pkg.checkLocallyModified(fileName)
-	}
-
-	if pkg.Pkgdir == "." && G.opts.CheckDistinfo && G.opts.CheckPatches {
-		if havePatches && !haveDistinfo {
-			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run \"%s makepatchsum\".", confMake)
 		}
 	}
 }
@@ -395,7 +313,7 @@ func (pkg *Package) readMakefile(fileName string, mainLines MkLines, allLines Mk
 	fileMklines.ForEachEnd(lineAction, atEnd)
 
 	if includingFnameForUsedCheck != "" {
-		fileMklines.checkForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))
+		fileMklines.CheckForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))
 	}
 
 	return
@@ -787,41 +705,6 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		"",
 		"See doc/Makefile-example or the pkgsrc guide, section",
 		"\"Package components\", subsection \"Makefile\" for more information.")
-}
-
-func (mklines *MkLinesImpl) checkForUsedComment(relativeName string) {
-	lines := mklines.lines
-	if lines.Len() < 3 {
-		return
-	}
-
-	expected := "# used by " + relativeName
-	for _, line := range lines.Lines {
-		if line.Text == expected {
-			return
-		}
-	}
-
-	i := 0
-	for i < 2 && hasPrefix(lines.Lines[i].Text, "#") {
-		i++
-	}
-
-	fix := lines.Lines[i].Autofix()
-	fix.Warnf("Please add a line %q here.", expected)
-	fix.Explain(
-		"Since Makefile.common files usually don't have any comments and",
-		"therefore not a clearly defined interface, they should at least",
-		"contain references to all files that include them, so that it is",
-		"easier to see what effects future changes may have.",
-		"",
-		"If there are more than five packages that use a Makefile.common,",
-		"you should think about giving it a proper name (maybe plugin.mk) and",
-		"documenting its interface.")
-	fix.InsertBefore(expected)
-	fix.Apply()
-
-	SaveAutofixChanges(lines)
 }
 
 func (pkg *Package) checkLocallyModified(fileName string) {

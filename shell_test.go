@@ -571,6 +571,24 @@ func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {
 		"WARN: fileName:1: Invoking subshells via $(...) is not portable enough.")
 }
 
+func (s *Suite) Test_ShellLine_CheckWord__PKGMANDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall")
+	t.SetupVartypes()
+	G.Mk = t.NewMkLines("chat/ircII/Makefile",
+		MkRcsID,
+		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/man",
+		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/${PKGMANDIR}")
+
+	G.Mk.Check()
+
+	t.CheckOutputLines(
+		"WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".",
+		"NOTE: chat/ircII/Makefile:2: This variable value should be aligned to column 25.",
+		"NOTE: chat/ircII/Makefile:3: This variable value should be aligned to column 25.")
+}
+
 func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished(c *check.C) {
 	t := s.Init(c)
 

@@ -855,6 +855,112 @@ func (s *Suite) Test_Pkglint_checkMode__skipped(c *check.C) {
 		"ERROR: device: Only files and directories are allowed in pkgsrc.")
 }
 
+func (s *Suite) Test_Pkglint_checkdirPackage(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir("category/package")
+	t.CreateFileLines("Makefile",
+		MkRcsID)
+
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
+		"WARN: distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
+		"ERROR: Makefile: Each package must define its LICENSE.",
+		"WARN: Makefile: No COMMENT given.")
+}
+
+func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/Makefile")
+	t.CreateFileLines("other/package/Makefile",
+		MkRcsID)
+	t.CreateFileLines("other/package/PLIST",
+		PlistRcsID,
+		"bin/program")
+	t.CreateFileLines("other/package/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = da39a3ee5e6b4b0d3255bfef95601890afd80709")
+	t.CreateFileLines("category/package/patches/patch-aa",
+		RcsID)
+	t.Chdir("category/package")
+	t.CreateFileLines("Makefile",
+		MkRcsID,
+		"",
+		"CATEGORIES=category",
+		"",
+		"COMMENT=\tComment",
+		"LICENSE=\t2-clause-bsd",
+		"PKGDIR=\t../../other/package")
+
+	// DISTINFO_FILE is resolved relative to PKGDIR, the other places
+	// are resolved relative to the package base directory.
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"ERROR: patches/patch-aa:1: Patch files must not be empty.")
+}
+
+func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetupPackage("category/package")
+	t.CreateFileDummyPatch("category/package/patches/patch-aa")
+	t.Remove("category/package/distinfo")
+
+	G.CheckDirent(pkg)
+
+	// FIXME: One of the below warnings is redundant.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
+		"WARN: ~/category/package/distinfo: File not found. Please run \""+confMake+" makepatchsum\".")
+}
+
+func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir("category/package")
+	t.CreateFileLines("Makefile",
+		MkRcsID,
+		"",
+		"META_PACKAGE=\tyes")
+	t.SetupVartypes()
+
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile: No COMMENT given.") // No error about missing LICENSE.
+}
+
+func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall,no-order")
+	pkg := t.SetupPackage("category/package",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"RUBY_VERSIONS_ACCEPTED=\t22 23 24 25", // As of 2018.
+		".for rv in ${RUBY_VERSIONS_ACCEPTED}",
+		"RUBY_VER?=\t\t${rv}",
+		".endfor",
+		"",
+		"RUBY_PKGDIR=\t../../lang/ruby-${RUBY_VER}-base",
+		"DISTINFO_FILE=\t${RUBY_PKGDIR}/distinfo")
+
+	// Pkglint cannot currently resolve the location of DISTINFO_FILE completely
+	// because the variable \"rv\" comes from a .for loop.
+	//
+	// TODO: iterate over variables in simple .for loops like the above.
+	G.CheckDirent(pkg)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	t := s.Init(c)
 
@@ -868,6 +974,31 @@ func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/ALTERNATIVES:1: " +
 			"Alternative implementation \"bin/wrapper-impl\" must appear in the PLIST.")
+}
+
+func (s *Suite) Test_Pkglint_ShowSummary__explanations_with_only(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--only", "interesting")
+	line := t.NewLine("Makefile", 27, "The old song")
+
+	line.Warnf("Filtered warning.")               // Is not logged.
+	Explain("Explanation for the above warning.") // Neither would this explanation be logged.
+	G.ShowSummary()
+
+	c.Check(G.explanationsAvailable, equals, false)
+	t.CheckOutputLines(
+		"Looks fine.") // "pkglint -e" is not advertised since the above explanation is not relevant.
+
+	line.Warnf("What an interesting line.")
+	Explain("This explanation is available.")
+	G.ShowSummary()
+
+	c.Check(G.explanationsAvailable, equals, true)
+	t.CheckOutputLines(
+		"WARN: Makefile:27: What an interesting line.",
+		"0 errors and 1 warning found.",
+		"(Run \"pkglint -e\" to show explanations.)")
 }
 
 func (s *Suite) Test_CheckfileMk__enoent(c *check.C) {
