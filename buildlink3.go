@@ -82,6 +82,7 @@ func (ck *Buildlink3Checker) Check() {
 
 	// Third paragraph: Package information.
 	indentLevel := 1 // The first .if is from the second paragraph.
+loop:
 	for {
 		if exp.EOF() {
 			exp.CurrentLine().Warnf("Expected \".endif\".")
@@ -91,25 +92,26 @@ func (ck *Buildlink3Checker) Check() {
 		mkline := exp.CurrentMkLine()
 		exp.Advance()
 
-		if mkline.IsVarassign() {
+		switch {
+		case mkline.IsVarassign():
 			ck.checkVarassign(exp, mkline, pkgbase)
 
-		} else if mkline.IsEmpty() || mkline.IsComment() {
+		case mkline.IsEmpty() || mkline.IsComment():
 			// Comments and empty lines are fine here.
 
-		} else if mkline.IsInclude() && hasSuffix(mkline.IncludeFile(), "/buildlink3.mk") {
-			// TODO: Maybe check dependency lines.
+		case mkline.IsInclude() && hasSuffix(mkline.IncludeFile(), "/buildlink3.mk"):
+			// Included files might be checked for consistency, someday.
 
-		} else if mkline.IsDirective() && mkline.Directive() == "if" {
+		case mkline.IsDirective() && mkline.Directive() == "if":
 			indentLevel++
 
-		} else if mkline.IsDirective() && mkline.Directive() == "endif" {
+		case mkline.IsDirective() && mkline.Directive() == "endif":
 			indentLevel--
 			if indentLevel == 0 {
-				break
+				break loop
 			}
 
-		} else {
+		default:
 			if trace.Tracing {
 				trace.Step1("Unchecked line %s in third paragraph.", exp.CurrentLine().Linenos())
 			}
