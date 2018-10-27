@@ -90,21 +90,21 @@ func (ck *Buildlink3Checker) Check() {
 		}
 
 		mkline := exp.CurrentMkLine()
+		exp.Advance()
 
 		if mkline.IsVarassign() {
-			ck.checkVarassign(exp, pkgbase)
+			ck.checkVarassign(exp, mkline, pkgbase)
 
-		} else if exp.AdvanceIfEquals("") || exp.AdvanceIfPrefix("#") {
+		} else if mkline.IsEmpty() || mkline.IsComment() {
 			// Comments and empty lines are fine here.
 
-		} else if exp.AdvanceIfMatches(`^\.[\t ]*include "\.\./\.\./([^/]+/[^/]+)/buildlink3\.mk"$`) ||
-			exp.AdvanceIfMatches(`^\.[\t ]*include "\.\./\.\./mk/([^\t ]+)\.buildlink3\.mk"$`) {
+		} else if mkline.IsInclude() && hasSuffix(mkline.IncludeFile(), "/buildlink3.mk") {
 			// TODO: Maybe check dependency lines.
 
-		} else if exp.AdvanceIfMatches(`^\.if[\t ]`) {
+		} else if mkline.IsDirective() && mkline.Directive() == "if" {
 			indentLevel++
 
-		} else if exp.AdvanceIfMatches(`^\.endif.*$`) {
+		} else if mkline.IsDirective() && mkline.Directive() == "endif" {
 			indentLevel--
 			if indentLevel == 0 {
 				break
@@ -114,7 +114,6 @@ func (ck *Buildlink3Checker) Check() {
 			if trace.Tracing {
 				trace.Step1("Unchecked line %s in third paragraph.", exp.CurrentLine().Linenos())
 			}
-			exp.Advance()
 		}
 	}
 	if ck.apiLine == nil {
@@ -138,9 +137,7 @@ func (ck *Buildlink3Checker) Check() {
 	SaveAutofixChanges(mklines.lines)
 }
 
-func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, pkgbase string) {
-	mkline := exp.CurrentMkLine()
-	exp.Advance()
+func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgbase string) {
 	varname, value := mkline.Varname(), mkline.Value()
 	doCheck := false
 	if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
