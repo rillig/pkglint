@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/trace"
 	"os"
 	"path/filepath"
 	"sort"

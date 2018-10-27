@@ -1,7 +1,6 @@
 package main
 
 import (
-	"netbsd.org/pkglint/trace"
 	"strings"
 )
 

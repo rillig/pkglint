@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/textproc"
-	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
 )

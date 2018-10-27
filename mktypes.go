@@ -2,7 +2,6 @@ package main
 
 import (
 	"netbsd.org/pkglint/textproc"
-	"netbsd.org/pkglint/trace"
 	"unicode"
 )
 

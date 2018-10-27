@@ -3,7 +3,6 @@ package main
 // Checks for patch files.
 
 import (
-	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
 )

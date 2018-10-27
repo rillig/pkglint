@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/trace"
 	"os"
 	"strconv"
 	"strings"

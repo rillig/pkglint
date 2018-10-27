@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
-	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
 )

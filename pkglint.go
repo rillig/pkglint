@@ -6,7 +6,7 @@ import (
 	"netbsd.org/pkglint/histogram"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
-	"netbsd.org/pkglint/trace"
+	tracePkg "netbsd.org/pkglint/trace"
 	"os"
 	"os/user"
 	"path"
@@ -116,6 +116,8 @@ type Hash struct {
 // G is the abbreviation for "global state";
 // it is the only global variable in this Go package
 var G = NewPkglint()
+
+var trace tracePkg.Tracer
 
 var exit = os.Exit // Indirect access, to allow main() to be tested.
 

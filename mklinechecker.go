@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/trace"
 	"os"
 	"path"
 	"strconv"

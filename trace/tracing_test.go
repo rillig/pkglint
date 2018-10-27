@@ -6,73 +6,79 @@ import (
 	"testing"
 )
 
-type Suite struct{}
+type Suite struct {
+	Tracer Tracer
+}
 
 var _ = check.Suite(new(Suite))
 
 func Test(t *testing.T) { check.TestingT(t) }
 
-func onlyArguments(args ...interface{}) {
-	defer Call(args...)()
-	Stepf("Running %q", "code")
+func (t *Tracer) onlyArguments(args ...interface{}) {
+	defer t.Call(args...)()
+	t.Stepf("Running %q", "code")
 }
 
-func argumentsAndResult(arg0 string, arg1 int) (result string) {
-	defer Call(arg0, arg1, Result(&result))()
-	Stepf("Running %q", "code")
+func (t *Tracer) argumentsAndResult(arg0 string, arg1 int) (result string) {
+	defer t.Call(arg0, arg1, t.Result(&result))()
+	t.Stepf("Running %q", "code")
 	return "the result"
 }
 
-func argumentsAndResultWrong(arg0 string, arg1 int) (result string) {
-	defer Call(arg0, arg1, result)() // "result" is evaluated too early and only once.
-	Stepf("Running %q", "code")
+func (t *Tracer) argumentsAndResultWrong(arg0 string, arg1 int) (result string) {
+	defer t.Call(arg0, arg1, result)() // "result" is evaluated too early and only once.
+	t.Stepf("Running %q", "code")
 	return "the result"
 }
 
 func (s *Suite) Test_Call__onlyArguments(c *check.C) {
+	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
-		onlyArguments("arg0", 1234)
+		tracer.onlyArguments("arg0", 1234)
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.onlyArguments(\"arg0\", 1234)\n"+
+		"TRACE: + netbsd.org/pkglint/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - netbsd.org/pkglint/trace.onlyArguments(\"arg0\", 1234)\n")
+		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n")
 }
 
 func (s *Suite) Test_Call__argumentsAndResult(c *check.C) {
+	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
-		argumentsAndResult("arg0", 1234)
+		tracer.argumentsAndResult("arg0", 1234)
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.argumentsAndResult(\"arg0\", 1234)\n"+
+		"TRACE: + netbsd.org/pkglint/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234)\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - netbsd.org/pkglint/trace.argumentsAndResult(\"arg0\", 1234, \"=>\", \"the result\")\n")
+		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234, \"=>\", \"the result\")\n")
 }
 
 func (s *Suite) Test_Call__argumentsAndResultWrong(c *check.C) {
+	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
-		argumentsAndResultWrong("arg0", 1234)
+		tracer.argumentsAndResultWrong("arg0", 1234)
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.argumentsAndResultWrong(\"arg0\", 1234, \"\")\n"+
+		"TRACE: + netbsd.org/pkglint/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - netbsd.org/pkglint/trace.argumentsAndResultWrong(\"arg0\", 1234, \"\")\n")
+		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n")
 }
 
 func (s *Suite) Test__fixed_argument_variants(c *check.C) {
+	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
-		defer Call0()()
-		defer Call1("x")()
-		defer Call2("x", "y")()
-		Step1("step %s", "a")
-		Step2("step %s, %s", "a", "b")
+		defer tracer.Call0()()
+		defer tracer.Call1("x")()
+		defer tracer.Call2("x", "y")()
+		tracer.Step1("step %s", "a")
+		tracer.Step2("step %s, %s", "a", "b")
 	})
 
 	c.Check(output, check.Equals, ""+
@@ -87,9 +93,10 @@ func (s *Suite) Test__fixed_argument_variants(c *check.C) {
 }
 
 func (s *Suite) Test__stringer_arg(c *check.C) {
+	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
-		defer Call(str{}, &str{})()
+		defer tracer.Call(str{}, &str{})()
 	})
 
 	c.Check(output, check.Equals, ""+
@@ -98,28 +105,34 @@ func (s *Suite) Test__stringer_arg(c *check.C) {
 }
 
 func (s *Suite) Test_traceCall__panic(c *check.C) {
+	tracer := &s.Tracer
+
 	c.Check(
-		func() { traceCall() },
+		func() { tracer.traceCall() },
 		check.Panics,
 		"Internal pkglint error: calls to trace.Call must only occur in tracing mode")
 }
 
 func (s *Suite) Test_Result__panic(c *check.C) {
+	tracer := &s.Tracer
+
 	c.Check(
-		func() { Result("invalid argument") },
+		func() { tracer.Result("invalid argument") },
 		check.Panics,
 		"Result must be called with a pointer to the result, not \"invalid argument\".")
 }
 
 func (s *Suite) captureTracingOutput(action func()) string {
+	tracer := &s.Tracer
+
 	out := bytes.Buffer{}
-	Out = &out
-	Tracing = true
+	tracer.Out = &out
+	tracer.Tracing = true
 
 	action()
 
-	Tracing = false
-	Out = nil
+	tracer.Tracing = false
+	tracer.Out = nil
 	return out.String()
 }
 

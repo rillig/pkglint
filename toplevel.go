@@ -1,8 +1,6 @@
 package main
 
-import (
-	"netbsd.org/pkglint/trace"
-)
+import ()
 
 type Toplevel struct {
 	dir            string

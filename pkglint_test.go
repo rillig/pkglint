@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/trace"
 	"os"
 )
 

@@ -14,7 +14,6 @@ import (
 
 	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/textproc"
-	"netbsd.org/pkglint/trace"
 )
 
 var equals = check.Equals

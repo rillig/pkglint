@@ -3,7 +3,6 @@ package textproc
 import (
 	"fmt"
 	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/trace"
 	"strings"
 )
 
@@ -42,9 +41,6 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.m = nil
 	pr.s = ""
 	if strings.HasPrefix(pr.rest, prefix) {
-		if trace.Tracing {
-			trace.Stepf("PrefixReplacer.AdvanceStr(%q, %q)", pr.rest, prefix)
-		}
 		pr.s = prefix
 		pr.rest = pr.rest[len(prefix):]
 		return true
@@ -73,9 +69,6 @@ func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
 		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
 	}
 	if m := pr.res.Match(pr.rest, re); m != nil {
-		if trace.Tracing {
-			trace.Stepf("PrefixReplacer.AdvanceRegexp(%q, %q, %q)", pr.rest, re, m[0])
-		}
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
 		pr.s = m[0]

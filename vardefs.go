@@ -2,7 +2,6 @@ package main
 
 import (
 	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/trace"
 	"path"
 	"strings"
 )
