@@ -32,7 +32,11 @@ type autofixAction struct {
 	lineno      int
 }
 
-// TODO: Document me
+// SilentMagicDiagnostic is used in exceptional situations when an
+// autofix action is not directly related to a diagnostic.
+//
+// To prevent confusion, the code using this magic value must ensure
+// to log a diagnostic by other means.
 const SilentMagicDiagnostic = "Silent-Magic-Diagnostic"
 
 // MagicAutofixFormat is a special value that is used for logging
