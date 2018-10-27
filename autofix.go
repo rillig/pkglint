@@ -20,7 +20,13 @@ type Autofix struct {
 	linesAfter  []string // Newly inserted lines, including \n
 	// Whether an actual fix has been applied (or, without --show-autofix,
 	// whether a fix is applicable)
-	modified    bool
+	modified bool
+
+	autofixShortTerm
+}
+
+// autofixShortTerm is the part of the Autofix that is reset after each call to Apply.
+type autofixShortTerm struct {
 	actions     []autofixAction // Human-readable description of the actual autofix actions
 	level       *LogLevel       //
 	diagFormat  string          // Is logged only if it couldn't be fixed automatically
@@ -238,11 +244,8 @@ func (fix *Autofix) Apply() {
 			fix.modified = true
 		}
 
-		fix.actions = nil
-		fix.level = nil
-		fix.diagFormat = ""
-		fix.diagArgs = nil
-		fix.explanation = nil
+		// Reduce number of calls to runtime.writeBarrier.
+		fix.autofixShortTerm = autofixShortTerm{}
 	}
 
 	G.explainNext = shallBeLogged(fix.diagFormat)
