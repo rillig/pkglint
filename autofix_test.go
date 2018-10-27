@@ -273,7 +273,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 
 	t.SetupCommandLine("--show-autofix", "--explain")
 
-	line := t.NewLine("fname", 1, "original")
+	line := t.NewLine("fileName", 1, "original")
 
 	c.Check(line.autofix, check.IsNil)
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n"))
@@ -288,7 +288,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 	c.Check(line.autofix, check.NotNil)
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "lriginao\n"))
 	t.CheckOutputLines(
-		"AUTOFIX: fname:1: Replacing \"original\" with \"lriginao\".")
+		"AUTOFIX: fileName:1: Replacing \"original\" with \"lriginao\".")
 
 	{
 		fix := line.Autofix()
@@ -301,7 +301,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "lruginao\n"))
 	c.Check(line.raw[0].textnl, equals, "lruginao\n")
 	t.CheckOutputLines(
-		"AUTOFIX: fname:1: Replacing \"i\" with \"u\".")
+		"AUTOFIX: fileName:1: Replacing \"i\" with \"u\".")
 
 	{
 		fix := line.Autofix()
@@ -314,7 +314,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "middle\n"))
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 	t.CheckOutputLines(
-		"AUTOFIX: fname:1: Replacing \"lruginao\" with \"middle\".")
+		"AUTOFIX: fileName:1: Replacing \"lruginao\" with \"middle\".")
 
 	{
 		fix := line.Autofix()
@@ -346,11 +346,11 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 		"between middle and after\n",
 		"after\n"})
 	t.CheckOutputLines(
-		"AUTOFIX: fname:1: Inserting a line \"before\" before this line.",
-		"AUTOFIX: fname:1: Inserting a line \"between before and middle\" before this line.",
-		"AUTOFIX: fname:1: Inserting a line \"between middle and after\" after this line.",
-		"NOTE: fname:1: This diagnostic is necessary for the following explanation.",
-		"AUTOFIX: fname:1: Inserting a line \"after\" after this line.",
+		"AUTOFIX: fileName:1: Inserting a line \"before\" before this line.",
+		"AUTOFIX: fileName:1: Inserting a line \"between before and middle\" before this line.",
+		"AUTOFIX: fileName:1: Inserting a line \"between middle and after\" after this line.",
+		"NOTE: fileName:1: This diagnostic is necessary for the following explanation.",
+		"AUTOFIX: fileName:1: Inserting a line \"after\" after this line.",
 		"",
 		"\tWhen inserting multiple lines, Apply must be called in-between.",
 		"\tOtherwise the changes are not described to the human reader.",
@@ -371,7 +371,7 @@ func (s *Suite) Test_Autofix__multiple_modifications(c *check.C) {
 		"between middle and after\n",
 		"after\n"})
 	t.CheckOutputLines(
-		"AUTOFIX: fname:1: Deleting this line.")
+		"AUTOFIX: fileName:1: Deleting this line.")
 }
 
 func (s *Suite) Test_Autofix__show_autofix_and_source(c *check.C) {
@@ -581,7 +581,7 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 
 	t.SetupCommandLine("--only", "few", "--autofix")
 
-	mklines := t.SetupFileMkLines("fname",
+	mklines := t.SetupFileMkLines("fileName",
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
 	lines := mklines.lines
@@ -603,7 +603,7 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	SaveAutofixChanges(lines)
 
 	t.CheckOutputEmpty()
-	t.CheckFileLines("fname",
+	t.CheckFileLines("fileName",
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
 	c.Check(lines.Lines[0].raw[0].textnl, equals, "VAR=\t111 222 333 444 555 \\\n")

@@ -103,9 +103,9 @@ outer:
 						"",
 						"Example:",
 						"\tfname=\"Curriculum vitae.doc\"",
-						"\tcp $fname /tmp",
+						"\tcp $fileName /tmp",
 						"\t# tries to copy the two files \"Curriculum\" and \"Vitae.doc\"",
-						"\tcp \"$fname\" /tmp",
+						"\tcp \"$fileName\" /tmp",
 						"\t# copies one file, as intended")
 				}
 

@@ -44,8 +44,8 @@ func shallBeLogged(format string) bool {
 	return true
 }
 
-func loggedAlready(fname, lineno, msg string) bool {
-	uniq := path.Clean(fname) + ":" + lineno + ":" + msg
+func loggedAlready(fileName, lineno, msg string) bool {
+	uniq := path.Clean(fileName) + ":" + lineno + ":" + msg
 	if G.logged[uniq] {
 		return true
 	}
@@ -57,15 +57,15 @@ func loggedAlready(fname, lineno, msg string) bool {
 	return false
 }
 
-func logs(level *LogLevel, fname, lineno, format, msg string) bool {
-	if fname != "" {
-		fname = cleanpath(fname)
+func logs(level *LogLevel, fileName, lineno, format, msg string) bool {
+	if fileName != "" {
+		fileName = cleanpath(fileName)
 	}
 	if G.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
 		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
 	}
 
-	if !G.opts.LogVerbose && format != AutofixFormat && loggedAlready(fname, lineno, msg) {
+	if !G.opts.LogVerbose && format != AutofixFormat && loggedAlready(fileName, lineno, msg) {
 		G.explainNext = false
 		return false
 	}
@@ -75,8 +75,8 @@ func logs(level *LogLevel, fname, lineno, format, msg string) bool {
 		text += sep + level.TraditionalName + ":"
 		sep = " "
 	}
-	if fname != "" {
-		text += sep + fname
+	if fileName != "" {
+		text += sep + fileName
 		sep = ": "
 		if lineno != "" {
 			text += ":" + lineno

@@ -39,7 +39,7 @@ type Pkgsrc struct {
 	Deprecated      map[string]string   //
 	vartypes        map[string]*Vartype // varcanon => type
 
-	Hashes       map[string]*Hash // Maps "alg:fname" => hash (inter-package check).
+	Hashes       map[string]*Hash // Maps "alg:fileName" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
 }
 
@@ -408,7 +408,7 @@ func (src *Pkgsrc) loadSuggestedUpdates() {
 	src.suggestedWipUpdates = src.parseSuggestedUpdates(Load(G.Pkgsrc.File("wip/TODO"), NotEmpty))
 }
 
-func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
+func (src *Pkgsrc) loadDocChangesFromFile(fileName string) []*Change {
 
 	parseChange := func(line Line) *Change {
 		text := line.Text
@@ -442,17 +442,17 @@ func (src *Pkgsrc) loadDocChangesFromFile(fname string) []*Change {
 	}
 
 	year := ""
-	if m, yyyy := match1(fname, `-(\d+)$`); m && yyyy >= "2018" {
+	if m, yyyy := match1(fileName, `-(\d+)$`); m && yyyy >= "2018" {
 		year = yyyy
 	}
 
-	lines := Load(fname, MustSucceed|NotEmpty)
+	lines := Load(fileName, MustSucceed|NotEmpty)
 	var changes []*Change
 	for _, line := range lines.Lines {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
 			if year != "" && change.Date[0:4] != year {
-				line.Warnf("Year %s for %s does not match the file name %s.", change.Date[0:4], change.Pkgpath, fname)
+				line.Warnf("Year %s for %s does not match the file name %s.", change.Date[0:4], change.Pkgpath, fileName)
 			}
 			if len(changes) >= 2 && year != "" {
 				if prev := changes[len(changes)-2]; change.Date < prev.Date {
@@ -495,16 +495,16 @@ func (src *Pkgsrc) loadDocChanges() {
 
 	var fnames []string
 	for _, file := range files {
-		fname := file.Name()
-		if matches(fname, `^CHANGES-20\d\d$`) && fname >= "CHANGES-2011" {
-			fnames = append(fnames, fname)
+		fileName := file.Name()
+		if matches(fileName, `^CHANGES-20\d\d$`) && fileName >= "CHANGES-2011" {
+			fnames = append(fnames, fileName)
 		}
 	}
 
 	sort.Strings(fnames)
 	src.LastChange = make(map[string]*Change)
-	for _, fname := range fnames {
-		changes := src.loadDocChangesFromFile(docdir + "/" + fname)
+	for _, fileName := range fnames {
+		changes := src.loadDocChangesFromFile(docdir + "/" + fileName)
 		for _, change := range changes {
 			src.LastChange[change.Pkgpath] = change
 		}

@@ -21,6 +21,7 @@ import (
 
 type RawLine struct {
 	Lineno int
+	// XXX: This is only needed for Autofix; probably should be moved there.
 	orignl string
 	textnl string
 }
@@ -42,23 +43,23 @@ type LineImpl struct {
 	Once
 }
 
-func NewLine(fname string, lineno int, text string, rawLines []*RawLine) Line {
-	return NewLineMulti(fname, lineno, lineno, text, rawLines)
+func NewLine(fileName string, lineno int, text string, rawLines []*RawLine) Line {
+	return NewLineMulti(fileName, lineno, lineno, text, rawLines)
 }
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
-func NewLineMulti(fname string, firstLine, lastLine int, text string, rawLines []*RawLine) Line {
-	return &LineImpl{fname, path.Base(fname), int32(firstLine), int32(lastLine), text, rawLines, nil, Once{}}
+func NewLineMulti(fileName string, firstLine, lastLine int, text string, rawLines []*RawLine) Line {
+	return &LineImpl{fileName, path.Base(fileName), int32(firstLine), int32(lastLine), text, rawLines, nil, Once{}}
 }
 
 // NewLineEOF creates a dummy line for logging, with the "line number" EOF.
-func NewLineEOF(fname string) Line {
-	return NewLineMulti(fname, -1, 0, "", nil)
+func NewLineEOF(fileName string) Line {
+	return NewLineMulti(fileName, -1, 0, "", nil)
 }
 
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
-func NewLineWhole(fname string) Line {
-	return NewLine(fname, 0, "", nil)
+func NewLineWhole(fileName string) Line {
+	return NewLine(fileName, 0, "", nil)
 }
 
 func (line *LineImpl) Linenos() string {

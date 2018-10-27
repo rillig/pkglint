@@ -15,7 +15,7 @@ func ChecklinesDistinfo(lines Lines) {
 		defer trace.Call1(lines.FileName)()
 	}
 
-	fname := lines.FileName
+	fileName := lines.FileName
 	patchdir := "patches"
 	if G.Pkg != nil && dirExists(G.Pkg.File(G.Pkg.Patchdir)) {
 		patchdir = G.Pkg.Patchdir
@@ -24,9 +24,9 @@ func ChecklinesDistinfo(lines Lines) {
 		trace.Step1("patchdir=%q", patchdir)
 	}
 
-	distinfoIsCommitted := isCommitted(fname)
+	distinfoIsCommitted := isCommitted(fileName)
 	ck := &distinfoLinesChecker{
-		fname, patchdir, distinfoIsCommitted,
+		fileName, patchdir, distinfoIsCommitted,
 		make(map[string]bool), nil, "", unknown, nil}
 	ck.checkLines(lines)
 	ChecklinesTrailingEmptyLines(lines)
@@ -133,15 +133,15 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 }
 
 // Inter-package check for differing distfile checksums.
-func (ck *distinfoLinesChecker) checkGlobalMismatch(line Line, fname, alg, hash string) {
+func (ck *distinfoLinesChecker) checkGlobalMismatch(line Line, fileName, alg, hash string) {
 	hashes := G.Pkgsrc.Hashes
-	if hashes != nil && !hasPrefix(fname, "patch-") { // Intentionally checking the file name instead of ck.isPatch
-		key := alg + ":" + fname
+	if hashes != nil && !hasPrefix(fileName, "patch-") { // Intentionally checking the file name instead of ck.isPatch
+		key := alg + ":" + fileName
 		otherHash := hashes[key]
 		if otherHash != nil {
 			if otherHash.hash != hash {
 				line.Errorf("The hash %s for %s is %s, which differs from %s in %s.",
-					alg, fname, hash, otherHash.hash, otherHash.line.ReferenceFrom(line))
+					alg, fileName, hash, otherHash.hash, otherHash.line.ReferenceFrom(line))
 			}
 		} else {
 			hashes[key] = &Hash{hash, line}

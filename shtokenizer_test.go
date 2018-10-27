@@ -112,11 +112,11 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	check("`",
 		backt(text("`")))
 
-	check("`cat fname`",
+	check("`cat fileName`",
 		backt(text("`")),
 		backt(text("cat")),
 		backt(space),
-		backt(text("fname")),
+		backt(text("fileName")),
 		text("`"))
 
 	check("hello, \"world\"",

@@ -301,34 +301,34 @@ func (pkglint *Pkglint) ShowSummary() {
 	}
 }
 
-func (pkglint *Pkglint) CheckDirent(fname string) {
+func (pkglint *Pkglint) CheckDirent(fileName string) {
 	if trace.Tracing {
-		defer trace.Call1(fname)()
+		defer trace.Call1(fileName)()
 	}
 
-	st, err := os.Lstat(fname)
+	st, err := os.Lstat(fileName)
 	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {
-		NewLineWhole(fname).Errorf("No such file or directory.")
+		NewLineWhole(fileName).Errorf("No such file or directory.")
 		return
 	}
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	dir := ifelseStr(isReg, path.Dir(fname), fname)
+	dir := ifelseStr(isReg, path.Dir(fileName), fileName)
 	pkgsrcRel := G.Pkgsrc.ToRel(dir)
 	pkglint.Wip = matches(pkgsrcRel, `^wip(/|$)`)
 	pkglint.Infrastructure = matches(pkgsrcRel, `^mk(/|$)`)
 	pkgsrcdir := findPkgsrcTopdir(dir)
 	if pkgsrcdir == "" {
-		NewLineWhole(fname).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
+		NewLineWhole(fileName).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
 		return
 	}
 
 	switch {
-	case isDir && isEmptyDir(fname):
+	case isDir && isEmptyDir(fileName):
 		return
 	case isReg:
-		pkglint.Checkfile(fname)
+		pkglint.Checkfile(fileName)
 		return
 	}
 
@@ -340,7 +340,7 @@ func (pkglint *Pkglint) CheckDirent(fname string) {
 	case ".":
 		CheckdirToplevel(dir)
 	default:
-		NewLineWhole(fname).Errorf("Cannot check directories outside a pkgsrc tree.")
+		NewLineWhole(fileName).Errorf("Cannot check directories outside a pkgsrc tree.")
 	}
 }
 
@@ -366,9 +366,9 @@ func (pkglint *Pkglint) NewPrefixReplacer(s string) *textproc.PrefixReplacer {
 }
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
-func findPkgsrcTopdir(fname string) string {
+func findPkgsrcTopdir(fileName string) string {
 	for _, dir := range [...]string{".", "..", "../..", "../../.."} {
-		if fileExists(fname + "/" + dir + "/mk/bsd.pkg.mk") {
+		if fileExists(fileName + "/" + dir + "/mk/bsd.pkg.mk") {
 			return dir
 		}
 	}
@@ -413,12 +413,12 @@ func resolveVariableRefs(text string) (resolved string) {
 	}
 }
 
-func CheckfileExtra(fname string) {
+func CheckfileExtra(fileName string) {
 	if trace.Tracing {
-		defer trace.Call1(fname)()
+		defer trace.Call1(fileName)()
 	}
 
-	if lines := Load(fname, NotEmpty|LogErrors); lines != nil {
+	if lines := Load(fileName, NotEmpty|LogErrors); lines != nil {
 		ChecklinesTrailingEmptyLines(lines)
 	}
 }
@@ -496,12 +496,12 @@ func ChecklinesMessage(lines Lines) {
 	SaveAutofixChanges(lines)
 }
 
-func CheckfileMk(fname string) {
+func CheckfileMk(fileName string) {
 	if trace.Tracing {
-		defer trace.Call1(fname)()
+		defer trace.Call1(fileName)()
 	}
 
-	mklines := LoadMk(fname, NotEmpty|LogErrors)
+	mklines := LoadMk(fileName, NotEmpty|LogErrors)
 	if mklines == nil {
 		return
 	}
@@ -510,18 +510,18 @@ func CheckfileMk(fname string) {
 	mklines.SaveAutofixChanges()
 }
 
-func (pkglint *Pkglint) Checkfile(fname string) {
+func (pkglint *Pkglint) Checkfile(fileName string) {
 	if trace.Tracing {
-		defer trace.Call1(fname)()
+		defer trace.Call1(fileName)()
 	}
 
-	basename := path.Base(fname)
-	pkgsrcRel := G.Pkgsrc.ToRel(fname)
+	basename := path.Base(fileName)
+	pkgsrcRel := G.Pkgsrc.ToRel(fileName)
 	depth := strings.Count(pkgsrcRel, "/")
 
 	if depth == 2 && !G.Wip {
 		if contains(basename, "README") || contains(basename, "TODO") {
-			NewLineWhole(fname).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
+			NewLineWhole(fileName).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
 			return
 		}
 	}
@@ -534,137 +534,137 @@ func (pkglint *Pkglint) Checkfile(fname string) {
 		contains(basename, "README") && depth == 2,
 		contains(basename, "TODO") && depth == 2:
 		if pkglint.opts.Import {
-			NewLineWhole(fname).Errorf("Must be cleaned up before committing the package.")
+			NewLineWhole(fileName).Errorf("Must be cleaned up before committing the package.")
 		}
 		return
 	}
 
-	st, err := os.Lstat(fname)
+	st, err := os.Lstat(fileName)
 	if err != nil {
-		NewLineWhole(fname).Errorf("Cannot determine file type: %s", err)
+		NewLineWhole(fileName).Errorf("Cannot determine file type: %s", err)
 		return
 	}
 
-	pkglint.checkExecutable(fname, st)
-	pkglint.checkMode(fname, st.Mode())
+	pkglint.checkExecutable(fileName, st)
+	pkglint.checkMode(fileName, st.Mode())
 }
 
 // checkMode checks a directory entry based on its file name and its mode
 // (regular file, directory, symlink).
-func (pkglint *Pkglint) checkMode(fname string, mode os.FileMode) {
-	basename := path.Base(fname)
+func (pkglint *Pkglint) checkMode(fileName string, mode os.FileMode) {
+	basename := path.Base(fileName)
 	switch {
 	case mode.IsDir():
 		switch {
 		case basename == "files" || basename == "patches" || isIgnoredFilename(basename):
 			// Ok
-		case matches(fname, `(?:^|/)files/[^/]*$`):
+		case matches(fileName, `(?:^|/)files/[^/]*$`):
 			// Ok
-		case !isEmptyDir(fname):
-			NewLineWhole(fname).Warnf("Unknown directory name.")
+		case !isEmptyDir(fileName):
+			NewLineWhole(fileName).Warnf("Unknown directory name.")
 		}
 
 	case mode&os.ModeSymlink != 0:
 		if !hasPrefix(basename, "work") {
-			NewLineWhole(fname).Warnf("Unknown symlink name.")
+			NewLineWhole(fileName).Warnf("Unknown symlink name.")
 		}
 
 	case !mode.IsRegular():
-		NewLineWhole(fname).Errorf("Only files and directories are allowed in pkgsrc.")
+		NewLineWhole(fileName).Errorf("Only files and directories are allowed in pkgsrc.")
 
 	case basename == "ALTERNATIVES":
 		if pkglint.opts.CheckAlternatives {
-			CheckfileAlternatives(fname)
+			CheckfileAlternatives(fileName)
 		}
 
 	case basename == "buildlink3.mk":
 		if pkglint.opts.CheckBuildlink3 {
-			if mklines := LoadMk(fname, NotEmpty|LogErrors); mklines != nil {
+			if mklines := LoadMk(fileName, NotEmpty|LogErrors); mklines != nil {
 				ChecklinesBuildlink3Mk(mklines)
 			}
 		}
 
 	case hasPrefix(basename, "DESCR"):
 		if pkglint.opts.CheckDescr {
-			if lines := Load(fname, NotEmpty|LogErrors); lines != nil {
+			if lines := Load(fileName, NotEmpty|LogErrors); lines != nil {
 				ChecklinesDescr(lines)
 			}
 		}
 
 	case basename == "distinfo":
 		if pkglint.opts.CheckDistinfo {
-			if lines := Load(fname, NotEmpty|LogErrors); lines != nil {
+			if lines := Load(fileName, NotEmpty|LogErrors); lines != nil {
 				ChecklinesDistinfo(lines)
 			}
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
 		if pkglint.opts.CheckInstall {
-			CheckfileExtra(fname)
+			CheckfileExtra(fileName)
 		}
 
 	case hasPrefix(basename, "MESSAGE"):
 		if pkglint.opts.CheckMessage {
-			if lines := Load(fname, NotEmpty|LogErrors); lines != nil {
+			if lines := Load(fileName, NotEmpty|LogErrors); lines != nil {
 				ChecklinesMessage(lines)
 			}
 		}
 
 	case basename == "options.mk":
 		if pkglint.opts.CheckOptions {
-			if mklines := LoadMk(fname, NotEmpty|LogErrors); mklines != nil {
+			if mklines := LoadMk(fileName, NotEmpty|LogErrors); mklines != nil {
 				ChecklinesOptionsMk(mklines)
 			}
 		}
 
 	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
 		if pkglint.opts.CheckPatches {
-			if lines := Load(fname, NotEmpty|LogErrors); lines != nil {
+			if lines := Load(fileName, NotEmpty|LogErrors); lines != nil {
 				ChecklinesPatch(lines)
 			}
 		}
 
-	case matches(fname, `(?:^|/)patches/manual[^/]*$`):
+	case matches(fileName, `(?:^|/)patches/manual[^/]*$`):
 		if trace.Tracing {
-			trace.Step1("Unchecked file %q.", fname)
+			trace.Step1("Unchecked file %q.", fileName)
 		}
 
-	case matches(fname, `(?:^|/)patches/[^/]*$`):
-		NewLineWhole(fname).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
+	case matches(fileName, `(?:^|/)patches/[^/]*$`):
+		NewLineWhole(fileName).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
-	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fname, `files/`) && !matches(fname, `patches/`):
+	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(fileName, `files/`) && !matches(fileName, `patches/`):
 		if pkglint.opts.CheckMk {
-			CheckfileMk(fname)
+			CheckfileMk(fileName)
 		}
 
 	case hasPrefix(basename, "PLIST"):
 		if pkglint.opts.CheckPlist {
-			if lines := Load(fname, NotEmpty|LogErrors); lines != nil {
+			if lines := Load(fileName, NotEmpty|LogErrors); lines != nil {
 				ChecklinesPlist(lines)
 			}
 		}
 
 	case hasPrefix(basename, "CHANGES-"):
 		// This only checks the file, but doesn't register the changes globally.
-		_ = pkglint.Pkgsrc.loadDocChangesFromFile(fname)
+		_ = pkglint.Pkgsrc.loadDocChangesFromFile(fileName)
 
-	case matches(fname, `(?:^|/)files/[^/]*$`):
+	case matches(fileName, `(?:^|/)files/[^/]*$`):
 		// Skip
 
 	case basename == "spec":
-		if !hasPrefix(G.Pkgsrc.ToRel(fname), "regress/") {
-			NewLineWhole(fname).Warnf("Only packages in regress/ may have spec files.")
+		if !hasPrefix(G.Pkgsrc.ToRel(fileName), "regress/") {
+			NewLineWhole(fileName).Warnf("Only packages in regress/ may have spec files.")
 		}
 
 	default:
-		NewLineWhole(fname).Warnf("Unexpected file found.")
+		NewLineWhole(fileName).Warnf("Unexpected file found.")
 		if pkglint.opts.CheckExtra {
-			CheckfileExtra(fname)
+			CheckfileExtra(fileName)
 		}
 	}
 }
 
-func (pkglint *Pkglint) checkExecutable(fname string, st os.FileInfo) {
+func (pkglint *Pkglint) checkExecutable(fileName string, st os.FileInfo) {
 	switch {
 	case !st.Mode().IsRegular():
 		// Directories and other entries may be executable.
@@ -672,13 +672,13 @@ func (pkglint *Pkglint) checkExecutable(fname string, st os.FileInfo) {
 	case st.Mode().Perm()&0111 == 0:
 		// Good.
 
-	case isCommitted(fname):
+	case isCommitted(fileName):
 		// Too late to be fixed by the package developer, since
 		// CVS remembers the executable bit in the repo file.
 		// At this point, it can only be reset by the CVS admins.
 
 	default:
-		line := NewLine(fname, 0, "", nil)
+		line := NewLine(fileName, 0, "", nil)
 		fix := line.Autofix()
 		fix.Warnf("Should not be executable.")
 		fix.Explain(
@@ -689,7 +689,7 @@ func (pkglint *Pkglint) checkExecutable(fname string, st os.FileInfo) {
 		fix.Custom(func(showAutofix, autofix bool) {
 			fix.Describef(0, "Clearing executable bits")
 			if autofix {
-				if err := os.Chmod(fname, st.Mode()&^0111); err != nil {
+				if err := os.Chmod(fileName, st.Mode()&^0111); err != nil {
 					line.Errorf("Cannot clear executable bits: %s", err)
 				}
 			}

@@ -28,7 +28,7 @@ type Package struct {
 
 	vars                  Scope
 	bl3                   map[string]Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
-	included              map[string]Line // fname => line
+	included              map[string]Line // fileName => line
 	seenMakefileCommon    bool            // Does the package have any .includes?
 	conditionalIncludes   map[string]MkLine
 	unconditionalIncludes map[string]MkLine
@@ -170,45 +170,45 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	havePatches := false
 
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
-	for _, fname := range files {
-		basename := path.Base(fname)
-		if (hasPrefix(basename, "Makefile.") || hasSuffix(fname, ".mk")) &&
-			!matches(fname, `patch-`) &&
-			!contains(fname, pkg.Pkgdir+"/") &&
-			!contains(fname, pkg.Filesdir+"/") {
-			if fragmentMklines := LoadMk(fname, MustSucceed); fragmentMklines != nil {
+	for _, fileName := range files {
+		basename := path.Base(fileName)
+		if (hasPrefix(basename, "Makefile.") || hasSuffix(fileName, ".mk")) &&
+			!matches(fileName, `patch-`) &&
+			!contains(fileName, pkg.Pkgdir+"/") &&
+			!contains(fileName, pkg.Filesdir+"/") {
+			if fragmentMklines := LoadMk(fileName, MustSucceed); fragmentMklines != nil {
 				fragmentMklines.DetermineUsedVariables()
 			}
 		}
 		if hasPrefix(basename, "PLIST") {
-			pkg.loadPlistDirs(fname)
+			pkg.loadPlistDirs(fileName)
 		}
 	}
 
-	for _, fname := range files {
-		if containsVarRef(fname) {
+	for _, fileName := range files {
+		if containsVarRef(fileName) {
 			if trace.Tracing {
-				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", fname)
+				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", fileName)
 			}
 			continue
 		}
 
-		if path.Base(fname) == "Makefile" {
-			if st, err := os.Lstat(fname); err == nil {
-				pkglint.checkExecutable(fname, st)
+		if path.Base(fileName) == "Makefile" {
+			if st, err := os.Lstat(fileName); err == nil {
+				pkglint.checkExecutable(fileName, st)
 			}
 			if G.opts.CheckMakefile {
-				pkg.checkfilePackageMakefile(fname, mklines)
+				pkg.checkfilePackageMakefile(fileName, mklines)
 			}
 		} else {
-			pkglint.Checkfile(fname)
+			pkglint.Checkfile(fileName)
 		}
-		if contains(fname, "/patches/patch-") {
+		if contains(fileName, "/patches/patch-") {
 			havePatches = true
-		} else if hasSuffix(fname, "/distinfo") {
+		} else if hasSuffix(fileName, "/distinfo") {
 			haveDistinfo = true
 		}
-		pkg.checkLocallyModified(fname)
+		pkg.checkLocallyModified(fileName)
 	}
 
 	if pkg.Pkgdir == "." && G.opts.CheckDistinfo && G.opts.CheckPatches {
@@ -219,15 +219,15 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 }
 
 func (pkg *Package) loadPackageMakefile() MkLines {
-	fname := pkg.File("Makefile")
+	fileName := pkg.File("Makefile")
 	if trace.Tracing {
-		defer trace.Call1(fname)()
+		defer trace.Call1(fileName)()
 	}
 
-	mainLines := NewMkLines(NewLines(fname, nil))
+	mainLines := NewMkLines(NewLines(fileName, nil))
 	allLines := NewMkLines(NewLines("", nil))
-	if _, result := pkg.readMakefile(fname, mainLines, allLines, ""); !result {
-		LoadMk(fname, NotEmpty|LogErrors) // Just for the LogErrors.
+	if _, result := pkg.readMakefile(fileName, mainLines, allLines, ""); !result {
+		LoadMk(fileName, NotEmpty|LogErrors) // Just for the LogErrors.
 		return nil
 	}
 
@@ -276,12 +276,12 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 	return mainLines
 }
 
-func (pkg *Package) readMakefile(fname string, mainLines MkLines, allLines MkLines, includingFnameForUsedCheck string) (exists bool, result bool) {
+func (pkg *Package) readMakefile(fileName string, mainLines MkLines, allLines MkLines, includingFnameForUsedCheck string) (exists bool, result bool) {
 	if trace.Tracing {
-		defer trace.Call1(fname)()
+		defer trace.Call1(fileName)()
 	}
 
-	fileMklines := LoadMk(fname, NotEmpty)
+	fileMklines := LoadMk(fileName, NotEmpty)
 	if fileMklines == nil {
 		return false, false
 	}
@@ -303,7 +303,7 @@ func (pkg *Package) readMakefile(fname string, mainLines MkLines, allLines MkLin
 			inc := mkline.IncludeFile()
 			includeFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(inc, true))
 			if containsVarRef(includeFile) {
-				if !contains(fname, "/mk/") {
+				if !contains(fileName, "/mk/") {
 					mkline.Notef("Skipping include file %q. This may result in false warnings.", includeFile)
 				}
 				includeFile = ""
@@ -337,16 +337,16 @@ func (pkg *Package) readMakefile(fname string, mainLines MkLines, allLines MkLin
 				pkg.seenMakefileCommon = true
 			}
 
-			skip := contains(fname, "/mk/") || hasSuffix(includeFile, "/bsd.pkg.mk") || IsPrefs(includeFile)
+			skip := contains(fileName, "/mk/") || hasSuffix(includeFile, "/bsd.pkg.mk") || IsPrefs(includeFile)
 			if !skip {
-				dirname, _ := path.Split(fname)
+				dirname, _ := path.Split(fileName)
 				dirname = cleanpath(dirname)
 
 				fullIncluded := dirname + "/" + includeFile
 				if trace.Tracing {
 					trace.Step1("Including %q.", fullIncluded)
 				}
-				fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fname, "")
+				fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", fileName, "")
 				innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding)
 
 				if !innerExists {
@@ -401,9 +401,9 @@ func (pkg *Package) readMakefile(fname string, mainLines MkLines, allLines MkLin
 	return
 }
 
-func (pkg *Package) checkfilePackageMakefile(fname string, mklines MkLines) {
+func (pkg *Package) checkfilePackageMakefile(fileName string, mklines MkLines) {
 	if trace.Tracing {
-		defer trace.Call1(fname)()
+		defer trace.Call1(fileName)()
 	}
 
 	vars := pkg.vars
@@ -412,7 +412,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines MkLines) {
 		!vars.Defined("META_PACKAGE") &&
 		!fileExists(pkg.File(pkg.Pkgdir+"/PLIST")) &&
 		!fileExists(pkg.File(pkg.Pkgdir+"/PLIST.common")) {
-		NewLineWhole(fname).Warnf("Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.")
+		NewLineWhole(fileName).Warnf("Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.")
 	}
 
 	if (vars.Defined("NO_CHECKSUM") || vars.Defined("META_PACKAGE")) && isEmptyDir(pkg.File(pkg.Patchdir)) {
@@ -430,7 +430,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines MkLines) {
 	}
 
 	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") && pkg.once.FirstTime("LICENSE") {
-		NewLineWhole(fname).Errorf("Each package must define its LICENSE.")
+		NewLineWhole(fileName).Errorf("Each package must define its LICENSE.")
 	}
 
 	pkg.checkGnuConfigureUseLanguages()
@@ -438,7 +438,7 @@ func (pkg *Package) checkfilePackageMakefile(fname string, mklines MkLines) {
 	pkg.checkPossibleDowngrade()
 
 	if !vars.Defined("COMMENT") {
-		NewLineWhole(fname).Warnf("No COMMENT given.")
+		NewLineWhole(fileName).Warnf("No COMMENT given.")
 	}
 
 	if imake, x11 := vars.FirstDefinition("USE_IMAKE"), vars.FirstDefinition("USE_X11"); imake != nil && x11 != nil {
@@ -824,9 +824,9 @@ func (mklines *MkLinesImpl) checkForUsedComment(relativeName string) {
 	SaveAutofixChanges(lines)
 }
 
-func (pkg *Package) checkLocallyModified(fname string) {
+func (pkg *Package) checkLocallyModified(fileName string) {
 	if trace.Tracing {
-		defer trace.Call(fname)()
+		defer trace.Call(fileName)()
 	}
 
 	owner, _ := pkg.vars.Value("OWNER")
@@ -847,15 +847,15 @@ func (pkg *Package) checkLocallyModified(fname string) {
 		return
 	}
 
-	if isLocallyModified(fname) {
+	if isLocallyModified(fileName) {
 		if owner != "" {
-			NewLineWhole(fname).Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
+			NewLineWhole(fileName).Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
 			Explain(
 				"See the pkgsrc guide, section \"Package components\",",
 				"keyword \"owner\", for more information.")
 		}
 		if maintainer != "" {
-			NewLineWhole(fname).Notef("Please only commit changes that %s would approve.", maintainer)
+			NewLineWhole(fileName).Notef("Please only commit changes that %s would approve.", maintainer)
 			Explain(
 				"See the pkgsrc guide, section \"Package components\",",
 				"keyword \"maintainer\", for more information.")

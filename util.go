@@ -114,9 +114,9 @@ func mustMatch(s string, re regex.Pattern) []string {
 	panic(fmt.Sprintf("mustMatch %q %q", s, re))
 }
 
-func isEmptyDir(fname string) bool {
-	dirents, err := ioutil.ReadDir(fname)
-	if err != nil || hasSuffix(fname, "/CVS") {
+func isEmptyDir(fileName string) bool {
+	dirents, err := ioutil.ReadDir(fileName)
+	if err != nil || hasSuffix(fileName, "/CVS") {
 		return true
 	}
 	for _, dirent := range dirents {
@@ -124,7 +124,7 @@ func isEmptyDir(fname string) bool {
 		if isIgnoredFilename(name) {
 			continue
 		}
-		if dirent.IsDir() && isEmptyDir(fname+"/"+name) {
+		if dirent.IsDir() && isEmptyDir(fileName+"/"+name) {
 			continue
 		}
 		return false
@@ -132,16 +132,16 @@ func isEmptyDir(fname string) bool {
 	return true
 }
 
-func getSubdirs(fname string) []string {
-	dirents, err := ioutil.ReadDir(fname)
+func getSubdirs(fileName string) []string {
+	dirents, err := ioutil.ReadDir(fileName)
 	if err != nil {
-		NewLineWhole(fname).Fatalf("Cannot be read: %s", err)
+		NewLineWhole(fileName).Fatalf("Cannot be read: %s", err)
 	}
 
 	var subdirs []string
 	for _, dirent := range dirents {
 		name := dirent.Name()
-		if dirent.IsDir() && !isIgnoredFilename(name) && !isEmptyDir(fname+"/"+name) {
+		if dirent.IsDir() && !isIgnoredFilename(name) && !isEmptyDir(fileName+"/"+name) {
 			subdirs = append(subdirs, name)
 		}
 	}
@@ -157,12 +157,12 @@ func isIgnoredFilename(fileName string) bool {
 }
 
 // Checks whether a file is already committed to the CVS repository.
-func isCommitted(fname string) bool {
-	lines := loadCvsEntries(fname)
+func isCommitted(fileName string) bool {
+	lines := loadCvsEntries(fileName)
 	if lines == nil {
 		return false
 	}
-	needle := "/" + path.Base(fname) + "/"
+	needle := "/" + path.Base(fileName) + "/"
 	for _, line := range lines.Lines {
 		if hasPrefix(line.Text, needle) {
 			return true
@@ -171,10 +171,10 @@ func isCommitted(fname string) bool {
 	return false
 }
 
-func isLocallyModified(fname string) bool {
-	baseName := path.Base(fname)
+func isLocallyModified(fileName string) bool {
+	baseName := path.Base(fileName)
 
-	lines := loadCvsEntries(fname)
+	lines := loadCvsEntries(fileName)
 	if lines == nil {
 		return false
 	}
@@ -182,7 +182,7 @@ func isLocallyModified(fname string) bool {
 	for _, line := range lines.Lines {
 		fields := strings.Split(line.Text, "/")
 		if 3 < len(fields) && fields[1] == baseName {
-			st, err := os.Stat(fname)
+			st, err := os.Stat(fileName)
 			if err != nil {
 				return true
 			}
@@ -200,8 +200,8 @@ func isLocallyModified(fname string) bool {
 	return false
 }
 
-func loadCvsEntries(fname string) Lines {
-	dir := path.Dir(fname)
+func loadCvsEntries(fileName string) Lines {
+	dir := path.Dir(fileName)
 	if dir == G.CvsEntriesDir {
 		return G.CvsEntriesLines
 	}
@@ -299,13 +299,13 @@ func varIsUsedSimilar(varname string) bool {
 		G.Pkg != nil && G.Pkg.vars.UsedSimilar(varname)
 }
 
-func fileExists(fname string) bool {
-	st, err := os.Stat(fname)
+func fileExists(fileName string) bool {
+	st, err := os.Stat(fileName)
 	return err == nil && st.Mode().IsRegular()
 }
 
-func dirExists(fname string) bool {
-	st, err := os.Stat(fname)
+func dirExists(fileName string) bool {
+	st, err := os.Stat(fileName)
 	return err == nil && st.Mode().IsDir()
 }
 
@@ -360,17 +360,17 @@ func relpath(from, to string) string {
 	return result
 }
 
-func abspath(fname string) string {
-	abs, err := filepath.Abs(fname)
-	G.Assertf(err == nil, "abspath %q.", fname)
+func abspath(fileName string) string {
+	abs, err := filepath.Abs(fileName)
+	G.Assertf(err == nil, "abspath %q.", fileName)
 	return filepath.ToSlash(abs)
 }
 
 // Differs from path.Clean in that only "../../" is replaced, not "../".
 // Also, the initial directory is always kept.
 // This is to provide the package path as context in recursive invocations of pkglint.
-func cleanpath(fname string) string {
-	tmp := fname
+func cleanpath(fileName string) string {
+	tmp := fileName
 	for len(tmp) > 2 && hasPrefix(tmp, "./") {
 		tmp = tmp[2:]
 	}

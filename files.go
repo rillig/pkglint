@@ -62,14 +62,14 @@ func LoadMk(fileName string, options LoadOptions) MkLines {
 	return NewMkLines(lines)
 }
 
-func nextLogicalLine(fname string, rawLines []*RawLine, pindex *int) Line {
+func nextLogicalLine(fileName string, rawLines []*RawLine, pindex *int) Line {
 	{ // Handle the common case efficiently
 		index := *pindex
 		rawLine := rawLines[index]
 		textnl := rawLine.textnl
 		if hasSuffix(textnl, "\n") && !hasSuffix(textnl, "\\\n") {
 			*pindex = index + 1
-			return NewLine(fname, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index:index+1])
+			return NewLine(fileName, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index:index+1])
 		}
 	}
 
@@ -100,7 +100,7 @@ func nextLogicalLine(fname string, rawLines []*RawLine, pindex *int) Line {
 	lastlineno := rawLines[index].Lineno
 	*pindex = index + 1
 
-	return NewLineMulti(fname, firstlineno, lastlineno, text, lineRawLines)
+	return NewLineMulti(fileName, firstlineno, lastlineno, text, lineRawLines)
 }
 
 func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
@@ -137,7 +137,7 @@ func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, c
 	return
 }
 
-func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool) Lines {
+func convertToLogicalLines(fileName string, rawText string, joinBackslashLines bool) Lines {
 	var rawLines []*RawLine
 	for lineno, rawLine := range strings.SplitAfter(rawText, "\n") {
 		if rawLine != "" {
@@ -148,19 +148,19 @@ func convertToLogicalLines(fname string, rawText string, joinBackslashLines bool
 	var loglines []Line
 	if joinBackslashLines {
 		for lineno := 0; lineno < len(rawLines); {
-			loglines = append(loglines, nextLogicalLine(fname, rawLines, &lineno))
+			loglines = append(loglines, nextLogicalLine(fileName, rawLines, &lineno))
 		}
 	} else {
 		for _, rawLine := range rawLines {
 			text := strings.TrimSuffix(rawLine.textnl, "\n")
-			logline := NewLine(fname, rawLine.Lineno, text, []*RawLine{rawLine})
+			logline := NewLine(fileName, rawLine.Lineno, text, []*RawLine{rawLine})
 			loglines = append(loglines, logline)
 		}
 	}
 
 	if 0 < len(rawLines) && !hasSuffix(rawLines[len(rawLines)-1].textnl, "\n") {
-		NewLineEOF(fname).Errorf("File must end with a newline.")
+		NewLineEOF(fileName).Errorf("File must end with a newline.")
 	}
 
-	return NewLines(fname, loglines)
+	return NewLines(fileName, loglines)
 }
