@@ -621,6 +621,30 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	c.Check(lines.Lines[0].raw[1].textnl, equals, "666\n")
 }
 
+// Demonstrates how to filter log messages.
+// The --autofix option can restrict the fixes to exactly one group or topic.
+func (s *Suite) Test_Autofix_Apply__only(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix", "--source", "--only", "interesting")
+	line := t.NewLine("Makefile", 27, "The old song")
+
+	// Is completely ignored, including any autofixes.
+	fix := line.Autofix()
+	fix.Warnf("Using \"old\" is deprecated.")
+	fix.Replace("old", "new1")
+	fix.Apply()
+
+	fix.Warnf("Using \"old\" is interesting.")
+	fix.Replace("old", "new2")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new2\".",
+		"-\tThe old song",
+		"+\tThe new2 song")
+}
+
 func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 	t := s.Init(c)
 

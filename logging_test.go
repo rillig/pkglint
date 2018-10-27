@@ -111,31 +111,6 @@ func (s *Suite) Test__show_source_separator_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
-// Demonstrates how to filter log messages.
-// This is useful in combination with the --autofix option,
-// to restrict the fixes to exactly one group or topic.
-func (s *Suite) Test_Line_log__only(c *check.C) {
-	t := s.Init(c)
-
-	t.SetupCommandLine("--autofix", "--source", "--only", "interesting")
-	line := t.NewLine("Makefile", 27, "The old song")
-
-	// Is completely ignored, including any autofixes.
-	fix := line.Autofix()
-	fix.Warnf("Using \"old\" is deprecated.")
-	fix.Replace("old", "new1")
-	fix.Apply()
-
-	fix.Warnf("Using \"old\" is interesting.")
-	fix.Replace("old", "new2")
-	fix.Apply()
-
-	t.CheckOutputLines(
-		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new2\".",
-		"-\tThe old song",
-		"+\tThe new2 song")
-}
-
 func (s *Suite) Test_Pkglint_ShowSummary__explanations_with_only(c *check.C) {
 	t := s.Init(c)
 
