@@ -319,6 +319,22 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		"AUTOFIX: fileName:1: Deleting this line.")
 }
 
+func (s *Suite) Test_Autofix_Explain(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("Makefile", 74, "line1")
+
+	fix := line.Autofix()
+	fix.Warnf("Please write row instead of line.")
+	fix.Replace("line", "row")
+	fix.Explain("Explanation")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:74: Please write row instead of line.")
+	c.Check(G.explanationsAvailable, equals, true)
+}
+
 func (s *Suite) Test_Autofix_Explain__SilentAutofixFormat(c *check.C) {
 	t := s.Init(c)
 
@@ -568,22 +584,6 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: Makefile:3: Converting to uppercase")
 	c.Check(lines.Lines[2].Text, equals, "LINE3")
-}
-
-func (s *Suite) Test_Autofix_Explain(c *check.C) {
-	t := s.Init(c)
-
-	line := t.NewLine("Makefile", 74, "line1")
-
-	fix := line.Autofix()
-	fix.Warnf("Please write row instead of line.")
-	fix.Replace("line", "row")
-	fix.Explain("Explanation")
-	fix.Apply()
-
-	t.CheckOutputLines(
-		"WARN: Makefile:74: Please write row instead of line.")
-	c.Check(G.explanationsAvailable, equals, true)
 }
 
 // Since the diagnostic doesn't contain the string "few", nothing happens.
