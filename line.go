@@ -179,7 +179,7 @@ func (line *LineImpl) String() string {
 //  fix.InsertBefore("new line")
 //  fix.InsertAfter("new line")
 //  fix.Delete()
-//  fix.Custom(func(printAutofix, autofix bool) {})
+//  fix.Custom(func(showAutofix, autofix bool) {})
 //
 //  fix.Apply()
 func (line *LineImpl) Autofix() *Autofix {

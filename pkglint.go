@@ -686,7 +686,7 @@ func (pkglint *Pkglint) checkExecutable(fname string, st os.FileInfo) {
 			"DEINSTALL scripts are usually not usable in the form they have in",
 			"the package, as the pathnames get adjusted during installation.",
 			"So there is no need to have any file executable.")
-		fix.Custom(func(printAutofix, autofix bool) {
+		fix.Custom(func(showAutofix, autofix bool) {
 			fix.Describef(0, "Clearing executable bits")
 			if autofix {
 				if err := os.Chmod(fname, st.Mode()&^0111); err != nil {

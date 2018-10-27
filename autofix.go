@@ -22,7 +22,7 @@ type Autofix struct {
 	modified    bool            // Modified in memory, but not necessarily written back to disk
 	actions     []autofixAction // Human-readable description of the actual autofix actions
 	level       *LogLevel       //
-	diagFormat  string          // Is printed only if it couldn't be fixed automatically
+	diagFormat  string          // Is logged only if it couldn't be fixed automatically
 	diagArgs    []interface{}   //
 	explanation []string        // Is printed together with the diagnostic
 }
@@ -136,11 +136,11 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 // The fixer function must check whether it can actually fix something,
 // and if so, call Describef to describe the actual fix.
 //
-// If printAutofix and autofix are both false, the fix must only be
+// If showAutofix and autofix are both false, the fix must only be
 // described by calling Describef. No observable modification must be done,
 // not even in memory.
 //
-// If printAutofix is true but autofix is false, the fix should be done in
+// If showAutofix is true but autofix is false, the fix should be done in
 // memory as far as possible. For example, changing the text of Line.raw
 // is appropriate, but changing files in the file system is not.
 //
@@ -149,7 +149,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 //
 // In any case, changes to the current Line will be written back to disk
 // by SaveAutofixChanges, after fixing all the lines in the file at once.
-func (fix *Autofix) Custom(fixer func(printAutofix, autofix bool)) {
+func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
 	if fix.skip() {
 		return
 	}

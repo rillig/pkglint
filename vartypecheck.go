@@ -47,7 +47,7 @@ func (cv *VartypeCheck) Notef(format string, args ...interface{})  { cv.Line.Not
 //  fix.InsertBefore("new line")
 //  fix.InsertAfter("new line")
 //  fix.Delete()
-//  fix.Custom(func(printAutofix, autofix bool) {})
+//  fix.Custom(func(showAutofix, autofix bool) {})
 //
 //  fix.Apply()
 func (cv *VartypeCheck) Autofix() *Autofix { return cv.Line.Autofix() }

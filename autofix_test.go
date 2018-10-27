@@ -514,9 +514,9 @@ func (s *Suite) Test_Autofix_Custom(c *check.C) {
 	doFix := func(line Line) {
 		fix := line.Autofix()
 		fix.Warnf("Please write in ALL-UPPERCASE.")
-		fix.Custom(func(printAutofix, autofix bool) {
+		fix.Custom(func(showAutofix, autofix bool) {
 			fix.Describef(int(line.firstLine), "Converting to uppercase")
-			if printAutofix || autofix {
+			if showAutofix || autofix {
 				line.Text = strings.ToUpper(line.Text)
 			}
 		})
@@ -583,7 +583,7 @@ func (s *Suite) Test_Autofix__skip(c *check.C) {
 	fix.InsertBefore("before")
 	fix.InsertAfter("after")
 	fix.Delete()
-	fix.Custom(func(printAutofix, autofix bool) {})
+	fix.Custom(func(showAutofix, autofix bool) {})
 	fix.Realign(mklines.mklines[0], 32)
 	fix.Apply()
 
