@@ -361,7 +361,7 @@ func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
 	c.Check(fix.RawText(), equals, "Text\n")
 }
 
-func (s *Suite) Test_Autofix__show_autofix_and_source(c *check.C) {
+func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--show-autofix", "--source")
@@ -485,7 +485,7 @@ func (s *Suite) Test_Autofix__suppress_unfixable_warnings(c *check.C) {
 
 	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Something's wrong here.")
-	fix.ReplaceRegex(`.`, "X", -1)
+	fix.ReplaceRegex(`.....`, "XXX", 1)
 	fix.Apply()
 
 	fix.Warnf("Since XXX marks are usually not fixed, use TODO instead to draw attention.")
@@ -496,21 +496,17 @@ func (s *Suite) Test_Autofix__suppress_unfixable_warnings(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Something's wrong here.",
-		"AUTOFIX: Makefile:2: Replacing \"l\" with \"X\".",
-		"AUTOFIX: Makefile:2: Replacing \"i\" with \"X\".",
-		"AUTOFIX: Makefile:2: Replacing \"n\" with \"X\".",
-		"AUTOFIX: Makefile:2: Replacing \"e\" with \"X\".",
-		"AUTOFIX: Makefile:2: Replacing \"2\" with \"X\".",
+		"AUTOFIX: Makefile:2: Replacing \"line2\" with \"XXX\".",
 		"-\tline2",
-		"+\tXXXXX",
+		"+\tXXX",
 		"",
 		"WARN: Makefile:2: Since XXX marks are usually not fixed, use TODO instead to draw attention.",
 		"AUTOFIX: Makefile:2: Replacing \"XXX\" with \"TODO\".",
 		"-\tline2",
-		"+\tTODOXX")
+		"+\tTODO")
 }
 
-// If an Autofix doesn't do anything it must not log any diagnostics.
+// If an Autofix doesn't do anything, it must not log any diagnostics.
 func (s *Suite) Test_Autofix__noop_replace(c *check.C) {
 	t := s.Init(c)
 
@@ -525,9 +521,13 @@ func (s *Suite) Test_Autofix__noop_replace(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// When using Autofix.CustomFix, it is tricky to get all the details right.
+// When using Autofix.Custom, it is tricky to get all the details right.
 // For best results, see the existing examples and the documentation.
-func (s *Suite) Test_Autofix_Custom(c *check.C) {
+//
+// Since this custom fix only operates on the text of the current line,
+// it can handle both the --show-autofix and the --autofix cases using
+// the same code.
+func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("Makefile",
