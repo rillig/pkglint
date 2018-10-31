@@ -7,6 +7,8 @@ import (
 
 type Buildlink3Checker struct {
 	mklines          MkLines
+	pkgbase          string
+	pkgbaseLine      MkLine
 	abiLine, apiLine MkLine
 	abi, api         *DependencyPattern
 }
@@ -41,29 +43,65 @@ func (ck *Buildlink3Checker) Check() {
 		}
 	}
 
-	pkgbaseLine, pkgbase := exp.CurrentLine(), ""
+	if !ck.checkFirstParagraph(exp) {
+		return
+	}
+	if !ck.checkSecondParagraph(exp) {
+		return
+	}
+	if !ck.checkThirdParagraph(exp) {
+		return
+	}
+
+	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
+	if !exp.ExpectText("BUILDLINK_TREE+=\t-" + ck.pkgbase) {
+		return
+	}
+
+	if !exp.EOF() {
+		exp.CurrentLine().Warnf("The file should end here.")
+	}
+
+	if G.Pkg != nil {
+		G.Pkg.checklinesBuildlink3Inclusion(mklines)
+	}
+
+	SaveAutofixChanges(mklines.lines)
+}
+
+func (ck *Buildlink3Checker) checkFirstParagraph(exp *MkExpecter) bool {
 
 	// First paragraph: Introduction of the package identifier
 	if !exp.AdvanceIfMatches(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`) {
 		exp.CurrentLine().Warnf("Expected a BUILDLINK_TREE line.")
-		return
+		return false
 	}
-	pkgbase = exp.Group(1)
+
+	pkgbase := exp.Group(1)
+	pkgbaseLine := exp.PreviousMkLine()
+
 	if containsVarRef(pkgbase) {
 		ck.checkVaruseInPkgbase(pkgbase, pkgbaseLine)
 	}
-
 	exp.ExpectEmptyLine()
+	ck.pkgbase = pkgbase
+	ck.pkgbaseLine = pkgbaseLine
+	return true
+}
 
-	// Second paragraph: multiple inclusion protection and introduction
-	// of the uppercase package identifier.
+// checkSecondParagraph checks the multiple inclusion protection and
+// introduces the uppercase package identifier.
+func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
+	pkgbase := ck.pkgbase
+	pkgbaseLine := ck.pkgbaseLine
+
 	if !exp.AdvanceIfMatches(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`) {
-		return
+		return false
 	}
 	pkgupperLine, pkgupper := exp.PreviousLine(), exp.Group(1)
 
 	if !exp.ExpectText(pkgupper + "_BUILDLINK3_MK:=") {
-		return
+		return false
 	}
 	exp.ExpectEmptyLine()
 
@@ -76,17 +114,24 @@ func (ck *Buildlink3Checker) Check() {
 	if G.Pkg != nil {
 		if mkbase := G.Pkg.EffectivePkgbase; mkbase != "" && mkbase != pkgbase {
 			pkgbaseLine.Errorf("Package name mismatch between %q in this file and %q from %s.",
-				pkgbase, mkbase, G.Pkg.EffectivePkgnameLine.ReferenceFrom(pkgbaseLine))
+				pkgbase, mkbase, G.Pkg.EffectivePkgnameLine.ReferenceFrom(pkgbaseLine.Line))
 		}
 	}
 
-	// Third paragraph: Package information.
-	indentLevel := 1 // The first .if is from the second paragraph.
+	return true
+}
+
+// Third paragraph: Package information.
+func (ck *Buildlink3Checker) checkThirdParagraph(exp *MkExpecter) bool {
+	pkgbase := ck.pkgbase
+
+	indentLevel := 1
+	// The first .if is from the second paragraph.
 loop:
 	for {
 		if exp.EOF() {
 			exp.CurrentLine().Warnf("Expected \".endif\".")
-			return
+			return false
 		}
 
 		mkline := exp.CurrentMkLine()
@@ -117,25 +162,12 @@ loop:
 			}
 		}
 	}
+
 	if ck.apiLine == nil {
 		exp.CurrentLine().Warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
 	exp.ExpectEmptyLine()
-
-	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
-	if !exp.ExpectText("BUILDLINK_TREE+=\t-" + pkgbase) {
-		return
-	}
-
-	if !exp.EOF() {
-		exp.CurrentLine().Warnf("The file should end here.")
-	}
-
-	if G.Pkg != nil {
-		G.Pkg.checklinesBuildlink3Inclusion(mklines)
-	}
-
-	SaveAutofixChanges(mklines.lines)
+	return true
 }
 
 func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgbase string) {
@@ -181,31 +213,36 @@ func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgb
 	}
 }
 
-func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine Line) {
-	warned := false
-	for _, pair := range [...]struct{ varuse, simple string }{
-		{"${PYPKGPREFIX}", "py"},
-		{"${RUBY_BASE}", "ruby"},
-		{"${RUBY_PKGPREFIX}", "ruby"},
-		{"${PHP_PKG_PREFIX}", "php"},
-	} {
-		if contains(pkgbase, pair.varuse) {
-			pkgbaseLine.Warnf("Please use %q instead of %q (also in other variables in this file).", pair.simple, pair.varuse)
-			warned = true
+func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine MkLine) {
+	checkSpecificVar := func(varuse, simple string) bool {
+		if contains(pkgbase, varuse) {
+			pkgbaseLine.Warnf("Please use %q instead of %q (also in other variables in this file).", simple, varuse)
+			return true
 		}
+		return false
 	}
+
+	warned := checkSpecificVar("${PYPKGPREFIX}", "py") ||
+		checkSpecificVar("${RUBY_BASE}", "ruby") ||
+		checkSpecificVar("${RUBY_PKGPREFIX}", "ruby") ||
+		checkSpecificVar("${PHP_PKG_PREFIX}", "php")
+
 	if !warned {
 		if m, varuse := match1(pkgbase, `(\$\{\w+\})`); m {
 			pkgbaseLine.Warnf("Please replace %q with a simple string (also in other variables in this file).", varuse)
 			warned = true
 		}
 	}
+
 	if warned {
 		Explain(
-			"Having variable package names in the BUILDLINK_TREE is not",
-			"necessary, since other packages depend on this package only for",
-			"a specific version of Python, Ruby or PHP.  Since these",
-			"package identifiers are only used at build time, they should",
-			"not include the specific version of the language interpreter.")
+			"The identifiers in the BUILDLINK_TREE variable should be plain",
+			"strings that do not refer to any variable.",
+			"",
+			"Even for packages that depend on a specific version of a",
+			"programming language, the plain name is enough since",
+			"the version number of the programming language is stored elsewhere.",
+			"Furthermore, these package identifiers are only used at build time,",
+			"after the specific version has been decided.")
 	}
 }

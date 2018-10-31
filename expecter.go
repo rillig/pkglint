@@ -121,6 +121,10 @@ func NewMkExpecter(mklines MkLines) *MkExpecter {
 	return &MkExpecter{mklines, *NewExpecter(mklines.lines)}
 }
 
+func (exp *MkExpecter) PreviousMkLine() MkLine {
+	return exp.mklines.mklines[exp.index-1]
+}
+
 func (exp *MkExpecter) CurrentMkLine() MkLine {
 	return exp.mklines.mklines[exp.index]
 }
