@@ -720,14 +720,17 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	t := s.Init(c)
 
-	checkResolve := func(before string, after string) {
-		c.Check(dummyMkLine.ResolveVarsInRelativePath(before, false), equals, after)
-	}
-
 	t.CreateFileLines("lang/lua53/Makefile")
 	t.CreateFileLines("lang/php72/Makefile")
 	t.CreateFileLines("emulators/suse100_base/Makefile")
 	t.CreateFileLines("lang/python36/Makefile")
+	mklines := t.SetupFileMkLines("Makefile",
+		MkRcsID)
+	mkline := mklines.mklines[0]
+
+	checkResolve := func(before string, after string) {
+		c.Check(mkline.ResolveVarsInRelativePath(before, false), equals, after)
+	}
 
 	checkResolve("", "")
 	checkResolve("${LUA_PKGSRCDIR}", "../../lang/lua53")
