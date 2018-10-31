@@ -361,11 +361,13 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 	pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
 
 	if G.Testing {
-		G.Assertf(!contains(pkgsrcdir, "../../../../.."), ""+
-			"Relative pkgsrc paths usually only contain two or three levels. "+
-			"Possible reason for reaching this assertion: "+
-			"Tests that access the file system must create their lines "+
-			"using t.SetupFileMkLines, not using t.NewMkLines.")
+		// Relative pkgsrc paths usually only contain two or three levels.
+		// A possible reason for reaching this assertion is:
+		// Tests that access the file system must create their lines
+		// using t.SetupFileMkLines, not using t.NewMkLines.
+		G.Assertf(!contains(pkgsrcdir, "../../../../.."),
+			"Relative path %q for %q is too deep below the pkgsrc root $q.",
+			pkgsrcdir, basedir, G.Pkgsrc.File("."))
 	}
 
 	tmp := relativePath
