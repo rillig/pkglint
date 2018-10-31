@@ -360,6 +360,14 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 	}
 	pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
 
+	if G.Testing {
+		G.Assertf(!contains(pkgsrcdir, "../../../../.."), ""+
+			"Relative pkgsrc paths usually only contain two or three levels. "+
+			"Possible reason for reaching this assertion: "+
+			"Tests that access the file system must create their lines "+
+			"using t.SetupFileMkLines, not using t.NewMkLines.")
+	}
+
 	tmp := relativePath
 	tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)

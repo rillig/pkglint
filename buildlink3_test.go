@@ -150,7 +150,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_api_versions_brace(c 
 
 	t.SetupVartypes()
 	t.CreateFileLines("multimedia/totem/Makefile")
-	mklines := t.NewMkLines("multimedia/totem/buildlink3.mk",
+	mklines := t.SetupFileMkLines("multimedia/totem/buildlink3.mk",
 		MkRcsID,
 		"",
 		"BUILDLINK_TREE+=\ttotem",

@@ -487,6 +487,9 @@ func (t *Tester) NewLinesAt(fileName string, firstLine int, texts ...string) Lin
 	return NewLines(fileName, result)
 }
 
+// NewMkLines creates new in-memory objects for the given lines,
+// as if they were parsed from a Makefile fragment.
+// No actual file is created for the lines; see SetupFileMkLines for that.
 func (t *Tester) NewMkLines(fileName string, lines ...string) MkLines {
 	rawText := ""
 	for _, line := range lines {

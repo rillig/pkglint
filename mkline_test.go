@@ -744,20 +744,18 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	checkResolve("${PKGDIR}", ".")
 }
 
-// FIXME:
-//  "ERROR: multimedia/totem/buildlink3.mk:10:
-//    \"../../../../../../AppData/Local/Temp/check-1443635317331776148/156/multimedia/totem\" does not exist.",
-func (s *Suite) DisabledTest_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.C) {
+func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mklines := t.NewMkLines("multimedia/totem/bla.mk",
+	mklines := t.SetupFileMkLines("multimedia/totem/bla.mk",
 		MkRcsID,
 		"BUILDLINK_PKGSRCDIR.totem?=\t../../multimedia/totem")
 
 	mklines.Check()
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"ERROR: ~/multimedia/totem/bla.mk:2: There is no package in \"multimedia/totem\".")
 }
 
 func (s *Suite) Test_MatchVarassign(c *check.C) {
