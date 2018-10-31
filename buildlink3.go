@@ -145,7 +145,8 @@ loop:
 			// Comments and empty lines are fine here.
 
 		case mkline.IsInclude() && hasSuffix(mkline.IncludeFile(), "/buildlink3.mk"):
-			// Included files might be checked for consistency, someday.
+			// Included files might be checked for consistency, someday,
+			// to match the ones mentioned in options.mk and Makefile.
 
 		case mkline.IsDirective() && mkline.Directive() == "if":
 			indentLevel++
@@ -218,7 +219,9 @@ func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgb
 	}
 
 	if varname == "pkgbase" {
-		exp.AdvanceIfMatches(`^\.[\t ]*include "../../mk/pkg-build-options\.mk"$`)
+		exp.AdvanceIf(func(mkline MkLine) bool {
+			return mkline.IsInclude() && mkline.IncludeFile() == "../../mk/pkg-build-options.mk"
+		})
 	}
 }
 
