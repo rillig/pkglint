@@ -141,6 +141,38 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__abi_api_versions(c *check.C) {
 		"WARN: buildlink3.mk:9: ABI version \"1.6.0\" should be at least API version \"1.6.1\" (see line 8).")
 }
 
+// As of October 2018, pkglint parses package dependencies a little
+// different than the pkg_* tools.
+// In all but two cases this works, this is one of the exceptions.
+// The "{totem,totem-xine}" cannot be parsed, therefore the check skipped.
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_api_versions_brace(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.CreateFileLines("multimedia/totem/Makefile")
+	mklines := t.NewMkLines("multimedia/totem/buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\ttotem",
+		"",
+		".if !defined(TOTEM_BUILDLINK3_MK)",
+		"TOTEM_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.totem+=\t{totem,totem-xine}>=1.4.0",
+		"BUILDLINK_ABI_DEPENDS.totem+=\ttotem>=2.32.0nb46",
+		"BUILDLINK_PKGSRCDIR.totem?=\t../../multimedia/totem",
+		"",
+		".endif # TOTEM_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-totem")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	// No warning about ABI "totem" and API "{totem,totem-xine}"
+	// because that case is explicitly not checked.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_ChecklinesBuildlink3Mk__no_BUILDLINK_TREE_at_beginning(c *check.C) {
 	t := s.Init(c)
 

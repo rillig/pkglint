@@ -194,11 +194,10 @@ func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgb
 	}
 
 	if doCheck && ck.abi != nil && ck.api != nil && ck.abi.Pkgbase != ck.api.Pkgbase {
-		if hasPrefix(ck.api.Pkgbase, "{") {
-			ck.abiLine.Errorf("Brace.")
+		if !hasPrefix(ck.api.Pkgbase, "{") {
+			ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
+				ck.abi.Pkgbase, ck.api.Pkgbase, ck.apiLine.ReferenceFrom(ck.abiLine.Line))
 		}
-		ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
-			ck.abi.Pkgbase, ck.api.Pkgbase, ck.apiLine.ReferenceFrom(ck.abiLine.Line))
 	}
 
 	if doCheck {
