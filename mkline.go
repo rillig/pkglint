@@ -366,7 +366,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 		// Tests that access the file system must create their lines
 		// using t.SetupFileMkLines, not using t.NewMkLines.
 		G.Assertf(!contains(pkgsrcdir, "../../../../.."),
-			"Relative path %q for %q is too deep below the pkgsrc root $q.",
+			"Relative path %q for %q is too deep below the pkgsrc root %q.",
 			pkgsrcdir, basedir, G.Pkgsrc.File("."))
 	}
 
