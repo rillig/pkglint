@@ -440,13 +440,14 @@ func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("Makefile", 46, "# dummy")
+	mklines := t.SetupFileMkLines("Makefile",
+		"# dummy")
 
-	MkLineChecker{mkline}.CheckRelativePkgdir("../pkgbase")
+	MkLineChecker{mklines.mklines[0]}.CheckRelativePkgdir("../pkgbase")
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:46: \"../pkgbase\" does not exist.",
-		"WARN: Makefile:46: \"../pkgbase\" is not a valid relative package directory.")
+		"ERROR: ~/Makefile:1: \"../pkgbase\" does not exist.",
+		"WARN: ~/Makefile:1: \"../pkgbase\" is not a valid relative package directory.")
 }
 
 // PR pkg/46570, item 2

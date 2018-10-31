@@ -252,7 +252,7 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 	// Tools that are defined by pkgsrc as load-time tools
 	// may be used in any file at load time.
 
-	mklines := t.NewMkLines("builtin.mk",
+	mklines := t.SetupFileMkLines("builtin.mk",
 		MkRcsID,
 		"",
 		"VAR!=   ${ECHO} 'too early'",
@@ -272,12 +272,12 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: builtin.mk:3: To use the tool ${ECHO} at load time, bsd.prefs.mk has to be included before.",
-		"WARN: builtin.mk:4: To use the tool ${LOAD} at load time, bsd.prefs.mk has to be included before.",
-		"WARN: builtin.mk:5: The tool ${RUN_CMD} cannot be used at load time.",
-		"WARN: builtin.mk:6: The tool ${NOWHERE} cannot be used at load time.",
-		"WARN: builtin.mk:12: The tool ${RUN_CMD} cannot be used at load time.",
-		"WARN: builtin.mk:13: The tool ${NOWHERE} cannot be used at load time.")
+		"WARN: ~/builtin.mk:3: To use the tool ${ECHO} at load time, bsd.prefs.mk has to be included before.",
+		"WARN: ~/builtin.mk:4: To use the tool ${LOAD} at load time, bsd.prefs.mk has to be included before.",
+		"WARN: ~/builtin.mk:5: The tool ${RUN_CMD} cannot be used at load time.",
+		"WARN: ~/builtin.mk:6: The tool ${NOWHERE} cannot be used at load time.",
+		"WARN: ~/builtin.mk:12: The tool ${RUN_CMD} cannot be used at load time.",
+		"WARN: ~/builtin.mk:13: The tool ${NOWHERE} cannot be used at load time.")
 }
 
 func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {
