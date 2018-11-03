@@ -2,35 +2,35 @@ package main
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_ChecklinesBuildlink3Mk(c *check.C) {
+func (s *Suite) Test_ChecklinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
+	t.CreateFileLines("x11/Xbae/Makefile")
+	t.CreateFileLines("mk/motif.buildlink3.mk")
 	mklines := t.SetupFileMkLines("buildlink3.mk",
 		MkRcsID,
 		"# XXX This file was created automatically using createbuildlink-@PKGVERSION@",
 		"",
-		"BUILDLINK_TREE+=        Xbae",
+		"BUILDLINK_TREE+=\tXbae",
 		"",
 		"BUILDLINK_DEPMETHOD.Xbae?=\tfull",
 		".if !defined(XBAE_BUILDLINK3_MK)",
 		"XBAE_BUILDLINK3_MK:=",
 		"",
-		"BUILDLINK_API_DEPENDS.Xbae+=    Xbae>=4.8.4",
-		"BUILDLINK_ABI_DEPENDS.Xbae+=    Xbae>=4.51.01nb2",
-		"BUILDLINK_PKGSRCDIR.Xbae?=      ../../x11/Xbae",
+		"BUILDLINK_API_DEPENDS.Xbae+=\tXbae>=4.8.4",
+		"BUILDLINK_ABI_DEPENDS.Xbae+=\tXbae>=4.51.01nb2",
+		"BUILDLINK_PKGSRCDIR.Xbae?=\t../../x11/Xbae",
 		"",
 		".include \"../../mk/motif.buildlink3.mk\"",
 		".endif # XBAE_BUILDLINK3_MK",
 		"",
-		"BUILDLINK_TREE+=        -Xbae")
+		"BUILDLINK_TREE+=\t-Xbae")
 
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/buildlink3.mk:12: \"x11/Xbae\" does not exist.",
-		"ERROR: ~/buildlink3.mk:12: There is no package in \"x11/Xbae\".",
-		"ERROR: ~/buildlink3.mk:14: \"mk/motif.buildlink3.mk\" does not exist.",
 		"ERROR: ~/buildlink3.mk:2: This comment indicates unfinished work (url2pkg).")
 }
 

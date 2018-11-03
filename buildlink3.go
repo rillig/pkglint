@@ -63,10 +63,11 @@ func (ck *Buildlink3Checker) Check() {
 	}
 
 	if G.Pkg != nil {
+		// TODO: Commenting this line doesn't make any test fail, but it should.
 		G.Pkg.checklinesBuildlink3Inclusion(mklines)
 	}
 
-	SaveAutofixChanges(mklines.lines)
+	mklines.SaveAutofixChanges()
 }
 
 func (ck *Buildlink3Checker) checkFirstParagraph(exp *MkExpecter) bool {

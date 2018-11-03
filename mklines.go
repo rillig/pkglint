@@ -420,7 +420,7 @@ func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
 }
 
 func (mklines *MkLinesImpl) SaveAutofixChanges() {
-	SaveAutofixChanges(mklines.lines)
+	mklines.lines.SaveAutofixChanges()
 }
 
 // VaralignBlock checks that all variable assignments from a paragraph

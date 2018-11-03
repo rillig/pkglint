@@ -27,3 +27,7 @@ func (ls *LinesImpl) Errorf(format string, args ...interface{}) {
 func (ls *LinesImpl) Warnf(format string, args ...interface{}) {
 	NewLineWhole(ls.FileName).Warnf(format, args...)
 }
+
+func (ls *LinesImpl) SaveAutofixChanges() {
+	SaveAutofixChanges(ls)
+}
