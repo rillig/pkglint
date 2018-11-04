@@ -227,8 +227,7 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	}
 
 	fix := pline.Autofix()
-	fix.Errorf("Duplicate file name %q, already appeared in %s.",
-		text, prev.ReferenceFrom(pline.Line))
+	fix.Errorf("Duplicate file name %q, already appeared in %s.", text, pline.RefTo(prev.Line))
 	fix.Delete()
 	fix.Apply()
 }
@@ -290,8 +289,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 	if contains(basename, ".a") || contains(basename, ".so") {
 		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
 			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
-				pline.Warnf("Redundant library found. The libtool library is in %s.",
-					laLine.ReferenceFrom(pline.Line))
+				pline.Warnf("Redundant library found. The libtool library is in %s.", pline.RefTo(laLine.Line))
 			}
 		}
 	}

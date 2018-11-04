@@ -134,7 +134,7 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 		if G.Pkg != nil && (value == "pre-configure" || value == "post-configure") {
 			if noConfigureLine := G.Pkg.vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
 				mkline.Warnf("SUBST_STAGE %s has no effect when NO_CONFIGURE is set (in %s).",
-					value, noConfigureLine.ReferenceFrom(mkline.Line))
+					value, mkline.RefTo(noConfigureLine))
 				Explain(
 					"To fix this properly, remove the definition of NO_CONFIGURE.")
 			}

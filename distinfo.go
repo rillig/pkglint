@@ -41,12 +41,12 @@ type distinfoLinesChecker struct {
 	patchdir            string // Relative to G.Pkg
 	distinfoIsCommitted bool
 
-	// All local patches that are mentioned in the distinfo file.
+	// All patches that are mentioned in the distinfo file.
 	patches map[string]bool // "patch-aa" => true
 
 	currentFileName  string
 	currentFirstLine Line         // The first line of the currentFileName group
-	isPatch          YesNoUnknown // Whether currentFileName is a local patch
+	isPatch          YesNoUnknown // Whether currentFileName is a patch, as opposed to a distfile
 	algorithms       []string     // The algorithms seen for currentFileName
 }
 
@@ -162,7 +162,7 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, fileName,
 		if otherHash != nil {
 			if otherHash.hash != hash {
 				line.Errorf("The %s hash for %s is %s, which differs from %s in %s.",
-					alg, fileName, hash, otherHash.hash, otherHash.line.ReferenceFrom(line))
+					alg, fileName, hash, otherHash.hash, line.RefTo(otherHash.line))
 			}
 		} else {
 			hashes[key] = &Hash{hash, line}
@@ -172,12 +172,13 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, fileName,
 
 func (ck *distinfoLinesChecker) checkUncommittedPatch(line Line, patchName, alg, hash string) {
 	if ck.isPatch == yes {
-		patchFname := ck.patchdir + "/" + patchName
-		if ck.distinfoIsCommitted && !isCommitted(G.Pkg.File(patchFname)) {
-			line.Warnf("%s is registered in distinfo but not added to CVS.", patchFname)
+		patchFileName := ck.patchdir + "/" + patchName
+		resolvedPatchFileName := G.Pkg.File(patchFileName)
+		if ck.distinfoIsCommitted && !isCommitted(resolvedPatchFileName) {
+			line.Warnf("%s is registered in distinfo but not added to CVS.", line.PathToFile(resolvedPatchFileName))
 		}
 		if alg == "SHA1" {
-			ck.checkPatchSha1(line, patchFname, hash)
+			ck.checkPatchSha1(line, patchFileName, hash)
 		}
 		ck.patches[patchName] = true
 	}
@@ -192,7 +193,7 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFname, distinfoSh
 	if distinfoSha1Hex != fileSha1Hex {
 		fix := line.Autofix()
 		fix.Errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".",
-			"SHA1", patchFname, distinfoSha1Hex, fileSha1Hex, confMake)
+			"SHA1", line.PathToFile(G.Pkg.File(patchFname)), distinfoSha1Hex, fileSha1Hex, confMake)
 		fix.Replace(distinfoSha1Hex, fileSha1Hex)
 		fix.Apply()
 	}

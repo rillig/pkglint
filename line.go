@@ -75,11 +75,20 @@ func (line *LineImpl) Linenos() string {
 	}
 }
 
-func (line *LineImpl) ReferenceFrom(other Line) string {
+// RefTo returns a reference to another line,
+// which can be in the same file or in a different file.
+func (line *LineImpl) RefTo(other Line) string {
 	if line.FileName != other.FileName {
-		return cleanpath(relpath(path.Dir(other.FileName), line.FileName)) + ":" + line.Linenos()
+		return cleanpath(relpath(path.Dir(line.FileName), other.FileName)) + ":" + other.Linenos()
 	}
-	return "line " + line.Linenos()
+	return "line " + other.Linenos()
+}
+
+// PathToFile returns the relative path from this line to the given file path.
+// This is typically used for arguments in diagnostics, which should always be
+// relative to the line with which the diagnostic is associated.
+func (line *LineImpl) PathToFile(filePath string) string {
+	return relpath(path.Dir(line.FileName), filePath)
 }
 
 func (line *LineImpl) IsMultiline() bool {

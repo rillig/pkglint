@@ -370,12 +370,12 @@ func (mklines *MkLinesImpl) CheckRedundantVariables() {
 	}
 	scope.OnIgnore = func(old, new MkLine) {
 		if isRelevant(old, new) && old.Value() == new.Value() {
-			old.Notef("Definition of %s is redundant because of %s.", new.Varname(), new.ReferenceFrom(old.Line))
+			old.Notef("Definition of %s is redundant because of %s.", new.Varname(), old.RefTo(new))
 		}
 	}
 	scope.OnOverwrite = func(old, new MkLine) {
 		if isRelevant(old, new) {
-			old.Warnf("Variable %s is overwritten in %s.", new.Varname(), new.ReferenceFrom(old.Line))
+			old.Warnf("Variable %s is overwritten in %s.", new.Varname(), old.RefTo(new))
 			Explain(
 				"The variable definition in this line does not have an effect since",
 				"it is overwritten elsewhere.  This typically happens because of a",

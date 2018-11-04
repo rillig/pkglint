@@ -97,7 +97,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 	if change.Action == "Updated" {
 		changeVersion := replaceAll(change.Version, `nb\d+$`, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
-			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.", change.Version, change.Line.ReferenceFrom(mkline.Line), pkgversion)
+			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.", change.Version, mkline.Line.RefTo(change.Line), pkgversion)
 			Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
@@ -343,7 +343,7 @@ func (pkg *Package) checkfilePackageMakefile(fileName string, mklines MkLines) {
 	}
 
 	if perlLine, noconfLine := vars.FirstDefinition("REPLACE_PERL"), vars.FirstDefinition("NO_CONFIGURE"); perlLine != nil && noconfLine != nil {
-		perlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).", noconfLine.ReferenceFrom(perlLine.Line))
+		perlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).", perlLine.RefTo(noconfLine))
 	}
 
 	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") && pkg.once.FirstTime("LICENSE") {
@@ -360,7 +360,7 @@ func (pkg *Package) checkfilePackageMakefile(fileName string, mklines MkLines) {
 
 	if imake, x11 := vars.FirstDefinition("USE_IMAKE"), vars.FirstDefinition("USE_X11"); imake != nil && x11 != nil {
 		if !hasSuffix(x11.FileName, "/mk/x11.buildlink3.mk") {
-			imake.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", x11.ReferenceFrom(imake.Line))
+			imake.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", imake.RefTo(x11))
 		}
 	}
 
@@ -381,7 +381,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 
 		} else if !matches(useLine.Value(), `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
 			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
-				useLine.ReferenceFrom(gnuLine.Line))
+				gnuLine.RefTo(useLine))
 		}
 	}
 }
@@ -759,13 +759,13 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 			pkg.conditionalIncludes[includefile] = mkline
 			if other := pkg.unconditionalIncludes[includefile]; other != nil {
 				mkline.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
-					cleanpath(includefile), mkline.ConditionalVars(), other.ReferenceFrom(mkline.Line))
+					cleanpath(includefile), mkline.ConditionalVars(), mkline.RefTo(other))
 			}
 		} else {
 			pkg.unconditionalIncludes[includefile] = mkline
 			if other := pkg.conditionalIncludes[includefile]; other != nil {
 				mkline.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
-					cleanpath(includefile), other.ReferenceFrom(mkline.Line), other.ConditionalVars())
+					cleanpath(includefile), mkline.RefTo(other), other.ConditionalVars())
 			}
 		}
 	}

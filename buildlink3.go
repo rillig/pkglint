@@ -99,7 +99,7 @@ func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
 	if !exp.AdvanceIfMatches(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`) {
 		return false
 	}
-	pkgupperLine, pkgupper := exp.PreviousLine(), exp.Group(1)
+	pkgupperLine, pkgupper := exp.PreviousMkLine(), exp.Group(1)
 
 	if !exp.ExpectText(pkgupper + "_BUILDLINK3_MK:=") {
 		return false
@@ -110,12 +110,12 @@ func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
 	if ucPkgbase != pkgupper && !containsVarRef(pkgbase) {
 		pkgupperLine.Errorf("Package name mismatch between multiple-inclusion guard %q (expected %q) and package name %q (from %s).",
-			pkgupper, ucPkgbase, pkgbase, pkgbaseLine.ReferenceFrom(pkgupperLine))
+			pkgupper, ucPkgbase, pkgbase, pkgupperLine.RefTo(pkgbaseLine))
 	}
 	if G.Pkg != nil {
 		if mkbase := G.Pkg.EffectivePkgbase; mkbase != "" && mkbase != pkgbase {
 			pkgbaseLine.Errorf("Package name mismatch between %q in this file and %q from %s.",
-				pkgbase, mkbase, G.Pkg.EffectivePkgnameLine.ReferenceFrom(pkgbaseLine.Line))
+				pkgbase, mkbase, pkgbaseLine.RefTo(G.Pkg.EffectivePkgnameLine))
 		}
 	}
 
@@ -181,7 +181,7 @@ func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgb
 	if doCheck && ck.abi != nil && ck.api != nil && ck.abi.Pkgbase != ck.api.Pkgbase {
 		if !hasPrefix(ck.api.Pkgbase, "{") {
 			ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
-				ck.abi.Pkgbase, ck.api.Pkgbase, ck.apiLine.ReferenceFrom(ck.abiLine.Line))
+				ck.abi.Pkgbase, ck.api.Pkgbase, ck.abiLine.RefTo(ck.apiLine))
 		}
 	}
 
@@ -190,7 +190,7 @@ func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgb
 			if ck.api != nil && ck.api.Lower != "" && !containsVarRef(ck.api.Lower) {
 				if pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
 					ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
-						ck.abi.Lower, ck.api.Lower, ck.apiLine.ReferenceFrom(ck.abiLine.Line))
+						ck.abi.Lower, ck.api.Lower, ck.abiLine.RefTo(ck.apiLine))
 				}
 			}
 		}

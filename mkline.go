@@ -423,6 +423,15 @@ func (mkline *MkLineImpl) ExplainRelativeDirs() {
 		"main pkgsrc repository.")
 }
 
+// RefTo returns a reference to another line,
+// which can be in the same file or in a different file.
+//
+// If there is a type mismatch when calling this function, try to add ".line" to
+// either the method receiver or the other line.
+func (mkline *MkLineImpl) RefTo(other MkLine) string {
+	return mkline.Line.RefTo(other.Line)
+}
+
 func matchMkDirective(text string) (m bool, indent, directive, args, comment string) {
 	i, n := 0, len(text)
 	if i < n && text[i] == '.' {
@@ -981,7 +990,7 @@ func (ind *Indentation) CheckFinish(fileName string) {
 	eofLine := NewLineEOF(fileName)
 	for ind.Len() > 1 {
 		openingMkline := ind.levels[ind.Len()-1].mkline
-		eofLine.Errorf(".%s from %s must be closed.", openingMkline.Directive(), openingMkline.ReferenceFrom(eofLine))
+		eofLine.Errorf(".%s from %s must be closed.", openingMkline.Directive(), eofLine.RefTo(openingMkline.Line))
 		ind.Pop()
 	}
 }
