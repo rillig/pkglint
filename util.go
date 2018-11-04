@@ -356,6 +356,14 @@ func relpath(from, to string) string {
 	if trace.Tracing {
 		trace.Stepf("relpath from %q to %q = %q", from, to, result)
 	}
+	if hasPrefix(to, from) && len(to) > len(from)+1 && to[len(from)] == '/' {
+		alternative := path.Clean(to[len(from)+1:])
+		if alternative != result {
+			// FIXME: Remove again after a full pkgsrc test run.
+			dummyLine.Warnf("different relpath result for %q to %q: old is %q, new is %q.", from, to, result, alternative)
+		}
+		return alternative
+	}
 	return result
 }
 

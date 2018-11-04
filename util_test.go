@@ -84,6 +84,15 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 	c.Check(cleanpath("dir/"), equals, "dir")
 }
 
+// Relpath is called so often that handling the most common calls
+// without file system IO makes sense.
+func (s *Suite) Test_relpath__quick(c *check.C) {
+	c.Check(relpath("some/dir", "some/dir/../.."), equals, "../..")
+	c.Check(relpath("some/dir", "some/dir/./././../.."), equals, "../..")
+	c.Check(relpath("some/dir", "some/dir/"), equals, ".")
+	c.Check(relpath("some/dir", "some/directory"), equals, "../directory")
+}
+
 func (s *Suite) Test_relpath__failure(c *check.C) {
 	t := s.Init(c)
 
