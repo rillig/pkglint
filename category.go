@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"netbsd.org/pkglint/textproc"
-	"sort"
 )
 
 func CheckdirCategory(dir string) {
@@ -59,7 +58,6 @@ func CheckdirCategory(dir string) {
 	// collect the SUBDIRs in the Makefile and in the file system.
 
 	fSubdirs := getSubdirs(dir)
-	sort.Strings(fSubdirs)
 	var mSubdirs []subdir
 
 	seen := make(map[string]MkLine)
