@@ -48,7 +48,7 @@ func (s *Suite) Test_ChecklinesDistinfo__global_hash_mismatch(c *check.C) {
 	ChecklinesDistinfo(lines)
 
 	t.CheckOutputLines(
-		"ERROR: distinfo:3: The hash SHA512 for pkgname-1.0.tar.gz is 12341234, which differs from Some-512-bit-hash in other/distinfo:7.",
+		"ERROR: distinfo:3: The SHA512 hash for pkgname-1.0.tar.gz is 12341234, which differs from Some-512-bit-hash in other/distinfo:7.",
 		"ERROR: distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"pkgname-1.0.tar.gz\", got SHA512.",
 		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"pkgname-1.1.tar.gz\", got SHA512.")
 }
