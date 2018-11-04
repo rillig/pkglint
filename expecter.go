@@ -117,10 +117,6 @@ func (exp *Expecter) ExpectText(text string) bool {
 	return false
 }
 
-func (exp *Expecter) SkipToFooter() {
-	exp.index = exp.lines.Len() - 2
-}
-
 // MkExpecter records the state when checking a list of Makefile lines from top to bottom.
 type MkExpecter struct {
 	mklines MkLines

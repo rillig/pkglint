@@ -175,14 +175,12 @@ func CheckdirCategory(dir string) {
 
 	// the pkgsrc-wip category Makefile defines its own targets for
 	// generating indexes and READMEs. Just skip them.
-	if G.Wip {
-		exp.SkipToFooter()
-	}
-
-	exp.ExpectEmptyLine()
-	exp.ExpectText(".include \"../mk/misc/category.mk\"")
-	if !exp.EOF() {
-		exp.CurrentLine().Errorf("The file should end here.")
+	if !G.Wip {
+		exp.ExpectEmptyLine()
+		exp.ExpectText(".include \"../mk/misc/category.mk\"")
+		if !exp.EOF() {
+			exp.CurrentLine().Errorf("The file should end here.")
+		}
 	}
 
 	mklines.SaveAutofixChanges()
