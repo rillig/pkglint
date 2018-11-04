@@ -42,6 +42,9 @@ func (exp *Expecter) Group(index int) string {
 
 // Advance skips the current line and returns true.
 func (exp *Expecter) Advance() bool {
+	if exp.EOF() {
+		return false
+	}
 	exp.index++
 	exp.m = nil
 	return true
@@ -88,10 +91,17 @@ func (exp *Expecter) ExpectEmptyLine() bool {
 	}
 
 	if G.opts.WarnSpace {
-		fix := exp.PreviousLine().Autofix()
-		fix.Notef("Empty line expected after this line.")
-		fix.InsertAfter("")
-		fix.Apply()
+		if exp.Index() == 0 {
+			fix := exp.CurrentLine().Autofix()
+			fix.Notef("Empty line expected before this line.")
+			fix.InsertBefore("")
+			fix.Apply()
+		} else {
+			fix := exp.PreviousLine().Autofix()
+			fix.Notef("Empty line expected after this line.")
+			fix.InsertAfter("")
+			fix.Apply()
+		}
 	}
 	return false
 }
