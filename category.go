@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"netbsd.org/pkglint/textproc"
 	"sort"
 )
 
@@ -21,8 +23,26 @@ func CheckdirCategory(dir string) {
 	}
 	exp.ExpectEmptyLine()
 
-	if exp.AdvanceIfMatches(`^COMMENT=\t*(.*)`) {
-		MkLineChecker{mklines.mklines[exp.Index()-1]}.CheckValidCharactersInValue(`[- '(),/0-9A-Za-z]`)
+	if exp.AdvanceIf(func(mkline MkLine) bool { return mkline.IsVarassign() && mkline.Varname() == "COMMENT" }) {
+		mkline := exp.PreviousMkLine()
+
+		lex := textproc.NewLexer(mkline.Value())
+		valid := textproc.NewByteSet("--- '(),/0-9A-Za-z")
+		invalid := valid.Inverse()
+		uni := ""
+
+		for !lex.EOF() {
+			_ = lex.NextBytesSet(valid)
+			ch := lex.NextByteSet(invalid)
+			if ch != -1 {
+				uni += fmt.Sprintf(" %U", ch)
+			}
+		}
+
+		if uni != "" {
+			mkline.Warnf("%s contains invalid characters (%s).", mkline.Varname(), uni[1:])
+		}
+
 	} else {
 		exp.CurrentLine().Errorf("COMMENT= line expected.")
 	}

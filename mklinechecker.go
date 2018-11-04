@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"netbsd.org/pkglint/regex"
 	"os"
 	"path"
@@ -1080,18 +1079,6 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 			"The PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache",
 			"distcc clang\".  Therefore, comparing it using == or != leads to",
 			"wrong results in these cases.")
-	}
-}
-
-func (ck MkLineChecker) CheckValidCharactersInValue(reValid regex.Pattern) {
-	mkline := ck.MkLine
-	rest := replaceAll(mkline.Value(), reValid, "")
-	if rest != "" {
-		uni := ""
-		for _, c := range rest {
-			uni += fmt.Sprintf(" %U", c)
-		}
-		mkline.Warnf("%s contains invalid characters (%s).", mkline.Varname(), uni[1:])
 	}
 }
 
