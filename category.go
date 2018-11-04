@@ -101,7 +101,7 @@ func CheckdirCategory(dir string) {
 	}
 
 	// To prevent unnecessary warnings about subdirectories that are
-	// in one list, but not in the other, we generate the sets of
+	// in one list but not in the other, generate the sets of
 	// subdirs of each list.
 	fCheck := make(map[string]bool)
 	mCheck := make(map[string]bool)
