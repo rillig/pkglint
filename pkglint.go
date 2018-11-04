@@ -780,6 +780,8 @@ func (pkglint *Pkglint) checkExecutable(fileName string, st os.FileInfo) {
 }
 
 func ChecklinesTrailingEmptyLines(lines Lines) {
+	// XXX: Maybe move to LinesChecker if there are enough similar functions.
+
 	max := lines.Len()
 	last := max
 	for last > 1 && lines.Lines[last-1].Text == "" {

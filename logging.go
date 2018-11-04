@@ -58,6 +58,8 @@ func loggedAlready(fileName, lineno, msg string) bool {
 }
 
 func logf(level *LogLevel, fileName, lineno, format, msg string) bool {
+	// TODO: Only ever output ASCII, no matter what's in the message.
+
 	if fileName != "" {
 		fileName = cleanpath(fileName)
 	}

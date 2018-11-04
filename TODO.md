@@ -40,3 +40,6 @@ do-install:
 	${ECHO} ${prog}
 .endfor
 ```
+
+* Check all diagnostics that refer to another file.
+  The path to that file must be given relative to the diagnostic line.

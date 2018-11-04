@@ -30,7 +30,7 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 		"NOTE: distinfo:2: Empty line expected.",
 		"ERROR: distinfo:5: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.",
 		"ERROR: distinfo:7: Expected SHA1 hash for patch-aa, got SHA1, Size.",
-		"ERROR: distinfo:8: Invalid line.",
+		"ERROR: distinfo:8: Invalid line: Another invalid line",
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
