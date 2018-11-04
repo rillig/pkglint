@@ -672,7 +672,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("ECHO", lkNone, BtShellCommand, "*: use")
 	sys("ECHO_MSG", lkNone, BtShellCommand)
 	sys("ECHO_N", lkNone, BtShellCommand)
-	pkg("EGDIR", lkNone, BtPathname) // Not defined anywhere, but used in many places like this.
+	pkg("EGDIR", lkNone, BtPathname) // Not defined anywhere but used in many places like this.
 	sys("EMACS_BIN", lkNone, BtPathname)
 	sys("EMACS_ETCPREFIX", lkNone, BtPathname)
 	sys("EMACS_FLAVOR", lkNone, enum("emacs xemacs"))

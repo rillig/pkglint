@@ -686,7 +686,7 @@ func (s *Suite) Test_Varalign__outlier_6(c *check.C) {
 	vt.Run()
 }
 
-// The long line is not an outlier, but very close. One more space, and
+// The long line is not an outlier but very close. One more space, and
 // it would count.
 func (s *Suite) Test_Varalign__outlier_10(c *check.C) {
 	vt := NewVaralignTester(s, c)

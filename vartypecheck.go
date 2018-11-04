@@ -13,7 +13,8 @@ type VartypeCheck struct {
 	// The name of the variable being checked.
 	//
 	// In some cases (see WithVarnameValueMatch) it contains not the
-	// variable name, but more a "description" of a part of a variable.
+	// variable name but more a "description" of a part of a variable.
+	// See MachinePlatform for an example.
 	Varname    string
 	Op         MkOperator
 	Value      string
@@ -332,8 +333,8 @@ func (cv *VartypeCheck) Dependency() {
 		cv.Warnf("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.Pkgbase)
 		Explain(
 			"If you use a * alone, the package specification may match other",
-			"packages that have the same prefix, but a longer name.  For example,",
-			"foo-* matches foo-1.2, but also foo-client-1.2 and foo-server-1.2.")
+			"packages that have the same prefix but a longer name.  For example,",
+			"foo-* matches foo-1.2 but also foo-client-1.2 and foo-server-1.2.")
 	}
 
 	withoutCharClasses := replaceAll(wildcard, `\[[\d-]+\]`, "")

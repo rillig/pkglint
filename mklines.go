@@ -495,7 +495,7 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 	continuation := false
 	if mkline.IsMultiline() {
 		// Interpreting the continuation marker as variable value
-		// is cheating, but works well.
+		// is cheating but works well.
 		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
 		m, _, _, _, _, _, value, _, _ := MatchVarassign(text)
 		continuation = m && value == "\\"
@@ -612,7 +612,7 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 		if hasPrefix(oldSpace, "\t") {
 			// Even though it is an outlier, it uses a tab and therefore
 			// didn't seem to be too long to the original developer.
-			// Therefore, leave it as-is, but still fix any continuation lines.
+			// Therefore, leave it as-is but still fix any continuation lines.
 			newSpace = oldSpace
 		} else {
 			newSpace = " "

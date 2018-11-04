@@ -201,7 +201,7 @@ func (s *Suite) Test_ChecklinesPatch__error_code(c *check.C) {
 	lines := t.NewLines("patch-ErrorCode",
 		RcsID,
 		"",
-		"*** Error code 1", // Looks like a context diff, but isn't.
+		"*** Error code 1", // Looks like a context diff but isn't.
 		"",
 		"--- file.orig",
 		"+++ file",

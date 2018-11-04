@@ -29,8 +29,8 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 		"NOTE: ~/archivers/Makefile:1: Empty line expected after this line.", // XXX: Duplicate.
 		"WARN: ~/archivers/Makefile:3: \"aaaaa\" should come before \"pkg1\".",
 		"ERROR: ~/archivers/Makefile:4: SUBDIR+= line or empty line expected.",
-		"ERROR: ~/archivers/Makefile:2: \"pkg1\" exists in the Makefile, but not in the file system.",
-		"ERROR: ~/archivers/Makefile:3: \"aaaaa\" exists in the Makefile, but not in the file system.",
+		"ERROR: ~/archivers/Makefile:2: \"pkg1\" exists in the Makefile but not in the file system.",
+		"ERROR: ~/archivers/Makefile:3: \"aaaaa\" exists in the Makefile but not in the file system.",
 		"NOTE: ~/archivers/Makefile:3: Empty line expected after this line.",
 		"WARN: ~/archivers/Makefile:4: This line should contain the following text: .include \"../mk/misc/category.mk\"",
 		"ERROR: ~/archivers/Makefile:4: The file should end here.")
@@ -127,9 +127,9 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 		"WARN: ~/category/Makefile:7: \"duplicate\" should come before \"in-wrong-order\".",
 		"WARN: ~/category/Makefile:10: \"commented-mk-and-fs\" should come before \"mk-only\".",
 		"WARN: ~/category/Makefile:12: \"commented-without-reason\" commented out without giving a reason.",
-		"ERROR: ~/category/Makefile:6: \"fs-only\" exists in the file system, but not in the Makefile.",
-		"ERROR: ~/category/Makefile:9: \"mk-only\" exists in the Makefile, but not in the file system.",
-		"ERROR: ~/category/Makefile:11: \"commented-mk-only\" exists in the Makefile, but not in the file system.")
+		"ERROR: ~/category/Makefile:6: \"fs-only\" exists in the file system but not in the Makefile.",
+		"ERROR: ~/category/Makefile:9: \"mk-only\" exists in the Makefile but not in the file system.",
+		"ERROR: ~/category/Makefile:11: \"commented-mk-only\" exists in the Makefile but not in the file system.")
 }
 
 func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {

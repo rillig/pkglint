@@ -402,7 +402,7 @@ func (t *Tester) ExpectFatal(action func(), expectedLines ...string) {
 	defer func() {
 		r := recover()
 		if r == nil {
-			panic("Expected a pkglint fatal error, but didn't get one.")
+			panic("Expected a pkglint fatal error but didn't get one.")
 		} else if _, ok := r.(pkglintFatal); ok {
 			t.CheckOutputLines(expectedLines...)
 		} else {
@@ -425,7 +425,7 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 	defer func() {
 		r := recover()
 		if r == nil {
-			panic("Expected a pkglint fatal error, but didn't get one.")
+			panic("Expected a pkglint fatal error but didn't get one.")
 		} else if _, ok := r.(pkglintFatal); ok {
 			t.c().Check(t.Output(), check.Matches, string(expected))
 		} else {
@@ -564,7 +564,7 @@ func (t *Tester) EnableTracingToLog() {
 	trace.Tracing = true
 }
 
-// EnableSilentTracing enables tracing mode, but discards any tracing output.
+// EnableSilentTracing enables tracing mode but discards any tracing output.
 // This can be used to improve code coverage without any side-effects,
 // since tracing output is quite large.
 func (t *Tester) EnableSilentTracing() {

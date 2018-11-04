@@ -782,7 +782,7 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	checkNotVarassign := func(text string) {
 		m, _, _, _, _, _, _, _, _ := MatchVarassign(text)
 		if m {
-			c.Errorf("Text %q matches variable assignment, but shouldn't.", text)
+			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
 	}
 

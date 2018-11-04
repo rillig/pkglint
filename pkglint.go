@@ -726,7 +726,7 @@ func (pkglint *Pkglint) checkMode(fileName string, mode os.FileMode) {
 		}
 
 	case hasPrefix(basename, "CHANGES-"):
-		// This only checks the file, but doesn't register the changes globally.
+		// This only checks the file but doesn't register the changes globally.
 		_ = pkglint.Pkgsrc.loadDocChangesFromFile(fileName)
 
 	case matches(fileName, `(?:^|/)files/[^/]*$`):

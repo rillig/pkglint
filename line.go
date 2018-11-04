@@ -10,7 +10,7 @@ package main
 // do not.
 //
 // Some methods allow modification of the raw lines contained in the
-// logical line, but leave the Text field untouched. These methods are
+// logical line but leave the Text field untouched. These methods are
 // used in the --autofix mode.
 
 import (

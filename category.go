@@ -120,7 +120,7 @@ func CheckdirCategory(dir string) {
 				}
 
 				fix := line.Autofix()
-				fix.Errorf("%q exists in the file system, but not in the Makefile.", fCurrent)
+				fix.Errorf("%q exists in the file system but not in the Makefile.", fCurrent)
 				fix.InsertBefore("SUBDIR+=\t" + fCurrent)
 				fix.Apply()
 			}
@@ -129,7 +129,7 @@ func CheckdirCategory(dir string) {
 		} else if len(mRest) > 0 && (len(fRest) == 0 || mRest[0].name < fRest[0]) {
 			if !fCheck[mRest[0].name] {
 				fix := mRest[0].line.Autofix()
-				fix.Errorf("%q exists in the Makefile, but not in the file system.", mRest[0].name)
+				fix.Errorf("%q exists in the Makefile but not in the file system.", mRest[0].name)
 				fix.Delete()
 				fix.Apply()
 			}
