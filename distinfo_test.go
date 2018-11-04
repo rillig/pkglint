@@ -191,10 +191,11 @@ func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1(c *check.C) {
 	t := s.Init(c)
 
 	G.Pkg = NewPackage(t.File("category/package"))
+	distinfoLine := t.NewLine(t.File("category/package/distinfo"), 5, "")
 
 	checker := &distinfoLinesChecker{}
-	checker.checkPatchSha1(dummyLine, "patch-nonexistent", "distinfo-sha1")
+	checker.checkPatchSha1(distinfoLine, "patch-nonexistent", "distinfo-sha1")
 
 	t.CheckOutputLines(
-		"ERROR: patch-nonexistent does not exist.")
+		"ERROR: ~/category/package/distinfo:5: Patch patch-nonexistent does not exist.")
 }

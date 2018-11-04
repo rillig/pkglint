@@ -863,4 +863,6 @@ func (c *FileCache) key(fileName string) string {
 	return path.Clean(fileName)
 }
 
-func makeHelp(topic string) string { return sprintf("%s help topic=%s", confMake, topic) }
+func makeHelp(topic string) string { return bmake("help topic=" + topic) }
+
+func bmake(target string) string { return sprintf("%s %s", confMake, target) }

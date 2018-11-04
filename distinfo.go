@@ -144,7 +144,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	for _, file := range patchFiles {
 		patchName := file.Name()
 		if file.Mode().IsRegular() && !ck.patches[patchName] && hasPrefix(patchName, "patch-") {
-			ck.distinfoLines.Errorf("patch %q is not recorded. Run \"%s makepatchsum\".", ck.patchdir+"/"+patchName, confMake)
+			ck.distinfoLines.Errorf("patch %q is not recorded. Run %q.", ck.patchdir+"/"+patchName, bmake("makepatchsum"))
 		}
 	}
 }
@@ -184,16 +184,19 @@ func (ck *distinfoLinesChecker) checkUncommittedPatch(line Line, patchName, alg,
 	}
 }
 
-func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFname, distinfoSha1Hex string) {
-	fileSha1Hex, err := computePatchSha1Hex(G.Pkg.File(patchFname))
+func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFileName, distinfoSha1Hex string) {
+	fileSha1Hex, err := computePatchSha1Hex(G.Pkg.File(patchFileName))
 	if err != nil {
-		line.Errorf("%s does not exist.", patchFname)
+		line.Errorf("Patch %s does not exist.", patchFileName)
 		return
 	}
 	if distinfoSha1Hex != fileSha1Hex {
 		fix := line.Autofix()
-		fix.Errorf("%s hash of %s differs (distinfo has %s, patch file has %s). Run \"%s makepatchsum\".",
-			"SHA1", line.PathToFile(G.Pkg.File(patchFname)), distinfoSha1Hex, fileSha1Hex, confMake)
+		fix.Errorf("SHA1 hash of %s differs (distinfo has %s, patch file has %s).",
+			line.PathToFile(G.Pkg.File(patchFileName)), distinfoSha1Hex, fileSha1Hex)
+		fix.Explain(
+			"To fix the hashes, either let pkglint --autofix do the work",
+			sprintf("or run %q.", bmake("makepatchsum")))
 		fix.Replace(distinfoSha1Hex, fileSha1Hex)
 		fix.Apply()
 	}

@@ -465,7 +465,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(fileName string) []*Change {
 						"and which aren't.",
 						"",
 						"To prevent this kind of mistakes in the future, make sure that",
-						"your system time is correct and use \""+confMake+" cce\" to commit",
+						sprintf("your system time is correct and run %q to commit", bmake("cce")),
 						"the changes entry.")
 				}
 			}

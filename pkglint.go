@@ -426,7 +426,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 
 	if pkg.Pkgdir == "." && G.Opts.CheckDistinfo && G.Opts.CheckPatches {
 		if havePatches && !haveDistinfo {
-			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run \"%s makepatchsum\".", confMake)
+			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run %q.", bmake("makepatchsum"))
 		}
 	}
 }
