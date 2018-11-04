@@ -529,8 +529,6 @@ func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
 		".include \"../../lang/php/ext.mk\"")
 
 	G.CheckDirent(pkg)
-
-	t.CheckOutputLines()
 }
 
 func (s *Suite) Test_Package_CheckInclude__conditional_and_unconditional_include(c *check.C) {

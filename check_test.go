@@ -73,6 +73,9 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t.checkC = nil
 
 	G.Opts.LogVerbose = true // To detect duplicate work being done
+
+	// To improve code coverage and ensure that trace.Result works
+	// in all cases. The latter cannot be ensured at compile time.
 	t.EnableSilentTracing()
 
 	prevdir, err := os.Getwd()
@@ -93,9 +96,17 @@ func (s *Suite) TearDownTest(c *check.C) {
 	G = Pkglint{} // unusable because of missing logOut and logErr
 	textproc.Testing = false
 	if out := t.Output(); out != "" {
-		_, _ = fmt.Fprintf(os.Stderr,
-			"\nUnchecked output in %q; check with: t.CheckOutputLines(%#v)\n",
-			c.TestName(), strings.Split(out, "\n"))
+		var msg strings.Builder
+		msg.WriteString("\n")
+		_, _ = fmt.Fprintf(&msg, "Unchecked output in %s; check with:\n", c.TestName())
+		msg.WriteString("\n")
+		msg.WriteString("t.CheckOutputLines(\n")
+		lines := strings.Split(strings.TrimSpace(out), "\n")
+		for i, line := range lines {
+			_, _ = fmt.Fprintf(&msg, "\t%q%s\n", line, ifelseStr(i == len(lines)-1, ")", ","))
+		}
+		_, _ = fmt.Fprintf(&msg, "\n")
+		_, _ = os.Stderr.WriteString(msg.String())
 	}
 	t.tmpdir = ""
 	t.DisableTracing()
@@ -115,7 +126,7 @@ type Tester struct {
 	tmpdir  string
 	checkC  *check.C // Only usable during the test method itself
 	prevdir string   // The current working directory before the test started
-	relcwd  string
+	relcwd  string   // See Tester.Chdir
 }
 
 func (t *Tester) c() *check.C {
@@ -533,14 +544,24 @@ func (t *Tester) Output() string {
 	return output
 }
 
+// CheckOutputEmpty ensures that the output up to now is empty.
+//
+// See CheckOutputLines.
 func (t *Tester) CheckOutputEmpty() {
-	t.CheckOutputLines( /* none */ )
+	output := t.Output()
+	actualLines := strings.Split(output, "\n")
+	actualLines = actualLines[:len(actualLines)-1]
+	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(nil))
 }
 
 // CheckOutputLines checks that the output up to now equals the given lines.
 // After the comparison, the output buffers are cleared so that later
 // calls only check against the newly added output.
+//
+// See CheckOutputEmpty.
 func (t *Tester) CheckOutputLines(expectedLines ...string) {
+	G.Assertf(len(expectedLines) > 0, "To check empty lines, use CheckLinesEmpty instead.")
+
 	output := t.Output()
 	actualLines := strings.Split(output, "\n")
 	actualLines = actualLines[:len(actualLines)-1]

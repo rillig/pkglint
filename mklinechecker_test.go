@@ -224,7 +224,11 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 
 	testCond := func(cond string, output ...string) {
 		MkLineChecker{t.NewMkLine("fileName", 1, cond)}.checkDirectiveCond()
-		t.CheckOutputLines(output...)
+		if len(output) > 0 {
+			t.CheckOutputLines(output...)
+		} else {
+			t.CheckOutputEmpty()
+		}
 	}
 
 	testCond(".if !empty(PKGSRC_COMPILER:Mmycc)",
