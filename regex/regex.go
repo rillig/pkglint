@@ -44,6 +44,10 @@ func (r *Registry) Compile(re Pattern) *regexp.Regexp {
 	return cre
 }
 
+// Consider defining an alternative CompileX method that implements the
+// /x modifier to allow whitespace in the regular expression.
+// This makes the regular expressions more readable.
+
 func (r *Registry) Match(s string, re Pattern) []string {
 	if !r.profiling {
 		return r.Compile(re).FindStringSubmatch(s)
