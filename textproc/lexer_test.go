@@ -247,7 +247,8 @@ func (s *Suite) Test_NewByteSet(c *check.C) {
 		0x1000000000000000}) // \xFC
 }
 
-//
+// Ensures that the bit manipulations work when a range spans
+// multiple of the uint64 words.
 func (s *Suite) Test_NewByteSet__large_range(c *check.C) {
 	set := NewByteSet("\x01-\xFE")
 
@@ -256,6 +257,19 @@ func (s *Suite) Test_NewByteSet__large_range(c *check.C) {
 		0xffffffffffffffff,
 		0xffffffffffffffff,
 		0x7fffffffffffffff})
+}
+
+// Demonstrates how to specify a byte set that includes a hyphen,
+// since that is also used for byte ranges.
+// The hyphen must be written as ---, and it must be at the beginning.
+func (s *Suite) Test_NewByteSet__range_hyphen(c *check.C) {
+	set := NewByteSet("---a-z")
+
+	c.Check(set.bits, equals, [4]uint64{
+		0x0000200000000000,
+		0x07fffffe00000000,
+		0x0000000000000000,
+		0x0000000000000000})
 }
 
 func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
