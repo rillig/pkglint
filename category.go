@@ -48,9 +48,8 @@ func CheckdirCategory(dir string) {
 	exp.ExpectEmptyLine()
 
 	type subdir struct {
-		name   string
-		line   MkLine
-		active bool
+		name string
+		line MkLine
 	}
 
 	// And now to the most complicated part of the category Makefiles,
@@ -67,8 +66,7 @@ func CheckdirCategory(dir string) {
 
 		if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) && mkline.Varname() == "SUBDIR" {
 			name := mkline.Value()
-			commentedOut := mkline.IsCommentedVarassign()
-			if commentedOut && mkline.VarassignComment() == "" {
+			if mkline.IsCommentedVarassign() && mkline.VarassignComment() == "" {
 				mkline.Warnf("%q commented out without giving a reason.", name)
 			}
 
@@ -81,7 +79,7 @@ func CheckdirCategory(dir string) {
 				mkline.Warnf("%q should come before %q.", name, prevSubdir)
 			}
 
-			mSubdirs = append(mSubdirs, subdir{name, mkline, !commentedOut})
+			mSubdirs = append(mSubdirs, subdir{name, mkline})
 			prevSubdir = name
 			exp.Advance()
 
@@ -111,7 +109,7 @@ func CheckdirCategory(dir string) {
 	var subdirs []string
 
 	var line MkLine
-	mActive := false
+	commented := false
 
 	for !(mAtend && fAtend) {
 		if !mAtend && mNeednext {
@@ -123,7 +121,7 @@ func CheckdirCategory(dir string) {
 			} else {
 				mCurrent = mSubdirs[mIndex].name
 				line = mSubdirs[mIndex].line
-				mActive = mSubdirs[mIndex].active
+				commented = mSubdirs[mIndex].line.IsCommentedVarassign()
 				mIndex++
 			}
 		}
@@ -160,7 +158,7 @@ func CheckdirCategory(dir string) {
 		} else { // f_current == m_current
 			fNeednext = true
 			mNeednext = true
-			if mActive {
+			if !commented {
 				subdirs = append(subdirs, dir+"/"+mCurrent)
 			}
 		}
