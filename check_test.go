@@ -630,10 +630,12 @@ func (t *Tester) EnableTracingToLog() {
 
 // EnableSilentTracing enables tracing mode but discards any tracing output.
 // This is the default mode when running the tests.
+// The diagnostics go to the in-memory buffer.
 //
 // It is used to check all calls to trace.Result, since the compiler
 // cannot check them.
 func (t *Tester) EnableSilentTracing() {
+	G.logOut = NewSeparatorWriter(&t.stdout)
 	trace.Out = ioutil.Discard
 	trace.Tracing = true
 }
