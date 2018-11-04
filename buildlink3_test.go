@@ -320,7 +320,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__missing_endif(c *check.C) {
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:EOF: .if from line 5 must be closed.",
+		"ERROR: buildlink3.mk:EOF: .if from line 5 must be closed.",
 		"NOTE: buildlink3.mk:6: Empty line expected after this line.")
 }
 

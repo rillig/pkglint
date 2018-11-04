@@ -543,10 +543,10 @@ func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: opsys.mk:EOF: .if from line 6 must be closed.",
-		"WARN: opsys.mk:EOF: .if from line 5 must be closed.",
-		"WARN: opsys.mk:EOF: .if from line 4 must be closed.",
-		"WARN: opsys.mk:EOF: .for from line 3 must be closed.")
+		"ERROR: opsys.mk:EOF: .if from line 6 must be closed.",
+		"ERROR: opsys.mk:EOF: .if from line 5 must be closed.",
+		"ERROR: opsys.mk:EOF: .if from line 4 must be closed.",
+		"ERROR: opsys.mk:EOF: .for from line 3 must be closed.")
 }
 
 func (s *Suite) Test_MkLines_Check__incomplete_subst_at_end(c *check.C) {
