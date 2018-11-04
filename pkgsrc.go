@@ -723,20 +723,16 @@ func (src *Pkgsrc) IsBuildDef(varname string) bool {
 func (src *Pkgsrc) loadMasterSites() {
 	mklines := src.LoadMk("mk/fetch/sites.mk", MustSucceed|NotEmpty)
 
-	nameToURL := src.MasterSiteVarToURL
-	urlToName := src.MasterSiteURLToVar
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
 			varname := mkline.Varname()
 			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
 				for _, url := range fields(mkline.Value()) {
 					if matches(url, `^(?:http://|https://|ftp://)`) {
-						if nameToURL[varname] == "" {
-							nameToURL[varname] = url
-						}
-						urlToName[url] = varname
+						src.registerMasterSite(varname, url)
 					}
 				}
+
 				// TODO: register variable type, to avoid redundant
 				// definitions in vardefs.go.
 			}
@@ -744,11 +740,21 @@ func (src *Pkgsrc) loadMasterSites() {
 	}
 
 	// Explicitly allowed, although not defined in mk/fetch/sites.mk.
-	nameToURL["MASTER_SITE_LOCAL"] = "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/"
+	src.registerMasterSite("MASTER_SITE_LOCAL", "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/")
 
 	if trace.Tracing {
-		trace.Stepf("Loaded %d MASTER_SITE_* URLs.", len(urlToName))
+		trace.Stepf("Loaded %d MASTER_SITE_* URLs.", len(G.Pkgsrc.MasterSiteURLToVar))
 	}
+}
+
+func (src *Pkgsrc) registerMasterSite(varname, url string) {
+	nameToURL := src.MasterSiteVarToURL
+	urlToName := src.MasterSiteURLToVar
+
+	if nameToURL[varname] == "" {
+		nameToURL[varname] = url
+	}
+	urlToName[url] = varname
 }
 
 func (src *Pkgsrc) loadPkgOptions() {

@@ -72,8 +72,6 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t.SetupCommandLine("-Wall") // To catch duplicate warnings
 	t.checkC = nil
 
-	G.Opts.LogVerbose = true // To detect duplicate work being done
-
 	// To improve code coverage and ensure that trace.Result works
 	// in all cases. The latter cannot be ensured at compile time.
 	t.EnableSilentTracing()
@@ -130,9 +128,7 @@ type Tester struct {
 }
 
 func (t *Tester) c() *check.C {
-	if t.checkC == nil {
-		panic("Suite.Init must be called before accessing check.C.")
-	}
+	G.Assertf(t.checkC != nil, "Suite.Init must be called before accessing check.C.")
 	return t.checkC
 }
 
@@ -152,25 +148,29 @@ func (t *Tester) SetupCommandLine(args ...string) {
 		t.CheckOutputEmpty()
 		t.c().Fatalf("Cannot parse command line: %#v", args)
 	}
-	G.Opts.LogVerbose = true // See SetUpTest
+
+	// Duplicate diagnostics often mean that the checking code is run
+	// twice, which is unnecessary.
+	//
+	// It also reveals diagnostics that are logged multiple times per
+	// line and thus can easily get annoying to the pkgsrc developers.
+	G.Opts.LogVerbose = true
 }
 
 // SetupVartypes registers a few hundred variables like MASTER_SITES,
 // WRKSRC, SUBST_SED.*, so that their data types are known to pkglint.
+//
+// Without calling this, there will be many warnings about undefined
+// or unused variables, or unknown shell commands.
+//
+// See SetupTool for registering tools like echo, awk, perl.
 func (t *Tester) SetupVartypes() {
 	G.Pkgsrc.InitVartypes()
 }
 
 func (t *Tester) SetupMasterSite(varname string, urls ...string) {
-	name2url := &G.Pkgsrc.MasterSiteVarToURL
-	url2name := &G.Pkgsrc.MasterSiteURLToVar
-	if *name2url == nil {
-		*name2url = make(map[string]string)
-		*url2name = make(map[string]string)
-	}
-	(*name2url)[varname] = urls[0]
 	for _, url := range urls {
-		(*url2name)[url] = varname
+		G.Pkgsrc.registerMasterSite(varname, url)
 	}
 }
 
