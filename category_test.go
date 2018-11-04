@@ -122,8 +122,8 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 
 	CheckdirCategory(t.File("category"))
 
-	// FIXME: duplicate must be mentioned.
 	t.CheckOutputLines(
+		"ERROR: ~/category/Makefile:7: \"duplicate\" must only appear once, already seen in line 5.",
 		"WARN: ~/category/Makefile:7: \"duplicate\" should come before \"in-wrong-order\".",
 		"WARN: ~/category/Makefile:10: \"commented-mk-and-fs\" should come before \"mk-only\".",
 		"WARN: ~/category/Makefile:12: \"commented-without-reason\" commented out without giving a reason.",

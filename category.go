@@ -62,6 +62,7 @@ func CheckdirCategory(dir string) {
 	sort.Strings(fSubdirs)
 	var mSubdirs []subdir
 
+	seen := make(map[string]MkLine)
 	prevSubdir := ""
 	for !exp.EOF() {
 		mkline := exp.CurrentMkLine()
@@ -73,12 +74,13 @@ func CheckdirCategory(dir string) {
 				mkline.Warnf("%q commented out without giving a reason.", name)
 			}
 
-			if name == prevSubdir {
-				mkline.Errorf("%q must only appear once.", name)
-			} else if name < prevSubdir {
+			if prev := seen[name]; prev != nil {
+				mkline.Errorf("%q must only appear once, already seen in %s.", name, prev.ReferenceFrom(mkline.Line))
+			}
+			seen[name] = mkline
+
+			if name < prevSubdir {
 				mkline.Warnf("%q should come before %q.", name, prevSubdir)
-			} else {
-				// correctly ordered
 			}
 
 			mSubdirs = append(mSubdirs, subdir{name, mkline, !commentedOut})
