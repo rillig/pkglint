@@ -36,7 +36,7 @@ func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
 
 	c.Check(exitcode, equals, 1)
 	t.CheckOutputLines(
-		"FATAL: \".\" is not inside a pkgsrc tree.")
+		"FATAL: \".\" must be inside a pkgsrc tree.")
 }
 
 func (s *Suite) Test_Pkglint_Main__only(c *check.C) {

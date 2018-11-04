@@ -14,9 +14,9 @@ func (s *Suite) Test_Autofix_Warnf__duplicate(c *check.C) {
 
 	fix := line.Autofix()
 	fix.Warnf("Warning 1.")
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() { fix.Warnf("Warning 2.") },
-		"FATAL: Pkglint internal error: Autofix can only have a single diagnostic.")
+		"Pkglint internal error: Autofix can only have a single diagnostic.")
 }
 
 func (s *Suite) Test_Autofix__default_leaves_line_unchanged(c *check.C) {
@@ -401,9 +401,9 @@ func (s *Suite) Test_Autofix_Explain__SilentAutofixFormat(c *check.C) {
 
 	fix := line.Autofix()
 	fix.Warnf(SilentAutofixFormat)
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() { fix.Explain("Explanation for inserting a line before.") },
-		"FATAL: Pkglint internal error: Autofix: Silent fixes cannot have an explanation.")
+		"Pkglint internal error: Autofix: Silent fixes cannot have an explanation.")
 }
 
 // To combine a silent diagnostic with an explanation, two separate autofixes
@@ -712,28 +712,28 @@ func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 
 	line := t.NewLine("fileName", 123, "text")
 
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() {
 			fix := line.Autofix()
 			fix.Apply()
 		},
-		"FATAL: Pkglint internal error: Each autofix must have a log level and a diagnostic.")
+		"Pkglint internal error: Each autofix must have a log level and a diagnostic.")
 
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() {
 			fix := line.Autofix()
 			fix.Replace("from", "to")
 			fix.Apply()
 		},
-		"FATAL: Pkglint internal error: Autofix: The diagnostic must be given before the action.")
+		"Pkglint internal error: Autofix: The diagnostic must be given before the action.")
 
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() {
 			fix := line.Autofix()
 			fix.Warnf("Warning without period")
 			fix.Apply()
 		},
-		"FATAL: Pkglint internal error: Autofix: format \"Warning without period\" must end with a period.")
+		"Pkglint internal error: Autofix: format \"Warning without period\" must end with a period.")
 }
 
 // Ensures that empty lines are logged between the diagnostics,

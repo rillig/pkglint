@@ -152,7 +152,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	if pkglint.Opts.Profiling {
 		f, err := os.Create("pkglint.pprof")
 		if err != nil {
-			G.Panicf("Cannot create profiling file: %s", err)
+			dummyLine.Fatalf("Cannot create profiling file: %s", err)
 		}
 		defer f.Close()
 
@@ -184,7 +184,11 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	}
 	relTopdir := findPkgsrcTopdir(firstArg)
 	if relTopdir == "" {
-		G.Panicf("%q is not inside a pkgsrc tree.", firstArg)
+		// If the first argument to pkglint is not inside a pkgsrc tree,
+		// pkglint doesn't know where to load the infrastructure files from,
+		// and these are needed for virtually every single check.
+		// Therefore, the only sensible thing to do is to quit immediately.
+		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstArg)
 	}
 
 	pkglint.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
@@ -427,20 +431,14 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	}
 }
 
-func (pkglint *Pkglint) Panicf(format string, args ...interface{}) {
-	prefix := ifelseStr(G.Opts.GccOutput, Fatal.GccName, Fatal.TraditionalName)
-	pkglint.logErr.Write(prefix + ": " + fmt.Sprintf(format, args...) + "\n")
-	panic(pkglintFatal{})
-}
-
 // Assertf checks that the condition is true. Otherwise it terminates the
 // process with a fatal error message, prefixed with "Pkglint internal error".
 //
 // This method must only be used for programming errors.
-// For runtime errors, use Panicf.
+// For runtime errors, use dummyLine.Fatalf.
 func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
-		pkglint.Panicf("Pkglint internal error: "+format, args...)
+		panic("Pkglint internal error: " + fmt.Sprintf(format, args...))
 	}
 }
 

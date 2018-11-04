@@ -436,6 +436,17 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 	action()
 }
 
+// ExpectPanic runs the given action and expects that this action calls
+// Pkglint.Assertf or uses some other way to panic.
+//
+// Usage:
+//  t.ExpectPanic(
+//      func() { /* do something that panics */ },
+//      "FATAL: ~/Makefile:1: Must not be empty")
+func (t *Tester) ExpectPanic(action func(), expectedMessage string) {
+	t.c().Check(action, check.Panics, expectedMessage)
+}
+
 // Arguments are either (lineno, orignl) or (lineno, orignl, textnl).
 func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
 	rawlines := make([]*RawLine, len(args)/2)

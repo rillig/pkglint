@@ -86,7 +86,7 @@ func logf(level *LogLevel, fileName, lineno, format, msg string) bool {
 		text += sep + level.GccName + ":"
 		sep = " "
 	}
-	if G.Opts.Profiling && format != AutofixFormat {
+	if G.Opts.Profiling && format != AutofixFormat && level != Fatal {
 		G.loghisto.Add(format, 1)
 	}
 	text += sep + msg + "\n"

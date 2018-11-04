@@ -1234,9 +1234,7 @@ func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 		} else {
 			globs = strings.TrimSuffix(arg, ":")
 		}
-		if perms == prevperms {
-			G.Panicf("Repeated permissions %q for %q.", perms, varname)
-		}
+		G.Assertf(perms != prevperms, "Repeated permissions %q for %q.", perms, varname)
 		prevperms = perms
 
 		var permissions ACLPermissions
@@ -1255,7 +1253,7 @@ func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 			case "":
 				break
 			default:
-				G.Panicf("Invalid ACL permission %q for %q.", perm, varname)
+				G.Assertf(false, "Invalid ACL permission %q for %q.", perm, varname)
 			}
 		}
 
@@ -1267,12 +1265,11 @@ func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 				"bsd.options.mk", "pkgconfig-builtin.mk", "pyversion.mk":
 				break
 			default:
-				G.Panicf("Invalid ACL glob %q for %q.", glob, varname)
+				G.Assertf(false, "Invalid ACL glob %q for %q.", glob, varname)
 			}
 			for _, prev := range result {
-				if matched, err := path.Match(prev.glob, glob); err != nil || matched {
-					G.Panicf("Ineffective ACL glob %q for %q.", glob, varname)
-				}
+				matched, err := path.Match(prev.glob, glob)
+				G.Assertf(err == nil && !matched, "Ineffective ACL glob %q for %q.", glob, varname)
 			}
 			result = append(result, ACLEntry{glob, permissions})
 		}

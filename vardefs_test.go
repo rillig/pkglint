@@ -73,21 +73,21 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__enumFromDirs(c *check.C) {
 func (s *Suite) Test_parseACLEntries(c *check.C) {
 	t := s.Init(c)
 
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "buildlink3.mk: *; *: *") },
-		"FATAL: Invalid ACL permission \"*\" for \"VARNAME\".")
+		"Pkglint internal error: Invalid ACL permission \"*\" for \"VARNAME\".")
 
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "buildlink3.mk: use; *: use") },
-		"FATAL: Repeated permissions \"use\" for \"VARNAME\".")
+		"Pkglint internal error: Repeated permissions \"use\" for \"VARNAME\".")
 
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "*.txt: use") },
-		"FATAL: Invalid ACL glob \"*.txt\" for \"VARNAME\".")
+		"Pkglint internal error: Invalid ACL glob \"*.txt\" for \"VARNAME\".")
 
-	t.ExpectFatal(
+	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "*.mk: use; buildlink3.mk: append") },
-		"FATAL: Ineffective ACL glob \"buildlink3.mk\" for \"VARNAME\".")
+		"Pkglint internal error: Ineffective ACL glob \"buildlink3.mk\" for \"VARNAME\".")
 }
 
 func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {

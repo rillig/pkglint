@@ -99,7 +99,7 @@ func (s *Suite) Test_relpath__failure(c *check.C) {
 	if runtime.GOOS == "windows" {
 		t.ExpectFatal(
 			func() { relpath("c:/", "d:/") },
-			"FATAL: Pkglint internal error: relpath \"c:/\" \"d:/\".")
+			"FATAL: relpath \"c:/\" \"d:/\".")
 	}
 }
 
@@ -107,9 +107,9 @@ func (s *Suite) Test_abspath(c *check.C) {
 	t := s.Init(c)
 
 	if runtime.GOOS == "windows" {
-		t.ExpectFatal(
+		t.ExpectPanic(
 			func() { abspath("file\u0000name") },
-			"FATAL: Pkglint internal error: abspath \"file\\x00name\".")
+			"Pkglint internal error: abspath \"file\\x00name\".")
 	}
 }
 
