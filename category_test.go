@@ -9,7 +9,7 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 	t.CreateFileLines("archivers/Makefile",
 		"# $",
 		"SUBDIR+=pkg1",
-		"SUBDIR+=\u0020aaaaa",
+		"SUBDIR+= aaaaa",
 		"SUBDIR-=unknown #doesn\u2019t work",
 		"",
 		".include \"../mk/category.mk\"")
