@@ -107,8 +107,6 @@ func CheckdirCategory(dir string) {
 	fRest := fSubdirs[:]
 	mRest := mSubdirs[:]
 
-	var subdirs []string
-
 	for len(mRest) > 0 || len(fRest) > 0 {
 
 		if len(fRest) > 0 && (len(mRest) == 0 || fRest[0] < mRest[0].name) {
@@ -138,10 +136,6 @@ func CheckdirCategory(dir string) {
 			mRest = mRest[1:]
 
 		} else {
-			if !mRest[0].line.IsCommentedVarassign() {
-				subdirs = append(subdirs, dir+"/"+mRest[0].name)
-			}
-
 			fRest = fRest[1:]
 			mRest = mRest[1:]
 		}
@@ -160,6 +154,12 @@ func CheckdirCategory(dir string) {
 	mklines.SaveAutofixChanges()
 
 	if G.Opts.Recursive {
-		G.Todo = append(append([]string(nil), subdirs...), G.Todo...)
+		var recurseInto []string
+		for _, msub := range mSubdirs {
+			if !msub.line.IsCommentedVarassign() {
+				recurseInto = append(recurseInto, dir+"/"+msub.name)
+			}
+		}
+		G.Todo = append(recurseInto, G.Todo...)
 	}
 }
