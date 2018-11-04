@@ -114,12 +114,12 @@ type Hash struct {
 }
 
 // G is the abbreviation for "global state";
-// it is the only global variable in this Go package
-var G = NewPkglint()
-
-var trace tracePkg.Tracer
-
-var exit = os.Exit // Indirect access, to allow main() to be tested.
+// these are the only global variable in this Go package
+var (
+	G     = NewPkglint()
+	trace tracePkg.Tracer
+	exit  = os.Exit // Indirect access, to allow main() to be tested.
+)
 
 func main() {
 	G.logOut = NewSeparatorWriter(os.Stdout)
