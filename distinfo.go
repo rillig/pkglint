@@ -71,7 +71,7 @@ func (ck *distinfoLinesChecker) checkLines(lines Lines) {
 		}
 		ck.algorithms = append(ck.algorithms, alg)
 
-		ck.checkGlobalMismatch(line, fileName, alg, hash)
+		ck.checkGlobalDistfileMismatch(line, fileName, alg, hash)
 		ck.checkUncommittedPatch(line, fileName, alg, hash)
 	}
 	ck.onFilenameChange(ck.distinfoLines.EOFLine(), "")
@@ -133,24 +133,24 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	if G.Pkg == nil {
 		return
 	}
-	files, err := ioutil.ReadDir(G.Pkg.File(ck.patchdir))
+	patchFiles, err := ioutil.ReadDir(G.Pkg.File(ck.patchdir))
 	if err != nil {
 		if trace.Tracing {
-			trace.Stepf("Cannot read patchesDir %q: %s", ck.patchdir, err)
+			trace.Stepf("Cannot read patchdir %q: %s", ck.patchdir, err)
 		}
 		return
 	}
 
-	for _, file := range files {
-		patch := file.Name()
-		if file.Mode().IsRegular() && !ck.patches[patch] && hasPrefix(patch, "patch-") {
-			ck.distinfoLines.Errorf("patch %q is not recorded. Run \"%s makepatchsum\".", ck.patchdir+"/"+patch, confMake)
+	for _, file := range patchFiles {
+		patchName := file.Name()
+		if file.Mode().IsRegular() && !ck.patches[patchName] && hasPrefix(patchName, "patch-") {
+			ck.distinfoLines.Errorf("patch %q is not recorded. Run \"%s makepatchsum\".", ck.patchdir+"/"+patchName, confMake)
 		}
 	}
 }
 
 // Inter-package check for differing distfile checksums.
-func (ck *distinfoLinesChecker) checkGlobalMismatch(line Line, fileName, alg, hash string) {
+func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, fileName, alg, hash string) {
 	hashes := G.Pkgsrc.Hashes
 	if hashes != nil && !hasPrefix(fileName, "patch-") { // Intentionally checking the file name instead of ck.isPatch
 		key := alg + ":" + fileName
