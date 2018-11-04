@@ -65,7 +65,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.Pkgsrc = NewPkgsrc(t.File("."))
 
 	t.checkC = c
-	t.SetupCommandLine( /* no arguments */ )
+	t.SetupCommandLine("-Wall") // To catch duplicate warnings
 	t.checkC = nil
 
 	G.opts.LogVerbose = true // To detect duplicate work being done
@@ -83,13 +83,14 @@ func (s *Suite) TearDownTest(c *check.C) {
 	t.checkC = nil // No longer usable; see https://github.com/go-check/check/issues/22
 
 	if err := os.Chdir(t.prevdir); err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
 	}
 
 	G = Pkglint{} // unusable because of missing logOut and logErr
 	textproc.Testing = false
 	if out := t.Output(); out != "" {
-		fmt.Fprintf(os.Stderr, "Unchecked output in %q; check with: t.CheckOutputLines(%#v)",
+		_, _ = fmt.Fprintf(os.Stderr,
+			"\nUnchecked output in %q; check with: t.CheckOutputLines(%#v)\n",
 			c.TestName(), strings.Split(out, "\n"))
 	}
 	t.tmpdir = ""
@@ -122,6 +123,9 @@ func (t *Tester) c() *check.C {
 
 // SetupCommandLine simulates a command line for the remainder of the test.
 // See Pkglint.ParseCommandLine.
+//
+// If SetupCommandLine is not called explicitly in a test, the command line
+// "-Wall" is used, to provide a high code coverage in the tests.
 func (t *Tester) SetupCommandLine(args ...string) {
 
 	// Prevent tracing from being disabled; see EnableSilentTracing.

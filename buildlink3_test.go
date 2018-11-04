@@ -241,6 +241,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__multiple_inclusion_wrong(c *check.C
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
+		"WARN: buildlink3.mk:5: HS_X11_BUILDLINK3_MK is used but not defined.",
 		"WARN: buildlink3.mk:6: UNRELATED_BUILDLINK3_MK is defined but not used.",
 		"WARN: buildlink3.mk:6: This line should contain the following text: HS_X11_BUILDLINK3_MK:=")
 }
@@ -260,6 +261,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__missing_endif(c *check.C) {
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
+		"NOTE: buildlink3.mk:6: Empty line expected after this line.",
 		"WARN: buildlink3.mk:EOF: Expected \".endif\".")
 }
 
@@ -270,7 +272,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__unknown_dependency_patterns(c *chec
 	mklines := t.NewMkLines("buildlink3.mk",
 		MkRcsID,
 		"",
-		"BUILDLINK_TREE+= hs-X11",
+		"BUILDLINK_TREE+=\ths-X11",
 		"",
 		".if !defined(HS_X11_BUILDLINK3_MK)",
 		"HS_X11_BUILDLINK3_MK:=",
@@ -337,6 +339,8 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
+		"WARN: buildlink3.mk:3: LICENSE may not be used in any file; it is a write-only variable.",
+		"WARN: buildlink3.mk:3: The list variable LICENSE should not be embedded in a word.",
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).",
 		"WARN: buildlink3.mk:13: This line should contain the following text: BUILDLINK_TREE+=\t-${LICENSE}-wxWidgets")
 }

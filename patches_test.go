@@ -54,7 +54,7 @@ func (s *Suite) Test_ChecklinesPatch__without_empty_line__autofix(c *check.C) {
 	ChecklinesPatch(patchLines)
 
 	t.CheckOutputLines(
-		"AUTOFIX: patch-WithoutEmptyLines:2: Inserting a line \"\" before this line.",
+		"AUTOFIX: patch-WithoutEmptyLines:1: Inserting a line \"\" after this line.",
 		"AUTOFIX: patch-WithoutEmptyLines:3: Inserting a line \"\" before this line.",
 		"AUTOFIX: distinfo:3: Replacing \"49abd735b7e706ea9ed6671628bb54e91f7f5ffb\" "+
 			"with \"4938fc8c0b483dc2e33e741b0da883d199e78164\".")
@@ -98,7 +98,7 @@ func (s *Suite) Test_ChecklinesPatch__no_comment_and_no_empty_lines(c *check.C) 
 	// the same. Outside of the testing environment, this duplicate
 	// diagnostic is suppressed; see LogVerbose.
 	t.CheckOutputLines(
-		"NOTE: ~/patch-WithoutEmptyLines:2: Empty line expected.",
+		"NOTE: ~/patch-WithoutEmptyLines:1: Empty line expected after this line.",
 		"ERROR: ~/patch-WithoutEmptyLines:2: Each patch must be documented.",
 		"NOTE: ~/patch-WithoutEmptyLines:2: Empty line expected.")
 }
@@ -353,9 +353,13 @@ func (s *Suite) Test_ChecklinesPatch__only_context_header_but_no_content(c *chec
 		"WARN: patch-context:5: Please use unified diffs (diff -u) for patches.")
 }
 
+// TODO: Maybe this should only be checked if the patch changes
+// an absolute path to a relative one, because otherwise these
+// absolute paths may be intentional.
 func (s *Suite) Test_ChecklinesPatch__Makefile_with_absolute_pathnames(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupCommandLine( /*none*/ )
 	lines := t.NewLines("patch-unified",
 		RcsID,
 		"",
@@ -381,9 +385,6 @@ func (s *Suite) Test_ChecklinesPatch__Makefile_with_absolute_pathnames(c *check.
 
 	// With extra warnings turned on, absolute paths in the context lines
 	// are also checked, to detect absolute paths that might be overlooked.
-	// TODO: Maybe this should only be checked if the patch changes
-	// an absolute path to a relative one, because otherwise these
-	// absolute paths may be intentional.
 	G.opts.WarnExtra = true
 
 	ChecklinesPatch(lines)

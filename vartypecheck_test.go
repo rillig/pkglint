@@ -884,7 +884,9 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).ShellCommand)
+	t := s.Init(c)
+	t.SetupVartypes()
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).ShellCommand)
 
 	vt.Varname("INSTALL_CMD")
 	vt.Values(
@@ -894,7 +896,10 @@ func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommands(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).ShellCommands)
+	t := s.Init(c)
+	t.SetupVartypes()
+	t.SetupTool("echo", "ECHO", AtRunTime)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).ShellCommands)
 
 	vt.Varname("GENERATE_PLIST")
 	vt.Values(

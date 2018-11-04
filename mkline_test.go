@@ -199,13 +199,14 @@ func (s *Suite) Test_NewMkLine__infrastructure(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: infra.mk:2: USE_BUILTIN.${_pkg_:S/^-//} is defined but not used.",
 		"ERROR: infra.mk:5: \".export\" requires arguments.",
+		"NOTE: infra.mk:2: This variable value should be aligned to column 41.",
 		"ERROR: infra.mk:10: Unmatched .endif.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("fileName", 1, "PKGNAME := ${UNKNOWN}")
+	mkline := t.NewMkLine("fileName", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetupVartypes()
 
 	vuc := &VarUseContext{G.Pkgsrc.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, false}

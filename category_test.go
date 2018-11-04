@@ -20,14 +20,20 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".",
 		"WARN: ~/archivers/Makefile:4: Line contains invalid characters (U+2019).",
 		"WARN: ~/archivers/Makefile:4: SUBDIR- is defined but not used.",
+		"NOTE: ~/archivers/Makefile:2: This variable value should be aligned to column 17.",
+		"NOTE: ~/archivers/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/archivers/Makefile:4: This variable value should be aligned to column 17.",
 		"ERROR: ~/archivers/Makefile:6: \"../mk/category.mk\" does not exist.",
+		"NOTE: ~/archivers/Makefile:1: Empty line expected after this line.",
 		"ERROR: ~/archivers/Makefile:2: COMMENT= line expected.",
+		"NOTE: ~/archivers/Makefile:1: Empty line expected after this line.", // XXX: Duplicate.
 		"WARN: ~/archivers/Makefile:2: Indentation should be a single tab character.",
 		"WARN: ~/archivers/Makefile:3: Indentation should be a single tab character.",
 		"WARN: ~/archivers/Makefile:3: \"aaaaa\" should come before \"pkg1\".",
 		"ERROR: ~/archivers/Makefile:4: SUBDIR+= line or empty line expected.",
 		"ERROR: ~/archivers/Makefile:2: \"pkg1\" exists in the Makefile, but not in the file system.",
 		"ERROR: ~/archivers/Makefile:3: \"aaaaa\" exists in the Makefile, but not in the file system.",
+		"NOTE: ~/archivers/Makefile:3: Empty line expected after this line.",
 		"WARN: ~/archivers/Makefile:4: This line should contain the following text: .include \"../mk/misc/category.mk\"",
 		"ERROR: ~/archivers/Makefile:4: The file should end here.")
 }
@@ -38,6 +44,7 @@ func (s *Suite) Test_CheckdirCategory__invalid_comment(c *check.C) {
 	t.SetupVartypes()
 	t.CreateFileLines("archivers/Makefile",
 		MkRcsID,
+		"",
 		"COMMENT=\t\\Make $$$$ fast\"",
 		"",
 		"SUBDIR+=\tpackage",
@@ -51,7 +58,7 @@ func (s *Suite) Test_CheckdirCategory__invalid_comment(c *check.C) {
 	CheckdirCategory(t.File("archivers"))
 
 	t.CheckOutputLines(
-		"WARN: ~/archivers/Makefile:2: COMMENT contains invalid characters (U+005C U+0024 U+0024 U+0024 U+0024 U+0022).")
+		"WARN: ~/archivers/Makefile:3: COMMENT contains invalid characters (U+005C U+0024 U+0024 U+0024 U+0024 U+0022).")
 }
 
 func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
@@ -64,6 +71,7 @@ func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
 	t.CreateFileLines("wip/fs-only/Makefile")
 	t.CreateFileLines("wip/Makefile",
 		MkRcsID,
+		"",
 		"COMMENT=\tCategory comment",
 		"",
 		"SUBDIR+=\tmk-only",
@@ -78,8 +86,9 @@ func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
 	G.CheckDirent(t.File("wip"))
 
 	t.CheckOutputLines(
-		"WARN: ~/wip/Makefile:5: \"package\" commented out without giving a reason.",
-		"ERROR: ~/wip/Makefile:6: \"package\" must only appear once.",
-		"ERROR: ~/wip/Makefile:4: \"fs-only\" exists in the file system, but not in the Makefile.",
-		"ERROR: ~/wip/Makefile:4: \"mk-only\" exists in the Makefile, but not in the file system.")
+		"WARN: ~/wip/Makefile:10: Unknown shell command \"wip-specific-command\".",
+		"WARN: ~/wip/Makefile:6: \"package\" commented out without giving a reason.",
+		"ERROR: ~/wip/Makefile:7: \"package\" must only appear once.",
+		"ERROR: ~/wip/Makefile:5: \"fs-only\" exists in the file system, but not in the Makefile.",
+		"ERROR: ~/wip/Makefile:5: \"mk-only\" exists in the Makefile, but not in the file system.")
 }

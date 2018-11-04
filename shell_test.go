@@ -525,6 +525,7 @@ func (s *Suite) Test_ShellLine_CheckWord__dollar_without_variable(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckWord__backslash_plus(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("find", "FIND", AtRunTime)
 	shline := t.NewShellLine("fileName", 1, "\tfind . -exec rm -rf {} \\+")
 
 	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
@@ -673,6 +674,11 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
+	t.SetupTool("install", "INSTALL", AtRunTime)
+	t.SetupTool("cp", "CP", AtRunTime)
+	t.SetupTool("mv", "MV", AtRunTime)
+	t.SetupTool("sed", "SED", AtRunTime)
 	text := "\tfor f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done"
 
 	shline := t.NewShellLine("Makefile", 3, text)
@@ -684,7 +690,11 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Makefile variable or $$f if you mean a shell variable.",
-		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.")
+		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.",
+		"WARN: Makefile:3: f is used but not defined.",
+		"WARN: Makefile:3: f is used but not defined.",
+		"WARN: Makefile:3: f is used but not defined.",
+		"WARN: Makefile:3: f is used but not defined.")
 
 	shline.CheckShellCommandLine("install -c manpage.1 ${PREFIX}/man/man1/manpage.1")
 
@@ -739,6 +749,9 @@ func (s *Suite) Test_splitIntoMkWords(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__sed_and_mv(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
+	t.SetupTool("sed", "SED", AtRunTime)
+	t.SetupTool("mv", "MV", AtRunTime)
 	shline := t.NewShellLine("Makefile", 85, "\t${RUN} ${SED} 's,#,// comment:,g' fileName > fileName.tmp; ${MV} fileName.tmp fileName")
 
 	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
@@ -761,6 +774,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__subshell(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_dir(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
 	shline := t.NewShellLine("Makefile", 85, "\t${RUN} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
 
 	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
@@ -787,6 +801,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_dir(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__install_option_d(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
 	shline := t.NewShellLine("Makefile", 85, "\t${RUN} ${INSTALL} -d ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
 
 	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
@@ -862,6 +877,7 @@ func (s *Suite) Test_ShellLine__variable_outside_quotes(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommand__cd_inside_if(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("echo", "ECHO", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -877,6 +893,8 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__cd_inside_if(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommand__negated_pipe(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("echo", "ECHO", AtRunTime)
+	t.SetupTool("test", "TEST", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -892,6 +910,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__negated_pipe(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommand__subshell(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("echo", "ECHO", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -935,6 +954,8 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__case_patterns_from_variable(c 
 func (s *Suite) Test_ShellLine_checkHiddenAndSuppress(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("echo", "ECHO", AtRunTime)
+	t.SetupTool("ls", "LS", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -1004,7 +1025,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 		".include \"extra.mk\"")
 	t.CreateFileLines("category/package/extra.mk",
 		MkRcsID,
-		"PYTHON_BIN= my_cmd")
+		"PYTHON_BIN=\tmy_cmd")
 
 	G.CheckDirent(pkg)
 
@@ -1025,6 +1046,8 @@ func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
 func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
+	t.SetupTool("pax", "PAX", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -1042,6 +1065,8 @@ func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("echo", "ECHO", AtRunTime)
+	t.SetupTool("echo -n", "ECHO_N", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -1059,6 +1084,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("ls", "LS", AtRunTime)
+	t.SetupTool("printf", "PRINTF", AtRunTime)
+	t.SetupTool("tr", "TR", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"pre-configure:",
@@ -1071,12 +1099,15 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 	// FIXME: Fix the parse error.
 	t.CheckOutputLines(
 		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
-		"WARN: Pkglint parse error in ShTokenizer.ShAtom at \"$$\" (quoting=plain).")
+		"WARN: Pkglint parse error in ShTokenizer.ShAtom at \"$$\" (quoting=plain).",
+		"WARN: Makefile:4: The exitcode of \"ls\" at the left of the | operator is ignored.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupTool("pax", "PAX", AtRunTime)
+	t.SetupTool("sed", "SED", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"pre-configure:",

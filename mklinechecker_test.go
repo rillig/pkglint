@@ -456,7 +456,7 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
-		"EGDIRS=${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d")
+		"EGDIRS=\t${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d")
 
 	mklines.Check()
 
@@ -848,5 +848,6 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
+		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
 		"WARN: ~/category/package/module.mk:11: Invalid relative path \"../package/module.mk\".")
 }

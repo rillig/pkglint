@@ -425,17 +425,17 @@ func (s *Suite) Test_PlistChecker__unwanted_entries(c *check.C) {
 
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
+		"share/perllocal.pod",
 		"share/pkgbase/CVS/Entries",
-		"share/pkgbase/Makefile.orig",
-		"share/perllocal.pod")
+		"share/pkgbase/Makefile.orig")
 	G.Pkg = NewPackage(t.File("category/package"))
 
 	ChecklinesPlist(lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: CVS files should not be in the PLIST.",
-		"WARN: ~/PLIST:3: .orig files should not be in the PLIST.",
-		"WARN: ~/PLIST:4: perllocal.pod files should not be in the PLIST.")
+		"WARN: ~/PLIST:2: perllocal.pod files should not be in the PLIST.",
+		"WARN: ~/PLIST:3: CVS files should not be in the PLIST.",
+		"WARN: ~/PLIST:4: .orig files should not be in the PLIST.")
 }
 
 func (s *Suite) Test_PlistChecker_checkpathInfo(c *check.C) {
@@ -457,19 +457,19 @@ func (s *Suite) Test_PlistChecker_checkpathLib(c *check.C) {
 
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
-		"lib/package/liberty-1.0.so",
 		"lib/charset.alias",
+		"lib/liberty-1.0.la",
 		"lib/locale/de_DE/liberty.mo",
-		"lib/liberty-1.0.la")
+		"lib/package/liberty-1.0.so")
 	G.Pkg = NewPackage(t.File("category/package"))
 	G.Pkg.EffectivePkgbase = "package"
 
 	ChecklinesPlist(lines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/PLIST:3: Only the libiconv package may install lib/charset.alias.",
-		"ERROR: ~/PLIST:4: \"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.",
-		"WARN: ~/PLIST:5: Packages that install libtool libraries should define USE_LIBTOOL.")
+		"ERROR: ~/PLIST:2: Only the libiconv package may install lib/charset.alias.",
+		"WARN: ~/PLIST:3: Packages that install libtool libraries should define USE_LIBTOOL.",
+		"ERROR: ~/PLIST:4: \"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 }
 
 func (s *Suite) Test_PlistChecker_checkpathMan(c *check.C) {
@@ -477,14 +477,14 @@ func (s *Suite) Test_PlistChecker_checkpathMan(c *check.C) {
 
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
-		"man/manx/program.x",
-		"man/man1/program.8")
+		"man/man1/program.8",
+		"man/manx/program.x")
 
 	ChecklinesPlist(lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: Unknown section \"x\" for manual page.",
-		"WARN: ~/PLIST:3: Mismatch between the section (1) and extension (8) of the manual page.")
+		"WARN: ~/PLIST:2: Mismatch between the section (1) and extension (8) of the manual page.",
+		"WARN: ~/PLIST:3: Unknown section \"x\" for manual page.")
 }
 
 func (s *Suite) Test_PlistChecker_checkpathShare(c *check.C) {

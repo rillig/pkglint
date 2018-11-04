@@ -891,11 +891,11 @@ func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 	t.CreateFileLines("Makefile",
 		MkRcsID,
 		"",
-		"CATEGORIES=category",
+		"CATEGORIES=\tcategory",
 		"",
 		"COMMENT=\tComment",
 		"LICENSE=\t2-clause-bsd",
-		"PKGDIR=\t../../other/package")
+		"PKGDIR=\t\t../../other/package")
 
 	// DISTINFO_FILE is resolved relative to PKGDIR, the other places
 	// are resolved relative to the package base directory.

@@ -285,3 +285,22 @@ file   pkglint_test.go
 start  ^func .* Test_Pkglint_Main__complete_package
 end    ^\}
 ```
+
+### Typical warnings during a test
+
+When running a newly written pkglint test, it may output more warnings than 
+necessary or interesting for the current test. Here are the most frequent
+warnings and how to repair them properly:
+
+#### Unknown shell command %q
+
+* Load the standard variables using `t.SetupVartypes()`
+* Define the corresponding tool using `t.SetupTool("tool", "TOOL", AtRunTime)`
+
+#### %s is used but not defined
+
+* Load the standard variables using `t.SetupVartypes()`
+
+#### %s is defined but not used
+
+* Load the standard variables using `t.SetupVartypes()`

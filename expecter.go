@@ -88,9 +88,9 @@ func (exp *Expecter) ExpectEmptyLine() bool {
 	}
 
 	if G.opts.WarnSpace {
-		fix := exp.CurrentLine().Autofix()
-		fix.Notef("Empty line expected.")
-		fix.InsertBefore("")
+		fix := exp.PreviousLine().Autofix()
+		fix.Notef("Empty line expected after this line.")
+		fix.InsertAfter("")
 		fix.Apply()
 	}
 	return false

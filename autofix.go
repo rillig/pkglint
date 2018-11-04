@@ -90,6 +90,7 @@ func (fix *Autofix) Replace(from string, to string) {
 // ReplaceAfter replaces the text "prefix+from" with "prefix+to", a single time.
 // In the diagnostic, only the replacement of "from" with "to" is mentioned.
 func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
+	fix.assertRealLine()
 	if fix.skip() {
 		return
 	}
@@ -114,6 +115,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 // Placeholders like `$1` are _not_ expanded in the `toText`.
 // (If you know how to do the expansion correctly, feel free to implement it.)
 func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int) {
+	fix.assertRealLine()
 	if fix.skip() {
 		return
 	}
@@ -165,6 +167,10 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 // In any case, changes to the current Line will be written back to disk
 // by SaveAutofixChanges, after fixing all the lines in the file at once.
 func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
+	// Contrary to the fixes that modify the line text, this one
+	// can be run even on dummy lines (like those standing for a
+	// file at whole), for example to fix the permissions of the file.
+
 	if fix.skip() {
 		return
 	}
@@ -182,6 +188,7 @@ func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
 // InsertBefore prepends a line before the current line.
 // The newline is added internally.
 func (fix *Autofix) InsertBefore(text string) {
+	fix.assertRealLine()
 	if fix.skip() {
 		return
 	}
@@ -195,6 +202,7 @@ func (fix *Autofix) InsertBefore(text string) {
 // InsertAfter appends a line after the current line.
 // The newline is added internally.
 func (fix *Autofix) InsertAfter(text string) {
+	fix.assertRealLine()
 	if fix.skip() {
 		return
 	}
@@ -209,6 +217,7 @@ func (fix *Autofix) InsertAfter(text string) {
 // It can be combined with InsertAfter or InsertBefore to
 // replace the complete line with some different text.
 func (fix *Autofix) Delete() {
+	fix.assertRealLine()
 	if fix.skip() {
 		return
 	}
@@ -293,6 +302,7 @@ func (fix *Autofix) Apply() {
 }
 
 func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
+	fix.assertRealLine()
 	G.Assertf(mkline.IsMultiline(), "Line must be a multiline.")
 	G.Assertf(mkline.IsVarassign() || mkline.IsCommentedVarassign(), "Line must be a variable assignment.")
 
@@ -371,6 +381,10 @@ func (fix *Autofix) skip() bool {
 		"Autofix: The diagnostic must be given before the action.")
 	// This check is necessary for the --only command line option.
 	return !shallBeLogged(fix.diagFormat)
+}
+
+func (fix *Autofix) assertRealLine() {
+	G.Assertf(fix.line.firstLine >= 1, "Cannot autofix this line since it is not a real line.")
 }
 
 // SaveAutofixChanges writes the given lines back into their files,
