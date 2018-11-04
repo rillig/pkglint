@@ -500,14 +500,8 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	// A file including itself does not lead to an endless loop while parsing
 	// but may still produce unexpected warnings, such as redundant definitions.
 	t.CheckOutputLines(
-		"WARN: different relpath result for \"~/category/package\" "+
-			"to \"~/category/package/../../category/package/Makefile\": "+
-			"old is \"Makefile\", new is \"../../category/package/Makefile\".",
 		"NOTE: ~/category/package/Makefile:3: Definition of PKGNAME is redundant "+
 			"because of ../../category/package/Makefile:3.",
-		"WARN: different relpath result for \"~/category/package\" "+
-			"to \"~/category/package/../../category/package/Makefile\": "+
-			"old is \"Makefile\", new is \"../../category/package/Makefile\".",
 		"NOTE: ~/category/package/Makefile:4: Definition of DISTNAME is redundant "+
 			"because of ../../category/package/Makefile:4.")
 }
@@ -683,8 +677,6 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	G.checkdirPackage(t.File("math/R-date"))
 
 	t.CheckOutputLines(
-		"WARN: different relpath result for \"~/math/R-date\" to \"~/math/R-date/../../math/R/Makefile.extension\": "+
-			"old is \"../R/Makefile.extension\", new is \"../../math/R/Makefile.extension\".",
 		"NOTE: ~/math/R-date/Makefile:6: Definition of MASTER_SITES is redundant because of ../../math/R/Makefile.extension:4.")
 }
 

@@ -356,6 +356,10 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 
 // relpath returns the relative path from `from` to `to`.
 func relpath(from, to string) string {
+	if hasPrefix(to, from) && len(to) > len(from)+1 && to[len(from)] == '/' {
+		return path.Clean(to[len(from)+1:])
+	}
+
 	absFrom := abspath(from)
 	absTo := abspath(to)
 	rel, err := filepath.Rel(absFrom, absTo)
@@ -363,14 +367,6 @@ func relpath(from, to string) string {
 	result := filepath.ToSlash(rel)
 	if trace.Tracing {
 		trace.Stepf("relpath from %q to %q = %q", from, to, result)
-	}
-	if hasPrefix(to, from) && len(to) > len(from)+1 && to[len(from)] == '/' {
-		alternative := path.Clean(to[len(from)+1:])
-		if alternative != result {
-			// FIXME: Remove again after a full pkgsrc test run.
-			dummyLine.Warnf("different relpath result for %q to %q: old is %q, new is %q.", from, to, result, alternative)
-		}
-		return alternative
 	}
 	return result
 }
