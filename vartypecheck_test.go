@@ -172,11 +172,11 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"gnome-control-center>=2.20.1{,nb*}")
 
 	vt.Output(
-		"WARN: fileName:1: Unknown dependency pattern \"Perl\".",
+		"WARN: fileName:1: Invalid dependency pattern \"Perl\".",
 		"WARN: fileName:3: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".",
 		"WARN: fileName:5: Only [0-9]* is allowed in the numeric part of a dependency.",
 		"WARN: fileName:5: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
-		"WARN: fileName:6: Unknown dependency pattern \"py-docs\".",
+		"WARN: fileName:6: Invalid dependency pattern \"py-docs\".",
 		"WARN: fileName:10: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
 		"WARN: fileName:11: Please use \"5.*\" instead of \"5*\" as the version pattern.",
 		"WARN: fileName:12: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
@@ -214,19 +214,19 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"gmake-[0-9]*:../../devel/gmake")
 
 	vt.Output(
-		"WARN: ~/category/package/fileName.mk:1: Unknown dependency pattern with path \"Perl\".",
+		"WARN: ~/category/package/fileName.mk:1: Invalid dependency pattern with path \"Perl\".",
 		"WARN: ~/category/package/fileName.mk:2: Dependencies should have the form \"../../category/package\".",
 		"ERROR: ~/category/package/fileName.mk:3: \"../../lang/perl5\" does not exist.",
 		"ERROR: ~/category/package/fileName.mk:3: There is no package in \"lang/perl5\".",
 		"WARN: ~/category/package/fileName.mk:3: Please use USE_TOOLS+=perl:run instead of this dependency.",
-		"WARN: ~/category/package/fileName.mk:4: Unknown dependency pattern \"broken0.12.1\".",
-		"WARN: ~/category/package/fileName.mk:5: Unknown dependency pattern \"broken[0-9]*\".",
-		"WARN: ~/category/package/fileName.mk:6: Unknown dependency pattern with path \"broken[0-9]*../../x11/alacarte\".",
-		"WARN: ~/category/package/fileName.mk:7: Unknown dependency pattern \"broken>=\".",
-		"WARN: ~/category/package/fileName.mk:8: Unknown dependency pattern \"broken=0\".",
-		"WARN: ~/category/package/fileName.mk:9: Unknown dependency pattern \"broken=\".",
-		"WARN: ~/category/package/fileName.mk:10: Unknown dependency pattern \"broken-\".",
-		"WARN: ~/category/package/fileName.mk:11: Unknown dependency pattern \"broken>\".",
+		"WARN: ~/category/package/fileName.mk:4: Invalid dependency pattern \"broken0.12.1\".",
+		"WARN: ~/category/package/fileName.mk:5: Invalid dependency pattern \"broken[0-9]*\".",
+		"WARN: ~/category/package/fileName.mk:6: Invalid dependency pattern with path \"broken[0-9]*../../x11/alacarte\".",
+		"WARN: ~/category/package/fileName.mk:7: Invalid dependency pattern \"broken>=\".",
+		"WARN: ~/category/package/fileName.mk:8: Invalid dependency pattern \"broken=0\".",
+		"WARN: ~/category/package/fileName.mk:9: Invalid dependency pattern \"broken=\".",
+		"WARN: ~/category/package/fileName.mk:10: Invalid dependency pattern \"broken-\".",
+		"WARN: ~/category/package/fileName.mk:11: Invalid dependency pattern \"broken>\".",
 		"WARN: ~/category/package/fileName.mk:13: Please use USE_TOOLS+=msgfmt instead of this dependency.",
 		"WARN: ~/category/package/fileName.mk:14: Please use USE_TOOLS+=gmake instead of this dependency.")
 }

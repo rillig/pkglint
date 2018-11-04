@@ -288,7 +288,7 @@ func (cv *VartypeCheck) Dependency() {
 			"comparison operators, this is not necessary.")
 
 	} else if deppat == nil || !parser.EOF() {
-		cv.Warnf("Unknown dependency pattern %q.", value)
+		cv.Warnf("Invalid dependency pattern %q.", value)
 		Explain(
 			"Typical dependencies have the following forms:",
 			"",
@@ -377,7 +377,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		return
 	}
 
-	cv.Warnf("Unknown dependency pattern with path %q.", value)
+	cv.Warnf("Invalid dependency pattern with path %q.", value)
 	Explain(
 		"Examples for valid dependency patterns with path are:",
 		"  package-[0-9]*:../../category/package",

@@ -324,7 +324,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__missing_endif(c *check.C) {
 		"NOTE: buildlink3.mk:6: Empty line expected after this line.")
 }
 
-func (s *Suite) Test_ChecklinesBuildlink3Mk__unknown_dependency_patterns(c *check.C) {
+func (s *Suite) Test_ChecklinesBuildlink3Mk__invalid_dependency_patterns(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -347,8 +347,8 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__unknown_dependency_patterns(c *chec
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:9: Unknown dependency pattern \"hs-X11!=1.6.1\".",
-		"WARN: buildlink3.mk:10: Unknown dependency pattern \"hs-X11!=1.6.1.2nb2\".")
+		"WARN: buildlink3.mk:9: Invalid dependency pattern \"hs-X11!=1.6.1\".",
+		"WARN: buildlink3.mk:10: Invalid dependency pattern \"hs-X11!=1.6.1.2nb2\".")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
