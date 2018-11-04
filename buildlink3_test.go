@@ -5,7 +5,6 @@ import "gopkg.in/check.v1"
 func (s *Suite) Test_ChecklinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.CreateFileLines("x11/Xbae/Makefile")
 	t.CreateFileLines("mk/motif.buildlink3.mk")

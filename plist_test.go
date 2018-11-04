@@ -5,7 +5,6 @@ import "gopkg.in/check.v1"
 func (s *Suite) Test_ChecklinesPlist(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
 		"bin/i386/6c",
@@ -209,8 +208,6 @@ func (s *Suite) Test_PlistChecker_checkpath__python_egg(c *check.C) {
 func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
-
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
 		"lib/libvirt/connection-driver/libvirt_driver_storage.la",
@@ -278,7 +275,6 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
 		"${PLIST.option1}bin/true",
@@ -340,8 +336,6 @@ func (s *Suite) Test_PlistChecker__autofix_with_only(c *check.C) {
 func (s *Suite) Test_PlistChecker__exec_MKDIR(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
-
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
 		"bin/program",
@@ -354,8 +348,6 @@ func (s *Suite) Test_PlistChecker__exec_MKDIR(c *check.C) {
 
 func (s *Suite) Test_PlistChecker__empty_line(c *check.C) {
 	t := s.Init(c)
-
-	t.SetupCommandLine("-Wall")
 
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
@@ -490,7 +482,6 @@ func (s *Suite) Test_PlistChecker_checkpathMan(c *check.C) {
 func (s *Suite) Test_PlistChecker_checkpathShare(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
 		"share/doc/html/package/index.html",
@@ -515,7 +506,6 @@ func (s *Suite) Test_PlistChecker_checkpathShare(c *check.C) {
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
 		"bin/program \t")
@@ -529,7 +519,6 @@ func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	lines := t.SetupFileLines("PLIST",
 		PlistRcsID,
 		"@unexec rmdir %D/bin",

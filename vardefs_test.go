@@ -93,7 +93,6 @@ func (s *Suite) Test_parseACLEntries(c *check.C) {
 func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	pkg := t.SetupPackage("category/package",
 		"BROKEN_ON_PLATFORM=\t${LP64PLATFORMS}")
 

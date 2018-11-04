@@ -135,7 +135,6 @@ func (s *Suite) Test_splitIntoShellTokens__redirect(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("awk", "AWK", AtRunTime)
 	t.SetupTool("cp", "CP", AtRunTime)
@@ -293,8 +292,6 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__strip(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
-
 	checkShellCommandLine := func(shellCommand string) {
 		G.Mk = t.NewMkLines("fileName",
 			"\t"+shellCommand)
@@ -321,7 +318,6 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__strip(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__nofix(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("echo", "", AtRunTime)
 	G.Mk = t.NewMkLines("Makefile",
@@ -354,7 +350,6 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__show_autofix(c *check.C) {
 func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("cat", "", AtRunTime)
 	t.SetupTool("echo", "", AtRunTime)
@@ -408,7 +403,6 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("fileName",
 		"# dummy")
@@ -451,7 +445,6 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__dollar_without_variable(c 
 func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 
 	checkWord := func(shellWord string, checkQuoting bool) {
@@ -575,7 +568,6 @@ func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckWord__PKGMANDIR(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("chat/ircII/Makefile",
 		MkRcsID,
@@ -593,7 +585,6 @@ func (s *Suite) Test_ShellLine_CheckWord__PKGMANDIR(c *check.C) {
 func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	mklines := t.NewMkLines("fileName.mk",
 		MkRcsID,
 		"",
@@ -615,8 +606,6 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished(c *check.C) {
 func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
-
 	// This call is unrealistic. It doesn't happen in practice, and this
 	// direct, forcing test is only to reach the code coverage.
 	NewShellLine(dummyMkLine).unescapeBackticks(
@@ -631,7 +620,6 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) 
 func (s *Suite) Test_ShellLine_variableNeedsQuoting(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("cp", "", AtRunTime)
 	mklines := t.NewMkLines("fileName.mk",
@@ -654,7 +642,6 @@ func (s *Suite) Test_ShellLine_variableNeedsQuoting(c *check.C) {
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__echo(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	echo := t.SetupTool("echo", "ECHO", AtRunTime)
 	echo.MustUseVarForm = true
 	G.Mk = t.NewMkLines("fileName",
@@ -860,7 +847,6 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__dquotBacktDquot(c *check.C) {
 func (s *Suite) Test_ShellLine__variable_outside_quotes(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("dummy.mk",
 		MkRcsID,
@@ -1133,7 +1119,6 @@ func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupTool("echo", "", AtRunTime)
 	t.SetupTool("rm", "", AtRunTime)
 	t.SetupTool("touch", "", AtRunTime)
@@ -1153,7 +1138,6 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) 
 func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupTool("echo", "", AtRunTime)
 	t.SetupTool("touch", "", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
@@ -1171,7 +1155,6 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("echo", "", AtRunTime)
 	t.SetupTool("grep", "GREP", AtRunTime)

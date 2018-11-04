@@ -60,7 +60,6 @@ func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	mklines := t.NewMkLines("Makefile",
@@ -78,7 +77,6 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("echo", "ECHO", AtRunTime)
 	t.SetupTool("find", "FIND", AtRunTime)
@@ -103,7 +101,6 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("databases/gdbm_compat/builtin.mk",
 		MkRcsID,
@@ -122,7 +119,6 @@ func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("sed", "SED", AfterPrefsMk)
 	mklines := t.NewMkLines("lang/qore/module.mk",
@@ -147,7 +143,6 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("converters/wv2/Makefile",
 		MkRcsID,
@@ -167,7 +162,6 @@ func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
 func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("chat/xchat/Makefile",
 		MkRcsID,
@@ -204,7 +198,6 @@ func (s *Suite) Test_MkLines__PKG_SKIP_REASON_depending_on_OPSYS(c *check.C) {
 func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupTool("echo", "ECHO", AfterPrefsMk)
 	mklines := t.NewMkLines("net/uucp/Makefile",
 		MkRcsID,
@@ -227,7 +220,6 @@ func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
 func (s *Suite) Test_MkLines_Check__list_variable_as_part_of_word(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("converters/chef/Makefile",
 		MkRcsID,
@@ -243,7 +235,6 @@ func (s *Suite) Test_MkLines_Check__list_variable_as_part_of_word(c *check.C) {
 func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("games/heretic2-demo/Makefile",
 		MkRcsID,
@@ -410,7 +401,6 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("fileName",
 		MkRcsID,
@@ -426,7 +416,6 @@ func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
 func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("fileName",
 		MkRcsID,
@@ -444,7 +433,6 @@ func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
@@ -518,7 +506,6 @@ func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("opsys.mk",
 		MkRcsID,
@@ -556,7 +543,6 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("opsys.mk",
 		MkRcsID,
@@ -578,7 +564,6 @@ func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 func (s *Suite) Test_MkLines_Check__incomplete_subst_at_end(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("subst.mk",
 		MkRcsID,
@@ -641,7 +626,6 @@ func (s *Suite) Test_MkLines__wip_category_Makefile(c *check.C) {
 func (s *Suite) Test_MkLines_determineDocumentedVariables(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("rm", "RM", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
@@ -692,7 +676,6 @@ func (s *Suite) Test_MkLines_determineDocumentedVariables(c *check.C) {
 func (s *Suite) Test_MkLines__shell_command_indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
@@ -712,7 +695,6 @@ func (s *Suite) Test_MkLines__shell_command_indentation(c *check.C) {
 func (s *Suite) Test_MkLines__unknown_options(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupOption("known", "")
 	mklines := t.NewMkLines("options.mk",
@@ -977,7 +959,6 @@ func (s *Suite) Test_MkLines_Check__hacks_mk(c *check.C) {
 func (s *Suite) Test_MkLines_Check__MASTER_SITE_in_HOMEPAGE(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("devel/catch/Makefile",
@@ -999,7 +980,6 @@ func (s *Suite) Test_MkLines_Check__MASTER_SITE_in_HOMEPAGE(c *check.C) {
 func (s *Suite) Test_MkLines_Check__VERSION_as_wordpart_in_MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("geography/viking/Makefile",
 		MkRcsID,
@@ -1016,7 +996,6 @@ func (s *Suite) Test_MkLines_Check__VERSION_as_wordpart_in_MASTER_SITES(c *check
 func (s *Suite) Test_MkLines_Check__shell_command_as_word_part_in_ENV_list(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("x11/lablgtk1/Makefile",
 		MkRcsID,

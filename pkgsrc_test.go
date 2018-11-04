@@ -115,7 +115,6 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupTool("echo", "ECHO", AtRunTime)
 	pkg := t.SetupPackage("category/package",
 		"pre-configure:",

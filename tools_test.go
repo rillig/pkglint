@@ -388,7 +388,6 @@ func (s *Suite) Test_ToolTime_String(c *check.C) {
 func (s *Suite) Test_Tools__var(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"TOOLS_CREATE+=          ln",
@@ -487,7 +486,6 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 func (s *Suite) Test_Tools__cmake(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupPackage("category/package",
 		"USE_CMAKE=\tyes",
 		"",

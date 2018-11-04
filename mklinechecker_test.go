@@ -188,7 +188,6 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__skip(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVartype__append_to_non_list(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("fileName.mk",
 		MkRcsID,
@@ -324,7 +323,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignPermissions(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarassignPermissions__infrastructure(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.CreateFileLines("mk/infra.mk",
 		MkRcsID,
@@ -340,7 +338,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignPermissions__infrastructure(c *
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
@@ -361,7 +358,6 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
@@ -383,7 +379,6 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupTool("install", "", AtRunTime)
 	mklines := t.NewMkLines("install-docfiles.mk",
@@ -410,7 +405,6 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.NewMkLines("any.mk",
 		MkRcsID,
@@ -470,7 +464,6 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 func (s *Suite) Test_MkLineChecker__Varuse_Modifier_L(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("x11/xkeyboard-config/Makefile",
 		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}")
@@ -484,7 +477,6 @@ func (s *Suite) Test_MkLineChecker__Varuse_Modifier_L(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("security/openssl/Makefile",
 		MkRcsID,
@@ -501,7 +493,6 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_com
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("audio/pulseaudio/Makefile",
 		MkRcsID,
@@ -517,7 +508,6 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	G.Mk = t.NewMkLines("chat/pidgin-icb/Makefile",
 		MkRcsID,
@@ -586,7 +576,6 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	mklines := t.SetupFileMkLines("options.mk",
 		MkRcsID,
@@ -656,7 +645,6 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *che
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	pkg := t.SetupPackage("category/package",
 		"MASTER_SITES=\t${HOMEPAGE:Q}")
 	G.Pkgsrc.LoadInfrastructure()
@@ -672,7 +660,6 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C
 func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 	mklines := t.SetupFileMkLines("options.mk",
@@ -689,7 +676,6 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupVartypes()
 	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 	mklines := t.SetupFileMkLines("options.mk",
@@ -706,7 +692,6 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_infrastructure(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupPkgsrc()
 	t.SetupVartypes()
 	t.CreateFileLines("mk/deeply/nested/infra.mk",
