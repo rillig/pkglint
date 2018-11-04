@@ -61,6 +61,12 @@ func (s *Suite) Test_CheckdirCategory__invalid_comment(c *check.C) {
 		"WARN: ~/archivers/Makefile:3: COMMENT contains invalid characters (U+005C U+0024 U+0024 U+0024 U+0024 U+0022).")
 }
 
+// The pkgsrc-wip Makefile has a large section with special code below
+// the SUBDIR list. This section is skipped by pkglint since it is assumed
+// to work.
+//
+// In all other category files, pkglint checks that directly after the
+// SUBDIR section there is only an empty line and the .include line.
 func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
 	t := s.Init(c)
 
@@ -68,14 +74,11 @@ func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
 	t.SetupVartypes()
 	t.CreateFileLines("mk/misc/category.mk")
 	t.CreateFileLines("wip/package/Makefile")
-	t.CreateFileLines("wip/fs-only/Makefile")
 	t.CreateFileLines("wip/Makefile",
 		MkRcsID,
 		"",
 		"COMMENT=\tCategory comment",
 		"",
-		"SUBDIR+=\tmk-only",
-		"#SUBDIR+=\tpackage",
 		"SUBDIR+=\tpackage",
 		"",
 		"wip-specific-target: .PHONY",
@@ -86,9 +89,46 @@ func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
 	G.CheckDirent(t.File("wip"))
 
 	t.CheckOutputLines(
-		"WARN: ~/wip/Makefile:10: Unknown shell command \"wip-specific-command\".",
-		"WARN: ~/wip/Makefile:6: \"package\" commented out without giving a reason.",
-		"ERROR: ~/wip/Makefile:7: \"package\" must only appear once.",
-		"ERROR: ~/wip/Makefile:5: \"fs-only\" exists in the file system, but not in the Makefile.",
-		"ERROR: ~/wip/Makefile:5: \"mk-only\" exists in the Makefile, but not in the file system.")
+		"WARN: ~/wip/Makefile:8: Unknown shell command \"wip-specific-command\".")
+}
+
+// Ensures that the diagnostics for mismatches between the category
+// Makefile and the file system appear strictly from top to bottom.
+func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupVartypes()
+	t.CreateFileLines("mk/misc/category.mk")
+	t.CreateFileLines("category/in-wrong-order/Makefile")
+	t.CreateFileLines("category/duplicate/Makefile")
+	t.CreateFileLines("category/fs-only/Makefile")
+	t.CreateFileLines("category/mk-and-fs/Makefile")
+	t.CreateFileLines("category/commented-fs-only/Makefile")
+	t.CreateFileLines("category/commented-mk-and-fs/Makefile")
+	t.CreateFileLines("category/Makefile",
+		MkRcsID,
+		"",
+		"COMMENT=\tCategory comment",
+		"",
+		"SUBDIR+=\tduplicate",
+		"SUBDIR+=\tin-wrong-order",
+		"SUBDIR+=\tduplicate",
+		"SUBDIR+=\tmk-and-fs",
+		"SUBDIR+=\tmk-only",
+		"#SUBDIR+=\tcommented-mk-and-fs\t# Reason",
+		"#SUBDIR+=\tcommented-mk-only\t# Reason",
+		"",
+		".include \"../mk/misc/category.mk\"")
+
+	CheckdirCategory(t.File("category"))
+
+	// FIXME: duplicate must be mentioned.
+	t.CheckOutputLines(
+		"WARN: ~/category/Makefile:7: \"duplicate\" should come before \"in-wrong-order\".",
+		"WARN: ~/category/Makefile:10: \"commented-mk-and-fs\" should come before \"mk-only\".",
+		"ERROR: ~/category/Makefile:5: \"commented-fs-only\" exists in the file system, but not in the Makefile.",
+		"ERROR: ~/category/Makefile:6: \"fs-only\" exists in the file system, but not in the Makefile.",
+		"ERROR: ~/category/Makefile:9: \"mk-only\" exists in the Makefile, but not in the file system.",
+		"ERROR: ~/category/Makefile:11: \"commented-mk-only\" exists in the Makefile, but not in the file system.")
 }
