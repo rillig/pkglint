@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"netbsd.org/pkglint/textproc"
 	"sort"
+	"strings"
 )
 
 func CheckdirCategory(dir string) {
@@ -50,7 +51,7 @@ func CheckdirCategory(dir string) {
 
 	type subdir struct {
 		name   string
-		line   Line
+		line   MkLine
 		active bool
 	}
 
@@ -64,34 +65,36 @@ func CheckdirCategory(dir string) {
 
 	prevSubdir := ""
 	for !exp.EOF() {
-		line := exp.CurrentLine()
-		text := line.Text
+		mkline := exp.CurrentMkLine()
 
-		if m, commentFlag, indentation, name, comment := match4(text, `^(#?)SUBDIR\+=([\t ]*)([^\t ]+)[\t ]*(?:#[\t ]*(.*?)[\t ]*|)$`); m {
-			commentedOut := commentFlag == "#"
-			if commentedOut && comment == "" {
-				line.Warnf("%q commented out without giving a reason.", name)
+		if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) && mkline.Varname() == "SUBDIR" {
+			name := mkline.Value()
+			commentedOut := mkline.IsCommentedVarassign()
+			if commentedOut && mkline.VarassignComment() == "" {
+				mkline.Warnf("%q commented out without giving a reason.", name)
 			}
 
-			if indentation != "\t" {
-				line.Warnf("Indentation should be a single tab character.")
+			valueAlign := mkline.ValueAlign()
+			indent := valueAlign[len(strings.TrimRightFunc(valueAlign, isHspaceRune)):]
+			if indent != "\t" {
+				mkline.Warnf("Indentation should be a single tab character.")
 			}
 
 			if name == prevSubdir {
-				line.Errorf("%q must only appear once.", name)
+				mkline.Errorf("%q must only appear once.", name)
 			} else if name < prevSubdir {
-				line.Warnf("%q should come before %q.", name, prevSubdir)
+				mkline.Warnf("%q should come before %q.", name, prevSubdir)
 			} else {
 				// correctly ordered
 			}
 
-			mSubdirs = append(mSubdirs, subdir{name, line, !commentedOut})
+			mSubdirs = append(mSubdirs, subdir{name, mkline, !commentedOut})
 			prevSubdir = name
 			exp.Advance()
 
 		} else {
-			if line.Text != "" {
-				line.Errorf("SUBDIR+= line or empty line expected.")
+			if !mkline.IsEmpty() {
+				mkline.Errorf("SUBDIR+= line or empty line expected.")
 			}
 			break
 		}
@@ -114,7 +117,7 @@ func CheckdirCategory(dir string) {
 
 	var subdirs []string
 
-	var line Line
+	var line MkLine
 	mActive := false
 
 	for !(mAtend && fAtend) {
@@ -122,7 +125,7 @@ func CheckdirCategory(dir string) {
 			mNeednext = false
 			if mIndex >= len(mSubdirs) {
 				mAtend = true
-				line = exp.CurrentLine()
+				line = exp.CurrentMkLine()
 				continue
 			} else {
 				mCurrent = mSubdirs[mIndex].name

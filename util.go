@@ -74,13 +74,21 @@ func replaceAllFunc(s string, re regex.Pattern, repl func(string) string) string
 func trimHspace(str string) string {
 	start := 0
 	end := len(str)
-	for start < end && (str[start] == ' ' || str[start] == '\t') {
+	for start < end && isHspace(str[start]) {
 		start++
 	}
-	for start < end && (str[end-1] == ' ' || str[end-1] == '\t') {
+	for start < end && isHspace(str[end-1]) {
 		end--
 	}
 	return str[start:end]
+}
+
+func isHspace(ch byte) bool {
+	return ch == ' ' || ch == '\t'
+}
+
+func isHspaceRune(ch rune) bool {
+	return ch == ' ' || ch == '\t'
 }
 
 func ifelseStr(cond bool, a, b string) string {
