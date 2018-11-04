@@ -49,15 +49,15 @@ func (s *Suite) Init(c *check.C) *Tester {
 	// see https://github.com/go-check/check/issues/22.
 
 	t := s.Tester // Has been initialized by SetUpTest
-	if t.checkC != nil {
+	if t.c != nil {
 		panic("Suite.Init must only be called once.")
 	}
-	t.checkC = c
+	t.c = c
 	return t
 }
 
 func (s *Suite) SetUpTest(c *check.C) {
-	t := &Tester{checkC: c}
+	t := &Tester{c: c}
 	s.Tester = t
 
 	G = NewPkglint()
@@ -68,9 +68,9 @@ func (s *Suite) SetUpTest(c *check.C) {
 	trace.Out = &t.stdout
 	G.Pkgsrc = NewPkgsrc(t.File("."))
 
-	t.checkC = c
+	t.c = c
 	t.SetupCommandLine("-Wall") // To catch duplicate warnings
-	t.checkC = nil
+	t.c = nil
 
 	// To improve code coverage and ensure that trace.Result works
 	// in all cases. The latter cannot be ensured at compile time.
@@ -85,7 +85,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 func (s *Suite) TearDownTest(c *check.C) {
 	t := s.Tester
-	t.checkC = nil // No longer usable; see https://github.com/go-check/check/issues/22
+	t.c = nil // No longer usable; see https://github.com/go-check/check/issues/22
 
 	if err := os.Chdir(t.prevdir); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
@@ -122,14 +122,9 @@ type Tester struct {
 	stdout  bytes.Buffer
 	stderr  bytes.Buffer
 	tmpdir  string
-	checkC  *check.C // Only usable during the test method itself
+	c       *check.C // Only usable during the test method itself
 	prevdir string   // The current working directory before the test started
-	relcwd  string   // See Tester.Chdir
-}
-
-func (t *Tester) c() *check.C {
-	G.Assertf(t.checkC != nil, "Suite.Init must be called before accessing check.C.")
-	return t.checkC
+	relCwd  string   // See Tester.Chdir
 }
 
 // SetupCommandLine simulates a command line for the remainder of the test.
@@ -146,7 +141,7 @@ func (t *Tester) SetupCommandLine(args ...string) {
 	exitcode := G.ParseCommandLine(append([]string{"pkglint"}, args...))
 	if exitcode != nil && *exitcode != 0 {
 		t.CheckOutputEmpty()
-		t.c().Fatalf("Cannot parse command line: %#v", args)
+		t.c.Fatalf("Cannot parse command line: %#v", args)
 	}
 
 	// Duplicate diagnostics often mean that the checking code is run
@@ -184,7 +179,9 @@ func (t *Tester) SetupTool(name, varname string, validity Validity) *Tool {
 }
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
-// The file is then read in, without considering line continuations.
+// The file is then read in, without interpreting line continuations.
+//
+// See SetupFileMkLines for loading a Makefile fragment.
 func (t *Tester) SetupFileLines(relativeFileName string, lines ...string) Lines {
 	fileName := t.CreateFileLines(relativeFileName, lines...)
 	return Load(fileName, MustSucceed)
@@ -192,6 +189,8 @@ func (t *Tester) SetupFileLines(relativeFileName string, lines ...string) Lines 
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, handling line continuations for Makefiles.
+//
+// See SetupFileLines for loading an ordinary file.
 func (t *Tester) SetupFileMkLines(relativeFileName string, lines ...string) MkLines {
 	fileName := t.CreateFileLines(relativeFileName, lines...)
 	return LoadMk(fileName, MustSucceed)
@@ -223,47 +222,60 @@ func (t *Tester) SetupPkgsrc() {
 	t.CreateFileLines("licenses/gnu-gpl-v2",
 		"The licenses for most software ...")
 
-	// The MASTER_SITES in the package Makefile are searched here.
+	// The various MASTER_SITE_* variables for use in the
+	// MASTER_SITES are defined in this file.
+	//
 	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",
 		MkRcsID)
 
-	// The options for the PKG_OPTIONS framework must be readable.
+	// The options for the PKG_OPTIONS framework are defined here.
+	//
 	// See Pkgsrc.loadPkgOptions.
-	t.CreateFileLines("mk/defaults/options.description")
+	t.CreateFileLines("mk/defaults/options.description",
+		"example-option   Description for the example option",
+		"example-option-without-description")
 
 	// The user-defined variables are read in to check for missing
 	// BUILD_DEFS declarations in the package Makefile.
 	t.CreateFileLines("mk/defaults/mk.conf",
 		MkRcsID)
 
-	// The tool definitions are read in to check for missing
-	// USE_TOOLS declarations in the package Makefile.
-	// They spread over several files from the pkgsrc infrastructure.
+	// The tool definitions are defined in various files in mk/tools/.
+	// The relevant files are listed in bsd.tools.mk.
+	// The tools that are defined here can be used in USE_TOOLS.
 	t.CreateFileLines("mk/tools/bsd.tools.mk",
 		".include \"defaults.mk\"")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		MkRcsID)
-	t.CreateFileLines("mk/bsd.prefs.mk", // Some tools are defined here.
+
+	// Those tools that are added to USE_TOOLS in bsd.prefs.mk may be
+	// used at load time by packages.
+	t.CreateFileLines("mk/bsd.prefs.mk",
 		MkRcsID)
 }
 
 // SetupCategory makes the given category valid by creating a dummy Makefile.
+// After that, it can be mentioned in the CATEGORIES variable of a package.
 func (t *Tester) SetupCategory(name string) {
-	if _, err := os.Stat(name + "/Makefile"); os.IsNotExist(err) {
+	G.Assertf(!contains(name, "/"), "Category must not contain a slash.")
+
+	if _, err := os.Stat(t.File(name + "/Makefile")); os.IsNotExist(err) {
 		t.CreateFileLines(name+"/Makefile",
 			MkRcsID)
 	}
 }
 
 // SetupPackage sets up all files for a package (including the pkgsrc
-// infrastructure) so that it does not produce any warnings. After calling
-// this method, individual files can be overwritten as necessary.
+// infrastructure) so that it does not produce any warnings.
 //
 // The given makefileLines start in line 20. Except if they are variable
 // definitions for already existing variables, then they replace that line.
 //
 // Returns the path to the package, ready to be used with Pkglint.CheckDirent.
+//
+// After calling this method, individual files can be overwritten as necessary.
+// Then, G.Pkgsrc.LoadInfrastructure should be called to load all the files.
 func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
 	category := path.Dir(pkgpath)
 
@@ -284,19 +296,18 @@ func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
 		"SHA512 (distfile-1.0.tar.gz) = 12341234...",
 		"Size (distfile-1.0.tar.gz) = 12341234")
 
-	var mlines []string
-	mlines = append(mlines,
+	mlines := []string{
 		MkRcsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
-		"CATEGORIES=\t"+category,
+		"CATEGORIES=\t" + category,
 		"MASTER_SITES=\t# none",
 		"",
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		"HOMEPAGE=\t# none",
 		"COMMENT=\tDummy package",
 		"LICENSE=\t2-clause-bsd",
-		"")
+		""}
 	for len(mlines) < 19 {
 		mlines = append(mlines, "# empty")
 	}
@@ -324,18 +335,23 @@ line:
 	return t.File(pkgpath)
 }
 
+// CreateFileLines creates a file in the temporary directory and writes the
+// given lines to it.
+//
+// It returns the full path to the created file.
 func (t *Tester) CreateFileLines(relativeFileName string, lines ...string) (fileName string) {
-	content := ""
+	var content bytes.Buffer
 	for _, line := range lines {
-		content += line + "\n"
+		content.WriteString(line)
+		content.WriteString("\n")
 	}
 
 	fileName = t.File(relativeFileName)
 	err := os.MkdirAll(path.Dir(fileName), 0777)
-	t.c().Assert(err, check.IsNil)
+	t.c.Assert(err, check.IsNil)
 
-	err = ioutil.WriteFile(fileName, []byte(content), 0666)
-	t.c().Check(err, check.IsNil)
+	err = ioutil.WriteFile(fileName, []byte(content.Bytes()), 0666)
+	t.c.Assert(err, check.IsNil)
 
 	G.fileCache.Evict(fileName)
 
@@ -362,12 +378,12 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
 // Calls to Tester.Chdir change the base directory for the relative file name.
 func (t *Tester) File(relativeFileName string) string {
 	if t.tmpdir == "" {
-		t.tmpdir = filepath.ToSlash(t.c().MkDir())
+		t.tmpdir = filepath.ToSlash(t.c.MkDir())
 	}
-	if t.relcwd != "" {
-		return cleanpath(relativeFileName)
+	if t.relCwd != "" {
+		return path.Clean(relativeFileName)
 	}
-	return cleanpath(t.tmpdir + "/" + relativeFileName)
+	return path.Clean(t.tmpdir + "/" + relativeFileName)
 }
 
 // Chdir changes the current working directory to the given subdirectory
@@ -382,28 +398,35 @@ func (t *Tester) File(relativeFileName string) string {
 //
 // As long as this method is not called in a test, the current working
 // directory is indeterminate.
-func (t *Tester) Chdir(relativeFileName string) {
-	if t.relcwd != "" {
+func (t *Tester) Chdir(relativeDirName string) {
+	if t.relCwd != "" {
 		// When multiple calls of Chdir are mixed with calls to CreateFileLines,
 		// the resulting Lines and MkLines variables will use relative file names,
 		// and these will point to different areas in the file system. This is
 		// usually not indented and therefore prevented.
-		t.checkC.Fatalf("Chdir must only be called once per test; already in %q.", t.relcwd)
+		t.c.Fatalf("Chdir must only be called once per test; already in %q.", t.relCwd)
 	}
 
-	_ = os.MkdirAll(t.File(relativeFileName), 0700)
-	if err := os.Chdir(t.File(relativeFileName)); err != nil {
-		t.checkC.Fatalf("Cannot chdir: %s", err)
+	_ = os.MkdirAll(t.File(relativeDirName), 0700)
+	if err := os.Chdir(t.File(relativeDirName)); err != nil {
+		t.c.Fatalf("Cannot chdir: %s", err)
 	}
-	t.relcwd = relativeFileName
+	t.relCwd = relativeDirName
 }
 
 // Remove removes the file from the temporary directory. The file must exist.
 func (t *Tester) Remove(relativeFileName string) {
 	fileName := t.File(relativeFileName)
 	err := os.Remove(fileName)
-	t.c().Check(err, check.IsNil)
+	t.c.Assert(err, check.IsNil)
 	G.fileCache.Evict(fileName)
+}
+
+// Check delegates a check to the check.Check function.
+// Thereby, there is no need to distinguish between c.Check and t.Check
+// in the test code.
+func (t *Tester) Check(obj interface{}, checker check.Checker, args ...interface{}) bool {
+	return t.c.Check(obj, checker, args...)
 }
 
 // ExpectFatal runs the given action and expects that this action calls
@@ -430,7 +453,7 @@ func (t *Tester) ExpectFatal(action func(), expectedLines ...string) {
 
 // ExpectFatalMatches runs the given action and expects that this action
 // calls Line.Fatalf or uses some other way to panic with a pkglintFatal.
-// It then matches the output against a regular expression.
+// It then matches the output against the given regular expression.
 //
 // Usage:
 //  t.ExpectFatalMatches(
@@ -442,7 +465,7 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 		if r == nil {
 			panic("Expected a pkglint fatal error but didn't get one.")
 		} else if _, ok := r.(pkglintFatal); ok {
-			t.c().Check(t.Output(), check.Matches, string(expected))
+			t.Check(t.Output(), check.Matches, string(expected))
 		} else {
 			panic(r)
 		}
@@ -459,7 +482,7 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 //      func() { /* do something that panics */ },
 //      "FATAL: ~/Makefile:1: Must not be empty")
 func (t *Tester) ExpectPanic(action func(), expectedMessage string) {
-	t.c().Check(action, check.Panics, expectedMessage)
+	t.Check(action, check.Panics, expectedMessage)
 }
 
 // Arguments are either (lineno, orignl) or (lineno, orignl, textnl).
@@ -551,7 +574,7 @@ func (t *Tester) CheckOutputEmpty() {
 	output := t.Output()
 	actualLines := strings.Split(output, "\n")
 	actualLines = actualLines[:len(actualLines)-1]
-	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(nil))
+	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(nil))
 }
 
 // CheckOutputLines checks that the output up to now equals the given lines.
@@ -565,7 +588,7 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 	output := t.Output()
 	actualLines := strings.Split(output, "\n")
 	actualLines = actualLines[:len(actualLines)-1]
-	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
+	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
 }
 
 // EnableTracing redirects all logging output (which is normally captured
@@ -609,11 +632,11 @@ func (t *Tester) DisableTracing() {
 // they equal the given lines.
 func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 	content, err := ioutil.ReadFile(t.File(relativeFileName))
-	t.c().Assert(err, check.IsNil)
+	t.c.Assert(err, check.IsNil)
 	text := string(content)
 	actualLines := strings.Split(text, "\n")
 	actualLines = actualLines[:len(actualLines)-1]
-	t.c().Check(emptyToNil(actualLines), deepEquals, emptyToNil(lines))
+	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(lines))
 }
 
 // CheckFileLinesDetab loads the lines from the temporary file and checks
@@ -629,5 +652,5 @@ func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 		detabbed = append(detabbed, rawText)
 	}
 
-	t.c().Check(detabbed, deepEquals, lines)
+	t.Check(detabbed, deepEquals, lines)
 }
