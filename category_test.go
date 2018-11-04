@@ -90,8 +90,6 @@ func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
 		"WARN: ~/wip/Makefile:8: Unknown shell command \"wip-specific-command\".")
 }
 
-// Ensures that the diagnostics for mismatches between the category
-// Makefile and the file system appear strictly from top to bottom.
 func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 	t := s.Init(c)
 
@@ -130,6 +128,39 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 		"ERROR: ~/category/Makefile:6: \"fs-only\" exists in the file system but not in the Makefile.",
 		"ERROR: ~/category/Makefile:9: \"mk-only\" exists in the Makefile but not in the file system.",
 		"ERROR: ~/category/Makefile:11: \"commented-mk-only\" exists in the Makefile but not in the file system.")
+}
+
+// Ensures that a directory in the file system can be added at the very
+// end of the SUBDIR list. This case takes a different code path than
+// an addition in the middle.
+//
+// The warning appears in the empty line below the SUBDIR lines
+// since the new SUBDIR would be inserted before that empty line.
+// It would have also been possible to insert the new SUBDIR after
+// the last SUBDIR line, but that would have been three more lines of code.
+func (s *Suite) Test_CheckdirCategory__subdirs_file_system_at_the_bottom(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--show-autofix")
+	t.SetupPkgsrc()
+	t.SetupVartypes()
+	t.CreateFileLines("mk/misc/category.mk")
+	t.CreateFileLines("category/mk-and-fs/Makefile")
+	t.CreateFileLines("category/zzz-fs-only/Makefile")
+	t.CreateFileLines("category/Makefile",
+		MkRcsID,
+		"",
+		"COMMENT=\tCategory comment",
+		"",
+		"SUBDIR+=\tmk-and-fs",
+		"",
+		".include \"../mk/misc/category.mk\"")
+
+	CheckdirCategory(t.File("category"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/Makefile:6: \"zzz-fs-only\" exists in the file system but not in the Makefile.",
+		"AUTOFIX: ~/category/Makefile:6: Inserting a line \"SUBDIR+=\\tzzz-fs-only\" before this line.")
 }
 
 func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {

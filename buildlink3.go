@@ -201,12 +201,6 @@ func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgb
 			mkline.Warnf("Only buildlink variables for %q, not %q may be set in this file.", pkgbase, varparam)
 		}
 	}
-
-	if varname == "pkgbase" {
-		exp.AdvanceIf(func(mkline MkLine) bool {
-			return mkline.IsInclude() && mkline.IncludeFile() == "../../mk/pkg-build-options.mk"
-		})
-	}
 }
 
 func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine MkLine) {
