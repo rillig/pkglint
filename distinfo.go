@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"crypto/sha1"
-	"fmt"
 	"io/ioutil"
 	"path"
 	"strings"
@@ -209,14 +208,14 @@ func computePatchSha1Hex(patchFilename string) (string, error) {
 		return "", err
 	}
 
-	hash := sha1.New()
-	netbsd := []byte("$" + "NetBSD")
+	hasher := sha1.New()
+	skipText := []byte("$" + "NetBSD")
 	for _, patchLine := range bytes.SplitAfter(patchBytes, []byte("\n")) {
-		if !bytes.Contains(patchLine, netbsd) {
-			hash.Write(patchLine)
+		if !bytes.Contains(patchLine, skipText) {
+			hasher.Write(patchLine)
 		}
 	}
-	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+	return sprintf("%x", hasher.Sum(nil)), nil
 }
 
 func AutofixDistinfo(oldSha1, newSha1 string) {

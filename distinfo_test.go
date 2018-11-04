@@ -34,23 +34,54 @@ func (s *Suite) Test_ChecklinesDistinfo(c *check.C) {
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
-func (s *Suite) Test_ChecklinesDistinfo__global_hash_mismatch(c *check.C) {
+// When checking the complete pkgsrc tree, pkglint has all information it needs
+// to check whether different packages use the same distfile but require
+// different hashes for it.
+//
+// In such a case, typically one of the packages should put its distfiles into
+// a DIST_SUBDIR.
+func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C) {
 	t := s.Init(c)
 
-	otherLine := t.NewLine("other/distinfo", 7, "dummy")
-	G.Pkgsrc.Hashes = map[string]*Hash{"SHA512:pkgname-1.0.tar.gz": {"Some-512-bit-hash", otherLine}}
-	lines := t.NewLines("distinfo",
+	t.SetupPkgsrc()
+	t.SetupPackage("category/package1")
+	t.SetupPackage("category/package2")
+	t.CreateFileLines("category/package1/distinfo",
 		RcsID,
 		"",
-		"SHA512 (pkgname-1.0.tar.gz) = 12341234",
-		"SHA512 (pkgname-1.1.tar.gz) = 12341234")
+		"SHA512 (distfile-1.0.tar.gz) = 1234567811111111",
+		"SHA512 (distfile-1.1.tar.gz) = 1111111111111111")
+	t.CreateFileLines("category/package2/distinfo",
+		RcsID,
+		"",
+		"SHA512 (distfile-1.0.tar.gz) = 1234567822222222",
+		"SHA512 (distfile-1.1.tar.gz) = 1111111111111111")
+	t.CreateFileLines("Makefile",
+		MkRcsID,
+		"",
+		"COMMENT=\tThis is pkgsrc",
+		"",
+		"SUBDIR+=\tcategory")
+	t.CreateFileLines("category/Makefile",
+		MkRcsID,
+		"",
+		"COMMENT=\tUseful programs",
+		"",
+		"SUBDIR+=\tpackage1",
+		"SUBDIR+=\tpackage2",
+		"",
+		".include \"../mk/misc/category.mk\"")
 
-	ChecklinesDistinfo(lines)
+	G.Main("pkglint", "-r", "-Wall", "-Call", t.File("."))
 
 	t.CheckOutputLines(
-		"ERROR: distinfo:3: The SHA512 hash for pkgname-1.0.tar.gz is 12341234, which differs from Some-512-bit-hash in other/distinfo:7.",
-		"ERROR: distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"pkgname-1.0.tar.gz\", got SHA512.",
-		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"pkgname-1.1.tar.gz\", got SHA512.")
+		"ERROR: ~/category/package1/distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
+		"ERROR: ~/category/package1/distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
+		"ERROR: ~/category/package2/distinfo:3: The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, which differs from 1234567811111111 in ../package1/distinfo:3.",
+		"ERROR: ~/category/package2/distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
+		"ERROR: ~/category/package2/distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
+		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
+		"5 errors and 1 warning found.")
 }
 
 func (s *Suite) Test_ChecklinesDistinfo__uncommitted_patch(c *check.C) {
