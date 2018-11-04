@@ -130,15 +130,14 @@ func CheckdirCategory(dir string) {
 
 		} else if len(mRest) > 0 && (len(fRest) == 0 || mRest[0].name < fRest[0]) {
 			if !fCheck[mRest[0].name] {
-				line := mRest[0].line.Line
-				fix := line.Autofix()
+				fix := mRest[0].line.Autofix()
 				fix.Errorf("%q exists in the Makefile, but not in the file system.", mRest[0].name)
 				fix.Delete()
 				fix.Apply()
 			}
 			mRest = mRest[1:]
 
-		} else { // f_current == m_current
+		} else {
 			if !mRest[0].line.IsCommentedVarassign() {
 				subdirs = append(subdirs, dir+"/"+mRest[0].name)
 			}
