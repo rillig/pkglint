@@ -89,7 +89,7 @@ pkgsrc() {
     && printf 'pkgsrc HEAD commit: %s\n' "$(git show-ref -s HEAD)" \
     && printf 'pkgsrc-wip HEAD commit: %s\n' "$(git -C wip show-ref -s HEAD)" \
     && printf '\n' \
-    && { "$archivedir/$runid.exe" -s -pr -Wall -Call . wip || true; } \
+    && { GODEBUG=gctrace=1 "$archivedir/$runid.exe" -s -pr -Wall -Call . wip 2> "$archivedir/$runid.err" || true; } \
     && cp "pkglint.pprof" "$archivedir/$runid.pprof"
     ) > "$archivedir/$runid.tmp" || true
   mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
