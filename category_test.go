@@ -104,8 +104,8 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 	t.CreateFileLines("category/duplicate/Makefile")
 	t.CreateFileLines("category/fs-only/Makefile")
 	t.CreateFileLines("category/mk-and-fs/Makefile")
-	t.CreateFileLines("category/commented-fs-only/Makefile")
 	t.CreateFileLines("category/commented-mk-and-fs/Makefile")
+	t.CreateFileLines("category/commented-without-reason/Makefile")
 	t.CreateFileLines("category/Makefile",
 		MkRcsID,
 		"",
@@ -118,6 +118,7 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 		"SUBDIR+=\tmk-only",
 		"#SUBDIR+=\tcommented-mk-and-fs\t# Reason",
 		"#SUBDIR+=\tcommented-mk-only\t# Reason",
+		"#SUBDIR+=\tcommented-without-reason",
 		"",
 		".include \"../mk/misc/category.mk\"")
 
@@ -127,7 +128,7 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile:7: \"duplicate\" should come before \"in-wrong-order\".",
 		"WARN: ~/category/Makefile:10: \"commented-mk-and-fs\" should come before \"mk-only\".",
-		"ERROR: ~/category/Makefile:5: \"commented-fs-only\" exists in the file system, but not in the Makefile.",
+		"WARN: ~/category/Makefile:12: \"commented-without-reason\" commented out without giving a reason.",
 		"ERROR: ~/category/Makefile:6: \"fs-only\" exists in the file system, but not in the Makefile.",
 		"ERROR: ~/category/Makefile:9: \"mk-only\" exists in the Makefile, but not in the file system.",
 		"ERROR: ~/category/Makefile:11: \"commented-mk-only\" exists in the Makefile, but not in the file system.")
