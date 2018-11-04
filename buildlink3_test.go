@@ -441,8 +441,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
 
 	ChecklinesBuildlink3Mk(mklines)
 
-	t.CheckOutputLines(
-		"WARN: ~/category/package/buildlink3.mk:14: The file should end here.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkMainPart__comment_at_end_of_file(c *check.C) {
