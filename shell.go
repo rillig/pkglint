@@ -14,6 +14,8 @@ const (
 	reShDollar       = `\\\$\$|` + reShVaruse + `|\$\$[,\-/]`
 )
 
+// TODO: Can ShellLine and ShellProgramChecker be merged into one type?
+
 type ShellLine struct {
 	mkline MkLine
 }
@@ -1004,6 +1006,8 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 
 // Example: "word1 word2;;;" => "word1", "word2;;;"
 // Compare devel/bmake/files/str.c, function brk_string.
+//
+// TODO: Move to mkline.go or mkparser.go.
 func splitIntoMkWords(line Line, text string) (words []string, rest string) {
 	if trace.Tracing {
 		defer trace.Call(line, text)()

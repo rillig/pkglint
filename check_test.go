@@ -66,6 +66,9 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	G.logErr = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
+
+	// XXX: Maybe the tests can run a bit faster when they don't
+	// create a temporary directory each.
 	G.Pkgsrc = NewPkgsrc(t.File("."))
 
 	t.c = c
@@ -485,7 +488,12 @@ func (t *Tester) ExpectPanic(action func(), expectedMessage string) {
 	t.Check(action, check.Panics, expectedMessage)
 }
 
-// Arguments are either (lineno, orignl) or (lineno, orignl, textnl).
+// NewRawLines creates lines from line numbers and raw text, including newlines.
+//
+// Arguments are sequences of either (lineno, orignl) or (lineno, orignl, textnl).
+//
+// Specifying textnl is only useful when simulating a line that has already been
+// modified by Autofix.
 func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
 	rawlines := make([]*RawLine, len(args)/2)
 	j := 0
@@ -505,12 +513,15 @@ func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
 	return rawlines[:j]
 }
 
+// NewLine creates an in-memory line with the given text.
+// This line does not correspond to any line in a file.
 func (t *Tester) NewLine(fileName string, lineno int, text string) Line {
 	textnl := text + "\n"
 	rawLine := RawLine{lineno, textnl, textnl}
 	return NewLine(fileName, lineno, text, []*RawLine{&rawLine})
 }
 
+// NewMkLine creates an in-memory line in the Makefile format with the given text.
 func (t *Tester) NewMkLine(fileName string, lineno int, text string) MkLine {
 	return NewMkLine(t.NewLine(fileName, lineno, text))
 }
@@ -519,40 +530,41 @@ func (t *Tester) NewShellLine(fileName string, lineno int, text string) *ShellLi
 	return NewShellLine(t.NewMkLine(fileName, lineno, text))
 }
 
-// NewLines generates a slice of simple lines,
-// i.e. each logical line has exactly one physical line.
-// To work with line continuations like in Makefiles,
-// use CreateFileLines together with LoadExistingLines.
+// NewLines returns a list of simple lines that belong together.
+//
+// To work with line continuations like in Makefiles, use SetupFileMkLines.
 func (t *Tester) NewLines(fileName string, lines ...string) Lines {
 	return t.NewLinesAt(fileName, 1, lines...)
 }
 
-// NewLinesAt generates a slice of simple lines,
-// i.e. each logical line has exactly one physical line.
-// To work with line continuations like in Makefiles,
-// use Suite.CreateFileLines together with Suite.LoadExistingLines.
+// NewLinesAt returns a list of simple lines that belong together.
+//
+// To work with line continuations like in Makefiles, use SetupFileMkLines.
 func (t *Tester) NewLinesAt(fileName string, firstLine int, texts ...string) Lines {
-	result := make([]Line, len(texts))
+	lines := make([]Line, len(texts))
 	for i, text := range texts {
-		textnl := text + "\n"
-		result[i] = NewLine(fileName, i+firstLine, text, t.NewRawLines(i+firstLine, textnl))
+		lines[i] = t.NewLine(fileName, i+firstLine, text)
 	}
-	return NewLines(fileName, result)
+	return NewLines(fileName, lines)
 }
 
-// NewMkLines creates new in-memory objects for the given lines,
-// as if they were parsed from a Makefile fragment.
-// No actual file is created for the lines; see SetupFileMkLines for that.
+// NewMkLines returns a list of lines in Makefile format,
+// as if they were parsed from a Makefile fragment,
+// taking continuation lines into account.
+//
+// No actual file is created for the lines;
+// see SetupFileMkLines for loading Makefile fragments with line continuations.
 func (t *Tester) NewMkLines(fileName string, lines ...string) MkLines {
-	rawText := ""
+	var rawText strings.Builder
 	for _, line := range lines {
-		rawText += line + "\n"
+		rawText.WriteString(line)
+		rawText.WriteString("\n")
 	}
-	return NewMkLines(convertToLogicalLines(fileName, rawText, true))
+	return NewMkLines(convertToLogicalLines(fileName, rawText.String(), true))
 }
 
 // Returns and consumes the output from both stdout and stderr.
-// The temporary directory is replaced with a tilde (~).
+// In the output, the temporary directory is replaced with a tilde (~).
 func (t *Tester) Output() string {
 	stdout := t.stdout.String()
 	stderr := t.stderr.String()
@@ -563,6 +575,8 @@ func (t *Tester) Output() string {
 	output := stdout + stderr
 	if t.tmpdir != "" {
 		output = strings.Replace(output, t.tmpdir, "~", -1)
+	} else {
+		panic("asdfgsfas")
 	}
 	return output
 }
@@ -591,8 +605,11 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
 }
 
-// EnableTracing redirects all logging output (which is normally captured
-// in an in-memory buffer) additionally to stdout.
+// EnableTracing logs the tracing output to os.Stdout instead of silently discarding it.
+// The normal diagnostics are written to the in-memory buffer as usual,
+// and additionally they are written to os.Stdout,
+// where they are shown together with the trace log.
+//
 // This is useful when stepping through the code, especially
 // in combination with SetupCommandLine("--debug").
 //
@@ -607,21 +624,23 @@ func (t *Tester) EnableTracing() {
 // EnableTracingToLog enables the tracing and writes the tracing output
 // to the test log that can be examined with Tester.Output.
 func (t *Tester) EnableTracingToLog() {
-	G.logOut = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
+	t.EnableTracing()
 	trace.Out = &t.stdout
-	trace.Tracing = true
 }
 
 // EnableSilentTracing enables tracing mode but discards any tracing output.
-// This can be used to improve code coverage without any side-effects,
-// since tracing output is quite large.
+// This is the default mode when running the tests.
+//
+// It is used to check all calls to trace.Result, since the compiler
+// cannot check them.
 func (t *Tester) EnableSilentTracing() {
 	trace.Out = ioutil.Discard
 	trace.Tracing = true
 }
 
-// DisableTracing logs the output to the buffers again, ready to be
-// checked with CheckOutputLines.
+// DisableTracing skips all tracing code.
+// The diagnostics go to the in-memory buffer again,
+// ready to be checked with CheckOutputLines.
 func (t *Tester) DisableTracing() {
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	trace.Tracing = false
@@ -633,8 +652,7 @@ func (t *Tester) DisableTracing() {
 func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 	content, err := ioutil.ReadFile(t.File(relativeFileName))
 	t.c.Assert(err, check.IsNil)
-	text := string(content)
-	actualLines := strings.Split(text, "\n")
+	actualLines := strings.Split(string(content), "\n")
 	actualLines = actualLines[:len(actualLines)-1]
 	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(lines))
 }
@@ -642,15 +660,14 @@ func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 // CheckFileLinesDetab loads the lines from the temporary file and checks
 // that they equal the given lines. The loaded file may use tabs or spaces
 // for indentation, while the lines in the code use spaces exclusively,
-// in order to make the depth of the indentation clearly visible.
+// in order to make the depth of the indentation clearly visible in the test code.
 func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 	actualLines := Load(t.File(relativeFileName), MustSucceed)
 
-	var detabbed []string
+	var detabbedLines []string
 	for _, line := range actualLines.Lines {
-		rawText := strings.TrimRight(detab(line.raw[0].orignl), "\n")
-		detabbed = append(detabbed, rawText)
+		detabbedLines = append(detabbedLines, detab(line.Text))
 	}
 
-	t.Check(detabbed, deepEquals, lines)
+	t.Check(detabbedLines, deepEquals, lines)
 }
