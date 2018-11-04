@@ -416,20 +416,20 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realistic(c *check.C) {
 	nonGnu := NewTools("non-gnu")
-	nonGnu.defTool("sed", "SED", false, AfterPrefsMk)
+	nonGnu.def("sed", "SED", false, AfterPrefsMk)
 
 	gnu := NewTools("gnu")
-	gnu.defTool("gsed", "SED", false, Nowhere)
+	gnu.def("gsed", "SED", false, Nowhere)
 
 	local1 := NewTools("local")
-	local1.defTool("sed", "SED", false, AfterPrefsMk)
+	local1.def("sed", "SED", false, AfterPrefsMk)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, AfterPrefsMk)
 	c.Check(local1.ByName("gsed").Validity, equals, Nowhere)
 
 	local2 := NewTools("local")
-	local2.defTool("gsed", "SED", false, Nowhere)
+	local2.def("gsed", "SED", false, Nowhere)
 	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, AfterPrefsMk)
@@ -451,20 +451,20 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realist
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unrealistic(c *check.C) {
 	nonGnu := NewTools("non-gnu")
-	nonGnu.defTool("sed", "SED", false, Nowhere)
+	nonGnu.def("sed", "SED", false, Nowhere)
 
 	gnu := NewTools("gnu")
-	gnu.defTool("gsed", "SED", false, AfterPrefsMk)
+	gnu.def("gsed", "SED", false, AfterPrefsMk)
 
 	local1 := NewTools("local")
-	local1.defTool("sed", "SED", false, Nowhere)
+	local1.def("sed", "SED", false, Nowhere)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, Nowhere)
 	c.Check(local1.ByName("gsed").Validity, equals, AfterPrefsMk)
 
 	local2 := NewTools("local")
-	local2.defTool("gsed", "SED", false, AfterPrefsMk)
+	local2.def("gsed", "SED", false, AfterPrefsMk)
 	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, Nowhere)

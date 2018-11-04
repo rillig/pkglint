@@ -607,7 +607,7 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback(c *check.C) {
 	t := s.Init(c)
 
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	G.Pkgsrc.Tools.defTool("tool", "TOOL", false, Nowhere)
+	G.Pkgsrc.Tools.def("tool", "TOOL", false, Nowhere)
 
 	loadTimeTool, loadTimeUsable := G.Tool("${TOOL}", LoadTime)
 	runTimeTool, runTimeUsable := G.Tool("${TOOL}", RunTime)
@@ -622,7 +622,7 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback_runtime(c *check.C
 	t := s.Init(c)
 
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	G.Pkgsrc.Tools.defTool("tool", "TOOL", false, AtRunTime)
+	G.Pkgsrc.Tools.def("tool", "TOOL", false, AtRunTime)
 
 	loadTimeTool, loadTimeUsable := G.Tool("${TOOL}", LoadTime)
 	runTimeTool, runTimeUsable := G.Tool("${TOOL}", RunTime)
@@ -651,7 +651,7 @@ func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
 	t := s.Init(c)
 
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	G.Pkgsrc.Tools.defTool("tool", "TOOL", false, AtRunTime)
+	G.Pkgsrc.Tools.def("tool", "TOOL", false, AtRunTime)
 
 	c.Check(G.ToolByVarname("TOOL", LoadTime).String(), equals, "tool:TOOL::AtRunTime")
 	c.Check(G.ToolByVarname("TOOL", RunTime).String(), equals, "tool:TOOL::AtRunTime")

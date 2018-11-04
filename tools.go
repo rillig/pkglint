@@ -112,10 +112,10 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 	}
 
 	validity := tr.validity(mkline.Basename, false)
-	return tr.defTool(name, varname, false, validity)
+	return tr.def(name, varname, false, validity)
 }
 
-func (tr *Tools) defTool(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
+func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
 	fresh := &Tool{name, varname, mustUseVarForm, validity}
 
 	tool := tr.byName[name]
@@ -254,7 +254,7 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool, addToUseTools
 	for _, dep := range deps {
 		name := strings.Split(dep, ":")[0]
 		if createIfAbsent || tr.ByName(name) != nil {
-			tr.defTool(name, "", false, validity)
+			tr.def(name, "", false, validity)
 		}
 	}
 }
@@ -277,7 +277,7 @@ func (tr *Tools) ByVarname(varname string) *Tool {
 	if tool == nil && tr.fallback != nil {
 		fallback := tr.fallback.ByVarname(varname)
 		if fallback != nil {
-			return tr.defTool(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
+			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
 		}
 	}
 	return tool
@@ -288,7 +288,7 @@ func (tr *Tools) ByName(name string) *Tool {
 	if tool == nil && tr.fallback != nil {
 		fallback := tr.fallback.ByName(name)
 		if fallback != nil {
-			return tr.defTool(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
+			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
 		}
 	}
 	return tool
