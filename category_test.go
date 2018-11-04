@@ -27,8 +27,6 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 		"NOTE: ~/archivers/Makefile:1: Empty line expected after this line.",
 		"ERROR: ~/archivers/Makefile:2: COMMENT= line expected.",
 		"NOTE: ~/archivers/Makefile:1: Empty line expected after this line.", // XXX: Duplicate.
-		"WARN: ~/archivers/Makefile:2: Indentation should be a single tab character.",
-		"WARN: ~/archivers/Makefile:3: Indentation should be a single tab character.",
 		"WARN: ~/archivers/Makefile:3: \"aaaaa\" should come before \"pkg1\".",
 		"ERROR: ~/archivers/Makefile:4: SUBDIR+= line or empty line expected.",
 		"ERROR: ~/archivers/Makefile:2: \"pkg1\" exists in the Makefile, but not in the file system.",
@@ -132,4 +130,28 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 		"ERROR: ~/category/Makefile:6: \"fs-only\" exists in the file system, but not in the Makefile.",
 		"ERROR: ~/category/Makefile:9: \"mk-only\" exists in the Makefile, but not in the file system.",
 		"ERROR: ~/category/Makefile:11: \"commented-mk-only\" exists in the Makefile, but not in the file system.")
+}
+
+func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.SetupVartypes()
+	t.CreateFileLines("mk/misc/category.mk")
+	t.CreateFileLines("category/package1/Makefile")
+	t.CreateFileLines("category/package2/Makefile")
+	t.CreateFileLines("category/Makefile",
+		MkRcsID,
+		"",
+		"COMMENT=\tCategory comment",
+		"",
+		"SUBDIR+=                    package1",
+		"SUBDIR+=\tpackage2",
+		"",
+		".include \"../mk/misc/category.mk\"")
+
+	CheckdirCategory(t.File("category"))
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/Makefile:5: This variable value should be aligned with tabs, not spaces, to column 17.")
 }

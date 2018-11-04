@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"netbsd.org/pkglint/textproc"
 	"sort"
-	"strings"
 )
 
 func CheckdirCategory(dir string) {
@@ -72,12 +71,6 @@ func CheckdirCategory(dir string) {
 			commentedOut := mkline.IsCommentedVarassign()
 			if commentedOut && mkline.VarassignComment() == "" {
 				mkline.Warnf("%q commented out without giving a reason.", name)
-			}
-
-			valueAlign := mkline.ValueAlign()
-			indent := valueAlign[len(strings.TrimRightFunc(valueAlign, isHspaceRune)):]
-			if indent != "\t" {
-				mkline.Warnf("Indentation should be a single tab character.")
 			}
 
 			if name == prevSubdir {
