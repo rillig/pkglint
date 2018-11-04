@@ -388,20 +388,31 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 		".if !defined(LICENSE_BUILDLINK3_MK)",
 		"LICENSE_BUILDLINK3_MK:=",
 		"",
-		"BUILDLINK_API_DEPENDS.${LICENSE}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.6.1.0",
-		"BUILDLINK_ABI_DEPENDS.${LICENSE}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.8.10.1nb26",
+		"BUILDLINK_API_DEPENDS.${LICENSE}-wxWidgets+=\t${LICENSE}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${LICENSE}-wxWidgets+=\t${LICENSE}-wxWidgets>=2.8.10.1nb26",
 		"",
 		".endif",
 		"",
-		"BUILDLINK_TREE+=\t-${PYPKGPREFIX}-wxWidgets")
+		"BUILDLINK_TREE+=\t-${LICENSE}-wxWidgets")
 
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:3: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:3: The list variable LICENSE should not be embedded in a word.",
-		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).",
-		"WARN: buildlink3.mk:13: This line should contain the following text: BUILDLINK_TREE+=\t-${LICENSE}-wxWidgets")
+		"WARN: buildlink3.mk:8: LICENSE should not be evaluated indirectly at load time.",
+		"WARN: buildlink3.mk:8: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
+		"WARN: buildlink3.mk:8: The list variable LICENSE should not be embedded in a word.",
+		"WARN: buildlink3.mk:9: LICENSE should not be evaluated indirectly at load time.",
+		"WARN: buildlink3.mk:9: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
+		"WARN: buildlink3.mk:9: The list variable LICENSE should not be embedded in a word.",
+		"WARN: buildlink3.mk:13: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
+		"WARN: buildlink3.mk:13: The list variable LICENSE should not be embedded in a word.",
+		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).")
 }
 
 // Those .include lines that are not indented at all may stay as-is.
