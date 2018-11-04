@@ -974,6 +974,18 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	}
 }
 
+func (ind *Indentation) CheckFinish(fileName string) {
+	if ind.Len() <= 1 {
+		return
+	}
+	eofLine := NewLineEOF(fileName)
+	for ind.Len() > 1 {
+		openingMkline := ind.levels[ind.Len()-1].mkline
+		eofLine.Warnf(".%s from %s must be closed.", openingMkline.Directive(), openingMkline.ReferenceFrom(eofLine))
+		ind.Pop()
+	}
+}
+
 func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
 	i, n := 0, len(text)
 

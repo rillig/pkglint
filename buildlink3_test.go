@@ -220,7 +220,8 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__missing_BUILDLINK_TREE_at_beginning
 		MkRcsID,
 		"",
 		".if !defined(HS_X11_BUILDLINK3_MK)",
-		"HS_X11_BUILDLINK3_MK:=")
+		"HS_X11_BUILDLINK3_MK:=",
+		".endif")
 
 	ChecklinesBuildlink3Mk(mklines)
 
@@ -293,7 +294,8 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__multiple_inclusion_wrong(c *check.C
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
 		".if !defined(HS_X11_BUILDLINK3_MK)",
-		"UNRELATED_BUILDLINK3_MK:=")
+		"UNRELATED_BUILDLINK3_MK:=",
+		".endif")
 
 	ChecklinesBuildlink3Mk(mklines)
 
@@ -318,6 +320,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__missing_endif(c *check.C) {
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
+		"WARN: buildlink3.mk:EOF: .if from line 5 must be closed.",
 		"NOTE: buildlink3.mk:6: Empty line expected after this line.",
 		"WARN: buildlink3.mk:EOF: Expected \".endif\".")
 }

@@ -150,10 +150,7 @@ func (mklines *MkLinesImpl) checkAll() {
 	}
 
 	atEnd := func(mkline MkLine) {
-		ind := mklines.indentation
-		if ind.Len() != 1 && ind.Depth("") != 0 {
-			mkline.Errorf("Directive indentation is not 0, but %d.", ind.Depth(""))
-		}
+		mklines.indentation.CheckFinish(mklines.lines.FileName)
 	}
 
 	// TODO: Extract this code so that it is clearly visible in the stack trace.
