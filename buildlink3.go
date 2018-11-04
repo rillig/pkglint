@@ -126,15 +126,10 @@ func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
 func (ck *Buildlink3Checker) checkThirdParagraph(exp *MkExpecter) bool {
 	pkgbase := ck.pkgbase
 
-	indentLevel := 1
 	// The first .if is from the second paragraph.
-loop:
-	for {
-		if exp.EOF() {
-			exp.CurrentLine().Warnf("Expected \".endif\".")
-			return false
-		}
+	indentLevel := 1
 
+	for !exp.EOF() && indentLevel > 0 {
 		mkline := exp.CurrentMkLine()
 		exp.Advance()
 
@@ -154,15 +149,16 @@ loop:
 
 		case mkline.IsDirective() && mkline.Directive() == "endif":
 			indentLevel--
-			if indentLevel == 0 {
-				break loop
-			}
 
 		default:
 			if trace.Tracing {
 				trace.Step1("Unchecked line %s in third paragraph.", exp.CurrentLine().Linenos())
 			}
 		}
+	}
+
+	if indentLevel > 0 {
+		return false
 	}
 
 	if ck.apiLine == nil {

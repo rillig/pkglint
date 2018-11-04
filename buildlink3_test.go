@@ -321,8 +321,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__missing_endif(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:EOF: .if from line 5 must be closed.",
-		"NOTE: buildlink3.mk:6: Empty line expected after this line.",
-		"WARN: buildlink3.mk:EOF: Expected \".endif\".")
+		"NOTE: buildlink3.mk:6: Empty line expected after this line.")
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk__unknown_dependency_patterns(c *check.C) {
