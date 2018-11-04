@@ -160,7 +160,7 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, fileName,
 		otherHash := hashes[key]
 		if otherHash != nil {
 			if otherHash.hash != hash {
-				line.Errorf("The %s hash for %s is %s, which differs from %s in %s.",
+				line.Errorf("The %s hash for %s is %s, which conflicts with %s in %s.",
 					alg, fileName, hash, otherHash.hash, line.RefTo(otherHash.line))
 			}
 		} else {

@@ -77,7 +77,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 	t.CheckOutputLines(
 		"ERROR: ~/category/package1/distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package1/distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
-		"ERROR: ~/category/package2/distinfo:3: The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, which differs from 1234567811111111 in ../package1/distinfo:3.",
+		"ERROR: ~/category/package2/distinfo:3: The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, which conflicts with 1234567811111111 in ../package1/distinfo:3.",
 		"ERROR: ~/category/package2/distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package2/distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
