@@ -68,7 +68,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t.SetupCommandLine("-Wall") // To catch duplicate warnings
 	t.checkC = nil
 
-	G.opts.LogVerbose = true // To detect duplicate work being done
+	G.Opts.LogVerbose = true // To detect duplicate work being done
 	t.EnableSilentTracing()
 
 	prevdir, err := os.Getwd()
@@ -137,7 +137,7 @@ func (t *Tester) SetupCommandLine(args ...string) {
 		t.CheckOutputEmpty()
 		t.c().Fatalf("Cannot parse command line: %#v", args)
 	}
-	G.opts.LogVerbose = true // See SetUpTest
+	G.Opts.LogVerbose = true // See SetUpTest
 }
 
 // SetupVartypes registers a few hundred variables like MASTER_SITES,

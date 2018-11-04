@@ -58,7 +58,7 @@ func (s *Suite) Test_SubstContext__complete(c *check.C) {
 func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	t := s.Init(c)
 
-	G.opts.WarnExtra = true
+	G.Opts.WarnExtra = true
 	ctx := NewSubstContext()
 
 	ctx.Varassign(newSubstLine(t, 11, "SUBST_CLASSES.SunOS+=prefix"))

@@ -69,7 +69,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment := MatchVarassign(text); m {
-		if G.opts.WarnSpace && spaceAfterVarname != "" {
+		if G.Opts.WarnSpace && spaceAfterVarname != "" {
 			switch {
 			case hasSuffix(varname, "+") && op == "=":
 				break

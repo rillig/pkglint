@@ -148,7 +148,7 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 		return nil
 	}
 
-	if G.opts.DumpMakefile {
+	if G.Opts.DumpMakefile {
 		G.logOut.WriteLine("Whole Makefile (with all included files) follows:")
 		for _, line := range allLines.lines.Lines {
 			G.logOut.WriteLine(line.String())
@@ -506,7 +506,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		defer trace.Call0()()
 	}
 
-	if !G.opts.WarnOrder || pkg.seenMakefileCommon {
+	if !G.Opts.WarnOrder || pkg.seenMakefileCommon {
 		return
 	}
 

@@ -28,9 +28,9 @@ var dummyMkLine = NewMkLine(dummyLine)
 //
 // Duplicates are handled in main.logf.
 func shallBeLogged(format string) bool {
-	if len(G.opts.LogOnly) > 0 {
+	if len(G.Opts.LogOnly) > 0 {
 		found := false
-		for _, substr := range G.opts.LogOnly {
+		for _, substr := range G.Opts.LogOnly {
 			if contains(format, substr) {
 				found = true
 				break
@@ -65,13 +65,13 @@ func logf(level *LogLevel, fileName, lineno, format, msg string) bool {
 		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
 	}
 
-	if !G.opts.LogVerbose && format != AutofixFormat && loggedAlready(fileName, lineno, msg) {
+	if !G.Opts.LogVerbose && format != AutofixFormat && loggedAlready(fileName, lineno, msg) {
 		G.explainNext = false
 		return false
 	}
 
 	var text, sep string
-	if !G.opts.GccOutput {
+	if !G.Opts.GccOutput {
 		text += sep + level.TraditionalName + ":"
 		sep = " "
 	}
@@ -82,11 +82,11 @@ func logf(level *LogLevel, fileName, lineno, format, msg string) bool {
 			text += ":" + lineno
 		}
 	}
-	if G.opts.GccOutput {
+	if G.Opts.GccOutput {
 		text += sep + level.GccName + ":"
 		sep = " "
 	}
-	if G.opts.Profiling && format != AutofixFormat {
+	if G.Opts.Profiling && format != AutofixFormat {
 		G.loghisto.Add(format, 1)
 	}
 	text += sep + msg + "\n"
@@ -134,7 +134,7 @@ func Explain(explanation ...string) {
 		return
 	}
 	G.explanationsAvailable = true
-	if !G.opts.Explain {
+	if !G.Opts.Explain {
 		return
 	}
 

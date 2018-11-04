@@ -47,7 +47,7 @@ func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
 	if c.Check(exitcode, check.NotNil) {
 		c.Check(*exitcode, equals, 0)
 	}
-	c.Check(G.opts.LogOnly, deepEquals, []string{":Q"})
+	c.Check(G.Opts.LogOnly, deepEquals, []string{":Q"})
 	t.CheckOutputLines(
 		confVersion)
 }

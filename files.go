@@ -43,7 +43,7 @@ func Load(fileName string, options LoadOptions) Lines {
 		return nil
 	}
 
-	if G.opts.Profiling {
+	if G.Opts.Profiling {
 		G.loaded.Add(path.Clean(fileName), 1)
 	}
 

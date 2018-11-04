@@ -185,7 +185,7 @@ func CheckdirCategory(dir string) {
 
 	mklines.SaveAutofixChanges()
 
-	if G.opts.Recursive {
+	if G.Opts.Recursive {
 		G.Todo = append(append([]string(nil), subdirs...), G.Todo...)
 	}
 }

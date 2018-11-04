@@ -203,7 +203,7 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 			"submitting a patch upstream, the corresponding bug report should",
 			"be mentioned in this file, to prevent duplicate work.")
 	}
-	if G.opts.WarnSpace && !ck.previousLineEmpty {
+	if G.Opts.WarnSpace && !ck.previousLineEmpty {
 		fix := line.Autofix()
 		fix.Notef("Empty line expected.")
 		fix.InsertBefore("")
@@ -216,7 +216,7 @@ func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) 
 		defer trace.Call2(text, patchedFileType.String())()
 	}
 
-	if G.opts.WarnExtra {
+	if G.Opts.WarnExtra {
 		ck.checklineAdded(text, patchedFileType)
 	} else {
 		ck.checktextRcsid(text)

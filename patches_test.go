@@ -385,7 +385,7 @@ func (s *Suite) Test_ChecklinesPatch__Makefile_with_absolute_pathnames(c *check.
 
 	// With extra warnings turned on, absolute paths in the context lines
 	// are also checked, to detect absolute paths that might be overlooked.
-	G.opts.WarnExtra = true
+	G.Opts.WarnExtra = true
 
 	ChecklinesPatch(lines)
 

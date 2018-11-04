@@ -90,7 +90,7 @@ outer:
 				repl.AdvanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`),
 				repl.AdvanceRegexp(`^\$\$(\$)\$`):
 				shvarname := repl.Group(1)
-				if G.opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shvarname) {
+				if G.Opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shvarname) {
 					line.Warnf("Unquoted shell variable %q.", shvarname)
 					Explain(
 						"When a shell variable contains white-space, it is expanded (split",
@@ -344,7 +344,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 		}
 	}
 	walker.Callback.AndOr = func(andor *MkShAndOr) {
-		if G.opts.WarnExtra && !*pSetE && walker.Current().Index != 0 {
+		if G.Opts.WarnExtra && !*pSetE && walker.Current().Index != 0 {
 			spc.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index, andor)
 		}
 	}
@@ -462,7 +462,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	case matches(shellword, `\$\{(PKGSRCDIR|PREFIX)(:Q)?\}`):
 	case scc.handleComment():
 	default:
-		if G.opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
+		if G.Opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
 			scc.shline.mkline.Warnf("Unknown shell command %q.", shellword)
 			Explain(
 				"If you want your package to be portable to all platforms that pkgsrc",
@@ -791,7 +791,7 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 		return false, ""
 	}
 
-	if G.opts.WarnExtra && len(pipeline.Cmds) > 1 {
+	if G.Opts.WarnExtra && len(pipeline.Cmds) > 1 {
 		if canFail, cmd := canFail(); canFail {
 			if cmd != "" {
 				line.Warnf("The exitcode of %q at the left of the | operator is ignored.", cmd)

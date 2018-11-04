@@ -87,7 +87,7 @@ func (line *LineImpl) IsMultiline() bool {
 }
 
 func (line *LineImpl) showSource(out *SeparatorWriter) {
-	if !G.opts.ShowSource {
+	if !G.Opts.ShowSource {
 		return
 	}
 
@@ -120,7 +120,7 @@ func (line *LineImpl) showSource(out *SeparatorWriter) {
 }
 
 func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
-	if G.opts.ShowAutofix || G.opts.Autofix {
+	if G.Opts.ShowAutofix || G.Opts.Autofix {
 		// In these two cases, the only interesting diagnostics are
 		// those that can be fixed automatically.
 		// These are logged by Autofix.Apply.
@@ -131,11 +131,11 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 		return
 	}
 
-	if G.opts.ShowSource {
+	if G.Opts.ShowSource {
 		line.showSource(G.logOut)
 	}
 	logf(level, line.FileName, line.Linenos(), format, fmt.Sprintf(format, args...))
-	if G.opts.ShowSource {
+	if G.Opts.ShowSource {
 		G.logOut.Separate()
 	}
 }

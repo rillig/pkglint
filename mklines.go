@@ -444,7 +444,7 @@ type varalignBlockInfo struct {
 
 func (va *VaralignBlock) Check(mkline MkLine) {
 	switch {
-	case !G.opts.WarnSpace:
+	case !G.Opts.WarnSpace:
 		return
 
 	case mkline.IsEmpty():

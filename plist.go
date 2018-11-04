@@ -65,7 +65,7 @@ func (ck *PlistChecker) Check(plainLines Lines) {
 	}
 	ChecklinesTrailingEmptyLines(plainLines)
 
-	if G.opts.WarnPlistSort {
+	if G.Opts.WarnPlistSort {
 		sorter := NewPlistLineSorter(plines)
 		sorter.Sort()
 		if !sorter.autofixed {
@@ -202,9 +202,9 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkSorted(pline *PlistLine) {
-	if text := pline.text; G.opts.WarnPlistSort && hasAlnumPrefix(text) && !containsVarRef(text) {
+	if text := pline.text; G.Opts.WarnPlistSort && hasAlnumPrefix(text) && !containsVarRef(text) {
 		if ck.lastFname != "" {
-			if ck.lastFname > text && !G.opts.Autofix {
+			if ck.lastFname > text && !G.Opts.Autofix {
 				pline.Warnf("%q should be sorted before %q.", text, ck.lastFname)
 				Explain(
 					"The files in the PLIST should be sorted alphabetically.",
@@ -369,7 +369,7 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 		}
 
 	case hasPrefix(text, "share/doc/html/"):
-		if G.opts.WarnPlistDepr {
+		if G.Opts.WarnPlistDepr {
 			pline.Warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 		}
 
@@ -493,7 +493,7 @@ func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 
 func (s *plistLineSorter) Sort() {
 	if line := s.unsortable; line != nil {
-		if G.opts.ShowAutofix || G.opts.Autofix {
+		if G.Opts.ShowAutofix || G.Opts.Autofix {
 			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", line)
 		}
 		return

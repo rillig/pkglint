@@ -29,8 +29,8 @@ func CheckdirToplevel(dir string) {
 
 	mklines.Check()
 
-	if G.opts.Recursive {
-		if G.opts.CheckGlobal {
+	if G.Opts.Recursive {
+		if G.Opts.CheckGlobal {
 			G.Pkgsrc.UsedLicenses = make(map[string]bool)
 			G.Pkgsrc.Hashes = make(map[string]*Hash)
 		}

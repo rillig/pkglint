@@ -25,7 +25,7 @@ func (ck MkLineChecker) Check() {
 	case mkline.IsShellCommand():
 		shellCommand := mkline.ShellCommand()
 
-		if G.opts.WarnSpace && hasPrefix(mkline.Text, "\t\t") {
+		if G.Opts.WarnSpace && hasPrefix(mkline.Text, "\t\t") {
 			fix := mkline.Autofix()
 			fix.Notef("Shell programs should be indented with a single tab.")
 			fix.Explain(
@@ -209,7 +209,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 }
 
 func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
-	if G.Mk == nil || !G.opts.WarnSpace {
+	if G.Mk == nil || !G.Opts.WarnSpace {
 		return
 	}
 	mkline := ck.MkLine
@@ -267,7 +267,7 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 //
 // See checkVarusePermissions.
 func (ck MkLineChecker) checkVarassignPermissions() {
-	if !G.opts.WarnPerm || G.Infrastructure {
+	if !G.Opts.WarnPerm || G.Infrastructure {
 		return
 	}
 	if trace.Tracing {
@@ -350,7 +350,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	varname := varuse.varname
 	vartype := G.Pkgsrc.VariableType(varname)
 	switch {
-	case !G.opts.WarnExtra:
+	case !G.Opts.WarnExtra:
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
 	case varIsDefinedSimilar(varname):
@@ -377,7 +377,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 
 	needsQuoting := mkline.VariableNeedsQuoting(varname, vartype, vuc)
 
-	if G.opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
+	if G.Opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
@@ -434,7 +434,7 @@ func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
 //
 // See checkVarassignPermissions.
 func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
-	if !G.opts.WarnPerm {
+	if !G.Opts.WarnPerm {
 		return
 	}
 	if trace.Tracing {
@@ -864,7 +864,7 @@ func (ck MkLineChecker) checkVarassignBsdPrefs() {
 		return
 	}
 
-	if !G.opts.WarnExtra ||
+	if !G.Opts.WarnExtra ||
 		G.Infrastructure ||
 		mkline.Op() != opAssignDefault ||
 		G.Mk.Tools.SeenPrefs ||
@@ -890,7 +890,7 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 		defer trace.Call(varname, op, value, comment)()
 	}
 
-	if !G.opts.WarnTypes {
+	if !G.Opts.WarnTypes {
 		return
 	}
 

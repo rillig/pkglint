@@ -134,7 +134,7 @@ func (s *Suite) Test_logf__duplicate_messages(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain")
-	G.opts.LogVerbose = false
+	G.Opts.LogVerbose = false
 	line := t.NewLine("README.txt", 123, "text")
 
 	// In rare cases, the explanations for the same warning may differ
@@ -178,7 +178,7 @@ func (s *Suite) Test_logf__duplicate_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain", "--autofix")
-	G.opts.LogVerbose = false // See SetUpTest
+	G.Opts.LogVerbose = false // See SetUpTest
 	line := t.NewLine("README.txt", 123, "text")
 
 	fix := line.Autofix()
