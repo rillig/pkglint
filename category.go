@@ -106,31 +106,21 @@ func CheckdirCategory(dir string) {
 
 	fRest := fSubdirs[:]
 	mRest := mSubdirs[:]
-	mAtend, mNeednext, mCurrent := false, true, ""
 
 	var subdirs []string
 
-	var line MkLine
-	commented := false
+	for len(mRest) > 0 || len(fRest) > 0 {
 
-	for !(mAtend && len(fRest) == 0) {
-		if !mAtend && mNeednext {
-			mNeednext = false
-			if len(mRest) == 0 {
-				mAtend = true
-				line = exp.CurrentMkLine()
-				continue
-			} else {
-				mCurrent = mRest[0].name
-				line = mRest[0].line
-				commented = mRest[0].line.IsCommentedVarassign()
-				mRest = mRest[1:]
-			}
-		}
-
-		if len(fRest) > 0 && (mAtend || fRest[0] < mCurrent) {
+		if len(fRest) > 0 && (len(mRest) == 0 || fRest[0] < mRest[0].name) {
 			fCurrent := fRest[0]
 			if !mCheck[fCurrent] {
+				var line Line
+				if len(mRest) > 0 {
+					line = mRest[0].line.Line
+				} else {
+					line = exp.CurrentLine()
+				}
+
 				fix := line.Autofix()
 				fix.Errorf("%q exists in the file system, but not in the Makefile.", fCurrent)
 				fix.InsertBefore("SUBDIR+=\t" + fCurrent)
@@ -138,21 +128,23 @@ func CheckdirCategory(dir string) {
 			}
 			fRest = fRest[1:]
 
-		} else if !mAtend && (len(fRest) == 0 || mCurrent < fRest[0]) {
-			if !fCheck[mCurrent] {
+		} else if len(mRest) > 0 && (len(fRest) == 0 || mRest[0].name < fRest[0]) {
+			if !fCheck[mRest[0].name] {
+				line := mRest[0].line.Line
 				fix := line.Autofix()
-				fix.Errorf("%q exists in the Makefile, but not in the file system.", mCurrent)
+				fix.Errorf("%q exists in the Makefile, but not in the file system.", mRest[0].name)
 				fix.Delete()
 				fix.Apply()
 			}
-			mNeednext = true
+			mRest = mRest[1:]
 
 		} else { // f_current == m_current
-			fRest = fRest[1:]
-			mNeednext = true
-			if !commented {
-				subdirs = append(subdirs, dir+"/"+mCurrent)
+			if !mRest[0].line.IsCommentedVarassign() {
+				subdirs = append(subdirs, dir+"/"+mRest[0].name)
 			}
+
+			fRest = fRest[1:]
+			mRest = mRest[1:]
 		}
 	}
 
