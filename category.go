@@ -60,11 +60,12 @@ func CheckdirCategory(dir string) {
 	var mSubdirs []subdir
 
 	seen := make(map[string]MkLine)
-	prevSubdir := ""
 	for !exp.EOF() {
 		mkline := exp.CurrentMkLine()
 
 		if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) && mkline.Varname() == "SUBDIR" {
+			exp.Advance()
+
 			name := mkline.Value()
 			if mkline.IsCommentedVarassign() && mkline.VarassignComment() == "" {
 				mkline.Warnf("%q commented out without giving a reason.", name)
@@ -75,13 +76,13 @@ func CheckdirCategory(dir string) {
 			}
 			seen[name] = mkline
 
-			if name < prevSubdir {
-				mkline.Warnf("%q should come before %q.", name, prevSubdir)
+			if len(mSubdirs) > 0 {
+				if prev := mSubdirs[len(mSubdirs)-1].name; name < prev {
+					mkline.Warnf("%q should come before %q.", name, prev)
+				}
 			}
 
 			mSubdirs = append(mSubdirs, subdir{name, mkline})
-			prevSubdir = name
-			exp.Advance()
 
 		} else {
 			if !mkline.IsEmpty() {
