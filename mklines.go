@@ -178,6 +178,12 @@ func (mklines *MkLinesImpl) ForEach(action func(mkline MkLine)) {
 // It keeps track of the indentation and all conditional variables.
 // At the end, atEnd is called with the last line as its argument.
 func (mklines *MkLinesImpl) ForEachEnd(action func(mkline MkLine) bool, atEnd func(lastMkline MkLine)) {
+
+	// XXX: To avoid looping over the lines multiple times, it would
+	// be nice to have an interface LinesChecker that checks a single thing.
+	// Multiple of these line checkers could be run in parallel, so that
+	// the diagnostics appear in the correct order, from top to bottom.
+
 	mklines.indentation = NewIndentation()
 	mklines.Tools.SeenPrefs = false
 
