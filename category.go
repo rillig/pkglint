@@ -105,7 +105,8 @@ func CheckdirCategory(dir string) {
 	}
 
 	fRest := fSubdirs[:]
-	mIndex, mAtend, mNeednext, mCurrent := 0, false, true, ""
+	mRest := mSubdirs[:]
+	mAtend, mNeednext, mCurrent := false, true, ""
 
 	var subdirs []string
 
@@ -115,15 +116,15 @@ func CheckdirCategory(dir string) {
 	for !(mAtend && len(fRest) == 0) {
 		if !mAtend && mNeednext {
 			mNeednext = false
-			if mIndex >= len(mSubdirs) {
+			if len(mRest) == 0 {
 				mAtend = true
 				line = exp.CurrentMkLine()
 				continue
 			} else {
-				mCurrent = mSubdirs[mIndex].name
-				line = mSubdirs[mIndex].line
-				commented = mSubdirs[mIndex].line.IsCommentedVarassign()
-				mIndex++
+				mCurrent = mRest[0].name
+				line = mRest[0].line
+				commented = mRest[0].line.IsCommentedVarassign()
+				mRest = mRest[1:]
 			}
 		}
 
