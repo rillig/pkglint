@@ -49,7 +49,7 @@ func (ck *Buildlink3Checker) Check() {
 	if !ck.checkSecondParagraph(exp) {
 		return
 	}
-	if !ck.checkThirdParagraph(exp) {
+	if !ck.checkMainPart(exp) {
 		return
 	}
 
@@ -123,7 +123,7 @@ func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
 }
 
 // Third paragraph: Package information.
-func (ck *Buildlink3Checker) checkThirdParagraph(exp *MkExpecter) bool {
+func (ck *Buildlink3Checker) checkMainPart(exp *MkExpecter) bool {
 	pkgbase := ck.pkgbase
 
 	// The first .if is from the second paragraph.
@@ -137,23 +137,11 @@ func (ck *Buildlink3Checker) checkThirdParagraph(exp *MkExpecter) bool {
 		case mkline.IsVarassign():
 			ck.checkVarassign(exp, mkline, pkgbase)
 
-		case mkline.IsEmpty() || mkline.IsComment():
-			// Comments and empty lines are fine here.
-
-		case mkline.IsInclude() && hasSuffix(mkline.IncludeFile(), "/buildlink3.mk"):
-			// Included files might be checked for consistency, someday,
-			// to match the ones mentioned in options.mk and Makefile.
-
 		case mkline.IsDirective() && mkline.Directive() == "if":
 			indentLevel++
 
 		case mkline.IsDirective() && mkline.Directive() == "endif":
 			indentLevel--
-
-		default:
-			if trace.Tracing {
-				trace.Step1("Unchecked line %s in third paragraph.", exp.CurrentLine().Linenos())
-			}
 		}
 	}
 

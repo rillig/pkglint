@@ -415,12 +415,12 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).")
 }
 
-func (s *Suite) Test_ChecklinesBuildlink3Mk__coverage(c *check.C) {
+// Since the buildlink3 checker does not use MkLines.ForEach, it has to keep
+// track of the nesting depth of .if directives.
+func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	t.CreateFileLines("mk/pkg-build-options.mk")
-	t.CreateFileLines("category/dependency/buildlink3.mk")
 	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
 		MkRcsID,
 		"",
@@ -429,19 +429,36 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__coverage(c *check.C) {
 		".if !defined(HS_X11_BUILDLINK3_MK)",
 		"HS_X11_BUILDLINK3_MK:=",
 		"",
-		"pkgbase := dependency",
-		".include \"../../mk/pkg-build-options.mk\"",
-		"",
 		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
 		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
 		"",
-		".include \"../../category/dependency/buildlink3.mk\"",
-		"",
-		".if ${OPSYS} == \"NetBSD\"",
+		".if ${OPSYS} == NetBSD",
 		".endif",
 		"",
-		".for var in value",
-		".endfor",
+		".endif\t# HS_X11_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-hs-X11")
+
+	ChecklinesBuildlink3Mk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:14: The file should end here.")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkMainPart__comment_at_end_of_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\ths-X11",
+		"",
+		".if !defined(HS_X11_BUILDLINK3_MK)",
+		"HS_X11_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
+		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
 		"",
 		".endif\t# HS_X11_BUILDLINK3_MK",
 		"",
@@ -452,5 +469,5 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__coverage(c *check.C) {
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/buildlink3.mk:25: The file should end here.")
+		"WARN: ~/category/package/buildlink3.mk:14: The file should end here.")
 }
