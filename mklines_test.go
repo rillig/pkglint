@@ -489,6 +489,32 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 		"ERROR: options.mk:15: Unmatched .endif.")
 }
 
+// The .include directives do not need to be indented. They have the
+// syntactical form of directives but cannot be nested in a single file.
+// Therefore they may be either indented at the correct indentation depth
+// or not indented at all.
+func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.CreateFileLines("included.mk")
+	mklines := t.SetupFileMkLines("module.mk",
+		MkRcsID,
+		"",
+		".if ${PKGPATH} == \"category/package\"",
+		".include \"included.mk\"",
+		". include \"included.mk\"",
+		".  include \"included.mk\"",
+		".    include \"included.mk\"",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: ~/module.mk:5: This directive should be indented by 2 spaces.",
+		"NOTE: ~/module.mk:7: This directive should be indented by 2 spaces.")
+}
+
 func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 	t := s.Init(c)
 
