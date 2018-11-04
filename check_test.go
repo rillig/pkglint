@@ -29,15 +29,19 @@ type Suite struct {
 
 // Init creates and returns a test helper that allows to:
 //
-// * create files for the test
+// * create files for the test:
+// CreateFileLines, SetupPkgsrc, SetupPackage
 //
-// * load these files into Line and MkLine objects (for tests spanning multiple files)
+// * load these files into Line and MkLine objects (for tests spanning multiple files):
+// SetupFileLines, SetupFileMkLines
 //
-// * create new in-memory Line and MkLine objects (for simple tests)
+// * create new in-memory Line and MkLine objects (for simple tests):
+// NewLine, NewLines, NewMkLine, NewMkLines
 //
-// * check the files that have been changed by the --autofix feature
+// * check the files that have been changed by the --autofix feature:
+// CheckFileLines
 //
-// * check the pkglint diagnostics
+// * check the pkglint diagnostics: CheckLinesEmpty, CheckLinesOutput
 func (s *Suite) Init(c *check.C) *Tester {
 
 	// Note: the check.C object from SetUpTest cannot be used here,
