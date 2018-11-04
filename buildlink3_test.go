@@ -37,10 +37,12 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 // Before version 5.3, pkglint wrongly warned here.
 // The mk/haskell.mk file takes care of constructing the correct PKGNAME,
 // but pkglint had not looked at that file.
-func (s *Suite) Test_ChecklinesBuildlink3Mk__name_mismatch(c *check.C) {
+//
+// Since then, pkglint also looks at files from mk/ when they are directly
+// included, and therefore finds the default definition for PKGNAME.
+func (s *Suite) Test_ChecklinesBuildlink3Mk__name_mismatch_Haskell_incomplete(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall")
 	t.SetupPackage("x11/hs-X11",
 		"DISTNAME=\tX11-1.0")
 	t.Chdir("x11/hs-X11")
@@ -64,6 +66,43 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__name_mismatch(c *check.C) {
 	// This warning only occurs because pkglint cannot see mk/haskell.mk in this test.
 	t.CheckOutputLines(
 		"ERROR: buildlink3.mk:3: Package name mismatch between \"hs-X11\" in this file and \"X11\" from Makefile:3.")
+}
+
+// Before version 5.3, pkglint wrongly warned here.
+// The mk/haskell.mk file takes care of constructing the correct PKGNAME,
+// but pkglint had not looked at that file.
+//
+// Since then, pkglint also looks at files from mk/ when they are directly
+// included, and therefore finds the default definition for PKGNAME.
+func (s *Suite) Test_ChecklinesBuildlink3Mk__name_mismatch_Haskell_complete(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/haskell.mk",
+		MkRcsID,
+		"PKGNAME?=\ths-${DISTNAME}")
+	t.SetupPackage("x11/hs-X11",
+		"DISTNAME=\tX11-1.0",
+		"",
+		".include \"../../mk/haskell.mk\"")
+	t.Chdir("x11/hs-X11")
+	t.CreateFileLines("buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\ths-X11",
+		"",
+		".if !defined(HS_X11_BUILDLINK3_MK)",
+		"HS_X11_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
+		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
+		"",
+		".endif\t# HS_X11_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-hs-X11")
+
+	G.CheckDirent(".")
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ChecklinesBuildlink3Mk__name_mismatch_multiple_inclusion(c *check.C) {
