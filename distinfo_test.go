@@ -158,6 +158,36 @@ func (s *Suite) Test_ChecklinesDistinfo__relative_path_in_distinfo(c *check.C) {
 			"is not recorded. Run \"@BMAKE@ makepatchsum\".")
 }
 
+// When the distinfo file and the patches are placed in the same package,
+// their diagnostics use short relative paths.
+func (s *Suite) Test_ChecklinesDistinfo__distinfo_and_patches_in_separate_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPackage("category/package",
+		"DISTINFO_FILE=\t../../other/common/distinfo",
+		"PATCHDIR=\t../../other/common/patches")
+	t.Remove("category/package/distinfo")
+	t.CreateFileLines("other/common/patches/CVS/Entries")
+	t.CreateFileDummyPatch("other/common/patches/patch-aa")
+	t.CreateFileDummyPatch("other/common/patches/patch-only-in-patches")
+	t.SetupFileLines("other/common/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = ...",
+		"SHA1 (patch-only-in-distinfo) = ...")
+	t.Chdir("category/package")
+
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"ERROR: ../../other/common/distinfo:3: SHA1 hash of patches/patch-aa differs "+
+			"(distinfo has ..., patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).",
+		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
+			"does not exist in directory \"patches\".",
+		"ERROR: ../../other/common/distinfo: patch \"patches/patch-only-in-patches\" "+
+			"is not recorded. Run \"@BMAKE@ makepatchsum\".")
+}
+
 func (s *Suite) Test_ChecklinesDistinfo__manual_patches(c *check.C) {
 	t := s.Init(c)
 
