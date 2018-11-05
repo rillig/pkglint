@@ -9,7 +9,7 @@ import (
 type Expecter struct {
 	lines Lines
 	index int
-	m     []string
+	m     []string // The groups from the last successful regex match
 }
 
 func NewExpecter(lines Lines) *Expecter {
@@ -20,16 +20,11 @@ func (exp *Expecter) CurrentLine() Line {
 	if exp.index < exp.lines.Len() {
 		return exp.lines.Lines[exp.index]
 	}
-
 	return NewLineEOF(exp.lines.FileName)
 }
 
 func (exp *Expecter) PreviousLine() Line {
 	return exp.lines.Lines[exp.index-1]
-}
-
-func (exp *Expecter) Index() int {
-	return exp.index
 }
 
 func (exp *Expecter) EOF() bool {
@@ -91,7 +86,7 @@ func (exp *Expecter) ExpectEmptyLine() bool {
 	}
 
 	if G.Opts.WarnSpace {
-		if exp.Index() == 0 {
+		if exp.index == 0 {
 			fix := exp.CurrentLine().Autofix()
 			fix.Notef("Empty line expected before this line.")
 			fix.InsertBefore("")
@@ -107,14 +102,11 @@ func (exp *Expecter) ExpectEmptyLine() bool {
 }
 
 func (exp *Expecter) ExpectText(text string) bool {
-	if !exp.EOF() && exp.lines.Lines[exp.index].Text == text {
-		exp.index++
-		exp.m = nil
-		return true
+	result := exp.AdvanceIfEquals(text)
+	if !result {
+		exp.CurrentLine().Warnf("This line should contain the following text: %s", text)
 	}
-
-	exp.CurrentLine().Warnf("This line should contain the following text: %s", text)
-	return false
+	return result
 }
 
 // MkExpecter records the state when checking a list of Makefile lines from top to bottom.
