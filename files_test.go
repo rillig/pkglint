@@ -127,7 +127,7 @@ func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_in_continuati
 		"ERROR: fileName:1: File must end with a newline.")
 }
 
-func (s *Suite) Test_splitRawLine(c *check.C) {
+func (s *Suite) Test_matchContinuationLine(c *check.C) {
 	leadingWhitespace, text, trailingWhitespace, continuation := matchContinuationLine("\n")
 
 	c.Check(leadingWhitespace, equals, "")
