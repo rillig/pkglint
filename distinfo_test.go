@@ -77,7 +77,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 	t.CheckOutputLines(
 		"ERROR: ~/category/package1/distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package1/distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
-		"ERROR: ~/category/package2/distinfo:3: The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, which conflicts with 1234567811111111 in ../package1/distinfo:3.",
+		"ERROR: ~/category/package2/distinfo:3: The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, "+
+			"which conflicts with 1234567811111111 in ../package1/distinfo:3.",
 		"ERROR: ~/category/package2/distinfo:4: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package2/distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
@@ -87,24 +88,17 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 func (s *Suite) Test_ChecklinesDistinfo__uncommitted_patch(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupPackage("category/package")
 	t.Chdir("category/package")
-	t.CreateFileLines("patches/patch-aa",
-		RcsID,
-		"",
-		"--- oldfile",
-		"+++ newfile",
-		"@@ -1,1 +1,1 @@",
-		"-old",
-		"+new")
+	t.CreateFileDummyPatch("patches/patch-aa")
 	t.CreateFileLines("CVS/Entries",
 		"/distinfo/...")
-	lines := t.SetupFileLines("distinfo",
+	t.SetupFileLines("distinfo",
 		RcsID,
 		"",
-		"SHA1 (patch-aa) = 5ad1fb9b3c328fff5caa1a23e8f330e707dd50c0")
-	G.Pkg = NewPackage(".")
+		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
 
-	ChecklinesDistinfo(lines)
+	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
 		"WARN: distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.")
@@ -113,24 +107,57 @@ func (s *Suite) Test_ChecklinesDistinfo__uncommitted_patch(c *check.C) {
 func (s *Suite) Test_ChecklinesDistinfo__unrecorded_patches(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupPackage("category/package")
 	t.Chdir("category/package")
 	t.CreateFileLines("patches/CVS/Entries")
-	t.CreateFileLines("patches/patch-aa")
-	t.CreateFileLines("patches/patch-src-Makefile")
-	lines := t.SetupFileLines("distinfo",
+	t.CreateFileDummyPatch("patches/patch-aa")
+	t.CreateFileDummyPatch("patches/patch-src-Makefile")
+	t.SetupFileLines("distinfo",
 		RcsID,
 		"",
 		"SHA1 (distfile.tar.gz) = ...",
 		"RMD160 (distfile.tar.gz) = ...",
 		"SHA512 (distfile.tar.gz) = ...",
 		"Size (distfile.tar.gz) = 1024 bytes")
-	G.Pkg = NewPackage(".")
 
-	ChecklinesDistinfo(lines)
+	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
 		"ERROR: distinfo: patch \"patches/patch-aa\" is not recorded. Run \""+confMake+" makepatchsum\".",
 		"ERROR: distinfo: patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
+}
+
+// The distinfo file and the patches are usually placed in the package
+// directory. By defining PATCHDIR or DISTINFO_FILE, a package can define
+// that they are somewhere else in pkgsrc.
+func (s *Suite) Test_ChecklinesDistinfo__relative_path_in_distinfo(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPackage("category/package",
+		"DISTINFO_FILE=\t../../other/common/distinfo",
+		"PATCHDIR=\t../../devel/patches/patches")
+	t.CreateFileLines("devel/patches/patches/CVS/Entries")
+	t.CreateFileDummyPatch("devel/patches/patches/patch-aa")
+	t.CreateFileDummyPatch("devel/patches/patches/patch-only-in-patches")
+	t.SetupFileLines("other/common/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = ...",
+		"SHA1 (patch-only-in-distinfo) = ...")
+	t.Chdir("category/package")
+
+	G.checkdirPackage(".")
+
+	// FIXME: The plain "distinfo" below is wrong.
+	t.CheckOutputLines(
+		"ERROR: distinfo: patch \"../../devel/patches/patches/patch-aa\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
+		"ERROR: distinfo: patch \"../../devel/patches/patches/patch-only-in-patches\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
+		"ERROR: ../../other/common/distinfo:3: SHA1 hash of ../../devel/patches/patches/patch-aa differs "+
+			"(distinfo has ..., patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).",
+		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
+			"does not exist in directory \"../../devel/patches/patches\".",
+		"ERROR: ../../other/common/distinfo: patch \"../../devel/patches/patches/patch-only-in-patches\" "+
+			"is not recorded. Run \"@BMAKE@ makepatchsum\".")
 }
 
 func (s *Suite) Test_ChecklinesDistinfo__manual_patches(c *check.C) {
