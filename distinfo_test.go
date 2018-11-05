@@ -136,6 +136,7 @@ func (s *Suite) Test_ChecklinesDistinfo__relative_path_in_distinfo(c *check.C) {
 	t.SetupPackage("category/package",
 		"DISTINFO_FILE=\t../../other/common/distinfo",
 		"PATCHDIR=\t../../devel/patches/patches")
+	t.Remove("category/package/distinfo")
 	t.CreateFileLines("devel/patches/patches/CVS/Entries")
 	t.CreateFileDummyPatch("devel/patches/patches/patch-aa")
 	t.CreateFileDummyPatch("devel/patches/patches/patch-only-in-patches")
@@ -148,10 +149,7 @@ func (s *Suite) Test_ChecklinesDistinfo__relative_path_in_distinfo(c *check.C) {
 
 	G.checkdirPackage(".")
 
-	// FIXME: The plain "distinfo" below is wrong.
 	t.CheckOutputLines(
-		"ERROR: distinfo: patch \"../../devel/patches/patches/patch-aa\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
-		"ERROR: distinfo: patch \"../../devel/patches/patches/patch-only-in-patches\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
 		"ERROR: ../../other/common/distinfo:3: SHA1 hash of ../../devel/patches/patches/patch-aa differs "+
 			"(distinfo has ..., patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).",
 		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
