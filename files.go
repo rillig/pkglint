@@ -70,7 +70,7 @@ func nextLogicalLine(fileName string, rawLines []*RawLine, index int) (Line, int
 		}
 	}
 
-	text := ""
+	var text strings.Builder
 	firstlineno := rawLines[index].Lineno
 	var lineRawLines []*RawLine
 	interestingRawLines := rawLines[index:]
@@ -78,24 +78,25 @@ func nextLogicalLine(fileName string, rawLines []*RawLine, index int) (Line, int
 	for i, rawLine := range interestingRawLines {
 		indent, rawText, outdent, cont := splitRawLine(rawLine.textnl)
 
-		if text == "" {
-			text += indent
+		if text.Len() == 0 {
+			text.WriteString(indent)
 		}
-		text += rawText
+		text.WriteString(rawText)
 		lineRawLines = append(lineRawLines, rawLine)
 
 		if cont != "" && i != len(interestingRawLines)-1 {
-			text += " "
+			text.WriteString(" ")
 			index++
 		} else {
-			text += outdent + cont
+			text.WriteString(outdent)
+			text.WriteString(cont)
 			break
 		}
 	}
 
 	lastlineno := rawLines[index].Lineno
 
-	return NewLineMulti(fileName, firstlineno, lastlineno, text, lineRawLines), index + 1
+	return NewLineMulti(fileName, firstlineno, lastlineno, text.String(), lineRawLines), index + 1
 }
 
 func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
