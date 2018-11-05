@@ -76,7 +76,7 @@ func nextLogicalLine(fileName string, rawLines []*RawLine, index int) (Line, int
 	interestingRawLines := rawLines[index:]
 
 	for i, rawLine := range interestingRawLines {
-		indent, rawText, outdent, cont := splitRawLine(rawLine.textnl)
+		indent, rawText, outdent, cont := matchContinuationLine(rawLine.textnl)
 
 		if text.Len() == 0 {
 			text.WriteString(indent)
@@ -99,31 +99,31 @@ func nextLogicalLine(fileName string, rawLines []*RawLine, index int) (Line, int
 	return NewLineMulti(fileName, firstlineno, lastlineno, text.String(), lineRawLines), index + 1
 }
 
-func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
-	end := len(textnl)
+func matchContinuationLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
+	j := len(textnl)
 
-	if end-1 >= 0 && textnl[end-1] == '\n' {
-		end--
+	if j > 0 && textnl[j-1] == '\n' {
+		j--
 	}
 
 	backslashes := 0
-	for end-1 >= 0 && textnl[end-1] == '\\' {
-		end--
+	for j > 0 && textnl[j-1] == '\\' {
+		j--
 		backslashes++
 	}
-	cont = textnl[end : end+backslashes%2]
-	end += backslashes / 2
+	cont = textnl[j : j+backslashes%2]
+	j += backslashes / 2
 
-	trailingEnd := end
-	for end-1 >= 0 && (textnl[end-1] == ' ' || textnl[end-1] == '\t') {
-		end--
+	trailingEnd := j
+	for j > 0 && isHspace(textnl[j-1]) {
+		j--
 	}
-	trailingStart := end
+	trailingStart := j
 	trailingWhitespace = textnl[trailingStart:trailingEnd]
 
 	i := 0
 	leadingStart := i
-	for i < end && (textnl[i] == ' ' || textnl[i] == '\t') {
+	for i < j && isHspace(textnl[i]) {
 		i++
 	}
 	leadingEnd := i
@@ -156,8 +156,8 @@ func convertToLogicalLines(fileName string, rawText string, joinBackslashLines b
 		}
 	}
 
-	if 0 < len(rawLines) && !hasSuffix(rawLines[len(rawLines)-1].textnl, "\n") {
-		NewLineEOF(fileName).Errorf("File must end with a newline.")
+	if rawText != "" && !hasSuffix(rawText, "\n") {
+		loglines[len(loglines)-1].Errorf("File must end with a newline.")
 	}
 
 	return NewLines(fileName, loglines)

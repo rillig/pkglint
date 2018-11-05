@@ -121,7 +121,23 @@ func (s *Suite) Test_convertToLogicalLines__comments(c *check.C) {
 		"ERROR: ~/comment.mk:23: Unknown Makefile line format: \"This is no comment\".")
 }
 
-func (s *Suite) Test_convertToLogicalLines__continuation_in_last_line(c *check.C) {
+func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof(c *check.C) {
+	t := s.Init(c)
+
+	rawText := "" +
+		"The package description\n" +
+		"takes 2 lines"
+
+	lines := convertToLogicalLines("DESCR", rawText, true)
+
+	c.Check(lines.Len(), equals, 2)
+	c.Check(lines.Lines[0].String(), equals, "DESCR:1: The package description")
+	c.Check(lines.Lines[1].String(), equals, "DESCR:2: takes 2 lines")
+	t.CheckOutputLines(
+		"ERROR: DESCR:2: File must end with a newline.")
+}
+
+func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_in_continuation_line(c *check.C) {
 	t := s.Init(c)
 
 	rawText := "" +
@@ -132,18 +148,18 @@ func (s *Suite) Test_convertToLogicalLines__continuation_in_last_line(c *check.C
 	c.Check(lines.Len(), equals, 1)
 	c.Check(lines.Lines[0].String(), equals, "fname_contlast:1: last line\\")
 	t.CheckOutputLines(
-		"ERROR: fname_contlast:EOF: File must end with a newline.")
+		"ERROR: fname_contlast:1: File must end with a newline.")
 }
 
 func (s *Suite) Test_splitRawLine(c *check.C) {
-	leadingWhitespace, text, trailingWhitespace, continuation := splitRawLine("\n")
+	leadingWhitespace, text, trailingWhitespace, continuation := matchContinuationLine("\n")
 
 	c.Check(leadingWhitespace, equals, "")
 	c.Check(text, equals, "")
 	c.Check(trailingWhitespace, equals, "")
 	c.Check(continuation, equals, "")
 
-	leadingWhitespace, text, trailingWhitespace, continuation = splitRawLine("\tword   \\\n")
+	leadingWhitespace, text, trailingWhitespace, continuation = matchContinuationLine("\tword   \\\n")
 
 	c.Check(leadingWhitespace, equals, "\t")
 	c.Check(text, equals, "word")
