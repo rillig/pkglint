@@ -176,7 +176,7 @@ func (s *Suite) Test_Options_Parse__long_flags(c *check.C) {
 	c.Check(posFlags, check.Equals, [5]bool{true, true, true, true, true})
 	c.Check(negFlags, check.Equals, [5]bool{false, false, false, false, false})
 	c.Check(otherFlags, check.Equals, [2]bool{true, false})
-	c.Check(err, check.ErrorMatches, `^progname: invalid argument for option --other1$`)
+	c.Check(err.Error(), check.Equals, "progname: invalid argument for option --other1")
 }
 
 func (s *Suite) Test_Options_handleLongOption__flag_group_without_argument(c *check.C) {
