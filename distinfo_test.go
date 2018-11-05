@@ -209,7 +209,7 @@ func (s *Suite) Test_ChecklinesDistinfo__manual_patches(c *check.C) {
 	ChecklinesDistinfo(lines)
 
 	// When a distinfo file is checked in the context of a package,
-	// the PATCHDIR is known, therefore the checks are active.
+	// the PATCHDIR is known, therefore the check is active.
 	t.CheckOutputLines(
 		"WARN: distinfo:3: Patch file \"patch-aa\" does not exist in directory \"patches\".")
 }
@@ -218,6 +218,8 @@ func (s *Suite) Test_ChecklinesDistinfo__manual_patches(c *check.C) {
 // their own patches directory. Therefore the distinfo file refers to missing
 // patches. Since this strange situation is caused by the pkgsrc
 // infrastructure, there is nothing a package author can do about.
+//
+// XXX: Re-check the documentation for this test.
 func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
 	t := s.Init(c)
 
@@ -229,7 +231,7 @@ func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
 		"",
 		"PHPEXT_MK=      # defined",
 		"PHPPKGSRCDIR=   ../../lang/php72",
-		"LICENSE?=        unknown-license",
+		"LICENSE?=       unknown-license",
 		"COMMENT?=       Some PHP package",
 		"GENERATE_PLIST+=# none",
 		"",
@@ -239,20 +241,11 @@ func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
 		".if defined(USE_PHP_EXT_PATCHES)",
 		"PATCHDIR=       ${.CURDIR}/${PHPPKGSRCDIR}/patches",
 		".endif")
-	t.CreateFileLines("lang/php72/patches/patch-php72",
-		RcsID,
-		"",
-		"Documentation",
-		"",
-		"--- old file",
-		"+++ new file",
-		"@@ -1,1 +1,1 @@",
-		"-old",
-		"+new")
+	t.CreateFileDummyPatch("lang/php72/patches/patch-php72")
 	t.CreateFileLines("lang/php72/distinfo",
 		RcsID,
 		"",
-		"SHA1 (patch-php72) = c109b2089f5ddbc5372b2ab28115ff558ee4187d")
+		"SHA1 (patch-php72) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
 
 	t.CreateFileLines("archivers/php-bz2/Makefile",
 		MkRcsID,
@@ -261,13 +254,15 @@ func (s *Suite) Test_ChecklinesDistinfo__missing_php_patches(c *check.C) {
 		"",
 		".include \"../../lang/php/ext.mk\"",
 		".include \"../../mk/bsd.pkg.mk\"")
+
+	G.CheckDirent(t.File("archivers/php-bz2"))
+
 	t.CreateFileLines("archivers/php-zlib/Makefile",
 		MkRcsID,
 		"",
 		".include \"../../lang/php/ext.mk\"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CheckDirent(t.File("archivers/php-bz2"))
 	G.CheckDirent(t.File("archivers/php-zlib"))
 
 	t.CheckOutputEmpty()
