@@ -16,8 +16,7 @@ const (
 )
 
 func Load(fileName string, options LoadOptions) Lines {
-	fromCache := G.fileCache.Get(fileName, options)
-	if fromCache != nil {
+	if fromCache := G.fileCache.Get(fileName, options); fromCache != nil {
 		return fromCache
 	}
 
@@ -62,19 +61,16 @@ func LoadMk(fileName string, options LoadOptions) MkLines {
 	return NewMkLines(lines)
 }
 
-func nextLogicalLine(fileName string, rawLines []*RawLine, pindex *int) Line {
+func nextLogicalLine(fileName string, rawLines []*RawLine, index int) (Line, int) {
 	{ // Handle the common case efficiently
-		index := *pindex
 		rawLine := rawLines[index]
 		textnl := rawLine.textnl
 		if hasSuffix(textnl, "\n") && !hasSuffix(textnl, "\\\n") {
-			*pindex = index + 1
-			return NewLine(fileName, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index:index+1])
+			return NewLine(fileName, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index:index+1]), index + 1
 		}
 	}
 
 	text := ""
-	index := *pindex
 	firstlineno := rawLines[index].Lineno
 	var lineRawLines []*RawLine
 	interestingRawLines := rawLines[index:]
@@ -98,9 +94,8 @@ func nextLogicalLine(fileName string, rawLines []*RawLine, pindex *int) Line {
 	}
 
 	lastlineno := rawLines[index].Lineno
-	*pindex = index + 1
 
-	return NewLineMulti(fileName, firstlineno, lastlineno, text, lineRawLines)
+	return NewLineMulti(fileName, firstlineno, lastlineno, text, lineRawLines), index + 1
 }
 
 func splitRawLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
@@ -148,7 +143,9 @@ func convertToLogicalLines(fileName string, rawText string, joinBackslashLines b
 	var loglines []Line
 	if joinBackslashLines {
 		for lineno := 0; lineno < len(rawLines); {
-			loglines = append(loglines, nextLogicalLine(fileName, rawLines, &lineno))
+			line, nextLineno := nextLogicalLine(fileName, rawLines, lineno)
+			loglines = append(loglines, line)
+			lineno = nextLineno
 		}
 	} else {
 		for _, rawLine := range rawLines {
