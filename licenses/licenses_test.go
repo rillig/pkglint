@@ -3,6 +3,7 @@ package licenses
 import (
 	"encoding/json"
 	"gopkg.in/check.v1"
+	"netbsd.org/pkglint/intqa"
 	"strings"
 	"testing"
 )
@@ -129,4 +130,11 @@ func toJSON(cond *Condition) string {
 func Test(t *testing.T) {
 	check.Suite(new(Suite))
 	check.TestingT(t)
+}
+
+func (s *Suite) Test__test_names(c *check.C) {
+	ck := intqa.NewTestNameChecker(c)
+	ck.IgnoreFiles("*yacc.go")
+	ck.ShowWarnings(false)
+	ck.Check()
 }

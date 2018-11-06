@@ -2,6 +2,7 @@ package getopt
 
 import (
 	"gopkg.in/check.v1"
+	"netbsd.org/pkglint/intqa"
 	"strings"
 	"testing"
 )
@@ -12,7 +13,7 @@ var _ = check.Suite(new(Suite))
 
 func Test(t *testing.T) { check.TestingT(t) }
 
-func (s *Suite) Test_Options_Parse_short(c *check.C) {
+func (s *Suite) Test_Options_Parse__short(c *check.C) {
 	opts := NewOptions()
 	var help bool
 	opts.AddFlagVar('h', "help", &help, false, "prints a help page")
@@ -24,7 +25,7 @@ func (s *Suite) Test_Options_Parse_short(c *check.C) {
 	c.Check(help, check.Equals, true)
 }
 
-func (s *Suite) Test_Options_Parse_unknown_short(c *check.C) {
+func (s *Suite) Test_Options_Parse__unknown_short(c *check.C) {
 	opts := NewOptions()
 
 	_, err := opts.Parse([]string{"progname", "-z"})
@@ -32,7 +33,7 @@ func (s *Suite) Test_Options_Parse_unknown_short(c *check.C) {
 	c.Check(err.Error(), check.Equals, "progname: unknown option: -z")
 }
 
-func (s *Suite) Test_Options_Parse_unknown_long(c *check.C) {
+func (s *Suite) Test_Options_Parse__unknown_long(c *check.C) {
 	opts := NewOptions()
 
 	_, err := opts.Parse([]string{"progname", "--unknown-long"})
@@ -40,7 +41,7 @@ func (s *Suite) Test_Options_Parse_unknown_long(c *check.C) {
 	c.Check(err.Error(), check.Equals, "progname: unknown option: --unknown-long")
 }
 
-func (s *Suite) Test_Options_Parse_unknown_flag_in_group(c *check.C) {
+func (s *Suite) Test_Options_Parse__unknown_flag_in_group(c *check.C) {
 	opts := NewOptions()
 	opts.AddFlagGroup('W', "warnings", "", "")
 
@@ -57,7 +58,7 @@ func (s *Suite) Test_Options_Parse_unknown_flag_in_group(c *check.C) {
 	c.Check(err.Error(), check.Equals, "progname: option requires an argument: -W")
 }
 
-func (s *Suite) Test_Options_Parse_abbreviated_long(c *check.C) {
+func (s *Suite) Test_Options_Parse__abbreviated_long(c *check.C) {
 	opts := NewOptions()
 	var longFlag, longerFlag bool
 	opts.AddFlagVar('?', "long", &longFlag, false, "")
@@ -83,7 +84,7 @@ func (s *Suite) Test_Options_Parse_abbreviated_long(c *check.C) {
 	c.Check(longerFlag, check.Equals, true)
 }
 
-func (s *Suite) Test_Options_Parse_mixed_args_and_options(c *check.C) {
+func (s *Suite) Test_Options_Parse__mixed_args_and_options(c *check.C) {
 	opts := NewOptions()
 	var aflag, bflag bool
 	opts.AddFlagVar('a', "aflag", &aflag, false, "")
@@ -106,7 +107,7 @@ func (s *Suite) Test_Options_Parse_mixed_args_and_options(c *check.C) {
 	c.Check(bflag, check.Equals, false)
 }
 
-func (s *Suite) Test_Options_Parse_string_list(c *check.C) {
+func (s *Suite) Test_Options_Parse__string_list(c *check.C) {
 	opts := NewOptions()
 	var verbose bool
 	var includes []string
@@ -276,4 +277,10 @@ func (s *Suite) Test_Options_Help(c *check.C) {
 		"    extra   Print extra warnings (disabled)\n"+
 		"\n"+
 		"  (Prefix a flag with \"no-\" to disable it.)\n")
+}
+
+func (s *Suite) Test__test_names(c *check.C) {
+	ck := intqa.NewTestNameChecker(c)
+	ck.ShowWarnings(false)
+	ck.Check()
 }

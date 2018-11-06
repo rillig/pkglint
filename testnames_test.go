@@ -9,7 +9,6 @@ import (
 //
 //  Test_${Type}_${Method}__${description_using_underscores}
 func (s *Suite) Test__test_names(c *check.C) {
-
 	ck := intqa.NewTestNameChecker(c)
 	ck.IgnoreFiles("*yacc.go")
 	ck.AllowPrefix("Varalign", "mklines_varalign.go")
@@ -22,6 +21,6 @@ func (s *Suite) Test__test_names(c *check.C) {
 		"dquotBacktDquot",
 		"and_getSubdirs",
 		"SilentAutofixFormat")
-	ck.ShowWarnings(true)
+	ck.ShowWarnings(false)
 	ck.Check()
 }

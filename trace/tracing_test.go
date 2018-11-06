@@ -3,6 +3,7 @@ package trace
 import (
 	"bytes"
 	"gopkg.in/check.v1"
+	"netbsd.org/pkglint/intqa"
 	"testing"
 )
 
@@ -31,7 +32,7 @@ func (t *Tracer) argumentsAndResultWrong(arg0 string, arg1 int) (result string) 
 	return "the result"
 }
 
-func (s *Suite) Test_Call__onlyArguments(c *check.C) {
+func (s *Suite) Test_Tracer_Call__only_arguments(c *check.C) {
 	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
@@ -44,7 +45,7 @@ func (s *Suite) Test_Call__onlyArguments(c *check.C) {
 		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n")
 }
 
-func (s *Suite) Test_Call__argumentsAndResult(c *check.C) {
+func (s *Suite) Test_Tracer_Call__arguments_and_result(c *check.C) {
 	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
@@ -57,7 +58,7 @@ func (s *Suite) Test_Call__argumentsAndResult(c *check.C) {
 		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234, \"=>\", \"the result\")\n")
 }
 
-func (s *Suite) Test_Call__argumentsAndResultWrong(c *check.C) {
+func (s *Suite) Test_Tracer_Call__arguments_and_result_wrong(c *check.C) {
 	tracer := &s.Tracer
 
 	output := s.captureTracingOutput(func() {
@@ -104,7 +105,7 @@ func (s *Suite) Test__stringer_arg(c *check.C) {
 		"TRACE: - netbsd.org/pkglint/trace.(*Suite).Test__stringer_arg.func1(It's a string, It's a string)\n")
 }
 
-func (s *Suite) Test_traceCall__panic(c *check.C) {
+func (s *Suite) Test_Tracer_traceCall__panic(c *check.C) {
 	tracer := &s.Tracer
 
 	c.Check(
@@ -113,7 +114,7 @@ func (s *Suite) Test_traceCall__panic(c *check.C) {
 		"Internal pkglint error: calls to trace.Call must only occur in tracing mode")
 }
 
-func (s *Suite) Test_Result__panic(c *check.C) {
+func (s *Suite) Test_Tracer_Result__panic(c *check.C) {
 	tracer := &s.Tracer
 
 	c.Check(
@@ -140,4 +141,11 @@ type str struct{}
 
 func (str) String() string {
 	return "It's a string"
+}
+
+func (s *Suite) Test__test_names(c *check.C) {
+	ck := intqa.NewTestNameChecker(c)
+	ck.AllowCamelCaseDescriptions()
+	ck.ShowWarnings(false)
+	ck.Check()
 }

@@ -2,6 +2,7 @@ package textproc
 
 import (
 	"gopkg.in/check.v1"
+	"netbsd.org/pkglint/intqa"
 	"testing"
 	"unicode"
 )
@@ -283,4 +284,12 @@ func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
 		0xefffffffffffffff})
 
 	c.Check(inverse.Inverse().bits, equals, set.bits)
+}
+
+func (s *Suite) Test__test_names(c *check.C) {
+	ck := intqa.NewTestNameChecker(c)
+	ck.AllowCamelCaseDescriptions(
+		"NextString_then_EOF")
+	ck.ShowWarnings(false)
+	ck.Check()
 }

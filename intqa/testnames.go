@@ -20,13 +20,13 @@ import (
 //
 // Test_${Type}_${Method}__${description_using_underscores}
 type TestNameChecker struct {
-	descriptions map[string]bool
-	ignore       []string
-	warn         bool
-	prefixes     []testeePrefix
-	c            *check.C
-	errors       []string
-	warnings     []string
+	camelCase map[string]bool
+	ignore    []string
+	warn      bool
+	prefixes  []testeePrefix
+	c         *check.C
+	errors    []string
+	warnings  []string
 }
 
 type testeePrefix struct {
@@ -53,7 +53,7 @@ type testeeElement struct {
 }
 
 func NewTestNameChecker(c *check.C) *TestNameChecker {
-	return &TestNameChecker{c: c, descriptions: make(map[string]bool)}
+	return &TestNameChecker{c: c, camelCase: make(map[string]bool)}
 }
 
 func (ck *TestNameChecker) IgnoreFiles(fileGlob string) {
@@ -80,7 +80,7 @@ func (ck *TestNameChecker) AllowPrefix(prefix, sourceFileName string) {
 // other in the test description. This is a typical use case.
 func (ck *TestNameChecker) AllowCamelCaseDescriptions(descriptions ...string) {
 	for _, description := range descriptions {
-		ck.descriptions[description] = true
+		ck.camelCase[description] = true
 	}
 }
 
@@ -180,10 +180,11 @@ func (ck *TestNameChecker) loadAllElements() []*testeeElement {
 	}
 
 	var elements []*testeeElement
-	for fileName, file := range pkgs["main"].Files {
-		//fixTabs(fileName)
-		for _, decl := range file.Decls {
-			ck.addElement(&elements, decl, fileName)
+	for _, pkg := range pkgs {
+		for fileName, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				ck.addElement(&elements, decl, fileName)
+			}
 		}
 	}
 
@@ -237,7 +238,7 @@ func (ck *TestNameChecker) checkTestName(test *testeeElement, prefix string, des
 		}
 	}
 
-	if isCamelCase(descr) && !ck.descriptions[descr] {
+	if isCamelCase(descr) && !ck.camelCase[descr] {
 		ck.addError("%s: Test description %q must not use CamelCase.", test.FullName, descr)
 	}
 }
