@@ -18,9 +18,10 @@ func (s *Suite) Test_Parse(c *check.C) {
 		c.Check(Parse(cond), check.DeepEquals, expected)
 	}
 
-	checkParseDeep("gnu-gpl-v2", NewSingleton(NewName("gnu-gpl-v2")))
+	checkParseDeep("gnu-gpl-v2", NewName("gnu-gpl-v2"))
 
-	checkParse("gnu-gpl-v2", "{Children:[{Name:gnu-gpl-v2}]}")
+	checkParse("gnu-gpl-v2", "{Name:gnu-gpl-v2}")
+
 	checkParse("a AND b", "{And:true,Children:[{Name:a},{Name:b}]}")
 	checkParse("a OR b", "{Or:true,Children:[{Name:a},{Name:b}]}")
 
@@ -45,7 +46,7 @@ func (s *Suite) Test_Parse(c *check.C) {
 			NewParen(NewAnd(NewName("c"), NewName("d")))))
 
 	checkParse("a AND b OR c AND d", "{And:true,Or:true,Children:[{Name:a},{Name:b},{Name:c},{Name:d}]}")
-	checkParse("((a AND (b AND c)))", "{Children:[{Paren:{Children:[{Paren:{And:true,Children:[{Name:a},{Paren:{And:true,Children:[{Name:b},{Name:c}]}}]}}]}}]}")
+	checkParse("((a AND (b AND c)))", "{Paren:{Children:[{Paren:{And:true,Children:[{Name:a},{Paren:{And:true,Children:[{Name:b},{Name:c}]}}]}}]}}")
 
 	c.Check(Parse("a AND b OR c AND d").String(), check.Equals, "a MIXED b MIXED c MIXED d")
 
@@ -82,7 +83,7 @@ func (s *Suite) Test_Condition_String(c *check.C) {
 	c.Check(mixed.String(), check.Equals, "a MIXED b MIXED c")
 }
 
-func (s *Suite) Test_Walk(c *check.C) {
+func (s *Suite) Test_Condition_Walk(c *check.C) {
 	condition := Parse("(a OR b) AND (c AND d)")
 
 	var out []string
@@ -111,9 +112,6 @@ func NewName(name string) *Condition {
 }
 func NewParen(child *Condition) *Condition {
 	return &Condition{Paren: child}
-}
-func NewSingleton(child *Condition) *Condition {
-	return &Condition{Children: []*Condition{child}}
 }
 func NewAnd(parts ...*Condition) *Condition {
 	return &Condition{Children: parts, And: true}

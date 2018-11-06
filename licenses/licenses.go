@@ -20,10 +20,15 @@ type Condition struct {
 func Parse(licenses string) *Condition {
 	lexer := &licenseLexer{lexer: textproc.NewLexer(licenses)}
 	result := liyyNewParser().Parse(lexer)
-	if result == 0 && lexer.lexer.EOF() {
-		return lexer.result
+	if result != 0 || !lexer.lexer.EOF() {
+		return nil
 	}
-	return nil
+
+	cond := lexer.result
+	if !cond.And && !cond.Or && cond.Name == "" && len(cond.Children) == 1 {
+		cond = cond.Children[0]
+	}
+	return cond
 }
 
 func (cond *Condition) String() string {
