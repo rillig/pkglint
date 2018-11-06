@@ -18,7 +18,7 @@ func (h *Histogram) Add(s string, n int) {
 	h.histo[s] += n
 }
 
-func (h *Histogram) PrintStats(caption string, out io.Writer, limit int) {
+func (h *Histogram) PrintStats(out io.Writer, caption string, limit int) {
 	type row struct {
 		s     string
 		count int

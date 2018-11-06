@@ -164,9 +164,9 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		pkglint.loaded = histogram.New()
 		defer func() {
 			pkglint.logOut.Write("")
-			pkglint.loghisto.PrintStats("loghisto", pkglint.logOut.out, -1)
+			pkglint.loghisto.PrintStats(pkglint.logOut.out, "loghisto", -1)
 			G.res.PrintStats(pkglint.logOut.out)
-			pkglint.loaded.PrintStats("loaded", pkglint.logOut.out, 10)
+			pkglint.loaded.PrintStats(pkglint.logOut.out, "loaded", 10)
 			pkglint.logOut.WriteLine(fmt.Sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
 		}()
 	}
