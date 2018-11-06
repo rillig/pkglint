@@ -177,7 +177,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 
 	t.ExpectFatal(
 		G.Pkgsrc.loadDocChanges,
-		"FATAL: ~/doc: Cannot be read.")
+		"FATAL: ~/doc: Cannot be read for loading the package changes.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {

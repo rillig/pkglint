@@ -195,17 +195,15 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 		return nil
 	}
 
-	fileInfos, err := ioutil.ReadDir(categoryDir)
-	if err != nil {
-		return error()
-	}
-
 	var names []string
-	for _, fileInfo := range fileInfos {
+	for _, fileInfo := range src.ReadDir(category) {
 		name := fileInfo.Name()
 		if matches(name, re) {
 			names = append(names, name)
 		}
+	}
+	if len(names) == 0 {
+		return error()
 	}
 
 	// In the pkgsrc directories, the major versions of packages are
@@ -227,10 +225,6 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 			}
 			keys[name] = version
 		}
-	}
-
-	if len(names) == 0 {
-		return error()
 	}
 
 	sort.SliceStable(names, func(i, j int) bool {
@@ -486,24 +480,24 @@ func (src *Pkgsrc) GetSuggestedPackageUpdates() []SuggestedUpdate {
 }
 
 func (src *Pkgsrc) loadDocChanges() {
-	docdir := G.Pkgsrc.File("doc")
-	files, err := ioutil.ReadDir(docdir)
-	if err != nil {
-		NewLineWhole(docdir).Fatalf("Cannot be read.")
+	docDir := src.File("doc")
+	files := src.ReadDir("doc")
+	if len(files) == 0 {
+		NewLineWhole(docDir).Fatalf("Cannot be read for loading the package changes.")
 	}
 
-	var fnames []string
+	var fileNames []string
 	for _, file := range files {
 		fileName := file.Name()
 		if matches(fileName, `^CHANGES-20\d\d$`) && fileName >= "CHANGES-2011" {
-			fnames = append(fnames, fileName)
+			fileNames = append(fileNames, fileName)
 		}
 	}
 
-	sort.Strings(fnames)
+	sort.Strings(fileNames)
 	src.LastChange = make(map[string]*Change)
-	for _, fileName := range fnames {
-		changes := src.loadDocChangesFromFile(docdir + "/" + fileName)
+	for _, fileName := range fileNames {
+		changes := src.loadDocChangesFromFile(docDir + "/" + fileName)
 		for _, change := range changes {
 			src.LastChange[change.Pkgpath] = change
 		}
@@ -692,6 +686,26 @@ func (src *Pkgsrc) Load(fileName string, options LoadOptions) Lines {
 // LoadMk loads the Makefile relative to the pkgsrc top directory.
 func (src *Pkgsrc) LoadMk(fileName string, options LoadOptions) MkLines {
 	return LoadMk(src.File(fileName), options)
+}
+
+// ReadDir reads the file listing from the given directory (relative to the pkgsrc root),
+// filtering out any ignored files (CVS/*) and empty directories.
+func (src *Pkgsrc) ReadDir(dirName string) []os.FileInfo {
+	dir := src.File(dirName)
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+
+	var relevantFiles []os.FileInfo
+	for _, dirent := range files {
+		name := dirent.Name()
+		if !dirent.IsDir() || !isIgnoredFilename(name) && !isEmptyDir(dir+"/"+name) {
+			relevantFiles = append(relevantFiles, dirent)
+		}
+	}
+
+	return relevantFiles
 }
 
 // File resolves a file name relative to the pkgsrc top directory.

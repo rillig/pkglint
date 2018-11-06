@@ -1,9 +1,6 @@
 package main
 
-import (
-	"io/ioutil"
-	"netbsd.org/pkglint/licenses"
-)
+import "netbsd.org/pkglint/licenses"
 
 func (src *Pkgsrc) checkToplevelUnusedLicenses() {
 	usedLicenses := src.UsedLicenses
@@ -11,13 +8,12 @@ func (src *Pkgsrc) checkToplevelUnusedLicenses() {
 		return
 	}
 
-	licenseDir := src.File("licenses")
-	files, _ := ioutil.ReadDir(licenseDir)
-	for _, licenseFile := range files {
+	licensesDir := src.File("licenses")
+	for _, licenseFile := range src.ReadDir("licenses") {
 		licenseName := licenseFile.Name()
-		licensePath := licenseDir + "/" + licenseName
-		if fileExists(licensePath) {
-			if !usedLicenses[licenseName] {
+		if !usedLicenses[licenseName] {
+			licensePath := licensesDir + "/" + licenseName
+			if fileExists(licensePath) {
 				NewLineWhole(licensePath).Warnf("This license seems to be unused.")
 			}
 		}
@@ -30,9 +26,9 @@ type LicenseChecker struct {
 
 func (lc *LicenseChecker) Check(value string, op MkOperator) {
 	expanded := resolveVariableRefs(value) // For ${PERL5_LICENSE}
-	licenses := licenses.Parse(ifelseStr(op == opAssignAppend, "append-placeholder ", "") + expanded)
+	cond := licenses.Parse(ifelseStr(op == opAssignAppend, "append-placeholder ", "") + expanded)
 
-	if licenses == nil {
+	if cond == nil {
 		if op == opAssign {
 			lc.MkLine.Errorf("Parse error for license condition %q.", value)
 		} else {
@@ -41,7 +37,7 @@ func (lc *LicenseChecker) Check(value string, op MkOperator) {
 		return
 	}
 
-	licenses.Walk(lc.checkNode)
+	cond.Walk(lc.checkNode)
 }
 
 func (lc *LicenseChecker) checkLicenseName(license string) {
