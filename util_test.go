@@ -93,7 +93,7 @@ func (s *Suite) Test_relpath__quick(c *check.C) {
 	c.Check(relpath("some/dir", "some/directory"), equals, "../directory")
 }
 
-func (s *Suite) Test_relpath__failure(c *check.C) {
+func (s *Suite) Test_relpath__failure_on_Windows(c *check.C) {
 	t := s.Init(c)
 
 	if runtime.GOOS == "windows" {
@@ -101,6 +101,15 @@ func (s *Suite) Test_relpath__failure(c *check.C) {
 			func() { relpath("c:/", "d:/") },
 			"FATAL: relpath \"c:/\" \"d:/\".")
 	}
+}
+
+func (s *Suite) Test_relpath__failure_on_Linux(c *check.C) {
+	t := s.Init(c)
+
+	c.Check(
+		func() { relpath(t.File("bin")+"\x00", t.File("rel")) },
+		check.PanicMatches,
+		`^Pkglint internal error: abspath \".*\".*`)
 }
 
 func (s *Suite) Test_abspath(c *check.C) {
