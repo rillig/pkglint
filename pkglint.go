@@ -206,7 +206,8 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		pkglint.CheckDirent(item)
 	}
 
-	checkToplevelUnusedLicenses()
+	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
+
 	pkglint.ShowSummary()
 	if pkglint.errors != 0 {
 		return 1

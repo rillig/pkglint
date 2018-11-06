@@ -5,20 +5,20 @@ import (
 	"netbsd.org/pkglint/licenses"
 )
 
-func checkToplevelUnusedLicenses() {
-	usedLicenses := G.Pkgsrc.UsedLicenses
+func (src *Pkgsrc) checkToplevelUnusedLicenses() {
+	usedLicenses := src.UsedLicenses
 	if usedLicenses == nil {
 		return
 	}
 
-	licensedir := G.Pkgsrc.File("licenses")
-	files, _ := ioutil.ReadDir(licensedir)
-	for _, licensefile := range files {
-		licensename := licensefile.Name()
-		licensepath := licensedir + "/" + licensename
-		if fileExists(licensepath) {
-			if !usedLicenses[licensename] {
-				NewLineWhole(licensepath).Warnf("This license seems to be unused.")
+	licenseDir := src.File("licenses")
+	files, _ := ioutil.ReadDir(licenseDir)
+	for _, licenseFile := range files {
+		licenseName := licenseFile.Name()
+		licensePath := licenseDir + "/" + licenseName
+		if fileExists(licensePath) {
+			if !usedLicenses[licenseName] {
+				NewLineWhole(licensePath).Warnf("This license seems to be unused.")
 			}
 		}
 	}
