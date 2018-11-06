@@ -2,18 +2,19 @@ package licenses
 
 import (
 	"netbsd.org/pkglint/textproc"
+	"strings"
 )
 
-// Condition describes a complex license condition.
-// It has either `Name` or `Paren` or `Children` set.
-// In the `Children` case, `And` and `Or` specify the operators used.
-// Malformed license conditions can have both `And` and `Or` set.
+// Condition describes the syntax of a complex license condition.
+// It has either Name or Paren or Children set.
+// In the Children case, either And or Or specify the operators used.
+// Only malformed license conditions can have both And and Or set.
 type Condition struct {
-	Name     string       `json:",omitempty"`
-	Paren    *Condition   `json:",omitempty"`
-	And      bool         `json:",omitempty"`
-	Or       bool         `json:",omitempty"`
-	Children []*Condition `json:",omitempty"`
+	Name     string       `json:",omitempty"` // A license name, such as gnu-gpl-v2
+	Paren    *Condition   `json:",omitempty"` // A parenthesized expression
+	And      bool         `json:",omitempty"` // license1 AND license2
+	Or       bool         `json:",omitempty"` // license1 OR license2
+	Children []*Condition `json:",omitempty"` // The operands of And and Or
 }
 
 func Parse(licenses string) *Condition {
@@ -32,15 +33,15 @@ func (cond *Condition) String() string {
 	if cond.Paren != nil {
 		return "(" + cond.Paren.String() + ")"
 	}
-	s := ""
+	var s strings.Builder
 	separator := [...]string{"", " AND ", " OR ", " MIXED "}[b2i(cond.And)+2*b2i(cond.Or)]
 	for i, child := range cond.Children {
 		if i != 0 {
-			s += separator
+			s.WriteString(separator)
 		}
-		s += child.String()
+		s.WriteString(child.String())
 	}
-	return s
+	return s.String()
 }
 
 func (cond *Condition) Walk(callback func(*Condition)) {
