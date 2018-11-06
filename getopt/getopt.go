@@ -139,7 +139,7 @@ func (o *Options) handleLongOption(args []string, i int, opt *option, argval *st
 			return 0, optErr("option requires an argument: --" + opt.longName)
 		}
 	}
-	panic("getopt: unknown option type")
+	panic("getopt: internal error: unknown option type")
 }
 
 func (o *Options) parseShortOptions(args []string, i int, optchars string) (skip int, err error) {

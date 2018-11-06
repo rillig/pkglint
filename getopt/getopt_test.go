@@ -227,12 +227,14 @@ func (s *Suite) Test_Options_handleLongOption__internal_error(c *check.C) {
 	opts := NewOptions()
 	group := opts.AddFlagGroup('W', "warnings", "warning,...", "Print selected warnings")
 	group.AddFlagVar("extra", &extra, false, "Print extra warnings")
+
+	// Intentionally damage internal structure to reach full code coverage.
 	opts.options[0].data = "unexpected value"
 
 	c.Check(
 		func() { _, _ = opts.Parse([]string{"progname", "--warnings"}) },
 		check.Panics,
-		"getopt: unknown option type")
+		"getopt: internal error: unknown option type")
 }
 
 func (s *Suite) Test_Options_parseShortOptions__flag_group_separate_argument(c *check.C) {
