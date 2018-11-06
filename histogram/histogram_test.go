@@ -22,9 +22,7 @@ func (s *Suite) Test_Histogram(c *check.C) {
 	var out strings.Builder
 	hgr.PrintStats(&out, "caption", 2)
 
-	// FIXME: Oops, off-by-one error.
 	c.Check(out.String(), check.Equals, ""+
 		"caption      3 three\n"+
-		"caption      2 two\n"+
-		"caption      1 one\n")
+		"caption      2 two\n")
 }
