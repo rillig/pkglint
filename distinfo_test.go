@@ -155,7 +155,7 @@ func (s *Suite) Test_ChecklinesDistinfo__relative_path_in_distinfo(c *check.C) {
 		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
 			"does not exist in directory \"../../devel/patches/patches\".",
 		"ERROR: ../../other/common/distinfo: patch \"../../devel/patches/patches/patch-only-in-patches\" "+
-			"is not recorded. Run \"@BMAKE@ makepatchsum\".")
+			"is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
 // When the distinfo file and the patches are placed in the same package,
@@ -185,7 +185,7 @@ func (s *Suite) Test_ChecklinesDistinfo__distinfo_and_patches_in_separate_direct
 		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
 			"does not exist in directory \"patches\".",
 		"ERROR: ../../other/common/distinfo: patch \"patches/patch-only-in-patches\" "+
-			"is not recorded. Run \"@BMAKE@ makepatchsum\".")
+			"is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
 func (s *Suite) Test_ChecklinesDistinfo__manual_patches(c *check.C) {
