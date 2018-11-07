@@ -455,3 +455,27 @@ func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 	c.Assert(t2, check.NotNil)
 	c.Check(t2.String(), equals, "ShellList of Pathmask (guessed)")
 }
+
+// Guessing the variable type also works for variables that are
+// not known to pkglint but are found when scanning mk/* for otherwise
+// unknown variables.
+func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/pkgsrc-make-env.mk",
+		MkRcsID,
+		"",
+		"PKGSRC_MAKE_ENV+=\t${MAKE_ENV}")
+	pkg := t.SetupPackage("category/package")
+
+	G.Main("pkglint", pkg)
+
+	typ := G.Pkgsrc.VariableType("PKGSRC_MAKE_ENV")
+
+	// FIXME: The type of the variable must be determined from the _ENV suffix.
+	c.Assert(typ, check.NotNil)
+	c.Check(typ.String(), equals, "Unknown")
+	t.CheckOutputLines(
+		"Looks fine.")
+}
