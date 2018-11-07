@@ -1,7 +1,5 @@
 package main
 
-import ()
-
 type Toplevel struct {
 	dir            string
 	previousSubdir string

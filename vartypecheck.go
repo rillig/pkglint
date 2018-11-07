@@ -262,7 +262,7 @@ func (cv *VartypeCheck) ConfFiles() {
 	}
 
 	for i, word := range words {
-		cv.WithValue(word).Pathname()
+		cv.WithValue(word).PathName()
 
 		if i%2 == 1 && !hasPrefix(word, "${") {
 			cv.Warnf("The destination file %q should start with a variable reference.", word)
@@ -465,7 +465,7 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 }
 
-// See Pathname.
+// See PathName.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) FileName() {
@@ -479,7 +479,7 @@ func (cv *VartypeCheck) FileName() {
 	}
 }
 
-func (cv *VartypeCheck) Filemask() {
+func (cv *VartypeCheck) FileMask() {
 	switch {
 	case cv.Op == opUseMatch:
 		break
@@ -722,7 +722,7 @@ func (cv *VartypeCheck) Pathlist() {
 	// Sometimes, variables called PATH contain a single pathname,
 	// especially those with auto-guessed type from MkLineImpl.VariableType.
 	if !contains(value, ":") && cv.Guessed {
-		cv.Pathname()
+		cv.PathName()
 		return
 	}
 
@@ -742,10 +742,10 @@ func (cv *VartypeCheck) Pathlist() {
 	}
 }
 
-// Pathmask is a shell pattern for pathnames, possibly including slashes.
+// PathMask is a shell pattern for pathnames, possibly including slashes.
 //
-// See Filemask.
-func (cv *VartypeCheck) Pathmask() {
+// See FileMask.
+func (cv *VartypeCheck) PathMask() {
 	if cv.Op == opUseMatch {
 		return
 	}
@@ -755,12 +755,12 @@ func (cv *VartypeCheck) Pathmask() {
 	CheckLineAbsolutePathname(cv.Line, cv.Value)
 }
 
-// Pathname checks for pathnames.
+// PathName checks for pathnames.
 //
 // Like FileName, but including slashes.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
-func (cv *VartypeCheck) Pathname() {
+func (cv *VartypeCheck) PathName() {
 	if cv.Op == opUseMatch {
 		return
 	}

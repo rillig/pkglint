@@ -427,9 +427,9 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 	}
 
 	checkType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR", "")
-	checkType("SOME_DIR", "Pathname (guessed)")
-	checkType("SOMEDIR", "Pathname (guessed)")
-	checkType("SEARCHPATHS", "ShellList of Pathname (guessed)")
+	checkType("SOME_DIR", "PathName (guessed)")
+	checkType("SOMEDIR", "PathName (guessed)")
+	checkType("SEARCHPATHS", "ShellList of PathName (guessed)")
 	checkType("MYPACKAGE_USER", "UserGroupName (guessed)")
 	checkType("MYPACKAGE_GROUP", "UserGroupName (guessed)")
 	checkType("MY_CMD_ENV", "ShellList of ShellWord (guessed)")
@@ -448,12 +448,12 @@ func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 	t1 := G.Pkgsrc.VariableType("FONT_DIRS")
 
 	c.Assert(t1, check.NotNil)
-	c.Check(t1.String(), equals, "ShellList of Pathmask (guessed)")
+	c.Check(t1.String(), equals, "ShellList of PathMask (guessed)")
 
 	t2 := G.Pkgsrc.VariableType("FONT_DIRS.ttf")
 
 	c.Assert(t2, check.NotNil)
-	c.Check(t2.String(), equals, "ShellList of Pathmask (guessed)")
+	c.Check(t2.String(), equals, "ShellList of PathMask (guessed)")
 }
 
 // Guessing the variable type also works for variables that are

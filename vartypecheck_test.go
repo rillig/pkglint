@@ -367,21 +367,21 @@ func (s *Suite) Test_VartypeCheck_FileName(c *check.C) {
 	vt.OutputEmpty()
 }
 
-func (s *Suite) Test_VartypeCheck_Filemask(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Filemask)
+func (s *Suite) Test_VartypeCheck_FileMask(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).FileMask)
 
 	vt.Varname("FNAME")
 	vt.Values(
-		"Filemask with spaces.docx",
+		"FileMask with spaces.docx",
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: fileName:1: \"Filemask with spaces.docx\" is not a valid file name mask.",
+		"WARN: fileName:1: \"FileMask with spaces.docx\" is not a valid file name mask.",
 		"WARN: fileName:2: A file name mask should not contain a slash.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
-		"Filemask with spaces.docx")
+		"FileMask with spaces.docx")
 
 	// There's no guarantee that a file name only contains [A-Za-z0-9.].
 	// Therefore there are no useful checks in this situation.
@@ -622,8 +622,8 @@ func (s *Suite) Test_VartypeCheck_Pathlist(c *check.C) {
 		"WARN: fileName:2: \"/directory with spaces\" is not a valid pathname.")
 }
 
-func (s *Suite) Test_VartypeCheck_Pathmask(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Pathmask)
+func (s *Suite) Test_VartypeCheck_PathMask(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PathMask)
 
 	vt.Varname("DISTDIRS")
 	vt.Values(
@@ -641,8 +641,8 @@ func (s *Suite) Test_VartypeCheck_Pathmask(c *check.C) {
 	vt.OutputEmpty()
 }
 
-func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Pathname)
+func (s *Suite) Test_VartypeCheck_PathName(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PathName)
 
 	vt.Varname("EGDIR")
 	vt.Values(
