@@ -488,9 +488,7 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	// and CPPPATH since these two variables are defined somewhere in the
 	// infrastructure.
 	t.CheckOutputLines(
-		// FIXME: CPPPATH _is_ defined in the infrastructure.
-		"WARN: ~/category/package/Makefile:20: CPPPATH is used but not defined.",
 		"WARN: ~/category/package/Makefile:21: ABCPATH is used but not defined.",
 		"WARN: ~/category/package/Makefile:21: PKGSRC_UNKNOWN_ENV is defined but not used.",
-		"0 errors and 3 warnings found.")
+		"0 errors and 2 warnings found.")
 }
