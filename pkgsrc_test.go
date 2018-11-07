@@ -463,18 +463,34 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
-	t.CreateFileLines("mk/pkgsrc-make-env.mk",
+	t.CreateFileLines("mk/sys-vars.mk",
 		MkRcsID,
 		"",
-		"PKGSRC_MAKE_ENV+=\t${MAKE_ENV}")
-	pkg := t.SetupPackage("category/package")
+		"PKGSRC_MAKE_ENV?=\t# none",
+		"CPPPATH?=\tcpp")
 
-	G.Main("pkglint", pkg)
+	pkg := t.SetupPackage("category/package",
+		"PKGSRC_MAKE_ENV+=\tCPP=${CPPPATH:Q}",
+		"PKGSRC_UNKNOWN_ENV+=\tCPP=${ABCPATH:Q}")
 
-	typ := G.Pkgsrc.VariableType("PKGSRC_MAKE_ENV")
+	G.Main("pkglint", "-Wall", pkg)
 
-	c.Assert(typ, check.NotNil)
-	c.Check(typ.String(), equals, "ShellList of ShellWord (guessed)")
+	if typ := G.Pkgsrc.VariableType("PKGSRC_MAKE_ENV"); c.Check(typ, check.NotNil) {
+		c.Check(typ.String(), equals, "ShellList of ShellWord (guessed)")
+	}
+
+	if typ := G.Pkgsrc.VariableType("CPPPATH"); c.Check(typ, check.NotNil) {
+		c.Check(typ.String(), equals, "Pathlist (guessed)")
+	}
+
+	// No warnings about "defined but not used" or "used but not defined"
+	// (which both rely on VariableType) may appear here for PKGSRC_MAKE_ENV
+	// and CPPPATH since these two variables are defined somewhere in the
+	// infrastructure.
 	t.CheckOutputLines(
-		"Looks fine.")
+		// FIXME: CPPPATH _is_ defined in the infrastructure.
+		"WARN: ~/category/package/Makefile:20: CPPPATH is used but not defined.",
+		"WARN: ~/category/package/Makefile:21: ABCPATH is used but not defined.",
+		"WARN: ~/category/package/Makefile:21: PKGSRC_UNKNOWN_ENV is defined but not used.",
+		"0 errors and 3 warnings found.")
 }
