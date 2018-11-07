@@ -60,13 +60,13 @@ func (s *Suite) Test_Line_showSource__duplicates(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package1/distinfo: patch \"../dependency/patches/patch-aa\" "+
-			"is not recorded. Run \"@BMAKE@ makepatchsum\".",
+			"is not recorded. Run \""+confMake+" makepatchsum\".",
 		"",
 		">\t--- old file",
 		"ERROR: ~/category/dependency/patches/patch-aa:3: Each patch must be documented.",
 		"",
 		"ERROR: ~/category/package2/distinfo: patch \"../dependency/patches/patch-aa\" "+
-			"is not recorded. Run \"@BMAKE@ makepatchsum\".",
+			"is not recorded. Run \""+confMake+" makepatchsum\".",
 		"",
 		">\t--- old file",
 		// FIXME: The above source line is missing a diagnostic.
