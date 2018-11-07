@@ -134,6 +134,8 @@ func main() {
 // Note: during tests, calling this method disables tracing
 // because the command line option --debug sets trace.Tracing
 // back to false.
+//
+// It also discards the -Wall option that is used by default in other tests.
 func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	defer func() {
 		if r := recover(); r != nil {

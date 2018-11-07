@@ -37,6 +37,44 @@ func (s *Suite) Test_Line_log__print_source(c *check.C) {
 		"+\tnew line after")
 }
 
+// Ensures that when two packages produce a warning in the same file, both the
+// warning and the corresponding source code are logged only once.
+func (s *Suite) Test_Line_showSource__duplicates(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/dependency/patches/patch-aa",
+		RcsID,
+		"",
+		"--- old file",
+		"+++ new file",
+		"@@ -1,1 +1,1 @@",
+		"-old line",
+		"+new line")
+	t.SetupPackage("category/package1",
+		"PATCHDIR=\t../../category/dependency/patches")
+	t.SetupPackage("category/package2",
+		"PATCHDIR=\t../../category/dependency/patches")
+
+	G.Main("pkglint", "--source", "-Wall", t.File("category/package1"), t.File("category/package2"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package1/distinfo: patch \"../dependency/patches/patch-aa\" "+
+			"is not recorded. Run \"@BMAKE@ makepatchsum\".",
+		"",
+		">\t--- old file",
+		"ERROR: ~/category/dependency/patches/patch-aa:3: Each patch must be documented.",
+		"",
+		"ERROR: ~/category/package2/distinfo: patch \"../dependency/patches/patch-aa\" "+
+			"is not recorded. Run \"@BMAKE@ makepatchsum\".",
+		"",
+		">\t--- old file",
+		// FIXME: The above source line is missing a diagnostic.
+		"",
+		"3 errors and 0 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
+
 func (s *Suite) Test_RawLine_String(c *check.C) {
 	t := s.Init(c)
 
