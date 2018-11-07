@@ -791,10 +791,13 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		defer trace.Call(varname, trace.Result(&vartype))()
 	}
 
-	if vartype := src.vartypes[varname]; vartype != nil {
+	// When scanning mk/** for otherwise unknown variables, their type
+	// is set to BtUnknown. These variables must not override the guess
+	// based on the variable name.
+	if vartype = src.vartypes[varname]; vartype != nil && vartype.basicType != BtUnknown {
 		return vartype
 	}
-	if vartype := src.vartypes[varnameCanon(varname)]; vartype != nil {
+	if vartype = src.vartypes[varnameCanon(varname)]; vartype != nil && vartype.basicType != BtUnknown {
 		return vartype
 	}
 
@@ -850,6 +853,15 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, true}
 	case hasSuffix(varbase, "_MK"):
 		gtype = &Vartype{lkNone, BtUnknown, allowAll, true}
+	}
+
+	if gtype == nil {
+		if vartype = src.vartypes[varname]; vartype != nil {
+			return vartype
+		}
+		if vartype = src.vartypes[varnameCanon(varname)]; vartype != nil {
+			return vartype
+		}
 	}
 
 	if trace.Tracing {

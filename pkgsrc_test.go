@@ -473,9 +473,8 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 
 	typ := G.Pkgsrc.VariableType("PKGSRC_MAKE_ENV")
 
-	// FIXME: The type of the variable must be determined from the _ENV suffix.
 	c.Assert(typ, check.NotNil)
-	c.Check(typ.String(), equals, "Unknown")
+	c.Check(typ.String(), equals, "ShellList of ShellWord (guessed)")
 	t.CheckOutputLines(
 		"Looks fine.")
 }
