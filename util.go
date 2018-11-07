@@ -359,9 +359,7 @@ func relpath(from, to string) string {
 	absFrom := abspath(from)
 	absTo := abspath(to)
 	rel, err := filepath.Rel(absFrom, absTo)
-	if err != nil {
-		dummyLine.Fatalf("relpath %q %q.", from, to)
-	}
+	G.Assertf(err == nil, "relpath %q %q.", from, to)
 	result := filepath.ToSlash(rel)
 	if trace.Tracing {
 		trace.Stepf("relpath from %q to %q = %q", from, to, result)

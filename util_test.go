@@ -93,26 +93,19 @@ func (s *Suite) Test_relpath__quick(c *check.C) {
 	c.Check(relpath("some/dir", "some/directory"), equals, "../directory")
 }
 
+// This is not really an internal error but won't happen in practice anyway.
+// Therefore using ExpectPanic instead of ExpectFatal is ok.
 func (s *Suite) Test_relpath__failure_on_Windows(c *check.C) {
 	t := s.Init(c)
 
 	if runtime.GOOS == "windows" {
-		t.ExpectFatal(
+		t.ExpectPanic(
 			func() { relpath("c:/", "d:/") },
-			"FATAL: relpath \"c:/\" \"d:/\".")
+			"Pkglint internal error: relpath \"c:/\" \"d:/\".")
 	}
 }
 
-func (s *Suite) Test_relpath__failure_on_Linux(c *check.C) {
-	t := s.Init(c)
-
-	c.Check(
-		func() { relpath(t.File("bin")+"\x00", t.File("rel")) },
-		check.PanicMatches,
-		`^Pkglint internal error: abspath \".*\".*`)
-}
-
-func (s *Suite) Test_abspath(c *check.C) {
+func (s *Suite) Test_abspath__on_Windows(c *check.C) {
 	t := s.Init(c)
 
 	if runtime.GOOS == "windows" {
