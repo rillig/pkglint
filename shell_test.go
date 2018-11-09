@@ -1157,6 +1157,7 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 
 	t.SetupVartypes()
 	t.SetupTool("echo", "", AtRunTime)
+	t.SetupTool("env", "", AtRunTime)
 	t.SetupTool("grep", "GREP", AtRunTime)
 	t.SetupTool("sed", "", AtRunTime)
 	t.SetupTool("touch", "", AtRunTime)
@@ -1178,7 +1179,8 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 		"\techo 'starting'; echo 'done.'",
 		"\techo 'logging' > log; echo 'done.'",
 		"\techo 'to stderr' 1>&2; echo 'done.'",
-		"\techo 'hello' | tr -d 'aeiou'")
+		"\techo 'hello' | tr -d 'aeiou'",
+		"\tenv | grep '^PATH='")
 
 	mklines.Check()
 
