@@ -39,6 +39,14 @@ func (pr *PrefixReplacer) NextString(prefix string) string {
 	return ""
 }
 
+func (pr *PrefixReplacer) SkipString(prefix string) bool {
+	skipped := strings.HasPrefix(pr.rest, prefix)
+	if skipped {
+		pr.Skip(len(prefix))
+	}
+	return skipped
+}
+
 func (pr *PrefixReplacer) NextByte(b byte) bool {
 	if pr.PeekByte() == int(b) {
 		pr.Skip(1)

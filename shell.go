@@ -80,18 +80,21 @@ outer:
 		case quoting == shqPlain:
 			switch {
 			// FIXME: These regular expressions don't belong here, they are the job of the tokenizer.
-			case repl.AdvanceRegexp(`^[!#%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
-				repl.AdvanceRegexp(`^\\(?:[ !"#'()*./;?\\^{|}]|\$\$)`):
+			case repl.SkipRegexp(`^[!#%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
+				repl.SkipRegexp(`^\\(?:[ !"#'()*./;?\\^{|}]|\$\$)`):
 			case repl.NextByte('\''):
 				quoting = shqSquot
 			case repl.NextByte('"'):
 				quoting = shqDquot
 			case repl.NextByte('`'):
 				quoting = shqBackt
-			case repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|#)`),
-				repl.AdvanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`),
-				repl.AdvanceRegexp(`^\$\$(\$)\$`):
+			case repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|#|\$\$)`),
+				repl.AdvanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`):
 				shvarname := repl.Group(1)
+				if shvarname == "$$" {
+					shvarname = "$"
+				}
+
 				if G.Opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shvarname) {
 					line.Warnf("Unquoted shell variable %q.", shvarname)
 					Explain(
@@ -121,7 +124,7 @@ outer:
 				Explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell.  Please use backticks (`...`) as a replacement.")
-				return // To avoid internal parse errors
+				return // To avoid internal pkglint parse errors
 
 			case repl.NextString("$$") != "":
 				break
@@ -152,10 +155,10 @@ outer:
 				break
 			case repl.NextString("\\$$") != "":
 				break
-			case repl.AdvanceRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
+			case repl.SkipRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
 				break
-			case repl.AdvanceRegexp(`^\$\$\{\w+[#%+\-:]*[^{}]*\}`),
-				repl.AdvanceRegexp(`^\$\$(?:\w+|[!#?@]|\$\$)`):
+			case repl.SkipRegexp(`^\$\$\{\w+[#%+\-:]*[^{}]*\}`),
+				repl.SkipRegexp(`^\$\$(?:\w+|[!#?@]|\$\$)`):
 				break
 			case repl.NextString("$$") != "":
 				line.Warnf("Unescaped $ or strange shell variable found.")
@@ -252,8 +255,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 				"To avoid this uncertainty, escape the double quotes using \\\".")
 
 		default:
-			G.Assertf(repl.AdvanceRegexp("^([^\\\\`]+)"), "incomplete switch")
-			unescaped += repl.Group(1)
+			unescaped += repl.NextRegexp("^([^\\\\`]+)")[1]
 		}
 	}
 	line.Errorf("Unfinished backquotes: %s", repl.Rest())

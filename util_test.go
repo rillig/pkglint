@@ -155,7 +155,7 @@ func (s *Suite) Test_isEmptyDir__empty_subdir(c *check.C) {
 func (s *Suite) Test__PrefixReplacer_Since(c *check.C) {
 	repl := G.NewPrefixReplacer("hello, world")
 	mark := repl.Mark()
-	repl.AdvanceRegexp(`^\w+`)
+	repl.SkipRegexp(`^\w+`)
 	c.Check(repl.Since(mark), equals, "hello")
 }
 
