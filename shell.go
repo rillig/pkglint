@@ -73,7 +73,7 @@ outer:
 			setE := true
 			shline.CheckShellCommand(backtCommand, &setE, time)
 
-			// Make(1) variables have the same syntax, no matter in which state we are currently.
+			// Make(1) variables have the same syntax, no matter in which state the shell parser is currently.
 		case shline.checkVaruseToken(parser, quoting):
 			break
 
@@ -198,7 +198,7 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 		// Fine.
 
 	case (quoting == shqSquot || quoting == shqDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
-		// This is ok if we don't allow these variables to have embedded [\$\\\"\'\`].
+		// This is ok as long as these variables don't have embedded [$\\"'`].
 
 	case quoting == shqDquot && varuse.IsQ():
 		shline.mkline.Warnf("Please don't use the :Q operator in double quotes.")

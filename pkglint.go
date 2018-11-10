@@ -364,7 +364,8 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	defer func() { G.Pkg = nil }()
 	pkg := G.Pkg
 
-	// we need to handle the Makefile first to get some variables
+	// Load the package Makefile and all included files,
+	// to collect all used and defined variables and similar data.
 	mklines := pkg.loadPackageMakefile()
 	if mklines == nil {
 		return
