@@ -88,6 +88,10 @@ func (pr *PrefixReplacer) NextRegexp(re regex.Pattern) []string {
 	return m
 }
 
+func (pr *PrefixReplacer) SkipRegexp(re regex.Pattern) bool {
+	return pr.NextRegexp(re) != nil
+}
+
 // NextBytesFunc chops off the longest prefix (possibly empty) consisting
 // solely of bytes for which fn returns true.
 func (pr *PrefixReplacer) NextBytesFunc(fn func(b byte) bool) string {

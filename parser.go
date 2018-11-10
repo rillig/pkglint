@@ -27,25 +27,28 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 	repl := p.repl
 
 	for {
-		if repl.AdvanceRegexp(`^\$\{\w+\}`) ||
-			repl.AdvanceRegexp(`^[\w.*+,{}]+`) ||
-			repl.AdvanceRegexp(`^\[[\d-]+\]`) {
-			pkgbase += repl.Group(0)
+		mark := repl.Mark()
+
+		if repl.SkipRegexp(`^\$\{\w+\}`) ||
+			repl.SkipRegexp(`^[\w.*+,{}]+`) ||
+			repl.SkipRegexp(`^\[[\d-]+\]`) {
+			pkgbase += repl.Since(mark)
 			continue
 		}
 
-		mark := repl.Mark()
 		if repl.NextByte('-') {
-			if repl.AdvanceRegexp(`^\d`) ||
-				repl.AdvanceRegexp(`^\$\{\w*VER\w*\}`) ||
+			if repl.SkipRegexp(`^\d`) ||
+				repl.SkipRegexp(`^\$\{\w*VER\w*\}`) ||
 				repl.NextByte('[') {
 				repl.Reset(mark)
 				return
 			}
 			pkgbase += "-"
-		} else {
-			return
+			continue
 		}
+
+		repl.Reset(mark)
+		return
 	}
 }
 
@@ -74,9 +77,9 @@ func (p *Parser) Dependency() *DependencyPattern {
 		op = repl.NextString(">")
 	}
 	if op != "" {
-		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
+		if m := repl.NextRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`); m != nil {
 			dp.LowerOp = op
-			dp.Lower = repl.Group(0)
+			dp.Lower = m[0]
 		} else {
 			repl.Reset(mark2)
 		}
@@ -87,9 +90,9 @@ func (p *Parser) Dependency() *DependencyPattern {
 		op = repl.NextString("<")
 	}
 	if op != "" {
-		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
+		if m := repl.NextRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`); m != nil {
 			dp.UpperOp = op
-			dp.Upper = repl.Group(0)
+			dp.Upper = m[0]
 		} else {
 			repl.Reset(mark2)
 		}

@@ -130,7 +130,7 @@ loop:
 
 		switch repl.PeekByte() {
 		case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
-			if repl.AdvanceRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`) {
+			if repl.SkipRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`) {
 				appendModifier(repl.Since(modifierMark))
 				continue
 			}
@@ -139,7 +139,7 @@ loop:
 				if len(rest) >= 2 && (rest[1] == closing || rest[1] == ':') {
 					repl.Skip(1)
 				} else if len(rest) >= 1 && (rest[0] == closing || rest[0] == ':') {
-				} else if repl.AdvanceRegexp(`^\\\d+`) {
+				} else if repl.SkipRegexp(`^\\\d+`) {
 				} else {
 					break loop
 				}
@@ -148,27 +148,27 @@ loop:
 			}
 
 		case '=', 'D', 'M', 'N', 'U':
-			if repl.AdvanceRegexp(`^[=DMNU]`) {
-				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:\\`+string(closing)+`]|\$\$|\\.)+`)) {
-				}
-				arg := repl.Since(modifierMark)
-				appendModifier(strings.Replace(arg, "\\:", ":", -1))
-				continue
+			repl.Skip(1)
+			re := regex.Pattern(ifelseStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`))
+			for p.VarUse() != nil || repl.SkipRegexp(re) {
 			}
+			arg := repl.Since(modifierMark)
+			appendModifier(strings.Replace(arg, "\\:", ":", -1))
+			continue
 
 		case 'C', 'S':
-			if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
-				separator := repl.Group(1)
+			if m := repl.NextRegexp(`^[CS]([%,/:;@^|])`); m != nil {
+				separator := m[1]
 				repl.NextByte('^')
 				re := regex.Pattern(`^([^\` + separator + `$` + string(closing) + `\\]|\$\$|\\.)+`)
-				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+				for p.VarUse() != nil || repl.SkipRegexp(re) {
 				}
 				repl.NextByte('$')
 				if repl.NextString(separator) != "" {
-					for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+					for p.VarUse() != nil || repl.SkipRegexp(re) {
 					}
 					if repl.NextString(separator) != "" {
-						repl.AdvanceRegexp(`^[1gW]`)
+						repl.SkipRegexp(`^[1gW]`) // FIXME: Multiple modifiers may be mentioned
 						appendModifier(repl.Since(modifierMark))
 						mayOmitColon = true
 						continue
@@ -177,9 +177,10 @@ loop:
 			}
 
 		case '@':
-			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
-				loopvar := repl.Group(1)
-				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:@`+string(closing)+`\\]|\$\$|\\.)+`)) {
+			if m := repl.NextRegexp(`^@([\w.]+)@`); m != nil {
+				loopvar := m[1]
+				re := regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`))
+				for p.VarUse() != nil || repl.NextString("$$") != "" || repl.NextRegexp(re) != nil {
 				}
 				if !repl.NextByte('@') && p.EmitWarnings {
 					p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
@@ -189,7 +190,7 @@ loop:
 			}
 
 		case '[':
-			if repl.AdvanceRegexp(`^\[(?:[-.\d]+|#)\]`) {
+			if repl.SkipRegexp(`^\[(?:[-.\d]+|#)\]`) {
 				appendModifier(repl.Since(modifierMark))
 				continue
 			}
@@ -197,10 +198,10 @@ loop:
 		case '?':
 			repl.Skip(1)
 			re := regex.Pattern(`^([^$:` + string(closing) + `]|\$\$)+`)
-			for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+			for p.VarUse() != nil || repl.SkipRegexp(re) {
 			}
 			if repl.NextByte(':') {
-				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
+				for p.VarUse() != nil || repl.SkipRegexp(re) {
 				}
 				appendModifier(repl.Since(modifierMark))
 				continue
@@ -208,8 +209,8 @@ loop:
 		}
 
 		repl.Reset(modifierMark)
-		// FIXME: Why AdvanceRegexp? This accepts :S,a,b,c,d,e,f but shouldn't.
-		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^:$`+string(closing)+`]|\$\$)+`)) {
+		// FIXME: Why skip over unknown modifiers here? This accepts :S,a,b,c,d,e,f but shouldn't.
+		for p.VarUse() != nil || repl.SkipRegexp(regex.Pattern(`^([^:$`+string(closing)+`]|\$\$)+`)) {
 		}
 		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
 			appendModifier(suffixSubst)
