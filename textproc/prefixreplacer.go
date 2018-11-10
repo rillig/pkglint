@@ -73,6 +73,21 @@ func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
 	return false
 }
 
+func (pr *PrefixReplacer) NextRegexp(re regex.Pattern) []string {
+	pr.m = nil
+	if !strings.HasPrefix(string(re), "^") {
+		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: regular expression %q must have prefix %q.", re, "^"))
+	}
+	if Testing && pr.res.Matches("", re) {
+		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
+	}
+	m := pr.res.Match(pr.rest, re)
+	if m != nil {
+		pr.rest = pr.rest[len(m[0]):]
+	}
+	return m
+}
+
 // NextBytesFunc chops off the longest prefix (possibly empty) consisting
 // solely of bytes for which fn returns true.
 func (pr *PrefixReplacer) NextBytesFunc(fn func(b byte) bool) string {

@@ -238,7 +238,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// Errors
 	checkRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
 		&mkCond{Not: &mkCond{Empty: varuse("PKG_OPTIONS", "Msndfile")}},
-		" || defined(PKG_OPTIONS:Msamplerate)")
+		"|| defined(PKG_OPTIONS:Msamplerate)")
 	checkRest("${LEFT} &&",
 		&mkCond{Not: &mkCond{Empty: varuse("LEFT")}},
 		"&&")

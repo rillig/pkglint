@@ -87,7 +87,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 			}
 		}
 
-		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`)) {
+		for p.VarUse() != nil || repl.NextRegexp(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`)) != nil {
 		}
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
@@ -256,7 +256,8 @@ func (p *MkParser) mkCondAnd() MkCond {
 	atoms := []MkCond{atom}
 	for {
 		mark := p.repl.Mark()
-		if !p.repl.AdvanceRegexp(`^[\t ]*&&[\t ]*`) {
+		p.repl.SkipHspace()
+		if p.repl.NextString("&&") == "" {
 			break
 		}
 		next := p.mkCondAtom()
@@ -294,13 +295,13 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return cond
 			}
 		}
-	case repl.HasPrefix("defined") && repl.AdvanceRegexp(`^defined[\t ]*\(`):
+	case repl.HasPrefix("defined") && repl.NextRegexp(`^defined[\t ]*\(`) != nil:
 		if varname := p.Varname(); varname != "" {
 			if repl.NextByte(')') {
 				return &mkCond{Defined: varname}
 			}
 		}
-	case repl.HasPrefix("empty") && repl.AdvanceRegexp(`^empty[\t ]*\(`):
+	case repl.HasPrefix("empty") && repl.NextRegexp(`^empty[\t ]*\(`) != nil:
 		if varname := p.Varname(); varname != "" {
 			modifiers := p.VarUseModifiers(varname, ')')
 			if repl.NextByte(')') {
@@ -327,11 +328,11 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 		}
 		if lhs != nil {
-			if repl.AdvanceRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(\d+(?:\.\d+)?)`) {
-				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, repl.Group(1), repl.Group(2)}}
+			if m := repl.NextRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(\d+(?:\.\d+)?)`); m != nil {
+				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
 			}
-			if repl.AdvanceRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`) {
-				op := repl.Group(1)
+			if m := repl.NextRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`); m != nil {
+				op := m[1]
 				if (op == "!=" || op == "==") && repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
 					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Group(1)}}
 				} else if str := repl.NextBytesSet(textproc.AlnumU); str != "" {
@@ -353,8 +354,8 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return &mkCond{Not: &mkCond{Empty: lhs}} // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
 		}
-		if repl.AdvanceRegexp(`^\d+(?:\.\d+)?`) {
-			return &mkCond{Num: repl.Group(0)}
+		if m := repl.NextRegexp(`^\d+(?:\.\d+)?`); m != nil {
+			return &mkCond{Num: m[0]}
 		}
 	}
 	repl.Reset(mark)

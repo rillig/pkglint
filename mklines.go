@@ -335,7 +335,7 @@ func (mklines *MkLinesImpl) determineDocumentedVariables() {
 
 			parser := NewMkParser(mkline.Line, words[1], false)
 			varname := parser.Varname()
-			if hasSuffix(varname, ".") && parser.repl.AdvanceRegexp(`^<\w+>`) {
+			if hasSuffix(varname, ".") && parser.repl.NextRegexp(`^<\w+>`) != nil {
 				varname += "*"
 			}
 			parser.repl.NextByte(':')
