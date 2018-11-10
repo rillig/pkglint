@@ -14,13 +14,12 @@ type PrefixReplacerMark string
 // stripping off a prefix matched by a literal string or a regular expression.
 type PrefixReplacer struct {
 	rest string
-	s    string
 	m    []string
 	res  *regex.Registry
 }
 
 func NewPrefixReplacer(s string, res *regex.Registry) *PrefixReplacer {
-	return &PrefixReplacer{s, "", nil, res}
+	return &PrefixReplacer{s, nil, res}
 }
 
 func (pr *PrefixReplacer) Rest() string {
@@ -34,9 +33,7 @@ func (pr *PrefixReplacer) Group(index int) string {
 
 func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.m = nil
-	pr.s = ""
 	if strings.HasPrefix(pr.rest, prefix) {
-		pr.s = prefix
 		pr.rest = pr.rest[len(prefix):]
 		return true
 	}
@@ -55,7 +52,6 @@ func (pr *PrefixReplacer) NextString(prefix string) string {
 func (pr *PrefixReplacer) AdvanceHspace() bool {
 	i := initialHspace(pr.rest)
 	if i != 0 {
-		pr.s = pr.rest[:i]
 		pr.rest = pr.rest[i:]
 		return true
 	}
@@ -64,7 +60,6 @@ func (pr *PrefixReplacer) AdvanceHspace() bool {
 
 func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
 	pr.m = nil
-	pr.s = ""
 	if !strings.HasPrefix(string(re), "^") {
 		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: regular expression %q must have prefix %q.", re, "^"))
 	}
@@ -74,7 +69,6 @@ func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
 	if m := pr.res.Match(pr.rest, re); m != nil {
 		pr.rest = pr.rest[len(m[0]):]
 		pr.m = m
-		pr.s = m[0]
 		return true
 	}
 	return false
