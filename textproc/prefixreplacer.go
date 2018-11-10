@@ -48,14 +48,14 @@ func (pr *PrefixReplacer) NextString(prefix string) string {
 	return ""
 }
 
-// AdvanceHspace advances over as many spaces and tabs as possible.
-func (pr *PrefixReplacer) AdvanceHspace() bool {
+func (pr *PrefixReplacer) NextHspace() string {
 	i := initialHspace(pr.rest)
 	if i != 0 {
+		hspace := pr.rest[:i]
 		pr.rest = pr.rest[i:]
-		return true
+		return hspace
 	}
-	return false
+	return ""
 }
 
 func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
