@@ -43,6 +43,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		varuse := NewMkVarUse(varname, modifiers...)
 		return &ShAtom{shtVaruse, text, shqPlain, varuse}
 	}
+	shvar := func(varname string) *ShAtom { return atom(shtShVarUse, varname) }
 	text := func(s string) *ShAtom { return atom(shtText, s) }
 	whitespace := func(s string) *ShAtom { return atom(shtSpace, s) }
 
@@ -78,13 +79,14 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	check("" /* none */)
 
 	check("$$var",
-		text("$$var"))
+		shvar("$$var"))
 
 	check("$$var$$var",
-		text("$$var$$var"))
+		shvar("$$var"),
+		shvar("$$var"))
 
 	check("$$var;;",
-		text("$$var"),
+		shvar("$$var"),
 		operator(";;"))
 
 	check("'single-quoted'",
@@ -96,7 +98,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	c.Check(rest, equals, "\"")
 
 	check("$${file%.c}.o",
-		text("$${file%.c}.o"))
+		shvar("$${file%.c}"),
+		text(".o"))
 
 	check("hello",
 		text("hello"))
@@ -173,7 +176,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		space,
 		text("in"),
 		space,
-		text("$$PAGES"),
+		shvar("$$PAGES"),
 		semicolon,
 		space,
 		text("do"),
@@ -187,7 +190,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		space,
 		mkvar("DESTDIR"),
 		mkvar("QTPREFIX"),
-		text("/man/man3/$${PAGE}"),
+		text("/man/man3/"),
+		shvar("$${PAGE}"),
 		semicolon,
 		space)
 
@@ -204,7 +208,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		backt(space),
 		backt(text("-1")),
 		backt(space),
-		backt(text("$${PAGE}qt")),
+		backt(shvar("$${PAGE}")),
+		backt(text("qt")),
 		text("`"),
 		semicolon,
 		space)
@@ -217,18 +222,18 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		text("`"))
 
 	check("$$var \"$$var\" '$$var' `$$var`",
-		text("$$var"),
+		shvar("$$var"),
 		space,
 		dquot(text("\"")),
-		dquot(text("$$var")),
+		dquot(shvar("$$var")),
 		text("\""),
 		space,
 		squot(text("'")),
-		squot(text("$$var")),
+		squot(shvar("$$var")),
 		text("'"),
 		space,
 		backt(text("`")),
-		backt(text("$$var")),
+		backt(shvar("$$var")),
 		text("`"))
 
 	check("\"`'echo;echo'`\"",
@@ -245,6 +250,9 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		operator("<"),
 		text("file"))
 
+	check("\\$$escaped",
+		text("\\$$escaped"))
+
 	check("-e \"s,\\$$sysconfdir/jabberd,\\$$sysconfdir,g\"",
 		text("-e"),
 		space,
@@ -257,7 +265,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		space,
 		text("$$,"),
 		space,
-		text("$$-"),
+		shvar("$$-"),
 		space,
 		text("$$/"),
 		space,
@@ -269,14 +277,14 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		space,
 		text("$$,$$/$$"),
 		semicolon,
-		text("$$-"))
+		shvar("$$-"))
 
 	rest = checkRest("COMMENT=\t\\Make $$$$ fast\"",
 		text("COMMENT="),
 		whitespace("\t"),
 		text("\\Make"),
 		space,
-		text("$$$$"),
+		shvar("$$$$"),
 		space,
 		text("fast"))
 	c.Check(rest, equals, "\"")

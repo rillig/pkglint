@@ -85,6 +85,16 @@ func (s *Suite) Test_splitIntoShellTokens__varuse_with_embedded_space_and_other_
 	c.Check(rest, equals, "")
 }
 
+// Two shell variables, next to each other,
+// are two separate atoms but count as a single token.
+func (s *Suite) Test_splitIntoShellTokens__two_shell_variables(c *check.C) {
+	code := "echo $$i$$j"
+	words, rest := splitIntoShellTokens(dummyLine, code)
+
+	c.Check(words, deepEquals, []string{"echo", "$$i$$j"})
+	c.Check(rest, equals, "")
+}
+
 func (s *Suite) Test_splitIntoMkWords__semicolons(c *check.C) {
 	words, rest := splitIntoMkWords(dummyLine, "word1 word2;;;")
 

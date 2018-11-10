@@ -11,7 +11,9 @@ const (
 	reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
 	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
 	reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
-	reShDollar       = `\\\$\$|` + reShVaruse + `|\$\$[,\-/]`
+
+	// FIXME: Must not be used because it doesn't distinguish between shtShVarUse and shtText.
+	reShDollar = `\\\$\$|` + reShVaruse + `|\$\$[,\-/]`
 )
 
 // TODO: Can ShellLine and ShellProgramChecker be merged into one type?
@@ -996,7 +998,7 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 		prevAtom = atom
 		if atom.Type == shtSpace && q == shqPlain {
 			emit()
-		} else if atom.Type == shtText || atom.Type == shtVaruse || atom.Quoting != shqPlain {
+		} else if atom.Type.IsWord() || atom.Quoting != shqPlain {
 			word += atom.MkText
 		} else {
 			emit()

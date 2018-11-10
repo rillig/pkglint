@@ -11,7 +11,8 @@ type ShAtomType uint8
 const (
 	shtSpace    ShAtomType = iota
 	shtVaruse              // ${PREFIX}
-	shtText                // while, cat, ENV=value, inter$${var:-pol}ate
+	shtShVarUse            // $${var:-pol}
+	shtText                // while, cat, ENV=value
 	shtOperator            // (, ;, |
 	shtComment             // # ...
 	shtSubshell            // $$(
@@ -21,16 +22,20 @@ func (t ShAtomType) String() string {
 	return [...]string{
 		"space",
 		"varuse",
-		"word",
+		"shvaruse",
+		"text",
 		"operator",
 		"comment",
 		"subshell",
 	}[t]
 }
 
+// IsWord checks whether the atom counts as text.
+// Makefile variables, shell variables and other text counts,
+// but keywords, operators and separators don't.
 func (t ShAtomType) IsWord() bool {
 	switch t {
-	case shtVaruse, shtText:
+	case shtVaruse, shtShVarUse, shtText:
 		return true
 	}
 	return false

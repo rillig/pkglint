@@ -154,6 +154,7 @@ func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	case repl.SkipRegexp(`^#[^)]*`):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
 	case repl.NextByte(')'):
+		// XXX: Why shtText and not shtOperator?
 		return &ShAtom{shtText, repl.Since(mark), shqPlain, nil}
 	case repl.SkipRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)+`):
 		return &ShAtom{shtText, repl.Since(mark), q, nil}
@@ -274,6 +275,11 @@ func (p *ShTokenizer) shAtomInternal(q ShQuoting, dquot, squot bool) *ShAtom {
 	repl := p.parser.repl
 
 	mark := repl.Mark()
+
+	if repl.SkipRegexp(`^(?:` + reShVaruse + `)`) {
+		return &ShAtom{shtShVarUse, repl.Since(mark), q, nil}
+	}
+
 loop:
 	for {
 		_ = `^[\t "$&'();<>\\|]+` // These are not allowed in shqPlain.
@@ -286,10 +292,10 @@ loop:
 		case squot && repl.SkipString("$$"):
 		case squot:
 			break loop
+		case repl.SkipString("\\$$"):
 		case repl.SkipRegexp(`^\\[^$]`):
 		case repl.HasPrefixRegexp(`^\$\$[^!#(*\-0-9?@A-Z_a-z{]`):
 			repl.NextString("$$")
-		case repl.SkipRegexp(`^(?:` + reShDollar + `)`):
 		default:
 			break loop
 		}
