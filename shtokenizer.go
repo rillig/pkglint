@@ -261,6 +261,12 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 //  text
 //  ${var:=default}
 func (p *ShTokenizer) shAtomInternal(q ShQuoting, dquot, squot bool) *ShAtom {
+	const (
+		reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
+		reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
+		reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
+	)
+
 	repl := p.parser.repl
 
 	mark := repl.Mark()

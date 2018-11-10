@@ -7,12 +7,6 @@ import (
 	"path"
 )
 
-const (
-	reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
-	reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
-	reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
-)
-
 // TODO: Can ShellLine and ShellProgramChecker be merged into one type?
 
 type ShellLine struct {
