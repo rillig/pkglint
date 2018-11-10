@@ -545,7 +545,6 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 		"WARN: fuzzing.mk:5: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
 		"WARN: fuzzing.mk:5: Pkglint parse error in MkLine.Tokenize at \"$`\".",
 
-		"WARN: fuzzing.mk:6: Pkglint parse error in ShTokenizer.ShAtom at \"`y\" (quoting=dbs).",
 		"WARN: fuzzing.mk:6: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
 
 		"WARN: fuzzing.mk:7: Pkglint parse error in ShTokenizer.ShAtom at \"$|\" (quoting=db).",
@@ -555,7 +554,6 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 		"WARN: fuzzing.mk:8: Pkglint parse error in ShTokenizer.ShAtom at \"`\" (quoting=dbd).",
 		"WARN: fuzzing.mk:8: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
 
-		"WARN: fuzzing.mk:9: Pkglint parse error in ShTokenizer.ShAtom at \"'\" (quoting=Sd).",
 		"WARN: fuzzing.mk:9: Invoking subshells via $(...) is not portable enough.",
 
 		"WARN: fuzzing.mk:10: Pkglint parse error in ShTokenizer.ShAtom at \"`\" (quoting=S).",

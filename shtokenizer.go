@@ -154,12 +154,13 @@ func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	case repl.SkipRegexp(`^#[^)]*`):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
 	case repl.NextByte(')'):
-		// XXX: Why shtText and not shtOperator?
+		// shtText instead of shtOperator because this atom belongs to a shtText token.
 		return &ShAtom{shtText, repl.Since(mark), shqPlain, nil}
-	case repl.SkipRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
-	return p.shOperator(q)
+	if op := p.shOperator(q); op != nil {
+		return op
+	}
+	return p.shAtomInternal(q, false, false)
 }
 
 func (p *ShTokenizer) shAtomDquotBackt() *ShAtom {
@@ -178,24 +179,21 @@ func (p *ShTokenizer) shAtomDquotBackt() *ShAtom {
 		return &ShAtom{shtText, repl.Since(mark), shqDquotBacktSquot, nil}
 	case repl.SkipRegexp("^#[^`]*"):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
-	case repl.SkipRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]_a-z~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	case repl.NextHspace() != "":
 		return &ShAtom{shtSpace, repl.Since(mark), q, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, false, false)
 }
 
 func (p *ShTokenizer) shAtomBacktDquot() *ShAtom {
+	const q = shqBacktDquot
 	repl := p.parser.repl
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('"'):
 		return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
-	case repl.SkipRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtText, repl.Since(mark), shqBacktDquot, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, true, false)
 }
 
 func (p *ShTokenizer) shAtomBacktSquot() *ShAtom {
@@ -205,22 +203,19 @@ func (p *ShTokenizer) shAtomBacktSquot() *ShAtom {
 	switch {
 	case repl.NextByte('\''):
 		return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
-	case repl.SkipRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
-		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, false, true)
 }
 
 func (p *ShTokenizer) shAtomSubshDquot() *ShAtom {
+	const q = shqSubshDquot
 	repl := p.parser.repl
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('"'):
 		return &ShAtom{shtText, repl.Since(mark), shqSubsh, nil}
-	case repl.SkipRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtText, repl.Since(mark), shqSubshDquot, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, true, false)
 }
 
 func (p *ShTokenizer) shAtomSubshSquot() *ShAtom {
@@ -230,10 +225,8 @@ func (p *ShTokenizer) shAtomSubshSquot() *ShAtom {
 	switch {
 	case repl.NextByte('\''):
 		return &ShAtom{shtText, repl.Since(mark), shqSubsh, nil}
-	case repl.SkipRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
-		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, false, true)
 }
 
 func (p *ShTokenizer) shAtomDquotBacktDquot() *ShAtom {
@@ -243,34 +236,30 @@ func (p *ShTokenizer) shAtomDquotBacktDquot() *ShAtom {
 	switch {
 	case repl.NextByte('"'):
 		return &ShAtom{shtText, repl.Since(mark), shqDquotBackt, nil}
-	case repl.SkipRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, true, false)
 }
 
 func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
+	const q = shqDquotBacktSquot
 	repl := p.parser.repl
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('\''):
 		return &ShAtom{shtText, repl.Since(mark), shqDquotBackt, nil}
-	case repl.SkipRegexp(`^(?:[\t !"#%()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|\$\$)+`):
-		return &ShAtom{shtText, repl.Since(mark), shqDquotBacktSquot, nil}
 	}
-	return nil
+	return p.shAtomInternal(q, false, true)
 }
 
-// shAtomInternal advances the parser over the next "word",
-// which is everything that does not change the quoting and is not a Make(1) variable.
-// Shell variables may appear as part of a word.
+// shAtomInternal reads the next shtText or shtShVarUse.
 //
 // Examples:
-//  while$var
-//  $$,
-//  $$!$$$$
-//  echo
-//  text${var:=default}text
+//  while
+//  text$$,text
+//  $$!
+//  $$$$
+//  text
+//  ${var:=default}
 func (p *ShTokenizer) shAtomInternal(q ShQuoting, dquot, squot bool) *ShAtom {
 	repl := p.parser.repl
 
