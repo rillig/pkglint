@@ -56,16 +56,25 @@ func (p *MkParser) MkTokens() []*MkToken {
 func (p *MkParser) VarUse() *MkVarUse {
 	repl := p.repl
 
+	if repl.PeekByte() != '$' {
+		return nil
+	}
+
 	mark := repl.Mark()
-	if repl.NextString("${") != "" || repl.NextString("$(") != "" {
-		usingRoundParen := repl.Since(mark) == "$("
-		closing := ifelseStr(usingRoundParen, ")", "}")
+	repl.Skip(1)
+
+	if repl.NextByte('{') || repl.NextByte('(') {
+		usingRoundParen := repl.Since(mark)[1] == '('
+		closing := byte('}')
+		if usingRoundParen {
+			closing = ')'
+		}
 
 		varnameMark := repl.Mark()
 		varname := p.Varname()
 		if varname != "" {
 			modifiers := p.VarUseModifiers(varname, closing)
-			if repl.NextString(closing) != "" { // TODO: make closing a single byte
+			if repl.NextByte(closing) {
 				if usingRoundParen && p.EmitWarnings {
 					parenVaruse := repl.Since(mark)
 					bracesVaruse := "${" + parenVaruse[2:len(parenVaruse)-1] + "}"
@@ -78,36 +87,37 @@ func (p *MkParser) VarUse() *MkVarUse {
 			}
 		}
 
-		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:`+closing+`]|\$\$)+`)) {
+		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`)) {
 		}
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
 			varexpr := repl.Since(varnameMark)
 			modifiers := p.VarUseModifiers(varexpr, closing)
-			if repl.NextString(closing) != "" {
+			if repl.NextByte(closing) {
 				return &MkVarUse{varexpr, modifiers}
 			}
 		}
 		repl.Reset(mark)
 	}
 
-	if repl.NextString("$@") != "" {
+	if repl.NextByte('@') {
 		return &MkVarUse{"@", nil}
 	}
-	if repl.NextString("$<") != "" {
+	if repl.NextByte('<') {
 		return &MkVarUse{"<", nil}
 	}
-	if repl.PeekByte() == '$' && repl.AdvanceRegexp(`^\$(\w)`) {
-		varname := repl.Group(1)
+	if varname := repl.NextBytesSet(textproc.AlnumU); varname != "" {
 		if p.EmitWarnings {
 			p.Line.Warnf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
 		}
 		return &MkVarUse{varname, nil}
 	}
+
+	repl.Reset(mark)
 	return nil
 }
 
-func (p *MkParser) VarUseModifiers(varname, closing string) []MkVarUseModifier {
+func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModifier {
 	repl := p.repl
 
 	var modifiers []MkVarUseModifier
@@ -126,9 +136,9 @@ loop:
 			}
 			if repl.NextString("ts") != "" {
 				rest := repl.Rest()
-				if len(rest) >= 2 && (rest[1] == closing[0] || rest[1] == ':') {
+				if len(rest) >= 2 && (rest[1] == closing || rest[1] == ':') {
 					repl.Skip(1)
-				} else if len(rest) >= 1 && (rest[0] == closing[0] || rest[0] == ':') {
+				} else if len(rest) >= 1 && (rest[0] == closing || rest[0] == ':') {
 				} else if repl.AdvanceRegexp(`^\\\d+`) {
 				} else {
 					break loop
@@ -139,7 +149,7 @@ loop:
 
 		case '=', 'D', 'M', 'N', 'U':
 			if repl.AdvanceRegexp(`^[=DMNU]`) {
-				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:\\`+closing+`]|\$\$|\\.)+`)) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:\\`+string(closing)+`]|\$\$|\\.)+`)) {
 				}
 				arg := repl.Since(modifierMark)
 				appendModifier(strings.Replace(arg, "\\:", ":", -1))
@@ -150,7 +160,7 @@ loop:
 			if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
 				separator := repl.Group(1)
 				repl.NextByte('^')
-				re := regex.Pattern(`^([^\` + separator + `$` + closing + `\\]|\$\$|\\.)+`)
+				re := regex.Pattern(`^([^\` + separator + `$` + string(closing) + `\\]|\$\$|\\.)+`)
 				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 				}
 				repl.NextByte('$')
@@ -169,7 +179,7 @@ loop:
 		case '@':
 			if repl.AdvanceRegexp(`^@([\w.]+)@`) {
 				loopvar := repl.Group(1)
-				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:@`+closing+`\\]|\$\$|\\.)+`)) {
+				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:@`+string(closing)+`\\]|\$\$|\\.)+`)) {
 				}
 				if !repl.NextByte('@') && p.EmitWarnings {
 					p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
@@ -186,7 +196,7 @@ loop:
 
 		case '?':
 			repl.Skip(1)
-			re := regex.Pattern(`^([^$:` + closing + `]|\$\$)+`)
+			re := regex.Pattern(`^([^$:` + string(closing) + `]|\$\$)+`)
 			for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 			}
 			if repl.NextByte(':') {
@@ -199,7 +209,7 @@ loop:
 
 		repl.Reset(modifierMark)
 		// FIXME: Why AdvanceRegexp? This accepts :S,a,b,c,d,e,f but shouldn't.
-		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^:$`+closing+`]|\$\$)+`)) {
+		for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^:$`+string(closing)+`]|\$\$)+`)) {
 		}
 		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
 			appendModifier(suffixSubst)
@@ -292,7 +302,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 		}
 	case repl.HasPrefix("empty") && repl.AdvanceRegexp(`^empty[\t ]*\(`):
 		if varname := p.Varname(); varname != "" {
-			modifiers := p.VarUseModifiers(varname, ")")
+			modifiers := p.VarUseModifiers(varname, ')')
 			if repl.NextByte(')') {
 				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
 			}
