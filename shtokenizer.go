@@ -261,18 +261,28 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 //  text
 //  ${var:=default}
 func (p *ShTokenizer) shAtomInternal(q ShQuoting, dquot, squot bool) *ShAtom {
-	const (
-		reShVarname      = `(?:[!#*\-\d?@]|\$\$|[A-Za-z_]\w*)`
-		reShVarexpansion = `(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`
-		reShVaruse       = `\$\$` + `(?:` + reShVarname + `|` + `\{` + reShVarname + `(?:` + reShVarexpansion + `)?` + `\})`
-	)
+	const reShVarname = `^(?:[!#*\-?@]|\$\$|[A-Za-z_]\w*|\d+)`
 
 	repl := p.parser.repl
-
 	mark := repl.Mark()
 
-	if repl.SkipRegexp(`^(?:` + reShVaruse + `)`) {
-		return &ShAtom{shtShVarUse, repl.Since(mark), q, nil}
+	if repl.SkipString("$$") {
+		if repl.SkipRegexp(reShVarname) {
+			return &ShAtom{shtShVarUse, repl.Since(mark), q, nil}
+		}
+
+		mark2 := repl.Mark()
+		if repl.NextByte('{') {
+			if repl.SkipRegexp(reShVarname) {
+				repl.SkipRegexp(`^(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`)
+				if repl.NextByte('}') {
+					return &ShAtom{shtShVarUse, repl.Since(mark), q, nil}
+				}
+			}
+			repl.Reset(mark2)
+		}
+
+		repl.Reset(mark)
 	}
 
 loop:
