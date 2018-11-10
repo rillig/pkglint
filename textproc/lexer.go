@@ -195,6 +195,11 @@ func (bs *ByteSet) Inverse() *ByteSet {
 	return &ByteSet{[4]uint64{^bs.bits[0], ^bs.bits[1], ^bs.bits[2], ^bs.bits[3]}}
 }
 
+// Contains tests whether the byte set contains the given byte.
+func (bs *ByteSet) Contains(b byte) bool {
+	return bs.bits[b/64]&(1<<(b%64)) != 0
+}
+
 // Predefined byte sets for parsing ASCII text.
 var (
 	Alnum  = NewByteSet("A-Za-z0-9")  // Alphanumerical, without underscore

@@ -224,6 +224,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 
 	line := shline.mkline.Line
 	for repl.Rest() != "" {
+		mark := repl.Mark()
 		switch {
 		case repl.AdvanceStr("`"):
 			if quoting == shqBackt {
@@ -234,7 +235,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 			return unescaped, quoting
 
 		case repl.AdvanceStr("\\\""), repl.AdvanceStr("\\\\"), repl.AdvanceStr("\\`"), repl.AdvanceStr("\\$"):
-			unescaped += repl.Str()[1:]
+			unescaped += repl.Since(mark)[1:]
 
 		case repl.AdvanceStr("\\"):
 			line.Warnf("Backslashes should be doubled inside backticks.")

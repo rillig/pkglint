@@ -2,6 +2,7 @@ package main
 
 import (
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/textproc"
 	"strings"
 )
 
@@ -323,8 +324,8 @@ func (p *MkParser) mkCondAtom() MkCond {
 				op := repl.Group(1)
 				if (op == "!=" || op == "==") && repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
 					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Group(1)}}
-				} else if repl.AdvanceRegexp(`^\w+`) {
-					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Str()}}
+				} else if str := repl.NextBytesSet(textproc.AlnumU); str != "" {
+					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
 				} else if rhs := p.VarUse(); rhs != nil {
 					return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
 				} else if repl.PeekByte() == '"' {
@@ -343,7 +344,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 		}
 		if repl.AdvanceRegexp(`^\d+(?:\.\d+)?`) {
-			return &mkCond{Num: repl.Str()}
+			return &mkCond{Num: repl.Group(0)}
 		}
 	}
 	repl.Reset(mark)

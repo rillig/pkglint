@@ -32,11 +32,6 @@ func (pr *PrefixReplacer) Group(index int) string {
 	return pr.m[index]
 }
 
-// Str returns the last match from AdvanceStr, AdvanceBytesFunc or AdvanceHspace.
-func (pr *PrefixReplacer) Str() string {
-	return pr.s
-}
-
 func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 	pr.m = nil
 	pr.s = ""
@@ -46,6 +41,14 @@ func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
 		return true
 	}
 	return false
+}
+
+func (pr *PrefixReplacer) NextString(prefix string) string {
+	if strings.HasPrefix(pr.rest, prefix) {
+		pr.Skip(len(prefix))
+		return prefix
+	}
+	return ""
 }
 
 // AdvanceHspace advances over as many spaces and tabs as possible.
@@ -89,6 +92,10 @@ func (pr *PrefixReplacer) NextBytesFunc(fn func(b byte) bool) string {
 		pr.rest = rest[i:]
 	}
 	return rest[:i]
+}
+
+func (pr *PrefixReplacer) NextBytesSet(set *ByteSet) string {
+	return pr.NextBytesFunc(set.Contains)
 }
 
 func (pr *PrefixReplacer) PeekByte() int {

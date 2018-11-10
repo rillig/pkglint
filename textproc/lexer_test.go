@@ -286,6 +286,18 @@ func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
 	c.Check(inverse.Inverse().bits, equals, set.bits)
 }
 
+func (s *Suite) Test_ByteSet_Contains(c *check.C) {
+	set := NewByteSet("A-Za-z0-9_\xFC")
+
+	c.Check(set.Contains(0x00), equals, false)
+	c.Check(set.Contains('-'), equals, false)
+	c.Check(set.Contains('A'), equals, true)
+	c.Check(set.Contains('Z'), equals, true)
+	c.Check(set.Contains('['), equals, false)
+	c.Check(set.Contains(0xFC), equals, true)
+	c.Check(set.Contains(0xFD), equals, false)
+}
+
 func (s *Suite) Test__test_names(c *check.C) {
 	ck := intqa.NewTestNameChecker(c)
 	ck.AllowCamelCaseDescriptions(

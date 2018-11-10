@@ -30,7 +30,7 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 		if repl.AdvanceRegexp(`^\$\{\w+\}`) ||
 			repl.AdvanceRegexp(`^[\w.*+,{}]+`) ||
 			repl.AdvanceRegexp(`^\[[\d-]+\]`) {
-			pkgbase += repl.Str()
+			pkgbase += repl.Group(0)
 			continue
 		}
 
@@ -69,20 +69,27 @@ func (p *Parser) Dependency() *DependencyPattern {
 	}
 
 	mark2 := repl.Mark()
-	if repl.AdvanceStr(">=") || repl.AdvanceStr(">") {
-		op := repl.Str()
+	op := repl.NextString(">=")
+	if op == "" {
+		op = repl.NextString(">")
+	}
+	if op != "" {
 		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
 			dp.LowerOp = op
-			dp.Lower = repl.Str()
+			dp.Lower = repl.Group(0)
 		} else {
 			repl.Reset(mark2)
 		}
 	}
-	if repl.AdvanceStr("<=") || repl.AdvanceStr("<") {
-		op := repl.Str()
+
+	op = repl.NextString("<=")
+	if op == "" {
+		op = repl.NextString("<")
+	}
+	if op != "" {
 		if repl.AdvanceRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`) {
 			dp.UpperOp = op
-			dp.Upper = repl.Str()
+			dp.Upper = repl.Group(0)
 		} else {
 			repl.Reset(mark2)
 		}
