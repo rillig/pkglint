@@ -351,6 +351,8 @@ func (p *MkParser) mkCondAtom() MkCond {
 
 func (p *MkParser) mkCondFunc() *mkCond {
 	repl := p.repl
+	mark := repl.Mark()
+
 	funcName := repl.NextBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' })
 	repl.SkipHspace()
 	if !repl.NextByte('(') {
@@ -382,6 +384,7 @@ func (p *MkParser) mkCondFunc() *mkCond {
 		}
 	}
 
+	repl.Reset(mark)
 	return nil
 }
 
