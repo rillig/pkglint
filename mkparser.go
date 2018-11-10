@@ -298,35 +298,8 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 		}
 
-	case repl.NextBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' }) != "":
-		funcName := strings.TrimSpace(repl.Since(mark))
-		repl.SkipHspace()
-		if repl.NextByte('(') {
-			switch funcName {
-			case "defined":
-				varname := p.Varname()
-				if varname != "" && repl.NextByte(')') {
-					return &mkCond{Defined: varname}
-				}
-
-			case "empty":
-				if varname := p.Varname(); varname != "" {
-					modifiers := p.VarUseModifiers(varname, ')')
-					if repl.NextByte(')') {
-						return &mkCond{Empty: &MkVarUse{varname, modifiers}}
-					}
-				}
-
-			case "commands", "exists", "make", "target":
-				argMark := repl.Mark()
-				for p.VarUse() != nil || repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) != "" {
-				}
-				arg := repl.Since(argMark)
-				if repl.NextByte(')') {
-					return &mkCond{Call: &MkCondCall{funcName, arg}}
-				}
-			}
-		}
+	case 'a' <= repl.PeekByte() && repl.PeekByte() <= 'z':
+		return p.mkCondFunc()
 
 	default:
 		lhs := p.VarUse()
@@ -373,6 +346,42 @@ func (p *MkParser) mkCondAtom() MkCond {
 		}
 	}
 	repl.Reset(mark)
+	return nil
+}
+
+func (p *MkParser) mkCondFunc() *mkCond {
+	repl := p.repl
+	funcName := repl.NextBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' })
+	repl.SkipHspace()
+	if !repl.NextByte('(') {
+		return nil
+	}
+
+	switch funcName {
+	case "defined":
+		varname := p.Varname()
+		if varname != "" && repl.NextByte(')') {
+			return &mkCond{Defined: varname}
+		}
+
+	case "empty":
+		if varname := p.Varname(); varname != "" {
+			modifiers := p.VarUseModifiers(varname, ')')
+			if repl.NextByte(')') {
+				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
+			}
+		}
+
+	case "commands", "exists", "make", "target":
+		argMark := repl.Mark()
+		for p.VarUse() != nil || repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) != "" {
+		}
+		arg := repl.Since(argMark)
+		if repl.NextByte(')') {
+			return &mkCond{Call: &MkCondCall{funcName, arg}}
+		}
+	}
+
 	return nil
 }
 
