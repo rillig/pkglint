@@ -288,6 +288,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 		if cond != nil {
 			return &mkCond{Not: cond}
 		}
+
 	case repl.NextByte('('):
 		cond := p.MkCond()
 		if cond != nil {
@@ -296,28 +297,37 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return cond
 			}
 		}
-	case repl.HasPrefix("defined") && repl.NextRegexp(`^defined[\t ]*\(`) != nil:
-		if varname := p.Varname(); varname != "" {
-			if repl.NextByte(')') {
-				return &mkCond{Defined: varname}
+
+	case repl.NextBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' }) != "":
+		funcName := strings.TrimSpace(repl.Since(mark))
+		repl.SkipHspace()
+		if repl.NextByte('(') {
+			switch funcName {
+			case "defined":
+				varname := p.Varname()
+				if varname != "" && repl.NextByte(')') {
+					return &mkCond{Defined: varname}
+				}
+
+			case "empty":
+				if varname := p.Varname(); varname != "" {
+					modifiers := p.VarUseModifiers(varname, ')')
+					if repl.NextByte(')') {
+						return &mkCond{Empty: &MkVarUse{varname, modifiers}}
+					}
+				}
+
+			case "commands", "exists", "make", "target":
+				argMark := repl.Mark()
+				for p.VarUse() != nil || repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) != "" {
+				}
+				arg := repl.Since(argMark)
+				if repl.NextByte(')') {
+					return &mkCond{Call: &MkCondCall{funcName, arg}}
+				}
 			}
 		}
-	case repl.HasPrefix("empty") && repl.NextRegexp(`^empty[\t ]*\(`) != nil:
-		if varname := p.Varname(); varname != "" {
-			modifiers := p.VarUseModifiers(varname, ')')
-			if repl.NextByte(')') {
-				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
-			}
-		}
-	case uint(repl.PeekByte()-'a') <= 'z'-'a' && repl.AdvanceRegexp(`^(commands|exists|make|target)[\t ]*\(`):
-		funcname := repl.Group(1)
-		argMark := repl.Mark()
-		for p.VarUse() != nil || repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) != "" {
-		}
-		arg := repl.Since(argMark)
-		if repl.NextByte(')') {
-			return &mkCond{Call: &MkCondCall{funcname, arg}}
-		}
+
 	default:
 		lhs := p.VarUse()
 		mark := repl.Mark()
