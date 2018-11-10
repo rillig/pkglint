@@ -56,6 +56,16 @@ func (l *Lexer) NextString(prefix string) string {
 	return ""
 }
 
+// SkipString skips over the given string, if the remaining string starts
+// with it. It returns whether it actually skipped.
+func (l *Lexer) SkipString(prefix string) bool {
+	skipped := strings.HasPrefix(l.rest, prefix)
+	if skipped {
+		l.rest = l.rest[len(prefix):]
+	}
+	return skipped
+}
+
 // NextHspace chops off the longest prefix (possibly empty) consisting
 // solely of horizontal whitespace, which is the ASCII space (U+0020)
 // and tab (U+0009).
@@ -73,12 +83,12 @@ func (l *Lexer) NextHspace() string {
 	return rest[:i]
 }
 
-// NextByte returns true if the remaining string starts with the given byte,
+// SkipByte returns true if the remaining string starts with the given byte,
 // and in that case, chops it off.
 //
 // The return type differs from the other methods since creating a string
 // would be too much work for such a simple operation.
-func (l *Lexer) NextByte(b byte) bool {
+func (l *Lexer) SkipByte(b byte) bool {
 	if len(l.rest) > 0 && l.rest[0] == b {
 		l.rest = l.rest[1:]
 		return true

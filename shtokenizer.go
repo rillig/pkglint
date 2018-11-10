@@ -85,7 +85,7 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 		return &ShAtom{shtWord, repl.Since(mark), shqBackt, nil}
 	case repl.PeekByte() == '#':
 		return &ShAtom{shtComment, repl.AdvanceRest(), q, nil}
-	case repl.NextString("$$(") != "":
+	case repl.SkipString("$$("):
 		return &ShAtom{shtSubshell, repl.Since(mark), shqSubsh, nil}
 	}
 
@@ -283,7 +283,7 @@ loop:
 		case dquot && repl.SkipRegexp(`^[\t &'();<>|]+`):
 		case squot && repl.NextByte('`'):
 		case squot && repl.SkipRegexp(`^[\t "&();<>\\|]+`):
-		case squot && repl.NextString("$$") != "":
+		case squot && repl.SkipString("$$"):
 		case squot:
 			break loop
 		case repl.SkipRegexp(`^\\[^$]`):
@@ -305,9 +305,9 @@ func (p *ShTokenizer) shOperator(q ShQuoting) *ShAtom {
 	repl := p.parser.repl
 	mark := repl.Mark()
 	switch {
-	case repl.NextString("||") != "",
-		repl.NextString("&&") != "",
-		repl.NextString(";;") != "",
+	case repl.SkipString("||"),
+		repl.SkipString("&&"),
+		repl.SkipString(";;"),
 		repl.NextByte('\n'),
 		repl.NextByte(';'),
 		repl.NextByte('('),

@@ -1101,7 +1101,7 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 
 func MatchMkInclude(text string) (m bool, indentation, directive, fileName string) {
 	lexer := textproc.NewLexer(text)
-	if lexer.NextString(".") != "" {
+	if lexer.SkipByte('.') {
 		indentation = lexer.NextHspace()
 		directive = lexer.NextString("include")
 		if directive == "" {
@@ -1109,14 +1109,14 @@ func MatchMkInclude(text string) (m bool, indentation, directive, fileName strin
 		}
 		if directive != "" {
 			lexer.NextHspace()
-			if lexer.NextByte('"') {
+			if lexer.SkipByte('"') {
 				// Note: strictly speaking, the full MkVarUse would have to be parsed
 				// here. But since these usually don't contain double quotes, it has
 				// worked fine up to now.
 				fileName = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
-				if fileName != "" && lexer.NextByte('"') {
+				if fileName != "" && lexer.SkipByte('"') {
 					lexer.NextHspace()
-					if lexer.EOF() || lexer.NextByte('#') {
+					if lexer.EOF() || lexer.SkipByte('#') {
 						m = true
 						return
 					}

@@ -75,9 +75,9 @@ func (lexer *licenseLexer) Lex(llval *liyySymType) int {
 	switch {
 	case repl.EOF():
 		return 0
-	case repl.NextByte('('):
+	case repl.SkipByte('('):
 		return ltOPEN
-	case repl.NextByte(')'):
+	case repl.SkipByte(')'):
 		return ltCLOSE
 	}
 

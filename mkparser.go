@@ -39,7 +39,7 @@ func (p *MkParser) MkTokens() []*MkToken {
 			dollar = len(repl.Rest())
 		}
 		repl.Skip(dollar)
-		if repl.NextString("$$") != "" {
+		if repl.SkipString("$$") {
 			goto again
 		}
 		text := repl.Since(mark)
@@ -134,7 +134,7 @@ loop:
 				appendModifier(repl.Since(modifierMark))
 				continue
 			}
-			if repl.NextString("ts") != "" {
+			if repl.SkipString("ts") {
 				rest := repl.Rest()
 				if len(rest) >= 2 && (rest[1] == closing || rest[1] == ':') {
 					repl.Skip(1)
@@ -164,10 +164,10 @@ loop:
 				for p.VarUse() != nil || repl.SkipRegexp(re) {
 				}
 				repl.NextByte('$')
-				if repl.NextString(separator) != "" {
+				if repl.SkipString(separator) {
 					for p.VarUse() != nil || repl.SkipRegexp(re) {
 					}
-					if repl.NextString(separator) != "" {
+					if repl.SkipString(separator) {
 						repl.SkipRegexp(`^[1gW]`) // FIXME: Multiple modifiers may be mentioned
 						appendModifier(repl.Since(modifierMark))
 						mayOmitColon = true
@@ -180,7 +180,7 @@ loop:
 			if m := repl.NextRegexp(`^@([\w.]+)@`); m != nil {
 				loopvar := m[1]
 				re := regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`))
-				for p.VarUse() != nil || repl.NextString("$$") != "" || repl.NextRegexp(re) != nil {
+				for p.VarUse() != nil || repl.SkipString("$$") || repl.SkipRegexp(re) {
 				}
 				if !repl.NextByte('@') && p.EmitWarnings {
 					p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
@@ -232,7 +232,7 @@ func (p *MkParser) MkCond() MkCond {
 	for {
 		mark := p.repl.Mark()
 		p.repl.SkipHspace()
-		if !(p.repl.NextString("||") != "") {
+		if !(p.repl.SkipString("||")) {
 			break
 		}
 		next := p.mkCondAnd()

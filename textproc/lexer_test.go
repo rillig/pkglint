@@ -80,6 +80,14 @@ func (s *Suite) Test_Lexer_NextString(c *check.C) {
 	c.Check(lexer.NextString("xt"), equals, "xt")
 }
 
+func (s *Suite) Test_Lexer_SkipString(c *check.C) {
+	lexer := NewLexer("text")
+
+	c.Check(lexer.SkipString("te"), equals, true)
+	c.Check(lexer.SkipString("st"), equals, false)
+	c.Check(lexer.SkipString("xt"), equals, true)
+}
+
 func (s *Suite) Test_Lexer_NextHspace(c *check.C) {
 	lexer := NewLexer("spaces   \t \t  and tabs\n")
 
@@ -90,15 +98,15 @@ func (s *Suite) Test_Lexer_NextHspace(c *check.C) {
 	c.Check(lexer.NextHspace(), equals, "") // Newline is not a horizontal space.
 }
 
-func (s *Suite) Test_Lexer_NextByte(c *check.C) {
+func (s *Suite) Test_Lexer_SkipByte(c *check.C) {
 	lexer := NewLexer("byte")
 
-	c.Check(lexer.NextByte('b'), equals, true)
-	c.Check(lexer.NextByte('b'), equals, false) // The b is already chopped off.
-	c.Check(lexer.NextByte('y'), equals, true)
-	c.Check(lexer.NextByte('t'), equals, true)
-	c.Check(lexer.NextByte('e'), equals, true)
-	c.Check(lexer.NextByte(0), equals, false) // This is not a C string.
+	c.Check(lexer.SkipByte('b'), equals, true)
+	c.Check(lexer.SkipByte('b'), equals, false) // The b is already chopped off.
+	c.Check(lexer.SkipByte('y'), equals, true)
+	c.Check(lexer.SkipByte('t'), equals, true)
+	c.Check(lexer.SkipByte('e'), equals, true)
+	c.Check(lexer.SkipByte(0), equals, false) // This is not a C string.
 }
 
 func (s *Suite) Test_Lexer_NextBytesFunc(c *check.C) {

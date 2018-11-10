@@ -113,20 +113,20 @@ outer:
 						"\t# copies one file, as intended")
 				}
 
-			case repl.NextString("$$@") != "":
+			case repl.SkipString("$$@"):
 				line.Warnf("The $@ shell variable should only be used in double quotes.")
 
-			case repl.NextString("$$?") != "":
+			case repl.SkipString("$$?"):
 				line.Warnf("The $? shell variable is often not available in \"set -e\" mode.")
 
-			case repl.NextString("$$(") != "":
+			case repl.SkipString("$$("):
 				line.Warnf("Invoking subshells via $(...) is not portable enough.")
 				Explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell.  Please use backticks (`...`) as a replacement.")
 				return // To avoid internal pkglint parse errors
 
-			case repl.NextString("$$") != "":
+			case repl.SkipString("$$"):
 				break
 
 			default:
@@ -139,7 +139,7 @@ outer:
 				quoting = shqPlain
 			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '\'' }) != "":
 				// just skip
-			case repl.NextString("$$") != "":
+			case repl.SkipString("$$"):
 				// just skip
 			default:
 				break outer
@@ -153,14 +153,14 @@ outer:
 				quoting = shqDquotBackt
 			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '"' && b != '\\' && b != '`' }) != "":
 				break
-			case repl.NextString("\\$$") != "":
+			case repl.SkipString("\\$$"):
 				break
 			case repl.SkipRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
 				break
 			case repl.SkipRegexp(`^\$\$\{\w+[#%+\-:]*[^{}]*\}`),
 				repl.SkipRegexp(`^\$\$(?:\w+|[!#?@]|\$\$)`):
 				break
-			case repl.NextString("$$") != "":
+			case repl.SkipString("$$"):
 				line.Warnf("Unescaped $ or strange shell variable found.")
 			default:
 				break outer
@@ -237,7 +237,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 			}
 			return unescaped, quoting
 
-		case repl.NextString("\\\"") != "", repl.NextString("\\\\") != "", repl.NextString("\\`") != "", repl.NextString("\\$") != "":
+		case repl.SkipString("\\\""), repl.SkipString("\\\\"), repl.SkipString("\\`"), repl.SkipString("\\$"):
 			unescaped += repl.Since(mark)[1:]
 
 		case repl.NextByte('\\'):
@@ -313,7 +313,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 	if hiddenAndSuppress != "" {
 		shline.checkHiddenAndSuppress(hiddenAndSuppress, lexer.Rest())
 	}
-	setE := lexer.NextString("${RUN}") != ""
+	setE := lexer.SkipString("${RUN}")
 	if !setE {
 		lexer.NextString("${_PKG_SILENT}${_PKG_DEBUG}")
 	}
