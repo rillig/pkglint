@@ -820,7 +820,7 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	// foobar="`echo \"foo   bar\" "\ " "three"`"
 	text := "foobar=\"`echo \\\"foo   bar\\\" \"\\ \" \"three\"`\""
 	repl := G.NewPrefixReplacer(text)
-	repl.AdvanceStr("foobar=\"`")
+	repl.NextString("foobar=\"`")
 
 	backtCommand, newQuoting := shline.unescapeBackticks(text, repl, shqDquotBackt)
 

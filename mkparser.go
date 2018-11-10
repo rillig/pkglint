@@ -23,7 +23,7 @@ func (p *MkParser) MkTokens() []*MkToken {
 
 	var tokens []*MkToken
 	for !p.EOF() {
-		if repl.AdvanceStr("#") {
+		if repl.NextByte('#') {
 			repl.AdvanceRest()
 		}
 
@@ -39,7 +39,7 @@ func (p *MkParser) MkTokens() []*MkToken {
 			dollar = len(repl.Rest())
 		}
 		repl.Skip(dollar)
-		if repl.AdvanceStr("$$") {
+		if repl.NextString("$$") != "" {
 			goto again
 		}
 		text := repl.Since(mark)
@@ -57,7 +57,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 	repl := p.repl
 
 	mark := repl.Mark()
-	if repl.AdvanceStr("${") || repl.AdvanceStr("$(") {
+	if repl.NextString("${") != "" || repl.NextString("$(") != "" {
 		usingRoundParen := repl.Since(mark) == "$("
 		closing := ifelseStr(usingRoundParen, ")", "}")
 
@@ -65,7 +65,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 		varname := p.Varname()
 		if varname != "" {
 			modifiers := p.VarUseModifiers(varname, closing)
-			if repl.AdvanceStr(closing) {
+			if repl.NextString(closing) != "" { // TODO: make closing a single byte
 				if usingRoundParen && p.EmitWarnings {
 					parenVaruse := repl.Since(mark)
 					bracesVaruse := "${" + parenVaruse[2:len(parenVaruse)-1] + "}"
@@ -84,17 +84,17 @@ func (p *MkParser) VarUse() *MkVarUse {
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
 			varexpr := repl.Since(varnameMark)
 			modifiers := p.VarUseModifiers(varexpr, closing)
-			if repl.AdvanceStr(closing) {
+			if repl.NextString(closing) != "" {
 				return &MkVarUse{varexpr, modifiers}
 			}
 		}
 		repl.Reset(mark)
 	}
 
-	if repl.AdvanceStr("$@") {
+	if repl.NextString("$@") != "" {
 		return &MkVarUse{"@", nil}
 	}
-	if repl.AdvanceStr("$<") {
+	if repl.NextString("$<") != "" {
 		return &MkVarUse{"<", nil}
 	}
 	if repl.PeekByte() == '$' && repl.AdvanceRegexp(`^\$(\w)`) {
@@ -114,7 +114,7 @@ func (p *MkParser) VarUseModifiers(varname, closing string) []MkVarUseModifier {
 	appendModifier := func(s string) { modifiers = append(modifiers, MkVarUseModifier{s}) }
 	mayOmitColon := false
 loop:
-	for repl.AdvanceStr(":") || mayOmitColon {
+	for repl.NextByte(':') || mayOmitColon {
 		mayOmitColon = false
 		modifierMark := repl.Mark()
 
@@ -124,7 +124,7 @@ loop:
 				appendModifier(repl.Since(modifierMark))
 				continue
 			}
-			if repl.AdvanceStr("ts") {
+			if repl.NextString("ts") != "" {
 				rest := repl.Rest()
 				if len(rest) >= 2 && (rest[1] == closing[0] || rest[1] == ':') {
 					repl.Skip(1)
@@ -149,15 +149,15 @@ loop:
 		case 'C', 'S':
 			if repl.AdvanceRegexp(`^[CS]([%,/:;@^|])`) {
 				separator := repl.Group(1)
-				repl.AdvanceStr("^")
+				repl.NextByte('^')
 				re := regex.Pattern(`^([^\` + separator + `$` + closing + `\\]|\$\$|\\.)+`)
 				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 				}
-				repl.AdvanceStr("$")
-				if repl.AdvanceStr(separator) {
+				repl.NextByte('$')
+				if repl.NextString(separator) != "" {
 					for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 					}
-					if repl.AdvanceStr(separator) {
+					if repl.NextString(separator) != "" {
 						repl.AdvanceRegexp(`^[1gW]`)
 						appendModifier(repl.Since(modifierMark))
 						mayOmitColon = true
@@ -171,7 +171,7 @@ loop:
 				loopvar := repl.Group(1)
 				for p.VarUse() != nil || repl.AdvanceRegexp(regex.Pattern(`^([^$:@`+closing+`\\]|\$\$|\\.)+`)) {
 				}
-				if !repl.AdvanceStr("@") && p.EmitWarnings {
+				if !repl.NextByte('@') && p.EmitWarnings {
 					p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
 				}
 				appendModifier(repl.Since(modifierMark))
@@ -185,11 +185,11 @@ loop:
 			}
 
 		case '?':
-			repl.AdvanceStr("?")
+			repl.Skip(1)
 			re := regex.Pattern(`^([^$:` + closing + `]|\$\$)+`)
 			for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 			}
-			if repl.AdvanceStr(":") {
+			if repl.NextByte(':') {
 				for p.VarUse() != nil || repl.AdvanceRegexp(re) {
 				}
 				appendModifier(repl.Since(modifierMark))
@@ -221,7 +221,7 @@ func (p *MkParser) MkCond() MkCond {
 	for {
 		mark := p.repl.Mark()
 		p.repl.SkipHspace()
-		if !p.repl.AdvanceStr("||") {
+		if !(p.repl.NextString("||") != "") {
 			break
 		}
 		next := p.mkCondAnd()
@@ -271,29 +271,29 @@ func (p *MkParser) mkCondAtom() MkCond {
 	mark := repl.Mark()
 	repl.SkipHspace()
 	switch {
-	case repl.AdvanceStr("!"):
+	case repl.NextByte('!'):
 		cond := p.mkCondAtom()
 		if cond != nil {
 			return &mkCond{Not: cond}
 		}
-	case repl.AdvanceStr("("):
+	case repl.NextByte('('):
 		cond := p.MkCond()
 		if cond != nil {
 			repl.SkipHspace()
-			if repl.AdvanceStr(")") {
+			if repl.NextByte(')') {
 				return cond
 			}
 		}
 	case repl.HasPrefix("defined") && repl.AdvanceRegexp(`^defined[\t ]*\(`):
 		if varname := p.Varname(); varname != "" {
-			if repl.AdvanceStr(")") {
+			if repl.NextByte(')') {
 				return &mkCond{Defined: varname}
 			}
 		}
 	case repl.HasPrefix("empty") && repl.AdvanceRegexp(`^empty[\t ]*\(`):
 		if varname := p.Varname(); varname != "" {
 			modifiers := p.VarUseModifiers(varname, ")")
-			if repl.AdvanceStr(")") {
+			if repl.NextByte(')') {
 				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
 			}
 		}
@@ -303,14 +303,14 @@ func (p *MkParser) mkCondAtom() MkCond {
 		for p.VarUse() != nil || repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) != "" {
 		}
 		arg := repl.Since(argMark)
-		if repl.AdvanceStr(")") {
+		if repl.NextByte(')') {
 			return &mkCond{Call: &MkCondCall{funcname, arg}}
 		}
 	default:
 		lhs := p.VarUse()
 		mark := repl.Mark()
-		if lhs == nil && repl.AdvanceStr("\"") {
-			if quotedLHS := p.VarUse(); quotedLHS != nil && repl.AdvanceStr("\"") {
+		if lhs == nil && repl.NextByte('"') {
+			if quotedLHS := p.VarUse(); quotedLHS != nil && repl.NextByte('"') {
 				lhs = quotedLHS
 			} else {
 				repl.Reset(mark)
@@ -330,9 +330,9 @@ func (p *MkParser) mkCondAtom() MkCond {
 					return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
 				} else if repl.PeekByte() == '"' {
 					mark := repl.Mark()
-					if repl.AdvanceStr("\"") {
+					if repl.NextByte('"') {
 						if quotedRHS := p.VarUse(); quotedRHS != nil {
-							if repl.AdvanceStr("\"") {
+							if repl.NextByte('"') {
 								return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
 							}
 						}
@@ -355,7 +355,7 @@ func (p *MkParser) Varname() string {
 	repl := p.repl
 
 	mark := repl.Mark()
-	repl.AdvanceStr(".")
+	repl.NextByte('.')
 	isVarnameChar := func(c byte) bool {
 		return 'A' <= c && c <= 'Z' || c == '_' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' || c == '+' || c == '-' || c == '.' || c == '*'
 	}

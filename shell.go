@@ -82,11 +82,11 @@ outer:
 			// FIXME: These regular expressions don't belong here, they are the job of the tokenizer.
 			case repl.AdvanceRegexp(`^[!#%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
 				repl.AdvanceRegexp(`^\\(?:[ !"#'()*./;?\\^{|}]|\$\$)`):
-			case repl.AdvanceStr("'"):
+			case repl.NextByte('\''):
 				quoting = shqSquot
-			case repl.AdvanceStr("\""):
+			case repl.NextByte('"'):
 				quoting = shqDquot
-			case repl.AdvanceStr("`"):
+			case repl.NextByte('`'):
 				quoting = shqBackt
 			case repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|#)`),
 				repl.AdvanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`),
@@ -110,20 +110,20 @@ outer:
 						"\t# copies one file, as intended")
 				}
 
-			case repl.AdvanceStr("$$@"):
+			case repl.NextString("$$@") != "":
 				line.Warnf("The $@ shell variable should only be used in double quotes.")
 
-			case repl.AdvanceStr("$$?"):
+			case repl.NextString("$$?") != "":
 				line.Warnf("The $? shell variable is often not available in \"set -e\" mode.")
 
-			case repl.AdvanceStr("$$("):
+			case repl.NextString("$$(") != "":
 				line.Warnf("Invoking subshells via $(...) is not portable enough.")
 				Explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell.  Please use backticks (`...`) as a replacement.")
 				return // To avoid internal parse errors
 
-			case repl.AdvanceStr("$$"): // Not part of a variable.
+			case repl.NextString("$$") != "":
 				break
 
 			default:
@@ -132,11 +132,11 @@ outer:
 
 		case quoting == shqSquot:
 			switch {
-			case repl.AdvanceStr("'"):
+			case repl.NextByte('\''):
 				quoting = shqPlain
 			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '\'' }) != "":
 				// just skip
-			case repl.AdvanceStr("$$"):
+			case repl.NextString("$$") != "":
 				// just skip
 			default:
 				break outer
@@ -144,20 +144,20 @@ outer:
 
 		case quoting == shqDquot:
 			switch {
-			case repl.AdvanceStr("\""):
+			case repl.NextByte('"'):
 				quoting = shqPlain
-			case repl.AdvanceStr("`"):
+			case repl.NextByte('`'):
 				quoting = shqDquotBackt
 			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '"' && b != '\\' && b != '`' }) != "":
 				break
-			case repl.AdvanceStr("\\$$"):
+			case repl.NextString("\\$$") != "":
 				break
 			case repl.AdvanceRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
 				break
 			case repl.AdvanceRegexp(`^\$\$\{\w+[#%+\-:]*[^{}]*\}`),
 				repl.AdvanceRegexp(`^\$\$(?:\w+|[!#?@]|\$\$)`):
 				break
-			case repl.AdvanceStr("$$"):
+			case repl.NextString("$$") != "":
 				line.Warnf("Unescaped $ or strange shell variable found.")
 			default:
 				break outer
@@ -226,7 +226,7 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 	for repl.Rest() != "" {
 		mark := repl.Mark()
 		switch {
-		case repl.AdvanceStr("`"):
+		case repl.NextByte('`'):
 			if quoting == shqBackt {
 				quoting = shqPlain
 			} else {
@@ -234,14 +234,14 @@ func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.Pref
 			}
 			return unescaped, quoting
 
-		case repl.AdvanceStr("\\\""), repl.AdvanceStr("\\\\"), repl.AdvanceStr("\\`"), repl.AdvanceStr("\\$"):
+		case repl.NextString("\\\"") != "", repl.NextString("\\\\") != "", repl.NextString("\\`") != "", repl.NextString("\\$") != "":
 			unescaped += repl.Since(mark)[1:]
 
-		case repl.AdvanceStr("\\"):
+		case repl.NextByte('\\'):
 			line.Warnf("Backslashes should be doubled inside backticks.")
 			unescaped += "\\"
 
-		case quoting == shqDquotBackt && repl.AdvanceStr("\""):
+		case quoting == shqDquotBackt && repl.NextByte('"'):
 			line.Warnf("Double quotes inside backticks inside double quotes are error prone.")
 			Explain(
 				"According to the SUSv3, they produce undefined results.",

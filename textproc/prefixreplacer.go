@@ -31,21 +31,20 @@ func (pr *PrefixReplacer) Group(index int) string {
 	return pr.m[index]
 }
 
-func (pr *PrefixReplacer) AdvanceStr(prefix string) bool {
-	pr.m = nil
-	if strings.HasPrefix(pr.rest, prefix) {
-		pr.rest = pr.rest[len(prefix):]
-		return true
-	}
-	return false
-}
-
 func (pr *PrefixReplacer) NextString(prefix string) string {
 	if strings.HasPrefix(pr.rest, prefix) {
 		pr.Skip(len(prefix))
 		return prefix
 	}
 	return ""
+}
+
+func (pr *PrefixReplacer) NextByte(b byte) bool {
+	if pr.PeekByte() == int(b) {
+		pr.Skip(1)
+		return true
+	}
+	return false
 }
 
 func (pr *PrefixReplacer) NextHspace() string {
