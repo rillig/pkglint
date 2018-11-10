@@ -334,9 +334,12 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 			if m := repl.NextRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`); m != nil {
 				op := m[1]
-				if (op == "!=" || op == "==") && repl.AdvanceRegexp(`^"([^"\$\\]*)"`) {
-					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, repl.Group(1)}}
-				} else if str := repl.NextBytesSet(textproc.AlnumU); str != "" {
+				if op == "==" || op == "!=" {
+					if mrhs := repl.NextRegexp(`^"([^"\$\\]*)"`); mrhs != nil {
+						return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
+					}
+				}
+				if str := repl.NextBytesSet(textproc.AlnumU); str != "" {
 					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
 				} else if rhs := p.VarUse(); rhs != nil {
 					return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
