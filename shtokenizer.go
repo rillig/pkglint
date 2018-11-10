@@ -78,11 +78,11 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 	case repl.NextHspace() != "":
 		return &ShAtom{shtSpace, repl.Since(mark), q, nil}
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquot, nil}
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqSquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqSquot, nil}
 	case repl.NextByte('`'):
-		return &ShAtom{shtWord, repl.Since(mark), shqBackt, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
 	case repl.PeekByte() == '#':
 		return &ShAtom{shtComment, repl.AdvanceRest(), q, nil}
 	case repl.SkipString("$$("):
@@ -97,9 +97,9 @@ func (p *ShTokenizer) shAtomDquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqPlain, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqPlain, nil}
 	case repl.NextByte('`'):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquotBackt, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquotBackt, nil}
 	}
 	return p.shAtomInternal(shqDquot, true, false)
 }
@@ -109,7 +109,7 @@ func (p *ShTokenizer) shAtomSquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqPlain, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqPlain, nil}
 	}
 	return p.shAtomInternal(shqSquot, false, true)
 }
@@ -123,11 +123,11 @@ func (p *ShTokenizer) shAtomBackt() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqBacktDquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqBacktDquot, nil}
 	case repl.NextByte('`'):
-		return &ShAtom{shtWord, repl.Since(mark), shqPlain, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqPlain, nil}
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqBacktSquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqBacktSquot, nil}
 	case repl.NextHspace() != "":
 		return &ShAtom{shtSpace, repl.Since(mark), q, nil}
 	case repl.SkipRegexp("^#[^`]*"):
@@ -146,17 +146,17 @@ func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	case repl.NextHspace() != "":
 		return &ShAtom{shtSpace, repl.Since(mark), q, nil}
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqSubshDquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqSubshDquot, nil}
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqSubshSquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqSubshSquot, nil}
 	case repl.NextByte('`'):
-		// FIXME: return &ShAtom{shtWord, repl.Since(mark), shqBackt, nil}
+		// FIXME: return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
 	case repl.SkipRegexp(`^#[^)]*`):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
 	case repl.NextByte(')'):
-		return &ShAtom{shtWord, repl.Since(mark), shqPlain, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqPlain, nil}
 	case repl.SkipRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Since(mark), q, nil}
+		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
 	return p.shOperator(q)
 }
@@ -170,15 +170,15 @@ func (p *ShTokenizer) shAtomDquotBackt() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('`'):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquot, nil}
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquotBacktDquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquotBacktDquot, nil}
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquotBacktSquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquotBacktSquot, nil}
 	case repl.SkipRegexp("^#[^`]*"):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
 	case repl.SkipRegexp(`^(?:[!#%*+,\-./0-9:=?@A-Z\[\]_a-z~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Since(mark), q, nil}
+		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	case repl.NextHspace() != "":
 		return &ShAtom{shtSpace, repl.Since(mark), q, nil}
 	}
@@ -190,9 +190,9 @@ func (p *ShTokenizer) shAtomBacktDquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqBackt, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
 	case repl.SkipRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Since(mark), shqBacktDquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqBacktDquot, nil}
 	}
 	return nil
 }
@@ -203,9 +203,9 @@ func (p *ShTokenizer) shAtomBacktSquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqBackt, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
 	case repl.SkipRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
-		return &ShAtom{shtWord, repl.Since(mark), q, nil}
+		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
 	return nil
 }
@@ -215,9 +215,9 @@ func (p *ShTokenizer) shAtomSubshDquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqSubsh, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqSubsh, nil}
 	case repl.SkipRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Since(mark), shqSubshDquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqSubshDquot, nil}
 	}
 	return nil
 }
@@ -228,9 +228,9 @@ func (p *ShTokenizer) shAtomSubshSquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqSubsh, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqSubsh, nil}
 	case repl.SkipRegexp(`^([\t !"#%&()*+,\-./0-9:;<=>?@A-Z\[\\\]^_` + "`" + `a-z{|}~]+|\$\$)+`):
-		return &ShAtom{shtWord, repl.Since(mark), q, nil}
+		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
 	return nil
 }
@@ -241,9 +241,9 @@ func (p *ShTokenizer) shAtomDquotBacktDquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('"'):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquotBackt, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquotBackt, nil}
 	case repl.SkipRegexp(`^(?:[\t !%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|` + reShDollar + `)+`):
-		return &ShAtom{shtWord, repl.Since(mark), q, nil}
+		return &ShAtom{shtText, repl.Since(mark), q, nil}
 	}
 	return nil
 }
@@ -253,9 +253,9 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 	mark := repl.Mark()
 	switch {
 	case repl.NextByte('\''):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquotBackt, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquotBackt, nil}
 	case repl.SkipRegexp(`^(?:[\t !"#%()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+|\\[^$]|\\\$\$|\$\$)+`):
-		return &ShAtom{shtWord, repl.Since(mark), shqDquotBacktSquot, nil}
+		return &ShAtom{shtText, repl.Since(mark), shqDquotBacktSquot, nil}
 	}
 	return nil
 }
@@ -296,7 +296,7 @@ loop:
 	}
 
 	if token := repl.Since(mark); token != "" {
-		return &ShAtom{shtWord, token, q, nil}
+		return &ShAtom{shtText, token, q, nil}
 	}
 	return nil
 }

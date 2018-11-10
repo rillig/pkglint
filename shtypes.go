@@ -11,7 +11,7 @@ type ShAtomType uint8
 const (
 	shtSpace    ShAtomType = iota
 	shtVaruse              // ${PREFIX}
-	shtWord                // while, cat, ENV=value
+	shtText                // while, cat, ENV=value, inter$${var:-pol}ate
 	shtOperator            // (, ;, |
 	shtComment             // # ...
 	shtSubshell            // $$(
@@ -30,7 +30,7 @@ func (t ShAtomType) String() string {
 
 func (t ShAtomType) IsWord() bool {
 	switch t {
-	case shtVaruse, shtWord:
+	case shtVaruse, shtText:
 		return true
 	}
 	return false
@@ -44,7 +44,7 @@ type ShAtom struct {
 }
 
 func (atom *ShAtom) String() string {
-	if atom.Type == shtWord && atom.Quoting == shqPlain && atom.data == nil {
+	if atom.Type == shtText && atom.Quoting == shqPlain && atom.data == nil {
 		return fmt.Sprintf("%q", atom.MkText)
 	}
 	if atom.Type == shtVaruse {

@@ -43,7 +43,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		varuse := NewMkVarUse(varname, modifiers...)
 		return &ShAtom{shtVaruse, text, shqPlain, varuse}
 	}
-	text := func(s string) *ShAtom { return atom(shtWord, s) }
+	text := func(s string) *ShAtom { return atom(shtText, s) }
 	whitespace := func(s string) *ShAtom { return atom(shtSpace, s) }
 
 	space := whitespace(" ")

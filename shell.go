@@ -996,7 +996,7 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 		prevAtom = atom
 		if atom.Type == shtSpace && q == shqPlain {
 			emit()
-		} else if atom.Type == shtWord || atom.Type == shtVaruse || atom.Quoting != shqPlain {
+		} else if atom.Type == shtText || atom.Type == shtVaruse || atom.Quoting != shqPlain {
 			word += atom.MkText
 		} else {
 			emit()
