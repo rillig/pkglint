@@ -8,7 +8,7 @@ func (s *Suite) Test_LicenseChecker_Check(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("licenses/gnu-gpl-v2",
-		"Most software \u2026")
+		"The licenses for most software are designed to take away ...")
 	mkline := t.NewMkLine("Makefile", 7, "LICENSE=dummy")
 
 	licenseChecker := &LicenseChecker{mkline}
@@ -83,7 +83,7 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		"0 errors and 2 warnings found.")
 }
 
-func (s *Suite) Test_LicenseChecker_checkLicenseName__LICENSE_FILE(c *check.C) {
+func (s *Suite) Test_LicenseChecker_checkName__LICENSE_FILE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()

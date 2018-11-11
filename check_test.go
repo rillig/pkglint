@@ -223,7 +223,7 @@ func (t *Tester) SetupPkgsrc() {
 	t.CreateFileLines("licenses/2-clause-bsd",
 		"Redistribution and use in source and binary forms ...")
 	t.CreateFileLines("licenses/gnu-gpl-v2",
-		"The licenses for most software ...")
+		"The licenses for most software are designed to take away ...")
 
 	// The various MASTER_SITE_* variables for use in the
 	// MASTER_SITES are defined in this file.

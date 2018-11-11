@@ -40,7 +40,7 @@ func (lc *LicenseChecker) Check(value string, op MkOperator) {
 	cond.Walk(lc.checkNode)
 }
 
-func (lc *LicenseChecker) checkLicenseName(license string) {
+func (lc *LicenseChecker) checkName(license string) {
 	licenseFile := ""
 	if G.Pkg != nil {
 		if mkline := G.Pkg.vars.FirstDefinition("LICENSE_FILE"); mkline != nil {
@@ -74,8 +74,8 @@ func (lc *LicenseChecker) checkLicenseName(license string) {
 }
 
 func (lc *LicenseChecker) checkNode(cond *licenses.Condition) {
-	if license := cond.Name; license != "" && license != "append-placeholder" {
-		lc.checkLicenseName(license)
+	if name := cond.Name; name != "" && name != "append-placeholder" {
+		lc.checkName(name)
 		return
 	}
 
