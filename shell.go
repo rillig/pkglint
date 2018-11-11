@@ -46,6 +46,11 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTim
 		line.Warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
+	shline.checkWordQuoting(token, checkQuoting, time)
+} // comment for the diff algorithm
+
+func (shline *ShellLine) checkWordQuoting(token string, checkQuoting bool, time ToolTime) {
+	line := shline.mkline.Line
 	parser := NewMkParser(line, token, false)
 	repl := parser.repl
 	quoting := shqPlain
