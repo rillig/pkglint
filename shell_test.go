@@ -618,10 +618,8 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) 
 
 	// This call is unrealistic. It doesn't happen in practice, and this
 	// direct, forcing test is only to reach the code coverage.
-	NewShellLine(dummyMkLine).unescapeBackticks(
-		"dummy",
-		G.NewPrefixReplacer(""),
-		shqBackt)
+	NewShellLine(dummyMkLine).
+		unescapeBackticks(G.NewPrefixReplacer("`"), shqBackt)
 
 	t.CheckOutputLines(
 		"ERROR: Unfinished backquotes: ")
@@ -832,7 +830,7 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 		lineno++
 		repl := G.NewPrefixReplacer(input)
 
-		output, newQuoting := shline.unescapeBackticks(input, repl, quoting)
+		output, newQuoting := shline.unescapeBackticks(repl, quoting)
 
 		c.Check(output, equals, expectedOutput)
 		c.Check(newQuoting, equals, expectedNewQuoting)
@@ -843,20 +841,20 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 		test(shqBackt, input, shqPlain, expectedOutput, rest)
 	}
 
-	testPlain("echo`end", "echo", "end")
-	testPlain("echo $$var`end", "echo $$var", "end")
-	testPlain("`end", "", "end")
-	testPlain("echo \"hello\"`end", "echo \"hello\"", "end")
-	testPlain("echo 'hello'`end", "echo 'hello'", "end")
-	testPlain("echo '\\\\\\\\'`end", "echo '\\\\'", "end")
+	testPlain("`echo`end", "echo", "end")
+	testPlain("`echo $$var`end", "echo $$var", "end")
+	testPlain("``end", "", "end")
+	testPlain("`echo \"hello\"`end", "echo \"hello\"", "end")
+	testPlain("`echo 'hello'`end", "echo 'hello'", "end")
+	testPlain("`echo '\\\\\\\\'`end", "echo '\\\\'", "end")
 
 	// Only the characters "$`\ are unescaped. All others stay the same.
-	testPlain("echo '\\n'`end", "echo '\\n'", "end")
+	testPlain("`echo '\\n'`end", "echo '\\n'", "end")
 
 	// varname="`echo \"one   two\" "\ " "three"`"
 	test(
 		shqDquotBackt,
-		"echo \\\"one   two\\\" \"\\ \" \"three\"`\"",
+		"`echo \\\"one   two\\\" \"\\ \" \"three\"`\"",
 		shqDquot,
 		"echo \"one   two\" \"\\ \" \"three\"",
 		"\"")

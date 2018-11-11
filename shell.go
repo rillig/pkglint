@@ -67,7 +67,8 @@ outer:
 		// make(1) variable.
 		case quoting == shqBackt || quoting == shqDquotBackt:
 			var backtCommand string
-			backtCommand, quoting = shline.unescapeBackticks(token, repl, quoting)
+			repl.Reset(textproc.PrefixReplacerMark("`" + repl.Rest())) // FIXME: This is a hack.
+			backtCommand, quoting = shline.unescapeBackticks(repl, quoting)
 			setE := true
 			shline.CheckShellCommand(backtCommand, &setE, time)
 
@@ -213,15 +214,17 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 	return true
 }
 
-// Scan for the end of the backticks, checking for single backslashes
-// and removing one level of backslashes. Backslashes are only removed
-// before a dollar, a backslash or a backtick.
+// unescapeBackticks takes a backticks expression like `echo \\"hello\\"` and
+// returns the part inside the backticks, removing one level of backslashes.
+//
+// Backslashes are only removed before a dollar, a backslash or a backtick.
+// Other backslashes generate a warning since it is easier to remember that
+// all backslashes are unescaped.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-func (shline *ShellLine) unescapeBackticks(shellword string, repl *textproc.PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
-	if trace.Tracing {
-		defer trace.Call(shellword, quoting, trace.Result(&unescaped))()
-	}
+func (shline *ShellLine) unescapeBackticks(repl *textproc.PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
+
+	G.Assertf(repl.SkipString("`"), "")
 
 	line := shline.mkline.Line
 	for repl.Rest() != "" {
