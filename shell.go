@@ -5,6 +5,7 @@ package main
 import (
 	"netbsd.org/pkglint/textproc"
 	"path"
+	"strings"
 )
 
 // TODO: Can ShellLine and ShellProgramChecker be merged into one type?
@@ -51,136 +52,98 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTim
 
 func (shline *ShellLine) checkWordQuoting(token string, checkQuoting bool, time ToolTime) {
 	line := shline.mkline.Line
-	parser := NewMkParser(line, token, false)
-	repl := parser.repl
+	tok := NewShTokenizer(line, token, false)
+
+	atoms := tok.ShAtoms()
 	quoting := shqPlain
 outer:
-	for !parser.EOF() {
+	for len(atoms) > 0 {
+		atom := atoms[0]
+		// Cutting off the first atom is done at the end of the loop since in
+		// some cases the called methods need to see the current atom.
+
 		if trace.Tracing {
-			trace.Stepf("shell state %s: %q", quoting, parser.Rest())
+			trace.Stepf("shell state %s: %q", quoting, atom)
 		}
 
 		switch {
-		// When parsing inside backticks, it is more
-		// reasonable to check the whole shell command
-		// recursively, instead of splitting off the first
-		// make(1) variable.
-		case quoting == shqBackt || quoting == shqDquotBackt:
-			var backtCommand string
-			repl.Reset(textproc.PrefixReplacerMark("`" + repl.Rest())) // FIXME: This is a hack.
-			backtCommand, quoting = shline.unescapeBackticks(repl, quoting)
-			setE := true
-			shline.CheckShellCommand(backtCommand, &setE, time)
+		case atom.Quoting == shqBackt || atom.Quoting == shqDquotBackt:
+			backtCommand := shline.unescapeBackticks(&atoms, quoting)
+			if backtCommand != "" {
+				setE := true
+				shline.CheckShellCommand(backtCommand, &setE, time)
+			}
+			continue
 
 			// Make(1) variables have the same syntax, no matter in which state the shell parser is currently.
-		case shline.checkVaruseToken(parser, quoting):
-			break
+		case shline.checkVaruseToken(&atoms, quoting):
+			continue
 
 		case quoting == shqPlain:
 			switch {
-			// FIXME: These regular expressions don't belong here, they are the job of the tokenizer.
-			case repl.SkipRegexp(`^[!#%&()*+,\-./0-9:;<=>?@A-Z\[\]^_a-z{|}~]+`),
-				repl.SkipRegexp(`^\\(?:[ !"#'()*./;?\\^{|}]|\$\$)`):
-			case repl.NextByte('\''):
-				quoting = shqSquot
-			case repl.NextByte('"'):
-				quoting = shqDquot
-			case repl.NextByte('`'):
-				quoting = shqBackt
-			case repl.AdvanceRegexp(`^\$\$([0-9A-Z_a-z]+|#|\$\$)`),
-				repl.AdvanceRegexp(`^\$\$\{([0-9A-Z_a-z]+|#)\}`):
-				shvarname := repl.Group(1)
-				if shvarname == "$$" {
-					shvarname = "$"
-				}
+			case atom.Type == shtShVarUse:
+				shline.checkShVarUse(atom, checkQuoting)
 
-				if G.Opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shvarname) {
-					line.Warnf("Unquoted shell variable %q.", shvarname)
-					Explain(
-						"When a shell variable contains white-space, it is expanded (split",
-						"into multiple words) when it is written as $variable in a shell",
-						"script.  If that is not intended, you should add quotation marks",
-						"around it, like \"$variable\".  Then, the variable will always expand",
-						"to a single word, preserving all white-space and other special",
-						"characters.",
-						"",
-						"Example:",
-						"\tfname=\"Curriculum vitae.doc\"",
-						"\tcp $fileName /tmp",
-						"\t# tries to copy the two files \"Curriculum\" and \"Vitae.doc\"",
-						"\tcp \"$fileName\" /tmp",
-						"\t# copies one file, as intended")
-				}
-
-			case repl.SkipString("$$@"):
-				line.Warnf("The $@ shell variable should only be used in double quotes.")
-
-			case repl.SkipString("$$?"):
-				line.Warnf("The $? shell variable is often not available in \"set -e\" mode.")
-
-			case repl.SkipString("$$("):
+			case atom.Type == shtSubshell:
 				line.Warnf("Invoking subshells via $(...) is not portable enough.")
 				Explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell.  Please use backticks (`...`) as a replacement.")
 				return // To avoid internal pkglint parse errors
 
-			case repl.SkipString("$$"):
+			case atom.Type == shtText:
 				break
 
-			default:
-				break outer
-			}
-
-		case quoting == shqSquot:
-			switch {
-			case repl.NextByte('\''):
-				quoting = shqPlain
-			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '\'' }) != "":
-				// just skip
-			case repl.SkipString("$$"):
-				// just skip
-			default:
-				break outer
-			}
-
-		case quoting == shqDquot:
-			switch {
-			case repl.NextByte('"'):
-				quoting = shqPlain
-			case repl.NextByte('`'):
-				quoting = shqDquotBackt
-			case repl.NextBytesFunc(func(b byte) bool { return b != '$' && b != '"' && b != '\\' && b != '`' }) != "":
-				break
-			case repl.SkipString("\\$$"):
-				break
-			case repl.SkipRegexp(`^\\.`): // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_02_01
-				break
-			case repl.SkipRegexp(`^\$\$\{\w+[#%+\-:]*[^{}]*\}`),
-				repl.SkipRegexp(`^\$\$(?:\w+|[!#?@]|\$\$)`):
-				break
-			case repl.SkipString("$$"):
-				break
 			default:
 				break outer
 			}
 		}
+
+		quoting = atom.Quoting
+		atoms = atoms[1:]
 	}
 
-	if trimHspace(parser.Rest()) != "" {
-		line.Warnf("Pkglint parse error in ShellLine.CheckWord at %q (quoting=%s), rest: %s", token, quoting, parser.Rest())
+	if trimHspace(tok.Rest()) != "" {
+		line.Warnf("Pkglint parse error in ShellLine.CheckWord at %q (quoting=%s), rest: %s", token, quoting, tok.Rest())
 	}
 }
 
-func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) bool {
-	if trace.Tracing {
-		defer trace.Call(parser.Rest(), quoting)()
+func (shline *ShellLine) checkShVarUse(atom *ShAtom, checkQuoting bool) {
+	line := shline.mkline.Line
+	shVarname := atom.ShVarname()
+
+	if shVarname == "@" {
+		line.Warnf("The $@ shell variable should only be used in double quotes.")
+
+	} else if G.Opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shVarname) {
+		line.Warnf("Unquoted shell variable %q.", shVarname)
+		Explain(
+			"When a shell variable contains white-space, it is expanded (split",
+			"into multiple words) when it is written as $variable in a shell",
+			"script.  If that is not intended, you should add quotation marks",
+			"around it, like \"$variable\".  Then, the variable will always expand",
+			"to a single word, preserving all white-space and other special",
+			"characters.",
+			"",
+			"Example:",
+			"\tfname=\"Curriculum vitae.doc\"",
+			"\tcp $fileName /tmp",
+			"\t# tries to copy the two files \"Curriculum\" and \"Vitae.doc\"",
+			"\tcp \"$fileName\" /tmp",
+			"\t# copies one file, as intended")
 	}
 
-	varuse := parser.VarUse()
+	if shVarname == "?" {
+		line.Warnf("The $? shell variable is often not available in \"set -e\" mode.")
+	}
+}
+
+func (shline *ShellLine) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting) bool {
+	varuse := (*atoms)[0].VarUse()
 	if varuse == nil {
 		return false
 	}
+	*atoms = (*atoms)[1:]
 	varname := varuse.varname
 
 	if varname == "@" {
@@ -222,30 +185,44 @@ func (shline *ShellLine) checkVaruseToken(parser *MkParser, quoting ShQuoting) b
 // all backslashes are unescaped.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_03
-func (shline *ShellLine) unescapeBackticks(repl *textproc.PrefixReplacer, quoting ShQuoting) (unescaped string, newQuoting ShQuoting) {
-
-	G.Assertf(repl.SkipString("`"), "")
-
+func (shline *ShellLine) unescapeBackticks(atoms *[]*ShAtom, quoting ShQuoting) string {
 	line := shline.mkline.Line
-	for repl.Rest() != "" {
-		mark := repl.Mark()
-		switch {
-		case repl.NextByte('`'):
-			if quoting == shqBackt {
-				quoting = shqPlain
-			} else {
-				quoting = shqDquot
+
+	// Skip the initial backtick.
+	*atoms = (*atoms)[1:]
+
+	var unescaped strings.Builder
+	for len(*atoms) > 0 {
+		atom := (*atoms)[0]
+		*atoms = (*atoms)[1:]
+
+		if atom.Quoting == quoting {
+			return unescaped.String()
+		}
+
+		if atom.Type != shtText {
+			unescaped.WriteString(atom.MkText)
+			continue
+		}
+
+		lex := textproc.NewLexer(atom.MkText)
+		for !lex.EOF() {
+			unescaped.WriteString(lex.NextBytesFunc(func(b byte) bool { return b != '\\' }))
+			if lex.SkipByte('\\') {
+				switch lex.PeekByte() {
+				case '"', '\\', '`', '$':
+					unescaped.WriteByte(byte(lex.PeekByte()))
+					lex.Skip(1)
+				default:
+					line.Warnf("Backslashes should be doubled inside backticks.")
+					unescaped.WriteByte('\\')
+				}
 			}
-			return unescaped, quoting
+		}
 
-		case repl.SkipString("\\\""), repl.SkipString("\\\\"), repl.SkipString("\\`"), repl.SkipString("\\$"):
-			unescaped += repl.Since(mark)[1:]
-
-		case repl.NextByte('\\'):
-			line.Warnf("Backslashes should be doubled inside backticks.")
-			unescaped += "\\"
-
-		case quoting == shqDquotBackt && repl.NextByte('"'):
+		// XXX: The regular expression is a bit cheated but is good enough until
+		// pkglint has a real parser for all shell constructs.
+		if atom.Quoting == shqDquotBackt && matches(atom.MkText, `(^|[^\\])"`) {
 			line.Warnf("Double quotes inside backticks inside double quotes are error prone.")
 			Explain(
 				"According to the SUSv3, they produce undefined results.",
@@ -254,13 +231,11 @@ func (shline *ShellLine) unescapeBackticks(repl *textproc.PrefixReplacer, quotin
 				"http://www.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html.",
 				"",
 				"To avoid this uncertainty, escape the double quotes using \\\".")
-
-		default:
-			unescaped += repl.NextRegexp("^([^\\\\`]+)")[1]
 		}
 	}
-	line.Errorf("Unfinished backquotes: %s", repl.Rest())
-	return unescaped, quoting
+
+	line.Errorf("Unfinished backticks after %q.", unescaped.String())
+	return unescaped.String()
 }
 
 func (shline *ShellLine) variableNeedsQuoting(shVarname string) bool {

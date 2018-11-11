@@ -2,6 +2,7 @@ package main
 
 import (
 	"gopkg.in/check.v1"
+	"strings"
 )
 
 func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {
@@ -231,6 +232,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	checkShellCommandLine("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
 
 	t.CheckOutputLines(
+		"WARN: fileName:1: Double quotes inside backticks inside double quotes are error prone.",
 		"WARN: fileName:1: The exitcode of \"unzip\" at the left of the | operator is ignored.")
 
 	// From mail/thunderbird/Makefile, rev. 1.159
@@ -245,6 +247,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: fileName:1: XPI_FILES is used but not defined.",
+		"WARN: fileName:1: Double quotes inside backticks inside double quotes are error prone.",
 		"WARN: fileName:1: The exitcode of \"${UNZIP_CMD}\" at the left of the | operator is ignored.")
 
 	// From x11/wxGTK28/Makefile
@@ -535,9 +538,8 @@ func (s *Suite) Test_ShellLine_CheckWord__backslash_plus(c *check.C) {
 
 	shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 
-	// FIXME: A backslash before any other character than "\` keeps its original meaning.
-	t.CheckOutputLines(
-		"WARN: fileName:1: Pkglint parse error in ShellLine.CheckWord at \"\\\\+\" (quoting=plain), rest: \\+")
+	// A backslash before any other character than " \ ` is discarded by the parser.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ShellLine_CheckWord__squot_dollar(c *check.C) {
@@ -550,6 +552,7 @@ func (s *Suite) Test_ShellLine_CheckWord__squot_dollar(c *check.C) {
 	// FIXME: Should be parsed correctly. Make passes the dollar through (probably),
 	// and the shell parser should complain about the unfinished string literal.
 	t.CheckOutputLines(
+		"WARN: fileName:1: Pkglint parse error in ShTokenizer.ShAtom at \"$\" (quoting=s).",
 		"WARN: fileName:1: Pkglint parse error in ShellLine.CheckWord at \"'$\" (quoting=s), rest: $")
 }
 
@@ -563,6 +566,7 @@ func (s *Suite) Test_ShellLine_CheckWord__dquot_dollar(c *check.C) {
 	// FIXME: Should be parsed correctly. Make passes the dollar through (probably),
 	// and the shell parser should complain about the unfinished string literal.
 	t.CheckOutputLines(
+		"WARN: fileName:1: Pkglint parse error in ShTokenizer.ShAtom at \"$\" (quoting=d).",
 		"WARN: fileName:1: Pkglint parse error in ShellLine.CheckWord at \"\\\"$\" (quoting=d), rest: $")
 }
 
@@ -620,11 +624,13 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) 
 
 	// This call is unrealistic. It doesn't happen in practice, and this
 	// direct, forcing test is only to reach the code coverage.
+	atoms := []*ShAtom{
+		NewShAtom(shtText, "`", shqBackt)}
 	NewShellLine(dummyMkLine).
-		unescapeBackticks(G.NewPrefixReplacer("`"), shqBackt)
+		unescapeBackticks(&atoms, shqBackt)
 
 	t.CheckOutputLines(
-		"ERROR: Unfinished backquotes: ")
+		"ERROR: Unfinished backticks after \"\".")
 }
 
 func (s *Suite) Test_ShellLine_variableNeedsQuoting(c *check.C) {
@@ -901,23 +907,28 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 
 	test := func(lineno int, input string, expectedOutput string, expectedRest string) {
 		shline := t.NewShellLine("dummy.mk", lineno, "# dummy")
-		repl := G.NewPrefixReplacer(input)
 
-		var quoting, expectedNewQuoting ShQuoting
-		repl.SkipRegexp(`^\w+=`)   // FIXME: Only for the current particular test cases
-		if repl.SkipString("\"") { // FIXME: Only for the current particular test cases
-			quoting = shqDquotBackt
-			expectedNewQuoting = shqDquot
-		} else {
-			quoting = shqBackt
-			expectedNewQuoting = shqPlain
+		tok := NewShTokenizer(nil, input, false)
+		atoms := tok.ShAtoms()
+
+		// Set up the correct quoting mode for the test by skipping
+		// uninteresting atoms at the beginning.
+		q := shqPlain
+		for atoms[0].MkText != "`" {
+			q = atoms[0].Quoting
+			atoms = atoms[1:]
+		}
+		c.Check(tok.Rest(), equals, "")
+
+		backtCommand := shline.unescapeBackticks(&atoms, q)
+
+		var actualRest strings.Builder
+		for _, atom := range atoms {
+			actualRest.WriteString(atom.MkText)
 		}
 
-		output, newQuoting := shline.unescapeBackticks(repl, quoting)
-
-		c.Check(output, equals, expectedOutput)
-		c.Check(newQuoting, equals, expectedNewQuoting)
-		c.Check(repl.Rest(), equals, expectedRest)
+		c.Check(backtCommand, equals, expectedOutput)
+		c.Check(actualRest.String(), equals, expectedRest)
 	}
 
 	// The 1xx test cases are in shqPlain mode.
@@ -931,6 +942,7 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 
 	// Only the characters " $ ` \ are unescaped. All others stay the same.
 	test(120, "`echo '\\n'`end", "echo '\\n'", "end")
+	test(121, "\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h`", "${GREP} 'expr' ${WRKSRC}/config.h", "")
 
 	// TODO: Add more details regarding which backslash is meant.
 	t.CheckOutputLines(
@@ -941,26 +953,31 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	test(200, "\"`echo`\"", "echo", "\"")
 	test(201, "\"`echo \"\"`\"", "echo \"\"", "\"")
 
+	t.CheckOutputLines(
+		"WARN: dummy.mk:201: Double quotes inside backticks inside double quotes are error prone.")
+
 	// varname="`echo \"one   two\" "\ " "three"`"
 	test(202,
 		"varname=\"`echo \\\"one   two\\\" \"\\ \" \"three\"`\"",
 		"echo \"one   two\" \"\\ \" \"three\"",
 		"\"")
 
-	// TODO: Add more details regarding which backslash is meant.
+	// TODO: Add more details regarding which backslash and backtick is meant.
 	t.CheckOutputLines(
-		"WARN: dummy.mk:202: Backslashes should be doubled inside backticks.")
+		"WARN: dummy.mk:202: Backslashes should be doubled inside backticks.",
+		"WARN: dummy.mk:202: Double quotes inside backticks inside double quotes are error prone.",
+		"WARN: dummy.mk:202: Double quotes inside backticks inside double quotes are error prone.")
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks__dquotBacktDquot(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("dummy.mk", 13, "\t var=\"`\"\"`\"")
+	t.SetupTool("echo", "", AtRunTime)
+	mkline := t.NewMkLine("dummy.mk", 13, "\t var=\"`echo \"\"`\"")
 
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"WARN: dummy.mk:13: Double quotes inside backticks inside double quotes are error prone.",
 		"WARN: dummy.mk:13: Double quotes inside backticks inside double quotes are error prone.")
 }
 
