@@ -826,20 +826,44 @@ func (s *Suite) Test_ShellLine__shell_comment_with_line_continuation(c *check.C)
 func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	t := s.Init(c)
 
-	shline := t.NewShellLine("dummy.mk", 13, "# dummy")
-	// foobar="`echo \"foo   bar\" "\ " "three"`"
-	text := "foobar=\"`echo \\\"foo   bar\\\" \"\\ \" \"three\"`\""
-	repl := G.NewPrefixReplacer(text)
-	repl.NextString("foobar=\"`")
+	lineno := 21
+	test := func(quoting ShQuoting, input string, expectedNewQuoting ShQuoting, expectedOutput string, expectedRest string) {
+		shline := t.NewShellLine("dummy.mk", lineno, "# dummy")
+		lineno++
+		repl := G.NewPrefixReplacer(input)
 
-	backtCommand, newQuoting := shline.unescapeBackticks(text, repl, shqDquotBackt)
+		output, newQuoting := shline.unescapeBackticks(input, repl, quoting)
 
-	c.Check(backtCommand, equals, "echo \"foo   bar\" \"\\ \" \"three\"")
-	c.Check(newQuoting, equals, shqDquot)
-	c.Check(repl.Rest(), equals, "\"")
+		c.Check(output, equals, expectedOutput)
+		c.Check(newQuoting, equals, expectedNewQuoting)
+		c.Check(repl.Rest(), equals, expectedRest)
+	}
+
+	testPlain := func(input string, expectedOutput string, rest string) {
+		test(shqBackt, input, shqPlain, expectedOutput, rest)
+	}
+
+	testPlain("echo`end", "echo", "end")
+	testPlain("echo $$var`end", "echo $$var", "end")
+	testPlain("`end", "", "end")
+	testPlain("echo \"hello\"`end", "echo \"hello\"", "end")
+	testPlain("echo 'hello'`end", "echo 'hello'", "end")
+	testPlain("echo '\\\\\\\\'`end", "echo '\\\\'", "end")
+
+	// Only the characters "$`\ are unescaped. All others stay the same.
+	testPlain("echo '\\n'`end", "echo '\\n'", "end")
+
+	// varname="`echo \"one   two\" "\ " "three"`"
+	test(
+		shqDquotBackt,
+		"echo \\\"one   two\\\" \"\\ \" \"three\"`\"",
+		shqDquot,
+		"echo \"one   two\" \"\\ \" \"three\"",
+		"\"")
 
 	t.CheckOutputLines(
-		"WARN: dummy.mk:13: Backslashes should be doubled inside backticks.")
+		"WARN: dummy.mk:27: Backslashes should be doubled inside backticks.",
+		"WARN: dummy.mk:28: Backslashes should be doubled inside backticks.")
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks__dquotBacktDquot(c *check.C) {
