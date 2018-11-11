@@ -826,11 +826,43 @@ func (s *Suite) Test_ShellLine_checkWordQuoting(c *check.C) {
 
 	t.SetupVartypes()
 	t.SetupTool("grep", "GREP", AtRunTime)
-	shline := t.NewShellLine("module.mk", 101, "\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h`")
 
-	shline.checkWordQuoting(shline.mkline.ShellCommand(), true, RunTime)
+	test := func(lineno int, input string) {
+		shline := t.NewShellLine("module.mk", lineno, "\t"+input)
 
-	t.CheckOutputEmpty()
+		shline.checkWordQuoting(shline.mkline.ShellCommand(), true, RunTime)
+	}
+
+	test(101, "socklen=`${GREP} 'expr' ${WRKSRC}/config.h`")
+
+	test(102, "s,$$from,$$to,")
+
+	// TODO: $bindir and similar variables don't need quoting.
+	// This variable is typically defined by GNU Configure,
+	// which cannot handle directories with special characters.
+	test(103, "${PREFIX}/$$bindir/program")
+
+	test(104, "$$@")
+
+	// TODO: Add separate tests for "set +e" and "set -e".
+	test(105, "$$?")
+
+	test(106, "$$(cat /bin/true)")
+
+	test(107, "\"$$\"")
+
+	test(108, "$$$$")
+
+	// TODO: The $ variable in line 108 doesn't need quoting.
+	t.CheckOutputLines(
+		"WARN: module.mk:102: Unquoted shell variable \"from\".",
+		"WARN: module.mk:102: Unquoted shell variable \"to\".",
+		"WARN: module.mk:103: Unquoted shell variable \"bindir\".",
+		"WARN: module.mk:104: The $@ shell variable should only be used in double quotes.",
+		"WARN: module.mk:105: The $? shell variable is often not available in \"set -e\" mode.",
+		"WARN: module.mk:106: Invoking subshells via $(...) is not portable enough.",
+		"WARN: module.mk:107: Unescaped $ or strange shell variable found.",
+		"WARN: module.mk:108: Unquoted shell variable \"$\".")
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
