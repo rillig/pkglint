@@ -158,17 +158,23 @@ loop:
 
 		case 'C', 'S':
 			// bmake allows _any_ separator, even letters.
-			if m := repl.NextRegexp(`^[CS]([%,/:;@^|])`); m != nil {
-				separator := m[1]
+			repl.Skip(1)
+			if m := repl.NextRegexp(`^[%,/:;@^|]`); m != nil {
+				separator := m[0][0]
 				repl.NextByte('^')
-				re := regex.Pattern(`^([^\` + separator + `$` + string(closing) + `\\]|\$\$|\\.)+`)
-				for p.VarUse() != nil || repl.SkipRegexp(re) {
-				}
-				repl.NextByte('$')
-				if repl.SkipString(separator) {
-					for p.VarUse() != nil || repl.SkipRegexp(re) {
+				skipOther := func() {
+					for p.VarUse() != nil ||
+						repl.SkipString("$$") ||
+						(len(repl.Rest()) >= 2 && repl.PeekByte() == '\\' && repl.Skip(2)) ||
+						repl.NextBytesFunc(func(b byte) bool { return b != separator && b != '$' && b != closing && b != '\\' }) != "" {
+
 					}
-					if repl.SkipString(separator) {
+				}
+				skipOther()
+				repl.NextByte('$')
+				if repl.NextByte(separator) {
+					skipOther()
+					if repl.NextByte(separator) {
 						repl.SkipRegexp(`^[1gW]`) // FIXME: Multiple modifiers may be mentioned
 						appendModifier(repl.Since(modifierMark))
 						mayOmitColon = true

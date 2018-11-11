@@ -113,8 +113,9 @@ func (pr *PrefixReplacer) Reset(mark PrefixReplacerMark) {
 	pr.rest = string(mark)
 }
 
-func (pr *PrefixReplacer) Skip(n int) {
+func (pr *PrefixReplacer) Skip(n int) bool {
 	pr.rest = pr.rest[n:]
+	return true
 }
 
 func (pr *PrefixReplacer) SkipHspace() {
