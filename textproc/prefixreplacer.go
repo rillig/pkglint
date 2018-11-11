@@ -26,11 +26,6 @@ func (pr *PrefixReplacer) Rest() string {
 	return pr.rest
 }
 
-// Group returns a matching group from the last matched AdvanceRegexp.
-func (pr *PrefixReplacer) Group(index int) string {
-	return pr.m[index]
-}
-
 func (pr *PrefixReplacer) NextString(prefix string) string {
 	if strings.HasPrefix(pr.rest, prefix) {
 		pr.Skip(len(prefix))
@@ -63,22 +58,6 @@ func (pr *PrefixReplacer) NextHspace() string {
 		return hspace
 	}
 	return ""
-}
-
-func (pr *PrefixReplacer) AdvanceRegexp(re regex.Pattern) bool {
-	pr.m = nil
-	if !strings.HasPrefix(string(re), "^") {
-		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: regular expression %q must have prefix %q.", re, "^"))
-	}
-	if Testing && pr.res.Matches("", re) {
-		panic(fmt.Sprintf("PrefixReplacer.AdvanceRegexp: the empty string must not match the regular expression %q.", re))
-	}
-	if m := pr.res.Match(pr.rest, re); m != nil {
-		pr.rest = pr.rest[len(m[0]):]
-		pr.m = m
-		return true
-	}
-	return false
 }
 
 func (pr *PrefixReplacer) NextRegexp(re regex.Pattern) []string {
@@ -151,10 +130,6 @@ func (pr *PrefixReplacer) AdvanceRest() string {
 	rest := pr.rest
 	pr.rest = ""
 	return rest
-}
-
-func (pr *PrefixReplacer) HasPrefix(str string) bool {
-	return strings.HasPrefix(pr.rest, str)
 }
 
 func (pr *PrefixReplacer) HasPrefixRegexp(re regex.Pattern) bool {
