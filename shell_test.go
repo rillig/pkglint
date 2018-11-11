@@ -824,10 +824,8 @@ func (s *Suite) Test_ShellLine__shell_comment_with_line_continuation(c *check.C)
 func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	t := s.Init(c)
 
-	lineno := 21
-	test := func(quoting ShQuoting, input string, expectedNewQuoting ShQuoting, expectedOutput string, expectedRest string) {
+	test := func(lineno int, quoting ShQuoting, input string, expectedNewQuoting ShQuoting, expectedOutput string, expectedRest string) {
 		shline := t.NewShellLine("dummy.mk", lineno, "# dummy")
-		lineno++
 		repl := G.NewPrefixReplacer(input)
 
 		output, newQuoting := shline.unescapeBackticks(repl, quoting)
@@ -837,31 +835,32 @@ func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 		c.Check(repl.Rest(), equals, expectedRest)
 	}
 
-	testPlain := func(input string, expectedOutput string, rest string) {
-		test(shqBackt, input, shqPlain, expectedOutput, rest)
+	testPlain := func(lineno int, input string, expectedOutput string, rest string) {
+		test(lineno, shqBackt, input, shqPlain, expectedOutput, rest)
 	}
 
-	testPlain("`echo`end", "echo", "end")
-	testPlain("`echo $$var`end", "echo $$var", "end")
-	testPlain("``end", "", "end")
-	testPlain("`echo \"hello\"`end", "echo \"hello\"", "end")
-	testPlain("`echo 'hello'`end", "echo 'hello'", "end")
-	testPlain("`echo '\\\\\\\\'`end", "echo '\\\\'", "end")
+	testPlain(100, "`echo`end", "echo", "end")
+	testPlain(101, "`echo $$var`end", "echo $$var", "end")
+	testPlain(102, "``end", "", "end")
+	testPlain(103, "`echo \"hello\"`end", "echo \"hello\"", "end")
+	testPlain(104, "`echo 'hello'`end", "echo 'hello'", "end")
+	testPlain(105, "`echo '\\\\\\\\'`end", "echo '\\\\'", "end")
 
 	// Only the characters "$`\ are unescaped. All others stay the same.
-	testPlain("`echo '\\n'`end", "echo '\\n'", "end")
+	testPlain(120, "`echo '\\n'`end", "echo '\\n'", "end")
 
 	// varname="`echo \"one   two\" "\ " "three"`"
-	test(
+	test(200,
 		shqDquotBackt,
 		"`echo \\\"one   two\\\" \"\\ \" \"three\"`\"",
 		shqDquot,
 		"echo \"one   two\" \"\\ \" \"three\"",
 		"\"")
 
+	// TODO: Add more details regarding which backslash is meant.
 	t.CheckOutputLines(
-		"WARN: dummy.mk:27: Backslashes should be doubled inside backticks.",
-		"WARN: dummy.mk:28: Backslashes should be doubled inside backticks.")
+		"WARN: dummy.mk:120: Backslashes should be doubled inside backticks.",
+		"WARN: dummy.mk:200: Backslashes should be doubled inside backticks.")
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks__dquotBacktDquot(c *check.C) {
