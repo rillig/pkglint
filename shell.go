@@ -160,7 +160,7 @@ outer:
 				repl.SkipRegexp(`^\$\$(?:\w+|[!#?@]|\$\$)`):
 				break
 			case repl.SkipString("$$"):
-				line.Warnf("Unescaped $ or strange shell variable found.")
+				break
 			default:
 				break outer
 			}

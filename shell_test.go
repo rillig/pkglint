@@ -210,8 +210,10 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	checkShellCommandLine("echo \"$$\"") // As seen by make(1); the shell sees: echo "$"
 
-	t.CheckOutputLines(
-		"WARN: fileName:1: Unescaped $ or strange shell variable found.")
+	// No warning about a possibly missed variable name.
+	// This occurs only rarely, and typically as part of a regular expression
+	// where it is used intentionally.
+	t.CheckOutputEmpty()
 
 	checkShellCommandLine("echo \"\\n\"")
 
@@ -891,8 +893,7 @@ func (s *Suite) Test_ShellLine_checkWordQuoting(c *check.C) {
 		"WARN: module.mk:102: Unquoted shell variable \"to\".",
 		"WARN: module.mk:104: The $@ shell variable should only be used in double quotes.",
 		"WARN: module.mk:105: The $? shell variable is often not available in \"set -e\" mode.",
-		"WARN: module.mk:106: Invoking subshells via $(...) is not portable enough.",
-		"WARN: module.mk:107: Unescaped $ or strange shell variable found.")
+		"WARN: module.mk:106: Invoking subshells via $(...) is not portable enough.")
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
