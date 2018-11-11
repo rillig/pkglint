@@ -821,6 +821,18 @@ func (s *Suite) Test_ShellLine__shell_comment_with_line_continuation(c *check.C)
 		"WARN: ~/Makefile:3--4: A shell comment does not stop at the end of line.")
 }
 
+func (s *Suite) Test_ShellLine_checkWordQuoting(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.SetupTool("grep", "GREP", AtRunTime)
+	shline := t.NewShellLine("module.mk", 101, "\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h`")
+
+	shline.checkWordQuoting(shline.mkline.ShellCommand(), true, RunTime)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {
 	t := s.Init(c)
 
