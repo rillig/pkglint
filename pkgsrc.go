@@ -60,6 +60,13 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		nil, // Only initialized when pkglint is run for a whole pkgsrc installation
 		nil}
 
+	addDefaultBuildDefs(src)
+
+	return src
+}
+
+func addDefaultBuildDefs(src *Pkgsrc) {
+
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
 	// BUILD_DEFS; therefore they are marked as "already added".
@@ -127,8 +134,6 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		"PKGPATH",
 		"RESTRICTED",
 		"USE_ABI_DEPENDS")
-
-	return src
 }
 
 // LoadInfrastructure reads the pkgsrc infrastructure files to
