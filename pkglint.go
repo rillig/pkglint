@@ -29,9 +29,9 @@ const confVersion = "@VERSION@"
 //  tracing.traceDepth (not thread-safe)
 type Pkglint struct {
 	Opts   CmdOpts  // Command line options.
-	Pkgsrc *Pkgsrc  // Global data, mostly extracted from mk/*.
-	Pkg    *Package // The package that is currently checked.
-	Mk     MkLines  // The Makefile (or fragment) that is currently checked.
+	Pkgsrc *Pkgsrc  // Global data, mostly extracted from mk/*, never nil.
+	Pkg    *Package // The package that is currently checked, or nil.
+	Mk     MkLines  // The Makefile (or fragment) that is currently checked, or nil.
 
 	Todo            []string // The files or directories that still need to be checked.
 	Wip             bool     // Is the currently checked item from pkgsrc-wip?
