@@ -43,7 +43,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		varuse := NewMkVarUse(varname, modifiers...)
 		return &ShAtom{shtVaruse, text, shqPlain, varuse}
 	}
-	shvar := func(varname string) *ShAtom { return atom(shtShVarUse, varname) }
+	shvar := func(text, varname string) *ShAtom { return &ShAtom{shtShVarUse, text, shqPlain, varname} }
 	text := func(s string) *ShAtom { return atom(shtText, s) }
 	whitespace := func(s string) *ShAtom { return atom(shtSpace, s) }
 
@@ -79,14 +79,14 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	check("" /* none */)
 
 	check("$$var",
-		shvar("$$var"))
+		shvar("$$var", "var"))
 
 	check("$$var$$var",
-		shvar("$$var"),
-		shvar("$$var"))
+		shvar("$$var", "var"),
+		shvar("$$var", "var"))
 
 	check("$$var;;",
-		shvar("$$var"),
+		shvar("$$var", "var"),
 		operator(";;"))
 
 	check("'single-quoted'",
@@ -98,7 +98,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	c.Check(rest, equals, "\"")
 
 	check("$${file%.c}.o",
-		shvar("$${file%.c}"),
+		shvar("$${file%.c}", "file"),
 		text(".o"))
 
 	check("hello",
@@ -176,7 +176,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		space,
 		text("in"),
 		space,
-		shvar("$$PAGES"),
+		shvar("$$PAGES", "PAGES"),
 		semicolon,
 		space,
 		text("do"),
@@ -191,7 +191,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		mkvar("DESTDIR"),
 		mkvar("QTPREFIX"),
 		text("/man/man3/"),
-		shvar("$${PAGE}"),
+		shvar("$${PAGE}", "PAGE"),
 		semicolon,
 		space)
 
@@ -208,7 +208,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		backt(space),
 		backt(text("-1")),
 		backt(space),
-		backt(shvar("$${PAGE}")),
+		backt(shvar("$${PAGE}", "PAGE")),
 		backt(text("qt")),
 		text("`"),
 		semicolon,
@@ -222,18 +222,18 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		text("`"))
 
 	check("$$var \"$$var\" '$$var' `$$var`",
-		shvar("$$var"),
+		shvar("$$var", "var"),
 		space,
 		dquot(text("\"")),
-		dquot(shvar("$$var")),
+		dquot(shvar("$$var", "var")),
 		text("\""),
 		space,
 		squot(text("'")),
-		squot(shvar("$$var")),
+		squot(shvar("$$var", "var")),
 		text("'"),
 		space,
 		backt(text("`")),
-		backt(shvar("$$var")),
+		backt(shvar("$$var", "var")),
 		text("`"))
 
 	check("\"`'echo;echo'`\"",
@@ -265,7 +265,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		space,
 		text("$$,"),
 		space,
-		shvar("$$-"),
+		shvar("$$-", "-"),
 		space,
 		text("$$/"),
 		space,
@@ -277,14 +277,14 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		space,
 		text("$$,$$/$$"),
 		semicolon,
-		shvar("$$-"))
+		shvar("$$-", "-"))
 
 	rest = checkRest("COMMENT=\t\\Make $$$$ fast\"",
 		text("COMMENT="),
 		whitespace("\t"),
 		text("\\Make"),
 		space,
-		shvar("$$$$"),
+		shvar("$$$$", "$"),
 		space,
 		text("fast"))
 	c.Check(rest, equals, "\"")
@@ -493,6 +493,51 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 
 	test("id=`${AWK} '{print}' < ${WRKSRC}/idfile`",
 		"id=`${AWK} '{print}' < ${WRKSRC}/idfile`")
+}
+
+func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
+
+	test := func(input string, output *ShAtom, rest string) {
+		tok := NewShTokenizer(nil, input, false)
+		actual := tok.shVarUse(shqPlain)
+
+		c.Check(actual, deepEquals, output)
+		c.Check(tok.Rest(), equals, rest)
+	}
+
+	shvar := func(text, varname string) *ShAtom {
+		return &ShAtom{shtShVarUse, text, shqPlain, varname}
+	}
+
+	test("$", nil, "$")
+	test("$$", nil, "$$")
+	test("${MKVAR}", nil, "${MKVAR}")
+
+	test("$$a", shvar("$$a", "a"), "")
+	test("$$a.", shvar("$$a", "a"), ".")
+	test("$$a_b_123:", shvar("$$a_b_123", "a_b_123"), ":")
+
+	test("$${varname}", shvar("$${varname}", "varname"), "")
+	test("$${varname}.", shvar("$${varname}", "varname"), ".")
+	test("$${0123}.", shvar("$${0123}", "0123"), ".")
+	test("$${varname", nil, "$${varname")
+
+	test("$${var:=value}", shvar("$${var:=value}", "var"), "")
+	test("$${var#value}", shvar("$${var#value}", "var"), "")
+	test("$${var##value}", shvar("$${var##value}", "var"), "")
+	test("$${var##*}", shvar("$${var##*}", "var"), "")
+
+	// TODO: allow variables in patterns.
+	test("$${var%.${ext}}", nil, "$${var%.${ext}}")
+
+	test("$${var##*", nil, "$${var##*")
+	test("$${var\"", nil, "$${var\"")
+
+	// TODO: test("$${var%${EXT}}", shvar("$${var%${EXT}}", "var"), "")
+	test("$${var%${EXT}}", nil, "$${var%${EXT}}")
+
+	test("$${/}", nil, "$${/}")
+	test("$${\\}", nil, "$${\\}")
 }
 
 func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {

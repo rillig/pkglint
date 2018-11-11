@@ -261,29 +261,12 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 //  text
 //  ${var:=default}
 func (p *ShTokenizer) shAtomInternal(q ShQuoting, dquot, squot bool) *ShAtom {
-	const reShVarname = `^(?:[!#*\-?@]|\$\$|[A-Za-z_]\w*|\d+)`
+	if shVarUse := p.shVarUse(q); shVarUse != nil {
+		return shVarUse
+	}
 
 	repl := p.parser.repl
 	mark := repl.Mark()
-
-	if repl.SkipString("$$") {
-		if repl.SkipRegexp(reShVarname) {
-			return &ShAtom{shtShVarUse, repl.Since(mark), q, nil}
-		}
-
-		mark2 := repl.Mark()
-		if repl.NextByte('{') {
-			if repl.SkipRegexp(reShVarname) {
-				repl.SkipRegexp(`^(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`)
-				if repl.NextByte('}') {
-					return &ShAtom{shtShVarUse, repl.Since(mark), q, nil}
-				}
-			}
-			repl.Reset(mark2)
-		}
-
-		repl.Reset(mark)
-	}
 
 loop:
 	for {
@@ -310,6 +293,39 @@ loop:
 		return &ShAtom{shtText, token, q, nil}
 	}
 	return nil
+}
+
+// shVarUse parses a use of a shell variable, like $$var or $${var:=value}.
+func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
+	repl := p.parser.repl
+	beforeDollar := repl.Mark()
+
+	if !repl.SkipString("$$") {
+		return nil
+	}
+
+	brace := repl.NextByte('{')
+
+	varnameStart := repl.Mark()
+	if !repl.SkipRegexp(`^(?:[!#*\-?@]|\$\$|[A-Za-z_]\w*|\d+)`) {
+		repl.Reset(beforeDollar)
+		return nil
+	}
+
+	shVarname := repl.Since(varnameStart)
+	if shVarname == "$$" {
+		shVarname = "$"
+	}
+
+	if brace {
+		repl.SkipRegexp(`^(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`)
+		if !repl.NextByte('}') {
+			repl.Reset(beforeDollar)
+			return nil
+		}
+	}
+
+	return &ShAtom{shtShVarUse, repl.Since(beforeDollar), q, shVarname}
 }
 
 func (p *ShTokenizer) shOperator(q ShQuoting) *ShAtom {

@@ -67,6 +67,12 @@ func (atom *ShAtom) VarUse() *MkVarUse {
 	return nil
 }
 
+// ShVarname applies to shell variable atoms like $$varname or $${varname:-modifier}
+// and returns the name of the shell variable.
+func (atom *ShAtom) ShVarname() string {
+	return atom.data.(string)
+}
+
 // ShQuoting describes the context in which a string appears
 // and how it must be unescaped to get its literal value.
 type ShQuoting uint8
