@@ -11,6 +11,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"runtime"
 	"runtime/pprof"
 	"strings"
 )
@@ -125,7 +126,12 @@ func main() {
 	G.logOut = NewSeparatorWriter(os.Stdout)
 	G.logErr = NewSeparatorWriter(os.Stderr)
 	trace.Out = os.Stdout
-	exit(G.Main(os.Args...))
+	exitcode := G.Main(os.Args...)
+	if G.Opts.Profiling {
+		G = Pkglint{} // Free all memory.
+		runtime.GC()  // Detect possible memory leaks.
+	}
+	exit(exitcode)
 }
 
 // Main runs the main program with the given arguments.

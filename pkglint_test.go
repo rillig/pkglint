@@ -1047,10 +1047,13 @@ func (s *Suite) Test_main(c *check.C) {
 
 	out, err := os.Create(t.CreateFileLines("out"))
 	c.Check(err, check.IsNil)
+	outProfiling, err := os.Create(t.CreateFileLines("out.profiling"))
+	c.Check(err, check.IsNil)
 
-	pkg := t.SetupPackage("category/package")
+	t.SetupPackage("category/package")
+	t.Chdir("category/package")
 
-	func() {
+	runMain := func(out *os.File, commandLine ...string) {
 		args := os.Args
 		stdout := os.Stdout
 		stderr := os.Stderr
@@ -1061,7 +1064,7 @@ func (s *Suite) Test_main(c *check.C) {
 			os.Args = args
 			exit = prevExit
 		}()
-		os.Args = []string{"pkglint", pkg}
+		os.Args = commandLine
 		os.Stdout = out
 		os.Stderr = out
 		exit = func(code int) {
@@ -1069,14 +1072,18 @@ func (s *Suite) Test_main(c *check.C) {
 		}
 
 		main()
-	}()
+	}
 
-	err = out.Close()
-	c.Check(err, check.IsNil)
+	runMain(out, "pkglint", ".")
+	runMain(outProfiling, "pkglint", "--profiling", ".")
 
-	t.CheckOutputEmpty()
-	t.CheckFileLines("out",
+	c.Check(out.Close(), check.IsNil)
+	c.Check(outProfiling.Close(), check.IsNil)
+
+	t.CheckOutputEmpty()          // Because all output is redirected.
+	t.CheckFileLines("../../out", // See the t.Chdir above.
 		"Looks fine.")
+	// outProfiling is not checked because it contains timing information.
 }
 
 // ExecutableFileInfo mocks a FileInfo because on Windows,
