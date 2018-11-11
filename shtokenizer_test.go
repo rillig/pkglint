@@ -516,6 +516,7 @@ func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
 	test("$$a", shvar("$$a", "a"), "")
 	test("$$a.", shvar("$$a", "a"), ".")
 	test("$$a_b_123:", shvar("$$a_b_123", "a_b_123"), ":")
+	test("$$123", shvar("$$1", "1"), "23")
 
 	test("$${varname}", shvar("$${varname}", "varname"), "")
 	test("$${varname}.", shvar("$${varname}", "varname"), ".")
@@ -526,6 +527,7 @@ func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
 	test("$${var#value}", shvar("$${var#value}", "var"), "")
 	test("$${var##value}", shvar("$${var##value}", "var"), "")
 	test("$${var##*}", shvar("$${var##*}", "var"), "")
+	test("$${var%\".gz\"}", shvar("$${var%\".gz\"}", "var"), "")
 
 	// TODO: allow variables in patterns.
 	test("$${var%.${ext}}", nil, "$${var%.${ext}}")
@@ -535,6 +537,9 @@ func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
 
 	// TODO: test("$${var%${EXT}}", shvar("$${var%${EXT}}", "var"), "")
 	test("$${var%${EXT}}", nil, "$${var%${EXT}}")
+
+	// TODO: length of var
+	test("$${#var}", nil, "$${#var}")
 
 	test("$${/}", nil, "$${/}")
 	test("$${\\}", nil, "$${\\}")

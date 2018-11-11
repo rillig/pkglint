@@ -296,12 +296,20 @@ loop:
 }
 
 // shVarUse parses a use of a shell variable, like $$var or $${var:=value}.
+//
+// See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_02
 func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
 	repl := p.parser.repl
 	beforeDollar := repl.Mark()
 
 	if !repl.SkipString("$$") {
 		return nil
+	}
+
+	if repl.PeekByte() >= '0' && repl.PeekByte() <= '9' {
+		repl.Skip(1)
+		text := repl.Since(beforeDollar)
+		return &ShAtom{shtShVarUse, text, q, text[2:]}
 	}
 
 	brace := repl.NextByte('{')
@@ -318,7 +326,7 @@ func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
 	}
 
 	if brace {
-		repl.SkipRegexp(`^(?:(?:#|##|%|%%|:-|:=|:\?|:\+|\+)[^$\\{}]*)`)
+		repl.SkipRegexp(`^(?:##?|%%?|:?[+\-=?])[^$\\{}]*`)
 		if !repl.NextByte('}') {
 			repl.Reset(beforeDollar)
 			return nil
