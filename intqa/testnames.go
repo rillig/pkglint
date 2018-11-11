@@ -170,18 +170,7 @@ func (ck *TestNameChecker) loadAllElements() []*testeeElement {
 		}
 	}
 
-	sort.Slice(elements, func(i, j int) bool {
-		ti := elements[i]
-		tj := elements[j]
-		switch {
-		case ti.Type != tj.Type:
-			return ti.Type < tj.Type
-		case ti.Func != tj.Func:
-			return ti.Func < tj.Func
-		default:
-			return ti.File < tj.File
-		}
-	})
+	sort.Slice(elements, func(i, j int) bool { return elements[i].Less(elements[j]) })
 
 	return elements
 }
@@ -311,6 +300,17 @@ func newElement(typeName, funcName, fileName string) *testeeElement {
 	}
 
 	return e
+}
+
+func (el *testeeElement) Less(other *testeeElement) bool {
+	switch {
+	case el.Type != other.Type:
+		return el.Type < other.Type
+	case el.Func != other.Func:
+		return el.Func < other.Func
+	default:
+		return el.File < other.File
+	}
 }
 
 func ifelseStr(cond bool, a, b string) string {
