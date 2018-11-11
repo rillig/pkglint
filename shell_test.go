@@ -626,6 +626,38 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) 
 }
 
 func (s *Suite) Test_ShellLine_variableNeedsQuoting(c *check.C) {
+
+	test := func(shVarname string, expected bool) {
+		c.Check((*ShellLine).variableNeedsQuoting(nil, shVarname), equals, expected)
+	}
+
+	test("#", false) // A length is always an integer.
+	test("?", false) // The exit code is always an integer.
+	test("$", false) // The PID is always an integer.
+
+	// In most cases, file and directory names don't contain special characters,
+	// and if they do, the package will probably not build. Therefore pkglint
+	// doesn't require them to be quoted, but doing so does not hurt.
+	test("d", false)    // Typically used for directories.
+	test("f", false)    // Typically used for files.
+	test("i", false)    // Typically used for literal values without special characters.
+	test("id", false)   // Identifiers usually don't use special characters.
+	test("dir", false)  // See d above.
+	test("file", false) // See f above.
+	test("src", false)  // Typically used when copying files or directories.
+	test("dst", false)  // Typically used when copying files or directories.
+
+	test("bindir", false) // A typical GNU-style directory.
+	test("mandir", false) // A typical GNU-style directory.
+	test("prefix", false) //
+
+	test("bindirs", true) // A list of directories is typically separated by spaces.
+	test("var", true)     // Other variables are unknown, so they should be quoted.
+	test("0", true)       // The program name may contain special characters when given as full path.
+	test("1", true)       // Command line arguments can be arbitrary strings.
+}
+
+func (s *Suite) Test_ShellLine_variableNeedsQuoting__integration(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -837,9 +869,9 @@ func (s *Suite) Test_ShellLine_checkWordQuoting(c *check.C) {
 
 	test(102, "s,$$from,$$to,")
 
-	// TODO: $bindir and similar variables don't need quoting.
 	// This variable is typically defined by GNU Configure,
 	// which cannot handle directories with special characters.
+	// Therefore using it unquoted is considered safe.
 	test(103, "${PREFIX}/$$bindir/program")
 
 	test(104, "$$@")
@@ -857,12 +889,10 @@ func (s *Suite) Test_ShellLine_checkWordQuoting(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: module.mk:102: Unquoted shell variable \"from\".",
 		"WARN: module.mk:102: Unquoted shell variable \"to\".",
-		"WARN: module.mk:103: Unquoted shell variable \"bindir\".",
 		"WARN: module.mk:104: The $@ shell variable should only be used in double quotes.",
 		"WARN: module.mk:105: The $? shell variable is often not available in \"set -e\" mode.",
 		"WARN: module.mk:106: Invoking subshells via $(...) is not portable enough.",
-		"WARN: module.mk:107: Unescaped $ or strange shell variable found.",
-		"WARN: module.mk:108: Unquoted shell variable \"$\".")
+		"WARN: module.mk:107: Unescaped $ or strange shell variable found.")
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks(c *check.C) {

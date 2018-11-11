@@ -263,11 +263,14 @@ func (shline *ShellLine) unescapeBackticks(repl *textproc.PrefixReplacer, quotin
 	return unescaped, quoting
 }
 
-func (shline *ShellLine) variableNeedsQuoting(shvarname string) bool {
-	switch shvarname {
-	case "#", "?":
+func (shline *ShellLine) variableNeedsQuoting(shVarname string) bool {
+	switch shVarname {
+	case "#", "?", "$":
 		return false // Definitely ok
-	case "d", "f", "i", "dir", "file", "src", "dst":
+	case "d", "f", "i", "id", "file", "src", "dst", "prefix":
+		return false // Probably ok
+	}
+	if hasSuffix(shVarname, "dir") {
 		return false // Probably ok
 	}
 	return true
