@@ -80,7 +80,7 @@ netbsd() {
     ~/pkglint/ netbsd:proj/pkgsrc/pkgtools/pkglint/files/
 
   echo "=> Installing NetBSD package"
-  ssh netbsd ". ./.bash_profile && cd proj/pkgsrc/pkgtools/pkglint && PKGSRC_RUN_TEST=yes bmake clean update && pkglint -Wall"
+  ssh netbsd ". ./.bash_profile && cd proj/pkgsrc/pkgtools/pkglint && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=yes "\$HOME/minipkg/bin/bmake" clean update && "\$HOME/minipkg/bin/pkglint" -Wall"
 }
 
 pkgsrc() {
