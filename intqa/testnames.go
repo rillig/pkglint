@@ -94,24 +94,6 @@ func (ck *TestNameChecker) addWarning(format string, args ...interface{}) {
 	ck.warnings = append(ck.warnings, "W: "+fmt.Sprintf(format, args...))
 }
 
-func newElement(typeName, funcName, fileName string) *testeeElement {
-	typeName = strings.TrimSuffix(typeName, "Impl")
-
-	e := &testeeElement{File: fileName, Type: typeName, Func: funcName}
-
-	e.FullName = e.Type + ifelseStr(e.Type != "" && e.Func != "", ".", "") + e.Func
-
-	e.Test = strings.HasSuffix(e.File, "_test.go") && e.Type != "" && strings.HasPrefix(e.Func, "Test")
-
-	if e.Test {
-		e.Prefix = strings.Split(strings.TrimPrefix(e.Func, "Test"), "__")[0]
-	} else {
-		e.Prefix = e.Type + ifelseStr(e.Type != "" && e.Func != "", "_", "") + e.Func
-	}
-
-	return e
-}
-
 // addElement adds a single type or function declaration
 // to the known elements.
 func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl, fileName string) {
@@ -311,6 +293,24 @@ func (ck *TestNameChecker) isIgnored(fileName string) bool {
 		}
 	}
 	return false
+}
+
+func newElement(typeName, funcName, fileName string) *testeeElement {
+	typeName = strings.TrimSuffix(typeName, "Impl")
+
+	e := &testeeElement{File: fileName, Type: typeName, Func: funcName}
+
+	e.FullName = e.Type + ifelseStr(e.Type != "" && e.Func != "", ".", "") + e.Func
+
+	e.Test = strings.HasSuffix(e.File, "_test.go") && e.Type != "" && strings.HasPrefix(e.Func, "Test")
+
+	if e.Test {
+		e.Prefix = strings.Split(strings.TrimPrefix(e.Func, "Test"), "__")[0]
+	} else {
+		e.Prefix = e.Type + ifelseStr(e.Type != "" && e.Func != "", "_", "") + e.Func
+	}
+
+	return e
 }
 
 func ifelseStr(cond bool, a, b string) string {
