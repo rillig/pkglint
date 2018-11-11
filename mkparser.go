@@ -87,7 +87,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 			}
 		}
 
-		for p.VarUse() != nil || repl.NextRegexp(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`)) != nil {
+		for p.VarUse() != nil || repl.SkipRegexp(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`)) {
 		}
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
@@ -157,6 +157,7 @@ loop:
 			continue
 
 		case 'C', 'S':
+			// bmake allows _any_ separator, even letters.
 			if m := repl.NextRegexp(`^[CS]([%,/:;@^|])`); m != nil {
 				separator := m[1]
 				repl.NextByte('^')
