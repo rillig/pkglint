@@ -47,7 +47,7 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTim
 	}
 
 	shline.checkWordQuoting(token, checkQuoting, time)
-} // comment for the diff algorithm
+}
 
 func (shline *ShellLine) checkWordQuoting(token string, checkQuoting bool, time ToolTime) {
 	line := shline.mkline.Line
