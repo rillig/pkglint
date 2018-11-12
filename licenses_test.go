@@ -64,16 +64,8 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		"",
 		".include \"../mk/misc/category.mk\"")
 
-	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
-		"CATEGORIES=\tcategory",
-		"",
-		"COMMENT=Example package",
-		"LICENSE=\t2-clause-bsd",
-		"NO_CHECKSUM=\tyes")
-	t.CreateFileLines("category/package/PLIST",
-		PlistRcsID,
-		"bin/program")
+	t.SetupPackage("category/package",
+		"LICENSE=\t2-clause-bsd")
 
 	G.Main("pkglint", "-r", "-Cglobal", t.File("."))
 
