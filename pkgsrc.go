@@ -248,6 +248,24 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 	return repls
 }
 
+func (src *Pkgsrc) checkToplevelUnusedLicenses() {
+	usedLicenses := src.UsedLicenses
+	if usedLicenses == nil {
+		return
+	}
+
+	licensesDir := src.File("licenses")
+	for _, licenseFile := range src.ReadDir("licenses") {
+		licenseName := licenseFile.Name()
+		if !usedLicenses[licenseName] {
+			licensePath := licensesDir + "/" + licenseName
+			if fileExists(licensePath) {
+				NewLineWhole(licensePath).Warnf("This license seems to be unused.")
+			}
+		}
+	}
+}
+
 // loadTools loads the tool definitions from `mk/tools/*`.
 func (src *Pkgsrc) loadTools() {
 	tools := src.Tools

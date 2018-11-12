@@ -44,37 +44,6 @@ func (s *Suite) Test_LicenseChecker_Check(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
-	t := s.Init(c)
-
-	t.SetupPkgsrc()
-	t.CreateFileLines("mk/misc/category.mk")
-	t.CreateFileLines("licenses/2-clause-bsd")
-	t.CreateFileLines("licenses/gnu-gpl-v3")
-
-	t.CreateFileLines("Makefile",
-		MkRcsID,
-		"SUBDIR+=\tcategory")
-
-	t.CreateFileLines("category/Makefile",
-		MkRcsID,
-		"COMMENT=\tExample category",
-		"",
-		"SUBDIR+=\tpackage",
-		"",
-		".include \"../mk/misc/category.mk\"")
-
-	t.SetupPackage("category/package",
-		"LICENSE=\t2-clause-bsd")
-
-	G.Main("pkglint", "-r", "-Cglobal", t.File("."))
-
-	t.CheckOutputLines(
-		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetupPkgsrc
-		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
-		"0 errors and 2 warnings found.")
-}
-
 func (s *Suite) Test_LicenseChecker_checkName__LICENSE_FILE(c *check.C) {
 	t := s.Init(c)
 

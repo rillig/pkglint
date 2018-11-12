@@ -48,6 +48,37 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 		{lines.Lines[6], "freeciv-client", "2.5.0", "(urgent)"}})
 }
 
+func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/misc/category.mk")
+	t.CreateFileLines("licenses/2-clause-bsd")
+	t.CreateFileLines("licenses/gnu-gpl-v3")
+
+	t.CreateFileLines("Makefile",
+		MkRcsID,
+		"SUBDIR+=\tcategory")
+
+	t.CreateFileLines("category/Makefile",
+		MkRcsID,
+		"COMMENT=\tExample category",
+		"",
+		"SUBDIR+=\tpackage",
+		"",
+		".include \"../mk/misc/category.mk\"")
+
+	t.SetupPackage("category/package",
+		"LICENSE=\t2-clause-bsd")
+
+	G.Main("pkglint", "-r", "-Cglobal", t.File("."))
+
+	t.CheckOutputLines(
+		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetupPkgsrc
+		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
+		"0 errors and 2 warnings found.")
+}
+
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t := s.Init(c)
 
