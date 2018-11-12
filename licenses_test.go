@@ -48,24 +48,10 @@ func (s *Suite) Test_LicenseChecker_checkName__LICENSE_FILE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
-	t.SetupCommandLine("-Wno-space")
-	t.CreateFileLines("category/package/DESCR",
-		"Package description")
-	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
+	t.SetupPackage("category/package",
+		"LICENSE=\tmy-license",
 		"",
-		"CATEGORIES=     chinese",
-		"",
-		"COMMENT=        Useful tools",
-		"LICENSE=        my-license",
-		"",
-		"LICENSE_FILE=   my-license",
-		"NO_CHECKSUM=    yes",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-	t.CreateFileLines("category/package/PLIST",
-		PlistRcsID,
-		"bin/program")
+		"LICENSE_FILE=\tmy-license")
 	t.CreateFileLines("category/package/my-license",
 		"An individual license file.")
 
