@@ -1,6 +1,10 @@
 package textproc
 
-import "strings"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
 
 // Lexer provides a flexible way of splitting a string into several parts
 // by repeatedly chopping off a prefix that matches a string, a function
@@ -85,9 +89,6 @@ func (l *Lexer) NextHspace() string {
 
 // SkipByte returns true if the remaining string starts with the given byte,
 // and in that case, chops it off.
-//
-// The return type differs from the other methods since creating a string
-// would be too much work for such a simple operation.
 func (l *Lexer) SkipByte(b byte) bool {
 	if len(l.rest) > 0 && l.rest[0] == b {
 		l.rest = l.rest[1:]
@@ -135,6 +136,34 @@ func (l *Lexer) NextBytesSet(bytes *ByteSet) string {
 		l.rest = rest[i:]
 	}
 	return rest[:i]
+}
+
+// SkipRegexp returns true if the remaining string matches the given regular
+// expression, and in that case, chops it off.
+func (l *Lexer) SkipRegexp(re *regexp.Regexp) bool {
+	if !strings.HasPrefix(re.String(), "^") {
+		panic(fmt.Sprintf("Lexer.SkipRegexp: regular expression %q must have prefix %q.", re, "^"))
+	}
+	str := re.FindString(l.rest)
+	if str != "" {
+		l.Skip(len(str))
+	}
+	return str != ""
+}
+
+// NextRegexp tests whether the remaining string matches the given regular
+// expression, and in that case, skips over it and returns the matched substrings,
+// as in regexp.FindStringSubmatch.
+// If the regular expression does not match, returns nil.
+func (l *Lexer) NextRegexp(re *regexp.Regexp) []string {
+	if !strings.HasPrefix(re.String(), "^") {
+		panic(fmt.Sprintf("Lexer.SkipRegexp: regular expression %q must have prefix %q.", re, "^"))
+	}
+	m := re.FindStringSubmatch(l.rest)
+	if m != nil {
+		l.Skip(len(m[0]))
+	}
+	return m
 }
 
 // Mark returns the current position of the lexer,

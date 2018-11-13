@@ -3,6 +3,7 @@ package textproc
 import (
 	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/intqa"
+	"regexp"
 	"testing"
 	"unicode"
 )
@@ -143,6 +144,30 @@ func (s *Suite) Test_Lexer_NextBytesSet(c *check.C) {
 	c.Check(lexer.NextBytesSet(Alnum), equals, "string")
 	c.Check(lexer.NextBytesSet(Hspace), equals, "\t\t ")
 	c.Check(lexer.NextBytesSet(Space), equals, "\n")
+}
+
+func (s *Suite) Test_Lexer_SkipRegexp(c *check.C) {
+	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
+
+	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^\w+`)), equals, true)
+	c.Check(lexer.Rest(), equals, " alphanumerical 90_ \tstring\t\t \n")
+	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^.+`)), equals, true)
+	c.Check(lexer.Rest(), equals, "\n")
+	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^.+`)), equals, false)
+	// This call returns false since the matched string was empty.
+	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^.*`)), equals, false)
+	c.Check(lexer.Rest(), equals, "\n")
+}
+
+func (s *Suite) Test_Lexer_NextRegexp(c *check.C) {
+	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
+
+	c.Check(lexer.NextRegexp(regexp.MustCompile(`^\w+`))[0], equals, "an")
+	c.Check(lexer.NextRegexp(regexp.MustCompile(`^[\w ]+`))[0], equals, " alphanumerical 90_ ")
+	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.+`))[0], equals, "\tstring\t\t ")
+	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.+`)), check.IsNil)
+	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.*`))[0], equals, "")
+	c.Check(lexer.Rest(), equals, "\n")
 }
 
 func (s *Suite) Test_Lexer_Mark__beginning(c *check.C) {
