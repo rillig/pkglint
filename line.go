@@ -30,16 +30,19 @@ func (rline *RawLine) String() string {
 	return strconv.Itoa(rline.Lineno) + ":" + rline.textnl
 }
 
+// Line represents a line of text from a file.
+// It aliases a pointer type to reduces the number of *Line occurrences in the code.
+// Using a type alias is more efficient than an interface type, I guess.
 type Line = *LineImpl
 
 type LineImpl struct {
-	FileName  string
-	Basename  string
-	firstLine int32 // Zero means not applicable, -1 means EOF
-	lastLine  int32 // Usually the same as firstLine, may differ in Makefiles
-	Text      string
-	raw       []*RawLine
-	autofix   *Autofix
+	FileName  string     // uses / as directory separator on all platforms
+	Basename  string     // the last component of the FileName
+	firstLine int32      // zero means the whole file, -1 means EOF
+	lastLine  int32      // usually the same as firstLine, may differ in Makefiles
+	Text      string     // without the trailing newline character
+	raw       []*RawLine // contains the original text including trailing newline
+	autofix   *Autofix   // any changes that pkglint would like to apply to the line
 	Once
 }
 
