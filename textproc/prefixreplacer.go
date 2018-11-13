@@ -42,7 +42,7 @@ func (pr *PrefixReplacer) SkipString(prefix string) bool {
 	return skipped
 }
 
-func (pr *PrefixReplacer) NextByte(b byte) bool {
+func (pr *PrefixReplacer) SkipByte(b byte) bool {
 	if pr.PeekByte() == int(b) {
 		pr.Skip(1)
 		return true
@@ -127,7 +127,7 @@ func (pr *PrefixReplacer) Since(mark PrefixReplacerMark) string {
 	return string(mark[:len(mark)-len(pr.rest)])
 }
 
-func (pr *PrefixReplacer) AdvanceRest() string {
+func (pr *PrefixReplacer) NextRest() string {
 	rest := pr.rest
 	pr.rest = ""
 	return rest

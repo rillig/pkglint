@@ -36,10 +36,10 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 			continue
 		}
 
-		if repl.NextByte('-') {
+		if repl.SkipByte('-') {
 			if repl.SkipRegexp(`^\d`) ||
 				repl.SkipRegexp(`^\$\{\w*VER\w*\}`) ||
-				repl.NextByte('[') {
+				repl.SkipByte('[') {
 				repl.Reset(mark)
 				return
 			}
@@ -100,8 +100,8 @@ func (p *Parser) Dependency() *DependencyPattern {
 	if dp.LowerOp != "" || dp.UpperOp != "" {
 		return &dp
 	}
-	if repl.NextByte('-') && repl.Rest() != "" {
-		dp.Wildcard = repl.AdvanceRest()
+	if repl.SkipByte('-') && repl.Rest() != "" {
+		dp.Wildcard = repl.NextRest()
 		return &dp
 	}
 	if hasPrefix(dp.Pkgbase, "${") && hasSuffix(dp.Pkgbase, "}") {

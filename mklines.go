@@ -338,7 +338,7 @@ func (mklines *MkLinesImpl) determineDocumentedVariables() {
 			if hasSuffix(varname, ".") && parser.repl.SkipRegexp(`^<\w+>`) {
 				varname += "*"
 			}
-			parser.repl.NextByte(':')
+			parser.repl.SkipByte(':')
 
 			varbase := varnameBase(varname)
 			if varbase == strings.ToUpper(varbase) && matches(varbase, `[A-Z]`) && parser.EOF() {
