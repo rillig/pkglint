@@ -5,7 +5,6 @@ import (
 	"netbsd.org/pkglint/getopt"
 	"netbsd.org/pkglint/histogram"
 	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/textproc"
 	tracePkg "netbsd.org/pkglint/trace"
 	"os"
 	"os/user"
@@ -450,10 +449,6 @@ func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
 		panic("Pkglint internal error: " + fmt.Sprintf(format, args...))
 	}
-}
-
-func (pkglint *Pkglint) NewPrefixReplacer(s string) *textproc.PrefixReplacer {
-	return textproc.NewPrefixReplacer(s, &pkglint.res)
 }
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.

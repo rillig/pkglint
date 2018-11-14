@@ -152,13 +152,6 @@ func (s *Suite) Test_isEmptyDir__empty_subdir(c *check.C) {
 	c.Check(isEmptyDir(t.File(".")), equals, true)
 }
 
-func (s *Suite) Test__PrefixReplacer_Since(c *check.C) {
-	repl := G.NewPrefixReplacer("hello, world")
-	mark := repl.Mark()
-	repl.SkipRegexp(`^\w+`)
-	c.Check(repl.Since(mark), equals, "hello")
-}
-
 func (s *Suite) Test_detab(c *check.C) {
 	c.Check(detab(""), equals, "")
 	c.Check(detab("\t"), equals, "        ")

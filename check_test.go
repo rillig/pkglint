@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/textproc"
 )
 
 var equals = check.Equals
@@ -62,7 +61,6 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	G = NewPkglint()
 	G.Testing = true
-	textproc.Testing = true
 	G.logOut = NewSeparatorWriter(&t.stdout)
 	G.logErr = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
@@ -95,7 +93,6 @@ func (s *Suite) TearDownTest(c *check.C) {
 	}
 
 	G = Pkglint{} // unusable because of missing logOut and logErr
-	textproc.Testing = false
 	if out := t.Output(); out != "" {
 		var msg strings.Builder
 		msg.WriteString("\n")
