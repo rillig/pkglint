@@ -46,8 +46,9 @@ func (l *Lexer) PeekByte() int {
 }
 
 // Skip skips the next n bytes.
-func (l *Lexer) Skip(n int) {
+func (l *Lexer) Skip(n int) bool {
 	l.rest = l.rest[n:]
+	return n > 0
 }
 
 // NextString tests whether the remaining string has the given prefix,
@@ -68,6 +69,23 @@ func (l *Lexer) SkipString(prefix string) bool {
 		l.rest = l.rest[len(prefix):]
 	}
 	return skipped
+}
+
+// SkipHspace chops off the longest prefix (possibly empty) consisting
+// solely of horizontal whitespace, which is the ASCII space (U+0020)
+// and tab (U+0009).
+func (l *Lexer) SkipHspace() bool {
+	// The same code as in NextBytesFunc, inlined here for performance reasons.
+	// As of Go 1.11, the compiler does not inline constant function arguments.
+	i := 0
+	rest := l.rest
+	for i < len(rest) && (rest[i] == ' ' || rest[i] == '\t') {
+		i++
+	}
+	if i != 0 {
+		l.rest = rest[i:]
+	}
+	return i > 0
 }
 
 // NextHspace chops off the longest prefix (possibly empty) consisting

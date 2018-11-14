@@ -60,7 +60,7 @@ func (s *Suite) Test_Lexer_PeekByte(c *check.C) {
 func (s *Suite) Test_Lexer_Skip(c *check.C) {
 	lexer := NewLexer("example text")
 
-	lexer.Skip(7)
+	c.Check(lexer.Skip(7), equals, 7)
 
 	c.Check(lexer.Rest(), equals, " text")
 
@@ -87,6 +87,18 @@ func (s *Suite) Test_Lexer_SkipString(c *check.C) {
 	c.Check(lexer.SkipString("te"), equals, true)
 	c.Check(lexer.SkipString("st"), equals, false)
 	c.Check(lexer.SkipString("xt"), equals, true)
+}
+
+func (s *Suite) Test_Lexer_SkipHspace(c *check.C) {
+	lexer := NewLexer("spaces   \t \t  and tabs\n")
+
+	c.Check(lexer.NextString("spaces"), equals, "spaces")
+	c.Check(lexer.SkipHspace(), equals, true)
+	c.Check(lexer.Rest(), equals, "and tabs\n")
+	c.Check(lexer.SkipHspace(), equals, false) // No space left.
+	c.Check(lexer.NextString("and tabs"), equals, "and tabs")
+	c.Check(lexer.SkipHspace(), equals, false) // Newline is not a horizontal space.
+	c.Check(lexer.Rest(), equals, "\n")
 }
 
 func (s *Suite) Test_Lexer_NextHspace(c *check.C) {
