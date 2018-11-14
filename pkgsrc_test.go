@@ -498,7 +498,8 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 		MkRcsID,
 		"",
 		"PKGSRC_MAKE_ENV?=\t# none",
-		"CPPPATH?=\tcpp")
+		"CPPPATH?=\tcpp",
+		"OSNAME.${f}?=\tOpsys")
 
 	pkg := t.SetupPackage("category/package",
 		"PKGSRC_MAKE_ENV+=\tCPP=${CPPPATH:Q}",
@@ -512,6 +513,10 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 
 	if typ := G.Pkgsrc.VariableType("CPPPATH"); c.Check(typ, check.NotNil) {
 		c.Check(typ.String(), equals, "Pathlist (guessed)")
+	}
+
+	if typ := G.Pkgsrc.VariableType("OSNAME.Other"); c.Check(typ, check.NotNil) {
+		c.Check(typ.String(), equals, "Unknown")
 	}
 
 	// No warnings about "defined but not used" or "used but not defined"
