@@ -84,7 +84,9 @@ func (p *ShTokenizer) shAtomPlain() *ShAtom {
 	case repl.SkipByte('`'):
 		return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
 	case repl.PeekByte() == '#':
-		return &ShAtom{shtComment, repl.NextRest(), q, nil}
+		rest := repl.Rest()
+		repl.Skip(len(rest))
+		return &ShAtom{shtComment, rest, q, nil}
 	case repl.SkipString("$$("):
 		return &ShAtom{shtSubshell, repl.Since(mark), shqSubsh, nil}
 	}
@@ -130,7 +132,7 @@ func (p *ShTokenizer) shAtomBackt() *ShAtom {
 		return &ShAtom{shtText, repl.Since(mark), shqBacktSquot, nil}
 	case repl.NextHspace() != "":
 		return &ShAtom{shtSpace, repl.Since(mark), q, nil}
-	case repl.SkipRegexp("^#[^`]*"):
+	case repl.SkipRegexp(G.res.Compile("^#[^`]*")):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
 	}
 	return p.shAtomInternal(q, false, false)
@@ -151,7 +153,7 @@ func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 		return &ShAtom{shtText, repl.Since(mark), shqSubshSquot, nil}
 	case repl.SkipByte('`'):
 		// FIXME: return &ShAtom{shtText, repl.Since(mark), shqBackt, nil}
-	case repl.SkipRegexp(`^#[^)]*`):
+	case repl.SkipRegexp(G.res.Compile(`^#[^)]*`)):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
 	case repl.SkipByte(')'):
 		// shtText instead of shtOperator because this atom belongs to a shtText token.
@@ -177,7 +179,7 @@ func (p *ShTokenizer) shAtomDquotBackt() *ShAtom {
 		return &ShAtom{shtText, repl.Since(mark), shqDquotBacktDquot, nil}
 	case repl.SkipByte('\''):
 		return &ShAtom{shtText, repl.Since(mark), shqDquotBacktSquot, nil}
-	case repl.SkipRegexp("^#[^`]*"):
+	case repl.SkipRegexp(G.res.Compile("^#[^`]*")):
 		return &ShAtom{shtComment, repl.Since(mark), q, nil}
 	case repl.NextHspace() != "":
 		return &ShAtom{shtSpace, repl.Since(mark), q, nil}
@@ -273,16 +275,16 @@ loop:
 		_ = `^[\t "$&'();<>\\|]+` // These are not allowed in shqPlain.
 
 		switch {
-		case repl.SkipRegexp(`^[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+`):
-		case dquot && repl.SkipRegexp(`^[\t &'();<>|]+`):
+		case repl.SkipRegexp(G.res.Compile(`^[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+`)):
+		case dquot && repl.SkipRegexp(G.res.Compile(`^[\t &'();<>|]+`)):
 		case squot && repl.SkipByte('`'):
-		case squot && repl.SkipRegexp(`^[\t "&();<>\\|]+`):
+		case squot && repl.SkipRegexp(G.res.Compile(`^[\t "&();<>\\|]+`)):
 		case squot && repl.SkipString("$$"):
 		case squot:
 			break loop
 		case repl.SkipString("\\$$"):
-		case repl.SkipRegexp(`^\\[^$]`):
-		case repl.HasPrefixRegexp(`^\$\$[^!#(*\-0-9?@A-Z_a-z{]`):
+		case repl.SkipRegexp(G.res.Compile(`^\\[^$]`)):
+		case matches(repl.Rest(), `^\$\$[^!#(*\-0-9?@A-Z_a-z{]`):
 			repl.NextString("$$")
 		default:
 			break loop
@@ -315,7 +317,7 @@ func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
 	brace := repl.SkipByte('{')
 
 	varnameStart := repl.Mark()
-	if !repl.SkipRegexp(`^(?:[!#*\-?@]|\$\$|[A-Za-z_]\w*|\d+)`) {
+	if !repl.SkipRegexp(G.res.Compile(`^(?:[!#*\-?@]|\$\$|[A-Za-z_]\w*|\d+)`)) {
 		repl.Reset(beforeDollar)
 		return nil
 	}
@@ -326,7 +328,7 @@ func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
 	}
 
 	if brace {
-		repl.SkipRegexp(`^(?:##?|%%?|:?[+\-=?])[^$\\{}]*`)
+		repl.SkipRegexp(G.res.Compile(`^(?:##?|%%?|:?[+\-=?])[^$\\{}]*`))
 		if !repl.SkipByte('}') {
 			repl.Reset(beforeDollar)
 			return nil
@@ -350,7 +352,7 @@ func (p *ShTokenizer) shOperator(q ShQuoting) *ShAtom {
 		repl.SkipByte('|'),
 		repl.SkipByte('&'):
 		return &ShAtom{shtOperator, repl.Since(mark), q, nil}
-	case repl.SkipRegexp(`^\d*(?:<<-|<<|<&|<>|>>|>&|>\||<|>)`):
+	case repl.SkipRegexp(G.res.Compile(`^\d*(?:<<-|<<|<&|<>|>>|>&|>\||<|>)`)):
 		return &ShAtom{shtOperator, repl.Since(mark), q, nil}
 	}
 	return nil

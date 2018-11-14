@@ -7,16 +7,16 @@ import (
 
 type Parser struct {
 	Line         Line
-	repl         *textproc.PrefixReplacer
+	repl         *textproc.Lexer
 	EmitWarnings bool
 }
 
 func NewParser(line Line, s string, emitWarnings bool) *Parser {
-	return &Parser{line, G.NewPrefixReplacer(s), emitWarnings}
+	return &Parser{line, textproc.NewLexer(s), emitWarnings}
 }
 
 func (p *Parser) EOF() bool {
-	return p.repl.Rest() == ""
+	return p.repl.EOF()
 }
 
 func (p *Parser) Rest() string {
@@ -29,16 +29,16 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 	for {
 		mark := repl.Mark()
 
-		if repl.SkipRegexp(`^\$\{\w+\}`) ||
-			repl.SkipRegexp(`^[\w.*+,{}]+`) ||
-			repl.SkipRegexp(`^\[[\d-]+\]`) {
+		if repl.SkipRegexp(G.res.Compile(`^\$\{\w+\}`)) ||
+			repl.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
+			repl.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
 			pkgbase += repl.Since(mark)
 			continue
 		}
 
 		if repl.SkipByte('-') {
-			if repl.SkipRegexp(`^\d`) ||
-				repl.SkipRegexp(`^\$\{\w*VER\w*\}`) ||
+			if repl.SkipRegexp(G.res.Compile(`^\d`)) ||
+				repl.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
 				repl.SkipByte('[') {
 				repl.Reset(mark)
 				return
@@ -77,7 +77,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 		op = repl.NextString(">")
 	}
 	if op != "" {
-		if m := repl.NextRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`); m != nil {
+		if m := repl.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
 			dp.LowerOp = op
 			dp.Lower = m[0]
 		} else {
@@ -90,7 +90,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 		op = repl.NextString("<")
 	}
 	if op != "" {
-		if m := repl.NextRegexp(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`); m != nil {
+		if m := repl.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
 			dp.UpperOp = op
 			dp.Upper = m[0]
 		} else {
@@ -101,7 +101,8 @@ func (p *Parser) Dependency() *DependencyPattern {
 		return &dp
 	}
 	if repl.SkipByte('-') && repl.Rest() != "" {
-		dp.Wildcard = repl.NextRest()
+		dp.Wildcard = repl.Rest()
+		repl.Skip(len(repl.Rest()))
 		return &dp
 	}
 	if hasPrefix(dp.Pkgbase, "${") && hasSuffix(dp.Pkgbase, "}") {

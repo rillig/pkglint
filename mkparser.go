@@ -24,7 +24,7 @@ func (p *MkParser) MkTokens() []*MkToken {
 	var tokens []*MkToken
 	for !p.EOF() {
 		if repl.SkipByte('#') {
-			repl.NextRest()
+			repl.Skip(len(repl.Rest()))
 		}
 
 		mark := repl.Mark()
@@ -87,7 +87,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 			}
 		}
 
-		for p.VarUse() != nil || repl.SkipRegexp(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`)) {
+		for p.VarUse() != nil || repl.SkipRegexp(G.res.Compile(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`))) {
 		}
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
@@ -130,7 +130,7 @@ loop:
 
 		switch repl.PeekByte() {
 		case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
-			if repl.SkipRegexp(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`) {
+			if repl.SkipRegexp(G.res.Compile(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`)) {
 				appendModifier(repl.Since(modifierMark))
 				continue
 			}
@@ -139,7 +139,7 @@ loop:
 				if len(rest) >= 2 && (rest[1] == closing || rest[1] == ':') {
 					repl.Skip(1)
 				} else if len(rest) >= 1 && (rest[0] == closing || rest[0] == ':') {
-				} else if repl.SkipRegexp(`^\\\d+`) {
+				} else if repl.SkipRegexp(G.res.Compile(`^\\\d+`)) {
 				} else {
 					break loop
 				}
@@ -149,7 +149,7 @@ loop:
 
 		case '=', 'D', 'M', 'N', 'U':
 			repl.Skip(1)
-			re := regex.Pattern(ifelseStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`))
+			re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
 			for p.VarUse() != nil || repl.SkipRegexp(re) {
 			}
 			arg := repl.Since(modifierMark)
@@ -159,7 +159,7 @@ loop:
 		case 'C', 'S':
 			// bmake allows _any_ separator, even letters.
 			repl.Skip(1)
-			if m := repl.NextRegexp(`^[%,/:;@^|]`); m != nil {
+			if m := repl.NextRegexp(G.res.Compile(`^[%,/:;@^|]`)); m != nil {
 				separator := m[0][0]
 				repl.SkipByte('^')
 				skipOther := func() {
@@ -175,7 +175,7 @@ loop:
 				if repl.SkipByte(separator) {
 					skipOther()
 					if repl.SkipByte(separator) {
-						repl.SkipRegexp(`^[1gW]`) // FIXME: Multiple modifiers may be mentioned
+						repl.SkipRegexp(G.res.Compile(`^[1gW]`)) // FIXME: Multiple modifiers may be mentioned
 						appendModifier(repl.Since(modifierMark))
 						mayOmitColon = true
 						continue
@@ -184,9 +184,9 @@ loop:
 			}
 
 		case '@':
-			if m := repl.NextRegexp(`^@([\w.]+)@`); m != nil {
+			if m := repl.NextRegexp(G.res.Compile(`^@([\w.]+)@`)); m != nil {
 				loopvar := m[1]
-				re := regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`))
+				re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`)))
 				for p.VarUse() != nil || repl.SkipString("$$") || repl.SkipRegexp(re) {
 				}
 				if !repl.SkipByte('@') && p.EmitWarnings {
@@ -197,14 +197,14 @@ loop:
 			}
 
 		case '[':
-			if repl.SkipRegexp(`^\[(?:[-.\d]+|#)\]`) {
+			if repl.SkipRegexp(G.res.Compile(`^\[(?:[-.\d]+|#)\]`)) {
 				appendModifier(repl.Since(modifierMark))
 				continue
 			}
 
 		case '?':
 			repl.Skip(1)
-			re := regex.Pattern(`^([^$:` + string(closing) + `]|\$\$)+`)
+			re := G.res.Compile(regex.Pattern(`^([^$:` + string(closing) + `]|\$\$)+`))
 			for p.VarUse() != nil || repl.SkipRegexp(re) {
 			}
 			if repl.SkipByte(':') {
@@ -217,7 +217,8 @@ loop:
 
 		repl.Reset(modifierMark)
 		// FIXME: Why skip over unknown modifiers here? This accepts :S,a,b,c,d,e,f but shouldn't.
-		for p.VarUse() != nil || repl.SkipRegexp(regex.Pattern(`^([^:$`+string(closing)+`]|\$\$)+`)) {
+		re := G.res.Compile(regex.Pattern(`^([^:$` + string(closing) + `]|\$\$)+`))
+		for p.VarUse() != nil || repl.SkipRegexp(re) {
 		}
 		if suffixSubst := repl.Since(modifierMark); contains(suffixSubst, "=") {
 			appendModifier(suffixSubst)
@@ -319,13 +320,13 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 		}
 		if lhs != nil {
-			if m := repl.NextRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(\d+(?:\.\d+)?)`); m != nil {
+			if m := repl.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(\d+(?:\.\d+)?)`)); m != nil {
 				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
 			}
-			if m := repl.NextRegexp(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`); m != nil {
+			if m := repl.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`)); m != nil {
 				op := m[1]
 				if op == "==" || op == "!=" {
-					if mrhs := repl.NextRegexp(`^"([^"\$\\]*)"`); mrhs != nil {
+					if mrhs := repl.NextRegexp(G.res.Compile(`^"([^"\$\\]*)"`)); mrhs != nil {
 						return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
 					}
 				}
@@ -348,7 +349,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return &mkCond{Not: &mkCond{Empty: lhs}} // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
 		}
-		if m := repl.NextRegexp(`^\d+(?:\.\d+)?`); m != nil {
+		if m := repl.NextRegexp(G.res.Compile(`^\d+(?:\.\d+)?`)); m != nil {
 			return &mkCond{Num: m[0]}
 		}
 	}
