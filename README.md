@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rillig/pkglint.svg?branch=master)](https://travis-ci.org/rillig/pkglint)
+[![Build Status](https://travis-ci.com/rillig/pkglint.svg?branch=master)](https://travis-ci.org/rillig/pkglint)
 [![codecov](https://codecov.io/gh/rillig/pkglint/branch/master/graph/badge.svg)](https://codecov.io/gh/rillig/pkglint)
 
 pkglint checks whether a pkgsrc package conforms to the various
