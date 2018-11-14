@@ -60,7 +60,11 @@ func (s *Suite) Test_Lexer_PeekByte(c *check.C) {
 func (s *Suite) Test_Lexer_Skip(c *check.C) {
 	lexer := NewLexer("example text")
 
-	c.Check(lexer.Skip(7), equals, 7)
+	c.Check(lexer.Skip(7), equals, true)
+
+	c.Check(lexer.Rest(), equals, " text")
+
+	c.Check(lexer.Skip(0), equals, false)
 
 	c.Check(lexer.Rest(), equals, " text")
 
