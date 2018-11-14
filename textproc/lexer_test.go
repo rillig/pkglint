@@ -175,6 +175,15 @@ func (s *Suite) Test_Lexer_SkipRegexp(c *check.C) {
 	c.Check(lexer.Rest(), equals, "\n")
 }
 
+func (s *Suite) Test_Lexer_SkipRegexp__panic(c *check.C) {
+	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
+
+	c.Check(
+		func() { lexer.SkipRegexp(regexp.MustCompile(`\w+`)) },
+		check.Panics,
+		"Lexer.SkipRegexp: regular expression \"\\\\w+\" must have prefix \"^\".")
+}
+
 func (s *Suite) Test_Lexer_NextRegexp(c *check.C) {
 	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
 
@@ -184,6 +193,15 @@ func (s *Suite) Test_Lexer_NextRegexp(c *check.C) {
 	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.+`)), check.IsNil)
 	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.*`))[0], equals, "")
 	c.Check(lexer.Rest(), equals, "\n")
+}
+
+func (s *Suite) Test_Lexer_NextRegexp__panic(c *check.C) {
+	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
+
+	c.Check(
+		func() { lexer.NextRegexp(regexp.MustCompile(`\w+`)) },
+		check.Panics,
+		"Lexer.NextRegexp: regular expression \"\\\\w+\" must have prefix \"^\".")
 }
 
 func (s *Suite) Test_Lexer_Mark__beginning(c *check.C) {

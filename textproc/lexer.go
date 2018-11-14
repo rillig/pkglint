@@ -175,7 +175,7 @@ func (l *Lexer) SkipRegexp(re *regexp.Regexp) bool {
 // If the regular expression does not match, returns nil.
 func (l *Lexer) NextRegexp(re *regexp.Regexp) []string {
 	if !strings.HasPrefix(re.String(), "^") {
-		panic(fmt.Sprintf("Lexer.SkipRegexp: regular expression %q must have prefix %q.", re, "^"))
+		panic(fmt.Sprintf("Lexer.NextRegexp: regular expression %q must have prefix %q.", re, "^"))
 	}
 	m := re.FindStringSubmatch(l.rest)
 	if m != nil {
