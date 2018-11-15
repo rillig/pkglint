@@ -693,6 +693,38 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// When a parameterized variable is defined in the pkgsrc infrastructure,
+// it does not generate a warning about being "used but not defined".
+// Even if the variable parameter differs, like .Linux and .SunOS in this
+// case. This pattern is typical for pkgsrc, therefore pkglint doesn't
+// check that the variable names match exactly.
+func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/sys-vars.mk",
+		MkRcsID,
+		"CPPPATH.Linux=\t/usr/bin/cpp")
+	G.Pkgsrc.LoadInfrastructure()
+
+	ck := MkLineChecker{t.NewMkLine("module.mk", 101, "COMMENT=\t${CPPPATH.SunOS}")}
+
+	ck.CheckVaruse(NewMkVarUse("CPPPATH.SunOS"), &VarUseContext{
+		vartype: &Vartype{
+			kindOfList: lkNone,
+			basicType:  BtPathname,
+			aclEntries: nil,
+			guessed:    true,
+		},
+		time:       vucTimeRun,
+		quoting:    vucQuotPlain,
+		IsWordPart: false,
+	})
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_infrastructure(c *check.C) {
 	t := s.Init(c)
 
