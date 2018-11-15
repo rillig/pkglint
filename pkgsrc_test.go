@@ -493,18 +493,22 @@ func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	t := s.Init(c)
 
+	// The type of OSNAME.* cannot be guessed from the variable name,
+	// but it is a known variable since the pkgsrc infrastructure uses
+	// it. But still, its type is unknown.
+
 	t.SetupPkgsrc()
 	t.CreateFileLines("mk/sys-vars.mk",
 		MkRcsID,
 		"",
 		"PKGSRC_MAKE_ENV?=\t# none",
 		"CPPPATH?=\tcpp",
-		"CPPPATH.Linux?=\t/usr/bin/cpp")
+		"OSNAME.Linux?=\tLinux")
 
 	pkg := t.SetupPackage("category/package",
 		"PKGSRC_MAKE_ENV+=\tCPP=${CPPPATH:Q}",
 		"PKGSRC_UNKNOWN_ENV+=\tCPP=${ABCPATH:Q}",
-		"CPPPATH.SunOS=\t\t${CPPPATH.Other}")
+		"OSNAME.SunOS=\t\t${OSNAME.Other}")
 
 	G.Main("pkglint", "-Wall", pkg)
 
@@ -516,8 +520,8 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 		c.Check(typ.String(), equals, "Pathlist (guessed)")
 	}
 
-	if typ := G.Pkgsrc.VariableType("CPPPATH.Other"); c.Check(typ, check.NotNil) {
-		c.Check(typ.String(), equals, "Pathlist (guessed)")
+	if typ := G.Pkgsrc.VariableType("OSNAME.Other"); c.Check(typ, check.NotNil) {
+		c.Check(typ.String(), equals, "Unknown")
 	}
 
 	// No warnings about "defined but not used" or "used but not defined"
