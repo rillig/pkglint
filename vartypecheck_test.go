@@ -628,8 +628,8 @@ func (s *Suite) Test_VartypeCheck_Pathlist(c *check.C) {
 		"/directory with spaces")
 
 	vt.Output(
-		"WARN: filename:1: The component \".\" of PATH should be an absolute path.",
-		"WARN: filename:1: The component \"\" of PATH should be an absolute path.",
+		"ERROR: filename:1: The component \".\" of PATH must be an absolute path.",
+		"ERROR: filename:1: The component \"\" of PATH must be an absolute path.",
 		"WARN: filename:1: \"${PREFIX}/!!!\" is not a valid pathname.",
 		"WARN: filename:2: \"/directory with spaces\" is not a valid pathname.")
 }

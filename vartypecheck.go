@@ -734,7 +734,12 @@ func (cv *VartypeCheck) Pathlist() {
 		}
 
 		if !hasPrefix(dir, "/") && !hasPrefix(dir, "${") {
-			cv.Warnf("The component %q of %s should be an absolute path.", dir, cv.Varname)
+			cv.Errorf("The component %q of %s must be an absolute path.", dir, cv.Varname)
+			Explain(
+				"Relative paths in the PATH variable are a security risk.",
+				"They also make the execution unreliable since they are",
+				"evaluated relative to the current directory of the process,",
+				"which means that after a \"cd\", different commands might be run.")
 		}
 	}
 }
