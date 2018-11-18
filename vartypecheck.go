@@ -465,7 +465,7 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 }
 
-// See Pathname.
+// Filename checks that filenames use only limited special characters.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
@@ -726,18 +726,18 @@ func (cv *VartypeCheck) Pathlist() {
 		return
 	}
 
-	for _, path := range cv.MkLine.ValueSplit(value, ":") {
-		if hasPrefix(path, "${") {
+	for _, dir := range cv.MkLine.ValueSplit(value, ":") {
+		if hasPrefix(dir, "${") {
 			continue
 		}
 
-		pathNoVar := cv.MkLine.WithoutMakeVariables(path)
-		if !matches(pathNoVar, `^[-0-9A-Za-z._~+%/]*$`) {
-			cv.Warnf("%q is not a valid pathname.", path)
+		dirNoVar := cv.MkLine.WithoutMakeVariables(dir)
+		if !matches(dirNoVar, `^[-0-9A-Za-z._~+%/]*$`) {
+			cv.Warnf("%q is not a valid pathname.", dir)
 		}
 
-		if !hasPrefix(path, "/") {
-			cv.Warnf("All components of %s (in this case %q) should be absolute paths.", cv.Varname, path)
+		if !hasPrefix(dir, "/") {
+			cv.Warnf("The component %q of %s should be an absolute path.", dir, cv.Varname)
 		}
 	}
 }

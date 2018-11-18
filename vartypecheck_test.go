@@ -624,12 +624,12 @@ func (s *Suite) Test_VartypeCheck_Pathlist(c *check.C) {
 
 	vt.Varname("PATH")
 	vt.Values(
-		"/usr/bin:/usr/sbin:.::${LOCALBASE}/bin:${HOMEPAGE:S,https://,,}",
+		"/usr/bin:/usr/sbin:.::${LOCALBASE}/bin:${HOMEPAGE:S,https://,,}:${TMPDIR}",
 		"/directory with spaces")
 
 	vt.Output(
-		"WARN: filename:1: All components of PATH (in this case \".\") should be absolute paths.",
-		"WARN: filename:1: All components of PATH (in this case \"\") should be absolute paths.",
+		"WARN: filename:1: The component \".\" of PATH should be an absolute path.",
+		"WARN: filename:1: The component \"\" of PATH should be an absolute path.",
 		"WARN: filename:2: \"/directory with spaces\" is not a valid pathname.")
 }
 
