@@ -36,13 +36,15 @@ func (rline *RawLine) String() string { return sprintf("%d:%s", rline.Lineno, rl
 type Line = *LineImpl
 
 type LineImpl struct {
-	Filename  string     // uses / as directory separator on all platforms
-	Basename  string     // the last component of the Filename
-	firstLine int32      // zero means the whole file, -1 means EOF
-	lastLine  int32      // usually the same as firstLine, may differ in Makefiles
-	Text      string     // without the trailing newline character
-	raw       []*RawLine // contains the original text including trailing newline
-	autofix   *Autofix   // any changes that pkglint would like to apply to the line
+	Filename  string // uses / as directory separator on all platforms
+	Basename  string // the last component of the Filename
+	firstLine int32  // zero means the whole file, -1 means EOF
+	lastLine  int32  // usually the same as firstLine, may differ in Makefiles
+	// without the trailing newline character;
+	// in Makefiles, also contains the text from the continuation lines
+	Text    string
+	raw     []*RawLine // contains the original text including trailing newline
+	autofix *Autofix   // any changes that pkglint would like to apply to the line
 	Once
 
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
