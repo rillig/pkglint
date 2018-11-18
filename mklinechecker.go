@@ -63,7 +63,7 @@ func (ck MkLineChecker) checkInclude() {
 	includefile := mkline.IncludeFile()
 	mustExist := mkline.MustExist()
 	if trace.Tracing {
-		trace.Step2("includingFile=%s includefile=%s", mkline.FileName, includefile)
+		trace.Step2("includingFile=%s includefile=%s", mkline.Filename, includefile)
 	}
 	ck.CheckRelativePath(includefile, mustExist)
 
@@ -1125,7 +1125,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 
 	abs := resolvedPath
 	if !hasPrefix(abs, "/") {
-		abs = path.Dir(mkline.FileName) + "/" + abs
+		abs = path.Dir(mkline.Filename) + "/" + abs
 	}
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
@@ -1140,7 +1140,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 		// From a package to the infrastructure.
 	case matches(relativePath, `^\.\./\.\./[^/]+/[^/]`):
 		// From a package to another package.
-	case hasPrefix(relativePath, "../mk/") && relpath(path.Dir(mkline.FileName), G.Pkgsrc.File(".")) == "..":
+	case hasPrefix(relativePath, "../mk/") && relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(".")) == "..":
 		// For category Makefiles.
 	default:
 		mkline.Warnf("Invalid relative path %q.", relativePath)

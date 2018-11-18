@@ -757,7 +757,7 @@ func (cv *VartypeCheck) PathMask() {
 
 // PathName checks for pathnames.
 //
-// Like FileName, but including slashes.
+// Like Filename, but including slashes.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
 func (cv *VartypeCheck) PathName() {
@@ -817,7 +817,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // PkgPath checks a directory name relative to the top-level pkgsrc directory.
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
-	pkgsrcdir := relpath(path.Dir(cv.MkLine.FileName), G.Pkgsrc.File("."))
+	pkgsrcdir := relpath(path.Dir(cv.MkLine.Filename), G.Pkgsrc.File("."))
 	MkLineChecker{cv.MkLine}.CheckRelativePkgdir(pkgsrcdir + "/" + cv.Value)
 }
 

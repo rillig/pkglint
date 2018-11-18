@@ -114,7 +114,7 @@ func (ck *distinfoLinesChecker) checkAlgorithms(line Line) {
 		break
 
 	case hasPrefix(fileName, "patch-") && algorithms == "SHA1":
-		pathToPatchdir := relpath(path.Dir(ck.currentFirstLine.FileName), G.Pkg.File(ck.patchdir))
+		pathToPatchdir := relpath(path.Dir(ck.currentFirstLine.Filename), G.Pkg.File(ck.patchdir))
 		ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", fileName, pathToPatchdir)
 		Explain(
 			"If the patches directory looks correct, the patch may have been",

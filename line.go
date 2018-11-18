@@ -36,8 +36,8 @@ func (rline *RawLine) String() string { return sprintf("%d:%s", rline.Lineno, rl
 type Line = *LineImpl
 
 type LineImpl struct {
-	FileName  string     // uses / as directory separator on all platforms
-	Basename  string     // the last component of the FileName
+	Filename  string     // uses / as directory separator on all platforms
+	Basename  string     // the last component of the Filename
 	firstLine int32      // zero means the whole file, -1 means EOF
 	lastLine  int32      // usually the same as firstLine, may differ in Makefiles
 	Text      string     // without the trailing newline character
@@ -45,7 +45,7 @@ type LineImpl struct {
 	autofix   *Autofix   // any changes that pkglint would like to apply to the line
 	Once
 
-	// XXX: FileName and Basename could be replaced with a pointer to a Lines object.
+	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
 
 func NewLine(fileName string, lineno int, text string, rawLines []*RawLine) Line {
@@ -83,8 +83,8 @@ func (line *LineImpl) Linenos() string {
 // RefTo returns a reference to another line,
 // which can be in the same file or in a different file.
 func (line *LineImpl) RefTo(other Line) string {
-	if line.FileName != other.FileName {
-		return cleanpath(relpath(path.Dir(line.FileName), other.FileName)) + ":" + other.Linenos()
+	if line.Filename != other.Filename {
+		return cleanpath(relpath(path.Dir(line.Filename), other.Filename)) + ":" + other.Linenos()
 	}
 	return "line " + other.Linenos()
 }
@@ -93,7 +93,7 @@ func (line *LineImpl) RefTo(other Line) string {
 // This is typically used for arguments in diagnostics, which should always be
 // relative to the line with which the diagnostic is associated.
 func (line *LineImpl) PathToFile(filePath string) string {
-	return relpath(path.Dir(line.FileName), filePath)
+	return relpath(path.Dir(line.Filename), filePath)
 }
 
 func (line *LineImpl) IsMultiline() bool {
@@ -148,7 +148,7 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 	if G.Opts.ShowSource {
 		line.showSource(G.logOut)
 	}
-	logf(level, line.FileName, line.Linenos(), format, fmt.Sprintf(format, args...))
+	logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	if G.Opts.ShowSource {
 		G.logOut.Separate()
 	}
@@ -171,7 +171,7 @@ func (line *LineImpl) Notef(format string, args ...interface{}) {
 }
 
 func (line *LineImpl) String() string {
-	return line.FileName + ":" + line.Linenos() + ": " + line.Text
+	return line.Filename + ":" + line.Linenos() + ": " + line.Text
 }
 
 // Autofix returns the autofix instance belonging to the line.

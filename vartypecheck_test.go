@@ -351,16 +351,16 @@ func (s *Suite) Test_VartypeCheck_FileName(c *check.C) {
 
 	vt.Varname("FNAME")
 	vt.Values(
-		"FileName with spaces.docx",
+		"Filename with spaces.docx",
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: fileName:1: \"FileName with spaces.docx\" is not a valid file name.",
+		"WARN: fileName:1: \"Filename with spaces.docx\" is not a valid file name.",
 		"WARN: fileName:2: A file name should not contain a slash.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
-		"FileName with spaces.docx")
+		"Filename with spaces.docx")
 
 	// There's no guarantee that a file name only contains [A-Za-z0-9.].
 	// Therefore there are no useful checks in this situation.

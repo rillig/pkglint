@@ -53,7 +53,7 @@ func (ck *PlistChecker) Check(plainLines Lines) {
 	ck.collectFilesAndDirs(plines)
 
 	if plines[0].Basename == "PLIST.common_end" {
-		commonLines := Load(strings.TrimSuffix(plines[0].FileName, "_end"), NotEmpty)
+		commonLines := Load(strings.TrimSuffix(plines[0].Filename, "_end"), NotEmpty)
 		if commonLines != nil {
 			ck.collectFilesAndDirs(ck.NewLines(commonLines))
 		}
@@ -536,5 +536,5 @@ func (s *plistLineSorter) Sort() {
 		lines = append(lines, pline.Line)
 	}
 
-	s.autofixed = SaveAutofixChanges(NewLines(lines[0].FileName, lines))
+	s.autofixed = SaveAutofixChanges(NewLines(lines[0].Filename, lines))
 }
