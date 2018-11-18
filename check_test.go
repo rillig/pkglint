@@ -378,7 +378,7 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
 
 // File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
-// Calls to Tester.Chdir change the base directory for the relative file name.
+// Calls to Tester.Chdir change the base directory for the relative filename.
 func (t *Tester) File(relativeFileName string) string {
 	if t.tmpdir == "" {
 		t.tmpdir = filepath.ToSlash(t.c.MkDir())
@@ -404,7 +404,7 @@ func (t *Tester) File(relativeFileName string) string {
 func (t *Tester) Chdir(relativeDirName string) {
 	if t.relCwd != "" {
 		// When multiple calls of Chdir are mixed with calls to CreateFileLines,
-		// the resulting Lines and MkLines variables will use relative file names,
+		// the resulting Lines and MkLines variables will use relative filenames,
 		// and these will point to different areas in the file system. This is
 		// usually not indented and therefore prevented.
 		t.c.Fatalf("Chdir must only be called once per test; already in %q.", t.relCwd)

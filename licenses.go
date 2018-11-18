@@ -50,7 +50,7 @@ func (lc *LicenseChecker) checkName(license string) {
 		Explain(
 			"Instead of using these deprecated licenses, extract the actual",
 			"license from the package into the pkgsrc/licenses/ directory",
-			"and define LICENSE to that file name.  See the pkgsrc guide,",
+			"and define LICENSE to that filename.  See the pkgsrc guide,",
 			"keyword LICENSE, for more information.")
 	}
 }

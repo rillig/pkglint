@@ -32,7 +32,7 @@ func ChecklinesDistinfo(lines Lines) {
 	SaveAutofixChanges(lines)
 }
 
-// XXX: Maybe an approach that first groups the lines by file name
+// XXX: Maybe an approach that first groups the lines by filename
 // is easier to understand.
 
 type distinfoLinesChecker struct {
@@ -155,7 +155,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, filename, alg, hash string) {
 	hashes := G.Pkgsrc.Hashes
 
-	// Intentionally checking the file name instead of ck.isPatch.
+	// Intentionally checking the filename instead of ck.isPatch.
 	// Missing the few distfiles that actually start with patch-*
 	// is more convenient than having lots of false positive mismatches.
 	if hashes != nil && !hasPrefix(filename, "patch-") {

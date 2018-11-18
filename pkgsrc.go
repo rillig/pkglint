@@ -468,7 +468,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
 			if year != "" && change.Date[0:4] != year {
-				line.Warnf("Year %s for %s does not match the file name %s.", change.Date[0:4], change.Pkgpath, filename)
+				line.Warnf("Year %s for %s does not match the filename %s.", change.Date[0:4], change.Pkgpath, filename)
 			}
 			if len(changes) >= 2 && year != "" {
 				if prev := changes[len(changes)-2]; change.Date < prev.Date {
@@ -731,7 +731,7 @@ func (src *Pkgsrc) ReadDir(dirName string) []os.FileInfo {
 	return relevantFiles
 }
 
-// File resolves a file name relative to the pkgsrc top directory.
+// File resolves a filename relative to the pkgsrc top directory.
 //
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").File("distfiles") => "/usr/pkgsrc/distfiles"

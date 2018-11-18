@@ -258,7 +258,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	check.AddFlagVar("patches", &gopts.CheckPatches, true, "check patches")
 	check.AddFlagVar("PLIST", &gopts.CheckPlist, true, "check PLIST files")
 
-	warn.AddFlagVar("absname", &gopts.WarnAbsname, true, "warn about use of absolute file names")
+	warn.AddFlagVar("absname", &gopts.WarnAbsname, true, "warn about use of absolute filenames")
 	warn.AddFlagVar("directcmd", &gopts.WarnDirectcmd, true, "warn about use of direct command names instead of Make variables")
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
 	warn.AddFlagVar("order", &gopts.WarnOrder, true, "warn if Makefile entries are unordered")
@@ -635,7 +635,7 @@ func (pkglint *Pkglint) Checkfile(filename string) {
 	pkglint.checkMode(filename, st.Mode())
 }
 
-// checkMode checks a directory entry based on its file name and its mode
+// checkMode checks a directory entry based on its filename and its mode
 // (regular file, directory, symlink).
 func (pkglint *Pkglint) checkMode(filename string, mode os.FileMode) {
 	basename := path.Base(filename)

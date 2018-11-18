@@ -32,7 +32,7 @@ func CheckfileAlternatives(filename string) {
 			}
 
 			fix := line.Autofix()
-			fix.Notef("@PREFIX@/ can be omitted from the file name.")
+			fix.Notef("@PREFIX@/ can be omitted from the filename.")
 			fix.Explain(
 				"The alternative implementation is always interpreted relative to",
 				"${PREFIX}.")

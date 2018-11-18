@@ -355,14 +355,14 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: filename:1: \"Filename with spaces.docx\" is not a valid file name.",
-		"WARN: filename:2: A file name should not contain a slash.")
+		"WARN: filename:1: \"Filename with spaces.docx\" is not a valid filename.",
+		"WARN: filename:2: A filename should not contain a slash.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
 		"Filename with spaces.docx")
 
-	// There's no guarantee that a file name only contains [A-Za-z0-9.].
+	// There's no guarantee that a filename only contains [A-Za-z0-9.].
 	// Therefore there are no useful checks in this situation.
 	vt.OutputEmpty()
 }
@@ -376,14 +376,14 @@ func (s *Suite) Test_VartypeCheck_FileMask(c *check.C) {
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: filename:1: \"FileMask with spaces.docx\" is not a valid file name mask.",
-		"WARN: filename:2: A file name mask should not contain a slash.")
+		"WARN: filename:1: \"FileMask with spaces.docx\" is not a valid filename mask.",
+		"WARN: filename:2: A filename mask should not contain a slash.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
 		"FileMask with spaces.docx")
 
-	// There's no guarantee that a file name only contains [A-Za-z0-9.].
+	// There's no guarantee that a filename only contains [A-Za-z0-9.].
 	// Therefore there are no useful checks in this situation.
 	vt.OutputEmpty()
 }
@@ -407,7 +407,7 @@ func (s *Suite) Test_VartypeCheck_FileMode(c *check.C) {
 	vt.Values(
 		"u+rwx")
 
-	// There's no guarantee that a file name only contains [A-Za-z0-9.].
+	// There's no guarantee that a filename only contains [A-Za-z0-9.].
 	// Therefore there are no useful checks in this situation.
 	vt.Output(
 		"WARN: filename:11: Invalid file mode \"u+rwx\".")
@@ -1173,7 +1173,7 @@ func (s *Suite) Test_VartypeCheck_YesNoIndirectly(c *check.C) {
 }
 
 // VartypeCheckTester helps to test the many different checks in VartypeCheck.
-// It keeps track of the current variable, operator, file name, line number,
+// It keeps track of the current variable, operator, filename, line number,
 // so that the test can focus on the interesting details.
 type VartypeCheckTester struct {
 	tester   *Tester
@@ -1184,7 +1184,7 @@ type VartypeCheckTester struct {
 	op       MkOperator
 }
 
-// NewVartypeCheckTester starts the test with a file name of "filename", at line 1,
+// NewVartypeCheckTester starts the test with a filename of "filename", at line 1,
 // with "=" as the operator. The variable has to be initialized explicitly.
 func NewVartypeCheckTester(t *Tester, checker func(cv *VartypeCheck)) *VartypeCheckTester {
 	return &VartypeCheckTester{

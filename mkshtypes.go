@@ -227,7 +227,7 @@ func (c *StrCommand) String() string {
 type MkShRedirection struct {
 	Fd     int      // Or -1
 	Op     string   // See io_file in shell.y for possible values
-	Target *ShToken // The file name or &fd
+	Target *ShToken // The filename or &fd
 }
 
 type MkShSeparator uint8

@@ -46,7 +46,7 @@ func (s *Suite) Test_ChecklinesPlist(c *check.C) {
 		"WARN: PLIST:14: Packages that install icon theme files should set ICON_THEMES.",
 		"ERROR: PLIST:15: Packages that install hicolor icons "+
 			"must include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile.",
-		"ERROR: PLIST:18: Duplicate file name \"share/tzinfo\", already appeared in line 17.")
+		"ERROR: PLIST:18: Duplicate filename \"share/tzinfo\", already appeared in line 17.")
 }
 
 func (s *Suite) Test_ChecklinesPlist__empty(c *check.C) {
@@ -288,11 +288,11 @@ func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 	ChecklinesPlist(lines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/PLIST:2: Duplicate file name \"bin/true\", already appeared in line 3.",
-		"ERROR: ~/PLIST:4: Duplicate file name \"bin/true\", already appeared in line 3.",
-		"ERROR: ~/PLIST:5: Duplicate file name \"bin/true\", already appeared in line 3.",
+		"ERROR: ~/PLIST:2: Duplicate filename \"bin/true\", already appeared in line 3.",
+		"ERROR: ~/PLIST:4: Duplicate filename \"bin/true\", already appeared in line 3.",
+		"ERROR: ~/PLIST:5: Duplicate filename \"bin/true\", already appeared in line 3.",
 		"WARN: ~/PLIST:6: \"bin/false\" should be sorted before \"bin/true\".",
-		"ERROR: ~/PLIST:8: Duplicate file name \"bin/true\", already appeared in line 3.")
+		"ERROR: ~/PLIST:8: Duplicate filename \"bin/true\", already appeared in line 3.")
 
 	t.SetupCommandLine("-Wall", "--autofix")
 

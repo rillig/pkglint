@@ -227,7 +227,7 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	}
 
 	fix := pline.Autofix()
-	fix.Errorf("Duplicate file name %q, already appeared in %s.", text, pline.RefTo(prev.Line))
+	fix.Errorf("Duplicate filename %q, already appeared in %s.", text, pline.RefTo(prev.Line))
 	fix.Delete()
 	fix.Apply()
 }
@@ -298,7 +298,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 	m, catOrMan, section, manpage, ext, gz := match5(pline.text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`)
 	if !m {
-		// maybe: line.Warnf("Invalid file name %q for manual page.", text)
+		// maybe: line.Warnf("Invalid filename %q for manual page.", text)
 		return
 	}
 

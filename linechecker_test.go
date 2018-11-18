@@ -19,7 +19,7 @@ func (s *Suite) Test_CheckLineAbsolutePathname(c *check.C) {
 	CheckLineAbsolutePathname(line, "cat /dev/stderr")
 	CheckLineAbsolutePathname(line, "printf '#! /bin/sh\\nexit 0'")
 
-	// This is not a file name at all, but certainly looks like one.
+	// This is not a filename at all, but certainly looks like one.
 	// Nevertheless, pkglint doesn't fall into the trap.
 	CheckLineAbsolutePathname(line, "sed -e /usr/s/usr/var/g")
 

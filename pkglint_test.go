@@ -101,7 +101,7 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"  Flags for -W, --warning:",
 		"    all          all of the following",
 		"    none         none of the following",
-		"    absname      warn about use of absolute file names (enabled)",
+		"    absname      warn about use of absolute filenames (enabled)",
 		"    directcmd    warn about use of direct command names instead of Make variables (enabled)",
 		"    extra        enable some extra warnings (disabled)",
 		"    order        warn if Makefile entries are unordered (enabled)",
@@ -479,7 +479,7 @@ func (s *Suite) Test_Pkglint_Checkfile__alternatives(c *check.C) {
 	G.Main("pkglint", lines.FileName)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/ALTERNATIVES:1: @PREFIX@/ can be omitted from the file name.",
+		"NOTE: ~/category/package/ALTERNATIVES:1: @PREFIX@/ can be omitted from the filename.",
 		"Looks fine.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
