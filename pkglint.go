@@ -764,7 +764,7 @@ func (pkglint *Pkglint) checkExecutable(fileName string, st os.FileInfo) {
 		// At this point, it can only be reset by the CVS admins.
 
 	default:
-		line := NewLine(fileName, 0, "", nil)
+		line := NewLineWhole(fileName)
 		fix := line.Autofix()
 		fix.Warnf("Should not be executable.")
 		fix.Explain(

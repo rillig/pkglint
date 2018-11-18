@@ -283,7 +283,7 @@ func (src *Pkgsrc) loadTools() {
 			}
 		}
 		if len(toolFiles) <= 1 {
-			NewLine(toc, 0, "", nil).Fatalf("Too few tool files.")
+			NewLineWhole(toc).Fatalf("Too few tool files.")
 		}
 	}
 

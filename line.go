@@ -51,11 +51,8 @@ type LineImpl struct {
 }
 
 func NewLine(fileName string, lineno int, text string, rawLine *RawLine) Line {
-	var rawLines []*RawLine
-	if rawLine != nil {
-		rawLines = []*RawLine{rawLine}
-	}
-	return NewLineMulti(fileName, lineno, lineno, text, rawLines)
+	G.Assertf(rawLine != nil, "use NewLineMulti for creating a Line with no RawLine attached to it")
+	return NewLineMulti(fileName, lineno, lineno, text, []*RawLine{rawLine})
 }
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
@@ -70,7 +67,7 @@ func NewLineEOF(fileName string) Line {
 
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
 func NewLineWhole(fileName string) Line {
-	return NewLine(fileName, 0, "", nil)
+	return NewLineMulti(fileName, 0, 0, "", nil)
 }
 
 func (line *LineImpl) Linenos() string {

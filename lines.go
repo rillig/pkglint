@@ -18,7 +18,7 @@ func (ls *LinesImpl) Len() int { return len(ls.Lines) }
 
 func (ls *LinesImpl) LastLine() Line { return ls.Lines[ls.Len()-1] }
 
-func (ls *LinesImpl) EOFLine() Line { return NewLine(ls.FileName, -1, "", nil) }
+func (ls *LinesImpl) EOFLine() Line { return NewLineMulti(ls.FileName, -1, -1, "", nil) }
 
 func (ls *LinesImpl) Errorf(format string, args ...interface{}) {
 	NewLineWhole(ls.FileName).Errorf(format, args...)

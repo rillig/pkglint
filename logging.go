@@ -20,7 +20,7 @@ var (
 	AutofixLogLevel = &LogLevel{"AUTOFIX", "autofix"}
 )
 
-var dummyLine = NewLine("", 0, "", nil)
+var dummyLine = NewLineMulti("", 0, 0, "", nil)
 var dummyMkLine = NewMkLine(dummyLine)
 
 // shallBeLogged tests whether a diagnostic with the given format should
