@@ -727,16 +727,13 @@ func (cv *VartypeCheck) Pathlist() {
 	}
 
 	for _, dir := range cv.MkLine.ValueSplit(value, ":") {
-		if hasPrefix(dir, "${") {
-			continue
-		}
 
 		dirNoVar := cv.MkLine.WithoutMakeVariables(dir)
 		if !matches(dirNoVar, `^[-0-9A-Za-z._~+%/]*$`) {
 			cv.Warnf("%q is not a valid pathname.", dir)
 		}
 
-		if !hasPrefix(dir, "/") {
+		if !hasPrefix(dir, "/") && !hasPrefix(dir, "${") {
 			cv.Warnf("The component %q of %s should be an absolute path.", dir, cv.Varname)
 		}
 	}

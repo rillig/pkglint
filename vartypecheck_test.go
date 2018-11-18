@@ -624,12 +624,13 @@ func (s *Suite) Test_VartypeCheck_Pathlist(c *check.C) {
 
 	vt.Varname("PATH")
 	vt.Values(
-		"/usr/bin:/usr/sbin:.::${LOCALBASE}/bin:${HOMEPAGE:S,https://,,}:${TMPDIR}",
+		"/usr/bin:/usr/sbin:.::${LOCALBASE}/bin:${HOMEPAGE:S,https://,,}:${TMPDIR}:${PREFIX}/!!!",
 		"/directory with spaces")
 
 	vt.Output(
 		"WARN: filename:1: The component \".\" of PATH should be an absolute path.",
 		"WARN: filename:1: The component \"\" of PATH should be an absolute path.",
+		"WARN: filename:1: \"${PREFIX}/!!!\" is not a valid pathname.",
 		"WARN: filename:2: \"/directory with spaces\" is not a valid pathname.")
 }
 
@@ -652,7 +653,7 @@ func (s *Suite) Test_VartypeCheck_PathMask(c *check.C) {
 	vt.OutputEmpty()
 }
 
-func (s *Suite) Test_VartypeCheck_PathName(c *check.C) {
+func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Pathname)
 
 	vt.Varname("EGDIR")
