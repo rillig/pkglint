@@ -346,8 +346,8 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"WARN: fileName:8: \"http://example.org/download?fileName=<distfile>;version=<version>\" is not a valid URL.")
 }
 
-func (s *Suite) Test_VartypeCheck_FileName(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).FileName)
+func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Filename)
 
 	vt.Varname("FNAME")
 	vt.Values(

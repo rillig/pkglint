@@ -468,7 +468,7 @@ func (cv *VartypeCheck) FetchURL() {
 // See PathName.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
-func (cv *VartypeCheck) FileName() {
+func (cv *VartypeCheck) Filename() {
 	switch {
 	case cv.Op == opUseMatch:
 		break
