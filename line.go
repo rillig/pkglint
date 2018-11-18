@@ -20,15 +20,15 @@ import (
 )
 
 type RawLine struct {
-	Lineno int
-	// XXX: This is only needed for Autofix; probably should be moved there.
-	orignl string
-	textnl string
+	Lineno int    // Counting starts at 1; 0 means inserted by Autofix
+	orignl string // The line as read in from the file, including newline
+	textnl string // The line as modified by Autofix, including newline
+
+	// XXX: Since only Autofix needs to distinguish between orignl and textnl,
+	// one of these fields should probably be moved there.
 }
 
-func (rline *RawLine) String() string {
-	return strconv.Itoa(rline.Lineno) + ":" + rline.textnl
-}
+func (rline *RawLine) String() string { return sprintf("%d:%s", rline.Lineno, rline.textnl) }
 
 // Line represents a line of text from a file.
 // It aliases a pointer type to reduces the number of *Line occurrences in the code.
@@ -44,6 +44,8 @@ type LineImpl struct {
 	raw       []*RawLine // contains the original text including trailing newline
 	autofix   *Autofix   // any changes that pkglint would like to apply to the line
 	Once
+
+	// XXX: FileName and Basename could be replaced with a pointer to a Lines object.
 }
 
 func NewLine(fileName string, lineno int, text string, rawLines []*RawLine) Line {
