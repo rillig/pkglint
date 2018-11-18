@@ -518,7 +518,7 @@ func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
 func (t *Tester) NewLine(fileName string, lineno int, text string) Line {
 	textnl := text + "\n"
 	rawLine := RawLine{lineno, textnl, textnl}
-	return NewLine(fileName, lineno, text, []*RawLine{&rawLine})
+	return NewLine(fileName, lineno, text, &rawLine)
 }
 
 // NewMkLine creates an in-memory line in the Makefile format with the given text.

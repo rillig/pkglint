@@ -50,7 +50,11 @@ type LineImpl struct {
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
 
-func NewLine(fileName string, lineno int, text string, rawLines []*RawLine) Line {
+func NewLine(fileName string, lineno int, text string, rawLine *RawLine) Line {
+	var rawLines []*RawLine
+	if rawLine != nil {
+		rawLines = []*RawLine{rawLine}
+	}
 	return NewLineMulti(fileName, lineno, lineno, text, rawLines)
 }
 

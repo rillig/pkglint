@@ -66,7 +66,7 @@ func nextLogicalLine(fileName string, rawLines []*RawLine, index int) (Line, int
 		rawLine := rawLines[index]
 		textnl := rawLine.textnl
 		if hasSuffix(textnl, "\n") && !hasSuffix(textnl, "\\\n") {
-			return NewLine(fileName, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index:index+1]), index + 1
+			return NewLine(fileName, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index]), index + 1
 		}
 	}
 
@@ -151,7 +151,7 @@ func convertToLogicalLines(fileName string, rawText string, joinBackslashLines b
 	} else {
 		for _, rawLine := range rawLines {
 			text := strings.TrimSuffix(rawLine.textnl, "\n")
-			logline := NewLine(fileName, rawLine.Lineno, text, []*RawLine{rawLine})
+			logline := NewLine(fileName, rawLine.Lineno, text, rawLine)
 			loglines = append(loglines, logline)
 		}
 	}

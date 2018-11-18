@@ -37,6 +37,18 @@ func (s *Suite) Test_Line_log__print_source(c *check.C) {
 		"+\tnew line after")
 }
 
+func (s *Suite) Test_Line_log__show_source_with_whole_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--source")
+	line := NewLineWhole("filename")
+
+	line.Warnf("This line does not have any RawLine attached.")
+
+	t.CheckOutputLines(
+		"WARN: filename: This line does not have any RawLine attached.")
+}
+
 // Ensures that when two packages produce a warning in the same file, both the
 // warning and the corresponding source code are logged only once.
 func (s *Suite) Test_Line_showSource__duplicates(c *check.C) {
