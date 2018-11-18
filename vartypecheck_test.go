@@ -653,7 +653,7 @@ func (s *Suite) Test_VartypeCheck_PathMask(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_PathName(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PathName)
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Pathname)
 
 	vt.Varname("EGDIR")
 	vt.Values(

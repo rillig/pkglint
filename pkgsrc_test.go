@@ -458,9 +458,9 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 	}
 
 	checkType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR", "")
-	checkType("SOME_DIR", "PathName (guessed)")
-	checkType("SOMEDIR", "PathName (guessed)")
-	checkType("SEARCHPATHS", "ShellList of PathName (guessed)")
+	checkType("SOME_DIR", "Pathname (guessed)")
+	checkType("SOMEDIR", "Pathname (guessed)")
+	checkType("SEARCHPATHS", "ShellList of Pathname (guessed)")
 	checkType("MYPACKAGE_USER", "UserGroupName (guessed)")
 	checkType("MYPACKAGE_GROUP", "UserGroupName (guessed)")
 	checkType("MY_CMD_ENV", "ShellList of ShellWord (guessed)")

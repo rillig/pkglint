@@ -230,7 +230,7 @@ var (
 	BtOption                 = &BasicType{"Option", (*VartypeCheck).Option}
 	BtPathlist               = &BasicType{"Pathlist", (*VartypeCheck).Pathlist}
 	BtPathmask               = &BasicType{"PathMask", (*VartypeCheck).PathMask}
-	BtPathname               = &BasicType{"PathName", (*VartypeCheck).PathName}
+	BtPathname               = &BasicType{"Pathname", (*VartypeCheck).Pathname}
 	BtPerl5Packlist          = &BasicType{"Perl5Packlist", (*VartypeCheck).Perl5Packlist}
 	BtPerms                  = &BasicType{"Perms", (*VartypeCheck).Perms}
 	BtPkgName                = &BasicType{"Pkgname", (*VartypeCheck).Pkgname}

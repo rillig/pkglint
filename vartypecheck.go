@@ -262,7 +262,7 @@ func (cv *VartypeCheck) ConfFiles() {
 	}
 
 	for i, word := range words {
-		cv.WithValue(word).PathName()
+		cv.WithValue(word).Pathname()
 
 		if i%2 == 1 && !hasPrefix(word, "${") {
 			cv.Warnf("The destination file %q should start with a variable reference.", word)
@@ -465,7 +465,7 @@ func (cv *VartypeCheck) FetchURL() {
 	}
 }
 
-// See PathName.
+// See Pathname.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
@@ -722,7 +722,7 @@ func (cv *VartypeCheck) Pathlist() {
 	// Sometimes, variables called PATH contain a single pathname,
 	// especially those with auto-guessed type from MkLineImpl.VariableType.
 	if !contains(value, ":") && cv.Guessed {
-		cv.PathName()
+		cv.Pathname()
 		return
 	}
 
@@ -755,12 +755,12 @@ func (cv *VartypeCheck) PathMask() {
 	CheckLineAbsolutePathname(cv.Line, cv.Value)
 }
 
-// PathName checks for pathnames.
+// Pathname checks for pathnames.
 //
 // Like Filename, but including slashes.
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
-func (cv *VartypeCheck) PathName() {
+func (cv *VartypeCheck) Pathname() {
 	if cv.Op == opUseMatch {
 		return
 	}
