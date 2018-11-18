@@ -13,7 +13,7 @@ func ChecklinesDistinfo(lines Lines) {
 		defer trace.Call1(lines.FileName)()
 	}
 
-	fileName := lines.FileName
+	filename := lines.FileName
 	patchdir := "patches"
 	if G.Pkg != nil && dirExists(G.Pkg.File(G.Pkg.Patchdir)) {
 		patchdir = G.Pkg.Patchdir
@@ -22,7 +22,7 @@ func ChecklinesDistinfo(lines Lines) {
 		trace.Step1("patchdir=%q", patchdir)
 	}
 
-	distinfoIsCommitted := isCommitted(fileName)
+	distinfoIsCommitted := isCommitted(filename)
 	ck := &distinfoLinesChecker{
 		lines, patchdir, distinfoIsCommitted,
 		make(map[string]bool), "", nil, unknown, nil}
@@ -59,19 +59,19 @@ func (ck *distinfoLinesChecker) checkLines(lines Lines) {
 		if i < 2 {
 			continue
 		}
-		m, alg, fileName, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
+		m, alg, filename, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
 		if !m {
 			line.Errorf("Invalid line: %s", line.Text)
 			continue
 		}
 
-		if fileName != ck.currentFileName {
-			ck.onFilenameChange(line, fileName)
+		if filename != ck.currentFileName {
+			ck.onFilenameChange(line, filename)
 		}
 		ck.algorithms = append(ck.algorithms, alg)
 
-		ck.checkGlobalDistfileMismatch(line, fileName, alg, hash)
-		ck.checkUncommittedPatch(line, fileName, alg, hash)
+		ck.checkGlobalDistfileMismatch(line, filename, alg, hash)
+		ck.checkUncommittedPatch(line, filename, alg, hash)
 	}
 	ck.onFilenameChange(ck.distinfoLines.EOFLine(), "")
 }
@@ -97,14 +97,14 @@ func (ck *distinfoLinesChecker) onFilenameChange(line Line, nextFname string) {
 }
 
 func (ck *distinfoLinesChecker) checkAlgorithms(line Line) {
-	fileName := ck.currentFileName
+	filename := ck.currentFileName
 	algorithms := strings.Join(ck.algorithms, ", ")
 
 	switch {
 
 	case ck.isPatch == yes:
 		if algorithms != "SHA1" {
-			line.Errorf("Expected SHA1 hash for %s, got %s.", fileName, algorithms)
+			line.Errorf("Expected SHA1 hash for %s, got %s.", filename, algorithms)
 		}
 
 	case ck.isPatch == unknown:
@@ -113,9 +113,9 @@ func (ck *distinfoLinesChecker) checkAlgorithms(line Line) {
 	case G.Pkg != nil && G.Pkg.IgnoreMissingPatches:
 		break
 
-	case hasPrefix(fileName, "patch-") && algorithms == "SHA1":
+	case hasPrefix(filename, "patch-") && algorithms == "SHA1":
 		pathToPatchdir := relpath(path.Dir(ck.currentFirstLine.Filename), G.Pkg.File(ck.patchdir))
-		ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", fileName, pathToPatchdir)
+		ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", filename, pathToPatchdir)
 		Explain(
 			"If the patches directory looks correct, the patch may have been",
 			"removed without updating the distinfo file.  In such a case please",
@@ -124,7 +124,7 @@ func (ck *distinfoLinesChecker) checkAlgorithms(line Line) {
 			"If the patches directory looks wrong, pkglint needs to be improved.")
 
 	case algorithms != "SHA1, RMD160, Size" && algorithms != "SHA1, RMD160, SHA512, Size":
-		line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", fileName, algorithms)
+		line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", filename, algorithms)
 	}
 }
 
@@ -152,19 +152,19 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 }
 
 // Inter-package check for differing distfile checksums.
-func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, fileName, alg, hash string) {
+func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, filename, alg, hash string) {
 	hashes := G.Pkgsrc.Hashes
 
 	// Intentionally checking the file name instead of ck.isPatch.
 	// Missing the few distfiles that actually start with patch-*
 	// is more convenient than having lots of false positive mismatches.
-	if hashes != nil && !hasPrefix(fileName, "patch-") {
-		key := alg + ":" + fileName
+	if hashes != nil && !hasPrefix(filename, "patch-") {
+		key := alg + ":" + filename
 		otherHash := hashes[key]
 		if otherHash != nil {
 			if otherHash.hash != hash {
 				line.Errorf("The %s hash for %s is %s, which conflicts with %s in %s.",
-					alg, fileName, hash, otherHash.hash, line.RefTo(otherHash.line))
+					alg, filename, hash, otherHash.hash, line.RefTo(otherHash.line))
 			}
 		} else {
 			hashes[key] = &Hash{hash, line}

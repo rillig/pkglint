@@ -261,7 +261,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 
 	t.SetupCommandLine("--show-autofix", "--explain")
 
-	line := t.NewLine("fileName", 1, "original")
+	line := t.NewLine("filename", 1, "original")
 
 	c.Check(line.autofix, check.IsNil)
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n"))
@@ -276,7 +276,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	c.Check(line.autofix, check.NotNil)
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "lriginao\n"))
 	t.CheckOutputLines(
-		"AUTOFIX: fileName:1: Replacing \"original\" with \"lriginao\".")
+		"AUTOFIX: filename:1: Replacing \"original\" with \"lriginao\".")
 
 	{
 		fix := line.Autofix()
@@ -289,7 +289,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "lruginao\n"))
 	c.Check(line.raw[0].textnl, equals, "lruginao\n")
 	t.CheckOutputLines(
-		"AUTOFIX: fileName:1: Replacing \"i\" with \"u\".")
+		"AUTOFIX: filename:1: Replacing \"i\" with \"u\".")
 
 	{
 		fix := line.Autofix()
@@ -302,7 +302,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "middle\n"))
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 	t.CheckOutputLines(
-		"AUTOFIX: fileName:1: Replacing \"lruginao\" with \"middle\".")
+		"AUTOFIX: filename:1: Replacing \"lruginao\" with \"middle\".")
 
 	c.Check(line.raw[0].textnl, equals, "middle\n")
 	t.CheckOutputEmpty()
@@ -316,7 +316,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 
 	c.Check(line.Autofix().RawText(), equals, "")
 	t.CheckOutputLines(
-		"AUTOFIX: fileName:1: Deleting this line.")
+		"AUTOFIX: filename:1: Deleting this line.")
 }
 
 func (s *Suite) Test_Autofix_Explain__without_explain_option(c *check.C) {
@@ -650,7 +650,7 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 
 	t.SetupCommandLine("--only", "few", "--autofix")
 
-	mklines := t.SetupFileMkLines("fileName",
+	mklines := t.SetupFileMkLines("filename",
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
 	lines := mklines.lines
@@ -675,7 +675,7 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 	SaveAutofixChanges(lines)
 
 	t.CheckOutputEmpty()
-	t.CheckFileLines("fileName",
+	t.CheckFileLines("filename",
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
 	c.Check(fix.RawText(), equals, ""+
@@ -710,7 +710,7 @@ func (s *Suite) Test_Autofix_Apply__only(c *check.C) {
 func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 	t := s.Init(c)
 
-	line := t.NewLine("fileName", 123, "text")
+	line := t.NewLine("filename", 123, "text")
 
 	t.ExpectPanic(
 		func() {

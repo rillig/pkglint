@@ -78,14 +78,14 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wspace")
-	fileName := t.CreateFileLines("Makefile",
+	filename := t.CreateFileLines("Makefile",
 		MkRcsID,
 		"VARNAME +=\t${VARNAME}",
 		"VARNAME+ =\t${VARNAME+}",
 		"VARNAME+ +=\t${VARNAME+}",
 		"pkgbase := pkglint")
 
-	CheckfileMk(fileName)
+	CheckfileMk(filename)
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
@@ -93,7 +93,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 
 	t.SetupCommandLine("-Wspace", "--autofix")
 
-	CheckfileMk(fileName)
+	CheckfileMk(filename)
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
@@ -134,26 +134,26 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 func (s *Suite) Test_NewMkLine__number_sign(c *check.C) {
 	t := s.Init(c)
 
-	mklineVarassignEscaped := t.NewMkLine("fileName", 1, "SED_CMD=\t's,\\#,hash,g'")
+	mklineVarassignEscaped := t.NewMkLine("filename", 1, "SED_CMD=\t's,\\#,hash,g'")
 
 	c.Check(mklineVarassignEscaped.Varname(), equals, "SED_CMD")
 	c.Check(mklineVarassignEscaped.Value(), equals, "'s,#,hash,g'")
 
-	mklineCommandEscaped := t.NewMkLine("fileName", 1, "\tsed -e 's,\\#,hash,g'")
+	mklineCommandEscaped := t.NewMkLine("filename", 1, "\tsed -e 's,\\#,hash,g'")
 
 	c.Check(mklineCommandEscaped.ShellCommand(), equals, "sed -e 's,\\#,hash,g'")
 
 	// From shells/zsh/Makefile.common, rev. 1.78
-	mklineCommandUnescaped := t.NewMkLine("fileName", 1, "\t# $ sha1 patches/patch-ac")
+	mklineCommandUnescaped := t.NewMkLine("filename", 1, "\t# $ sha1 patches/patch-ac")
 
 	c.Check(mklineCommandUnescaped.ShellCommand(), equals, "# $ sha1 patches/patch-ac")
 	t.CheckOutputEmpty() // No warning about parsing the lonely dollar sign.
 
-	mklineVarassignUnescaped := t.NewMkLine("fileName", 1, "SED_CMD=\t's,#,hash,'")
+	mklineVarassignUnescaped := t.NewMkLine("filename", 1, "SED_CMD=\t's,#,hash,'")
 
 	c.Check(mklineVarassignUnescaped.Value(), equals, "'s,")
 	t.CheckOutputLines(
-		"WARN: fileName:1: The # character starts a comment.")
+		"WARN: filename:1: The # character starts a comment.")
 }
 
 func (s *Suite) Test_NewMkLine__leading_space(c *check.C) {
@@ -206,7 +206,7 @@ func (s *Suite) Test_NewMkLine__infrastructure(c *check.C) {
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("fileName", 1, "PKGNAME:= ${UNKNOWN}")
+	mkline := t.NewMkLine("filename", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetupVartypes()
 
 	vuc := &VarUseContext{G.Pkgsrc.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, false}

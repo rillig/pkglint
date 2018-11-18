@@ -10,8 +10,8 @@ type LinesImpl struct {
 	Lines    []Line
 }
 
-func NewLines(fileName string, lines []Line) Lines {
-	return &LinesImpl{fileName, path.Base(fileName), lines}
+func NewLines(filename string, lines []Line) Lines {
+	return &LinesImpl{filename, path.Base(filename), lines}
 }
 
 func (ls *LinesImpl) Len() int { return len(ls.Lines) }

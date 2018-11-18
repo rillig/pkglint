@@ -10,7 +10,7 @@ func (s *Suite) Test_MkLines_Check__autofix_directive_indentation(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix", "-Wspace")
-	lines := t.SetupFileLines("fileName.mk",
+	lines := t.SetupFileLines("filename.mk",
 		MkRcsID,
 		".if defined(A)",
 		".for a in ${A}",
@@ -23,11 +23,11 @@ func (s *Suite) Test_MkLines_Check__autofix_directive_indentation(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/fileName.mk:3: Replacing \".\" with \".  \".",
-		"AUTOFIX: ~/fileName.mk:4: Replacing \".\" with \".    \".",
-		"AUTOFIX: ~/fileName.mk:5: Replacing \".\" with \".    \".",
-		"AUTOFIX: ~/fileName.mk:6: Replacing \".\" with \".  \".")
-	t.CheckFileLines("fileName.mk",
+		"AUTOFIX: ~/filename.mk:3: Replacing \".\" with \".  \".",
+		"AUTOFIX: ~/filename.mk:4: Replacing \".\" with \".    \".",
+		"AUTOFIX: ~/filename.mk:5: Replacing \".\" with \".    \".",
+		"AUTOFIX: ~/filename.mk:6: Replacing \".\" with \".  \".")
+	t.CheckFileLines("filename.mk",
 		"# $"+"NetBSD$",
 		".if defined(A)",
 		".  for a in ${A}",
@@ -371,7 +371,7 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables__BUILTIN_FIND_FILES_VAR(c
 func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("fileName",
+	mklines := t.NewMkLines("filename",
 		"\t${VAR}")
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
@@ -385,7 +385,7 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("fileName",
+	mklines := t.NewMkLines("filename",
 		"\t${outer.${inner}}")
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
@@ -402,32 +402,32 @@ func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mklines := t.NewMkLines("fileName",
+	mklines := t.NewMkLines("filename",
 		MkRcsID,
 		"",
-		"\tmd5sum fileName")
+		"\tmd5sum filename")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: fileName:3: Unknown shell command \"md5sum\".")
+		"WARN: filename:3: Unknown shell command \"md5sum\".")
 }
 
 func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mklines := t.NewMkLines("fileName",
+	mklines := t.NewMkLines("filename",
 		MkRcsID,
 		"TOOLS_CREATE+=\tmd5sum",
 		"",
-		"\tmd5sum fileName")
+		"\tmd5sum filename")
 
 	mklines.Check()
 
 	// TODO: Is it necessary to add the tool to USE_TOOLS? If not, why not?
 	t.CheckOutputLines(
-		"WARN: fileName:4: The \"md5sum\" tool is used but not added to USE_TOOLS.")
+		"WARN: filename:4: The \"md5sum\" tool is used but not added to USE_TOOLS.")
 }
 
 func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {

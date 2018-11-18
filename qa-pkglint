@@ -113,9 +113,9 @@ diffs() {
         use warnings;
 
         sub readhisto($) {
-          my ($fileName) = @_;
+          my ($filename) = @_;
           my %histo = ();
-          open(my $f, "<", $fileName) or die;
+          open(my $f, "<", $filename) or die;
           while (defined(my $line = <$f>)) {
             if ($line =~ /^loghisto[\t ]+(\d+)[\t ]+(.*)$/) {
               $histo{$2} = +$1;

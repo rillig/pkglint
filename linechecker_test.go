@@ -44,7 +44,7 @@ func (s *Suite) Test_CheckLineTrailingWhitespace(c *check.C) {
 func (s *Suite) Test_CheckLineRcsid(c *check.C) {
 	t := s.Init(c)
 
-	lines := t.NewLines("fileName",
+	lines := t.NewLines("filename",
 		"$"+"NetBSD: dummy $",
 		"$"+"NetBSD$",
 		"$"+"Id: dummy $",
@@ -56,7 +56,7 @@ func (s *Suite) Test_CheckLineRcsid(c *check.C) {
 	}
 
 	t.CheckOutputLines(
-		"ERROR: fileName:3: Expected \"$"+"NetBSD$\".",
-		"ERROR: fileName:4: Expected \"$"+"NetBSD$\".",
-		"ERROR: fileName:5: Expected \"$"+"NetBSD$\".")
+		"ERROR: filename:3: Expected \"$"+"NetBSD$\".",
+		"ERROR: filename:4: Expected \"$"+"NetBSD$\".",
+		"ERROR: filename:5: Expected \"$"+"NetBSD$\".")
 }

@@ -2,8 +2,8 @@ package main
 
 import "strings"
 
-func CheckfileAlternatives(fileName string) {
-	lines := Load(fileName, NotEmpty|LogErrors)
+func CheckfileAlternatives(filename string) {
+	lines := Load(filename, NotEmpty|LogErrors)
 	if lines == nil {
 		return
 	}

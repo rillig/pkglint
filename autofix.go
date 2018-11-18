@@ -431,10 +431,10 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		changes[line.Filename] = chlines
 	}
 
-	for fileName := range changed {
-		G.fileCache.Evict(fileName)
-		changedLines := changes[fileName]
-		tmpName := fileName + ".pkglint.tmp"
+	for filename := range changed {
+		G.fileCache.Evict(filename)
+		changedLines := changes[filename]
+		tmpName := filename + ".pkglint.tmp"
 		text := ""
 		for _, changedLine := range changedLines {
 			text += changedLine
@@ -444,7 +444,7 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 			logf(Error, tmpName, "", "Cannot write: %s", "Cannot write: "+err.Error())
 			continue
 		}
-		err = os.Rename(tmpName, fileName)
+		err = os.Rename(tmpName, filename)
 		if err != nil {
 			logf(Error, tmpName, "",
 				"Cannot overwrite with autofixed content: %s",

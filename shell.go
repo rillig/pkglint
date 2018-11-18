@@ -127,9 +127,9 @@ func (shline *ShellLine) checkShVarUse(atom *ShAtom, checkQuoting bool) {
 			"",
 			"Example:",
 			"\tfname=\"Curriculum vitae.doc\"",
-			"\tcp $fileName /tmp",
+			"\tcp $filename /tmp",
 			"\t# tries to copy the two files \"Curriculum\" and \"Vitae.doc\"",
-			"\tcp \"$fileName\" /tmp",
+			"\tcp \"$filename\" /tmp",
 			"\t# copies one file, as intended")
 	}
 

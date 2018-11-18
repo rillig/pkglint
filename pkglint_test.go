@@ -347,7 +347,7 @@ func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("fileName", 1, "GCC_VERSION=${GCC_VERSION}")
+	mkline := t.NewMkLine("filename", 1, "GCC_VERSION=${GCC_VERSION}")
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Pkg.vars.Define("GCC_VERSION", mkline)
 
@@ -359,9 +359,9 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	t := s.Init(c)
 
-	mkline1 := t.NewMkLine("fileName", 10, "_=${SECOND}")
-	mkline2 := t.NewMkLine("fileName", 11, "_=${THIRD}")
-	mkline3 := t.NewMkLine("fileName", 12, "_=got it")
+	mkline1 := t.NewMkLine("filename", 10, "_=${SECOND}")
+	mkline2 := t.NewMkLine("filename", 11, "_=${THIRD}")
+	mkline3 := t.NewMkLine("filename", 12, "_=got it")
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	defineVar(mkline1, "FIRST")
 	defineVar(mkline2, "SECOND")
@@ -378,7 +378,7 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("fileName", 10, "_=x11")
+	mkline := t.NewMkLine("filename", 10, "_=x11")
 	G.Pkg = NewPackage(t.File("category/pkg"))
 	G.Pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
 
@@ -1002,26 +1002,26 @@ func (s *Suite) Test_Pkglint_ShowSummary__explanations_with_only(c *check.C) {
 func (s *Suite) Test_CheckfileMk__enoent(c *check.C) {
 	t := s.Init(c)
 
-	CheckfileMk(t.File("fileName.mk"))
+	CheckfileMk(t.File("filename.mk"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/fileName.mk: Cannot be read.")
+		"ERROR: ~/filename.mk: Cannot be read.")
 }
 
 func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
-	fileName := t.File("file.mk")
-	fileInfo := ExecutableFileInfo{path.Base(fileName)}
+	filename := t.File("file.mk")
+	fileInfo := ExecutableFileInfo{path.Base(filename)}
 
-	G.checkExecutable(fileName, fileInfo)
+	G.checkExecutable(filename, fileInfo)
 
 	t.CheckOutputLines(
 		"WARN: ~/file.mk: Should not be executable.")
 
 	t.SetupCommandLine("--autofix")
 
-	G.checkExecutable(fileName, fileInfo)
+	G.checkExecutable(filename, fileInfo)
 
 	// FIXME: The error message "Cannot clear executable bits" is swallowed.
 	t.CheckOutputLines(
@@ -1033,10 +1033,10 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 
 	t.CreateFileLines("CVS/Entries",
 		"/file.mk/modified////")
-	fileName := t.File("file.mk")
-	fileInfo := ExecutableFileInfo{path.Base(fileName)}
+	filename := t.File("file.mk")
+	fileInfo := ExecutableFileInfo{path.Base(filename)}
 
-	G.checkExecutable(fileName, fileInfo)
+	G.checkExecutable(filename, fileInfo)
 
 	// See the "Too late" comment in Pkglint.checkExecutable.
 	t.CheckOutputEmpty()

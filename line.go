@@ -50,24 +50,24 @@ type LineImpl struct {
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
 
-func NewLine(fileName string, lineno int, text string, rawLine *RawLine) Line {
+func NewLine(filename string, lineno int, text string, rawLine *RawLine) Line {
 	G.Assertf(rawLine != nil, "use NewLineMulti for creating a Line with no RawLine attached to it")
-	return NewLineMulti(fileName, lineno, lineno, text, []*RawLine{rawLine})
+	return NewLineMulti(filename, lineno, lineno, text, []*RawLine{rawLine})
 }
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
-func NewLineMulti(fileName string, firstLine, lastLine int, text string, rawLines []*RawLine) Line {
-	return &LineImpl{fileName, path.Base(fileName), int32(firstLine), int32(lastLine), text, rawLines, nil, Once{}}
+func NewLineMulti(filename string, firstLine, lastLine int, text string, rawLines []*RawLine) Line {
+	return &LineImpl{filename, path.Base(filename), int32(firstLine), int32(lastLine), text, rawLines, nil, Once{}}
 }
 
 // NewLineEOF creates a dummy line for logging, with the "line number" EOF.
-func NewLineEOF(fileName string) Line {
-	return NewLineMulti(fileName, -1, 0, "", nil)
+func NewLineEOF(filename string) Line {
+	return NewLineMulti(filename, -1, 0, "", nil)
 }
 
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
-func NewLineWhole(fileName string) Line {
-	return NewLineMulti(fileName, 0, 0, "", nil)
+func NewLineWhole(filename string) Line {
+	return NewLineMulti(filename, 0, 0, "", nil)
 }
 
 func (line *LineImpl) Linenos() string {

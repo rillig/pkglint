@@ -38,7 +38,7 @@ type Pkgsrc struct {
 	Deprecated      map[string]string   //
 	vartypes        map[string]*Vartype // varcanon => type
 
-	Hashes       map[string]*Hash // Maps "alg:fileName" => hash (inter-package check).
+	Hashes       map[string]*Hash // Maps "alg:filename" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
 }
 
@@ -424,7 +424,7 @@ func (src *Pkgsrc) loadSuggestedUpdates() {
 	src.suggestedWipUpdates = src.parseSuggestedUpdates(Load(G.Pkgsrc.File("wip/TODO"), NotEmpty))
 }
 
-func (src *Pkgsrc) loadDocChangesFromFile(fileName string) []*Change {
+func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 
 	parseChange := func(line Line) *Change {
 		text := line.Text
@@ -458,17 +458,17 @@ func (src *Pkgsrc) loadDocChangesFromFile(fileName string) []*Change {
 	}
 
 	year := ""
-	if m, yyyy := match1(fileName, `-(\d+)$`); m && yyyy >= "2018" {
+	if m, yyyy := match1(filename, `-(\d+)$`); m && yyyy >= "2018" {
 		year = yyyy
 	}
 
-	lines := Load(fileName, MustSucceed|NotEmpty)
+	lines := Load(filename, MustSucceed|NotEmpty)
 	var changes []*Change
 	for _, line := range lines.Lines {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
 			if year != "" && change.Date[0:4] != year {
-				line.Warnf("Year %s for %s does not match the file name %s.", change.Date[0:4], change.Pkgpath, fileName)
+				line.Warnf("Year %s for %s does not match the file name %s.", change.Date[0:4], change.Pkgpath, filename)
 			}
 			if len(changes) >= 2 && year != "" {
 				if prev := changes[len(changes)-2]; change.Date < prev.Date {
@@ -509,18 +509,18 @@ func (src *Pkgsrc) loadDocChanges() {
 		NewLineWhole(docDir).Fatalf("Cannot be read for loading the package changes.")
 	}
 
-	var fileNames []string
+	var filenames []string
 	for _, file := range files {
-		fileName := file.Name()
-		if matches(fileName, `^CHANGES-20\d\d$`) && fileName >= "CHANGES-2011" {
-			fileNames = append(fileNames, fileName)
+		filename := file.Name()
+		if matches(filename, `^CHANGES-20\d\d$`) && filename >= "CHANGES-2011" {
+			filenames = append(filenames, filename)
 		}
 	}
 
-	sort.Strings(fileNames)
+	sort.Strings(filenames)
 	src.LastChange = make(map[string]*Change)
-	for _, fileName := range fileNames {
-		changes := src.loadDocChangesFromFile(docDir + "/" + fileName)
+	for _, filename := range filenames {
+		changes := src.loadDocChangesFromFile(docDir + "/" + filename)
 		for _, change := range changes {
 			src.LastChange[change.Pkgpath] = change
 		}
@@ -702,13 +702,13 @@ func (src *Pkgsrc) initDeprecatedVars() {
 }
 
 // Load loads the file relative to the pkgsrc top directory.
-func (src *Pkgsrc) Load(fileName string, options LoadOptions) Lines {
-	return Load(src.File(fileName), options)
+func (src *Pkgsrc) Load(filename string, options LoadOptions) Lines {
+	return Load(src.File(filename), options)
 }
 
 // LoadMk loads the Makefile relative to the pkgsrc top directory.
-func (src *Pkgsrc) LoadMk(fileName string, options LoadOptions) MkLines {
-	return LoadMk(src.File(fileName), options)
+func (src *Pkgsrc) LoadMk(filename string, options LoadOptions) MkLines {
+	return LoadMk(src.File(filename), options)
 }
 
 // ReadDir reads the file listing from the given directory (relative to the pkgsrc root),
@@ -739,12 +739,12 @@ func (src *Pkgsrc) File(relativeName string) string {
 	return cleanpath(src.topdir + "/" + relativeName)
 }
 
-// ToRel returns the path of `fileName`, relative to the pkgsrc top directory.
+// ToRel returns the path of `filename`, relative to the pkgsrc top directory.
 //
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").ToRel("/usr/pkgsrc/distfiles") => "distfiles"
-func (src *Pkgsrc) ToRel(fileName string) string {
-	return relpath(src.topdir, fileName)
+func (src *Pkgsrc) ToRel(filename string) string {
+	return relpath(src.topdir, filename)
 }
 
 func (src *Pkgsrc) AddBuildDefs(varnames ...string) {

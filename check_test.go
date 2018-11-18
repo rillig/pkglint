@@ -183,8 +183,8 @@ func (t *Tester) SetupTool(name, varname string, validity Validity) *Tool {
 //
 // See SetupFileMkLines for loading a Makefile fragment.
 func (t *Tester) SetupFileLines(relativeFileName string, lines ...string) Lines {
-	fileName := t.CreateFileLines(relativeFileName, lines...)
-	return Load(fileName, MustSucceed)
+	filename := t.CreateFileLines(relativeFileName, lines...)
+	return Load(filename, MustSucceed)
 }
 
 // SetupFileLines creates a temporary file and writes the given lines to it.
@@ -192,8 +192,8 @@ func (t *Tester) SetupFileLines(relativeFileName string, lines ...string) Lines 
 //
 // See SetupFileLines for loading an ordinary file.
 func (t *Tester) SetupFileMkLines(relativeFileName string, lines ...string) MkLines {
-	fileName := t.CreateFileLines(relativeFileName, lines...)
-	return LoadMk(fileName, MustSucceed)
+	filename := t.CreateFileLines(relativeFileName, lines...)
+	return LoadMk(filename, MustSucceed)
 }
 
 // SetupPkgsrc sets up a minimal but complete pkgsrc installation in the
@@ -342,23 +342,23 @@ line:
 // given lines to it.
 //
 // It returns the full path to the created file.
-func (t *Tester) CreateFileLines(relativeFileName string, lines ...string) (fileName string) {
+func (t *Tester) CreateFileLines(relativeFileName string, lines ...string) (filename string) {
 	var content bytes.Buffer
 	for _, line := range lines {
 		content.WriteString(line)
 		content.WriteString("\n")
 	}
 
-	fileName = t.File(relativeFileName)
-	err := os.MkdirAll(path.Dir(fileName), 0777)
+	filename = t.File(relativeFileName)
+	err := os.MkdirAll(path.Dir(filename), 0777)
 	t.c.Assert(err, check.IsNil)
 
-	err = ioutil.WriteFile(fileName, []byte(content.Bytes()), 0666)
+	err = ioutil.WriteFile(filename, []byte(content.Bytes()), 0666)
 	t.c.Assert(err, check.IsNil)
 
-	G.fileCache.Evict(fileName)
+	G.fileCache.Evict(filename)
 
-	return fileName
+	return filename
 }
 
 // CreateFileDummyPatch creates a patch file with the given name in the
@@ -419,10 +419,10 @@ func (t *Tester) Chdir(relativeDirName string) {
 
 // Remove removes the file from the temporary directory. The file must exist.
 func (t *Tester) Remove(relativeFileName string) {
-	fileName := t.File(relativeFileName)
-	err := os.Remove(fileName)
+	filename := t.File(relativeFileName)
+	err := os.Remove(filename)
 	t.c.Assert(err, check.IsNil)
-	G.fileCache.Evict(fileName)
+	G.fileCache.Evict(filename)
 }
 
 // Check delegates a check to the check.Check function.
@@ -515,37 +515,37 @@ func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
 
 // NewLine creates an in-memory line with the given text.
 // This line does not correspond to any line in a file.
-func (t *Tester) NewLine(fileName string, lineno int, text string) Line {
+func (t *Tester) NewLine(filename string, lineno int, text string) Line {
 	textnl := text + "\n"
 	rawLine := RawLine{lineno, textnl, textnl}
-	return NewLine(fileName, lineno, text, &rawLine)
+	return NewLine(filename, lineno, text, &rawLine)
 }
 
 // NewMkLine creates an in-memory line in the Makefile format with the given text.
-func (t *Tester) NewMkLine(fileName string, lineno int, text string) MkLine {
-	return NewMkLine(t.NewLine(fileName, lineno, text))
+func (t *Tester) NewMkLine(filename string, lineno int, text string) MkLine {
+	return NewMkLine(t.NewLine(filename, lineno, text))
 }
 
-func (t *Tester) NewShellLine(fileName string, lineno int, text string) *ShellLine {
-	return NewShellLine(t.NewMkLine(fileName, lineno, text))
+func (t *Tester) NewShellLine(filename string, lineno int, text string) *ShellLine {
+	return NewShellLine(t.NewMkLine(filename, lineno, text))
 }
 
 // NewLines returns a list of simple lines that belong together.
 //
 // To work with line continuations like in Makefiles, use SetupFileMkLines.
-func (t *Tester) NewLines(fileName string, lines ...string) Lines {
-	return t.NewLinesAt(fileName, 1, lines...)
+func (t *Tester) NewLines(filename string, lines ...string) Lines {
+	return t.NewLinesAt(filename, 1, lines...)
 }
 
 // NewLinesAt returns a list of simple lines that belong together.
 //
 // To work with line continuations like in Makefiles, use SetupFileMkLines.
-func (t *Tester) NewLinesAt(fileName string, firstLine int, texts ...string) Lines {
+func (t *Tester) NewLinesAt(filename string, firstLine int, texts ...string) Lines {
 	lines := make([]Line, len(texts))
 	for i, text := range texts {
-		lines[i] = t.NewLine(fileName, i+firstLine, text)
+		lines[i] = t.NewLine(filename, i+firstLine, text)
 	}
-	return NewLines(fileName, lines)
+	return NewLines(filename, lines)
 }
 
 // NewMkLines returns a list of lines in Makefile format,
@@ -554,13 +554,13 @@ func (t *Tester) NewLinesAt(fileName string, firstLine int, texts ...string) Lin
 //
 // No actual file is created for the lines;
 // see SetupFileMkLines for loading Makefile fragments with line continuations.
-func (t *Tester) NewMkLines(fileName string, lines ...string) MkLines {
+func (t *Tester) NewMkLines(filename string, lines ...string) MkLines {
 	var rawText strings.Builder
 	for _, line := range lines {
 		rawText.WriteString(line)
 		rawText.WriteString("\n")
 	}
-	return NewMkLines(convertToLogicalLines(fileName, rawText.String(), true))
+	return NewMkLines(convertToLogicalLines(filename, rawText.String(), true))
 }
 
 // Returns and consumes the output from both stdout and stderr.

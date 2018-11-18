@@ -895,15 +895,15 @@ func (ind *Indentation) Condition() string {
 	return ind.top().condition
 }
 
-func (ind *Indentation) AddCheckedFile(fileName string) {
+func (ind *Indentation) AddCheckedFile(filename string) {
 	top := ind.top()
-	top.checkedFiles = append(top.checkedFiles, fileName)
+	top.checkedFiles = append(top.checkedFiles, filename)
 }
 
-func (ind *Indentation) IsCheckedFile(fileName string) bool {
+func (ind *Indentation) IsCheckedFile(filename string) bool {
 	for _, level := range ind.levels {
 		for _, levelFilename := range level.checkedFiles {
-			if fileName == levelFilename {
+			if filename == levelFilename {
 				return true
 			}
 		}
@@ -983,11 +983,11 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 	}
 }
 
-func (ind *Indentation) CheckFinish(fileName string) {
+func (ind *Indentation) CheckFinish(filename string) {
 	if ind.Len() <= 1 {
 		return
 	}
-	eofLine := NewLineEOF(fileName)
+	eofLine := NewLineEOF(filename)
 	for ind.Len() > 1 {
 		openingMkline := ind.levels[ind.Len()-1].mkline
 		eofLine.Errorf(".%s from %s must be closed.", openingMkline.Directive(), eofLine.RefTo(openingMkline.Line))
@@ -1099,7 +1099,7 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 	return
 }
 
-func MatchMkInclude(text string) (m bool, indentation, directive, fileName string) {
+func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
 	lexer := textproc.NewLexer(text)
 	if lexer.SkipByte('.') {
 		indentation = lexer.NextHspace()
@@ -1113,8 +1113,8 @@ func MatchMkInclude(text string) (m bool, indentation, directive, fileName strin
 				// Note: strictly speaking, the full MkVarUse would have to be parsed
 				// here. But since these usually don't contain double quotes, it has
 				// worked fine up to now.
-				fileName = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
-				if fileName != "" && lexer.SkipByte('"') {
+				filename = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
+				if filename != "" && lexer.SkipByte('"') {
 					lexer.NextHspace()
 					if lexer.EOF() || lexer.SkipByte('#') {
 						m = true

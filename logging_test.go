@@ -195,7 +195,7 @@ func (s *Suite) Test_logf__panic(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectPanic(
-		func() { logf(Error, "fileName", "13", "No period", "No period") },
+		func() { logf(Error, "filename", "13", "No period", "No period") },
 		"Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 
