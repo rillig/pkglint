@@ -79,7 +79,7 @@ func (line *LineImpl) Linenos() string {
 	case line.firstLine == line.lastLine:
 		return strconv.Itoa(int(line.firstLine))
 	default:
-		return strconv.Itoa(int(line.firstLine)) + "--" + strconv.Itoa(int(line.lastLine))
+		return sprintf("%d--%d", line.firstLine, line.lastLine)
 	}
 }
 
