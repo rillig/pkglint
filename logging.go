@@ -67,6 +67,7 @@ func logf(level *LogLevel, filename, lineno, format, msg string) bool {
 		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
 	}
 
+	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
 	if !G.Opts.LogVerbose && format != AutofixFormat && loggedAlready(filename, lineno, msg) {
 		G.explainNext = false
 		return false

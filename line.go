@@ -143,11 +143,14 @@ func (line *LineImpl) showSource(out *SeparatorWriter) {
 	}
 }
 
-func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
+// diag logs a diagnostic. These are filtered by the --only command line option,
+// and duplicates are suppressed unless the --log-verbose command line option is given.
+//
+// See logf for logging arbitrary messages.
+func (line *LineImpl) diag(level *LogLevel, format string, args []interface{}) {
 	if G.Opts.ShowAutofix || G.Opts.Autofix {
-		// In these two cases, the only interesting diagnostics are
-		// those that can be fixed automatically.
-		// These are logged by Autofix.Apply.
+		// In these two cases, the only interesting diagnostics are those that can
+		// be fixed automatically. These are logged by Autofix.Apply.
 		return
 	}
 	G.explainNext = shallBeLogged(format)
@@ -165,19 +168,19 @@ func (line *LineImpl) log(level *LogLevel, format string, args []interface{}) {
 }
 
 func (line *LineImpl) Fatalf(format string, args ...interface{}) {
-	line.log(Fatal, format, args)
+	line.diag(Fatal, format, args)
 }
 
 func (line *LineImpl) Errorf(format string, args ...interface{}) {
-	line.log(Error, format, args)
+	line.diag(Error, format, args)
 }
 
 func (line *LineImpl) Warnf(format string, args ...interface{}) {
-	line.log(Warn, format, args)
+	line.diag(Warn, format, args)
 }
 
 func (line *LineImpl) Notef(format string, args ...interface{}) {
-	line.log(Note, format, args)
+	line.diag(Note, format, args)
 }
 
 func (line *LineImpl) String() string {
