@@ -127,6 +127,22 @@ func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_in_continuati
 		"ERROR: filename:1: File must end with a newline.")
 }
 
+func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_with_source(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--source")
+	rawText := "" +
+		"last line\\"
+
+	lines := convertToLogicalLines("filename", rawText, true)
+
+	c.Check(lines.Len(), equals, 1)
+	c.Check(lines.Lines[0].String(), equals, "filename:1: last line\\")
+	t.CheckOutputLines(
+		// FIXME: linebreak is missing before ERROR.
+		">\tlast line\\ERROR: filename:1: File must end with a newline.")
+}
+
 func (s *Suite) Test_matchContinuationLine(c *check.C) {
 	leadingWhitespace, text, trailingWhitespace, continuation := matchContinuationLine("\n")
 
