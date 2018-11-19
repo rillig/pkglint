@@ -446,13 +446,16 @@ func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check
 		"after")
 	line := mklines.lines.Lines[1]
 
-	{
-		fix := line.Autofix()
-		fix.Warnf("Using \"old\" is deprecated.")
-		fix.Replace("old", "new")
-		fix.Apply()
-	}
+	fix := line.Autofix()
+	fix.Warnf("Using \"old\" is deprecated.")
+	fix.Replace("old", "new")
+	fix.Apply()
 
+	// Using a tab for indentation preserves the exact layout in the output
+	// since in pkgsrc Makefiles, tabs are also used in the middle of the line
+	// to align the variable values. Using a single space for indentation would
+	// make some of the lines appear misaligned in the pkglint output although
+	// they are correct in the Makefiles.
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:2--4: Using \"old\" is deprecated.",
 		"AUTOFIX: ~/Makefile:3: Replacing \"old\" with \"new\".",
