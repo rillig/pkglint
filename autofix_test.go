@@ -101,8 +101,8 @@ func (s *Suite) Test_Autofix_ReplaceAfter__autofix(c *check.C) {
 		"AUTOFIX: ~/Makefile:1: Replacing \"n\" with \"v\".",
 		"-\t# line 1 \\",
 		"+\t# live 1 \\",
-		">\tcontinuation 1 \\",
-		">\tcontinuation 2")
+		"\tcontinuation 1 \\",
+		"\tcontinuation 2")
 }
 
 func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix(c *check.C) {
@@ -456,10 +456,10 @@ func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:2--4: Using \"old\" is deprecated.",
 		"AUTOFIX: ~/Makefile:3: Replacing \"old\" with \"new\".",
-		">\t# before \\",
+		"\t# before \\",
 		"-\tThe old song \\",
 		"+\tThe new song \\",
-		">\tafter")
+		"\tafter")
 }
 
 func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {

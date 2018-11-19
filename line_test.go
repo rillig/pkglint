@@ -16,7 +16,7 @@ func (s *Suite) Test_Line_log__gcc_format(c *check.C) {
 		"filename:123: note: Diagnostics can be logged in GCC-style.")
 }
 
-func (s *Suite) Test_Line_log__print_source(c *check.C) {
+func (s *Suite) Test_Line_log__show_source(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--show-autofix", "--source")

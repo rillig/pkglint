@@ -109,6 +109,13 @@ func (line *LineImpl) showSource(out *SeparatorWriter) {
 	}
 
 	printDiff := func(rawLines []*RawLine) {
+		prefix := ">\t"
+		for _, rawLine := range rawLines {
+			if rawLine.textnl != rawLine.orignl {
+				prefix = "\t" // Make it look like an actual diff
+			}
+		}
+
 		for _, rawLine := range rawLines {
 			if rawLine.textnl != rawLine.orignl {
 				if rawLine.orignl != "" {
@@ -118,7 +125,7 @@ func (line *LineImpl) showSource(out *SeparatorWriter) {
 					out.Write("+\t" + rawLine.textnl)
 				}
 			} else {
-				out.Write(">\t" + rawLine.orignl)
+				out.Write(prefix + rawLine.orignl)
 			}
 		}
 	}
