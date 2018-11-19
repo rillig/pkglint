@@ -9,14 +9,17 @@ import (
 	"strings"
 )
 
+// Tracer produces a hierarchical structure of log events.
 type Tracer struct {
 	Tracing bool
 	Out     io.Writer
 	depth   int
 }
 
+// Result marks an argument of Tracer.Call as a result of that function.
+// It is only logged when exiting from the function but not when entering it.
 type Result struct {
-	result
+	pointer interface{}
 }
 
 func (t *Tracer) Stepf(format string, args ...interface{}) {
@@ -109,21 +112,17 @@ func (t *Tracer) traceCall(args ...interface{}) func() {
 	}
 }
 
-type result struct {
-	pointer interface{}
-}
-
 // Result marks an argument as a result and is only logged when the function returns.
 func (t *Tracer) Result(rv interface{}) Result {
 	if reflect.ValueOf(rv).Kind() != reflect.Ptr {
 		panic(fmt.Sprintf("Result must be called with a pointer to the result, not %#v.", rv))
 	}
-	return Result{result{rv}}
+	return Result{rv}
 }
 
 func withoutResults(args []interface{}) []interface{} {
 	for i, arg := range args {
-		if _, ok := arg.(result); ok {
+		if _, ok := arg.(Result); ok {
 			return args[0:i]
 		}
 	}
@@ -132,12 +131,12 @@ func withoutResults(args []interface{}) []interface{} {
 
 func withResults(args []interface{}) []interface{} {
 	for i, arg := range args {
-		if _, ok := arg.(result); ok {
+		if _, ok := arg.(Result); ok {
 			var awr []interface{}
 			awr = append(awr, args[0:i]...)
 			awr = append(awr, "=>")
 			for _, res := range args[i:] {
-				pointer := reflect.ValueOf(res.(result).pointer)
+				pointer := reflect.ValueOf(res.(Result).pointer)
 				actual := reflect.Indirect(pointer).Interface()
 				awr = append(awr, actual)
 			}
