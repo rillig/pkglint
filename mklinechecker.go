@@ -171,7 +171,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 	mkline := ck.MkLine
 	args := mkline.Args()
 
-	if m, vars, values := match2(args, `^([^\t ]+(?:[\t ]*[^\t ]+)*?)[\t ]+in[\t ]+(.*)$`); m {
+	if m, vars, _ := match2(args, `^([^\t ]+(?:[\t ]*[^\t ]+)*?)[\t ]+in[\t ]+(.*)$`); m {
 		for _, forvar := range fields(vars) {
 			indentation.AddVar(forvar)
 			if !G.Infrastructure && hasPrefix(forvar, "_") {
@@ -189,18 +189,14 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 			forVars[forvar] = true
 		}
 
-		// Check if any of the value's types is not guessed.
-		guessed := true
-		for _, value := range fields(values) {
-			if m, vname := match1(value, `^\$\{(.*)\}`); m {
-				vartype := G.Pkgsrc.VariableType(vname)
-				if vartype != nil && !vartype.guessed {
-					guessed = false
-				}
-			}
-		}
-
-		forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, guessed}
+		// XXX: The type BtUnknown is very unspecific here. For known variables
+		// or constant values this could probably be improved.
+		//
+		// The guessed flag could also be determined more correctly. As of November 2018,
+		// running pkglint over the whole pkgsrc tree did not produce any different result
+		// whether guessed was true or false, so currently it is not worth investing
+		// any work.
+		forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
 		forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
 		for _, forLoopVar := range mkline.DetermineUsedVariables() {
 			ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
