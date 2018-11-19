@@ -15,10 +15,14 @@ type Tracer struct {
 	depth   int
 }
 
+type Result struct {
+	result
+}
+
 func (t *Tracer) Stepf(format string, args ...interface{}) {
 	if t.Tracing {
 		msg := fmt.Sprintf(format, args...)
-		io.WriteString(t.Out, fmt.Sprintf("TRACE: %s  %s\n", t.traceIndent(), msg))
+		_, _ = io.WriteString(t.Out, fmt.Sprintf("TRACE: %s  %s\n", t.traceIndent(), msg))
 	}
 }
 
@@ -96,12 +100,12 @@ func (t *Tracer) traceCall(args ...interface{}) func() {
 		}
 	}
 	indent := t.traceIndent()
-	io.WriteString(t.Out, fmt.Sprintf("TRACE: %s+ %s(%s)\n", indent, funcname, argsStr(withoutResults(args))))
+	_, _ = io.WriteString(t.Out, fmt.Sprintf("TRACE: %s+ %s(%s)\n", indent, funcname, argsStr(withoutResults(args))))
 	t.depth++
 
 	return func() {
 		t.depth--
-		io.WriteString(t.Out, fmt.Sprintf("TRACE: %s- %s(%s)\n", indent, funcname, argsStr(withResults(args))))
+		_, _ = io.WriteString(t.Out, fmt.Sprintf("TRACE: %s- %s(%s)\n", indent, funcname, argsStr(withResults(args))))
 	}
 }
 
@@ -110,11 +114,11 @@ type result struct {
 }
 
 // Result marks an argument as a result and is only logged when the function returns.
-func (t *Tracer) Result(rv interface{}) result {
+func (t *Tracer) Result(rv interface{}) Result {
 	if reflect.ValueOf(rv).Kind() != reflect.Ptr {
 		panic(fmt.Sprintf("Result must be called with a pointer to the result, not %#v.", rv))
 	}
-	return result{rv}
+	return Result{result{rv}}
 }
 
 func withoutResults(args []interface{}) []interface{} {

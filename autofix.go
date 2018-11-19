@@ -348,8 +348,8 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 
 	for _, rawLine := range fix.line.raw[1:] {
 		_, comment, oldSpace := match2(rawLine.textnl, `^(#?)([ \t]*)`)
-		newWidth := tabWidth(oldSpace) - oldWidth + newWidth
-		newSpace := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
+		newLineWidth := tabWidth(oldSpace) - oldWidth + newWidth
+		newSpace := strings.Repeat("\t", newLineWidth/8) + strings.Repeat(" ", newLineWidth%8)
 		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
 		if replaced != rawLine.textnl {
 			if G.Opts.ShowAutofix || G.Opts.Autofix {

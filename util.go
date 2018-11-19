@@ -249,7 +249,6 @@ func shorten(s string, maxChars int) string {
 	for i := range s {
 		if chars >= maxChars {
 			return s[:i] + "..."
-			break
 		}
 		chars++
 	}
@@ -596,8 +595,8 @@ func naturalLess(str1, str2 string) bool {
 
 	idx := 0
 	len1, len2 := len(str1), len(str2)
-	len := len1 + len2 - imax(len1, len2)
-	for idx < len {
+	minLen := len1 + len2 - imax(len1, len2)
+	for idx < minLen {
 		c1, c2 := str1[idx], str2[idx]
 		dig1, dig2 := isDigit(c1), isDigit(c2)
 		switch {

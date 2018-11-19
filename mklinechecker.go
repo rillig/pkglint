@@ -180,7 +180,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 
 			if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
 				// Fine.
-			} else if matches(forvar, `[A-Z]`) {
+			} else if strings.IndexFunc(forvar, func(r rune) bool { return 'A' <= r && r <= 'Z' }) != -1 {
 				mkline.Warnf(".for variable names should not contain uppercase letters.")
 			} else {
 				mkline.Errorf("Invalid variable name %q.", forvar)
@@ -936,6 +936,8 @@ func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comme
 	}
 }
 
+// CheckVartypePrimitive checks a single list element of the given type.
+//
 // For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
 func (ck MkLineChecker) CheckVartypePrimitive(varname string, checker *BasicType, op MkOperator, value, comment string, guessed bool) {

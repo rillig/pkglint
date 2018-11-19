@@ -357,7 +357,8 @@ func simulateSubstLines(t *Tester, texts ...string) {
 	ctx := NewSubstContext()
 	for _, lineText := range texts {
 		var lineno int
-		fmt.Sscanf(lineText[0:4], "%d: ", &lineno)
+		_, err := fmt.Sscanf(lineText[0:4], "%d: ", &lineno)
+		G.Assertf(err == nil, "%s", err)
 		text := lineText[4:]
 		line := newSubstLine(t, lineno, text)
 

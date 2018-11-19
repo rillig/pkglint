@@ -993,7 +993,7 @@ func (cv *VartypeCheck) ShellCommand() {
 	NewShellLine(cv.MkLine).CheckShellCommand(cv.Value, &setE, RunTime)
 }
 
-// Zero or more shell commands, each terminated with a semicolon.
+// ShellCommands checks for zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
 	NewShellLine(cv.MkLine).CheckShellCommands(cv.Value, RunTime)
 }
@@ -1139,7 +1139,8 @@ func (cv *VartypeCheck) WrkdirSubdirectory() {
 	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 }
 
-// A directory relative to ${WRKSRC}, for use in CONFIGURE_DIRS and similar variables.
+// WrksrcSubdirectory checks a directory relative to ${WRKSRC},
+// for use in CONFIGURE_DIRS and similar variables.
 func (cv *VartypeCheck) WrksrcSubdirectory() {
 	if m, _, rest := match2(cv.Value, `^(\$\{WRKSRC\})(?:/(.*))?`); m {
 		if rest == "" {

@@ -272,7 +272,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {
-		fmt.Fprintf(pkglint.logErr.out, "%s\n\n", err)
+		_, _ = fmt.Fprintf(pkglint.logErr.out, "%s\n\n", err)
 		opts.Help(pkglint.logErr.out, "pkglint [options] dir...")
 		exitcode := 1
 		return &exitcode

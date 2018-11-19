@@ -123,7 +123,8 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__name_mismatch_multiple_inclusion(c 
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"ERROR: buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"PKGBASE2\" (expected \"PKGBASE1\") and package name \"pkgbase1\" (from line 3).",
+		"ERROR: buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"PKGBASE2\" "+
+			"(expected \"PKGBASE1\") and package name \"pkgbase1\" (from line 3).",
 		"WARN: buildlink3.mk:9: Definition of BUILDLINK_API_DEPENDS is missing.")
 }
 

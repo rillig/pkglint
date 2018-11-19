@@ -378,7 +378,7 @@ func (ck *PatchChecker) checklineOtherAbsolutePathname(line Line, text string) {
 	if hasPrefix(text, "#") && !hasPrefix(text, "#!") {
 		// Don't warn for absolute pathnames in comments, except for shell interpreters.
 
-	} else if m, before, path, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
+	} else if m, before, dir, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
 		switch {
 		case matches(before, `[\w).@}]$`) && !matches(before, `DESTDIR.$`):
 			// Example: $prefix/bin
@@ -396,7 +396,7 @@ func (ck *PatchChecker) checklineOtherAbsolutePathname(line Line, text string) {
 			if trace.Tracing {
 				trace.Step1("before=%q", before)
 			}
-			CheckwordAbsolutePathname(line, path)
+			CheckwordAbsolutePathname(line, dir)
 		}
 	}
 }
