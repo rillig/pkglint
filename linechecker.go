@@ -2,16 +2,19 @@ package main
 
 import (
 	"fmt"
-	"netbsd.org/pkglint/regex"
 	"strings"
 )
 
-// CheckLineAbsolutePathname checks whether any absolute pathnames occur in the line.
+type LineChecker struct {
+	line Line
+}
+
+// CheckAbsolutePathname checks whether any absolute pathnames occur in the line.
 //
 // XXX: Is this check really useful? It had been added 10 years ago because some
 // style guide said that "absolute pathnames should be avoided", but there was no
 // evidence for that.
-func CheckLineAbsolutePathname(line Line, text string) {
+func (ck LineChecker) CheckAbsolutePathname(text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
 	}
@@ -25,14 +28,14 @@ func CheckLineAbsolutePathname(line Line, text string) {
 	// assignments like "bindir=/bin".
 	if m, path := match1(text, `(?:^|[\t ]|\$[{(]DESTDIR[)}]|[\w_]+[\t ]*=[\t ]*)(/(?:[^"' \t\\]|"[^"*]"|'[^']*')*)`); m {
 		if matches(path, `^/\w`) {
-			CheckwordAbsolutePathname(line, path)
+			ck.CheckWordAbsolutePathname(path)
 		}
 	}
 }
 
-func CheckLineLength(line Line, maxlength int) {
-	if len(line.Text) > maxlength {
-		line.Warnf("Line too long (should be no more than %d characters).", maxlength)
+func (ck LineChecker) CheckLength(maxlength int) {
+	if len(ck.line.Text) > maxlength {
+		ck.line.Warnf("Line too long (should be no more than %d characters).", maxlength)
 		Explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
@@ -40,21 +43,21 @@ func CheckLineLength(line Line, maxlength int) {
 	}
 }
 
-func CheckLineValidCharacters(line Line) {
+func (ck LineChecker) CheckValidCharacters() {
 	uni := ""
-	for _, r := range line.Text {
+	for _, r := range ck.line.Text {
 		if r != '\t' && !(' ' <= r && r <= '~') {
 			uni += fmt.Sprintf(" %U", r)
 		}
 	}
 	if uni != "" {
-		line.Warnf("Line contains invalid characters (%s).", uni[1:])
+		ck.line.Warnf("Line contains invalid characters (%s).", uni[1:])
 	}
 }
 
-func CheckLineTrailingWhitespace(line Line) {
-	if strings.HasSuffix(line.Text, " ") || strings.HasSuffix(line.Text, "\t") {
-		fix := line.Autofix()
+func (ck LineChecker) CheckTrailingWhitespace() {
+	if strings.HasSuffix(ck.line.Text, " ") || strings.HasSuffix(ck.line.Text, "\t") {
+		fix := ck.line.Autofix()
 		fix.Notef("Trailing white-space.")
 		fix.Explain(
 			"When a line ends with some white-space, that space is in most cases",
@@ -64,34 +67,13 @@ func CheckLineTrailingWhitespace(line Line) {
 	}
 }
 
-func CheckLineRcsid(line Line, prefixRe regex.Pattern, suggestedPrefix string) bool {
-	if trace.Tracing {
-		defer trace.Call(prefixRe, suggestedPrefix)()
-	}
-
-	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
-		return true
-	}
-
-	fix := line.Autofix()
-	fix.Errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
-	fix.Explain(
-		"Several files in pkgsrc must contain the CVS Id, so that their",
-		"current version can be traced back later from a binary package.",
-		"This is to ensure reproducible builds, for example for finding bugs.")
-	fix.InsertBefore(suggestedPrefix + "$" + "NetBSD$")
-	fix.Apply()
-
-	return false
-}
-
-// CheckwordAbsolutePathname checks the given word (which is often part of a
+// CheckWordAbsolutePathname checks the given word (which is often part of a
 // shell command) for absolute pathnames.
 //
 // XXX: Is this check really useful? It had been added 10 years ago because some
 // style guide said that "absolute pathnames should be avoided", but there was no
 // evidence for that.
-func CheckwordAbsolutePathname(line Line, word string) {
+func (ck LineChecker) CheckWordAbsolutePathname(word string) {
 	if trace.Tracing {
 		defer trace.Call1(word)()
 	}
@@ -112,8 +94,8 @@ func CheckwordAbsolutePathname(line Line, word string) {
 
 	case matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
-		line.Warnf("Found absolute pathname: %s", word)
-		if contains(line.Text, "DESTDIR") {
+		ck.line.Warnf("Found absolute pathname: %s", word)
+		if contains(ck.line.Text, "DESTDIR") {
 			Explain(
 				"Absolute pathnames are often an indicator for unportable code.  As",
 				"pkgsrc aims to be a portable system, absolute pathnames should be",

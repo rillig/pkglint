@@ -1,6 +1,9 @@
 package main
 
-import "path"
+import (
+	"netbsd.org/pkglint/regex"
+	"path"
+)
 
 type Lines = *LinesImpl
 
@@ -30,4 +33,26 @@ func (ls *LinesImpl) Warnf(format string, args ...interface{}) {
 
 func (ls *LinesImpl) SaveAutofixChanges() {
 	SaveAutofixChanges(ls)
+}
+
+func (ls *LinesImpl) CheckRcsid(index int, prefixRe regex.Pattern, suggestedPrefix string) bool {
+	if trace.Tracing {
+		defer trace.Call(prefixRe, suggestedPrefix)()
+	}
+
+	line := ls.Lines[index]
+	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
+		return true
+	}
+
+	fix := line.Autofix()
+	fix.Errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
+	fix.Explain(
+		"Several files in pkgsrc must contain the CVS Id, so that their",
+		"current version can be traced back later from a binary package.",
+		"This is to ensure reproducible builds, for example for finding bugs.")
+	fix.InsertBefore(suggestedPrefix + "$" + "NetBSD$")
+	fix.Apply()
+
+	return false
 }

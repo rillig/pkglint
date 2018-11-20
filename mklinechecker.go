@@ -15,8 +15,8 @@ type MkLineChecker struct {
 func (ck MkLineChecker) Check() {
 	mkline := ck.MkLine
 
-	CheckLineTrailingWhitespace(mkline.Line)
-	CheckLineValidCharacters(mkline.Line)
+	LineChecker{mkline.Line}.CheckTrailingWhitespace()
+	LineChecker{mkline.Line}.CheckValidCharacters()
 
 	switch {
 	case mkline.IsVarassign():

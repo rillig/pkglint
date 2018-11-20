@@ -33,7 +33,7 @@ func (ck *PatchChecker) Check() {
 		defer trace.Call0()()
 	}
 
-	if CheckLineRcsid(ck.lines.Lines[0], ``, "") {
+	if ck.lines.CheckRcsid(0, ``, "") {
 		ck.exp.Advance()
 	}
 	if ck.exp.EOF() {
@@ -365,7 +365,7 @@ func (ck *PatchChecker) checklineSourceAbsolutePathname(line Line, text string) 
 			// ok; Python example: libdir = prefix + '/lib'
 
 		default:
-			CheckwordAbsolutePathname(line, str)
+			LineChecker{line}.CheckWordAbsolutePathname(str)
 		}
 	}
 }
@@ -396,7 +396,7 @@ func (ck *PatchChecker) checklineOtherAbsolutePathname(line Line, text string) {
 			if trace.Tracing {
 				trace.Step1("before=%q", before)
 			}
-			CheckwordAbsolutePathname(line, dir)
+			LineChecker{line}.CheckWordAbsolutePathname(dir)
 		}
 	}
 }

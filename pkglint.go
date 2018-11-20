@@ -595,9 +595,10 @@ func ChecklinesDescr(lines Lines) {
 	}
 
 	for _, line := range lines.Lines {
-		CheckLineLength(line, 80)
-		CheckLineTrailingWhitespace(line)
-		CheckLineValidCharacters(line)
+		ck := LineChecker{line}
+		ck.CheckLength(80)
+		ck.CheckTrailingWhitespace()
+		ck.CheckValidCharacters()
 		if contains(line.Text, "${") {
 			line.Notef("Variables are not expanded in the DESCR file.")
 		}
@@ -641,14 +642,15 @@ func ChecklinesMessage(lines Lines) {
 		fix.Explain(explanation...)
 		fix.InsertBefore(hline)
 		fix.Apply()
-		CheckLineRcsid(lines.Lines[0], ``, "")
+		lines.CheckRcsid(0, ``, "")
 	} else if 1 < lines.Len() {
-		CheckLineRcsid(lines.Lines[1], ``, "")
+		lines.CheckRcsid(1, ``, "")
 	}
 	for _, line := range lines.Lines {
-		CheckLineLength(line, 80)
-		CheckLineTrailingWhitespace(line)
-		CheckLineValidCharacters(line)
+		ck := LineChecker{line}
+		ck.CheckLength(80)
+		ck.CheckTrailingWhitespace()
+		ck.CheckValidCharacters()
 	}
 	if lastLine := lines.LastLine(); lastLine.Text != hline {
 		fix := lastLine.Autofix()

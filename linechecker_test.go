@@ -4,24 +4,25 @@ import (
 	"gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_CheckLineAbsolutePathname(c *check.C) {
+func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("Makefile", 1, "# dummy")
 
-	CheckLineAbsolutePathname(line, "bindir=/bin")
-	CheckLineAbsolutePathname(line, "bindir=/../lib")
-	CheckLineAbsolutePathname(line, "cat /dev/null")
-	CheckLineAbsolutePathname(line, "cat /dev/tty")
-	CheckLineAbsolutePathname(line, "cat /dev/zero")
-	CheckLineAbsolutePathname(line, "cat /dev/stdin")
-	CheckLineAbsolutePathname(line, "cat /dev/stdout")
-	CheckLineAbsolutePathname(line, "cat /dev/stderr")
-	CheckLineAbsolutePathname(line, "printf '#! /bin/sh\\nexit 0'")
+	ck := LineChecker{line}
+	ck.CheckAbsolutePathname("bindir=/bin")
+	ck.CheckAbsolutePathname("bindir=/../lib")
+	ck.CheckAbsolutePathname("cat /dev/null")
+	ck.CheckAbsolutePathname("cat /dev/tty")
+	ck.CheckAbsolutePathname("cat /dev/zero")
+	ck.CheckAbsolutePathname("cat /dev/stdin")
+	ck.CheckAbsolutePathname("cat /dev/stdout")
+	ck.CheckAbsolutePathname("cat /dev/stderr")
+	ck.CheckAbsolutePathname("printf '#! /bin/sh\\nexit 0'")
 
 	// This is not a filename at all, but certainly looks like one.
 	// Nevertheless, pkglint doesn't fall into the trap.
-	CheckLineAbsolutePathname(line, "sed -e /usr/s/usr/var/g")
+	ck.CheckAbsolutePathname("sed -e /usr/s/usr/var/g")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Found absolute pathname: /bin",
@@ -34,44 +35,24 @@ func (s *Suite) Test_CheckLineAbsolutePathname(c *check.C) {
 // It might be useful, but all the code surrounding this check was added for
 // theoretical reasons instead of a practical bug. Therefore the code is still
 // there, it is just not enabled by default.
-func (s *Suite) Test_CheckLineAbsolutePathname__disabled_by_default(c *check.C) {
+func (s *Suite) Test_LineChecker_CheckAbsolutePathname__disabled_by_default(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine( /* none, which means -Wall is suppressed */ )
 	line := t.NewLine("Makefile", 1, "# dummy")
 
-	CheckLineAbsolutePathname(line, "bindir=/bin")
+	LineChecker{line}.CheckAbsolutePathname("bindir=/bin")
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLineTrailingWhitespace(c *check.C) {
+func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("Makefile", 32, "The line must go on   ")
 
-	CheckLineTrailingWhitespace(line)
+	LineChecker{line}.CheckTrailingWhitespace()
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:32: Trailing white-space.")
-}
-
-func (s *Suite) Test_CheckLineRcsid(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.NewLines("filename",
-		"$"+"NetBSD: dummy $",
-		"$"+"NetBSD$",
-		"$"+"Id: dummy $",
-		"$"+"Id$",
-		"$"+"FreeBSD$")
-
-	for _, line := range lines.Lines {
-		CheckLineRcsid(line, ``, "")
-	}
-
-	t.CheckOutputLines(
-		"ERROR: filename:3: Expected \"$"+"NetBSD$\".",
-		"ERROR: filename:4: Expected \"$"+"NetBSD$\".",
-		"ERROR: filename:5: Expected \"$"+"NetBSD$\".")
 }
