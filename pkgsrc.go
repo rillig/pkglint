@@ -798,8 +798,8 @@ func (src *Pkgsrc) loadPkgOptions() {
 	lines := src.Load("mk/defaults/options.description", MustSucceed)
 
 	for _, line := range lines.Lines {
-		if m, optname, optdescr := match2(line.Text, `^([-0-9a-z_+]+)(?:[\t ]+(.*))?$`); m {
-			src.PkgOptions[optname] = optdescr
+		if m, name, description := match2(line.Text, `^([-0-9a-z_+]+)(?:[\t ]+(.*))?$`); m {
+			src.PkgOptions[name] = description
 		} else {
 			line.Fatalf("Unknown line format: %s", line.Text)
 		}
