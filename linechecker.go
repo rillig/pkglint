@@ -19,6 +19,10 @@ func (ck LineChecker) CheckAbsolutePathname(text string) {
 		defer trace.Call1(text)()
 	}
 
+	// XXX: The following code only checks the first absolute pathname per line.
+	// The remaining pathnames are ignored. This is probably harmless in practice
+	// since it doesn't occur often.
+
 	// In the GNU coding standards, DESTDIR is defined as a (usually
 	// empty) prefix that can be used to install files to a different
 	// location from what they have been built for. Therefore
@@ -28,14 +32,17 @@ func (ck LineChecker) CheckAbsolutePathname(text string) {
 	// assignments like "bindir=/bin".
 	if m, path := match1(text, `(?:^|[\t ]|\$[{(]DESTDIR[)}]|[\w_]+[\t ]*=[\t ]*)(/(?:[^"' \t\\]|"[^"*]"|'[^']*')*)`); m {
 		if matches(path, `^/\w`) {
+
+			// XXX: Why is the "before" text from the above regular expression
+			// not passed on to this method?
 			ck.CheckWordAbsolutePathname(path)
 		}
 	}
 }
 
-func (ck LineChecker) CheckLength(maxlength int) {
-	if len(ck.line.Text) > maxlength {
-		ck.line.Warnf("Line too long (should be no more than %d characters).", maxlength)
+func (ck LineChecker) CheckLength(maxLength int) {
+	if len(ck.line.Text) > maxLength {
+		ck.line.Warnf("Line too long (should be no more than %d characters).", maxLength)
 		Explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
@@ -44,23 +51,23 @@ func (ck LineChecker) CheckLength(maxlength int) {
 }
 
 func (ck LineChecker) CheckValidCharacters() {
-	uni := ""
+	var uni strings.Builder
 	for _, r := range ck.line.Text {
 		if r != '\t' && !(' ' <= r && r <= '~') {
-			uni += fmt.Sprintf(" %U", r)
+			_, _ = fmt.Fprintf(&uni, " %U", r)
 		}
 	}
-	if uni != "" {
-		ck.line.Warnf("Line contains invalid characters (%s).", uni[1:])
+	if uni.Len() > 0 {
+		ck.line.Warnf("Line contains invalid characters (%s).", uni.String()[1:])
 	}
 }
 
 func (ck LineChecker) CheckTrailingWhitespace() {
 	if strings.HasSuffix(ck.line.Text, " ") || strings.HasSuffix(ck.line.Text, "\t") {
 		fix := ck.line.Autofix()
-		fix.Notef("Trailing white-space.")
+		fix.Notef("Trailing whitespace.")
 		fix.Explain(
-			"When a line ends with some white-space, that space is in most cases",
+			"When a line ends with some whitespace, that space is in most cases",
 			"irrelevant and can be removed.")
 		fix.ReplaceRegex(`[ \t\r]+\n$`, "\n", 1)
 		fix.Apply()

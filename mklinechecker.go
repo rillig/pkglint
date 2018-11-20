@@ -652,7 +652,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 		}
 		fix.Explain(
 			"Many variables in pkgsrc do not need the :Q operator, since they",
-			"are not expected to contain white-space or other special characters.",
+			"are not expected to contain whitespace or other special characters.",
 			"Examples for these \"safe\" variables are:",
 			"",
 			"\t* filenames",

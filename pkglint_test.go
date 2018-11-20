@@ -109,7 +109,7 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"    plist-depr   warn about deprecated paths in PLISTs (disabled)",
 		"    plist-sort   warn about unsorted entries in PLISTs (disabled)",
 		"    quoting      warn about quoting issues (disabled)",
-		"    space        warn about inconsistent use of white-space (disabled)",
+		"    space        warn about inconsistent use of whitespace (disabled)",
 		"    style        warn about stylistic issues (disabled)",
 		"    types        do some simple type checking in Makefiles (enabled)",
 		"",

@@ -54,5 +54,5 @@ func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
 	LineChecker{line}.CheckTrailingWhitespace()
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:32: Trailing white-space.")
+		"NOTE: Makefile:32: Trailing whitespace.")
 }

@@ -65,7 +65,7 @@ func NewMkLine(line Line) *MkLineImpl {
 		Explain(
 			"If you want this line to contain a shell program, use a tab",
 			"character for indentation.  Otherwise please remove the leading",
-			"white-space.")
+			"whitespace.")
 	}
 
 	if m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment := MatchVarassign(text); m {
@@ -526,7 +526,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	}
 
 	// In .for loops, the :Q operator is always misplaced, since
-	// the items are broken up at white-space, not as shell words
+	// the items are broken up at whitespace, not as shell words
 	// like in all other parts of make(1).
 	if vuc.quoting == vucQuotFor {
 		return nqNo

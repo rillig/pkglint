@@ -513,7 +513,7 @@ func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	ChecklinesPlist(lines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/PLIST:2: pkgsrc does not support filenames ending in white-space.")
+		"ERROR: ~/PLIST:2: pkgsrc does not support filenames ending in whitespace.")
 }
 
 func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {

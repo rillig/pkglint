@@ -266,7 +266,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	warn.AddFlagVar("plist-depr", &gopts.WarnPlistDepr, false, "warn about deprecated paths in PLISTs")
 	warn.AddFlagVar("plist-sort", &gopts.WarnPlistSort, false, "warn about unsorted entries in PLISTs")
 	warn.AddFlagVar("quoting", &gopts.WarnQuoting, false, "warn about quoting issues")
-	warn.AddFlagVar("space", &gopts.WarnSpace, false, "warn about inconsistent use of white-space")
+	warn.AddFlagVar("space", &gopts.WarnSpace, false, "warn about inconsistent use of whitespace")
 	warn.AddFlagVar("style", &gopts.WarnStyle, false, "warn about stylistic issues")
 	warn.AddFlagVar("types", &gopts.WarnTypes, true, "do some simple type checking in Makefiles")
 

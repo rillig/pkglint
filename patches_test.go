@@ -566,9 +566,9 @@ func (s *Suite) Test_ChecklinesPatch__empty_context_lines_in_hunk(c *check.C) {
 	ChecklinesPatch(lines)
 
 	// The first context line should start with a single space character,
-	// but that would mean trailing white-space, so it may be left out.
+	// but that would mean trailing whitespace, so it may be left out.
 	// The last context line is omitted completely because it would also
-	// have trailing white-space, and if that were removed, would be a
+	// have trailing whitespace, and if that were removed, would be a
 	// trailing empty line.
 	t.CheckOutputEmpty()
 }
@@ -592,9 +592,9 @@ func (s *Suite) Test_ChecklinesPatch__invalid_line_in_hunk(c *check.C) {
 	ChecklinesPatch(lines)
 
 	// The first context line should start with a single space character,
-	// but that would mean trailing white-space, so it may be left out.
+	// but that would mean trailing whitespace, so it may be left out.
 	// The last context line is omitted completely because it would also
-	// have trailing white-space, and if that were removed, would be a
+	// have trailing whitespace, and if that were removed, would be a
 	// trailing empty line.
 	t.CheckOutputLines(
 		"ERROR: ~/patch-aa:10: Invalid line in unified patch hunk: <<<<<<<<")

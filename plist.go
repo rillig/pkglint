@@ -390,9 +390,9 @@ func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
 
 func (pline *PlistLine) CheckTrailingWhitespace() {
 	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
-		pline.Errorf("pkgsrc does not support filenames ending in white-space.")
+		pline.Errorf("pkgsrc does not support filenames ending in whitespace.")
 		Explain(
-			"Each character in the PLIST is relevant, even trailing white-space.")
+			"Each character in the PLIST is relevant, even trailing whitespace.")
 	}
 }
 

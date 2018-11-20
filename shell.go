@@ -118,11 +118,11 @@ func (shline *ShellLine) checkShVarUse(atom *ShAtom, checkQuoting bool) {
 	} else if G.Opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shVarname) {
 		line.Warnf("Unquoted shell variable %q.", shVarname)
 		Explain(
-			"When a shell variable contains white-space, it is expanded (split",
+			"When a shell variable contains whitespace, it is expanded (split",
 			"into multiple words) when it is written as $variable in a shell",
 			"script.  If that is not intended, you should add quotation marks",
 			"around it, like \"$variable\".  Then, the variable will always expand",
-			"to a single word, preserving all white-space and other special",
+			"to a single word, preserving all whitespace and other special",
 			"characters.",
 			"",
 			"Example:",
