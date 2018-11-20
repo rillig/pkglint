@@ -33,7 +33,7 @@ func (ck *PatchChecker) Check() {
 		defer trace.Call0()()
 	}
 
-	if ck.lines.CheckRcsid(0, ``, "") {
+	if ck.lines.CheckRcsID(0, ``, "") {
 		ck.exp.Advance()
 	}
 	if ck.exp.EOF() {

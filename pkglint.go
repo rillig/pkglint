@@ -642,9 +642,9 @@ func ChecklinesMessage(lines Lines) {
 		fix.Explain(explanation...)
 		fix.InsertBefore(hline)
 		fix.Apply()
-		lines.CheckRcsid(0, ``, "")
+		lines.CheckRcsID(0, ``, "")
 	} else if 1 < lines.Len() {
-		lines.CheckRcsid(1, ``, "")
+		lines.CheckRcsID(1, ``, "")
 	}
 	for _, line := range lines.Lines {
 		ck := LineChecker{line}

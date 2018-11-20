@@ -63,6 +63,10 @@ func (ck LineChecker) CheckValidCharacters() {
 }
 
 func (ck LineChecker) CheckTrailingWhitespace() {
+
+	// XXX: Markdown files may need trailing whitespace. If there should ever
+	// be Markdown files in pkgsrc, this code has to be adjusted.
+
 	if strings.HasSuffix(ck.line.Text, " ") || strings.HasSuffix(ck.line.Text, "\t") {
 		fix := ck.line.Autofix()
 		fix.Notef("Trailing whitespace.")

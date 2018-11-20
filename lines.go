@@ -35,7 +35,7 @@ func (ls *LinesImpl) SaveAutofixChanges() {
 	SaveAutofixChanges(ls)
 }
 
-func (ls *LinesImpl) CheckRcsid(index int, prefixRe regex.Pattern, suggestedPrefix string) bool {
+func (ls *LinesImpl) CheckRcsID(index int, prefixRe regex.Pattern, suggestedPrefix string) bool {
 	if trace.Tracing {
 		defer trace.Call(prefixRe, suggestedPrefix)()
 	}
