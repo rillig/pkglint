@@ -204,7 +204,7 @@ func (ck *TestNameChecker) checkTestName(test *testeeElement, prefix string, des
 	} else if !strings.HasSuffix(testee.File, "_test.go") {
 		correctTestFile := strings.TrimSuffix(testee.File, ".go") + "_test.go"
 		if correctTestFile != test.File {
-			ck.addWarning("Test %q for %q should be in %s instead of %s.",
+			ck.addError("Test %q for %q must be in %s instead of %s.",
 				test.FullName, testee.FullName, correctTestFile, test.File)
 		}
 	}
