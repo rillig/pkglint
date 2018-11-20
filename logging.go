@@ -57,61 +57,6 @@ func loggedAlready(filename, lineno, msg string) bool {
 	return false
 }
 
-func logf(level *LogLevel, filename, lineno, format, msg string) bool {
-	// TODO: Only ever output ASCII, no matter what's in the message.
-
-	if filename != "" {
-		filename = cleanpath(filename)
-	}
-	if G.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
-		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
-	}
-
-	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
-	if !G.Opts.LogVerbose && format != AutofixFormat && loggedAlready(filename, lineno, msg) {
-		G.explainNext = false
-		return false
-	}
-
-	var text, sep string
-	if !G.Opts.GccOutput {
-		text += sep + level.TraditionalName + ":"
-		sep = " "
-	}
-	if filename != "" {
-		text += sep + filename
-		sep = ": "
-		if lineno != "" {
-			text += ":" + lineno
-		}
-	}
-	if G.Opts.GccOutput {
-		text += sep + level.GccName + ":"
-		sep = " "
-	}
-	if G.Opts.Profiling && format != AutofixFormat && level != Fatal {
-		G.loghisto.Add(format, 1)
-	}
-	text += sep + msg + "\n"
-
-	out := G.logOut
-	if level == Fatal {
-		out = G.logErr
-	}
-
-	out.Write(text)
-
-	switch level {
-	case Fatal:
-		panic(pkglintFatal{})
-	case Error:
-		G.errors++
-	case Warn:
-		G.warnings++
-	}
-	return true
-}
-
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.

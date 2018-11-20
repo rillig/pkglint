@@ -271,7 +271,7 @@ func (fix *Autofix) Apply() {
 			line.showSource(G.logOut)
 		}
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
-		logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
+		G.logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 	}
 
 	if logFix {
@@ -280,7 +280,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			logf(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
+			G.logf(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
 		}
 	}
 
@@ -441,12 +441,12 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		}
 		err := ioutil.WriteFile(tmpName, []byte(text), 0666)
 		if err != nil {
-			logf(Error, tmpName, "", "Cannot write: %s", "Cannot write: "+err.Error())
+			G.logf(Error, tmpName, "", "Cannot write: %s", "Cannot write: "+err.Error())
 			continue
 		}
 		err = os.Rename(tmpName, filename)
 		if err != nil {
-			logf(Error, tmpName, "",
+			G.logf(Error, tmpName, "",
 				"Cannot overwrite with autofixed content: %s",
 				"Cannot overwrite with autofixed content: "+err.Error())
 			continue

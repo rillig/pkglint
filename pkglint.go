@@ -470,10 +470,65 @@ func (pkglint *Pkglint) diag(line Line, level *LogLevel, format string, args []i
 	if pkglint.Opts.ShowSource {
 		line.showSource(G.logOut)
 	}
-	logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	pkglint.logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	if pkglint.Opts.ShowSource {
 		pkglint.logOut.Separate()
 	}
+}
+
+func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg string) bool {
+	// TODO: Only ever output ASCII, no matter what's in the message.
+
+	if filename != "" {
+		filename = cleanpath(filename)
+	}
+	if pkglint.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
+		pkglint.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
+	}
+
+	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
+	if !pkglint.Opts.LogVerbose && format != AutofixFormat && loggedAlready(filename, lineno, msg) {
+		pkglint.explainNext = false
+		return false
+	}
+
+	var text, sep string
+	if !pkglint.Opts.GccOutput {
+		text += sep + level.TraditionalName + ":"
+		sep = " "
+	}
+	if filename != "" {
+		text += sep + filename
+		sep = ": "
+		if lineno != "" {
+			text += ":" + lineno
+		}
+	}
+	if pkglint.Opts.GccOutput {
+		text += sep + level.GccName + ":"
+		sep = " "
+	}
+	if pkglint.Opts.Profiling && format != AutofixFormat && level != Fatal {
+		pkglint.loghisto.Add(format, 1)
+	}
+	text += sep + msg + "\n"
+
+	out := pkglint.logOut
+	if level == Fatal {
+		out = pkglint.logErr
+	}
+
+	out.Write(text)
+
+	switch level {
+	case Fatal:
+		panic(pkglintFatal{})
+	case Error:
+		pkglint.errors++
+	case Warn:
+		pkglint.warnings++
+	}
+	return true
 }
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
