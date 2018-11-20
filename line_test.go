@@ -4,19 +4,18 @@ import (
 	"gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_Line_diag__gcc_format(c *check.C) {
+func (s *Suite) Test_logf__gcc_format(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--gcc-output-format")
-	line := t.NewLine("filename", 123, "text")
 
-	line.Notef("Diagnostics can be logged in GCC-style.")
+	logf(Note, "filename", "123", "Diagnostics can be logged in GCC-style.", "Diagnostics can be logged in GCC-style.")
 
 	t.CheckOutputLines(
 		"filename:123: note: Diagnostics can be logged in GCC-style.")
 }
 
-func (s *Suite) Test_Line_diag__show_source(c *check.C) {
+func (s *Suite) Test_Pkglint_diag__show_source(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--show-autofix", "--source")
@@ -37,7 +36,7 @@ func (s *Suite) Test_Line_diag__show_source(c *check.C) {
 		"+\tnew line after")
 }
 
-func (s *Suite) Test_Line_diag__show_source_with_whole_file(c *check.C) {
+func (s *Suite) Test_Pkglint_diag__show_source_with_whole_file(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--source")
@@ -51,7 +50,7 @@ func (s *Suite) Test_Line_diag__show_source_with_whole_file(c *check.C) {
 
 // Ensures that when two packages produce a warning in the same file, both the
 // warning and the corresponding source code are logged only once.
-func (s *Suite) Test_Line_showSource__duplicates(c *check.C) {
+func (s *Suite) Test_Pkglint_diag__source_duplicates(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()

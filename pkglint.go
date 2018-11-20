@@ -451,6 +451,31 @@ func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	}
 }
 
+// diag logs a diagnostic. These are filtered by the --only command line option,
+// and duplicates are suppressed unless the --log-verbose command line option is given.
+//
+// See logf for logging arbitrary messages.
+func (pkglint *Pkglint) diag(line Line, level *LogLevel, format string, args []interface{}) {
+	if pkglint.Opts.ShowAutofix || pkglint.Opts.Autofix {
+		// In these two cases, the only interesting diagnostics are those that can
+		// be fixed automatically. These are logged by Autofix.Apply.
+		return
+	}
+
+	pkglint.explainNext = shallBeLogged(format)
+	if !pkglint.explainNext {
+		return
+	}
+
+	if pkglint.Opts.ShowSource {
+		line.showSource(G.logOut)
+	}
+	logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	if pkglint.Opts.ShowSource {
+		pkglint.logOut.Separate()
+	}
+}
+
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
 func findPkgsrcTopdir(filename string) string {
 	for _, dir := range [...]string{".", "..", "../..", "../../.."} {
