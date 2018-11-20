@@ -101,7 +101,7 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"  Flags for -W, --warning:",
 		"    all          all of the following",
 		"    none         none of the following",
-		"    absname      warn about use of absolute filenames (enabled)",
+		"    absname      warn about use of absolute filenames (disabled)",
 		"    directcmd    warn about use of direct command names instead of Make variables (enabled)",
 		"    extra        enable some extra warnings (disabled)",
 		"    order        warn if Makefile entries are unordered (enabled)",

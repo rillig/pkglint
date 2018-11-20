@@ -351,7 +351,7 @@ func (s *Suite) Test_ChecklinesPatch__only_context_header_but_no_content(c *chec
 func (s *Suite) Test_ChecklinesPatch__Makefile_with_absolute_pathnames(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine( /*none*/ )
+	t.SetupCommandLine("-Wabsname", "-Wno-extra")
 	lines := t.NewLines("patch-unified",
 		RcsID,
 		"",

@@ -30,6 +30,21 @@ func (s *Suite) Test_CheckLineAbsolutePathname(c *check.C) {
 		"WARN: Makefile:1: Found absolute pathname: /dev/stderr")
 }
 
+// It is unclear whether pkglint should check for absolute pathnames by default.
+// It might be useful, but all the code surrounding this check was added for
+// theoretical reasons instead of a practical bug. Therefore the code is still
+// there, it is just not enabled by default.
+func (s *Suite) Test_CheckLineAbsolutePathname__disabled_by_default(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine( /* none, which means -Wall is suppressed */ )
+	line := t.NewLine("Makefile", 1, "# dummy")
+
+	CheckLineAbsolutePathname(line, "bindir=/bin")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_CheckLineTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 

@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+// CheckLineAbsolutePathname checks whether any absolute pathnames occur in the line.
+//
+// XXX: Is this check really useful? It had been added 10 years ago because some
+// style guide said that "absolute pathnames should be avoided", but there was no
+// evidence for that.
 func CheckLineAbsolutePathname(line Line, text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
@@ -80,9 +85,19 @@ func CheckLineRcsid(line Line, prefixRe regex.Pattern, suggestedPrefix string) b
 	return false
 }
 
+// CheckwordAbsolutePathname checks the given word (which is often part of a
+// shell command) for absolute pathnames.
+//
+// XXX: Is this check really useful? It had been added 10 years ago because some
+// style guide said that "absolute pathnames should be avoided", but there was no
+// evidence for that.
 func CheckwordAbsolutePathname(line Line, word string) {
 	if trace.Tracing {
 		defer trace.Call1(word)()
+	}
+
+	if !G.Opts.WarnAbsname {
+		return
 	}
 
 	switch {
