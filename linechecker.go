@@ -110,7 +110,7 @@ func (ck LineChecker) CheckWordAbsolutePathname(word string) {
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
 
 	case matches(word, `/s\W`):
-		// Probably a sed(1) command, e.g. /find/s,replace,with,
+		// Probably a sed(1) command, such as /find/s,replace,with,
 
 	case matches(word, `^/(?:[a-z]|\$[({])`):
 		// Absolute paths probably start with a lowercase letter.
@@ -131,6 +131,8 @@ func (ck LineChecker) CheckWordAbsolutePathname(word string) {
 				"Absolute pathnames are often an indicator for unportable code.  As",
 				"pkgsrc aims to be a portable system, absolute pathnames should be",
 				"avoided whenever possible.")
+
+			// TODO: Explain how to actually fix this warning properly.
 		}
 	}
 }
