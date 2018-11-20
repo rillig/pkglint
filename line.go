@@ -143,6 +143,9 @@ func (line *LineImpl) showSource(out *SeparatorWriter) {
 }
 
 func (line *LineImpl) Fatalf(format string, args ...interface{}) {
+	if trace.Tracing {
+		trace.Stepf("Fatalf: %q, %v", format, args)
+	}
 	G.diag(line, Fatal, format, args)
 }
 
