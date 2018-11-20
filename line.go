@@ -162,7 +162,7 @@ func (line *LineImpl) Notef(format string, args ...interface{}) {
 }
 
 func (line *LineImpl) String() string {
-	return line.Filename + ":" + line.Linenos() + ": " + line.Text
+	return sprintf("%s:%s: %s", line.Filename, line.Linenos(), line.Text)
 }
 
 // Autofix returns the autofix instance belonging to the line.
