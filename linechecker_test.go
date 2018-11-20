@@ -26,9 +26,9 @@ func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Found absolute pathname: /bin",
-		"WARN: Makefile:1: Found absolute pathname: /dev/stdin",
-		"WARN: Makefile:1: Found absolute pathname: /dev/stdout",
-		"WARN: Makefile:1: Found absolute pathname: /dev/stderr")
+		"WARN: Makefile:1: The \"/dev/stdin\" file is not portable.",
+		"WARN: Makefile:1: The \"/dev/stdout\" file is not portable.",
+		"WARN: Makefile:1: The \"/dev/stderr\" file is not portable.")
 }
 
 // It is unclear whether pkglint should check for absolute pathnames by default.

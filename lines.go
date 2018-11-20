@@ -41,15 +41,36 @@ func (ls *LinesImpl) CheckRcsID(index int, prefixRe regex.Pattern, suggestedPref
 	}
 
 	line := ls.Lines[index]
-	if matches(line.Text, `^`+prefixRe+`\$`+`NetBSD(?::[^\$]+)?\$$`) {
+	if m, expanded := match1(line.Text, `^`+prefixRe+`\$`+`NetBSD(:[^\$]+)?\$$`); m {
+
+		if G.Wip && expanded != "" {
+			fix := line.Autofix()
+			fix.Errorf("Expected exactly %q.", suggestedPrefix+"$"+"NetBSD$")
+			fix.Explain(
+				"Several files in pkgsrc must contain the CVS Id, so that their",
+				"current version can be traced back later from a binary package.",
+				"This is to ensure reproducible builds, for example for finding bugs.",
+				"",
+				"These CVS Ids are specific to the CVS version control system, and",
+				"pkgsrc-wip uses Git instead.  Therefore, having the expanded CVS Ids",
+				"in those files represents the file from which they were originally",
+				"copied but not their current state.  Because of that, these markers",
+				"should be replaced with the plain, unexpanded string $"+"NetBSD$.",
+				"",
+				"To preserve the history of the CVS Id, should that ever be needed,",
+				"remove the leading $.")
+			fix.InsertBefore(suggestedPrefix + "$" + "NetBSD$")
+			fix.Apply()
+		}
+
 		return true
 	}
 
 	fix := line.Autofix()
 	fix.Errorf("Expected %q.", suggestedPrefix+"$"+"NetBSD$")
 	fix.Explain(
-		"Several files in pkgsrc must contain the CVS Id, so that their",
-		"current version can be traced back later from a binary package.",
+		"Most files in pkgsrc contain the CVS Id, so that their current",
+		"version can be traced back later from a binary package.",
 		"This is to ensure reproducible builds, for example for finding bugs.")
 	fix.InsertBefore(suggestedPrefix + "$" + "NetBSD$")
 	fix.Apply()

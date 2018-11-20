@@ -46,8 +46,8 @@ func (s *Suite) Test_Lines_CheckRcsID__wip(c *check.C) {
 
 	G.CheckDirent(t.File("wip/package"))
 
-	// TODO: file1.mk should get a warning because it uses the expanded form.
 	t.CheckOutputLines(
+		"ERROR: ~/wip/package/file1.mk:1: Expected exactly \"# $"+"NetBSD$\".",
 		"ERROR: ~/wip/package/file3.mk:1: Expected \"# $"+"NetBSD$\".",
 		"ERROR: ~/wip/package/file4.mk:1: Expected \"# $"+"NetBSD$\".",
 		"ERROR: ~/wip/package/file5.mk:1: Expected \"# $"+"NetBSD$\".")

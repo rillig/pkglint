@@ -97,6 +97,15 @@ func (ck LineChecker) CheckWordAbsolutePathname(word string) {
 	case matches(word, `^/dev/(?:null|tty|zero)$`):
 		// These are defined by POSIX.
 
+	case matches(word, `^/dev/(?:stdin|stdout|stderr)$`):
+		ck.line.Warnf("The %q file is not portable.", word)
+		Explain(
+			"The special files /dev/{stdin,stdout,stderr}, although present",
+			"on Linux systems, are not available on other systems, and POSIX",
+			"explicitly mentions them as examples of system-specific filenames.",
+			"",
+			"See https://unix.stackexchange.com/q/36403.")
+
 	case word == "/bin/sh":
 		// This is usually correct, although on Solaris, it's pretty feature-crippled.
 

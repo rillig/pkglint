@@ -61,6 +61,10 @@ func loggedAlready(filename, lineno, msg string) bool {
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
 func Explain(explanation ...string) {
+
+	// TODO: Add automatic word wrapping so that the pkglint source
+	// code doesn't need to be concerned with manual line wrapping.
+
 	if G.Testing {
 		for _, s := range explanation {
 			if l := tabWidth(s); l > 68 && contains(s, " ") {
