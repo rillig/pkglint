@@ -7,28 +7,62 @@ import (
 func (s *Suite) Test_LineChecker_CheckAbsolutePathname(c *check.C) {
 	t := s.Init(c)
 
-	line := t.NewLine("Makefile", 1, "# dummy")
+	t.SetupCommandLine("-Wabsname", "--explain")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"\tbindir=/bin",
+		"\tbindir=/../lib",
+		"\tcat /dev/null",
+		"\tcat /dev/tty",
+		"\tcat /dev/zero",
+		"\tcat /dev/stdin",
+		"\tcat /dev/stdout",
+		"\tcat /dev/stderr",
+		"\tprintf '#! /bin/sh\\nexit 0'",
+		"\tprogram=$$bindir/program",
+		"\tbindir=${PREFIX}/bin",
+		"\tbindir=${DESTDIR}${PREFIX}/bin",
+		"\tbindir=${DESTDIR}/bin",
 
-	ck := LineChecker{line}
-	ck.CheckAbsolutePathname("bindir=/bin")
-	ck.CheckAbsolutePathname("bindir=/../lib")
-	ck.CheckAbsolutePathname("cat /dev/null")
-	ck.CheckAbsolutePathname("cat /dev/tty")
-	ck.CheckAbsolutePathname("cat /dev/zero")
-	ck.CheckAbsolutePathname("cat /dev/stdin")
-	ck.CheckAbsolutePathname("cat /dev/stdout")
-	ck.CheckAbsolutePathname("cat /dev/stderr")
-	ck.CheckAbsolutePathname("printf '#! /bin/sh\\nexit 0'")
+		// This is not a filename at all, but certainly looks like one.
+		// Nevertheless, pkglint doesn't fall into the trap.
+		"\tsed -e /usr/s/usr/var/g")
 
-	// This is not a filename at all, but certainly looks like one.
-	// Nevertheless, pkglint doesn't fall into the trap.
-	ck.CheckAbsolutePathname("sed -e /usr/s/usr/var/g")
+	mklines.ForEach(func(mkline MkLine) {
+		if !mkline.IsComment() {
+			LineChecker{mkline.Line}.CheckAbsolutePathname(mkline.ShellCommand())
+		}
+	})
 
 	t.CheckOutputLines(
-		"WARN: Makefile:1: Found absolute pathname: /bin",
-		"WARN: Makefile:1: The \"/dev/stdin\" file is not portable.",
-		"WARN: Makefile:1: The \"/dev/stdout\" file is not portable.",
-		"WARN: Makefile:1: The \"/dev/stderr\" file is not portable.")
+		"WARN: Makefile:2: Found absolute pathname: /bin",
+		"",
+		"\tAbsolute pathnames are often an indicator for unportable code.  As",
+		"\tpkgsrc aims to be a portable system, absolute pathnames should be",
+		"\tavoided whenever possible.",
+		"",
+		"WARN: Makefile:7: The \"/dev/stdin\" file is not portable.",
+		"",
+		"\tThe special files /dev/{stdin,stdout,stderr}, although present",
+		"\ton Linux systems, are not available on other systems, and POSIX",
+		"\texplicitly mentions them as examples of system-specific filenames.",
+		"\t",
+		"\tSee https://unix.stackexchange.com/q/36403.",
+		"",
+		"WARN: Makefile:8: The \"/dev/stdout\" file is not portable.",
+		"WARN: Makefile:9: The \"/dev/stderr\" file is not portable.",
+		"WARN: Makefile:14: Found absolute pathname: /bin",
+		"",
+		"\tAbsolute pathnames are often an indicator for unportable code.  As",
+		"\tpkgsrc aims to be a portable system, absolute pathnames should be",
+		"\tavoided whenever possible.",
+		"\t",
+		"\tA special variable in this context is ${DESTDIR}, which is used in",
+		"\tGNU projects to specify a different directory for installation than",
+		"\twhat the programs see later when they are executed.  Usually it is",
+		"\tempty, so if anything after that variable starts with a slash, it is",
+		"\tconsidered an absolute pathname.",
+		"")
 }
 
 // It is unclear whether pkglint should check for absolute pathnames by default.
