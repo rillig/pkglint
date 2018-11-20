@@ -172,7 +172,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		defer func() {
 			pkglint.logOut.Write("")
 			pkglint.loghisto.PrintStats(pkglint.logOut.out, "loghisto", -1)
-			G.res.PrintStats(pkglint.logOut.out)
+			pkglint.res.PrintStats(pkglint.logOut.out)
 			pkglint.loaded.PrintStats(pkglint.logOut.out, "loaded", 10)
 			pkglint.logOut.WriteLine(fmt.Sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
 		}()
@@ -185,7 +185,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		pkglint.Todo = []string{"."}
 	}
 
-	firstArg := G.Todo[0]
+	firstArg := pkglint.Todo[0]
 	if fileExists(firstArg) {
 		firstArg = path.Dir(firstArg)
 	}
@@ -329,7 +329,7 @@ func (pkglint *Pkglint) CheckDirent(filename string) {
 	isReg := st.Mode().IsRegular()
 
 	dir := ifelseStr(isReg, path.Dir(filename), filename)
-	pkgsrcRel := G.Pkgsrc.ToRel(dir)
+	pkgsrcRel := pkglint.Pkgsrc.ToRel(dir)
 	pkglint.Wip = matches(pkgsrcRel, `^wip(/|$)`)
 	pkglint.Infrastructure = matches(pkgsrcRel, `^mk(/|$)`)
 	pkgsrcdir := findPkgsrcTopdir(dir)
@@ -365,9 +365,9 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 		defer trace.Call1(dir)()
 	}
 
-	G.Pkg = NewPackage(dir)
-	defer func() { G.Pkg = nil }()
-	pkg := G.Pkg
+	pkglint.Pkg = NewPackage(dir)
+	defer func() { pkglint.Pkg = nil }()
+	pkg := pkglint.Pkg
 
 	// Load the package Makefile and all included files,
 	// to collect all used and defined variables and similar data.
@@ -380,7 +380,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	if pkg.Pkgdir != "." {
 		files = append(files, dirglob(pkg.File(pkg.Pkgdir))...)
 	}
-	if G.Opts.CheckExtra {
+	if pkglint.Opts.CheckExtra {
 		files = append(files, dirglob(pkg.File(pkg.Filesdir))...)
 	}
 	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
@@ -419,7 +419,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			if st, err := os.Lstat(filename); err == nil {
 				pkglint.checkExecutable(filename, st)
 			}
-			if G.Opts.CheckMakefile {
+			if pkglint.Opts.CheckMakefile {
 				pkg.checkfilePackageMakefile(filename, mklines)
 			}
 		} else {
@@ -433,7 +433,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 		pkg.checkLocallyModified(filename)
 	}
 
-	if pkg.Pkgdir == "." && G.Opts.CheckDistinfo && G.Opts.CheckPatches {
+	if pkg.Pkgdir == "." && pkglint.Opts.CheckDistinfo && pkglint.Opts.CheckPatches {
 		if havePatches && !haveDistinfo {
 			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run %q.", bmake("makepatchsum"))
 		}
@@ -468,7 +468,7 @@ func (pkglint *Pkglint) diag(line Line, level *LogLevel, format string, args []i
 	}
 
 	if pkglint.Opts.ShowSource {
-		line.showSource(G.logOut)
+		line.showSource(pkglint.logOut)
 	}
 	pkglint.logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	if pkglint.Opts.ShowSource {
@@ -682,10 +682,10 @@ func (pkglint *Pkglint) Checkfile(filename string) {
 	}
 
 	basename := path.Base(filename)
-	pkgsrcRel := G.Pkgsrc.ToRel(filename)
+	pkgsrcRel := pkglint.Pkgsrc.ToRel(filename)
 	depth := strings.Count(pkgsrcRel, "/")
 
-	if depth == 2 && !G.Wip {
+	if depth == 2 && !pkglint.Wip {
 		if contains(basename, "README") || contains(basename, "TODO") {
 			NewLineWhole(filename).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
 			return
@@ -818,7 +818,7 @@ func (pkglint *Pkglint) checkMode(filename string, mode os.FileMode) {
 		// Skip
 
 	case basename == "spec":
-		if !hasPrefix(G.Pkgsrc.ToRel(filename), "regress/") {
+		if !hasPrefix(pkglint.Pkgsrc.ToRel(filename), "regress/") {
 			NewLineWhole(filename).Warnf("Only packages in regress/ may have spec files.")
 		}
 
@@ -917,9 +917,9 @@ func (pkglint *Pkglint) ToolByVarname(varname string, time ToolTime) *Tool {
 }
 
 func (pkglint *Pkglint) tools() *Tools {
-	if G.Mk != nil {
-		return G.Mk.Tools
+	if pkglint.Mk != nil {
+		return pkglint.Mk.Tools
 	} else {
-		return G.Pkgsrc.Tools
+		return pkglint.Pkgsrc.Tools
 	}
 }
