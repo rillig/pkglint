@@ -304,3 +304,10 @@ warnings and how to repair them properly:
 #### %s is defined but not used
 
 * Load the standard variables using `t.SetupVartypes()`
+
+### Traps and pitfalls during a test
+
+If a file is not checked although it should be, check whether you have created
+the lines using `t.NewLines` instead of `t.CreateFileLines`. The former creates
+the lines only in memory, and the result of that method must be used, otherwise
+the call doesn't make sense.
