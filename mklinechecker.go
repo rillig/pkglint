@@ -725,8 +725,25 @@ func (ck MkLineChecker) checkVarassign() {
 	ck.checkText(value)
 	ck.CheckVartype(varname, op, value, comment)
 
+	ck.checkVarassignUnused()
+
+	ck.checkVarassignSpecific()
+
+	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
+		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
+	} else if fix = G.Pkgsrc.Deprecated[varcanon]; fix != "" {
+		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
+	}
+
+	ck.checkVarassignVaruse()
+}
+
+func (ck MkLineChecker) checkVarassignUnused() {
+	varname := ck.MkLine.Varname()
+	varcanon := varnameCanon(varname)
+
 	// If the variable is not used and is untyped, it may be a spelling mistake.
-	if op == opAssignEval && varname == strings.ToLower(varname) {
+	if ck.MkLine.Op() == opAssignEval && varname == strings.ToLower(varname) {
 		if trace.Tracing {
 			trace.Step1("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
@@ -739,19 +756,9 @@ func (ck MkLineChecker) checkVarassign() {
 		} else if G.Mk != nil && !G.Mk.FirstTime("defined but not used: "+varname) {
 			// Skip
 		} else {
-			mkline.Warnf("%s is defined but not used.", varname)
+			ck.MkLine.Warnf("%s is defined but not used.", varname)
 		}
 	}
-
-	ck.checkVarassignSpecific()
-
-	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
-		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix = G.Pkgsrc.Deprecated[varcanon]; fix != "" {
-		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
-	}
-
-	ck.checkVarassignVaruse()
 }
 
 func (ck MkLineChecker) checkVarassignVaruse() {
