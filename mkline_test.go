@@ -698,6 +698,44 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 		"${DESTDIR:S,/,\\:,:S,:,:,}/sbin")
 }
 
+func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
+	t := s.Init(c)
+
+	testTokens := func(value string, expected ...*MkToken) {
+		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
+		split := mkline.ValueTokens()
+		c.Check(split, deepEquals, expected)
+	}
+
+	testTokens("#empty",
+		[]*MkToken(nil)...)
+
+	testTokens("value",
+		&MkToken{"value", nil})
+
+	testTokens("value ${VAR} rest",
+		&MkToken{"value ", nil},
+		&MkToken{"${VAR}", NewMkVarUse("VAR")},
+		&MkToken{" rest", nil})
+
+	testTokens("value ${UNFINISHED",
+		&MkToken{"value ", nil})
+}
+
+func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
+	split := mkline.ValueTokens()
+
+	c.Check(split, deepEquals, []*MkToken{{"value ", nil}})
+
+	split2 := mkline.ValueTokens() // This time the slice is taken from the cache.
+
+	// In Go, it's not possible to compare slices for reference equality.
+	c.Check(split2, deepEquals, split)
+}
+
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	t := s.Init(c)
 

@@ -21,14 +21,16 @@ type MkLineImpl struct {
 }
 type mkLineAssign = *mkLineAssignImpl
 type mkLineAssignImpl struct {
-	commented  bool       // Whether the whole variable assignment is commented out
-	varname    string     // e.g. "HOMEPAGE", "SUBST_SED.perl"
-	varcanon   string     // e.g. "HOMEPAGE", "SUBST_SED.*"
-	varparam   string     // e.g. "", "perl"
-	op         MkOperator //
-	valueAlign string     // The text up to and including the assignment operator, e.g. VARNAME+=\t
-	value      string     // The trimmed value
-	comment    string
+	commented   bool       // Whether the whole variable assignment is commented out
+	varname     string     // e.g. "HOMEPAGE", "SUBST_SED.perl"
+	varcanon    string     // e.g. "HOMEPAGE", "SUBST_SED.*"
+	varparam    string     // e.g. "", "perl"
+	op          MkOperator //
+	valueAlign  string     // The text up to and including the assignment operator, e.g. VARNAME+=\t
+	value       string     // The trimmed value
+	valueMk     []*MkToken // The value, sent through splitIntoMkWords
+	valueMkRest string     // nonempty in case of parse errors
+	comment     string
 }
 type mkLineShell struct {
 	command string
@@ -101,6 +103,8 @@ func NewMkLine(line Line) *MkLineImpl {
 			NewMkOperator(op),
 			valueAlign,
 			value,
+			nil,
+			"",
 			comment}}
 	}
 
@@ -337,7 +341,20 @@ func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
 }
 
 func (mkline *MkLineImpl) ValueTokens() []*MkToken {
-	return mkline.Tokenize(mkline.Value(), false)
+	value := mkline.Value()
+	if value == "" {
+		return nil
+	}
+
+	assign := mkline.data.(mkLineAssign)
+	if assign.valueMk != nil || assign.valueMkRest != "" {
+		return assign.valueMk
+	}
+
+	p := NewMkParser(mkline.Line, value, true)
+	assign.valueMk = p.MkTokens()
+	assign.valueMkRest = p.Rest()
+	return assign.valueMk
 }
 
 func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
