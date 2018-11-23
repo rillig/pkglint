@@ -771,7 +771,7 @@ func (ck MkLineChecker) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
 		defer trace.Call(vartype, time)()
 	}
 	mkline := ck.MkLine
-	tokens := NewMkParser(mkline.Line, mkline.Value(), false).MkTokens()
+	tokens := NewMkParser(nil, mkline.Value(), false).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `[\t ]$`)
@@ -1001,7 +1001,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		defer trace.Call1(mkline.Args())()
 	}
 
-	p := NewMkParser(mkline.Line, mkline.Args(), false) // XXX: Why false?
+	p := NewMkParser(nil, mkline.Args(), false) // XXX: Why false?
 	cond := p.MkCond()
 	if !p.EOF() {
 		mkline.Warnf("Invalid condition, unrecognized part: %q.", p.Rest())

@@ -154,7 +154,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 
 func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	testRest := func(input string, expectedTree MkCond, expectedRest string) {
-		p := NewMkParser(dummyLine, input, false)
+		p := NewMkParser(nil, input, false)
 		actualTree := p.MkCond()
 		c.Check(actualTree, deepEquals, expectedTree)
 		c.Check(p.Rest(), equals, expectedRest)

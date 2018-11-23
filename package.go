@@ -445,7 +445,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 }
 
 func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
-	tokens := NewMkParser(dummyLine, pkgname, false).MkTokens()
+	tokens := NewMkParser(nil, pkgname, false).MkTokens()
 
 	result := ""
 	for _, token := range tokens {

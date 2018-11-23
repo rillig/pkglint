@@ -15,6 +15,7 @@ type MkParser struct {
 // NewMkParser creates a new parser for the given text.
 // If emitWarnings is false, line may be nil.
 func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
+	G.Assertf((line != nil) == emitWarnings, "line must be given iff emitWarnings is set")
 	return &MkParser{NewParser(line, text, emitWarnings)}
 }
 

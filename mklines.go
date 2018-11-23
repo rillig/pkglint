@@ -333,7 +333,7 @@ func (mklines *MkLinesImpl) determineDocumentedVariables() {
 
 			commentLines++
 
-			parser := NewMkParser(mkline.Line, words[1], false)
+			parser := NewMkParser(nil, words[1], false)
 			varname := parser.Varname()
 			if hasSuffix(varname, ".") && parser.repl.SkipRegexp(G.res.Compile(`^<\w+>`)) {
 				varname += "*"
