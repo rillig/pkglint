@@ -462,7 +462,7 @@ func (pkglint *Pkglint) diag(line Line, level *LogLevel, format string, args []i
 		return
 	}
 
-	pkglint.explainNext = shallBeLogged(format)
+	pkglint.explainNext = pkglint.shallBeLogged(format)
 	if !pkglint.explainNext {
 		return
 	}
@@ -474,6 +474,23 @@ func (pkglint *Pkglint) diag(line Line, level *LogLevel, format string, args []i
 	if pkglint.Opts.ShowSource {
 		pkglint.logOut.Separate()
 	}
+}
+
+// shallBeLogged tests whether a diagnostic with the given format should
+// be logged.
+//
+// It only inspects the --only arguments; duplicates are handled in main.logf.
+func (pkglint *Pkglint) shallBeLogged(format string) bool {
+	if len(G.Opts.LogOnly) == 0 {
+		return true
+	}
+
+	for _, substr := range G.Opts.LogOnly {
+		if contains(format, substr) {
+			return true
+		}
+	}
+	return false
 }
 
 func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg string) bool {

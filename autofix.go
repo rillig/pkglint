@@ -256,7 +256,7 @@ func (fix *Autofix) Apply() {
 		fix.autofixShortTerm = autofixShortTerm{}
 	}
 
-	G.explainNext = shallBeLogged(fix.diagFormat)
+	G.explainNext = G.shallBeLogged(fix.diagFormat)
 	if !G.explainNext || len(fix.actions) == 0 {
 		reset()
 		return
@@ -380,7 +380,7 @@ func (fix *Autofix) skip() bool {
 		fix.diagFormat != "",
 		"Autofix: The diagnostic must be given before the action.")
 	// This check is necessary for the --only command line option.
-	return !shallBeLogged(fix.diagFormat)
+	return !G.shallBeLogged(fix.diagFormat)
 }
 
 func (fix *Autofix) assertRealLine() {

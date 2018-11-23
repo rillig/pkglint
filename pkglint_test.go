@@ -1167,6 +1167,24 @@ func (s *Suite) Test_Pkglint_diag__source_duplicates(c *check.C) {
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
+func (s *Suite) Test_Pkglint_shallBeLogged(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine( /* none */ )
+
+	c.Check(G.shallBeLogged("Options should not contain whitespace."), equals, true)
+
+	t.SetupCommandLine("--only", "whitespace")
+
+	c.Check(G.shallBeLogged("Options should not contain whitespace."), equals, true)
+	c.Check(G.shallBeLogged("Options should not contain space."), equals, false)
+
+	t.SetupCommandLine( /* none again */ )
+
+	c.Check(G.shallBeLogged("Options should not contain whitespace."), equals, true)
+	c.Check(G.shallBeLogged("Options should not contain space."), equals, true)
+}
+
 // Even if verbose logging is disabled, the "Replacing" diagnostics
 // must not be filtered for duplicates since each of them modifies the line.
 func (s *Suite) Test_Pkglint_logf__duplicate_autofix(c *check.C) {

@@ -497,7 +497,7 @@ func (s *plistLineSorter) Sort() {
 		return
 	}
 
-	if !shallBeLogged("%q should be sorted before %q.") {
+	if !G.shallBeLogged("%q should be sorted before %q.") {
 		return
 	}
 	if len(s.middle) == 0 {

@@ -23,27 +23,6 @@ var (
 var dummyLine = NewLineMulti("", 0, 0, "", nil)
 var dummyMkLine = NewMkLine(dummyLine)
 
-// shallBeLogged tests whether a diagnostic with the given format should
-// be logged. It only inspects the --only arguments.
-//
-// Duplicates are handled in main.logf.
-func shallBeLogged(format string) bool {
-	if len(G.Opts.LogOnly) > 0 {
-		found := false
-		for _, substr := range G.Opts.LogOnly {
-			if contains(format, substr) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	return true
-}
-
 func loggedAlready(filename, lineno, msg string) bool {
 	uniq := path.Clean(filename) + ":" + lineno + ":" + msg
 	if G.logged[uniq] {
