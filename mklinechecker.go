@@ -712,7 +712,6 @@ func (ck MkLineChecker) checkVarassign() {
 	op := mkline.Op()
 	value := mkline.Value()
 	comment := mkline.VarassignComment()
-	varcanon := varnameCanon(varname)
 
 	if trace.Tracing {
 		defer trace.Call(varname, op, value)()
@@ -729,13 +728,18 @@ func (ck MkLineChecker) checkVarassign() {
 
 	ck.checkVarassignSpecific()
 
-	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
-		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix = G.Pkgsrc.Deprecated[varcanon]; fix != "" {
-		mkline.Warnf("Definition of %s is deprecated. %s", varname, fix)
-	}
+	ck.checkVarassignDeprecated()
 
 	ck.checkVarassignVaruse()
+}
+
+func (ck MkLineChecker) checkVarassignDeprecated() {
+	varname := ck.MkLine.Varname()
+	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
+		ck.MkLine.Warnf("Definition of %s is deprecated. %s", varname, fix)
+	} else if fix = G.Pkgsrc.Deprecated[varnameCanon(varname)]; fix != "" {
+		ck.MkLine.Warnf("Definition of %s is deprecated. %s", varname, fix)
+	}
 }
 
 func (ck MkLineChecker) checkVarassignUnused() {
