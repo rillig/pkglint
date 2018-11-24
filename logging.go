@@ -20,7 +20,6 @@ var (
 )
 
 var dummyLine = NewLineMulti("", 0, 0, "", nil)
-var dummyMkLine = NewMkLine(dummyLine)
 
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records

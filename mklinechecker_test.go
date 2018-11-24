@@ -156,10 +156,11 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
 	c.Check(vartype.guessed, equals, false)
 	c.Check(vartype.kindOfList, equals, lkNone)
 
-	MkLineChecker{dummyMkLine}.CheckVartype("COMMENT", opAssign, "A nice package", "")
+	mkline := t.NewMkLine("Makefile", 123, "COMMENT=\tA nice package")
+	MkLineChecker{mkline}.CheckVartype(mkline.Varname(), mkline.Op(), mkline.Value(), mkline.VarassignComment())
 
 	t.CheckOutputLines(
-		"WARN: COMMENT should not begin with \"A\".")
+		"WARN: Makefile:123: COMMENT should not begin with \"A\".")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVartype(c *check.C) {

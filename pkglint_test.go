@@ -551,9 +551,10 @@ func (s *Suite) Test_Pkglint_Checkfile__in_current_working_directory(c *check.C)
 func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
 	t := s.Init(c)
 
+	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
-	local := G.Mk.Tools.Define("tool", "TOOL", dummyMkLine)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", mkline)
+	local := G.Mk.Tools.Define("tool", "TOOL", mkline)
 
 	global.Validity = Nowhere
 	local.Validity = AtRunTime
@@ -570,8 +571,9 @@ func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
 func (s *Suite) Test_Pkglint_Tool__lookup_by_name_fallback(c *check.C) {
 	t := s.Init(c)
 
+	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", mkline)
 
 	global.Validity = Nowhere
 
@@ -587,9 +589,10 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_name_fallback(c *check.C) {
 func (s *Suite) Test_Pkglint_Tool__lookup_by_varname(c *check.C) {
 	t := s.Init(c)
 
+	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
-	local := G.Mk.Tools.Define("tool", "TOOL", dummyMkLine)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", mkline)
+	local := G.Mk.Tools.Define("tool", "TOOL", mkline)
 
 	global.Validity = Nowhere
 	local.Validity = AtRunTime
@@ -636,9 +639,10 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback_runtime(c *check.C
 func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	t := s.Init(c)
 
+	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
-	global := G.Pkgsrc.Tools.Define("tool", "TOOL", dummyMkLine)
-	local := G.Mk.Tools.Define("tool", "TOOL", dummyMkLine)
+	global := G.Pkgsrc.Tools.Define("tool", "TOOL", mkline)
+	local := G.Mk.Tools.Define("tool", "TOOL", mkline)
 
 	global.Validity = Nowhere
 	local.Validity = AtRunTime
