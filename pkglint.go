@@ -509,33 +509,22 @@ func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg stri
 	if filename != "" {
 		filename = cleanpath(filename)
 	}
-	var text, sep string
-	if !pkglint.Opts.GccOutput {
-		text += sep + level.TraditionalName + ":"
-		sep = " "
-	}
-	if filename != "" {
-		text += sep + filename
-		sep = ": "
-		if lineno != "" {
-			text += ":" + lineno
-		}
-	}
-	if pkglint.Opts.GccOutput {
-		text += sep + level.GccName + ":"
-		sep = " "
-	}
 	if pkglint.Opts.Profiling && format != AutofixFormat && level != Fatal {
 		pkglint.loghisto.Add(format, 1)
 	}
-	text += sep + msg + "\n"
 
 	out := pkglint.logOut
 	if level == Fatal {
 		out = pkglint.logErr
 	}
 
-	out.Write(text)
+	filenameSep := ifelseStr(filename != "", ": ", "")
+	linenoSep := ifelseStr(filename != "" && lineno != "", ":", "")
+	if pkglint.Opts.GccOutput {
+		out.Printf("%s%s%s%s%s: %s\n", filename, linenoSep, lineno, filenameSep, level.GccName, msg)
+	} else {
+		out.Printf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, lineno, msg)
+	}
 
 	switch level {
 	case Fatal:
