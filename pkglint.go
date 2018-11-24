@@ -163,7 +163,8 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		}
 		defer f.Close()
 
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		G.Assertf(err == nil, "Cannot start profiling: %s", err)
 		defer pprof.StopCPUProfile()
 
 		pkglint.res.Profiling()
