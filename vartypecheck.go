@@ -692,7 +692,7 @@ func (cv *VartypeCheck) Option() {
 	}
 
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z+]*)$`); m {
-		if G.Mk != nil && !G.Mk.FirstTime("option:"+optname) {
+		if G.Mk != nil && !G.Mk.FirstTimeSlice("option:", optname) {
 			return
 		}
 

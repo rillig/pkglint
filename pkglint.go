@@ -45,7 +45,7 @@ type Pkglint struct {
 	explainNext           bool
 	logged                Once
 	explanationsAvailable bool
-	explanationsGiven     map[string]bool
+	explained             Once
 	autofixAvailable      bool
 	logOut                *SeparatorWriter
 	logErr                *SeparatorWriter
@@ -502,7 +502,7 @@ func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg stri
 	}
 
 	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
-	if !pkglint.Opts.LogVerbose && format != AutofixFormat && !pkglint.logged.FirstTime(path.Clean(filename)+":"+lineno+": "+msg) {
+	if !pkglint.Opts.LogVerbose && format != AutofixFormat && !pkglint.logged.FirstTimeSlice(path.Clean(filename), lineno, msg) {
 		pkglint.explainNext = false
 		return
 	}

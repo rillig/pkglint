@@ -353,7 +353,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	case containsVarRef(varname):
 	case G.Pkgsrc.vartypes[varname] != nil:
 	case G.Pkgsrc.vartypes[varnameCanon(varname)] != nil:
-	case G.Mk != nil && !G.Mk.FirstTime("used but not defined: "+varname):
+	case G.Mk != nil && !G.Mk.FirstTimeSlice("used but not defined: ", varname):
 
 	default:
 		mkline.Warnf("%s is used but not defined.", varname)
@@ -757,7 +757,7 @@ func (ck MkLineChecker) checkVarassignUnused() {
 			// Ok
 		} else if deprecated := G.Pkgsrc.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
 			// Ok
-		} else if G.Mk != nil && !G.Mk.FirstTime("defined but not used: "+varname) {
+		} else if G.Mk != nil && !G.Mk.FirstTimeSlice("defined but not used: ", varname) {
 			// Skip
 		} else {
 			ck.MkLine.Warnf("%s is defined but not used.", varname)

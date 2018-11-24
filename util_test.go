@@ -412,3 +412,13 @@ func (s *Suite) Test_FileCache(c *check.C) {
 func (s *Suite) Test_makeHelp(c *check.C) {
 	c.Check(makeHelp("subst"), equals, confMake+" help topic=subst")
 }
+
+func (s *Suite) Test_Once(c *check.C) {
+	var once Once
+
+	c.Check(once.FirstTime("str"), equals, true)
+	c.Check(once.FirstTime("str"), equals, false)
+	c.Check(once.FirstTimeSlice("str"), equals, false)
+	c.Check(once.FirstTimeSlice("str", "str2"), equals, true)
+	c.Check(once.FirstTimeSlice("str", "str2"), equals, false)
+}

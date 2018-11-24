@@ -37,6 +37,8 @@ func (pkglint *Pkglint) Explain(explanation ...string) {
 			}
 			if m, before := match1(s, `(.+)\. [^ ]`); m {
 				if !matches(before, `\d$|e\.g`) {
+					// TODO: Find out why this rule exists. It's the same as in
+					// the NetBSD manual pages, but seems otherwise unnecessary.
 					pkglint.logErr.Printf("Short space after period: %s\n", s)
 				}
 			}
@@ -54,14 +56,9 @@ func (pkglint *Pkglint) Explain(explanation ...string) {
 		return
 	}
 
-	complete := strings.Join(explanation, "\n")
-	if pkglint.explanationsGiven[complete] {
+	if !pkglint.explained.FirstTimeSlice(explanation...) {
 		return
 	}
-	if pkglint.explanationsGiven == nil {
-		pkglint.explanationsGiven = make(map[string]bool)
-	}
-	pkglint.explanationsGiven[complete] = true
 
 	pkglint.logOut.WriteLine("")
 	for _, explanationLine := range explanation {

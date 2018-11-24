@@ -431,12 +431,23 @@ type Once struct {
 }
 
 func (o *Once) FirstTime(what string) bool {
-	if o.seen == nil {
-		o.seen = make(map[uint64]bool)
+	return o.check(crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA)))
+}
+
+func (o *Once) FirstTimeSlice(whats ...string) bool {
+	crc := crc64.New(crc64.MakeTable(crc64.ECMA))
+	for _, what := range whats {
+		_, _ = crc.Write([]byte(what))
 	}
-	key := crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA))
+	return o.check(crc.Sum64())
+}
+
+func (o *Once) check(key uint64) bool {
 	if _, ok := o.seen[key]; ok {
 		return false
+	}
+	if o.seen == nil {
+		o.seen = make(map[uint64]bool)
 	}
 	o.seen[key] = true
 	return true
