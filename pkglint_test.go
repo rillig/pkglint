@@ -792,7 +792,7 @@ func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
 	// FIXME: Do this resetting properly
 	G.errors = 0
 	G.warnings = 0
-	G.logged = make(map[string]bool)
+	G.logged = Once{}
 	G.Main("pkglint", "--import", "category/package", "wip/package")
 
 	t.CheckOutputLines(

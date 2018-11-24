@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"path"
 	"strings"
 )
 
@@ -22,19 +21,6 @@ var (
 
 var dummyLine = NewLineMulti("", 0, 0, "", nil)
 var dummyMkLine = NewMkLine(dummyLine)
-
-func loggedAlready(filename, lineno, msg string) bool {
-	uniq := path.Clean(filename) + ":" + lineno + ":" + msg
-	if G.logged[uniq] {
-		return true
-	}
-
-	if G.logged == nil {
-		G.logged = make(map[string]bool)
-	}
-	G.logged[uniq] = true
-	return false
-}
 
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records

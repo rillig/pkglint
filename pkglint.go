@@ -43,7 +43,7 @@ type Pkglint struct {
 	errors                int
 	warnings              int
 	explainNext           bool
-	logged                map[string]bool
+	logged                Once
 	explanationsAvailable bool
 	explanationsGiven     map[string]bool
 	autofixAvailable      bool
@@ -504,7 +504,7 @@ func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg stri
 	}
 
 	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
-	if !pkglint.Opts.LogVerbose && format != AutofixFormat && loggedAlready(filename, lineno, msg) {
+	if !pkglint.Opts.LogVerbose && format != AutofixFormat && !pkglint.logged.FirstTime(path.Clean(filename)+":"+lineno+": "+msg) {
 		pkglint.explainNext = false
 		return false
 	}
