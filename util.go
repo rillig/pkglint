@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"hash/crc64"
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
 	"os"
@@ -426,17 +427,18 @@ func hasAlnumPrefix(s string) bool {
 // Once remembers with which arguments its FirstTime method has been called
 // and only returns true on each first call.
 type Once struct {
-	seen map[string]bool
+	seen map[uint64]bool
 }
 
 func (o *Once) FirstTime(what string) bool {
 	if o.seen == nil {
-		o.seen = make(map[string]bool)
+		o.seen = make(map[uint64]bool)
 	}
-	if _, ok := o.seen[what]; ok {
+	key := crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA))
+	if _, ok := o.seen[key]; ok {
 		return false
 	}
-	o.seen[what] = true
+	o.seen[key] = true
 	return true
 }
 
