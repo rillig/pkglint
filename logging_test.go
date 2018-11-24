@@ -111,17 +111,17 @@ func (s *Suite) Test__show_source_separator_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
-func (s *Suite) Test_Explain__only(c *check.C) {
+func (s *Suite) Test_Pkglint_Explain__only(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--only", "interesting", "--explain")
 	line := t.NewLine("Makefile", 27, "The old song")
 
-	line.Warnf("Filtered warning.")               // Is not logged.
-	Explain("Explanation for the above warning.") // Neither is this explanation logged.
+	line.Warnf("Filtered warning.")                 // Is not logged.
+	G.Explain("Explanation for the above warning.") // Neither is this explanation logged.
 
 	line.Warnf("What an interesting line.")
-	Explain("This explanation is logged.")
+	G.Explain("This explanation is logged.")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:27: What an interesting line.",
@@ -130,10 +130,10 @@ func (s *Suite) Test_Explain__only(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Explain__long_lines(c *check.C) {
+func (s *Suite) Test_Pkglint_Explain__long_lines(c *check.C) {
 	t := s.Init(c)
 
-	Explain(
+	G.Explain(
 		"123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789")
 
 	t.CheckOutputLines(
@@ -142,10 +142,10 @@ func (s *Suite) Test_Explain__long_lines(c *check.C) {
 		"Short space after period: 123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789")
 }
 
-func (s *Suite) Test_Explain__trailing_whitespace(c *check.C) {
+func (s *Suite) Test_Pkglint_Explain__trailing_whitespace(c *check.C) {
 	t := s.Init(c)
 
-	Explain(
+	G.Explain(
 		"This is a space: ")
 
 	t.CheckOutputLines(

@@ -981,8 +981,8 @@ func (s *Suite) Test_Pkglint_ShowSummary__explanations_with_only(c *check.C) {
 	t.SetupCommandLine("--only", "interesting")
 	line := t.NewLine("Makefile", 27, "The old song")
 
-	line.Warnf("Filtered warning.")               // Is not logged.
-	Explain("Explanation for the above warning.") // Neither would this explanation be logged.
+	line.Warnf("Filtered warning.")                 // Is not logged.
+	G.Explain("Explanation for the above warning.") // Neither would this explanation be logged.
 	G.ShowSummary()
 
 	c.Check(G.explanationsAvailable, equals, false)
@@ -990,7 +990,7 @@ func (s *Suite) Test_Pkglint_ShowSummary__explanations_with_only(c *check.C) {
 		"Looks fine.") // "pkglint -e" is not advertised since the above explanation is not relevant.
 
 	line.Warnf("What an interesting line.")
-	Explain("This explanation is available.")
+	G.Explain("This explanation is available.")
 	G.ShowSummary()
 
 	c.Check(G.explanationsAvailable, equals, true)
@@ -1054,9 +1054,9 @@ func (s *Suite) Test_Pkglint_logf__duplicate_messages(c *check.C) {
 	// when they appear in different contexts. In such a case, if the
 	// warning is suppressed, the explanation must not appear on its own.
 	line.Warnf("The warning.") // Is logged
-	Explain("Explanation 1")
+	G.Explain("Explanation 1")
 	line.Warnf("The warning.") // Is suppressed
-	Explain("Explanation 2")
+	G.Explain("Explanation 2")
 
 	t.CheckOutputLines(
 		"WARN: README.txt:123: The warning.",
@@ -1073,9 +1073,9 @@ func (s *Suite) Test_Pkglint_logf__duplicate_explanations(c *check.C) {
 
 	// In rare cases, different diagnostics may have the same explanation.
 	line.Warnf("Warning 1.")
-	Explain("Explanation")
+	G.Explain("Explanation")
 	line.Warnf("Warning 2.")
-	Explain("Explanation") // Is suppressed.
+	G.Explain("Explanation") // Is suppressed.
 
 	t.CheckOutputLines(
 		"WARN: README.txt:123: Warning 1.",

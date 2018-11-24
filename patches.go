@@ -168,7 +168,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		line := ck.exp.CurrentLine()
 		if !ck.isEmptyLine(line.Text) && !matches(line.Text, rePatchUniFileDel) {
 			line.Warnf("Empty line or end of file expected.")
-			Explain(
+			G.Explain(
 				"This line is not part of the patch anymore, although it may",
 				"look so.  To make this situation clear, there should be an",
 				"empty line before this line.  If the line doesn't contain",
@@ -184,7 +184,7 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.Errorf("Each patch must be documented.")
-		Explain(
+		G.Explain(
 			"Pkgsrc tries to have as few patches as possible.  Therefore, each",
 			"patch must document why it is necessary.  Typical reasons are",
 			"portability or security.  A typical documented patch looks like",
@@ -241,7 +241,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	case ftConfigure:
 		if hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
 			line.Errorf("This code must not be included in patches.")
-			Explain(
+			G.Explain(
 				"It is generated automatically by pkgsrc after the patch phase.",
 				"",
 				"For more details, look for \"configure-scripts-override\" in",

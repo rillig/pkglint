@@ -40,7 +40,7 @@ func CheckfileAlternatives(filename string) {
 			fix.Apply()
 		} else {
 			line.Errorf("Invalid ALTERNATIVES line %q.", line.Text)
-			Explain(
+			G.Explain(
 				sprintf("Run %q for more information.", makeHelp("alternatives")))
 		}
 	}

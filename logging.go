@@ -25,50 +25,50 @@ var dummyMkLine = NewMkLine(dummyLine)
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
-func Explain(explanation ...string) {
+func (pkglint *Pkglint) Explain(explanation ...string) {
 
 	// TODO: Add automatic word wrapping so that the pkglint source
 	// code doesn't need to be concerned with manual line wrapping.
 
-	if G.Testing {
+	if pkglint.Testing {
 		for _, s := range explanation {
 			if l := tabWidth(s); l > 68 && contains(s, " ") {
 				lastSpace := strings.LastIndexByte(s[:68], ' ')
-				G.logErr.Printf("Long explanation line: %s\nBreak after: %s\n", s, s[:lastSpace])
+				pkglint.logErr.Printf("Long explanation line: %s\nBreak after: %s\n", s, s[:lastSpace])
 			}
 			if m, before := match1(s, `(.+)\. [^ ]`); m {
 				if !matches(before, `\d$|e\.g`) {
-					G.logErr.Printf("Short space after period: %s\n", s)
+					pkglint.logErr.Printf("Short space after period: %s\n", s)
 				}
 			}
 			if hasSuffix(s, " ") || hasSuffix(s, "\t") {
-				G.logErr.Printf("Trailing whitespace: %q\n", s)
+				pkglint.logErr.Printf("Trailing whitespace: %q\n", s)
 			}
 		}
 	}
 
-	if !G.explainNext {
+	if !pkglint.explainNext {
 		return
 	}
-	G.explanationsAvailable = true
-	if !G.Opts.Explain {
+	pkglint.explanationsAvailable = true
+	if !pkglint.Opts.Explain {
 		return
 	}
 
 	complete := strings.Join(explanation, "\n")
-	if G.explanationsGiven[complete] {
+	if pkglint.explanationsGiven[complete] {
 		return
 	}
-	if G.explanationsGiven == nil {
-		G.explanationsGiven = make(map[string]bool)
+	if pkglint.explanationsGiven == nil {
+		pkglint.explanationsGiven = make(map[string]bool)
 	}
-	G.explanationsGiven[complete] = true
+	pkglint.explanationsGiven[complete] = true
 
-	G.logOut.WriteLine("")
+	pkglint.logOut.WriteLine("")
 	for _, explanationLine := range explanation {
-		G.logOut.WriteLine("\t" + explanationLine)
+		pkglint.logOut.WriteLine("\t" + explanationLine)
 	}
-	G.logOut.WriteLine("")
+	pkglint.logOut.WriteLine("")
 
 }
 

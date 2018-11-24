@@ -64,7 +64,7 @@ func NewMkLine(line Line) *MkLineImpl {
 
 	if hasPrefix(text, " ") && line.Basename != "bsd.buildlink3.mk" {
 		line.Warnf("Makefile lines should not start with space characters.")
-		Explain(
+		G.Explain(
 			"If you want this line to contain a shell program, use a tab",
 			"character for indentation.  Otherwise please remove the leading",
 			"whitespace.")
@@ -87,7 +87,7 @@ func NewMkLine(line Line) *MkLineImpl {
 
 		if comment != "" && value != "" && spaceAfterValue == "" {
 			line.Warnf("The # character starts a comment.")
-			Explain(
+			G.Explain(
 				"In a variable assignment, an unescaped # starts a comment that",
 				"continues until the end of the line.  To escape the #, write \\#.")
 		}
@@ -434,7 +434,7 @@ func (ind *Indentation) RememberUsedVariables(cond MkCond) {
 }
 
 func (mkline *MkLineImpl) ExplainRelativeDirs() {
-	Explain(
+	G.Explain(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
 		"main pkgsrc repository.")

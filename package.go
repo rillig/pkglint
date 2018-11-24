@@ -98,7 +98,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 		changeVersion := replaceAll(change.Version, `nb\d+$`, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
 			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.", change.Version, mkline.Line.RefTo(change.Line), pkgversion)
-			Explain(
+			G.Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
 				"This is unusual, since packages are typically upgraded instead of",
@@ -486,7 +486,7 @@ func (pkg *Package) checkUpdate() {
 			switch {
 			case cmp < 0:
 				pkgnameLine.Warnf("This package should be updated to %s%s.", sugg.Version, comment)
-				Explain(
+				G.Explain(
 					"The wishlist for package updates in doc/TODO mentions that a newer",
 					"version of this package is available.")
 			case cmp > 0:
@@ -699,7 +699,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 	mkline := mklines.mklines[firstRelevant]
 	mkline.Warnf("The canonical order of the variables is %s.", strings.Join(canonical, ", "))
-	Explain(
+	G.Explain(
 		"In simple package Makefiles, some common variables should be",
 		"arranged in a specific order.",
 		"",
@@ -733,13 +733,13 @@ func (pkg *Package) checkLocallyModified(filename string) {
 	if isLocallyModified(filename) {
 		if owner != "" {
 			NewLineWhole(filename).Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
-			Explain(
+			G.Explain(
 				"See the pkgsrc guide, section \"Package components\",",
 				"keyword \"owner\", for more information.")
 		}
 		if maintainer != "" {
 			NewLineWhole(filename).Notef("Please only commit changes that %s would approve.", maintainer)
-			Explain(
+			G.Explain(
 				"See the pkgsrc guide, section \"Package components\",",
 				"keyword \"maintainer\", for more information.")
 		}

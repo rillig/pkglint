@@ -43,7 +43,7 @@ func (ck LineChecker) CheckAbsolutePathname(text string) {
 func (ck LineChecker) CheckLength(maxLength int) {
 	if len(ck.line.Text) > maxLength {
 		ck.line.Warnf("Line too long (should be no more than %d characters).", maxLength)
-		Explain(
+		G.Explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
 			"And this is still the default size of many terminal emulators.",
 			"Moderately short lines also make reading easier.")
@@ -99,7 +99,7 @@ func (ck LineChecker) CheckWordAbsolutePathname(word string) {
 
 	case matches(word, `^/dev/(?:stdin|stdout|stderr)$`):
 		ck.line.Warnf("The %q file is not portable.", word)
-		Explain(
+		G.Explain(
 			"The special files /dev/{stdin,stdout,stderr}, although present",
 			"on Linux systems, are not available on other systems, and POSIX",
 			"explicitly mentions them as examples of system-specific filenames.",
@@ -116,7 +116,7 @@ func (ck LineChecker) CheckWordAbsolutePathname(word string) {
 		// Absolute paths probably start with a lowercase letter.
 		ck.line.Warnf("Found absolute pathname: %s", word)
 		if contains(ck.line.Text, "DESTDIR") {
-			Explain(
+			G.Explain(
 				"Absolute pathnames are often an indicator for unportable code.  As",
 				"pkgsrc aims to be a portable system, absolute pathnames should be",
 				"avoided whenever possible.",
@@ -127,7 +127,7 @@ func (ck LineChecker) CheckWordAbsolutePathname(word string) {
 				"empty, so if anything after that variable starts with a slash, it is",
 				"considered an absolute pathname.")
 		} else {
-			Explain(
+			G.Explain(
 				"Absolute pathnames are often an indicator for unportable code.  As",
 				"pkgsrc aims to be a portable system, absolute pathnames should be",
 				"avoided whenever possible.")

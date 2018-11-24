@@ -47,7 +47,7 @@ func (lc *LicenseChecker) checkName(license string) {
 		"no-redistribution",
 		"shareware":
 		lc.MkLine.Errorf("License %q must not be used.", license)
-		Explain(
+		G.Explain(
 			"Instead of using these deprecated licenses, extract the actual",
 			"license from the package into the pkgsrc/licenses/ directory",
 			"and define LICENSE to that filename.  See the pkgsrc guide,",
@@ -63,7 +63,7 @@ func (lc *LicenseChecker) checkNode(cond *licenses.Condition) {
 
 	if cond.And && cond.Or {
 		lc.MkLine.Errorf("AND and OR operators in license conditions can only be combined using parentheses.")
-		Explain(
+		G.Explain(
 			"Examples for valid license conditions are:",
 			"",
 			"\tlicense1 AND license2 AND (license3 OR license4)",

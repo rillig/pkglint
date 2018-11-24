@@ -289,7 +289,7 @@ func (fix *Autofix) Apply() {
 			line.showSource(G.logOut)
 		}
 		if logDiagnostic && len(fix.explanation) > 0 {
-			Explain(fix.explanation...)
+			G.Explain(fix.explanation...)
 		}
 		if G.Opts.ShowSource {
 			if !G.Opts.Explain || !logDiagnostic || len(fix.explanation) == 0 {

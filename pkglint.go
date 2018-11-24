@@ -615,7 +615,7 @@ func ChecklinesDescr(lines Lines) {
 		line := lines.Lines[maxLines]
 
 		line.Warnf("File too long (should be no more than %d lines).", maxLines)
-		Explain(
+		G.Explain(
 			"The DESCR file should fit on a traditional terminal of 80x25",
 			"characters.  It is also intended to give a _brief_ summary about",
 			"the package's contents.")
@@ -637,7 +637,7 @@ func ChecklinesMessage(lines Lines) {
 
 	if lines.Len() < 3 {
 		lines.LastLine().Warnf("File too short.")
-		Explain(explanation...)
+		G.Explain(explanation...)
 		return
 	}
 
