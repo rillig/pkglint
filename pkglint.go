@@ -113,6 +113,8 @@ type Hash struct {
 	line Line
 }
 
+type pkglintFatal struct{}
+
 // G is the abbreviation for "global state";
 // these are the only global variable in this Go package
 var (

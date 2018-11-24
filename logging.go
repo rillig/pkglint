@@ -62,13 +62,12 @@ func (pkglint *Pkglint) Explain(explanation ...string) {
 
 	pkglint.logOut.WriteLine("")
 	for _, explanationLine := range explanation {
-		pkglint.logOut.WriteLine("\t" + explanationLine)
+		pkglint.logOut.Write("\t")
+		pkglint.logOut.WriteLine(explanationLine)
 	}
 	pkglint.logOut.WriteLine("")
 
 }
-
-type pkglintFatal struct{}
 
 // SeparatorWriter writes output, occasionally separated by an
 // empty line. This is used for separating the diagnostics when

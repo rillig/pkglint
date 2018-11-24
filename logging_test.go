@@ -151,3 +151,5 @@ func (s *Suite) Test_Pkglint_Explain__trailing_whitespace(c *check.C) {
 	t.CheckOutputLines(
 		"Trailing whitespace: \"This is a space: \"")
 }
+
+// TODO: Add tests for SeparatorWriter.
