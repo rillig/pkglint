@@ -493,12 +493,9 @@ func (pkglint *Pkglint) shallBeLogged(format string) bool {
 	return false
 }
 
-func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg string) bool {
+func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg string) {
 	// TODO: Only ever output ASCII, no matter what's in the message.
 
-	if filename != "" {
-		filename = cleanpath(filename)
-	}
 	if pkglint.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
 		pkglint.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
 	}
@@ -506,9 +503,12 @@ func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg stri
 	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
 	if !pkglint.Opts.LogVerbose && format != AutofixFormat && !pkglint.logged.FirstTime(path.Clean(filename)+":"+lineno+": "+msg) {
 		pkglint.explainNext = false
-		return false
+		return
 	}
 
+	if filename != "" {
+		filename = cleanpath(filename)
+	}
 	var text, sep string
 	if !pkglint.Opts.GccOutput {
 		text += sep + level.TraditionalName + ":"
@@ -545,7 +545,6 @@ func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg stri
 	case Warn:
 		pkglint.warnings++
 	}
-	return true
 }
 
 // Returns the pkgsrc top-level directory, relative to the given file or directory.
