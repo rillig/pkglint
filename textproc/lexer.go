@@ -75,17 +75,18 @@ func (l *Lexer) SkipString(prefix string) bool {
 // solely of horizontal whitespace, which is the ASCII space (U+0020)
 // and tab (U+0009).
 func (l *Lexer) SkipHspace() bool {
-	// The same code as in NextBytesFunc, inlined here for performance reasons.
-	// As of Go 1.11, the compiler does not inline constant function arguments.
+	// Very similar code as in NextHspace, inlined here for performance reasons.
+	// As of Go 1.11, the compiler does not inline a call to NextHspace here.
 	i := 0
 	rest := l.rest
 	for i < len(rest) && (rest[i] == ' ' || rest[i] == '\t') {
 		i++
 	}
-	if i != 0 {
+	if i > 0 {
 		l.rest = rest[i:]
+		return true
 	}
-	return i > 0
+	return false
 }
 
 // NextHspace chops off the longest prefix (possibly empty) consisting

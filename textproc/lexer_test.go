@@ -94,25 +94,28 @@ func (s *Suite) Test_Lexer_SkipString(c *check.C) {
 }
 
 func (s *Suite) Test_Lexer_SkipHspace(c *check.C) {
-	lexer := NewLexer("spaces   \t \t  and tabs\n")
+	lexer := NewLexer("spaces   \t \t  and tabs\n\t ")
 
 	c.Check(lexer.NextString("spaces"), equals, "spaces")
 	c.Check(lexer.SkipHspace(), equals, true)
-	c.Check(lexer.Rest(), equals, "and tabs\n")
+	c.Check(lexer.Rest(), equals, "and tabs\n\t ")
 	c.Check(lexer.SkipHspace(), equals, false) // No space left.
 	c.Check(lexer.NextString("and tabs"), equals, "and tabs")
 	c.Check(lexer.SkipHspace(), equals, false) // Newline is not a horizontal space.
-	c.Check(lexer.Rest(), equals, "\n")
+	c.Check(lexer.NextString("\n"), equals, "\n")
+	c.Check(lexer.SkipHspace(), equals, true)
 }
 
 func (s *Suite) Test_Lexer_NextHspace(c *check.C) {
-	lexer := NewLexer("spaces   \t \t  and tabs\n")
+	lexer := NewLexer("spaces   \t \t  and tabs\n\t ")
 
 	c.Check(lexer.NextString("spaces"), equals, "spaces")
 	c.Check(lexer.NextHspace(), equals, "   \t \t  ")
 	c.Check(lexer.NextHspace(), equals, "") // No space left.
 	c.Check(lexer.NextString("and tabs"), equals, "and tabs")
 	c.Check(lexer.NextHspace(), equals, "") // Newline is not a horizontal space.
+	c.Check(lexer.NextString("\n"), equals, "\n")
+	c.Check(lexer.NextHspace(), equals, "\t ")
 }
 
 func (s *Suite) Test_Lexer_SkipByte(c *check.C) {
@@ -142,6 +145,7 @@ func (s *Suite) Test_Lexer_NextByteSet(c *check.C) {
 	c.Check(lexer.NextByteSet(Alnum), equals, int('a'))
 	c.Check(lexer.NextByteSet(Alnum), equals, int('n'))
 	c.Check(lexer.NextByteSet(Space), equals, int(' '))
+	c.Check(lexer.NextByteSet(Space), equals, -1)
 	c.Check(lexer.NextByteSet(Alnum), equals, int('a'))
 	c.Check(lexer.NextByteSet(Space), equals, int('\n'))
 	c.Check(lexer.NextByteSet(Alnum), equals, -1)
