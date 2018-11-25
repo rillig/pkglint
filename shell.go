@@ -438,13 +438,21 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 
 	switch {
 	case shellword == "${RUN}" || shellword == "":
+		break
 	case scc.handleForbiddenCommand():
+		break
 	case scc.handleTool():
+		break
 	case scc.handleCommandVariable():
+		break
 	case matches(shellword, `^(?::|break|cd|continue|eval|exec|exit|export|read|set|shift|umask|unset)$`):
+		break
 	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
+		break
 	case matches(shellword, `\$\{(PKGSRCDIR|PREFIX)(:Q)?\}`):
+		break
 	case scc.handleComment():
+		break
 	default:
 		if G.Opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
 			scc.shline.mkline.Warnf("Unknown shell command %q.", shellword)

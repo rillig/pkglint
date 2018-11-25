@@ -276,14 +276,21 @@ loop:
 
 		switch {
 		case repl.SkipRegexp(G.res.Compile(`^[!#%*+,\-./0-9:=?@A-Z\[\]^_a-z{}~]+`)):
+			break
 		case dquot && repl.SkipRegexp(G.res.Compile(`^[\t &'();<>|]+`)):
+			break
 		case squot && repl.SkipByte('`'):
+			break
 		case squot && repl.SkipRegexp(G.res.Compile(`^[\t "&();<>\\|]+`)):
+			break
 		case squot && repl.SkipString("$$"):
+			break
 		case squot:
 			break loop
 		case repl.SkipString("\\$$"):
+			break
 		case repl.SkipRegexp(G.res.Compile(`^\\[^$]`)):
+			break
 		case matches(repl.Rest(), `^\$\$[^!#(*\-0-9?@A-Z_a-z{]`):
 			repl.NextString("$$")
 		default:

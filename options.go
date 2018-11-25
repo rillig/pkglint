@@ -30,7 +30,9 @@ loop:
 		mkline := exp.CurrentMkLine()
 		switch {
 		case mkline.IsComment():
+			break
 		case mkline.IsEmpty():
+			break
 
 		case mkline.IsVarassign():
 			switch mkline.Varcanon() {

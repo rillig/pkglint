@@ -347,13 +347,19 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	vartype := G.Pkgsrc.VariableType(varname)
 	switch {
 	case !G.Opts.WarnExtra:
+		break
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
 	case varIsDefinedSimilar(varname):
+		break
 	case containsVarRef(varname):
+		break
 	case G.Pkgsrc.vartypes[varname] != nil:
+		break
 	case G.Pkgsrc.vartypes[varnameCanon(varname)] != nil:
+		break
 	case G.Mk != nil && !G.Mk.FirstTimeSlice("used but not defined: ", varname):
+		break
 
 	default:
 		mkline.Warnf("%s is used but not defined.", varname)
@@ -1138,6 +1144,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 
 	switch {
 	case !hasPrefix(relativePath, "../"):
+		break
 	case hasPrefix(relativePath, "../../mk/"):
 		// From a package to the infrastructure.
 	case matches(relativePath, `^\.\./\.\./[^/]+/[^/]`):
