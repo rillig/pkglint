@@ -46,3 +46,7 @@ do-install:
 
 * Check all warnings and errors whether their explanation has instructions
   on how to fix the diagnostic properly.
+
+* Ensure even better test coverage than 100%.
+  For each of the testees, there should be 100% code coverage by
+  only those tests whose name corresponds to the testee.
