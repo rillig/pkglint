@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
 	"path"
 	"strings"
@@ -438,27 +439,27 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 	tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
-	if contains(tmp, "${LUA_PKGSRCDIR}") {
-		tmp = strings.Replace(tmp, "${LUA_PKGSRCDIR}", G.Pkgsrc.Latest("lang", `^lua[0-9]+$`, "../../lang/$0"), -1)
+
+	replaceLatest := func(varuse, category string, pattern regex.Pattern, replacement string) {
+		if contains(tmp, varuse) {
+			latest := G.Pkgsrc.Latest(category, pattern, replacement)
+			tmp = strings.Replace(tmp, varuse, latest, -1)
+		}
 	}
-	if contains(tmp, "${PHPPKGSRCDIR}") {
-		tmp = strings.Replace(tmp, "${PHPPKGSRCDIR}", G.Pkgsrc.Latest("lang", `^php[0-9]+$`, "../../lang/$0"), -1)
-	}
-	if contains(tmp, "${SUSE_DIR_PREFIX}") {
-		suseDirPrefix := G.Pkgsrc.Latest("emulators", `^(suse[0-9]+)_base$`, "$1")
-		tmp = strings.Replace(tmp, "${SUSE_DIR_PREFIX}", suseDirPrefix, -1)
-	}
-	if contains(tmp, "${PYPKGSRCDIR}") {
-		tmp = strings.Replace(tmp, "${PYPKGSRCDIR}", G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0"), -1)
-	}
-	if contains(tmp, "${PYPACKAGE}") {
-		tmp = strings.Replace(tmp, "${PYPACKAGE}", G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "$0"), -1)
-	}
+	replaceLatest("${LUA_PKGSRCDIR}", "lang", `^lua[0-9]+$`, "../../lang/$0")
+	replaceLatest("${PHPPKGSRCDIR}", "lang", `^php[0-9]+$`, "../../lang/$0")
+	replaceLatest("${SUSE_DIR_PREFIX}", "emulators", `^(suse[0-9]+)_base$`, "$1")
+	replaceLatest("${PYPKGSRCDIR}", "lang", `^python[0-9]+$`, "../../lang/$0")
+	replaceLatest("${PYPACKAGE}", "lang", `^python[0-9]+$`, "$0")
 	if G.Pkg != nil {
+		// XXX: Even if these variables are defined indirectly,
+		// pkglint should be able to resolve them properly.
+		// There is already G.Pkg.Value, maybe that can be used here.
 		tmp = strings.Replace(tmp, "${FILESDIR}", G.Pkg.Filesdir, -1)
 		tmp = strings.Replace(tmp, "${PKGDIR}", G.Pkg.Pkgdir, -1)
 	}
 
+	// TODO: What is this good for, and in which cases does it make a difference?
 	if adjustDepth {
 		if hasPrefix(tmp, "../../") && !hasPrefix(tmp[6:], ".") {
 			tmp = pkgsrcdir + "/" + tmp[6:]
@@ -471,13 +472,6 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 		trace.Step2("resolveVarsInRelativePath: %q => %q", relativePath, tmp)
 	}
 	return tmp
-}
-
-func (ind *Indentation) RememberUsedVariables(cond MkCond) {
-	NewMkCondWalker().Walk(cond, &MkCondCallback{
-		VarUse: func(varuse *MkVarUse) {
-			ind.AddVar(varuse.varname)
-		}})
 }
 
 func (mkline *MkLineImpl) ExplainRelativeDirs() {
@@ -851,6 +845,13 @@ func (ind *Indentation) String() string {
 		}
 	}
 	return "[" + trimHspace(s) + "]"
+}
+
+func (ind *Indentation) RememberUsedVariables(cond MkCond) {
+	NewMkCondWalker().Walk(
+		cond,
+		&MkCondCallback{
+			VarUse: func(varuse *MkVarUse) { ind.AddVar(varuse.varname) }})
 }
 
 type indentationLevel struct {
