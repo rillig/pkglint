@@ -365,7 +365,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		mkline.Warnf("%s is used but not defined.", varname)
 	}
 
-	ck.checkVaruseMod(varuse, vartype)
+	ck.checkVaruseModifiers(varuse, vartype)
 
 	if varuse.varname == "@" {
 		ck.MkLine.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
@@ -401,7 +401,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	ck.checkVaruseText(varname, vartype, vuc.time)
 }
 
-func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
+func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype) {
 	mods := varuse.modifiers
 	if len(mods) == 0 {
 		return
@@ -419,6 +419,7 @@ func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
 			"This is a much clearer expression of the same thought.")
 	}
 
+	// Suggest to replace ${VAR:S,^,__magic__,1:M__magic__*:S,^__magic__,,} with the simpler ${VAR:[1]}.
 	if len(mods) == 3 {
 		if m, _, from, to, options := mods[0].MatchSubst(); m && from == "^" && matches(to, `^\w+$`) && options == "1" {
 			magic := to
@@ -436,6 +437,11 @@ func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
 			}
 		}
 	}
+
+	// TODO: Add checks for a single modifier, among them:
+	// TODO: Suggest to replace ${VAR:@l@-l${l}@} with the simpler ${VAR:S,^,-l,}.
+	// TODO: Suggest to replace ${VAR:@l@${l}suffix@} with the simpler ${VAR:=suffix}.
+
 }
 
 // checkVarusePermissions checks the permissions for the right-hand side

@@ -552,7 +552,11 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
 	}
 
-	if vartype == nil || vuc.vartype == nil || vartype.basicType == BtUnknown {
+	// TODO: Systematically test this function, each and every case, from top to bottom.
+	// TODO: Re-check the order of all these if clauses whether it really makes sense.
+
+	vucVartype := vuc.vartype
+	if vartype == nil || vucVartype == nil || vartype.basicType == BtUnknown {
 		return unknown
 	}
 
@@ -583,7 +587,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vuc.vartype.IsConsideredList()
+	wantList := vucVartype.IsConsideredList()
 	haveList := vartype.IsConsideredList()
 	if trace.Tracing {
 		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
@@ -606,6 +610,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 			if !vuc.IsWordPart {
 				return no
 			}
+			// XXX: Should there be a return here? It looks as if it could have been forgotten.
 		case vucQuotBackt:
 			return no
 		case vucQuotDquot, vucQuotSquot:
@@ -613,33 +618,31 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		}
 	}
 
-	// Variables that appear as parts of shell words generally need
-	// to be quoted. An exception is in the case of backticks,
-	// because the whole backticks expression is parsed as a single
-	// shell word by pkglint.
-	if vuc.IsWordPart && vuc.vartype != nil && vuc.vartype.IsShell() && vuc.quoting != vucQuotBackt {
+	// Variables that appear as parts of shell words generally need to be quoted.
+	//
+	// An exception is in the case of backticks, because the whole backticks expression
+	// is parsed as a single shell word by pkglint. (XXX: This comment may be outdated.)
+	if vuc.IsWordPart && vucVartype.IsShell() && vuc.quoting != vucQuotBackt {
 		return yes
 	}
 
 	// SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
-	if vuc.vartype != nil && vuc.vartype.IsPlainString() {
+	if vucVartype.IsPlainString() {
 		return no
 	}
 
 	if wantList != haveList {
-		if vuc.vartype != nil && vartype != nil {
-			if vuc.vartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
-				return no
-			}
-			if vuc.vartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
-				return no // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
-			}
+		if vucVartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
+			return no
+		}
+		if vucVartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
+			return no // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 		}
 		return yes
 	}
 
-	// Bad: LDADD += -l${LIBS}
-	// Good: LDADD += ${LIBS:@lib@-l${lib} @}
+	// Bad: LDADD+= -l${LIBS}
+	// Good: LDADD+= ${LIBS:S,^,-l,}
 	if wantList && haveList && vuc.IsWordPart {
 		return yes
 	}
@@ -651,7 +654,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 }
 
 func (mkline *MkLineImpl) DetermineUsedVariables() []string {
-	// XXX: It would be good to have these variables as MkVarUse objects
+	// TODO: It would be good to have these variables as MkVarUse objects
 	// including the context in which they are used.
 
 	var varnames []string
@@ -660,7 +663,7 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 		varnames = append(varnames, varname)
 	}
 
-	var searchIn func(text string)
+	var searchIn func(text string) // mutually recursive with searchInVarUse
 
 	searchInVarUse := func(varuse *MkVarUse) {
 		varname := varuse.varname
@@ -688,14 +691,14 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 	switch {
 
 	case mkline.IsVarassign():
+		//searchIn(mkline.Varname())
 		searchIn(mkline.Value())
 
 	case mkline.IsDirective() && mkline.Directive() == "for":
 		searchIn(mkline.Args())
 
 	case mkline.IsDirective() && mkline.Cond() != nil:
-		mkline.Cond().Walk(
-			&MkCondCallback{VarUse: searchInVarUse})
+		mkline.Cond().Walk(&MkCondCallback{VarUse: searchInVarUse})
 
 	case mkline.IsShellCommand():
 		searchIn(mkline.ShellCommand())
