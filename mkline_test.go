@@ -71,7 +71,7 @@ func (s *Suite) Test_NewMkLine(c *check.C) {
 	c.Check(ln[10].IsSysinclude(), equals, false)
 
 	t.CheckOutputLines(
-		"WARN: test.mk:9: Space before colon in dependency line.")
+		"NOTE: test.mk:9: Space before colon in dependency line.")
 }
 
 func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {

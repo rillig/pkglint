@@ -138,10 +138,12 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includefile, nil}}
 	}
 
+	// XXX: Replace this regular expression with proper parsing.
+	// There might be a ${VAR:M*.c} in these variables, which currently confuses the "parser".
 	if m, targets, whitespace, sources := match3(text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`); m {
 		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 		if whitespace != "" {
-			line.Warnf("Space before colon in dependency line.")
+			line.Notef("Space before colon in dependency line.")
 		}
 		return &MkLineImpl{line, mkLineDependency{targets, sources}}
 	}
