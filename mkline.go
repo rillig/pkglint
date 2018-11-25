@@ -698,8 +698,7 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 		searchIn(mkline.Args())
 
 	case mkline.IsDirective() && mkline.Cond() != nil:
-		NewMkCondWalker().Walk(
-			mkline.Cond(),
+		mkline.Cond().Walk(
 			&MkCondCallback{VarUse: searchInVarUse})
 
 	case mkline.IsShellCommand():
@@ -851,10 +850,8 @@ func (ind *Indentation) String() string {
 }
 
 func (ind *Indentation) RememberUsedVariables(cond MkCond) {
-	NewMkCondWalker().Walk(
-		cond,
-		&MkCondCallback{
-			VarUse: func(varuse *MkVarUse) { ind.AddVar(varuse.varname) }})
+	cond.Walk(&MkCondCallback{
+		VarUse: func(varuse *MkVarUse) { ind.AddVar(varuse.varname) }})
 }
 
 type indentationLevel struct {
@@ -1007,7 +1004,7 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 		if cond := mkline.Cond(); cond != nil {
 			ind.RememberUsedVariables(cond)
 
-			NewMkCondWalker().Walk(cond, &MkCondCallback{
+			cond.Walk(&MkCondCallback{
 				Call: func(name string, arg string) {
 					if name == "exists" {
 						ind.AddCheckedFile(arg)

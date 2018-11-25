@@ -297,7 +297,7 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		events = append(events, fmt.Sprintf("%14s  %s", name, strings.Join(args, ", ")))
 	}
 
-	NewMkCondWalker().Walk(mkline.Cond(), &MkCondCallback{
+	mkline.Cond().Walk(&MkCondCallback{
 		Defined: func(varname string) {
 			addEvent("defined", varname)
 		},

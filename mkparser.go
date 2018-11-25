@@ -456,9 +456,11 @@ type MkCondCallback struct {
 	VarUse        func(varuse *MkVarUse)
 }
 
-type MkCondWalker struct{}
+func (cond *mkCond) Walk(callback *MkCondCallback) {
+	(&MkCondWalker{}).Walk(cond, callback)
+}
 
-func NewMkCondWalker() *MkCondWalker { return &MkCondWalker{} }
+type MkCondWalker struct{}
 
 func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 	switch {

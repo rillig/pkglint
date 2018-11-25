@@ -73,7 +73,7 @@ loop:
 				continue
 			}
 
-			NewMkCondWalker().Walk(cond, &MkCondCallback{
+			cond.Walk(&MkCondCallback{
 				Empty: func(varuse *MkVarUse) {
 					if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {
 						if m, positive, pattern := varuse.modifiers[0].MatchMatch(); m && positive {

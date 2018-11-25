@@ -1075,7 +1075,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		ck.CheckVaruse(varuse, vuc)
 	}
 
-	NewMkCondWalker().Walk(cond, &MkCondCallback{
+	cond.Walk(&MkCondCallback{
 		Empty:         checkEmpty,
 		CompareVarStr: checkCompareVarStr,
 		VarUse:        checkVarUse})
