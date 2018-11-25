@@ -124,6 +124,27 @@ func (s *Suite) Test_NewMkLine__varname_with_hash(c *check.C) {
 		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.\\\\#=\\tvalue\".")
 }
 
+func (s *Suite) Test_MkLine_Varparam(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 2, "SUBST_SED.${param}=\tvalue")
+
+	varparam := mkline.Varparam()
+
+	c.Check(varparam, equals, "${param}")
+}
+
+func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 2, "#SUBST_SED.${param}=\tvalue")
+
+	valueAlign := mkline.ValueAlign()
+
+	c.Check(mkline.IsCommentedVarassign(), equals, true)
+	c.Check(valueAlign, equals, "#SUBST_SED.${param}=\t")
+}
+
 func (s *Suite) Test_MkLine_Cond(c *check.C) {
 	t := s.Init(c)
 

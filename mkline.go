@@ -161,6 +161,9 @@ func (mkline *MkLineImpl) String() string {
 	return fmt.Sprintf("%s:%s", mkline.Filename, mkline.Linenos())
 }
 
+// IsVarassign returns true for variable assignments of the form VAR=value.
+//
+// See IsCommentedVarassign.
 func (mkline *MkLineImpl) IsVarassign() bool {
 	data, ok := mkline.data.(mkLineAssign)
 	return ok && !data.commented
@@ -184,6 +187,7 @@ func (mkline *MkLineImpl) IsShellCommand() bool {
 	return ok
 }
 
+// IsComment returns true for lines that consist entirely of a comment.
 func (mkline *MkLineImpl) IsComment() bool {
 	_, ok := mkline.data.(mkLineComment)
 	return ok || mkline.IsCommentedVarassign()
@@ -194,20 +198,31 @@ func (mkline *MkLineImpl) IsEmpty() bool {
 	return ok
 }
 
-// IsDirective checks whether the line is a conditional (.if/.elif/.else/.if) or a loop (.for/.endfor).
+// IsDirective returns true for conditionals (.if/.elif/.else/.if) or loops (.for/.endfor).
+//
+// See IsInclude.
 func (mkline *MkLineImpl) IsDirective() bool {
 	_, ok := mkline.data.(mkLineDirective)
 	return ok
 }
 
+// IsInclude returns true for lines like: .include "other.mk"
+//
+// See IsSysinclude for lines like: .include <sys.mk>
 func (mkline *MkLineImpl) IsInclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && !incl.sys
 }
+
+// IsSysinclude returns true for lines like: .include <sys.mk>
+//
+// See IsInclude for lines like: .include "other.mk"
 func (mkline *MkLineImpl) IsSysinclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && incl.sys
 }
+
+// IsDependency returns true for dependency lines like "target: source".
 func (mkline *MkLineImpl) IsDependency() bool {
 	_, ok := mkline.data.(mkLineDependency)
 	return ok
@@ -217,19 +232,21 @@ func (mkline *MkLineImpl) IsDependency() bool {
 // of the variable that is assigned or appended to.
 //
 // Example:
-//  VARNAME?=       value
+//  VARNAME.${param}?=      value   # Varname is "VARNAME.${param}"
 func (mkline *MkLineImpl) Varname() string { return mkline.data.(mkLineAssign).varname }
 
 // Varcanon applies to variable assignments and returns the canonicalized variable name for parameterized variables.
 // Examples:
-//  HOMEPAGE           => HOMEPAGE
-//  SUBST_SED.anything => SUBST_SED.*
+//  HOMEPAGE           => "HOMEPAGE"
+//  SUBST_SED.anything => "SUBST_SED.*"
+//  SUBST_SED.${param} => "SUBST_SED.*"
 func (mkline *MkLineImpl) Varcanon() string { return mkline.data.(mkLineAssign).varcanon }
 
 // Varparam applies to variable assignments and returns the parameter for parameterized variables.
 // Examples:
 //  HOMEPAGE           => ""
-//  SUBST_SED.anything => anything
+//  SUBST_SED.anything => "anything"
+//  SUBST_SED.${param} => "${param}"
 func (mkline *MkLineImpl) Varparam() string { return mkline.data.(mkLineAssign).varparam }
 
 // Op applies to variable assignments and returns the assignment operator.
@@ -238,15 +255,21 @@ func (mkline *MkLineImpl) Op() MkOperator { return mkline.data.(mkLineAssign).op
 // ValueAlign applies to variable assignments and returns all the text
 // before the variable value, e.g. "VARNAME+=\t".
 func (mkline *MkLineImpl) ValueAlign() string { return mkline.data.(mkLineAssign).valueAlign }
-func (mkline *MkLineImpl) Value() string      { return mkline.data.(mkLineAssign).value }
+
+func (mkline *MkLineImpl) Value() string { return mkline.data.(mkLineAssign).value }
 
 // VarassignComment applies to variable assignments and returns the comment.
+//
 // Example:
 //  VAR=value # comment
+//
 // In the above line, the comment is "# comment".
+//
 // The leading "#" is included so that pkglint can distinguish between no comment at all and an empty comment.
 func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
-func (mkline *MkLineImpl) ShellCommand() string     { return mkline.data.(mkLineShell).command }
+
+func (mkline *MkLineImpl) ShellCommand() string { return mkline.data.(mkLineShell).command }
+
 func (mkline *MkLineImpl) Indent() string {
 	if mkline.IsDirective() {
 		return mkline.data.(mkLineDirective).indent
@@ -255,7 +278,7 @@ func (mkline *MkLineImpl) Indent() string {
 	}
 }
 
-// Directive returns one of "if", "ifdef", "ifndef", "else", "elif", "endif", "for", "endfor", "undef".
+// Directive returns the preprocessing directive, like "if", "for", "endfor", etc.
 //
 // See matchMkDirective.
 func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineDirective).directive }
@@ -278,17 +301,21 @@ func (mkline *MkLineImpl) Cond() MkCond {
 
 // DirectiveComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
 func (mkline *MkLineImpl) DirectiveComment() string { return mkline.data.(mkLineDirective).comment }
-func (mkline *MkLineImpl) HasElseBranch() bool      { return mkline.data.(mkLineDirective).elseLine != nil }
+
+func (mkline *MkLineImpl) HasElseBranch() bool { return mkline.data.(mkLineDirective).elseLine != nil }
+
 func (mkline *MkLineImpl) SetHasElseBranch(elseLine MkLine) {
 	data := mkline.data.(mkLineDirective)
 	data.elseLine = elseLine
 	mkline.data = data
 }
 
-func (mkline *MkLineImpl) MustExist() bool     { return mkline.data.(mkLineInclude).mustExist }
+func (mkline *MkLineImpl) MustExist() bool { return mkline.data.(mkLineInclude).mustExist }
+
 func (mkline *MkLineImpl) IncludeFile() string { return mkline.data.(mkLineInclude).includeFile }
 
 func (mkline *MkLineImpl) Targets() string { return mkline.data.(mkLineDependency).targets }
+
 func (mkline *MkLineImpl) Sources() string { return mkline.data.(mkLineDependency).sources }
 
 // ConditionalVars applies to .include lines and is a space-separated
