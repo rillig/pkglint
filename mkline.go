@@ -541,6 +541,12 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 	return
 }
 
+// VariableNeedsQuoting determines whether the given variable needs the :Q operator
+// in the given context.
+//
+// This decision depends on many factors, such as whether the type of the context is
+// a list of things, whether the variable is a list, whether it can contain only
+// safe characters, and so on.
 func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
@@ -550,7 +556,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		return unknown
 	}
 
-	if vartype.basicType.IsEnum() || vartype.IsBasicSafe() {
+	if !vartype.basicType.NeedsQ() {
 		if vartype.kindOfList == lkNone {
 			if vartype.guessed {
 				return unknown

@@ -140,10 +140,13 @@ func (vt *Vartype) IsShell() bool {
 	return false
 }
 
-// IsBasicSafe returns whether the basic vartype consists only of
-// characters that don't need escaping in most contexts, like A-Za-z0-9-_.
-func (vt *Vartype) IsBasicSafe() bool {
-	switch vt.basicType {
+// NeedsQ returns whether variables of this type need the :Q
+// modifier to be safely embedded in other variables or shell programs.
+//
+// Variables that can consists only of characters like A-Za-z0-9-._
+// don't need the :Q modifier. All others do, for safety reasons.
+func (bt *BasicType) NeedsQ() bool {
+	switch bt {
 	case BtBuildlinkDepmethod,
 		BtCategory,
 		BtDistSuffix,
@@ -172,9 +175,9 @@ func (vt *Vartype) IsBasicSafe() bool {
 		BtWrkdirSubdirectory,
 		BtYesNo,
 		BtYesNoIndirectly:
-		return true
+		return false
 	}
-	return false
+	return !bt.IsEnum()
 }
 
 func (vt *Vartype) IsPlainString() bool {
