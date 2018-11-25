@@ -106,6 +106,24 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		"pkgbase := pkglint")
 }
 
+func (s *Suite) Test_NewMkLine__varname_with_hash(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 123, "VARNAME.#=\tvalue")
+
+	// Parse error because the # starts a comment.
+	c.Check(mkline.IsVarassign(), equals, false)
+
+	mkline2 := t.NewMkLine("Makefile", 123, "VARNAME.\\#=\tvalue")
+
+	// FIXME: Varname() should be "VARNAME.#".
+	c.Check(mkline2.IsVarassign(), equals, false)
+
+	t.CheckOutputLines(
+		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.#=\\tvalue\".",
+		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.\\\\#=\\tvalue\".")
+}
+
 func (s *Suite) Test_MkLine_Cond(c *check.C) {
 	t := s.Init(c)
 
