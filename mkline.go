@@ -1003,20 +1003,15 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 
 	switch directive {
 	case "if":
+		cond := mkline.Cond()
+
 		// For multiple-inclusion guards, the indentation stays at the same level.
-		guard := false
-		if hasPrefix(args, "!defined(") && hasSuffix(args, "_MK)") {
-			varname := args[9 : len(args)-1]
-			if varname != "" && isalnum(varname) {
-				ind.AddVar(varname)
-				guard = true
-			}
-		}
+		guard := cond != nil && cond.Not != nil && hasSuffix(cond.Not.Defined, "_MK")
 		if !guard {
 			ind.top().depth += 2
 		}
 
-		if cond := mkline.Cond(); cond != nil {
+		if cond != nil {
 			ind.RememberUsedVariables(cond)
 
 			cond.Walk(&MkCondCallback{
