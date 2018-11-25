@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -267,10 +268,16 @@ func (fix *Autofix) Apply() {
 	logFix := G.Opts.Autofix || G.Opts.ShowAutofix
 
 	if logDiagnostic {
-		if !logFix {
-			line.showSource(G.logOut)
-		}
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
+		if !logFix {
+			// TODO: Merge this FirstTimeSlice with the one in Pkglint.logf.
+			if G.Opts.LogVerbose || fix.diagFormat == AutofixFormat ||
+				G.logged.FirstTimeSlice(path.Clean(line.Filename), line.Linenos(), msg,
+					"Autofix, to avoid the duplicate in Pkglint.logf") {
+
+				line.showSource(G.logOut)
+			}
+		}
 		G.logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 	}
 

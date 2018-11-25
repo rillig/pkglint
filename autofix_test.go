@@ -870,14 +870,7 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 
 	t.CheckOutputLines(
 		">\tPRE_XORGPROTO_LIST_MISSING =\tapplewmproto",
-		"NOTE: x11/xorgproto/builtin.mk:5: Unnecessary space after variable name \"PRE_XORGPROTO_LIST_MISSING\".",
-		"",
-		">\tPRE_XORGPROTO_LIST_MISSING =\tapplewmproto",
-		// FIXME: lonely source above
-		"",
-		">\tPRE_XORGPROTO_LIST_MISSING =\tapplewmproto",
-		// FIXME: lonely source above
-	)
+		"NOTE: x11/xorgproto/builtin.mk:5: Unnecessary space after variable name \"PRE_XORGPROTO_LIST_MISSING\".")
 }
 
 // RawText returns the raw text of the fixed line, including line ends.
