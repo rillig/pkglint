@@ -867,7 +867,7 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 	}
 
 	if mkline.VarassignComment() == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
-		mkline.Notef("Please use \"# empty\", \"# none\" or \"yes\" instead of \"# defined\".")
+		mkline.Notef("Please use \"# empty\", \"# none\" or \"# yes\" instead of \"# defined\".")
 		G.Explain(
 			"The value #defined says something about the state of the variable,",
 			"but not what that _means_.  In some cases a variable that is defined",

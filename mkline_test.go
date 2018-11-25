@@ -148,6 +148,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
+		// FIXME: Don't say anything here because the spaced form is clearer that the compressed form.
 		"NOTE: ~/Makefile:4: Unnecessary space after variable name \"VARNAME+\".")
 
 	t.SetupCommandLine("-Wspace", "--autofix")
@@ -156,6 +157,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
+		// FIXME: Don't fix anything here because the spaced form is clearer that the compressed form.
 		"AUTOFIX: ~/Makefile:4: Replacing \"VARNAME+ +=\" with \"VARNAME++=\".")
 	t.CheckFileLines("Makefile",
 		MkRcsID+"",
@@ -204,6 +206,8 @@ func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
 	c.Check(valueAlign, equals, "#SUBST_SED.${param}=\t")
 }
 
+// Demonstrates how a simple condition is structured internally.
+// For most of the checks, using cond.Walk is the simplest way to go.
 func (s *Suite) Test_MkLine_Cond(c *check.C) {
 	t := s.Init(c)
 
@@ -254,7 +258,7 @@ func (s *Suite) Test_NewMkLine__number_sign(c *check.C) {
 		"WARN: filename:1: The # character starts a comment.")
 }
 
-func (s *Suite) Test_NewMkLine__leading_space(c *check.C) {
+func (s *Suite) Test_NewMkLine__varassign_leading_space(c *check.C) {
 	t := s.Init(c)
 
 	_ = t.NewMkLine("rubyversion.mk", 427, " _RUBYVER=\t2.15")
@@ -266,8 +270,12 @@ func (s *Suite) Test_NewMkLine__leading_space(c *check.C) {
 		"WARN: rubyversion.mk:427: Makefile lines should not start with space characters.")
 }
 
-// Exotic test cases from the pkgsrc infrastructure.
+// Exotic code examples from the pkgsrc infrastructure.
 // Hopefully, pkgsrc packages don't need such complicated code.
+// Still, pkglint needs to parse them correctly, or it would not
+// be able to parse and check the infrastructure files as well.
+//
+// See Pkgsrc.loadUntypedVars.
 func (s *Suite) Test_NewMkLine__infrastructure(c *check.C) {
 	t := s.Init(c)
 
