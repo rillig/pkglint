@@ -86,7 +86,7 @@ func NewMkLine(line Line) *MkLineImpl {
 			default:
 				// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 				fix := line.Autofix()
-				fix.Warnf("Unnecessary space after variable name %q.", varname)
+				fix.Notef("Unnecessary space after variable name %q.", varname)
 				fix.Replace(varname+spaceAfterVarname+op, varname+op)
 				fix.Apply()
 			}

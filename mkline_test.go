@@ -88,8 +88,8 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 	CheckfileMk(filename)
 
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
-		"WARN: ~/Makefile:4: Unnecessary space after variable name \"VARNAME+\".")
+		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
+		"NOTE: ~/Makefile:4: Unnecessary space after variable name \"VARNAME+\".")
 
 	t.SetupCommandLine("-Wspace", "--autofix")
 
