@@ -315,7 +315,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	mkline := t.NewMkLine("filename", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetupVartypes()
 
-	vuc := &VarUseContext{G.Pkgsrc.vartypes["PKGNAME"], vucTimeParse, vucQuotUnknown, false}
+	vuc := &VarUseContext{G.Pkgsrc.VariableType("PKGNAME"), vucTimeParse, vucQuotUnknown, false}
 	nq := mkline.VariableNeedsQuoting("UNKNOWN", nil, vuc)
 
 	c.Check(nq, equals, unknown)
@@ -335,7 +335,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 
 	MkLineChecker{mkline}.checkVarassign()
 
-	t.CheckOutputEmpty() // Up to pkglint 5.3.6, it warned about a missing :Q here, which was wrong.
+	t.CheckOutputEmpty() // Up to version 5.3.6, pkglint warned about a missing :Q here, which was wrong.
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_list_to_list(c *check.C) {
@@ -355,7 +355,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mkline := t.NewMkLine("builtin.mk", 3, "USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}")
+	mkline := t.NewMkLine("builtin.mk", 3,
+		"USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}")
 
 	MkLineChecker{mkline}.checkVarassign()
 
@@ -368,12 +369,14 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *ch
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mkline := t.NewMkLine("Makefile", 3, "SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'")
+	mkline := t.NewMkLine("Makefile", 3,
+		"SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'")
 
 	MkLineChecker{mkline}.checkVarassign()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} and make sure the variable appears outside of any quoting characters.")
+		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} " +
+			"and make sure the variable appears outside of any quoting characters.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_command(c *check.C) {
@@ -431,7 +434,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_as_command_argument(c 
 		"WARN: Makefile:3: The exitcode of the command at the left of the | operator is ignored.")
 }
 
-// Based on mail/mailfront/Makefile.
+// As seen in mail/mailfront/Makefile.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(c *check.C) {
 	t := s.Init(c)
 
@@ -445,11 +448,10 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(c 
 	t.CheckOutputEmpty() // Don't suggest to use ${HOMEPAGE:Q}.
 }
 
-// Pkglint currently does not parse $$(subshell) commands very well. As
-// a side effect, it sometimes issues wrong warnings about the :Q
-// modifier.
+// Before November 2018, pkglint did not parse $$(subshell) commands very well.
+// As a side effect, it sometimes issued wrong warnings about the :Q modifier.
 //
-// Based on www/firefox31/xpi.mk.
+// As seen in www/firefox31/xpi.mk.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_subshell(c *check.C) {
 	t := s.Init(c)
 
@@ -471,7 +473,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_subshell(c *check.C
 
 // LDFLAGS (and even more so CPPFLAGS and CFLAGS) may contain special
 // shell characters like quotes or backslashes. Therefore, quoting them
-// correctly is more tricky than with other variables.
+// correctly is trickier than with other variables.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *check.C) {
 	t := s.Init(c)
 
@@ -488,7 +490,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *ch
 		"WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} outside of any quoting characters.")
 }
 
-// No quoting is necessary here.
+// No quoting is necessary when lists of options are appended to each other.
 // PKG_OPTIONS are declared as "lkShell" although they are processed
 // using make's .for loop, which splits them at whitespace and usually
 // requires the variable to be declared as "lkSpace".
@@ -504,6 +506,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__package_options(c *check.C) {
 
 	MkLineChecker{G.Mk.mklines[1]}.Check()
 
+	// No warning about a missing :Q modifier.
 	t.CheckOutputEmpty()
 }
 
@@ -634,6 +637,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
 	// using it inside backticks, and luckily there is no need for it.
 	t.CheckOutputLines(
 		"WARN: Makefile:4: COMMENT may not be used in any file; it is a write-only variable.",
+		// TODO: Better suggest that COMMENT should not be used inside backticks or other quotes.
 		"WARN: Makefile:4: The variable COMMENT should be quoted as part of a shell word.")
 }
 
@@ -705,7 +709,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check
 	t.CheckOutputEmpty()
 }
 
-// These examples from real pkgsrc end up in the final nqDontKnow case.
+// As of October 2018, these examples from real pkgsrc end up in the
+// final "unknown" case.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	t := s.Init(c)
 
@@ -724,6 +729,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
+		// TODO: Explain why the variable may not be set, by listing the current rules.
 		"WARN: ~/Makefile:4: The variable LINKER_RPATH_FLAG may not be set by any package.",
 		"WARN: ~/Makefile:4: Please use ${LINKER_RPATH_FLAG:S/-rpath/& /:Q} instead of ${LINKER_RPATH_FLAG:S/-rpath/& /}.",
 		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be evaluated at load time.",
@@ -763,6 +769,13 @@ func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
 		"WARN: Makefile:2: The # character starts a comment.")
 }
 
+// Ensures that the conditional variables of a line can be set even
+// after initializing the MkLine.
+//
+// If this test should fail, it is probably because mkLineDirective
+// is not a pointer type anymore.
+//
+// See https://github.com/golang/go/issues/28045.
 func (s *Suite) Test_MkLine_ConditionalVars(c *check.C) {
 	t := s.Init(c)
 
@@ -802,6 +815,20 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 		"/bin",
 		"${DESTDIR}${PREFIX}",
 		"${DESTDIR:S,/,\\:,:S,:,:,}/sbin")
+}
+
+func (s *Suite) Test_MkLine_ValueSplit__space(c *check.C) {
+	t := s.Init(c)
+
+	checkSplit := func(value string, expected ...string) {
+		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
+		split := mkline.ValueSplit(value, "")
+		c.Check(split, deepEquals, expected)
+	}
+
+	// FIXME: two and three are different fields. That's a bug in ValueSplit.
+	checkSplit("one   two\t\t${THREE:Uthree:Nsome \tspaces}",
+		"one", "two${THREE:Uthree:Nsome \tspaces}")
 }
 
 func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
@@ -891,8 +918,11 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 
 	checkVarassign := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
 		type VarAssign struct {
-			commented                                                              bool
-			varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string
+			commented                  bool
+			varname, spaceAfterVarname string
+			op, align                  string
+			value, spaceAfterValue     string
+			comment                    string
 		}
 		expected := VarAssign{commented, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment}
 		am, acommented, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment := MatchVarassign(text)
@@ -919,7 +949,6 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	checkVarassign("VAR += value", false, "VAR", " ", "+=", "VAR += ", "value", "", "")
 	checkVarassign(" VAR=value", false, "VAR", "", "=", " VAR=", "value", "", "")
 	checkVarassign("VAR=value #comment", false, "VAR", "", "=", "VAR=", "value", " ", "#comment")
-	checkVarassign("#VAR=value", true, "VAR", "", "=", "#VAR=", "value", "", "")
 
 	checkNotVarassign("\tVAR=value")
 	checkNotVarassign("?=value")
@@ -927,8 +956,12 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	checkNotVarassign("#")
 	checkNotVarassign("VAR.$$=value")
 
-	// A single space is typically used for writing documentation,
-	// not for commenting out code.
+	// A commented variable assignment must start immediately after the comment character.
+	// There must be no additional whitespace before the variable name.
+	checkVarassign("#VAR=value", true, "VAR", "", "=", "#VAR=", "value", "", "")
+
+	// A single space is typically used for writing documentation, not for commenting out code.
+	// Therefore this line doesn't count as commented variable assignment.
 	checkNotVarassign("# VAR=value")
 }
 
@@ -1007,13 +1040,12 @@ func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
 		"${TARGETS}: ${SOURCES} # ${dependency.comment}",
 		".include \"${OTHER_FILE}\"",
 		"",
-		"\t"+
-			"${VAR.${param}}"+
-			"${VAR}and${VAR2}"+
-			"${VAR:M${pattern}}"+
-			"$(ROUND_PARENTHESES)"+
-			"$$shellvar"+
-			"$<$@$x")
+		"\t${VAR.${param}}",
+		"\t${VAR}and${VAR2}",
+		"\t${VAR:M${pattern}}",
+		"\t$(ROUND_PARENTHESES)",
+		"\t$$shellvar",
+		"\t$< $@ $x")
 
 	var varnames []string
 	for _, mkline := range mklines.mklines {

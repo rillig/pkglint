@@ -142,11 +142,16 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 
 	case "SUBST_MESSAGE.*":
 		ctx.dupString(mkline, &ctx.message, varname, value)
+
 	case "SUBST_FILES.*":
 		ctx.dupBool(mkline, &ctx.curr.seenFiles, varname, op, value)
+
 	case "SUBST_SED.*":
 		ctx.dupBool(mkline, &ctx.curr.seenSed, varname, op, value)
 		ctx.curr.seenTransform = true
+
+		// TODO: Suggest to use SUBST_VARS instead of SUBST_SED as far as possible.
+
 	case "SUBST_VARS.*":
 		ctx.dupBool(mkline, &ctx.curr.seenVars, varname, op, value)
 		ctx.curr.seenTransform = true
@@ -156,6 +161,7 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 			}
 			ctx.vars[substVar] = true
 		}
+
 	case "SUBST_FILTER_CMD.*":
 		ctx.dupString(mkline, &ctx.filterCmd, varname, value)
 		ctx.curr.seenTransform = true
