@@ -764,9 +764,12 @@ type VarUseContext struct {
 	vartype    *Vartype
 	time       vucTime
 	quoting    vucQuoting
-	IsWordPart bool // Example: echo ${LOCALBASE} LOCALBASE=${LOCALBASE}
+	IsWordPart bool // Example: LOCALBASE=${LOCALBASE}
 }
 
+// vucTime is the time at which a variable is used.
+//
+// See ToolTime, which is the same except that there is no unknown.
 type vucTime uint8
 
 const (
@@ -780,20 +783,26 @@ const (
 
 	// All files have been read, all variables can be referenced.
 	// Variable values don't change anymore.
+	//
+	// Well, except for the ::= modifier.
+	// But that modifier is usually not used in pkgsrc.
 	vucTimeRun
 )
 
 func (t vucTime) String() string { return [...]string{"unknown", "parse", "run"}[t] }
 
 func (t vucTime) ToToolTime() ToolTime {
-	if t == vucTimeParse {
-		return LoadTime
+	if t == vucTimeRun {
+		return RunTime
 	}
-	return RunTime
+	return LoadTime
 }
 
 // The quoting context in which the variable is used.
 // Depending on this context, the modifiers :Q or :M can be allowed or not.
+//
+// The shell tokenizer knows multi-level quoting modes (see ShQuoting),
+// but for deciding whether :Q is necessary or not, a single level is enough.
 type vucQuoting uint8
 
 const (
