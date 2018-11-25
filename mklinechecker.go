@@ -81,27 +81,39 @@ func (ck MkLineChecker) checkInclude() {
 	case hasSuffix(includedFile, "/Makefile"):
 		mkline.Errorf("Other Makefiles must not be included directly.")
 		G.Explain(
-			"If you want to include portions of another Makefile, extract",
-			"the common parts and put them into a Makefile.common.  After",
-			"that, both this one and the other package should include the",
-			"Makefile.common.")
+			"To include portions of another Makefile, extract the common parts",
+			"and put them into a Makefile.common or a Makefile fragment called",
+			"module.mk or similar.  After that, both this one and the other",
+			"package should include the newly created file.")
 
 	case IsPrefs(includedFile):
 		if mkline.Basename == "buildlink3.mk" && includedFile == "../../mk/bsd.prefs.mk" {
-			mkline.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+			fix := mkline.Autofix()
+			fix.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+			fix.Replace("bsd.prefs.mk", "bsd.fast.prefs.mk")
+			fix.Apply()
 		}
 
-	case hasSuffix(includedFile, "/x11-links/buildlink3.mk"):
-		mkline.Errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includedFile)
+	case hasSuffix(includedFile, "pkgtools/x11-links/buildlink3.mk"):
+		fix := mkline.Autofix()
+		fix.Errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includedFile)
+		fix.Replace("pkgtools/x11-links/buildlink3.mk", "mk/x11.buildlink3.mk")
+		fix.Apply()
 
-	case hasSuffix(includedFile, "/jpeg/buildlink3.mk"):
-		mkline.Errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includedFile)
+	case hasSuffix(includedFile, "graphics/jpeg/buildlink3.mk"):
+		fix := mkline.Autofix()
+		fix.Errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includedFile)
+		fix.Replace("graphics/jpeg/buildlink3.mk", "mk/jpeg.buildlink3.mk")
+		fix.Apply()
 
 	case hasSuffix(includedFile, "/intltool/buildlink3.mk"):
 		mkline.Warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 
 	case hasSuffix(includedFile, "/builtin.mk"):
-		mkline.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includedFile, path.Dir(includedFile))
+		fix := mkline.Autofix()
+		fix.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includedFile, path.Dir(includedFile))
+		fix.Replace("builtin.mk", "buildlink3.mk")
+		fix.Apply()
 	}
 }
 
@@ -128,27 +140,28 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 		needsArgument = true
 	}
 
-	if needsArgument && args == "" {
+	switch {
+	case needsArgument && args == "":
 		mkline.Errorf("\".%s\" requires arguments.", directive)
 
-	} else if !needsArgument && args != "" {
+	case !needsArgument && args != "":
 		if directive == "else" {
 			mkline.Errorf("\".%s\" does not take arguments. If you meant \"else if\", use \".elif\".", directive)
 		} else {
 			mkline.Errorf("\".%s\" does not take arguments.", directive)
 		}
 
-	} else if directive == "if" || directive == "elif" {
+	case directive == "if" || directive == "elif":
 		ck.checkDirectiveCond()
 
-	} else if directive == "ifdef" || directive == "ifndef" {
+	case directive == "ifdef" || directive == "ifndef":
 		mkline.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
 			directive, ifelseStr(directive == "ifdef", "", "!"), args)
 
-	} else if directive == "for" {
+	case directive == "for":
 		ck.checkDirectiveFor(forVars, ind)
 
-	} else if directive == "undef" {
+	case directive == "undef":
 		for _, varname := range fields(args) {
 			if forVars[varname] {
 				mkline.Notef("Using \".undef\" after a \".for\" loop is unnecessary.")
@@ -163,13 +176,13 @@ func (ck MkLineChecker) checkDirectiveEnd(ind *Indentation) {
 	comment := mkline.DirectiveComment()
 
 	if directive == "endif" && comment != "" {
-		if condition := ind.Condition(); !contains(condition, comment) {
-			mkline.Warnf("Comment %q does not match condition %q.", comment, condition)
+		if args := ind.Args(); !contains(args, comment) {
+			mkline.Warnf("Comment %q does not match condition %q.", comment, args)
 		}
 	}
 	if directive == "endfor" && comment != "" {
-		if condition := ind.Condition(); !contains(condition, comment) {
-			mkline.Warnf("Comment %q does not match loop %q.", comment, condition)
+		if args := ind.Args(); !contains(args, comment) {
+			mkline.Warnf("Comment %q does not match loop %q.", comment, args)
 		}
 	}
 	if ind.Len() <= 1 {
@@ -1031,7 +1044,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		defer trace.Call1(mkline.Args())()
 	}
 
-	p := NewMkParser(nil, mkline.Args(), false) // XXX: Why false?
+	p := NewMkParser(nil, mkline.Args(), false) // No emitWarnings here, see the code below.
 	cond := p.MkCond()
 	if !p.EOF() {
 		mkline.Warnf("Invalid condition, unrecognized part: %q.", p.Rest())

@@ -858,7 +858,7 @@ func (ind *Indentation) RememberUsedVariables(cond MkCond) {
 type indentationLevel struct {
 	mkline          MkLine   // The line in which the indentation started; the .if/.for
 	depth           int      // Number of space characters; always a multiple of 2
-	condition       string   // The corresponding condition from the .if or latest .elif
+	args            string   // The arguments from the .if or .for, or the latest .elif
 	conditionalVars []string // Variables on which the current path depends
 
 	// Files whose existence has been checked in an if branch that is
@@ -958,9 +958,9 @@ func (ind *Indentation) Varnames() []string {
 	return varnames
 }
 
-// Condition returns the condition of the innermost .if, .elif or .for.
-func (ind *Indentation) Condition() string {
-	return ind.top().condition
+// Args returns the arguments of the innermost .if, .elif or .for.
+func (ind *Indentation) Args() string {
+	return ind.top().args
 }
 
 func (ind *Indentation) AddCheckedFile(filename string) {
@@ -1027,7 +1027,7 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 
 	case "elif":
 		// Handled here instead of TrackBefore to allow the action to access the previous condition.
-		ind.top().condition = args
+		ind.top().args = args
 
 	case "else":
 		top := ind.top()
