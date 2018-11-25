@@ -662,11 +662,11 @@ func (s *Suite) Test_MkLine_ConditionalVars(c *check.C) {
 
 	mkline := t.NewMkLine("Makefile", 45, ".include \"../../category/package/buildlink3.mk\"")
 
-	c.Check(mkline.ConditionalVars(), equals, "")
+	c.Check(mkline.ConditionalVars(), check.HasLen, 0)
 
-	mkline.SetConditionalVars("OPSYS")
+	mkline.SetConditionalVars([]string{"OPSYS"})
 
-	c.Check(mkline.ConditionalVars(), equals, "OPSYS")
+	c.Check(mkline.ConditionalVars(), deepEquals, []string{"OPSYS"})
 }
 
 func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
@@ -850,11 +850,11 @@ func (s *Suite) Test_Indentation(c *check.C) {
 
 	ind.AddVar("LEVEL1.VAR1")
 
-	c.Check(ind.Varnames(), equals, "LEVEL1.VAR1")
+	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1"})
 
 	ind.AddVar("LEVEL1.VAR2")
 
-	c.Check(ind.Varnames(), equals, "LEVEL1.VAR1, LEVEL1.VAR2")
+	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1", "LEVEL1.VAR2"})
 	c.Check(ind.DependsOn("LEVEL1.VAR1"), equals, true)
 	c.Check(ind.DependsOn("OTHER_VAR"), equals, false)
 
@@ -862,17 +862,17 @@ func (s *Suite) Test_Indentation(c *check.C) {
 
 	ind.AddVar("LEVEL2.VAR")
 
-	c.Check(ind.Varnames(), equals, "LEVEL1.VAR1, LEVEL1.VAR2, LEVEL2.VAR")
+	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1", "LEVEL1.VAR2", "LEVEL2.VAR"})
 	c.Check(ind.String(), equals, "[2 (LEVEL1.VAR1 LEVEL1.VAR2) 2 (LEVEL2.VAR)]")
 
 	ind.Pop()
 
-	c.Check(ind.Varnames(), equals, "LEVEL1.VAR1, LEVEL1.VAR2")
+	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1", "LEVEL1.VAR2"})
 	c.Check(ind.IsConditional(), equals, true)
 
 	ind.Pop()
 
-	c.Check(ind.Varnames(), equals, "")
+	c.Check(ind.Varnames(), check.HasLen, 0)
 	c.Check(ind.IsConditional(), equals, false)
 	c.Check(ind.String(), equals, "[]")
 }
@@ -886,7 +886,7 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	ind.RememberUsedVariables(mkline.Cond())
 
 	t.CheckOutputEmpty()
-	c.Check(ind.Varnames(), equals, "PKGREVISION")
+	c.Check(ind.Varnames(), deepEquals, []string{"PKGREVISION"})
 }
 
 func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {

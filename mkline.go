@@ -48,11 +48,11 @@ type mkLineDirectiveImpl struct {
 }
 type mkLineInclude = *mkLineIncludeImpl // See https://github.com/golang/go/issues/28045
 type mkLineIncludeImpl struct {
-	mustExist       bool   // for .sinclude, nonexistent files are ignored
-	sys             bool   // whether the include uses <file.mk> (very rare) instead of "file.mk"
-	indent          string // the space between the leading "." and the directive
-	includeFile     string // the text between the <brackets> or "quotes"
-	conditionalVars string // variables on which this inclusion depends (filled in later, as needed)
+	mustExist       bool     // for .sinclude, nonexistent files are ignored
+	sys             bool     // whether the include uses <file.mk> (very rare) instead of "file.mk"
+	indent          string   // the space between the leading "." and the directive
+	includeFile     string   // the text between the <brackets> or "quotes"
+	conditionalVars []string // variables on which this inclusion depends (filled in later, as needed)
 }
 type mkLineDependency struct {
 	targets string
@@ -131,11 +131,11 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, indent, directive, includefile := MatchMkInclude(text); m {
-		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includefile, ""}}
+		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includefile, nil}}
 	}
 
 	if m, indent, directive, includefile := match3(text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`); m {
-		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includefile, ""}}
+		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includefile, nil}}
 	}
 
 	if m, targets, whitespace, sources := match3(text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`); m {
@@ -291,8 +291,10 @@ func (mkline *MkLineImpl) Sources() string { return mkline.data.(mkLineDependenc
 // ConditionalVars applies to .include lines and is a space-separated
 // list of those variable names on which the inclusion depends.
 // It is initialized later, step by step, when parsing other lines.
-func (mkline *MkLineImpl) ConditionalVars() string { return mkline.data.(mkLineInclude).conditionalVars }
-func (mkline *MkLineImpl) SetConditionalVars(varnames string) {
+func (mkline *MkLineImpl) ConditionalVars() []string {
+	return mkline.data.(mkLineInclude).conditionalVars
+}
+func (mkline *MkLineImpl) SetConditionalVars(varnames []string) {
 	include := mkline.data.(mkLineInclude)
 	include.conditionalVars = varnames
 	mkline.data = include
@@ -899,14 +901,12 @@ func (ind *Indentation) IsConditional() bool {
 // condition or loop surrounding the current line.
 //
 // Variables named *_MK are excluded since they are usually not interesting.
-func (ind *Indentation) Varnames() string {
-	sep := ""
-	varnames := ""
+func (ind *Indentation) Varnames() []string {
+	var varnames []string
 	for _, level := range ind.levels {
 		for _, levelVarname := range level.conditionalVars {
 			if !hasSuffix(levelVarname, "_MK") {
-				varnames += sep + levelVarname
-				sep = ", "
+				varnames = append(varnames, levelVarname)
 			}
 		}
 	}

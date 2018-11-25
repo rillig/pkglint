@@ -748,7 +748,7 @@ func (pkg *Package) checkLocallyModified(filename string) {
 
 func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 	conditionalVars := mkline.ConditionalVars()
-	if conditionalVars == "" {
+	if len(conditionalVars) == 0 {
 		conditionalVars = indentation.Varnames()
 		mkline.SetConditionalVars(conditionalVars)
 	}
@@ -760,15 +760,20 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 			pkg.conditionalIncludes[includefile] = mkline
 			if other := pkg.unconditionalIncludes[includefile]; other != nil {
 				mkline.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
-					cleanpath(includefile), mkline.ConditionalVars(), mkline.RefTo(other))
+					cleanpath(includefile), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
 			}
 		} else {
 			pkg.unconditionalIncludes[includefile] = mkline
 			if other := pkg.conditionalIncludes[includefile]; other != nil {
 				mkline.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
-					cleanpath(includefile), mkline.RefTo(other), other.ConditionalVars())
+					cleanpath(includefile), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
 			}
 		}
+
+		// TODO: Check whether the conditional variables are the same on both places.
+		// Ideally they should match, but there may be some differences in internal
+		// variables, which need to be filtered out before comparing them, like it is
+		// already done with *_MK variables.
 	}
 }
 
