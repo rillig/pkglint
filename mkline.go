@@ -541,37 +541,24 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 	return
 }
 
-type NeedsQuoting uint8
-
-const (
-	nqNo NeedsQuoting = iota
-	nqYes
-	nqDoesntMatter
-	nqDontKnow
-)
-
-func (nq NeedsQuoting) String() string {
-	return [...]string{"no", "yes", "doesn't matter", "don't know"}[nq]
-}
-
-func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting NeedsQuoting) {
+func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
 	}
 
 	if vartype == nil || vuc.vartype == nil || vartype.basicType == BtUnknown {
-		return nqDontKnow
+		return unknown
 	}
 
 	if vartype.basicType.IsEnum() || vartype.IsBasicSafe() {
 		if vartype.kindOfList == lkNone {
 			if vartype.guessed {
-				return nqDontKnow
+				return unknown
 			}
-			return nqDoesntMatter
+			return no
 		}
 		if vartype.kindOfList == lkShell && !vuc.IsWordPart {
-			return nqNo
+			return no
 		}
 	}
 
@@ -579,13 +566,13 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// the items are broken up at whitespace, not as shell words
 	// like in all other parts of make(1).
 	if vuc.quoting == vucQuotFor {
-		return nqNo
+		return no
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.IsWordPart && vuc.quoting == vucQuotPlain {
 		if vartype.kindOfList == lkNone && vartype.basicType == BtShellWord {
-			return nqNo
+			return no
 		}
 	}
 
@@ -601,7 +588,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// 2. xargs ${PERL5}
 	if !vuc.IsWordPart && vuc.quoting == vucQuotPlain {
 		if wantList && haveList {
-			return nqDontKnow
+			return unknown
 		}
 	}
 
@@ -611,12 +598,12 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		switch vuc.quoting {
 		case vucQuotPlain:
 			if !vuc.IsWordPart {
-				return nqNo
+				return no
 			}
 		case vucQuotBackt:
-			return nqNo
+			return no
 		case vucQuotDquot, vucQuotSquot:
-			return nqDoesntMatter
+			return unknown
 		}
 	}
 
@@ -625,36 +612,36 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// because the whole backticks expression is parsed as a single
 	// shell word by pkglint.
 	if vuc.IsWordPart && vuc.vartype != nil && vuc.vartype.IsShell() && vuc.quoting != vucQuotBackt {
-		return nqYes
+		return yes
 	}
 
 	// SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
 	if vuc.vartype != nil && vuc.vartype.IsPlainString() {
-		return nqNo
+		return no
 	}
 
 	if wantList != haveList {
 		if vuc.vartype != nil && vartype != nil {
 			if vuc.vartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
-				return nqNo
+				return no
 			}
 			if vuc.vartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
-				return nqNo // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
+				return no // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 			}
 		}
-		return nqYes
+		return yes
 	}
 
 	// Bad: LDADD += -l${LIBS}
 	// Good: LDADD += ${LIBS:@lib@-l${lib} @}
 	if wantList && haveList && vuc.IsWordPart {
-		return nqYes
+		return yes
 	}
 
 	if trace.Tracing {
 		trace.Step1("Don't know whether :Q is needed for %q", varname)
 	}
-	return nqDontKnow
+	return unknown
 }
 
 func (mkline *MkLineImpl) DetermineUsedVariables() []string {

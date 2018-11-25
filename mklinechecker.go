@@ -382,7 +382,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 
 	needsQuoting := mkline.VariableNeedsQuoting(varname, vartype, vuc)
 
-	if G.Opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != nqDontKnow {
+	if G.Opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != unknown {
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
@@ -570,7 +570,7 @@ func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 
 // CheckVaruseShellword checks whether a variable use of the form ${VAR}
 // or ${VAR:Modifier} is allowed in a certain context.
-func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting NeedsQuoting) {
+func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, mod, needsQuoting)()
 	}
@@ -592,7 +592,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 	if mod == ":M*:Q" && !needMstar {
 		mkline.Notef("The :M* modifier is not needed here.")
 
-	} else if needsQuoting == nqYes {
+	} else if needsQuoting == yes {
 		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
 		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
 			if vartype.IsConsideredList() {
@@ -648,18 +648,16 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 		}
 	}
 
-	if hasSuffix(mod, ":Q") && (needsQuoting == nqNo || needsQuoting == nqDoesntMatter) {
+	if hasSuffix(mod, ":Q") && needsQuoting != yes {
 		bad := "${" + varname + mod + "}"
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 
 		fix := mkline.Line.Autofix()
-		if needsQuoting == nqNo {
-			fix.Warnf("The :Q operator should not be used for ${%s} here.", varname)
-		} else {
+		if needsQuoting == no {
 			fix.Notef("The :Q operator isn't necessary for ${%s} here.", varname)
 		}
 		fix.Explain(
-			"Many variables in pkgsrc do not need the :Q operator, since they",
+			"Many variables in pkgsrc do not need the :Q operator since they",
 			"are not expected to contain whitespace or other special characters.",
 			"Examples for these \"safe\" variables are:",
 			"",
