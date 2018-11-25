@@ -803,7 +803,7 @@ const (
 	vucQuotPlain              // Example: echo LOCALBASE=${LOCALBASE}
 	vucQuotDquot              // Example: echo "The version is ${PKGVERSION}."
 	vucQuotSquot              // Example: echo 'The version is ${PKGVERSION}.'
-	vucQuotBackt              // Example: echo \`sed 1q ${WRKSRC}/README\`
+	vucQuotBackt              // Example: echo `sed 1q ${WRKSRC}/README`
 
 	// The .for loop in Makefiles. This is the only place where
 	// variables are split on whitespace. Everywhere else (:Q, :M)
@@ -840,14 +840,14 @@ func NewIndentation() *Indentation {
 }
 
 func (ind *Indentation) String() string {
-	s := ""
+	var s strings.Builder
 	for _, level := range ind.levels[1:] {
-		s += fmt.Sprintf(" %d", level.depth)
+		_, _ = fmt.Fprintf(&s, " %d", level.depth)
 		if len(level.conditionalVars) > 0 {
-			s += " (" + strings.Join(level.conditionalVars, " ") + ")"
+			_, _ = fmt.Fprintf(&s, " (%s)", strings.Join(level.conditionalVars, " "))
 		}
 	}
-	return "[" + trimHspace(s) + "]"
+	return "[" + trimHspace(s.String()) + "]"
 }
 
 func (ind *Indentation) RememberUsedVariables(cond MkCond) {
@@ -861,9 +861,11 @@ type indentationLevel struct {
 	condition       string   // The corresponding condition from the .if or latest .elif
 	conditionalVars []string // Variables on which the current path depends
 
-	// Files whose existence has been checked in a related path.
-	// The check counts for both the "if" and the "else" branch,
-	// but that sloppiness will be discovered by functional tests.
+	// Files whose existence has been checked in an if branch that is
+	// related to the current indentation. After a .if exists(fname),
+	// pkglint will happily accept .include "fname" in both the then and
+	// the else branch. This is ok since the primary job of this file list
+	// is to prevent wrong pkglint warnings about missing files.
 	checkedFiles []string
 }
 
@@ -877,6 +879,9 @@ func (ind *Indentation) top() *indentationLevel {
 
 // Depth returns the number of space characters by which the directive
 // should be indented.
+//
+// This is typically two more than the surrounding level, except for
+// multiple-inclusion guards.
 func (ind *Indentation) Depth(directive string) int {
 	switch directive {
 	case "if", "elif", "else", "endfor", "endif":
@@ -893,7 +898,15 @@ func (ind *Indentation) Push(mkline MkLine, indent int, condition string) {
 	ind.levels = append(ind.levels, indentationLevel{mkline, indent, condition, nil, nil})
 }
 
+// AddVar remembers that the current indentation depends on the given variable,
+// most probably because that variable is used in a .if directive.
+//
+// Variables named *_MK are ignored since they are usually not interesting.
 func (ind *Indentation) AddVar(varname string) {
+	if hasSuffix(varname, "_MK") {
+		return
+	}
+
 	vars := &ind.top().conditionalVars
 	for _, existingVarname := range *vars {
 		if varname == existingVarname {
@@ -917,12 +930,12 @@ func (ind *Indentation) DependsOn(varname string) bool {
 
 // IsConditional returns whether the current line depends on evaluating
 // any variable in an .if or .elif expression or from a .for loop.
+//
+// Variables named *_MK are excluded since they are usually not interesting.
 func (ind *Indentation) IsConditional() bool {
 	for _, level := range ind.levels {
-		for _, varname := range level.conditionalVars {
-			if !hasSuffix(varname, "_MK") {
-				return true
-			}
+		if len(level.conditionalVars) > 0 {
+			return true
 		}
 	}
 	return false
@@ -936,9 +949,10 @@ func (ind *Indentation) Varnames() []string {
 	var varnames []string
 	for _, level := range ind.levels {
 		for _, levelVarname := range level.conditionalVars {
-			if !hasSuffix(levelVarname, "_MK") {
-				varnames = append(varnames, levelVarname)
-			}
+			G.Assertf(
+				!hasSuffix(levelVarname, "_MK"),
+				"multiple-inclusion guard must be filtered out earlier.")
+			varnames = append(varnames, levelVarname)
 		}
 	}
 	return varnames
