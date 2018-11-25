@@ -840,6 +840,53 @@ func (s *Suite) Test_SaveAutofixChanges__cannot_overwrite(c *check.C) {
 		"ERROR: ~/file.txt.pkglint.tmp: Cannot overwrite with autofixed content: .*\n")
 }
 
+// Up to 2018-11-25, pkglint in some cases logged only the source without
+// a corresponding warning.
+func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPackage("x11/xorg-cf-files",
+		".include \"../../x11/xorgproto/buildlink3.mk\"")
+
+	t.SetupPackage("x11/xorgproto",
+		"DISTNAME=\txorgproto-1.0")
+	t.CreateFileDummyBuildlink3("x11/xorgproto/buildlink3.mk")
+	t.CreateFileLines("x11/xorgproto/builtin.mk",
+		MkRcsID,
+		"",
+		"BUILTIN_PKG:=\txorgproto",
+		"",
+		"PRE_XORGPROTO_LIST_MISSING = \\",
+		"\tapplewmproto")
+	t.Chdir(".")
+
+	G.Main("pkglint", "-Wall", "--source", "x11/xorg-cf-files", "x11/xorgproto")
+
+	t.CheckOutputLines(
+		">\tPRE_XORGPROTO_LIST_MISSING = \\",
+		">\t\tapplewmproto",
+		"NOTE: x11/xorgproto/builtin.mk:5--6: Unnecessary space after variable name \"PRE_XORGPROTO_LIST_MISSING\".",
+		"",
+		">\tPRE_XORGPROTO_LIST_MISSING = \\",
+		">\t\tapplewmproto",
+		// FIXME: lonely source above
+		"",
+		">\t",
+		"WARN: x11/xorgproto/buildlink3.mk:13: This line should contain the following text: BUILDLINK_TREE+=\t-xorgproto",
+		"",
+		">\tPRE_XORGPROTO_LIST_MISSING = \\",
+		">\t\tapplewmproto",
+		// FIXME: lonely source above
+		"",
+		">\tPRE_XORGPROTO_LIST_MISSING = \\",
+		">\t\tapplewmproto",
+		"WARN: x11/xorgproto/builtin.mk:5--6: PRE_XORGPROTO_LIST_MISSING is defined but not used.",
+		"",
+		"0 errors and 2 warnings found.",
+		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
+		"(Run \"pkglint -F\" to automatically fix some issues.)")
+}
+
 // RawText returns the raw text of the fixed line, including line ends.
 // This may differ from the original text when the --show-autofix
 // or --autofix options are enabled.

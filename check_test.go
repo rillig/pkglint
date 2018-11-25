@@ -376,6 +376,38 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
 		"+new")
 }
 
+func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string) {
+	dir := path.Dir(relativeFileName)
+	lower := path.Base(dir)
+	upper := strings.ToUpper(lower)
+
+	width := tabWidth(sprintf("BUILDLINK_API_DEPENDS.%s+=\t", lower))
+
+	aligned := func(format string, args ...interface{}) string {
+		msg := sprintf(format, args...)
+		for tabWidth(msg) < width {
+			msg += "\t"
+		}
+		return msg
+	}
+
+	t.CreateFileLines(relativeFileName,
+		MkRcsID,
+		sprintf(""),
+		sprintf("BUILDLINK_TREE+=\t%s", lower),
+		sprintf(""),
+		sprintf(".if !defined(%s_BUILDLINK3_MK)", upper),
+		sprintf("%s_BUILDLINK3_MK:=", upper),
+		sprintf(""),
+		aligned("BUILDLINK_API_DEPENDS.%s+=", lower)+sprintf("%s>=0", lower),
+		aligned("BUILDLINK_PKGSRCDIR.%s?=", lower)+sprintf("../../%s", dir),
+		aligned("BUILDLINK_DEPMETHOD.%s?=", lower)+"build",
+		sprintf(".endif # %s_BUILDLINK3_MK", upper),
+		sprintf(""),
+		sprintf(""),
+		sprintf("BUILDLINK_TREE+=\t-%s", upper))
+}
+
 // File returns the absolute path to the given file in the
 // temporary directory. It doesn't check whether that file exists.
 // Calls to Tester.Chdir change the base directory for the relative filename.
