@@ -332,9 +332,19 @@ func (mkline *MkLineImpl) SetConditionalVars(varnames []string) {
 
 // Tokenize extracts variable uses and other text from the string.
 //
+// TODO: Check this paragraph for correctness.
+// Either:
+// The given s must have exactly the format from the file, i.e. an escaped
+// comment is written as \#.
+// Or:
+// The given s must have the format after parsing comments, i.e. the trailing
+// comment is already removed, and a # does not introduce another comment.
+//
 // Example:
 //  input:  ${PREFIX}/bin abc
 //  output: [MkToken("${PREFIX}", MkVarUse("PREFIX")), MkToken("/bin abc")]
+//
+// See ValueTokens, which is the tokenized version of Value.
 func (mkline *MkLineImpl) Tokenize(s string, warn bool) []*MkToken {
 	if trace.Tracing {
 		defer trace.Call(mkline, s)()
