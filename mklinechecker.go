@@ -243,8 +243,8 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 
 func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 	mkline := ck.MkLine
-	targets := fields(mkline.Targets())
-	sources := fields(mkline.Sources())
+	targets := ck.MkLine.ValueSplit(mkline.Targets(), "")
+	sources := ck.MkLine.ValueSplit(mkline.Sources(), "")
 
 	for _, source := range sources {
 		if source == ".PHONY" {
@@ -264,7 +264,7 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 			// TODO: Check for spelling mistakes.
 
 		} else if hasPrefix(target, "${.CURDIR}/") {
-			// OK, this is intentional
+			// This is deliberate, see the explanation below.
 
 		} else if !allowedTargets[target] {
 			mkline.Warnf("Unusual target %q.", target)
@@ -336,6 +336,7 @@ func (ck MkLineChecker) checkVarassignPermissions() {
 		alternativeFiles := vartype.AllowedFiles(needed)
 		switch {
 		case alternativeActions != 0 && alternativeFiles != "":
+			// FIXME: Sometimes the message says "ok in *", which is missing that in buildlink3.mk, none of the actions are allowed.
 			mkline.Warnf("The variable %s may not be %s (only %s) in this file; it would be ok in %s.",
 				varname, needed.HumanString(), alternativeActions.HumanString(), alternativeFiles)
 		case alternativeFiles != "":
@@ -351,6 +352,7 @@ func (ck MkLineChecker) checkVarassignPermissions() {
 		G.Explain(
 			"The allowed actions for a variable are determined based on the file",
 			"name in which the variable is used or defined.  The exact rules are",
+			// FIXME: List the rules in this very explanation.
 			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
 			"on the tech-pkg@NetBSD.org mailing list.")
 	}
@@ -400,23 +402,29 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	ck.checkVarusePermissions(varname, vartype, vuc)
 
 	if varname == "LOCALBASE" && !G.Infrastructure {
-		ck.MkLine.Warnf("Please use PREFIX instead of LOCALBASE.")
+		fix := ck.MkLine.Autofix()
+		fix.Warnf("Please use PREFIX instead of LOCALBASE.")
+		fix.Replace("${LOCALBASE}", "${PREFIX}")
+		fix.Apply()
 	}
 
 	needsQuoting := mkline.VariableNeedsQuoting(varname, vartype, vuc)
 
 	if G.Opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != unknown {
+		// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
-	if G.Pkgsrc.UserDefinedVars.Defined(varname) && !G.Pkgsrc.IsBuildDef(varname) && !G.Mk.buildDefs[varname] {
-		mkline.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
-		G.Explain(
-			"When a pkgsrc package is built, many things can be configured by the",
-			"pkgsrc user in the mk.conf file.  All these configurations should be",
-			"recorded in the binary package, so the package can be reliably",
-			"rebuilt.  The BUILD_DEFS variable contains a list of all these",
-			"user-settable variables, so please add your variable to it, too.")
+	if G.Pkgsrc.UserDefinedVars.Defined(varname) && !G.Pkgsrc.IsBuildDef(varname) {
+		if !G.Mk.buildDefs[varname] && (true || G.Mk.FirstTimeSlice("BUILD_DEFS", varname)) {
+			mkline.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
+			G.Explain(
+				"When a pkgsrc package is built, many things can be configured by the",
+				"pkgsrc user in the mk.conf file.  All these configurations should be",
+				"recorded in the binary package so the package can be reliably",
+				"rebuilt.  The BUILD_DEFS variable contains a list of all these",
+				"user-settable variables, so please add your variable to it, too.")
+		}
 	}
 
 	ck.checkVaruseDeprecated(varuse)
@@ -464,7 +472,7 @@ func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype)
 	// TODO: Add checks for a single modifier, among them:
 	// TODO: Suggest to replace ${VAR:@l@-l${l}@} with the simpler ${VAR:S,^,-l,}.
 	// TODO: Suggest to replace ${VAR:@l@${l}suffix@} with the simpler ${VAR:=suffix}.
-
+	// TODO: Investigate why :Q is not checked at this exact place.
 }
 
 // checkVarusePermissions checks the permissions for the right-hand side

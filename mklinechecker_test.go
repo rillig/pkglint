@@ -760,13 +760,17 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 	t.SetupVartypes()
 	mklines := t.SetupFileMkLines("options.mk",
 		MkRcsID,
-		"COMMENT=        ${VARBASE} ${X11_TYPE}",
-		"BUILD_DEFS+=    X11_TYPE")
+		"COMMENT=                ${VARBASE} ${X11_TYPE}",
+		"PKG_FAIL_REASON+=       ${VARBASE} ${X11_TYPE}",
+		"BUILD_DEFS+=            X11_TYPE")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
+		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.",
+		"WARN: ~/options.mk:3: The user-defined variable VARBASE is used but not added to BUILD_DEFS.",
+		// FIXME: Why twice?
+		"WARN: ~/options.mk:3: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {

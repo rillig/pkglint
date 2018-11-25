@@ -34,9 +34,11 @@ type Pkgsrc struct {
 	LastChange          map[string]*Change  //
 	listVersions        map[string][]string // See ListVersions
 
-	UserDefinedVars Scope               // Used for checking BUILD_DEFS
-	Deprecated      map[string]string   //
-	vartypes        map[string]*Vartype // varcanon => type
+	// Variables that may be overridden by the pkgsrc user. Used for checking BUILD_DEFS.
+	UserDefinedVars Scope
+
+	Deprecated map[string]string   //
+	vartypes   map[string]*Vartype // varcanon => type
 
 	Hashes       map[string]*Hash // Maps "alg:filename" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
