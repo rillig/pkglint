@@ -2,76 +2,135 @@ package main
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_NewMkLine(c *check.C) {
+func (s *Suite) Test_NewMkLine__varassign(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wspace")
-	mklines := t.NewMkLines("test.mk",
-		"VARNAME.param?=value # varassign comment",
-		"\tshell command # shell comment",
-		"# whole line comment",
-		"",
-		".  if !empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[\\#]} == 1 # directive comment",
-		".    include \"../../mk/bsd.prefs.mk\" # include comment",
-		".    include <subdir.mk> # sysinclude comment",
-		"target1 target2: source1 source2",
-		"target : source",
-		"VARNAME+=value",
+	mkline := t.NewMkLine("test.mk", 101,
+		"VARNAME.param?=value # varassign comment")
+
+	c.Check(mkline.IsVarassign(), equals, true)
+	c.Check(mkline.Varname(), equals, "VARNAME.param")
+	c.Check(mkline.Varcanon(), equals, "VARNAME.*")
+	c.Check(mkline.Varparam(), equals, "param")
+	c.Check(mkline.Op(), equals, opAssignDefault)
+	c.Check(mkline.Value(), equals, "value")
+	c.Check(mkline.VarassignComment(), equals, "# varassign comment")
+}
+
+func (s *Suite) Test_NewMkLine__shellcmd(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		"\tshell command # shell comment")
+
+	c.Check(mkline.IsShellCommand(), equals, true)
+	c.Check(mkline.ShellCommand(), equals, "shell command # shell comment")
+}
+
+func (s *Suite) Test_NewMkLine__comment(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		"# whole line comment")
+
+	c.Check(mkline.IsComment(), equals, true)
+}
+
+func (s *Suite) Test_NewMkLine__empty(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101, "")
+
+	c.Check(mkline.IsEmpty(), equals, true)
+}
+
+func (s *Suite) Test_NewMkLine__directive(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		".  if !empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[\\#]} == 1 # directive comment")
+
+	c.Check(mkline.IsDirective(), equals, true)
+	c.Check(mkline.Indent(), equals, "  ")
+	c.Check(mkline.Directive(), equals, "if")
+	c.Check(mkline.Args(), equals, "!empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[#]} == 1")
+	c.Check(mkline.DirectiveComment(), equals, "directive comment")
+}
+
+func (s *Suite) Test_NewMkLine__include(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		".    include \"../../mk/bsd.prefs.mk\" # include comment")
+
+	c.Check(mkline.IsInclude(), equals, true)
+	c.Check(mkline.Indent(), equals, "    ")
+	c.Check(mkline.MustExist(), equals, true)
+	c.Check(mkline.IncludeFile(), equals, "../../mk/bsd.prefs.mk")
+}
+
+func (s *Suite) Test_NewMkLine__sysinclude(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		".    include <subdir.mk> # sysinclude comment")
+
+	c.Check(mkline.IsSysinclude(), equals, true)
+	c.Check(mkline.Indent(), equals, "    ")
+	c.Check(mkline.MustExist(), equals, true)
+	c.Check(mkline.IncludeFile(), equals, "subdir.mk")
+}
+
+func (s *Suite) Test_NewMkLine__dependency(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		"target1 target2: source1 source2")
+
+	c.Check(mkline.IsDependency(), equals, true)
+	c.Check(mkline.Targets(), equals, "target1 target2")
+	c.Check(mkline.Sources(), equals, "source1 source2")
+}
+
+func (s *Suite) Test_NewMkLine__dependency_space(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		"target : source")
+
+	c.Check(mkline.Targets(), equals, "target")
+	c.Check(mkline.Sources(), equals, "source")
+	t.CheckOutputLines(
+		"NOTE: test.mk:101: Space before colon in dependency line.")
+}
+
+func (s *Suite) Test_NewMkLine__varassign_append(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
+		"VARNAME+=value")
+
+	c.Check(mkline.IsVarassign(), equals, true)
+	c.Check(mkline.Varname(), equals, "VARNAME")
+	c.Check(mkline.Varcanon(), equals, "VARNAME")
+	c.Check(mkline.Varparam(), equals, "")
+}
+
+func (s *Suite) Test_NewMkLine__merge_conflict(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("test.mk", 101,
 		"<<<<<<<<<<<<<<<<<")
-	ln := mklines.mklines
-
-	c.Check(ln[0].IsVarassign(), equals, true)
-	c.Check(ln[0].Varname(), equals, "VARNAME.param")
-	c.Check(ln[0].Varcanon(), equals, "VARNAME.*")
-	c.Check(ln[0].Varparam(), equals, "param")
-	c.Check(ln[0].Op(), equals, opAssignDefault)
-	c.Check(ln[0].Value(), equals, "value")
-	c.Check(ln[0].VarassignComment(), equals, "# varassign comment")
-
-	c.Check(ln[1].IsShellCommand(), equals, true)
-	c.Check(ln[1].ShellCommand(), equals, "shell command # shell comment")
-
-	c.Check(ln[2].IsComment(), equals, true)
-
-	c.Check(ln[3].IsEmpty(), equals, true)
-
-	c.Check(ln[4].IsDirective(), equals, true)
-	c.Check(ln[4].Indent(), equals, "  ")
-	c.Check(ln[4].Directive(), equals, "if")
-	c.Check(ln[4].Args(), equals, "!empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[#]} == 1")
-	c.Check(ln[4].DirectiveComment(), equals, "directive comment")
-
-	c.Check(ln[5].IsInclude(), equals, true)
-	c.Check(ln[5].Indent(), equals, "    ")
-	c.Check(ln[5].MustExist(), equals, true)
-	c.Check(ln[5].IncludeFile(), equals, "../../mk/bsd.prefs.mk")
-
-	c.Check(ln[6].IsSysinclude(), equals, true)
-	c.Check(ln[6].Indent(), equals, "    ")
-	c.Check(ln[6].MustExist(), equals, true)
-	c.Check(ln[6].IncludeFile(), equals, "subdir.mk")
-
-	c.Check(ln[7].IsDependency(), equals, true)
-	c.Check(ln[7].Targets(), equals, "target1 target2")
-	c.Check(ln[7].Sources(), equals, "source1 source2")
-
-	c.Check(ln[9].IsVarassign(), equals, true)
-	c.Check(ln[9].Varname(), equals, "VARNAME")
-	c.Check(ln[9].Varcanon(), equals, "VARNAME")
-	c.Check(ln[9].Varparam(), equals, "")
 
 	// Merge conflicts are of neither type.
-	c.Check(ln[10].IsVarassign(), equals, false)
-	c.Check(ln[10].IsDirective(), equals, false)
-	c.Check(ln[10].IsInclude(), equals, false)
-	c.Check(ln[10].IsEmpty(), equals, false)
-	c.Check(ln[10].IsComment(), equals, false)
-	c.Check(ln[10].IsDependency(), equals, false)
-	c.Check(ln[10].IsShellCommand(), equals, false)
-	c.Check(ln[10].IsSysinclude(), equals, false)
-
-	t.CheckOutputLines(
-		"NOTE: test.mk:9: Space before colon in dependency line.")
+	c.Check(mkline.IsVarassign(), equals, false)
+	c.Check(mkline.IsDirective(), equals, false)
+	c.Check(mkline.IsInclude(), equals, false)
+	c.Check(mkline.IsEmpty(), equals, false)
+	c.Check(mkline.IsComment(), equals, false)
+	c.Check(mkline.IsDependency(), equals, false)
+	c.Check(mkline.IsShellCommand(), equals, false)
+	c.Check(mkline.IsSysinclude(), equals, false)
 }
 
 func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {

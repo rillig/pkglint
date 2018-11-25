@@ -1093,7 +1093,7 @@ func (s *Suite) Test_VaralignBlock_Check__autofix(c *check.C) {
 
 	t.SetupCommandLine("-Wspace", "--show-autofix")
 
-	lines := t.NewLines("file.mk",
+	mklines := t.NewMkLines("file.mk",
 		"VAR=   value",    // Indentation 7, fixed to 8.
 		"",                //
 		"VAR=    value",   // Indentation 8, fixed to 8.
@@ -1108,9 +1108,9 @@ func (s *Suite) Test_VaralignBlock_Check__autofix(c *check.C) {
 		"",                //
 		"VAR=\tvalue")     // Already aligned with tabs only, left unchanged.
 
-	varalign := &VaralignBlock{}
-	for _, line := range lines.Lines {
-		varalign.Check(NewMkLine(line))
+	var varalign VaralignBlock
+	for _, line := range mklines.mklines {
+		varalign.Check(line)
 	}
 	varalign.Finish()
 
@@ -1129,10 +1129,11 @@ func (s *Suite) Test_VaralignBlock_Check__autofix(c *check.C) {
 		"AUTOFIX: file.mk:11: Replacing \"    \\t\" with \"\\t\\t\".")
 }
 
+// When the lines of a paragraph are inconsistently aligned,
+// they are realigned to the minimum required width.
 func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wspace")
 	mklines := t.NewMkLines("file.mk",
 		"VAR= \tvalue",
 		"VAR=    \tvalue",
@@ -1142,7 +1143,7 @@ func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {
 		"VAR=\t\t\tdeep",
 		"VAR=\t\t\tindentation")
 
-	varalign := new(VaralignBlock)
+	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
 		varalign.Check(mkline)
 	}
@@ -1154,6 +1155,9 @@ func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {
 		"NOTE: file.mk:3: This variable value should be aligned to column 9.")
 }
 
+// For every variable assignment, there is at least one space or tab between the variable
+// name and the value. Even if it is the longest line, and even if the value would start
+// exactly at a tab stop.
 func (s *Suite) Test_VaralignBlock_Check__longest_line_no_space(c *check.C) {
 	t := s.Init(c)
 
@@ -1162,9 +1166,9 @@ func (s *Suite) Test_VaralignBlock_Check__longest_line_no_space(c *check.C) {
 		"SUBST_CLASSES+= aaaaaaaa",
 		"SUBST_STAGE.aaaaaaaa= pre-configure",
 		"SUBST_FILES.aaaaaaaa= *.pl",
-		"SUBST_FILTER_CMD.aaaaaaaa=cat")
+		"SUBST_FILTER_CMD.aaaaaa=cat")
 
-	varalign := new(VaralignBlock)
+	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
 		varalign.Check(mkline)
 	}
@@ -1187,7 +1191,7 @@ func (s *Suite) Test_VaralignBlock_Check__only_spaces(c *check.C) {
 		"SUBST_FILES.aaaaaaaa= *.pl",
 		"SUBST_FILTER_CMD.aaaaaaaa= cat")
 
-	varalign := new(VaralignBlock)
+	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
 		varalign.Check(mkline)
 	}
