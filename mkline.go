@@ -152,6 +152,7 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, nil}
 	}
 
+	// The %q is deliberate here since it shows possible strange characters.
 	line.Errorf("Unknown Makefile line format: %q.", text)
 	return &MkLineImpl{line, nil}
 }
