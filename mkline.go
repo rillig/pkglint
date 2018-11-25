@@ -496,26 +496,16 @@ func (mkline *MkLineImpl) RefTo(other MkLine) string {
 	return mkline.Line.RefTo(other.Line)
 }
 
+var AlnumDash = textproc.NewByteSet("a-z---")
+
 func matchMkDirective(text string) (m bool, indent, directive, args, comment string) {
-	i, n := 0, len(text)
-	if i < n && text[i] == '.' {
-		i++
-	} else {
+	lexer := textproc.NewLexer(text)
+	if !lexer.SkipByte('.') {
 		return
 	}
 
-	indentStart := i
-	for i < n && (text[i] == ' ' || text[i] == '\t') {
-		i++
-	}
-	indentEnd := i
-
-	directiveStart := i
-	for i < n && ('a' <= text[i] && text[i] <= 'z' || text[i] == '-') {
-		i++
-	}
-	directiveEnd := i
-	directive = text[directiveStart:directiveEnd]
+	indent = lexer.NextHspace()
+	directive = lexer.NextBytesSet(AlnumDash)
 	switch directive {
 	case "if", "else", "elif", "endif",
 		"ifdef", "ifndef",
@@ -528,30 +518,29 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 		return
 	}
 
-	for i < n && (text[i] == ' ' || text[i] == '\t') {
-		i++
-	}
+	lexer.SkipHspace()
 
-	argsStart := i
-	for i < n && (text[i] != '#' || text[i-1] == '\\') {
-		i++
-	}
-	commentStart := i
-	if commentStart < n {
-		commentStart++
-		for commentStart < n && (text[commentStart] == ' ' || text[commentStart] == '\t') {
-			commentStart++
+	argsStart := lexer.Mark()
+	for !lexer.EOF() {
+		if lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1 {
+			lexer.Skip(2)
+		} else if lexer.PeekByte() == '#' {
+			break
+		} else {
+			lexer.Skip(1)
 		}
 	}
-	for i > argsStart && (text[i-1] == ' ' || text[i-1] == '\t') {
-		i--
+	args = lexer.Since(argsStart)
+	args = strings.TrimFunc(args, func(r rune) bool { return isHspace(byte(r)) })
+	args = strings.Replace(args, "\\#", "#", -1)
+
+	if !lexer.EOF() {
+		lexer.Skip(1)
+		lexer.SkipHspace()
+		comment = lexer.Rest()
 	}
-	argsEnd := i
 
 	m = true
-	indent = text[indentStart:indentEnd]
-	args = strings.Replace(text[argsStart:argsEnd], "\\#", "#", -1)
-	comment = text[commentStart:]
 	return
 }
 
