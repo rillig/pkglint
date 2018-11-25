@@ -221,7 +221,7 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 		}
 
 	case mkline.IsInclude():
-		if IsPrefs(mkline.IncludeFile()) {
+		if IsPrefs(mkline.IncludedFile()) {
 			tr.SeenPrefs = true
 		}
 	}

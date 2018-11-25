@@ -49,7 +49,7 @@ loop:
 			// The conditionals are typically for OPSYS and MACHINE_ARCH.
 
 		case mkline.IsInclude():
-			if mkline.IncludeFile() == "../../mk/bsd.options.mk" {
+			if mkline.IncludedFile() == "../../mk/bsd.options.mk" {
 				exp.Advance()
 				break loop
 			}

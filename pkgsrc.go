@@ -276,9 +276,9 @@ func (src *Pkgsrc) loadTools() {
 		mklines := LoadMk(toc, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
 			if mkline.IsInclude() {
-				includefile := mkline.IncludeFile()
-				if !contains(includefile, "/") {
-					toolFiles = append(toolFiles, includefile)
+				includedFile := mkline.IncludedFile()
+				if !contains(includedFile, "/") {
+					toolFiles = append(toolFiles, includedFile)
 				}
 			}
 		}

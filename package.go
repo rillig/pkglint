@@ -116,8 +116,8 @@ func (pkg *Package) checklinesBuildlink3Inclusion(mklines MkLines) {
 	includedFiles := make(map[string]MkLine)
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
-			file := mkline.IncludeFile()
-			if m, bl3 := match1(file, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
+			includedFile := mkline.IncludedFile()
+			if m, bl3 := match1(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk`); m {
 				includedFiles[bl3] = mkline
 				if pkg.bl3[bl3] == nil {
 					mkline.Warnf("%s/buildlink3.mk is included by this file but not by the package.", bl3)
@@ -215,22 +215,21 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		allLines.mklines = append(allLines.mklines, mkline)
 		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
-		var includeFile, incDir, incBase string
+		var includedFile, incDir, incBase string
 		if mkline.IsInclude() {
-			inc := mkline.IncludeFile()
-			includeFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(inc, true))
-			if containsVarRef(includeFile) {
+			includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile(), true))
+			if containsVarRef(includedFile) {
 				if !contains(filename, "/mk/") {
-					mkline.Notef("Skipping include file %q. This may result in false warnings.", includeFile)
+					mkline.Notef("Skipping include file %q. This may result in false warnings.", includedFile)
 				}
-				includeFile = ""
+				includedFile = ""
 			}
-			incDir, incBase = path.Split(includeFile)
+			incDir, incBase = path.Split(includedFile)
 		}
 
-		if includeFile != "" {
+		if includedFile != "" {
 			if mkline.Basename != "buildlink3.mk" {
-				if m, bl3File := match1(includeFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
+				if m, bl3File := match1(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
 					pkg.bl3[bl3File] = mkline.Line
 					if trace.Tracing {
 						trace.Step1("Buildlink3 file in package: %q", bl3File)
@@ -239,27 +238,27 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 			}
 		}
 
-		if includeFile != "" && pkg.included[includeFile] == nil {
-			pkg.included[includeFile] = mkline.Line
+		if includedFile != "" && pkg.included[includedFile] == nil {
+			pkg.included[includedFile] = mkline.Line
 
-			if matches(includeFile, `^\.\./[^./][^/]*/[^/]+`) {
+			if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
 				mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
 				mkline.ExplainRelativeDirs()
 			}
 
 			if mkline.Basename == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
 				if trace.Tracing {
-					trace.Step1("Including %q sets seenMakefileCommon.", includeFile)
+					trace.Step1("Including %q sets seenMakefileCommon.", includedFile)
 				}
 				pkg.seenMakefileCommon = true
 			}
 
-			skip := contains(filename, "/mk/") || hasSuffix(includeFile, "/bsd.pkg.mk") || IsPrefs(includeFile)
+			skip := contains(filename, "/mk/") || hasSuffix(includedFile, "/bsd.pkg.mk") || IsPrefs(includedFile)
 			if !skip {
 				dirname, _ := path.Split(filename)
 				dirname = cleanpath(dirname)
 
-				fullIncluded := dirname + "/" + includeFile
+				fullIncluded := dirname + "/" + includedFile
 				if trace.Tracing {
 					trace.Step1("Including %q.", fullIncluded)
 				}
@@ -267,7 +266,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 				innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding)
 
 				if !innerExists {
-					if fileMklines.indentation.IsCheckedFile(includeFile) {
+					if fileMklines.indentation.IsCheckedFile(includedFile) {
 						return true // See https://github.com/rillig/pkglint/issues/1
 					}
 
@@ -280,12 +279,12 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 					if dirname != pkgBasedir { // Prevent unnecessary syscalls
 						dirname = pkgBasedir
 
-						fullIncludedFallback := dirname + "/" + includeFile
+						fullIncludedFallback := dirname + "/" + includedFile
 						innerExists, innerResult = pkg.readMakefile(fullIncludedFallback, mainLines, allLines, fullIncluding)
 					}
 
 					if !innerExists {
-						mkline.Errorf("Cannot read %q.", includeFile)
+						mkline.Errorf("Cannot read %q.", includedFile)
 					}
 				}
 
@@ -763,19 +762,19 @@ func (pkg *Package) CheckInclude(mkline MkLine, indentation *Indentation) {
 	}
 
 	if path.Dir(abspath(mkline.Filename)) == abspath(pkg.File(".")) {
-		includefile := mkline.IncludeFile()
+		includedFile := mkline.IncludedFile()
 
 		if indentation.IsConditional() {
-			pkg.conditionalIncludes[includefile] = mkline
-			if other := pkg.unconditionalIncludes[includefile]; other != nil {
+			pkg.conditionalIncludes[includedFile] = mkline
+			if other := pkg.unconditionalIncludes[includedFile]; other != nil {
 				mkline.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
-					cleanpath(includefile), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
+					cleanpath(includedFile), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
 			}
 		} else {
-			pkg.unconditionalIncludes[includefile] = mkline
-			if other := pkg.conditionalIncludes[includefile]; other != nil {
+			pkg.unconditionalIncludes[includedFile] = mkline
+			if other := pkg.conditionalIncludes[includedFile]; other != nil {
 				mkline.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
-					cleanpath(includefile), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
+					cleanpath(includedFile), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
 			}
 		}
 

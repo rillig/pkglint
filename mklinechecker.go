@@ -70,15 +70,15 @@ func (ck MkLineChecker) checkInclude() {
 		ck.checkDirectiveIndentation(G.Mk.indentation.Depth("include"))
 	}
 
-	includefile := mkline.IncludeFile()
+	includedFile := mkline.IncludedFile()
 	mustExist := mkline.MustExist()
 	if trace.Tracing {
-		trace.Step2("includingFile=%s includefile=%s", mkline.Filename, includefile)
+		trace.Step2("includingFile=%s includedFile=%s", mkline.Filename, includedFile)
 	}
-	ck.CheckRelativePath(includefile, mustExist)
+	ck.CheckRelativePath(includedFile, mustExist)
 
 	switch {
-	case hasSuffix(includefile, "/Makefile"):
+	case hasSuffix(includedFile, "/Makefile"):
 		mkline.Errorf("Other Makefiles must not be included directly.")
 		G.Explain(
 			"If you want to include portions of another Makefile, extract",
@@ -86,22 +86,22 @@ func (ck MkLineChecker) checkInclude() {
 			"that, both this one and the other package should include the",
 			"Makefile.common.")
 
-	case IsPrefs(includefile):
-		if mkline.Basename == "buildlink3.mk" && includefile == "../../mk/bsd.prefs.mk" {
+	case IsPrefs(includedFile):
+		if mkline.Basename == "buildlink3.mk" && includedFile == "../../mk/bsd.prefs.mk" {
 			mkline.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		}
 
-	case hasSuffix(includefile, "/x11-links/buildlink3.mk"):
-		mkline.Errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includefile)
+	case hasSuffix(includedFile, "/x11-links/buildlink3.mk"):
+		mkline.Errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includedFile)
 
-	case hasSuffix(includefile, "/jpeg/buildlink3.mk"):
-		mkline.Errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includefile)
+	case hasSuffix(includedFile, "/jpeg/buildlink3.mk"):
+		mkline.Errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includedFile)
 
-	case hasSuffix(includefile, "/intltool/buildlink3.mk"):
+	case hasSuffix(includedFile, "/intltool/buildlink3.mk"):
 		mkline.Warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 
-	case hasSuffix(includefile, "/builtin.mk"):
-		mkline.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includefile, path.Dir(includefile))
+	case hasSuffix(includedFile, "/builtin.mk"):
+		mkline.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includedFile, path.Dir(includedFile))
 	}
 }
 

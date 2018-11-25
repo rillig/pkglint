@@ -52,7 +52,7 @@ type mkLineIncludeImpl struct {
 	mustExist       bool     // for .sinclude, nonexistent files are ignored
 	sys             bool     // whether the include uses <file.mk> (very rare) instead of "file.mk"
 	indent          string   // the space between the leading "." and the directive
-	includeFile     string   // the text between the <brackets> or "quotes"
+	includedFile    string   // the text between the <brackets> or "quotes"
 	conditionalVars []string // variables on which this inclusion depends (filled in later, as needed)
 }
 type mkLineDependency struct {
@@ -131,12 +131,12 @@ func NewMkLine(line Line) *MkLineImpl {
 		return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, comment, nil, nil}}
 	}
 
-	if m, indent, directive, includefile := MatchMkInclude(text); m {
-		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includefile, nil}}
+	if m, indent, directive, includedFile := MatchMkInclude(text); m {
+		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
 	}
 
-	if m, indent, directive, includefile := match3(text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`); m {
-		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includefile, nil}}
+	if m, indent, directive, includedFile := match3(text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`); m {
+		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
 	}
 
 	// XXX: Replace this regular expression with proper parsing.
@@ -313,7 +313,7 @@ func (mkline *MkLineImpl) SetHasElseBranch(elseLine MkLine) {
 
 func (mkline *MkLineImpl) MustExist() bool { return mkline.data.(mkLineInclude).mustExist }
 
-func (mkline *MkLineImpl) IncludeFile() string { return mkline.data.(mkLineInclude).includeFile }
+func (mkline *MkLineImpl) IncludedFile() string { return mkline.data.(mkLineInclude).includedFile }
 
 func (mkline *MkLineImpl) Targets() string { return mkline.data.(mkLineDependency).targets }
 
@@ -708,7 +708,7 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 		searchIn(mkline.Sources())
 
 	case mkline.IsInclude():
-		searchIn(mkline.IncludeFile())
+		searchIn(mkline.IncludedFile())
 	}
 
 	return varnames

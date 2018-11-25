@@ -576,6 +576,7 @@ func resolveVariableRefs(text string) (resolved string) {
 
 	str := text
 	for {
+		// TODO: Replace regular expression with full parser.
 		replaced := replaceAllFunc(str, `\$\{([\w.]+)\}`, replacer)
 		if replaced == str {
 			if trace.Tracing && str != text {
