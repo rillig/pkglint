@@ -1115,6 +1115,7 @@ func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname,
 
 	valueAlign = text[:len(text)-len(lexer.Rest())]
 	valueStart := lexer.Mark()
+	// FIXME: This is the same code as in matchMkDirective.
 	for !lexer.EOF() && lexer.PeekByte() != '#' {
 		switch {
 		case lexer.SkipString("[#"):
