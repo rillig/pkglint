@@ -392,17 +392,25 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("filename",
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		"LHS.${lparam}=\tRHS.${rparam}",
+		"",
+		"target:",
 		"\t${outer.${inner}}")
-	mkline := mklines.mklines[0]
+	assignMkline := mklines.mklines[2]
+	shellMkline := mklines.mklines[5]
 	G.Mk = mklines
 
 	mklines.DetermineUsedVariables()
 
-	c.Check(len(mklines.vars.used), equals, 3)
-	c.Check(mklines.vars.FirstUse("inner"), equals, mkline)
-	c.Check(mklines.vars.FirstUse("outer.*"), equals, mkline)
-	c.Check(mklines.vars.FirstUse("outer.${inner}"), equals, mkline)
+	c.Check(len(mklines.vars.used), equals, 4)
+	// FIXME: lparam is missing.
+	c.Check(mklines.vars.FirstUse("rparam"), equals, assignMkline)
+	c.Check(mklines.vars.FirstUse("inner"), equals, shellMkline)
+	c.Check(mklines.vars.FirstUse("outer.*"), equals, shellMkline)
+	c.Check(mklines.vars.FirstUse("outer.${inner}"), equals, shellMkline)
 }
 
 func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
