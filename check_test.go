@@ -404,8 +404,7 @@ func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string) {
 		aligned("BUILDLINK_DEPMETHOD.%s?=", lower)+"build",
 		sprintf(".endif # %s_BUILDLINK3_MK", upper),
 		sprintf(""),
-		sprintf(""),
-		sprintf("BUILDLINK_TREE+=\t-%s", upper))
+		sprintf("BUILDLINK_TREE+=\t-%s", lower))
 }
 
 // File returns the absolute path to the given file in the
