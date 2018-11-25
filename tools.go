@@ -84,7 +84,16 @@ type Tools struct {
 	byName    map[string]*Tool // "sed" => tool
 	byVarname map[string]*Tool // "GREP_CMD" => tool
 	fallback  *Tools
-	SeenPrefs bool // Determines the effect of adding the tool to USE_TOOLS
+
+	// Determines the effect of adding the tool to USE_TOOLS.
+	//
+	// As long as bsd.prefs.mk has definitely not been included by the current file,
+	// tools added to USE_TOOLS are available at load time, but only after bsd.prefs.mk
+	// has been included.
+	//
+	// Adding a tool to USE_TOOLS _after_ bsd.prefs.mk has been included, on the other
+	// hand, only makes the tool available at run time.
+	SeenPrefs bool
 }
 
 func NewTools(traceName string) *Tools {

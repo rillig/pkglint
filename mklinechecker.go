@@ -438,19 +438,34 @@ func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype)
 		return
 	}
 
-	if mods[0].IsSuffixSubst() && vartype != nil && !vartype.IsConsideredList() {
+	ck.checkVaruseModifiersSuffix(varuse, vartype)
+	ck.checkVaruseModifiersRange(varuse)
+
+	// TODO: Add checks for a single modifier, among them:
+	// TODO: Suggest to replace ${VAR:@l@-l${l}@} with the simpler ${VAR:S,^,-l,}.
+	// TODO: Suggest to replace ${VAR:@l@${l}suffix@} with the simpler ${VAR:=suffix}.
+	// TODO: Investigate why :Q is not checked at this exact place.
+}
+
+func (ck MkLineChecker) checkVaruseModifiersSuffix(varuse *MkVarUse, vartype *Vartype) {
+	if varuse.modifiers[0].IsSuffixSubst() && vartype != nil && !vartype.IsConsideredList() {
 		ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
 		G.Explain(
-			"Instead of:",
+			"Instead of (for example):",
 			"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
 			"",
 			"Write:",
 			"\tMASTER_SITES=\t${HOMEPAGE}repository/",
 			"",
-			"This is a much clearer expression of the same thought.")
+			"This is a clearer expression of the same thought.")
 	}
+}
 
-	// Suggest to replace ${VAR:S,^,__magic__,1:M__magic__*:S,^__magic__,,} with the simpler ${VAR:[1]}.
+// checkVaruseModifiersRange suggests to replace
+// ${VAR:S,^,__magic__,1:M__magic__*:S,^__magic__,,} with the simpler ${VAR:[1]}.
+func (ck MkLineChecker) checkVaruseModifiersRange(varuse *MkVarUse) {
+	mods := varuse.modifiers
+
 	if len(mods) == 3 {
 		if m, _, from, to, options := mods[0].MatchSubst(); m && from == "^" && matches(to, `^\w+$`) && options == "1" {
 			magic := to
@@ -468,11 +483,6 @@ func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype)
 			}
 		}
 	}
-
-	// TODO: Add checks for a single modifier, among them:
-	// TODO: Suggest to replace ${VAR:@l@-l${l}@} with the simpler ${VAR:S,^,-l,}.
-	// TODO: Suggest to replace ${VAR:@l@${l}suffix@} with the simpler ${VAR:=suffix}.
-	// TODO: Investigate why :Q is not checked at this exact place.
 }
 
 // checkVarusePermissions checks the permissions for the right-hand side
@@ -499,12 +509,12 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	mkline := ck.MkLine
-	perms := vartype.EffectivePermissions(mkline.Basename)
+	effPerms := vartype.EffectivePermissions(mkline.Basename)
 
 	// Is the variable used at load time although that is not allowed?
 	directly := false
 	indirectly := false
-	if !perms.Contains(aclpUseLoadtime) { // May not be used at load time.
+	if !effPerms.Contains(aclpUseLoadtime) { // May not be used at load time.
 		if vuc.time == vucTimeParse {
 			directly = true
 		} else if vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) {
@@ -529,7 +539,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		}
 	}
 
-	if !perms.Contains(aclpUseLoadtime) && !perms.Contains(aclpUse) {
+	if !effPerms.Contains(aclpUseLoadtime) && !effPerms.Contains(aclpUse) {
 		needed := aclpUse
 		if directly || indirectly {
 			needed = aclpUseLoadtime
@@ -544,6 +554,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		G.Explain(
 			"The allowed actions for a variable are determined based on the file",
 			"name in which the variable is used or defined.  The exact rules are",
+			// FIXME: List the rules in this very explanation.
 			"hard-coded into pkglint.  If they seem to be incorrect, please ask",
 			"on the tech-pkg@NetBSD.org mailing list.")
 	}
@@ -552,6 +563,15 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 // warnVaruseToolLoadTime logs a warning that the tool ${varname}
 // may not be used at load time.
 func (ck MkLineChecker) warnVaruseToolLoadTime(varname string, tool *Tool) {
+	// TODO: While using a tool by its variable name may be ok at load time,
+	// doing the same with the plain name of a tool is never ok.
+	// "VAR!= cat" is never guaranteed to call the correct cat.
+	// Even for shell builtins like echo and printf, bmake may decide
+	// to skip the shell and execute the commands via execve, which
+	// means that even echo is not a shell-builtin anymore.
+
+	// TODO: Replace "parse time" with "load time" everywhere.
+
 	if tool.Validity == AfterPrefsMk {
 		ck.MkLine.Warnf("To use the tool ${%s} at load time, bsd.prefs.mk has to be included before.", varname)
 		return
@@ -608,31 +628,29 @@ func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 }
 
 // CheckVaruseShellword checks whether a variable use of the form ${VAR}
-// or ${VAR:Modifier} is allowed in a certain context.
+// or ${VAR:modifiers} is allowed in a certain context.
 func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, mod, needsQuoting)()
 	}
 
-	// In GNU configure scripts, a few variables need to be
-	// passed through the :M* operator before they reach the
-	// configure scripts.
+	// In GNU configure scripts, a few variables need to be passed through
+	// the :M* operator before they reach the configure scripts. Otherwise
+	// the leading or trailing spaces will lead to strange caching errors
+	// since the GNU configure scripts cannot handle these space characters.
 	//
 	// When doing checks outside a package, the :M* operator is needed for safety.
-	needMstar := matches(varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`) &&
-		(G.Pkg == nil || G.Pkg.vars.Defined("GNU_CONFIGURE"))
-
-	strippedMod := mod
-	if m, stripped := match1(mod, `(.*?)(?::M\*)?(?::Q)?$`); m {
-		strippedMod = stripped
-	}
+	needMstar := (G.Pkg == nil || G.Pkg.vars.Defined("GNU_CONFIGURE")) &&
+		matches(varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
 
 	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
 		mkline.Notef("The :M* modifier is not needed here.")
 
 	} else if needsQuoting == yes {
-		correctMod := strippedMod + ifelseStr(needMstar, ":M*:Q", ":Q")
+		modNoQ := strings.TrimSuffix(mod, ":Q")
+		modNoM := strings.TrimSuffix(modNoQ, ":M*")
+		correctMod := modNoM + ifelseStr(needMstar, ":M*:Q", ":Q")
 		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
 			if vartype.IsConsideredList() {
 				mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
