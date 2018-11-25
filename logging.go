@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"strings"
 )
 
 type LogLevel struct {
@@ -26,28 +25,6 @@ var dummyLine = NewLineMulti("", 0, 0, "", nil)
 // that an explanation is available.
 func (pkglint *Pkglint) Explain(explanation ...string) {
 
-	// TODO: Add automatic word wrapping so that the pkglint source
-	// code doesn't need to be concerned with manual line wrapping.
-
-	if pkglint.Testing {
-		for _, s := range explanation {
-			if l := tabWidth(s); l > 68 && contains(s, " ") {
-				lastSpace := strings.LastIndexByte(s[:68], ' ')
-				pkglint.logErr.Printf("Long explanation line: %s\nBreak after: %s\n", s, s[:lastSpace])
-			}
-			if m, before := match1(s, `(.+)\. [^ ]`); m {
-				if !matches(before, `\d$|e\.g`) {
-					// TODO: Find out why this rule exists. It's the same as in
-					// the NetBSD manual pages, but seems otherwise unnecessary.
-					pkglint.logErr.Printf("Short space after period: %s\n", s)
-				}
-			}
-			if hasSuffix(s, " ") || hasSuffix(s, "\t") {
-				pkglint.logErr.Printf("Trailing whitespace in explanation: %q\n", s)
-			}
-		}
-	}
-
 	if !pkglint.explainNext {
 		return
 	}
@@ -61,7 +38,8 @@ func (pkglint *Pkglint) Explain(explanation ...string) {
 	}
 
 	pkglint.logOut.WriteLine("")
-	for _, explanationLine := range explanation {
+	wrapped := wrap(68, explanation...)
+	for _, explanationLine := range wrapped {
 		pkglint.logOut.Write("\t")
 		pkglint.logOut.WriteLine(explanationLine)
 	}

@@ -631,8 +631,8 @@ func (s *Suite) Test_MkLines__wip_category_Makefile(c *check.C) {
 		"\t",
 		"\t\t.PHONY: my-target",
 		"\t",
-		"\tIn the rare case that you actually want a file-based make(1)",
-		"\ttarget, write it like this:",
+		"\tIn the rare case that you actually want a file-based make(1) target,",
+		"\twrite it like this:",
 		"\t",
 		"\t\t${.CURDIR}/my-file:",
 		"")

@@ -142,26 +142,4 @@ func (s *Suite) Test_Pkglint_Explain__only(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Pkglint_Explain__long_lines(c *check.C) {
-	t := s.Init(c)
-
-	G.Explain(
-		"123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789")
-
-	t.CheckOutputLines(
-		"Long explanation line: 123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789",
-		"Break after: 123456789 12345678. abcdefghi. 123456789 123456789 123456789",
-		"Short space after period: 123456789 12345678. abcdefghi. 123456789 123456789 123456789 123456789 123456789")
-}
-
-func (s *Suite) Test_Pkglint_Explain__trailing_whitespace(c *check.C) {
-	t := s.Init(c)
-
-	G.Explain(
-		"This is a space: ")
-
-	t.CheckOutputLines(
-		"Trailing whitespace in explanation: \"This is a space: \"")
-}
-
 // TODO: Add tests for SeparatorWriter.
