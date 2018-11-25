@@ -335,10 +335,10 @@ func (mklines *MkLinesImpl) determineDocumentedVariables() {
 
 			parser := NewMkParser(nil, words[1], false)
 			varname := parser.Varname()
-			if hasSuffix(varname, ".") && parser.repl.SkipRegexp(G.res.Compile(`^<\w+>`)) {
+			if hasSuffix(varname, ".") && parser.lexer.SkipRegexp(G.res.Compile(`^<\w+>`)) {
 				varname += "*"
 			}
-			parser.repl.SkipByte(':')
+			parser.lexer.SkipByte(':')
 
 			varbase := varnameBase(varname)
 			if varbase == strings.ToUpper(varbase) && matches(varbase, `[A-Z]`) && parser.EOF() {

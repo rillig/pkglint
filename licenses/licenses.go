@@ -70,18 +70,18 @@ type licenseLexer struct {
 var licenseNameChars = textproc.NewByteSet("A-Za-z0-9---.")
 
 func (lexer *licenseLexer) Lex(llval *liyySymType) int {
-	repl := lexer.lexer
-	repl.NextHspace()
+	lex := lexer.lexer
+	lex.NextHspace()
 	switch {
-	case repl.EOF():
+	case lex.EOF():
 		return 0
-	case repl.SkipByte('('):
+	case lex.SkipByte('('):
 		return ltOPEN
-	case repl.SkipByte(')'):
+	case lex.SkipByte(')'):
 		return ltCLOSE
 	}
 
-	word := repl.NextBytesSet(licenseNameChars)
+	word := lex.NextBytesSet(licenseNameChars)
 	switch word {
 	case "AND":
 		return ltAND

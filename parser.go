@@ -7,7 +7,7 @@ import (
 
 type Parser struct {
 	Line         Line
-	repl         *textproc.Lexer
+	lexer        *textproc.Lexer
 	EmitWarnings bool
 }
 
@@ -16,38 +16,38 @@ func NewParser(line Line, s string, emitWarnings bool) *Parser {
 }
 
 func (p *Parser) EOF() bool {
-	return p.repl.EOF()
+	return p.lexer.EOF()
 }
 
 func (p *Parser) Rest() string {
-	return p.repl.Rest()
+	return p.lexer.Rest()
 }
 
 func (p *Parser) PkgbasePattern() (pkgbase string) {
-	repl := p.repl
+	lexer := p.lexer
 
 	for {
-		mark := repl.Mark()
+		mark := lexer.Mark()
 
-		if repl.SkipRegexp(G.res.Compile(`^\$\{\w+\}`)) ||
-			repl.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
-			repl.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
-			pkgbase += repl.Since(mark)
+		if lexer.SkipRegexp(G.res.Compile(`^\$\{\w+\}`)) ||
+			lexer.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
+			lexer.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
+			pkgbase += lexer.Since(mark)
 			continue
 		}
 
-		if repl.SkipByte('-') {
-			if repl.SkipRegexp(G.res.Compile(`^\d`)) ||
-				repl.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
-				repl.SkipByte('[') {
-				repl.Reset(mark)
+		if lexer.SkipByte('-') {
+			if lexer.SkipRegexp(G.res.Compile(`^\d`)) ||
+				lexer.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
+				lexer.SkipByte('[') {
+				lexer.Reset(mark)
 				return
 			}
 			pkgbase += "-"
 			continue
 		}
 
-		repl.Reset(mark)
+		lexer.Reset(mark)
 		return
 	}
 }
@@ -62,47 +62,47 @@ type DependencyPattern struct {
 }
 
 func (p *Parser) Dependency() *DependencyPattern {
-	repl := p.repl
+	lexer := p.lexer
 
 	var dp DependencyPattern
-	mark := repl.Mark()
+	mark := lexer.Mark()
 	dp.Pkgbase = p.PkgbasePattern()
 	if dp.Pkgbase == "" {
 		return nil
 	}
 
-	mark2 := repl.Mark()
-	op := repl.NextString(">=")
+	mark2 := lexer.Mark()
+	op := lexer.NextString(">=")
 	if op == "" {
-		op = repl.NextString(">")
+		op = lexer.NextString(">")
 	}
 	if op != "" {
-		if m := repl.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
+		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
 			dp.LowerOp = op
 			dp.Lower = m[0]
 		} else {
-			repl.Reset(mark2)
+			lexer.Reset(mark2)
 		}
 	}
 
-	op = repl.NextString("<=")
+	op = lexer.NextString("<=")
 	if op == "" {
-		op = repl.NextString("<")
+		op = lexer.NextString("<")
 	}
 	if op != "" {
-		if m := repl.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
+		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
 			dp.UpperOp = op
 			dp.Upper = m[0]
 		} else {
-			repl.Reset(mark2)
+			lexer.Reset(mark2)
 		}
 	}
 	if dp.LowerOp != "" || dp.UpperOp != "" {
 		return &dp
 	}
-	if repl.SkipByte('-') && repl.Rest() != "" {
-		dp.Wildcard = repl.Rest()
-		repl.Skip(len(repl.Rest()))
+	if lexer.SkipByte('-') && lexer.Rest() != "" {
+		dp.Wildcard = lexer.Rest()
+		lexer.Skip(len(lexer.Rest()))
 		return &dp
 	}
 	if hasPrefix(dp.Pkgbase, "${") && hasSuffix(dp.Pkgbase, "}") {
@@ -114,6 +114,6 @@ func (p *Parser) Dependency() *DependencyPattern {
 		return &dp
 	}
 
-	repl.Reset(mark)
+	lexer.Reset(mark)
 	return nil
 }

@@ -575,13 +575,13 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 		// Covers shAtomSubshDquot: return nil
 		"\t"+"$$(\"'",
 
-		// Covers shAtomSubsh: case repl.AdvanceStr("`")
+		// Covers shAtomSubsh: case lexer.AdvanceStr("`")
 		"\t"+"$$(`",
 
 		// Covers shAtomSubshSquot: return nil
 		"\t"+"$$('$)",
 
-		// Covers shAtomDquotBackt: case repl.AdvanceRegexp("^#[^`]*")
+		// Covers shAtomDquotBackt: case lexer.AdvanceRegexp("^#[^`]*")
 		"\t"+"\"`# comment")
 
 	mklines.Check()
