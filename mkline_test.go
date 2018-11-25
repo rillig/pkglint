@@ -988,8 +988,6 @@ func (s *Suite) Test_matchMkDirective(c *check.C) {
 
 	test(".if ${VAR} == value", "", "if", "${VAR} == value", "")
 	test(".\tendif # comment", "\t", "endif", "", "comment")
-	test(".if ${VAR} == \"#\"", "", "if", "${VAR:[", "]}")
-
-	// FIXME: [#] is accepted by the bmake parser.
-	test(".if ${VAR:[#]}", "", "if", "${VAR:[", "]}")
+	test(".if ${VAR} == \"#\"", "", "if", "${VAR} == \"", "\"")
+	test(".if ${VAR:[#]}", "", "if", "${VAR:[#]}", "")
 }

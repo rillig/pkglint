@@ -515,12 +515,15 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 	lexer.SkipHspace()
 
 	argsStart := lexer.Mark()
-	for !lexer.EOF() {
-		if lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1 {
+	for !lexer.EOF() && lexer.PeekByte() != '#' {
+		switch {
+		case lexer.SkipString("[#"):
+			// See devel/bmake/files/parse.c:/as in modifier/
+
+		case lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1:
 			lexer.Skip(2)
-		} else if lexer.PeekByte() == '#' {
-			break
-		} else {
+
+		default:
 			lexer.Skip(1)
 		}
 	}
