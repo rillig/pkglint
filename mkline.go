@@ -691,7 +691,7 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 	switch {
 
 	case mkline.IsVarassign():
-		//searchIn(mkline.Varname())
+		searchIn(mkline.Varname())
 		searchIn(mkline.Value())
 
 	case mkline.IsDirective() && mkline.Directive() == "for":

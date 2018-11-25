@@ -405,8 +405,8 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 
 	mklines.DetermineUsedVariables()
 
-	c.Check(len(mklines.vars.used), equals, 4)
-	// FIXME: lparam is missing.
+	c.Check(len(mklines.vars.used), equals, 5)
+	c.Check(mklines.vars.FirstUse("lparam"), equals, assignMkline)
 	c.Check(mklines.vars.FirstUse("rparam"), equals, assignMkline)
 	c.Check(mklines.vars.FirstUse("inner"), equals, shellMkline)
 	c.Check(mklines.vars.FirstUse("outer.*"), equals, shellMkline)
