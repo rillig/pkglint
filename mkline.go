@@ -1051,107 +1051,81 @@ func (ind *Indentation) CheckFinish(filename string) {
 	}
 }
 
-func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
-	i, n := 0, len(text)
+// VarnameBytes contains characters that may be used in variable names.
+// The bracket is included here for the tool of the same name, e.g. "TOOLS_PATH.[".
+var VarnameBytes = textproc.NewByteSet("A-Za-z_0-9*+---.[")
 
-	if i < n && text[i] == '#' {
-		commented = true
-		i++
-	} else {
-		for i < n && text[i] == ' ' {
-			i++
-		}
+func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
+	lexer := textproc.NewLexer(text)
+
+	commented = lexer.SkipByte('#')
+	for !commented && lexer.SkipByte(' ') {
 	}
 
-	varnameStart := i
-	for ; i < n; i++ {
-		b := text[i]
+	varnameStart := lexer.Mark()
+	for !lexer.EOF() {
 		switch {
 
-		// As of go1.11.1 (October 2018), the Go compiler doesn't emit good
-		// code for these kinds of comparisons.
-		// See https://github.com/golang/go/issues/17372.
-		case 'A' <= b && b <= 'Z',
-			'a' <= b && b <= 'z',
-			b == '_',
-			'0' <= b && b <= '9',
-			'*' <= b && b <= '.' && (b == '*' || b == '+' || b == '-' || b == '.'),
-			b == '[': // For the tool of the same name, e.g. "TOOLS_PATH.[".
+		case lexer.NextBytesSet(VarnameBytes) != "":
 			continue
 
-		case b == '$':
-			parser := NewMkParser(nil, text[i:], false)
+		case lexer.PeekByte() == '$':
+			parser := NewMkParser(nil, lexer.Rest(), false)
 			varuse := parser.VarUse()
 			if varuse == nil {
 				return
 			}
-			varuseLen := len(text[i:]) - len(parser.Rest())
-			i += varuseLen - 1
+			varuseLen := len(lexer.Rest()) - len(parser.Rest())
+			lexer.Skip(varuseLen)
 			continue
 		}
 		break
 	}
-	varnameEnd := i
+	varname = lexer.Since(varnameStart)
 
-	if varnameEnd == varnameStart {
+	if varname == "" {
 		return
 	}
 
-	for i < n && (text[i] == ' ' || text[i] == '\t') {
-		i++
-	}
+	spaceAfterVarname = lexer.NextHspace()
 
-	opStart := i
-	if i < n {
-		if b := text[i]; b == '!' || b == '+' || b == ':' || b == '?' {
-			i++
-		}
+	opStart := lexer.Mark()
+	switch lexer.PeekByte() {
+	case '!', '+', ':', '?':
+		lexer.Skip(1)
 	}
-	if i < n && text[i] == '=' {
-		i++
-	} else {
+	if !lexer.SkipByte('=') {
 		return
 	}
-	opEnd := i
+	op = lexer.Since(opStart)
 
-	if text[varnameEnd-1] == '+' && varnameEnd == opStart && text[opStart] == '=' {
-		varnameEnd--
-		opStart--
+	if hasSuffix(varname, "+") && op == "=" && spaceAfterVarname == "" {
+		varname = varname[:len(varname)-1]
+		op = "+="
 	}
 
-	for i < n && (text[i] == ' ' || text[i] == '\t') {
-		i++
-	}
+	lexer.SkipHspace()
 
-	valueStart := i
-	valuebuf := make([]byte, n-valueStart)
-	j := 0
-	for ; i < n; i++ {
-		b := text[i]
-		if b == '#' && (i == valueStart || text[i-1] != '\\') {
+	valueAlign = text[:len(text)-len(lexer.Rest())]
+	valueStart := lexer.Mark()
+	for !lexer.EOF() && lexer.PeekByte() != '#' {
+		switch {
+		case lexer.SkipString("[#"):
 			break
-		} else if b != '\\' || i+1 >= n || text[i+1] != '#' {
-			valuebuf[j] = b
-			j++
+
+		case lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1:
+			lexer.Skip(2)
+
+		default:
+			lexer.Skip(1)
 		}
 	}
-
-	commentStart := i
-	for text[i-1] == ' ' || text[i-1] == '\t' {
-		i--
-	}
-	valueEnd := i
-
-	commentEnd := n
+	rawValueWithSpace := lexer.Since(valueStart)
+	spaceAfterValue = rawValueWithSpace[len(strings.TrimRight(rawValueWithSpace, " \t")):]
+	value = trimHspace(strings.Replace(lexer.Since(valueStart), "\\#", "#", -1))
+	comment = lexer.Rest()
 
 	m = true
-	varname = text[varnameStart:varnameEnd]
-	spaceAfterVarname = text[varnameEnd:opStart]
-	op = text[opStart:opEnd]
-	valueAlign = text[0:valueStart]
-	value = trimHspace(string(valuebuf[:j]))
-	spaceAfterValue = text[valueEnd:commentStart]
-	comment = text[commentStart:commentEnd]
 	return
 }
 
