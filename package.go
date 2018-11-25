@@ -315,6 +315,15 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		fileMklines.CheckForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))
 	}
 
+	// For every included buildlink3.mk, include the corresponding builtin.mk
+	// automatically since the pkgsrc infrastructure does the same.
+	if path.Base(filename) == "buildlink3.mk" {
+		builtin := path.Join(path.Dir(filename), "builtin.mk")
+		if fileExists(builtin) {
+			pkg.readMakefile(builtin, mainLines, allLines, "")
+		}
+	}
+
 	return
 }
 
