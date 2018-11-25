@@ -422,3 +422,39 @@ func (s *Suite) Test_Once(c *check.C) {
 	c.Check(once.FirstTimeSlice("str", "str2"), equals, true)
 	c.Check(once.FirstTimeSlice("str", "str2"), equals, false)
 }
+
+func (s *Suite) Test_wrap(c *check.C) {
+
+	wrapped := wrap(20,
+		"See the pkgsrc guide, section \"Package components, Makefile\":",
+		"https://www.NetBSD.org/doc/pkgsrc/pkgsrc.html#components.Makefile.",
+		"",
+		"For more information, ask on the tech-pkg@NetBSD.org mailing list.",
+		"",
+		"\tpreformatted line 1",
+		"\tpreformatted line 2",
+		"",
+		"Normal text continues here with linebreaks.")
+
+	expected := []string{
+		"See the pkgsrc",
+		"guide, section",
+		"\"Package components,",
+		"Makefile\":",
+		"https://www.NetBSD.org/doc/pkgsrc/pkgsrc.html#components.Makefile.",
+		"",
+		"For more",
+		"information, ask on",
+		"the",
+		"tech-pkg@NetBSD.org",
+		"mailing list.",
+		"",
+		"\tpreformatted line 1",
+		"\tpreformatted line 2",
+		"",
+		"Normal text",
+		"continues here with",
+		"linebreaks."}
+
+	c.Check(wrapped, deepEquals, expected)
+}

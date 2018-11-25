@@ -5,6 +5,7 @@ import (
 	"hash/crc64"
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/textproc"
 	"os"
 	"path"
 	"path/filepath"
@@ -872,3 +873,43 @@ func (c *FileCache) key(filename string) string {
 func makeHelp(topic string) string { return bmake("help topic=" + topic) }
 
 func bmake(target string) string { return sprintf("%s %s", confMake, target) }
+
+func wrap(max int, lines ...string) []string {
+	var wrapped []string
+	var buf strings.Builder
+	nonSpace := textproc.Space.Inverse()
+
+	for _, line := range lines {
+		if line == "" || line[0] == '\t' {
+			if buf.Len() > 0 {
+				wrapped = append(wrapped, buf.String())
+				buf.Reset()
+			}
+			wrapped = append(wrapped, line)
+			continue
+		}
+
+		lexer := textproc.NewLexer(line)
+		for !lexer.EOF() {
+			space := lexer.NextBytesSet(textproc.Space)
+			word := lexer.NextBytesSet(nonSpace)
+
+			if buf.Len() > 0 && buf.Len()+len(space)+len(word) > max {
+				wrapped = append(wrapped, buf.String())
+				buf.Reset()
+				if space == " " {
+					space = ""
+				}
+			}
+
+			buf.WriteString(space)
+			buf.WriteString(word)
+		}
+	}
+
+	if buf.Len() > 0 {
+		wrapped = append(wrapped, buf.String())
+	}
+
+	return wrapped
+}
