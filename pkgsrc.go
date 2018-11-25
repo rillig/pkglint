@@ -824,7 +824,7 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		return vartype
 	}
 
-	if tool := G.ToolByVarname(varname, RunTime); tool != nil {
+	if tool := G.ToolByVarname(varname); tool != nil {
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
 		}
@@ -836,7 +836,7 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 	}
 
 	if m, toolVarname := match1(varname, `^TOOLS_(.*)`); m {
-		if tool := G.ToolByVarname(toolVarname, RunTime); tool != nil {
+		if tool := G.ToolByVarname(toolVarname); tool != nil {
 			return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
 		}
 	}

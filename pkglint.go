@@ -923,7 +923,7 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 // current package. It is not guaranteed to be usable, only defined;
 // that must be checked by the calling code, see Tool.UsableAtLoadTime and
 // Tool.UsableAtRunTime.
-func (pkglint *Pkglint) ToolByVarname(varname string, time ToolTime) *Tool {
+func (pkglint *Pkglint) ToolByVarname(varname string) *Tool {
 	return pkglint.tools().ByVarname(varname)
 }
 

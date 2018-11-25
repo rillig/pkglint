@@ -604,7 +604,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if tool := G.ToolByVarname(varname, vuc.time.ToToolTime()); tool != nil {
+	if tool := G.ToolByVarname(varname); tool != nil {
 		switch vuc.quoting {
 		case vucQuotPlain:
 			if !vuc.IsWordPart {
@@ -790,13 +790,6 @@ const (
 )
 
 func (t vucTime) String() string { return [...]string{"unknown", "parse", "run"}[t] }
-
-func (t vucTime) ToToolTime() ToolTime {
-	if t == vucTimeRun {
-		return RunTime
-	}
-	return LoadTime
-}
 
 // The quoting context in which the variable is used.
 // Depending on this context, the modifiers :Q or :M can be allowed or not.

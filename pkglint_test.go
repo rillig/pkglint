@@ -647,8 +647,7 @@ func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	global.Validity = Nowhere
 	local.Validity = AtRunTime
 
-	c.Check(G.ToolByVarname("TOOL", LoadTime), equals, local)
-	c.Check(G.ToolByVarname("TOOL", RunTime), equals, local)
+	c.Check(G.ToolByVarname("TOOL"), equals, local)
 }
 
 func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
@@ -657,8 +656,7 @@ func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
 	G.Mk = t.NewMkLines("Makefile", MkRcsID)
 	G.Pkgsrc.Tools.def("tool", "TOOL", false, AtRunTime)
 
-	c.Check(G.ToolByVarname("TOOL", LoadTime).String(), equals, "tool:TOOL::AtRunTime")
-	c.Check(G.ToolByVarname("TOOL", RunTime).String(), equals, "tool:TOOL::AtRunTime")
+	c.Check(G.ToolByVarname("TOOL").String(), equals, "tool:TOOL::AtRunTime")
 }
 
 func (s *Suite) Test_CheckfileExtra(c *check.C) {

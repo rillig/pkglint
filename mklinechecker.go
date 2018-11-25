@@ -482,7 +482,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	if (directly || indirectly) && !vartype.guessed {
-		if tool := G.ToolByVarname(varname, LoadTime); tool != nil {
+		if tool := G.ToolByVarname(varname); tool != nil {
 			if !tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
 				ck.warnVaruseToolLoadTime(varname, tool)
 			}
