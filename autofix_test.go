@@ -845,9 +845,11 @@ func (s *Suite) Test_SaveAutofixChanges__cannot_overwrite(c *check.C) {
 func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupCommandLine("-Wall", "--source")
+	G.Opts.LogVerbose = false // For realistic conditions; otherwise all diagnostics are logged.
+
 	t.SetupPackage("x11/xorg-cf-files",
 		".include \"../../x11/xorgproto/buildlink3.mk\"")
-
 	t.SetupPackage("x11/xorgproto",
 		"DISTNAME=\txorgproto-1.0")
 	t.CreateFileDummyBuildlink3("x11/xorgproto/buildlink3.mk")
@@ -860,9 +862,11 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 		"",
 		".for id in ${PRE_XORGPROTO_LIST_MISSING}",
 		".endfor")
+	G.Pkgsrc.LoadInfrastructure()
 	t.Chdir(".")
 
-	G.Main("pkglint", "-Wall", "--source", "x11/xorg-cf-files", "x11/xorgproto")
+	G.CheckDirent("x11/xorg-cf-files")
+	G.CheckDirent("x11/xorgproto")
 
 	t.CheckOutputLines(
 		">\tPRE_XORGPROTO_LIST_MISSING =\tapplewmproto",
@@ -873,10 +877,7 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 		"",
 		">\tPRE_XORGPROTO_LIST_MISSING =\tapplewmproto",
 		// FIXME: lonely source above
-		"",
-		"Looks fine.",
-		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
-		"(Run \"pkglint -F\" to automatically fix some issues.)")
+	)
 }
 
 // RawText returns the raw text of the fixed line, including line ends.
