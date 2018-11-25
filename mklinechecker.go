@@ -397,6 +397,8 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 
 	ck.checkVaruseDeprecated(varuse)
+
+	ck.checkVaruseText(varname, vartype, vuc.time)
 }
 
 func (ck MkLineChecker) checkVaruseMod(varuse *MkVarUse, vartype *Vartype) {
@@ -789,17 +791,21 @@ func (ck MkLineChecker) checkVarassignVaruse() {
 
 	if vartype != nil && vartype.IsShell() {
 		ck.checkVarassignVaruseShell(vartype, time)
-	} else {
-		ck.checkVarassignVaruseMk(vartype, time)
+	} else { // XXX: This else looks as if it should be omitted.
+		ck.checkVaruseText(ck.MkLine.Value(), vartype, time)
 	}
 }
 
-func (ck MkLineChecker) checkVarassignVaruseMk(vartype *Vartype, time vucTime) {
+func (ck MkLineChecker) checkVaruseText(text string, vartype *Vartype, time vucTime) {
+	if !contains(text, "$") {
+		return
+	}
+
 	if trace.Tracing {
 		defer trace.Call(vartype, time)()
 	}
-	mkline := ck.MkLine
-	tokens := NewMkParser(nil, mkline.Value(), false).MkTokens()
+
+	tokens := NewMkParser(nil, text, false).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `[\t ]$`)

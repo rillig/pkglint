@@ -243,17 +243,21 @@ func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupTool("echo", "ECHO", AtRunTime)
+	t.SetupVartypes()
 	G.Pkgsrc.initDeprecatedVars()
 	mklines := t.NewMkLines("Makefile",
-		"USE_PERL5=\tyes",
-		"SUBST_POSTCMD.class=${ECHO}")
+		MkRcsID,
+		"USE_PERL5=\t\tyes",
+		"SUBST_POSTCMD.class=\t${ECHO}",
+		"CPPFLAGS+=\t\t${BUILDLINK_CPPFLAGS.${PKG_JVM}}")
 
-	MkLineChecker{mklines.mklines[0]}.checkVarassign()
-	MkLineChecker{mklines.mklines[1]}.checkVarassign()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:1: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.",
-		"WARN: Makefile:2: Definition of SUBST_POSTCMD.class is deprecated. Has been removed, as it seemed unused.")
+		"WARN: Makefile:2: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.",
+		"WARN: Makefile:3: Definition of SUBST_POSTCMD.class is deprecated. Has been removed, as it seemed unused.",
+		"WARN: Makefile:4: BUILDLINK_CPPFLAGS.${PKG_JVM} may not be used in any file; it is a write-only variable.",
+		"WARN: Makefile:4: Use of \"PKG_JVM\" is deprecated. Use PKG_DEFAULT_JVM instead.")
 }
 
 func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {

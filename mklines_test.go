@@ -140,6 +140,11 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// For parameterized variables, the "defined but not used" and
+// the "used but not defined" checks are loosened a bit.
+// When VAR.param1 is defined or used, VAR.param2 is also regarded
+// as defined or used since often in pkgsrc, parameterized variables
+// are not referred to by their exact names but by VAR.${param}.
 func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
 	t := s.Init(c)
 
@@ -151,8 +156,9 @@ func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
 
 	mklines.Check()
 
-	// No warnings about defined but not used or vice versa
-	t.CheckOutputEmpty()
+	// No warnings about CONFIGURE_ARGS.* being defined but not used or vice versa.
+	t.CheckOutputLines(
+		"WARN: converters/wv2/Makefile:2: ICONV_TYPE is used but not defined.")
 }
 
 // Even very complicated shell commands are parsed correctly.

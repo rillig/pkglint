@@ -472,11 +472,17 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 	checkWord("${${list}}", false)
 
-	t.CheckOutputEmpty() // No warning for variables that are completely indirect.
+	// No warning for the outer variable since it is completely indirect.
+	// The inner variable ${list} must still be defined, though.
+	t.CheckOutputLines(
+		"WARN: dummy.mk:1: list is used but not defined.",
+		"WARN: dummy.mk:1: list is used but not defined.")
 
 	checkWord("${SED_FILE.${id}}", false)
 
-	t.CheckOutputEmpty() // No warning for variables that are partly indirect.
+	// No warning for variables that are partly indirect.
+	t.CheckOutputLines(
+		"WARN: dummy.mk:1: id is used but not defined.")
 
 	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
 	checkWord("$@", false)
