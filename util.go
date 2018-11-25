@@ -891,8 +891,13 @@ func wrap(max int, lines ...string) []string {
 
 		lexer := textproc.NewLexer(line)
 		for !lexer.EOF() {
+			bol := len(lexer.Rest()) == len(line)
 			space := lexer.NextBytesSet(textproc.Space)
 			word := lexer.NextBytesSet(nonSpace)
+
+			if bol && space == "" && buf.Len() > 0 {
+				space = " "
+			}
 
 			if buf.Len() > 0 && buf.Len()+len(space)+len(word) > max {
 				wrapped = append(wrapped, buf.String())

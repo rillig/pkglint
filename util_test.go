@@ -434,7 +434,12 @@ func (s *Suite) Test_wrap(c *check.C) {
 		"\tpreformatted line 1",
 		"\tpreformatted line 2",
 		"",
-		"Normal text continues here with linebreaks.")
+		"Normal",
+		"text",
+		"continues",
+		"here",
+		"with",
+		"linebreaks.")
 
 	expected := []string{
 		"See the pkgsrc",
