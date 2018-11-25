@@ -12,14 +12,14 @@ import (
 // MkLine is a line from a Makefile fragment.
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
-// shell commands and preprocessor instructions.
+// shell commands and directives like .if and .for.
 type MkLine = *MkLineImpl
 
 type MkLineImpl struct {
 	Line
 	data interface{} // One of the following mkLine* types
 }
-type mkLineAssign = *mkLineAssignImpl
+type mkLineAssign = *mkLineAssignImpl // See https://github.com/golang/go/issues/28045
 type mkLineAssignImpl struct {
 	commented   bool       // Whether the whole variable assignment is commented out
 	varname     string     // e.g. "HOMEPAGE", "SUBST_SED.perl"
@@ -35,33 +35,38 @@ type mkLineAssignImpl struct {
 type mkLineShell struct {
 	command string
 }
-type mkLineComment struct{}
+type mkLineComment struct{} // See mkLineAssignImpl.commented for another type of comment line
 type mkLineEmpty struct{}
-type mkLineDirective = *mkLineDirectiveImpl
+type mkLineDirective = *mkLineDirectiveImpl // See https://github.com/golang/go/issues/28045
 type mkLineDirectiveImpl struct {
-	indent    string
-	directive string
+	indent    string // the space between the leading "." and the directive
+	directive string // "if", "else", "for", etc.
 	args      string
-	comment   string
-	elseLine  MkLine // (filled in later)
-	cond      MkCond // (filled in later, as needed)
+	comment   string // mainly interesting for .endif and .endfor
+	elseLine  MkLine // for .if (filled in later)
+	cond      MkCond // for .if and .elif (filled in later as needed)
 }
-type mkLineInclude = *mkLineIncludeImpl
+type mkLineInclude = *mkLineIncludeImpl // See https://github.com/golang/go/issues/28045
 type mkLineIncludeImpl struct {
-	mustExist       bool
-	sys             bool
-	indent          string
-	includeFile     string
-	conditionalVars string // (filled in later)
+	mustExist       bool   // for .sinclude, nonexistent files are ignored
+	sys             bool   // whether the include uses <file.mk> (very rare) instead of "file.mk"
+	indent          string // the space between the leading "." and the directive
+	includeFile     string // the text between the <brackets> or "quotes"
+	conditionalVars string // variables on which this inclusion depends (filled in later, as needed)
 }
 type mkLineDependency struct {
 	targets string
 	sources string
 }
 
+// NewMkLine parses the text of a Makefile line to see what kind of line
+// it is: variable assignment, include, comment, etc.
+//
+// See devel/bmake/parse.c:/^Parse_File/
 func NewMkLine(line Line) *MkLineImpl {
 	text := line.Text
 
+	// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 	if hasPrefix(text, " ") && line.Basename != "bsd.buildlink3.mk" {
 		line.Warnf("Makefile lines should not start with space characters.")
 		G.Explain(
@@ -78,6 +83,7 @@ func NewMkLine(line Line) *MkLineImpl {
 			case matches(varname, `^[a-z]`) && op == ":=":
 				break
 			default:
+				// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 				fix := line.Autofix()
 				fix.Warnf("Unnecessary space after variable name %q.", varname)
 				fix.Replace(varname+spaceAfterVarname+op, varname+op)
@@ -85,6 +91,7 @@ func NewMkLine(line Line) *MkLineImpl {
 			}
 		}
 
+		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 		if comment != "" && value != "" && spaceAfterValue == "" {
 			line.Warnf("The # character starts a comment.")
 			G.Explain(
@@ -92,17 +99,14 @@ func NewMkLine(line Line) *MkLineImpl {
 				"continues until the end of the line.  To escape the #, write \\#.")
 		}
 
-		value = strings.Replace(value, "\\#", "#", -1)
-		varparam := varnameParam(varname)
-
 		return &MkLineImpl{line, &mkLineAssignImpl{
 			commented,
 			varname,
 			varnameCanon(varname),
-			varparam,
+			varnameParam(varname),
 			NewMkOperator(op),
 			valueAlign,
-			value,
+			strings.Replace(value, "\\#", "#", -1),
 			nil,
 			"",
 			comment}}
@@ -135,6 +139,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, targets, whitespace, sources := match3(text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`); m {
+		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 		if whitespace != "" {
 			line.Warnf("Space before colon in dependency line.")
 		}
@@ -892,6 +897,7 @@ func (ind *Indentation) IsConditional() bool {
 
 // Varnames returns the list of all variables that are mentioned in any
 // condition or loop surrounding the current line.
+//
 // Variables named *_MK are excluded since they are usually not interesting.
 func (ind *Indentation) Varnames() string {
 	sep := ""

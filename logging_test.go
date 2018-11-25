@@ -47,6 +47,12 @@ func (s *Suite) Test__show_source_separator(c *check.C) {
 		"WARN: ~/DESCR:3: Using \"third\" is deprecated.")
 }
 
+// When the --show-autofix option is given, the warning is shown first,
+// without the affected source, even if the --source option is also given.
+// This is because the original and the modified source are shown after
+// the "Replacing" message. Since these are shown in diff style, they
+// must be kept together. And since the "+" line must be below the "Replacing"
+// line, this order of lines seems to be the most intuitive.
 func (s *Suite) Test__show_source_separator_show_autofix(c *check.C) {
 	t := s.Init(c)
 
@@ -80,6 +86,11 @@ func (s *Suite) Test__show_source_separator_show_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
+// See Test__show_source_separator_show_autofix for the ordering of the
+// output lines.
+//
+// TODO: Giving the diagnostics again would be useful, but the warning and
+// error counters should not be affected, as well as the exitcode.
 func (s *Suite) Test__show_source_separator_autofix(c *check.C) {
 	t := s.Init(c)
 
@@ -117,14 +128,15 @@ func (s *Suite) Test_Pkglint_Explain__only(c *check.C) {
 	t.SetupCommandLine("--only", "interesting", "--explain")
 	line := t.NewLine("Makefile", 27, "The old song")
 
-	line.Warnf("Filtered warning.")                 // Is not logged.
-	G.Explain("Explanation for the above warning.") // Neither is this explanation logged.
+	// Neither the warning nor the corresponding explanation are logged.
+	line.Warnf("Filtered warning.")
+	G.Explain("Explanation for the above warning.")
 
-	line.Warnf("What an interesting line.")
+	line.Notef("What an interesting line.")
 	G.Explain("This explanation is logged.")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:27: What an interesting line.",
+		"NOTE: Makefile:27: What an interesting line.",
 		"",
 		"\tThis explanation is logged.",
 		"")
@@ -149,7 +161,7 @@ func (s *Suite) Test_Pkglint_Explain__trailing_whitespace(c *check.C) {
 		"This is a space: ")
 
 	t.CheckOutputLines(
-		"Trailing whitespace: \"This is a space: \"")
+		"Trailing whitespace in explanation: \"This is a space: \"")
 }
 
 // TODO: Add tests for SeparatorWriter.

@@ -985,21 +985,26 @@ func (s *Suite) Test_Pkglint_ShowSummary__explanations_with_only(c *check.C) {
 	t.SetupCommandLine("--only", "interesting")
 	line := t.NewLine("Makefile", 27, "The old song")
 
-	line.Warnf("Filtered warning.")                 // Is not logged.
-	G.Explain("Explanation for the above warning.") // Neither would this explanation be logged.
+	// Neither the warning nor the corresponding explanation are logged.
+	line.Warnf("Filtered warning.")
+	G.Explain("Explanation for the above warning.")
 	G.ShowSummary()
 
+	// Since the above warning is filtered out by the --only option,
+	// adding --explain to the options would not show any explanation.
+	// Therefore, "Run \"pkglint -e\"" is not advertised in this case,
+	// but see below.
 	c.Check(G.explanationsAvailable, equals, false)
 	t.CheckOutputLines(
-		"Looks fine.") // "pkglint -e" is not advertised since the above explanation is not relevant.
+		"Looks fine.")
 
-	line.Warnf("What an interesting line.")
+	line.Warnf("This warning is interesting.")
 	G.Explain("This explanation is available.")
 	G.ShowSummary()
 
 	c.Check(G.explanationsAvailable, equals, true)
 	t.CheckOutputLines(
-		"WARN: Makefile:27: What an interesting line.",
+		"WARN: Makefile:27: This warning is interesting.",
 		"0 errors and 1 warning found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
@@ -1047,6 +1052,12 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// In rare cases, the explanations for the same warning may differ
+// when they appear in different contexts. In such a case, if the
+// warning is suppressed, the explanation must not appear on its own.
+//
+// An example of this was (until November 2018) DESTDIR in the check
+// for absolute pathnames.
 func (s *Suite) Test_Pkglint_logf__duplicate_messages(c *check.C) {
 	t := s.Init(c)
 
@@ -1054,12 +1065,13 @@ func (s *Suite) Test_Pkglint_logf__duplicate_messages(c *check.C) {
 	G.Opts.LogVerbose = false
 	line := t.NewLine("README.txt", 123, "text")
 
-	// In rare cases, the explanations for the same warning may differ
-	// when they appear in different contexts. In such a case, if the
-	// warning is suppressed, the explanation must not appear on its own.
-	line.Warnf("The warning.") // Is logged
+	// Is logged because it is the first appearance of this warning.
+	line.Warnf("The warning.")
 	G.Explain("Explanation 1")
-	line.Warnf("The warning.") // Is suppressed
+
+	// Is suppressed because the warning is the same as above and LogVerbose
+	// has been set to false for this test.
+	line.Warnf("The warning.")
 	G.Explain("Explanation 2")
 
 	t.CheckOutputLines(

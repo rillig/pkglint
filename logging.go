@@ -43,7 +43,7 @@ func (pkglint *Pkglint) Explain(explanation ...string) {
 				}
 			}
 			if hasSuffix(s, " ") || hasSuffix(s, "\t") {
-				pkglint.logErr.Printf("Trailing whitespace: %q\n", s)
+				pkglint.logErr.Printf("Trailing whitespace in explanation: %q\n", s)
 			}
 		}
 	}
