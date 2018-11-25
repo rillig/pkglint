@@ -975,3 +975,21 @@ func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
 		"@",
 		"x"})
 }
+
+func (s *Suite) Test_matchMkDirective(c *check.C) {
+
+	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string) {
+		m, indent, directive, args, comment := matchMkDirective(input)
+		c.Check(
+			[]interface{}{m, indent, directive, args, comment},
+			deepEquals,
+			[]interface{}{true, expectedIndent, expectedDirective, expectedArgs, expectedComment})
+	}
+
+	test(".if ${VAR} == value", "", "if", "${VAR} == value", "")
+	test(".\tendif # comment", "\t", "endif", "", "comment")
+	test(".if ${VAR} == \"#\"", "", "if", "${VAR:[", "]}")
+
+	// FIXME: [#] is accepted by the bmake parser.
+	test(".if ${VAR:[#]}", "", "if", "${VAR:[", "]}")
+}
