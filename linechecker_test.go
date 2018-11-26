@@ -90,3 +90,14 @@ func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: Makefile:32: Trailing whitespace.")
 }
+
+func (s *Suite) Test_LineChecker_CheckTrailingWhitespace__tab(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("Makefile", 32, "The line must go on\t")
+
+	LineChecker{line}.CheckTrailingWhitespace()
+
+	t.CheckOutputLines(
+		"NOTE: Makefile:32: Trailing whitespace.")
+}

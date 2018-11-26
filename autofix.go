@@ -244,7 +244,7 @@ func (fix *Autofix) Apply() {
 	// To fix this assertion, call one of Autofix.Errorf, Autofix.Warnf
 	// or Autofix.Notef before calling Apply.
 	G.Assertf(
-		fix.level != nil && fix.diagFormat != "",
+		fix.level != nil,
 		"Each autofix must have a log level and a diagnostic.")
 
 	reset := func() {

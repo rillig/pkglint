@@ -397,11 +397,13 @@ func (s *Suite) Test_VartypeCheck_FileMode(c *check.C) {
 		"0600",
 		"1234",
 		"12345",
-		"${OTHER_PERMS}")
+		"${OTHER_PERMS}",
+		"")
 
 	vt.Output(
 		"WARN: filename:1: Invalid file mode \"u+rwx\".",
-		"WARN: filename:4: Invalid file mode \"12345\".")
+		"WARN: filename:4: Invalid file mode \"12345\".",
+		"WARN: filename:6: Invalid file mode \"\".")
 
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -499,7 +501,12 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 		"`pkg-config pidgin --ldflags`",
 		"-unknown",
 		"no-hyphen",
-		"-Wl,--rpath,/usr/lib64")
+		"-Wl,--rpath,/usr/lib64",
+		"-pthread",
+		"-static",
+		"-static-something",
+		"${LDFLAGS.NetBSD}",
+		"-l${LIBNCURSES}")
 	vt.Op(opUseMatch)
 	vt.Values(
 		"anything")
@@ -903,6 +910,9 @@ func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
 	vt.Varname("INSTALL_CMD")
 	vt.Values(
 		"${INSTALL_DATA} -m 0644 ${WRKDIR}/source ${DESTDIR}${PREFIX}/target")
+
+	vt.Op(opUseMatch)
+	vt.Values("*")
 
 	vt.OutputEmpty()
 }

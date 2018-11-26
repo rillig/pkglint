@@ -67,6 +67,8 @@ func (s *Suite) Test_NewMkLine__include(c *check.C) {
 	c.Check(mkline.Indent(), equals, "    ")
 	c.Check(mkline.MustExist(), equals, true)
 	c.Check(mkline.IncludedFile(), equals, "../../mk/bsd.prefs.mk")
+
+	c.Check(mkline.IsSysinclude(), equals, false)
 }
 
 func (s *Suite) Test_NewMkLine__sysinclude(c *check.C) {
@@ -79,6 +81,8 @@ func (s *Suite) Test_NewMkLine__sysinclude(c *check.C) {
 	c.Check(mkline.Indent(), equals, "    ")
 	c.Check(mkline.MustExist(), equals, true)
 	c.Check(mkline.IncludedFile(), equals, "subdir.mk")
+
+	c.Check(mkline.IsInclude(), equals, false)
 }
 
 func (s *Suite) Test_NewMkLine__dependency(c *check.C) {

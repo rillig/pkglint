@@ -105,23 +105,26 @@ func (l *Logger) Explain(explanation ...string) {
 }
 
 func (l *Logger) ShowSummary() {
-	if !l.Opts.Quiet && !l.Opts.Autofix {
-		if l.errors != 0 || l.warnings != 0 {
-			l.out.Printf("%d %s and %d %s found.\n",
-				l.errors, ifelseStr(l.errors == 1, "error", "errors"),
-				l.warnings, ifelseStr(l.warnings == 1, "warning", "warnings"))
-		} else {
-			l.out.WriteLine("Looks fine.")
-		}
-		if l.explanationsAvailable && !l.Opts.Explain {
-			l.out.WriteLine("(Run \"pkglint -e\" to show explanations.)")
-		}
-		if l.autofixAvailable && !l.Opts.ShowAutofix {
+	if l.Opts.Quiet || l.Opts.Autofix {
+		return
+	}
+
+	if l.errors != 0 || l.warnings != 0 {
+		l.out.Printf("%d %s and %d %s found.\n",
+			l.errors, ifelseStr(l.errors == 1, "error", "errors"),
+			l.warnings, ifelseStr(l.warnings == 1, "warning", "warnings"))
+	} else {
+		l.out.WriteLine("Looks fine.")
+	}
+
+	if l.explanationsAvailable && !l.Opts.Explain {
+		l.out.WriteLine("(Run \"pkglint -e\" to show explanations.)")
+	}
+	if l.autofixAvailable {
+		if !l.Opts.ShowAutofix {
 			l.out.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
 		}
-		if l.autofixAvailable && !l.Opts.Autofix {
-			l.out.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
-		}
+		l.out.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
 	}
 }
 

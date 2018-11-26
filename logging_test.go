@@ -341,6 +341,87 @@ func (s *Suite) Test_Logger_ShowSummary__1_error_1_warning_quiet(c *check.C) {
 		"WARN: .")
 }
 
+func (s *Suite) Test_Logger_ShowSummary__explanations_available(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.Logf(Error, "", "", ".", ".")
+	logger.Explain(
+		"Explanation.")
+
+	logger.ShowSummary()
+
+	t.CheckOutputLines(
+		"ERROR: .",
+		"1 error and 0 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__explanations_available_in_explain_mode(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.Logf(Error, "", "", ".", ".")
+	logger.Explain(
+		"Explanation.")
+
+	// Since the --explain option is already given, it need not be advertised.
+	logger.Opts.Explain = true
+
+	logger.ShowSummary()
+
+	t.CheckOutputLines(
+		"ERROR: .",
+		"1 error and 0 warnings found.")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__autofix_available(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.autofixAvailable = true // See SaveAutofixChanges
+
+	logger.ShowSummary()
+
+	t.CheckOutputLines(
+		"Looks fine.",
+		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
+		"(Run \"pkglint -F\" to automatically fix some issues.)")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__autofix_available_with_show_autofix_option(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.autofixAvailable = true // See SaveAutofixChanges
+	logger.Opts.ShowAutofix = true
+
+	logger.ShowSummary()
+
+	// Since the --show-autofix option is already given, it need not be advertised.
+	// But the --autofix option is not given, therefore mention it.
+	t.CheckOutputLines(
+		"Looks fine.",
+		"(Run \"pkglint -F\" to automatically fix some issues.)")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__autofix_available_with_autofix_option(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.autofixAvailable = true // See SaveAutofixChanges
+	logger.Opts.Autofix = true
+
+	logger.ShowSummary()
+
+	// Since the --autofix option is already given, it need not be advertised.
+	// Mentioning the --show-autofix option would be pointless here since the
+	// usual path goes from default mode via --show-autofix to --autofix.
+	// The usual "x warnings" would also be misleading since the warnings have just
+	// been fixed by the autofix feature. Therefore the output is completely empty.
+	t.CheckOutputEmpty()
+}
+
 // In rare cases, the explanations for the same warning may differ
 // when they appear in different contexts. In such a case, if the
 // warning is suppressed, the explanation must not appear on its own.
