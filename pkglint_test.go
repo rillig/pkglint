@@ -251,11 +251,33 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"(Run \"pkglint -F\" to automatically fix some issues.)")
 }
 
-// go test -c -covermode count
-// pkgsrcdir=...
-// env PKGLINT_TESTCMDLINE="$pkgsrcdir -r" ./pkglint.test -test.coverprofile pkglint.cov
-// go tool cover -html=pkglint.cov -o coverage.html
+// Run pkglint in a realistic environment.
+//
+//  env \
+//  PKGLINT_TESTDIR="..." \
+//  PKGLINT_TESTCMDLINE="-r" \
+//  go test -covermode=count -test.coverprofile pkglint.cov
+//
+//  go tool cover -html=pkglint.cov -o coverage.html
+//
+// To measure the branch coverage of the pkglint tests:
+//
+//  env \
+//  PKGLINT_TESTDIR=C:/Users/rillig/git/pkgsrc \
+//  PKGLINT_TESTCMDLINE="-r -Wall -Call -e" \
+//  gobco -vet=off -test.covermode=count \
+//      -test.coverprofile=pkglint-pkgsrc.pprof \
+//      -timeout=3600s -check.f '^' \
+//      > pkglint-pkgsrc.out
+//
+// See https://github.com/rillig/gobco for the tool to measure the branch coverage.
 func (s *Suite) Test_Pkglint__coverage(c *check.C) {
+
+	if cwd := os.Getenv("PKGLINT_TESTDIR"); cwd != "" {
+		err := os.Chdir(cwd)
+		c.Assert(err, check.IsNil)
+	}
+
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
 	if cmdline != "" {
 		G.out = NewSeparatorWriter(os.Stdout)
