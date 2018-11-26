@@ -18,7 +18,7 @@ import (
 // to first show the code and then show the diagnostic. This allows
 // the diagnostics to underline the relevant part of the source code
 // and reminds of the squiggly line used for spellchecking.
-func (s *Suite) Test__show_source_separator(c *check.C) {
+func (s *Suite) Test_Logger__show_source_separator(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--source")
@@ -229,7 +229,7 @@ func (s *Suite) Test_Logger_logf__gcc_format(c *check.C) {
 
 	t.SetupCommandLine("--gcc-output-format")
 
-	G.logf(Note, "filename", "123", "Diagnostics can be logged in GCC-style.", "Diagnostics can be logged in GCC-style.")
+	G.Logf(Note, "filename", "123", "Diagnostics can be logged in GCC-style.", "Diagnostics can be logged in GCC-style.")
 
 	t.CheckOutputLines(
 		"filename:123: note: Diagnostics can be logged in GCC-style.")
@@ -347,7 +347,7 @@ func (s *Suite) Test_Logger_logf__panic(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectPanic(
-		func() { G.logf(Error, "filename", "13", "No period", "No period") },
+		func() { G.Logf(Error, "filename", "13", "No period", "No period") },
 		"Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 

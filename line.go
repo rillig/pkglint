@@ -146,19 +146,19 @@ func (line *LineImpl) Fatalf(format string, args ...interface{}) {
 	if trace.Tracing {
 		trace.Stepf("Fatalf: %q, %v", format, args)
 	}
-	G.diag(line, Fatal, format, args)
+	G.Diag(line, Fatal, format, args)
 }
 
 func (line *LineImpl) Errorf(format string, args ...interface{}) {
-	G.diag(line, Error, format, args)
+	G.Diag(line, Error, format, args)
 }
 
 func (line *LineImpl) Warnf(format string, args ...interface{}) {
-	G.diag(line, Warn, format, args)
+	G.Diag(line, Warn, format, args)
 }
 
 func (line *LineImpl) Notef(format string, args ...interface{}) {
-	G.diag(line, Note, format, args)
+	G.Diag(line, Note, format, args)
 }
 
 func (line *LineImpl) String() string {

@@ -98,7 +98,7 @@ func (l *Logger) ShowSummary() {
 // shallBeLogged tests whether a diagnostic with the given format should
 // be logged.
 //
-// It only inspects the --only arguments; duplicates are handled in main.logf.
+// It only inspects the --only arguments; duplicates are handled in Logger.Logf.
 func (l *Logger) shallBeLogged(format string) bool {
 	if len(G.Opts.LogOnly) == 0 {
 		return true
@@ -112,11 +112,11 @@ func (l *Logger) shallBeLogged(format string) bool {
 	return false
 }
 
-// diag logs a diagnostic. These are filtered by the --only command line option,
+// Diag logs a diagnostic. These are filtered by the --only command line option,
 // and duplicates are suppressed unless the --log-verbose command line option is given.
 //
-// See logf for logging arbitrary messages.
-func (l *Logger) diag(line Line, level *LogLevel, format string, args []interface{}) {
+// See Logf for logging arbitrary messages.
+func (l *Logger) Diag(line Line, level *LogLevel, format string, args []interface{}) {
 	if l.Opts.ShowAutofix || l.Opts.Autofix {
 		// In these two cases, the only interesting diagnostics are those that can
 		// be fixed automatically. These are logged by Autofix.Apply.
@@ -131,20 +131,20 @@ func (l *Logger) diag(line Line, level *LogLevel, format string, args []interfac
 	if l.Opts.ShowSource {
 		line.showSource(l.logOut)
 	}
-	l.logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	l.Logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
 	if l.Opts.ShowSource {
 		l.logOut.Separate()
 	}
 }
 
-func (l *Logger) logf(level *LogLevel, filename, lineno, format, msg string) {
+func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 	// TODO: Only ever output ASCII, no matter what's in the message.
 
 	if G.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
 		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
 	}
 
-	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
+	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see Diag().
 	if !l.Opts.LogVerbose && format != AutofixFormat && !l.logged.FirstTimeSlice(path.Clean(filename), lineno, msg) {
 		l.explainNext = false
 		return

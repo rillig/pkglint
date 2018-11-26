@@ -270,15 +270,15 @@ func (fix *Autofix) Apply() {
 	if logDiagnostic {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		if !logFix {
-			// TODO: Merge this FirstTimeSlice with the one in Pkglint.logf.
+			// TODO: Merge this FirstTimeSlice with the one in Logger.Logf.
 			if G.Logger.Opts.LogVerbose || fix.diagFormat == AutofixFormat ||
 				G.logged.FirstTimeSlice(path.Clean(line.Filename), line.Linenos(), msg,
-					"Autofix, to avoid the duplicate in Pkglint.logf") {
+					"Autofix, to avoid the duplicate in Logger.Logf") {
 
 				line.showSource(G.logOut)
 			}
 		}
-		G.logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
+		G.Logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 	}
 
 	if logFix {
@@ -287,7 +287,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			G.logf(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
+			G.Logf(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
 		}
 	}
 
@@ -448,12 +448,12 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		}
 		err := ioutil.WriteFile(tmpName, []byte(text), 0666)
 		if err != nil {
-			G.logf(Error, tmpName, "", "Cannot write: %s", "Cannot write: "+err.Error())
+			G.Logf(Error, tmpName, "", "Cannot write: %s", "Cannot write: "+err.Error())
 			continue
 		}
 		err = os.Rename(tmpName, filename)
 		if err != nil {
-			G.logf(Error, tmpName, "",
+			G.Logf(Error, tmpName, "",
 				"Cannot overwrite with autofixed content: %s",
 				"Cannot overwrite with autofixed content: "+err.Error())
 			continue
