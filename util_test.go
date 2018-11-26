@@ -350,6 +350,8 @@ func (s *Suite) Test_isalnum(c *check.C) {
 func (s *Suite) Test_FileCache(c *check.C) {
 	t := s.Init(c)
 
+	t.EnableTracingToLog()
+
 	cache := NewFileCache(3)
 
 	lines := t.NewLines("Makefile",
@@ -401,12 +403,12 @@ func (s *Suite) Test_FileCache(c *check.C) {
 	c.Check(cache.misses, equals, 5)
 
 	t.CheckOutputLines(
-		"FileCache \"Makefile\" with count 4.",
-		"FileCache \"file1.mk\" with count 2.",
-		"FileCache \"file2.mk\" with count 2.",
-		"FileCache.Evict \"file2.mk\" with count 2.",
-		"FileCache.Evict \"file1.mk\" with count 2.",
-		"FileCache.Halve \"Makefile\" with count 4.")
+		"TRACE:   FileCache \"Makefile\" with count 4.",
+		"TRACE:   FileCache \"file1.mk\" with count 2.",
+		"TRACE:   FileCache \"file2.mk\" with count 2.",
+		"TRACE:   FileCache.Evict \"file2.mk\" with count 2.",
+		"TRACE:   FileCache.Evict \"file1.mk\" with count 2.",
+		"TRACE:   FileCache.Halve \"Makefile\" with count 4.")
 }
 
 func (s *Suite) Test_makeHelp(c *check.C) {
