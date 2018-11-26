@@ -423,7 +423,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 		G.Explain(
 			"Directories are removed automatically when they are empty.",
 			"When a package needs an empty directory, it can use the @pkgdir",
-			"command in the PLIST")
+			"command in the PLIST.")
 
 	case "imake-man":
 		args := fields(arg)
