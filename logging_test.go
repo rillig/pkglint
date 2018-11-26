@@ -5,6 +5,47 @@ import (
 	"strings"
 )
 
+// Calling Logf without further preparation just logs the message.
+// Suppressing duplicate messages or filtering messages happens
+// in other methods of the Logger, namely Relevant, FirstTime, Diag.
+func (s *Suite) Test_Logger_Logf(c *check.C) {
+	var sw strings.Builder
+	logger := Logger{logOut: NewSeparatorWriter(&sw)}
+
+	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
+
+	c.Check(sw.String(), equals, ""+
+		"ERROR: filename:3: Blue should be orange.\n")
+}
+
+// Logf doesn't filter duplicates, but Diag does.
+func (s *Suite) Test_Logger_Logf__duplicates(c *check.C) {
+	var sw strings.Builder
+	logger := Logger{logOut: NewSeparatorWriter(&sw)}
+
+	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
+	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
+
+	c.Check(sw.String(), equals, ""+
+		"ERROR: filename:3: Blue should be orange.\n"+
+		"ERROR: filename:3: Blue should be orange.\n")
+}
+
+// Diag filters duplicate messages, unlike Logf.
+func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
+	t := s.Init(c)
+
+	var sw strings.Builder
+	logger := Logger{logOut: NewSeparatorWriter(&sw)}
+	line := t.NewLine("filename", 3, "Text")
+
+	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue should be %s.", "orange")
+
+	c.Check(sw.String(), equals, ""+
+		"ERROR: filename:3: Blue should be orange.\n")
+}
+
 // Since the --source option generates multi-line diagnostics,
 // they are separated by an empty line.
 //
