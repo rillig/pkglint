@@ -13,7 +13,8 @@ type Logger struct {
 	out *SeparatorWriter
 	err *SeparatorWriter
 
-	suppress bool
+	suppressDiag bool
+	suppressExpl bool
 
 	logged    Once
 	explained Once
@@ -57,7 +58,8 @@ func (l *Logger) IsAutofix() bool { return l.Opts.Autofix || l.Opts.ShowAutofix 
 // The result of the decision affects all log items until Relevant is called for the next time.
 func (l *Logger) Relevant(format string) bool {
 	relevant := l.shallBeLogged(format)
-	l.suppress = !relevant
+	l.suppressDiag = !relevant
+	l.suppressExpl = !relevant
 	return relevant
 }
 
@@ -67,7 +69,8 @@ func (l *Logger) FirstTime(filename, linenos, msg string) bool {
 	}
 
 	if !l.logged.FirstTimeSlice(path.Clean(filename), linenos, msg) {
-		l.suppress = true
+		l.suppressDiag = true
+		l.suppressExpl = true
 		return false
 	}
 
@@ -78,7 +81,8 @@ func (l *Logger) FirstTime(filename, linenos, msg string) bool {
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
 func (l *Logger) Explain(explanation ...string) {
-	if l.suppress {
+	if l.suppressExpl {
+		l.suppressExpl = false
 		return
 	}
 
@@ -157,6 +161,7 @@ func (l *Logger) Diag(line Line, level *LogLevel, format string, args ...interfa
 	linenos := line.Linenos()
 	msg := fmt.Sprintf(format, args...)
 	if !l.FirstTime(filename, linenos, msg) {
+		l.suppressDiag = false
 		return
 	}
 
@@ -170,7 +175,8 @@ func (l *Logger) Diag(line Line, level *LogLevel, format string, args ...interfa
 }
 
 func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
-	if l.suppress {
+	if l.suppressDiag {
+		l.suppressDiag = false
 		return
 	}
 

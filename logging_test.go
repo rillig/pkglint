@@ -45,11 +45,11 @@ func (s *Suite) Test_Logger_Logf__mixed_with_Diag(c *check.C) {
 	logger.Diag(line, Error, "Diag %s.", "1") // Duplicate, therefore suppressed
 	logger.Logf(Error, "filename", "3", "Logf output 3.", "Logf output 3.")
 
-	// FIXME: Logf output 3 must not be suppressed.
 	c.Check(sw.String(), equals, ""+
 		"ERROR: filename:3: Logf output 1.\n"+
 		"ERROR: filename:3: Diag 1.\n"+
-		"ERROR: filename:3: Logf output 2.\n")
+		"ERROR: filename:3: Logf output 2.\n"+
+		"ERROR: filename:3: Logf output 3.\n")
 }
 
 // Diag filters duplicate messages, unlike Logf.
