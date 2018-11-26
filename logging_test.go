@@ -67,6 +67,37 @@ func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 		"ERROR: filename:3: Blue should be orange.\n")
 }
 
+// Explanations are associated with their diagnostics. Therefore, when one
+// of them is suppressed, the other is suppressed, too.
+func (s *Suite) Test_Logger_Diag__explanation(c *check.C) {
+	t := s.Init(c)
+
+	var sw strings.Builder
+	logger := Logger{out: NewSeparatorWriter(&sw)}
+	logger.Opts.Explain = true
+	line := t.NewLine("filename", 3, "Text")
+
+	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Explain(
+		"The colors have changed.")
+
+	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Explain(
+		"The colors have changed.")
+
+	// Even when the text of the explanation is not the same, it is still
+	// suppressed since it belongs to the diagnostic.
+	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Explain(
+		"The colors have further changed.")
+
+	c.Check(sw.String(), equals, ""+
+		"ERROR: filename:3: Blue should be orange.\n"+
+		"\n"+
+		"\tThe colors have changed.\n"+
+		"\n")
+}
+
 // Since the --source option generates multi-line diagnostics,
 // they are separated by an empty line.
 //
