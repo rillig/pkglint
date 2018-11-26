@@ -880,7 +880,7 @@ func wrap(max int, lines ...string) []string {
 	nonSpace := textproc.Space.Inverse()
 
 	for _, line := range lines {
-		if line == "" || line[0] == '\t' {
+		if line == "" || isHspace(line[0]) || line[0] == '*' {
 			if buf.Len() > 0 {
 				wrapped = append(wrapped, buf.String())
 				buf.Reset()
