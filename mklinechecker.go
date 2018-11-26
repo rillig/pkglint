@@ -730,6 +730,12 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 }
 
 func (ck MkLineChecker) checkVaruseDeprecated(varuse *MkVarUse) {
+	// Temporarily disabled since this method is not called for all places,
+	// such as ${_PKG_SILENT} in a shell command.
+	if varuse != nil {
+		return
+	}
+
 	varname := varuse.varname
 	instead := G.Pkgsrc.Deprecated[varname]
 	if instead == "" {
@@ -1060,6 +1066,30 @@ func (ck MkLineChecker) checkText(text string) {
 	// Note: A simple -R is not detected, as the rate of false positives is too high.
 	if m, flag := match1(text, `(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R\b)`); m {
 		mkline.Warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+	}
+
+	ck.checkTextDeprecated(text)
+}
+
+func (ck MkLineChecker) checkTextDeprecated(text string) {
+	rest := text
+	for {
+		m, r := G.res.ReplaceFirst(rest, `(?:^|[^$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
+		if m == nil {
+			break
+		}
+		rest = r
+
+		varbase, varext := m[1], m[2]
+		varname := varbase + varext
+		varcanon := varnameCanon(varname)
+		instead := G.Pkgsrc.Deprecated[varname]
+		if instead == "" {
+			instead = G.Pkgsrc.Deprecated[varcanon]
+		}
+		if instead != "" {
+			ck.MkLine.Warnf("Use of %q is deprecated. %s", varname, instead)
+		}
 	}
 }
 

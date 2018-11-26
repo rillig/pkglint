@@ -788,6 +788,22 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {
 		"+\tCC:=\t${CC:[1]}")
 }
 
+func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	G.Pkgsrc.initDeprecatedVars()
+
+	mkline := t.NewMkLine("module.mk", 123,
+		"\t${_PKG_SILENT}${_PKG_DEBUG} :")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:123: Use of \"_PKG_SILENT\" is deprecated. Use RUN (with more error checking) instead.",
+		"WARN: module.mk:123: Use of \"_PKG_DEBUG\" is deprecated. Use RUN (with more error checking) instead.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 	t := s.Init(c)
 
@@ -841,10 +857,8 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 
 	mklines.Check()
 
-	// TODO: Merge the two equal warnings below.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
-		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.",
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }
 
