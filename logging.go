@@ -37,7 +37,7 @@ func (pkglint *Pkglint) Explain(explanation ...string) {
 		return
 	}
 
-	pkglint.logOut.WriteLine("")
+	pkglint.logOut.Separate()
 	wrapped := wrap(68, explanation...)
 	for _, explanationLine := range wrapped {
 		pkglint.logOut.Write("\t")
