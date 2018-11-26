@@ -874,6 +874,11 @@ func makeHelp(topic string) string { return bmake("help topic=" + topic) }
 
 func bmake(target string) string { return sprintf("%s %s", confMake, target) }
 
+func seeGuide(sectionName, sectionID string) string {
+	return sprintf("See the pkgsrc guide, section %q: https://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#%s",
+		sectionName, sectionID)
+}
+
 func wrap(max int, lines ...string) []string {
 	var wrapped []string
 	var buf strings.Builder

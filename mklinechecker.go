@@ -689,7 +689,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 			}
 			G.Explain(
-				"See the pkgsrc guide, section \"quoting guideline\", for details.")
+				seeGuide("Echoing a string exactly as-is", "echo-literal"))
 
 		} else if vuc.quoting != vucQuotPlain {
 			mkline.Warnf("Please move ${%s%s} outside of any quoting characters.", varname, mod)
@@ -1054,8 +1054,7 @@ func (ck MkLineChecker) checkText(text string) {
 			"\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
 			"\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
 			"",
-			"See the pkgsrc guide, section \"Directories used during the build",
-			"process\" for more information.")
+			seeGuide("Directories used during the build process", "build.builddirs"))
 	}
 
 	// Note: A simple -R is not detected, as the rate of false positives is too high.

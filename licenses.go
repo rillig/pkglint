@@ -50,8 +50,9 @@ func (lc *LicenseChecker) checkName(license string) {
 		G.Explain(
 			"Instead of using these deprecated licenses, extract the actual",
 			"license from the package into the pkgsrc/licenses/ directory",
-			"and define LICENSE to that filename.  See the pkgsrc guide,",
-			"keyword LICENSE, for more information.")
+			"and define LICENSE to that filename.",
+			"",
+			seeGuide("Handling licenses", "handling-licenses"))
 	}
 }
 

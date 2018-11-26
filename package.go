@@ -711,8 +711,8 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		"In simple package Makefiles, some common variables should be",
 		"arranged in a specific order.",
 		"",
-		"See doc/Makefile-example or the pkgsrc guide, section",
-		"\"Package components\", subsection \"Makefile\" for more information.")
+		"See doc/Makefile-example for an example Makefile.",
+		seeGuide("Package components, Makefile", "components.Makefile"))
 }
 
 func (pkg *Package) checkLocallyModified(filename string) {
@@ -742,8 +742,7 @@ func (pkg *Package) checkLocallyModified(filename string) {
 		if owner != "" {
 			NewLineWhole(filename).Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
 			G.Explain(
-				"See the pkgsrc guide, section \"Package components\",",
-				"keyword \"owner\", for more information.")
+				seeGuide("Package components, Makefile", "components.Makefile"))
 		}
 		if maintainer != "" {
 			NewLineWhole(filename).Notef("Please only commit changes that %s would approve.", maintainer)

@@ -848,6 +848,36 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--explain")
+	mklines := t.SetupFileMkLines("module.mk",
+		MkRcsID,
+		"pre-configure:",
+		"\tcd ${WRKSRC}/..")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:3: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
+		"",
+		"\tWRKSRC should be defined so that there is no need to do anything",
+		"\toutside of this directory.",
+		"\t",
+		"\tExample:",
+		"\t",
+		"\t\tWRKSRC=\t${WRKDIR}",
+		"\t\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
+		"\t\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
+		"\t",
+		"\tSee the pkgsrc guide, section \"Directories used during the build",
+		"\tprocess\":",
+		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#build.builddirs",
+		"",
+		"WARN: ~/module.mk:3: WRKSRC is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 	t := s.Init(c)
 
