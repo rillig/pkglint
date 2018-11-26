@@ -846,7 +846,7 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall", "--source")
-	G.Opts.LogVerbose = false // For realistic conditions; otherwise all diagnostics are logged.
+	G.Logger.Opts.LogVerbose = false // For realistic conditions; otherwise all diagnostics are logged.
 
 	t.SetupPackage("x11/xorg-cf-files",
 		".include \"../../x11/xorgproto/buildlink3.mk\"")
@@ -879,7 +879,7 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall", "--source", "--explain")
-	G.Opts.LogVerbose = false // For realistic conditions; otherwise all diagnostics are logged.
+	G.Logger.Opts.LogVerbose = false // For realistic conditions; otherwise all diagnostics are logged.
 
 	t.SetupPackage("print/tex-bibtex8",
 		"MAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}")

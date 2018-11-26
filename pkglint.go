@@ -18,14 +18,7 @@ import (
 const confMake = "@BMAKE@"
 const confVersion = "@VERSION@"
 
-// Pkglint contains all global variables of this Go package.
-// The rest of the global state is in the other packages:
-//  regex.Profiling    (not thread-local)
-//  regex.res          (and related variables; not thread-safe)
-//  textproc.Testing   (not thread-local; harmless)
-//  tracing.Tracing    (not thread-safe)
-//  tracing.Out        (not thread-safe)
-//  tracing.traceDepth (not thread-safe)
+// Pkglint is a container for all global variables of this Go package.
 type Pkglint struct {
 	Opts   CmdOpts  // Command line options.
 	Pkgsrc *Pkgsrc  // Global data, mostly extracted from mk/*, never nil.
@@ -40,17 +33,8 @@ type Pkglint struct {
 	CvsEntriesDir   string   // Cached to avoid I/O
 	CvsEntriesLines Lines
 
-	errors                int
-	warnings              int
-	explainNext           bool
-	logged                Once
-	explanationsAvailable bool
-	explained             Once
-	autofixAvailable      bool
-	logOut                *SeparatorWriter
-	logErr                *SeparatorWriter
+	Logger
 
-	loghisto  *histogram.Histogram
 	loaded    *histogram.Histogram
 	res       regex.Registry
 	fileCache *FileCache
@@ -89,18 +73,11 @@ type CmdOpts struct {
 	WarnStyle,
 	WarnTypes bool
 
-	Explain,
-	Autofix,
-	GccOutput,
+	Profiling,
 	ShowHelp,
 	DumpMakefile,
 	Import,
-	LogVerbose,
-	Profiling,
-	Quiet,
 	Recursive,
-	ShowAutofix,
-	ShowSource,
 	ShowVersion bool
 
 	LogOnly []string
@@ -227,23 +204,24 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 
 func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	gopts := &pkglint.Opts
+	lopts := &pkglint.Logger.Opts
 	opts := getopt.NewOptions()
 
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
 	opts.AddFlagVar('d', "debug", &trace.Tracing, false, "log verbose call traces for debugging")
-	opts.AddFlagVar('e', "explain", &gopts.Explain, false, "explain the diagnostics or give further help")
-	opts.AddFlagVar('f', "show-autofix", &gopts.ShowAutofix, false, "show what pkglint can fix automatically")
-	opts.AddFlagVar('F', "autofix", &gopts.Autofix, false, "try to automatically fix some errors")
-	opts.AddFlagVar('g', "gcc-output-format", &gopts.GccOutput, false, "mimic the gcc output format")
+	opts.AddFlagVar('e', "explain", &lopts.Explain, false, "explain the diagnostics or give further help")
+	opts.AddFlagVar('f', "show-autofix", &lopts.ShowAutofix, false, "show what pkglint can fix automatically")
+	opts.AddFlagVar('F', "autofix", &lopts.Autofix, false, "try to automatically fix some errors")
+	opts.AddFlagVar('g', "gcc-output-format", &lopts.GccOutput, false, "mimic the gcc output format")
 	opts.AddFlagVar('h', "help", &gopts.ShowHelp, false, "show a detailed usage message")
 	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
 	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
-	opts.AddFlagVar('m', "log-verbose", &gopts.LogVerbose, false, "allow the same diagnostic more than once")
+	opts.AddFlagVar('m', "log-verbose", &lopts.LogVerbose, false, "allow the same diagnostic more than once")
 	opts.AddStrList('o', "only", &gopts.LogOnly, "only log diagnostics containing the given text")
 	opts.AddFlagVar('p', "profiling", &gopts.Profiling, false, "profile the executing program")
-	opts.AddFlagVar('q', "quiet", &gopts.Quiet, false, "don't show a summary line when finishing")
+	opts.AddFlagVar('q', "quiet", &lopts.Quiet, false, "don't show a summary line when finishing")
 	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")
-	opts.AddFlagVar('s', "source", &gopts.ShowSource, false, "show the source lines together with diagnostics")
+	opts.AddFlagVar('s', "source", &lopts.ShowSource, false, "show the source lines together with diagnostics")
 	opts.AddFlagVar('V', "version", &gopts.ShowVersion, false, "show the version number of pkglint")
 	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
 
@@ -295,27 +273,6 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 	}
 
 	return nil
-}
-
-func (pkglint *Pkglint) ShowSummary() {
-	if !pkglint.Opts.Quiet && !pkglint.Opts.Autofix {
-		if pkglint.errors != 0 || pkglint.warnings != 0 {
-			pkglint.logOut.Printf("%d %s and %d %s found.\n",
-				pkglint.errors, ifelseStr(pkglint.errors == 1, "error", "errors"),
-				pkglint.warnings, ifelseStr(pkglint.warnings == 1, "warning", "warnings"))
-		} else {
-			pkglint.logOut.WriteLine("Looks fine.")
-		}
-		if pkglint.explanationsAvailable && !pkglint.Opts.Explain {
-			pkglint.logOut.WriteLine("(Run \"pkglint -e\" to show explanations.)")
-		}
-		if pkglint.autofixAvailable && !pkglint.Opts.ShowAutofix {
-			pkglint.logOut.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
-		}
-		if pkglint.autofixAvailable && !pkglint.Opts.Autofix {
-			pkglint.logOut.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
-		}
-	}
 }
 
 func (pkglint *Pkglint) CheckDirent(filename string) {
@@ -451,91 +408,6 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
 		panic("Pkglint internal error: " + fmt.Sprintf(format, args...))
-	}
-}
-
-// diag logs a diagnostic. These are filtered by the --only command line option,
-// and duplicates are suppressed unless the --log-verbose command line option is given.
-//
-// See logf for logging arbitrary messages.
-func (pkglint *Pkglint) diag(line Line, level *LogLevel, format string, args []interface{}) {
-	if pkglint.Opts.ShowAutofix || pkglint.Opts.Autofix {
-		// In these two cases, the only interesting diagnostics are those that can
-		// be fixed automatically. These are logged by Autofix.Apply.
-		return
-	}
-
-	pkglint.explainNext = pkglint.shallBeLogged(format)
-	if !pkglint.explainNext {
-		return
-	}
-
-	if pkglint.Opts.ShowSource {
-		line.showSource(pkglint.logOut)
-	}
-	pkglint.logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
-	if pkglint.Opts.ShowSource {
-		pkglint.logOut.Separate()
-	}
-}
-
-// shallBeLogged tests whether a diagnostic with the given format should
-// be logged.
-//
-// It only inspects the --only arguments; duplicates are handled in main.logf.
-func (pkglint *Pkglint) shallBeLogged(format string) bool {
-	if len(G.Opts.LogOnly) == 0 {
-		return true
-	}
-
-	for _, substr := range G.Opts.LogOnly {
-		if contains(format, substr) {
-			return true
-		}
-	}
-	return false
-}
-
-func (pkglint *Pkglint) logf(level *LogLevel, filename, lineno, format, msg string) {
-	// TODO: Only ever output ASCII, no matter what's in the message.
-
-	if pkglint.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
-		pkglint.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
-	}
-
-	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
-	if !pkglint.Opts.LogVerbose && format != AutofixFormat && !pkglint.logged.FirstTimeSlice(path.Clean(filename), lineno, msg) {
-		pkglint.explainNext = false
-		return
-	}
-
-	if filename != "" {
-		filename = cleanpath(filename)
-	}
-	if pkglint.Opts.Profiling && format != AutofixFormat && level != Fatal {
-		pkglint.loghisto.Add(format, 1)
-	}
-
-	out := pkglint.logOut
-	if level == Fatal {
-		out = pkglint.logErr
-	}
-
-	filenameSep := ifelseStr(filename != "", ": ", "")
-	linenoSep := ifelseStr(filename != "" && lineno != "", ":", "")
-	if pkglint.Opts.GccOutput {
-		out.Printf("%s%s%s%s%s: %s\n", filename, linenoSep, lineno, filenameSep, level.GccName, msg)
-	} else {
-		out.Printf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, lineno, msg)
-	}
-
-	switch level {
-	case Fatal:
-		panic(pkglintFatal{})
-	case Error:
-		pkglint.errors++
-	case Warn:
-		pkglint.warnings++
 	}
 }
 

@@ -204,7 +204,7 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 	if text := pline.text; G.Opts.WarnPlistSort && hasAlnumPrefix(text) && !containsVarRef(text) {
 		if ck.lastFname != "" {
-			if ck.lastFname > text && !G.Opts.Autofix {
+			if ck.lastFname > text && !G.Logger.Opts.Autofix {
 				pline.Warnf("%q should be sorted before %q.", text, ck.lastFname)
 				G.Explain(
 					"The files in the PLIST should be sorted alphabetically.",
@@ -491,7 +491,7 @@ func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 
 func (s *plistLineSorter) Sort() {
 	if line := s.unsortable; line != nil {
-		if G.Opts.ShowAutofix || G.Opts.Autofix {
+		if G.Logger.IsAutofix() {
 			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", line)
 		}
 		return

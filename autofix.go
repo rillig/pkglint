@@ -100,7 +100,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 		if rawLine.Lineno != 0 {
 			replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1)
 			if replaced != rawLine.textnl {
-				if G.Opts.ShowAutofix || G.Opts.Autofix {
+				if G.Logger.IsAutofix() {
 					rawLine.textnl = replaced
 				}
 				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
@@ -137,7 +137,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 
 			replaced := replaceAllFunc(rawLine.textnl, from, replace)
 			if replaced != rawLine.textnl {
-				if G.Opts.ShowAutofix || G.Opts.Autofix {
+				if G.Logger.IsAutofix() {
 					rawLine.textnl = replaced
 				}
 				for _, fromText := range froms {
@@ -176,7 +176,7 @@ func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
 		return
 	}
 
-	fixer(G.Opts.ShowAutofix, G.Opts.Autofix)
+	fixer(G.Logger.Opts.ShowAutofix, G.Logger.Opts.Autofix)
 }
 
 // Describef is used while Autofix.Custom is called to remember a description
@@ -194,7 +194,7 @@ func (fix *Autofix) InsertBefore(text string) {
 		return
 	}
 
-	if G.Opts.ShowAutofix || G.Opts.Autofix {
+	if G.Logger.IsAutofix() {
 		fix.linesBefore = append(fix.linesBefore, text+"\n")
 	}
 	fix.Describef(fix.line.raw[0].Lineno, "Inserting a line %q before this line.", text)
@@ -208,7 +208,7 @@ func (fix *Autofix) InsertAfter(text string) {
 		return
 	}
 
-	if G.Opts.ShowAutofix || G.Opts.Autofix {
+	if G.Logger.IsAutofix() {
 		fix.linesAfter = append(fix.linesAfter, text+"\n")
 	}
 	fix.Describef(fix.line.raw[len(fix.line.raw)-1].Lineno, "Inserting a line %q after this line.", text)
@@ -224,7 +224,7 @@ func (fix *Autofix) Delete() {
 	}
 
 	for _, line := range fix.line.raw {
-		if G.Opts.ShowAutofix || G.Opts.Autofix {
+		if G.Logger.IsAutofix() {
 			line.textnl = ""
 		}
 		fix.Describef(line.Lineno, "Deleting this line.")
@@ -263,15 +263,15 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
-	logDiagnostic := (G.Opts.ShowAutofix || !G.Opts.Autofix) &&
+	logDiagnostic := (G.Logger.Opts.ShowAutofix || !G.Logger.Opts.Autofix) &&
 		fix.diagFormat != SilentAutofixFormat
-	logFix := G.Opts.Autofix || G.Opts.ShowAutofix
+	logFix := G.Logger.IsAutofix()
 
 	if logDiagnostic {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		if !logFix {
 			// TODO: Merge this FirstTimeSlice with the one in Pkglint.logf.
-			if G.Opts.LogVerbose || fix.diagFormat == AutofixFormat ||
+			if G.Logger.Opts.LogVerbose || fix.diagFormat == AutofixFormat ||
 				G.logged.FirstTimeSlice(path.Clean(line.Filename), line.Linenos(), msg,
 					"Autofix, to avoid the duplicate in Pkglint.logf") {
 
@@ -298,8 +298,8 @@ func (fix *Autofix) Apply() {
 		if logDiagnostic && len(fix.explanation) > 0 {
 			G.Explain(fix.explanation...)
 		}
-		if G.Opts.ShowSource {
-			if !G.Opts.Explain || !logDiagnostic || len(fix.explanation) == 0 {
+		if G.Logger.Opts.ShowSource {
+			if !G.Logger.Opts.Explain || !logDiagnostic || len(fix.explanation) == 0 {
 				G.logOut.Separate()
 			}
 		}
@@ -359,7 +359,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 		newSpace := strings.Repeat("\t", newLineWidth/8) + strings.Repeat(" ", newLineWidth%8)
 		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
 		if replaced != rawLine.textnl {
-			if G.Opts.ShowAutofix || G.Opts.Autofix {
+			if G.Logger.IsAutofix() {
 				rawLine.textnl = replaced
 			}
 			fix.Describef(rawLine.Lineno, "Replacing indentation %q with %q.", oldSpace, newSpace)
@@ -404,11 +404,11 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 	}
 
 	// Fast lane for the case that nothing is written back to disk.
-	if !G.Opts.Autofix {
+	if !G.Logger.Opts.Autofix {
 		for _, line := range lines.Lines {
 			if line.autofix != nil && line.autofix.modified {
 				G.autofixAvailable = true
-				if G.Opts.ShowAutofix {
+				if G.Logger.Opts.ShowAutofix {
 					// Only in this case can the loaded lines be modified.
 					G.fileCache.Evict(line.Filename)
 				}

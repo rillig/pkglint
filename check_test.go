@@ -149,7 +149,7 @@ func (t *Tester) SetupCommandLine(args ...string) {
 	//
 	// It also reveals diagnostics that are logged multiple times per
 	// line and thus can easily get annoying to the pkgsrc developers.
-	G.Opts.LogVerbose = true
+	G.Logger.Opts.LogVerbose = true
 }
 
 // SetupVartypes registers a few hundred variables like MASTER_SITES,

@@ -3,7 +3,33 @@ package main
 import (
 	"fmt"
 	"io"
+	"netbsd.org/pkglint/histogram"
+	"path"
 )
+
+type Logger struct {
+	errors                int
+	warnings              int
+	explainNext           bool
+	logged                Once
+	explanationsAvailable bool
+	explained             Once
+	autofixAvailable      bool
+	logOut                *SeparatorWriter
+	logErr                *SeparatorWriter
+	loghisto              *histogram.Histogram
+	Opts                  LoggerOpts
+}
+
+type LoggerOpts struct {
+	ShowAutofix,
+	Autofix,
+	Explain,
+	ShowSource,
+	LogVerbose,
+	GccOutput,
+	Quiet bool
+}
 
 type LogLevel struct {
 	TraditionalName string
@@ -20,30 +46,138 @@ var (
 
 var dummyLine = NewLineMulti("", 0, 0, "", nil)
 
+func (l *Logger) IsAutofix() bool { return l.Opts.Autofix || l.Opts.ShowAutofix }
+
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
-func (pkglint *Pkglint) Explain(explanation ...string) {
+func (l *Logger) Explain(explanation ...string) {
 
-	if !pkglint.explainNext {
+	if !l.explainNext {
 		return
 	}
-	pkglint.explanationsAvailable = true
-	if !pkglint.Opts.Explain {
-		return
-	}
-
-	if !pkglint.explained.FirstTimeSlice(explanation...) {
+	l.explanationsAvailable = true
+	if !l.Opts.Explain {
 		return
 	}
 
-	pkglint.logOut.Separate()
+	if !l.explained.FirstTimeSlice(explanation...) {
+		return
+	}
+
+	l.logOut.Separate()
 	wrapped := wrap(68, explanation...)
 	for _, explanationLine := range wrapped {
-		pkglint.logOut.Write("\t")
-		pkglint.logOut.WriteLine(explanationLine)
+		l.logOut.Write("\t")
+		l.logOut.WriteLine(explanationLine)
 	}
-	pkglint.logOut.WriteLine("")
+	l.logOut.WriteLine("")
+}
+
+func (l *Logger) ShowSummary() {
+	if !l.Opts.Quiet && !l.Opts.Autofix {
+		if l.errors != 0 || l.warnings != 0 {
+			l.logOut.Printf("%d %s and %d %s found.\n",
+				l.errors, ifelseStr(l.errors == 1, "error", "errors"),
+				l.warnings, ifelseStr(l.warnings == 1, "warning", "warnings"))
+		} else {
+			l.logOut.WriteLine("Looks fine.")
+		}
+		if l.explanationsAvailable && !l.Opts.Explain {
+			l.logOut.WriteLine("(Run \"pkglint -e\" to show explanations.)")
+		}
+		if l.autofixAvailable && !l.Opts.ShowAutofix {
+			l.logOut.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
+		}
+		if l.autofixAvailable && !l.Opts.Autofix {
+			l.logOut.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
+		}
+	}
+}
+
+// shallBeLogged tests whether a diagnostic with the given format should
+// be logged.
+//
+// It only inspects the --only arguments; duplicates are handled in main.logf.
+func (l *Logger) shallBeLogged(format string) bool {
+	if len(G.Opts.LogOnly) == 0 {
+		return true
+	}
+
+	for _, substr := range G.Opts.LogOnly {
+		if contains(format, substr) {
+			return true
+		}
+	}
+	return false
+}
+
+// diag logs a diagnostic. These are filtered by the --only command line option,
+// and duplicates are suppressed unless the --log-verbose command line option is given.
+//
+// See logf for logging arbitrary messages.
+func (l *Logger) diag(line Line, level *LogLevel, format string, args []interface{}) {
+	if l.Opts.ShowAutofix || l.Opts.Autofix {
+		// In these two cases, the only interesting diagnostics are those that can
+		// be fixed automatically. These are logged by Autofix.Apply.
+		return
+	}
+
+	l.explainNext = l.shallBeLogged(format)
+	if !l.explainNext {
+		return
+	}
+
+	if l.Opts.ShowSource {
+		line.showSource(l.logOut)
+	}
+	l.logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
+	if l.Opts.ShowSource {
+		l.logOut.Separate()
+	}
+}
+
+func (l *Logger) logf(level *LogLevel, filename, lineno, format, msg string) {
+	// TODO: Only ever output ASCII, no matter what's in the message.
+
+	if G.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
+		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
+	}
+
+	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see diag().
+	if !l.Opts.LogVerbose && format != AutofixFormat && !l.logged.FirstTimeSlice(path.Clean(filename), lineno, msg) {
+		l.explainNext = false
+		return
+	}
+
+	if filename != "" {
+		filename = cleanpath(filename)
+	}
+	if G.Opts.Profiling && format != AutofixFormat && level != Fatal {
+		l.loghisto.Add(format, 1)
+	}
+
+	out := l.logOut
+	if level == Fatal {
+		out = l.logErr
+	}
+
+	filenameSep := ifelseStr(filename != "", ": ", "")
+	linenoSep := ifelseStr(filename != "" && lineno != "", ":", "")
+	if l.Opts.GccOutput {
+		out.Printf("%s%s%s%s%s: %s\n", filename, linenoSep, lineno, filenameSep, level.GccName, msg)
+	} else {
+		out.Printf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, lineno, msg)
+	}
+
+	switch level {
+	case Fatal:
+		panic(pkglintFatal{})
+	case Error:
+		l.errors++
+	case Warn:
+		l.warnings++
+	}
 }
 
 // SeparatorWriter writes output, occasionally separated by an

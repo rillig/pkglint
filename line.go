@@ -103,7 +103,7 @@ func (line *LineImpl) IsMultiline() bool {
 }
 
 func (line *LineImpl) showSource(out *SeparatorWriter) {
-	if !G.Opts.ShowSource {
+	if !G.Logger.Opts.ShowSource {
 		return
 	}
 

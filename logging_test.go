@@ -125,7 +125,7 @@ func (s *Suite) Test__show_source_separator_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
-func (s *Suite) Test_Pkglint_Explain__only(c *check.C) {
+func (s *Suite) Test_Logger_Explain__only(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--only", "interesting", "--explain")
@@ -143,6 +143,212 @@ func (s *Suite) Test_Pkglint_Explain__only(c *check.C) {
 		"",
 		"\tThis explanation is logged.",
 		"")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--only", "interesting")
+	line := t.NewLine("Makefile", 27, "The old song")
+
+	// Neither the warning nor the corresponding explanation are logged.
+	line.Warnf("Filtered warning.")
+	G.Explain("Explanation for the above warning.")
+	G.ShowSummary()
+
+	// Since the above warning is filtered out by the --only option,
+	// adding --explain to the options would not show any explanation.
+	// Therefore, "Run \"pkglint -e\"" is not advertised in this case,
+	// but see below.
+	c.Check(G.explanationsAvailable, equals, false)
+	t.CheckOutputLines(
+		"Looks fine.")
+
+	line.Warnf("This warning is interesting.")
+	G.Explain("This explanation is available.")
+	G.ShowSummary()
+
+	c.Check(G.explanationsAvailable, equals, true)
+	t.CheckOutputLines(
+		"WARN: Makefile:27: This warning is interesting.",
+		"0 errors and 1 warning found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
+
+// In rare cases, the explanations for the same warning may differ
+// when they appear in different contexts. In such a case, if the
+// warning is suppressed, the explanation must not appear on its own.
+//
+// An example of this was (until November 2018) DESTDIR in the check
+// for absolute pathnames.
+func (s *Suite) Test_Logger_logf__duplicate_messages(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	G.Logger.Opts.LogVerbose = false
+	line := t.NewLine("README.txt", 123, "text")
+
+	// Is logged because it is the first appearance of this warning.
+	line.Warnf("The warning.")
+	G.Explain("Explanation 1")
+
+	// Is suppressed because the warning is the same as above and LogVerbose
+	// has been set to false for this test.
+	line.Warnf("The warning.")
+	G.Explain("Explanation 2")
+
+	t.CheckOutputLines(
+		"WARN: README.txt:123: The warning.",
+		"",
+		"\tExplanation 1",
+		"")
+}
+
+func (s *Suite) Test_Logger_logf__duplicate_explanations(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	line := t.NewLine("README.txt", 123, "text")
+
+	// In rare cases, different diagnostics may have the same explanation.
+	line.Warnf("Warning 1.")
+	G.Explain("Explanation")
+	line.Warnf("Warning 2.")
+	G.Explain("Explanation") // Is suppressed.
+
+	t.CheckOutputLines(
+		"WARN: README.txt:123: Warning 1.",
+		"",
+		"\tExplanation",
+		"",
+		"WARN: README.txt:123: Warning 2.")
+}
+
+func (s *Suite) Test_Logger_logf__gcc_format(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--gcc-output-format")
+
+	G.logf(Note, "filename", "123", "Diagnostics can be logged in GCC-style.", "Diagnostics can be logged in GCC-style.")
+
+	t.CheckOutputLines(
+		"filename:123: note: Diagnostics can be logged in GCC-style.")
+}
+
+func (s *Suite) Test_Logger_diag__show_source(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--show-autofix", "--source")
+	line := t.NewLine("filename", 123, "text")
+
+	fix := line.Autofix()
+	fix.Notef("Diagnostics can show the differences in autofix mode.")
+	fix.InsertBefore("new line before")
+	fix.InsertAfter("new line after")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename:123: Diagnostics can show the differences in autofix mode.",
+		"AUTOFIX: filename:123: Inserting a line \"new line before\" before this line.",
+		"AUTOFIX: filename:123: Inserting a line \"new line after\" after this line.",
+		"+\tnew line before",
+		">\ttext",
+		"+\tnew line after")
+}
+
+func (s *Suite) Test_Logger_diag__show_source_with_whole_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--source")
+	line := NewLineWhole("filename")
+
+	line.Warnf("This line does not have any RawLine attached.")
+
+	t.CheckOutputLines(
+		"WARN: filename: This line does not have any RawLine attached.")
+}
+
+// Ensures that when two packages produce a warning in the same file, both the
+// warning and the corresponding source code are logged only once.
+func (s *Suite) Test_Logger_diag__source_duplicates(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+	t.CreateFileLines("category/dependency/patches/patch-aa",
+		RcsID,
+		"",
+		"--- old file",
+		"+++ new file",
+		"@@ -1,1 +1,1 @@",
+		"-old line",
+		"+new line")
+	t.SetupPackage("category/package1",
+		"PATCHDIR=\t../../category/dependency/patches")
+	t.SetupPackage("category/package2",
+		"PATCHDIR=\t../../category/dependency/patches")
+
+	G.Main("pkglint", "--source", "-Wall", t.File("category/package1"), t.File("category/package2"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package1/distinfo: patch \"../dependency/patches/patch-aa\" "+
+			"is not recorded. Run \""+confMake+" makepatchsum\".",
+		"",
+		">\t--- old file",
+		"ERROR: ~/category/dependency/patches/patch-aa:3: Each patch must be documented.",
+		"",
+		"ERROR: ~/category/package2/distinfo: patch \"../dependency/patches/patch-aa\" "+
+			"is not recorded. Run \""+confMake+" makepatchsum\".",
+		"",
+		">\t--- old file",
+		// FIXME: The above source line is missing a diagnostic.
+		"",
+		"3 errors and 0 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
+
+func (s *Suite) Test_Logger_shallBeLogged(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine( /* none */ )
+
+	c.Check(G.shallBeLogged("Options should not contain whitespace."), equals, true)
+
+	t.SetupCommandLine("--only", "whitespace")
+
+	c.Check(G.shallBeLogged("Options should not contain whitespace."), equals, true)
+	c.Check(G.shallBeLogged("Options should not contain space."), equals, false)
+
+	t.SetupCommandLine( /* none again */ )
+
+	c.Check(G.shallBeLogged("Options should not contain whitespace."), equals, true)
+	c.Check(G.shallBeLogged("Options should not contain space."), equals, true)
+}
+
+// Even if verbose logging is disabled, the "Replacing" diagnostics
+// must not be filtered for duplicates since each of them modifies the line.
+func (s *Suite) Test_Logger_logf__duplicate_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain", "--autofix")
+	G.Logger.Opts.LogVerbose = false // See SetUpTest
+	line := t.NewLine("README.txt", 123, "text")
+
+	fix := line.Autofix()
+	fix.Warnf("T should always be uppercase.")
+	fix.ReplaceRegex(`t`, "T", -1)
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".",
+		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".")
+}
+
+func (s *Suite) Test_Logger_logf__panic(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectPanic(
+		func() { G.logf(Error, "filename", "13", "No period", "No period") },
+		"Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 
 func (s *Suite) Test_SeparatorWriter(c *check.C) {
