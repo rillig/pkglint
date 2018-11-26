@@ -403,10 +403,7 @@ func (p *MkParser) Varname() string {
 
 	mark := lexer.Mark()
 	lexer.SkipByte('.')
-	isVarnameChar := func(c byte) bool {
-		return 'A' <= c && c <= 'Z' || c == '_' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' || c == '+' || c == '-' || c == '.' || c == '*'
-	}
-	for p.VarUse() != nil || lexer.NextBytesFunc(isVarnameChar) != "" {
+	for p.VarUse() != nil || lexer.NextBytesSet(VarnameBytes) != "" {
 	}
 	return lexer.Since(mark)
 }
