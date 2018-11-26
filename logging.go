@@ -8,17 +8,21 @@ import (
 )
 
 type Logger struct {
+	Opts LoggerOpts
+
+	logOut *SeparatorWriter
+	logErr *SeparatorWriter
+
+	suppress bool
+
+	logged    Once
+	explained Once
+	loghisto  *histogram.Histogram
+
 	errors                int
 	warnings              int
-	explainNext           bool
-	logged                Once
 	explanationsAvailable bool
-	explained             Once
 	autofixAvailable      bool
-	logOut                *SeparatorWriter
-	logErr                *SeparatorWriter
-	loghisto              *histogram.Histogram
-	Opts                  LoggerOpts
 }
 
 type LoggerOpts struct {
@@ -48,14 +52,36 @@ var dummyLine = NewLineMulti("", 0, 0, "", nil)
 
 func (l *Logger) IsAutofix() bool { return l.Opts.Autofix || l.Opts.ShowAutofix }
 
+// Relevant decides and remembers whether the given diagnostic is relevant and should be logged.
+//
+// The result of the decision affects all log items until Relevant is called for the next time.
+func (l *Logger) Relevant(format string) bool {
+	relevant := l.shallBeLogged(format)
+	l.suppress = !relevant
+	return relevant
+}
+
+func (l *Logger) FirstTime(filename, linenos, msg string) bool {
+	if l.Opts.LogVerbose {
+		return true
+	}
+
+	if !l.logged.FirstTimeSlice(path.Clean(filename), linenos, msg) {
+		l.suppress = true
+		return false
+	}
+
+	return true
+}
+
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
 func (l *Logger) Explain(explanation ...string) {
-
-	if !l.explainNext {
+	if l.suppress {
 		return
 	}
+
 	l.explanationsAvailable = true
 	if !l.Opts.Explain {
 		return
@@ -123,31 +149,35 @@ func (l *Logger) Diag(line Line, level *LogLevel, format string, args []interfac
 		return
 	}
 
-	l.explainNext = l.shallBeLogged(format)
-	if !l.explainNext {
+	if !l.Relevant(format) {
+		return
+	}
+
+	filename := line.Filename
+	linenos := line.Linenos()
+	msg := fmt.Sprintf(format, args...)
+	if !l.FirstTime(filename, linenos, msg) {
 		return
 	}
 
 	if l.Opts.ShowSource {
 		line.showSource(l.logOut)
-	}
-	l.Logf(level, line.Filename, line.Linenos(), format, fmt.Sprintf(format, args...))
-	if l.Opts.ShowSource {
+		l.Logf(level, filename, linenos, format, msg)
 		l.logOut.Separate()
+	} else {
+		l.Logf(level, filename, linenos, format, msg)
 	}
 }
 
 func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
+	if l.suppress {
+		return
+	}
+
 	// TODO: Only ever output ASCII, no matter what's in the message.
 
 	if G.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
 		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
-	}
-
-	// XXX: Allow to override this check, to log arbitrary messages, not only diagnostics; see Diag().
-	if !l.Opts.LogVerbose && format != AutofixFormat && !l.logged.FirstTimeSlice(path.Clean(filename), lineno, msg) {
-		l.explainNext = false
-		return
 	}
 
 	if filename != "" {

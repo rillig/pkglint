@@ -181,7 +181,7 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 //
 // An example of this was (until November 2018) DESTDIR in the check
 // for absolute pathnames.
-func (s *Suite) Test_Logger_logf__duplicate_messages(c *check.C) {
+func (s *Suite) Test_Logger_Logf__duplicate_messages(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain")
@@ -204,7 +204,7 @@ func (s *Suite) Test_Logger_logf__duplicate_messages(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Logger_logf__duplicate_explanations(c *check.C) {
+func (s *Suite) Test_Logger_Logf__duplicate_explanations(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain")
@@ -224,7 +224,7 @@ func (s *Suite) Test_Logger_logf__duplicate_explanations(c *check.C) {
 		"WARN: README.txt:123: Warning 2.")
 }
 
-func (s *Suite) Test_Logger_logf__gcc_format(c *check.C) {
+func (s *Suite) Test_Logger_Logf__gcc_format(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--gcc-output-format")
@@ -235,7 +235,7 @@ func (s *Suite) Test_Logger_logf__gcc_format(c *check.C) {
 		"filename:123: note: Diagnostics can be logged in GCC-style.")
 }
 
-func (s *Suite) Test_Logger_diag__show_source(c *check.C) {
+func (s *Suite) Test_Logger_Diag__show_source(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--show-autofix", "--source")
@@ -256,7 +256,7 @@ func (s *Suite) Test_Logger_diag__show_source(c *check.C) {
 		"+\tnew line after")
 }
 
-func (s *Suite) Test_Logger_diag__show_source_with_whole_file(c *check.C) {
+func (s *Suite) Test_Logger_Diag__show_source_with_whole_file(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--source")
@@ -270,7 +270,7 @@ func (s *Suite) Test_Logger_diag__show_source_with_whole_file(c *check.C) {
 
 // Ensures that when two packages produce a warning in the same file, both the
 // warning and the corresponding source code are logged only once.
-func (s *Suite) Test_Logger_diag__source_duplicates(c *check.C) {
+func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -299,9 +299,6 @@ func (s *Suite) Test_Logger_diag__source_duplicates(c *check.C) {
 		"ERROR: ~/category/package2/distinfo: patch \"../dependency/patches/patch-aa\" "+
 			"is not recorded. Run \""+confMake+" makepatchsum\".",
 		"",
-		">\t--- old file",
-		// FIXME: The above source line is missing a diagnostic.
-		"",
 		"3 errors and 0 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
@@ -326,7 +323,7 @@ func (s *Suite) Test_Logger_shallBeLogged(c *check.C) {
 
 // Even if verbose logging is disabled, the "Replacing" diagnostics
 // must not be filtered for duplicates since each of them modifies the line.
-func (s *Suite) Test_Logger_logf__duplicate_autofix(c *check.C) {
+func (s *Suite) Test_Logger_Logf__duplicate_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain", "--autofix")
@@ -343,7 +340,7 @@ func (s *Suite) Test_Logger_logf__duplicate_autofix(c *check.C) {
 		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".")
 }
 
-func (s *Suite) Test_Logger_logf__panic(c *check.C) {
+func (s *Suite) Test_Logger_Logf__panic(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectPanic(

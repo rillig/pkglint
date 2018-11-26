@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 )
@@ -257,8 +256,7 @@ func (fix *Autofix) Apply() {
 		fix.autofixShortTerm = autofixShortTerm{}
 	}
 
-	G.explainNext = G.shallBeLogged(fix.diagFormat)
-	if !G.explainNext || len(fix.actions) == 0 {
+	if !G.Logger.Relevant(fix.diagFormat) || len(fix.actions) == 0 {
 		reset()
 		return
 	}
@@ -270,11 +268,7 @@ func (fix *Autofix) Apply() {
 	if logDiagnostic {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		if !logFix {
-			// TODO: Merge this FirstTimeSlice with the one in Logger.Logf.
-			if G.Logger.Opts.LogVerbose || fix.diagFormat == AutofixFormat ||
-				G.logged.FirstTimeSlice(path.Clean(line.Filename), line.Linenos(), msg,
-					"Autofix, to avoid the duplicate in Logger.Logf") {
-
+			if fix.diagFormat == AutofixFormat || G.Logger.FirstTime(line.Filename, line.Linenos(), msg) {
 				line.showSource(G.logOut)
 			}
 		}

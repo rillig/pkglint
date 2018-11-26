@@ -888,7 +888,6 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 
 	G.CheckDirent("print/tex-bibtex8")
 
-	// FIXME: The source code must not be repeated.
 	t.CheckOutputLines(
 		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}",
 		"WARN: print/tex-bibtex8/Makefile:20: Please use ${CFLAGS.${PKGSRC_COMPILER}:Q} instead of ${CFLAGS.${PKGSRC_COMPILER}}.",
@@ -915,8 +914,7 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 		"\t",
 		"\tThe second library is missing the -l.  To fix this, write",
 		"\t${LIBS:@lib@-l${lib}@}.",
-		"",
-		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}")
+		"")
 }
 
 // RawText returns the raw text of the fixed line, including line ends.
