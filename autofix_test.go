@@ -873,6 +873,56 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 		"NOTE: x11/xorgproto/builtin.mk:5: Unnecessary space after variable name \"PRE_XORGPROTO_LIST_MISSING\".")
 }
 
+// Up to 2018-11-26, pkglint in some cases logged only the source without
+// a corresponding warning.
+func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--source", "--explain")
+	G.Opts.LogVerbose = false // For realistic conditions; otherwise all diagnostics are logged.
+
+	t.SetupPackage("print/tex-bibtex8",
+		"MAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}")
+	G.Pkgsrc.LoadInfrastructure()
+	t.Chdir(".")
+
+	G.CheckDirent("print/tex-bibtex8")
+
+	// FIXME: There must not be 2 consecutive empty lines.
+	// FIXME: The source code must not be repeated.
+	t.CheckOutputLines(
+		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}",
+		"WARN: print/tex-bibtex8/Makefile:20: Please use ${CFLAGS.${PKGSRC_COMPILER}:Q} instead of ${CFLAGS.${PKGSRC_COMPILER}}.",
+		"",
+		"",
+		"\tSee the pkgsrc guide, section \"Echoing a string exactly as-is\":",
+		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#echo-literal",
+		"",
+		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}",
+		"WARN: print/tex-bibtex8/Makefile:20: The list variable PKGSRC_COMPILER should not be embedded in a word.",
+		"",
+		"",
+		"\tWhen a list variable has multiple elements, this expression expands",
+		"\tto something unexpected:",
+		"\t",
+		"\tExample: ${MASTER_SITE_SOURCEFORGE}directory/ expands to",
+		"\t",
+		"\t\thttps://mirror1.sf.net/ https://mirror2.sf.net/directory/",
+		"\t",
+		"\tThe first URL is missing the directory.  To fix this, write",
+		"\t\t${MASTER_SITE_SOURCEFORGE:=directory/}.",
+		"\t",
+		"\tExample: -l${LIBS} expands to",
+		"\t",
+		"\t\t-llib1 lib2",
+		"\t",
+		"\tThe second library is missing the -l.  To fix this, write",
+		"\t${LIBS:@lib@-l${lib}@}.",
+		"",
+		"",
+		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}")
+}
+
 // RawText returns the raw text of the fixed line, including line ends.
 // This may differ from the original text when the --show-autofix
 // or --autofix options are enabled.
