@@ -258,7 +258,9 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 func (s *Suite) Test_Pkglint__coverage(c *check.C) {
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
 	if cmdline != "" {
-		G.out, G.err, trace.Out = NewSeparatorWriter(os.Stdout), NewSeparatorWriter(os.Stderr), os.Stdout
+		G.out = NewSeparatorWriter(os.Stdout)
+		G.err = NewSeparatorWriter(os.Stderr)
+		trace.Out = os.Stdout
 		G.Main(append([]string{"pkglint"}, fields(cmdline)...)...)
 	}
 }
