@@ -149,9 +149,9 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 	}
 
 	if G.Opts.DumpMakefile {
-		G.logOut.WriteLine("Whole Makefile (with all included files) follows:")
+		G.out.WriteLine("Whole Makefile (with all included files) follows:")
 		for _, line := range allLines.lines.Lines {
-			G.logOut.WriteLine(line.String())
+			G.out.WriteLine(line.String())
 		}
 	}
 

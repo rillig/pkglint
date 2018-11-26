@@ -811,7 +811,7 @@ func (c *FileCache) removeOldEntries() {
 
 	if G.Testing {
 		for _, e := range c.table {
-			G.logOut.Printf("FileCache %q with count %d.\n", e.key, e.count)
+			G.out.Printf("FileCache %q with count %d.\n", e.key, e.count)
 		}
 	}
 
@@ -820,7 +820,7 @@ func (c *FileCache) removeOldEntries() {
 	for newLen > 0 && c.table[newLen-1].count == minCount {
 		e := c.table[newLen-1]
 		if G.Testing {
-			G.logOut.Printf("FileCache.Evict %q with count %d.\n", e.key, e.count)
+			G.out.Printf("FileCache.Evict %q with count %d.\n", e.key, e.count)
 		}
 		delete(c.mapping, e.key)
 		newLen--
@@ -830,7 +830,7 @@ func (c *FileCache) removeOldEntries() {
 	// To avoid files getting stuck in the cache.
 	for _, e := range c.table {
 		if G.Testing {
-			G.logOut.Printf("FileCache.Halve %q with count %d.\n", e.key, e.count)
+			G.out.Printf("FileCache.Halve %q with count %d.\n", e.key, e.count)
 		}
 		e.count /= 2
 	}

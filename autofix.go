@@ -269,7 +269,7 @@ func (fix *Autofix) Apply() {
 		msg := fmt.Sprintf(fix.diagFormat, fix.diagArgs...)
 		if !logFix {
 			if fix.diagFormat == AutofixFormat || G.Logger.FirstTime(line.Filename, line.Linenos(), msg) {
-				line.showSource(G.logOut)
+				line.showSource(G.out)
 			}
 		}
 		G.Logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
@@ -287,14 +287,14 @@ func (fix *Autofix) Apply() {
 
 	if logDiagnostic || logFix {
 		if logFix {
-			line.showSource(G.logOut)
+			line.showSource(G.out)
 		}
 		if logDiagnostic && len(fix.explanation) > 0 {
 			G.Explain(fix.explanation...)
 		}
 		if G.Logger.Opts.ShowSource {
 			if !G.Logger.Opts.Explain || !logDiagnostic || len(fix.explanation) == 0 {
-				G.logOut.Separate()
+				G.out.Separate()
 			}
 		}
 	}

@@ -121,7 +121,7 @@ func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 
 	pkg := t.SetupPackage("category/package")
 
-	G.logOut = nil // Force an error that cannot happen in practice.
+	G.out = nil // Force an error that cannot happen in practice.
 
 	c.Check(
 		func() { G.Main("pkglint", pkg) },
@@ -258,7 +258,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 func (s *Suite) Test_Pkglint__coverage(c *check.C) {
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
 	if cmdline != "" {
-		G.logOut, G.logErr, trace.Out = NewSeparatorWriter(os.Stdout), NewSeparatorWriter(os.Stderr), os.Stdout
+		G.out, G.err, trace.Out = NewSeparatorWriter(os.Stdout), NewSeparatorWriter(os.Stderr), os.Stdout
 		G.Main(append([]string{"pkglint"}, fields(cmdline)...)...)
 	}
 }

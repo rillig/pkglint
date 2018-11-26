@@ -10,7 +10,7 @@ import (
 // in other methods of the Logger, namely Relevant, FirstTime, Diag.
 func (s *Suite) Test_Logger_Logf(c *check.C) {
 	var sw strings.Builder
-	logger := Logger{logOut: NewSeparatorWriter(&sw)}
+	logger := Logger{out: NewSeparatorWriter(&sw)}
 
 	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
 
@@ -21,7 +21,7 @@ func (s *Suite) Test_Logger_Logf(c *check.C) {
 // Logf doesn't filter duplicates, but Diag does.
 func (s *Suite) Test_Logger_Logf__duplicates(c *check.C) {
 	var sw strings.Builder
-	logger := Logger{logOut: NewSeparatorWriter(&sw)}
+	logger := Logger{out: NewSeparatorWriter(&sw)}
 
 	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
 	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
@@ -36,7 +36,7 @@ func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 	t := s.Init(c)
 
 	var sw strings.Builder
-	logger := Logger{logOut: NewSeparatorWriter(&sw)}
+	logger := Logger{out: NewSeparatorWriter(&sw)}
 	line := t.NewLine("filename", 3, "Text")
 
 	logger.Diag(line, Error, "Blue should be %s.", "orange")

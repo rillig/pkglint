@@ -101,8 +101,8 @@ var (
 )
 
 func main() {
-	G.logOut = NewSeparatorWriter(os.Stdout)
-	G.logErr = NewSeparatorWriter(os.Stderr)
+	G.out = NewSeparatorWriter(os.Stdout)
+	G.err = NewSeparatorWriter(os.Stderr)
 	trace.Out = os.Stdout
 	exitcode := G.Main(os.Args...)
 	if G.Opts.Profiling {
@@ -147,14 +147,14 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 		defer pprof.StopCPUProfile()
 
 		pkglint.res.Profiling()
-		pkglint.loghisto = histogram.New()
+		pkglint.histo = histogram.New()
 		pkglint.loaded = histogram.New()
 		defer func() {
-			pkglint.logOut.Write("")
-			pkglint.loghisto.PrintStats(pkglint.logOut.out, "loghisto", -1)
-			pkglint.res.PrintStats(pkglint.logOut.out)
-			pkglint.loaded.PrintStats(pkglint.logOut.out, "loaded", 10)
-			pkglint.logOut.WriteLine(fmt.Sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
+			pkglint.out.Write("")
+			pkglint.histo.PrintStats(pkglint.out.out, "loghisto", -1)
+			pkglint.res.PrintStats(pkglint.out.out)
+			pkglint.loaded.PrintStats(pkglint.out.out, "loaded", 10)
+			pkglint.out.WriteLine(fmt.Sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
 		}()
 	}
 
@@ -253,21 +253,21 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) *int {
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {
-		_, _ = fmt.Fprintf(pkglint.logErr.out, "%s\n\n", err)
-		opts.Help(pkglint.logErr.out, "pkglint [options] dir...")
+		_, _ = fmt.Fprintf(pkglint.err.out, "%s\n\n", err)
+		opts.Help(pkglint.err.out, "pkglint [options] dir...")
 		exitcode := 1
 		return &exitcode
 	}
 	gopts.args = remainingArgs
 
 	if gopts.ShowHelp {
-		opts.Help(pkglint.logOut.out, "pkglint [options] dir...")
+		opts.Help(pkglint.out.out, "pkglint [options] dir...")
 		exitcode := 0
 		return &exitcode
 	}
 
 	if pkglint.Opts.ShowVersion {
-		_, _ = fmt.Fprintf(pkglint.logOut.out, "%s\n", confVersion)
+		_, _ = fmt.Fprintf(pkglint.out.out, "%s\n", confVersion)
 		exitcode := 0
 		return &exitcode
 	}

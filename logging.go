@@ -10,14 +10,14 @@ import (
 type Logger struct {
 	Opts LoggerOpts
 
-	logOut *SeparatorWriter
-	logErr *SeparatorWriter
+	out *SeparatorWriter
+	err *SeparatorWriter
 
 	suppress bool
 
 	logged    Once
 	explained Once
-	loghisto  *histogram.Histogram
+	histo     *histogram.Histogram
 
 	errors                int
 	warnings              int
@@ -91,32 +91,32 @@ func (l *Logger) Explain(explanation ...string) {
 		return
 	}
 
-	l.logOut.Separate()
+	l.out.Separate()
 	wrapped := wrap(68, explanation...)
 	for _, explanationLine := range wrapped {
-		l.logOut.Write("\t")
-		l.logOut.WriteLine(explanationLine)
+		l.out.Write("\t")
+		l.out.WriteLine(explanationLine)
 	}
-	l.logOut.WriteLine("")
+	l.out.WriteLine("")
 }
 
 func (l *Logger) ShowSummary() {
 	if !l.Opts.Quiet && !l.Opts.Autofix {
 		if l.errors != 0 || l.warnings != 0 {
-			l.logOut.Printf("%d %s and %d %s found.\n",
+			l.out.Printf("%d %s and %d %s found.\n",
 				l.errors, ifelseStr(l.errors == 1, "error", "errors"),
 				l.warnings, ifelseStr(l.warnings == 1, "warning", "warnings"))
 		} else {
-			l.logOut.WriteLine("Looks fine.")
+			l.out.WriteLine("Looks fine.")
 		}
 		if l.explanationsAvailable && !l.Opts.Explain {
-			l.logOut.WriteLine("(Run \"pkglint -e\" to show explanations.)")
+			l.out.WriteLine("(Run \"pkglint -e\" to show explanations.)")
 		}
 		if l.autofixAvailable && !l.Opts.ShowAutofix {
-			l.logOut.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
+			l.out.WriteLine("(Run \"pkglint -fs\" to show what can be fixed automatically.)")
 		}
 		if l.autofixAvailable && !l.Opts.Autofix {
-			l.logOut.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
+			l.out.WriteLine("(Run \"pkglint -F\" to automatically fix some issues.)")
 		}
 	}
 }
@@ -161,9 +161,9 @@ func (l *Logger) Diag(line Line, level *LogLevel, format string, args ...interfa
 	}
 
 	if l.Opts.ShowSource {
-		line.showSource(l.logOut)
+		line.showSource(l.out)
 		l.Logf(level, filename, linenos, format, msg)
-		l.logOut.Separate()
+		l.out.Separate()
 	} else {
 		l.Logf(level, filename, linenos, format, msg)
 	}
@@ -184,12 +184,12 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 		filename = cleanpath(filename)
 	}
 	if G.Opts.Profiling && format != AutofixFormat && level != Fatal {
-		l.loghisto.Add(format, 1)
+		l.histo.Add(format, 1)
 	}
 
-	out := l.logOut
+	out := l.out
 	if level == Fatal {
-		out = l.logErr
+		out = l.err
 	}
 
 	filenameSep := ifelseStr(filename != "", ": ", "")

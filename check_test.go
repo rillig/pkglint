@@ -61,8 +61,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	G = NewPkglint()
 	G.Testing = true
-	G.logOut = NewSeparatorWriter(&t.stdout)
-	G.logErr = NewSeparatorWriter(&t.stderr)
+	G.out = NewSeparatorWriter(&t.stdout)
+	G.err = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
 
 	// XXX: Maybe the tests can run a bit faster when they don't
@@ -92,7 +92,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 		_, _ = fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
 	}
 
-	G = Pkglint{} // unusable because of missing logOut and logErr
+	G = Pkglint{} // unusable because of missing Logger.out and Logger.err
 	if out := t.Output(); out != "" {
 		var msg strings.Builder
 		msg.WriteString("\n")
@@ -647,7 +647,7 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 // In JetBrains GoLand, the tracing output is suppressed after the first
 // failed check, see https://youtrack.jetbrains.com/issue/GO-6154.
 func (t *Tester) EnableTracing() {
-	G.logOut = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
+	G.out = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
 	trace.Out = os.Stdout
 	trace.Tracing = true
 }
@@ -666,7 +666,7 @@ func (t *Tester) EnableTracingToLog() {
 // It is used to check all calls to trace.Result, since the compiler
 // cannot check them.
 func (t *Tester) EnableSilentTracing() {
-	G.logOut = NewSeparatorWriter(&t.stdout)
+	G.out = NewSeparatorWriter(&t.stdout)
 	trace.Out = ioutil.Discard
 	trace.Tracing = true
 }
@@ -675,7 +675,7 @@ func (t *Tester) EnableSilentTracing() {
 // The diagnostics go to the in-memory buffer again,
 // ready to be checked with CheckOutputLines.
 func (t *Tester) DisableTracing() {
-	G.logOut = NewSeparatorWriter(&t.stdout)
+	G.out = NewSeparatorWriter(&t.stdout)
 	trace.Tracing = false
 	trace.Out = nil
 }
