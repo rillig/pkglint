@@ -888,7 +888,6 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 
 	G.CheckDirent("print/tex-bibtex8")
 
-	// FIXME: There must not be 2 consecutive empty lines.
 	// FIXME: The source code must not be repeated.
 	t.CheckOutputLines(
 		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}",
@@ -916,7 +915,6 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 		"\t",
 		"\tThe second library is missing the -l.  To fix this, write",
 		"\t${LIBS:@lib@-l${lib}@}.",
-		"",
 		"",
 		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}")
 }

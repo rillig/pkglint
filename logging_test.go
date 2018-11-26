@@ -174,9 +174,35 @@ func (s *Suite) Test_SeparatorWriter_Printf(c *check.C) {
 
 	wr.Separate()
 
-	c.Check(sb.String(), equals, "ab")
+	// The current line is terminated immediately, but the empty line for
+	// separating two paragraphs is kept in mind. It will be added later,
+	// before the next non-newline character.
+	c.Check(sb.String(), equals, "ab\n")
 
 	wr.Printf("c")
 
-	c.Check(sb.String(), equals, "ab\nc")
+	c.Check(sb.String(), equals, "ab\n\nc")
+}
+
+func (s *Suite) Test_SeparatorWriter_Separate(c *check.C) {
+	var sb strings.Builder
+	wr := NewSeparatorWriter(&sb)
+
+	wr.WriteLine("a")
+	wr.Separate()
+
+	c.Check(sb.String(), equals, "a\n")
+
+	// The call to Separate had requested an empty line. That empty line
+	// can either be given explicitly (like here), or it will be written
+	// implicitly before the next non-newline character.
+	wr.WriteLine("")
+	wr.Separate()
+
+	c.Check(sb.String(), equals, "a\n\n")
+
+	wr.WriteLine("c")
+	wr.Separate()
+
+	c.Check(sb.String(), equals, "a\n\nc\n")
 }
