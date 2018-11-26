@@ -31,6 +31,27 @@ func (s *Suite) Test_Logger_Logf__duplicates(c *check.C) {
 		"ERROR: filename:3: Blue should be orange.\n")
 }
 
+// Ensure that suppressing a diagnostic doesn't influence later calls to Logf.
+func (s *Suite) Test_Logger_Logf__mixed_with_Diag(c *check.C) {
+	t := s.Init(c)
+
+	var sw strings.Builder
+	logger := Logger{out: NewSeparatorWriter(&sw)}
+	line := t.NewLine("filename", 3, "Text")
+
+	logger.Logf(Error, "filename", "3", "Logf output 1.", "Logf output 1.")
+	logger.Diag(line, Error, "Diag %s.", "1")
+	logger.Logf(Error, "filename", "3", "Logf output 2.", "Logf output 2.")
+	logger.Diag(line, Error, "Diag %s.", "1") // Duplicate, therefore suppressed
+	logger.Logf(Error, "filename", "3", "Logf output 3.", "Logf output 3.")
+
+	// FIXME: Logf output 3 must not be suppressed.
+	c.Check(sw.String(), equals, ""+
+		"ERROR: filename:3: Logf output 1.\n"+
+		"ERROR: filename:3: Diag 1.\n"+
+		"ERROR: filename:3: Logf output 2.\n")
+}
+
 // Diag filters duplicate messages, unlike Logf.
 func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 	t := s.Init(c)
