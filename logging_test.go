@@ -268,6 +268,79 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
+func (s *Suite) Test_Logger_ShowSummary__looks_fine(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+
+	logger.ShowSummary()
+
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__1_error_1_warning(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.Logf(Error, "", "", ".", ".")
+	logger.Logf(Warn, "", "", ".", ".")
+
+	logger.ShowSummary()
+
+	t.CheckOutputLines(
+		"ERROR: .",
+		"WARN: .",
+		"1 error and 1 warning found.")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__2_errors_3_warnings(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.Logf(Error, "", "", "1.", "1.")
+	logger.Logf(Error, "", "", "2.", "2.")
+	logger.Logf(Warn, "", "", "3.", "3.")
+	logger.Logf(Warn, "", "", "4.", "4.")
+	logger.Logf(Warn, "", "", "5.", "5.")
+
+	logger.ShowSummary()
+
+	t.CheckOutputLines(
+		"ERROR: 1.",
+		"ERROR: 2.",
+		"WARN: 3.",
+		"WARN: 4.",
+		"WARN: 5.",
+		"2 errors and 3 warnings found.")
+}
+
+func (s *Suite) Test_Logger_ShowSummary__looks_fine_quiet(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.Opts.Quiet = true
+
+	logger.ShowSummary()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Logger_ShowSummary__1_error_1_warning_quiet(c *check.C) {
+	t := s.Init(c)
+
+	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
+	logger.Opts.Quiet = true
+	logger.Logf(Error, "", "", ".", ".")
+	logger.Logf(Warn, "", "", ".", ".")
+
+	logger.ShowSummary()
+
+	t.CheckOutputLines(
+		"ERROR: .",
+		"WARN: .")
+}
+
 // In rare cases, the explanations for the same warning may differ
 // when they appear in different contexts. In such a case, if the
 // warning is suppressed, the explanation must not appear on its own.
