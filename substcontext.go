@@ -155,7 +155,7 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 	case "SUBST_VARS.*":
 		ctx.dupBool(mkline, &ctx.curr.seenVars, varname, op, value)
 		ctx.curr.seenTransform = true
-		for _, substVar := range mkline.ValueSplit(value, "") {
+		for _, substVar := range mkline.ValueFields(value) {
 			if ctx.vars == nil {
 				ctx.vars = make(map[string]bool)
 			}

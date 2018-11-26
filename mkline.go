@@ -359,30 +359,97 @@ func (mkline *MkLineImpl) Tokenize(s string, warn bool) []*MkToken {
 	return tokens
 }
 
-// ValueSplit splits the variable value of an assignment line,
-// taking care of variable references. For example, when the value
-// "/bin:${PATH:S,::,::,}" is split at ":", it results in
-// {"/bin", "${PATH:S,::,::,}"}.
+// ValueSplit splits the given value, taking care of variable references.
+// Example:
 //
-// If the separator is empty, splitting is done on whitespace.
+//  ValueSplit("${VAR:Udefault}::${VAR2}two:words", ":")
+//  => "${VAR:Udefault}"
+//     ""
+//     "${VAR2}two"
+//     "words"
+//
+// Note that even though the first word contains a colon, it is not split
+// at that point since the colon is inside a variable use.
+//
+// When several separators are adjacent, this results in empty words in the output.
 func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
+	G.Assertf(separator != "", "Separator must not be empty; use ValueFields to split on whitespace")
+
 	tokens := mkline.Tokenize(value, false)
 	var split []string
-	for _, token := range tokens {
-		if split == nil {
-			split = []string{""}
-		}
-		if token.Varuse == nil && contains(token.Text, separator) {
-			var subs []string
-			if separator == "" {
-				subs = fields(token.Text)
-			} else {
-				subs = strings.Split(token.Text, separator)
-			}
-			split[len(split)-1] += subs[0]
-			split = append(split, subs[1:]...)
+	cont := false
+
+	out := func(s string) {
+		if cont {
+			split[len(split)-1] += s
 		} else {
-			split[len(split)-1] += token.Text
+			split = append(split, s)
+		}
+	}
+
+	for _, token := range tokens {
+		if token.Varuse != nil {
+			out(token.Text)
+			cont = true
+		} else {
+			lexer := textproc.NewLexer(token.Text)
+			for !lexer.EOF() {
+				if lexer.SkipString(separator) {
+					out("")
+					cont = false
+				}
+				idx := strings.Index(lexer.Rest(), separator)
+				if idx == -1 {
+					idx = len(lexer.Rest())
+				}
+				if idx > 0 {
+					out(lexer.NextString(lexer.Rest()[:idx]))
+					cont = true
+				}
+			}
+		}
+	}
+	return split
+}
+
+// ValueFields splits the given value, taking care of variable references.
+// Example:
+//
+//  ValueFields("${VAR:Udefault value} ${VAR2}two words")
+//  => "${VAR:Udefault value}"
+//     "${VAR2}two"
+//     "words"
+//
+// Note that even though the first word contains a space, it is not split
+// at that point since the space is inside a variable use.
+func (mkline *MkLineImpl) ValueFields(value string) []string {
+	tokens := mkline.Tokenize(value, false)
+	var split []string
+	cont := false
+
+	out := func(s string) {
+		if cont {
+			split[len(split)-1] += s
+		} else {
+			split = append(split, s)
+		}
+	}
+
+	for _, token := range tokens {
+		if token.Varuse != nil {
+			out(token.Text)
+			cont = true
+		} else {
+			lexer := textproc.NewLexer(token.Text)
+			for !lexer.EOF() {
+				for lexer.NextBytesSet(textproc.Space) != "" {
+					cont = false
+				}
+				if word := lexer.NextBytesSet(textproc.Space.Inverse()); word != "" {
+					out(word)
+					cont = true
+				}
+			}
 		}
 	}
 	return split

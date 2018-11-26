@@ -114,7 +114,7 @@ func (mklines *MkLinesImpl) checkAll() {
 
 			switch mkline.Varcanon() {
 			case "PLIST_VARS":
-				ids := mkline.ValueSplit(resolveVariableRefs(mkline.Value()), "")
+				ids := mkline.ValueFields(resolveVariableRefs(mkline.Value()))
 				for _, id := range ids {
 					if !mklines.plistVarSkip && mklines.plistVarSet[id] == nil {
 						mkline.Warnf("%q is added to PLIST_VARS, but PLIST.%s is not defined in this file.", id, id)
@@ -234,7 +234,7 @@ func (mklines *MkLinesImpl) DetermineDefinedVariables() {
 			}
 
 		case "PLIST_VARS":
-			ids := mkline.ValueSplit(resolveVariableRefs(mkline.Value()), "")
+			ids := mkline.ValueFields(resolveVariableRefs(mkline.Value()))
 			for _, id := range ids {
 				if trace.Tracing {
 					trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
@@ -269,7 +269,7 @@ func (mklines *MkLinesImpl) collectPlistVars() {
 		if mkline.IsVarassign() {
 			switch mkline.Varcanon() {
 			case "PLIST_VARS":
-				ids := mkline.ValueSplit(resolveVariableRefs(mkline.Value()), "")
+				ids := mkline.ValueFields(resolveVariableRefs(mkline.Value()))
 				for _, id := range ids {
 					if containsVarRef(id) {
 						mklines.plistVarSkip = true

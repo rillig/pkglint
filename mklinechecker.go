@@ -243,8 +243,8 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 
 func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 	mkline := ck.MkLine
-	targets := ck.MkLine.ValueSplit(mkline.Targets(), "")
-	sources := ck.MkLine.ValueSplit(mkline.Sources(), "")
+	targets := ck.MkLine.ValueFields(mkline.Targets())
+	sources := ck.MkLine.ValueFields(mkline.Sources())
 
 	for _, source := range sources {
 		if source == ".PHONY" {

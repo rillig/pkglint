@@ -791,44 +791,72 @@ func (s *Suite) Test_MkLine_ConditionalVars(c *check.C) {
 func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 	t := s.Init(c)
 
-	checkSplit := func(value string, expected ...string) {
+	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
 		split := mkline.ValueSplit(value, ":")
 		c.Check(split, deepEquals, expected)
 	}
 
-	checkSplit("#empty",
+	test("#empty",
 		[]string(nil)...)
 
-	checkSplit("/bin",
+	test("/bin",
 		"/bin")
 
-	checkSplit("/bin:/sbin",
+	test("/bin:/sbin",
 		"/bin",
 		"/sbin")
 
-	checkSplit("${DESTDIR}/bin:/bin/${SUBDIR}",
+	test("${DESTDIR}/bin:/bin/${SUBDIR}",
 		"${DESTDIR}/bin",
 		"/bin/${SUBDIR}")
 
-	checkSplit("/bin:${DESTDIR}${PREFIX}:${DESTDIR:S,/,\\:,:S,:,:,}/sbin",
+	test("/bin:${DESTDIR}${PREFIX}:${DESTDIR:S,/,\\:,:S,:,:,}/sbin",
 		"/bin",
 		"${DESTDIR}${PREFIX}",
 		"${DESTDIR:S,/,\\:,:S,:,:,}/sbin")
+
+	test("${VAR:Udefault}::${VAR2}two:words",
+		"${VAR:Udefault}",
+		"",
+		"${VAR2}two",
+		"words")
 }
 
-func (s *Suite) Test_MkLine_ValueSplit__space(c *check.C) {
+func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 	t := s.Init(c)
 
-	checkSplit := func(value string, expected ...string) {
-		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
-		split := mkline.ValueSplit(value, "")
+	test := func(value string, expected ...string) {
+		mkline := t.NewMkLine("Makefile", 1, "VAR=\t"+value)
+		split := mkline.ValueFields(value)
 		c.Check(split, deepEquals, expected)
 	}
 
-	// FIXME: two and three are different fields. That's a bug in ValueSplit.
-	checkSplit("one   two\t\t${THREE:Uthree:Nsome \tspaces}",
-		"one", "two${THREE:Uthree:Nsome \tspaces}")
+	test("one   two\t\t${THREE:Uthree:Nsome \tspaces}",
+		"one",
+		"two",
+		"${THREE:Uthree:Nsome \tspaces}")
+
+	test("${VAR:Udefault value} ${VAR2}two words",
+		"${VAR:Udefault value}",
+		"${VAR2}two",
+		"words")
+}
+
+// Before 2018-11-26, this test panicked.
+func (s *Suite) Test_MkLine_ValueFields__adjacent_vars(c *check.C) {
+	t := s.Init(c)
+
+	test := func(value string, expected ...string) {
+		mkline := t.NewMkLine("Makefile", 1, "")
+		split := mkline.ValueFields(value)
+		c.Check(split, deepEquals, expected)
+	}
+
+	test("\t; ${RM} ${WRKSRC}",
+		";",
+		"${RM}",
+		"${WRKSRC}")
 }
 
 func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
