@@ -1,6 +1,9 @@
 package main
 
-import "gopkg.in/check.v1"
+import (
+	"gopkg.in/check.v1"
+	"strings"
+)
 
 // Since the --source option generates multi-line diagnostics,
 // they are separated by an empty line.
@@ -142,4 +145,38 @@ func (s *Suite) Test_Pkglint_Explain__only(c *check.C) {
 		"")
 }
 
-// TODO: Add tests for SeparatorWriter.
+func (s *Suite) Test_SeparatorWriter(c *check.C) {
+	var sb strings.Builder
+	wr := NewSeparatorWriter(&sb)
+
+	wr.WriteLine("a")
+	wr.WriteLine("b")
+
+	c.Check(sb.String(), equals, "a\nb\n")
+
+	wr.Separate()
+
+	c.Check(sb.String(), equals, "a\nb\n")
+
+	wr.WriteLine("c")
+
+	c.Check(sb.String(), equals, "a\nb\n\nc\n")
+}
+
+func (s *Suite) Test_SeparatorWriter_Printf(c *check.C) {
+	var sb strings.Builder
+	wr := NewSeparatorWriter(&sb)
+
+	wr.Printf("a")
+	wr.Printf("b")
+
+	c.Check(sb.String(), equals, "ab")
+
+	wr.Separate()
+
+	c.Check(sb.String(), equals, "ab")
+
+	wr.Printf("c")
+
+	c.Check(sb.String(), equals, "ab\nc")
+}
