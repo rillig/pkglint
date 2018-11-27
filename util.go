@@ -379,13 +379,13 @@ func abspath(filename string) string {
 // This is to provide the package path as context in recursive invocations of pkglint.
 func cleanpath(filename string) string {
 	tmp := filename
-	for len(tmp) > 2 && hasPrefix(tmp, "./") {
+	for len(tmp) > 2 && tmp[0] == '.' && tmp[1] == '/' {
 		tmp = tmp[2:]
 	}
 	for contains(tmp, "/./") {
 		tmp = strings.Replace(tmp, "/./", "/", -1)
 	}
-	if len(tmp) > 2 && hasSuffix(tmp, "/.") {
+	if len(tmp) > 2 && tmp[len(tmp)-2] == '/' && tmp[len(tmp)-1] == '.' {
 		tmp = tmp[:len(tmp)-2]
 	}
 	for contains(tmp, "//") {
