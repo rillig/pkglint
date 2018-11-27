@@ -404,7 +404,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	if varname == "LOCALBASE" && !G.Infrastructure {
 		fix := ck.MkLine.Autofix()
 		fix.Warnf("Please use PREFIX instead of LOCALBASE.")
-		fix.Replace("${LOCALBASE}", "${PREFIX}")
+		fix.ReplaceRegex(`\$\{LOCALBASE\b`, "${PREFIX", 1)
 		fix.Apply()
 	}
 

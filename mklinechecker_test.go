@@ -349,8 +349,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassignVaruse(c *check.C) {
 
 	MkLineChecker{mkline}.checkVarassignVaruse()
 
-	// FIXME: There should be a warning about LOCALBASE here.
 	t.CheckOutputLines(
+		"WARN: module.mk:123: Please use PREFIX instead of LOCALBASE.",
 		"NOTE: module.mk:123: The :Q operator isn't necessary for ${LOCALBASE} here.")
 }
 
