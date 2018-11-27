@@ -287,18 +287,44 @@ func (s *Suite) Test_Options_handleLongOption__flag_group_separate_argument(c *c
 	c.Check(extra, check.Equals, true)
 }
 
-func (s *Suite) Test_Options_handleLongOption__flag_group_negated(c *check.C) {
-	var extra bool
+func (s *Suite) Test_Options_handleLongOption__flag_group_all_then_disable(c *check.C) {
+	var false1, false2, true1, true2 bool
 
 	opts := NewOptions()
-	group := opts.AddFlagGroup('W', "warnings", "warning,...", "Print selected warnings")
-	group.AddFlagVar("extra", &extra, true, "Print extra warnings")
+	group := opts.AddFlagGroup('a', "answers", "answer,...", "Choose the answers")
+	group.AddFlagVar("false1", &false1, false, "A")
+	group.AddFlagVar("false2", &false2, false, "B")
+	group.AddFlagVar("true1", &true1, true, "C")
+	group.AddFlagVar("true2", &true2, true, "C")
 
-	args, err := opts.Parse([]string{"progname", "--warnings", "all,no-extra"})
+	args, err := opts.Parse([]string{"progname", "--answers", "all,no-false1,no-true1", "arg"})
 
-	c.Check(args, check.IsNil)
 	c.Check(err, check.IsNil)
-	c.Check(extra, check.Equals, false)
+	c.Check(args, check.DeepEquals, []string{"arg"})
+	c.Check(false1, check.Equals, false)
+	c.Check(false2, check.Equals, true)
+	c.Check(true1, check.Equals, false)
+	c.Check(true2, check.Equals, true)
+}
+
+func (s *Suite) Test_Options_handleLongOption__flag_group_none_then_enable(c *check.C) {
+	var false1, false2, true1, true2 bool
+
+	opts := NewOptions()
+	group := opts.AddFlagGroup('a', "answers", "answer,...", "Choose the answers")
+	group.AddFlagVar("false1", &false1, false, "A")
+	group.AddFlagVar("false2", &false2, false, "B")
+	group.AddFlagVar("true1", &true1, true, "C")
+	group.AddFlagVar("true2", &true2, true, "C")
+
+	args, err := opts.Parse([]string{"progname", "--answers", "none,false1,true1", "arg"})
+
+	c.Check(err, check.IsNil)
+	c.Check(args, check.DeepEquals, []string{"arg"})
+	c.Check(false1, check.Equals, true)
+	c.Check(false2, check.Equals, false)
+	c.Check(true1, check.Equals, true)
+	c.Check(true2, check.Equals, false)
 }
 
 func (s *Suite) Test_Options_handleLongOption__internal_error(c *check.C) {
