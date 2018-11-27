@@ -340,6 +340,20 @@ func (s *Suite) Test_MkLineChecker_checkVarassignPermissions__infrastructure(c *
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignVaruse(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mkline := t.NewMkLine("module.mk", 123, "PLIST_SUBST+=\tLOCALBASE=${LOCALBASE:Q}")
+
+	MkLineChecker{mkline}.checkVarassignVaruse()
+
+	// FIXME: There should be a warning about LOCALBASE here.
+	t.CheckOutputLines(
+		"NOTE: module.mk:123: The :Q operator isn't necessary for ${LOCALBASE} here.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	t := s.Init(c)
 
