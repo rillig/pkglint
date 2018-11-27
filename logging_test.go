@@ -482,6 +482,18 @@ func (s *Suite) Test_Logger_Logf__gcc_format(c *check.C) {
 		"filename:123: note: Diagnostics can be logged in GCC-style.")
 }
 
+// Ensures that pkglint never destroys the terminal emulator by sending unintended escape sequences.
+func (s *Suite) Test_Logger_Logf__strange_characters(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--gcc-output-format")
+
+	G.Logf(Note, "filename", "123", "Format.", "Unicode \U0001F645 and ANSI \x1B are never logged.")
+
+	t.CheckOutputLines(
+		"filename:123: note: Unicode U+1F645 and ANSI U+001B are never logged.")
+}
+
 func (s *Suite) Test_Logger_Diag__show_source(c *check.C) {
 	t := s.Init(c)
 
@@ -617,8 +629,8 @@ func (s *Suite) Test_SeparatorWriter_Flush(c *check.C) {
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
 
-	wr.Printf("a")
-	wr.Printf("b")
+	wr.Write("a")
+	wr.Write("b")
 
 	c.Check(sb.String(), equals, "")
 
@@ -633,7 +645,7 @@ func (s *Suite) Test_SeparatorWriter_Flush(c *check.C) {
 	// It will be added later, before the next non-newline character.
 	c.Check(sb.String(), equals, "ab\n")
 
-	wr.Printf("c")
+	wr.Write("c")
 	wr.Flush()
 
 	c.Check(sb.String(), equals, "ab\n\nc")

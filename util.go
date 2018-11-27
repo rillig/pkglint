@@ -925,3 +925,32 @@ func wrap(max int, lines ...string) []string {
 
 	return wrapped
 }
+
+// escapePrintable returns an ASCII-only string that represents the given string
+// very closely, but without putting any physical terminal or terminal emulator
+// at the risk of interpreting malicious data from the files checked by pkglint.
+// This escaping is not reversible, and it doesn't need to.
+func escapePrintable(s string) string {
+	i := 0
+	for i < len(s) && textproc.XPrint.Contains(s[i]) {
+		i++
+	}
+	if i == len(s) {
+		return s
+	}
+
+	var escaped strings.Builder
+	escaped.WriteString(s[:i])
+	rest := s[i:]
+	for j, r := range rest {
+		switch {
+		case rune(byte(r)) == r && textproc.XPrint.Contains(byte(rest[j])):
+			escaped.WriteByte(byte(r))
+		case r == 0xFFFD && !hasPrefix(rest[j:], "\uFFFD"):
+			_, _ = fmt.Fprintf(&escaped, "\\x%02X", rest[j])
+		default:
+			_, _ = fmt.Fprintf(&escaped, "%U", r)
+		}
+	}
+	return escaped.String()
+}

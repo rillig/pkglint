@@ -265,4 +265,5 @@ var (
 	Digit  = NewByteSet("0-9")        // The digits zero to nine
 	Space  = NewByteSet("\t\n ")      // Tab, newline, space
 	Hspace = NewByteSet("\t ")        // Tab, space
+	XPrint = NewByteSet("\n\t -~")    // Printable ASCII, plus tab and newline
 )

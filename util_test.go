@@ -476,3 +476,10 @@ func (s *Suite) Test_wrap(c *check.C) {
 
 	c.Check(wrapped, deepEquals, expected)
 }
+
+func (s *Suite) Test_escapePrintable(c *check.C) {
+	c.Check(escapePrintable(""), equals, "")
+	c.Check(escapePrintable("ASCII only~\n\t"), equals, "ASCII only~\n\t")
+	c.Check(escapePrintable("Bad \xFF character"), equals, "Bad \\xFF character")
+	c.Check(escapePrintable("Unicode \uFFFD replacement"), equals, "Unicode U+FFFD replacement")
+}

@@ -111,9 +111,9 @@ func (l *Logger) ShowSummary() {
 	}
 
 	if l.errors != 0 || l.warnings != 0 {
-		l.out.Printf("%d %s and %d %s found.\n",
+		l.out.Write(sprintf("%d %s and %d %s found.\n",
 			l.errors, ifelseStr(l.errors == 1, "error", "errors"),
-			l.warnings, ifelseStr(l.warnings == 1, "warning", "warnings"))
+			l.warnings, ifelseStr(l.warnings == 1, "warning", "warnings")))
 	} else {
 		l.out.WriteLine("Looks fine.")
 	}
@@ -184,8 +184,6 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 		return
 	}
 
-	// TODO: Only ever output ASCII, no matter what's in the message.
-
 	if G.Testing && format != AutofixFormat && !hasSuffix(format, ": %s") && !hasSuffix(format, ". %s") {
 		G.Assertf(hasSuffix(format, "."), "Diagnostic format %q must end in a period.", format)
 	}
@@ -204,11 +202,13 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 
 	filenameSep := ifelseStr(filename != "", ": ", "")
 	linenoSep := ifelseStr(filename != "" && lineno != "", ":", "")
+	var diag string
 	if l.Opts.GccOutput {
-		out.Printf("%s%s%s%s%s: %s\n", filename, linenoSep, lineno, filenameSep, level.GccName, msg)
+		diag = fmt.Sprintf("%s%s%s%s%s: %s\n", filename, linenoSep, lineno, filenameSep, level.GccName, msg)
 	} else {
-		out.Printf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, lineno, msg)
+		diag = fmt.Sprintf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, lineno, msg)
 	}
+	out.Write(escapePrintable(diag))
 
 	switch level {
 	case Fatal:
@@ -243,10 +243,6 @@ func (wr *SeparatorWriter) Write(text string) {
 	for _, b := range []byte(text) {
 		wr.write(b)
 	}
-}
-
-func (wr *SeparatorWriter) Printf(format string, args ...interface{}) {
-	wr.Write(fmt.Sprintf(format, args...))
 }
 
 // Separate remembers to output an empty line before the next character.

@@ -369,6 +369,20 @@ func (s *Suite) Test_ByteSet_Contains(c *check.C) {
 	c.Check(set.Contains(0xFD), equals, false)
 }
 
+func (s *Suite) Test__XPrint(c *check.C) {
+	set := XPrint
+
+	c.Check(set.Contains(0x00), equals, false)
+	c.Check(set.Contains(0x08), equals, false)
+	c.Check(set.Contains('\t'), equals, true)
+	c.Check(set.Contains('\n'), equals, true)
+	c.Check(set.Contains('\v'), equals, false)
+	c.Check(set.Contains(' '), equals, true)
+	c.Check(set.Contains('~'), equals, true)
+	c.Check(set.Contains(0x7F), equals, false)
+	c.Check(set.Contains(0xA0), equals, false)
+}
+
 func (s *Suite) Test__test_names(c *check.C) {
 	ck := intqa.NewTestNameChecker(c)
 	ck.AllowCamelCaseDescriptions(
