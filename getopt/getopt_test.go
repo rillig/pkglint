@@ -63,6 +63,14 @@ func (s *Suite) Test_Options_Parse__unknown_short(c *check.C) {
 	c.Check(err.Error(), check.Equals, "progname: unknown option: -z")
 }
 
+func (s *Suite) Test_Options_Parse__unknown_short_with_argument(c *check.C) {
+	opts := NewOptions()
+
+	_, err := opts.Parse([]string{"progname", "-z", "arg"})
+
+	c.Check(err.Error(), check.Equals, "progname: unknown option: -z")
+}
+
 func (s *Suite) Test_Options_Parse__unknown_long(c *check.C) {
 	opts := NewOptions()
 
