@@ -161,6 +161,8 @@ func (line *LineImpl) Notef(format string, args ...interface{}) {
 	G.Diag(line, Note, format, args...)
 }
 
+func (line *LineImpl) Explain(explanation ...string) { G.Explain(explanation...) }
+
 func (line *LineImpl) String() string {
 	return sprintf("%s:%s: %s", line.Filename, line.Linenos(), line.Text)
 }

@@ -654,7 +654,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
 			if vartype.IsConsideredList() {
 				mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
-				G.Explain(
+				mkline.Explain(
 					"When a list variable has multiple elements, this expression expands",
 					"to something unexpected:",
 					"",
@@ -673,35 +673,48 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 					"${LIBS:@lib@-l${lib}@}.")
 			} else {
 				mkline.Warnf("The variable %s should be quoted as part of a shell word.", varname)
-				G.Explain(
+				mkline.Explain(
 					"This variable can contain spaces or other special characters.",
 					"Therefore it should be quoted by replacing ${VAR} with ${VAR:Q}.")
 			}
 
 		} else if mod != correctMod {
 			if vuc.quoting == vucQuotPlain {
-				fix := mkline.Line.Autofix()
+				fix := mkline.Autofix()
 				fix.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+				fix.Explain(
+					seeGuide("Echoing a string exactly as-is", "echo-literal"))
 				fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
 				fix.Apply()
 			} else {
 				mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
 					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
+				mkline.Explain(
+					"The :Q modifier only works reliably when it is used outside of any",
+					"quoting characters like 'single' or \"double\" quotes or `backticks`.",
+					"",
+					"Examples:",
+					"Instead of CFLAGS=\"${CFLAGS:Q}\",",
+					"     write CFLAGS=${CFLAGS:Q}.",
+					"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
+					"     write 's,@CFLAGS@,'${CFLAGS:Q}','.",
+					"",
+					seeGuide("Echoing a string exactly as-is", "echo-literal"))
 			}
-			G.Explain(
-				seeGuide("Echoing a string exactly as-is", "echo-literal"))
 
 		} else if vuc.quoting != vucQuotPlain {
 			mkline.Warnf("Please move ${%s%s} outside of any quoting characters.", varname, mod)
-			G.Explain(
+			mkline.Explain(
 				"The :Q modifier only works reliably when it is used outside of any",
-				"quoting characters.",
+				"quoting characters like 'single' or \"double\" quotes or `backticks`.",
 				"",
 				"Examples:",
 				"Instead of CFLAGS=\"${CFLAGS:Q}\",",
 				"     write CFLAGS=${CFLAGS:Q}.",
 				"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
-				"     write 's,@CFLAGS@,'${CFLAGS:Q}','.")
+				"     write 's,@CFLAGS@,'${CFLAGS:Q}','.",
+				"",
+				seeGuide("Echoing a string exactly as-is", "echo-literal"))
 		}
 	}
 
