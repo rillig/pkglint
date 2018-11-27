@@ -477,16 +477,32 @@ func (s *Suite) Test_Logger_Logf__gcc_format(c *check.C) {
 	t.SetupCommandLine("--gcc-output-format")
 
 	G.Logf(Note, "filename", "123", "Both filename and line number.", "Both filename and line number.")
-	G.Logf(Note, "", "123", "No filename.", "No filename.")
-	G.Logf(Note, "filename", "", "No line number.", "No line number.")
+	G.Logf(Note, "", "123", "No filename, only line number.", "No filename, only line number.")
+	G.Logf(Note, "filename", "", "Filename without line number.", "Filename without line number.")
 	G.Logf(Note, "", "", "Neither filename nor line number.", "Neither filename nor line number.")
 
 	t.CheckOutputLines(
 		"filename:123: note: Both filename and line number.",
-		// FIXME
-		"123note: No filename.",
-		"filename: note: No line number.",
+		"note: No filename, only line number.",
+		"filename: note: Filename without line number.",
 		"note: Neither filename nor line number.")
+}
+
+func (s *Suite) Test_Logger_Logf__traditional_format(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--gcc-output-format=no")
+
+	G.Logf(Note, "filename", "123", "Both filename and line number.", "Both filename and line number.")
+	G.Logf(Note, "", "123", "No filename, only line number.", "No filename, only line number.")
+	G.Logf(Note, "filename", "", "Filename without line number.", "Filename without line number.")
+	G.Logf(Note, "", "", "Neither filename nor line number.", "Neither filename nor line number.")
+
+	t.CheckOutputLines(
+		"NOTE: filename:123: Both filename and line number.",
+		"NOTE: No filename, only line number.",
+		"NOTE: filename: Filename without line number.",
+		"NOTE: Neither filename nor line number.")
 }
 
 // Ensures that pkglint never destroys the terminal emulator by sending unintended escape sequences.

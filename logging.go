@@ -201,12 +201,13 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 	}
 
 	filenameSep := ifelseStr(filename != "", ": ", "")
-	linenoSep := ifelseStr(filename != "" && lineno != "", ":", "")
+	effLineno := ifelseStr(filename != "", lineno, "")
+	linenoSep := ifelseStr(effLineno != "", ":", "")
 	var diag string
 	if l.Opts.GccOutput {
-		diag = fmt.Sprintf("%s%s%s%s%s: %s\n", filename, linenoSep, lineno, filenameSep, level.GccName, msg)
+		diag = fmt.Sprintf("%s%s%s%s%s: %s\n", filename, linenoSep, effLineno, filenameSep, level.GccName, msg)
 	} else {
-		diag = fmt.Sprintf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, lineno, msg)
+		diag = fmt.Sprintf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, effLineno, msg)
 	}
 	out.Write(escapePrintable(diag))
 
