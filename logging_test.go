@@ -476,10 +476,17 @@ func (s *Suite) Test_Logger_Logf__gcc_format(c *check.C) {
 
 	t.SetupCommandLine("--gcc-output-format")
 
-	G.Logf(Note, "filename", "123", "Diagnostics can be logged in GCC-style.", "Diagnostics can be logged in GCC-style.")
+	G.Logf(Note, "filename", "123", "Both filename and line number.", "Both filename and line number.")
+	G.Logf(Note, "", "123", "No filename.", "No filename.")
+	G.Logf(Note, "filename", "", "No line number.", "No line number.")
+	G.Logf(Note, "", "", "Neither filename nor line number.", "Neither filename nor line number.")
 
 	t.CheckOutputLines(
-		"filename:123: note: Diagnostics can be logged in GCC-style.")
+		"filename:123: note: Both filename and line number.",
+		// FIXME
+		"123note: No filename.",
+		"filename: note: No line number.",
+		"note: Neither filename nor line number.")
 }
 
 // Ensures that pkglint never destroys the terminal emulator by sending unintended escape sequences.
