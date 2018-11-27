@@ -916,7 +916,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 		c.Check(mkline.ResolveVarsInRelativePath(before, false), equals, after)
 	}
 
-	checkResolve("", "")
+	checkResolve("", ".")
 	checkResolve("${LUA_PKGSRCDIR}", "../../lang/lua53")
 	checkResolve("${PHPPKGSRCDIR}", "../../lang/php72")
 	checkResolve("${SUSE_DIR_PREFIX}", "suse100")

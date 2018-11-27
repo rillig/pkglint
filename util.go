@@ -378,39 +378,28 @@ func abspath(filename string) string {
 // Also, the initial directory is always kept.
 // This is to provide the package path as context in recursive invocations of pkglint.
 func cleanpath(filename string) string {
-	tmp := filename
-	for len(tmp) > 2 && tmp[0] == '.' && tmp[1] == '/' {
-		tmp = tmp[2:]
-	}
-	for contains(tmp, "/./") {
-		tmp = strings.Replace(tmp, "/./", "/", -1)
-	}
-	if len(tmp) > 2 && tmp[len(tmp)-2] == '/' && tmp[len(tmp)-1] == '.' {
-		tmp = tmp[:len(tmp)-2]
-	}
-	for contains(tmp, "//") {
-		tmp = strings.Replace(tmp, "//", "/", -1)
+	parts := make([]string, 0, 5)
+	lex := textproc.NewLexer(filename)
+	for lex.SkipString("./") {
 	}
 
-	// Repeatedly replace `/[^.][^/]*/[^.][^/]*/\.\./\.\./` with "/"
-again:
-	slash0 := -1
-	slash1 := -1
-	slash2 := -1
-	for i, ch := range []byte(tmp) {
-		if ch == '/' {
-			slash0 = slash1
-			slash1 = slash2
-			slash2 = i
-			if slash0 != -1 && tmp[slash0+1:slash1] != ".." && tmp[slash1+1:slash2] != ".." && hasPrefix(tmp[i:], "/../../") {
-				tmp = tmp[:slash0] + tmp[i+6:]
-				goto again
+	for !lex.EOF() {
+		part := lex.NextBytesFunc(func(b byte) bool { return b != '/' })
+		parts = append(parts, part)
+		n := len(parts)
+		if n >= 5 && parts[n-1] == ".." && parts[n-2] == ".." && parts[n-3] != ".." && parts[n-4] != ".." {
+			parts = parts[:n-4]
+		}
+		if lex.SkipByte('/') {
+			for lex.SkipByte('/') || lex.SkipString("./") {
 			}
 		}
 	}
 
-	tmp = strings.TrimSuffix(tmp, "/")
-	return tmp
+	if len(parts) == 0 {
+		return "."
+	}
+	return strings.Join(parts, "/")
 }
 
 func containsVarRef(s string) bool {
