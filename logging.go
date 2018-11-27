@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"netbsd.org/pkglint/histogram"
@@ -226,10 +227,11 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 type SeparatorWriter struct {
 	out   io.Writer
 	state uint8 // 0 = beginning of line, 1 = in line, 2 = separator wanted, 3 = paragraph
+	line  bytes.Buffer
 }
 
 func NewSeparatorWriter(out io.Writer) *SeparatorWriter {
-	return &SeparatorWriter{out, 0}
+	return &SeparatorWriter{out: out}
 }
 
 func (wr *SeparatorWriter) WriteLine(text string) {
@@ -251,26 +253,34 @@ func (wr *SeparatorWriter) Printf(format string, args ...interface{}) {
 // If the writer is currently in the middle of a line, that line is terminated immediately.
 func (wr *SeparatorWriter) Separate() {
 	if wr.state == 1 {
-		_, _ = wr.out.Write([]byte{'\n'})
+		wr.write('\n')
 	}
 	if wr.state < 2 {
 		wr.state = 2
 	}
 }
 
+func (wr *SeparatorWriter) Flush() {
+	_, _ = io.Copy(wr.out, &wr.line)
+	wr.line.Reset()
+}
+
 func (wr *SeparatorWriter) write(b byte) {
-	switch {
-	case b == '\n':
+	if b == '\n' {
 		if wr.state == 1 {
 			wr.state = 0
 		} else {
 			wr.state = 3
 		}
-	default:
-		if wr.state == 2 {
-			_, _ = wr.out.Write([]byte{'\n'})
-		}
-		wr.state = 1
+		wr.line.WriteByte('\n')
+		wr.Flush()
+		return
 	}
-	_, _ = wr.out.Write([]byte{b})
+
+	if wr.state == 2 {
+		wr.line.WriteByte('\n')
+		wr.Flush()
+	}
+	wr.state = 1
+	wr.line.WriteByte(b)
 }

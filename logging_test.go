@@ -613,23 +613,28 @@ func (s *Suite) Test_SeparatorWriter(c *check.C) {
 	c.Check(sb.String(), equals, "a\nb\n\nc\n")
 }
 
-func (s *Suite) Test_SeparatorWriter_Printf(c *check.C) {
+func (s *Suite) Test_SeparatorWriter_Flush(c *check.C) {
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
 
 	wr.Printf("a")
 	wr.Printf("b")
 
+	c.Check(sb.String(), equals, "")
+
+	wr.Flush()
+
 	c.Check(sb.String(), equals, "ab")
 
 	wr.Separate()
 
-	// The current line is terminated immediately, but the empty line for
-	// separating two paragraphs is kept in mind. It will be added later,
-	// before the next non-newline character.
+	// The current line is terminated immediately by the above Separate(),
+	// but the empty line for separating two paragraphs is kept in mind.
+	// It will be added later, before the next non-newline character.
 	c.Check(sb.String(), equals, "ab\n")
 
 	wr.Printf("c")
+	wr.Flush()
 
 	c.Check(sb.String(), equals, "ab\n\nc")
 }
