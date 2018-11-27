@@ -332,6 +332,24 @@ func (s *Suite) Test_Options_parseShortOptions__flag_group_separate_argument(c *
 }
 
 func (s *Suite) Test_Options_Help(c *check.C) {
+	var verbose bool
+	var name string
+
+	opts := NewOptions()
+	opts.AddFlagVar('v', "verbose", &verbose, false, "Print a detailed log")
+	opts.AddStrVar('n', "name", &name, "", "Name of the print job")
+
+	var out strings.Builder
+	opts.Help(&out, "progname [options] args")
+
+	c.Check(out.String(), check.Equals, ""+
+		"usage: progname [options] args\n"+
+		"\n"+
+		"  -v, --verbose   Print a detailed log\n"+
+		"  -n, --name      Name of the print job\n")
+}
+
+func (s *Suite) Test_Options_Help__with_flag_group(c *check.C) {
 	var verbose, basic, extra bool
 	var name string
 
