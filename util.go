@@ -417,13 +417,7 @@ func containsVarRef(s string) bool {
 	return contains(s, "${")
 }
 
-func hasAlnumPrefix(s string) bool {
-	if s == "" {
-		return false
-	}
-	b := s[0]
-	return '0' <= b && b <= '9' || 'A' <= b && b <= 'Z' || b == '_' || 'a' <= b && b <= 'z'
-}
+func hasAlnumPrefix(s string) bool { return s != "" && textproc.AlnumU.Contains(s[0]) }
 
 // Once remembers with which arguments its FirstTime method has been called
 // and only returns true on each first call.
