@@ -24,7 +24,7 @@ type LexerMark string
 // It cannot match Unicode code points individually and is therefore
 // usually used with ASCII characters.
 type ByteSet struct {
-	bits [4]uint64
+	bits [256]bool
 }
 
 func NewLexer(text string) *Lexer {
@@ -134,7 +134,7 @@ func (l *Lexer) NextBytesFunc(fn func(b byte) bool) string {
 // otherwise -1.
 func (l *Lexer) NextByteSet(set *ByteSet) int {
 	rest := l.rest
-	if 0 < len(rest) && set.bits[rest[0]/64]&(1<<(rest[0]%64)) != 0 {
+	if 0 < len(rest) && set.Contains(rest[0]) {
 		l.rest = rest[1:]
 		return int(rest[0])
 	}
@@ -148,7 +148,7 @@ func (l *Lexer) NextBytesSet(bytes *ByteSet) string {
 	// As of Go 1.11, the compiler does not inline variable function arguments.
 	i := 0
 	rest := l.rest
-	for i < len(rest) && bytes.bits[rest[i]/64]&(1<<(rest[i]%64)) != 0 {
+	for i < len(rest) && bytes.Contains(rest[i]) {
 		i++
 	}
 	if i != 0 {
@@ -222,26 +222,12 @@ func NewByteSet(chars string) *ByteSet {
 		case i+2 < len(chars) && chars[i+1] == '-':
 			min := uint(chars[i])
 			max := uint(chars[i+2]) // inclusive
-			for j := uint(0); j < 4; j++ {
-				minBit := 64 * j
-				if min < minBit+64 && minBit <= max {
-					loMask := ^uint64(0)
-					if minBit < min {
-						loMask <<= min - minBit
-					}
-
-					hiMask := ^uint64(0)
-					if minBit+63 > max {
-						hiMask >>= minBit + 63 - max
-					}
-
-					set.bits[j] |= loMask & hiMask
-				}
+			for c := min; c <= max; c++ {
+				set.bits[c] = true
 			}
 			i += 3
 		default:
-			ch := chars[i]
-			set.bits[ch/64] |= 1 << (ch % 64)
+			set.bits[chars[i]] = true
 			i++
 		}
 	}
@@ -250,13 +236,15 @@ func NewByteSet(chars string) *ByteSet {
 
 // Inverse returns a byte set that matches the inverted set of bytes.
 func (bs *ByteSet) Inverse() *ByteSet {
-	return &ByteSet{[4]uint64{^bs.bits[0], ^bs.bits[1], ^bs.bits[2], ^bs.bits[3]}}
+	var inv ByteSet
+	for i := 0; i < 256; i++ {
+		inv.bits[i] = !bs.Contains(byte(i))
+	}
+	return &inv
 }
 
 // Contains tests whether the byte set contains the given byte.
-func (bs *ByteSet) Contains(b byte) bool {
-	return bs.bits[b/64]&(1<<(b%64)) != 0
-}
+func (bs *ByteSet) Contains(b byte) bool { return bs.bits[b] }
 
 // Predefined byte sets for parsing ASCII text.
 var (

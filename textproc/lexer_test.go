@@ -4,6 +4,7 @@ import (
 	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/intqa"
 	"regexp"
+	"strings"
 	"testing"
 	"unicode"
 )
@@ -312,49 +313,43 @@ func (s *Suite) Test_Lexer_Commit(c *check.C) {
 func (s *Suite) Test_NewByteSet(c *check.C) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 
-	c.Check(set.bits, equals, [4]uint64{
-		0x03ff000000000000, // 9-0
-		0x07fffffe87fffffe, // z-a _ Z-A
-		0x0000000000000000,
-		0x1000000000000000}) // \xFC
-}
-
-// Ensures that the bit manipulations work when a range spans
-// multiple of the uint64 words.
-func (s *Suite) Test_NewByteSet__large_range(c *check.C) {
-	set := NewByteSet("\x01-\xFE")
-
-	c.Check(set.bits, equals, [4]uint64{
-		0xfffffffffffffffe,
-		0xffffffffffffffff,
-		0xffffffffffffffff,
-		0x7fffffffffffffff})
+	expected := "" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"0123456789_\xFC"
+	for i := 0; i < 256; i++ {
+		c.Check(
+			set.Contains(byte(i)),
+			equals,
+			strings.IndexByte(expected, byte(i)) != -1)
+	}
 }
 
 // Demonstrates how to specify a byte set that includes a hyphen,
 // since that is also used for byte ranges.
-// The hyphen must be written as ---, and it must be at the beginning.
+// The hyphen must be written as ---, which is a range from hyphen to hyphen.
 func (s *Suite) Test_NewByteSet__range_hyphen(c *check.C) {
 	set := NewByteSet("---a-z")
 
-	c.Check(set.bits, equals, [4]uint64{
-		0x0000200000000000,
-		0x07fffffe00000000,
-		0x0000000000000000,
-		0x0000000000000000})
+	expected := "abcdefghijklmnopqrstuvwxyz-"
+	for i := 0; i < 256; i++ {
+		c.Check(
+			set.Contains(byte(i)),
+			equals,
+			strings.IndexByte(expected, byte(i)) != -1)
+	}
 }
 
 func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 	inverse := set.Inverse()
 
-	c.Check(inverse.bits, equals, [4]uint64{
-		0xfc00ffffffffffff,
-		0xf800000178000001,
-		0xffffffffffffffff,
-		0xefffffffffffffff})
-
-	c.Check(inverse.Inverse().bits, equals, set.bits)
+	for i := 0; i < 256; i++ {
+		c.Check(
+			inverse.Contains(byte(i)),
+			equals,
+			!set.Contains(byte(i)))
+	}
 }
 
 func (s *Suite) Test_ByteSet_Contains(c *check.C) {
