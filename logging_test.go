@@ -255,12 +255,9 @@ func (s *Suite) Test_Logger_Explain__show_autofix(c *check.C) {
 	fix.Replace("old", "new")
 	fix.Apply()
 
+	// Since the warning without fix doesn't fix anything, it is filtered out.
+	// So is the corresponding explanation.
 	t.CheckOutputLines(
-		"",
-		// FIXME: Since the warning will not be fixed, it is not shown here.
-		// Therefore its explanation must also not be shown.
-		"\tExplanation for warning without fix.",
-		"",
 		"WARN: Makefile:27: Warning with fix.",
 		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new\".",
 		"",
@@ -285,12 +282,9 @@ func (s *Suite) Test_Logger_Explain__show_autofix_and_source(c *check.C) {
 	fix.Replace("old", "new")
 	fix.Apply()
 
+	// Since the warning without fix doesn't fix anything, it is filtered out.
+	// So is the corresponding explanation.
 	t.CheckOutputLines(
-		"",
-		// FIXME: Since the warning will not be fixed, it is not shown here.
-		// Therefore its explanation must also not be shown.
-		"\tExplanation for warning without fix.",
-		"",
 		"WARN: Makefile:27: Warning with fix.",
 		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new\".",
 		"-\tThe old song",

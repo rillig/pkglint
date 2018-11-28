@@ -154,6 +154,7 @@ func (l *Logger) Diag(line Line, level *LogLevel, format string, args ...interfa
 	if l.Opts.ShowAutofix || l.Opts.Autofix {
 		// In these two cases, the only interesting diagnostics are those that can
 		// be fixed automatically. These are logged by Autofix.Apply.
+		l.suppressExpl = true
 		return
 	}
 
