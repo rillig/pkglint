@@ -238,6 +238,68 @@ func (s *Suite) Test_Logger_Explain__only(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_Logger_Explain__show_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain", "--show-autofix")
+	line := t.NewLine("Makefile", 27, "The old song")
+
+	line.Warnf("Warning without fix.")
+	line.Explain(
+		"Explanation for warning without fix.")
+
+	fix := line.Autofix()
+	fix.Warnf("Warning with fix.")
+	fix.Explain(
+		"Explanation for warning with fix.")
+	fix.Replace("old", "new")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"",
+		// FIXME: Since the warning will not be fixed, it is not shown here.
+		// Therefore its explanation must also not be shown.
+		"\tExplanation for warning without fix.",
+		"",
+		"WARN: Makefile:27: Warning with fix.",
+		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new\".",
+		"",
+		"\tExplanation for warning with fix.",
+		"")
+}
+
+func (s *Suite) Test_Logger_Explain__show_autofix_and_source(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain", "--show-autofix", "--source")
+	line := t.NewLine("Makefile", 27, "The old song")
+
+	line.Warnf("Warning without fix.")
+	line.Explain(
+		"Explanation for warning without fix.")
+
+	fix := line.Autofix()
+	fix.Warnf("Warning with fix.")
+	fix.Explain(
+		"Explanation for warning with fix.")
+	fix.Replace("old", "new")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"",
+		// FIXME: Since the warning will not be fixed, it is not shown here.
+		// Therefore its explanation must also not be shown.
+		"\tExplanation for warning without fix.",
+		"",
+		"WARN: Makefile:27: Warning with fix.",
+		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new\".",
+		"-\tThe old song",
+		"+\tThe new song",
+		"",
+		"\tExplanation for warning with fix.",
+		"")
+}
+
 func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 	t := s.Init(c)
 
