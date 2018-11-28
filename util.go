@@ -738,7 +738,7 @@ func IsPrefs(filename string) bool {
 
 func isalnum(s string) bool {
 	for _, ch := range []byte(s) {
-		if !('0' <= ch && ch <= '9' || 'A' <= ch && ch <= 'Z' || ch == '_' || 'a' <= ch && ch <= 'z') {
+		if !textproc.AlnumU.Contains(ch) {
 			return false
 		}
 	}
