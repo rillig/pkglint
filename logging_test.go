@@ -294,6 +294,33 @@ func (s *Suite) Test_Logger_Explain__show_autofix_and_source(c *check.C) {
 		"")
 }
 
+// When the --autofix option is given, the warnings are not shown, therefore it doesn't
+// make sense to show the explanation for the warning.
+func (s *Suite) Test_Logger_Explain__autofix_and_source(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain", "--autofix", "--source")
+	line := t.NewLine("Makefile", 27, "The old song")
+
+	line.Warnf("Warning without fix.")
+	line.Explain(
+		"Explanation for warning without fix.")
+
+	fix := line.Autofix()
+	fix.Warnf("Warning with fix.")
+	fix.Explain(
+		"Explanation for warning with fix.")
+	fix.Replace("old", "new")
+	fix.Apply()
+
+	// Since the warning without fix doesn't fix anything, it is filtered out.
+	// So is the corresponding explanation.
+	t.CheckOutputLines(
+		"AUTOFIX: Makefile:27: Replacing \"old\" with \"new\".",
+		"-\tThe old song",
+		"+\tThe new song")
+}
+
 func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 	t := s.Init(c)
 
