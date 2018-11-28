@@ -113,7 +113,7 @@ DDEESSCCRRIIPPTTIIOONN
      [[nnoo--]]qquuoottiinngg        Warn for possibly invalid quoting of make variables
                          in shell programs and shell variables themselves.
 
-     [[nnoo--]]ssppaaccee          Emit notes for inconsistent use of white-space.
+     [[nnoo--]]ssppaaccee          Emit notes for inconsistent use of whitespace.
 
      [[nnoo--]]ssttyyllee          Warn for stylistic issues that don't affect the build
                          process.
