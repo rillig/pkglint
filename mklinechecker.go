@@ -429,7 +429,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 
 	ck.checkVaruseDeprecated(varuse)
 
-	ck.checkVaruseText(varname, vartype, vuc.time)
+	ck.checkTextVarUse(varname, vartype, vuc.time)
 }
 
 func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype) {
@@ -736,7 +736,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 			"\t* user and group names",
 			"\t* tool names and tool paths",
 			"\t* variable names",
-			"\t* PKGNAME")
+			"\t* package names (but not dependency patterns like pkg>=1.2)")
 		fix.Replace(bad, good)
 		fix.Apply()
 	}
@@ -759,25 +759,25 @@ func (ck MkLineChecker) checkVaruseDeprecated(varuse *MkVarUse) {
 	}
 }
 
-func (ck MkLineChecker) checkVarassignPythonVersions(varname, value string) {
+func (ck MkLineChecker) checkVarassignDecreasingVersions(varname, value string) {
 	if trace.Tracing {
 		defer trace.Call2(varname, value)()
 	}
 
 	mkline := ck.MkLine
-	strversions := fields(value)
-	intversions := make([]int, len(strversions))
-	for i, strversion := range strversions {
-		iver, err := strconv.Atoi(strversion)
+	strVersions := fields(value)
+	intVersions := make([]int, len(strVersions))
+	for i, strVersion := range strVersions {
+		iver, err := strconv.Atoi(strVersion)
 		if err != nil || !(iver > 0) {
 			mkline.Errorf("All values for %s must be positive integers.", varname)
 			return
 		}
-		intversions[i] = iver
+		intVersions[i] = iver
 	}
 
-	for i, ver := range intversions {
-		if i > 0 && ver >= intversions[i-1] {
+	for i, ver := range intVersions {
+		if i > 0 && ver >= intVersions[i-1] {
 			mkline.Warnf("The values for %s should be in decreasing order.", varname)
 			G.Explain(
 				"If they aren't, it may be possible that needless versions of",
@@ -866,11 +866,11 @@ func (ck MkLineChecker) checkVarassignVaruse() {
 	if vartype != nil && vartype.IsShell() {
 		ck.checkVarassignVaruseShell(vartype, time)
 	} else { // XXX: This else looks as if it should be omitted.
-		ck.checkVaruseText(ck.MkLine.Value(), vartype, time)
+		ck.checkTextVarUse(ck.MkLine.Value(), vartype, time)
 	}
 }
 
-func (ck MkLineChecker) checkVaruseText(text string, vartype *Vartype, time vucTime) {
+func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time vucTime) {
 	if !contains(text, "$") {
 		return
 	}
@@ -931,7 +931,7 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
-		ck.checkVarassignPythonVersions(varname, value)
+		ck.checkVarassignDecreasingVersions(varname, value)
 	}
 
 	if mkline.VarassignComment() == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
@@ -1055,15 +1055,26 @@ func (ck MkLineChecker) CheckVartypePrimitive(varname string, checker *BasicType
 	checker.checker(ctx)
 }
 
+// checkText checks the given text (which is typically the right-hand side of a variable
+// assignment or a shell command).
+//
+// Note: checkTextVarUse cannot be called here since it needs to know the context where it is included.
+// Maybe that context should be added here as parameters.
 func (ck MkLineChecker) checkText(text string) {
 	if trace.Tracing {
 		defer trace.Call1(text)()
 	}
 
-	mkline := ck.MkLine
+	ck.checkTextWrksrcDotDot(text)
+	ck.checkTextRpath(text)
+	ck.checkTextDeprecated(text)
+
+}
+
+func (ck MkLineChecker) checkTextWrksrcDotDot(text string) {
 	if contains(text, "${WRKSRC}/..") {
-		mkline.Warnf("Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".")
-		G.Explain(
+		ck.MkLine.Warnf("Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".")
+		ck.MkLine.Explain(
 			"WRKSRC should be defined so that there is no need to do anything",
 			"outside of this directory.",
 			"",
@@ -1075,13 +1086,15 @@ func (ck MkLineChecker) checkText(text string) {
 			"",
 			seeGuide("Directories used during the build process", "build.builddirs"))
 	}
+}
 
-	// Note: A simple -R is not detected, as the rate of false positives is too high.
+// checkTextPath checks for literal -Wl,--rpath options.
+//
+// Note: A simple -R is not detected, as the rate of false positives is too high.
+func (ck MkLineChecker) checkTextRpath(text string) {
 	if m, flag := match1(text, `(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R\b)`); m {
-		mkline.Warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+		ck.MkLine.Warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
 	}
-
-	ck.checkTextDeprecated(text)
 }
 
 func (ck MkLineChecker) checkTextDeprecated(text string) {
