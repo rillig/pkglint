@@ -139,7 +139,7 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 		"WARN: category/package/filename.mk:8: Unusual target \"target-3\".")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wtypes")
@@ -157,24 +157,24 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
 	c.Check(vartype.kindOfList, equals, lkNone)
 
 	mkline := t.NewMkLine("Makefile", 123, "COMMENT=\tA nice package")
-	MkLineChecker{mkline}.CheckVartype(mkline.Varname(), mkline.Op(), mkline.Value(), mkline.VarassignComment())
+	MkLineChecker{mkline}.checkVartype(mkline.Varname(), mkline.Op(), mkline.Value(), mkline.VarassignComment())
 
 	t.CheckOutputLines(
 		"WARN: Makefile:123: COMMENT should not begin with \"A\".")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
 	mkline := t.NewMkLine("filename", 1, "DISTNAME=gcc-${GCC_VERSION}")
 
-	MkLineChecker{mkline}.CheckVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
+	MkLineChecker{mkline}.checkVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__skip(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__skip(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wno-types")
@@ -186,7 +186,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__skip(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__append_to_non_list(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -524,7 +524,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 		"WARN: audio/pulseaudio/Makefile:2: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -538,7 +538,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 	c.Check(words, deepEquals, []string{"`pkg-config pidgin --cflags`"})
 	c.Check(rest, equals, "")
 
-	MkLineChecker{G.Mk.mklines[1]}.CheckVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
+	MkLineChecker{G.Mk.mklines[1]}.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
 	// No warning about "`pkg-config" being an unknown CFlag.
 	t.CheckOutputEmpty()
@@ -547,7 +547,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 // See PR 46570, Ctrl+F "4. Shell quoting".
 // Pkglint is correct, since the shell sees this definition for
 // CPPFLAGS as three words, not one word.
-func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()

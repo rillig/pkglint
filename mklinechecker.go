@@ -802,7 +802,7 @@ func (ck MkLineChecker) checkVarassign() {
 	ck.checkVarassignBsdPrefs()
 
 	ck.checkText(value)
-	ck.CheckVartype(varname, op, value, comment)
+	ck.checkVartype(varname, op, value, comment)
 
 	ck.checkVarassignUnused()
 
@@ -992,7 +992,7 @@ func (ck MkLineChecker) checkVarassignBsdPrefs() {
 		"bsd.prefs.mk file, which will take care of everything.")
 }
 
-func (ck MkLineChecker) CheckVartype(varname string, op MkOperator, value, comment string) {
+func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comment string) {
 	if trace.Tracing {
 		defer trace.Call(varname, op, value, comment)()
 	}
@@ -1153,7 +1153,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		modifiers := varuse.modifiers
 		for _, modifier := range modifiers {
 			if m, positive, pattern := modifier.MatchMatch(); m && (positive || len(modifiers) == 1) {
-				ck.CheckVartype(varname, opUseMatch, pattern, "")
+				ck.checkVartype(varname, opUseMatch, pattern, "")
 
 				vartype := G.Pkgsrc.VariableType(varname)
 				if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
@@ -1178,7 +1178,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 			ck.checkCompareVarStr(varname, op, value)
 		} else if len(varmods) == 1 {
 			if m, _, _ := varmods[0].MatchMatch(); m && value != "" {
-				ck.CheckVartype(varname, opUseMatch, value, "")
+				ck.checkVartype(varname, opUseMatch, value, "")
 			}
 		}
 	}
@@ -1196,7 +1196,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 }
 
 func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
-	ck.CheckVartype(varname, opUseCompare, value, "")
+	ck.checkVartype(varname, opUseCompare, value, "")
 
 	if varname == "PKGSRC_COMPILER" {
 		ck.MkLine.Warnf("Use ${PKGSRC_COMPILER:%s%s} instead of the %s operator.", ifelseStr(op == "==", "M", "N"), value, op)
