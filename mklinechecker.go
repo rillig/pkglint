@@ -903,6 +903,8 @@ func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time vucT
 	}
 }
 
+// checkVarassignVaruseShell is very similar to checkVarassignVaruse, they just differ
+// in the way they determine isWordPart.
 func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
 	if trace.Tracing {
 		defer trace.Call(vartype, time)()
@@ -934,7 +936,7 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 	varname := mkline.Varname()
 	value := mkline.Value()
 
-	if contains(value, "/etc/rc.d") {
+	if contains(value, "/etc/rc.d") && mkline.Varname() != "RPMIGNOREPATH" {
 		mkline.Warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
