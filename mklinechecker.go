@@ -845,6 +845,8 @@ func (ck MkLineChecker) checkVarassignUnused() {
 	}
 }
 
+// checkVarassignVaruse checks that in a variable assignment, each variables used on either side
+// of the assignment has the correct data type and quoting.
 func (ck MkLineChecker) checkVarassignVaruse() {
 	if trace.Tracing {
 		defer trace.Call()()
@@ -862,6 +864,11 @@ func (ck MkLineChecker) checkVarassignVaruse() {
 	if op == opAssignShell {
 		vartype = shellcommandsContextType
 	}
+
+	ck.checkTextVarUse(
+		ck.MkLine.Varname(),
+		&Vartype{lkNone, BtVariableName, []ACLEntry{{"*", aclpAll}}, false},
+		vucTimeParse)
 
 	if vartype != nil && vartype.IsShell() {
 		ck.checkVarassignVaruseShell(vartype, time)

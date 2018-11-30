@@ -401,17 +401,29 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 		"WARN: buildlink3.mk:3: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:3: The list variable LICENSE should not be embedded in a word.",
+
+		"WARN: buildlink3.mk:8: LICENSE should not be evaluated at load time.",
+		"WARN: buildlink3.mk:8: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
+		"WARN: buildlink3.mk:8: The list variable LICENSE should not be embedded in a word.",
 		"WARN: buildlink3.mk:8: LICENSE should not be evaluated indirectly at load time.",
 		"WARN: buildlink3.mk:8: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:8: The list variable LICENSE should not be embedded in a word.",
+
+		"WARN: buildlink3.mk:9: LICENSE should not be evaluated at load time.",
+		"WARN: buildlink3.mk:9: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
+		"WARN: buildlink3.mk:9: The list variable LICENSE should not be embedded in a word.",
 		"WARN: buildlink3.mk:9: LICENSE should not be evaluated indirectly at load time.",
 		"WARN: buildlink3.mk:9: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:9: The list variable LICENSE should not be embedded in a word.",
+
 		"WARN: buildlink3.mk:13: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:13: The list variable LICENSE should not be embedded in a word.",
+
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).")
 }
 
