@@ -368,7 +368,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			cv.Warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtDependency, cv.Op, pattern, cv.MkComment, cv.Guessed)
+		MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtDependency, cv.Op, pattern, cv.MkComment, cv.Guessed)
 		return
 	}
 
@@ -439,7 +439,7 @@ func (cv *VartypeCheck) Enum(vmap map[string]bool, basicType *BasicType) {
 }
 
 func (cv *VartypeCheck) FetchURL() {
-	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 
 	for siteURL, siteName := range G.Pkgsrc.MasterSiteURLToVar {
 		if hasPrefix(cv.Value, siteURL) {
@@ -520,7 +520,7 @@ func (cv *VartypeCheck) GccReqd() {
 }
 
 func (cv *VartypeCheck) Homepage() {
-	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 
 	if m, wrong, sitename, subdir := match3(cv.Value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`); m {
 		baseURL := G.Pkgsrc.MasterSiteVarToURL[sitename]
@@ -966,7 +966,7 @@ func (cv *VartypeCheck) SedCommands() {
 						"",
 						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-				MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtSedCommand, cv.Op, tokens[i], cv.MkComment, cv.Guessed)
+				MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtSedCommand, cv.Op, tokens[i], cv.MkComment, cv.Guessed)
 			} else {
 				cv.Errorf("The -e option to sed requires an argument.")
 			}
@@ -1136,7 +1136,7 @@ func (cv *VartypeCheck) WrapperTransform() {
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {
-	MkLineChecker{cv.MkLine}.CheckVartypePrimitive(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
 }
 
 // WrksrcSubdirectory checks a directory relative to ${WRKSRC},

@@ -960,16 +960,19 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 
 	if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
 		if m, revVarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
-			mkline.Warnf("%s should not be used in %s as it includes the PKGREVISION. Please use %[1]s_NOREV instead.", revVarname, varname)
+			mkline.Warnf("%s should not be used in %s as it includes the PKGREVISION. "+
+				"Please use %[1]s_NOREV instead.", revVarname, varname)
 		}
 	}
 
 	if hasPrefix(varname, "SITES_") {
 		mkline.Warnf("SITES_* is deprecated. Please use SITES.* instead.")
+		// No autofix since it doesn't occur anymore.
 	}
 
 	if varname == "PKG_SKIP_REASON" && G.Mk.indentation.DependsOn("OPSYS") {
-		mkline.Notef("Consider defining NOT_FOR_PLATFORM instead of setting PKG_SKIP_REASON depending on ${OPSYS}.")
+		mkline.Notef("Consider defining NOT_FOR_PLATFORM instead of " +
+			"setting PKG_SKIP_REASON depending on ${OPSYS}.")
 	}
 }
 
@@ -1019,6 +1022,8 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 	vartype := G.Pkgsrc.VariableType(varname)
 
 	if op == opAssignAppend {
+		// XXX: MayBeAppendedTo also depends on the current file, see checkVarusePermissions.
+		// These checks may be combined.
 		if vartype != nil && !vartype.MayBeAppendedTo() {
 			mkline.Warnf("The \"+=\" operator should only be used with lists, not with %s.", varname)
 		}
@@ -1036,29 +1041,29 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 		}
 
 	case vartype.kindOfList == lkNone:
-		ck.CheckVartypePrimitive(varname, vartype.basicType, op, value, comment, vartype.guessed)
+		ck.CheckVartypeBasic(varname, vartype.basicType, op, value, comment, vartype.guessed)
 
 	case value == "":
 		break
 
 	case vartype.kindOfList == lkSpace:
 		for _, word := range fields(value) {
-			ck.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
+			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
 
 	case vartype.kindOfList == lkShell:
 		words, _ := splitIntoMkWords(mkline.Line, value)
 		for _, word := range words {
-			ck.CheckVartypePrimitive(varname, vartype.basicType, op, word, comment, vartype.guessed)
+			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}
 	}
 }
 
-// CheckVartypePrimitive checks a single list element of the given type.
+// CheckVartypeBasic checks a single list element of the given type.
 //
 // For some variables (like `BuildlinkDepth`), `op` influences the valid values.
 // The `comment` parameter comes from a variable assignment, when a part of the line is commented out.
-func (ck MkLineChecker) CheckVartypePrimitive(varname string, checker *BasicType, op MkOperator, value, comment string, guessed bool) {
+func (ck MkLineChecker) CheckVartypeBasic(varname string, checker *BasicType, op MkOperator, value, comment string, guessed bool) {
 	if trace.Tracing {
 		defer trace.Call(varname, checker.name, op, value, comment, guessed)()
 	}
