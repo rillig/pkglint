@@ -944,8 +944,8 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 			"with \"none\".  It is this meaning that should be described.")
 	}
 
-	if m, revvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
-		if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
+	if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
+		if m, revvarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
 			mkline.Warnf("%s should not be used in %s, as it includes the PKGREVISION. Please use %s_NOREV instead.", revvarname, varname, revvarname)
 		}
 	}
