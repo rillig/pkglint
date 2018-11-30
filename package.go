@@ -40,7 +40,7 @@ func NewPackage(dir string) *Package {
 		panic(fmt.Sprintf("Package directory %q must be two subdirectories below the pkgsrc root %q.", dir, G.Pkgsrc.File(".")))
 	}
 
-	pkg := &Package{
+	pkg := Package{
 		dir:                   dir,
 		Pkgpath:               pkgpath,
 		Pkgdir:                ".",
@@ -64,7 +64,7 @@ func NewPackage(dir string) *Package {
 	pkg.vars.Fallback("PGSQL_VERSION", "95")
 	pkg.vars.Fallback(".CURDIR", ".") // FIXME: In reality, this is an absolute pathname.
 
-	return pkg
+	return &pkg
 }
 
 // File returns the (possibly absolute) path to relativeFileName,

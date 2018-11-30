@@ -125,14 +125,14 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 }
 
 func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
-	fresh := &Tool{name, varname, mustUseVarForm, validity}
+	fresh := Tool{name, varname, mustUseVarForm, validity}
 
 	tool := tr.byName[name]
 	if tool == nil {
-		tool = fresh
+		tool = &fresh
 		tr.byName[name] = tool
 	} else {
-		tr.merge(tool, fresh)
+		tr.merge(tool, &fresh)
 	}
 
 	if tr.fallback != nil {

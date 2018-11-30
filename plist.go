@@ -27,7 +27,7 @@ func ChecklinesPlist(lines Lines) {
 			"Meta packages also don't need a PLIST file.")
 	}
 
-	ck := &PlistChecker{
+	ck := PlistChecker{
 		make(map[string]*PlistLine),
 		make(map[string]*PlistLine),
 		"",

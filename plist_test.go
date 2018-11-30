@@ -131,7 +131,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
 		"lib/after.la",
 		"@exec echo \"after lib/after.la\"")
-	ck := &PlistChecker{nil, nil, "", Once{}}
+	ck := PlistChecker{nil, nil, "", Once{}}
 	plines := ck.NewLines(lines)
 
 	sorter1 := NewPlistLineSorter(plines)

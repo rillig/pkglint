@@ -1259,8 +1259,8 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		}
 
 		valueNovar := mkline.WithoutMakeVariables(effectiveValue)
-		vc := &VartypeCheck{mkline, mkline.Line, varname, op, effectiveValue, valueNovar, comment, false}
-		vt.checker(vc)
+		vc := VartypeCheck{mkline, mkline.Line, varname, op, effectiveValue, valueNovar, comment, false}
+		vt.checker(&vc)
 
 		vt.lineno++
 	}

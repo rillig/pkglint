@@ -45,7 +45,7 @@ type Pkgsrc struct {
 }
 
 func NewPkgsrc(dir string) *Pkgsrc {
-	src := &Pkgsrc{
+	src := Pkgsrc{
 		dir,
 		make(map[string]bool),
 		NewTools("Pkgsrc"),
@@ -62,9 +62,9 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		nil, // Only initialized when pkglint is run for a whole pkgsrc installation
 		nil}
 
-	addDefaultBuildDefs(src)
+	addDefaultBuildDefs(&src)
 
-	return src
+	return &src
 }
 
 func addDefaultBuildDefs(src *Pkgsrc) {
@@ -345,7 +345,7 @@ func (src *Pkgsrc) loadTools() {
 func (src *Pkgsrc) loadUntypedVars() {
 
 	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
-	unknownType := &Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
+	unknownType := Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
 
 	handleLine := func(mkline MkLine) {
 		if mkline.IsVarassign() {
@@ -363,7 +363,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 				if trace.Tracing {
 					trace.Stepf("Untyped variable %q in %s", varcanon, mkline)
 				}
-				src.vartypes[varcanon] = unknownType
+				src.vartypes[varcanon] = &unknownType
 			}
 		}
 	}

@@ -901,9 +901,9 @@ type Indentation struct {
 }
 
 func NewIndentation() *Indentation {
-	ind := &Indentation{}
+	ind := Indentation{}
 	ind.Push(nil, 0, "") // Dummy
-	return ind
+	return &ind
 }
 
 func (ind *Indentation) String() string {

@@ -160,7 +160,7 @@ type MkShSimpleCommand struct {
 }
 
 func NewStrCommand(cmd *MkShSimpleCommand) *StrCommand {
-	strcmd := &StrCommand{
+	strcmd := StrCommand{
 		make([]string, len(cmd.Assignments)),
 		"",
 		make([]string, len(cmd.Args))}
@@ -173,7 +173,7 @@ func NewStrCommand(cmd *MkShSimpleCommand) *StrCommand {
 	for i, arg := range cmd.Args {
 		strcmd.Args[i] = arg.MkText
 	}
-	return strcmd
+	return &strcmd
 }
 
 // StrCommand is structurally similar to MkShSimpleCommand, but all

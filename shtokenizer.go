@@ -7,8 +7,8 @@ type ShTokenizer struct {
 
 func NewShTokenizer(line Line, text string, emitWarnings bool) *ShTokenizer {
 	p := NewParser(line, text, emitWarnings)
-	mkp := &MkParser{p}
-	return &ShTokenizer{p, mkp}
+	mkp := MkParser{p}
+	return &ShTokenizer{p, &mkp}
 }
 
 // ShAtom parses a basic building block of a shell program.

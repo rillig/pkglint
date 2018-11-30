@@ -18,8 +18,8 @@ type Condition struct {
 }
 
 func Parse(licenses string) *Condition {
-	lexer := &licenseLexer{lexer: textproc.NewLexer(licenses)}
-	result := liyyNewParser().Parse(lexer)
+	lexer := licenseLexer{lexer: textproc.NewLexer(licenses)}
+	result := liyyNewParser().Parse(&lexer)
 	if result != 0 || !lexer.lexer.EOF() {
 		return nil
 	}

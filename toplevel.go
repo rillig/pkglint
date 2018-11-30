@@ -11,7 +11,7 @@ func CheckdirToplevel(dir string) {
 		defer trace.Call1(dir)()
 	}
 
-	ctx := &Toplevel{dir, "", nil}
+	ctx := Toplevel{dir, "", nil}
 	filename := dir + "/Makefile"
 
 	mklines := LoadMk(filename, NotEmpty|LogErrors)

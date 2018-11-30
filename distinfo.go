@@ -23,7 +23,7 @@ func ChecklinesDistinfo(lines Lines) {
 	}
 
 	distinfoIsCommitted := isCommitted(filename)
-	ck := &distinfoLinesChecker{
+	ck := distinfoLinesChecker{
 		lines, patchdir, distinfoIsCommitted,
 		make(map[string]bool), "", nil, unknown, nil}
 	ck.checkLines(lines)

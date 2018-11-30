@@ -29,27 +29,27 @@ func NewOptions() *Options {
 //  warnings.AddFlagVar("extra", &extra, false, "Print extra warnings")
 func (o *Options) AddFlagGroup(shortName rune, longName, argsName, description string) *FlagGroup {
 	grp := new(FlagGroup)
-	opt := &option{shortName, longName, argsName, description, grp}
-	o.options = append(o.options, opt)
+	opt := option{shortName, longName, argsName, description, grp}
+	o.options = append(o.options, &opt)
 	return grp
 }
 
 func (o *Options) AddFlagVar(shortName rune, longName string, pflag *bool, defval bool, description string) {
 	*pflag = defval
-	opt := &option{shortName, longName, "", description, pflag}
-	o.options = append(o.options, opt)
+	opt := option{shortName, longName, "", description, pflag}
+	o.options = append(o.options, &opt)
 }
 
 func (o *Options) AddStrVar(shortName rune, longName string, pstr *string, defval string, description string) {
 	*pstr = defval
-	opt := &option{shortName, longName, "", description, pstr}
-	o.options = append(o.options, opt)
+	opt := option{shortName, longName, "", description, pstr}
+	o.options = append(o.options, &opt)
 }
 
 func (o *Options) AddStrList(shortName rune, longName string, plist *[]string, description string) {
 	*plist = []string{}
-	opt := &option{shortName, longName, "", description, plist}
-	o.options = append(o.options, opt)
+	opt := option{shortName, longName, "", description, plist}
+	o.options = append(o.options, &opt)
 }
 
 // Parse extracts the command line options from the given arguments.
@@ -303,8 +303,8 @@ type groupFlag struct {
 }
 
 func (fg *FlagGroup) AddFlagVar(name string, flag *bool, defval bool, description string) {
-	opt := &groupFlag{name, flag, description}
-	fg.flags = append(fg.flags, opt)
+	opt := groupFlag{name, flag, description}
+	fg.flags = append(fg.flags, &opt)
 	*flag = defval
 }
 

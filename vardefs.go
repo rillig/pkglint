@@ -23,13 +23,13 @@ func (src *Pkgsrc) InitVartypes() {
 		m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
 		varbase, varparam := m[1], m[2]
 
-		vartype := &Vartype{kindOfList, checker, parseACLEntries(varname, aclEntries), false}
+		vartype := Vartype{kindOfList, checker, parseACLEntries(varname, aclEntries), false}
 
 		if varparam == "" || varparam == "*" {
-			src.vartypes[varbase] = vartype
+			src.vartypes[varbase] = &vartype
 		}
 		if varparam == "*" || varparam == ".*" {
-			src.vartypes[varbase+".*"] = vartype
+			src.vartypes[varbase+".*"] = &vartype
 		}
 	}
 

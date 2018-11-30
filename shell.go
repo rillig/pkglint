@@ -171,8 +171,8 @@ func (shline *ShellLine) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting) b
 
 	if varname != "@" {
 		vucstate := quoting.ToVarUseContext()
-		vuc := &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, true}
-		MkLineChecker{shline.mkline}.CheckVaruse(varuse, vuc)
+		vuc := VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, true}
+		MkLineChecker{shline.mkline}.CheckVaruse(varuse, &vuc)
 	}
 	return true
 }
@@ -316,7 +316,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 		return
 	}
 
-	spc := &ShellProgramChecker{shline}
+	spc := ShellProgramChecker{shline}
 	spc.checkConditionalCd(program)
 
 	walker := NewMkShWalker()

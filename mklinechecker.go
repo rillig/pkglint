@@ -219,10 +219,10 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// running pkglint over the whole pkgsrc tree did not produce any different result
 		// whether guessed was true or false, so currently it is not worth investing
 		// any work.
-		forLoopType := &Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
-		forLoopContext := &VarUseContext{forLoopType, vucTimeParse, vucQuotFor, false}
+		forLoopType := Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
+		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, vucQuotFor, false}
 		for _, forLoopVar := range mkline.DetermineUsedVariables() {
-			ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, forLoopContext)
+			ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, &forLoopContext)
 		}
 	}
 }
@@ -897,8 +897,8 @@ func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time vucT
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `[\t ]$`)
 			spaceRight := i+1 >= len(tokens) || matches(tokens[i+1].Text, `^[\t ]`)
 			isWordPart := !(spaceLeft && spaceRight)
-			vuc := &VarUseContext{vartype, time, vucQuotPlain, isWordPart}
-			ck.CheckVaruse(token.Varuse, vuc)
+			vuc := VarUseContext{vartype, time, vucQuotPlain, isWordPart}
+			ck.CheckVaruse(token.Varuse, &vuc)
 		}
 	}
 }
@@ -925,8 +925,8 @@ func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime
 	for i, atom := range atoms {
 		if varuse := atom.VarUse(); varuse != nil {
 			isWordPart := isWordPart(atoms, i)
-			vuc := &VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), isWordPart}
-			ck.CheckVaruse(varuse, vuc)
+			vuc := VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), isWordPart}
+			ck.CheckVaruse(varuse, &vuc)
 		}
 	}
 }
@@ -1070,8 +1070,8 @@ func (ck MkLineChecker) CheckVartypeBasic(varname string, checker *BasicType, op
 
 	mkline := ck.MkLine
 	valueNoVar := mkline.WithoutMakeVariables(value)
-	ctx := &VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, guessed}
-	checker.checker(ctx)
+	ctx := VartypeCheck{mkline, mkline.Line, varname, op, value, valueNoVar, comment, guessed}
+	checker.checker(&ctx)
 }
 
 // checkText checks the given text (which is typically the right-hand side of a variable
@@ -1204,8 +1204,8 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 	checkVarUse := func(varuse *MkVarUse) {
 		var vartype *Vartype // TODO: Insert a better type guess here.
-		vuc := &VarUseContext{vartype, vucTimeParse, vucQuotPlain, false}
-		ck.CheckVaruse(varuse, vuc)
+		vuc := VarUseContext{vartype, vucTimeParse, vucQuotPlain, false}
+		ck.CheckVaruse(varuse, &vuc)
 	}
 
 	cond.Walk(&MkCondCallback{

@@ -56,8 +56,8 @@ func (s *Suite) Init(c *check.C) *Tester {
 }
 
 func (s *Suite) SetUpTest(c *check.C) {
-	t := &Tester{c: c}
-	s.Tester = t
+	t := Tester{c: c}
+	s.Tester = &t
 
 	G = NewPkglint()
 	G.Testing = true
