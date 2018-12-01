@@ -228,7 +228,7 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	t := s.Init(c)
 
 	unmodified := t.CreateFileLines("unmodified")
-	modTime := time.Unix(1136239445, 0)
+	modTime := time.Unix(1136239445, 0).UTC()
 
 	err := os.Chtimes(unmodified, modTime, modTime)
 	c.Check(err, check.IsNil)
@@ -237,7 +237,7 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	// Make sure that the file system has second precision and accuracy.
-	c.Check(st.ModTime(), check.DeepEquals, modTime)
+	c.Check(st.ModTime().UTC(), check.DeepEquals, modTime)
 
 	modified := t.CreateFileLines("modified")
 

@@ -194,7 +194,7 @@ func isLocallyModified(filename string) bool {
 
 			// According to http://cvsman.com/cvs-1.12.12/cvs_19.php, format both timestamps.
 			cvsModTime := fields[3]
-			fsModTime := st.ModTime().Format(time.ANSIC)
+			fsModTime := st.ModTime().UTC().Format(time.ANSIC)
 			if trace.Tracing {
 				trace.Stepf("cvs.time=%q fs.time=%q", cvsModTime, fsModTime)
 			}
