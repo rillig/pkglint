@@ -1,5 +1,7 @@
 package main
 
+import "netbsd.org/pkglint/textproc"
+
 // SubstContext records the state of a block of variable assignments
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
@@ -150,7 +152,7 @@ func (ctx *SubstContext) Varassign(mkline MkLine) {
 		ctx.dupBool(mkline, &ctx.curr.seenSed, varname, op, value)
 		ctx.curr.seenTransform = true
 
-		// TODO: Suggest to use SUBST_VARS instead of SUBST_SED as far as possible.
+		ctx.suggestSubstVars(mkline)
 
 	case "SUBST_VARS.*":
 		ctx.dupBool(mkline, &ctx.curr.seenVars, varname, op, value)
@@ -235,4 +237,54 @@ func (ctx *SubstContext) dupBool(mkline MkLine, flag *bool, varname string, op M
 		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", varname)
 	}
 	*flag = true
+}
+
+func (ctx *SubstContext) suggestSubstVars(mkline MkLine) {
+
+	tokens, _ := splitIntoShellTokens(mkline.Line, mkline.Value())
+	for _, token := range tokens {
+
+		parser := NewMkParser(nil, token, false)
+		lexer := parser.lexer
+		if !lexer.SkipByte('s') {
+			continue
+		}
+
+		separator := lexer.NextByteSet(textproc.XPrint) // Really any character works
+		if separator == -1 {
+			continue
+		}
+
+		if !lexer.SkipByte('@') {
+			continue
+		}
+
+		varname := parser.Varname()
+		if !lexer.SkipByte('@') || !lexer.SkipByte(byte(separator)) {
+			continue
+		}
+
+		varuse := parser.VarUse()
+		if varuse == nil || varuse.varname != varname {
+			continue
+		}
+
+		switch varuse.Mod() {
+		case "", ":Q":
+			break
+		default:
+			continue
+		}
+
+		if !lexer.SkipByte(byte(separator)) {
+			continue
+		}
+
+		mkline.Notef("The substitution command %q can be replaced with \"SUBST_VARS.%s+= %s\".", token, ctx.id, varname)
+		mkline.Explain(
+			"Replacing @VAR@ with ${VAR} is such a typical pattern that pkgsrc has built-in support for it,",
+			"requiring only the variable name instead of the full sed command.")
+	}
+
+	// TODO: Autofix
 }

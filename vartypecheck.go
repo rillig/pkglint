@@ -925,9 +925,6 @@ func (cv *VartypeCheck) Restricted() {
 	}
 }
 
-func (cv *VartypeCheck) SedCommand() {
-}
-
 func (cv *VartypeCheck) SedCommands() {
 	tokens, rest := splitIntoShellTokens(cv.Line, cv.Value)
 	if rest != "" {
@@ -965,7 +962,6 @@ func (cv *VartypeCheck) SedCommands() {
 						"",
 						"This way, short sed commands cannot be hidden at the end of a line.")
 				}
-				MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtSedCommand, cv.Op, tokens[i], cv.MkComment, cv.Guessed)
 			} else {
 				cv.Errorf("The -e option to sed requires an argument.")
 			}

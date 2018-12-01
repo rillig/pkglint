@@ -245,7 +245,6 @@ var (
 	BtRelativePkgDir         = &BasicType{"RelativePkgDir", (*VartypeCheck).RelativePkgDir}
 	BtRelativePkgPath        = &BasicType{"RelativePkgPath", (*VartypeCheck).RelativePkgPath}
 	BtRestricted             = &BasicType{"Restricted", (*VartypeCheck).Restricted}
-	BtSedCommand             = &BasicType{"SedCommand", (*VartypeCheck).SedCommand}
 	BtSedCommands            = &BasicType{"SedCommands", (*VartypeCheck).SedCommands}
 	BtShellCommand           = &BasicType{"ShellCommand", nil}
 	BtShellCommands          = &BasicType{"ShellCommands", nil}
