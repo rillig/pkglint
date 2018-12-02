@@ -1213,7 +1213,8 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
 
 			vartype := G.Pkgsrc.VariableType(varname)
 			if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
-				ck.MkLine.Notef("%s should be compared using == instead of matching against %q.", varname, ":"+modifier.Text)
+				ck.MkLine.Notef("%s should be compared using %s instead of matching against %q.",
+					varname, ifelseStr(positive, "==", "!="), ":"+modifier.Text)
 				G.Explain(
 					"This variable has a single value, not a list of values.",
 					"Therefore it feels strange to apply list operators like :M and :N onto it.",

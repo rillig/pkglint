@@ -591,7 +591,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Ncategory/package\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using != instead of matching against \":Ncategory/package\".",
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mone\".",
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mtwo\".")
 }
