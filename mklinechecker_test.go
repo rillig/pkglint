@@ -203,7 +203,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 }
 
 // The command line option -Wno-types can be used to suppress the type checks.
-// Suppressing it is rarely needed and comes from the time where this feature was introduced around TODO:20xx.
+// Suppressing it is rarely needed and comes from Feb 12 2005 when this feature was introduced.
 // Since then the type system has matured and proven effective.
 func (s *Suite) Test_MkLineChecker_checkVartype__skip(c *check.C) {
 	t := s.Init(c)
@@ -274,34 +274,22 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename:1: \"mailto:someone@example.org\" is not a valid URL.")
 
 	testCond(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
-		"WARN: filename:1: PKGSRC_RUN_TEST should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
+		"WARN: filename:1: PKGSRC_RUN_TEST should be matched "+
+			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
 	testCond(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
 	testCond(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
-		"WARN: filename:1: The empty() function takes a variable name as parameter, not a variable expression.")
+		"WARN: filename:1: The empty() function takes a variable name as parameter, "+
+			"not a variable expression.")
 
-	testCond(".if ${EMUL_PLATFORM} == \"linux-x386\"",
-		"WARN: filename:1: "+
-			"\"x386\" is not valid for the hardware architecture part of EMUL_PLATFORM. "+
-			"Use one of "+
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex "+
-			"dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb "+
-			"earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
-			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
-			"} instead.")
+	testCond(".if ${PKGSRC_COMPILER} == \"msvc\"",
+		"WARN: filename:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
+			"Use one of { ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc } instead.",
+		"WARN: filename:1: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
-	testCond(".if ${EMUL_PLATFORM:Mlinux-x386}",
-		"WARN: filename:1: "+
-			"The pattern \"x386\" cannot match any of { aarch64 aarch64eb alpha amd64 arc arm arm26 "+
-			"arm32 cobalt coldfire convex dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
-			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf "+
-			"earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 i386 i586 i686 ia64 m68000 m68k m88k "+
-			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 "+
-			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } "+
-			"for the hardware architecture part of EMUL_PLATFORM.",
-		"NOTE: filename:1: EMUL_PLATFORM should be compared using == instead of matching against \":Mlinux-x386\".")
+	testCond(".if ${PKG_LIBTOOL:Mlibtool}",
+		"NOTE: filename:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".")
 
 	testCond(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
 		"WARN: filename:1: "+
