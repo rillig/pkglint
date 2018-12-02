@@ -270,7 +270,7 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 "+
 			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } "+
 			"for the hardware architecture part of EMUL_PLATFORM.",
-		"NOTE: filename:1: EMUL_PLATFORM should be compared using == instead of the :M or :N modifier without wildcards.")
+		"NOTE: filename:1: EMUL_PLATFORM should be compared using == instead of matching against \":Mlinux-x386\".")
 
 	testCond(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
 		"WARN: filename:1: "+
@@ -286,7 +286,7 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 			"m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax "+
 			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
-		"NOTE: filename:1: MACHINE_ARCH should be compared using == instead of the :M or :N modifier without wildcards.")
+		"NOTE: filename:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
 	testCond(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"")
 }
@@ -518,22 +518,26 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpattern"))
 
+	// When the pattern contains placeholders, it cannot be converted to == or !=.
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpa*n"))
+
 	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "tl", "Mpattern"))
 
 	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Ncategory/package"))
 
+	// ${PKGPATH:None:Ntwo} is a short variant of ${PKGPATH} != "one" && ${PKGPATH} != "two",
+	// therefore no note is logged in this case.
 	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "None", "Ntwo"))
 
-	// Doesn't make sense since the patterns "one" and "two" don't overlap.
+	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
 	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mone", "Mtwo"))
 
-	// TODO: Be more specific in the diagnostics.
 	t.CheckOutputLines(
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.")
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Ncategory/package\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mone\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mtwo\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {

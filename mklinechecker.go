@@ -1201,15 +1201,14 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
 
 			vartype := G.Pkgsrc.VariableType(varname)
 			if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
-				ck.MkLine.Notef("%s should be compared using == instead of the :M or :N modifier without wildcards.", varname)
+				ck.MkLine.Notef("%s should be compared using == instead of matching against %q.", varname, ":"+modifier.Text)
 				G.Explain(
-					"This variable has a single value, not a list of values.  Therefore",
-					"it feels strange to apply list operators like :M and :N onto it.",
+					"This variable has a single value, not a list of values.",
+					"Therefore it feels strange to apply list operators like :M and :N onto it.",
 					"A more direct approach is to use the == and != operators.",
 					"",
-					"An entirely different case is when the pattern contains wildcards",
-					"like ^, *, $.  In such a case, using the :M or :N modifiers is",
-					"useful and preferred.")
+					"An entirely different case is when the pattern contains wildcards like ^, *, $.",
+					"In such a case, using the :M or :N modifiers is useful and preferred.")
 			}
 		}
 	}
