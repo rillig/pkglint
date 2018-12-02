@@ -540,8 +540,7 @@ func (va *VaralignBlock) processVarassign(mkline MkLine) {
 
 	continuation := false
 	if mkline.IsMultiline() {
-		// Interpreting the continuation marker as variable value
-		// is cheating but works well.
+		// Parsing the continuation marker as variable value is cheating but works well.
 		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
 		m, _, _, _, _, _, value, _, _ := MatchVarassign(text)
 		continuation = m && value == "\\"
@@ -627,14 +626,14 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	if trace.Tracing {
 		trace.Stepf("Indentation including whitespace is between %d and %d.",
 			minTotalWidth, maxTotalWidth)
-		trace.Stepf("Minimum required indentation is %d + 1.",
-			minVarnameOpWidth)
+		trace.Stepf("Minimum required indentation is %d + 1.", minVarnameOpWidth)
 		if outlier != 0 {
 			trace.Stepf("The outlier is at indentation %d.", outlier)
 		}
 	}
 
 	if minTotalWidth > minVarnameOpWidth && minTotalWidth == maxTotalWidth && minTotalWidth%8 == 0 {
+		// The whole paragraph is already indented to the same width.
 		return minTotalWidth
 	}
 
@@ -689,15 +688,17 @@ func (va *VaralignBlock) realignInitialLine(mkline MkLine, varnameOp string, old
 
 	if wrongColumn {
 		fix.Explain(
-			"Normally, all variable values in a block should start at the same",
-			"column.  There are some exceptions to this rule:",
+			"Normally, all variable values in a block should start at the same column.",
+			"This provides orientation, especially for sequences",
+			"of variables that often appear in the same order.",
+			"For these it suffices to look at the variable values only.",
 			"",
-			"Definitions for long variable names may be indented with a single",
-			"space instead of tabs, but only if they appear in a block that is",
-			"otherwise indented using tabs.",
+			"There are some exceptions to this rule:",
 			"",
-			"Variable definitions that span multiple lines are not checked for",
-			"alignment at all.",
+			"Definitions for long variable names may be indented with a single space instead of tabs,",
+			"but only if they appear in a block that is otherwise indented using tabs.",
+			"",
+			"Variable definitions that span multiple lines are not checked for alignment at all.",
 			"",
 			"When the block contains something else than variable definitions",
 			"and directives like .if or .for, it is not checked at all.")

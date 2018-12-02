@@ -487,6 +487,7 @@ func (src *Pkgsrc) InitVartypes() {
 	// some other variables, sorted alphabetically
 
 	acl(".CURDIR", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
+	acl(".IMPSRC", lkShell, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl(".TARGET", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl("@", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl("ALL_ENV", lkShell, BtShellWord, "")

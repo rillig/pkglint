@@ -40,6 +40,8 @@ func (s *Suite) Test_MkLines_Check__autofix_directive_indentation(c *check.C) {
 func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
+	t.SetupTool("cc", "CC", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
@@ -48,13 +50,8 @@ func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: .TARGET is always defined.
-	// FIXME: .IMPSRC is always defined.
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Unusual target \"echo\".",
-		"WARN: Makefile:4: Unknown shell command \"cc\".",
-		"WARN: Makefile:4: .TARGET is used but not defined.",
-		"WARN: Makefile:4: .IMPSRC is used but not defined.")
+		"WARN: Makefile:3: Unusual target \"echo\".")
 }
 
 func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
