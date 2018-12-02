@@ -509,6 +509,33 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_com
 		"WARN: security/openssl/Makefile:2: Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	mkline := t.NewMkLine("module.mk", 123, ".if ${PKGPATH} == \"category/package\"")
+	ck := MkLineChecker{mkline}
+
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpattern"))
+
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "tl", "Mpattern"))
+
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Ncategory/package"))
+
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "None", "Ntwo"))
+
+	// Doesn't make sense since the patterns "one" and "two" don't overlap.
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mone", "Mtwo"))
+
+	// TODO: Be more specific in the diagnostics.
+	t.CheckOutputLines(
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of the :M or :N modifier without wildcards.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
 	t := s.Init(c)
 
