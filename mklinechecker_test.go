@@ -572,6 +572,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	mkline := t.NewMkLine("module.mk", 123, ".if ${PKGPATH} == \"category/package\"")
 	ck := MkLineChecker{mkline}
 
+	// FIXME: checkDirectiveCondEmpty cannot know whether it is empty(...) or !empty(...).
+	// It must know that to generate the proper diagnostics.
+
 	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpattern"))
 
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
