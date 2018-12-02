@@ -270,8 +270,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 			}
 
 		case "PLIST_VARS":
-			ids := mkline.Fields()
-			for _, unresolvedID := range ids {
+			for _, unresolvedID := range mkline.Fields() {
 				id := resolveVariableRefs(unresolvedID)
 				if trace.Tracing {
 					trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
@@ -308,8 +307,7 @@ func (mklines *MkLinesImpl) collectPlistVars() {
 		if mkline.IsVarassign() {
 			switch mkline.Varcanon() {
 			case "PLIST_VARS":
-				ids := mkline.Fields()
-				for _, unresolvedID := range ids {
+				for _, unresolvedID := range mkline.Fields() {
 					id := resolveVariableRefs(unresolvedID)
 					if containsVarRef(id) {
 						mklines.plistVarSkip = true
