@@ -1297,7 +1297,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 	}
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist {
-			mkline.Errorf("%q does not exist.", resolvedPath)
+			mkline.Errorf("Relative path %q does not exist.", resolvedPath)
 		}
 		return
 	}

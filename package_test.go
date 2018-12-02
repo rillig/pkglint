@@ -618,7 +618,7 @@ func (s *Suite) Test_Package__include_after_exists(c *check.C) {
 		"WARN: distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
 		"ERROR: Makefile: Each package must define its LICENSE.",
 		"WARN: Makefile: No COMMENT given.",
-		"ERROR: Makefile:4: \"options.mk\" does not exist.")
+		"ERROR: Makefile:4: Relative path \"options.mk\" does not exist.")
 }
 
 // See https://github.com/rillig/pkglint/issues/1
