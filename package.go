@@ -217,7 +217,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 
 		var includedFile, incDir, incBase string
 		if mkline.IsInclude() {
-			includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile(), true))
+			includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
 			if containsVarRef(includedFile) {
 				if !contains(filename, "/mk/") {
 					mkline.Notef("Skipping include file %q. This may result in false warnings.", includedFile)

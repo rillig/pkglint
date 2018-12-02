@@ -816,8 +816,9 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t.SetupOption("both", "")
 	t.SetupOption("only-added", "")
 	t.SetupOption("only-defined", "")
+	t.CreateFileLines("mk/bsd.options.mk")
 
-	mklines := t.SetupFileMkLines("options.mk",
+	mklines := t.SetupFileMkLines("category/package/options.mk",
 		MkRcsID,
 		"",
 		"PKG_OPTIONS_VAR=        PKG_OPTIONS.pkg",
@@ -839,9 +840,8 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: ~/options.mk:7: \"mk/bsd.options.mk\" does not exist.", // Not relevant for this test.
-		"WARN: ~/options.mk:9: \"only-added\" is added to PLIST_VARS, but PLIST.only-added is not defined in this file.",
-		"WARN: ~/options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
+		"WARN: ~/category/package/options.mk:9: \"only-added\" is added to PLIST_VARS, but PLIST.only-added is not defined in this file.",
+		"WARN: ~/category/package/options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
 }
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {

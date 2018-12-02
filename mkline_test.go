@@ -916,7 +916,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	mkline := mklines.mklines[0]
 
 	checkResolve := func(before string, after string) {
-		c.Check(mkline.ResolveVarsInRelativePath(before, false), equals, after)
+		c.Check(mkline.ResolveVarsInRelativePath(before), equals, after)
 	}
 
 	checkResolve("", ".")

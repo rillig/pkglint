@@ -1257,7 +1257,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 
 	mkline := ck.MkLine
 	ck.CheckRelativePath(pkgdir, true)
-	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, false)
+	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir)
 
 	// XXX: Is the leading "./" realistic?
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
@@ -1286,7 +1286,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
-	resolvedPath := mkline.ResolveVarsInRelativePath(relativePath, true)
+	resolvedPath := mkline.ResolveVarsInRelativePath(relativePath)
 	if containsVarRef(resolvedPath) {
 		return
 	}

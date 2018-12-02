@@ -520,7 +520,7 @@ func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
 	return valueNovar
 }
 
-func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustDepth bool) string {
+func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string {
 
 	var basedir string
 	if G.Pkg != nil {
@@ -562,13 +562,6 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string, adjustD
 		// There is already G.Pkg.Value, maybe that can be used here.
 		tmp = strings.Replace(tmp, "${FILESDIR}", G.Pkg.Filesdir, -1)
 		tmp = strings.Replace(tmp, "${PKGDIR}", G.Pkg.Pkgdir, -1)
-	}
-
-	// TODO: What is this good for, and in which cases does it make a difference?
-	if adjustDepth {
-		if hasPrefix(tmp, "../../") && !hasPrefix(tmp[6:], ".") {
-			tmp = pkgsrcdir + "/" + tmp[6:]
-		}
 	}
 
 	tmp = cleanpath(tmp)

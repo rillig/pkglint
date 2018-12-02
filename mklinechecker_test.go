@@ -77,7 +77,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
 	MkLineChecker{mkline}.checkInclude()
 
 	t.CheckOutputLines(
-		"ERROR: ~/Makefile:2: \"other/package/Makefile\" does not exist.",
+		"ERROR: ~/Makefile:2: \"../../other/package/Makefile\" does not exist.",
 		"ERROR: ~/Makefile:2: Other Makefiles must not be included directly.")
 }
 
@@ -473,7 +473,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 
 	t.CreateFileLines("other/package/Makefile")
 	// Must be in the filesystem because of directory references.
-	mklines := t.SetupFileMkLines("Makefile",
+	mklines := t.SetupFileMkLines("category/package/Makefile",
 		"# dummy")
 	ck := MkLineChecker{mklines.mklines[0]}
 
@@ -483,10 +483,10 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 
 	// FIXME: The diagnostics for does-not-exist are redundant.
 	t.CheckOutputLines(
-		"ERROR: ~/Makefile:1: \"../pkgbase\" does not exist.",
-		"WARN: ~/Makefile:1: \"../pkgbase\" is not a valid relative package directory.",
-		"ERROR: ~/Makefile:1: \"other/does-not-exist\" does not exist.",
-		"ERROR: ~/Makefile:1: There is no package in \"other/does-not-exist\".")
+		"ERROR: ~/category/package/Makefile:1: \"../pkgbase\" does not exist.",
+		"WARN: ~/category/package/Makefile:1: \"../pkgbase\" is not a valid relative package directory.",
+		"ERROR: ~/category/package/Makefile:1: \"../../other/does-not-exist\" does not exist.",
+		"ERROR: ~/category/package/Makefile:1: There is no package in \"other/does-not-exist\".")
 }
 
 // PR pkg/46570, item 2
