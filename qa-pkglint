@@ -57,6 +57,7 @@ analyze() {
 netbsd() {
   echo "=> Copying files to NetBSD VM"
   rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync \
+    --chmod=F0664 \
     --cvs-exclude \
     --exclude="qa-pkglint" \
     --exclude="**.[01]" \
