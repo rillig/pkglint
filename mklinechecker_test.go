@@ -405,11 +405,10 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 
 	mklines.Check()
 
-	// Evaluating PKG_SYSCONFDIR.* at load time is probably ok, though
-	// pkglint cannot prove anything here.
+	// Evaluating PKG_SYSCONFDIR.* at load time is probably ok,
+	// though pkglint cannot prove anything here.
 	//
-	// Evaluating .CURDIR at load time is ok since it is defined from
-	// the beginning.
+	// Evaluating .CURDIR at load time is definitely ok since it is defined from the beginning.
 	t.CheckOutputLines(
 		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
 }
@@ -457,7 +456,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.
 		"WARN: any.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
 }
 
-func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
+func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -472,14 +471,22 @@ func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 	t := s.Init(c)
 
+	t.CreateFileLines("other/package/Makefile")
+	// Must be in the filesystem because of directory references.
 	mklines := t.SetupFileMkLines("Makefile",
 		"# dummy")
+	ck := MkLineChecker{mklines.mklines[0]}
 
-	MkLineChecker{mklines.mklines[0]}.CheckRelativePkgdir("../pkgbase")
+	ck.CheckRelativePkgdir("../pkgbase")
+	ck.CheckRelativePkgdir("../../other/package")
+	ck.CheckRelativePkgdir("../../other/does-not-exist")
 
+	// FIXME: The diagnostics for does-not-exist are redundant.
 	t.CheckOutputLines(
 		"ERROR: ~/Makefile:1: \"../pkgbase\" does not exist.",
-		"WARN: ~/Makefile:1: \"../pkgbase\" is not a valid relative package directory.")
+		"WARN: ~/Makefile:1: \"../pkgbase\" is not a valid relative package directory.",
+		"ERROR: ~/Makefile:1: \"other/does-not-exist\" does not exist.",
+		"ERROR: ~/Makefile:1: There is no package in \"other/does-not-exist\".")
 }
 
 // PR pkg/46570, item 2
