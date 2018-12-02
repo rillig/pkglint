@@ -203,8 +203,8 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 
 			if matches(forvar, `^[_a-z][_a-z0-9]*$`) {
 				// Fine.
-			} else if strings.IndexFunc(forvar, func(r rune) bool { return 'A' <= r && r <= 'Z' }) != -1 {
-				mkline.Warnf(".for variable names should not contain uppercase letters.")
+			} else if matches(forvar, `^[A-Z_a-z][0-9A-Z_a-z]*$`) {
+				mkline.Warnf("The variable name %q in the .for loop should not contain uppercase letters.", forvar)
 			} else {
 				mkline.Errorf("Invalid variable name %q.", forvar)
 			}
@@ -1154,11 +1154,23 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	checkCompareVarStr := func(varuse *MkVarUse, op string, value string) {
 		varname := varuse.varname
 		varmods := varuse.modifiers
-		if len(varmods) == 0 {
+		switch len(varmods) {
+		case 0:
 			ck.checkCompareVarStr(varname, op, value)
-		} else if len(varmods) == 1 {
+
+		case 1:
 			if m, _, _ := varmods[0].MatchMatch(); m && value != "" {
 				ck.checkVartype(varname, opUseMatch, value, "")
+			}
+
+		default:
+			// This case covers ${VAR:Mfilter:O:u} or similar uses in conditions.
+			// To check these properly, pkglint first needs to know the most common modifiers and how they interact.
+			// As of November 2018, the modifiers are not modeled.
+			// The following tracing statement makes it easy to discover these cases,
+			// in order to decide whether checking them is worthwhile.
+			if trace.Tracing {
+				trace.Stepf("checkCompareVarStr ${%s%s} %s %s", varuse.varname, varuse.Mod(), op, value)
 			}
 		}
 	}
@@ -1227,6 +1239,17 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 	}
 }
 
+// CheckRelativePkgdir checks a reference from one pkgsrc package to another.
+// These references should always have the form ../../category/package.
+//
+// When used in DEPENDS or similar variables, these directories could theoretically
+// also be relative to the pkgsrc root, which would save a few keystrokes.
+// This, however, is not implemented in pkgsrc and suggestions regarding this topic
+// have not been made in the last two decades on the public mailing lists.
+// While being a bit redundant, the current scheme works well.
+//
+// When used in .include directives, the relative package directories must be written
+// with the leading ../.. anyway, so the benefit might not be too big at all.
 func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	if trace.Tracing {
 		defer trace.Call1(pkgdir)()
@@ -1236,6 +1259,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	ck.CheckRelativePath(pkgdir, true)
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, false)
 
+	// XXX: Is the leading "./" realistic?
 	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
 		if !fileExists(G.Pkgsrc.File(otherpkgpath + "/Makefile")) {
 			mkline.Errorf("There is no package in %q.", otherpkgpath)
@@ -1250,6 +1274,8 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	}
 }
 
+// CheckRelativePath checks a relative path that leads to the directory of another package
+// or to a subdirectory thereof or a file within there.
 func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 	if trace.Tracing {
 		defer trace.Call(relativePath, mustExist)()
@@ -1287,5 +1313,6 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 		// For category Makefiles.
 	default:
 		mkline.Warnf("Invalid relative path %q.", relativePath)
+		// TODO: Explain this warning.
 	}
 }

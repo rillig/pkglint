@@ -23,14 +23,17 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 	t.CreateFileLines("mk/bsd.prefs.mk")
 	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
 		".include \"../../mk/bsd.prefs.mk\"")
-	// If the buildlink3.mk file is not actually created, resolving the
+	// If the buildlink3.mk file doesn't actually exist, resolving the
 	// relative path fails since that depends on the actual file system,
 	// not on syntactical paths; see os.Stat in CheckRelativePath.
+	//
+	// TODO: Refactor relpath to be independent of a filesystem.
 
 	MkLineChecker{mklines.mklines[0]}.Check()
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/buildlink3.mk:1: For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+		"NOTE: ~/category/package/buildlink3.mk:1: For efficiency reasons, " +
+			"please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
@@ -53,12 +56,16 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/filename.mk:3: ../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
+		"ERROR: ~/category/package/filename.mk:3: "+
+			"../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
 			"Include \"../../mk/x11.buildlink3.mk\" instead.",
-		"ERROR: ~/category/package/filename.mk:4: ../../graphics/jpeg/buildlink3.mk must not be included directly. "+
+		"ERROR: ~/category/package/filename.mk:4: "+
+			"../../graphics/jpeg/buildlink3.mk must not be included directly. "+
 			"Include \"../../mk/jpeg.buildlink3.mk\" instead.",
-		"WARN: ~/category/package/filename.mk:5: Please write \"USE_TOOLS+= intltool\" instead of this line.",
-		"ERROR: ~/category/package/filename.mk:6: ../../devel/intltool/builtin.mk must not be included directly. "+
+		"WARN: ~/category/package/filename.mk:5: "+
+			"Please write \"USE_TOOLS+= intltool\" instead of this line.",
+		"ERROR: ~/category/package/filename.mk:6: "+
+			"../../devel/intltool/builtin.mk must not be included directly. "+
 			"Include \"../../devel/intltool/buildlink3.mk\" instead.")
 }
 
@@ -96,26 +103,50 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 		"",
 		".for var in a b c",
 		".endfor",
-		".undef var",
-		"",
-		".for VAR in a b c",
-		".endfor",
-		"",
-		".for $ in a b c",
-		".endfor")
+		".undef var")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"ERROR: category/package/filename.mk:3: \".for\" requires arguments.",
 		"ERROR: category/package/filename.mk:6: \".if\" requires arguments.",
-		"ERROR: category/package/filename.mk:7: \".else\" does not take arguments. If you meant \"else if\", use \".elif\".",
+		"ERROR: category/package/filename.mk:7: \".else\" does not take arguments. "+
+			"If you meant \"else if\", use \".elif\".",
 		"ERROR: category/package/filename.mk:8: \".endif\" does not take arguments.",
-		"WARN: category/package/filename.mk:10: The \".ifdef\" directive is deprecated. Please use \".if defined(FNAME_MK)\" instead.",
-		"WARN: category/package/filename.mk:12: The \".ifndef\" directive is deprecated. Please use \".if !defined(FNAME_MK)\" instead.",
-		"NOTE: category/package/filename.mk:17: Using \".undef\" after a \".for\" loop is unnecessary.",
-		"WARN: category/package/filename.mk:19: .for variable names should not contain uppercase letters.",
-		"ERROR: category/package/filename.mk:22: Invalid variable name \"$\".")
+		"WARN: category/package/filename.mk:10: The \".ifdef\" directive is deprecated. "+
+			"Please use \".if defined(FNAME_MK)\" instead.",
+		"WARN: category/package/filename.mk:12: The \".ifndef\" directive is deprecated. "+
+			"Please use \".if !defined(FNAME_MK)\" instead.",
+		"NOTE: category/package/filename.mk:17: Using \".undef\" after a \".for\" loop is unnecessary.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		".for VAR in a b c", // Should be lowercase.
+		".endfor",
+		"",
+		".for _var_ in a b c", // Should be written without underscores.
+		".endfor",
+		"",
+		".for .var. in a b c", // Should be written without dots.
+		".endfor",
+		"",
+		".for ${VAR} in a b c", // The variable name really must be an identifier.
+		".endfor")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: The variable name \"VAR\" in the .for loop should not contain uppercase letters.",
+		"WARN: filename.mk:6: Variable names starting with an underscore (_var_) are reserved for internal pkgsrc use.",
+		"ERROR: filename.mk:9: Invalid variable name \".var.\".",
+		"ERROR: filename.mk:12: Invalid variable name \"${VAR}\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
@@ -145,10 +176,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	t.SetupCommandLine("-Wtypes")
 	t.SetupVartypes()
 
-	vartype1 := G.Pkgsrc.vartypes["COMMENT"]
-	c.Assert(vartype1, check.NotNil)
-	c.Check(vartype1.guessed, equals, false)
-
+	// Since COMMENT is defined in vardefs.go its type is certain instead of guessed.
 	vartype := G.Pkgsrc.VariableType("COMMENT")
 
 	c.Assert(vartype, check.NotNil)
@@ -174,6 +202,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// The command line option -Wno-types can be used to suppress the type checks.
+// Suppressing it is rarely needed and comes from the time where this feature was introduced around TODO:20xx.
+// Since then the type system has matured and proven effective.
 func (s *Suite) Test_MkLineChecker_checkVartype__skip(c *check.C) {
 	t := s.Init(c)
 
@@ -217,7 +248,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wtypes")
