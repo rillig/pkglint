@@ -141,7 +141,7 @@ func (src *Pkgsrc) InitVartypes() {
 		if len(values) > 0 {
 			joined := keysJoined(values)
 			if trace.Tracing {
-				trace.Stepf("Enum from %s in: %s", strings.Join(varcanons, " "), filename, joined)
+				trace.Stepf("Enum from %s in %s with values: %s", strings.Join(varcanons, " "), filename, joined)
 			}
 			return enum(joined)
 		}
