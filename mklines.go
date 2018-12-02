@@ -10,16 +10,19 @@ type MkLines = *MkLinesImpl
 type MkLinesImpl struct {
 	mklines       []MkLine
 	lines         Lines
-	forVars       map[string]bool // The variables currently used in .for loops
-	target        string          // Current make(1) target
-	vars          Scope
+	target        string            // Current make(1) target; only available during checkAll
+	vars          Scope             //
 	buildDefs     map[string]bool   // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
 	plistVarAdded map[string]MkLine // Identifiers that are added to PLIST_VARS.
 	plistVarSet   map[string]MkLine // Identifiers for which PLIST.${id} is defined.
 	plistVarSkip  bool              // True if any of the PLIST_VARS identifiers refers to a variable.
 	Tools         *Tools            // Tools defined in file scope.
 	indentation   *Indentation      // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
+	forVars       map[string]bool   // The variables currently used in .for loops
 	Once
+
+	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
+	// TODO: Describe where each of the above fields is valid.
 }
 
 func NewMkLines(lines Lines) MkLines {
@@ -34,7 +37,6 @@ func NewMkLines(lines Lines) MkLines {
 	return &MkLinesImpl{
 		mklines,
 		lines,
-		make(map[string]bool),
 		"",
 		NewScope(),
 		make(map[string]bool),
@@ -43,9 +45,35 @@ func NewMkLines(lines Lines) MkLines {
 		false,
 		tools,
 		nil,
+		make(map[string]bool),
 		Once{}}
 }
 
+// TODO: Consider defining an interface MkLinesChecker (different name, though, since this one confuses even me)
+// that checks a single topic, like:
+//
+//  * PlistVars
+//  * ForLoops
+//  * MakeTargets
+//  * Tools
+//  * Indentation
+//  * LoadTimeVarUse
+//  * Subst
+//  * VarAlign
+//
+// These could be run in parallel to get the diagnostics strictly from top to bottom.
+// Some of the checkers will probably depend on one another.
+//
+// The driving code for these checkers could look like:
+//
+//  ck.Init
+//  ck.BeforeLine
+//  ck.Line
+//  ck.AfterLine
+//  ck.Finish
+
+// UseVar remembers that the given variable is used in the given line.
+// This controls the "defined but not used" warning.
 func (mklines *MkLinesImpl) UseVar(mkline MkLine, varname string) {
 	mklines.vars.Use(varname, mkline)
 	if G.Pkg != nil {
@@ -75,17 +103,19 @@ func (mklines *MkLinesImpl) Check() {
 }
 
 func (mklines *MkLinesImpl) checkAll() {
-	allowedTargets := func() map[string]bool {
-		targets := make(map[string]bool)
-		prefixes := [...]string{"pre", "do", "post"}
-		actions := [...]string{"fetch", "extract", "patch", "tools", "wrapper", "configure", "build", "test", "install", "package", "clean"}
-		for _, prefix := range prefixes {
-			for _, action := range actions {
-				targets[prefix+"-"+action] = true
-			}
-		}
-		return targets
-	}()
+	allowedTargets := map[string]bool{
+		"pre-fetch": true, "do-fetch": true, "post-fetch": true,
+		"pre-extract": true, "do-extract": true, "post-extract": true,
+		"pre-patch": true, "do-patch": true, "post-patch": true,
+		"pre-tools": true, "do-tools": true, "post-tools": true,
+		"pre-wrapper": true, "do-wrapper": true, "post-wrapper": true,
+		"pre-configure": true, "do-configure": true, "post-configure": true,
+		"pre-build": true, "do-build": true, "post-build": true,
+		"pre-test": true, "do-test": true, "post-test": true,
+		"pre-install": true, "do-install": true, "post-install": true,
+		"pre-package": true, "do-package": true, "post-package": true,
+		"pre-clean": true, "do-clean": true, "post-clean": true}
+	G.Assertf(len(allowedTargets) == 33, "Error in allowedTargets initialization")
 
 	mklines.lines.CheckRcsID(0, `#[\t ]+`, "# ")
 
