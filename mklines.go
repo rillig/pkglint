@@ -253,8 +253,8 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 		switch varcanon {
 		case
 			"BUILD_DEFS",
-			"PKG_GROUPS_VARS",
-			"PKG_USERS_VARS":
+			"PKG_GROUPS_VARS", // see mk/misc/unprivileged.mk
+			"PKG_USERS_VARS":  // see mk/misc/unprivileged.mk
 			for _, varname := range mkline.Fields() {
 				mklines.buildDefs[varname] = true
 				if trace.Tracing {
