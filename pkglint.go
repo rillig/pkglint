@@ -359,7 +359,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			!contains(filename, pkg.Pkgdir+"/") &&
 			!contains(filename, pkg.Filesdir+"/") {
 			if fragmentMklines := LoadMk(filename, MustSucceed); fragmentMklines != nil {
-				fragmentMklines.DetermineUsedVariables()
+				fragmentMklines.collectUsedVariables()
 			}
 		}
 		if hasPrefix(basename, "PLIST") {

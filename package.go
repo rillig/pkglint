@@ -160,8 +160,8 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 		mainLines.Tools.def("cpack", "", false, AtRunTime)
 	}
 
-	allLines.DetermineUsedVariables()
-	allLines.CheckRedundantVariables()
+	allLines.collectUsedVariables()
+	allLines.CheckRedundantAssignments()
 
 	pkg.Pkgdir, _ = pkg.vars.Value("PKGDIR")
 	pkg.DistinfoFile, _ = pkg.vars.Value("DISTINFO_FILE")

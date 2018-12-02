@@ -91,7 +91,7 @@ func (mklines *MkLinesImpl) Check() {
 
 	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
 	// are collected to make the order of the definitions irrelevant.
-	mklines.DetermineUsedVariables()
+	mklines.collectUsedVariables()
 	mklines.collectDefinedVariables()
 	mklines.collectPlistVars()
 	mklines.collectElse()
@@ -132,7 +132,7 @@ func (mklines *MkLinesImpl) checkAll() {
 		ck := MkLineChecker{mkline}
 		ck.Check()
 
-		varalign.Check(mkline)
+		varalign.Process(mkline)
 		mklines.Tools.ParseToolLine(mkline, false, false)
 
 		switch {
@@ -303,6 +303,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 }
 
 func (mklines *MkLinesImpl) collectPlistVars() {
+	// TODO: The PLIST_VARS code above looks very similar.
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
 			switch mkline.Varcanon() {
@@ -331,20 +332,24 @@ func (mklines *MkLinesImpl) collectPlistVars() {
 func (mklines *MkLinesImpl) collectElse() {
 	// Make a dry-run over the lines, which sets data.elseLine (in mkline.go) as a side-effect.
 	mklines.ForEach(func(mkline MkLine) {})
+	// TODO: Check whether this ForEach is redundant because it is already run somewhere else.
 }
 
-func (mklines *MkLinesImpl) DetermineUsedVariables() {
+func (mklines *MkLinesImpl) collectUsedVariables() {
 	for _, mkline := range mklines.mklines {
 		for _, varname := range mkline.DetermineUsedVariables() {
 			mklines.UseVar(mkline, varname)
 		}
 	}
 
-	mklines.determineDocumentedVariables()
+	mklines.collectDocumentedVariables()
 }
 
-// Loosely based on mk/help/help.awk, revision 1.28
-func (mklines *MkLinesImpl) determineDocumentedVariables() {
+// collectDocumentedVariables collects the variables that are mentioned in the human-readable
+// documentation of the Makefile fragments from the pkgsrc infrastructure.
+//
+// Loosely based on mk/help/help.awk, revision 1.28, but much simpler.
+func (mklines *MkLinesImpl) collectDocumentedVariables() {
 	scope := NewScope()
 	commentLines := 0
 	relevant := true
@@ -396,8 +401,9 @@ func (mklines *MkLinesImpl) determineDocumentedVariables() {
 	finish()
 }
 
-func (mklines *MkLinesImpl) CheckRedundantVariables() {
+func (mklines *MkLinesImpl) CheckRedundantAssignments() {
 	scope := NewRedundantScope()
+
 	isRelevant := func(old, new MkLine) bool {
 		if old.Basename != "Makefile" && new.Basename == "Makefile" {
 			return false
@@ -407,11 +413,13 @@ func (mklines *MkLinesImpl) CheckRedundantVariables() {
 		}
 		return true
 	}
+
 	scope.OnIgnore = func(old, new MkLine) {
 		if isRelevant(old, new) && old.Value() == new.Value() {
 			old.Notef("Definition of %s is redundant because of %s.", new.Varname(), old.RefTo(new))
 		}
 	}
+
 	scope.OnOverwrite = func(old, new MkLine) {
 		if isRelevant(old, new) {
 			old.Warnf("Variable %s is overwritten in %s.", new.Varname(), old.RefTo(new))
@@ -487,7 +495,7 @@ type varalignBlockInfo struct {
 	continuation   bool   // A continuation line with no value in the first line.
 }
 
-func (va *VaralignBlock) Check(mkline MkLine) {
+func (va *VaralignBlock) Process(mkline MkLine) {
 	switch {
 	case !G.Opts.WarnSpace:
 		return
@@ -496,21 +504,20 @@ func (va *VaralignBlock) Check(mkline MkLine) {
 		va.Finish()
 		return
 
-	case mkline.IsCommentedVarassign():
-		break
+	case mkline.IsVarassign(), mkline.IsCommentedVarassign():
+		va.processVarassign(mkline)
 
-	case mkline.IsComment():
+	case mkline.IsComment(), mkline.IsDirective():
 		return
 
-	case mkline.IsDirective():
-		return
-
-	case !mkline.IsVarassign():
+	default:
 		trace.Stepf("Skipping")
 		va.skip = true
 		return
 	}
+}
 
+func (va *VaralignBlock) processVarassign(mkline MkLine) {
 	switch {
 	case mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`):
 		// Arguments to procedures do not take part in block alignment.

@@ -375,7 +375,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *
 		"WARN: ~/category/package/builtin.mk:8: H_UNDEF is used but not defined.")
 }
 
-func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
+func (s *Suite) Test_MkLines_collectUsedVariables__simple(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename",
@@ -383,13 +383,13 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__simple(c *check.C) {
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
 
-	mklines.DetermineUsedVariables()
+	mklines.collectUsedVariables()
 
 	c.Check(len(mklines.vars.used), equals, 1)
 	c.Check(mklines.vars.FirstUse("VAR"), equals, mkline)
 }
 
-func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
+func (s *Suite) Test_MkLines_collectUsedVariables__nested(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
@@ -403,7 +403,7 @@ func (s *Suite) Test_MkLines_DetermineUsedVariables__nested(c *check.C) {
 	shellMkline := mklines.mklines[5]
 	G.Mk = mklines
 
-	mklines.DetermineUsedVariables()
+	mklines.collectUsedVariables()
 
 	c.Check(len(mklines.vars.used), equals, 5)
 	c.Check(mklines.vars.FirstUse("lparam"), equals, assignMkline)
@@ -638,7 +638,7 @@ func (s *Suite) Test_MkLines__wip_category_Makefile(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkLines_determineDocumentedVariables(c *check.C) {
+func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -670,7 +670,7 @@ func (s *Suite) Test_MkLines_determineDocumentedVariables(c *check.C) {
 
 	// The variables that appear in the documentation are marked as
 	// used, to prevent the "defined but not used" warnings.
-	mklines.determineDocumentedVariables()
+	mklines.collectDocumentedVariables()
 
 	var varnames []string
 	for varname, mkline := range mklines.vars.used {
@@ -725,7 +725,7 @@ func (s *Suite) Test_MkLines__unknown_options(c *check.C) {
 		"WARN: options.mk:4: Unknown option \"unknown\".")
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantVariables(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments(c *check.C) {
 	t := s.Init(c)
 	included := t.NewMkLines("module.mk",
 		"VAR=\tvalue ${OTHER}",
@@ -738,68 +738,68 @@ func (s *Suite) Test_MkLines_CheckRedundantVariables(c *check.C) {
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
-	mklines.CheckRedundantVariables()
+	mklines.CheckRedundantAssignments()
 
 	t.CheckOutputLines(
 		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.",
 		"WARN: module.mk:1: Variable VAR is overwritten in line 3.")
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantVariables__different_value(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__different_value(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",
 		"VAR=\tvalue ${OTHER}",
 		"VAR?=\tdifferent value")
 
-	mklines.CheckRedundantVariables()
+	mklines.CheckRedundantAssignments()
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantVariables__overwrite_same_value(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_value(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",
 		"VAR=\tvalue ${OTHER}",
 		"VAR=\tvalue ${OTHER}")
 
-	mklines.CheckRedundantVariables()
+	mklines.CheckRedundantAssignments()
 
 	t.CheckOutputLines(
 		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.")
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantVariables__procedure_call(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("mk/pthread.buildlink3.mk",
 		"CHECK_BUILTIN.pthread:=\tyes",
 		".include \"../../mk/pthread.builtin.mk\"",
 		"CHECK_BUILTIN.pthread:=\tno")
 
-	mklines.CheckRedundantVariables()
+	mklines.CheckRedundantAssignments()
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantVariables__shell_and_eval(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",
 		"VAR:=\tvalue ${OTHER}",
 		"VAR!=\tvalue ${OTHER}")
 
-	mklines.CheckRedundantVariables()
+	mklines.CheckRedundantAssignments()
 
 	// Combining := and != is too complicated to be analyzed by pkglint,
 	// therefore no warning.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantVariables__shell_and_eval_literal(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval_literal(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",
 		"VAR:=\tvalue",
 		"VAR!=\tvalue")
 
-	mklines.CheckRedundantVariables()
+	mklines.CheckRedundantAssignments()
 
 	// Even when := is used with a literal value (which is usually
 	// only done for procedure calls), the shell evaluation can have
@@ -874,7 +874,7 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_Check__if_else(c *check.C) {
+func (s *Suite) Test_MkLines_collectElse(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wno-space")
@@ -1090,7 +1090,7 @@ func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
 	c.Check(seenUsesGettext, equals, true)
 }
 
-func (s *Suite) Test_VaralignBlock_Check__autofix(c *check.C) {
+func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wspace", "--show-autofix")
@@ -1112,7 +1112,7 @@ func (s *Suite) Test_VaralignBlock_Check__autofix(c *check.C) {
 
 	var varalign VaralignBlock
 	for _, line := range mklines.mklines {
-		varalign.Check(line)
+		varalign.Process(line)
 	}
 	varalign.Finish()
 
@@ -1133,7 +1133,7 @@ func (s *Suite) Test_VaralignBlock_Check__autofix(c *check.C) {
 
 // When the lines of a paragraph are inconsistently aligned,
 // they are realigned to the minimum required width.
-func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {
+func (s *Suite) Test_VaralignBlock_Process__reduce_indentation(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("file.mk",
@@ -1147,7 +1147,7 @@ func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {
 
 	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
-		varalign.Check(mkline)
+		varalign.Process(mkline)
 	}
 	varalign.Finish()
 
@@ -1160,7 +1160,7 @@ func (s *Suite) Test_VaralignBlock_Check__reduce_indentation(c *check.C) {
 // For every variable assignment, there is at least one space or tab between the variable
 // name and the value. Even if it is the longest line, and even if the value would start
 // exactly at a tab stop.
-func (s *Suite) Test_VaralignBlock_Check__longest_line_no_space(c *check.C) {
+func (s *Suite) Test_VaralignBlock_Process__longest_line_no_space(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wspace")
@@ -1172,7 +1172,7 @@ func (s *Suite) Test_VaralignBlock_Check__longest_line_no_space(c *check.C) {
 
 	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
-		varalign.Check(mkline)
+		varalign.Process(mkline)
 	}
 	varalign.Finish()
 
@@ -1183,7 +1183,7 @@ func (s *Suite) Test_VaralignBlock_Check__longest_line_no_space(c *check.C) {
 		"NOTE: file.mk:4: This variable value should be aligned to column 33.")
 }
 
-func (s *Suite) Test_VaralignBlock_Check__only_spaces(c *check.C) {
+func (s *Suite) Test_VaralignBlock_Process__only_spaces(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wspace")
@@ -1195,7 +1195,7 @@ func (s *Suite) Test_VaralignBlock_Check__only_spaces(c *check.C) {
 
 	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
-		varalign.Check(mkline)
+		varalign.Process(mkline)
 	}
 	varalign.Finish()
 
