@@ -204,6 +204,10 @@ func (bt *BasicType) AllowedEnums() string {
 	return bt.name[6 : len(bt.name)-1]
 }
 
+// TODO: Try to implement BasicType.PossibleChars()
+// TODO: Try to implement BasicType.CanBeEmpty()
+// TODO: Try to implement BasicType.PossibleWords() / PossibleValues()
+
 var (
 	BtAwkCommand             = &BasicType{"AwkCommand", (*VartypeCheck).AwkCommand}
 	BtBasicRegularExpression = &BasicType{"BasicRegularExpression", (*VartypeCheck).BasicRegularExpression}

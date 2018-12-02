@@ -91,8 +91,10 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:5: Variable names starting with an underscore (_list_) are reserved for internal pkgsrc use.",
-		"WARN: Makefile:5: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.",
+		"WARN: Makefile:5: Variable names starting with an underscore (_list_) "+
+			"are reserved for internal pkgsrc use.",
+		"WARN: Makefile:5: Variable names starting with an underscore (_dir_) "+
+			"are reserved for internal pkgsrc use.",
 		"WARN: Makefile:6: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
@@ -111,7 +113,8 @@ func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: databases/gdbm_compat/builtin.mk:2: " +
-			"USE_BUILTIN.gdbm should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not compared with \"no\".")
+			"USE_BUILTIN.gdbm should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", " +
+			"not compared with \"no\".")
 }
 
 func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
@@ -130,6 +133,7 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 
 	vars3 := mklines.mklines[2].DetermineUsedVariables()
 
+	// qore-version, despite its unusual name, is a pretty normal Make variable.
 	c.Check(vars3, deepEquals, []string{"qore-version"})
 
 	mklines.Check()
