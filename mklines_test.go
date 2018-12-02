@@ -163,10 +163,27 @@ func (s *Suite) Test_MkLines__varuse_parameterized(c *check.C) {
 		"WARN: converters/wv2/Makefile:2: ICONV_TYPE is used but not defined.")
 }
 
-// Even very complicated shell commands are parsed correctly.
-// Since the variable is defined in this same Makefile, it is
-// assumed to be a known shell command and therefore does not need
-// USE_TOOLS or a similar declaration.
+// When an ODE runtime loop is used to expand variables to shell commands,
+// pkglint only understands that there is a variable that is executed as
+// shell command.
+//
+// In this example, GCONF_SCHEMAS is a list of filenames, but pkglint doesn't know this
+// because there is no built-in rule saying *_SCHEMAS are filenames.
+// If the variable name had been GCONF_SCHEMA_FILES, pkglint would know.
+//
+// As of November 2018, pkglint sees GCONF_SCHEMAS as being the shell command.
+// It doesn't expand the @s@ loop to see what really happens.
+//
+// If it did that, it could notice that GCONF_SCHEMAS expands to a single shell command,
+// and in that command INSTALL_DATA is used as the command for the first time,
+// and as a regular command line argument in all other times.
+// This combination is strange enough to warrant a warning.
+//
+// The bug here is the missing semicolon just before the @}.
+//
+// Pkglint could offer to either add the missing semicolon.
+// Or, if it knows what INSTALL_DATA does, it could simply say that INSTALL_DATA
+// can handle multiple files in a single invocation.
 func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
 	t := s.Init(c)
 
@@ -175,8 +192,8 @@ func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
 		MkRcsID,
 		"GCONF_SCHEMAS=\tapps_xchat_url_handler.schemas",
 		"post-install:",
-		"\t${GCONF_SCHEMAS:@.s.@"+
-			"${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}")
+		"\t${GCONF_SCHEMAS:@s@"+
+			"${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${s} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}")
 
 	mklines.Check()
 
