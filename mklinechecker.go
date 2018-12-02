@@ -1151,45 +1151,6 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		return
 	}
 
-	checkEmpty := func(varuse *MkVarUse) {
-		varname := varuse.varname
-		if matches(varname, `^\$.*:[MN]`) {
-			mkline.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
-			G.Explain(
-				"Instead of empty(${VARNAME:Mpattern}), you should write either",
-				"of the following:",
-				"",
-				"\tempty(VARNAME:Mpattern)",
-				"\t${VARNAME:Mpattern} == \"\"",
-				"",
-				"Instead of !empty(${VARNAME:Mpattern}), you should write either",
-				"of the following:",
-				"",
-				"\t!empty(VARNAME:Mpattern)",
-				"\t${VARNAME:Mpattern}")
-		}
-
-		modifiers := varuse.modifiers
-		for _, modifier := range modifiers {
-			if m, positive, pattern := modifier.MatchMatch(); m && (positive || len(modifiers) == 1) {
-				ck.checkVartype(varname, opUseMatch, pattern, "")
-
-				vartype := G.Pkgsrc.VariableType(varname)
-				if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
-					mkline.Notef("%s should be compared using == instead of the :M or :N modifier without wildcards.", varname)
-					G.Explain(
-						"This variable has a single value, not a list of values.  Therefore",
-						"it feels strange to apply list operators like :M and :N onto it.",
-						"A more direct approach is to use the == and != operators.",
-						"",
-						"An entirely different case is when the pattern contains wildcards",
-						"like ^, *, $.  In such a case, using the :M or :N modifiers is",
-						"useful and preferred.")
-				}
-			}
-		}
-	}
-
 	checkCompareVarStr := func(varuse *MkVarUse, op string, value string) {
 		varname := varuse.varname
 		varmods := varuse.modifiers
@@ -1209,9 +1170,50 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	}
 
 	cond.Walk(&MkCondCallback{
-		Empty:         checkEmpty,
+		Empty:         ck.checkDirectiveCondEmpty,
 		CompareVarStr: checkCompareVarStr,
 		VarUse:        checkVarUse})
+}
+
+// checkDirectiveCondEmpty checks a condition of the form empty(...) in an .if directive.
+func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
+	varname := varuse.varname
+	if matches(varname, `^\$.*:[MN]`) {
+		ck.MkLine.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
+		G.Explain(
+			"Instead of empty(${VARNAME:Mpattern}), you should write either",
+			"of the following:",
+			"",
+			"\tempty(VARNAME:Mpattern)",
+			"\t${VARNAME:Mpattern} == \"\"",
+			"",
+			"Instead of !empty(${VARNAME:Mpattern}), you should write either",
+			"of the following:",
+			"",
+			"\t!empty(VARNAME:Mpattern)",
+			"\t${VARNAME:Mpattern}")
+	}
+
+	modifiers := varuse.modifiers
+	for _, modifier := range modifiers {
+		if m, positive, pattern := modifier.MatchMatch(); m && (positive || len(modifiers) == 1) {
+			ck.checkVartype(varname, opUseMatch, pattern, "")
+
+			vartype := G.Pkgsrc.VariableType(varname)
+			if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
+				ck.MkLine.Notef("%s should be compared using == instead of the :M or :N modifier without wildcards.", varname)
+				G.Explain(
+					"This variable has a single value, not a list of values.  Therefore",
+					"it feels strange to apply list operators like :M and :N onto it.",
+					"A more direct approach is to use the == and != operators.",
+					"",
+					"An entirely different case is when the pattern contains wildcards",
+					"like ^, *, $.  In such a case, using the :M or :N modifiers is",
+					"useful and preferred.")
+			}
+		}
+	}
+
 }
 
 func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
