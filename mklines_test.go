@@ -1088,6 +1088,9 @@ func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
 	c.Check(seenUsesGettext, equals, true)
 }
 
+// At 2018-12-02, pkglint had resolved ${MY_PLIST_VARS} into a single word,
+// whereas the correct behavior is to resolve it into two words.
+// It had produced warnings about mismatched PLIST_VARS IDs.
 func (s *Suite) Test_MkLines_checkVarassignPlist__indirect(c *check.C) {
 	t := s.Init(c)
 
@@ -1103,11 +1106,7 @@ func (s *Suite) Test_MkLines_checkVarassignPlist__indirect(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: Words must be expanded after resolving other variables.
-	t.CheckOutputLines(
-		"WARN: ~/plist.mk:4: \"var1 var2\" is added to PLIST_VARS, but PLIST.var1 var2 is not defined in this file.",
-		"WARN: ~/plist.mk:6: PLIST.var1 is defined, but \"var1\" is not added to PLIST_VARS in this file.",
-		"WARN: ~/plist.mk:7: PLIST.var2 is defined, but \"var2\" is not added to PLIST_VARS in this file.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
