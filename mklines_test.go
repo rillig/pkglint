@@ -201,7 +201,6 @@ func (s *Suite) Test_MkLines__loop_modifier(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// PR 46570
 func (s *Suite) Test_MkLines__PKG_SKIP_REASON_depending_on_OPSYS(c *check.C) {
 	t := s.Init(c)
 
