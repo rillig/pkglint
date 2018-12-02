@@ -628,12 +628,12 @@ func (s *Suite) Test_MkLines__wip_category_Makefile(c *check.C) {
 		"WARN: ~/wip/Makefile:14: Unusual target \"clean-tmpdir\".",
 		"",
 		"\tIf you want to define your own target, declare it like this:",
-		"\t",
+		"",
 		"\t\t.PHONY: my-target",
-		"\t",
+		"",
 		"\tIn the rare case that you actually want a file-based make(1) target,",
 		"\twrite it like this:",
-		"\t",
+		"",
 		"\t\t${.CURDIR}/my-file:",
 		"")
 }

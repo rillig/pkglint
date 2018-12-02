@@ -321,6 +321,32 @@ func (s *Suite) Test_Logger_Explain__autofix_and_source(c *check.C) {
 		"+\tThe new song")
 }
 
+// When an explanation consists of multiple paragraphs, it contains some empty lines.
+// When printing these lines, there is no need to write the tab that is used for indenting
+// the normal lines.
+//
+// Since pkglint likes to complain about trailing whitespace, it should not generate it itself.
+func (s *Suite) Test_Logger_Explain__empty_lines(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+	line := t.NewLine("Makefile", 27, "The old song")
+
+	line.Warnf("A normal warning.")
+	line.Explain(
+		"Paragraph 1 of the explanation.",
+		"",
+		"Paragraph 2 of the explanation.")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:27: A normal warning.",
+		"",
+		"\tParagraph 1 of the explanation.",
+		"",
+		"\tParagraph 2 of the explanation.",
+		"")
+}
+
 func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 	t := s.Init(c)
 

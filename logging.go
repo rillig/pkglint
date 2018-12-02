@@ -99,7 +99,9 @@ func (l *Logger) Explain(explanation ...string) {
 	l.out.Separate()
 	wrapped := wrap(68, explanation...)
 	for _, explanationLine := range wrapped {
-		l.out.Write("\t")
+		if explanationLine != "" {
+			l.out.Write("\t")
+		}
 		l.out.WriteLine(explanationLine)
 	}
 	l.out.WriteLine("")
