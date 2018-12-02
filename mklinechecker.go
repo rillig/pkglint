@@ -971,8 +971,8 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 	}
 
 	if varname == "PKG_SKIP_REASON" && G.Mk.indentation.DependsOn("OPSYS") {
-		mkline.Notef("Consider defining NOT_FOR_PLATFORM instead of " +
-			"setting PKG_SKIP_REASON depending on ${OPSYS}.")
+		mkline.Notef("Consider setting NOT_FOR_PLATFORM instead of " +
+			"PKG_SKIP_REASON depending on ${OPSYS}.")
 	}
 }
 
