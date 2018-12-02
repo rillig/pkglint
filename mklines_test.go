@@ -81,6 +81,8 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	mklines := t.NewMkLines("Makefile", // From audio/squeezeboxserver
 		MkRcsID,
 		"",
+		"SBS_COPY=\tsource target",
+		"",
 		".for _list_ _dir_ in ${SBS_COPY}",
 		"\tcd ${WRKSRC} && ${FIND} ${${_list_}} -type f ! -name '*.orig' 2>/dev/null "+
 			"| pax -rw -pm ${DESTDIR}${PREFIX}/${${_dir_}}",
@@ -89,10 +91,9 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Variable names starting with an underscore (_list_) are reserved for internal pkgsrc use.",
-		"WARN: Makefile:3: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.",
-		"WARN: Makefile:3: SBS_COPY is used but not defined.",
-		"WARN: Makefile:4: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
+		"WARN: Makefile:5: Variable names starting with an underscore (_list_) are reserved for internal pkgsrc use.",
+		"WARN: Makefile:5: Variable names starting with an underscore (_dir_) are reserved for internal pkgsrc use.",
+		"WARN: Makefile:6: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
