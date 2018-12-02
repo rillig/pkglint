@@ -16,6 +16,7 @@ type Vartype struct {
 
 type KindOfList uint8
 
+// TODO: Remove lkSpace. Since 2015 the .for variables are split on shell words, like everywhere else.
 const (
 	lkNone  KindOfList = iota // Plain data type
 	lkSpace                   // List entries are separated by whitespace; used in .for loops.

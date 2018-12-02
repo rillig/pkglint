@@ -531,7 +531,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
 	G.CheckDirent(pkg)
 }
 
-func (s *Suite) Test_Package_CheckInclude__conditional_and_unconditional_include(c *check.C) {
+func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_unconditional_include(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()

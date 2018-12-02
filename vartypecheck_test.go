@@ -524,7 +524,7 @@ func (s *Suite) Test_VartypeCheck_License(c *check.C) {
 	G.Mk = t.NewMkLines("perl5.mk",
 		MkRcsID,
 		"PERL5_LICENSE= gnu-gpl-v2 OR artistic")
-	G.Mk.DetermineDefinedVariables()
+	G.Mk.collectDefinedVariables()
 
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).License)
 

@@ -162,7 +162,7 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 		ck.checkDirectiveFor(forVars, ind)
 
 	case directive == "undef":
-		for _, varname := range fields(args) {
+		for _, varname := range mkline.Fields() {
 			if forVars[varname] {
 				mkline.Notef("Using \".undef\" after a \".for\" loop is unnecessary.")
 			}
@@ -764,18 +764,18 @@ func (ck MkLineChecker) checkVaruseDeprecated(varuse *MkVarUse) {
 	}
 }
 
-func (ck MkLineChecker) checkVarassignDecreasingVersions(varname, value string) {
+func (ck MkLineChecker) checkVarassignDecreasingVersions() {
 	if trace.Tracing {
-		defer trace.Call2(varname, value)()
+		defer trace.Call0()()
 	}
 
 	mkline := ck.MkLine
-	strVersions := fields(value)
+	strVersions := mkline.Fields()
 	intVersions := make([]int, len(strVersions))
 	for i, strVersion := range strVersions {
 		iver, err := strconv.Atoi(strVersion)
 		if err != nil || !(iver > 0) {
-			mkline.Errorf("All values for %s must be positive integers.", varname)
+			mkline.Errorf("All values for %s must be positive integers.", mkline.Varname())
 			return
 		}
 		intVersions[i] = iver
@@ -783,7 +783,7 @@ func (ck MkLineChecker) checkVarassignDecreasingVersions(varname, value string) 
 
 	for i, ver := range intVersions {
 		if i > 0 && ver >= intVersions[i-1] {
-			mkline.Warnf("The values for %s should be in decreasing order.", varname)
+			mkline.Warnf("The values for %s should be in decreasing order.", mkline.Varname())
 			G.Explain(
 				"If they aren't, it may be possible that needless versions of",
 				"packages are installed.")
@@ -945,7 +945,7 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
-		ck.checkVarassignDecreasingVersions(varname, value)
+		ck.checkVarassignDecreasingVersions()
 	}
 
 	if mkline.VarassignComment() == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {

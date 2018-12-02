@@ -422,6 +422,8 @@ func findPkgsrcTopdir(filename string) string {
 }
 
 func resolveVariableRefs(text string) (resolved string) {
+	// TODO: How does this fit into the Scope type, which is newer than this function?
+
 	if !contains(text, "${") {
 		return text
 	}

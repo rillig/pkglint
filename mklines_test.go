@@ -311,7 +311,7 @@ func (s *Suite) Test_MkLines_CheckForUsedComment(c *check.C) {
 	c.Check(G.autofixAvailable, equals, true)
 }
 
-func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
+func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall,no-space")
@@ -350,7 +350,7 @@ func (s *Suite) Test_MkLines_DetermineDefinedVariables(c *check.C) {
 		"WARN: determine-defined-variables.mk:16: Unknown shell command \"unknown-command\".")
 }
 
-func (s *Suite) Test_MkLines_DetermineDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
+func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall,no-space")
