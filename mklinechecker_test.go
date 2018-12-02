@@ -502,33 +502,49 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Unclosed Make variable starting at \"${EGDIR/apparmor.d $...\".",
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
+
+		// XXX: This warning is redundant because of the "Unclosed" warning above.
 		"WARN: Makefile:2: Pkglint parse error in MkLine.Tokenize at "+
 			"\"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".")
 }
 
-func (s *Suite) Test_MkLineChecker__Varuse_Modifier_L(c *check.C) {
+func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	G.Mk = t.NewMkLines("x11/xkeyboard-config/Makefile",
-		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}")
+	mklines := t.NewMkLines("x11/xkeyboard-config/Makefile",
+		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}",
+		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:Q}")
 
-	MkLineChecker{G.Mk.mklines[0]}.Check()
+	MkLineChecker{mklines.mklines[0]}.Check()
+	MkLineChecker{mklines.mklines[1]}.Check()
 
-	// Don't warn that ${XKBBASE}/xkbcomp is used but not defined.
-	t.CheckOutputEmpty()
+	// In line 1, don't warn that ${XKBBASE}/xkbcomp is used but not defined.
+	// This is because the :L modifier interprets everything before as an expression
+	// instead of a variable name.
+	//
+	// In line 2 the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
+	// name of another variable, and that variable is not known. Only XKBBASE is known.
+	//
+	// FIXME: The below warnings are wrong because the MkParser does not recognize the
+	// slash as part of a variable name. Because of that, parsing stops before the $.
+	// The warning "Unclosed Make variable" wrongly assumes that any parse error from
+	// a variable use is because of unclosed braces, which it isn't in this case.h
+	t.CheckOutputLines(
+		"WARN: x11/xkeyboard-config/Makefile:2: Unclosed Make variable starting at \"${${XKBBASE}/xkbcomp...\".",
+		"WARN: x11/xkeyboard-config/Makefile:2: Unclosed Make variable starting at \"${${XKBBASE}/xkbcomp...\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	G.Mk = t.NewMkLines("security/openssl/Makefile",
+	mklines := t.NewMkLines("security/openssl/Makefile",
 		MkRcsID,
 		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
 		".endif")
 
-	G.Mk.Check()
+	mklines.Check()
 
 	// Don't warn about unknown shell command "cc".
 	t.CheckOutputLines(
@@ -595,7 +611,8 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.
 	c.Check(words, deepEquals, []string{"`pkg-config pidgin --cflags`"})
 	c.Check(rest, equals, "")
 
-	MkLineChecker{G.Mk.mklines[1]}.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
+	ck := MkLineChecker{G.Mk.mklines[1]}
+	ck.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
 	// No warning about "`pkg-config" being an unknown CFlag.
 	t.CheckOutputEmpty()
@@ -797,6 +814,10 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// Any variable that is defined in the pkgsrc infrastructure in mk/**/*.mk is
+// considered defined, and no "used but not defined" warning is logged for it.
+//
+// See Pkgsrc.loadUntypedVars.
 func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_infrastructure(c *check.C) {
 	t := s.Init(c)
 
@@ -853,8 +874,10 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {
 
 	// FIXME: The check is called two times, even though it only produces a single NOTE.
 	t.CheckOutputLines(
-		"NOTE: mk/compiler/gcc.mk:150: The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",
-		"AUTOFIX: mk/compiler/gcc.mk:150: Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
+		"NOTE: mk/compiler/gcc.mk:150: "+
+			"The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",
+		"AUTOFIX: mk/compiler/gcc.mk:150: "+
+			"Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
 		"-\tCC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}",
 		"+\tCC:=\t${CC:[1]}")
 }
@@ -880,7 +903,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 
 	t.SetupPkgsrc()
 	G.Pkgsrc.LoadInfrastructure()
-
 	t.SetupCommandLine("-Wall,no-space")
 	t.SetupVartypes()
 	mklines := t.SetupFileMkLines("module.mk",
@@ -897,6 +919,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 
 	mklines.Check()
 
+	// TODO: Split this test into several, one for each topic.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:2: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.",
 		"WARN: ~/module.mk:3: _TOOLS_VARNAME.sed is defined but not used.",
@@ -989,5 +1012,6 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
+		// TODO: This warning is unspecific, there is also a pkglint warning "should be ../../category/package".
 		"WARN: ~/category/package/module.mk:11: Invalid relative path \"../package/module.mk\".")
 }
