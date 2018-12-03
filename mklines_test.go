@@ -359,7 +359,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 		"SUV=                    value for substitution",
 		"",
 		"pre-configure:",
-		"\t${RUN} autoreconf; autoheader-2.13; unknown-command",
+		"\t${RUN} autoreconf; autoheader-2.13",
 		"\t${ECHO} ${OSV:Q}")
 
 	mklines.Check()
@@ -368,10 +368,11 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 	// The SUV variable is used implicitly by the SUBST framework, therefore no warning.
 	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
 	t.CheckOutputLines(
-		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files, maybe except buildlink3.mk.
-		"WARN: determine-defined-variables.mk:12: The variable SUBST_VARS.subst may not be set "+
-			"(only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
-		"WARN: determine-defined-variables.mk:16: Unknown shell command \"unknown-command\".")
+		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files,
+		// maybe except buildlink3.mk.
+		"WARN: determine-defined-variables.mk:12: The variable SUBST_VARS.subst may not be set " +
+			"(only given a default value, appended to) in this file; " +
+			"it would be ok in Makefile, Makefile.common, options.mk.")
 }
 
 func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
@@ -409,7 +410,7 @@ func (s *Suite) Test_MkLines_collectUsedVariables__simple(c *check.C) {
 
 	mklines.collectUsedVariables()
 
-	c.Check(len(mklines.vars.used), equals, 1)
+	c.Check(mklines.vars.used, deepEquals, map[string]MkLine{"VAR": mkline})
 	c.Check(mklines.vars.FirstUse("VAR"), equals, mkline)
 }
 
