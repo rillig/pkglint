@@ -602,6 +602,7 @@ func (t *Tester) Output() string {
 
 	t.stdout.Reset()
 	t.stderr.Reset()
+	G.Logger.logged = Once{}
 
 	output := stdout + stderr
 	if t.tmpdir != "" {
@@ -617,6 +618,7 @@ func (t *Tester) Output() string {
 // See CheckOutputLines.
 func (t *Tester) CheckOutputEmpty() {
 	output := t.Output()
+
 	actualLines := strings.Split(output, "\n")
 	actualLines = actualLines[:len(actualLines)-1]
 	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(nil))

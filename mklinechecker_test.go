@@ -915,6 +915,26 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C)
 		"WARN: module.mk:123: Use of \"_PKG_DEBUG\" is deprecated. Use RUN (with more error checking) instead.")
 }
 
+// PR 46570, item "15. net/uucp/Makefile has a make loop"
+func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupTool("echo", "ECHO", AfterPrefsMk)
+	mkline := t.NewMkLine("net/uucp/Makefile", 123, "\techo ${UUCP_${var}}")
+
+	MkLineChecker{mkline}.Check()
+
+	// No warning about UUCP_${var} being used but not defined.
+	//
+	// Normally, parameterized variables use a dot instead of an underscore as separator.
+	// This is one of the few other cases. Pkglint doesn't warn about dynamic variable
+	// names like UUCP_${var} or SITES_${distfile}.
+	//
+	// It does warn about simple variable names though, like ${var} in this example.
+	t.CheckOutputLines(
+		"WARN: net/uucp/Makefile:123: var is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 	t := s.Init(c)
 

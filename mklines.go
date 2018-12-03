@@ -429,6 +429,8 @@ func (mklines *MkLinesImpl) CheckRedundantAssignments() {
 	mklines.ForEach(scope.Handle)
 }
 
+// CheckForUsedComment checks that this file (a Makefile.common) has the given
+// relativeName in one of the "# used by" comments at the beginning of the file.
 func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
 	lines := mklines.lines
 	if lines.Len() < 3 {

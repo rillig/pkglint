@@ -218,33 +218,11 @@ func (s *Suite) Test_MkLines__PKG_SKIP_REASON_depending_on_OPSYS(c *check.C) {
 		"NOTE: Makefile:4: Consider setting NOT_FOR_PLATFORM instead of PKG_SKIP_REASON depending on ${OPSYS}.")
 }
 
-// PR 46570, item "15. net/uucp/Makefile has a make loop"
-func (s *Suite) Test_MkLines__indirect_variables(c *check.C) {
-	t := s.Init(c)
-
-	t.SetupTool("echo", "ECHO", AfterPrefsMk)
-	mklines := t.NewMkLines("net/uucp/Makefile",
-		MkRcsID,
-		"",
-		"post-configure:",
-		".for var in MAIL_PROGRAM CMDPATH",
-		"\t"+`${RUN} ${ECHO} "#define ${var} \""${UUCP_${var}}"\""`,
-		".endfor")
-
-	mklines.Check()
-
-	// No warning about UUCP_${var} being used but not defined.
-	// Normally, parameterized variables use a dot instead of an
-	// underscore as separator. This is one of the other cases,
-	// and pkglint just doesn't warn about dynamic variable names
-	// like UUCP_${var} or SITES_${distfile}.
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_MkLines_Check__list_variable_as_part_of_word(c *check.C) {
+func (s *Suite) Test_MkLines_Check__use_list_variable_as_part_of_word(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
+	t.SetupTool("tr", "", AtRunTime)
 	mklines := t.NewMkLines("converters/chef/Makefile",
 		MkRcsID,
 		"\tcd ${WRKSRC} && tr '\\r' '\\n' < ${DISTDIR}/${DIST_SUBDIR}/${DISTFILES} > chef.l")
@@ -252,7 +230,6 @@ func (s *Suite) Test_MkLines_Check__list_variable_as_part_of_word(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: converters/chef/Makefile:2: Unknown shell command \"tr\".",
 		"WARN: converters/chef/Makefile:2: The list variable DISTFILES should not be embedded in a word.")
 }
 
@@ -263,17 +240,19 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 	mklines := t.NewMkLines("games/heretic2-demo/Makefile",
 		MkRcsID,
 		".if ${OPSYS} == \"DragonFly\"",
-		"TOOLS_PLATFORM.gtar=\t/usr/bin/bsdtar",
+		"TAR_CMD=\t/usr/bin/bsdtar",
 		".endif",
-		"TOOLS_PLATFORM.gtar=\t/usr/bin/bsdtar")
+		"TAR_CMD=\t/usr/bin/bsdtar",
+		"",
+		"do-extract:",
+		"\t${TAR_CMD}")
 
 	mklines.Check()
 
-	// No warning about an unknown shell command in line 3,
-	// since that line depends on OPSYS.
+	// No warning about an unknown shell command in line 3 since that line depends on OPSYS.
+	// Shell commands that are specific to an operating system are probably defined
+	// and used intentionally, so even commands that are not known tools are allowed.
 	t.CheckOutputLines(
-		"WARN: games/heretic2-demo/Makefile:3: The variable TOOLS_PLATFORM.gtar may not be set by any package.",
-		"WARN: games/heretic2-demo/Makefile:5: The variable TOOLS_PLATFORM.gtar may not be set by any package.",
 		"WARN: games/heretic2-demo/Makefile:5: Unknown shell command \"/usr/bin/bsdtar\".")
 }
 
@@ -281,50 +260,77 @@ func (s *Suite) Test_MkLines_CheckForUsedComment(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--show-autofix")
-	t.NewMkLines("Makefile.common",
-		MkRcsID,
-		"",
-		"# used by sysutils/mc",
-	).CheckForUsedComment("sysutils/mc")
 
-	t.CheckOutputEmpty()
+	test := func(pkgpath string, lines []string, diagnostics []string) {
+		mklines := t.NewMkLines("Makefile.common", lines...)
 
-	t.NewMkLines("Makefile.common").CheckForUsedComment("category/package")
+		mklines.CheckForUsedComment(pkgpath)
 
-	t.CheckOutputEmpty()
+		if len(diagnostics) > 0 {
+			t.CheckOutputLines(diagnostics...)
+		} else {
+			t.CheckOutputEmpty()
+		}
+	}
 
-	t.NewMkLines("Makefile.common",
-		MkRcsID,
-	).CheckForUsedComment("category/package")
+	lines := func(lines ...string) []string { return lines }
+	diagnostics := func(diagnostics ...string) []string { return diagnostics }
 
-	t.CheckOutputEmpty()
+	// This file is too short to be checked.
+	test(
+		"category/package",
+		lines(),
+		diagnostics())
 
-	t.NewMkLines("Makefile.common",
-		MkRcsID,
-		"",
-	).CheckForUsedComment("category/package")
+	// Still too short.
+	test(
+		"category/package",
+		lines(
+			MkRcsID),
+		diagnostics())
 
-	t.CheckOutputEmpty()
+	// Still too short.
+	test(
+		"category/package",
+		lines(
+			MkRcsID,
+			""),
+		diagnostics())
 
-	t.NewMkLines("Makefile.common",
-		MkRcsID,
-		"",
-		"VARNAME=\tvalue",
-	).CheckForUsedComment("category/package")
+	// This file is correctly mentioned.
+	test(
+		"sysutils/mc",
+		lines(
+			MkRcsID,
+			"",
+			"# used by sysutils/mc"),
+		diagnostics())
 
-	t.CheckOutputLines(
-		"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here.",
-		"AUTOFIX: Makefile.common:2: Inserting a line \"# used by category/package\" before this line.")
+	// This file is not correctly mentioned, therefore the line is inserted.
+	// TODO: Since the following line is of a different type, an additional empty line should be inserted.
+	test(
+		"category/package",
+		lines(
+			MkRcsID,
+			"",
+			"VARNAME=\tvalue"),
+		diagnostics(
+			"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here.",
+			"AUTOFIX: Makefile.common:2: Inserting a line \"# used by category/package\" before this line."))
 
-	t.NewMkLines("Makefile.common",
-		MkRcsID,
-		"#",
-		"#",
-	).CheckForUsedComment("category/package")
+	// The "used by" comments may either start in line 2 or in line 3.
+	test(
+		"category/package",
+		lines(
+			MkRcsID,
+			"#",
+			"#"),
+		diagnostics(
+			"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.",
+			"AUTOFIX: Makefile.common:3: Inserting a line \"# used by category/package\" before this line."))
 
-	t.CheckOutputLines(
-		"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.",
-		"AUTOFIX: Makefile.common:3: Inserting a line \"# used by category/package\" before this line.")
+	// TODO: What if there is an introductory comment first? That should stay at the top of the file.
+	// TODO: What if the "used by" comments appear in the second paragraph, preceded by only comments and empty lines?
 
 	c.Check(G.autofixAvailable, equals, true)
 }
