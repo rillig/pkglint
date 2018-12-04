@@ -1,4 +1,4 @@
-package main
+package pkglint
 
 // Checks for patch files.
 

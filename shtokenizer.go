@@ -1,4 +1,4 @@
-package main
+package pkglint
 
 type ShTokenizer struct {
 	parser *Parser

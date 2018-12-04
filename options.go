@@ -1,4 +1,4 @@
-package main
+package pkglint
 
 func ChecklinesOptionsMk(mklines MkLines) {
 	if trace.Tracing {

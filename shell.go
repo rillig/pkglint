@@ -1,4 +1,4 @@
-package main
+package pkglint
 
 // Parsing and checking shell commands embedded in Makefiles
 

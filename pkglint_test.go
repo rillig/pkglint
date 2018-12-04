@@ -1,4 +1,4 @@
-package main
+package pkglint
 
 import (
 	"io/ioutil"
@@ -1043,7 +1043,7 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 	// See the "Too late" comment in Pkglint.checkExecutable.
 	t.CheckOutputEmpty()
 }
-func (s *Suite) Test_main(c *check.C) {
+func (s *Suite) Test_Main(c *check.C) {
 	t := s.Init(c)
 
 	out, err := os.Create(t.CreateFileLines("out"))
@@ -1072,7 +1072,7 @@ func (s *Suite) Test_main(c *check.C) {
 			c.Check(code, equals, 0)
 		}
 
-		main()
+		Main()
 	}
 
 	runMain(out, "pkglint", ".")

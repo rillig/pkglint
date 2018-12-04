@@ -1,5 +1,5 @@
 %{
-package main
+package pkglint
 %}
 
 %token <Word> tkWORD

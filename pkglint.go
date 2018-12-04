@@ -1,4 +1,4 @@
-package main
+package pkglint
 
 import (
 	"fmt"
@@ -100,7 +100,7 @@ var (
 	exit  = os.Exit // Indirect access, to allow main() to be tested.
 )
 
-func main() {
+func Main() {
 	G.out = NewSeparatorWriter(os.Stdout)
 	G.err = NewSeparatorWriter(os.Stderr)
 	trace.Out = os.Stdout
