@@ -22,27 +22,32 @@ install() {
   genrunid
   (cd "$srcdir" && chmod 644 *.go)
   echo "=> Formatting pkglint"
-  (cd "$srcdir" && go fmt netbsd.org/pkglint/...)
+  go fmt netbsd.org/pkglint/...
   echo "=> Generating source code"
-  (cd "$srcdir" && go generate netbsd.org/pkglint/...)
+  go generate netbsd.org/pkglint/...
   echo "=> Testing pkglint"
-  (cd "$srcdir" && go test -vet=off netbsd.org/pkglint/...)
+  go test -vet=off netbsd.org/pkglint/...
   echo "=> Installing pkglint"
-  (cd "$srcdir" && go install)
+  go install netbsd.org/pkglint/...
   cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
 }
 
 install_notest() {
   genrunid
-  echo "=> Installing pkglint"
   (cd "$srcdir" && chmod 644 *.go)
-  (cd "$srcdir" && go fmt netbsd.org/pkglint/... && go install && cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe")
+  echo "=> Formatting pkglint"
+  go fmt netbsd.org/pkglint/...
+  echo "=> Generating source code"
+  go generate netbsd.org/pkglint/...
+  echo "=> Installing pkglint"
+  go install netbsd.org/pkglint/...
+  cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
 }
 
 analyze() {
   echo "=> Analyzing test coverage"
   (
-    cd ~/pkglint \
+    cd "$srcdir" \
     && tmpfile=$(cygpath -w "/tmp/gocover-$$.html") \
     && go test -vet=off -coverprofile=coverage.out -covermode=count -timeout 30m -coverpkg ./... ./... \
     && go tool cover -html=coverage.out -o "$tmpfile" \
