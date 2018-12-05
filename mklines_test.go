@@ -742,7 +742,34 @@ func (s *Suite) Test_MkLines__unknown_options(c *check.C) {
 		"WARN: options.mk:4: Unknown option \"unknown\".")
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantAssignments(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.C) {
+	t := s.Init(c)
+	included := t.NewMkLines("included.mk",
+		"OVERRIDE=\tprevious value",
+		"REDUNDANT=\tredundant")
+	including := t.NewMkLines("including.mk",
+		"OVERRIDE=\toverridden value",
+		"REDUNDANT=\tredundant")
+
+	var allLines []Line
+	allLines = append(allLines, included.lines.Lines...)
+	allLines = append(allLines, including.lines.Lines...)
+	mklines := NewMkLines(NewLines(included.lines.FileName, allLines))
+
+	// XXX: The warnings from here are not in the same order as the other warnings.
+	// XXX: There may be some warnings for the same file separated by warnings for other files.
+	mklines.CheckRedundantAssignments()
+
+	// No warning for VAR=... in Makefile since it makes sense to have common files
+	// with default values for variables, overriding some of them in each package.
+	t.CheckOutputLines(
+		// FIXME: The below warning is wrong because overwriting in a different file is ok.
+		"WARN: included.mk:1: Variable OVERRIDE is overwritten in including.mk:1.",
+		// FIXME: It's the other way round: including.mk:2 is redundant because of included.mk:2.
+		"NOTE: included.mk:2: Definition of REDUNDANT is redundant because of including.mk:2.")
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *check.C) {
 	t := s.Init(c)
 	included := t.NewMkLines("module.mk",
 		"VAR=\tvalue ${OTHER}",
@@ -750,19 +777,24 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments(c *check.C) {
 		"VAR=\tnew value")
 	makefile := t.NewMkLines("Makefile",
 		"VAR=\tthe package may overwrite variables from other files")
-	allLines := append(append([]Line(nil), included.lines.Lines...), makefile.lines.Lines...)
+
+	var allLines []Line
+	allLines = append(allLines, included.lines.Lines...)
+	allLines = append(allLines, makefile.lines.Lines...)
 	mklines := NewMkLines(NewLines(included.lines.FileName, allLines))
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
 	mklines.CheckRedundantAssignments()
 
+	// No warning for VAR=... in Makefile since it makes sense to have common files
+	// with default values for variables, overriding some of them in each package.
 	t.CheckOutputLines(
 		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.",
 		"WARN: module.mk:1: Variable VAR is overwritten in line 3.")
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantAssignments__different_value(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_definitely_unused(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",
 		"VAR=\tvalue ${OTHER}",
@@ -770,7 +802,20 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__different_value(c *check
 
 	mklines.CheckRedundantAssignments()
 
+	// FIXME: A default assignment after an unconditional assignment is redundant.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_overridden(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("module.mk",
+		"VAR?=\tdefault value",
+		"VAR=\toverridden value")
+
+	mklines.CheckRedundantAssignments()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:1: Variable VAR is overwritten in line 2.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_value(c *check.C) {
@@ -783,6 +828,33 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_value(c *
 
 	t.CheckOutputLines(
 		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.")
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditional_overwrite(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("module.mk",
+		"VAR=\tdefault",
+		".if ${OPSYS} == NetBSD",
+		"VAR=\topsys",
+		".endif")
+
+	mklines.CheckRedundantAssignments()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditional_default(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("module.mk",
+		"VAR=\tdefault",
+		".if ${OPSYS} == NetBSD",
+		"VAR?=\topsys",
+		".endif")
+
+	mklines.CheckRedundantAssignments()
+
+	// TODO: WARN: module.mk:3: The value \"opsys\" will never be assigned to VAR because it is defined unconditionally in line 1.
+	t.CheckOutputEmpty()
 }
 
 // These warnings are precise and accurate since the value of VAR is not used between line 2 and 4.
