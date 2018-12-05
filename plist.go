@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"netbsd.org/pkglint/textproc"
 	"path"
 	"sort"
 	"strings"
@@ -90,15 +91,14 @@ func (ck *PlistChecker) NewLines(lines Lines) []*PlistLine {
 	return plines
 }
 
+var plistLineStart = textproc.NewByteSet("$0-9A-Za-z")
+
 func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 	for _, pline := range plines {
 		if text := pline.text; len(text) > 0 {
 			first := text[0]
 			switch {
-			case 'a' <= first && first <= 'z',
-				first == '$',
-				'A' <= first && first <= 'Z',
-				'0' <= first && first <= '9':
+			case plistLineStart.Contains(first):
 				if prev := ck.allFiles[text]; prev == nil || pline.condition < prev.condition {
 					ck.allFiles[text] = pline
 				}

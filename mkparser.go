@@ -308,7 +308,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 			}
 		}
 
-	case 'a' <= lexer.PeekByte() && lexer.PeekByte() <= 'z':
+	case lexer.TestByteSet(textproc.Lower):
 		return p.mkCondFunc()
 
 	default:
@@ -363,7 +363,7 @@ func (p *MkParser) mkCondFunc() *mkCond {
 	lexer := p.lexer
 	mark := lexer.Mark()
 
-	funcName := lexer.NextBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' })
+	funcName := lexer.NextBytesSet(textproc.Lower)
 	lexer.SkipHspace()
 	if !lexer.SkipByte('(') {
 		return nil

@@ -1,5 +1,7 @@
 package pkglint
 
+import "netbsd.org/pkglint/textproc"
+
 type ShTokenizer struct {
 	parser *Parser
 	mkp    *MkParser
@@ -315,7 +317,7 @@ func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
 		return nil
 	}
 
-	if lexer.PeekByte() >= '0' && lexer.PeekByte() <= '9' {
+	if lexer.TestByteSet(textproc.Digit) {
 		lexer.Skip(1)
 		text := lexer.Since(beforeDollar)
 		return &ShAtom{shtShVarUse, text, q, text[2:]}
