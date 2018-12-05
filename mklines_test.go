@@ -950,6 +950,8 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval_literal(c
 	// only done for procedure calls), the shell evaluation can have
 	// so many different side effects that pkglint cannot reliably
 	// help in this situation.
+	//
+	// TODO: Why not? The evaluation in line 1 is trivial to analyze.
 	t.CheckOutputEmpty()
 }
 
@@ -1016,6 +1018,12 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {
 
 	mklines.Check()
 
+	// As of November 2018, pkglint doesn't analyze the .if 0 block.
+	// Therefore it doesn't know that the option1 block will never match because of the 0.
+	// This is ok though since it could be a temporary workaround from the package maintainer.
+	//
+	// As of November 2018, pkglint doesn't analyze the .for loop.
+	// Therefore it doesn't know that an .if block for option3 is missing.
 	t.CheckOutputEmpty()
 }
 
@@ -1113,6 +1121,7 @@ func (s *Suite) Test_MkLines_Check__hacks_mk(c *check.C) {
 	mklines.Check()
 
 	// No warning about including bsd.prefs.mk before using the ?= operator.
+	// FIXME: Why not?
 	t.CheckOutputEmpty()
 }
 
@@ -1139,7 +1148,7 @@ func (s *Suite) Test_MkLines_Check__MASTER_SITE_in_HOMEPAGE(c *check.C) {
 		"WARN: devel/catch/Makefile:5: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 }
 
-func (s *Suite) Test_MkLines_Check__VERSION_as_wordpart_in_MASTER_SITES(c *check.C) {
+func (s *Suite) Test_MkLines_Check__VERSION_as_word_part_in_MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -1199,6 +1208,8 @@ func (s *Suite) Test_MkLines_Check__extra_warnings(c *check.C) {
 		"NOTE: options.mk:11: You can use \"../build\" instead of \"${WRKSRC}/../build\".")
 }
 
+// Ensures that during MkLines.ForEach, the conditional variables in
+// MkLines.Indentation are correctly updated for each line.
 func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
 	t := s.Init(c)
 
