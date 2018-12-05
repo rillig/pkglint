@@ -653,9 +653,40 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" should start with a hyphen.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--autofix", "-Wspace")
+	lines := t.SetupFileLines("filename.mk",
+		MkRcsID,
+		".if defined(A)",
+		".for a in ${A}",
+		".if defined(C)",
+		".endif",
+		".endfor",
+		".endif")
+	mklines := NewMkLines(lines)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/filename.mk:3: Replacing \".\" with \".  \".",
+		"AUTOFIX: ~/filename.mk:4: Replacing \".\" with \".    \".",
+		"AUTOFIX: ~/filename.mk:5: Replacing \".\" with \".    \".",
+		"AUTOFIX: ~/filename.mk:6: Replacing \".\" with \".  \".")
+	t.CheckFileLines("filename.mk",
+		"# $"+"NetBSD$",
+		".if defined(A)",
+		".  for a in ${A}",
+		".    if defined(C)",
+		".    endif",
+		".  endfor",
+		".endif")
+}
+
 // Up to 2018-01-28, pkglint applied the autofix also to the continuation
 // lines, which is incorrect. It replaced the dot in "4.*" with spaces.
-func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall", "--autofix")
