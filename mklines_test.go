@@ -785,6 +785,48 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_value(c *
 		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.")
 }
 
+// These warnings are precise and accurate since the value of VAR is not used between line 2 and 4.
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_variable_different_value(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("module.mk",
+		"OTHER=\tvalue before",
+		"VAR=\tvalue ${OTHER}",
+		"OTHER=\tvalue after",
+		"VAR=\tvalue ${OTHER}")
+
+	mklines.CheckRedundantAssignments()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:1: Variable OTHER is overwritten in line 3.",
+		"NOTE: module.mk:2: Definition of VAR is redundant because of line 4.")
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_different_value_used_between(c *check.C) {
+	t := s.Init(c)
+	mklines := t.NewMkLines("module.mk",
+		"OTHER=\tvalue before",
+		"VAR=\tvalue ${OTHER}",
+
+		// VAR is used here at load time, therefore it must be defined at this point.
+		// At this point, VAR uses the \"before\" value of OTHER.
+		"RESULT1:=\t${VAR}",
+
+		"OTHER=\tvalue after",
+
+		// VAR is used here again at load time, this time using the \"after\" value of OTHER.
+		"RESULT2:=\t${VAR}",
+
+		// Still this definition is redundant.
+		"VAR=\tvalue ${OTHER}")
+
+	mklines.CheckRedundantAssignments()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:1: Variable OTHER is overwritten in line 4.",
+		// FIXME: It's the other way round: line 6 is redundant because of line 2.
+		"NOTE: module.mk:2: Definition of VAR is redundant because of line 6.")
+}
+
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("mk/pthread.buildlink3.mk",
