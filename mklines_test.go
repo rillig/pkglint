@@ -20,7 +20,7 @@ func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Unusual target \"echo\".")
+		"WARN: Makefile:3: Undeclared target \"echo\".")
 }
 
 func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
@@ -529,10 +529,10 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 		".endfor # j",                 // Wrong, should be i.
 		"",
 		".if ${PKG_OPTIONS:Moption}",
-		".endif # option",
+		".endif # option", // Correct.
 		"",
 		".if ${PKG_OPTIONS:Moption}",
-		".endif # opti", // This typo gets unnoticed since "opti" is a substring of the condition.
+		".endif # opti", // This typo goes unnoticed since "opti" is a substring of the condition.
 		"",
 		".if ${OPSYS} == NetBSD",
 		".elif ${OPSYS} == FreeBSD",
@@ -549,7 +549,7 @@ func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
 		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".")
 }
 
-func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
+func (s *Suite) Test_MkLines_Check__unfinished_directives(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -568,6 +568,28 @@ func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 		"ERROR: opsys.mk:EOF: .if from line 5 must be closed.",
 		"ERROR: opsys.mk:EOF: .if from line 4 must be closed.",
 		"ERROR: opsys.mk:EOF: .for from line 3 must be closed.")
+}
+
+func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	mklines := t.NewMkLines("opsys.mk",
+		MkRcsID,
+		"",
+		".for i in 1 2 3 4 5",
+		".  if ${OPSYS} == NetBSD",
+		".  endfor",
+		".endif")
+
+	mklines.Check()
+
+	// As of November 2018 pkglint doesn't find that the inner .if is closed by an .endfor.
+	// This is checked by bmake, though.
+	//
+	// As soon as pkglint starts to analyze .if/.for as regular statements
+	// like in most programming languages, it will find this inconsistency, too.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__incomplete_subst_at_end(c *check.C) {
@@ -619,14 +641,14 @@ func (s *Suite) Test_MkLines__wip_category_Makefile(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/wip/Makefile:14: Unusual target \"clean-tmpdir\".",
+		"WARN: ~/wip/Makefile:14: Undeclared target \"clean-tmpdir\".",
 		"",
-		"\tIf you want to define your own target, declare it like this:",
+		"\tTo define a custom target in a package, declare it like this:",
 		"",
 		"\t\t.PHONY: my-target",
 		"",
-		"\tIn the rare case that you actually want a file-based make(1) target,",
-		"\twrite it like this:",
+		"\tTo define a custom target that creates a file (should be rarely",
+		"\tneeded), declare it like this:",
 		"",
 		"\t\t${.CURDIR}/my-file:",
 		"")
@@ -643,6 +665,8 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 		"# Copyright 2000-2018",
 		"#",
 		"# This whole comment is ignored, until the next empty line.",
+		"# Since it contains the word \"copyright\", it's probably legalese",
+		"# instead of documentation.",
 		"",
 		"# User-settable variables:",
 		"#",
@@ -673,12 +697,12 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 	sort.Strings(varnames)
 
 	expected := []string{
-		"PKG_DEBUG_LEVEL (line 9)",
-		"PKG_VERBOSE (line 14)",
-		"VARBASE1.* (line 21)",
-		"VARBASE2.* (line 22)",
-		"VARBASE3.${id} (line 23)",
-		"VARBASE3.* (line 23)"}
+		"PKG_DEBUG_LEVEL (line 11)",
+		"PKG_VERBOSE (line 16)",
+		"VARBASE1.* (line 23)",
+		"VARBASE2.* (line 24)",
+		"VARBASE3.${id} (line 25)",
+		"VARBASE3.* (line 25)"}
 	c.Check(varnames, deepEquals, expected)
 }
 

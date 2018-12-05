@@ -267,14 +267,14 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 			// This is deliberate, see the explanation below.
 
 		} else if !allowedTargets[target] {
-			mkline.Warnf("Unusual target %q.", target)
+			mkline.Warnf("Undeclared target %q.", target)
 			G.Explain(
-				"If you want to define your own target, declare it like this:",
+				"To define a custom target in a package, declare it like this:",
 				"",
 				"\t.PHONY: my-target",
 				"",
-				"In the rare case that you actually want a file-based make(1)",
-				"target, write it like this:",
+				"To define a custom target that creates a file (should be rarely needed),",
+				"declare it like this:",
 				"",
 				"\t${.CURDIR}/my-file:")
 		}
