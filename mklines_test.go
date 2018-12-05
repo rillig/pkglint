@@ -919,8 +919,22 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval(c *check.
 
 	mklines.CheckRedundantAssignments()
 
-	// Combining := and != is too complicated to be analyzed by pkglint,
-	// therefore no warning.
+	// As of November 2018, pkglint doesn't check redundancies that involve the := or != operators.
+	//
+	// What happens here is:
+	//
+	// Line 1 evaluates OTHER at load time.
+	// Line 1 assigns its value to VAR.
+	// Line 2 evaluates OTHER at load time.
+	// Line 2 passes its value through the shell and assigns the result to VAR.
+	//
+	// Since VAR is defined in line 1, not used afterwards and overwritten in line 2, it is redundant.
+	// Well, not quite, because evaluating ${OTHER} might have side-effects from :sh or ::= modifiers,
+	// but these are so rare that they are frowned upon and are not considered by pkglint.
+	//
+	// Expected result:
+	// WARN: module.mk:2: Previous definition of VAR in line 1 is unused.
+
 	t.CheckOutputEmpty()
 }
 
