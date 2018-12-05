@@ -118,17 +118,16 @@ func (shline *ShellLine) checkShVarUse(atom *ShAtom, checkQuoting bool) {
 	} else if G.Opts.WarnQuoting && checkQuoting && shline.variableNeedsQuoting(shVarname) {
 		line.Warnf("Unquoted shell variable %q.", shVarname)
 		G.Explain(
-			"When a shell variable contains whitespace, it is expanded (split",
-			"into multiple words) when it is written as $variable in a shell",
-			"script.  If that is not intended, you should add quotation marks",
-			"around it, like \"$variable\".  Then, the variable will always expand",
-			"to a single word, preserving all whitespace and other special",
-			"characters.",
+			"When a shell variable contains whitespace, it is expanded (split into multiple words)",
+			"when it is written as $variable in a shell script.",
+			"If that is not intended, it should be surrounded by quotation marks, like \"$variable\".",
+			"This way it always expands to a single word, preserving all whitespace and other special characters.",
 			"",
 			"Example:",
 			"\tfname=\"Curriculum vitae.doc\"",
 			"\tcp $filename /tmp",
 			"\t# tries to copy the two files \"Curriculum\" and \"Vitae.doc\"",
+			"",
 			"\tcp \"$filename\" /tmp",
 			"\t# copies one file, as intended")
 	}
@@ -282,10 +281,6 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 		}
 	}
 
-	if m, cmd := match1(shelltext, `^@*-(.*(?:MKDIR|INSTALL.*-d|INSTALL_.*_DIR).*)`); m {
-		line.Notef("You don't need to use \"-\" before %q.", cmd)
-	}
-
 	lexer := textproc.NewLexer(shelltext)
 	lexer.NextHspace()
 	hiddenAndSuppress := lexer.NextBytesFunc(func(b byte) bool { return b == '-' || b == '@' })
@@ -397,8 +392,8 @@ func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) 
 	if contains(hiddenAndSuppress, "-") {
 		shline.mkline.Warnf("Using a leading \"-\" to suppress errors is deprecated.")
 		G.Explain(
-			"If you really want to ignore any errors from this command, append",
-			"\"|| ${TRUE}\" to the command.")
+			"If you really want to ignore any errors from this command, append \"|| ${TRUE}\" to the command.",
+			"This is more visible than a single hyphen, and it should be.")
 	}
 }
 
@@ -457,9 +452,10 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 		if G.Opts.WarnExtra && !(G.Mk != nil && G.Mk.indentation.DependsOn("OPSYS")) {
 			scc.shline.mkline.Warnf("Unknown shell command %q.", shellword)
 			G.Explain(
-				"If you want your package to be portable to all platforms that pkgsrc",
-				"supports, you should only use shell commands that are covered by the",
-				"tools framework.")
+				"To make the package portable to all platforms that pkgsrc supports,",
+				"it should only use shell commands that are covered by the tools framework.",
+				"",
+				"To run custom shell commands, prefix them with \"./\" or with \"${PREFIX}/\".")
 		}
 	}
 }

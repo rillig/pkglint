@@ -325,7 +325,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:20: " +
-			"PKGNAME is ${DISTNAME} by default. You probably don't need to define PKGNAME.")
+			"This assignment is probably redundant since PKGNAME is ${DISTNAME} by default.")
 }
 
 func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *check.C) {

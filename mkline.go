@@ -73,9 +73,8 @@ func NewMkLine(line Line) *MkLineImpl {
 	if hasPrefix(text, " ") && line.Basename != "bsd.buildlink3.mk" {
 		line.Warnf("Makefile lines should not start with space characters.")
 		G.Explain(
-			"If you want this line to contain a shell program, use a tab",
-			"character for indentation.  Otherwise please remove the leading",
-			"whitespace.")
+			"If this line should be a shell command connected to a target, use a tab character for indentation.",
+			"Otherwise remove the leading whitespace.")
 	}
 
 	if m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment := MatchVarassign(text); m {

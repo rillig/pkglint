@@ -21,9 +21,8 @@ func ChecklinesPlist(lines Lines) {
 			"and that the author didn't run \"bmake print-PLIST\" after installing",
 			"the files.",
 			"",
-			"Another reason, common for Perl packages, is that the final PLIST is",
-			"automatically generated.  Since the source PLIST is not used at all,",
-			"you can remove it.",
+			"Another reason, common for Perl packages, is that the final PLIST is automatically generated.",
+			"Since the source PLIST is not used at all, it can be removed.",
 			"",
 			"Meta packages also don't need a PLIST file.")
 	}

@@ -276,7 +276,6 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	checkShellCommandLine("-${MKDIR} deeply/nested/subdir")
 
 	t.CheckOutputLines(
-		"NOTE: filename:1: You don't need to use \"-\" before \"${MKDIR} deeply/nested/subdir\".",
 		"WARN: filename:1: Using a leading \"-\" to suppress errors is deprecated.")
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))

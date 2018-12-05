@@ -1194,14 +1194,12 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
 	if matches(varname, `^\$.*:[MN]`) {
 		ck.MkLine.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
 		G.Explain(
-			"Instead of empty(${VARNAME:Mpattern}), you should write either",
-			"of the following:",
+			"Instead of empty(${VARNAME:Mpattern}), you should write either of the following:",
 			"",
 			"\tempty(VARNAME:Mpattern)",
 			"\t${VARNAME:Mpattern} == \"\"",
 			"",
-			"Instead of !empty(${VARNAME:Mpattern}), you should write either",
-			"of the following:",
+			"Instead of !empty(${VARNAME:Mpattern}), you should write either of the following:",
 			"",
 			"\t!empty(VARNAME:Mpattern)",
 			"\t${VARNAME:Mpattern}")

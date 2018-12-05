@@ -111,6 +111,10 @@ func (p *MkParser) VarUse() *MkVarUse {
 	if varname := lexer.NextBytesSet(textproc.AlnumU); varname != "" {
 		if p.EmitWarnings {
 			p.Line.Warnf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
+			p.Line.Explain(
+				"Technically there is no ambiguity since these variables are always parsed as Make variables.",
+				"For human readers though, $x more often means a shell variable than a Make variable,",
+				"and this would be misleading here.")
 		}
 		return &MkVarUse{varname, nil}
 	}

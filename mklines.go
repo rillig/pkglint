@@ -453,13 +453,14 @@ func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
 	fix.Warnf("Please add a line %q here.", expected)
 	fix.Explain(
 		"Since Makefile.common files usually don't have any comments and",
-		"therefore not a clearly defined interface, they should at least",
+		"therefore not a clearly defined purpose, they should at least",
 		"contain references to all files that include them, so that it is",
 		"easier to see what effects future changes may have.",
 		"",
 		"If there are more than five packages that use a Makefile.common,",
-		"you should think about giving it a proper name (maybe plugin.mk) and",
-		"documenting its interface.")
+		"that file should have a clearly defined and documented purpose,",
+		"and the filename should reflect that purpose.",
+		"Typical names are module.mk, plugin.mk or version.mk.")
 	fix.InsertBefore(expected)
 	fix.Apply()
 

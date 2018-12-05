@@ -384,9 +384,9 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	t := s.Init(c)
 
-	mkline1 := t.NewMkLine("filename", 10, "_=${SECOND}")
-	mkline2 := t.NewMkLine("filename", 11, "_=${THIRD}")
-	mkline3 := t.NewMkLine("filename", 12, "_=got it")
+	mkline1 := t.NewMkLine("filename", 10, "FIRST=\t${SECOND}")
+	mkline2 := t.NewMkLine("filename", 11, "SECOND=\t${THIRD}")
+	mkline3 := t.NewMkLine("filename", 12, "THIRD=\tgot it")
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	defineVar(mkline1, "FIRST")
 	defineVar(mkline2, "SECOND")
