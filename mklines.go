@@ -349,9 +349,14 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 	commentLines := 0
 	relevant := true
 
+	// TODO: Correctly interpret declarations like "package-settable variables:" and
+	// TODO: "user-settable variables", as well as "default: ...", "allowed: ...",
+	// TODO: "list of" and other types.
+
 	finish := func() {
 		if commentLines >= 3 && relevant {
 			for varname, mkline := range scope.used {
+				mklines.vars.Define(varname, mkline)
 				mklines.vars.Use(varname, mkline)
 			}
 		}
@@ -379,9 +384,10 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 			}
 			parser.lexer.SkipByte(':')
 
-			varbase := varnameBase(varname)
-			if varbase == strings.ToUpper(varbase) && matches(varbase, `[A-Z]`) && parser.EOF() {
-				scope.Use(varname, mkline)
+			varcanon := varnameCanon(varname)
+			if varcanon == strings.ToUpper(varcanon) && matches(varcanon, `[A-Z]`) && parser.EOF() {
+				scope.Define(varcanon, mkline)
+				scope.Use(varcanon, mkline)
 			}
 
 			if 1 < len(words) && words[1] == "Copyright" {

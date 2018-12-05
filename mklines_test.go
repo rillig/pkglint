@@ -687,7 +687,7 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 		"# VARBASE3.${id}")
 
 	// The variables that appear in the documentation are marked as
-	// used, to prevent the "defined but not used" warnings.
+	// both used and defined, to prevent the "defined but not used" warnings.
 	mklines.collectDocumentedVariables()
 
 	var varnames []string
@@ -701,7 +701,6 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 		"PKG_VERBOSE (line 16)",
 		"VARBASE1.* (line 23)",
 		"VARBASE2.* (line 24)",
-		"VARBASE3.${id} (line 25)",
 		"VARBASE3.* (line 25)"}
 	c.Check(varnames, deepEquals, expected)
 }
