@@ -1027,6 +1027,33 @@ func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_Check__PLIST_VARS_indirect_2(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wno-space")
+	t.SetupVartypes()
+	t.SetupOption("a", "")
+	t.SetupOption("b", "")
+	t.SetupOption("c", "")
+
+	mklines := t.NewMkLines("module.mk",
+		MkRcsID,
+		"",
+		"PKG_SUPPORTED_OPTIONS=  a b c",
+		"PLIST_VARS+=            ${PKG_SUPPORTED_OPTIONS:S,a,,g}",
+		"",
+		"PLIST_VARS+=            only-added",
+		"",
+		"PLIST.only-defined=     yes")
+
+	mklines.Check()
+
+	// If the PLIST_VARS contain complex expressions that involve other variables,
+	// it becomes too difficult for pkglint to decide whether the IDs can still match.
+	// Therefore, in such a case, no diagnostics are logged at all.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_collectElse(c *check.C) {
 	t := s.Init(c)
 
@@ -1076,33 +1103,6 @@ func (s *Suite) Test_MkLines_Check__defined_and_used_variables(c *check.C) {
 	mklines.Check()
 
 	// If there are variable involved in the definition of PLIST_VARS or PLIST.*,
-	// it becomes too difficult for pkglint to decide whether the IDs can still match.
-	// Therefore, in such a case, no diagnostics are logged at all.
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_MkLines_Check__indirect_PLIST_VARS(c *check.C) {
-	t := s.Init(c)
-
-	t.SetupCommandLine("-Wno-space")
-	t.SetupVartypes()
-	t.SetupOption("a", "")
-	t.SetupOption("b", "")
-	t.SetupOption("c", "")
-
-	mklines := t.NewMkLines("module.mk",
-		MkRcsID,
-		"",
-		"PKG_SUPPORTED_OPTIONS=  a b c",
-		"PLIST_VARS+=            ${PKG_SUPPORTED_OPTIONS:S,a,,g}",
-		"",
-		"PLIST_VARS+=            only-added",
-		"",
-		"PLIST.only-defined=     yes")
-
-	mklines.Check()
-
-	// If the PLIST_VARS contain complex expressions that involve other variables,
 	// it becomes too difficult for pkglint to decide whether the IDs can still match.
 	// Therefore, in such a case, no diagnostics are logged at all.
 	t.CheckOutputEmpty()
