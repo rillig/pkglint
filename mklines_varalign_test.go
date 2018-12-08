@@ -34,7 +34,7 @@ func (vt *VaralignTester) Diagnostics(diagnostics ...string) { vt.diagnostics = 
 func (vt *VaralignTester) Autofixes(autofixes ...string) { vt.autofixes = autofixes }
 
 // Fixed remembers the expected fixed lines. To make the layout changes
-// clearly visible, tabs are replaced with spaces in these expected lines.
+// clearly visible, the lines given here use spaces instead of tabs.
 // The fixed lines that have been written to the file are still using tabs.
 func (vt *VaralignTester) Fixed(lines ...string) { vt.fixed = lines }
 
@@ -143,7 +143,7 @@ func (s *Suite) Test_Varalign__one_var_spaces(c *check.C) {
 }
 
 // Inconsistently aligned lines for variables of the same length are
-// replaced with tabs, so that they nicely align.
+// replaced with tabs, so that they align nicely.
 func (s *Suite) Test_Varalign__two_vars__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -187,7 +187,8 @@ func (s *Suite) Test_Varalign__several_vars__spaces(c *check.C) {
 	vt.Run()
 }
 
-// Continuation lines may be indented with a single space.
+// Lines that are continued my be indented with a single space
+// if the first line of the variable definition has no value.
 func (s *Suite) Test_Varalign__continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -201,7 +202,7 @@ func (s *Suite) Test_Varalign__continuation(c *check.C) {
 	vt.Run()
 }
 
-// To align these two lines, the first line needs more more tab.
+// To align these two lines, the first line needs one more tab.
 // The second line is further to the right but doesn't count as
 // an outlier since it is not far enough.
 // Adding one more tab to the indentation is generally considered ok.
@@ -228,11 +229,13 @@ func (s *Suite) Test_Varalign__short_long__tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"BLOCK=\tshort",
-		"BLOCK_LONGVAR=\tlong")
+		"BLOCK_LONGVAR=\t\t\t\tlong")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".")
 	vt.Fixed(
 		"BLOCK=          short",
 		"BLOCK_LONGVAR=  long")
@@ -322,9 +325,9 @@ func (s *Suite) Test_Varalign__aligned_continuation(c *check.C) {
 	vt.Run()
 }
 
-// Shell commands are assumed to be already nicely indented.
+// Shell commands in continuation lines are assumed to be already nicely indented.
 // This particular example is not, but pkglint cannot decide this as of
-// version 5.5.2.
+// version 5.5.2 (January 2018).
 func (s *Suite) Test_Varalign__shell_command(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -343,10 +346,9 @@ func (s *Suite) Test_Varalign__shell_command(c *check.C) {
 }
 
 // The most common pattern for laying out continuation lines is to have all
-// values in the continuation lines, one value per line, all indented to the
-// same depth.
-// The depth is either a single tab or aligns with the other variables in the
-// paragraph.
+// values in the continuation lines, one value per line, all indented to the same depth.
+// The depth is either a single tab (see the test below) or aligns with the other
+// variables in the paragraph (this test).
 func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -368,6 +370,31 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check
 		"SITES.distfile-1.0.0.tar.gz= \\",
 		"                ${MASTER_SITES_SOURCEFORGE} \\",
 		"                ${MASTER_SITES_GITHUB}")
+	vt.Run()
+}
+
+// The most common pattern for laying out continuation lines is to have all
+// values in the continuation lines, one value per line, all indented to the same depth.
+// The depth is either a single tab (this test) or aligns with the other
+// variables in the paragraph (see the test above).
+func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line_with_single_tab(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"WRKSRC=\t${WRKDIR}",
+		"DISTFILES=\tdistfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz= \\",
+		"\t${MASTER_SITES_SOURCEFORGE} \\",
+		"\t${MASTER_SITES_GITHUB}")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"WRKSRC=         ${WRKDIR}",
+		"DISTFILES=      distfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz= \\",
+		"        ${MASTER_SITES_SOURCEFORGE} \\",
+		"        ${MASTER_SITES_GITHUB}")
 	vt.Run()
 }
 
