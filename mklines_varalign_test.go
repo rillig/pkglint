@@ -485,9 +485,8 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_first_line(c *c
 
 // When there is an outlier, no matter whether indented using space or tab,
 // fix the whole block to use the indentation of the second-longest line.
-// Since all of the remaining lines have the same indentation (in this case,
-// there is only 1 line at all), that existing indentation is used instead of
-// the minimum necessary, which would only be a single tab.
+// In this case, all of the remaining lines have the same indentation (there is only 1 line at all).
+// Therefore this existing indentation is used instead of the minimum necessary, which would only be a single tab.
 func (s *Suite) Test_Varalign__tab_outlier(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -568,9 +567,10 @@ func (s *Suite) Test_Varalign__single_space(c *check.C) {
 	vt.Run()
 }
 
-// These variables all look nicely aligned, but they use spaces instead
-// of tabs for alignment. The spaces are replaced with tabs, making the
-// indentation a little deeper.
+// These variables all look nicely aligned, but they use spaces instead of tabs for alignment.
+// The spaces are replaced with tabs, which makes the indentation 4 spaces deeper in the first paragraph.
+// In the second paragraph it's even 7 additional spaces.
+// This is ok though since it is the prevailing indentation style in pkgsrc.
 func (s *Suite) Test_Varalign__only_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -602,8 +602,12 @@ func (s *Suite) Test_Varalign__only_space(c *check.C) {
 	vt.Run()
 }
 
-// The indentation is deeper than necessary, but all lines agree on
-// the same column. Therefore this indentation depth is kept.
+// The indentation is deeper than necessary, but all lines agree on the same column.
+// Therefore this indentation depth is kept. It looks good and is probably due to
+// some other paragraphs in the file that are indented equally deep.
+//
+// As of December 2018, pkglint only looks at a single paragraph at a time,
+// therefore it cannot reliably decide whether this deep indentation is necessary.
 func (s *Suite) Test_Varalign__mixed_tabs_and_spaces_same_column(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -619,7 +623,7 @@ func (s *Suite) Test_Varalign__mixed_tabs_and_spaces_same_column(c *check.C) {
 	vt.Run()
 }
 
-// Both lines are indented to the same column. This is a very simple case.
+// Both lines are indented to the same column. Therefore none of them is considered an outlier.
 func (s *Suite) Test_Varalign__outlier_1(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -635,8 +639,7 @@ func (s *Suite) Test_Varalign__outlier_1(c *check.C) {
 	vt.Run()
 }
 
-// A single space that ends at the same depth as a tab is replaced with a
-// tab, for consistency.
+// A single space that ends at the same depth as a tab is replaced with a tab, for consistency.
 func (s *Suite) Test_Varalign__outlier_2(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -654,8 +657,8 @@ func (s *Suite) Test_Varalign__outlier_2(c *check.C) {
 
 // A short line that is indented with spaces is aligned to a longer line
 // that is indented with tabs. This is because space-indented lines are
-// only special when their indentation is much deeper than the tab-indented
-// ones.
+// only allowed when their indentation is much deeper than the tab-indented
+// ones (so-called outliers), or as the first line of a continuation line.
 func (s *Suite) Test_Varalign__outlier_3(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -675,6 +678,7 @@ func (s *Suite) Test_Varalign__outlier_3(c *check.C) {
 
 // This space-indented line doesn't count as an outlier yet because it
 // is only a single tab away. The limit is two tabs.
+// Therefore both lines are indented with tabs.
 func (s *Suite) Test_Varalign__outlier_4(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -694,6 +698,8 @@ func (s *Suite) Test_Varalign__outlier_4(c *check.C) {
 
 // This space-indented line is an outlier since it is far enough from the
 // tab-indented line. The latter would require 2 tabs to align to the former.
+// Therefore the short line is not indented to the long line, in order to
+// keep the indentation reasonably short for a large amount of the lines.
 func (s *Suite) Test_Varalign__outlier_5(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -707,7 +713,7 @@ func (s *Suite) Test_Varalign__outlier_5(c *check.C) {
 	vt.Run()
 }
 
-// Short space-indented lines are expanded to the tab-depth.
+// Short space-indented lines do not count as outliers. They are are aligned to the longer tab-indented line.
 func (s *Suite) Test_Varalign__outlier_6(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -723,8 +729,7 @@ func (s *Suite) Test_Varalign__outlier_6(c *check.C) {
 	vt.Run()
 }
 
-// The long line is not an outlier but very close. One more space, and
-// it would count.
+// The long line is not an outlier but very close. One more space, and it would count.
 func (s *Suite) Test_Varalign__outlier_10(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
