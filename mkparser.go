@@ -220,64 +220,17 @@ loop:
 			continue
 
 		case 'C', 'S':
-			lexer.Skip(1)
-			sep := lexer.PeekByte() // bmake allows _any_ separator, even letters.
-			if sep == -1 {
-				break
+			if p.varUseModifierSubst(lexer, closing) {
+				appendModifier(lexer.Since(modifierMark))
+				mayOmitColon = true
+				continue
 			}
-
-			lexer.Skip(1)
-			separator := byte(sep)
-
-			isOther := func(b byte) bool {
-				return b != separator && b != '$' && b != closing && b != '\\'
-			}
-
-			skipOther := func() {
-				for p.VarUse() != nil ||
-					lexer.SkipString("$$") ||
-					(len(lexer.Rest()) >= 2 && lexer.PeekByte() == '\\' && lexer.Skip(2)) ||
-					lexer.NextBytesFunc(isOther) != "" {
-				}
-			}
-
-			lexer.SkipByte('^')
-			skipOther()
-			lexer.SkipByte('$')
-
-			if !lexer.SkipByte(separator) {
-				break
-			}
-
-			skipOther()
-
-			if !lexer.SkipByte(separator) {
-				break
-			}
-
-			lexer.SkipRegexp(G.res.Compile(`^[1gW]`)) // FIXME: Multiple modifiers may be mentioned
-
-			appendModifier(lexer.Since(modifierMark))
-			mayOmitColon = true
-			continue
 
 		case '@':
-			lexer.Skip(1)
-			loopVar := lexer.NextBytesSet(AlnumDot)
-			if loopVar == "" || !lexer.SkipByte('@') {
-				break
+			if p.varUseModifierAt(lexer, closing, varname) {
+				appendModifier(lexer.Since(modifierMark))
+				continue
 			}
-
-			re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`)))
-			for p.VarUse() != nil || lexer.SkipString("$$") || lexer.SkipRegexp(re) {
-			}
-
-			if !lexer.SkipByte('@') && p.EmitWarnings {
-				p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopVar)
-			}
-
-			appendModifier(lexer.Since(modifierMark))
-			continue
 
 		case '[':
 			if lexer.SkipRegexp(G.res.Compile(`^\[(?:[-.\d]+|#)\]`)) {
@@ -309,6 +262,65 @@ loop:
 		}
 	}
 	return modifiers
+}
+
+func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool {
+	lexer.Skip(1)
+	sep := lexer.PeekByte() // bmake allows _any_ separator, even letters.
+	if sep == -1 {
+		return false
+	}
+
+	lexer.Skip(1)
+	separator := byte(sep)
+
+	isOther := func(b byte) bool {
+		return b != separator && b != '$' && b != closing && b != '\\'
+	}
+
+	skipOther := func() {
+		for p.VarUse() != nil ||
+			lexer.SkipString("$$") ||
+			(len(lexer.Rest()) >= 2 && lexer.PeekByte() == '\\' && lexer.Skip(2)) ||
+			lexer.NextBytesFunc(isOther) != "" {
+		}
+	}
+
+	lexer.SkipByte('^')
+	skipOther()
+	lexer.SkipByte('$')
+
+	if !lexer.SkipByte(separator) {
+		return false
+	}
+
+	skipOther()
+
+	if !lexer.SkipByte(separator) {
+		return false
+	}
+
+	lexer.SkipRegexp(G.res.Compile(`^[1gW]`)) // FIXME: Multiple modifiers may be mentioned
+
+	return true
+}
+
+func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, closing byte, varname string) bool {
+	lexer.Skip(1)
+	loopVar := lexer.NextBytesSet(AlnumDot)
+	if loopVar == "" || !lexer.SkipByte('@') {
+		return false
+	}
+
+	re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`)))
+	for p.VarUse() != nil || lexer.SkipString("$$") || lexer.SkipRegexp(re) {
+	}
+
+	if !lexer.SkipByte('@') && p.EmitWarnings {
+		p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopVar)
+	}
+
+	return true
 }
 
 // MkCond parses a condition like ${OPSYS} == "NetBSD".
