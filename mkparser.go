@@ -420,34 +420,35 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
 			}
 
-			if m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`)); m != nil {
-				op := m[1]
-				if op == "==" || op == "!=" {
-					if mrhs := lexer.NextRegexp(G.res.Compile(`^"([^"\$\\]*)"`)); mrhs != nil {
-						return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
-					}
-				}
-
-				if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
-					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
-				}
-
-				if rhs := p.VarUse(); rhs != nil {
-					return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
-				}
-
-				if lexer.PeekByte() == '"' {
-					mark := lexer.Mark()
-					lexer.Skip(1)
-					if quotedRHS := p.VarUse(); quotedRHS != nil {
-						if lexer.SkipByte('"') {
-							return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
-						}
-					}
-					lexer.Reset(mark)
-				}
-			} else {
+			m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`))
+			if m == nil {
 				return &mkCond{Not: &mkCond{Empty: lhs}} // See devel/bmake/files/cond.c:/\* For \.if \$/
+			}
+
+			op := m[1]
+			if op == "==" || op == "!=" {
+				if mrhs := lexer.NextRegexp(G.res.Compile(`^"([^"\$\\]*)"`)); mrhs != nil {
+					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
+				}
+			}
+
+			if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
+				return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
+			}
+
+			if rhs := p.VarUse(); rhs != nil {
+				return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
+			}
+
+			if lexer.PeekByte() == '"' {
+				mark := lexer.Mark()
+				lexer.Skip(1)
+				if quotedRHS := p.VarUse(); quotedRHS != nil {
+					if lexer.SkipByte('"') {
+						return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
+					}
+				}
+				lexer.Reset(mark)
 			}
 		}
 
@@ -484,6 +485,10 @@ func (p *MkParser) mkCondFunc() *mkCond {
 				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
 			}
 		}
+
+		// TODO: Consider suggesting ${VAR} instead of !empty(VAR) since it is shorter and
+		// avoids unnecessary negation, which makes the expression less confusing.
+		// This applies especially to the ${VAR:Mpattern} form.
 
 	case "commands", "exists", "make", "target":
 		argMark := lexer.Mark()
