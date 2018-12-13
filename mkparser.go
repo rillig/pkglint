@@ -262,17 +262,22 @@ loop:
 			continue
 
 		case '@':
-			if m := lexer.NextRegexp(G.res.Compile(`^@([\w.]+)@`)); m != nil {
-				loopvar := m[1]
-				re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`)))
-				for p.VarUse() != nil || lexer.SkipString("$$") || lexer.SkipRegexp(re) {
-				}
-				if !lexer.SkipByte('@') && p.EmitWarnings {
-					p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopvar)
-				}
-				appendModifier(lexer.Since(modifierMark))
-				continue
+			lexer.Skip(1)
+			loopVar := lexer.NextBytesSet(AlnumDot)
+			if loopVar == "" || !lexer.SkipByte('@') {
+				break
 			}
+
+			re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`)))
+			for p.VarUse() != nil || lexer.SkipString("$$") || lexer.SkipRegexp(re) {
+			}
+
+			if !lexer.SkipByte('@') && p.EmitWarnings {
+				p.Line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopVar)
+			}
+
+			appendModifier(lexer.Since(modifierMark))
+			continue
 
 		case '[':
 			if lexer.SkipRegexp(G.res.Compile(`^\[(?:[-.\d]+|#)\]`)) {

@@ -587,7 +587,10 @@ func (mkline *MkLineImpl) RefTo(other MkLine) string {
 	return mkline.Line.RefTo(other.Line)
 }
 
-var AlnumDash = textproc.NewByteSet("a-z---")
+var (
+	LowerDash = textproc.NewByteSet("a-z---")
+	AlnumDot  = textproc.NewByteSet("A-Za-z0-9_.")
+)
 
 func matchMkDirective(text string) (m bool, indent, directive, args, comment string) {
 	lexer := textproc.NewLexer(text)
@@ -596,7 +599,7 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 	}
 
 	indent = lexer.NextHspace()
-	directive = lexer.NextBytesSet(AlnumDash)
+	directive = lexer.NextBytesSet(LowerDash)
 	switch directive {
 	case "if", "else", "elif", "endif",
 		"ifdef", "ifndef",
