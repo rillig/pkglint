@@ -73,6 +73,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 
 	if lexer.SkipByte('{') || lexer.SkipByte('(') {
 		usingRoundParen := lexer.Since(mark)[1] == '('
+
 		closing := byte('}')
 		if usingRoundParen {
 			closing = ')'
@@ -99,9 +100,13 @@ func (p *MkParser) VarUse() *MkVarUse {
 			}
 		}
 
-		re := G.res.Compile(regex.Pattern(ifelseStr(usingRoundParen, `^([^$:)]|\$\$)+`, `^([^$:}]|\$\$)+`)))
+		// This code path parses ${arbitrary text :L} and ${expression :? true-branch : false-branch }.
+		// The text in front of the :L or :? modifier doesn't have to be a variable name.
+
+		re := G.res.Compile(regex.Pattern(ifelseStr(usingRoundParen, `^(?:[^$:)]|\$\$)+`, `^(?:[^$:}]|\$\$)+`)))
 		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
+
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
 			varexpr := lexer.Since(varnameMark)
@@ -110,6 +115,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 				return &MkVarUse{varexpr, modifiers}
 			}
 		}
+
 		lexer.Reset(mark)
 	}
 
@@ -152,7 +158,10 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 
 	var modifiers []MkVarUseModifier
 	appendModifier := func(s string) { modifiers = append(modifiers, MkVarUseModifier{s}) }
+
+	// The :S and :C modifiers may be chained without using the : as separator.
 	mayOmitColon := false
+
 loop:
 	for lexer.SkipByte(':') || mayOmitColon {
 		mayOmitColon = false
@@ -160,17 +169,23 @@ loop:
 
 		switch lexer.PeekByte() {
 		case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
-			if lexer.SkipRegexp(G.res.Compile(`^(E|H|L|Ox?|Q|R|T|sh|tA|tW|tl|tu|tw|u)`)) {
-				appendModifier(lexer.Since(modifierMark))
+			mod := lexer.NextBytesSet(textproc.Alnum)
+			switch mod {
+
+			case "E", "H", "L", "O", "Ox", "Q", "R", "T", "sh", "tA", "tW", "tl", "tu", "tw", "u":
+				appendModifier(mod)
 				continue
-			}
-			if lexer.SkipString("ts") {
+
+			case "ts":
 				rest := lexer.Rest()
-				if len(rest) >= 2 && (rest[1] == closing || rest[1] == ':') {
+				switch {
+				case len(rest) >= 2 && (rest[1] == closing || rest[1] == ':'):
 					lexer.Skip(1)
-				} else if len(rest) >= 1 && (rest[0] == closing || rest[0] == ':') {
-				} else if lexer.SkipRegexp(G.res.Compile(`^\\\d+`)) {
-				} else {
+				case len(rest) >= 1 && (rest[0] == closing || rest[0] == ':'):
+					break
+				case lexer.SkipRegexp(G.res.Compile(`^\\\d+`)):
+					break
+				default:
 					break loop
 				}
 				appendModifier(lexer.Since(modifierMark))
