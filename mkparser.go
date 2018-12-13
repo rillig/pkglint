@@ -153,6 +153,9 @@ func (p *MkParser) VarUse() *MkVarUse {
 	return nil
 }
 
+// VarUseModifiers parses the modifiers of a variable being used, such as :Q, :Mpattern.
+//
+// See the bmake manual page.
 func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModifier {
 	lexer := p.lexer
 
@@ -172,7 +175,22 @@ loop:
 			mod := lexer.NextBytesSet(textproc.Alnum)
 			switch mod {
 
-			case "E", "H", "L", "O", "Ox", "Q", "R", "T", "sh", "tA", "tW", "tl", "tu", "tw", "u":
+			case
+				"E",  // Extension, e.g. path/file.suffix => suffix
+				"H",  // Head, e.g. dir/subdir/file.suffix => dir/subdir
+				"L",  // XXX: Shouldn't this be handled specially?
+				"O",  // Order alphabetically
+				"Ox", // Shuffle
+				"Q",  // Quote shell meta-characters
+				"R",  // Strip the file suffix, e.g. path/file.suffix => file
+				"T",  // Basename, e.g. path/file.suffix => file.suffix
+				"sh", // Evaluate the variable value as shell command
+				"tA", // Try to convert to absolute path
+				"tW", // Causes the value to be treated as a single word
+				"tl", // To lowercase
+				"tu", // To uppercase
+				"tw", // Causes the value to be treated as list of words
+				"u":  // Remove adjacent duplicate words (like uniq(1))
 				appendModifier(mod)
 				continue
 
