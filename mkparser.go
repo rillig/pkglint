@@ -287,7 +287,7 @@ loop:
 
 		case '?':
 			lexer.Skip(1)
-			re := G.res.Compile(regex.Pattern(`^([^$:` + string(closing) + `]|\$\$)+`))
+			re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:}]|\$\$)+`, `^([^$:)]|\$\$)+`)))
 			for p.VarUse() != nil || lexer.SkipRegexp(re) {
 			}
 			if lexer.SkipByte(':') {
