@@ -111,6 +111,10 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	test("${VAR:S/-//S/.//}",
 		varuseText("${VAR:S/-//S/.//}", "VAR", "S/-//", "S/.//"))
 
+	// The :S and :C modifiers accept an arbitrary character as separator. Here it is "a".
+	test("${VAR:Sahara}",
+		varuse("VAR", "Sahara"))
+
 	test("${VAR:ts}", varuse("VAR", "ts"))                 // The separator character can be left out.
 	test("${VAR:ts\\000012}", varuse("VAR", "ts\\000012")) // The separator character can be a long octal number.
 	test("${VAR:ts\\124}", varuse("VAR", "ts\\124"))       // Or even decimal.

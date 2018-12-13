@@ -220,31 +220,46 @@ loop:
 			continue
 
 		case 'C', 'S':
-			// bmake allows _any_ separator, even letters.
 			lexer.Skip(1)
-			if m := lexer.NextRegexp(G.res.Compile(`^[%,/:;@^|]`)); m != nil {
-				separator := m[0][0]
-				lexer.SkipByte('^')
-				skipOther := func() {
-					for p.VarUse() != nil ||
-						lexer.SkipString("$$") ||
-						(len(lexer.Rest()) >= 2 && lexer.PeekByte() == '\\' && lexer.Skip(2)) ||
-						lexer.NextBytesFunc(func(b byte) bool { return b != separator && b != '$' && b != closing && b != '\\' }) != "" {
+			sep := lexer.PeekByte() // bmake allows _any_ separator, even letters.
+			if sep == -1 {
+				break
+			}
 
-					}
-				}
-				skipOther()
-				lexer.SkipByte('$')
-				if lexer.SkipByte(separator) {
-					skipOther()
-					if lexer.SkipByte(separator) {
-						lexer.SkipRegexp(G.res.Compile(`^[1gW]`)) // FIXME: Multiple modifiers may be mentioned
-						appendModifier(lexer.Since(modifierMark))
-						mayOmitColon = true
-						continue
-					}
+			lexer.Skip(1)
+			separator := byte(sep)
+
+			isOther := func(b byte) bool {
+				return b != separator && b != '$' && b != closing && b != '\\'
+			}
+
+			skipOther := func() {
+				for p.VarUse() != nil ||
+					lexer.SkipString("$$") ||
+					(len(lexer.Rest()) >= 2 && lexer.PeekByte() == '\\' && lexer.Skip(2)) ||
+					lexer.NextBytesFunc(isOther) != "" {
 				}
 			}
+
+			lexer.SkipByte('^')
+			skipOther()
+			lexer.SkipByte('$')
+
+			if !lexer.SkipByte(separator) {
+				break
+			}
+
+			skipOther()
+
+			if !lexer.SkipByte(separator) {
+				break
+			}
+
+			lexer.SkipRegexp(G.res.Compile(`^[1gW]`)) // FIXME: Multiple modifiers may be mentioned
+
+			appendModifier(lexer.Since(modifierMark))
+			mayOmitColon = true
+			continue
 
 		case '@':
 			if m := lexer.NextRegexp(G.res.Compile(`^@([\w.]+)@`)); m != nil {
