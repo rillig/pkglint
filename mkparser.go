@@ -85,7 +85,11 @@ func (p *MkParser) VarUse() *MkVarUse {
 			if lexer.SkipByte(closing) {
 				if usingRoundParen && p.EmitWarnings {
 					parenVaruse := lexer.Since(mark)
-					bracesVaruse := "${" + parenVaruse[2:len(parenVaruse)-1] + "}"
+					edit := []byte(parenVaruse)
+					edit[1] = '{'
+					edit[len(edit)-1] = '}'
+					bracesVaruse := string(edit)
+
 					fix := p.Line.Autofix()
 					fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varname)
 					fix.Replace(parenVaruse, bracesVaruse)
@@ -95,7 +99,8 @@ func (p *MkParser) VarUse() *MkVarUse {
 			}
 		}
 
-		for p.VarUse() != nil || lexer.SkipRegexp(G.res.Compile(regex.Pattern(`^([^$:`+string(closing)+`]|\$\$)+`))) {
+		re := G.res.Compile(regex.Pattern(ifelseStr(usingRoundParen, `^([^$:)]|\$\$)+`, `^([^$:}]|\$\$)+`)))
+		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
 		rest := p.Rest()
 		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
