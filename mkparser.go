@@ -14,11 +14,23 @@ type MkParser struct {
 
 // NewMkParser creates a new parser for the given text.
 // If emitWarnings is false, line may be nil.
+//
+// TODO: Document what exactly text is. Is it the form taken from the file, or is it after unescaping "\#" to #?
+//
+// TODO: Remove the emitWarnings argument in order to separate parsing from checking.
 func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
 	G.Assertf((line != nil) == emitWarnings, "line must be given iff emitWarnings is set")
 	return &MkParser{NewParser(line, text, emitWarnings)}
 }
 
+// MkTokens splits a text like in the following example:
+//  Text${VAR:Mmodifier}${VAR2}more text${VAR3}
+// into tokens like these:
+//  Text
+//  ${VAR:Mmodifier}
+//  ${VAR2}
+//  more text
+//  ${VAR3}
 func (p *MkParser) MkTokens() []*MkToken {
 	lexer := p.lexer
 
@@ -27,6 +39,7 @@ func (p *MkParser) MkTokens() []*MkToken {
 		// FIXME: Aren't the comments already gone at this stage?
 		if lexer.SkipByte('#') {
 			lexer.Skip(len(lexer.Rest()))
+			continue
 		}
 
 		mark := lexer.Mark()
@@ -35,14 +48,7 @@ func (p *MkParser) MkTokens() []*MkToken {
 			continue
 		}
 
-	again:
-		dollar := strings.IndexByte(lexer.Rest(), '$')
-		if dollar == -1 {
-			dollar = len(lexer.Rest())
-		}
-		lexer.Skip(dollar)
-		if lexer.SkipString("$$") {
-			goto again
+		for lexer.NextBytesFunc(func(b byte) bool { return b != '$' }) != "" || lexer.SkipString("$$") {
 		}
 		text := lexer.Since(mark)
 		if text != "" {
@@ -108,15 +114,28 @@ func (p *MkParser) VarUse() *MkVarUse {
 	if lexer.SkipByte('<') {
 		return &MkVarUse{"<", nil}
 	}
-	if varname := lexer.NextBytesSet(textproc.AlnumU); varname != "" {
+
+	varname := lexer.NextByteSet(textproc.AlnumU)
+	if varname != -1 {
+
 		if p.EmitWarnings {
-			p.Line.Warnf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Makefile variable or $$%[1]s if you mean a shell variable.", varname)
-			p.Line.Explain(
-				"Technically there is no ambiguity since these variables are always parsed as Make variables.",
-				"For human readers though, $x more often means a shell variable than a Make variable,",
-				"and this would be misleading here.")
+			varnameRest := lexer.Copy().NextBytesSet(textproc.AlnumU)
+			if varnameRest != "" {
+				p.Line.Errorf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.",
+					sprintf("%c%s", varname, varnameRest))
+				p.Line.Explain(
+					"Only the first letter after the dollar is the variable name.",
+					"Everything following it is normal text, even if it looks like a variable name to human readers.")
+			} else {
+				p.Line.Warnf("$%[1]c is ambiguous. Use ${%[1]c} if you mean a Make variable or $$%[1]c if you mean a shell variable.", varname)
+				p.Line.Explain(
+					"In its current form, this variable is parsed as a Make variable.",
+					"For human readers though, $x looks more like a shell variable than a Make variable,",
+					"since Make variables are usually written using braces (BSD-style) or parentheses (GNU-style).")
+			}
 		}
-		return &MkVarUse{varname, nil}
+
+		return &MkVarUse{sprintf("%c", varname), nil}
 	}
 
 	lexer.Reset(mark)

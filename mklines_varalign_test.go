@@ -14,7 +14,7 @@ type VaralignTester struct {
 	diagnostics []string // The expected diagnostics in default mode
 	autofixes   []string // The expected diagnostics in --autofix mode
 	fixed       []string // The expected fixed lines, with spaces instead of tabs
-	source      bool
+	ShowSource  bool     // The --show-source command line option
 }
 
 func NewVaralignTester(s *Suite, c *check.C) *VaralignTester {
@@ -52,7 +52,7 @@ func (vt *VaralignTester) run(autofix bool) {
 	if autofix {
 		cmdline = append(cmdline, "--autofix")
 	}
-	if vt.source {
+	if vt.ShowSource {
 		cmdline = append(cmdline, "--source")
 	}
 	t.SetupCommandLine(cmdline...)
@@ -895,7 +895,7 @@ func (s *Suite) Test_Varalign__fix_without_diagnostic(c *check.C) {
 		"                        RUBY_SHLIBMAJOR=${RUBY_SHLIBMAJOR:Q} \\",
 		"                        RUBY_NOSHLIBMAJOR=${RUBY_NOSHLIBMAJOR} \\",
 		"                        RUBY_NAME=${RUBY_NAME:Q}")
-	vt.source = true
+	vt.ShowSource = true
 	vt.Run()
 }
 
@@ -910,7 +910,7 @@ func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
 		"\tb \\",
 		"\tc \\",
 		"",
-		"NEXT_VAR=\tmust not be indented")
+		"NEXT_VAR=\tsecond line")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1--5: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
@@ -921,13 +921,15 @@ func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
 		"        b \\",
 		"        c \\",
 		"",
-		"NEXT_VAR=       must not be indented")
+		"NEXT_VAR=       second line")
 	vt.Run()
 }
 
 // Commented-out variables take part in the realignment.
-// The TZ=UTC below is part of the two-line comment since make(1)
-// interprets it in the same way.
+// The TZ=UTC below is part of the two-line comment since make(1) interprets it in the same way.
+//
+// This is one of the few cases where commented variable assignments are treated specially.
+// See MkLine.IsCommentedVarassign.
 func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -959,6 +961,9 @@ func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 	vt.Run()
 }
 
+// Commented variable assignments are realigned, too.
+// In this case, the BEFORE and COMMENTED variables are already aligned properly.
+// The line starting with "AFTER" is actually part of the comment, therefore it is not changed.
 func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -967,7 +972,7 @@ func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
 		"#\tvalue1 \\",
 		"#\tvalue2 \\",
 		"#\tvalue3 \\",
-		"AFTER=\tafter") // This line continues the comment.
+		"AFTER=\tafter")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -982,6 +987,9 @@ func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
 
 // The HOMEPAGE is completely ignored. Since its value is empty it doesn't
 // need any alignment. Whether it is commented out doesn't matter.
+//
+// If the HOMEPAGE were taken into account, the alignment would differ and
+// the COMMENT line would be realigned to column 17, reducing the indentation by one tab.
 func (s *Suite) Test_Varalign__realign_variable_without_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -997,6 +1005,8 @@ func (s *Suite) Test_Varalign__realign_variable_without_value(c *check.C) {
 
 // This commented multiline variable is already perfectly aligned.
 // Nothing needs to be fixed.
+// This is a simple case since a paragraph containing only one line
+// is always aligned properly, except when the indentation uses spaces instead of tabs.
 func (s *Suite) Test_Varalign__realign_commented_multiline(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(

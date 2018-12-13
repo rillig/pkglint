@@ -152,6 +152,36 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_MkParser_VarUse(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("--explain")
+
+	mkline := t.NewMkLine("module.mk", 123, "\t$Varname $X")
+	p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
+
+	tokens := p.MkTokens()
+	c.Check(tokens, deepEquals, []*MkToken{
+		{"$V", NewMkVarUse("V")},
+		{"arname ", nil},
+		{"$X", NewMkVarUse("X")}})
+
+	t.CheckOutputLines(
+		"ERROR: module.mk:123: $Varname is ambiguous. Use ${Varname} if you mean a Make variable or $$Varname if you mean a shell variable.",
+		"",
+		"\tOnly the first letter after the dollar is the variable name.",
+		"\tEverything following it is normal text, even if it looks like a",
+		"\tvariable name to human readers.",
+		"",
+		"WARN: module.mk:123: $X is ambiguous. Use ${X} if you mean a Make variable or $$X if you mean a shell variable.",
+		"",
+		"\tIn its current form, this variable is parsed as a Make variable. For",
+		"\thuman readers though, $x looks more like a shell variable than a",
+		"\tMake variable, since Make variables are usually written using braces",
+		"\t(BSD-style) or parentheses (GNU-style).",
+		"")
+}
+
 func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	testRest := func(input string, expectedTree MkCond, expectedRest string) {
 		p := NewMkParser(nil, input, false)

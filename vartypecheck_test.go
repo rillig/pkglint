@@ -16,7 +16,7 @@ func (s *Suite) Test_VartypeCheck_AwkCommand(c *check.C) {
 		"{print $$0}")
 
 	vt.Output(
-		"WARN: filename:1: $0 is ambiguous. Use ${0} if you mean a Makefile variable or $$0 if you mean a shell variable.")
+		"WARN: filename:1: $0 is ambiguous. Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.")
 }
 
 func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
