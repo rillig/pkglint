@@ -414,10 +414,12 @@ func (p *MkParser) mkCondAtom() MkCond {
 				lexer.Reset(mark)
 			}
 		}
+
 		if lhs != nil {
-			if m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(\d+(?:\.\d+)?)`)); m != nil {
+			if m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
 				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
 			}
+
 			if m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`)); m != nil {
 				op := m[1]
 				if op == "==" || op == "!=" {
@@ -425,17 +427,21 @@ func (p *MkParser) mkCondAtom() MkCond {
 						return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
 					}
 				}
+
 				if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
 					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
-				} else if rhs := p.VarUse(); rhs != nil {
+				}
+
+				if rhs := p.VarUse(); rhs != nil {
 					return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
-				} else if lexer.PeekByte() == '"' {
+				}
+
+				if lexer.PeekByte() == '"' {
 					mark := lexer.Mark()
-					if lexer.SkipByte('"') {
-						if quotedRHS := p.VarUse(); quotedRHS != nil {
-							if lexer.SkipByte('"') {
-								return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
-							}
+					lexer.Skip(1)
+					if quotedRHS := p.VarUse(); quotedRHS != nil {
+						if lexer.SkipByte('"') {
+							return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
 						}
 					}
 					lexer.Reset(mark)
@@ -444,7 +450,9 @@ func (p *MkParser) mkCondAtom() MkCond {
 				return &mkCond{Not: &mkCond{Empty: lhs}} // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
 		}
-		if m := lexer.NextRegexp(G.res.Compile(`^\d+(?:\.\d+)?`)); m != nil {
+
+		// See devel/bmake/files/cond.c:/^CondCvtArg
+		if m := lexer.NextRegexp(G.res.Compile(`^(?:0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
 			return &mkCond{Num: m[0]}
 		}
 	}
@@ -501,6 +509,12 @@ func (p *MkParser) Varname() string {
 	return lexer.Since(mark)
 }
 
+// MkCond is a condition in a Makefile, such as ${OPSYS} == NetBSD.
+//
+// The representation is somewhere between syntactic and semantic.
+// Unnecessary parentheses are omitted in this representation,
+// but !empty(VARNAME) is represented differently from ${VARNAME} != "".
+// For higher level analysis, a unified representation might be better.
 type MkCond = *mkCond
 
 type mkCond struct {

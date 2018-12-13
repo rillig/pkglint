@@ -250,36 +250,58 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 			{Not: &mkCond{Empty: varuse("MACHINE_OPSYS", "MNetBSD")}}}})
 
 	// Exotic cases
+
 	test("0",
 		&mkCond{Num: "0"})
+
+	test("0xCAFEBABE",
+		&mkCond{Num: "0xCAFEBABE"})
+
+	test("${VAR} == 0xCAFEBABE",
+		&mkCond{
+			CompareVarNum: &MkCondCompareVarNum{
+				Var: varuse("VAR"),
+				Op:  "==",
+				Num: "0xCAFEBABE"}})
+
 	test("! ( defined(A)  && empty(VARNAME) )",
 		&mkCond{Not: &mkCond{
 			And: []*mkCond{
 				{Defined: "A"},
 				{Empty: varuse("VARNAME")}}}})
+
 	test("${REQD_MAJOR} > ${MAJOR}",
 		&mkCond{CompareVarVar: &MkCondCompareVarVar{varuse("REQD_MAJOR"), ">", varuse("MAJOR")}})
+
 	test("${OS_VERSION} >= 6.5",
 		&mkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), ">=", "6.5"}})
+
 	test("${OS_VERSION} == 5.3",
 		&mkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), "==", "5.3"}})
+
 	test("!empty(${OS_VARIANT:MIllumos})", // Probably not intended
 		&mkCond{Not: &mkCond{Empty: varuse("${OS_VARIANT:MIllumos}")}})
+
 	test("defined (VARNAME)", // There may be whitespace before the parenthesis; see devel/bmake/files/cond.c:^compare_function.
 		&mkCond{Defined: "VARNAME"})
+
 	test("${\"${PKG_OPTIONS:Moption}\":?--enable-option:--disable-option}",
 		&mkCond{Not: &mkCond{Empty: varuse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")}})
 
 	// Errors
+
 	testRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
 		&mkCond{Not: &mkCond{Empty: varuse("PKG_OPTIONS", "Msndfile")}},
 		"|| defined(PKG_OPTIONS:Msamplerate)")
+
 	testRest("${LEFT} &&",
 		&mkCond{Not: &mkCond{Empty: varuse("LEFT")}},
 		"&&")
+
 	testRest("\"unfinished string literal",
 		nil,
 		"\"unfinished string literal")
+
 	testRest("${VAR} == \"unfinished string literal",
 		nil, // Not even the ${VAR} gets through here, although that can be expected.
 		"${VAR} == \"unfinished string literal")
