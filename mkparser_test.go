@@ -290,7 +290,7 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 		varuse("VAR", "Sahara"))
 
 	test("${VAR:ts}",
-		varuse("VAR", "ts")) // The separator character can be left out.
+		varuse("VAR", "ts")) // The separator character can be left out, which means empty.
 
 	test("${VAR:ts\\000012}",
 		varuse("VAR", "ts\\000012")) // The separator character can be a long octal number.

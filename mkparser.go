@@ -195,6 +195,7 @@ loop:
 				continue
 
 			case "ts":
+				// See devel/bmake/files/var.c:/case 't'
 				rest := lexer.Rest()
 				switch {
 				case len(rest) >= 2 && (rest[1] == closing || rest[1] == ':'):
