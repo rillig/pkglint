@@ -2,7 +2,7 @@ package pkglint
 
 import "strconv"
 
-func parseShellProgram(line Line, program string) (list *MkShList, err error) {
+func parseShellProgram(line Line, program string) (*MkShList, error) {
 	if trace.Tracing {
 		defer trace.Call(program)()
 	}
@@ -46,6 +46,7 @@ func NewShellLexer(tokens []string, rest string) *ShellLexer {
 		atCommandStart: true,
 		error:          rest}
 }
+
 func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 	if len(lex.remaining) == 0 {
 		return 0
