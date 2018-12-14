@@ -577,10 +577,12 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		for _, or := range cond.Or {
 			w.Walk(or, callback)
 		}
+
 	case cond.And != nil:
 		for _, and := range cond.And {
 			w.Walk(and, callback)
 		}
+
 	case cond.Not != nil:
 		w.Walk(cond.Not, callback)
 
@@ -589,8 +591,11 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 			callback.Defined(cond.Defined)
 		}
 		if callback.VarUse != nil {
+			// This is not really a VarUse, it's more a VarUseDefined.
+			// But in practice they are similar enough to be treated the same.
 			callback.VarUse(&MkVarUse{cond.Defined, nil})
 		}
+
 	case cond.Empty != nil:
 		if callback.Empty != nil {
 			callback.Empty(cond.Empty)
@@ -598,6 +603,7 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		if callback.VarUse != nil {
 			callback.VarUse(cond.Empty)
 		}
+
 	case cond.CompareVarVar != nil:
 		if callback.CompareVarVar != nil {
 			cvv := cond.CompareVarVar
@@ -608,6 +614,7 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 			callback.VarUse(cvv.Left)
 			callback.VarUse(cvv.Right)
 		}
+
 	case cond.CompareVarStr != nil:
 		if callback.CompareVarStr != nil {
 			cvs := cond.CompareVarStr
@@ -616,6 +623,7 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		if callback.VarUse != nil {
 			callback.VarUse(cond.CompareVarStr.Var)
 		}
+
 	case cond.CompareVarNum != nil:
 		if callback.CompareVarNum != nil {
 			cvn := cond.CompareVarNum
@@ -624,6 +632,7 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		if callback.VarUse != nil {
 			callback.VarUse(cond.CompareVarNum.Var)
 		}
+
 	case cond.Call != nil:
 		if callback.Call != nil {
 			call := cond.Call

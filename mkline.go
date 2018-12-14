@@ -1159,7 +1159,12 @@ func (ind *Indentation) CheckFinish(filename string) {
 }
 
 // VarnameBytes contains characters that may be used in variable names.
-// The bracket is included here for the tool of the same name, e.g. "TOOLS_PATH.[".
+// The bracket is included only for the tool of the same name, e.g. "TOOLS_PATH.[".
+//
+// This approach differs from the one in devel/bmake/files/parse.c:/^Parse_IsVar,
+// but in practice it works equally well. Luckily there aren't many situations
+// where a complicated variable name contains unbalanced parentheses or braces,
+// which would confuse the devel/bmake parser.
 var VarnameBytes = textproc.NewByteSet("A-Za-z_0-9*+---.[")
 
 func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
