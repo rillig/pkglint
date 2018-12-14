@@ -249,8 +249,8 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	test("${${_var_}.*}",
 		varuse("${_var_}.*"))
 
-	test("${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}",
-		varuse("GCONF_SCHEMAS", "@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@"))
+	test("${OPTIONS:@opt@printf 'Option %s is selected\n' ${opt:Q}';@}",
+		varuse("OPTIONS", "@opt@printf 'Option %s is selected\n' ${opt:Q}';@"))
 
 	/* weird features */
 	test("${${EMACS_VERSION_MAJOR}>22:?@comment :}",
