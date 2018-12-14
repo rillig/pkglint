@@ -36,14 +36,82 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 		text += "}"
 		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
 	}
+
+	// Everything except VarUses is passed through unmodified.
+
+	test("literal",
+		literal("literal"))
+
+	test("\\/share\\/ { print \"share directory\" }",
+		literal("\\/share\\/ { print \"share directory\" }"))
+
+	test("find . -name \\*.orig -o -name \\*.pre",
+		literal("find . -name \\*.orig -o -name \\*.pre"))
+
+	test("-e 's|\\$${EC2_HOME.*}|EC2_HOME}|g'",
+		literal("-e 's|\\$${EC2_HOME.*}|EC2_HOME}|g'"))
+
+	test("$$var1 $$var2 $$? $$",
+		literal("$$var1 $$var2 $$? $$"))
+
+	testRest("hello, ${W:L:tl}orld", []*MkToken{
+		literal("hello, "),
+		varuse("W", "L", "tl"),
+		literal("orld")},
+		"")
+	testRest("ftp://${PKGNAME}/ ${MASTER_SITES:=subdir/}", []*MkToken{
+		literal("ftp://"),
+		varuse("PKGNAME"),
+		literal("/ "),
+		varuse("MASTER_SITES", "=subdir/")},
+		"")
+
+	// FIXME: Text must match modifiers.
+	testRest("${VAR:S,a,b,c,d,e,f}",
+		[]*MkToken{{
+			Text:   "${VAR:S,a,b,c,d,e,f}",
+			Varuse: NewMkVarUse("VAR", "S,a,b,")}},
+		"")
+
+	testRest("Text${VAR:Mmodifier}${VAR2}more text${VAR3}", []*MkToken{
+		literal("Text"),
+		varuse("VAR", "Mmodifier"),
+		varuse("VAR2"),
+		literal("more text"),
+		varuse("VAR3")},
+		"")
+}
+
+func (s *Suite) Test_MkParser_VarUse(c *check.C) {
+	t := s.Init(c)
+
+	testRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
+		line := t.NewLines("Test_MkParser_VarUse.mk", input).Lines[0]
+		p := NewMkParser(line, input, true)
+		actualTokens := p.MkTokens()
+		c.Check(actualTokens, deepEquals, expectedTokens)
+		for i, expectedToken := range expectedTokens {
+			if i < len(actualTokens) {
+				c.Check(*actualTokens[i], deepEquals, *expectedToken)
+				c.Check(actualTokens[i].Varuse, deepEquals, expectedToken.Varuse)
+			}
+		}
+		c.Check(p.Rest(), equals, expectedRest)
+	}
+	test := func(input string, expectedToken *MkToken) {
+		testRest(input, []*MkToken{expectedToken}, "")
+	}
+	varuse := func(varname string, modifiers ...string) *MkToken {
+		text := "${" + varname
+		for _, modifier := range modifiers {
+			text += ":" + modifier
+		}
+		text += "}"
+		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
+	}
 	varuseText := func(text, varname string, modifiers ...string) *MkToken {
 		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
 	}
-
-	test("literal", literal("literal"))
-	test("\\/share\\/ { print \"share directory\" }", literal("\\/share\\/ { print \"share directory\" }"))
-	test("find . -name \\*.orig -o -name \\*.pre", literal("find . -name \\*.orig -o -name \\*.pre"))
-	test("-e 's|\\$${EC2_HOME.*}|EC2_HOME}|g'", literal("-e 's|\\$${EC2_HOME.*}|EC2_HOME}|g'"))
 
 	test("${VARIABLE}", varuse("VARIABLE"))
 	test("${VARIABLE.param}", varuse("VARIABLE.param"))
@@ -125,7 +193,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 
 	test("$(GNUSTEP_USER_ROOT)", varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"))
 	t.CheckOutputLines(
-		"WARN: Test_MkParser_MkTokens.mk:1: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
+		"WARN: Test_MkParser_VarUse.mk:1: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
 
 	testRest("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
 	testRest("$(VAR}", nil, "$(VAR}") // Opening parenthesis, closing brace
@@ -134,29 +202,10 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}", varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end
 	t.CheckOutputLines(
-		"WARN: Test_MkParser_MkTokens.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".")
-
-	testRest("hello, ${W:L:tl}orld", []*MkToken{
-		literal("hello, "),
-		varuse("W", "L", "tl"),
-		literal("orld")},
-		"")
-	testRest("ftp://${PKGNAME}/ ${MASTER_SITES:=subdir/}", []*MkToken{
-		literal("ftp://"),
-		varuse("PKGNAME"),
-		literal("/ "),
-		varuse("MASTER_SITES", "=subdir/")},
-		"")
-
-	// FIXME: Text must match modifiers.
-	testRest("${VAR:S,a,b,c,d,e,f}",
-		[]*MkToken{{
-			Text:   "${VAR:S,a,b,c,d,e,f}",
-			Varuse: NewMkVarUse("VAR", "S,a,b,")}},
-		"")
+		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".")
 }
 
-func (s *Suite) Test_MkParser_VarUse(c *check.C) {
+func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--explain")
