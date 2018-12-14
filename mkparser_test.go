@@ -268,10 +268,20 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	test("${${PKGBASE} ${PKGVERSION}:L}",
 		varuse("${PKGBASE} ${PKGVERSION}", "L"))
 
+	// This complicated expression returns the major.minor.patch version
+	// of the package given in ${d}.
+	//
+	// The :L modifier interprets the variable name not as a variable name
+	// but takes it as the variable value. Followed by the :sh modifier,
+	// this combination evaluates to the output of pkg_info.
+	//
+	// In this output, all non-digit characters are replaced with spaces so
+	// that the remaining value is a space-separated list of version parts.
+	// From these parts, the first 3 are taken and joined using a dot as separator.
 	test("${${${PKG_INFO} -E ${d} || echo:L:sh}:L:C/[^[0-9]]*/ /g:[1..3]:ts.}",
 		varuse("${${PKG_INFO} -E ${d} || echo:L:sh}", "L", "C/[^[0-9]]*/ /g", "[1..3]", "ts."))
 
-	// For :S and :C, the colon can be left out.
+	// For :S and :C, the colon can be left out. It's confusing but possible.
 	test("${VAR:S/-//S/.//}",
 		varuseText("${VAR:S/-//S/.//}", "VAR", "S/-//", "S/.//"))
 
