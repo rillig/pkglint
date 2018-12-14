@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"fmt"
-	"gopkg.in/check.v1"
-)
+import "gopkg.in/check.v1"
 
 func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 	list, err := parseShellProgram(dummyLine, ""+
@@ -22,8 +19,8 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 			if format != "" && !contains(format, "%") {
 				panic(format)
 			}
-			detail := fmt.Sprintf(format, args...)
-			commands = append(commands, fmt.Sprintf("%16s %s", kind, detail))
+			detail := sprintf(format, args...)
+			commands = append(commands, sprintf("%16s %s", kind, detail))
 		}
 
 		walker := NewMkShWalker()

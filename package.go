@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"fmt"
 	"netbsd.org/pkglint/pkgver"
 	"path"
 	"strconv"
@@ -37,7 +36,7 @@ type Package struct {
 func NewPackage(dir string) *Package {
 	pkgpath := G.Pkgsrc.ToRel(dir)
 	if strings.Count(pkgpath, "/") != 1 {
-		panic(fmt.Sprintf("Package directory %q must be two subdirectories below the pkgsrc root %q.", dir, G.Pkgsrc.File(".")))
+		panic(sprintf("Package directory %q must be two subdirectories below the pkgsrc root %q.", dir, G.Pkgsrc.File(".")))
 	}
 
 	pkg := Package{

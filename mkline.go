@@ -161,7 +161,7 @@ func NewMkLine(line Line) *MkLineImpl {
 }
 
 func (mkline *MkLineImpl) String() string {
-	return fmt.Sprintf("%s:%s", mkline.Filename, mkline.Linenos())
+	return sprintf("%s:%s", mkline.Filename, mkline.Linenos())
 }
 
 // IsVarassign returns true for variable assignments of the form VAR=value.
@@ -922,7 +922,7 @@ func (vuc *VarUseContext) String() string {
 	if vuc.vartype != nil {
 		typename = vuc.vartype.String()
 	}
-	return fmt.Sprintf("(%s time:%s quoting:%s wordpart:%v)", typename, vuc.time, vuc.quoting, vuc.IsWordPart)
+	return sprintf("(%s time:%s quoting:%s wordpart:%v)", typename, vuc.time, vuc.quoting, vuc.IsWordPart)
 }
 
 // Indentation remembers the stack of preprocessing directives and their

@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"fmt"
 	"gopkg.in/check.v1"
 	"sort"
 )
@@ -692,7 +691,7 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 
 	var varnames []string
 	for varname, mkline := range mklines.vars.used {
-		varnames = append(varnames, fmt.Sprintf("%s (line %s)", varname, mkline.Linenos()))
+		varnames = append(varnames, sprintf("%s (line %s)", varname, mkline.Linenos()))
 	}
 	sort.Strings(varnames)
 

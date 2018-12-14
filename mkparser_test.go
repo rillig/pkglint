@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"fmt"
 	"gopkg.in/check.v1"
 	"strings"
 )
@@ -365,6 +364,10 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	}
 	varuse := NewMkVarUse
 
+	// TODO: Add tests for &&, ||, !.
+
+	// TODO: Add test for !empty(VAR:M}).
+
 	test("${OPSYS:MNetBSD}",
 		&mkCond{Not: &mkCond{Empty: varuse("OPSYS", "MNetBSD")}})
 
@@ -380,6 +383,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	test("!empty(VARNAME:M[yY][eE][sS])",
 		&mkCond{Not: &mkCond{Empty: varuse("VARNAME", "M[yY][eE][sS]")}})
 
+	// Colons are unescaped at this point because they cannot be mistaken for separators anymore.
 	test("!empty(USE_TOOLS:Mautoconf\\:run)",
 		&mkCond{Not: &mkCond{Empty: varuse("USE_TOOLS", "Mautoconf:run")}})
 
@@ -400,9 +404,6 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	test("\"${pkg}\" == \"${name}\"",
 		&mkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
-
-	test("(defined(VARNAME))",
-		&mkCond{Defined: "VARNAME"})
 
 	test("exists(/etc/hosts)",
 		&mkCond{Call: &MkCondCall{"exists", "/etc/hosts"}})
@@ -436,6 +437,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	// Exotic cases
 
+	// ".if 0" can be used to skip over a block of code.
 	test("0",
 		&mkCond{Num: "0"})
 
@@ -467,7 +469,8 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	test("!empty(${OS_VARIANT:MIllumos})", // Probably not intended
 		&mkCond{Not: &mkCond{Empty: varuse("${OS_VARIANT:MIllumos}")}})
 
-	test("defined (VARNAME)", // There may be whitespace before the parenthesis; see devel/bmake/files/cond.c:^compare_function.
+	// There may be whitespace before the parenthesis; see devel/bmake/files/cond.c:^compare_function.
+	test("defined (VARNAME)",
 		&mkCond{Defined: "VARNAME"})
 
 	test("${\"${PKG_OPTIONS:Moption}\":?--enable-option:--disable-option}",
@@ -487,19 +490,24 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		nil,
 		"\"unfinished string literal")
 
+	// Not even the ${VAR} gets through here, although that can be expected. FIXME: Why?
 	testRest("${VAR} == \"unfinished string literal",
-		nil, // Not even the ${VAR} gets through here, although that can be expected.
+		nil,
 		"${VAR} == \"unfinished string literal")
 }
 
-func (s *Suite) Test_MkParser__varuse_parentheses_autofix(c *check.C) {
+// Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
+// of nested variables though because this case is not important enough to
+// invest much development time. It occurs so seldom that it is acceptable
+// to run pkglint multiple times in such a case.
+func (s *Suite) Test_MkParser_VarUse__parentheses_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("--autofix")
 	t.SetupVartypes()
 	lines := t.SetupFileLines("Makefile",
 		MkRcsID,
-		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES}")
+		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES} $(A.$(B.$(C)))")
 	mklines := NewMkLines(lines)
 
 	mklines.Check()
@@ -507,10 +515,11 @@ func (s *Suite) Test_MkParser__varuse_parentheses_autofix(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P1)\" with \"${P1}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P2)\" with \"${P2}\".",
-		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".")
+		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".",
+		"AUTOFIX: ~/Makefile:2: Replacing \"$(C)\" with \"${C}\".")
 	t.CheckFileLines("Makefile",
 		MkRcsID,
-		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES}")
+		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES} $(A.$(B.${C}))")
 }
 
 func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
@@ -535,8 +544,11 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 	}
 
 	addEvent := func(name string, args ...string) {
-		events = append(events, fmt.Sprintf("%14s  %s", name, strings.Join(args, ", ")))
+		events = append(events, sprintf("%14s  %s", name, strings.Join(args, ", ")))
 	}
+
+	// TODO: Add callbacks for And, Or, Not if needed.
+	// Especially Not(Empty(VARNAME)) should be an interesting case.
 
 	mkline.Cond().Walk(&MkCondCallback{
 		Defined: func(varname string) {

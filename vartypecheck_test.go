@@ -1,8 +1,6 @@
 package pkglint
 
 import (
-	"fmt"
-
 	"gopkg.in/check.v1"
 )
 
@@ -1241,7 +1239,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 				text = varname + opStr + value
 			}
 		case op == opUseMatch:
-			text = fmt.Sprintf(".if ${%s:M%s} == \"\"", varname, value)
+			text = sprintf(".if ${%s:M%s} == \"\"", varname, value)
 		default:
 			panic("Invalid operator: " + opStr)
 		}

@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"fmt"
-	"strconv"
-)
+import "strconv"
 
 func parseShellProgram(line Line, program string) (list *MkShList, err error) {
 	if trace.Tracing {
@@ -27,7 +24,7 @@ type ParseError struct {
 }
 
 func (e *ParseError) Error() string {
-	return fmt.Sprintf("parse error at %#v", e.RemainingTokens)
+	return sprintf("parse error at %#v", e.RemainingTokens)
 }
 
 type ShellLexer struct {

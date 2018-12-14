@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -48,7 +47,7 @@ func (w *MkShWalker) Path() string {
 		if level.Index == -1 {
 			path = append(path, abbreviated)
 		} else {
-			path = append(path, fmt.Sprintf("%s[%d]", abbreviated, level.Index))
+			path = append(path, sprintf("%s[%d]", abbreviated, level.Index))
 		}
 	}
 	return strings.Join(path, ".")

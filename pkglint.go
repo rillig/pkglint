@@ -154,7 +154,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 			pkglint.histo.PrintStats(pkglint.out.out, "loghisto", -1)
 			pkglint.res.PrintStats(pkglint.out.out)
 			pkglint.loaded.PrintStats(pkglint.out.out, "loaded", 10)
-			pkglint.out.WriteLine(fmt.Sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
+			pkglint.out.WriteLine(sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
 		}()
 	}
 
@@ -407,7 +407,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 // For runtime errors, use dummyLine.Fatalf.
 func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
-		panic("Pkglint internal error: " + fmt.Sprintf(format, args...))
+		panic("Pkglint internal error: " + sprintf(format, args...))
 	}
 }
 
