@@ -230,11 +230,11 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		lex.atCommandStart = false
 	case lex.atCommandStart && matches(token, `^[A-Za-z_]\w*=`):
 		ttype = tkASSIGNMENT_WORD
-		p := NewShTokenizer(dummyLine, token, false)
+		p := NewShTokenizer(dummyLine, token, false) // Just for converting the string to a ShToken
 		lval.Word = p.ShToken()
 	default:
 		ttype = tkWORD
-		p := NewShTokenizer(dummyLine, token, false)
+		p := NewShTokenizer(dummyLine, token, false) // Just for converting the string to a ShToken
 		lval.Word = p.ShToken()
 		lex.atCommandStart = false
 	}
