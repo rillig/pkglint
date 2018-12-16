@@ -199,7 +199,11 @@ func (t *Tester) SetupFileMkLines(relativeFileName string, lines ...string) MkLi
 // SetupPkgsrc sets up a minimal but complete pkgsrc installation in the
 // temporary folder, so that pkglint runs without any errors.
 // Individual files may be overwritten by calling other Setup* methods.
+//
 // This setup is especially interesting for testing Pkglint.Main.
+//
+// If the test works on a lower level than Pkglint.Main,
+// LoadInfrastructure must be called to actually load the infrastructure files.
 func (t *Tester) SetupPkgsrc() {
 
 	// This file is needed to locate the pkgsrc root directory.

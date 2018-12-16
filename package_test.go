@@ -691,7 +691,12 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetupPackage("category/pkg1",
+		"PKGNAME=                package1-1.0")
+	t.SetupPackage("category/pkg2",
+		"PKGNAME=                package2-1.0")
+	t.SetupPackage("category/pkg3",
+		"PKGNAME=                package3-5.0")
 	t.CreateFileLines("doc/TODO",
 		"Suggested package updates",
 		"",
@@ -701,30 +706,6 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"\t"+"o package1-1.0",
 		"\t"+"o package2-2.0 [nice new features]",
 		"\t"+"o package3-3.0 [security update]")
-	t.CreateFileLines("licenses/gnu-gpl-v2",
-		"The licenses for most software are designed to take away ...")
-
-	t.CreateFileLines("category/pkg1/Makefile",
-		MkRcsID,
-		"",
-		"PKGNAME=                package1-1.0",
-		"GENERATE_PLIST+=        echo \"bin/program\";",
-		"NO_CHECKSUM=            yes",
-		"LICENSE=                gnu-gpl-v2")
-	t.CreateFileLines("category/pkg2/Makefile",
-		MkRcsID,
-		"",
-		"PKGNAME=                package2-1.0",
-		"GENERATE_PLIST+=        echo \"bin/program\";",
-		"NO_CHECKSUM=            yes",
-		"LICENSE=                gnu-gpl-v2")
-	t.CreateFileLines("category/pkg3/Makefile",
-		MkRcsID,
-		"",
-		"PKGNAME=                package3-5.0",
-		"GENERATE_PLIST+=        echo \"bin/program\";",
-		"NO_CHECKSUM=            yes",
-		"LICENSE=                gnu-gpl-v2")
 
 	t.Chdir(".")
 	G.Main("pkglint", "-Wall,no-space,no-order", "category/pkg1", "category/pkg2", "category/pkg3")
@@ -733,16 +714,10 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"WARN: category/pkg1/../../doc/TODO:3: Invalid line format \"\".",
 		"WARN: category/pkg1/../../doc/TODO:4: Invalid line format \"\\tO wrong bullet\".",
 		"WARN: category/pkg1/../../doc/TODO:5: Invalid package name \"package-without-version\".",
-		"WARN: category/pkg1/Makefile: Each package should define a COMMENT.",
-		"NOTE: category/pkg1/Makefile:3: The update request to 1.0 from doc/TODO has been done.",
-		"WARN: category/pkg1/Makefile:4: Please use \"${ECHO}\" instead of \"echo\".",
-		"WARN: category/pkg2/Makefile: Each package should define a COMMENT.",
-		"WARN: category/pkg2/Makefile:3: This package should be updated to 2.0 ([nice new features]).",
-		"WARN: category/pkg2/Makefile:4: Please use \"${ECHO}\" instead of \"echo\".",
-		"WARN: category/pkg3/Makefile: Each package should define a COMMENT.",
-		"NOTE: category/pkg3/Makefile:3: This package is newer than the update request to 3.0 ([security update]).",
-		"WARN: category/pkg3/Makefile:4: Please use \"${ECHO}\" instead of \"echo\".",
-		"0 errors and 10 warnings found.",
+		"NOTE: category/pkg1/Makefile:20: The update request to 1.0 from doc/TODO has been done.",
+		"WARN: category/pkg2/Makefile:20: This package should be updated to 2.0 ([nice new features]).",
+		"NOTE: category/pkg3/Makefile:20: This package is newer than the update request to 3.0 ([security update]).",
+		"0 errors and 4 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
