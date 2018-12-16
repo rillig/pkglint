@@ -385,10 +385,13 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 		!vars.Defined("META_PACKAGE") &&
 		!fileExists(pkg.File(pkg.Pkgdir+"/PLIST")) &&
 		!fileExists(pkg.File(pkg.Pkgdir+"/PLIST.common")) {
+		// TODO: Move these technical details into the explanation, making space for an understandable warning.
 		NewLineWhole(filename).Warnf("Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.")
 	}
 
-	if (vars.Defined("NO_CHECKSUM") || vars.Defined("META_PACKAGE")) && isEmptyDir(pkg.File(pkg.Patchdir)) {
+	if (vars.Defined("NO_CHECKSUM") ||
+		vars.Defined("META_PACKAGE")) && isEmptyDir(pkg.File(pkg.Patchdir)) {
+
 		if distinfoFile := pkg.File(pkg.DistinfoFile); fileExists(distinfoFile) {
 			NewLineWhole(distinfoFile).Warnf("This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
 		}
@@ -399,12 +402,17 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 		}
 	}
 
-	if perlLine, noconfLine := vars.FirstDefinition("REPLACE_PERL"), vars.FirstDefinition("NO_CONFIGURE"); perlLine != nil && noconfLine != nil {
-		perlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).", perlLine.RefTo(noconfLine))
+	// TODO: There are other REPLACE_* variables which are probably also affected by NO_CONFIGURE.
+	if noConfigureLine := vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
+		if replacePerlLine := vars.FirstDefinition("REPLACE_PERL"); replacePerlLine != nil {
+			replacePerlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).",
+				replacePerlLine.RefTo(noConfigureLine))
+		}
 	}
 
 	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") && pkg.once.FirstTime("LICENSE") {
 		NewLineWhole(filename).Errorf("Each package must define its LICENSE.")
+		// TODO: Explain why the LICENSE is necessary.
 	}
 
 	pkg.checkGnuConfigureUseLanguages()
@@ -415,9 +423,11 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 		NewLineWhole(filename).Warnf("No COMMENT given.")
 	}
 
-	if imake, x11 := vars.FirstDefinition("USE_IMAKE"), vars.FirstDefinition("USE_X11"); imake != nil && x11 != nil {
-		if !hasSuffix(x11.Filename, "/mk/x11.buildlink3.mk") {
-			imake.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", imake.RefTo(x11))
+	if imake := vars.FirstDefinition("USE_IMAKE"); imake != nil {
+		if x11 := vars.FirstDefinition("USE_X11"); x11 != nil {
+			if !hasSuffix(x11.Filename, "/mk/x11.buildlink3.mk") {
+				imake.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", imake.RefTo(x11))
+			}
 		}
 	}
 
@@ -430,15 +440,19 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 func (pkg *Package) checkGnuConfigureUseLanguages() {
 	vars := pkg.vars
 
-	if gnuLine, useLine := vars.FirstDefinition("GNU_CONFIGURE"), vars.FirstDefinition("USE_LANGUAGES"); gnuLine != nil && useLine != nil {
-		if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
-			// Don't emit a warning, since the comment
-			// probably contains a statement that C is
-			// really not needed.
+	if gnuLine := vars.FirstDefinition("GNU_CONFIGURE"); gnuLine != nil {
+		if useLine := vars.FirstDefinition("USE_LANGUAGES"); useLine != nil {
 
-		} else if !matches(useLine.Value(), `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
-			gnuLine.Warnf("GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in %s.",
-				gnuLine.RefTo(useLine))
+			if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
+				// Don't emit a warning since the comment probably contains a
+				// statement that C is really not needed.
+
+			} else if !matches(useLine.Value(), `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
+				gnuLine.Warnf(
+					"GNU_CONFIGURE almost always needs a C compiler, "+
+						"but \"c\" is not added to USE_LANGUAGES in %s.",
+					gnuLine.RefTo(useLine))
+			}
 		}
 	}
 }
@@ -484,6 +498,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 			pkg.EffectivePkgversion = m2
 		}
 	}
+
 	if pkg.EffectivePkgnameLine == nil && distname != "" && !containsVarRef(distname) {
 		if m, m1, m2 := match2(distname, rePkgname); m {
 			pkg.EffectivePkgname = distname + pkg.getNbpart()
@@ -492,6 +507,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 			pkg.EffectivePkgversion = m2
 		}
 	}
+
 	if pkg.EffectivePkgnameLine != nil {
 		if trace.Tracing {
 			trace.Stepf("Effective name=%q base=%q version=%q",
@@ -502,6 +518,8 @@ func (pkg *Package) determineEffectivePkgVars() {
 
 func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 	tokens := NewMkParser(nil, pkgname, false).MkTokens()
+
+	// TODO: Make this resolving of variable references available to all other variables as well.
 
 	result := ""
 	for _, token := range tokens {
@@ -526,30 +544,38 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 }
 
 func (pkg *Package) checkUpdate() {
-	if pkg.EffectivePkgbase != "" {
-		for _, sugg := range G.Pkgsrc.GetSuggestedPackageUpdates() {
-			if pkg.EffectivePkgbase != sugg.Pkgname {
-				continue
-			}
+	if pkg.EffectivePkgbase == "" {
+		return
+	}
 
-			suggver, comment := sugg.Version, sugg.Comment
-			if comment != "" {
-				comment = " (" + comment + ")"
-			}
+	for _, sugg := range G.Pkgsrc.GetSuggestedPackageUpdates() {
+		if pkg.EffectivePkgbase != sugg.Pkgname {
+			continue
+		}
 
-			pkgnameLine := pkg.EffectivePkgnameLine
-			cmp := pkgver.Compare(pkg.EffectivePkgversion, suggver)
-			switch {
-			case cmp < 0:
-				pkgnameLine.Warnf("This package should be updated to %s%s.", sugg.Version, comment)
-				G.Explain(
-					"The wishlist for package updates in doc/TODO mentions that a newer",
-					"version of this package is available.")
-			case cmp > 0:
-				pkgnameLine.Notef("This package is newer than the update request to %s%s.", suggver, comment)
-			default:
-				pkgnameLine.Notef("The update request to %s from doc/TODO%s has been done.", suggver, comment)
-			}
+		suggver, comment := sugg.Version, sugg.Comment
+		if comment != "" {
+			comment = " (" + comment + ")"
+		}
+
+		pkgnameLine := pkg.EffectivePkgnameLine
+		cmp := pkgver.Compare(pkg.EffectivePkgversion, suggver)
+		switch {
+
+		case cmp < 0:
+			pkgnameLine.Warnf("This package should be updated to %s%s.",
+				sugg.Version, comment)
+			G.Explain(
+				"The wishlist for package updates in doc/TODO mentions that a newer",
+				"version of this package is available.")
+
+		case cmp > 0:
+			pkgnameLine.Notef("This package is newer than the update request to %s%s.",
+				suggver, comment)
+
+		default:
+			pkgnameLine.Notef("The update request to %s from doc/TODO%s has been done.",
+				suggver, comment)
 		}
 	}
 }
@@ -573,17 +599,22 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		once
 		many
 	)
+
 	type Variable struct {
 		varname    string
 		repetition Repetition
 	}
+
 	type Section struct {
 		repetition Repetition
 		vars       []Variable
 	}
+
 	variable := func(name string, repetition Repetition) Variable { return Variable{name, repetition} }
 	section := func(repetition Repetition, vars ...Variable) Section { return Section{repetition, vars} }
 
+	// See doc/Makefile-example.
+	// See https://netbsd.org/docs/pkgsrc/pkgsrc.html#components.Makefile.
 	var sections = []Section{
 		section(once,
 			variable("GITHUB_PROJECT", optional), // either here or below MASTER_SITES
@@ -631,11 +662,13 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		section(optional,
 			variable("BUILD_DEPENDS", many),
 			variable("TOOL_DEPENDS", many),
-			variable("DEPENDS", many)),
-	}
+			variable("DEPENDS", many))}
 
 	firstRelevant := -1
 	lastRelevant := -1
+
+	// TODO: understand and explain this code.
+	//  It is much longer and much more complicated than it should be.
 	skip := func() bool {
 		relevantVars := make(map[string]bool)
 		for _, section := range sections {
@@ -753,6 +786,9 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		canonical = canonical[:len(canonical)-1]
 	}
 
+	// TODO: This leads to very long and complicated warnings.
+	//  Those parts that are correct should not be mentioned,
+	//  except if they are helpful for locating the mistakes.
 	mkline := mklines.mklines[firstRelevant]
 	mkline.Warnf("The canonical order of the variables is %s.", strings.Join(canonical, ", "))
 	G.Explain(

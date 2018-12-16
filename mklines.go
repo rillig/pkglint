@@ -455,6 +455,9 @@ func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
 		i++
 	}
 
+	// TODO: Sort the comments.
+	// TODO: Discuss whether these comments are actually helpful.
+
 	fix := lines.Lines[i].Autofix()
 	fix.Warnf("Please add a line %q here.", expected)
 	fix.Explain(
