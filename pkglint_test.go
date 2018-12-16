@@ -44,8 +44,8 @@ func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
 
 	exitcode := G.ParseCommandLine([]string{"pkglint", "-Wall", "-o", ":Q", "--version"})
 
-	if c.Check(exitcode, check.NotNil) {
-		c.Check(*exitcode, equals, 0)
+	if exitcode != -1 {
+		c.Check(exitcode, equals, 0)
 	}
 	c.Check(G.Opts.LogOnly, deepEquals, []string{":Q"})
 	t.CheckOutputLines(
@@ -1066,21 +1066,17 @@ func (s *Suite) Test_Main(c *check.C) {
 		args := os.Args
 		stdout := os.Stdout
 		stderr := os.Stderr
-		prevExit := exit
 		defer func() {
 			os.Stderr = stderr
 			os.Stdout = stdout
 			os.Args = args
-			exit = prevExit
 		}()
 		os.Args = commandLine
 		os.Stdout = out
 		os.Stderr = out
-		exit = func(code int) {
-			c.Check(code, equals, 0)
-		}
 
-		Main()
+		exitCode := Main()
+		c.Check(exitCode, equals, 0)
 	}
 
 	runMain(out, "pkglint", ".")

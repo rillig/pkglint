@@ -139,7 +139,7 @@ func (t *Tester) SetupCommandLine(args ...string) {
 	defer func() { trace.Tracing = prevTracing }()
 
 	exitcode := G.ParseCommandLine(append([]string{"pkglint"}, args...))
-	if exitcode != nil && *exitcode != 0 {
+	if exitcode != -1 && exitcode != 0 {
 		t.CheckOutputEmpty()
 		t.c.Fatalf("Cannot parse command line: %#v", args)
 	}

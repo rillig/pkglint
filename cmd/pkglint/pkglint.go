@@ -1,7 +1,10 @@
 package main
 
-import "netbsd.org/pkglint"
+import (
+	"netbsd.org/pkglint"
+	"os"
+)
 
 func main() {
-	pkglint.Main()
+	os.Exit(pkglint.Main())
 }
