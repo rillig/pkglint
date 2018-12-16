@@ -342,6 +342,12 @@ func (s *ShSuite) Test_ShellParser__case_clause(c *check.C) {
 				b.Words("pattern"),
 				b.List().AddCommand(b.SimpleCommand("case-item-action")), sepNone))))
 
+	s.test("case $$expr in (if|then|else) ;; esac",
+		b.List().AddCommand(b.Case(
+			b.Token("$$expr"),
+			b.CaseItem(
+				b.Words("if", "then", "else"),
+				b.List(), sepNone))))
 }
 
 func (s *ShSuite) Test_ShellParser__if_clause(c *check.C) {

@@ -55,6 +55,7 @@ type ShellLexer struct {
 	atCommandStart bool
 	sinceFor       int
 	sinceCase      int
+	inCasePattern  bool // true inside (pattern1|pattern2|pattern3); works only for simple cases
 	error          string
 	result         *MkShList
 }
@@ -101,6 +102,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		return tkSEMI
 	case ";;":
 		lex.atCommandStart = true
+		lex.inCasePattern = true
 		return tkSEMISEMI
 	case "\n":
 		lex.atCommandStart = true
@@ -109,13 +111,14 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		lex.atCommandStart = true
 		return tkBACKGROUND
 	case "|":
-		lex.atCommandStart = true
+		lex.atCommandStart = !lex.inCasePattern
 		return tkPIPE
 	case "(":
-		lex.atCommandStart = true
+		lex.atCommandStart = !lex.inCasePattern
 		return tkLPAREN
 	case ")":
 		lex.atCommandStart = true
+		lex.inCasePattern = false
 		return tkRPAREN
 	case "&&":
 		lex.atCommandStart = true
@@ -221,6 +224,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 	case lex.sinceCase == 2 && token == "in":
 		ttype = tkIN
 		lex.atCommandStart = false
+		lex.inCasePattern = true
 	case (lex.atCommandStart || lex.sinceCase == 3) && token == "esac":
 		ttype = tkESAC
 		lex.atCommandStart = false
