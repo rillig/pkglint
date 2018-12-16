@@ -988,6 +988,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 	// because the variable \"rv\" comes from a .for loop.
 	//
 	// TODO: iterate over variables in simple .for loops like the above.
+	// TODO: when implementing the above, take care of deeply nested loops (42.zip).
 	G.CheckDirent(pkg)
 
 	t.CheckOutputEmpty()
