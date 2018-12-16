@@ -895,7 +895,9 @@ func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
 
 	// FIXME: One of the below warnings is redundant.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:20: References to other packages should look like \"../../category/package\", not \"../package\".",
+		"WARN: ~/category/package/Makefile:20: "+
+			"References to other packages should look "+
+			"like \"../../category/package\", not \"../package\".",
 		"WARN: ~/category/package/Makefile:20: Invalid relative path \"../package/extra.mk\".")
 }
 
@@ -907,9 +909,10 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t.CreateFileLines("category/package/CVS/Entries",
 		"/Makefile//modified//")
 
-	// Since MAINTAINER= pkgsrc-users@NetBSD.org, everyone may commit changes.
+	// In packages without specific MAINTAINER, everyone may commit changes.
 
-	pkg := t.SetupPackage("category/package")
+	pkg := t.SetupPackage("category/package",
+		"MAINTAINER=\tpkgsrc-users@NetBSD.org")
 
 	G.CheckDirent(pkg)
 
@@ -917,19 +920,8 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 
 	// A package with a MAINTAINER may be edited with care.
 
-	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
-		"",
-		"DISTNAME=\tdistname-1.0",
-		"CATEGORIES=\tcategory",
-		"MASTER_SITES=\t# none",
-		"",
-		"MAINTAINER=\tmaintainer@example.org", // Different from default value
-		"HOMEPAGE=\t# none",
-		"COMMENT=\tDummy package",
-		"LICENSE=\t2-clause-bsd",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
+	t.SetupPackage("category/package",
+		"MAINTAINER=\tmaintainer@example.org")
 
 	G.CheckDirent(pkg)
 
