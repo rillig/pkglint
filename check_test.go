@@ -321,9 +321,9 @@ func (t *Tester) SetupPackage(pkgpath string, makefileLines ...string) string {
 
 line:
 	for _, line := range makefileLines {
-		if m, prefix := match1(line, `^(\w+=)`); m {
+		if m, prefix := match1(line, `^#?(\w+=)`); m {
 			for i, existingLine := range mlines {
-				if hasPrefix(existingLine, prefix) {
+				if hasPrefix(strings.TrimPrefix(existingLine, "#"), prefix) {
 					mlines[i] = line
 					continue line
 				}

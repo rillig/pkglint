@@ -904,6 +904,7 @@ func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t := s.Init(c)
 
+	// no-order since SetupPackage doesn't place OWNER correctly.
 	t.SetupCommandLine("-Wall,no-order")
 	G.Username = "example-user"
 	t.CreateFileLines("category/package/CVS/Entries",
@@ -932,6 +933,7 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	// A package with an OWNER may NOT be edited by others.
 
 	pkg = t.SetupPackage("category/package",
+		"#MAINTAINER=\t# undefined",
 		"OWNER=\towner@example.org")
 
 	G.CheckDirent(pkg)
@@ -939,6 +941,20 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile: " +
 			"Don't commit changes to this file without asking the OWNER, owner@example.org.")
+
+	// In a package with both OWNER and MAINTAINER, OWNER wins.
+
+	pkg = t.SetupPackage("category/package",
+		"MAINTAINER=\tmaintainer@example.org",
+		"OWNER=\towner@example.org")
+
+	G.CheckDirent(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile: "+
+			"Don't commit changes to this file without asking the OWNER, owner@example.org.",
+		"NOTE: ~/category/package/Makefile: "+
+			"Please only commit changes that maintainer@example.org would approve.")
 
 	// ... unless you are the owner, of course.
 
