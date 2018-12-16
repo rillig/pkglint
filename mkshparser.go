@@ -27,9 +27,30 @@ func (e *ParseError) Error() string {
 	return sprintf("parse error at %#v", e.RemainingTokens)
 }
 
+// ShellLexer categorizes tokens for shell commands, providing
+// the lexer required by the yacc-generated parser.
+//
+// The main work of tokenizing is done in ShellTokenizer though.
+//
+// Example:
+//  while :; do var=$$other; done
+// =>
+//  while
+//  space " "
+//  word ":"
+//  semicolon
+//  space " "
+//  do
+//  space " "
+//  assign "var=$$other"
+//  semicolon
+//  space " "
+//  done
+//
+// See splitIntoShellTokens and ShellTokenizer.
 type ShellLexer struct {
 	current        string
-	ioredirect     string
+	ioRedirect     string
 	remaining      []string
 	atCommandStart bool
 	sinceFor       int
@@ -41,7 +62,7 @@ type ShellLexer struct {
 func NewShellLexer(tokens []string, rest string) *ShellLexer {
 	return &ShellLexer{
 		current:        "",
-		ioredirect:     "",
+		ioRedirect:     "",
 		remaining:      tokens,
 		atCommandStart: true,
 		error:          rest}
@@ -66,8 +87,8 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		}()
 	}
 
-	token := lex.ioredirect
-	lex.ioredirect = ""
+	token := lex.ioRedirect
+	lex.ioRedirect = ""
 	if token == "" {
 		token = lex.remaining[0]
 		lex.current = token
@@ -102,6 +123,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 	case "||":
 		lex.atCommandStart = true
 		return tkOR
+
 	case ">":
 		lex.atCommandStart = false
 		return tkGT
@@ -134,7 +156,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 	if m, fdstr, op := match2(token, `^(\d+)(<<-|<<|<>|<&|>>|>&|>\||<|>)$`); m {
 		fd, _ := strconv.Atoi(fdstr)
 		lval.IONum = fd
-		lex.ioredirect = op
+		lex.ioRedirect = op
 		return tkIO_NUMBER
 	}
 
@@ -163,6 +185,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		case "do":
 			return tkDO
 		case "done":
+			// TODO: add test that ensures "lex.atCommandStart = false" is required here.
 			return tkDONE
 		case "in":
 			lex.atCommandStart = false
@@ -174,6 +197,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		case "{":
 			return tkLBRACE
 		case "}":
+			// TODO: add test that ensures "lex.atCommandStart = false" is required here.
 			return tkRBRACE
 		case "!":
 			return tkEXCLAM
