@@ -19,7 +19,7 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 }
 
 func (list *MkShList) AddCommand(command *MkShCommand) *MkShList {
-	pipeline := NewMkShPipeline(false, command)
+	pipeline := NewMkShPipeline(false, []*MkShCommand{command})
 	andOr := NewMkShAndOr(pipeline)
 	return list.AddAndOr(andOr)
 }

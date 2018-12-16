@@ -86,7 +86,7 @@ pipeline : tkEXCLAM pipe_sequence {
 }
 
 pipe_sequence : command {
-	$$ = NewMkShPipeline(false, $1)
+	$$ = NewMkShPipeline(false, []*MkShCommand{$1})
 }
 pipe_sequence : pipe_sequence tkPIPE linebreak command {
 	$$.Add($4)

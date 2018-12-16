@@ -734,14 +734,14 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	}
 
 	walker := NewMkShWalker()
-	walker.Callback.If = func(ifClause *MkShIfClause) {
+	walker.Callback.If = func(ifClause *MkShIf) {
 		for _, cond := range ifClause.Conds {
 			if simple := getSimple(cond); simple != nil {
 				checkConditionalCd(simple)
 			}
 		}
 	}
-	walker.Callback.Loop = func(loop *MkShLoopClause) {
+	walker.Callback.Loop = func(loop *MkShLoop) {
 		if simple := getSimple(loop.Cond); simple != nil {
 			checkConditionalCd(simple)
 		}

@@ -48,7 +48,8 @@ func (s *ShSuite) Test_ShellParser__program(c *check.C) {
 		b.List().AddCommand(b.SimpleCommand("echo")))
 
 	s.test(""+
-		"cd ${WRKSRC} && ${FIND} ${${_list_}} -type f ! -name '*.orig' 2> /dev/null "+
+		"cd ${WRKSRC} "+
+		"&& ${FIND} ${${_list_}} -type f ! -name '*.orig' 2> /dev/null "+
 		"| pax -rw -pm ${DESTDIR}${PREFIX}/${${_dir_}}",
 		b.List().AddAndOr(b.AndOr(
 			b.Pipeline(false, b.SimpleCommand("cd", "${WRKSRC}"))).Add("&&",
@@ -256,6 +257,7 @@ func (s *ShSuite) Test_ShellParser__compound_list(c *check.C) {
 func (s *ShSuite) Test_ShellParser__term(c *check.C) {
 	b := s.init(c)
 
+	// TODO
 	_ = b
 }
 
@@ -390,6 +392,7 @@ func (s *ShSuite) Test_ShellParser__until_clause(c *check.C) {
 func (s *ShSuite) Test_ShellParser__function_definition(c *check.C) {
 	b := s.init(c)
 
+	// TODO
 	_ = b
 }
 
@@ -432,21 +435,21 @@ func (s *ShSuite) Test_ShellParser__simple_command(c *check.C) {
 	// RUN is a special Make variable since it ends with a semicolon;
 	// therefore it needs to be split off before passing the rest of
 	// the command to the shell command parser.
+	// Otherwise it would be interpreted as a shell command,
+	// and the real shell command would be its argument.
 	s.test("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
 		b.List().AddCommand(b.SimpleCommand("${RUN}", "subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")))
 
 	s.test("PATH=/nonexistent env PATH=${PATH:Q} true",
 		b.List().AddCommand(b.SimpleCommand("PATH=/nonexistent", "env", "PATH=${PATH:Q}", "true")))
 
+	// The opening curly brace only has its special meaning when it appears as a whole word.
 	s.test("{OpenGrok args",
 		b.List().AddCommand(b.SimpleCommand("{OpenGrok", "args")))
 }
 
 func (s *ShSuite) Test_ShellParser__io_redirect(c *check.C) {
 	b := s.init(c)
-
-	s.test("echo >> ${PLIST_SRC}",
-		b.List().AddCommand(b.SimpleCommand("echo", ">>${PLIST_SRC}")))
 
 	s.test("echo >> ${PLIST_SRC}",
 		b.List().AddCommand(b.SimpleCommand("echo", ">>${PLIST_SRC}")))
@@ -490,6 +493,7 @@ func (s *ShSuite) Test_ShellParser__io_redirect(c *check.C) {
 func (s *ShSuite) Test_ShellParser__io_here(c *check.C) {
 	b := s.init(c)
 
+	// TODO
 	_ = b
 }
 
@@ -512,7 +516,7 @@ func (s *ShSuite) test(program string, expected *MkShList) {
 
 	c := s.c
 
-	if ok1, ok2 := c.Check(succeeded, equals, 0), c.Check(lexer.error, equals, ""); ok1 && ok2 {
+	if c.Check(succeeded, equals, 0) && c.Check(lexer.error, equals, "") {
 		if !c.Check(lexer.result, deepEquals, expected) {
 			actualJSON, actualErr := json.MarshalIndent(lexer.result, "", "  ")
 			expectedJSON, expectedErr := json.MarshalIndent(expected, "", "  ")
@@ -588,14 +592,14 @@ func (b *MkShBuilder) AndOr(pipeline *MkShPipeline) *MkShAndOr {
 }
 
 func (b *MkShBuilder) Pipeline(negated bool, cmds ...*MkShCommand) *MkShPipeline {
-	return NewMkShPipeline(negated, cmds...)
+	return NewMkShPipeline(negated, cmds)
 }
 
 func (b *MkShBuilder) SimpleCommand(words ...string) *MkShCommand {
 	cmd := &MkShSimpleCommand{}
 	assignments := true
 	for _, word := range words {
-		if assignments && matches(word, `^\w+=`) {
+		if assignments && matches(word, `^[A-Za-z_]\w*=`) {
 			cmd.Assignments = append(cmd.Assignments, b.Token(word))
 		} else if m, fdstr, op, rest := match3(word, `^(\d*)(<<-|<<|<&|>>|>&|>\||<|>)(.*)$`); m {
 			fd, err := strconv.Atoi(fdstr)
@@ -616,25 +620,26 @@ func (b *MkShBuilder) SimpleCommand(words ...string) *MkShCommand {
 }
 
 func (b *MkShBuilder) If(condActionElse ...*MkShList) *MkShCommand {
-	ifclause := &MkShIfClause{}
+	ifClause := &MkShIf{}
 	for i, part := range condActionElse {
-		if i%2 == 0 && i != len(condActionElse)-1 {
-			ifclause.Conds = append(ifclause.Conds, part)
-		} else if i%2 == 1 {
-			ifclause.Actions = append(ifclause.Actions, part)
-		} else {
-			ifclause.Else = part
+		switch {
+		case i%2 == 0 && i != len(condActionElse)-1:
+			ifClause.Conds = append(ifClause.Conds, part)
+		case i%2 == 1:
+			ifClause.Actions = append(ifClause.Actions, part)
+		default:
+			ifClause.Else = part
 		}
 	}
-	return &MkShCommand{Compound: &MkShCompoundCommand{If: ifclause}}
+	return &MkShCommand{Compound: &MkShCompoundCommand{If: ifClause}}
 }
 
 func (b *MkShBuilder) For(varname string, items []*ShToken, action *MkShList) *MkShCommand {
-	return &MkShCommand{Compound: &MkShCompoundCommand{For: &MkShForClause{varname, items, action}}}
+	return &MkShCommand{Compound: &MkShCompoundCommand{For: &MkShFor{varname, items, action}}}
 }
 
 func (b *MkShBuilder) Case(selector *ShToken, items ...*MkShCaseItem) *MkShCommand {
-	return &MkShCommand{Compound: &MkShCompoundCommand{Case: &MkShCaseClause{selector, items}}}
+	return &MkShCommand{Compound: &MkShCompoundCommand{Case: &MkShCase{selector, items}}}
 }
 
 func (b *MkShBuilder) CaseItem(patterns []*ShToken, action *MkShList, separator MkShSeparator) *MkShCaseItem {
@@ -644,14 +649,14 @@ func (b *MkShBuilder) CaseItem(patterns []*ShToken, action *MkShList, separator 
 func (b *MkShBuilder) While(cond, action *MkShList, redirects ...*MkShRedirection) *MkShCommand {
 	return &MkShCommand{
 		Compound: &MkShCompoundCommand{
-			Loop: &MkShLoopClause{cond, action, false}},
+			Loop: &MkShLoop{cond, action, false}},
 		Redirects: redirects}
 }
 
 func (b *MkShBuilder) Until(cond, action *MkShList, redirects ...*MkShRedirection) *MkShCommand {
 	return &MkShCommand{
 		Compound: &MkShCompoundCommand{
-			Loop: &MkShLoopClause{cond, action, true}},
+			Loop: &MkShLoop{cond, action, true}},
 		Redirects: redirects}
 }
 
@@ -672,6 +677,7 @@ func (b *MkShBuilder) Subshell(list *MkShList) *MkShCommand {
 func (b *MkShBuilder) Token(mktext string) *ShToken {
 	tokenizer := NewShTokenizer(dummyLine, mktext, false)
 	token := tokenizer.ShToken()
+	G.Assertf(tokenizer.parser.EOF(), "Invalid token: %q", tokenizer.parser.Rest())
 	return token
 }
 

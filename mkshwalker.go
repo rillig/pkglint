@@ -13,16 +13,16 @@ type MkShWalker struct {
 		Command            func(command *MkShCommand)
 		SimpleCommand      func(command *MkShSimpleCommand)
 		CompoundCommand    func(command *MkShCompoundCommand)
-		Case               func(caseClause *MkShCaseClause)
+		Case               func(caseClause *MkShCase)
 		CaseItem           func(caseItem *MkShCaseItem)
 		FunctionDefinition func(funcdef *MkShFunctionDefinition)
-		If                 func(ifClause *MkShIfClause)
-		Loop               func(loop *MkShLoopClause)
+		If                 func(ifClause *MkShIf)
+		Loop               func(loop *MkShLoop)
 		Words              func(words []*ShToken)
 		Word               func(word *ShToken)
 		Redirects          func(redirects []*MkShRedirection)
 		Redirect           func(redirect *MkShRedirection)
-		For                func(forClause *MkShForClause)
+		For                func(forClause *MkShFor)
 		Varname            func(varname string)
 	}
 	Context []MkShWalkerPathElement
@@ -166,7 +166,7 @@ func (w *MkShWalker) walkCompoundCommand(index int, command *MkShCompoundCommand
 	w.pop()
 }
 
-func (w *MkShWalker) walkCase(caseClause *MkShCaseClause) {
+func (w *MkShWalker) walkCase(caseClause *MkShCase) {
 	w.push(-1, caseClause)
 
 	if callback := w.Callback.Case; callback != nil {
@@ -199,7 +199,7 @@ func (w *MkShWalker) walkFunctionDefinition(index int, funcdef *MkShFunctionDefi
 	w.pop()
 }
 
-func (w *MkShWalker) walkIf(ifClause *MkShIfClause) {
+func (w *MkShWalker) walkIf(ifClause *MkShIf) {
 	w.push(-1, ifClause)
 
 	if callback := w.Callback.If; callback != nil {
@@ -217,7 +217,7 @@ func (w *MkShWalker) walkIf(ifClause *MkShIfClause) {
 	w.pop()
 }
 
-func (w *MkShWalker) walkLoop(loop *MkShLoopClause) {
+func (w *MkShWalker) walkLoop(loop *MkShLoop) {
 	w.push(-1, loop)
 
 	if callback := w.Callback.Loop; callback != nil {
@@ -280,7 +280,7 @@ func (w *MkShWalker) walkRedirects(index int, redirects []*MkShRedirection) {
 	w.pop()
 }
 
-func (w *MkShWalker) walkFor(forClause *MkShForClause) {
+func (w *MkShWalker) walkFor(forClause *MkShFor) {
 	w.push(-1, forClause)
 
 	if callback := w.Callback.For; callback != nil {
