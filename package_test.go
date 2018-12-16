@@ -18,7 +18,8 @@ func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__file_but_not_package
 	G.Pkg.checklinesBuildlink3Inclusion(mklines)
 
 	t.CheckOutputLines(
-		"WARN: category/package/buildlink3.mk:3: category/dependency/buildlink3.mk is included by this file but not by the package.")
+		"WARN: category/package/buildlink3.mk:3: " +
+			"category/dependency/buildlink3.mk is included by this file but not by the package.")
 }
 
 func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__package_but_not_file(c *check.C) {
@@ -35,7 +36,8 @@ func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__package_but_not_file
 
 	t.CheckOutputLines(
 		"TRACE: + (*Package).checklinesBuildlink3Inclusion()",
-		"TRACE: 1   ../../category/dependency/buildlink3.mk/buildlink3.mk is included by the package but not by the buildlink3.mk file.",
+		"TRACE: 1   ../../category/dependency/buildlink3.mk/buildlink3.mk "+
+			"is included by the package but not by the buildlink3.mk file.",
 		"TRACE: - (*Package).checklinesBuildlink3Inclusion()")
 }
 
@@ -45,20 +47,22 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.vars.Define("PKGNAME", t.NewMkLine("Makefile", 5, "PKGNAME=dummy"))
 
-	c.Check(pkg.pkgnameFromDistname("pkgname-1.0", "whatever"), equals, "pkgname-1.0")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME}", "distname-1.0"), equals, "distname-1.0")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S/dist/pkg/}", "distname-1.0"), equals, "pkgname-1.0")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S|a|b|g}", "panama-0.13"), equals, "pbnbmb-0.13")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S|^lib||}", "libncurses"), equals, "ncurses")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S|^lib||}", "mylib"), equals, "mylib")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:tl:S/-/./g:S/he/-/1}", "SaxonHE9-5-0-1J"), equals, "saxon-9.5.0.1j")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1"), equals, "${DISTNAME:C/beta/.0./}")
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S/-0$/.0/1}", "aspell-af-0.50-0"), equals, "aspell-af-0.50.0")
+	test := func(pkgname, distname, expectedPkgname string) {
+		c.Check(pkg.pkgnameFromDistname(pkgname, distname), equals, expectedPkgname)
+	}
+
+	test("pkgname-1.0", "whatever", "pkgname-1.0")
+	test("${DISTNAME}", "distname-1.0", "distname-1.0")
+	test("${DISTNAME:S/dist/pkg/}", "distname-1.0", "pkgname-1.0")
+	test("${DISTNAME:S|a|b|g}", "panama-0.13", "pbnbmb-0.13")
+	test("${DISTNAME:S|^lib||}", "libncurses", "ncurses")
+	test("${DISTNAME:S|^lib||}", "mylib", "mylib")
+	test("${DISTNAME:tl:S/-/./g:S/he/-/1}", "SaxonHE9-5-0-1J", "saxon-9.5.0.1j")
+	test("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1", "${DISTNAME:C/beta/.0./}")
+	test("${DISTNAME:S/-0$/.0/1}", "aspell-af-0.50-0", "aspell-af-0.50.0")
 
 	// FIXME: Should produce a parse error since the :S modifier is malformed; see Test_MkParser_MkTokens.
-	c.Check(pkg.pkgnameFromDistname("${DISTNAME:S,a,b,c,d}", "aspell-af-0.50-0"), equals, "bspell-af-0.50-0")
-
-	t.CheckOutputEmpty()
+	test("${DISTNAME:S,a,b,c,d}", "aspell-af-0.50-0", "bspell-af-0.50-0")
 }
 
 func (s *Suite) Test_Package_CheckVarorder(c *check.C) {

@@ -859,13 +859,18 @@ func (pkg *Package) checkIncludeConditionally(mkline MkLine, indentation *Indent
 		if indentation.IsConditional() {
 			pkg.conditionalIncludes[includedFile] = mkline
 			if other := pkg.unconditionalIncludes[includedFile]; other != nil {
-				mkline.Warnf("%q is included conditionally here (depending on %s) and unconditionally in %s.",
+				mkline.Warnf(
+					"%q is included conditionally here (depending on %s) "+
+						"and unconditionally in %s.",
 					cleanpath(includedFile), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
 			}
+
 		} else {
 			pkg.unconditionalIncludes[includedFile] = mkline
 			if other := pkg.conditionalIncludes[includedFile]; other != nil {
-				mkline.Warnf("%q is included unconditionally here and conditionally in %s (depending on %s).",
+				mkline.Warnf(
+					"%q is included unconditionally here "+
+						"and conditionally in %s (depending on %s).",
 					cleanpath(includedFile), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
 			}
 		}
