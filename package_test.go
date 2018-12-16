@@ -610,18 +610,13 @@ func (s *Suite) Test_Package__include_without_exists(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	t.CreateFileLines("mk/bsd.pkg.mk")
-	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
-		"",
-		".include \"options.mk\"",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
+	t.SetupPackage("category/package",
+		".include \"options.mk\"")
 
 	G.checkdirPackage(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/Makefile:3: Cannot read \"options.mk\".")
+		"ERROR: ~/category/package/Makefile:20: Cannot read \"options.mk\".")
 }
 
 // See https://github.com/rillig/pkglint/issues/1
@@ -629,25 +624,16 @@ func (s *Suite) Test_Package__include_after_exists(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	t.CreateFileLines("mk/bsd.pkg.mk")
-	t.Chdir("category/package")
-	t.CreateFileLines("Makefile",
-		MkRcsID,
-		"",
+	t.SetupPackage("category/package",
 		".if exists(options.mk)",
 		".  include \"options.mk\"",
-		".endif",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
+		".endif")
 
-	G.checkdirPackage(".")
+	G.checkdirPackage(t.File("category/package"))
 
+	// FIXME: This error message should not appear at all because of the .if exists before.
 	t.CheckOutputLines(
-		"WARN: Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
-		"WARN: distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
-		"ERROR: Makefile: Each package must define its LICENSE.",
-		"WARN: Makefile: Each package should define a COMMENT.",
-		"ERROR: Makefile:4: Relative path \"options.mk\" does not exist.")
+		"ERROR: ~/category/package/Makefile:21: Relative path \"options.mk\" does not exist.")
 }
 
 // See https://github.com/rillig/pkglint/issues/1
@@ -655,20 +641,15 @@ func (s *Suite) Test_Package_readMakefile__include_other_after_exists(c *check.C
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	t.CreateFileLines("mk/bsd.pkg.mk")
-	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
-		"",
+	t.SetupPackage("category/package",
 		".if exists(options.mk)",
 		".  include \"another.mk\"",
-		".endif",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
+		".endif")
 
 	G.checkdirPackage(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/Makefile:4: Cannot read \"another.mk\".")
+		"ERROR: ~/category/package/Makefile:21: Cannot read \"another.mk\".")
 }
 
 // See https://mail-index.netbsd.org/tech-pkg/2018/07/22/msg020092.html
