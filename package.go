@@ -426,7 +426,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 	if imake := vars.FirstDefinition("USE_IMAKE"); imake != nil {
 		if x11 := vars.FirstDefinition("USE_X11"); x11 != nil {
 			if !hasSuffix(x11.Filename, "/mk/x11.buildlink3.mk") {
-				imake.Notef("USE_IMAKE makes USE_X11 in %s superfluous.", imake.RefTo(x11))
+				imake.Notef("USE_IMAKE makes USE_X11 in %s redundant.", imake.RefTo(x11))
 			}
 		}
 	}

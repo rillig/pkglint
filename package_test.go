@@ -783,6 +783,8 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C)
 		"WARN: ~/category/package/Makefile:20: GNU_CONFIGURE almost always needs a C compiler, but \"c\" is not added to USE_LANGUAGES in line 21.")
 }
 
+// Packages that define GNU_CONFIGURE should also set at least USE_LANGUAGES=c.
+// Except if they know what they are doing, as documented in the comment "none, really".
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE_ok(c *check.C) {
 	t := s.Init(c)
 
@@ -833,7 +835,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *
 	G.CheckDirent(pkg)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:21: USE_IMAKE makes USE_X11 in line 20 superfluous.")
+		"NOTE: ~/category/package/Makefile:21: USE_IMAKE makes USE_X11 in line 20 redundant.")
 }
 
 func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
