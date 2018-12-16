@@ -48,6 +48,16 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 
 		walker.Walk(list)
 
+		// TODO: Provide a reduced AST that omits all "AndOr with 1 pipelines", etc.
+		// It should look like this:
+		//
+		//  List with 5 andOrs (or generic Commands?)
+		//    If with 1 then-branch(es)
+		//      SimpleCommand condition
+		//      SimpleCommand action
+		//    Case with 1 item(s)
+		//      ...
+
 		c.Check(commands, deepEquals, []string{
 			"            List with 5 andOrs",
 			"           AndOr with 1 pipelines",
@@ -86,7 +96,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 			"   SimpleCommand case-item-action",
 			"            Path List.AndOr[0].Pipeline[0].Command[0].CompoundCommand.If." +
 				"List[2].AndOr[0].Pipeline[0].Command[0].CompoundCommand.Case.CaseItem[0]." +
-				"List[1].AndOr[0].Pipeline[0].Command[0].SimpleCommand",
+				"List.AndOr[0].Pipeline[0].Command[0].SimpleCommand",
 			"            Word case-item-action",
 			"           AndOr with 1 pipelines",
 			"        Pipeline with 1 commands",
