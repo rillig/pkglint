@@ -118,8 +118,8 @@ func (ck *distinfoLinesChecker) checkAlgorithms(line Line) {
 		ck.currentFirstLine.Warnf("Patch file %q does not exist in directory %q.", filename, pathToPatchdir)
 		G.Explain(
 			"If the patches directory looks correct, the patch may have been",
-			"removed without updating the distinfo file.  In such a case please",
-			"update the distinfo file.",
+			"removed without updating the distinfo file.",
+			"In such a case please update the distinfo file.",
 			"",
 			"If the patches directory looks wrong, pkglint needs to be improved.")
 

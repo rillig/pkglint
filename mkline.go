@@ -98,7 +98,8 @@ func NewMkLine(line Line) *MkLineImpl {
 			line.Warnf("The # character starts a comment.")
 			G.Explain(
 				"In a variable assignment, an unescaped # starts a comment that",
-				"continues until the end of the line.  To escape the #, write \\#.")
+				"continues until the end of the line.",
+				"To escape the #, write \\#.")
 		}
 
 		return &MkLineImpl{line, &mkLineAssignImpl{

@@ -169,10 +169,10 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		if !ck.isEmptyLine(line.Text) && !matches(line.Text, rePatchUniFileDel) {
 			line.Warnf("Empty line or end of file expected.")
 			G.Explain(
-				"This line is not part of the patch anymore, although it may",
-				"look so.  To make this situation clear, there should be an",
-				"empty line before this line.  If the line doesn't contain",
-				"useful information, it should be removed.")
+				"This line is not part of the patch anymore, although it may look so.",
+				"To make this situation clear, there should be an",
+				"empty line before this line.",
+				"If the line doesn't contain useful information, it should be removed.")
 		}
 	}
 }
@@ -185,10 +185,10 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.Errorf("Each patch must be documented.")
 		G.Explain(
-			"Pkgsrc tries to have as few patches as possible.  Therefore, each",
-			"patch must document why it is necessary.  Typical reasons are",
-			"portability or security.  A typical documented patch looks like",
-			"this:",
+			"Pkgsrc tries to have as few patches as possible.",
+			"Therefore, each patch must document why it is necessary.",
+			"Typical reasons are portability or security.",
+			"A typical documented patch looks like this:",
 			"",
 			"\t$"+"NetBSD$",
 			"",
@@ -199,8 +199,8 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 			"corresponding CVE identifier.",
 			"",
 			"Each patch should be sent to the upstream maintainers of the",
-			"package, so that they can include it in future versions.  After",
-			"submitting a patch upstream, the corresponding bug report should",
+			"package, so that they can include it in future versions.",
+			"After submitting a patch upstream, the corresponding bug report should",
 			"be mentioned in this file, to prevent duplicate work.")
 	}
 	if G.Opts.WarnSpace && !ck.previousLineEmpty {

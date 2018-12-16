@@ -236,9 +236,9 @@ func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string)
 		pline.Warnf("The bin/ directory should not have subdirectories.")
 		G.Explain(
 			"The programs in bin/ are collected there to be executable by the",
-			"user without having to type an absolute path.  This advantage does",
-			"not apply to programs in subdirectories of bin/.  These programs",
-			"should rather be placed in libexec/PKGBASE.")
+			"user without having to type an absolute path.",
+			"This advantage does not apply to programs in subdirectories of bin/.",
+			"These programs should rather be placed in libexec/PKGBASE.")
 		return
 	}
 }
@@ -324,9 +324,9 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 		fix.Notef("The .gz extension is unnecessary for manual pages.")
 		fix.Explain(
 			"Whether the manual pages are installed in compressed form or not is",
-			"configured by the pkgsrc user.  Compression and decompression takes",
-			"place automatically, no matter if the .gz extension is mentioned in",
-			"the PLIST or not.")
+			"configured by the pkgsrc user.",
+			"Compression and decompression takes place automatically,",
+			"no matter if the .gz extension is mentioned in the PLIST or not.")
 		fix.ReplaceRegex(`\.gz\n`, "\n", 1)
 		fix.Apply()
 	}
@@ -445,8 +445,8 @@ func (pline *PlistLine) warnImakeMannewsuffix() {
 	pline.Warnf("IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.")
 	G.Explain(
 		"This is the result of a print-PLIST call that has not been edited",
-		"manually by the package maintainer.  Please replace the",
-		"IMAKE_MANNEWSUFFIX with:",
+		"manually by the package maintainer.",
+		"Please replace the IMAKE_MANNEWSUFFIX with:",
 		"",
 		"\tIMAKE_MAN_SUFFIX for programs,",
 		"\tIMAKE_LIBMAN_SUFFIX for library functions,",

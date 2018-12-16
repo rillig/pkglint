@@ -495,9 +495,8 @@ func ChecklinesDescr(lines Lines) {
 
 		line.Warnf("File too long (should be no more than %d lines).", maxLines)
 		G.Explain(
-			"The DESCR file should fit on a traditional terminal of 80x25",
-			"characters.  It is also intended to give a _brief_ summary about",
-			"the package's contents.")
+			"The DESCR file should fit on a traditional terminal of 80x25 characters.",
+			"It is also intended to give a _brief_ summary about the package's contents.")
 	}
 
 	SaveAutofixChanges(lines)
@@ -735,9 +734,10 @@ func (pkglint *Pkglint) checkExecutable(filename string, st os.FileInfo) {
 		fix := line.Autofix()
 		fix.Warnf("Should not be executable.")
 		fix.Explain(
-			"No package file should ever be executable.  Even the INSTALL and",
-			"DEINSTALL scripts are usually not usable in the form they have in",
-			"the package, as the pathnames get adjusted during installation.",
+			"No package file should ever be executable.",
+			"Even the INSTALL and DEINSTALL scripts are usually not usable",
+			"in the form they have in the package,",
+			"as the pathnames get adjusted during installation.",
 			"So there is no need to have any file executable.")
 		fix.Custom(func(showAutofix, autofix bool) {
 			fix.Describef(0, "Clearing executable bits")

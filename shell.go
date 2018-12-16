@@ -87,8 +87,8 @@ outer:
 			case atom.Type == shtSubshell:
 				line.Warnf("Invoking subshells via $(...) is not portable enough.")
 				G.Explain(
-					"The Solaris /bin/sh does not know this way to execute a command in a",
-					"subshell.  Please use backticks (`...`) as a replacement.")
+					"The Solaris /bin/sh does not know this way to execute a command in a subshell.",
+					"Please use backticks (`...`) as a replacement.")
 
 				// Early return to avoid further parse errors.
 				// As of December 2018, it might be worth continuing again since the
@@ -168,8 +168,8 @@ func (shline *ShellLine) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting) b
 	case quoting == shqDquot && varuse.IsQ():
 		shline.mkline.Warnf("Please don't use the :Q operator in double quotes.")
 		G.Explain(
-			"Either remove the :Q or the double quotes.  In most cases, it is",
-			"more appropriate to remove the double quotes.")
+			"Either remove the :Q or the double quotes.",
+			"In most cases, it is more appropriate to remove the double quotes.")
 	}
 
 	if varname != "@" {
@@ -272,10 +272,10 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 			sprintf("Run %q for more information.", makeHelp("subst")))
 		if contains(shelltext, "#") {
 			G.Explain(
-				"When migrating to the SUBST framework, pay attention to \"#\"",
-				"characters.  In shell commands, make(1) does not interpret them as",
-				"comment character, but in variable assignments it does.  Therefore,",
-				"instead of the shell command",
+				"When migrating to the SUBST framework, pay attention to \"#\" characters.",
+				"In shell commands, make(1) does not interpret them as",
+				"comment character, but in variable assignments it does.",
+				"Therefore, instead of the shell command",
 				"",
 				"\tsed -e 's,#define foo,,'",
 				"",
@@ -383,12 +383,12 @@ func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) 
 				shline.mkline.Warnf("The shell command %q should not be hidden.", cmd)
 				G.Explain(
 					"Hidden shell commands do not appear on the terminal or in the log",
-					"file when they are executed.  When they fail, the error message",
+					"file when they are executed.",
+					"When they fail, the error message",
 					"cannot be assigned to the command, which is very difficult to debug.",
 					"",
-					"It is better to insert ${RUN} at the beginning of the whole command",
-					"line.  This will hide the command by default but shows it when",
-					"PKG_DEBUG_LEVEL is set.")
+					"It is better to insert ${RUN} at the beginning of the whole command line",
+					"This will hide the command by default but shows it when PKG_DEBUG_LEVEL is set.")
 			}
 		}
 	}
@@ -567,9 +567,10 @@ func (scc *SimpleCommandChecker) handleComment() bool {
 		G.Explain(
 			"When you split a shell command into multiple lines that are",
 			"continued with a backslash, they will nevertheless be converted to",
-			"a single line before the shell sees them.  That means that even if",
-			"it _looks_ like that the comment only spans one line in the",
-			"Makefile, in fact it spans until the end of the whole shell command.",
+			"a single line before the shell sees them.",
+			"That means that even if it _looks_ like that the comment only spans",
+			"one line in the Makefile, in fact it spans until the end of the whole",
+			"shell command.",
 			"",
 			"To insert a comment into shell code, you can write it like this:",
 			"",
@@ -627,13 +628,14 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 					scc.shline.mkline.Notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of %q.", dirname, cmdname)
 					G.Explain(
 						"Many packages include a list of all needed directories in their",
-						"PLIST file.  In such a case, you can just set AUTO_MKDIRS=yes and",
-						"be done.  The pkgsrc infrastructure will then create all directories",
-						"in advance.",
+						"PLIST file.",
+						"In such a case, you can just set AUTO_MKDIRS=yes and be done.",
+						"The pkgsrc infrastructure will then create all directories in advance.",
 						"",
-						"To create directories that are not mentioned in the PLIST file, it",
-						"is easier to just list them in INSTALLATION_DIRS than to execute the",
-						"commands explicitly.  That way, you don't have to think about which",
+						"To create directories that are not mentioned in the PLIST file,",
+						"it is easier to just list them in INSTALLATION_DIRS than to execute the",
+						"commands explicitly.",
+						"That way, you don't have to think about which",
 						"of the many INSTALL_*_DIR variables is appropriate, since",
 						"INSTALLATION_DIRS takes care of that.")
 				} else {
@@ -641,9 +643,10 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 					G.Explain(
 						"To create directories during installation, it is easier to just",
 						"list them in INSTALLATION_DIRS than to execute the commands",
-						"explicitly.  That way, you don't have to think about which",
-						"of the many INSTALL_*_DIR variables is appropriate, since",
-						"INSTALLATION_DIRS takes care of that.")
+						"explicitly.",
+						"That way, you don't have to think about which",
+						"of the many INSTALL_*_DIR variables is appropriate,",
+						"since INSTALLATION_DIRS takes care of that.")
 				}
 			}
 		}
@@ -751,7 +754,8 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 			spc.shline.mkline.Warnf("The Solaris /bin/sh does not support negation of shell commands.")
 			G.Explain(
 				"The GNU Autoconf manual has many more details of what shell",
-				"features to avoid for portable programs.  It can be read at:",
+				"features to avoid for portable programs.",
+				"It can be read at:",
 				"https://www.gnu.org/software/autoconf/manual/autoconf.html#Limitations-of-Builtins")
 		}
 	}
@@ -795,8 +799,8 @@ func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipel
 				"on the left side of the \"|\" fails, this failure is ignored.",
 				"",
 				"If you need to detect the failure of the left-hand-side command, use",
-				"temporary files to save the output of the command.  A good place to",
-				"create those files is in ${WRKDIR}.")
+				"temporary files to save the output of the command.",
+				"A good place to create those files is in ${WRKDIR}.")
 		}
 	}
 }
@@ -891,9 +895,10 @@ func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkSh
 	line.Warnf("Please switch to \"set -e\" mode before using a semicolon (after %q) to separate commands.",
 		NewStrCommand(command.Simple).String())
 	G.Explain(
-		"Normally, when a shell command fails (returns non-zero), the",
-		"remaining commands are still executed.  For example, the following",
-		"commands would remove all files from the HOME directory:",
+		"Normally, when a shell command fails (returns non-zero),",
+		"the remaining commands are still executed.",
+		"For example, the following commands would remove",
+		"all files from the HOME directory:",
 		"",
 		"\tcd \"$HOME\"; cd /nonexistent; rm -rf *",
 		"",
@@ -935,14 +940,15 @@ func (shline *ShellLine) checkInstallCommand(shellcmd string) {
 		line.Warnf("The shell command %q should not be used in the install phase.", shellcmd)
 		G.Explain(
 			"In the install phase, the only thing that should be done is to",
-			"install the prepared files to their final location.  The file's",
-			"contents should not be changed anymore.")
+			"install the prepared files to their final location.",
+			"The file's contents should not be changed anymore.")
 
 	case "cp", "${CP}":
 		line.Warnf("${CP} should not be used to install files.")
 		G.Explain(
 			"The ${CP} command is highly platform dependent and cannot overwrite",
-			"read-only files.  Please use ${PAX} instead.",
+			"read-only files.",
+			"Please use ${PAX} instead.",
 			"",
 			"For example, instead of",
 			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
