@@ -15,7 +15,6 @@ func (s *Suite) Test__test_names(c *check.C) {
 	ck.AllowPrefix("ShellParser", "mkshparser.go")
 	ck.AllowCamelCaseDescriptions(
 		"comparing_YesNo_variable_to_string",
-		"GitHub",
 		"enumFrom",
 		"enumFromDirs",
 		"dquotBacktDquot",

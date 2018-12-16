@@ -263,7 +263,7 @@ func (ck *TestNameChecker) Check() {
 		}
 	}
 	if len(ck.errors) > 0 || (ck.warn && len(ck.warnings) > 0) {
-		fmt.Printf("%d %s and %d %s.",
+		ck.c.Errorf("%d %s and %d %s.",
 			len(ck.errors),
 			ifelseStr(len(ck.errors) == 1, "error", "errors"),
 			len(ck.warnings),

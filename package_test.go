@@ -34,6 +34,9 @@ func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__package_but_not_file
 	t.EnableTracingToLog()
 	G.Pkg.checklinesBuildlink3Inclusion(mklines)
 
+	// This is only traced but not logged as a regular warning since
+	// several packages have build dependencies that are not needed
+	// for building other packages. These cannot be flagged as warnings.
 	t.CheckOutputLines(
 		"TRACE: + (*Package).checklinesBuildlink3Inclusion()",
 		"TRACE: 1   ../../category/dependency/buildlink3.mk/buildlink3.mk "+
@@ -78,9 +81,11 @@ func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
 		"DISTNAME=9term",
 		"CATEGORIES=x11"))
 
+	// TODO: Make this warning more specific to the actual situation.
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
-			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, COMMENT, LICENSE.")
+			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, " +
+			"COMMENT, LICENSE.")
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
 		MkRcsID,
@@ -96,6 +101,7 @@ func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
 }
 
 // Ensure that comments and empty lines do not lead to panics.
+// This would be when accessing fields from the MkLine without checking the line type before.
 func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 	t := s.Init(c)
 
@@ -115,7 +121,8 @@ func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
-			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, COMMENT, LICENSE.")
+			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, " +
+			"COMMENT, LICENSE.")
 }
 
 func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
@@ -157,12 +164,35 @@ func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *chec
 		".endif",
 		"LICENSE=\tgnu-gpl-v2"))
 
-	// No warning about the missing COMMENT since the directive
+	// No warning about the missing COMMENT since the .if directive
 	// causes the whole check to be skipped.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_CheckVarorder__GitHub(c *check.C) {
+// TODO: Add more tests like skip_if_there_are_directives for other line types.
+
+func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_top(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Worder")
+	pkg := NewPackage(t.File("x11/9term"))
+
+	pkg.CheckVarorder(t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"GITHUB_PROJECT=\t\tautocutsel",
+		"DISTNAME=\t\tautocutsel-0.10.0",
+		"CATEGORIES=\t\tx11",
+		"MASTER_SITES=\t\t${MASTER_SITE_GITHUB:=sigmike/}",
+		"GITHUB_TAG=\t\t${PKGVERSION_NOREV}",
+		"",
+		"COMMENT=\tComment",
+		"LICENSE=\tgnu-gpl-v2"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_bottom(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Worder")
