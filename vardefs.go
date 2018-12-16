@@ -77,7 +77,7 @@ func (src *Pkgsrc) InitVartypes() {
 	}
 
 	bl3list := func(varname string, kindOfList KindOfList, checker *BasicType) {
-		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk: append")
+		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk: append; *: use")
 	}
 	cmdline := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, "buildlink3.mk, builtin.mk:; *: use-loadtime, use")
@@ -518,6 +518,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkglist("BROKEN_EXCEPT_ON_PLATFORM", lkSpace, BtMachinePlatformPattern)
 	pkglist("BROKEN_ON_PLATFORM", lkSpace, BtMachinePlatformPattern)
 	sys("BSD_MAKE_ENV", lkShell, BtShellWord)
+	// TODO: Align the permissions of the various BUILDLINK_*.* variables with each other.
 	acl("BUILDLINK_ABI_DEPENDS.*", lkSpace, BtDependency, "buildlink3.mk, builtin.mk: append, use-loadtime; *: append")
 	acl("BUILDLINK_API_DEPENDS.*", lkSpace, BtDependency, "buildlink3.mk, builtin.mk: append, use-loadtime; *: append")
 	acl("BUILDLINK_AUTO_DIRS.*", lkNone, BtYesNo, "buildlink3.mk: append")
