@@ -1,6 +1,9 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import (
+	"gopkg.in/check.v1"
+	"strings"
+)
 
 func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__file_but_not_package(c *check.C) {
 	t := s.Init(c)
@@ -858,12 +861,28 @@ func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 	pkg := t.SetupPackage("category/package",
 		".include \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\"")
 
+	t.EnableTracingToLog()
 	G.CheckDirent(pkg)
+	t.EnableSilentTracing()
 
-	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:20: " +
+	// Since 2018-12-16 there is no warning or note anymore for the
+	// buildlink3.mk file being skipped since it didn't help the average
+	// pkglint user.
+
+	// The information is still available in the trace log though.
+
+	output := t.Output()
+	var relevant []string
+	for _, line := range strings.Split(output, "\n") {
+		if contains(line, "Skipping") {
+			relevant = append(relevant, line)
+		}
+	}
+
+	c.Check(relevant, deepEquals, []string{
+		"TRACE: 1 2 3 4   ~/category/package/Makefile:20: " +
 			"Skipping include file \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\". " +
-			"This may result in false warnings.")
+			"This may result in false warnings."})
 }
 
 func (s *Suite) Test_Package_readMakefile__not_found(c *check.C) {

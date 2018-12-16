@@ -241,10 +241,12 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		var includedFile, incDir, incBase string
 		if mkline.IsInclude() {
 			// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
+			// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
 			includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
 			if containsVarRef(includedFile) {
-				if !contains(filename, "/mk/") {
-					mkline.Notef("Skipping include file %q. This may result in false warnings.", includedFile)
+				if trace.Tracing && !contains(filename, "/mk/") {
+					trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
+						mkline.Filename, mkline.Linenos(), includedFile)
 				}
 				includedFile = ""
 			}
@@ -270,7 +272,16 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 				mkline.ExplainRelativeDirs()
 			}
 
-			if mkline.Basename == "Makefile" && !hasPrefix(incDir, "../../mk/") && incBase != "buildlink3.mk" && incBase != "builtin.mk" && incBase != "options.mk" {
+			switch {
+			case
+				mkline.Basename != "Makefile",
+				hasPrefix(incDir, "../../mk/"),
+				incBase == "buildlink3.mk",
+				incBase == "builtin.mk",
+				incBase == "options.mk":
+				break
+
+			default:
 				if trace.Tracing {
 					trace.Step1("Including %q sets seenMakefileCommon.", includedFile)
 				}
