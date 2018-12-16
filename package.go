@@ -108,16 +108,22 @@ func (pkg *Package) checkPossibleDowngrade() {
 	if change.Action == "Updated" {
 		changeVersion := replaceAll(change.Version, `nb\d+$`, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
-			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.", change.Version, mkline.Line.RefTo(change.Line), pkgversion)
+			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.",
+				change.Version, mkline.Line.RefTo(change.Line), pkgversion)
 			G.Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
 				"This is unusual, since packages are typically upgraded instead of",
 				"downgraded.")
+
+			// TODO: Check whether the current version is mentioned in doc/CHANGES.
 		}
 	}
 }
 
+// checklinesBuildlink3Inclusion checks whether the package Makefile and
+// the corresponding buildlink3.mk agree for all included buildlink3.mk
+// files whether they are included conditionally or unconditionally.
 func (pkg *Package) checklinesBuildlink3Inclusion(mklines MkLines) {
 	if trace.Tracing {
 		defer trace.Call0()()
@@ -159,6 +165,10 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 		return nil
 	}
 
+	// TODO: Is this still necessary? This code is 20 years old and was introduced
+	// when pkglint loaded the package Makefile including all included files into
+	// a single string. Maybe it makes sense to print the file inclusion hierarchy
+	// to quickly see files that cannot be included because of unresolved variables.
 	if G.Opts.DumpMakefile {
 		G.out.WriteLine("Whole Makefile (with all included files) follows:")
 		for _, line := range allLines.lines.Lines {
@@ -166,6 +176,7 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 		}
 	}
 
+	// See mk/tools/cmake.mk
 	if pkg.vars.Defined("USE_CMAKE") {
 		mainLines.Tools.def("cmake", "", false, AtRunTime)
 		mainLines.Tools.def("cpack", "", false, AtRunTime)
@@ -204,12 +215,13 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 	return mainLines
 }
 
-func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines MkLines, includingFnameForUsedCheck string) (exists bool, result bool) {
+// TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
+func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines MkLines, includingFileForUsedCheck string) (exists bool, result bool) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
 
-	fileMklines := LoadMk(filename, NotEmpty)
+	fileMklines := LoadMk(filename, NotEmpty) // TODO: Document why omitting LogErrors is correct here.
 	if fileMklines == nil {
 		return false, false
 	}
@@ -228,6 +240,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 
 		var includedFile, incDir, incBase string
 		if mkline.IsInclude() {
+			// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 			includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
 			if containsVarRef(includedFile) {
 				if !contains(filename, "/mk/") {
@@ -321,8 +334,8 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	atEnd := func(mkline MkLine) {}
 	fileMklines.ForEachEnd(lineAction, atEnd)
 
-	if includingFnameForUsedCheck != "" {
-		fileMklines.CheckForUsedComment(G.Pkgsrc.ToRel(includingFnameForUsedCheck))
+	if includingFileForUsedCheck != "" {
+		fileMklines.CheckForUsedComment(G.Pkgsrc.ToRel(includingFileForUsedCheck))
 	}
 
 	// For every included buildlink3.mk, include the corresponding builtin.mk

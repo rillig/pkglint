@@ -352,6 +352,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	havePatches := false
 
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
+	// TODO: Why is this code necessary? What effect does it have?
 	for _, filename := range files {
 		basename := path.Base(filename)
 		if (hasPrefix(basename, "Makefile.") || hasSuffix(filename, ".mk")) &&
@@ -395,6 +396,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 
 	if pkg.Pkgdir == "." && pkglint.Opts.CheckDistinfo && pkglint.Opts.CheckPatches {
 		if havePatches && !haveDistinfo {
+			// TODO: Add Line.RefTo to make the context clear.
 			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run %q.", bmake("makepatchsum"))
 		}
 	}
