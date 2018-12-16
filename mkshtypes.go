@@ -176,6 +176,18 @@ type MkShSimpleCommand struct {
 	Redirections []*MkShRedirection
 }
 
+// StrCommand is structurally similar to MkShSimpleCommand, but all
+// components are converted to strings to allow for simpler checks,
+// especially for analyzing command line options.
+//
+// Example:
+//  LC_ALL=C sort */*.c > sorted
+type StrCommand struct {
+	Assignments []string
+	Name        string
+	Args        []string
+}
+
 func NewStrCommand(cmd *MkShSimpleCommand) *StrCommand {
 	strcmd := StrCommand{
 		make([]string, len(cmd.Assignments)),
@@ -191,18 +203,6 @@ func NewStrCommand(cmd *MkShSimpleCommand) *StrCommand {
 		strcmd.Args[i] = arg.MkText
 	}
 	return &strcmd
-}
-
-// StrCommand is structurally similar to MkShSimpleCommand, but all
-// components are converted to strings to allow for simpler checks,
-// especially for analyzing command line options.
-//
-// Example:
-//  LC_ALL=C sort */*.c > sorted
-type StrCommand struct {
-	Assignments []string
-	Name        string
-	Args        []string
 }
 
 // HasOption checks whether one of the arguments is exactly the given opt.
