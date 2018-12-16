@@ -243,26 +243,13 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		if includedFile != "" && pkg.included[includedFile] == nil {
 			pkg.included[includedFile] = mkline.Line
 
+			// TODO: "../../../.." also matches but shouldn't.
 			if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
 				mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
 				mkline.ExplainRelativeDirs()
 			}
 
-			switch {
-			case
-				mkline.Basename != "Makefile",
-				hasPrefix(incDir, "../../mk/"),
-				incBase == "buildlink3.mk",
-				incBase == "builtin.mk",
-				incBase == "options.mk":
-				break
-
-			default:
-				if trace.Tracing {
-					trace.Step1("Including %q sets seenMakefileCommon.", includedFile)
-				}
-				pkg.seenMakefileCommon = true
-			}
+			pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
 
 			skip := contains(filename, "/mk/") || hasSuffix(includedFile, "/bsd.pkg.mk") || IsPrefs(includedFile)
 			if !skip {
@@ -327,6 +314,9 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 
 	// For every included buildlink3.mk, include the corresponding builtin.mk
 	// automatically since the pkgsrc infrastructure does the same.
+	//
+	// Disabled for now since it increases the running time by about 20%
+	// and produces many new warnings, which must be evaluated first.
 	if false && path.Base(filename) == "buildlink3.mk" {
 		builtin := path.Join(path.Dir(filename), "builtin.mk")
 		if fileExists(builtin) {
@@ -335,6 +325,23 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	}
 
 	return
+}
+
+func (pkg *Package) collectUsedBy(mkline MkLine, incDir string, incBase string, includedFile string) {
+	switch {
+	case
+		mkline.Basename != "Makefile",
+		hasPrefix(incDir, "../../mk/"),
+		incBase == "buildlink3.mk",
+		incBase == "builtin.mk",
+		incBase == "options.mk":
+		return
+	}
+
+	if trace.Tracing {
+		trace.Step1("Including %q sets seenMakefileCommon.", includedFile)
+	}
+	pkg.seenMakefileCommon = true
 }
 
 func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (includedFile, incDir, incBase string) {
