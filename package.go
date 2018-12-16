@@ -29,9 +29,9 @@ type Package struct {
 	Plist                PlistContent // Files and directories mentioned in the PLIST files
 
 	vars               Scope
-	bl3                map[string]Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
-	included           map[string]Line // filename => line
-	seenMakefileCommon bool            // Does the package have any .includes?
+	bl3                map[string]MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+	included           map[string]MkLine // filename => line
+	seenMakefileCommon bool              // Does the package have any .includes?
 
 	// Files from .include lines that are nested inside .if.
 	// They often depend on OPSYS or on the existence of files in the build environment.
@@ -60,8 +60,8 @@ func NewPackage(dir string) *Package {
 		DistinfoFile:          "${PKGDIR}/distinfo", // TODO: Redundant, see the vars.Fallback below.
 		Plist:                 NewPlistContent(),
 		vars:                  NewScope(),
-		bl3:                   make(map[string]Line),
-		included:              make(map[string]Line),
+		bl3:                   make(map[string]MkLine),
+		included:              make(map[string]MkLine),
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
 	}
@@ -241,7 +241,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
 		if includedFile != "" && pkg.included[includedFile] == nil {
-			pkg.included[includedFile] = mkline.Line
+			pkg.included[includedFile] = mkline
 
 			// TODO: "../../../.." also matches but shouldn't.
 			if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
@@ -363,7 +363,7 @@ func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (i
 	if includedFile != "" {
 		if mkline.Basename != "buildlink3.mk" {
 			if m, bl3File := match1(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
-				pkg.bl3[bl3File] = mkline.Line
+				pkg.bl3[bl3File] = mkline
 				if trace.Tracing {
 					trace.Step1("Buildlink3 file in package: %q", bl3File)
 				}
