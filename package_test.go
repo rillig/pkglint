@@ -481,7 +481,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 		"",
 		".include \"../../mk/bsd.prefs.mk\"",
 		//
-		// Now all tools from USE_TOOLS are defined with their variables.
+		// At this point, all tools from USE_TOOLS are defined with their variables.
 		// ${FALSE} works, but a plain "false" might call the wrong tool.
 		// That's because the tool wrappers are not set up yet. This
 		// happens between the post-depends and pre-fetch stages. Even
@@ -516,6 +516,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/pkgbase/Makefile:14: To use the tool ${FALSE} at load time, bsd.prefs.mk has to be included before.",
+		// TODO: "before including bsd.prefs.mk in line ###".
 		"WARN: ~/category/pkgbase/Makefile:15: To use the tool ${NICE} at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.",
 		"WARN: ~/category/pkgbase/Makefile:16: To use the tool ${TRUE} at load time, bsd.prefs.mk has to be included before.",
 		"WARN: ~/category/pkgbase/Makefile:25: To use the tool ${NICE} at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.")
@@ -574,44 +575,33 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	t.CreateFileLines("devel/zlib/buildlink3.mk", "")
-	t.CreateFileLines("licenses/gnu-gpl-v2", "")
-	t.CreateFileLines("mk/bsd.pkg.mk", "")
-	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
-
-	t.Chdir("category/package")
-	t.CreateFileLines("Makefile",
-		MkRcsID,
-		"",
-		"COMMENT=\tDescription",
-		"LICENSE=\tgnu-gpl-v2",
+	t.SetupOption("zlib", "")
+	t.SetupPackage("category/package",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"",
-		".endif",
-		".include \"../../mk/bsd.pkg.mk\"")
-	t.CreateFileLines("options.mk",
+		".endif")
+	t.CreateFileLines("devel/zlib/buildlink3.mk", "")
+	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
+
+	t.CreateFileLines("category/package/options.mk",
 		MkRcsID,
 		"",
 		".if !empty(PKG_OPTIONS:Mzlib)",
 		".  include \"../../devel/zlib/buildlink3.mk\"",
 		".endif",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"")
-	t.CreateFileLines("PLIST",
-		PlistRcsID,
-		"bin/program")
-	t.CreateFileLines("distinfo",
-		RcsID)
+	t.Chdir("category/package")
 
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is CATEGORIES, empty line, COMMENT, LICENSE.",
-		"WARN: options.mk:3: Unknown option \"zlib\".",
 		"WARN: options.mk:4: \"../../devel/zlib/buildlink3.mk\" is "+
-			"included conditionally here (depending on PKG_OPTIONS) and unconditionally in Makefile:5.",
+			"included conditionally here (depending on PKG_OPTIONS) "+
+			"and unconditionally in Makefile:20.",
 		"WARN: options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is "+
-			"included unconditionally here and conditionally in Makefile:7 (depending on OPSYS).",
+			"included unconditionally here "+
+			"and conditionally in Makefile:22 (depending on OPSYS).",
 		"WARN: options.mk:3: Expected definition of PKG_OPTIONS_VAR.")
 }
 

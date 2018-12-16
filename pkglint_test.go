@@ -926,8 +926,8 @@ func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 		"LICENSE=\t2-clause-bsd",
 		"PKGDIR=\t\t../../other/package")
 
-	// DISTINFO_FILE is resolved relative to PKGDIR, the other places
-	// are resolved relative to the package base directory.
+	// DISTINFO_FILE is resolved relative to PKGDIR,
+	// the other locations are resolved relative to the package base directory.
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
@@ -945,8 +945,11 @@ func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C)
 
 	// FIXME: One of the below warnings is redundant.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
-		"WARN: ~/category/package/distinfo: File not found. Please run \""+confMake+" makepatchsum\".")
+		"WARN: ~/category/package/distinfo: File not found. "+
+			"Please run \""+confMake+" makesum\" "+
+			"or define NO_CHECKSUM=yes in the package Makefile.",
+		"WARN: ~/category/package/distinfo: File not found. "+
+			"Please run \""+confMake+" makepatchsum\".")
 }
 
 func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
