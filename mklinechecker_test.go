@@ -518,7 +518,7 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
 
 		// XXX: This warning is redundant because of the "Unclosed" warning above.
-		"WARN: Makefile:2: Pkglint parse error in MkLine.Tokenize at "+
+		"WARN: Makefile:2: Internal pkglint error in MkLine.Tokenize at "+
 			"\"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".")
 }
 

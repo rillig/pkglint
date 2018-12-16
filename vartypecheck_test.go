@@ -26,7 +26,7 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 		".*\\.pl$$")
 
 	vt.Output(
-		"WARN: filename:1: Pkglint parse error in MkLine.Tokenize at \"$\".")
+		"WARN: filename:1: Internal pkglint error in MkLine.Tokenize at \"$\".")
 }
 
 func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {

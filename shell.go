@@ -89,7 +89,11 @@ outer:
 				G.Explain(
 					"The Solaris /bin/sh does not know this way to execute a command in a",
 					"subshell.  Please use backticks (`...`) as a replacement.")
-				return // To avoid internal pkglint parse errors
+
+				// Early return to avoid further parse errors.
+				// As of December 2018, it might be worth continuing again since the
+				// shell parser has improved in 2018.
+				return
 
 			case atom.Type == shtText:
 				break
@@ -104,7 +108,7 @@ outer:
 	}
 
 	if trimHspace(tok.Rest()) != "" {
-		line.Warnf("Pkglint parse error in ShellLine.CheckWord at %q (quoting=%s), rest: %s", token, quoting, tok.Rest())
+		line.Warnf("Internal pkglint error in ShellLine.CheckWord at %q (quoting=%s), rest: %s", token, quoting, tok.Rest())
 	}
 }
 

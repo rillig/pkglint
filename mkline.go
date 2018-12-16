@@ -356,7 +356,7 @@ func (mkline *MkLineImpl) Tokenize(s string, warn bool) []*MkToken {
 	p := NewMkParser(mkline.Line, s, true)
 	tokens := p.MkTokens()
 	if warn && p.Rest() != "" {
-		mkline.Warnf("Pkglint parse error in MkLine.Tokenize at %q.", p.Rest())
+		mkline.Warnf("Internal pkglint error in MkLine.Tokenize at %q.", p.Rest())
 	}
 	return tokens
 }

@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (s *Suite) Test_parseShellProgram__parse_error(c *check.C) {
+func (s *Suite) Test_parseShellProgram__parse_error_for_unfinished_shell_variable(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("module.mk", 1, "\t$${")
@@ -18,7 +18,7 @@ func (s *Suite) Test_parseShellProgram__parse_error(c *check.C) {
 	c.Check(err.Error(), equals, "parse error at []string{\"\"}")
 
 	t.CheckOutputLines(
-		"WARN: module.mk:1: Pkglint parse error in ShTokenizer.ShAtom at \"$${\" (quoting=plain).")
+		"WARN: module.mk:1: Internal pkglint error in ShTokenizer.ShAtom at \"$${\" (quoting=plain).")
 }
 
 type ShSuite struct {
