@@ -18,6 +18,10 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 	c.Check(varuse.Mod(), equals, ":Q")
 }
 
+// AddCommand adds a command directly to a list of commands,
+// creating all the intermediate nodes for the syntactic representation.
+// As soon as that representation is replaced with a semantic representation,
+// this method should no longer be necessary.
 func (list *MkShList) AddCommand(command *MkShCommand) *MkShList {
 	pipeline := NewMkShPipeline(false, []*MkShCommand{command})
 	andOr := NewMkShAndOr(pipeline)
@@ -47,3 +51,6 @@ func (s *Suite) Test_MkVarUseModifier_MatchSubst__backslash(c *check.C) {
 	c.Check(to, equals, "\\:")
 	c.Check(options, equals, "")
 }
+
+// TODO: Add test for :L in the middle of a MkVarUse.
+// TODO: Add test for :L at the end of a MkVarUse.
