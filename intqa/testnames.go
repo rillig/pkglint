@@ -287,7 +287,7 @@ func (ck *TestNameChecker) isIgnored(filename string) bool {
 func newElement(typeName, funcName, filename string) *testeeElement {
 	typeName = strings.TrimSuffix(typeName, "Impl")
 
-	e := &testeeElement{File: filename, Type: typeName, Func: funcName}
+	e := testeeElement{File: filename, Type: typeName, Func: funcName}
 
 	e.FullName = e.Type + ifelseStr(e.Type != "" && e.Func != "", ".", "") + e.Func
 
@@ -299,7 +299,7 @@ func newElement(typeName, funcName, filename string) *testeeElement {
 		e.Prefix = e.Type + ifelseStr(e.Type != "" && e.Func != "", "_", "") + e.Func
 	}
 
-	return e
+	return &e
 }
 
 func (el *testeeElement) Less(other *testeeElement) bool {

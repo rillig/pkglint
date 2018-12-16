@@ -505,14 +505,14 @@ func (s *ShSuite) init(c *check.C) *MkShBuilder {
 func (s *ShSuite) test(program string, expected *MkShList) {
 	tokens, rest := splitIntoShellTokens(dummyLine, program)
 	s.c.Check(rest, equals, "")
-	lexer := &ShellLexer{
+	lexer := ShellLexer{
 		current:        "",
 		remaining:      tokens,
 		atCommandStart: true,
 		error:          ""}
-	parser := &shyyParserImpl{}
+	parser := shyyParserImpl{}
 
-	succeeded := parser.Parse(lexer)
+	succeeded := parser.Parse(&lexer)
 
 	c := s.c
 
@@ -596,7 +596,7 @@ func (b *MkShBuilder) Pipeline(negated bool, cmds ...*MkShCommand) *MkShPipeline
 }
 
 func (b *MkShBuilder) SimpleCommand(words ...string) *MkShCommand {
-	cmd := &MkShSimpleCommand{}
+	cmd := MkShSimpleCommand{}
 	assignments := true
 	for _, word := range words {
 		if assignments && matches(word, `^[A-Za-z_]\w*=`) {
@@ -616,11 +616,11 @@ func (b *MkShBuilder) SimpleCommand(words ...string) *MkShCommand {
 			}
 		}
 	}
-	return &MkShCommand{Simple: cmd}
+	return &MkShCommand{Simple: &cmd}
 }
 
 func (b *MkShBuilder) If(condActionElse ...*MkShList) *MkShCommand {
-	ifClause := &MkShIf{}
+	ifClause := MkShIf{}
 	for i, part := range condActionElse {
 		switch {
 		case i%2 == 0 && i != len(condActionElse)-1:
@@ -631,7 +631,7 @@ func (b *MkShBuilder) If(condActionElse ...*MkShList) *MkShCommand {
 			ifClause.Else = part
 		}
 	}
-	return &MkShCommand{Compound: &MkShCompoundCommand{If: ifClause}}
+	return &MkShCommand{Compound: &MkShCompoundCommand{If: &ifClause}}
 }
 
 func (b *MkShBuilder) For(varname string, items []*ShToken, action *MkShList) *MkShCommand {

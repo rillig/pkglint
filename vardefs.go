@@ -1215,11 +1215,11 @@ func enum(values string) *BasicType {
 		valueMap[value] = true
 	}
 	name := "enum: " + values + " " // See IsEnum
-	basicType := &BasicType{name, nil}
+	basicType := BasicType{name, nil}
 	basicType.checker = func(check *VartypeCheck) {
-		check.Enum(valueMap, basicType)
+		check.Enum(valueMap, &basicType)
 	}
-	return basicType
+	return &basicType
 }
 
 func parseACLEntries(varname string, aclEntries string) []ACLEntry {

@@ -7,9 +7,14 @@ import (
 	"strings"
 )
 
+// TODO: What about package names that refer to other variables?
 const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 
-// Package contains data for the pkgsrc package that is currently checked.
+// Package is the pkgsrc package that is currently checked.
+//
+// Most of the information is loaded first, and after loading the actual checks take place.
+// This is necessary because variables in Makefiles may be used before they are defined,
+// and such dependencies often span multiple files that are included indirectly.
 type Package struct {
 	dir                  string       // The directory of the package, for resolving files
 	Pkgpath              string       // e.g. "category/pkgdir"
@@ -18,34 +23,41 @@ type Package struct {
 	Patchdir             string       // PATCHDIR from the package Makefile
 	DistinfoFile         string       // DISTINFO_FILE from the package Makefile
 	EffectivePkgname     string       // PKGNAME or DISTNAME from the package Makefile, including nb13
-	EffectivePkgbase     string       // The effective PKGNAME without the version
+	EffectivePkgbase     string       // EffectivePkgname without the version
 	EffectivePkgversion  string       // The version part of the effective PKGNAME, excluding nb13
-	EffectivePkgnameLine MkLine       // The origin of the three effective_* values
+	EffectivePkgnameLine MkLine       // The origin of the three Effective* values
 	Plist                PlistContent // Files and directories mentioned in the PLIST files
 
-	vars                  Scope
-	bl3                   map[string]Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
-	included              map[string]Line // filename => line
-	seenMakefileCommon    bool            // Does the package have any .includes?
-	conditionalIncludes   map[string]MkLine
+	vars               Scope
+	bl3                map[string]Line // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+	included           map[string]Line // filename => line
+	seenMakefileCommon bool            // Does the package have any .includes?
+
+	// Files from .include lines that are nested inside .if.
+	// They often depend on OPSYS or on the existence of files in the build environment.
+	conditionalIncludes map[string]MkLine
+	// Files from .include lines that are not nested.
+	// These are cross-checked with buildlink3.mk whether they are unconditional there, too.
 	unconditionalIncludes map[string]MkLine
-	once                  Once
-	IgnoreMissingPatches  bool // In distinfo, don't warn about patches that cannot be found.
+
+	once                 Once
+	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 }
 
 func NewPackage(dir string) *Package {
 	pkgpath := G.Pkgsrc.ToRel(dir)
 	if strings.Count(pkgpath, "/") != 1 {
-		panic(sprintf("Package directory %q must be two subdirectories below the pkgsrc root %q.", dir, G.Pkgsrc.File(".")))
+		G.Assertf(false, "Package directory %q must be two subdirectories below the pkgsrc root %q.",
+			dir, G.Pkgsrc.File("."))
 	}
 
 	pkg := Package{
 		dir:                   dir,
 		Pkgpath:               pkgpath,
 		Pkgdir:                ".",
-		Filesdir:              "files",
-		Patchdir:              "patches",
-		DistinfoFile:          "${PKGDIR}/distinfo",
+		Filesdir:              "files",              // TODO: Redundant, see the vars.Fallback below.
+		Patchdir:              "patches",            // TODO: Redundant, see the vars.Fallback below.
+		DistinfoFile:          "${PKGDIR}/distinfo", // TODO: Redundant, see the vars.Fallback below.
 		Plist:                 NewPlistContent(),
 		vars:                  NewScope(),
 		bl3:                   make(map[string]Line),
