@@ -238,31 +238,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		allLines.mklines = append(allLines.mklines, mkline)
 		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
-		var includedFile, incDir, incBase string
-		if mkline.IsInclude() {
-			// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
-			// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-			includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
-			if containsVarRef(includedFile) {
-				if trace.Tracing && !contains(filename, "/mk/") {
-					trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
-						mkline.Filename, mkline.Linenos(), includedFile)
-				}
-				includedFile = ""
-			}
-			incDir, incBase = path.Split(includedFile)
-		}
-
-		if includedFile != "" {
-			if mkline.Basename != "buildlink3.mk" {
-				if m, bl3File := match1(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
-					pkg.bl3[bl3File] = mkline.Line
-					if trace.Tracing {
-						trace.Step1("Buildlink3 file in package: %q", bl3File)
-					}
-				}
-			}
-		}
+		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
 		if includedFile != "" && pkg.included[includedFile] == nil {
 			pkg.included[includedFile] = mkline.Line
@@ -355,6 +331,36 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		builtin := path.Join(path.Dir(filename), "builtin.mk")
 		if fileExists(builtin) {
 			pkg.readMakefile(builtin, mainLines, allLines, "")
+		}
+	}
+
+	return
+}
+
+func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (includedFile, incDir, incBase string) {
+
+	if mkline.IsInclude() {
+		// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
+		// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
+		includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
+		if containsVarRef(includedFile) {
+			if trace.Tracing && !contains(includingFilename, "/mk/") {
+				trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
+					mkline.Filename, mkline.Linenos(), includedFile)
+			}
+			includedFile = ""
+		}
+		incDir, incBase = path.Split(includedFile)
+	}
+
+	if includedFile != "" {
+		if mkline.Basename != "buildlink3.mk" {
+			if m, bl3File := match1(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk$`); m {
+				pkg.bl3[bl3File] = mkline.Line
+				if trace.Tracing {
+					trace.Step1("Buildlink3 file in package: %q", bl3File)
+				}
+			}
 		}
 	}
 
