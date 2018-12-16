@@ -29,7 +29,7 @@ type Pkglint struct {
 	Wip             bool     // Is the currently checked item from pkgsrc-wip?
 	Infrastructure  bool     // Is the currently checked item from the pkgsrc infrastructure?
 	Testing         bool     // Is pkglint in self-testing mode (only during development)?
-	CurrentUsername string   // For checking against OWNER and MAINTAINER
+	Username        string   // For checking against OWNER and MAINTAINER
 	CvsEntriesDir   string   // Cached to avoid I/O
 	CvsEntriesLines Lines
 
@@ -184,7 +184,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitcode int) {
 	currentUser, err := user.Current()
 	if err == nil {
 		// On Windows, this is `Computername\Username`.
-		pkglint.CurrentUsername = replaceAll(currentUser.Username, `^.*\\`, "")
+		pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
 	}
 
 	for len(pkglint.Todo) > 0 {

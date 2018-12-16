@@ -919,7 +919,7 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall,no-order")
-	G.CurrentUsername = "example-user"
+	G.Username = "example-user"
 	t.CreateFileLines("category/package/CVS/Entries",
 		"/Makefile//modified//")
 
@@ -966,7 +966,7 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 
 	// ... unless you are the owner, of course.
 
-	G.CurrentUsername = "owner"
+	G.Username = "owner"
 
 	G.CheckDirent(pkg)
 

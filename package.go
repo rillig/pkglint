@@ -799,6 +799,12 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		seeGuide("Package components, Makefile", "components.Makefile"))
 }
 
+// checkLocallyModified checks files that are about to be committed.
+// Depending on whether the package has a MAINTAINER or an OWNER,
+// the wording differs.
+//
+// Pkglint assumes that the local username is the same as the NetBSD
+// username, which fits most scenarios.
 func (pkg *Package) checkLocallyModified(filename string) {
 	if trace.Tracing {
 		defer trace.Call(filename)()
@@ -813,7 +819,7 @@ func (pkg *Package) checkLocallyModified(filename string) {
 		return
 	}
 
-	username := G.CurrentUsername
+	username := G.Username
 	if trace.Tracing {
 		trace.Stepf("user=%q owner=%q maintainer=%q", username, owner, maintainer)
 	}
@@ -822,18 +828,21 @@ func (pkg *Package) checkLocallyModified(filename string) {
 		return
 	}
 
-	if isLocallyModified(filename) {
-		if owner != "" {
-			NewLineWhole(filename).Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
-			G.Explain(
-				seeGuide("Package components, Makefile", "components.Makefile"))
-		}
-		if maintainer != "" {
-			NewLineWhole(filename).Notef("Please only commit changes that %s would approve.", maintainer)
-			G.Explain(
-				"See the pkgsrc guide, section \"Package components\",",
-				"keyword \"maintainer\", for more information.")
-		}
+	if !isLocallyModified(filename) {
+		return
+	}
+
+	if owner != "" {
+		NewLineWhole(filename).Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
+		G.Explain(
+			seeGuide("Package components, Makefile", "components.Makefile"))
+	}
+
+	if maintainer != "" {
+		NewLineWhole(filename).Notef("Please only commit changes that %s would approve.", maintainer)
+		G.Explain(
+			"See the pkgsrc guide, section \"Package components\",",
+			"keyword \"maintainer\", for more information.")
 	}
 }
 
