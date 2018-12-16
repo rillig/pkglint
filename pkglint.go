@@ -264,8 +264,10 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {
-		_, _ = fmt.Fprintf(pkglint.err.out, "%s\n\n", err)
-		opts.Help(pkglint.err.out, "pkglint [options] dir...")
+		errOut := pkglint.err.out
+		_, _ = fmt.Fprintln(errOut, err)
+		_, _ = fmt.Fprintln(errOut, "")
+		opts.Help(errOut, "pkglint [options] dir...")
 		return 1
 	}
 	gopts.args = remainingArgs
@@ -283,6 +285,10 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	return -1
 }
 
+// CheckDirent checks a directory or a single file.
+//
+// During tests, it assumes that Pkgsrc.LoadInfrastructure has been called.
+// It is the most high-level method for testing pkglint.
 func (pkglint *Pkglint) CheckDirent(filename string) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
