@@ -973,7 +973,6 @@ func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *ch
 func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall,no-order")
 	pkg := t.SetupPackage("category/package",
 		".include \"../../mk/bsd.prefs.mk\"",
 		"",
