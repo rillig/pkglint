@@ -420,7 +420,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 	pkg.checkPossibleDowngrade()
 
 	if !vars.Defined("COMMENT") {
-		NewLineWhole(filename).Warnf("No COMMENT given.")
+		NewLineWhole(filename).Warnf("Each package should define a COMMENT.")
 	}
 
 	if imake := vars.FirstDefinition("USE_IMAKE"); imake != nil {
@@ -457,7 +457,12 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 	}
 }
 
-func (pkg *Package) getNbpart() string {
+// nbPart determines the smallest part of the package version number,
+// typically "nb13" or an empty string.
+//
+// It is only used inside pkgsrc to mark changes that are
+// independent from the upstream package.
+func (pkg *Package) nbPart() string {
 	pkgrevision, _ := pkg.vars.Value("PKGREVISION")
 	if rev, err := strconv.Atoi(pkgrevision); err == nil {
 		return "nb" + strconv.Itoa(rev)
@@ -492,7 +497,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 
 	if pkgname != "" && !containsVarRef(pkgname) {
 		if m, m1, m2 := match2(pkgname, rePkgname); m {
-			pkg.EffectivePkgname = pkgname + pkg.getNbpart()
+			pkg.EffectivePkgname = pkgname + pkg.nbPart()
 			pkg.EffectivePkgnameLine = pkgnameLine
 			pkg.EffectivePkgbase = m1
 			pkg.EffectivePkgversion = m2
@@ -501,7 +506,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 
 	if pkg.EffectivePkgnameLine == nil && distname != "" && !containsVarRef(distname) {
 		if m, m1, m2 := match2(distname, rePkgname); m {
-			pkg.EffectivePkgname = distname + pkg.getNbpart()
+			pkg.EffectivePkgname = distname + pkg.nbPart()
 			pkg.EffectivePkgnameLine = distnameLine
 			pkg.EffectivePkgbase = m1
 			pkg.EffectivePkgversion = m2

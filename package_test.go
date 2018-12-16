@@ -263,8 +263,6 @@ func (s *Suite) Test_Package_CheckVarorder__MASTER_SITES(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// The diagnostics must be helpful.
-// In the case of wip/ioping, they were ambiguous and wrong.
 func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	t := s.Init(c)
 
@@ -293,7 +291,8 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
-			"GITHUB_PROJECT, DISTNAME, PKGNAME, CATEGORIES, MASTER_SITES, GITHUB_PROJECT, DIST_SUBDIR, empty line, " +
+			"GITHUB_PROJECT, DISTNAME, PKGNAME, CATEGORIES, " +
+			"MASTER_SITES, GITHUB_PROJECT, DIST_SUBDIR, empty line, " +
 			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 
 	// After moving the variables according to the warning:
@@ -317,20 +316,21 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_getNbpart(c *check.C) {
+func (s *Suite) Test_Package_nbPart(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("category/pkgbase"))
 	pkg.vars.Define("PKGREVISION", t.NewMkLine("Makefile", 1, "PKGREVISION=14"))
 
-	c.Check(pkg.getNbpart(), equals, "nb14")
+	c.Check(pkg.nbPart(), equals, "nb14")
 
 	pkg.vars = NewScope()
 	pkg.vars.Define("PKGREVISION", t.NewMkLine("Makefile", 1, "PKGREVISION=asdf"))
 
-	c.Check(pkg.getNbpart(), equals, "")
+	c.Check(pkg.nbPart(), equals, "")
 }
 
+// PKGNAME is stronger than DISTNAME.
 func (s *Suite) Test_Package_determineEffectivePkgVars__precedence(c *check.C) {
 	t := s.Init(c)
 
@@ -427,6 +427,8 @@ func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
 		"",
 		"COMMENT=\tComment",
 		"LICENSE=\t2-clause-bsd")
+	// TODO: There is no .include line at the end of the Makefile.
+	//  This should always be checked though.
 
 	G.checkdirPackage(t.File("category/package"))
 
@@ -654,7 +656,7 @@ func (s *Suite) Test_Package__include_after_exists(c *check.C) {
 		"WARN: Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
 		"WARN: distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
 		"ERROR: Makefile: Each package must define its LICENSE.",
-		"WARN: Makefile: No COMMENT given.",
+		"WARN: Makefile: Each package should define a COMMENT.",
 		"ERROR: Makefile:4: Relative path \"options.mk\" does not exist.")
 }
 
@@ -760,13 +762,13 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"WARN: category/pkg1/../../doc/TODO:3: Invalid line format \"\".",
 		"WARN: category/pkg1/../../doc/TODO:4: Invalid line format \"\\tO wrong bullet\".",
 		"WARN: category/pkg1/../../doc/TODO:5: Invalid package name \"package-without-version\".",
-		"WARN: category/pkg1/Makefile: No COMMENT given.",
+		"WARN: category/pkg1/Makefile: Each package should define a COMMENT.",
 		"NOTE: category/pkg1/Makefile:3: The update request to 1.0 from doc/TODO has been done.",
 		"WARN: category/pkg1/Makefile:4: Please use \"${ECHO}\" instead of \"echo\".",
-		"WARN: category/pkg2/Makefile: No COMMENT given.",
+		"WARN: category/pkg2/Makefile: Each package should define a COMMENT.",
 		"WARN: category/pkg2/Makefile:3: This package should be updated to 2.0 ([nice new features]).",
 		"WARN: category/pkg2/Makefile:4: Please use \"${ECHO}\" instead of \"echo\".",
-		"WARN: category/pkg3/Makefile: No COMMENT given.",
+		"WARN: category/pkg3/Makefile: Each package should define a COMMENT.",
 		"NOTE: category/pkg3/Makefile:3: This package is newer than the update request to 3.0 ([security update]).",
 		"WARN: category/pkg3/Makefile:4: Please use \"${ECHO}\" instead of \"echo\".",
 		"0 errors and 10 warnings found.",
@@ -817,7 +819,7 @@ func (s *Suite) Test__distinfo_from_other_package(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: x11/gst-x11/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
 		"ERROR: x11/gst-x11/Makefile: Each package must define its LICENSE.",
-		"WARN: x11/gst-x11/Makefile: No COMMENT given.",
+		"WARN: x11/gst-x11/Makefile: Each package should define a COMMENT.",
 		"WARN: x11/gst-x11/../../multimedia/gst-base/distinfo:3: Patch file \"patch-aa\" does not exist in directory \"../../x11/gst-x11/patches\".")
 }
 
