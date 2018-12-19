@@ -155,7 +155,7 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 		"_BUILD_DEFS+=\tPKG_SYSCONFBASEDIR PKG_SYSCONFDIR")
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	c.Check(G.Pkgsrc.IsBuildDef("PKG_SYSCONFDIR"), equals, true)
 	c.Check(G.Pkgsrc.IsBuildDef("VARBASE"), equals, false)
@@ -233,7 +233,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 		"\to package-1.13 [cool new features]")
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	t.CheckOutputLines(
 		"WARN: ~/wip/package/Makefile:3: This package should be updated to 1.13 ([cool new features]).")

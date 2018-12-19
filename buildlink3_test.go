@@ -60,7 +60,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_incomplete(c 
 		"",
 		"BUILDLINK_TREE+=\t-hs-X11")
 
-	G.CheckDirent(".")
+	G.Check(".")
 
 	// This warning only occurs because pkglint cannot see mk/haskell.mk in this test.
 	t.CheckOutputLines(
@@ -99,7 +99,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(c *c
 		"",
 		"BUILDLINK_TREE+=\t-hs-X11")
 
-	G.CheckDirent(".")
+	G.Check(".")
 
 	t.CheckOutputEmpty()
 }

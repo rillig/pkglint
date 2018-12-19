@@ -131,7 +131,7 @@ func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 // initialize only those parts of the infrastructure they really
 // need.
 //
-// Especially covers Pkglint.ShowSummary and Pkglint.CheckFileReg.
+// Especially covers Pkglint.ShowSummary and Pkglint.checkReg.
 func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t := s.Init(c)
 
@@ -284,43 +284,43 @@ func (s *Suite) Test_Pkglint__coverage(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_Pkglint_CheckDirent__outside(c *check.C) {
+func (s *Suite) Test_Pkglint_Check__outside(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("empty")
 
-	G.CheckDirent(t.File("."))
+	G.Check(t.File("."))
 
 	t.CheckOutputLines(
 		"ERROR: ~: Cannot determine the pkgsrc root directory for \"~\".")
 }
 
-func (s *Suite) Test_Pkglint_CheckDirent__empty_directory(c *check.C) {
+func (s *Suite) Test_Pkglint_Check__empty_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
 	t.CreateFileLines("category/package/CVS/Entries")
 
-	G.CheckDirent(t.File("category/package"))
+	G.Check(t.File("category/package"))
 
 	// Empty directories are silently skipped.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_CheckDirent__files_directory(c *check.C) {
+func (s *Suite) Test_Pkglint_Check__files_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
 	t.CreateFileLines("category/package/files/README.md")
 
-	G.CheckDirent(t.File("category/package/files"))
+	G.Check(t.File("category/package/files"))
 
 	// This diagnostic is not really correct, but it's an edge case anyway.
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/files: Cannot check directories outside a pkgsrc tree.")
 }
 
-func (s *Suite) Test_Pkglint_CheckDirent__manual_patch(c *check.C) {
+func (s *Suite) Test_Pkglint_Check__manual_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -328,7 +328,7 @@ func (s *Suite) Test_Pkglint_CheckDirent__manual_patch(c *check.C) {
 	t.CreateFileLines("category/package/Makefile",
 		MkRcsID)
 
-	G.CheckDirent(t.File("category/package"))
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
@@ -337,7 +337,7 @@ func (s *Suite) Test_Pkglint_CheckDirent__manual_patch(c *check.C) {
 		"WARN: ~/category/package/Makefile: Each package should define a COMMENT.")
 }
 
-func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
+func (s *Suite) Test_Pkglint_Check(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/bsd.pkg.mk")
@@ -345,22 +345,22 @@ func (s *Suite) Test_Pkglint_CheckDirent(c *check.C) {
 	t.CreateFileLines("category/Makefile")
 	t.CreateFileLines("Makefile")
 
-	G.CheckDirent(t.File("."))
+	G.Check(t.File("."))
 
 	t.CheckOutputLines(
 		"ERROR: ~/Makefile: Must not be empty.")
 
-	G.CheckDirent(t.File("category"))
+	G.Check(t.File("category"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/Makefile: Must not be empty.")
 
-	G.CheckDirent(t.File("category/package"))
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile: Must not be empty.")
 
-	G.CheckDirent(t.File("category/package/nonexistent"))
+	G.Check(t.File("category/package/nonexistent"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/nonexistent: No such file or directory.")
@@ -500,7 +500,7 @@ func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 
 // Demonstrates that an ALTERNATIVES file can be tested individually,
 // without any dependencies on a whole package or a PLIST file.
-func (s *Suite) Test_Pkglint_CheckFileReg__alternatives(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -549,7 +549,7 @@ func (s *Suite) Test_Pkglint__profiling_error(c *check.C) {
 	c.Check(t.Output(), check.Matches, `^FATAL: Cannot create profiling file: open pkglint\.pprof: .*\n$`)
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__in_current_working_directory(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__in_current_working_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -699,12 +699,12 @@ func (s *Suite) Test_CheckFileOther(c *check.C) {
 	t.CreateFileLines("category/package/DEINSTALL",
 		"#! /bin/sh")
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__before_import(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__before_import(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space", "--import")
@@ -714,7 +714,7 @@ func (s *Suite) Test_Pkglint_CheckFileReg__before_import(c *check.C) {
 	t.CreateFileLines("category/package/Makefile.orig")
 	t.CreateFileLines("category/package/Makefile.rej")
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile.orig: Must be cleaned up before committing the package.",
@@ -723,7 +723,7 @@ func (s *Suite) Test_Pkglint_CheckFileReg__before_import(c *check.C) {
 		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__errors(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__errors(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -732,17 +732,17 @@ func (s *Suite) Test_Pkglint_CheckFileReg__errors(c *check.C) {
 	t.CreateFileLines("category/package/files/subdir/subsub/file")
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.CheckFileReg(t.File("category/package/options.mk"), 0444)
-	G.CheckFileReg(t.File("category/package/files/subdir"), 0555|os.ModeDir)
-	G.CheckFileReg(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
-	G.CheckFileReg(t.File("category/package/files"), 0555|os.ModeDir)
+	G.checkReg(t.File("category/package/options.mk"), 0444)
+	G.checkReg(t.File("category/package/files/subdir"), 0555|os.ModeDir)
+	G.checkReg(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
+	G.checkReg(t.File("category/package/files"), 0555|os.ModeDir)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/options.mk: Cannot be read.",
 		"WARN: ~/category/package/files/subdir/subsub: Unknown directory name.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__file_selection(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__file_selection(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -755,16 +755,16 @@ func (s *Suite) Test_Pkglint_CheckFileReg__file_selection(c *check.C) {
 		RcsID)
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.CheckFileReg(t.File("doc/CHANGES-2018"), 0444)
-	G.CheckFileReg(t.File("category/package/buildlink3.mk"), 0444)
-	G.CheckFileReg(t.File("category/package/unexpected.txt"), 0444)
+	G.checkReg(t.File("doc/CHANGES-2018"), 0444)
+	G.checkReg(t.File("category/package/buildlink3.mk"), 0444)
+	G.checkReg(t.File("category/package/unexpected.txt"), 0444)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
 		"WARN: ~/category/package/unexpected.txt: Unexpected file found.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__readme_and_todo(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/Makefile",
@@ -834,37 +834,37 @@ func (s *Suite) Test_Pkglint_CheckFileReg__readme_and_todo(c *check.C) {
 		"4 errors and 0 warnings found.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__unknown_file_in_patches(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
-	G.CheckFileReg(t.File("category/Makefile/patches/index"), 0444)
+	G.checkReg(t.File("category/Makefile/patches/index"), 0444)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile/patches/index: " +
 			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__file_in_files(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/files/index")
 
-	G.CheckFileReg(t.File("category/package/files/index"), 0444)
+	G.checkReg(t.File("category/package/files/index"), 0444)
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_CheckFileReg__spec(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
 
-	G.CheckFileReg(t.File("category/package/spec"), 0444)
-	G.CheckFileReg(t.File("regress/package/spec"), 0444)
+	G.checkReg(t.File("category/package/spec"), 0444)
+	G.checkReg(t.File("regress/package/spec"), 0444)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
@@ -946,7 +946,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C)
 	t.CreateFileDummyPatch("category/package/patches/patch-aa")
 	t.Remove("category/package/distinfo")
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	// FIXME: One of the below warnings is redundant.
 	t.CheckOutputLines(
@@ -994,7 +994,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 	//
 	// TODO: iterate over variables in simple .for loops like the above.
 	// TODO: when implementing the above, take care of deeply nested loops (42.zip).
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	t.CheckOutputEmpty()
 }
@@ -1007,7 +1007,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	t.CreateFileLines("category/package/ALTERNATIVES",
 		"bin/wrapper bin/wrapper-impl")
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/ALTERNATIVES:1: " +

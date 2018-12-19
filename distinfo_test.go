@@ -255,7 +255,7 @@ func (s *Suite) Test_CheckLinesDistinfo__missing_php_patches(c *check.C) {
 		".include \"../../lang/php/ext.mk\"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CheckDirent(t.File("archivers/php-bz2"))
+	G.Check(t.File("archivers/php-bz2"))
 
 	t.CreateFileLines("archivers/php-zlib/Makefile",
 		MkRcsID,
@@ -263,7 +263,7 @@ func (s *Suite) Test_CheckLinesDistinfo__missing_php_patches(c *check.C) {
 		".include \"../../lang/php/ext.mk\"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	G.CheckDirent(t.File("archivers/php-zlib"))
+	G.Check(t.File("archivers/php-zlib"))
 
 	t.CheckOutputEmpty()
 }

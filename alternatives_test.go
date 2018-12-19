@@ -19,7 +19,7 @@ func (s *Suite) Test_CheckFileAlternatives__PLIST(c *check.C) {
 		"bin/vim",
 		"sbin/sendmail.exim${EXIMVER}")
 
-	G.CheckDirent(".")
+	G.Check(".")
 
 	t.CheckOutputLines(
 		"ERROR: ALTERNATIVES:1: Alternative implementation \"@PREFIX@/sbin/sendmail.postfix@POSTFIXVER@\" "+

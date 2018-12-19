@@ -44,7 +44,7 @@ func (s *Suite) Test_Lines_CheckRcsID__wip(c *check.C) {
 	t.CreateFileLines("wip/package/file5.mk",
 		"# $"+"FreeBSD$")
 
-	G.CheckDirent(t.File("wip/package"))
+	G.Check(t.File("wip/package"))
 
 	t.CheckOutputLines(
 		"NOTE: ~/wip/package/file1.mk:1: Expected exactly \"# $"+"NetBSD$\".",
@@ -54,7 +54,7 @@ func (s *Suite) Test_Lines_CheckRcsID__wip(c *check.C) {
 
 	G.Logger.Opts.Autofix = true
 
-	G.CheckDirent(t.File("wip/package"))
+	G.Check(t.File("wip/package"))
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/wip/package/file1.mk:1: Replacing \"# $NetBSD: dummy $\" with \"# $NetBSD$\".",

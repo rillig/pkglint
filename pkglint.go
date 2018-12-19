@@ -201,7 +201,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	for len(pkglint.Todo) > 0 {
 		item := pkglint.Todo[0]
 		pkglint.Todo = pkglint.Todo[1:]
-		pkglint.CheckDirent(item)
+		pkglint.Check(item)
 	}
 
 	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
@@ -285,26 +285,26 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	return -1
 }
 
-// CheckDirent checks a directory or a single file.
+// Check checks a directory or a single file.
 //
 // During tests, it assumes that Pkgsrc.LoadInfrastructure has been called.
 // It is the most high-level method for testing pkglint.
-func (pkglint *Pkglint) CheckDirent(filename string) {
+func (pkglint *Pkglint) Check(dirent string) {
 	if trace.Tracing {
-		defer trace.Call1(filename)()
+		defer trace.Call1(dirent)()
 	}
 
-	st, err := os.Lstat(filename)
+	st, err := os.Lstat(dirent)
 	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {
-		NewLineWhole(filename).Errorf("No such file or directory.")
+		NewLineWhole(dirent).Errorf("No such file or directory.")
 		return
 	}
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	dir := filename
+	dir := dirent
 	if isReg {
-		dir = path.Dir(filename)
+		dir = path.Dir(dirent)
 	}
 
 	pkgsrcRel := pkglint.Pkgsrc.ToRel(dir)
@@ -312,15 +312,15 @@ func (pkglint *Pkglint) CheckDirent(filename string) {
 	pkglint.Infrastructure = matches(pkgsrcRel, `^mk(/|$)`)
 	pkgsrcdir := findPkgsrcTopdir(dir)
 	if pkgsrcdir == "" {
-		NewLineWhole(filename).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
+		NewLineWhole(dirent).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
 		return
 	}
 
 	switch {
-	case isDir && isEmptyDir(filename):
+	case isDir && isEmptyDir(dirent):
 		return
 	case isReg:
-		pkglint.CheckFileReg(filename, st.Mode())
+		pkglint.checkReg(dirent, st.Mode())
 		return
 	}
 
@@ -332,7 +332,7 @@ func (pkglint *Pkglint) CheckDirent(filename string) {
 	case ".":
 		CheckdirToplevel(dir)
 	default:
-		NewLineWhole(filename).Errorf("Cannot check directories outside a pkgsrc tree.")
+		NewLineWhole(dirent).Errorf("Cannot check directories outside a pkgsrc tree.")
 	}
 }
 
@@ -406,7 +406,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			if err != nil {
 				NewLineWhole(filename).Errorf("Cannot determine file type: %s", err)
 			} else {
-				pkglint.CheckFileReg(filename, st.Mode())
+				pkglint.checkReg(filename, st.Mode())
 			}
 		}
 		if contains(filename, "/patches/patch-") {
@@ -592,7 +592,8 @@ func CheckFileMk(filename string) {
 	mklines.SaveAutofixChanges()
 }
 
-func (pkglint *Pkglint) CheckFileReg(filename string, mode os.FileMode) {
+// checkReg checks a regular file.
+func (pkglint *Pkglint) checkReg(filename string, mode os.FileMode) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
@@ -609,7 +610,7 @@ func (pkglint *Pkglint) CheckFileReg(filename string, mode os.FileMode) {
 	}
 
 	switch {
-	case hasPrefix(basename, "work"),
+	case hasPrefix(basename, "work"), // FIXME: This is not a regular file.
 		hasSuffix(basename, "~"),
 		hasSuffix(basename, ".orig"),
 		hasSuffix(basename, ".rej"),

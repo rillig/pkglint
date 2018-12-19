@@ -368,7 +368,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignPermissions__infrastructure(c *
 		"PKG_DEVELOPER?=\tyes")
 	t.CreateFileLines("mk/bsd.pkg.mk")
 
-	G.CheckDirent(t.File("mk/infra.mk"))
+	G.Check(t.File("mk/infra.mk"))
 
 	t.CheckOutputEmpty()
 }
@@ -773,7 +773,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *che
 
 	// This package is guaranteed to not use GNU_CONFIGURE.
 	// Since the :M* hack is only needed for GNU_CONFIGURE, it is not necessary here.
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	// FIXME: Duplicate diagnostics.
 	t.CheckOutputLines(
@@ -790,7 +790,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C
 		"MASTER_SITES=\t${HOMEPAGE:Q}")
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:5: The :Q operator isn't necessary for ${HOMEPAGE} here.")

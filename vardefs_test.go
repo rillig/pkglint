@@ -97,7 +97,7 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {
 	pkg := t.SetupPackage("category/package",
 		"BROKEN_ON_PLATFORM=\t${LP64PLATFORMS}")
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	// No warning about a missing :Q operator.
 	// All PLATFORM variables must be either lkNone or lkSpace.

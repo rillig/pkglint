@@ -1157,7 +1157,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 		MkRcsID,
 		"PYTHON_BIN=\tmy_cmd")
 
-	G.CheckDirent(pkg)
+	G.Check(pkg)
 
 	t.CheckOutputEmpty()
 }
