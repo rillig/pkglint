@@ -454,14 +454,14 @@ func (s *Scope) Define(varname string, mkline MkLine) {
 	if s.defined[varname] == nil {
 		s.defined[varname] = mkline
 		if trace.Tracing {
-			trace.Step2("Defining %q in line %s", varname, mkline.Linenos())
+			trace.Step2("Defining %q in %s", varname, mkline.String())
 		}
 	}
 	varcanon := varnameCanon(varname)
 	if varcanon != varname && s.defined[varcanon] == nil {
 		s.defined[varcanon] = mkline
 		if trace.Tracing {
-			trace.Step2("Defining %q in line %s", varcanon, mkline.Linenos())
+			trace.Step2("Defining %q in %s", varcanon, mkline.String())
 		}
 	}
 }
