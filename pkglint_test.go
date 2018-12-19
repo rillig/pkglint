@@ -134,7 +134,7 @@ func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 // initialize only those parts of the infrastructure they really
 // need.
 //
-// Especially covers Pkglint.ShowSummary and Pkglint.Checkfile.
+// Especially covers Pkglint.ShowSummary and Pkglint.CheckFile.
 func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t := s.Init(c)
 
@@ -412,7 +412,7 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	c.Check(resolved, equals, "gst-plugins0.10-x11/distinfo")
 }
 
-func (s *Suite) Test_ChecklinesDescr(c *check.C) {
+func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("DESCR",
@@ -422,7 +422,7 @@ func (s *Suite) Test_ChecklinesDescr(c *check.C) {
 		"", "", "", "", "", "", "", "", "20",
 		"", "", "", "", "", "", "", "", "", "30")
 
-	ChecklinesDescr(lines)
+	CheckLinesDescr(lines)
 
 	t.CheckOutputLines(
 		"WARN: DESCR:1: Line too long (should be no more than 80 characters).",
@@ -430,19 +430,19 @@ func (s *Suite) Test_ChecklinesDescr(c *check.C) {
 		"WARN: DESCR:25: File too long (should be no more than 24 lines).")
 }
 
-func (s *Suite) Test_ChecklinesMessage__short(c *check.C) {
+func (s *Suite) Test_CheckLinesMessage__short(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("MESSAGE",
 		"one line")
 
-	ChecklinesMessage(lines)
+	CheckLinesMessage(lines)
 
 	t.CheckOutputLines(
 		"WARN: MESSAGE:1: File too short.")
 }
 
-func (s *Suite) Test_ChecklinesMessage__malformed(c *check.C) {
+func (s *Suite) Test_CheckLinesMessage__malformed(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("MESSAGE",
@@ -452,7 +452,7 @@ func (s *Suite) Test_ChecklinesMessage__malformed(c *check.C) {
 		"4",
 		"5")
 
-	ChecklinesMessage(lines)
+	CheckLinesMessage(lines)
 
 	t.CheckOutputLines(
 		"WARN: MESSAGE:1: Expected a line of exactly 75 \"=\" characters.",
@@ -460,7 +460,7 @@ func (s *Suite) Test_ChecklinesMessage__malformed(c *check.C) {
 		"WARN: MESSAGE:5: Expected a line of exactly 75 \"=\" characters.")
 }
 
-func (s *Suite) Test_ChecklinesMessage__autofix(c *check.C) {
+func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall", "--autofix")
@@ -471,7 +471,7 @@ func (s *Suite) Test_ChecklinesMessage__autofix(c *check.C) {
 		"4",
 		"5")
 
-	ChecklinesMessage(lines)
+	CheckLinesMessage(lines)
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/MESSAGE:1: Inserting a line "+
@@ -494,7 +494,7 @@ func (s *Suite) Test_ChecklinesMessage__autofix(c *check.C) {
 
 // Demonstrates that an ALTERNATIVES file can be tested individually,
 // without any dependencies on a whole package or a PLIST file.
-func (s *Suite) Test_Pkglint_Checkfile__alternatives(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__alternatives(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -543,7 +543,7 @@ func (s *Suite) Test_Pkglint__profiling_error(c *check.C) {
 	c.Check(t.Output(), check.Matches, `^FATAL: Cannot create profiling file: open pkglint\.pprof: .*\n$`)
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__in_current_working_directory(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__in_current_working_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -683,7 +683,7 @@ func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
 	c.Check(G.ToolByVarname("TOOL").String(), equals, "tool:TOOL::AtRunTime")
 }
 
-func (s *Suite) Test_CheckfileExtra(c *check.C) {
+func (s *Suite) Test_CheckFileOther(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -698,7 +698,7 @@ func (s *Suite) Test_CheckfileExtra(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__before_import(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__before_import(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space", "--import")
@@ -717,7 +717,7 @@ func (s *Suite) Test_Pkglint_Checkfile__before_import(c *check.C) {
 		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__errors(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__errors(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -726,10 +726,10 @@ func (s *Suite) Test_Pkglint_Checkfile__errors(c *check.C) {
 	t.CreateFileLines("category/package/files/subdir/subsub/file")
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.Checkfile(t.File("category/package/options.mk"))
-	G.Checkfile(t.File("category/package/files/subdir"))
-	G.Checkfile(t.File("category/package/files/subdir/subsub"))
-	G.Checkfile(t.File("category/package/files"))
+	G.CheckFile(t.File("category/package/options.mk"))
+	G.CheckFile(t.File("category/package/files/subdir"))
+	G.CheckFile(t.File("category/package/files/subdir/subsub"))
+	G.CheckFile(t.File("category/package/files"))
 
 	c.Check(t.Output(), check.Matches, `^`+
 		`ERROR: ~/category/package/options.mk: Cannot determine file type: .*\n`+
@@ -737,7 +737,7 @@ func (s *Suite) Test_Pkglint_Checkfile__errors(c *check.C) {
 		`$`)
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__file_selection(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__file_selection(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -750,16 +750,16 @@ func (s *Suite) Test_Pkglint_Checkfile__file_selection(c *check.C) {
 		RcsID)
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.Checkfile(t.File("doc/CHANGES-2018"))
-	G.Checkfile(t.File("category/package/buildlink3.mk"))
-	G.Checkfile(t.File("category/package/unexpected.txt"))
+	G.CheckFile(t.File("doc/CHANGES-2018"))
+	G.CheckFile(t.File("category/package/buildlink3.mk"))
+	G.CheckFile(t.File("category/package/unexpected.txt"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
 		"WARN: ~/category/package/unexpected.txt: Unexpected file found.")
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__readme_and_todo(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/Makefile",
@@ -829,37 +829,37 @@ func (s *Suite) Test_Pkglint_Checkfile__readme_and_todo(c *check.C) {
 		"4 errors and 0 warnings found.")
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__unknown_file_in_patches(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__unknown_file_in_patches(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
-	G.Checkfile(t.File("category/Makefile/patches/index"))
+	G.CheckFile(t.File("category/Makefile/patches/index"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile/patches/index: " +
 			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__file_in_files(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__file_in_files(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/files/index")
 
-	G.Checkfile(t.File("category/package/files/index"))
+	G.CheckFile(t.File("category/package/files/index"))
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_Checkfile__spec(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFile__spec(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
 
-	G.Checkfile(t.File("category/package/spec"))
-	G.Checkfile(t.File("regress/package/spec"))
+	G.CheckFile(t.File("category/package/spec"))
+	G.CheckFile(t.File("regress/package/spec"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
@@ -1009,10 +1009,10 @@ func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 			"Alternative implementation \"bin/wrapper-impl\" must appear in the PLIST.")
 }
 
-func (s *Suite) Test_CheckfileMk__enoent(c *check.C) {
+func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
 	t := s.Init(c)
 
-	CheckfileMk(t.File("filename.mk"))
+	CheckFileMk(t.File("filename.mk"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/filename.mk: Cannot be read.")

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func ChecklinesPlist(lines Lines) {
+func CheckLinesPlist(lines Lines) {
 	if trace.Tracing {
 		defer trace.Call1(lines.FileName)()
 	}
@@ -63,7 +63,7 @@ func (ck *PlistChecker) Check(plainLines Lines) {
 		ck.checkline(pline)
 		pline.CheckTrailingWhitespace()
 	}
-	ChecklinesTrailingEmptyLines(plainLines)
+	CheckLinesTrailingEmptyLines(plainLines)
 
 	if G.Opts.WarnPlistSort {
 		sorter := NewPlistLineSorter(plines)

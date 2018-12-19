@@ -2,7 +2,7 @@ package pkglint
 
 import "strings"
 
-func CheckfileAlternatives(filename string) {
+func CheckFileAlternatives(filename string) {
 	lines := Load(filename, NotEmpty|LogErrors)
 	if lines == nil {
 		return

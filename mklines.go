@@ -180,7 +180,7 @@ func (mklines *MkLinesImpl) checkAll() {
 	substContext.Finish(NewMkLine(mklines.lines.EOFLine())) // TODO: mklines.EOFLine()
 	varalign.Finish()
 
-	ChecklinesTrailingEmptyLines(mklines.lines)
+	CheckLinesTrailingEmptyLines(mklines.lines)
 }
 
 func (mklines *MkLinesImpl) checkVarassignPlist(mkline MkLine) {

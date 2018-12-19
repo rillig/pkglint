@@ -1,6 +1,6 @@
 package pkglint
 
-func ChecklinesOptionsMk(mklines MkLines) {
+func CheckLinesOptionsMk(mklines MkLines) {
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines.FileName)()
 	}

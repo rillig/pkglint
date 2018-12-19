@@ -2,7 +2,7 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_CheckfileAlternatives__PLIST(c *check.C) {
+func (s *Suite) Test_CheckFileAlternatives__PLIST(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPackage("category/package")
@@ -31,7 +31,7 @@ func (s *Suite) Test_CheckfileAlternatives__PLIST(c *check.C) {
 		"ERROR: ALTERNATIVES:5: Invalid ALTERNATIVES line \"invalid\".")
 }
 
-func (s *Suite) Test_CheckfileAlternatives__empty(c *check.C) {
+func (s *Suite) Test_CheckFileAlternatives__empty(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
@@ -39,7 +39,7 @@ func (s *Suite) Test_CheckfileAlternatives__empty(c *check.C) {
 
 	G.Pkg = NewPackage(".")
 
-	CheckfileAlternatives("ALTERNATIVES")
+	CheckFileAlternatives("ALTERNATIVES")
 
 	t.CheckOutputLines(
 		"ERROR: ALTERNATIVES: Must not be empty.")

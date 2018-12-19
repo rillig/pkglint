@@ -316,7 +316,7 @@ func (pkglint *Pkglint) CheckDirent(filename string) {
 	case isDir && isEmptyDir(filename):
 		return
 	case isReg:
-		pkglint.Checkfile(filename)
+		pkglint.CheckFile(filename)
 		return
 	}
 
@@ -398,7 +398,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 				pkg.checkfilePackageMakefile(filename, mklines)
 			}
 		} else {
-			pkglint.Checkfile(filename)
+			pkglint.CheckFile(filename)
 		}
 		if contains(filename, "/patches/patch-") {
 			havePatches = true
@@ -478,17 +478,17 @@ func resolveVariableRefs(text string) (resolved string) {
 	}
 }
 
-func CheckfileExtra(filename string) {
+func CheckFileOther(filename string) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
 
 	if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-		ChecklinesTrailingEmptyLines(lines)
+		CheckLinesTrailingEmptyLines(lines)
 	}
 }
 
-func ChecklinesDescr(lines Lines) {
+func CheckLinesDescr(lines Lines) {
 	if trace.Tracing {
 		defer trace.Call1(lines.FileName)()
 	}
@@ -502,7 +502,7 @@ func ChecklinesDescr(lines Lines) {
 			line.Notef("Variables are not expanded in the DESCR file.")
 		}
 	}
-	ChecklinesTrailingEmptyLines(lines)
+	CheckLinesTrailingEmptyLines(lines)
 
 	if maxLines := 24; lines.Len() > maxLines {
 		line := lines.Lines[maxLines]
@@ -516,7 +516,7 @@ func ChecklinesDescr(lines Lines) {
 	SaveAutofixChanges(lines)
 }
 
-func ChecklinesMessage(lines Lines) {
+func CheckLinesMessage(lines Lines) {
 	if trace.Tracing {
 		defer trace.Call1(lines.FileName)()
 	}
@@ -557,12 +557,12 @@ func ChecklinesMessage(lines Lines) {
 		fix.InsertAfter(hline)
 		fix.Apply()
 	}
-	ChecklinesTrailingEmptyLines(lines)
+	CheckLinesTrailingEmptyLines(lines)
 
 	SaveAutofixChanges(lines)
 }
 
-func CheckfileMk(filename string) {
+func CheckFileMk(filename string) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
@@ -576,7 +576,7 @@ func CheckfileMk(filename string) {
 	mklines.SaveAutofixChanges()
 }
 
-func (pkglint *Pkglint) Checkfile(filename string) {
+func (pkglint *Pkglint) CheckFile(filename string) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
@@ -640,53 +640,53 @@ func (pkglint *Pkglint) checkMode(filename string, mode os.FileMode) {
 
 	case basename == "ALTERNATIVES":
 		if pkglint.Opts.CheckAlternatives {
-			CheckfileAlternatives(filename)
+			CheckFileAlternatives(filename)
 		}
 
 	case basename == "buildlink3.mk":
 		if pkglint.Opts.CheckBuildlink3 {
 			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
-				ChecklinesBuildlink3Mk(mklines)
+				CheckLinesBuildlink3Mk(mklines)
 			}
 		}
 
 	case hasPrefix(basename, "DESCR"):
 		if pkglint.Opts.CheckDescr {
 			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				ChecklinesDescr(lines)
+				CheckLinesDescr(lines)
 			}
 		}
 
 	case basename == "distinfo":
 		if pkglint.Opts.CheckDistinfo {
 			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				ChecklinesDistinfo(lines)
+				CheckLinesDistinfo(lines)
 			}
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
 		if pkglint.Opts.CheckInstall {
-			CheckfileExtra(filename)
+			CheckFileOther(filename)
 		}
 
 	case hasPrefix(basename, "MESSAGE"):
 		if pkglint.Opts.CheckMessage {
 			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				ChecklinesMessage(lines)
+				CheckLinesMessage(lines)
 			}
 		}
 
 	case basename == "options.mk":
 		if pkglint.Opts.CheckOptions {
 			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
-				ChecklinesOptionsMk(mklines)
+				CheckLinesOptionsMk(mklines)
 			}
 		}
 
 	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
 		if pkglint.Opts.CheckPatches {
 			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				ChecklinesPatch(lines)
+				CheckLinesPatch(lines)
 			}
 		}
 
@@ -700,13 +700,13 @@ func (pkglint *Pkglint) checkMode(filename string, mode os.FileMode) {
 
 	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(filename, `files/`) && !matches(filename, `patches/`):
 		if pkglint.Opts.CheckMk {
-			CheckfileMk(filename)
+			CheckFileMk(filename)
 		}
 
 	case hasPrefix(basename, "PLIST"):
 		if pkglint.Opts.CheckPlist {
 			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				ChecklinesPlist(lines)
+				CheckLinesPlist(lines)
 			}
 		}
 
@@ -725,7 +725,7 @@ func (pkglint *Pkglint) checkMode(filename string, mode os.FileMode) {
 	default:
 		NewLineWhole(filename).Warnf("Unexpected file found.")
 		if pkglint.Opts.CheckExtra {
-			CheckfileExtra(filename)
+			CheckFileOther(filename)
 		}
 	}
 }
@@ -765,14 +765,14 @@ func (pkglint *Pkglint) checkExecutable(filename string, st os.FileInfo) {
 	}
 }
 
-func ChecklinesTrailingEmptyLines(lines Lines) {
-	// XXX: Maybe move to LinesChecker if there are enough similar functions.
-
+func CheckLinesTrailingEmptyLines(lines Lines) {
 	max := lines.Len()
+
 	last := max
 	for last > 1 && lines.Lines[last-1].Text == "" {
 		last--
 	}
+
 	if last != max {
 		lines.Lines[last].Notef("Trailing empty lines.")
 	}

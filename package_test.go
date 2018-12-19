@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__file_but_not_package(c *check.C) {
+func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__file_but_not_package(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/dependency/buildlink3.mk")
@@ -15,14 +15,14 @@ func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__file_but_not_package
 		"",
 		".include \"../../category/dependency/buildlink3.mk\"")
 
-	G.Pkg.checklinesBuildlink3Inclusion(mklines)
+	G.Pkg.checkLinesBuildlink3Inclusion(mklines)
 
 	t.CheckOutputLines(
 		"WARN: category/package/buildlink3.mk:3: " +
 			"category/dependency/buildlink3.mk is included by this file but not by the package.")
 }
 
-func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__package_but_not_file(c *check.C) {
+func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/dependency/buildlink3.mk")
@@ -32,16 +32,16 @@ func (s *Suite) Test_Package_checklinesBuildlink3Inclusion__package_but_not_file
 		MkRcsID)
 
 	t.EnableTracingToLog()
-	G.Pkg.checklinesBuildlink3Inclusion(mklines)
+	G.Pkg.checkLinesBuildlink3Inclusion(mklines)
 
 	// This is only traced but not logged as a regular warning since
 	// several packages have build dependencies that are not needed
 	// for building other packages. These cannot be flagged as warnings.
 	t.CheckOutputLines(
-		"TRACE: + (*Package).checklinesBuildlink3Inclusion()",
+		"TRACE: + (*Package).checkLinesBuildlink3Inclusion()",
 		"TRACE: 1   ../../category/dependency/buildlink3.mk/buildlink3.mk "+
 			"is included by the package but not by the buildlink3.mk file.",
-		"TRACE: - (*Package).checklinesBuildlink3Inclusion()")
+		"TRACE: - (*Package).checkLinesBuildlink3Inclusion()")
 }
 
 func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
