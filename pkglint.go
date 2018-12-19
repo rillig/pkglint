@@ -285,7 +285,13 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	return -1
 }
 
-// Check checks a directory or a single file.
+// Check checks a directory entry, which can be a regular file,
+// a directory or a symlink (only allowed for the working directory).
+//
+// This is the method that is called for each command line argument.
+//
+// It sets up all the global state (infrastructure, wip) for accurately
+// classifying the entry.
 //
 // During tests, it assumes that Pkgsrc.LoadInfrastructure has been called.
 // It is the most high-level method for testing pkglint.
@@ -307,7 +313,9 @@ func (pkglint *Pkglint) Check(dirent string) {
 		dir = path.Dir(dirent)
 	}
 
-	pkgsrcRel := pkglint.Pkgsrc.ToRel(dir)
+	basename := path.Base(dirent)
+	pkgsrcRel := pkglint.Pkgsrc.ToRel(dirent)
+
 	pkglint.Wip = matches(pkgsrcRel, `^wip(/|$)`)
 	pkglint.Infrastructure = matches(pkgsrcRel, `^mk(/|$)`)
 	pkgsrcdir := findPkgsrcTopdir(dir)
@@ -319,8 +327,11 @@ func (pkglint *Pkglint) Check(dirent string) {
 	switch {
 	case isDir && isEmptyDir(dirent):
 		return
+
 	case isReg:
-		pkglint.checkReg(dirent, st.Mode())
+		depth := strings.Count(pkgsrcRel, "/")
+		pkglint.checkExecutable(dirent, st.Mode())
+		pkglint.checkReg(dirent, basename, depth)
 		return
 	}
 
@@ -333,6 +344,42 @@ func (pkglint *Pkglint) Check(dirent string) {
 		CheckdirToplevel(dir)
 	default:
 		NewLineWhole(dirent).Errorf("Cannot check directories outside a pkgsrc tree.")
+	}
+}
+
+// checkDirent checks a directory entry based on its filename and its mode
+// (regular file, directory, symlink).
+func (pkglint *Pkglint) checkDirent(dirent string, mode os.FileMode) {
+	basename := path.Base(dirent)
+
+	switch {
+
+	case mode.IsRegular():
+		pkgsrcRel := pkglint.Pkgsrc.ToRel(dirent)
+		depth := strings.Count(pkgsrcRel, "/")
+		pkglint.checkReg(dirent, basename, depth)
+
+	case hasPrefix(basename, "work"):
+		if pkglint.Opts.Import {
+			NewLineWhole(dirent).Errorf("Must be cleaned up before committing the package.")
+		}
+		return
+
+	case mode.IsDir():
+		switch {
+		case basename == "files" || basename == "patches" || isIgnoredFilename(basename):
+			// Ok
+		case matches(dirent, `(?:^|/)files/[^/]*$`):
+			// Ok
+		case !isEmptyDir(dirent):
+			NewLineWhole(dirent).Warnf("Unknown directory name.")
+		}
+
+	case mode&os.ModeSymlink != 0:
+		NewLineWhole(dirent).Warnf("Invalid symlink name.")
+
+	default:
+		NewLineWhole(dirent).Errorf("Only files and directories are allowed in pkgsrc.")
 	}
 }
 
@@ -406,7 +453,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			if err != nil {
 				NewLineWhole(filename).Errorf("Cannot determine file type: %s", err)
 			} else {
-				pkglint.checkReg(filename, st.Mode())
+				pkglint.checkDirent(filename, st.Mode())
 			}
 		}
 		if contains(filename, "/patches/patch-") {
@@ -592,15 +639,7 @@ func CheckFileMk(filename string) {
 	mklines.SaveAutofixChanges()
 }
 
-// checkReg checks a regular file.
-func (pkglint *Pkglint) checkReg(filename string, mode os.FileMode) {
-	if trace.Tracing {
-		defer trace.Call1(filename)()
-	}
-
-	basename := path.Base(filename)
-	pkgsrcRel := pkglint.Pkgsrc.ToRel(filename)
-	depth := strings.Count(pkgsrcRel, "/")
+func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 	if depth == 2 && !pkglint.Wip {
 		if contains(basename, "README") || contains(basename, "TODO") {
@@ -610,8 +649,7 @@ func (pkglint *Pkglint) checkReg(filename string, mode os.FileMode) {
 	}
 
 	switch {
-	case hasPrefix(basename, "work"), // FIXME: This is not a regular file.
-		hasSuffix(basename, "~"),
+	case hasSuffix(basename, "~"),
 		hasSuffix(basename, ".orig"),
 		hasSuffix(basename, ".rej"),
 		contains(basename, "README") && depth == 2,
@@ -622,33 +660,7 @@ func (pkglint *Pkglint) checkReg(filename string, mode os.FileMode) {
 		return
 	}
 
-	pkglint.checkExecutable(filename, mode)
-	pkglint.checkMode(filename, mode) // FIXME: checkMode is more general; it also checks directories.
-}
-
-// checkMode checks a directory entry based on its filename and its mode
-// (regular file, directory, symlink).
-func (pkglint *Pkglint) checkMode(filename string, mode os.FileMode) {
-	basename := path.Base(filename)
 	switch {
-	case mode.IsDir():
-		switch {
-		case basename == "files" || basename == "patches" || isIgnoredFilename(basename):
-			// Ok
-		case matches(filename, `(?:^|/)files/[^/]*$`):
-			// Ok
-		case !isEmptyDir(filename):
-			NewLineWhole(filename).Warnf("Unknown directory name.")
-		}
-
-	case mode&os.ModeSymlink != 0:
-		if !hasPrefix(basename, "work") {
-			NewLineWhole(filename).Warnf("Unknown symlink name.")
-		}
-
-	case !mode.IsRegular():
-		NewLineWhole(filename).Errorf("Only files and directories are allowed in pkgsrc.")
-
 	case basename == "ALTERNATIVES":
 		if pkglint.Opts.CheckAlternatives {
 			CheckFileAlternatives(filename)

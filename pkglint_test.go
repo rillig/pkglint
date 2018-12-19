@@ -704,7 +704,7 @@ func (s *Suite) Test_CheckFileOther(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_checkReg__before_import(c *check.C) {
+func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space", "--import")
@@ -723,7 +723,7 @@ func (s *Suite) Test_Pkglint_checkReg__before_import(c *check.C) {
 		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__errors(c *check.C) {
+func (s *Suite) Test_Pkglint_checkDirent__errors(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -732,17 +732,17 @@ func (s *Suite) Test_Pkglint_checkReg__errors(c *check.C) {
 	t.CreateFileLines("category/package/files/subdir/subsub/file")
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.checkReg(t.File("category/package/options.mk"), 0444)
-	G.checkReg(t.File("category/package/files/subdir"), 0555|os.ModeDir)
-	G.checkReg(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
-	G.checkReg(t.File("category/package/files"), 0555|os.ModeDir)
+	G.checkDirent(t.File("category/package/options.mk"), 0444)
+	G.checkDirent(t.File("category/package/files/subdir"), 0555|os.ModeDir)
+	G.checkDirent(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
+	G.checkDirent(t.File("category/package/files"), 0555|os.ModeDir)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/options.mk: Cannot be read.",
 		"WARN: ~/category/package/files/subdir/subsub: Unknown directory name.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__file_selection(c *check.C) {
+func (s *Suite) Test_Pkglint_checkDirent__file_selection(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -755,9 +755,9 @@ func (s *Suite) Test_Pkglint_checkReg__file_selection(c *check.C) {
 		RcsID)
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.checkReg(t.File("doc/CHANGES-2018"), 0444)
-	G.checkReg(t.File("category/package/buildlink3.mk"), 0444)
-	G.checkReg(t.File("category/package/unexpected.txt"), 0444)
+	G.checkDirent(t.File("doc/CHANGES-2018"), 0444)
+	G.checkDirent(t.File("category/package/buildlink3.mk"), 0444)
+	G.checkDirent(t.File("category/package/unexpected.txt"), 0444)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
@@ -839,7 +839,7 @@ func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
-	G.checkReg(t.File("category/Makefile/patches/index"), 0444)
+	G.checkReg(t.File("category/Makefile/patches/index"), "index", 3)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile/patches/index: " +
@@ -851,7 +851,7 @@ func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
 
 	t.CreateFileLines("category/package/files/index")
 
-	G.checkReg(t.File("category/package/files/index"), 0444)
+	G.checkReg(t.File("category/package/files/index"), "index", 3)
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
@@ -863,25 +863,25 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
 
-	G.checkReg(t.File("category/package/spec"), 0444)
-	G.checkReg(t.File("regress/package/spec"), 0444)
+	G.checkReg(t.File("category/package/spec"), "spec", 2)
+	G.checkReg(t.File("regress/package/spec"), "spec", 2)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
 }
 
-func (s *Suite) Test_Pkglint_checkMode__skipped(c *check.C) {
+func (s *Suite) Test_Pkglint_checkDirent__skipped(c *check.C) {
 	t := s.Init(c)
 
-	G.checkMode("work", os.ModeSymlink)
-	G.checkMode("work.i386", os.ModeSymlink)
-	G.checkMode("work.hostname", os.ModeSymlink)
-	G.checkMode("other", os.ModeSymlink)
+	G.checkDirent("work", os.ModeSymlink)
+	G.checkDirent("work.i386", os.ModeSymlink)
+	G.checkDirent("work.hostname", os.ModeSymlink)
+	G.checkDirent("other", os.ModeSymlink)
 
-	G.checkMode("device", os.ModeDevice)
+	G.checkDirent("device", os.ModeDevice)
 
 	t.CheckOutputLines(
-		"WARN: other: Unknown symlink name.",
+		"WARN: other: Invalid symlink name.",
 		"ERROR: device: Only files and directories are allowed in pkgsrc.")
 }
 
