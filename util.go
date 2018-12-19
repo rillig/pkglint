@@ -475,14 +475,14 @@ func (s *Scope) Use(varname string, line MkLine) {
 	if s.used[varname] == nil {
 		s.used[varname] = line
 		if trace.Tracing {
-			trace.Step2("Using %q in line %s", varname, line.Linenos())
+			trace.Step2("Using %q in %s", varname, line.String())
 		}
 	}
 	varcanon := varnameCanon(varname)
 	if varcanon != varname && s.used[varcanon] == nil {
 		s.used[varcanon] = line
 		if trace.Tracing {
-			trace.Step2("Using %q in line %s", varcanon, line.Linenos())
+			trace.Step2("Using %q in %s", varcanon, line.String())
 		}
 	}
 }
