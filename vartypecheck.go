@@ -7,12 +7,10 @@ import (
 )
 
 type VartypeCheck struct {
-	// The type of MkLine is *MkLineImpl instead of a simple MkLine to appease go vet.
-	// As of December 2018, it would complain:
-	// > vartypecheck.go:1137:16: cannot use cv.MkLine (variable with invalid type)
-	// > as *MkLineImpl value in struct literal
+	// Note: if "go vet" or "go test" complains about a "variable with invalid type", update to go1.11.4.
+	// See https://github.com/golang/go/issues/28972.
 
-	MkLine *MkLineImpl
+	MkLine MkLine
 	Line   Line
 
 	// The name of the variable being checked.
