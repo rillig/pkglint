@@ -498,8 +498,13 @@ func CheckLinesDescr(lines Lines) {
 		ck.CheckLength(80)
 		ck.CheckTrailingWhitespace()
 		ck.CheckValidCharacters()
+
 		if contains(line.Text, "${") {
-			line.Notef("Variables are not expanded in the DESCR file.")
+			for _, token := range NewMkParser(nil, line.Text, false).MkTokens() {
+				if token.Varuse != nil && G.Pkgsrc.VariableType(token.Varuse.varname) != nil {
+					line.Notef("Variables are not expanded in the DESCR file.")
+				}
+			}
 		}
 	}
 	CheckLinesTrailingEmptyLines(lines)

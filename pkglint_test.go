@@ -415,15 +415,23 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 	t := s.Init(c)
 
+	t.SetupVartypes()
 	lines := t.NewLines("DESCR",
 		strings.Repeat("X", 90),
 		"", "", "", "", "", "", "", "", "10",
 		"Try ${PREFIX}",
 		"", "", "", "", "", "", "", "", "20",
-		"", "", "", "", "", "", "", "", "", "30")
+		"... expressions like ${key} to ... ${unfinished",
+		"", "", "", "", "", "", "", "", "30")
 
 	CheckLinesDescr(lines)
 
+	// The package author may think that variables like ${PREFIX}
+	// are expanded in DESCR files too, but that doesn't happen.
+	//
+	// Variables that are not well-known in pkgsrc are not warned
+	// about since these are probably legitimate examples, as seen
+	// in devel/go-properties/DESCR.
 	t.CheckOutputLines(
 		"WARN: DESCR:1: Line too long (should be no more than 80 characters).",
 		"NOTE: DESCR:11: Variables are not expanded in the DESCR file.",
