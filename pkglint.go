@@ -526,23 +526,25 @@ func CheckLinesMessage(lines Lines) {
 		defer trace.Call1(lines.FileName)()
 	}
 
-	explanation := []string{
-		"A MESSAGE file should consist of a header line, having 75 \"=\"",
-		"characters, followed by a line containing only the RCS Id, then an",
-		"empty line, your text and finally the footer line, which is the",
-		"same as the header line."}
+	explanation := func() []string {
+		return []string{
+			"A MESSAGE file should consist of a header line, having 75 \"=\"",
+			"characters, followed by a line containing only the RCS Id, then an",
+			"empty line, your text and finally the footer line, which is the",
+			"same as the header line."}
+	}
 
 	if lines.Len() < 3 {
 		lines.LastLine().Warnf("File too short.")
-		G.Explain(explanation...)
+		G.Explain(explanation()...)
 		return
 	}
 
-	hline := strings.Repeat("=", 75)
+	hline := "==========================================================================="
 	if line := lines.Lines[0]; line.Text != hline {
 		fix := line.Autofix()
 		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
-		fix.Explain(explanation...)
+		fix.Explain(explanation()...)
 		fix.InsertBefore(hline)
 		fix.Apply()
 		lines.CheckRcsID(0, ``, "")
@@ -558,7 +560,7 @@ func CheckLinesMessage(lines Lines) {
 	if lastLine := lines.LastLine(); lastLine.Text != hline {
 		fix := lastLine.Autofix()
 		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
-		fix.Explain(explanation...)
+		fix.Explain(explanation()...)
 		fix.InsertAfter(hline)
 		fix.Apply()
 	}
