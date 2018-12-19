@@ -90,8 +90,7 @@ func (s *Suite) Test_LineChecker_CheckLength(c *check.C) {
 	LineChecker{line2}.CheckLength(20)
 
 	t.CheckOutputLines(
-		"WARN: DESCR:1: Line too long (should be no more than 20 characters).",
-		"WARN: DESCR:2: Line too long (should be no more than 20 characters).")
+		"WARN: DESCR:1: Line too long (should be no more than 20 characters).")
 }
 
 func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {

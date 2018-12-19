@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"fmt"
+	"netbsd.org/pkglint/textproc"
 	"strings"
 )
 
@@ -42,6 +43,12 @@ func (ck LineChecker) CheckAbsolutePathname(text string) {
 
 func (ck LineChecker) CheckLength(maxLength int) {
 	if len(ck.line.Text) > maxLength {
+		lexer := textproc.NewLexer(ck.line.Text[0:maxLength])
+		lexer.NextBytesFunc(func(b byte) bool { return !isHspace(b) })
+		if lexer.EOF() {
+			return
+		}
+
 		ck.line.Warnf("Line too long (should be no more than %d characters).", maxLength)
 		G.Explain(
 			"Back in the old time, terminals with 80x25 characters were common.",
