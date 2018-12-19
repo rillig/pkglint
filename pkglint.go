@@ -302,7 +302,11 @@ func (pkglint *Pkglint) CheckDirent(filename string) {
 	isDir := st.Mode().IsDir()
 	isReg := st.Mode().IsRegular()
 
-	dir := ifelseStr(isReg, path.Dir(filename), filename)
+	dir := filename
+	if isReg {
+		dir = path.Dir(filename)
+	}
+
 	pkgsrcRel := pkglint.Pkgsrc.ToRel(dir)
 	pkglint.Wip = matches(pkgsrcRel, `^wip(/|$)`)
 	pkglint.Infrastructure = matches(pkgsrcRel, `^mk(/|$)`)
