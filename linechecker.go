@@ -2,7 +2,6 @@ package pkglint
 
 import (
 	"fmt"
-	"netbsd.org/pkglint/textproc"
 	"strings"
 )
 
@@ -46,17 +45,17 @@ func (ck LineChecker) CheckLength(maxLength int) {
 		return
 	}
 
-	lexer := textproc.NewLexer(ck.line.Text[0:maxLength])
-	lexer.NextBytesFunc(func(b byte) bool { return !isHspace(b) })
-	if lexer.EOF() {
-		return
+	prefix := ck.line.Text[0:maxLength]
+	for i := 0; i < len(prefix); i++ {
+		if isHspace(prefix[i]) {
+			ck.line.Warnf("Line too long (should be no more than %d characters).", maxLength)
+			G.Explain(
+				"Back in the old time, terminals with 80x25 characters were common.",
+				"And this is still the default size of many terminal emulators.",
+				"Moderately short lines also make reading easier.")
+			return
+		}
 	}
-
-	ck.line.Warnf("Line too long (should be no more than %d characters).", maxLength)
-	G.Explain(
-		"Back in the old time, terminals with 80x25 characters were common.",
-		"And this is still the default size of many terminal emulators.",
-		"Moderately short lines also make reading easier.")
 }
 
 func (ck LineChecker) CheckValidCharacters() {
