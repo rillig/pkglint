@@ -316,7 +316,7 @@ func (pkglint *Pkglint) CheckDirent(filename string) {
 	case isDir && isEmptyDir(filename):
 		return
 	case isReg:
-		pkglint.CheckFile(filename)
+		pkglint.CheckFileReg(filename, st.Mode())
 		return
 	}
 
@@ -392,13 +392,18 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 
 		if path.Base(filename) == "Makefile" {
 			if st, err := os.Lstat(filename); err == nil {
-				pkglint.checkExecutable(filename, st)
+				pkglint.checkExecutable(filename, st.Mode())
 			}
 			if pkglint.Opts.CheckMakefile {
 				pkg.checkfilePackageMakefile(filename, mklines)
 			}
 		} else {
-			pkglint.CheckFile(filename)
+			st, err := os.Lstat(filename)
+			if err != nil {
+				NewLineWhole(filename).Errorf("Cannot determine file type: %s", err)
+			} else {
+				pkglint.CheckFileReg(filename, st.Mode())
+			}
 		}
 		if contains(filename, "/patches/patch-") {
 			havePatches = true
@@ -583,7 +588,7 @@ func CheckFileMk(filename string) {
 	mklines.SaveAutofixChanges()
 }
 
-func (pkglint *Pkglint) CheckFile(filename string) {
+func (pkglint *Pkglint) CheckFileReg(filename string, mode os.FileMode) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
@@ -612,14 +617,8 @@ func (pkglint *Pkglint) CheckFile(filename string) {
 		return
 	}
 
-	st, err := os.Lstat(filename)
-	if err != nil {
-		NewLineWhole(filename).Errorf("Cannot determine file type: %s", err)
-		return
-	}
-
-	pkglint.checkExecutable(filename, st)
-	pkglint.checkMode(filename, st.Mode())
+	pkglint.checkExecutable(filename, mode)
+	pkglint.checkMode(filename, mode) // FIXME: checkMode is more general; it also checks directories.
 }
 
 // checkMode checks a directory entry based on its filename and its mode
@@ -737,12 +736,12 @@ func (pkglint *Pkglint) checkMode(filename string, mode os.FileMode) {
 	}
 }
 
-func (pkglint *Pkglint) checkExecutable(filename string, st os.FileInfo) {
+func (pkglint *Pkglint) checkExecutable(filename string, mode os.FileMode) {
 	switch {
-	case !st.Mode().IsRegular():
+	case !mode.IsRegular():
 		// Directories and other entries may be executable.
 
-	case st.Mode().Perm()&0111 == 0:
+	case mode.Perm()&0111 == 0:
 		// Good.
 
 	case isCommitted(filename):
@@ -763,7 +762,7 @@ func (pkglint *Pkglint) checkExecutable(filename string, st os.FileInfo) {
 		fix.Custom(func(showAutofix, autofix bool) {
 			fix.Describef(0, "Clearing executable bits")
 			if autofix {
-				if err := os.Chmod(filename, st.Mode()&^0111); err != nil {
+				if err := os.Chmod(filename, mode&^0111); err != nil {
 					line.Errorf("Cannot clear executable bits: %s", err)
 				}
 			}

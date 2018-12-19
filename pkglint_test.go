@@ -1,13 +1,10 @@
 package pkglint
 
 import (
-	"io/ioutil"
-	"path"
-	"strings"
-	"time"
-
 	"gopkg.in/check.v1"
+	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
@@ -134,7 +131,7 @@ func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 // initialize only those parts of the infrastructure they really
 // need.
 //
-// Especially covers Pkglint.ShowSummary and Pkglint.CheckFile.
+// Especially covers Pkglint.ShowSummary and Pkglint.CheckFileReg.
 func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t := s.Init(c)
 
@@ -503,7 +500,7 @@ func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 
 // Demonstrates that an ALTERNATIVES file can be tested individually,
 // without any dependencies on a whole package or a PLIST file.
-func (s *Suite) Test_Pkglint_CheckFile__alternatives(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__alternatives(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -552,7 +549,7 @@ func (s *Suite) Test_Pkglint__profiling_error(c *check.C) {
 	c.Check(t.Output(), check.Matches, `^FATAL: Cannot create profiling file: open pkglint\.pprof: .*\n$`)
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__in_current_working_directory(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__in_current_working_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
@@ -707,7 +704,7 @@ func (s *Suite) Test_CheckFileOther(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__before_import(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__before_import(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space", "--import")
@@ -726,7 +723,7 @@ func (s *Suite) Test_Pkglint_CheckFile__before_import(c *check.C) {
 		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__errors(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__errors(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -735,18 +732,17 @@ func (s *Suite) Test_Pkglint_CheckFile__errors(c *check.C) {
 	t.CreateFileLines("category/package/files/subdir/subsub/file")
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.CheckFile(t.File("category/package/options.mk"))
-	G.CheckFile(t.File("category/package/files/subdir"))
-	G.CheckFile(t.File("category/package/files/subdir/subsub"))
-	G.CheckFile(t.File("category/package/files"))
+	G.CheckFileReg(t.File("category/package/options.mk"), 0444)
+	G.CheckFileReg(t.File("category/package/files/subdir"), 0555|os.ModeDir)
+	G.CheckFileReg(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
+	G.CheckFileReg(t.File("category/package/files"), 0555|os.ModeDir)
 
-	c.Check(t.Output(), check.Matches, `^`+
-		`ERROR: ~/category/package/options.mk: Cannot determine file type: .*\n`+
-		`WARN: ~/category/package/files/subdir/subsub: Unknown directory name\.\n`+
-		`$`)
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/options.mk: Cannot be read.",
+		"WARN: ~/category/package/files/subdir/subsub: Unknown directory name.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__file_selection(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__file_selection(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Call", "-Wall,no-space")
@@ -759,16 +755,16 @@ func (s *Suite) Test_Pkglint_CheckFile__file_selection(c *check.C) {
 		RcsID)
 	G.Pkgsrc.LoadInfrastructure()
 
-	G.CheckFile(t.File("doc/CHANGES-2018"))
-	G.CheckFile(t.File("category/package/buildlink3.mk"))
-	G.CheckFile(t.File("category/package/unexpected.txt"))
+	G.CheckFileReg(t.File("doc/CHANGES-2018"), 0444)
+	G.CheckFileReg(t.File("category/package/buildlink3.mk"), 0444)
+	G.CheckFileReg(t.File("category/package/unexpected.txt"), 0444)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
 		"WARN: ~/category/package/unexpected.txt: Unexpected file found.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__readme_and_todo(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__readme_and_todo(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/Makefile",
@@ -838,37 +834,37 @@ func (s *Suite) Test_Pkglint_CheckFile__readme_and_todo(c *check.C) {
 		"4 errors and 0 warnings found.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__unknown_file_in_patches(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__unknown_file_in_patches(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
-	G.CheckFile(t.File("category/Makefile/patches/index"))
+	G.CheckFileReg(t.File("category/Makefile/patches/index"), 0444)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile/patches/index: " +
 			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__file_in_files(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__file_in_files(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/files/index")
 
-	G.CheckFile(t.File("category/package/files/index"))
+	G.CheckFileReg(t.File("category/package/files/index"), 0444)
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_CheckFile__spec(c *check.C) {
+func (s *Suite) Test_Pkglint_CheckFileReg__spec(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
 
-	G.CheckFile(t.File("category/package/spec"))
-	G.CheckFile(t.File("regress/package/spec"))
+	G.CheckFileReg(t.File("category/package/spec"), 0444)
+	G.CheckFileReg(t.File("regress/package/spec"), 0444)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
@@ -1031,16 +1027,15 @@ func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
 	filename := t.File("file.mk")
-	fileInfo := ExecutableFileInfo{path.Base(filename)}
 
-	G.checkExecutable(filename, fileInfo)
+	G.checkExecutable(filename, 0555)
 
 	t.CheckOutputLines(
 		"WARN: ~/file.mk: Should not be executable.")
 
 	t.SetupCommandLine("--autofix")
 
-	G.checkExecutable(filename, fileInfo)
+	G.checkExecutable(filename, 0555)
 
 	// FIXME: The error message "Cannot clear executable bits" is swallowed.
 	t.CheckOutputLines(
@@ -1053,9 +1048,8 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 	t.CreateFileLines("CVS/Entries",
 		"/file.mk/modified////")
 	filename := t.File("file.mk")
-	fileInfo := ExecutableFileInfo{path.Base(filename)}
 
-	G.checkExecutable(filename, fileInfo)
+	G.checkExecutable(filename, 0555)
 
 	// See the "Too late" comment in Pkglint.checkExecutable.
 	t.CheckOutputEmpty()
@@ -1099,16 +1093,3 @@ func (s *Suite) Test_Main(c *check.C) {
 		"Looks fine.")
 	// outProfiling is not checked because it contains timing information.
 }
-
-// ExecutableFileInfo mocks a FileInfo because on Windows,
-// regular files don't have the executable bit.
-type ExecutableFileInfo struct {
-	name string
-}
-
-func (i ExecutableFileInfo) Name() string       { return i.name }
-func (i ExecutableFileInfo) Size() int64        { return 13 }
-func (i ExecutableFileInfo) Mode() os.FileMode  { return 0777 }
-func (i ExecutableFileInfo) ModTime() time.Time { return time.Unix(0, 0) }
-func (i ExecutableFileInfo) IsDir() bool        { return false }
-func (i ExecutableFileInfo) Sys() interface{}   { return nil }
