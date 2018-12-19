@@ -417,8 +417,9 @@ func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 
 	t.SetupVartypes()
 	lines := t.NewLines("DESCR",
-		strings.Repeat("X", 90),
-		"", "", "", "", "", "", "", "", "10",
+		"word "+strings.Repeat("X", 80),
+		strings.Repeat("X", 90), // No warning since there are no spaces.
+		"", "", "", "", "", "", "", "10",
 		"Try ${PREFIX}",
 		"", "", "", "", "", "", "", "", "20",
 		"... expressions like ${key} to ... ${unfinished",
