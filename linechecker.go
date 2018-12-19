@@ -42,19 +42,21 @@ func (ck LineChecker) CheckAbsolutePathname(text string) {
 }
 
 func (ck LineChecker) CheckLength(maxLength int) {
-	if len(ck.line.Text) > maxLength {
-		lexer := textproc.NewLexer(ck.line.Text[0:maxLength])
-		lexer.NextBytesFunc(func(b byte) bool { return !isHspace(b) })
-		if lexer.EOF() {
-			return
-		}
-
-		ck.line.Warnf("Line too long (should be no more than %d characters).", maxLength)
-		G.Explain(
-			"Back in the old time, terminals with 80x25 characters were common.",
-			"And this is still the default size of many terminal emulators.",
-			"Moderately short lines also make reading easier.")
+	if len(ck.line.Text) <= maxLength {
+		return
 	}
+
+	lexer := textproc.NewLexer(ck.line.Text[0:maxLength])
+	lexer.NextBytesFunc(func(b byte) bool { return !isHspace(b) })
+	if lexer.EOF() {
+		return
+	}
+
+	ck.line.Warnf("Line too long (should be no more than %d characters).", maxLength)
+	G.Explain(
+		"Back in the old time, terminals with 80x25 characters were common.",
+		"And this is still the default size of many terminal emulators.",
+		"Moderately short lines also make reading easier.")
 }
 
 func (ck LineChecker) CheckValidCharacters() {
