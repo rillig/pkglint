@@ -1126,23 +1126,23 @@ func (ck MkLineChecker) checkTextRpath(text string) {
 }
 
 func (ck MkLineChecker) checkTextDeprecated(text string) {
-	rest := text
-	for {
-		m, r := G.res.ReplaceFirst(rest, `(?:^|[^$])\$\{([-A-Z0-9a-z_]+)(\.[\-0-9A-Z_a-z]+)?(?::[^\}]+)?\}`, "")
-		if m == nil {
-			break
-		}
-		rest = r
+	tokens := NewMkParser(nil, text, false).MkTokens()
+	for _, token := range tokens {
+		if token.Varuse != nil {
+			varname := token.Varuse.varname
+			varcanon := varnameCanon(varname)
 
-		varbase, varext := m[1], m[2]
-		varname := varbase + varext
-		varcanon := varnameCanon(varname)
-		instead := G.Pkgsrc.Deprecated[varname]
-		if instead == "" {
-			instead = G.Pkgsrc.Deprecated[varcanon]
-		}
-		if instead != "" {
-			ck.MkLine.Warnf("Use of %q is deprecated. %s", varname, instead)
+			ck.checkTextDeprecated(varname)
+			ck.checkTextDeprecated(token.Varuse.Mod())
+
+			instead := G.Pkgsrc.Deprecated[varname]
+			if instead == "" {
+				instead = G.Pkgsrc.Deprecated[varcanon]
+			}
+
+			if instead != "" {
+				ck.MkLine.Warnf("Use of %q is deprecated. %s", varname, instead)
+			}
 		}
 	}
 }
