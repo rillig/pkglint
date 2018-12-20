@@ -10,6 +10,11 @@ import (
 
 // TODO: Can ShellLine and ShellProgramChecker be merged into one type?
 
+// ShellLine is either a line from a Makefile starting with a tab,
+// thereby containing shell commands to be executed.
+//
+// Or it is a variable assignment line from a Makefile with a left-hand
+// side variable that is of some shell-like type; see Vartype.IsShell.
 type ShellLine struct {
 	mkline MkLine
 }
