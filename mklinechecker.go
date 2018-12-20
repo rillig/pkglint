@@ -753,12 +753,6 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 }
 
 func (ck MkLineChecker) checkVaruseDeprecated(varuse *MkVarUse) {
-	// Temporarily disabled since this method is not called for all places,
-	// such as ${_PKG_SILENT} in a shell command.
-	if varuse != nil {
-		return
-	}
-
 	varname := varuse.varname
 	instead := G.Pkgsrc.Deprecated[varname]
 	if instead == "" {
