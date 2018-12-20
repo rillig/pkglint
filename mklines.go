@@ -370,7 +370,7 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 		text := mkline.Text
 		switch {
 		case hasPrefix(text, "#"):
-			words := fields(text)
+			words := strings.Fields(text)
 			if len(words) <= 1 {
 				break
 			}

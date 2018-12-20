@@ -41,9 +41,6 @@ func hasSuffix(s, suffix string) bool {
 func sprintf(format string, args ...interface{}) string {
 	return fmt.Sprintf(format, args...)
 }
-func fields(s string) []string {
-	return strings.Fields(s)
-}
 func matches(s string, re regex.Pattern) bool {
 	return G.res.Matches(s, re)
 }

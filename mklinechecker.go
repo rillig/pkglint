@@ -196,7 +196,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 	args := mkline.Args()
 
 	if m, vars, _ := match2(args, `^([^\t ]+(?:[\t ]*[^\t ]+)*?)[\t ]+in[\t ]+(.*)$`); m {
-		for _, forvar := range fields(vars) {
+		for _, forvar := range strings.Fields(vars) {
 			indentation.AddVar(forvar)
 			if !G.Infrastructure && hasPrefix(forvar, "_") {
 				mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
@@ -220,7 +220,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// running pkglint over the whole pkgsrc tree did not produce any different result
 		// whether guessed was true or false, so currently it is not worth investing
 		// any work.
-		forLoopType := Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
+		forLoopType := Vartype{lkShell, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
 		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, vucQuotFor, false}
 		for _, itemsVar := range mkline.DetermineUsedVariables() {
 			ck.CheckVaruse(&MkVarUse{itemsVar, nil}, &forLoopContext)
@@ -1055,11 +1055,6 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 
 	case value == "":
 		break
-
-	case vartype.kindOfList == lkSpace:
-		for _, word := range fields(value) {
-			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.guessed)
-		}
 
 	case vartype.kindOfList == lkShell:
 		words, _ := splitIntoMkWords(mkline.Line, value)

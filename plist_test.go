@@ -535,7 +535,7 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 		"WARN: ~/PLIST:2: Please remove this line. It is no longer necessary.",
 		"ERROR: ~/PLIST:3: ldconfig must be used with \"||/usr/bin/true\".",
 		"WARN: ~/PLIST:5: @dirrm is obsolete. Please remove this line.",
-		"WARN: ~/PLIST:6: Invalid number of arguments for imake-man.",
+		"WARN: ~/PLIST:6: Invalid number of arguments for imake-man, should be 3.",
 		"WARN: ~/PLIST:7: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",
 		"WARN: ~/PLIST:8: Unknown PLIST directive \"@unknown\".")
 }

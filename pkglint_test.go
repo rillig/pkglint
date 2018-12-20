@@ -280,7 +280,7 @@ func (s *Suite) Test_Pkglint__coverage(c *check.C) {
 		G.out = NewSeparatorWriter(os.Stdout)
 		G.err = NewSeparatorWriter(os.Stderr)
 		trace.Out = os.Stdout
-		G.Main(append([]string{"pkglint"}, fields(cmdline)...)...)
+		G.Main(append([]string{"pkglint"}, strings.Fields(cmdline)...)...)
 	}
 }
 
