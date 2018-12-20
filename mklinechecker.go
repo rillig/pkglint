@@ -282,11 +282,11 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 	}
 }
 
-// checkVarassignPermissions checks the permissions for the left-hand side
+// checkVarassignLeftPermissions checks the permissions for the left-hand side
 // of a variable assignment line.
 //
 // See checkVarusePermissions.
-func (ck MkLineChecker) checkVarassignPermissions() {
+func (ck MkLineChecker) checkVarassignLeftPermissions() {
 	if !G.Opts.WarnPerm || G.Infrastructure {
 		return
 	}
@@ -495,7 +495,7 @@ func (ck MkLineChecker) checkVaruseModifiersRange(varuse *MkVarUse) {
 // checkVarusePermissions checks the permissions for the right-hand side
 // of a variable assignment line.
 //
-// See checkVarassignPermissions.
+// See checkVarassignLeftPermissions.
 func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
 	if !G.Opts.WarnPerm {
 		return
@@ -791,6 +791,23 @@ func (ck MkLineChecker) checkVarassignDecreasingVersions() {
 }
 
 func (ck MkLineChecker) checkVarassign() {
+	ck.checkVarassignLeft()
+	ck.checkVarassignRight()
+}
+
+// checkVarassignLeft checks everything to the left of the assignment operator.
+func (ck MkLineChecker) checkVarassignLeft() {
+	varname := ck.MkLine.Varname()
+	if hasPrefix(varname, "_") && !G.Infrastructure {
+		ck.MkLine.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
+	}
+
+	ck.checkVarassignLeftPermissions()
+	ck.checkVarassignBsdPrefs()
+}
+
+// checkVarassignLeft checks everything to the right of the assignment operator.
+func (ck MkLineChecker) checkVarassignRight() {
 	mkline := ck.MkLine
 	varname := mkline.Varname()
 	op := mkline.Op()
@@ -801,13 +818,10 @@ func (ck MkLineChecker) checkVarassign() {
 		defer trace.Call(varname, op, value)()
 	}
 
-	ck.checkVarassignPermissions()
-	ck.checkVarassignBsdPrefs()
-
 	ck.checkText(value)
 	ck.checkVartype(varname, op, value, comment)
 
-	ck.checkVarassignUnused()
+	ck.checkVarassignDefinedButNotUsed()
 
 	ck.checkVarassignSpecific()
 
@@ -825,7 +839,7 @@ func (ck MkLineChecker) checkVarassignDeprecated() {
 	}
 }
 
-func (ck MkLineChecker) checkVarassignUnused() {
+func (ck MkLineChecker) checkVarassignDefinedButNotUsed() {
 	varname := ck.MkLine.Varname()
 	varcanon := varnameCanon(varname)
 
@@ -936,10 +950,6 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 
 	if contains(value, "/etc/rc.d") && mkline.Varname() != "RPMIGNOREPATH" {
 		mkline.Warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
-	}
-
-	if hasPrefix(varname, "_") && !G.Infrastructure {
-		mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {
@@ -1089,7 +1099,6 @@ func (ck MkLineChecker) checkText(text string) {
 	ck.checkTextWrksrcDotDot(text)
 	ck.checkTextRpath(text)
 	ck.checkTextDeprecated(text)
-
 }
 
 func (ck MkLineChecker) checkTextWrksrcDotDot(text string) {

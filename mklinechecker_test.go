@@ -2,6 +2,18 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("module.mk", 123, "_VARNAME=\tvalue")
+
+	MkLineChecker{mkline}.checkVarassignLeft()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:123: Variable names starting with an underscore " +
+			"(_VARNAME) are reserved for internal pkgsrc use.")
+}
+
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
 	t := s.Init(c)
 
@@ -339,7 +351,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 		"WARN: Makefile:2: ac_cv_libpari_libs is defined but not used.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVarassignPermissions(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wall,no-space")
@@ -358,7 +370,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignPermissions(c *check.C) {
 }
 
 // Don't check the permissions for infrastructure files since they have their own rules.
-func (s *Suite) Test_MkLineChecker_checkVarassignPermissions__infrastructure(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -990,8 +1002,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 	// TODO: Split this test into several, one for each topic.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:2: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.",
-		"WARN: ~/module.mk:3: _TOOLS_VARNAME.sed is defined but not used.",
 		"WARN: ~/module.mk:3: Variable names starting with an underscore (_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
+		"WARN: ~/module.mk:3: _TOOLS_VARNAME.sed is defined but not used.",
 		"WARN: ~/module.mk:4: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
