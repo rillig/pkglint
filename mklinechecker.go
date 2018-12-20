@@ -56,6 +56,7 @@ func (ck MkLineChecker) checkShellCommand() {
 		fix.ReplaceRegex(`^\t\t+`, "\t", 1)
 		fix.Apply()
 	}
+
 	ck.checkText(shellCommand)
 	NewShellLine(mkline).CheckShellCommandLine(shellCommand)
 }
@@ -221,8 +222,8 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// any work.
 		forLoopType := Vartype{lkSpace, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
 		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, vucQuotFor, false}
-		for _, forLoopVar := range mkline.DetermineUsedVariables() {
-			ck.CheckVaruse(&MkVarUse{forLoopVar, nil}, &forLoopContext)
+		for _, itemsVar := range mkline.DetermineUsedVariables() {
+			ck.CheckVaruse(&MkVarUse{itemsVar, nil}, &forLoopContext)
 		}
 	}
 }
