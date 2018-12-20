@@ -806,6 +806,11 @@ func (ck MkLineChecker) checkVarassignLeft() {
 	ck.checkVarassignLeftDeprecated()
 	ck.checkVarassignLeftPermissions()
 	ck.checkVarassignLeftBsdPrefs()
+
+	ck.checkTextVarUse(
+		ck.MkLine.Varname(),
+		&Vartype{lkNone, BtVariableName, []ACLEntry{{"*", aclpAll}}, false},
+		vucTimeParse)
 }
 
 // checkVarassignLeft checks everything to the right of the assignment operator.
@@ -823,9 +828,9 @@ func (ck MkLineChecker) checkVarassignRight() {
 	ck.checkText(value)
 	ck.checkVartype(varname, op, value, comment)
 
-	ck.checkVarassignSpecific()
+	ck.checkVarassignMisc()
 
-	ck.checkVarassignVaruse()
+	ck.checkVarassignRightVaruse()
 }
 
 func (ck MkLineChecker) checkVarassignLeftDeprecated() {
@@ -860,9 +865,10 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 	}
 }
 
-// checkVarassignVaruse checks that in a variable assignment, each variables used on either side
-// of the assignment has the correct data type and quoting.
-func (ck MkLineChecker) checkVarassignVaruse() {
+// checkVarassignRightVaruse checks that in a variable assignment,
+// each variable used on the right-hand side of the assignment operator
+// has the correct data type and quoting.
+func (ck MkLineChecker) checkVarassignRightVaruse() {
 	if trace.Tracing {
 		defer trace.Call()()
 	}
@@ -879,11 +885,6 @@ func (ck MkLineChecker) checkVarassignVaruse() {
 	if op == opAssignShell {
 		vartype = shellcommandsContextType
 	}
-
-	ck.checkTextVarUse(
-		ck.MkLine.Varname(),
-		&Vartype{lkNone, BtVariableName, []ACLEntry{{"*", aclpAll}}, false},
-		vucTimeParse)
 
 	if vartype != nil && vartype.IsShell() {
 		ck.checkVarassignVaruseShell(vartype, time)
@@ -913,7 +914,7 @@ func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time vucT
 	}
 }
 
-// checkVarassignVaruseShell is very similar to checkVarassignVaruse, they just differ
+// checkVarassignVaruseShell is very similar to checkVarassignRightVaruse, they just differ
 // in the way they determine isWordPart.
 func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
 	if trace.Tracing {
@@ -941,7 +942,7 @@ func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime
 	}
 }
 
-func (ck MkLineChecker) checkVarassignSpecific() {
+func (ck MkLineChecker) checkVarassignMisc() {
 	mkline := ck.MkLine
 	varname := mkline.Varname()
 	value := mkline.Value()

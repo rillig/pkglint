@@ -1079,7 +1079,7 @@ func (cv *VartypeCheck) UserGroupName() {
 	}
 }
 
-// VariableName checks that the value is a valid variable name.
+// VariableName checks that the value is a valid variable name to be used in Makefiles.
 func (cv *VartypeCheck) VariableName() {
 	if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
 		cv.Warnf("%q is not a valid variable name.", cv.Value)

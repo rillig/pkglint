@@ -386,14 +386,14 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkVarassignVaruse(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarassignRightVaruse(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
 
 	mkline := t.NewMkLine("module.mk", 123, "PLIST_SUBST+=\tLOCALBASE=${LOCALBASE:Q}")
 
-	MkLineChecker{mkline}.checkVarassignVaruse()
+	MkLineChecker{mkline}.checkVarassignRightVaruse()
 
 	t.CheckOutputLines(
 		"WARN: module.mk:123: Please use PREFIX instead of LOCALBASE.",
@@ -978,7 +978,7 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *c
 		"WARN: net/uucp/Makefile:123: var is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupPkgsrc()
