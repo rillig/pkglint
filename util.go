@@ -927,9 +927,9 @@ func escapePrintable(s string) string {
 		case rune(byte(r)) == r && textproc.XPrint.Contains(byte(rest[j])):
 			escaped.WriteByte(byte(r))
 		case r == 0xFFFD && !hasPrefix(rest[j:], "\uFFFD"):
-			_, _ = fmt.Fprintf(&escaped, "\\x%02X", rest[j])
+			_, _ = fmt.Fprintf(&escaped, "<\\x%02X>", rest[j])
 		default:
-			_, _ = fmt.Fprintf(&escaped, "%U", r)
+			_, _ = fmt.Fprintf(&escaped, "<%U>", r)
 		}
 	}
 	return escaped.String()
