@@ -802,8 +802,10 @@ func (ck MkLineChecker) checkVarassignLeft() {
 		ck.MkLine.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
+	ck.checkVarassignLeftNotUsed()
+	ck.checkVarassignLeftDeprecated()
 	ck.checkVarassignLeftPermissions()
-	ck.checkVarassignBsdPrefs()
+	ck.checkVarassignLeftBsdPrefs()
 }
 
 // checkVarassignLeft checks everything to the right of the assignment operator.
@@ -821,16 +823,12 @@ func (ck MkLineChecker) checkVarassignRight() {
 	ck.checkText(value)
 	ck.checkVartype(varname, op, value, comment)
 
-	ck.checkVarassignDefinedButNotUsed()
-
 	ck.checkVarassignSpecific()
-
-	ck.checkVarassignDeprecated()
 
 	ck.checkVarassignVaruse()
 }
 
-func (ck MkLineChecker) checkVarassignDeprecated() {
+func (ck MkLineChecker) checkVarassignLeftDeprecated() {
 	varname := ck.MkLine.Varname()
 	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
 		ck.MkLine.Warnf("Definition of %s is deprecated. %s", varname, fix)
@@ -839,7 +837,7 @@ func (ck MkLineChecker) checkVarassignDeprecated() {
 	}
 }
 
-func (ck MkLineChecker) checkVarassignDefinedButNotUsed() {
+func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 	varname := ck.MkLine.Varname()
 	varcanon := varnameCanon(varname)
 
@@ -987,7 +985,7 @@ func (ck MkLineChecker) checkVarassignSpecific() {
 	}
 }
 
-func (ck MkLineChecker) checkVarassignBsdPrefs() {
+func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 	mkline := ck.MkLine
 
 	switch mkline.Varcanon() {

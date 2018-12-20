@@ -10,8 +10,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 	MkLineChecker{mkline}.checkVarassignLeft()
 
 	t.CheckOutputLines(
-		"WARN: module.mk:123: Variable names starting with an underscore " +
-			"(_VARNAME) are reserved for internal pkgsrc use.")
+		"WARN: module.mk:123: Variable names starting with an underscore "+
+			"(_VARNAME) are reserved for internal pkgsrc use.",
+		"WARN: module.mk:123: _VARNAME is defined but not used.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
@@ -526,8 +527,8 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Unclosed Make variable starting at \"${EGDIR/apparmor.d $...\".",
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
+		"WARN: Makefile:2: Unclosed Make variable starting at \"${EGDIR/apparmor.d $...\".",
 
 		// XXX: This warning is redundant because of the "Unclosed" warning above.
 		"WARN: Makefile:2: Internal pkglint error in MkLine.Tokenize at "+
