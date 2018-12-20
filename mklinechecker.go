@@ -1096,7 +1096,6 @@ func (ck MkLineChecker) checkText(text string) {
 
 	ck.checkTextWrksrcDotDot(text)
 	ck.checkTextRpath(text)
-	ck.checkTextDeprecated(text)
 }
 
 func (ck MkLineChecker) checkTextWrksrcDotDot(text string) {
@@ -1122,28 +1121,6 @@ func (ck MkLineChecker) checkTextWrksrcDotDot(text string) {
 func (ck MkLineChecker) checkTextRpath(text string) {
 	if m, flag := match1(text, `(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R\b)`); m {
 		ck.MkLine.Warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
-	}
-}
-
-func (ck MkLineChecker) checkTextDeprecated(text string) {
-	tokens := NewMkParser(nil, text, false).MkTokens()
-	for _, token := range tokens {
-		if token.Varuse != nil {
-			varname := token.Varuse.varname
-			varcanon := varnameCanon(varname)
-
-			ck.checkTextDeprecated(varname)
-			ck.checkTextDeprecated(token.Varuse.Mod())
-
-			instead := G.Pkgsrc.Deprecated[varname]
-			if instead == "" {
-				instead = G.Pkgsrc.Deprecated[varcanon]
-			}
-
-			if instead != "" {
-				ck.MkLine.Warnf("Use of %q is deprecated. %s", varname, instead)
-			}
-		}
 	}
 }
 

@@ -253,11 +253,9 @@ func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: Duplicate diagnostics.
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.",
 		"WARN: Makefile:3: Definition of SUBST_POSTCMD.class is deprecated. Has been removed, as it seemed unused.",
-		"WARN: Makefile:4: Use of \"PKG_JVM\" is deprecated. Use PKG_DEFAULT_JVM instead.",
 		"WARN: Makefile:4: Use of \"PKG_JVM\" is deprecated. Use PKG_DEFAULT_JVM instead.")
 }
 

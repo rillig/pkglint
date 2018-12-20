@@ -955,8 +955,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C)
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"WARN: module.mk:123: Use of \"_PKG_SILENT\" is deprecated. Use RUN (with more error checking) instead.",
-		"WARN: module.mk:123: Use of \"_PKG_DEBUG\" is deprecated. Use RUN (with more error checking) instead.")
+		"WARN: module.mk:123: Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")
 }
 
 // PR 46570, item "15. net/uucp/Makefile has a make loop"
@@ -1035,7 +1034,6 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 	// FIXME: Duplicate diagnostics.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
-		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.",
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.",
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }

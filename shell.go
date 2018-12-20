@@ -298,7 +298,9 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 	}
 	setE := lexer.SkipString("${RUN}")
 	if !setE {
-		lexer.NextString("${_PKG_SILENT}${_PKG_DEBUG}")
+		if lexer.NextString("${_PKG_SILENT}${_PKG_DEBUG}") != "" {
+			line.Warnf("Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")
+		}
 	}
 
 	shline.CheckShellCommand(lexer.Rest(), &setE, RunTime)
