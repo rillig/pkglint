@@ -396,6 +396,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 
 	if G.Opts.WarnQuoting && vuc.quoting != vucQuotUnknown && needsQuoting != unknown {
 		// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?
+		// It's for splitting the value into tokens, taking "double" and 'single' quotes into account.
 		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
 	}
 
@@ -935,8 +936,8 @@ func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime
 	atoms := NewShTokenizer(mkline.Line, mkline.Value(), false).ShAtoms()
 	for i, atom := range atoms {
 		if varuse := atom.VarUse(); varuse != nil {
-			isWordPart := isWordPart(atoms, i)
-			vuc := VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), isWordPart}
+			wordPart := isWordPart(atoms, i)
+			vuc := VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), wordPart}
 			ck.CheckVaruse(varuse, &vuc)
 		}
 	}
