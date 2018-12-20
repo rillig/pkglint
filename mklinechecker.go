@@ -801,7 +801,6 @@ func (ck MkLineChecker) checkVarassign() {
 		defer trace.Call(varname, op, value)()
 	}
 
-	defineVar(mkline, varname)
 	ck.checkVarassignPermissions()
 	ck.checkVarassignBsdPrefs()
 
