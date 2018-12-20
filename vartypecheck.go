@@ -9,6 +9,8 @@ import (
 type VartypeCheck struct {
 	// Note: if "go vet" or "go test" complains about a "variable with invalid type", update to go1.11.4.
 	// See https://github.com/golang/go/issues/28972.
+	// That doesn't help though since pkglint contains these "more convoluted alias declarations"
+	// mentioned in https://github.com/golang/go/commit/6971090515ba.
 
 	MkLine MkLine
 	Line   Line
