@@ -57,8 +57,8 @@ func (s *Suite) Test_Lines_CheckRcsID__wip(c *check.C) {
 	G.Check(t.File("wip/package"))
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/wip/package/file1.mk:1: Replacing \"# $NetBSD: dummy $\" with \"# $NetBSD$\".",
-		"AUTOFIX: ~/wip/package/file3.mk:1: Inserting a line \"# $NetBSD$\" before this line.",
-		"AUTOFIX: ~/wip/package/file4.mk:1: Inserting a line \"# $NetBSD$\" before this line.",
-		"AUTOFIX: ~/wip/package/file5.mk:1: Inserting a line \"# $NetBSD$\" before this line.")
+		"AUTOFIX: ~/wip/package/file1.mk:1: Replacing \"# $"+"NetBSD: dummy $\" with \"# $"+"NetBSD$\".",
+		"AUTOFIX: ~/wip/package/file3.mk:1: Inserting a line \"# $"+"NetBSD$\" before this line.",
+		"AUTOFIX: ~/wip/package/file4.mk:1: Inserting a line \"# $"+"NetBSD$\" before this line.",
+		"AUTOFIX: ~/wip/package/file5.mk:1: Inserting a line \"# $"+"NetBSD$\" before this line.")
 }
