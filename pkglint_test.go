@@ -505,13 +505,13 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 
 	t.SetupPkgsrc()
 	lines := t.SetupFileLines("category/package/ALTERNATIVES",
-		"bin/tar @PREFIX@/bin/gnu-tar")
+		"bin/tar bin/gnu-tar")
 
 	G.Main("pkglint", lines.FileName)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/ALTERNATIVES:1: @PREFIX@/ can be omitted from the filename.",
-		"Looks fine.",
+		"ERROR: ~/category/package/ALTERNATIVES:1: Alternative implementation \"bin/gnu-tar\" must be an absolute path.",
+		"1 error and 0 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
@@ -1010,8 +1010,10 @@ func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/ALTERNATIVES:1: " +
-			"Alternative implementation \"bin/wrapper-impl\" must appear in the PLIST.")
+		"ERROR: ~/category/package/ALTERNATIVES:1: "+
+			"Alternative implementation \"bin/wrapper-impl\" must appear in the PLIST.",
+		"ERROR: ~/category/package/ALTERNATIVES:1: "+
+			"Alternative implementation \"bin/wrapper-impl\" must be an absolute path.")
 }
 
 func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
