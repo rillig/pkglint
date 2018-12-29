@@ -53,23 +53,23 @@ func (s *Suite) Test_Compare(c *check.C) {
 		{"20151110"},
 	}
 
-	checkVersion := func(i int, iversion string, j int, jversion string) {
-		actual := Compare(iversion, jversion)
+	checkVersion := func(i int, iVersion string, j int, jVersion string) {
+		actual := Compare(iVersion, jVersion)
 		switch {
 		case i < j && !(actual < 0):
-			c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, "<0"})
+			c.Check([]interface{}{i, iVersion, j, jVersion, actual}, check.DeepEquals, []interface{}{i, iVersion, j, jVersion, "<0"})
 		case i == j && !(actual == 0):
-			c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, "==0"})
+			c.Check([]interface{}{i, iVersion, j, jVersion, actual}, check.DeepEquals, []interface{}{i, iVersion, j, jVersion, "==0"})
 		case i > j && !(actual > 0):
-			c.Check([]interface{}{i, iversion, j, jversion, actual}, check.DeepEquals, []interface{}{i, iversion, j, jversion, ">0"})
+			c.Check([]interface{}{i, iVersion, j, jVersion, actual}, check.DeepEquals, []interface{}{i, iVersion, j, jVersion, ">0"})
 		}
 	}
 
-	for i, iversions := range versions {
-		for j, jversions := range versions {
-			for _, iversion := range iversions {
-				for _, jversion := range jversions {
-					checkVersion(i, iversion, j, jversion)
+	for i, iVersions := range versions {
+		for j, jVersions := range versions {
+			for _, iVersion := range iVersions {
+				for _, jVersion := range jVersions {
+					checkVersion(i, iVersion, j, jVersion)
 				}
 			}
 		}
