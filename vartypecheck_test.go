@@ -904,8 +904,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		"WARN: filename:8: Unknown sed command \"1d\".",
 		"ERROR: filename:9: The -e option to sed requires an argument.",
 		"WARN: filename:10: Unknown sed command \"-i\".",
-		// FIXME: Should be "Please always use"
-		"WARN: filename:10: Unknown sed command \"s,from,to,\".")
+		"NOTE: filename:10: Please always use \"-e\" in sed commands, even if there is only one substitution.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {

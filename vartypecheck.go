@@ -982,7 +982,7 @@ func (cv *VartypeCheck) SedCommands() {
 		case token == "-n":
 			// Don't print lines per default.
 
-		case i == 0 && matches(token, `^["']?(\d+|/.*/)?s.+["']?$`):
+		case matches(token, `^["']?(\d+|/.*/)?s`):
 			cv.Notef("Please always use \"-e\" in sed commands, even if there is only one substitution.")
 
 		default:
