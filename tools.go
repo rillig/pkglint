@@ -16,8 +16,8 @@ type Tool struct {
 
 	// Some of the very simple tools (echo, printf, test) differ in their implementations.
 	//
-	// When bmake encounters a "simple" command line, it "optimizes" the
-	// call to a shell (see devel/bmake/files/compat.c:/Compat_Init/).
+	// When bmake encounters a "simple" command line, it bypasses the
+	// call to a shell (see devel/bmake/files/compat.c:/useShell/).
 	// Therefore, sometimes the shell builtin is run, and sometimes the
 	// native tool.
 	//
