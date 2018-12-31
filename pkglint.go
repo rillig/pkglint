@@ -309,7 +309,7 @@ func (pkglint *Pkglint) Check(dirent string) {
 	isReg := st.Mode().IsRegular()
 
 	dir := dirent
-	if isReg {
+	if !isDir {
 		dir = path.Dir(dirent)
 	}
 
