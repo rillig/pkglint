@@ -7,7 +7,7 @@ import (
 func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	if typ := G.Pkgsrc.vartypes["PREFIX"]; c.Check(typ, check.NotNil) {
 		c.Check(typ.basicType.name, equals, "Pathname")
@@ -59,7 +59,7 @@ func (s *Suite) Test_ACLPermissions_HumanString(c *check.C) {
 func (s *Suite) Test_Vartype_IsConsideredList(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	c.Check(G.Pkgsrc.VariableType("COMMENT").IsConsideredList(), equals, false)
 	c.Check(G.Pkgsrc.VariableType("DEPENDS").IsConsideredList(), equals, true)

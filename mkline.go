@@ -534,7 +534,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 		// Relative pkgsrc paths usually only contain two or three levels.
 		// A possible reason for reaching this assertion is:
 		// Tests that access the file system must create their lines
-		// using t.SetupFileMkLines, not using t.NewMkLines.
+		// using t.SetUpFileMkLines, not using t.NewMkLines.
 		G.Assertf(!contains(pkgsrcdir, "../../../../.."),
 			"Relative path %q for %q is too deep below the pkgsrc root %q.",
 			pkgsrcdir, basedir, G.Pkgsrc.File("."))

@@ -231,7 +231,7 @@ end    ^\}
 func (s *Suite) Test_Type_Method__description(c *check.C) {
 	t := s.Init(c)       // Every test needs this.
 
-	t.Setup…(…)          // Set up the testing environment.
+	t.SetUp…(…)          // Set up the testing environment.
 
 	lines := t.New…(…)   // Set up the test data.
 
@@ -294,16 +294,16 @@ warnings and how to repair them properly:
 
 #### Unknown shell command %q
 
-* Load the standard variables using `t.SetupVartypes()`
-* Define the corresponding tool using `t.SetupTool("tool", "TOOL", AtRunTime)`
+* Load the standard variables using `t.SetUpVartypes()`
+* Define the corresponding tool using `t.SetUpTool("tool", "TOOL", AtRunTime)`
 
 #### %s is used but not defined
 
-* Load the standard variables using `t.SetupVartypes()`
+* Load the standard variables using `t.SetUpVartypes()`
 
 #### %s is defined but not used
 
-* Load the standard variables using `t.SetupVartypes()`
+* Load the standard variables using `t.SetUpVartypes()`
 
 ### Traps and pitfalls during a test
 

@@ -8,7 +8,7 @@ import (
 func (s *Suite) Test_SubstContext__incomplete(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
 	ctx.Varassign(newSubstLine(t, 10, "PKGNAME=pkgname-1.0"))
@@ -38,7 +38,7 @@ func (s *Suite) Test_SubstContext__incomplete(c *check.C) {
 func (s *Suite) Test_SubstContext__complete(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
 	ctx.Varassign(newSubstLine(t, 10, "PKGNAME=pkgname-1.0"))
@@ -83,7 +83,7 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
 	ctx.Varassign(newSubstLine(t, 10, "UNRELATED=anything"))
@@ -99,7 +99,7 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 
 	simulateSubstLines(t,
 		"10: SUBST_CLASSES+=         one two",
@@ -118,7 +118,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 
 	simulateSubstLines(t,
 		"10: SUBST_CLASSES+=         one",
@@ -142,7 +142,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 func (s *Suite) Test_SubstContext__directives(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 
 	simulateSubstLines(t,
 		"10: SUBST_CLASSES+=         os",
@@ -171,7 +171,7 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 func (s *Suite) Test_SubstContext__missing_transformation_in_one_branch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 
 	simulateSubstLines(t,
 		"10: SUBST_CLASSES+=         os",
@@ -197,7 +197,7 @@ func (s *Suite) Test_SubstContext__missing_transformation_in_one_branch(c *check
 func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
+	t.SetUpCommandLine("-Wextra")
 
 	simulateSubstLines(t,
 		"10: SUBST_CLASSES+=         os",
@@ -225,8 +225,8 @@ func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
 func (s *Suite) Test_SubstContext__post_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra,no-space", "--show-autofix")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wextra,no-space", "--show-autofix")
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
 		MkRcsID,
@@ -246,8 +246,8 @@ func (s *Suite) Test_SubstContext__post_patch(c *check.C) {
 func (s *Suite) Test_SubstContext__pre_configure_with_NO_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall,no-space")
-	pkg := t.SetupPackage("category/package",
+	t.SetUpCommandLine("-Wall,no-space")
+	pkg := t.SetUpPackage("category/package",
 		"SUBST_CLASSES+=         os",
 		"SUBST_STAGE.os=         pre-configure",
 		"SUBST_FILES.os=         guess-os.h",
@@ -264,8 +264,8 @@ func (s *Suite) Test_SubstContext__pre_configure_with_NO_CONFIGURE(c *check.C) {
 func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wextra")
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
 		MkRcsID,
@@ -289,8 +289,8 @@ func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra,no-space")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wextra,no-space")
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
 		MkRcsID,
@@ -312,8 +312,8 @@ func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra,no-space")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wextra,no-space")
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
 		MkRcsID,
@@ -337,8 +337,8 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wextra,no-space")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wextra,no-space")
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
 		MkRcsID,
@@ -360,8 +360,8 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
-	t.SetupTool("sh", "SH", AtRunTime)
+	t.SetUpVartypes()
+	t.SetUpTool("sh", "SH", AtRunTime)
 
 	mklines := t.NewMkLines("subst.mk",
 		MkRcsID,

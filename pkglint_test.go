@@ -121,7 +121,7 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 	t := s.Init(c)
 
-	pkg := t.SetupPackage("category/package")
+	pkg := t.SetUpPackage("category/package")
 
 	G.out = nil // Force an error that cannot happen in practice.
 
@@ -143,7 +143,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// In this test, several of the infrastructure files are later
 	// overwritten with more realistic and interesting content.
 	// This is typical of the pkglint tests.
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 
 	// FIXME: pkglint should warn that the latest version in this file
 	// (1.10) doesn't match the current version in the package (1.11).
@@ -173,7 +173,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// a complete pkgsrc package are created individually.
 	//
 	// In this test each file is created manually for demonstration purposes.
-	// Other tests typically call t.SetupPackage, which does most of the work
+	// Other tests typically call t.SetUpPackage, which does most of the work
 	// shown here while allowing to adjust the package Makefile a little bit.
 
 	// The existence of this file makes the category "sysutils" valid.
@@ -309,7 +309,7 @@ func (s *Suite) Test_Pkglint_Check__outside(c *check.C) {
 func (s *Suite) Test_Pkglint_Check__empty_directory(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/CVS/Entries")
 
 	G.Check(t.File("category/package"))
@@ -321,7 +321,7 @@ func (s *Suite) Test_Pkglint_Check__empty_directory(c *check.C) {
 func (s *Suite) Test_Pkglint_Check__files_directory(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/files/README.md")
 
 	G.Check(t.File("category/package/files"))
@@ -334,7 +334,7 @@ func (s *Suite) Test_Pkglint_Check__files_directory(c *check.C) {
 func (s *Suite) Test_Pkglint_Check__manual_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/patches/manual-configure")
 	t.CreateFileLines("category/package/Makefile",
 		MkRcsID)
@@ -351,7 +351,7 @@ func (s *Suite) Test_Pkglint_Check__manual_patch(c *check.C) {
 func (s *Suite) Test_Pkglint_Check__doc_TODO(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 
 	G.Check(G.Pkgsrc.File("doc/TODO"))
 
@@ -437,7 +437,7 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	lines := t.NewLines("DESCR",
 		"word "+strings.Repeat("X", 80),
 		strings.Repeat("X", 90), // No warning since there are no spaces.
@@ -494,8 +494,8 @@ func (s *Suite) Test_CheckLinesMessage__malformed(c *check.C) {
 func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall", "--autofix")
-	lines := t.SetupFileLines("MESSAGE",
+	t.SetUpCommandLine("-Wall", "--autofix")
+	lines := t.SetUpFileLines("MESSAGE",
 		"1",
 		"2",
 		"3",
@@ -528,8 +528,8 @@ func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
-	lines := t.SetupFileLines("category/package/ALTERNATIVES",
+	t.SetUpPkgsrc()
+	lines := t.SetUpFileLines("category/package/ALTERNATIVES",
 		"bin/tar bin/gnu-tar")
 
 	G.Main("pkglint", lines.FileName)
@@ -543,7 +543,7 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 func (s *Suite) Test_Pkglint__profiling(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.Chdir(".")
 
 	G.Main("pkglint", "--profiling")
@@ -564,7 +564,7 @@ func (s *Suite) Test_Pkglint__profiling(c *check.C) {
 func (s *Suite) Test_Pkglint__profiling_error(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.Chdir(".")
 	t.CreateFileLines("pkglint.pprof/file")
 
@@ -577,8 +577,8 @@ func (s *Suite) Test_Pkglint__profiling_error(c *check.C) {
 func (s *Suite) Test_Pkglint_checkReg__in_current_working_directory(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
-	t.SetupVartypes()
+	t.SetUpPkgsrc()
+	t.SetUpVartypes()
 	t.CreateFileLines("licenses/mit")
 	t.Chdir("category/package")
 	t.CreateFileLines("log")
@@ -717,8 +717,8 @@ func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
 func (s *Suite) Test_CheckFileOther(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Call", "-Wall,no-space")
-	pkg := t.SetupPackage("category/package")
+	t.SetUpCommandLine("-Call", "-Wall,no-space")
+	pkg := t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/INSTALL",
 		"#! /bin/sh")
 	t.CreateFileLines("category/package/DEINSTALL",
@@ -732,8 +732,8 @@ func (s *Suite) Test_CheckFileOther(c *check.C) {
 func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Call", "-Wall,no-space", "--import")
-	pkg := t.SetupPackage("category/package")
+	t.SetUpCommandLine("-Call", "-Wall,no-space", "--import")
+	pkg := t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/work/log")
 	t.CreateFileLines("category/package/Makefile~")
 	t.CreateFileLines("category/package/Makefile.orig")
@@ -751,8 +751,8 @@ func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 func (s *Suite) Test_Pkglint_checkDirent__errors(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Call", "-Wall,no-space")
-	t.SetupPkgsrc()
+	t.SetUpCommandLine("-Call", "-Wall,no-space")
+	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/files/subdir/file")
 	t.CreateFileLines("category/package/files/subdir/subsub/file")
 	G.Pkgsrc.LoadInfrastructure()
@@ -770,8 +770,8 @@ func (s *Suite) Test_Pkglint_checkDirent__errors(c *check.C) {
 func (s *Suite) Test_Pkglint_checkDirent__file_selection(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Call", "-Wall,no-space")
-	t.SetupPkgsrc()
+	t.SetUpCommandLine("-Call", "-Wall,no-space")
+	t.SetUpPkgsrc()
 	t.CreateFileLines("doc/CHANGES-2018",
 		RcsID)
 	t.CreateFileLines("category/package/buildlink3.mk",
@@ -834,7 +834,7 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 		t.CreateFileLines(dst, strings.TrimSuffix(string(text), "\n"))
 	}
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	G.Pkgsrc.LoadInfrastructure()
 	t.Chdir(".")
 
@@ -932,8 +932,8 @@ func (s *Suite) Test_Pkglint_checkdirPackage(c *check.C) {
 func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
-	t.SetupPkgsrc()
+	t.SetUpVartypes()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("category/Makefile")
 	t.CreateFileLines("other/package/Makefile",
 		MkRcsID)
@@ -967,7 +967,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C) {
 	t := s.Init(c)
 
-	pkg := t.SetupPackage("category/package")
+	pkg := t.SetUpPackage("category/package")
 	t.CreateFileDummyPatch("category/package/patches/patch-aa")
 	t.Remove("category/package/distinfo")
 
@@ -990,7 +990,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *ch
 		MkRcsID,
 		"",
 		"META_PACKAGE=\tyes")
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	G.checkdirPackage(".")
 
@@ -1003,7 +1003,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *ch
 func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C) {
 	t := s.Init(c)
 
-	pkg := t.SetupPackage("category/package",
+	pkg := t.SetUpPackage("category/package",
 		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		"RUBY_VERSIONS_ACCEPTED=\t22 23 24 25", // As of 2018.
@@ -1027,8 +1027,8 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall,no-space")
-	pkg := t.SetupPackage("category/package")
+	t.SetUpCommandLine("-Wall,no-space")
+	pkg := t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/ALTERNATIVES",
 		"bin/wrapper bin/wrapper-impl")
 
@@ -1060,7 +1060,7 @@ func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/file.mk: Should not be executable.")
 
-	t.SetupCommandLine("--autofix")
+	t.SetUpCommandLine("--autofix")
 
 	G.checkExecutable(filename, 0555)
 
@@ -1089,7 +1089,7 @@ func (s *Suite) Test_Main(c *check.C) {
 	outProfiling, err := os.Create(t.CreateFileLines("out.profiling"))
 	c.Check(err, check.IsNil)
 
-	t.SetupPackage("category/package")
+	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
 
 	runMain := func(out *os.File, commandLine ...string) {

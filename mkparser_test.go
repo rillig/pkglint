@@ -325,7 +325,7 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("--explain")
+	t.SetUpCommandLine("--explain")
 
 	mkline := t.NewMkLine("module.mk", 123, "\t$Varname $X")
 	p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
@@ -503,9 +503,9 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 func (s *Suite) Test_MkParser_VarUse__parentheses_autofix(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("--autofix")
-	t.SetupVartypes()
-	lines := t.SetupFileLines("Makefile",
+	t.SetUpCommandLine("--autofix")
+	t.SetUpVartypes()
+	lines := t.SetUpFileLines("Makefile",
 		MkRcsID,
 		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES} $(A.$(B.$(C)))")
 	mklines := NewMkLines(lines)

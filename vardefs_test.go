@@ -39,7 +39,7 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__enumFrom(c *check.C) {
 		".  endif",
 		".endfor")
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	checkEnumValues := func(varname, values string) {
 		vartype := G.Pkgsrc.VariableType(varname).String()
@@ -61,7 +61,7 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__enumFromDirs(c *check.C) {
 	t.CreateFileLines("lang/python28/Makefile", MkRcsID)
 	t.CreateFileLines("lang/python33/Makefile", MkRcsID)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	checkEnumValues := func(varname, values string) {
 		vartype := G.Pkgsrc.VariableType(varname).String()
@@ -94,7 +94,7 @@ func (s *Suite) Test_parseACLEntries(c *check.C) {
 func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {
 	t := s.Init(c)
 
-	pkg := t.SetupPackage("category/package",
+	pkg := t.SetUpPackage("category/package",
 		"BROKEN_ON_PLATFORM=\t${LP64PLATFORMS}")
 
 	G.Check(pkg)

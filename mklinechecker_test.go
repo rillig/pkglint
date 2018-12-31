@@ -18,7 +18,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	mkline := t.NewMkLine("filename.mk", 1, "# url2pkg-marker")
 
@@ -31,10 +31,10 @@ func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
 func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	t.CreateFileLines("mk/bsd.prefs.mk")
-	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
+	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
 		".include \"../../mk/bsd.prefs.mk\"")
 	// If the buildlink3.mk file doesn't actually exist, resolving the
 	// relative path fails since that depends on the actual file system,
@@ -52,13 +52,13 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	t.CreateFileLines("pkgtools/x11-links/buildlink3.mk")
 	t.CreateFileLines("graphics/jpeg/buildlink3.mk")
 	t.CreateFileLines("devel/intltool/buildlink3.mk")
 	t.CreateFileLines("devel/intltool/builtin.mk")
-	mklines := t.SetupFileMkLines("category/package/filename.mk",
+	mklines := t.SetUpFileMkLines("category/package/filename.mk",
 		MkRcsID,
 		"",
 		".include \"../../pkgtools/x11-links/buildlink3.mk\"",
@@ -98,7 +98,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile_exists(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("other/existing/Makefile")
-	t.SetupPackage("category/package",
+	t.SetUpPackage("category/package",
 		".include \"../../other/existing/Makefile\"",
 		".include \"../../other/not-found/Makefile\"")
 
@@ -111,7 +111,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile_exists(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("category/package/filename.mk",
 		MkRcsID,
@@ -150,7 +150,7 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
@@ -179,7 +179,7 @@ func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) 
 func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("category/package/filename.mk",
 		MkRcsID,
@@ -200,8 +200,8 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wtypes")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wtypes")
+	t.SetUpVartypes()
 
 	// Since COMMENT is defined in vardefs.go its type is certain instead of guessed.
 	vartype := G.Pkgsrc.VariableType("COMMENT")
@@ -221,7 +221,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mkline := t.NewMkLine("filename", 1, "DISTNAME=gcc-${GCC_VERSION}")
 
 	MkLineChecker{mkline}.checkVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
@@ -235,8 +235,8 @@ func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVartype__skip(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wno-types")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wno-types")
+	t.SetUpVartypes()
 	mkline := t.NewMkLine("filename", 1, "DISTNAME=invalid:::distname")
 
 	MkLineChecker{mkline}.Check()
@@ -247,7 +247,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__skip(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
 		"DISTNAME+=\tsuffix",
@@ -267,7 +267,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 	t := s.Init(c)
 
 	G.Pkg = NewPackage(t.File("graphics/gimp-fix-ca"))
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mkline := t.NewMkLine("filename", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=")
 
 	MkLineChecker{mkline}.checkVarassign()
@@ -278,8 +278,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wtypes")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wtypes")
+	t.SetUpVartypes()
 
 	testCond := func(cond string, output ...string) {
 		MkLineChecker{t.NewMkLine("filename", 1, cond)}.checkDirectiveCond()
@@ -340,7 +340,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	G.Mk = t.NewMkLines("Makefile",
 		MkRcsID,
@@ -355,8 +355,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall,no-space")
-	t.SetupVartypes()
+	t.SetUpCommandLine("-Wall,no-space")
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
 		"PKG_DEVELOPER?= yes",
@@ -374,7 +374,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	t.CreateFileLines("mk/infra.mk",
 		MkRcsID,
 		"",
@@ -389,7 +389,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure
 func (s *Suite) Test_MkLineChecker_checkVarassignRightVaruse(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	mkline := t.NewMkLine("module.mk", 123, "PLIST_SUBST+=\tLOCALBASE=${LOCALBASE:Q}")
 
@@ -403,7 +403,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightVaruse(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
 		"COMMENT=\t${GAMES_USER}",
@@ -423,7 +423,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
 		"WRKSRC:=${.CURDIR}",
@@ -443,8 +443,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
-	t.SetupTool("install", "", AtRunTime)
+	t.SetUpVartypes()
+	t.SetUpTool("install", "", AtRunTime)
 	mklines := t.NewMkLines("install-docfiles.mk",
 		MkRcsID,
 		"DOCFILES=\ta b c",
@@ -469,7 +469,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("any.mk",
 		MkRcsID,
 		// PKGREVISION may only be set in Makefile, not used at load time; see vardefs.go.
@@ -486,7 +486,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.
 func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mkline := t.NewMkLine("options.mk", 56, "PKGNAME=${LOCALBASE}")
 
 	MkLineChecker{mkline}.Check()
@@ -500,7 +500,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 
 	t.CreateFileLines("other/package/Makefile")
 	// Must be in the filesystem because of directory references.
-	mklines := t.SetupFileMkLines("category/package/Makefile",
+	mklines := t.SetUpFileMkLines("category/package/Makefile",
 		"# dummy")
 	ck := MkLineChecker{mklines.mklines[0]}
 
@@ -538,7 +538,7 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("x11/xkeyboard-config/Makefile",
 		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}",
 		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:Q}")
@@ -565,7 +565,7 @@ func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("security/openssl/Makefile",
 		MkRcsID,
 		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
@@ -581,7 +581,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_com
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mkline := t.NewMkLine("module.mk", 123, ".if ${PKGPATH} == \"category/package\"")
 	ck := MkLineChecker{mkline}
 
@@ -615,7 +615,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	G.Mk = t.NewMkLines("audio/pulseaudio/Makefile",
 		MkRcsID,
 		".if ${OPSYS} == \"Darwin\" && ${PKGSRC_COMPILER} == \"clang\"",
@@ -630,7 +630,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	G.Mk = t.NewMkLines("chat/pidgin-icb/Makefile",
 		MkRcsID,
 		"CFLAGS+=\t`pkg-config pidgin --cflags`")
@@ -654,7 +654,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.
 func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"CPPFLAGS.SunOS+=\t-DPIPECOMMAND=\\\"/usr/sbin/sendmail -bs %s\\\"")
@@ -669,8 +669,8 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("--autofix", "-Wspace")
-	lines := t.SetupFileLines("filename.mk",
+	t.SetUpCommandLine("--autofix", "-Wspace")
+	lines := t.SetUpFileLines("filename.mk",
 		MkRcsID,
 		".if defined(A)",
 		".for a in ${A}",
@@ -702,9 +702,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C
 func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall", "--autofix")
-	t.SetupVartypes()
-	mklines := t.SetupFileMkLines("options.mk",
+	t.SetUpCommandLine("-Wall", "--autofix")
+	t.SetUpVartypes()
+	mklines := t.SetUpFileMkLines("options.mk",
 		MkRcsID,
 		".if ${PKGNAME} == pkgname",
 		".if \\",
@@ -730,8 +730,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
-	mklines := t.SetupFileMkLines("options.mk",
+	t.SetUpVartypes()
+	mklines := t.SetUpFileMkLines("options.mk",
 		MkRcsID,
 		"GOPATH=\t${WRKDIR}",
 		"do-build:",
@@ -753,9 +753,9 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall,no-space")
-	t.SetupVartypes()
-	mklines := t.SetupFileMkLines("options.mk",
+	t.SetUpCommandLine("-Wall,no-space")
+	t.SetUpVartypes()
+	mklines := t.SetUpFileMkLines("options.mk",
 		MkRcsID,
 		"CONFIGURE_ARGS+=        ${CFLAGS:Q}",
 		"CONFIGURE_ARGS+=        ${CFLAGS:M*:Q}",
@@ -777,8 +777,8 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall,no-space")
-	pkg := t.SetupPackage("category/package",
+	t.SetUpCommandLine("-Wall,no-space")
+	pkg := t.SetUpPackage("category/package",
 		"MAKE_FLAGS+=\tCFLAGS=${CFLAGS:M*:Q}",
 		"MAKE_FLAGS+=\tLFLAGS=${LDFLAGS:M*:Q}")
 	G.Pkgsrc.LoadInfrastructure()
@@ -799,7 +799,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *che
 func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C) {
 	t := s.Init(c)
 
-	pkg := t.SetupPackage("category/package",
+	pkg := t.SetUpPackage("category/package",
 		"MASTER_SITES=\t${HOMEPAGE:Q}")
 	G.Pkgsrc.LoadInfrastructure()
 
@@ -814,9 +814,9 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C
 func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
-	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
-	mklines := t.SetupFileMkLines("options.mk",
+	t.SetUpVartypes()
+	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+	mklines := t.SetUpFileMkLines("options.mk",
 		MkRcsID,
 		"WRKSRC=\t\t${WRKDIR:=/subdir}",
 		"MASTER_SITES=\t${MASTER_SITE_GITHUB:=organization/}")
@@ -830,9 +830,9 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
-	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
-	mklines := t.SetupFileMkLines("options.mk",
+	t.SetUpVartypes()
+	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+	mklines := t.SetUpFileMkLines("options.mk",
 		MkRcsID,
 		".for var in a b c",
 		"\t: ${var}",
@@ -851,8 +851,8 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
-	t.SetupPkgsrc()
+	t.SetUpVartypes()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/sys-vars.mk",
 		MkRcsID,
 		"CPPPATH.Linux=\t/usr/bin/cpp")
@@ -882,13 +882,13 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_infrastructure(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
-	t.SetupVartypes()
+	t.SetUpPkgsrc()
+	t.SetUpVartypes()
 	t.CreateFileLines("mk/deeply/nested/infra.mk",
 		MkRcsID,
 		"INFRA_VAR?=\tvalue")
 	G.Pkgsrc.LoadInfrastructure()
-	mklines := t.SetupFileMkLines("category/package/module.mk",
+	mklines := t.SetUpFileMkLines("category/package/module.mk",
 		MkRcsID,
 		"do-fetch:",
 		"\t: ${INFRA_VAR} ${UNDEFINED}")
@@ -904,14 +904,14 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 
 	// XXX: This paragraph should not be necessary since VARBASE and X11_TYPE
 	// are also defined in vardefs.go.
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/defaults/mk.conf",
 		"VARBASE?= /usr/pkg/var")
 	G.Pkgsrc.LoadInfrastructure()
 
-	t.SetupCommandLine("-Wall,no-space")
-	t.SetupVartypes()
-	mklines := t.SetupFileMkLines("options.mk",
+	t.SetUpCommandLine("-Wall,no-space")
+	t.SetUpVartypes()
+	mklines := t.SetUpFileMkLines("options.mk",
 		MkRcsID,
 		"COMMENT=                ${VARBASE} ${X11_TYPE}",
 		"PKG_FAIL_REASON+=       ${VARBASE} ${X11_TYPE}",
@@ -926,8 +926,8 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("--show-autofix", "--source")
-	t.SetupVartypes()
+	t.SetUpCommandLine("--show-autofix", "--source")
+	t.SetUpVartypes()
 	mkline := t.NewMkLine("mk/compiler/gcc.mk", 150,
 		"CC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}")
 
@@ -946,7 +946,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	G.Pkgsrc.initDeprecatedVars()
 
 	mkline := t.NewMkLine("module.mk", 123,
@@ -962,7 +962,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C)
 func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupTool("echo", "ECHO", AfterPrefsMk)
+	t.SetUpTool("echo", "ECHO", AfterPrefsMk)
 	mkline := t.NewMkLine("net/uucp/Makefile", 123, "\techo ${UUCP_${var}}")
 
 	MkLineChecker{mkline}.Check()
@@ -981,11 +981,11 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *c
 func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	G.Pkgsrc.LoadInfrastructure()
-	t.SetupCommandLine("-Wall,no-space")
-	t.SetupVartypes()
-	mklines := t.SetupFileMkLines("module.mk",
+	t.SetUpCommandLine("-Wall,no-space")
+	t.SetUpVartypes()
+	mklines := t.SetUpFileMkLines("module.mk",
 		MkRcsID,
 		"EGDIR=                  ${PREFIX}/etc/rc.d",
 		"_TOOLS_VARNAME.sed=     SED",
@@ -1020,11 +1020,11 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	G.Pkgsrc.LoadInfrastructure()
 
-	t.SetupCommandLine("-Wall,no-space")
-	mklines := t.SetupFileMkLines("module.mk",
+	t.SetUpCommandLine("-Wall,no-space")
+	mklines := t.SetUpFileMkLines("module.mk",
 		MkRcsID,
 		"CFLAGS+=                -Wl,--rpath,${PREFIX}/lib",
 		"PKG_FAIL_REASON+=       \"Group ${GAMEGRP} doesn't exist.\"")
@@ -1041,8 +1041,8 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupCommandLine("-Wall", "--explain")
-	mklines := t.SetupFileMkLines("module.mk",
+	t.SetUpCommandLine("-Wall", "--explain")
+	mklines := t.SetUpFileMkLines("module.mk",
 		MkRcsID,
 		"pre-configure:",
 		"\tcd ${WRKSRC}/..")
@@ -1071,11 +1071,11 @@ func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	G.Pkgsrc.LoadInfrastructure()
 	t.CreateFileLines("wip/package/Makefile")
 	t.CreateFileLines("wip/package/module.mk")
-	mklines := t.SetupFileMkLines("category/package/module.mk",
+	mklines := t.SetUpFileMkLines("category/package/module.mk",
 		MkRcsID,
 		"DEPENDS+=       wip-package-[0-9]*:../../wip/package",
 		".include \"../../wip/package/module.mk\"",

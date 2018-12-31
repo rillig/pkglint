@@ -66,7 +66,7 @@ func (s *Suite) Test_VartypeCheck_Category(c *check.C) {
 func (s *Suite) Test_VartypeCheck_CFlag(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).CFlag)
 
-	vt.tester.SetupTool("pkg-config", "", AtRunTime)
+	vt.tester.SetUpTool("pkg-config", "", AtRunTime)
 
 	vt.Varname("CFLAGS")
 	vt.Op(opAssignAppend)
@@ -290,7 +290,7 @@ func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
 func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("module.mk",
 		MkRcsID,
@@ -313,8 +313,8 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).FetchURL)
 
-	t.SetupMasterSite("MASTER_SITE_GNU", "http://ftp.gnu.org/pub/gnu/")
-	t.SetupMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+	t.SetUpMasterSite("MASTER_SITE_GNU", "http://ftp.gnu.org/pub/gnu/")
+	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 
 	vt.Varname("MASTER_SITES")
 	vt.Values(
@@ -493,7 +493,7 @@ func (s *Suite) Test_VartypeCheck_Integer(c *check.C) {
 func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).LdFlag)
 
-	vt.tester.SetupTool("pkg-config", "", AtRunTime)
+	vt.tester.SetUpTool("pkg-config", "", AtRunTime)
 
 	vt.Varname("LDFLAGS")
 	vt.Op(opAssignAppend)
@@ -521,7 +521,7 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 
 func (s *Suite) Test_VartypeCheck_License(c *check.C) {
 	t := s.Init(c)
-	t.SetupPkgsrc() // Adds the gnu-gpl-v2 and 2-clause-bsd licenses
+	t.SetUpPkgsrc() // Adds the gnu-gpl-v2 and 2-clause-bsd licenses
 
 	G.Mk = t.NewMkLines("perl5.mk",
 		MkRcsID,
@@ -909,7 +909,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
 	t := s.Init(c)
-	t.SetupVartypes()
+	t.SetUpVartypes()
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).ShellCommand)
 
 	vt.Varname("INSTALL_CMD")
@@ -924,8 +924,8 @@ func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
 
 func (s *Suite) Test_VartypeCheck_ShellCommands(c *check.C) {
 	t := s.Init(c)
-	t.SetupVartypes()
-	t.SetupTool("echo", "ECHO", AtRunTime)
+	t.SetUpVartypes()
+	t.SetUpTool("echo", "ECHO", AtRunTime)
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).ShellCommands)
 
 	vt.Varname("GENERATE_PLIST")
@@ -955,9 +955,9 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).Tool)
 
-	t.SetupTool("tool1", "", AtRunTime)
-	t.SetupTool("tool2", "", AtRunTime)
-	t.SetupTool("tool3", "", AtRunTime)
+	t.SetUpTool("tool1", "", AtRunTime)
+	t.SetUpTool("tool2", "", AtRunTime)
+	t.SetUpTool("tool3", "", AtRunTime)
 
 	vt.Varname("USE_TOOLS")
 	vt.Op(opAssignAppend)

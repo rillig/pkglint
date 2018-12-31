@@ -51,7 +51,7 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
 	t.CreateFileLines("licenses/2-clause-bsd")
 	t.CreateFileLines("licenses/gnu-gpl-v3")
@@ -68,13 +68,13 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		"",
 		".include \"../mk/misc/category.mk\"")
 
-	t.SetupPackage("category/package",
+	t.SetUpPackage("category/package",
 		"LICENSE=\t2-clause-bsd")
 
 	G.Main("pkglint", "-r", "-Cglobal", t.File("."))
 
 	t.CheckOutputLines(
-		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetupPkgsrc
+		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetUpPkgsrc
 		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
 		"0 errors and 2 warnings found.")
 }
@@ -146,8 +146,8 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupTool("echo", "ECHO", AtRunTime)
-	pkg := t.SetupPackage("category/package",
+	t.SetUpTool("echo", "ECHO", AtRunTime)
+	pkg := t.SetUpPackage("category/package",
 		"pre-configure:",
 		"\t@${ECHO} ${PKG_SYSCONFDIR} ${VARBASE}")
 	t.CreateFileLines("mk/bsd.pkg.mk",
@@ -201,7 +201,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.Remove("doc/CHANGES-2018")
 	t.Remove("doc/TODO")
 	t.Remove("doc")
@@ -222,7 +222,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 	t := s.Init(c)
 
-	pkg := t.SetupPackage("wip/package",
+	pkg := t.SetUpPackage("wip/package",
 		"DISTNAME=\tpackage-1.11",
 		"CATEGORIES=\tlocal")
 	t.CreateFileLines("wip/TODO",
@@ -242,8 +242,8 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupTool("echo", "ECHO", AtRunTime)
-	t.SetupVartypes()
+	t.SetUpTool("echo", "ECHO", AtRunTime)
+	t.SetUpVartypes()
 	G.Pkgsrc.initDeprecatedVars()
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
@@ -447,7 +447,7 @@ func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {
 func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	checkType := func(varname string, vartype string) {
 		actualType := G.Pkgsrc.VariableType(varname)
@@ -477,7 +477,7 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 	t := s.Init(c)
 
-	t.SetupVartypes()
+	t.SetUpVartypes()
 
 	t1 := G.Pkgsrc.VariableType("FONT_DIRS")
 
@@ -500,7 +500,7 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	// but it is a known variable since the pkgsrc infrastructure uses
 	// it. But still, its type is unknown.
 
-	t.SetupPkgsrc()
+	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/sys-vars.mk",
 		MkRcsID,
 		"",
@@ -508,7 +508,7 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 		"CPPPATH?=\tcpp",
 		"OSNAME.Linux?=\tLinux")
 
-	pkg := t.SetupPackage("category/package",
+	pkg := t.SetUpPackage("category/package",
 		"PKGSRC_MAKE_ENV+=\tCPP=${CPPPATH:Q}",
 		"PKGSRC_UNKNOWN_ENV+=\tCPP=${ABCPATH:Q}",
 		"OSNAME.SunOS=\t\t${OSNAME.Other}")
