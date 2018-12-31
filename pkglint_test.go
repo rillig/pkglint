@@ -337,6 +337,20 @@ func (s *Suite) Test_Pkglint_Check__manual_patch(c *check.C) {
 		"WARN: ~/category/package/Makefile: Each package should define a COMMENT.")
 }
 
+func (s *Suite) Test_Pkglint_Check__doc_TODO(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupPkgsrc()
+
+	G.Check(G.Pkgsrc.File("doc/TODO"))
+
+	// The file doc/TODO cannot be checked explicitly and individually.
+	// It is loaded as part of the pkgsrc infrastructure and is thus
+	// checked implicitly whenever a package or an individual file is checked.
+	t.CheckOutputLines(
+		"WARN: ~/doc/TODO: Unexpected file found.")
+}
+
 func (s *Suite) Test_Pkglint_Check(c *check.C) {
 	t := s.Init(c)
 
