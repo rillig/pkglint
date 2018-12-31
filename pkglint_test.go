@@ -176,12 +176,13 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// Other tests typically call t.SetUpPackage, which does most of the work
 	// shown here while allowing to adjust the package Makefile a little bit.
 
-	// The existence of this file makes the category "sysutils" valid.
+	// The existence of this file makes the category "sysutils" valid,
+	// so that it can be used in CATEGORIES in the package Makefile.
 	// The category "tools" on the other hand is not valid.
 	t.CreateFileLines("sysutils/Makefile",
 		MkRcsID)
 
-	// The package Makefile is quite simple, containing just the
+	// The package Makefile in this test is quite simple, containing just the
 	// standard variable definitions. The data for checking the variable
 	// values is partly defined in the pkgsrc infrastructure files
 	// (as defined in the previous lines), and partly in the pkglint
@@ -237,15 +238,17 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"",
 		"SHA1 (checkperms-1.12.tar.gz) = 34c084b4d06bcd7a8bba922ff57677e651eeced5",
 		"RMD160 (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",
-		"SHA512 (checkperms-1.12.tar.gz) = 43e37b5963c63fdf716acdb470928d7e21a7bdfd"+
-			"dd6c85cf626a11acc7f45fa52a53d4bcd83d543150328fe8cec5587987d2d9a7c5f0aaeb02ac1127ab41f8ae",
+		"SHA512 (checkperms-1.12.tar.gz) = "+
+			"43e37b5963c63fdf716acdb470928d7e21a7bdfddd6c85cf626a11acc7f45fa5"+
+			"2a53d4bcd83d543150328fe8cec5587987d2d9a7c5f0aaeb02ac1127ab41f8ae",
 		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
 		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
 
 	G.Main("pkglint", "-Wall", "-Call", t.File("sysutils/checkperms"))
 
 	t.CheckOutputLines(
-		"WARN: ~/sysutils/checkperms/Makefile:3: This package should be updated to 1.13 ([supports more file formats]).",
+		"WARN: ~/sysutils/checkperms/Makefile:3: "+
+			"This package should be updated to 1.13 ([supports more file formats]).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
 		"ERROR: ~/sysutils/checkperms/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",
@@ -268,18 +271,19 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 //
 //  go tool cover -html=pkglint.cov -o coverage.html
 //
-// To measure the branch coverage of the pkglint tests:
+// To measure the branch coverage of pkglint checking a complete pkgsrc installation,
+// install https://github.com/rillig/gobco and adjust the following code:
 //
 //  env \
 //  PKGLINT_TESTDIR=C:/Users/rillig/git/pkgsrc \
 //  PKGLINT_TESTCMDLINE="-r -Wall -Call -e" \
-//  gobco -vet=off -test.covermode=count \
+//  gobco -test.covermode=count \
 //      -test.coverprofile=pkglint-pkgsrc.pprof \
-//      -timeout=3600s -check.f '^' \
+//      -timeout=3600s -check.f '^Test_Pkglint__realistic' \
 //      > pkglint-pkgsrc.out
 //
 // See https://github.com/rillig/gobco for the tool to measure the branch coverage.
-func (s *Suite) Test_Pkglint__coverage(c *check.C) {
+func (s *Suite) Test_Pkglint__realistic(c *check.C) {
 
 	if cwd := os.Getenv("PKGLINT_TESTDIR"); cwd != "" {
 		err := os.Chdir(cwd)
