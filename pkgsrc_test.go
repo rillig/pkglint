@@ -417,9 +417,12 @@ func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 		"===== Merge conflict",
 		">>>>> Merge conflict")
 
-	t.ExpectFatal(
-		G.Pkgsrc.loadPkgOptions,
-		"FATAL: ~/mk/defaults/options.description:2: Unknown line format: <<<<< Merge conflict")
+	G.Pkgsrc.loadPkgOptions()
+
+	t.CheckOutputLines(
+		"ERROR: ~/mk/defaults/options.description:2: Invalid line format: <<<<< Merge conflict",
+		"ERROR: ~/mk/defaults/options.description:3: Invalid line format: ===== Merge conflict",
+		"ERROR: ~/mk/defaults/options.description:4: Invalid line format: >>>>> Merge conflict")
 }
 
 func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {

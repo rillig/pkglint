@@ -553,7 +553,7 @@ func (pkg *Package) checkUpdate() {
 		return
 	}
 
-	for _, sugg := range G.Pkgsrc.GetSuggestedPackageUpdates() {
+	for _, sugg := range G.Pkgsrc.SuggestedUpdates() {
 		if pkg.EffectivePkgbase != sugg.Pkgname {
 			continue
 		}

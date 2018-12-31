@@ -409,6 +409,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 		"COMMENT=\t${GAMES_USER}",
 		"COMMENT:=\t${PKGBASE}",
 		"PYPKGPREFIX=${PKGBASE}")
+	G.Pkgsrc.loadDefaultBuildDefs()
 	G.Pkgsrc.UserDefinedVars.Define("GAMES_USER", mklines.mklines[0])
 
 	mklines.Check()
