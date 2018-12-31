@@ -10,14 +10,27 @@ import (
 // pkgsrc.
 //
 // See `mk/tools/`.
-//
-// TODO: MustUseVarForm does not really depend on the tool but only depends
-// on where the tool is used (load time, run time). This had already been
-// modeled wrong in pkglint 4, more than 10 years ago.
 type Tool struct {
-	Name           string // e.g. "sed", "gzip"
-	Varname        string // e.g. "SED", "GZIP_CMD"
-	MustUseVarForm bool   // True for `echo`, because of many differing implementations.
+	Name    string // e.g. "sed", "gzip"
+	Varname string // e.g. "SED", "GZIP_CMD"
+
+	// Some of the very simple tools (echo, printf, test) differ in their implementations.
+	//
+	// When bmake encounters a "simple" command line, it "optimizes" the
+	// call to a shell (see devel/bmake/files/compat.c:/Compat_Init/).
+	// Therefore, sometimes the shell builtin is run, and sometimes the
+	// native tool.
+	//
+	// In particular, this decision depends on PKG_DEBUG_LEVEL
+	// since that variable adds a semicolon to the command line, which is
+	// considered one of the characters that force the commands being
+	// executed by the shell. As of December 2018, the list of special characters
+	// is "~#=|^(){};&<>*?[]:$`\\\n".
+	//
+	// To work around this tricky situation, pkglint warns when these shell builtins
+	// are used by their simple names (echo, test) instead of the variable form
+	// (${ECHO}, ${TEST}).
+	MustUseVarForm bool
 	Validity       Validity
 }
 
