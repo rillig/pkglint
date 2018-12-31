@@ -79,7 +79,6 @@ func (tool *Tool) UsableAtRunTime() bool {
 // and remembers whether these tools are defined at all,
 // and whether they are declared to be used via USE_TOOLS.
 type Tools struct {
-	TraceName string           // Only for the trace log
 	byName    map[string]*Tool // "sed" => tool
 	byVarname map[string]*Tool // "GREP_CMD" => tool
 	fallback  *Tools
@@ -95,9 +94,8 @@ type Tools struct {
 	SeenPrefs bool
 }
 
-func NewTools(traceName string) *Tools {
+func NewTools() *Tools {
 	return &Tools{
-		traceName,
 		make(map[string]*Tool),
 		make(map[string]*Tool),
 		nil,
@@ -112,7 +110,7 @@ func NewTools(traceName string) *Tools {
 // (e.g. "awk") or by its variable (e.g. ${AWK}).
 func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 	if trace.Tracing {
-		trace.Stepf("Tools.Define for %s: %q %q in %s", tr.TraceName, name, varname, mkline)
+		trace.Stepf("Tools.Define: %q %q in %s", name, varname, mkline)
 	}
 
 	if !tr.IsValidToolName(name) {
@@ -163,7 +161,7 @@ func (tr *Tools) merge(target, source *Tool) {
 
 func (tr *Tools) Trace() {
 	if trace.Tracing {
-		defer trace.Call1(tr.TraceName)()
+		defer trace.Call0()()
 	} else {
 		return
 	}

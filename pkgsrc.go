@@ -49,7 +49,7 @@ func NewPkgsrc(dir string) *Pkgsrc {
 	src := Pkgsrc{
 		dir,
 		make(map[string]bool),
-		NewTools("Pkgsrc"),
+		NewTools(),
 		make(map[string]string),
 		make(map[string]string),
 		make(map[string]string),
@@ -63,12 +63,12 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		nil, // Only initialized when pkglint is run for a whole pkgsrc installation
 		nil}
 
-	addDefaultBuildDefs(&src)
+	src.addDefaultBuildDefs()
 
 	return &src
 }
 
-func addDefaultBuildDefs(src *Pkgsrc) {
+func (src *Pkgsrc) addDefaultBuildDefs() {
 
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to

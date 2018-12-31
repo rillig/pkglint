@@ -928,6 +928,8 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
 }
 
+// Since all required information is passed to G.checkDirent via parameters,
+// this test produces the expected results even though none of these files actually exists.
 func (s *Suite) Test_Pkglint_checkDirent__skipped(c *check.C) {
 	t := s.Init(c)
 

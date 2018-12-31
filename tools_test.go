@@ -54,7 +54,7 @@ func (s *Suite) Test_Tools_Define__invalid_tool_name(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
-	reg := NewTools("")
+	reg := NewTools()
 
 	reg.Define("tool_name", "", mkline)
 	reg.Define("tool:dependency", "", mkline)
@@ -73,7 +73,7 @@ func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {
 
 	t.DisableTracing()
 
-	reg := NewTools("")
+	reg := NewTools()
 	reg.Trace()
 
 	t.CheckOutputEmpty()
@@ -112,7 +112,7 @@ func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
-	tools := NewTools("")
+	tools := NewTools()
 	tool := tools.Define("tool", "", mkline)
 
 	c.Check(tool.Name, equals, "tool")
@@ -128,7 +128,7 @@ func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
 func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	t := s.Init(c)
 
-	tools := NewTools("")
+	tools := NewTools()
 
 	tools.ParseToolLine(t.NewMkLine("create.mk", 2, "TOOLS_CREATE+= load"), true, false)
 	tools.ParseToolLine(t.NewMkLine("create.mk", 3, "TOOLS_CREATE+= run"), true, false)
@@ -202,7 +202,7 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 		"USE_TOOLS+=     run")
 	G.Pkgsrc.LoadInfrastructure()
 
-	tools := NewTools("")
+	tools := NewTools()
 	tools.Fallback(G.Pkgsrc.Tools)
 
 	load := tools.ByName("load")
@@ -348,7 +348,7 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 	t.DisableTracing()
 
 	t.CheckOutputLines(
-		"TRACE: + (*Tools).Trace(\"Pkgsrc\")",
+		"TRACE: + (*Tools).Trace()",
 		"TRACE: 1   tool awk:AWK::AfterPrefsMk",
 		"TRACE: 1   tool echo:ECHO:var:AfterPrefsMk",
 		"TRACE: 1   tool echo -n:ECHO_N:var:AfterPrefsMk",
@@ -358,9 +358,9 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 		"TRACE: 1   tool sed:SED::AfterPrefsMk",
 		"TRACE: 1   tool test:TEST:var:AfterPrefsMk",
 		"TRACE: 1   tool true:TRUE:var:AfterPrefsMk",
-		"TRACE: - (*Tools).Trace(\"Pkgsrc\")")
+		"TRACE: - (*Tools).Trace()")
 
-	tools := NewTools("module.mk")
+	tools := NewTools()
 	tools.Fallback(G.Pkgsrc.Tools)
 
 	t.EnableTracingToLog()
@@ -368,8 +368,8 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 	t.DisableTracing()
 
 	t.CheckOutputLines(
-		"TRACE: + (*Tools).Trace(\"module.mk\")",
-		"TRACE: 1 + (*Tools).Trace(\"Pkgsrc\")",
+		"TRACE: + (*Tools).Trace()",
+		"TRACE: 1 + (*Tools).Trace()",
 		"TRACE: 1 2   tool awk:AWK::AfterPrefsMk",
 		"TRACE: 1 2   tool echo:ECHO:var:AfterPrefsMk",
 		"TRACE: 1 2   tool echo -n:ECHO_N:var:AfterPrefsMk",
@@ -379,8 +379,8 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 		"TRACE: 1 2   tool sed:SED::AfterPrefsMk",
 		"TRACE: 1 2   tool test:TEST:var:AfterPrefsMk",
 		"TRACE: 1 2   tool true:TRUE:var:AfterPrefsMk",
-		"TRACE: 1 - (*Tools).Trace(\"Pkgsrc\")",
-		"TRACE: - (*Tools).Trace(\"module.mk\")")
+		"TRACE: 1 - (*Tools).Trace()",
+		"TRACE: - (*Tools).Trace()")
 }
 
 func (s *Suite) Test_ToolTime_String(c *check.C) {
@@ -418,20 +418,20 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 //
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realistic(c *check.C) {
-	nonGnu := NewTools("non-gnu")
+	nonGnu := NewTools()
 	nonGnu.def("sed", "SED", false, AfterPrefsMk)
 
-	gnu := NewTools("gnu")
+	gnu := NewTools()
 	gnu.def("gsed", "SED", false, Nowhere)
 
-	local1 := NewTools("local")
+	local1 := NewTools()
 	local1.def("sed", "SED", false, AfterPrefsMk)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, AfterPrefsMk)
 	c.Check(local1.ByName("gsed").Validity, equals, Nowhere)
 
-	local2 := NewTools("local")
+	local2 := NewTools()
 	local2.def("gsed", "SED", false, Nowhere)
 	local2.Fallback(nonGnu)
 
@@ -453,20 +453,20 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realist
 //
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unrealistic(c *check.C) {
-	nonGnu := NewTools("non-gnu")
+	nonGnu := NewTools()
 	nonGnu.def("sed", "SED", false, Nowhere)
 
-	gnu := NewTools("gnu")
+	gnu := NewTools()
 	gnu.def("gsed", "SED", false, AfterPrefsMk)
 
-	local1 := NewTools("local")
+	local1 := NewTools()
 	local1.def("sed", "SED", false, Nowhere)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, Nowhere)
 	c.Check(local1.ByName("gsed").Validity, equals, AfterPrefsMk)
 
-	local2 := NewTools("local")
+	local2 := NewTools()
 	local2.def("gsed", "SED", false, AfterPrefsMk)
 	local2.Fallback(nonGnu)
 
