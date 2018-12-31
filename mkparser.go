@@ -255,7 +255,7 @@ loop:
 		lexer.Reset(modifierMark)
 
 		// FIXME: Why skip over unknown modifiers here? This accepts :S,a,b,c,d,e,f but shouldn't.
-		re := G.res.Compile(regex.Pattern(`^([^:$` + string(closing) + `]|\$\$)+`))
+		re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
 		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
 
