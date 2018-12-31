@@ -71,7 +71,7 @@ func (src *Pkgsrc) loadDefaultBuildDefs() {
 	// Some user-defined variables do not influence the binary
 	// package at all and therefore do not have to be added to
 	// BUILD_DEFS; therefore they are marked as "already added".
-	src.AddBuildDefs(
+	src.addBuildDefs(
 		"DISTDIR",
 		"FETCH_CMD",
 		"FETCH_OUTPUT_ARGS",
@@ -80,7 +80,7 @@ func (src *Pkgsrc) loadDefaultBuildDefs() {
 
 	// The following variables are used so often that not every
 	// package should need to add it to BUILD_DEFS manually.
-	src.AddBuildDefs(
+	src.addBuildDefs(
 		"PKGSRC_COMPILER",
 		"PKGSRC_USE_SSP",
 		"UNPRIVILEGED",
@@ -88,7 +88,7 @@ func (src *Pkgsrc) loadDefaultBuildDefs() {
 
 	// The following variables are so obscure that they are
 	// probably not used in practice.
-	src.AddBuildDefs(
+	src.addBuildDefs(
 		"MANINSTALL")
 
 	// The following variables are added to _BUILD_DEFS by the pkgsrc
@@ -96,7 +96,7 @@ func (src *Pkgsrc) loadDefaultBuildDefs() {
 	// To regenerate the below list:
 	//  grep -hr '^_BUILD_DEFS+=' mk/ | tr ' \t' '\n\n' | sed -e 's,.*=,,' -e '/^_/d' -e '/^$/d' -e 's,.*,"&"\,,' | sort -u
 	// TODO: Run the equivalent of the above command at startup.
-	src.AddBuildDefs(
+	src.addBuildDefs(
 		"ABI",
 		"BUILTIN_PKGS",
 		"CFLAGS",
@@ -329,7 +329,7 @@ func (src *Pkgsrc) loadTools() {
 				case "_BUILD_DEFS":
 					// TODO: Compare with src.loadDefaultBuildDefs; is it redundant?
 					for _, buildDefsVar := range mkline.Fields() {
-						src.AddBuildDefs(buildDefsVar)
+						src.addBuildDefs(buildDefsVar)
 					}
 				}
 			}
@@ -758,7 +758,7 @@ func (src *Pkgsrc) ToRel(filename string) string {
 	return relpath(src.topdir, filename)
 }
 
-func (src *Pkgsrc) AddBuildDefs(varnames ...string) {
+func (src *Pkgsrc) addBuildDefs(varnames ...string) {
 	for _, varname := range varnames {
 		src.buildDefs[varname] = true
 	}
