@@ -40,7 +40,7 @@ type Suite struct {
 // * check the files that have been changed by the --autofix feature:
 // CheckFileLines
 //
-// * check the pkglint diagnostics: CheckLinesEmpty, CheckLinesOutput
+// * check the pkglint diagnostics: CheckOutputEmpty, CheckOutputLines
 func (s *Suite) Init(c *check.C) *Tester {
 
 	// Note: the check.C object from SetUpTest cannot be used here,

@@ -644,6 +644,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 	if depth == 2 && !pkglint.Wip {
 		if contains(basename, "README") || contains(basename, "TODO") {
 			NewLineWhole(filename).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
+			// TODO: Add a convincing explanation.
 			return
 		}
 	}
