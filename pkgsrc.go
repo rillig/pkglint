@@ -867,6 +867,7 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	case hasSuffix(varbase, "DIRS"):
 		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
 	case hasSuffix(varbase, "DIR") && !hasSuffix(varbase, "DESTDIR"), hasSuffix(varname, "_HOME"):
+		// TODO: hasSuffix(varbase, "BASE")
 		gtype = &Vartype{lkNone, BtPathname, allowRuntime, true}
 	case hasSuffix(varbase, "FILES"):
 		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
@@ -891,6 +892,7 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	case hasSuffix(varname, "_LDFLAGS"):
 		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, true}
 	case hasSuffix(varbase, "_MK"):
+		// TODO: Add BtGuard for inclusion guards, since these variables may only be checked using defined().
 		gtype = &Vartype{lkNone, BtUnknown, allowAll, true}
 	}
 
@@ -913,7 +915,7 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	return gtype
 }
 
-// Change is a change entry from the `doc/CHANGES-*` files.
+// Change describes a modification to a single package, from the doc/CHANGES-* files.
 type Change struct {
 	Line    Line
 	Action  string
@@ -923,7 +925,7 @@ type Change struct {
 	Date    string
 }
 
-// SuggestedUpdate is from the `doc/TODO` file.
+// SuggestedUpdate describes a desired package update, from the doc/TODO file.
 type SuggestedUpdate struct {
 	Line    Line
 	Pkgname string
