@@ -379,6 +379,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 		"SUBST_SED.test+=\ts,'@SH@','${SH}',",           // Can be replaced, even when the -e is missing.
 		"SUBST_SED.test+=\t-e s,@SH@,${PKGNAME},",       // Cannot be replaced since the variable name differs.
 		"SUBST_SED.test+=\t-e s,@SH@,'\"'${SH:Q}'\"',g", // Cannot be replaced since the double quotes are added.
+		"SUBST_SED.test+=\t-e s",                        // Just to get 100% code coverage.
+		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}",           // Just to get 100% code coverage.
 		"# end")
 
 	mklines.Check()
