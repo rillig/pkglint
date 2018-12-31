@@ -324,14 +324,14 @@ func (pkglint *Pkglint) Check(dirent string) {
 		return
 	}
 
-	switch {
-	case isDir && isEmptyDir(dirent):
-		return
-
-	case isReg:
+	if isReg {
 		depth := strings.Count(pkgsrcRel, "/")
 		pkglint.checkExecutable(dirent, st.Mode())
 		pkglint.checkReg(dirent, basename, depth)
+		return
+	}
+
+	if isDir && isEmptyDir(dirent) {
 		return
 	}
 
@@ -483,10 +483,10 @@ func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	}
 }
 
-// Returns the pkgsrc top-level directory, relative to the given file or directory.
-func findPkgsrcTopdir(filename string) string {
+// Returns the pkgsrc top-level directory, relative to the given directory.
+func findPkgsrcTopdir(dirname string) string {
 	for _, dir := range [...]string{".", "..", "../..", "../../.."} {
-		if fileExists(filename + "/" + dir + "/mk/bsd.pkg.mk") {
+		if fileExists(dirname + "/" + dir + "/mk/bsd.pkg.mk") {
 			return dir
 		}
 	}
@@ -706,7 +706,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 			}
 		}
 
-	case matches(basename, `^patch-[-A-Za-z0-9_.~+]*[A-Za-z0-9_]$`):
+	case matches(basename, `^patch-[-\w.~+]*\w$`):
 		if pkglint.Opts.CheckPatches {
 			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
 				CheckLinesPatch(lines)
@@ -721,7 +721,9 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 	case matches(filename, `(?:^|/)patches/[^/]*$`):
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
-	case matches(basename, `^(?:.*\.mk|Makefile.*)$`) && !matches(filename, `files/`) && !matches(filename, `patches/`):
+	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
+		!contains(filename, "files/") &&
+		!contains(filename, "patches/"):
 		if pkglint.Opts.CheckMk {
 			CheckFileMk(filename)
 		}
@@ -754,38 +756,36 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 }
 
 func (pkglint *Pkglint) checkExecutable(filename string, mode os.FileMode) {
-	switch {
-	case !mode.IsRegular():
-		// Directories and other entries may be executable.
+	if mode.Perm()&0111 == 0 {
+		// Not executable at all.
+		return
+	}
 
-	case mode.Perm()&0111 == 0:
-		// Good.
-
-	case isCommitted(filename):
+	if isCommitted(filename) {
 		// Too late to be fixed by the package developer, since
 		// CVS remembers the executable bit in the repo file.
 		// At this point, it can only be reset by the CVS admins.
-
-	default:
-		line := NewLineWhole(filename)
-		fix := line.Autofix()
-		fix.Warnf("Should not be executable.")
-		fix.Explain(
-			"No package file should ever be executable.",
-			"Even the INSTALL and DEINSTALL scripts are usually not usable",
-			"in the form they have in the package,",
-			"as the pathnames get adjusted during installation.",
-			"So there is no need to have any file executable.")
-		fix.Custom(func(showAutofix, autofix bool) {
-			fix.Describef(0, "Clearing executable bits")
-			if autofix {
-				if err := os.Chmod(filename, mode&^0111); err != nil {
-					line.Errorf("Cannot clear executable bits: %s", err)
-				}
-			}
-		})
-		fix.Apply()
+		return
 	}
+
+	line := NewLineWhole(filename)
+	fix := line.Autofix()
+	fix.Warnf("Should not be executable.")
+	fix.Explain(
+		"No package file should ever be executable.",
+		"Even the INSTALL and DEINSTALL scripts are usually not usable",
+		"in the form they have in the package,",
+		"as the pathnames get adjusted during installation.",
+		"So there is no need to have any file executable.")
+	fix.Custom(func(showAutofix, autofix bool) {
+		fix.Describef(0, "Clearing executable bits")
+		if autofix {
+			if err := os.Chmod(filename, mode&^0111); err != nil {
+				line.Errorf("Cannot clear executable bits: %s", err)
+			}
+		}
+	})
+	fix.Apply()
 }
 
 func CheckLinesTrailingEmptyLines(lines Lines) {
@@ -804,7 +804,7 @@ func CheckLinesTrailingEmptyLines(lines Lines) {
 // Tool returns the tool definition from the closest scope (file, global), or nil.
 // The command can be "sed" or "gsed" or "${SED}".
 // If a tool is returned, usable tells whether that tool has been added
-// to USE_TOOLS in the current scope.
+// to USE_TOOLS in the current scope (file or package).
 func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable bool) {
 	varname := ""
 	if m, toolVarname := match1(command, `^\$\{(\w+)\}$`); m {
@@ -833,10 +833,10 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 
 // ToolByVarname looks up the tool by its variable name, e.g. "SED".
 //
-// The returned tool may come either from the current Makefile or the
-// current package. It is not guaranteed to be usable, only defined;
-// that must be checked by the calling code, see Tool.UsableAtLoadTime and
-// Tool.UsableAtRunTime.
+// The returned tool may come either from the current file or the current package.
+// It is not guaranteed to be usable (added to USE_TOOLS), only defined;
+// that must be checked by the calling code,
+// see Tool.UsableAtLoadTime and Tool.UsableAtRunTime.
 func (pkglint *Pkglint) ToolByVarname(varname string) *Tool {
 	return pkglint.tools().ByVarname(varname)
 }

@@ -10,54 +10,10 @@ import (
 func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := G.Main("pkglint", "-h")
+	exitCode := G.Main("pkglint", "-h")
 
-	c.Check(exitcode, equals, 0)
-	c.Check(t.Output(), check.Matches, `^\Qusage: pkglint [options] dir...\E\n(?s).+`)
-}
-
-func (s *Suite) Test_Pkglint_Main__version(c *check.C) {
-	t := s.Init(c)
-
-	exitcode := G.Main("pkglint", "--version")
-
-	c.Check(exitcode, equals, 0)
+	c.Check(exitCode, equals, 0)
 	t.CheckOutputLines(
-		confVersion)
-}
-
-func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
-	t := s.Init(c)
-
-	exitcode := G.Main("pkglint")
-
-	c.Check(exitcode, equals, 1)
-	t.CheckOutputLines(
-		"FATAL: \".\" must be inside a pkgsrc tree.")
-}
-
-func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
-	t := s.Init(c)
-
-	exitcode := G.ParseCommandLine([]string{"pkglint", "-Wall", "-o", ":Q", "--version"})
-
-	if exitcode != -1 {
-		c.Check(exitcode, equals, 0)
-	}
-	c.Check(G.Opts.LogOnly, deepEquals, []string{":Q"})
-	t.CheckOutputLines(
-		confVersion)
-}
-
-func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
-	t := s.Init(c)
-
-	exitcode := G.Main("pkglint", "--unknown-option")
-
-	c.Check(exitcode, equals, 1)
-	t.CheckOutputLines(
-		"pkglint: unknown option: --unknown-option",
-		"",
 		"usage: pkglint [options] dir...",
 		"",
 		"  -C, --check=check,...       enable or disable specific checks",
@@ -113,6 +69,55 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 		"  (Prefix a flag with \"no-\" to disable it.)")
 }
 
+func (s *Suite) Test_Pkglint_Main__version(c *check.C) {
+	t := s.Init(c)
+
+	exitcode := G.Main("pkglint", "--version")
+
+	c.Check(exitcode, equals, 0)
+	t.CheckOutputLines(
+		confVersion)
+}
+
+func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
+	t := s.Init(c)
+
+	exitcode := G.Main("pkglint")
+
+	// The "." from the error message is the implicit argument added in Pkglint.Main.
+	c.Check(exitcode, equals, 1)
+	t.CheckOutputLines(
+		"FATAL: \".\" must be inside a pkgsrc tree.")
+}
+
+func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
+	t := s.Init(c)
+
+	exitcode := G.ParseCommandLine([]string{"pkglint", "-Wall", "--only", ":Q", "--version"})
+
+	if exitcode != -1 {
+		c.Check(exitcode, equals, 0)
+	}
+	c.Check(G.Opts.LogOnly, deepEquals, []string{":Q"})
+	t.CheckOutputLines(
+		confVersion)
+}
+
+func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
+	t := s.Init(c)
+
+	exitcode := G.Main("pkglint", "--unknown-option")
+
+	c.Check(exitcode, equals, 1)
+	c.Check(t.Output(), check.Matches,
+		`\Qpkglint: unknown option: --unknown-option\E\n`+
+			`\Q\E\n`+
+			`\Qusage: pkglint [options] dir...\E\n`+
+			`(?s).+`)
+	// See Test_Pkglint_Main__help for the complete output.
+}
+
+// This test covers the code path for unexpected panics.
 func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 	t := s.Init(c)
 
@@ -127,14 +132,17 @@ func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 
 // Demonstrates which infrastructure files are necessary to actually run
 // pkglint in a realistic scenario.
-// For most tests, this setup is too much work, therefore they
-// initialize only those parts of the infrastructure they really
-// need.
 //
 // Especially covers Pkglint.ShowSummary and Pkglint.checkReg.
 func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t := s.Init(c)
 
+	// Since the general infrastructure setup is useful for several tests,
+	// it is available as a separate method.
+	//
+	// In this test, several of the infrastructure files are later
+	// overwritten with more realistic and interesting content.
+	// This is typical of the pkglint tests.
 	t.SetupPkgsrc()
 
 	// FIXME: pkglint should warn that the latest version in this file
@@ -154,16 +162,19 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"",
 		"\to checkperms-1.13 [supports more file formats]")
 
-	// The LICENSE in the package Makefile is searched here.
-	t.CreateFileLines("licenses/bsd-2",
-		"# dummy")
-
 	// The MASTER_SITES in the package Makefile are searched here.
 	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",
 		MkRcsID,
 		"",
 		"MASTER_SITE_GITHUB+=\thttps://github.com/")
+
+	// After setting up the pkgsrc infrastructure, the files for
+	// a complete pkgsrc package are created individually.
+	//
+	// In this test each file is created manually for demonstration purposes.
+	// Other tests typically call t.SetupPackage, which does most of the work
+	// shown here while allowing to adjust the package Makefile a little bit.
 
 	// The existence of this file makes the category "sysutils" valid.
 	// The category "tools" on the other hand is not valid.
@@ -185,7 +196,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		"HOMEPAGE=\thttps://github.com/rillig/checkperms/",
 		"COMMENT=\tCheck file permissions",
-		"LICENSE=\tbsd-2",
+		"LICENSE=\t2-clause-bsd",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
