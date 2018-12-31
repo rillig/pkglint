@@ -186,3 +186,15 @@ func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: ~/category/Makefile:5: This variable value should be aligned with tabs, not spaces, to column 17.")
 }
+
+func (s *Suite) Test_CheckdirCategory__no_Makefile(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("category/other-file")
+
+	G.Check(t.File("category"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/Makefile: Cannot be read.")
+}

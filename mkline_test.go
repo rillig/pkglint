@@ -830,6 +830,65 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 		"words")
 }
 
+func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
+	t := s.Init(c)
+
+	test := func(value string, expected ...string) {
+		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
+		fields := mkline.Fields()
+		c.Check(fields, deepEquals, expected)
+
+		// Repeated calls get the cached value.
+		if len(fields) > 0 {
+			cached := mkline.Fields()
+			c.Check(&cached[0], equals, &fields[0])
+		}
+	}
+
+	test("# empty",
+		nil...)
+
+	test("word",
+		"word")
+
+	test("word '${VAR}single ${VAR}' \"\t\"",
+		"word",
+		"'${VAR}single", "${VAR}'", // FIXME: should be a single word.
+		"\"", "\"") // FIXME: should be a single word.
+}
+
+func (s *Suite) Test_MkLine_Fields__for(c *check.C) {
+	t := s.Init(c)
+
+	test := func(value string, expected ...string) {
+		mkline := t.NewMkLine("Makefile", 1, ".for "+value)
+		fields := mkline.Fields()
+		c.Check(fields, deepEquals, expected)
+
+		// Repeated calls get the cached value.
+		if len(fields) > 0 {
+			cached := mkline.Fields()
+			c.Check(&cached[0], equals, &fields[0])
+		}
+	}
+
+	// Unrealistic, but needed for full code coverage.
+	test("# empty",
+		nil...)
+
+	// Still unrealistic.
+	test("i in # empty",
+		"i",
+		"in")
+
+	test("i in word '${VAR}single ${VAR}' \"\t\"",
+		"i",
+		"in",
+		"word",
+		"'${VAR}single", "${VAR}'", // FIXME: should be a single word.
+		"\"", "\"") // FIXME: should be a single word.
+}
+
 func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 	t := s.Init(c)
 
