@@ -253,10 +253,12 @@ loop:
 		}
 
 		lexer.Reset(modifierMark)
+
 		// FIXME: Why skip over unknown modifiers here? This accepts :S,a,b,c,d,e,f but shouldn't.
 		re := G.res.Compile(regex.Pattern(`^([^:$` + string(closing) + `]|\$\$)+`))
 		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
+
 		if suffixSubst := lexer.Since(modifierMark); contains(suffixSubst, "=") {
 			appendModifier(suffixSubst)
 			continue
@@ -268,7 +270,7 @@ loop:
 func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool {
 	lexer.Skip(1)
 	sep := lexer.PeekByte() // bmake allows _any_ separator, even letters.
-	if sep == -1 {
+	if sep == -1 || byte(sep) == closing {
 		return false
 	}
 

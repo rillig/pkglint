@@ -522,6 +522,30 @@ func (s *Suite) Test_MkParser_VarUse__parentheses_autofix(c *check.C) {
 		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES} $(A.$(B.${C}))")
 }
 
+func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
+	t := s.Init(c)
+
+	varUse := NewMkVarUse
+	test := func(text string, varUse *MkVarUse, rest string) {
+		mkline := t.NewMkLine("Makefile", 20, "\t"+text)
+		p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
+
+		actual := p.VarUse()
+
+		t.Check(actual, deepEquals, varUse)
+		t.Check(p.Rest(), equals, rest)
+		t.CheckOutputEmpty()
+	}
+
+	test("${VAR:S", nil, "${VAR:S")             // Just for code coverage.
+	test("${VAR:S}", varUse("VAR"), "")         // FIXME: should not consume anything.
+	test("${VAR:S,}", varUse("VAR"), "")        // FIXME: should not consume anything.
+	test("${VAR:S,from,to}", varUse("VAR"), "") // FIXME: should not consume anything.
+	test("${VAR:S,from,to,}", varUse("VAR", "S,from,to,"), "")
+	test("${VAR:S,^from$,to,}", varUse("VAR", "S,^from$,to,"), "")
+	test("${VAR:S,@F@,${F},}", varUse("VAR", "S,@F@,${F},"), "")
+}
+
 func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 	t := s.Init(c)
 
