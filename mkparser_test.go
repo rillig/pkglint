@@ -546,6 +546,31 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 	test("${VAR:S,@F@,${F},}", varUse("VAR", "S,@F@,${F},"), "")
 }
 
+func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
+	t := s.Init(c)
+
+	varUse := NewMkVarUse
+	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
+		mkline := t.NewMkLine("Makefile", 20, "\t"+text)
+		p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
+
+		actual := p.VarUse()
+
+		t.Check(actual, deepEquals, varUse)
+		t.Check(p.Rest(), equals, rest)
+		if len(diagnostics) > 0 {
+			t.CheckOutputLines(diagnostics...)
+		} else {
+			t.CheckOutputEmpty()
+		}
+	}
+
+	test("${VAR:@", nil, "${VAR:@") // Just for code coverage.
+	test("${VAR:@i@${i}}", varUse("VAR", "@i@${i}"), "",
+		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".")
+	test("${VAR:@i@${i}@}", varUse("VAR", "@i@${i}@"), "")
+}
+
 func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 	t := s.Init(c)
 
