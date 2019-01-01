@@ -51,10 +51,11 @@ func (s *Suite) Test__regex_ReplaceFirst(c *check.C) {
 }
 
 func (s *Suite) Test_mustMatch(c *check.C) {
-	c.Check(
+	t := s.Init(c)
+
+	t.ExpectPanic(
 		func() { mustMatch("aaa", `b`) },
-		check.Panics,
-		"mustMatch \"aaa\" \"b\"")
+		"Pkglint internal error: mustMatch \"aaa\" \"b\"")
 }
 
 func (s *Suite) Test_shorten(c *check.C) {

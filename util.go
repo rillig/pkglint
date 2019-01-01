@@ -110,10 +110,11 @@ func imax(a, b int) int {
 }
 
 func mustMatch(s string, re regex.Pattern) []string {
-	if m := G.res.Match(s, re); m != nil {
-		return m
+	m := G.res.Match(s, re)
+	if m == nil {
+		G.Assertf(false, "mustMatch %q %q", s, re)
 	}
-	panic(sprintf("mustMatch %q %q", s, re))
+	return m
 }
 
 func isEmptyDir(filename string) bool {
