@@ -281,7 +281,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	t.SetUpCommandLine("-Wtypes")
 	t.SetUpVartypes()
 
-	testCond := func(cond string, output ...string) {
+	test := func(cond string, output ...string) {
 		MkLineChecker{t.NewMkLine("filename", 1, cond)}.checkDirectiveCond()
 		if len(output) > 0 {
 			t.CheckOutputLines(output...)
@@ -290,35 +290,35 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		}
 	}
 
-	testCond(".if !empty(PKGSRC_COMPILER:Mmycc)",
+	test(".if !empty(PKGSRC_COMPILER:Mmycc)",
 		"WARN: filename:1: The pattern \"mycc\" cannot match any of "+
 			"{ ccache ccc clang distcc f2c gcc hp icc ido "+
 			"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.")
 
-	testCond(".elif ${A} != ${B}")
+	test(".elif ${A} != ${B}")
 
-	testCond(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
+	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
 		"WARN: filename:1: \"mailto:someone@example.org\" is not a valid URL.")
 
-	testCond(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
+	test(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
 		"WARN: filename:1: PKGSRC_RUN_TEST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
-	testCond(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
+	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
-	testCond(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
+	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
 		"WARN: filename:1: The empty() function takes a variable name as parameter, "+
 			"not a variable expression.")
 
-	testCond(".if ${PKGSRC_COMPILER} == \"msvc\"",
+	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
 		"WARN: filename:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
 			"Use one of { ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc } instead.",
 		"WARN: filename:1: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
-	testCond(".if ${PKG_LIBTOOL:Mlibtool}",
+	test(".if ${PKG_LIBTOOL:Mlibtool}",
 		"NOTE: filename:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".")
 
-	testCond(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
+	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
 		"WARN: filename:1: "+
 			"The pattern \"UnknownOS\" cannot match any of "+
 			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
@@ -334,7 +334,26 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			"} for MACHINE_ARCH.",
 		"NOTE: filename:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
-	testCond(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"")
+	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
+		nil...)
+
+	// The only interesting line from the below tracing output is the one
+	// containing "checkCompareVarStr".
+	t.EnableTracingToLog()
+	test(".if ${VAR:Mpattern1:Mpattern2} == comparison",
+		"TRACE: + MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
+		"TRACE: 1 + (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
+		"TRACE: 1 - (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
+		"TRACE: 1   checkCompareVarStr ${VAR:Mpattern1:Mpattern2} == comparison",
+		"TRACE: 1 + MkLineChecker.CheckVaruse(filename:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: 1 2 + (*Pkgsrc).VariableType(\"VAR\")",
+		"TRACE: 1 2 3   No type definition found for \"VAR\".",
+		"TRACE: 1 2 - (*Pkgsrc).VariableType(\"VAR\", \"=>\", (*pkglint.Vartype)(nil))",
+		"TRACE: 1 2 + (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: 1 2 - (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false), \"=>\", unknown)",
+		"TRACE: 1 - MkLineChecker.CheckVaruse(filename:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: - MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")")
+	t.EnableSilentTracing()
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
