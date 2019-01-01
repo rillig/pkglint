@@ -205,16 +205,16 @@ func isLocallyModified(filename string) bool {
 
 func loadCvsEntries(filename string) Lines {
 	dir := path.Dir(filename)
-	if dir == G.CvsEntriesDir {
-		return G.CvsEntriesLines
+	if dir == G.cvsEntriesDir {
+		return G.cvsEntriesLines
 	}
 
 	lines := Load(dir+"/CVS/Entries", 0)
 	if lines == nil {
 		return nil
 	}
-	G.CvsEntriesDir = dir
-	G.CvsEntriesLines = lines
+	G.cvsEntriesDir = dir
+	G.cvsEntriesLines = lines
 	return lines
 }
 

@@ -30,8 +30,8 @@ type Pkglint struct {
 	Infrastructure  bool     // Is the currently checked file from the pkgsrc infrastructure?
 	Testing         bool     // Is pkglint in self-testing mode (only during development)?
 	Username        string   // For checking against OWNER and MAINTAINER
-	CvsEntriesDir   string   // Cached to avoid I/O
-	CvsEntriesLines Lines
+	cvsEntriesDir   string   // Cached to avoid I/O
+	cvsEntriesLines Lines
 
 	Logger
 
