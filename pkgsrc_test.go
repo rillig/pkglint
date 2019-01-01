@@ -184,13 +184,20 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"))
 
 	c.Assert(len(changes), equals, 7)
-	c.Check(*changes[0], equals, Change{changes[0].Line, "Added", "category/package", "1.0", "author1", "2015-01-01"})
-	c.Check(*changes[1], equals, Change{changes[1].Line, "Updated", "category/package", "1.5", "author2", "2018-01-02"})
-	c.Check(*changes[2], equals, Change{changes[2].Line, "Renamed", "category/package", "", "author3", "2018-01-03"})
-	c.Check(*changes[3], equals, Change{changes[3].Line, "Moved", "category/package", "", "author4", "2018-01-04"})
-	c.Check(*changes[4], equals, Change{changes[4].Line, "Removed", "category/package", "", "author5", "2018-01-09"})
-	c.Check(*changes[5], equals, Change{changes[5].Line, "Removed", "category/package", "", "author6", "2018-01-06"})
-	c.Check(*changes[6], equals, Change{changes[6].Line, "Downgraded", "category/package", "1.2", "author7", "2018-01-07"})
+	c.Check(*changes[0], equals, Change{changes[0].Line,
+		"Added", "category/package", "1.0", "author1", "2015-01-01"})
+	c.Check(*changes[1], equals, Change{changes[1].Line,
+		"Updated", "category/package", "1.5", "author2", "2018-01-02"})
+	c.Check(*changes[2], equals, Change{changes[2].Line,
+		"Renamed", "category/package", "", "author3", "2018-01-03"})
+	c.Check(*changes[3], equals, Change{changes[3].Line,
+		"Moved", "category/package", "", "author4", "2018-01-04"})
+	c.Check(*changes[4], equals, Change{changes[4].Line,
+		"Removed", "category/package", "", "author5", "2018-01-09"})
+	c.Check(*changes[5], equals, Change{changes[5].Line,
+		"Removed", "category/package", "", "author6", "2018-01-06"})
+	c.Check(*changes[6], equals, Change{changes[6].Line,
+		"Downgraded", "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(
 		"WARN: ~/doc/CHANGES-2018:1: Year 2015 for category/package does not match the filename ~/doc/CHANGES-2018.",
