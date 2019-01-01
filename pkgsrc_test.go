@@ -231,7 +231,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 
 	pkg := t.SetUpPackage("wip/package",
 		"DISTNAME=\tpackage-1.11",
-		"CATEGORIES=\tlocal")
+		"CATEGORIES=\tlocal") // To avoid "Invalid category wip".
 	t.CreateFileLines("wip/TODO",
 		RcsID,
 		"",
@@ -243,7 +243,8 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/wip/package/Makefile:3: This package should be updated to 1.13 ([cool new features]).")
+		"WARN: ~/wip/package/Makefile:3: " +
+			"This package should be updated to 1.13 ([cool new features]).")
 }
 
 func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
@@ -261,9 +262,12 @@ func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Definition of USE_PERL5 is deprecated. Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.",
-		"WARN: Makefile:3: Definition of SUBST_POSTCMD.class is deprecated. Has been removed, as it seemed unused.",
-		"WARN: Makefile:4: Use of \"PKG_JVM\" is deprecated. Use PKG_DEFAULT_JVM instead.")
+		"WARN: Makefile:2: Definition of USE_PERL5 is deprecated. "+
+			"Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.",
+		"WARN: Makefile:3: Definition of SUBST_POSTCMD.class is deprecated. "+
+			"Has been removed, as it seemed unused.",
+		"WARN: Makefile:4: Use of \"PKG_JVM\" is deprecated. "+
+			"Use PKG_DEFAULT_JVM instead.")
 }
 
 func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {
@@ -320,7 +324,7 @@ func (s *Suite) Test_Pkgsrc__caching(c *check.C) {
 	c.Check(cached, equals, "../../lang/python27")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__multi(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("lang/Makefile")

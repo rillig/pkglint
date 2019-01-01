@@ -18,13 +18,13 @@ func CheckLinesPlist(lines Lines) {
 		lines.Lines[0].Warnf("PLIST files shouldn't be empty.")
 		G.Explain(
 			"One reason for empty PLISTs is that this is a newly created package",
-			"and that the author didn't run \"bmake print-PLIST\" after installing",
-			"the files.",
+			sprintf("and that the author didn't run %q after installing the files.", bmake("print-PLIST")),
 			"",
-			"Another reason, common for Perl packages, is that the final PLIST is automatically generated.",
-			"Since the source PLIST is not used at all, it can be removed.",
+			"For most Perl packages, the final PLIST is generated automatically.",
+			"Since the source PLIST is not used at all, it can be removed for these packages.",
 			"",
-			"Meta packages also don't need a PLIST file.")
+			"Meta packages also don't need a PLIST file",
+			"since their only purpose is to declare dependencies.")
 	}
 
 	ck := PlistChecker{
