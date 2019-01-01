@@ -1305,13 +1305,16 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 		MkRcsID,
 		"pre-configure:",
 		"\ttouch file; for f in file; do echo \"$$f\"; done",
-		"\tfor f in file; do echo \"$$f\"; done; touch file")
+		"\tfor f in file; do echo \"$$f\"; done; touch file",
+		"\ttouch 1; touch 2; touch 3; touch 4")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon " +
-			"(after \"touch file\") to separate commands.")
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"touch file\") to separate commands.",
+		"WARN: Makefile:5: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"touch 1\") to separate commands.")
 }
 
 func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
