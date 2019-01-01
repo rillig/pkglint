@@ -441,18 +441,26 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			continue
 		}
 
-		if path.Base(filename) == "Makefile" {
-			if st, err := os.Lstat(filename); err == nil {
-				pkglint.checkExecutable(filename, st.Mode())
-			}
+		st, err := os.Lstat(filename)
+		switch {
+		case err != nil:
+			// For missing custom distinfo file, an error message is already generated
+			// for the line where DISTINFO_FILE is defined.
+			//
+			// For all other cases it is next to impossible to reach this branch
+			// since all those files come from calls to dirglob.
+			break
+
+		case path.Base(filename) == "Makefile":
+			pkglint.checkExecutable(filename, st.Mode())
 			if pkglint.Opts.CheckMakefile {
 				pkg.checkfilePackageMakefile(filename, mklines)
 			}
-		} else {
-			st, err := os.Lstat(filename)
-			G.AssertNil(err, "Cannot determine file type")
+
+		default:
 			pkglint.checkDirent(filename, st.Mode())
 		}
+
 		if contains(filename, "/patches/patch-") {
 			havePatches = true
 		} else if hasSuffix(filename, "/distinfo") {

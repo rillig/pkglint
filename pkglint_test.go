@@ -1076,6 +1076,20 @@ func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 			"Alternative implementation \"bin/wrapper-impl\" must be an absolute path.")
 }
 
+func (s *Suite) Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"DISTINFO_FILE=\tnonexistent")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/nonexistent: File not found. Please run \"@BMAKE@ makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
+		"ERROR: ~/category/package/Makefile:20: Relative path \"nonexistent\" does not exist.")
+}
+
 func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
 	t := s.Init(c)
 
