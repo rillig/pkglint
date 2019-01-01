@@ -314,7 +314,7 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time ToolTime) {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	line := shline.mkline.Line
@@ -442,7 +442,7 @@ func (scc *SimpleCommandChecker) Check() {
 
 func (scc *SimpleCommandChecker) checkCommandStart() {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -481,7 +481,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 // and whether the package has added it to USE_TOOLS.
 func (scc *SimpleCommandChecker) handleTool() bool {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	command := scc.strcmd.Name
@@ -501,7 +501,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 
 func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -519,7 +519,7 @@ func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 
 func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -554,7 +554,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 
 func (scc *SimpleCommandChecker) handleComment() bool {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	shellword := scc.strcmd.Name
@@ -597,7 +597,7 @@ func (scc *SimpleCommandChecker) handleComment() bool {
 
 func (scc *SimpleCommandChecker) checkRegexReplace() {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	cmdname := scc.strcmd.Name
@@ -619,7 +619,7 @@ func (scc *SimpleCommandChecker) checkRegexReplace() {
 
 func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	cmdname := scc.strcmd.Name
@@ -668,7 +668,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 
 func (scc *SimpleCommandChecker) checkInstallMulti() {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	cmd := scc.strcmd
@@ -697,7 +697,7 @@ func (scc *SimpleCommandChecker) checkInstallMulti() {
 
 func (scc *SimpleCommandChecker) checkPaxPe() {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	if (scc.strcmd.Name == "${PAX}" || scc.strcmd.Name == "pax") && scc.strcmd.HasOption("-pe") {
@@ -711,7 +711,7 @@ func (scc *SimpleCommandChecker) checkPaxPe() {
 
 func (scc *SimpleCommandChecker) checkEchoN() {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	if scc.strcmd.Name == "${ECHO}" && scc.strcmd.HasOption("-n") {
@@ -725,7 +725,7 @@ type ShellProgramChecker struct {
 
 func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	getSimple := func(list *MkShList) *MkShSimpleCommand {
@@ -785,7 +785,7 @@ func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool, time
 
 func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipeline) {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	canFail := func() (bool, string) {
@@ -892,7 +892,7 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 
 func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkShAndOr) {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	command := list.AndOrs[index-1].Pipes[0].Cmds[0]
@@ -928,7 +928,7 @@ func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkSh
 // Some shell commands should not be used in the install phase.
 func (shline *ShellLine) checkInstallCommand(shellcmd string) {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	if G.Mk == nil || !matches(G.Mk.target, `^(?:pre|do|post)-install$`) {

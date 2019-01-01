@@ -291,7 +291,7 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 		return
 	}
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	mkline := ck.MkLine
@@ -871,7 +871,7 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 // has the correct data type and quoting.
 func (ck MkLineChecker) checkVarassignRightVaruse() {
 	if trace.Tracing {
-		defer trace.Call()()
+		defer trace.Call0()()
 	}
 
 	mkline := ck.MkLine
