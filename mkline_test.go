@@ -1043,6 +1043,7 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	checkVarassign("VAR += value", false, "VAR", " ", "+=", "VAR += ", "value", "", "")
 	checkVarassign(" VAR=value", false, "VAR", "", "=", " VAR=", "value", "", "")
 	checkVarassign("VAR=value #comment", false, "VAR", "", "=", "VAR=", "value", " ", "#comment")
+	checkVarassign("NFILES=${FILES:[#]}", false, "NFILES", "", "=", "NFILES=", "${FILES:[#]}", "", "")
 
 	checkNotVarassign("\tVAR=value")
 	checkNotVarassign("?=value")
