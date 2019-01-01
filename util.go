@@ -118,10 +118,15 @@ func mustMatch(s string, re regex.Pattern) []string {
 }
 
 func isEmptyDir(filename string) bool {
-	dirents, err := ioutil.ReadDir(filename)
-	if err != nil || hasSuffix(filename, "/CVS") {
+	if hasSuffix(filename, "/CVS") {
 		return true
 	}
+
+	dirents, err := ioutil.ReadDir(filename)
+	if err != nil {
+		return true
+	}
+
 	for _, dirent := range dirents {
 		name := dirent.Name()
 		if isIgnoredFilename(name) {
@@ -190,7 +195,7 @@ func isLocallyModified(filename string) bool {
 				return true
 			}
 
-			// According to http://cvsman.com/cvs-1.12.12/cvs_19.php, format both timestamps.
+			// Following http://cvsman.com/cvs-1.12.12/cvs_19.php, format both timestamps.
 			cvsModTime := fields[3]
 			fsModTime := st.ModTime().UTC().Format(time.ANSIC)
 			if trace.Tracing {
@@ -230,12 +235,12 @@ func detab(s string) string {
 }
 
 func shorten(s string, maxChars int) string {
-	chars := 0
+	codePoints := 0
 	for i := range s {
-		if chars >= maxChars {
+		if codePoints >= maxChars {
 			return s[:i] + "..."
 		}
-		chars++
+		codePoints++
 	}
 	return s
 }
@@ -247,6 +252,7 @@ func varnameBase(varname string) string {
 	}
 	return varname
 }
+
 func varnameCanon(varname string) string {
 	dot := strings.IndexByte(varname, '.')
 	if dot > 0 {
@@ -254,6 +260,7 @@ func varnameCanon(varname string) string {
 	}
 	return varname
 }
+
 func varnameParam(varname string) string {
 	dot := strings.IndexByte(varname, '.')
 	if dot > 0 {

@@ -142,7 +142,7 @@ func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_isEmptyDir__empty_subdir(c *check.C) {
+func (s *Suite) Test_isEmptyDir(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("CVS/Entries",
@@ -151,6 +151,7 @@ func (s *Suite) Test_isEmptyDir__empty_subdir(c *check.C) {
 		"dummy")
 
 	c.Check(isEmptyDir(t.File(".")), equals, true)
+	c.Check(isEmptyDir(t.File("CVS")), equals, true)
 }
 
 func (s *Suite) Test_detab(c *check.C) {
