@@ -109,6 +109,14 @@ func (s *Suite) Test_CheckLinesPlist__sorting(c *check.C) {
 		"WARN: PLIST:6: \"bin/cat\" should be sorted before \"bin/otherprogram\".")
 }
 
+func (s *Suite) Test_CheckLinesPlist__sort_common(c *check.C) {
+	t := s.Init(c)
+
+	// TODO: Examine what happens if there is a PLIST.common to be sorted.
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 	t := s.Init(c)
 
@@ -165,7 +173,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"@exec echo \"after lib/after.la\"") // The footer starts here
 }
 
-func (s *Suite) Test_PlistChecker_checkpathMan__gz(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathMan__gz(c *check.C) {
 	t := s.Init(c)
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
@@ -179,7 +187,7 @@ func (s *Suite) Test_PlistChecker_checkpathMan__gz(c *check.C) {
 		"NOTE: PLIST:2: The .gz extension is unnecessary for manual pages.")
 }
 
-func (s *Suite) Test_PlistChecker_checkpath__PKGMANDIR(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPath__PKGMANDIR(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -192,7 +200,7 @@ func (s *Suite) Test_PlistChecker_checkpath__PKGMANDIR(c *check.C) {
 		"NOTE: PLIST:2: PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
 }
 
-func (s *Suite) Test_PlistChecker_checkpath__python_egg(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPath__python_egg(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -375,14 +383,14 @@ func (s *Suite) Test_PlistChecker__unknown_line_type(c *check.C) {
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistRcsID,
-		"---unknown",
-		"+++unknown")
+		"---invalid",
+		"+++invalid")
 
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: Unknown line type: ---unknown",
-		"WARN: ~/PLIST:3: Unknown line type: +++unknown")
+		"WARN: ~/PLIST:2: Invalid line type: ---invalid",
+		"WARN: ~/PLIST:3: Invalid line type: +++invalid")
 }
 
 func (s *Suite) Test_PlistChecker__doc(c *check.C) {
@@ -430,7 +438,7 @@ func (s *Suite) Test_PlistChecker__unwanted_entries(c *check.C) {
 		"WARN: ~/PLIST:4: .orig files should not be in the PLIST.")
 }
 
-func (s *Suite) Test_PlistChecker_checkpathInfo(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathInfo(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -444,7 +452,7 @@ func (s *Suite) Test_PlistChecker_checkpathInfo(c *check.C) {
 		"WARN: ~/PLIST:2: Packages that install info files should set INFO_FILES in the Makefile.")
 }
 
-func (s *Suite) Test_PlistChecker_checkpathLib(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -464,7 +472,7 @@ func (s *Suite) Test_PlistChecker_checkpathLib(c *check.C) {
 		"ERROR: ~/PLIST:4: \"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 }
 
-func (s *Suite) Test_PlistChecker_checkpathMan(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -479,7 +487,7 @@ func (s *Suite) Test_PlistChecker_checkpathMan(c *check.C) {
 		"WARN: ~/PLIST:3: Unknown section \"x\" for manual page.")
 }
 
-func (s *Suite) Test_PlistChecker_checkpathShare(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",

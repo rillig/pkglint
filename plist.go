@@ -60,7 +60,7 @@ func (ck *PlistChecker) Check(plainLines Lines) {
 	}
 
 	for _, pline := range plines {
-		ck.checkline(pline)
+		ck.checkLine(pline)
 		pline.CheckTrailingWhitespace()
 	}
 	CheckLinesTrailingEmptyLines(plainLines)
@@ -84,6 +84,7 @@ func (ck *PlistChecker) NewLines(lines Lines) []*PlistLine {
 			if m, cond, rest := match2(text, `^(?:\$\{(PLIST\.[\w-.]+)\})+(.*)`); m {
 				condition, text = cond, rest
 			}
+			// TODO: Support multiple conditions per line.
 		}
 		plines[i] = &PlistLine{line, condition, text}
 	}
@@ -105,6 +106,8 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 					ck.allDirs[dir] = pline
 				}
 			case first == '@':
+				// TODO: Check if this directive is still used,
+				//  or if it has been removed during a pkg_install re-implementation.
 				if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
 					for dir := dirname; dir != "."; dir = path.Dir(dir) {
 						ck.allDirs[dir] = pline
@@ -116,25 +119,25 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 	}
 }
 
-func (ck *PlistChecker) checkline(pline *PlistLine) {
+func (ck *PlistChecker) checkLine(pline *PlistLine) {
 	text := pline.text
 	if hasAlnumPrefix(text) {
-		ck.checkpath(pline)
+		ck.checkPath(pline)
 	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)[\t ]*(.*)`); m {
 		pline.CheckDirective(cmd, arg)
 	} else if hasPrefix(text, "$") {
-		ck.checkpath(pline)
+		ck.checkPath(pline)
 	} else if text == "" {
 		fix := pline.Autofix()
 		fix.Warnf("PLISTs should not contain empty lines.")
 		fix.Delete()
 		fix.Apply()
 	} else {
-		pline.Warnf("Unknown line type: %s", pline.Line.Text)
+		pline.Warnf("Invalid line type: %s", pline.Line.Text)
 	}
 }
 
-func (ck *PlistChecker) checkpath(pline *PlistLine) {
+func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	text := pline.text
 	sdirname, basename := path.Split(text)
 	dirname := strings.TrimSuffix(sdirname, "/")
@@ -164,19 +167,19 @@ func (ck *PlistChecker) checkpath(pline *PlistLine) {
 
 	switch topdir {
 	case "bin":
-		ck.checkpathBin(pline, dirname, basename)
+		ck.checkPathBin(pline, dirname, basename)
 	case "doc":
 		pline.Errorf("Documentation must be installed under share/doc, not doc.")
 	case "etc":
-		ck.checkpathEtc(pline, dirname, basename)
+		ck.checkPathEtc(pline, dirname, basename)
 	case "info":
-		ck.checkpathInfo(pline, dirname, basename)
+		ck.checkPathInfo(pline, dirname, basename)
 	case "lib":
-		ck.checkpathLib(pline, dirname, basename)
+		ck.checkPathLib(pline, dirname, basename)
 	case "man":
-		ck.checkpathMan(pline)
+		ck.checkPathMan(pline)
 	case "share":
-		ck.checkpathShare(pline)
+		ck.checkPathShare(pline)
 	}
 
 	if contains(text, "${PKGLOCALEDIR}") && G.Pkg != nil && !G.Pkg.vars.Defined("USE_PKGLOCALEDIR") {
@@ -231,7 +234,7 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	fix.Apply()
 }
 
-func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathBin(pline *PlistLine, dirname, basename string) {
 	if contains(dirname, "/") {
 		pline.Warnf("The bin/ directory should not have subdirectories.")
 		G.Explain(
@@ -243,7 +246,7 @@ func (ck *PlistChecker) checkpathBin(pline *PlistLine, dirname, basename string)
 	}
 }
 
-func (ck *PlistChecker) checkpathEtc(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathEtc(pline *PlistLine, dirname, basename string) {
 	if hasPrefix(pline.text, "etc/rc.d/") {
 		pline.Errorf("RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.")
 		return
@@ -253,7 +256,7 @@ func (ck *PlistChecker) checkpathEtc(pline *PlistLine, dirname, basename string)
 		"Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
 }
 
-func (ck *PlistChecker) checkpathInfo(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathInfo(pline *PlistLine, dirname, basename string) {
 	if pline.text == "info/dir" {
 		pline.Errorf("\"info/dir\" must not be listed. Use install-info to add/remove an entry.")
 		return
@@ -264,7 +267,7 @@ func (ck *PlistChecker) checkpathInfo(pline *PlistLine, dirname, basename string
 	}
 }
 
-func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathLib(pline *PlistLine, dirname, basename string) {
 	switch {
 	case G.Pkg != nil && G.Pkg.EffectivePkgbase != "" && hasPrefix(pline.text, "lib/"+G.Pkg.EffectivePkgbase+"/"):
 		return
@@ -294,7 +297,7 @@ func (ck *PlistChecker) checkpathLib(pline *PlistLine, dirname, basename string)
 	}
 }
 
-func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
+func (ck *PlistChecker) checkPathMan(pline *PlistLine) {
 	m, catOrMan, section, manpage, ext, gz := match5(pline.text, `^man/(cat|man)(\w+)/(.*?)\.(\w+)(\.gz)?$`)
 	if !m {
 		// maybe: line.Warnf("Invalid filename %q for manual page.", text)
@@ -332,7 +335,7 @@ func (ck *PlistChecker) checkpathMan(pline *PlistLine) {
 	}
 }
 
-func (ck *PlistChecker) checkpathShare(pline *PlistLine) {
+func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
 	text := pline.text
 	switch {
 	case hasPrefix(text, "share/icons/") && G.Pkg != nil:
