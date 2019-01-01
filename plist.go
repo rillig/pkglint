@@ -114,7 +114,6 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 					}
 				}
 			}
-
 		}
 	}
 }
@@ -141,8 +140,8 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 
 func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	text := pline.text
-	sdirname, basename := path.Split(text)
-	dirname := strings.TrimSuffix(sdirname, "/")
+	dirSlash, basename := path.Split(text)
+	dirname := strings.TrimSuffix(dirSlash, "/")
 
 	ck.checkSorted(pline)
 	ck.checkDuplicate(pline)
@@ -150,6 +149,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	if contains(basename, "${IMAKE_MANNEWSUFFIX}") {
 		pline.warnImakeMannewsuffix()
 	}
+
 	if hasPrefix(text, "${PKGMANDIR}/") {
 		fix := pline.Autofix()
 		fix.Notef("PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
@@ -163,10 +163,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 		pline.text = strings.Replace(pline.text, "${PKGMANDIR}/", "man/", 1)
 	}
 
-	topdir := ""
-	if firstSlash := strings.IndexByte(text, '/'); firstSlash != -1 {
-		topdir = text[:firstSlash]
-	}
+	topdir := strings.SplitN(text, "/", 2)[0]
 
 	switch topdir {
 	case "bin":
