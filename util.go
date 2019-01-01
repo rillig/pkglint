@@ -429,12 +429,12 @@ func (o *Once) check(key uint64) bool {
 // in a certain scope, such as a package or a file.
 type Scope struct {
 	defined  map[string]MkLine
-	fallback map[string]string
 	used     map[string]MkLine
+	fallback map[string]string
 }
 
 func NewScope() Scope {
-	return Scope{make(map[string]MkLine), make(map[string]string), make(map[string]MkLine)}
+	return Scope{make(map[string]MkLine), make(map[string]MkLine), make(map[string]string)}
 }
 
 // Define marks the variable and its canonicalized form as defined.
@@ -445,6 +445,7 @@ func (s *Scope) Define(varname string, mkline MkLine) {
 			trace.Step2("Defining %q in %s", varname, mkline.String())
 		}
 	}
+
 	varcanon := varnameCanon(varname)
 	if varcanon != varname && s.defined[varcanon] == nil {
 		s.defined[varcanon] = mkline
@@ -466,6 +467,7 @@ func (s *Scope) Use(varname string, line MkLine) {
 			trace.Step2("Using %q in %s", varname, line.String())
 		}
 	}
+
 	varcanon := varnameCanon(varname)
 	if varcanon != varname && s.used[varcanon] == nil {
 		s.used[varcanon] = line
@@ -492,6 +494,7 @@ func (s *Scope) DefinedSimilar(varname string) bool {
 		}
 		return true
 	}
+
 	varcanon := varnameCanon(varname)
 	if s.defined[varcanon] != nil {
 		if trace.Tracing {
@@ -517,6 +520,7 @@ func (s *Scope) UsedSimilar(varname string) bool {
 }
 
 // FirstDefinition returns the line in which the variable has been defined first.
+//
 // Having multiple definitions is typical in the branches of "if" statements.
 func (s *Scope) FirstDefinition(varname string) MkLine {
 	mkline := s.defined[varname]
@@ -640,7 +644,7 @@ func naturalLess(str1, str2 string) bool {
 // but that's deep in the infrastructure and only affects the "nb13" extension.)
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
-	dirLevel    int
+	dirLevel    int // The number of enclosing directives (.if, .for).
 	OnIgnore    func(old, new MkLine)
 	OnOverwrite func(old, new MkLine)
 }
@@ -666,8 +670,9 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 		value := mkline.Value()
 		valueNovar := mkline.WithoutMakeVariables(value)
 		if op == opAssignEval && value == valueNovar {
-			op = opAssign // The two operators are effectively the same in this case.
+			op = /* effectively */ opAssign
 		}
+
 		existing, found := s.vars[varname]
 		if !found {
 			if op == opAssignShell || op == opAssignEval {
@@ -678,10 +683,12 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 				}
 				s.vars[varname] = &redundantScopeVarinfo{mkline, value}
 			}
+
 		} else if existing != nil {
 			if op == opAssign && existing.value == value {
-				op = opAssignDefault
+				op = /* effectively */ opAssignDefault
 			}
+
 			switch op {
 			case opAssign:
 				if s.OnOverwrite != nil {
@@ -722,15 +729,6 @@ func IsPrefs(filename string) bool {
 		return true
 	}
 	return false
-}
-
-func isalnum(s string) bool {
-	for _, ch := range []byte(s) {
-		if !textproc.AlnumU.Contains(ch) {
-			return false
-		}
-	}
-	return true
 }
 
 // FileCache reduces the IO load for commonly loaded files by about 50%,
