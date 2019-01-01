@@ -389,7 +389,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 	}
 
 	err := filepath.Walk(src.File("mk"), handleFile)
-	G.Assertf(err == nil, "Walk error in pkgsrc infrastructure: %s", err)
+	G.AssertNil(err, "Walk error in pkgsrc infrastructure")
 }
 
 func (src *Pkgsrc) parseSuggestedUpdates(lines Lines) []SuggestedUpdate {

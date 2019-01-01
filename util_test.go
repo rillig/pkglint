@@ -101,17 +101,17 @@ func (s *Suite) Test_relpath__failure_on_Windows(c *check.C) {
 	if runtime.GOOS == "windows" {
 		t.ExpectPanic(
 			func() { relpath("c:/", "d:/") },
-			"Pkglint internal error: relpath \"c:/\" \"d:/\".")
+			"Pkglint internal error: relpath \"c:/\" \"d:/\": Rel: can't make d:/ relative to c:/")
 	}
 }
 
-func (s *Suite) Test_abspath__on_Windows(c *check.C) {
+func (s *Suite) Test_abspath__failure_on_Windows(c *check.C) {
 	t := s.Init(c)
 
 	if runtime.GOOS == "windows" {
 		t.ExpectPanic(
 			func() { abspath("file\u0000name") },
-			"Pkglint internal error: abspath \"file\\x00name\".")
+			"Pkglint internal error: abspath \"file\\x00name\": invalid argument")
 	}
 }
 

@@ -154,7 +154,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		defer f.Close()
 
 		err = pprof.StartCPUProfile(f)
-		G.Assertf(err == nil, "Cannot start profiling: %s", err)
+		G.AssertNil(err, "Cannot start profiling")
 		defer pprof.StopCPUProfile()
 
 		pkglint.res.Profiling()
@@ -450,11 +450,8 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 			}
 		} else {
 			st, err := os.Lstat(filename)
-			if err != nil {
-				NewLineWhole(filename).Errorf("Cannot determine file type: %s", err)
-			} else {
-				pkglint.checkDirent(filename, st.Mode())
-			}
+			G.AssertNil(err, "Cannot determine file type")
+			pkglint.checkDirent(filename, st.Mode())
 		}
 		if contains(filename, "/patches/patch-") {
 			havePatches = true
@@ -480,6 +477,16 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
 		panic("Pkglint internal error: " + sprintf(format, args...))
+	}
+}
+
+// AssertNil ensures that the given error is nil.
+//
+// Other than Assertf, this method does not require any comparison operator in the calling code.
+// This makes it possible to get 100% branch coverage for cases that "really can never fail".
+func (pkglint *Pkglint) AssertNil(err error, format string, args ...interface{}) {
+	if err != nil {
+		panic("Pkglint internal error: " + sprintf(format, args...) + ": " + err.Error())
 	}
 }
 
