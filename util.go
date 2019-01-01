@@ -164,6 +164,20 @@ func isIgnoredFilename(filename string) bool {
 	return false
 }
 
+func dirglob(dirname string) []string {
+	infos, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		return nil
+	}
+	var filenames []string
+	for _, info := range infos {
+		if !(isIgnoredFilename(info.Name())) {
+			filenames = append(filenames, cleanpath(dirname+"/"+info.Name()))
+		}
+	}
+	return filenames
+}
+
 // Checks whether a file is already committed to the CVS repository.
 func isCommitted(filename string) bool {
 	lines := G.loadCvsEntries(filename)
@@ -308,20 +322,6 @@ func toInt(s string, def int) int {
 		return n
 	}
 	return def
-}
-
-func dirglob(dirname string) []string {
-	fis, err := ioutil.ReadDir(dirname)
-	if err != nil {
-		return nil
-	}
-	var fnames []string
-	for _, fi := range fis {
-		if !(isIgnoredFilename(fi.Name())) {
-			fnames = append(fnames, cleanpath(dirname+"/"+fi.Name()))
-		}
-	}
-	return fnames
 }
 
 // Emulates make(1)'s :S substitution operator.
