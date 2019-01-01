@@ -31,9 +31,8 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: PLIST:1: Expected \"@comment $"+"NetBSD$\".",
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.",
-		"ERROR: PLIST:3: Configuration files must not be registered in the PLIST. "+
-			"Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.",
-		"ERROR: PLIST:4: RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.",
+		"ERROR: PLIST:3: Configuration files must not be registered in the PLIST.",
+		"ERROR: PLIST:4: RCD_SCRIPTS must not be registered in the PLIST.",
 		"ERROR: PLIST:6: \"info/dir\" must not be listed. Use install-info to add/remove an entry.",
 		"WARN: PLIST:8: Redundant library found. The libtool library is in line 9.",
 		"WARN: PLIST:9: \"lib/libc.la\" should be sorted before \"lib/libc.so.6\".",
@@ -417,7 +416,7 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR(c *check.C) {
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
+		"WARN: ~/PLIST:2: PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR is not set in the package Makefile.")
 }
 
 func (s *Suite) Test_PlistChecker__unwanted_entries(c *check.C) {

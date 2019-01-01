@@ -183,7 +183,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	}
 
 	if contains(text, "${PKGLOCALEDIR}") && G.Pkg != nil && !G.Pkg.vars.Defined("USE_PKGLOCALEDIR") {
-		pline.Warnf("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR was not found.")
+		pline.Warnf("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR is not set in the package Makefile.")
 	}
 
 	if contains(text, "/CVS/") {
@@ -195,8 +195,8 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	if hasSuffix(text, "/perllocal.pod") {
 		pline.Warnf("perllocal.pod files should not be in the PLIST.")
 		G.Explain(
-			"This file is handled automatically by the INSTALL/DEINSTALL scripts,",
-			"since its contents changes frequently.")
+			"This file is handled automatically by the INSTALL/DEINSTALL scripts",
+			"since its contents depends on more than one package.")
 	}
 	if contains(text, ".egg-info/") {
 		pline.Warnf("Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
@@ -210,7 +210,7 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 				pline.Warnf("%q should be sorted before %q.", text, ck.lastFname)
 				G.Explain(
 					"The files in the PLIST should be sorted alphabetically.",
-					"To fix this, run \"pkglint -F PLIST\".")
+					"This allows human readers to quickly see whether a file is included or not.")
 			}
 		}
 		ck.lastFname = text
@@ -248,11 +248,14 @@ func (ck *PlistChecker) checkPathBin(pline *PlistLine, dirname, basename string)
 
 func (ck *PlistChecker) checkPathEtc(pline *PlistLine, dirname, basename string) {
 	if hasPrefix(pline.text, "etc/rc.d/") {
-		pline.Errorf("RCD_SCRIPTS must not be registered in the PLIST. Please use the RCD_SCRIPTS framework.")
+		pline.Errorf("RCD_SCRIPTS must not be registered in the PLIST.")
+		pline.Explain(
+			"Please use the RCD_SCRIPTS framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
 		return
 	}
 
-	pline.Errorf("Configuration files must not be registered in the PLIST. " +
+	pline.Errorf("Configuration files must not be registered in the PLIST.")
+	pline.Explain(
 		"Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
 }
 
