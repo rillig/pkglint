@@ -121,18 +121,19 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 
 func (ck *PlistChecker) checkLine(pline *PlistLine) {
 	text := pline.text
-	if hasAlnumPrefix(text) {
-		ck.checkPath(pline)
-	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)[\t ]*(.*)`); m {
-		// TODO: Check if the above regex is missing a hyphen.
-		pline.CheckDirective(cmd, arg)
-	} else if hasPrefix(text, "$") {
-		ck.checkPath(pline)
-	} else if text == "" {
+
+	if text == "" {
 		fix := pline.Autofix()
 		fix.Warnf("PLISTs should not contain empty lines.")
 		fix.Delete()
 		fix.Apply()
+
+	} else if textproc.AlnumU.Contains(text[0]) || text[0] == '$' {
+		ck.checkPath(pline)
+
+	} else if m, cmd, arg := match2(text, `^@([a-z-]+)[\t ]*(.*)`); m {
+		pline.CheckDirective(cmd, arg)
+
 	} else {
 		pline.Warnf("Invalid line type: %s", pline.Line.Text)
 	}
