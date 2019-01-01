@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopkg.in/check.v1"
-	"strconv"
 )
 
 func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
@@ -634,10 +633,7 @@ func (b *MkShBuilder) SimpleCommand(words ...string) *MkShCommand {
 		if assignments && matches(word, `^[A-Za-z_]\w*=`) {
 			cmd.Assignments = append(cmd.Assignments, b.Token(word))
 		} else if m, fdstr, op, rest := match3(word, `^(\d*)(<<-|<<|<&|>>|>&|>\||<|>)(.*)$`); m {
-			fd, err := strconv.Atoi(fdstr)
-			if err != nil {
-				fd = -1
-			}
+			fd := toInt(fdstr, -1)
 			cmd.Redirections = append(cmd.Redirections, b.Redirection(fd, op, rest))
 		} else {
 			assignments = false

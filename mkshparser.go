@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"fmt"
-	"strconv"
-)
+import "fmt"
 
 func parseShellProgram(line Line, program string) (*MkShList, error) {
 	if trace.Tracing {
@@ -164,7 +161,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 	}
 
 	if m, fdstr, op := match2(token, `^(\d+)(<<-|<<|<>|<&|>>|>&|>\||<|>)$`); m {
-		fd, _ := strconv.Atoi(fdstr)
+		fd := toInt(fdstr, -1)
 		lval.IONum = fd
 		lex.ioRedirect = op
 		return tkIO_NUMBER

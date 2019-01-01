@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -223,13 +222,13 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 	keys := make(map[string]int)
 	for _, name := range names {
 		if m, pkgbase, versionStr := match2(name, `^(\D+)(\d+)$`); m {
-			version, _ := strconv.Atoi(versionStr)
+			version := toInt(versionStr, 0)
 			if pkgbase == "postgresql" && version < 60 {
 				version = 10 * version
 			}
 			if pkgbase == "go" {
-				major, _ := strconv.Atoi(versionStr[:1])
-				minor, _ := strconv.Atoi(versionStr[1:])
+				major := toInt(versionStr[:1], 0)
+				minor := toInt(versionStr[1:], 0)
 				version = 100*major + minor
 			}
 			keys[name] = version
