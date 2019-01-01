@@ -65,6 +65,7 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	G.Opts.WarnExtra = true
 	ctx := NewSubstContext()
 
+	// SUBST_CLASSES is added to OPSYSVARS in mk/bsd.pkg.mk.
 	ctx.Varassign(newSubstLine(t, 11, "SUBST_CLASSES.SunOS+=prefix"))
 	ctx.Varassign(newSubstLine(t, 12, "SUBST_CLASSES.NetBSD+=prefix"))
 	ctx.Varassign(newSubstLine(t, 13, "SUBST_FILES.prefix=Makefile"))
