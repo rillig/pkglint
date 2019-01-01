@@ -150,7 +150,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	}
 	if hasPrefix(text, "${PKGMANDIR}/") {
 		fix := pline.Autofix()
-		fix.Notef("PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
+		fix.Notef("PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 		fix.Explain(
 			"The pkgsrc infrastructure takes care of replacing the correct value",
 			"when generating the actual PLIST for the package.")

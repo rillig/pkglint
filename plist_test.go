@@ -196,7 +196,7 @@ func (s *Suite) Test_PlistChecker_checkPath__PKGMANDIR(c *check.C) {
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
-		"NOTE: PLIST:2: PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
+		"NOTE: PLIST:2: PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 }
 
 func (s *Suite) Test_PlistChecker_checkPath__python_egg(c *check.C) {
@@ -244,7 +244,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 			"should be sorted before \"lib/libvirt/connection-driver/libvirt_driver_storage.la\".",
 		"WARN: ~/PLIST:4: \"lib/libvirt/connection-driver/libvirt_driver_libxl.la\" "+
 			"should be sorted before \"lib/libvirt/connection-driver/libvirt_driver_nodedev.la\".",
-		"NOTE: ~/PLIST:6: PLIST files should mention \"man/\" instead of \"${PKGMANDIR}\".")
+		"NOTE: ~/PLIST:6: PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	CheckLinesPlist(lines)
