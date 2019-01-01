@@ -421,15 +421,17 @@ func (p *ShTokenizer) ShToken() *ShToken {
 		return NewShToken(atom.MkText, atom)
 	}
 
-nextAtom:
-	mark := lexer.Mark()
-	atom := peek()
-	if atom != nil && (atom.Type.IsWord() || atom.Quoting != shqPlain) {
-		skip()
-		atoms = append(atoms, atom)
-		goto nextAtom
+	for {
+		mark := lexer.Mark()
+		atom := peek()
+		if atom != nil && (atom.Type.IsWord() || atom.Quoting != shqPlain) {
+			skip()
+			atoms = append(atoms, atom)
+			continue
+		}
+		lexer.Reset(mark)
+		break
 	}
-	lexer.Reset(mark)
 
 	G.Assertf(len(atoms) > 0, "ShTokenizer.ShToken")
 	return NewShToken(lexer.Since(initialMark), atoms...)
