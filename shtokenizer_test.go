@@ -545,6 +545,10 @@ func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
 	test("$${\\}", nil, "$${\\}")
 }
 
+// This test demonstrates that the shell tokenizer is not perfect yet.
+// There are still some corner cases that trigger a parse error.
+// To get 100% code coverage, they have been found using the fuzzer
+// and trimmed down to minimal examples.
 func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 	t := s.Init(c)
 
@@ -616,6 +620,11 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 		"WARN: fuzzing.mk:12: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`# comment\"")
 }
 
+// In order to get 100% code coverage for the shell tokenizer, a panic() statement has been
+// added to each uncovered basic block. After that, this fuzzer quickly found relatively
+// small example programs that led to the uncovered code.
+//
+// This test is not useful as-is.
 func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	t := s.Init(c)
 
@@ -627,7 +636,7 @@ func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	for i := 0; i < 1000; i++ {
 		tokenizer := NewShTokenizer(dummyLine, fuzzer.Generate(50), false)
 		tokenizer.ShAtoms()
-		t.Output() // Discard the output, only react on fatal errors.
+		t.Output() // Discard the output, only react on panics.
 	}
 	fuzzer.Ok()
 }
