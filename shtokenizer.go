@@ -30,6 +30,8 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 		return &ShAtom{shtVaruse, lexer.Since(mark), quoting, varuse}
 	}
 
+	// TODO: Most probably there is a more elegant way than the large switch block below.
+
 	var atom *ShAtom
 	switch quoting {
 	case shqPlain:
@@ -360,7 +362,7 @@ func (p *ShTokenizer) shOperator(q ShQuoting) *ShAtom {
 	case lexer.SkipString("||"),
 		lexer.SkipString("&&"),
 		lexer.SkipString(";;"),
-		lexer.SkipByte('\n'),
+		lexer.NextBytesFunc(func(b byte) bool { return b == '\n' }) != "",
 		lexer.SkipByte(';'),
 		lexer.SkipByte('('),
 		lexer.SkipByte(')'),

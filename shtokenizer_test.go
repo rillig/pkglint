@@ -457,10 +457,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	testNil("")
 	testNil(" ")
 	rest := testRest("\t\t\t\n\n\n\n\t ",
-		"\n",
-		"\n", // TODO: Why three separators? One should be enough. What does the grammar say?
-		"\n")
-	c.Check(rest, equals, "\n\t ") // TODO: Why is the newline still here?
+		"\n\n\n\n")
+	c.Check(rest, equals, "\t ")
 
 	test("echo",
 		"echo")
