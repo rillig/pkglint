@@ -1,6 +1,9 @@
 package pkglint
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 func parseShellProgram(line Line, program string) (*MkShList, error) {
 	if trace.Tracing {
@@ -13,10 +16,14 @@ func parseShellProgram(line Line, program string) (*MkShList, error) {
 
 	succeeded := parser.Parse(lexer)
 
-	if succeeded == 0 && lexer.error == "" {
+	switch {
+	case succeeded == 0 && lexer.error == "":
 		return lexer.result, nil
+	case succeeded == 0 && rest != "":
+		return nil, fmt.Errorf("splitIntoShellTokens couldn't parse %q", rest)
+	default:
+		return nil, &ParseError{append([]string{lexer.current}, lexer.remaining...)}
 	}
-	return nil, &ParseError{append([]string{lexer.current}, lexer.remaining...)}
 }
 
 type ParseError struct {

@@ -630,10 +630,9 @@ func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished(c *check.C) {
 	// Breakpoint in ShellLine.unescapeBackticks
 	mklines.Check()
 
-	// FIXME: Mention the unfinished backquote.
 	t.CheckOutputLines(
-		"WARN: filename.mk:4: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"\"}",
-		"WARN: filename.mk:5: Pkglint ShellLine.CheckShellCommand: parse error at []string{\"echo\"}")
+		"WARN: filename.mk:4: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`${VAR}\"",
+		"WARN: filename.mk:5: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`${VAR}\"")
 }
 
 func (s *Suite) Test_ShellLine_unescapeBackticks__unfinished_direct(c *check.C) {
@@ -1117,6 +1116,7 @@ func (s *Suite) Test_ShellLine_checkHiddenAndSuppress(c *check.C) {
 
 	mklines.Check()
 
+	// No warning about the hidden ls since the target name starts with "show-".
 	t.CheckOutputEmpty()
 }
 
@@ -1163,7 +1163,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 // .mk file includes the file defining the command.
 // FIXME: This paragraph sounds wrong. All commands from included files should be valid.
 //
-// The variable must not be called *_CMD, or another code path is taken.
+// The PYTHON_BIN variable below must not be called *_CMD, or another code path is taken.
 func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c *check.C) {
 	t := s.Init(c)
 
@@ -1239,17 +1239,12 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"pre-configure:",
-		"\t${RUN} while cd ..; do printf .; done",
-		// TODO: "\t${RUN} if ls | tr -d $$; then :; fi",
-		"\t${RUN} if ls | tr -d shell$$; then :; fi")
+		"\t${RUN} while cd ..; do printf .; done")
 
 	mklines.Check()
 
-	// FIXME: Fix the parse error.
 	t.CheckOutputLines(
-		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
-		"WARN: Internal pkglint error in ShTokenizer.ShAtom at \"$$\" (quoting=plain).",
-		"WARN: Makefile:4: The exitcode of \"ls\" at the left of the | operator is ignored.")
+		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
