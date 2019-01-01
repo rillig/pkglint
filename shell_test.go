@@ -1108,16 +1108,13 @@ func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
-		"\t${RUN} ktrace; mktexlsr; strace; texconfig; truss")
+		"\t${RUN} mktexlsr; texconfig")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:3: \"ktrace\" must not be used in Makefiles.",
 		"ERROR: Makefile:3: \"mktexlsr\" must not be used in Makefiles.",
-		"ERROR: Makefile:3: \"strace\" must not be used in Makefiles.",
-		"ERROR: Makefile:3: \"texconfig\" must not be used in Makefiles.",
-		"ERROR: Makefile:3: \"truss\" must not be used in Makefiles.")
+		"ERROR: Makefile:3: \"texconfig\" must not be used in Makefiles.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {

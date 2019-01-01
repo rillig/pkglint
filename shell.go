@@ -319,6 +319,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 
 	line := shline.mkline.Line
 	program, err := parseShellProgram(line, shellcmd)
+	// FIXME: This code is duplicated in checkWordQuoting.
 	if err != nil && contains(shellcmd, "$$(") { // Hack until the shell parser can handle subshells.
 		line.Warnf("Invoking subshells via $(...) is not portable enough.")
 		return
@@ -335,6 +336,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 	walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
 		scc := NewSimpleCommandChecker(shline, command, time)
 		scc.Check()
+		// TODO: Implement getopt parsing for StrCommand.
 		if scc.strcmd.Name == "set" && scc.strcmd.AnyArgMatches(`^-.*e`) {
 			*pSetE = true
 		}
@@ -395,12 +397,12 @@ func (shline *ShellLine) checkHiddenAndSuppress(hiddenAndSuppress, rest string) 
 			default:
 				shline.mkline.Warnf("The shell command %q should not be hidden.", cmd)
 				G.Explain(
-					"Hidden shell commands do not appear on the terminal or in the log",
-					"file when they are executed.",
-					"When they fail, the error message",
-					"cannot be assigned to the command, which is very difficult to debug.",
+					"Hidden shell commands do not appear on the terminal",
+					"or in the log file when they are executed.",
+					"When they fail, the error message cannot be related to the command,",
+					"which makes debugging more difficult.",
 					"",
-					"It is better to insert ${RUN} at the beginning of the whole command line",
+					"It is better to insert ${RUN} at the beginning of the whole command line.",
 					"This will hide the command by default but shows it when PKG_DEBUG_LEVEL is set.")
 			}
 		}
@@ -450,6 +452,8 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 
 	switch {
 	case shellword == "${RUN}" || shellword == "":
+		// FIXME: ${RUN} must never appear as a simple command.
+		//  It should always be trimmed before passing the shell program to the SimpleCommandChecker.
 		break
 	case scc.handleForbiddenCommand():
 		break
@@ -457,7 +461,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 		break
 	case scc.handleCommandVariable():
 		break
-	case matches(shellword, `^(?::|break|cd|continue|eval|exec|exit|export|read|set|shift|umask|unset)$`):
+	case scc.handleShellBuiltin():
 		break
 	case hasPrefix(shellword, "./"): // All commands from the current directory are fine.
 		break
@@ -506,12 +510,11 @@ func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 
 	shellword := scc.strcmd.Name
 	switch path.Base(shellword) {
-	case "ktrace", "mktexlsr", "strace", "texconfig", "truss":
+	case "mktexlsr", "texconfig":
 		scc.shline.mkline.Errorf("%q must not be used in Makefiles.", shellword)
 		G.Explain(
-			"This command must appear in INSTALL scripts, not in the package",
-			"Makefile, so that the package also works if it is installed as a",
-			"binary package via pkg_add.")
+			"This command may only appear in INSTALL scripts, not in the package Makefile,",
+			"so that the package also works if it is installed as a binary package.")
 		return true
 	}
 	return false
@@ -548,6 +551,14 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 		if G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname) {
 			return true
 		}
+	}
+	return false
+}
+
+func (scc *SimpleCommandChecker) handleShellBuiltin() bool {
+	switch scc.strcmd.Name {
+	case ":", "break", "cd", "continue", "eval", "exec", "exit", "export", "read", "set", "shift", "umask", "unset":
+		return true
 	}
 	return false
 }
