@@ -974,23 +974,23 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 		MkRcsID)
 	mkline := mklines.mklines[0]
 
-	checkResolve := func(before string, after string) {
+	test := func(before string, after string) {
 		c.Check(mkline.ResolveVarsInRelativePath(before), equals, after)
 	}
 
-	checkResolve("", ".")
-	checkResolve("${LUA_PKGSRCDIR}", "../../lang/lua53")
-	checkResolve("${PHPPKGSRCDIR}", "../../lang/php72")
-	checkResolve("${SUSE_DIR_PREFIX}", "suse100")
-	checkResolve("${PYPKGSRCDIR}", "../../lang/python36")
-	checkResolve("${PYPACKAGE}", "python36")
-	checkResolve("${FILESDIR}", "${FILESDIR}")
-	checkResolve("${PKGDIR}", "${PKGDIR}")
+	test("", ".")
+	test("${LUA_PKGSRCDIR}", "../../lang/lua53")
+	test("${PHPPKGSRCDIR}", "../../lang/php72")
+	test("${SUSE_DIR_PREFIX}", "suse100")
+	test("${PYPKGSRCDIR}", "../../lang/python36")
+	test("${PYPACKAGE}", "python36")
+	test("${FILESDIR}", "${FILESDIR}")
+	test("${PKGDIR}", "${PKGDIR}")
 
 	G.Pkg = NewPackage(t.File("category/package"))
 
-	checkResolve("${FILESDIR}", "files")
-	checkResolve("${PKGDIR}", ".")
+	test("${FILESDIR}", "files")
+	test("${PKGDIR}", ".")
 }
 
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.C) {
@@ -1010,7 +1010,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.
 func (s *Suite) Test_MatchVarassign(c *check.C) {
 	s.Init(c)
 
-	checkVarassign := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
+	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
 		type VarAssign struct {
 			commented                  bool
 			varname, spaceAfterVarname string
@@ -1027,37 +1027,38 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 		actual := VarAssign{acommented, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment}
 		c.Check(actual, equals, expected)
 	}
-	checkNotVarassign := func(text string) {
+
+	testInvalid := func(text string) {
 		m, _, _, _, _, _, _, _, _ := MatchVarassign(text)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
 	}
 
-	checkVarassign("C++=c11", false, "C+", "", "+=", "C++=", "c11", "", "")
-	checkVarassign("V=v", false, "V", "", "=", "V=", "v", "", "")
-	checkVarassign("VAR=#comment", false, "VAR", "", "=", "VAR=", "", "", "#comment")
-	checkVarassign("VAR=\\#comment", false, "VAR", "", "=", "VAR=", "#comment", "", "")
-	checkVarassign("VAR=\\\\\\##comment", false, "VAR", "", "=", "VAR=", "\\\\#", "", "#comment")
-	checkVarassign("VAR=\\", false, "VAR", "", "=", "VAR=", "\\", "", "")
-	checkVarassign("VAR += value", false, "VAR", " ", "+=", "VAR += ", "value", "", "")
-	checkVarassign(" VAR=value", false, "VAR", "", "=", " VAR=", "value", "", "")
-	checkVarassign("VAR=value #comment", false, "VAR", "", "=", "VAR=", "value", " ", "#comment")
-	checkVarassign("NFILES=${FILES:[#]}", false, "NFILES", "", "=", "NFILES=", "${FILES:[#]}", "", "")
+	test("C++=c11", false, "C+", "", "+=", "C++=", "c11", "", "")
+	test("V=v", false, "V", "", "=", "V=", "v", "", "")
+	test("VAR=#comment", false, "VAR", "", "=", "VAR=", "", "", "#comment")
+	test("VAR=\\#comment", false, "VAR", "", "=", "VAR=", "#comment", "", "")
+	test("VAR=\\\\\\##comment", false, "VAR", "", "=", "VAR=", "\\\\#", "", "#comment")
+	test("VAR=\\", false, "VAR", "", "=", "VAR=", "\\", "", "")
+	test("VAR += value", false, "VAR", " ", "+=", "VAR += ", "value", "", "")
+	test(" VAR=value", false, "VAR", "", "=", " VAR=", "value", "", "")
+	test("VAR=value #comment", false, "VAR", "", "=", "VAR=", "value", " ", "#comment")
+	test("NFILES=${FILES:[#]}", false, "NFILES", "", "=", "NFILES=", "${FILES:[#]}", "", "")
 
-	checkNotVarassign("\tVAR=value")
-	checkNotVarassign("?=value")
-	checkNotVarassign("<=value")
-	checkNotVarassign("#")
-	checkNotVarassign("VAR.$$=value")
+	testInvalid("\tVAR=value")
+	testInvalid("?=value")
+	testInvalid("<=value")
+	testInvalid("#")
+	testInvalid("VAR.$$=value")
 
 	// A commented variable assignment must start immediately after the comment character.
 	// There must be no additional whitespace before the variable name.
-	checkVarassign("#VAR=value", true, "VAR", "", "=", "#VAR=", "value", "", "")
+	test("#VAR=value", true, "VAR", "", "=", "#VAR=", "value", "", "")
 
 	// A single space is typically used for writing documentation, not for commenting out code.
 	// Therefore this line doesn't count as commented variable assignment.
-	checkNotVarassign("# VAR=value")
+	testInvalid("# VAR=value")
 }
 
 func (s *Suite) Test_NewMkOperator(c *check.C) {

@@ -70,7 +70,7 @@ func (s *Suite) Test_Compare(c *check.C) {
 		return [...]string{"<0", "==0", ">0"}[cmp+1]
 	}
 
-	checkVersion := func(i int, iVersion string, j int, jVersion string) {
+	test := func(i int, iVersion string, j int, jVersion string) {
 		actual := icmp(Compare(iVersion, jVersion), 0)
 		expected := icmp(i, j)
 		if actual != expected {
@@ -85,7 +85,7 @@ func (s *Suite) Test_Compare(c *check.C) {
 		for j, jVersions := range versions {
 			for _, iVersion := range iVersions {
 				for _, jVersion := range jVersions {
-					checkVersion(i, iVersion, j, jVersion)
+					test(i, iVersion, j, jVersion)
 				}
 			}
 		}

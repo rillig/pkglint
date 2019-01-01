@@ -8,9 +8,9 @@ import (
 func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	t := s.Init(c)
 
-	// checkRest ensures that the given string is parsed to the expected
+	// testRest ensures that the given string is parsed to the expected
 	// atoms, and returns the remaining text.
-	checkRest := func(s string, expected ...*ShAtom) string {
+	testRest := func(s string, expected ...*ShAtom) string {
 		p := NewShTokenizer(dummyLine, s, false)
 		q := shqPlain
 		for _, exp := range expected {
@@ -23,7 +23,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	// test ensures that the given string is parsed to the expected
 	// atoms, and that the text is completely consumed by the parser.
 	test := func(str string, expected ...*ShAtom) {
-		rest := checkRest(str, expected...)
+		rest := testRest(str, expected...)
 		c.Check(rest, equals, "")
 		t.CheckOutputEmpty()
 	}
@@ -69,7 +69,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	// Ignore unused functions; useful for deleting some of the tests during debugging.
 	use := func(args ...interface{}) {}
-	use(checkRest, test)
+	use(testRest, test)
 	use(operator, comment, mkvar, text, whitespace)
 	use(space, semicolon, pipe, subshell)
 	use(backt, dquot, squot, subsh)
@@ -94,7 +94,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		squot(text("single-quoted")),
 		text("'"))
 
-	rest := checkRest("\"" /* none */)
+	rest := testRest("\"" /* none */)
 	c.Check(rest, equals, "\"")
 
 	test("$${file%.c}.o",
@@ -279,7 +279,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		semicolon,
 		shvar("$$-", "-"))
 
-	rest = checkRest("COMMENT=\t\\Make $$$$ fast\"",
+	rest = testRest("COMMENT=\t\\Make $$$$ fast\"",
 		text("COMMENT="),
 		whitespace("\t"),
 		text("\\Make"),
@@ -392,7 +392,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
-	checkQuotingChange := func(input, expectedOutput string) {
+	test := func(input, expectedOutput string) {
 		p := NewShTokenizer(dummyLine, input, false)
 		q := shqPlain
 		result := ""
@@ -411,18 +411,18 @@ func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
 		c.Check(p.Rest(), equals, "")
 	}
 
-	checkQuotingChange("hello, world", "hello, world")
-	checkQuotingChange("hello, \"world\"", "hello, \"[d]world\"[plain]")
-	checkQuotingChange("1 \"\" 2 '' 3 `` 4", "1 \"[d]\"[plain] 2 '[s]'[plain] 3 `[b]`[plain] 4")
-	checkQuotingChange("\"\"", "\"[d]\"[plain]")
-	checkQuotingChange("''", "'[s]'[plain]")
-	checkQuotingChange("``", "`[b]`[plain]")
-	checkQuotingChange("x\"x`x`x\"x'x\"x'", "x\"[d]x`[db]x`[d]x\"[plain]x'[s]x\"x'[plain]")
-	checkQuotingChange("x\"x`x'x'x`x\"", "x\"[d]x`[db]x'[dbs]x'[db]x`[d]x\"[plain]")
-	checkQuotingChange("x\\\"x\\'x\\`x\\\\", "x\\\"x\\'x\\`x\\\\")
-	checkQuotingChange("x\"x\\\"x\\'x\\`x\\\\", "x\"[d]x\\\"x\\'x\\`x\\\\")
-	checkQuotingChange("x'x\\\"x\\'x\\`x\\\\", "x'[s]x\\\"x\\'[plain]x\\`x\\\\")
-	checkQuotingChange("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
+	test("hello, world", "hello, world")
+	test("hello, \"world\"", "hello, \"[d]world\"[plain]")
+	test("1 \"\" 2 '' 3 `` 4", "1 \"[d]\"[plain] 2 '[s]'[plain] 3 `[b]`[plain] 4")
+	test("\"\"", "\"[d]\"[plain]")
+	test("''", "'[s]'[plain]")
+	test("``", "`[b]`[plain]")
+	test("x\"x`x`x\"x'x\"x'", "x\"[d]x`[db]x`[d]x\"[plain]x'[s]x\"x'[plain]")
+	test("x\"x`x'x'x`x\"", "x\"[d]x`[db]x'[dbs]x'[db]x`[d]x\"[plain]")
+	test("x\\\"x\\'x\\`x\\\\", "x\\\"x\\'x\\`x\\\\")
+	test("x\"x\\\"x\\'x\\`x\\\\", "x\"[d]x\\\"x\\'x\\`x\\\\")
+	test("x'x\\\"x\\'x\\`x\\\\", "x'[s]x\\\"x\\'[plain]x\\`x\\\\")
+	test("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
 }
 
 func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
@@ -437,6 +437,7 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 		}
 		return p.Rest()
 	}
+
 	test := func(str string, expected ...string) {
 		p := NewShTokenizer(dummyLine, str, false)
 		for _, exp := range expected {
@@ -445,15 +446,16 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 		c.Check(p.Rest(), equals, "")
 		t.CheckOutputEmpty()
 	}
-	checkNil := func(str string) {
+
+	testNil := func(str string) {
 		p := NewShTokenizer(dummyLine, str, false)
 		c.Check(p.ShToken(), check.IsNil)
 		c.Check(p.Rest(), equals, "")
 		t.CheckOutputEmpty()
 	}
 
-	checkNil("")
-	checkNil(" ")
+	testNil("")
+	testNil(" ")
 	rest := testRest("\t\t\t\n\n\n\n\t ",
 		"\n",
 		"\n", // TODO: Why three separators? One should be enough. What does the grammar say?

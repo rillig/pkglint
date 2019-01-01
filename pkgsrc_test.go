@@ -463,7 +463,7 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 
 	t.SetUpVartypes()
 
-	checkType := func(varname string, vartype string) {
+	test := func(varname string, vartype string) {
 		actualType := G.Pkgsrc.VariableType(varname)
 		if vartype == "" {
 			c.Check(actualType, check.IsNil)
@@ -474,17 +474,17 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 		}
 	}
 
-	checkType("_PERL5_PACKLIST_AWK_STRIP_DESTDIR", "")
-	checkType("SOME_DIR", "Pathname (guessed)")
-	checkType("SOMEDIR", "Pathname (guessed)")
-	checkType("SEARCHPATHS", "List of Pathname (guessed)")
-	checkType("MYPACKAGE_USER", "UserGroupName (guessed)")
-	checkType("MYPACKAGE_GROUP", "UserGroupName (guessed)")
-	checkType("MY_CMD_ENV", "List of ShellWord (guessed)")
-	checkType("MY_CMD_ARGS", "List of ShellWord (guessed)")
-	checkType("MY_CMD_CFLAGS", "List of CFlag (guessed)")
-	checkType("MY_CMD_LDFLAGS", "List of LdFlag (guessed)")
-	checkType("PLIST.abcde", "Yes")
+	test("_PERL5_PACKLIST_AWK_STRIP_DESTDIR", "")
+	test("SOME_DIR", "Pathname (guessed)")
+	test("SOMEDIR", "Pathname (guessed)")
+	test("SEARCHPATHS", "List of Pathname (guessed)")
+	test("MYPACKAGE_USER", "UserGroupName (guessed)")
+	test("MYPACKAGE_GROUP", "UserGroupName (guessed)")
+	test("MY_CMD_ENV", "List of ShellWord (guessed)")
+	test("MY_CMD_ARGS", "List of ShellWord (guessed)")
+	test("MY_CMD_CFLAGS", "List of CFlag (guessed)")
+	test("MY_CMD_LDFLAGS", "List of LdFlag (guessed)")
+	test("PLIST.abcde", "Yes")
 }
 
 // Guessing the variable type works for both plain and parameterized variable names.
