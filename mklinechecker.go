@@ -884,7 +884,7 @@ func (ck MkLineChecker) checkVarassignRightVaruse() {
 
 	vartype := G.Pkgsrc.VariableType(mkline.Varname())
 	if op == opAssignShell {
-		vartype = shellcommandsContextType
+		vartype = shellCommandsType
 	}
 
 	if vartype != nil && vartype.IsShell() {

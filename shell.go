@@ -23,8 +23,8 @@ func NewShellLine(mkline MkLine) *ShellLine {
 	return &ShellLine{mkline}
 }
 
-var shellcommandsContextType = &Vartype{lkNone, BtShellCommands, []ACLEntry{{"*", aclpAllRuntime}}, false}
-var shellwordVuc = &VarUseContext{shellcommandsContextType, vucTimeUnknown, vucQuotPlain, false}
+var shellCommandsType = &Vartype{lkNone, BtShellCommands, []ACLEntry{{"*", aclpAllRuntime}}, false}
+var shellWordVuc = &VarUseContext{shellCommandsType, vucTimeUnknown, vucQuotPlain, false}
 
 func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
@@ -41,13 +41,14 @@ func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTim
 	// to the MkLineChecker. Examples for these are ${VAR:Mpattern} or $@.
 	p := NewMkParser(nil, token, false)
 	if varuse := p.VarUse(); varuse != nil && p.EOF() {
-		MkLineChecker{shline.mkline}.CheckVaruse(varuse, shellwordVuc)
+		MkLineChecker{shline.mkline}.CheckVaruse(varuse, shellWordVuc)
 		return
 	}
 
 	if matches(token, `\$\{PREFIX\}/man(?:$|/)`) {
 		line.Warnf("Please use ${PKGMANDIR} instead of \"man\".")
 	}
+
 	if contains(token, "etc/rc.d") {
 		line.Warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
@@ -75,6 +76,7 @@ outer:
 		case atom.Quoting == shqBackt || atom.Quoting == shqDquotBackt:
 			backtCommand := shline.unescapeBackticks(&atoms, quoting)
 			if backtCommand != "" {
+				// TODO: Wrap the setE into a struct.
 				setE := true
 				shline.CheckShellCommand(backtCommand, &setE, time)
 			}
@@ -87,7 +89,7 @@ outer:
 		case quoting == shqPlain:
 			switch {
 			case atom.Type == shtShVarUse:
-				shline.checkShVarUse(atom, checkQuoting)
+				shline.checkShVarUsePlain(atom, checkQuoting)
 
 			case atom.Type == shtSubshell:
 				line.Warnf("Invoking subshells via $(...) is not portable enough.")
@@ -113,11 +115,12 @@ outer:
 	}
 
 	if trimHspace(tok.Rest()) != "" {
-		line.Warnf("Internal pkglint error in ShellLine.CheckWord at %q (quoting=%s), rest: %s", token, quoting, tok.Rest())
+		line.Warnf("Internal pkglint error in ShellLine.CheckWord at %q (quoting=%s), rest: %s",
+			token, quoting, tok.Rest())
 	}
 }
 
-func (shline *ShellLine) checkShVarUse(atom *ShAtom, checkQuoting bool) {
+func (shline *ShellLine) checkShVarUsePlain(atom *ShAtom, checkQuoting bool) {
 	line := shline.mkline.Line
 	shVarname := atom.ShVarname()
 
@@ -143,6 +146,8 @@ func (shline *ShellLine) checkShVarUse(atom *ShAtom, checkQuoting bool) {
 
 	if shVarname == "?" {
 		line.Warnf("The $? shell variable is often not available in \"set -e\" mode.")
+		// TODO: Explain how to properly fix this warning.
+		// TODO: Make sure the warning is only shown when applicable.
 	}
 }
 
@@ -151,6 +156,7 @@ func (shline *ShellLine) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting) b
 	if varuse == nil {
 		return false
 	}
+
 	*atoms = (*atoms)[1:]
 	varname := varuse.varname
 
@@ -177,11 +183,9 @@ func (shline *ShellLine) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting) b
 			"In most cases, it is more appropriate to remove the double quotes.")
 	}
 
-	if varname != "@" {
-		vucstate := quoting.ToVarUseContext()
-		vuc := VarUseContext{shellcommandsContextType, vucTimeUnknown, vucstate, true}
-		MkLineChecker{shline.mkline}.CheckVaruse(varuse, &vuc)
-	}
+	vuc := VarUseContext{shellCommandsType, vucTimeUnknown, quoting.ToVarUseContext(), true}
+	MkLineChecker{shline.mkline}.CheckVaruse(varuse, &vuc)
+
 	return true
 }
 
