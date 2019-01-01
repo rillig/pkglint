@@ -385,9 +385,6 @@ func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
 		G.Explain(
 			"To fix this, add INFO_FILES=yes to the package Makefile.")
 
-	case hasPrefix(text, "share/locale/") && hasSuffix(text, ".mo"):
-		// Fine.
-
 	case hasPrefix(text, "share/man/"):
 		pline.Warnf("Man pages should be installed into man/, not share/man/.")
 	}
@@ -421,7 +418,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 		}
 
 	case "comment":
-		// Nothing to do.
+		// Nothing to check.
 
 	case "dirrm":
 		pline.Warnf("@dirrm is obsolete. Please remove this line.")
@@ -465,7 +462,7 @@ type plistLineSorter struct {
 	header     []*PlistLine // Does not take part in sorting
 	middle     []*PlistLine // Only this part is sorted
 	footer     []*PlistLine // Does not take part in sorting, typically contains @exec or @pkgdir
-	unsortable Line         // Some lines so difficult to sort that only humans can do that
+	unsortable Line         // Some lines are so difficult to sort that only humans can do that
 	changed    bool         // Whether the sorting actually changed something
 	autofixed  bool         // Whether the newly sorted file has been written to disk
 }

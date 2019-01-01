@@ -22,7 +22,7 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"sbin/clockctl",
 		"share/icons/gnome/delete-icon",
 		"share/icons/hicolor/icon1.png",
-		"share/icons/hicolor/icon2.png", // No additional warning
+		"share/icons/hicolor/icon2.png", // No additional error for hicolor-icon-theme.
 		"share/tzinfo",
 		"share/tzinfo")
 
@@ -261,6 +261,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"share/locale/zh_TW/LC_MESSAGES/libvirt.mo",
 		"share/locale/zu/LC_MESSAGES/libvirt.mo",
 		"@pkgdir share/examples/libvirt/nwfilter",
+		// Directives may contain arbitrary horizontal whitespace.
 		"@pkgdir        etc/libvirt/qemu/networks/autostart",
 		"@pkgdir        etc/logrotate.d",
 		"@pkgdir        etc/sasl2")
@@ -405,19 +406,25 @@ func (s *Suite) Test_PlistChecker__empty_line(c *check.C) {
 		"bin/program")
 }
 
-func (s *Suite) Test_PlistChecker__unknown_line_type(c *check.C) {
+func (s *Suite) Test_PlistChecker__invalid_line_type(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistRcsID,
 		"---invalid",
-		"+++invalid")
+		"+++invalid",
+		"<<<<<<<< merge conflict",
+		"======== merge conflict",
+		">>>>>>>> merge conflict")
 
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
 		"WARN: ~/PLIST:2: Invalid line type: ---invalid",
-		"WARN: ~/PLIST:3: Invalid line type: +++invalid")
+		"WARN: ~/PLIST:3: Invalid line type: +++invalid",
+		"WARN: ~/PLIST:4: Invalid line type: <<<<<<<< merge conflict",
+		"WARN: ~/PLIST:5: Invalid line type: ======== merge conflict",
+		"WARN: ~/PLIST:6: Invalid line type: >>>>>>>> merge conflict")
 }
 
 func (s *Suite) Test_PlistChecker__doc(c *check.C) {
@@ -447,7 +454,7 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR(c *check.C) {
 		"WARN: ~/PLIST:2: PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR is not set in the package Makefile.")
 }
 
-func (s *Suite) Test_PlistChecker__unwanted_entries(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPath__unwanted_entries(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -455,7 +462,6 @@ func (s *Suite) Test_PlistChecker__unwanted_entries(c *check.C) {
 		"share/perllocal.pod",
 		"share/pkgbase/CVS/Entries",
 		"share/pkgbase/Makefile.orig")
-	G.Pkg = NewPackage(t.File("category/package"))
 
 	CheckLinesPlist(lines)
 
@@ -496,7 +502,8 @@ func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/PLIST:2: Only the libiconv package may install lib/charset.alias.",
 		"WARN: ~/PLIST:3: Packages that install libtool libraries should define USE_LIBTOOL.",
-		"ERROR: ~/PLIST:4: \"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
+		"ERROR: ~/PLIST:4: \"lib/locale\" must not be listed. "+
+			"Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
