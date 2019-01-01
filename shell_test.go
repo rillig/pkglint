@@ -186,7 +186,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	checkShellCommandLine("echo \"${CFLAGS:Q}\"") // vucQuotDquot
 
 	t.CheckOutputLines(
-		"WARN: filename:1: Please don't use the :Q operator in double quotes.",
+		"WARN: filename:1: The :Q modifier should not be used inside double quotes.",
 		"WARN: filename:1: CFLAGS may not be used in this file; "+
 			"it would be ok in Makefile, Makefile.common, options.mk, *.mk.",
 		"WARN: filename:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} "+

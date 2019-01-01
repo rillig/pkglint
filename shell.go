@@ -177,9 +177,9 @@ func (shline *ShellLine) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting) b
 		// This is ok as long as these variables don't have embedded [$\\"'`].
 
 	case quoting == shqDquot && varuse.IsQ():
-		shline.mkline.Warnf("Please don't use the :Q operator in double quotes.")
+		shline.mkline.Warnf("The :Q modifier should not be used inside double quotes.")
 		G.Explain(
-			"Either remove the :Q or the double quotes.",
+			"To fix this warning, either remove the :Q or the double quotes.",
 			"In most cases, it is more appropriate to remove the double quotes.")
 	}
 
@@ -270,6 +270,8 @@ func (shline *ShellLine) CheckShellCommandLine(shelltext string) {
 
 	line := shline.mkline.Line
 
+	// TODO: Add sed and mv in addition to ${SED} and ${MV}.
+	// TODO: Now that a shell command parser is available, be more precise in the condition.
 	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
 		line.Notef("Please use the SUBST framework instead of ${SED} and ${MV}.")
 		G.Explain(
