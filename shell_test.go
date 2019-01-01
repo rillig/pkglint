@@ -1292,7 +1292,8 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:4: Please switch to \"set -e\" mode before using a semicolon (after \"touch file\") to separate commands.")
+		"WARN: Makefile:4: Please switch to \"set -e\" mode before using a semicolon " +
+			"(after \"touch file\") to separate commands.")
 }
 
 func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C) {
@@ -1309,7 +1310,8 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon (after \"touch file\") to separate commands.")
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon " +
+			"(after \"touch file\") to separate commands.")
 }
 
 func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
@@ -1345,9 +1347,14 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon (after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.",
-		"WARN: Makefile:6: Please switch to \"set -e\" mode before using a semicolon (after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.",
-		"WARN: Makefile:7: Please switch to \"set -e\" mode before using a semicolon (after \"set -x\") to separate commands.",
-		"WARN: Makefile:12: Please switch to \"set -e\" mode before using a semicolon (after \"touch file\") to separate commands.",
-		"WARN: Makefile:14: Please switch to \"set -e\" mode before using a semicolon (after \"echo 'logging'\") to separate commands.")
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.",
+		"WARN: Makefile:6: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.",
+		"WARN: Makefile:7: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"set -x\") to separate commands.",
+		"WARN: Makefile:12: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"touch file\") to separate commands.",
+		"WARN: Makefile:14: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"echo 'logging'\") to separate commands.")
 }
