@@ -324,11 +324,8 @@ func toInt(s string, def int) int {
 	return def
 }
 
-// Emulates make(1)'s :S substitution operator.
+// mkopSubst evaluates make(1)'s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, flags string) string {
-	if trace.Tracing {
-		defer trace.Call(s, left, from, right, to, flags)()
-	}
 	re := regex.Pattern(ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", ""))
 	done := false
 	gflag := contains(flags, "g")
@@ -347,6 +344,7 @@ func relpath(from, to string) string {
 		return path.Clean(to[len(from)+1:])
 	}
 
+	// TODO: avoid these filesystem calls as they require IO.
 	absFrom := abspath(from)
 	absTo := abspath(to)
 	rel, err := filepath.Rel(absFrom, absTo)
@@ -401,7 +399,7 @@ func hasAlnumPrefix(s string) bool { return s != "" && textproc.AlnumU.Contains(
 // Once remembers with which arguments its FirstTime method has been called
 // and only returns true on each first call.
 type Once struct {
-	seen map[uint64]bool
+	seen map[uint64]struct{}
 }
 
 func (o *Once) FirstTime(what string) bool {
@@ -421,9 +419,9 @@ func (o *Once) check(key uint64) bool {
 		return false
 	}
 	if o.seen == nil {
-		o.seen = make(map[uint64]bool)
+		o.seen = make(map[uint64]struct{})
 	}
-	o.seen[key] = true
+	o.seen[key] = struct{}{}
 	return true
 }
 
