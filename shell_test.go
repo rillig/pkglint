@@ -1235,16 +1235,20 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 
 	t.SetUpTool("ls", "LS", AtRunTime)
 	t.SetUpTool("printf", "PRINTF", AtRunTime)
-	t.SetUpTool("tr", "TR", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"pre-configure:",
-		"\t${RUN} while cd ..; do printf .; done")
+		"\t${RUN} while cd ..; do printf .; done",
+		"\t${RUN} if cd ..; then printf .; fi",
+		"\t${RUN} ! cd ..",
+		"\t${RUN} if cd .. && cd ..; then printf .; fi") // For code coverage
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
+		"ERROR: Makefile:4: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
+		"WARN: Makefile:5: The Solaris /bin/sh does not support negation of shell commands.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
