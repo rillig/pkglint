@@ -352,7 +352,7 @@ func (shline *ShellLine) CheckShellCommand(shellcmd string, pSetE *bool, time To
 	walker.Callback.Word = func(word *ShToken) {
 		// TODO: Try to replace false with true here; it had been set to false
 		// TODO: in 2016 for no apparent reason.
-		spc.checkWord(word, false, time)
+		spc.shline.CheckWord(word.MkText, false, time)
 	}
 
 	walker.Walk(program)
@@ -568,6 +568,9 @@ func (scc *SimpleCommandChecker) handleComment() bool {
 		defer trace.Call0()()
 	}
 
+	// FIXME: Research and explain how pkglint can ever interpret
+	//  a shell comment as a simple command. That just doesn't fit.
+
 	shellword := scc.strcmd.Name
 	if trace.Tracing {
 		defer trace.Call1(shellword)()
@@ -582,17 +585,21 @@ func (scc *SimpleCommandChecker) handleComment() bool {
 
 	if semicolon {
 		scc.shline.mkline.Warnf("A shell comment should not contain semicolons.")
+		// TODO: Explain.
+		// TODO: Check whether the existing warnings are useful.
 	}
+
 	if multiline {
 		scc.shline.mkline.Warnf("A shell comment does not stop at the end of line.")
 	}
 
 	if semicolon || multiline {
 		G.Explain(
-			"When you split a shell command into multiple lines that are",
+			"When a shell command is split into multiple lines that are",
 			"continued with a backslash, they will nevertheless be converted to",
 			"a single line before the shell sees them.",
-			"That means that even if it _looks_ like that the comment only spans",
+			"",
+			"This means that even if it looks as if the comment only spanned",
 			"one line in the Makefile, in fact it spans until the end of the whole",
 			"shell command.",
 			"",
@@ -714,9 +721,14 @@ func (scc *SimpleCommandChecker) checkPaxPe() {
 	if (scc.strcmd.Name == "${PAX}" || scc.strcmd.Name == "pax") && scc.strcmd.HasOption("-pe") {
 		scc.shline.mkline.Warnf("Please use the -pp option to pax(1) instead of -pe.")
 		G.Explain(
-			"The -pe option tells pax to preserve the ownership of the files,",
-			"which means that the installed files will belong to the user that",
-			"has built the package.")
+			"The -pe option tells pax to preserve the ownership of the files.",
+			"",
+			"When extracting distfiles as root user, this means that whatever numeric uid was",
+			"used by the upstream package will also appear in the filesystem during the build.",
+			"",
+			"The {pre,do,post}-install targets are usually run as root.",
+			"When pax -pe is used in these targets, this means that the installed files will",
+			"belong to the user that has built the package.")
 	}
 }
 
@@ -760,6 +772,8 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 		}
 	}
 
+	// TODO: It might be worth reversing the logic, like this:
+	//  walker.Callback.Simple = { if inside if.cond || loop.cond { ... } }
 	walker := NewMkShWalker()
 	walker.Callback.If = func(ifClause *MkShIf) {
 		for _, cond := range ifClause.Conds {
@@ -784,14 +798,6 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 		}
 	}
 	walker.Walk(list)
-}
-
-func (spc *ShellProgramChecker) checkWord(word *ShToken, checkQuoting bool, time ToolTime) {
-	if trace.Tracing {
-		defer trace.Call(word.MkText)()
-	}
-
-	spc.shline.CheckWord(word.MkText, checkQuoting, time)
 }
 
 func (spc *ShellProgramChecker) checkPipeExitcode(line Line, pipeline *MkShPipeline) {
@@ -961,6 +967,7 @@ func (shline *ShellLine) checkInstallCommand(shellcmd string) {
 
 	case "sed", "${SED}",
 		"tr", "${TR}":
+		// TODO: Pkglint should not complain when sed and tr are used to transform filenames.
 		line.Warnf("The shell command %q should not be used in the install phase.", shellcmd)
 		G.Explain(
 			"In the install phase, the only thing that should be done is to",
@@ -970,22 +977,26 @@ func (shline *ShellLine) checkInstallCommand(shellcmd string) {
 	case "cp", "${CP}":
 		line.Warnf("${CP} should not be used to install files.")
 		G.Explain(
-			"The ${CP} command is highly platform dependent and cannot overwrite",
-			"read-only files.",
+			"The ${CP} command is highly platform dependent and cannot overwrite read-only files.",
 			"Please use ${PAX} instead.",
 			"",
-			"For example, instead of",
+			"For example, instead of:",
 			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
-			"you should use",
+			"use:",
 			"\tcd ${WRKSRC} && ${PAX} -wr * ${PREFIX}/foodir")
 	}
 }
 
 // Example: "word1 word2;;;" => "word1", "word2", ";;", ";"
+//
+// TODO: Document what this function should be used for.
 func splitIntoShellTokens(line Line, text string) (tokens []string, rest string) {
 	if trace.Tracing {
 		defer trace.Call(line, text)()
 	}
+
+	// TODO: Check whether this function is used correctly by all callers.
+	//  It may be better to use a proper shell parser instead of this tokenizer.
 
 	word := ""
 	rest = text
@@ -1028,6 +1039,10 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 // Compare devel/bmake/files/str.c, function brk_string.
 //
 // TODO: Move to mkline.go or mkparser.go.
+//
+// TODO: Document what this function should be used for.
+//
+// TODO: Compare with brk_string from devel/bmake, especially for backticks.
 func splitIntoMkWords(line Line, text string) (words []string, rest string) {
 	if trace.Tracing {
 		defer trace.Call(line, text)()
