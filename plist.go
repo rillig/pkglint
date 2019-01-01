@@ -124,6 +124,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 	if hasAlnumPrefix(text) {
 		ck.checkPath(pline)
 	} else if m, cmd, arg := match2(text, `^(?:\$\{[\w.]+\})?@([a-z-]+)[\t ]*(.*)`); m {
+		// TODO: Check if the above regex is missing a hyphen.
 		pline.CheckDirective(cmd, arg)
 	} else if hasPrefix(text, "$") {
 		ck.checkPath(pline)
@@ -157,6 +158,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 		fix.Replace("${PKGMANDIR}/", "man/")
 		fix.Apply()
 
+		// Since the autofix only applies to the Line, the PlistLine needs to be updated manually.
 		pline.text = strings.Replace(pline.text, "${PKGMANDIR}/", "man/", 1)
 	}
 

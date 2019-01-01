@@ -172,6 +172,34 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"@exec echo \"after lib/after.la\"") // The footer starts here
 }
 
+func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistRcsID,
+		"bin/program",
+		"${PLIST.var}bin/conditional-program",
+		"${PLIST.linux}${PLIST.arm}bin/arm-linux-only",
+		"${PLIST.linux}${PLIST.arm-64}@exec echo 'This is Linux/arm64'",
+		"${PLIST.ocaml-opt}share/ocaml",
+		"${PLIST.ocaml-opt}@exec echo 'This is OCaml'",
+		"${PLIST.ocaml-opt}@exec echo 'This is OCaml'",
+		"${PYSITELIB:S,lib,share}/modifiers don't work in PLISTs",
+		"${PLIST.empty}",
+		"",
+		"$prefix/bin",
+		"<<<<<<<<< merge conflict")
+
+	CheckLinesPlist(lines)
+
+	t.CheckOutputLines(
+		"WARN: PLIST:3: \"bin/conditional-program\" should be sorted before \"bin/program\".",
+		"WARN: PLIST:4: \"bin/arm-linux-only\" should be sorted before \"bin/conditional-program\".",
+		"WARN: PLIST:10: PLISTs should not contain empty lines.",
+		"WARN: PLIST:11: PLISTs should not contain empty lines.",
+		"WARN: PLIST:13: Invalid line type: <<<<<<<<< merge conflict")
+}
+
 func (s *Suite) Test_PlistChecker_checkPathMan__gz(c *check.C) {
 	t := s.Init(c)
 
