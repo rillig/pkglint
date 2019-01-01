@@ -90,6 +90,7 @@ func (vt *Vartype) Union() ACLPermissions {
 	return permissions
 }
 
+// AllowedFiles lists the file patterns in which the given permissions are allowed.
 func (vt *Vartype) AllowedFiles(perms ACLPermissions) string {
 	files := make([]string, 0, len(vt.aclEntries))
 	for _, aclEntry := range vt.aclEntries {
@@ -100,7 +101,7 @@ func (vt *Vartype) AllowedFiles(perms ACLPermissions) string {
 	return strings.Join(files, ", ")
 }
 
-// IsConsideredList returns whether the type is considered a shell list.
+// IsConsideredList returns whether the type is considered a list.
 // This distinction between "real lists" and "considered a list" makes
 // the implementation of checklineMkVartype easier.
 func (vt *Vartype) IsConsideredList() bool {
@@ -266,7 +267,11 @@ var (
 	BtYesNoIndirectly        = &BasicType{"YesNoIndirectly", (*VartypeCheck).YesNoIndirectly}
 )
 
-func init() { // Necessary due to circular dependency
+// Necessary due to circular dependencies between the checkers.
+//
+// The Go compiler is stricter than absolutely necessary for this particular case.
+// The following methods are only referred to but not invoked during initialization.
+func init() {
 	BtShellCommand.checker = (*VartypeCheck).ShellCommand
 	BtShellCommands.checker = (*VartypeCheck).ShellCommands
 	BtShellWord.checker = (*VartypeCheck).ShellWord

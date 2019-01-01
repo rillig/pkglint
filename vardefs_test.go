@@ -88,7 +88,7 @@ func (s *Suite) Test_parseACLEntries(c *check.C) {
 
 	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "*.mk: use; buildlink3.mk: append") },
-		"Pkglint internal error: Ineffective ACL glob \"buildlink3.mk\" for \"VARNAME\".")
+		"Pkglint internal error: Unreachable ACL pattern \"buildlink3.mk\" for \"VARNAME\".")
 }
 
 func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {

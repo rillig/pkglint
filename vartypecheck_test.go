@@ -13,8 +13,12 @@ func (s *Suite) Test_VartypeCheck_AwkCommand(c *check.C) {
 		"{print $0}",
 		"{print $$0}")
 
+	// TODO: In this particular context of AWK programs, $$0 is not a shell variable.
+	//  The warning should be adjusted to reflect this.
+
 	vt.Output(
-		"WARN: filename:1: $0 is ambiguous. Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.")
+		"WARN: filename:1: $0 is ambiguous. " +
+			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.")
 }
 
 func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
@@ -237,7 +241,8 @@ func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
 	vt.Varname("EXTRACT_SUFX")
 	vt.Values(
 		".tar.gz",
-		".tar.bz2")
+		".tar.bz2",
+		".tar.gz # overrides a definition from a Makefile.common")
 
 	vt.Output(
 		"NOTE: filename:1: EXTRACT_SUFX is \".tar.gz\" by default, so this definition may be redundant.")
@@ -259,12 +264,17 @@ func (s *Suite) Test_VartypeCheck_EmulPlatform(c *check.C) {
 			"interix irix linux mirbsd netbsd openbsd osf1 solaris sunos "+
 			"} instead.",
 		"WARN: filename:2: \"8087\" is not valid for the hardware architecture part of EMUL_PLATFORM. "+
-			"Use one of "+
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast "+
-			"earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
-			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
-			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
+			"Use one of { "+
+			"aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 "+
+			"cobalt coldfire convex dreamcast "+
+			"earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb "+
+			"earmv6 earmv6eb earmv6hf earmv6hfeb "+
+			"earmv7 earmv7eb earmv7hf earmv7hfeb evbarm "+
+			"hpcmips hpcsh hppa hppa64 "+
+			"i386 i586 i686 ia64 m68000 m68k m88k "+
+			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 "+
+			"s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} instead.",
 		"WARN: filename:3: \"${LINUX}\" is not a valid emulation platform.")
 }
@@ -283,14 +293,14 @@ func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
 
 	vt.Output(
 		"WARN: filename:3: The pattern \"sun-jdk*\" cannot match any of { jdk1 jdk2 jdk4 } for JDK.",
-		"WARN: filename:5: Invalid match pattern \"[\".",
-		"WARN: filename:5: The pattern \"[\" cannot match any of { jdk1 jdk2 jdk4 } for JDK.")
+		"WARN: filename:5: Invalid match pattern \"[\".")
 }
 
 func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	t.SetUpCommandLine("-Wall", "--explain")
 
 	mklines := t.NewMkLines("module.mk",
 		MkRcsID,
@@ -306,7 +316,21 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: module.mk:3: MACHINE_ARCH should be compared using == instead of matching against \":Mi386\".",
-		"WARN: module.mk:5: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.")
+		"",
+		"\tThis variable has a single value, not a list of values. Therefore it",
+		"\tfeels strange to apply list operators like :M and :N onto it. A more",
+		"\tdirect approach is to use the == and != operators.",
+		"",
+		"\tAn entirely different case is when the pattern contains wildcards",
+		"\tlike ^, *, $. In such a case, using the :M or :N modifiers is useful",
+		"\tand preferred.",
+		"",
+		"WARN: module.mk:5: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
+		"",
+		"\tThe PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache",
+		"\tdistcc clang\". Therefore, comparing it using == or != leads to wrong",
+		"\tresults in these cases.",
+		"")
 }
 
 func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
@@ -327,7 +351,8 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"WARN: filename:1: Please use ${MASTER_SITE_GITHUB:=example/} "+
 			"instead of \"https://github.com/example/project/\" "+
 			"and run \""+confMake+" help topic=github\" for further tips.",
-		"WARN: filename:2: Please use ${MASTER_SITE_GNU:=bison} instead of \"http://ftp.gnu.org/pub/gnu/bison\".",
+		"WARN: filename:2: Please use ${MASTER_SITE_GNU:=bison} "+
+			"instead of \"http://ftp.gnu.org/pub/gnu/bison\".",
 		"ERROR: filename:3: The subdirectory in MASTER_SITE_GNU must end with a slash.",
 		"ERROR: filename:4: The site MASTER_SITE_INVALID does not exist.")
 
@@ -451,7 +476,8 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 		"${MASTER_SITES}")
 
 	vt.Output(
-		"WARN: filename:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. Use https://cdn.NetBSD.org/pub/pkgsrc/distfiles/ directly.")
+		"WARN: filename:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. " +
+			"Use https://cdn.NetBSD.org/pub/pkgsrc/distfiles/ directly.")
 }
 
 func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
@@ -737,7 +763,8 @@ func (s *Suite) Test_VartypeCheck_PkgOptionsVar(c *check.C) {
 
 	vt.Output(
 		"ERROR: filename:1: PKGBASE must not be used in PKG_OPTIONS_VAR.",
-		"ERROR: filename:3: PKG_OPTIONS_VAR must be of the form \"PKG_OPTIONS.*\", not \"PKG_OPTS.mc\".")
+		"ERROR: filename:3: PKG_OPTIONS_VAR must be "+
+			"of the form \"PKG_OPTIONS.*\", not \"PKG_OPTS.mc\".")
 }
 
 func (s *Suite) Test_VartypeCheck_PkgPath(c *check.C) {
@@ -801,22 +828,30 @@ func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
 			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
 			"} for the operating system part of ONLY_FOR_PLATFORM.",
 		"WARN: filename:2: The pattern \"8087\" cannot match any of "+
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast "+
-			"earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
+			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 "+
+			"cobalt coldfire convex dreamcast "+
+			"earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
+			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
 			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
-			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
+			"i386 i586 i686 ia64 m68000 m68k m88k "+
+			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
 		"WARN: filename:3: The pattern \"netbsd\" cannot match any of "+
 			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
 			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
 			"} for the operating system part of ONLY_FOR_PLATFORM.",
 		"WARN: filename:3: The pattern \"l*\" cannot match any of "+
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast "+
-			"earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
+			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 "+
+			"cobalt coldfire convex dreamcast "+
+			"earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
+			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
 			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
-			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
+			"i386 i586 i686 ia64 m68000 m68k m88k "+
+			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
 		"WARN: filename:5: \"FreeBSD*\" is not a valid platform pattern.",
 		"WARN: filename:8: Please use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
@@ -969,9 +1004,9 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 		"unknown")
 
 	vt.Output(
-		"ERROR: filename:2: Unknown tool dependency \"unknown\". "+
+		"ERROR: filename:2: Invalid tool dependency \"unknown\". "+
 			"Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".",
-		"ERROR: filename:4: Malformed tool dependency: \"mal:formed:tool\".",
+		"ERROR: filename:4: Invalid tool dependency \"mal:formed:tool\".",
 		"ERROR: filename:5: Unknown tool \"unknown\".")
 
 	vt.Varname("USE_TOOLS.NetBSD")
@@ -981,7 +1016,7 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 		"tool2:unknown")
 
 	vt.Output(
-		"ERROR: filename:12: Unknown tool dependency \"unknown\". " +
+		"ERROR: filename:12: Invalid tool dependency \"unknown\". " +
 			"Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".")
 
 	vt.Varname("TOOLS_NOOP")
@@ -1014,6 +1049,11 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 		"NOTE: filename:6: For consistency, please add a trailing slash to \"https://www.example.org\".",
 		"WARN: filename:7: \"https://www.example.org/path with spaces\" is not a valid URL.",
 		"WARN: filename:8: \"string with spaces\" is not a valid URL.")
+
+	// Yes, even in 2019, some pkgsrc-wip packages really use a gopher HOMEPAGE.
+	vt.Values(
+		"gopher://bitreich.org/1/scm/geomyidae")
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_UserGroupName(c *check.C) {
@@ -1122,14 +1162,18 @@ func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
 		"${WRKSRC}/subdir",
 		"${CONFIGURE_DIRS}",
 		"${WRKSRC}/directory with spaces",
-		"directory with spaces")
+		"directory with spaces",
+		"../other")
 	vt.Output(
 		"NOTE: filename:1: You can use \".\" instead of \"${WRKSRC}\".",
 		"NOTE: filename:2: You can use \".\" instead of \"${WRKSRC}/\".",
 		"NOTE: filename:3: You can use \".\" instead of \"${WRKSRC}/.\".",
 		"NOTE: filename:4: You can use \"subdir\" instead of \"${WRKSRC}/subdir\".",
+		// FIXME: There's a conceptual mismatch between List of Dir and a simple Dir here.
 		"NOTE: filename:6: You can use \"directory with spaces\" instead of \"${WRKSRC}/directory with spaces\".",
-		"WARN: filename:7: \"directory with spaces\" is not a valid subdirectory of ${WRKSRC}.")
+		// FIXME: There's a conceptual mismatch between List of Dir and a simple Dir here.
+		"WARN: filename:7: \"directory with spaces\" is not a valid subdirectory of ${WRKSRC}.",
+		"WARN: filename:8: \"../other\" is not a valid subdirectory of ${WRKSRC}.")
 }
 
 func (s *Suite) Test_VartypeCheck_Yes(c *check.C) {
@@ -1264,7 +1308,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		}
 
 		valueNovar := mkline.WithoutMakeVariables(effectiveValue)
-		vc := VartypeCheck{mkline, mkline.Line, varname, op, effectiveValue, valueNovar, comment, false}
+		vc := VartypeCheck{mkline, varname, op, effectiveValue, valueNovar, comment, false}
 		vt.checker(&vc)
 
 		vt.lineno++

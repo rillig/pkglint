@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// VartypeCheck groups together the various checks for variables of the different types.
 type VartypeCheck struct {
 	// Note: if "go vet" or "go test" complains about a "variable with invalid type", update to go1.11.4.
 	// See https://github.com/golang/go/issues/28972.
@@ -15,7 +16,6 @@ type VartypeCheck struct {
 	// Ideally the "more convoluted cyclic type declaration" should be broken up.
 
 	MkLine *MkLineImpl
-	Line   Line
 
 	// The name of the variable being checked.
 	//
@@ -26,13 +26,14 @@ type VartypeCheck struct {
 	Op         MkOperator
 	Value      string
 	ValueNoVar string
-	MkComment  string
-	Guessed    bool // Whether the type definition is guessed (based on the variable name) or explicitly defined (see vardefs.go).
+	MkComment  string // The comment including the "#".
+	Guessed    bool   // Whether the type definition is guessed (based on the variable name) or explicitly defined (see vardefs.go).
 }
 
-func (cv *VartypeCheck) Errorf(format string, args ...interface{}) { cv.Line.Errorf(format, args...) }
-func (cv *VartypeCheck) Warnf(format string, args ...interface{})  { cv.Line.Warnf(format, args...) }
-func (cv *VartypeCheck) Notef(format string, args ...interface{})  { cv.Line.Notef(format, args...) }
+func (cv *VartypeCheck) Errorf(format string, args ...interface{}) { cv.MkLine.Errorf(format, args...) }
+func (cv *VartypeCheck) Warnf(format string, args ...interface{})  { cv.MkLine.Warnf(format, args...) }
+func (cv *VartypeCheck) Notef(format string, args ...interface{})  { cv.MkLine.Notef(format, args...) }
+func (cv *VartypeCheck) Explain(explanation ...string)             { cv.MkLine.Explain(explanation...) }
 
 // Autofix returns the autofix instance belonging to the line.
 //
@@ -57,7 +58,7 @@ func (cv *VartypeCheck) Notef(format string, args ...interface{})  { cv.Line.Not
 //  fix.Custom(func(showAutofix, autofix bool) {})
 //
 //  fix.Apply()
-func (cv *VartypeCheck) Autofix() *Autofix { return cv.Line.Autofix() }
+func (cv *VartypeCheck) Autofix() *Autofix { return cv.MkLine.Autofix() }
 
 // WithValue returns a new VartypeCheck context by copying all
 // fields except the value.
@@ -95,41 +96,39 @@ func (cv *VartypeCheck) WithVarnameValueMatch(varname, value string) *VartypeChe
 }
 
 const (
-	reMachineOpsys = "" + // See mk/platform
-		"AIX|BSDOS|Bitrig|Cygwin|Darwin|DragonFly|FreeBSD|FreeMiNT|GNUkFreeBSD|" +
-		"HPUX|Haiku|IRIX|Interix|Linux|Minix|MirBSD|NetBSD|OSF1|OpenBSD|QNX|SCO_SV|SunOS|UnixWare"
+	machineOpsysValues = "" + // See mk/platform
+		"AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD " +
+		"HPUX Haiku IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare"
 
-	// See mk/emulator/emulator-vars.mk.
-	reEmulOpsys = "" +
-		"bitrig|bsdos|cygwin|darwin|dragonfly|freebsd|" +
-		"haiku|hpux|interix|irix|linux|mirbsd|netbsd|openbsd|osf1|solaris|sunos"
+		// See mk/emulator/emulator-vars.mk.
+	emulOpsysValues = "" +
+		"bitrig bsdos cygwin darwin dragonfly freebsd " +
+		"haiku hpux interix irix linux mirbsd netbsd openbsd osf1 solaris sunos"
 
 	// Hardware architectures having the same name in bsd.own.mk and the GNU world.
 	// These are best-effort guesses, since they depend on the operating system.
-	reArch = "" +
-		"aarch64|alpha|amd64|arc|arm|cobalt|convex|dreamcast|i386|" +
-		"hpcmips|hpcsh|hppa|hppa64|ia64|" +
-		"m68k|m88k|mips|mips64|mips64el|mipseb|mipsel|mipsn32|mlrisc|" +
-		"ns32k|pc532|pmax|powerpc|powerpc64|rs6000|s390|sparc|sparc64|vax|x86_64"
+	archValues = "" +
+		"aarch64 alpha amd64 arc arm cobalt convex dreamcast i386 " +
+		"hpcmips hpcsh hppa hppa64 ia64 " +
+		"m68k m88k mips mips64 mips64el mipseb mipsel mipsn32 mlrisc " +
+		"ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sparc sparc64 vax x86_64"
 
 	// See mk/bsd.prefs.mk:/^GNU_ARCH\./
-	reMachineArch = "" +
-		reArch + "|" +
-		"aarch64eb|amd64|arm26|arm32|coldfire|earm|earmeb|earmhf|earmhfeb|earmv4|earmv4eb|earmv5|" +
-		"earmv5eb|earmv6|earmv6eb|earmv6hf|earmv6hfeb|earmv7|earmv7eb|earmv7hf|earmv7hfeb|evbarm|" +
-		"i386|i586|i686|m68000|mips|mips64eb|sh3eb|sh3el"
+	machineArchValues = "" +
+		archValues + " " +
+		"aarch64eb amd64 arm26 arm32 coldfire earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 " +
+		"earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm " +
+		"i386 i586 i686 m68000 mips mips64eb sh3eb sh3el"
 
 	// See mk/bsd.prefs.mk:/^GNU_ARCH\./
-	reMachineGnuArch = "" +
-		reArch + "|" +
-		"aarch64_be|arm|armeb|armv4|armv4eb|armv6|armv6eb|armv7|armv7eb|" +
-		"i486|m5407|m68010|mips64|mipsel|sh|shle|x86_64"
-
-	reEmulArch = reMachineArch // Just a wild guess.
+	machineGnuArchValues = "" +
+		archValues + " " +
+		"aarch64_be arm armeb armv4 armv4eb armv6 armv6eb armv7 armv7eb " +
+		"i486 m5407 m68010 mips64 mipsel sh shle x86_64"
 )
 
-func enumFromRe(re string) *BasicType {
-	values := strings.Split(re, "|")
+func enumFromValues(spaceSeparated string) *BasicType {
+	values := strings.Fields(spaceSeparated)
 	sort.Strings(values)
 	seen := make(map[string]bool)
 	var unique []string
@@ -143,11 +142,11 @@ func enumFromRe(re string) *BasicType {
 }
 
 var (
-	enumMachineOpsys            = enumFromRe(reMachineOpsys)
-	enumMachineArch             = enumFromRe(reMachineArch)
-	enumMachineGnuArch          = enumFromRe(reMachineGnuArch)
-	enumEmulOpsys               = enumFromRe(reEmulOpsys)
-	enumEmulArch                = enumFromRe(reEmulArch)
+	enumMachineOpsys            = enumFromValues(machineOpsysValues)
+	enumMachineArch             = enumFromValues(machineArchValues)
+	enumMachineGnuArch          = enumFromValues(machineGnuArchValues)
+	enumEmulOpsys               = enumFromValues(emulOpsysValues)
+	enumEmulArch                = enumFromValues(machineArchValues) // Just a wild guess.
 	enumMachineGnuPlatformOpsys = enumEmulOpsys
 )
 
@@ -216,23 +215,30 @@ func (cv *VartypeCheck) CFlag() {
 	}
 }
 
-// Comment checks for the single-line description of the package.
+// Comment checks for the single-line description of a package.
+//
+// The comment for categories is checked in CheckdirCategory since these
+// almost never change.
 func (cv *VartypeCheck) Comment() {
 	value := cv.Value
 
-	if value == "TODO: Short description of the package" { // See pkgtools/url2pkg/files/url2pkg.pl, keyword "COMMENT".
+	// See pkgtools/url2pkg/files/url2pkg.pl, keyword "COMMENT".
+	if value == "TODO: Short description of the package" {
 		cv.Errorf("COMMENT must be set.")
 	}
+
 	if m, first := match1(value, `^(?i)(a|an)[\t ]`); m {
 		cv.Warnf("COMMENT should not begin with %q.", first)
 	}
-	if m, isA := match1(value, ` (is a|is an) `); m {
+
+	if m, isA := match1(value, `\b(is an?)\b`); m {
 		cv.Warnf("COMMENT should not contain %q.", isA)
 		G.Explain(
 			"The words \"package is a\" are redundant.",
 			"Since every package comment could start with them,",
 			"it is better to remove this redundancy in all cases.")
 	}
+
 	if G.Pkg != nil && G.Pkg.EffectivePkgbase != "" {
 		pkgbase := G.Pkg.EffectivePkgbase
 		if hasPrefix(strings.ToLower(value), strings.ToLower(pkgbase+" ")) {
@@ -243,15 +249,19 @@ func (cv *VartypeCheck) Comment() {
 				"provide additional information instead.")
 		}
 	}
+
 	if matches(value, `^[a-z]`) && cv.Op == opAssign {
 		cv.Warnf("COMMENT should start with a capital letter.")
 	}
+
 	if hasSuffix(value, ".") {
 		cv.Warnf("COMMENT should not end with a period.")
 	}
+
 	if len(value) > 70 {
 		cv.Warnf("COMMENT should not be longer than 70 characters.")
 	}
+
 	if hasPrefix(value, "\"") && hasSuffix(value, "\"") ||
 		hasPrefix(value, "'") && hasSuffix(value, "'") {
 		cv.Warnf("COMMENT should not be enclosed in quotes.")
@@ -285,7 +295,7 @@ func (cv *VartypeCheck) ConfFiles() {
 func (cv *VartypeCheck) Dependency() {
 	value := cv.Value
 
-	parser := NewParser(cv.Line, value, false)
+	parser := NewParser(cv.MkLine.Line, value, false)
 	deppat := parser.Dependency()
 	if deppat != nil && deppat.Wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
 		cv.Warnf("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
@@ -377,7 +387,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			cv.Warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtDependency, cv.Op, pattern, cv.MkComment, cv.Guessed)
+		cv.WithValue(pattern).Dependency()
 		return
 	}
 
@@ -392,12 +402,21 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		"Examples for valid dependency patterns with path are:",
 		"  package-[0-9]*:../../category/package",
 		"  package>=3.41:../../category/package",
-		"  package-2.718:../../category/package")
+		"  package-2.718{,nb*}:../../category/package")
 }
 
 func (cv *VartypeCheck) DistSuffix() {
-	if cv.Value == ".tar.gz" {
+	if cv.Value == ".tar.gz" && !hasPrefix(cv.MkComment, "#") {
 		cv.Notef("%s is \".tar.gz\" by default, so this definition may be redundant.", cv.Varname)
+		cv.Explain(
+			"To check whether the definition is really redundant:",
+			"",
+			sprintf("\t1. run %q", bmake("show-var VARNAME="+cv.Varname)),
+			"\t2. remove this definition",
+			sprintf("\t3. run %q again", bmake("show-var VARNAME="+cv.Varname)),
+			"",
+			"If the values from step 1 and step 3 really differ, add a comment to this line",
+			"in the Makefile that this (apparently redundant) definition is really needed.")
 	}
 }
 
@@ -423,32 +442,41 @@ func (cv *VartypeCheck) EmulPlatform() {
 	}
 }
 
-func (cv *VartypeCheck) Enum(vmap map[string]bool, basicType *BasicType) {
+// Enum checks an enumeration for valid values.
+//
+// The given allowedValues contains all allowed enum values.
+// The given basicType is only provided to lazily access the allowed enum values as a sorted list.
+func (cv *VartypeCheck) Enum(allowedValues map[string]bool, basicType *BasicType) {
 	if cv.Op == opUseMatch {
-		if !vmap[cv.Value] && cv.Value == cv.ValueNoVar {
+		if !allowedValues[cv.Value] && cv.Value == cv.ValueNoVar {
 			canMatch := false
-			for value := range vmap {
+			for value := range allowedValues {
 				if ok, err := path.Match(cv.Value, value); err != nil {
 					cv.Warnf("Invalid match pattern %q.", cv.Value)
-					break
+					return
 				} else if ok {
 					canMatch = true
 				}
 			}
 			if !canMatch {
-				cv.Warnf("The pattern %q cannot match any of { %s } for %s.", cv.Value, basicType.AllowedEnums(), cv.Varname)
+				cv.Warnf("The pattern %q cannot match any of { %s } for %s.",
+					cv.Value, basicType.AllowedEnums(), cv.Varname)
 			}
 		}
 		return
 	}
 
-	if cv.Value == cv.ValueNoVar && !vmap[cv.Value] {
-		cv.Warnf("%q is not valid for %s. Use one of { %s } instead.", cv.Value, cv.Varname, basicType.AllowedEnums())
+	if cv.Value == cv.ValueNoVar && !allowedValues[cv.Value] {
+		cv.Warnf("%q is not valid for %s. Use one of { %s } instead.",
+			cv.Value, cv.Varname, basicType.AllowedEnums())
 	}
 }
 
 func (cv *VartypeCheck) FetchURL() {
-	MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+
+	// TODO: Handle leading "-".
+
+	cv.URL()
 
 	for siteURL, siteName := range G.Pkgsrc.MasterSiteURLToVar {
 		if hasPrefix(cv.Value, siteURL) {
@@ -464,6 +492,7 @@ func (cv *VartypeCheck) FetchURL() {
 		}
 	}
 
+	// TODO: Replace the regular expression by accessing the MkVarUse.
 	if m, name, subdir := match2(cv.Value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
 		if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
 			cv.Errorf("The site %s does not exist.", name)
@@ -489,6 +518,9 @@ func (cv *VartypeCheck) Filename() {
 }
 
 func (cv *VartypeCheck) FileMask() {
+
+	// TODO: Decide whether to call this a "mask" or a "pattern", and use only that word everywhere.
+
 	switch {
 	case cv.Op == opUseMatch:
 		break
@@ -529,7 +561,7 @@ func (cv *VartypeCheck) GccReqd() {
 }
 
 func (cv *VartypeCheck) Homepage() {
-	MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtURL, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	cv.URL()
 
 	if m, wrong, sitename, subdir := match3(cv.Value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`); m {
 		baseURL := G.Pkgsrc.MasterSiteVarToURL[sitename]
@@ -559,6 +591,8 @@ func (cv *VartypeCheck) Homepage() {
 	}
 }
 
+// Identifier checks for valid identifiers in various contexts, limiting the
+// valid characters to A-Za-z0-9_.
 func (cv *VartypeCheck) Identifier() {
 	if cv.Op == opUseMatch {
 		if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^[\w*?]`) {
@@ -566,15 +600,19 @@ func (cv *VartypeCheck) Identifier() {
 		}
 		return
 	}
+
 	if cv.Value != cv.ValueNoVar {
 		// TODO: Activate this warning again, or document why it is not useful.
 		//line.logWarning("Identifiers should be given directly.")
 	}
+
 	switch {
-	case matches(cv.ValueNoVar, `^[+\-.0-9A-Z_a-z]+$`):
+	case matches(cv.ValueNoVar, `^[+\-.\w]+$`):
 		// Fine.
+
 	case cv.Value != "" && cv.ValueNoVar == "":
 		// Don't warn here.
+
 	default:
 		cv.Warnf("Invalid identifier %q.", cv.Value)
 	}
@@ -648,7 +686,7 @@ func (cv *VartypeCheck) MachineGnuPlatform() {
 		cv.Warnf("%q is not a valid platform pattern.", cv.Value)
 		G.Explain(
 			"A platform pattern has the form <OPSYS>-<OS_VERSION>-<MACHINE_ARCH>.",
-			"Each of these components may be a shell globbing expression.",
+			"Each of these components may use wildcards.",
 			"",
 			"Examples:",
 			"* NetBSD-[456].*-i386",
@@ -669,6 +707,7 @@ func (cv *VartypeCheck) MailAddress() {
 	if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
 		cv.Warnf("Please write \"NetBSD.org\" instead of %q.", domain)
 	}
+
 	if matches(value, `(?i)^(tech-pkg|packages)@NetBSD\.org$`) {
 		cv.Errorf("This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.")
 	}
@@ -705,7 +744,8 @@ func (cv *VartypeCheck) Option() {
 			return
 		}
 
-		if _, found := G.Pkgsrc.PkgOptions[optname]; !found { // There's a difference between empty and absent here.
+		// There's a difference between empty and absent here.
+		if _, found := G.Pkgsrc.PkgOptions[optname]; !found {
 			cv.Warnf("Unknown option %q.", optname)
 			G.Explain(
 				"This option is not documented in the mk/defaults/options.description file.",
@@ -760,10 +800,12 @@ func (cv *VartypeCheck) PathMask() {
 	if cv.Op == opUseMatch {
 		return
 	}
+
 	if !matches(cv.ValueNoVar, `^[#%*+\-./0-9?@A-Z\[\]_a-z~]*$`) {
 		cv.Warnf("%q is not a valid pathname mask.", cv.Value)
 	}
-	LineChecker{cv.Line}.CheckAbsolutePathname(cv.Value)
+
+	LineChecker{cv.MkLine.Line}.CheckAbsolutePathname(cv.Value)
 }
 
 // Pathname checks for pathnames.
@@ -775,10 +817,12 @@ func (cv *VartypeCheck) Pathname() {
 	if cv.Op == opUseMatch {
 		return
 	}
+
 	if !matches(cv.ValueNoVar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.Warnf("%q is not a valid pathname.", cv.Value)
 	}
-	LineChecker{cv.Line}.CheckAbsolutePathname(cv.Value)
+
+	LineChecker{cv.MkLine.Line}.CheckAbsolutePathname(cv.Value)
 }
 
 func (cv *VartypeCheck) Perl5Packlist() {
@@ -826,6 +870,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 }
 
 // PkgPath checks a directory name relative to the top-level pkgsrc directory.
+//
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
 	pkgsrcdir := relpath(path.Dir(cv.MkLine.Filename), G.Pkgsrc.File("."))
@@ -836,7 +881,7 @@ func (cv *VartypeCheck) PkgRevision() {
 	if !matches(cv.Value, `^[1-9]\d*$`) {
 		cv.Warnf("%s must be a positive integer number.", cv.Varname)
 	}
-	if cv.Line.Basename != "Makefile" {
+	if cv.MkLine.Basename != "Makefile" {
 		cv.Errorf("%s only makes sense directly in the package Makefile.", cv.Varname)
 		G.Explain(
 			"Usually, different packages using the same Makefile.common have",
@@ -937,15 +982,14 @@ func (cv *VartypeCheck) Restricted() {
 }
 
 func (cv *VartypeCheck) SedCommands() {
-	tokens, rest := splitIntoShellTokens(cv.Line, cv.Value)
+	tokens, rest := splitIntoShellTokens(cv.MkLine.Line, cv.Value)
 	if rest != "" {
-		if contains(cv.Line.Text, "#") {
+		if contains(cv.MkLine.Text, "#") {
 			cv.Errorf("Invalid shell words %q in sed commands.", rest)
 			G.Explain(
 				"When sed commands have embedded \"#\" characters, they need to be",
 				"escaped with a backslash, otherwise make(1) will interpret them as a",
-				"comment, no matter if they occur in single or double quotes or",
-				"whatever.")
+				"comment, even if they occur in single or double quotes or whatever.")
 		}
 		return
 	}
@@ -1015,6 +1059,8 @@ func (cv *VartypeCheck) Stage() {
 }
 
 // Tool checks for tool names like "awk", "m4:pkgsrc", "digest:bootstrap".
+//
+// TODO: Distinguish between Tool and ToolDependency.
 func (cv *VartypeCheck) Tool() {
 	if cv.Varname == "TOOLS_NOOP" && cv.Op == opAssignAppend {
 		// no warning for package-defined tool definitions
@@ -1027,10 +1073,11 @@ func (cv *VartypeCheck) Tool() {
 		switch tooldep {
 		case "", "bootstrap", "build", "pkgsrc", "run", "test":
 		default:
-			cv.Errorf("Unknown tool dependency %q. Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".", tooldep)
+			cv.Errorf("Invalid tool dependency %q. Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".", tooldep)
 		}
+
 	} else if cv.Op != opUseMatch && cv.Value == cv.ValueNoVar {
-		cv.Errorf("Malformed tool dependency: %q.", cv.Value)
+		cv.Errorf("Invalid tool dependency %q.", cv.Value)
 		G.Explain(
 			"A tool dependency typically looks like \"sed\" or \"sed:run\".")
 	}
@@ -1091,8 +1138,8 @@ func (cv *VartypeCheck) VariableName() {
 			"parameterized part, following the dot.",
 			"",
 			"Examples:",
-			"\t* PKGNAME",
-			"\t* PKG_OPTIONS.gnuchess")
+			"* PKGNAME",
+			"* PKG_OPTIONS.gtk+-2.0")
 	}
 }
 
@@ -1142,7 +1189,7 @@ func (cv *VartypeCheck) WrapperTransform() {
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {
-	MkLineChecker{cv.MkLine}.CheckVartypeBasic(cv.Varname, BtPathname, cv.Op, cv.Value, cv.MkComment, cv.Guessed)
+	cv.Pathname()
 }
 
 // WrksrcSubdirectory checks a directory relative to ${WRKSRC},
@@ -1152,9 +1199,13 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 		if rest == "" {
 			rest = "."
 		}
-		cv.Notef("You can use %q instead of %q.", rest, cv.Value)
-		G.Explain(
+
+		fix := cv.Autofix()
+		fix.Notef("You can use %q instead of %q.", rest, cv.Value)
+		fix.Explain(
 			"These directories are interpreted relative to ${WRKSRC}.")
+		fix.Replace(cv.Value, rest)
+		fix.Apply()
 
 	} else if cv.Value != "" && cv.ValueNoVar == "" {
 		// The value of another variable
@@ -1162,6 +1213,8 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 	} else if !matches(cv.ValueNoVar, `^(?:\.|[0-9A-Za-z_@][-0-9A-Za-z_@./+]*)$`) {
 		cv.Warnf("%q is not a valid subdirectory of ${WRKSRC}.", cv.Value)
 	}
+
+	// TODO: Check for ${WRKSRC}/.. or a simple .., like in checkTextWrksrcDotDot.
 }
 
 func (cv *VartypeCheck) Yes() {
