@@ -161,7 +161,7 @@ func isIgnoredFilename(filename string) bool {
 
 // Checks whether a file is already committed to the CVS repository.
 func isCommitted(filename string) bool {
-	lines := loadCvsEntries(filename)
+	lines := G.loadCvsEntries(filename)
 	if lines == nil {
 		return false
 	}
@@ -177,7 +177,7 @@ func isCommitted(filename string) bool {
 func isLocallyModified(filename string) bool {
 	baseName := path.Base(filename)
 
-	lines := loadCvsEntries(filename)
+	lines := G.loadCvsEntries(filename)
 	if lines == nil {
 		return false
 	}
@@ -201,21 +201,6 @@ func isLocallyModified(filename string) bool {
 		}
 	}
 	return false
-}
-
-func loadCvsEntries(filename string) Lines {
-	dir := path.Dir(filename)
-	if dir == G.cvsEntriesDir {
-		return G.cvsEntriesLines
-	}
-
-	lines := Load(dir+"/CVS/Entries", 0)
-	if lines == nil {
-		return nil
-	}
-	G.cvsEntriesDir = dir
-	G.cvsEntriesLines = lines
-	return lines
 }
 
 // Returns the number of columns that a string occupies when printed with

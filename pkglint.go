@@ -864,3 +864,19 @@ func (pkglint *Pkglint) tools() *Tools {
 		return pkglint.Pkgsrc.Tools
 	}
 }
+
+func (pkglint *Pkglint) loadCvsEntries(filename string) Lines {
+	dir := path.Dir(filename)
+	if dir == pkglint.cvsEntriesDir {
+		return pkglint.cvsEntriesLines
+	}
+
+	lines := Load(dir+"/CVS/Entries", 0)
+	if lines == nil {
+		return nil
+	}
+
+	pkglint.cvsEntriesDir = dir
+	pkglint.cvsEntriesLines = lines
+	return lines
+}
