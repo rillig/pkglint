@@ -291,6 +291,17 @@ func (tr *Tools) validity(basename string, useTools bool) Validity {
 	}
 }
 
+func (tr *Tools) ByName(name string) *Tool {
+	tool := tr.byName[name]
+	if tool == nil && tr.fallback != nil {
+		fallback := tr.fallback.ByName(name)
+		if fallback != nil {
+			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
+		}
+	}
+	return tool
+}
+
 func (tr *Tools) ByVarname(varname string) *Tool {
 	tool := tr.byVarname[varname]
 	if tool == nil && tr.fallback != nil {
@@ -302,16 +313,7 @@ func (tr *Tools) ByVarname(varname string) *Tool {
 	return tool
 }
 
-func (tr *Tools) ByName(name string) *Tool {
-	tool := tr.byName[name]
-	if tool == nil && tr.fallback != nil {
-		fallback := tr.fallback.ByName(name)
-		if fallback != nil {
-			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
-		}
-	}
-	return tool
-}
+// TODO: Tools.ByCommand (name or ${VARNAME})
 
 func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 	if time == LoadTime {
