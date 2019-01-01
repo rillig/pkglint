@@ -73,8 +73,8 @@ func (tool *Tool) UsableAtLoadTime(seenPrefs bool) bool {
 //  VAR=    ${${TOOL}:sh}     # Probably ok; the :sh modifier is evaluated at
 //                            # run time. But if VAR should ever be evaluated
 //                            # at load time (see the "Not allowed" cases
-//                            # above), it doesn't work. Currently pkglint
-//                            # cannot detect these cases reliably.
+//                            # above), it doesn't work. As of January 2019,
+//                            # pkglint cannot reliably distinguish these cases.
 //
 //  own-target:
 //          ${TOOL}           # Allowed.

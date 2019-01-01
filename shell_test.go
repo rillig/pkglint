@@ -149,6 +149,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t.SetUpVartypes()
 	t.SetUpTool("awk", "AWK", AtRunTime)
 	t.SetUpTool("cp", "CP", AtRunTime)
+	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpTool("mkdir", "MKDIR", AtRunTime) // This is actually "mkdir -p".
 	t.SetUpTool("unzip", "UNZIP_CMD", AtRunTime)
 
@@ -170,9 +171,8 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename:1: Unknown shell command \"uname\".",
-		"WARN: filename:1: Please switch to \"set -e\" mode before using a semicolon (after \"uname=`uname`\") to separate commands.",
-		"WARN: filename:1: Unknown shell command \"echo\".",
-		"WARN: filename:1: Unknown shell command \"echo\".")
+		"WARN: filename:1: Please switch to \"set -e\" mode "+
+			"before using a semicolon (after \"uname=`uname`\") to separate commands.")
 
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpVartypes()
@@ -180,7 +180,8 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	test("echo ${PKGNAME:Q}") // vucQuotPlain
 
 	t.CheckOutputLines(
-		"WARN: filename:1: PKGNAME may not be used in this file; it would be ok in Makefile, Makefile.*, *.mk.",
+		"WARN: filename:1: PKGNAME may not be used in this file; "+
+			"it would be ok in Makefile, Makefile.*, *.mk.",
 		"NOTE: filename:1: The :Q operator isn't necessary for ${PKGNAME} here.")
 
 	test("echo \"${CFLAGS:Q}\"") // vucQuotDquot
@@ -239,7 +240,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	test("" +
 		"${RUN} for e in ${XPI_FILES}; do " +
 		"  subdir=\"`${UNZIP_CMD} -c \"$$e\" install.rdf | " +
-		"" + "awk '/^    <em:id>/ {sub(\".*<em:id>\",\"\");sub(\"</em:id>.*\",\"\");print;exit;}'`\" && " +
+		"" + "awk '/.../ {print;exit;}'`\" && " +
 		"  ${MKDIR} \"${WRKDIR}/extensions/$$subdir\" && " +
 		"  cd \"${WRKDIR}/extensions/$$subdir\" && " +
 		"  ${UNZIP_CMD} -aqo $$e; " +
@@ -258,6 +259,8 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 		"  ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"; " +
 		"done")
 
+	// TODO: Why is TOOLS_PATH.msgfmt not recognized?
+	//  At least, the warning should be more specific, mentioning USE_TOOLS.
 	t.CheckOutputLines(
 		"WARN: filename:1: WRKSRC may not be used in this file; it would be ok in Makefile, Makefile.*, *.mk.",
 		"WARN: filename:1: Unknown shell command \"[\".",
@@ -284,6 +287,9 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	// A directory that is found in the PLIST.
 	test("${RUN} ${INSTALL_DATA_DIR} share/pkgbase ${PREFIX}/share/pkgbase")
 
+	// TODO: Add a test for using this command inside a conditional;
+	//  the note should not appear then.
+
 	t.CheckOutputLines(
 		"NOTE: filename:1: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= share/pkgbase\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".",
@@ -303,6 +309,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t.CheckOutputEmpty() // No warning about missing error checking.
 }
 
+// TODO: Document in detail that strip is not a regular tool.
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__strip(c *check.C) {
 	t := s.Init(c)
 
@@ -361,6 +368,25 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__show_autofix(c *check.C) {
 		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".")
 }
 
+func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	t.SetUpVartypes()
+	t.SetUpTool("echo", "", AtRunTime)
+	G.Mk = t.NewMkLines("Makefile",
+		"\techo ${PKGNAME:Q}")
+	shline := NewShellLine(G.Mk.mklines[0])
+
+	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
+
+	t.CheckOutputLines(
+		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".")
+
+	// TODO: There should be a general way of testing a code in the three modes:
+	//  default, --show-autofix, --autofix.
+}
+
 func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 	t := s.Init(c)
 
@@ -398,22 +424,7 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"WARN: Makefile:11: The exitcode of the command at the left of the | operator is ignored.")
 }
 
-func (s *Suite) Test_ShellLine_CheckShellCommandLine__autofix(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wall", "--autofix")
-	t.SetUpVartypes()
-	t.SetUpTool("echo", "", AtRunTime)
-	G.Mk = t.NewMkLines("Makefile",
-		"\techo ${PKGNAME:Q}")
-	shline := NewShellLine(G.Mk.mklines[0])
-
-	shline.CheckShellCommandLine("echo ${PKGNAME:Q}")
-
-	t.CheckOutputLines(
-		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".")
-}
-
+// TODO: Document the exact purpose of this test, or split it into useful tests.
 func (s *Suite) Test_ShellLine_CheckShellCommandLine__implementation(c *check.C) {
 	t := s.Init(c)
 
@@ -469,19 +480,20 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 	test("${${list}}", false)
 
-	test("${${list}}", false)
-
 	// No warning for the outer variable since it is completely indirect.
 	// The inner variable ${list} must still be defined, though.
 	t.CheckOutputLines(
-		"WARN: dummy.mk:1: list is used but not defined.",
 		"WARN: dummy.mk:1: list is used but not defined.")
 
 	test("${SED_FILE.${id}}", false)
 
 	// No warning for variables that are partly indirect.
+	// TODO: Why not?
 	t.CheckOutputLines(
 		"WARN: dummy.mk:1: id is used but not defined.")
+
+	// TODO: Since $@ refers to ${.TARGET} and not sh.argv, there is no point in checking for quotes.
+	// TODO: Having the same tests for $$@ would be much more interesting.
 
 	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
 	test("$@", false)
@@ -681,14 +693,14 @@ func (s *Suite) Test_ShellLine_variableNeedsQuoting__integration(c *check.C) {
 		MkRcsID,
 		"",
 		// It's a bit silly to use shell variables in CONFIGURE_ARGS,
-		// but currently that's the only way to run ShellLine.variableNeedsQuoting.
+		// but as of January 2019 that's the only way to run ShellLine.variableNeedsQuoting.
 		"CONFIGURE_ARGS+=\t; cp $$dir $$\\# $$target",
 		"pre-configure:",
 		"\tcp $$dir $$\\# $$target")
 
 	mklines.Check()
 
-	// Quoting check is currently disabled for real shell commands.
+	// As of January 2019, the quoting check is disabled for real shell commands.
 	// See ShellLine.CheckShellCommand, spc.checkWord.
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: Unquoted shell variable \"target\".")
@@ -774,12 +786,18 @@ func (s *Suite) Test_splitIntoMkWords(c *check.C) {
 
 	words, rest := splitIntoShellTokens(dummyLine, url) // Doesn't really make sense
 
-	c.Check(words, check.DeepEquals, []string{"http://registry.gimp.org/file/fix-ca.c?action=download", "&", "id=9884", "&", "file="})
+	c.Check(words, check.DeepEquals, []string{
+		"http://registry.gimp.org/file/fix-ca.c?action=download",
+		"&",
+		"id=9884",
+		"&",
+		"file="})
 	c.Check(rest, equals, "")
 
 	words, rest = splitIntoMkWords(dummyLine, url)
 
-	c.Check(words, check.DeepEquals, []string{"http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="})
+	c.Check(words, check.DeepEquals, []string{
+		"http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="})
 	c.Check(rest, equals, "")
 
 	words, rest = splitIntoMkWords(dummyLine, "a b \"c  c  c\" d;;d;; \"e\"''`` 'rest")

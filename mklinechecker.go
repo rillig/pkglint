@@ -218,8 +218,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		//
 		// The guessed flag could also be determined more correctly. As of November 2018,
 		// running pkglint over the whole pkgsrc tree did not produce any different result
-		// whether guessed was true or false, so currently it is not worth investing
-		// any work.
+		// whether guessed was true or false.
 		forLoopType := Vartype{lkShell, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
 		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, vucQuotFor, false}
 		for _, itemsVar := range mkline.DetermineUsedVariables() {

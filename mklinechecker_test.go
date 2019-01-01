@@ -789,7 +789,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
 	mklines.Check()
 
 	// FIXME: There should be some notes and warnings about missing :M*;
-	// these are currently prevented by the PERL5 case in VariableNeedsQuoting.
+	//  these are prevented by the PERL5 case in VariableNeedsQuoting.
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.")
 }
@@ -1013,7 +1013,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"WRKSRC=                 ${PKGNAME}",
 		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}",
 		// TODO: The first of the below assignments should be flagged as redundant by RedundantScope;
-		// that check is currently only implemented for package Makefiles, not for other files.
+		//  as of January 2019, that check is only implemented for package Makefiles, not for other files.
 		"PYTHON_VERSIONS_ACCEPTED= -13",
 		"PYTHON_VERSIONS_ACCEPTED= 27 36")
 

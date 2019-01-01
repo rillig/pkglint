@@ -143,7 +143,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	// XXX: Replace this regular expression with proper parsing.
-	// There might be a ${VAR:M*.c} in these variables, which currently confuses the "parser".
+	// There might be a ${VAR:M*.c} in these variables, which the below regular expression cannot handle.
 	if m, targets, whitespace, sources := match3(text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`); m {
 		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 		if whitespace != "" {

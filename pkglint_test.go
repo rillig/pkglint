@@ -1049,7 +1049,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 		"RUBY_PKGDIR=\t../../lang/ruby-${RUBY_VER}-base",
 		"DISTINFO_FILE=\t${RUBY_PKGDIR}/distinfo")
 
-	// Pkglint cannot currently resolve the location of DISTINFO_FILE completely
+	// As of January 2019, pkglint cannot resolve the location of DISTINFO_FILE completely
 	// because the variable \"rv\" comes from a .for loop.
 	//
 	// TODO: iterate over variables in simple .for loops like the above.
