@@ -78,7 +78,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment := MatchVarassign(text); m {
-		if G.Opts.WarnSpace && spaceAfterVarname != "" {
+		if spaceAfterVarname != "" {
 			switch {
 			case hasSuffix(varname, "+") && op == "=":
 				break
@@ -95,7 +95,7 @@ func NewMkLine(line Line) *MkLineImpl {
 
 		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 		if comment != "" && value != "" && spaceAfterValue == "" {
-			line.Warnf("The # character starts a comment.")
+			line.Warnf("The # character starts a Makefile comment.")
 			G.Explain(
 				"In a variable assignment, an unescaped # starts a comment that",
 				"continues until the end of the line.",

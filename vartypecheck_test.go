@@ -934,7 +934,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 	vt.Output(
 		"NOTE: filename:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
 		"NOTE: filename:2: Each sed command should appear in an assignment of its own.",
-		"WARN: filename:3: The # character starts a comment.",
+		"WARN: filename:3: The # character starts a Makefile comment.",
 		"ERROR: filename:3: Invalid shell words \"\\\"s,\" in sed commands.",
 		"WARN: filename:8: Unknown sed command \"1d\".",
 		"ERROR: filename:9: The -e option to sed requires an argument.",

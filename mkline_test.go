@@ -259,7 +259,7 @@ func (s *Suite) Test_NewMkLine__number_sign(c *check.C) {
 
 	c.Check(mklineVarassignUnescaped.Value(), equals, "'s,")
 	t.CheckOutputLines(
-		"WARN: filename:1: The # character starts a comment.")
+		"WARN: filename:1: The # character starts a Makefile comment.")
 }
 
 func (s *Suite) Test_NewMkLine__varassign_leading_space(c *check.C) {
@@ -773,7 +773,7 @@ func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: The # character starts a comment.")
+		"WARN: Makefile:2: The # character starts a Makefile comment.")
 }
 
 // Ensures that the conditional variables of a line can be set even
