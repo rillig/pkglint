@@ -94,4 +94,14 @@ func (s *Suite) Test_Parser_Dependency(c *check.C) {
 
 	// TODO: support this edge case someday.
 	// "{ssh{,6}-[0-9]*,openssh-[0-9]*}" is not representable using the current data structure
+
+	// TODO: More test cases from current pkgsrc:
+	// R-jsonlite>=0.9.6*
+	//
+	// {ezmlm>=0.53,ezmlm-idx>=0.40}
+	// {samba>=2.0,ja-samba>=2.0}
+	// {mecab-ipadic>=2.7.0,mecab-jumandic>=5.1}
+	//
+	// ${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}
+	// ${DISTNAME:S/gnome-vfs/gnome-vfs2-${GNOME_VFS_NAME}/}
 }
