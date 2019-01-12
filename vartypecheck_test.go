@@ -219,10 +219,11 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).DependencyWithPath)
 
-	t.CreateFileLines("x11/alacarte/Makefile")
 	t.CreateFileLines("category/package/Makefile")
 	t.CreateFileLines("devel/gettext/Makefile")
 	t.CreateFileLines("devel/gmake/Makefile")
+	t.CreateFileLines("devel/py-module/Makefile")
+	t.CreateFileLines("x11/alacarte/Makefile")
 	G.Pkg = NewPackage(t.File("category/package"))
 
 	vt.Varname("DEPENDS")
@@ -242,7 +243,8 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"broken>:../../x11/alacarte",
 		"gtk2+>=2.16:../../x11/alacarte",
 		"gettext-[0-9]*:../../devel/gettext",
-		"gmake-[0-9]*:../../devel/gmake")
+		"gmake-[0-9]*:../../devel/gmake",
+		"${PYPKGPREFIX}-module>=0:../../devel/py-module")
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:1: Invalid dependency pattern with path \"Perl\".",
