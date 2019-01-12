@@ -5,10 +5,15 @@ import (
 )
 
 func (s *Suite) Test_VartypeCheck_AwkCommand(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).AwkCommand)
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).AwkCommand)
 
 	vt.Varname("PLIST_AWK")
 	vt.Op(opAssignAppend)
+	vt.Values(
+		"{print $0}",
+		"{print $$0}")
+	t.DisableTracing()
 	vt.Values(
 		"{print $0}",
 		"{print $$0}")
@@ -17,20 +22,29 @@ func (s *Suite) Test_VartypeCheck_AwkCommand(c *check.C) {
 	//  The warning should be adjusted to reflect this.
 
 	vt.Output(
-		"WARN: filename:1: $0 is ambiguous. " +
+		"WARN: filename:1: $0 is ambiguous. "+
+			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.",
+		"WARN: filename:3: $0 is ambiguous. "+
 			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.")
 }
 
 func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).BasicRegularExpression)
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).BasicRegularExpression)
 
 	vt.Varname("REPLACE_FILES.pl")
 	vt.Values(
 		".*\\.pl$",
 		".*\\.pl$$")
+	t.DisableTracing()
+	vt.Values(
+		".*\\.pl$",
+		".*\\.pl$$")
 
 	vt.Output(
-		"WARN: filename:1: Internal pkglint error in MkLine.Tokenize at \"$\".")
+		"WARN: filename:1: Internal pkglint error in MkLine.Tokenize at \"$\".",
+		"WARN: filename:3: Internal pkglint error in MkLine.Tokenize at \"$\".")
+
 }
 
 func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {
@@ -40,7 +54,8 @@ func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {
 	vt.Op(opAssignDefault)
 	vt.Values(
 		"full",
-		"unknown")
+		"unknown",
+		"${BUILDLINK_DEPMETHOD.kernel}")
 
 	vt.Output(
 		"WARN: filename:2: Invalid dependency method \"unknown\". Valid methods are \"build\" or \"full\".")
@@ -80,12 +95,18 @@ func (s *Suite) Test_VartypeCheck_CFlag(c *check.C) {
 		"target:sparc64",
 		"-std=c99",
 		"-XX:+PrintClassHistogramAfterFullGC",
-		"`pkg-config pidgin --cflags`")
+		"`pkg-config pidgin --cflags`",
+		"-c99",
+		"-c",
+		"-no-integrated-as",
+		"-pthread",
+		"`pkg-config`_plus")
 
 	vt.Output(
 		"WARN: filename:2: Compiler flag \"/W3\" should start with a hyphen.",
 		"WARN: filename:3: Compiler flag \"target:sparc64\" should start with a hyphen.",
-		"WARN: filename:5: Unknown compiler flag \"-XX:+PrintClassHistogramAfterFullGC\".")
+		"WARN: filename:5: Unknown compiler flag \"-XX:+PrintClassHistogramAfterFullGC\".",
+		"WARN: filename:11: Compiler flag \"`pkg-config`_plus\" should start with a hyphen.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -484,7 +505,7 @@ func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).Identifier)
 
-	vt.Varname("SUBST_CLASSES")
+	vt.Varname("MYSQL_CHARSET")
 	vt.Values(
 		"${OTHER_VAR}",
 		"identifiers cannot contain spaces",
@@ -497,7 +518,7 @@ func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
 	vt.Output(
 		"WARN: filename:2: Invalid identifier \"identifiers cannot contain spaces\".",
 		"WARN: filename:3: Invalid identifier \"id/cannot/contain/slashes\".",
-		"WARN: filename:11: Invalid identifier pattern \"[A-Z]\" for SUBST_CLASSES.")
+		"WARN: filename:11: Invalid identifier pattern \"[A-Z]\" for MYSQL_CHARSET.")
 }
 
 func (s *Suite) Test_VartypeCheck_Integer(c *check.C) {
@@ -1040,7 +1061,9 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 		"httpxs://www.example.org",
 		"https://www.example.org",
 		"https://www.example.org/path with spaces",
-		"string with spaces")
+		"string with spaces",
+		"gopher://example.org/",
+		"ftp://example.org/pub/")
 
 	vt.Output(
 		"WARN: filename:3: Please write NetBSD.org instead of www.netbsd.org.",
@@ -1097,7 +1120,8 @@ func (s *Suite) Test_VartypeCheck_Version(c *check.C) {
 		"1.2.3.4.5.6",
 		"4.1nb17",
 		"4.1-SNAPSHOT",
-		"4pre7")
+		"4pre7",
+		"${VER}")
 	vt.Output(
 		"WARN: filename:4: Invalid version number \"4.1-SNAPSHOT\".")
 
@@ -1144,10 +1168,12 @@ func (s *Suite) Test_VartypeCheck_WrapperTransform(c *check.C) {
 		"rmdir:/usr/include",
 		"rpath:/usr/lib:/usr/pkg/lib",
 		"rpath:/usr/lib",
-		"unknown")
+		"unknown",
+		"-e 's,-Wall,-Wall -Wextra,'")
 	vt.Output(
 		"WARN: filename:7: Unknown wrapper transform command \"rpath:/usr/lib\".",
-		"WARN: filename:8: Unknown wrapper transform command \"unknown\".")
+		"WARN: filename:8: Unknown wrapper transform command \"unknown\".",
+		"WARN: filename:9: Unknown wrapper transform command \"-e 's,-Wall,-Wall -Wextra,'\".")
 }
 
 func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
@@ -1161,18 +1187,15 @@ func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
 		"${WRKSRC}/.",
 		"${WRKSRC}/subdir",
 		"${CONFIGURE_DIRS}",
-		"${WRKSRC}/directory with spaces",
-		"directory with spaces",
+		"${WRKSRC}/directory with spaces", // This is a list of 3 directories.
+		"directory with spaces",           // This is a list of 3 directories.
 		"../other")
 	vt.Output(
 		"NOTE: filename:1: You can use \".\" instead of \"${WRKSRC}\".",
 		"NOTE: filename:2: You can use \".\" instead of \"${WRKSRC}/\".",
 		"NOTE: filename:3: You can use \".\" instead of \"${WRKSRC}/.\".",
 		"NOTE: filename:4: You can use \"subdir\" instead of \"${WRKSRC}/subdir\".",
-		// FIXME: There's a conceptual mismatch between List of Dir and a simple Dir here.
-		"NOTE: filename:6: You can use \"directory with spaces\" instead of \"${WRKSRC}/directory with spaces\".",
-		// FIXME: There's a conceptual mismatch between List of Dir and a simple Dir here.
-		"WARN: filename:7: \"directory with spaces\" is not a valid subdirectory of ${WRKSRC}.",
+		"NOTE: filename:6: You can use \"directory\" instead of \"${WRKSRC}/directory\".",
 		"WARN: filename:8: \"../other\" is not a valid subdirectory of ${WRKSRC}.")
 }
 
@@ -1246,6 +1269,11 @@ type VartypeCheckTester struct {
 // NewVartypeCheckTester starts the test with a filename of "filename", at line 1,
 // with "=" as the operator. The variable has to be initialized explicitly.
 func NewVartypeCheckTester(t *Tester, checker func(cv *VartypeCheck)) *VartypeCheckTester {
+
+	// This is necessary to know whether the variable name is a list type
+	// since in such a case each value is split into the list elements.
+	t.SetUpVartypes()
+
 	return &VartypeCheckTester{
 		t,
 		checker,
@@ -1307,9 +1335,23 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 			effectiveValue = mkline.Value()
 		}
 
-		valueNovar := mkline.WithoutMakeVariables(effectiveValue)
-		vc := VartypeCheck{mkline, varname, op, effectiveValue, valueNovar, comment, false}
-		vt.checker(&vc)
+		vartype := G.Pkgsrc.VariableType(varname)
+
+		// See MkLineChecker.checkVartype.
+		var lineValues []string
+		if vartype == nil || vartype.kindOfList == lkNone {
+			lineValues = []string{effectiveValue}
+		} else {
+			var rest string
+			lineValues, rest = splitIntoMkWords(mkline.Line, effectiveValue)
+			vt.tester.Check(rest, equals, "")
+		}
+
+		for _, lineValue := range lineValues {
+			valueNovar := mkline.WithoutMakeVariables(lineValue)
+			vc := VartypeCheck{mkline, varname, op, lineValue, valueNovar, comment, false}
+			vt.checker(&vc)
+		}
 
 		vt.lineno++
 	}

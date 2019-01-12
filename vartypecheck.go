@@ -1178,14 +1178,17 @@ func (cv *VartypeCheck) WrapperReorder() {
 
 func (cv *VartypeCheck) WrapperTransform() {
 	cmd := cv.Value
-	if hasPrefix(cmd, "rm:-") ||
-		matches(cmd, `^(R|l|rpath):([^:]+):(.+)$`) ||
-		matches(cmd, `^'?(opt|rename|rm-optarg|rmdir):.*$`) ||
-		cmd == "-e" ||
-		matches(cmd, `^["']?s[|:,]`) {
-		return
+	switch {
+	case hasPrefix(cmd, "rm:-"),
+		matches(cmd, `^(R|l|rpath):([^:]+):(.+)$`),
+		matches(cmd, `^'?(opt|rename|rm-optarg|rmdir):.*$`),
+		cmd == "-e",
+		matches(cmd, `^["']?s[|:,]`):
+		break
+
+	default:
+		cv.Warnf("Unknown wrapper transform command %q.", cmd)
 	}
-	cv.Warnf("Unknown wrapper transform command %q.", cmd)
 }
 
 func (cv *VartypeCheck) WrkdirSubdirectory() {

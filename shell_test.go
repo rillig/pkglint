@@ -580,11 +580,9 @@ func (s *Suite) Test_ShellLine_CheckWord__dquot_dollar(c *check.C) {
 
 	shline.CheckWord(shline.mkline.ShellCommand(), false, RunTime)
 
-	// FIXME: Should be parsed correctly. Make passes the dollar through (probably),
-	// and the shell parser should complain about the unfinished string literal.
-	t.CheckOutputLines(
-		"WARN: filename:1: Internal pkglint error in ShTokenizer.ShAtom at \"$\" (quoting=d).",
-		"WARN: filename:1: Internal pkglint error in ShellLine.CheckWord at \"\\\"$\" (quoting=d), rest: $")
+	// FIXME: Make consumes the dollar silently.
+	//  This could be worth another pkglint warning.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_ShellLine_CheckWord__dollar_subshell(c *check.C) {

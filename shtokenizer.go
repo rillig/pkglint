@@ -302,7 +302,8 @@ loop:
 			lexer.NextString("$$")
 		case lexer.Rest() == "$$":
 			lexer.Skip(2)
-			break
+		case lexer.Rest() == "$":
+			lexer.Skip(1)
 		default:
 			break loop
 		}
