@@ -374,14 +374,20 @@ func cleanpath(filename string) string {
 	for !lex.EOF() {
 		part := lex.NextBytesFunc(func(b byte) bool { return b != '/' })
 		parts = append(parts, part)
-		n := len(parts)
-		if n >= 5 && parts[n-1] == ".." && parts[n-2] == ".." && parts[n-3] != ".." && parts[n-4] != ".." {
-			parts = parts[:n-4]
-		}
 		if lex.SkipByte('/') {
 			for lex.SkipByte('/') || lex.SkipString("./") {
 			}
 		}
+	}
+
+	for i := 2; i+3 < len(parts); /* nothing */ {
+		if parts[i] != ".." && parts[i+1] != ".." && parts[i+2] == ".." && parts[i+3] == ".." {
+			if i+4 == len(parts) || parts[i+4] != ".." {
+				parts = append(parts[:i], parts[i+4:]...)
+				continue
+			}
+		}
+		i++
 	}
 
 	if len(parts) == 0 {
