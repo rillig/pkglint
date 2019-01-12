@@ -362,6 +362,37 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	c.Check(dst.Defined("VAR"), equals, true)
 }
 
+func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
+	t := s.Init(c)
+
+	mkline1 := t.NewMkLine("fname.mk", 3, "VAR=\tvalue")
+	mkline2 := t.NewMkLine("fname.mk", 3, ".if ${VAR::=value}")
+
+	scope := NewScope()
+	scope.Define("VAR", mkline1)
+	scope.Define("SNEAKY", mkline2)
+
+	t.Check(scope.FirstDefinition("VAR"), equals, mkline1)
+
+	// This call returns nil because it's not a variable assignment
+	// and the calling code typically assumes a variable definition.
+	// These sneaky variables with implicit definition are an edge
+	// case that only few people actually know. It's better that way.
+	t.Check(scope.FirstDefinition("SNEAKY"), check.IsNil)
+}
+
+func (s *Suite) Test_Scope__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	scope := NewScope()
+	scope.Define("VAR.param", t.NewMkLine("fname.mk", 3, "VAR.param=\tvalue"))
+	t.DisableTracing()
+
+	t.Check(scope.DefinedSimilar("VAR.param"), equals, true)
+	t.Check(scope.DefinedSimilar("VAR.other"), equals, true)
+	t.Check(scope.DefinedSimilar("OTHER"), equals, false)
+}
+
 func (s *Suite) Test_naturalLess(c *check.C) {
 	c.Check(naturalLess("", "a"), equals, true)
 	c.Check(naturalLess("a", ""), equals, false)
