@@ -1093,22 +1093,34 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 	vt.Values(
 		"# none",
 		"${OTHER_VAR}",
+		"https://www.NetBSD.org/",
 		"https://www.netbsd.org/",
-		"mailto:someone@example.org",
-		"httpxs://www.example.org",
 		"https://www.example.org",
-		"https://www.example.org/path with spaces",
-		"string with spaces",
+		"ftp://example.org/pub/",
 		"gopher://example.org/",
-		"ftp://example.org/pub/")
+
+		"",
+		"ftp://example.org/<",
+		"gopher://example.org/<",
+		"http://example.org/<",
+		"https://example.org/<",
+		"https://www.example.org/path with spaces",
+		"httpxs://www.example.org",
+		"mailto:someone@example.org",
+		"string with spaces")
 
 	vt.Output(
-		"WARN: filename:3: Please write NetBSD.org instead of www.netbsd.org.",
-		"WARN: filename:4: \"mailto:someone@example.org\" is not a valid URL.",
-		"WARN: filename:5: \"httpxs://www.example.org\" is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.",
-		"NOTE: filename:6: For consistency, please add a trailing slash to \"https://www.example.org\".",
-		"WARN: filename:7: \"https://www.example.org/path with spaces\" is not a valid URL.",
-		"WARN: filename:8: \"string with spaces\" is not a valid URL.")
+		"WARN: filename:4: Please write NetBSD.org instead of www.netbsd.org.",
+		"NOTE: filename:5: For consistency, please add a trailing slash to \"https://www.example.org\".",
+		"WARN: filename:8: \"\" is not a valid URL.",
+		"WARN: filename:9: \"ftp://example.org/<\" is not a valid URL.",
+		"WARN: filename:10: \"gopher://example.org/<\" is not a valid URL.",
+		"WARN: filename:11: \"http://example.org/<\" is not a valid URL.",
+		"WARN: filename:12: \"https://example.org/<\" is not a valid URL.",
+		"WARN: filename:13: \"https://www.example.org/path with spaces\" is not a valid URL.",
+		"WARN: filename:14: \"httpxs://www.example.org\" is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.",
+		"WARN: filename:15: \"mailto:someone@example.org\" is not a valid URL.",
+		"WARN: filename:16: \"string with spaces\" is not a valid URL.")
 
 	// Yes, even in 2019, some pkgsrc-wip packages really use a gopher HOMEPAGE.
 	vt.Values(
