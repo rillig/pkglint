@@ -458,6 +458,14 @@ func (s *Suite) Test_makeHelp(c *check.C) {
 	c.Check(makeHelp("subst"), equals, confMake+" help topic=subst")
 }
 
+func (s *Suite) Test_hasAlnumPrefix(c *check.C) {
+	t := s.Init(c)
+
+	t.Check(hasAlnumPrefix(""), equals, false)
+	t.Check(hasAlnumPrefix("A"), equals, true)
+	t.Check(hasAlnumPrefix(","), equals, false)
+}
+
 func (s *Suite) Test_Once(c *check.C) {
 	var once Once
 
