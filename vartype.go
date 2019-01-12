@@ -194,9 +194,11 @@ type BasicType struct {
 func (bt *BasicType) IsEnum() bool {
 	return hasPrefix(bt.name, "enum: ")
 }
+
 func (bt *BasicType) HasEnum(value string) bool {
 	return !contains(value, " ") && contains(bt.name, " "+value+" ")
 }
+
 func (bt *BasicType) AllowedEnums() string {
 	return bt.name[6 : len(bt.name)-1]
 }

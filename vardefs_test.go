@@ -37,6 +37,12 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__enumFrom(c *check.C) {
 		".  if !empty(USE_LANGUAGES:M${_version_})",
 		"USE_LANGUAGES+=         c++",
 		".  endif",
+		".endfor",
+		"",
+		".for _version_", // Just for code coverage.
+		".endfor",
+		"",
+		".for version in c99 c200x", // Just for code coverage.
 		".endfor")
 
 	t.SetUpVartypes()
@@ -101,5 +107,20 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {
 
 	// No warning about a missing :Q operator.
 	// All PLATFORM variables must be either lkNone or lkSpace.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Pkgsrc_InitVartypes__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("editors/emacs/modules.mk",
+		MkRcsID,
+		"",
+		"_EMACS_VERSIONS_ALL=    emacs31",
+		"_EMACS_VERSIONS_ALL+=   emacs29")
+	t.DisableTracing()
+
+	t.SetUpVartypes() // Just for code coverage.
+
 	t.CheckOutputEmpty()
 }
