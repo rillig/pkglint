@@ -1212,11 +1212,22 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 		fix.Replace(cv.Value, rest)
 		fix.Apply()
 
-	} else if cv.Value != "" && cv.ValueNoVar == "" {
+	} else if cv.ValueNoVar == "" {
 		// The value of another variable
 
 	} else if !matches(cv.ValueNoVar, `^(?:\.|[0-9A-Za-z_@][-0-9A-Za-z_@./+]*)$`) {
 		cv.Warnf("%q is not a valid subdirectory of ${WRKSRC}.", cv.Value)
+		cv.Explain(
+			"WRKSRC should be defined so that there is no need to do anything",
+			"outside of this directory.",
+			"",
+			"Example:",
+			"",
+			"\tWRKSRC=\t${WRKDIR}",
+			"\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
+			"\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
+			"",
+			seeGuide("Directories used during the build process", "build.builddirs"))
 	}
 
 	// TODO: Check for ${WRKSRC}/.. or a simple .., like in checkTextWrksrcDotDot.

@@ -1223,14 +1223,18 @@ func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
 		"${CONFIGURE_DIRS}",
 		"${WRKSRC}/directory with spaces", // This is a list of 3 directories.
 		"directory with spaces",           // This is a list of 3 directories.
-		"../other")
+		"../other",
+		"${WRKDIR}/sub",
+		"${SRCDIR}/sub")
 	vt.Output(
 		"NOTE: filename:1: You can use \".\" instead of \"${WRKSRC}\".",
 		"NOTE: filename:2: You can use \".\" instead of \"${WRKSRC}/\".",
 		"NOTE: filename:3: You can use \".\" instead of \"${WRKSRC}/.\".",
 		"NOTE: filename:4: You can use \"subdir\" instead of \"${WRKSRC}/subdir\".",
 		"NOTE: filename:6: You can use \"directory\" instead of \"${WRKSRC}/directory\".",
-		"WARN: filename:8: \"../other\" is not a valid subdirectory of ${WRKSRC}.")
+		"WARN: filename:8: \"../other\" is not a valid subdirectory of ${WRKSRC}.",
+		"WARN: filename:9: \"${WRKDIR}/sub\" is not a valid subdirectory of ${WRKSRC}.",
+		"WARN: filename:10: \"${SRCDIR}/sub\" is not a valid subdirectory of ${WRKSRC}.")
 }
 
 func (s *Suite) Test_VartypeCheck_Yes(c *check.C) {
