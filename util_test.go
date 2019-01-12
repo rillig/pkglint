@@ -363,11 +363,30 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 }
 
 func (s *Suite) Test_naturalLess(c *check.C) {
+	c.Check(naturalLess("", "a"), equals, true)
+	c.Check(naturalLess("a", ""), equals, false)
+
+	c.Check(naturalLess("a", "b"), equals, true)
+	c.Check(naturalLess("b", "a"), equals, false)
+
+	// Numbers are always considered smaller than other characters.
+	c.Check(naturalLess("0", "!"), equals, true)
+	c.Check(naturalLess("!", "0"), equals, false)
+
 	c.Check(naturalLess("0", "a"), equals, true)
 	c.Check(naturalLess("a", "0"), equals, false)
+
+	c.Check(naturalLess("5", "12"), equals, true)
+	c.Check(naturalLess("12", "5"), equals, false)
+
+	c.Check(naturalLess("5", "7"), equals, true)
+	c.Check(naturalLess("7", "5"), equals, false)
+
 	c.Check(naturalLess("000", "0000"), equals, true)
 	c.Check(naturalLess("0000", "000"), equals, false)
+
 	c.Check(naturalLess("000", "000"), equals, false)
+
 	c.Check(naturalLess("00011", "000111"), equals, true)
 	c.Check(naturalLess("00011", "00012"), equals, true)
 }
