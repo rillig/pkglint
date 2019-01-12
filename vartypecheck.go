@@ -597,7 +597,7 @@ func (cv *VartypeCheck) Homepage() {
 // valid characters to A-Za-z0-9_.
 func (cv *VartypeCheck) Identifier() {
 	if cv.Op == opUseMatch {
-		if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^[\w*?]`) {
+		if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^[\w*\-?\[\]]+$`) {
 			cv.Warnf("Invalid identifier pattern %q for %s.", cv.Value, cv.Varname)
 		}
 		return

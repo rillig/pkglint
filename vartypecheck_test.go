@@ -548,12 +548,14 @@ func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
 	vt.Op(opUseMatch)
 	vt.Values(
 		"[A-Z]",
+		"[A-Z.]",
+		"${PKG_OPTIONS:Moption}",
 		"A*B")
 
 	vt.Output(
 		"WARN: filename:2: Invalid identifier \"identifiers cannot contain spaces\".",
 		"WARN: filename:3: Invalid identifier \"id/cannot/contain/slashes\".",
-		"WARN: filename:11: Invalid identifier pattern \"[A-Z]\" for MYSQL_CHARSET.")
+		"WARN: filename:12: Invalid identifier pattern \"[A-Z.]\" for MYSQL_CHARSET.")
 }
 
 func (s *Suite) Test_VartypeCheck_Integer(c *check.C) {
