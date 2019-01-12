@@ -1082,6 +1082,22 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 	vt.Values(
 		"gmake:run")
 
+	vt.Varname("TOOLS_NOOP")
+	vt.Op(opAssign) // TODO: In a Makefile, this should be equivalent to opAssignAppend.
+	vt.Values(
+		"gmake:run")
+
+	vt.Output(
+		"ERROR: filename:31: Unknown tool \"gmake\".")
+
+	vt.Varname("USE_TOOLS")
+	vt.Op(opUseMatch)
+	vt.Values(
+		"tool1",
+		"tool1:build",
+		"tool1:*",
+		"${t}:build")
+
 	vt.OutputEmpty()
 }
 
