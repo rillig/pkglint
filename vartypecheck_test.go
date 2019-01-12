@@ -544,7 +544,15 @@ func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
 	vt.Values(
 		"${OTHER_VAR}",
 		"identifiers cannot contain spaces",
-		"id/cannot/contain/slashes")
+		"id/cannot/contain/slashes",
+		"id-${OTHER_VAR}",
+		"")
+
+	vt.Output(
+		"WARN: filename:2: Invalid identifier \"identifiers cannot contain spaces\".",
+		"WARN: filename:3: Invalid identifier \"id/cannot/contain/slashes\".",
+		"WARN: filename:5: Invalid identifier \"\".")
+
 	vt.Op(opUseMatch)
 	vt.Values(
 		"[A-Z]",
@@ -553,8 +561,6 @@ func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
 		"A*B")
 
 	vt.Output(
-		"WARN: filename:2: Invalid identifier \"identifiers cannot contain spaces\".",
-		"WARN: filename:3: Invalid identifier \"id/cannot/contain/slashes\".",
 		"WARN: filename:12: Invalid identifier pattern \"[A-Z.]\" for MYSQL_CHARSET.")
 }
 
@@ -592,7 +598,8 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 		"-static",
 		"-static-something",
 		"${LDFLAGS.NetBSD}",
-		"-l${LIBNCURSES}")
+		"-l${LIBNCURSES}",
+		"`pkg-config`_plus")
 	vt.Op(opUseMatch)
 	vt.Values(
 		"anything")
@@ -600,7 +607,8 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 	vt.Output(
 		"WARN: filename:4: Unknown linker flag \"-unknown\".",
 		"WARN: filename:5: Linker flag \"no-hyphen\" should start with a hyphen.",
-		"WARN: filename:6: Please use \"${COMPILER_RPATH_FLAG}\" instead of \"-Wl,--rpath\".")
+		"WARN: filename:6: Please use \"${COMPILER_RPATH_FLAG}\" instead of \"-Wl,--rpath\".",
+		"WARN: filename:12: Linker flag \"`pkg-config`_plus\" should start with a hyphen.")
 }
 
 func (s *Suite) Test_VartypeCheck_License(c *check.C) {
@@ -646,7 +654,8 @@ func (s *Suite) Test_VartypeCheck_MachineGnuPlatform(c *check.C) {
 		"Cygwin-*-amd64",
 		"x86_64-*",
 		"*-*-*-*",
-		"${OTHER_VAR}")
+		"${OTHER_VAR}",
+		"x86_64-pc") // Just for code coverage.
 
 	vt.Output(
 		"WARN: filename:2: The pattern \"Cygwin\" cannot match any of "+
@@ -659,7 +668,8 @@ func (s *Suite) Test_VartypeCheck_MachineGnuPlatform(c *check.C) {
 			"{ bitrig bsdos cygwin darwin dragonfly freebsd haiku hpux interix irix linux mirbsd "+
 			"netbsd openbsd osf1 solaris sunos } "+
 			"for the operating system part of MACHINE_GNU_PLATFORM.",
-		"WARN: filename:4: \"*-*-*-*\" is not a valid platform pattern.")
+		"WARN: filename:4: \"*-*-*-*\" is not a valid platform pattern.",
+		"WARN: filename:6: \"x86_64-pc\" is not a valid platform pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
@@ -836,10 +846,13 @@ func (s *Suite) Test_VartypeCheck_Perms(c *check.C) {
 		"root",
 		"${ROOT_USER}",
 		"ROOT_USER",
-		"${REAL_ROOT_USER}")
+		"${REAL_ROOT_USER}",
+		"${ROOT_GROUP}",
+		"${REAL_ROOT_GROUP}")
 
 	vt.Output(
-		"ERROR: filename:2: ROOT_USER must not be used in permission definitions. Use REAL_ROOT_USER instead.")
+		"ERROR: filename:2: ROOT_USER must not be used in permission definitions. Use REAL_ROOT_USER instead.",
+		"ERROR: filename:5: ROOT_GROUP must not be used in permission definitions. Use REAL_ROOT_GROUP instead.")
 }
 
 func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
@@ -859,6 +872,12 @@ func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
 
 	vt.Output(
 		"WARN: filename:8: \"pkgbase-z1\" is not a valid package name.")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"pkgbase-[0-9]*")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_PkgOptionsVar(c *check.C) {
