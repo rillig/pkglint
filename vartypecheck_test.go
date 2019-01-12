@@ -1193,7 +1193,7 @@ func (s *Suite) Test_VartypeCheck_WrapperReorder(c *check.C) {
 func (s *Suite) Test_VartypeCheck_WrapperTransform(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).WrapperTransform)
 
-	vt.Varname("WRAPPER_TRANSFORM")
+	vt.Varname("WRAPPER_TRANSFORM_CMDS")
 	vt.Op(opAssignAppend)
 	vt.Values(
 		"rm:-O3",
@@ -1207,8 +1207,7 @@ func (s *Suite) Test_VartypeCheck_WrapperTransform(c *check.C) {
 		"-e 's,-Wall,-Wall -Wextra,'")
 	vt.Output(
 		"WARN: filename:7: Unknown wrapper transform command \"rpath:/usr/lib\".",
-		"WARN: filename:8: Unknown wrapper transform command \"unknown\".",
-		"WARN: filename:9: Unknown wrapper transform command \"-e 's,-Wall,-Wall -Wextra,'\".")
+		"WARN: filename:8: Unknown wrapper transform command \"unknown\".")
 }
 
 func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
