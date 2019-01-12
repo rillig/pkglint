@@ -16,10 +16,16 @@ type Vartype struct {
 
 type KindOfList uint8
 
-// TODO: Rename lkNone to Plain, and lkShell to List.
 const (
-	lkNone  KindOfList = iota // Plain data type
-	lkShell                   // List entries are shell words; used in the :M, :S modifiers.
+	// lkNone is a plain data type, no list at all.
+	lkNone KindOfList = iota
+
+	// lkShell is a compound type, consisting of several space-separated elements.
+	// Elements can have embedded spaces by enclosing them in quotes, like in the shell.
+	//
+	// These lists are used in the :M, :S modifiers, in .for loops,
+	// and as lists of arbitrary things.
+	lkShell
 )
 
 type ACLEntry struct {
