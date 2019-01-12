@@ -77,6 +77,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 		op = lexer.NextString(">")
 	}
 	if op != "" {
+		// FIXME: Parser.Dependency must be moved to MkParser so that it can use VarUse.
 		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
 			dp.LowerOp = op
 			dp.Lower = m[0]
@@ -90,6 +91,7 @@ func (p *Parser) Dependency() *DependencyPattern {
 		op = lexer.NextString("<")
 	}
 	if op != "" {
+		// FIXME: Parser.Dependency must be moved to MkParser so that it can use VarUse.
 		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
 			dp.UpperOp = op
 			dp.Upper = m[0]
@@ -103,8 +105,17 @@ func (p *Parser) Dependency() *DependencyPattern {
 	}
 
 	if lexer.SkipByte('-') && lexer.Rest() != "" {
-		dp.Wildcard = lexer.Rest()
-		lexer.Skip(len(lexer.Rest()))
+		versionMark := lexer.Mark()
+
+		// FIXME: Parser.Dependency must be moved to MkParser so that it can use VarUse.
+		for lexer.SkipRegexp(G.res.Compile(`^(\$\{\w+\}|[\w\[\]*_.\-])`)) {
+		}
+
+		if !lexer.SkipString("{,nb*}") {
+			lexer.SkipString("{,nb[0-9]*}")
+		}
+
+		dp.Wildcard = lexer.Since(versionMark)
 		return &dp
 	}
 

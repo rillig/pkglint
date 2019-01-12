@@ -133,7 +133,9 @@ func (s *Suite) Test_VartypeCheck_Comment(c *check.C) {
 		"Package is a great package",
 		"Package is an awesome package",
 		"The Big New Package is a great package",
-		"Converter converts between measurement units")
+		"Converter converts between measurement units",
+		"\"Official\" office suite",
+		"'SQL injection fuzzer")
 
 	vt.Output(
 		"ERROR: filename:2: COMMENT must be set.",
@@ -194,7 +196,9 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"postgresql8[0-35-9]-${module}-[0-9]*",
 		"ncurses-${NC_VERS}{,nb*}",
 		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
-		"gnome-control-center>=2.20.1{,nb*}")
+		"gnome-control-center>=2.20.1{,nb*}",
+		"gnome-control-center>=2.20.1{,nb[0-9]*}",
+		"package-1.0|garbage")
 
 	vt.Output(
 		"WARN: filename:1: Invalid dependency pattern \"Perl\".",
@@ -205,8 +209,10 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"WARN: filename:10: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
 		"WARN: filename:11: Please use \"5.*\" instead of \"5*\" as the version pattern.",
 		"WARN: filename:12: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
-		"WARN: filename:20: The version pattern \"[0-9]*,openssh-[0-9]*}\" should not contain a hyphen.", // XXX
-		"WARN: filename:21: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
+		"WARN: filename:20: Invalid dependency pattern \"{ssh{,6}-[0-9]*,openssh-[0-9]*}\".",
+		"WARN: filename:21: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
+		"WARN: filename:22: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
+		"WARN: filename:23: Invalid dependency pattern \"package-1.0|garbage\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
