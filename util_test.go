@@ -154,6 +154,16 @@ func (s *Suite) Test_isEmptyDir(c *check.C) {
 	c.Check(isEmptyDir(t.File("CVS")), equals, true)
 }
 
+func (s *Suite) Test_getSubdirs(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("subdir/file")
+	t.CreateFileLines("empty/file")
+	c.Check(os.Remove(t.File("empty/file")), check.IsNil)
+
+	c.Check(getSubdirs(t.File(".")), deepEquals, []string{"subdir"})
+}
+
 func (s *Suite) Test_detab(c *check.C) {
 	c.Check(detab(""), equals, "")
 	c.Check(detab("\t"), equals, "        ")
