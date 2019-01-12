@@ -572,7 +572,9 @@ func (cv *VartypeCheck) Homepage() {
 				}
 			}
 		}
+
 		fixedURL := baseURL + subdir
+
 		fix := cv.Autofix()
 		if baseURL != "" {
 			fix.Warnf("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedURL)

@@ -493,20 +493,47 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 
 	vt.Varname("HOMEPAGE")
 	vt.Values(
+		"http://www.pkgsrc.org/",
+		"https://www.pkgsrc.org/",
 		"${MASTER_SITES}")
 
 	vt.Output(
-		"WARN: filename:1: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+		"WARN: filename:3: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
 	G.Pkg = NewPackage(t.File("category/package"))
-	G.Pkg.vars.Define("MASTER_SITES", t.NewMkLine(G.Pkg.File("Makefile"), 5, "MASTER_SITES=\thttps://cdn.NetBSD.org/pub/pkgsrc/distfiles/"))
+
+	vt.Values(
+		"${MASTER_SITES}")
+
+	// When this assignment occurs while checking a package, but the package
+	// doesn't define MASTER_SITES, that variable cannot be expanded, which means
+	// the warning cannot refer to its value.
+	vt.Output(
+		"WARN: filename:4: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+
+	delete(G.Pkg.vars.defined, "MASTER_SITES")
+	G.Pkg.vars.Define("MASTER_SITES", t.NewMkLine(G.Pkg.File("Makefile"), 5,
+		"MASTER_SITES=\thttps://cdn.NetBSD.org/pub/pkgsrc/distfiles/"))
 
 	vt.Values(
 		"${MASTER_SITES}")
 
 	vt.Output(
-		"WARN: filename:2: HOMEPAGE should not be defined in terms of MASTER_SITEs. " +
+		"WARN: filename:5: HOMEPAGE should not be defined in terms of MASTER_SITEs. " +
 			"Use https://cdn.NetBSD.org/pub/pkgsrc/distfiles/ directly.")
+
+	delete(G.Pkg.vars.defined, "MASTER_SITES")
+	G.Pkg.vars.Define("MASTER_SITES", t.NewMkLine(G.Pkg.File("Makefile"), 5,
+		"MASTER_SITES=\t${MASTER_SITE_GITHUB}"))
+
+	vt.Values(
+		"${MASTER_SITES}")
+
+	// When MASTER_SITES itself makes use of another variable, pkglint doesn't
+	// resolve that variable and just outputs the simple variant of this warning.
+	vt.Output(
+		"WARN: filename:6: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+
 }
 
 func (s *Suite) Test_VartypeCheck_Identifier(c *check.C) {
