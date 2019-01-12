@@ -116,6 +116,28 @@ func (s *Suite) Test_abspath__failure_on_Windows(c *check.C) {
 	}
 }
 
+func (s *Suite) Test_fileExists(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("dir/file")
+
+	t.Check(fileExists(t.File("nonexistent")), equals, false)
+	t.Check(fileExists(t.File("dir")), equals, false)
+	t.Check(fileExists(t.File("dir/nonexistent")), equals, false)
+	t.Check(fileExists(t.File("dir/file")), equals, true)
+}
+
+func (s *Suite) Test_dirExists(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("dir/file")
+
+	t.Check(dirExists(t.File("nonexistent")), equals, false)
+	t.Check(dirExists(t.File("dir")), equals, true)
+	t.Check(dirExists(t.File("dir/nonexistent")), equals, false)
+	t.Check(dirExists(t.File("dir/file")), equals, false)
+}
+
 func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
 	t := s.Init(c)
 
@@ -254,6 +276,7 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	modified := t.CreateFileLines("modified")
 
 	t.CreateFileLines("CVS/Entries",
+		"//", // Just for code coverage.
 		"/unmodified//"+modTime.Format(time.ANSIC)+"//",
 		"/modified//"+modTime.Format(time.ANSIC)+"//",
 		"/enoent//"+modTime.Format(time.ANSIC)+"//")
@@ -263,6 +286,10 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	c.Check(isLocallyModified(t.File("enoent")), equals, true)
 	c.Check(isLocallyModified(t.File("not_mentioned")), equals, false)
 	c.Check(isLocallyModified(t.File("subdir/file")), equals, false)
+
+	t.DisableTracing()
+
+	c.Check(isLocallyModified(t.File("unmodified")), equals, false)
 }
 
 func (s *Suite) Test_Scope_Defined(c *check.C) {
