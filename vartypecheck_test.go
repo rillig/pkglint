@@ -662,6 +662,57 @@ func (s *Suite) Test_VartypeCheck_MachineGnuPlatform(c *check.C) {
 		"WARN: filename:4: \"*-*-*-*\" is not a valid platform pattern.")
 }
 
+func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).MachinePlatformPattern)
+
+	vt.Varname("ONLY_FOR_PLATFORM")
+	vt.Op(opUseMatch)
+	vt.Values(
+		"linux-i386",
+		"nextbsd-5.0-8087",
+		"netbsd-7.0-l*",
+		"NetBSD-1.6.2-i386",
+		"FreeBSD*",
+		"FreeBSD-*",
+		"${LINUX}",
+		"NetBSD-[0-1]*-*")
+
+	vt.Output(
+		"WARN: filename:1: \"linux-i386\" is not a valid platform pattern.",
+		"WARN: filename:2: The pattern \"nextbsd\" cannot match any of "+
+			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
+			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
+			"} for the operating system part of ONLY_FOR_PLATFORM.",
+		"WARN: filename:2: The pattern \"8087\" cannot match any of "+
+			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 "+
+			"cobalt coldfire convex dreamcast "+
+			"earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
+			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
+			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
+			"i386 i586 i686 ia64 m68000 m68k m88k "+
+			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
+			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
+		"WARN: filename:3: The pattern \"netbsd\" cannot match any of "+
+			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
+			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
+			"} for the operating system part of ONLY_FOR_PLATFORM.",
+		"WARN: filename:3: The pattern \"l*\" cannot match any of "+
+			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 "+
+			"cobalt coldfire convex dreamcast "+
+			"earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
+			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
+			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
+			"i386 i586 i686 ia64 m68000 m68k m88k "+
+			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
+			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
+		"WARN: filename:5: \"FreeBSD*\" is not a valid platform pattern.",
+		"WARN: filename:8: Please use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
+}
+
 func (s *Suite) Test_VartypeCheck_MailAddress(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).MailAddress)
 
@@ -862,57 +913,6 @@ func (s *Suite) Test_VartypeCheck_PkgRevision(c *check.C) {
 		"3")
 
 	vt.OutputEmpty()
-}
-
-func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).MachinePlatformPattern)
-
-	vt.Varname("ONLY_FOR_PLATFORM")
-	vt.Op(opUseMatch)
-	vt.Values(
-		"linux-i386",
-		"nextbsd-5.0-8087",
-		"netbsd-7.0-l*",
-		"NetBSD-1.6.2-i386",
-		"FreeBSD*",
-		"FreeBSD-*",
-		"${LINUX}",
-		"NetBSD-[0-1]*-*")
-
-	vt.Output(
-		"WARN: filename:1: \"linux-i386\" is not a valid platform pattern.",
-		"WARN: filename:2: The pattern \"nextbsd\" cannot match any of "+
-			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
-			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
-			"} for the operating system part of ONLY_FOR_PLATFORM.",
-		"WARN: filename:2: The pattern \"8087\" cannot match any of "+
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 "+
-			"cobalt coldfire convex dreamcast "+
-			"earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
-			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
-			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
-			"i386 i586 i686 ia64 m68000 m68k m88k "+
-			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
-			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
-			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
-		"WARN: filename:3: The pattern \"netbsd\" cannot match any of "+
-			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
-			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
-			"} for the operating system part of ONLY_FOR_PLATFORM.",
-		"WARN: filename:3: The pattern \"l*\" cannot match any of "+
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 "+
-			"cobalt coldfire convex dreamcast "+
-			"earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
-			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf "+
-			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
-			"i386 i586 i686 ia64 m68000 m68k m88k "+
-			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
-			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
-			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
-		"WARN: filename:5: \"FreeBSD*\" is not a valid platform pattern.",
-		"WARN: filename:8: Please use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
