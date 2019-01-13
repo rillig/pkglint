@@ -857,7 +857,7 @@ func seeGuide(sectionName, sectionID string) string {
 // Empty lines, indented lines and lines starting with "*" are kept as-is.
 func wrap(max int, lines ...string) []string {
 	var wrapped []string
-	var buf strings.Builder
+	var sb strings.Builder
 	nonSpace := textproc.Space.Inverse()
 
 	for _, line := range lines {
@@ -865,9 +865,9 @@ func wrap(max int, lines ...string) []string {
 		if line == "" || isHspace(line[0]) || line[0] == '*' {
 
 			// Finish current paragraph.
-			if buf.Len() > 0 {
-				wrapped = append(wrapped, buf.String())
-				buf.Reset()
+			if sb.Len() > 0 {
+				wrapped = append(wrapped, sb.String())
+				sb.Reset()
 			}
 
 			wrapped = append(wrapped, line)
@@ -880,23 +880,23 @@ func wrap(max int, lines ...string) []string {
 			space := lexer.NextBytesSet(textproc.Space)
 			word := lexer.NextBytesSet(nonSpace)
 
-			if bol && buf.Len() > 0 {
+			if bol && sb.Len() > 0 {
 				space = " "
 			}
 
-			if buf.Len() > 0 && buf.Len()+len(space)+len(word) > max {
-				wrapped = append(wrapped, buf.String())
-				buf.Reset()
+			if sb.Len() > 0 && sb.Len()+len(space)+len(word) > max {
+				wrapped = append(wrapped, sb.String())
+				sb.Reset()
 				space = ""
 			}
 
-			buf.WriteString(space)
-			buf.WriteString(word)
+			sb.WriteString(space)
+			sb.WriteString(word)
 		}
 	}
 
-	if buf.Len() > 0 {
-		wrapped = append(wrapped, buf.String())
+	if sb.Len() > 0 {
+		wrapped = append(wrapped, sb.String())
 	}
 
 	return wrapped
