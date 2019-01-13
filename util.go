@@ -697,16 +697,12 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 
 			switch op {
 			case opAssign:
-				if s.OnOverwrite != nil {
-					s.OnOverwrite(existing.mkline, mkline)
-				}
+				s.OnOverwrite(existing.mkline, mkline)
 				existing.value = value
 			case opAssignAppend:
 				existing.value += " " + value
 			case opAssignDefault:
-				if s.OnIgnore != nil {
-					s.OnIgnore(existing.mkline, mkline)
-				}
+				s.OnIgnore(existing.mkline, mkline)
 			case opAssignShell, opAssignEval:
 				s.vars[varname] = nil // Won't be checked further.
 			}
