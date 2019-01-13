@@ -277,8 +277,10 @@ loop:
 	return modifiers
 }
 
+// varUseModifierSubst parses a :S,from,to, or a :C,from,to, modifier.
 func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool {
-	lexer.Skip(1)
+	lexer.Skip(1 /* the initial S or C */)
+
 	sep := lexer.PeekByte() // bmake allows _any_ separator, even letters.
 	if sep == -1 || byte(sep) == closing {
 		return false
@@ -318,8 +320,11 @@ func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool
 	return true
 }
 
+// varUseModifierAt parses a variable modifier like ":@v@echo ${v};@",
+// which expands the variable value in a loop.
 func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, closing byte, varname string) bool {
-	lexer.Skip(1)
+	lexer.Skip(1 /* the initial @ */)
+
 	loopVar := lexer.NextBytesSet(AlnumDot)
 	if loopVar == "" || !lexer.SkipByte('@') {
 		return false
@@ -337,6 +342,7 @@ func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, closing byte, varname
 }
 
 // MkCond parses a condition like ${OPSYS} == "NetBSD".
+//
 // See devel/bmake/files/cond.c.
 func (p *MkParser) MkCond() MkCond {
 	and := p.mkCondAnd()
