@@ -887,9 +887,7 @@ func wrap(max int, lines ...string) []string {
 			if buf.Len() > 0 && buf.Len()+len(space)+len(word) > max {
 				wrapped = append(wrapped, buf.String())
 				buf.Reset()
-				if hasPrefix(space, " ") { // XXX
-					space = ""
-				}
+				space = ""
 			}
 
 			buf.WriteString(space)

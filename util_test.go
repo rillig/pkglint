@@ -579,7 +579,7 @@ func (s *Suite) Test_wrap(c *check.C) {
 		"Sentence two.",
 		"",
 		"A\tB\tC\tD E",
-		"\tveryVeryVeryVeryVeryVeryVeryVeryLong"}
+		"veryVeryVeryVeryVeryVeryVeryVeryLong"}
 
 	c.Check(wrapped, deepEquals, expected)
 }
