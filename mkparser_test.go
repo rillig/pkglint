@@ -585,6 +585,12 @@ func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 	testRest("boost-build-1.59.*", "boost-build", "-1.59.*")
 	testRest("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
 	testRest("${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*")
+
+	// This is a valid dependency pattern, but it's more complicated
+	// than the patterns pkglint can handle as of January 2019.
+	//
+	// This pattern doesn't have a single package base, which means it cannot be parsed at all.
+	testRest("{ssh{,6}-[0-9]*,openssh-[0-9]*}", "", "{ssh{,6}-[0-9]*,openssh-[0-9]*}")
 }
 
 func (s *Suite) Test_MkParser_Dependency(c *check.C) {

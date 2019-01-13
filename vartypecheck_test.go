@@ -209,7 +209,6 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"WARN: filename:10: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
 		"WARN: filename:11: Please use \"5.*\" instead of \"5*\" as the version pattern.",
 		"WARN: filename:12: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
-		"WARN: filename:20: Invalid dependency pattern \"{ssh{,6}-[0-9]*,openssh-[0-9]*}\".",
 		"WARN: filename:21: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename:22: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename:23: Invalid dependency pattern \"package-1.0|garbage\".")

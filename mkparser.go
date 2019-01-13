@@ -527,34 +527,43 @@ func (p *MkParser) Varname() string {
 	return lexer.Since(mark)
 }
 
-func (p *MkParser) PkgbasePattern() (pkgbase string) {
+func (p *MkParser) PkgbasePattern() string {
 	lexer := p.lexer
+	start := lexer.Mark()
 
 	for {
-		mark := lexer.Mark()
-
 		if p.VarUse() != nil ||
 			lexer.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
 			lexer.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
-			pkgbase += lexer.Since(mark)
 			continue
 		}
 
-		if lexer.SkipByte('-') {
-			if lexer.SkipRegexp(G.res.Compile(`^\d`)) ||
-				// TODO: Replace regex with proper VarUse.
-				lexer.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
-				lexer.SkipByte('[') {
-				lexer.Reset(mark)
-				return
-			}
-			pkgbase += "-"
-			continue
+		lookahead := lexer.Copy()
+		if !lookahead.SkipByte('-') {
+			break
 		}
 
-		lexer.Reset(mark)
-		return
+		if lookahead.SkipRegexp(G.res.Compile(`^\d`)) ||
+			// TODO: Replace regex with proper VarUse.
+			lookahead.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
+			lookahead.SkipByte('[') {
+
+			// The parser is looking at a hyphen followed by a version number.
+			// This means the pkgbase stops before the hyphen.
+			break
+		}
+
+		lexer.Skip(1 /* the hyphen */)
 	}
+
+	pkgbase := lexer.Since(start)
+	if strings.Count(pkgbase, "{") == strings.Count(pkgbase, "}") {
+		return pkgbase
+	}
+
+	// Unbalanced braces, as in "{ssh{,6}-[0-9]".
+	lexer.Reset(start)
+	return ""
 }
 
 type DependencyPattern struct {

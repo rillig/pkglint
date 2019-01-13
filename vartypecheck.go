@@ -306,6 +306,11 @@ func (cv *VartypeCheck) Dependency() {
 			"For dependency patterns using the comparison operators,",
 			"this is not necessary.")
 
+	} else if deppat == nil && contains(value, "{") {
+		// Don't warn about complicated patterns like "{ssh{,6}>=0,openssh>=0}"
+		// that pkglint doesn't understand as of January 2019.
+		return
+
 	} else if deppat == nil || !parser.EOF() {
 		cv.Warnf("Invalid dependency pattern %q.", value)
 		G.Explain(
