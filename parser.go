@@ -50,12 +50,3 @@ func (p *Parser) PkgbasePattern() (pkgbase string) {
 		return
 	}
 }
-
-type DependencyPattern struct {
-	Pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
-	LowerOp  string // ">=", ">"
-	Lower    string // "2.5.0", "${PYVER}"
-	UpperOp  string // "<", "<="
-	Upper    string // "3.0", "${PYVER}"
-	Wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
-}
