@@ -199,7 +199,9 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"gnome-control-center>=2.20.1{,nb*}",
 		"gnome-control-center>=2.20.1{,nb[0-9]*}",
 		"package-1.0|garbage",
-		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}")
+		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}",
+		"package>=1.0:../../category/package",
+		"package-1.0>=1.0.3")
 
 	vt.Output(
 		"WARN: filename:1: Invalid dependency pattern \"Perl\".",
@@ -212,7 +214,11 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"WARN: filename:12: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
 		"WARN: filename:21: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename:22: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
-		"WARN: filename:23: Invalid dependency pattern \"package-1.0|garbage\".")
+		"WARN: filename:23: Invalid dependency pattern \"package-1.0|garbage\".",
+		// TODO: Mention that the path should be removed.
+		"WARN: filename:25: Invalid dependency pattern \"package>=1.0:../../category/package\".",
+		// TODO: Mention that version numbers in a pkgbase must be appended directly, without hyphen.
+		"WARN: filename:26: Invalid dependency pattern \"package-1.0>=1.0.3\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
