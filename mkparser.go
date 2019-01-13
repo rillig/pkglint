@@ -533,8 +533,7 @@ func (p *MkParser) PkgbasePattern() (pkgbase string) {
 	for {
 		mark := lexer.Mark()
 
-		// TODO: Replace regex with proper VarUse.
-		if lexer.SkipRegexp(G.res.Compile(`^\$\{\w+\}`)) ||
+		if p.VarUse() != nil ||
 			lexer.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
 			lexer.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
 			pkgbase += lexer.Since(mark)
@@ -570,6 +569,23 @@ type DependencyPattern struct {
 func (p *MkParser) Dependency() *DependencyPattern {
 	lexer := p.lexer
 
+	parseVersion := func() string {
+		mark := lexer.Mark()
+
+		for p.VarUse() != nil {
+		}
+		if lexer.Since(mark) != "" {
+			return lexer.Since(mark)
+		}
+
+		m := lexer.NextRegexp(G.res.Compile(`^\d[\w.]*`))
+		if m != nil {
+			return m[0]
+		}
+
+		return ""
+	}
+
 	var dp DependencyPattern
 	mark := lexer.Mark()
 	dp.Pkgbase = p.PkgbasePattern()
@@ -582,11 +598,12 @@ func (p *MkParser) Dependency() *DependencyPattern {
 	if op == "" {
 		op = lexer.NextString(">")
 	}
+
 	if op != "" {
-		// FIXME: Use VarUse.
-		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
+		version := parseVersion()
+		if version != "" {
 			dp.LowerOp = op
-			dp.Lower = m[0]
+			dp.Lower = version
 		} else {
 			lexer.Reset(mark2)
 		}
@@ -596,11 +613,12 @@ func (p *MkParser) Dependency() *DependencyPattern {
 	if op == "" {
 		op = lexer.NextString("<")
 	}
+
 	if op != "" {
-		// FIXME: Use VarUse.
-		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
+		version := parseVersion()
+		if version != "" {
 			dp.UpperOp = op
-			dp.Upper = m[0]
+			dp.Upper = version
 		} else {
 			lexer.Reset(mark2)
 		}
@@ -625,8 +643,7 @@ func (p *MkParser) Dependency() *DependencyPattern {
 		return &dp
 	}
 
-	// FIXME: Use VarUse.
-	if hasPrefix(dp.Pkgbase, "${") && hasSuffix(dp.Pkgbase, "}") {
+	if pkgbaseParser := NewMkParser(nil, dp.Pkgbase, false); pkgbaseParser.VarUse() != nil && pkgbaseParser.EOF() {
 		return &dp
 	}
 
