@@ -198,7 +198,8 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
 		"gnome-control-center>=2.20.1{,nb*}",
 		"gnome-control-center>=2.20.1{,nb[0-9]*}",
-		"package-1.0|garbage")
+		"package-1.0|garbage",
+		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}")
 
 	vt.Output(
 		"WARN: filename:1: Invalid dependency pattern \"Perl\".",
