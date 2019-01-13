@@ -218,6 +218,7 @@ func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine Mk
 		checkSpecificVar("${PHP_PKG_PREFIX}", "php")
 
 	if !warned {
+		// TODO: Replace regex with proper VarUse.
 		if m, varuse := match1(pkgbase, `(\$\{\w+\})`); m {
 			pkgbaseLine.Warnf("Please replace %q with a simple string (also in other variables in this file).", varuse)
 			warned = true

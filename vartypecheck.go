@@ -857,6 +857,7 @@ func (cv *VartypeCheck) Pkgname() {
 func (cv *VartypeCheck) PkgOptionsVar() {
 	cv.VariableName()
 
+	// TODO: Replace regex with proper VarUse.
 	if matches(cv.Value, `\$\{PKGBASE[:\}]`) {
 		cv.Errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		G.Explain(

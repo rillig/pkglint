@@ -647,12 +647,14 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 	case cmdname == "${INSTALL}" && scc.strcmd.HasOption("-d"):
 		cmdname = "${INSTALL} -d"
 	case matches(cmdname, `^\$\{INSTALL_.*_DIR\}$`):
+		// TODO: Replace regex with proper VarUse.
 		break
 	default:
 		return
 	}
 
 	for _, arg := range scc.strcmd.Args {
+		// TODO: Replace regex with proper VarUse.
 		if !contains(arg, "$$") && !matches(arg, `\$\{[_.]*[a-z]`) {
 			if m, dirname := match1(arg, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
 				if G.Pkg != nil && G.Pkg.Plist.Dirs[dirname] {
@@ -1006,7 +1008,7 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 			tokens = append(tokens, word)
 			word = ""
 		}
-		rest = p.mkp.Rest()
+		rest = p.parser.Rest()
 	}
 
 	q := shqPlain
@@ -1063,5 +1065,5 @@ func splitIntoMkWords(line Line, text string) (words []string, rest string) {
 		words = append(words, word)
 		word = ""
 	}
-	return words, word + p.mkp.Rest()
+	return words, word + p.parser.Rest()
 }

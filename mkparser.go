@@ -9,7 +9,17 @@ import (
 // MkParser wraps a Parser and provides methods for parsing
 // things related to Makefiles.
 type MkParser struct {
-	*Parser
+	Line         Line
+	lexer        *textproc.Lexer
+	EmitWarnings bool
+}
+
+func (p *MkParser) EOF() bool {
+	return p.lexer.EOF()
+}
+
+func (p *MkParser) Rest() string {
+	return p.lexer.Rest()
 }
 
 // NewMkParser creates a new parser for the given text.
@@ -20,7 +30,7 @@ type MkParser struct {
 // TODO: Remove the emitWarnings argument in order to separate parsing from checking.
 func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
 	G.Assertf((line != nil) == emitWarnings, "line must be given iff emitWarnings is set")
-	return &MkParser{NewParser(line, text, emitWarnings)}
+	return &MkParser{line, textproc.NewLexer(text), emitWarnings}
 }
 
 // MkTokens splits a text like in the following example:
@@ -523,6 +533,7 @@ func (p *MkParser) PkgbasePattern() (pkgbase string) {
 	for {
 		mark := lexer.Mark()
 
+		// TODO: Replace regex with proper VarUse.
 		if lexer.SkipRegexp(G.res.Compile(`^\$\{\w+\}`)) ||
 			lexer.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
 			lexer.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
@@ -532,6 +543,7 @@ func (p *MkParser) PkgbasePattern() (pkgbase string) {
 
 		if lexer.SkipByte('-') {
 			if lexer.SkipRegexp(G.res.Compile(`^\d`)) ||
+				// TODO: Replace regex with proper VarUse.
 				lexer.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
 				lexer.SkipByte('[') {
 				lexer.Reset(mark)

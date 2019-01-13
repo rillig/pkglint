@@ -3,14 +3,13 @@ package pkglint
 import "netbsd.org/pkglint/textproc"
 
 type ShTokenizer struct {
-	parser *Parser
-	mkp    *MkParser
+	parser *MkParser
 }
 
 func NewShTokenizer(line Line, text string, emitWarnings bool) *ShTokenizer {
-	p := NewParser(line, text, emitWarnings)
-	mkp := MkParser{p}
-	return &ShTokenizer{p, &mkp}
+	// TODO: Switching to NewMkParser is nontrivial since emitWarnings must equal (line != nil).
+	p := MkParser{line, textproc.NewLexer(text), emitWarnings}
+	return &ShTokenizer{&p}
 }
 
 // ShAtom parses a basic building block of a shell program.
@@ -26,7 +25,7 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 	lexer := p.parser.lexer
 	mark := lexer.Mark()
 
-	if varuse := p.mkp.VarUse(); varuse != nil {
+	if varuse := p.parser.VarUse(); varuse != nil {
 		return &ShAtom{shtVaruse, lexer.Since(mark), quoting, varuse}
 	}
 

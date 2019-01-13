@@ -823,6 +823,7 @@ func CheckLinesTrailingEmptyLines(lines Lines) {
 // to USE_TOOLS in the current scope (file or package).
 func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable bool) {
 	varname := ""
+	// TODO: Replace regex with proper VarUse.
 	if m, toolVarname := match1(command, `^\$\{(\w+)\}$`); m {
 		varname = toolVarname
 	}
