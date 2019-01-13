@@ -852,17 +852,24 @@ func seeGuide(sectionName, sectionID string) string {
 		sectionName, sectionID)
 }
 
+// wrap performs automatic word wrapping on the given lines.
+//
+// Empty lines, indented lines and lines starting with "*" are kept as-is.
 func wrap(max int, lines ...string) []string {
 	var wrapped []string
 	var buf strings.Builder
 	nonSpace := textproc.Space.Inverse()
 
 	for _, line := range lines {
+
 		if line == "" || isHspace(line[0]) || line[0] == '*' {
+
+			// Finish current paragraph.
 			if buf.Len() > 0 {
 				wrapped = append(wrapped, buf.String())
 				buf.Reset()
 			}
+
 			wrapped = append(wrapped, line)
 			continue
 		}
@@ -873,14 +880,14 @@ func wrap(max int, lines ...string) []string {
 			space := lexer.NextBytesSet(textproc.Space)
 			word := lexer.NextBytesSet(nonSpace)
 
-			if bol && space == "" && buf.Len() > 0 {
+			if bol && buf.Len() > 0 {
 				space = " "
 			}
 
 			if buf.Len() > 0 && buf.Len()+len(space)+len(word) > max {
 				wrapped = append(wrapped, buf.String())
 				buf.Reset()
-				if hasPrefix(space, " ") {
+				if hasPrefix(space, " ") { // XXX
 					space = ""
 				}
 			}

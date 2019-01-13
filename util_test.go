@@ -547,7 +547,10 @@ func (s *Suite) Test_wrap(c *check.C) {
 		"with",
 		"linebreaks.",
 		"",
-		"Sentence one.  Sentence two.")
+		"Sentence one.  Sentence two.",
+		"",
+		"A\tB\tC\tD",
+		"E\tveryVeryVeryVeryVeryVeryVeryVeryLong")
 
 	expected := []string{
 		"See the pkgsrc",
@@ -573,7 +576,10 @@ func (s *Suite) Test_wrap(c *check.C) {
 		"linebreaks.",
 		"",
 		"Sentence one.",
-		"Sentence two."}
+		"Sentence two.",
+		"",
+		"A\tB\tC\tD E",
+		"\tveryVeryVeryVeryVeryVeryVeryVeryLong"}
 
 	c.Check(wrapped, deepEquals, expected)
 }
