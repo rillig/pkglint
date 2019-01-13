@@ -925,3 +925,18 @@ func escapePrintable(s string) string {
 	}
 	return escaped.String()
 }
+
+func stringSliceLess(a, b []string) bool {
+	limit := len(a)
+	if len(b) < limit {
+		limit = len(b)
+	}
+
+	for i := 0; i < limit; i++ {
+		if a[i] != b[i] {
+			return a[i] < b[i]
+		}
+	}
+
+	return len(a) < len(b)
+}

@@ -585,3 +585,34 @@ func (s *Suite) Test_escapePrintable(c *check.C) {
 	c.Check(escapePrintable("Bad \xFF character"), equals, "Bad <\\xFF> character")
 	c.Check(escapePrintable("Unicode \uFFFD replacement"), equals, "Unicode <U+FFFD> replacement")
 }
+
+func (s *Suite) Test_stringSliceLess(c *check.C) {
+	var elements = [][][]string{
+		{nil, {}},
+		{{"a"}},
+		{{"a", "a"}},
+		{{"a", "b"}},
+		{{"b"}},
+		{{"b", "a"}}}
+
+	test := func(i int, iElement []string, j int, jElement []string) {
+		actual := stringSliceLess(iElement, jElement)
+		expected := i < j
+		if actual != expected {
+			c.Check(
+				[]interface{}{i, iElement, j, jElement, actual},
+				check.DeepEquals,
+				[]interface{}{i, iElement, j, jElement, expected})
+		}
+	}
+
+	for i, iElements := range elements {
+		for j, jElements := range elements {
+			for _, iElement := range iElements {
+				for _, jElement := range jElements {
+					test(i, iElement, j, jElement)
+				}
+			}
+		}
+	}
+}
