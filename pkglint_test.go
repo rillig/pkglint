@@ -1086,7 +1086,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(c *check
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/nonexistent: File not found. Please run \"@BMAKE@ makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
+		"WARN: ~/category/package/nonexistent: File not found. "+
+			"Please run \""+bmake("makesum")+"\" "+
+			"or define NO_CHECKSUM=yes in the package Makefile.",
 		"ERROR: ~/category/package/Makefile:20: Relative path \"nonexistent\" does not exist.")
 }
 
