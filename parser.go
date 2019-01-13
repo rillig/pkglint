@@ -2,7 +2,6 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/textproc"
-	"strings"
 )
 
 type Parser struct {
@@ -59,76 +58,4 @@ type DependencyPattern struct {
 	UpperOp  string // "<", "<="
 	Upper    string // "3.0", "${PYVER}"
 	Wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
-}
-
-func (p *Parser) Dependency() *DependencyPattern {
-	lexer := p.lexer
-
-	var dp DependencyPattern
-	mark := lexer.Mark()
-	dp.Pkgbase = p.PkgbasePattern()
-	if dp.Pkgbase == "" {
-		return nil
-	}
-
-	mark2 := lexer.Mark()
-	op := lexer.NextString(">=")
-	if op == "" {
-		op = lexer.NextString(">")
-	}
-	if op != "" {
-		// FIXME: Parser.Dependency must be moved to MkParser so that it can use VarUse.
-		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
-			dp.LowerOp = op
-			dp.Lower = m[0]
-		} else {
-			lexer.Reset(mark2)
-		}
-	}
-
-	op = lexer.NextString("<=")
-	if op == "" {
-		op = lexer.NextString("<")
-	}
-	if op != "" {
-		// FIXME: Parser.Dependency must be moved to MkParser so that it can use VarUse.
-		if m := lexer.NextRegexp(G.res.Compile(`^(?:(?:\$\{\w+\})+|\d[\w.]*)`)); m != nil {
-			dp.UpperOp = op
-			dp.Upper = m[0]
-		} else {
-			lexer.Reset(mark2)
-		}
-	}
-
-	if dp.LowerOp != "" || dp.UpperOp != "" {
-		return &dp
-	}
-
-	if lexer.SkipByte('-') && lexer.Rest() != "" {
-		versionMark := lexer.Mark()
-
-		// FIXME: Parser.Dependency must be moved to MkParser so that it can use VarUse.
-		for lexer.SkipRegexp(G.res.Compile(`^(\$\{\w+\}|[\w\[\]*_.\-])`)) {
-		}
-
-		if !lexer.SkipString("{,nb*}") {
-			lexer.SkipString("{,nb[0-9]*}")
-		}
-
-		dp.Wildcard = lexer.Since(versionMark)
-		return &dp
-	}
-
-	if hasPrefix(dp.Pkgbase, "${") && hasSuffix(dp.Pkgbase, "}") {
-		return &dp
-	}
-
-	if hasSuffix(dp.Pkgbase, "-*") {
-		dp.Pkgbase = strings.TrimSuffix(dp.Pkgbase, "-*")
-		dp.Wildcard = "*"
-		return &dp
-	}
-
-	lexer.Reset(mark)
-	return nil
 }

@@ -295,7 +295,7 @@ func (cv *VartypeCheck) ConfFiles() {
 func (cv *VartypeCheck) Dependency() {
 	value := cv.Value
 
-	parser := NewParser(cv.MkLine.Line, value, false)
+	parser := NewMkParser(nil, value, false)
 	deppat := parser.Dependency()
 	if deppat != nil && deppat.Wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
 		cv.Warnf("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
