@@ -517,6 +517,35 @@ func (p *MkParser) Varname() string {
 	return lexer.Since(mark)
 }
 
+func (p *MkParser) PkgbasePattern() (pkgbase string) {
+	lexer := p.lexer
+
+	for {
+		mark := lexer.Mark()
+
+		if lexer.SkipRegexp(G.res.Compile(`^\$\{\w+\}`)) ||
+			lexer.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
+			lexer.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
+			pkgbase += lexer.Since(mark)
+			continue
+		}
+
+		if lexer.SkipByte('-') {
+			if lexer.SkipRegexp(G.res.Compile(`^\d`)) ||
+				lexer.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
+				lexer.SkipByte('[') {
+				lexer.Reset(mark)
+				return
+			}
+			pkgbase += "-"
+			continue
+		}
+
+		lexer.Reset(mark)
+		return
+	}
+}
+
 type DependencyPattern struct {
 	Pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
 	LowerOp  string // ">=", ">"
