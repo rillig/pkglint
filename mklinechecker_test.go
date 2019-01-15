@@ -427,7 +427,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 		MkRcsID,
 		"COMMENT=\t${GAMES_USER}",
 		"COMMENT:=\t${PKGBASE}",
-		"PYPKGPREFIX=${PKGBASE}")
+		"PYPKGPREFIX=\t${PKGBASE}")
 	G.Pkgsrc.loadDefaultBuildDefs()
 	G.Pkgsrc.UserDefinedVars.Define("GAMES_USER", mklines.mklines[0])
 
@@ -436,8 +436,56 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: options.mk:3: PKGBASE should not be evaluated at load time.",
 		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.",
+		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("options.mk",
+		MkRcsID,
+		"COMMENT=\t${GAMES_USER}",
+		"COMMENT:=\t${PKGBASE}",
+		"PYPKGPREFIX=\t${PKGBASE}")
+	G.Pkgsrc.loadDefaultBuildDefs()
+	G.Pkgsrc.UserDefinedVars.Define("GAMES_USER", mklines.mklines[0])
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: options.mk:3: PKGBASE should not be evaluated at load time.",
+		"",
+		"\tMany variables, especially lists of something, get their values",
+		"\tincrementally. Therefore it is generally unsafe to rely on their",
+		"\tvalue until it is clear that it will never change again. This point",
+		"\tis reached when the whole package Makefile is loaded and execution",
+		"\tof the shell commands starts; in some cases earlier.",
+		"",
+		"\tAdditionally, when using the \":=\" operator, each $$ is replaced with",
+		"\ta single $, so variables that have references to shell variables or",
+		"\tregular expressions are modified in a subtle way.",
+		"",
+		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.",
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for",
+		"\tPYPKGPREFIX are:",
+		"",
+		"\t* it may be set in pyversion.mk",
+		"\t* it may be used at load time, used in *",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"",
 		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.",
-		"NOTE: options.mk:4: This variable value should be aligned to column 17.")
+		"",
+		"\tThe variable on the left-hand side may be evaluated at load time,",
+		"\tbut the variable on the right-hand side may not. Because of the",
+		"\tassignment in this line, the variable might be used indirectly at",
+		"\tload time, before it is guaranteed to be properly initialized.",
+		"")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C) {

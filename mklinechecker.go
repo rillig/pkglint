@@ -349,13 +349,29 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 			mkline.Warnf("The variable %s may not be %s by any package.",
 				varname, needed.HumanString())
 		}
-		G.Explain(
-			"The allowed actions for a variable are determined based on the file",
-			"name in which the variable is used or defined.",
-			// FIXME: List the rules in this very explanation.
-			"The exact rules are hard-coded into pkglint.",
-			"If they seem to be incorrect, please ask on the tech-pkg@NetBSD.org mailing list.")
+		ck.explainPermissions(varname, vartype)
 	}
+}
+
+func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype) {
+	if !G.Logger.Opts.Explain {
+		return
+	}
+
+	var expl []string
+	expl = append(expl,
+		"The allowed actions for a variable are determined based on the file",
+		"name in which the variable is used or defined.",
+		sprintf("The rules for %s are:", varname),
+		"")
+	for _, rule := range vartype.aclEntries {
+		expl = append(expl, sprintf("* it may be %s in %s", rule.permissions.HumanString(), rule.glob))
+	}
+	expl = append(expl,
+		"",
+		"If these rules seem to be incorrect, please ask on the tech-pkg@NetBSD.org mailing list.")
+
+	G.Explain(expl...)
 }
 
 // CheckVaruse checks a single use of a variable in a specific context.
@@ -558,12 +574,8 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		} else {
 			mkline.Warnf("%s may not be used in any file; it is a write-only variable.", varname)
 		}
-		G.Explain(
-			"The allowed actions for a variable are determined based on the file",
-			"name in which the variable is used or defined.",
-			// FIXME: List the rules in this very explanation.
-			"The exact rules are hard-coded into pkglint.",
-			"If they seem to be incorrect, please ask on the tech-pkg@NetBSD.org mailing list.")
+
+		ck.explainPermissions(varname, vartype)
 	}
 }
 
