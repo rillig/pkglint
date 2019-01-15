@@ -632,6 +632,20 @@ func (s *Suite) Test_joinSkipEmpty(c *check.C) {
 		"one, two, three")
 }
 
+func (s *Suite) Test_joinSkipEmptyCambridge(c *check.C) {
+	t := s.Init(c)
+
+	t.Check(
+		joinSkipEmptyCambridge("and", "", "one", "", "", "two", "", "three"),
+		deepEquals,
+		"one, two and three")
+
+	t.Check(
+		joinSkipEmptyCambridge("and", "", "one", "", ""),
+		deepEquals,
+		"one")
+}
+
 func (s *Suite) Test_joinSkipEmptyOxford(c *check.C) {
 	t := s.Init(c)
 

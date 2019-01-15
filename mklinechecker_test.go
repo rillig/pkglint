@@ -500,7 +500,8 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS may not be set in this file; it would be ok in Makefile, Makefile.*, or *.mk.",
+		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS may not be set in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
 		"\tname in which the variable is used or defined. The rules for",
@@ -1107,12 +1108,12 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.",
 		"WARN: ~/module.mk:7: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
 			"(only given a default value, or appended to) in this file; "+
-			"it would be ok in Makefile, Makefile.common, or options.mk.",
+			"it would be ok in Makefile, Makefile.common or options.mk.",
 		"WARN: ~/module.mk:7: Invalid version number \"-13\".",
 		"ERROR: ~/module.mk:7: All values for PYTHON_VERSIONS_ACCEPTED must be positive integers.",
 		"WARN: ~/module.mk:8: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
 			"(only given a default value, or appended to) in this file; "+
-			"it would be ok in Makefile, Makefile.common, or options.mk.",
+			"it would be ok in Makefile, Makefile.common or options.mk.",
 		"WARN: ~/module.mk:8: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.")
 }
 

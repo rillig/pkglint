@@ -99,7 +99,7 @@ func (vt *Vartype) AllowedFiles(perms ACLPermissions) string {
 			files = append(files, aclEntry.glob)
 		}
 	}
-	return joinSkipEmptyOxford("or", files...)
+	return joinSkipEmptyCambridge("or", files...)
 }
 
 // IsConsideredList returns whether the type is considered a list.

@@ -340,7 +340,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 		// maybe except buildlink3.mk.
 		"WARN: determine-defined-variables.mk:12: The variable SUBST_VARS.subst may not be set " +
 			"(only given a default value, or appended to) in this file; " +
-			"it would be ok in Makefile, Makefile.common, or options.mk.")
+			"it would be ok in Makefile, Makefile.common or options.mk.")
 }
 
 func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {

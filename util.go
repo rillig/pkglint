@@ -956,6 +956,31 @@ func joinSkipEmpty(sep string, elements ...string) string {
 	return strings.Join(nonempty, sep)
 }
 
+func joinSkipEmptyCambridge(conn string, elements ...string) string {
+	var nonempty []string
+	for _, element := range elements {
+		if element != "" {
+			nonempty = append(nonempty, element)
+		}
+	}
+
+	var sb strings.Builder
+	for i, element := range nonempty {
+		if i > 0 {
+			if i == len(nonempty)-1 {
+				sb.WriteRune(' ')
+				sb.WriteString(conn)
+				sb.WriteRune(' ')
+			} else {
+				sb.WriteString(", ")
+			}
+		}
+		sb.WriteString(element)
+	}
+
+	return sb.String()
+}
+
 func joinSkipEmptyOxford(conn string, elements ...string) string {
 	var nonempty []string
 	for _, element := range elements {

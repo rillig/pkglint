@@ -181,7 +181,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename:1: PKGNAME may not be used in this file; "+
-			"it would be ok in Makefile, Makefile.*, or *.mk.",
+			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"NOTE: filename:1: The :Q operator isn't necessary for ${PKGNAME} here.")
 
 	test("echo \"${CFLAGS:Q}\"") // vucQuotDquot
@@ -189,7 +189,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename:1: The :Q modifier should not be used inside double quotes.",
 		"WARN: filename:1: CFLAGS may not be used in this file; "+
-			"it would be ok in Makefile, Makefile.common, options.mk, or *.mk.",
+			"it would be ok in Makefile, Makefile.common, options.mk or *.mk.",
 		"WARN: filename:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} "+
 			"and make sure the variable appears outside of any quoting characters.")
 
@@ -263,7 +263,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	//  At least, the warning should be more specific, mentioning USE_TOOLS.
 	t.CheckOutputLines(
 		"WARN: filename:1: WRKSRC may not be used in this file; "+
-			"it would be ok in Makefile, Makefile.*, or *.mk.",
+			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: filename:1: Unknown shell command \"[\".",
 		"WARN: filename:1: Unknown shell command \"${TOOLS_PATH.msgfmt}\".")
 
