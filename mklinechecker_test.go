@@ -257,7 +257,8 @@ func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: The variable DISTNAME may not be appended to (only set, given a default value) in this file.",
+		"WARN: filename.mk:2: The variable DISTNAME may not be appended to "+
+			"(only set, or given a default value) in this file.",
 		"WARN: filename.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.")
 }
 
@@ -473,8 +474,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
 		"\tname in which the variable is used or defined. The rules for",
 		"\tPYPKGPREFIX are:",
 		"",
-		"\t* it may be set in pyversion.mk",
-		"\t* it may be used at load time, used in *",
+		"\t* in pyversion.mk, it may be set",
+		"\t* in any file, it may be used at load time, or used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
 		"\ttech-pkg@NetBSD.org mailing list.",
@@ -499,17 +500,17 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS may not be set in this file; it would be ok in Makefile, Makefile.*, *.mk.",
+		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS may not be set in this file; it would be ok in Makefile, Makefile.*, or *.mk.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
 		"\tname in which the variable is used or defined. The rules for",
 		"\tAUTO_MKDIRS are:",
 		"",
-		"\t* it may be set, used in Makefile",
-		"\t* it may not be accessed at all in buildlink3.mk",
-		"\t* it may not be accessed at all in builtin.mk",
-		"\t* it may be set, given a default value, used in Makefile.*",
-		"\t* it may be set, given a default value, used in *.mk",
+		"\t* in Makefile, it may be set, or used",
+		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in builtin.mk, it may not be accessed at all",
+		"\t* in Makefile.*, it may be set, given a default value, or used",
+		"\t* in *.mk, it may be set, given a default value, or used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
 		"\ttech-pkg@NetBSD.org mailing list.",
@@ -1105,11 +1106,13 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
 		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.",
 		"WARN: ~/module.mk:7: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
-			"(only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
+			"(only given a default value, or appended to) in this file; "+
+			"it would be ok in Makefile, Makefile.common, or options.mk.",
 		"WARN: ~/module.mk:7: Invalid version number \"-13\".",
 		"ERROR: ~/module.mk:7: All values for PYTHON_VERSIONS_ACCEPTED must be positive integers.",
 		"WARN: ~/module.mk:8: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
-			"(only given a default value, appended to) in this file; it would be ok in Makefile, Makefile.common, options.mk.",
+			"(only given a default value, or appended to) in this file; "+
+			"it would be ok in Makefile, Makefile.common, or options.mk.",
 		"WARN: ~/module.mk:8: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.")
 }
 

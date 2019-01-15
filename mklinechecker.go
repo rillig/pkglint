@@ -367,10 +367,16 @@ func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype) {
 
 	for _, rule := range vartype.aclEntries {
 		perms := rule.permissions.HumanString()
+
+		files := rule.glob
+		if files == "*" {
+			files = "any file"
+		}
+
 		if perms != "" {
-			expl = append(expl, sprintf("* it may be %s in %s", perms, rule.glob))
+			expl = append(expl, sprintf("* in %s, it may be %s", files, perms))
 		} else {
-			expl = append(expl, sprintf("* it may not be accessed at all in %s", rule.glob))
+			expl = append(expl, sprintf("* in %s, it may not be accessed at all", files))
 		}
 	}
 

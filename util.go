@@ -945,3 +945,28 @@ func stringSliceLess(a, b []string) bool {
 
 	return len(a) < len(b)
 }
+
+func joinSkipEmpty(sep string, elements ...string) string {
+	var nonempty []string
+	for _, element := range elements {
+		if element != "" {
+			nonempty = append(nonempty, element)
+		}
+	}
+	return strings.Join(nonempty, sep)
+}
+
+func joinSkipEmptyOxford(conn string, elements ...string) string {
+	var nonempty []string
+	for _, element := range elements {
+		if element != "" {
+			nonempty = append(nonempty, element)
+		}
+	}
+
+	if lastIndex := len(nonempty) - 1; lastIndex >= 1 {
+		nonempty[lastIndex] = conn + " " + nonempty[lastIndex]
+	}
+
+	return strings.Join(nonempty, ", ")
+}

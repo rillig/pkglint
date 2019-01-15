@@ -622,3 +622,21 @@ func (s *Suite) Test_stringSliceLess(c *check.C) {
 		}
 	}
 }
+
+func (s *Suite) Test_joinSkipEmpty(c *check.C) {
+	t := s.Init(c)
+
+	t.Check(
+		joinSkipEmpty(", ", "", "one", "", "", "two", "", "three"),
+		deepEquals,
+		"one, two, three")
+}
+
+func (s *Suite) Test_joinSkipEmptyOxford(c *check.C) {
+	t := s.Init(c)
+
+	t.Check(
+		joinSkipEmptyOxford("and", "", "one", "", "", "two", "", "three"),
+		deepEquals,
+		"one, two, and three")
+}

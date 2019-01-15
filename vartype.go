@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"path"
-	"strings"
-)
+import "path"
 
 // Vartype is a combination of a data type and a permission specification.
 // See vardefs.go for examples, and vartypecheck.go for the implementation.
@@ -56,24 +53,22 @@ func (perms ACLPermissions) String() string {
 	if perms == 0 {
 		return "none"
 	}
-	result := "" +
-		ifelseStr(perms.Contains(aclpSet), "set, ", "") +
-		ifelseStr(perms.Contains(aclpSetDefault), "set-default, ", "") +
-		ifelseStr(perms.Contains(aclpAppend), "append, ", "") +
-		ifelseStr(perms.Contains(aclpUseLoadtime), "use-loadtime, ", "") +
-		ifelseStr(perms.Contains(aclpUse), "use, ", "") +
-		ifelseStr(perms.Contains(aclpUnknown), "unknown, ", "")
-	return strings.TrimRight(result, ", ")
+	return joinSkipEmpty(", ",
+		ifelseStr(perms.Contains(aclpSet), "set", ""),
+		ifelseStr(perms.Contains(aclpSetDefault), "set-default", ""),
+		ifelseStr(perms.Contains(aclpAppend), "append", ""),
+		ifelseStr(perms.Contains(aclpUseLoadtime), "use-loadtime", ""),
+		ifelseStr(perms.Contains(aclpUse), "use", ""),
+		ifelseStr(perms.Contains(aclpUnknown), "unknown", ""))
 }
 
 func (perms ACLPermissions) HumanString() string {
-	result := "" +
-		ifelseStr(perms.Contains(aclpSet), "set, ", "") +
-		ifelseStr(perms.Contains(aclpSetDefault), "given a default value, ", "") +
-		ifelseStr(perms.Contains(aclpAppend), "appended to, ", "") +
-		ifelseStr(perms.Contains(aclpUseLoadtime), "used at load time, ", "") +
-		ifelseStr(perms.Contains(aclpUse), "used, ", "")
-	return strings.TrimRight(result, ", ")
+	return joinSkipEmptyOxford("or",
+		ifelseStr(perms.Contains(aclpSet), "set", ""),
+		ifelseStr(perms.Contains(aclpSetDefault), "given a default value", ""),
+		ifelseStr(perms.Contains(aclpAppend), "appended to", ""),
+		ifelseStr(perms.Contains(aclpUseLoadtime), "used at load time", ""),
+		ifelseStr(perms.Contains(aclpUse), "used", ""))
 }
 
 func (vt *Vartype) EffectivePermissions(basename string) ACLPermissions {
@@ -104,7 +99,7 @@ func (vt *Vartype) AllowedFiles(perms ACLPermissions) string {
 			files = append(files, aclEntry.glob)
 		}
 	}
-	return strings.Join(files, ", ")
+	return joinSkipEmptyOxford("or", files...)
 }
 
 // IsConsideredList returns whether the type is considered a list.
