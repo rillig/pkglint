@@ -112,14 +112,21 @@ func (vt *Vartype) IsConsideredList() bool {
 		return true
 	}
 	switch vt.basicType {
-	case BtAwkCommand, BtSedCommands, BtShellCommand, BtShellCommands, BtLicense, BtConfFiles:
+	case BtAwkCommand, BtSedCommands, BtShellCommand, BtShellCommands, BtConfFiles:
 		return true
 	}
 	return false
 }
 
 func (vt *Vartype) MayBeAppendedTo() bool {
-	return vt.kindOfList != lkNone || vt.IsConsideredList() || vt.basicType == BtComment
+	if vt.kindOfList != lkNone || vt.IsConsideredList() {
+		return true
+	}
+	switch vt.basicType {
+	case BtComment, BtLicense:
+		return true
+	}
+	return false
 }
 
 func (vt *Vartype) String() string {
