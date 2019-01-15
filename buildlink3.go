@@ -203,28 +203,30 @@ func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgb
 }
 
 func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine MkLine) {
-	checkSpecificVar := func(varuse, simple string) bool {
-		if contains(pkgbase, varuse) {
-			pkgbaseLine.Warnf("Please use %q instead of %q (also in other variables in this file).", simple, varuse)
-			return true
+	for _, token := range pkgbaseLine.ValueTokens() {
+		if token.Varuse == nil {
+			continue
 		}
-		return false
-	}
 
-	warned := checkSpecificVar("${PYPKGPREFIX}", "py") ||
-		checkSpecificVar("${RUBY_BASE}", "ruby") ||
-		checkSpecificVar("${RUBY_PKGPREFIX}", "ruby") ||
-		checkSpecificVar("${PHP_PKG_PREFIX}", "php")
-
-	if !warned {
-		// TODO: Replace regex with proper VarUse.
-		if m, varuse := match1(pkgbase, `(\$\{\w+\})`); m {
-			pkgbaseLine.Warnf("Please replace %q with a simple string (also in other variables in this file).", varuse)
-			warned = true
+		replacement := ""
+		switch token.Varuse.varname {
+		case "PYPKGPREFIX":
+			replacement = "py"
+		case "RUBY_BASE", "RUBY_PKGPREFIX":
+			replacement = "ruby"
+		case "PHP_PKG_PREFIX":
+			replacement = "php"
 		}
-	}
 
-	if warned {
+		if replacement != "" {
+			pkgbaseLine.Warnf("Please use %q instead of %q (also in other variables in this file).",
+				replacement, token.Text)
+		} else {
+			pkgbaseLine.Warnf(
+				"Please replace %q with a simple string (also in other variables in this file).",
+				token.Text)
+		}
+
 		G.Explain(
 			"The identifiers in the BUILDLINK_TREE variable should be plain",
 			"strings that do not refer to any variable.",
