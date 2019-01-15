@@ -364,9 +364,16 @@ func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype) {
 		"name in which the variable is used or defined.",
 		sprintf("The rules for %s are:", varname),
 		"")
+
 	for _, rule := range vartype.aclEntries {
-		expl = append(expl, sprintf("* it may be %s in %s", rule.permissions.HumanString(), rule.glob))
+		perms := rule.permissions.HumanString()
+		if perms != "" {
+			expl = append(expl, sprintf("* it may be %s in %s", perms, rule.glob))
+		} else {
+			expl = append(expl, sprintf("* it may not be accessed at all in %s", rule.glob))
+		}
 	}
+
 	expl = append(expl,
 		"",
 		"If these rules seem to be incorrect, please ask on the tech-pkg@NetBSD.org mailing list.")

@@ -488,6 +488,34 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpVartypes()
+
+	mkline := t.NewMkLine("buildlink3.mk", 123, "AUTO_MKDIRS=\tyes")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS may not be set in this file; it would be ok in Makefile, Makefile.*, *.mk.",
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for",
+		"\tAUTO_MKDIRS are:",
+		"",
+		"\t* it may be set, used in Makefile",
+		"\t* it may not be accessed at all in buildlink3.mk",
+		"\t* it may not be accessed at all in builtin.mk",
+		"\t* it may be set, given a default value, used in Makefile.*",
+		"\t* it may be set, given a default value, used in *.mk",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C) {
 	t := s.Init(c)
 
