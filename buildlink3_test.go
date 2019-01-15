@@ -2,6 +2,32 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
+// This test ensures that CheckLinesBuildlink3Mk really checks for
+// buildlink3.mk files that are included by the buildlink3.mk file
+// but not by the package.
+func (s *Suite) Test_CheckLinesBuildlink3Mk__package(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/dependency1/buildlink3.mk",
+		MkRcsID)
+	t.CreateFileLines("category/dependency2/buildlink3.mk",
+		MkRcsID)
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0",
+		"",
+		".include \"../../category/dependency1/buildlink3.mk\"")
+
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		".include \"../../category/dependency2/buildlink3.mk\"")
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:12: " +
+			"../../category/dependency2/buildlink3.mk is included " +
+			"by this file but not by the package.")
+}
+
 func (s *Suite) Test_CheckLinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 	t := s.Init(c)
 

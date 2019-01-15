@@ -19,7 +19,8 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__file_but_not_package
 
 	t.CheckOutputLines(
 		"WARN: category/package/buildlink3.mk:3: " +
-			"category/dependency/buildlink3.mk is included by this file but not by the package.")
+			"../../category/dependency/buildlink3.mk is included by this file " +
+			"but not by the package.")
 }
 
 func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file(c *check.C) {
@@ -39,7 +40,7 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 	// for building other packages. These cannot be flagged as warnings.
 	t.CheckOutputLines(
 		"TRACE: + (*Package).checkLinesBuildlink3Inclusion()",
-		"TRACE: 1   ../../category/dependency/buildlink3.mk/buildlink3.mk "+
+		"TRACE: 1   ../../category/dependency/buildlink3.mk "+
 			"is included by the package but not by the buildlink3.mk file.",
 		"TRACE: - (*Package).checkLinesBuildlink3Inclusion()")
 }
@@ -361,7 +362,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:20: " +
+		"NOTE: ~/category/package/Makefile:4: " +
 			"This assignment is probably redundant since PKGNAME is ${DISTNAME} by default.")
 }
 
@@ -714,9 +715,9 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"WARN: category/pkg1/../../doc/TODO:3: Invalid line format \"\".",
 		"WARN: category/pkg1/../../doc/TODO:4: Invalid line format \"\\tO wrong bullet\".",
 		"WARN: category/pkg1/../../doc/TODO:5: Invalid package name \"package-without-version\".",
-		"NOTE: category/pkg1/Makefile:20: The update request to 1.0 from doc/TODO has been done.",
-		"WARN: category/pkg2/Makefile:20: This package should be updated to 2.0 ([nice new features]).",
-		"NOTE: category/pkg3/Makefile:20: This package is newer than the update request to 3.0 ([security update]).",
+		"NOTE: category/pkg1/Makefile:4: The update request to 1.0 from doc/TODO has been done.",
+		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0 ([nice new features]).",
+		"NOTE: category/pkg3/Makefile:4: This package is newer than the update request to 3.0 ([security update]).",
 		"0 errors and 4 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }

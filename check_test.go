@@ -307,6 +307,7 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 		MkRcsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
+		"#PKGNAME=\tpackage-1.0",
 		"CATEGORIES=\t" + category,
 		"MASTER_SITES=\t# none",
 		"",
@@ -380,7 +381,7 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
 		"+new")
 }
 
-func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string) {
+func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string, customLines ...string) {
 	dir := path.Dir(relativeFileName)
 	lower := path.Base(dir)
 	upper := strings.ToUpper(lower)
@@ -395,20 +396,27 @@ func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string) {
 		return msg
 	}
 
-	t.CreateFileLines(relativeFileName,
+	var lines []string
+	lines = append(lines,
 		MkRcsID,
-		sprintf(""),
+		"",
 		sprintf("BUILDLINK_TREE+=\t%s", lower),
-		sprintf(""),
+		"",
 		sprintf(".if !defined(%s_BUILDLINK3_MK)", upper),
 		sprintf("%s_BUILDLINK3_MK:=", upper),
-		sprintf(""),
+		"",
 		aligned("BUILDLINK_API_DEPENDS.%s+=", lower)+sprintf("%s>=0", lower),
 		aligned("BUILDLINK_PKGSRCDIR.%s?=", lower)+sprintf("../../%s", dir),
 		aligned("BUILDLINK_DEPMETHOD.%s?=", lower)+"build",
+		"")
+	lines = append(lines, customLines...)
+	lines = append(lines,
+		"",
 		sprintf(".endif # %s_BUILDLINK3_MK", upper),
-		sprintf(""),
+		"",
 		sprintf("BUILDLINK_TREE+=\t-%s", lower))
+
+	t.CreateFileLines(relativeFileName, lines...)
 }
 
 // File returns the absolute path to the given file in the

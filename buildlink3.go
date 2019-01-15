@@ -63,7 +63,6 @@ func (ck *Buildlink3Checker) Check() {
 	}
 
 	if G.Pkg != nil {
-		// TODO: Commenting this line doesn't make any test fail, but it should.
 		G.Pkg.checkLinesBuildlink3Inclusion(mklines)
 	}
 

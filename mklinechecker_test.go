@@ -826,7 +826,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:5: The :Q operator isn't necessary for ${HOMEPAGE} here.")
+		"NOTE: ~/category/package/Makefile:6: The :Q operator isn't necessary for ${HOMEPAGE} here.")
 }
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
