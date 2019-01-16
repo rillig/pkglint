@@ -466,8 +466,10 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		return nil
 	}
 
+	// Each date in the file should be from the same year as the filename says.
+	// For years earlier than 2018 pkglint doesn't care because it's not a big issue anyway.
 	year := ""
-	if m, yyyy := match1(filename, `-(\d+)$`); m && yyyy >= "2018" { // TODO: Why 2018?
+	if m, yyyy := match1(filename, `-(\d+)$`); m && yyyy >= "2018" {
 		year = yyyy
 	}
 
