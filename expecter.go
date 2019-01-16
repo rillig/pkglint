@@ -37,8 +37,8 @@ func (exp *Expecter) Group(index int) string {
 	return exp.m[index]
 }
 
-// Advance skips the current line and returns true.
-func (exp *Expecter) Advance() bool {
+// Skip skips the current line and returns true.
+func (exp *Expecter) Skip() bool {
 	if exp.EOF() {
 		return false
 	}
@@ -47,11 +47,12 @@ func (exp *Expecter) Advance() bool {
 	return true
 }
 
-func (exp *Expecter) StepBack() {
+func (exp *Expecter) Undo() {
 	exp.index--
+	exp.m = nil
 }
 
-func (exp *Expecter) AdvanceIfMatches(re regex.Pattern) bool {
+func (exp *Expecter) NextRegexp(re regex.Pattern) []string {
 	if trace.Tracing {
 		defer trace.Call(exp.CurrentLine().Text, re)()
 	}
@@ -60,30 +61,34 @@ func (exp *Expecter) AdvanceIfMatches(re regex.Pattern) bool {
 		if m := G.res.Match(exp.lines.Lines[exp.index].Text, re); m != nil {
 			exp.index++
 			exp.m = m
-			return true
+			return m
 		}
 	}
-	return false
+	return nil
 }
 
-func (exp *Expecter) AdvanceIfPrefix(prefix string) bool {
+func (exp *Expecter) SkipRegexp(re regex.Pattern) bool {
+	return exp.NextRegexp(re) != nil
+}
+
+func (exp *Expecter) SkipPrefix(prefix string) bool {
 	if trace.Tracing {
 		defer trace.Call2(exp.CurrentLine().Text, prefix)()
 	}
 
-	return !exp.EOF() && strings.HasPrefix(exp.lines.Lines[exp.index].Text, prefix) && exp.Advance()
+	return !exp.EOF() && strings.HasPrefix(exp.lines.Lines[exp.index].Text, prefix) && exp.Skip()
 }
 
-func (exp *Expecter) AdvanceIfEquals(text string) bool {
+func (exp *Expecter) SkipString(text string) bool {
 	if trace.Tracing {
 		defer trace.Call2(exp.CurrentLine().Text, text)()
 	}
 
-	return !exp.EOF() && exp.lines.Lines[exp.index].Text == text && exp.Advance()
+	return !exp.EOF() && exp.lines.Lines[exp.index].Text == text && exp.Skip()
 }
 
-func (exp *Expecter) ExpectEmptyLine() bool {
-	if exp.AdvanceIfEquals("") {
+func (exp *Expecter) SkipEmptyOrNote() bool {
+	if exp.SkipString("") {
 		return true
 	}
 
@@ -103,8 +108,8 @@ func (exp *Expecter) ExpectEmptyLine() bool {
 	return false
 }
 
-func (exp *Expecter) ExpectText(text string) bool {
-	result := exp.AdvanceIfEquals(text)
+func (exp *Expecter) SkipContainsOrWarn(text string) bool {
+	result := exp.SkipString(text)
 	if !result {
 		exp.CurrentLine().Warnf("This line should contain the following text: %s", text)
 	}
@@ -129,16 +134,16 @@ func (exp *MkExpecter) CurrentMkLine() MkLine {
 	return exp.mklines.mklines[exp.index]
 }
 
-func (exp *MkExpecter) AdvanceWhile(pred func(mkline MkLine) bool) {
+func (exp *MkExpecter) SkipWhile(pred func(mkline MkLine) bool) {
 	if trace.Tracing {
 		defer trace.Call(exp.CurrentMkLine().Text)()
 	}
 
 	for !exp.EOF() && pred(exp.CurrentMkLine()) {
-		exp.Advance()
+		exp.Skip()
 	}
 }
 
-func (exp *MkExpecter) AdvanceIf(pred func(mkline MkLine) bool) bool {
-	return !exp.EOF() && pred(exp.CurrentMkLine()) && exp.Advance()
+func (exp *MkExpecter) SkipIf(pred func(mkline MkLine) bool) bool {
+	return !exp.EOF() && pred(exp.CurrentMkLine()) && exp.Skip()
 }

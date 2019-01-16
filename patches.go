@@ -34,32 +34,32 @@ func (ck *PatchChecker) Check() {
 	}
 
 	if ck.lines.CheckRcsID(0, ``, "") {
-		ck.exp.Advance()
+		ck.exp.Skip()
 	}
 	if ck.exp.EOF() {
 		ck.lines.Lines[0].Errorf("Patch files must not be empty.")
 		return
 	}
 
-	ck.previousLineEmpty = ck.exp.ExpectEmptyLine()
+	ck.previousLineEmpty = ck.exp.SkipEmptyOrNote()
 
 	patchedFiles := 0
 	for !ck.exp.EOF() {
 		line := ck.exp.CurrentLine()
-		if ck.exp.AdvanceIfMatches(rePatchUniFileDel) {
-			if ck.exp.AdvanceIfMatches(rePatchUniFileAdd) {
+		if ck.exp.SkipRegexp(rePatchUniFileDel) {
+			if ck.exp.SkipRegexp(rePatchUniFileAdd) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.checkUnifiedDiff(ck.exp.Group(1))
 				patchedFiles++
 				continue
 			}
 
-			ck.exp.StepBack()
+			ck.exp.Undo()
 		}
 
-		if ck.exp.AdvanceIfMatches(rePatchUniFileAdd) {
+		if ck.exp.SkipRegexp(rePatchUniFileAdd) {
 			patchedFile := ck.exp.Group(1)
-			if ck.exp.AdvanceIfMatches(rePatchUniFileDel) {
+			if ck.exp.SkipRegexp(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.exp.PreviousLine().Warnf("Unified diff headers should be first ---, then +++.")
 				ck.checkUnifiedDiff(patchedFile)
@@ -67,20 +67,20 @@ func (ck *PatchChecker) Check() {
 				continue
 			}
 
-			ck.exp.StepBack()
+			ck.exp.Undo()
 		}
 
-		if ck.exp.AdvanceIfMatches(`^\*\*\*[\t ]([^\t ]+)(.*)$`) {
-			if ck.exp.AdvanceIfMatches(`^---[\t ]([^\t ]+)(.*)$`) {
+		if ck.exp.SkipRegexp(`^\*\*\*[\t ]([^\t ]+)(.*)$`) {
+			if ck.exp.SkipRegexp(`^---[\t ]([^\t ]+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
 				line.Warnf("Please use unified diffs (diff -u) for patches.")
 				return
 			}
 
-			ck.exp.StepBack()
+			ck.exp.Undo()
 		}
 
-		ck.exp.Advance()
+		ck.exp.Skip()
 		ck.previousLineEmpty = ck.isEmptyLine(line.Text)
 		if !ck.previousLineEmpty {
 			ck.seenDocumentation = true
@@ -115,7 +115,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	}
 
 	hasHunks := false
-	for ck.exp.AdvanceIfMatches(rePatchUniHunk) {
+	for ck.exp.SkipRegexp(rePatchUniHunk) {
 		text := ck.exp.m[0]
 		hasHunks = true
 		linesToDel := toInt(ck.exp.Group(2), 1)
@@ -128,7 +128,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 
 		for !ck.exp.EOF() && (linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.exp.CurrentLine().Text, "\\")) {
 			line := ck.exp.CurrentLine()
-			ck.exp.Advance()
+			ck.exp.Skip()
 
 			text := line.Text
 			switch {

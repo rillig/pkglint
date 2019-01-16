@@ -8,7 +8,7 @@ func CheckLinesOptionsMk(mklines MkLines) {
 	mklines.Check()
 
 	exp := NewMkExpecter(mklines)
-	exp.AdvanceWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
+	exp.SkipWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
 
 	if exp.EOF() || !(exp.CurrentMkLine().IsVarassign() && exp.CurrentMkLine().Varname() == "PKG_OPTIONS_VAR") {
 		exp.CurrentLine().Warnf("Expected definition of PKG_OPTIONS_VAR.")
@@ -19,14 +19,14 @@ func CheckLinesOptionsMk(mklines MkLines) {
 			"This way, the options.mk files have the same structure and are easy to understand.")
 		return
 	}
-	exp.Advance()
+	exp.Skip()
 
 	declaredOptions := make(map[string]MkLine)
 	handledOptions := make(map[string]MkLine)
 	var optionsInDeclarationOrder []string
 
 loop:
-	for ; !exp.EOF(); exp.Advance() {
+	for ; !exp.EOF(); exp.Skip() {
 		mkline := exp.CurrentMkLine()
 		switch {
 		case mkline.IsComment():
@@ -50,7 +50,7 @@ loop:
 
 		case mkline.IsInclude():
 			if mkline.IncludedFile() == "../../mk/bsd.options.mk" {
-				exp.Advance()
+				exp.Skip()
 				break loop
 			}
 
@@ -65,7 +65,7 @@ loop:
 		}
 	}
 
-	for ; !exp.EOF(); exp.Advance() {
+	for ; !exp.EOF(); exp.Skip() {
 		mkline := exp.CurrentMkLine()
 		if mkline.IsDirective() && (mkline.Directive() == "if" || mkline.Directive() == "elif") {
 			cond := mkline.Cond()

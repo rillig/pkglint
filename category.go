@@ -15,11 +15,11 @@ func CheckdirCategory(dir string) {
 	mklines.Check()
 
 	exp := NewMkExpecter(mklines)
-	for exp.AdvanceIfPrefix("#") {
+	for exp.SkipPrefix("#") {
 	}
-	exp.ExpectEmptyLine()
+	exp.SkipEmptyOrNote()
 
-	if exp.AdvanceIf(func(mkline MkLine) bool { return mkline.IsVarassign() && mkline.Varname() == "COMMENT" }) {
+	if exp.SkipIf(func(mkline MkLine) bool { return mkline.IsVarassign() && mkline.Varname() == "COMMENT" }) {
 		mkline := exp.PreviousMkLine()
 
 		lex := textproc.NewLexer(mkline.Value())
@@ -42,7 +42,7 @@ func CheckdirCategory(dir string) {
 	} else {
 		exp.CurrentLine().Errorf("COMMENT= line expected.")
 	}
-	exp.ExpectEmptyLine()
+	exp.SkipEmptyOrNote()
 
 	type subdir struct {
 		name string
@@ -61,7 +61,7 @@ func CheckdirCategory(dir string) {
 		mkline := exp.CurrentMkLine()
 
 		if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) && mkline.Varname() == "SUBDIR" {
-			exp.Advance()
+			exp.Skip()
 
 			name := mkline.Value()
 			if mkline.IsCommentedVarassign() && mkline.VarassignComment() == "" {
@@ -141,8 +141,8 @@ func CheckdirCategory(dir string) {
 	// the pkgsrc-wip category Makefile defines its own targets for
 	// generating indexes and READMEs. Just skip them.
 	if !G.Wip {
-		exp.ExpectEmptyLine()
-		exp.ExpectText(".include \"../mk/misc/category.mk\"")
+		exp.SkipEmptyOrNote()
+		exp.SkipContainsOrWarn(".include \"../mk/misc/category.mk\"")
 		if !exp.EOF() {
 			exp.CurrentLine().Errorf("The file should end here.")
 		}

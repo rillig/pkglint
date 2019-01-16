@@ -27,7 +27,7 @@ func (ck *Buildlink3Checker) Check() {
 
 	exp := NewMkExpecter(mklines)
 
-	for exp.AdvanceIf(MkLine.IsComment) {
+	for exp.SkipIf(MkLine.IsComment) {
 		line := exp.PreviousLine()
 		// See pkgtools/createbuildlink/files/createbuildlink
 		if hasPrefix(line.Text, "# XXX This file was created automatically") {
@@ -35,11 +35,11 @@ func (ck *Buildlink3Checker) Check() {
 		}
 	}
 
-	exp.ExpectEmptyLine()
+	exp.SkipEmptyOrNote()
 
-	if exp.AdvanceIfMatches(`^BUILDLINK_DEPMETHOD\.([^\t ]+)\?=.*$`) {
+	if exp.SkipRegexp(`^BUILDLINK_DEPMETHOD\.([^\t ]+)\?=.*$`) {
 		exp.PreviousLine().Warnf("This line belongs inside the .ifdef block.")
-		for exp.AdvanceIfEquals("") {
+		for exp.SkipString("") {
 		}
 	}
 
@@ -54,7 +54,7 @@ func (ck *Buildlink3Checker) Check() {
 	}
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
-	if !exp.ExpectText("BUILDLINK_TREE+=\t-" + ck.pkgbase) {
+	if !exp.SkipContainsOrWarn("BUILDLINK_TREE+=\t-" + ck.pkgbase) {
 		return
 	}
 
@@ -72,7 +72,7 @@ func (ck *Buildlink3Checker) Check() {
 func (ck *Buildlink3Checker) checkFirstParagraph(exp *MkExpecter) bool {
 
 	// First paragraph: Introduction of the package identifier
-	if !exp.AdvanceIfMatches(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`) {
+	if !exp.SkipRegexp(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`) {
 		exp.CurrentLine().Warnf("Expected a BUILDLINK_TREE line.")
 		return false
 	}
@@ -83,7 +83,7 @@ func (ck *Buildlink3Checker) checkFirstParagraph(exp *MkExpecter) bool {
 	if containsVarRef(pkgbase) {
 		ck.checkVaruseInPkgbase(pkgbase, pkgbaseLine)
 	}
-	exp.ExpectEmptyLine()
+	exp.SkipEmptyOrNote()
 	ck.pkgbase = pkgbase
 	ck.pkgbaseLine = pkgbaseLine
 	return true
@@ -95,15 +95,15 @@ func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
 	pkgbase := ck.pkgbase
 	pkgbaseLine := ck.pkgbaseLine
 
-	if !exp.AdvanceIfMatches(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`) {
+	if !exp.SkipRegexp(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`) {
 		return false
 	}
 	pkgupperLine, pkgupper := exp.PreviousMkLine(), exp.Group(1)
 
-	if !exp.ExpectText(pkgupper + "_BUILDLINK3_MK:=") {
+	if !exp.SkipContainsOrWarn(pkgupper + "_BUILDLINK3_MK:=") {
 		return false
 	}
-	exp.ExpectEmptyLine()
+	exp.SkipEmptyOrNote()
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
@@ -130,7 +130,7 @@ func (ck *Buildlink3Checker) checkMainPart(exp *MkExpecter) bool {
 
 	for !exp.EOF() && indentLevel > 0 {
 		mkline := exp.CurrentMkLine()
-		exp.Advance()
+		exp.Skip()
 
 		switch {
 		case mkline.IsVarassign():
@@ -151,7 +151,7 @@ func (ck *Buildlink3Checker) checkMainPart(exp *MkExpecter) bool {
 	if ck.apiLine == nil {
 		exp.CurrentLine().Warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
-	exp.ExpectEmptyLine()
+	exp.SkipEmptyOrNote()
 	return true
 }
 
