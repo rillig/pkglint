@@ -177,6 +177,32 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 		"FATAL: ~/doc: Cannot be read for loading the package changes.")
 }
 
+// Since package authors for pkgsrc-wip cannot necessarily commit to
+// main pkgsrc, don't warn about unsorted doc/CHANGES lines.
+// Only pkgsrc main committers can fix these.
+func (s *Suite) Test_Pkgsrc_loadDocChanges__wip(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("wip/package",
+		"CATEGORIES=\tlocal")
+	t.CreateFileLines("doc/CHANGES-2018",
+		RcsID,
+		"",
+		"Changes to the packages collection and infrastructure in 2018:",
+		"",
+		"\tUpdated sysutils/checkperms to 1.10 [rillig 2018-01-05]",
+		"\tUpdated sysutils/checkperms to 1.11 [rillig 2018-01-01]")
+
+	G.Main("pkglint", t.File("wip/package"))
+
+	// FIXME: Don't warn here.
+	t.CheckOutputLines(
+		"WARN: ~/doc/CHANGES-2018:6: Date 2018-01-01 for sysutils/checkperms "+
+			"is earlier than 2018-01-05 for sysutils/checkperms.",
+		"0 errors and 1 warning found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
+
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	t := s.Init(c)
 
