@@ -144,7 +144,6 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 		patchName := file.Name()
 		if file.Mode().IsRegular() && !ck.patches[patchName] && hasPrefix(patchName, "patch-") {
 			ck.distinfoLines.Errorf("patch %q is not recorded. Run %q.",
-				// FIXME: Relative paths must not be "../dependency" but the full "../../category/dependency" instead.
 				cleanpath(relpath(path.Dir(ck.distinfoLines.FileName), G.Pkg.File(ck.patchdir+"/"+patchName))),
 				bmake("makepatchsum"))
 		}
