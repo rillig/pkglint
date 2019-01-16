@@ -450,7 +450,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 				line.Warnf("Package changes should be indented using a single tab, not %q.", space)
 				line.Explain(
 					"To avoid this formatting mistake in the future, just run",
-					bmake("cce"),
+					sprintf("%q", bmake("cce")),
 					"after committing the update to the package.")
 			}
 
