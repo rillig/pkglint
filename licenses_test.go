@@ -58,7 +58,7 @@ func (s *Suite) Test_LicenseChecker_checkName__LICENSE_FILE(c *check.C) {
 	G.Main("pkglint", t.File("category/package"))
 
 	// FIXME: It should be allowed to place a license file directly into
-	// the package directory.
+	//  the package directory.
 	t.CheckOutputLines(
 		"WARN: ~/category/package/my-license: Unexpected file found.",
 		"0 errors and 1 warning found.")
