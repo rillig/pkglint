@@ -471,15 +471,19 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		year = yyyy
 	}
 
+	warn := !G.Wip
+
 	lines := Load(filename, MustSucceed|NotEmpty)
 	var changes []*Change
 	for _, line := range lines.Lines {
 		if change := parseChange(line); change != nil {
 			changes = append(changes, change)
-			if year != "" && change.Date[0:4] != year {
+
+			if warn && year != "" && change.Date[0:4] != year {
 				line.Warnf("Year %s for %s does not match the filename %s.", change.Date[0:4], change.Pkgpath, filename)
 			}
-			if len(changes) >= 2 && year != "" {
+
+			if warn && len(changes) >= 2 && year != "" {
 				if prev := changes[len(changes)-2]; change.Date < prev.Date {
 					line.Warnf("Date %s for %s is earlier than %s for %s.", change.Date, change.Pkgpath, prev.Date, prev.Pkgpath)
 					G.Explain(
@@ -495,9 +499,12 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 						"the changes entry.")
 				}
 			}
-		} else if lex := textproc.NewLexer(line.Text); lex.SkipByte('\t') && lex.TestByteSet(textproc.Upper) {
-			line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
-			G.Explain("See mk/misc/developer.mk for the rules.")
+
+		} else if warn {
+			if lex := textproc.NewLexer(line.Text); lex.SkipByte('\t') && lex.TestByteSet(textproc.Upper) {
+				line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
+				G.Explain("See mk/misc/developer.mk for the rules.")
+			}
 		}
 	}
 	return changes

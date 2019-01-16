@@ -190,6 +190,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	}
 
 	pkglint.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
+	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstArg), `^wip(/|$)`) // Same as in Pkglint.Check.
 	pkglint.Pkgsrc.LoadInfrastructure()
 
 	currentUser, err := user.Current()
