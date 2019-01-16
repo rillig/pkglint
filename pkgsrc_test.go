@@ -247,6 +247,27 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip_suppresses_warnings(c *c
 		"Looks fine.")
 }
 
+func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("doc/CHANGES-2018",
+		RcsID,
+		"",
+		"Changes to the packages collection and infrastructure in 2018:",
+		"",
+		"        Updated sysutils/checkperms to 1.10 [rillig 2018-01-05]",
+		"    \tUpdated sysutils/checkperms to 1.11 [rillig 2018-01-01]")
+
+	G.Main("pkglint", t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/doc/CHANGES-2018:5: Package changes should be indented using a single tab, not \"        \".",
+		"WARN: ~/doc/CHANGES-2018:6: Package changes should be indented using a single tab, not \"    \\t\".",
+		"0 errors and 2 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
+
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 	t := s.Init(c)
 

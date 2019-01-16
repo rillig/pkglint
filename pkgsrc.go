@@ -503,9 +503,21 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 			}
 
 		} else if warn {
-			if lex := textproc.NewLexer(line.Text); lex.SkipByte('\t') && lex.TestByteSet(textproc.Upper) {
-				line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
-				G.Explain("See mk/misc/developer.mk for the rules.")
+			lex := textproc.NewLexer(line.Text)
+			space := lex.NextHspace()
+			if space != "" {
+				if space != "\t" {
+					line.Warnf("Package changes should be indented using a single tab, not %q.", space)
+					line.Explain(
+						"To avoid this formatting mistake in the future, just run",
+						bmake("cce"),
+						"after committing the update to the package.")
+
+				} else if lex.TestByteSet(textproc.Upper) {
+					line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
+					line.Explain(
+						"See mk/misc/developer.mk for the rules.")
+				}
 			}
 		}
 	}
