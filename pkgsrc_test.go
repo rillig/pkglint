@@ -164,6 +164,19 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 	// does not contain anything at mklinechecker.go:/UserDefinedVars/.
 }
 
+func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.Remove("doc/CHANGES-2018")
+	t.Remove("doc/TODO")
+	t.Remove("doc")
+
+	t.ExpectFatal(
+		G.Pkgsrc.loadDocChanges,
+		"FATAL: ~/doc: Cannot be read for loading the package changes.")
+}
+
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	t := s.Init(c)
 
@@ -203,19 +216,6 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:1: Year 2015 for category/package does not match the filename ~/doc/CHANGES-2018.",
 		"WARN: ~/doc/CHANGES-2018:6: Date 2018-01-06 for category/package is earlier than 2018-01-09 for category/package.",
 		"WARN: ~/doc/CHANGES-2018:12: Unknown doc/CHANGES line: \tAdded another [new package]")
-}
-
-func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPkgsrc()
-	t.Remove("doc/CHANGES-2018")
-	t.Remove("doc/TODO")
-	t.Remove("doc")
-
-	t.ExpectFatal(
-		G.Pkgsrc.loadDocChanges,
-		"FATAL: ~/doc: Cannot be read for loading the package changes.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {
