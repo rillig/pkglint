@@ -11,11 +11,10 @@ import (
 type Expecter struct {
 	lines Lines
 	index int
-	m     []string // The groups from the last successful regex match
 }
 
 func NewExpecter(lines Lines) *Expecter {
-	return &Expecter{lines, 0, nil}
+	return &Expecter{lines, 0}
 }
 
 func (exp *Expecter) CurrentLine() Line {
@@ -33,23 +32,17 @@ func (exp *Expecter) EOF() bool {
 	return !(exp.index < exp.lines.Len())
 }
 
-func (exp *Expecter) Group(index int) string {
-	return exp.m[index]
-}
-
 // Skip skips the current line and returns true.
 func (exp *Expecter) Skip() bool {
 	if exp.EOF() {
 		return false
 	}
 	exp.index++
-	exp.m = nil
 	return true
 }
 
 func (exp *Expecter) Undo() {
 	exp.index--
-	exp.m = nil
 }
 
 func (exp *Expecter) NextRegexp(re regex.Pattern) []string {
@@ -60,7 +53,6 @@ func (exp *Expecter) NextRegexp(re regex.Pattern) []string {
 	if !exp.EOF() {
 		if m := G.res.Match(exp.lines.Lines[exp.index].Text, re); m != nil {
 			exp.index++
-			exp.m = m
 			return m
 		}
 	}

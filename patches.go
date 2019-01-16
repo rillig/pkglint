@@ -47,9 +47,9 @@ func (ck *PatchChecker) Check() {
 	for !ck.exp.EOF() {
 		line := ck.exp.CurrentLine()
 		if ck.exp.SkipRegexp(rePatchUniFileDel) {
-			if ck.exp.SkipRegexp(rePatchUniFileAdd) {
+			if m := ck.exp.NextRegexp(rePatchUniFileAdd); m != nil {
 				ck.checkBeginDiff(line, patchedFiles)
-				ck.checkUnifiedDiff(ck.exp.Group(1))
+				ck.checkUnifiedDiff(m[1])
 				patchedFiles++
 				continue
 			}
@@ -57,8 +57,8 @@ func (ck *PatchChecker) Check() {
 			ck.exp.Undo()
 		}
 
-		if ck.exp.SkipRegexp(rePatchUniFileAdd) {
-			patchedFile := ck.exp.Group(1)
+		if m := ck.exp.NextRegexp(rePatchUniFileAdd); m != nil {
+			patchedFile := m[1]
 			if ck.exp.SkipRegexp(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.exp.PreviousLine().Warnf("Unified diff headers should be first ---, then +++.")
@@ -115,14 +115,20 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	}
 
 	hasHunks := false
-	for ck.exp.SkipRegexp(rePatchUniHunk) {
-		text := ck.exp.m[0]
+	for {
+		m := ck.exp.NextRegexp(rePatchUniHunk)
+		if m == nil {
+			break
+		}
+
+		text := m[0]
 		hasHunks = true
-		linesToDel := toInt(ck.exp.Group(2), 1)
-		linesToAdd := toInt(ck.exp.Group(4), 1)
+		linesToDel := toInt(m[2], 1)
+		linesToAdd := toInt(m[4], 1)
 		if trace.Tracing {
 			trace.Stepf("hunk -%d +%d", linesToDel, linesToAdd)
 		}
+
 		ck.checktextUniHunkCr()
 		ck.checktextRcsid(text)
 

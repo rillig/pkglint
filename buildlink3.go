@@ -72,12 +72,13 @@ func (ck *Buildlink3Checker) Check() {
 func (ck *Buildlink3Checker) checkFirstParagraph(exp *MkExpecter) bool {
 
 	// First paragraph: Introduction of the package identifier
-	if !exp.SkipRegexp(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`) {
+	m := exp.NextRegexp(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`)
+	if m == nil {
 		exp.CurrentLine().Warnf("Expected a BUILDLINK_TREE line.")
 		return false
 	}
 
-	pkgbase := exp.Group(1)
+	pkgbase := m[1]
 	pkgbaseLine := exp.PreviousMkLine()
 
 	if containsVarRef(pkgbase) {
@@ -95,10 +96,11 @@ func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
 	pkgbase := ck.pkgbase
 	pkgbaseLine := ck.pkgbaseLine
 
-	if !exp.SkipRegexp(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`) {
+	m := exp.NextRegexp(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`)
+	if m == nil {
 		return false
 	}
-	pkgupperLine, pkgupper := exp.PreviousMkLine(), exp.Group(1)
+	pkgupperLine, pkgupper := exp.PreviousMkLine(), m[1]
 
 	if !exp.SkipContainsOrWarn(pkgupper + "_BUILDLINK3_MK:=") {
 		return false
