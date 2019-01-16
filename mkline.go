@@ -334,27 +334,27 @@ func (mkline *MkLineImpl) SetConditionalVars(varnames []string) {
 	mkline.data = include
 }
 
-// Tokenize extracts variable uses and other text from the string.
+// Tokenize extracts variable uses and other text from the given text.
 //
-// TODO: Check this paragraph for correctness.
-// Either:
-// The given s must have exactly the format from the file, i.e. an escaped
-// comment is written as \#.
-// Or:
-// The given s must have the format after parsing comments, i.e. the trailing
-// comment is already removed, and a # does not introduce another comment.
+// When used in IsVarassign lines, the given text must have the format
+// after stripping the end-of-line comment. Such text is available from
+// Value. A shell comment is therefore marked by a simple #, not an escaped
+// \# like in Makefiles.
+//
+// When used in IsShellCommand lines, # does not mark a Makefile comment
+// and may thus still appear in the text. Therefore, # marks a shell comment.
 //
 // Example:
 //  input:  ${PREFIX}/bin abc
 //  output: [MkToken("${PREFIX}", MkVarUse("PREFIX")), MkToken("/bin abc")]
 //
 // See ValueTokens, which is the tokenized version of Value.
-func (mkline *MkLineImpl) Tokenize(s string, warn bool) []*MkToken {
+func (mkline *MkLineImpl) Tokenize(text string, warn bool) []*MkToken {
 	if trace.Tracing {
-		defer trace.Call(mkline, s)()
+		defer trace.Call(mkline, text)()
 	}
 
-	p := NewMkParser(mkline.Line, s, true)
+	p := NewMkParser(mkline.Line, text, true)
 	tokens := p.MkTokens()
 	if warn && p.Rest() != "" {
 		mkline.Warnf("Internal pkglint error in MkLine.Tokenize at %q.", p.Rest())
