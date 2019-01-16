@@ -435,13 +435,29 @@ func (src *Pkgsrc) loadSuggestedUpdates() {
 
 func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 
+	warn := !G.Wip
+
 	parseChange := func(line Line) *Change {
-		text := line.Text
-		if !hasPrefix(text, "\t") {
+		lex := textproc.NewLexer(line.Text)
+
+		space := lex.NextHspace()
+		if space == "" {
 			return nil
 		}
 
-		f := strings.Fields(text)
+		if space != "\t" {
+			if warn {
+				line.Warnf("Package changes should be indented using a single tab, not %q.", space)
+				line.Explain(
+					"To avoid this formatting mistake in the future, just run",
+					bmake("cce"),
+					"after committing the update to the package.")
+			}
+
+			return nil
+		}
+
+		f := strings.Fields(lex.Rest())
 		n := len(f)
 		if n != 4 && n != 6 {
 			return nil
@@ -456,70 +472,68 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		switch {
 		case action == "Added" && f[2] == "version" && n == 6:
 			return &Change{line, action, pkgpath, f[3], author, date}
+
 		case (action == "Updated" || action == "Downgraded") && f[2] == "to" && n == 6:
 			return &Change{line, action, pkgpath, f[3], author, date}
+
 		case action == "Removed" && (n == 6 && f[2] == "successor" || n == 4):
 			return &Change{line, action, pkgpath, "", author, date}
+
 		case (action == "Renamed" || action == "Moved") && f[2] == "to" && n == 6:
 			return &Change{line, action, pkgpath, "", author, date}
 		}
+
+		line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
+		line.Explain(
+			"See mk/misc/developer.mk for the rules.")
+
 		return nil
 	}
 
 	// Each date in the file should be from the same year as the filename says.
+	// This check has been added in 2018.
 	// For years earlier than 2018 pkglint doesn't care because it's not a big issue anyway.
 	year := ""
 	if m, yyyy := match1(filename, `-(\d+)$`); m && yyyy >= "2018" {
 		year = yyyy
 	}
 
-	warn := !G.Wip
-
 	lines := Load(filename, MustSucceed|NotEmpty)
 	var changes []*Change
 	for _, line := range lines.Lines {
-		if change := parseChange(line); change != nil {
-			changes = append(changes, change)
 
-			if warn && year != "" && change.Date[0:4] != year {
-				line.Warnf("Year %s for %s does not match the filename %s.", change.Date[0:4], change.Pkgpath, filename)
-			}
+		change := parseChange(line)
+		if change == nil {
+			continue
+		}
 
-			if warn && len(changes) >= 2 && year != "" {
-				if prev := changes[len(changes)-2]; change.Date < prev.Date {
-					line.Warnf("Date %s for %s is earlier than %s in %s.",
-						change.Date, change.Pkgpath, prev.Date, line.RefTo(prev.Line))
-					line.Explain(
-						"The entries in doc/CHANGES should be in chronological order, and",
-						"all dates are assumed to be in the UTC timezone, to prevent time",
-						"warps.",
-						"",
-						"To fix this, determine which of the involved dates are correct",
-						"and which aren't.",
-						"",
-						"To prevent this kind of mistakes in the future,",
-						"make sure that your system time is correct and run",
-						sprintf("%q", bmake("cce")),
-						"to commit the changes entry.")
-				}
-			}
+		changes = append(changes, change)
 
-		} else if warn {
-			lex := textproc.NewLexer(line.Text)
-			space := lex.NextHspace()
-			if space != "" {
-				if space != "\t" {
-					line.Warnf("Package changes should be indented using a single tab, not %q.", space)
-					line.Explain(
-						"To avoid this formatting mistake in the future, just run",
-						bmake("cce"),
-						"after committing the update to the package.")
+		if !warn {
+			continue
+		}
 
-				} else if lex.TestByteSet(textproc.Upper) {
-					line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
-					line.Explain(
-						"See mk/misc/developer.mk for the rules.")
-				}
+		if year != "" && change.Date[0:4] != year {
+			line.Warnf("Year %s for %s does not match the filename %s.",
+				change.Date[0:4], change.Pkgpath, filename)
+		}
+
+		if len(changes) >= 2 && year != "" {
+			if prev := changes[len(changes)-2]; change.Date < prev.Date {
+				line.Warnf("Date %s for %s is earlier than %s in %s.",
+					change.Date, change.Pkgpath, prev.Date, line.RefTo(prev.Line))
+				line.Explain(
+					"The entries in doc/CHANGES should be in chronological order, and",
+					"all dates are assumed to be in the UTC timezone, to prevent time",
+					"warps.",
+					"",
+					"To fix this, determine which of the involved dates are correct",
+					"and which aren't.",
+					"",
+					"To prevent this kind of mistakes in the future,",
+					"make sure that your system time is correct and run",
+					sprintf("%q", bmake("cce")),
+					"to commit the changes entry.")
 			}
 		}
 	}
