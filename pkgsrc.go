@@ -485,8 +485,9 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 
 			if warn && len(changes) >= 2 && year != "" {
 				if prev := changes[len(changes)-2]; change.Date < prev.Date {
-					line.Warnf("Date %s for %s is earlier than %s for %s.", change.Date, change.Pkgpath, prev.Date, prev.Pkgpath)
-					G.Explain(
+					line.Warnf("Date %s for %s is earlier than %s in %s.",
+						change.Date, change.Pkgpath, prev.Date, line.RefTo(prev.Line))
+					line.Explain(
 						"The entries in doc/CHANGES should be in chronological order, and",
 						"all dates are assumed to be in the UTC timezone, to prevent time",
 						"warps.",
@@ -494,9 +495,10 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 						"To fix this, determine which of the involved dates are correct",
 						"and which aren't.",
 						"",
-						"To prevent this kind of mistakes in the future, make sure that",
-						sprintf("your system time is correct and run %q to commit", bmake("cce")),
-						"the changes entry.")
+						"To prevent this kind of mistakes in the future,",
+						"make sure that your system time is correct and run",
+						sprintf("%q", bmake("cce")),
+						"to commit the changes entry.")
 				}
 			}
 
@@ -507,6 +509,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 			}
 		}
 	}
+
 	return changes
 }
 

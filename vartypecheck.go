@@ -172,6 +172,7 @@ func (cv *VartypeCheck) Category() {
 	if cv.Value != "wip" && fileExists(G.Pkgsrc.File(cv.Value+"/Makefile")) {
 		return
 	}
+
 	switch cv.Value {
 	case
 		"chinese", "crosspkgtools",
