@@ -183,8 +183,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadDocChanges__wip(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("wip/package",
-		"CATEGORIES=\tlocal")
+	t.SetUpPackage("wip/package")
 	t.CreateFileLines("doc/CHANGES-2018",
 		RcsID,
 		"",
@@ -256,8 +255,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetUpPackage("wip/package",
-		"DISTNAME=\tpackage-1.11",
-		"CATEGORIES=\tlocal") // To avoid "Invalid category wip".
+		"DISTNAME=\tpackage-1.11")
 	t.CreateFileLines("wip/TODO",
 		RcsID,
 		"",

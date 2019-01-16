@@ -284,7 +284,12 @@ func (t *Tester) SetUpCategory(name string) {
 // After calling this method, individual files can be overwritten as necessary.
 // Then, G.Pkgsrc.LoadInfrastructure should be called to load all the files.
 func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
+
 	category := path.Dir(pkgpath)
+	if category == "wip" {
+		// To avoid boilerplate CATEGORIES definitions for wip packages.
+		category = "local"
+	}
 
 	t.SetUpPkgsrc()
 	t.SetUpVartypes()
