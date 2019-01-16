@@ -5,93 +5,91 @@ import (
 	"strings"
 )
 
-// Expecter records the state when checking a list of lines from top to bottom.
-//
-// TODO: Maybe rename to LineLexer.
-type Expecter struct {
+// LinesLexer records the state when checking a list of lines from top to bottom.
+type LinesLexer struct {
 	lines Lines
 	index int
 }
 
-func NewExpecter(lines Lines) *Expecter {
-	return &Expecter{lines, 0}
+func NewLinesLexer(lines Lines) *LinesLexer {
+	return &LinesLexer{lines, 0}
 }
 
-func (exp *Expecter) CurrentLine() Line {
-	if exp.index < exp.lines.Len() {
-		return exp.lines.Lines[exp.index]
+func (llex *LinesLexer) CurrentLine() Line {
+	if llex.index < llex.lines.Len() {
+		return llex.lines.Lines[llex.index]
 	}
-	return NewLineEOF(exp.lines.FileName)
+	return NewLineEOF(llex.lines.FileName)
 }
 
-func (exp *Expecter) PreviousLine() Line {
-	return exp.lines.Lines[exp.index-1]
+func (llex *LinesLexer) PreviousLine() Line {
+	return llex.lines.Lines[llex.index-1]
 }
 
-func (exp *Expecter) EOF() bool {
-	return !(exp.index < exp.lines.Len())
+func (llex *LinesLexer) EOF() bool {
+	return !(llex.index < llex.lines.Len())
 }
 
 // Skip skips the current line and returns true.
-func (exp *Expecter) Skip() bool {
-	if exp.EOF() {
+func (llex *LinesLexer) Skip() bool {
+	if llex.EOF() {
 		return false
 	}
-	exp.index++
+	llex.index++
 	return true
 }
 
-func (exp *Expecter) Undo() {
-	exp.index--
+func (llex *LinesLexer) Undo() {
+	llex.index--
 }
 
-func (exp *Expecter) NextRegexp(re regex.Pattern) []string {
+func (llex *LinesLexer) NextRegexp(re regex.Pattern) []string {
 	if trace.Tracing {
-		defer trace.Call(exp.CurrentLine().Text, re)()
+		defer trace.Call(llex.CurrentLine().Text, re)()
 	}
 
-	if !exp.EOF() {
-		if m := G.res.Match(exp.lines.Lines[exp.index].Text, re); m != nil {
-			exp.index++
+	if !llex.EOF() {
+		if m := G.res.Match(llex.lines.Lines[llex.index].Text, re); m != nil {
+			llex.index++
 			return m
 		}
 	}
 	return nil
 }
 
-func (exp *Expecter) SkipRegexp(re regex.Pattern) bool {
-	return exp.NextRegexp(re) != nil
+func (llex *LinesLexer) SkipRegexp(re regex.Pattern) bool {
+	return llex.NextRegexp(re) != nil
 }
 
-func (exp *Expecter) SkipPrefix(prefix string) bool {
+func (llex *LinesLexer) SkipPrefix(prefix string) bool {
 	if trace.Tracing {
-		defer trace.Call2(exp.CurrentLine().Text, prefix)()
+		defer trace.Call2(llex.CurrentLine().Text, prefix)()
 	}
 
-	return !exp.EOF() && strings.HasPrefix(exp.lines.Lines[exp.index].Text, prefix) && exp.Skip()
+	return !llex.EOF() && strings.HasPrefix(llex.lines.Lines[llex.index].Text, prefix) && llex.Skip()
 }
 
-func (exp *Expecter) SkipString(text string) bool {
+func (llex *LinesLexer) SkipString(text string) bool {
 	if trace.Tracing {
-		defer trace.Call2(exp.CurrentLine().Text, text)()
+		defer trace.Call2(llex.CurrentLine().Text, text)()
 	}
 
-	return !exp.EOF() && exp.lines.Lines[exp.index].Text == text && exp.Skip()
+	return !llex.EOF() && llex.lines.Lines[llex.index].Text == text && llex.Skip()
 }
 
-func (exp *Expecter) SkipEmptyOrNote() bool {
-	if exp.SkipString("") {
+func (llex *LinesLexer) SkipEmptyOrNote() bool {
+	if llex.SkipString("") {
 		return true
 	}
 
 	if G.Opts.WarnSpace {
-		if exp.index == 0 {
-			fix := exp.CurrentLine().Autofix()
+		if llex.index == 0 {
+			fix := llex.CurrentLine().Autofix()
 			fix.Notef("Empty line expected before this line.")
 			fix.InsertBefore("")
 			fix.Apply()
 		} else {
-			fix := exp.PreviousLine().Autofix()
+			fix := llex.PreviousLine().Autofix()
 			fix.Notef("Empty line expected after this line.")
 			fix.InsertAfter("")
 			fix.Apply()
@@ -100,42 +98,42 @@ func (exp *Expecter) SkipEmptyOrNote() bool {
 	return false
 }
 
-func (exp *Expecter) SkipContainsOrWarn(text string) bool {
-	result := exp.SkipString(text)
+func (llex *LinesLexer) SkipContainsOrWarn(text string) bool {
+	result := llex.SkipString(text)
 	if !result {
-		exp.CurrentLine().Warnf("This line should contain the following text: %s", text)
+		llex.CurrentLine().Warnf("This line should contain the following text: %s", text)
 	}
 	return result
 }
 
-// MkExpecter records the state when checking a list of Makefile lines from top to bottom.
-type MkExpecter struct {
+// MkLinesLexer records the state when checking a list of Makefile lines from top to bottom.
+type MkLinesLexer struct {
 	mklines MkLines
-	Expecter
+	LinesLexer
 }
 
-func NewMkExpecter(mklines MkLines) *MkExpecter {
-	return &MkExpecter{mklines, *NewExpecter(mklines.lines)}
+func NewMkLinesLexer(mklines MkLines) *MkLinesLexer {
+	return &MkLinesLexer{mklines, *NewLinesLexer(mklines.lines)}
 }
 
-func (exp *MkExpecter) PreviousMkLine() MkLine {
-	return exp.mklines.mklines[exp.index-1]
+func (mlex *MkLinesLexer) PreviousMkLine() MkLine {
+	return mlex.mklines.mklines[mlex.index-1]
 }
 
-func (exp *MkExpecter) CurrentMkLine() MkLine {
-	return exp.mklines.mklines[exp.index]
+func (mlex *MkLinesLexer) CurrentMkLine() MkLine {
+	return mlex.mklines.mklines[mlex.index]
 }
 
-func (exp *MkExpecter) SkipWhile(pred func(mkline MkLine) bool) {
+func (mlex *MkLinesLexer) SkipWhile(pred func(mkline MkLine) bool) {
 	if trace.Tracing {
-		defer trace.Call(exp.CurrentMkLine().Text)()
+		defer trace.Call(mlex.CurrentMkLine().Text)()
 	}
 
-	for !exp.EOF() && pred(exp.CurrentMkLine()) {
-		exp.Skip()
+	for !mlex.EOF() && pred(mlex.CurrentMkLine()) {
+		mlex.Skip()
 	}
 }
 
-func (exp *MkExpecter) SkipIf(pred func(mkline MkLine) bool) bool {
-	return !exp.EOF() && pred(exp.CurrentMkLine()) && exp.Skip()
+func (mlex *MkLinesLexer) SkipIf(pred func(mkline MkLine) bool) bool {
+	return !mlex.EOF() && pred(mlex.CurrentMkLine()) && mlex.Skip()
 }

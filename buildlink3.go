@@ -25,41 +25,41 @@ func (ck *Buildlink3Checker) Check() {
 
 	mklines.Check()
 
-	exp := NewMkExpecter(mklines)
+	llex := NewMkLinesLexer(mklines)
 
-	for exp.SkipIf(MkLine.IsComment) {
-		line := exp.PreviousLine()
+	for llex.SkipIf(MkLine.IsComment) {
+		line := llex.PreviousLine()
 		// See pkgtools/createbuildlink/files/createbuildlink
 		if hasPrefix(line.Text, "# XXX This file was created automatically") {
 			line.Errorf("This comment indicates unfinished work (url2pkg).")
 		}
 	}
 
-	exp.SkipEmptyOrNote()
+	llex.SkipEmptyOrNote()
 
-	if exp.SkipRegexp(`^BUILDLINK_DEPMETHOD\.([^\t ]+)\?=.*$`) {
-		exp.PreviousLine().Warnf("This line belongs inside the .ifdef block.")
-		for exp.SkipString("") {
+	if llex.SkipRegexp(`^BUILDLINK_DEPMETHOD\.([^\t ]+)\?=.*$`) {
+		llex.PreviousLine().Warnf("This line belongs inside the .ifdef block.")
+		for llex.SkipString("") {
 		}
 	}
 
-	if !ck.checkFirstParagraph(exp) {
+	if !ck.checkFirstParagraph(llex) {
 		return
 	}
-	if !ck.checkSecondParagraph(exp) {
+	if !ck.checkSecondParagraph(llex) {
 		return
 	}
-	if !ck.checkMainPart(exp) {
+	if !ck.checkMainPart(llex) {
 		return
 	}
 
 	// Fourth paragraph: Cleanup, corresponding to the first paragraph.
-	if !exp.SkipContainsOrWarn("BUILDLINK_TREE+=\t-" + ck.pkgbase) {
+	if !llex.SkipContainsOrWarn("BUILDLINK_TREE+=\t-" + ck.pkgbase) {
 		return
 	}
 
-	if !exp.EOF() {
-		exp.CurrentLine().Warnf("The file should end here.")
+	if !llex.EOF() {
+		llex.CurrentLine().Warnf("The file should end here.")
 	}
 
 	if G.Pkg != nil {
@@ -69,22 +69,22 @@ func (ck *Buildlink3Checker) Check() {
 	mklines.SaveAutofixChanges()
 }
 
-func (ck *Buildlink3Checker) checkFirstParagraph(exp *MkExpecter) bool {
+func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 
 	// First paragraph: Introduction of the package identifier
-	m := exp.NextRegexp(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`)
+	m := mlex.NextRegexp(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`)
 	if m == nil {
-		exp.CurrentLine().Warnf("Expected a BUILDLINK_TREE line.")
+		mlex.CurrentLine().Warnf("Expected a BUILDLINK_TREE line.")
 		return false
 	}
 
 	pkgbase := m[1]
-	pkgbaseLine := exp.PreviousMkLine()
+	pkgbaseLine := mlex.PreviousMkLine()
 
 	if containsVarRef(pkgbase) {
 		ck.checkVaruseInPkgbase(pkgbase, pkgbaseLine)
 	}
-	exp.SkipEmptyOrNote()
+	mlex.SkipEmptyOrNote()
 	ck.pkgbase = pkgbase
 	ck.pkgbaseLine = pkgbaseLine
 	return true
@@ -92,20 +92,20 @@ func (ck *Buildlink3Checker) checkFirstParagraph(exp *MkExpecter) bool {
 
 // checkSecondParagraph checks the multiple inclusion protection and
 // introduces the uppercase package identifier.
-func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
+func (ck *Buildlink3Checker) checkSecondParagraph(mlex *MkLinesLexer) bool {
 	pkgbase := ck.pkgbase
 	pkgbaseLine := ck.pkgbaseLine
 
-	m := exp.NextRegexp(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`)
+	m := mlex.NextRegexp(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`)
 	if m == nil {
 		return false
 	}
-	pkgupperLine, pkgupper := exp.PreviousMkLine(), m[1]
+	pkgupperLine, pkgupper := mlex.PreviousMkLine(), m[1]
 
-	if !exp.SkipContainsOrWarn(pkgupper + "_BUILDLINK3_MK:=") {
+	if !mlex.SkipContainsOrWarn(pkgupper + "_BUILDLINK3_MK:=") {
 		return false
 	}
-	exp.SkipEmptyOrNote()
+	mlex.SkipEmptyOrNote()
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
@@ -124,19 +124,19 @@ func (ck *Buildlink3Checker) checkSecondParagraph(exp *MkExpecter) bool {
 }
 
 // Third paragraph: Package information.
-func (ck *Buildlink3Checker) checkMainPart(exp *MkExpecter) bool {
+func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 	pkgbase := ck.pkgbase
 
 	// The first .if is from the second paragraph.
 	indentLevel := 1
 
-	for !exp.EOF() && indentLevel > 0 {
-		mkline := exp.CurrentMkLine()
-		exp.Skip()
+	for !mlex.EOF() && indentLevel > 0 {
+		mkline := mlex.CurrentMkLine()
+		mlex.Skip()
 
 		switch {
 		case mkline.IsVarassign():
-			ck.checkVarassign(exp, mkline, pkgbase)
+			ck.checkVarassign(mlex, mkline, pkgbase)
 
 		case mkline.IsDirective() && mkline.Directive() == "if":
 			indentLevel++
@@ -151,13 +151,13 @@ func (ck *Buildlink3Checker) checkMainPart(exp *MkExpecter) bool {
 	}
 
 	if ck.apiLine == nil {
-		exp.CurrentLine().Warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
+		mlex.CurrentLine().Warnf("Definition of BUILDLINK_API_DEPENDS is missing.")
 	}
-	exp.SkipEmptyOrNote()
+	mlex.SkipEmptyOrNote()
 	return true
 }
 
-func (ck *Buildlink3Checker) checkVarassign(exp *MkExpecter, mkline MkLine, pkgbase string) {
+func (ck *Buildlink3Checker) checkVarassign(mlex *MkLinesLexer, mkline MkLine, pkgbase string) {
 	varname, value := mkline.Varname(), mkline.Value()
 	doCheck := false
 

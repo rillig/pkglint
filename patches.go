@@ -12,12 +12,12 @@ func CheckLinesPatch(lines Lines) {
 		defer trace.Call1(lines.FileName)()
 	}
 
-	(&PatchChecker{lines, NewExpecter(lines), false, false}).Check()
+	(&PatchChecker{lines, NewLinesLexer(lines), false, false}).Check()
 }
 
 type PatchChecker struct {
 	lines             Lines
-	exp               *Expecter
+	llex              *LinesLexer
 	seenDocumentation bool
 	previousLineEmpty bool
 }
@@ -34,53 +34,53 @@ func (ck *PatchChecker) Check() {
 	}
 
 	if ck.lines.CheckRcsID(0, ``, "") {
-		ck.exp.Skip()
+		ck.llex.Skip()
 	}
-	if ck.exp.EOF() {
+	if ck.llex.EOF() {
 		ck.lines.Lines[0].Errorf("Patch files must not be empty.")
 		return
 	}
 
-	ck.previousLineEmpty = ck.exp.SkipEmptyOrNote()
+	ck.previousLineEmpty = ck.llex.SkipEmptyOrNote()
 
 	patchedFiles := 0
-	for !ck.exp.EOF() {
-		line := ck.exp.CurrentLine()
-		if ck.exp.SkipRegexp(rePatchUniFileDel) {
-			if m := ck.exp.NextRegexp(rePatchUniFileAdd); m != nil {
+	for !ck.llex.EOF() {
+		line := ck.llex.CurrentLine()
+		if ck.llex.SkipRegexp(rePatchUniFileDel) {
+			if m := ck.llex.NextRegexp(rePatchUniFileAdd); m != nil {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.checkUnifiedDiff(m[1])
 				patchedFiles++
 				continue
 			}
 
-			ck.exp.Undo()
+			ck.llex.Undo()
 		}
 
-		if m := ck.exp.NextRegexp(rePatchUniFileAdd); m != nil {
+		if m := ck.llex.NextRegexp(rePatchUniFileAdd); m != nil {
 			patchedFile := m[1]
-			if ck.exp.SkipRegexp(rePatchUniFileDel) {
+			if ck.llex.SkipRegexp(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
-				ck.exp.PreviousLine().Warnf("Unified diff headers should be first ---, then +++.")
+				ck.llex.PreviousLine().Warnf("Unified diff headers should be first ---, then +++.")
 				ck.checkUnifiedDiff(patchedFile)
 				patchedFiles++
 				continue
 			}
 
-			ck.exp.Undo()
+			ck.llex.Undo()
 		}
 
-		if ck.exp.SkipRegexp(`^\*\*\*[\t ]([^\t ]+)(.*)$`) {
-			if ck.exp.SkipRegexp(`^---[\t ]([^\t ]+)(.*)$`) {
+		if ck.llex.SkipRegexp(`^\*\*\*[\t ]([^\t ]+)(.*)$`) {
+			if ck.llex.SkipRegexp(`^---[\t ]([^\t ]+)(.*)$`) {
 				ck.checkBeginDiff(line, patchedFiles)
 				line.Warnf("Please use unified diffs (diff -u) for patches.")
 				return
 			}
 
-			ck.exp.Undo()
+			ck.llex.Undo()
 		}
 
-		ck.exp.Skip()
+		ck.llex.Skip()
 		ck.previousLineEmpty = ck.isEmptyLine(line.Text)
 		if !ck.previousLineEmpty {
 			ck.seenDocumentation = true
@@ -116,7 +116,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 
 	hasHunks := false
 	for {
-		m := ck.exp.NextRegexp(rePatchUniHunk)
+		m := ck.llex.NextRegexp(rePatchUniHunk)
 		if m == nil {
 			break
 		}
@@ -132,9 +132,9 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		ck.checktextUniHunkCr()
 		ck.checktextRcsid(text)
 
-		for !ck.exp.EOF() && (linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.exp.CurrentLine().Text, "\\")) {
-			line := ck.exp.CurrentLine()
-			ck.exp.Skip()
+		for !ck.llex.EOF() && (linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.llex.CurrentLine().Text, "\\")) {
+			line := ck.llex.CurrentLine()
+			ck.llex.Skip()
 
 			text := line.Text
 			switch {
@@ -172,18 +172,18 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		// been lost during transmission. There is no way to detect
 		// this by looking only at the patch file.
 		if linesToAdd != linesToDel {
-			line := ck.exp.PreviousLine()
+			line := ck.llex.PreviousLine()
 			line.Warnf("Premature end of patch hunk (expected %d lines to be deleted and %d lines to be added).",
 				linesToDel, linesToAdd)
 		}
 	}
 
 	if !hasHunks {
-		ck.exp.CurrentLine().Errorf("No patch hunks for %q.", patchedFile)
+		ck.llex.CurrentLine().Errorf("No patch hunks for %q.", patchedFile)
 	}
 
-	if !ck.exp.EOF() {
-		line := ck.exp.CurrentLine()
+	if !ck.llex.EOF() {
+		line := ck.llex.CurrentLine()
 		if !ck.isEmptyLine(line.Text) && !matches(line.Text, rePatchUniFileDel) {
 			line.Warnf("Empty line or end of file expected.")
 			G.Explain(
@@ -248,7 +248,7 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 
 	ck.checktextRcsid(addedText)
 
-	line := ck.exp.PreviousLine()
+	line := ck.llex.PreviousLine()
 	switch patchedFileType {
 	case ftShell, ftIgnore:
 		break
@@ -275,7 +275,7 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 		defer trace.Call0()()
 	}
 
-	line := ck.exp.PreviousLine()
+	line := ck.llex.PreviousLine()
 	if hasSuffix(line.Text, "\r") {
 		// This code has been introduced around 2006.
 		// As of 2018, this might be fixed by now.
@@ -294,9 +294,9 @@ func (ck *PatchChecker) checktextRcsid(text string) {
 	}
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
 		if matches(text, rePatchUniHunk) {
-			ck.exp.PreviousLine().Warnf("Found RCS tag \"$%s$\". Please remove it.", tagname)
+			ck.llex.PreviousLine().Warnf("Found RCS tag \"$%s$\". Please remove it.", tagname)
 		} else {
-			ck.exp.PreviousLine().Warnf("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
+			ck.llex.PreviousLine().Warnf("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
 		}
 	}
 }
