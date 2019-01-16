@@ -268,6 +268,29 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
+// Once or twice in a decade, changes to the pkgsrc infrastructure are also
+// documented in doc/CHANGES. These entries typically span multiple lines.
+func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__multiline(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("doc/CHANGES-2018",
+		RcsID,
+		"",
+		"Changes to the packages collection and infrastructure in 2018:",
+		"",
+		"\tmk/bsd.pkg.mk: Added new framework for handling packages",
+		"\t\twith multiple MASTER_SITES while fetching the main",
+		"\t\tdistfile directly from GitHub [rillig 2018-01-01]")
+
+	G.Main("pkglint", t.File("category/package"))
+
+	// For pkglint's purpose, the infrastructure entries are simply ignored
+	// since they do not belong to a single package.
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 	t := s.Init(c)
 
