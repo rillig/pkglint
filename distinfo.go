@@ -153,11 +153,27 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 
 // Inter-package check for differing distfile checksums.
 func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, filename, alg, hash string) {
-	hashes := G.Pkgsrc.Hashes
 
 	// Intentionally checking the filename instead of ck.isPatch.
 	// Missing the few distfiles that actually start with patch-*
 	// is more convenient than having lots of false positive mismatches.
+	if hasPrefix(filename, "patch-") {
+		return
+	}
+
+	hashes := G.Pkgsrc.Hashes
+	if hashes == nil {
+		return
+	}
+
+	// The Size hash is not encoded in hex, therefore it would trigger wrong error messages below.
+	// Since the Size hash is targeted towards humans and not really useful for detecting duplicates,
+	// omitting the check here is ok. Any mismatches will be reliably detected because the other
+	// hashes will be different, too.
+	if alg == "Size" {
+		return
+	}
+
 	if hashes != nil && !hasPrefix(filename, "patch-") {
 		key := alg + ":" + filename
 		otherHash := hashes[key]
