@@ -40,6 +40,10 @@ type Pkgsrc struct {
 	Deprecated map[string]string   //
 	vartypes   map[string]*Vartype // varcanon => type
 
+	// TODO: The Hashes and UsedLicenses are modified after the initialization.
+	//  This contradicts the expectation that all pkgsrc data is constant.
+	//  These two fields should probably be moved to the Pkglint type.
+
 	Hashes       map[string]*Hash // Maps "alg:filename" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
 }

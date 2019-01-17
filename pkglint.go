@@ -99,7 +99,7 @@ type CmdOpts struct {
 }
 
 type Hash struct {
-	hash     string
+	hash     []byte
 	location Location
 }
 

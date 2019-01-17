@@ -3,6 +3,7 @@ package pkglint
 import (
 	"bytes"
 	"crypto/sha1"
+	"encoding/hex"
 	"io/ioutil"
 	"path"
 	"strings"
@@ -160,13 +161,19 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, filename,
 	if hashes != nil && !hasPrefix(filename, "patch-") {
 		key := alg + ":" + filename
 		otherHash := hashes[key]
+
+		hashBytes, err := hex.DecodeString(hash)
+		if err != nil {
+			line.Errorf("The %s hash for %s contains a non-hex character.", alg, filename)
+		}
+
 		if otherHash != nil {
-			if otherHash.hash != hash {
+			if bytes.Compare(otherHash.hash, hashBytes) != 0 {
 				line.Errorf("The %s hash for %s is %s, which conflicts with %s in %s.",
-					alg, filename, hash, otherHash.hash, line.RefToLocation(otherHash.location))
+					alg, filename, hash, hex.EncodeToString(otherHash.hash), line.RefToLocation(otherHash.location))
 			}
 		} else {
-			hashes[key] = &Hash{hash, line.Location}
+			hashes[key] = &Hash{hashBytes, line.Location}
 		}
 	}
 }

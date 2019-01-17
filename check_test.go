@@ -300,12 +300,15 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 	t.CreateFileLines(pkgpath+"/PLIST",
 		PlistRcsID,
 		"bin/program")
+
+	// This distinfo file contains dummy hashes since pkglint cannot check the
+	// distfiles hashes anyway. It can only check the hashes for the patches.
 	t.CreateFileLines(pkgpath+"/distinfo",
 		RcsID,
 		"",
-		"SHA1 (distfile-1.0.tar.gz) = 12341234...",
-		"RMD160 (distfile-1.0.tar.gz) = 12341234...",
-		"SHA512 (distfile-1.0.tar.gz) = 12341234...",
+		"SHA1 (distfile-1.0.tar.gz) = 12341234",
+		"RMD160 (distfile-1.0.tar.gz) = 12341234",
+		"SHA512 (distfile-1.0.tar.gz) = 12341234",
 		"Size (distfile-1.0.tar.gz) = 12341234")
 
 	mlines := []string{
