@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"runtime/pprof"
 	"strings"
 )
@@ -147,6 +148,19 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	}
 
 	if pkglint.Opts.Profiling {
+
+		defer func() {
+			runtime.GC()
+
+			fd, err := os.Create("pkglint.heapdump")
+			G.AssertNil(err, "heapDump.create")
+
+			debug.WriteHeapDump(fd.Fd())
+
+			err = fd.Close()
+			G.AssertNil(err, "heapDump.close")
+		}()
+
 		f, err := os.Create("pkglint.pprof")
 		if err != nil {
 			dummyLine.Fatalf("Cannot create profiling file: %s", err)
