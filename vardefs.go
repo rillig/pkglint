@@ -1275,7 +1275,7 @@ func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 			}
 			for _, prev := range result {
 				matched, err := path.Match(prev.glob, glob)
-				G.AssertNil(err, "Invalid ACL pattern %q for %q.", glob, varname)
+				G.AssertNil(err, "Invalid ACL pattern %q for %q", glob, varname)
 				G.Assertf(!matched, "Unreachable ACL pattern %q for %q.", glob, varname)
 			}
 			result = append(result, ACLEntry{glob, permissions})

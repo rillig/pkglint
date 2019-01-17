@@ -491,6 +491,9 @@ func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 
 // AssertNil ensures that the given error is nil.
 //
+// Contrary to other diagnostics, the format should not end in a period
+// since it is followed by the error.
+//
 // Other than Assertf, this method does not require any comparison operator in the calling code.
 // This makes it possible to get 100% branch coverage for cases that "really can never fail".
 func (pkglint *Pkglint) AssertNil(err error, format string, args ...interface{}) {
