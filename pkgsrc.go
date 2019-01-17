@@ -498,17 +498,19 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		year = yyyy
 	}
 
-	cont := false
+	infra := false
 	lines := Load(filename, MustSucceed|NotEmpty)
 	var changes []*Change
 	for _, line := range lines.Lines {
 
 		if hasPrefix(line.Text, "\tmk/") {
-			cont = true
-		} else if cont && hasPrefix(line.Text, "\t\t") {
+			infra = true
+		}
+		if infra {
+			if hasSuffix(line.Text, "]") {
+				infra = false
+			}
 			continue
-		} else {
-			cont = false
 		}
 
 		change := parseChange(line)

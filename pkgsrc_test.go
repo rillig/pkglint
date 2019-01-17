@@ -288,12 +288,8 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__infrastructure(c *check.C) {
 
 	// For pkglint's purpose, the infrastructure entries are simply ignored
 	// since they do not belong to a single package.
-	// FIXME: Recognize this line.
 	t.CheckOutputLines(
-		"WARN: ~/doc/CHANGES-2018:8: Unknown doc/CHANGES line: "+
-			"\tmk/bsd.pkg.mk: Another infrastructure change [rillig 2018-01-02]",
-		"0 errors and 1 warning found.",
-		"(Run \"pkglint -e\" to show explanations.)")
+		"Looks fine.")
 }
 
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
