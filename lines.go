@@ -31,8 +31,8 @@ func (ls *LinesImpl) Warnf(format string, args ...interface{}) {
 	NewLineWhole(ls.FileName).Warnf(format, args...)
 }
 
-func (ls *LinesImpl) SaveAutofixChanges() {
-	SaveAutofixChanges(ls)
+func (ls *LinesImpl) SaveAutofixChanges() bool {
+	return SaveAutofixChanges(ls)
 }
 
 func (ls *LinesImpl) CheckRcsID(index int, prefixRe regex.Pattern, suggestedPrefix string) bool {
