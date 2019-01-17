@@ -99,8 +99,8 @@ type CmdOpts struct {
 }
 
 type Hash struct {
-	hash string
-	line Line // TODO: Maybe a Location object would already be enough.
+	hash     string
+	location Location
 }
 
 type pkglintFatal struct{}
