@@ -767,12 +767,26 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 			NewLineWhole(filename).Warnf("Only packages in regress/ may have spec files.")
 		}
 
+	case pkglint.matchesLicenseFile(basename):
+		if pkglint.Opts.CheckExtra {
+			CheckFileOther(filename)
+		}
+
 	default:
 		NewLineWhole(filename).Warnf("Unexpected file found.")
 		if pkglint.Opts.CheckExtra {
 			CheckFileOther(filename)
 		}
 	}
+}
+
+func (pkglint *Pkglint) matchesLicenseFile(basename string) bool {
+	if pkglint.Pkg == nil {
+		return false
+	}
+
+	licenseFile, _ := pkglint.Pkg.vars.Value("LICENSE_FILE")
+	return basename == path.Base(licenseFile)
 }
 
 func (pkglint *Pkglint) checkExecutable(filename string, mode os.FileMode) {
