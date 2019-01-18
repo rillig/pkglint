@@ -152,6 +152,8 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	if pkglint.Opts.Profiling {
 
 		defer func() {
+			pkglint.fileCache.table = nil
+			pkglint.fileCache.mapping = nil
 			runtime.GC()
 
 			fd, err := os.Create("pkglint.heapdump")
