@@ -83,6 +83,10 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 		"ERROR: ~/category/package2/distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
 		"5 errors and 1 warning found.")
+
+	t.Check(len(G.Pkgsrc.Hashes["SHA512:distfile-1.0.tar.gz"].hash), equals, 8)
+	// FIXME: Must be 8, since the binary hash is only 8 bytes long.
+	t.Check(cap(G.Pkgsrc.Hashes["SHA512:distfile-1.0.tar.gz"].hash), equals, 16)
 }
 
 func (s *Suite) Test_CheckLinesDistinfo__uncommitted_patch(c *check.C) {
