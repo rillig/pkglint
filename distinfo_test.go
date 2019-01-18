@@ -84,9 +84,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
 		"5 errors and 1 warning found.")
 
+	// Ensure that hex.DecodeString does not waste memory here.
 	t.Check(len(G.Pkgsrc.Hashes["SHA512:distfile-1.0.tar.gz"].hash), equals, 8)
-	// FIXME: Must be 8, since the binary hash is only 8 bytes long.
-	t.Check(cap(G.Pkgsrc.Hashes["SHA512:distfile-1.0.tar.gz"].hash), equals, 16)
+	t.Check(cap(G.Pkgsrc.Hashes["SHA512:distfile-1.0.tar.gz"].hash), equals, 8)
 }
 
 func (s *Suite) Test_CheckLinesDistinfo__uncommitted_patch(c *check.C) {

@@ -179,17 +179,28 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, filename,
 		otherHash := hashes[key]
 
 		hashBytes, err := hex.DecodeString(hash)
+
+		// As of Go 1.11.4 in January 2019, hex.DecodeString has a memory leak.
+		// Instead of allocating a byte slice half the length of the given string
+		// it allocates a byte array of the length of the whole string and then
+		// returns the first half of it. The latter half then contains a copy of the
+		// original string, leaking that information into heap dumps and wasting heap memory.
+		//
+		// Free the unnecessary memory by copying the byte slice again.
+		newBytes := make([]byte, len(hashBytes))
+		copy(newBytes, hashBytes)
+
 		if err != nil {
 			line.Errorf("The %s hash for %s contains a non-hex character.", alg, filename)
 		}
 
 		if otherHash != nil {
-			if !bytes.Equal(otherHash.hash, hashBytes) {
+			if !bytes.Equal(otherHash.hash, newBytes) {
 				line.Errorf("The %s hash for %s is %s, which conflicts with %s in %s.",
 					alg, filename, hash, hex.EncodeToString(otherHash.hash), line.RefToLocation(otherHash.location))
 			}
 		} else {
-			hashes[key] = &Hash{hashBytes, line.Location}
+			hashes[key] = &Hash{newBytes, line.Location}
 		}
 	}
 }
