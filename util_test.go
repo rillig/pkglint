@@ -654,3 +654,14 @@ func (s *Suite) Test_joinSkipEmptyOxford(c *check.C) {
 		deepEquals,
 		"one, two, and three")
 }
+
+func (s *Suite) Test_StringInterner(c *check.C) {
+	t := s.Init(c)
+
+	si := NewStringInterner()
+
+	t.Check(si.Intern(""), equals, "")
+	t.Check(si.Intern("Hello"), equals, "Hello")
+	t.Check(si.Intern("Hello, world"), equals, "Hello, world")
+	t.Check(si.Intern("Hello, world"[0:5]), equals, "Hello")
+}

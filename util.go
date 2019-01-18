@@ -66,6 +66,15 @@ func replaceAllFunc(s string, re regex.Pattern, repl func(string) string) string
 	return G.res.Compile(re).ReplaceAllStringFunc(s, repl)
 }
 
+// intern returns an independent copy of the given string.
+//
+// It should be called when only a small substring of a large string
+// is needed for the rest of the program's lifetime.
+//
+// All strings allocated here will stay in memory forever,
+// therefore it should only be used for long-lived strings.
+func intern(str string) string { return G.interner.Intern(str) }
+
 // trimHspace returns str, with leading and trailing space (U+0020)
 // and tab (U+0009) removed.
 //
@@ -994,4 +1003,32 @@ func joinSkipEmptyOxford(conn string, elements ...string) string {
 	}
 
 	return strings.Join(nonempty, ", ")
+}
+
+// StringInterner collects commonly used strings to avoid wasting heap memory
+// by duplicated strings.
+type StringInterner struct {
+	strs map[string]string
+}
+
+func NewStringInterner() StringInterner {
+	return StringInterner{make(map[string]string)}
+}
+
+func (si *StringInterner) Intern(str string) string {
+	interned, found := si.strs[str]
+	if found {
+		return interned
+	}
+
+	// Ensure that the original string is never stored directly in the map
+	// since it might be a substring of a very large string. The interned
+	// strings must be completely independent of anything from the outside,
+	// so that the large source string can be freed afterwards.
+	var sb strings.Builder
+	sb.WriteString(str)
+	key := sb.String()
+
+	si.strs[key] = key
+	return key
 }

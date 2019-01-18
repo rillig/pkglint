@@ -39,12 +39,14 @@ type Pkglint struct {
 	loaded    *histogram.Histogram
 	res       regex.Registry
 	fileCache *FileCache
+	interner  StringInterner
 }
 
 func NewPkglint() Pkglint {
 	return Pkglint{
 		res:       regex.NewRegistry(),
-		fileCache: NewFileCache(200)}
+		fileCache: NewFileCache(200),
+		interner:  NewStringInterner()}
 }
 
 type CmdOpts struct {

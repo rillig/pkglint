@@ -420,7 +420,7 @@ func (src *Pkgsrc) parseSuggestedUpdates(lines Lines) []SuggestedUpdate {
 		if state == 3 {
 			if m, pkgname, comment := match2(text, `^\to[\t ]([^\t ]+)(?:[\t ]*(.+))?$`); m {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
-					updates = append(updates, SuggestedUpdate{line.Location, pkgbase, pkgversion, comment})
+					updates = append(updates, SuggestedUpdate{line.Location, intern(pkgbase), intern(pkgversion), intern(comment)})
 				} else {
 					line.Warnf("Invalid package name %q.", pkgname)
 				}
@@ -473,20 +473,29 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		}
 		author, date = author[1:], date[:len(date)-1]
 
-		loc := line.Location
+		newChange := func(version string) *Change {
+			return &Change{
+				Location: line.Location,
+				Action:   intern(action),
+				Pkgpath:  intern(pkgpath),
+				Version:  intern(version),
+				Author:   intern(author),
+				Date:     intern(date),
+			}
+		}
 
 		switch {
 		case action == "Added" && f[2] == "version" && n == 6:
-			return &Change{loc, action, pkgpath, f[3], author, date}
+			return newChange(f[3])
 
 		case (action == "Updated" || action == "Downgraded") && f[2] == "to" && n == 6:
-			return &Change{loc, action, pkgpath, f[3], author, date}
+			return newChange(f[3])
 
 		case action == "Removed" && (n == 6 && f[2] == "successor" || n == 4):
-			return &Change{loc, action, pkgpath, "", author, date}
+			return newChange("")
 
 		case (action == "Renamed" || action == "Moved") && f[2] == "to" && n == 6:
-			return &Change{loc, action, pkgpath, "", author, date}
+			return newChange("")
 		}
 
 		line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
