@@ -1033,8 +1033,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__cd_inside_if(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
-		"WARN: Makefile:3: Found absolute pathname: /bin")
+		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommand__negated_pipe(c *check.C) {
@@ -1051,8 +1050,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommand__negated_pipe(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: The Solaris /bin/sh does not support negation of shell commands.",
-		"WARN: Makefile:3: Found absolute pathname: /etc/passwd")
+		"WARN: Makefile:3: The Solaris /bin/sh does not support negation of shell commands.")
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommand__subshell(c *check.C) {

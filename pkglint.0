@@ -90,8 +90,6 @@ DDEESSCCRRIIPPTTIIOONN
 
      nnoonnee                Disable all warnings.
 
-     [[nnoo--]]aabbssnnaammee        Warn if a file contains an absolute pathname.
-
      [[nnoo--]]ddiirreeccttccmmdd      Warn if a system command name is used instead of a
                          variable (e.g. sed instead of ${SED}).
 

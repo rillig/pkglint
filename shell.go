@@ -621,9 +621,6 @@ func (scc *SimpleCommandChecker) checkRegexReplace() {
 	cmdname := scc.strcmd.Name
 	isSubst := false
 	for _, arg := range scc.strcmd.Args {
-		if !isSubst {
-			LineChecker{scc.shline.mkline.Line}.CheckAbsolutePathname(arg)
-		}
 		if G.Testing && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
 			scc.shline.mkline.Warnf("Substitution commands like %q should always be quoted.", arg)
 			G.Explain(

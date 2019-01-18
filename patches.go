@@ -250,12 +250,6 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 
 	line := ck.llex.PreviousLine()
 	switch patchedFileType {
-	case ftShell, ftIgnore:
-		break
-	case ftMakefile:
-		ck.checklineOtherAbsolutePathname(line, addedText)
-	case ftSource:
-		ck.checklineSourceAbsolutePathname(line, addedText)
 	case ftConfigure:
 		if hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
 			line.Errorf("This code must not be included in patches.")
@@ -265,8 +259,6 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 				"For more details, look for \"configure-scripts-override\" in",
 				"mk/configure/gnu-configure.mk.")
 		}
-	default:
-		ck.checklineOtherAbsolutePathname(line, addedText)
 	}
 }
 
@@ -314,27 +306,14 @@ func (ck *PatchChecker) isEmptyLine(text string) bool {
 
 type FileType uint8
 
-// TODO: Is this type really useful? It is mainly used for warning about absolute filenames,
-// and that check is questionable in itself.
-
 const (
-	ftSource FileType = iota
-	ftShell
-	ftMakefile
-	ftText
-	ftConfigure
-	ftIgnore
+	ftConfigure FileType = iota
 	ftUnknown
 )
 
 func (ft FileType) String() string {
 	return [...]string{
-		"source code",
-		"shell code",
-		"Makefile",
-		"text file",
 		"configure file",
-		"ignored",
 		"unknown",
 	}[ft]
 }
@@ -347,82 +326,10 @@ func guessFileType(filename string) (fileType FileType) {
 
 	basename := path.Base(filename)
 	basename = strings.TrimSuffix(basename, ".in") // doesn't influence the content type
-	ext := strings.ToLower(strings.TrimLeft(path.Ext(basename), "."))
 
 	switch {
-	case matches(basename, `^I?[Mm]akefile|\.ma?k$`):
-		return ftMakefile
 	case basename == "configure" || basename == "configure.ac":
 		return ftConfigure
 	}
-
-	switch ext {
-	case "m4", "sh":
-		return ftShell
-	case "c", "cc", "cpp", "cxx", "el", "h", "hh", "hpp", "l", "pl", "pm", "py", "s", "t", "y":
-		return ftSource
-	case "conf", "html", "info", "man", "po", "tex", "texi", "texinfo", "txt", "xml":
-		return ftText
-	case "":
-		return ftUnknown
-	}
-
-	if trace.Tracing {
-		trace.Step1("Unknown file type for %q", filename)
-	}
 	return ftUnknown
-}
-
-// Looks for strings like "/dev/cd0" appearing in source code
-func (ck *PatchChecker) checklineSourceAbsolutePathname(line Line, text string) {
-	if !strings.ContainsAny(text, "\"'") {
-		return
-	}
-	if matched, before, _, str := match3(text, `^(.*)(["'])(/\w[^"']*)["']`); matched {
-		if trace.Tracing {
-			trace.Step2("checklineSourceAbsolutePathname: before=%q, str=%q", before, str)
-		}
-
-		switch {
-		case matches(before, `[A-Z_][\t ]*$`):
-			// ok; C example: const char *echo_cmd = PREFIX "/bin/echo";
-
-		case matches(before, `\+[\t ]*$`):
-			// ok; Python example: libdir = prefix + '/lib'
-
-		default:
-			LineChecker{line}.CheckWordAbsolutePathname(str)
-		}
-	}
-}
-
-func (ck *PatchChecker) checklineOtherAbsolutePathname(line Line, text string) {
-	if trace.Tracing {
-		defer trace.Call1(text)()
-	}
-
-	if hasPrefix(text, "#") && !hasPrefix(text, "#!") {
-		// Don't warn for absolute pathnames in comments, except for shell interpreters.
-
-	} else if m, before, dir, _ := match3(text, `^(.*?)((?:/[\w.]+)*/(?:bin|dev|etc|home|lib|mnt|opt|proc|sbin|tmp|usr|var)\b[\w./\-]*)(.*)$`); m {
-		switch {
-		case matches(before, `[\w).@}]$`) && !matches(before, `DESTDIR.$`):
-			// Example: $prefix/bin
-			// Example: $(prefix)/bin
-			// Example: ../bin
-			// Example: @prefix@/bin
-			// Example: ${prefix}/bin
-
-		case matches(before, `\+[\t ]*["']$`):
-			// Example: prefix + '/lib'
-
-		// XXX new: case matches(before, `\bs.$`): // Example: sed -e s,/usr,@PREFIX@,
-
-		default:
-			if trace.Tracing {
-				trace.Step1("before=%q", before)
-			}
-			LineChecker{line}.CheckWordAbsolutePathname(dir)
-		}
-	}
 }

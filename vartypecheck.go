@@ -812,8 +812,6 @@ func (cv *VartypeCheck) PathMask() {
 	if !matches(cv.ValueNoVar, `^[#%*+\-./0-9?@A-Z\[\]_a-z~]*$`) {
 		cv.Warnf("%q is not a valid pathname mask.", cv.Value)
 	}
-
-	LineChecker{cv.MkLine.Line}.CheckAbsolutePathname(cv.Value)
 }
 
 // Pathname checks for pathnames.
@@ -829,8 +827,6 @@ func (cv *VartypeCheck) Pathname() {
 	if !matches(cv.ValueNoVar, `^[#\-0-9A-Za-z._~+%/]*$`) {
 		cv.Warnf("%q is not a valid pathname.", cv.Value)
 	}
-
-	LineChecker{cv.MkLine.Line}.CheckAbsolutePathname(cv.Value)
 }
 
 func (cv *VartypeCheck) Perl5Packlist() {
