@@ -94,7 +94,7 @@ func (src *Pkgsrc) InitVartypes() {
 						words := mkline.ValueFields(mkline.Args())
 						if len(words) > 2 && words[0] == "_version_" {
 							for _, word := range words[2:] {
-								languages[word] = true
+								languages[intern(word)] = true
 							}
 						}
 					}
@@ -130,7 +130,7 @@ func (src *Pkgsrc) InitVartypes() {
 							words, _ := splitIntoMkWords(mkline.Line, mkline.Value())
 							for _, word := range words {
 								if !contains(word, "$") {
-									values[word] = true
+									values[intern(word)] = true
 								}
 							}
 						}
