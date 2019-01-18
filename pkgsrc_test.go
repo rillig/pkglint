@@ -44,8 +44,8 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 	todo := G.Pkgsrc.parseSuggestedUpdates(lines)
 
 	c.Check(todo, check.DeepEquals, []SuggestedUpdate{
-		{lines.Lines[5], "CSP", "0.34", ""},
-		{lines.Lines[6], "freeciv-client", "2.5.0", "(urgent)"}})
+		{lines.Lines[5].Location, "CSP", "0.34", ""},
+		{lines.Lines[6].Location, "freeciv-client", "2.5.0", "(urgent)"}})
 }
 
 func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
@@ -197,19 +197,19 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"))
 
 	c.Assert(len(changes), equals, 7)
-	c.Check(*changes[0], equals, Change{changes[0].Line,
+	c.Check(*changes[0], equals, Change{changes[0].Location,
 		"Added", "category/package", "1.0", "author1", "2015-01-01"})
-	c.Check(*changes[1], equals, Change{changes[1].Line,
+	c.Check(*changes[1], equals, Change{changes[1].Location,
 		"Updated", "category/package", "1.5", "author2", "2018-01-02"})
-	c.Check(*changes[2], equals, Change{changes[2].Line,
+	c.Check(*changes[2], equals, Change{changes[2].Location,
 		"Renamed", "category/package", "", "author3", "2018-01-03"})
-	c.Check(*changes[3], equals, Change{changes[3].Line,
+	c.Check(*changes[3], equals, Change{changes[3].Location,
 		"Moved", "category/package", "", "author4", "2018-01-04"})
-	c.Check(*changes[4], equals, Change{changes[4].Line,
+	c.Check(*changes[4], equals, Change{changes[4].Location,
 		"Removed", "category/package", "", "author5", "2018-01-09"})
-	c.Check(*changes[5], equals, Change{changes[5].Line,
+	c.Check(*changes[5], equals, Change{changes[5].Location,
 		"Removed", "category/package", "", "author6", "2018-01-06"})
-	c.Check(*changes[6], equals, Change{changes[6].Line,
+	c.Check(*changes[6], equals, Change{changes[6].Location,
 		"Downgraded", "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(

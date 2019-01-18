@@ -420,7 +420,7 @@ func (src *Pkgsrc) parseSuggestedUpdates(lines Lines) []SuggestedUpdate {
 		if state == 3 {
 			if m, pkgname, comment := match2(text, `^\to[\t ]([^\t ]+)(?:[\t ]*(.+))?$`); m {
 				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
-					updates = append(updates, SuggestedUpdate{line, pkgbase, pkgversion, comment})
+					updates = append(updates, SuggestedUpdate{line.Location, pkgbase, pkgversion, comment})
 				} else {
 					line.Warnf("Invalid package name %q.", pkgname)
 				}
@@ -473,18 +473,20 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		}
 		author, date = author[1:], date[:len(date)-1]
 
+		loc := line.Location
+
 		switch {
 		case action == "Added" && f[2] == "version" && n == 6:
-			return &Change{line, action, pkgpath, f[3], author, date}
+			return &Change{loc, action, pkgpath, f[3], author, date}
 
 		case (action == "Updated" || action == "Downgraded") && f[2] == "to" && n == 6:
-			return &Change{line, action, pkgpath, f[3], author, date}
+			return &Change{loc, action, pkgpath, f[3], author, date}
 
 		case action == "Removed" && (n == 6 && f[2] == "successor" || n == 4):
-			return &Change{line, action, pkgpath, "", author, date}
+			return &Change{loc, action, pkgpath, "", author, date}
 
 		case (action == "Renamed" || action == "Moved") && f[2] == "to" && n == 6:
-			return &Change{line, action, pkgpath, "", author, date}
+			return &Change{loc, action, pkgpath, "", author, date}
 		}
 
 		line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
@@ -536,7 +538,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		if len(changes) >= 2 && year != "" {
 			if prev := changes[len(changes)-2]; change.Date < prev.Date {
 				line.Warnf("Date %s for %s is earlier than %s in %s.",
-					change.Date, change.Pkgpath, prev.Date, line.RefTo(prev.Line))
+					change.Date, change.Pkgpath, prev.Date, line.RefToLocation(prev.Location))
 				line.Explain(
 					"The entries in doc/CHANGES should be in chronological order, and",
 					"all dates are assumed to be in the UTC timezone, to prevent time",
@@ -969,17 +971,17 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 
 // Change describes a modification to a single package, from the doc/CHANGES-* files.
 type Change struct {
-	Line    Line
-	Action  string
-	Pkgpath string
-	Version string
-	Author  string
-	Date    string
+	Location Location
+	Action   string
+	Pkgpath  string
+	Version  string
+	Author   string
+	Date     string
 }
 
 // SuggestedUpdate describes a desired package update, from the doc/TODO file.
 type SuggestedUpdate struct {
-	Line    Line
+	Line    Location
 	Pkgname string
 	Version string
 	Comment string

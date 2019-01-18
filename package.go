@@ -109,7 +109,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 		changeVersion := replaceAll(change.Version, `nb\d+$`, "")
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
 			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.",
-				change.Version, mkline.Line.RefTo(change.Line), pkgversion)
+				change.Version, mkline.Line.RefToLocation(change.Location), pkgversion)
 			G.Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
