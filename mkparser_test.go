@@ -559,6 +559,14 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 	test("${VAR:S,^from$,to,}", varUse("VAR", "S,^from$,to,"), "")
 
 	test("${VAR:S,@F@,${F},}", varUse("VAR", "S,@F@,${F},"), "")
+
+	test("${VAR:S,from,to,1}", varUse("VAR", "S,from,to,1"), "")
+	test("${VAR:S,from,to,g}", varUse("VAR", "S,from,to,g"), "")
+	test("${VAR:S,from,to,W}", varUse("VAR", "S,from,to,W"), "")
+
+	// FIXME
+	test("${VAR:S,from,to,1gW}", varUse("VAR", "S,from,to,1"), "",
+		"WARN: Makefile:20: Invalid variable modifier \"gW\" for \"VAR\".")
 }
 
 func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
