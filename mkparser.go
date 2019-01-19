@@ -657,8 +657,7 @@ func (p *MkParser) Dependency() *DependencyPattern {
 	if lexer.SkipByte('-') && lexer.Rest() != "" {
 		versionMark := lexer.Mark()
 
-		// FIXME: Use VarUse.
-		for lexer.SkipRegexp(G.res.Compile(`^(\$\{\w+\}|[\w\[\]*_.\-])`)) {
+		for p.VarUse() != nil || lexer.SkipRegexp(G.res.Compile(`^[\w\[\]*_.\-]+`)) {
 		}
 
 		if !lexer.SkipString("{,nb*}") {
