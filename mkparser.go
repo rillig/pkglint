@@ -315,7 +315,7 @@ func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool
 		return false
 	}
 
-	lexer.SkipRegexp(G.res.Compile(`^[1gW]`)) // FIXME: Multiple modifiers may be mentioned
+	lexer.NextBytesFunc(func(b byte) bool { return b == '1' || b == 'g' || b == 'W' })
 
 	return true
 }
