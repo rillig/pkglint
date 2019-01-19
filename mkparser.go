@@ -506,8 +506,8 @@ func (p *MkParser) mkCondFunc() *mkCond {
 		}
 
 		// TODO: Consider suggesting ${VAR} instead of !empty(VAR) since it is shorter and
-		// avoids unnecessary negation, which makes the expression less confusing.
-		// This applies especially to the ${VAR:Mpattern} form.
+		//  avoids unnecessary negation, which makes the expression less confusing.
+		//  This applies especially to the ${VAR:Mpattern} form.
 
 	case "commands", "exists", "make", "target":
 		argMark := lexer.Mark()
@@ -534,6 +534,28 @@ func (p *MkParser) Varname() string {
 }
 
 func (p *MkParser) PkgbasePattern() string {
+
+	// isVersion returns true for "1.2", "[0-9]*", "${PKGVERSION}", "${PKGNAME:C/^.*-//}",
+	// but not for "client", "${PKGNAME}", "[a-z]".
+	isVersion := func(s string) bool {
+		lexer := textproc.NewLexer(s)
+
+		lexer.SkipByte('[')
+		if lexer.NextByteSet(textproc.Digit) != -1 {
+			return true
+		}
+
+		lookaheadParser := NewMkParser(nil, lexer.Rest(), false)
+		varUse := lookaheadParser.VarUse()
+		if varUse != nil {
+			if contains(varUse.varname, "VER") || len(varUse.modifiers) > 0 {
+				return true
+			}
+		}
+
+		return false
+	}
+
 	lexer := p.lexer
 	start := lexer.Mark()
 
@@ -544,18 +566,7 @@ func (p *MkParser) PkgbasePattern() string {
 			continue
 		}
 
-		lookahead := lexer.Copy()
-		if !lookahead.SkipByte('-') {
-			break
-		}
-
-		if lookahead.SkipRegexp(G.res.Compile(`^\d`)) ||
-			// TODO: Replace regex with proper VarUse.
-			lookahead.SkipRegexp(G.res.Compile(`^\$\{\w*VER\w*\}`)) ||
-			lookahead.SkipByte('[') {
-
-			// The parser is looking at a hyphen followed by a version number.
-			// This means the pkgbase stops before the hyphen.
+		if lexer.PeekByte() != '-' || isVersion(lexer.Rest()[1:]) {
 			break
 		}
 
