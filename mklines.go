@@ -349,8 +349,8 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 	relevant := true
 
 	// TODO: Correctly interpret declarations like "package-settable variables:" and
-	// TODO: "user-settable variables", as well as "default: ...", "allowed: ...",
-	// TODO: "list of" and other types.
+	//  "user-settable variables", as well as "default: ...", "allowed: ...",
+	//  "list of" and other types.
 
 	finish := func() {
 		if commentLines >= 3 && relevant {
