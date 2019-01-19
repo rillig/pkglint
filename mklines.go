@@ -171,13 +171,12 @@ func (mklines *MkLinesImpl) checkAll() {
 		mklines.indentation.CheckFinish(mklines.lines.FileName)
 	}
 
-	// TODO: Extract this code so that it is clearly visible in the stack trace.
 	if trace.Tracing {
 		trace.Stepf("Starting main checking loop")
 	}
 	mklines.ForEachEnd(lineAction, atEnd)
 
-	substContext.Finish(NewMkLine(mklines.lines.EOFLine())) // TODO: mklines.EOFLine()
+	substContext.Finish(mklines.EOFLine())
 	varalign.Finish()
 
 	CheckLinesTrailingEmptyLines(mklines.lines)
@@ -479,6 +478,10 @@ func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
 
 func (mklines *MkLinesImpl) SaveAutofixChanges() {
 	mklines.lines.SaveAutofixChanges()
+}
+
+func (mklines *MkLinesImpl) EOFLine() MkLine {
+	return NewMkLine(mklines.lines.EOFLine())
 }
 
 // VaralignBlock checks that all variable assignments from a paragraph
