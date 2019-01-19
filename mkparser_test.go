@@ -523,6 +523,38 @@ func (s *Suite) Test_MkParser_VarUse__parentheses_autofix(c *check.C) {
 		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES} $(A.$(B.${C}))")
 }
 
+func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
+	t := s.Init(c)
+
+	varUse := NewMkVarUse
+	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
+		mkline := t.NewMkLine("Makefile", 20, "\t"+text)
+		p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
+
+		actual := p.VarUse()
+
+		t.Check(actual, deepEquals, varUse)
+		t.Check(p.Rest(), equals, rest)
+		if len(diagnostics) > 0 {
+			t.CheckOutputLines(diagnostics...)
+		} else {
+			t.CheckOutputEmpty()
+		}
+	}
+
+	// This modifier is used so seldom that pkglint does not
+	// check whether the command is actually valid.
+	// At least not while parsing the modifier since at this point it might
+	// be still unknown which of the commands can be used and which cannot.
+	test("${VAR:!command!}", varUse("VAR", "!command!"), "")
+
+	test("${VAR:!command}", varUse("VAR"), "",
+		"WARN: Makefile:20: Invalid variable modifier \"!command\" for \"VAR\".")
+
+	test("${VAR:command!}", varUse("VAR"), "",
+		"WARN: Makefile:20: Invalid variable modifier \"command!\" for \"VAR\".")
+}
+
 func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 	t := s.Init(c)
 

@@ -258,19 +258,19 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 
 		lexer.Reset(modifierMark)
 
-		// Nothing else matched so far. Now try the ${SOURCES:%.c=%.o} substitution.
 		re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
 		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
-		suffixSubst := lexer.Since(modifierMark)
+		modifier := lexer.Since(modifierMark)
 
-		if contains(suffixSubst, "=") {
-			appendModifier(suffixSubst)
+		// ${SOURCES:%.c=%.o} or ${:!uname -a:[2]}
+		if contains(modifier, "=") || (hasPrefix(modifier, "!") && hasSuffix(modifier, "!")) {
+			appendModifier(modifier)
 			continue
 		}
 
-		if p.EmitWarnings && suffixSubst != "" {
-			p.Line.Warnf("Invalid variable modifier %q for %q.", suffixSubst, varname)
+		if p.EmitWarnings && modifier != "" {
+			p.Line.Warnf("Invalid variable modifier %q for %q.", modifier, varname)
 		}
 
 	}
