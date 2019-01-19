@@ -47,12 +47,6 @@ func (p *MkParser) MkTokens() []*MkToken {
 
 	var tokens []*MkToken
 	for !p.EOF() {
-		// FIXME: Aren't the comments already gone at this stage?
-		if lexer.SkipByte('#') {
-			lexer.Skip(len(lexer.Rest()))
-			continue
-		}
-
 		mark := lexer.Mark()
 		if varuse := p.VarUse(); varuse != nil {
 			tokens = append(tokens, &MkToken{Text: lexer.Since(mark), Varuse: varuse})

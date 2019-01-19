@@ -804,8 +804,12 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 		c.Check(split, deepEquals, expected)
 	}
 
-	test("#empty",
-		[]string(nil)...)
+	test("Platform-independent C# compiler #5",
+		"Platform-independent C# compiler #5")
+
+	// This warning refers to the #5 since it starts a word, but not to the C#.
+	t.CheckOutputLines(
+		"WARN: Makefile:1: The # character starts a Makefile comment.")
 
 	test("/bin",
 		"/bin")
