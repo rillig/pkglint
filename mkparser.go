@@ -25,7 +25,8 @@ func (p *MkParser) Rest() string {
 // NewMkParser creates a new parser for the given text.
 // If emitWarnings is false, line may be nil.
 //
-// TODO: Document what exactly text is. Is it the form taken from the file, or is it after unescaping "\#" to #?
+// The text argument is assumed to be after unescaping the # character,
+// which means the # is a normal character and does not introduce a Makefile comment.
 //
 // TODO: Remove the emitWarnings argument in order to separate parsing from checking.
 func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
