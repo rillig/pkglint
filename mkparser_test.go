@@ -66,12 +66,13 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 		varuse("MASTER_SITES", "=subdir/")},
 		"")
 
-	// FIXME: Text must match modifiers.
 	testRest("${VAR:S,a,b,c,d,e,f}",
 		[]*MkToken{{
 			Text:   "${VAR:S,a,b,c,d,e,f}",
 			Varuse: NewMkVarUse("VAR", "S,a,b,")}},
 		"")
+	t.CheckOutputLines(
+		"WARN: Test_MkParser_MkTokens.mk:1: Invalid variable modifier \"c,d,e,f\" for \"VAR\".")
 
 	testRest("Text${VAR:Mmodifier}${VAR2}more text${VAR3}", []*MkToken{
 		literal("Text"),
@@ -526,7 +527,7 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 	t := s.Init(c)
 
 	varUse := NewMkVarUse
-	test := func(text string, varUse *MkVarUse, rest string) {
+	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
 		mkline := t.NewMkLine("Makefile", 20, "\t"+text)
 		p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
 
@@ -534,15 +535,29 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 
 		t.Check(actual, deepEquals, varUse)
 		t.Check(p.Rest(), equals, rest)
-		t.CheckOutputEmpty()
+		if len(diagnostics) > 0 {
+			t.CheckOutputLines(diagnostics...)
+		} else {
+			t.CheckOutputEmpty()
+		}
 	}
 
-	test("${VAR:S", nil, "${VAR:S")             // Just for code coverage.
-	test("${VAR:S}", varUse("VAR"), "")         // FIXME: should not consume anything.
-	test("${VAR:S,}", varUse("VAR"), "")        // FIXME: should not consume anything.
-	test("${VAR:S,from,to}", varUse("VAR"), "") // FIXME: should not consume anything.
+	test("${VAR:S", nil, "${VAR:S",
+		"WARN: Makefile:20: Invalid variable modifier \"S\" for \"VAR\".")
+
+	test("${VAR:S}", varUse("VAR"), "",
+		"WARN: Makefile:20: Invalid variable modifier \"S\" for \"VAR\".")
+
+	test("${VAR:S,}", varUse("VAR"), "",
+		"WARN: Makefile:20: Invalid variable modifier \"S,\" for \"VAR\".")
+
+	test("${VAR:S,from,to}", varUse("VAR"), "",
+		"WARN: Makefile:20: Invalid variable modifier \"S,from,to\" for \"VAR\".")
+
 	test("${VAR:S,from,to,}", varUse("VAR", "S,from,to,"), "")
+
 	test("${VAR:S,^from$,to,}", varUse("VAR", "S,^from$,to,"), "")
+
 	test("${VAR:S,@F@,${F},}", varUse("VAR", "S,@F@,${F},"), "")
 }
 
@@ -565,9 +580,12 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 		}
 	}
 
-	test("${VAR:@", nil, "${VAR:@") // Just for code coverage.
+	test("${VAR:@", nil, "${VAR:@",
+		"WARN: Makefile:20: Invalid variable modifier \"@\" for \"VAR\".")
+
 	test("${VAR:@i@${i}}", varUse("VAR", "@i@${i}"), "",
 		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".")
+
 	test("${VAR:@i@${i}@}", varUse("VAR", "@i@${i}@"), "")
 }
 

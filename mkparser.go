@@ -170,7 +170,6 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 	// The :S and :C modifiers may be chained without using the : as separator.
 	mayOmitColon := false
 
-loop:
 	for lexer.SkipByte(':') || mayOmitColon {
 		mayOmitColon = false
 		modifierMark := lexer.Mark()
@@ -210,7 +209,7 @@ loop:
 				case lexer.SkipRegexp(G.res.Compile(`^\\\d+`)):
 					break
 				default:
-					break loop
+					continue
 				}
 				appendModifier(lexer.Since(modifierMark))
 				continue
@@ -259,15 +258,21 @@ loop:
 
 		lexer.Reset(modifierMark)
 
-		// FIXME: Why skip over unknown modifiers here? This accepts :S,a,b,c,d,e,f but shouldn't.
+		// Nothing else matched so far. Now try the ${SOURCES:%.c=%.o} substitution.
 		re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
 		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
+		suffixSubst := lexer.Since(modifierMark)
 
-		if suffixSubst := lexer.Since(modifierMark); contains(suffixSubst, "=") {
+		if contains(suffixSubst, "=") {
 			appendModifier(suffixSubst)
 			continue
 		}
+
+		if p.EmitWarnings && suffixSubst != "" {
+			p.Line.Warnf("Invalid variable modifier %q for %q.", suffixSubst, varname)
+		}
+
 	}
 	return modifiers
 }
