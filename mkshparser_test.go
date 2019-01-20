@@ -288,8 +288,12 @@ func (s *ShSuite) Test_ShellParser__compound_list(c *check.C) {
 func (s *ShSuite) Test_ShellParser__term(c *check.C) {
 	b := s.init(c)
 
-	// TODO
-	_ = b
+	s.test("echo1 ; echo2 ;",
+		b.List().
+			AddCommand(b.SimpleCommand("echo1")).
+			AddSemicolon().
+			AddCommand(b.SimpleCommand("echo2")).
+			AddSemicolon())
 }
 
 func (s *ShSuite) Test_ShellParser__for_clause(c *check.C) {
