@@ -560,7 +560,7 @@ func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
 
 	// bmake ignores the :[3] modifier, and the :L modifier just returns the
 	// variable name, in this case BUILD_DIRS.
-	test("${BUILD_DIRS:[3]:L}", varUse("echo hello", "[3]", "L"), "")
+	test("${BUILD_DIRS:[3]:L}", varUse("BUILD_DIRS", "[3]", "L"), "")
 }
 
 func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
