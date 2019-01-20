@@ -1175,6 +1175,35 @@ func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
 		"x"})
 }
 
+func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
+	t := s.Init(c)
+
+	test := func(input, output string) {
+		unquoted := (*MkLineImpl).UnquoteShell(nil, input)
+		t.Check(unquoted, equals, output)
+	}
+
+	test("", "")
+	test("plain", "plain")
+	test("plain words", "plain words")
+	test("\"dquot\"", "dquot")
+	test("\"dquot \\\"escaped\\\\\"", "dquot \"escaped\\")
+	test("'squot \\\"escaped\\\\'", "squot \\\"escaped\\\\")
+	test("'squot,''squot'", "squot,squot")
+	test("\"dquot,\"'squot'", "dquot,squot")
+	test("\"'\",'\"'", "',\"")
+	test("\\\" \\\\", "\" \\")
+
+	// UnquoteShell does not parse shell variable expansions or even subshells.
+	// It therefore must cope with unexpected input and make the best out of it.
+
+	test("\\", "")
+	test("\"\\", "")
+	test("'", "")
+	test("\"$(\"", "$(")
+	test("`", "`")
+}
+
 func (s *Suite) Test_matchMkDirective(c *check.C) {
 
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string) {

@@ -815,6 +815,47 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 	return varnames
 }
 
+func (mkline *MkLineImpl) UnquoteShell(str string) string {
+	var sb strings.Builder
+	n := len(str)
+
+outer:
+	for i := 0; i < n; i++ {
+		switch str[i] {
+		case '"':
+			for i++; i < n; i++ {
+				switch str[i] {
+				case '"':
+					continue outer
+				case '\\':
+					i++
+					if i < n {
+						sb.WriteByte(str[i])
+					}
+				default:
+					sb.WriteByte(str[i])
+				}
+			}
+
+		case '\'':
+			for i++; i < n && str[i] != '\''; i++ {
+				sb.WriteByte(str[i])
+			}
+
+		case '\\':
+			i++
+			if i < n {
+				sb.WriteByte(str[i])
+			}
+
+		default:
+			sb.WriteByte(str[i])
+		}
+	}
+
+	return sb.String()
+}
+
 type MkOperator uint8
 
 const (
