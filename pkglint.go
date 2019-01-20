@@ -784,9 +784,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		}
 
 	case pkglint.matchesLicenseFile(basename):
-		if pkglint.Opts.CheckExtra {
-			CheckFileOther(filename)
-		}
+		break
 
 	default:
 		NewLineWhole(filename).Warnf("Unexpected file found.")
