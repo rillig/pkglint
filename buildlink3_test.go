@@ -381,7 +381,21 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mklines := t.NewMkLines("buildlink3.mk",
+	mklinesPhp := t.NewMkLines("x11/php-wxwidgets/buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\t${PHP_PKG_PREFIX}-wxWidgets",
+		"",
+		".if !defined(PHP_WXWIDGETS_BUILDLINK3_MK)",
+		"PHP_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${PHP_PKG_PREFIX}-wxWidgets+=\t${PHP_PKG_PREFIX}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${PHP_PKG_PREFIX}-wxWidgets+=\t${PHP_PKG_PREFIX}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${PHP_PKG_PREFIX}-wxWidgets")
+	mklinesPy := t.NewMkLines("x11/py-wxwidgets/buildlink3.mk",
 		MkRcsID,
 		"",
 		"BUILDLINK_TREE+=\t${PYPKGPREFIX}-wxWidgets",
@@ -395,11 +409,45 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
 		".endif",
 		"",
 		"BUILDLINK_TREE+=\t-${PYPKGPREFIX}-wxWidgets")
+	mklinesRuby1 := t.NewMkLines("x11/ruby1-wxwidgets/buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\t${RUBY_BASE}-wxWidgets",
+		"",
+		".if !defined(RUBY_WXWIDGETS_BUILDLINK3_MK)",
+		"RUBY_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${RUBY_BASE}-wxWidgets+=\t${RUBY_BASE}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${RUBY_BASE}-wxWidgets+=\t${RUBY_BASE}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${RUBY_BASE}-wxWidgets")
+	mklinesRuby2 := t.NewMkLines("x11/ruby2-wxwidgets/buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\t${RUBY_PKGPREFIX}-wxWidgets",
+		"",
+		".if !defined(RUBY_WXWIDGETS_BUILDLINK3_MK)",
+		"RUBY_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${RUBY_PKGPREFIX}-wxWidgets+=\t${RUBY_PKGPREFIX}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${RUBY_PKGPREFIX}-wxWidgets+=\t${RUBY_PKGPREFIX}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${RUBY_PKGPREFIX}-wxWidgets")
 
-	CheckLinesBuildlink3Mk(mklines)
+	CheckLinesBuildlink3Mk(mklinesPhp)
+	CheckLinesBuildlink3Mk(mklinesPy)
+	CheckLinesBuildlink3Mk(mklinesRuby1)
+	CheckLinesBuildlink3Mk(mklinesRuby2)
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:3: Please use \"py\" instead of \"${PYPKGPREFIX}\" (also in other variables in this file).")
+		"WARN: x11/php-wxwidgets/buildlink3.mk:3: Please use \"php\" instead of \"${PHP_PKG_PREFIX}\" (also in other variables in this file).",
+		"WARN: x11/py-wxwidgets/buildlink3.mk:3: Please use \"py\" instead of \"${PYPKGPREFIX}\" (also in other variables in this file).",
+		"WARN: x11/ruby1-wxwidgets/buildlink3.mk:3: Please use \"ruby\" instead of \"${RUBY_BASE}\" (also in other variables in this file).",
+		"WARN: x11/ruby2-wxwidgets/buildlink3.mk:3: Please use \"ruby\" instead of \"${RUBY_PKGPREFIX}\" (also in other variables in this file).")
 }
 
 func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *check.C) {
