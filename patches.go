@@ -156,6 +156,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 
 			case hasPrefix(text, "+"):
 				linesToAdd--
+				ck.checktextRcsid(text)
 				ck.checklineAdded(text[1:], patchedFileType)
 
 			case hasPrefix(text, "\\"):
@@ -234,10 +235,10 @@ func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) 
 		defer trace.Call2(text, patchedFileType.String())()
 	}
 
+	ck.checktextRcsid(text)
+
 	if G.Opts.WarnExtra {
 		ck.checklineAdded(text, patchedFileType)
-	} else {
-		ck.checktextRcsid(text)
 	}
 }
 
@@ -245,8 +246,6 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 	if trace.Tracing {
 		defer trace.Call2(addedText, patchedFileType.String())()
 	}
-
-	ck.checktextRcsid(addedText)
 
 	line := ck.llex.PreviousLine()
 	switch patchedFileType {
