@@ -388,15 +388,24 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: subst.mk:6: Please use ${SH:Q} instead of ${SH}.",
-		"NOTE: subst.mk:6: The substitution command \"s,@SH@,${SH},g\" can be replaced with \"SUBST_VARS.test+= SH\".",
-		"NOTE: subst.mk:7: The substitution command \"s,@SH@,${SH:Q},g\" can be replaced with \"SUBST_VARS.test+= SH\".",
+		"NOTE: subst.mk:6: The substitution command \"s,@SH@,${SH},g\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".",
+		"NOTE: subst.mk:7: The substitution command \"s,@SH@,${SH:Q},g\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".",
 		"WARN: subst.mk:8: Please use ${SH:T:Q} instead of ${SH:T}.",
 		"WARN: subst.mk:9: Please use ${SH:Q} instead of ${SH}.",
-		"NOTE: subst.mk:9: The substitution command \"s,@SH@,${SH},\" can be replaced with \"SUBST_VARS.test+= SH\".",
-		// TODO: Handle the quotes in line 10
-		// TODO: Handle the quotes in line 11
-		// TODO: Handle the quotes in line 12
-		"NOTE: subst.mk:13: Please always use \"-e\" in sed commands, even if there is only one substitution.")
+		"NOTE: subst.mk:9: The substitution command \"s,@SH@,${SH},\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".",
+		"NOTE: subst.mk:10: The substitution command \"'s,@SH@,${SH},'\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".",
+		"NOTE: subst.mk:11: The substitution command \"\\\"s,@SH@,${SH},\\\"\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".",
+		"NOTE: subst.mk:12: The substitution command \"s,'@SH@','${SH}',\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".",
+		"NOTE: subst.mk:13: Please always use \"-e\" in sed commands, "+
+			"even if there is only one substitution.",
+		"NOTE: subst.mk:13: The substitution command \"s,'@SH@','${SH}',\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".")
 }
 
 // simulateSubstLines only tests some of the inner workings of SubstContext.

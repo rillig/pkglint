@@ -244,7 +244,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline MkLine) {
 	tokens, _ := splitIntoShellTokens(mkline.Line, mkline.Value())
 	for _, token := range tokens {
 
-		parser := NewMkParser(nil, token, false)
+		parser := NewMkParser(nil, mkline.UnquoteShell(token), false)
 		lexer := parser.lexer
 		if !lexer.SkipByte('s') {
 			continue
