@@ -542,7 +542,7 @@ func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
 		}
 	}
 
-	// This modifier is used so seldom that pkglint does not
+	// The !command! modifier is used so seldom that pkglint does not
 	// check whether the command is actually valid.
 	// At least not while parsing the modifier since at this point it might
 	// be still unknown which of the commands can be used and which cannot.
@@ -553,6 +553,14 @@ func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
 
 	test("${VAR:command!}", varUse("VAR"), "",
 		"WARN: Makefile:20: Invalid variable modifier \"command!\" for \"VAR\".")
+
+	// The :L modifier makes the variable value "echo hello", and the :[1]
+	// modifier extracts the "echo".
+	test("${echo hello:L:[1]}", varUse("echo hello", "L", "[1]"), "")
+
+	// bmake ignores the :[3] modifier, and the :L modifier just returns the
+	// variable name, in this case BUILD_DIRS.
+	test("${BUILD_DIRS:[3]:L}", varUse("echo hello", "[3]", "L"), "")
 }
 
 func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
