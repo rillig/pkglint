@@ -427,8 +427,16 @@ func (s *ShSuite) Test_ShellParser__until_clause(c *check.C) {
 func (s *ShSuite) Test_ShellParser__function_definition(c *check.C) {
 	b := s.init(c)
 
-	// TODO
-	_ = b
+	s.test("fn() { simple-command; }",
+		b.List().AddCommand(b.Function(
+			"fn",
+			b.Brace(b.List().
+				AddCommand(b.SimpleCommand("simple-command")).
+				AddSemicolon()).
+				Compound)))
+
+	// For some reason the POSIX grammar does not allow function bodies that consist of
+	// a single command without braces or parentheses.
 }
 
 func (s *ShSuite) Test_ShellParser__brace_group(c *check.C) {
@@ -526,10 +534,8 @@ func (s *ShSuite) Test_ShellParser__io_redirect(c *check.C) {
 }
 
 func (s *ShSuite) Test_ShellParser__io_here(c *check.C) {
-	b := s.init(c)
-
-	// TODO
-	_ = b
+	// In pkgsrc Makefiles, the IO here-documents cannot be used since all the text
+	// is joined into a single line. Therefore there are no tests here.
 }
 
 func (s *ShSuite) init(c *check.C) *MkShBuilder {
