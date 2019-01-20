@@ -607,6 +607,48 @@ func (s *ShSuite) Test_ShellLexer_Lex__redirects(c *check.C) {
 	c.Check(lexer.Lex(&llval), equals, 0)
 }
 
+func (s *ShSuite) Test_ShellLexer_Lex__keywords(c *check.C) {
+	b := s.init(c)
+
+	testErr := func(program, error, remaining string) {
+		tokens, rest := splitIntoShellTokens(dummyLine, program)
+		s.c.Check(rest, equals, "")
+
+		lexer := ShellLexer{
+			current:        "",
+			remaining:      tokens,
+			atCommandStart: true,
+			error:          ""}
+		parser := shyyParserImpl{}
+
+		succeeded := parser.Parse(&lexer)
+
+		c.Check(succeeded, equals, 1)
+		c.Check(lexer.error, equals, error)
+		c.Check(joinSkipEmpty(" ", append([]string{lexer.current}, lexer.remaining...)...), equals, remaining)
+	}
+
+	s.test(
+		"echo if then elif else fi for in do done while until case esac",
+		b.List().AddCommand(b.SimpleCommand("echo",
+			"if", "then", "elif", "else", "fi",
+			"for", "in", "do", "done", "while", "until", "case", "esac")))
+
+	testErr(
+		"echo ;; remaining",
+		"syntax error",
+		";; remaining")
+
+	testErr(
+		"echo (subshell-command args)",
+		"syntax error",
+		"subshell-command args )")
+
+	testErr("while :; do :; done if cond; then :; fi",
+		"syntax error",
+		"if cond ; then : ; fi")
+}
+
 type MkShBuilder struct {
 }
 
