@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"errors"
 	"gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
@@ -1131,6 +1132,17 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 	// See the "Too late" comment in Pkglint.checkExecutable.
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_Pkglint_AssertNil(c *check.C) {
+	t := s.Init(c)
+
+	G.AssertNil(nil, "this is not an error")
+
+	t.ExpectPanic(
+		func() { G.AssertNil(errors.New("unexpected error"), "Oops") },
+		"Pkglint internal error: Oops: unexpected error")
+}
+
 func (s *Suite) Test_Main(c *check.C) {
 	t := s.Init(c)
 
