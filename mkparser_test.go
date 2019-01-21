@@ -268,6 +268,16 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	test("${${PKGBASE} ${PKGVERSION}:L}",
 		varuse("${PKGBASE} ${PKGVERSION}", "L"))
 
+	// The variable name is optional; the variable with the empty name always
+	// evaluates to the empty string. Bmake actively prevents this variable from
+	// ever being defined. Therefore the :U branch is always taken, and this
+	// in turn is used to implement the variables from the .for loops.
+	test("${:U}",
+		varuse("", "U"))
+
+	test("${:Ufixed value}",
+		varuse("", "Ufixed value"))
+
 	// This complicated expression returns the major.minor.patch version
 	// of the package given in ${d}.
 	//

@@ -86,23 +86,23 @@ func (p *MkParser) VarUse() *MkVarUse {
 
 		varnameMark := lexer.Mark()
 		varname := p.Varname()
-		if varname != "" {
-			modifiers := p.VarUseModifiers(varname, closing)
-			if lexer.SkipByte(closing) {
-				if usingRoundParen && p.EmitWarnings {
-					parenVaruse := lexer.Since(mark)
-					edit := []byte(parenVaruse)
-					edit[1] = '{'
-					edit[len(edit)-1] = '}'
-					bracesVaruse := string(edit)
 
-					fix := p.Line.Autofix()
-					fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varname)
-					fix.Replace(parenVaruse, bracesVaruse)
-					fix.Apply()
-				}
-				return &MkVarUse{varname, modifiers}
+		modifiers := p.VarUseModifiers(varname, closing)
+		if lexer.SkipByte(closing) {
+			if usingRoundParen && p.EmitWarnings {
+				parenVaruse := lexer.Since(mark)
+				edit := []byte(parenVaruse)
+				edit[1] = '{'
+				edit[len(edit)-1] = '}'
+				bracesVaruse := string(edit)
+
+				fix := p.Line.Autofix()
+				fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varname)
+				fix.Replace(parenVaruse, bracesVaruse)
+				fix.Apply()
 			}
+
+			return &MkVarUse{varname, modifiers}
 		}
 
 		// This code path parses ${arbitrary text :L} and ${expression :? true-branch : false-branch }.
