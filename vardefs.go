@@ -1114,7 +1114,7 @@ func (src *Pkgsrc) InitVartypes() {
 		"*: use-loadtime, use")
 	usr("RUBY_VERSION_REQD", lkNone, BtVersion)
 	acl("RUBY_PKGPREFIX", lkNone, enumFromDirs("lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"), ""+
-		"special:rubyversion.mk: set; "+
+		"special:rubyversion.mk: set, default, use; "+
 		"*: use-loadtime, use")
 	sys("RUN", lkNone, BtShellCommand)
 	sys("RUN_LDCONFIG", lkNone, BtYesNo)
