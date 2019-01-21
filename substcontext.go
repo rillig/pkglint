@@ -286,5 +286,6 @@ func (ctx *SubstContext) suggestSubstVars(mkline MkLine) {
 			"requiring only the variable name instead of the full sed command.")
 	}
 
-	// TODO: Autofix
+	// TODO: Make this an autofix since it appears 684 times in pkgsrc.
+	//  Only lines that contain a single sed command should be autofixed.
 }
