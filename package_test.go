@@ -902,6 +902,29 @@ func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
 		"WARN: ~/category/package/Makefile:20: Invalid relative path \"../package/extra.mk\".")
 }
 
+// When a buildlink3.mk file is included, the corresponding builtin.mk
+// file is included by the pkgsrc infrastructure. Therefore all variables
+// declared in the builtin.mk file become known in the package.
+func (s *Suite) Test_Package_readMakefile__builtin_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "ECHO", AtRunTime)
+	t.SetUpPackage("category/package",
+		".include \"../../category/lib1/buildlink3.mk\"",
+		"",
+		"show-var-from-builtin: .PHONY",
+		"\techo ${VAR_FROM_BUILTIN} ${OTHER_VAR}")
+	t.CreateFileDummyBuildlink3("category/lib1/buildlink3.mk")
+	t.CreateFileLines("category/lib1/builtin.mk",
+		MkRcsID,
+		"VAR_FROM_BUILTIN=\t# defined")
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:23: OTHER_VAR is used but not defined.")
+}
+
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t := s.Init(c)
 
