@@ -349,11 +349,22 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 
 // relpath returns the relative path from `from` to `to`.
 func relpath(from, to string) string {
+
+	// From "dir" to "dir/subdir/...".
 	if hasPrefix(to, from) && len(to) > len(from)+1 && to[len(from)] == '/' {
 		return path.Clean(to[len(from)+1:])
 	}
 
-	// TODO: avoid these filesystem calls as they require IO.
+	// Take a shortcut for the most common variant in a complete pkgsrc scan,
+	// which is to resolve the relative path from a package to the pkgsrc root.
+	// This avoids unnecessary calls to the filesystem API.
+	if to == "." {
+		fromParts := strings.FieldsFunc(from, func(r rune) bool { return r == '/' })
+		if len(fromParts) == 3 && !hasPrefix(fromParts[0], ".") && !hasPrefix(fromParts[1], ".") && fromParts[2] == "." {
+			return "../.."
+		}
+	}
+
 	absFrom := abspath(from)
 	absTo := abspath(to)
 	rel, err := filepath.Rel(absFrom, absTo)

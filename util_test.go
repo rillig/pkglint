@@ -111,10 +111,17 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 // Relpath is called so often that handling the most common calls
 // without file system IO makes sense.
 func (s *Suite) Test_relpath__quick(c *check.C) {
-	c.Check(relpath("some/dir", "some/dir/../.."), equals, "../..")
-	c.Check(relpath("some/dir", "some/dir/./././../.."), equals, "../..")
-	c.Check(relpath("some/dir", "some/dir/"), equals, ".")
-	c.Check(relpath("some/dir", "some/directory"), equals, "../directory")
+
+	test := func(from, to, result string) {
+		c.Check(relpath(from, to), equals, result)
+	}
+
+	test("some/dir", "some/dir/../..", "../..")
+	test("some/dir", "some/dir/./././../..", "../..")
+	test("some/dir", "some/dir/", ".")
+	test("some/dir", "some/directory", "../directory")
+
+	test("category/package/.", ".", "../..")
 }
 
 // This is not really an internal error but won't happen in practice anyway.
