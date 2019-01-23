@@ -564,7 +564,17 @@ func (s *Suite) Test_Autofix__show_unfixable_diagnostics_in_default_mode(c *chec
 	lines.Lines[0].Warnf("This warning is shown since the --show-autofix option is not given.")
 
 	fix := lines.Lines[1].Autofix()
-	fix.Warnf("This warning cannot be fixed automatically but should nevertheless be shown.")
+	fix.Warnf("This warning cannot be fixed and is therefore not shown.")
+	fix.Replace("XXX", "TODO")
+	fix.Apply()
+
+	fix.Warnf("This warning cannot be fixed automatically but should be shown anyway.")
+	fix.Replace("XXX", "TODO")
+	fix.Anyway()
+	fix.Apply()
+
+	// If this warning should ever appear it is probably because fix.anyway is not reset properly.
+	fix.Warnf("This warning cannot be fixed and is therefore not shown.")
 	fix.Replace("XXX", "TODO")
 	fix.Apply()
 
@@ -573,7 +583,9 @@ func (s *Suite) Test_Autofix__show_unfixable_diagnostics_in_default_mode(c *chec
 	t.CheckOutputLines(
 		">\tline1",
 		"WARN: Makefile:1: This warning is shown since the --show-autofix option is not given.",
-		// FIXME: The warning for line 2 should be shown here. There's no reason for it to be hidden.
+		"",
+		">\tline2",
+		"WARN: Makefile:2: This warning cannot be fixed automatically but should be shown anyway.",
 		"",
 		">\tline3",
 		"WARN: Makefile:3: This warning is also shown.")
