@@ -229,7 +229,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 
 	t.SetUpVartypes()
 	vartype := G.Pkgsrc.VariableType("PKGNAME")
-	vuc := VarUseContext{vartype, vucTimeUnknown, vucQuotBackt, false}
+	vuc := VarUseContext{vartype, vucTimeUnknown, VucQuotBackt, false}
 
 	c.Check(vuc.String(), equals, "(Pkgname time:unknown quoting:backt wordpart:false)")
 }
@@ -320,7 +320,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	mkline := t.NewMkLine("filename", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetUpVartypes()
 
-	vuc := VarUseContext{G.Pkgsrc.VariableType("PKGNAME"), vucTimeParse, vucQuotUnknown, false}
+	vuc := VarUseContext{G.Pkgsrc.VariableType("PKGNAME"), vucTimeParse, VucQuotUnknown, false}
 	nq := mkline.VariableNeedsQuoting("UNKNOWN", nil, &vuc)
 
 	c.Check(nq, equals, unknown)
@@ -333,7 +333,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	t.SetUpMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
 	mkline := t.NewMkLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}")
 
-	vuc := VarUseContext{G.Pkgsrc.vartypes["MASTER_SITES"], vucTimeRun, vucQuotPlain, false}
+	vuc := VarUseContext{G.Pkgsrc.vartypes["MASTER_SITES"], vucTimeRun, VucQuotPlain, false}
 	nq := mkline.VariableNeedsQuoting("HOMEPAGE", G.Pkgsrc.vartypes["HOMEPAGE"], &vuc)
 
 	c.Check(nq, equals, no)
