@@ -220,7 +220,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// running pkglint over the whole pkgsrc tree did not produce any different result
 		// whether guessed was true or false.
 		forLoopType := Vartype{lkShell, BtUnknown, []ACLEntry{{"*", aclpAllRead}}, false}
-		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, VucQuotFor, false}
+		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, VucQuotPlain, false}
 		for _, itemsVar := range mkline.DetermineUsedVariables() {
 			ck.CheckVaruse(&MkVarUse{itemsVar, nil}, &forLoopContext)
 		}

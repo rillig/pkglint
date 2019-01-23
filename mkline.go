@@ -673,13 +673,6 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		}
 	}
 
-	// In .for loops, the :Q operator is always misplaced, since
-	// the items are broken up at whitespace, not as shell words
-	// like in all other parts of make(1).
-	if vuc.quoting == VucQuotFor {
-		return no
-	}
-
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.IsWordPart && vuc.quoting == VucQuotPlain {
 		if vartype.kindOfList == lkNone && vartype.basicType == BtShellWord {
@@ -946,15 +939,6 @@ const (
 	VucQuotDquot              // Example: echo "The version is ${PKGVERSION}."
 	VucQuotSquot              // Example: echo 'The version is ${PKGVERSION}.'
 	VucQuotBackt              // Example: echo `sed 1q ${WRKSRC}/README`
-
-	// VucQuotFor describes .for loop in Makefiles.
-	// This is the only place where variables are split on whitespace.
-	// Everywhere else (:Q, :M) they are split like in the shell.
-	//
-	// FIXME: Since 2015 the above is no longer true.
-	//
-	// Example: .for f in ${EXAMPLE_FILES}
-	VucQuotFor
 )
 
 func (q VucQuoting) String() string {
