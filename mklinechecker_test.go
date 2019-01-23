@@ -966,7 +966,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 			guessed:    true,
 		},
 		time:       vucTimeRun,
-		quoting:    vucQuotPlain,
+		quoting:    VucQuotPlain,
 		IsWordPart: false,
 	})
 

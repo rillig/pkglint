@@ -954,6 +954,26 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval_literal(c
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__included_OPSYS_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/dependency/buildlink3.mk\"",
+		"CONFIGURE_ARGS+=\tone",
+		"CONFIGURE_ARGS=\ttwo",
+		"CONFIGURE_ARGS+=\tthree")
+	t.SetUpPackage("category/dependency")
+	t.CreateFileDummyBuildlink3("category/dependency/buildlink3.mk")
+	t.CreateFileLines("category/dependency/builtin.mk",
+		MkRcsID,
+		"CONFIGURE_ARGS.Darwin+=\tdarwin")
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:21: Variable CONFIGURE_ARGS is overwritten in line 22.")
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 

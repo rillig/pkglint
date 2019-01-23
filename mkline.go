@@ -676,12 +676,12 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// In .for loops, the :Q operator is always misplaced, since
 	// the items are broken up at whitespace, not as shell words
 	// like in all other parts of make(1).
-	if vuc.quoting == vucQuotFor {
+	if vuc.quoting == VucQuotFor {
 		return no
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
-	if vuc.IsWordPart && vuc.quoting == vucQuotPlain {
+	if vuc.IsWordPart && vuc.quoting == VucQuotPlain {
 		if vartype.kindOfList == lkNone && vartype.basicType == BtShellWord {
 			return no
 		}
@@ -697,7 +697,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// Both of these can be correct, depending on the situation:
 	// 1. echo ${PERL5:Q}
 	// 2. xargs ${PERL5}
-	if !vuc.IsWordPart && vuc.quoting == vucQuotPlain {
+	if !vuc.IsWordPart && vuc.quoting == VucQuotPlain {
 		if wantList && haveList {
 			return unknown
 		}
@@ -707,14 +707,14 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// special characters, so they can safely be used inside any quotes.
 	if tool := G.ToolByVarname(varname); tool != nil {
 		switch vuc.quoting {
-		case vucQuotPlain:
+		case VucQuotPlain:
 			if !vuc.IsWordPart {
 				return no
 			}
 			// XXX: Should there be a return here? It looks as if it could have been forgotten.
-		case vucQuotBackt:
+		case VucQuotBackt:
 			return no
-		case vucQuotDquot, vucQuotSquot:
+		case VucQuotDquot, VucQuotSquot:
 			return unknown
 		}
 	}
@@ -723,7 +723,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	//
 	// An exception is in the case of backticks, because the whole backticks expression
 	// is parsed as a single shell word by pkglint. (XXX: This comment may be outdated.)
-	if vuc.IsWordPart && vucVartype.IsShell() && vuc.quoting != vucQuotBackt {
+	if vuc.IsWordPart && vucVartype.IsShell() && vuc.quoting != VucQuotBackt {
 		return yes
 	}
 
@@ -905,7 +905,7 @@ func (op MkOperator) String() string {
 type VarUseContext struct {
 	vartype    *Vartype
 	time       vucTime
-	quoting    vucQuoting
+	quoting    VucQuoting
 	IsWordPart bool // Example: LOCALBASE=${LOCALBASE}
 }
 
@@ -933,29 +933,31 @@ const (
 
 func (t vucTime) String() string { return [...]string{"unknown", "parse", "run"}[t] }
 
-// The quoting context in which the variable is used.
+// VucQuoting describes in what level of quoting the variable is used.
 // Depending on this context, the modifiers :Q or :M can be allowed or not.
 //
 // The shell tokenizer knows multi-level quoting modes (see ShQuoting),
 // but for deciding whether :Q is necessary or not, a single level is enough.
-type vucQuoting uint8
+type VucQuoting uint8
 
 const (
-	vucQuotUnknown vucQuoting = iota
-	vucQuotPlain              // Example: echo LOCALBASE=${LOCALBASE}
-	vucQuotDquot              // Example: echo "The version is ${PKGVERSION}."
-	vucQuotSquot              // Example: echo 'The version is ${PKGVERSION}.'
-	vucQuotBackt              // Example: echo `sed 1q ${WRKSRC}/README`
+	VucQuotUnknown VucQuoting = iota
+	VucQuotPlain              // Example: echo LOCALBASE=${LOCALBASE}
+	VucQuotDquot              // Example: echo "The version is ${PKGVERSION}."
+	VucQuotSquot              // Example: echo 'The version is ${PKGVERSION}.'
+	VucQuotBackt              // Example: echo `sed 1q ${WRKSRC}/README`
 
-	// The .for loop in Makefiles. This is the only place where
-	// variables are split on whitespace. Everywhere else (:Q, :M)
-	// they are split like in the shell.
+	// VucQuotFor describes .for loop in Makefiles.
+	// This is the only place where variables are split on whitespace.
+	// Everywhere else (:Q, :M) they are split like in the shell.
+	//
+	// FIXME: Since 2015 the above is no longer true.
 	//
 	// Example: .for f in ${EXAMPLE_FILES}
-	vucQuotFor
+	VucQuotFor
 )
 
-func (q vucQuoting) String() string {
+func (q VucQuoting) String() string {
 	return [...]string{"unknown", "plain", "dquot", "squot", "backt", "mk-for"}[q]
 }
 

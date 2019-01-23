@@ -24,7 +24,7 @@ func NewShellLine(mkline MkLine) *ShellLine {
 }
 
 var shellCommandsType = &Vartype{lkNone, BtShellCommands, []ACLEntry{{"*", aclpAllRuntime}}, false}
-var shellWordVuc = &VarUseContext{shellCommandsType, vucTimeUnknown, vucQuotPlain, false}
+var shellWordVuc = &VarUseContext{shellCommandsType, vucTimeUnknown, VucQuotPlain, false}
 
 func (shline *ShellLine) CheckWord(token string, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
