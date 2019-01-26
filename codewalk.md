@@ -143,21 +143,21 @@ Some more details are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
 ```codewalk
-file         linechecker.go
-go:type:doc  Autofix
+file autofix.go
+go:type Autofix
 ```
 
 ```codewalk
-file         line.go
-go:func:doc  LineImpl.Autofix
+file line.go
+go:func LineImpl.Autofix
 ```
 
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
 ```codewalk
-file         mkline.go
-go:func:doc  MkLineImpl.variableNeedsQuoting
+file mkline.go
+go:func MkLineImpl.VariableNeedsQuoting
 ```
 
 ## Basic ingredients
