@@ -1,15 +1,5 @@
 # The pkglint tour
 
-> Note: I wish there were a tool for nicely rendering the below codewalk blocks.
-> If you know of such a tool, please tell me.
-> `godoc` codewalks don't count since [they are only supported for the Go distribution 
-> itself](https://github.com/golang/go/issues/14369).
->
-> See also:
->
-> * [github/markup/#172](https://github.com/github/markup/issues/172#issuecomment-33241601) (closed)
-> * [MarkdownHelper](https://github.com/BurdetteLamar/MarkdownHelper)
-
 ## The entry points
 
 ### Running pkglint
