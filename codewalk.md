@@ -15,9 +15,13 @@
 ### Running pkglint
 
 ```codewalk
-file   pkglint.go
-start  ^func main
-end    ^\}
+file     cmd/pkglint/main.go
+go:func  main
+```
+
+```codewalk
+file     pkglint.go
+go:func  Pkglint.Main
 ```
 
 When running pkglint, the `G` variable is set up first.
@@ -31,15 +35,13 @@ Having only a single global variable makes it easy to reset the global state dur
 Very similar code is used to set up the test and tear it down again:
 
 ```codewalk
-file   check_test.go
-start  ^func .* SetUpTest
-end    ^\}
+file     check_test.go
+go:func  Suite.SetUpTest
 ```
 
 ```codewalk
-file   check_test.go
-start  ^func .* TearDownTest
-end    ^\}
+file     check_test.go
+go:func  Suite.TearDownTest
 ```
 
 ## First contact: checking a single DESCR file
@@ -52,8 +54,8 @@ Let's trace an invocation of the command `pkglint DESCR` down to where
 the actual checks happen.
 
 ```codewalk
-file   pkglint.go
-start  func main
+file     cmd/pkglint/main.go
+go:func  main
 ```
 
 ```codewalk
@@ -81,24 +83,24 @@ line argument, which in this file is `DESCR`. From there, the pkgsrc
 root is usually reachable via `../../`, and this is what pkglint tries.
 
 After initializing the pkgsrc metadata,
-all items from the TODO list are worked off and handed over to `CheckDirent`,
+all items from the TODO list are worked off and handed over to `Pkglint.Check`,
 one after another.
 
 ```codewalk
-file   pkglint.go
-start  func CheckDirent
+file     pkglint.go
+go:func  Pkglint.Check
 ```
 
 Since `DESCR` is a regular file, the next method to call is `Checkfile`.
 
 ```codewalk
-file   pkglint.go
-start  func Checkfile
+file     pkglint.go
+go:func  Pkglint.checkReg
 ```
 
 ```codewalk
 file   pkglint.go
-start  /basename, "DESCR"/
+start  basename, "DESCR"
 end    ^$
 ```
 
@@ -114,9 +116,8 @@ because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
 ```codewalk
-file   pkglint.go
-start  func ChecklinesDescr
-end    ^\}
+file     pkglint.go
+go:func  CheckLinesDescr
 ```
 
 Now we are where the actual action takes place.
@@ -133,9 +134,8 @@ The autofix feature must be hidden in one of the line checks,
 and indeed, the code for `CheckLineTrailingWhitespace` says:
 
 ```codewalk
-file   linechecker.go
-start  ^func CheckLineTrailingWhitespace
-end    ^\}
+file     linechecker.go
+go:func  LineChecker.CheckTrailingWhitespace
 ```
 
 This code is a typical example for using the autofix feature.
@@ -143,23 +143,21 @@ Some more details are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
 ```codewalk
-file   linechecker.go
-start  /^type Autofix/ upwhile /^\/\//
-end    /^type Autofix/
+file         linechecker.go
+go:type:doc  Autofix
 ```
 
 ```codewalk
-file   line.go
-start  /^func .* Autofix/ upwhile /^\/\//
-end    /^func .* Autofix/
+file         line.go
+go:func:doc  LineImpl.Autofix
 ```
 
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
 ```codewalk
-file   mkline.go
-start  /^func .* VariableNeedsQuoting
+file         mkline.go
+go:func:doc  MkLineImpl.variableNeedsQuoting
 ```
 
 ## Basic ingredients
@@ -183,14 +181,13 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 The definition for the `Line` type is:
 
 ```codewalk
-file   line.go
-start  ^type Line =
+file     line.go
+go:type  Line
 ```
 
 ```codewalk
-file   line.go
-start  ^type LineImpl struct
-end    ^\}
+file     line.go
+go:type  LineImpl
 ```
 
 ### MkLine
@@ -201,14 +198,13 @@ Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Mod
 and these are handled specially.
 
 ```codewalk
-file   mkline.go
-start  ^type MkLine =
+file     mkline.go
+go:type  MkLine
 ```
 
 ```codewalk
-file   mkline.go
-start  ^type MkLineImpl struct
-end    ^\}
+file    mkline.go
+go:type MkLineImpl
 ```
 
 ### ShellLine
@@ -218,9 +214,8 @@ which are embedded in Makefile fragments.
 The `ShellLine` type provides methods for checking shell commands and their individual parts.
 
 ```codewalk
-file   shell.go
-start  ^type ShellLine struct
-end    ^\}
+file     shell.go
+go:type  ShellLine
 ```
 
 ## Testing pkglint
@@ -246,9 +241,8 @@ It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
 ```codewalk
-file   check_test.go
-start  /^type Tester/ upwhile /^\/\//
-end    ^\}
+file     check_test.go
+go:type  Tester
 ```
 
 The `s` variable is not used in tests.
@@ -260,9 +254,8 @@ Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
 ```codewalk
-file   util_test.go
-start  ^func .* Test_tabLength
-end    ^\}
+file     util_test.go
+go:func  Suite.Test_tabWidth
 ```
 
 ### Logging detailed information during tests
@@ -281,9 +274,8 @@ To see how to setup complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
 ```codewalk
-file   pkglint_test.go
-start  ^func .* Test_Pkglint_Main__complete_package
-end    ^\}
+file     pkglint_test.go
+go:func  Suite.Test_Pkglint_Main__complete_package
 ```
 
 ### Typical warnings during a test
