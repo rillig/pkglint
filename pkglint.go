@@ -193,21 +193,22 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		pkglint.Todo = []string{"."}
 	}
 
-	firstArg := pkglint.Todo[0]
-	if fileExists(firstArg) {
-		firstArg = path.Dir(firstArg)
+	firstDir := pkglint.Todo[0]
+	if fileExists(firstDir) {
+		firstDir = path.Dir(firstDir)
 	}
-	relTopdir := findPkgsrcTopdir(firstArg)
+
+	relTopdir := findPkgsrcTopdir(firstDir)
 	if relTopdir == "" {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
 		// and these are needed for virtually every single check.
 		// Therefore, the only sensible thing to do is to quit immediately.
-		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstArg)
+		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
 	}
 
-	pkglint.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
-	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstArg), `^wip(/|$)`) // Same as in Pkglint.Check.
+	pkglint.Pkgsrc = NewPkgsrc(firstDir + "/" + relTopdir)
+	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstDir), `^wip(/|$)`) // Same as in Pkglint.Check.
 	pkglint.Pkgsrc.LoadInfrastructure()
 
 	currentUser, err := user.Current()
@@ -598,13 +599,14 @@ func CheckLinesDescr(lines Lines) {
 			}
 		}
 	}
+
 	CheckLinesTrailingEmptyLines(lines)
 
 	if maxLines := 24; lines.Len() > maxLines {
 		line := lines.Lines[maxLines]
 
 		line.Warnf("File too long (should be no more than %d lines).", maxLines)
-		G.Explain(
+		line.Explain(
 			"The DESCR file should fit on a traditional terminal of 80x25 characters.",
 			"It is also intended to give a _brief_ summary about the package's contents.")
 	}
