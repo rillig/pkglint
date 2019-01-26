@@ -4,7 +4,7 @@
 
 ### Running pkglint
 
-> from [cmd/pkglint/main.go](cmd/pkglint/main.go#L9):
+> from [cmd/pkglint/main.go](cmd/pkglint/main.go#L10):
 
 ```go
 func main() {
@@ -12,7 +12,7 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L127):
+> from [pkglint.go](pkglint.go#L128):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -132,7 +132,7 @@ Having only a single global variable makes it easy to reset the global state dur
 
 Very similar code is used to set up the test and tear it down again:
 
-> from [check_test.go](check_test.go#L57):
+> from [check_test.go](check_test.go#L58):
 
 ```go
 func (s *Suite) SetUpTest(c *check.C) {
@@ -165,7 +165,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 }
 ```
 
-> from [check_test.go](check_test.go#L86):
+> from [check_test.go](check_test.go#L87):
 
 ```go
 func (s *Suite) TearDownTest(c *check.C) {
@@ -204,7 +204,7 @@ text for human consumption), they are the ideal target.
 Let's trace an invocation of the command `pkglint DESCR` down to where
 the actual checks happen.
 
-> from [cmd/pkglint/main.go](cmd/pkglint/main.go#L9):
+> from [cmd/pkglint/main.go](cmd/pkglint/main.go#L10):
 
 ```go
 func main() {
@@ -212,7 +212,7 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L146):
+> from [pkglint.go](pkglint.go#L147):
 
 ```go
 	if exitcode := pkglint.ParseCommandLine(argv); exitcode != -1 {
@@ -223,7 +223,7 @@ func main() {
 Since there are no command line options starting with a hyphen, we can
 skip the command line parsing for this example.
 
-> from [pkglint.go](pkglint.go#L188):
+> from [pkglint.go](pkglint.go#L189):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -285,7 +285,7 @@ After initializing the pkgsrc metadata,
 all items from the TODO list are worked off and handed over to `Pkglint.Check`,
 one after another.
 
-> from [pkglint.go](pkglint.go#L304):
+> from [pkglint.go](pkglint.go#L305):
 
 ```go
 // Check checks a directory entry, which can be a regular file,
@@ -353,7 +353,7 @@ func (pkglint *Pkglint) Check(dirent string) {
 
 Since `DESCR` is a regular file, the next method to call is `Checkfile`.
 
-> from [pkglint.go](pkglint.go#L676):
+> from [pkglint.go](pkglint.go#L677):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -477,7 +477,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L711):
+> from [pkglint.go](pkglint.go#L712):
 
 ```go
 	case hasPrefix(basename, "DESCR"):
@@ -500,7 +500,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L581):
+> from [pkglint.go](pkglint.go#L582):
 
 ```go
 func CheckLinesDescr(lines Lines) {
@@ -550,7 +550,7 @@ since none of the visible checks fixes anything.
 The autofix feature must be hidden in one of the line checks,
 and indeed, the code for `CheckLineTrailingWhitespace` says:
 
-> from [linechecker.go](linechecker.go#L41):
+> from [linechecker.go](linechecker.go#L42):
 
 ```go
 func (ck LineChecker) CheckTrailingWhitespace() {
@@ -574,7 +574,7 @@ This code is a typical example for using the autofix feature.
 Some more details are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
-> from [autofix.go](autofix.go#L10):
+> from [autofix.go](autofix.go#L11):
 
 ```go
 // Autofix handles all modifications to a single line,
@@ -593,7 +593,7 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L197):
+> from [line.go](line.go#L198):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -630,7 +630,7 @@ func (line *LineImpl) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L644):
+> from [mkline.go](mkline.go#L645):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator
@@ -759,13 +759,13 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 
 The definition for the `Line` type is:
 
-> from [line.go](line.go#L57):
+> from [line.go](line.go#L58):
 
 ```go
 type Line = *LineImpl
 ```
 
-> from [line.go](line.go#L59):
+> from [line.go](line.go#L60):
 
 ```go
 type LineImpl struct {
@@ -794,13 +794,13 @@ In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
 
-> from [mkline.go](mkline.go#L16):
+> from [mkline.go](mkline.go#L17):
 
 ```go
 type MkLine = *MkLineImpl
 ```
 
-> from [mkline.go](mkline.go#L18):
+> from [mkline.go](mkline.go#L19):
 
 ```go
 type MkLineImpl struct {
@@ -815,7 +815,7 @@ The instructions for building and installing packages are written in shell comma
 which are embedded in Makefile fragments.
 The `ShellLine` type provides methods for checking shell commands and their individual parts.
 
-> from [shell.go](shell.go#L12):
+> from [shell.go](shell.go#L13):
 
 ```go
 // ShellLine is either a line from a Makefile starting with a tab,
@@ -850,7 +850,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L116):
+> from [check_test.go](check_test.go#L117):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -875,7 +875,7 @@ which is the underlying testing framework.
 Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
-> from [util_test.go](util_test.go#L66):
+> from [util_test.go](util_test.go#L67):
 
 ```go
 func (s *Suite) Test_tabWidth(c *check.C) {
@@ -902,7 +902,7 @@ t.DisableTracing()
 To see how to setup complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
-> from [pkglint_test.go](pkglint_test.go#L134):
+> from [pkglint_test.go](pkglint_test.go#L135):
 
 ```go
 // Demonstrates which infrastructure files are necessary to actually run
