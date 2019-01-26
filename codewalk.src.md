@@ -4,9 +4,27 @@
 
 ### Running pkglint
 
+As is common in Go, each executable command is implemented in its own directory.
+This directory is commonly called `cmd`.
+ 
 ```codewalk
 file     cmd/pkglint/main.go
 go:func  main
+```
+
+From there on, everything interesting happens in the `netbsd.org/pkglint` package.
+The below `Main` function already uses some implementation details (like `G.out` and `G.err`),
+therefore it is currently not possible to write that code outside of this package.
+
+Making all the pkglint code exportable is a good idea in general, but as of January 2019,
+no one has asked to use any of the pkglint code as a library,
+therefore the decision whether each element should be exported or not is not carved in stone yet.
+If you want to use some of the code in your own pkgsrc programs,
+[just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org).
+
+```codewalk
+file     pkglint.go
+go:func  Main
 ```
 
 ```codewalk
@@ -50,38 +68,63 @@ go:func  main
 
 ```codewalk
 file   pkglint.go
-start  ^[\t]if exitcode
+start  ^[\t]if exitcode :=
 end    ^\t\}$
 ```
 
 Since there are no command line options starting with a hyphen, we can
 skip the command line parsing for this example.
 
+The argument `DESCR` is saved in the `TODO` list.
+The default use case for pkglint is to check the package from the
+current working directory, therefore this is done if no arguments are given.
+
 ```codewalk
 file   pkglint.go
 start  ^[\t]for _, arg
-end    ^\}
+end    ^$
+endUp 1
 ```
 
-The argument `DESCR` is saved in the `TODO` list, and then the pkgsrc
-infrastructure data is loaded by `Initialize`.
-This must happen in this order because pkglint needs to determine the
-pkgsrc root directory, just in case there are two or more pkgsrc trees
-in the local system.
-The path of the pkgsrc directory is determined from the first command
-line argument, which in this file is `DESCR`. From there, the pkgsrc
-root is usually reachable via `../../`, and this is what pkglint tries.
+Next, the files from the pkgsrc infrastructure are loaded to parse the
+known variable names (like PREFIX, TOOLS_CREATE.*, the MASTER_SITEs).
 
-After initializing the pkgsrc metadata,
-all items from the TODO list are worked off and handed over to `Pkglint.Check`,
-one after another.
+The path to the pkgsrc root directory is determined from the first command line argument,
+therefore the arguments had to be processed in the code above.
+
+In this example run, the first (and only) argument is `DESCR`.
+From there, the pkgsrc root is usually reachable via `../../`,
+and this is what pkglint tries.
+
+```codewalk
+file   pkglint.go
+start  ^[\t]firstDir :=
+end    LoadInfrastructure
+```
+
+Now the information from pkgsrc is loaded, and the main work can start.
+The items from the TODO list are worked off and handed over to `Pkglint.Check`,
+one after another. When pkglint is called with the `-r` option,
+some entries may be added to the Todo list,
+but that doesn't happen in this simple example run.
+
+```codewalk
+file   pkglint.go
+start  ^[\t]for len\(pkglint\.Todo\)
+end    ^\t}
+```
+
+The main work is done in `Pkglint.Check`:
 
 ```codewalk
 file     pkglint.go
-go:func  Pkglint.Check
+start    ^\tif isReg
+end      ^\t\}
 ```
 
-Since `DESCR` is a regular file, the next method to call is `Checkfile`.
+Since `DESCR` is a regular file, the next function to call is `checkReg`.
+For directories, the next function would depend on the depth from the
+pkgsrc root directory.
 
 ```codewalk
 file     pkglint.go
@@ -90,8 +133,9 @@ go:func  Pkglint.checkReg
 
 ```codewalk
 file   pkglint.go
-start  basename, "DESCR"
-end    ^$
+start  basename == "buildlink3.mk"
+end    case basename == "DEINSTALL"
+endUp  2
 ```
 
 When compared to the code blocks around this one, it looks strange that
@@ -101,6 +145,7 @@ files. So everything's fine here.
 
 At this point, the file is loaded and converted to lines.
 For DESCR files, this is very simple, so there's no need to dive into that.
+
 The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
@@ -121,7 +166,7 @@ Therefore the checks for individual lines happen before the other check.
 The call to `SaveAutofixChanges` at the end looks a bit strange
 since none of the visible checks fixes anything.
 The autofix feature must be hidden in one of the line checks,
-and indeed, the code for `CheckLineTrailingWhitespace` says:
+and indeed, the code for `CheckTrailingWhitespace` says:
 
 ```codewalk
 file     linechecker.go
@@ -129,7 +174,7 @@ go:func  LineChecker.CheckTrailingWhitespace
 ```
 
 This code is a typical example for using the autofix feature.
-Some more details are described at the `Autofix` type itself
+Some more possibilities are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
 ```codewalk
@@ -154,6 +199,7 @@ go:func MkLineImpl.VariableNeedsQuoting
 
 Pkglint checks packages, and a package consists of several different files.
 All pkgsrc files are text files, which are organized in lines.
+
 Most pkglint diagnostics refer to a specific line,
 therefore the `Line` type is responsible for producing the diagnostics.
 

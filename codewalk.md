@@ -4,11 +4,40 @@
 
 ### Running pkglint
 
+As is common in Go, each executable command is implemented in its own directory.
+This directory is commonly called `cmd`.
+ 
 > from [cmd/pkglint/main.go](cmd/pkglint/main.go#L10):
 
 ```go
 func main() {
 	exit(pkglint.Main())
+}
+```
+
+From there on, everything interesting happens in the `netbsd.org/pkglint` package.
+The below `Main` function already uses some implementation details (like `G.out` and `G.err`),
+therefore it is currently not possible to write that code outside of this package.
+
+Making all the pkglint code exportable is a good idea in general, but as of January 2019,
+no one has asked to use any of the pkglint code as a library,
+therefore the decision whether each element should be exported or not is not carved in stone yet.
+If you want to use some of the code in your own pkgsrc programs,
+[just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org).
+
+> from [pkglint.go](pkglint.go#L116):
+
+```go
+func Main() int {
+	G.out = NewSeparatorWriter(os.Stdout)
+	G.err = NewSeparatorWriter(os.Stderr)
+	trace.Out = os.Stdout
+	exitCode := G.Main(os.Args...)
+	if G.Opts.Profiling {
+		G = Pkglint{} // Free all memory.
+		runtime.GC()  // For detecting possible memory leaks; see qa-pkglint.
+	}
+	return exitCode
 }
 ```
 
@@ -83,21 +112,22 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		pkglint.Todo = []string{"."}
 	}
 
-	firstArg := pkglint.Todo[0]
-	if fileExists(firstArg) {
-		firstArg = path.Dir(firstArg)
+	firstDir := pkglint.Todo[0]
+	if fileExists(firstDir) {
+		firstDir = path.Dir(firstDir)
 	}
-	relTopdir := findPkgsrcTopdir(firstArg)
+
+	relTopdir := findPkgsrcTopdir(firstDir)
 	if relTopdir == "" {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
 		// and these are needed for virtually every single check.
 		// Therefore, the only sensible thing to do is to quit immediately.
-		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstArg)
+		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
 	}
 
-	pkglint.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
-	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstArg), `^wip(/|$)`) // Same as in Pkglint.Check.
+	pkglint.Pkgsrc = NewPkgsrc(firstDir + "/" + relTopdir)
+	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstDir), `^wip(/|$)`) // Same as in Pkglint.Check.
 	pkglint.Pkgsrc.LoadInfrastructure()
 
 	currentUser, err := user.Current()
@@ -223,6 +253,10 @@ func main() {
 Since there are no command line options starting with a hyphen, we can
 skip the command line parsing for this example.
 
+The argument `DESCR` is saved in the `TODO` list.
+The default use case for pkglint is to check the package from the
+current working directory, therefore this is done if no arguments are given.
+
 > from [pkglint.go](pkglint.go#L189):
 
 ```go
@@ -232,128 +266,74 @@ skip the command line parsing for this example.
 	if len(pkglint.Todo) == 0 {
 		pkglint.Todo = []string{"."}
 	}
+```
 
-	firstArg := pkglint.Todo[0]
-	if fileExists(firstArg) {
-		firstArg = path.Dir(firstArg)
+Next, the files from the pkgsrc infrastructure are loaded to parse the
+known variable names (like PREFIX, TOOLS_CREATE.*, the MASTER_SITEs).
+
+The path to the pkgsrc root directory is determined from the first command line argument,
+therefore the arguments had to be processed in the code above.
+
+In this example run, the first (and only) argument is `DESCR`.
+From there, the pkgsrc root is usually reachable via `../../`,
+and this is what pkglint tries.
+
+> from [pkglint.go](pkglint.go#L196):
+
+```go
+	firstDir := pkglint.Todo[0]
+	if fileExists(firstDir) {
+		firstDir = path.Dir(firstDir)
 	}
-	relTopdir := findPkgsrcTopdir(firstArg)
+
+	relTopdir := findPkgsrcTopdir(firstDir)
 	if relTopdir == "" {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
 		// and these are needed for virtually every single check.
 		// Therefore, the only sensible thing to do is to quit immediately.
-		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstArg)
+		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
 	}
 
-	pkglint.Pkgsrc = NewPkgsrc(firstArg + "/" + relTopdir)
-	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstArg), `^wip(/|$)`) // Same as in Pkglint.Check.
+	pkglint.Pkgsrc = NewPkgsrc(firstDir + "/" + relTopdir)
+	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstDir), `^wip(/|$)`) // Same as in Pkglint.Check.
 	pkglint.Pkgsrc.LoadInfrastructure()
+```
 
-	currentUser, err := user.Current()
-	if err == nil {
-		// On Windows, this is `Computername\Username`.
-		pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
-	}
+Now the information from pkgsrc is loaded, and the main work can start.
+The items from the TODO list are worked off and handed over to `Pkglint.Check`,
+one after another. When pkglint is called with the `-r` option,
+some entries may be added to the Todo list,
+but that doesn't happen in this simple example run.
 
+> from [pkglint.go](pkglint.go#L220):
+
+```go
 	for len(pkglint.Todo) > 0 {
 		item := pkglint.Todo[0]
 		pkglint.Todo = pkglint.Todo[1:]
 		pkglint.Check(item)
 	}
-
-	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
-
-	pkglint.ShowSummary()
-	if pkglint.errors != 0 {
-		return 1
-	}
-	return 0
-}
 ```
 
-The argument `DESCR` is saved in the `TODO` list, and then the pkgsrc
-infrastructure data is loaded by `Initialize`.
-This must happen in this order because pkglint needs to determine the
-pkgsrc root directory, just in case there are two or more pkgsrc trees
-in the local system.
-The path of the pkgsrc directory is determined from the first command
-line argument, which in this file is `DESCR`. From there, the pkgsrc
-root is usually reachable via `../../`, and this is what pkglint tries.
+The main work is done in `Pkglint.Check`:
 
-After initializing the pkgsrc metadata,
-all items from the TODO list are worked off and handed over to `Pkglint.Check`,
-one after another.
-
-> from [pkglint.go](pkglint.go#L305):
+> from [pkglint.go](pkglint.go#L345):
 
 ```go
-// Check checks a directory entry, which can be a regular file,
-// a directory or a symlink (only allowed for the working directory).
-//
-// This is the method that is called for each command line argument.
-//
-// It sets up all the global state (infrastructure, wip) for accurately
-// classifying the entry.
-//
-// During tests, it assumes that Pkgsrc.LoadInfrastructure has been called.
-// It is the most high-level method for testing pkglint.
-func (pkglint *Pkglint) Check(dirent string) {
-	if trace.Tracing {
-		defer trace.Call1(dirent)()
-	}
-
-	st, err := os.Lstat(dirent)
-	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {
-		NewLineWhole(dirent).Errorf("No such file or directory.")
-		return
-	}
-	isDir := st.Mode().IsDir()
-	isReg := st.Mode().IsRegular()
-
-	dir := dirent
-	if !isDir {
-		dir = path.Dir(dirent)
-	}
-
-	basename := path.Base(dirent)
-	pkgsrcRel := pkglint.Pkgsrc.ToRel(dirent)
-
-	pkglint.Wip = matches(pkgsrcRel, `^wip(/|$)`)
-	pkglint.Infrastructure = matches(pkgsrcRel, `^mk(/|$)`)
-	pkgsrcdir := findPkgsrcTopdir(dir)
-	if pkgsrcdir == "" {
-		NewLineWhole(dirent).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
-		return
-	}
-
 	if isReg {
 		depth := strings.Count(pkgsrcRel, "/")
 		pkglint.checkExecutable(dirent, st.Mode())
 		pkglint.checkReg(dirent, basename, depth)
 		return
 	}
-
-	if isDir && isEmptyDir(dirent) {
-		return
-	}
-
-	switch pkgsrcdir {
-	case "../..":
-		pkglint.checkdirPackage(dir)
-	case "..":
-		CheckdirCategory(dir)
-	case ".":
-		CheckdirToplevel(dir)
-	default:
-		NewLineWhole(dirent).Errorf("Cannot check directories outside a pkgsrc tree.")
-	}
-}
 ```
 
-Since `DESCR` is a regular file, the next method to call is `Checkfile`.
+Since `DESCR` is a regular file, the next function to call is `checkReg`.
+For directories, the next function would depend on the depth from the
+pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L677):
+> from [pkglint.go](pkglint.go#L679):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -477,9 +457,16 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L712):
+> from [pkglint.go](pkglint.go#L707):
 
 ```go
+	case basename == "buildlink3.mk":
+		if pkglint.Opts.CheckBuildlink3 {
+			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
+				CheckLinesBuildlink3Mk(mklines)
+			}
+		}
+
 	case hasPrefix(basename, "DESCR"):
 		if pkglint.Opts.CheckDescr {
 			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
@@ -487,6 +474,12 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 			}
 		}
 
+	case basename == "distinfo":
+		if pkglint.Opts.CheckDistinfo {
+			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+				CheckLinesDistinfo(lines)
+			}
+		}
 ```
 
 When compared to the code blocks around this one, it looks strange that
@@ -496,11 +489,12 @@ files. So everything's fine here.
 
 At this point, the file is loaded and converted to lines.
 For DESCR files, this is very simple, so there's no need to dive into that.
+
 The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L582):
+> from [pkglint.go](pkglint.go#L583):
 
 ```go
 func CheckLinesDescr(lines Lines) {
@@ -522,13 +516,14 @@ func CheckLinesDescr(lines Lines) {
 			}
 		}
 	}
+
 	CheckLinesTrailingEmptyLines(lines)
 
 	if maxLines := 24; lines.Len() > maxLines {
 		line := lines.Lines[maxLines]
 
 		line.Warnf("File too long (should be no more than %d lines).", maxLines)
-		G.Explain(
+		line.Explain(
 			"The DESCR file should fit on a traditional terminal of 80x25 characters.",
 			"It is also intended to give a _brief_ summary about the package's contents.")
 	}
@@ -548,7 +543,7 @@ Therefore the checks for individual lines happen before the other check.
 The call to `SaveAutofixChanges` at the end looks a bit strange
 since none of the visible checks fixes anything.
 The autofix feature must be hidden in one of the line checks,
-and indeed, the code for `CheckLineTrailingWhitespace` says:
+and indeed, the code for `CheckTrailingWhitespace` says:
 
 > from [linechecker.go](linechecker.go#L42):
 
@@ -571,7 +566,7 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 ```
 
 This code is a typical example for using the autofix feature.
-Some more details are described at the `Autofix` type itself
+Some more possibilities are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
 > from [autofix.go](autofix.go#L11):
@@ -743,6 +738,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 Pkglint checks packages, and a package consists of several different files.
 All pkgsrc files are text files, which are organized in lines.
+
 Most pkglint diagnostics refer to a specific line,
 therefore the `Line` type is responsible for producing the diagnostics.
 
