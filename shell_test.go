@@ -1148,7 +1148,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 	// FIXME: In PERL5:Q and PERL6:Q, the :Q is wrong.
 	t.CheckOutputLines(
 		"WARN: Makefile:3: PERL5_VARS_CMD is defined but not used.",
-		"WARN: Makefile:4: The \"perl6\" tool is used but not added to USE_TOOLS.")
+		"WARN: Makefile:4: The \"${PERL6:Q}\" tool is used but not added to USE_TOOLS.")
 }
 
 // The package Makefile and other .mk files in a package directory
