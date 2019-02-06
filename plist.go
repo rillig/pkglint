@@ -292,7 +292,7 @@ func (ck *PlistChecker) checkPathLib(pline *PlistLine, dirname, basename string)
 
 	switch ext := path.Ext(basename); ext {
 	case ".la":
-		if G.Pkg != nil && !G.Pkg.vars.Defined("USE_LIBTOOL") {
+		if G.Pkg != nil && !G.Pkg.vars.Defined("USE_LIBTOOL") && ck.once.FirstTime("USE_LIBTOOL") {
 			pline.Warnf("Packages that install libtool libraries should define USE_LIBTOOL.")
 		}
 	}

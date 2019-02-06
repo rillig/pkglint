@@ -48,6 +48,23 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"ERROR: PLIST:18: Duplicate filename \"share/tzinfo\", already appeared in line 17.")
 }
 
+// When a PLIST contains multiple libtool libraries, USE_LIBTOOL needs only
+// be defined once in the package Makefile. Therefore, a single warning is enough.
+func (s *Suite) Test_CheckLinesPlist__multiple_libtool_libraries(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
+	lines := t.NewLines("PLIST",
+		PlistRcsID,
+		"lib/libc.la",
+		"lib/libm.la")
+
+	CheckLinesPlist(lines)
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: Packages that install libtool libraries should define USE_LIBTOOL.")
+}
+
 func (s *Suite) Test_CheckLinesPlist__empty(c *check.C) {
 	t := s.Init(c)
 
