@@ -213,7 +213,7 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 	// written without dots, which leads to ambiguities:
 	//
 	// databases/postgresql: 94 < 95 < 96 < 10 < 11
-	// lang/go: go19 < go110 < go111 < go2
+	// lang/go: 19 < 110 < 111 < 2
 	keys := make(map[string]int)
 	for _, name := range names {
 		if m, pkgbase, versionStr := match2(name, `^(\D+)(\d+)$`); m {
@@ -231,9 +231,7 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 	}
 
 	sort.SliceStable(names, func(i, j int) bool {
-		// TODO: Check if this Less implementation is really transitive.
-		//  examples: ps ps5 ps10 ps96 pq px
-		if keyI, keyJ := keys[names[i]], keys[names[j]]; keyI != 0 && keyJ != 0 {
+		if keyI, keyJ := keys[names[i]], keys[names[j]]; keyI != keyJ {
 			return keyI < keyJ
 		}
 		return naturalLess(names[i], names[j])
