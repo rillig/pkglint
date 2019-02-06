@@ -150,9 +150,8 @@ func (s *Suite) Test_VartypeCheck_Comment(c *check.C) {
 		"WARN: filename:8: COMMENT should not contain \"is an\".",
 		"WARN: filename:9: COMMENT should not contain \"is a\".",
 		"WARN: filename:10: COMMENT should not start with the package name.",
-		// FIXME: Wrong order
-		"WARN: filename:11: COMMENT should not contain \"is a\".",
-		"WARN: filename:11: COMMENT should not start with the package name.")
+		"WARN: filename:11: COMMENT should not start with the package name.",
+		"WARN: filename:11: COMMENT should not contain \"is a\".")
 }
 
 func (s *Suite) Test_VartypeCheck_ConfFiles(c *check.C) {
