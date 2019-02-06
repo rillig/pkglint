@@ -134,6 +134,7 @@ func (s *Suite) Test_VartypeCheck_Comment(c *check.C) {
 		"Package is an awesome package",
 		"The Big New Package is a great package",
 		"Converter converts between measurement units",
+		"Converter is a unit converter",
 		"\"Official\" office suite",
 		"'SQL injection fuzzer")
 
@@ -148,7 +149,10 @@ func (s *Suite) Test_VartypeCheck_Comment(c *check.C) {
 		"WARN: filename:7: COMMENT should not contain \"is a\".",
 		"WARN: filename:8: COMMENT should not contain \"is an\".",
 		"WARN: filename:9: COMMENT should not contain \"is a\".",
-		"WARN: filename:10: COMMENT should not start with the package name.")
+		"WARN: filename:10: COMMENT should not start with the package name.",
+		// FIXME: Wrong order
+		"WARN: filename:11: COMMENT should not contain \"is a\".",
+		"WARN: filename:11: COMMENT should not start with the package name.")
 }
 
 func (s *Suite) Test_VartypeCheck_ConfFiles(c *check.C) {
