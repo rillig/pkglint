@@ -40,6 +40,9 @@ type Pkglint struct {
 	res       regex.Registry
 	fileCache *FileCache
 	interner  StringInterner
+
+	Hashes       map[string]*Hash // Maps "alg:filename" => hash (inter-package check).
+	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
 }
 
 func NewPkglint() Pkglint {

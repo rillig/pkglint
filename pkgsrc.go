@@ -39,13 +39,6 @@ type Pkgsrc struct {
 
 	Deprecated map[string]string   //
 	vartypes   map[string]*Vartype // varcanon => type
-
-	// TODO: The Hashes and UsedLicenses are modified after the initialization.
-	//  This contradicts the expectation that all pkgsrc data is constant.
-	//  These two fields should probably be moved to the Pkglint type.
-
-	Hashes       map[string]*Hash // Maps "alg:filename" => hash (inter-package check).
-	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
 }
 
 func NewPkgsrc(dir string) *Pkgsrc {
@@ -62,9 +55,7 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		make(map[string][]string),
 		NewScope(),
 		make(map[string]string),
-		make(map[string]*Vartype),
-		nil, // Only initialized when pkglint is run for a whole pkgsrc installation
-		nil}
+		make(map[string]*Vartype)}
 
 	return &src
 }
@@ -258,7 +249,7 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 }
 
 func (src *Pkgsrc) checkToplevelUnusedLicenses() {
-	usedLicenses := src.UsedLicenses
+	usedLicenses := G.UsedLicenses
 	if usedLicenses == nil {
 		return
 	}

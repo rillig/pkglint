@@ -161,7 +161,7 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, filename,
 		return
 	}
 
-	hashes := G.Pkgsrc.Hashes
+	hashes := G.Hashes
 	if hashes == nil {
 		return
 	}
