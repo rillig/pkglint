@@ -231,7 +231,8 @@ func (fix *Autofix) Delete() {
 }
 
 // Anyway has the effect of showing the diagnostic even when nothing can
-// be fixed automatically.
+// be fixed automatically, but only if neither --show-autofix nor
+// --autofix mode is given.
 func (fix *Autofix) Anyway() {
 	fix.anyway = true
 }
@@ -262,7 +263,8 @@ func (fix *Autofix) Apply() {
 		fix.autofixShortTerm = autofixShortTerm{}
 	}
 
-	if !G.Logger.Relevant(fix.diagFormat) || !fix.anyway && len(fix.actions) == 0 {
+	if !G.Logger.Relevant(fix.diagFormat) ||
+		len(fix.actions) == 0 && !(fix.anyway && !G.Logger.Opts.ShowAutofix && !G.Logger.Opts.Autofix) {
 		reset()
 		return
 	}
