@@ -112,8 +112,6 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 					ck.allDirs[dir] = pline
 				}
 			case first == '@':
-				// TODO: Check if this directive is still used,
-				//  or if it has been removed during a pkg_install re-implementation.
 				if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
 					for dir := dirname; dir != "."; dir = path.Dir(dir) {
 						ck.allDirs[dir] = pline
