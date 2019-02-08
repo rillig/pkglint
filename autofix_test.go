@@ -627,6 +627,35 @@ func (s *Suite) Test_Autofix__suppress_unfixable_warnings_with_show_autofix(c *c
 		"+\tTODO")
 }
 
+// With the default command line options, this warning is printed.
+// With the --show-autofix option this warning is NOT printed since it
+// cannot be fixed automatically.
+func (s *Suite) Test_Autofix_Anyway__options(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix")
+
+	line := t.NewLine("filename", 3, "")
+	fix := line.Autofix()
+
+	fix.Warnf("This autofix doesn't match.")
+	fix.Replace("doesn't match", "")
+	fix.Anyway()
+	fix.Apply()
+
+	t.CheckOutputEmpty()
+
+	t.SetUpCommandLine()
+
+	fix.Warnf("This autofix doesn't match.")
+	fix.Replace("doesn't match", "")
+	fix.Anyway()
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: filename:3: This autofix doesn't match.")
+}
+
 // If an Autofix doesn't do anything, it must not log any diagnostics.
 func (s *Suite) Test_Autofix__noop_replace(c *check.C) {
 	t := s.Init(c)
