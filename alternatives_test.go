@@ -59,3 +59,21 @@ func (s *Suite) Test_CheckFileAlternatives__empty(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ALTERNATIVES: Must not be empty.")
 }
+
+func (s *Suite) Test_CheckFileAlternatives__ALTERNATIVES_SRC(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"ALTERNATIVES_SRC=\talts")
+	t.CreateFileLines("category/package/alts",
+		"bin/program @PREFIX@/bin/gnu-program",
+		"bin/program @PREFIX@/bin/nb-program")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	// Since ALTERNATIVES_SRC is only rarely used and then usually points
+	// at an ALTERNATIVES file in another directory, this warning is ok.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/alts: Unexpected file found.")
+}
