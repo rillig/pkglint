@@ -347,7 +347,8 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 	})
 }
 
-// relpath returns the relative path from `from` to `to`.
+// relpath returns the relative path from the directory "from"
+// to the filesystem entry "to".
 func relpath(from, to string) string {
 
 	// From "dir" to "dir/subdir/...".
