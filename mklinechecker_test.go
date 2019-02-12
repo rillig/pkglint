@@ -1021,7 +1021,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVaruseModifiersRange(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--show-autofix", "--source")
@@ -1039,6 +1039,24 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {
 			"Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
 		"-\tCC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}",
 		"+\tCC:=\t${CC:[1]}")
+
+	// Now go through all the "almost" cases, to reach full branch coverage.
+	mklines := t.NewMkLines("gcc.mk",
+		MkRcsID,
+		"\t: ${CC:M1:M2:M3}",
+		"\t: ${CC:C/^begin//:M2:M3}",                    // M1 pattern not exactly ^
+		"\t: ${CC:C/^/_asdf_/g:M2:M3}",                  // M1 options != "1"
+		"\t: ${CC:C/^/....../g:M2:M3}",                  // M1 replacement doesn't match \w+
+		"\t: ${CC:C/^/_asdf_/1:O:M3}",                   // M2 is not a match modifier
+		"\t: ${CC:C/^/_asdf_/1:N2:M3}",                  // M2 is :N instead of :M
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_:M3}",             // M2 pattern is missing the * at the end
+		"\t: ${CC:C/^/_asdf_/1:Mother:M3}",              // M2 pattern differs from the M1 pattern
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:M3}",            // M3 ist not a substitution modifier
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,from,to,}",    // M3 pattern differs from the M1 pattern
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,^_asdf_,to,}", // M3 replacement is not empty
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,^_asdf_,,g}")  // M3 modifier has options
+
+	mklines.Check()
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C) {
