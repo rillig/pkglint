@@ -528,22 +528,25 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 	} else {
 		basedir = path.Dir(mkline.Filename)
 	}
-	pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
-
-	if G.Testing {
-		// Relative pkgsrc paths usually only contain two or three levels.
-		// A possible reason for reaching this assertion is:
-		// Tests that access the file system must create their lines
-		// using t.SetUpFileMkLines, not using t.NewMkLines.
-		G.Assertf(!contains(pkgsrcdir, "../../../../.."),
-			"Relative path %q for %q is too deep below the pkgsrc root %q.",
-			pkgsrcdir, basedir, G.Pkgsrc.File("."))
-	}
 
 	tmp := relativePath
-	tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
+	if contains(tmp, "PKGSRCDIR") && !G.Testing {
+		pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
+
+		if G.Testing {
+			// Relative pkgsrc paths usually only contain two or three levels.
+			// A possible reason for reaching this assertion is:
+			//
+			// Tests that access the file system must create their lines
+			// using t.SetUpFileMkLines, not using t.NewMkLines.
+			G.Assertf(!contains(pkgsrcdir, "../../../../.."),
+				"Relative path %q for %q is too deep below the pkgsrc root %q.",
+				pkgsrcdir, basedir, G.Pkgsrc.File("."))
+		}
+		tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
+	}
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
-	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
+	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1) // FIXME
 
 	replaceLatest := func(varuse, category string, pattern regex.Pattern, replacement string) {
 		if contains(tmp, varuse) {
