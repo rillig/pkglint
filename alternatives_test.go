@@ -63,17 +63,19 @@ func (s *Suite) Test_CheckFileAlternatives__empty(c *check.C) {
 func (s *Suite) Test_CheckFileAlternatives__ALTERNATIVES_SRC(c *check.C) {
 	t := s.Init(c)
 
+	// It's a strange situation, having an ALTERNATIVES file defined by
+	// the package but then referring to another package's file by means
+	// of ALTERNATIVES_SRC. As of February 2019 I don't remember if I
+	// really had this case in mind when I initially wrote the code in
+	// CheckFileAlternatives.
 	t.SetUpPackage("category/package",
 		"ALTERNATIVES_SRC=\talts")
-	t.CreateFileLines("category/package/alts",
-		"bin/program @PREFIX@/bin/gnu-program",
-		"bin/program @PREFIX@/bin/nb-program")
+	t.CreateFileLines("category/package/ALTERNATIVES",
+		"bin/pgm @PREFIX@/bin/gnu-program",
+		"bin/pgm @PREFIX@/bin/nb-program")
 	G.Pkgsrc.LoadInfrastructure()
 
 	G.Check(t.File("category/package"))
 
-	// Since ALTERNATIVES_SRC is only rarely used and then usually points
-	// at an ALTERNATIVES file in another directory, this warning is ok.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/alts: Unexpected file found.")
+	t.CheckOutputEmpty()
 }
