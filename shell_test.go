@@ -1189,6 +1189,26 @@ func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
 		"WARN: file.mk:3: A shell comment should not contain semicolons.")
 }
 
+// This test ensures that the command line options to INSTALL_*_DIR are properly
+// parsed and do not lead to "can only handle one directory at a time" warnings.
+func (s *Suite) Test_SimpleCommandChecker_checkInstallMulti(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("install.mk",
+		MkRcsID,
+		"",
+		"do-install:",
+		"\t${INSTALL_PROGRAM_DIR} -m 0555 -g ${APACHE_GROUP} -o ${APACHE_USER} \\",
+		"\t\t${DESTDIR}${PREFIX}/lib/apache-modules")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: install.mk:4--5: You can use \"INSTALLATION_DIRS+= lib/apache-modules\" " +
+			"instead of \"${INSTALL_PROGRAM_DIR}\".")
+}
+
 func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 	t := s.Init(c)
 
