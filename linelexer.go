@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"netbsd.org/pkglint/regex"
-	"strings"
-)
+import "netbsd.org/pkglint/regex"
 
 // LinesLexer records the state when checking a list of lines from top to bottom.
 type LinesLexer struct {
@@ -66,7 +63,9 @@ func (llex *LinesLexer) SkipPrefix(prefix string) bool {
 		defer trace.Call2(llex.CurrentLine().Text, prefix)()
 	}
 
-	return !llex.EOF() && strings.HasPrefix(llex.lines.Lines[llex.index].Text, prefix) && llex.Skip()
+	return !llex.EOF() &&
+		hasPrefix(llex.lines.Lines[llex.index].Text, prefix) &&
+		llex.Skip()
 }
 
 func (llex *LinesLexer) SkipString(text string) bool {
