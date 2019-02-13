@@ -867,6 +867,25 @@ func (s *Suite) Test_Autofix_Apply__explanation_followed_by_note(c *check.C) {
 		"NOTE: README.txt:123: A note without fix.")
 }
 
+func (s *Suite) Test_Autofix_Anyway__autofix_option(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	line := t.NewLine("filename", 5, "text")
+
+	fix := line.Autofix()
+	fix.Notef("This line is quite short.")
+	fix.Replace("not found", "needle")
+	fix.Anyway()
+	fix.Apply()
+
+	// The replacement text is not found, therefore the note should not be logged.
+	// Because of fix.Anyway, the note should be logged anyway.
+	// But because of the --autofix option, the note should not be logged.
+	// Therefore, in the end nothing is shown in this case.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SaveAutofixChanges__file_removed(c *check.C) {
 	t := s.Init(c)
 

@@ -234,7 +234,7 @@ func (fix *Autofix) Delete() {
 // be fixed automatically, but only if neither --show-autofix nor
 // --autofix mode is given.
 func (fix *Autofix) Anyway() {
-	fix.anyway = true
+	fix.anyway = !G.Logger.IsAutofix()
 }
 
 // Apply does the actual work.
@@ -263,8 +263,7 @@ func (fix *Autofix) Apply() {
 		fix.autofixShortTerm = autofixShortTerm{}
 	}
 
-	if !G.Logger.Relevant(fix.diagFormat) ||
-		len(fix.actions) == 0 && !(fix.anyway && !G.Logger.Opts.ShowAutofix && !G.Logger.Opts.Autofix) {
+	if !(G.Logger.Relevant(fix.diagFormat) && (len(fix.actions) > 0 || fix.anyway)) {
 		reset()
 		return
 	}
@@ -275,10 +274,8 @@ func (fix *Autofix) Apply() {
 
 	if logDiagnostic {
 		msg := sprintf(fix.diagFormat, fix.diagArgs...)
-		if !logFix {
-			if fix.diagFormat == AutofixFormat || G.Logger.FirstTime(line.Filename, line.Linenos(), msg) {
-				line.showSource(G.out)
-			}
+		if !logFix && G.Logger.FirstTime(line.Filename, line.Linenos(), msg) {
+			line.showSource(G.out)
 		}
 		G.Logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
 	}

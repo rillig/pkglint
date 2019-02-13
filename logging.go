@@ -51,6 +51,7 @@ var (
 
 var dummyLine = NewLineMulti("", 0, 0, "", nil)
 
+// IsAutofix returns whether one of the --show-autofix or --autofix options is active.
 func (l *Logger) IsAutofix() bool { return l.Opts.Autofix || l.Opts.ShowAutofix }
 
 // Relevant decides and remembers whether the given diagnostic is relevant and should be logged.
