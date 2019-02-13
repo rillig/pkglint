@@ -337,7 +337,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	for _, rawLine := range fix.line.raw[1:] {
 		_, comment, space := match2(rawLine.textnl, `^(#?)([ \t]*)`)
 		width := tabWidth(comment + space)
-		if (oldWidth == 0 || width < oldWidth) && width >= 8 && rawLine.textnl != "\n" {
+		if (oldWidth == 0 || width < oldWidth) && width >= 8 {
 			oldWidth = width
 		}
 		if !matches(space, `^\t* {0,7}$`) {

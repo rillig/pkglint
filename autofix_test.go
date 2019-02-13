@@ -969,6 +969,78 @@ func (s *Suite) Test_Autofix_Realign__wrong_line_type(c *check.C) {
 		"Pkglint internal error: Line must be a variable assignment.")
 }
 
+func (s *Suite) Test_Autofix_Realign__short_continuation_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	mklines := t.SetUpFileMkLines("file.mk",
+		MkRcsID,
+		"BUILD_DIRS= \\",
+		"\tdir \\",
+		"")
+	mkline := mklines.mklines[1]
+	fix := mkline.Autofix()
+	fix.Warnf("Line should be realigned.")
+
+	// In this case realigning has no effect since the oldWidth == 8,
+	// which counts as "sufficiently intentional not to be modified".
+	fix.Realign(mkline, 16)
+
+	mklines.SaveAutofixChanges()
+
+	t.CheckOutputEmpty()
+	t.CheckFileLines("file.mk",
+		MkRcsID,
+		"BUILD_DIRS= \\",
+		"\tdir \\",
+		"")
+}
+
+// Just for branch coverage.
+func (s *Suite) Test_Autofix_setDiag__no_testing_mode(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("file.mk", 123, "text")
+
+	G.Testing = false
+
+	fix := line.Autofix()
+	fix.Notef("Note.")
+	fix.Replace("from", "to")
+	fix.Apply()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Autofix_setDiag__bad_call_sequence(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("file.mk", 123, "text")
+	fix := line.Autofix()
+	fix.Notef("Note.")
+
+	t.ExpectPanic(
+		func() { fix.Notef("Note 2.") },
+		"Pkglint internal error: Autofix can only have a single diagnostic.")
+
+	fix.level = nil // To cover the second assertion.
+	t.ExpectPanic(
+		func() { fix.Notef("Note 2.") },
+		"Pkglint internal error: Autofix can only have a single diagnostic.")
+}
+
+func (s *Suite) Test_Autofix_assertRealLine(c *check.C) {
+	t := s.Init(c)
+
+	line := NewLineEOF("filename.mk")
+	fix := line.Autofix()
+	fix.Warnf("Warning.")
+
+	t.ExpectPanic(
+		func() { fix.Replace("from", "to") },
+		"Pkglint internal error: Cannot autofix this line since it is not a real line.")
+}
+
 func (s *Suite) Test_SaveAutofixChanges__file_removed(c *check.C) {
 	t := s.Init(c)
 
