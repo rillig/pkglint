@@ -300,7 +300,7 @@ func (fix *Autofix) Apply() {
 			G.Explain(fix.explanation...)
 		}
 		if G.Logger.Opts.ShowSource {
-			if !G.Logger.Opts.Explain || !logDiagnostic || len(fix.explanation) == 0 {
+			if !(G.Logger.Opts.Explain && logDiagnostic && len(fix.explanation) > 0) {
 				G.out.Separate()
 			}
 		}
