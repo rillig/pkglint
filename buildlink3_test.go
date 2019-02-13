@@ -575,6 +575,55 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variable
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0",
+		"BUILDLINK_API_DEPENDS.package+=\tpackage>=${API_VERSION}",
+		"",
+		"API_VERSION=\t1.5")
+
+	G.Check(t.File("category/package"))
+
+	// Since the versions contain variable references, pkglint refuses to compare them.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage-1.*",
+		"BUILDLINK_API_DEPENDS.package+=\tpackage-2.*")
+
+	G.Check(t.File("category/package"))
+
+	// Since the versions do not contain lower bounds (they are package-1.*
+	// instead of package>=1), pkglint refuses to compare them.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1",
+		"BUILDLINK_API_DEPENDS.package+=\tpackage-1.*")
+
+	G.Check(t.File("category/package"))
+
+	// Since the API version does not contain lower bounds (it is package-1.*
+	// instead of package>=1), pkglint refuses to compare the versions.
+	t.CheckOutputEmpty()
+}
+
 // Just for branch coverage.
 func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t := s.Init(c)
