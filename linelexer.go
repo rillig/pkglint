@@ -63,9 +63,11 @@ func (llex *LinesLexer) SkipPrefix(prefix string) bool {
 		defer trace.Call2(llex.CurrentLine().Text, prefix)()
 	}
 
-	return !llex.EOF() &&
-		hasPrefix(llex.lines.Lines[llex.index].Text, prefix) &&
+	if !llex.EOF() && hasPrefix(llex.lines.Lines[llex.index].Text, prefix) {
 		llex.Skip()
+		return true
+	}
+	return false
 }
 
 func (llex *LinesLexer) SkipString(text string) bool {
@@ -73,7 +75,11 @@ func (llex *LinesLexer) SkipString(text string) bool {
 		defer trace.Call2(llex.CurrentLine().Text, text)()
 	}
 
-	return !llex.EOF() && llex.lines.Lines[llex.index].Text == text && llex.Skip()
+	if !llex.EOF() && llex.lines.Lines[llex.index].Text == text {
+		llex.Skip()
+		return true
+	}
+	return false
 }
 
 func (llex *LinesLexer) SkipEmptyOrNote() bool {
@@ -134,5 +140,9 @@ func (mlex *MkLinesLexer) SkipWhile(pred func(mkline MkLine) bool) {
 }
 
 func (mlex *MkLinesLexer) SkipIf(pred func(mkline MkLine) bool) bool {
-	return !mlex.EOF() && pred(mlex.CurrentMkLine()) && mlex.Skip()
+	if !mlex.EOF() && pred(mlex.CurrentMkLine()) {
+		mlex.Skip()
+		return true
+	}
+	return false
 }

@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
+	"netbsd.org/pkglint/histogram"
 	"strings"
 )
 
@@ -50,6 +51,36 @@ func (s *Suite) Test_Logger_Logf__mixed_with_Diag(c *check.C) {
 		"ERROR: filename:3: Diag 1.\n"+
 		"ERROR: filename:3: Logf output 2.\n"+
 		"ERROR: filename:3: Logf output 3.\n")
+}
+
+func (s *Suite) Test_Logger_Logf__production(c *check.C) {
+	var sw strings.Builder
+	logger := Logger{out: NewSeparatorWriter(&sw)}
+
+	// In production mode, the checks for the diagnostic messages are
+	// turned off, for performance reasons. The unit tests provide
+	// enough coverage.
+	G.Testing = false
+	logger.Logf(Error, "filename", "3", "diagnostic", "message")
+
+	c.Check(sw.String(), equals, ""+
+		"ERROR: filename:3: message\n")
+}
+
+func (s *Suite) Test_Logger_Logf__profiling(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename", 123, "text")
+
+	G.Opts.Profiling = true
+	G.Logger.histo = histogram.New()
+	line.Warnf("Warning.")
+
+	G.Logger.histo.PrintStats(G.out.out, "loghisto", -1)
+
+	t.CheckOutputLines(
+		"WARN: filename:123: Warning.",
+		"loghisto      1 Warning.")
 }
 
 // Diag filters duplicate messages, unlike Logf.
