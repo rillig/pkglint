@@ -124,7 +124,7 @@ func (ck *distinfoLinesChecker) checkAlgorithms(line Line) {
 			"",
 			"If the patches directory looks wrong, pkglint needs to be improved.")
 
-	case algorithms != "SHA1, RMD160, Size" && algorithms != "SHA1, RMD160, SHA512, Size":
+	case algorithms != "SHA1, RMD160, SHA512, Size":
 		line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", filename, algorithms)
 	}
 }
@@ -174,25 +174,23 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(line Line, filename,
 		return
 	}
 
-	if hashes != nil && !hasPrefix(filename, "patch-") {
-		key := alg + ":" + filename
-		otherHash := hashes[key]
+	key := alg + ":" + filename
+	otherHash := hashes[key]
 
-		// See https://github.com/golang/go/issues/29802
-		hashBytes := make([]byte, hex.DecodedLen(len(hash)))
-		_, err := hex.Decode(hashBytes, []byte(hash))
-		if err != nil {
-			line.Errorf("The %s hash for %s contains a non-hex character.", alg, filename)
-		}
+	// See https://github.com/golang/go/issues/29802
+	hashBytes := make([]byte, hex.DecodedLen(len(hash)))
+	_, err := hex.Decode(hashBytes, []byte(hash))
+	if err != nil {
+		line.Errorf("The %s hash for %s contains a non-hex character.", alg, filename)
+	}
 
-		if otherHash != nil {
-			if !bytes.Equal(otherHash.hash, hashBytes) {
-				line.Errorf("The %s hash for %s is %s, which conflicts with %s in %s.",
-					alg, filename, hash, hex.EncodeToString(otherHash.hash), line.RefToLocation(otherHash.location))
-			}
-		} else {
-			hashes[key] = &Hash{hashBytes, line.Location}
+	if otherHash != nil {
+		if !bytes.Equal(otherHash.hash, hashBytes) {
+			line.Errorf("The %s hash for %s is %s, which conflicts with %s in %s.",
+				alg, filename, hash, hex.EncodeToString(otherHash.hash), line.RefToLocation(otherHash.location))
 		}
+	} else {
+		hashes[key] = &Hash{hashBytes, line.Location}
 	}
 }
 

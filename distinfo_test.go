@@ -34,6 +34,44 @@ func (s *Suite) Test_CheckLinesDistinfo(c *check.C) {
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
+func (s *Suite) Test_CheckLinesDistinfo__wrong_distfile_algorithms(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir("category/package")
+	lines := t.SetUpFileLines("distinfo",
+		RcsID,
+		"",
+		"MD5 (distfile.tar.gz) = 12345678901234567890123456789012",
+		"SHA1 (distfile.tar.gz) = 1234567890123456789012345678901234567890")
+
+	CheckLinesDistinfo(lines)
+
+	t.CheckOutputLines(
+		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums " +
+			"for \"distfile.tar.gz\", got MD5, SHA1.")
+}
+
+func (s *Suite) Test_CheckLinesDistinfo__wrong_patch_algorithms(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileDummyPatch("patches/patch-aa")
+	t.SetUpFileLines("distinfo",
+		RcsID,
+		"",
+		"MD5 (patch-aa) = 12345678901234567890123456789012",
+		"SHA1 (patch-aa) = 1234567890123456789012345678901234567890")
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: distinfo:4: SHA1 hash of patches/patch-aa differs "+
+			"(distinfo has 1234567890123456789012345678901234567890, "+
+			"patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).",
+		"ERROR: distinfo:EOF: Expected SHA1 hash for patch-aa, got MD5, SHA1.")
+}
+
 // When checking the complete pkgsrc tree, pkglint has all information it needs
 // to check whether different packages use the same distfile but require
 // different hashes for it.
