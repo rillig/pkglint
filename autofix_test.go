@@ -996,6 +996,36 @@ func (s *Suite) Test_Autofix_Realign__short_continuation_line(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_Autofix_Realign__multiline_indented_with_spaces(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	mklines := t.SetUpFileMkLines("file.mk",
+		MkRcsID,
+		"BUILD_DIRS= \\",
+		"\t        dir1 \\",
+		"\t\tdir2 \\",
+		"  ") // Trailing whitespace is not fixed by Autofix.Realign.
+
+	mkline := mklines.mklines[1]
+
+	fix := mkline.Autofix()
+	fix.Warnf("Warning.")
+	fix.Realign(mkline, 16)
+	fix.Apply()
+
+	mklines.SaveAutofixChanges()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/file.mk:3: Replacing indentation \"\\t        \" with \"\\t\\t\".")
+	t.CheckFileLines("file.mk",
+		MkRcsID,
+		"BUILD_DIRS= \\",
+		"\t\tdir1 \\",
+		"\t\tdir2 \\",
+		"  ")
+}
+
 // Just for branch coverage.
 func (s *Suite) Test_Autofix_setDiag__no_testing_mode(c *check.C) {
 	t := s.Init(c)
