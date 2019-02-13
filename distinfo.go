@@ -242,16 +242,3 @@ func computePatchSha1Hex(patchFilename string) (string, error) {
 	}
 	return sprintf("%x", hasher.Sum(nil)), nil
 }
-
-func AutofixDistinfo(oldSha1, newSha1 string) {
-	distinfoFilename := G.Pkg.File(G.Pkg.DistinfoFile)
-	if lines := Load(distinfoFilename, NotEmpty|LogErrors); lines != nil {
-		for _, line := range lines.Lines {
-			fix := line.Autofix()
-			fix.Warnf(SilentAutofixFormat)
-			fix.Replace(oldSha1, newSha1)
-			fix.Apply()
-		}
-		SaveAutofixChanges(lines)
-	}
-}

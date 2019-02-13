@@ -34,6 +34,27 @@ func (s *Suite) Test_CheckLinesDistinfo(c *check.C) {
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
+func (s *Suite) Test_CheckLinesDistinfo__nonexistent_distfile_called_patch(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir("category/package")
+	lines := t.SetUpFileLines("distinfo",
+		RcsID,
+		"",
+		"MD5 (patch-5.3.tar.gz) = 12345678901234567890123456789012",
+		"SHA1 (patch-5.3.tar.gz) = 1234567890123456789012345678901234567890")
+	G.Pkg = NewPackage(".")
+
+	CheckLinesDistinfo(lines)
+
+	// Even though the filename starts with "patch-" and therefore looks like
+	// a patch, it is a normal distfile because it has other hash algorithms
+	// than exactly SHA1.
+	t.CheckOutputLines(
+		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums " +
+			"for \"patch-5.3.tar.gz\", got MD5, SHA1.")
+}
+
 func (s *Suite) Test_CheckLinesDistinfo__wrong_distfile_algorithms(c *check.C) {
 	t := s.Init(c)
 
@@ -315,6 +336,26 @@ func (s *Suite) Test_CheckLinesDistinfo__missing_php_patches(c *check.C) {
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	G.Check(t.File("archivers/php-zlib"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileDummyPatch("patches/patch-aa")
+	t.CreateFileLines("CVS/Entries",
+		"/distinfo/...")
+	t.CreateFileLines("patches/CVS/Entries",
+		"/patch-aa/...")
+	t.SetUpFileLines("distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
+
+	G.checkdirPackage(".")
 
 	t.CheckOutputEmpty()
 }

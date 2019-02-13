@@ -988,3 +988,18 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 
 	t.CheckOutputEmpty()
 }
+
+// In practice the distinfo file can always be autofixed since it has
+// just been read successfully and the corresponding patch file could
+// also be autofixed right before.
+func (s *Suite) Test_Package_AutofixDistinfo__missing_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	G.Pkg = NewPackage(t.File("category/package"))
+
+	G.Pkg.AutofixDistinfo("old", "new")
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/distinfo: Cannot be read.")
+}

@@ -898,6 +898,19 @@ func (pkg *Package) loadPlistDirs(plistFilename string) {
 	}
 }
 
+func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
+	distinfoFilename := pkg.File(pkg.DistinfoFile)
+	if lines := Load(distinfoFilename, NotEmpty|LogErrors); lines != nil {
+		for _, line := range lines.Lines {
+			fix := line.Autofix()
+			fix.Warnf(SilentAutofixFormat)
+			fix.Replace(oldSha1, newSha1)
+			fix.Apply()
+		}
+		lines.SaveAutofixChanges()
+	}
+}
+
 type PlistContent struct {
 	Dirs  map[string]bool
 	Files map[string]bool
