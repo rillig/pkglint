@@ -210,6 +210,35 @@ func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix_and_source(c *check.C) {
 		"+\tYXXXX")
 }
 
+// When an autofix replaces text, it does not touch those
+// lines that have been inserted before since these are
+// usually already correct.
+func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix")
+	line := t.NewLine("filename", 5, "initial text")
+
+	fix := line.Autofix()
+	fix.Notef("Inserting a line.")
+	fix.InsertBefore("line before")
+	fix.InsertAfter("line after")
+	fix.Apply()
+
+	fix.Notef("Replacing text.")
+	fix.Replace("l", "L")
+	fix.ReplaceRegex(`i`, "I", 1)
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename:5: Inserting a line.",
+		"AUTOFIX: filename:5: Inserting a line \"line before\" before this line.",
+		"AUTOFIX: filename:5: Inserting a line \"line after\" after this line.",
+		"NOTE: filename:5: Replacing text.",
+		"AUTOFIX: filename:5: Replacing \"l\" with \"L\".",
+		"AUTOFIX: filename:5: Replacing \"i\" with \"I\".")
+}
+
 func (s *Suite) Test_SaveAutofixChanges(c *check.C) {
 	t := s.Init(c)
 
