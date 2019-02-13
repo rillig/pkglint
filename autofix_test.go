@@ -886,6 +886,89 @@ func (s *Suite) Test_Autofix_Anyway__autofix_option(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Autofix_Anyway__autofix_and_show_autofix_options(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix", "--show-autofix")
+	line := t.NewLine("filename", 5, "text")
+
+	fix := line.Autofix()
+	fix.Notef("This line is quite short.")
+	fix.Replace("not found", "needle")
+	fix.Anyway()
+	fix.Apply()
+
+	// The replacement text is not found, therefore the note should not be logged.
+	// Because of fix.Anyway, the note should be logged anyway.
+	// But because of the --autofix option, the note should not be logged.
+	// Even if the --show-autofix option is explicitly given, the note should not be logged.
+	// Therefore, in the end nothing is shown in this case.
+	t.CheckOutputEmpty()
+}
+
+// The --autofix option normally suppresses the diagnostics and just logs
+// the actual fixes. Adding the --show-autofix option logs both.
+func (s *Suite) Test_Autofix_Apply__autofix_and_show_autofix_options(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix", "--show-autofix")
+	line := t.NewLine("filename", 5, "text")
+
+	fix := line.Autofix()
+	fix.Notef("This line is quite short.")
+	fix.Replace("text", "replacement")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename:5: This line is quite short.",
+		"AUTOFIX: filename:5: Replacing \"text\" with \"replacement\".")
+}
+
+// Ensures that without explanations, the separator between the individual
+// diagnostics are generated.
+func (s *Suite) Test_Autofix_Apply__source_without_explain(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--source", "--explain", "--show-autofix")
+	line := t.NewLine("filename", 5, "text")
+
+	fix := line.Autofix()
+	fix.Notef("This line is quite short.")
+	fix.Replace("text", "replacement")
+	fix.Apply()
+
+	fix.Warnf("Follow-up warning, separated.")
+	fix.Replace("replacement", "text again")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename:5: This line is quite short.",
+		"AUTOFIX: filename:5: Replacing \"text\" with \"replacement\".",
+		"-\ttext",
+		"+\treplacement",
+		"",
+		"WARN: filename:5: Follow-up warning, separated.",
+		"AUTOFIX: filename:5: Replacing \"replacement\" with \"text again\".",
+		"-\ttext",
+		"+\ttext again")
+}
+
+func (s *Suite) Test_Autofix_Realign__wrong_line_type(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		".if \\",
+		"${PKGSRC_RUN_TESTS}")
+
+	mkline := mklines.mklines[1]
+	fix := mkline.Autofix()
+
+	t.ExpectPanic(
+		func() { fix.Realign(mkline, 16) },
+		"Pkglint internal error: Line must be a variable assignment.")
+}
+
 func (s *Suite) Test_SaveAutofixChanges__file_removed(c *check.C) {
 	t := s.Init(c)
 
