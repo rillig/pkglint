@@ -624,6 +624,32 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_TREE+=\tmistake", // Wrong, but doesn't happen in practice.
+		"",
+		"LDFLAGS.NetBSD+=\t-ldl",
+		"",
+		"BUILDLINK_DEPMETHOD.other+=\tbuild",
+		"",
+		"BUILDLINK_API_DEPENDS.other+=\tother>=3")
+
+	G.Check(t.File("category/package"))
+
+	// FIXME: Why is appending to LDFLAGS forbidden? It sounds useful.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:14: "+
+			"The variable LDFLAGS.NetBSD may not be appended to in this file; "+
+			"it would be ok in Makefile, Makefile.common, options.mk or *.mk.",
+		"WARN: ~/category/package/buildlink3.mk:16: "+
+			"Only buildlink variables for \"package\", "+
+			"not \"other\" may be set in this file.")
+}
+
 // Just for branch coverage.
 func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t := s.Init(c)
