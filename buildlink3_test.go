@@ -493,6 +493,117 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).")
 }
 
+func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		".if ${X11_TYPE} == modular",
+		".else",
+		".endif")
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0:../../category/package",
+		"BUILDLINK_API_DEPENDS.package+=\tpackage>=1.5:../../category/package")
+
+	G.Check(t.File("category/package"))
+
+	// Since these dependencies are malformed, they are not processed further.
+	// Doing that would reveal that the ABI version should be higher than the API version.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:12: "+
+			"Invalid dependency pattern \"package>=1.0:../../category/package\".",
+		"WARN: ~/category/package/buildlink3.mk:13: "+
+			"Invalid dependency pattern \"package>=1.5:../../category/package\".")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	// t.CreateFileDummyBuildlink3() cannot be used here since it always adds an API line.
+	t.CreateFileLines("category/package/buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\tpackage",
+		"",
+		".if !defined(PACKAGE_BUILDLINK3_MK)",
+		"PACKAGE_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_PKGSRCDIR.package?=\t../../category/package",
+		"BUILDLINK_DEPMETHOD.package?=\tbuild",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0",
+		"",
+		".endif # PACKAGE_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-package")
+
+	G.Check(t.File("category/package"))
+
+	// Since only ABI is given but not API, the check for ABI >= API cannot be done.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:13: Definition of BUILDLINK_API_DEPENDS is missing.")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=${ABI_VERSION}",
+		"BUILDLINK_API_DEPENDS.package+=\tpackage>=${API_VERSION}",
+		"",
+		"ABI_VERSION=\t1.0",
+		"API_VERSION=\t1.5")
+
+	G.Check(t.File("category/package"))
+
+	// Since the versions contain variable references, pkglint refuses to compare them.
+	t.CheckOutputEmpty()
+}
+
+// Just for branch coverage.
+func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
+	t.DisableTracing()
+
+	G.Check(t.File("category/package/buildlink3.mk"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"DISTNAME=\t# empty",
+		"PKGNAME=\t# empty, to force mkbase to be empty")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
+
+	G.Check(t.File("category/package"))
+
+	// There is no warning from buildlink3.mk about mismatched package names
+	// since that is only a follow-up error of being unable to parse the pkgbase.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:4: \"\" is not a valid package name.")
+}
+
 // Since the buildlink3 checker does not use MkLines.ForEach, it has to keep
 // track of the nesting depth of .if directives.
 func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
