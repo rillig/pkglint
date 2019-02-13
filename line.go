@@ -19,7 +19,7 @@ import (
 )
 
 type RawLine struct {
-	Lineno int    // Counting starts at 1; 0 means inserted by Autofix
+	Lineno int    // Counting starts at 1
 	orignl string // The line as read in from the file, including newline
 	textnl string // The line as modified by Autofix, including newline
 

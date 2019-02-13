@@ -96,15 +96,13 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 	}
 
 	for _, rawLine := range fix.line.raw {
-		if rawLine.Lineno != 0 {
-			replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1)
-			if replaced != rawLine.textnl {
-				if G.Logger.IsAutofix() {
-					rawLine.textnl = replaced
-				}
-				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
-				return
+		replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1)
+		if replaced != rawLine.textnl {
+			if G.Logger.IsAutofix() {
+				rawLine.textnl = replaced
 			}
+			fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
+			return
 		}
 	}
 }
@@ -122,26 +120,24 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 
 	done := 0
 	for _, rawLine := range fix.line.raw {
-		if rawLine.Lineno != 0 {
-			var froms []string // The strings that have actually changed
+		var froms []string // The strings that have actually changed
 
-			replace := func(fromText string) string {
-				if howOften >= 0 && done >= howOften {
-					return fromText
-				}
-				froms = append(froms, fromText)
-				done++
-				return toText
+		replace := func(fromText string) string {
+			if howOften >= 0 && done >= howOften {
+				return fromText
 			}
+			froms = append(froms, fromText)
+			done++
+			return toText
+		}
 
-			replaced := replaceAllFunc(rawLine.textnl, from, replace)
-			if replaced != rawLine.textnl {
-				if G.Logger.IsAutofix() {
-					rawLine.textnl = replaced
-				}
-				for _, fromText := range froms {
-					fix.Describef(rawLine.Lineno, "Replacing %q with %q.", fromText, toText)
-				}
+		replaced := replaceAllFunc(rawLine.textnl, from, replace)
+		if replaced != rawLine.textnl {
+			if G.Logger.IsAutofix() {
+				rawLine.textnl = replaced
+			}
+			for _, fromText := range froms {
+				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", fromText, toText)
 			}
 		}
 	}
@@ -268,8 +264,14 @@ func (fix *Autofix) Apply() {
 		return
 	}
 
-	logDiagnostic := (G.Logger.Opts.ShowAutofix || !G.Logger.Opts.Autofix) &&
-		fix.diagFormat != SilentAutofixFormat
+	logDiagnostic := true
+	switch {
+	case fix.diagFormat == SilentAutofixFormat:
+		logDiagnostic = false
+	case G.Logger.Opts.Autofix && !G.Logger.Opts.ShowAutofix:
+		logDiagnostic = false
+	}
+
 	logFix := G.Logger.IsAutofix()
 
 	if logDiagnostic {
