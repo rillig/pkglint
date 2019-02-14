@@ -34,18 +34,22 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 	t.SetUpVartypes()
 
 	t.CreateFileLines("mk/bsd.prefs.mk")
+	t.CreateFileLines("mk/bsd.fast.prefs.mk")
 	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
-		".include \"../../mk/bsd.prefs.mk\"")
+		MkRcsID,
+		".include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.fast.prefs.mk\"")
+
 	// If the buildlink3.mk file doesn't actually exist, resolving the
 	// relative path fails since that depends on the actual file system,
 	// not on syntactical paths; see os.Stat in CheckRelativePath.
 	//
 	// TODO: Refactor relpath to be independent of a filesystem.
 
-	MkLineChecker{mklines.mklines[0]}.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/buildlink3.mk:1: For efficiency reasons, " +
+		"NOTE: ~/category/package/buildlink3.mk:2: For efficiency reasons, " +
 			"please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 }
 
@@ -130,7 +134,7 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 		"",
 		".for var in a b c",
 		".endfor",
-		".undef var")
+		".undef var unrelated")
 
 	mklines.Check()
 
@@ -174,6 +178,49 @@ func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) 
 		"WARN: filename.mk:6: Variable names starting with an underscore (_var_) are reserved for internal pkgsrc use.",
 		"ERROR: filename.mk:9: Invalid variable name \".var.\".",
 		"ERROR: filename.mk:12: Invalid variable name \"${VAR}\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("opsys.mk",
+		MkRcsID,
+		"",
+		".for i in 1 2 3 4 5",
+		".  if ${OPSYS} == NetBSD",
+		".    if ${MACHINE_ARCH} == x86_64",
+		".      if ${OS_VERSION:M8.*}",
+		".      endif # MACHINE_ARCH", // Wrong, should be OS_VERSION.
+		".    endif # OS_VERSION",     // Wrong, should be MACHINE_ARCH.
+		".  endif # OPSYS",            // Correct.
+		".endfor # j",                 // Wrong, should be i.
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif # option", // Correct.
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif # opti", // This typo goes unnoticed since "opti" is a substring of the condition.
+		"",
+		".if ${OPSYS} == NetBSD",
+		".elif ${OPSYS} == FreeBSD",
+		".endif # NetBSD", // Wrong, should be FreeBSD from the .elif.
+		"",
+		".for ii in 1 2",
+		".  for jj in 1 2",
+		".  endfor # ii", // Note: a simple "i" would not generate a warning because it is found in the word "in".
+		".endfor # ii")
+
+	// See MkLineChecker.checkDirective
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: opsys.mk:7: Comment \"MACHINE_ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
+		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition \"${MACHINE_ARCH} == x86_64\".",
+		"WARN: opsys.mk:10: Comment \"j\" does not match loop \"i in 1 2 3 4 5\".",
+		"WARN: opsys.mk:12: Unknown option \"option\".",
+		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".",
+		"WARN: opsys.mk:24: Comment \"ii\" does not match loop \"jj in 1 2\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {

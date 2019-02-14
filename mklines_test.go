@@ -511,43 +511,6 @@ func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 		"NOTE: ~/module.mk:7: This directive should be indented by 2 spaces.")
 }
 
-func (s *Suite) Test_MkLines_Check__endif_comment(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("opsys.mk",
-		MkRcsID,
-		"",
-		".for i in 1 2 3 4 5",
-		".  if ${OPSYS} == NetBSD",
-		".    if ${MACHINE_ARCH} == x86_64",
-		".      if ${OS_VERSION:M8.*}",
-		".      endif # MACHINE_ARCH", // Wrong, should be OS_VERSION.
-		".    endif # OS_VERSION",     // Wrong, should be MACHINE_ARCH.
-		".  endif # OPSYS",            // Correct.
-		".endfor # j",                 // Wrong, should be i.
-		"",
-		".if ${PKG_OPTIONS:Moption}",
-		".endif # option", // Correct.
-		"",
-		".if ${PKG_OPTIONS:Moption}",
-		".endif # opti", // This typo goes unnoticed since "opti" is a substring of the condition.
-		"",
-		".if ${OPSYS} == NetBSD",
-		".elif ${OPSYS} == FreeBSD",
-		".endif # NetBSD") // Wrong, should be FreeBSD from the .elif.
-
-	// See MkLineChecker.checkDirective
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: opsys.mk:7: Comment \"MACHINE_ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
-		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition \"${MACHINE_ARCH} == x86_64\".",
-		"WARN: opsys.mk:10: Comment \"j\" does not match loop \"i in 1 2 3 4 5\".",
-		"WARN: opsys.mk:12: Unknown option \"option\".",
-		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".")
-}
-
 func (s *Suite) Test_MkLines_Check__unfinished_directives(c *check.C) {
 	t := s.Init(c)
 
