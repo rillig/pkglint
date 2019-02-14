@@ -741,7 +741,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// Bad: LDADD+= -l${LIBS}
 	// Good: LDADD+= ${LIBS:S,^,-l,}
-	if wantList && haveList && vuc.IsWordPart {
+	if wantList {
 		return yes
 	}
 
