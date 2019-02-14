@@ -1057,7 +1057,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 
 	// Just for branch coverage.
 	G.Testing = false
-	test("${PKGSRCDIR}", ".")
+	test("${PKGSRCDIR}", "../..")
 }
 
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.C) {
