@@ -776,6 +776,13 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 		"WARN: ~/Makefile:6: The variable PATH may not be set by any package.",
 		"WARN: ~/Makefile:6: PREFIX should not be evaluated at load time.",
 		"WARN: ~/Makefile:6: PATH should not be evaluated at load time.")
+
+	// Just for branch coverage.
+	trace.Tracing = false
+	MkLineChecker{mklines.mklines[2]}.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/Makefile:3: GO_SRCPATH is defined but not used.")
 }
 
 func (s *Suite) Test_MkLine__shell_varuse_in_backt_dquot(c *check.C) {
@@ -1189,6 +1196,30 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 
 	t.CheckOutputEmpty()
 	c.Check(ind.Varnames(), deepEquals, []string{"PKGREVISION"})
+}
+
+func (s *Suite) Test_Indentation_TrackAfter__checked_files(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"",
+		".if make(other.mk)",
+		".  include \"other.mk\"",
+		".endif",
+		"",
+		".if exists(checked.mk)",
+		".  include \"checked.mk\"",
+		".elif exists(other-checked.mk)",
+		".  include \"other-checked.mk\"",
+		".endif")
+
+	mklines.Check()
+
+	// FIXME: line 10 should not get a warning.
+	t.CheckOutputLines(
+		"ERROR: file.mk:4: Relative path \"other.mk\" does not exist.",
+		"ERROR: file.mk:10: Relative path \"other-checked.mk\" does not exist.")
 }
 
 func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {

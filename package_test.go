@@ -632,9 +632,8 @@ func (s *Suite) Test_Package__include_after_exists(c *check.C) {
 
 	G.checkdirPackage(t.File("category/package"))
 
-	// FIXME: This error message should not appear at all because of the .if exists before.
-	t.CheckOutputLines(
-		"ERROR: ~/category/package/Makefile:21: Relative path \"options.mk\" does not exist.")
+	// No error message at all because of the .if exists before.
+	t.CheckOutputEmpty()
 }
 
 // See https://github.com/rillig/pkglint/issues/1
