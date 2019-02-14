@@ -1220,6 +1220,22 @@ func (s *Suite) Test_Indentation_TrackAfter__checked_files(c *check.C) {
 		"ERROR: file.mk:4: Relative path \"other.mk\" does not exist.")
 }
 
+func (s *Suite) Test_Indentation_TrackAfter__lonely_else(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"",
+		".else")
+
+	mklines.Check()
+
+	// Surprisingly, pkglint doesn't report an error about this trivial bug.
+	// This will be caught by bmake, though. Therefore the only purpose of
+	// this test is the branch coverage in the "top.mkline != nil" case.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
 	t := s.Init(c)
 
@@ -1320,4 +1336,44 @@ func (s *Suite) Test_matchMkDirective(c *check.C) {
 
 	test(".if ${VAR} == \\",
 		"", "if", "${VAR} == \\", "")
+}
+
+func (s *Suite) Test_MatchMkInclude(c *check.C) {
+	t := s.Init(c)
+
+	test := func(input, expectedIndent, expectedDirective, expectedFilename string) {
+		m, indent, directive, args := MatchMkInclude(input)
+		c.Check(
+			[]interface{}{m, indent, directive, args},
+			deepEquals,
+			[]interface{}{true, expectedIndent, expectedDirective, expectedFilename})
+	}
+
+	testFail := func(input string) {
+		m, _, _, _ := MatchMkInclude(input)
+		if m {
+			c.Errorf("Text %q unexpectedly matched.", input)
+		}
+	}
+
+	testFail("")
+	testFail(".")
+	testFail(".include")
+	testFail(".include \"")
+	testFail(".include \"other.mk")
+	testFail(".include \"other.mk\" \"")
+
+	test(".include \"other.mk\"",
+		"", "include", "other.mk")
+
+	test(".include \"other.mk\"\t",
+		"", "include", "other.mk")
+
+	test(".include \"other.mk\"\t#",
+		"", "include", "other.mk")
+
+	test(".include \"other.mk\"\t# comment",
+		"", "include", "other.mk")
+
+	t.CheckOutputEmpty()
 }
