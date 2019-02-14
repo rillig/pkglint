@@ -696,10 +696,8 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// Both of these can be correct, depending on the situation:
 	// 1. echo ${PERL5:Q}
 	// 2. xargs ${PERL5}
-	if !vuc.IsWordPart && vuc.quoting == VucQuotPlain {
-		if wantList && haveList {
-			return unknown
-		}
+	if !vuc.IsWordPart && wantList && haveList {
+		return unknown
 	}
 
 	// Pkglint assumes that the tool definitions don't include very
