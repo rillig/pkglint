@@ -1143,17 +1143,6 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 			ind.top().depth += 2
 		}
 
-		if cond != nil {
-			ind.RememberUsedVariables(cond)
-
-			cond.Walk(&MkCondCallback{
-				Call: func(name string, arg string) {
-					if name == "exists" {
-						ind.AddCheckedFile(arg)
-					}
-				}})
-		}
-
 	case "for", "ifdef", "ifndef":
 		ind.top().depth += 2
 
@@ -1171,6 +1160,23 @@ func (ind *Indentation) TrackAfter(mkline MkLine) {
 		if ind.Len() > 1 { // Can only be false in unbalanced files.
 			ind.Pop()
 		}
+	}
+
+	switch directive {
+	case "if", "elif":
+		cond := mkline.Cond()
+		if cond == nil {
+			break
+		}
+
+		ind.RememberUsedVariables(cond)
+
+		cond.Walk(&MkCondCallback{
+			Call: func(name string, arg string) {
+				if name == "exists" {
+					ind.AddCheckedFile(arg)
+				}
+			}})
 	}
 
 	if trace.Tracing {

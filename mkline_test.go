@@ -1216,10 +1216,8 @@ func (s *Suite) Test_Indentation_TrackAfter__checked_files(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: line 10 should not get a warning.
 	t.CheckOutputLines(
-		"ERROR: file.mk:4: Relative path \"other.mk\" does not exist.",
-		"ERROR: file.mk:10: Relative path \"other-checked.mk\" does not exist.")
+		"ERROR: file.mk:4: Relative path \"other.mk\" does not exist.")
 }
 
 func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
