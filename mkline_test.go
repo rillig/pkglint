@@ -17,6 +17,20 @@ func (s *Suite) Test_NewMkLine__varassign(c *check.C) {
 	c.Check(mkline.VarassignComment(), equals, "# varassign comment")
 }
 
+func (s *Suite) Test_NewMkLine__varassign_space_around_operator(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix", "--source")
+	t.NewMkLine("test.mk", 101,
+		"pkgbase = package")
+
+	t.CheckOutputLines(
+		"NOTE: test.mk:101: Unnecessary space after variable name \"pkgbase\".",
+		"AUTOFIX: test.mk:101: Replacing \"pkgbase =\" with \"pkgbase=\".",
+		"-\tpkgbase = package",
+		"+\tpkgbase= package")
+}
+
 func (s *Suite) Test_NewMkLine__shellcmd(c *check.C) {
 	t := s.Init(c)
 
@@ -832,6 +846,17 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 		"",
 		"${VAR2}two",
 		"words")
+
+}
+
+func (s *Suite) Test_MkLine_ValueSplit__invalid_argument(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tvalue")
+
+	t.ExpectPanic(
+		func() { mkline.ValueSplit("value", "") },
+		"Pkglint internal error: Separator must not be empty; use ValueFields to split on whitespace")
 }
 
 func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
@@ -957,14 +982,28 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
-	split := mkline.ValueTokens()
+	tokens := mkline.ValueTokens()
 
-	c.Check(split, deepEquals, []*MkToken{{"value ", nil}})
+	c.Check(tokens, deepEquals, []*MkToken{{"value ", nil}})
 
-	split2 := mkline.ValueTokens() // This time the slice is taken from the cache.
+	tokens2 := mkline.ValueTokens() // This time the slice is taken from the cache.
 
 	// In Go, it's not possible to compare slices for reference equality.
-	c.Check(split2, deepEquals, split)
+	c.Check(tokens2, deepEquals, tokens)
+}
+
+func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
+	tokens := mkline.ValueTokens()
+
+	c.Check(tokens, check.IsNil)
+
+	tokens2 := mkline.ValueTokens() // This time the slice is taken from the cache.
+
+	// In Go, it's not possible to compare slices for reference equality.
+	c.Check(tokens2, deepEquals, tokens)
 }
 
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
@@ -1219,8 +1258,18 @@ func (s *Suite) Test_matchMkDirective(c *check.C) {
 			[]interface{}{true, expectedIndent, expectedDirective, expectedArgs, expectedComment})
 	}
 
-	test(".if ${VAR} == value", "", "if", "${VAR} == value", "")
-	test(".\tendif # comment", "\t", "endif", "", "comment")
-	test(".if ${VAR} == \"#\"", "", "if", "${VAR} == \"", "\"")
-	test(".if ${VAR:[#]}", "", "if", "${VAR:[#]}", "")
+	test(".if ${VAR} == value",
+		"", "if", "${VAR} == value", "")
+
+	test(".\tendif # comment",
+		"\t", "endif", "", "comment")
+
+	test(".if ${VAR} == \"#\"",
+		"", "if", "${VAR} == \"", "\"")
+
+	test(".if ${VAR:[#]}",
+		"", "if", "${VAR:[#]}", "")
+
+	test(".if ${VAR} == \\",
+		"", "if", "${VAR} == \\", "")
 }
