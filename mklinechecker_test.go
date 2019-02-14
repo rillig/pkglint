@@ -223,6 +223,24 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C
 		"WARN: opsys.mk:24: Comment \"ii\" does not match loop \"jj in 1 2\".")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/file.mk",
+		MkRcsID,
+		".for i = 1 2 3", // The "=" should rather be "in".
+		".endfor",
+		"",
+		".for _i_ in 1 2 3", // Underscores are only allowed in infrastructure files.
+		".endfor")
+
+	G.Check(t.File("mk/file.mk"))
+
+	// Pkglint doesn't care about trivial syntax errors, bmake will already catch these.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 	t := s.Init(c)
 
