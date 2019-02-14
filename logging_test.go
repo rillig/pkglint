@@ -83,6 +83,37 @@ func (s *Suite) Test_Logger_Logf__profiling(c *check.C) {
 		"loghisto      1 Warning.")
 }
 
+func (s *Suite) Test_Logger_Logf__profiling_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix", "--source", "--explain")
+	line := t.NewLine("filename", 123, "text")
+
+	G.Opts.Profiling = true
+	G.Logger.histo = histogram.New()
+
+	fix := line.Autofix()
+	fix.Notef("Autofix note.")
+	fix.Explain(
+		"Autofix explanation.")
+	fix.Replace("text", "replacement")
+	fix.Apply()
+
+	// The AUTOFIX line is not counted in the histogram although
+	// it uses the same code path as the other messages.
+	G.Logger.histo.PrintStats(G.out.out, "loghisto", -1)
+
+	t.CheckOutputLines(
+		"NOTE: filename:123: Autofix note.",
+		"AUTOFIX: filename:123: Replacing \"text\" with \"replacement\".",
+		"-\ttext",
+		"+\treplacement",
+		"",
+		"\tAutofix explanation.",
+		"",
+		"loghisto      1 Autofix note.")
+}
+
 // Diag filters duplicate messages, unlike Logf.
 func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 	t := s.Init(c)
