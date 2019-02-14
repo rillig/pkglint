@@ -674,7 +674,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 			}
 			return no
 		}
-		if vartype.kindOfList == lkShell && !vuc.IsWordPart {
+		if !vuc.IsWordPart {
 			return no
 		}
 	}
