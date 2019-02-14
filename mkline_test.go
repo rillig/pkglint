@@ -467,6 +467,25 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(c 
 	t.CheckOutputEmpty() // Don't suggest to use ${HOMEPAGE:Q}.
 }
 
+func (s *Suite) Test_MkLine_VariableNeedsQuoting__MASTER_SITES_and_HOMEPAGE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"MASTER_SITES=\t${HOMEPAGE}",
+		"MASTER_SITES=\t${PATH}", // Some nonsense just for branch coverage.
+		"HOMEPAGE=\t${MASTER_SITES}",
+		"HOMEPAGE=\t${BUILD_DIRS}") // Some nonsense just for branch coverage.
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Please use ${PATH:Q} instead of ${PATH}.",
+		"WARN: Makefile:4: HOMEPAGE should not be defined in terms of MASTER_SITEs.",
+		"WARN: Makefile:5: Please use ${BUILD_DIRS:Q} instead of ${BUILD_DIRS}.")
+}
+
 // Before November 2018, pkglint did not parse $$(subshell) commands very well.
 // As a side effect, it sometimes issued wrong warnings about the :Q modifier.
 //
