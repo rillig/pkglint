@@ -983,6 +983,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	}
 
 	test("", ".")
+	test("${PKGSRCDIR}", ".")
 	test("${LUA_PKGSRCDIR}", "../../lang/lua53")
 	test("${PHPPKGSRCDIR}", "../../lang/php72")
 	test("${SUSE_DIR_PREFIX}", "suse100")
@@ -995,6 +996,10 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 
 	test("${FILESDIR}", "files")
 	test("${PKGDIR}", ".")
+
+	// Just for branch coverage.
+	G.Testing = false
+	test("${PKGSRCDIR}", ".")
 }
 
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.C) {

@@ -530,15 +530,13 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 	}
 
 	tmp := relativePath
-	if contains(tmp, "PKGSRCDIR") && !G.Testing {
+	if contains(tmp, "PKGSRCDIR") {
 		pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
 
 		if G.Testing {
 			// Relative pkgsrc paths usually only contain two or three levels.
-			// A possible reason for reaching this assertion is:
-			//
-			// Tests that access the file system must create their lines
-			// using t.SetUpFileMkLines, not using t.NewMkLines.
+			// A possible reason for reaching this assertion is a pkglint unit test
+			// that uses t.NewMkLines instead of the correct t.SetUpFileMkLines.
 			G.Assertf(!contains(pkgsrcdir, "../../../../.."),
 				"Relative path %q for %q is too deep below the pkgsrc root %q.",
 				pkgsrcdir, basedir, G.Pkgsrc.File("."))
@@ -554,11 +552,16 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 			tmp = strings.Replace(tmp, varuse, latest, -1)
 		}
 	}
+
+	// These variables are only used in pkgsrc packages, therefore they
+	// are replaced with the fixed "../.." regardless of where the text appears.
 	replaceLatest("${LUA_PKGSRCDIR}", "lang", `^lua[0-9]+$`, "../../lang/$0")
 	replaceLatest("${PHPPKGSRCDIR}", "lang", `^php[0-9]+$`, "../../lang/$0")
-	replaceLatest("${SUSE_DIR_PREFIX}", "emulators", `^(suse[0-9]+)_base$`, "$1")
 	replaceLatest("${PYPKGSRCDIR}", "lang", `^python[0-9]+$`, "../../lang/$0")
+
 	replaceLatest("${PYPACKAGE}", "lang", `^python[0-9]+$`, "$0")
+	replaceLatest("${SUSE_DIR_PREFIX}", "emulators", `^(suse[0-9]+)_base$`, "$1")
+
 	if G.Pkg != nil {
 		// XXX: Even if these variables are defined indirectly,
 		// pkglint should be able to resolve them properly.
