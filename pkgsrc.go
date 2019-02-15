@@ -34,7 +34,11 @@ type Pkgsrc struct {
 	LastChange          map[string]*Change  //
 	listVersions        map[string][]string // See ListVersions
 
-	// Variables that may be overridden by the pkgsrc user. Used for checking BUILD_DEFS.
+	// Variables that may be overridden by the pkgsrc user.
+	// They are typically defined in mk/defaults/mk.conf.
+	//
+	// Whenever a package uses such a variable, it must add the variable name
+	// to BUILD_DEFS.
 	UserDefinedVars Scope
 
 	Deprecated map[string]string   //
@@ -816,6 +820,9 @@ func (src *Pkgsrc) addBuildDefs(varnames ...string) {
 	}
 }
 
+// IsBuildDef returns whether the given variable is automatically added
+// to BUILD_DEFS by the pkgsrc infrastructure. In such a case, the
+// package doesn't need to add the variable to BUILD_DEFS itself.
 func (src *Pkgsrc) IsBuildDef(varname string) bool {
 	return src.buildDefs[varname]
 }

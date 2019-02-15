@@ -1115,6 +1115,63 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
+// The LOCALBASE variable may be defined and used in the infrastructure.
+// It is always equivalent to PREFIX and only exists for historic reasons.
+func (s *Suite) Test_MkLineChecker_CheckVaruse__LOCALBASE_in_infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/infra.mk",
+		MkRcsID,
+		"LOCALBASE?=\t${PREFIX}",
+		"DEFAULT_PREFIX=\t${LOCALBASE}")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("mk/infra.mk"))
+
+	// No warnings about LOCALBASE being used; in packages LOCALBASE is deprecated.
+	t.CheckOutputLines(
+		"WARN: ~/mk/infra.mk:2: PREFIX should not be evaluated indirectly at load time.")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckVaruse__user_defined_variable_and_BUILD_DEFS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/defaults/mk.conf",
+		"VARBASE?=\t${PREFIX}/var",
+		"PYTHON_VER?=\t36")
+	G.Pkgsrc.LoadInfrastructure()
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"BUILD_DEFS+=\tPYTHON_VER",
+		"\t: ${VARBASE}",
+		"\t: ${VARBASE}",
+		"\t: ${PYTHON_VER}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: file.mk:3: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVaruseModifiersSuffix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"\t: ${HOMEPAGE:=subdir/:Q}", // wrong
+		"\t: ${BUILD_DIRS:=subdir/}", // correct
+		"\t: ${BIN_PROGRAMS:=.exe}")  // unknown since BIN_PROGRAMS doesn't have a type
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: file.mk:2: The :from=to modifier should only be used with lists, not with HOMEPAGE.",
+		"WARN: file.mk:4: BIN_PROGRAMS is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVaruseModifiersRange(c *check.C) {
 	t := s.Init(c)
 
