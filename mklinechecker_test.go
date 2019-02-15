@@ -440,19 +440,37 @@ func (s *Suite) Test_MkLineChecker_checkVarassign(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall,no-space")
 	t.SetUpVartypes()
+	t.SetUpTool("awk", "AWK", AtRunTime)
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
-		"PKG_DEVELOPER?= yes",
-		"BUILD_DEFS?=    VARBASE")
+		"PKG_DEVELOPER?=\tyes",
+		"BUILD_DEFS?=\tVARBASE",
+		"USE_TOOLS:=\t${USE_TOOLS:Nunwanted-tool}",
+		"USE_TOOLS:=\t${MY_TOOLS}",
+		"USE_TOOLS:=\tawk")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"WARN: options.mk:2: The variable PKG_DEVELOPER may not be given a default value by any package.",
 		"WARN: options.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
-		"WARN: options.mk:3: The variable BUILD_DEFS may not be given a default value (only appended to) in this file.")
+		"WARN: options.mk:3: The variable BUILD_DEFS may not be given a default value (only appended to) in this file.",
+		"WARN: options.mk:5: The variable USE_TOOLS may not be set (only appended to) in this file.",
+		"WARN: options.mk:5: MY_TOOLS is used but not defined.",
+		"WARN: options.mk:6: The variable USE_TOOLS may not be set (only appended to) in this file.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.DisableTracing() // Just to reach branch coverage for unknown permissions.
+	mklines := t.NewMkLines("options.mk",
+		MkRcsID,
+		"COMMENT=\tShort package description")
+
+	mklines.Check()
 }
 
 // Don't check the permissions for infrastructure files since they have their own rules.
@@ -827,6 +845,17 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Unknown compiler flag \"-bs\".",
 		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" should start with a hyphen.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, ".if 0")
+
+	// Calling this method is only useful in the context of a whole file.
+	MkLineChecker{mkline}.checkDirectiveIndentation(4)
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {

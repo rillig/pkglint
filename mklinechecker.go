@@ -298,9 +298,6 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 	op := mkline.Op()
 	vartype := G.Pkgsrc.VariableType(varname)
 	if vartype == nil {
-		if trace.Tracing {
-			trace.Step1("No type definition found for %q.", varname)
-		}
 		return
 	}
 
