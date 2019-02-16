@@ -664,6 +664,21 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.
 		"WARN: any.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"IGNORE_PKG.package=\t${ONLY_FOR_UNPRIVILEGED}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: file.mk:2: IGNORE_PKG.package should be set to YES or yes.",
+		"WARN: file.mk:2: ONLY_FOR_UNPRIVILEGED should not be evaluated indirectly at load time.")
+}
+
 func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 

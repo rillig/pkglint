@@ -560,15 +560,8 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 			if !tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
 				ck.warnVaruseToolLoadTime(varname, tool)
 			}
-
 		} else {
-			// Might the variable be used indirectly at load time, for example
-			// by assigning it to another variable which then gets evaluated?
-			isIndirect := vuc.time != vucTimeParse && // Otherwise it would be directly.
-				// The context might be used at load time somewhere.
-				vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime)
-
-			ck.warnVaruseLoadTime(varname, isIndirect)
+			ck.warnVaruseLoadTime(varname, indirectly)
 		}
 	}
 
