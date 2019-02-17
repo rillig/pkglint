@@ -682,13 +682,17 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C
 func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpVartypes()
 	t.SetUpTool("nowhere", "NOWHERE", Nowhere)
 	t.SetUpTool("after-prefs", "AFTER_PREFS", AfterPrefsMk)
 	t.SetUpTool("at-runtime", "AT_RUNTIME", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
-		".if ${NOWHERE} && ${AFTER_PREFS} && ${AT_RUNTIME}",
-		".endif")
+		".if ${NOWHERE} && ${AFTER_PREFS} && ${AT_RUNTIME} && ${MK_TOOL}",
+		".endif",
+		"",
+		"TOOLS_CREATE+=\t\tmk-tool",
+		"_TOOLS_VARNAME.mk-tool=\tMK_TOOL")
 
 	mklines.Check()
 
@@ -697,7 +701,12 @@ func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
 			"it has to be added to USE_TOOLS before including bsd.prefs.mk.",
 		"WARN: Makefile:2: To use the tool ${AFTER_PREFS} at load time, "+
 			"bsd.prefs.mk has to be included before.",
-		"WARN: Makefile:2: The tool ${AT_RUNTIME} cannot be used at load time.")
+		"WARN: Makefile:2: The tool ${AT_RUNTIME} cannot be used at load time.",
+		"WARN: Makefile:2: To use the tool ${MK_TOOL} at load time, "+
+			"bsd.prefs.mk has to be included before.",
+		"WARN: Makefile:6: Variable names starting with an underscore "+
+			"(_TOOLS_VARNAME.mk-tool) are reserved for internal pkgsrc use.",
+		"WARN: Makefile:6: _TOOLS_VARNAME.mk-tool is defined but not used.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
