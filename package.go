@@ -666,12 +666,10 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 			variable("TOOL_DEPENDS", many),
 			variable("DEPENDS", many))}
 
-	firstRelevant := -1
-	lastRelevant := -1
+	relevantLines := (func() []MkLine {
+		firstRelevant := -1
+		lastRelevant := -1
 
-	// TODO: understand and explain this code.
-	//  It is much longer and much more complicated than it should be.
-	skip := func() bool {
 		relevantVars := make(map[string]bool)
 		for _, section := range sections {
 			for _, variable := range section.vars {
@@ -693,7 +691,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 							trace.Stepf("Skipping varorder because of line %s.",
 								mklines.mklines[firstIrrelevant].Linenos())
 						}
-						return true
+						return nil
 					}
 					lastRelevant = i
 				} else {
@@ -713,9 +711,13 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		}
 
 		if firstRelevant == -1 {
-			return true
+			return nil
 		}
-		interesting := mklines.mklines[firstRelevant : lastRelevant+1]
+		return mklines.mklines[firstRelevant : lastRelevant+1]
+	})()
+
+	skip := func() bool {
+		interesting := relevantLines
 
 		varcanon := func() string {
 			for len(interesting) > 0 && interesting[0].IsComment() {
@@ -760,7 +762,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		return len(interesting) == 0
 	}
 
-	if skip() {
+	if len(relevantLines) == 0 || skip() {
 		return
 	}
 
@@ -768,7 +770,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	for _, section := range sections {
 		for _, variable := range section.vars {
 			found := false
-			for _, mkline := range mklines.mklines[firstRelevant : lastRelevant+1] {
+			for _, mkline := range relevantLines {
 				if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
 					if mkline.Varcanon() == variable.varname {
 						canonical = append(canonical, mkline.Varname())
@@ -791,7 +793,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	// TODO: This leads to very long and complicated warnings.
 	//  Those parts that are correct should not be mentioned,
 	//  except if they are helpful for locating the mistakes.
-	mkline := mklines.mklines[firstRelevant]
+	mkline := relevantLines[0]
 	mkline.Warnf("The canonical order of the variables is %s.", strings.Join(canonical, ", "))
 	G.Explain(
 		"In simple package Makefiles, some common variables should be",
