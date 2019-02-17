@@ -679,6 +679,27 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C
 		"WARN: file.mk:2: ONLY_FOR_UNPRIVILEGED should not be evaluated indirectly at load time.")
 }
 
+func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("nowhere", "NOWHERE", Nowhere)
+	t.SetUpTool("after-prefs", "AFTER_PREFS", AfterPrefsMk)
+	t.SetUpTool("at-runtime", "AT_RUNTIME", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		".if ${NOWHERE} && ${AFTER_PREFS} && ${AT_RUNTIME}",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:2: To use the tool ${NOWHERE} at load time, "+
+			"it has to be added to USE_TOOLS before including bsd.prefs.mk.",
+		"WARN: Makefile:2: To use the tool ${AFTER_PREFS} at load time, "+
+			"bsd.prefs.mk has to be included before.",
+		"WARN: Makefile:2: The tool ${AT_RUNTIME} cannot be used at load time.")
+}
+
 func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
