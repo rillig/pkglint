@@ -985,8 +985,8 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 
 	testTokens := func(value string, expected ...*MkToken) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
-		split := mkline.ValueTokens()
-		c.Check(split, deepEquals, expected)
+		tokens, _ := mkline.ValueTokens()
+		c.Check(tokens, deepEquals, expected)
 	}
 
 	testTokens("#empty",
@@ -1008,28 +1008,32 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
-	tokens := mkline.ValueTokens()
+	tokens, rest := mkline.ValueTokens()
 
 	c.Check(tokens, deepEquals, []*MkToken{{"value ", nil}})
+	c.Check(rest, equals, "${UNFINISHED")
 
-	tokens2 := mkline.ValueTokens() // This time the slice is taken from the cache.
+	tokens2, rest2 := mkline.ValueTokens() // This time the slice is taken from the cache.
 
 	// In Go, it's not possible to compare slices for reference equality.
 	c.Check(tokens2, deepEquals, tokens)
+	c.Check(rest2, equals, rest)
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
-	tokens := mkline.ValueTokens()
+	tokens, rest := mkline.ValueTokens()
 
 	c.Check(tokens, check.IsNil)
+	c.Check(rest, equals, "${UNFINISHED")
 
-	tokens2 := mkline.ValueTokens() // This time the slice is taken from the cache.
+	tokens2, rest2 := mkline.ValueTokens() // This time the slice is taken from the cache.
 
 	// In Go, it's not possible to compare slices for reference equality.
 	c.Check(tokens2, deepEquals, tokens)
+	c.Check(rest2, equals, rest)
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
@@ -1042,9 +1046,7 @@ func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
 	mklines.mklines[1].ValueTokens()
 	mklines.Check()
 
-	// FIXME: Duplicate warning
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.",
 		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.")
 }
 

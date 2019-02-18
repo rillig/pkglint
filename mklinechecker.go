@@ -305,7 +305,7 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 
 	// E.g. USE_TOOLS:= ${USE_TOOLS:Nunwanted-tool}
 	if op == opAssignEval && perms&aclpAppend != 0 {
-		tokens := mkline.ValueTokens()
+		tokens, _ := mkline.ValueTokens()
 		if len(tokens) == 1 && tokens[0].Varuse != nil && tokens[0].Varuse.varname == varname {
 			return
 		}

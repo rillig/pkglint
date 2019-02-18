@@ -354,10 +354,18 @@ func (mkline *MkLineImpl) Tokenize(text string, warn bool) []*MkToken {
 		defer trace.Call(mkline, text)()
 	}
 
-	p := NewMkParser(mkline.Line, text, true)
-	tokens := p.MkTokens()
-	if warn && p.Rest() != "" {
-		mkline.Warnf("Internal pkglint error in MkLine.Tokenize at %q.", p.Rest())
+	var tokens []*MkToken
+	var rest string
+	if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) && text == mkline.Value() {
+		tokens, rest = mkline.ValueTokens()
+	} else {
+		p := NewMkParser(mkline.Line, text, true)
+		tokens = p.MkTokens()
+		rest = p.Rest()
+	}
+
+	if warn && rest != "" {
+		mkline.Warnf("Internal pkglint error in MkLine.Tokenize at %q.", rest)
 	}
 	return tokens
 }
@@ -458,21 +466,21 @@ func (mkline *MkLineImpl) ValueFields(value string) []string {
 	return split
 }
 
-func (mkline *MkLineImpl) ValueTokens() []*MkToken {
+func (mkline *MkLineImpl) ValueTokens() ([]*MkToken, string) {
 	value := mkline.Value()
 	if value == "" {
-		return nil
+		return nil, ""
 	}
 
 	assign := mkline.data.(mkLineAssign)
 	if assign.valueMk != nil || assign.valueMkRest != "" {
-		return assign.valueMk
+		return assign.valueMk, assign.valueMkRest
 	}
 
 	p := NewMkParser(mkline.Line, value, true)
 	assign.valueMk = p.MkTokens()
 	assign.valueMkRest = p.Rest()
-	return assign.valueMk
+	return assign.valueMk, assign.valueMkRest
 }
 
 // Fields applies to variable assignments and .for loops.
