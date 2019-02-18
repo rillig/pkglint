@@ -375,10 +375,8 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	}
 	varuse := NewMkVarUse
 
-	// TODO: Add tests for &&, ||, !.
-
-	// TODO: Add test for !empty(VAR:M}).
-
+	// TODO: Make this variant of the !empty operator distinguishable
+	//  from the one that is actually written !empty.
 	test("${OPSYS:MNetBSD}",
 		&mkCond{Not: &mkCond{Empty: varuse("OPSYS", "MNetBSD")}})
 
