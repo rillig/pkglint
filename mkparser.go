@@ -27,8 +27,6 @@ func (p *MkParser) Rest() string {
 //
 // The text argument is assumed to be after unescaping the # character,
 // which means the # is a normal character and does not introduce a Makefile comment.
-//
-// TODO: Remove the emitWarnings argument in order to separate parsing from checking.
 func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
 	G.Assertf((line != nil) == emitWarnings, "line must be given iff emitWarnings is set")
 	return &MkParser{line, textproc.NewLexer(text), emitWarnings}

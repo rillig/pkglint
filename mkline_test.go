@@ -1032,6 +1032,22 @@ func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	c.Check(tokens2, deepEquals, tokens)
 }
 
+func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"ROUND=\t$(ROUND)")
+
+	mklines.mklines[1].ValueTokens()
+	mklines.Check()
+
+	// FIXME: Duplicate warning
+	t.CheckOutputLines(
+		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.",
+		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.")
+}
+
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	t := s.Init(c)
 
