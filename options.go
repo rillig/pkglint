@@ -73,7 +73,7 @@ loop:
 				continue
 			}
 
-			checkVarUse := func(varuse *MkVarUse) {
+			recordUsedOption := func(varuse *MkVarUse) {
 				if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {
 					if m, positive, pattern := varuse.modifiers[0].MatchMatch(); m && positive {
 						option := pattern
@@ -85,8 +85,8 @@ loop:
 				}
 			}
 			cond.Walk(&MkCondCallback{
-				Empty: checkVarUse,
-				Var:   checkVarUse})
+				Empty: recordUsedOption,
+				Var:   recordUsedOption})
 
 			if cond.Empty != nil && mkline.HasElseBranch() {
 				mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")
