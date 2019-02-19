@@ -439,7 +439,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 
 			m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`))
 			if m == nil {
-				return &mkCond{Not: &mkCond{Empty: lhs}} // See devel/bmake/files/cond.c:/\* For \.if \$/
+				return &mkCond{Var: lhs} // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
 
 			op := m[1]
@@ -695,6 +695,7 @@ type mkCond struct {
 
 	Defined       string
 	Empty         *MkVarUse
+	Var           *MkVarUse
 	CompareVarNum *MkCondCompareVarNum
 	CompareVarStr *MkCondCompareVarStr
 	CompareVarVar *MkCondCompareVarVar
@@ -728,6 +729,7 @@ type MkCondCallback struct {
 	CompareVarStr func(varuse *MkVarUse, op string, str string)
 	CompareVarVar func(left *MkVarUse, op string, right *MkVarUse)
 	Call          func(name string, arg string)
+	Var           func(varuse *MkVarUse)
 	VarUse        func(varuse *MkVarUse)
 }
 
@@ -760,6 +762,14 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 			// This is not really a VarUse, it's more a VarUseDefined.
 			// But in practice they are similar enough to be treated the same.
 			callback.VarUse(&MkVarUse{cond.Defined, nil})
+		}
+
+	case cond.Var != nil:
+		if callback.Var != nil {
+			callback.Var(cond.Var)
+		}
+		if callback.VarUse != nil {
+			callback.VarUse(cond.Var)
 		}
 
 	case cond.Empty != nil:

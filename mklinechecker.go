@@ -1181,6 +1181,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 	cond.Walk(&MkCondCallback{
 		Empty:         ck.checkDirectiveCondEmpty,
+		Var:           ck.checkDirectiveCondEmpty,
 		CompareVarStr: checkCompareVarStr,
 		VarUse:        checkVarUse})
 }

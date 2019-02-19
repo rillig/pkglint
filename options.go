@@ -73,18 +73,20 @@ loop:
 				continue
 			}
 
-			cond.Walk(&MkCondCallback{
-				Empty: func(varuse *MkVarUse) {
-					if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {
-						if m, positive, pattern := varuse.modifiers[0].MatchMatch(); m && positive {
-							option := pattern
-							if !containsVarRef(option) {
-								handledOptions[option] = mkline
-								optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
-							}
+			checkVarUse := func(varuse *MkVarUse) {
+				if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {
+					if m, positive, pattern := varuse.modifiers[0].MatchMatch(); m && positive {
+						option := pattern
+						if !containsVarRef(option) {
+							handledOptions[option] = mkline
+							optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
 						}
 					}
-				}})
+				}
+			}
+			cond.Walk(&MkCondCallback{
+				Empty: checkVarUse,
+				Var:   checkVarUse})
 
 			if cond.Empty != nil && mkline.HasElseBranch() {
 				mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")
