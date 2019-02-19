@@ -46,16 +46,13 @@ func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 		"  Flags for -W, --warning:",
 		"    all          all of the following",
 		"    none         none of the following",
-		"    directcmd    warn about use of direct command names instead of Make variables (enabled)",
 		"    extra        enable some extra warnings (disabled)",
-		"    order        warn if Makefile entries are unordered (enabled)",
 		"    perm         warn about unforeseen variable definition and use (disabled)",
 		"    plist-depr   warn about deprecated paths in PLISTs (disabled)",
 		"    plist-sort   warn about unsorted entries in PLISTs (disabled)",
 		"    quoting      warn about quoting issues (disabled)",
 		"    space        warn about inconsistent use of whitespace (disabled)",
 		"    style        warn about stylistic issues (disabled)",
-		"    types        do some simple type checking in Makefiles (enabled)",
 		"",
 		"  (Prefix a flag with \"no-\" to disable it.)")
 }

@@ -301,6 +301,15 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 		PlistRcsID,
 		"bin/program")
 
+	// Because the package Makefile includes this file, the check for the
+	// correct ordering of variables is skipped. As of February 2019, the
+	// SetupPackage function does not insert the custom variables in the
+	// correct position. To prevent the tests from having to mention the
+	// unrelated warnings about the variable order, that check is suppressed
+	// here.
+	t.CreateFileLines(pkgpath+"/suppress-varorder.mk",
+		MkRcsID)
+
 	// This distinfo file contains dummy hashes since pkglint cannot check the
 	// distfiles hashes anyway. It can only check the hashes for the patches.
 	t.CreateFileLines(pkgpath+"/distinfo",
@@ -323,7 +332,8 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 		"HOMEPAGE=\t# none",
 		"COMMENT=\tDummy package",
 		"LICENSE=\t2-clause-bsd",
-		""}
+		"",
+		".include \"suppress-varorder.mk\""}
 	for len(mlines) < 19 {
 		mlines = append(mlines, "# empty")
 	}

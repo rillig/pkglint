@@ -1041,10 +1041,6 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 		defer trace.Call(varname, op, value, comment)()
 	}
 
-	if !G.Opts.WarnTypes {
-		return
-	}
-
 	mkline := ck.MkLine
 	vartype := G.Pkgsrc.VariableType(varname)
 

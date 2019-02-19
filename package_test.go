@@ -72,7 +72,6 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
 	pkg := NewPackage(t.File("x11/9term"))
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
@@ -106,7 +105,6 @@ func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
 func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
 	pkg := NewPackage(t.File("x11/9term"))
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
@@ -129,8 +127,6 @@ func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
-
 	pkg := NewPackage(t.File("x11/9term"))
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
@@ -149,8 +145,6 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 
 func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Worder")
 
 	pkg := NewPackage(t.File("category/package"))
 
@@ -175,7 +169,6 @@ func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *chec
 func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_top(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
 	pkg := NewPackage(t.File("x11/9term"))
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
@@ -196,7 +189,6 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_top(c *check.C
 func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_bottom(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
 	pkg := NewPackage(t.File("x11/9term"))
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
@@ -217,8 +209,6 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_bottom(c *chec
 func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
-
 	t.CreateFileLines("mk/bsd.pkg.mk", "# dummy")
 	t.CreateFileLines("x11/Makefile", MkRcsID)
 	t.CreateFileLines("x11/9term/PLIST", PlistRcsID, "bin/9term")
@@ -226,10 +216,10 @@ func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 	t.CreateFileLines("x11/9term/Makefile",
 		MkRcsID,
 		"",
-		"DISTNAME=9term-1.0",
-		"CATEGORIES=x11",
+		"DISTNAME=\t9term-1.0",
+		"CATEGORIES=\tx11",
 		"",
-		"COMMENT=Terminal",
+		"COMMENT=\tTerminal",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
@@ -246,7 +236,6 @@ func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 func (s *Suite) Test_Package_CheckVarorder__MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
 	pkg := NewPackage(t.File("category/package"))
 
 	pkg.CheckVarorder(t.NewMkLines("Makefile",
@@ -267,7 +256,6 @@ func (s *Suite) Test_Package_CheckVarorder__MASTER_SITES(c *check.C) {
 func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Worder")
 	t.SetUpVartypes()
 	pkg := NewPackage(t.File("category/package"))
 
@@ -354,7 +342,6 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__precedence(c *check.C) {
 func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall,no-order")
 	pkg := t.SetUpPackage("category/package",
 		"DISTNAME=\tdistname-1.0",
 		"PKGNAME=\tdistname-1.0")
@@ -369,7 +356,6 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
 func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall,no-order")
 	pkg := t.SetUpPackage("category/package",
 		"DISTNAME=\tpkgname-version")
 
@@ -708,7 +694,7 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"\t"+"o package3-3.0 [security update]")
 
 	t.Chdir(".")
-	G.Main("pkglint", "-Wall,no-space,no-order", "category/pkg1", "category/pkg2", "category/pkg3")
+	G.Main("pkglint", "-Wall,no-space", "category/pkg1", "category/pkg2", "category/pkg3")
 
 	t.CheckOutputLines(
 		"WARN: category/pkg1/../../doc/TODO:3: Invalid line format \"\".",
@@ -927,8 +913,6 @@ func (s *Suite) Test_Package_readMakefile__builtin_mk(c *check.C) {
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t := s.Init(c)
 
-	// no-order since SetUpPackage doesn't place OWNER correctly.
-	t.SetUpCommandLine("-Wall,no-order")
 	G.Username = "example-user"
 	t.CreateFileLines("category/package/CVS/Entries",
 		"/Makefile//modified//")

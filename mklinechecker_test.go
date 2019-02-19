@@ -265,7 +265,6 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wtypes")
 	t.SetUpVartypes()
 
 	// Since COMMENT is defined in vardefs.go its type is certain instead of guessed.
@@ -290,21 +289,6 @@ func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 	mkline := t.NewMkLine("filename", 1, "DISTNAME=gcc-${GCC_VERSION}")
 
 	MkLineChecker{mkline}.checkVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
-
-	t.CheckOutputEmpty()
-}
-
-// The command line option -Wno-types can be used to suppress the type checks.
-// Suppressing it is rarely needed and comes from Feb 12 2005 when this feature was introduced.
-// Since then the type system has matured and proven effective.
-func (s *Suite) Test_MkLineChecker_checkVartype__skip(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wno-types")
-	t.SetUpVartypes()
-	mkline := t.NewMkLine("filename", 1, "DISTNAME=invalid:::distname")
-
-	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputEmpty()
 }
@@ -344,7 +328,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wtypes")
 	t.SetUpVartypes()
 
 	test := func(cond string, output ...string) {
@@ -361,20 +344,28 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			"{ ccache ccc clang distcc f2c gcc hp icc ido "+
 			"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.")
 
-	test(".elif ${A} != ${B}")
+	test(".elif ${A} != ${B}",
+		"WARN: filename:1: A is used but not defined.",
+		"WARN: filename:1: B is used but not defined.")
 
 	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
-		"WARN: filename:1: \"mailto:someone@example.org\" is not a valid URL.")
+		"WARN: filename:1: \"mailto:someone@example.org\" is not a valid URL.",
+		"WARN: filename:1: HOMEPAGE should not be evaluated at load time.",
+		"WARN: filename:1: HOMEPAGE may not be used in any file; it is a write-only variable.")
 
 	test(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
 		"WARN: filename:1: PKGSRC_RUN_TEST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
-	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
+	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])",
+		"WARN: filename:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
+		"WARN: filename:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
 		"WARN: filename:1: The empty() function takes a variable name as parameter, "+
-			"not a variable expression.")
+			"not a variable expression.",
+		"WARN: filename:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
+		"WARN: filename:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
 		"WARN: filename:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
@@ -382,7 +373,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename:1: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
 	test(".if ${PKG_LIBTOOL:Mlibtool}",
-		"NOTE: filename:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".")
+		"NOTE: filename:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".",
+		"WARN: filename:1: PKG_LIBTOOL should not be evaluated at load time.",
+		"WARN: filename:1: PKG_LIBTOOL may not be used in any file; it is a write-only variable.")
 
 	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
 		"WARN: filename:1: "+
@@ -401,7 +394,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"NOTE: filename:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
-		nil...)
+		"WARN: filename:1: MASTER_SITES should not be evaluated at load time.",
+		"WARN: filename:1: MASTER_SITES may not be used in any file; it is a write-only variable.")
 
 	// The only interesting line from the below tracing output is the one
 	// containing "checkCompareVarStr".
@@ -415,6 +409,10 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"TRACE: 1 2 + (*Pkgsrc).VariableType(\"VAR\")",
 		"TRACE: 1 2 3   No type definition found for \"VAR\".",
 		"TRACE: 1 2 - (*Pkgsrc).VariableType(\"VAR\", \"=>\", (*pkglint.Vartype)(nil))",
+		"WARN: filename:1: VAR is used but not defined.",
+		"TRACE: 1 2 + MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: 1 2 3   No type definition found for \"VAR\".",
+		"TRACE: 1 2 - MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 + (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 - (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false), \"=>\", unknown)",
 		"TRACE: 1 - MkLineChecker.CheckVaruse(filename:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",

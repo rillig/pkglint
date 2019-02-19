@@ -63,16 +63,13 @@ type CmdOpts struct {
 	// could be contrasted by a future --ignore option, in order to suppress
 	// individual checks.
 
-	WarnDirectcmd,
 	WarnExtra,
-	WarnOrder,
 	WarnPerm,
 	WarnPlistDepr,
 	WarnPlistSort,
 	WarnQuoting,
 	WarnSpace,
-	WarnStyle,
-	WarnTypes bool
+	WarnStyle bool
 
 	Profiling,
 	ShowHelp,
@@ -245,16 +242,13 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	check.AddFlagVar("extra", &gopts.CheckExtra, false, "check various additional files")
 	check.AddFlagVar("global", &gopts.CheckGlobal, false, "inter-package checks")
 
-	warn.AddFlagVar("directcmd", &gopts.WarnDirectcmd, true, "warn about use of direct command names instead of Make variables")
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
-	warn.AddFlagVar("order", &gopts.WarnOrder, true, "warn if Makefile entries are unordered")
 	warn.AddFlagVar("perm", &gopts.WarnPerm, false, "warn about unforeseen variable definition and use")
 	warn.AddFlagVar("plist-depr", &gopts.WarnPlistDepr, false, "warn about deprecated paths in PLISTs")
 	warn.AddFlagVar("plist-sort", &gopts.WarnPlistSort, false, "warn about unsorted entries in PLISTs")
 	warn.AddFlagVar("quoting", &gopts.WarnQuoting, false, "warn about quoting issues")
 	warn.AddFlagVar("space", &gopts.WarnSpace, false, "warn about inconsistent use of whitespace")
 	warn.AddFlagVar("style", &gopts.WarnStyle, false, "warn about stylistic issues")
-	warn.AddFlagVar("types", &gopts.WarnTypes, true, "do some simple type checking in Makefiles")
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {
@@ -718,8 +712,8 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		!contains(filename, "files/") &&
-		!contains(filename, "patches/"):
+		!(hasPrefix(filename, "files/") || contains(filename, "/files/")) &&
+		!(hasPrefix(filename, "patches/") || contains(filename, "/patches/")):
 		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):

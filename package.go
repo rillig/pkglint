@@ -591,7 +591,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		defer trace.Call0()()
 	}
 
-	if !G.Opts.WarnOrder || pkg.seenMakefileCommon {
+	if pkg.seenMakefileCommon {
 		return
 	}
 
