@@ -103,14 +103,14 @@ loop:
 		declared := declaredOptions[option]
 		handled := handledOptions[option]
 
-		if handled == nil {
+		switch {
+		case handled == nil:
 			declared.Warnf("Option %q should be handled below in an .if block.", option)
 			G.Explain(
 				"If an option is not processed in this file, it may either be a",
 				"typo, or the option does not have any effect.")
-		}
 
-		if declared == nil {
+		case declared == nil:
 			handled.Warnf("Option %q is handled but not added to PKG_SUPPORTED_OPTIONS.", option)
 			G.Explain(
 				"This block of code will never be run since PKG_OPTIONS cannot",
@@ -119,5 +119,5 @@ loop:
 		}
 	}
 
-	SaveAutofixChanges(mklines.lines)
+	mklines.SaveAutofixChanges()
 }
