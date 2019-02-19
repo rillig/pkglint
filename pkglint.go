@@ -53,24 +53,8 @@ func NewPkglint() Pkglint {
 }
 
 type CmdOpts struct {
-	// TODO: Are these Check* options really necessary?
-	//
-	// They had been introduced in order to make pkglint more flexible,
-	// but without any actual need.
-
-	CheckAlternatives,
-	CheckBuildlink3,
-	CheckDescr,
-	CheckDistinfo,
 	CheckExtra,
-	CheckGlobal,
-	CheckInstall,
-	CheckMakefile,
-	CheckMessage,
-	CheckMk,
-	CheckOptions,
-	CheckPatches,
-	CheckPlist bool
+	CheckGlobal bool
 
 	// TODO: Are these Warn* options really all necessary?
 	//
@@ -258,19 +242,8 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	opts.AddFlagVar('V', "version", &gopts.ShowVersion, false, "show the version number of pkglint")
 	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
 
-	check.AddFlagVar("ALTERNATIVES", &gopts.CheckAlternatives, true, "check ALTERNATIVES files")
-	check.AddFlagVar("bl3", &gopts.CheckBuildlink3, true, "check buildlink3.mk files")
-	check.AddFlagVar("DESCR", &gopts.CheckDescr, true, "check DESCR file")
-	check.AddFlagVar("distinfo", &gopts.CheckDistinfo, true, "check distinfo file")
 	check.AddFlagVar("extra", &gopts.CheckExtra, false, "check various additional files")
 	check.AddFlagVar("global", &gopts.CheckGlobal, false, "inter-package checks")
-	check.AddFlagVar("INSTALL", &gopts.CheckInstall, true, "check INSTALL and DEINSTALL scripts")
-	check.AddFlagVar("Makefile", &gopts.CheckMakefile, true, "check Makefiles")
-	check.AddFlagVar("MESSAGE", &gopts.CheckMessage, true, "check MESSAGE file")
-	check.AddFlagVar("mk", &gopts.CheckMk, true, "check other .mk files")
-	check.AddFlagVar("options", &gopts.CheckOptions, true, "check options.mk files")
-	check.AddFlagVar("patches", &gopts.CheckPatches, true, "check patches")
-	check.AddFlagVar("PLIST", &gopts.CheckPlist, true, "check PLIST files")
 
 	warn.AddFlagVar("directcmd", &gopts.WarnDirectcmd, true, "warn about use of direct command names instead of Make variables")
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
@@ -474,9 +447,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 
 		case path.Base(filename) == "Makefile":
 			pkglint.checkExecutable(filename, st.Mode())
-			if pkglint.Opts.CheckMakefile {
-				pkg.checkfilePackageMakefile(filename, mklines)
-			}
+			pkg.checkfilePackageMakefile(filename, mklines)
 
 		default:
 			pkglint.checkDirent(filename, st.Mode())
@@ -490,7 +461,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 		pkg.checkLocallyModified(filename)
 	}
 
-	if pkg.Pkgdir == "." && pkglint.Opts.CheckDistinfo && pkglint.Opts.CheckPatches {
+	if pkg.Pkgdir == "." {
 		if havePatches && !haveDistinfo {
 			// TODO: Add Line.RefTo to make the context clear.
 			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run %q.", bmake("makepatchsum"))
@@ -703,55 +674,39 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 	switch {
 	case basename == "ALTERNATIVES":
-		if pkglint.Opts.CheckAlternatives {
-			CheckFileAlternatives(filename)
-		}
+		CheckFileAlternatives(filename)
 
 	case basename == "buildlink3.mk":
-		if pkglint.Opts.CheckBuildlink3 {
-			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
-				CheckLinesBuildlink3Mk(mklines)
-			}
+		if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
+			CheckLinesBuildlink3Mk(mklines)
 		}
 
 	case hasPrefix(basename, "DESCR"):
-		if pkglint.Opts.CheckDescr {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesDescr(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesDescr(lines)
 		}
 
 	case basename == "distinfo":
-		if pkglint.Opts.CheckDistinfo {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesDistinfo(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesDistinfo(lines)
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
-		if pkglint.Opts.CheckInstall {
-			CheckFileOther(filename)
-		}
+		CheckFileOther(filename)
 
 	case hasPrefix(basename, "MESSAGE"):
-		if pkglint.Opts.CheckMessage {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesMessage(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesMessage(lines)
 		}
 
 	case basename == "options.mk":
-		if pkglint.Opts.CheckOptions {
-			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
-				CheckLinesOptionsMk(mklines)
-			}
+		if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
+			CheckLinesOptionsMk(mklines)
 		}
 
 	case matches(basename, `^patch-[-\w.~+]*\w$`):
-		if pkglint.Opts.CheckPatches {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesPatch(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesPatch(lines)
 		}
 
 	case matches(filename, `(?:^|/)patches/manual[^/]*$`):
@@ -765,15 +720,11 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
 		!contains(filename, "files/") &&
 		!contains(filename, "patches/"):
-		if pkglint.Opts.CheckMk {
-			CheckFileMk(filename)
-		}
+		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
-		if pkglint.Opts.CheckPlist {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesPlist(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesPlist(lines)
 		}
 
 	case hasPrefix(basename, "CHANGES-"):
