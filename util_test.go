@@ -403,9 +403,7 @@ func (s *Suite) Test_Scope_Value(c *check.C) {
 
 	value, found := mklines.vars.Value("VAR")
 	t.Check(found, equals, true)
-	// FIXME: Since the first value is overwritten by the others,
-	//  it must not be reported as "the value".
-	t.Check(value, equals, "first")
+	t.Check(value, equals, "third (conditional)")
 
 	t.CheckOutputLines(
 		"WARN: file.mk:2: VAR is defined but not used.")

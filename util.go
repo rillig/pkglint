@@ -466,15 +466,13 @@ func NewScope() Scope {
 
 // Define marks the variable and its canonicalized form as defined.
 func (s *Scope) Define(varname string, mkline MkLine) {
-	if s.defined[varname] == nil {
-		s.defined[varname] = mkline
-		if trace.Tracing {
-			trace.Step2("Defining %q in %s", varname, mkline.String())
-		}
+	s.defined[varname] = mkline
+	if trace.Tracing {
+		trace.Step2("Defining %q in %s", varname, mkline.String())
 	}
 
 	varcanon := varnameCanon(varname)
-	if varcanon != varname && s.defined[varcanon] == nil {
+	if varcanon != varname {
 		s.defined[varcanon] = mkline
 		if trace.Tracing {
 			trace.Step2("Defining %q in %s", varcanon, mkline.String())
@@ -549,6 +547,9 @@ func (s *Scope) UsedSimilar(varname string) bool {
 // FirstDefinition returns the line in which the variable has been defined first.
 //
 // Having multiple definitions is typical in the branches of "if" statements.
+//
+// FIXME: The name is wrong; it doesn't return the first definition but
+//  the last one. There is no unit test for this case though.
 func (s *Scope) FirstDefinition(varname string) MkLine {
 	mkline := s.defined[varname]
 	if mkline != nil && mkline.IsVarassign() {

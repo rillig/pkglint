@@ -1014,11 +1014,8 @@ func (s *Suite) Test_Package__using_common_Makefile_overriding_DISTINFO_FILE(c *
 
 	G.Check(t.File("security/pinentry-fltk"))
 
-	// FIXME: The DISTINFO_FILE definition from pinentry-fltk must
-	//  override the one from pinentry since it appears later and
-	//  is unconditional.
-	t.CheckOutputLines(
-		"ERROR: ~/security/pinentry/distinfo: " +
-			"Patch \"../pinentry-fltk/patches/patch-aa\" is not recorded. " +
-			"Run \"" + confMake + " makepatchsum\".")
+	// The DISTINFO_FILE definition from pinentry-fltk overrides
+	// the one from pinentry since it appears later.
+	// Therefore the patch is searched for at the right location.
+	t.CheckOutputEmpty()
 }
