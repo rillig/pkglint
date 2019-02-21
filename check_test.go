@@ -687,8 +687,9 @@ func (t *Tester) EnableTracing() {
 // EnableTracingToLog enables the tracing and writes the tracing output
 // to the test log that can be examined with Tester.Output.
 func (t *Tester) EnableTracingToLog() {
-	t.EnableTracing()
+	G.out = NewSeparatorWriter(&t.stdout)
 	trace.Out = &t.stdout
+	trace.Tracing = true
 }
 
 // EnableSilentTracing enables tracing mode but discards any tracing output.
