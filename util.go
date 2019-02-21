@@ -578,6 +578,10 @@ func (s *Scope) UsedSimilar(varname string) bool {
 func (s *Scope) FirstDefinition(varname string) MkLine {
 	mkline := s.firstDef[varname]
 	if mkline != nil && mkline.IsVarassign() {
+		lastLine := s.LastDefinition(varname)
+		if lastLine != mkline {
+			mkline.Notef("FirstDefinition differs from LastDefinition in %s.", mkline.RefTo(lastLine))
+		}
 		return mkline
 	}
 	return nil // See NewPackage and G.Pkgsrc.UserDefinedVars
