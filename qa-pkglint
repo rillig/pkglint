@@ -60,6 +60,11 @@ analyze() {
 }
 
 netbsd() {
+  echo "=> Checking for @beta"
+  if (cd "$srcdir" && grep -n "@beta" *.go); then
+    exit 1
+  fi
+
   echo "=> Copying files to NetBSD VM"
   rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync \
     --chmod=F0664 \
@@ -83,7 +88,7 @@ netbsd() {
     --exclude="*.iml" \
     --exclude="*yacc.go" \
     --exclude="*.log" \
-    ~/pkglint/ netbsd:proj/pkgsrc/pkgtools/pkglint/files/
+    "$srcdir" netbsd:proj/pkgsrc/pkgtools/pkglint/files/
 
   echo "=> Installing NetBSD package"
   cmd=". ./.bash_profile"
