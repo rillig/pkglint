@@ -580,7 +580,8 @@ func (s *Scope) FirstDefinition(varname string) MkLine {
 	if mkline != nil && mkline.IsVarassign() {
 		lastLine := s.LastDefinition(varname)
 		if lastLine != mkline {
-			//mkline.Notef("FirstDefinition differs from LastDefinition in %s.", mkline.RefTo(lastLine))
+			// @beta
+			mkline.Notef("FirstDefinition differs from LastDefinition in %s.", mkline.RefTo(lastLine))
 		}
 		return mkline
 	}
