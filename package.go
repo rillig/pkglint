@@ -185,10 +185,10 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 	allLines.collectUsedVariables()
 	allLines.CheckRedundantAssignments()
 
-	pkg.Pkgdir, _ = pkg.vars.Value("PKGDIR")
-	pkg.DistinfoFile, _ = pkg.vars.Value("DISTINFO_FILE")
-	pkg.Filesdir, _ = pkg.vars.Value("FILESDIR")
-	pkg.Patchdir, _ = pkg.vars.Value("PATCHDIR")
+	pkg.Pkgdir, _ = pkg.vars.Value("PKGDIR") // TODO: Switch to LastValue
+	pkg.DistinfoFile, _ = pkg.vars.LastValue("DISTINFO_FILE")
+	pkg.Filesdir, _ = pkg.vars.Value("FILESDIR") // TODO: Switch to LastValue
+	pkg.Patchdir, _ = pkg.vars.Value("PATCHDIR") // TODO: Switch to LastValue
 
 	// See lang/php/ext.mk
 	if varIsDefinedSimilar("PHPEXT_MK") {

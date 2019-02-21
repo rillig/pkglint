@@ -360,7 +360,8 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	dst := NewScope()
 	dst.DefineAll(src)
 
-	c.Check(dst.defined, check.HasLen, 0)
+	c.Check(dst.firstDef, check.HasLen, 0)
+	c.Check(dst.lastDef, check.HasLen, 0)
 	c.Check(dst.used, check.HasLen, 0)
 
 	src.Define("VAR", t.NewMkLine("file.mk", 1, "VAR=value"))
@@ -401,9 +402,13 @@ func (s *Suite) Test_Scope_Value(c *check.C) {
 
 	mklines.Check()
 
-	value, found := mklines.vars.Value("VAR")
-	t.Check(found, equals, true)
-	t.Check(value, equals, "third (conditional)")
+	firstValue, firstFound := mklines.vars.Value("VAR")
+	t.Check(firstFound, equals, true)
+	t.Check(firstValue, equals, "first")
+
+	lastValue, lastFound := mklines.vars.LastValue("VAR")
+	t.Check(lastFound, equals, true)
+	t.Check(lastValue, equals, "third (conditional)")
 
 	t.CheckOutputLines(
 		"WARN: file.mk:2: VAR is defined but not used.")

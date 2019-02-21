@@ -519,7 +519,8 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 	vt.Output(
 		"WARN: filename:4: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
-	delete(G.Pkg.vars.defined, "MASTER_SITES")
+	delete(G.Pkg.vars.firstDef, "MASTER_SITES")
+	delete(G.Pkg.vars.lastDef, "MASTER_SITES")
 	G.Pkg.vars.Define("MASTER_SITES", t.NewMkLine(G.Pkg.File("Makefile"), 5,
 		"MASTER_SITES=\thttps://cdn.NetBSD.org/pub/pkgsrc/distfiles/"))
 
@@ -530,7 +531,8 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 		"WARN: filename:5: HOMEPAGE should not be defined in terms of MASTER_SITEs. " +
 			"Use https://cdn.NetBSD.org/pub/pkgsrc/distfiles/ directly.")
 
-	delete(G.Pkg.vars.defined, "MASTER_SITES")
+	delete(G.Pkg.vars.firstDef, "MASTER_SITES")
+	delete(G.Pkg.vars.lastDef, "MASTER_SITES")
 	G.Pkg.vars.Define("MASTER_SITES", t.NewMkLine(G.Pkg.File("Makefile"), 5,
 		"MASTER_SITES=\t${MASTER_SITE_GITHUB}"))
 

@@ -455,28 +455,38 @@ func (o *Once) check(key uint64) bool {
 // Scope remembers which variables are defined and which are used
 // in a certain scope, such as a package or a file.
 type Scope struct {
-	defined  map[string]MkLine
+	firstDef map[string]MkLine
+	lastDef  map[string]MkLine
 	used     map[string]MkLine
 	fallback map[string]string
 }
 
 func NewScope() Scope {
-	return Scope{make(map[string]MkLine), make(map[string]MkLine), make(map[string]string)}
+	return Scope{
+		make(map[string]MkLine),
+		make(map[string]MkLine),
+		make(map[string]MkLine),
+		make(map[string]string)}
 }
 
 // Define marks the variable and its canonicalized form as defined.
 func (s *Scope) Define(varname string, mkline MkLine) {
-	s.defined[varname] = mkline
-	if trace.Tracing {
-		trace.Step2("Defining %q in %s", varname, mkline.String())
+	def := func(name string) {
+		if s.firstDef[name] == nil {
+			s.firstDef[name] = mkline
+			if trace.Tracing {
+				trace.Step2("Defining %q for the first time in %s", name, mkline.String())
+			}
+		} else if trace.Tracing {
+			trace.Step2("Defining %q in %s", name, mkline.String())
+		}
+		s.lastDef[name] = mkline
 	}
 
+	def(varname)
 	varcanon := varnameCanon(varname)
 	if varcanon != varname {
-		s.defined[varcanon] = mkline
-		if trace.Tracing {
-			trace.Step2("Defining %q in %s", varcanon, mkline.String())
-		}
+		def(varcanon)
 	}
 }
 
@@ -508,12 +518,12 @@ func (s *Scope) Use(varname string, line MkLine) {
 // Even if Defined returns true, FirstDefinition doesn't necessarily return true
 // since the latter ignores the default definitions from vardefs.go, keyword dummyVardefMkline.
 func (s *Scope) Defined(varname string) bool {
-	return s.defined[varname] != nil
+	return s.firstDef[varname] != nil
 }
 
 // DefinedSimilar tests whether the variable or its canonicalized form is defined.
 func (s *Scope) DefinedSimilar(varname string) bool {
-	if s.defined[varname] != nil {
+	if s.firstDef[varname] != nil {
 		if trace.Tracing {
 			trace.Step1("Variable %q is defined", varname)
 		}
@@ -521,7 +531,7 @@ func (s *Scope) DefinedSimilar(varname string) bool {
 	}
 
 	varcanon := varnameCanon(varname)
-	if s.defined[varcanon] != nil {
+	if s.firstDef[varcanon] != nil {
 		if trace.Tracing {
 			trace.Step2("Variable %q (similar to %q) is defined", varcanon, varname)
 		}
@@ -547,11 +557,22 @@ func (s *Scope) UsedSimilar(varname string) bool {
 // FirstDefinition returns the line in which the variable has been defined first.
 //
 // Having multiple definitions is typical in the branches of "if" statements.
-//
-// FIXME: The name is wrong; it doesn't return the first definition but
-//  the last one. There is no unit test for this case though.
 func (s *Scope) FirstDefinition(varname string) MkLine {
-	mkline := s.defined[varname]
+	mkline := s.firstDef[varname]
+	if mkline != nil && mkline.IsVarassign() {
+		return mkline
+	}
+	return nil // See NewPackage and G.Pkgsrc.UserDefinedVars
+}
+
+// LastDefinition returns the line in which the variable has been defined last.
+//
+// Having multiple definitions is typical in the branches of "if" statements.
+//
+// Another typical case involves two files: the included file defines a default
+// value, and the including file later overrides that value.
+func (s *Scope) LastDefinition(varname string) MkLine {
+	mkline := s.lastDef[varname]
 	if mkline != nil && mkline.IsVarassign() {
 		return mkline
 	}
@@ -573,15 +594,27 @@ func (s *Scope) Value(varname string) (value string, found bool) {
 	return "", false
 }
 
+func (s *Scope) LastValue(varname string) (value string, found bool) {
+	mkline := s.LastDefinition(varname)
+	if mkline != nil {
+		return mkline.Value(), true
+	}
+	if fallback, ok := s.fallback[varname]; ok {
+		return fallback, true
+	}
+	return "", false
+}
+
 func (s *Scope) DefineAll(other Scope) {
 	var varnames []string
-	for varname := range other.defined {
+	for varname := range other.firstDef {
 		varnames = append(varnames, varname)
 	}
 	sort.Strings(varnames)
 
 	for _, varname := range varnames {
-		s.Define(varname, other.defined[varname])
+		s.Define(varname, other.firstDef[varname])
+		s.Define(varname, other.lastDef[varname])
 	}
 }
 
