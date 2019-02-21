@@ -65,7 +65,7 @@ netbsd() {
     --chmod=F0664 \
     --cvs-exclude \
     --exclude="qa-pkglint" \
-    --exclude="**.[01]" \
+    --exclude="*.out" \
     --exclude=".git*" \
     --exclude="/.travis.yml" \
     --exclude="/COPYING" \
