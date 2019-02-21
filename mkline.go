@@ -551,7 +551,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 		}
 		tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
 	}
-	tmp = strings.Replace(tmp, "${.CURDIR}", basedir, -1)
+	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)   // TODO: Replace with the "typical" os.Getwd().
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1) // FIXME
 
 	replaceLatest := func(varuse, category string, pattern regex.Pattern, replacement string) {
