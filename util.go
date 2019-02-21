@@ -455,8 +455,9 @@ func (o *Once) check(key uint64) bool {
 // Scope remembers which variables are defined and which are used
 // in a certain scope, such as a package or a file.
 type Scope struct {
-	firstDef map[string]MkLine
+	firstDef map[string]MkLine // TODO: Can this be removed?
 	lastDef  map[string]MkLine
+	value    map[string]string
 	used     map[string]MkLine
 	fallback map[string]string
 }
@@ -465,6 +466,7 @@ func NewScope() Scope {
 	return Scope{
 		make(map[string]MkLine),
 		make(map[string]MkLine),
+		make(map[string]string),
 		make(map[string]MkLine),
 		make(map[string]string)}
 }
@@ -480,7 +482,23 @@ func (s *Scope) Define(varname string, mkline MkLine) {
 		} else if trace.Tracing {
 			trace.Step2("Defining %q in %s", name, mkline.String())
 		}
+
 		s.lastDef[name] = mkline
+
+		// In most cases the defining lines are indeed variable assignments.
+		// Exceptions are comments that only document the variable but still mark
+		// it as defined so that it doesn't produce the "used but not defined" warning.
+		if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
+
+			switch mkline.Op() {
+			case opAssign, opAssignEval, opAssignShell:
+				s.value[name] = mkline.Value()
+			case opAssignAppend:
+				s.value[name] += " " + mkline.Value()
+			case opAssignDefault:
+				// No change to the value.
+			}
+		}
 	}
 
 	def(varname)
@@ -594,6 +612,11 @@ func (s *Scope) LastValue(varname string) string {
 }
 
 func (s *Scope) LastValueFound(varname string) (value string, found bool) {
+	value, found = s.value[varname]
+	if found {
+		return
+	}
+
 	mkline := s.LastDefinition(varname)
 	if mkline != nil {
 		return mkline.Value(), true

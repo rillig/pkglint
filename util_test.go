@@ -322,6 +322,24 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	c.Check(isLocallyModified(t.File("unmodified")), equals, false)
 }
 
+func (s *Suite) Test_Scope_Define(c *check.C) {
+	t := s.Init(c)
+
+	scope := NewScope()
+	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 121, "BUILD_DIRS=\tone two three"))
+
+	c.Check(scope.LastValue("BUILD_DIRS"), equals, "one two three")
+
+	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS+=\tfour"))
+
+	c.Check(scope.LastValue("BUILD_DIRS"), equals, "one two three four")
+
+	// Later default assignments do not have an effect.
+	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS?=\tdefault"))
+
+	c.Check(scope.LastValue("BUILD_DIRS"), equals, "one two three four")
+}
+
 func (s *Suite) Test_Scope_Defined(c *check.C) {
 	t := s.Init(c)
 
