@@ -507,22 +507,12 @@ func resolveVariableRefs(text string) (resolved string) {
 		if !visited[varname] {
 			visited[varname] = true
 			if G.Pkg != nil {
-				if value, ok := G.Pkg.vars.Value(varname); ok {
-					lastValue, _ := G.Pkg.vars.LastValue(varname)
-					if value != lastValue {
-						dummyLine.Notef("Pkg.FirstValue for %q is %q, LastValue is %q.",
-							varname, value, lastValue)
-					}
+				if value, ok := G.Pkg.vars.LastValue(varname); ok {
 					return value
 				}
 			}
 			if G.Mk != nil {
-				if value, ok := G.Mk.vars.Value(varname); ok {
-					lastValue, _ := G.Mk.vars.LastValue(varname)
-					if value != lastValue {
-						dummyLine.Notef("Mk.FirstValue for %q is %q, LastValue is %q.",
-							varname, value, lastValue)
-					}
+				if value, ok := G.Mk.vars.LastValue(varname); ok {
 					return value
 				}
 			}

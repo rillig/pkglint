@@ -583,17 +583,6 @@ func (s *Scope) FirstUse(varname string) MkLine {
 	return s.used[varname]
 }
 
-func (s *Scope) Value(varname string) (value string, found bool) {
-	mkline := s.FirstDefinition(varname)
-	if mkline != nil {
-		return mkline.Value(), true
-	}
-	if fallback, ok := s.fallback[varname]; ok {
-		return fallback, true
-	}
-	return "", false
-}
-
 func (s *Scope) LastValue(varname string) (value string, found bool) {
 	mkline := s.LastDefinition(varname)
 	if mkline != nil {

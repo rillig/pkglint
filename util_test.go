@@ -389,7 +389,7 @@ func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 	t.Check(scope.FirstDefinition("SNEAKY"), check.IsNil)
 }
 
-func (s *Suite) Test_Scope_Value(c *check.C) {
+func (s *Suite) Test_Scope_LastValue(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("file.mk",
@@ -401,10 +401,6 @@ func (s *Suite) Test_Scope_Value(c *check.C) {
 		".endif")
 
 	mklines.Check()
-
-	firstValue, firstFound := mklines.vars.Value("VAR")
-	t.Check(firstFound, equals, true)
-	t.Check(firstValue, equals, "first")
 
 	lastValue, lastFound := mklines.vars.LastValue("VAR")
 	t.Check(lastFound, equals, true)
