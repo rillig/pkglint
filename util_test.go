@@ -388,6 +388,29 @@ func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 	t.Check(scope.FirstDefinition("SNEAKY"), check.IsNil)
 }
 
+func (s *Suite) Test_Scope_Value(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"VAR=\tfirst",
+		"VAR=\tsecond",
+		".if 1",
+		"VAR=\tthird (conditional)",
+		".endif")
+
+	mklines.Check()
+
+	value, found := mklines.vars.Value("VAR")
+	t.Check(found, equals, true)
+	// FIXME: Since the first value is overwritten by the others,
+	//  it must not be reported as "the value".
+	t.Check(value, equals, "first")
+
+	t.CheckOutputLines(
+		"WARN: file.mk:2: VAR is defined but not used.")
+}
+
 func (s *Suite) Test_Scope__no_tracing(c *check.C) {
 	t := s.Init(c)
 
