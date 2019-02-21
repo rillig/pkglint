@@ -438,6 +438,11 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 	vars := pkg.vars
 
 	if gnuLine := vars.FirstDefinition("GNU_CONFIGURE"); gnuLine != nil {
+
+		// FIXME: Instead of using the first definition here, a better approach
+		//  is probably to use all the definitions except those from mk/compiler.mk.
+		//  In real pkgsrc, the last definition is typically from mk/compiler.mk
+		//  and only contains c++.
 		if useLine := vars.FirstDefinition("USE_LANGUAGES"); useLine != nil {
 
 			if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
