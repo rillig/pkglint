@@ -411,7 +411,7 @@ func (mklines *MkLinesImpl) CheckRedundantAssignments() {
 		return true
 	}
 
-	scope.OnIgnore = func(old, new MkLine) {
+	scope.OnRedundant = func(old, new MkLine) {
 		if isRelevant(old, new) && old.Value() == new.Value() {
 			new.Notef("Definition of %s is redundant because of %s.", old.Varname(), new.RefTo(old))
 		}

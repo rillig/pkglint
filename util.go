@@ -676,7 +676,7 @@ type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
 	dirLevel    int // The number of enclosing directives (.if, .for).
 	includePath includePath
-	OnIgnore    func(old, new MkLine)
+	OnRedundant func(old, new MkLine)
 	OnOverwrite func(old, new MkLine)
 }
 type redundantScopeVarinfo struct {
@@ -746,9 +746,9 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 				existing.value += " " + value
 			case opAssignDefault:
 				if existing.includePath.includes(s.includePath) {
-					s.OnIgnore(mkline, existing.mkline)
+					s.OnRedundant(mkline, existing.mkline)
 				} else {
-					s.OnIgnore(existing.mkline, mkline)
+					s.OnRedundant(existing.mkline, mkline)
 				}
 			case opAssignShell, opAssignEval:
 				s.vars[varname] = nil // Won't be checked further.
