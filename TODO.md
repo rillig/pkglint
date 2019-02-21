@@ -35,7 +35,7 @@
 
 ```
 do-install:
-	${ECHO} ${msg}   # Undefined variable ${prog}.
+	${ECHO} ${msg}   # Should produce: Undefined variable ${msg}.
 .for msg in message1
 	${ECHO} ${msg}
 .endfor
