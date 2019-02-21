@@ -583,7 +583,17 @@ func (s *Scope) FirstUse(varname string) MkLine {
 	return s.used[varname]
 }
 
-func (s *Scope) LastValue(varname string) (value string, found bool) {
+// LastValue returns the value from the last variable definition.
+//
+// If an empty string is returned this can mean either that the
+// variable value is indeed the empty string or that the variable
+// was not found. To distinguish these cases, call LastValueFound instead.
+func (s *Scope) LastValue(varname string) string {
+	value, _ := s.LastValueFound(varname)
+	return value
+}
+
+func (s *Scope) LastValueFound(varname string) (value string, found bool) {
 	mkline := s.LastDefinition(varname)
 	if mkline != nil {
 		return mkline.Value(), true

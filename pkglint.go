@@ -507,12 +507,12 @@ func resolveVariableRefs(text string) (resolved string) {
 		if !visited[varname] {
 			visited[varname] = true
 			if G.Pkg != nil {
-				if value, ok := G.Pkg.vars.LastValue(varname); ok {
+				if value, ok := G.Pkg.vars.LastValueFound(varname); ok {
 					return value
 				}
 			}
 			if G.Mk != nil {
-				if value, ok := G.Mk.vars.LastValue(varname); ok {
+				if value, ok := G.Mk.vars.LastValueFound(varname); ok {
 					return value
 				}
 			}
@@ -745,7 +745,7 @@ func (pkglint *Pkglint) matchesLicenseFile(basename string) bool {
 		return false
 	}
 
-	licenseFile, _ := pkglint.Pkg.vars.LastValue("LICENSE_FILE")
+	licenseFile := pkglint.Pkg.vars.LastValue("LICENSE_FILE")
 	return basename == path.Base(licenseFile)
 }
 

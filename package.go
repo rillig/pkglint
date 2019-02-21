@@ -185,10 +185,10 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 	allLines.collectUsedVariables()
 	allLines.CheckRedundantAssignments()
 
-	pkg.Pkgdir, _ = pkg.vars.LastValue("PKGDIR")
-	pkg.DistinfoFile, _ = pkg.vars.LastValue("DISTINFO_FILE")
-	pkg.Filesdir, _ = pkg.vars.LastValue("FILESDIR")
-	pkg.Patchdir, _ = pkg.vars.LastValue("PATCHDIR")
+	pkg.Pkgdir = pkg.vars.LastValue("PKGDIR")
+	pkg.DistinfoFile = pkg.vars.LastValue("DISTINFO_FILE")
+	pkg.Filesdir = pkg.vars.LastValue("FILESDIR")
+	pkg.Patchdir = pkg.vars.LastValue("PATCHDIR")
 
 	// See lang/php/ext.mk
 	if varIsDefinedSimilar("PHPEXT_MK") {
@@ -460,7 +460,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 // It is only used inside pkgsrc to mark changes that are
 // independent from the upstream package.
 func (pkg *Package) nbPart() string {
-	pkgrevision, _ := pkg.vars.LastValue("PKGREVISION")
+	pkgrevision := pkg.vars.LastValue("PKGREVISION")
 	if rev, err := strconv.Atoi(pkgrevision); err == nil {
 		return "nb" + strconv.Itoa(rev)
 	}
@@ -814,8 +814,8 @@ func (pkg *Package) checkLocallyModified(filename string) {
 		defer trace.Call(filename)()
 	}
 
-	owner, _ := pkg.vars.LastValue("OWNER")
-	maintainer, _ := pkg.vars.LastValue("MAINTAINER")
+	owner := pkg.vars.LastValue("OWNER")
+	maintainer := pkg.vars.LastValue("MAINTAINER")
 	if maintainer == "pkgsrc-users@NetBSD.org" {
 		maintainer = ""
 	}

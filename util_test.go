@@ -402,9 +402,7 @@ func (s *Suite) Test_Scope_LastValue(c *check.C) {
 
 	mklines.Check()
 
-	lastValue, lastFound := mklines.vars.LastValue("VAR")
-	t.Check(lastFound, equals, true)
-	t.Check(lastValue, equals, "third (conditional)")
+	t.Check(mklines.vars.LastValue("VAR"), equals, "third (conditional)")
 
 	t.CheckOutputLines(
 		"WARN: file.mk:2: VAR is defined but not used.")
