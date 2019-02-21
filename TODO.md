@@ -41,9 +41,6 @@ do-install:
 .endfor
 ```
 
-* Check all diagnostics that refer to another file.
-  The path to that file must be given relative to the diagnostic line.
-
 * Check all warnings and errors whether their explanation has instructions
   on how to fix the diagnostic properly.
 
