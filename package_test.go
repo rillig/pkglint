@@ -990,3 +990,35 @@ func (s *Suite) Test_Package_AutofixDistinfo__missing_file(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo: Cannot be read.")
 }
+
+func (s *Suite) Test_Package__using_common_Makefile_overriding_DISTINFO_FILE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("security/pinentry")
+	t.CreateFileLines("security/pinentry/Makefile.common",
+		MkRcsID,
+		"DISTINFO_FILE=\t${.CURDIR}/../../security/pinentry/distinfo")
+	t.SetUpPackage("security/pinentry-fltk",
+		".include \"../../security/pinentry/Makefile.common\"",
+		"DISTINFO_FILE=\t${.CURDIR}/distinfo")
+	t.CreateFileDummyPatch("security/pinentry-fltk/patches/patch-aa")
+	t.CreateFileLines("security/pinentry-fltk/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("security/pinentry"))
+
+	t.CheckOutputEmpty()
+
+	G.Check(t.File("security/pinentry-fltk"))
+
+	// FIXME: The DISTINFO_FILE definition from pinentry-fltk must
+	//  override the one from pinentry since it appears later and
+	//  is unconditional.
+	t.CheckOutputLines(
+		"ERROR: ~/security/pinentry/distinfo: " +
+			"Patch \"../pinentry-fltk/patches/patch-aa\" is not recorded. " +
+			"Run \"" + confMake + " makepatchsum\".")
+}
