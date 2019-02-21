@@ -4,6 +4,7 @@ import (
 	"netbsd.org/pkglint/regex"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -1285,7 +1286,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 	}
 
 	abs := resolvedPath
-	if !hasPrefix(abs, "/") {
+	if !filepath.IsAbs(abs) {
 		abs = path.Dir(mkline.Filename) + "/" + abs
 	}
 	if _, err := os.Stat(abs); err != nil {
