@@ -759,7 +759,7 @@ func (pkglint *Pkglint) matchesLicenseFile(basename string) bool {
 		return false
 	}
 
-	licenseFile, _ := pkglint.Pkg.vars.Value("LICENSE_FILE")
+	licenseFile, _ := pkglint.Pkg.vars.LastValue("LICENSE_FILE")
 	return basename == path.Base(licenseFile)
 }
 

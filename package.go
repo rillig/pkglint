@@ -460,7 +460,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 // It is only used inside pkgsrc to mark changes that are
 // independent from the upstream package.
 func (pkg *Package) nbPart() string {
-	pkgrevision, _ := pkg.vars.Value("PKGREVISION")
+	pkgrevision, _ := pkg.vars.LastValue("PKGREVISION")
 	if rev, err := strconv.Atoi(pkgrevision); err == nil {
 		return "nb" + strconv.Itoa(rev)
 	}
@@ -814,8 +814,8 @@ func (pkg *Package) checkLocallyModified(filename string) {
 		defer trace.Call(filename)()
 	}
 
-	owner, _ := pkg.vars.Value("OWNER")
-	maintainer, _ := pkg.vars.Value("MAINTAINER")
+	owner, _ := pkg.vars.LastValue("OWNER")
+	maintainer, _ := pkg.vars.LastValue("MAINTAINER")
 	if maintainer == "pkgsrc-users@NetBSD.org" {
 		maintainer = ""
 	}
