@@ -662,22 +662,26 @@ func naturalLess(str1, str2 string) bool {
 	return len1 < len2
 }
 
-// RedundantScope checks for redundant variable definitions and accidentally
-// overwriting variables. It tries to be as correct as possible by not flagging
-// anything that is defined conditionally. There may be some edge cases though
-// like defining PKGNAME, then evaluating it using :=, then defining it again.
-// This pattern is so error-prone that it should not appear in pkgsrc at all,
-// thus pkglint doesn't even expect it. (Well, except for the PKGNAME case,
-// but that's deep in the infrastructure and only affects the "nb13" extension.)
+// RedundantScope checks for redundant variable definitions and for variables
+// that are accidentally overwritten. It tries to be as correct as possible
+// by not flagging anything that is defined conditionally.
+//
+// There may be some edge cases though like defining PKGNAME, then evaluating
+// it using :=, then defining it again. This pattern is so error-prone that
+// it should not appear in pkgsrc at all, thus pkglint doesn't even expect it.
+// (Well, except for the PKGNAME case, but that's deep in the infrastructure
+// and only affects the "nb13" extension.)
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
 	dirLevel    int // The number of enclosing directives (.if, .for).
+	includePath includePath
 	OnIgnore    func(old, new MkLine)
 	OnOverwrite func(old, new MkLine)
 }
 type redundantScopeVarinfo struct {
-	mkline MkLine
-	value  string
+	mkline      MkLine
+	includePath includePath
+	value       string
 }
 
 func NewRedundantScope() *RedundantScope {
@@ -685,10 +689,19 @@ func NewRedundantScope() *RedundantScope {
 }
 
 func (s *RedundantScope) Handle(mkline MkLine) {
+	if mkline.firstLine == 1 {
+		s.includePath.push(mkline.Location.Filename)
+	} else {
+		s.includePath.popUntil(mkline.Location.Filename)
+	}
+
 	switch {
 	case mkline.IsVarassign():
 		varname := mkline.Varname()
 		if s.dirLevel != 0 {
+			// Since the variable is defined or assigned conditionally,
+			// it becomes too complicated for pkglint to check all possible
+			// code paths. Therefore ignore the variable from now on.
 			s.vars[varname] = nil
 			break
 		}
@@ -708,7 +721,7 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 				if op == opAssignAppend {
 					value = " " + value
 				}
-				s.vars[varname] = &redundantScopeVarinfo{mkline, value}
+				s.vars[varname] = &redundantScopeVarinfo{mkline, s.includePath.copy(), value}
 			}
 
 		} else if existing != nil {
@@ -718,12 +731,24 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 
 			switch op {
 			case opAssign:
-				s.OnOverwrite(existing.mkline, mkline)
+				if s.includePath.includes(existing.includePath) {
+					// This is the usual pattern of including a file and
+					// then overwriting some of them. Although technically
+					// this overwrites the previous definition, it is not
+					// worth a warning since this is used a lot and
+					// intentionally.
+				} else {
+					s.OnOverwrite(existing.mkline, mkline)
+				}
 				existing.value = value
 			case opAssignAppend:
 				existing.value += " " + value
 			case opAssignDefault:
-				s.OnIgnore(existing.mkline, mkline)
+				if existing.includePath.includes(s.includePath) {
+					s.OnIgnore(mkline, existing.mkline)
+				} else {
+					s.OnIgnore(existing.mkline, mkline)
+				}
 			case opAssignShell, opAssignEval:
 				s.vars[varname] = nil // Won't be checked further.
 			}
@@ -737,6 +762,34 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 			s.dirLevel--
 		}
 	}
+}
+
+type includePath struct {
+	files []string
+}
+
+func (p *includePath) push(filename string) {
+	p.files = append(p.files, filename)
+}
+
+func (p *includePath) popUntil(filename string) {
+	for p.files[len(p.files)-1] != filename {
+		p.files = p.files[:len(p.files)-1]
+	}
+}
+
+func (p *includePath) includes(other includePath) bool {
+	for i, filename := range p.files {
+		if i < len(other.files) && other.files[i] == filename {
+			continue
+		}
+		return false
+	}
+	return len(p.files) < len(other.files)
+}
+
+func (p *includePath) copy() includePath {
+	return includePath{append([]string(nil), p.files...)}
 }
 
 // IsPrefs returns whether the given file, when included, loads the user

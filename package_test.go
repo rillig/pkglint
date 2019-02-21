@@ -528,9 +528,9 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	// but may still produce unexpected warnings, such as redundant definitions.
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:3: "+
-			"Definition of PKGNAME is redundant because of Makefile:3.",
+			"Definition of PKGNAME is redundant because of ../../category/package/Makefile:3.",
 		"NOTE: ~/category/package/Makefile:4: "+
-			"Definition of DISTNAME is redundant because of Makefile:4.")
+			"Definition of DISTNAME is redundant because of ../../category/package/Makefile:4.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
@@ -642,11 +642,8 @@ func (s *Suite) Test_Package_readMakefile__include_other_after_exists(c *check.C
 func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
 	t.SetUpMasterSite("MASTER_SITE_R_CRAN", "http://cran.r-project.org/src/")
-	t.CreateFileLines("mk/bsd.pkg.mk")
-	t.CreateFileLines("licenses/gnu-gpl-v2",
-		"The licenses for most software are designed to take away ...")
 	t.CreateFileLines("math/R/Makefile.extension",
 		MkRcsID,
 		"",
@@ -665,18 +662,20 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 		"",
 		".include \"../../math/R/Makefile.extension\"",
 		".include \"../../mk/bsd.pkg.mk\"")
+	G.Pkgsrc.LoadInfrastructure()
 
 	// See Package.checkfilePackageMakefile
-	// See Scope.uncond
 	G.checkdirPackage(t.File("math/R-date"))
 
-	// FIXME: The definition in Makefile:6 is redundant because the same definition
-	//  occurs later in Makefile.extension:4. It would be wrong though to mark the
-	//  definition in Makefile.extension as redundant because that definition is
-	//  probably used by other packages as well.
+	// The definition in Makefile:6 is redundant because the same definition
+	// occurs later in Makefile.extension:4. Usually the later definition gets
+	// the note. In this case though, it would be wrong to mark the
+	// definition in Makefile.extension as redundant because that definition is
+	// probably used by other packages as well. Therefore in this case the roles
+	// of the two lines are swapped; see RedundantScope.Handle, the ".includes" line.
 	t.CheckOutputLines(
-		"NOTE: ~/math/R/Makefile.extension:4: " +
-			"Definition of MASTER_SITES is redundant because of ../R-date/Makefile:6.")
+		"NOTE: ~/math/R-date/Makefile:6: " +
+			"Definition of MASTER_SITES is redundant because of ../../math/R/Makefile.extension:4.")
 }
 
 func (s *Suite) Test_Package_checkUpdate(c *check.C) {

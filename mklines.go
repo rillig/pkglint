@@ -405,9 +405,6 @@ func (mklines *MkLinesImpl) CheckRedundantAssignments() {
 	scope := NewRedundantScope()
 
 	isRelevant := func(old, new MkLine) bool {
-		if old.Basename != "Makefile" && new.Basename == "Makefile" {
-			return false
-		}
 		if new.Op() == opAssignEval {
 			return false
 		}

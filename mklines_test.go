@@ -710,24 +710,22 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.
 		"OVERRIDE=\tprevious value",
 		"REDUNDANT=\tredundant")
 	including := t.NewMkLines("including.mk",
+		".include \"included.mk\"",
 		"OVERRIDE=\toverridden value",
 		"REDUNDANT=\tredundant")
 
 	var allLines []Line
+	allLines = append(allLines, including.lines.Lines[:1]...)
 	allLines = append(allLines, included.lines.Lines...)
-	allLines = append(allLines, including.lines.Lines...)
+	allLines = append(allLines, including.lines.Lines[1:]...)
 	mklines := NewMkLines(NewLines(included.lines.FileName, allLines))
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
 	mklines.CheckRedundantAssignments()
 
-	// No warning for VAR=... in Makefile since it makes sense to have common files
-	// with default values for variables, overriding some of them in each package.
 	t.CheckOutputLines(
-		// FIXME: The below warning is wrong because overwriting in a different file is ok.
-		"WARN: included.mk:1: Variable OVERRIDE is overwritten in including.mk:1.",
-		"NOTE: including.mk:2: Definition of REDUNDANT is redundant because of included.mk:2.")
+		"NOTE: including.mk:3: Definition of REDUNDANT is redundant because of included.mk:2.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *check.C) {
@@ -736,13 +734,15 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *
 		"VAR=\tvalue ${OTHER}",
 		"VAR?=\tvalue ${OTHER}",
 		"VAR=\tnew value")
-	makefile := t.NewMkLines("Makefile",
+	including := t.NewMkLines("Makefile",
+		".include \"module.mk\"",
 		"VAR=\tthe package may overwrite variables from other files")
 
 	var allLines []Line
+	allLines = append(allLines, including.lines.Lines[:1]...)
 	allLines = append(allLines, included.lines.Lines...)
-	allLines = append(allLines, makefile.lines.Lines...)
-	mklines := NewMkLines(NewLines(included.lines.FileName, allLines))
+	allLines = append(allLines, including.lines.Lines[1:]...)
+	mklines := NewMkLines(NewLines(including.lines.FileName, allLines))
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
