@@ -1025,26 +1025,18 @@ func (s *Suite) Test_Package__redundant_variable_in_unrelated_files(c *check.C) 
 
 	t.SetUpPackage("databases/py-trytond-ldap-authentication",
 		".include \"../../devel/py-trytond/Makefile.common\"",
-		".include \"../../lang/python/application.mk\"",
 		".include \"../../lang/python/egg.mk\"")
 	t.CreateFileLines("devel/py-trytond/Makefile.common",
 		MkRcsID,
 		"PY_PATCHPLIST=\tyes")
-	t.CreateFileLines("lang/python/application.mk",
-		MkRcsID,
-		".include \"pyversion.mk\"")
-	t.CreateFileLines("lang/python/pyversion.mk",
-		MkRcsID)
 	t.CreateFileLines("lang/python/egg.mk",
 		MkRcsID,
-		".include \"pyversion.mk\"",
 		"PY_PATCHPLIST=\tyes")
 	G.Pkgsrc.LoadInfrastructure()
 
 	G.Check(t.File("databases/py-trytond-ldap-authentication"))
 
-	// FIXME: egg.mk and Makefile.common are unrelated, therefore the note must not appear.
-	t.CheckOutputLines(
-		"NOTE: ~/lang/python/egg.mk:3: " +
-			"Definition of PY_PATCHPLIST is redundant because of ../../devel/py-trytond/Makefile.common:2.")
+	// Since egg.mk and Makefile.common are unrelated, the definition of
+	// PY_PATCHPLIST is not redundant in these files.
+	t.CheckOutputEmpty()
 }

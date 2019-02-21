@@ -747,7 +747,7 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 			case opAssignDefault:
 				if existing.includePath.includes(s.includePath) {
 					s.OnRedundant(mkline, existing.mkline)
-				} else {
+				} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
 					s.OnRedundant(existing.mkline, mkline)
 				}
 			case opAssignShell, opAssignEval:
@@ -787,6 +787,18 @@ func (p *includePath) includes(other includePath) bool {
 		return false
 	}
 	return len(p.files) < len(other.files)
+}
+
+func (p *includePath) equals(other includePath) bool {
+	if len(p.files) != len(other.files) {
+		return false
+	}
+	for i, filename := range p.files {
+		if other.files[i] != filename {
+			return false
+		}
+	}
+	return true
 }
 
 func (p *includePath) copy() includePath {
