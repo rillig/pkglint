@@ -374,7 +374,7 @@ func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 	t := s.Init(c)
 
 	mkline1 := t.NewMkLine("fname.mk", 3, "VAR=\tvalue")
-	mkline2 := t.NewMkLine("fname.mk", 3, ".if ${VAR::=value}")
+	mkline2 := t.NewMkLine("fname.mk", 3, ".if ${SNEAKY::=value}")
 
 	scope := NewScope()
 	scope.Define("VAR", mkline1)
