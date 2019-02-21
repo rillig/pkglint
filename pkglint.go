@@ -512,11 +512,21 @@ func resolveVariableRefs(text string) (resolved string) {
 			visited[varname] = true
 			if G.Pkg != nil {
 				if value, ok := G.Pkg.vars.Value(varname); ok {
+					lastValue, _ := G.Pkg.vars.Value(varname)
+					if value != lastValue {
+						dummyLine.Notef("Pkg.FirstValue for %q is %q, LastValue is %q.",
+							varname, value, lastValue)
+					}
 					return value
 				}
 			}
 			if G.Mk != nil {
 				if value, ok := G.Mk.vars.Value(varname); ok {
+					lastValue, _ := G.Mk.vars.Value(varname)
+					if value != lastValue {
+						dummyLine.Notef("Mk.FirstValue for %q is %q, LastValue is %q.",
+							varname, value, lastValue)
+					}
 					return value
 				}
 			}
