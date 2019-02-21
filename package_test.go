@@ -527,10 +527,10 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	// A file including itself does not lead to an endless loop while parsing
 	// but may still produce unexpected warnings, such as redundant definitions.
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:3: Definition of PKGNAME is redundant "+
-			"because of ../../category/package/Makefile:3.",
-		"NOTE: ~/category/package/Makefile:4: Definition of DISTNAME is redundant "+
-			"because of ../../category/package/Makefile:4.")
+		"NOTE: ~/category/package/Makefile:3: "+
+			"Definition of PKGNAME is redundant because of Makefile:3.",
+		"NOTE: ~/category/package/Makefile:4: "+
+			"Definition of DISTNAME is redundant because of Makefile:4.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
@@ -670,8 +670,13 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	// See Scope.uncond
 	G.checkdirPackage(t.File("math/R-date"))
 
+	// FIXME: The definition in Makefile:6 is redundant because the same definition
+	//  occurs later in Makefile.extension:4. It would be wrong though to mark the
+	//  definition in Makefile.extension as redundant because that definition is
+	//  probably used by other packages as well.
 	t.CheckOutputLines(
-		"NOTE: ~/math/R-date/Makefile:6: Definition of MASTER_SITES is redundant because of ../../math/R/Makefile.extension:4.")
+		"NOTE: ~/math/R/Makefile.extension:4: " +
+			"Definition of MASTER_SITES is redundant because of ../R-date/Makefile:6.")
 }
 
 func (s *Suite) Test_Package_checkUpdate(c *check.C) {

@@ -727,8 +727,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.
 	t.CheckOutputLines(
 		// FIXME: The below warning is wrong because overwriting in a different file is ok.
 		"WARN: included.mk:1: Variable OVERRIDE is overwritten in including.mk:1.",
-		// FIXME: It's the other way round: including.mk:2 is redundant because of included.mk:2.
-		"NOTE: included.mk:2: Definition of REDUNDANT is redundant because of including.mk:2.")
+		"NOTE: including.mk:2: Definition of REDUNDANT is redundant because of included.mk:2.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *check.C) {
@@ -752,7 +751,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *
 	// No warning for VAR=... in Makefile since it makes sense to have common files
 	// with default values for variables, overriding some of them in each package.
 	t.CheckOutputLines(
-		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.",
+		"NOTE: module.mk:2: Definition of VAR is redundant because of line 1.",
 		"WARN: module.mk:1: Variable VAR is overwritten in line 3.")
 }
 
@@ -789,7 +788,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_value(c *
 	mklines.CheckRedundantAssignments()
 
 	t.CheckOutputLines(
-		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.")
+		"NOTE: module.mk:2: Definition of VAR is redundant because of line 1.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditional_overwrite(c *check.C) {
@@ -832,7 +831,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_variable_
 
 	t.CheckOutputLines(
 		"WARN: module.mk:1: Variable OTHER is overwritten in line 3.",
-		"NOTE: module.mk:2: Definition of VAR is redundant because of line 4.")
+		"NOTE: module.mk:4: Definition of VAR is redundant because of line 2.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_different_value_used_between(c *check.C) {
@@ -857,8 +856,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_different_valu
 
 	t.CheckOutputLines(
 		"WARN: module.mk:1: Variable OTHER is overwritten in line 4.",
-		// FIXME: It's the other way round: line 6 is redundant because of line 2.
-		"NOTE: module.mk:2: Definition of VAR is redundant because of line 6.")
+		"NOTE: module.mk:6: Definition of VAR is redundant because of line 2.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call(c *check.C) {
