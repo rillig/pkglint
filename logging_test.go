@@ -748,14 +748,17 @@ func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 	G.Main("pkglint", "--source", "-Wall", t.File("category/package1"), t.File("category/package2"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package1/distinfo: patch \"../dependency/patches/patch-aa\" "+
-			"is not recorded. Run \""+confMake+" makepatchsum\".",
+		"ERROR: ~/category/package1/distinfo: "+
+			"Patch \"../dependency/patches/patch-aa\" is not recorded. "+
+			"Run \""+confMake+" makepatchsum\".",
 		"",
 		">\t--- old file",
-		"ERROR: ~/category/dependency/patches/patch-aa:3: Each patch must be documented.",
+		"ERROR: ~/category/dependency/patches/patch-aa:3: "+
+			"Each patch must be documented.",
 		"",
-		"ERROR: ~/category/package2/distinfo: patch \"../dependency/patches/patch-aa\" "+
-			"is not recorded. Run \""+confMake+" makepatchsum\".",
+		"ERROR: ~/category/package2/distinfo: "+
+			"Patch \"../dependency/patches/patch-aa\" is not recorded. "+
+			"Run \""+confMake+" makepatchsum\".",
 		"",
 		"3 errors and 0 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")

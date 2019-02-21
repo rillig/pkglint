@@ -488,7 +488,7 @@ func (s *Suite) Test_PlistChecker_checkPath__unwanted_entries(c *check.C) {
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: perllocal.pod files should not be in the PLIST.",
+		"WARN: ~/PLIST:2: The perllocal.pod file should not be in the PLIST.",
 		"WARN: ~/PLIST:3: CVS files should not be in the PLIST.",
 		"WARN: ~/PLIST:4: .orig files should not be in the PLIST.")
 }
@@ -577,7 +577,7 @@ func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/PLIST:2: pkgsrc does not support filenames ending in whitespace.")
+		"ERROR: ~/PLIST:2: Pkgsrc does not support filenames ending in whitespace.")
 }
 
 func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
@@ -597,7 +597,7 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/PLIST:2: Please remove this line. It is no longer necessary.",
-		"ERROR: ~/PLIST:3: ldconfig must be used with \"||/usr/bin/true\".",
+		"ERROR: ~/PLIST:3: The ldconfig command must be used with \"||/usr/bin/true\".",
 		"WARN: ~/PLIST:5: @dirrm is obsolete. Please remove this line.",
 		"WARN: ~/PLIST:6: Invalid number of arguments for imake-man, should be 3.",
 		"WARN: ~/PLIST:7: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",

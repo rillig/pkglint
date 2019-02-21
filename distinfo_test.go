@@ -195,8 +195,8 @@ func (s *Suite) Test_CheckLinesDistinfo__unrecorded_patches(c *check.C) {
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"ERROR: distinfo: patch \"patches/patch-aa\" is not recorded. Run \""+confMake+" makepatchsum\".",
-		"ERROR: distinfo: patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
+		"ERROR: distinfo: Patch \"patches/patch-aa\" is not recorded. Run \""+confMake+" makepatchsum\".",
+		"ERROR: distinfo: Patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
 // The distinfo file and the patches are usually placed in the package
@@ -226,7 +226,7 @@ func (s *Suite) Test_CheckLinesDistinfo__relative_path_in_distinfo(c *check.C) {
 			"(distinfo has ..., patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).",
 		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
 			"does not exist in directory \"../../devel/patches/patches\".",
-		"ERROR: ../../other/common/distinfo: patch \"../../devel/patches/patches/patch-only-in-patches\" "+
+		"ERROR: ../../other/common/distinfo: Patch \"../../devel/patches/patches/patch-only-in-patches\" "+
 			"is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
@@ -256,7 +256,7 @@ func (s *Suite) Test_CheckLinesDistinfo__distinfo_and_patches_in_separate_direct
 			"(distinfo has ..., patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).",
 		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
 			"does not exist in directory \"patches\".",
-		"ERROR: ../../other/common/distinfo: patch \"patches/patch-only-in-patches\" "+
+		"ERROR: ../../other/common/distinfo: Patch \"patches/patch-only-in-patches\" "+
 			"is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 

@@ -197,7 +197,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 		pline.Warnf(".orig files should not be in the PLIST.")
 	}
 	if hasSuffix(text, "/perllocal.pod") {
-		pline.Warnf("perllocal.pod files should not be in the PLIST.")
+		pline.Warnf("The perllocal.pod file should not be in the PLIST.")
 		G.Explain(
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts",
 			"since its contents depends on more than one package.")
@@ -396,7 +396,7 @@ func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
 
 func (pline *PlistLine) CheckTrailingWhitespace() {
 	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
-		pline.Errorf("pkgsrc does not support filenames ending in whitespace.")
+		pline.Errorf("Pkgsrc does not support filenames ending in whitespace.")
 		G.Explain(
 			"Each character in the PLIST is relevant, even trailing whitespace.")
 	}
@@ -418,7 +418,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 	case "exec", "unexec":
 		switch {
 		case contains(arg, "ldconfig") && !contains(arg, "/usr/bin/true"):
-			pline.Errorf("ldconfig must be used with \"||/usr/bin/true\".")
+			pline.Errorf("The ldconfig command must be used with \"||/usr/bin/true\".")
 		}
 
 	case "comment":
