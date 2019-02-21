@@ -10,3 +10,4 @@
 *yacc.go
 *yacc.log
 debug
+*.out
