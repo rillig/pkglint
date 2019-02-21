@@ -65,13 +65,9 @@ func (ck *PlistChecker) Check(plainLines Lines) {
 	}
 	CheckLinesTrailingEmptyLines(plainLines)
 
-	if G.Opts.WarnPlistSort {
-		sorter := NewPlistLineSorter(plines)
-		sorter.Sort()
-		if !sorter.autofixed {
-			SaveAutofixChanges(plainLines)
-		}
-	} else {
+	sorter := NewPlistLineSorter(plines)
+	sorter.Sort()
+	if !sorter.autofixed {
 		SaveAutofixChanges(plainLines)
 	}
 }
@@ -208,7 +204,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkSorted(pline *PlistLine) {
-	if text := pline.text; G.Opts.WarnPlistSort && hasAlnumPrefix(text) && !containsVarRef(text) {
+	if text := pline.text; hasAlnumPrefix(text) && !containsVarRef(text) {
 		if ck.lastFname != "" {
 			if ck.lastFname > text && !G.Logger.Opts.Autofix {
 				pline.Warnf("%q should be sorted before %q.", text, ck.lastFname)
@@ -376,9 +372,7 @@ func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
 		}
 
 	case hasPrefix(text, "share/doc/html/"):
-		if G.Opts.WarnPlistDepr {
-			pline.Warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
-		}
+		pline.Warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
 	case G.Pkg != nil && G.Pkg.EffectivePkgbase != "" && (hasPrefix(text, "share/doc/"+G.Pkg.EffectivePkgbase+"/") ||
 		hasPrefix(text, "share/examples/"+G.Pkg.EffectivePkgbase+"/")):

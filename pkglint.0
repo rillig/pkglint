@@ -79,12 +79,6 @@ DDEESSCCRRIIPPTTIIOONN
      [[nnoo--]]ppeerrmm           Warn if a variable is used or modified outside its
                          specified scope.
 
-     [[nnoo--]]pplliisstt--ddeepprr     Warn if deprecated pathnames are used in _P_L_I_S_T files.
-                         This warning is disabled by default.
-
-     [[nnoo--]]pplliisstt--ssoorrtt     Warn if items of a PLIST file are not sorted
-                         alphabetically.  This warning is disabled by default.
-
      [[nnoo--]]qquuoottiinngg        Warn for possibly invalid quoting of make variables
                          in shell programs and shell variables themselves.
 

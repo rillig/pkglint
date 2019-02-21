@@ -65,8 +65,6 @@ type CmdOpts struct {
 
 	WarnExtra,
 	WarnPerm,
-	WarnPlistDepr,
-	WarnPlistSort,
 	WarnQuoting,
 	WarnSpace,
 	WarnStyle bool
@@ -244,8 +242,6 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
 	warn.AddFlagVar("perm", &gopts.WarnPerm, false, "warn about unforeseen variable definition and use")
-	warn.AddFlagVar("plist-depr", &gopts.WarnPlistDepr, false, "warn about deprecated paths in PLISTs")
-	warn.AddFlagVar("plist-sort", &gopts.WarnPlistSort, false, "warn about unsorted entries in PLISTs")
 	warn.AddFlagVar("quoting", &gopts.WarnQuoting, false, "warn about quoting issues")
 	warn.AddFlagVar("space", &gopts.WarnSpace, false, "warn about inconsistent use of whitespace")
 	warn.AddFlagVar("style", &gopts.WarnStyle, false, "warn about stylistic issues")

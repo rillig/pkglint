@@ -109,7 +109,6 @@ func (s *Suite) Test_CheckLinesPlist__condition(c *check.C) {
 func (s *Suite) Test_CheckLinesPlist__sorting(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wplist-sort")
 	lines := t.NewLines("PLIST",
 		PlistRcsID,
 		"@comment Do not remove",
