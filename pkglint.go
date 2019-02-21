@@ -512,7 +512,7 @@ func resolveVariableRefs(text string) (resolved string) {
 			visited[varname] = true
 			if G.Pkg != nil {
 				if value, ok := G.Pkg.vars.Value(varname); ok {
-					lastValue, _ := G.Pkg.vars.Value(varname)
+					lastValue, _ := G.Pkg.vars.LastValue(varname)
 					if value != lastValue {
 						dummyLine.Notef("Pkg.FirstValue for %q is %q, LastValue is %q.",
 							varname, value, lastValue)
@@ -522,7 +522,7 @@ func resolveVariableRefs(text string) (resolved string) {
 			}
 			if G.Mk != nil {
 				if value, ok := G.Mk.vars.Value(varname); ok {
-					lastValue, _ := G.Mk.vars.Value(varname)
+					lastValue, _ := G.Mk.vars.LastValue(varname)
 					if value != lastValue {
 						dummyLine.Notef("Mk.FirstValue for %q is %q, LastValue is %q.",
 							varname, value, lastValue)
