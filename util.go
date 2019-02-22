@@ -454,6 +454,10 @@ func (o *Once) check(key uint64) bool {
 
 // Scope remembers which variables are defined and which are used
 // in a certain scope, such as a package or a file.
+//
+// TODO: Decide whether the scope should consider variable assignments
+//  from the pkgsrc infrastructure. For Package.checkGnuConfigureUseLanguages
+//  it would be better to ignore them completely.
 type Scope struct {
 	firstDef map[string]MkLine // TODO: Can this be removed?
 	lastDef  map[string]MkLine
