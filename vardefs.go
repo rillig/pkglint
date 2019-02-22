@@ -100,7 +100,10 @@ func (src *Pkgsrc) InitVartypes() {
 					}
 				}
 			}
-			for _, language := range [...]string{"ada", "c", "c99", "c++", "c++11", "fortran", "fortran77", "java", "objc", "obj-c++"} {
+			alwaysAvailable := [...]string{
+				"ada", "c", "c99", "c++", "c++11", "c++14",
+				"fortran", "fortran77", "java", "objc", "obj-c++"}
+			for _, language := range alwaysAvailable {
 				languages[language] = true
 			}
 
