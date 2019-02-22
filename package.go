@@ -437,26 +437,35 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 func (pkg *Package) checkGnuConfigureUseLanguages() {
 	vars := pkg.vars
 
-	if gnuLine := vars.FirstDefinition("GNU_CONFIGURE"); gnuLine != nil {
-
-		// FIXME: Instead of using the first definition here, a better approach
-		//  is probably to use all the definitions except those from mk/compiler.mk.
-		//  In real pkgsrc, the last definition is typically from mk/compiler.mk
-		//  and only contains c++.
-		if useLine := vars.FirstDefinition("USE_LANGUAGES"); useLine != nil {
-
-			if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
-				// Don't emit a warning since the comment probably contains a
-				// statement that C is really not needed.
-
-			} else if !matches(useLine.Value(), `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
-				gnuLine.Warnf(
-					"GNU_CONFIGURE almost always needs a C compiler, "+
-						"but \"c\" is not added to USE_LANGUAGES in %s.",
-					gnuLine.RefTo(useLine))
-			}
-		}
+	gnuLine := vars.FirstDefinition("GNU_CONFIGURE")
+	if gnuLine == nil {
+		return
 	}
+
+	// FIXME: Instead of using the first definition here, a better approach
+	//  is probably to use all the definitions except those from mk/compiler.mk.
+	//  In real pkgsrc, the last definition is typically from mk/compiler.mk
+	//  and only contains c++.
+	useLine := vars.FirstDefinition("USE_LANGUAGES")
+	if useLine == nil {
+		return
+	}
+
+	if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
+		// Don't emit a warning since the comment probably contains a
+		// statement that C is really not needed.
+		return
+	}
+
+	languages := useLine.Value()
+	if matches(languages, `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
+		return
+	}
+
+	gnuLine.Warnf(
+		"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in %s.",
+		gnuLine.RefTo(useLine))
 }
 
 // nbPart determines the smallest part of the package version number,
