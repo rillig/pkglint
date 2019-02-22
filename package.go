@@ -457,6 +457,9 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 		return
 	}
 
+	// Alternatively this could be vars.LastValue("USE_LANGUAGES"), but
+	// only if that value excludes all variable assignments done by
+	// mk/compiler.mk.
 	languages := useLine.Value()
 	if matches(languages, `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
 		return
