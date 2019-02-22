@@ -907,6 +907,22 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_m
 			"but \"c\" is not added to USE_LANGUAGES in line 20.")
 }
 
+func (s *Suite) Test_Package__USE_LANGUAGES_too_late(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../mk/compiler.mk\"",
+		"USE_LANGUAGES=\tc c99 fortran ada c++14")
+	t.CreateFileLines("mk/compiler.mk",
+		MkRcsID)
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	// FIXME: There must be a warning "USE_LANGUAGES must be added before including compiler.mk."
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 	t := s.Init(c)
 
