@@ -828,6 +828,85 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *
 		"NOTE: ~/category/package/Makefile:21: USE_IMAKE makes USE_X11 in line 20 redundant.")
 }
 
+func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"USE_LANGUAGES=\tfortran77",
+		"USE_LANGUAGES+=\tc++14",
+		"USE_LANGUAGES+=\tada",
+		"GNU_CONFIGURE=\tyes")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: "+
+			"@beta FirstDefinition differs from LastDefinition in line 22.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in line 20.")
+}
+
+func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__C_in_the_middle(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"USE_LANGUAGES=\tfortran77",
+		"USE_LANGUAGES+=\tc99",
+		"USE_LANGUAGES+=\tada",
+		"GNU_CONFIGURE=\tyes")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	// FIXME: c99 is added in line 21, that should count.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: "+
+			"@beta FirstDefinition differs from LastDefinition in line 22.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in line 20.")
+}
+
+func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"USE_LANGUAGES=\tfortran77",
+		"USE_LANGUAGES+=\tc++",
+		"USE_LANGUAGES+=\tada",
+		"GNU_CONFIGURE=\tyes",
+		"",
+		".include \"../../mk/compiler.mk\"")
+	t.CreateFileLines("mk/compiler.mk",
+		MkRcsID,
+		".include \"bsd.prefs.mk\"",
+		"",
+		"USE_LANGUAGES?=\tc",
+		"USE_LANGUAGES+=\tc",
+		"USE_LANGUAGES+=\tc++")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	// The package defines several languages it needs, but C is not one of them.
+	// When the package is loaded, the included files are read in recursively, even
+	// when they come from the pkgsrc infrastructure.
+	//
+	// As of February 2019, the USE_LANGUAGES definitions from mk/compiler.mk are
+	// loaded as if they were defined by the package, without taking the conditionals
+	// into account. Thereby "c" is added unconditionally to USE_LANGUAGES. Therefore
+	// it must not be accessed by vars.LastValue(), or the warning would never appear
+	// in practice.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: "+
+			"@beta FirstDefinition differs from LastDefinition in ../../mk/compiler.mk:6.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in line 20.")
+}
+
 func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 	t := s.Init(c)
 
