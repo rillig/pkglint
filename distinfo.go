@@ -51,15 +51,15 @@ type distinfoLinesChecker struct {
 }
 
 func (ck *distinfoLinesChecker) checkLines(lines Lines) {
-	lines.CheckRcsID(0, ``, "")
-	if 1 < len(lines.Lines) && lines.Lines[1].Text != "" {
-		lines.Lines[1].Notef("Empty line expected.")
+	llex := NewLinesLexer(lines)
+	if lines.CheckRcsID(0, ``, "") {
+		llex.Skip()
 	}
+	llex.SkipEmptyOrNote()
 
-	for i, line := range lines.Lines {
-		if i < 2 {
-			continue
-		}
+	for llex.Skip() {
+		line := llex.PreviousLine()
+
 		m, alg, filename, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (.*)(?: bytes)?$`)
 		if !m {
 			line.Errorf("Invalid line: %s", line.Text)

@@ -27,7 +27,9 @@ func (s *Suite) Test_CheckLinesDistinfo(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: distinfo:1: Expected \"$"+"NetBSD$\".",
-		"NOTE: distinfo:2: Empty line expected.",
+		"NOTE: distinfo:1: Empty line expected before this line.",
+		"ERROR: distinfo:1: Invalid line: should be the RCS ID",
+		"ERROR: distinfo:2: Invalid line: should be empty",
 		"ERROR: distinfo:5: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.",
 		"ERROR: distinfo:7: Expected SHA1 hash for patch-aa, got SHA1, Size.",
 		"ERROR: distinfo:8: Invalid line: Another invalid line",
