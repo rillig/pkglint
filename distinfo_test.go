@@ -372,3 +372,28 @@ func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:5: Patch patch-nonexistent does not exist.")
 }
+
+// When there is at least one correct hash for a distfile, running
+// pkglint --autofix adds the missing hashes, provided the distfile has been
+// downloaded to pkgsrc/distfiles, which is the standard distfiles location.
+func (s *Suite) Test_CheckLinesDistinfo__add_missing_hashes(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/distinfo",
+		RcsID,
+		"",
+		"SHA1 (package-1.0.txt) = asdf")
+	t.CreateFileLines("distfiles/package-1.0.txt",
+		"hello, world")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	// TODO: Since the file exists in the distfiles directory, pkglint
+	//  can check the hash right away. It can also add the missing hashes
+	//  since this file is not a patch file.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/distinfo:EOF: " +
+			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", got SHA1.")
+}
