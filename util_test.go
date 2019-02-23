@@ -735,3 +735,28 @@ func (s *Suite) Test_includePath_includes(c *check.C) {
 	t.Check(mc.includes(mo), equals, false)
 	t.Check(mo.includes(mc), equals, false)
 }
+
+func (s *Suite) Test_includePath_equals(c *check.C) {
+	t := s.Init(c)
+
+	path := func(locations ...string) includePath {
+		return includePath{locations}
+	}
+
+	var (
+		m   = path("Makefile")
+		mc  = path("Makefile", "Makefile.common")
+		mco = path("Makefile", "Makefile.common", "other.mk")
+		mo  = path("Makefile", "other.mk")
+	)
+
+	t.Check(m.equals(m), equals, true)
+
+	t.Check(m.equals(mc), equals, false)
+	t.Check(m.equals(mco), equals, false)
+	t.Check(mc.equals(mco), equals, false)
+
+	t.Check(mc.equals(m), equals, false)
+	t.Check(mc.equals(mo), equals, false)
+	t.Check(mo.equals(mc), equals, false)
+}
