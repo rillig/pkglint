@@ -14,8 +14,8 @@ type Var struct {
 	//  1 = constant
 	//  2 = constant and read; further writes will make it non-constant
 	//  3 = not constant anymore
-	literalValueState uint8
-	literalValue      string
+	constantState uint8
+	constantValue string
 
 	value      string
 	valueInfra string
@@ -57,7 +57,7 @@ func (v *Var) ConditionalVars() []string {
 //  VAR+=${dir}
 //  .endfor
 
-// Literal returns whether the variable's value is a constant,
+// Constant returns whether the variable's value is a constant,
 // without being dependent on any other variable.
 //
 // Multiple assignments (such as VAR=1, VAR+=2, VAR+=3) are considered to
@@ -70,15 +70,15 @@ func (v *Var) ConditionalVars() []string {
 // TODO: Simple .for loops that append to the variable are ok as well.
 //  (This needs to be worded more precisely since that part potentially
 //  adds a lot of complexity to the whole data structure.)
-func (v *Var) Literal() bool {
-	return v.literalValueState == 1 || v.literalValueState == 2
+func (v *Var) Constant() bool {
+	return v.constantState == 1 || v.constantState == 2
 }
 
-// LiteralValue returns the value of the literal.
-// It is only allowed when Literal() returns true.
-func (v *Var) LiteralValue() string {
-	G.Assertf(v.Literal(), "Variable must have a literal value.")
-	return v.literalValue
+// ConstantValue returns the constant value of the variable.
+// It is only allowed when Constant() returns true.
+func (v *Var) ConstantValue() string {
+	G.Assertf(v.Constant(), "Variable must be constant.")
+	return v.constantValue
 }
 
 // Value returns the (approximated) value of the variable, taking into account
@@ -88,7 +88,7 @@ func (v *Var) LiteralValue() string {
 // value is not reliable. It may be the value from either branch, or even the
 // combined value of both branches.
 //
-// See Literal and LiteralValue for more reliable information.
+// See Constant and ConstantValue for more reliable information.
 func (v *Var) Value() string {
 	return v.value
 }
@@ -101,7 +101,7 @@ func (v *Var) Value() string {
 // value is not reliable. It may be the value from either branch, or even the
 // combined value of both branches.
 //
-// See Literal and LiteralValue for more reliable information, but these ignore
+// See Constant and ConstantValue for more reliable information, but these ignore
 // assignments from the infrastructure.
 func (v *Var) ValueInfra() string {
 	return v.valueInfra
@@ -123,7 +123,7 @@ func (v *Var) WriteLocations() []MkLine {
 
 func (v *Var) Read(mkline MkLine) {
 	v.readLocations = append(v.readLocations, mkline)
-	v.literalValueState = [...]uint8{3, 2, 2, 3}[v.literalValueState]
+	v.constantState = [...]uint8{3, 2, 2, 3}[v.constantState]
 }
 
 func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
@@ -138,7 +138,7 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 	if !v.isInfra(mkline) {
 		v.update(mkline, &v.value)
 	}
-	v.updateLiteralValue(mkline)
+	v.updateConstantValue(mkline)
 }
 
 func (v *Var) isInfra(mkline MkLine) bool {
@@ -172,39 +172,41 @@ func (v *Var) update(mkline MkLine, update *string) {
 	}
 }
 
-func (v *Var) updateLiteralValue(mkline MkLine) {
-	if v.literalValueState == 3 {
+func (v *Var) updateConstantValue(mkline MkLine) {
+	if v.constantState == 3 {
 		return
 	}
 
-	// For now, just mark the variable as being non-literal if it depends
-	// on other variables. Later this can be made more sophisticated, but
-	// then the current value needs to be resolved, and for that this method
-	// would need to be passed the proper scope for resolving variable references.
-	// Plus, the documentation of Literal would need to be adjusted.
+	// For now, just mark the variable as being non-constant if it depends
+	// on other variables. Later this can be made more sophisticated:
+	// * For the := operator, the current value needs to be resolved.
+	//   This in turn requires the proper scope for resolving variable references.
+	// * For the other operators, the referenced variables must be still
+	//   be constant at the end of loading the complete package.
+	// * Fhe documentation of Constant would need to be adjusted.
 	value := mkline.Value()
 	if v.Conditional() || value != mkline.WithoutMakeVariables(value) {
-		v.literalValueState = 3
-		v.literalValue = ""
+		v.constantState = 3
+		v.constantValue = ""
 		return
 	}
 
 	switch mkline.Op() {
 	case opAssign, opAssignEval:
-		v.literalValue = value
+		v.constantValue = value
 
 	case opAssignDefault:
-		if v.literalValueState == 0 {
-			v.literalValue = value
+		if v.constantState == 0 {
+			v.constantValue = value
 		}
 
 	case opAssignAppend:
-		v.literalValue += " " + value
+		v.constantValue += " " + value
 
 	case opAssignShell:
-		v.literalValueState = 2
-		v.literalValue = ""
+		v.constantState = 2
+		v.constantValue = ""
 	}
 
-	v.literalValueState = [...]uint8{1, 1, 3, 3}[v.literalValueState]
+	v.constantState = [...]uint8{1, 1, 3, 3}[v.constantState]
 }
