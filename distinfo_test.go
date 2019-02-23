@@ -30,9 +30,9 @@ func (s *Suite) Test_CheckLinesDistinfo(c *check.C) {
 		"NOTE: distinfo:1: Empty line expected before this line.",
 		"ERROR: distinfo:1: Invalid line: should be the RCS ID",
 		"ERROR: distinfo:2: Invalid line: should be empty",
-		"ERROR: distinfo:5: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.",
-		"ERROR: distinfo:7: Expected SHA1 hash for patch-aa, got SHA1, Size.",
 		"ERROR: distinfo:8: Invalid line: Another invalid line",
+		"ERROR: distinfo:3: Expected SHA1, RMD160, SHA512, Size checksums for \"distfile.tar.gz\", got MD5, SHA1.",
+		"ERROR: distinfo:5: Expected SHA1 hash for patch-aa, got SHA1, Size.",
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
@@ -53,7 +53,7 @@ func (s *Suite) Test_CheckLinesDistinfo__nonexistent_distfile_called_patch(c *ch
 	// a patch, it is a normal distfile because it has other hash algorithms
 	// than exactly SHA1.
 	t.CheckOutputLines(
-		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums " +
+		"ERROR: distinfo:3: Expected SHA1, RMD160, SHA512, Size checksums " +
 			"for \"patch-5.3.tar.gz\", got MD5, SHA1.")
 }
 
@@ -70,7 +70,7 @@ func (s *Suite) Test_CheckLinesDistinfo__wrong_distfile_algorithms(c *check.C) {
 	CheckLinesDistinfo(lines)
 
 	t.CheckOutputLines(
-		"ERROR: distinfo:EOF: Expected SHA1, RMD160, SHA512, Size checksums " +
+		"ERROR: distinfo:3: Expected SHA1, RMD160, SHA512, Size checksums " +
 			"for \"distfile.tar.gz\", got MD5, SHA1.")
 }
 
@@ -89,10 +89,10 @@ func (s *Suite) Test_CheckLinesDistinfo__wrong_patch_algorithms(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
+		"ERROR: distinfo:3: Expected SHA1 hash for patch-aa, got MD5, SHA1.",
 		"ERROR: distinfo:4: SHA1 hash of patches/patch-aa differs "+
 			"(distinfo has 1234567890123456789012345678901234567890, "+
-			"patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).",
-		"ERROR: distinfo:EOF: Expected SHA1 hash for patch-aa, got MD5, SHA1.")
+			"patch file has ebbf34b0641bcb508f17d5a27f2bf2a536d810ac).")
 }
 
 // When checking the complete pkgsrc tree, pkglint has all information it needs
@@ -137,20 +137,21 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 	G.Main("pkglint", "-r", "-Wall", "-Call", t.File("."))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package1/distinfo:4: "+
+		"ERROR: ~/category/package1/distinfo:3: "+
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
-		"ERROR: ~/category/package1/distinfo:EOF: "+
+		"ERROR: ~/category/package1/distinfo:4: "+
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
-		"ERROR: ~/category/package2/distinfo:3: The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, "+
+		"ERROR: ~/category/package2/distinfo:3: "+
+			"Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
+		"ERROR: ~/category/package2/distinfo:3: "+
+			"The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, "+
 			"which conflicts with 1234567811111111 in ../package1/distinfo:3.",
 		"ERROR: ~/category/package2/distinfo:4: "+
-			"Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
-		"ERROR: ~/category/package2/distinfo:5: "+
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package2/distinfo:5: "+
-			"The SHA512 hash for encoding-error.tar.gz contains a non-hex character.",
-		"ERROR: ~/category/package2/distinfo:EOF: "+
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"encoding-error.tar.gz\", got SHA512.",
+		"ERROR: ~/category/package2/distinfo:5: "+
+			"The SHA512 hash for encoding-error.tar.gz contains a non-hex character.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
 		"7 errors and 1 warning found.")
 
@@ -396,6 +397,6 @@ func (s *Suite) Test_CheckLinesDistinfo__add_missing_hashes(c *check.C) {
 	//  can check the hash right away. It can also add the missing hashes
 	//  since this file is not a patch file.
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/distinfo:EOF: " +
+		"ERROR: ~/category/package/distinfo:3: " +
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", got SHA1.")
 }
