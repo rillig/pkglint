@@ -5,10 +5,15 @@ package pkglint
 // It keeps track of all places where the variable is accessed or modified
 // and provides information for further static analysis, such as:
 //
-// Whether the variable value is constant, and if so, what the constant value is.
+// * Whether the variable value is constant, and if so,
+// what the constant value is (Constant, ConstantValue).
+//
+// * What its (approximated) value is, either including values from the pkgsrc
+// infrastructure (ValueInfra) or excluding them (Value).
+//
+// * On which other variables this variable depends (Conditional, ConditionalVars).
 type Var struct {
 	Name string
-	Type *Vartype
 
 	//  0 = neither written nor read
 	//  1 = constant
@@ -26,7 +31,7 @@ type Var struct {
 }
 
 func NewVar(name string) *Var {
-	return &Var{name, nil, 0, "", "", "", nil, nil, NewStringSet()}
+	return &Var{name, 0, "", "", "", nil, nil, NewStringSet()}
 }
 
 // Conditional returns whether the variable value depends on other variables.
