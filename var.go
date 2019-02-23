@@ -3,16 +3,17 @@ package pkglint
 // Var describes a variable in a Makefile snippet.
 //
 // It keeps track of all places where the variable is accessed or modified (see
-// ReadLocations, WriteLocations)
-// and provides information for further static analysis, such as:
+// ReadLocations, WriteLocations) and provides information for further static
+// analysis, such as:
 //
-// * Whether the variable value is constant, and if so,
-// what the constant value is (see Constant, ConstantValue).
+// * Whether the variable value is constant, and if so, what the constant value
+// is (see Constant, ConstantValue).
 //
 // * What its (approximated) value is, either including values from the pkgsrc
 // infrastructure (see ValueInfra) or excluding them (Value).
 //
-// * On which other variables this variable depends (Conditional, ConditionalVars).
+// * On which other variables this variable depends (see Conditional,
+// ConditionalVars).
 type Var struct {
 	Name string
 
@@ -98,9 +99,9 @@ func (v *Var) ConstantValue() string {
 // Value returns the (approximated) value of the variable, taking into account
 // all variable assignments that happen outside the pkgsrc infrastructure.
 //
-// For variables that are conditionally assigned (as in .if/.else), the returned
-// value is not reliable. It may be the value from either branch, or even the
-// combined value of both branches.
+// For variables that are conditionally assigned (as in .if/.else), the
+// returned value is not reliable. It may be the value from either branch, or
+// even the combined value of both branches.
 //
 // See Constant and ConstantValue for more reliable information.
 func (v *Var) Value() string {
@@ -111,12 +112,12 @@ func (v *Var) Value() string {
 // account all variable assignments from the package, the user and the pkgsrc
 // infrastructure.
 //
-// For variables that are conditionally assigned (as in .if/.else), the returned
-// value is not reliable. It may be the value from either branch, or even the
-// combined value of both branches.
+// For variables that are conditionally assigned (as in .if/.else), the
+// returned value is not reliable. It may be the value from either branch, or
+// even the combined value of both branches.
 //
-// See Constant and ConstantValue for more reliable information, but these ignore
-// assignments from the infrastructure.
+// See Constant and ConstantValue for more reliable information, but these
+// ignore assignments from the infrastructure.
 func (v *Var) ValueInfra() string {
 	return v.valueInfra
 }
@@ -192,9 +193,12 @@ func (v *Var) updateConstantValue(mkline MkLine) {
 	}
 
 	// For now, just mark the variable as being non-constant if it depends
-	// on other variables. Later this can be made more sophisticated:
+	// on other variables. Later this can be made more sophisticated, but
+	// needs a few precautions:
 	// * For the := operator, the current value needs to be resolved.
-	//   This in turn requires the proper scope for resolving variable references.
+	//   This in turn requires the proper scope for resolving variable
+	//   references. Furthermore, the variable must be constant at this
+	//   point, while later changes can be ignored.
 	// * For the other operators, the referenced variables must be still
 	//   be constant at the end of loading the complete package.
 	// * Fhe documentation of Constant would need to be adjusted.
