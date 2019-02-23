@@ -813,6 +813,25 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_inside_conditi
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_include(c *check.C) {
+	t := s.Init(c)
+	t.CreateFileLines("module.mk",
+		"VAR=\tgeneric",
+		".if ${OPSYS} == NetBSD",
+		".  include \"included.mk\"",
+		".endif")
+	t.CreateFileLines("included.mk",
+		"VAR=\tignored",
+		"VAR=\toverwritten")
+	mklines := t.LoadMkInclude("module.mk")
+
+	mklines.CheckRedundantAssignments()
+
+	// FIXME: expected a warning "WARN: module.mk:4: line 3 is ignored"
+	//  Since line 3 and line 4 are in the same basic block, line 3 is definitely ignored.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditional_default(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",
