@@ -60,6 +60,7 @@ func (ck *distinfoLinesChecker) parse() {
 		switch {
 		case !hasPrefix(prevFilename, "patch-"):
 			return no
+		// TODO: reverse the order of the following 2 conditions.
 		case G.Pkg == nil:
 			return unknown
 		case fileExists(G.Pkg.File(ck.patchdir + "/" + prevFilename)):
@@ -117,20 +118,35 @@ func (ck *distinfoLinesChecker) checkAlgorithms(info distinfoFileInfo) {
 	algorithms := info.algorithms()
 	line := info.line()
 
+	isPatch := info.isPatch
+
 	switch {
+	case algorithms == "SHA1" && isPatch != no:
+		return
 
-	case info.isPatch == yes:
-		if algorithms != "SHA1" {
-			line.Errorf("Expected SHA1 hash for %s, got %s.", filename, algorithms)
-		}
+	case algorithms == "SHA1, RMD160, SHA512, Size" && isPatch != yes:
+		return
+	}
 
-	case info.isPatch == unknown:
-		break
+	switch {
+	case isPatch == yes:
+		line.Errorf("Expected SHA1 hash for %s, got %s.", filename, algorithms)
 
-	case G.Pkg != nil && G.Pkg.IgnoreMissingPatches:
-		break
+	case isPatch == unknown:
+		line.Errorf("Wrong checksum algorithms %s for %s.", algorithms, filename)
+		line.Explain(
+			"Distfiles that are downloaded from external sources must have the",
+			"checksum algorithms SHA1, RMD160, SHA512, Size.",
+			"",
+			"Patch files from pkgsrc must have only the SHA1 hash.")
+
+	// At this point, the file is either a missing patch file or a distfile.
 
 	case hasPrefix(filename, "patch-") && algorithms == "SHA1":
+		if G.Pkg.IgnoreMissingPatches {
+			break
+		}
+
 		pathToPatchdir := relpath(path.Dir(line.Filename), G.Pkg.File(ck.patchdir))
 		line.Warnf("Patch file %q does not exist in directory %q.", filename, pathToPatchdir)
 		G.Explain(
@@ -141,7 +157,7 @@ func (ck *distinfoLinesChecker) checkAlgorithms(info distinfoFileInfo) {
 			"In rare cases, pkglint cannot determine the correct location of the patches directory.",
 			"In that case, see the pkglint man page for contact information.")
 
-	case algorithms != "SHA1, RMD160, SHA512, Size":
+	default:
 		line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", filename, algorithms)
 	}
 }
@@ -250,6 +266,9 @@ func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFileName, distinf
 }
 
 type distinfoFileInfo struct {
+	//  yes     = the patch file exists
+	//  unknown = distinfo file is checked without a pkgsrc package
+	//  no      = distfile or nonexistent patch file
 	isPatch YesNoUnknown
 	hashes  []distinfoHash
 }
