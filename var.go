@@ -201,7 +201,7 @@ func (v *Var) updateConstantValue(mkline MkLine) {
 	//   point, while later changes can be ignored.
 	// * For the other operators, the referenced variables must be still
 	//   be constant at the end of loading the complete package.
-	// * Fhe documentation of Constant would need to be adjusted.
+	// * The documentation of Constant would need to be adjusted.
 	value := mkline.Value()
 	if v.Conditional() || value != mkline.WithoutMakeVariables(value) {
 		v.constantState = 3
