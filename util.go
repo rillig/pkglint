@@ -1173,3 +1173,24 @@ func (si *StringInterner) Intern(str string) string {
 	si.strs[key] = key
 	return key
 }
+
+// StringSets stores unique strings in insertion order.
+type StringSet struct {
+	Elements []string
+	seen     map[string]struct{}
+}
+
+func NewStringSet() StringSet {
+	return StringSet{nil, make(map[string]struct{})}
+}
+
+func (s *StringSet) Add(element string) {
+	if _, found := s.seen[element]; !found {
+		s.seen[element] = struct{}{}
+		s.Elements = append(s.Elements, element)
+	}
+}
+
+func (s *StringSet) Size() int {
+	return len(s.Elements)
+}
