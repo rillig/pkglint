@@ -2,25 +2,26 @@ package pkglint
 
 // Var describes a variable in a Makefile snippet.
 //
-// It provides information about the possible values and all places where the
-// variable is accessed and modified.
+// It keeps track of all places where the variable is accessed or modified
+// and provides information for further static analysis, such as:
 //
-// TODO: Remove this type in June 2019 if it is still a stub.
+// Whether the variable value is constant, and if so, what the constant value is.
 type Var struct {
 	Name string
 	Type *Vartype
 
-	//  0 = not yet assigned
-	//  1 = literal
-	//  2 = not anymore
-	//  3 = not yet assigned, but already read
-	//  4 = literal and read
+	//  0 = neither written nor read
+	//  1 = constant
+	//  2 = constant and read; further writes will make it non-constant
+	//  3 = not constant anymore
+	//
 	// TODO: The exact definition of "read", "accessed", "referenced" is important here.
 	literalValueState uint8
 	literalValue      string
-	readLocations     []MkLine
-	writeLocations    []MkLine
-	conditionalVars   StringSet
+
+	readLocations   []MkLine
+	writeLocations  []MkLine
+	conditionalVars StringSet
 }
 
 func NewVar(name string) *Var { return &Var{name, nil, 0, "", nil, nil, NewStringSet()} }
@@ -70,7 +71,7 @@ func (v *Var) ConditionalVars() []string {
 //  (This needs to be worded more precisely since that part potentially
 //  adds a lot of complexity to the whole data structure.)
 func (v *Var) Literal() bool {
-	return v.literalValueState == 1 || v.literalValueState == 4
+	return v.literalValueState == 1 || v.literalValueState == 2
 }
 
 // LiteralValue returns the value of the literal.
@@ -124,7 +125,7 @@ func (v *Var) WriteLocations() []MkLine {
 
 func (v *Var) Read(mkline MkLine) {
 	v.readLocations = append(v.readLocations, mkline)
-	v.literalValueState = [...]uint8{3, 4, 2, 3, 4}[v.literalValueState]
+	v.literalValueState = [...]uint8{3, 2, 2, 3}[v.literalValueState]
 }
 
 func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
@@ -135,7 +136,7 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 		v.conditionalVars.Add(cond)
 	}
 
-	if v.literalValueState == 2 {
+	if v.literalValueState == 3 {
 		return
 	}
 
@@ -143,10 +144,10 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 	// on other variables. Later this can be made more sophisticated, but
 	// then the current value needs to be resolved, and for that this method
 	// would need to be passed the proper scope for resolving variable references.
-	// Plus, the documentation of Literal needs to be adjusted.
+	// Plus, the documentation of Literal would need to be adjusted.
 	value := mkline.Value()
 	if len(conditionVarnames) > 0 || value != mkline.WithoutMakeVariables(value) {
-		v.literalValueState = 2
+		v.literalValueState = 3
 		v.literalValue = ""
 		return
 	}
@@ -168,5 +169,5 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 		v.literalValue = ""
 	}
 
-	v.literalValueState = [...]uint8{1, 1, 2, 2, 2}[v.literalValueState]
+	v.literalValueState = [...]uint8{1, 1, 3, 3}[v.literalValueState]
 }
