@@ -2,14 +2,15 @@ package pkglint
 
 // Var describes a variable in a Makefile snippet.
 //
-// It keeps track of all places where the variable is accessed or modified
+// It keeps track of all places where the variable is accessed or modified (see
+// ReadLocations, WriteLocations)
 // and provides information for further static analysis, such as:
 //
 // * Whether the variable value is constant, and if so,
-// what the constant value is (Constant, ConstantValue).
+// what the constant value is (see Constant, ConstantValue).
 //
 // * What its (approximated) value is, either including values from the pkgsrc
-// infrastructure (ValueInfra) or excluding them (Value).
+// infrastructure (see ValueInfra) or excluding them (Value).
 //
 // * On which other variables this variable depends (Conditional, ConditionalVars).
 type Var struct {
@@ -28,10 +29,11 @@ type Var struct {
 	readLocations   []MkLine
 	writeLocations  []MkLine
 	conditionalVars StringSet
+	refs            StringSet
 }
 
 func NewVar(name string) *Var {
-	return &Var{name, 0, "", "", "", nil, nil, NewStringSet()}
+	return &Var{name, 0, "", "", "", nil, nil, NewStringSet(), NewStringSet()}
 }
 
 // Conditional returns whether the variable value depends on other variables.
@@ -47,8 +49,6 @@ func (v *Var) ConditionalVars() []string {
 	return v.conditionalVars.Elements
 }
 
-// TODO: Refs
-//
 // Refs returns all variables on which this variable depends. These are:
 //
 // Variables that are referenced in the value, such as in VAR=${OTHER}.
@@ -61,6 +61,15 @@ func (v *Var) ConditionalVars() []string {
 //  .for dir in ${DIRS}
 //  VAR+=${dir}
 //  .endfor
+func (v *Var) Refs() []string {
+	return v.refs.Elements
+}
+
+// AddRef marks this variable as being dependent on the given variable name.
+// This can be used for the .for loops mentioned in Refs.
+func (v *Var) AddRef(varname string) {
+	v.refs.Add(varname)
+}
 
 // Constant returns whether the variable's value is a constant,
 // without being dependent on any other variable.
@@ -135,9 +144,9 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 	G.Assertf(mkline.Varname() == v.Name, "wrong variable name")
 
 	v.writeLocations = append(v.writeLocations, mkline)
-	for _, cond := range conditionVarnames {
-		v.conditionalVars.Add(cond)
-	}
+	v.conditionalVars.AddAll(conditionVarnames)
+	v.refs.AddAll(mkline.DetermineUsedVariables())
+	v.refs.AddAll(conditionVarnames)
 
 	v.update(mkline, &v.valueInfra)
 	if !v.isInfra(mkline) {

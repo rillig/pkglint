@@ -281,3 +281,17 @@ func (s *Suite) Test_Var_WriteLocations(c *check.C) {
 	// whether that's the best way or whether to make the lines unique.
 	t.Check(v.WriteLocations(), deepEquals, []MkLine{mkline123, mkline125, mkline125})
 }
+
+func (s *Suite) Test_Var_Refs(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VAR")
+
+	t.Check(v.Refs(), check.IsNil)
+
+	v.Write(t.NewMkLine("write.mk", 123, "VAR=${OTHER} ${${OPSYS} == NetBSD :? ${THEN} : ${ELSE}}"), "COND")
+
+	v.AddRef("FOR")
+
+	t.Check(v.Refs(), deepEquals, []string{"OTHER", "OPSYS", "THEN", "ELSE", "COND", "FOR"})
+}

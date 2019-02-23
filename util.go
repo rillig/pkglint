@@ -1191,6 +1191,12 @@ func (s *StringSet) Add(element string) {
 	}
 }
 
+func (s *StringSet) AddAll(elements []string) {
+	for _, element := range elements {
+		s.Add(element)
+	}
+}
+
 func (s *StringSet) Size() int {
 	return len(s.Elements)
 }
