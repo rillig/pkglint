@@ -429,7 +429,9 @@ func (mklines *MkLinesImpl) CheckRedundantAssignments() {
 		}
 	}
 
-	mklines.ForEach(scope.Handle)
+	mklines.ForEach(func(mkline MkLine) {
+		scope.Handle(mkline, mklines.indentation)
+	})
 }
 
 // CheckForUsedComment checks that this file (a Makefile.common) has the given

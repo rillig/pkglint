@@ -737,7 +737,6 @@ func naturalLess(str1, str2 string) bool {
 // and only affects the "nb13" extension.)
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
-	dirLevel    int // The number of enclosing directives (.if, .for).
 	includePath includePath
 	OnRedundant func(old, new MkLine)
 	OnOverwrite func(old, new MkLine)
@@ -751,14 +750,12 @@ func NewRedundantScope() *RedundantScope {
 	return &RedundantScope{vars: make(map[string]*redundantScopeVarinfo)}
 }
 
-func (s *RedundantScope) Handle(mkline MkLine) {
+func (s *RedundantScope) Handle(mkline MkLine, ind *Indentation) {
 	s.updateIncludePath(mkline)
 
 	switch {
 	case mkline.IsVarassign():
-		s.handleVarassign(mkline)
-	case mkline.IsDirective():
-		s.handleDirective(mkline)
+		s.handleVarassign(mkline, ind)
 	}
 }
 
@@ -770,62 +767,51 @@ func (s *RedundantScope) updateIncludePath(mkline MkLine) {
 	}
 }
 
-func (s *RedundantScope) handleVarassign(mkline MkLine) {
+func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	varname := mkline.Varname()
-	if s.dirLevel != 0 {
-		// Since the variable is defined or assigned conditionally,
-		// it becomes too complicated for pkglint to check all possible
-		// code paths. Therefore ignore the variable from now on.
-		s.vars[varname] = nil
+
+	existing := s.vars[varname]
+	if existing == nil {
+		vari := NewVar(varname)
+		vari.Write(mkline, ind.Varnames()...)
+		s.vars[varname] = &redundantScopeVarinfo{vari, s.includePath.copy()}
+		return
+	}
+
+	if existing.vari.Conditional() {
 		return
 	}
 
 	op := mkline.Op()
 	value := mkline.Value()
 
-	existing, found := s.vars[varname]
-	if !found {
-		vari := NewVar(varname)
-		vari.Write(mkline)
-		s.vars[varname] = &redundantScopeVarinfo{vari, s.includePath.copy()}
+	if op == opAssign && existing.vari.Value() == value {
+		op = /* effectively */ opAssignDefault
+	}
 
-	} else if existing != nil {
-		if op == opAssign && existing.vari.Value() == value {
-			op = /* effectively */ opAssignDefault
+	prevWrite := func() MkLine { return existing.vari.WriteLocations()[0] }
+
+	switch op {
+	case opAssign:
+		if s.includePath.includes(existing.includePath) {
+			// This is the usual pattern of including a file and
+			// then overwriting some of them. Although technically
+			// this overwrites the previous definition, it is not
+			// worth a warning since this is used a lot and
+			// intentionally.
+		} else if !ind.IsConditional() {
+			s.OnOverwrite(prevWrite(), mkline)
 		}
 
-		prevWrite := func() MkLine { return existing.vari.WriteLocations()[0] }
-
-		switch op {
-		case opAssign:
-			if s.includePath.includes(existing.includePath) {
-				// This is the usual pattern of including a file and
-				// then overwriting some of them. Although technically
-				// this overwrites the previous definition, it is not
-				// worth a warning since this is used a lot and
-				// intentionally.
-			} else {
-				s.OnOverwrite(prevWrite(), mkline)
-			}
-
-		case opAssignDefault:
-			if existing.includePath.includes(s.includePath) {
-				s.OnRedundant(mkline, prevWrite())
-			} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
-				s.OnRedundant(prevWrite(), mkline)
-			}
+	case opAssignDefault:
+		if existing.includePath.includes(s.includePath) {
+			s.OnRedundant(mkline, prevWrite())
+		} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
+			s.OnRedundant(prevWrite(), mkline)
 		}
-		existing.vari.Write(mkline)
 	}
-}
 
-func (s *RedundantScope) handleDirective(mkline MkLine) {
-	switch mkline.Directive() {
-	case "for", "if", "ifdef", "ifndef":
-		s.dirLevel++
-	case "endfor", "endif":
-		s.dirLevel--
-	}
+	existing.vari.Write(mkline, ind.Varnames()...)
 }
 
 type includePath struct {
