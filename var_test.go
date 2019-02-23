@@ -144,14 +144,61 @@ func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
 
 	v := NewVar("VARNAME")
 
+	t.Check(v.Conditional(), equals, false)
 	t.Check(v.ConditionalVars(), check.IsNil)
 
 	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), "OPSYS")
 
 	t.Check(v.Literal(), equals, false)
+	t.Check(v.Conditional(), equals, true)
 	t.Check(v.ConditionalVars(), deepEquals, []string{"OPSYS"})
 
 	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\tconditional"), "OPSYS")
 
+	t.Check(v.Conditional(), equals, true)
 	t.Check(v.ConditionalVars(), deepEquals, []string{"OPSYS"})
+}
+
+func (s *Suite) Test_Var_Value__initial_conditional_write(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), "OPSYS")
+
+	// Since there is no previous value, the simplest choice is to just
+	// take the first seen value, no matter if that value is conditional
+	// or not.
+	t.Check(v.Conditional(), equals, true)
+	t.Check(v.Literal(), equals, false)
+	t.Check(v.Value(), equals, "overwritten conditionally")
+}
+
+func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"))
+
+	t.Check(v.Value(), equals, "value")
+
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME+=\tappended"))
+
+	t.Check(v.Value(), equals, "value appended")
+
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), "OPSYS")
+
+	// When there is a previous value, it's probably best to keep
+	// that value since this way the following code results in the
+	// most generic value:
+	//  VAR=    generic
+	//  .if ${OPSYS} == NetBSD
+	//  VAR=    specific
+	//  .endif
+	// The value stays the same, still it is marked as conditional and therefore
+	// not constant anymore.
+	t.Check(v.Conditional(), equals, true)
+	t.Check(v.Literal(), equals, false)
+	t.Check(v.Value(), equals, "value appended")
 }

@@ -19,12 +19,14 @@ type Var struct {
 	literalValueState uint8
 	literalValue      string
 
+	value string
+
 	readLocations   []MkLine
 	writeLocations  []MkLine
 	conditionalVars StringSet
 }
 
-func NewVar(name string) *Var { return &Var{name, nil, 0, "", nil, nil, NewStringSet()} }
+func NewVar(name string) *Var { return &Var{name, nil, 0, "", "", nil, nil, NewStringSet()} }
 
 // Conditional returns whether the variable value depends on other variables.
 func (v *Var) Conditional() bool {
@@ -90,8 +92,7 @@ func (v *Var) LiteralValue() string {
 //
 // See Literal and LiteralValue for more reliable information.
 func (v *Var) Value() string {
-	G.Assertf(false, "Not implemented.")
-	return ""
+	return v.value
 }
 
 // ValueInfra returns the (approximated) value of the variable, taking into
@@ -136,6 +137,37 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 		v.conditionalVars.Add(cond)
 	}
 
+	v.updateValue(mkline)
+	v.updateLiteralValue(mkline)
+}
+
+func (v *Var) updateValue(mkline MkLine) {
+	firstWrite := len(v.writeLocations) == 1
+	if v.Conditional() && !firstWrite {
+		return
+	}
+
+	value := mkline.Value()
+	switch mkline.Op() {
+	case opAssign, opAssignEval:
+		v.value = value
+
+	case opAssignDefault:
+		if firstWrite {
+			v.value = value
+		}
+
+	case opAssignAppend:
+		v.value += " " + value
+
+	case opAssignShell:
+		// Ignore these for now.
+		// Later it might be useful to parse the shell commands to
+		// evaluate simple commands like "test && echo yes || echo no".
+	}
+}
+
+func (v *Var) updateLiteralValue(mkline MkLine) {
 	if v.literalValueState == 3 {
 		return
 	}
@@ -146,7 +178,7 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 	// would need to be passed the proper scope for resolving variable references.
 	// Plus, the documentation of Literal would need to be adjusted.
 	value := mkline.Value()
-	if len(conditionVarnames) > 0 || value != mkline.WithoutMakeVariables(value) {
+	if v.Conditional() || value != mkline.WithoutMakeVariables(value) {
 		v.literalValueState = 3
 		v.literalValue = ""
 		return
