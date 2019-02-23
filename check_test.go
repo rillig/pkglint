@@ -196,6 +196,32 @@ func (t *Tester) SetUpFileMkLines(relativeFileName string, lines ...string) MkLi
 	return LoadMk(filename, MustSucceed)
 }
 
+// LoadMkInclude loads the given Makefile fragment and all the files it includes,
+// merging all the lines into a single MkLines object.
+//
+// This is useful for testing code related to Package.readMakefile.
+func (t *Tester) LoadMkInclude(relativeFileName string) MkLines {
+	var lines []Line
+
+	var load func(filename string)
+	load = func(filename string) {
+		for _, mkline := range NewMkLines(Load(filename, MustSucceed)).mklines {
+			lines = append(lines, mkline.Line)
+
+			if mkline.IsInclude() {
+				included := path.Join(path.Dir(filename), mkline.IncludedFile())
+				load(included)
+			}
+		}
+	}
+
+	load(t.File(relativeFileName))
+
+	// This assumes that the test files do not contain parse errors.
+	// Otherwise the diagnostics would appear twice.
+	return NewMkLines(NewLines(t.File(relativeFileName), lines))
+}
+
 // SetUpPkgsrc sets up a minimal but complete pkgsrc installation in the
 // temporary folder, so that pkglint runs without any errors.
 // Individual files may be overwritten by calling other SetUp* methods.

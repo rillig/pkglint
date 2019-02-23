@@ -706,19 +706,15 @@ func (s *Suite) Test_MkLines__unknown_options(c *check.C) {
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.C) {
 	t := s.Init(c)
-	included := t.NewMkLines("included.mk",
+	t.CreateFileLines("included.mk",
 		"OVERRIDE=\tprevious value",
 		"REDUNDANT=\tredundant")
-	including := t.NewMkLines("including.mk",
+	t.CreateFileLines("including.mk",
 		".include \"included.mk\"",
 		"OVERRIDE=\toverridden value",
 		"REDUNDANT=\tredundant")
-
-	var allLines []Line
-	allLines = append(allLines, including.lines.Lines[:1]...)
-	allLines = append(allLines, included.lines.Lines...)
-	allLines = append(allLines, including.lines.Lines[1:]...)
-	mklines := NewMkLines(NewLines(included.lines.FileName, allLines))
+	t.Chdir(".")
+	mklines := t.LoadMkInclude("including.mk")
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
@@ -730,19 +726,16 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *check.C) {
 	t := s.Init(c)
-	included := t.NewMkLines("module.mk",
+	t.CreateFileLines("module.mk",
 		"VAR=\tvalue ${OTHER}",
 		"VAR?=\tvalue ${OTHER}",
 		"VAR=\tnew value")
-	including := t.NewMkLines("Makefile",
+	t.CreateFileLines("Makefile",
 		".include \"module.mk\"",
 		"VAR=\tthe package may overwrite variables from other files")
+	t.Chdir(".")
 
-	var allLines []Line
-	allLines = append(allLines, including.lines.Lines[:1]...)
-	allLines = append(allLines, included.lines.Lines...)
-	allLines = append(allLines, including.lines.Lines[1:]...)
-	mklines := NewMkLines(NewLines(including.lines.FileName, allLines))
+	mklines := t.LoadMkInclude("Makefile")
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
