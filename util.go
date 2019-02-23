@@ -752,68 +752,79 @@ func NewRedundantScope() *RedundantScope {
 }
 
 func (s *RedundantScope) Handle(mkline MkLine) {
+	s.updateIncludePath(mkline)
+
+	switch {
+	case mkline.IsVarassign():
+		s.handleVarassign(mkline)
+	case mkline.IsDirective():
+		s.handleDirective(mkline)
+	}
+}
+
+func (s *RedundantScope) updateIncludePath(mkline MkLine) {
 	if mkline.firstLine == 1 {
 		s.includePath.push(mkline.Location.Filename)
 	} else {
 		s.includePath.popUntil(mkline.Location.Filename)
 	}
+}
 
-	switch {
-	case mkline.IsVarassign():
-		varname := mkline.Varname()
-		if s.dirLevel != 0 {
-			// Since the variable is defined or assigned conditionally,
-			// it becomes too complicated for pkglint to check all possible
-			// code paths. Therefore ignore the variable from now on.
-			s.vars[varname] = nil
-			break
+func (s *RedundantScope) handleVarassign(mkline MkLine) {
+	varname := mkline.Varname()
+	if s.dirLevel != 0 {
+		// Since the variable is defined or assigned conditionally,
+		// it becomes too complicated for pkglint to check all possible
+		// code paths. Therefore ignore the variable from now on.
+		s.vars[varname] = nil
+		return
+	}
+
+	op := mkline.Op()
+	value := mkline.Value()
+
+	existing, found := s.vars[varname]
+	if !found {
+		vari := NewVar(varname)
+		vari.Write(mkline)
+		s.vars[varname] = &redundantScopeVarinfo{vari, s.includePath.copy()}
+
+	} else if existing != nil {
+		if op == opAssign && existing.vari.Value() == value {
+			op = /* effectively */ opAssignDefault
 		}
 
-		op := mkline.Op()
-		value := mkline.Value()
+		prevWrite := func() MkLine { return existing.vari.WriteLocations()[0] }
 
-		existing, found := s.vars[varname]
-		if !found {
-			vari := NewVar(varname)
-			vari.Write(mkline)
-			s.vars[varname] = &redundantScopeVarinfo{vari, s.includePath.copy()}
-
-		} else if existing != nil {
-			if op == opAssign && existing.vari.Value() == value {
-				op = /* effectively */ opAssignDefault
+		switch op {
+		case opAssign:
+			if s.includePath.includes(existing.includePath) {
+				// This is the usual pattern of including a file and
+				// then overwriting some of them. Although technically
+				// this overwrites the previous definition, it is not
+				// worth a warning since this is used a lot and
+				// intentionally.
+			} else {
+				s.OnOverwrite(prevWrite(), mkline)
 			}
 
-			prevWrite := func() MkLine { return existing.vari.WriteLocations()[0] }
-
-			switch op {
-			case opAssign:
-				if s.includePath.includes(existing.includePath) {
-					// This is the usual pattern of including a file and
-					// then overwriting some of them. Although technically
-					// this overwrites the previous definition, it is not
-					// worth a warning since this is used a lot and
-					// intentionally.
-				} else {
-					s.OnOverwrite(prevWrite(), mkline)
-				}
-
-			case opAssignDefault:
-				if existing.includePath.includes(s.includePath) {
-					s.OnRedundant(mkline, prevWrite())
-				} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
-					s.OnRedundant(prevWrite(), mkline)
-				}
+		case opAssignDefault:
+			if existing.includePath.includes(s.includePath) {
+				s.OnRedundant(mkline, prevWrite())
+			} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
+				s.OnRedundant(prevWrite(), mkline)
 			}
-			existing.vari.Write(mkline)
 		}
+		existing.vari.Write(mkline)
+	}
+}
 
-	case mkline.IsDirective():
-		switch mkline.Directive() {
-		case "for", "if", "ifdef", "ifndef":
-			s.dirLevel++
-		case "endfor", "endif":
-			s.dirLevel--
-		}
+func (s *RedundantScope) handleDirective(mkline MkLine) {
+	switch mkline.Directive() {
+	case "for", "if", "ifdef", "ifndef":
+		s.dirLevel++
+	case "endfor", "endif":
+		s.dirLevel--
 	}
 }
 
