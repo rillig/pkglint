@@ -743,9 +743,8 @@ type RedundantScope struct {
 	OnOverwrite func(old, new MkLine)
 }
 type redundantScopeVarinfo struct {
-	mkline      MkLine
+	vari        *Var
 	includePath includePath
-	value       string
 }
 
 func NewRedundantScope() *RedundantScope {
@@ -772,26 +771,19 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 
 		op := mkline.Op()
 		value := mkline.Value()
-		valueNovar := mkline.WithoutMakeVariables(value)
-		if op == opAssignEval && value == valueNovar {
-			op = /* effectively */ opAssign
-		}
 
 		existing, found := s.vars[varname]
 		if !found {
-			if op == opAssignShell || op == opAssignEval {
-				s.vars[varname] = nil // Won't be checked further.
-			} else {
-				if op == opAssignAppend {
-					value = " " + value
-				}
-				s.vars[varname] = &redundantScopeVarinfo{mkline, s.includePath.copy(), value}
-			}
+			vari := NewVar(varname)
+			vari.Write(mkline)
+			s.vars[varname] = &redundantScopeVarinfo{vari, s.includePath.copy()}
 
 		} else if existing != nil {
-			if op == opAssign && existing.value == value {
+			if op == opAssign && existing.vari.Value() == value {
 				op = /* effectively */ opAssignDefault
 			}
+
+			prevWrite := func() MkLine { return existing.vari.WriteLocations()[0] }
 
 			switch op {
 			case opAssign:
@@ -802,20 +794,17 @@ func (s *RedundantScope) Handle(mkline MkLine) {
 					// worth a warning since this is used a lot and
 					// intentionally.
 				} else {
-					s.OnOverwrite(existing.mkline, mkline)
+					s.OnOverwrite(prevWrite(), mkline)
 				}
-				existing.value = value
-			case opAssignAppend:
-				existing.value += " " + value
+
 			case opAssignDefault:
 				if existing.includePath.includes(s.includePath) {
-					s.OnRedundant(mkline, existing.mkline)
+					s.OnRedundant(mkline, prevWrite())
 				} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
-					s.OnRedundant(existing.mkline, mkline)
+					s.OnRedundant(prevWrite(), mkline)
 				}
-			case opAssignShell, opAssignEval:
-				s.vars[varname] = nil // Won't be checked further.
 			}
+			existing.vari.Write(mkline)
 		}
 
 	case mkline.IsDirective():
