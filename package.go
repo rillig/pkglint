@@ -408,8 +408,12 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 	}
 
 	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") && pkg.once.FirstTime("LICENSE") {
-		NewLineWhole(filename).Errorf("Each package must define its LICENSE.")
+		line := NewLineWhole(filename)
+		line.Errorf("Each package must define its LICENSE.")
 		// TODO: Explain why the LICENSE is necessary.
+		line.Explain(
+			"To take a good guess on the license of a package,",
+			sprintf("run %q.", bmake("guess-license")))
 	}
 
 	pkg.checkGnuConfigureUseLanguages()

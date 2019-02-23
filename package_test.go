@@ -212,7 +212,6 @@ func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 	t.CreateFileLines("mk/bsd.pkg.mk", "# dummy")
 	t.CreateFileLines("x11/Makefile", MkRcsID)
 	t.CreateFileLines("x11/9term/PLIST", PlistRcsID, "bin/9term")
-	t.CreateFileLines("x11/9term/distinfo", RcsID)
 	t.CreateFileLines("x11/9term/Makefile",
 		MkRcsID,
 		"",
@@ -221,6 +220,8 @@ func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 		"",
 		"COMMENT=\tTerminal",
 		"",
+		"NO_CHECKSUM=\tyes",
+		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	t.SetUpVartypes()
@@ -228,6 +229,7 @@ func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 	G.Check(t.File("x11/9term"))
 
 	// Since the error is grave enough, the warning about the correct position is suppressed.
+	// TODO: Knowing the correct position helps, though.
 	t.CheckOutputLines(
 		"ERROR: ~/x11/9term/Makefile: Each package must define its LICENSE.")
 }
