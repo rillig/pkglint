@@ -14,19 +14,20 @@ type Var struct {
 	//  1 = constant
 	//  2 = constant and read; further writes will make it non-constant
 	//  3 = not constant anymore
-	//
-	// TODO: The exact definition of "read", "accessed", "referenced" is important here.
 	literalValueState uint8
 	literalValue      string
 
-	value string
+	value      string
+	valueInfra string
 
 	readLocations   []MkLine
 	writeLocations  []MkLine
 	conditionalVars StringSet
 }
 
-func NewVar(name string) *Var { return &Var{name, nil, 0, "", "", nil, nil, NewStringSet()} }
+func NewVar(name string) *Var {
+	return &Var{name, nil, 0, "", "", "", nil, nil, NewStringSet()}
+}
 
 // Conditional returns whether the variable value depends on other variables.
 func (v *Var) Conditional() bool {
@@ -59,15 +60,12 @@ func (v *Var) ConditionalVars() []string {
 // Literal returns whether the variable's value is a constant,
 // without being dependent on any other variable.
 //
-// Multiple assignments (such as VAR=1, VAR+=2, VAR+=3) are considered literals
-// as well.
-//
-// TODO: As long as the variable is not used in-between these assignments.
-//  That is, no .include or .if may appear there, and no ::= modifier may
-//  access this variable.
-//  Note: being referenced in other variables is not the same as the value
-//  being actually used. The check for being actually used would need to
-//  be able to check transitive references.
+// Multiple assignments (such as VAR=1, VAR+=2, VAR+=3) are considered to
+// form a single constant as well, as long as the variable is not read before
+// or in-between these assignments. The definition of "read" is very strict
+// here since every mention of the variable counts. This may prevent some
+// essentially constant values from being detected as such, but these can
+// be added later.
 //
 // TODO: Simple .for loops that append to the variable are ok as well.
 //  (This needs to be worded more precisely since that part potentially
@@ -106,8 +104,7 @@ func (v *Var) Value() string {
 // See Literal and LiteralValue for more reliable information, but these ignore
 // assignments from the infrastructure.
 func (v *Var) ValueInfra() string {
-	G.Assertf(false, "Not implemented.")
-	return ""
+	return v.valueInfra
 }
 
 // ReadLocations returns the locations where the variable is read, such as
@@ -137,11 +134,19 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 		v.conditionalVars.Add(cond)
 	}
 
-	v.updateValue(mkline)
+	v.update(mkline, &v.valueInfra)
+	if !v.isInfra(mkline) {
+		v.update(mkline, &v.value)
+	}
 	v.updateLiteralValue(mkline)
 }
 
-func (v *Var) updateValue(mkline MkLine) {
+func (v *Var) isInfra(mkline MkLine) bool {
+	rel := G.Pkgsrc.ToRel(mkline.Filename)
+	return hasPrefix(rel, "mk/") || hasPrefix(rel, "wip/mk/")
+}
+
+func (v *Var) update(mkline MkLine, update *string) {
 	firstWrite := len(v.writeLocations) == 1
 	if v.Conditional() && !firstWrite {
 		return
@@ -150,15 +155,15 @@ func (v *Var) updateValue(mkline MkLine) {
 	value := mkline.Value()
 	switch mkline.Op() {
 	case opAssign, opAssignEval:
-		v.value = value
+		*update = value
 
 	case opAssignDefault:
 		if firstWrite {
-			v.value = value
+			*update = value
 		}
 
 	case opAssignAppend:
-		v.value += " " + value
+		*update += " " + value
 
 	case opAssignShell:
 		// Ignore these for now.

@@ -203,6 +203,42 @@ func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C
 	t.Check(v.Value(), equals, "value appended")
 }
 
+func (s *Suite) Test_Var_Value__infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	v.Write(t.NewMkLine(t.File("write.mk"), 123, "VARNAME=\tvalue"))
+
+	t.Check(v.Value(), equals, "value")
+
+	v.Write(t.NewMkLine(t.File("mk/write.mk"), 123, "VARNAME=\tinfra"))
+
+	t.Check(v.Value(), equals, "value")
+
+	v.Write(t.NewMkLine(t.File("wip/mk/write.mk"), 123, "VARNAME=\twip infra"))
+
+	t.Check(v.Value(), equals, "value")
+}
+
+func (s *Suite) Test_Var_ValueInfra(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	v.Write(t.NewMkLine(t.File("write.mk"), 123, "VARNAME=\tvalue"))
+
+	t.Check(v.ValueInfra(), equals, "value")
+
+	v.Write(t.NewMkLine(t.File("mk/write.mk"), 123, "VARNAME=\tinfra"))
+
+	t.Check(v.ValueInfra(), equals, "infra")
+
+	v.Write(t.NewMkLine(t.File("wip/mk/write.mk"), 123, "VARNAME=\twip infra"))
+
+	t.Check(v.ValueInfra(), equals, "wip infra")
+}
+
 func (s *Suite) Test_Var_ReadLocations(c *check.C) {
 	t := s.Init(c)
 
