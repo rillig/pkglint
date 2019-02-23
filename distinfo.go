@@ -60,7 +60,6 @@ func (ck *distinfoLinesChecker) parse() {
 		switch {
 		case !hasPrefix(prevFilename, "patch-"):
 			return no
-		// TODO: reverse the order of the following 2 conditions.
 		case G.Pkg == nil:
 			return unknown
 		case fileExists(G.Pkg.File(ck.patchdir + "/" + prevFilename)):
