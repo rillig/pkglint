@@ -202,3 +202,46 @@ func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C
 	t.Check(v.Literal(), equals, false)
 	t.Check(v.Value(), equals, "value appended")
 }
+
+func (s *Suite) Test_Var_ReadLocations(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VAR")
+
+	t.Check(v.ReadLocations(), check.IsNil)
+
+	mkline123 := t.NewMkLine("read.mk", 123, "OTHER=\t${VAR}")
+	v.Read(mkline123)
+
+	t.Check(v.ReadLocations(), deepEquals, []MkLine{mkline123})
+
+	mkline124 := t.NewMkLine("read.mk", 124, "OTHER=\t${VAR} ${VAR}")
+	v.Read(mkline124)
+	v.Read(mkline124)
+
+	// For now, count every read of the variable. I'm not yet sure
+	// whether that's the best way or whether to make the lines unique.
+	t.Check(v.ReadLocations(), deepEquals, []MkLine{mkline123, mkline124, mkline124})
+}
+
+func (s *Suite) Test_Var_WriteLocations(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VAR")
+
+	t.Check(v.WriteLocations(), check.IsNil)
+
+	mkline123 := t.NewMkLine("write.mk", 123, "VAR=\tvalue")
+	v.Write(mkline123)
+
+	t.Check(v.WriteLocations(), deepEquals, []MkLine{mkline123})
+
+	// Multiple writes from the same line may happen because of a .for loop.
+	mkline125 := t.NewMkLine("write.mk", 125, "VAR+=\t${var}")
+	v.Write(mkline125)
+	v.Write(mkline125)
+
+	// For now, count every write of the variable. I'm not yet sure
+	// whether that's the best way or whether to make the lines unique.
+	t.Check(v.WriteLocations(), deepEquals, []MkLine{mkline123, mkline125, mkline125})
+}
