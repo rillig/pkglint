@@ -7,9 +7,16 @@ package pkglint
 //
 // TODO: Remove this type in June 2019 if it is still a stub.
 type Var struct {
-	Name              string
-	Type              *Vartype
-	literalValueState uint8 // 0 = not yet assigned, 1 = literal, 2 = not anymore
+	Name string
+	Type *Vartype
+
+	//  0 = not yet assigned
+	//  1 = literal
+	//  2 = not anymore
+	//  3 = not yet assigned, but already read
+	//  4 = literal and read
+	// TODO: The exact definition of "read", "accessed", "referenced" is important here.
+	literalValueState uint8
 	literalValue      string
 	readLocations     []MkLine
 	writeLocations    []MkLine
@@ -63,7 +70,7 @@ func (v *Var) ConditionalVars() []string {
 //  (This needs to be worded more precisely since that part potentially
 //  adds a lot of complexity to the whole data structure.)
 func (v *Var) Literal() bool {
-	return v.literalValueState == 1
+	return v.literalValueState == 1 || v.literalValueState == 4
 }
 
 // LiteralValue returns the value of the literal.
@@ -117,6 +124,7 @@ func (v *Var) WriteLocations() []MkLine {
 
 func (v *Var) Read(mkline MkLine) {
 	v.readLocations = append(v.readLocations, mkline)
+	v.literalValueState = [...]uint8{3, 4, 2, 3, 4}[v.literalValueState]
 }
 
 func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
@@ -145,21 +153,20 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 
 	switch mkline.Op() {
 	case opAssign, opAssignEval:
-		v.literalValueState = 1
 		v.literalValue = value
 
 	case opAssignDefault:
 		if v.literalValueState == 0 {
-			v.literalValueState = 1
 			v.literalValue = value
 		}
 
 	case opAssignAppend:
-		v.literalValueState = 1
 		v.literalValue += " " + value
 
 	case opAssignShell:
 		v.literalValueState = 2
 		v.literalValue = ""
 	}
+
+	v.literalValueState = [...]uint8{1, 1, 2, 2, 2}[v.literalValueState]
 }
