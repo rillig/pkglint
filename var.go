@@ -14,6 +14,10 @@ package pkglint
 //
 // * On which other variables this variable depends (see Conditional,
 // ConditionalVars).
+//
+// TODO: Decide how to handle OPSYS-specific variables, such as LDFLAGS.SunOS.
+//
+// TODO: Decide how to handle parameterized variables, such as SUBST_MESSAGE.doc.
 type Var struct {
 	Name string
 
