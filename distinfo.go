@@ -157,8 +157,15 @@ func (ck *distinfoLinesChecker) checkAlgorithms(info distinfoFileInfo) {
 			"In that case, see the pkglint man page for contact information.")
 
 	default:
-		line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", filename, algorithms)
+		ck.checkAlgorithmsDistfile(line, filename, algorithms)
 	}
+}
+
+func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(line Line, filename, algorithms string) {
+	// TODO: Check whether some of the standard algorithms are missing,
+	//  and if they are and the downloaded distfile exists, calculate them
+	//  and add them to the distinfo file via autofix.
+	line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", filename, algorithms)
 }
 
 func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
