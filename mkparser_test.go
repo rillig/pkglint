@@ -412,6 +412,13 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	test("\"${pkg}\" == \"${name}\"",
 		&mkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
 
+	// The right-hand side is not split further to keep the data types simple.
+	// FIXME: Allow this complex right-hand side.
+	testRest("${ABC} == \"${A}B${C}\"",
+		nil,
+		"${ABC} == \"${A}B${C}\"")
+	// &mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("ABC"), "==", "${A}B${C}"}})
+
 	test("exists(/etc/hosts)",
 		&mkCond{Call: &MkCondCall{"exists", "/etc/hosts"}})
 

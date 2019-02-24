@@ -460,6 +460,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 			if lexer.PeekByte() == '"' {
 				mark := lexer.Mark()
 				lexer.Skip(1)
+				// FIXME: "${PRE}text${POST}" is also a valid rhs.
 				if quotedRHS := p.VarUse(); quotedRHS != nil {
 					if lexer.SkipByte('"') {
 						return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
