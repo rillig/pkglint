@@ -458,6 +458,9 @@ func (o *Once) check(key uint64) bool {
 // TODO: Decide whether the scope should consider variable assignments
 //  from the pkgsrc infrastructure. For Package.checkGnuConfigureUseLanguages
 //  it would be better to ignore them completely.
+//
+// TODO: Merge this code with Var, which defines essentially the
+//  same features.
 type Scope struct {
 	firstDef map[string]MkLine // TODO: Can this be removed?
 	lastDef  map[string]MkLine
