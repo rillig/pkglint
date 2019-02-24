@@ -821,6 +821,7 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		}
 		if callback.VarUse != nil {
 			callback.VarUse(cond.CompareVarStr.Var)
+			w.walkStr(cond.CompareVarStr.Str, callback)
 		}
 
 	case cond.CompareVarNum != nil:
@@ -836,6 +837,18 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		if callback.Call != nil {
 			call := cond.Call
 			callback.Call(call.Name, call.Arg)
+			w.walkStr(call.Arg, callback)
+		}
+	}
+}
+
+func (w *MkCondWalker) walkStr(str string, callback *MkCondCallback) {
+	if callback.VarUse != nil {
+		tokens := NewMkParser(nil, str, false).MkTokens()
+		for _, token := range tokens {
+			if token.Varuse != nil {
+				callback.VarUse(token.Varuse)
+			}
 		}
 	}
 }

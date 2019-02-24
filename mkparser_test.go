@@ -840,15 +840,16 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		" compareVarStr  STR, Str",
 		"        varUse  STR",
 		" compareVarStr  VAR, ${PRE}text${POST}",
-		// FIXME: varUse for PRE and POST are missing here.
 		"        varUse  VAR",
+		"        varUse  PRE",
+		"        varUse  POST",
 		" compareVarNum  NUM, 3",
 		"        varUse  NUM",
 		"       defined  VAR",
 		"        varUse  VAR",
 		"          call  exists, file.mk",
 		"          call  exists, ${FILE}",
-		// FIXME: "varUse FILE" is missing here.
+		"        varUse  FILE",
 		"           var  NONEMPTY",
 		"        varUse  NONEMPTY"})
 }
