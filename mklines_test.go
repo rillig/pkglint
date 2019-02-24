@@ -1045,9 +1045,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_i
 
 	mklines.CheckRedundantAssignments()
 
-	// FIXME: This is wrong because the later assignment is only a default assignment
-	//  that has no effect in this case but has an effect when included from a file
-	//  that doesn't define VAR.
+	// If assign-then-default.mk:2 is deleted, VAR still has the same value.
 	t.CheckOutputLines(
 		"NOTE: ~/assign-then-default.mk:2: Definition of VAR is redundant because of included.mk:2.")
 }
