@@ -783,6 +783,7 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 4, ""+
 		".if ${VAR:Mmatch} == ${OTHER} || "+
 		"${STR} == Str || "+
+		"${VAR} == \"${PRE}text${POST}\" || "+
 		"${NUM} == 3 && "+
 		"defined(VAR) && "+
 		"!exists(file.mk) && "+
@@ -838,6 +839,9 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		"        varUse  OTHER",
 		" compareVarStr  STR, Str",
 		"        varUse  STR",
+		" compareVarStr  VAR, ${PRE}text${POST}",
+		// FIXME: varUse for PRE and POST are missing here.
+		"        varUse  VAR",
 		" compareVarNum  NUM, 3",
 		"        varUse  NUM",
 		"       defined  VAR",
