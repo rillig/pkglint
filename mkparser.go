@@ -821,8 +821,8 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		}
 		if callback.VarUse != nil {
 			callback.VarUse(cond.CompareVarStr.Var)
-			w.walkStr(cond.CompareVarStr.Str, callback)
 		}
+		w.walkStr(cond.CompareVarStr.Str, callback)
 
 	case cond.CompareVarNum != nil:
 		if callback.CompareVarNum != nil {
@@ -837,8 +837,8 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		if callback.Call != nil {
 			call := cond.Call
 			callback.Call(call.Name, call.Arg)
-			w.walkStr(call.Arg, callback)
 		}
+		w.walkStr(cond.Call.Arg, callback)
 	}
 }
 

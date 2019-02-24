@@ -978,13 +978,28 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__if_then_else(c *check.C)
 
 	// These two definitions are of course not redundant since they happen in
 	// different branches of the same .if statement.
-	// FIXME: This warning is wrong.
-	//  The cause is that the two assignments seem to be unconditional
-	//  to pkglint as for some reason the exists() function does not
-	//  register its argument as a condition variable. It shouldn't need to
-	//  since even a ".if 0" is ok for having two branches.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__if_then_else_without_variable(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("if-then-else.mk",
+		MkRcsID,
+		".if exists(/nonexistent)",
+		"IT=\texists",
+		".else",
+		"IT=\tdoesn't exist",
+		".endif")
+
+	mklines.CheckRedundantAssignments()
+
+	// These two definitions are of course not redundant since they happen in
+	// different branches of the same .if statement.
+	// FIXME: Even though the .if condition does not refer to any variables,
+	//  this still means that the variable assignments are conditional.
 	t.CheckOutputLines(
-		"WARN: ~/if-then-else.mk:3: Variable OS is overwritten in line 5.")
+		"WARN: ~/if-then-else.mk:3: Variable IT is overwritten in line 5.")
 }
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
