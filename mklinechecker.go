@@ -544,6 +544,9 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 
 	mkline := ck.MkLine
 	effPerms := vartype.EffectivePermissions(mkline.Basename)
+	if effPerms == aclpUnknown {
+		return
+	}
 
 	// Is the variable used at load time although that is not allowed?
 	directly := false

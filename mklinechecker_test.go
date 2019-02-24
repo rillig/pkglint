@@ -349,23 +349,17 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename:1: B is used but not defined.")
 
 	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
-		"WARN: filename:1: \"mailto:someone@example.org\" is not a valid URL.",
-		"WARN: filename:1: HOMEPAGE should not be evaluated at load time.",
-		"WARN: filename:1: HOMEPAGE may not be used in any file; it is a write-only variable.")
+		"WARN: filename:1: \"mailto:someone@example.org\" is not a valid URL.")
 
 	test(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
 		"WARN: filename:1: PKGSRC_RUN_TEST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
-	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])",
-		"WARN: filename:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
-		"WARN: filename:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
+	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
 		"WARN: filename:1: The empty() function takes a variable name as parameter, "+
-			"not a variable expression.",
-		"WARN: filename:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
-		"WARN: filename:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
+			"not a variable expression.")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
 		"WARN: filename:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
@@ -373,9 +367,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename:1: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
 	test(".if ${PKG_LIBTOOL:Mlibtool}",
-		"NOTE: filename:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".",
-		"WARN: filename:1: PKG_LIBTOOL should not be evaluated at load time.",
-		"WARN: filename:1: PKG_LIBTOOL may not be used in any file; it is a write-only variable.")
+		"NOTE: filename:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".")
 
 	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
 		"WARN: filename:1: "+
@@ -393,9 +385,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			"} for MACHINE_ARCH.",
 		"NOTE: filename:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
-	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
-		"WARN: filename:1: MASTER_SITES should not be evaluated at load time.",
-		"WARN: filename:1: MASTER_SITES may not be used in any file; it is a write-only variable.")
+	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"")
 
 	// The only interesting line from the below tracing output is the one
 	// containing "checkCompareVarStr".
@@ -657,9 +647,10 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		"WARN: any.mk:2: PKGREVISION should not be evaluated at load time.",
-		"WARN: any.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
+	// FIXME: Fix the permissions of PKGREVISION to explicitly say "none",
+	//  or make "none" the default. But then there must be no warning that
+	//  "this variable is not writable anywhere", since that would be wrong.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C) {
