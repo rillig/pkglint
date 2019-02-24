@@ -405,10 +405,9 @@ func (mklines *MkLinesImpl) CheckRedundantAssignments() {
 	scope := NewRedundantScope()
 
 	isRelevant := func(old, new MkLine) bool {
-		if new.Op() == opAssignEval {
-			return false
-		}
-		return true
+		// TODO: This is cheated. Using the := operator is merely a human convention,
+		//  not a technical indicator.
+		return old.Op() != opAssignEval && new.Op() != opAssignEval
 	}
 
 	scope.OnRedundant = func(old, new MkLine) {
