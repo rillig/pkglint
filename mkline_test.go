@@ -254,26 +254,26 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 func (s *Suite) Test_NewMkLine__number_sign(c *check.C) {
 	t := s.Init(c)
 
-	mklineVarassignEscaped := t.NewMkLine("filename", 1, "SED_CMD=\t's,\\#,hash,g'")
+	mklineVarassignEscaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,\\#,hash,g'")
 
 	c.Check(mklineVarassignEscaped.Varname(), equals, "SED_CMD")
 	c.Check(mklineVarassignEscaped.Value(), equals, "'s,#,hash,g'")
 
-	mklineCommandEscaped := t.NewMkLine("filename", 1, "\tsed -e 's,\\#,hash,g'")
+	mklineCommandEscaped := t.NewMkLine("filename.mk", 1, "\tsed -e 's,\\#,hash,g'")
 
 	c.Check(mklineCommandEscaped.ShellCommand(), equals, "sed -e 's,\\#,hash,g'")
 
 	// From shells/zsh/Makefile.common, rev. 1.78
-	mklineCommandUnescaped := t.NewMkLine("filename", 1, "\t# $ sha1 patches/patch-ac")
+	mklineCommandUnescaped := t.NewMkLine("filename.mk", 1, "\t# $ sha1 patches/patch-ac")
 
 	c.Check(mklineCommandUnescaped.ShellCommand(), equals, "# $ sha1 patches/patch-ac")
 	t.CheckOutputEmpty() // No warning about parsing the lonely dollar sign.
 
-	mklineVarassignUnescaped := t.NewMkLine("filename", 1, "SED_CMD=\t's,#,hash,'")
+	mklineVarassignUnescaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,#,hash,'")
 
 	c.Check(mklineVarassignUnescaped.Value(), equals, "'s,")
 	t.CheckOutputLines(
-		"WARN: filename:1: The # character starts a Makefile comment.")
+		"WARN: filename.mk:1: The # character starts a Makefile comment.")
 }
 
 func (s *Suite) Test_NewMkLine__varassign_leading_space(c *check.C) {
@@ -331,7 +331,7 @@ func (s *Suite) Test_NewMkLine__infrastructure(c *check.C) {
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("filename", 1, "PKGNAME:= ${UNKNOWN}")
+	mkline := t.NewMkLine("filename.mk", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetUpVartypes()
 
 	vuc := VarUseContext{G.Pkgsrc.VariableType("PKGNAME"), vucTimeParse, VucQuotUnknown, false}

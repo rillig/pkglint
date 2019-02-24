@@ -28,7 +28,8 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 
 	t.CreateFileLines("category/dependency/buildlink3.mk")
 	G.Pkg = NewPackage(t.File("category/package"))
-	G.Pkg.bl3["../../category/dependency/buildlink3.mk"] = t.NewMkLine("filename", 1, "")
+	G.Pkg.bl3["../../category/dependency/buildlink3.mk"] =
+		t.NewMkLine("../../category/dependency/buildlink3.mk", 1, "")
 	mklines := t.NewMkLines("category/package/buildlink3.mk",
 		MkRcsID)
 

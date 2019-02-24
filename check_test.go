@@ -612,6 +612,11 @@ func (t *Tester) NewLine(filename string, lineno int, text string) Line {
 
 // NewMkLine creates an in-memory line in the Makefile format with the given text.
 func (t *Tester) NewMkLine(filename string, lineno int, text string) MkLine {
+	basename := path.Base(filename)
+	G.Assertf(
+		hasSuffix(basename, ".mk") || basename == "Makefile" || hasPrefix(basename, "Makefile."),
+		"filename %q must be realistic, otherwise the variable permissions are wrong", filename)
+
 	return NewMkLine(t.NewLine(filename, lineno, text))
 }
 
@@ -644,6 +649,11 @@ func (t *Tester) NewLinesAt(filename string, firstLine int, texts ...string) Lin
 // No actual file is created for the lines;
 // see SetUpFileMkLines for loading Makefile fragments with line continuations.
 func (t *Tester) NewMkLines(filename string, lines ...string) MkLines {
+	basename := path.Base(filename)
+	G.Assertf(
+		hasSuffix(basename, ".mk") || basename == "Makefile" || hasPrefix(basename, "Makefile."),
+		"filename %q must be realistic, otherwise the variable permissions are wrong", filename)
+
 	var rawText strings.Builder
 	for _, line := range lines {
 		rawText.WriteString(line)

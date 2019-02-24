@@ -371,7 +371,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *
 func (s *Suite) Test_MkLines_collectUsedVariables__simple(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("filename",
+	mklines := t.NewMkLines("filename.mk",
 		"\t${VAR}")
 	mkline := mklines.mklines[0]
 	G.Mk = mklines
@@ -410,7 +410,7 @@ func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mklines := t.NewMkLines("filename",
+	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
 		"",
 		"\tmd5sum filename")
@@ -418,14 +418,14 @@ func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename:3: Unknown shell command \"md5sum\".")
+		"WARN: filename.mk:3: Unknown shell command \"md5sum\".")
 }
 
 func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mklines := t.NewMkLines("filename",
+	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
 		"TOOLS_CREATE+=\tmd5sum",
 		"",
@@ -435,7 +435,7 @@ func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 
 	// TODO: Is it necessary to add the tool to USE_TOOLS? If not, why not?
 	t.CheckOutputLines(
-		"WARN: filename:4: The \"md5sum\" tool is used but not added to USE_TOOLS.")
+		"WARN: filename.mk:4: The \"md5sum\" tool is used but not added to USE_TOOLS.")
 }
 
 func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
