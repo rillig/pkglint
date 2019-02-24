@@ -781,7 +781,12 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		return
 	}
 
-	if existing.vari.Conditional() {
+	// TODO: Just being conditional is only half the truth.
+	//  To be precise, the "conditional path" must differ between
+	//  this variable assignment and the/any? previous one.
+	//  See Test_MkLines_CheckRedundantAssignments__overwrite_inside_conditional.
+	//  Anyway, too few warnings are better than wrong warnings.
+	if existing.vari.Conditional() || ind.Depth("") > 0 {
 		return
 	}
 

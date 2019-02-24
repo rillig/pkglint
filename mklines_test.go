@@ -1066,10 +1066,9 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_included_f
 
 	mklines.CheckRedundantAssignments()
 
-	// FIXME: This is wrong. The assignment in including.mk:2 is only redundant if
-	//  included.mk is actually included.
-	t.CheckOutputLines(
-		"NOTE: ~/including.mk:2: Definition of VAR is redundant because of included.mk:2.")
+	// The assignment in including.mk:2 is only redundant if included.mk is actually included.
+	// Therefore both included.mk:2 nor including.mk:2 are relevant.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
