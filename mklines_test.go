@@ -1071,6 +1071,33 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_included_f
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_parameters(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/pkg-build-options.mk",
+		MkRcsID,
+		"USED:=\t${pkgbase}")
+	t.CreateFileLines("including.mk",
+		MkRcsID,
+		"pkgbase=\tpackage1",
+		".include \"mk/pkg-build-options.mk\"",
+		"",
+		"pkgbase=\tpackage2",
+		".include \"mk/pkg-build-options.mk\"",
+		"",
+		"pkgbase=\tpackage3",
+		".include \"mk/pkg-build-options.mk\"")
+	mklines := t.LoadMkInclude("including.mk")
+
+	mklines.CheckRedundantAssignments()
+
+	// FIXME: This variable is not overwritten since it is used in-between
+	//  by the included file.
+	t.CheckOutputLines(
+		"WARN: ~/including.mk:2: Variable pkgbase is overwritten in line 5.",
+		"WARN: ~/including.mk:2: Variable pkgbase is overwritten in line 8.")
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
