@@ -180,15 +180,12 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 		missing[alg] = true
 	}
 	seen := map[string]distinfoHash{}
-	var extra []string
 
 	for _, hash := range info.hashes {
 		alg := hash.algorithm
 		if missing[alg] {
 			seen[alg] = hash
 			delete(missing, alg)
-		} else if _, found := seen[alg]; !found {
-			extra = append(extra, alg)
 		}
 	}
 
