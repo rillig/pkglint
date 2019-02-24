@@ -1017,6 +1017,41 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__append_then_default(c *c
 		"NOTE: ~/append-then-default.mk:3: Definition of VAR is redundant because of line 2.")
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_same_file(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("assign-then-default.mk",
+		MkRcsID,
+		"VAR=\tvalue",
+		"VAR?=\tvalue")
+
+	mklines.CheckRedundantAssignments()
+
+	t.CheckOutputLines(
+		"NOTE: ~/assign-then-default.mk:3: Definition of VAR is redundant because of line 2.")
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_included_file(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("included.mk",
+		MkRcsID,
+		"VAR?=\tvalue")
+	t.CreateFileLines("assign-then-default.mk",
+		MkRcsID,
+		"VAR=\tvalue",
+		".include \"included.mk\"")
+	mklines := t.LoadMkInclude("assign-then-default.mk")
+
+	mklines.CheckRedundantAssignments()
+
+	// FIXME: This is wrong because the later assignment is only a default assignment
+	//  that has no effect in this case but has an effect when included from a file
+	//  that doesn't define VAR.
+	t.CheckOutputLines(
+		"NOTE: ~/assign-then-default.mk:2: Definition of VAR is redundant because of included.mk:2.")
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
