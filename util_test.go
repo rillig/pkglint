@@ -86,6 +86,8 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 	test("dir/multi/././/file", "dir/multi/file")
 	test("dir/", "dir")
 
+	test("dir/", "dir")
+
 	// Components like aa/bb/../.. are removed, but not in the initial part of the path,
 	// and only if they are not followed by another "..".
 	test("dir/../dir/../dir/../dir/subdir/../../Makefile", "dir/../dir/../dir/../Makefile")
