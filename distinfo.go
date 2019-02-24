@@ -206,8 +206,8 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 	line.Explain(
 		"To add the missing lines to the distinfo file, run",
 		sprintf("%q", bmake("distinfo")),
-		"for each variant of the package until all distfiles",
-		sprintf("are downloaded to %q.", path.Join(distdir, distSubdir)),
+		"for each variant of the package until all distfiles are downloaded to",
+		sprintf("%q.", path.Join("${PKGSRCDIR}", "distfiles", distSubdir)),
 		"The variants are typically selected by setting EMUL_PLATFORM",
 		"or similar variables in the",
 		sprintf("%q", bmake("distinfo")),
