@@ -1001,6 +1001,22 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__if_then_else_without_var
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__append_then_default(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("append-then-default.mk",
+		MkRcsID,
+		"VAR+=\tvalue",
+		"VAR?=\tvalue")
+
+	mklines.CheckRedundantAssignments()
+
+	// FIXME: This is wrong because the actual value of the variable includes a leading space.
+	//  The values are therefore different, but the default assignment still has no effect.
+	t.CheckOutputLines(
+		"NOTE: ~/append-then-default.mk:3: Definition of VAR is redundant because of line 2.")
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
