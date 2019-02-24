@@ -58,6 +58,14 @@ func (src *Pkgsrc) InitVartypes() {
 			"*.mk: append, default, use")
 	}
 
+	// Some package-defined lists may also be appended in buildlink3.mk files,
+	// for example platform-specific CFLAGS and LDFLAGS.
+	pkglistbl3 := func(varname string, kindOfList KindOfList, checker *BasicType) {
+		acl(varname, kindOfList, checker, ""+
+			"Makefile, Makefile.common, options.mk: append, default, set, use; "+
+			"buildlink3.mk, builtin.mk, *.mk: append, default, use")
+	}
+
 	// sys declares a user-defined or system-defined variable that must not be modified by packages.
 	//
 	// It also must not be used in buildlink3.mk and builtin.mk files or at load-time,
@@ -581,8 +589,8 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("CATEGORIES", lkShell, BtCategory, "Makefile: set, append; Makefile.common: set, default, append")
 	sysload("CC_VERSION", lkNone, BtMessage)
 	sysload("CC", lkNone, BtShellCommand)
-	pkglist("CFLAGS", lkShell, BtCFlag)   // may also be changed by the user
-	pkglist("CFLAGS.*", lkShell, BtCFlag) // may also be changed by the user
+	pkglistbl3("CFLAGS", lkShell, BtCFlag)   // may also be changed by the user
+	pkglistbl3("CFLAGS.*", lkShell, BtCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", lkNone, BtYesNo, "builtin.mk: default; Makefile: set")
 	acl("CHECK_BUILTIN.*", lkNone, BtYesNo, "Makefile, options.mk, buildlink3.mk: set; builtin.mk: default, use-loadtime; *: use-loadtime")
 	acl("CHECK_FILES_SKIP", lkShell, BtBasicRegularExpression, "Makefile, Makefile.common: append")
@@ -810,8 +818,8 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("KRB5_DEFAULT", lkNone, enum("heimdal mit-krb5"))
 	sys("KRB5_TYPE", lkNone, BtIdentifier)
 	sys("LD", lkNone, BtShellCommand)
-	pkglist("LDFLAGS", lkShell, BtLdFlag)
-	pkglist("LDFLAGS.*", lkShell, BtLdFlag)
+	pkglistbl3("LDFLAGS", lkShell, BtLdFlag)      // May also be changed by the user.
+	pkglistbl3("LDFLAGS.*", lkShell, BtLdFlag)    // May also be changed by the user.
 	sysload("LIBABISUFFIX", lkNone, BtIdentifier) // Can also be empty.
 	sys("LIBGRP", lkNone, BtUserGroupName)
 	sys("LIBMODE", lkNone, BtFileMode)

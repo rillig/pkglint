@@ -626,13 +626,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.
 
 	G.Check(t.File("category/package"))
 
-	// FIXME: Why is appending to LDFLAGS forbidden? It sounds useful.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/buildlink3.mk:14: "+
-			"The variable LDFLAGS.NetBSD may not be appended to in this file; "+
-			"it would be ok in Makefile, Makefile.common, options.mk or *.mk.",
-		"WARN: ~/category/package/buildlink3.mk:16: "+
-			"Only buildlink variables for \"package\", "+
+		"WARN: ~/category/package/buildlink3.mk:16: " +
+			"Only buildlink variables for \"package\", " +
 			"not \"other\" may be set in this file.")
 }
 
