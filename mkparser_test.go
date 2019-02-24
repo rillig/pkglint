@@ -779,6 +779,7 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		"${NUM} == 3 && "+
 		"defined(VAR) && "+
 		"!exists(file.mk) && "+
+		"exists(${FILE}) && "+
 		"(((${NONEMPTY})))")
 	var events []string
 
@@ -835,6 +836,8 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		"       defined  VAR",
 		"        varUse  VAR",
 		"          call  exists, file.mk",
+		"          call  exists, ${FILE}",
+		// FIXME: "varUse FILE" is missing here.
 		"           var  NONEMPTY",
 		"        varUse  NONEMPTY"})
 }
