@@ -243,7 +243,7 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("CROSSBASE", lkNone, BtPathname)
 	usr("VARBASE", lkNone, BtPathname)
 	acl("X11_TYPE", lkNone, enum("modular native"), "*: use-loadtime, use")
-	usr("X11BASE", lkNone, BtPathname)
+	acl("X11BASE", lkNone, BtPathname, "*: use-loadtime, use")
 	usr("MOTIFBASE", lkNone, BtPathname)
 	usr("PKGINFODIR", lkNone, BtPathname)
 	usr("PKGMANDIR", lkNone, BtPathname)
