@@ -668,6 +668,10 @@ func (t *Tester) Output() string {
 
 	G.Assertf(t.tmpdir != "", "Tester must be initialized before checking the output.")
 	output := stdout + stderr
+	// TODO: The explanations are wrapped. Because of this it can happen
+	//  that t.tmpdir is spread among multiple lines if that directory
+	//  name contains spaces, which is common on Windows. A temporary
+	//  workaround is to set TMP=/path/without/spaces.
 	output = strings.Replace(output, t.tmpdir, "~", -1)
 	return output
 }
