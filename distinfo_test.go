@@ -199,7 +199,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 			"The SHA512 hash for encoding-error.tar.gz contains a non-hex character.",
 
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
-		"8 errors and 1 warning found.")
+		"8 errors and 1 warning found.",
+		"(Run \"pkglint -e\" to show explanations.)")
 
 	// Ensure that hex.DecodeString does not waste memory here.
 	t.Check(len(G.Hashes["SHA512:distfile-1.0.tar.gz"].hash), equals, 8)
@@ -497,21 +498,86 @@ func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1(c *check.C) {
 func (s *Suite) Test_CheckLinesDistinfo__add_missing_hashes(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
 		RcsID,
 		"",
-		"SHA1 (package-1.0.txt) = asdf")
+		"RMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		"CRC32 (package-1.0.txt) = asdf")
 	t.CreateFileLines("distfiles/package-1.0.txt",
 		"hello, world")
 	G.Pkgsrc.LoadInfrastructure()
 
+	// This run is only used to verify that the RMD160 hash is correct, and if
+	// it should ever differ, the correct hash will appear in an error message.
 	G.Check(t.File("category/package"))
 
-	// TODO: Since the file exists in the distfiles directory, pkglint
-	//  can check the hash right away. It can also add the missing hashes
-	//  since this file is not a patch file.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/distinfo:3: "+
+			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"got RMD160, CRC32.",
+		"",
+		"\tTo add the missing lines to the distinfo file, run \""+confMake,
+		"\tdistinfo\" for each variant of the package until all distfiles are",
+		"\tdownloaded to",
+		"\t\"~/distfiles\".",
+		"\tThe variants are typically selected by setting EMUL_PLATFORM or",
+		"\tsimilar variables in the \""+confMake+" distinfo\" command line.",
+		"",
+		"\tAfter that, run \"cvs update -C distinfo\" to revert the distinfo file",
+		"\tto the previous state, since the above commands have removed some of",
+		"\tthe entries.",
+		"",
+		"\tAfter downloading all possible distfiles, run \"pkglint --autofix\",",
+		"\twhich will find the downloaded distfiles and add the missing hashes",
+		"\tto the distinfo file.",
+		"",
+		"ERROR: ~/category/package/distinfo:3: Missing SHA1 hash for package-1.0.txt.",
+		"ERROR: ~/category/package/distinfo:3: Missing SHA512 hash for package-1.0.txt.",
+		"ERROR: ~/category/package/distinfo:3: Missing Size hash for package-1.0.txt.")
+
+	t.SetUpCommandLine("-Wall", "--autofix", "--show-autofix", "--source")
+
+	G.Check(t.File("category/package"))
+
+	// Since the file exists in the distfiles directory, pkglint checks the
+	// hash right away. It also adds the missing hashes since this file is
+	// not a patch file.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/distinfo:3: Missing SHA1 hash for package-1.0.txt.",
+		"AUTOFIX: ~/category/package/distinfo:3: "+
+			"Inserting a line \"SHA1 (package-1.0.txt) "+
+			"= cd50d19784897085a8d0e3e413f8612b097c03f1\" "+
+			"before this line.",
+		"+\tSHA1 (package-1.0.txt) = cd50d19784897085a8d0e3e413f8612b097c03f1",
+		">\tRMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		"",
+		"ERROR: ~/category/package/distinfo:3: Missing SHA512 hash for package-1.0.txt.",
+		"AUTOFIX: ~/category/package/distinfo:3: "+
+			"Inserting a line \"SHA512 (package-1.0.txt) "+
+			"= f65f341b35981fda842b09b2c8af9bcdb7602a4c2e6fa1f7d41f0974d3e3122f"+
+			"268fc79d5a4af66358f5133885cd1c165c916f80ab25e5d8d95db46f803c782c\" after this line.",
+		"+\tSHA1 (package-1.0.txt) = cd50d19784897085a8d0e3e413f8612b097c03f1",
+		">\tRMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		"+\tSHA512 (package-1.0.txt) = f65f341b35981fda842b09b2c8af9bcdb7602a4c2e6fa1f7d41f0974d3e3122f"+
+			"268fc79d5a4af66358f5133885cd1c165c916f80ab25e5d8d95db46f803c782c",
+		"",
+		"ERROR: ~/category/package/distinfo:3: Missing Size hash for package-1.0.txt.",
+		"AUTOFIX: ~/category/package/distinfo:3: "+
+			"Inserting a line \"Size (package-1.0.txt) = 13 bytes\" after this line.",
+		"+\tSHA1 (package-1.0.txt) = cd50d19784897085a8d0e3e413f8612b097c03f1",
+		">\tRMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		"+\tSHA512 (package-1.0.txt) = f65f341b35981fda842b09b2c8af9bcdb7602a4c2e6fa1f7d41f0974d3e3122f2"+
+			"68fc79d5a4af66358f5133885cd1c165c916f80ab25e5d8d95db46f803c782c",
+		"+\tSize (package-1.0.txt) = 13 bytes")
+
+	t.SetUpCommandLine("-Wall")
+
+	G.Check(t.File("category/package"))
+
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: " +
-			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", got SHA1.")
+			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", " +
+			"got SHA1, RMD160, SHA512, Size, CRC32.")
 }

@@ -3,8 +3,13 @@ package pkglint
 import (
 	"bytes"
 	"crypto/sha1"
+	"crypto/sha512"
 	"encoding/hex"
+	"golang.org/x/crypto/ripemd160"
+	"hash"
+	"io"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 )
@@ -157,15 +162,145 @@ func (ck *distinfoLinesChecker) checkAlgorithms(info distinfoFileInfo) {
 			"In that case, see the pkglint man page for contact information.")
 
 	default:
-		ck.checkAlgorithmsDistfile(line, filename, algorithms)
+		ck.checkAlgorithmsDistfile(info)
 	}
 }
 
-func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(line Line, filename, algorithms string) {
-	// TODO: Check whether some of the standard algorithms are missing,
-	//  and if they are and the downloaded distfile exists, calculate them
-	//  and add them to the distinfo file via autofix.
-	line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", filename, algorithms)
+// checkAlgorithmsDistfile checks whether some of the standard algorithms are
+// missing. If so and the downloaded distfile exists, they are calculated and
+// added to the distinfo file via an autofix.
+func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
+	line := info.line()
+	line.Errorf("Expected SHA1, RMD160, SHA512, Size checksums for %q, got %s.", info.filename(), info.algorithms())
+
+	algorithms := [...]string{"SHA1", "RMD160", "SHA512", "Size"}
+
+	missing := map[string]bool{}
+	for _, alg := range algorithms {
+		missing[alg] = true
+	}
+	seen := map[string]distinfoHash{}
+	var extra []string
+
+	for _, hash := range info.hashes {
+		alg := hash.algorithm
+		if missing[alg] {
+			seen[alg] = hash
+			delete(missing, alg)
+		} else if _, found := seen[alg]; !found {
+			extra = append(extra, alg)
+		}
+	}
+
+	if len(missing) == 0 || len(seen) == 0 {
+		return
+	}
+
+	distdir := G.Pkgsrc.File("distfiles")
+	distSubdir := ""
+	if G.Pkg != nil {
+		distSubdir = G.Pkg.vars.LastValue("DIST_SUBDIR")
+	}
+
+	// It's a rare situation that the explanation is generated
+	// this far from the corresponding diagnostic.
+	// This explanation only makes sense when there are some
+	// hashes missing that can be automatically added by pkglint.
+	line.Explain(
+		"To add the missing lines to the distinfo file, run",
+		sprintf("%q", bmake("distinfo")),
+		"for each variant of the package until all distfiles",
+		sprintf("are downloaded to %q.", path.Join(distdir, distSubdir)),
+		"The variants are typically selected by setting EMUL_PLATFORM",
+		"or similar variables in the",
+		sprintf("%q", bmake("distinfo")),
+		"command line.",
+		"",
+		"After that, run",
+		sprintf("%q", "cvs update -C distinfo"),
+		"to revert the distinfo file to the previous state, since the above",
+		"commands have removed some of the entries.",
+		"",
+		"After downloading all possible distfiles, run",
+		sprintf("%q,", "pkglint --autofix"),
+		"which will find the downloaded distfiles and add the missing",
+		"hashes to the distinfo file.")
+
+	distfile := path.Join(distdir, distSubdir, info.filename())
+	if !fileExists(distfile) {
+		return
+	}
+
+	computeHash := func(hasher hash.Hash) string {
+		f, err := os.Open(distfile)
+		G.AssertNil(err, "Opening distfile")
+
+		// Don't load the distfile into memory since some of them
+		// are hundreds of MB in size.
+		_, err = io.Copy(hasher, f)
+		G.AssertNil(err, "Computing hash of distfile")
+
+		hexHash := hex.EncodeToString(hasher.Sum(nil))
+
+		err = f.Close()
+		G.AssertNil(err, "Closing distfile")
+
+		return hexHash
+	}
+
+	compute := func(alg string) string {
+		switch alg {
+		case "SHA1":
+			return computeHash(sha1.New())
+		case "RMD160":
+			return computeHash(ripemd160.New())
+		case "SHA512":
+			return computeHash(sha512.New())
+		default:
+			fileInfo, err := os.Lstat(distfile)
+			G.AssertNil(err, "Inaccessible distfile info")
+			return sprintf("%d bytes", fileInfo.Size())
+		}
+	}
+
+	for alg, hash := range seen {
+		computed := compute(alg)
+
+		if computed != hash.hash {
+			line.Errorf("The %s checksum for %q is %s in distinfo, %s in %s.",
+				alg, hash.filename, hash.hash, computed, line.PathToFile(distfile))
+			return
+		}
+	}
+
+	// At this point, all the existing hash algorithms are correct,
+	// and there is at least one hash algorithm. This is evidence enough
+	// that the distfile is the expected one. Now generate the missing hashes
+	// and insert them, in the correct order.
+
+	var insertion Line
+	var remainingHashes = info.hashes
+	for _, alg := range algorithms {
+		if missing[alg] {
+			computed := compute(alg)
+
+			if insertion == nil {
+				fix := line.Autofix()
+				fix.Errorf("Missing %s hash for %s.", alg, info.filename())
+				fix.InsertBefore(sprintf("%s (%s) = %s", alg, info.filename(), computed))
+				fix.Apply()
+			} else {
+				fix := insertion.Autofix()
+				fix.Errorf("Missing %s hash for %s.", alg, info.filename())
+				fix.InsertAfter(sprintf("%s (%s) = %s", alg, info.filename(), computed))
+				fix.Apply()
+			}
+
+		} else if len(remainingHashes) > 0 && remainingHashes[0].algorithm == alg {
+			insertion = remainingHashes[0].line
+			remainingHashes = remainingHashes[1:]
+		}
+	}
 }
 
 func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
