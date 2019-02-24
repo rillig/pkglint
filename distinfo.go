@@ -84,7 +84,7 @@ func (ck *distinfoLinesChecker) parse() {
 		line := llex.CurrentLine()
 		llex.Skip()
 
-		m, alg, filename, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (\S+)(?: bytes)?$`)
+		m, alg, filename, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (\S+(?: bytes)?)$`)
 		if !m {
 			line.Errorf("Invalid line: %s", line.Text)
 			continue
