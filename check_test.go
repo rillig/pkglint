@@ -92,7 +92,6 @@ func (s *Suite) TearDownTest(c *check.C) {
 		_, _ = fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
 	}
 
-	G = Pkglint{} // unusable because of missing Logger.out and Logger.err
 	if out := t.Output(); out != "" {
 		var msg strings.Builder
 		msg.WriteString("\n")
@@ -106,8 +105,11 @@ func (s *Suite) TearDownTest(c *check.C) {
 		_, _ = fmt.Fprintf(&msg, "\n")
 		_, _ = os.Stderr.WriteString(msg.String())
 	}
+
 	t.tmpdir = ""
 	t.DisableTracing()
+
+	G = Pkglint{} // unusable because of missing Logger.out and Logger.err
 }
 
 var _ = check.Suite(new(Suite))
@@ -659,13 +661,14 @@ func (t *Tester) Output() string {
 	t.stdout.Reset()
 	t.stderr.Reset()
 	G.Logger.logged = Once{}
-
-	output := stdout + stderr
-	if t.tmpdir != "" {
-		output = strings.Replace(output, t.tmpdir, "~", -1)
-	} else {
-		panic("asdfgsfas")
+	if G.Logger.out != nil { // Necessary because Main resets the G variable.
+		G.Logger.out.state = 0 // Prevent an empty line at the beginning of the next output.
+		G.Logger.err.state = 0
 	}
+
+	G.Assertf(t.tmpdir != "", "Tester must be initialized before checking the output.")
+	output := stdout + stderr
+	output = strings.Replace(output, t.tmpdir, "~", -1)
 	return output
 }
 
