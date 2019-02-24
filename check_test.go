@@ -205,6 +205,10 @@ func (t *Tester) SetUpFileMkLines(relativeFileName string, lines ...string) MkLi
 func (t *Tester) LoadMkInclude(relativeFileName string) MkLines {
 	var lines []Line
 
+	// TODO: Include files with multiple-inclusion guard only once.
+	// TODO: Include files without multiple-inclusion guard as often as needed.
+	// TODO: Set an upper limit, to prevent denial of service.
+
 	var load func(filename string)
 	load = func(filename string) {
 		for _, mkline := range NewMkLines(Load(filename, MustSucceed)).mklines {

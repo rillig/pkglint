@@ -28,10 +28,21 @@ type Package struct {
 	EffectivePkgnameLine MkLine       // The origin of the three Effective* values
 	Plist                PlistContent // Files and directories mentioned in the PLIST files
 
-	vars               Scope
-	bl3                map[string]MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
-	included           map[string]MkLine // filename => line
-	seenMakefileCommon bool              // Does the package have any .includes?
+	vars Scope
+	bl3  map[string]MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+
+	// Remembers the Makefile fragments that have already been included.
+	// The key to the map is the filename relative to the package directory.
+	// Typical keys are "../../category/package/buildlink3.mk".
+	//
+	// TODO: Include files with multiple-inclusion guard only once.
+	//
+	// TODO: Include files without multiple-inclusion guard as often as needed.
+	//
+	// TODO: Set an upper limit, to prevent denial of service.
+	included map[string]MkLine // filename => line
+
+	seenMakefileCommon bool // Does the package have any .includes?
 
 	// Files from .include lines that are nested inside .if.
 	// They often depend on OPSYS or on the existence of files in the build environment.
