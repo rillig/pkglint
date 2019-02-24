@@ -773,7 +773,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	existing := s.vars[varname]
 	if existing == nil {
 		vari := NewVar(varname)
-		vari.Write(mkline, ind.Varnames()...)
+		vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
 		s.vars[varname] = &redundantScopeVarinfo{vari, s.includePath.copy()}
 		return
 	}
@@ -811,7 +811,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		}
 	}
 
-	existing.vari.Write(mkline, ind.Varnames()...)
+	existing.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
 }
 
 type includePath struct {

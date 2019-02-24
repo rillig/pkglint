@@ -996,10 +996,9 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__if_then_else_without_var
 
 	// These two definitions are of course not redundant since they happen in
 	// different branches of the same .if statement.
-	// FIXME: Even though the .if condition does not refer to any variables,
-	//  this still means that the variable assignments are conditional.
-	t.CheckOutputLines(
-		"WARN: ~/if-then-else.mk:3: Variable IT is overwritten in line 5.")
+	// Even though the .if condition does not refer to any variables,
+	// this still means that the variable assignments are conditional.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {

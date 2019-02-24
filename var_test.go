@@ -7,11 +7,11 @@ func (s *Suite) Test_Var_ConstantValue__assign(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"), false)
 
 	t.Check(v.ConstantValue(), equals, "value")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\toverwritten"))
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\toverwritten"), false)
 
 	t.Check(v.ConstantValue(), equals, "overwritten")
 }
@@ -21,11 +21,11 @@ func (s *Suite) Test_Var_ConstantValue__assign_reference(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"), false)
 
 	t.Check(v.ConstantValue(), equals, "value")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\t${OTHER}"))
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\t${OTHER}"), false)
 
 	t.Check(v.Constant(), equals, false)
 }
@@ -37,7 +37,7 @@ func (s *Suite) Test_Var_ConstantValue__assign_conditional(c *check.C) {
 
 	t.Check(v.ConditionalVars(), check.IsNil)
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), "OPSYS")
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), true, "OPSYS")
 
 	t.Check(v.Constant(), equals, false)
 }
@@ -47,11 +47,11 @@ func (s *Suite) Test_Var_ConstantValue__default(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME?=\tvalue"))
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME?=\tvalue"), false)
 
 	t.Check(v.ConstantValue(), equals, "value")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME?=\tignored"))
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME?=\tignored"), false)
 
 	t.Check(v.ConstantValue(), equals, "value")
 }
@@ -61,11 +61,11 @@ func (s *Suite) Test_Var_ConstantValue__append(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME+=\tvalue"))
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME+=\tvalue"), false)
 
 	t.Check(v.ConstantValue(), equals, " value")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME+=\tappended"))
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME+=\tappended"), false)
 
 	t.Check(v.ConstantValue(), equals, " value appended")
 }
@@ -75,11 +75,11 @@ func (s *Suite) Test_Var_ConstantValue__eval(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME:=\tvalue"))
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME:=\tvalue"), false)
 
 	t.Check(v.ConstantValue(), equals, "value")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten"))
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten"), false)
 
 	t.Check(v.ConstantValue(), equals, "overwritten")
 }
@@ -90,11 +90,11 @@ func (s *Suite) Test_Var_ConstantValue__shell(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"), false)
 
 	t.Check(v.ConstantValue(), equals, "value")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME!=\techo hello"))
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME!=\techo hello"), false)
 
 	t.Check(v.Constant(), equals, false)
 }
@@ -112,7 +112,7 @@ func (s *Suite) Test_Var_ConstantValue__referenced_before(c *check.C) {
 
 	t.Check(v.Constant(), equals, false)
 
-	v.Write(t.NewMkLine("readwrite.mk", 124, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine("readwrite.mk", 124, "VARNAME=\tvalue"), false)
 
 	t.Check(v.Constant(), equals, false)
 }
@@ -122,7 +122,7 @@ func (s *Suite) Test_Var_ConstantValue__referenced_in_between(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("readwrite.mk", 123, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine("readwrite.mk", 123, "VARNAME=\tvalue"), false)
 
 	t.Check(v.ConstantValue(), equals, "value")
 
@@ -134,7 +134,7 @@ func (s *Suite) Test_Var_ConstantValue__referenced_in_between(c *check.C) {
 
 	t.Check(v.ConstantValue(), equals, "value")
 
-	v.Write(t.NewMkLine("write.mk", 125, "VARNAME=\toverwritten"))
+	v.Write(t.NewMkLine("write.mk", 125, "VARNAME=\toverwritten"), false)
 
 	t.Check(v.Constant(), equals, false)
 }
@@ -147,13 +147,13 @@ func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
 	t.Check(v.Conditional(), equals, false)
 	t.Check(v.ConditionalVars(), check.IsNil)
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), "OPSYS")
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), true, "OPSYS")
 
 	t.Check(v.Constant(), equals, false)
 	t.Check(v.Conditional(), equals, true)
 	t.Check(v.ConditionalVars(), deepEquals, []string{"OPSYS"})
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\tconditional"), "OPSYS")
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\tconditional"), true, "OPSYS")
 
 	t.Check(v.Conditional(), equals, true)
 	t.Check(v.ConditionalVars(), deepEquals, []string{"OPSYS"})
@@ -164,7 +164,7 @@ func (s *Suite) Test_Var_Value__initial_conditional_write(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), "OPSYS")
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), true, "OPSYS")
 
 	// Since there is no previous value, the simplest choice is to just
 	// take the first seen value, no matter if that value is conditional
@@ -179,15 +179,15 @@ func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"), false)
 
 	t.Check(v.Value(), equals, "value")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME+=\tappended"))
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME+=\tappended"), false)
 
 	t.Check(v.Value(), equals, "value appended")
 
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), "OPSYS")
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), true, "OPSYS")
 
 	// When there is a previous value, it's probably best to keep
 	// that value since this way the following code results in the
@@ -208,15 +208,15 @@ func (s *Suite) Test_Var_Value__infrastructure(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine(t.File("write.mk"), 123, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine(t.File("write.mk"), 123, "VARNAME=\tvalue"), false)
 
 	t.Check(v.Value(), equals, "value")
 
-	v.Write(t.NewMkLine(t.File("mk/write.mk"), 123, "VARNAME=\tinfra"))
+	v.Write(t.NewMkLine(t.File("mk/write.mk"), 123, "VARNAME=\tinfra"), false)
 
 	t.Check(v.Value(), equals, "value")
 
-	v.Write(t.NewMkLine(t.File("wip/mk/write.mk"), 123, "VARNAME=\twip infra"))
+	v.Write(t.NewMkLine(t.File("wip/mk/write.mk"), 123, "VARNAME=\twip infra"), false)
 
 	t.Check(v.Value(), equals, "value")
 }
@@ -226,15 +226,15 @@ func (s *Suite) Test_Var_ValueInfra(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	v.Write(t.NewMkLine(t.File("write.mk"), 123, "VARNAME=\tvalue"))
+	v.Write(t.NewMkLine(t.File("write.mk"), 123, "VARNAME=\tvalue"), false)
 
 	t.Check(v.ValueInfra(), equals, "value")
 
-	v.Write(t.NewMkLine(t.File("mk/write.mk"), 123, "VARNAME=\tinfra"))
+	v.Write(t.NewMkLine(t.File("mk/write.mk"), 123, "VARNAME=\tinfra"), false)
 
 	t.Check(v.ValueInfra(), equals, "infra")
 
-	v.Write(t.NewMkLine(t.File("wip/mk/write.mk"), 123, "VARNAME=\twip infra"))
+	v.Write(t.NewMkLine(t.File("wip/mk/write.mk"), 123, "VARNAME=\twip infra"), false)
 
 	t.Check(v.ValueInfra(), equals, "wip infra")
 }
@@ -268,14 +268,14 @@ func (s *Suite) Test_Var_WriteLocations(c *check.C) {
 	t.Check(v.WriteLocations(), check.IsNil)
 
 	mkline123 := t.NewMkLine("write.mk", 123, "VAR=\tvalue")
-	v.Write(mkline123)
+	v.Write(mkline123, false)
 
 	t.Check(v.WriteLocations(), deepEquals, []MkLine{mkline123})
 
 	// Multiple writes from the same line may happen because of a .for loop.
 	mkline125 := t.NewMkLine("write.mk", 125, "VAR+=\t${var}")
-	v.Write(mkline125)
-	v.Write(mkline125)
+	v.Write(mkline125, false)
+	v.Write(mkline125, false)
 
 	// For now, count every write of the variable. I'm not yet sure
 	// whether that's the best way or whether to make the lines unique.
@@ -289,7 +289,9 @@ func (s *Suite) Test_Var_Refs(c *check.C) {
 
 	t.Check(v.Refs(), check.IsNil)
 
-	v.Write(t.NewMkLine("write.mk", 123, "VAR=${OTHER} ${${OPSYS} == NetBSD :? ${THEN} : ${ELSE}}"), "COND")
+	// The referenced variables are taken from the mkline.
+	// They don't need to be passed separately.
+	v.Write(t.NewMkLine("write.mk", 123, "VAR=${OTHER} ${${OPSYS} == NetBSD :? ${THEN} : ${ELSE}}"), true, "COND")
 
 	v.AddRef("FOR")
 

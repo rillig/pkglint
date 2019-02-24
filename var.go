@@ -31,19 +31,31 @@ type Var struct {
 	value      string
 	valueInfra string
 
-	readLocations   []MkLine
-	writeLocations  []MkLine
+	readLocations  []MkLine
+	writeLocations []MkLine
+
+	conditional     bool
 	conditionalVars StringSet
-	refs            StringSet
+
+	refs StringSet
 }
 
 func NewVar(name string) *Var {
-	return &Var{name, 0, "", "", "", nil, nil, NewStringSet(), NewStringSet()}
+	return &Var{name, 0, "", "", "", nil, nil, false, NewStringSet(), NewStringSet()}
 }
 
 // Conditional returns whether the variable value depends on other variables.
 func (v *Var) Conditional() bool {
-	return v.conditionalVars.Size() > 0
+	return v.conditional
+}
+
+// SetConditional marks the variable as being set conditionally in at least
+// one branch.
+//
+// (For later: It might be interesting to see for each assignment whether
+// it is conditional or not.)
+func (v *Var) SetConditional() {
+	v.conditional = true
 }
 
 // ConditionalVars returns all variables in conditions on which the value of
@@ -145,11 +157,16 @@ func (v *Var) Read(mkline MkLine) {
 	v.constantState = [...]uint8{3, 2, 2, 3}[v.constantState]
 }
 
-func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
+func (v *Var) Write(mkline MkLine, conditional bool, conditionVarnames ...string) {
 	G.Assertf(mkline.Varname() == v.Name, "wrong variable name")
 
 	v.writeLocations = append(v.writeLocations, mkline)
+
+	if conditional || len(conditionVarnames) > 0 {
+		v.conditional = true
+	}
 	v.conditionalVars.AddAll(conditionVarnames)
+
 	v.refs.AddAll(mkline.DetermineUsedVariables())
 	v.refs.AddAll(conditionVarnames)
 
@@ -157,6 +174,7 @@ func (v *Var) Write(mkline MkLine, conditionVarnames ...string) {
 	if !v.isInfra(mkline) {
 		v.update(mkline, &v.value)
 	}
+
 	v.updateConstantValue(mkline)
 }
 
