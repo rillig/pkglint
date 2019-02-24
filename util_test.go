@@ -73,39 +73,44 @@ func (s *Suite) Test_tabWidth(c *check.C) {
 }
 
 func (s *Suite) Test_cleanpath(c *check.C) {
-	c.Check(cleanpath("simple/path"), equals, "simple/path")
-	c.Check(cleanpath("/absolute/path"), equals, "/absolute/path")
+	test := func(from, to string) {
+		c.Check(cleanpath(from), equals, to)
+	}
+
+	test("simple/path", "simple/path")
+	test("/absolute/path", "/absolute/path")
 
 	// Single dot components are removed, unless it's the only component of the path.
-	c.Check(cleanpath("./././."), equals, ".")
-	c.Check(cleanpath("./././"), equals, ".")
-	c.Check(cleanpath("dir/multi/././/file"), equals, "dir/multi/file")
-	c.Check(cleanpath("dir/"), equals, "dir")
+	test("./././.", ".")
+	test("./././", ".")
+	test("dir/multi/././/file", "dir/multi/file")
+	test("dir/", "dir")
 
 	// Components like aa/bb/../.. are removed, but not in the initial part of the path,
 	// and only if they are not followed by another "..".
-	c.Check(cleanpath("dir/../dir/../dir/../dir/subdir/../../Makefile"), equals, "dir/../dir/../dir/../Makefile")
-	c.Check(cleanpath("111/222/../../333/444/../../555/666/../../777/888/9"), equals, "111/222/../../777/888/9")
-	c.Check(cleanpath("1/2/3/../../4/5/6/../../7/8/9/../../../../10"), equals, "1/2/3/../../4/7/8/9/../../../../10")
-	c.Check(cleanpath("cat/pkg.v1/../../cat/pkg.v2/Makefile"), equals, "cat/pkg.v1/../../cat/pkg.v2/Makefile")
-	c.Check(cleanpath("aa/../../../../../a/b/c/d"), equals, "aa/../../../../../a/b/c/d")
-	c.Check(cleanpath("aa/bb/../../../../a/b/c/d"), equals, "aa/bb/../../../../a/b/c/d")
-	c.Check(cleanpath("aa/bb/cc/../../../a/b/c/d"), equals, "aa/bb/cc/../../../a/b/c/d")
-	c.Check(cleanpath("aa/bb/cc/dd/../../a/b/c/d"), equals, "aa/bb/a/b/c/d")
-	c.Check(cleanpath("aa/bb/cc/dd/ee/../a/b/c/d"), equals, "aa/bb/cc/dd/ee/../a/b/c/d")
-	c.Check(cleanpath("../../../../../a/b/c/d"), equals, "../../../../../a/b/c/d")
-	c.Check(cleanpath("aa/../../../../a/b/c/d"), equals, "aa/../../../../a/b/c/d")
-	c.Check(cleanpath("aa/bb/../../../a/b/c/d"), equals, "aa/bb/../../../a/b/c/d")
-	c.Check(cleanpath("aa/bb/cc/../../a/b/c/d"), equals, "aa/bb/cc/../../a/b/c/d")
-	c.Check(cleanpath("aa/bb/cc/dd/../a/b/c/d"), equals, "aa/bb/cc/dd/../a/b/c/d")
-	c.Check(cleanpath("aa/../cc/../../a/b/c/d"), equals, "aa/../cc/../../a/b/c/d")
+	test("dir/../dir/../dir/../dir/subdir/../../Makefile", "dir/../dir/../dir/../Makefile")
+	test("111/222/../../333/444/../../555/666/../../777/888/9", "111/222/../../777/888/9")
+	test("1/2/3/../../4/5/6/../../7/8/9/../../../../10", "1/2/3/../../4/7/8/9/../../../../10")
+	test("cat/pkg.v1/../../cat/pkg.v2/Makefile", "cat/pkg.v1/../../cat/pkg.v2/Makefile")
+	test("aa/../../../../../a/b/c/d", "aa/../../../../../a/b/c/d")
+	test("aa/bb/../../../../a/b/c/d", "aa/bb/../../../../a/b/c/d")
+	test("aa/bb/cc/../../../a/b/c/d", "aa/bb/cc/../../../a/b/c/d")
+	test("aa/bb/cc/dd/../../a/b/c/d", "aa/bb/a/b/c/d")
+	test("aa/bb/cc/dd/ee/../a/b/c/d", "aa/bb/cc/dd/ee/../a/b/c/d")
+	test("../../../../../a/b/c/d", "../../../../../a/b/c/d")
+	test("aa/../../../../a/b/c/d", "aa/../../../../a/b/c/d")
+	test("aa/bb/../../../a/b/c/d", "aa/bb/../../../a/b/c/d")
+	test("aa/bb/cc/../../a/b/c/d", "aa/bb/cc/../../a/b/c/d")
+	test("aa/bb/cc/dd/../a/b/c/d", "aa/bb/cc/dd/../a/b/c/d")
+	test("aa/../cc/../../a/b/c/d", "aa/../cc/../../a/b/c/d")
 
 	// The initial 2 components of the path are typically category/package, when
 	// pkglint is called from the pkgsrc top-level directory.
 	// This path serves as the context and therefore is always kept.
-	c.Check(cleanpath("aa/bb/../../cc/dd/../../ee/ff"), equals, "aa/bb/../../ee/ff")
-	c.Check(cleanpath("aa/bb/../../cc/dd/../.."), equals, "aa/bb/../..")
-	c.Check(cleanpath("aa/bb/cc/dd/../.."), equals, "aa/bb")
+	test("aa/bb/../../cc/dd/../../ee/ff", "aa/bb/../../ee/ff")
+	test("aa/bb/../../cc/dd/../..", "aa/bb/../..")
+	test("aa/bb/cc/dd/../..", "aa/bb")
+	test("aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk")
 }
 
 // Relpath is called so often that handling the most common calls
