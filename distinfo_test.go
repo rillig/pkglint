@@ -581,3 +581,27 @@ func (s *Suite) Test_CheckLinesDistinfo__add_missing_hashes(c *check.C) {
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", " +
 			"got SHA1, RMD160, SHA512, Size, CRC32.")
 }
+
+func (s *Suite) Test_CheckLinesDistinfo__wrong_distfile_hash(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall")
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/distinfo",
+		RcsID,
+		"",
+		"RMD160 (package-1.0.txt) = 1234wrongHash1234")
+	t.CreateFileLines("distfiles/package-1.0.txt",
+		"hello, world")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/distinfo:3: "+
+			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"got RMD160.",
+		"ERROR: ~/category/package/distinfo:3: "+
+			"The RMD160 checksum for \"package-1.0.txt\" is 1234wrongHash1234 in distinfo, "+
+			"1a88147a0344137404c63f3b695366eab869a98a in ../../distfiles/package-1.0.txt.")
+}
