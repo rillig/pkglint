@@ -747,6 +747,7 @@ type RedundantScope struct {
 type redundantScopeVarinfo struct {
 	vari        *Var
 	includePath includePath
+	lastAction  uint8 // 0 = none, 1 = read, 2 = write
 }
 
 func NewRedundantScope() *RedundantScope {
@@ -760,6 +761,8 @@ func (s *RedundantScope) Handle(mkline MkLine, ind *Indentation) {
 	case mkline.IsVarassign():
 		s.handleVarassign(mkline, ind)
 	}
+
+	s.handleVarUse(mkline)
 }
 
 func (s *RedundantScope) updateIncludePath(mkline MkLine) {
@@ -775,9 +778,9 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 
 	existing := s.vars[varname]
 	if existing == nil {
-		vari := NewVar(varname)
-		vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
-		s.vars[varname] = &redundantScopeVarinfo{vari, s.includePath.copy()}
+		info := s.get(varname)
+		info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
+		info.lastAction = 2
 		return
 	}
 
@@ -790,6 +793,14 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		return
 	}
 
+	// When the variable has been read after the previous write,
+	// it is not redundant.
+	if existing.lastAction == 1 {
+		existing.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
+		existing.lastAction = 2
+		return
+	}
+
 	op := mkline.Op()
 	value := mkline.Value()
 
@@ -797,29 +808,67 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		op = /* effectively */ opAssignDefault
 	}
 
-	prevWrite := func() MkLine { return existing.vari.WriteLocations()[0] }
+	prevWrites := existing.vari.WriteLocations()
+	if len(prevWrites) > 0 {
+		switch op {
+		case opAssign:
+			if s.includePath.includes(existing.includePath) {
+				// This is the usual pattern of including a file and
+				// then overwriting some of them. Although technically
+				// this overwrites the previous definition, it is not
+				// worth a warning since this is used a lot and
+				// intentionally.
 
-	switch op {
-	case opAssign:
-		if s.includePath.includes(existing.includePath) {
-			// This is the usual pattern of including a file and
-			// then overwriting some of them. Although technically
-			// this overwrites the previous definition, it is not
-			// worth a warning since this is used a lot and
-			// intentionally.
-		} else if !ind.IsConditional() {
-			s.OnOverwrite(prevWrite(), mkline)
-		}
+				// FIXME: ind.IsConditional is not precise enough since it
+				//  only looks at the variables. There may be conditions entirely
+				//  without variables, such as exists(/usr).
+			} else if !ind.IsConditional() {
+				s.OnOverwrite(prevWrites[0], mkline)
+			}
 
-	case opAssignDefault:
-		if existing.includePath.includes(s.includePath) {
-			s.OnRedundant(mkline, prevWrite())
-		} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
-			s.OnRedundant(prevWrite(), mkline)
+		case opAssignDefault:
+			if existing.includePath.includes(s.includePath) {
+				s.OnRedundant(mkline, prevWrites[0])
+			} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
+				s.OnRedundant(prevWrites[0], mkline)
+			}
 		}
 	}
 
 	existing.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
+	existing.lastAction = 2
+}
+
+func (s *RedundantScope) handleVarUse(mkline MkLine) {
+	switch {
+	case mkline.IsVarassign(), mkline.IsCommentedVarassign():
+		for _, varname := range mkline.DetermineUsedVariables() {
+			info := s.get(varname)
+			info.vari.Read(mkline)
+			info.lastAction = 1
+		}
+
+	case mkline.IsDirective():
+		// TODO: Handle varuse for conditions and loops.
+		break
+
+	case mkline.IsInclude(), mkline.IsSysinclude():
+		// TODO: Handle VarUse for includes, which may reference variables.
+		break
+
+	case mkline.IsDependency():
+		// TODO: Handle VarUse for this case.
+	}
+}
+
+func (s *RedundantScope) get(varname string) *redundantScopeVarinfo {
+	info := s.vars[varname]
+	if info == nil {
+		v := NewVar(varname)
+		info = &redundantScopeVarinfo{v, s.includePath.copy(), 0}
+		s.vars[varname] = info
+	}
+	return info
 }
 
 type includePath struct {

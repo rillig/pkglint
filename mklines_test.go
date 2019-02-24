@@ -857,8 +857,12 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_variable_
 
 	mklines.CheckRedundantAssignments()
 
+	// Strictly speaking, line 1 is redundant because OTHER is not evaluated
+	// at load time and then immediately overwritten in line 3. If the operator
+	// in line 2 were a := instead of a =, the situation would be clear.
+	// Pkglint doesn't warn about the redundancy in line 1 because it prefers
+	// to omit warnings instead of giving wrong advice.
 	t.CheckOutputLines(
-		"WARN: module.mk:1: Variable OTHER is overwritten in line 3.",
 		"NOTE: module.mk:4: Definition of VAR is redundant because of line 2.")
 }
 
@@ -882,9 +886,11 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_different_valu
 
 	mklines.CheckRedundantAssignments()
 
-	t.CheckOutputLines(
-		"WARN: module.mk:1: Variable OTHER is overwritten in line 4.",
-		"NOTE: module.mk:6: Definition of VAR is redundant because of line 2.")
+	// There is nothing redundant here. Each write is followed by a
+	// corresponding read, except for the last one. That is ok though
+	// because in pkgsrc the last action of a package is to include
+	// bsd.pkg.mk, which reads almost all variables.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call(c *check.C) {
@@ -1091,11 +1097,9 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_parameters(c *
 
 	mklines.CheckRedundantAssignments()
 
-	// FIXME: This variable is not overwritten since it is used in-between
-	//  by the included file.
-	t.CheckOutputLines(
-		"WARN: ~/including.mk:2: Variable pkgbase is overwritten in line 5.",
-		"WARN: ~/including.mk:2: Variable pkgbase is overwritten in line 8.")
+	// This variable is not overwritten since it is used in-between
+	// by the included file.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
