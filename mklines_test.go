@@ -1050,6 +1050,28 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_i
 		"NOTE: ~/assign-then-default.mk:2: Definition of VAR is redundant because of included.mk:2.")
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_included_file(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("included.mk",
+		MkRcsID,
+		"VAR?=\tvalue")
+	t.CreateFileLines("including.mk",
+		MkRcsID,
+		"VAR=\tvalue",
+		".if ${COND}",
+		".  include \"included.mk\"",
+		".endif")
+	mklines := t.LoadMkInclude("including.mk")
+
+	mklines.CheckRedundantAssignments()
+
+	// FIXME: This is wrong. The assignment in including.mk:2 is only redundant if
+	//  included.mk is actually included.
+	t.CheckOutputLines(
+		"NOTE: ~/including.mk:2: Definition of VAR is redundant because of included.mk:2.")
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
