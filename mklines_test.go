@@ -963,6 +963,26 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__included_OPSYS_variable(
 		"WARN: ~/category/package/Makefile:21: Variable CONFIGURE_ARGS is overwritten in line 22.")
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__if_then_else(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("if-then-else.mk",
+		MkRcsID,
+		".if exists(${FILE})",
+		"OS=\tNetBSD${A}",
+		".else",
+		"OS=\tOTHER${A}",
+		".endif")
+
+	mklines.CheckRedundantAssignments()
+
+	// These two definitions are of course not redundant since they happen in
+	// different branches of the same .if statement.
+	// FIXME: This warning is wrong.
+	t.CheckOutputLines(
+		"WARN: ~/if-then-else.mk:3: Variable OS is overwritten in line 5.")
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
