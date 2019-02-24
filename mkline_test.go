@@ -1254,6 +1254,32 @@ func (s *Suite) Test_Indentation_TrackAfter__lonely_else(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpPackage("category/other")
+	t.CreateFileDummyBuildlink3("category/other/buildlink3.mk")
+	t.SetUpPackage("category/package",
+		"DISTNAME=\tpackage-1.0",
+		".include \"../../category/other/buildlink3.mk\"")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		".if ${OPSYS} == NetBSD || ${OPSYS} == FreeBSD",
+		".  if ${OPSYS} == NetBSD",
+		".    include \"../../category/other/buildlink3.mk\"",
+		".  endif",
+		".endif")
+
+	G.Check(t.File("category/package"))
+
+	// TODO: It feels wrong that OPSYS is mentioned twice here.
+	//  Why only twice and not three times?
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:14: " +
+			"\"../../category/other/buildlink3.mk\" is included conditionally here " +
+			"(depending on OPSYS, OPSYS) and unconditionally in Makefile:20.")
+}
+
 func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
 	t := s.Init(c)
 
