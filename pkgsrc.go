@@ -953,6 +953,8 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	case hasSuffix(varbase, "_MK"):
 		// TODO: Add BtGuard for inclusion guards, since these variables may only be checked using defined().
 		gtype = &Vartype{lkNone, BtUnknown, allowAll, true}
+	case hasSuffix(varbase, "_SKIP"):
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
 	}
 
 	if gtype == nil {
