@@ -335,12 +335,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 	// The tools autoreconf and autoheader213 are known at this point because of the USE_TOOLS line.
 	// The SUV variable is used implicitly by the SUBST framework, therefore no warning.
 	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
-	t.CheckOutputLines(
-		// FIXME: the below warning is wrong; it's ok to have SUBST blocks in all files,
-		//  maybe except buildlink3.mk.
-		"WARN: determine-defined-variables.mk:12: The variable SUBST_VARS.subst may not be set " +
-			"(only given a default value, or appended to) in this file; " +
-			"it would be ok in Makefile, Makefile.common or options.mk.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {

@@ -1155,13 +1155,13 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("STRIP", lkNone, BtShellCommand) // see mk/tools/strip.mk
 	acl("SUBDIR", lkShell, BtFileName, "Makefile: append; *:")
 	acl("SUBST_CLASSES", lkShell, BtIdentifier, "Makefile: set, append; *: append")
-	acl("SUBST_CLASSES.*", lkShell, BtIdentifier, "Makefile: set, append; *: append")
+	acl("SUBST_CLASSES.*", lkShell, BtIdentifier, "Makefile: set, append; *: append") // OPSYS-specific
 	acl("SUBST_FILES.*", lkShell, BtPathmask, "Makefile, Makefile.*, *.mk: set, append")
 	acl("SUBST_FILTER_CMD.*", lkNone, BtShellCommand, "Makefile, Makefile.*, *.mk: set")
 	acl("SUBST_MESSAGE.*", lkNone, BtMessage, "Makefile, Makefile.*, *.mk: set")
 	acl("SUBST_SED.*", lkNone, BtSedCommands, "Makefile, Makefile.*, *.mk: set, append")
 	pkg("SUBST_STAGE.*", lkNone, BtStage)
-	pkglist("SUBST_VARS.*", lkShell, BtVariableName)
+	acl("SUBST_VARS.*", lkShell, BtVariableName, "Makefile, Makefile.*, *.mk: set, append")
 	pkglist("SUPERSEDES", lkShell, BtDependency)
 	acl("TEST_DEPENDS", lkShell, BtDependencyWithPath, "Makefile, Makefile.common, *.mk: append")
 	pkglist("TEST_DIRS", lkShell, BtWrksrcSubdirectory)
