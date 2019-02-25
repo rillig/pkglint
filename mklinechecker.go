@@ -1308,6 +1308,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 		// From a package to another package.
 	case hasPrefix(relativePath, "../mk/") && relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(".")) == "..":
 		// For category Makefiles.
+		// TODO: Or from a pkgsrc wip package to wip/mk.
 	default:
 		mkline.Warnf("Invalid relative path %q.", relativePath)
 		// TODO: Explain this warning.

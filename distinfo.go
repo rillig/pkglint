@@ -10,7 +10,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 )
 
@@ -151,8 +150,8 @@ func (ck *distinfoLinesChecker) checkAlgorithms(info distinfoFileInfo) {
 			break
 		}
 
-		pathToPatchdir := relpath(path.Dir(line.Filename), G.Pkg.File(ck.patchdir))
-		line.Warnf("Patch file %q does not exist in directory %q.", filename, pathToPatchdir)
+		line.Warnf("Patch file %q does not exist in directory %q.",
+			filename, line.PathToFile(G.Pkg.File(ck.patchdir)))
 		G.Explain(
 			"If the patches directory looks correct, the patch may have been",
 			"removed without updating the distinfo file.",
@@ -314,8 +313,9 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	for _, file := range patchFiles {
 		patchName := file.Name()
 		if file.Mode().IsRegular() && ck.infos[patchName].isPatch != yes && hasPrefix(patchName, "patch-") {
-			ck.lines.Errorf("Patch %q is not recorded. Run %q.",
-				cleanpath(relpath(path.Dir(ck.lines.FileName), G.Pkg.File(ck.patchdir+"/"+patchName))),
+			line := NewLineWhole(ck.lines.FileName)
+			line.Errorf("Patch %q is not recorded. Run %q.",
+				line.PathToFile(G.Pkg.File(ck.patchdir+"/"+patchName)),
 				bmake("makepatchsum"))
 		}
 	}
