@@ -751,7 +751,11 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_definitely
 
 	mklines.CheckRedundantAssignments()
 
-	// FIXME: A default assignment after an unconditional assignment is redundant.
+	// A default assignment after an unconditional assignment is redundant.
+	// As of February 2019, pkglint doesn't recognize it as redundant because its
+	// initial value refers to another variable.
+	// TODO: Since VAR is not used between lines 1 and 2, pkglint should
+	//  flag it as redundant, independent of its initial value.
 	t.CheckOutputEmpty()
 }
 
