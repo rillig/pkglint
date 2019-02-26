@@ -871,6 +871,12 @@ func (s *RedundantScope) get(varname string) *redundantScopeVarinfo {
 	return info
 }
 
+// includePath remembers the whole sequence of included files,
+// such as Makefile includes ../../a/b/buildlink3.mk includes ../../c/d/buildlink3.mk.
+//
+// This information is used by the RedundantScope to decide whether
+// one of two variable assignments is redundant. Two assignments can
+// only be redundant if one location includes the other.
 type includePath struct {
 	files []string
 }
