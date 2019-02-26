@@ -646,16 +646,16 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("any.mk",
 		MkRcsID,
-		// PKGREVISION may only be set in Makefile, not used at load time; see vardefs.go.
 		".if defined(PKGREVISION)",
 		".endif")
 
 	mklines.Check()
 
-	// FIXME: Fix the permissions of PKGREVISION to explicitly say "none",
-	//  or make "none" the default. But then there must be no warning that
-	//  "this variable is not writable anywhere", since that would be wrong.
-	t.CheckOutputEmpty()
+	// Since PKGREVISION may only be set in the package Makefile directly,
+	// there is no other file that could be mentioned as "it would be ok in".
+	t.CheckOutputLines(
+		"WARN: any.mk:2: PKGREVISION should not be evaluated at load time.",
+		"WARN: any.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C) {

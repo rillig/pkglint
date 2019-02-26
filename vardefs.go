@@ -997,7 +997,7 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("PKGNAME_NOREV", lkNone, BtPkgName)
 	sysload("PKGPATH", lkNone, BtPathname)
 	acl("PKGREPOSITORY", lkNone, BtUnknown, "")
-	acl("PKGREVISION", lkNone, BtPkgRevision, "Makefile: set")
+	acl("PKGREVISION", lkNone, BtPkgRevision, "Makefile: set; *: none")
 	sys("PKGSRCDIR", lkNone, BtPathname)
 	acl("PKGSRCTOP", lkNone, BtYes, "Makefile: set")
 	sys("PKGSRC_SETENV", lkNone, BtShellCommand)
