@@ -295,6 +295,26 @@ func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__bad(c *check.C)
 		"WARN: distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.")
 }
 
+func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__good(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileDummyPatch("patches/patch-aa")
+	t.CreateFileLines("CVS/Entries",
+		"/distinfo/...")
+	t.CreateFileLines("patches/CVS/Entries",
+		"/patch-aa/...")
+	t.SetUpFileLines("distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
+
+	G.checkdirPackage(".")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t := s.Init(c)
 
@@ -455,26 +475,6 @@ func (s *Suite) Test_CheckLinesDistinfo__missing_php_patches(c *check.C) {
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	G.Check(t.File("archivers/php-zlib"))
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__good(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPackage("category/package")
-	t.Chdir("category/package")
-	t.CreateFileDummyPatch("patches/patch-aa")
-	t.CreateFileLines("CVS/Entries",
-		"/distinfo/...")
-	t.CreateFileLines("patches/CVS/Entries",
-		"/patch-aa/...")
-	t.SetUpFileLines("distinfo",
-		RcsID,
-		"",
-		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
-
-	G.checkdirPackage(".")
 
 	t.CheckOutputEmpty()
 }
