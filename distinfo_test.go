@@ -2,7 +2,7 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_CheckLinesDistinfo(c *check.C) {
+func (s *Suite) Test_CheckLinesDistinfo__parse_errors(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
@@ -36,7 +36,7 @@ func (s *Suite) Test_CheckLinesDistinfo(c *check.C) {
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
-func (s *Suite) Test_CheckLinesDistinfo__nonexistent_distfile_called_patch(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__nonexistent_distfile_called_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
@@ -57,7 +57,7 @@ func (s *Suite) Test_CheckLinesDistinfo__nonexistent_distfile_called_patch(c *ch
 			"for \"patch-5.3.tar.gz\", got MD5, SHA1.")
 }
 
-func (s *Suite) Test_CheckLinesDistinfo__wrong_distfile_algorithms(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__wrong_distfile_algorithms(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir("category/package")
@@ -80,7 +80,7 @@ func (s *Suite) Test_CheckLinesDistinfo__wrong_distfile_algorithms(c *check.C) {
 // for both distfile or patch.
 //
 // This test only demonstrates the edge case.
-func (s *Suite) Test_CheckLinesDistinfo__ambiguous_distfile(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__ambiguous_distfile(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--explain")
@@ -102,7 +102,7 @@ func (s *Suite) Test_CheckLinesDistinfo__ambiguous_distfile(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_CheckLinesDistinfo__wrong_patch_algorithms(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__wrong_patch_algorithms(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -276,7 +276,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wr
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"patch-aa\", got RMD160.")
 }
 
-func (s *Suite) Test_CheckLinesDistinfo__uncommitted_patch(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__bad(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -295,7 +295,7 @@ func (s *Suite) Test_CheckLinesDistinfo__uncommitted_patch(c *check.C) {
 		"WARN: distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.")
 }
 
-func (s *Suite) Test_CheckLinesDistinfo__unrecorded_patches(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -321,7 +321,7 @@ func (s *Suite) Test_CheckLinesDistinfo__unrecorded_patches(c *check.C) {
 // The distinfo file and the patches are usually placed in the package
 // directory. By defining PATCHDIR or DISTINFO_FILE, a package can define
 // that they are somewhere else in pkgsrc.
-func (s *Suite) Test_CheckLinesDistinfo__relative_path_in_distinfo(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1__relative_path_in_distinfo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -459,7 +459,7 @@ func (s *Suite) Test_CheckLinesDistinfo__missing_php_patches(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__good(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -495,7 +495,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1(c *check.C) {
 // When there is at least one correct hash for a distfile, running
 // pkglint --autofix adds the missing hashes, provided the distfile has been
 // downloaded to pkgsrc/distfiles, which is the standard distfiles location.
-func (s *Suite) Test_CheckLinesDistinfo__add_missing_hashes(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_hashes(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall", "--explain")
@@ -574,7 +574,7 @@ func (s *Suite) Test_CheckLinesDistinfo__add_missing_hashes(c *check.C) {
 			"got SHA1, RMD160, SHA512, Size, CRC32.")
 }
 
-func (s *Suite) Test_CheckLinesDistinfo__wrong_distfile_hash(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_distfile_hash(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall")
