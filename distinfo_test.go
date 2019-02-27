@@ -616,3 +616,26 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__no_usual_algo
 			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", " +
 			"got MD5.")
 }
+
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__SHA1_missing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/distinfo",
+		RcsID,
+		"",
+		"SHA512 (package-1.0.txt) = f65f341b35981fda842b09b2c8af9bcdb7602a4c2e6fa1f7d41f0974d3e3122f268fc79d5a4af66358f5133885cd1c165c916f80ab25e5d8d95db46f803c782c",
+		"Size (package-1.0.txt) = 13 bytes")
+	t.CreateFileLines("distfiles/package-1.0.txt",
+		"hello, world")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/distinfo:3: "+
+			"Expected SHA1, RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"got SHA512, Size.",
+		"ERROR: ~/category/package/distinfo:3: Missing SHA1 hash for package-1.0.txt.",
+		"ERROR: ~/category/package/distinfo:3: Missing RMD160 hash for package-1.0.txt.")
+}
