@@ -547,17 +547,13 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	if effPerms == aclpUnknown {
 		return
 	}
+	if effPerms.Contains(aclpUseLoadtime) {
+		return
+	}
 
 	// Is the variable used at load time although that is not allowed?
-	directly := false
-	indirectly := false
-	if !effPerms.Contains(aclpUseLoadtime) { // May not be used at load time.
-		if vuc.time == vucTimeParse {
-			directly = true
-		} else if vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime) {
-			indirectly = true
-		}
-	}
+	directly := vuc.time == vucTimeParse
+	indirectly := !directly && vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime)
 
 	if (directly || indirectly) && !vartype.guessed {
 		if tool := G.ToolByVarname(varname); tool != nil {
@@ -569,7 +565,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		}
 	}
 
-	if !effPerms.Contains(aclpUseLoadtime) && !effPerms.Contains(aclpUse) {
+	if !effPerms.Contains(aclpUse) {
 		needed := aclpUse
 		if directly || indirectly {
 			needed = aclpUseLoadtime

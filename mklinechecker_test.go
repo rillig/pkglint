@@ -673,6 +673,23 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C
 		"WARN: file.mk:2: ONLY_FOR_UNPRIVILEGED should not be evaluated indirectly at load time.")
 }
 
+// This test is only here for branch coverage.
+// It does not demonstrate anything useful.
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly_tool(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"USE_TOOLS+=\t${PKGREVISION}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: file.mk:2: PKGREVISION should not be evaluated indirectly at load time.",
+		"WARN: file.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
+}
+
 func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
 	t := s.Init(c)
 
