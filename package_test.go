@@ -910,6 +910,18 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_m
 			"but \"c\" is not added to USE_LANGUAGES in line 20.")
 }
 
+func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__only_GNU_CONFIGURE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"GNU_CONFIGURE=\tyes")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package__USE_LANGUAGES_too_late(c *check.C) {
 	t := s.Init(c)
 
