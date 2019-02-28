@@ -1245,7 +1245,3 @@ func (s *StringSet) AddAll(elements []string) {
 		s.Add(element)
 	}
 }
-
-func (s *StringSet) Size() int {
-	return len(s.Elements)
-}
