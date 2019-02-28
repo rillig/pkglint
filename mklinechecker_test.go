@@ -690,6 +690,22 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly_tool(c *ch
 		"WARN: file.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_other_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("buildlink3.mk",
+		MkRcsID,
+		"VAR=\t${VAR} ${AUTO_MKDIRS}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:2: " +
+			"AUTO_MKDIRS may not be used in this file; " +
+			"it would be ok in Makefile, Makefile.* or *.mk.")
+}
+
 func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
 	t := s.Init(c)
 
