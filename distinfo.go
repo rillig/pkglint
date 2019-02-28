@@ -262,6 +262,8 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 		computed := compute(alg)
 
 		if computed != hash.hash {
+			// Do not try to autofix anything in this situation.
+			// Wrong hashes are a serious issue.
 			line.Errorf("The %s checksum for %q is %s in distinfo, %s in %s.",
 				alg, hash.filename, hash.hash, computed, line.PathToFile(distfile))
 			return
