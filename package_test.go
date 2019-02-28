@@ -922,6 +922,19 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__only_GNU_CONFIGURE(c
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__ok(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"GNU_CONFIGURE=\tyes",
+		"USE_LANGUAGES=\tc++ objc")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package__USE_LANGUAGES_too_late(c *check.C) {
 	t := s.Init(c)
 
