@@ -1050,6 +1050,14 @@ func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
 		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.")
 }
 
+func (s *Suite) Test_MkLine_Tokenize__commented_varassign(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "#VAR=\tvalue ${VAR} suffix text")
+
+	t.Check(mkline.Tokenize(mkline.Value(), false), check.HasLen, 3)
+}
+
 func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	t := s.Init(c)
 
