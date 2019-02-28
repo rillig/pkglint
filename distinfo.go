@@ -293,7 +293,7 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 				fix.Apply()
 			}
 
-		} else if len(remainingHashes) > 0 && remainingHashes[0].algorithm == alg {
+		} else if remainingHashes[0].algorithm == alg {
 			insertion = remainingHashes[0].line
 			remainingHashes = remainingHashes[1:]
 		}
