@@ -49,15 +49,6 @@ func (v *Var) Conditional() bool {
 	return v.conditional
 }
 
-// SetConditional marks the variable as being set conditionally in at least
-// one branch.
-//
-// (For later: It might be interesting to see for each assignment whether
-// it is conditional or not.)
-func (v *Var) SetConditional() {
-	v.conditional = true
-}
-
 // ConditionalVars returns all variables in conditions on which the value of
 // this variable depends.
 //
@@ -157,6 +148,10 @@ func (v *Var) Read(mkline MkLine) {
 	v.constantState = [...]uint8{3, 2, 2, 3}[v.constantState]
 }
 
+// Write marks the variable as being assigned in the given line.
+// Only standard assignments (VAR=value) are handled.
+// Side-effect assignments (${VAR::=value}) are not handled here since
+// they don't occur in practice.
 func (v *Var) Write(mkline MkLine, conditional bool, conditionVarnames ...string) {
 	G.Assertf(mkline.Varname() == v.Name, "wrong variable name")
 
