@@ -132,6 +132,9 @@ func (v *Var) ValueInfra() string {
 // ReadLocations returns the locations where the variable is read, such as
 // in ${VAR} or defined(VAR) or empty(VAR).
 //
+// Uses inside conditionals are included, no matter whether they are actually
+// reachable in practice.
+//
 // Indirect uses through other variables (such as VAR2=${VAR}, VAR3=${VAR2})
 // are not listed.
 func (v *Var) ReadLocations() []MkLine {
@@ -139,6 +142,9 @@ func (v *Var) ReadLocations() []MkLine {
 }
 
 // WriteLocations returns the locations where the variable is modified.
+//
+// Assignments inside conditionals are included, no matter whether they are actually
+// reachable in practice.
 func (v *Var) WriteLocations() []MkLine {
 	return v.writeLocations
 }

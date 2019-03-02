@@ -446,6 +446,27 @@ func (s *Suite) Test_Scope__no_tracing(c *check.C) {
 	t.Check(scope.DefinedSimilar("OTHER"), equals, false)
 }
 
+func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
+	t := s.Init(c)
+
+	scope := NewRedundantScope()
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"VAR=\tvalue",
+		".if 1",
+		"VAR=\tconditional",
+		".endif")
+
+	mklines.ForEach(func(mkline MkLine) {
+		scope.Handle(mkline, mklines.indentation)
+	})
+
+	t.Check(
+		scope.get("VAR").vari.WriteLocations(),
+		deepEquals,
+		[]MkLine{mklines.mklines[1] /* FIXME: , mklines.mklines[3] */})
+}
+
 func (s *Suite) Test_naturalLess(c *check.C) {
 	c.Check(naturalLess("", "a"), equals, true)
 	c.Check(naturalLess("a", ""), equals, false)
