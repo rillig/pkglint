@@ -514,6 +514,22 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__no_tracing(c *
 	mklines.Check()
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mkline := t.NewMkLine("filename.mk", 123, "LICENSE?=\tgnu-gpl-v2")
+
+	MkLineChecker{mkline}.checkVarassignLeftPermissions()
+
+	// FIXME: Setting a default license is typical for big software projects
+	//  like GNOME or KDE that consist of many package.
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: " +
+			"The variable LICENSE may not be given a default value " +
+			"(only set, or appended to) in this file.")
+}
+
 // Don't check the permissions for infrastructure files since they have their own rules.
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure(c *check.C) {
 	t := s.Init(c)
