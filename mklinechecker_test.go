@@ -1007,6 +1007,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__compare_pattern_with_empt
 		".endif",
 		"",
 		".if ${X11BASE:N<>} == \"*\"",
+		".endif",
+		"",
+		".if !(${OPSYS:M*BSD} != \"\"",
 		".endif")
 
 	mklines.Check()
@@ -1014,7 +1017,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__compare_pattern_with_empt
 	// TODO: There should be a warning about "<>" containing invalid
 	//  characters for a path. See VartypeCheck.Pathname
 	t.CheckOutputLines(
-		"WARN: filename.mk:5: \"*\" is not a valid pathname.")
+		"WARN: filename.mk:5: \"*\" is not a valid pathname.",
+		// FIXME: That comparison is also ok.
+		"WARN: filename.mk:8: Invalid identifier \"\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
