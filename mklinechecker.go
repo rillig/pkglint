@@ -572,10 +572,14 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		}
 		alternativeFiles := vartype.AllowedFiles(needed)
 		if alternativeFiles != "" {
-			mkline.Warnf("%s may not be used in this file; it would be ok in %s.",
-				varname, alternativeFiles)
+			if G.Mk == nil || G.Mk.FirstTimeSlice("don't-use", varname, mkline.Filename) {
+				mkline.Warnf("%s may not be used in this file; it would be ok in %s.",
+					varname, alternativeFiles)
+			}
 		} else {
-			mkline.Warnf("%s may not be used in any file; it is a write-only variable.", varname)
+			if G.Mk == nil || G.Mk.FirstTimeSlice("write-only", varname) {
+				mkline.Warnf("%s may not be used in any file; it is a write-only variable.", varname)
+			}
 		}
 
 		ck.explainPermissions(varname, vartype)

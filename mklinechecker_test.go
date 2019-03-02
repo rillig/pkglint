@@ -717,30 +717,12 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 
 	mklines.Check()
 
-	// FIXME: That's too many redundant warnings.
+	// Since these warnings are valid for the whole file, duplicates are suppressed.
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:2: "+
 			"AUTO_MKDIRS may not be used in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:2: "+
-			"AUTO_MKDIRS may not be used in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk.",
-		"WARN: buildlink3.mk:2: "+
-			"PKGREVISION may not be used in any file; "+
-			"it is a write-only variable.",
-		"WARN: buildlink3.mk:2: "+
-			"PKGREVISION may not be used in any file; "+
-			"it is a write-only variable.",
-		"WARN: buildlink3.mk:3: "+
-			"AUTO_MKDIRS may not be used in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk.",
-		"WARN: buildlink3.mk:3: "+
-			"AUTO_MKDIRS may not be used in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk.",
-		"WARN: buildlink3.mk:3: "+
-			"PKGREVISION may not be used in any file; "+
-			"it is a write-only variable.",
-		"WARN: buildlink3.mk:3: "+
 			"PKGREVISION may not be used in any file; "+
 			"it is a write-only variable.")
 }
