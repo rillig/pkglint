@@ -350,6 +350,12 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 // relpath returns the relative path from the directory "from"
 // to the filesystem entry "to".
 //
+// Both from and to are interpreted relative to the current working directory,
+// unless they are absolute paths.
+//
+// FIXME: Taking the current working directory into account is rather uncommon
+//  in pkglint and triggers various hard to find bugs.
+//
 // It does not preserve the "../.." that is typical for relative
 // directories in pkgsrc. If possible, these are turned into the simpler
 // form "../other-package".
