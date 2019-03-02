@@ -706,6 +706,45 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 			"it would be ok in Makefile, Makefile.* or *.mk.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("buildlink3.mk",
+		MkRcsID,
+		"VAR=\t${VAR} ${AUTO_MKDIRS} ${AUTO_MKDIRS} ${PKGREVISION} ${PKGREVISION}",
+		"VAR=\t${VAR} ${AUTO_MKDIRS} ${AUTO_MKDIRS} ${PKGREVISION} ${PKGREVISION}")
+
+	mklines.Check()
+
+	// FIXME: That's too many redundant warnings.
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:2: "+
+			"AUTO_MKDIRS may not be used in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk.",
+		"WARN: buildlink3.mk:2: "+
+			"AUTO_MKDIRS may not be used in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk.",
+		"WARN: buildlink3.mk:2: "+
+			"PKGREVISION may not be used in any file; "+
+			"it is a write-only variable.",
+		"WARN: buildlink3.mk:2: "+
+			"PKGREVISION may not be used in any file; "+
+			"it is a write-only variable.",
+		"WARN: buildlink3.mk:3: "+
+			"AUTO_MKDIRS may not be used in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk.",
+		"WARN: buildlink3.mk:3: "+
+			"AUTO_MKDIRS may not be used in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk.",
+		"WARN: buildlink3.mk:3: "+
+			"PKGREVISION may not be used in any file; "+
+			"it is a write-only variable.",
+		"WARN: buildlink3.mk:3: "+
+			"PKGREVISION may not be used in any file; "+
+			"it is a write-only variable.")
+}
+
 func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
 	t := s.Init(c)
 
