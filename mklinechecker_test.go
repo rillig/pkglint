@@ -15,6 +15,22 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 		"WARN: module.mk:123: _VARNAME is defined but not used.")
 }
 
+// Files from the pkgsrc infrastructure may define and use variables
+// whose name starts with an underscore.
+func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/infra.mk",
+		MkRcsID,
+		"_VARNAME=\tvalue")
+
+	G.Check(t.File("mk/infra.mk"))
+
+	t.CheckOutputLines(
+		"WARN: ~/mk/infra.mk:2: _VARNAME is defined but not used.")
+}
+
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
 	t := s.Init(c)
 
