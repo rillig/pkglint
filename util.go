@@ -775,10 +775,11 @@ func (s *RedundantScope) updateIncludePath(mkline MkLine) {
 
 func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	varname := mkline.Varname()
+	info := s.vars[varname]
 
-	existing := s.vars[varname]
-	if existing == nil {
-		info := s.get(varname)
+	// In the very first assignment, no redundancy can occur.
+	if info == nil {
+		info = s.get(varname)
 		info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
 		info.lastAction = 2
 		return
@@ -789,15 +790,16 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	//  this variable assignment and the/any? previous one.
 	//  See Test_MkLines_CheckRedundantAssignments__overwrite_inside_conditional.
 	//  Anyway, too few warnings are better than wrong warnings.
-	if existing.vari.Conditional() || ind.Depth("") > 0 {
+	if info.vari.Conditional() || ind.Depth("") > 0 {
+		// FIXME: vari.Write is missing here, even though the assignment is conditional.
 		return
 	}
 
 	// When the variable has been read after the previous write,
 	// it is not redundant.
-	if existing.lastAction == 1 {
-		existing.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
-		existing.lastAction = 2
+	if info.lastAction == 1 {
+		info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
+		info.lastAction = 2
 		return
 	}
 
@@ -805,16 +807,16 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	value := mkline.Value()
 
 	// FIXME: Skip the whole redundancy check if the value is not known to be constant.
-	if op == opAssign && existing.vari.Value() == value {
+	if op == opAssign && info.vari.Value() == value {
 		op = /* effectively */ opAssignDefault
 	}
 
-	prevWrites := existing.vari.WriteLocations()
+	prevWrites := info.vari.WriteLocations()
 	if len(prevWrites) > 0 {
 		switch op {
 		// TODO: What about opAssignEval?
 		case opAssign:
-			if s.includePath.includes(existing.includePath) {
+			if s.includePath.includes(info.includePath) {
 				// This is the usual pattern of including a file and
 				// then overwriting some of them. Although technically
 				// this overwrites the previous definition, it is not
@@ -829,16 +831,16 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 			}
 
 		case opAssignDefault:
-			if existing.includePath.includes(s.includePath) {
+			if info.includePath.includes(s.includePath) {
 				s.OnRedundant(mkline, prevWrites[0])
-			} else if s.includePath.includes(existing.includePath) || s.includePath.equals(existing.includePath) {
+			} else if s.includePath.includes(info.includePath) || s.includePath.equals(info.includePath) {
 				s.OnRedundant(prevWrites[0], mkline)
 			}
 		}
 	}
 
-	existing.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
-	existing.lastAction = 2
+	info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
+	info.lastAction = 2
 }
 
 func (s *RedundantScope) handleVarUse(mkline MkLine) {
