@@ -115,7 +115,6 @@ func (mklines *MkLinesImpl) checkAll() {
 		"pre-install": true, "do-install": true, "post-install": true,
 		"pre-package": true, "do-package": true, "post-package": true,
 		"pre-clean": true, "do-clean": true, "post-clean": true}
-	G.Assertf(len(allowedTargets) == 33, "Error in allowedTargets initialization")
 
 	mklines.lines.CheckRcsID(0, `#[\t ]+`, "# ")
 
