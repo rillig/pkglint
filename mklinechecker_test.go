@@ -736,6 +736,33 @@ func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
 		"WARN: Makefile:6: _TOOLS_VARNAME.mk-tool is defined but not used.")
 }
 
+// This somewhat unrealistic case demonstrates how there can be a tool in a
+// Makefile that is not known to the global pkgsrc.
+//
+// This test covers the "pkgsrcTool != nil" condition.
+func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime__local_tool(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.CreateFileLines("mk/bsd.prefs.mk")
+	mklines := t.SetUpFileMkLines("category/package/Makefile",
+		MkRcsID,
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"TOOLS_CREATE+=\t\tmk-tool",
+		"_TOOLS_VARNAME.mk-tool=\tMK_TOOL",
+		"",
+		"TOOL_OUTPUT!=\t${MK_TOOL}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:5: Variable names starting with an underscore (_TOOLS_VARNAME.mk-tool) are reserved for internal pkgsrc use.",
+		"WARN: ~/category/package/Makefile:5: _TOOLS_VARNAME.mk-tool is defined but not used.",
+		"WARN: ~/category/package/Makefile:7: TOOL_OUTPUT is defined but not used.",
+		"WARN: ~/category/package/Makefile:7: The tool ${MK_TOOL} cannot be used at load time.")
+}
+
 func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
