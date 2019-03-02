@@ -349,6 +349,10 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 
 // relpath returns the relative path from the directory "from"
 // to the filesystem entry "to".
+//
+// It does not preserve the "../.." that is typical for relative
+// directories in pkgsrc. If possible, these are turned into the simpler
+// form "../other-package".
 func relpath(from, to string) string {
 
 	// FIXME: All these shortcuts are dangerous. The whole code of this
@@ -359,6 +363,8 @@ func relpath(from, to string) string {
 
 	// From "dir" to "dir/subdir/...".
 	if hasPrefix(to, from) && len(to) > len(from)+1 && to[len(from)] == '/' {
+		// FIXME: path.Clean transforms the good "../../a/b" into "../b" when the
+		//  category matches.
 		return path.Clean(to[len(from)+1:])
 	}
 
