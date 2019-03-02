@@ -1679,3 +1679,22 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__include_if_exists(c *check
 	t.CheckOutputLines(
 		"ERROR: ~/filename.mk:2: Relative path \"included.mk\" does not exist.")
 }
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("wip/mk/git-package.mk",
+		MkRcsID)
+	t.SetUpPackage("wip/package",
+		".include \"../mk/git-package.mk\"")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("wip/package"))
+
+	// FIXME: wip/mk is not a package.
+	t.CheckOutputLines(
+		"WARN: ~/wip/package/Makefile:20: "+
+			"References to other packages should look like \"../../category/package\", "+
+			"not \"../package\".",
+		"WARN: ~/wip/package/Makefile:20: Invalid relative path \"../mk/git-package.mk\".")
+}
