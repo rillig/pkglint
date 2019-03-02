@@ -777,11 +777,14 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	varname := mkline.Varname()
 	info := s.vars[varname]
 
+	defer func() {
+		info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
+		info.lastAction = 2
+	}()
+
 	// In the very first assignment, no redundancy can occur.
 	if info == nil {
 		info = s.get(varname)
-		info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
-		info.lastAction = 2
 		return
 	}
 
@@ -791,15 +794,12 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	//  See Test_MkLines_CheckRedundantAssignments__overwrite_inside_conditional.
 	//  Anyway, too few warnings are better than wrong warnings.
 	if info.vari.Conditional() || ind.Depth("") > 0 {
-		// FIXME: vari.Write is missing here, even though the assignment is conditional.
 		return
 	}
 
 	// When the variable has been read after the previous write,
 	// it is not redundant.
 	if info.lastAction == 1 {
-		info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
-		info.lastAction = 2
 		return
 	}
 
@@ -838,9 +838,6 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 			}
 		}
 	}
-
-	info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
-	info.lastAction = 2
 }
 
 func (s *RedundantScope) handleVarUse(mkline MkLine) {

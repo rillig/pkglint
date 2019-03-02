@@ -464,7 +464,7 @@ func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
 	t.Check(
 		scope.get("VAR").vari.WriteLocations(),
 		deepEquals,
-		[]MkLine{mklines.mklines[1] /* FIXME: , mklines.mklines[3] */})
+		[]MkLine{mklines.mklines[1], mklines.mklines[3]})
 }
 
 func (s *Suite) Test_naturalLess(c *check.C) {
