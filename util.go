@@ -351,6 +351,12 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 // to the filesystem entry "to".
 func relpath(from, to string) string {
 
+	// FIXME: All these shortcuts are dangerous. The whole code of this
+	//  function must be re-examined and thoroughly tested for further bugs.
+
+	from = strings.TrimPrefix(from, "./")
+	to = strings.TrimPrefix(to, "./")
+
 	// From "dir" to "dir/subdir/...".
 	if hasPrefix(to, from) && len(to) > len(from)+1 && to[len(from)] == '/' {
 		return path.Clean(to[len(from)+1:])
