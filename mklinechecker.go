@@ -856,27 +856,37 @@ func (ck MkLineChecker) checkVarassignLeftDeprecated() {
 	}
 }
 
+// checkVarassignLeftNotUsed checks whether the left-hand side of a variable
+// assignment is not used. If it is unused and also doesn't have a predefined
+// data type, it may be a spelling mistake.
 func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 	varname := ck.MkLine.Varname()
 	varcanon := varnameCanon(varname)
 
-	// If the variable is not used and is untyped, it may be a spelling mistake.
 	if ck.MkLine.Op() == opAssignEval && varname == strings.ToLower(varname) {
 		if trace.Tracing {
 			trace.Step1("%s might be unused unless it is an argument to a procedure file.", varname)
 		}
-
-	} else if !varIsUsedSimilar(varname) {
-		if vartypes := G.Pkgsrc.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
-			// Ok
-		} else if deprecated := G.Pkgsrc.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
-			// Ok
-		} else if G.Mk != nil && !G.Mk.FirstTimeSlice("defined but not used: ", varname) {
-			// Skip
-		} else {
-			ck.MkLine.Warnf("%s is defined but not used.", varname)
-		}
+		return
 	}
+
+	if varIsUsedSimilar(varname) {
+		return
+	}
+
+	if vartypes := G.Pkgsrc.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
+		return
+	}
+
+	if deprecated := G.Pkgsrc.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
+		return
+	}
+
+	if G.Mk != nil && !G.Mk.FirstTimeSlice("defined but not used: ", varname) {
+		return
+	}
+
+	ck.MkLine.Warnf("%s is defined but not used.", varname)
 }
 
 // checkVarassignRightVaruse checks that in a variable assignment,
