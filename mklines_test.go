@@ -658,7 +658,6 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 	sort.Strings(varnames)
 
 	expected := []string{
-		"A (line 24)", // FIXME: pkgsrc doesn't have single-letter uppercase variables.
 		"PARAGRAPH (line 23)",
 		"PKG_DEBUG_LEVEL (line 11)",
 		"PKG_VERBOSE (line 16)",
