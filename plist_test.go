@@ -566,6 +566,38 @@ func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 		"WARN: ~/PLIST:6: Man pages should be installed into man/, not share/man/.")
 }
 
+func (s *Suite) Test_PlistChecker_checkPathShare__gnome_icon_theme(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileDummyBuildlink3("graphics/gnome-icon-theme/buildlink3.mk")
+	t.SetUpPackage("graphics/gnome-icon-theme-extras",
+		"ICON_THEMES=\tyes",
+		".include \"../../graphics/gnome-icon-theme/buildlink3.mk\"")
+	t.CreateFileLines("graphics/gnome-icon-theme-extras/PLIST",
+		PlistRcsID,
+		"share/icons/gnome/16x16/devices/media-optical-cd-audio.png",
+		"share/icons/gnome/16x16/devices/media-optical-dvd.png")
+	G.Pkgsrc.LoadInfrastructure()
+
+	t.Chdir(".")
+	G.Check("graphics/gnome-icon-theme-extras")
+
+	t.CheckOutputEmpty()
+
+	// Note the leading "./".
+	G.Check("./graphics/gnome-icon-theme-extras")
+
+	// FIXME: The leading dot results in different error messages.
+	// TODO: Redundant error message.
+	t.CheckOutputLines(
+		"ERROR: graphics/gnome-icon-theme-extras/PLIST:2: "+
+			"The package Makefile must include "+
+			"\"../../graphics/gnome-icon-theme/buildlink3.mk\".",
+		"ERROR: graphics/gnome-icon-theme-extras/PLIST:3: "+
+			"The package Makefile must include "+
+			"\"../../graphics/gnome-icon-theme/buildlink3.mk\".")
+}
+
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 
