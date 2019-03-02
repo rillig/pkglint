@@ -40,7 +40,7 @@ type Package struct {
 	// TODO: Include files without multiple-inclusion guard as often as needed.
 	//
 	// TODO: Set an upper limit, to prevent denial of service.
-	included map[string]MkLine // filename => line
+	included Once
 
 	seenMakefileCommon bool // Does the package have any .includes?
 
@@ -72,7 +72,7 @@ func NewPackage(dir string) *Package {
 		Plist:                 NewPlistContent(),
 		vars:                  NewScope(),
 		bl3:                   make(map[string]MkLine),
-		included:              make(map[string]MkLine),
+		included:              Once{},
 		conditionalIncludes:   make(map[string]MkLine),
 		unconditionalIncludes: make(map[string]MkLine),
 	}
@@ -245,11 +245,9 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	handleIncludeLine := func(mkline MkLine) YesNoUnknown {
 		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
-		if includedFile == "" || pkg.included[includedFile] != nil {
+		if includedFile == "" || !pkg.included.FirstTime(includedFile) {
 			return unknown
 		}
-
-		pkg.included[includedFile] = mkline
 
 		if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
 			if G.Wip && contains(includedFile, "/mk/") {

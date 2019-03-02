@@ -2,7 +2,6 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
-	"sort"
 	"strings"
 )
 
@@ -1046,27 +1045,36 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
-		".include \"../../devel/library/buildlink3.mk\"")
+		".include \"../../devel/library/buildlink3.mk\"",
+		".include \"../../lang/language/module.mk\"")
 	t.SetUpPackage("devel/library")
-	t.CreateFileDummyBuildlink3("devel/library/buildlink3.mk",
-		".include \"builtin.mk\"")
+	t.CreateFileDummyBuildlink3("devel/library/buildlink3.mk")
 	t.CreateFileLines("devel/library/builtin.mk",
+		MkRcsID)
+	t.CreateFileLines("lang/language/module.mk",
+		MkRcsID,
+		".include \"version.mk\"")
+	t.CreateFileLines("lang/language/version.mk",
 		MkRcsID)
 	pkg := NewPackage(t.File("category/package"))
 
 	pkg.loadPackageMakefile()
 
-	var included []string
-	for relativeFilename := range pkg.included {
-		included = append(included, relativeFilename)
-	}
-	sort.Strings(included)
-
-	t.Check(included, deepEquals, []string{
+	expected := []string{
 		"../../devel/library/buildlink3.mk",
+		// FIXME: "../../devel/library/builtin.mk" is missing.
+		"../../lang/language/module.mk",
 		"../../mk/bsd.pkg.mk",
-		"builtin.mk", // FIXME: Must be ../../devel/library/builtin.mk
-		"suppress-varorder.mk"})
+		"suppress-varorder.mk",
+		// FIXME: must be "../../lang/language/version.mk".
+		"version.mk"}
+
+	seen := pkg.included
+	for _, filename := range expected {
+		t.Check(seen.Seen(filename), equals, true)
+	}
+	// FIXME: must be 6 entries when builtin.mk has been added.
+	t.Check(seen.seen, check.HasLen, 5)
 }
 
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {

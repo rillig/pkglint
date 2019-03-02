@@ -441,6 +441,11 @@ func (o *Once) FirstTimeSlice(whats ...string) bool {
 	return o.check(crc.Sum64())
 }
 
+func (o *Once) Seen(what string) bool {
+	_, seen := o.seen[crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA))]
+	return seen
+}
+
 func (o *Once) check(key uint64) bool {
 	if _, ok := o.seen[key]; ok {
 		return false
