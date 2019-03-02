@@ -727,6 +727,43 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 			"it is a write-only variable.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"PYTHON_VERSIONS_ACCEPTED=\t36 __future__",
+		"PYTHON_VERSIONS_ACCEPTED=\t36 -13",
+		"PYTHON_VERSIONS_ACCEPTED=\t36 ${PKGVERSION_NOREV}",
+		"PYTHON_VERSIONS_ACCEPTED=\t36 37",
+		"PYTHON_VERSIONS_ACCEPTED=\t37 36 27 25")
+
+	// TODO: All but the last of the above assignments should be flagged as
+	//  redundant by RedundantScope; as of March 2019, that check is only
+	//  implemented for package Makefiles, not for individual files.
+
+	mklines.Check()
+
+	// Half of these warnings are from VartypeCheck.Version, the
+	// other half are from checkVarassignDecreasingVersions.
+	// Strictly speaking some of them are redundant, but that would
+	// mean to reject only variable references in checkVarassignDecreasingVersions.
+	// This is probably ok.
+	// TODO: Fix this.
+	t.CheckOutputLines(
+		"WARN: Makefile:2: Invalid version number \"__future__\".",
+		"ERROR: Makefile:2: Value \"__future__\" for "+
+			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
+		"WARN: Makefile:3: Invalid version number \"-13\".",
+		"ERROR: Makefile:3: Value \"-13\" for "+
+			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
+		"ERROR: Makefile:4: Value \"${PKGVERSION_NOREV}\" for "+
+			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
+		"WARN: Makefile:5: The values for PYTHON_VERSIONS_ACCEPTED "+
+			"should be in decreasing order (37 before 36).")
+}
+
 func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {
 	t := s.Init(c)
 
@@ -1378,11 +1415,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"_TOOLS_VARNAME.sed=     SED",
 		"DIST_SUBDIR=            ${PKGNAME}",
 		"WRKSRC=                 ${PKGNAME}",
-		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}",
-		// TODO: The first of the below assignments should be flagged as redundant by RedundantScope;
-		//  as of January 2019, that check is only implemented for package Makefiles, not for other files.
-		"PYTHON_VERSIONS_ACCEPTED= -13",
-		"PYTHON_VERSIONS_ACCEPTED= 27 36")
+		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}")
 
 	mklines.Check()
 
@@ -1394,16 +1427,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"WARN: ~/module.mk:4: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
-		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.",
-		"WARN: ~/module.mk:7: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
-			"(only given a default value, or appended to) in this file; "+
-			"it would be ok in Makefile, Makefile.common or options.mk.",
-		"WARN: ~/module.mk:7: Invalid version number \"-13\".",
-		"ERROR: ~/module.mk:7: All values for PYTHON_VERSIONS_ACCEPTED must be positive integers.",
-		"WARN: ~/module.mk:8: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
-			"(only given a default value, or appended to) in this file; "+
-			"it would be ok in Makefile, Makefile.common or options.mk.",
-		"WARN: ~/module.mk:8: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.")
+		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {

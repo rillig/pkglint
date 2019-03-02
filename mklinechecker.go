@@ -787,7 +787,7 @@ func (ck MkLineChecker) checkVarassignDecreasingVersions() {
 	for i, strVersion := range strVersions {
 		iver, err := strconv.Atoi(strVersion)
 		if err != nil || !(iver > 0) {
-			mkline.Errorf("All values for %s must be positive integers.", mkline.Varname())
+			mkline.Errorf("Value %q for %s must be a positive integer.", strVersion, mkline.Varname())
 			return
 		}
 		intVersions[i] = iver
@@ -795,7 +795,8 @@ func (ck MkLineChecker) checkVarassignDecreasingVersions() {
 
 	for i, ver := range intVersions {
 		if i > 0 && ver >= intVersions[i-1] {
-			mkline.Warnf("The values for %s should be in decreasing order.", mkline.Varname())
+			mkline.Warnf("The values for %s should be in decreasing order (%d before %d).",
+				mkline.Varname(), ver, intVersions[i-1])
 			G.Explain(
 				"If they aren't, it may be possible that needless versions of",
 				"packages are installed.")

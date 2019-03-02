@@ -1333,8 +1333,8 @@ func (s *Suite) Test_MkLines_Check__extra_warnings(c *check.C) {
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Mk = t.NewMkLines("options.mk",
 		MkRcsID,
+		"",
 		".for word in ${PKG_FAIL_REASON}",
-		"PYTHON_VERSIONS_ACCEPTED=\t27 35 30",
 		"CONFIGURE_ARGS+=\t--sharedir=${PREFIX}/share/kde",
 		"COMMENT=\t# defined",
 		".endfor",
@@ -1347,7 +1347,6 @@ func (s *Suite) Test_MkLines_Check__extra_warnings(c *check.C) {
 	G.Mk.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:3: The values for PYTHON_VERSIONS_ACCEPTED should be in decreasing order.",
 		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"# yes\" instead of \"# defined\".",
 		"WARN: options.mk:7: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
 		"WARN: options.mk:11: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
