@@ -939,6 +939,15 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call_implement
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call_libarchive(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME: +NOTE: archivers/ark/../../archivers/libarchive/buildlink3.mk:14: Definition of CHECK_BUILTIN.libarchive is redundant because of builtin.mk:96.
+	//  This is also a bug in relpath. Running pkglint -Wall ./././archivers/ark triggers the note.
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",
