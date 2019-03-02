@@ -1154,26 +1154,30 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		return
 	}
 
-	checkCompareVarStr := func(varuse *MkVarUse, op string, value string) {
+	checkCompareVarStr := func(varuse *MkVarUse, op string, str string) {
 		varname := varuse.varname
 		varmods := varuse.modifiers
 		switch len(varmods) {
 		case 0:
-			ck.checkCompareVarStr(varname, op, value)
+			ck.checkCompareVarStr(varname, op, str)
 
 		case 1:
-			if m, _, _ := varmods[0].MatchMatch(); m && value != "" {
-				ck.checkVartype(varname, opUseMatch, value, "")
+			if m, _, _ := varmods[0].MatchMatch(); m && str != "" {
+				// FIXME: check opUseMatch for pattern
+				// FIXME: check opUseCompare for str
+				ck.checkVartype(varname, opUseMatch, str, "")
 			}
 
 		default:
 			// This case covers ${VAR:Mfilter:O:u} or similar uses in conditions.
-			// To check these properly, pkglint first needs to know the most common modifiers and how they interact.
-			// As of November 2018, the modifiers are not modeled.
+			// To check these properly, pkglint first needs to know the most common
+			// modifiers and how they interact.
+			// As of March 2019, the modifiers are not modeled.
 			// The following tracing statement makes it easy to discover these cases,
 			// in order to decide whether checking them is worthwhile.
 			if trace.Tracing {
-				trace.Stepf("checkCompareVarStr ${%s%s} %s %s", varuse.varname, varuse.Mod(), op, value)
+				trace.Stepf("checkCompareVarStr ${%s%s} %s %s",
+					varuse.varname, varuse.Mod(), op, str)
 			}
 		}
 	}

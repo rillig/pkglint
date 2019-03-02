@@ -962,6 +962,27 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_com
 		"WARN: security/openssl/Makefile:2: Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.")
 }
 
+// The :N modifier filters unwanted values. After this filter, any variable value
+// may be compared with the empty string, regardless of the variable type.
+// Effectively, the :N modifier changes the type from T to Option(T).
+func (s *Suite) Test_MkLineChecker_checkDirectiveCond__compare_pattern_with_empty(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		".if ${X11BASE:Npattern} == \"\"",
+		".endif",
+		"",
+		".if ${X11BASE:Npattern} == \"*\"",
+		".endif")
+
+	mklines.Check()
+
+	// FIXME: There should be a warning since "*" is not a valid path.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	t := s.Init(c)
 
