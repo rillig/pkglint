@@ -907,6 +907,40 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call(c *check.
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call_implemented(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.SetUpPackage("devel/gettext-lib")
+	t.SetUpPackage("x11/Xaos",
+		".include \"../../devel/gettext-lib/buildlink3.mk\"")
+	t.CreateFileLines("devel/gettext-lib/builtin.mk",
+		MkRcsID,
+		"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
+		"",
+		"CHECK_BUILTIN.gettext?=\tno",
+		".if !empty(CHECK_BUILTIN.gettext:M[nN][oO])",
+		".endif")
+	t.CreateFileLines("devel/gettext-lib/buildlink3.mk",
+		MkRcsID,
+		"CHECK_BUILTIN.gettext:=\tyes",
+		".include \"builtin.mk\"",
+		"CHECK_BUILTIN.gettext:=\tno")
+	G.Pkgsrc.LoadInfrastructure()
+
+	// Checking x11/Xaos instead of devel/gettext-lib avoids warnings
+	// about the minimal buildlink3.mk file.
+	G.Check(t.File("x11/Xaos"))
+
+	// FIXME: This note is wrong.
+	//  The variable is a procedure parameter.
+	t.CheckOutputLines(
+		"NOTE: ~/devel/gettext-lib/buildlink3.mk:2: " +
+			"Definition of CHECK_BUILTIN.gettext is redundant " +
+			"because of builtin.mk:5.")
+}
+
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval(c *check.C) {
 	t := s.Init(c)
 	mklines := t.NewMkLines("module.mk",

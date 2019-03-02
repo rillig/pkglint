@@ -289,6 +289,8 @@ func (t *Tester) SetUpPkgsrc() {
 	// used at load time by packages.
 	t.CreateFileLines("mk/bsd.prefs.mk",
 		MkRcsID)
+	t.CreateFileLines("mk/bsd.fast.prefs.mk",
+		MkRcsID)
 
 	// Category Makefiles require this file for the common definitions.
 	t.CreateFileLines("mk/misc/category.mk")
