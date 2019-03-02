@@ -409,28 +409,24 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 func (mklines *MkLinesImpl) CheckRedundantAssignments() {
 	scope := NewRedundantScope()
 
-	isRelevant := func(old, new MkLine) bool {
-		// TODO: This is cheated. Using the := operator is merely a human convention,
-		//  not a technical indicator.
-		return old.Op() != opAssignEval && new.Op() != opAssignEval
-	}
-
 	scope.OnRedundant = func(old, new MkLine) {
-		if isRelevant(old, new) && old.Value() == new.Value() {
-			new.Notef("Definition of %s is redundant because of %s.", old.Varname(), new.RefTo(old))
+		if new.Op() == opAssignDefault {
+			new.Notef("Default assignment of %s has no effect because of %s.",
+				old.Varname(), new.RefTo(old))
+		} else {
+			new.Notef("Definition of %s is redundant because of %s.",
+				old.Varname(), new.RefTo(old))
 		}
 	}
 
 	scope.OnOverwrite = func(old, new MkLine) {
-		if isRelevant(old, new) {
-			old.Warnf("Variable %s is overwritten in %s.", new.Varname(), old.RefTo(new))
-			G.Explain(
-				"The variable definition in this line does not have an effect since",
-				"it is overwritten elsewhere.",
-				"This typically happens because of a typo (writing = instead of +=)",
-				"or because the line that overwrites",
-				"is in another file that is used by several packages.")
-		}
+		old.Warnf("Variable %s is overwritten in %s.", new.Varname(), old.RefTo(new))
+		G.Explain(
+			"The variable definition in this line does not have an effect since",
+			"it is overwritten elsewhere.",
+			"This typically happens because of a typo (writing = instead of +=)",
+			"or because the line that overwrites",
+			"is in another file that is used by several packages.")
 	}
 
 	mklines.ForEach(func(mkline MkLine) {

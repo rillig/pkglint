@@ -671,14 +671,17 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	G.checkdirPackage(t.File("math/R-date"))
 
 	// The definition in Makefile:6 is redundant because the same definition
-	// occurs later in Makefile.extension:4. Usually the later definition gets
-	// the note. In this case though, it would be wrong to mark the
-	// definition in Makefile.extension as redundant because that definition is
-	// probably used by other packages as well. Therefore in this case the roles
-	// of the two lines are swapped; see RedundantScope.Handle, the ".includes" line.
-	t.CheckOutputLines(
-		"NOTE: ~/math/R-date/Makefile:6: " +
-			"Definition of MASTER_SITES is redundant because of ../../math/R/Makefile.extension:4.")
+	// occurs later in Makefile.extension:4.
+	//
+	// When a file includes another file, it's always the including file that
+	// is marked as redundant since the included file typically provides the
+	// generally useful value for several packages;
+	// see RedundantScope.handleVarassign, keyword includePath.
+	//
+	// As of March 2019, pkglint doesn't warn in this case because it doesn't
+	// consider MASTER_SITES to be constant, as it depends on another variable.
+	// TODO: Analyze in which cases the variable can be considered constant nevertheless.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkUpdate(c *check.C) {

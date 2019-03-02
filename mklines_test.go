@@ -744,7 +744,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *
 	// No warning for VAR=... in Makefile since it makes sense to have common files
 	// with default values for variables, overriding some of them in each package.
 	t.CheckOutputLines(
-		"NOTE: module.mk:2: Definition of VAR is redundant because of line 1.",
+		"NOTE: module.mk:2: Default assignment of VAR has no effect because of line 1.",
 		"WARN: module.mk:1: Variable VAR is overwritten in line 3.")
 }
 
@@ -757,11 +757,9 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_definitely
 	mklines.CheckRedundantAssignments()
 
 	// A default assignment after an unconditional assignment is redundant.
-	// As of February 2019, pkglint doesn't recognize it as redundant because its
-	// initial value refers to another variable.
-	// TODO: Since VAR is not used between lines 1 and 2, pkglint should
-	//  flag it as redundant, independent of its initial value.
-	t.CheckOutputEmpty()
+	// Even more so when the variable is not used between the two assignments.
+	t.CheckOutputLines(
+		"NOTE: module.mk:2: Default assignment of VAR has no effect because of line 1.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_overridden(c *check.C) {
@@ -1021,10 +1019,8 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__append_then_default(c *c
 
 	mklines.CheckRedundantAssignments()
 
-	// FIXME: This is wrong because the actual value of the variable includes a leading space.
-	//  The values are therefore different, but the default assignment still has no effect.
 	t.CheckOutputLines(
-		"NOTE: ~/append-then-default.mk:3: Definition of VAR is redundant because of line 2.")
+		"NOTE: ~/append-then-default.mk:3: Default assignment of VAR has no effect because of line 2.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_same_file(c *check.C) {
@@ -1038,7 +1034,8 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_s
 	mklines.CheckRedundantAssignments()
 
 	t.CheckOutputLines(
-		"NOTE: ~/assign-then-default.mk:3: Definition of VAR is redundant because of line 2.")
+		"NOTE: ~/assign-then-default.mk:3: " +
+			"Default assignment of VAR has no effect because of line 2.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__eval_then_eval(c *check.C) {
@@ -1094,13 +1091,13 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_then_read_then_ass
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_included_file(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("included.mk",
-		MkRcsID,
-		"VAR?=\tvalue")
 	t.CreateFileLines("assign-then-default.mk",
 		MkRcsID,
 		"VAR=\tvalue",
 		".include \"included.mk\"")
+	t.CreateFileLines("included.mk",
+		MkRcsID,
+		"VAR?=\tvalue")
 	mklines := t.LoadMkInclude("assign-then-default.mk")
 
 	mklines.CheckRedundantAssignments()
@@ -1113,15 +1110,15 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_i
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_included_file(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("included.mk",
-		MkRcsID,
-		"VAR?=\tvalue")
 	t.CreateFileLines("including.mk",
 		MkRcsID,
 		"VAR=\tvalue",
 		".if ${COND}",
 		".  include \"included.mk\"",
 		".endif")
+	t.CreateFileLines("included.mk",
+		MkRcsID,
+		"VAR?=\tvalue")
 	mklines := t.LoadMkInclude("including.mk")
 
 	mklines.CheckRedundantAssignments()

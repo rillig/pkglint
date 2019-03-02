@@ -832,7 +832,12 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 
 		case opAssignDefault:
 			if info.includePath.includes(s.includePath) {
-				s.OnRedundant(mkline, prevWrites[0])
+				// A variable is defined before including the file with the
+				// default assignment. This is common and fine. Except when
+				// the value is the same as the default value.
+				if info.vari.Constant() && info.vari.ConstantValue() == mkline.Value() {
+					s.OnRedundant(mkline, prevWrites[0])
+				}
 			} else if s.includePath.includes(info.includePath) || s.includePath.equals(info.includePath) {
 				s.OnRedundant(prevWrites[0], mkline)
 			}
