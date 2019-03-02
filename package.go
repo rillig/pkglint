@@ -236,11 +236,11 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	if fileMklines == nil {
 		return false, false
 	}
+
 	exists = true
+	result = true
 
 	isMainMakefile := len(mainLines.mklines) == 0
-
-	result = true
 
 	handleIncludeLine := func(mkline MkLine) YesNoUnknown {
 		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
@@ -317,9 +317,9 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
 		if mkline.IsInclude() {
-			result := handleIncludeLine(mkline)
-			if result != unknown {
-				return result == yes
+			includeResult := handleIncludeLine(mkline)
+			if includeResult != unknown {
+				return includeResult == yes
 			}
 		}
 
@@ -335,6 +335,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		}
 		return true
 	}
+
 	atEnd := func(mkline MkLine) {}
 	fileMklines.ForEachEnd(lineAction, atEnd)
 
