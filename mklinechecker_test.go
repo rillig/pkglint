@@ -1055,15 +1055,17 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("audio/pulseaudio/Makefile",
+	G.Mk = t.NewMkLines("Makefile",
 		MkRcsID,
-		".if ${OPSYS} == \"Darwin\" && ${PKGSRC_COMPILER} == \"clang\"",
+		".if ${PKGSRC_COMPILER} == \"clang\"",
+		".elif ${PKGSRC_COMPILER} != \"gcc\"",
 		".endif")
 
 	G.Mk.Check()
 
 	t.CheckOutputLines(
-		"WARN: audio/pulseaudio/Makefile:2: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.")
+		"WARN: Makefile:2: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
+		"WARN: Makefile:3: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.C) {
