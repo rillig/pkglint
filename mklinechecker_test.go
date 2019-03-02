@@ -18,6 +18,32 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 		"WARN: module.mk:123: _VARNAME is defined but not used.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__procedure_call(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/pkg-build-options.mk")
+	mklines := t.SetUpFileMkLines("category/package/filename.mk",
+		MkRcsID,
+		"",
+		"pkgbase := glib2",
+		".include \"../../mk/pkg-build-options.mk\"",
+		"",
+		"VAR=\tvalue")
+
+	mklines.Check()
+
+	// There is no warning for pkgbase although it looks unused as well.
+	// The file pkg-build-options.mk is essentially a procedure call,
+	// and pkgbase is its parameter.
+	//
+	// To distinguish these parameters from ordinary variables, they are
+	// usually written with the := operator instead of the = operator.
+	// This has the added benefit that the parameter is only evaluated
+	// once, especially if it contains references to other variables.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/filename.mk:6: VAR is defined but not used.")
+}
+
 // Files from the pkgsrc infrastructure may define and use variables
 // whose name starts with an underscore.
 func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C) {
