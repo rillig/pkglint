@@ -677,11 +677,10 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	// is marked as redundant since the included file typically provides the
 	// generally useful value for several packages;
 	// see RedundantScope.handleVarassign, keyword includePath.
-	//
-	// As of March 2019, pkglint doesn't warn in this case because it doesn't
-	// consider MASTER_SITES to be constant, as it depends on another variable.
-	// TODO: Analyze in which cases the variable can be considered constant nevertheless.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"NOTE: ~/math/R-date/Makefile:6: " +
+			"Definition of MASTER_SITES is redundant " +
+			"because of ../../math/R/Makefile.extension:4.")
 }
 
 func (s *Suite) Test_Package_checkUpdate(c *check.C) {

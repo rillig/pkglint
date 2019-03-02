@@ -79,15 +79,16 @@ func (v *Var) AddRef(varname string) {
 	v.refs.Add(varname)
 }
 
-// Constant returns whether the variable's value is a constant,
-// without being dependent on any other variable.
+// Constant returns whether the variable's value is a constant.
+// It may reference other variables since these references are evaluated
+// lazily, when the variable value is actually needed.
 //
 // Multiple assignments (such as VAR=1, VAR+=2, VAR+=3) are considered to
 // form a single constant as well, as long as the variable is not read before
 // or in-between these assignments. The definition of "read" is very strict
 // here since every mention of the variable counts. This may prevent some
-// essentially constant values from being detected as such, but these can
-// be added later.
+// essentially constant values from being detected as such, but these special
+// cases may be implemented later.
 //
 // TODO: Simple .for loops that append to the variable are ok as well.
 //  (This needs to be worded more precisely since that part potentially
@@ -215,26 +216,43 @@ func (v *Var) updateConstantValue(mkline MkLine) {
 		return
 	}
 
-	// For now, just mark the variable as being non-constant if it depends
-	// on other variables. Later this can be made more sophisticated, but
-	// needs a few precautions:
-	// * For the := operator, the current value needs to be resolved.
-	//   This in turn requires the proper scope for resolving variable
-	//   references. Furthermore, the variable must be constant at this
-	//   point, while later changes can be ignored.
-	// * For the other operators, the referenced variables must be still
-	//   be constant at the end of loading the complete package.
-	// * The documentation of Constant would need to be adjusted.
-	value := mkline.Value()
-	if v.Conditional() || value != mkline.WithoutMakeVariables(value) {
+	// Even if the variable references other variables, this does not
+	// influence whether the variable is considered constant. (Except
+	// for the := operator.)
+	//
+	// Strictly speaking, the referenced variables must be still
+	// be constant at the end of loading the complete package.
+	// (And even after that, because of the ::= modifier. But luckily
+	// almost no one knows that modifier.)
+
+	if v.Conditional() {
 		v.constantState = 3
 		v.constantValue = ""
 		return
 	}
 
+	value := mkline.Value()
 	switch mkline.Op() {
-	case opAssign, opAssignEval:
+	case opAssign:
 		v.constantValue = value
+
+	case opAssignEval:
+		if value != mkline.WithoutMakeVariables(value) {
+			// To leave the variable in the constant state, the current value
+			// of the referenced variables would need to be resolved.
+			//
+			// This in turn requires the proper scope for resolving variable
+			// references. Furthermore, the referenced variables must be
+			// constant at this point. Later changes to these variables
+			// can be ignored though.
+			//
+			// Because this sounds complicated to implement, the variable
+			// is marked as non-constant for now.
+			v.constantState = 3
+			v.constantValue = ""
+		} else {
+			v.constantValue = value
+		}
 
 	case opAssignDefault:
 		if v.constantState == 0 {

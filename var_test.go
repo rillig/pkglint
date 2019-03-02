@@ -16,6 +16,10 @@ func (s *Suite) Test_Var_ConstantValue__assign(c *check.C) {
 	t.Check(v.ConstantValue(), equals, "overwritten")
 }
 
+// Variables that reference other variable are considered constants.
+// Even if these referenced variables change their value in-between,
+// this does not affect the constant-ness of this variable, since the
+// references are resolved lazily.
 func (s *Suite) Test_Var_ConstantValue__assign_reference(c *check.C) {
 	t := s.Init(c)
 
@@ -27,6 +31,26 @@ func (s *Suite) Test_Var_ConstantValue__assign_reference(c *check.C) {
 
 	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\t${OTHER}"), false)
 
+	t.Check(v.Constant(), equals, true)
+}
+
+func (s *Suite) Test_Var_ConstantValue__assign_eval_reference(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tvalue"), false)
+
+	t.Check(v.ConstantValue(), equals, "value")
+
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\t${OTHER}"), false)
+
+	// To analyze this case correctly, pkglint would have to know
+	// the current value of ${OTHER} in line 124. For that it would
+	// need the complete scope including all other variables.
+	//
+	// As of March 2019 this is not implemented, therefore pkglint
+	// doesn't treat the variable as constant, to prevent wrong warnings.
 	t.Check(v.Constant(), equals, false)
 }
 
