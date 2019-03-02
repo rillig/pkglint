@@ -777,10 +777,6 @@ func (ck MkLineChecker) checkVaruseDeprecated(varuse *MkVarUse) {
 }
 
 func (ck MkLineChecker) checkVarassignDecreasingVersions() {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
 	mkline := ck.MkLine
 	strVersions := mkline.Fields()
 	intVersions := make([]int, len(strVersions))
