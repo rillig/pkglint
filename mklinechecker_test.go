@@ -743,6 +743,36 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 			"it is a write-only variable.")
 }
 
+// In some pkglint tests, the method is called directly without G.Mk being set.
+// In practice this doesn't happen.
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__without_mklines(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mkline := t.NewMkLine("buildlink3.mk", 123,
+		"VAR=\t${VAR} ${AUTO_MKDIRS} ${AUTO_MKDIRS} ${PKGREVISION} ${PKGREVISION}")
+
+	MkLineChecker{mkline}.Check()
+
+	// Since G.Mk is not set, the duplicates are not suppressed.
+	// Therefore in this case there are more warnings than in realistic situations.
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:123: VAR is defined but not used.",
+		"WARN: buildlink3.mk:123: VAR is used but not defined.",
+		"WARN: buildlink3.mk:123: "+
+			"AUTO_MKDIRS may not be used in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk.",
+		"WARN: buildlink3.mk:123: "+
+			"AUTO_MKDIRS may not be used in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk.",
+		"WARN: buildlink3.mk:123: "+
+			"PKGREVISION may not be used in any file; "+
+			"it is a write-only variable.",
+		"WARN: buildlink3.mk:123: "+
+			"PKGREVISION may not be used in any file; "+
+			"it is a write-only variable.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) {
 	t := s.Init(c)
 
