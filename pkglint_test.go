@@ -551,6 +551,15 @@ func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 		"===========================================================================")
 }
 
+func (s *Suite) Test_CheckLinesMessage__common(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME: If there is a MESSAGE.common, it is combined with MESSAGE.
+	//  See meta-pkgs/ruby-redmine-plugins for an example.
+
+	t.CheckOutputEmpty()
+}
+
 // Demonstrates that an ALTERNATIVES file can be tested individually,
 // without any dependencies on a whole package or a PLIST file.
 func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
