@@ -241,14 +241,8 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	isMainMakefile := len(mainLines.mklines) == 0
 
 	result = true
-	lineAction := func(mkline MkLine) bool {
-		if isMainMakefile {
-			mainLines.mklines = append(mainLines.mklines, mkline)
-			mainLines.lines.Lines = append(mainLines.lines.Lines, mkline.Line)
-		}
-		allLines.mklines = append(allLines.mklines, mkline)
-		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
+	handleIncludeLine := func(mkline MkLine) YesNoUnknown {
 		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
 		if includedFile != "" && pkg.included[includedFile] == nil {
@@ -279,7 +273,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 
 				if !innerExists {
 					if fileMklines.indentation.IsCheckedFile(includedFile) {
-						return true // See https://github.com/rillig/pkglint/issues/1
+						return yes // See https://github.com/rillig/pkglint/issues/1
 					}
 
 					// Only look in the directory relative to the
@@ -302,8 +296,25 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 
 				if !innerResult {
 					result = false
-					return false
+					return no
 				}
+			}
+		}
+		return unknown
+	}
+
+	lineAction := func(mkline MkLine) bool {
+		if isMainMakefile {
+			mainLines.mklines = append(mainLines.mklines, mkline)
+			mainLines.lines.Lines = append(mainLines.lines.Lines, mkline.Line)
+		}
+		allLines.mklines = append(allLines.mklines, mkline)
+		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
+
+		if mkline.IsInclude() {
+			result := handleIncludeLine(mkline)
+			if result != unknown {
+				return result == yes
 			}
 		}
 
