@@ -1078,7 +1078,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 	case value == "":
 		break
 
-	case vartype.kindOfList == lkShell:
+	default:
 		words, _ := splitIntoMkWords(mkline.Line, value)
 		for _, word := range words {
 			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.guessed)
