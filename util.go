@@ -832,7 +832,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				//  only looks at the variables. There may be conditions entirely
 				//  without variables, such as exists(/usr).
 			} else if !ind.IsConditional() {
-				s.OnOverwrite(prevWrites[0], mkline)
+				s.OnOverwrite(prevWrites[len(prevWrites)-1], mkline)
 			}
 
 		case opAssignDefault:
@@ -841,10 +841,10 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				// default assignment. This is common and fine. Except when
 				// the value is the same as the default value.
 				if info.vari.Constant() && info.vari.ConstantValue() == mkline.Value() {
-					s.OnRedundant(mkline, prevWrites[0])
+					s.OnRedundant(mkline, prevWrites[len(prevWrites)-1])
 				}
 			} else if s.includePath.includes(info.includePath) || s.includePath.equals(info.includePath) {
-				s.OnRedundant(prevWrites[0], mkline)
+				s.OnRedundant(prevWrites[len(prevWrites)-1], mkline)
 			}
 		}
 	}

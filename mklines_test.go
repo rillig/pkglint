@@ -745,7 +745,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *
 	// with default values for variables, overriding some of them in each package.
 	t.CheckOutputLines(
 		"NOTE: module.mk:2: Default assignment of VAR has no effect because of line 1.",
-		"WARN: module.mk:1: Variable VAR is overwritten in line 3.")
+		"WARN: module.mk:2: Variable VAR is overwritten in line 3.")
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_definitely_unused(c *check.C) {

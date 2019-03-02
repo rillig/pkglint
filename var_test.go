@@ -80,6 +80,20 @@ func (s *Suite) Test_Var_ConstantValue__default(c *check.C) {
 	t.Check(v.ConstantValue(), equals, "value")
 }
 
+func (s *Suite) Test_Var_ConstantValue__eval_then_default(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	v.Write(t.NewMkLine("buildlink3.mk", 123, "VARNAME:=\tvalue"), false)
+
+	t.Check(v.ConstantValue(), equals, "value")
+
+	v.Write(t.NewMkLine("builtin.mk", 124, "VARNAME?=\tignored"), false)
+
+	t.Check(v.ConstantValue(), equals, "value")
+}
+
 func (s *Suite) Test_Var_ConstantValue__append(c *check.C) {
 	t := s.Init(c)
 
