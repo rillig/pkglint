@@ -1649,10 +1649,10 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) {
 	t := s.Init(c)
 
-	// Just a random UUID, to really guarantee that the file does not exist.
-
 	absDir := ifelseStr(runtime.GOOS == "windows", "C:/", "/")
+	// Just a random UUID, to really guarantee that the file does not exist.
 	absPath := absDir + "0f5c2d56-8a7a-4c9d-9caa-859b52bbc8c7"
+
 	t.SetUpPkgsrc()
 	G.Pkgsrc.LoadInfrastructure()
 	mklines := t.SetUpFileMkLines("category/package/module.mk",
@@ -1663,4 +1663,19 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) 
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/module.mk:2: The path \"" + absPath + "\" must be relative.")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath__include_if_exists(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkRcsID,
+		".include \"included.mk\"",
+		".sinclude \"included.mk\"")
+
+	mklines.Check()
+
+	// There is no warning for line 3 because of the "s" in "sinclude".
+	t.CheckOutputLines(
+		"ERROR: ~/filename.mk:2: Relative path \"included.mk\" does not exist.")
 }
