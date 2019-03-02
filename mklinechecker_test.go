@@ -1477,6 +1477,37 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"WARN: ~/module.mk:7: SITES_* is deprecated. Please use SITES.* instead.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignMisc__multiple_inclusion_guards(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.SetUpVartypes()
+	t.CreateFileLines("filename.mk",
+		MkRcsID,
+		".if !defined(FILENAME_MK)",
+		"FILENAME_MK=\t# defined",
+		".endif")
+	t.CreateFileLines("Makefile.common",
+		MkRcsID,
+		".if !defined(MAKEFILE_COMMON)",
+		"MAKEFILE_COMMON=\t# defined",
+		"",
+		".endif")
+	t.CreateFileLines("other.mk",
+		MkRcsID,
+		"COMMENT=\t# defined")
+
+	G.Check(t.File("filename.mk"))
+	G.Check(t.File("Makefile.common"))
+	G.Check(t.File("other.mk"))
+
+	// For multiple-inclusion guards, the meaning of the variable value
+	// is clear, therefore they are exempted from the warnings.
+	t.CheckOutputLines(
+		"NOTE: ~/other.mk:2: Please use \"# empty\", \"# none\" or \"# yes\" " +
+			"instead of \"# defined\".")
+}
+
 func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 	t := s.Init(c)
 
