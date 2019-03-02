@@ -245,7 +245,7 @@ func (v *Var) updateConstantValue(mkline MkLine) {
 		v.constantValue += " " + value
 
 	case opAssignShell:
-		v.constantState = 2
+		v.constantState = 3
 		v.constantValue = ""
 	}
 
