@@ -639,6 +639,10 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 		"# VARIABLE",
 		"#\tA paragraph of a single line is not enough to be recognized as \"relevant\".",
 		"",
+		"# PARAGRAPH",
+		"#\tA paragraph may end in a",
+		"#\tPARA_END_VARNAME.",
+		"",
 		"# VARBASE1.<param1>",
 		"# VARBASE2.*",
 		"# VARBASE3.${id}")
@@ -654,11 +658,13 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 	sort.Strings(varnames)
 
 	expected := []string{
+		"A (line 24)", // FIXME: pkgsrc doesn't have single-letter uppercase variables.
+		"PARAGRAPH (line 23)",
 		"PKG_DEBUG_LEVEL (line 11)",
 		"PKG_VERBOSE (line 16)",
-		"VARBASE1.* (line 23)",
-		"VARBASE2.* (line 24)",
-		"VARBASE3.* (line 25)"}
+		"VARBASE1.* (line 27)",
+		"VARBASE2.* (line 28)",
+		"VARBASE3.* (line 29)"}
 	c.Check(varnames, deepEquals, expected)
 }
 
