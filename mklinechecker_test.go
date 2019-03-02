@@ -1691,10 +1691,9 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
 
 	G.Check(t.File("wip/package"))
 
-	// FIXME: wip/mk is not a package.
 	t.CheckOutputLines(
 		"WARN: ~/wip/package/Makefile:20: "+
-			"References to other packages should look like \"../../category/package\", "+
-			"not \"../package\".",
+			"References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", "+
+			"not \"../mk\".",
 		"WARN: ~/wip/package/Makefile:20: Invalid relative path \"../mk/git-package.mk\".")
 }

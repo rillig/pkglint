@@ -254,9 +254,12 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		if includedFile != "" && pkg.included[includedFile] == nil {
 			pkg.included[includedFile] = mkline
 
-			// TODO: "../../../.." also matches but shouldn't.
 			if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
-				mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
+				if G.Wip && contains(includedFile, "/mk/") {
+					mkline.Warnf("References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", not \"../mk\".")
+				} else {
+					mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
+				}
 				mkline.ExplainRelativeDirs()
 			}
 
