@@ -345,7 +345,8 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	// automatically since the pkgsrc infrastructure does the same.
 	if path.Base(filename) == "buildlink3.mk" {
 		builtin := cleanpath(path.Dir(filename) + "/builtin.mk")
-		if fileExists(builtin) {
+		builtinRel := relpath(pkg.dir, builtin)
+		if pkg.included.FirstTime(builtinRel) && fileExists(builtin) {
 			pkg.readMakefile(builtin, mainLines, allLines, "")
 		}
 	}

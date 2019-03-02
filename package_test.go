@@ -1062,7 +1062,7 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 
 	expected := []string{
 		"../../devel/library/buildlink3.mk",
-		// FIXME: "../../devel/library/builtin.mk" is missing.
+		"../../devel/library/builtin.mk",
 		"../../lang/language/module.mk",
 		"../../mk/bsd.pkg.mk",
 		"suppress-varorder.mk",
@@ -1073,8 +1073,7 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 	for _, filename := range expected {
 		t.Check(seen.Seen(filename), equals, true)
 	}
-	// FIXME: must be 6 entries when builtin.mk has been added.
-	t.Check(seen.seen, check.HasLen, 5)
+	t.Check(seen.seen, check.HasLen, 6)
 }
 
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
