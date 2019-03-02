@@ -394,7 +394,7 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 				scope.Use(varcanon, mkline)
 			}
 
-			if 1 < len(words) && words[1] == "Copyright" {
+			if words[1] == "Copyright" {
 				relevant = false
 			}
 
