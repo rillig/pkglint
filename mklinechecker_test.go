@@ -406,6 +406,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"NOTE: filename.mk:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
+		// FIXME: Indeed, indeed, the :M modifier ends at the colon.
+		//  Why doesn't pkglint complain loudly about the unknown "//*" modifier?
+		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",
 		"WARN: filename.mk:1: MASTER_SITES should not be evaluated at load time.")
 
 	// The only interesting line from the below tracing output is the one
@@ -974,13 +977,15 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__compare_pattern_with_empt
 		".if ${X11BASE:Npattern} == \"\"",
 		".endif",
 		"",
-		".if ${X11BASE:Npattern} == \"*\"",
+		".if ${X11BASE:N<>} == \"*\"",
 		".endif")
 
 	mklines.Check()
 
-	// FIXME: There should be a warning since "*" is not a valid path.
-	t.CheckOutputEmpty()
+	// TODO: There should be a warning about "<>" containing invalid
+	//  characters for a path. See VartypeCheck.Pathname
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: \"*\" is not a valid pathname.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {

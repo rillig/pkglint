@@ -1162,10 +1162,14 @@ func (ck MkLineChecker) checkDirectiveCond() {
 			ck.checkCompareVarStr(varname, op, str)
 
 		case 1:
-			if m, _, _ := varmods[0].MatchMatch(); m && str != "" {
-				// FIXME: check opUseMatch for pattern
-				// FIXME: check opUseCompare for str
-				ck.checkVartype(varname, opUseMatch, str, "")
+			if m, positive, pattern := varmods[0].MatchMatch(); m {
+				ck.checkVartype(varname, opUseMatch, pattern, "")
+
+				// After applying the :N modifier, every expression may end up empty,
+				// regardless of its data type. Therefore there's no point in checking that case.
+				if positive || str != "" {
+					ck.checkVartype(varname, opUseCompare, str, "")
+				}
 			}
 
 		default:
