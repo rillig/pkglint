@@ -245,61 +245,66 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	handleIncludeLine := func(mkline MkLine) YesNoUnknown {
 		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
-		if includedFile != "" && pkg.included[includedFile] == nil {
-			pkg.included[includedFile] = mkline
+		if includedFile == "" || pkg.included[includedFile] != nil {
+			return unknown
+		}
 
-			if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
-				if G.Wip && contains(includedFile, "/mk/") {
-					mkline.Warnf("References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", not \"../mk\".")
-				} else {
-					mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
-				}
-				mkline.ExplainRelativeDirs()
+		pkg.included[includedFile] = mkline
+
+		if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
+			if G.Wip && contains(includedFile, "/mk/") {
+				mkline.Warnf("References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", not \"../mk\".")
+			} else {
+				mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
+			}
+			mkline.ExplainRelativeDirs()
+		}
+
+		pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
+
+		skip := contains(filename, "/mk/") || hasSuffix(includedFile, "/bsd.pkg.mk") || IsPrefs(includedFile)
+		if skip {
+			return unknown
+		}
+
+		dirname, _ := path.Split(filename)
+		dirname = cleanpath(dirname)
+
+		fullIncluded := dirname + "/" + includedFile
+		if trace.Tracing {
+			trace.Step1("Including %q.", fullIncluded)
+		}
+		fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", filename, "")
+		innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding)
+
+		if !innerExists {
+			if fileMklines.indentation.IsCheckedFile(includedFile) {
+				return yes // See https://github.com/rillig/pkglint/issues/1
 			}
 
-			pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
+			// Only look in the directory relative to the
+			// current file and in the package directory.
+			// Make(1) has a list of include directories, but pkgsrc
+			// doesn't make use of that, so pkglint also doesn't
+			// need this extra complexity.
+			pkgBasedir := pkg.File(".")
+			if dirname != pkgBasedir { // Prevent unnecessary syscalls
+				dirname = pkgBasedir
 
-			skip := contains(filename, "/mk/") || hasSuffix(includedFile, "/bsd.pkg.mk") || IsPrefs(includedFile)
-			if !skip {
-				dirname, _ := path.Split(filename)
-				dirname = cleanpath(dirname)
+				fullIncludedFallback := dirname + "/" + includedFile
+				innerExists, innerResult = pkg.readMakefile(fullIncludedFallback, mainLines, allLines, fullIncluding)
+			}
 
-				fullIncluded := dirname + "/" + includedFile
-				if trace.Tracing {
-					trace.Step1("Including %q.", fullIncluded)
-				}
-				fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", filename, "")
-				innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding)
-
-				if !innerExists {
-					if fileMklines.indentation.IsCheckedFile(includedFile) {
-						return yes // See https://github.com/rillig/pkglint/issues/1
-					}
-
-					// Only look in the directory relative to the
-					// current file and in the package directory.
-					// Make(1) has a list of include directories, but pkgsrc
-					// doesn't make use of that, so pkglint also doesn't
-					// need this extra complexity.
-					pkgBasedir := pkg.File(".")
-					if dirname != pkgBasedir { // Prevent unnecessary syscalls
-						dirname = pkgBasedir
-
-						fullIncludedFallback := dirname + "/" + includedFile
-						innerExists, innerResult = pkg.readMakefile(fullIncludedFallback, mainLines, allLines, fullIncluding)
-					}
-
-					if !innerExists {
-						mkline.Errorf("Cannot read %q.", includedFile)
-					}
-				}
-
-				if !innerResult {
-					result = false
-					return no
-				}
+			if !innerExists {
+				mkline.Errorf("Cannot read %q.", includedFile)
 			}
 		}
+
+		if !innerResult {
+			result = false
+			return no
+		}
+
 		return unknown
 	}
 
@@ -368,19 +373,17 @@ func (pkg *Package) collectUsedBy(mkline MkLine, incDir string, incBase string, 
 
 func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (includedFile, incDir, incBase string) {
 
-	if mkline.IsInclude() {
-		// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
-		// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-		includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
-		if containsVarRef(includedFile) {
-			if trace.Tracing && !contains(includingFilename, "/mk/") {
-				trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
-					mkline.Filename, mkline.Linenos(), includedFile)
-			}
-			includedFile = ""
+	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
+	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
+	includedFile = resolveVariableRefs(mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
+	if containsVarRef(includedFile) {
+		if trace.Tracing && !contains(includingFilename, "/mk/") {
+			trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
+				mkline.Filename, mkline.Linenos(), includedFile)
 		}
-		incDir, incBase = path.Split(includedFile)
+		includedFile = ""
 	}
+	incDir, incBase = path.Split(includedFile)
 
 	if includedFile != "" {
 		if mkline.Basename != "buildlink3.mk" {
