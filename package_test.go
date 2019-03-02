@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
+	"sort"
 	"strings"
 )
 
@@ -1037,6 +1038,35 @@ func (s *Suite) Test_Package_readMakefile__builtin_mk(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:23: OTHER_VAR is used but not defined.")
+}
+
+// Ensures that the paths in Package.included are indeed relative to the
+// package directory. This hadn't been the case until March 2019.
+func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../devel/library/buildlink3.mk\"")
+	t.SetUpPackage("devel/library")
+	t.CreateFileDummyBuildlink3("devel/library/buildlink3.mk",
+		".include \"builtin.mk\"")
+	t.CreateFileLines("devel/library/builtin.mk",
+		MkRcsID)
+	pkg := NewPackage(t.File("category/package"))
+
+	pkg.loadPackageMakefile()
+
+	var included []string
+	for relativeFilename := range pkg.included {
+		included = append(included, relativeFilename)
+	}
+	sort.Strings(included)
+
+	t.Check(included, deepEquals, []string{
+		"../../devel/library/buildlink3.mk",
+		"../../mk/bsd.pkg.mk",
+		"builtin.mk", // FIXME: Must be ../../devel/library/builtin.mk
+		"suppress-varorder.mk"})
 }
 
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
