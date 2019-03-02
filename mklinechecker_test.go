@@ -1,6 +1,9 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import (
+	"gopkg.in/check.v1"
+	"runtime"
+)
 
 func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 	t := s.Init(c)
@@ -1613,4 +1616,23 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
 		// TODO: This warning is unspecific, there is also a pkglint warning "should be ../../category/package".
 		"WARN: ~/category/package/module.mk:11: Invalid relative path \"../package/module.mk\".")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) {
+	t := s.Init(c)
+
+	// Just a random UUID, to really guarantee that the file does not exist.
+
+	absDir := ifelseStr(runtime.GOOS == "windows", "C:/", "/")
+	absPath := absDir + "0f5c2d56-8a7a-4c9d-9caa-859b52bbc8c7"
+	t.SetUpPkgsrc()
+	G.Pkgsrc.LoadInfrastructure()
+	mklines := t.SetUpFileMkLines("category/package/module.mk",
+		MkRcsID,
+		"DISTINFO_FILE=\t"+absPath)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/module.mk:2: The path \"" + absPath + "\" must be relative.")
 }
