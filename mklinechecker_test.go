@@ -514,7 +514,12 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__no_tracing(c *
 	mklines.Check()
 }
 
-func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license(c *check.C) {
+// Setting a default license is typical for big software projects
+// like GNOME or KDE that consist of many packages, or for programming
+// languages like Perl or Python that suggest certain licenses.
+//
+// The default license is typically set in a Makefile.common or module.mk.
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license_default(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -522,12 +527,25 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license(c *che
 
 	MkLineChecker{mkline}.checkVarassignLeftPermissions()
 
-	// FIXME: Setting a default license is typical for big software projects
-	//  like GNOME or KDE that consist of many package.
+	t.CheckOutputEmpty()
+}
+
+// Setting a default license doesn't make sense in a package Makefile
+// since that Makefile is only used for a single package.
+// It only makes sense to set the license unconditionally there.
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license_default_Makefile(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mkline := t.NewMkLine("Makefile", 123, "LICENSE?=\tgnu-gpl-v2")
+
+	MkLineChecker{mkline}.checkVarassignLeftPermissions()
+
 	t.CheckOutputLines(
-		"WARN: filename.mk:123: " +
+		"WARN: Makefile:123: " +
 			"The variable LICENSE may not be given a default value " +
-			"(only set, or appended to) in this file.")
+			"(only set, or appended to) in this file; " +
+			"it would be ok in *.")
 }
 
 // Don't check the permissions for infrastructure files since they have their own rules.
