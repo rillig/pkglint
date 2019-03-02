@@ -1041,6 +1041,21 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_s
 		"NOTE: ~/assign-then-default.mk:3: Definition of VAR is redundant because of line 2.")
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__eval_then_eval(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkRcsID,
+		"VAR:=\tvalue",
+		"VAR:=\tvalue",
+		"VAR:=\tother")
+
+	mklines.CheckRedundantAssignments()
+
+	// TODO: Add redundancy check for the := operator.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_included_file(c *check.C) {
 	t := s.Init(c)
 

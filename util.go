@@ -804,6 +804,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	op := mkline.Op()
 	value := mkline.Value()
 
+	// FIXME: Skip the whole redundancy check if the value is not known to be constant.
 	if op == opAssign && existing.vari.Value() == value {
 		op = /* effectively */ opAssignDefault
 	}
@@ -811,6 +812,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	prevWrites := existing.vari.WriteLocations()
 	if len(prevWrites) > 0 {
 		switch op {
+		// TODO: What about opAssignEval?
 		case opAssign:
 			if s.includePath.includes(existing.includePath) {
 				// This is the usual pattern of including a file and
@@ -861,6 +863,7 @@ func (s *RedundantScope) handleVarUse(mkline MkLine) {
 	}
 }
 
+// get returns the info for the given variable, creating it if necessary.
 func (s *RedundantScope) get(varname string) *redundantScopeVarinfo {
 	info := s.vars[varname]
 	if info == nil {
