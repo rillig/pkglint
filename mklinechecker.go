@@ -423,7 +423,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	if G.Opts.WarnQuoting && vuc.quoting != VucQuotUnknown && needsQuoting != unknown {
 		// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?
 		//  It's for splitting the value into tokens, taking "double" and 'single' quotes into account.
-		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting)
+		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting == yes)
 	}
 
 	if G.Pkgsrc.UserDefinedVars.Defined(varname) && !G.Pkgsrc.IsBuildDef(varname) {
@@ -653,7 +653,7 @@ func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 
 // CheckVaruseShellword checks whether a variable use of the form ${VAR}
 // or ${VAR:modifiers} is allowed in a certain context.
-func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting YesNoUnknown) {
+func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting bool) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, mod, needsQuoting)()
 	}
@@ -671,7 +671,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 	if mod == ":M*:Q" && !needMstar {
 		mkline.Notef("The :M* modifier is not needed here.")
 
-	} else if needsQuoting == yes {
+	} else if needsQuoting {
 		modNoQ := strings.TrimSuffix(mod, ":Q")
 		modNoM := strings.TrimSuffix(modNoQ, ":M*")
 		correctMod := modNoM + ifelseStr(needMstar, ":M*:Q", ":Q")
@@ -743,14 +743,12 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 		}
 	}
 
-	if hasSuffix(mod, ":Q") && needsQuoting != yes {
+	if hasSuffix(mod, ":Q") && !needsQuoting {
 		bad := "${" + varname + mod + "}"
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 
 		fix := mkline.Line.Autofix()
-		if needsQuoting == no {
-			fix.Notef("The :Q operator isn't necessary for ${%s} here.", varname)
-		}
+		fix.Notef("The :Q operator isn't necessary for ${%s} here.", varname)
 		fix.Explain(
 			"Many variables in pkgsrc do not need the :Q operator since they",
 			"are not expected to contain whitespace or other special characters.",
