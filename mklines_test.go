@@ -1056,6 +1056,41 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__eval_then_eval(c *check.
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_then_assign(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkRcsID,
+		"VAR!=\techo echo",
+		"VAR=\techo echo")
+
+	mklines.CheckRedundantAssignments()
+
+	// Although the two variable assignments look very similar, they do
+	// something entirely different. The first executes the echo command,
+	// and the second just assigns a string. Therefore the actual variable
+	// values are different, and the second assignment is not redundant.
+	// It assigns a different value. Nevertheless, the shell command is
+	// redundant and can be removed since its result is never used.
+	t.CheckOutputLines(
+		"WARN: ~/filename.mk:2: Variable VAR is overwritten in line 3.")
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_then_read_then_assign(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkRcsID,
+		"VAR!=\techo echo",
+		"OUTPUT:=${VAR}",
+		"VAR=\techo echo")
+
+	mklines.CheckRedundantAssignments()
+
+	// No warning since the value is used in-between.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_included_file(c *check.C) {
 	t := s.Init(c)
 
