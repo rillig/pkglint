@@ -933,12 +933,10 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call_implement
 	// about the minimal buildlink3.mk file.
 	G.Check(t.File("x11/Xaos"))
 
-	// FIXME: This note is wrong.
-	//  The variable is a procedure parameter.
-	t.CheckOutputLines(
-		"NOTE: ~/devel/gettext-lib/buildlink3.mk:2: " +
-			"Definition of CHECK_BUILTIN.gettext is redundant " +
-			"because of builtin.mk:5.")
+	// There is nothing redundant here.
+	// Up to March 2019, pkglint didn't pass the correct pathnames to Package.included,
+	// which triggered a wrong note here.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval(c *check.C) {

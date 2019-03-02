@@ -1064,10 +1064,9 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 		"../../devel/library/buildlink3.mk",
 		"../../devel/library/builtin.mk",
 		"../../lang/language/module.mk",
+		"../../lang/language/version.mk",
 		"../../mk/bsd.pkg.mk",
-		"suppress-varorder.mk",
-		// FIXME: must be "../../lang/language/version.mk".
-		"version.mk"}
+		"suppress-varorder.mk"}
 
 	seen := pkg.included
 	for _, filename := range expected {

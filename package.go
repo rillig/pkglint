@@ -245,7 +245,16 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	handleIncludeLine := func(mkline MkLine) YesNoUnknown {
 		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
-		if includedFile == "" || !pkg.included.FirstTime(includedFile) {
+		if includedFile == "" {
+			return unknown
+		}
+
+		dirname, _ := path.Split(filename)
+		dirname = cleanpath(dirname)
+		fullIncluded := dirname + "/" + includedFile
+		relIncludedFile := relpath(pkg.dir, fullIncluded)
+
+		if !pkg.included.FirstTime(relIncludedFile) {
 			return unknown
 		}
 
@@ -265,10 +274,6 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 			return unknown
 		}
 
-		dirname, _ := path.Split(filename)
-		dirname = cleanpath(dirname)
-
-		fullIncluded := dirname + "/" + includedFile
 		if trace.Tracing {
 			trace.Step1("Including %q.", fullIncluded)
 		}
