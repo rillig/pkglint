@@ -1120,6 +1120,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkg("RESTRICTED", lkNone, BtMessage)
 	usr("ROOT_USER", lkNone, BtUserGroupName)
 	usr("ROOT_GROUP", lkNone, BtUserGroupName)
+	pkglist("RPMIGNOREPATH", lkShell, BtPathmask)
 	acl("RUBY_BASE", lkNone, enumFromDirs("lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"), ""+
 		"special:rubyversion.mk: set; "+
 		"*: use-loadtime, use")

@@ -1458,6 +1458,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 	mklines := t.SetUpFileMkLines("module.mk",
 		MkRcsID,
 		"EGDIR=                  ${PREFIX}/etc/rc.d",
+		"RPMIGNOREPATH+=         ${PREFIX}/etc/rc.d",
 		"_TOOLS_VARNAME.sed=     SED",
 		"DIST_SUBDIR=            ${PKGNAME}",
 		"WRKSRC=                 ${PKGNAME}",
@@ -1468,12 +1469,12 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 	// TODO: Split this test into several, one for each topic.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:2: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.",
-		"WARN: ~/module.mk:3: Variable names starting with an underscore (_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
-		"WARN: ~/module.mk:3: _TOOLS_VARNAME.sed is defined but not used.",
-		"WARN: ~/module.mk:4: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
-		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
-		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
-		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.")
+		"WARN: ~/module.mk:4: Variable names starting with an underscore (_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
+		"WARN: ~/module.mk:4: _TOOLS_VARNAME.sed is defined but not used.",
+		"WARN: ~/module.mk:5: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:6: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:7: SITES_distfile.tar.gz is defined but not used.",
+		"WARN: ~/module.mk:7: SITES_* is deprecated. Please use SITES.* instead.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
