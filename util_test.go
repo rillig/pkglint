@@ -114,6 +114,9 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 	test("aa/bb/cc/dd/../..", "aa/bb")
 	test("aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk")
 	test("./aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk")
+
+	// FIXME: Argh, this must be a simple "..".
+	test("../.", "../.")
 }
 
 // Relpath is called so often that handling the most common calls
