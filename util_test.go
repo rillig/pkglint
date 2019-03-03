@@ -124,6 +124,7 @@ func (s *Suite) Test_relpath(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
+	t.Check(G.Pkgsrc.topdir, equals, t.tmpdir)
 
 	test := func(from, to, result string) {
 		c.Check(relpath(from, to), equals, result)
@@ -132,6 +133,14 @@ func (s *Suite) Test_relpath(c *check.C) {
 	test("some/dir", "some/directory", "../../some/directory")
 
 	test("category/package/.", ".", "../..")
+
+	// This case is handled by one of the shortcuts,
+	// which does not correctly handle dotdot.
+	// FIXME: should be meta-pkgs/kde/k5f.mk.
+	test(
+		"./.",
+		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
+		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk")
 }
 
 // Relpath is called so often that handling the most common calls
