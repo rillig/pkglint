@@ -554,7 +554,14 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 		}
 		tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
 	}
-	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)   // TODO: Replace with the "typical" os.Getwd().
+
+	// Strictly speaking, the .CURDIR should be replaced with the basedir.
+	// Depending on whether pkglint is executed with a relative or an absolute
+	// path, this would produce diagnostics that "this relative path must not
+	// be absolute". Since ${.CURDIR} is usually used in package Makefiles and
+	// followed by "../.." anyway, the exact directory doesn't matter.
+	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
+
 	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1) // FIXME
 
 	replaceLatest := func(varuse, category string, pattern regex.Pattern, replacement string) {
