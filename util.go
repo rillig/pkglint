@@ -376,8 +376,7 @@ func relpath(from, to string) (result string) {
 
 	// Take a shortcut for the common case from "dir" to "dir/subdir/...".
 	if hasPrefix(cto, cfrom) && len(cto) > len(cfrom)+1 && cto[len(cfrom)] == '/' {
-		result = cleanpath(cto[len(cfrom)+1:])
-		return
+		return cleanpath(cto[len(cfrom)+1:])
 	}
 
 	// Take a shortcut for the common case from "category/package" to ".".
@@ -390,7 +389,7 @@ func relpath(from, to string) (result string) {
 	}
 
 	if cfrom == "." && !filepath.IsAbs(cto) {
-		return cto
+		return path.Clean(cto)
 	}
 
 	absFrom := abspath(cfrom)

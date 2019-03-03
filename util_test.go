@@ -134,13 +134,23 @@ func (s *Suite) Test_relpath(c *check.C) {
 
 	test("category/package/.", ".", "../..")
 
-	// This case is handled by one of the shortcuts,
-	// which does not correctly handle dotdot.
-	// FIXME: should be meta-pkgs/kde/k5f.mk.
+	// This case is handled by one of the shortcuts that avoid file system access.
 	test(
 		"./.",
 		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
-		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk")
+		"meta-pkgs/kde/kf5.mk")
+
+	// This happens when "pkglint -r x11" is run.
+	G.Pkgsrc.topdir = "x11/.."
+
+	test(
+		"./.",
+		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
+		"meta-pkgs/kde/kf5.mk")
+	test(
+		"x11/..",
+		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
+		"meta-pkgs/kde/kf5.mk")
 }
 
 // Relpath is called so often that handling the most common calls
