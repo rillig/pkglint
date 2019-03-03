@@ -350,49 +350,65 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 // relpath returns the relative path from the directory "from"
 // to the filesystem entry "to".
 //
+// The relative path is built by going from the "from" directory via the
+// pkgsrc root to the "to" filename. This produces the form
+// "../../category/package" that is found in DEPENDS and .include lines.
+//
 // Both from and to are interpreted relative to the current working directory,
 // unless they are absolute paths.
 //
-// FIXME: Taking the current working directory into account is rather uncommon
-//  in pkglint and triggers various hard to find bugs.
-//
-// It does not preserve the "../.." that is typical for relative
-// directories in pkgsrc. If possible, these are turned into the simpler
-// form "../other-package".
-func relpath(from, to string) string {
+// This function should only be used if the relative path from one file to
+// another cannot be computed in another way. The preferred way is to take
+// the relative filenames directly from the .include or exists() where they
+// appear.
+func relpath(from, to string) (result string) {
 
-	// FIXME: All these shortcuts are dangerous. The whole code of this
-	//  function must be re-examined and thoroughly tested for further bugs.
-
-	from = strings.TrimPrefix(from, "./")
-	to = strings.TrimPrefix(to, "./")
-
-	// From "dir" to "dir/subdir/...".
-	if hasPrefix(to, from) && len(to) > len(from)+1 && to[len(from)] == '/' {
-		// FIXME: path.Clean transforms the good "../../a/b" into "../b" when the
-		//  category matches.
-		return path.Clean(to[len(from)+1:])
+	if trace.Tracing {
+		defer trace.Call(from, to, trace.Result(&result))()
 	}
 
-	// Take a shortcut for the most common variant in a complete pkgsrc scan,
-	// which is to resolve the relative path from a package to the pkgsrc root.
-	// This avoids unnecessary calls to the filesystem API.
-	if to == "." {
-		fromParts := strings.FieldsFunc(from, func(r rune) bool { return r == '/' })
+	cfrom := cleanpath(from)
+	cto := cleanpath(to)
+
+	if cfrom == cto {
+		return "."
+	}
+
+	// Take a shortcut for the common case from "dir" to "dir/subdir/...".
+	if hasPrefix(cto, cfrom) && len(cto) > len(cfrom)+1 && cto[len(cfrom)] == '/' {
+		result = cleanpath(cto[len(cfrom)+1:])
+		return
+	}
+
+	// Take a shortcut for the common case from "category/package" to ".".
+	// This is the most common variant in a complete pkgsrc scan.
+	if cto == "." {
+		fromParts := strings.FieldsFunc(cfrom, func(r rune) bool { return r == '/' })
 		if len(fromParts) == 3 && !hasPrefix(fromParts[0], ".") && !hasPrefix(fromParts[1], ".") && fromParts[2] == "." {
 			return "../.."
 		}
 	}
 
-	absFrom := abspath(from)
-	absTo := abspath(to)
-	rel, err := filepath.Rel(absFrom, absTo)
-	G.AssertNil(err, "relpath %q %q", from, to)
-	result := filepath.ToSlash(rel)
-	if trace.Tracing {
-		trace.Stepf("relpath from %q to %q = %q", from, to, result)
+	if cfrom == "." && !filepath.IsAbs(cto) {
+		return cto
 	}
-	return result
+
+	absFrom := abspath(cfrom)
+	absTopdir := abspath(G.Pkgsrc.topdir)
+	absTo := abspath(cto)
+
+	toTop, err := filepath.Rel(absFrom, absTopdir)
+	G.AssertNil(err, "relpath from %q to topdir %q", absFrom, absTopdir)
+
+	fromTop, err := filepath.Rel(absTopdir, absTo)
+	G.AssertNil(err, "relpath from topdir %q to %q", absTopdir, absTo)
+
+	result = cleanpath(filepath.ToSlash(toTop) + "/" + filepath.ToSlash(fromTop))
+
+	if trace.Tracing {
+		trace.Stepf("relpath from %q to %q = %q", cfrom, cto, result)
+	}
+	return
 }
 
 func abspath(filename string) string {

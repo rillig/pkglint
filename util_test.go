@@ -120,6 +120,20 @@ func (s *Suite) Test_cleanpath(c *check.C) {
 	test(".././././././././", "..")
 }
 
+func (s *Suite) Test_relpath(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+
+	test := func(from, to, result string) {
+		c.Check(relpath(from, to), equals, result)
+	}
+
+	test("some/dir", "some/directory", "../../some/directory")
+
+	test("category/package/.", ".", "../..")
+}
+
 // Relpath is called so often that handling the most common calls
 // without file system IO makes sense.
 func (s *Suite) Test_relpath__quick(c *check.C) {
@@ -131,9 +145,6 @@ func (s *Suite) Test_relpath__quick(c *check.C) {
 	test("some/dir", "some/dir/../..", "../..")
 	test("some/dir", "some/dir/./././../..", "../..")
 	test("some/dir", "some/dir/", ".")
-	test("some/dir", "some/directory", "../directory")
-
-	test("category/package/.", ".", "../..")
 }
 
 // This is not really an internal error but won't happen in practice anyway.
@@ -141,10 +152,14 @@ func (s *Suite) Test_relpath__quick(c *check.C) {
 func (s *Suite) Test_relpath__failure_on_Windows(c *check.C) {
 	t := s.Init(c)
 
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" && hasPrefix(t.tmpdir, "C:/") {
 		t.ExpectPanic(
 			func() { relpath("c:/", "d:/") },
-			"Pkglint internal error: relpath \"c:/\" \"d:/\": Rel: can't make d:/ relative to c:/")
+			sprintf(
+				"Pkglint internal error: "+
+					"relpath from topdir %q to %q: "+
+					"Rel: can't make %s relative to %s",
+				t.tmpdir, "D:/", "D:/", t.tmpdir))
 	}
 }
 

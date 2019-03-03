@@ -529,11 +529,15 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	// but that is checked later.
 	// A file including itself does not lead to an endless loop while parsing
 	// but may still produce unexpected warnings, such as redundant definitions.
+	//
+	// TODO: Since the Makefile is referenced via "../../category/package",
+	//  it would be nice if this relative path would be reflected in the output
+	//  instead of referring just to "Makefile".
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:3: "+
-			"Definition of PKGNAME is redundant because of ../../category/package/Makefile:3.",
+			"Definition of PKGNAME is redundant because of Makefile:3.",
 		"NOTE: ~/category/package/Makefile:4: "+
-			"Definition of DISTNAME is redundant because of ../../category/package/Makefile:4.")
+			"Definition of DISTNAME is redundant because of Makefile:4.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
