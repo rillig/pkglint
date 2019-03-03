@@ -165,23 +165,19 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 	CheckFileMk(filename)
 
 	t.CheckOutputLines(
-		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
-		// FIXME: Don't say anything here because the spaced form is clearer that the compressed form.
-		"NOTE: ~/Makefile:4: Unnecessary space after variable name \"VARNAME+\".")
+		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".")
 
 	t.SetUpCommandLine("-Wspace", "--autofix")
 
 	CheckFileMk(filename)
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
-		// FIXME: Don't fix anything here because the spaced form is clearer that the compressed form.
-		"AUTOFIX: ~/Makefile:4: Replacing \"VARNAME+ +=\" with \"VARNAME++=\".")
+		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".")
 	t.CheckFileLines("Makefile",
 		MkRcsID+"",
 		"VARNAME+=\t${VARNAME}",
 		"VARNAME+ =\t${VARNAME+}",
-		"VARNAME++=\t${VARNAME+}",
+		"VARNAME+ +=\t${VARNAME+}",
 		"pkgbase := pkglint")
 }
 

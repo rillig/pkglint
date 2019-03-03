@@ -80,7 +80,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	if m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment := MatchVarassign(text); m {
 		if spaceAfterVarname != "" {
 			switch {
-			case hasSuffix(varname, "+") && op == "=":
+			case hasSuffix(varname, "+") && (op == "=" || op == "+="):
 				break
 			case matches(varname, `^[a-z]`) && op == ":=":
 				break
