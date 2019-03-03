@@ -529,6 +529,9 @@ func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
 }
 
 func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string {
+	if !contains(relativePath, "$") {
+		return cleanpath(relativePath)
+	}
 
 	var basedir string
 	if G.Pkg != nil {
