@@ -562,7 +562,14 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 	// followed by "../.." anyway, the exact directory doesn't matter.
 	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
 
-	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1) // FIXME
+	// TODO: Add test for exists(${.PARSEDIR}/file).
+	// TODO: Add test for evaluating ${.PARSEDIR} in an included package.
+	// TODO: Add test for including ${.PARSEDIR}/other.mk.
+	// TODO: Add test for evaluating ${.PARSEDIR} in the infrastructure.
+	//  This is the only practically relevant use case since the category
+	//  directories don't contain any *.mk files that could be included.
+	// TODO: Add test that suggests ${.PARSEDIR} in .include to be omitted.
+	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
 
 	replaceLatest := func(varuse, category string, pattern regex.Pattern, replacement string) {
 		if contains(tmp, varuse) {
