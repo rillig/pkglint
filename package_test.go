@@ -527,17 +527,43 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 
 	// Including a package Makefile directly is an error (in the last line),
 	// but that is checked later.
-	// A file including itself does not lead to an endless loop while parsing
-	// but may still produce unexpected warnings, such as redundant definitions.
-	//
-	// TODO: Since the Makefile is referenced via "../../category/package",
+	// This test demonstrates that a file including itself does not lead to an
+	// endless loop while parsing. It might trigger an error in the future.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package__relative_included_filenames_in_same_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpkgname-1.67",
+		"DISTNAME=\tdistfile_1_67",
+		".include \"../../category/package/other.mk\"")
+	t.CreateFileLines("category/package/other.mk",
+		MkRcsID,
+		"PKGNAME=\tpkgname-1.67",
+		"DISTNAME=\tdistfile_1_67",
+		".include \"../../category/package/other.mk\"")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	// TODO: Since other.mk is referenced via "../../category/package",
 	//  it would be nice if this relative path would be reflected in the output
 	//  instead of referring just to "Makefile".
+	//  This needs to be fixed somewhere near relpath.
+	//
+	// The notes are in reverse order because they are produced when checking
+	// other.mk, and there the relative order is correct (line 2 before line 3).
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:3: "+
-			"Definition of PKGNAME is redundant because of Makefile:3.",
 		"NOTE: ~/category/package/Makefile:4: "+
-			"Definition of DISTNAME is redundant because of Makefile:4.")
+			"Definition of PKGNAME is redundant because of other.mk:2.",
+		"NOTE: ~/category/package/Makefile:3: "+
+			"Definition of DISTNAME is redundant because of other.mk:3.",
+		"NOTE: ~/category/package/Makefile:3: "+
+			"@beta FirstDefinition differs from LastDefinition in other.mk:3.",
+		"NOTE: ~/category/package/Makefile:4: "+
+			"@beta FirstDefinition differs from LastDefinition in other.mk:2.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
@@ -850,11 +876,15 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:20: "+
-			"@beta FirstDefinition differs from LastDefinition in line 22.",
 		"WARN: ~/category/package/Makefile:23: "+
 			"GNU_CONFIGURE almost always needs a C compiler, "+
-			"but \"c\" is not added to USE_LANGUAGES in line 20.")
+			"but \"c\" is not added to USE_LANGUAGES in line 20.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in line 21.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in line 22.")
 }
 
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__C_in_the_middle(c *check.C) {
@@ -869,13 +899,9 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__C_in_the_middle(c *c
 
 	G.Check(t.File("category/package"))
 
-	// FIXME: c99 is added in line 21, that should count.
-	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:20: "+
-			"@beta FirstDefinition differs from LastDefinition in line 22.",
-		"WARN: ~/category/package/Makefile:23: "+
-			"GNU_CONFIGURE almost always needs a C compiler, "+
-			"but \"c\" is not added to USE_LANGUAGES in line 20.")
+	// Until March 2019 pkglint wrongly warned that USE_LANGUAGES would not
+	// include c or c99, although c99 was added.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_mk(c *check.C) {
@@ -903,17 +929,22 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_m
 	// When the package is loaded, the included files are read in recursively, even
 	// when they come from the pkgsrc infrastructure.
 	//
-	// As of February 2019, the USE_LANGUAGES definitions from mk/compiler.mk are
+	// Up to March 2019, the USE_LANGUAGES definitions from mk/compiler.mk were
 	// loaded as if they were defined by the package, without taking the conditionals
-	// into account. Thereby "c" is added unconditionally to USE_LANGUAGES. Therefore
-	// it must not be accessed by vars.LastValue(), or the warning would never appear
-	// in practice.
+	// into account. Thereby "c" was added unconditionally to USE_LANGUAGES.
+	//
+	// Since March 2019 the infrastructure files are ignored when determining the value
+	// of USE_LANGUAGES.
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:20: "+
-			"@beta FirstDefinition differs from LastDefinition in ../../mk/compiler.mk:6.",
 		"WARN: ~/category/package/Makefile:23: "+
 			"GNU_CONFIGURE almost always needs a C compiler, "+
-			"but \"c\" is not added to USE_LANGUAGES in line 20.")
+			"but \"c\" is not added to USE_LANGUAGES in line 20.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in line 21.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+			"but \"c\" is not added to USE_LANGUAGES in line 22.")
 }
 
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__only_GNU_CONFIGURE(c *check.C) {

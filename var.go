@@ -93,12 +93,18 @@ func (v *Var) AddRef(varname string) {
 // TODO: Simple .for loops that append to the variable are ok as well.
 //  (This needs to be worded more precisely since that part potentially
 //  adds a lot of complexity to the whole data structure.)
+//
+// Variable assignments in the pkgsrc infrastructure are taken into account
+// for determining whether a variable is constant.
 func (v *Var) Constant() bool {
 	return v.constantState == 1 || v.constantState == 2
 }
 
 // ConstantValue returns the constant value of the variable.
 // It is only allowed when Constant() returns true.
+//
+// Variable assignments in the pkgsrc infrastructure are taken into account
+// for determining the constant value.
 func (v *Var) ConstantValue() string {
 	G.Assertf(v.Constant(), "Variable must be constant.")
 	return v.constantValue
@@ -138,6 +144,8 @@ func (v *Var) ValueInfra() string {
 //
 // Indirect uses through other variables (such as VAR2=${VAR}, VAR3=${VAR2})
 // are not listed.
+//
+// Variable uses in the pkgsrc infrastructure are taken into account.
 func (v *Var) ReadLocations() []MkLine {
 	return v.readLocations
 }
@@ -146,6 +154,8 @@ func (v *Var) ReadLocations() []MkLine {
 //
 // Assignments inside conditionals are included, no matter whether they are actually
 // reachable in practice.
+//
+// Variable assignments in the pkgsrc infrastructure are taken into account.
 func (v *Var) WriteLocations() []MkLine {
 	return v.writeLocations
 }
@@ -173,16 +183,11 @@ func (v *Var) Write(mkline MkLine, conditional bool, conditionVarnames ...string
 	v.refs.AddAll(conditionVarnames)
 
 	v.update(mkline, &v.valueInfra)
-	if !v.isInfra(mkline) {
+	if !G.Pkgsrc.IsInfra(mkline.Line.Filename) {
 		v.update(mkline, &v.value)
 	}
 
 	v.updateConstantValue(mkline)
-}
-
-func (v *Var) isInfra(mkline MkLine) bool {
-	rel := G.Pkgsrc.ToRel(mkline.Filename)
-	return hasPrefix(rel, "mk/") || hasPrefix(rel, "wip/mk/")
 }
 
 func (v *Var) update(mkline MkLine, update *string) {

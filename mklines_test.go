@@ -718,7 +718,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
 		"NOTE: including.mk:3: Definition of REDUNDANT is redundant because of included.mk:2.")
@@ -739,7 +739,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// No warning for VAR=... in Makefile since it makes sense to have common files
 	// with default values for variables, overriding some of them in each package.
@@ -754,7 +754,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_definitely
 		"VAR=\tvalue ${OTHER}",
 		"VAR?=\tdifferent value")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// A default assignment after an unconditional assignment is redundant.
 	// Even more so when the variable is not used between the two assignments.
@@ -768,7 +768,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__default_value_overridden
 		"VAR?=\tdefault value",
 		"VAR=\toverridden value")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
 		"WARN: module.mk:1: Variable VAR is overwritten in line 2.")
@@ -780,7 +780,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_value(c *
 		"VAR=\tvalue ${OTHER}",
 		"VAR=\tvalue ${OTHER}")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
 		"NOTE: module.mk:2: Definition of VAR is redundant because of line 1.")
@@ -794,7 +794,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditional_overwrite(c 
 		"VAR=\topsys",
 		".endif")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputEmpty()
 }
@@ -808,7 +808,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_inside_conditi
 		"VAR=\toverwritten",
 		".endif")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// TODO: expected a warning "WARN: module.mk:4: line 3 is ignored"
 	// Since line 3 and line 4 are in the same basic block, line 3 is definitely ignored.
@@ -827,7 +827,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_include(c 
 		"VAR=\toverwritten")
 	mklines := t.LoadMkInclude("module.mk")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// TODO: expected a warning "WARN: module.mk:4: line 3 is ignored"
 	//  Since line 3 and line 4 are in the same basic block, line 3 is definitely ignored.
@@ -842,7 +842,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditional_default(c *c
 		"VAR?=\topsys",
 		".endif")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// TODO: WARN: module.mk:3: The value \"opsys\" will never be assigned to VAR because it is defined unconditionally in line 1.
 	t.CheckOutputEmpty()
@@ -857,7 +857,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_same_variable_
 		"OTHER=\tvalue after",
 		"VAR=\tvalue ${OTHER}")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// Strictly speaking, line 1 is redundant because OTHER is not evaluated
 	// at load time and then immediately overwritten in line 3. If the operator
@@ -886,7 +886,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_different_valu
 		// Still this definition is redundant.
 		"VAR=\tvalue ${OTHER}")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// There is nothing redundant here. Each write is followed by a
 	// corresponding read, except for the last one. That is ok though
@@ -902,7 +902,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_call(c *check.
 		".include \"../../mk/pthread.builtin.mk\"",
 		"CHECK_BUILTIN.pthread:=\tno")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputEmpty()
 }
@@ -945,7 +945,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval(c *check.
 		"VAR:=\tvalue ${OTHER}",
 		"VAR!=\tvalue ${OTHER}")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// As of November 2018, pkglint doesn't check redundancies that involve the := or != operators.
 	//
@@ -972,7 +972,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_and_eval_literal(c
 		"VAR:=\tvalue",
 		"VAR!=\tvalue")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// Even when := is used with a literal value (which is usually
 	// only done for procedure calls), the shell evaluation can have
@@ -1014,7 +1014,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__if_then_else(c *check.C)
 		"OS=\tOTHER",
 		".endif")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// These two definitions are of course not redundant since they happen in
 	// different branches of the same .if statement.
@@ -1032,7 +1032,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__if_then_else_without_var
 		"IT=\tdoesn't exist",
 		".endif")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// These two definitions are of course not redundant since they happen in
 	// different branches of the same .if statement.
@@ -1049,7 +1049,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__append_then_default(c *c
 		"VAR+=\tvalue",
 		"VAR?=\tvalue")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
 		"NOTE: ~/append-then-default.mk:3: Default assignment of VAR has no effect because of line 2.")
@@ -1063,7 +1063,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_s
 		"VAR=\tvalue",
 		"VAR?=\tvalue")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
 		"NOTE: ~/assign-then-default.mk:3: " +
@@ -1079,7 +1079,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__eval_then_eval(c *check.
 		"VAR:=\tvalue",
 		"VAR:=\tother")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// TODO: Add redundancy check for the := operator.
 	t.CheckOutputEmpty()
@@ -1093,7 +1093,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_then_assign(c *che
 		"VAR!=\techo echo",
 		"VAR=\techo echo")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// Although the two variable assignments look very similar, they do
 	// something entirely different. The first executes the echo command,
@@ -1114,7 +1114,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__shell_then_read_then_ass
 		"OUTPUT:=${VAR}",
 		"VAR=\techo echo")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// No warning since the value is used in-between.
 	t.CheckOutputEmpty()
@@ -1132,7 +1132,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__assign_then_default_in_i
 		"VAR?=\tvalue")
 	mklines := t.LoadMkInclude("assign-then-default.mk")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// If assign-then-default.mk:2 is deleted, VAR still has the same value.
 	t.CheckOutputLines(
@@ -1153,7 +1153,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_included_f
 		"VAR?=\tvalue")
 	mklines := t.LoadMkInclude("including.mk")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// The assignment in including.mk:2 is only redundant if included.mk is actually included.
 	// Therefore both included.mk:2 nor including.mk:2 are relevant.
@@ -1178,7 +1178,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_parameters(c *
 		".include \"mk/pkg-build-options.mk\"")
 	mklines := t.LoadMkInclude("including.mk")
 
-	mklines.CheckRedundantAssignments()
+	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// This variable is not overwritten since it is used in-between
 	// by the included file.

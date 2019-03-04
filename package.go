@@ -163,7 +163,7 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines MkLines) {
 	}
 }
 
-func (pkg *Package) loadPackageMakefile() MkLines {
+func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
 	filename := pkg.File("Makefile")
 	if trace.Tracing {
 		defer trace.Call1(filename)()
@@ -173,7 +173,7 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 	allLines := NewMkLines(NewLines("", nil))
 	if _, result := pkg.readMakefile(filename, mainLines, allLines, ""); !result {
 		LoadMk(filename, NotEmpty|LogErrors) // Just for the LogErrors.
-		return nil
+		return nil, nil
 	}
 
 	// TODO: Is this still necessary? This code is 20 years old and was introduced
@@ -194,7 +194,6 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 	}
 
 	allLines.collectUsedVariables()
-	allLines.CheckRedundantAssignments()
 
 	pkg.Pkgdir = pkg.vars.LastValue("PKGDIR")
 	pkg.DistinfoFile = pkg.vars.LastValue("DISTINFO_FILE")
@@ -223,7 +222,7 @@ func (pkg *Package) loadPackageMakefile() MkLines {
 		trace.Step1("PKGDIR=%s", pkg.Pkgdir)
 	}
 
-	return mainLines
+	return mainLines, allLines
 }
 
 // TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
@@ -404,7 +403,7 @@ func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (i
 	return
 }
 
-func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
+func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, allLines MkLines) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
@@ -449,7 +448,10 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 			sprintf("run %q.", bmake("guess-license")))
 	}
 
-	pkg.checkGnuConfigureUseLanguages()
+	scope := NewRedundantScope()
+	allLines.CheckRedundantAssignments(scope) // Updates the variables in the scope
+	pkg.checkGnuConfigureUseLanguages(scope)
+
 	pkg.determineEffectivePkgVars()
 	pkg.checkPossibleDowngrade()
 
@@ -471,41 +473,46 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines) {
 	SaveAutofixChanges(mklines.lines)
 }
 
-func (pkg *Package) checkGnuConfigureUseLanguages() {
-	vars := pkg.vars
+func (pkg *Package) checkGnuConfigureUseLanguages(s *RedundantScope) {
 
-	gnuLine := vars.FirstDefinition("GNU_CONFIGURE")
-	if gnuLine == nil {
+	gnuConfigure := s.vars["GNU_CONFIGURE"]
+	if gnuConfigure == nil || !gnuConfigure.vari.Constant() {
 		return
 	}
 
-	// FIXME: Instead of using the first definition here, a better approach
-	//  is probably to use all the definitions except those from mk/compiler.mk.
-	//  In real pkgsrc, the last definition is typically from mk/compiler.mk
-	//  and only contains c++.
-	useLine := vars.FirstDefinition("USE_LANGUAGES")
-	if useLine == nil {
+	useLanguages := s.vars["USE_LANGUAGES"]
+	if useLanguages == nil || !useLanguages.vari.Constant() {
 		return
 	}
 
-	if matches(useLine.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
-		// Don't emit a warning since the comment probably contains a
-		// statement that C is really not needed.
-		return
+	var wrongLines []MkLine
+	for _, mkline := range useLanguages.vari.WriteLocations() {
+
+		if G.Pkgsrc.IsInfra(mkline.Line.Filename) {
+			continue
+		}
+
+		if matches(mkline.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
+			// Don't emit a warning since the comment probably contains a
+			// statement that C is really not needed.
+			return
+		}
+
+		languages := mkline.Value()
+		if matches(languages, `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
+			return
+		}
+
+		wrongLines = append(wrongLines, mkline)
 	}
 
-	// Alternatively this could be vars.LastValue("USE_LANGUAGES"), but
-	// only if that value excludes all variable assignments done by
-	// mk/compiler.mk.
-	languages := useLine.Value()
-	if matches(languages, `(?:^|[\t ]+)(?:c|c99|objc)(?:[\t ]+|$)`) {
-		return
+	gnuLine := gnuConfigure.vari.WriteLocations()[0]
+	for _, useLine := range wrongLines {
+		gnuLine.Warnf(
+			"GNU_CONFIGURE almost always needs a C compiler, "+
+				"but \"c\" is not added to USE_LANGUAGES in %s.",
+			gnuLine.RefTo(useLine))
 	}
-
-	gnuLine.Warnf(
-		"GNU_CONFIGURE almost always needs a C compiler, "+
-			"but \"c\" is not added to USE_LANGUAGES in %s.",
-		gnuLine.RefTo(useLine))
 }
 
 // nbPart determines the smallest part of the package version number,

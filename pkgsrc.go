@@ -814,6 +814,13 @@ func (src *Pkgsrc) ToRel(filename string) string {
 	return relpath(src.topdir, filename)
 }
 
+// IsInfra returns whether the given filename (relative to the pkglint
+// working directory) is part of the pkgsrc infrastructure.
+func (src *Pkgsrc) IsInfra(filename string) bool {
+	rel := src.ToRel(filename)
+	return hasPrefix(rel, "mk/") || hasPrefix(rel, "wip/mk/")
+}
+
 func (src *Pkgsrc) addBuildDefs(varnames ...string) {
 	for _, varname := range varnames {
 		src.buildDefs[varname] = true

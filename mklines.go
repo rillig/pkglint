@@ -406,8 +406,7 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 	finish()
 }
 
-func (mklines *MkLinesImpl) CheckRedundantAssignments() {
-	scope := NewRedundantScope()
+func (mklines *MkLinesImpl) CheckRedundantAssignments(scope *RedundantScope) {
 
 	scope.OnRedundant = func(old, new MkLine) {
 		if new.Op() == opAssignDefault {
