@@ -810,7 +810,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_inside_conditi
 
 	mklines.CheckRedundantAssignments()
 
-	// FIXME: expected a warning "WARN: module.mk:4: line 3 is ignored"
+	// TODO: expected a warning "WARN: module.mk:4: line 3 is ignored"
 	// Since line 3 and line 4 are in the same basic block, line 3 is definitely ignored.
 	t.CheckOutputEmpty()
 }
@@ -829,7 +829,7 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__conditionally_include(c 
 
 	mklines.CheckRedundantAssignments()
 
-	// FIXME: expected a warning "WARN: module.mk:4: line 3 is ignored"
+	// TODO: expected a warning "WARN: module.mk:4: line 3 is ignored"
 	//  Since line 3 and line 4 are in the same basic block, line 3 is definitely ignored.
 	t.CheckOutputEmpty()
 }
@@ -1351,7 +1351,8 @@ func (s *Suite) Test_MkLines_Check__hacks_mk(c *check.C) {
 	mklines.Check()
 
 	// No warning about including bsd.prefs.mk before using the ?= operator.
-	// FIXME: Why not?
+	// This is because the hacks.mk files are included implicitly by the
+	// pkgsrc infrastructure right after bsd.prefs.mk.
 	t.CheckOutputEmpty()
 }
 
