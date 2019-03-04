@@ -164,6 +164,9 @@ func (s *Suite) Test_relpath__quick(c *check.C) {
 	test("some/dir", "some/dir/../..", "../..")
 	test("some/dir", "some/dir/./././../..", "../..")
 	test("some/dir", "some/dir/", ".")
+
+	test("some/dir", ".", "../..")
+	test("some/dir/.", ".", "../..")
 }
 
 // This is not really an internal error but won't happen in practice anyway.

@@ -383,7 +383,7 @@ func relpath(from, to string) (result string) {
 	// This is the most common variant in a complete pkgsrc scan.
 	if cto == "." {
 		fromParts := strings.FieldsFunc(cfrom, func(r rune) bool { return r == '/' })
-		if len(fromParts) == 3 && !hasPrefix(fromParts[0], ".") && !hasPrefix(fromParts[1], ".") && fromParts[2] == "." {
+		if len(fromParts) == 2 && !hasPrefix(fromParts[0], ".") && !hasPrefix(fromParts[1], ".") {
 			return "../.."
 		}
 	}
