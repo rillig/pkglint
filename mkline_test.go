@@ -1484,12 +1484,20 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"")
 
 	// The dollar-space refers to a normal Make variable named " ".
-	// TODO: This edge case needs some more changes throughout pkglint.
+	// The lonely dollar at the very end refers to the variable named "",
+	// which is specially protected in bmake to always contain the empty string.
+	// It is heavily used in .for loops in the form ${:Uvalue}.
+	//
+	// TODO: The rest of pkglint assumes that the empty string is not a valid
+	//  variable name, mainly because the empty variable name is not visible
+	//  outside of the bmake debugging mode.
 	test("Lonely $ character $",
-		"Lonely ",
-		// FIXME: Expected text("Lonely "), varuse(" "), text("character").
-		tokens(text("Lonely ")),
-		"$ character $",
+		"Lonely $ character ",
+		tokens(
+			text("Lonely "),
+			varuseText("$ " /* instead of "${ }" */, " "),
+			text("character ")),
+		"$",
 		false,
 		"")
 }

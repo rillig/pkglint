@@ -192,6 +192,11 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	test("${PKGNAME:C/-[0-9].*$/-[0-9]*/}",
 		varuse("PKGNAME", "C/-[0-9].*$/-[0-9]*/"))
 
+	// TODO: Does the $@ refer to ${.TARGET}, or is it just an unmatchable
+	//  regular expression?
+	test("${PKGNAME:C/$@/target?/}",
+		varuse("PKGNAME", "C/$@/target?/"))
+
 	test("${PKGNAME:S/py${_PYTHON_VERSION}/py${i}/:C/-[0-9].*$/-[0-9]*/}",
 		varuse("PKGNAME", "S/py${_PYTHON_VERSION}/py${i}/", "C/-[0-9].*$/-[0-9]*/"))
 
