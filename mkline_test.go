@@ -1360,6 +1360,140 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	test("`", "`")
 }
 
+func (s *Suite) Test_splitMkLine(c *check.C) {
+	t := s.Init(c)
+
+	varuse := func(varname string, modifiers ...string) *MkToken {
+		text := "${" + varname
+		for _, modifier := range modifiers {
+			text += ":" + modifier
+		}
+		text += "}"
+		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
+	}
+	varuseText := func(text, varname string, modifiers ...string) *MkToken {
+		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
+	}
+	text := func(text string) *MkToken {
+		return &MkToken{text, nil}
+	}
+	tokens := func(tokens ...*MkToken) []*MkToken {
+		return tokens
+	}
+	_, _, _, _ = text, varuse, varuseText, tokens
+
+	test := func(text string, main string, tokens []*MkToken, rest string, hasComment bool, comment string) {
+		aMain, aTokens, aRest, aHasComment, aComment := splitMkLine(text)
+		t.Check(
+			[]interface{}{text, aTokens, aMain, aRest, aHasComment, aComment},
+			deepEquals,
+			[]interface{}{text, tokens, main, rest, hasComment, comment})
+	}
+
+	test("",
+		"",
+		tokens(),
+		"",
+		false,
+		"")
+
+	// The leading space from the comment is skipped since there is no practical
+	// difference between "#defined" and "# defined".
+	test("# comment",
+		"",
+		tokens(),
+		"",
+		true,
+		"comment")
+
+	// Comments that don't have exactly one leading space are unusual, and the
+	// indentation may be significant in multi-line comments (for example in
+	// the API documentation of the infrastructure files). Therefore all the
+	// leading whitespace is preserved.
+	test("#\tcomment",
+		"",
+		tokens(),
+		"",
+		true,
+		"\tcomment")
+	test("#   comment",
+		"",
+		tokens(),
+		"",
+		true,
+		"   comment")
+
+	// Other than in the shell, # also starts a comment in the middle of a word.
+	test("COMMENT=\tThe C# compiler",
+		"COMMENT=\tThe C",
+		tokens(text("COMMENT=\tThe C")),
+		"",
+		true,
+		"compiler")
+
+	test("text",
+		"text",
+		tokens(text("text")),
+		"",
+		false,
+		"")
+
+	test("${TARGET}: ${SOURCES} # comment",
+		"${TARGET}: ${SOURCES}",
+		tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
+		"",
+		true,
+		"comment")
+
+	// A # starts a comment, except if it immediately follows a [.
+	// This is done so that the length modifier :[#] can be written without
+	// escaping the #.
+	test("VAR=\t${OTHER:[#]} # comment",
+		"VAR=\t${OTHER:[#]}",
+		tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
+		"",
+		true,
+		"comment")
+
+	// The backslash is only removed when it escapes a comment.
+	// In particular, it cannot be used to escape a dollar,
+	// which is done by writing the dollar twice.
+	test("$$shellvar $${shellvar} \\${MKVAR} [] \\x",
+		"$$shellvar $${shellvar} \\${MKVAR} [] \\x",
+		tokens(text("$$shellvar $${shellvar} \\"), varuse("MKVAR"), text(" [] \\x")),
+		"",
+		false,
+		"")
+
+	// Parse errors are recorded in the rest return value.
+	test("${UNCLOSED",
+		"",
+		tokens(),
+		"${UNCLOSED",
+		false,
+		"")
+
+	// When a parse error occurs, the comment is not parsed and the main text
+	// is not trimmed to the right, to keep as much original information as
+	// possible.
+	test("text before ${UNCLOSED # comment",
+		"text before ",
+		tokens(text("text before ")),
+		"${UNCLOSED # comment",
+		false,
+		"")
+
+	// The dollar-space refers to a normal Make variable named " ".
+	// TODO: This edge case needs some more changes throughout pkglint.
+	test("Lonely $ character $",
+		"Lonely ",
+		// FIXME: Expected text("Lonely "), varuse(" "), text("character").
+		tokens(text("Lonely ")),
+		"$ character $",
+		false,
+		"")
+}
+
 func (s *Suite) Test_matchMkDirective(c *check.C) {
 
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string) {

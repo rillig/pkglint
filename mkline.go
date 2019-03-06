@@ -620,9 +620,98 @@ func (mkline *MkLineImpl) RefTo(other MkLine) string {
 }
 
 var (
-	LowerDash = textproc.NewByteSet("a-z---")
-	AlnumDot  = textproc.NewByteSet("A-Za-z0-9_.")
+	LowerDash            = textproc.NewByteSet("a-z---")
+	AlnumDot             = textproc.NewByteSet("A-Za-z0-9_.")
+	splitMkLineSafeChars = textproc.NewByteSet("\\#[$").Inverse()
 )
+
+// splitMkLine parses a logical line from a Makefile (that is, after joining
+// the lines that end in a backslash) into two parts: the main part and the
+// comment.
+//
+// This applies to all line types except those starting with a tab, which
+// contain the shell commands to be associated with make targets. These cannot
+// have comments.
+func splitMkLine(text string) (main string, tokens []*MkToken, rest string, hasComment bool, comment string) {
+
+	p := NewMkParser(nil, text, false)
+	lexer := p.lexer
+
+	rtrimHspace := func(s string) string {
+		end := len(s)
+		for end > 0 && isHspace(s[end-1]) {
+			end--
+		}
+		return s[:end]
+	}
+
+	parseToken := func() string {
+		var sb strings.Builder
+
+		for {
+			if plain := lexer.NextBytesSet(splitMkLineSafeChars); plain != "" {
+				sb.WriteString(plain)
+
+			} else if lexer.SkipString("[#") {
+				// See devel/bmake/files/parse.c:/as in modifier/
+				sb.WriteString("[#")
+
+			} else if hasPrefix(lexer.Rest(), "\\#") {
+				sb.WriteByte('#')
+				lexer.Skip(2)
+
+			} else if lexer.SkipByte('\\') {
+				sb.WriteByte('\\')
+
+			} else if lexer.SkipByte('[') {
+				sb.WriteByte('[')
+
+			} else if lexer.SkipString("$$") {
+				sb.WriteString("$$")
+
+			} else if lexer.EOF() || lexer.PeekByte() == '#' {
+				return rtrimHspace(sb.String())
+
+			} else {
+				return sb.String()
+			}
+		}
+	}
+
+	start := lexer.Mark()
+	for !lexer.EOF() {
+		mark := lexer.Mark()
+
+		if varUse := p.VarUse(); varUse != nil {
+			tokens = append(tokens, &MkToken{lexer.Since(mark), varUse})
+
+		} else if token := parseToken(); token != "" {
+			tokens = append(tokens, &MkToken{token, nil})
+
+		} else {
+			break
+		}
+	}
+
+	main = strings.Replace(lexer.Since(start), "\\#", "#", -1)
+
+	if lexer.SkipByte('#') {
+		hspace := lexer.NextHspace()
+		if hspace == " " {
+			hspace = ""
+		}
+		hasComment = true
+		comment = hspace + lexer.Rest()
+	} else {
+		rest = lexer.Rest()
+	}
+
+	if rest == "" {
+		main = rtrimHspace(main)
+	}
+
+	return
+}
 
 func matchMkDirective(text string) (m bool, indent, directive, args, comment string) {
 	lexer := textproc.NewLexer(text)
