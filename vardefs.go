@@ -164,8 +164,8 @@ func (src *Pkgsrc) InitVartypes() {
 		return enum(defval)
 	}
 
-	// enumFromDirs reads the directories from category, takes all
-	// that have a single number in them and ranks them from earliest
+	// enumFromDirs reads the directories from category, takes all that have
+	// a single number in them (such as php72) and ranks them from earliest
 	// to latest.
 	//
 	// If the directories cannot be found, the allowed values are taken
