@@ -1500,6 +1500,15 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"$",
 		false,
 		"")
+
+	// The character [ prevents the following # from starting a comment, even
+	// outside of variable modifiers.
+	test("COMMENT=\t[#] $$\\# $$# comment",
+		"COMMENT=\t[#] $$# $$",
+		tokens(text("COMMENT=\t[#] $$# $$")),
+		"",
+		true,
+		"comment")
 }
 
 func (s *Suite) Test_matchMkDirective(c *check.C) {
