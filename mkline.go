@@ -1320,6 +1320,9 @@ func (ind *Indentation) CheckFinish(filename string) {
 // but in practice it works equally well. Luckily there aren't many situations
 // where a complicated variable name contains unbalanced parentheses or braces,
 // which would confuse the devel/bmake parser.
+//
+// TODO: The allowed characters differ between the basename and the parameter
+//  of the variable. The square bracket is only allowed in the parameter part.
 var VarnameBytes = textproc.NewByteSet("A-Za-z_0-9*+---.[")
 
 func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
