@@ -651,28 +651,31 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, hasC
 		for {
 			if plain := lexer.NextBytesSet(splitMkLineSafeChars); plain != "" {
 				sb.WriteString(plain)
+				continue
+			}
 
-			} else if lexer.SkipString("[#") {
-				// See devel/bmake/files/parse.c:/as in modifier/
-				sb.WriteString("[#")
+			switch {
+			case lexer.SkipString("$$"):
+				sb.WriteString("$$")
 
-			} else if hasPrefix(lexer.Rest(), "\\#") {
+			case hasPrefix(lexer.Rest(), "\\#"):
 				sb.WriteByte('#')
 				lexer.Skip(2)
 
-			} else if lexer.SkipByte('\\') {
+			case lexer.SkipByte('\\'):
 				sb.WriteByte('\\')
 
-			} else if lexer.SkipByte('[') {
+			case lexer.SkipString("[#"):
+				// See devel/bmake/files/parse.c:/as in modifier/
+				sb.WriteString("[#")
+
+			case lexer.SkipByte('['):
 				sb.WriteByte('[')
 
-			} else if lexer.SkipString("$$") {
-				sb.WriteString("$$")
-
-			} else if lexer.EOF() || lexer.PeekByte() == '#' {
+			case lexer.EOF(), lexer.PeekByte() == '#':
 				return rtrimHspace(sb.String())
 
-			} else {
+			default:
 				return sb.String()
 			}
 		}
