@@ -717,8 +717,14 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, hasC
 }
 
 func matchMkDirective(text string) (m bool, indent, directive, args, comment string) {
-	lexer := textproc.NewLexer(text)
-	if !lexer.SkipByte('.') {
+	if !hasPrefix(text, ".") {
+		return
+	}
+
+	main, _, rest, hasComment, trailingComment := splitMkLine(text)
+
+	lexer := textproc.NewLexer(main)
+	if !lexer.SkipByte('.') || rest != "" {
 		return
 	}
 
@@ -738,27 +744,10 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 
 	lexer.SkipHspace()
 
-	argsStart := lexer.Mark()
-	for !lexer.EOF() && lexer.PeekByte() != '#' {
-		switch {
-		case lexer.SkipString("[#"):
-			// See devel/bmake/files/parse.c:/as in modifier/
+	args = lexer.Rest()
 
-		case lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1:
-			lexer.Skip(2)
-
-		default:
-			lexer.Skip(1)
-		}
-	}
-	args = lexer.Since(argsStart)
-	args = strings.TrimFunc(args, func(r rune) bool { return isHspace(byte(r)) })
-	args = strings.Replace(args, "\\#", "#", -1)
-
-	if !lexer.EOF() {
-		lexer.Skip(1)
-		lexer.SkipHspace()
-		comment = lexer.Rest()
+	if hasComment {
+		comment = trailingComment
 	}
 
 	m = true
@@ -1327,6 +1316,9 @@ var VarnameBytes = textproc.NewByteSet("A-Za-z_0-9*+---.[")
 
 func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
 	lexer := textproc.NewLexer(text)
+
+	// TODO: use splitMkLine here instead of doing the lexing again.
+	//  It gets a bit tricky in the case of commented variable assignments.
 
 	commented = lexer.SkipByte('#')
 	for !commented && lexer.SkipByte(' ') {
