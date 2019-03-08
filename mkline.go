@@ -1315,6 +1315,97 @@ func (ind *Indentation) CheckFinish(filename string) {
 var VarnameBytes = textproc.NewByteSet("A-Za-z_0-9*+---.[")
 
 func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
+
+	m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment = MatchVarassignOld(text)
+	nm, ncommented, nvarname, nspaceAfterVarname, nop, nvalueAlign, nvalue, nspaceAfterValue, ncomment := MatchVarassignNew(text)
+
+	oldStr := fmt.Sprintf("%v, %v, %q, %q, %q, %q, %q, %q, %q", m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment)
+	newStr := fmt.Sprintf("%v, %v, %q, %q, %q, %q, %q, %q, %q", nm, ncommented, nvarname, nspaceAfterVarname, nop, nvalueAlign, nvalue, nspaceAfterValue, ncomment)
+	if oldStr != newStr {
+		dummyLine.Errorf("MatchVarassign diff:\nold: %q\nnew: %q", oldStr, newStr)
+	}
+	return
+}
+
+func MatchVarassignOld(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
+	lexer := textproc.NewLexer(text)
+
+	// TODO: use splitMkLine here instead of doing the lexing again.
+	//  It gets a bit tricky in the case of commented variable assignments.
+
+	commented = lexer.SkipByte('#')
+	for !commented && lexer.SkipByte(' ') {
+	}
+
+	varnameStart := lexer.Mark()
+	for !lexer.EOF() {
+		switch {
+
+		case lexer.NextBytesSet(VarnameBytes) != "":
+			continue
+
+		case lexer.PeekByte() == '$':
+			parser := NewMkParser(nil, lexer.Rest(), false)
+			varuse := parser.VarUse()
+			if varuse == nil {
+				return
+			}
+			varuseLen := len(lexer.Rest()) - len(parser.Rest())
+			lexer.Skip(varuseLen)
+			continue
+		}
+		break
+	}
+	varname = lexer.Since(varnameStart)
+
+	if varname == "" {
+		return
+	}
+
+	spaceAfterVarname = lexer.NextHspace()
+
+	opStart := lexer.Mark()
+	switch lexer.PeekByte() {
+	case '!', '+', ':', '?':
+		lexer.Skip(1)
+	}
+	if !lexer.SkipByte('=') {
+		return
+	}
+	op = lexer.Since(opStart)
+
+	if hasSuffix(varname, "+") && op == "=" && spaceAfterVarname == "" {
+		varname = varname[:len(varname)-1]
+		op = "+="
+	}
+
+	lexer.SkipHspace()
+
+	valueAlign = text[:len(text)-len(lexer.Rest())]
+	valueStart := lexer.Mark()
+	// FIXME: This is the same code as in matchMkDirective.
+	for !lexer.EOF() && lexer.PeekByte() != '#' {
+		switch {
+		case lexer.SkipString("[#"):
+			break
+
+		case lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1:
+			lexer.Skip(2)
+
+		default:
+			lexer.Skip(1)
+		}
+	}
+	rawValueWithSpace := lexer.Since(valueStart)
+	spaceAfterValue = rawValueWithSpace[len(strings.TrimRight(rawValueWithSpace, " \t")):]
+	value = trimHspace(strings.Replace(lexer.Since(valueStart), "\\#", "#", -1))
+	comment = lexer.Rest()
+
+	m = true
+	return
+}
+
+func MatchVarassignNew(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
 	lexer := textproc.NewLexer(text)
 
 	// TODO: use splitMkLine here instead of doing the lexing again.
