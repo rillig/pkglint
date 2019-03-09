@@ -657,8 +657,15 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spac
 			case lexer.SkipString("$$"):
 				sb.WriteString("$$")
 
-			case hasPrefix(lexer.Rest(), "\\#"):
+			case lexer.SkipString("\\#"):
 				sb.WriteByte('#')
+
+			case hasPrefix(lexer.Rest(), "\\$"):
+				sb.WriteByte('\\')
+				lexer.Skip(1)
+
+			case lexer.PeekByte() == '\\' && len(lexer.Rest()) >= 2:
+				sb.WriteString(lexer.Rest()[:2])
 				lexer.Skip(2)
 
 			case lexer.SkipByte('\\'):
@@ -695,6 +702,7 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spac
 		}
 	}
 
+	// FIXME: doesn't work for \\#
 	main = strings.Replace(lexer.Since(start), "\\#", "#", -1)
 
 	if lexer.SkipByte('#') {
@@ -1326,7 +1334,7 @@ func MatchVarassign(text string) (m bool, assignment mkLineAssign) {
 	oldStr := toString(m, assignment)
 	newStr := toString(newM, newAssignment)
 	if oldStr != newStr {
-		fmt.Printf("MatchVarassign %s\nold: %q\nnew: %q\n", text, oldStr, newStr)
+		panic(fmt.Sprintf("MatchVarassign %s\nold: %s\nnew: %s\n", text, oldStr, newStr))
 	}
 
 	return
@@ -1431,8 +1439,19 @@ func MatchVarassignNew(text string) (m bool, assignment mkLineAssign) {
 	//  It gets a bit tricky in the case of commented variable assignments.
 
 	commented := lexer.SkipByte('#')
+
+	main, tokens, rest, spaceBeforeComment, hasComment, comment := splitMkLine(lexer.Rest())
+	_, _, _, _, _ = main, tokens, rest, hasComment, comment
+
+	lexer = textproc.NewLexer(main)
+	mainStart := lexer.Mark()
+
 	for !commented && lexer.SkipByte(' ') {
 	}
+
+	// TODO: A MkTokenLexer that has an underlying []*MkToken instead of a
+	//  string might be useful for these parsing jobs, and maybe later in
+	//  the checks as well.
 
 	varnameStart := lexer.Mark()
 	for !lexer.EOF() {
@@ -1478,26 +1497,13 @@ func MatchVarassignNew(text string) (m bool, assignment mkLineAssign) {
 
 	lexer.SkipHspace()
 
-	valueAlign := text[:len(text)-len(lexer.Rest())]
-	valueStart := lexer.Mark()
-	// FIXME: This is the same code as in matchMkDirective.
-	for !lexer.EOF() && lexer.PeekByte() != '#' {
-		switch {
-		case lexer.SkipString("[#"):
-			break
-
-		// See devel/bmake/files/parse.c, ParseGetLine, if (ch == '\\')
-		case lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1:
-			lexer.Skip(2)
-
-		default:
-			lexer.Skip(1)
-		}
+	value := trimHspace(lexer.Rest() + rest)
+	spaceBeforeValue := ""
+	if value == "" {
+		spaceBeforeValue = spaceBeforeComment
+		spaceBeforeComment = ""
 	}
-	rawValueWithSpace := lexer.Since(valueStart)
-	spaceAfterValue := rawValueWithSpace[len(strings.TrimRight(rawValueWithSpace, " \t")):]
-	value := trimHspace(strings.Replace(lexer.Since(valueStart), "\\#", "#", -1))
-	comment := lexer.Rest()
+	valueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart) + spaceBeforeValue
 
 	return true, &mkLineAssignImpl{
 		commented:         commented,
@@ -1511,8 +1517,8 @@ func MatchVarassignNew(text string) (m bool, assignment mkLineAssign) {
 		valueMk:           nil, // filled in lazily
 		valueMkRest:       "",  // filled in lazily
 		fields:            nil, // filled in lazily
-		spaceAfterValue:   spaceAfterValue,
-		comment:           comment,
+		spaceAfterValue:   spaceBeforeComment,
+		comment:           ifelseStr(hasComment, "#", "") + comment,
 	}
 }
 

@@ -1194,6 +1194,59 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	// A single space is typically used for writing documentation, not for commenting out code.
 	// Therefore this line doesn't count as commented variable assignment.
 	testInvalid("# VAR=value")
+
+	// Ensure that the alignment for the variable value is correct.
+	test("BUILD_DIRS=\tdir1 dir2",
+		false,
+		"BUILD_DIRS",
+		"",
+		"=",
+		"BUILD_DIRS=\t",
+		"dir1 dir2",
+		"",
+		"")
+
+	// Ensure that the alignment for the variable value is correct,
+	// even if the whole line is commented.
+	test("#BUILD_DIRS=\tdir1 dir2",
+		true,
+		"BUILD_DIRS",
+		"",
+		"=",
+		"#BUILD_DIRS=\t",
+		"dir1 dir2",
+		"",
+		"")
+
+	test("MASTER_SITES=\t#none",
+		false,
+		"MASTER_SITES",
+		"",
+		"=",
+		"MASTER_SITES=\t",
+		"",
+		"",
+		"#none")
+
+	test("MASTER_SITES=\t# none",
+		false,
+		"MASTER_SITES",
+		"",
+		"=",
+		"MASTER_SITES=\t",
+		"",
+		"",
+		"# none")
+
+	test("EGDIRS=\t${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
+		false,
+		"EGDIRS",
+		"",
+		"=",
+		"EGDIRS=\t",
+		"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
+		"",
+		"")
 }
 
 func (s *Suite) Test_NewMkOperator(c *check.C) {
@@ -1503,9 +1556,60 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		true,
 		" comment")
 
+	// A backslash always escapes the next character, be it a # for a comment
+	// or something else. This makes it difficult to write a literal \# in a
+	// Makefile, but that's an edge case anyway.
+	test("VAR0=\t#comment",
+		"VAR0=",
+		tokens(text("VAR0=")),
+		"",
+		// Later, when converting this result into a proper variable assignment,
+		// this "space before comment" is reclassified as "space before the value",
+		// in order to align the "#comment" with the other variable values.
+		"\t",
+		true,
+		"comment")
+	test("VAR1=\t\\#no-comment",
+		"VAR1=\t#no-comment",
+		tokens(text("VAR1=\t#no-comment")),
+		"",
+		"",
+		false,
+		"")
+	test("VAR2=\t\\\\#comment",
+		"VAR2=\t\\\\",
+		tokens(text("VAR2=\t\\\\")),
+		"",
+		"",
+		true,
+		"comment")
+
 	// The backslash is only removed when it escapes a comment.
-	// In particular, it cannot be used to escape a dollar,
-	// which is done by writing the dollar twice.
+	// In particular, it cannot be used to escape a dollar that starts a
+	// variable use.
+	test("VAR0=\t$T",
+		"VAR0=\t$T",
+		tokens(text("VAR0=\t"), varuseText("$T", "T")),
+		"",
+		"",
+		false,
+		"")
+	test("VAR1=\t\\$T",
+		"VAR1=\t\\$T",
+		tokens(text("VAR1=\t\\"), varuseText("$T", "T")),
+		"",
+		"",
+		false,
+		"")
+	test("VAR2=\t\\\\$T",
+		"VAR2=\t\\\\$T",
+		tokens(text("VAR2=\t\\\\"), varuseText("$T", "T")),
+		"",
+		"",
+		false,
+		"")
+
+	// To escape a dollar, write it twice.
 	test("$$shellvar $${shellvar} \\${MKVAR} [] \\x",
 		"$$shellvar $${shellvar} \\${MKVAR} [] \\x",
 		tokens(text("$$shellvar $${shellvar} \\"), varuse("MKVAR"), text(" [] \\x")),
@@ -1562,6 +1666,14 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		true,
 		" comment")
+
+	test("VAR2=\t\\\\#comment",
+		"VAR2=\t\\\\",
+		tokens(text("VAR2=\t\\\\")),
+		"",
+		"",
+		true,
+		"comment")
 }
 
 func (s *Suite) Test_matchMkDirective(c *check.C) {
