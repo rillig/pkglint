@@ -1107,22 +1107,28 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	s.Init(c)
 
 	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
-		type VarAssign struct {
-			commented                  bool
-			varname, spaceAfterVarname string
-			op                         MkOperator
-			align                      string
-			value, spaceAfterValue     string
-			comment                    string
-		}
-		expected := VarAssign{commented, varname, spaceAfterVarname, NewMkOperator(op), align, value, spaceAfterValue, comment}
-		m, a := MatchVarassign(text)
+		m, actual := MatchVarassign(text)
 		if !m {
 			c.Errorf("Text %q doesn't match variable assignment", text)
 			return
 		}
-		actual := VarAssign{a.commented, a.varname, a.spaceAfterVarname, a.op, a.valueAlign, a.value, a.spaceAfterValue, a.comment}
-		c.Check(actual, equals, expected)
+
+		expected := mkLineAssignImpl{
+			commented:         commented,
+			varname:           varname,
+			varcanon:          varnameCanon(varname),
+			varparam:          varnameParam(varname),
+			spaceAfterVarname: spaceAfterVarname,
+			op:                NewMkOperator(op),
+			valueAlign:        align,
+			value:             value,
+			valueMk:           nil,
+			valueMkRest:       "",
+			fields:            nil,
+			spaceAfterValue:   spaceAfterValue,
+			comment:           comment,
+		}
+		c.Check(*actual, deepEquals, expected)
 	}
 
 	testInvalid := func(text string) {
