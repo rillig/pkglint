@@ -1437,20 +1437,21 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		false,
 		"")
 
-	// The leading space from the comment is skipped since there is no practical
-	// difference between "#defined" and "# defined".
+	// The leading space from the comment is preserved to make parsing as exact
+	// as possible. The difference between "#defined" and "# defined" might be
+	// relevant in some cases.
 	test("# comment",
 		"",
 		tokens(),
 		"",
 		"",
 		true,
-		"comment")
+		" comment")
 
 	// Comments that don't have exactly one leading space are unusual, and the
 	// indentation may be significant in multi-line comments (for example in
 	// the API documentation of the infrastructure files). Therefore all the
-	// leading whitespace is preserved.
+	// leading whitespace is preserved, as is a single U+0020.
 	test("#\tcomment",
 		"",
 		tokens(),
@@ -1473,7 +1474,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		"",
 		true,
-		"compiler")
+		" compiler")
 
 	test("text",
 		"text",
@@ -1489,7 +1490,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		" ",
 		true,
-		"comment")
+		" comment")
 
 	// A # starts a comment, except if it immediately follows a [.
 	// This is done so that the length modifier :[#] can be written without
@@ -1500,7 +1501,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		" ",
 		true,
-		"comment")
+		" comment")
 
 	// The backslash is only removed when it escapes a comment.
 	// In particular, it cannot be used to escape a dollar,
@@ -1560,7 +1561,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		"",
 		true,
-		"comment")
+		" comment")
 }
 
 func (s *Suite) Test_matchMkDirective(c *check.C) {
@@ -1577,7 +1578,7 @@ func (s *Suite) Test_matchMkDirective(c *check.C) {
 		"", "if", "${VAR} == value", "")
 
 	test(".\tendif # comment",
-		"\t", "endif", "", "comment")
+		"\t", "endif", "", " comment")
 
 	test(".if ${VAR} == \"#\"",
 		"", "if", "${VAR} == \"", "\"")

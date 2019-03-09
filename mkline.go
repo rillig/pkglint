@@ -124,7 +124,13 @@ func NewMkLine(line Line) *MkLineImpl {
 	}
 
 	if m, indent, directive, args, comment := matchMkDirective(text); m {
-		return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, comment, nil, nil, nil}}
+
+		// In .if and .endif lines the space surrounding the comment is irrelevant.
+		// Especially for checking that the .endif comment matches the .if condition,
+		// it must be trimmed.
+		trimmedComment := trimHspace(comment)
+
+		return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
 	}
 
 	if m, indent, directive, includedFile := MatchMkInclude(text); m {
@@ -692,12 +698,8 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spac
 	main = strings.Replace(lexer.Since(start), "\\#", "#", -1)
 
 	if lexer.SkipByte('#') {
-		hspace := lexer.NextHspace()
-		if hspace == " " {
-			hspace = ""
-		}
 		hasComment = true
-		comment = hspace + lexer.Rest()
+		comment = lexer.Rest()
 	} else {
 		rest = lexer.Rest()
 	}
