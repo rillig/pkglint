@@ -67,6 +67,7 @@ func (s *Suite) Test_MkTokensLexer__varuse_varuse_varuse(c *check.C) {
 	t.Check(lexer.NextVarUse(), deepEquals, NewMkVarUse("dirs", "O", "u"))
 	t.Check(lexer.NextVarUse(), deepEquals, NewMkVarUse("VAR", "Mpattern"))
 	t.Check(lexer.NextVarUse(), deepEquals, NewMkVarUse(".TARGET"))
+	t.Check(lexer.NextVarUse(), check.IsNil)
 }
 
 func (s *Suite) Test_MkTokensLexer__mark_reset_since_in_initial_state(c *check.C) {
@@ -254,4 +255,37 @@ func (s *Suite) Test_MkTokensLexer__varuse_when_plain_text(c *check.C) {
 	t.Check(lexer.NextVarUse(), check.IsNil)
 	t.Check(lexer.NextString("xt"), equals, "xt")
 	t.Check(lexer.NextVarUse(), check.IsNil)
+}
+
+// The code that creates the tokens for the lexer never puts two
+// plain text MkTokens besides each other. There's no point in doing
+// that since they could have been combined into a single token from
+// the beginning.
+func (s *Suite) Test_MkTokensLexer__adjacent_plain_text(c *check.C) {
+	t := s.Init(c)
+
+	lexer := NewMkTokensLexer([]*MkToken{
+		{"text1", nil},
+		{"text2", nil}})
+
+	// Returns false since the string is distributed over two separate tokens.
+	t.Check(lexer.SkipString("text1text2"), equals, false)
+
+	t.Check(lexer.SkipString("text1"), equals, true)
+
+	// This returns false since the internal lexer is not advanced to the
+	// next text token. To do that, all methods from the internal lexer
+	// would have to be redefined by MkTokensLexer in order to advance the
+	// internal lexer to the next token.
+	//
+	// Since this situation doesn't occur in practice, there's no point in
+	// implementing it.
+	t.Check(lexer.SkipString("text2"), equals, false)
+
+	// Just for covering the "Varuse != nil" branch in MkTokensLexer.NextVarUse.
+	t.Check(lexer.NextVarUse(), check.IsNil)
+
+	// The string is still not found since the next token is only consumed
+	// by the NextVarUse above if it is indeed a VarUse.
+	t.Check(lexer.SkipString("text2"), equals, false)
 }
