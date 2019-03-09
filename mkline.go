@@ -106,10 +106,6 @@ func NewMkLine(line Line) *MkLineImpl {
 				"To escape the #, write \\#.")
 		}
 
-		a.varcanon = varnameCanon(a.varname)
-		a.varparam = varnameParam(a.varname)
-		a.value = strings.Replace(a.value, "\\#", "#", -1)
-
 		return &MkLineImpl{line, a}
 	}
 

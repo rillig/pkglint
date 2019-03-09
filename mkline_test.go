@@ -222,7 +222,7 @@ func (s *Suite) Test_NewMkLine__escaped_hash_in_value(c *check.C) {
 	c.Check(parsed[0].Value(), equals, "value")
 	c.Check(parsed[1].Value(), equals, "value#")
 	c.Check(parsed[2].Value(), equals, "value\\\\")
-	c.Check(parsed[3].Value(), equals, "value\\#") // FIXME: Must be "value\\\\#"
+	c.Check(parsed[3].Value(), equals, "value\\\\#")
 	c.Check(parsed[4].Value(), equals, "value\\\\\\\\")
 
 	t.CheckOutputLines(
