@@ -229,8 +229,6 @@ func (s *Suite) Test_MkTokensLexer__constructor_uses_shared_array(c *check.C) {
 	t.Check(lexer.Rest(), equals, "modified text")
 }
 
-// TODO: even without the append() calls the lexer and the marks are independent of each other
-
 func (s *Suite) Test_MkTokensLexer__peek_after_varuse(c *check.C) {
 	t := s.Init(c)
 

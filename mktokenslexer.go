@@ -61,7 +61,7 @@ func (m *MkTokensLexer) NextVarUse() *MkVarUse {
 // Mark remembers the current position of the lexer.
 // The lexer can later be reset to that position by calling Reset.
 func (m *MkTokensLexer) Mark() MkTokensLexerMark {
-	return MkTokensLexerMark{m.Lexer.Rest(), append([]*MkToken(nil), m.tokens...)}
+	return MkTokensLexerMark{m.Lexer.Rest(), m.tokens}
 }
 
 // Since returns the text between the given mark and the current position
@@ -78,7 +78,7 @@ func (m *MkTokensLexer) Since(mark MkTokensLexerMark) string {
 // that is, the mark is not destroyed.
 func (m *MkTokensLexer) Reset(mark MkTokensLexerMark) {
 	m.Lexer = textproc.NewLexer(mark.rest)
-	m.tokens = append([]*MkToken(nil), mark.tokens...)
+	m.tokens = mark.tokens
 }
 
 // MkTokensLexerMark remembers a position of a token lexer,
