@@ -795,9 +795,9 @@ type RedundantScope struct {
 	OnOverwrite func(old, new MkLine)
 }
 type redundantScopeVarinfo struct {
-	vari        *Var
-	includePath includePath
-	lastAction  uint8 // 0 = none, 1 = read, 2 = write
+	vari         *Var
+	includePaths []includePath
+	lastAction   uint8 // 0 = none, 1 = read, 2 = write
 }
 
 func NewRedundantScope() *RedundantScope {
@@ -825,16 +825,17 @@ func (s *RedundantScope) updateIncludePath(mkline MkLine) {
 
 func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	varname := mkline.Varname()
-	info := s.vars[varname]
+	first := s.vars[varname] == nil
+	info := s.get(varname)
 
 	defer func() {
 		info.vari.Write(mkline, ind.Depth("") > 0, ind.Varnames()...)
 		info.lastAction = 2
+		s.access(varname)
 	}()
 
 	// In the very first assignment, no redundancy can occur.
-	if info == nil {
-		info = s.get(varname)
+	if first {
 		return
 	}
 
@@ -866,7 +867,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		switch op {
 		// TODO: What about opAssignEval?
 		case opAssign:
-			if s.includePath.includes(info.includePath) {
+			if s.includePath.includesAny(info.includePaths) {
 				// This is the usual pattern of including a file and
 				// then overwriting some of them. Although technically
 				// this overwrites the previous definition, it is not
@@ -881,14 +882,19 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 			}
 
 		case opAssignDefault:
-			if info.includePath.includes(s.includePath) {
-				// A variable is defined before including the file with the
-				// default assignment. This is common and fine. Except when
-				// the value is the same as the default value.
+			if s.includePath.includedByAny(info.includePaths) {
+				// A variable has been defined before including this file
+				// containing the default assignment. This is common and fine.
+				// Except when the value is the same as the default value.
 				if info.vari.Constant() && info.vari.ConstantValue() == mkline.Value() {
 					s.OnRedundant(mkline, prevWrites[len(prevWrites)-1])
 				}
-			} else if s.includePath.includes(info.includePath) || s.includePath.equals(info.includePath) {
+
+			} else if s.includePath.includesOrEqualsAll(info.includePaths) {
+				// After including one or more files, the variable is either
+				// overwritten or defaulted with the same value as its
+				// guaranteed current value. All previous accesses to the
+				// variable were either in this file or in an included file.
 				s.OnRedundant(prevWrites[len(prevWrites)-1], mkline)
 			}
 		}
@@ -902,6 +908,7 @@ func (s *RedundantScope) handleVarUse(mkline MkLine) {
 			info := s.get(varname)
 			info.vari.Read(mkline)
 			info.lastAction = 1
+			s.access(varname)
 		}
 
 	case mkline.IsDirective():
@@ -917,15 +924,21 @@ func (s *RedundantScope) handleVarUse(mkline MkLine) {
 	}
 }
 
-// get returns the info for the given variable, creating it if necessary.
+// access returns the info for the given variable, creating it if necessary.
 func (s *RedundantScope) get(varname string) *redundantScopeVarinfo {
 	info := s.vars[varname]
 	if info == nil {
 		v := NewVar(varname)
-		info = &redundantScopeVarinfo{v, s.includePath.copy(), 0}
+		info = &redundantScopeVarinfo{v, nil, 0}
 		s.vars[varname] = info
 	}
 	return info
+}
+
+// access records the current file location, to be used in later inclusion checks.
+func (s *RedundantScope) access(varname string) {
+	info := s.vars[varname]
+	info.includePaths = append(info.includePaths, s.includePath.copy())
 }
 
 // includePath remembers the whole sequence of included files,
@@ -956,6 +969,33 @@ func (p *includePath) includes(other includePath) bool {
 		return false
 	}
 	return len(p.files) < len(other.files)
+}
+
+func (p *includePath) includesAny(others []includePath) bool {
+	for _, other := range others {
+		if p.includes(other) {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *includePath) includedByAny(others []includePath) bool {
+	for _, other := range others {
+		if other.includes(*p) {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *includePath) includesOrEqualsAll(others []includePath) bool {
+	for _, other := range others {
+		if !(p.includes(other) || p.equals(other)) {
+			return false
+		}
+	}
+	return true
 }
 
 func (p *includePath) equals(other includePath) bool {

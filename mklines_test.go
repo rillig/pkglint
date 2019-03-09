@@ -704,7 +704,7 @@ func (s *Suite) Test_MkLines__unknown_options(c *check.C) {
 		"WARN: options.mk:4: Unknown option \"unknown\".")
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_after_including(c *check.C) {
 	t := s.Init(c)
 	t.CreateFileLines("included.mk",
 		"OVERRIDE=\tprevious value",
@@ -724,7 +724,23 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_mk(c *check.
 		"NOTE: including.mk:3: Definition of REDUNDANT is redundant because of included.mk:2.")
 }
 
-func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile(c *check.C) {
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__redundant_assign_after_including(c *check.C) {
+	t := s.Init(c)
+	t.CreateFileLines("included.mk",
+		"REDUNDANT=\tredundant")
+	t.CreateFileLines("including.mk",
+		".include \"included.mk\"",
+		"REDUNDANT=\tredundant")
+	t.Chdir(".")
+	mklines := t.LoadMkInclude("including.mk")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	t.CheckOutputLines(
+		"NOTE: including.mk:2: Definition of REDUNDANT is redundant because of included.mk:1.")
+}
+
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__override_in_Makefile_after_including(c *check.C) {
 	t := s.Init(c)
 	t.CreateFileLines("module.mk",
 		"VAR=\tvalue ${OTHER}",
@@ -1201,24 +1217,20 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_definition_fro
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// Before pkglint 5.7.2 (2019-03-09), including.mk:2 used WRKSRC for the first time.
-	// At that point the include path for that variable is fixed once and for all.
-	// Later in RedundantScope.handleVarassign, there is a check that was supposed to
-	// prevent all warnings in included files, if there is such a relation.
+	// At that point the include path for that variable was fixed once and for all.
+	// Later in RedundantScope.handleVarassign, there was a check that was supposed to
+	// prevent all warnings in included files, if there was such a relation.
 	//
-	// In this case no such inclusion hierarchy is visible since the include path of
-	// WRKSRC is [including.mk], which is the same as the include path at including.mk:4,
-	// therefore the lines are in the same file and the earlier line gets the warning.
+	// In this case no such inclusion hierarchy was visible since the include path of
+	// WRKSRC was [including.mk], which was the same as the include path at including.mk:4,
+	// therefore the lines were in the same file and the earlier line got the warning.
 	//
-	// Except that the earlier line is not related in any way to WRKSRC.includePath.
+	// Except that the earlier line was not related in any way to WRKSRC.includePath.
 	//
-	// This reveals an imprecise handling of these includePaths. The condition should
-	// better be "if any includePath from any write access to the variable is below the
-	// current file, don't issue a warning".
-	//
-	// FIXME: The warning must not be in the included file.
-	//  It's always the including file that is responsible for redundancies.
-	t.CheckOutputLines(
-		"WARN: ~/included.mk:2: Variable WRKSRC is overwritten in including.mk:4.")
+	// This revealed an imprecise handling of these includePaths. They have been changed
+	// to be more precise. Now every access to the variable is recorded, and the
+	// conditions have been changed to "all of" or "any of", as appropriate.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
