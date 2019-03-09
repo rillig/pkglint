@@ -1317,10 +1317,7 @@ func MatchVarassign(text string) (m bool, assignment mkLineAssign) {
 		if !m {
 			return "no"
 		}
-		return fmt.Sprintf(
-			"%v, %q, %q, %q, %q, %q, %q, %q",
-			a.commented, a.varname, a.spaceAfterVarname, a.op, a.valueAlign,
-			a.value, a.spaceAfterValue, a.comment)
+		return fmt.Sprintf("%#v", *a)
 	}
 
 	m, assignment = MatchVarassignOld(text)
@@ -1329,7 +1326,7 @@ func MatchVarassign(text string) (m bool, assignment mkLineAssign) {
 	oldStr := toString(m, assignment)
 	newStr := toString(newM, newAssignment)
 	if oldStr != newStr {
-		fmt.Printf("MatchVarassign %s:\nold: %q\nnew: %q\n", text, oldStr, newStr)
+		fmt.Printf("MatchVarassign %s\nold: %q\nnew: %q\n", text, oldStr, newStr)
 	}
 
 	return
