@@ -1421,17 +1421,18 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 	}
 	_, _, _, _ = text, varuse, varuseText, tokens
 
-	test := func(text string, main string, tokens []*MkToken, rest string, hasComment bool, comment string) {
-		aMain, aTokens, aRest, aHasComment, aComment := splitMkLine(text)
+	test := func(text string, main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
+		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := splitMkLine(text)
 		t.Check(
-			[]interface{}{text, aTokens, aMain, aRest, aHasComment, aComment},
+			[]interface{}{text, aTokens, aMain, aRest, aSpaceBeforeComment, aHasComment, aComment},
 			deepEquals,
-			[]interface{}{text, tokens, main, rest, hasComment, comment})
+			[]interface{}{text, tokens, main, rest, spaceBeforeComment, hasComment, comment})
 	}
 
 	test("",
 		"",
 		tokens(),
+		"",
 		"",
 		false,
 		"")
@@ -1441,6 +1442,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 	test("# comment",
 		"",
 		tokens(),
+		"",
 		"",
 		true,
 		"comment")
@@ -1453,11 +1455,13 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		tokens(),
 		"",
+		"",
 		true,
 		"\tcomment")
 	test("#   comment",
 		"",
 		tokens(),
+		"",
 		"",
 		true,
 		"   comment")
@@ -1467,12 +1471,14 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"COMMENT=\tThe C",
 		tokens(text("COMMENT=\tThe C")),
 		"",
+		"",
 		true,
 		"compiler")
 
 	test("text",
 		"text",
 		tokens(text("text")),
+		"",
 		"",
 		false,
 		"")
@@ -1481,6 +1487,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"${TARGET}: ${SOURCES}",
 		tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
 		"",
+		" ",
 		true,
 		"comment")
 
@@ -1491,6 +1498,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"VAR=\t${OTHER:[#]}",
 		tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
 		"",
+		" ",
 		true,
 		"comment")
 
@@ -1501,6 +1509,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"$$shellvar $${shellvar} \\${MKVAR} [] \\x",
 		tokens(text("$$shellvar $${shellvar} \\"), varuse("MKVAR"), text(" [] \\x")),
 		"",
+		"",
 		false,
 		"")
 
@@ -1509,6 +1518,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		tokens(),
 		"${UNCLOSED",
+		"",
 		false,
 		"")
 
@@ -1519,6 +1529,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"text before ",
 		tokens(text("text before ")),
 		"${UNCLOSED # comment",
+		"",
 		false,
 		"")
 
@@ -1537,6 +1548,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 			varuseText("$ " /* instead of "${ }" */, " "),
 			text("character ")),
 		"$",
+		"",
 		false,
 		"")
 
@@ -1545,6 +1557,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 	test("COMMENT=\t[#] $$\\# $$# comment",
 		"COMMENT=\t[#] $$# $$",
 		tokens(text("COMMENT=\t[#] $$# $$")),
+		"",
 		"",
 		true,
 		"comment")

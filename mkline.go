@@ -625,7 +625,7 @@ var (
 // This applies to all line types except those starting with a tab, which
 // contain the shell commands to be associated with make targets. These cannot
 // have comments.
-func splitMkLine(text string) (main string, tokens []*MkToken, rest string, hasComment bool, comment string) {
+func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
 
 	p := NewMkParser(nil, text, false)
 	lexer := p.lexer
@@ -703,7 +703,9 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, hasC
 	}
 
 	if rest == "" {
+		mainWithSpaces := main
 		main = rtrimHspace(main)
+		spaceBeforeComment = mainWithSpaces[len(main):]
 	}
 
 	return
@@ -714,7 +716,7 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 		return
 	}
 
-	main, _, rest, hasComment, trailingComment := splitMkLine(text)
+	main, _, rest, _, hasComment, trailingComment := splitMkLine(text)
 
 	lexer := textproc.NewLexer(main)
 	if !lexer.SkipByte('.') || rest != "" {
