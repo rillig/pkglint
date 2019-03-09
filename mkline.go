@@ -22,17 +22,19 @@ type MkLineImpl struct {
 }
 type mkLineAssign = *mkLineAssignImpl // See https://github.com/golang/go/issues/28045
 type mkLineAssignImpl struct {
-	commented   bool       // Whether the whole variable assignment is commented out
-	varname     string     // e.g. "HOMEPAGE", "SUBST_SED.perl"
-	varcanon    string     // e.g. "HOMEPAGE", "SUBST_SED.*"
-	varparam    string     // e.g. "", "perl"
-	op          MkOperator //
-	valueAlign  string     // The text up to and including the assignment operator, e.g. VARNAME+=\t
-	value       string     // The trimmed value
-	valueMk     []*MkToken // The value, sent through splitIntoMkWords
-	valueMkRest string     // nonempty in case of parse errors
-	fields      []string   // The value, space-separated according to shell quoting rules
-	comment     string
+	commented         bool   // Whether the whole variable assignment is commented out
+	varname           string // e.g. "HOMEPAGE", "SUBST_SED.perl"
+	varcanon          string // e.g. "HOMEPAGE", "SUBST_SED.*"
+	varparam          string // e.g. "", "perl"
+	spaceAfterVarname string
+	op                MkOperator //
+	valueAlign        string     // The text up to and including the assignment operator, e.g. VARNAME+=\t
+	value             string     // The trimmed value
+	valueMk           []*MkToken // The value, sent through splitIntoMkWords
+	valueMkRest       string     // nonempty in case of parse errors
+	fields            []string   // The value, space-separated according to shell quoting rules
+	spaceAfterValue   string
+	comment           string
 }
 type mkLineShell struct {
 	command string
@@ -77,24 +79,26 @@ func NewMkLine(line Line) *MkLineImpl {
 			"Otherwise remove the leading whitespace.")
 	}
 
-	if m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment := MatchVarassign(text); m {
-		if spaceAfterVarname != "" {
+	if m, a := MatchVarassign(text); m {
+		if a.spaceAfterVarname != "" {
+			varname := a.varname
+			op := a.op
 			switch {
-			case hasSuffix(varname, "+") && (op == "=" || op == "+="):
+			case hasSuffix(varname, "+") && (op == opAssign || op == opAssignAppend):
 				break
-			case matches(varname, `^[a-z]`) && op == ":=":
+			case matches(varname, `^[a-z]`) && op == opAssignEval:
 				break
 			default:
 				// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 				fix := line.Autofix()
 				fix.Notef("Unnecessary space after variable name %q.", varname)
-				fix.Replace(varname+spaceAfterVarname+op, varname+op)
+				fix.Replace(varname+a.spaceAfterVarname+op.String(), varname+op.String())
 				fix.Apply()
 			}
 		}
 
 		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
-		if comment != "" && value != "" && spaceAfterValue == "" {
+		if a.comment != "" && a.value != "" && a.spaceAfterValue == "" {
 			line.Warnf("The # character starts a Makefile comment.")
 			G.Explain(
 				"In a variable assignment, an unescaped # starts a comment that",
@@ -102,18 +106,11 @@ func NewMkLine(line Line) *MkLineImpl {
 				"To escape the #, write \\#.")
 		}
 
-		return &MkLineImpl{line, &mkLineAssignImpl{
-			commented,
-			varname,
-			varnameCanon(varname),
-			varnameParam(varname),
-			NewMkOperator(op),
-			valueAlign,
-			strings.Replace(value, "\\#", "#", -1),
-			nil,
-			"",
-			nil,
-			comment}}
+		a.varcanon = varnameCanon(a.varname)
+		a.varparam = varnameParam(a.varname)
+		a.value = strings.Replace(a.value, "\\#", "#", -1)
+
+		return &MkLineImpl{line, a}
 	}
 
 	if hasPrefix(text, "\t") {
@@ -1314,26 +1311,37 @@ func (ind *Indentation) CheckFinish(filename string) {
 //  of the variable. The square bracket is only allowed in the parameter part.
 var VarnameBytes = textproc.NewByteSet("A-Za-z_0-9*+---.[")
 
-func MatchVarassign(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
+func MatchVarassign(text string) (m bool, assignment mkLineAssign) {
 
-	m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment = MatchVarassignOld(text)
-	nm, ncommented, nvarname, nspaceAfterVarname, nop, nvalueAlign, nvalue, nspaceAfterValue, ncomment := MatchVarassignNew(text)
+	var toString = func(m bool, a mkLineAssign) string {
+		if !m {
+			return "no"
+		}
+		return fmt.Sprintf(
+			"%v, %q, %q, %q, %q, %q, %q, %q",
+			a.commented, a.varname, a.spaceAfterVarname, a.op, a.valueAlign,
+			a.value, a.spaceAfterValue, a.comment)
+	}
 
-	oldStr := fmt.Sprintf("%v, %v, %q, %q, %q, %q, %q, %q, %q", m, commented, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment)
-	newStr := fmt.Sprintf("%v, %v, %q, %q, %q, %q, %q, %q, %q", nm, ncommented, nvarname, nspaceAfterVarname, nop, nvalueAlign, nvalue, nspaceAfterValue, ncomment)
+	m, assignment = MatchVarassignOld(text)
+	newM, newAssignment := MatchVarassignNew(text)
+
+	oldStr := toString(m, assignment)
+	newStr := toString(newM, newAssignment)
 	if oldStr != newStr {
-		dummyLine.Errorf("MatchVarassign diff:\nold: %q\nnew: %q", oldStr, newStr)
+		fmt.Printf("MatchVarassign %s:\nold: %q\nnew: %q\n", text, oldStr, newStr)
 	}
+
 	return
 }
 
-func MatchVarassignOld(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
+func MatchVarassignOld(text string) (m bool, assignment mkLineAssign) {
 	lexer := textproc.NewLexer(text)
 
 	// TODO: use splitMkLine here instead of doing the lexing again.
 	//  It gets a bit tricky in the case of commented variable assignments.
 
-	commented = lexer.SkipByte('#')
+	commented := lexer.SkipByte('#')
 	for !commented && lexer.SkipByte(' ') {
 	}
 
@@ -1356,13 +1364,13 @@ func MatchVarassignOld(text string) (m, commented bool, varname, spaceAfterVarna
 		}
 		break
 	}
-	varname = lexer.Since(varnameStart)
+	varname := lexer.Since(varnameStart)
 
 	if varname == "" {
 		return
 	}
 
-	spaceAfterVarname = lexer.NextHspace()
+	spaceAfterVarname := lexer.NextHspace()
 
 	opStart := lexer.Mark()
 	switch lexer.PeekByte() {
@@ -1372,16 +1380,16 @@ func MatchVarassignOld(text string) (m, commented bool, varname, spaceAfterVarna
 	if !lexer.SkipByte('=') {
 		return
 	}
-	op = lexer.Since(opStart)
+	op := NewMkOperator(lexer.Since(opStart))
 
-	if hasSuffix(varname, "+") && op == "=" && spaceAfterVarname == "" {
+	if hasSuffix(varname, "+") && op == opAssign && spaceAfterVarname == "" {
 		varname = varname[:len(varname)-1]
-		op = "+="
+		op = opAssignAppend
 	}
 
 	lexer.SkipHspace()
 
-	valueAlign = text[:len(text)-len(lexer.Rest())]
+	valueAlign := text[:len(text)-len(lexer.Rest())]
 	valueStart := lexer.Mark()
 	// FIXME: This is the same code as in matchMkDirective.
 	for !lexer.EOF() && lexer.PeekByte() != '#' {
@@ -1397,21 +1405,34 @@ func MatchVarassignOld(text string) (m, commented bool, varname, spaceAfterVarna
 		}
 	}
 	rawValueWithSpace := lexer.Since(valueStart)
-	spaceAfterValue = rawValueWithSpace[len(strings.TrimRight(rawValueWithSpace, " \t")):]
-	value = trimHspace(strings.Replace(lexer.Since(valueStart), "\\#", "#", -1))
-	comment = lexer.Rest()
+	spaceAfterValue := rawValueWithSpace[len(strings.TrimRight(rawValueWithSpace, " \t")):]
+	value := trimHspace(strings.Replace(lexer.Since(valueStart), "\\#", "#", -1))
+	comment := lexer.Rest()
 
-	m = true
-	return
+	return true, &mkLineAssignImpl{
+		commented:         commented,
+		varname:           varname,
+		varcanon:          varnameCanon(varname),
+		varparam:          varnameParam(varname),
+		spaceAfterVarname: spaceAfterVarname,
+		op:                op,
+		valueAlign:        valueAlign,
+		value:             value,
+		valueMk:           nil, // filled in lazily
+		valueMkRest:       "",  // filled in lazily
+		fields:            nil, // filled in lazily
+		spaceAfterValue:   spaceAfterValue,
+		comment:           comment,
+	}
 }
 
-func MatchVarassignNew(text string) (m, commented bool, varname, spaceAfterVarname, op, valueAlign, value, spaceAfterValue, comment string) {
+func MatchVarassignNew(text string) (m bool, assignment mkLineAssign) {
 	lexer := textproc.NewLexer(text)
 
 	// TODO: use splitMkLine here instead of doing the lexing again.
 	//  It gets a bit tricky in the case of commented variable assignments.
 
-	commented = lexer.SkipByte('#')
+	commented := lexer.SkipByte('#')
 	for !commented && lexer.SkipByte(' ') {
 	}
 
@@ -1434,13 +1455,13 @@ func MatchVarassignNew(text string) (m, commented bool, varname, spaceAfterVarna
 		}
 		break
 	}
-	varname = lexer.Since(varnameStart)
+	varname := lexer.Since(varnameStart)
 
 	if varname == "" {
 		return
 	}
 
-	spaceAfterVarname = lexer.NextHspace()
+	spaceAfterVarname := lexer.NextHspace()
 
 	opStart := lexer.Mark()
 	switch lexer.PeekByte() {
@@ -1450,16 +1471,16 @@ func MatchVarassignNew(text string) (m, commented bool, varname, spaceAfterVarna
 	if !lexer.SkipByte('=') {
 		return
 	}
-	op = lexer.Since(opStart)
+	op := NewMkOperator(lexer.Since(opStart))
 
-	if hasSuffix(varname, "+") && op == "=" && spaceAfterVarname == "" {
+	if hasSuffix(varname, "+") && op == opAssign && spaceAfterVarname == "" {
 		varname = varname[:len(varname)-1]
-		op = "+="
+		op = opAssignAppend
 	}
 
 	lexer.SkipHspace()
 
-	valueAlign = text[:len(text)-len(lexer.Rest())]
+	valueAlign := text[:len(text)-len(lexer.Rest())]
 	valueStart := lexer.Mark()
 	// FIXME: This is the same code as in matchMkDirective.
 	for !lexer.EOF() && lexer.PeekByte() != '#' {
@@ -1475,12 +1496,25 @@ func MatchVarassignNew(text string) (m, commented bool, varname, spaceAfterVarna
 		}
 	}
 	rawValueWithSpace := lexer.Since(valueStart)
-	spaceAfterValue = rawValueWithSpace[len(strings.TrimRight(rawValueWithSpace, " \t")):]
-	value = trimHspace(strings.Replace(lexer.Since(valueStart), "\\#", "#", -1))
-	comment = lexer.Rest()
+	spaceAfterValue := rawValueWithSpace[len(strings.TrimRight(rawValueWithSpace, " \t")):]
+	value := trimHspace(strings.Replace(lexer.Since(valueStart), "\\#", "#", -1))
+	comment := lexer.Rest()
 
-	m = true
-	return
+	return true, &mkLineAssignImpl{
+		commented:         commented,
+		varname:           varname,
+		varcanon:          varnameCanon(varname),
+		varparam:          varnameParam(varname),
+		spaceAfterVarname: spaceAfterVarname,
+		op:                op,
+		valueAlign:        valueAlign,
+		value:             value,
+		valueMk:           nil, // filled in lazily
+		valueMkRest:       "",  // filled in lazily
+		fields:            nil, // filled in lazily
+		spaceAfterValue:   spaceAfterValue,
+		comment:           comment,
+	}
 }
 
 func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {

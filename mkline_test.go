@@ -1110,22 +1110,23 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 		type VarAssign struct {
 			commented                  bool
 			varname, spaceAfterVarname string
-			op, align                  string
+			op                         MkOperator
+			align                      string
 			value, spaceAfterValue     string
 			comment                    string
 		}
-		expected := VarAssign{commented, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment}
-		am, acommented, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment := MatchVarassign(text)
-		if !am {
+		expected := VarAssign{commented, varname, spaceAfterVarname, NewMkOperator(op), align, value, spaceAfterValue, comment}
+		m, a := MatchVarassign(text)
+		if !m {
 			c.Errorf("Text %q doesn't match variable assignment", text)
 			return
 		}
-		actual := VarAssign{acommented, avarname, aspaceAfterVarname, aop, aalign, avalue, aspaceAfterValue, acomment}
+		actual := VarAssign{a.commented, a.varname, a.spaceAfterVarname, a.op, a.valueAlign, a.value, a.spaceAfterValue, a.comment}
 		c.Check(actual, equals, expected)
 	}
 
 	testInvalid := func(text string) {
-		m, _, _, _, _, _, _, _, _ := MatchVarassign(text)
+		m, _ := MatchVarassign(text)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
