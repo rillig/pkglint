@@ -35,6 +35,15 @@ func (m *MkTokensLexer) next() {
 
 func (m *MkTokensLexer) EOF() bool { return m.Lexer.EOF() && len(m.tokens) == 0 }
 
+func (m *MkTokensLexer) Rest() string {
+	var sb strings.Builder
+	sb.WriteString(m.Lexer.Rest())
+	for _, token := range m.tokens {
+		sb.WriteString(token.Text)
+	}
+	return sb.String()
+}
+
 func (m *MkTokensLexer) NextVarUse() *MkToken {
 	if m.Lexer.EOF() && len(m.tokens) > 0 && m.tokens[0].Varuse != nil {
 		token := m.tokens[0]
@@ -46,33 +55,22 @@ func (m *MkTokensLexer) NextVarUse() *MkToken {
 }
 
 func (m *MkTokensLexer) Mark() MkTokensLexerMark {
-	return MkTokensLexerMark{m.Lexer.Mark(), append([]*MkToken(nil), m.tokens...)}
+	return MkTokensLexerMark{m.Lexer.Rest(), append([]*MkToken(nil), m.tokens...)}
 }
 
 func (m *MkTokensLexer) Since(mark MkTokensLexerMark) string {
-	lex := textproc.NewLexer("")
-	lex.Reset(mark.mark)
-	early := (&MkTokensLexer{lex, mark.tokens}).Rest()
+	early := (&MkTokensLexer{textproc.NewLexer(mark.rest), mark.tokens}).Rest()
 	late := m.Rest()
 
 	return strings.TrimSuffix(early, late)
 }
 
-func (m *MkTokensLexer) Rest() string {
-	var sb strings.Builder
-	sb.WriteString(m.Lexer.Rest())
-	for _, token := range m.tokens {
-		sb.WriteString(token.Text)
-	}
-	return sb.String()
-}
-
 func (m *MkTokensLexer) Reset(mark MkTokensLexerMark) {
-	m.Lexer.Reset(mark.mark)
+	m.Lexer = textproc.NewLexer(mark.rest)
 	m.tokens = append([]*MkToken(nil), mark.tokens...)
 }
 
 type MkTokensLexerMark struct {
-	mark   textproc.LexerMark
+	rest   string
 	tokens []*MkToken
 }
