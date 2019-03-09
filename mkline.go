@@ -1394,6 +1394,7 @@ func MatchVarassignOld(text string) (m bool, assignment mkLineAssign) {
 		case lexer.SkipString("[#"):
 			break
 
+		// See devel/bmake/files/parse.c, ParseGetLine, if (ch == '\\')
 		case lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1:
 			lexer.Skip(2)
 
@@ -1485,6 +1486,7 @@ func MatchVarassignNew(text string) (m bool, assignment mkLineAssign) {
 		case lexer.SkipString("[#"):
 			break
 
+		// See devel/bmake/files/parse.c, ParseGetLine, if (ch == '\\')
 		case lexer.PeekByte() == '\\' && len(lexer.Rest()) > 1:
 			lexer.Skip(2)
 

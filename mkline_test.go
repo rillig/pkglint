@@ -199,6 +199,38 @@ func (s *Suite) Test_NewMkLine__varname_with_hash(c *check.C) {
 		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.\\\\#=\\tvalue\".")
 }
 
+// Ensures that pkglint parses escaped # characters in the same way as bmake.
+//
+// To check that bmake parses them the same, set a breakpoint after the t.NewMkLines
+// and look in t.tmpdir for the location of the file. Then run bmake with that file.
+func (s *Suite) Test_NewMkLine__escaped_hash_in_value(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("Makefile",
+		"VAR0=\tvalue#",
+		"VAR1=\tvalue\\#",
+		"VAR2=\tvalue\\\\#",
+		"VAR3=\tvalue\\\\\\#",
+		"VAR4=\tvalue\\\\\\\\#",
+		"",
+		"all:",
+		".for var in VAR0 VAR1 VAR2 VAR3 VAR4",
+		"\t@printf '%s\\n' ${${var}}''",
+		".endfor")
+	parsed := mklines.mklines
+
+	c.Check(parsed[0].Value(), equals, "value")
+	c.Check(parsed[1].Value(), equals, "value#")
+	c.Check(parsed[2].Value(), equals, "value\\\\")
+	c.Check(parsed[3].Value(), equals, "value\\#") // FIXME: Must be "value\\\\#"
+	c.Check(parsed[4].Value(), equals, "value\\\\\\\\")
+
+	t.CheckOutputLines(
+		"WARN: ~/Makefile:1: The # character starts a Makefile comment.",
+		"WARN: ~/Makefile:3: The # character starts a Makefile comment.",
+		"WARN: ~/Makefile:5: The # character starts a Makefile comment.")
+}
+
 func (s *Suite) Test_MkLine_Varparam(c *check.C) {
 	t := s.Init(c)
 
