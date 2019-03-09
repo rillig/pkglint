@@ -336,6 +336,12 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".")
+
+	// Unfinished variable use
+	testRest("${", nil, "${")
+
+	// Unfinished nested variable use
+	testRest("${${", nil, "${${")
 }
 
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {

@@ -121,6 +121,7 @@ func (p *MkParser) VarUse() *MkVarUse {
 		}
 
 		lexer.Reset(mark)
+		return nil
 	}
 
 	varname := lexer.NextByteSet(textproc.AlnumU)
@@ -151,9 +152,6 @@ func (p *MkParser) VarUse() *MkVarUse {
 		switch symbol {
 		case "$":
 			// This is an escaped dollar character and not a variable use.
-
-		case "{":
-			// This is a syntax error, probably an unclosed variable use.
 
 		case "@", "<", " ":
 			// These variable names are known to exist.
