@@ -619,10 +619,66 @@ func (mkline *MkLineImpl) RefTo(other MkLine) string {
 }
 
 var (
-	LowerDash            = textproc.NewByteSet("a-z---")
-	AlnumDot             = textproc.NewByteSet("A-Za-z0-9_.")
-	splitMkLineSafeChars = textproc.NewByteSet("\\#[$").Inverse()
+	LowerDash                  = textproc.NewByteSet("a-z---")
+	AlnumDot                   = textproc.NewByteSet("A-Za-z0-9_.")
+	unescapeMkCommentSafeChars = textproc.NewByteSet("\\#[$").Inverse()
 )
+
+// unescapeMkComment takes a Makefile line, as written in a file, and splits
+// it into the main part and the comment.
+//
+// The comment starts at the first #. Except if it is preceded by an odd number
+// of backslashes. Or by an opening bracket.
+//
+// The main text is returned including leading and trailing whitespace. Any
+// escaped # is returned in its unescaped form, that is, \# becomes #.
+//
+// The comment is returned including the leading "#", if any. If the line has
+// no comment, it is an empty string.
+func unescapeMkComment(text string) (main, comment string) {
+	var sb strings.Builder
+
+	lexer := textproc.NewLexer(text)
+
+again:
+	if plain := lexer.NextBytesSet(unescapeMkCommentSafeChars); plain != "" {
+		sb.WriteString(plain)
+		goto again
+	}
+
+	switch {
+	case lexer.SkipByte('$'):
+		sb.WriteByte('$')
+
+	case lexer.SkipString("\\#"):
+		sb.WriteByte('#')
+
+	case lexer.PeekByte() == '\\' && len(lexer.Rest()) >= 2:
+		sb.WriteString(lexer.Rest()[:2])
+		lexer.Skip(2)
+
+	case lexer.SkipByte('\\'):
+		sb.WriteByte('\\')
+
+	case lexer.SkipString("[#"):
+		// See devel/bmake/files/parse.c:/as in modifier/
+		sb.WriteString("[#")
+
+	case lexer.SkipByte('['):
+		sb.WriteByte('[')
+
+	default:
+		main = sb.String()
+		if lexer.PeekByte() == '#' {
+			return main, lexer.Rest()
+		}
+
+		G.Assertf(lexer.EOF(), "unescapeMkComment(%q): sb = %q, rest = %q", text, main, lexer.Rest())
+		return main, ""
+	}
+
+	goto again
+}
 
 // splitMkLine parses a logical line from a Makefile (that is, after joining
 // the lines that end in a backslash) into two parts: the main part and the
@@ -633,7 +689,9 @@ var (
 // have comments.
 func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
 
-	p := NewMkParser(nil, text, false)
+	main, comment = unescapeMkComment(text)
+
+	p := NewMkParser(nil, main, false)
 	lexer := p.lexer
 
 	rtrimHspace := func(s string) string {
@@ -647,47 +705,23 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spac
 	parseToken := func() string {
 		var sb strings.Builder
 
-		for {
-			if plain := lexer.NextBytesSet(splitMkLineSafeChars); plain != "" {
-				sb.WriteString(plain)
+		for !lexer.EOF() {
+			if lexer.SkipString("$$") {
+				sb.WriteString("$$")
 				continue
 			}
 
-			switch {
-			case lexer.SkipString("$$"):
-				sb.WriteString("$$")
-
-			case lexer.SkipString("\\#"):
-				sb.WriteByte('#')
-
-			case hasPrefix(lexer.Rest(), "\\$"):
-				sb.WriteByte('\\')
-				lexer.Skip(1)
-
-			case lexer.PeekByte() == '\\' && len(lexer.Rest()) >= 2:
-				sb.WriteString(lexer.Rest()[:2])
-				lexer.Skip(2)
-
-			case lexer.SkipByte('\\'):
-				sb.WriteByte('\\')
-
-			case lexer.SkipString("[#"):
-				// See devel/bmake/files/parse.c:/as in modifier/
-				sb.WriteString("[#")
-
-			case lexer.SkipByte('['):
-				sb.WriteByte('[')
-
-			case lexer.EOF(), lexer.PeekByte() == '#':
-				return rtrimHspace(sb.String())
-
-			default:
-				return sb.String()
+			other := lexer.NextBytesSet(textproc.NewByteSet("$").Inverse())
+			if other == "" {
+				break
 			}
+
+			sb.WriteString(other)
 		}
+
+		return sb.String()
 	}
 
-	start := lexer.Mark()
 	for !lexer.EOF() {
 		mark := lexer.Mark()
 
@@ -702,15 +736,12 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spac
 		}
 	}
 
-	// FIXME: doesn't work for \\#
-	main = strings.Replace(lexer.Since(start), "\\#", "#", -1)
-
-	if lexer.SkipByte('#') {
+	if comment != "" {
 		hasComment = true
-		comment = lexer.Rest()
-	} else {
-		rest = lexer.Rest()
+		comment = comment[1:]
 	}
+	rest = lexer.Rest()
+	main = main[:len(main)-len(rest)]
 
 	if rest == "" {
 		mainWithSpaces := main
@@ -1476,12 +1507,10 @@ func MatchVarassignNew(text string) (m bool, assignment mkLineAssign) {
 	lexer.SkipHspace()
 
 	value := trimHspace(lexer.Rest() + rest)
-	spaceBeforeValue := ""
 	if value == "" {
-		spaceBeforeValue = spaceBeforeComment
 		spaceBeforeComment = ""
 	}
-	valueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart) + spaceBeforeValue
+	valueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart)
 
 	return true, &mkLineAssignImpl{
 		commented:         commented,

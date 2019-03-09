@@ -1247,6 +1247,16 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 		"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
 		"",
 		"")
+
+	test("VAR:=\t${VAR:M-*:[\\#]}",
+		false,
+		"VAR",
+		"",
+		":=",
+		"VAR:=\t",
+		"${VAR:M-*:[#]}",
+		"",
+		"")
 }
 
 func (s *Suite) Test_NewMkOperator(c *check.C) {
@@ -1452,6 +1462,126 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	test("`", "`")
 }
 
+func (s *Suite) Test_unescapeMkComment(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, main, comment string) {
+		aMain, aComment := unescapeMkComment(text)
+		t.Check(
+			[]interface{}{text, aMain, aComment},
+			deepEquals,
+			[]interface{}{text, main, comment})
+	}
+
+	test("",
+		"",
+		"")
+	test("text",
+		"text",
+		"")
+
+	// The leading space from the comment is preserved to make parsing as exact
+	// as possible.
+	//
+	// The difference between "#defined" and "# defined" is relevant in a few
+	// cases, such as the API documentation of the infrastructure files.
+	test("# comment",
+		"",
+		"# comment")
+	test("#\tcomment",
+		"",
+		"#\tcomment")
+	test("#   comment",
+		"",
+		"#   comment")
+
+	// Other than in the shell, # also starts a comment in the middle of a word.
+	test("COMMENT=\tThe C# compiler",
+		"COMMENT=\tThe C",
+		"# compiler")
+	test("COMMENT=\tThe C\\# compiler",
+		"COMMENT=\tThe C# compiler",
+		"")
+
+	test("${TARGET}: ${SOURCES} # comment",
+		"${TARGET}: ${SOURCES} ",
+		"# comment")
+
+	// A # starts a comment, except if it immediately follows a [.
+	// This is done so that the length modifier :[#] can be written without
+	// escaping the #.
+	test("VAR=\t${OTHER:[#]} # comment",
+		"VAR=\t${OTHER:[#]} ",
+		"# comment")
+
+	// The # in the :[#] modifier may be escaped or not. Both forms are equivalent.
+	test("VAR:=\t${VAR:M-*:[\\#]}",
+		"VAR:=\t${VAR:M-*:[#]}",
+		"")
+
+	// The character [ prevents the following # from starting a comment, even
+	// outside of variable modifiers.
+	test("COMMENT=\t[#] $$\\# $$# comment",
+		"COMMENT=\t[#] $$# $$",
+		"# comment")
+
+	// A backslash always escapes the next character, be it a # for a comment
+	// or something else. This makes it difficult to write a literal \# in a
+	// Makefile, but that's an edge case anyway.
+	test("VAR0=\t#comment",
+		"VAR0=\t",
+		"#comment")
+	test("VAR1=\t\\#no-comment",
+		"VAR1=\t#no-comment",
+		"")
+	test("VAR2=\t\\\\#comment",
+		"VAR2=\t\\\\",
+		"#comment")
+
+	// The backslash is only removed when it escapes a comment.
+	// In particular, it cannot be used to escape a dollar that starts a
+	// variable use.
+	test("VAR0=\t$T",
+		"VAR0=\t$T",
+		"")
+	test("VAR1=\t\\$T",
+		"VAR1=\t\\$T",
+		"")
+	test("VAR2=\t\\\\$T",
+		"VAR2=\t\\\\$T",
+		"")
+
+	// To escape a dollar, write it twice.
+	test("$$shellvar $${shellvar} \\${MKVAR} [] \\x",
+		"$$shellvar $${shellvar} \\${MKVAR} [] \\x",
+		"")
+
+	// Parse errors are recorded in the rest return value.
+	test("${UNCLOSED",
+		"${UNCLOSED",
+		"")
+
+	// In this early phase of parsing, unfinished variable uses are not
+	// interpreted and do not influence the detection of the comment start.
+	test("text before ${UNCLOSED # comment",
+		"text before ${UNCLOSED ",
+		"# comment")
+
+	// The dollar-space refers to a normal Make variable named " ".
+	// The lonely dollar at the very end refers to the variable named "",
+	// which is specially protected in bmake to always contain the empty string.
+	// It is heavily used in .for loops in the form ${:Uvalue}.
+	test("Lonely $ character $",
+		"Lonely $ character $",
+		"")
+
+	// An even number of backslashes does not escape the #.
+	// Therefore it starts a comment here.
+	test("VAR2=\t\\\\#comment",
+		"VAR2=\t\\\\",
+		"#comment")
+}
+
 func (s *Suite) Test_splitMkLine(c *check.C) {
 	t := s.Init(c)
 
@@ -1489,10 +1619,19 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		false,
 		"")
+	test("text",
+		"text",
+		tokens(text("text")),
+		"",
+		"",
+		false,
+		"")
 
 	// The leading space from the comment is preserved to make parsing as exact
-	// as possible. The difference between "#defined" and "# defined" might be
-	// relevant in some cases.
+	// as possible.
+	//
+	// The difference between "#defined" and "# defined" is relevant in a few
+	// cases, such as the API documentation of the infrastructure files.
 	test("# comment",
 		"",
 		tokens(),
@@ -1500,11 +1639,6 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		true,
 		" comment")
-
-	// Comments that don't have exactly one leading space are unusual, and the
-	// indentation may be significant in multi-line comments (for example in
-	// the API documentation of the infrastructure files). Therefore all the
-	// leading whitespace is preserved, as is a single U+0020.
 	test("#\tcomment",
 		"",
 		tokens(),
@@ -1528,10 +1662,9 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"",
 		true,
 		" compiler")
-
-	test("text",
-		"text",
-		tokens(text("text")),
+	test("COMMENT=\tThe C\\# compiler",
+		"COMMENT=\tThe C# compiler",
+		tokens(text("COMMENT=\tThe C# compiler")),
 		"",
 		"",
 		false,
@@ -1539,7 +1672,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 
 	test("${TARGET}: ${SOURCES} # comment",
 		"${TARGET}: ${SOURCES}",
-		tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
+		tokens(varuse("TARGET"), text(": "), varuse("SOURCES"), text(" ")),
 		"",
 		" ",
 		true,
@@ -1550,18 +1683,27 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 	// escaping the #.
 	test("VAR=\t${OTHER:[#]} # comment",
 		"VAR=\t${OTHER:[#]}",
-		tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
+		tokens(text("VAR=\t"), varuse("OTHER", "[#]"), text(" ")),
 		"",
 		" ",
 		true,
 		" comment")
+
+	// The # in the :[#] modifier may be escaped or not. Both forms are equivalent.
+	test("VAR:=\t${VAR:M-*:[\\#]}",
+		"VAR:=\t${VAR:M-*:[#]}",
+		tokens(text("VAR:=\t"), varuse("VAR", "M-*", "[#]")),
+		"",
+		"",
+		false,
+		"")
 
 	// A backslash always escapes the next character, be it a # for a comment
 	// or something else. This makes it difficult to write a literal \# in a
 	// Makefile, but that's an edge case anyway.
 	test("VAR0=\t#comment",
 		"VAR0=",
-		tokens(text("VAR0=")),
+		tokens(text("VAR0=\t")),
 		"",
 		// Later, when converting this result into a proper variable assignment,
 		// this "space before comment" is reclassified as "space before the value",
@@ -1633,10 +1775,10 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 	test("text before ${UNCLOSED # comment",
 		"text before ",
 		tokens(text("text before ")),
-		"${UNCLOSED # comment",
-		"",
-		false,
-		"")
+		"${UNCLOSED ", // FIXME: put the space into spaceBeforeComment
+		"",            // FIXME: the space is missing here
+		true,
+		" comment")
 
 	// The dollar-space refers to a normal Make variable named " ".
 	// The lonely dollar at the very end refers to the variable named "",
