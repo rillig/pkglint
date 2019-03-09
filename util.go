@@ -628,8 +628,9 @@ func (s *Scope) FirstDefinition(varname string) MkLine {
 	mkline := s.firstDef[varname]
 	if mkline != nil && mkline.IsVarassign() {
 		lastLine := s.LastDefinition(varname)
-		if lastLine != mkline {
-			mkline.Notef("@beta FirstDefinition differs from LastDefinition in %s.", mkline.RefTo(lastLine))
+		if trace.Tracing && lastLine != mkline {
+			trace.Stepf("%s: FirstDefinition differs from LastDefinition in %s.",
+				mkline.String(), mkline.RefTo(lastLine))
 		}
 		return mkline
 	}

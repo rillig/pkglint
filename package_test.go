@@ -550,7 +550,7 @@ func (s *Suite) Test_Package__relative_included_filenames_in_same_directory(c *c
 
 	// TODO: Since other.mk is referenced via "../../category/package",
 	//  it would be nice if this relative path would be reflected in the output
-	//  instead of referring just to "Makefile".
+	//  instead of referring just to "other.mk".
 	//  This needs to be fixed somewhere near relpath.
 	//
 	// The notes are in reverse order because they are produced when checking
@@ -559,11 +559,7 @@ func (s *Suite) Test_Package__relative_included_filenames_in_same_directory(c *c
 		"NOTE: ~/category/package/Makefile:4: "+
 			"Definition of PKGNAME is redundant because of other.mk:2.",
 		"NOTE: ~/category/package/Makefile:3: "+
-			"Definition of DISTNAME is redundant because of other.mk:3.",
-		"NOTE: ~/category/package/Makefile:3: "+
-			"@beta FirstDefinition differs from LastDefinition in other.mk:3.",
-		"NOTE: ~/category/package/Makefile:4: "+
-			"@beta FirstDefinition differs from LastDefinition in other.mk:2.")
+			"Definition of DISTNAME is redundant because of other.mk:3.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {

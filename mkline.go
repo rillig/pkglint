@@ -160,6 +160,7 @@ func NewMkLine(line Line) *MkLineImpl {
 	return &MkLineImpl{line, nil}
 }
 
+// String returns the filename and line numbers.
 func (mkline *MkLineImpl) String() string {
 	return sprintf("%s:%s", mkline.Filename, mkline.Linenos())
 }
