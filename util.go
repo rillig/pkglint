@@ -361,6 +361,9 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 // another cannot be computed in another way. The preferred way is to take
 // the relative filenames directly from the .include or exists() where they
 // appear.
+//
+// TODO: Invent data types for all kinds of relative paths that occur in pkgsrc
+//  and pkglint. Make sure that these paths cannot be accidentally mixed.
 func relpath(from, to string) (result string) {
 
 	if trace.Tracing {
