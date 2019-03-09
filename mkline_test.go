@@ -189,14 +189,13 @@ func (s *Suite) Test_NewMkLine__varname_with_hash(c *check.C) {
 	// Parse error because the # starts a comment.
 	c.Check(mkline.IsVarassign(), equals, false)
 
-	mkline2 := t.NewMkLine("Makefile", 123, "VARNAME.\\#=\tvalue")
+	mkline2 := t.NewMkLine("Makefile", 124, "VARNAME.\\#=\tvalue")
 
-	// FIXME: Varname() should be "VARNAME.#".
-	c.Check(mkline2.IsVarassign(), equals, false)
+	c.Check(mkline2.IsVarassign(), equals, true)
+	c.Check(mkline2.Varname(), equals, "VARNAME.#")
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.#=\\tvalue\".",
-		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.\\\\#=\\tvalue\".")
+		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.#=\\tvalue\".")
 }
 
 // Ensures that pkglint parses escaped # characters in the same way as bmake.

@@ -564,9 +564,14 @@ func (p *MkParser) mkCondFunc() *mkCond {
 func (p *MkParser) Varname() string {
 	lexer := p.lexer
 
+	// TODO: duplicated code in MatchVarassign
 	mark := lexer.Mark()
 	lexer.SkipByte('.')
-	for p.VarUse() != nil || lexer.NextBytesSet(VarnameBytes) != "" {
+	for lexer.NextBytesSet(VarbaseBytes) != "" || p.VarUse() != nil {
+	}
+	if lexer.SkipByte('.') || hasPrefix(lexer.Since(mark), "SITES_") {
+		for lexer.NextBytesSet(VarparamBytes) != "" || p.VarUse() != nil {
+		}
 	}
 	return lexer.Since(mark)
 }

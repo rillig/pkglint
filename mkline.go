@@ -1339,8 +1339,11 @@ func (ind *Indentation) CheckFinish(filename string) {
 	}
 }
 
-// VarnameBytes contains characters that may be used in variable names.
-// The bracket is included only for the tool of the same name, e.g. "TOOLS_PATH.[".
+// VarbaseBytes contains characters that may be used in the main part of variable names.
+// VarparamBytes contains characters that may be used in the parameter part of variable names.
+//
+// For example, TOOLS_PATH.[ is a valid variable name but [ alone isn't since
+// the opening bracket is only allowed in the parameter part of variable names.
 //
 // This approach differs from the one in devel/bmake/files/parse.c:/^Parse_IsVar,
 // but in practice it works equally well. Luckily there aren't many situations
@@ -1349,7 +1352,10 @@ func (ind *Indentation) CheckFinish(filename string) {
 //
 // TODO: The allowed characters differ between the basename and the parameter
 //  of the variable. The square bracket is only allowed in the parameter part.
-var VarnameBytes = textproc.NewByteSet("A-Za-z_0-9*+---.[")
+var (
+	VarbaseBytes  = textproc.NewByteSet("A-Za-z_0-9+---")
+	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---.[")
+)
 
 func MatchVarassign(text string) (m bool, assignment mkLineAssign) {
 	commented := hasPrefix(text, "#")
@@ -1358,7 +1364,7 @@ func MatchVarassign(text string) (m bool, assignment mkLineAssign) {
 		withoutLeadingComment = withoutLeadingComment[1:]
 	}
 
-	_, tokens, rest, spaceBeforeComment, hasComment, comment := splitMkLine(withoutLeadingComment)
+	main, tokens, rest, spaceBeforeComment, hasComment, comment := splitMkLine(withoutLeadingComment)
 
 	lexer := NewMkTokensLexer(tokens)
 	mainStart := lexer.Mark()
@@ -1367,8 +1373,14 @@ func MatchVarassign(text string) (m bool, assignment mkLineAssign) {
 	}
 
 	varnameStart := lexer.Mark()
-	for lexer.NextBytesSet(VarnameBytes) != "" || lexer.NextVarUse() != nil {
+	// TODO: duplicated code in MkParser.Varname
+	for lexer.NextBytesSet(VarbaseBytes) != "" || lexer.NextVarUse() != nil {
 	}
+	if lexer.SkipByte('.') || hasPrefix(main, "SITES_") {
+		for lexer.NextBytesSet(VarparamBytes) != "" || lexer.NextVarUse() != nil {
+		}
+	}
+
 	varname := lexer.Since(varnameStart)
 
 	if varname == "" {
