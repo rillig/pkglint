@@ -1200,6 +1200,21 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_definition_fro
 
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
+	// Before pkglint 5.7.2 (2019-03-09), including.mk:2 used WRKSRC for the first time.
+	// At that point the include path for that variable is fixed once and for all.
+	// Later in RedundantScope.handleVarassign, there is a check that was supposed to
+	// prevent all warnings in included files, if there is such a relation.
+	//
+	// In this case no such inclusion hierarchy is visible since the include path of
+	// WRKSRC is [including.mk], which is the same as the include path at including.mk:4,
+	// therefore the lines are in the same file and the earlier line gets the warning.
+	//
+	// Except that the earlier line is not related in any way to WRKSRC.includePath.
+	//
+	// This reveals an imprecise handling of these includePaths. The condition should
+	// better be "if any includePath from any write access to the variable is below the
+	// current file, don't issue a warning".
+	//
 	// FIXME: The warning must not be in the included file.
 	//  It's always the including file that is responsible for redundancies.
 	t.CheckOutputLines(
