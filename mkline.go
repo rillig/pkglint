@@ -1433,44 +1433,22 @@ func MatchVarassignOld(text string) (m bool, assignment mkLineAssign) {
 }
 
 func MatchVarassignNew(text string) (m bool, assignment mkLineAssign) {
-	lexer := textproc.NewLexer(text)
+	commented := hasPrefix(text, "#")
+	withoutLeadingComment := text
+	if commented {
+		withoutLeadingComment = withoutLeadingComment[1:]
+	}
 
-	// TODO: use splitMkLine here instead of doing the lexing again.
-	//  It gets a bit tricky in the case of commented variable assignments.
+	_, tokens, rest, spaceBeforeComment, hasComment, comment := splitMkLine(withoutLeadingComment)
 
-	commented := lexer.SkipByte('#')
-
-	main, tokens, rest, spaceBeforeComment, hasComment, comment := splitMkLine(lexer.Rest())
-	_, _, _, _, _ = main, tokens, rest, hasComment, comment
-
-	lexer = textproc.NewLexer(main)
+	lexer := NewMkTokensLexer(tokens)
 	mainStart := lexer.Mark()
 
 	for !commented && lexer.SkipByte(' ') {
 	}
 
-	// TODO: A MkTokenLexer that has an underlying []*MkToken instead of a
-	//  string might be useful for these parsing jobs, and maybe later in
-	//  the checks as well.
-
 	varnameStart := lexer.Mark()
-	for !lexer.EOF() {
-		switch {
-
-		case lexer.NextBytesSet(VarnameBytes) != "":
-			continue
-
-		case lexer.PeekByte() == '$':
-			parser := NewMkParser(nil, lexer.Rest(), false)
-			varuse := parser.VarUse()
-			if varuse == nil {
-				return
-			}
-			varuseLen := len(lexer.Rest()) - len(parser.Rest())
-			lexer.Skip(varuseLen)
-			continue
-		}
-		break
+	for lexer.NextBytesSet(VarnameBytes) != "" || lexer.NextVarUse() != nil {
 	}
 	varname := lexer.Since(varnameStart)
 
