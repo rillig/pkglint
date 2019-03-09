@@ -759,11 +759,11 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 	}
 
 	main, _, rest, _, hasComment, trailingComment := splitMkLine(text)
-
-	lexer := textproc.NewLexer(main)
-	if !lexer.SkipByte('.') || rest != "" {
+	if rest != "" {
 		return
 	}
+
+	lexer := textproc.NewLexer(main[1:])
 
 	indent = lexer.NextHspace()
 	directive = lexer.NextBytesSet(LowerDash)

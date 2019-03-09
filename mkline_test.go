@@ -1827,6 +1827,14 @@ func (s *Suite) Test_matchMkDirective(c *check.C) {
 			[]interface{}{true, expectedIndent, expectedDirective, expectedArgs, expectedComment})
 	}
 
+	testFail := func(input string) {
+		m, indent, directive, args, comment := matchMkDirective(input)
+		if m {
+			c.Errorf("The line %q could be parsed as directive (%q, %q, %q, %q) but shouldn't.",
+				indent, directive, args, comment)
+		}
+	}
+
 	test(".if ${VAR} == value",
 		"", "if", "${VAR} == value", "")
 
@@ -1841,6 +1849,9 @@ func (s *Suite) Test_matchMkDirective(c *check.C) {
 
 	test(".if ${VAR} == \\",
 		"", "if", "${VAR} == \\", "")
+
+	// Unclosed variable
+	testFail(".if ${VAR")
 }
 
 func (s *Suite) Test_MatchMkInclude(c *check.C) {
