@@ -1185,6 +1185,27 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__procedure_parameters(c *
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_definition_from_included_file(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("included.mk",
+		MkRcsID,
+		"WRKSRC=\t${WRKDIR}/${PKGBASE}")
+	t.CreateFileLines("including.mk",
+		MkRcsID,
+		"SUBDIR=\t${WRKSRC}",
+		".include \"included.mk\"",
+		"WRKSRC=\t${WRKDIR}/overwritten")
+	mklines := t.LoadMkInclude("including.mk")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	// FIXME: The warning must not be in the included file.
+	//  It's always the including file that is responsible for redundancies.
+	t.CheckOutputLines(
+		"WARN: ~/included.mk:2: Variable WRKSRC is overwritten in including.mk:4.")
+}
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
