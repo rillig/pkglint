@@ -283,20 +283,23 @@ func (ctx *SubstContext) suggestSubstVars(mkline MkLine) {
 			continue
 		}
 
-		op := ifelseStr(ctx.curr.seenVars, "+=", "=")
+		varop := sprintf("SUBST_VARS.%s%s%s",
+			ctx.id,
+			ifelseStr(hasSuffix(ctx.id, "+"), " ", ""),
+			ifelseStr(ctx.curr.seenVars, "+=", "="))
 
 		fix := mkline.Autofix()
-		fix.Notef("The substitution command %q can be replaced with \"SUBST_VARS.%s%s %s\".",
-			token, ctx.id, op, varname)
+		fix.Notef("The substitution command %q can be replaced with \"%s %s\".",
+			token, varop, varname)
 		fix.Explain(
 			"Replacing @VAR@ with ${VAR} is such a typical pattern that pkgsrc has built-in support for it,",
 			"requiring only the variable name instead of the full sed command.")
 		if mkline.VarassignComment() == "" && len(tokens) == 2 && tokens[0] == "-e" {
 			// TODO: Extract the alignment computation somewhere else, so that it is generally available.
 			alignBefore := tabWidth(mkline.ValueAlign())
-			alignAfter := tabWidth(sprintf("SUBST_VARS.%s%s\t", ctx.id, op))
+			alignAfter := tabWidth(varop + "\t")
 			tabs := strings.Repeat("\t", imax((alignAfter-alignBefore)/8, 0))
-			fix.Replace(mkline.Text, sprintf("SUBST_VARS.%s%s\t%s%s", ctx.id, op, tabs, varname))
+			fix.Replace(mkline.Text, varop+"\t"+tabs+varname)
 		}
 		fix.Anyway()
 		fix.Apply()

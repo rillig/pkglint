@@ -441,6 +441,46 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 			"with \"SUBST_VARS.test+=\\tSH\".")
 }
 
+// If the SUBST_CLASS identifier ends with a plus, the generated code must
+// use the correct assignment operator and be nicely formatted.
+func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("sh", "SH", AtRunTime)
+
+	mklines := t.NewMkLines("subst.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=\t\tgtk+",
+		"SUBST_STAGE.gtk+ =\tpre-configure",
+		"SUBST_FILES.gtk+ =\tfilename",
+		"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g",
+		"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: subst.mk:6: The substitution command \"s,@SH@,${SH:Q},g\" "+
+			"can be replaced with \"SUBST_VARS.gtk+ = SH\".",
+		"NOTE: subst.mk:7: The substitution command \"s,@SH@,${SH:Q},g\" "+
+			"can be replaced with \"SUBST_VARS.gtk+ += SH\".")
+
+	t.SetUpCommandLine("--show-autofix")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: subst.mk:6: The substitution command \"s,@SH@,${SH:Q},g\" "+
+			"can be replaced with \"SUBST_VARS.gtk+ = SH\".",
+		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.gtk+ +=\\t-e s,@SH@,${SH:Q},g\" "+
+			"with \"SUBST_VARS.gtk+ =\\tSH\".",
+		"NOTE: subst.mk:7: The substitution command \"s,@SH@,${SH:Q},g\" "+
+			"can be replaced with \"SUBST_VARS.gtk+ += SH\".",
+		"AUTOFIX: subst.mk:7: Replacing \"SUBST_SED.gtk+ +=\\t-e s,@SH@,${SH:Q},g\" "+
+			"with \"SUBST_VARS.gtk+ +=\\tSH\".")
+}
+
 // simulateSubstLines only tests some of the inner workings of SubstContext.
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
