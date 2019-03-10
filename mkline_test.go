@@ -755,7 +755,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__shellword_part(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: ~/Makefile:6: The substitution command \"s:@LINKER_RPATH_FLAG@:${LINKER_RPATH_FLAG}:g\" " +
-			"can be replaced with \"SUBST_VARS.class+= LINKER_RPATH_FLAG\".")
+			"can be replaced with \"SUBST_VARS.class= LINKER_RPATH_FLAG\".")
 }
 
 // Tools, when used in a shell command, must not be quoted.
