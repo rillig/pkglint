@@ -268,14 +268,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 
 		pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
 
-		skip := hasSuffix(includedFile, "/bsd.pkg.mk") || IsPrefs(includedFile)
-		if !skip && contains(filename, "/mk/") {
-			skip = true
-			if contains(filename, "buildlink3.mk") && contains(includedFile, "builtin.mk") {
-				skip = false
-			}
-		}
-		if skip {
+		if !pkg.diveInto(filename, includedFile) {
 			return unknown
 		}
 
@@ -362,6 +355,17 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	}
 
 	return
+}
+
+func (pkg *Package) diveInto(includingFile string, includedFile string) bool {
+	skip := hasSuffix(includedFile, "/bsd.pkg.mk") || IsPrefs(includedFile)
+	if !skip && contains(includingFile, "/mk/") {
+		skip = true
+		if contains(includingFile, "buildlink3.mk") && contains(includedFile, "builtin.mk") {
+			skip = false
+		}
+	}
+	return !skip
 }
 
 func (pkg *Package) collectUsedBy(mkline MkLine, incDir string, incBase string, includedFile string) {
