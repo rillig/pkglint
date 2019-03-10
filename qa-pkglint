@@ -5,6 +5,10 @@ srcdir="$HOME/pkglint"
 archivedir="$srcdir/archive"
 pkgsrcdir="$HOME/git/pkgsrc"
 
+step_msg() {
+  printf '%s => %s\n' "$(date +'%H:%M:%S')" "$1"
+}
+
 genrunid() {
   if [ -n "${runid-}" ]; then
     return
@@ -21,13 +25,13 @@ genrunid() {
 install() {
   genrunid
   (cd "$srcdir" && chmod 644 *.go)
-  echo "=> Formatting pkglint"
+  step_msg "Formatting pkglint"
   go fmt netbsd.org/pkglint/...
-  echo "=> Generating source code"
+  step_msg "Generating source code"
   go generate netbsd.org/pkglint/...
-  echo "=> Testing pkglint"
+  step_msg "Testing pkglint"
   go test netbsd.org/pkglint/...
-  echo "=> Installing pkglint"
+  step_msg "Installing pkglint"
   go install netbsd.org/pkglint/...
   cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
 }
@@ -35,17 +39,17 @@ install() {
 install_notest() {
   genrunid
   (cd "$srcdir" && chmod 644 *.go)
-  echo "=> Formatting pkglint"
+  step_msg "Formatting pkglint"
   go fmt netbsd.org/pkglint/...
-  echo "=> Generating source code"
+  step_msg "Generating source code"
   go generate netbsd.org/pkglint/...
-  echo "=> Installing pkglint"
+  step_msg "Installing pkglint"
   go install netbsd.org/pkglint/...
   cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
 }
 
 analyze() {
-  echo "=> Analyzing test coverage"
+  step_msg "Analyzing test coverage"
   (
     cd "$srcdir" \
     && tmpfile=$(cygpath -w "/tmp/gocover-$$.html") \
@@ -55,17 +59,17 @@ analyze() {
     && cygstart "$tmpfile"
   )
 
-  echo "=> Analyzing code style"
+  step_msg "Analyzing code style"
   (cd ~/pkglint && gometalinter --exclude "exported method|unexported|drop this else") | less
 }
 
 netbsd() {
-  echo "=> Checking for @beta"
+  step_msg "Checking for @beta"
   if (cd "$srcdir" && grep -n "@beta" *.go); then
     exit 1
   fi
 
-  echo "=> Copying files to NetBSD VM"
+  step_msg "Copying files to NetBSD VM"
   rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync \
     --chmod=F0664 \
     --cvs-exclude \
@@ -90,7 +94,7 @@ netbsd() {
     --exclude="*.log" \
     "$srcdir/" netbsd:proj/pkgsrc/pkgtools/pkglint/files/
 
-  echo "=> Installing NetBSD package"
+  step_msg "Installing NetBSD package"
   cmd=". ./.bash_profile"
   cmd="$cmd && cd proj/pkgsrc/pkgtools/pkglint"
   cmd="$cmd && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=no "\$HOME/minipkg/bin/bmake" clean update"
@@ -101,7 +105,7 @@ netbsd() {
 
 pkgsrc() {
   genrunid
-  echo "=> Running pkglint on the pkgsrc tree (at $(date +'%H:%M:%S'))"
+  step_msg "Running pkglint on the pkgsrc tree"
   time (
     cd "$pkgsrcdir" \
     && printf 'pkgsrc HEAD commit: %s\n' "$(git show-ref -s HEAD)" \
@@ -115,7 +119,7 @@ pkgsrc() {
 }
 
 diffs() {
-  echo "=> Generating diffs"
+  step_msg "Generating diffs"
   (
     cd "$archivedir"
     for out in 20*.out; do
@@ -171,4 +175,4 @@ for cmd in "$@"; do
   "$cmd"
 done
 
-echo "=> OK"
+step_msg "OK"
