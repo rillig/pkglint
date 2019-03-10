@@ -520,11 +520,11 @@ func (t *Tester) Remove(relativeFileName string) {
 	G.fileCache.Evict(filename)
 }
 
-// SetUpFiles provides a function for creating hierarchies of MkLines
+// SetUpHierarchy provides a function for creating hierarchies of MkLines
 // that include each other.
 // The hierarchy is created only in memory, nothing is written to disk.
 //
-//  include, files := t.SetUpFiles()
+//  include, get := t.SetUpHierarchy()
 //
 //  include("including.mk",
 //      include("other.mk",
@@ -536,12 +536,12 @@ func (t *Tester) Remove(relativeFileName string) {
 //          include("env.mk",
 //              "VAR= env")))
 //
-//  mklines := files["including.mk"]
-//  module := files["module.mk"]
-func (t *Tester) SetUpFiles() (include func(filename string, args ...interface{}) MkLines,
-	files map[string]MkLines) {
+//  mklines := get("including.mk")
+//  module := get("module.mk")
+func (t *Tester) SetUpHierarchy() (include func(filename string, args ...interface{}) MkLines,
+	get func(string) MkLines) {
 
-	files = map[string]MkLines{}
+	files := map[string]MkLines{}
 
 	include = func(filename string, args ...interface{}) MkLines {
 		var lines []Line
@@ -570,6 +570,8 @@ func (t *Tester) SetUpFiles() (include func(filename string, args ...interface{}
 		files[filename] = mklines
 		return mklines
 	}
+
+	get = func(filename string) MkLines { return files[filename] }
 
 	return
 }

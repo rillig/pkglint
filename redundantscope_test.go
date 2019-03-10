@@ -283,18 +283,18 @@ func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
-	t.CreateFileLines("included.mk",
-		"VAR.def.def?= ${OTHER}",
-		"VAR.def.asg?= ${OTHER}",
-		"VAR.def.app?= ${OTHER}",
-		"VAR.asg.def=  ${OTHER}",
-		"VAR.asg.asg=  ${OTHER}",
-		"VAR.asg.app=  ${OTHER}",
-		"VAR.app.def+= ${OTHER}",
-		"VAR.app.asg+= ${OTHER}",
-		"VAR.app.app+= ${OTHER}")
-	t.CreateFileLines("including.mk",
-		".include \"included.mk\"",
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
+		include("included.mk",
+			"VAR.def.def?= ${OTHER}",
+			"VAR.def.asg?= ${OTHER}",
+			"VAR.def.app?= ${OTHER}",
+			"VAR.asg.def=  ${OTHER}",
+			"VAR.asg.asg=  ${OTHER}",
+			"VAR.asg.app=  ${OTHER}",
+			"VAR.app.def+= ${OTHER}",
+			"VAR.app.asg+= ${OTHER}",
+			"VAR.app.app+= ${OTHER}"),
 		"VAR.def.def?= ${OTHER}",
 		"VAR.def.asg=  ${OTHER}",
 		"VAR.def.app+= ${OTHER}",
@@ -304,22 +304,22 @@ func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
 		"VAR.app.def?= ${OTHER}",
 		"VAR.app.asg=  ${OTHER}",
 		"VAR.app.app+= ${OTHER}")
-	mklines := t.LoadMkInclude("including.mk")
+	mklines := get("including.mk")
 
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
-		"NOTE: ~/including.mk:2: Default assignment of VAR.def.def has no effect because of included.mk:1.",
-		"NOTE: ~/including.mk:3: Definition of VAR.def.asg is redundant because of included.mk:2.",
+		"NOTE: including.mk:2: Default assignment of VAR.def.def has no effect because of included.mk:1.",
+		"NOTE: including.mk:3: Definition of VAR.def.asg is redundant because of included.mk:2.",
 		// In line 4, defining a default value and then appending to it is a common pattern.
 		// Appending the same value feels redundant but probably doesn't happen in practice.
 		// If it does, there should be a note for it.
-		"NOTE: ~/including.mk:5: Default assignment of VAR.asg.def has no effect because of included.mk:4.",
-		"NOTE: ~/including.mk:6: Definition of VAR.asg.asg is redundant because of included.mk:5.",
+		"NOTE: including.mk:5: Default assignment of VAR.asg.def has no effect because of included.mk:4.",
+		"NOTE: including.mk:6: Definition of VAR.asg.asg is redundant because of included.mk:5.",
 		// In line 7, setting a variable and later appending to it is a common pattern.
 		// Appending the same value feels redundant but probably doesn't happen in practice.
 		// If it does, there should be a note for it.
-		"NOTE: ~/including.mk:8: Default assignment of VAR.app.def has no effect because of included.mk:7.",
+		"NOTE: including.mk:8: Default assignment of VAR.app.def has no effect because of included.mk:7.",
 		// In line 9, overwriting an appended variable might be a mistake.
 		// TODO: Find out whether this case happens in actual pkgsrc and if it's accidental.
 		// In line 10, appending further is a common pattern.
@@ -331,18 +331,18 @@ func (s *Suite) Test_RedundantScope__after_including_different_value(c *check.C)
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
-	t.CreateFileLines("included.mk",
-		"VAR.def.def?= ${VALUE}",
-		"VAR.def.asg?= ${VALUE}",
-		"VAR.def.app?= ${VALUE}",
-		"VAR.asg.def=  ${VALUE}",
-		"VAR.asg.asg=  ${VALUE}",
-		"VAR.asg.app=  ${VALUE}",
-		"VAR.app.def+= ${VALUE}",
-		"VAR.app.asg+= ${VALUE}",
-		"VAR.app.app+= ${VALUE}")
-	t.CreateFileLines("including.mk",
-		".include \"included.mk\"",
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
+		include("included.mk",
+			"VAR.def.def?= ${VALUE}",
+			"VAR.def.asg?= ${VALUE}",
+			"VAR.def.app?= ${VALUE}",
+			"VAR.asg.def=  ${VALUE}",
+			"VAR.asg.asg=  ${VALUE}",
+			"VAR.asg.app=  ${VALUE}",
+			"VAR.app.def+= ${VALUE}",
+			"VAR.app.asg+= ${VALUE}",
+			"VAR.app.app+= ${VALUE}"),
 		"VAR.def.def?= ${OTHER}",
 		"VAR.def.asg=  ${OTHER}",
 		"VAR.def.app+= ${OTHER}",
@@ -352,14 +352,14 @@ func (s *Suite) Test_RedundantScope__after_including_different_value(c *check.C)
 		"VAR.app.def?= ${OTHER}",
 		"VAR.app.asg=  ${OTHER}",
 		"VAR.app.app+= ${OTHER}")
-	mklines := t.LoadMkInclude("including.mk")
+	mklines := get("including.mk")
 
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
-		"NOTE: ~/including.mk:2: Default assignment of VAR.def.def has no effect because of included.mk:1.",
-		"NOTE: ~/including.mk:5: Default assignment of VAR.asg.def has no effect because of included.mk:4.",
-		"NOTE: ~/including.mk:8: Default assignment of VAR.app.def has no effect because of included.mk:7.")
+		"NOTE: including.mk:2: Default assignment of VAR.def.def has no effect because of included.mk:1.",
+		"NOTE: including.mk:5: Default assignment of VAR.asg.def has no effect because of included.mk:4.",
+		"NOTE: including.mk:8: Default assignment of VAR.app.def has no effect because of included.mk:7.")
 }
 
 func (s *Suite) Test_RedundantScope__before_including_same_value(c *check.C) {
@@ -367,7 +367,8 @@ func (s *Suite) Test_RedundantScope__before_including_same_value(c *check.C) {
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
-	t.CreateFileLines("including.mk",
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
 		"VAR.def.def?= ${OTHER}",
 		"VAR.def.asg?= ${OTHER}",
 		"VAR.def.app?= ${OTHER}",
@@ -377,27 +378,26 @@ func (s *Suite) Test_RedundantScope__before_including_same_value(c *check.C) {
 		"VAR.app.def+= ${OTHER}",
 		"VAR.app.asg+= ${OTHER}",
 		"VAR.app.app+= ${OTHER}",
-		".include \"included.mk\"")
-	t.CreateFileLines("included.mk",
-		"VAR.def.def?= ${OTHER}",
-		"VAR.def.asg=  ${OTHER}",
-		"VAR.def.app+= ${OTHER}",
-		"VAR.asg.def?= ${OTHER}",
-		"VAR.asg.asg=  ${OTHER}",
-		"VAR.asg.app+= ${OTHER}",
-		"VAR.app.def?= ${OTHER}",
-		"VAR.app.asg=  ${OTHER}",
-		"VAR.app.app+= ${OTHER}")
-	mklines := t.LoadMkInclude("including.mk")
+		include("included.mk",
+			"VAR.def.def?= ${OTHER}",
+			"VAR.def.asg=  ${OTHER}",
+			"VAR.def.app+= ${OTHER}",
+			"VAR.asg.def?= ${OTHER}",
+			"VAR.asg.asg=  ${OTHER}",
+			"VAR.asg.app+= ${OTHER}",
+			"VAR.app.def?= ${OTHER}",
+			"VAR.app.asg=  ${OTHER}",
+			"VAR.app.app+= ${OTHER}"))
+	mklines := get("including.mk")
 
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
-		"NOTE: ~/including.mk:1: Default assignment of VAR.def.def has no effect because of included.mk:1.",
-		"NOTE: ~/including.mk:2: Default assignment of VAR.def.asg has no effect because of included.mk:2.",
-		"NOTE: ~/including.mk:4: Definition of VAR.asg.def is redundant because of included.mk:4.",
-		"NOTE: ~/including.mk:5: Definition of VAR.asg.asg is redundant because of included.mk:5.",
-		"WARN: ~/including.mk:8: Variable VAR.app.asg is overwritten in included.mk:8.")
+		"NOTE: including.mk:1: Default assignment of VAR.def.def has no effect because of included.mk:1.",
+		"NOTE: including.mk:2: Default assignment of VAR.def.asg has no effect because of included.mk:2.",
+		"NOTE: including.mk:4: Definition of VAR.asg.def is redundant because of included.mk:4.",
+		"NOTE: including.mk:5: Definition of VAR.asg.asg is redundant because of included.mk:5.",
+		"WARN: including.mk:8: Variable VAR.app.asg is overwritten in included.mk:8.")
 }
 
 func (s *Suite) Test_RedundantScope__before_including_different_value(c *check.C) {
@@ -405,7 +405,8 @@ func (s *Suite) Test_RedundantScope__before_including_different_value(c *check.C
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
-	t.CreateFileLines("including.mk",
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
 		"VAR.def.def?= ${VALUE}",
 		"VAR.def.asg?= ${VALUE}",
 		"VAR.def.app?= ${VALUE}",
@@ -415,25 +416,24 @@ func (s *Suite) Test_RedundantScope__before_including_different_value(c *check.C
 		"VAR.app.def+= ${VALUE}",
 		"VAR.app.asg+= ${VALUE}",
 		"VAR.app.app+= ${VALUE}",
-		".include \"included.mk\"")
-	t.CreateFileLines("included.mk",
-		"VAR.def.def?= ${OTHER}",
-		"VAR.def.asg=  ${OTHER}",
-		"VAR.def.app+= ${OTHER}",
-		"VAR.asg.def?= ${OTHER}",
-		"VAR.asg.asg=  ${OTHER}",
-		"VAR.asg.app+= ${OTHER}",
-		"VAR.app.def?= ${OTHER}",
-		"VAR.app.asg=  ${OTHER}",
-		"VAR.app.app+= ${OTHER}")
-	mklines := t.LoadMkInclude("including.mk")
+		include("included.mk",
+			"VAR.def.def?= ${OTHER}",
+			"VAR.def.asg=  ${OTHER}",
+			"VAR.def.app+= ${OTHER}",
+			"VAR.asg.def?= ${OTHER}",
+			"VAR.asg.asg=  ${OTHER}",
+			"VAR.asg.app+= ${OTHER}",
+			"VAR.app.def?= ${OTHER}",
+			"VAR.app.asg=  ${OTHER}",
+			"VAR.app.app+= ${OTHER}"))
+	mklines := get("including.mk")
 
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	t.CheckOutputLines(
-		"WARN: ~/including.mk:2: Variable VAR.def.asg is overwritten in included.mk:2.",
-		"WARN: ~/including.mk:5: Variable VAR.asg.asg is overwritten in included.mk:5.",
-		"WARN: ~/including.mk:8: Variable VAR.app.asg is overwritten in included.mk:8.")
+		"WARN: including.mk:2: Variable VAR.def.asg is overwritten in included.mk:2.",
+		"WARN: including.mk:5: Variable VAR.asg.asg is overwritten in included.mk:5.",
+		"WARN: including.mk:8: Variable VAR.app.asg is overwritten in included.mk:8.")
 }
 
 func (s *Suite) Test_RedundantScope__independent_same_value(c *check.C) {
@@ -441,30 +441,29 @@ func (s *Suite) Test_RedundantScope__independent_same_value(c *check.C) {
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
-	t.CreateFileLines("including.mk",
-		".include \"included1.mk\"",
-		".include \"included2.mk\"")
-	t.CreateFileLines("included1.mk",
-		"VAR.def.def?= ${OTHER}",
-		"VAR.def.asg?= ${OTHER}",
-		"VAR.def.app?= ${OTHER}",
-		"VAR.asg.def=  ${OTHER}",
-		"VAR.asg.asg=  ${OTHER}",
-		"VAR.asg.app=  ${OTHER}",
-		"VAR.app.def+= ${OTHER}",
-		"VAR.app.asg+= ${OTHER}",
-		"VAR.app.app+= ${OTHER}")
-	t.CreateFileLines("included2.mk",
-		"VAR.def.def?= ${OTHER}",
-		"VAR.def.asg=  ${OTHER}",
-		"VAR.def.app+= ${OTHER}",
-		"VAR.asg.def?= ${OTHER}",
-		"VAR.asg.asg=  ${OTHER}",
-		"VAR.asg.app+= ${OTHER}",
-		"VAR.app.def?= ${OTHER}",
-		"VAR.app.asg=  ${OTHER}",
-		"VAR.app.app+= ${OTHER}")
-	mklines := t.LoadMkInclude("including.mk")
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
+		include("included1.mk",
+			"VAR.def.def?= ${OTHER}",
+			"VAR.def.asg?= ${OTHER}",
+			"VAR.def.app?= ${OTHER}",
+			"VAR.asg.def=  ${OTHER}",
+			"VAR.asg.asg=  ${OTHER}",
+			"VAR.asg.app=  ${OTHER}",
+			"VAR.app.def+= ${OTHER}",
+			"VAR.app.asg+= ${OTHER}",
+			"VAR.app.app+= ${OTHER}"),
+		include("included2.mk",
+			"VAR.def.def?= ${OTHER}",
+			"VAR.def.asg=  ${OTHER}",
+			"VAR.def.app+= ${OTHER}",
+			"VAR.asg.def?= ${OTHER}",
+			"VAR.asg.asg=  ${OTHER}",
+			"VAR.asg.app+= ${OTHER}",
+			"VAR.app.def?= ${OTHER}",
+			"VAR.app.asg=  ${OTHER}",
+			"VAR.app.app+= ${OTHER}"))
+	mklines := get("including.mk")
 
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
@@ -479,30 +478,29 @@ func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
-	t.CreateFileLines("including.mk",
-		".include \"included1.mk\"",
-		".include \"included2.mk\"")
-	t.CreateFileLines("included1.mk",
-		"VAR.def.def?= ${VALUE}",
-		"VAR.def.asg?= ${VALUE}",
-		"VAR.def.app?= ${VALUE}",
-		"VAR.asg.def=  ${VALUE}",
-		"VAR.asg.asg=  ${VALUE}",
-		"VAR.asg.app=  ${VALUE}",
-		"VAR.app.def+= ${VALUE}",
-		"VAR.app.asg+= ${VALUE}",
-		"VAR.app.app+= ${VALUE}")
-	t.CreateFileLines("included2.mk",
-		"VAR.def.def?= ${OTHER}",
-		"VAR.def.asg=  ${OTHER}",
-		"VAR.def.app+= ${OTHER}",
-		"VAR.asg.def?= ${OTHER}",
-		"VAR.asg.asg=  ${OTHER}",
-		"VAR.asg.app+= ${OTHER}",
-		"VAR.app.def?= ${OTHER}",
-		"VAR.app.asg=  ${OTHER}",
-		"VAR.app.app+= ${OTHER}")
-	mklines := t.LoadMkInclude("including.mk")
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
+		include("included1.mk",
+			"VAR.def.def?= ${VALUE}",
+			"VAR.def.asg?= ${VALUE}",
+			"VAR.def.app?= ${VALUE}",
+			"VAR.asg.def=  ${VALUE}",
+			"VAR.asg.asg=  ${VALUE}",
+			"VAR.asg.app=  ${VALUE}",
+			"VAR.app.def+= ${VALUE}",
+			"VAR.app.asg+= ${VALUE}",
+			"VAR.app.app+= ${VALUE}"),
+		include("included2.mk",
+			"VAR.def.def?= ${OTHER}",
+			"VAR.def.asg=  ${OTHER}",
+			"VAR.def.app+= ${OTHER}",
+			"VAR.asg.def?= ${OTHER}",
+			"VAR.asg.asg=  ${OTHER}",
+			"VAR.asg.app+= ${OTHER}",
+			"VAR.app.def?= ${OTHER}",
+			"VAR.app.asg=  ${OTHER}",
+			"VAR.app.app+= ${OTHER}"))
+	mklines := get("including.mk")
 
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
@@ -515,7 +513,7 @@ func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
 func (s *Suite) Test_RedundantScope__file_hierarchy(c *check.C) {
 	t := s.Init(c)
 
-	include, files := t.SetUpFiles()
+	include, get := t.SetUpHierarchy()
 
 	include("including.mk",
 		include("other.mk",
@@ -527,18 +525,18 @@ func (s *Suite) Test_RedundantScope__file_hierarchy(c *check.C) {
 			include("env.mk",
 				"VAR= env")))
 
-	files["including.mk"].CheckRedundantAssignments(NewRedundantScope())
+	get("including.mk").CheckRedundantAssignments(NewRedundantScope())
 
 	// No output since the included files are independent.
 	t.CheckOutputEmpty()
 
-	files["other.mk"].CheckRedundantAssignments(NewRedundantScope())
+	get("other.mk").CheckRedundantAssignments(NewRedundantScope())
 
 	// No output since the file by itself in neither redundant nor
 	// does it include any other file.
 	t.CheckOutputEmpty()
 
-	files["module.mk"].CheckRedundantAssignments(NewRedundantScope())
+	get("module.mk").CheckRedundantAssignments(NewRedundantScope())
 
 	// No warning about env.mk because it is independent from version.mk.
 	// Pkglint only produces warnings when it is very sure that the variable
