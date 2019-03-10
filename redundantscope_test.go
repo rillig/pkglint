@@ -514,11 +514,6 @@ func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
 
 // FIXME: Continue the systematic redundancy tests.
 //
-// Tests involving variables that are defined and overwritten in independent files.
-// including.mk
-// +-- included1.mk
-// `-- included2.mk
-//
 // Tests involving several files, both dependent and independent.
 // This is to test includePath.includesAll and includePath.includesAny.
 //
