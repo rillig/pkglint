@@ -512,10 +512,52 @@ func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_RedundantScope__file_hierarchy(c *check.C) {
+	t := s.Init(c)
+
+	include, files := t.SetUpFiles()
+
+	include("including.mk",
+		include("other.mk",
+			"VAR= other"),
+		include("module.mk",
+			"VAR= module",
+			include("version.mk",
+				"VAR= version"),
+			include("env.mk",
+				"VAR= env")))
+
+	files["including.mk"].CheckRedundantAssignments(NewRedundantScope())
+
+	// No output since the included files are independent.
+	t.CheckOutputEmpty()
+
+	files["other.mk"].CheckRedundantAssignments(NewRedundantScope())
+
+	// No output since the file by itself in neither redundant nor
+	// does it include any other file.
+	t.CheckOutputEmpty()
+
+	files["module.mk"].CheckRedundantAssignments(NewRedundantScope())
+
+	// No warning about env.mk because it is independent from version.mk.
+	// Pkglint only produces warnings when it is very sure that the variable
+	// definition is really redundant in all cases.
+	//
+	// One reason to not warn is that at the point where env.mk is evaluated,
+	// version.mk had last written to the variable. Since version.mk is
+	// independent from env.mk, there is nothing redundant here.
+	// Pkglint doesn't do this, but it could.
+	//
+	// Another reason not to warn is that all locations where the variable has
+	// ever been accessed are saved. And if the current location neither includes
+	// all of the others nor is included by all of the others, there is at least
+	// one access that is in an unrelated file. This is what pkglint does.
+	t.CheckOutputLines(
+		"WARN: module.mk:1: Variable VAR is overwritten in version.mk:1.")
+}
+
 // FIXME: Continue the systematic redundancy tests.
-//
-// Tests involving several files, both dependent and independent.
-// This is to test includePath.includesAll and includePath.includesAny.
 //
 // A test where the operators = and += define a variable that afterwards
 // is assigned the same value using the ?= operator.

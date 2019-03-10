@@ -520,6 +520,60 @@ func (t *Tester) Remove(relativeFileName string) {
 	G.fileCache.Evict(filename)
 }
 
+// SetUpFiles provides a function for creating hierarchies of MkLines
+// that include each other.
+// The hierarchy is created only in memory, nothing is written to disk.
+//
+//  include, files := t.SetUpFiles()
+//
+//  include("including.mk",
+//      include("other.mk",
+//          "VAR= other"),
+//      include("module.mk",
+//          "VAR= module",
+//          include("version.mk",
+//              "VAR= version"),
+//          include("env.mk",
+//              "VAR= env")))
+//
+//  mklines := files["including.mk"]
+//  module := files["module.mk"]
+func (t *Tester) SetUpFiles() (include func(filename string, args ...interface{}) MkLines,
+	files map[string]MkLines) {
+
+	files = map[string]MkLines{}
+
+	include = func(filename string, args ...interface{}) MkLines {
+		var lines []Line
+		lineno := 1
+
+		addLine := func(text string) {
+			lines = append(lines, t.NewLine(filename, lineno, text))
+			lineno++
+		}
+
+		for _, arg := range args {
+			switch arg := arg.(type) {
+			case string:
+				addLine(arg)
+			case MkLines:
+				text := sprintf(".include %q", arg.lines.FileName)
+				addLine(text)
+				lines = append(lines, arg.lines.Lines...)
+			default:
+				panic("invalid type")
+			}
+		}
+
+		mklines := NewMkLines(NewLines(filename, lines))
+		G.Assertf(files[filename] == nil, "File %q already exists.", filename)
+		files[filename] = mklines
+		return mklines
+	}
+
+	return
+}
+
 // Check delegates a check to the check.Check function.
 // Thereby, there is no need to distinguish between c.Check and t.Check
 // in the test code.
