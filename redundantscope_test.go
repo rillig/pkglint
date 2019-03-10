@@ -595,20 +595,16 @@ func (s *Suite) Test_RedundantScope__assign_and_append_followed_by_assign(c *che
 
 func (s *Suite) Test_RedundantScope__override_after_including(c *check.C) {
 	t := s.Init(c)
-	t.CreateFileLines("included.mk",
-		"OVERRIDE=       previous value",
-		"REDUNDANT=      redundant")
-	t.CreateFileLines("including.mk",
-		".include \"included.mk\"",
+
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
+		include("included.mk",
+			"OVERRIDE=       previous value",
+			"REDUNDANT=      redundant"),
 		"OVERRIDE=       overridden value",
 		"REDUNDANT=      redundant")
-	t.Chdir(".")
-	mklines := t.LoadMkInclude("including.mk")
-	// FIXME: Hierarchy
 
-	// XXX: The warnings from here are not in the same order as the other warnings.
-	// XXX: There may be some warnings for the same file separated by warnings for other files.
-	NewRedundantScope().Check(mklines)
+	NewRedundantScope().Check(get("including.mk"))
 
 	t.CheckOutputLines(
 		"NOTE: including.mk:3: Definition of REDUNDANT is redundant because of included.mk:2.")
@@ -616,16 +612,14 @@ func (s *Suite) Test_RedundantScope__override_after_including(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__redundant_assign_after_including(c *check.C) {
 	t := s.Init(c)
-	t.CreateFileLines("included.mk",
-		"REDUNDANT=      redundant")
-	t.CreateFileLines("including.mk",
-		".include \"included.mk\"",
-		"REDUNDANT=      redundant")
-	t.Chdir(".")
-	mklines := t.LoadMkInclude("including.mk")
-	// FIXME: Hierarchy
 
-	NewRedundantScope().Check(mklines)
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
+		include("included.mk",
+			"REDUNDANT=      redundant"),
+		"REDUNDANT=      redundant")
+
+	NewRedundantScope().Check(get("including.mk"))
 
 	t.CheckOutputLines(
 		"NOTE: including.mk:2: Definition of REDUNDANT is redundant because of included.mk:1.")
@@ -633,20 +627,18 @@ func (s *Suite) Test_RedundantScope__redundant_assign_after_including(c *check.C
 
 func (s *Suite) Test_RedundantScope__override_in_Makefile_after_including(c *check.C) {
 	t := s.Init(c)
-	t.CreateFileLines("module.mk",
-		"VAR=    value ${OTHER}",
-		"VAR?=   value ${OTHER}",
-		"VAR=    new value")
-	t.CreateFileLines("Makefile",
-		".include \"module.mk\"",
-		"VAR=    the package may overwrite variables from other files")
-	t.Chdir(".")
 
-	mklines := t.LoadMkInclude("Makefile")
+	include, get := t.SetUpHierarchy()
+	include("Makefile",
+		include("module.mk",
+			"VAR=    value ${OTHER}",
+			"VAR?=   value ${OTHER}",
+			"VAR=    new value"),
+		"VAR=    the package may overwrite variables from other files")
 
 	// XXX: The warnings from here are not in the same order as the other warnings.
 	// XXX: There may be some warnings for the same file separated by warnings for other files.
-	NewRedundantScope().Check(mklines)
+	NewRedundantScope().Check(get("Makefile"))
 
 	// No warning for VAR=... in Makefile since it makes sense to have common files
 	// with default values for variables, overriding some of them in each package.
@@ -657,6 +649,7 @@ func (s *Suite) Test_RedundantScope__override_in_Makefile_after_including(c *che
 
 func (s *Suite) Test_RedundantScope__default_value_definitely_unused(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    value ${OTHER}",
 		"VAR?=   different value")
@@ -671,6 +664,7 @@ func (s *Suite) Test_RedundantScope__default_value_definitely_unused(c *check.C)
 
 func (s *Suite) Test_RedundantScope__default_value_overridden(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR?=   default value",
 		"VAR=    overridden value")
@@ -683,6 +677,7 @@ func (s *Suite) Test_RedundantScope__default_value_overridden(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__overwrite_same_value(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    value ${OTHER}",
 		"VAR=    value ${OTHER}")
@@ -695,6 +690,7 @@ func (s *Suite) Test_RedundantScope__overwrite_same_value(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__conditional_overwrite(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    default",
 		".if ${OPSYS} == NetBSD",
@@ -708,6 +704,7 @@ func (s *Suite) Test_RedundantScope__conditional_overwrite(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__overwrite_inside_conditional(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    generic",
 		".if ${OPSYS} == NetBSD",
@@ -724,17 +721,17 @@ func (s *Suite) Test_RedundantScope__overwrite_inside_conditional(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__conditionally_include(c *check.C) {
 	t := s.Init(c)
-	t.CreateFileLines("module.mk",
+
+	include, get := t.SetUpHierarchy()
+	include("module.mk",
 		"VAR=    generic",
 		".if ${OPSYS} == NetBSD",
-		".  include \"included.mk\"",
+		include("included.mk",
+			"VAR=    ignored",
+			"VAR=    overwritten"),
 		".endif")
-	t.CreateFileLines("included.mk",
-		"VAR=    ignored",
-		"VAR=    overwritten")
-	mklines := t.LoadMkInclude("module.mk")
 
-	NewRedundantScope().Check(mklines)
+	NewRedundantScope().Check(get("module.mk"))
 
 	// TODO: expected a warning "WARN: module.mk:4: line 3 is ignored"
 	//  Since line 3 and line 4 are in the same basic block, line 3 is definitely ignored.
@@ -743,6 +740,7 @@ func (s *Suite) Test_RedundantScope__conditionally_include(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__conditional_default(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    default",
 		".if ${OPSYS} == NetBSD",
@@ -758,6 +756,7 @@ func (s *Suite) Test_RedundantScope__conditional_default(c *check.C) {
 // These warnings are precise and accurate since the value of VAR is not used between line 2 and 4.
 func (s *Suite) Test_RedundantScope__overwrite_same_variable_different_value(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"OTHER=  value before",
 		"VAR=    value ${OTHER}",
@@ -777,6 +776,7 @@ func (s *Suite) Test_RedundantScope__overwrite_same_variable_different_value(c *
 
 func (s *Suite) Test_RedundantScope__overwrite_different_value_used_between(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"OTHER=          value before",
 		"VAR=            value ${OTHER}",
@@ -922,6 +922,7 @@ func (s *Suite) Test_RedundantScope__procedure_call_infrastructure(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__shell_and_eval(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR:=    value ${OTHER}",
 		"VAR!=    value ${OTHER}")
@@ -949,6 +950,7 @@ func (s *Suite) Test_RedundantScope__shell_and_eval(c *check.C) {
 
 func (s *Suite) Test_RedundantScope__shell_and_eval_literal(c *check.C) {
 	t := s.Init(c)
+
 	mklines := t.NewMkLines("module.mk",
 		"VAR:=    value",
 		"VAR!=    value")
@@ -987,7 +989,7 @@ func (s *Suite) Test_RedundantScope__included_OPSYS_variable(c *check.C) {
 func (s *Suite) Test_RedundantScope__if_then_else(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetUpFileMkLines("if-then-else.mk",
+	mklines := t.NewMkLines("if-then-else.mk",
 		MkRcsID,
 		".if exists(${FILE})",
 		"OS=     NetBSD",
@@ -1005,7 +1007,7 @@ func (s *Suite) Test_RedundantScope__if_then_else(c *check.C) {
 func (s *Suite) Test_RedundantScope__if_then_else_without_variable(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetUpFileMkLines("if-then-else.mk",
+	mklines := t.NewMkLines("if-then-else.mk",
 		MkRcsID,
 		".if exists(/nonexistent)",
 		"IT=     exists",
@@ -1025,7 +1027,7 @@ func (s *Suite) Test_RedundantScope__if_then_else_without_variable(c *check.C) {
 func (s *Suite) Test_RedundantScope__append_then_default(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetUpFileMkLines("append-then-default.mk",
+	mklines := t.NewMkLines("append-then-default.mk",
 		MkRcsID,
 		"VAR+=   value",
 		"VAR?=   value")
@@ -1033,13 +1035,13 @@ func (s *Suite) Test_RedundantScope__append_then_default(c *check.C) {
 	NewRedundantScope().Check(mklines)
 
 	t.CheckOutputLines(
-		"NOTE: ~/append-then-default.mk:3: Default assignment of VAR has no effect because of line 2.")
+		"NOTE: append-then-default.mk:3: Default assignment of VAR has no effect because of line 2.")
 }
 
 func (s *Suite) Test_RedundantScope__assign_then_default_in_same_file(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetUpFileMkLines("assign-then-default.mk",
+	mklines := t.NewMkLines("assign-then-default.mk",
 		MkRcsID,
 		"VAR=    value",
 		"VAR?=   value")
@@ -1047,14 +1049,14 @@ func (s *Suite) Test_RedundantScope__assign_then_default_in_same_file(c *check.C
 	NewRedundantScope().Check(mklines)
 
 	t.CheckOutputLines(
-		"NOTE: ~/assign-then-default.mk:3: " +
+		"NOTE: assign-then-default.mk:3: " +
 			"Default assignment of VAR has no effect because of line 2.")
 }
 
 func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetUpFileMkLines("filename.mk",
+	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
 		"VAR:=   value",
 		"VAR:=   value",
@@ -1063,14 +1065,14 @@ func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
 	NewRedundantScope().Check(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/filename.mk:2: Variable VAR is overwritten in line 3.",
-		"WARN: ~/filename.mk:3: Variable VAR is overwritten in line 4.")
+		"WARN: filename.mk:2: Variable VAR is overwritten in line 3.",
+		"WARN: filename.mk:3: Variable VAR is overwritten in line 4.")
 }
 
 func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetUpFileMkLines("filename.mk",
+	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
 		"VAR!=   echo echo",
 		"VAR=    echo echo")
@@ -1084,14 +1086,13 @@ func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {
 	// It assigns a different value. Nevertheless, the shell command is
 	// redundant and can be removed since its result is never used.
 	t.CheckOutputLines(
-		"WARN: ~/filename.mk:2: Variable VAR is overwritten in line 3.")
+		"WARN: filename.mk:2: Variable VAR is overwritten in line 3.")
 }
 
 func (s *Suite) Test_RedundantScope__shell_then_read_then_assign(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.SetUpFileMkLines("filename.mk",
-		MkRcsID,
 		"VAR!=           echo echo",
 		"OUTPUT:=        ${VAR}",
 		"VAR=            echo echo")
@@ -1105,37 +1106,31 @@ func (s *Suite) Test_RedundantScope__shell_then_read_then_assign(c *check.C) {
 func (s *Suite) Test_RedundantScope__assign_then_default_in_included_file(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("assign-then-default.mk",
-		MkRcsID,
+	include, get := t.SetUpHierarchy()
+	include("assign-then-default.mk",
 		"VAR=    value",
-		".include \"included.mk\"")
-	t.CreateFileLines("included.mk",
-		MkRcsID,
-		"VAR?=    value")
-	mklines := t.LoadMkInclude("assign-then-default.mk")
+		include("included.mk",
+			"VAR?=    value"))
 
-	NewRedundantScope().Check(mklines)
+	NewRedundantScope().Check(get("assign-then-default.mk"))
 
-	// If assign-then-default.mk:2 is deleted, VAR still has the same value.
+	// If assign-then-default.mk:1 were deleted, VAR would still have the same value.
 	t.CheckOutputLines(
-		"NOTE: ~/assign-then-default.mk:2: Definition of VAR is redundant because of included.mk:2.")
+		"NOTE: assign-then-default.mk:1: Definition of VAR is redundant because of included.mk:1.")
 }
 
 func (s *Suite) Test_RedundantScope__conditionally_included_file(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("including.mk",
-		MkRcsID,
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
 		"VAR=    value",
 		".if ${COND}",
-		".  include \"included.mk\"",
+		include("included.mk",
+			"VAR?=   value"),
 		".endif")
-	t.CreateFileLines("included.mk",
-		MkRcsID,
-		"VAR?=   value")
-	mklines := t.LoadMkInclude("including.mk")
 
-	NewRedundantScope().Check(mklines)
+	NewRedundantScope().Check(get("including.mk"))
 
 	// The assignment in including.mk:2 is only redundant if included.mk is actually included.
 	// Therefore both included.mk:2 nor including.mk:2 are relevant.
@@ -1145,6 +1140,7 @@ func (s *Suite) Test_RedundantScope__conditionally_included_file(c *check.C) {
 func (s *Suite) Test_RedundantScope__procedure_parameters(c *check.C) {
 	t := s.Init(c)
 
+	// TODO: make Tester.SetUpHierarchy accept a file multiple times.
 	t.CreateFileLines("mk/pkg-build-options.mk",
 		MkRcsID,
 		"USED:=  ${pkgbase}")
@@ -1192,17 +1188,16 @@ func (s *Suite) Test_RedundantScope_handleVarassign__shell_followed_by_default(c
 func (s *Suite) Test_RedundantScope__overwrite_definition_from_included_file(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("included.mk",
-		MkRcsID,
-		"WRKSRC= ${WRKDIR}/${PKGBASE}")
-	t.CreateFileLines("including.mk",
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
 		MkRcsID,
 		"SUBDIR= ${WRKSRC}",
-		".include \"included.mk\"",
+		include("included.mk",
+			MkRcsID,
+			"WRKSRC= ${WRKDIR}/${PKGBASE}"),
 		"WRKSRC= ${WRKDIR}/overwritten")
-	mklines := t.LoadMkInclude("including.mk")
 
-	NewRedundantScope().Check(mklines)
+	NewRedundantScope().Check(get("including.mk"))
 
 	// Before pkglint 5.7.2 (2019-03-10), the above setup generated a warning:
 	//
