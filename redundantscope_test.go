@@ -1071,6 +1071,28 @@ func (s *Suite) Test_RedundantScope__procedure_parameters(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// Branch coverage for info.vari.Constant(). The other tests typically
+// make a variable non-constant by adding conditional assignments between
+// .if/.endif. But there are other ways. The output of shell commands is
+// unpredictable for pkglint (as of March 2019), therefore it treats these
+// variables as non-constant.
+func (s *Suite) Test_RedundantScope_handleVarassign__shell_followed_by_default(c *check.C) {
+	t := s.Init(c)
+
+	include, get := t.SetUpHierarchy()
+	include("including.mk",
+		"VAR!= echo 'hello, world'",
+		include("included.mk",
+			"VAR?= hello world"))
+
+	NewRedundantScope().Check(get("including.mk"))
+
+	// If pkglint should ever learn to interpret simple shell commands, there
+	// should be a warning for including.mk:2 that the shell command generates
+	// the default value.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_RedundantScope__overwrite_definition_from_included_file(c *check.C) {
 	t := s.Init(c)
 
