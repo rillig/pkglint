@@ -712,7 +712,7 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spac
 				continue
 			}
 
-			other := lexer.NextBytesSet(textproc.NewByteSet("$").Inverse())
+			other := lexer.NextBytesFunc(func(b byte) bool { return b != '$' })
 			if other == "" {
 				break
 			}

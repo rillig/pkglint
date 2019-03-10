@@ -490,7 +490,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 					switch {
 					case p.VarUse() != nil,
 						lexer.NextBytesSet(textproc.Alnum) != "",
-						lexer.NextBytesSet(textproc.NewByteSet("\"\\").Inverse()) != "":
+						lexer.NextBytesFunc(func(b byte) bool { return b != '"' && b != '\\' }) != "":
 						rhsText.WriteString(lexer.Since(m))
 
 					case lexer.SkipString("\\\""),
