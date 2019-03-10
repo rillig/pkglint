@@ -538,11 +538,13 @@ func (t *Tester) Remove(relativeFileName string) {
 //
 //  mklines := get("including.mk")
 //  module := get("module.mk")
-func (t *Tester) SetUpHierarchy() (include func(filename string, args ...interface{}) MkLines,
+func (t *Tester) SetUpHierarchy() (
+	include func(filename string, args ...interface{}) MkLines,
 	get func(string) MkLines) {
 
 	files := map[string]MkLines{}
 
+	// FIXME: Define where the filename is relative to: to the file, or to the current directory.
 	include = func(filename string, args ...interface{}) MkLines {
 		var lines []Line
 		lineno := 1
@@ -566,12 +568,17 @@ func (t *Tester) SetUpHierarchy() (include func(filename string, args ...interfa
 		}
 
 		mklines := NewMkLines(NewLines(filename, lines))
-		G.Assertf(files[filename] == nil, "File %q already exists.", filename)
+		// FIXME: This filename must be relative to the including file.
+		G.Assertf(files[filename] == nil, "MkLines with name %q already exist.", filename)
+		// FIXME: This filename must be relative to the base directory.
 		files[filename] = mklines
 		return mklines
 	}
 
-	get = func(filename string) MkLines { return files[filename] }
+	get = func(filename string) MkLines {
+		G.Assertf(files[filename] != nil, "MkLines with name %q doesn't exist.", filename)
+		return files[filename]
+	}
 
 	return
 }

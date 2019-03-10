@@ -781,21 +781,44 @@ func (s *Suite) Test_RedundantScope__overwrite_different_value_used_between(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__procedure_call(c *check.C) {
+func (s *Suite) Test_RedundantScope__procedure_call_to_noop(c *check.C) {
 	t := s.Init(c)
-	mklines := t.NewMkLines("mk/pthread.buildlink3.mk",
-		"CHECK_BUILTIN.pthread:=\tyes",
-		".include \"../../mk/pthread.builtin.mk\"",
-		"CHECK_BUILTIN.pthread:=\tno")
 
-	NewRedundantScope().Check(mklines)
+	include, get := t.SetUpHierarchy()
+	include("mk/pthread.buildlink3.mk",
+		"CHECK_BUILTIN.pthread:= yes",
+		include("pthread.builtin.mk",
+			"# Nothing happens here."),
+		"CHECK_BUILTIN.pthread:= no")
 
-	// FIXME
+	NewRedundantScope().Check(get("mk/pthread.buildlink3.mk"))
+
 	t.CheckOutputLines(
 		"WARN: mk/pthread.buildlink3.mk:1: Variable CHECK_BUILTIN.pthread is overwritten in line 3.")
 }
 
 func (s *Suite) Test_RedundantScope__procedure_call_implemented(c *check.C) {
+	t := s.Init(c)
+
+	include, get := t.SetUpHierarchy()
+	include("mk/pthread.buildlink3.mk",
+		"CHECK_BUILTIN.pthread:= yes",
+		include("pthread.builtin.mk",
+			"CHECK_BUILTIN.pthread?= no",
+			".if !empty(CHECK_BUILTIN.pthread:M[Nn][Oo])",
+			".endif"),
+		"CHECK_BUILTIN.pthread:= no")
+
+	NewRedundantScope().Check(get("mk/pthread.buildlink3.mk"))
+
+	// This test is a bit unrealistic. It wrongly assumes that all files from
+	// an .include directive are actually included by pkglint.
+	//
+	// See Package.readMakefile/handleIncludeLine/skip.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_RedundantScope__procedure_call_implemented_package(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -825,6 +848,58 @@ func (s *Suite) Test_RedundantScope__procedure_call_implemented(c *check.C) {
 	// Up to March 2019, pkglint didn't pass the correct pathnames to Package.included,
 	// which triggered a wrong note here.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_RedundantScope__procedure_call_infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("x11/alacarte",
+		".include \"../../mk/pthread.buildlink3.mk\"")
+	t.CreateFileLines("mk/pthread.buildlink3.mk",
+		MkRcsID,
+		"CHECK_BUILTIN.gettext:=\tyes",
+		".include \"pthread.builtin.mk\"",
+		"CHECK_BUILTIN.gettext:=\tno")
+	t.CreateFileLines("mk/pthread.builtin.mk",
+		MkRcsID,
+		"CHECK_BUILTIN.gettext?=\tno",
+		".if !empty(CHECK_BUILTIN.gettext:M[nN][oO])",
+		".endif")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("x11/alacarte"))
+
+	// There is nothing redundant here.
+	//
+	// 1. pthread.buildlink3.mk sets the variable
+	// 2. pthread.builtin.mk assigns it a default value
+	//    (which is common practice)
+	// 3. pthread.builtin.mk then reads it
+	//    (which marks the next write as non-redundant)
+	// 4. pthread.buildlink3.mk sets the variable again
+	//    (this is considered neither overwriting nor redundant)
+	//
+	// Up to March 2019, pkglint complained:
+	//
+	// WARN: ~/mk/pthread.buildlink3.mk:2:
+	//     Variable CHECK_BUILTIN.gettext is overwritten in line 4.
+	//
+	// The cause for the warning is that when including files from the
+	// infrastructure, pkglint only includes the outermost level of files.
+	// If an infrastructure file includes another infrastructure file,
+	// pkglint skips that, for performance reasons.
+	//
+	// This optimization effectively made the .include for pthread.builtin.mk
+	// a no-op, therefore it was correct to issue a warning here.
+	//
+	// Since this warning is wrong, in March 2019 another special rule has
+	// been added to Package.readMakefile.handleIncludeLine.skip saying that
+	// including a buildlink3.mk file also includes the corresponding
+	// builtin.mk file.
+	//
+	// FIXME: This warning is wrong.
+	t.CheckOutputLines(
+		"WARN: ~/mk/pthread.buildlink3.mk:2: Variable CHECK_BUILTIN.gettext is overwritten in line 4.")
 }
 
 func (s *Suite) Test_RedundantScope__shell_and_eval(c *check.C) {
