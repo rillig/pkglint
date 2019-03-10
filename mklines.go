@@ -408,18 +408,19 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 
 func (mklines *MkLinesImpl) CheckRedundantAssignments(scope *RedundantScope) {
 
-	scope.OnRedundant = func(old, new MkLine) {
-		if new.Op() == opAssignDefault {
-			new.Notef("Default assignment of %s has no effect because of %s.",
-				old.Varname(), new.RefTo(old))
+	scope.OnRedundant = func(redundant, because MkLine) {
+		if redundant.Op() == opAssignDefault {
+			redundant.Notef("Default assignment of %s has no effect because of %s.",
+				because.Varname(), redundant.RefTo(because))
 		} else {
-			new.Notef("Definition of %s is redundant because of %s.",
-				old.Varname(), new.RefTo(old))
+			redundant.Notef("Definition of %s is redundant because of %s.",
+				because.Varname(), redundant.RefTo(because))
 		}
 	}
 
-	scope.OnOverwrite = func(old, new MkLine) {
-		old.Warnf("Variable %s is overwritten in %s.", new.Varname(), old.RefTo(new))
+	scope.OnOverwrite = func(overwritten, by MkLine) {
+		overwritten.Warnf("Variable %s is overwritten in %s.",
+			overwritten.Varname(), overwritten.RefTo(by))
 		G.Explain(
 			"The variable definition in this line does not have an effect since",
 			"it is overwritten elsewhere.",

@@ -16,8 +16,8 @@ package pkglint
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
 	includePath includePath
-	OnRedundant func(old, new MkLine) // FIXME: Rename parameters
-	OnOverwrite func(old, new MkLine) // FIXME: Rename parameters
+	OnRedundant func(redundant, because MkLine)
+	OnOverwrite func(overwritten, by MkLine)
 }
 type redundantScopeVarinfo struct {
 	vari         *Var
@@ -98,7 +98,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				// The situation is:
 				//
 				//   including.mk: VAR= initial value
-				//   included.mk:  VAR= overwritten     <-- you are here
+				//   included.mk:  VAR= overwriting     <-- you are here
 				//
 				// Because the included files is never wrong (by definition),
 				// the including file gets the warning in this case.
@@ -120,7 +120,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				// overwritten or defaulted with the same value as its
 				// guaranteed current value. All previous accesses to the
 				// variable were either in this file or in an included file.
-				s.OnRedundant(prevWrites[len(prevWrites)-1], mkline)
+				s.OnRedundant(mkline, prevWrites[len(prevWrites)-1])
 
 			case s.includePath.includedByOrEqualsAll(info.includePaths):
 
@@ -137,7 +137,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				// Except when this line has the same value as the guaranteed
 				// current value of the variable. Then it is redundant.
 				if info.vari.Constant() && info.vari.ConstantValue() == mkline.Value() {
-					s.OnRedundant(mkline, prevWrites[len(prevWrites)-1])
+					s.OnRedundant(prevWrites[len(prevWrites)-1], mkline)
 				}
 			}
 		}
