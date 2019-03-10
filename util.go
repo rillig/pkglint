@@ -1154,7 +1154,6 @@ func seeGuide(sectionName, sectionID string) string {
 func wrap(max int, lines ...string) []string {
 	var wrapped []string
 	var sb strings.Builder
-	nonSpace := textproc.Space.Inverse()
 
 	for _, line := range lines {
 
@@ -1174,7 +1173,7 @@ func wrap(max int, lines ...string) []string {
 		for !lexer.EOF() {
 			bol := len(lexer.Rest()) == len(line)
 			space := lexer.NextBytesSet(textproc.Space)
-			word := lexer.NextBytesSet(nonSpace)
+			word := lexer.NextBytesSet(notSpace)
 
 			if bol && sb.Len() > 0 {
 				space = " "

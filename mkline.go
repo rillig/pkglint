@@ -423,6 +423,8 @@ func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
 	return split
 }
 
+var notSpace = textproc.Space.Inverse()
+
 // ValueFields splits the given value, taking care of variable references.
 // Example:
 //
@@ -456,7 +458,7 @@ func (mkline *MkLineImpl) ValueFields(value string) []string {
 				for lexer.NextBytesSet(textproc.Space) != "" {
 					cont = false
 				}
-				if word := lexer.NextBytesSet(textproc.Space.Inverse()); word != "" {
+				if word := lexer.NextBytesSet(notSpace); word != "" {
 					out(word)
 					cont = true
 				}
