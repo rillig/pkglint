@@ -573,6 +573,11 @@ func (s *Suite) Test_RedundantScope__file_hierarchy(c *check.C) {
 //
 // Tests that show how to suppress the notes about redundant assignments
 // and overwritten variables. The explanation must be helpful.
+//
+// Tests for dynamic variable assignments. For example BUILD_DIRS.NetBSD may
+// be modified by any assignment of the form BUILD_DIRS.${var} or even ${var}.
+// Without further analysis, pkglint cannot report redundancy warnings for any
+// package that uses such variable assignments.
 
 func (s *Suite) Test_RedundantScope__override_after_including(c *check.C) {
 	t := s.Init(c)
