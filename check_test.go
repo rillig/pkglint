@@ -759,11 +759,7 @@ func (t *Tester) Output() string {
 //
 // See CheckOutputLines.
 func (t *Tester) CheckOutputEmpty() {
-	output := t.Output()
-
-	actualLines := strings.Split(output, "\n")
-	actualLines = actualLines[:len(actualLines)-1]
-	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(nil))
+	t.CheckOutput(nil)
 }
 
 // CheckOutputLines checks that the output up to now equals the given lines.
@@ -773,7 +769,19 @@ func (t *Tester) CheckOutputEmpty() {
 // See CheckOutputEmpty.
 func (t *Tester) CheckOutputLines(expectedLines ...string) {
 	G.Assertf(len(expectedLines) > 0, "To check empty lines, use CheckLinesEmpty instead.")
+	t.CheckOutput(expectedLines)
+}
 
+// CheckOutput checks that the output up to now equals the given lines.
+// After the comparison, the output buffers are cleared so that later
+// calls only check against the newly added output.
+//
+// The expectedLines can be either empty or non-empty.
+//
+// When the output is always empty, use CheckOutputEmpty instead.
+// When the output always contain some lines, use CheckOutputLines instead.
+// This variant should only be used when the expectedLines are generated dynamically.
+func (t *Tester) CheckOutput(expectedLines []string) {
 	output := t.Output()
 	actualLines := strings.Split(output, "\n")
 	actualLines = actualLines[:len(actualLines)-1]

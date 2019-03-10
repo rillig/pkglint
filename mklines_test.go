@@ -234,11 +234,7 @@ func (s *Suite) Test_MkLines_CheckForUsedComment(c *check.C) {
 
 		mklines.CheckForUsedComment(pkgpath)
 
-		if len(diagnostics) > 0 {
-			t.CheckOutputLines(diagnostics...)
-		} else {
-			t.CheckOutputEmpty()
-		}
+		t.CheckOutput(diagnostics)
 	}
 
 	lines := func(lines ...string) []string { return lines }
