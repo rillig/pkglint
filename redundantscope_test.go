@@ -896,10 +896,7 @@ func (s *Suite) Test_RedundantScope__procedure_call_infrastructure(c *check.C) {
 	// been added to Package.readMakefile.handleIncludeLine.skip saying that
 	// including a buildlink3.mk file also includes the corresponding
 	// builtin.mk file.
-	//
-	// FIXME: This warning is wrong.
-	t.CheckOutputLines(
-		"WARN: ~/mk/pthread.buildlink3.mk:2: Variable CHECK_BUILTIN.gettext is overwritten in line 4.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_RedundantScope__shell_and_eval(c *check.C) {
