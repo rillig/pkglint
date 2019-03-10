@@ -1232,3 +1232,61 @@ func (s *Suite) Test_Package__redundant_variable_in_unrelated_files(c *check.C) 
 	// PY_PATCHPLIST is not redundant in these files.
 	t.CheckOutputEmpty()
 }
+
+// Pkglint loads some files from the pkgsrc infrastructure and skips others.
+//
+// When a buildlink3.mk file from the infrastructure is included, it should
+// be allowed to include its corresponding builtin.mk file in turn.
+//
+// This is necessary to load the correct variable assignments for the
+// redundancy check, in particular variable assignments that serve as
+// arguments to "procedure calls", such as mk/find-files.mk.
+func (s *Suite) Test_Package_readMakefile__include_infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--dumpmakefile")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/dlopen.buildlink3.mk\"",
+		".include \"../../mk/pthread.buildlink3.mk\"")
+	t.CreateFileLines("mk/dlopen.buildlink3.mk",
+		".include \"dlopen.builtin.mk\"")
+	t.CreateFileLines("mk/dlopen.builtin.mk",
+		".include \"pthread.builtin.mk\"")
+	t.CreateFileLines("mk/pthread.buildlink3.mk",
+		".include \"pthread.builtin.mk\"")
+	t.CreateFileLines("mk/pthread.builtin.mk",
+		"# This should be included by pthread.buildlink3.mk")
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"Whole Makefile (with all included files) follows:",
+		"~/category/package/Makefile:1: "+MkRcsID,
+		"~/category/package/Makefile:2: ",
+		"~/category/package/Makefile:3: DISTNAME=\tdistname-1.0",
+		"~/category/package/Makefile:4: #PKGNAME=\tpackage-1.0",
+		"~/category/package/Makefile:5: CATEGORIES=\tcategory",
+		"~/category/package/Makefile:6: MASTER_SITES=\t# none",
+		"~/category/package/Makefile:7: ",
+		"~/category/package/Makefile:8: MAINTAINER=\tpkgsrc-users@NetBSD.org",
+		"~/category/package/Makefile:9: HOMEPAGE=\t# none",
+		"~/category/package/Makefile:10: COMMENT=\tDummy package",
+		"~/category/package/Makefile:11: LICENSE=\t2-clause-bsd",
+		"~/category/package/Makefile:12: ",
+		"~/category/package/Makefile:13: .include \"suppress-varorder.mk\"",
+		"~/category/package/suppress-varorder.mk:1: "+MkRcsID,
+		"~/category/package/Makefile:14: # empty",
+		"~/category/package/Makefile:15: # empty",
+		"~/category/package/Makefile:16: # empty",
+		"~/category/package/Makefile:17: # empty",
+		"~/category/package/Makefile:18: # empty",
+		"~/category/package/Makefile:19: # empty",
+		"~/category/package/Makefile:20: .include \"../../mk/dlopen.buildlink3.mk\"",
+		"~/category/package/../../mk/dlopen.buildlink3.mk:1: .include \"dlopen.builtin.mk\"",
+		"~/mk/dlopen.builtin.mk:1: .include \"pthread.builtin.mk\"",
+		"~/category/package/Makefile:21: .include \"../../mk/pthread.buildlink3.mk\"",
+		"~/category/package/../../mk/pthread.buildlink3.mk:1: .include \"pthread.builtin.mk\"",
+		// FIXME: pthread.builtin.mk must be included here.
+		"~/category/package/Makefile:22: ",
+		"~/category/package/Makefile:23: .include \"../../mk/bsd.pkg.mk\"")
+}
