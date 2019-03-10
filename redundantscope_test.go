@@ -749,7 +749,8 @@ func (s *Suite) Test_RedundantScope__conditional_default(c *check.C) {
 
 	NewRedundantScope().Check(mklines)
 
-	// TODO: WARN: module.mk:3: The value \"opsys\" will never be assigned to VAR because it is defined unconditionally in line 1.
+	// TODO: WARN: module.mk:3: The value \"opsys\" will never be assigned
+	//  to VAR because it is defined unconditionally in line 1.
 	t.CheckOutputEmpty()
 }
 
@@ -990,7 +991,6 @@ func (s *Suite) Test_RedundantScope__if_then_else(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("if-then-else.mk",
-		MkRcsID,
 		".if exists(${FILE})",
 		"OS=     NetBSD",
 		".else",
@@ -1008,7 +1008,6 @@ func (s *Suite) Test_RedundantScope__if_then_else_without_variable(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("if-then-else.mk",
-		MkRcsID,
 		".if exists(/nonexistent)",
 		"IT=     exists",
 		".else",
@@ -1028,36 +1027,33 @@ func (s *Suite) Test_RedundantScope__append_then_default(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("append-then-default.mk",
-		MkRcsID,
 		"VAR+=   value",
 		"VAR?=   value")
 
 	NewRedundantScope().Check(mklines)
 
 	t.CheckOutputLines(
-		"NOTE: append-then-default.mk:3: Default assignment of VAR has no effect because of line 2.")
+		"NOTE: append-then-default.mk:2: Default assignment of VAR has no effect because of line 1.")
 }
 
 func (s *Suite) Test_RedundantScope__assign_then_default_in_same_file(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("assign-then-default.mk",
-		MkRcsID,
 		"VAR=    value",
 		"VAR?=   value")
 
 	NewRedundantScope().Check(mklines)
 
 	t.CheckOutputLines(
-		"NOTE: assign-then-default.mk:3: " +
-			"Default assignment of VAR has no effect because of line 2.")
+		"NOTE: assign-then-default.mk:2: " +
+			"Default assignment of VAR has no effect because of line 1.")
 }
 
 func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
 		"VAR:=   value",
 		"VAR:=   value",
 		"VAR:=   other")
@@ -1065,15 +1061,14 @@ func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
 	NewRedundantScope().Check(mklines)
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: Variable VAR is overwritten in line 3.",
-		"WARN: filename.mk:3: Variable VAR is overwritten in line 4.")
+		"WARN: filename.mk:1: Variable VAR is overwritten in line 2.",
+		"WARN: filename.mk:2: Variable VAR is overwritten in line 3.")
 }
 
 func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
 		"VAR!=   echo echo",
 		"VAR=    echo echo")
 
@@ -1086,7 +1081,7 @@ func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {
 	// It assigns a different value. Nevertheless, the shell command is
 	// redundant and can be removed since its result is never used.
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: Variable VAR is overwritten in line 3.")
+		"WARN: filename.mk:1: Variable VAR is overwritten in line 2.")
 }
 
 func (s *Suite) Test_RedundantScope__shell_then_read_then_assign(c *check.C) {
@@ -1142,10 +1137,8 @@ func (s *Suite) Test_RedundantScope__procedure_parameters(c *check.C) {
 
 	// TODO: make Tester.SetUpHierarchy accept a file multiple times.
 	t.CreateFileLines("mk/pkg-build-options.mk",
-		MkRcsID,
 		"USED:=  ${pkgbase}")
 	t.CreateFileLines("including.mk",
-		MkRcsID,
 		"pkgbase= package1",
 		".include \"mk/pkg-build-options.mk\"",
 		"",
@@ -1190,10 +1183,8 @@ func (s *Suite) Test_RedundantScope__overwrite_definition_from_included_file(c *
 
 	include, get := t.SetUpHierarchy()
 	include("including.mk",
-		MkRcsID,
 		"SUBDIR= ${WRKSRC}",
 		include("included.mk",
-			MkRcsID,
 			"WRKSRC= ${WRKDIR}/${PKGBASE}"),
 		"WRKSRC= ${WRKDIR}/overwritten")
 
@@ -1226,20 +1217,20 @@ func (s *Suite) Test_RedundantScope__overwrite_definition_from_included_file(c *
 func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
 	t := s.Init(c)
 
-	scope := NewRedundantScope()
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
 		"VAR=    value",
 		".if 1",
 		"VAR=    conditional",
 		".endif")
 
+	scope := NewRedundantScope()
 	scope.Check(mklines)
+	writeLocations := scope.get("VAR").vari.WriteLocations()
 
 	t.Check(
-		scope.get("VAR").vari.WriteLocations(),
+		writeLocations,
 		deepEquals,
-		[]MkLine{mklines.mklines[1], mklines.mklines[3]})
+		[]MkLine{mklines.mklines[0], mklines.mklines[2]})
 }
 
 // Ensures that commented variables do not influence the redundancy check.
