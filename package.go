@@ -253,6 +253,10 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		fullIncluded := dirname + "/" + includedFile
 		relIncludedFile := relpath(pkg.dir, fullIncluded)
 
+		if !pkg.diveInto(filename, includedFile) {
+			return unknown
+		}
+
 		if !pkg.included.FirstTime(relIncludedFile) {
 			return unknown
 		}
@@ -267,10 +271,6 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		}
 
 		pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
-
-		if !pkg.diveInto(filename, includedFile) {
-			return unknown
-		}
 
 		if trace.Tracing {
 			trace.Step1("Including %q.", fullIncluded)

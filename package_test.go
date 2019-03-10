@@ -1096,14 +1096,15 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 		"../../devel/library/builtin.mk",
 		"../../lang/language/module.mk",
 		"../../lang/language/version.mk",
-		"../../mk/bsd.pkg.mk",
 		"suppress-varorder.mk"}
 
 	seen := pkg.included
 	for _, filename := range expected {
-		t.Check(seen.Seen(filename), equals, true)
+		if !seen.Seen(filename) {
+			c.Errorf("File %q is not seen.", filename)
+		}
 	}
-	t.Check(seen.seen, check.HasLen, 6)
+	t.Check(seen.seen, check.HasLen, 5)
 }
 
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
@@ -1286,7 +1287,7 @@ func (s *Suite) Test_Package_readMakefile__include_infrastructure(c *check.C) {
 		"~/mk/dlopen.builtin.mk:1: .include \"pthread.builtin.mk\"",
 		"~/category/package/Makefile:21: .include \"../../mk/pthread.buildlink3.mk\"",
 		"~/category/package/../../mk/pthread.buildlink3.mk:1: .include \"pthread.builtin.mk\"",
-		// FIXME: pthread.builtin.mk must be included here.
+		"~/mk/pthread.builtin.mk:1: # This should be included by pthread.buildlink3.mk",
 		"~/category/package/Makefile:22: ",
 		"~/category/package/Makefile:23: .include \"../../mk/bsd.pkg.mk\"")
 }
