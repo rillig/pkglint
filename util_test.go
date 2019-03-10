@@ -487,27 +487,6 @@ func (s *Suite) Test_Scope__no_tracing(c *check.C) {
 	t.Check(scope.DefinedSimilar("OTHER"), equals, false)
 }
 
-func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
-	t := s.Init(c)
-
-	scope := NewRedundantScope()
-	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
-		"VAR=\tvalue",
-		".if 1",
-		"VAR=\tconditional",
-		".endif")
-
-	mklines.ForEach(func(mkline MkLine) {
-		scope.Handle(mkline, mklines.indentation)
-	})
-
-	t.Check(
-		scope.get("VAR").vari.WriteLocations(),
-		deepEquals,
-		[]MkLine{mklines.mklines[1], mklines.mklines[3]})
-}
-
 func (s *Suite) Test_naturalLess(c *check.C) {
 	c.Check(naturalLess("", "a"), equals, true)
 	c.Check(naturalLess("a", ""), equals, false)
@@ -779,54 +758,4 @@ func (s *Suite) Test_StringInterner(c *check.C) {
 	t.Check(si.Intern("Hello"), equals, "Hello")
 	t.Check(si.Intern("Hello, world"), equals, "Hello, world")
 	t.Check(si.Intern("Hello, world"[0:5]), equals, "Hello")
-}
-
-func (s *Suite) Test_includePath_includes(c *check.C) {
-	t := s.Init(c)
-
-	path := func(locations ...string) includePath {
-		return includePath{locations}
-	}
-
-	var (
-		m   = path("Makefile")
-		mc  = path("Makefile", "Makefile.common")
-		mco = path("Makefile", "Makefile.common", "other.mk")
-		mo  = path("Makefile", "other.mk")
-	)
-
-	t.Check(m.includes(m), equals, false)
-
-	t.Check(m.includes(mc), equals, true)
-	t.Check(m.includes(mco), equals, true)
-	t.Check(mc.includes(mco), equals, true)
-
-	t.Check(mc.includes(m), equals, false)
-	t.Check(mc.includes(mo), equals, false)
-	t.Check(mo.includes(mc), equals, false)
-}
-
-func (s *Suite) Test_includePath_equals(c *check.C) {
-	t := s.Init(c)
-
-	path := func(locations ...string) includePath {
-		return includePath{locations}
-	}
-
-	var (
-		m   = path("Makefile")
-		mc  = path("Makefile", "Makefile.common")
-		mco = path("Makefile", "Makefile.common", "other.mk")
-		mo  = path("Makefile", "other.mk")
-	)
-
-	t.Check(m.equals(m), equals, true)
-
-	t.Check(m.equals(mc), equals, false)
-	t.Check(m.equals(mco), equals, false)
-	t.Check(mc.equals(mco), equals, false)
-
-	t.Check(mc.equals(m), equals, false)
-	t.Check(mc.equals(mo), equals, false)
-	t.Check(mo.equals(mc), equals, false)
 }
