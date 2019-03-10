@@ -54,7 +54,6 @@ func (s *RedundantScope) updateIncludePath(mkline MkLine) {
 
 func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	varname := mkline.Varname()
-	first := s.vars[varname] == nil
 	info := s.get(varname)
 
 	defer func() {
@@ -64,7 +63,8 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	}()
 
 	// In the very first assignment, no redundancy can occur.
-	if first {
+	prevWrites := info.vari.WriteLocations()
+	if len(prevWrites) == 0 {
 		return
 	}
 
@@ -91,58 +91,55 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		op = /* effectively */ opAssignDefault
 	}
 
-	prevWrites := info.vari.WriteLocations()
-	if len(prevWrites) > 0 {
-		switch op {
-		// TODO: What about opAssignEval?
+	switch op {
+	// TODO: What about opAssignEval?
 
-		case opAssign: // with a different value than before
-			if s.includePath.includedByOrEqualsAll(info.includePaths) {
+	case opAssign: // with a different value than before
+		if s.includePath.includedByOrEqualsAll(info.includePaths) {
 
-				// The situation is:
-				//
-				//   including.mk: VAR= initial value
-				//   included.mk:  VAR= overwriting     <-- you are here
-				//
-				// Because the included files is never wrong (by definition),
-				// the including file gets the warning in this case.
-				s.onOverwrite(prevWrites[len(prevWrites)-1], mkline)
-			}
+			// The situation is:
+			//
+			//   including.mk: VAR= initial value
+			//   included.mk:  VAR= overwriting     <-- you are here
+			//
+			// Because the included files is never wrong (by definition),
+			// the including file gets the warning in this case.
+			s.onOverwrite(prevWrites[len(prevWrites)-1], mkline)
+		}
 
-		case opAssignDefault: // or opAssign with the same value as before
-			switch {
+	case opAssignDefault: // or opAssign with the same value as before
+		switch {
 
-			case s.includePath.includesOrEqualsAll(info.includePaths):
+		case s.includePath.includesOrEqualsAll(info.includePaths):
 
-				// The situation is:
-				//
-				//   included.mk:  VAR=  value
-				//   including.mk: VAR=  value   <-- you are here
-				//   including.mk: VAR?= value   <-- or here
-				//
-				// After including one or more files, the variable is either
-				// overwritten or defaulted with the same value as its
-				// guaranteed current value. All previous accesses to the
-				// variable were either in this file or in an included file.
-				s.onRedundant(mkline, prevWrites[len(prevWrites)-1])
+			// The situation is:
+			//
+			//   included.mk:  VAR=  value
+			//   including.mk: VAR=  value   <-- you are here
+			//   including.mk: VAR?= value   <-- or here
+			//
+			// After including one or more files, the variable is either
+			// overwritten or defaulted with the same value as its
+			// guaranteed current value. All previous accesses to the
+			// variable were either in this file or in an included file.
+			s.onRedundant(mkline, prevWrites[len(prevWrites)-1])
 
-			case s.includePath.includedByOrEqualsAll(info.includePaths):
+		case s.includePath.includedByOrEqualsAll(info.includePaths):
 
-				// The situation is:
-				//
-				//   including.mk: VAR=  value
-				//   included.mk:  VAR?= value   <-- you are here
-				//   included.mk:  VAR=  value   <-- or here
-				//
-				// A variable has been defined in an including file.
-				// The current line either has a default assignment or an
-				// unconditional assignment. This is common and fine.
-				//
-				// Except when this line has the same value as the guaranteed
-				// current value of the variable. Then it is redundant.
-				if info.vari.Constant() && info.vari.ConstantValue() == mkline.Value() {
-					s.onRedundant(prevWrites[len(prevWrites)-1], mkline)
-				}
+			// The situation is:
+			//
+			//   including.mk: VAR=  value
+			//   included.mk:  VAR?= value   <-- you are here
+			//   included.mk:  VAR=  value   <-- or here
+			//
+			// A variable has been defined in an including file.
+			// The current line either has a default assignment or an
+			// unconditional assignment. This is common and fine.
+			//
+			// Except when this line has the same value as the guaranteed
+			// current value of the variable. Then it is redundant.
+			if info.vari.Constant() && info.vari.ConstantValue() == mkline.Value() {
+				s.onRedundant(prevWrites[len(prevWrites)-1], mkline)
 			}
 		}
 	}
