@@ -1086,20 +1086,27 @@ func (s *Suite) Test_RedundantScope__overwrite_definition_from_included_file(c *
 
 	NewRedundantScope().Check(mklines)
 
-	// Before pkglint 5.7.2 (2019-03-09), including.mk:2 used WRKSRC for the first time.
-	// At that point the include path for that variable was fixed once and for all.
-	// Later in RedundantScope.handleVarassign, there was a check that was supposed to
-	// prevent all warnings in included files, if there was such a relation.
+	// Before pkglint 5.7.2 (2019-03-10), the above setup generated a warning:
 	//
-	// In this case no such inclusion hierarchy was visible since the include path of
-	// WRKSRC was [including.mk], which was the same as the include path at including.mk:4,
-	// therefore the lines were in the same file and the earlier line got the warning.
+	// WARN: ~/included.mk:2: Variable WRKSRC is overwritten in including.mk:4.
 	//
-	// Except that the earlier line was not related in any way to WRKSRC.includePath.
+	// This warning is obviously wrong since the included file must never
+	// receive a warning. Of course this default definition may be overridden
+	// by the including file.
 	//
-	// This revealed an imprecise handling of these includePaths. They have been changed
-	// to be more precise. Now every access to the variable is recorded, and the
-	// conditions have been changed to "all of" or "any of", as appropriate.
+	// The warning was generated because in including.mk:2 the variable WRKSRC
+	// was used for the first time. Back then, each variable had only a single
+	// include path. That include path marks where the variable is used and
+	// defined.
+	//
+	// The variable definition at included.mk didn't modify this include path.
+	// Therefore pkglint wrongly assumed that this variable was only ever
+	// accessed in including.mk and issued a warning.
+	//
+	// To fix this, the RedundantScope now remembers every access to the
+	// variable, and the redundancy warnings are only issued in cases where
+	// either all variable accesses are in files including the current file,
+	// or all variable accesses are in files included by the current file.
 	t.CheckOutputEmpty()
 }
 
