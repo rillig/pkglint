@@ -528,10 +528,6 @@ func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
 // Tests involving several files, both dependent and independent.
 // This is to test includePath.includesAll and includePath.includesAny.
 //
-// Tests where the variables are overwritten with the same value.
-//
-// Tests where the variables are overwritten with a different value.
-//
 // A test where the operators = and += define a variable that afterwards
 // is assigned the same value using the ?= operator.
 //
