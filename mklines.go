@@ -406,34 +406,6 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 	finish()
 }
 
-func (mklines *MkLinesImpl) CheckRedundantAssignments(scope *RedundantScope) {
-
-	scope.OnRedundant = func(redundant, because MkLine) {
-		if redundant.Op() == opAssignDefault {
-			redundant.Notef("Default assignment of %s has no effect because of %s.",
-				because.Varname(), redundant.RefTo(because))
-		} else {
-			redundant.Notef("Definition of %s is redundant because of %s.",
-				because.Varname(), redundant.RefTo(because))
-		}
-	}
-
-	scope.OnOverwrite = func(overwritten, by MkLine) {
-		overwritten.Warnf("Variable %s is overwritten in %s.",
-			overwritten.Varname(), overwritten.RefTo(by))
-		G.Explain(
-			"The variable definition in this line does not have an effect since",
-			"it is overwritten elsewhere.",
-			"This typically happens because of a typo (writing = instead of +=)",
-			"or because the line that overwrites",
-			"is in another file that is used by several packages.")
-	}
-
-	mklines.ForEach(func(mkline MkLine) {
-		scope.Handle(mkline, mklines.indentation)
-	})
-}
-
 // CheckForUsedComment checks that this file (a Makefile.common) has the given
 // relativeName in one of the "# used by" comments at the beginning of the file.
 func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {

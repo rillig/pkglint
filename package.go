@@ -449,7 +449,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 	}
 
 	scope := NewRedundantScope()
-	allLines.CheckRedundantAssignments(scope) // Updates the variables in the scope
+	scope.Check(allLines) // Updates the variables in the scope
 	pkg.checkGnuConfigureUseLanguages(scope)
 
 	pkg.determineEffectivePkgVars()

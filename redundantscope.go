@@ -16,8 +16,6 @@ package pkglint
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
 	includePath includePath
-	OnRedundant func(redundant, because MkLine)
-	OnOverwrite func(overwritten, by MkLine)
 }
 type redundantScopeVarinfo struct {
 	vari         *Var
@@ -27,6 +25,12 @@ type redundantScopeVarinfo struct {
 
 func NewRedundantScope() *RedundantScope {
 	return &RedundantScope{vars: make(map[string]*redundantScopeVarinfo)}
+}
+
+func (s *RedundantScope) Check(mklines MkLines) {
+	mklines.ForEach(func(mkline MkLine) {
+		s.Handle(mkline, mklines.indentation)
+	})
 }
 
 func (s *RedundantScope) Handle(mkline MkLine, ind *Indentation) {
@@ -102,7 +106,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				//
 				// Because the included files is never wrong (by definition),
 				// the including file gets the warning in this case.
-				s.OnOverwrite(prevWrites[len(prevWrites)-1], mkline)
+				s.onOverwrite(prevWrites[len(prevWrites)-1], mkline)
 			}
 
 		case opAssignDefault: // or opAssign with the same value as before
@@ -120,7 +124,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				// overwritten or defaulted with the same value as its
 				// guaranteed current value. All previous accesses to the
 				// variable were either in this file or in an included file.
-				s.OnRedundant(mkline, prevWrites[len(prevWrites)-1])
+				s.onRedundant(mkline, prevWrites[len(prevWrites)-1])
 
 			case s.includePath.includedByOrEqualsAll(info.includePaths):
 
@@ -137,7 +141,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				// Except when this line has the same value as the guaranteed
 				// current value of the variable. Then it is redundant.
 				if info.vari.Constant() && info.vari.ConstantValue() == mkline.Value() {
-					s.OnRedundant(prevWrites[len(prevWrites)-1], mkline)
+					s.onRedundant(prevWrites[len(prevWrites)-1], mkline)
 				}
 			}
 		}
@@ -182,6 +186,27 @@ func (s *RedundantScope) get(varname string) *redundantScopeVarinfo {
 func (s *RedundantScope) access(varname string) {
 	info := s.vars[varname]
 	info.includePaths = append(info.includePaths, s.includePath.copy())
+}
+
+func (s *RedundantScope) onRedundant(redundant MkLine, because MkLine) {
+	if redundant.Op() == opAssignDefault {
+		redundant.Notef("Default assignment of %s has no effect because of %s.",
+			because.Varname(), redundant.RefTo(because))
+	} else {
+		redundant.Notef("Definition of %s is redundant because of %s.",
+			because.Varname(), redundant.RefTo(because))
+	}
+}
+
+func (s *RedundantScope) onOverwrite(overwritten MkLine, by MkLine) {
+	overwritten.Warnf("Variable %s is overwritten in %s.",
+		overwritten.Varname(), overwritten.RefTo(by))
+	G.Explain(
+		"The variable definition in this line does not have an effect since",
+		"it is overwritten elsewhere.",
+		"This typically happens because of a typo (writing = instead of +=)",
+		"or because the line that overwrites",
+		"is in another file that is used by several packages.")
 }
 
 // includePath remembers the whole sequence of included files,
