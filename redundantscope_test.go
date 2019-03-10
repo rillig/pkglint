@@ -555,10 +555,24 @@ func (s *Suite) Test_RedundantScope__file_hierarchy(c *check.C) {
 		"WARN: module.mk:1: Variable VAR is overwritten in version.mk:1.")
 }
 
+// The RedundantScope keeps track of the variable values. As a consequence,
+// it reports the variable assignment in the last line as being redundant,
+// instead of warning that it destroys the previous value.
+func (s *Suite) Test_RedundantScope__assign_and_append_followed_by_assign(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("redundant.mk",
+		"VAR= first",
+		"VAR+= second",
+		"VAR= first second")
+
+	NewRedundantScope().Check(mklines)
+
+	t.CheckOutputLines(
+		"NOTE: redundant.mk:3: Definition of VAR is redundant because of line 2.")
+}
+
 // FIXME: Continue the systematic redundancy tests.
-//
-// A test where the operators = and += define a variable that afterwards
-// is assigned the same value using the ?= operator.
 //
 // Tests where the variables refer to other variables. These variables may
 // be read and written between the relevant assignments.
