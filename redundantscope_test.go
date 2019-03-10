@@ -311,18 +311,18 @@ func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: including.mk:2: Default assignment of VAR.def.def has no effect because of included.mk:1.",
 		"NOTE: including.mk:3: Definition of VAR.def.asg is redundant because of included.mk:2.",
-		// In line 4, defining a default value and then appending to it is a common pattern.
+		// VAR.def.app defines a default value and then appends to it. This is a common pattern.
 		// Appending the same value feels redundant but probably doesn't happen in practice.
 		// If it does, there should be a note for it.
 		"NOTE: including.mk:5: Default assignment of VAR.asg.def has no effect because of included.mk:4.",
 		"NOTE: including.mk:6: Definition of VAR.asg.asg is redundant because of included.mk:5.",
-		// In line 7, setting a variable and later appending to it is a common pattern.
+		// VAR.asg.app defines a variable and later appends to it. This is a common pattern.
 		// Appending the same value feels redundant but probably doesn't happen in practice.
 		// If it does, there should be a note for it.
 		"NOTE: including.mk:8: Default assignment of VAR.app.def has no effect because of included.mk:7.",
-		// In line 9, overwriting an appended variable might be a mistake.
+		// VAR.app.asg first appends and then overwrites. This might be a mistake.
 		// TODO: Find out whether this case happens in actual pkgsrc and if it's accidental.
-		// In line 10, appending further is a common pattern.
+		// VAR.app.app first appends and then appends one more. This is a common pattern.
 	)
 }
 
