@@ -91,22 +91,32 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	if len(prevWrites) > 0 {
 		switch op {
 		// TODO: What about opAssignEval?
-		case opAssign:
-			if s.includePath.includesAny(info.includePaths) {
-				// This is the usual pattern of including a file and
-				// then overwriting some of them. Although technically
-				// this overwrites the previous definition, it is not
-				// worth a warning since this is used a lot and
-				// intentionally.
 
-				// FIXME: ind.IsConditional is not precise enough since it
-				//  only looks at the variables. There may be conditions entirely
-				//  without variables, such as exists(/usr).
-			} else if !ind.IsConditional() {
+		case opAssign: // with a different value than before
+			switch {
+			case s.includePath.includedByOrEqualsAll(info.includePaths):
+				// The situation is:
+				//  including.mk: VAR= initial value
+				//  included.mk:  VAR= overwritten
+				// Because the included files is never wrong (by definition),
+				// the including file gets the warning in this case.
+				s.OnOverwrite(prevWrites[len(prevWrites)-1], mkline)
+
+			case s.includePath.includesAny(info.includePaths):
+				// The situation is:
+				//  included.mk:  VAR= common value
+				//  including.mk: VAR= overwritten
+				// This pattern is used a lot in pkgsrc, and overwriting
+				// the variable is expected here.
+
+			// FIXME: ind.IsConditional is not precise enough since it
+			//  only looks at the variables. There may be conditions entirely
+			//  without variables, such as exists(/usr).
+			case s.includePath.includesOrEqualsAll(info.includePaths) && !ind.IsConditional():
 				s.OnOverwrite(prevWrites[len(prevWrites)-1], mkline)
 			}
 
-		case opAssignDefault:
+		case opAssignDefault: // or opAssign with the same value as before
 			if s.includePath.includedByAny(info.includePaths) {
 				// A variable has been defined before including this file
 				// containing the default assignment. This is common and fine.
@@ -188,14 +198,14 @@ func (p *includePath) popUntil(filename string) {
 
 func (p *includePath) includes(other includePath) bool {
 	for i, filename := range p.files {
-		if i < len(other.files) && other.files[i] == filename {
-			continue
+		if i >= len(other.files) || other.files[i] != filename {
+			return false
 		}
-		return false
 	}
 	return len(p.files) < len(other.files)
 }
 
+// FIXME: test whether "any" is actually correct here. It should probably be "all".
 func (p *includePath) includesAny(others []includePath) bool {
 	for _, other := range others {
 		if p.includes(other) {
@@ -205,6 +215,7 @@ func (p *includePath) includesAny(others []includePath) bool {
 	return false
 }
 
+// FIXME: test whether "any" is actually correct here. It should probably be "all".
 func (p *includePath) includedByAny(others []includePath) bool {
 	for _, other := range others {
 		if other.includes(*p) {
@@ -217,6 +228,15 @@ func (p *includePath) includedByAny(others []includePath) bool {
 func (p *includePath) includesOrEqualsAll(others []includePath) bool {
 	for _, other := range others {
 		if !(p.includes(other) || p.equals(other)) {
+			return false
+		}
+	}
+	return true
+}
+
+func (p *includePath) includedByOrEqualsAll(others []includePath) bool {
+	for _, other := range others {
+		if !(other.includes(*p) || p.equals(other)) {
 			return false
 		}
 	}

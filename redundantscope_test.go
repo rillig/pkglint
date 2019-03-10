@@ -471,9 +471,7 @@ func (s *Suite) Test_RedundantScope__independent_same_value(c *check.C) {
 	// Since the two included files are independent, there cannot be any
 	// redundancies between them. These redundancies can only be discovered
 	// when one of them includes the other.
-	// FIXME: There must be no warnings here.
-	t.CheckOutputLines(
-		"WARN: ~/included1.mk:8: Variable VAR.app.asg is overwritten in included2.mk:8.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
@@ -509,13 +507,9 @@ func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
 	mklines.CheckRedundantAssignments(NewRedundantScope())
 
 	// Since the two included files are independent, there cannot be any
-	// redundancies between them. These redundancies can only be discovered
+	// redundancies between them. Redundancies can only be discovered
 	// when one of them includes the other.
-	// FIXME: There must be no warnings here.
-	t.CheckOutputLines(
-		"WARN: ~/included1.mk:2: Variable VAR.def.asg is overwritten in included2.mk:2.",
-		"WARN: ~/included1.mk:5: Variable VAR.asg.asg is overwritten in included2.mk:5.",
-		"WARN: ~/included1.mk:8: Variable VAR.app.asg is overwritten in included2.mk:8.")
+	t.CheckOutputEmpty()
 }
 
 // FIXME: Continue the systematic redundancy tests.
