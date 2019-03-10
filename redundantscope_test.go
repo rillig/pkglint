@@ -436,6 +436,88 @@ func (s *Suite) Test_RedundantScope__before_including_different_value(c *check.C
 		"WARN: ~/including.mk:8: Variable VAR.app.asg is overwritten in included.mk:8.")
 }
 
+func (s *Suite) Test_RedundantScope__independent_same_value(c *check.C) {
+	t := s.Init(c)
+
+	// Only test the ?=, = and += operators since the others are ignored,
+	// as of March 2019.
+	t.CreateFileLines("including.mk",
+		".include \"included1.mk\"",
+		".include \"included2.mk\"")
+	t.CreateFileLines("included1.mk",
+		"VAR.def.def?= ${OTHER}",
+		"VAR.def.asg?= ${OTHER}",
+		"VAR.def.app?= ${OTHER}",
+		"VAR.asg.def=  ${OTHER}",
+		"VAR.asg.asg=  ${OTHER}",
+		"VAR.asg.app=  ${OTHER}",
+		"VAR.app.def+= ${OTHER}",
+		"VAR.app.asg+= ${OTHER}",
+		"VAR.app.app+= ${OTHER}")
+	t.CreateFileLines("included2.mk",
+		"VAR.def.def?= ${OTHER}",
+		"VAR.def.asg=  ${OTHER}",
+		"VAR.def.app+= ${OTHER}",
+		"VAR.asg.def?= ${OTHER}",
+		"VAR.asg.asg=  ${OTHER}",
+		"VAR.asg.app+= ${OTHER}",
+		"VAR.app.def?= ${OTHER}",
+		"VAR.app.asg=  ${OTHER}",
+		"VAR.app.app+= ${OTHER}")
+	mklines := t.LoadMkInclude("including.mk")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	// Since the two included files are independent, there cannot be any
+	// redundancies between them. These redundancies can only be discovered
+	// when one of them includes the other.
+	// FIXME: There must be no warnings here.
+	t.CheckOutputLines(
+		"WARN: ~/included1.mk:8: Variable VAR.app.asg is overwritten in included2.mk:8.")
+}
+
+func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
+	t := s.Init(c)
+
+	// Only test the ?=, = and += operators since the others are ignored,
+	// as of March 2019.
+	t.CreateFileLines("including.mk",
+		".include \"included1.mk\"",
+		".include \"included2.mk\"")
+	t.CreateFileLines("included1.mk",
+		"VAR.def.def?= ${VALUE}",
+		"VAR.def.asg?= ${VALUE}",
+		"VAR.def.app?= ${VALUE}",
+		"VAR.asg.def=  ${VALUE}",
+		"VAR.asg.asg=  ${VALUE}",
+		"VAR.asg.app=  ${VALUE}",
+		"VAR.app.def+= ${VALUE}",
+		"VAR.app.asg+= ${VALUE}",
+		"VAR.app.app+= ${VALUE}")
+	t.CreateFileLines("included2.mk",
+		"VAR.def.def?= ${OTHER}",
+		"VAR.def.asg=  ${OTHER}",
+		"VAR.def.app+= ${OTHER}",
+		"VAR.asg.def?= ${OTHER}",
+		"VAR.asg.asg=  ${OTHER}",
+		"VAR.asg.app+= ${OTHER}",
+		"VAR.app.def?= ${OTHER}",
+		"VAR.app.asg=  ${OTHER}",
+		"VAR.app.app+= ${OTHER}")
+	mklines := t.LoadMkInclude("including.mk")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	// Since the two included files are independent, there cannot be any
+	// redundancies between them. These redundancies can only be discovered
+	// when one of them includes the other.
+	// FIXME: There must be no warnings here.
+	t.CheckOutputLines(
+		"WARN: ~/included1.mk:2: Variable VAR.def.asg is overwritten in included2.mk:2.",
+		"WARN: ~/included1.mk:5: Variable VAR.asg.asg is overwritten in included2.mk:5.",
+		"WARN: ~/included1.mk:8: Variable VAR.app.asg is overwritten in included2.mk:8.")
+}
+
 // FIXME: Continue the systematic redundancy tests.
 //
 // Tests involving variables that are defined and overwritten in independent files.
