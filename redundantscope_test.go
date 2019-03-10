@@ -1231,6 +1231,25 @@ func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
 		[]MkLine{mklines.mklines[1], mklines.mklines[3]})
 }
 
+// Ensures that commented variables do not influence the redundancy check.
+func (s *Suite) Test_RedundantScope__commented_variable_assignment(c *check.C) {
+	t := s.Init(c)
+
+	include, get := t.SetUpHierarchy()
+	include("main.mk",
+		include("redundant.mk",
+			"VAR=    value"),
+		include("doc.mk",
+			"#OTHER= ${VAR}"),
+		"VAR=     value",
+		"OTHER=   value")
+
+	NewRedundantScope().Check(get("main.mk"))
+
+	t.CheckOutputLines(
+		"NOTE: main.mk:3: Definition of VAR is redundant because of redundant.mk:1.")
+}
+
 func (s *Suite) Test_includePath_includes(c *check.C) {
 	t := s.Init(c)
 

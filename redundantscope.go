@@ -156,7 +156,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 
 func (s *RedundantScope) handleVarUse(mkline MkLine) {
 	switch {
-	case mkline.IsVarassign(), mkline.IsCommentedVarassign():
+	case mkline.IsVarassign():
 		for _, varname := range mkline.DetermineUsedVariables() {
 			info := s.get(varname)
 			info.vari.Read(mkline)
