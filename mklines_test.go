@@ -1233,6 +1233,174 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__overwrite_definition_fro
 	t.CheckOutputEmpty()
 }
 
+// In a single file, five variables get a default value and are later overridden
+// with the same value using the five different assignments operators.
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__single_file_default(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		"DEFAULT?=\tvalue",
+		"ASSIGN?=\tvalue",
+		"APPEND?=\tvalue",
+		"EVAL?=\tvalue",
+		"SHELL?=\tvalue",
+		"",
+		"DEFAULT?=\tvalue",
+		"ASSIGN=\tvalue",
+		"APPEND+=\tvalue",
+		"EVAL:=\tvalue",
+		"SHELL!=\tvalue")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
+		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.")
+	// TODO: "4: is overwritten later",
+	// TODO: "5: is overwritten later"
+}
+
+// In a single file, five variables get assigned are value and are later overridden
+// with the same value using the five different assignments operators.
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__single_file_assign(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		"DEFAULT=\tvalue",
+		"ASSIGN=\tvalue",
+		"APPEND=\tvalue",
+		"EVAL=\tvalue",
+		"SHELL=\tvalue",
+		"",
+		"DEFAULT?=\tvalue",
+		"ASSIGN=\tvalue",
+		"APPEND+=\tvalue",
+		"EVAL:=\tvalue",
+		"SHELL!=\tvalue")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
+		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.")
+	// TODO: "4: is overwritten later",
+	// TODO: "5: is overwritten later"
+}
+
+// In a single file, five variables get appended a value and are later overridden
+// with the same value using the five different assignments operators.
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__single_file_append(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		"DEFAULT+=\tvalue",
+		"ASSIGN+=\tvalue",
+		"APPEND+=\tvalue",
+		"EVAL+=\tvalue",
+		"SHELL+=\tvalue",
+		"",
+		"DEFAULT?=\tvalue",
+		"ASSIGN=\tvalue",
+		"APPEND+=\tvalue",
+		"EVAL:=\tvalue",
+		"SHELL!=\tvalue")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
+		"WARN: file.mk:2: Variable ASSIGN is overwritten in line 8.")
+	// TODO: "4: is overwritten later",
+	// TODO: "5: is overwritten later"
+}
+
+// In a single file, five variables get assigned a value using the := operator,
+// which in this simple case is equivalent to the = operator. The variables are
+// later overridden with the same value using the five different assignments operators.
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__single_file_eval(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		"DEFAULT:=\tvalue",
+		"ASSIGN:=\tvalue",
+		"APPEND:=\tvalue",
+		"EVAL:=\tvalue",
+		"SHELL:=\tvalue",
+		"",
+		"DEFAULT?=\tvalue",
+		"ASSIGN=\tvalue",
+		"APPEND+=\tvalue",
+		"EVAL:=\tvalue",
+		"SHELL!=\tvalue")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
+		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.")
+	// TODO: "4: is overwritten later",
+	// TODO: "5: is overwritten later"
+}
+
+// In a single file, five variables get assigned a value using the != operator,
+// which runs a shell command. As of March 2019 pkglint doesn't try to evaluate
+// the shell commands, therefore the variable values are unknown. The variables
+// are later overridden using the five different assignments operators.
+func (s *Suite) Test_MkLines_CheckRedundantAssignments__single_file_shell(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		"DEFAULT!=\tvalue",
+		"ASSIGN!=\tvalue",
+		"APPEND!=\tvalue",
+		"EVAL!=\tvalue",
+		"SHELL!=\tvalue",
+		"",
+		"DEFAULT?=\tvalue",
+		"ASSIGN=\tvalue",
+		"APPEND+=\tvalue",
+		"EVAL:=\tvalue",
+		"SHELL!=\tvalue")
+
+	mklines.CheckRedundantAssignments(NewRedundantScope())
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
+		"WARN: file.mk:2: Variable ASSIGN is overwritten in line 8.")
+	// TODO: "4: is overwritten later",
+	// TODO: "5: is overwritten later"
+}
+
+// TODO: Continue the systematic redundancy tests.
+//
+// Tests involving a single file (done)
+//
+// Tests involving an including file and an included file.
+// The variables are first defined (using all operators) in the including file.
+// They are then defined (again using all operators) in the included file.
+//
+// Tests involving an including file and an included file.
+// The variables are first defined (using all operators) in the included file.
+// They are then defined (again using all operators) in the including file.
+//
+// Tests involving variables that are defined and overwritten in independent files.
+// including.mk
+//     included1.mk
+//     included2.mk
+//
+// Tests involving several files, both dependent and independent.
+// This is to test includePath.includesAll and includePath.includesAny.
+//
+// Tests where the variables are overwritten with the same value.
+//
+// Tests where the variables are overwritten with a different value.
+//
+// A test where the operators = and += define a variable that afterwards
+// is assigned the same value using the ?= operator.
+//
+// Tests where the variables refer to other variables. These variables may
+// be read and written between the relevant assignments.
+
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
 
