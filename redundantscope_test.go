@@ -1223,9 +1223,7 @@ func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
 		"VAR=\tconditional",
 		".endif")
 
-	mklines.ForEach(func(mkline MkLine) {
-		scope.Handle(mkline, mklines.indentation)
-	})
+	scope.Check(mklines)
 
 	t.Check(
 		scope.get("VAR").vari.WriteLocations(),
