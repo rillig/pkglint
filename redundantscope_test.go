@@ -281,29 +281,43 @@ func (s *Suite) Test_RedundantScope__single_file_shell_ref(c *check.C) {
 func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
 	t := s.Init(c)
 
-	// Only test the ?=, = and += operators since the others are ignored,
-	// as of March 2019.
+	// As of March 2019, the != operator is ignored for the redundancy check.
+	// TODO: Add the != operator.
 	include, get := t.SetUpHierarchy()
 	include("including.mk",
 		include("included.mk",
 			"VAR.def.def?=   ${OTHER}",
 			"VAR.def.asg?=   ${OTHER}",
 			"VAR.def.app?=   ${OTHER}",
+			"VAR.def.evl?=   ${OTHER}",
 			"VAR.asg.def=    ${OTHER}",
 			"VAR.asg.asg=    ${OTHER}",
 			"VAR.asg.app=    ${OTHER}",
+			"VAR.asg.evl=    ${OTHER}",
 			"VAR.app.def+=   ${OTHER}",
 			"VAR.app.asg+=   ${OTHER}",
-			"VAR.app.app+=   ${OTHER}"),
+			"VAR.app.app+=   ${OTHER}",
+			"VAR.app.evl+=   ${OTHER}",
+			"VAR.evl.def:=   ${OTHER}",
+			"VAR.evl.asg:=   ${OTHER}",
+			"VAR.evl.app:=   ${OTHER}",
+			"VAR.evl.evl:=   ${OTHER}"),
 		"VAR.def.def?=   ${OTHER}",
 		"VAR.def.asg=    ${OTHER}",
 		"VAR.def.app+=   ${OTHER}",
+		"VAR.def.evl:=   ${OTHER}",
 		"VAR.asg.def?=   ${OTHER}",
 		"VAR.asg.asg=    ${OTHER}",
 		"VAR.asg.app+=   ${OTHER}",
+		"VAR.asg.evl:=   ${OTHER}",
 		"VAR.app.def?=   ${OTHER}",
 		"VAR.app.asg=    ${OTHER}",
-		"VAR.app.app+=   ${OTHER}")
+		"VAR.app.app+=   ${OTHER}",
+		"VAR.app.evl:=   ${OTHER}",
+		"VAR.evl.def?=   ${OTHER}",
+		"VAR.evl.asg=    ${OTHER}",
+		"VAR.evl.app+=   ${OTHER}",
+		"VAR.evl.evl:=   ${OTHER}")
 	mklines := get("including.mk")
 
 	NewRedundantScope().Check(mklines)
@@ -311,19 +325,29 @@ func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: including.mk:2: Default assignment of VAR.def.def has no effect because of included.mk:1.",
 		"NOTE: including.mk:3: Definition of VAR.def.asg is redundant because of included.mk:2.",
+
 		// VAR.def.app defines a default value and then appends to it. This is a common pattern.
 		// Appending the same value feels redundant but probably doesn't happen in practice.
 		// If it does, there should be a note for it.
-		"NOTE: including.mk:5: Default assignment of VAR.asg.def has no effect because of included.mk:4.",
-		"NOTE: including.mk:6: Definition of VAR.asg.asg is redundant because of included.mk:5.",
+
+		// VAR.def.evl introduces a subtle difference since := evaluates the variable immediately.
+		// Therefore the assignment is not redundant.
+
+		"NOTE: including.mk:6: Default assignment of VAR.asg.def has no effect because of included.mk:5.",
+		"NOTE: including.mk:7: Definition of VAR.asg.asg is redundant because of included.mk:6.",
+
 		// VAR.asg.app defines a variable and later appends to it. This is a common pattern.
 		// Appending the same value feels redundant but probably doesn't happen in practice.
 		// If it does, there should be a note for it.
-		"NOTE: including.mk:8: Default assignment of VAR.app.def has no effect because of included.mk:7.",
+
+		"NOTE: including.mk:10: Default assignment of VAR.app.def has no effect because of included.mk:9.",
+
 		// VAR.app.asg first appends and then overwrites. This might be a mistake.
 		// TODO: Find out whether this case happens in actual pkgsrc and if it's accidental.
 		// VAR.app.app first appends and then appends one more. This is a common pattern.
-	)
+
+		"NOTE: including.mk:14: Default assignment of VAR.evl.def has no effect because of included.mk:13.",
+		"NOTE: including.mk:15: Definition of VAR.evl.asg is redundant because of included.mk:14.")
 }
 
 func (s *Suite) Test_RedundantScope__after_including_different_value(c *check.C) {
