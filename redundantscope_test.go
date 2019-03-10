@@ -24,8 +24,8 @@ func (s *Suite) Test_RedundantScope__single_file_default(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
-		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.")
-	// TODO: "4: is overwritten later",
+		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.",
+		"WARN: file.mk:4: Variable EVAL is overwritten in line 10.")
 	// TODO: "5: is overwritten later"
 }
 
@@ -51,8 +51,8 @@ func (s *Suite) Test_RedundantScope__single_file_assign(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
-		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.")
-	// TODO: "4: is overwritten later",
+		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.",
+		"WARN: file.mk:4: Variable EVAL is overwritten in line 10.")
 	// TODO: "5: is overwritten later"
 }
 
@@ -78,8 +78,8 @@ func (s *Suite) Test_RedundantScope__single_file_append(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
-		"WARN: file.mk:2: Variable ASSIGN is overwritten in line 8.")
-	// TODO: "4: is overwritten later",
+		"WARN: file.mk:2: Variable ASSIGN is overwritten in line 8.",
+		"WARN: file.mk:4: Variable EVAL is overwritten in line 10.")
 	// TODO: "5: is overwritten later"
 }
 
@@ -106,8 +106,8 @@ func (s *Suite) Test_RedundantScope__single_file_eval(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
-		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.")
-	// TODO: "4: is overwritten later",
+		"NOTE: file.mk:8: Definition of ASSIGN is redundant because of line 2.",
+		"WARN: file.mk:4: Variable EVAL is overwritten in line 10.")
 	// TODO: "5: is overwritten later"
 }
 
@@ -135,8 +135,8 @@ func (s *Suite) Test_RedundantScope__single_file_shell(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of DEFAULT has no effect because of line 1.",
-		"WARN: file.mk:2: Variable ASSIGN is overwritten in line 8.")
-	// TODO: "4: is overwritten later",
+		"WARN: file.mk:2: Variable ASSIGN is overwritten in line 8.",
+		"WARN: file.mk:4: Variable EVAL is overwritten in line 10.")
 	// TODO: "5: is overwritten later"
 }
 
@@ -790,7 +790,9 @@ func (s *Suite) Test_RedundantScope__procedure_call(c *check.C) {
 
 	NewRedundantScope().Check(mklines)
 
-	t.CheckOutputEmpty()
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: mk/pthread.buildlink3.mk:1: Variable CHECK_BUILTIN.pthread is overwritten in line 3.")
 }
 
 func (s *Suite) Test_RedundantScope__procedure_call_implemented(c *check.C) {
@@ -967,8 +969,9 @@ func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
 
 	NewRedundantScope().Check(mklines)
 
-	// TODO: Add redundancy check for the := operator.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/filename.mk:2: Variable VAR is overwritten in line 3.",
+		"WARN: ~/filename.mk:3: Variable VAR is overwritten in line 4.")
 }
 
 func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {

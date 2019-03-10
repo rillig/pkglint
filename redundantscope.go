@@ -83,16 +83,25 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		return
 	}
 
-	op := mkline.Op()
+	effOp := mkline.Op()
 	value := mkline.Value()
 
 	// FIXME: Skip the whole redundancy check if the value is not known to be constant.
-	if op == opAssign && info.vari.Value() == value {
-		op = /* effectively */ opAssignDefault
+	if effOp == opAssign && info.vari.Value() == value {
+		effOp = opAssignDefault
 	}
 
-	switch op {
-	// TODO: What about opAssignEval?
+	if effOp == opAssignEval && value == mkline.WithoutMakeVariables(value) {
+		// Maybe add support for VAR:= ${OTHER} later. This involves evaluating
+		// the OTHER variable though using the appropriate scope. Oh, wait,
+		// there _is_ a scope here. So if OTHER doesn't refer to further
+		// variables it's all possible.
+		//
+		// TODO: The above idea seems possible and useful.
+		effOp = opAssign
+	}
+
+	switch effOp {
 
 	case opAssign: // with a different value than before
 		if s.includePath.includedByOrEqualsAll(info.includePaths) {
