@@ -101,19 +101,6 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 				// Because the included files is never wrong (by definition),
 				// the including file gets the warning in this case.
 				s.OnOverwrite(prevWrites[len(prevWrites)-1], mkline)
-
-			case s.includePath.includesAny(info.includePaths):
-				// The situation is:
-				//  included.mk:  VAR= common value
-				//  including.mk: VAR= overwritten
-				// This pattern is used a lot in pkgsrc, and overwriting
-				// the variable is expected here.
-
-			// FIXME: ind.IsConditional is not precise enough since it
-			//  only looks at the variables. There may be conditions entirely
-			//  without variables, such as exists(/usr).
-			case s.includePath.includesOrEqualsAll(info.includePaths) && !ind.IsConditional():
-				s.OnOverwrite(prevWrites[len(prevWrites)-1], mkline)
 			}
 
 		case opAssignDefault: // or opAssign with the same value as before
@@ -203,16 +190,6 @@ func (p *includePath) includes(other includePath) bool {
 		}
 	}
 	return len(p.files) < len(other.files)
-}
-
-// FIXME: test whether "any" is actually correct here. It should probably be "all".
-func (p *includePath) includesAny(others []includePath) bool {
-	for _, other := range others {
-		if p.includes(other) {
-			return true
-		}
-	}
-	return false
 }
 
 // FIXME: test whether "any" is actually correct here. It should probably be "all".
