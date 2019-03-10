@@ -93,8 +93,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 		// TODO: What about opAssignEval?
 
 		case opAssign: // with a different value than before
-			switch {
-			case s.includePath.includedByOrEqualsAll(info.includePaths):
+			if s.includePath.includedByOrEqualsAll(info.includePaths) {
 				// The situation is:
 				//  including.mk: VAR= initial value
 				//  included.mk:  VAR= overwritten
