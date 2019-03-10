@@ -1385,8 +1385,8 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__single_file_shell(c *che
 //
 // Tests involving variables that are defined and overwritten in independent files.
 // including.mk
-//     included1.mk
-//     included2.mk
+// +-- included1.mk
+// `-- included2.mk
 //
 // Tests involving several files, both dependent and independent.
 // This is to test includePath.includesAll and includePath.includesAny.
@@ -1400,6 +1400,14 @@ func (s *Suite) Test_MkLines_CheckRedundantAssignments__single_file_shell(c *che
 //
 // Tests where the variables refer to other variables. These variables may
 // be read and written between the relevant assignments.
+//
+// Tests where the variables are defined conditionally using .if, .else, .endif.
+//
+// Tests where the variables are defined in a .for loop that might not be
+// evaluated at all.
+//
+// Tests where files are included conditionally and additionally have conditional
+// sections, arbitrarily nested.
 
 func (s *Suite) Test_MkLines_Check__PLIST_VARS(c *check.C) {
 	t := s.Init(c)
