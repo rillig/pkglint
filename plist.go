@@ -31,15 +31,17 @@ func CheckLinesPlist(lines Lines) {
 		make(map[string]*PlistLine),
 		make(map[string]*PlistLine),
 		"",
-		Once{}}
+		Once{},
+		false}
 	ck.Check(lines)
 }
 
 type PlistChecker struct {
-	allFiles  map[string]*PlistLine
-	allDirs   map[string]*PlistLine
-	lastFname string
-	once      Once
+	allFiles        map[string]*PlistLine
+	allDirs         map[string]*PlistLine
+	lastFname       string
+	once            Once
+	nonAsciiAllowed bool
 }
 
 type PlistLine struct {
@@ -132,6 +134,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 
 	} else if m, cmd, arg := match2(text, `^@([a-z-]+)[\t ]*(.*)`); m {
 		pline.CheckDirective(cmd, arg)
+		ck.nonAsciiAllowed = pline.firstLine > 1
 
 	} else {
 		pline.Warnf("Invalid line type: %s", pline.Line.Text)
@@ -143,8 +146,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	dirSlash, basename := path.Split(text)
 	dirname := strings.TrimSuffix(dirSlash, "/")
 
-	LineChecker{pline.Line}.CheckValidCharacters()
-
+	ck.checkPathNonAscii(pline)
 	ck.checkSorted(pline)
 	ck.checkDuplicate(pline)
 
@@ -202,6 +204,34 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	}
 	if contains(text, ".egg-info/") {
 		pline.Warnf("Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
+	}
+}
+
+func (ck *PlistChecker) checkPathNonAscii(pline *PlistLine) {
+	text := pline.text
+
+	lex := textproc.NewLexer(text)
+	lex.NextBytesFunc(func(b byte) bool { return b >= ' ' && b <= '~' })
+	ascii := lex.EOF()
+
+	switch {
+	case !ck.nonAsciiAllowed && !ascii:
+		ck.nonAsciiAllowed = true
+
+		pline.Warnf("Non-ASCII filename %q.", text)
+		pline.Explain(
+			"The great majority of filenames installed by pkgsrc packages",
+			"are ASCII-only. Filenames containing non-ASCII characters",
+			"can cause various problems since their name may already be",
+			"different when another character encoding is set in the locale.",
+			"",
+			"To mark a filename as intentionally non-ASCII, insert a PLIST",
+			"@comment with a convincing reason directly above this line.",
+			"That comment will allow this line and the lines directly",
+			"below it to contain non-ASCII filenames.")
+
+	case ck.nonAsciiAllowed && ascii:
+		ck.nonAsciiAllowed = false
 	}
 }
 

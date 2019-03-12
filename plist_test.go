@@ -154,7 +154,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
 		"lib/after.la",
 		"@exec echo \"after lib/after.la\"")
-	ck := PlistChecker{nil, nil, "", Once{}}
+	ck := PlistChecker{nil, nil, "", Once{}, false}
 	plines := ck.NewLines(lines)
 
 	sorter1 := NewPlistLineSorter(plines)
@@ -162,7 +162,8 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 
 	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
 
-	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, "", Once{}}).NewLines(NewLines(lines.FileName, cleanedLines)))
+	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, "", Once{}, false}).
+		NewLines(NewLines(lines.FileName, cleanedLines)))
 
 	c.Check(sorter2.unsortable, check.IsNil)
 
@@ -448,29 +449,57 @@ func (s *Suite) Test_PlistChecker__invalid_line_type(c *check.C) {
 		"WARN: ~/PLIST:6: Invalid line type: >>>>>>>> merge conflict")
 }
 
-func (s *Suite) Test_PlistChecker__non_ASCII_characters_in_filenames(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpCommandLine("-Wall", "--explain")
 	lines := t.NewLines("PLIST",
 		PlistRcsID,
-		"bin/fr\xFCher",                // German, old
-		"bin/\u00A4thernetz",           // German
-		"bin/\u0633\u0644\u0627\u0645", // Arabic
-		"bin/\uC548\uB148",             // Korean,
-		"bin/\U0001F603",               // Smiling face with open mouth
-		"sbin/iconv")
+
+		"dir1/fr\xFCher", // German, "back then", encoded in ISO 8859-1
+
+		// Subsequent non-ASCII filenames do not generate further messages
+		// since these filenames typically appear in groups, and issuing
+		// too many warnings quickly gets boring.
+		"dir1/\u00C4thernetz", // German
+
+		// This ASCII-only pathname enables the check again.
+		"dir2/aaa",
+		"dir2/\u0633\u0644\u0627\u0645", // Arabic: salaam
+
+		"dir2/\uC548\uB148", // Korean: annyeong
+
+		// This ASCII-only pathname enables the check again.
+		"dir3/ascii-only",
+
+		// Any comment suppresses the check for the next contiguous
+		// sequence of non-ASCII filenames.
+		"@comment The next file is non-ASCII on purpose.",
+		"dir3/\U0001F603", // Smiling face with open mouth
+
+		// This ASCII-only pathname enables the check again.
+		"sbin/iconv",
+
+		"sbin/\U0001F603", // Smiling face with open mouth
+	)
 
 	CheckLinesPlist(lines)
 
-	// FIXME: Explain how to suppress these warnings (@comment in the line before).
-	// FIXME: Improve test case by demonstrating how to suppress these warnings.
 	t.CheckOutputLines(
-		// FIXME: Must be "invalid byte (0xFC)" instead.
-		"WARN: PLIST:2: Line contains invalid characters (U+FFFD).",
-		"WARN: PLIST:3: Line contains invalid characters (U+00A4).",
-		"WARN: PLIST:4: Line contains invalid characters (U+0633 U+0644 U+0627 U+0645).",
-		"WARN: PLIST:5: Line contains invalid characters (U+C548 U+B148).",
-		"WARN: PLIST:6: Line contains invalid characters (U+1F603).")
+		"WARN: PLIST:2: Non-ASCII filename \"dir1/fr\\xfcher\".",
+		"",
+		"\tThe great majority of filenames installed by pkgsrc packages are",
+		"\tASCII-only. Filenames containing non-ASCII characters can cause",
+		"\tvarious problems since their name may already be different when",
+		"\tanother character encoding is set in the locale.",
+		"",
+		"\tTo mark a filename as intentionally non-ASCII, insert a PLIST",
+		"\t@comment with a convincing reason directly above this line. That",
+		"\tcomment will allow this line and the lines directly below it to",
+		"\tcontain non-ASCII filenames.",
+		"",
+		"WARN: PLIST:5: Non-ASCII filename \"dir2/<U+0633><U+0644><U+0627><U+0645>\".",
+		"WARN: PLIST:11: Non-ASCII filename \"sbin/<U+1F603>\".")
 }
 
 func (s *Suite) Test_PlistChecker__doc(c *check.C) {
@@ -629,6 +658,7 @@ func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
+		"WARN: ~/PLIST:2: Non-ASCII filename \"bin/program \\t\".",
 		"ERROR: ~/PLIST:2: Pkgsrc does not support filenames ending in whitespace.")
 }
 
