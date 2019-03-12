@@ -486,7 +486,7 @@ func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
 	CheckLinesPlist(lines)
 
 	t.CheckOutputLines(
-		"WARN: PLIST:2: Non-ASCII filename \"dir1/fr\\xfcher\".",
+		"WARN: PLIST:2: Non-ASCII filename \"dir1/fr<0xFC>her\".",
 		"",
 		"\tThe great majority of filenames installed by pkgsrc packages are",
 		"\tASCII-only. Filenames containing non-ASCII characters can cause",

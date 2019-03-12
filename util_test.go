@@ -682,7 +682,7 @@ func (s *Suite) Test_escapePrintable(c *check.C) {
 	c.Check(escapePrintable(""), equals, "")
 	c.Check(escapePrintable("ASCII only~\n\t"), equals, "ASCII only~\n\t")
 	c.Check(escapePrintable("Beep \u0007 control \u001F"), equals, "Beep <U+0007> control <U+001F>")
-	c.Check(escapePrintable("Bad \xFF character"), equals, "Bad <\\xFF> character")
+	c.Check(escapePrintable("Bad \xFF character"), equals, "Bad <0xFF> character")
 	c.Check(escapePrintable("Unicode \uFFFD replacement"), equals, "Unicode <U+FFFD> replacement")
 }
 

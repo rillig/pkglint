@@ -218,7 +218,7 @@ func (ck *PlistChecker) checkPathNonAscii(pline *PlistLine) {
 	case !ck.nonAsciiAllowed && !ascii:
 		ck.nonAsciiAllowed = true
 
-		pline.Warnf("Non-ASCII filename %q.", text)
+		pline.Warnf("Non-ASCII filename %q.", escapePrintable(text))
 		pline.Explain(
 			"The great majority of filenames installed by pkgsrc packages",
 			"are ASCII-only. Filenames containing non-ASCII characters",
