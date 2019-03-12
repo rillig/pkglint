@@ -448,6 +448,25 @@ func (s *Suite) Test_PlistChecker__invalid_line_type(c *check.C) {
 		"WARN: ~/PLIST:6: Invalid line type: >>>>>>>> merge conflict")
 }
 
+func (s *Suite) Test_PlistChecker__non_ASCII_characters_in_filenames(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistRcsID,
+		"bin/fr\xFCher",                // German, old
+		"bin/\u00A4thernetz",           // German
+		"bin/\u0633\u0644\u0627\u0645", // Arabic
+		"bin/\uC548\uB148",             // Korean,
+		"bin/\U0001F603",               // Smiling face with open mouth
+		"sbin/iconv")
+
+	CheckLinesPlist(lines)
+
+	// FIXME: Warn about non-ASCII characters.
+	//  Explain how to suppress these warnings (@comment in the line before)
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PlistChecker__doc(c *check.C) {
 	t := s.Init(c)
 
