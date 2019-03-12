@@ -143,6 +143,8 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	dirSlash, basename := path.Split(text)
 	dirname := strings.TrimSuffix(dirSlash, "/")
 
+	LineChecker{pline.Line}.CheckValidCharacters()
+
 	ck.checkSorted(pline)
 	ck.checkDuplicate(pline)
 

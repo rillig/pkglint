@@ -462,9 +462,15 @@ func (s *Suite) Test_PlistChecker__non_ASCII_characters_in_filenames(c *check.C)
 
 	CheckLinesPlist(lines)
 
-	// FIXME: Warn about non-ASCII characters.
-	//  Explain how to suppress these warnings (@comment in the line before)
-	t.CheckOutputEmpty()
+	// FIXME: Explain how to suppress these warnings (@comment in the line before).
+	// FIXME: Improve test case by demonstrating how to suppress these warnings.
+	t.CheckOutputLines(
+		// FIXME: Must be "invalid byte (0xFC)" instead.
+		"WARN: PLIST:2: Line contains invalid characters (U+FFFD).",
+		"WARN: PLIST:3: Line contains invalid characters (U+00A4).",
+		"WARN: PLIST:4: Line contains invalid characters (U+0633 U+0644 U+0627 U+0645).",
+		"WARN: PLIST:5: Line contains invalid characters (U+C548 U+B148).",
+		"WARN: PLIST:6: Line contains invalid characters (U+1F603).")
 }
 
 func (s *Suite) Test_PlistChecker__doc(c *check.C) {
