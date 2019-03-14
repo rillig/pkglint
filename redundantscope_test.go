@@ -603,6 +603,133 @@ func (s *Suite) Test_RedundantScope__assign_and_append_followed_by_assign(c *che
 		"NOTE: redundant.mk:3: Definition of VAR is redundant because of line 2.")
 }
 
+// The redundancy analysis for a variable VAR is influenced by changes to
+// each variable that is referenced by VAR. The exact details also depend
+// on the assignment operators being used for VAR and OTHER.
+func (s *Suite) Test_RedundantScope__referenced_variable_is_modified(c *check.C) {
+	t := s.Init(c)
+
+	test := func(line1, line2, line3, line4 string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			line1, line2, line3, line4)
+
+		NewRedundantScope().Check(mklines)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test(
+		"OTHER=  other-before",
+		"VAR=    ${OTHER}",
+		"OTHER?= other-after",
+		"VAR=    ${OTHER}",
+
+		// TODO: "3: has no effect"
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR=    ${OTHER}",
+		"OTHER=  other-after",
+		"VAR=    ${OTHER}",
+
+		// TODO: "3: overwrites",
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR=    ${OTHER}",
+		"OTHER+= other-after",
+		"VAR=    ${OTHER}",
+
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR=    ${OTHER}",
+		"OTHER:= other-after",
+		"VAR=    ${OTHER}",
+
+		// TODO: "3: overwrites line 1"
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR=    ${OTHER}",
+		"OTHER!= other-after",
+		"VAR=    ${OTHER}",
+
+		// TODO: "3: overwrites line 1",
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+}
+
+// The redundancy analysis for a variable VAR is influenced by changes to
+// each variable that is referenced by VAR. The exact details also depend
+// on the assignment operators being used for VAR and OTHER.
+func (s *Suite) Test_RedundantScope__variable_referencing_another_is_modified(c *check.C) {
+	t := s.Init(c)
+
+	test := func(line1, line2, line3, line4 string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			line1, line2, line3, line4)
+
+		NewRedundantScope().Check(mklines)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	// In this test, the second line is tested for each operator.
+
+	test(
+		"OTHER=  other-before",
+		"VAR?=   ${OTHER}",
+		"OTHER=  other-after",
+		"VAR=    ${OTHER}",
+
+		// TODO: "3: overwrites line 1"
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR=    ${OTHER}",
+		"OTHER=  other-after",
+		"VAR=    ${OTHER}",
+
+		// TODO: "3: overwrites",
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR+=   ${OTHER}",
+		"OTHER=  other-after",
+		"VAR=    ${OTHER}",
+
+		// TODO: "3: overwrites",
+		// The value from line 2 is prefixed by a space, therefore pkglint
+		// issues a warning here instead of an "is redundant" note.
+		"WARN: filename.mk:2: Variable VAR is overwritten in line 4.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR:=   ${OTHER}",
+		"OTHER=  other-after",
+		"VAR=    ${OTHER}",
+
+		// As of March 2019, pkglint only looks at each variable in isolation.
+		// In this case, to detect that the assignment in line 1 has no effect,
+		// it's necessary to trace the assignment in line 2 and then see that
+		// the VAR from line 2 is immediately overwritten in line 4.
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+
+	test(
+		"OTHER=  other-before",
+		"VAR=    ${OTHER}",
+		"OTHER!= other-after",
+		"VAR=    ${OTHER}",
+
+		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
+}
+
 // FIXME: Continue the systematic redundancy tests.
 //
 // Tests where the variables refer to other variables. These variables may
@@ -623,6 +750,9 @@ func (s *Suite) Test_RedundantScope__assign_and_append_followed_by_assign(c *che
 // be modified by any assignment of the form BUILD_DIRS.${var} or even ${var}.
 // Without further analysis, pkglint cannot report redundancy warnings for any
 // package that uses such variable assignments.
+//
+// Tests for variables with modifiers, such as ${VAR:Uundef}, ${VAR:Mpattern},
+// ${command:sh}, ${command::=value}.
 
 func (s *Suite) Test_RedundantScope__override_after_including(c *check.C) {
 	t := s.Init(c)
