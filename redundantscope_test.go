@@ -732,9 +732,6 @@ func (s *Suite) Test_RedundantScope__variable_referencing_another_is_modified(c 
 
 // FIXME: Continue the systematic redundancy tests.
 //
-// Tests where the variables refer to other variables. These variables may
-// be read and written between the relevant assignments.
-//
 // Tests where the variables are defined conditionally using .if, .else, .endif.
 //
 // Tests where the variables are defined in a .for loop that might not be
