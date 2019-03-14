@@ -400,11 +400,19 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename.mk:1: PKGSRC_RUN_TEST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
-	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
+	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])",
+		// FIXME: The warning must include "in this file" since it would be allowed in builtin.mk.
+		"WARN: filename.mk:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
+		// TODO: Having two warnings is redundant.
+		"WARN: filename.mk:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
 		"WARN: filename.mk:1: The empty() function takes a variable name as parameter, "+
-			"not a variable expression.")
+			"not a variable expression.",
+		// FIXME: The warning must include "in this file" since it would be allowed in builtin.mk.
+		"WARN: filename.mk:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
+		// TODO: Having two warnings is redundant.
+		"WARN: filename.mk:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
 		"WARN: filename.mk:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
@@ -412,7 +420,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename.mk:1: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
 	test(".if ${PKG_LIBTOOL:Mlibtool}",
-		"NOTE: filename.mk:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".")
+		"NOTE: filename.mk:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".",
+		"WARN: filename.mk:1: PKG_LIBTOOL should not be evaluated at load time.")
 
 	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
 		"WARN: filename.mk:1: "+
@@ -666,6 +675,10 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 		"\t* in builtin.mk, it may not be accessed at all",
 		"\t* in Makefile.*, it may be set, given a default value, or used",
 		"\t* in *.mk, it may be set, given a default value, or used",
+		// TODO: Improve the wording to "in all other files".
+		"\t* in any file, it may not be accessed at all",
+		// TODO: Add a check for infrastructure permissions
+		//  when the "infra:" prefix is added.
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
 		"\ttech-pkg@NetBSD.org mailing list.",

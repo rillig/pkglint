@@ -1131,6 +1131,9 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: ~/multimedia/totem/bla.mk:2: "+
+			"The variable BUILDLINK_PKGSRCDIR.totem may not be given a default value in this file; "+
+			"it would be ok in buildlink3.mk.",
 		"ERROR: ~/multimedia/totem/bla.mk:2: There is no package in \"multimedia/totem\".")
 }
 

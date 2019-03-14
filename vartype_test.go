@@ -18,7 +18,7 @@ func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {
 	if typ := G.Pkgsrc.vartypes["EXTRACT_OPTS"]; c.Check(typ, check.NotNil) {
 		c.Check(typ.basicType.name, equals, "ShellWord")
 		c.Check(typ.EffectivePermissions("Makefile"), equals, aclpAppend|aclpSet)
-		c.Check(typ.EffectivePermissions("options.mk"), equals, aclpUnknown)
+		c.Check(typ.EffectivePermissions("options.mk"), equals, aclpNone)
 	}
 }
 
@@ -46,7 +46,6 @@ func (s *Suite) Test_ACLPermissions_Contains(c *check.C) {
 func (s *Suite) Test_ACLPermissions_String(c *check.C) {
 	c.Check(ACLPermissions(0).String(), equals, "none")
 	c.Check(aclpAll.String(), equals, "set, set-default, append, use-loadtime, use")
-	c.Check(aclpUnknown.String(), equals, "unknown")
 }
 
 func (s *Suite) Test_ACLPermissions_HumanString(c *check.C) {
@@ -56,9 +55,6 @@ func (s *Suite) Test_ACLPermissions_HumanString(c *check.C) {
 
 	c.Check(aclpAll.HumanString(),
 		equals, "set, given a default value, appended to, used at load time, or used")
-
-	c.Check(aclpUnknown.HumanString(),
-		equals, "") // Doesn't happen in practice
 }
 
 func (s *Suite) Test_Vartype_IsConsideredList(c *check.C) {

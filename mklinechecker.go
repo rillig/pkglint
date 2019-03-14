@@ -325,10 +325,6 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 	switch {
 	case perms.Contains(needed):
 		break
-	case perms == aclpUnknown:
-		if trace.Tracing {
-			trace.Step1("Unknown permissions for %q.", varname)
-		}
 	default:
 		alternativeActions := perms & aclpAllWrite
 		alternativeFiles := vartype.AllowedFiles(needed)
@@ -544,9 +540,6 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 
 	mkline := ck.MkLine
 	effPerms := vartype.EffectivePermissions(mkline.Basename)
-	if effPerms == aclpUnknown {
-		return
-	}
 	if effPerms.Contains(aclpUseLoadtime) {
 		return
 	}
@@ -631,6 +624,8 @@ func (ck MkLineChecker) warnVaruseToolLoadTime(varname string, tool *Tool) {
 
 func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 	mkline := ck.MkLine
+
+	// FIXME: Distinguish "in this file" and "everywhere".
 
 	if !isIndirect {
 		mkline.Warnf("%s should not be evaluated at load time.", varname)

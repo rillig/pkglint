@@ -39,10 +39,8 @@ const (
 	aclpUseLoadtime                            // OTHER := ${VAR}, OTHER != ${VAR}
 	aclpUse                                    // OTHER = ${VAR}
 
-	// TODO: Try what happens if this constant is removed.
-	//  All variables should have proper permission definitions for all files.
-	//  Missing permission definitions could also count as "none".
-	aclpUnknown
+	aclpNone ACLPermissions = 0
+
 	aclpAllWrite   = aclpSet | aclpSetDefault | aclpAppend
 	aclpAllRead    = aclpUseLoadtime | aclpUse
 	aclpAll        = aclpAllWrite | aclpAllRead
@@ -62,8 +60,7 @@ func (perms ACLPermissions) String() string {
 		ifelseStr(perms.Contains(aclpSetDefault), "set-default", ""),
 		ifelseStr(perms.Contains(aclpAppend), "append", ""),
 		ifelseStr(perms.Contains(aclpUseLoadtime), "use-loadtime", ""),
-		ifelseStr(perms.Contains(aclpUse), "use", ""),
-		ifelseStr(perms.Contains(aclpUnknown), "unknown", ""))
+		ifelseStr(perms.Contains(aclpUse), "use", ""))
 }
 
 func (perms ACLPermissions) HumanString() string {
@@ -81,7 +78,7 @@ func (vt *Vartype) EffectivePermissions(basename string) ACLPermissions {
 			return aclEntry.permissions
 		}
 	}
-	return aclpUnknown
+	return aclpNone
 }
 
 // Union returns the union of all possible permissions.

@@ -504,8 +504,8 @@ func (src *Pkgsrc) InitVartypes() {
 	acl(".TARGET", lkNone, BtPathname, "buildlink3.mk: none; *: use, use-loadtime")
 	acl("@", lkNone, BtPathname, "buildlink3.mk: none; *: use, use-loadtime")
 	acl("ALL_ENV", lkShell, BtShellWord, "")
-	acl("ALTERNATIVES_FILE", lkNone, BtFileName, "")
-	acl("ALTERNATIVES_SRC", lkShell, BtPathname, "")
+	pkg("ALTERNATIVES_FILE", lkNone, BtFileName)
+	pkglist("ALTERNATIVES_SRC", lkShell, BtPathname)
 	pkg("APACHE_MODULE", lkNone, BtYes)
 	sys("AR", lkNone, BtShellCommand)
 	sys("AS", lkNone, BtShellCommand)
@@ -564,7 +564,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("BUILDLINK_TRANSFORM.*", lkShell, BtWrapperTransform, "*: append")
 	acl("BUILDLINK_TREE", lkShell, BtIdentifier, "buildlink3.mk: append")
 	acl("BUILDLINK_X11_DIR", lkNone, BtPathname, "*: use")
-	acl("BUILD_DEFS", lkShell, BtVariableName, "Makefile, Makefile.common, options.mk: append")
+	acl("BUILD_DEFS", lkShell, BtVariableName, "Makefile, Makefile.common, *.mk: append")
 	pkglist("BUILD_DEFS_EFFECTS", lkShell, BtVariableName)
 	acl("BUILD_DEPENDS", lkShell, BtDependencyWithPath, "Makefile, Makefile.common, *.mk: append")
 	pkglist("BUILD_DIRS", lkShell, BtWrksrcSubdirectory)
@@ -619,7 +619,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkglist("CMAKE_PREFIX_PATH", lkShell, BtPathmask)
 	pkglist("CMAKE_USE_GNU_INSTALL_DIRS", lkNone, BtYesNo)
 	pkg("CMAKE_INSTALL_PREFIX", lkNone, BtPathname) // The default is ${PREFIX}.
-	acl("COMMENT", lkNone, BtComment, "Makefile, Makefile.common: set, append")
+	acl("COMMENT", lkNone, BtComment, "Makefile, Makefile.common, *.mk: set, append")
 	sys("COMPILE.*", lkNone, BtShellCommand)
 	acl("COMPILER_RPATH_FLAG", lkNone, enum("-Wl,-rpath"), "*: use")
 	pkglist("CONFIGURE_ARGS", lkShell, BtShellWord)
@@ -1034,18 +1034,18 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PKG_JVMS_ACCEPTED", lkShell, jvms, "Makefile: set; Makefile.common: default, set")
 	usr("PKG_JVM_DEFAULT", lkNone, jvms)
 	acl("PKG_LEGACY_OPTIONS", lkShell, BtOption, "")
-	acl("PKG_LIBTOOL", lkNone, BtPathname, "Makefile: set")
-	acl("PKG_OPTIONS", lkShell, BtOption, "bsd.options.mk: set; *: use-loadtime, use")
+	pkg("PKG_LIBTOOL", lkNone, BtPathname)
+	sysload("PKG_OPTIONS", lkShell, BtOption)
 	usr("PKG_OPTIONS.*", lkShell, BtOption)
-	acl("PKG_OPTIONS_DEPRECATED_WARNINGS", lkShell, BtShellWord, "")
-	acl("PKG_OPTIONS_GROUP.*", lkShell, BtOption, "Makefile, options.mk: set, append")
-	acl("PKG_OPTIONS_LEGACY_OPTS", lkShell, BtUnknown, "Makefile, Makefile.common, options.mk: append")
-	acl("PKG_OPTIONS_LEGACY_VARS", lkShell, BtUnknown, "Makefile, Makefile.common, options.mk: append")
-	acl("PKG_OPTIONS_NONEMPTY_SETS", lkShell, BtIdentifier, "")
-	acl("PKG_OPTIONS_OPTIONAL_GROUPS", lkShell, BtIdentifier, "options.mk: set, append")
-	acl("PKG_OPTIONS_REQUIRED_GROUPS", lkShell, BtIdentifier, "Makefile, options.mk: set")
-	acl("PKG_OPTIONS_SET.*", lkShell, BtOption, "")
-	acl("PKG_OPTIONS_VAR", lkNone, BtPkgOptionsVar, "Makefile, Makefile.common, options.mk: set; bsd.options.mk: use-loadtime")
+	acl("PKG_OPTIONS_DEPRECATED_WARNINGS", lkShell, BtShellWord, "options.mk: append; *: none")
+	acl("PKG_OPTIONS_GROUP.*", lkShell, BtOption, "options.mk: set, append; *: none")
+	acl("PKG_OPTIONS_LEGACY_OPTS", lkShell, BtUnknown, "options.mk: set, append; *: none")
+	acl("PKG_OPTIONS_LEGACY_VARS", lkShell, BtUnknown, "options.mk: set, append; *: none")
+	acl("PKG_OPTIONS_NONEMPTY_SETS", lkShell, BtIdentifier, "options.mk: set, append; *: none")
+	acl("PKG_OPTIONS_OPTIONAL_GROUPS", lkShell, BtIdentifier, "options.mk: set, append; *: none")
+	acl("PKG_OPTIONS_REQUIRED_GROUPS", lkShell, BtIdentifier, "options.mk: set, append; *: none")
+	acl("PKG_OPTIONS_SET.*", lkShell, BtOption, "options.mk: set, append; *: none")
+	acl("PKG_OPTIONS_VAR", lkNone, BtPkgOptionsVar, "options.mk: set; *: none")
 	acl("PKG_PRESERVE", lkNone, BtYes, "Makefile: set")
 	acl("PKG_SHELL", lkNone, BtPathname, "Makefile, Makefile.common: set")
 	acl("PKG_SHELL.*", lkNone, BtPathname, "Makefile, Makefile.common: set")
@@ -1173,7 +1173,7 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("TOOLS_ALIASES", lkShell, BtFileName)
 	sys("TOOLS_BROKEN", lkShell, BtTool)
 	sys("TOOLS_CMD.*", lkNone, BtPathname)
-	acl("TOOLS_CREATE", lkShell, BtTool, "Makefile, Makefile.common, options.mk: append")
+	acl("TOOLS_CREATE", lkShell, BtTool, "Makefile, Makefile.common, *.mk: append")
 	acl("TOOLS_DEPENDS.*", lkShell, BtDependencyWithPath, "buildlink3.mk: none; Makefile, Makefile.*: set, default; *: use")
 	sys("TOOLS_GNU_MISSING", lkShell, BtTool)
 	sys("TOOLS_NOOP", lkShell, BtTool)
@@ -1251,7 +1251,7 @@ func enum(values string) *BasicType {
 
 func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 	if aclEntries == "" {
-		return nil
+		return []ACLEntry{{"*", aclpNone}}
 	}
 
 	var result []ACLEntry
@@ -1280,7 +1280,9 @@ func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 			case "":
 				break
 			default:
-				G.Assertf(false, "Invalid ACL permission %q for %q.", perm, varname)
+				G.Assertf(false, "Invalid ACL permission %q for %q. "+
+					"Valid permissions are append, default, set, use, use-loadtime, none.",
+					perm, varname)
 			}
 		}
 
@@ -1288,8 +1290,7 @@ func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 			switch glob {
 			case "*",
 				"Makefile", "Makefile.common", "Makefile.*",
-				"buildlink3.mk", "builtin.mk", "options.mk", "hacks.mk", "*.mk",
-				"bsd.options.mk":
+				"buildlink3.mk", "builtin.mk", "options.mk", "hacks.mk", "*.mk":
 				break
 			default:
 				withoutSpecial := strings.TrimPrefix(glob, "special:")
@@ -1307,5 +1308,11 @@ func parseACLEntries(varname string, aclEntries string) []ACLEntry {
 			result = append(result, ACLEntry{glob, permissions})
 		}
 	}
+
+	if result[len(result)-1].glob != "*" {
+		//println("default permissions missing for " + varname)
+		result = append(result, ACLEntry{"*", aclpNone})
+	}
+
 	return result
 }

@@ -192,6 +192,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	test("echo '${COMMENT:Q}'") // VucQuotSquot
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:1: COMMENT may not be used in any file; it is a write-only variable.",
 		"WARN: filename.mk:1: Please move ${COMMENT:Q} outside of any quoting characters.")
 
 	test("echo target=$@ exitcode=$$? '$$' \"\\$$\"")
@@ -509,7 +510,8 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 
 	test("${COMMENT:Q}", true)
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: dummy.mk:1: COMMENT may not be used in any file; it is a write-only variable.")
 
 	test("\"${DISTINFO_FILE:Q}\"", true)
 

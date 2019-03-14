@@ -331,7 +331,24 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 	// The tools autoreconf and autoheader213 are known at this point because of the USE_TOOLS line.
 	// The SUV variable is used implicitly by the SUBST framework, therefore no warning.
 	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
-	t.CheckOutputEmpty()
+	//
+	// FIXME: The warning that OPSYSVARS may not be appended to is wrong.
+	//  It is caused by because there is no permission definition for
+	//  infrastructure files.
+	//  This is a feature that pkglint doesn't have as of March 2019.
+	//  It should be added at Pkgsrc.InitVartypes.acl as a prefix "infra:"
+	//  that works similar to the already existing prefix "special:".
+	//  The "infra:" prefix applies to both mk/* and wip/mk/* files, and globs
+	//  without that prefix only apply to all files outside the infrastructure.
+	//  The prefix might also be "sys:", which corresponds nicely with the sys()
+	//  function in Pkgsrc.InitVartypes. That name had been chosen back then
+	//  because it is as long as pkg and usr, which at that time were the only
+	//  categories of predefined permissions. Others have been added later, so
+	//  it may also be possible to rename sys() to infra().
+	t.CheckOutputLines(
+		"WARN: determine-defined-variables.mk:6: " +
+			"The variable OPSYSVARS may not be appended to in this file; " +
+			"it would be ok in Makefile or Makefile.common.")
 }
 
 func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
