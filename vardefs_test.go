@@ -81,12 +81,12 @@ func (s *Suite) Test_parseACLEntries(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectPanic(
-		func() { parseACLEntries("VARNAME", "buildlink3.mk: *; *: *") },
+		func() { parseACLEntries("VARNAME", "buildlink3.mk: *", "*: *") },
 		"Pkglint internal error: Invalid ACL permission \"*\" for \"VARNAME\". "+
 			"Valid permissions are append, default, set, use, use-loadtime, none.")
 
 	t.ExpectPanic(
-		func() { parseACLEntries("VARNAME", "buildlink3.mk: use; *: use") },
+		func() { parseACLEntries("VARNAME", "buildlink3.mk: use", "*: use") },
 		"Pkglint internal error: Repeated permissions \"use\" for \"VARNAME\".")
 
 	t.ExpectPanic(
@@ -94,7 +94,7 @@ func (s *Suite) Test_parseACLEntries(c *check.C) {
 		"Pkglint internal error: Invalid ACL glob \"*.txt\" for \"VARNAME\".")
 
 	t.ExpectPanic(
-		func() { parseACLEntries("VARNAME", "*.mk: use; buildlink3.mk: append") },
+		func() { parseACLEntries("VARNAME", "*.mk: use", "buildlink3.mk: append") },
 		"Pkglint internal error: Unreachable ACL pattern \"buildlink3.mk\" for \"VARNAME\".")
 }
 
