@@ -6,13 +6,27 @@ import (
 	"strings"
 )
 
-// This file defines the specific type of some variables.
+// This file defines the type and the access permissions of most pkgsrc
+// variables.
 //
-// Some are plain values, some are lists.
-// Lists are split like in the shell, using "double" and 'single' quotes
-// to enclose spaces.
+// Some types are plain values, some are lists. Lists are split like in the
+// shell, using "double" and 'single' quotes to enclose spaces.
 //
 // See vartypecheck.go for how these types are checked.
+//
+// The permissions depend on the name of the file where the variable is
+// either assigned or used. There are several types of Makefile fragments
+// in pkgsrc, and some of them have very specific tasks, like buildlink3.mk,
+// builtin.mk and options.mk.
+//
+// TODO: There are separate permission rules for files from the pkgsrc
+//  infrastructure since the infrastructure basically provides the API, and
+//  the packages use the API.
+//
+// Variables that are defined by packages are usually used by the
+// infrastructure, and vice versa. There are also user-defined variables,
+// which from the view point of a package, are the same as variables
+// defined by the infrastructure.
 
 // InitVartypes initializes the long list of predefined pkgsrc variables.
 // After this is done, PKGNAME, MAKE_ENV and all the other variables
