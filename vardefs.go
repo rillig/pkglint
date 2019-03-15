@@ -570,7 +570,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("BUILDLINK_PREFIX.*", lkNone, BtPathname,
 		"builtin.mk: set, use; Makefile, Makefile.common, *.mk: use")
 	acl("BUILDLINK_RPATHDIRS.*", lkShell, BtPathname, "buildlink3.mk: append")
-	acl("BUILDLINK_TARGETS", lkShell, BtIdentifier, "builtin.mk: append")
+	acl("BUILDLINK_TARGETS", lkShell, BtIdentifier, "Makefile, Makefile.*, *.mk: append")
 	acl("BUILDLINK_FNAME_TRANSFORM.*", lkNone, BtSedCommands,
 		"Makefile, buildlink3.mk, builtin.mk, hacks.mk, options.mk: append")
 	acl("BUILDLINK_TRANSFORM", lkShell, BtWrapperTransform, "*: append")
@@ -789,7 +789,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("GNU_CONFIGURE_MANDIR", lkNone, BtPathname, "Makefile, Makefile.common: set")
 	pkg("GNU_CONFIGURE_PREFIX", lkNone, BtPathname)
 	pkg("GOPATH", lkNone, BtPathname)
-	acl("HAS_CONFIGURE", lkNone, BtYes, "Makefile, Makefile.common: set")
+	pkgload("HAS_CONFIGURE", lkNone, BtYes)
 	pkglist("HEADER_TEMPLATES", lkShell, BtPathname)
 	pkg("HOMEPAGE", lkNone, BtHomepage)
 	pkg("ICON_THEMES", lkNone, BtYes)
@@ -946,7 +946,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkglist("NOT_PAX_MPROTECT_SAFE", lkShell, BtPathmask)
 	acl("NO_BIN_ON_CDROM", lkNone, BtRestricted, "Makefile, Makefile.common, *.mk: set")
 	acl("NO_BIN_ON_FTP", lkNone, BtRestricted, "Makefile, Makefile.common, *.mk: set")
-	acl("NO_BUILD", lkNone, BtYes, "Makefile, Makefile.common: set; Makefile.*: default, set")
+	pkgload("NO_BUILD", lkNone, BtYes)
 	pkg("NO_CHECKSUM", lkNone, BtYes)
 	pkg("NO_CONFIGURE", lkNone, BtYes)
 	acl("NO_EXPORT_CPP", lkNone, BtYes, "Makefile: set")
@@ -1111,13 +1111,13 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PREFIX", lkNone, BtPathname, "*: use")
 	acl("PREV_PKGPATH", lkNone, BtPathname, "*: use") // doesn't exist any longer
 	acl("PRINT_PLIST_AWK", lkNone, BtAwkCommand, "*: append")
-	pkglist("PRIVILEGED_STAGES", lkShell, enum("install package clean"))
-	acl("PTHREAD_AUTO_VARS", lkNone, BtYesNo, "Makefile, Makefile.common: set")
+	pkglist("PRIVILEGED_STAGES", lkShell, enum("build install package clean"))
+	pkg("PTHREAD_AUTO_VARS", lkNone, BtYesNo)
 	sys("PTHREAD_CFLAGS", lkShell, BtCFlag)
 	sys("PTHREAD_LDFLAGS", lkShell, BtLdFlag)
 	sys("PTHREAD_LIBS", lkShell, BtLdFlag)
 	acl("PTHREAD_OPTS", lkShell, enum("native optional require"),
-		"Makefile: set, append; Makefile.common, buildlink3.mk: append")
+		"Makefile, Makefile.*, *.mk: default, set, append")
 	sysload("PTHREAD_TYPE", lkNone, BtIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", lkNone, BtYes)
 	acl("PYPKGPREFIX", lkNone, enumFromDirs("lang", `^python(\d+)$`, "py$1", "py27 py36"), ""+
@@ -1136,7 +1136,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("RCD_SCRIPT_WRK.*", lkNone, BtPathname, "Makefile: set")
 	usr("REAL_ROOT_USER", lkNone, BtUserGroupName)
 	usr("REAL_ROOT_GROUP", lkNone, BtUserGroupName)
-	acl("REPLACE.*", lkNone, BtUnknown, "Makefile: set")
+	pkglist("REPLACE.*", lkNone, BtUnknown)
 	pkglist("REPLACE_AWK", lkShell, BtPathmask)
 	pkglist("REPLACE_BASH", lkShell, BtPathmask)
 	pkglist("REPLACE_CSH", lkShell, BtPathmask)
