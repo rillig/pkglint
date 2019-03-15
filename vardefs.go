@@ -1084,12 +1084,9 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("PKG_SHELL.*", lkNone, BtPathname, "Makefile, Makefile.common: set")
 	sys("PKG_SHLIBTOOL", lkNone, BtPathname)
 	pkglist("PKG_SKIP_REASON", lkShell, BtShellWord)
-	acl("PKG_SUGGESTED_OPTIONS", lkShell, BtOption,
-		"Makefile, Makefile.common, options.mk: set, append")
-	acl("PKG_SUGGESTED_OPTIONS.*", lkShell, BtOption,
-		"Makefile, Makefile.common, options.mk: set, append")
-	acl("PKG_SUPPORTED_OPTIONS", lkShell, BtOption,
-		"Makefile: set, append; Makefile.common: set; options.mk: set, append, use")
+	optlist("PKG_SUGGESTED_OPTIONS", lkShell, BtOption)
+	optlist("PKG_SUGGESTED_OPTIONS.*", lkShell, BtOption)
+	optlist("PKG_SUPPORTED_OPTIONS", lkShell, BtOption)
 	acl("PKG_SYSCONFDIR*", lkNone, BtPathname, ""+
 		"Makefile: set, use, use-loadtime; "+
 		"buildlink3.mk, builtin.mk: use-loadtime; "+
