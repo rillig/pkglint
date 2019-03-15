@@ -118,14 +118,6 @@ func imax(a, b int) int {
 	return b
 }
 
-func mustMatch(s string, re regex.Pattern) []string {
-	m := G.res.Match(s, re)
-	if m == nil {
-		G.Assertf(false, "mustMatch %q %q", s, re)
-	}
-	return m
-}
-
 func isEmptyDir(filename string) bool {
 	if hasSuffix(filename, "/CVS") {
 		return true

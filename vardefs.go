@@ -33,11 +33,11 @@ import (
 // can be used in Makefiles without triggering warnings about typos.
 func (src *Pkgsrc) InitVartypes() {
 
-	acl := func(varname string, kindOfList KindOfList, checker *BasicType, aclEntries ...string) {
-		m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
-		varbase, varparam := m[1], m[2]
+	acl := func(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
+		m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
+		G.Assertf(m, "invalid variable name")
 
-		vartype := Vartype{kindOfList, checker, parseACLEntries(varname, aclEntries...), false}
+		vartype := Vartype{kindOfList, basicType, parseACLEntries(varname, aclEntries...), false}
 
 		if varparam == "" || varparam == "*" {
 			src.vartypes[varbase] = &vartype

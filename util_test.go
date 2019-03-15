@@ -50,14 +50,6 @@ func (s *Suite) Test__regex_ReplaceFirst(c *check.C) {
 	c.Check(rest, equals, "X+c+d")
 }
 
-func (s *Suite) Test_mustMatch(c *check.C) {
-	t := s.Init(c)
-
-	t.ExpectPanic(
-		func() { mustMatch("aaa", `b`) },
-		"Pkglint internal error: mustMatch \"aaa\" \"b\"")
-}
-
 func (s *Suite) Test_shorten(c *check.C) {
 	c.Check(shorten("aaaaa", 3), equals, "aaa...")
 	c.Check(shorten("aaaaa", 5), equals, "aaaaa")
