@@ -53,7 +53,7 @@ func (src *Pkgsrc) InitVartypes() {
 	// Simple assignment (instead of appending) is only allowed in Makefile and Makefile.common.
 	pkglist := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker, ""+
-			"Makefile, Makefile.common, options.mk: append, default, set, use; "+
+			"Makefile, Makefile.*, options.mk: append, default, set, use; "+
 			"buildlink3.mk, builtin.mk: none; "+
 			"*.mk: append, default, use")
 	}
@@ -686,7 +686,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkg("DIST_SUBDIR", lkNone, BtPathname)
 	pkglist("DJB_BUILD_ARGS", lkShell, BtShellWord)
 	pkglist("DJB_BUILD_TARGETS", lkShell, BtIdentifier)
-	acl("DJB_CONFIG_CMDS", lkNone, BtShellCommands, "options.mk: set")
+	pkglist("DJB_CONFIG_CMDS", lkNone, BtShellCommands)
 	pkglist("DJB_CONFIG_DIRS", lkShell, BtWrksrcSubdirectory)
 	pkg("DJB_CONFIG_HOME", lkNone, BtFileName)
 	pkg("DJB_CONFIG_PREFIX", lkNone, BtPathname)

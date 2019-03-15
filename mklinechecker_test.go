@@ -370,7 +370,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 	t.CheckOutputLines(
 		"WARN: filename.mk:10: The variable MASTER_SITES may not be set " +
 			"(only given a default value, or appended to) in this file; " +
-			"it would be ok in Makefile, Makefile.common or options.mk.")
+			"it would be ok in Makefile, Makefile.* or options.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
