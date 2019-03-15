@@ -33,6 +33,7 @@ import (
 // can be used in Makefiles without triggering warnings about typos.
 func (src *Pkgsrc) InitVartypes() {
 
+	// acl defines a variable with the given type and permissions.
 	acl := func(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
 		m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
 		G.Assertf(m, "invalid variable name")
@@ -47,24 +48,25 @@ func (src *Pkgsrc) InitVartypes() {
 		}
 	}
 
-	// A package-defined variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
+	// A package-settable variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
 	pkg := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker,
-			"Makefile: set, use",
 			"buildlink3.mk, builtin.mk: none",
-			"Makefile.*, *.mk: default, set, use")
+			"Makefile, Makefile.*, *.mk: default, set, use")
 	}
 
 	// pkgload is the same as pkg, except that the variable may be accessed at load time.
 	pkgload := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker,
-			"Makefile: set, use, use-loadtime",
 			"buildlink3.mk, builtin.mk: none",
-			"Makefile.*, *.mk: default, set, use, use-loadtime")
+			"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	}
 
-	// A package-defined list may be appended to in all Makefiles except buildlink3.mk and builtin.mk.
-	// Simple assignment (instead of appending) is only allowed in Makefile and Makefile.common.
+	// A package-defined list may be defined and appended to in all Makefiles
+	// except buildlink3.mk and builtin.mk. Simple assignment (instead of
+	// appending) is also allowed. If this leads of an unconditional
+	// assignment overriding a previous value, the redundancy check will
+	// catch it.
 	pkglist := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker,
 			"Makefile, Makefile.*, options.mk: append, default, set, use",
@@ -80,10 +82,15 @@ func (src *Pkgsrc) InitVartypes() {
 			"buildlink3.mk, builtin.mk, *.mk: append, default, use")
 	}
 
-	// sys declares a user-defined or system-defined variable that must not be modified by packages.
+	// sys declares a user-defined or system-defined variable that must not
+	// be modified by packages.
 	//
-	// It also must not be used in buildlink3.mk and builtin.mk files or at load-time,
-	// since the system/user preferences may not have been loaded when these files are included.
+	// It also must not be used in buildlink3.mk and builtin.mk files or at
+	// load time since the system/user preferences may not have been loaded
+	// when these files are included.
+	//
+	// TODO: These timing issues should be handled separately from the permissions.
+	//  They can be made more precise.
 	sys := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker,
 			"buildlink3.mk: none",
@@ -93,6 +100,7 @@ func (src *Pkgsrc) InitVartypes() {
 	// usr declares a user-defined variable that must not be modified by packages.
 	usr := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker,
+			// TODO: why is builtin.mk missing here?
 			"buildlink3.mk: none",
 			"*: use-loadtime, use")
 	}
@@ -103,18 +111,24 @@ func (src *Pkgsrc) InitVartypes() {
 			"*: use-loadtime, use")
 	}
 
+	// bl3list declares a list variable that is defined by buildlink3.mk and
+	// builtin.mk and can later be used by the package.
 	bl3list := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker,
 			"buildlink3.mk, builtin.mk: append",
 			"*: use")
 	}
 
+	// cmdline declares a variable that is defined on the command line. There
+	// are only few variables of this type, such as PKG_DEBUG_LEVEL.
 	cmdline := func(varname string, kindOfList KindOfList, checker *BasicType) {
 		acl(varname, kindOfList, checker,
 			"buildlink3.mk, builtin.mk: none",
 			"*: use-loadtime, use")
 	}
 
+	// compilerLanguages reads the available languages that are typically
+	// bundled in a single compiler framework, such as GCC or Clang.
 	compilerLanguages := enum(
 		func() string {
 			mklines := LoadMk(src.File("mk/compiler.mk"), NotEmpty)
@@ -153,21 +167,26 @@ func (src *Pkgsrc) InitVartypes() {
 	// defval. This is mostly useful when testing pkglint.
 	enumFrom := func(filename string, defval string, varcanons ...string) *BasicType {
 		mklines := LoadMk(src.File(filename), NotEmpty)
-		values := make(map[string]bool)
+		if mklines == nil {
+			return enum(defval)
+		}
 
-		if mklines != nil {
-			for _, mkline := range mklines.mklines {
-				if mkline.IsVarassign() {
-					varcanon := mkline.Varcanon()
-					for _, vc := range varcanons {
-						if vc == varcanon {
-							words, _ := splitIntoMkWords(mkline.Line, mkline.Value())
-							for _, word := range words {
-								if !contains(word, "$") {
-									values[intern(word)] = true
-								}
-							}
-						}
+		values := make(map[string]bool)
+		for _, mkline := range mklines.mklines {
+			if !mkline.IsVarassign() {
+				continue
+			}
+
+			varcanon := mkline.Varcanon()
+			for _, vc := range varcanons {
+				if vc != varcanon {
+					continue
+				}
+
+				words := mkline.ValueFields(mkline.Value())
+				for _, word := range words {
+					if !contains(word, "$") {
+						values[intern(word)] = true
 					}
 				}
 			}
@@ -188,9 +207,9 @@ func (src *Pkgsrc) InitVartypes() {
 		return enum(defval)
 	}
 
-	// enumFromDirs reads the directories from category, takes all that have
-	// a single number in them (such as php72) and ranks them from earliest
-	// to latest.
+	// enumFromDirs reads the package directories from category, takes all
+	// that have a single number in them (such as php72) and ranks them
+	// from earliest to latest.
 	//
 	// If the directories cannot be found, the allowed values are taken
 	// from defval. This is mostly useful when testing pkglint.
@@ -228,7 +247,7 @@ func (src *Pkgsrc) InitVartypes() {
 		"openjdk8 oracle-jdk8 openjdk7 sun-jdk7 sun-jdk6 jdk16 jdk15 kaffe",
 		"_PKG_JVMS.*")
 
-	// Last synced with mk/defaults/mk.conf revision 1.269 (2017-01-01).
+	// Last synced with mk/defaults/mk.conf revision 1.300 (fe3d998769f).
 	usr("USE_CWRAPPERS", lkNone, enum("yes no auto"))
 	usr("ALLOW_VULNERABLE_PACKAGES", lkNone, BtYes)
 	usr("AUDIT_PACKAGES_FLAGS", lkShell, BtShellWord)
@@ -242,7 +261,7 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("X509_KEY", lkNone, BtPathname)
 	usr("X509_CERTIFICATE", lkNone, BtPathname)
 	usr("PATCH_DEBUG", lkNone, BtYes)
-	usr("PKG_COMPRESSION", lkNone, enum("gzip bzip2 none"))
+	usr("PKG_COMPRESSION", lkNone, enum("gzip bzip2 xz none"))
 	usr("PKGSRC_LOCKTYPE", lkNone, enum("none sleep once"))
 	usr("PKGSRC_SLEEPSECS", lkNone, BtInteger)
 	usr("ABI", lkNone, enum("32 64"))
@@ -255,9 +274,12 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("PKGSRC_SHOW_BUILD_DEFS", lkNone, BtYesNo)
 	usr("PKGSRC_RUN_TEST", lkNone, BtYesNo)
 	usr("PKGSRC_MKPIE", lkNone, BtYesNo)
-	usr("PKGSRC_USE_FORTIFY", lkNone, BtYesNo)
-	usr("PKGSRC_USE_RELRO", lkNone, BtYesNo)
+	usr("PKGSRC_MKREPRO", lkNone, BtYesNo)
+	usr("PKGSRC_USE_CTF", lkNone, BtYesNo)
+	usr("PKGSRC_USE_FORTIFY", lkNone, enum("no weak strong"))
+	usr("PKGSRC_USE_RELRO", lkNone, enum("no partial full"))
 	usr("PKGSRC_USE_SSP", lkNone, enum("no yes strong all"))
+	usr("PKGSRC_USE_STACK_CHECK", lkNone, enum("no yes"))
 	usr("PREFER.*", lkNone, enum("pkgsrc native"))
 	usr("PREFER_PKGSRC", lkShell, BtIdentifier)
 	usr("PREFER_NATIVE", lkShell, BtIdentifier)
@@ -293,7 +315,7 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("RCD_SCRIPTS_DIR", lkNone, BtPathname)
 	usr("PACKAGES", lkNone, BtPathname)
 	usr("PASSIVE_FETCH", lkNone, BtYes)
-	usr("PATCH_FUZZ_FACTOR", lkNone, enum("-F0 -F1 -F2 -F3"))
+	usr("PATCH_FUZZ_FACTOR", lkNone, enum("none -F0 -F1 -F2 -F3"))
 	usr("ACCEPTABLE_LICENSES", lkShell, BtIdentifier)
 	usr("SPECIFIC_PKGS", lkNone, BtYes)
 	usr("SITE_SPECIFIC_PKGS", lkShell, BtPkgPath)
@@ -364,6 +386,8 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("CYRUS_IDLE", lkNone, enum("poll idled no"))
 	usrpkg("CYRUS_GROUP", lkNone, BtUserGroupName)
 	usrpkg("CYRUS_USER", lkNone, BtUserGroupName)
+	usrpkg("DAEMONTOOLS_LOG_USER", lkNone, BtUserGroupName)
+	usrpkg("DAEMONTOOLS_GROUP", lkNone, BtUserGroupName)
 	usrpkg("DBUS_GROUP", lkNone, BtUserGroupName)
 	usrpkg("DBUS_USER", lkNone, BtUserGroupName)
 	usrpkg("DEFANG_GROUP", lkNone, BtUserGroupName)
@@ -372,6 +396,12 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("DEFAULT_IRC_SERVER", lkNone, BtIdentifier)
 	usrpkg("DEFAULT_SERIAL_DEVICE", lkNone, BtPathname)
 	usrpkg("DIALER_GROUP", lkNone, BtUserGroupName)
+	usrpkg("DJBDNS_AXFR_USER", lkNone, BtUserGroupName)
+	usrpkg("DJBDNS_CACHE_USER", lkNone, BtUserGroupName)
+	usrpkg("DJBDNS_LOG_USER", lkNone, BtUserGroupName)
+	usrpkg("DJBDNS_RBL_USER", lkNone, BtUserGroupName)
+	usrpkg("DJBDNS_TINY_USER", lkNone, BtUserGroupName)
+	usrpkg("DJBDNS_DJBDNS_GROUP", lkNone, BtUserGroupName)
 	usrpkg("DT_LAYOUT", lkNone, enum("US FI FR GER DV"))
 	usrpkg("ELK_GUI", lkShell, enum("none xaw motif"))
 	usrpkg("EMACS_TYPE", lkNone, emacsVersions)
@@ -427,6 +457,7 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("KNEWS_DOMAIN_NAME", lkNone, BtIdentifier)
 	usrpkg("LIBDVDCSS_HOMEPAGE", lkNone, BtHomepage)
 	usrpkg("LIBDVDCSS_MASTER_SITES", lkShell, BtFetchURL)
+	usrpkg("LIBUSB_TYPE", lkNone, enum("compat native"))
 	usrpkg("LATEX2HTML_ICONPATH", lkNone, BtURL)
 	usrpkg("LEAFNODE_DATA_DIR", lkNone, BtPathname)
 	usrpkg("LEAFNODE_USER", lkNone, BtUserGroupName)
@@ -441,6 +472,8 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("MECAB_CHARSET", lkNone, BtIdentifier)
 	usrpkg("MEDIATOMB_GROUP", lkNone, BtUserGroupName)
 	usrpkg("MEDIATOMB_USER", lkNone, BtUserGroupName)
+	usrpkg("MIREDO_USER", lkNone, BtUserGroupName)
+	usrpkg("MIREDO_GROUP", lkNone, BtUserGroupName)
 	usrpkg("MLDONKEY_GROUP", lkNone, BtUserGroupName)
 	usrpkg("MLDONKEY_HOME", lkNone, BtPathname)
 	usrpkg("MLDONKEY_USER", lkNone, BtUserGroupName)
@@ -463,6 +496,8 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("NMH_MTA", lkNone, enum("smtp sendmail"))
 	usrpkg("NMH_PAGER", lkNone, BtIdentifier)
 	usrpkg("NS_PREFERRED", lkNone, enum("communicator navigator mozilla"))
+	usrpkg("NULLMAILER_USER", lkNone, BtUserGroupName)
+	usrpkg("NULLMAILER_GROUP", lkNone, BtUserGroupName)
 	usrpkg("OPENSSH_CHROOT", lkNone, BtPathname)
 	usrpkg("OPENSSH_USER", lkNone, BtUserGroupName)
 	usrpkg("OPENSSH_GROUP", lkNone, BtUserGroupName)
@@ -483,6 +518,16 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("PROCMAIL_TRUSTED_IDS", lkShell, BtUnknown)
 	usrpkg("PVM_SSH", lkNone, BtPathname)
 	usrpkg("QMAILDIR", lkNone, BtPathname)
+	usrpkg("QMAIL_ALIAS_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_DAEMON_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_LOG_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_ROOT_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_PASSWD_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_QUEUE_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_REMOTE_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_SEND_USER", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_QMAIL_GROUP", lkNone, BtUserGroupName)
+	usrpkg("QMAIL_NOFILES_GROUP", lkNone, BtUserGroupName)
 	usrpkg("QMAIL_QFILTER_TMPDIR", lkNone, BtPathname)
 	usrpkg("QMAIL_QUEUE_DIR", lkNone, BtPathname)
 	usrpkg("QMAIL_QUEUE_EXTRA", lkNone, BtMailAddress)
@@ -503,11 +548,15 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("SDIST_PAWD", lkNone, enum("pawd pwd"))
 	usrpkg("SERIAL_DEVICES", lkShell, BtPathname)
 	usrpkg("SILC_CLIENT_WITH_PERL", lkNone, BtYesNo)
+	usrpkg("SNIPROXY_USER", lkNone, BtUserGroupName)
+	usrpkg("SNIPROXY_GROUP", lkNone, BtUserGroupName)
 	usrpkg("SSH_SUID", lkNone, BtYesNo)
 	usrpkg("SSYNC_PAWD", lkNone, enum("pawd pwd"))
 	usrpkg("SUSE_PREFER", lkNone, enum("13.1 12.1 10.0"))
 	usrpkg("TEXMFSITE", lkNone, BtPathname)
 	usrpkg("THTTPD_LOG_FACILITY", lkNone, BtIdentifier)
+	usrpkg("UCSPI_SSL_USER", lkNone, BtUserGroupName)
+	usrpkg("UCSPI_SSL_GROUP", lkNone, BtUserGroupName)
 	usrpkg("UNPRIVILEGED", lkNone, BtYesNo)
 	usrpkg("USE_CROSS_COMPILE", lkNone, BtYesNo)
 	usrpkg("USERPPP_GROUP", lkNone, BtUserGroupName)

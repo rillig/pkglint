@@ -670,9 +670,9 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 		"\tname in which the variable is used or defined. The rules for",
 		"\tAUTO_MKDIRS are:",
 		"",
-		"\t* in Makefile, it may be set, or used",
 		"\t* in buildlink3.mk, it may not be accessed at all",
 		"\t* in builtin.mk, it may not be accessed at all",
+		"\t* in Makefile, it may be set, given a default value, or used",
 		"\t* in Makefile.*, it may be set, given a default value, or used",
 		"\t* in *.mk, it may be set, given a default value, or used",
 		// TODO: Improve the wording to "in all other files".
