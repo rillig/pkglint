@@ -473,7 +473,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:3: LICENSE may not be used in this file; "+
-			"it would be ok in Makefile, Makefile.*, options.mk or *.mk.",
+			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:3: The variable LICENSE should be quoted as part of a shell word.",
 		"WARN: buildlink3.mk:8: LICENSE should not be evaluated at load time.",
 		// FIXME: This contradicts the warning from line 3 above.

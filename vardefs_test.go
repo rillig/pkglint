@@ -85,8 +85,10 @@ func (s *Suite) Test_VarTypeRegistry_parseACLEntries__invalid_arguments(c *check
 
 	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "buildlink3.mk: *", "*: *") },
-		"Pkglint internal error: Invalid ACL permission \"*\" for \"VARNAME\". "+
-			"Valid permissions are append, default, set, use, use-loadtime, none.")
+		"Pkglint internal error: "+
+			"Invalid ACL permission \"*\" for \"VARNAME\" in \"buildlink3.mk\". "+
+			"Remaining parts are \"*\". "+
+			"Valid permissions are default, set, append, use, use-loadtime (in this order), or none.")
 
 	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "buildlink3.mk: use", "*: use") },

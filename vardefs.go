@@ -124,7 +124,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist := func(varname string, checker *BasicType) {
 		acllist(varname, checker,
 			"buildlink3.mk, builtin.mk: none",
-			"Makefile, Makefile.*, *.mk: append, default, set, use")
+			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 
 	// pkgappend declares a variable that may use the += operator,
@@ -140,9 +140,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// suffix.
 	pkgappend := func(varname string, checker *BasicType) {
 		acl(varname, checker,
-			"Makefile, Makefile.*, options.mk: append, default, set, use",
 			"buildlink3.mk, builtin.mk: none",
-			"*.mk: append, default, set, use")
+			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 
 	// Some package-defined variables may be modified in buildlink3.mk files.
@@ -157,8 +156,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// for example platform-specific CFLAGS and LDFLAGS.
 	pkglistbl3 := func(varname string, checker *BasicType) {
 		reg.DefineParse(varname, lkShell, checker,
-			"Makefile, Makefile.common, options.mk: append, default, set, use",
-			"buildlink3.mk, builtin.mk, *.mk: append, default, use")
+			"buildlink3.mk, builtin.mk: default, append, use",
+			"Makefile, Makefile.common, *.mk: default, set, append, use")
 	}
 
 	// sys declares a user-defined or system-defined variable that must not
@@ -187,7 +186,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		acl(varname, checker,
 			// TODO: why is builtin.mk missing here?
 			"buildlink3.mk: none",
-			"*: use-loadtime, use")
+			"*: use, use-loadtime")
 	}
 
 	// usr declares a user-defined list variable that must not be modified by packages.
@@ -195,18 +194,18 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		acllist(varname, checker,
 			// TODO: why is builtin.mk missing here?
 			"buildlink3.mk: none",
-			"*: use-loadtime, use")
+			"*: use, use-loadtime")
 	}
 
 	// sysload declares a system-provided variable that may already be used at load time.
 	sysload := func(varname string, checker *BasicType) {
 		reg.DefineParse(varname, lkNone, checker,
-			"*: use-loadtime, use")
+			"*: use, use-loadtime")
 	}
 
 	sysloadlist := func(varname string, checker *BasicType) {
 		reg.DefineParse(varname, lkShell, checker,
-			"*: use-loadtime, use")
+			"*: use, use-loadtime")
 	}
 
 	// bl3list declares a list variable that is defined by buildlink3.mk and
@@ -222,7 +221,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	cmdline := func(varname string, checker *BasicType) {
 		reg.DefineParse(varname, lkNone, checker,
 			"buildlink3.mk, builtin.mk: none",
-			"*: use-loadtime, use")
+			"*: use, use-loadtime")
 	}
 
 	// Only for infrastructure files; see mk/misc/show.mk
@@ -393,9 +392,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usr("CROSSBASE", BtPathname)
 	usr("VARBASE", BtPathname)
 	acl("X11_TYPE", enum("modular native"),
-		"*: use-loadtime, use")
+		"*: use, use-loadtime")
 	acl("X11BASE", BtPathname,
-		"*: use-loadtime, use")
+		"*: use, use-loadtime")
 	usr("MOTIFBASE", BtPathname)
 	usr("PKGINFODIR", BtPathname)
 	usr("PKGMANDIR", BtPathname)
@@ -459,14 +458,14 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"Makefile: default, set, use, use-loadtime",
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile.*, *.mk: default, set, use, use-loadtime",
-			"*: use-loadtime, use")
+			"*: use, use-loadtime")
 	}
 	usrpkglist := func(varname string, checker *BasicType) {
 		acllist(varname, checker,
 			"Makefile: default, set, use, use-loadtime",
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile.*, *.mk: default, set, use, use-loadtime",
-			"*: use-loadtime, use")
+			"*: use, use-loadtime")
 	}
 
 	usrpkg("ACROREAD_FONTPATH", BtPathlist)
@@ -749,7 +748,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("BUILDLINK_JAVA_PREFIX.*", BtPathname,
 		"buildlink3.mk: set, use")
 	acllist("BUILDLINK_LDADD.*", BtLdFlag,
-		"builtin.mk: set, default, append, use",
+		"builtin.mk: default, set, append, use",
 		"buildlink3.mk: append, use",
 		"Makefile, Makefile.*, *.mk: use")
 	acllist("BUILDLINK_LDFLAGS", BtLdFlag,
@@ -797,10 +796,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("BUILD_TARGET.*", BtIdentifier)
 	pkg("BUILD_USES_MSGFMT", BtYes)
 	acl("BUILTIN_PKG", BtIdentifier,
-		"builtin.mk: set, use-loadtime, use",
+		"builtin.mk: set, use, use-loadtime",
 		"Makefile, Makefile.*, *.mk: use, use-loadtime")
 	acl("BUILTIN_PKG.*", BtPkgName,
-		"builtin.mk: set, use-loadtime, use")
+		"builtin.mk: set, use, use-loadtime")
 	acllist("BUILTIN_FIND_FILES_VAR", BtVariableName,
 		"builtin.mk: set")
 	acllist("BUILTIN_FIND_FILES.*", BtPathname,
@@ -910,7 +909,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("DLOPEN_REQUIRE_PTHREADS", BtYesNo)
 	pkg("DL_AUTO_VARS", BtYes)
 	acllist("DL_LIBS", BtLdFlag,
-		"*: use, append")
+		"*: append, use")
 	sys("DOCOWN", BtUserGroupName)
 	sys("DOCGRP", BtUserGroupName)
 	sys("DOCMODE", BtFileMode)
@@ -1218,7 +1217,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("PHP_PKG_PREFIX",
 		enumFromDirs("lang", `^php(\d+)$`, "php$1", "php56 php71 php72 php73"),
 		"special:phpversion.mk: set",
-		"*: use-loadtime, use")
+		"*: use, use-loadtime")
 	sys("PKGBASE", BtIdentifier)
 	// Despite its name, this is actually a list of filenames.
 	acllist("PKGCONFIG_FILE.*", BtPathname,
@@ -1352,7 +1351,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("PYPKGPREFIX",
 		enumFromDirs("lang", `^python(\d+)$`, "py$1", "py27 py36"),
 		"special:pyversion.mk: set",
-		"*: use-loadtime, use")
+		"*: use, use-loadtime")
 	// See lang/python/pyversion.mk
 	pkg("PYTHON_FOR_BUILD_ONLY", enum("yes no test tool YES"))
 	pkglist("REPLACE_PYTHON", BtPathmask)
@@ -1401,12 +1400,12 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("RUBY_BASE",
 		enumFromDirs("lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"),
 		"special:rubyversion.mk: set",
-		"*: use-loadtime, use")
+		"*: use, use-loadtime")
 	usr("RUBY_VERSION_REQD", BtVersion)
 	acl("RUBY_PKGPREFIX",
 		enumFromDirs("lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"),
-		"special:rubyversion.mk: set, default, use",
-		"*: use-loadtime, use")
+		"special:rubyversion.mk: default, set, use",
+		"*: use, use-loadtime")
 	sys("RUN", BtShellCommand)
 	sys("RUN_LDCONFIG", BtYesNo)
 	acllist("SCRIPTS_ENV", BtShellWord,
@@ -1479,8 +1478,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// this check, a package may set this variable before including the
 	// corresponding buildlink3.mk file.
 	acl("USE_BUILTIN.*", BtYesNoIndirectly,
-		"builtin.mk: set, use, use-loadtime",
-		"Makefile, Makefile.*, *.mk: set, use-loadtime, use")
+		"Makefile, Makefile.*, *.mk: set, use, use-loadtime")
 	pkg("USE_CMAKE", BtYes)
 	usr("USE_DESTDIR", BtYes)
 	pkglist("USE_FEATURES", BtIdentifier)
@@ -1553,32 +1551,12 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 	for _, arg := range aclEntries {
 		fields := strings.SplitN(arg, ": ", 2)
 		G.Assertf(len(fields) == 2, "Invalid ACL entry %q", arg)
-		globs, perms := fields[0], ifelseStr(fields[1] == "none", "", fields[1])
+		globs, perms := fields[0], fields[1]
 
 		G.Assertf(perms != prevperms, "Repeated permissions %q for %q.", perms, varname)
 		prevperms = perms
 
-		var permissions ACLPermissions
-		for _, perm := range strings.Split(perms, ", ") {
-			switch perm {
-			case "append":
-				permissions |= aclpAppend
-			case "default":
-				permissions |= aclpSetDefault
-			case "set":
-				permissions |= aclpSet
-			case "use":
-				permissions |= aclpUse
-			case "use-loadtime":
-				permissions |= aclpUseLoadtime
-			case "":
-				break
-			default:
-				G.Assertf(false, "Invalid ACL permission %q for %q. "+
-					"Valid permissions are append, default, set, use, use-loadtime, none.",
-					perm, varname)
-			}
-		}
+		permissions := reg.parsePermissions(varname, globs, perms)
 
 		for _, glob := range strings.Split(globs, ", ") {
 			switch glob {
@@ -1609,4 +1587,48 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 	}
 
 	return result
+}
+
+func (reg *VarTypeRegistry) parsePermissions(varname, globs, perms string) ACLPermissions {
+	if perms == "none" {
+		return aclpNone
+	}
+
+	splitPerms := strings.Split(perms, ", ")
+	var permissions ACLPermissions
+
+	remove := func(name string, perm ACLPermissions) {
+		if len(splitPerms) > 0 && splitPerms[0] == name {
+			permissions |= perm
+			splitPerms = splitPerms[1:]
+		}
+	}
+
+	// The order of the assignment permissions is in perceived
+	// chronological order. First the default assignment, which
+	// can later be overridden by an unconditional assignment,
+	// and that can be appended later to add more values.
+	remove("default", aclpSetDefault)
+	remove("set", aclpSet)
+	remove("append", aclpAppend)
+
+	// When using a variable, "use" comes first because it feels
+	// more general. Most variables that can be used at load time
+	// can also be used at run time.
+	//
+	// Using a variable at load time is a special access that
+	// applies to fewer variables. Therefore it comes last.
+	remove("use", aclpUse)
+	remove("use-loadtime", aclpUseLoadtime)
+
+	if len(splitPerms) > 0 {
+		G.Assertf(
+			false,
+			"Invalid ACL permission %q for %q in %q. "+
+				"Remaining parts are %q. "+
+				"Valid permissions are default, set, append, "+
+				"use, use-loadtime (in this order), or none.",
+			perms, varname, globs, strings.Join(splitPerms, ", "))
+	}
+	return permissions
 }
