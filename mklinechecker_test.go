@@ -773,8 +773,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_run_time(c 
 			"LOAD_TIME_ELSEWHERE should not be used at load time in this file; "+
 			"it would be ok in Makefile.",
 		"WARN: filename.mk:3: "+
-			// FIXME: not at all at load time.
-			"RUN_TIME_ELSEWHERE should not be used at load time in this file.")
+			"RUN_TIME_ELSEWHERE should not be used at load time in any file.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.C) {
@@ -866,9 +865,9 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_infrastru
 	// Therefore the check is skipped when such a variable appears at the
 	// left-hand side of an assignment.
 	//
-	// TODO: Even in this case involving an unknown infrastructure variable,
-	//  it is possible to issue a warning since VAR may not be used at all,
-	//  independent of any properties of INFRA.
+	// Even in this case involving an unknown infrastructure variable,
+	// it is possible to issue a warning since VAR should not be used at all,
+	// independent of any properties of INFRA.
 	t.CheckOutputEmpty()
 }
 
@@ -891,9 +890,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_load_time
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:123: " +
-			"VAR should not be used indirectly " +
-			"(via LOAD_TIME) at load time in this file.")
+		"WARN: buildlink3.mk:123: VAR should not be used indirectly " +
+			"(via LOAD_TIME) at load time.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_file(c *check.C) {

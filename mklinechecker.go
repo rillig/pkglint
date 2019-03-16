@@ -618,25 +618,27 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		return
 	}
 
+	if indirectly {
+		mkline.Warnf("%s should not be used indirectly (via %s) at load time.",
+			varname, mkline.Varname())
+		ck.explainPermissions(varname, vartype)
+		return
+	}
+
 	needed := aclpUse
-	if directly || indirectly {
+	if directly {
 		needed = aclpUseLoadtime
 	}
 	alternativeFiles := vartype.AllowedFiles(needed)
 
 	switch {
-
-	case alternativeFiles == "" && indirectly:
-		mkline.Warnf("%s should not be used indirectly (via %s) at load time in this file.",
-			varname, mkline.Varname())
-
 	case alternativeFiles == "" && directly:
-		mkline.Warnf("%s should not be used at load time in this file.", varname)
+		mkline.Warnf("%s should not be used at load time in any file.", varname)
 
 	case alternativeFiles == "":
-		mkline.Warnf("%s should not be used at run time in this file.", varname)
+		mkline.Warnf("%s should not be used at run time in any file.", varname)
 
-	case needed == aclpUseLoadtime:
+	case directly:
 		mkline.Warnf(
 			"%s should not be used at load time in this file; "+
 				"it would be ok in %s.",
