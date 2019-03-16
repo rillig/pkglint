@@ -143,21 +143,24 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
+	pkgappendbl3 := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
+			"Makefile, Makefile.*, *.mk: default, set, append, use")
+	}
 
 	// Some package-defined variables may be modified in buildlink3.mk files.
 	// These variables are typically related to compiling and linking files
 	// from C and related languages.
 	pkgbl3 := func(varname string, basicType *BasicType) {
 		reg.DefineParse(varname, lkNone, basicType,
-			"Makefile, Makefile.common, options.mk: default, set, use",
-			"buildlink3.mk, builtin.mk, *.mk: default, use")
+			"Makefile, Makefile.*, *.mk: default, set, use")
 	}
 	// Some package-defined lists may also be appended in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
 	pkglistbl3 := func(varname string, basicType *BasicType) {
 		reg.DefineParse(varname, lkShell, basicType,
 			"buildlink3.mk, builtin.mk: default, append, use",
-			"Makefile, Makefile.common, *.mk: default, set, append, use")
+			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 
 	// sys declares a user-defined or system-defined variable that must not
@@ -742,7 +745,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"buildlink3.mk: append")
 	acllist("BUILDLINK_DEPMETHOD.*", BtBuildlinkDepmethod,
 		"buildlink3.mk: default, append, use",
-		"Makefile, Makefile.*, *.mk: set, append")
+		"Makefile, Makefile.*, *.mk: default, set, append")
 	acl("BUILDLINK_DIR", BtPathname,
 		"*: use")
 	bl3list("BUILDLINK_FILES.*", BtPathmask)
@@ -1418,8 +1421,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"*: use, use-loadtime")
 	sys("RUN", BtShellCommand)
 	sys("RUN_LDCONFIG", BtYesNo)
-	acllist("SCRIPTS_ENV", BtShellWord,
-		"Makefile, Makefile.common: append")
+	pkglist("SCRIPTS_ENV", BtShellWord)
 	usrlist("SETGID_GAMES_PERMS", BtPerms)
 	usrlist("SETUID_ROOT_PERMS", BtPerms)
 	pkg("SET_LIBDIR", BtYes)
@@ -1447,14 +1449,14 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acllist("SUBDIR", BtFileName,
 		"Makefile: append")
 
-	pkglist("SUBST_CLASSES", BtIdentifier)
-	pkglist("SUBST_CLASSES.*", BtIdentifier) // OPSYS-specific
-	pkglist("SUBST_FILES.*", BtPathmask)
-	pkg("SUBST_FILTER_CMD.*", BtShellCommand)
-	pkg("SUBST_MESSAGE.*", BtMessage)
-	pkgappend("SUBST_SED.*", BtSedCommands)
-	pkg("SUBST_STAGE.*", BtStage)
-	pkglist("SUBST_VARS.*", BtVariableName)
+	pkglistbl3("SUBST_CLASSES", BtIdentifier)
+	pkglistbl3("SUBST_CLASSES.*", BtIdentifier) // OPSYS-specific
+	pkglistbl3("SUBST_FILES.*", BtPathmask)
+	pkgbl3("SUBST_FILTER_CMD.*", BtShellCommand)
+	pkgbl3("SUBST_MESSAGE.*", BtMessage)
+	pkgappendbl3("SUBST_SED.*", BtSedCommands)
+	pkgbl3("SUBST_STAGE.*", BtStage)
+	pkglistbl3("SUBST_VARS.*", BtVariableName)
 
 	pkglist("SUPERSEDES", BtDependency)
 	pkglist("TEST_DEPENDS", BtDependencyWithPath)
