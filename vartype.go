@@ -47,6 +47,8 @@ const (
 	aclpAllRuntime = aclpAll &^ aclpUseLoadtime
 )
 
+// Contains returns whether each permission of the given subset is
+// contained in this permission set.
 func (perms ACLPermissions) Contains(subset ACLPermissions) bool {
 	return perms&subset == subset
 }
@@ -92,7 +94,9 @@ func (vt *Vartype) Union() ACLPermissions {
 	return permissions
 }
 
-// AllowedFiles lists the file patterns in which the given permissions are allowed.
+// AllowedFiles lists the file patterns in which all of the given
+// permissions are allowed, readily formatted to be used in a diagnostic.
+// If the permission is allowed nowhere, an empty string is returned.
 func (vt *Vartype) AllowedFiles(perms ACLPermissions) string {
 	files := make([]string, 0, len(vt.aclEntries))
 	for _, aclEntry := range vt.aclEntries {

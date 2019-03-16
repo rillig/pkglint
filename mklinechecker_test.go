@@ -737,9 +737,6 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *
 	t.CheckOutputEmpty()
 }
 
-//		// FIXME: The warning must include "in this file" since it would be allowed in builtin.mk.
-//		"WARN: filename.mk:1: IS_BUILTIN.Xfixes should not be evaluated at load time."
-
 // Ensures that the warning "should not be evaluated at load time" is issued
 // only if using the variable at run time is allowed. If the latter were not
 // allowed, this warning would be confusing.
@@ -769,15 +766,15 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_run_time(c 
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:2: RUN_TIME should not be evaluated at load time.",
-		// FIXME: "not at load time" suggests that using the variable at run time were allowed.
-		"WARN: filename.mk:2: WRITE_ONLY should not be evaluated at load time.",
-		"WARN: filename.mk:2: WRITE_ONLY may not be used in any file; it is a write-only variable.",
-		"WARN: filename.mk:3: LOAD_TIME_ELSEWHERE should not be evaluated at load time.",
-		"WARN: filename.mk:3: LOAD_TIME_ELSEWHERE may not be used in this file; it would be ok in Makefile.",
-		// FIXME: "not at load time" suggests that using the variable at run time were allowed.
-		"WARN: filename.mk:3: RUN_TIME_ELSEWHERE should not be evaluated at load time.",
-		// FIXME: "may not" should be "should not".
-		"WARN: filename.mk:3: RUN_TIME_ELSEWHERE may not be used in any file; it is a write-only variable.")
+		"WARN: filename.mk:2: "+
+			"WRITE_ONLY should not be used in any file; "+
+			"it is a write-only variable.",
+		"WARN: filename.mk:3: "+
+			"LOAD_TIME_ELSEWHERE should not be used at load time in this file; "+
+			"it would be ok in Makefile.",
+		"WARN: filename.mk:3: "+
+			// FIXME: not at all at load time.
+			"RUN_TIME_ELSEWHERE should not be used at load time in this file.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.C) {
@@ -794,8 +791,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.
 	// Since PKGREVISION may only be set in the package Makefile directly,
 	// there is no other file that could be mentioned as "it would be ok in".
 	t.CheckOutputLines(
-		"WARN: any.mk:2: PKGREVISION should not be evaluated at load time.",
-		"WARN: any.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
+		"WARN: any.mk:2: PKGREVISION should not be used in any file; it is a write-only variable.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C) {
@@ -826,8 +822,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly_tool(c *ch
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: file.mk:2: PKGREVISION should not be evaluated indirectly at load time.",
-		"WARN: file.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
+		"WARN: file.mk:2: PKGREVISION should not be used in any file; it is a write-only variable.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_other_file(c *check.C) {
@@ -842,7 +837,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:2: " +
-			"AUTO_MKDIRS may not be used in this file; " +
+			"AUTO_MKDIRS should not be used at run time in this file; " +
 			"it would be ok in Makefile, Makefile.* or *.mk.")
 }
 
@@ -851,35 +846,54 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_infrastru
 
 	// This combination of BtUnknown and all permissions is typical for
 	// otherwise unknown variables from the pkgsrc infrastructure.
-	G.Pkgsrc.vartypes.Define("MOTIFLIB", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.Define("INFRA", lkNone, BtUnknown,
 		ACLEntry{"*", aclpAll})
-	G.Pkgsrc.vartypes.DefineParse("COMPILER_RPATH_FLAG", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtUnknown,
 		"buildlink3.mk: none",
 		"*: use")
-
-	mkline := t.NewMkLine("buildlink3.mk", 123, "MOTIFLIB=\t${COMPILER_RPATH_FLAG}")
+	mkline := t.NewMkLine("buildlink3.mk", 123, "INFRA=\t${VAR}")
 
 	MkLineChecker{mkline}.Check()
 
-	// FIXME: Since MOTIFLIB is defined in the infrastructure and pkglint
-	//  knows nothing else about this variable, it assumes that MOTIFLIB
-	//  may be used at load time. This is done to prevent wrong warnings.
-	//  This in turn has consequences when MOTIFLIB is used on the left-hand
-	//  side of an assignment since pkglint assumes that the right-hand
-	//  side may now be evaluated at load time. This produces the first
-	//  warning.
-	//  .
-	//  The second warning is wrong because it just looks at the needed
-	//  permissions at the end of MkLineChecker.checkVarusePermissions.
-	//  To match the wording of the current message, it must look at the
-	//  union of both aclpUse|aclpUseLoadTime.
+	// Since INFRA is defined in the infrastructure and pkglint
+	// knows nothing else about this variable, it assumes that INFRA
+	// may be used at load time. This is done to prevent wrong warnings.
+	//
+	// This in turn has consequences when INFRA is used on the left-hand
+	// side of an assignment since pkglint assumes that the right-hand
+	// side may now be evaluated at load time.
+	//
+	// Therefore the check is skipped when such a variable appears at the
+	// left-hand side of an assignment.
+	//
+	// TODO: Even in this case involving an unknown infrastructure variable,
+	//  it is possible to issue a warning since VAR may not be used at all,
+	//  independent of any properties of INFRA.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_load_time(c *check.C) {
+	t := s.Init(c)
+
+	// LOAD_TIME may be used at load time in other.mk.
+	// Since VAR must not be used at load time at all, it would be dangerous
+	// to use its value in LOAD_TIME, as the latter might be evaluated later
+	// at load time, and at that point VAR would be evaluated as well.
+
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkNone, BtMessage,
+		"buildlink3.mk: set",
+		"*.mk: use-loadtime")
+	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtUnknown,
+		"buildlink3.mk: none",
+		"*.mk: use")
+	mkline := t.NewMkLine("buildlink3.mk", 123, "LOAD_TIME=\t${VAR}")
+
+	MkLineChecker{mkline}.Check()
+
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:123: "+
-			"COMPILER_RPATH_FLAG should not be evaluated indirectly at load time.",
-		"WARN: buildlink3.mk:123: "+
-			"COMPILER_RPATH_FLAG may not be used in any file; "+
-			// FIXME: This conclusion is wrong.
-			"it is a write-only variable.")
+		"WARN: buildlink3.mk:123: " +
+			"VAR should not be used indirectly " +
+			"(via LOAD_TIME) at load time in this file.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_file(c *check.C) {
@@ -896,10 +910,10 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 	// Since these warnings are valid for the whole file, duplicates are suppressed.
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:2: "+
-			"AUTO_MKDIRS may not be used in this file; "+
+			"AUTO_MKDIRS should not be used at run time in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:2: "+
-			"PKGREVISION may not be used in any file; "+
+			"PKGREVISION should not be used in any file; "+
 			"it is a write-only variable.")
 }
 
@@ -917,19 +931,24 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__without_mklines(c *ch
 	// Since G.Mk is not set, the duplicates are not suppressed.
 	// Therefore in this case there are more warnings than in realistic situations.
 	t.CheckOutputLines(
+		// Since G.Mk is not set, there is no place to remember the defined
+		// and the used variables. Therefore the "defined but not used" and
+		// "used but not defined" warning only add noise and must therefore
+		// be suppressed. FIXME
 		"WARN: buildlink3.mk:123: VAR is defined but not used.",
 		"WARN: buildlink3.mk:123: VAR is used but not defined.",
+
 		"WARN: buildlink3.mk:123: "+
-			"AUTO_MKDIRS may not be used in this file; "+
+			"AUTO_MKDIRS should not be used at run time in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:123: "+
-			"AUTO_MKDIRS may not be used in this file; "+
+			"AUTO_MKDIRS should not be used at run time in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:123: "+
-			"PKGREVISION may not be used in any file; "+
+			"PKGREVISION should not be used in any file; "+
 			"it is a write-only variable.",
 		"WARN: buildlink3.mk:123: "+
-			"PKGREVISION may not be used in any file; "+
+			"PKGREVISION should not be used in any file; "+
 			"it is a write-only variable.")
 }
 

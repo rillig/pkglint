@@ -472,19 +472,14 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 	CheckLinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:3: LICENSE may not be used in this file; "+
+		"WARN: buildlink3.mk:3: LICENSE should not be used at run time in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:3: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:8: LICENSE should not be evaluated at load time.",
-		// FIXME: This contradicts the warning from line 3 above.
-		"WARN: buildlink3.mk:8: LICENSE may not be used in any file; it is a write-only variable.",
-		"WARN: buildlink3.mk:8: LICENSE should not be evaluated indirectly at load time.",
 		"WARN: buildlink3.mk:8: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:9: LICENSE should not be evaluated at load time.",
-		"WARN: buildlink3.mk:9: LICENSE should not be evaluated indirectly at load time.",
 		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
 		"WARN: buildlink3.mk:13: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).")
+		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string "+
+			"(also in other variables in this file).")
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) {

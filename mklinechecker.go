@@ -539,42 +539,117 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	mkline := ck.MkLine
 	effPerms := vartype.EffectivePermissions(mkline.Basename)
 	if effPerms.Contains(aclpUseLoadtime) {
+		// Skip any checks, assuming that if a variable may be used at
+		// load time, it may also be used at run time.
 		return
 	}
 
-	// Is the variable used at load time although that is not allowed?
+	// At this point the variable must not be used at load time.
+	// Now determine whether it is directly used at load time because
+	// the context already says so or, a little trickier, if it might
+	// be used at load time somewhere in the future because it is
+	// assigned to another variable, and that variable is allowed
+	// to be used at load time.
 	directly := vuc.time == vucTimeParse
-	indirectly := !directly && vuc.vartype != nil && vuc.vartype.Union().Contains(aclpUseLoadtime)
+	indirectly := !directly && vuc.vartype != nil &&
+		vuc.vartype.Union().Contains(aclpUseLoadtime)
 
-	if (directly || indirectly) && !vartype.guessed {
+	if vartype.guessed {
+		return
+	}
+
+	if directly || indirectly {
+		// At this point the variable is used at load time although that
+		// is not allowed.
+
+		// Whether a tool variable may be used at load time depends on
+		// whether bsd.prefs.mk has been included. That file examines the
+		// tools that have been added to USE_TOOLS up to this point and
+		// makes their variables available for use at load time.
 		if tool := G.ToolByVarname(varname); tool != nil {
 			if !tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
 				ck.warnVaruseToolLoadTime(varname, tool)
 			}
-		} else {
+			return
+		}
+
+		if effPerms.Contains(aclpUse) {
 			ck.warnVaruseLoadTime(varname, indirectly)
+			return
 		}
+
+		// At this point the variable is used at load time although in this
+		// file it must not be used at all. Continue to get a detailed
+		// warning showing alternative permissions and/or alternative files.
+
+	} else if effPerms.Contains(aclpUse) {
+		// At this point the variable is used at run time. Since that is
+		// allowed by the permissions, there is nothing more to check for.
+		return
 	}
 
-	if !effPerms.Contains(aclpUse) {
-		needed := aclpUse
-		if directly || indirectly {
-			needed = aclpUseLoadtime
-		}
-		alternativeFiles := vartype.AllowedFiles(needed)
-		if alternativeFiles != "" {
-			if G.Mk == nil || G.Mk.FirstTimeSlice("don't-use", varname, mkline.Filename) {
-				mkline.Warnf("%s may not be used in this file; it would be ok in %s.",
-					varname, alternativeFiles)
-			}
-		} else {
-			if G.Mk == nil || G.Mk.FirstTimeSlice("write-only", varname) {
-				mkline.Warnf("%s may not be used in any file; it is a write-only variable.", varname)
-			}
-		}
+	if G.Mk != nil && !G.Mk.FirstTimeSlice("checkVarusePermissions", varname) {
+		return
+	}
 
+	// Do not warn about unknown infrastructure variables.
+	// These have all permissions to prevent warnings when they are used.
+	// But when other variables are assigned to them it would seem as if
+	// these other variables could become evaluated at load time.
+	// And this is something that most variables do not allow.
+	if vuc.vartype != nil && vuc.vartype.basicType == BtUnknown {
+		return
+	}
+
+	// At this point the variable is either:
+	// - used at load time and must not be used at all in this file, or
+	// - used at run time and must not be used at run time in this file.
+	//   (Whether such a variable may be used at load time or not should
+	//   not matter; this case is not expected in practice.)
+	//
+	// There must be a warning in any case, the remaining question is only
+	// about the details in the wording.
+
+	anyPerms := vartype.Union()
+	if !anyPerms.Contains(aclpUse) && !anyPerms.Contains(aclpUseLoadtime) {
+		// FIXME: replace "may not" with "should not" everywhere else
+		mkline.Warnf("%s should not be used in any file; it is a write-only variable.", varname)
 		ck.explainPermissions(varname, vartype)
+		return
 	}
+
+	needed := aclpUse
+	if directly || indirectly {
+		needed = aclpUseLoadtime
+	}
+	alternativeFiles := vartype.AllowedFiles(needed)
+
+	switch {
+
+	case alternativeFiles == "" && indirectly:
+		mkline.Warnf("%s should not be used indirectly (via %s) at load time in this file.",
+			varname, mkline.Varname())
+
+	case alternativeFiles == "" && directly:
+		mkline.Warnf("%s should not be used at load time in this file.", varname)
+
+	case alternativeFiles == "":
+		mkline.Warnf("%s should not be used at run time in this file.", varname)
+
+	case needed == aclpUseLoadtime:
+		mkline.Warnf(
+			"%s should not be used at load time in this file; "+
+				"it would be ok in %s.",
+			varname, alternativeFiles)
+
+	default:
+		mkline.Warnf(
+			"%s should not be used at run time in this file; "+
+				"it would be ok in %s.",
+			varname, alternativeFiles)
+	}
+
+	ck.explainPermissions(varname, vartype)
 }
 
 // warnVaruseToolLoadTime logs a warning that the tool ${varname}
@@ -642,7 +717,7 @@ func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 	}
 
 	mkline.Warnf("%s should not be evaluated indirectly at load time.", varname)
-	G.Explain(
+	mkline.Explain(
 		"The variable on the left-hand side may be evaluated at load time,",
 		"but the variable on the right-hand side may not.",
 		"Because of the assignment in this line, the variable might be used indirectly",
