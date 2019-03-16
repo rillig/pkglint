@@ -99,13 +99,31 @@ func (vt *Vartype) Union() ACLPermissions {
 //
 // If the permission is allowed nowhere, an empty string is returned.
 func (vt *Vartype) AlternativeFiles(perms ACLPermissions) string {
-	files := make([]string, 0, len(vt.aclEntries))
+	pos := make([]string, 0, len(vt.aclEntries))
+	neg := make([]string, 0, len(vt.aclEntries))
 	for _, aclEntry := range vt.aclEntries {
 		if aclEntry.permissions.Contains(perms) {
-			files = append(files, aclEntry.glob)
+			pos = append(pos, aclEntry.glob)
+		} else {
+			neg = append(neg, aclEntry.glob)
 		}
 	}
-	return joinSkipEmptyCambridge("or", files...)
+
+	positive := joinSkipEmptyCambridge("or", pos...)
+	if positive == "" {
+		return ""
+	}
+
+	negative := joinSkipEmptyCambridge("or", neg...)
+	if negative == "" {
+		return positive
+	}
+
+	if negative == "*" {
+		return positive + " only"
+	}
+
+	return positive + ", but not " + negative
 }
 
 // IsConsideredList returns whether the type is considered a list.

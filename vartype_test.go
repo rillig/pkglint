@@ -33,6 +33,9 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 		"Makefile: use",
 		"Makefile.*: none",
 		"*: use")
+	G.Pkgsrc.vartypes.DefineParse("ONLY", lkNone, BtYesNo,
+		"buildlink3.mk: append",
+		"*: none")
 
 	test := func(varname string, perms ACLPermissions, alternatives string) {
 		vartype := G.Pkgsrc.VariableType(varname)
@@ -44,8 +47,11 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 	// file list.
 	test("VAR", aclpNone, "buildlink3.mk, b*.mk, *.mk, Makefile, Makefile.* or *")
 
-	// FIXME: "b*.mk, Makefile or *, but not buildlink3.mk, *.mk or Makefile.*".
-	test("VAR", aclpUse, "b*.mk, Makefile or *")
+	test("VAR", aclpUse, "b*.mk, Makefile or *, but not buildlink3.mk, *.mk or Makefile.*")
+
+	test("VAR", aclpUseLoadtime, "")
+
+	test("ONLY", aclpAppend, "buildlink3.mk only")
 }
 
 func (s *Suite) Test_BasicType_HasEnum(c *check.C) {

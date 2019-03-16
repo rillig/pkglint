@@ -508,8 +508,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 			"(only set) in this file.",
 		"WARN: options.mk:14: "+
 			"The variable SET_ONLY_DEFAULT_ELSEWHERE may not be given a "+
-			// FIXME: "this file" matches "*.mk", so the warning must be more precise.
-			"default value (only set) in this file; it would be ok in *.mk.")
+			"default value (only set) in this file; it would be ok in *.mk, "+
+			"but not options.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__no_tracing(c *check.C) {
@@ -603,7 +603,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: options.mk:3: PKGBASE should not be used at load time in any file.",
-		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.")
+		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; "+
+			"it would be ok in pyversion.mk only.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
@@ -645,7 +646,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
 		"\ttech-pkg@NetBSD.org mailing list.",
 		"",
 		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; "+
-			"it would be ok in pyversion.mk.",
+			"it would be ok in pyversion.mk only.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
 		"\tname in which the variable is used or defined. The rules for",
@@ -670,7 +671,8 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS may not be set in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk.",
+			"it would be ok in Makefile, Makefile.* or *.mk, "+
+			"but not buildlink3.mk or builtin.mk.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
 		"\tname in which the variable is used or defined. The rules for",
@@ -769,7 +771,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_run_time(c 
 			"it is a write-only variable.",
 		"WARN: filename.mk:3: "+
 			"LOAD_TIME_ELSEWHERE should not be used at load time in this file; "+
-			"it would be ok in Makefile.",
+			"it would be ok in Makefile, but not *.mk.",
 		"WARN: filename.mk:3: "+
 			"RUN_TIME_ELSEWHERE should not be used at load time in any file.")
 }
@@ -835,7 +837,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:2: " +
 			"AUTO_MKDIRS should not be used in this file; " +
-			"it would be ok in Makefile, Makefile.* or *.mk.")
+			"it would be ok in Makefile, Makefile.* or *.mk, " +
+			"but not buildlink3.mk or builtin.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_infrastructure_variable(c *check.C) {
@@ -907,7 +910,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:2: "+
 			"AUTO_MKDIRS should not be used in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk.",
+			"it would be ok in Makefile, Makefile.* or *.mk, "+
+			"but not buildlink3.mk or builtin.mk.",
 		"WARN: buildlink3.mk:2: "+
 			"PKGREVISION should not be used in any file; "+
 			"it is a write-only variable.")
@@ -933,10 +937,12 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__without_mklines(c *ch
 
 		"WARN: buildlink3.mk:123: "+
 			"AUTO_MKDIRS should not be used in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk.",
+			"it would be ok in Makefile, Makefile.* or *.mk, "+
+			"but not buildlink3.mk or builtin.mk.",
 		"WARN: buildlink3.mk:123: "+
 			"AUTO_MKDIRS should not be used in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk.",
+			"it would be ok in Makefile, Makefile.* or *.mk, "+
+			"but not buildlink3.mk or builtin.mk.",
 		"WARN: buildlink3.mk:123: "+
 			"PKGREVISION should not be used in any file; "+
 			"it is a write-only variable.",
