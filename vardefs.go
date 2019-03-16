@@ -175,6 +175,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"*: use")
 	}
 
+	sysbl3 := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
+			"*: use")
+	}
+
 	syslist := func(varname string, basicType *BasicType) {
 		acllist(varname, basicType,
 			"buildlink3.mk: none",
@@ -917,16 +922,16 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("DO_NADA", BtShellCommand)
 	pkg("DYNAMIC_SITES_CMD", BtShellCommand)
 	pkg("DYNAMIC_SITES_SCRIPT", BtPathname)
-	sys("ECHO", BtShellCommand)
-	sys("ECHO_MSG", BtShellCommand)
-	sys("ECHO_N", BtShellCommand)
+	sysbl3("ECHO", BtShellCommand)
+	sysbl3("ECHO_MSG", BtShellCommand)
+	sysbl3("ECHO_N", BtShellCommand)
 	pkg("EGDIR", BtPathname) // Not defined anywhere but used in many places like this.
 	sys("EMACS_BIN", BtPathname)
 	sys("EMACS_ETCPREFIX", BtPathname)
 	sys("EMACS_FLAVOR", enum("emacs xemacs"))
 	sys("EMACS_INFOPREFIX", BtPathname)
 	sys("EMACS_LISPPREFIX", BtPathname)
-	pkglist("EMACS_MODULES", BtIdentifier)
+	pkglistbl3("EMACS_MODULES", BtIdentifier)
 	sys("EMACS_PKGNAME_PREFIX", BtIdentifier) // Or the empty string.
 	sys("EMACS_TYPE", enum("emacs xemacs"))
 	pkglist("EMACS_VERSIONS_ACCEPTED", emacsVersions)
@@ -993,7 +998,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("GITHUB_RELEASE", BtFileName)
 	pkg("GITHUB_TYPE", enum("tag release"))
 	pkg("GMAKE_REQD", BtVersion)
-	sys("GNU_ARCH.*", BtIdentifier)
+	// Some packages need to set GNU_ARCH.i386 to either i486 or i586.
+	pkg("GNU_ARCH.*", BtIdentifier)
 	pkgload("GNU_CONFIGURE", BtYes)
 	pkg("GNU_CONFIGURE_INFODIR", BtPathname)
 	pkg("GNU_CONFIGURE_LIBDIR", BtPathname)
@@ -1206,7 +1212,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("PERL5_SUB_INSTALLVENDORMAN3DIR", BtPrefixPathname)
 	pkg("PERL5_USE_PACKLIST", BtYesNo)
 	sys("PGSQL_PREFIX", BtPathname)
-	pkglist("PGSQL_VERSIONS_ACCEPTED", pgsqlVersions)
+	// The bl3 is necessary for databases/postgresql-postgis2.
+	pkglistbl3("PGSQL_VERSIONS_ACCEPTED", pgsqlVersions)
 	usr("PGSQL_VERSION_DEFAULT", BtVersion)
 	sys("PG_LIB_EXT", enum("dylib so"))
 	sys("PGSQL_TYPE",
@@ -1345,7 +1352,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	syslist("PTHREAD_CFLAGS", BtCFlag)
 	syslist("PTHREAD_LDFLAGS", BtLdFlag)
 	syslist("PTHREAD_LIBS", BtLdFlag)
-	pkglist("PTHREAD_OPTS", enum("native optional require"))
+	pkglistbl3("PTHREAD_OPTS", enum("native optional require"))
 	sysload("PTHREAD_TYPE", BtIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", BtYes)
 	acl("PYPKGPREFIX",
