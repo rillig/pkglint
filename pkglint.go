@@ -678,7 +678,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 	case basename == "distinfo":
 		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-			CheckLinesDistinfo(lines)
+			CheckLinesDistinfo(G.Pkg, lines)
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
