@@ -872,14 +872,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("CXXFLAGS.*", BtCFlag)
 	pkglist("CWRAPPERS_APPEND.*", BtShellWord)
 	syslist("DEFAULT_DISTFILES", BtFetchURL) // From mk/fetch/bsd.fetch-vars.mk.
-	acl("DEINSTALL_FILE", BtPathname,
-		"Makefile: set")
-	acllist("DEINSTALL_SRC", BtPathname,
-		"Makefile: set",
-		"Makefile.common: default, set")
-	acllist("DEINSTALL_TEMPLATES", BtPathname,
-		"Makefile: set, append",
-		"Makefile.common: set, default, append")
+	pkglist("DEINSTALL_SRC", BtPathname)
+	pkglist("DEINSTALL_TEMPLATES", BtPathname)
 	sys("DELAYED_ERROR_MSG", BtShellCommand)
 	sys("DELAYED_WARNING_MSG", BtShellCommand)
 	pkglist("DEPENDS", BtDependencyWithPath)
