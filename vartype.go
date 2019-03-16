@@ -213,11 +213,7 @@ func (bt *BasicType) NeedsQ() bool {
 }
 
 func (vt *Vartype) IsPlainString() bool {
-	switch vt.basicType {
-	case BtComment, BtMessage, BtUnknown:
-		return true
-	}
-	return false
+	return vt.basicType == BtComment || vt.basicType == BtMessage
 }
 
 type BasicType struct {
