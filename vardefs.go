@@ -52,8 +52,27 @@ func (reg *VarTypeRegistry) DefinedCanon(varname string) bool {
 	return reg.Canon(varname) != nil
 }
 
-func (reg *VarTypeRegistry) Define(varcanon string, vartype *Vartype) {
+func (reg *VarTypeRegistry) DefineType(varcanon string, vartype *Vartype) {
 	reg.types[varcanon] = vartype
+}
+
+func (reg *VarTypeRegistry) Define(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...ACLEntry) {
+	m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
+	G.Assertf(m, "invalid variable name")
+
+	vartype := Vartype{kindOfList, basicType, aclEntries, false}
+
+	if varparam == "" || varparam == "*" {
+		reg.types[varbase] = &vartype
+	}
+	if varparam == "*" || varparam == ".*" {
+		reg.types[varbase+".*"] = &vartype
+	}
+}
+
+// DefineParse defines a variable with the given type and permissions.
+func (reg *VarTypeRegistry) DefineParse(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
+	reg.Define(varname, kindOfList, basicType, parseACLEntries(varname, aclEntries...)...)
 }
 
 // InitVartypes initializes the long list of predefined pkgsrc variables.
@@ -61,26 +80,11 @@ func (reg *VarTypeRegistry) Define(varcanon string, vartype *Vartype) {
 // can be used in Makefiles without triggering warnings about typos.
 func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
-	// aclSpecial defines a variable with the given type and permissions.
-	aclSpecial := func(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
-		m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
-		G.Assertf(m, "invalid variable name")
-
-		vartype := Vartype{kindOfList, basicType, parseACLEntries(varname, aclEntries...), false}
-
-		if varparam == "" || varparam == "*" {
-			reg.types[varbase] = &vartype
-		}
-		if varparam == "*" || varparam == ".*" {
-			reg.types[varbase+".*"] = &vartype
-		}
-	}
-
 	acl := func(varname string, basicType *BasicType, aclEntries ...string) {
-		aclSpecial(varname, lkNone, basicType, aclEntries...)
+		reg.DefineParse(varname, lkNone, basicType, aclEntries...)
 	}
 	acllist := func(varname string, basicType *BasicType, aclEntries ...string) {
-		aclSpecial(varname, lkShell, basicType, aclEntries...)
+		reg.DefineParse(varname, lkShell, basicType, aclEntries...)
 	}
 
 	// A package-settable variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
@@ -92,7 +96,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
 	// pkgload is the same as pkg, except that the variable may be accessed at load time.
 	pkgload := func(varname string, checker *BasicType) {
-		aclSpecial(varname, lkNone, checker,
+		reg.DefineParse(varname, lkNone, checker,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	}
@@ -122,7 +126,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// Some package-defined lists may also be appended in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
 	pkglistbl3 := func(varname string, checker *BasicType) {
-		aclSpecial(varname, lkShell, checker,
+		reg.DefineParse(varname, lkShell, checker,
 			"Makefile, Makefile.common, options.mk: append, default, set, use",
 			"buildlink3.mk, builtin.mk, *.mk: append, default, use")
 	}
@@ -166,19 +170,19 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
 	// sysload declares a system-provided variable that may already be used at load time.
 	sysload := func(varname string, checker *BasicType) {
-		aclSpecial(varname, lkNone, checker,
+		reg.DefineParse(varname, lkNone, checker,
 			"*: use-loadtime, use")
 	}
 
 	sysloadlist := func(varname string, checker *BasicType) {
-		aclSpecial(varname, lkShell, checker,
+		reg.DefineParse(varname, lkShell, checker,
 			"*: use-loadtime, use")
 	}
 
 	// bl3list declares a list variable that is defined by buildlink3.mk and
 	// builtin.mk and can later be used by the package.
 	bl3list := func(varname string, checker *BasicType) {
-		aclSpecial(varname, lkShell, checker,
+		reg.DefineParse(varname, lkShell, checker,
 			"buildlink3.mk, builtin.mk: append",
 			"*: use")
 	}
@@ -186,7 +190,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// cmdline declares a variable that is defined on the command line. There
 	// are only few variables of this type, such as PKG_DEBUG_LEVEL.
 	cmdline := func(varname string, checker *BasicType) {
-		aclSpecial(varname, lkNone, checker,
+		reg.DefineParse(varname, lkNone, checker,
 			"buildlink3.mk, builtin.mk: none",
 			"*: use-loadtime, use")
 	}

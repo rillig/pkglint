@@ -364,7 +364,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 				if trace.Tracing {
 					trace.Stepf("Untyped variable %q in %s", varcanon, mkline)
 				}
-				src.vartypes.Define(varcanon, &unknownType)
+				src.vartypes.DefineType(varcanon, &unknownType)
 			}
 		}
 	}
