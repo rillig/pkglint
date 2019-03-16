@@ -1620,11 +1620,6 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 		}
 	}
 
-	if len(result) > 0 && result[len(result)-1].glob != "*" {
-		//println("default permissions missing for " + varname)
-		result = append(result, ACLEntry{"*", aclpNone})
-	}
-
 	return result
 }
 

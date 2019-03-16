@@ -663,8 +663,6 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 		"\t* in Makefile, it may be set, given a default value, or used",
 		"\t* in Makefile.*, it may be set, given a default value, or used",
 		"\t* in *.mk, it may be set, given a default value, or used",
-		// TODO: Improve the wording to "in all other files".
-		"\t* in any file, it may not be accessed at all",
 		// TODO: Add a check for infrastructure permissions
 		//  when the "infra:" prefix is added.
 		"",
