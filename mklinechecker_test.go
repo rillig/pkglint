@@ -477,13 +477,26 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 
 	t.SetUpVartypes()
 	t.SetUpTool("awk", "AWK", AtRunTime)
+	G.Pkgsrc.vartypes.DefineParse("SET_ONLY", lkNone, BtUnknown,
+		"options.mk: set")
+	G.Pkgsrc.vartypes.DefineParse("SET_ONLY_DEFAULT_ELSEWHERE", lkNone, BtUnknown,
+		"options.mk: set",
+		"*.mk: default, set")
 	mklines := t.NewMkLines("options.mk",
 		MkRcsID,
 		"PKG_DEVELOPER?=\tyes",
 		"BUILD_DEFS?=\tVARBASE",
 		"USE_TOOLS:=\t${USE_TOOLS:Nunwanted-tool}",
 		"USE_TOOLS:=\t${MY_TOOLS}",
-		"USE_TOOLS:=\tawk")
+		"USE_TOOLS:=\tawk",
+		"",
+		"SET_ONLY=\tset",
+		"SET_ONLY:=\teval",
+		"SET_ONLY?=\tdefault",
+		"",
+		"SET_ONLY_DEFAULT_ELSEWHERE=\tset",
+		"SET_ONLY_DEFAULT_ELSEWHERE:=\teval",
+		"SET_ONLY_DEFAULT_ELSEWHERE?=\tdefault")
 
 	mklines.Check()
 
@@ -493,7 +506,14 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 		"WARN: options.mk:3: The variable BUILD_DEFS may not be given a default value (only appended to) in this file.",
 		"WARN: options.mk:5: The variable USE_TOOLS may not be set (only appended to) in this file.",
 		"WARN: options.mk:5: MY_TOOLS is used but not defined.",
-		"WARN: options.mk:6: The variable USE_TOOLS may not be set (only appended to) in this file.")
+		"WARN: options.mk:6: The variable USE_TOOLS may not be set (only appended to) in this file.",
+		"WARN: options.mk:10: "+
+			"The variable SET_ONLY may not be given a default value "+
+			"(only set) in this file.",
+		"WARN: options.mk:14: "+
+			"The variable SET_ONLY_DEFAULT_ELSEWHERE may not be given a "+
+			// FIXME: "this file" matches "*.mk", so the warning must be more precise.
+			"default value (only set) in this file; it would be ok in *.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__no_tracing(c *check.C) {
