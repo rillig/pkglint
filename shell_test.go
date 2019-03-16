@@ -469,6 +469,11 @@ func (s *Suite) Test_ShellLine_CheckWord(c *check.C) {
 	test := func(shellWord string, checkQuoting bool) {
 		shline := t.NewShellLine("dummy.mk", 1, "\t echo "+shellWord)
 
+		// Provide a storage for the "used but not defined" warnings.
+		// See checkVaruseUndefined and checkVarassignLeftNotUsed.
+		G.Mk = NewMkLines(NewLines("dummy.mk", nil))
+		defer func() { G.Mk = nil }()
+
 		shline.CheckWord(shellWord, checkQuoting, RunTime)
 	}
 
@@ -734,11 +739,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine__shell_variables(c *check.C
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.",
-		"WARN: Makefile:3: f is used but not defined.",
-		"WARN: Makefile:3: f is used but not defined.",
-		"WARN: Makefile:3: f is used but not defined.",
-		"WARN: Makefile:3: f is used but not defined.")
+		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.")
 
 	shline.CheckShellCommandLine("install -c manpage.1 ${PREFIX}/man/man1/manpage.1")
 

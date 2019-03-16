@@ -13,9 +13,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 	MkLineChecker{mkline}.checkVarassignLeft()
 
 	t.CheckOutputLines(
-		"WARN: module.mk:123: Variable names starting with an underscore "+
-			"(_VARNAME) are reserved for internal pkgsrc use.",
-		"WARN: module.mk:123: _VARNAME is defined but not used.")
+		"WARN: module.mk:123: Variable names starting with an underscore " +
+			"(_VARNAME) are reserved for internal pkgsrc use.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__procedure_call(c *check.C) {
@@ -385,9 +384,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			"{ ccache ccc clang distcc f2c gcc hp icc ido "+
 			"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.")
 
-	test(".elif ${A} != ${B}",
-		"WARN: filename.mk:1: A is used but not defined.",
-		"WARN: filename.mk:1: B is used but not defined.")
+	test(".elif ${A} != ${B}")
 
 	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
 		"WARN: filename.mk:1: \"mailto:someone@example.org\" is not a valid URL.",
@@ -446,7 +443,6 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"TRACE: 1 2 + (*Pkgsrc).VariableType(\"VAR\")",
 		"TRACE: 1 2 3   No type definition found for \"VAR\".",
 		"TRACE: 1 2 - (*Pkgsrc).VariableType(\"VAR\", \"=>\", (*pkglint.Vartype)(nil))",
-		"WARN: filename.mk:1: VAR is used but not defined.",
 		"TRACE: 1 2 + MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 3   No type definition found for \"VAR\".",
 		"TRACE: 1 2 - MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
@@ -930,11 +926,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__without_mklines(c *ch
 	// Therefore in this case there are more warnings than in realistic situations.
 	t.CheckOutputLines(
 		// Since G.Mk is not set, there is no place to remember the defined
-		// and the used variables. Therefore the "defined but not used" and
-		// "used but not defined" warning only add noise and must therefore
-		// be suppressed. FIXME
-		"WARN: buildlink3.mk:123: VAR is defined but not used.",
-		"WARN: buildlink3.mk:123: VAR is used but not defined.",
+		// and the used variables. Therefore there must be no "defined but not
+		// used" or "used but not defined" warnings here.
 
 		"WARN: buildlink3.mk:123: "+
 			"AUTO_MKDIRS should not be used at run time in this file; "+
@@ -1638,9 +1631,11 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *c
 	t := s.Init(c)
 
 	t.SetUpTool("echo", "ECHO", AfterPrefsMk)
-	mkline := t.NewMkLine("net/uucp/Makefile", 123, "\techo ${UUCP_${var}}")
+	mklines := t.NewMkLines("net/uucp/Makefile",
+		MkRcsID,
+		"\techo ${UUCP_${var}}")
 
-	MkLineChecker{mkline}.Check()
+	mklines.Check()
 
 	// No warning about UUCP_${var} being used but not defined.
 	//
@@ -1650,7 +1645,7 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *c
 	//
 	// It does warn about simple variable names though, like ${var} in this example.
 	t.CheckOutputLines(
-		"WARN: net/uucp/Makefile:123: var is used but not defined.")
+		"WARN: net/uucp/Makefile:2: var is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {

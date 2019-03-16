@@ -452,7 +452,7 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 		break
 	case G.Pkgsrc.vartypes.DefinedCanon(varname):
 		break
-	case G.Mk != nil && !G.Mk.FirstTimeSlice("used but not defined: ", varname):
+	case G.Mk == nil || !G.Mk.FirstTimeSlice("used but not defined: ", varname):
 		break
 
 	default:
@@ -955,7 +955,7 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if G.Mk != nil && !G.Mk.FirstTimeSlice("defined but not used: ", varname) {
+	if G.Mk == nil || !G.Mk.FirstTimeSlice("defined but not used: ", varname) {
 		return
 	}
 

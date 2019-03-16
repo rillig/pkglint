@@ -807,8 +807,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	trace.Tracing = false
 	MkLineChecker{mklines.mklines[2]}.Check()
 
-	t.CheckOutputLines(
-		"WARN: ~/Makefile:3: GO_SRCPATH is defined but not used.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLine__shell_varuse_in_backt_dquot(c *check.C) {
