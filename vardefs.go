@@ -93,9 +93,8 @@ func (src *Pkgsrc) InitVartypes() {
 
 	// Some package-defined lists may also be appended in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
-	pkglistbl3 := func(varname string, kindOfList KindOfList, checker *BasicType) {
-		// FIXME
-		aclSpecial(varname, kindOfList, checker,
+	pkglistbl3 := func(varname string, checker *BasicType) {
+		aclSpecial(varname, lkShell, checker,
 			"Makefile, Makefile.common, options.mk: append, default, set, use",
 			"buildlink3.mk, builtin.mk, *.mk: append, default, use")
 	}
@@ -759,8 +758,8 @@ func (src *Pkgsrc) InitVartypes() {
 		"Makefile.common: set, default, append")
 	sysload("CC_VERSION", lkNone, BtMessage)
 	sysload("CC", lkNone, BtShellCommand)
-	pkglistbl3("CFLAGS", lkShell, BtCFlag)   // may also be changed by the user
-	pkglistbl3("CFLAGS.*", lkShell, BtCFlag) // may also be changed by the user
+	pkglistbl3("CFLAGS", BtCFlag)   // may also be changed by the user
+	pkglistbl3("CFLAGS.*", BtCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", BtYesNo,
 		"builtin.mk: default",
 		"Makefile: set")
@@ -1040,8 +1039,8 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("KRB5_DEFAULT", enum("heimdal mit-krb5"))
 	sys("KRB5_TYPE", BtIdentifier)
 	sys("LD", BtShellCommand)
-	pkglistbl3("LDFLAGS", lkShell, BtLdFlag)      // May also be changed by the user.
-	pkglistbl3("LDFLAGS.*", lkShell, BtLdFlag)    // May also be changed by the user.
+	pkglistbl3("LDFLAGS", BtLdFlag)               // May also be changed by the user.
+	pkglistbl3("LDFLAGS.*", BtLdFlag)             // May also be changed by the user.
 	sysload("LIBABISUFFIX", lkNone, BtIdentifier) // Can also be empty.
 	sys("LIBGRP", BtUserGroupName)
 	sys("LIBMODE", BtFileMode)
