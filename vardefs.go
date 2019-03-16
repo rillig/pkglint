@@ -1462,7 +1462,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("TEST_ENV", BtShellWord)
 	pkglist("TEST_TARGET", BtIdentifier)
 	pkglist("TEXINFO_REQD", BtVersion)
-	pkglist("TOOL_DEPENDS", BtDependencyWithPath)
+	pkglistbl3("TOOL_DEPENDS", BtDependencyWithPath)
 	syslist("TOOLS_ALIASES", BtFileName)
 	syslist("TOOLS_BROKEN", BtTool)
 	sys("TOOLS_CMD.*", BtPathname)
