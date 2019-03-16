@@ -327,7 +327,7 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 		break
 	default:
 		alternativeActions := perms & aclpAllWrite
-		alternativeFiles := vartype.AllowedFiles(needed)
+		alternativeFiles := vartype.AlternativeFiles(needed)
 		switch {
 		case alternativeActions != 0 && alternativeFiles != "":
 			// FIXME: Sometimes the message says "ok in *", which is missing that in buildlink3.mk, none of the actions are allowed.
@@ -637,7 +637,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	if directly {
 		needed = aclpUseLoadtime
 	}
-	alternativeFiles := vartype.AllowedFiles(needed)
+	alternativeFiles := vartype.AlternativeFiles(needed)
 
 	loadTimeExplanation := func() []string {
 		return []string{

@@ -23,6 +23,31 @@ func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {
 	}
 }
 
+func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtYesNo,
+		"buildlink3.mk: none",
+		"special:b*.mk: use",
+		"*.mk: none",
+		"Makefile: use",
+		"Makefile.*: none",
+		"*: use")
+
+	test := func(varname string, perms ACLPermissions, alternatives string) {
+		vartype := G.Pkgsrc.VariableType(varname)
+		t.Check(vartype.AlternativeFiles(perms), equals, alternatives)
+	}
+
+	// Just out of curiosity, since calling the function with no
+	// permissions doesn't make sense. The result is the complete
+	// file list.
+	test("VAR", aclpNone, "buildlink3.mk, b*.mk, *.mk, Makefile, Makefile.* or *")
+
+	// FIXME: "b*.mk, Makefile or *, but not buildlink3.mk, *.mk or Makefile.*".
+	test("VAR", aclpUse, "b*.mk, Makefile or *")
+}
+
 func (s *Suite) Test_BasicType_HasEnum(c *check.C) {
 	vc := enum("start middle end")
 

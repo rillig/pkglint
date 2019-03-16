@@ -1600,7 +1600,7 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 		for _, glob := range strings.Split(globs, ", ") {
 			switch glob {
 			case "*",
-				"Makefile", "Makefile.common", "Makefile.*",
+				"Makefile", "Makefile.*",
 				"buildlink3.mk", "builtin.mk", "options.mk", "hacks.mk", "*.mk":
 				break
 			default:

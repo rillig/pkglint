@@ -94,10 +94,11 @@ func (vt *Vartype) Union() ACLPermissions {
 	return permissions
 }
 
-// AllowedFiles lists the file patterns in which all of the given
+// AlternativeFiles lists the file patterns in which all of the given
 // permissions are allowed, readily formatted to be used in a diagnostic.
+//
 // If the permission is allowed nowhere, an empty string is returned.
-func (vt *Vartype) AllowedFiles(perms ACLPermissions) string {
+func (vt *Vartype) AlternativeFiles(perms ACLPermissions) string {
 	files := make([]string, 0, len(vt.aclEntries))
 	for _, aclEntry := range vt.aclEntries {
 		if aclEntry.permissions.Contains(perms) {
