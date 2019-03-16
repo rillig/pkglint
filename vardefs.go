@@ -1588,8 +1588,8 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 	var result []ACLEntry
 	prevperms := "(first)"
 	for _, arg := range aclEntries {
-		fields := strings.SplitN(arg, ": ", 2)
-		G.Assertf(len(fields) == 2, "Invalid ACL entry %q", arg)
+		fields := strings.Split(arg, ": ")
+		G.Assertf(len(fields) == 2, "ACL entry %q must have exactly 1 colon.", arg)
 		globs, perms := fields[0], fields[1]
 
 		G.Assertf(perms != prevperms, "Repeated permissions %q for %q.", perms, varname)
