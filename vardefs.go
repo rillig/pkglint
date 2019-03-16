@@ -999,7 +999,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	syslist("GAMEDIR_PERMS", BtPerms)
 	sys("GAMEMODE", BtFileMode)
 	sys("GAMES_USER", BtUserGroupName)
-	pkglist("GCC_REQD", BtGccReqd)
+	pkglistbl3("GCC_REQD", BtGccReqd)
 	pkglistSpecial("GENERATE_PLIST", BtShellCommands)
 	pkg("GITHUB_PROJECT", BtIdentifier)
 	pkg("GITHUB_TAG", BtIdentifier)
@@ -1217,8 +1217,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("ONLY_FOR_PLATFORM", BtMachinePlatformPattern)
 	pkg("ONLY_FOR_UNPRIVILEGED", BtYesNo)
 	sysload("OPSYS", BtIdentifier)
-	acllist("OPSYSVARS", BtVariableName,
-		"Makefile, Makefile.common: append")
+	pkglistbl3("OPSYSVARS", BtVariableName)
 	acl("OSVERSION_SPECIFIC", BtYes,
 		"Makefile, Makefile.common: set")
 	sysload("OS_VERSION", BtVersion)
@@ -1285,9 +1284,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acllist("PKGCONFIG_FILE.*", BtPathname,
 		"builtin.mk: set, append",
 		"special:pkgconfig-builtin.mk: use-loadtime")
-	acllist("PKGCONFIG_OVERRIDE", BtPathmask,
-		"Makefile: set, append",
-		"Makefile.common: append")
+	pkglist("PKGCONFIG_OVERRIDE", BtPathmask)
 	pkg("PKGCONFIG_OVERRIDE_STAGE", BtStage)
 	pkg("PKGDIR", BtRelativePkgDir)
 	sys("PKGDIRMODE", BtFileMode)
@@ -1379,19 +1376,17 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile: set")
 	pkglist("PKG_USERS", BtShellWord)
 	pkglist("PKG_USERS_VARS", BtVariableName)
-	acl("PKG_USE_KERBEROS", BtYes,
-		"Makefile, Makefile.common: set")
+	pkg("PKG_USE_KERBEROS", BtYes)
 	pkgload("PLIST.*", BtYes)
 	pkglist("PLIST_VARS", BtIdentifier)
 	pkglist("PLIST_SRC", BtRelativePkgPath)
 	pkglist("PLIST_SUBST", BtShellWord)
 	pkg("PLIST_TYPE", enum("dynamic static"))
-	acllist("PREPEND_PATH", BtPathname,
-		"*: append")
+	pkglistbl3("PREPEND_PATH", BtPathname)
 	acl("PREFIX", BtPathname,
 		"*: use")
-	acl("PREV_PKGPATH", BtPathname,
-		"*: use") // doesn't exist any longer
+	// BtPathname instead of BtPkgPath since the original package doesn't exist anymore.
+	pkg("PREV_PKGPATH", BtPathname)
 	acl("PRINT_PLIST_AWK", BtAwkCommand,
 		"*: append")
 	pkglist("PRIVILEGED_STAGES", enum("build install package clean"))
@@ -1620,6 +1615,12 @@ func parseACLEntries(varname string, aclEntries ...string) []ACLEntry {
 	if len(aclEntries) == 0 {
 		return []ACLEntry{{"*", aclpNone}}
 	}
+
+	// TODO: Use separate rules for infrastructure files.
+	//  These rules would have the "infra:" prefix
+	//  that works similar to the already existing prefix "special:".
+	//  The "infra:" prefix applies to both mk/* and wip/mk/* files, and globs
+	//  without that prefix only apply to all files outside the infrastructure.
 
 	var result []ACLEntry
 	prevperms := "(first)"
