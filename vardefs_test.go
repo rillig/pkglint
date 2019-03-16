@@ -77,8 +77,11 @@ func (s *Suite) Test_VarTypeRegistry_Init__enumFromDirs(c *check.C) {
 	test("PYPKGPREFIX", "enum: py28 py33 ")
 }
 
-func (s *Suite) Test_parseACLEntries(c *check.C) {
+func (s *Suite) Test_VarTypeRegistry_parseACLEntries__invalid_arguments(c *check.C) {
 	t := s.Init(c)
+
+	reg := NewVarTypeRegistry()
+	parseACLEntries := reg.parseACLEntries
 
 	t.ExpectPanic(
 		func() { parseACLEntries("VARNAME", "buildlink3.mk: *", "*: *") },

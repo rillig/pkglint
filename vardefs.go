@@ -72,7 +72,8 @@ func (reg *VarTypeRegistry) Define(varname string, kindOfList KindOfList, basicT
 
 // DefineParse defines a variable with the given type and permissions.
 func (reg *VarTypeRegistry) DefineParse(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
-	reg.Define(varname, kindOfList, basicType, parseACLEntries(varname, aclEntries...)...)
+	parsedEntries := reg.parseACLEntries(varname, aclEntries...)
+	reg.Define(varname, kindOfList, basicType, parsedEntries...)
 }
 
 // InitVartypes initializes the long list of predefined pkgsrc variables.
@@ -1611,7 +1612,7 @@ func enum(values string) *BasicType {
 	return &basicType
 }
 
-func parseACLEntries(varname string, aclEntries ...string) []ACLEntry {
+func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string) []ACLEntry {
 	if len(aclEntries) == 0 {
 		return []ACLEntry{{"*", aclpNone}}
 	}
