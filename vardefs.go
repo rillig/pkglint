@@ -28,10 +28,38 @@ import (
 // which from the view point of a package, are the same as variables
 // defined by the infrastructure.
 
+type VarTypeRegistry struct {
+	types map[string]*Vartype // varcanon => type
+}
+
+func NewVarTypeRegistry() VarTypeRegistry {
+	return VarTypeRegistry{make(map[string]*Vartype)}
+}
+
+func (reg *VarTypeRegistry) Canon(varname string) *Vartype {
+	vartype := reg.types[varname]
+	if vartype == nil {
+		vartype = reg.types[varnameCanon(varname)]
+	}
+	return vartype
+}
+
+func (reg *VarTypeRegistry) DefinedExact(varname string) bool {
+	return reg.types[varname] != nil
+}
+
+func (reg *VarTypeRegistry) DefinedCanon(varname string) bool {
+	return reg.Canon(varname) != nil
+}
+
+func (reg *VarTypeRegistry) Define(varcanon string, vartype *Vartype) {
+	reg.types[varcanon] = vartype
+}
+
 // InitVartypes initializes the long list of predefined pkgsrc variables.
 // After this is done, PKGNAME, MAKE_ENV and all the other variables
 // can be used in Makefiles without triggering warnings about typos.
-func (src *Pkgsrc) InitVartypes() {
+func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
 	// aclSpecial defines a variable with the given type and permissions.
 	aclSpecial := func(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
@@ -41,10 +69,10 @@ func (src *Pkgsrc) InitVartypes() {
 		vartype := Vartype{kindOfList, basicType, parseACLEntries(varname, aclEntries...), false}
 
 		if varparam == "" || varparam == "*" {
-			src.vartypes[varbase] = &vartype
+			reg.types[varbase] = &vartype
 		}
 		if varparam == "*" || varparam == ".*" {
-			src.vartypes[varbase+".*"] = &vartype
+			reg.types[varbase+".*"] = &vartype
 		}
 	}
 

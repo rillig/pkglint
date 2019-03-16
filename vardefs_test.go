@@ -2,17 +2,17 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_Pkgsrc_InitVartypes(c *check.C) {
+func (s *Suite) Test_VarTypeRegistry_Init(c *check.C) {
 	t := s.Init(c)
 
 	src := NewPkgsrc(t.File("."))
-	src.InitVartypes()
+	src.vartypes.Init(src)
 
-	c.Check(src.vartypes["BSD_MAKE_ENV"].basicType.name, equals, "ShellWord")
-	c.Check(src.vartypes["USE_BUILTIN.*"].basicType.name, equals, "YesNoIndirectly")
+	c.Check(src.vartypes.Canon("BSD_MAKE_ENV").basicType.name, equals, "ShellWord")
+	c.Check(src.vartypes.Canon("USE_BUILTIN.*").basicType.name, equals, "YesNoIndirectly")
 }
 
-func (s *Suite) Test_Pkgsrc_InitVartypes__enumFrom(c *check.C) {
+func (s *Suite) Test_VarTypeRegistry_Init__enumFrom(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("editors/emacs/modules.mk",
@@ -59,7 +59,7 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__enumFrom(c *check.C) {
 	test("PKGSRC_COMPILER", "List of enum: ccache distcc f2c g95 gcc ido mipspro-ucode sunpro ")
 }
 
-func (s *Suite) Test_Pkgsrc_InitVartypes__enumFromDirs(c *check.C) {
+func (s *Suite) Test_VarTypeRegistry_Init__enumFromDirs(c *check.C) {
 	t := s.Init(c)
 
 	// To make the test useful, these directories must differ from the
@@ -98,7 +98,7 @@ func (s *Suite) Test_parseACLEntries(c *check.C) {
 		"Pkglint internal error: Unreachable ACL pattern \"buildlink3.mk\" for \"VARNAME\".")
 }
 
-func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {
+func (s *Suite) Test_VarTypeRegistry_Init__LP64PLATFORMS(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetUpPackage("category/package",
@@ -111,7 +111,7 @@ func (s *Suite) Test_Pkgsrc_InitVartypes__LP64PLATFORMS(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkgsrc_InitVartypes__no_tracing(c *check.C) {
+func (s *Suite) Test_VarTypeRegistry_Init__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("editors/emacs/modules.mk",

@@ -450,9 +450,7 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 		break
 	case containsVarRef(varname):
 		break
-	case G.Pkgsrc.vartypes[varname] != nil:
-		break
-	case G.Pkgsrc.vartypes[varnameCanon(varname)] != nil:
+	case G.Pkgsrc.vartypes.DefinedCanon(varname):
 		break
 	case G.Mk != nil && !G.Mk.FirstTimeSlice("used but not defined: ", varname):
 		break
@@ -869,11 +867,13 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if vartypes := G.Pkgsrc.vartypes; vartypes[varname] != nil || vartypes[varcanon] != nil {
+	vartypes := G.Pkgsrc.vartypes
+	if vartypes.DefinedExact(varname) || vartypes.DefinedExact(varcanon) {
 		return
 	}
 
-	if deprecated := G.Pkgsrc.Deprecated; deprecated[varname] != "" || deprecated[varcanon] != "" {
+	deprecated := G.Pkgsrc.Deprecated
+	if deprecated[varname] != "" || deprecated[varcanon] != "" {
 		return
 	}
 
