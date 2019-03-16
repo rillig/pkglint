@@ -671,7 +671,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("@", BtPathname,
 		"buildlink3.mk: none",
 		"*: use, use-loadtime")
-	pkglist("ALL_ENV", BtShellWord)
+	pkglistbl3("ALL_ENV", BtShellWord)
 	pkg("ALTERNATIVES_FILE", BtFileName)
 	pkglist("ALTERNATIVES_SRC", BtPathname)
 	pkg("APACHE_MODULE", BtYes)
@@ -780,7 +780,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("BUILD_TARGET.*", BtIdentifier)
 	pkg("BUILD_USES_MSGFMT", BtYes)
 	acl("BUILTIN_PKG", BtIdentifier,
-		"builtin.mk: set, use-loadtime, use")
+		"builtin.mk: set, use-loadtime, use",
+		"Makefile, Makefile.common, *.mk: use, use-loadtime")
 	acl("BUILTIN_PKG.*", BtPkgName,
 		"builtin.mk: set, use-loadtime, use")
 	acllist("BUILTIN_FIND_FILES_VAR", BtVariableName,
@@ -797,9 +798,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"builtin.mk: set")
 	sys("BUILTIN_X11_TYPE", BtUnknown)
 	sys("BUILTIN_X11_VERSION", BtUnknown)
-	acllist("CATEGORIES", BtCategory,
-		"Makefile: set, append",
-		"Makefile.common: set, default, append")
+	pkglist("CATEGORIES", BtCategory)
 	sysload("CC_VERSION", BtMessage)
 	sysload("CC", BtShellCommand)
 	pkglistbl3("CFLAGS", BtCFlag)   // may also be changed by the user
@@ -811,8 +810,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, options.mk, buildlink3.mk: set",
 		"builtin.mk: default, use-loadtime",
 		"*: use-loadtime")
-	acllist("CHECK_FILES_SKIP", BtBasicRegularExpression,
-		"Makefile, Makefile.common: append")
+	pkglist("CHECK_FILES_SKIP", BtBasicRegularExpression)
 	pkg("CHECK_FILES_SUPPORTED", BtYesNo)
 	usr("CHECK_HEADERS", BtYesNo)
 	pkglist("CHECK_HEADERS_SKIP", BtPathmask)
@@ -848,10 +846,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("CONFIGURE_ARGS", BtShellWord)
 	pkglist("CONFIGURE_ARGS.*", BtShellWord)
 	pkglist("CONFIGURE_DIRS", BtWrksrcSubdirectory)
-	acllist("CONFIGURE_ENV", BtShellWord,
-		"Makefile, Makefile.common: append, set, use",
-		"buildlink3.mk, builtin.mk: append",
-		"*.mk: append, use")
+	pkglistbl3("CONFIGURE_ENV", BtShellWord)
 	acllist("CONFIGURE_ENV.*", BtShellWord,
 		"Makefile, Makefile.common: append, set, use",
 		"buildlink3.mk, builtin.mk: append",
@@ -860,14 +855,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("CONFIGURE_HAS_LIBDIR", BtYesNo)
 	pkg("CONFIGURE_HAS_MANDIR", BtYesNo)
 	pkg("CONFIGURE_SCRIPT", BtPathname)
-	acllist("CONFIG_GUESS_OVERRIDE", BtPathmask,
-		"Makefile, Makefile.common: set, append")
-	acllist("CONFIG_STATUS_OVERRIDE", BtPathmask,
-		"Makefile, Makefile.common: set, append")
-	acl("CONFIG_SHELL", BtPathname,
-		"Makefile, Makefile.common, hacks.mk: set")
-	acllist("CONFIG_SUB_OVERRIDE", BtPathmask,
-		"Makefile, Makefile.common: set, append")
+	pkglist("CONFIG_GUESS_OVERRIDE", BtPathmask)
+	pkglist("CONFIG_STATUS_OVERRIDE", BtPathmask)
+	pkg("CONFIG_SHELL", BtPathname)
+	pkglist("CONFIG_SUB_OVERRIDE", BtPathmask)
 	pkglist("CONFLICTS", BtDependency)
 	pkglistSpecial("CONF_FILES", BtConfFiles)
 	pkg("CONF_FILES_MODE", enum("0644 0640 0600 0400"))
@@ -1028,8 +1019,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("IGNORE_PKG.*", BtYes,
 		"*: set, use-loadtime")
 	sys("IMAKE", BtShellCommand)
-	acllist("INCOMPAT_CURSES", BtMachinePlatformPattern,
-		"Makefile: set, append")
+	pkglistbl3("INCOMPAT_CURSES", BtMachinePlatformPattern)
 	sys("INFO_DIR", BtPathname) // relative to PREFIX
 	pkg("INFO_FILES", BtYes)
 	sys("INSTALL", BtShellCommand)
@@ -1061,7 +1051,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile: set, append",
 		"Makefile.common, *.mk: set, default, append")
 	acl("INSTALL_UNSTRIPPED", BtYesNo,
-		"Makefile, Makefile.common, options.mk: default, set")
+		"Makefile, Makefile.common, *.mk: default, set, use, use-loadtime")
 	pkglist("INTERACTIVE_STAGE", enum("fetch extract configure build test install"))
 	acl("IS_BUILTIN.*", BtYesNoIndirectly,
 		"builtin.mk: set, use-loadtime, use",
@@ -1118,8 +1108,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile.common: default")
 	sysload("MAKE", BtShellCommand)
 	pkglist("MAKEFLAGS", BtShellWord)
-	acllist("MAKEVARS", BtVariableName,
-		"Makefile, buildlink3.mk, builtin.mk, hacks.mk: append")
+	pkglist("MAKEVARS", BtVariableName)
 	pkglist("MAKE_DIRS", BtPathname)
 	pkglist("MAKE_DIRS_PERMS", BtPerms)
 	acllist("MAKE_ENV", BtShellWord,
@@ -1241,8 +1230,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("PATCHDIR", BtRelativePkgPath)
 	pkglist("PATCHFILES", BtFileName)
 	pkglist("PATCH_ARGS", BtShellWord)
-	acllist("PATCH_DIST_ARGS", BtShellWord,
-		"Makefile: set, append")
+	pkglist("PATCH_DIST_ARGS", BtShellWord)
 	pkg("PATCH_DIST_CAT", BtShellCommand)
 	acl("PATCH_DIST_STRIP*", BtShellWord,
 		"buildlink3.mk, builtin.mk: none",
