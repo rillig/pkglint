@@ -1169,6 +1169,34 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {
+	t := s.Init(c)
+
+	G.Username = "example-user"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//",
+		"D/patches////")
+	t.CreateFileDummyPatch("category/package/patches/patch-aa")
+
+	pkg := t.SetUpPackage("category/package",
+		"MAINTAINER=\tmaintainer@example.org")
+	t.CreateFileLines("category/package/distinfo",
+		RcsID,
+		"",
+		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
+
+	G.Check(pkg)
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile: "+
+			"Please only commit changes that "+
+			"maintainer@example.org would approve.",
+		// FIXME: There must be no warning for directories.
+		"NOTE: ~/category/package/patches: "+
+			"Please only commit changes that "+
+			"maintainer@example.org would approve.")
+}
+
 // In practice the distinfo file can always be autofixed since it has
 // just been read successfully and the corresponding patch file could
 // also be autofixed right before.
