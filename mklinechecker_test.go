@@ -367,10 +367,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 
 	MkLineChecker{mkline}.checkVarassign()
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:10: The variable MASTER_SITES may not be set " +
-			"(only given a default value, or appended to) in this file; " +
-			"it would be ok in Makefile, Makefile.* or options.mk.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
@@ -530,6 +527,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license_defaul
 // Setting a default license doesn't make sense in a package Makefile
 // since that Makefile is only used for a single package.
 // It only makes sense to set the license unconditionally there.
+//
+// Except, maybe if the license depends on the user settings from mk.conf,
+// like choosing certain plugins or modules.
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license_default_Makefile(c *check.C) {
 	t := s.Init(c)
 
@@ -538,11 +538,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license_defaul
 
 	MkLineChecker{mkline}.checkVarassignLeftPermissions()
 
-	t.CheckOutputLines(
-		"WARN: Makefile:123: " +
-			"The variable LICENSE may not be given a default value " +
-			"(only set, or appended to) in this file; " +
-			"it would be ok in *.")
+	t.CheckOutputEmpty()
 }
 
 // Don't check the permissions for infrastructure files since they have their own rules.
