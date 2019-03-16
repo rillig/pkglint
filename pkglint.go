@@ -714,7 +714,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 	case hasPrefix(basename, "PLIST"):
 		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-			CheckLinesPlist(lines)
+			CheckLinesPlist(G.Pkg, lines)
 		}
 
 	case hasPrefix(basename, "CHANGES-"):
