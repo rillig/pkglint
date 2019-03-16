@@ -701,7 +701,6 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
 	// only appear completely unquoted. There is no practical way of
 	// using it inside backticks, and luckily there is no need for it.
 	t.CheckOutputLines(
-		"WARN: Makefile:4: COMMENT may not be used in any file; it is a write-only variable.",
 		// TODO: Better suggest that COMMENT should not be used inside backticks or other quotes.
 		"WARN: Makefile:4: The variable COMMENT should be quoted as part of a shell word.")
 }

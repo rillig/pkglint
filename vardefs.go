@@ -115,14 +115,22 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"*.mk: append, default, use")
 	}
 
-	// Some variable types look like lists, but their values cannot be checked
-	// by looking at a single one of them. An example is CONF_FILES, which is
+	// pkgappend declares a variable that may use the += operator,
+	// even though it is not a list where each item can be interpreted
+	// on its own.
+	//
+	// This applies to lists in which a single logical list item is
+	// composed of several syntactical words, such as CONF_FILES, which is
 	// a list of filename pairs.
-	pkglistSpecial := func(varname string, checker *BasicType) {
+	//
+	// This also applies to COMMENT, which is not a list at all but a string
+	// that is sometimes composed of a common prefix and a package-specific
+	// suffix.
+	pkgappend := func(varname string, checker *BasicType) {
 		acl(varname, checker,
 			"Makefile, Makefile.*, options.mk: append, default, set, use",
 			"buildlink3.mk, builtin.mk: none",
-			"*.mk: append, default, use")
+			"*.mk: append, default, set, use")
 	}
 
 	// Some package-defined variables may be modified in buildlink3.mk files.
@@ -829,11 +837,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usr("CHECK_RELRO", BtYesNo)
 	pkglist("CHECK_RELRO_SKIP", BtPathmask)
 	pkg("CHECK_RELRO_SUPPORTED", BtYesNo)
-	acl("CHECK_SHLIBS", BtYesNo,
-		"Makefile: set")
+	pkg("CHECK_SHLIBS", BtYesNo)
 	pkglist("CHECK_SHLIBS_SKIP", BtPathmask)
-	acl("CHECK_SHLIBS_SUPPORTED", BtYesNo,
-		"Makefile: set")
+	pkg("CHECK_SHLIBS_SUPPORTED", BtYesNo)
 	pkglist("CHECK_WRKREF_SKIP", BtPathmask)
 	pkg("CMAKE_ARG_PATH", BtPathname)
 	pkglist("CMAKE_ARGS", BtShellWord)
@@ -844,19 +850,14 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("CMAKE_PREFIX_PATH", BtPathmask)
 	pkg("CMAKE_USE_GNU_INSTALL_DIRS", BtYesNo)
 	pkg("CMAKE_INSTALL_PREFIX", BtPathname) // The default is ${PREFIX}.
-	acl("COMMENT", BtComment,
-		"Makefile, Makefile.*, *.mk: set, append")
+	pkgappend("COMMENT", BtComment)
 	sys("COMPILE.*", BtShellCommand)
-	acl("COMPILER_RPATH_FLAG", enum("-Wl,-rpath"),
-		"*: use")
+	sys("COMPILER_RPATH_FLAG", enum("-Wl,-rpath"))
 	pkglist("CONFIGURE_ARGS", BtShellWord)
 	pkglist("CONFIGURE_ARGS.*", BtShellWord)
 	pkglist("CONFIGURE_DIRS", BtWrksrcSubdirectory)
 	pkglistbl3("CONFIGURE_ENV", BtShellWord)
-	acllist("CONFIGURE_ENV.*", BtShellWord,
-		"Makefile, Makefile.common: append, set, use",
-		"buildlink3.mk, builtin.mk: append",
-		"*.mk: append, use")
+	pkglistbl3("CONFIGURE_ENV.*", BtShellWord)
 	pkg("CONFIGURE_HAS_INFODIR", BtYesNo)
 	pkg("CONFIGURE_HAS_LIBDIR", BtYesNo)
 	pkg("CONFIGURE_HAS_MANDIR", BtYesNo)
@@ -866,7 +867,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("CONFIG_SHELL", BtPathname)
 	pkglist("CONFIG_SUB_OVERRIDE", BtPathmask)
 	pkglist("CONFLICTS", BtDependency)
-	pkglistSpecial("CONF_FILES", BtConfFiles)
+	pkgappend("CONF_FILES", BtConfFiles)
 	pkg("CONF_FILES_MODE", enum("0644 0640 0600 0400"))
 	pkglist("CONF_FILES_PERMS", BtPerms)
 	sys("COPY", enum("-c")) // The flag that tells ${INSTALL} to copy a file
@@ -896,7 +897,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("DIST_SUBDIR", BtPathname)
 	pkglist("DJB_BUILD_ARGS", BtShellWord)
 	pkglist("DJB_BUILD_TARGETS", BtIdentifier)
-	pkglistSpecial("DJB_CONFIG_CMDS", BtShellCommands)
+	pkgappend("DJB_CONFIG_CMDS", BtShellCommands)
 	pkglist("DJB_CONFIG_DIRS", BtWrksrcSubdirectory)
 	pkg("DJB_CONFIG_HOME", BtFileName)
 	pkg("DJB_CONFIG_PREFIX", BtPathname)
@@ -1001,7 +1002,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("GAMEMODE", BtFileMode)
 	sys("GAMES_USER", BtUserGroupName)
 	pkglistbl3("GCC_REQD", BtGccReqd)
-	pkglistSpecial("GENERATE_PLIST", BtShellCommands)
+	pkgappend("GENERATE_PLIST", BtShellCommands)
 	pkg("GITHUB_PROJECT", BtIdentifier)
 	pkg("GITHUB_TAG", BtIdentifier)
 	pkg("GITHUB_RELEASE", BtFileName)
@@ -1114,7 +1115,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile.common: default")
 	sysload("MAKE", BtShellCommand)
 	pkglist("MAKEFLAGS", BtShellWord)
-	pkglist("MAKEVARS", BtVariableName)
+	pkglistbl3("MAKEVARS", BtVariableName)
 	pkglist("MAKE_DIRS", BtPathname)
 	pkglist("MAKE_DIRS_PERMS", BtPerms)
 	acllist("MAKE_ENV", BtShellWord,
@@ -1476,8 +1477,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile.common: append")
 	sysload("SHLIB_TYPE",
 		enum("COFF ECOFF ELF SOM XCOFF Mach-O PE PEwin a.out aixlib dylib none"))
-	acllist("SITES.*", BtFetchURL,
-		"Makefile, Makefile.common, options.mk: set, append, use")
+	pkglist("SITES.*", BtFetchURL)
 	usr("SMF_PREFIS", BtPathname)
 	pkg("SMF_SRCDIR", BtPathname)
 	pkg("SMF_NAME", BtFileName)
@@ -1554,14 +1554,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"*: set, default, use")
 	pkg("USE_GCC_RUNTIME", BtYesNo)
 	pkg("USE_GNU_CONFIGURE_HOST", BtYesNo)
-	acl("USE_GNU_ICONV", BtYes,
-		"Makefile, Makefile.*, *.mk: set, use-loadtime, use")
-	acl("USE_IMAKE", BtYes,
-		"Makefile: set")
+	pkgload("USE_GNU_ICONV", BtYes)
+	pkg("USE_IMAKE", BtYes)
 	pkg("USE_JAVA", enum("run yes build"))
 	pkg("USE_JAVA2", enum("YES yes no 1.4 1.5 6 7 8"))
-	acllist("USE_LANGUAGES", compilerLanguages,
-		"Makefile, Makefile.common, options.mk: set, append")
+	pkglist("USE_LANGUAGES", compilerLanguages)
 	pkg("USE_LIBTOOL", BtYes)
 	pkg("USE_MAKEINFO", BtYes)
 	pkg("USE_MSGFMT_PLURALS", BtYes)
