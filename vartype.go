@@ -301,6 +301,8 @@ var (
 	BtYes                    = &BasicType{"Yes", (*VartypeCheck).Yes}
 	BtYesNo                  = &BasicType{"YesNo", (*VartypeCheck).YesNo}
 	BtYesNoIndirectly        = &BasicType{"YesNoIndirectly", (*VartypeCheck).YesNoIndirectly}
+
+	btForLoop = &BasicType{".for loop", nil /* never called */}
 )
 
 // Necessary due to circular dependencies between the checkers.

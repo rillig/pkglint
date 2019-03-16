@@ -711,6 +711,44 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_condition(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkShell, BtPathmask,
+		"special:filename.mk: use-loadtime")
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", lkShell, BtPathmask,
+		"special:filename.mk: use")
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		".if ${LOAD_TIME} && ${RUN_TIME}",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_for_loop(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkShell, BtPathmask,
+		"special:filename.mk: use-loadtime")
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", lkShell, BtPathmask,
+		"special:filename.mk: use")
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		".for pattern in ${LOAD_TIME} ${RUN_TIME}",
+		".endfor")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *check.C) {
 	t := s.Init(c)
 
