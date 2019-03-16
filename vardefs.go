@@ -63,8 +63,8 @@ func (src *Pkgsrc) InitVartypes() {
 	}
 
 	// pkgload is the same as pkg, except that the variable may be accessed at load time.
-	pkgload := func(varname string, kindOfList KindOfList, checker *BasicType) {
-		aclSpecial(varname, kindOfList, checker,
+	pkgload := func(varname string, checker *BasicType) {
+		aclSpecial(varname, lkNone, checker,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	}
@@ -157,8 +157,8 @@ func (src *Pkgsrc) InitVartypes() {
 
 	// cmdline declares a variable that is defined on the command line. There
 	// are only few variables of this type, such as PKG_DEBUG_LEVEL.
-	cmdline := func(varname string, kindOfList KindOfList, checker *BasicType) {
-		aclSpecial(varname, kindOfList, checker,
+	cmdline := func(varname string, checker *BasicType) {
+		aclSpecial(varname, lkNone, checker,
 			"buildlink3.mk, builtin.mk: none",
 			"*: use-loadtime, use")
 	}
@@ -978,7 +978,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acl("GNU_ARCH.*", BtIdentifier,
 		"buildlink3.mk: none",
 		"*: set, use")
-	pkgload("GNU_CONFIGURE", lkNone, BtYes)
+	pkgload("GNU_CONFIGURE", BtYes)
 	pkg("GNU_CONFIGURE_INFODIR", BtPathname)
 	pkg("GNU_CONFIGURE_LIBDIR", BtPathname)
 	pkg("GNU_CONFIGURE_LIBSUBDIR", BtPathname)
@@ -986,7 +986,7 @@ func (src *Pkgsrc) InitVartypes() {
 		"Makefile, Makefile.common: set")
 	pkg("GNU_CONFIGURE_PREFIX", BtPathname)
 	pkg("GOPATH", BtPathname)
-	pkgload("HAS_CONFIGURE", lkNone, BtYes)
+	pkgload("HAS_CONFIGURE", BtYes)
 	pkglist("HEADER_TEMPLATES", BtPathname)
 	pkg("HOMEPAGE", BtHomepage)
 	pkg("ICON_THEMES", BtYes)
@@ -1169,7 +1169,7 @@ func (src *Pkgsrc) InitVartypes() {
 		"Makefile, Makefile.common, *.mk: set")
 	acl("NO_BIN_ON_FTP", BtRestricted,
 		"Makefile, Makefile.common, *.mk: set")
-	pkgload("NO_BUILD", lkNone, BtYes)
+	pkgload("NO_BUILD", BtYes)
 	pkg("NO_CHECKSUM", BtYes)
 	pkg("NO_CONFIGURE", BtYes)
 	acl("NO_EXPORT_CPP", BtYes,
@@ -1289,7 +1289,7 @@ func (src *Pkgsrc) InitVartypes() {
 	// installed or not.
 	sys("PKG_CREATE", BtShellCommand)
 	sys("PKG_DBDIR", BtPathname)
-	cmdline("PKG_DEBUG_LEVEL", lkNone, BtInteger)
+	cmdline("PKG_DEBUG_LEVEL", BtInteger)
 	usrlist("PKG_DEFAULT_OPTIONS", BtOption)
 	sys("PKG_DELETE", BtShellCommand)
 	acllist("PKG_DESTDIR_SUPPORT", enum("destdir user-destdir"),
@@ -1353,7 +1353,7 @@ func (src *Pkgsrc) InitVartypes() {
 	pkglist("PKG_USERS_VARS", BtVariableName)
 	acl("PKG_USE_KERBEROS", BtYes,
 		"Makefile, Makefile.common: set")
-	pkgload("PLIST.*", lkNone, BtYes)
+	pkgload("PLIST.*", BtYes)
 	pkglist("PLIST_VARS", BtIdentifier)
 	pkglist("PLIST_SRC", BtRelativePkgPath)
 	pkglist("PLIST_SUBST", BtShellWord)
