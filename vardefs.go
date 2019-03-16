@@ -1042,7 +1042,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("INSTALL_TEMPLATES", BtPathname)
 	pkgload("INSTALL_UNSTRIPPED", BtYesNo)
 	pkglist("INTERACTIVE_STAGE", enum("fetch extract configure build test install"))
-	pkgload("IS_BUILTIN.*", BtYesNoIndirectly)
+	acl("IS_BUILTIN.*", BtYesNoIndirectly,
+		"buildlink3.mk: none",
+		"builtin.mk: set, use, use-loadtime", // The "set" differs from the standard sys.
+		"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	sys("JAVA_BINPREFIX", BtPathname)
 	pkg("JAVA_CLASSPATH", BtShellWord)
 	pkg("JAVA_HOME", BtPathname)
