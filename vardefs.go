@@ -149,9 +149,8 @@ func (src *Pkgsrc) InitVartypes() {
 
 	// bl3list declares a list variable that is defined by buildlink3.mk and
 	// builtin.mk and can later be used by the package.
-	bl3list := func(varname string, kindOfList KindOfList, checker *BasicType) {
-		// FIXME
-		aclSpecial(varname, kindOfList, checker,
+	bl3list := func(varname string, checker *BasicType) {
+		aclSpecial(varname, lkShell, checker,
 			"buildlink3.mk, builtin.mk: append",
 			"*: use")
 	}
@@ -671,11 +670,11 @@ func (src *Pkgsrc) InitVartypes() {
 		"buildlink3.mk: append",
 		"Makefile: set")
 	syslist("BUILDLINK_CFLAGS", BtCFlag)
-	bl3list("BUILDLINK_CFLAGS.*", lkShell, BtCFlag)
+	bl3list("BUILDLINK_CFLAGS.*", BtCFlag)
 	acl("BUILDLINK_CONTENTS_FILTER.*", BtShellCommand,
 		"buildlink3.mk: set")
 	syslist("BUILDLINK_CPPFLAGS", BtCFlag)
-	bl3list("BUILDLINK_CPPFLAGS.*", lkShell, BtCFlag)
+	bl3list("BUILDLINK_CPPFLAGS.*", BtCFlag)
 	acllist("BUILDLINK_DEPENDS", BtIdentifier,
 		"buildlink3.mk: append")
 	acllist("BUILDLINK_DEPMETHOD.*", BtBuildlinkDepmethod,
@@ -684,7 +683,7 @@ func (src *Pkgsrc) InitVartypes() {
 		"Makefile.common, *.mk: append")
 	acl("BUILDLINK_DIR", BtPathname,
 		"*: use")
-	bl3list("BUILDLINK_FILES.*", lkShell, BtPathmask)
+	bl3list("BUILDLINK_FILES.*", BtPathmask)
 	pkg("BUILDLINK_FILES_CMD.*", BtShellCommand)
 	acllist("BUILDLINK_INCDIRS.*", BtPathname,
 		"buildlink3.mk: default, append",
@@ -697,7 +696,7 @@ func (src *Pkgsrc) InitVartypes() {
 		"Makefile, Makefile.common, *.mk: use")
 	acllist("BUILDLINK_LDFLAGS", BtLdFlag,
 		"*: use")
-	bl3list("BUILDLINK_LDFLAGS.*", lkShell, BtLdFlag)
+	bl3list("BUILDLINK_LDFLAGS.*", BtLdFlag)
 	acllist("BUILDLINK_LIBDIRS.*", BtPathname,
 		"buildlink3.mk, builtin.mk: append",
 		"Makefile, Makefile.common, *.mk: use")
