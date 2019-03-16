@@ -619,7 +619,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	if indirectly {
-		mkline.Warnf("%s should not be used indirectly (via %s) at load time.",
+		mkline.Warnf("%s should not be used indirectly at load time (via %s).",
 			varname, mkline.Varname())
 		ck.explainPermissions(varname, vartype)
 		return
@@ -636,7 +636,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		mkline.Warnf("%s should not be used at load time in any file.", varname)
 
 	case alternativeFiles == "":
-		mkline.Warnf("%s should not be used at run time in any file.", varname)
+		mkline.Warnf("%s should not be used in any file.", varname)
 
 	case directly:
 		mkline.Warnf(
@@ -646,8 +646,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 
 	default:
 		mkline.Warnf(
-			"%s should not be used at run time in this file; "+
-				"it would be ok in %s.",
+			"%s should not be used in this file; it would be ok in %s.",
 			varname, alternativeFiles)
 	}
 

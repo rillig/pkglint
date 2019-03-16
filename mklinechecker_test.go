@@ -832,7 +832,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:2: " +
-			"AUTO_MKDIRS should not be used at run time in this file; " +
+			"AUTO_MKDIRS should not be used in this file; " +
 			"it would be ok in Makefile, Makefile.* or *.mk.")
 }
 
@@ -887,7 +887,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_load_time
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:123: VAR should not be used indirectly " +
-			"(via LOAD_TIME) at load time.")
+			"at load time (via LOAD_TIME).")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_file(c *check.C) {
@@ -904,7 +904,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 	// Since these warnings are valid for the whole file, duplicates are suppressed.
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:2: "+
-			"AUTO_MKDIRS should not be used at run time in this file; "+
+			"AUTO_MKDIRS should not be used in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:2: "+
 			"PKGREVISION should not be used in any file; "+
@@ -930,10 +930,10 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__without_mklines(c *ch
 		// used" or "used but not defined" warnings here.
 
 		"WARN: buildlink3.mk:123: "+
-			"AUTO_MKDIRS should not be used at run time in this file; "+
+			"AUTO_MKDIRS should not be used in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:123: "+
-			"AUTO_MKDIRS should not be used at run time in this file; "+
+			"AUTO_MKDIRS should not be used in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk.",
 		"WARN: buildlink3.mk:123: "+
 			"PKGREVISION should not be used in any file; "+
