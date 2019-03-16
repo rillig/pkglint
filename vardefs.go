@@ -94,9 +94,26 @@ func (reg *VarTypeRegistry) DefineParse(varname string, kindOfList KindOfList, b
 // can be used in Makefiles without triggering warnings about typos.
 func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
+	// acl defines the permissions of a variable by listing the permissions
+	// individually.
+	//
+	// Each variable that uses this function directly must document:
+	//  - which of the predefined permission sets is the closest
+	//  - how this individual permission set differs
+	//  - why the predefined permission set is not good enough
+	//  - which packages need this custom permission set.
 	acl := func(varname string, basicType *BasicType, aclEntries ...string) {
 		reg.DefineParse(varname, lkNone, basicType, aclEntries...)
 	}
+
+	// acllist defines the permissions of a list variable by listing
+	// the permissions individually.
+	//
+	// Each variable that uses this function directly must document:
+	//  - which of the predefined permission sets is the closest
+	//  - how this individual permission set differs
+	//  - why the predefined permission set is not good enough
+	//  - which packages need this custom permission set.
 	acllist := func(varname string, basicType *BasicType, aclEntries ...string) {
 		reg.DefineParse(varname, lkShell, basicType, aclEntries...)
 	}
@@ -155,11 +172,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		reg.DefineParse(varname, lkNone, basicType,
 			"Makefile, Makefile.*, *.mk: default, set, use")
 	}
-	// Some package-defined lists may also be appended in buildlink3.mk files,
+	// Some package-defined lists may also be modified in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
 	pkglistbl3 := func(varname string, basicType *BasicType) {
 		reg.DefineParse(varname, lkShell, basicType,
-			"buildlink3.mk, builtin.mk: default, append, use",
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 
@@ -720,7 +736,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("BINOWN", BtUserGroupName)
 	pkglist("BOOTSTRAP_DEPENDS", BtDependencyWithPath)
 	pkg("BOOTSTRAP_PKG", BtYesNo)
-	pkg("BROKEN", BtMessage)
+	// BROKEN should better be a list of messages instead of a simple string.
+	pkgappend("BROKEN", BtMessage)
 	pkg("BROKEN_GETTEXT_DETECTION", BtYesNo)
 	pkglist("BROKEN_EXCEPT_ON_PLATFORM", BtMachinePlatformPattern)
 	pkglist("BROKEN_ON_PLATFORM", BtMachinePlatformPattern)
@@ -808,10 +825,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, Makefile.*, *.mk: use, use-loadtime")
 	acl("BUILTIN_PKG.*", BtPkgName,
 		"builtin.mk: set, use, use-loadtime")
-	acllist("BUILTIN_FIND_FILES_VAR", BtVariableName,
-		"builtin.mk: set")
-	acllist("BUILTIN_FIND_FILES.*", BtPathname,
-		"builtin.mk: set")
+	pkglistbl3("BUILTIN_FIND_FILES_VAR", BtVariableName)
+	pkglistbl3("BUILTIN_FIND_FILES.*", BtPathname)
 	acl("BUILTIN_FIND_GREP.*", BtUnknown,
 		"builtin.mk: set")
 	acllist("BUILTIN_FIND_HEADERS_VAR", BtVariableName,
@@ -882,18 +897,18 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("CONF_FILES_PERMS", BtPerms)
 	sys("COPY", enum("-c")) // The flag that tells ${INSTALL} to copy a file
 	sys("CPP", BtShellCommand)
-	pkglist("CPPFLAGS", BtCFlag)
-	pkglist("CPPFLAGS.*", BtCFlag)
+	pkglistbl3("CPPFLAGS", BtCFlag)
+	pkglistbl3("CPPFLAGS.*", BtCFlag)
 	sys("CXX", BtShellCommand)
-	pkglist("CXXFLAGS", BtCFlag)
-	pkglist("CXXFLAGS.*", BtCFlag)
-	pkglist("CWRAPPERS_APPEND.*", BtShellWord)
+	pkglistbl3("CXXFLAGS", BtCFlag)
+	pkglistbl3("CXXFLAGS.*", BtCFlag)
+	pkglistbl3("CWRAPPERS_APPEND.*", BtShellWord)
 	syslist("DEFAULT_DISTFILES", BtFetchURL) // From mk/fetch/bsd.fetch-vars.mk.
 	pkglist("DEINSTALL_SRC", BtPathname)
 	pkglist("DEINSTALL_TEMPLATES", BtPathname)
 	sys("DELAYED_ERROR_MSG", BtShellCommand)
 	sys("DELAYED_WARNING_MSG", BtShellCommand)
-	pkglist("DEPENDS", BtDependencyWithPath)
+	pkglistbl3("DEPENDS", BtDependencyWithPath)
 	usrlist("DEPENDS_TARGET", BtIdentifier)
 	pkglist("DESCR_SRC", BtPathname)
 	sys("DESTDIR", BtPathname)
@@ -1003,7 +1018,12 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("GMAKE_REQD", BtVersion)
 	// Some packages need to set GNU_ARCH.i386 to either i486 or i586.
 	pkg("GNU_ARCH.*", BtIdentifier)
-	pkgload("GNU_CONFIGURE", BtYes)
+	// GNU_CONFIGURE needs to be tested in some buildlink3.mk files,
+	// such as lang/vala.
+	acl("GNU_CONFIGURE", BtYes,
+		"buildlink3.mk: none",
+		"builtin.mk: use, use-loadtime",
+		"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	pkg("GNU_CONFIGURE_INFODIR", BtPathname)
 	pkg("GNU_CONFIGURE_LIBDIR", BtPathname)
 	pkg("GNU_CONFIGURE_LIBSUBDIR", BtPathname)
@@ -1046,8 +1066,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkgload("INSTALL_UNSTRIPPED", BtYesNo)
 	pkglist("INTERACTIVE_STAGE", enum("fetch extract configure build test install"))
 	acl("IS_BUILTIN.*", BtYesNoIndirectly,
-		"buildlink3.mk: none",
-		"builtin.mk: set, use, use-loadtime", // The "set" differs from the standard sys.
+		// These two differ from the standard,
+		// they are needed for devel/ncursesw.
+		"buildlink3.mk: use, use-loadtime",
+		// The "set" differs from the standard sys.
+		"builtin.mk: set, use, use-loadtime",
 		"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	sys("JAVA_BINPREFIX", BtPathname)
 	pkg("JAVA_CLASSPATH", BtShellWord)
@@ -1218,8 +1241,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("PERL5_SUB_INSTALLVENDORMAN3DIR", BtPrefixPathname)
 	pkg("PERL5_USE_PACKLIST", BtYesNo)
 	sys("PGSQL_PREFIX", BtPathname)
-	// The bl3 is necessary for databases/postgresql-postgis2.
-	pkglistbl3("PGSQL_VERSIONS_ACCEPTED", pgsqlVersions)
+	acllist("PGSQL_VERSIONS_ACCEPTED", pgsqlVersions,
+		// The "set" is necessary for databases/postgresql-postgis2.
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
 	usr("PGSQL_VERSION_DEFAULT", BtVersion)
 	sys("PG_LIB_EXT", enum("dylib so"))
 	sys("PGSQL_TYPE",
@@ -1476,7 +1500,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sysload("TOOLS_PLATFORM.*", BtShellCommand)
 	syslist("TOUCH_FLAGS", BtShellWord)
 	pkglist("UAC_REQD_EXECS", BtPrefixPathname)
-	pkglist("UNLIMIT_RESOURCES",
+	pkglistbl3("UNLIMIT_RESOURCES",
 		enum("cputime datasize memorysize stacksize"))
 	usr("UNPRIVILEGED_USER", BtUserGroupName)
 	usr("UNPRIVILEGED_GROUP", BtUserGroupName)
