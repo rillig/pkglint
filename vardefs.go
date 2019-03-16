@@ -958,13 +958,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("EXTRACT_ENV", BtShellWord)
 	pkglist("EXTRACT_ONLY", BtPathname)
 	pkglist("EXTRACT_OPTS", BtShellWord)
-	acllist("EXTRACT_OPTS_BIN", BtShellWord)
-	acllist("EXTRACT_OPTS_LHA", BtShellWord)
-	acllist("EXTRACT_OPTS_PAX", BtShellWord)
-	acllist("EXTRACT_OPTS_RAR", BtShellWord)
-	acllist("EXTRACT_OPTS_TAR", BtShellWord)
-	acllist("EXTRACT_OPTS_ZIP", BtShellWord)
-	acllist("EXTRACT_OPTS_ZOO", BtShellWord)
+	pkglist("EXTRACT_OPTS_BIN", BtShellWord)
+	pkglist("EXTRACT_OPTS_LHA", BtShellWord)
+	pkglist("EXTRACT_OPTS_PAX", BtShellWord)
+	pkglist("EXTRACT_OPTS_RAR", BtShellWord)
+	pkglist("EXTRACT_OPTS_TAR", BtShellWord)
+	pkglist("EXTRACT_OPTS_ZIP", BtShellWord)
+	pkglist("EXTRACT_OPTS_ZOO", BtShellWord)
 	pkg("EXTRACT_SUFX", BtDistSuffix)
 	pkg("EXTRACT_USING", enum("bsdtar gtar nbtar pax"))
 	sys("FAIL_MSG", BtShellCommand)
@@ -1540,6 +1540,9 @@ func enum(values string) *BasicType {
 }
 
 func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string) []ACLEntry {
+
+	G.Assertf(len(aclEntries) > 0, "At least one ACL entry must be given.")
+
 	// TODO: Use separate rules for infrastructure files.
 	//  These rules would have the "infra:" prefix
 	//  that works similar to the already existing prefix "special:".
