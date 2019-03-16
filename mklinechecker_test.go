@@ -726,6 +726,46 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *
 //		// FIXME: The warning must include "in this file" since it would be allowed in builtin.mk.
 //		"WARN: filename.mk:1: IS_BUILTIN.Xfixes should not be evaluated at load time."
 
+// Ensures that the warning "should not be evaluated at load time" is issued
+// only if using the variable at run time is allowed. If the latter were not
+// allowed, this warning would be confusing.
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_run_time(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkNone, BtUnknown,
+		"*.mk: use, use-loadtime")
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", lkNone, BtUnknown,
+		"*.mk: use")
+	G.Pkgsrc.vartypes.DefineParse("WRITE_ONLY", lkNone, BtUnknown,
+		"*.mk: set")
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME_ELSEWHERE", lkNone, BtUnknown,
+		"Makefile: use-loadtime",
+		"*.mk: set")
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME_ELSEWHERE", lkNone, BtUnknown,
+		"Makefile: use",
+		"*.mk: set")
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		".if ${LOAD_TIME} && ${RUN_TIME} && ${WRITE_ONLY}",
+		".elif ${LOAD_TIME_ELSEWHERE} && ${RUN_TIME_ELSEWHERE}",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: RUN_TIME should not be evaluated at load time.",
+		// FIXME: "not at load time" suggests that using the variable at run time were allowed.
+		"WARN: filename.mk:2: WRITE_ONLY should not be evaluated at load time.",
+		"WARN: filename.mk:2: WRITE_ONLY may not be used in any file; it is a write-only variable.",
+		"WARN: filename.mk:3: LOAD_TIME_ELSEWHERE should not be evaluated at load time.",
+		"WARN: filename.mk:3: LOAD_TIME_ELSEWHERE may not be used in this file; it would be ok in Makefile.",
+		// FIXME: "not at load time" suggests that using the variable at run time were allowed.
+		"WARN: filename.mk:3: RUN_TIME_ELSEWHERE should not be evaluated at load time.",
+		// FIXME: "may not" should be "should not".
+		"WARN: filename.mk:3: RUN_TIME_ELSEWHERE may not be used in any file; it is a write-only variable.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.C) {
 	t := s.Init(c)
 
