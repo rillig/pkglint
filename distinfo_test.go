@@ -522,7 +522,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 		"\tTo add the missing lines to the distinfo file, run",
 		"\t\t"+confMake+" distinfo",
 		"\tfor each variant of the package until all distfiles are downloaded",
-		"\tto \"${PKGSRCDIR}/distfiles\".",
+		"\tto ${PKGSRCDIR}/distfiles.",
 		"",
 		"\tThe variants are typically selected by setting EMUL_PLATFORM or",
 		"\tsimilar variables in the command line.",

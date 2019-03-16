@@ -194,10 +194,6 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 	}
 
 	distdir := G.Pkgsrc.File("distfiles")
-	distSubdir := ""
-	if ck.pkg != nil {
-		distSubdir = ck.pkg.vars.LastValue("DIST_SUBDIR")
-	}
 
 	// It's a rare situation that the explanation is generated
 	// this far from the corresponding diagnostic.
@@ -207,7 +203,7 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 		"To add the missing lines to the distinfo file, run",
 		sprintf("\t%s", bmake("distinfo")),
 		"for each variant of the package until all distfiles are downloaded to",
-		sprintf("%q.", cleanpath("${PKGSRCDIR}/distfiles/"+distSubdir)),
+		"${PKGSRCDIR}/distfiles.",
 		"",
 		"The variants are typically selected by setting EMUL_PLATFORM",
 		"or similar variables in the command line.",
@@ -222,7 +218,7 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 		"which will find the downloaded distfiles and add the missing",
 		"hashes to the distinfo file.")
 
-	distfile := cleanpath(distdir + "/" + distSubdir + "/" + info.filename())
+	distfile := cleanpath(distdir + "/" + info.filename())
 	if !fileExists(distfile) {
 		return
 	}
