@@ -137,9 +137,13 @@ func (src *Pkgsrc) InitVartypes() {
 	}
 
 	// sysload declares a system-provided variable that may already be used at load time.
-	sysload := func(varname string, kindOfList KindOfList, checker *BasicType) {
-		// FIXME
-		aclSpecial(varname, kindOfList, checker,
+	sysload := func(varname string, checker *BasicType) {
+		aclSpecial(varname, lkNone, checker,
+			"*: use-loadtime, use")
+	}
+
+	sysloadlist := func(varname string, checker *BasicType) {
+		aclSpecial(varname, lkShell, checker,
 			"*: use-loadtime, use")
 	}
 
@@ -756,8 +760,8 @@ func (src *Pkgsrc) InitVartypes() {
 	acllist("CATEGORIES", BtCategory,
 		"Makefile: set, append",
 		"Makefile.common: set, default, append")
-	sysload("CC_VERSION", lkNone, BtMessage)
-	sysload("CC", lkNone, BtShellCommand)
+	sysload("CC_VERSION", BtMessage)
+	sysload("CC", BtShellCommand)
 	pkglistbl3("CFLAGS", BtCFlag)   // may also be changed by the user
 	pkglistbl3("CFLAGS.*", BtCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", BtYesNo,
@@ -1039,9 +1043,9 @@ func (src *Pkgsrc) InitVartypes() {
 	usr("KRB5_DEFAULT", enum("heimdal mit-krb5"))
 	sys("KRB5_TYPE", BtIdentifier)
 	sys("LD", BtShellCommand)
-	pkglistbl3("LDFLAGS", BtLdFlag)               // May also be changed by the user.
-	pkglistbl3("LDFLAGS.*", BtLdFlag)             // May also be changed by the user.
-	sysload("LIBABISUFFIX", lkNone, BtIdentifier) // Can also be empty.
+	pkglistbl3("LDFLAGS", BtLdFlag)       // May also be changed by the user.
+	pkglistbl3("LDFLAGS.*", BtLdFlag)     // May also be changed by the user.
+	sysload("LIBABISUFFIX", BtIdentifier) // Can also be empty.
 	sys("LIBGRP", BtUserGroupName)
 	sys("LIBMODE", BtFileMode)
 	sys("LIBOWN", BtUserGroupName)
@@ -1070,14 +1074,14 @@ func (src *Pkgsrc) InitVartypes() {
 	acllist("LTCONFIG_OVERRIDE", BtPathmask,
 		"Makefile: set, append",
 		"Makefile.common: append")
-	sysload("MACHINE_ARCH", lkNone, enumMachineArch)
-	sysload("MACHINE_GNU_ARCH", lkNone, enumMachineGnuArch)
-	sysload("MACHINE_GNU_PLATFORM", lkNone, BtMachineGnuPlatform)
-	sysload("MACHINE_PLATFORM", lkNone, BtMachinePlatform)
+	sysload("MACHINE_ARCH", enumMachineArch)
+	sysload("MACHINE_GNU_ARCH", enumMachineGnuArch)
+	sysload("MACHINE_GNU_PLATFORM", BtMachineGnuPlatform)
+	sysload("MACHINE_PLATFORM", BtMachinePlatform)
 	acl("MAINTAINER", BtMailAddress,
 		"Makefile: set",
 		"Makefile.common: default")
-	sysload("MAKE", lkNone, BtShellCommand)
+	sysload("MAKE", BtShellCommand)
 	pkglist("MAKEFLAGS", BtShellWord)
 	acllist("MAKEVARS", BtVariableName,
 		"Makefile, buildlink3.mk, builtin.mk, hacks.mk: append")
@@ -1179,17 +1183,17 @@ func (src *Pkgsrc) InitVartypes() {
 		"Makefile, Makefile.common, *.mk: set")
 	acl("NO_SRC_ON_FTP", BtRestricted,
 		"Makefile, Makefile.common, *.mk: set")
-	sysload("OBJECT_FMT", lkNone, enum("COFF ECOFF ELF SOM XCOFF Mach-O PE a.out"))
+	sysload("OBJECT_FMT", enum("COFF ECOFF ELF SOM XCOFF Mach-O PE a.out"))
 	pkglist("ONLY_FOR_COMPILER", compilers)
 	pkglist("ONLY_FOR_PLATFORM", BtMachinePlatformPattern)
 	pkg("ONLY_FOR_UNPRIVILEGED", BtYesNo)
-	sysload("OPSYS", lkNone, BtIdentifier)
+	sysload("OPSYS", BtIdentifier)
 	acllist("OPSYSVARS", BtVariableName,
 		"Makefile, Makefile.common: append")
 	acl("OSVERSION_SPECIFIC", BtYes,
 		"Makefile, Makefile.common: set")
-	sysload("OS_VERSION", lkNone, BtVersion)
-	sysload("OSX_VERSION", lkNone, BtVersion) // See mk/platform/Darwin.mk.
+	sysload("OS_VERSION", BtVersion)
+	sysload("OSX_VERSION", BtVersion) // See mk/platform/Darwin.mk.
 	pkg("OVERRIDE_DIRDEPTH*", BtInteger)
 	pkg("OVERRIDE_GNU_CONFIG_SCRIPTS", BtYes)
 	acl("OWNER", BtMailAddress,
@@ -1262,7 +1266,7 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("PKGLOCALEDIR", BtPathname)
 	pkg("PKGNAME", BtPkgName)
 	sys("PKGNAME_NOREV", BtPkgName)
-	sysload("PKGPATH", lkNone, BtPathname)
+	sysload("PKGPATH", BtPathname)
 	sys("PKGREPOSITORY", BtUnknown)
 	acl("PKGREVISION", BtPkgRevision,
 		"Makefile: set",
@@ -1279,7 +1283,7 @@ func (src *Pkgsrc) InitVartypes() {
 	sys("PKG_APACHE", enum("apache24"))
 	pkglist("PKG_APACHE_ACCEPTED", enum("apache24"))
 	usr("PKG_APACHE_DEFAULT", enum("apache24"))
-	sysload("PKG_BUILD_OPTIONS.*", lkShell, BtOption)
+	sysloadlist("PKG_BUILD_OPTIONS.*", BtOption)
 	usr("PKG_CONFIG", BtYes)
 	// ^^ No, this is not the popular command from GNOME, but the setting
 	// whether the pkgsrc user wants configuration files automatically
@@ -1292,7 +1296,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acllist("PKG_DESTDIR_SUPPORT", enum("destdir user-destdir"),
 		"Makefile, Makefile.common: set")
 	pkglist("PKG_FAIL_REASON", BtShellWord)
-	sysload("PKG_FORMAT", lkNone, BtIdentifier)
+	sysload("PKG_FORMAT", BtIdentifier)
 	acl("PKG_GECOS.*", BtMessage,
 		"Makefile: set")
 	acl("PKG_GID.*", BtInteger,
@@ -1312,7 +1316,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acllist("PKG_LEGACY_OPTIONS", BtOption,
 		"options.mk: set, append")
 	pkg("PKG_LIBTOOL", BtPathname)
-	sysload("PKG_OPTIONS", lkShell, BtOption)
+	sysloadlist("PKG_OPTIONS", BtOption)
 	usrlist("PKG_OPTIONS.*", BtOption)
 	opt := pkg         // TODO: force package options to only be set in options.mk
 	optlist := pkglist // TODO: force package options to only be set in options.mk
@@ -1370,7 +1374,7 @@ func (src *Pkgsrc) InitVartypes() {
 	syslist("PTHREAD_LIBS", BtLdFlag)
 	acllist("PTHREAD_OPTS", enum("native optional require"),
 		"Makefile, Makefile.*, *.mk: default, set, append")
-	sysload("PTHREAD_TYPE", lkNone, BtIdentifier) // Or "native" or "none".
+	sysload("PTHREAD_TYPE", BtIdentifier) // Or "native" or "none".
 	pkg("PY_PATCHPLIST", BtYes)
 	acl("PYPKGPREFIX",
 		enumFromDirs("lang", `^python(\d+)$`, "py$1", "py27 py36"),
@@ -1447,7 +1451,7 @@ func (src *Pkgsrc) InitVartypes() {
 	acllist("SHLIBTOOL_OVERRIDE", BtPathmask,
 		"Makefile: set, append",
 		"Makefile.common: append")
-	sysload("SHLIB_TYPE", lkNone,
+	sysload("SHLIB_TYPE",
 		enum("COFF ECOFF ELF SOM XCOFF Mach-O PE PEwin a.out aixlib dylib none"))
 	acllist("SITES.*", BtFetchURL,
 		"Makefile, Makefile.common, options.mk: set, append, use")
@@ -1506,7 +1510,7 @@ func (src *Pkgsrc) InitVartypes() {
 	syslist("TOOLS_GNU_MISSING", BtTool)
 	syslist("TOOLS_NOOP", BtTool)
 	sys("TOOLS_PATH.*", BtPathname)
-	sysload("TOOLS_PLATFORM.*", lkNone, BtShellCommand)
+	sysload("TOOLS_PLATFORM.*", BtShellCommand)
 	syslist("TOUCH_FLAGS", BtShellWord)
 	pkglist("UAC_REQD_EXECS", BtPrefixPathname)
 	acllist("UNLIMIT_RESOURCES",
@@ -1555,7 +1559,7 @@ func (src *Pkgsrc) InitVartypes() {
 	syslist("WARNINGS", BtShellWord)
 	sys("WARNING_MSG", BtShellCommand)
 	sys("WARNING_CAT", BtShellCommand)
-	sysload("WRAPPER_DIR", lkNone, BtPathname)
+	sysload("WRAPPER_DIR", BtPathname)
 	acllist("WRAPPER_REORDER_CMDS", BtWrapperReorder,
 		"Makefile, Makefile.common, buildlink3.mk: append")
 	pkg("WRAPPER_SHELL", BtShellCommand)
