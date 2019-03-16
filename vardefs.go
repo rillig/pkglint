@@ -102,15 +102,15 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	}
 
 	// A package-settable variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
-	pkg := func(varname string, checker *BasicType) {
-		acl(varname, checker,
+	pkg := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, use")
 	}
 
 	// pkgload is the same as pkg, except that the variable may be accessed at load time.
-	pkgload := func(varname string, checker *BasicType) {
-		reg.DefineParse(varname, lkNone, checker,
+	pkgload := func(varname string, basicType *BasicType) {
+		reg.DefineParse(varname, lkNone, basicType,
 			"buildlink3.mk: none",
 			"builtin.mk: use, use-loadtime",
 			"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
@@ -121,8 +121,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// appending) is also allowed. If this leads of an unconditional
 	// assignment overriding a previous value, the redundancy check will
 	// catch it.
-	pkglist := func(varname string, checker *BasicType) {
-		acllist(varname, checker,
+	pkglist := func(varname string, basicType *BasicType) {
+		acllist(varname, basicType,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
@@ -138,8 +138,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// This also applies to COMMENT, which is not a list at all but a string
 	// that is sometimes composed of a common prefix and a package-specific
 	// suffix.
-	pkgappend := func(varname string, checker *BasicType) {
-		acl(varname, checker,
+	pkgappend := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
@@ -147,15 +147,15 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// Some package-defined variables may be modified in buildlink3.mk files.
 	// These variables are typically related to compiling and linking files
 	// from C and related languages.
-	pkgbl3 := func(varname string, checker *BasicType) {
-		reg.DefineParse(varname, lkNone, checker,
+	pkgbl3 := func(varname string, basicType *BasicType) {
+		reg.DefineParse(varname, lkNone, basicType,
 			"Makefile, Makefile.common, options.mk: default, set, use",
 			"buildlink3.mk, builtin.mk, *.mk: default, use")
 	}
 	// Some package-defined lists may also be appended in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
-	pkglistbl3 := func(varname string, checker *BasicType) {
-		reg.DefineParse(varname, lkShell, checker,
+	pkglistbl3 := func(varname string, basicType *BasicType) {
+		reg.DefineParse(varname, lkShell, basicType,
 			"buildlink3.mk, builtin.mk: default, append, use",
 			"Makefile, Makefile.common, *.mk: default, set, append, use")
 	}
@@ -169,57 +169,57 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//
 	// TODO: These timing issues should be handled separately from the permissions.
 	//  They can be made more precise.
-	sys := func(varname string, checker *BasicType) {
-		acl(varname, checker,
+	sys := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
 			"buildlink3.mk: none",
 			"*: use")
 	}
 
-	syslist := func(varname string, checker *BasicType) {
-		acllist(varname, checker,
+	syslist := func(varname string, basicType *BasicType) {
+		acllist(varname, basicType,
 			"buildlink3.mk: none",
 			"*: use")
 	}
 
 	// usr declares a user-defined variable that must not be modified by packages.
-	usr := func(varname string, checker *BasicType) {
-		acl(varname, checker,
+	usr := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
 			// TODO: why is builtin.mk missing here?
 			"buildlink3.mk: none",
 			"*: use, use-loadtime")
 	}
 
 	// usr declares a user-defined list variable that must not be modified by packages.
-	usrlist := func(varname string, checker *BasicType) {
-		acllist(varname, checker,
+	usrlist := func(varname string, basicType *BasicType) {
+		acllist(varname, basicType,
 			// TODO: why is builtin.mk missing here?
 			"buildlink3.mk: none",
 			"*: use, use-loadtime")
 	}
 
 	// sysload declares a system-provided variable that may already be used at load time.
-	sysload := func(varname string, checker *BasicType) {
-		reg.DefineParse(varname, lkNone, checker,
+	sysload := func(varname string, basicType *BasicType) {
+		reg.DefineParse(varname, lkNone, basicType,
 			"*: use, use-loadtime")
 	}
 
-	sysloadlist := func(varname string, checker *BasicType) {
-		reg.DefineParse(varname, lkShell, checker,
+	sysloadlist := func(varname string, basicType *BasicType) {
+		reg.DefineParse(varname, lkShell, basicType,
 			"*: use, use-loadtime")
 	}
 
 	// bl3list declares a list variable that is defined by buildlink3.mk and
 	// builtin.mk and can later be used by the package.
-	bl3list := func(varname string, checker *BasicType) {
-		reg.DefineParse(varname, lkShell, checker,
+	bl3list := func(varname string, basicType *BasicType) {
+		reg.DefineParse(varname, lkShell, basicType,
 			"buildlink3.mk, builtin.mk: append",
 			"*: use")
 	}
 
 	// cmdline declares a variable that is defined on the command line. There
 	// are only few variables of this type, such as PKG_DEBUG_LEVEL.
-	cmdline := func(varname string, checker *BasicType) {
-		reg.DefineParse(varname, lkNone, checker,
+	cmdline := func(varname string, basicType *BasicType) {
+		reg.DefineParse(varname, lkNone, basicType,
 			"buildlink3.mk, builtin.mk: none",
 			"*: use, use-loadtime")
 	}
@@ -453,15 +453,15 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// omitting this necessary inclusion.
 	//
 	// TODO: parse all the below information directly from mk/defaults/mk.conf.
-	usrpkg := func(varname string, checker *BasicType) {
-		acl(varname, checker,
+	usrpkg := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
 			"Makefile: default, set, use, use-loadtime",
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile.*, *.mk: default, set, use, use-loadtime",
 			"*: use, use-loadtime")
 	}
-	usrpkglist := func(varname string, checker *BasicType) {
-		acllist(varname, checker,
+	usrpkglist := func(varname string, basicType *BasicType) {
+		acllist(varname, basicType,
 			"Makefile: default, set, use, use-loadtime",
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile.*, *.mk: default, set, use, use-loadtime",
