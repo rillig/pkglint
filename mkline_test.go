@@ -407,7 +407,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	MkLineChecker{mkline}.checkVarassign()
 
 	t.CheckOutputLines(
-		"WARN: builtin.mk:3: PKG_ADMIN should not be evaluated at load time.",
+		"WARN: builtin.mk:3: PKG_ADMIN should not be used at load time in any file.",
 		"NOTE: builtin.mk:3: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 
@@ -780,7 +780,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall,no-space")
+	t.SetUpCommandLine("-Wall,no-space", "--explain")
 	t.SetUpVartypes()
 
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -795,13 +795,101 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// TODO: Explain why the variable may not be set, by listing the current rules.
 		"WARN: ~/Makefile:4: The variable LINKER_RPATH_FLAG may not be set by any package.",
-		"WARN: ~/Makefile:4: Please use ${LINKER_RPATH_FLAG:S/-rpath/& /:Q} instead of ${LINKER_RPATH_FLAG:S/-rpath/& /}.",
-		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be evaluated at load time.",
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for",
+		"\tLINKER_RPATH_FLAG are:",
+		"",
+		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in any file, it may be used",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"",
+		"WARN: ~/Makefile:4: Please use ${LINKER_RPATH_FLAG:S/-rpath/& /:Q} "+
+			"instead of ${LINKER_RPATH_FLAG:S/-rpath/& /}.",
+		"",
+		"\tSee the pkgsrc guide, section \"Echoing a string exactly as-is\":",
+		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#echo-literal",
+		"",
+		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be used at load time in any file.",
+		"",
+		"\tMany variables, especially lists of something, get their values",
+		"\tincrementally. Therefore it is generally unsafe to rely on their",
+		"\tvalue until it is clear that it will never change again. This point",
+		"\tis reached when the whole package Makefile is loaded and execution",
+		"\tof the shell commands starts; in some cases earlier.",
+		"",
+		"\tAdditionally, when using the \":=\" operator, each $$ is replaced with",
+		"\ta single $, so variables that have references to shell variables or",
+		"\tregular expressions are modified in a subtle way.",
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for",
+		"\tLINKER_RPATH_FLAG are:",
+		"",
+		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in any file, it may be used",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"",
 		"WARN: ~/Makefile:6: The variable PATH may not be set by any package.",
-		"WARN: ~/Makefile:6: PREFIX should not be evaluated at load time.",
-		"WARN: ~/Makefile:6: PATH should not be evaluated at load time.")
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for PATH",
+		"\tare:",
+		"",
+		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in any file, it may be used",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"",
+		"WARN: ~/Makefile:6: PREFIX should not be used at load time in any file.",
+		"",
+		"\tMany variables, especially lists of something, get their values",
+		"\tincrementally. Therefore it is generally unsafe to rely on their",
+		"\tvalue until it is clear that it will never change again. This point",
+		"\tis reached when the whole package Makefile is loaded and execution",
+		"\tof the shell commands starts; in some cases earlier.",
+		"",
+		"\tAdditionally, when using the \":=\" operator, each $$ is replaced with",
+		"\ta single $, so variables that have references to shell variables or",
+		"\tregular expressions are modified in a subtle way.",
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for PREFIX",
+		"\tare:",
+		"",
+		"\t* in any file, it may be used",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"",
+		"WARN: ~/Makefile:6: PATH should not be used at load time in any file.",
+		"",
+		"\tMany variables, especially lists of something, get their values",
+		"\tincrementally. Therefore it is generally unsafe to rely on their",
+		"\tvalue until it is clear that it will never change again. This point",
+		"\tis reached when the whole package Makefile is loaded and execution",
+		"\tof the shell commands starts; in some cases earlier.",
+		"",
+		"\tAdditionally, when using the \":=\" operator, each $$ is replaced with",
+		"\ta single $, so variables that have references to shell variables or",
+		"\tregular expressions are modified in a subtle way.",
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for PATH",
+		"\tare:",
+		"",
+		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in any file, it may be used",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"")
 
 	// Just for branch coverage.
 	trace.Tracing = false

@@ -347,12 +347,18 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 	}
 }
 
-func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype) {
+func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype, intro ...string) {
 	if !G.Logger.Opts.Explain {
 		return
 	}
 
 	var expl []string
+
+	if len(intro) > 0 {
+		expl = append(expl, intro...)
+		expl = append(expl, "")
+	}
+
 	expl = append(expl,
 		"The allowed actions for a variable are determined based on the file",
 		"name in which the variable is used or defined.",
@@ -573,14 +579,8 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 			return
 		}
 
-		if effPerms.Contains(aclpUse) {
-			ck.warnVaruseLoadTime(varname, indirectly)
-			return
-		}
-
-		// At this point the variable is used at load time although in this
-		// file it must not be used at all. Continue to get a detailed
-		// warning showing alternative permissions and/or alternative files.
+		// Continue to get a detailed warning showing alternative
+		// permissions and/or alternative files.
 
 	} else if effPerms.Contains(aclpUse) {
 		// At this point the variable is used at run time. Since that is
@@ -601,14 +601,17 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		return
 	}
 
-	// At this point the variable is either:
-	// - used at load time and must not be used at all in this file, or
-	// - used at run time and must not be used at run time in this file.
-	//   (Whether such a variable may be used at load time or not should
-	//   not matter; this case is not expected in practice.)
+	// At this point the variable is used either at load time or at run
+	// time, and that particular use is not allowed in this file.
 	//
-	// There must be a warning in any case, the remaining question is only
-	// about the details in the wording.
+	// If the variable is used at run time, it may or may not be used at
+	// load time in this file. Having a variable that may be used at load
+	// time but not at run time is not a practically important case.
+	// Therefore it is not handled specially here.
+	//
+	// Anyway, there must be a warning now since the requested use is not
+	// allowed. The only remaining question is about how detailed the
+	// warning will be.
 
 	anyPerms := vartype.Union()
 	if !anyPerms.Contains(aclpUse) && !anyPerms.Contains(aclpUseLoadtime) {
@@ -621,7 +624,12 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	if indirectly {
 		mkline.Warnf("%s should not be used indirectly at load time (via %s).",
 			varname, mkline.Varname())
-		ck.explainPermissions(varname, vartype)
+		ck.explainPermissions(varname, vartype,
+			"The variable on the left-hand side may be evaluated at load time,",
+			"but the variable on the right-hand side may not.",
+			"Because of the assignment in this line, the variable might be",
+			"used indirectly at load time, before it is guaranteed to be",
+			"properly initialized.")
 		return
 	}
 
@@ -631,26 +639,42 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 	alternativeFiles := vartype.AllowedFiles(needed)
 
+	loadTimeExplanation := func() []string {
+		return []string{
+			"Many variables, especially lists of something, get their values incrementally.",
+			"Therefore it is generally unsafe to rely on their",
+			"value until it is clear that it will never change again.",
+			"This point is reached when the whole package Makefile is loaded and",
+			"execution of the shell commands starts; in some cases earlier.",
+			"",
+			"Additionally, when using the \":=\" operator, each $$ is replaced",
+			"with a single $, so variables that have references to shell",
+			"variables or regular expressions are modified in a subtle way."}
+	}
+
 	switch {
 	case alternativeFiles == "" && directly:
 		mkline.Warnf("%s should not be used at load time in any file.", varname)
+		ck.explainPermissions(varname, vartype, loadTimeExplanation()...)
 
 	case alternativeFiles == "":
 		mkline.Warnf("%s should not be used in any file.", varname)
+		ck.explainPermissions(varname, vartype)
 
 	case directly:
 		mkline.Warnf(
 			"%s should not be used at load time in this file; "+
 				"it would be ok in %s.",
 			varname, alternativeFiles)
+		ck.explainPermissions(varname, vartype, loadTimeExplanation()...)
 
 	default:
 		mkline.Warnf(
 			"%s should not be used in this file; it would be ok in %s.",
 			varname, alternativeFiles)
+		ck.explainPermissions(varname, vartype)
 	}
 
-	ck.explainPermissions(varname, vartype)
 }
 
 // warnVaruseToolLoadTime logs a warning that the tool ${varname}
@@ -694,35 +718,6 @@ func (ck MkLineChecker) warnVaruseToolLoadTime(varname string, tool *Tool) {
 		"load time (see above for the tricky rules).",
 		"Therefore the tools can only be used at run time,",
 		"except in the package Makefile itself.")
-}
-
-func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
-	mkline := ck.MkLine
-
-	// FIXME: Distinguish "in this file" and "everywhere".
-
-	if !isIndirect {
-		// FIXME: This warning must only appear if the variable may be used at run time.
-		mkline.Warnf("%s should not be evaluated at load time.", varname)
-		G.Explain(
-			"Many variables, especially lists of something, get their values incrementally.",
-			"Therefore it is generally unsafe to rely on their",
-			"value until it is clear that it will never change again.",
-			"This point is reached when the whole package Makefile is loaded and",
-			"execution of the shell commands starts; in some cases earlier.",
-			"",
-			"Additionally, when using the \":=\" operator, each $$ is replaced",
-			"with a single $, so variables that have references to shell",
-			"variables or regular expressions are modified in a subtle way.")
-		return
-	}
-
-	mkline.Warnf("%s should not be evaluated indirectly at load time.", varname)
-	mkline.Explain(
-		"The variable on the left-hand side may be evaluated at load time,",
-		"but the variable on the right-hand side may not.",
-		"Because of the assignment in this line, the variable might be used indirectly",
-		"at load time, before it is guaranteed to be properly initialized.")
 }
 
 // CheckVaruseShellword checks whether a variable use of the form ${VAR}

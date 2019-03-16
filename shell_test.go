@@ -1009,7 +1009,7 @@ func (s *Suite) Test_ShellLine__variable_outside_quotes(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: dummy.mk:2: The variable GZIP may not be set by any package.",
 		"WARN: dummy.mk:2: Unquoted shell variable \"comment\".",
-		"WARN: dummy.mk:2: ECHO should not be evaluated indirectly at load time.")
+		"WARN: dummy.mk:2: ECHO should not be used indirectly at load time (via GZIP).")
 }
 
 func (s *Suite) Test_ShellLine_CheckShellCommand__cd_inside_if(c *check.C) {

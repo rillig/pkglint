@@ -388,7 +388,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 
 	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
 		"WARN: filename.mk:1: \"mailto:someone@example.org\" is not a valid URL.",
-		"WARN: filename.mk:1: HOMEPAGE should not be evaluated at load time.")
+		"WARN: filename.mk:1: HOMEPAGE should not be used at load time in any file.")
 
 	test(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
 		"WARN: filename.mk:1: PKGSRC_RUN_TEST should be matched "+
@@ -407,7 +407,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 
 	test(".if ${PKG_LIBTOOL:Mlibtool}",
 		"NOTE: filename.mk:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".",
-		"WARN: filename.mk:1: PKG_LIBTOOL should not be evaluated at load time.")
+		"WARN: filename.mk:1: PKG_LIBTOOL should not be used at load time in any file.")
 
 	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
 		"WARN: filename.mk:1: "+
@@ -429,7 +429,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		// FIXME: Indeed, indeed, the :M modifier ends at the colon.
 		//  Why doesn't pkglint complain loudly about the unknown "//*" modifier?
 		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",
-		"WARN: filename.mk:1: MASTER_SITES should not be evaluated at load time.")
+		"WARN: filename.mk:1: MASTER_SITES should not be used at load time in any file.")
 
 	// The only interesting line from the below tracing output is the one
 	// containing "checkCompareVarStr".
@@ -602,9 +602,8 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:3: PKGBASE should not be evaluated at load time.",
-		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.",
-		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.")
+		"WARN: options.mk:3: PKGBASE should not be used at load time in any file.",
+		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
@@ -623,7 +622,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:3: PKGBASE should not be evaluated at load time.",
+		"WARN: options.mk:3: PKGBASE should not be used at load time in any file.",
 		"",
 		"\tMany variables, especially lists of something, get their values",
 		"\tincrementally. Therefore it is generally unsafe to rely on their",
@@ -635,7 +634,18 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
 		"\ta single $, so variables that have references to shell variables or",
 		"\tregular expressions are modified in a subtle way.",
 		"",
-		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; it would be ok in pyversion.mk.",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for PKGBASE",
+		"\tare:",
+		"",
+		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in any file, it may be used",
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"",
+		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; "+
+			"it would be ok in pyversion.mk.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
 		"\tname in which the variable is used or defined. The rules for",
@@ -645,15 +655,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
 		"\t* in any file, it may be used at load time, or used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
-		"\ttech-pkg@NetBSD.org mailing list.",
-		"",
-		"WARN: options.mk:4: PKGBASE should not be evaluated indirectly at load time.",
-		"",
-		"\tThe variable on the left-hand side may be evaluated at load time,",
-		"\tbut the variable on the right-hand side may not. Because of the",
-		"\tassignment in this line, the variable might be used indirectly at",
-		"\tload time, before it is guaranteed to be properly initialized.",
-		"")
+		"\ttech-pkg@NetBSD.org mailing list.", "")
 }
 
 func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
@@ -761,7 +763,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_run_time(c 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: RUN_TIME should not be evaluated at load time.",
+		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.",
 		"WARN: filename.mk:2: "+
 			"WRITE_ONLY should not be used in any file; "+
 			"it is a write-only variable.",
@@ -801,7 +803,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__indirectly(c *check.C
 
 	t.CheckOutputLines(
 		"WARN: file.mk:2: IGNORE_PKG.package should be set to YES or yes.",
-		"WARN: file.mk:2: ONLY_FOR_UNPRIVILEGED should not be evaluated indirectly at load time.")
+		"WARN: file.mk:2: ONLY_FOR_UNPRIVILEGED should not be used indirectly at load time (via IGNORE_PKG.package).")
 }
 
 // This test is only here for branch coverage.
@@ -1532,7 +1534,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__LOCALBASE_in_infrastructure(c *c
 
 	// No warnings about LOCALBASE being used; in packages LOCALBASE is deprecated.
 	t.CheckOutputLines(
-		"WARN: ~/mk/infra.mk:2: PREFIX should not be evaluated indirectly at load time.")
+		"WARN: ~/mk/infra.mk:2: PREFIX should not be used indirectly at load time (via LOCALBASE).")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruse__user_defined_variable_and_BUILD_DEFS(c *check.C) {
