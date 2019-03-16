@@ -828,6 +828,42 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 			"it would be ok in Makefile, Makefile.* or *.mk.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_infrastructure_variable(c *check.C) {
+	t := s.Init(c)
+
+	// This combination of BtUnknown and all permissions is typical for
+	// otherwise unknown variables from the pkgsrc infrastructure.
+	G.Pkgsrc.vartypes.Define("MOTIFLIB", lkNone, BtUnknown,
+		ACLEntry{"*", aclpAll})
+	G.Pkgsrc.vartypes.DefineParse("COMPILER_RPATH_FLAG", lkNone, BtUnknown,
+		"buildlink3.mk: none",
+		"*: use")
+
+	mkline := t.NewMkLine("buildlink3.mk", 123, "MOTIFLIB=\t${COMPILER_RPATH_FLAG}")
+
+	MkLineChecker{mkline}.Check()
+
+	// FIXME: Since MOTIFLIB is defined in the infrastructure and pkglint
+	//  knows nothing else about this variable, it assumes that MOTIFLIB
+	//  may be used at load time. This is done to prevent wrong warnings.
+	//  This in turn has consequences when MOTIFLIB is used on the left-hand
+	//  side of an assignment since pkglint assumes that the right-hand
+	//  side may now be evaluated at load time. This produces the first
+	//  warning.
+	//  .
+	//  The second warning is wrong because it just looks at the needed
+	//  permissions at the end of MkLineChecker.checkVarusePermissions.
+	//  To match the wording of the current message, it must look at the
+	//  union of both aclpUse|aclpUseLoadTime.
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:123: "+
+			"COMPILER_RPATH_FLAG should not be evaluated indirectly at load time.",
+		"WARN: buildlink3.mk:123: "+
+			"COMPILER_RPATH_FLAG may not be used in any file; "+
+			// FIXME: This conclusion is wrong.
+			"it is a write-only variable.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_file(c *check.C) {
 	t := s.Init(c)
 
