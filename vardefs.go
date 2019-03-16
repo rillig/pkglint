@@ -97,7 +97,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// pkgload is the same as pkg, except that the variable may be accessed at load time.
 	pkgload := func(varname string, checker *BasicType) {
 		reg.DefineParse(varname, lkNone, checker,
-			"buildlink3.mk, builtin.mk: none",
+			"buildlink3.mk: none",
+			"builtin.mk: use, use-loadtime",
 			"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	}
 
@@ -123,6 +124,14 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"*.mk: append, default, use")
 	}
 
+	// Some package-defined variables may be modified in buildlink3.mk files.
+	// These variables are typically related to compiling and linking files
+	// from C and related languages.
+	pkgbl3 := func(varname string, checker *BasicType) {
+		reg.DefineParse(varname, lkNone, checker,
+			"Makefile, Makefile.common, options.mk: default, set, use",
+			"buildlink3.mk, builtin.mk, *.mk: default, use")
+	}
 	// Some package-defined lists may also be appended in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
 	pkglistbl3 := func(varname string, checker *BasicType) {
@@ -733,12 +742,12 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"buildlink3.mk, builtin.mk: append",
 		"Makefile, Makefile.common, *.mk: use")
 	acllist("BUILDLINK_LIBS.*", BtLdFlag,
-		"Makefile: set, append",
-		"buildlink3.mk: append")
+		"buildlink3.mk: append",
+		"Makefile, Makefile.common, *.mk: set, append, use")
 	acllist("BUILDLINK_PASSTHRU_DIRS", BtPathname,
-		"Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
+		"Makefile, Makefile.common, *.mk: append")
 	acllist("BUILDLINK_PASSTHRU_RPATHDIRS", BtPathname,
-		"Makefile, Makefile.common, buildlink3.mk, hacks.mk: append")
+		"Makefile, Makefile.common, *.mk: append")
 	acl("BUILDLINK_PKGSRCDIR.*", BtRelativePkgDir,
 		"buildlink3.mk: default, use-loadtime")
 	acl("BUILDLINK_PREFIX.*", BtPathname,
@@ -902,7 +911,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("DL_AUTO_VARS", BtYes,
 		"Makefile, Makefile.common, options.mk: set")
 	acllist("DL_LIBS", BtLdFlag,
-		"*: use")
+		"*: use, append")
 	sys("DOCOWN", BtUserGroupName)
 	sys("DOCGRP", BtUserGroupName)
 	sys("DOCMODE", BtFileMode)
@@ -1323,8 +1332,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, Makefile.common: set")
 	pkglist("PKG_FAIL_REASON", BtShellWord)
 	sysload("PKG_FORMAT", BtIdentifier)
-	acl("PKG_GECOS.*", BtMessage,
-		"Makefile: set")
+	pkg("PKG_GECOS.*", BtMessage)
 	acl("PKG_GID.*", BtInteger,
 		"Makefile: set")
 	pkglist("PKG_GROUPS", BtShellWord)
@@ -1394,7 +1402,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("PRINT_PLIST_AWK", BtAwkCommand,
 		"*: append")
 	pkglist("PRIVILEGED_STAGES", enum("build install package clean"))
-	pkg("PTHREAD_AUTO_VARS", BtYesNo)
+	pkgbl3("PTHREAD_AUTO_VARS", BtYesNo)
 	syslist("PTHREAD_CFLAGS", BtCFlag)
 	syslist("PTHREAD_LDFLAGS", BtLdFlag)
 	syslist("PTHREAD_LIBS", BtLdFlag)
@@ -1517,10 +1525,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, Makefile.common, *.mk: append")
 	pkglist("TEST_DIRS", BtWrksrcSubdirectory)
 	pkglist("TEST_ENV", BtShellWord)
-	acllist("TEST_TARGET", BtIdentifier,
-		"Makefile: set",
-		"Makefile.common: default, set",
-		"options.mk: set, append")
+	pkglist("TEST_TARGET", BtIdentifier)
 	pkglist("TEXINFO_REQD", BtVersion)
 	acllist("TOOL_DEPENDS", BtDependencyWithPath,
 		"Makefile, Makefile.common, *.mk: append")
@@ -1541,8 +1546,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("UAC_REQD_EXECS", BtPrefixPathname)
 	acllist("UNLIMIT_RESOURCES",
 		enum("cputime datasize memorysize stacksize"),
-		"Makefile: set, append",
-		"Makefile.common: append")
+		"Makefile, Makefile.common, *.mk: set, append")
 	usr("UNPRIVILEGED_USER", BtUserGroupName)
 	usr("UNPRIVILEGED_GROUP", BtUserGroupName)
 	pkglist("UNWRAP_FILES", BtPathmask)
@@ -1552,7 +1556,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("USE_BSD_MAKEFILE", BtYes)
 	acl("USE_BUILTIN.*", BtYesNoIndirectly,
 		"builtin.mk: set, use, use-loadtime",
-		"Makefile, Makefile.common, *.mk: use-loadtime")
+		"Makefile, Makefile.common, *.mk: set, use-loadtime, use")
 	pkg("USE_CMAKE", BtYes)
 	usr("USE_DESTDIR", BtYes)
 	pkglist("USE_FEATURES", BtIdentifier)
@@ -1562,7 +1566,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("USE_GCC_RUNTIME", BtYesNo)
 	pkg("USE_GNU_CONFIGURE_HOST", BtYesNo)
 	acl("USE_GNU_ICONV", BtYes,
-		"Makefile, Makefile.common, options.mk: set, use-loadtime, use")
+		"Makefile, Makefile.common, *.mk: set, use-loadtime, use")
 	acl("USE_IMAKE", BtYes,
 		"Makefile: set")
 	pkg("USE_JAVA", enum("run yes build"))
