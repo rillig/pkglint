@@ -204,6 +204,12 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"*: use-loadtime, use")
 	}
 
+	// Only for infrastructure files; see mk/misc/show.mk
+	infralist := func(varname string, basicType *BasicType) {
+		acllist(varname, basicType,
+			"*: append")
+	}
+
 	// compilerLanguages reads the available languages that are typically
 	// bundled in a single compiler framework, such as GCC or Clang.
 	compilerLanguages := enum(
@@ -693,7 +699,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("BINMODE", BtFileMode)
 	sys("BINOWN", BtUserGroupName)
 	acllist("BOOTSTRAP_DEPENDS", BtDependencyWithPath,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	pkg("BOOTSTRAP_PKG", BtYesNo)
 	pkg("BROKEN", BtMessage)
 	pkg("BROKEN_GETTEXT_DETECTION", BtYesNo)
@@ -720,39 +726,38 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"buildlink3.mk: append")
 	acllist("BUILDLINK_DEPMETHOD.*", BtBuildlinkDepmethod,
 		"buildlink3.mk: default, append, use",
-		"Makefile: set, append",
-		"Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: set, append")
 	acl("BUILDLINK_DIR", BtPathname,
 		"*: use")
 	bl3list("BUILDLINK_FILES.*", BtPathmask)
-	pkg("BUILDLINK_FILES_CMD.*", BtShellCommand)
+	pkgbl3("BUILDLINK_FILES_CMD.*", BtShellCommand)
 	acllist("BUILDLINK_INCDIRS.*", BtPathname,
 		"buildlink3.mk: default, append",
-		"Makefile, Makefile.common, *.mk: use")
+		"Makefile, Makefile.*, *.mk: use")
 	acl("BUILDLINK_JAVA_PREFIX.*", BtPathname,
 		"buildlink3.mk: set, use")
 	acllist("BUILDLINK_LDADD.*", BtLdFlag,
 		"builtin.mk: set, default, append, use",
 		"buildlink3.mk: append, use",
-		"Makefile, Makefile.common, *.mk: use")
+		"Makefile, Makefile.*, *.mk: use")
 	acllist("BUILDLINK_LDFLAGS", BtLdFlag,
 		"*: use")
 	bl3list("BUILDLINK_LDFLAGS.*", BtLdFlag)
 	acllist("BUILDLINK_LIBDIRS.*", BtPathname,
 		"buildlink3.mk, builtin.mk: append",
-		"Makefile, Makefile.common, *.mk: use")
+		"Makefile, Makefile.*, *.mk: use")
 	acllist("BUILDLINK_LIBS.*", BtLdFlag,
 		"buildlink3.mk: append",
-		"Makefile, Makefile.common, *.mk: set, append, use")
+		"Makefile, Makefile.*, *.mk: set, append, use")
 	acllist("BUILDLINK_PASSTHRU_DIRS", BtPathname,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	acllist("BUILDLINK_PASSTHRU_RPATHDIRS", BtPathname,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	acl("BUILDLINK_PKGSRCDIR.*", BtRelativePkgDir,
 		"buildlink3.mk: default, use-loadtime")
 	acl("BUILDLINK_PREFIX.*", BtPathname,
 		"builtin.mk: set, use",
-		"Makefile, Makefile.common, *.mk: use")
+		"Makefile, Makefile.*, *.mk: use")
 	acllist("BUILDLINK_RPATHDIRS.*", BtPathname,
 		"buildlink3.mk: append")
 	acllist("BUILDLINK_TARGETS", BtIdentifier,
@@ -768,10 +773,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("BUILDLINK_X11_DIR", BtPathname,
 		"*: use")
 	acllist("BUILD_DEFS", BtVariableName,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	pkglist("BUILD_DEFS_EFFECTS", BtVariableName)
 	acllist("BUILD_DEPENDS", BtDependencyWithPath,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	pkglist("BUILD_DIRS", BtWrksrcSubdirectory)
 	pkglist("BUILD_ENV", BtShellWord)
 	sys("BUILD_MAKE_CMD", BtShellCommand)
@@ -781,7 +786,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("BUILD_USES_MSGFMT", BtYes)
 	acl("BUILTIN_PKG", BtIdentifier,
 		"builtin.mk: set, use-loadtime, use",
-		"Makefile, Makefile.common, *.mk: use, use-loadtime")
+		"Makefile, Makefile.*, *.mk: use, use-loadtime")
 	acl("BUILTIN_PKG.*", BtPkgName,
 		"builtin.mk: set, use-loadtime, use")
 	acllist("BUILTIN_FIND_FILES_VAR", BtVariableName,
@@ -839,7 +844,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("CMAKE_USE_GNU_INSTALL_DIRS", BtYesNo)
 	pkg("CMAKE_INSTALL_PREFIX", BtPathname) // The default is ${PREFIX}.
 	acl("COMMENT", BtComment,
-		"Makefile, Makefile.common, *.mk: set, append")
+		"Makefile, Makefile.*, *.mk: set, append")
 	sys("COMPILE.*", BtShellCommand)
 	acl("COMPILER_RPATH_FLAG", enum("-Wl,-rpath"),
 		"*: use")
@@ -1049,9 +1054,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("INSTALL_TARGET", BtIdentifier)
 	acllist("INSTALL_TEMPLATES", BtPathname,
 		"Makefile: set, append",
-		"Makefile.common, *.mk: set, default, append")
+		"Makefile.*, *.mk: set, default, append")
 	acl("INSTALL_UNSTRIPPED", BtYesNo,
-		"Makefile, Makefile.common, *.mk: default, set, use, use-loadtime")
+		"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
 	pkglist("INTERACTIVE_STAGE", enum("fetch extract configure build test install"))
 	acl("IS_BUILTIN.*", BtYesNoIndirectly,
 		"builtin.mk: set, use-loadtime, use",
@@ -1191,9 +1196,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("NOT_PAX_ASLR_SAFE", BtPathmask)
 	pkglist("NOT_PAX_MPROTECT_SAFE", BtPathmask)
 	acl("NO_BIN_ON_CDROM", BtRestricted,
-		"Makefile, Makefile.common, *.mk: set")
+		"Makefile, Makefile.*, *.mk: set")
 	acl("NO_BIN_ON_FTP", BtRestricted,
-		"Makefile, Makefile.common, *.mk: set")
+		"Makefile, Makefile.*, *.mk: set")
 	pkgload("NO_BUILD", BtYes)
 	pkg("NO_CHECKSUM", BtYes)
 	pkg("NO_CONFIGURE", BtYes)
@@ -1204,9 +1209,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	acl("NO_PKGTOOLS_REQD_CHECK", BtYes,
 		"Makefile: set")
 	acl("NO_SRC_ON_CDROM", BtRestricted,
-		"Makefile, Makefile.common, *.mk: set")
+		"Makefile, Makefile.*, *.mk: set")
 	acl("NO_SRC_ON_FTP", BtRestricted,
-		"Makefile, Makefile.common, *.mk: set")
+		"Makefile, Makefile.*, *.mk: set")
 	sysload("OBJECT_FMT", enum("COFF ECOFF ELF SOM XCOFF Mach-O PE a.out"))
 	pkglist("ONLY_FOR_COMPILER", compilers)
 	pkglist("ONLY_FOR_PLATFORM", BtMachinePlatformPattern)
@@ -1234,7 +1239,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("PATCH_DIST_CAT", BtShellCommand)
 	acl("PATCH_DIST_STRIP*", BtShellWord,
 		"buildlink3.mk, builtin.mk: none",
-		"Makefile, Makefile.common, *.mk: set")
+		"Makefile, Makefile.*, *.mk: set")
 	acllist("PATCH_SITES", BtFetchURL,
 		"Makefile, Makefile.common, options.mk: set")
 	pkg("PATCH_STRIP", BtShellWord)
@@ -1430,9 +1435,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("REPLACE_BASH", BtPathmask)
 	pkglist("REPLACE_CSH", BtPathmask)
 	acllist("REPLACE_FILES.*", BtPathmask,
-		"Makefile, Makefile.common, *.mk: default, set, append")
+		"Makefile, Makefile.*, *.mk: default, set, append")
 	acllist("REPLACE_INTERPRETER", BtIdentifier,
-		"Makefile, Makefile.common, *.mk: default, set, append")
+		"Makefile, Makefile.*, *.mk: default, set, append")
 	pkglist("REPLACE_KSH", BtPathmask)
 	pkglist("REPLACE_LOCALEDIR_PATTERNS", BtFileMask)
 	pkglist("REPLACE_LUA", BtPathmask)
@@ -1510,18 +1515,18 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, Makefile.*, *.mk: set, append")
 	pkglist("SUPERSEDES", BtDependency)
 	acllist("TEST_DEPENDS", BtDependencyWithPath,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	pkglist("TEST_DIRS", BtWrksrcSubdirectory)
 	pkglist("TEST_ENV", BtShellWord)
 	pkglist("TEST_TARGET", BtIdentifier)
 	pkglist("TEXINFO_REQD", BtVersion)
 	acllist("TOOL_DEPENDS", BtDependencyWithPath,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	syslist("TOOLS_ALIASES", BtFileName)
 	syslist("TOOLS_BROKEN", BtTool)
 	sys("TOOLS_CMD.*", BtPathname)
 	acllist("TOOLS_CREATE", BtTool,
-		"Makefile, Makefile.common, *.mk: append")
+		"Makefile, Makefile.*, *.mk: append")
 	acllist("TOOLS_DEPENDS.*", BtDependencyWithPath,
 		"buildlink3.mk: none",
 		"Makefile, Makefile.*: set, default",
@@ -1534,7 +1539,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("UAC_REQD_EXECS", BtPrefixPathname)
 	acllist("UNLIMIT_RESOURCES",
 		enum("cputime datasize memorysize stacksize"),
-		"Makefile, Makefile.common, *.mk: set, append")
+		"Makefile, Makefile.*, *.mk: set, append")
 	usr("UNPRIVILEGED_USER", BtUserGroupName)
 	usr("UNPRIVILEGED_GROUP", BtUserGroupName)
 	pkglist("UNWRAP_FILES", BtPathmask)
@@ -1544,7 +1549,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("USE_BSD_MAKEFILE", BtYes)
 	acl("USE_BUILTIN.*", BtYesNoIndirectly,
 		"builtin.mk: set, use, use-loadtime",
-		"Makefile, Makefile.common, *.mk: set, use-loadtime, use")
+		"Makefile, Makefile.*, *.mk: set, use-loadtime, use")
 	pkg("USE_CMAKE", BtYes)
 	usr("USE_DESTDIR", BtYes)
 	pkglist("USE_FEATURES", BtIdentifier)
@@ -1554,7 +1559,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("USE_GCC_RUNTIME", BtYesNo)
 	pkg("USE_GNU_CONFIGURE_HOST", BtYesNo)
 	acl("USE_GNU_ICONV", BtYes,
-		"Makefile, Makefile.common, *.mk: set, use-loadtime, use")
+		"Makefile, Makefile.*, *.mk: set, use-loadtime, use")
 	acl("USE_IMAKE", BtYes,
 		"Makefile: set")
 	pkg("USE_JAVA", enum("run yes build"))
@@ -1578,8 +1583,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("WARNING_MSG", BtShellCommand)
 	sys("WARNING_CAT", BtShellCommand)
 	sysload("WRAPPER_DIR", BtPathname)
-	acllist("WRAPPER_REORDER_CMDS", BtWrapperReorder,
-		"Makefile, Makefile.common, buildlink3.mk: append")
+	pkglistbl3("WRAPPER_REORDER_CMDS", BtWrapperReorder)
 	pkg("WRAPPER_SHELL", BtShellCommand)
 	acllist("WRAPPER_TRANSFORM_CMDS", BtWrapperTransform,
 		"Makefile, Makefile.common, buildlink3.mk: append")
@@ -1591,19 +1595,12 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("XMKMF_FLAGS", BtShellWord)
 	pkglist("_WRAP_EXTRA_ARGS.*", BtShellWord)
 
-	// Only for infrastructure files; see mk/misc/show.mk
-	acllist("_VARGROUPS", BtIdentifier,
-		"*: append")
-	acllist("_USER_VARS.*", BtIdentifier,
-		"*: append")
-	acllist("_PKG_VARS.*", BtIdentifier,
-		"*: append")
-	acllist("_SYS_VARS.*", BtIdentifier,
-		"*: append")
-	acllist("_DEF_VARS.*", BtIdentifier,
-		"*: append")
-	acllist("_USE_VARS.*", BtIdentifier,
-		"*: append")
+	infralist("_VARGROUPS", BtIdentifier)
+	infralist("_USER_VARS.*", BtIdentifier)
+	infralist("_PKG_VARS.*", BtIdentifier)
+	infralist("_SYS_VARS.*", BtIdentifier)
+	infralist("_DEF_VARS.*", BtIdentifier)
+	infralist("_USE_VARS.*", BtIdentifier)
 }
 
 func enum(values string) *BasicType {
