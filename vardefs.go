@@ -558,7 +558,7 @@ func (src *Pkgsrc) InitVartypes() {
 	usrpkg("POPTOP_USE_MPPE", BtYes)
 	usrpkg("PROCMAIL_MAILSPOOLHOME", BtFileName)
 	// Comma-separated list of string or integer literals.
-	usrpkglist("PROCMAIL_TRUSTED_IDS", BtUnknown)
+	usrpkg("PROCMAIL_TRUSTED_IDS", BtUnknown)
 	usrpkg("PVM_SSH", BtPathname)
 	usrpkg("QMAILDIR", BtPathname)
 	usrpkg("QMAIL_ALIAS_USER", BtUserGroupName)
