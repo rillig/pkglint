@@ -1057,7 +1057,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, Makefile.common, options.mk: default, set")
 	pkglist("INTERACTIVE_STAGE", enum("fetch extract configure build test install"))
 	acl("IS_BUILTIN.*", BtYesNoIndirectly,
-		"builtin.mk: set, use-loadtime, use")
+		"builtin.mk: set, use-loadtime, use",
+		"Makefile, Makefile.*, *.mk: use, use-loadtime")
 	sys("JAVA_BINPREFIX", BtPathname)
 	pkg("JAVA_CLASSPATH", BtShellWord)
 	pkg("JAVA_HOME", BtPathname)

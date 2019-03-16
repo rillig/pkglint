@@ -400,19 +400,11 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename.mk:1: PKGSRC_RUN_TEST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
-	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])",
-		// FIXME: The warning must include "in this file" since it would be allowed in builtin.mk.
-		"WARN: filename.mk:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
-		// TODO: Having two warnings is redundant.
-		"WARN: filename.mk:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
+	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
 		"WARN: filename.mk:1: The empty() function takes a variable name as parameter, "+
-			"not a variable expression.",
-		// FIXME: The warning must include "in this file" since it would be allowed in builtin.mk.
-		"WARN: filename.mk:1: IS_BUILTIN.Xfixes should not be evaluated at load time.",
-		// TODO: Having two warnings is redundant.
-		"WARN: filename.mk:1: IS_BUILTIN.Xfixes may not be used in this file; it would be ok in builtin.mk.")
+			"not a variable expression.")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
 		"WARN: filename.mk:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
@@ -730,6 +722,9 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *
 	// quickly.
 	t.CheckOutputEmpty()
 }
+
+//		// FIXME: The warning must include "in this file" since it would be allowed in builtin.mk.
+//		"WARN: filename.mk:1: IS_BUILTIN.Xfixes should not be evaluated at load time."
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.C) {
 	t := s.Init(c)

@@ -626,6 +626,7 @@ func (ck MkLineChecker) warnVaruseLoadTime(varname string, isIndirect bool) {
 	// FIXME: Distinguish "in this file" and "everywhere".
 
 	if !isIndirect {
+		// FIXME: This warning must only appear if the variable may be used at run time.
 		mkline.Warnf("%s should not be evaluated at load time.", varname)
 		G.Explain(
 			"Many variables, especially lists of something, get their values incrementally.",
