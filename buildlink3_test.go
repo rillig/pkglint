@@ -130,6 +130,45 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(c *c
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__Perl(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("x11/p5-gtk2",
+		"DISTNAME=\tGtk2-1.0",
+		"PKGNAME=\t${DISTNAME:C:Gtk2:p5-gtk2:}")
+	t.CreateFileLines("x11/p5-gtk2/buildlink3.mk",
+		MkRcsID,
+		"",
+		"BUILDLINK_TREE+=\tp5-gtk2",
+		"",
+		".if !defined(P5_GTK2_BUILDLINK3_MK)",
+		"P5_GTK2_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.p5-gtk2+=\tp5-gtk2>=1.0",
+		"BUILDLINK_ABI_DEPENDS.p5-gtk2+=\tp5-gtk2>=1.0",
+		"",
+		".endif\t# P5_GTK2_BUILDLINK3_MK",
+		"",
+		"BUILDLINK_TREE+=\t-p5-gtk2")
+
+	G.Check(t.File("x11/p5-gtk2"))
+
+	// Up to 2019-03-17, pkglint wrongly complained about a mismatch
+	// between the package name from buildlink3.mk (p5-gtk2) and the
+	// one from the package Makefile (Gtk2).
+	//
+	// Pkglint had taken this information from the DISTNAME variable,
+	// ignoring the fact that PKGNAME was also defined.
+	//
+	// FIXME: If PKGNAME is defined, DISTNAME must not be used as the effective package name.
+	//
+	// FIXME: Evaluate the :C modifier in ${DISTNAME:C:Gtk2:p5-gtk2:}.
+	t.CheckOutputLines(
+		"ERROR: ~/x11/p5-gtk2/buildlink3.mk:3: " +
+			"Package name mismatch between \"p5-gtk2\" in this file " +
+			"and \"Gtk2\" from Makefile:3.")
+}
+
 func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_multiple_inclusion(c *check.C) {
 	t := s.Init(c)
 
