@@ -101,12 +101,39 @@ func (vt *Vartype) Union() ACLPermissions {
 func (vt *Vartype) AlternativeFiles(perms ACLPermissions) string {
 	pos := make([]string, 0, len(vt.aclEntries))
 	neg := make([]string, 0, len(vt.aclEntries))
+
+	merge := func(slice []string) []string {
+		di := 0
+		for si, early := range slice {
+			redundant := false
+			for _, late := range slice[si+1:] {
+				matched, err := path.Match(late, early)
+				if err == nil && matched {
+					redundant = true
+					break
+				}
+			}
+			if !redundant {
+				slice[di] = early
+				di++
+			}
+		}
+		return slice[:di]
+	}
+
 	for _, aclEntry := range vt.aclEntries {
 		if aclEntry.permissions.Contains(perms) {
 			pos = append(pos, aclEntry.glob)
 		} else {
 			neg = append(neg, aclEntry.glob)
 		}
+	}
+
+	if len(neg) == 0 {
+		pos = merge(pos)
+	}
+	if len(pos) == 0 {
+		neg = merge(neg)
 	}
 
 	positive := joinSkipEmptyCambridge("or", pos...)

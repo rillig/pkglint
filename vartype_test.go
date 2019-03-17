@@ -66,8 +66,7 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 			"*.mk: set",
 			"Makefile: set, append",
 			"Makefile.*: set"),
-		// TODO: should be "*.mk, Makefile or Makefile.*"
-		"buildlink3.mk, b*.mk, *.mk, Makefile or Makefile.*")
+		"*.mk, Makefile or Makefile.*")
 
 	// When the last rule is "*", all previous rules are merged into that.
 	test(
@@ -78,8 +77,7 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 			"Makefile: set, append",
 			"Makefile.*: set",
 			"*: set, append"),
-		// TODO: should be "*"
-		"buildlink3.mk, b*.mk, *.mk, Makefile, Makefile.* or *")
+		"*")
 
 	test(
 		rules(
@@ -95,6 +93,9 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 		// TODO: should be "buildlink3.mk only".
 		"*, but not buildlink3.mk")
 
+	// If there are both positive and negative cases, preserve all the
+	// rules verbatim. Otherwise it would be too confusing for the
+	// pkglint users to see and maybe learn the actual rules.
 	test(
 		rules(
 			"buildlink3.mk: none",
