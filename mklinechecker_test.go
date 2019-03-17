@@ -350,7 +350,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: The variable DISTNAME may not be appended to "+
+		"WARN: filename.mk:2: The variable DISTNAME should not be appended to "+
 			"(only set, or given a default value) in this file.",
 		"WARN: filename.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.")
 }
@@ -497,17 +497,17 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:2: The variable PKG_DEVELOPER may not be given a default value by any package.",
+		"WARN: options.mk:2: The variable PKG_DEVELOPER should not be given a default value by any package.",
 		"WARN: options.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
-		"WARN: options.mk:3: The variable BUILD_DEFS may not be given a default value (only appended to) in this file.",
-		"WARN: options.mk:5: The variable USE_TOOLS may not be set (only appended to) in this file.",
+		"WARN: options.mk:3: The variable BUILD_DEFS should not be given a default value (only appended to) in this file.",
+		"WARN: options.mk:5: The variable USE_TOOLS should not be set (only appended to) in this file.",
 		"WARN: options.mk:5: MY_TOOLS is used but not defined.",
-		"WARN: options.mk:6: The variable USE_TOOLS may not be set (only appended to) in this file.",
+		"WARN: options.mk:6: The variable USE_TOOLS should not be set (only appended to) in this file.",
 		"WARN: options.mk:10: "+
-			"The variable SET_ONLY may not be given a default value "+
+			"The variable SET_ONLY should not be given a default value "+
 			"(only set) in this file.",
 		"WARN: options.mk:14: "+
-			"The variable SET_ONLY_DEFAULT_ELSEWHERE may not be given a "+
+			"The variable SET_ONLY_DEFAULT_ELSEWHERE should not be given a "+
 			"default value (only set) in this file; it would be ok in *.mk, "+
 			"but not options.mk.")
 }
@@ -603,7 +603,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: options.mk:3: PKGBASE should not be used at load time in any file.",
-		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; "+
+		"WARN: options.mk:4: The variable PYPKGPREFIX should not be set in this file; "+
 			"it would be ok in pyversion.mk only.")
 }
 
@@ -639,13 +639,13 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__explain(c *check.C) {
 		"\tname in which the variable is used or defined. The rules for PKGBASE",
 		"\tare:",
 		"",
-		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in buildlink3.mk, it should not be accessed at all",
 		"\t* in any file, it may be used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
 		"\ttech-pkg@NetBSD.org mailing list.",
 		"",
-		"WARN: options.mk:4: The variable PYPKGPREFIX may not be set in this file; "+
+		"WARN: options.mk:4: The variable PYPKGPREFIX should not be set in this file; "+
 			"it would be ok in pyversion.mk only.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
@@ -670,7 +670,7 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS may not be set in this file; "+
+		"WARN: buildlink3.mk:123: The variable AUTO_MKDIRS should not be set in this file; "+
 			"it would be ok in Makefile, Makefile.* or *.mk, "+
 			"but not buildlink3.mk or builtin.mk.",
 		"",
@@ -678,8 +678,8 @@ func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
 		"\tname in which the variable is used or defined. The rules for",
 		"\tAUTO_MKDIRS are:",
 		"",
-		"\t* in buildlink3.mk, it may not be accessed at all",
-		"\t* in builtin.mk, it may not be accessed at all",
+		"\t* in buildlink3.mk, it should not be accessed at all",
+		"\t* in builtin.mk, it should not be accessed at all",
 		"\t* in Makefile, it may be set, given a default value, or used",
 		"\t* in Makefile.*, it may be set, given a default value, or used",
 		"\t* in *.mk, it may be set, given a default value, or used",

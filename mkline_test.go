@@ -795,13 +795,13 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:4: The variable LINKER_RPATH_FLAG may not be set by any package.",
+		"WARN: ~/Makefile:4: The variable LINKER_RPATH_FLAG should not be set by any package.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
 		"\tname in which the variable is used or defined. The rules for",
 		"\tLINKER_RPATH_FLAG are:",
 		"",
-		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in buildlink3.mk, it should not be accessed at all",
 		"\t* in any file, it may be used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
@@ -829,19 +829,19 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 		"\tname in which the variable is used or defined. The rules for",
 		"\tLINKER_RPATH_FLAG are:",
 		"",
-		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in buildlink3.mk, it should not be accessed at all",
 		"\t* in any file, it may be used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
 		"\ttech-pkg@NetBSD.org mailing list.",
 		"",
-		"WARN: ~/Makefile:6: The variable PATH may not be set by any package.",
+		"WARN: ~/Makefile:6: The variable PATH should not be set by any package.",
 		"",
 		"\tThe allowed actions for a variable are determined based on the file",
 		"\tname in which the variable is used or defined. The rules for PATH",
 		"\tare:",
 		"",
-		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in buildlink3.mk, it should not be accessed at all",
 		"\t* in any file, it may be used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
@@ -884,7 +884,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 		"\tname in which the variable is used or defined. The rules for PATH",
 		"\tare:",
 		"",
-		"\t* in buildlink3.mk, it may not be accessed at all",
+		"\t* in buildlink3.mk, it should not be accessed at all",
 		"\t* in any file, it may be used",
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
@@ -1218,7 +1218,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.
 
 	t.CheckOutputLines(
 		"WARN: ~/multimedia/totem/bla.mk:2: "+
-			"The variable BUILDLINK_PKGSRCDIR.totem may not be given a default value in this file; "+
+			"The variable BUILDLINK_PKGSRCDIR.totem should not be given a default value in this file; "+
 			"it would be ok in buildlink3.mk.",
 		"ERROR: ~/multimedia/totem/bla.mk:2: There is no package in \"multimedia/totem\".")
 }

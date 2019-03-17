@@ -330,17 +330,16 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 		alternativeFiles := vartype.AlternativeFiles(needed)
 		switch {
 		case alternativeActions != 0 && alternativeFiles != "":
-			// FIXME: Sometimes the message says "ok in *", which is missing that in buildlink3.mk, none of the actions are allowed.
-			mkline.Warnf("The variable %s may not be %s (only %s) in this file; it would be ok in %s.",
+			mkline.Warnf("The variable %s should not be %s (only %s) in this file; it would be ok in %s.",
 				varname, needed.HumanString(), alternativeActions.HumanString(), alternativeFiles)
 		case alternativeFiles != "":
-			mkline.Warnf("The variable %s may not be %s in this file; it would be ok in %s.",
+			mkline.Warnf("The variable %s should not be %s in this file; it would be ok in %s.",
 				varname, needed.HumanString(), alternativeFiles)
 		case alternativeActions != 0:
-			mkline.Warnf("The variable %s may not be %s (only %s) in this file.",
+			mkline.Warnf("The variable %s should not be %s (only %s) in this file.",
 				varname, needed.HumanString(), alternativeActions.HumanString())
 		default:
-			mkline.Warnf("The variable %s may not be %s by any package.",
+			mkline.Warnf("The variable %s should not be %s by any package.",
 				varname, needed.HumanString())
 		}
 		ck.explainPermissions(varname, vartype)
@@ -376,7 +375,7 @@ func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype, int
 		if perms != "" {
 			expl = append(expl, sprintf("* in %s, it may be %s", files, perms))
 		} else {
-			expl = append(expl, sprintf("* in %s, it may not be accessed at all", files))
+			expl = append(expl, sprintf("* in %s, it should not be accessed at all", files))
 		}
 	}
 
@@ -615,7 +614,6 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 
 	anyPerms := vartype.Union()
 	if !anyPerms.Contains(aclpUse) && !anyPerms.Contains(aclpUseLoadtime) {
-		// FIXME: replace "may not" with "should not" everywhere else
 		mkline.Warnf("%s should not be used in any file; it is a write-only variable.", varname)
 		ck.explainPermissions(varname, vartype)
 		return
@@ -626,7 +624,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 			varname, mkline.Varname())
 		ck.explainPermissions(varname, vartype,
 			"The variable on the left-hand side may be evaluated at load time,",
-			"but the variable on the right-hand side may not.",
+			"but the variable on the right-hand side should not.",
 			"Because of the assignment in this line, the variable might be",
 			"used indirectly at load time, before it is guaranteed to be",
 			"properly initialized.")
@@ -678,7 +676,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 }
 
 // warnVaruseToolLoadTime logs a warning that the tool ${varname}
-// may not be used at load time.
+// should not be used at load time.
 func (ck MkLineChecker) warnVaruseToolLoadTime(varname string, tool *Tool) {
 	// TODO: While using a tool by its variable name may be ok at load time,
 	//  doing the same with the plain name of a tool is never ok.

@@ -1007,7 +1007,7 @@ func (s *Suite) Test_ShellLine__variable_outside_quotes(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: dummy.mk:2: The variable GZIP may not be set by any package.",
+		"WARN: dummy.mk:2: The variable GZIP should not be set by any package.",
 		"WARN: dummy.mk:2: Unquoted shell variable \"comment\".",
 		"WARN: dummy.mk:2: ECHO should not be used indirectly at load time (via GZIP).")
 }
