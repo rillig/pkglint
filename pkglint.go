@@ -41,14 +41,23 @@ type Pkglint struct {
 	fileCache *FileCache
 	interner  StringInterner
 
+	// cwd is the slash-separated absolute path to the current working
+	// directory. It is used for speeding up relpath and abspath.
+	// There is no other use for it.
+	cwd string
+
 	Hashes       map[string]*Hash // Maps "alg:filename" => hash (inter-package check).
 	UsedLicenses map[string]bool  // Maps "license name" => true (inter-package check).
 }
 
 func NewPkglint() Pkglint {
+	cwd, err := os.Getwd()
+	assertNil(err, "os.Getwd")
+
 	return Pkglint{
 		res:       regex.NewRegistry(),
 		fileCache: NewFileCache(200),
+		cwd:       filepath.ToSlash(cwd),
 		interner:  NewStringInterner()}
 }
 
@@ -478,9 +487,7 @@ func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 // Other than Assertf, this method does not require any comparison operator in the calling code.
 // This makes it possible to get 100% branch coverage for cases that "really can never fail".
 func (pkglint *Pkglint) AssertNil(err error, format string, args ...interface{}) {
-	if err != nil {
-		panic("Pkglint internal error: " + sprintf(format, args...) + ": " + err.Error())
-	}
+	assertNil(err, format, args...)
 }
 
 // Returns the pkgsrc top-level directory, relative to the given directory.

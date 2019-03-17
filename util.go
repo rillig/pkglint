@@ -118,6 +118,12 @@ func imax(a, b int) int {
 	return b
 }
 
+func assertNil(err error, format string, args ...interface{}) {
+	if err != nil {
+		panic("Pkglint internal error: " + sprintf(format, args...) + ": " + err.Error())
+	}
+}
+
 func isEmptyDir(filename string) bool {
 	if hasSuffix(filename, "/CVS") {
 		return true
@@ -406,9 +412,11 @@ func relpath(from, to string) (result string) {
 }
 
 func abspath(filename string) string {
-	abs, err := filepath.Abs(filename)
-	G.AssertNil(err, "abspath %q", filename)
-	return filepath.ToSlash(abs)
+	abs := filename
+	if !filepath.IsAbs(filename) {
+		abs = G.cwd + "/" + abs
+	}
+	return path.Clean(abs)
 }
 
 // Differs from path.Clean in that only "../../" is replaced, not "../".

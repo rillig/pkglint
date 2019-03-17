@@ -3,7 +3,6 @@ package pkglint
 import (
 	"gopkg.in/check.v1"
 	"os"
-	"runtime"
 	"testing"
 	"time"
 )
@@ -159,32 +158,6 @@ func (s *Suite) Test_relpath__quick(c *check.C) {
 
 	test("some/dir", ".", "../..")
 	test("some/dir/.", ".", "../..")
-}
-
-// This is not really an internal error but won't happen in practice anyway.
-// Therefore using ExpectPanic instead of ExpectFatal is ok.
-func (s *Suite) Test_relpath__failure_on_Windows(c *check.C) {
-	t := s.Init(c)
-
-	if runtime.GOOS == "windows" && hasPrefix(t.tmpdir, "C:/") {
-		t.ExpectPanic(
-			func() { relpath("c:/", "d:/") },
-			sprintf(
-				"Pkglint internal error: "+
-					"relpath from topdir %q to %q: "+
-					"Rel: can't make %s relative to %s",
-				t.tmpdir, "D:/", "D:/", t.tmpdir))
-	}
-}
-
-func (s *Suite) Test_abspath__failure_on_Windows(c *check.C) {
-	t := s.Init(c)
-
-	if runtime.GOOS == "windows" {
-		t.ExpectPanic(
-			func() { abspath("file\u0000name") },
-			"Pkglint internal error: abspath \"file\\x00name\": invalid argument")
-	}
 }
 
 func (s *Suite) Test_fileExists(c *check.C) {

@@ -505,11 +505,13 @@ func (t *Tester) Chdir(relativeDirName string) {
 		t.c.Fatalf("Chdir must only be called once per test; already in %q.", t.relCwd)
 	}
 
-	_ = os.MkdirAll(t.File(relativeDirName), 0700)
-	if err := os.Chdir(t.File(relativeDirName)); err != nil {
+	absDirName := t.File(relativeDirName)
+	_ = os.MkdirAll(absDirName, 0700)
+	if err := os.Chdir(absDirName); err != nil {
 		t.c.Fatalf("Cannot chdir: %s", err)
 	}
 	t.relCwd = relativeDirName
+	G.cwd = absDirName
 }
 
 // Remove removes the file from the temporary directory. The file must exist.
