@@ -25,7 +25,7 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org).
 
-> from [pkglint.go](pkglint.go#L116):
+> from [pkglint.go](pkglint.go#L107):
 
 ```go
 func Main() int {
@@ -41,7 +41,7 @@ func Main() int {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L128):
+> from [pkglint.go](pkglint.go#L119):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -206,7 +206,6 @@ func (s *Suite) TearDownTest(c *check.C) {
 		_, _ = fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
 	}
 
-	G = Pkglint{} // unusable because of missing Logger.out and Logger.err
 	if out := t.Output(); out != "" {
 		var msg strings.Builder
 		msg.WriteString("\n")
@@ -220,8 +219,11 @@ func (s *Suite) TearDownTest(c *check.C) {
 		_, _ = fmt.Fprintf(&msg, "\n")
 		_, _ = os.Stderr.WriteString(msg.String())
 	}
+
 	t.tmpdir = ""
 	t.DisableTracing()
+
+	G = Pkglint{} // unusable because of missing Logger.out and Logger.err
 }
 ```
 
@@ -242,7 +244,7 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L147):
+> from [pkglint.go](pkglint.go#L138):
 
 ```go
 	if exitcode := pkglint.ParseCommandLine(argv); exitcode != -1 {
@@ -257,7 +259,7 @@ The argument `DESCR` is saved in the `TODO` list.
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L189):
+> from [pkglint.go](pkglint.go#L180):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -278,7 +280,7 @@ In this example run, the first (and only) argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L196):
+> from [pkglint.go](pkglint.go#L187):
 
 ```go
 	firstDir := pkglint.Todo[0]
@@ -306,7 +308,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L220):
+> from [pkglint.go](pkglint.go#L211):
 
 ```go
 	for len(pkglint.Todo) > 0 {
@@ -318,7 +320,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L345):
+> from [pkglint.go](pkglint.go#L320):
 
 ```go
 	if isReg {
@@ -333,7 +335,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L679):
+> from [pkglint.go](pkglint.go#L650):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -360,55 +362,39 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 	switch {
 	case basename == "ALTERNATIVES":
-		if pkglint.Opts.CheckAlternatives {
-			CheckFileAlternatives(filename)
-		}
+		CheckFileAlternatives(filename)
 
 	case basename == "buildlink3.mk":
-		if pkglint.Opts.CheckBuildlink3 {
-			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
-				CheckLinesBuildlink3Mk(mklines)
-			}
+		if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
+			CheckLinesBuildlink3Mk(mklines)
 		}
 
 	case hasPrefix(basename, "DESCR"):
-		if pkglint.Opts.CheckDescr {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesDescr(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesDescr(lines)
 		}
 
 	case basename == "distinfo":
-		if pkglint.Opts.CheckDistinfo {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesDistinfo(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesDistinfo(G.Pkg, lines)
 		}
 
 	case basename == "DEINSTALL" || basename == "INSTALL":
-		if pkglint.Opts.CheckInstall {
-			CheckFileOther(filename)
-		}
+		CheckFileOther(filename)
 
 	case hasPrefix(basename, "MESSAGE"):
-		if pkglint.Opts.CheckMessage {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesMessage(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesMessage(lines)
 		}
 
 	case basename == "options.mk":
-		if pkglint.Opts.CheckOptions {
-			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
-				CheckLinesOptionsMk(mklines)
-			}
+		if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
+			CheckLinesOptionsMk(mklines)
 		}
 
 	case matches(basename, `^patch-[-\w.~+]*\w$`):
-		if pkglint.Opts.CheckPatches {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesPatch(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesPatch(lines)
 		}
 
 	case matches(filename, `(?:^|/)patches/manual[^/]*$`):
@@ -420,17 +406,13 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		!contains(filename, "files/") &&
-		!contains(filename, "patches/"):
-		if pkglint.Opts.CheckMk {
-			CheckFileMk(filename)
-		}
+		!(hasPrefix(filename, "files/") || contains(filename, "/files/")) &&
+		!(hasPrefix(filename, "patches/") || contains(filename, "/patches/")):
+		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
-		if pkglint.Opts.CheckPlist {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesPlist(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesPlist(G.Pkg, lines)
 		}
 
 	case hasPrefix(basename, "CHANGES-"):
@@ -457,28 +439,22 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L707):
+> from [pkglint.go](pkglint.go#L676):
 
 ```go
 	case basename == "buildlink3.mk":
-		if pkglint.Opts.CheckBuildlink3 {
-			if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
-				CheckLinesBuildlink3Mk(mklines)
-			}
+		if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
+			CheckLinesBuildlink3Mk(mklines)
 		}
 
 	case hasPrefix(basename, "DESCR"):
-		if pkglint.Opts.CheckDescr {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesDescr(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesDescr(lines)
 		}
 
 	case basename == "distinfo":
-		if pkglint.Opts.CheckDistinfo {
-			if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-				CheckLinesDistinfo(lines)
-			}
+		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
+			CheckLinesDistinfo(G.Pkg, lines)
 		}
 ```
 
@@ -494,7 +470,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L583):
+> from [pkglint.go](pkglint.go#L554):
 
 ```go
 func CheckLinesDescr(lines Lines) {
@@ -588,7 +564,7 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L198):
+> from [line.go](line.go#L200):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -625,7 +601,7 @@ func (line *LineImpl) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L645):
+> from [mkline.go](mkline.go#L796):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator
@@ -654,7 +630,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 			}
 			return no
 		}
-		if vartype.kindOfList == lkShell && !vuc.IsWordPart {
+		if !vuc.IsWordPart {
 			return no
 		}
 	}
@@ -676,10 +652,8 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	// Both of these can be correct, depending on the situation:
 	// 1. echo ${PERL5:Q}
 	// 2. xargs ${PERL5}
-	if !vuc.IsWordPart && vuc.quoting == VucQuotPlain {
-		if wantList && haveList {
-			return unknown
-		}
+	if !vuc.IsWordPart && wantList && haveList {
+		return unknown
 	}
 
 	// Pkglint assumes that the tool definitions don't include very
@@ -723,7 +697,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// Bad: LDADD+= -l${LIBS}
 	// Good: LDADD+= ${LIBS:S,^,-l,}
-	if wantList && haveList && vuc.IsWordPart {
+	if wantList {
 		return yes
 	}
 
@@ -755,13 +729,13 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 
 The definition for the `Line` type is:
 
-> from [line.go](line.go#L58):
+> from [line.go](line.go#L65):
 
 ```go
 type Line = *LineImpl
 ```
 
-> from [line.go](line.go#L60):
+> from [line.go](line.go#L67):
 
 ```go
 type LineImpl struct {
@@ -846,7 +820,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L117):
+> from [check_test.go](check_test.go#L119):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -871,7 +845,7 @@ which is the underlying testing framework.
 Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
-> from [util_test.go](util_test.go#L67):
+> from [util_test.go](util_test.go#L58):
 
 ```go
 func (s *Suite) Test_tabWidth(c *check.C) {
@@ -898,7 +872,7 @@ t.DisableTracing()
 To see how to setup complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
-> from [pkglint_test.go](pkglint_test.go#L135):
+> from [pkglint_test.go](pkglint_test.go#L119):
 
 ```go
 // Demonstrates which infrastructure files are necessary to actually run
