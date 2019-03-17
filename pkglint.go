@@ -98,7 +98,7 @@ type Hash struct {
 type pkglintFatal struct{}
 
 // G is the abbreviation for "global state";
-// these are the only global variable in this Go package
+// this and the tracer are the only global variables in this Go package.
 var (
 	G     = NewPkglint()
 	trace tracePkg.Tracer
@@ -120,8 +120,8 @@ func Main() int {
 // argv[0] is the program name.
 //
 // Note: during tests, calling this method disables tracing
-// because the command line option --debug sets trace.Tracing
-// back to false.
+// because the getopt parser resets all options before the actual parsing.
+// One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
 func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
