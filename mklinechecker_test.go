@@ -1128,11 +1128,14 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 	// Must be in the filesystem because of directory references.
 	mklines := t.SetUpFileMkLines("category/package/Makefile",
 		"# dummy")
-	ck := MkLineChecker{mklines.mklines[0]}
 
-	ck.CheckRelativePkgdir("../pkgbase")
-	ck.CheckRelativePkgdir("../../other/package")
-	ck.CheckRelativePkgdir("../../other/does-not-exist")
+	mklines.ForEach(func(mkline MkLine) {
+		ck := MkLineChecker{mkline}
+
+		ck.CheckRelativePkgdir("../pkgbase")
+		ck.CheckRelativePkgdir("../../other/package")
+		ck.CheckRelativePkgdir("../../other/does-not-exist")
+	})
 
 	// FIXME: The diagnostics for does-not-exist are redundant.
 	t.CheckOutputLines(
