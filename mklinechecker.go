@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// MkLineChecker provides checks for a single line from a Makefile fragment.
 type MkLineChecker struct {
 	MkLine MkLine
 }
