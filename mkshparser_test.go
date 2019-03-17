@@ -10,18 +10,20 @@ func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, expProgram *MkShList, expError error, expDiagnostics ...string) {
-		ck := t.NewShellLineChecker("module.mk", 123, "\t"+text)
+		mklines := t.NewMkLines("module.mk", "\t"+text)
 
-		defer t.CheckOutput(expDiagnostics)
+		mklines.ForEach(func(mkline MkLine) {
+			program, err := parseShellProgram(mkline.Line, text)
 
-		program, err := parseShellProgram(ck.mkline.Line, text)
+			if err == nil {
+				c.Check(err, equals, expError)
+			} else {
+				c.Check(err, deepEquals, expError)
+				c.Check(program, deepEquals, expProgram)
+			}
 
-		if err == nil {
-			c.Check(err, equals, expError)
-		} else {
-			c.Check(err, deepEquals, expError)
-			c.Check(program, deepEquals, expProgram)
-		}
+			t.CheckOutput(expDiagnostics)
+		})
 	}
 
 	test("$$",
@@ -33,7 +35,7 @@ func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
 		"$${",
 		nil,
 		fmt.Errorf("splitIntoShellTokens couldn't parse \"$${\""),
-		"WARN: module.mk:123: Unclosed shell variable starting at \"$${\".")
+		"WARN: module.mk:1: Unclosed shell variable starting at \"$${\".")
 
 	test(
 		"$$;",
