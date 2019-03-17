@@ -404,11 +404,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__ineffective_C_modifier(c
 	pkg.check(files, mklines, allLines)
 
 	t.Check(pkg.EffectivePkgname, equals, "distname-1.0")
-	// FIXME: there's nothing redundant here.
-	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:4: " +
-			"This assignment is probably redundant since " +
-			"PKGNAME is ${DISTNAME} by default.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {

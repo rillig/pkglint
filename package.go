@@ -652,15 +652,17 @@ func (pkg *Package) determineEffectivePkgVars() {
 	if distnameLine != nil {
 		distname = distnameLine.Value()
 	}
+
 	pkgname := ""
 	if pkgnameLine != nil {
 		pkgname = pkgnameLine.Value()
 	}
 
-	if distname != "" && pkgname != "" {
-		merged, ok := pkg.pkgnameFromDistname(pkgname, distname)
+	effname := pkgname
+	if distname != "" && effname != "" {
+		merged, ok := pkg.pkgnameFromDistname(effname, distname)
 		if ok {
-			pkgname = merged
+			effname = merged
 		}
 	}
 
@@ -676,9 +678,9 @@ func (pkg *Package) determineEffectivePkgVars() {
 		distname = ""
 	}
 
-	if pkgname != "" && !containsVarRef(pkgname) {
-		if m, m1, m2 := match2(pkgname, rePkgname); m {
-			pkg.EffectivePkgname = pkgname + pkg.nbPart()
+	if effname != "" && !containsVarRef(effname) {
+		if m, m1, m2 := match2(effname, rePkgname); m {
+			pkg.EffectivePkgname = effname + pkg.nbPart()
 			pkg.EffectivePkgnameLine = pkgnameLine
 			pkg.EffectivePkgbase = m1
 			pkg.EffectivePkgversion = m2
