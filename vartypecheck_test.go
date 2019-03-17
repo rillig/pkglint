@@ -625,10 +625,14 @@ func (s *Suite) Test_VartypeCheck_License(c *check.C) {
 	t := s.Init(c)
 	t.SetUpPkgsrc() // Adds the gnu-gpl-v2 and 2-clause-bsd licenses
 
-	G.Mk = t.NewMkLines("perl5.mk",
+	t.SetUpPackage("category/package")
+	G.Pkg = NewPackage(t.File("category/package"))
+
+	mklines := t.NewMkLines("perl5.mk",
 		MkRcsID,
 		"PERL5_LICENSE= gnu-gpl-v2 OR artistic")
-	G.Mk.collectDefinedVariables()
+	// Also registers the PERL5_LICENSE variable in the package.
+	mklines.collectDefinedVariables()
 
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).License)
 
