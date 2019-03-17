@@ -43,6 +43,39 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__procedure_call(c *
 		"WARN: ~/category/package/filename.mk:6: VAR is defined but not used.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__infra(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/infra.mk",
+		MkRcsID,
+		"#",
+		"# Package-settable variables:",
+		"#",
+		"# CTF_SUPPORTED",
+		"#\tIf set to no, ...",
+		"#\tsecond line.",
+		"#",
+		"#",
+		".if ${CTF_SUPPORTED:Uyes:tl} == yes",
+		".endif")
+	t.SetUpPackage("category/package",
+		"CTF_SUPPORTED=\tno")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		// FIXME: This variable _is_ defined. It is used by the pkgsrc
+		//  infrastructure and also documented.
+		//
+		//  When scanning the pkgsrc infrastructure for unknown variables,
+		//  it seems that only variable definitions are handled, but not
+		//  variable uses.
+		//
+		//  The documentation might be too short to be regarded as relevant.
+		"WARN: ~/category/package/Makefile:20: CTF_SUPPORTED is defined but not used.")
+}
+
 // Files from the pkgsrc infrastructure may define and use variables
 // whose name starts with an underscore.
 func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C) {
