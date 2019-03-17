@@ -571,7 +571,10 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 
 	if distname != "" && pkgname != "" {
-		pkgname = pkg.pkgnameFromDistname(pkgname, distname)
+		merged, ok := pkg.pkgnameFromDistname(pkgname, distname)
+		if ok {
+			pkgname = merged
+		}
 	}
 
 	if pkgname != "" && pkgname == distname && pkgnameLine.VarassignComment() == "" {
@@ -612,14 +615,18 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 }
 
-func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
+func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool) {
 	tokens := NewMkParser(nil, pkgname, false).MkTokens()
 
 	// TODO: Make this resolving of variable references available to all other variables as well.
 
-	result := ""
+	var result strings.Builder
 	for _, token := range tokens {
-		if token.Varuse != nil && token.Varuse.varname == "DISTNAME" {
+		if token.Varuse != nil {
+			if token.Varuse.varname != "DISTNAME" {
+				return "", false
+			}
+
 			newDistname := distname
 			for _, mod := range token.Varuse.modifiers {
 				if mod.IsToLower() {
@@ -627,16 +634,15 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) string {
 				} else if m, regex, _, _, _ := mod.MatchSubst(); m && !regex {
 					newDistname = mod.Subst(newDistname)
 				} else {
-					newDistname = token.Text
-					break
+					return "", false
 				}
 			}
-			result += newDistname
+			result.WriteString(newDistname)
 		} else {
-			result += token.Text
+			result.WriteString(token.Text)
 		}
 	}
-	return result
+	return result.String(), true
 }
 
 func (pkg *Package) checkUpdate() {

@@ -53,7 +53,11 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	pkg.vars.Define("PKGNAME", t.NewMkLine("Makefile", 5, "PKGNAME=dummy"))
 
 	test := func(pkgname, distname, expectedPkgname string) {
-		c.Check(pkg.pkgnameFromDistname(pkgname, distname), equals, expectedPkgname)
+		merged, ok := pkg.pkgnameFromDistname(pkgname, distname)
+		if !ok {
+			merged = ""
+		}
+		c.Check(merged, equals, expectedPkgname)
 	}
 
 	test("pkgname-1.0", "whatever", "pkgname-1.0")
@@ -63,7 +67,7 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	test("${DISTNAME:S|^lib||}", "libncurses", "ncurses")
 	test("${DISTNAME:S|^lib||}", "mylib", "mylib")
 	test("${DISTNAME:tl:S/-/./g:S/he/-/1}", "SaxonHE9-5-0-1J", "saxon-9.5.0.1j")
-	test("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1", "${DISTNAME:C/beta/.0./}")
+	test("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1", "")
 	test("${DISTNAME:S/-0$/.0/1}", "aspell-af-0.50-0", "aspell-af-0.50.0")
 
 	// FIXME: Should produce a parse error since the :S modifier is malformed; see Test_MkParser_MkTokens.
