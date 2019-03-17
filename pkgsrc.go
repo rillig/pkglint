@@ -348,31 +348,37 @@ func (src *Pkgsrc) loadUntypedVars() {
 	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
 	unknownType := Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
 
-	handleLine := func(mkline MkLine) {
-		if mkline.IsVarassign() {
-			varcanon := mkline.Varcanon()
+	define := func(varcanon string, mkline MkLine) {
+		switch {
+		case
+			src.vartypes.DefinedCanon(varcanon),  // Already defined
+			src.Tools.ByVarname(varcanon) != nil, // Already known as a tool
+			hasPrefix(varcanon, "_"),             // Skip internal variables
+			contains(varcanon, "$"),              // Indirect or parameterized
+			hasSuffix(varcanon, "_MK"):           // Multiple-inclusion guard
 
-			switch {
-			case
-				src.vartypes.DefinedCanon(varcanon),  // Already defined
-				src.Tools.ByVarname(varcanon) != nil, // Already known as a tool
-				hasPrefix(varcanon, "_"),             // Skip internal variables
-				contains(varcanon, "$"),              // Indirect or parameterized
-				hasSuffix(varcanon, "_MK"):           // Multiple-inclusion guard
-
-			default:
-				if trace.Tracing {
-					trace.Stepf("Untyped variable %q in %s", varcanon, mkline)
-				}
-				src.vartypes.DefineType(varcanon, &unknownType)
+		default:
+			if trace.Tracing {
+				trace.Stepf("Untyped variable %q in %s", varcanon, mkline)
 			}
+			src.vartypes.DefineType(varcanon, &unknownType)
 		}
 	}
 
 	handleMkFile := func(path string) {
 		mklines := LoadMk(path, 0)
 		if mklines != nil && len(mklines.mklines) > 0 {
-			mklines.ForEach(handleLine)
+			G.Assertf(G.Mk == nil, "asdf")
+			G.Mk = mklines // FIXME: This is because defineVar uses G.Mk instead of the method receiver.
+			mklines.collectDefinedVariables()
+			mklines.collectUsedVariables()
+			for varname, mkline := range mklines.vars.firstDef {
+				define(varnameCanon(varname), mkline)
+			}
+			for varname, mkline := range mklines.vars.used {
+				define(varnameCanon(varname), mkline)
+			}
+			G.Mk = nil
 		}
 	}
 

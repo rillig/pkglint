@@ -51,29 +51,24 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__infra(c *check.C) 
 		"#",
 		"# Package-settable variables:",
 		"#",
-		"# CTF_SUPPORTED",
+		"# SHORT_DOCUMENTATION",
 		"#\tIf set to no, ...",
 		"#\tsecond line.",
 		"#",
 		"#",
-		".if ${CTF_SUPPORTED:Uyes:tl} == yes",
+		".if ${USED_IN_INFRASTRUCTURE:Uyes:tl} == yes",
 		".endif")
 	t.SetUpPackage("category/package",
-		"CTF_SUPPORTED=\tno")
+		"USED_IN_INFRASTRUCTURE=\t${SHORT_DOCUMENTATION}",
+		"",
+		"UNUSED_INFRA=\t${UNDOCUMENTED}")
 	G.Pkgsrc.LoadInfrastructure()
 
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		// FIXME: This variable _is_ defined. It is used by the pkgsrc
-		//  infrastructure and also documented.
-		//
-		//  When scanning the pkgsrc infrastructure for unknown variables,
-		//  it seems that only variable definitions are handled, but not
-		//  variable uses.
-		//
-		//  The documentation might be too short to be regarded as relevant.
-		"WARN: ~/category/package/Makefile:20: CTF_SUPPORTED is defined but not used.")
+		"WARN: ~/category/package/Makefile:22: UNUSED_INFRA is defined but not used.",
+		"WARN: ~/category/package/Makefile:22: UNDOCUMENTED is used but not defined.")
 }
 
 // Files from the pkgsrc infrastructure may define and use variables
@@ -1609,7 +1604,12 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__LOCALBASE_in_infrastructure(c *c
 
 	G.Check(t.File("mk/infra.mk"))
 
-	// No warnings about LOCALBASE being used; in packages LOCALBASE is deprecated.
+	// No warnings about LOCALBASE being used; the infrastructure files may
+	// do this. In packages though, LOCALBASE is deprecated.
+
+	// There is no warning about DEFAULT_PREFIX being "defined but not used"
+	// since Pkgsrc.loadUntypedVars calls Pkgsrc.vartypes.DefineType, which
+	// registers that variable globally.
 	t.CheckOutputLines(
 		"WARN: ~/mk/infra.mk:2: PREFIX should not be used indirectly at load time (via LOCALBASE).")
 }
