@@ -418,56 +418,55 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 
 	test := func(cond string, output ...string) {
 		mklines := t.NewMkLines("filename.mk",
-			MkRcsID,
 			cond)
+		G.Mk = mklines
 		mklines.ForEach(func(mkline MkLine) {
-			if mkline.IsDirective() {
-				MkLineChecker{mkline}.checkDirectiveCond()
-			}
+			MkLineChecker{mkline}.checkDirectiveCond()
 		})
 		t.CheckOutput(output)
 	}
 
 	test(
 		".if !empty(PKGSRC_COMPILER:Mmycc)",
-		"WARN: filename.mk:2: The pattern \"mycc\" cannot match any of "+
+		"WARN: filename.mk:1: The pattern \"mycc\" cannot match any of "+
 			"{ ccache ccc clang distcc f2c gcc hp icc ido "+
 			"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.")
 
 	test(
 		".elif ${A} != ${B}",
-		nil...)
+		"WARN: filename.mk:1: A is used but not defined.",
+		"WARN: filename.mk:1: B is used but not defined.")
 
 	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
-		"WARN: filename.mk:2: \"mailto:someone@example.org\" is not a valid URL.",
-		"WARN: filename.mk:2: HOMEPAGE should not be used at load time in any file.")
+		"WARN: filename.mk:1: \"mailto:someone@example.org\" is not a valid URL.",
+		"WARN: filename.mk:1: HOMEPAGE should not be used at load time in any file.")
 
 	test(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
-		"WARN: filename.mk:2: PKGSRC_RUN_TEST should be matched "+
+		"WARN: filename.mk:1: PKGSRC_RUN_TEST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
 	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
-		"WARN: filename.mk:2: The empty() function takes a variable name as parameter, "+
+		"WARN: filename.mk:1: The empty() function takes a variable name as parameter, "+
 			"not a variable expression.")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
-		"WARN: filename.mk:2: \"msvc\" is not valid for PKGSRC_COMPILER. "+
+		"WARN: filename.mk:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
 			"Use one of { ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc } instead.",
-		"WARN: filename.mk:2: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
+		"WARN: filename.mk:1: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
 	test(".if ${PKG_LIBTOOL:Mlibtool}",
-		"NOTE: filename.mk:2: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".",
-		"WARN: filename.mk:2: PKG_LIBTOOL should not be used at load time in any file.")
+		"NOTE: filename.mk:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".",
+		"WARN: filename.mk:1: PKG_LIBTOOL should not be used at load time in any file.")
 
 	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
-		"WARN: filename.mk:2: "+
+		"WARN: filename.mk:1: "+
 			"The pattern \"UnknownOS\" cannot match any of "+
 			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
 			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
 			"} for the operating system part of MACHINE_PLATFORM.",
-		"WARN: filename.mk:2: "+
+		"WARN: filename.mk:1: "+
 			"The pattern \"x86\" cannot match any of "+
 			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast earm "+
 			"earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb "+
@@ -475,37 +474,38 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			"m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax "+
 			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
-		"NOTE: filename.mk:2: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
+		"NOTE: filename.mk:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
 		// FIXME: Indeed, indeed, the :M modifier ends at the colon.
 		//  Why doesn't pkglint complain loudly about the unknown "//*" modifier?
-		"WARN: filename.mk:2: \"ftp\" is not a valid URL.",
-		"WARN: filename.mk:2: MASTER_SITES should not be used at load time in any file.")
+		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",
+		"WARN: filename.mk:1: MASTER_SITES should not be used at load time in any file.")
 
 	// The only interesting line from the below tracing output is the one
 	// containing "checkCompareVarStr".
 	t.EnableTracingToLog()
 	test(".if ${VAR:Mpattern1:Mpattern2} == comparison",
-		"TRACE:   Indentation before line 2: []",
+		"TRACE:   Indentation before line 1: []",
 		"TRACE: + MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: 1 + (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: 1 - (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: 1   checkCompareVarStr ${VAR:Mpattern1:Mpattern2} == comparison",
-		"TRACE: 1 + MkLineChecker.CheckVaruse(filename.mk:2, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: 1 + MkLineChecker.CheckVaruse(filename.mk:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 + (*Pkgsrc).VariableType(\"VAR\")",
 		"TRACE: 1 2 3   No type definition found for \"VAR\".",
 		"TRACE: 1 2 - (*Pkgsrc).VariableType(\"VAR\", \"=>\", (*pkglint.Vartype)(nil))",
+		"WARN: filename.mk:1: VAR is used but not defined.",
 		"TRACE: 1 2 + MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 3   No type definition found for \"VAR\".",
 		"TRACE: 1 2 - MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 + (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 - (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false), \"=>\", unknown)",
-		"TRACE: 1 - MkLineChecker.CheckVaruse(filename.mk:2, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: 1 - MkLineChecker.CheckVaruse(filename.mk:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: - MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: + (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: - (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
-		"TRACE:   Indentation after line 2: [2 (VAR)]")
+		"TRACE:   Indentation after line 1: [2 (VAR)]")
 	t.EnableSilentTracing()
 }
 
