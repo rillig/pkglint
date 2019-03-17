@@ -108,9 +108,10 @@ func (m MkVarUseModifier) Subst(str string) (string, bool) {
 	}
 
 	if regex {
-		if matches(from, `^\w+$`) && matches(to, `^[^&$\\]*$`) {
+		if matches(from, `^[\w-]+$`) && matches(to, `^[^&$\\]*$`) {
 			regex = false
 		} else {
+			dummyLine.Notef("Unhandled subst from %q to %q.", from, to)
 			return "", false
 		}
 	}

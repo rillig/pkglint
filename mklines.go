@@ -244,7 +244,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 			continue
 		}
 
-		defineVar(mkline, mkline.Varname())
+		defineVar(G.Pkg, mklines, mkline, mkline.Varname())
 
 		varcanon := mkline.Varcanon()
 		switch varcanon {
@@ -291,7 +291,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 		case "OPSYSVARS":
 			for _, opsysVar := range mkline.Fields() {
 				mklines.UseVar(mkline, opsysVar+".*")
-				defineVar(mkline, opsysVar)
+				defineVar(G.Pkg, mklines, mkline, opsysVar)
 			}
 		}
 	}

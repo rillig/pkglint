@@ -291,12 +291,12 @@ func varnameParam(varname string) string {
 }
 
 // defineVar marks a variable as defined in both the current package and the current file.
-func defineVar(mkline MkLine, varname string) {
-	if G.Mk != nil {
-		G.Mk.vars.Define(varname, mkline)
+func defineVar(pkg *Package, mklines MkLines, mkline MkLine, varname string) {
+	if mklines != nil {
+		mklines.vars.Define(varname, mkline)
 	}
-	if G.Pkg != nil {
-		G.Pkg.vars.Define(varname, mkline)
+	if pkg != nil {
+		pkg.vars.Define(varname, mkline)
 	}
 }
 
