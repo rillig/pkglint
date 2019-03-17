@@ -666,8 +666,13 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 
-	if pkgname != "" && pkgname == distname && pkgnameLine.VarassignComment() == "" {
-		pkgnameLine.Notef("This assignment is probably redundant since PKGNAME is ${DISTNAME} by default.")
+	if pkgname != "" && (pkgname == distname || pkgname == "${DISTNAME}") {
+		if pkgnameLine.VarassignComment() == "" {
+			pkgnameLine.Notef("This assignment is probably redundant " +
+				"since PKGNAME is ${DISTNAME} by default.")
+			pkgnameLine.Explain(
+				"To mark this assignment as necessary, add a comment to the end of this line.")
+		}
 	}
 
 	if pkgname == "" && distname != "" && !containsVarRef(distname) && !matches(distname, rePkgname) {

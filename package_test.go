@@ -361,6 +361,20 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
 			"This assignment is probably redundant since PKGNAME is ${DISTNAME} by default.")
 }
 
+func (s *Suite) Test_Package_determineEffectivePkgVars__simple_reference(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"DISTNAME=\tdistname-1.0",
+		"PKGNAME=\t${DISTNAME}")
+
+	G.Check(pkg)
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:4: " +
+			"This assignment is probably redundant since PKGNAME is ${DISTNAME} by default.")
+}
+
 func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *check.C) {
 	t := s.Init(c)
 
