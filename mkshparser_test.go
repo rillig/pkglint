@@ -10,11 +10,11 @@ func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, expProgram *MkShList, expError error, expDiagnostics ...string) {
-		shline := t.NewShellLine("module.mk", 123, "\t"+text)
+		ck := t.NewShellLineChecker("module.mk", 123, "\t"+text)
 
 		defer t.CheckOutput(expDiagnostics)
 
-		program, err := parseShellProgram(shline.mkline.Line, text)
+		program, err := parseShellProgram(ck.mkline.Line, text)
 
 		if err == nil {
 			c.Check(err, equals, expError)

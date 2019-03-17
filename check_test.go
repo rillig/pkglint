@@ -691,8 +691,8 @@ func (t *Tester) NewMkLine(filename string, lineno int, text string) MkLine {
 	return NewMkLine(t.NewLine(filename, lineno, text))
 }
 
-func (t *Tester) NewShellLine(filename string, lineno int, text string) *ShellLine {
-	return NewShellLine(t.NewMkLine(filename, lineno, text))
+func (t *Tester) NewShellLineChecker(filename string, lineno int, text string) *ShellLineChecker {
+	return NewShellLineChecker(t.NewMkLine(filename, lineno, text))
 }
 
 // NewLines returns a list of simple lines that belong together.

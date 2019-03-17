@@ -1045,16 +1045,16 @@ func (cv *VartypeCheck) ShellCommand() {
 		return
 	}
 	setE := true
-	NewShellLine(cv.MkLine).CheckShellCommand(cv.Value, &setE, RunTime)
+	NewShellLineChecker(cv.MkLine).CheckShellCommand(cv.Value, &setE, RunTime)
 }
 
 // ShellCommands checks for zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
-	NewShellLine(cv.MkLine).CheckShellCommands(cv.Value, RunTime)
+	NewShellLineChecker(cv.MkLine).CheckShellCommands(cv.Value, RunTime)
 }
 
 func (cv *VartypeCheck) ShellWord() {
-	NewShellLine(cv.MkLine).CheckWord(cv.Value, true, RunTime)
+	NewShellLineChecker(cv.MkLine).CheckWord(cv.Value, true, RunTime)
 }
 
 func (cv *VartypeCheck) Stage() {
