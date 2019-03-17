@@ -750,6 +750,10 @@ func (s *Suite) Test_RedundantScope__variable_referencing_another_is_modified(c 
 //
 // Tests for variables with modifiers, such as ${VAR:Uundef}, ${VAR:Mpattern},
 // ${command:sh}, ${command::=value}.
+//
+// A test that compares a package with the default values from mk/defaults/mk.conf.
+// A package doesn't need to override these defaults, and the redundancy check
+// should notify the package author of this redundancy.
 
 func (s *Suite) Test_RedundantScope__override_after_including(c *check.C) {
 	t := s.Init(c)

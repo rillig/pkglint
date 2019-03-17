@@ -415,10 +415,14 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usr("LOCALBASE", BtPathname)
 	usr("CROSSBASE", BtPathname)
 	usr("VARBASE", BtPathname)
+
+	// X11_TYPE and X11BASE may be used in buildlink3.mk as well, which the
+	// standard sysload doesn't allow.
 	acl("X11_TYPE", enum("modular native"),
 		"*: use, use-loadtime")
 	acl("X11BASE", BtPathname,
 		"*: use, use-loadtime")
+
 	usr("MOTIFBASE", BtPathname)
 	usr("PKGINFODIR", BtPathname)
 	usr("PKGMANDIR", BtPathname)
@@ -564,7 +568,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usrpkg("ICECAST_CHROOTDIR", BtPathname)
 	usrpkg("ICECAST_CHUNKLEN", BtInteger)
 	usrpkg("ICECAST_SOURCE_BUFFSIZE", BtInteger)
-	usrpkg("IMAP_UW_CCLIENT_MBOX_FMT", enum("mbox mbx mh mmdf mtx mx news phile tenex unix"))
+	usrpkg("IMAP_UW_CCLIENT_MBOX_FMT",
+		enum("mbox mbx mh mmdf mtx mx news phile tenex unix"))
 	usrpkg("IMAP_UW_MAILSPOOLHOME", BtFileName)
 	usrpkg("IMDICTDIR", BtPathname)
 	usrpkg("INN_DATA_DIR", BtPathname)
@@ -686,7 +691,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usrpkg("SNIPROXY_GROUP", BtUserGroupName)
 	usrpkg("SSH_SUID", BtYesNo)
 	usrpkg("SSYNC_PAWD", enum("pawd pwd"))
-	usrpkg("SUSE_PREFER", enum("13.1 12.1 10.0"))
+	usrpkg("SUSE_PREFER", enum("13.1 12.1 10.0")) // TODO: extract
 	usrpkg("TEXMFSITE", BtPathname)
 	usrpkg("THTTPD_LOG_FACILITY", BtIdentifier)
 	usrpkg("UCSPI_SSL_USER", BtUserGroupName)
@@ -708,6 +713,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usrpkg("ZSH_STATIC", BtYes)
 
 	// some other variables, sorted alphabetically
+
+	// TODO: Instead of grouping them alphabetically, group them
+	//  by topic, like clean, fetch, patch, configure, build, install,
+	//  subst, buildlink3, checks. This will make them easier to
+	//  analyze and align the permissions.
 
 	sysload(".CURDIR", BtPathname)
 	sysload(".IMPSRC", BtPathname)
