@@ -382,10 +382,33 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__C_modifier(c *check.C) {
 		"PKGNAME=\t${DISTNAME:C:Gtk2:p5-gtk2:}")
 	pkg := NewPackage(t.File("x11/p5-gtk2"))
 
-	pkg.determineEffectivePkgVars()
+	files, mklines, allLines := pkg.load()
+	pkg.check(files, mklines, allLines)
 
-	// TODO: Should be "p5-gtk2-1.0".
-	t.Check(pkg.EffectivePkgname, equals, "")
+	t.Check(pkg.EffectivePkgname, equals, "p5-gtk2-1.0")
+}
+
+// In some cases the PKGNAME is derived from DISTNAME, and it seems as
+// if the :C modifier would not affect anything. This may nevertheless
+// be on purpose since the modifier may apply to future versions and
+// do things like replacing a "-1" with a ".1".
+func (s *Suite) Test_Package_determineEffectivePkgVars__ineffective_C_modifier(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"DISTNAME=\tdistname-1.0",
+		"PKGNAME=\t${DISTNAME:C:does_not_match:replacement:}")
+	pkg := NewPackage(t.File("category/package"))
+
+	files, mklines, allLines := pkg.load()
+	pkg.check(files, mklines, allLines)
+
+	t.Check(pkg.EffectivePkgname, equals, "distname-1.0")
+	// FIXME: there's nothing redundant here.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:4: " +
+			"This assignment is probably redundant since " +
+			"PKGNAME is ${DISTNAME} by default.")
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
