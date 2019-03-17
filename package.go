@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/pkgver"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -159,6 +160,92 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines MkLines) {
 			if includedFiles[packageBl3] == nil {
 				trace.Step1("%s is included by the package but not by the buildlink3.mk file.", packageBl3)
 			}
+		}
+	}
+}
+
+func (pkg *Package) load() ([]string, MkLines, MkLines) {
+	// Load the package Makefile and all included files,
+	// to collect all used and defined variables and similar data.
+	mklines, allLines := pkg.loadPackageMakefile()
+	if mklines == nil {
+		return nil, nil, nil
+	}
+
+	files := dirglob(pkg.File("."))
+	if pkg.Pkgdir != "." {
+		files = append(files, dirglob(pkg.File(pkg.Pkgdir))...)
+	}
+	if G.Opts.CheckExtra {
+		files = append(files, dirglob(pkg.File(pkg.Filesdir))...)
+	}
+	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
+	if pkg.DistinfoFile != pkg.vars.fallback["DISTINFO_FILE"] {
+		files = append(files, pkg.File(pkg.DistinfoFile))
+	}
+
+	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
+	// TODO: Why is this code necessary? What effect does it have?
+	for _, filename := range files {
+		basename := path.Base(filename)
+		if (hasPrefix(basename, "Makefile.") || hasSuffix(filename, ".mk")) &&
+			!matches(filename, `patch-`) &&
+			!contains(filename, pkg.Pkgdir+"/") &&
+			!contains(filename, pkg.Filesdir+"/") {
+			if fragmentMklines := LoadMk(filename, MustSucceed); fragmentMklines != nil {
+				fragmentMklines.collectUsedVariables()
+			}
+		}
+		if hasPrefix(basename, "PLIST") {
+			pkg.loadPlistDirs(filename)
+		}
+	}
+
+	return files, mklines, allLines
+}
+
+func (pkg *Package) check(files []string, mklines, allLines MkLines) {
+	haveDistinfo := false
+	havePatches := false
+
+	for _, filename := range files {
+		if containsVarRef(filename) {
+			if trace.Tracing {
+				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", filename)
+			}
+			continue
+		}
+
+		st, err := os.Lstat(filename)
+		switch {
+		case err != nil:
+			// For missing custom distinfo file, an error message is already generated
+			// for the line where DISTINFO_FILE is defined.
+			//
+			// For all other cases it is next to impossible to reach this branch
+			// since all those files come from calls to dirglob.
+			break
+
+		case path.Base(filename) == "Makefile":
+			G.checkExecutable(filename, st.Mode())
+			pkg.checkfilePackageMakefile(filename, mklines, allLines)
+
+		default:
+			G.checkDirent(filename, st.Mode())
+		}
+
+		if contains(filename, "/patches/patch-") {
+			havePatches = true
+		} else if hasSuffix(filename, "/distinfo") {
+			haveDistinfo = true
+		}
+		pkg.checkLocallyModified(filename)
+	}
+
+	if pkg.Pkgdir == "." {
+		if havePatches && !haveDistinfo {
+			// TODO: Add Line.RefTo to make the context clear.
+			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run %q.", bmake("makepatchsum"))
 		}
 	}
 }
