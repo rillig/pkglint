@@ -159,14 +159,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__Perl(c *check.C) {
 	//
 	// Pkglint had taken this information from the DISTNAME variable,
 	// ignoring the fact that PKGNAME was also defined.
-	//
-	// FIXME: If PKGNAME is defined, DISTNAME must not be used as the effective package name.
-	//
-	// FIXME: Evaluate the :C modifier in ${DISTNAME:C:Gtk2:p5-gtk2:}.
-	t.CheckOutputLines(
-		"ERROR: ~/x11/p5-gtk2/buildlink3.mk:3: " +
-			"Package name mismatch between \"p5-gtk2\" in this file " +
-			"and \"Gtk2\" from Makefile:3.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_multiple_inclusion(c *check.C) {

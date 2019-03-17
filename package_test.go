@@ -369,6 +369,20 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *chec
 			"As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 }
 
+func (s *Suite) Test_Package_determineEffectivePkgVars__C_modifier(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("x11/p5-gtk2",
+		"DISTNAME=\tGtk2-1.0",
+		"PKGNAME=\t${DISTNAME:C:Gtk2:p5-gtk2:}")
+	pkg := NewPackage(t.File("x11/p5-gtk2"))
+
+	pkg.determineEffectivePkgVars()
+
+	// TODO: Should be "p5-gtk2-1.0".
+	t.Check(pkg.EffectivePkgname, equals, "")
+}
+
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	t := s.Init(c)
 

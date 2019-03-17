@@ -582,6 +582,10 @@ func (pkg *Package) determineEffectivePkgVars() {
 		distnameLine.Warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
+	if pkgname != "" {
+		distname = ""
+	}
+
 	if pkgname != "" && !containsVarRef(pkgname) {
 		if m, m1, m2 := match2(pkgname, rePkgname); m {
 			pkg.EffectivePkgname = pkgname + pkg.nbPart()
