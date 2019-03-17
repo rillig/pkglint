@@ -26,32 +26,86 @@ func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {
 func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtYesNo,
-		"buildlink3.mk: none",
-		"special:b*.mk: use",
-		"*.mk: none",
-		"Makefile: use",
-		"Makefile.*: none",
-		"*: use")
-	G.Pkgsrc.vartypes.DefineParse("ONLY", lkNone, BtYesNo,
-		"buildlink3.mk: append",
-		"*: none")
-
-	test := func(varname string, perms ACLPermissions, alternatives string) {
+	// test generates the files description for the "set" permission.
+	test := func(rules []string, alternatives string) {
+		varname := "VAR"
+		G.Pkgsrc.vartypes.DefineParse(varname, lkNone, BtYesNo, rules...)
 		vartype := G.Pkgsrc.VariableType(varname)
-		t.Check(vartype.AlternativeFiles(perms), equals, alternatives)
+		t.Check(vartype.AlternativeFiles(aclpSet), equals, alternatives)
 	}
+	rules := func(rules ...string) []string { return rules }
 
-	// Just out of curiosity, since calling the function with no
-	// permissions doesn't make sense. The result is the complete
-	// file list.
-	test("VAR", aclpNone, "buildlink3.mk, b*.mk, *.mk, Makefile, Makefile.* or *")
+	// When there are no matching rules at all, there's nothing to describe.
+	test(
+		rules(
+			"*: none"),
+		"")
 
-	test("VAR", aclpUse, "b*.mk, Makefile or *, but not buildlink3.mk, *.mk or Makefile.*")
+	// When there are only positive rules that are disjoint, these are
+	// listed in the given order.
+	test(
+		rules(
+			"buildlink3.mk: set",
+			"Makefile: set, append", // to avoid "repeated permissions" panic
+			"Makefile.*: set"),
+		"buildlink3.mk, Makefile or Makefile.*")
 
-	test("VAR", aclpUseLoadtime, "")
+	// When there are only positive rules and some of them overlap,
+	// these are merged.
+	test(
+		rules(
+			"buildlink3.mk: set",
+			"special:b*.mk: set, append",
+			"*.mk: set",
+			"Makefile: set, append",
+			"Makefile.*: set"),
+		// TODO: should be "*.mk, Makefile or Makefile.*"
+		"buildlink3.mk, b*.mk, *.mk, Makefile or Makefile.*")
 
-	test("ONLY", aclpAppend, "buildlink3.mk only")
+	// When the last rule is "*", all previous rules are merged into that.
+	test(
+		rules(
+			"buildlink3.mk: set",
+			"special:b*.mk: set, append",
+			"*.mk: set",
+			"Makefile: set, append",
+			"Makefile.*: set",
+			"*: set, append"),
+		// TODO: should be "*"
+		"buildlink3.mk, b*.mk, *.mk, Makefile, Makefile.* or *")
+
+	test(
+		rules(
+			"buildlink3.mk: set",
+			"*: none"),
+		"buildlink3.mk only")
+
+	// Everywhere except in buildlink3.mk.
+	test(
+		rules(
+			"buildlink3.mk: none",
+			"*: set"),
+		// TODO: should be "buildlink3.mk only".
+		"*, but not buildlink3.mk")
+
+	test(
+		rules(
+			"buildlink3.mk: none",
+			"special:b*.mk: set",
+			"*.mk: none",
+			"Makefile: set",
+			"Makefile.*: none",
+			"*: set"),
+		"b*.mk, Makefile or *, but not buildlink3.mk, *.mk or Makefile.*")
+
+	test(
+		rules(
+			"buildlink3.mk: none",
+			"builtin.mk: set",
+			"Makefile: none",
+			"*.mk: append"),
+		// TODO: should be "builtin.mk only".
+		"builtin.mk, but not buildlink3.mk, Makefile or *.mk")
 }
 
 func (s *Suite) Test_BasicType_HasEnum(c *check.C) {
