@@ -726,9 +726,6 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool)
 				if mod.IsToLower() {
 					newDistname = strings.ToLower(newDistname)
 				} else if subst, ok := mod.Subst(newDistname); ok {
-					if !ok {
-						return "", false
-					}
 					newDistname = subst
 				} else {
 					return "", false
