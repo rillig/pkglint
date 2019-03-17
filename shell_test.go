@@ -153,7 +153,7 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t.SetUpTool("mkdir", "MKDIR", AtRunTime) // This is actually "mkdir -p".
 	t.SetUpTool("unzip", "UNZIP_CMD", AtRunTime)
 
-	test := func(shellCommand string) {
+	test := func(shellCommand string, diagnostics ...string) {
 		G.Mk = t.NewMkLines("filename.mk",
 			"\t"+shellCommand)
 		shline := NewShellLine(G.Mk.mklines[0])
@@ -161,15 +161,14 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 		G.Mk.ForEach(func(mkline MkLine) {
 			shline.CheckShellCommandLine(shline.mkline.ShellCommand())
 		})
+
+		t.CheckOutput(diagnostics)
 	}
 
-	test("@# Comment")
+	test("@# Comment",
+		nil...)
 
-	t.CheckOutputEmpty()
-
-	test("uname=`uname`; echo $$uname; echo; ${PREFIX}/bin/command")
-
-	t.CheckOutputLines(
+	test("uname=`uname`; echo $$uname; echo; ${PREFIX}/bin/command",
 		"WARN: filename.mk:1: Unknown shell command \"uname\".",
 		"WARN: filename.mk:1: Please switch to \"set -e\" mode "+
 			"before using a semicolon (after \"uname=`uname`\") to separate commands.")
@@ -177,130 +176,99 @@ func (s *Suite) Test_ShellLine_CheckShellCommandLine(c *check.C) {
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpVartypes()
 
-	test("echo ${PKGNAME:Q}") // VucQuotPlain
-
-	t.CheckOutputLines(
+	test("echo ${PKGNAME:Q}", // VucQuotPlain
 		"NOTE: filename.mk:1: The :Q operator isn't necessary for ${PKGNAME} here.")
 
-	test("echo \"${CFLAGS:Q}\"") // VucQuotDquot
-
-	t.CheckOutputLines(
+	test("echo \"${CFLAGS:Q}\"", // VucQuotDquot
 		"WARN: filename.mk:1: The :Q modifier should not be used inside double quotes.",
 		"WARN: filename.mk:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} "+
 			"and make sure the variable appears outside of any quoting characters.")
 
-	test("echo '${COMMENT:Q}'") // VucQuotSquot
-
-	t.CheckOutputLines(
+	test("echo '${COMMENT:Q}'", // VucQuotSquot
 		"WARN: filename.mk:1: Please move ${COMMENT:Q} outside of any quoting characters.")
 
-	test("echo target=$@ exitcode=$$? '$$' \"\\$$\"")
-
-	t.CheckOutputLines(
+	test("echo target=$@ exitcode=$$? '$$' \"\\$$\"",
 		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".",
 		"WARN: filename.mk:1: The $? shell variable is often not available in \"set -e\" mode.")
 
-	test("echo $$@")
-
-	t.CheckOutputLines(
+	test("echo $$@",
 		"WARN: filename.mk:1: The $@ shell variable should only be used in double quotes.")
-
-	test("echo \"$$\"") // As seen by make(1); the shell sees: echo "$"
 
 	// No warning about a possibly missed variable name.
 	// This occurs only rarely, and typically as part of a regular expression
 	// where it is used intentionally.
-	t.CheckOutputEmpty()
+	test("echo \"$$\"", // As seen by make(1); the shell sees: echo "$"
+		nil...)
 
-	test("echo \"\\n\"")
+	test("echo \"\\n\"",
+		nil...)
 
-	t.CheckOutputEmpty()
+	test("${RUN} for f in *.c; do echo $${f%.c}; done",
+		nil...)
 
-	test("${RUN} for f in *.c; do echo $${f%.c}; done")
-
-	t.CheckOutputEmpty()
-
-	test("${RUN} set +x; echo $${variable+set}")
-
-	t.CheckOutputEmpty()
+	test("${RUN} set +x; echo $${variable+set}",
+		nil...)
 
 	// Based on mail/thunderbird/Makefile, rev. 1.159
-	test("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")
-
-	t.CheckOutputLines(
+	test("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
 		"WARN: filename.mk:1: Double quotes inside backticks inside double quotes are error prone.",
 		"WARN: filename.mk:1: The exitcode of \"unzip\" at the left of the | operator is ignored.")
 
 	// From mail/thunderbird/Makefile, rev. 1.159
-	test("" +
-		"${RUN} for e in ${XPI_FILES}; do " +
-		"  subdir=\"`${UNZIP_CMD} -c \"$$e\" install.rdf | " +
-		"" + "awk '/.../ {print;exit;}'`\" && " +
-		"  ${MKDIR} \"${WRKDIR}/extensions/$$subdir\" && " +
-		"  cd \"${WRKDIR}/extensions/$$subdir\" && " +
-		"  ${UNZIP_CMD} -aqo $$e; " +
-		"done")
-
-	t.CheckOutputLines(
+	test(""+
+		"${RUN} for e in ${XPI_FILES}; do "+
+		"  subdir=\"`${UNZIP_CMD} -c \"$$e\" install.rdf | "+
+		""+"awk '/.../ {print;exit;}'`\" && "+
+		"  ${MKDIR} \"${WRKDIR}/extensions/$$subdir\" && "+
+		"  cd \"${WRKDIR}/extensions/$$subdir\" && "+
+		"  ${UNZIP_CMD} -aqo $$e; "+
+		"done",
 		"WARN: filename.mk:1: XPI_FILES is used but not defined.",
 		"WARN: filename.mk:1: Double quotes inside backticks inside double quotes are error prone.",
 		"WARN: filename.mk:1: The exitcode of \"${UNZIP_CMD}\" at the left of the | operator is ignored.")
 
 	// From x11/wxGTK28/Makefile
-	test("" +
-		"set -e; cd ${WRKSRC}/locale; " +
-		"for lang in *.po; do " +
-		"  [ \"$${lang}\" = \"wxstd.po\" ] && continue; " +
-		"  ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"; " +
-		"done")
-
 	// TODO: Why is TOOLS_PATH.msgfmt not recognized?
 	//  At least, the warning should be more specific, mentioning USE_TOOLS.
-	t.CheckOutputLines(
+	test(""+
+		"set -e; cd ${WRKSRC}/locale; "+
+		"for lang in *.po; do "+
+		"  [ \"$${lang}\" = \"wxstd.po\" ] && continue; "+
+		"  ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"; "+
+		"done",
 		"WARN: filename.mk:1: Unknown shell command \"[\".",
 		"WARN: filename.mk:1: Unknown shell command \"${TOOLS_PATH.msgfmt}\".")
 
-	test("@cp from to")
-
-	t.CheckOutputLines(
+	test("@cp from to",
 		"WARN: filename.mk:1: The shell command \"cp\" should not be hidden.")
 
-	test("-cp from to")
-
-	t.CheckOutputLines(
+	test("-cp from to",
 		"WARN: filename.mk:1: Using a leading \"-\" to suppress errors is deprecated.")
 
-	test("-${MKDIR} deeply/nested/subdir")
-
-	t.CheckOutputLines(
+	test("-${MKDIR} deeply/nested/subdir",
 		"WARN: filename.mk:1: Using a leading \"-\" to suppress errors is deprecated.")
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Pkg.Plist.Dirs["share/pkgbase"] = true
 
 	// A directory that is found in the PLIST.
-	test("${RUN} ${INSTALL_DATA_DIR} share/pkgbase ${PREFIX}/share/pkgbase")
-
 	// TODO: Add a test for using this command inside a conditional;
 	//  the note should not appear then.
-
-	t.CheckOutputLines(
+	test("${RUN} ${INSTALL_DATA_DIR} share/pkgbase ${PREFIX}/share/pkgbase",
 		"NOTE: filename.mk:1: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= share/pkgbase\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".",
 		"WARN: filename.mk:1: The INSTALL_*_DIR commands can only handle one directory at a time.")
 
 	// A directory that is not found in the PLIST.
-	test("${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/share/other")
-
-	t.CheckOutputLines(
+	test("${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/share/other",
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= share/other\" instead of \"${INSTALL_DATA_DIR}\".")
 
 	G.Pkg = nil
 
 	// See PR 46570, item "1. It does not"
-	test("for x in 1 2 3; do echo \"$$x\" || exit 1; done")
-
-	t.CheckOutputEmpty() // No warning about missing error checking.
+	// No warning about missing error checking ("set -e").
+	test("for x in 1 2 3; do echo \"$$x\" || exit 1; done",
+		nil...)
 }
 
 // TODO: Document in detail that strip is not a regular tool.
