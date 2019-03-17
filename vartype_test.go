@@ -24,15 +24,22 @@ func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {
 }
 
 func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
-	t := s.Init(c)
 
 	// test generates the files description for the "set" permission.
 	test := func(rules []string, alternatives string) {
-		varname := "VAR"
-		G.Pkgsrc.vartypes.DefineParse(varname, lkNone, BtYesNo, rules...)
-		vartype := G.Pkgsrc.VariableType(varname)
-		t.Check(vartype.AlternativeFiles(aclpSet), equals, alternatives)
+		aclEntries := (*VarTypeRegistry).parseACLEntries(nil, "", rules...)
+		vartype := Vartype{lkNone, BtYesNo, aclEntries, false}
+
+		alternativeFiles := vartype.AlternativeFiles(aclpSet)
+
+		c.Check(alternativeFiles, equals, alternatives)
 	}
+
+	// rules parses the given permission rules.
+	//
+	// There is a built-in check that prevents repeated adjacent permissions.
+	// The "append" permission can be added alternatively to circumvent this
+	// check, since that permission is effectively ignore by this test.
 	rules := func(rules ...string) []string { return rules }
 
 	// When there are no matching rules at all, there's nothing to describe.
