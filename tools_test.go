@@ -504,3 +504,23 @@ func (s *Suite) Test_Tools__cmake(c *check.C) {
 
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_Tools__gmake(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("gmake", "GMAKE", AtRunTime)
+	t.SetUpPackage("category/package",
+		"USE_TOOLS=\tgmake",
+		"",
+		"do-test:",
+		"\tcd ${WRKSRC} && make tests")
+	G.Pkgsrc.LoadInfrastructure()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		// FIXME
+		"WARN: ~/category/package/Makefile:20: The variable USE_TOOLS should not be set (only appended to) in this file.",
+		// FIXME: USE_TOOLS+=gmake makes both gmake and plain make available.
+		"WARN: ~/category/package/Makefile:23: Unknown shell command \"make\".")
+}
