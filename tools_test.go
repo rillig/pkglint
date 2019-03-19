@@ -508,18 +508,27 @@ func (s *Suite) Test_Tools__cmake(c *check.C) {
 func (s *Suite) Test_Tools__gmake(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpTool("gmake", "GMAKE", AtRunTime)
 	t.SetUpPackage("category/package",
 		"USE_TOOLS=\tgmake",
 		"",
 		"do-test:",
 		"\tcd ${WRKSRC} && make tests")
+	t.CreateFileLines("mk/tools/bsd.tools.mk",
+		".include \"defaults.mk\"",
+		".include \"replace.mk\"",
+		".include \"make.mk\"")
+	t.CreateFileLines("mk/tools/make.mk",
+		"TOOLS_CREATE+=\tmake",
+		"TOOLS_PATH.make=\t/usr/bin/make")
+	t.CreateFileLines("mk/tools/replace.mk",
+		"TOOLS_CREATE+=\tgmake",
+		"TOOLS_PATH.gmake=\t/usr/bin/gnu-make")
+
 	G.Pkgsrc.LoadInfrastructure()
 
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		// FIXME: The warning shown here is not the one from the actual devel/py-mercurial.
-		// FIXME: USE_TOOLS+=gmake makes both gmake and plain make available.
-		"WARN: ~/category/package/Makefile:23: Unknown shell command \"make\".")
+		// FIXME: mk/tools/make.mk always makes "make" available.
+		"WARN: ~/category/package/Makefile:23: The \"make\" tool is used but not added to USE_TOOLS.")
 }
