@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// FIXME: Read and understand how the "new tools framework" (2005) is
+//  supposed to work. As can be seen in Test_Tools__gmake, pkglint doesn't
+//  understand the tools framework correctly, as of March 2019.
+
 // Tool is one of the many standard shell utilities that are typically
 // provided by the operating system, or, if missing, are installed via
 // pkgsrc.
