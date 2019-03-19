@@ -519,8 +519,7 @@ func (s *Suite) Test_Tools__gmake(c *check.C) {
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		// FIXME
-		"WARN: ~/category/package/Makefile:20: The variable USE_TOOLS should not be set (only appended to) in this file.",
+		// FIXME: The warning shown here is not the one from the actual devel/py-mercurial.
 		// FIXME: USE_TOOLS+=gmake makes both gmake and plain make available.
 		"WARN: ~/category/package/Makefile:23: Unknown shell command \"make\".")
 }

@@ -1544,10 +1544,27 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("USE_PKGINSTALL", BtYes)
 	pkg("USE_PKGLOCALEDIR", BtYesNo)
 	usr("USE_PKGSRC_GCC", BtYes)
+
+	// USE_TOOLS is not similar to any predefined permissions set.
+	//
+	// It may be appended to in buildlink3 files to make tools available
+	// at runtime. Making tools available at load time would only work
+	// before bsd.prefs.mk has been included for the first time, and that
+	// cannot be guaranteed.
+	//
+	// All other files may also use = instead of +=. Cases where the tools
+	// list is accidentally overwritten are detected by the redundancy check.
+	//
+	// The use-loadtime is only for devel/ncurses/Makefile.common, which
+	// removes tbl from USE_TOOLS.
 	acllist("USE_TOOLS", BtTool,
-		"*: append, use-loadtime")
+		"special:Makefile.common: set, append, use, use-loadtime",
+		"buildlink3.mk, builtin.mk: append",
+		"*: set, append, use")
 	acllist("USE_TOOLS.*", BtTool, // OPSYS-specific
-		"*: append, use-loadtime")
+		"buildlink3.mk, builtin.mk: append",
+		"*: set, append, use")
+
 	pkg("USE_X11", BtYes)
 	syslist("WARNINGS", BtShellWord)
 	sys("WARNING_MSG", BtShellCommand)

@@ -311,7 +311,6 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 		MkRcsID,
 		"",
 		"USE_TOOLS+=             autoconf213 autoconf",
-		"USE_TOOLS:=             ${USE_TOOLS:Ntbl}",
 		"",
 		"OPSYSVARS+=             OSV",
 		"OSV.NetBSD=             NetBSD-specific value",
@@ -330,7 +329,8 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 
 	// The tools autoreconf and autoheader213 are known at this point because of the USE_TOOLS line.
 	// The SUV variable is used implicitly by the SUBST framework, therefore no warning.
-	// The OSV.NetBSD variable is used implicitly via the OSV variable, therefore no warning.
+	// The OSV.NetBSD variable is used indirectly because OSV is declared
+	// as being OPSYS-specific, therefore no warning.
 	t.CheckOutputEmpty()
 }
 
