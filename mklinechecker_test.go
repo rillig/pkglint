@@ -557,7 +557,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 		"WARN: options.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
 		"WARN: options.mk:3: The variable BUILD_DEFS should not be given a default value (only appended to) in this file.",
 		"WARN: options.mk:4: USE_TOOLS should not be used at load time in this file; "+
-			"it would be ok in Makefile.common, but not buildlink3.mk, builtin.mk or *.",
+			"it would be ok in Makefile.common or builtin.mk, but not buildlink3.mk or *.",
 		"WARN: options.mk:5: MY_TOOLS is used but not defined.",
 		"WARN: options.mk:10: "+
 			"The variable SET_ONLY should not be given a default value "+

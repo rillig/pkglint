@@ -1552,6 +1552,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// before bsd.prefs.mk has been included for the first time, and that
 	// cannot be guaranteed.
 	//
+	// There are a few builtin.mk files that check whether some tool is
+	// already contained in USE_TOOLS. For them, use-loadtime is allowed.
+	//
 	// All other files may also use = instead of +=. Cases where the tools
 	// list is accidentally overwritten are detected by the redundancy check.
 	//
@@ -1559,7 +1562,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// removes tbl from USE_TOOLS.
 	acllist("USE_TOOLS", BtTool,
 		"special:Makefile.common: set, append, use, use-loadtime",
-		"buildlink3.mk, builtin.mk: append",
+		"buildlink3.mk: append",
+		"builtin.mk: append, use-loadtime",
 		"*: set, append, use")
 	acllist("USE_TOOLS.*", BtTool, // OPSYS-specific
 		"buildlink3.mk, builtin.mk: append",
