@@ -1264,6 +1264,13 @@ func (cv *VartypeCheck) Yes() {
 	}
 }
 
+// YesNo checks for variables that can be set to either yes or no. Undefined
+// means no.
+//
+// Most of these variables use the lowercase yes/no variant. Some use the
+// uppercase YES/NO, and the mixed forms Yes/No are practically never seen.
+// Testing these variables using the however-mixed pattern is done solely
+// because writing this pattern is shorter than repeating the variable name.
 func (cv *VartypeCheck) YesNo() {
 	const (
 		yes1 = "[yY][eE][sS]"
@@ -1274,6 +1281,7 @@ func (cv *VartypeCheck) YesNo() {
 	if cv.Op == opUseMatch {
 		switch cv.Value {
 		case yes1, yes2, no1, no2:
+			break
 		default:
 			cv.Warnf("%s should be matched against %q or %q, not %q.", cv.Varname, yes1, no1, cv.Value)
 		}
