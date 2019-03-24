@@ -1437,7 +1437,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 			effectiveValue = mkline.Value()
 		}
 
-		vartype := G.Pkgsrc.VariableType(varname)
+		vartype := G.Pkgsrc.VariableType(nil, varname)
 
 		// See MkLineChecker.checkVartype.
 		var lineValues []string

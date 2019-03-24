@@ -491,7 +491,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 
 	command := scc.strcmd.Name
 
-	tool, usable := G.Tool(command, scc.time)
+	tool, usable := G.Tool(scc.MkLines, command, scc.time)
 
 	if tool != nil && !usable {
 		scc.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", command)
@@ -531,7 +531,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	if varuse := parser.VarUse(); varuse != nil && parser.EOF() {
 		varname := varuse.varname
 
-		if vartype := G.Pkgsrc.VariableType(varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
+		if vartype := G.Pkgsrc.VariableType(scc.MkLines, varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
 			scc.checkInstallCommand(shellword)
 			return true
 		}
@@ -876,7 +876,7 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	case "set":
 	}
 
-	tool, _ := G.Tool(cmdName, RunTime)
+	tool, _ := G.Tool(spc.MkLines, cmdName, RunTime)
 	if tool == nil {
 		return true
 	}

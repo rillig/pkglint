@@ -890,7 +890,7 @@ func (src *Pkgsrc) loadPkgOptions() {
 // VariableType returns the type of the variable
 // (possibly guessed based on the variable name),
 // or nil if the type cannot even be guessed.
-func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
+func (src *Pkgsrc) VariableType(mklines MkLines, varname string) (vartype *Vartype) {
 	if trace.Tracing {
 		defer trace.Call(varname, trace.Result(&vartype))()
 	}
@@ -903,7 +903,7 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 		return vartype
 	}
 
-	if tool := G.ToolByVarname(varname); tool != nil {
+	if tool := G.ToolByVarname(mklines, varname); tool != nil {
 		if trace.Tracing {
 			trace.Stepf("Use of tool %+v", tool)
 		}
@@ -915,7 +915,7 @@ func (src *Pkgsrc) VariableType(varname string) (vartype *Vartype) {
 	}
 
 	if m, toolVarname := match1(varname, `^TOOLS_(.*)`); m {
-		if tool := G.ToolByVarname(toolVarname); tool != nil {
+		if tool := G.ToolByVarname(mklines, toolVarname); tool != nil {
 			return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
 		}
 	}

@@ -48,7 +48,7 @@ func (s *Suite) Test_VarTypeRegistry_Init__enumFrom(c *check.C) {
 	t.SetUpVartypes()
 
 	test := func(varname, values string) {
-		vartype := G.Pkgsrc.VariableType(varname).String()
+		vartype := G.Pkgsrc.VariableType(nil, varname).String()
 		c.Check(vartype, equals, values)
 	}
 
@@ -70,7 +70,7 @@ func (s *Suite) Test_VarTypeRegistry_Init__enumFromDirs(c *check.C) {
 	t.SetUpVartypes()
 
 	test := func(varname, values string) {
-		vartype := G.Pkgsrc.VariableType(varname).String()
+		vartype := G.Pkgsrc.VariableType(nil, varname).String()
 		c.Check(vartype, equals, values)
 	}
 

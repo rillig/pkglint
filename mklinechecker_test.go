@@ -347,7 +347,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	t.SetUpVartypes()
 
 	// Since COMMENT is defined in vardefs.go its type is certain instead of guessed.
-	vartype := G.Pkgsrc.VariableType("COMMENT")
+	vartype := G.Pkgsrc.VariableType(nil, "COMMENT")
 
 	c.Assert(vartype, check.NotNil)
 	c.Check(vartype.basicType.name, equals, "Comment")

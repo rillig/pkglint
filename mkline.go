@@ -797,7 +797,7 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 // This decision depends on many factors, such as whether the type of the context is
 // a list of things, whether the variable is a list, whether it can contain only
 // safe characters, and so on.
-func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
 	}
@@ -845,7 +845,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if tool := G.ToolByVarname(varname); tool != nil {
+	if tool := G.ToolByVarname(mklines, varname); tool != nil {
 		switch vuc.quoting {
 		case VucQuotPlain:
 			if !vuc.IsWordPart {

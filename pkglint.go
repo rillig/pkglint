@@ -487,7 +487,7 @@ func CheckLinesDescr(lines Lines) {
 
 		if contains(line.Text, "${") {
 			for _, token := range NewMkParser(nil, line.Text, false).MkTokens() {
-				if token.Varuse != nil && G.Pkgsrc.VariableType(token.Varuse.varname) != nil {
+				if token.Varuse != nil && G.Pkgsrc.VariableType(nil, token.Varuse.varname) != nil {
 					line.Notef("Variables are not expanded in the DESCR file.")
 				}
 			}
@@ -729,14 +729,14 @@ func CheckLinesTrailingEmptyLines(lines Lines) {
 // The command can be "sed" or "gsed" or "${SED}".
 // If a tool is returned, usable tells whether that tool has been added
 // to USE_TOOLS in the current scope (file or package).
-func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable bool) {
+func (pkglint *Pkglint) Tool(mklines MkLines, command string, time ToolTime) (tool *Tool, usable bool) {
 	varname := ""
 	p := NewMkParser(nil, command, false)
 	if varUse := p.VarUse(); varUse != nil && p.EOF() {
 		varname = varUse.varname
 	}
 
-	tools := pkglint.tools()
+	tools := pkglint.tools(mklines)
 
 	if t := tools.ByName(command); t != nil {
 		if tools.Usable(t, time) {
@@ -762,13 +762,13 @@ func (pkglint *Pkglint) Tool(command string, time ToolTime) (tool *Tool, usable 
 // It is not guaranteed to be usable (added to USE_TOOLS), only defined;
 // that must be checked by the calling code,
 // see Tool.UsableAtLoadTime and Tool.UsableAtRunTime.
-func (pkglint *Pkglint) ToolByVarname(varname string) *Tool {
-	return pkglint.tools().ByVarname(varname)
+func (pkglint *Pkglint) ToolByVarname(mklines MkLines, varname string) *Tool {
+	return pkglint.tools(mklines).ByVarname(varname)
 }
 
-func (pkglint *Pkglint) tools() *Tools {
-	if pkglint.Mk != nil {
-		return pkglint.Mk.Tools
+func (pkglint *Pkglint) tools(mklines MkLines) *Tools {
+	if mklines != nil {
+		return mklines.Tools
 	} else {
 		return pkglint.Pkgsrc.Tools
 	}

@@ -299,7 +299,7 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 	mkline := ck.MkLine
 	varname := mkline.Varname()
 	op := mkline.Op()
-	vartype := G.Pkgsrc.VariableType(varname)
+	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 	if vartype == nil {
 		return
 	}
@@ -400,7 +400,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 
 	varname := varuse.varname
-	vartype := G.Pkgsrc.VariableType(varname)
+	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 	ck.checkVaruseUndefined(vartype, varname)
 
 	ck.checkVaruseModifiers(varuse, vartype)
@@ -421,7 +421,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		fix.Apply()
 	}
 
-	needsQuoting := mkline.VariableNeedsQuoting(varname, vartype, vuc)
+	needsQuoting := mkline.VariableNeedsQuoting(ck.MkLines, varname, vartype, vuc)
 
 	if G.Opts.WarnQuoting && vuc.quoting != VucQuotUnknown && needsQuoting != unknown {
 		// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?
@@ -573,7 +573,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		// whether bsd.prefs.mk has been included. That file examines the
 		// tools that have been added to USE_TOOLS up to this point and
 		// makes their variables available for use at load time.
-		if tool := G.ToolByVarname(varname); tool != nil {
+		if tool := G.ToolByVarname(ck.MkLines, varname); tool != nil {
 			if !tool.UsableAtLoadTime(ck.MkLines.Tools.SeenPrefs) {
 				ck.warnVaruseToolLoadTime(varname, tool)
 			}
@@ -971,7 +971,7 @@ func (ck MkLineChecker) checkVarassignRightVaruse() {
 		time = vucTimeParse
 	}
 
-	vartype := G.Pkgsrc.VariableType(mkline.Varname())
+	vartype := G.Pkgsrc.VariableType(ck.MkLines, mkline.Varname())
 	if op == opAssignShell {
 		vartype = shellCommandsType
 	}
@@ -1117,7 +1117,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 	}
 
 	mkline := ck.MkLine
-	vartype := G.Pkgsrc.VariableType(varname)
+	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 
 	if op == opAssignAppend {
 		// XXX: MayBeAppendedTo also depends on the current file, see checkVarusePermissions.
@@ -1287,7 +1287,7 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
 		if m, positive, pattern := modifier.MatchMatch(); m && (positive || len(modifiers) == 1) {
 			ck.checkVartype(varname, opUseMatch, pattern, "")
 
-			vartype := G.Pkgsrc.VariableType(varname)
+			vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 			if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.IsConsideredList() {
 				ck.MkLine.Notef("%s should be compared using %s instead of matching against %q.",
 					varname, ifelseStr(positive, "==", "!="), ":"+modifier.Text)
