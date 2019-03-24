@@ -94,7 +94,7 @@ func NewPackage(dir string) *Package {
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
 func (pkg *Package) File(relativeFileName string) string {
-	return cleanpath(resolveVariableRefs(G.Mk, pkg.dir+"/"+relativeFileName))
+	return cleanpath(resolveVariableRefs(nil, pkg.dir+"/"+relativeFileName))
 }
 
 func (pkg *Package) checkPossibleDowngrade() {
@@ -495,7 +495,7 @@ func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (i
 
 	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	includedFile = resolveVariableRefs(G.Mk, mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
+	includedFile = resolveVariableRefs(nil, mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
 	if containsVarRef(includedFile) {
 		if trace.Tracing && !contains(includingFilename, "/mk/") {
 			trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
