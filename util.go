@@ -290,16 +290,6 @@ func varnameParam(varname string) string {
 	return ""
 }
 
-// defineVar marks a variable as defined in both the current package and the current file.
-func defineVar(pkg *Package, mklines MkLines, mkline MkLine, varname string) {
-	if mklines != nil {
-		mklines.vars.Define(varname, mkline)
-	}
-	if pkg != nil {
-		pkg.vars.Define(varname, mkline)
-	}
-}
-
 // varIsDefinedSimilar tests whether the variable (or its canonicalized form)
 // is defined in the current package or in the current file.
 func varIsDefinedSimilar(pkg *Package, mklines MkLines, varname string) bool {

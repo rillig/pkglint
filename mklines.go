@@ -241,7 +241,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 			continue
 		}
 
-		defineVar(G.Pkg, mklines, mkline, mkline.Varname())
+		mklines.defineVar(G.Pkg, mkline, mkline.Varname())
 
 		varcanon := mkline.Varcanon()
 		switch varcanon {
@@ -288,9 +288,17 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 		case "OPSYSVARS":
 			for _, opsysVar := range mkline.Fields() {
 				mklines.UseVar(mkline, opsysVar+".*")
-				defineVar(G.Pkg, mklines, mkline, opsysVar)
+				mklines.defineVar(G.Pkg, mkline, opsysVar)
 			}
 		}
+	}
+}
+
+// defineVar marks a variable as defined in both the current package and the current file.
+func (mklines *MkLinesImpl) defineVar(pkg *Package, mkline MkLine, varname string) {
+	mklines.vars.Define(varname, mkline)
+	if pkg != nil {
+		pkg.vars.Define(varname, mkline)
 	}
 }
 
