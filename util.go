@@ -290,20 +290,6 @@ func varnameParam(varname string) string {
 	return ""
 }
 
-// varIsDefinedSimilar tests whether the variable (or its canonicalized form)
-// is defined in the current package or in the current file.
-func varIsDefinedSimilar(pkg *Package, mklines MkLines, varname string) bool {
-	return mklines != nil && (mklines.vars.DefinedSimilar(varname) || mklines.forVars[varname]) ||
-		pkg != nil && pkg.vars.DefinedSimilar(varname)
-}
-
-// varIsUsedSimilar tests whether the variable (or its canonicalized form)
-// is used in the current package or in the current file.
-func varIsUsedSimilar(pkg *Package, mklines MkLines, varname string) bool {
-	return mklines != nil && mklines.vars.UsedSimilar(varname) ||
-		pkg != nil && pkg.vars.UsedSimilar(varname)
-}
-
 func fileExists(filename string) bool {
 	st, err := os.Stat(filename)
 	return err == nil && st.Mode().IsRegular()

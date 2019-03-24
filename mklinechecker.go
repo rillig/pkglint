@@ -453,7 +453,9 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 		break
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
-	case varIsDefinedSimilar(G.Pkg, ck.MkLines, varname):
+	case ck.MkLines != nil && (ck.MkLines.vars.DefinedSimilar(varname) || ck.MkLines.forVars[varname]):
+		break
+	case G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname):
 		break
 	case containsVarRef(varname):
 		break
@@ -931,7 +933,11 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if varIsUsedSimilar(G.Pkg, ck.MkLines, varname) {
+	if ck.MkLines != nil && ck.MkLines.vars.UsedSimilar(varname) {
+		return
+	}
+
+	if G.Pkg != nil && G.Pkg.vars.UsedSimilar(varname) {
 		return
 	}
 

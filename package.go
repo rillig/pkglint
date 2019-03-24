@@ -288,11 +288,11 @@ func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
 	pkg.Patchdir = pkg.vars.LastValue("PATCHDIR")
 
 	// See lang/php/ext.mk
-	if varIsDefinedSimilar(pkg, nil, "PHPEXT_MK") {
-		if !varIsDefinedSimilar(pkg, nil, "USE_PHP_EXT_PATCHES") {
+	if pkg.vars.DefinedSimilar("PHPEXT_MK") {
+		if !pkg.vars.DefinedSimilar("USE_PHP_EXT_PATCHES") {
 			pkg.Patchdir = "patches"
 		}
-		if varIsDefinedSimilar(pkg, nil, "PECL_VERSION") {
+		if pkg.vars.DefinedSimilar("PECL_VERSION") {
 			pkg.DistinfoFile = "distinfo"
 		} else {
 			pkg.IgnoreMissingPatches = true
