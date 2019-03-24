@@ -425,7 +425,7 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 
 	// TODO: It may be better to define MkLines.Resolve and Package.Resolve,
 	//  to clearly state the scope of the involved variables.
-	resolved := resolveVariableRefs("gcc-${GCC_VERSION}")
+	resolved := resolveVariableRefs(nil, "gcc-${GCC_VERSION}")
 
 	c.Check(resolved, equals, "gcc-${GCC_VERSION}")
 }
@@ -444,7 +444,7 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	// TODO: Add a similar test in which some of the variables are defined
 	//  conditionally or with differing values, just to see what pkglint does
 	//  in such a case.
-	resolved := resolveVariableRefs("you ${FIRST}")
+	resolved := resolveVariableRefs(nil, "you ${FIRST}")
 
 	c.Check(resolved, equals, "you got it")
 }
@@ -459,7 +459,7 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	G.Pkg = NewPackage(t.File("category/pkg"))
 	G.Pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
 
-	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
+	resolved := resolveVariableRefs(nil, "gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
 
 	c.Check(resolved, equals, "gst-plugins0.10-x11/distinfo")
 }

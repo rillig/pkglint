@@ -423,7 +423,7 @@ func findPkgsrcTopdir(dirname string) string {
 	return ""
 }
 
-func resolveVariableRefs(text string) (resolved string) {
+func resolveVariableRefs(mklines MkLines, text string) (resolved string) {
 	// TODO: How does this fit into the Scope type, which is newer than this function?
 
 	if !contains(text, "${") {
@@ -441,8 +441,8 @@ func resolveVariableRefs(text string) (resolved string) {
 					return value
 				}
 			}
-			if G.Mk != nil {
-				if value, ok := G.Mk.vars.LastValueFound(varname); ok {
+			if mklines != nil {
+				if value, ok := mklines.vars.LastValueFound(varname); ok {
 					return value
 				}
 			}
