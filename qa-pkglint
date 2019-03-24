@@ -87,6 +87,7 @@ netbsd() {
     --exclude="/pkglint.exe" \
     --exclude="/pkglint.test.exe" \
     --exclude="/shell/" \
+    --exclude="/tools/" \
     --exclude="*.docx" \
     --exclude="/.idea/" \
     --exclude="/.vscode/" \
