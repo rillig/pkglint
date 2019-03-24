@@ -70,9 +70,12 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	test("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1", "fspanel-0.8.0.1")
 	test("${DISTNAME:C/Gtk2/p5-gtk2/}", "Gtk2-1.0", "p5-gtk2-1.0")
 	test("${DISTNAME:S/-0$/.0/1}", "aspell-af-0.50-0", "aspell-af-0.50.0")
+	test("${DISTNAME:M*.tar.gz:C,\\..*,,}", "aspell-af-0.50-0", "")
 
 	// FIXME: Should produce a parse error since the :S modifier is malformed; see Test_MkParser_MkTokens.
 	test("${DISTNAME:S,a,b,c,d}", "aspell-af-0.50-0", "bspell-af-0.50-0")
+
+	test("${DISTFILE:C,\\..*,,}", "aspell-af-0.50-0", "")
 }
 
 func (s *Suite) Test_Package_CheckVarorder(c *check.C) {

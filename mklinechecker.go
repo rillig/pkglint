@@ -656,10 +656,6 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		mkline.Warnf("%s should not be used at load time in any file.", varname)
 		ck.explainPermissions(varname, vartype, loadTimeExplanation()...)
 
-	case alternativeFiles == "":
-		mkline.Warnf("%s should not be used in any file.", varname)
-		ck.explainPermissions(varname, vartype)
-
 	case directly:
 		mkline.Warnf(
 			"%s should not be used at load time in this file; "+

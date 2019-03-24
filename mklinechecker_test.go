@@ -933,6 +933,23 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 			"but not buildlink3.mk or builtin.mk.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarusePermissions__usable_only_at_loadtime_in_other_file(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtFileName,
+		"*: set, use-loadtime")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"VAR=\t${VAR}")
+
+	mklines.Check()
+
+	// Since the variable is usable at load time, pkglint assumes it is also
+	// usable at run time. This is not the case for VAR, but probably doesn't
+	// happen in practice anyway.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_infrastructure_variable(c *check.C) {
 	t := s.Init(c)
 
