@@ -368,8 +368,6 @@ func (src *Pkgsrc) loadUntypedVars() {
 	handleMkFile := func(path string) {
 		mklines := LoadMk(path, 0)
 		if mklines != nil && len(mklines.mklines) > 0 {
-			G.Assertf(G.Mk == nil, "asdf")
-			G.Mk = mklines // FIXME: This is because defineVar uses G.Mk instead of the method receiver.
 			mklines.collectDefinedVariables()
 			mklines.collectUsedVariables()
 			for varname, mkline := range mklines.vars.firstDef {
@@ -378,7 +376,6 @@ func (src *Pkgsrc) loadUntypedVars() {
 			for varname, mkline := range mklines.vars.used {
 				define(varnameCanon(varname), mkline)
 			}
-			G.Mk = nil
 		}
 	}
 
