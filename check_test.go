@@ -162,7 +162,7 @@ func (t *Tester) SetUpCommandLine(args ...string) {
 //
 // See SetUpTool for registering tools like echo, awk, perl.
 func (t *Tester) SetUpVartypes() {
-	G.Pkgsrc.vartypes.Init(G.Pkgsrc)
+	G.Pkgsrc.vartypes.Init(&G.Pkgsrc)
 }
 
 func (t *Tester) SetUpMasterSite(varname string, urls ...string) {

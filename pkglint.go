@@ -22,7 +22,7 @@ const confVersion = "@VERSION@"
 // Pkglint is a container for all global variables of this Go package.
 type Pkglint struct {
 	Opts   CmdOpts  // Command line options.
-	Pkgsrc *Pkgsrc  // Global data, mostly extracted from mk/*, never nil.
+	Pkgsrc Pkgsrc   // Global data, mostly extracted from mk/*.
 	Pkg    *Package // The package that is currently checked, or nil.
 
 	Todo            []string // The files or directories that still need to be checked.

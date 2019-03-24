@@ -6,7 +6,7 @@ func (s *Suite) Test_VarTypeRegistry_Init(c *check.C) {
 	t := s.Init(c)
 
 	src := NewPkgsrc(t.File("."))
-	src.vartypes.Init(src)
+	src.vartypes.Init(&src)
 
 	c.Check(src.vartypes.Canon("BSD_MAKE_ENV").basicType.name, equals, "ShellWord")
 	c.Check(src.vartypes.Canon("USE_BUILTIN.*").basicType.name, equals, "YesNoIndirectly")

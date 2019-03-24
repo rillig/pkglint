@@ -45,8 +45,8 @@ type Pkgsrc struct {
 	vartypes   VarTypeRegistry
 }
 
-func NewPkgsrc(dir string) *Pkgsrc {
-	src := Pkgsrc{
+func NewPkgsrc(dir string) Pkgsrc {
+	return Pkgsrc{
 		dir,
 		make(map[string]bool),
 		NewTools(),
@@ -60,8 +60,6 @@ func NewPkgsrc(dir string) *Pkgsrc {
 		NewScope(),
 		make(map[string]string),
 		NewVarTypeRegistry()}
-
-	return &src
 }
 
 func (src *Pkgsrc) loadDefaultBuildDefs() {
