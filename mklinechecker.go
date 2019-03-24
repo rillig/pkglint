@@ -11,7 +11,8 @@ import (
 
 // MkLineChecker provides checks for a single line from a Makefile fragment.
 type MkLineChecker struct {
-	MkLine MkLine
+	MkLines MkLines
+	MkLine  MkLine
 }
 
 func (ck MkLineChecker) Check() {
@@ -70,7 +71,7 @@ func (ck MkLineChecker) checkInclude() {
 
 	mkline := ck.MkLine
 	if mkline.Indent() != "" {
-		ck.checkDirectiveIndentation(G.Mk.indentation.Depth("include"))
+		ck.checkDirectiveIndentation(ck.MkLines.indentation.Depth("include"))
 	}
 
 	includedFile := mkline.IncludedFile()
@@ -230,7 +231,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 }
 
 func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
-	if G.Mk == nil || !G.Opts.WarnSpace {
+	if ck.MkLines == nil || !G.Opts.WarnSpace {
 		return
 	}
 	mkline := ck.MkLine
@@ -429,7 +430,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	}
 
 	if G.Pkgsrc.UserDefinedVars.Defined(varname) && !G.Pkgsrc.IsBuildDef(varname) {
-		if !G.Mk.buildDefs[varname] && G.Mk.FirstTimeSlice("BUILD_DEFS", varname) {
+		if !ck.MkLines.buildDefs[varname] && ck.MkLines.FirstTimeSlice("BUILD_DEFS", varname) {
 			mkline.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
 			G.Explain(
 				"When a pkgsrc package is built, many things can be configured by the",
@@ -452,13 +453,13 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 		break
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
-	case varIsDefinedSimilar(G.Pkg, G.Mk, varname):
+	case varIsDefinedSimilar(G.Pkg, ck.MkLines, varname):
 		break
 	case containsVarRef(varname):
 		break
 	case G.Pkgsrc.vartypes.DefinedCanon(varname):
 		break
-	case G.Mk == nil || !G.Mk.FirstTimeSlice("used but not defined: ", varname):
+	case ck.MkLines == nil || !ck.MkLines.FirstTimeSlice("used but not defined: ", varname):
 		break
 
 	default:
@@ -573,7 +574,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		// tools that have been added to USE_TOOLS up to this point and
 		// makes their variables available for use at load time.
 		if tool := G.ToolByVarname(varname); tool != nil {
-			if !tool.UsableAtLoadTime(G.Mk.Tools.SeenPrefs) {
+			if !tool.UsableAtLoadTime(ck.MkLines.Tools.SeenPrefs) {
 				ck.warnVaruseToolLoadTime(varname, tool)
 			}
 			return
@@ -588,7 +589,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		return
 	}
 
-	if G.Mk != nil && !G.Mk.FirstTimeSlice("checkVarusePermissions", varname) {
+	if ck.MkLines != nil && !ck.MkLines.FirstTimeSlice("checkVarusePermissions", varname) {
 		return
 	}
 
@@ -930,7 +931,7 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if varIsUsedSimilar(G.Pkg, G.Mk, varname) {
+	if varIsUsedSimilar(G.Pkg, ck.MkLines, varname) {
 		return
 	}
 
@@ -944,7 +945,7 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if G.Mk == nil || !G.Mk.FirstTimeSlice("defined but not used: ", varname) {
+	if ck.MkLines == nil || !ck.MkLines.FirstTimeSlice("defined but not used: ", varname) {
 		return
 	}
 
@@ -1069,7 +1070,7 @@ func (ck MkLineChecker) checkVarassignMisc() {
 		// No autofix since it doesn't occur anymore.
 	}
 
-	if varname == "PKG_SKIP_REASON" && G.Mk.indentation.DependsOn("OPSYS") {
+	if varname == "PKG_SKIP_REASON" && ck.MkLines.indentation.DependsOn("OPSYS") {
 		// TODO: Provide autofix for simple cases, like ".if ${OPSYS} == SunOS".
 		mkline.Notef("Consider setting NOT_FOR_PLATFORM instead of " +
 			"PKG_SKIP_REASON depending on ${OPSYS}.")
@@ -1091,8 +1092,8 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 	if !G.Opts.WarnExtra ||
 		G.Infrastructure ||
 		mkline.Op() != opAssignDefault ||
-		G.Mk.Tools.SeenPrefs ||
-		!G.Mk.FirstTime("include bsd.prefs.mk before using ?=") {
+		ck.MkLines.Tools.SeenPrefs ||
+		!ck.MkLines.FirstTime("include bsd.prefs.mk before using ?=") {
 		return
 	}
 
@@ -1373,7 +1374,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 
 	abs := path.Dir(mkline.Filename) + "/" + resolvedPath
 	if _, err := os.Stat(abs); err != nil {
-		if mustExist && !(G.Mk != nil && G.Mk.indentation.IsCheckedFile(resolvedPath)) {
+		if mustExist && !(ck.MkLines != nil && ck.MkLines.indentation.IsCheckedFile(resolvedPath)) {
 			mkline.Errorf("Relative path %q does not exist.", resolvedPath)
 		}
 		return

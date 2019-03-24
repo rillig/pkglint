@@ -128,7 +128,7 @@ func (mklines *MkLinesImpl) checkAll() {
 			mklines.Tools.SeenPrefs = true
 		}
 
-		ck := MkLineChecker{mkline}
+		ck := MkLineChecker{mklines, mkline}
 		ck.Check()
 
 		varalign.Process(mkline)

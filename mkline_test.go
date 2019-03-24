@@ -379,7 +379,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 
 	c.Check(nq, equals, no)
 
-	MkLineChecker{mkline}.checkVarassign()
+	MkLineChecker{nil, mkline}.checkVarassign()
 
 	t.CheckOutputEmpty() // Up to version 5.3.6, pkglint warned about a missing :Q here, which was wrong.
 }
@@ -391,7 +391,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_list_to_list(c *check.C
 	t.SetUpMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
 	mkline := t.NewMkLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}")
 
-	MkLineChecker{mkline}.checkVarassign()
+	MkLineChecker{nil, mkline}.checkVarassign()
 
 	// Assigning lists to lists is ok.
 	t.CheckOutputEmpty()
@@ -404,7 +404,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	mkline := t.NewMkLine("builtin.mk", 3,
 		"USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}")
 
-	MkLineChecker{mkline}.checkVarassign()
+	MkLineChecker{nil, mkline}.checkVarassign()
 
 	t.CheckOutputLines(
 		"WARN: builtin.mk:3: PKG_ADMIN should not be used at load time in any file.",
@@ -418,7 +418,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *ch
 	mkline := t.NewMkLine("Makefile", 3,
 		"SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'")
 
-	MkLineChecker{mkline}.checkVarassign()
+	MkLineChecker{nil, mkline}.checkVarassign()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} " +
@@ -437,7 +437,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_command(c *check.C)
 		"GENERATE_PLIST= cd ${DESTDIR}${PREFIX}; ${FIND} * \\( -type f -or -type l \\) | ${SORT};")
 
 	G.Mk.collectDefinedVariables()
-	MkLineChecker{G.Mk.mklines[1]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:2: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
@@ -451,7 +451,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__word_as_part_of_word(c *check.
 		MkRcsID,
 		"EGDIR=\t${EGDIR}/${MACHINE_GNU_PLATFORM}")
 
-	MkLineChecker{G.Mk.mklines[1]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
 
 	t.CheckOutputEmpty()
 }
@@ -489,7 +489,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(c 
 		MkRcsID,
 		"MASTER_SITES=${HOMEPAGE}archive/")
 
-	MkLineChecker{G.Mk.mklines[1]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
 
 	t.CheckOutputEmpty() // Don't suggest to use ${HOMEPAGE:Q}.
 }
@@ -528,8 +528,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_subshell(c *check.C
 		"\t id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"",
 		"\t id=`${AWK} '{print}' < ${WRKSRC}/idfile` && echo \"$$id\"")
 
-	MkLineChecker{G.Mk.mklines[1]}.Check()
-	MkLineChecker{G.Mk.mklines[2]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[2]}.Check()
 
 	// Don't suggest to use ${AWK:Q}.
 	t.CheckOutputLines(
@@ -548,8 +548,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *ch
 		"SUBST_SED.link=-e 's|(LIBTOOL_LINK).*(LIBS)|& ${LDFLAGS:M*:Q}|g'",
 		"SUBST_SED.link=-e 's|(LIBTOOL_LINK).*(LIBS)|& '${LDFLAGS:M*:Q}'|g'")
 
-	MkLineChecker{G.Mk.mklines[1]}.Check()
-	MkLineChecker{G.Mk.mklines[2]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[2]}.Check()
 
 	t.CheckOutputLines(
 		"WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} outside of any quoting characters.")
@@ -569,7 +569,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__package_options(c *check.C) {
 		MkRcsID,
 		"PKG_SUGGESTED_OPTIONS+=\t${PKG_DEFAULT_OPTIONS:Mcdecimal} ${PKG_OPTIONS.py-trytond:Mcdecimal}")
 
-	MkLineChecker{G.Mk.mklines[1]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
 
 	// No warning about a missing :Q modifier.
 	t.CheckOutputEmpty()
@@ -585,7 +585,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quotes_in_subshell_in_
 		MkRcsID,
 		"CONFIGURE_ARGS+=\t-tklibs \"`${SH} -c '${ECHO} $$TK_LD_FLAGS'`\"")
 
-	MkLineChecker{G.Mk.mklines[1]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
 
 	// Don't suggest ${ECHO:Q} here.
 	t.CheckOutputEmpty()
@@ -598,7 +598,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(c
 	G.Mk = t.NewMkLines("x11/qt5-qtbase/Makefile.common",
 		"BUILDLINK_TRANSFORM+=opt:-ldl:${BUILDLINK_LDADD.dl:M*}")
 
-	MkLineChecker{G.Mk.mklines[0]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[0]}.Check()
 
 	// Note: The :M* modifier is not necessary, since this is not a GNU Configure package.
 	t.CheckOutputLines(
@@ -612,7 +612,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_message(c *check.C)
 	G.Mk = t.NewMkLines("benchmarks/iozone/Makefile",
 		"SUBST_MESSAGE.crlf=\tStripping EOL CR in ${REPLACE_PERL}")
 
-	MkLineChecker{G.Mk.mklines[0]}.Check()
+	MkLineChecker{G.Mk, G.Mk.mklines[0]}.Check()
 
 	// Don't suggest ${REPLACE_PERL:Q}.
 	t.CheckOutputEmpty()
@@ -657,7 +657,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_li
 		MkRcsID,
 		"MASTER_SITES=\tftp://ftp.gtk.org/${PKGNAME}/ ${MASTER_SITE_GNOME:=subdir/}")
 
-	MkLineChecker{G.Mk.mklines[1]}.checkVarassignRightVaruse()
+	MkLineChecker{G.Mk, G.Mk.mklines[1]}.checkVarassignRightVaruse()
 
 	t.CheckOutputEmpty() // Don't warn about missing :Q modifiers.
 }
@@ -672,7 +672,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 		"",
 		"CONFIGURE_ENV+=\tSYS_TAR_COMMAND_PATH=${TOOLS_TAR:Q}")
 
-	MkLineChecker{mklines.mklines[2]}.checkVarassignRightVaruse()
+	MkLineChecker{mklines, mklines.mklines[2]}.checkVarassignRightVaruse()
 
 	// The TOOLS_* variables only contain the path to the tool,
 	// without any additional arguments that might be necessary
@@ -693,8 +693,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
 		"COMPILE_CMD=\tcc `${CAT} ${WRKDIR}/compileflags`",
 		"COMMENT_CMD=\techo `echo ${COMMENT}`")
 
-	MkLineChecker{mklines.mklines[2]}.checkVarassignRightVaruse()
-	MkLineChecker{mklines.mklines[3]}.checkVarassignRightVaruse()
+	MkLineChecker{mklines, mklines.mklines[2]}.checkVarassignRightVaruse()
+	MkLineChecker{mklines, mklines.mklines[3]}.checkVarassignRightVaruse()
 
 	// Both CAT and WRKDIR are safe from quoting, therefore no warnings.
 	// But COMMENT may contain arbitrary characters and therefore must
@@ -893,7 +893,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 
 	// Just for branch coverage.
 	trace.Tracing = false
-	MkLineChecker{mklines.mklines[2]}.Check()
+	MkLineChecker{mklines, mklines.mklines[2]}.Check()
 
 	t.CheckOutputEmpty()
 }

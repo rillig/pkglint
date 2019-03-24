@@ -421,7 +421,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			cond)
 		G.Mk = mklines
 		mklines.ForEach(func(mkline MkLine) {
-			MkLineChecker{mkline}.checkDirectiveCond()
+			MkLineChecker{mklines, mkline}.checkDirectiveCond()
 		})
 		t.CheckOutput(output)
 	}
@@ -1147,7 +1147,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 		"# dummy")
 
 	mklines.ForEach(func(mkline MkLine) {
-		ck := MkLineChecker{mkline}
+		ck := MkLineChecker{mklines, mkline}
 
 		ck.CheckRelativePkgdir("../pkgbase")
 		ck.CheckRelativePkgdir("../../other/package")
@@ -1189,8 +1189,8 @@ func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}",
 		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:Q}")
 
-	MkLineChecker{mklines.mklines[0]}.Check()
-	MkLineChecker{mklines.mklines[1]}.Check()
+	MkLineChecker{mklines, mklines.mklines[0]}.Check()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
 
 	// In line 1, don't warn that ${XKBBASE}/xkbcomp is used but not defined.
 	// This is because the :L modifier interprets everything before as an expression
@@ -1255,7 +1255,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	t.SetUpVartypes()
 	mkline := t.NewMkLine("module.mk", 123, ".if ${PKGPATH} == \"category/package\"")
-	ck := MkLineChecker{mkline}
+	ck := MkLineChecker{nil, mkline}
 
 	// FIXME: checkDirectiveCondEmpty cannot know whether it is empty(...) or !empty(...).
 	//  It must know that to generate the proper diagnostics.
@@ -1315,7 +1315,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.
 	c.Check(words, deepEquals, []string{"`pkg-config pidgin --cflags`"})
 	c.Check(rest, equals, "")
 
-	ck := MkLineChecker{G.Mk.mklines[1]}
+	ck := MkLineChecker{G.Mk, G.Mk.mklines[1]}
 	ck.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
 	// No warning about "`pkg-config" being an unknown CFlag.
@@ -1346,7 +1346,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation(c *check.C) {
 	mkline := t.NewMkLine("filename.mk", 123, ".if 0")
 
 	// Calling this method is only useful in the context of a whole file.
-	MkLineChecker{mkline}.checkDirectiveIndentation(4)
+	MkLineChecker{nil, mkline}.checkDirectiveIndentation(4)
 
 	t.CheckOutputEmpty()
 }
@@ -1543,7 +1543,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 		"CPPPATH.Linux=\t/usr/bin/cpp")
 	G.Pkgsrc.LoadInfrastructure()
 
-	ck := MkLineChecker{t.NewMkLine("module.mk", 101, "COMMENT=\t${CPPPATH.SunOS}")}
+	ck := MkLineChecker{nil, t.NewMkLine("module.mk", 101, "COMMENT=\t${CPPPATH.SunOS}")}
 
 	ck.CheckVaruse(NewMkVarUse("CPPPATH.SunOS"), &VarUseContext{
 		vartype: &Vartype{
@@ -1678,7 +1678,7 @@ func (s *Suite) Test_MkLineChecker_checkVaruseModifiersRange(c *check.C) {
 	mkline := t.NewMkLine("mk/compiler/gcc.mk", 150,
 		"CC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}")
 
-	MkLineChecker{mkline}.Check()
+	MkLineChecker{nil, mkline}.Check()
 
 	// FIXME: The check is called two times, even though it only produces a single NOTE.
 	t.CheckOutputLines(
@@ -1717,7 +1717,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C)
 	mkline := t.NewMkLine("module.mk", 123,
 		"\t${_PKG_SILENT}${_PKG_DEBUG} :")
 
-	MkLineChecker{mkline}.Check()
+	MkLineChecker{nil, mkline}.Check()
 
 	t.CheckOutputLines(
 		"WARN: module.mk:123: Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")

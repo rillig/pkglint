@@ -678,7 +678,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__echo(c *check.C) {
 		"# dummy")
 	mkline := t.NewMkLine("filename.mk", 3, "# dummy")
 
-	MkLineChecker{mkline}.checkText("echo \"hello, world\"")
+	MkLineChecker{G.Mk, mkline}.checkText("echo \"hello, world\"")
 
 	t.CheckOutputEmpty()
 
@@ -958,7 +958,7 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *chec
 	t.SetUpTool("echo", "", AtRunTime)
 	mkline := t.NewMkLine("dummy.mk", 13, "\t var=\"`echo \"\"`\"")
 
-	MkLineChecker{mkline}.Check()
+	MkLineChecker{nil, mkline}.Check()
 
 	t.CheckOutputLines(
 		"WARN: dummy.mk:13: Double quotes inside backticks inside double quotes are error prone.")
@@ -1143,7 +1143,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
 
 	mkline := t.NewMkLine("file.mk", 3, "\t# comment; continuation")
 
-	MkLineChecker{mkline}.Check()
+	MkLineChecker{nil, mkline}.Check()
 
 	t.CheckOutputLines(
 		"WARN: file.mk:3: A shell comment should not contain semicolons.")
