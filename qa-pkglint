@@ -4,6 +4,7 @@ set -eu
 srcdir="$HOME/pkglint"
 archivedir="$srcdir/archive"
 pkgsrcdir="$HOME/git/pkgsrc"
+: ${GOPATH:="$HOME/go"}
 
 step_msg() {
   printf '%s => %s\n' "$(date +'%H:%M:%S')" "$1"
