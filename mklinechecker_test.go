@@ -419,7 +419,6 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	test := func(cond string, output ...string) {
 		mklines := t.NewMkLines("filename.mk",
 			cond)
-		G.Mk = mklines
 		mklines.ForEach(func(mkline MkLine) {
 			MkLineChecker{mklines, mkline}.checkDirectiveCond()
 		})
@@ -1305,17 +1304,17 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("chat/pidgin-icb/Makefile",
+	mklines := t.NewMkLines("chat/pidgin-icb/Makefile",
 		MkRcsID,
 		"CFLAGS+=\t`pkg-config pidgin --cflags`")
-	mkline := G.Mk.mklines[1]
+	mkline := mklines.mklines[1]
 
 	words, rest := splitIntoMkWords(mkline.Line, mkline.Value())
 
 	c.Check(words, deepEquals, []string{"`pkg-config pidgin --cflags`"})
 	c.Check(rest, equals, "")
 
-	ck := MkLineChecker{G.Mk, G.Mk.mklines[1]}
+	ck := MkLineChecker{mklines, mklines.mklines[1]}
 	ck.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
 	// No warning about "`pkg-config" being an unknown CFlag.

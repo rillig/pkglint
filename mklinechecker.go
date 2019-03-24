@@ -1163,7 +1163,7 @@ func (ck MkLineChecker) CheckVartypeBasic(varname string, checker *BasicType, op
 
 	mkline := ck.MkLine
 	valueNoVar := mkline.WithoutMakeVariables(value)
-	ctx := VartypeCheck{mkline, varname, op, value, valueNoVar, comment, guessed}
+	ctx := VartypeCheck{ck.MkLines, mkline, varname, op, value, valueNoVar, comment, guessed}
 	checker.checker(&ctx)
 }
 

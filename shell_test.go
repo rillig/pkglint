@@ -154,11 +154,11 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 	t.SetUpTool("unzip", "UNZIP_CMD", AtRunTime)
 
 	test := func(shellCommand string, diagnostics ...string) {
-		G.Mk = t.NewMkLines("filename.mk",
+		mklines := t.NewMkLines("filename.mk",
 			"\t"+shellCommand)
-		ck := NewShellLineChecker(G.Mk, G.Mk.mklines[0])
+		ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
-		G.Mk.ForEach(func(mkline MkLine) {
+		mklines.ForEach(func(mkline MkLine) {
 			ck.CheckShellCommandLine(ck.mkline.ShellCommand())
 		})
 
@@ -276,11 +276,11 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__strip(c *check.C) {
 	t := s.Init(c)
 
 	test := func(shellCommand string) {
-		G.Mk = t.NewMkLines("filename.mk",
+		mklines := t.NewMkLines("filename.mk",
 			"\t"+shellCommand)
 
-		G.Mk.ForEach(func(mkline MkLine) {
-			ck := NewShellLineChecker(G.Mk, mkline)
+		mklines.ForEach(func(mkline MkLine) {
+			ck := NewShellLineChecker(mklines, mkline)
 			ck.CheckShellCommandLine(mkline.ShellCommand())
 		})
 	}
@@ -303,9 +303,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__nofix(c *check.C) {
 
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "", AtRunTime)
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
-	ck := NewShellLineChecker(G.Mk, G.Mk.mklines[0])
+	ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
 	ck.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
@@ -319,9 +319,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__show_autofix(c *che
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "", AtRunTime)
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
-	ck := NewShellLineChecker(G.Mk, G.Mk.mklines[0])
+	ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
 	ck.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
@@ -336,9 +336,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__autofix(c *check.C)
 	t.SetUpCommandLine("-Wall", "--autofix")
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "", AtRunTime)
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		"\techo ${PKGNAME:Q}")
-	ck := NewShellLineChecker(G.Mk, G.Mk.mklines[0])
+	ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
 	ck.CheckShellCommandLine("echo ${PKGNAME:Q}")
 
@@ -358,7 +358,7 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 	t.SetUpTool("printf", "", AtRunTime)
 	t.SetUpTool("sed", "", AtRunTime)
 	t.SetUpTool("right-side", "", AtRunTime)
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		"\t echo | right-side",
 		"\t sed s,s,s, | right-side",
 		"\t printf | sed s,s,s, | right-side ",
@@ -371,8 +371,8 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"\t var=value | right-side",
 		"\t if :; then :; fi | right-side")
 
-	for _, mkline := range G.Mk.mklines {
-		ck := NewShellLineChecker(G.Mk, mkline)
+	for _, mkline := range mklines.mklines {
+		ck := NewShellLineChecker(mklines, mkline)
 		ck.CheckShellCommandLine(mkline.ShellCommand())
 	}
 
@@ -391,9 +391,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__implementation(c *c
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("filename.mk",
+	mklines := t.NewMkLines("filename.mk",
 		"# dummy")
-	ck := NewShellLineChecker(G.Mk, G.Mk.mklines[0])
+	ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
 	// foobar="`echo \"foo   bar\"`"
 	text := "foobar=\"`echo \\\"foo   bar\\\"`\""
@@ -403,12 +403,12 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__implementation(c *c
 	c.Check(tokens, deepEquals, []string{text})
 	c.Check(rest, equals, "")
 
-	G.Mk.ForEach(func(mkline MkLine) { ck.CheckWord(text, false, RunTime) })
+	mklines.ForEach(func(mkline MkLine) { ck.CheckWord(text, false, RunTime) })
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Unknown shell command \"echo\".")
 
-	G.Mk.ForEach(func(mkline MkLine) { ck.CheckShellCommandLine(text) })
+	mklines.ForEach(func(mkline MkLine) { ck.CheckShellCommandLine(text) })
 
 	// No parse errors
 	t.CheckOutputLines(
@@ -420,9 +420,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__dollar_without_vari
 
 	t.SetUpVartypes()
 	t.SetUpTool("pax", "", AtRunTime)
-	G.Mk = t.NewMkLines("filename.mk",
+	mklines := t.NewMkLines("filename.mk",
 		"# dummy")
-	ck := NewShellLineChecker(G.Mk, G.Mk.mklines[0])
+	ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
 	ck.CheckShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 
@@ -437,10 +437,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 	test := func(shellWord string, checkQuoting bool) {
 		// Provide a storage for the "used but not defined" warnings.
 		// See checkVaruseUndefined and checkVarassignLeftNotUsed.
-		G.Mk = NewMkLines(NewLines("dummy.mk", nil))
-		defer func() { G.Mk = nil }()
+		mklines := NewMkLines(NewLines("dummy.mk", nil))
 
-		ck := t.NewShellLineChecker(G.Mk, "dummy.mk", 1, "\t echo "+shellWord)
+		ck := t.NewShellLineChecker(mklines, "dummy.mk", 1, "\t echo "+shellWord)
 		ck.CheckWord(shellWord, checkQuoting, RunTime)
 	}
 
@@ -565,12 +564,12 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__PKGMANDIR(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("chat/ircII/Makefile",
+	mklines := t.NewMkLines("chat/ircII/Makefile",
 		MkRcsID,
 		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/man",
 		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/${PKGMANDIR}")
 
-	G.Mk.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
 		"WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".",
@@ -673,15 +672,15 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__echo(c *check.C) {
 
 	echo := t.SetUpTool("echo", "ECHO", AtRunTime)
 	echo.MustUseVarForm = true
-	G.Mk = t.NewMkLines("filename.mk",
+	mklines := t.NewMkLines("filename.mk",
 		"# dummy")
 	mkline := t.NewMkLine("filename.mk", 3, "# dummy")
 
-	MkLineChecker{G.Mk, mkline}.checkText("echo \"hello, world\"")
+	MkLineChecker{mklines, mkline}.checkText("echo \"hello, world\"")
 
 	t.CheckOutputEmpty()
 
-	NewShellLineChecker(G.Mk, mkline).CheckShellCommandLine("echo \"hello, world\"")
+	NewShellLineChecker(mklines, mkline).CheckShellCommandLine("echo \"hello, world\"")
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: Please use \"${ECHO}\" instead of \"echo\".")
@@ -722,11 +721,11 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 func (s *Suite) Test_ShellLineChecker_checkInstallCommand(c *check.C) {
 	t := s.Init(c)
 
-	G.Mk = t.NewMkLines("filename.mk",
+	mklines := t.NewMkLines("filename.mk",
 		"# dummy")
-	G.Mk.target = "do-install"
+	mklines.target = "do-install"
 
-	ck := t.NewShellLineChecker(G.Mk, "filename.mk", 1, "\tdummy")
+	ck := t.NewShellLineChecker(mklines, "filename.mk", 1, "\tdummy")
 
 	ck.checkInstallCommand("sed")
 

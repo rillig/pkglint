@@ -24,7 +24,6 @@ type Pkglint struct {
 	Opts   CmdOpts  // Command line options.
 	Pkgsrc *Pkgsrc  // Global data, mostly extracted from mk/*, never nil.
 	Pkg    *Package // The package that is currently checked, or nil.
-	Mk     MkLines  // The Makefile (or fragment) that is currently checked, or nil.
 
 	Todo            []string // The files or directories that still need to be checked.
 	Wip             bool     // Is the currently checked file or package from pkgsrc-wip?

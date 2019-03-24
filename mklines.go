@@ -86,9 +86,6 @@ func (mklines *MkLinesImpl) Check() {
 		defer trace.Call1(mklines.lines.FileName)()
 	}
 
-	G.Mk = mklines
-	defer func() { G.Mk = nil }()
-
 	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
 	// are collected to make the order of the definitions irrelevant.
 	mklines.collectUsedVariables()

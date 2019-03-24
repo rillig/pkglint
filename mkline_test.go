@@ -432,12 +432,12 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_command(c *check.C)
 	t.SetUpTool("find", "FIND", AtRunTime)
 	t.SetUpTool("sort", "SORT", AtRunTime)
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"GENERATE_PLIST= cd ${DESTDIR}${PREFIX}; ${FIND} * \\( -type f -or -type l \\) | ${SORT};")
 
-	G.Mk.collectDefinedVariables()
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
+	mklines.collectDefinedVariables()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:2: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
@@ -447,11 +447,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__word_as_part_of_word(c *check.
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"EGDIR=\t${EGDIR}/${MACHINE_GNU_PLATFORM}")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
 
 	t.CheckOutputEmpty()
 }
@@ -485,11 +485,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(c 
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"MASTER_SITES=${HOMEPAGE}archive/")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
 
 	t.CheckOutputEmpty() // Don't suggest to use ${HOMEPAGE:Q}.
 }
@@ -523,13 +523,13 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_subshell(c *check.C
 	t.SetUpVartypes()
 	t.SetUpTool("awk", "AWK", AtRunTime)
 	t.SetUpTool("echo", "ECHO", AtRunTime)
-	G.Mk = t.NewMkLines("xpi.mk",
+	mklines := t.NewMkLines("xpi.mk",
 		MkRcsID,
 		"\t id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"",
 		"\t id=`${AWK} '{print}' < ${WRKSRC}/idfile` && echo \"$$id\"")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
-	MkLineChecker{G.Mk, G.Mk.mklines[2]}.Check()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
+	MkLineChecker{mklines, mklines.mklines[2]}.Check()
 
 	// Don't suggest to use ${AWK:Q}.
 	t.CheckOutputLines(
@@ -543,13 +543,13 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *ch
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("x11/mlterm/Makefile",
+	mklines := t.NewMkLines("x11/mlterm/Makefile",
 		MkRcsID,
 		"SUBST_SED.link=-e 's|(LIBTOOL_LINK).*(LIBS)|& ${LDFLAGS:M*:Q}|g'",
 		"SUBST_SED.link=-e 's|(LIBTOOL_LINK).*(LIBS)|& '${LDFLAGS:M*:Q}'|g'")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
-	MkLineChecker{G.Mk, G.Mk.mklines[2]}.Check()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
+	MkLineChecker{mklines, mklines.mklines[2]}.Check()
 
 	t.CheckOutputLines(
 		"WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} outside of any quoting characters.")
@@ -565,11 +565,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__package_options(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"PKG_SUGGESTED_OPTIONS+=\t${PKG_DEFAULT_OPTIONS:Mcdecimal} ${PKG_OPTIONS.py-trytond:Mcdecimal}")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
 
 	// No warning about a missing :Q modifier.
 	t.CheckOutputEmpty()
@@ -581,11 +581,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quotes_in_subshell_in_
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("sh", "SH", AtRunTime)
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("x11/labltk/Makefile",
+	mklines := t.NewMkLines("x11/labltk/Makefile",
 		MkRcsID,
 		"CONFIGURE_ARGS+=\t-tklibs \"`${SH} -c '${ECHO} $$TK_LD_FLAGS'`\"")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.Check()
+	MkLineChecker{mklines, mklines.mklines[1]}.Check()
 
 	// Don't suggest ${ECHO:Q} here.
 	t.CheckOutputEmpty()
@@ -595,10 +595,10 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(c
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("x11/qt5-qtbase/Makefile.common",
+	mklines := t.NewMkLines("x11/qt5-qtbase/Makefile.common",
 		"BUILDLINK_TRANSFORM+=opt:-ldl:${BUILDLINK_LDADD.dl:M*}")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[0]}.Check()
+	MkLineChecker{mklines, mklines.mklines[0]}.Check()
 
 	// Note: The :M* modifier is not necessary, since this is not a GNU Configure package.
 	t.CheckOutputLines(
@@ -609,10 +609,10 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_message(c *check.C)
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("benchmarks/iozone/Makefile",
+	mklines := t.NewMkLines("benchmarks/iozone/Makefile",
 		"SUBST_MESSAGE.crlf=\tStripping EOL CR in ${REPLACE_PERL}")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[0]}.Check()
+	MkLineChecker{mklines, mklines.mklines[0]}.Check()
 
 	// Don't suggest ${REPLACE_PERL:Q}.
 	t.CheckOutputEmpty()
@@ -622,12 +622,12 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__guessed_list_variable_in_quote
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("audio/jack-rack/Makefile",
+	mklines := t.NewMkLines("audio/jack-rack/Makefile",
 		MkRcsID,
 		"LADSPA_PLUGIN_PATH=\t${PREFIX}/lib/ladspa",
 		"CPPFLAGS+=\t\t-DLADSPA_PATH=\"\\\"${LADSPA_PLUGIN_PATH}\\\"\"")
 
-	G.Mk.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
 		"WARN: audio/jack-rack/Makefile:3: The variable LADSPA_PLUGIN_PATH should be quoted as part of a shell word.")
@@ -637,11 +637,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__list_in_list(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("x11/eterm/Makefile",
+	mklines := t.NewMkLines("x11/eterm/Makefile",
 		MkRcsID,
 		"DISTFILES=\t${DEFAULT_DISTFILES} ${PIXMAP_FILES}")
 
-	G.Mk.Check()
+	mklines.Check()
 
 	// Don't warn about missing :Q modifiers.
 	t.CheckOutputLines(
@@ -653,11 +653,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_li
 
 	t.SetUpMasterSite("MASTER_SITE_GNOME", "http://ftp.gnome.org/")
 	t.SetUpVartypes()
-	G.Mk = t.NewMkLines("x11/gtk3/Makefile",
+	mklines := t.NewMkLines("x11/gtk3/Makefile",
 		MkRcsID,
 		"MASTER_SITES=\tftp://ftp.gtk.org/${PKGNAME}/ ${MASTER_SITE_GNOME:=subdir/}")
 
-	MkLineChecker{G.Mk, G.Mk.mklines[1]}.checkVarassignRightVaruse()
+	MkLineChecker{mklines, mklines.mklines[1]}.checkVarassignRightVaruse()
 
 	t.CheckOutputEmpty() // Don't warn about missing :Q modifiers.
 }

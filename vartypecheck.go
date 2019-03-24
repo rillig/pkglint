@@ -8,6 +8,8 @@ import (
 
 // VartypeCheck groups together the various checks for variables of the different types.
 type VartypeCheck struct {
+	MkLines MkLines
+
 	// Note: if "go vet" or "go test" complains about a "variable with invalid type", update to go1.11.4.
 	// See https://github.com/golang/go/issues/28972.
 	// That doesn't help though since pkglint contains these "more convoluted alias declarations"
@@ -382,7 +384,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	if m, pattern, relpath, pkg := match3(value, `(.*):(\.\./\.\./[^/]+/([^/]+))$`); m {
-		MkLineChecker{G.Mk, cv.MkLine}.CheckRelativePkgdir(relpath)
+		MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath)
 
 		switch pkg {
 		case "gettext":
@@ -660,7 +662,7 @@ func (cv *VartypeCheck) LdFlag() {
 }
 
 func (cv *VartypeCheck) License() {
-	(&LicenseChecker{G.Mk, cv.MkLine}).Check(cv.Value, cv.Op)
+	(&LicenseChecker{cv.MkLines, cv.MkLine}).Check(cv.Value, cv.Op)
 }
 
 func (cv *VartypeCheck) MachineGnuPlatform() {
@@ -748,7 +750,7 @@ func (cv *VartypeCheck) Option() {
 	}
 
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z+]*)$`); m {
-		if G.Mk != nil && !G.Mk.FirstTimeSlice("option:", optname) {
+		if cv.MkLines != nil && !cv.MkLines.FirstTimeSlice("option:", optname) {
 			return
 		}
 
@@ -879,7 +881,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) PkgPath() {
 	pkgsrcdir := cv.MkLine.PathToFile(G.Pkgsrc.File("."))
-	MkLineChecker{G.Mk, cv.MkLine}.CheckRelativePkgdir(pkgsrcdir + "/" + cv.Value)
+	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(pkgsrcdir + "/" + cv.Value)
 }
 
 func (cv *VartypeCheck) PkgRevision() {
@@ -964,7 +966,7 @@ func (cv *VartypeCheck) PythonDependency() {
 
 // RelativePkgDir refers to a package directory, e.g. ../../category/pkgbase.
 func (cv *VartypeCheck) RelativePkgDir() {
-	MkLineChecker{G.Mk, cv.MkLine}.CheckRelativePkgdir(cv.Value)
+	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(cv.Value)
 }
 
 // RelativePkgPath refers to a file or directory, e.g. ../../category/pkgbase,
@@ -972,7 +974,7 @@ func (cv *VartypeCheck) RelativePkgDir() {
 //
 // See RelativePkgDir, which requires a directory, not a file.
 func (cv *VartypeCheck) RelativePkgPath() {
-	MkLineChecker{G.Mk, cv.MkLine}.CheckRelativePath(cv.Value, true)
+	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePath(cv.Value, true)
 }
 
 func (cv *VartypeCheck) Restricted() {
@@ -1045,16 +1047,16 @@ func (cv *VartypeCheck) ShellCommand() {
 		return
 	}
 	setE := true
-	NewShellLineChecker(G.Mk, cv.MkLine).CheckShellCommand(cv.Value, &setE, RunTime)
+	NewShellLineChecker(cv.MkLines, cv.MkLine).CheckShellCommand(cv.Value, &setE, RunTime)
 }
 
 // ShellCommands checks for zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
-	NewShellLineChecker(G.Mk, cv.MkLine).CheckShellCommands(cv.Value, RunTime)
+	NewShellLineChecker(cv.MkLines, cv.MkLine).CheckShellCommands(cv.Value, RunTime)
 }
 
 func (cv *VartypeCheck) ShellWord() {
-	NewShellLineChecker(G.Mk, cv.MkLine).CheckWord(cv.Value, true, RunTime)
+	NewShellLineChecker(cv.MkLines, cv.MkLine).CheckWord(cv.Value, true, RunTime)
 }
 
 func (cv *VartypeCheck) Stage() {
@@ -1071,7 +1073,7 @@ func (cv *VartypeCheck) Tool() {
 		// no warning for package-defined tool definitions
 
 	} else if m, toolname, tooldep := match2(cv.Value, `^([-\w]+|\[)(?::(\w+))?$`); m {
-		if tool, _ := G.Tool(G.Mk, toolname, RunTime); tool == nil {
+		if tool, _ := G.Tool(cv.MkLines, toolname, RunTime); tool == nil {
 			cv.Errorf("Unknown tool %q.", toolname)
 		}
 
