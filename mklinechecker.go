@@ -61,7 +61,7 @@ func (ck MkLineChecker) checkShellCommand() {
 	}
 
 	ck.checkText(shellCommand)
-	NewShellLineChecker(mkline).CheckShellCommandLine(shellCommand)
+	NewShellLineChecker(ck.MkLines, mkline).CheckShellCommandLine(shellCommand)
 }
 
 func (ck MkLineChecker) checkInclude() {
