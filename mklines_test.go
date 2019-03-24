@@ -412,6 +412,8 @@ func (s *Suite) Test_MkLines__private_tool_undefined(c *check.C) {
 		"WARN: filename.mk:3: Unknown shell command \"md5sum\".")
 }
 
+// Tools that are defined by a package by adding to TOOLS_CREATE can
+// be used without adding them to USE_TOOLS again.
 func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 	t := s.Init(c)
 
@@ -424,9 +426,7 @@ func (s *Suite) Test_MkLines__private_tool_defined(c *check.C) {
 
 	mklines.Check()
 
-	// TODO: Is it necessary to add the tool to USE_TOOLS? If not, why not?
-	t.CheckOutputLines(
-		"WARN: filename.mk:4: The \"md5sum\" tool is used but not added to USE_TOOLS.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {

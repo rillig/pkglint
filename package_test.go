@@ -559,9 +559,10 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/pkgbase/Makefile:14: To use the tool ${FALSE} at load time, bsd.prefs.mk has to be included before.",
 		// TODO: "before including bsd.prefs.mk in line ###".
-		"WARN: ~/category/pkgbase/Makefile:15: To use the tool ${NICE} at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.",
+		// TODO: ${NICE} could be used at load time if it were added to USE_TOOLS earlier.
+		"WARN: ~/category/pkgbase/Makefile:15: The tool ${NICE} cannot be used at load time.",
 		"WARN: ~/category/pkgbase/Makefile:16: To use the tool ${TRUE} at load time, bsd.prefs.mk has to be included before.",
-		"WARN: ~/category/pkgbase/Makefile:25: To use the tool ${NICE} at load time, it has to be added to USE_TOOLS before including bsd.prefs.mk.")
+		"WARN: ~/category/pkgbase/Makefile:25: The tool ${NICE} cannot be used at load time.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
