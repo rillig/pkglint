@@ -96,22 +96,8 @@ func (s *Suite) Test_splitIntoShellTokens__two_shell_variables(c *check.C) {
 	c.Check(rest, equals, "")
 }
 
-func (s *Suite) Test_splitIntoMkWords__semicolons(c *check.C) {
-	words, rest := splitIntoMkWords(dummyLine, "word1 word2;;;")
-
-	c.Check(words, deepEquals, []string{"word1", "word2;;;"})
-	c.Check(rest, equals, "")
-}
-
 func (s *Suite) Test_splitIntoShellTokens__varuse_with_embedded_space(c *check.C) {
 	words, rest := splitIntoShellTokens(dummyLine, "${VAR:S/ /_/g}")
-
-	c.Check(words, deepEquals, []string{"${VAR:S/ /_/g}"})
-	c.Check(rest, equals, "")
-}
-
-func (s *Suite) Test_splitIntoMkWords__varuse_with_embedded_space(c *check.C) {
-	words, rest := splitIntoMkWords(dummyLine, "${VAR:S/ /_/g}")
 
 	c.Check(words, deepEquals, []string{"${VAR:S/ /_/g}"})
 	c.Check(rest, equals, "")
@@ -736,31 +722,6 @@ func (s *Suite) Test_ShellLineChecker_checkInstallCommand(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: ${CP} should not be used to install files.")
-}
-
-func (s *Suite) Test_splitIntoMkWords(c *check.C) {
-	url := "http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="
-
-	words, rest := splitIntoShellTokens(dummyLine, url) // Doesn't really make sense
-
-	c.Check(words, check.DeepEquals, []string{
-		"http://registry.gimp.org/file/fix-ca.c?action=download",
-		"&",
-		"id=9884",
-		"&",
-		"file="})
-	c.Check(rest, equals, "")
-
-	words, rest = splitIntoMkWords(dummyLine, url)
-
-	c.Check(words, check.DeepEquals, []string{
-		"http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="})
-	c.Check(rest, equals, "")
-
-	words, rest = splitIntoMkWords(dummyLine, "a b \"c  c  c\" d;;d;; \"e\"''`` 'rest")
-
-	c.Check(words, check.DeepEquals, []string{"a", "b", "\"c  c  c\"", "d;;d;;", "\"e\"''``"})
-	c.Check(rest, equals, "'rest")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv(c *check.C) {

@@ -1026,34 +1026,3 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 
 	return
 }
-
-// Example: "word1 word2;;;" => "word1", "word2;;;"
-// Compare devel/bmake/files/str.c, function brk_string.
-//
-// TODO: Move to mkline.go or mkparser.go.
-//
-// TODO: Document what this function should be used for.
-//
-// TODO: Compare with brk_string from devel/bmake, especially for backticks.
-func splitIntoMkWords(line Line, text string) (words []string, rest string) {
-	if trace.Tracing {
-		defer trace.Call(line, text)()
-	}
-
-	p := NewShTokenizer(line, text, false)
-	atoms := p.ShAtoms()
-	word := ""
-	for _, atom := range atoms {
-		if atom.Type == shtSpace && atom.Quoting == shqPlain {
-			words = append(words, word)
-			word = ""
-		} else {
-			word += atom.MkText
-		}
-	}
-	if word != "" && atoms[len(atoms)-1].Quoting == shqPlain {
-		words = append(words, word)
-		word = ""
-	}
-	return words, word + p.parser.Rest()
-}

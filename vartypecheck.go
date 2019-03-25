@@ -276,7 +276,7 @@ func (cv *VartypeCheck) Comment() {
 // When a package is installed, the example file is installed as usual
 // and is then copied to its final location.
 func (cv *VartypeCheck) ConfFiles() {
-	words, _ := splitIntoMkWords(cv.MkLine.Line, cv.Value)
+	words := cv.MkLine.ValueFields(cv.Value)
 	if len(words)%2 != 0 {
 		cv.Warnf("Values for %s should always be pairs of paths.", cv.Varname)
 	}

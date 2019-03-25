@@ -1444,9 +1444,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		if vartype == nil || vartype.kindOfList == lkNone {
 			lineValues = []string{effectiveValue}
 		} else {
-			var rest string
-			lineValues, rest = splitIntoMkWords(mkline.Line, effectiveValue)
-			vt.tester.Check(rest, equals, "")
+			lineValues = mkline.ValueFields(effectiveValue)
 		}
 
 		for _, lineValue := range lineValues {

@@ -590,7 +590,7 @@ func (t *Tester) SetUpHierarchy() (
 
 // Demonstrates that Tester.SetUpHierarchy uses relative paths for the
 // .include directives.
-func (s *Suite) Test_Tester_SetupHierarchy(c *check.C) {
+func (s *Suite) Test_Tester_SetUpHierarchy(c *check.C) {
 	t := s.Init(c)
 
 	include, get := t.SetUpHierarchy()

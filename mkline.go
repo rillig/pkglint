@@ -423,47 +423,55 @@ func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
 
 var notSpace = textproc.Space.Inverse()
 
-// ValueFields splits the given value, taking care of variable references.
-// Example:
+// ValueFields splits the given value in the same way as the :M variable
+// modifier, taking care of variable references. Example:
 //
-//  ValueFields("${VAR:Udefault value} ${VAR2}two words")
+//  ValueFields("${VAR:Udefault value} ${VAR2}two words;;; 'word three'")
 //  => "${VAR:Udefault value}"
 //     "${VAR2}two"
-//     "words"
+//     "words;;;"
+//     "'word three'"
 //
 // Note that even though the first word contains a space, it is not split
-// at that point since the space is inside a variable use.
+// at that point since the space is inside a variable use. Shell tokens
+// such as semicolons are also treated as normal characters. Only double
+// and single quotes are interpreted.
+//
+// Compare devel/bmake/files/str.c, function brk_string.
+//
+// TODO: Compare with brk_string from devel/bmake, especially for backticks.
 func (mkline *MkLineImpl) ValueFields(value string) []string {
-	tokens := mkline.Tokenize(value, false)
-	var split []string
-	cont := false
-
-	out := func(s string) {
-		if cont {
-			split[len(split)-1] += s
-		} else {
-			split = append(split, s)
-		}
+	if trace.Tracing {
+		defer trace.Call(mkline, value)()
 	}
 
-	for _, token := range tokens {
-		if token.Varuse != nil {
-			out(token.Text)
-			cont = true
+	p := NewShTokenizer(mkline.Line, value, false)
+	atoms := p.ShAtoms()
+
+	if len(atoms) > 0 && atoms[0].Type == shtSpace {
+		atoms = atoms[1:]
+	}
+
+	word := ""
+	var words []string
+	for _, atom := range atoms {
+		if atom.Type == shtSpace && atom.Quoting == shqPlain {
+			words = append(words, word)
+			word = ""
 		} else {
-			lexer := textproc.NewLexer(token.Text)
-			for !lexer.EOF() {
-				for lexer.NextBytesSet(textproc.Space) != "" {
-					cont = false
-				}
-				if word := lexer.NextBytesSet(notSpace); word != "" {
-					out(word)
-					cont = true
-				}
-			}
+			word += atom.MkText
 		}
 	}
-	return split
+	if word != "" && atoms[len(atoms)-1].Quoting == shqPlain {
+		words = append(words, word)
+		word = ""
+	}
+
+	// TODO: Handle parse errors
+	rest := word + p.parser.Rest()
+	_ = rest
+
+	return words
 }
 
 func (mkline *MkLineImpl) ValueTokens() ([]*MkToken, string) {

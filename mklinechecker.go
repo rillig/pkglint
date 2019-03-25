@@ -1151,7 +1151,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 		break
 
 	default:
-		words, _ := splitIntoMkWords(mkline.Line, value)
+		words := mkline.ValueFields(value)
 		for _, word := range words {
 			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.guessed)
 		}

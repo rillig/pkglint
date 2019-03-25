@@ -1021,8 +1021,8 @@ func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
 
 	test("word '${VAR}single ${VAR}' \"\t\"",
 		"word",
-		"'${VAR}single", "${VAR}'", // FIXME: should be a single word.
-		"\"", "\"") // FIXME: should be a single word.
+		"'${VAR}single ${VAR}'",
+		"\"\t\"")
 }
 
 func (s *Suite) Test_MkLine_Fields__for(c *check.C) {
@@ -1053,8 +1053,27 @@ func (s *Suite) Test_MkLine_Fields__for(c *check.C) {
 		"i",
 		"in",
 		"word",
-		"'${VAR}single", "${VAR}'", // FIXME: should be a single word.
-		"\"", "\"") // FIXME: should be a single word.
+		"'${VAR}single ${VAR}'",
+		"\"\t\"")
+}
+
+func (s *Suite) Test_MkLine_Fields__semicolons(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tword1 word2;;;")
+	words := mkline.Fields()
+
+	c.Check(words, deepEquals, []string{"word1", "word2;;;"})
+}
+
+func (s *Suite) Test_MkLine_Fields__varuse_with_embedded_space(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "VAR=\t${VAR:S/ /_/g}")
+
+	words := mkline.Fields()
+
+	c.Check(words, deepEquals, []string{"${VAR:S/ /_/g}"})
 }
 
 func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
@@ -1071,10 +1090,12 @@ func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 		"two",
 		"${THREE:Uthree:Nsome \tspaces}")
 
-	test("${VAR:Udefault value} ${VAR2}two words",
+	// The example from the ValueFields documentation.
+	test("${VAR:Udefault value} ${VAR2}two words;;; 'word three'",
 		"${VAR:Udefault value}",
 		"${VAR2}two",
-		"words")
+		"words;;;",
+		"'word three'")
 }
 
 // Before 2018-11-26, this test panicked.
@@ -1091,6 +1112,31 @@ func (s *Suite) Test_MkLine_ValueFields__adjacent_vars(c *check.C) {
 		";",
 		"${RM}",
 		"${WRKSRC}")
+}
+
+func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *check.C) {
+	t := s.Init(c)
+	url := "http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="
+	mkline := t.NewMkLine("filename.mk", 123, "MASTER_SITES=\t"+url)
+
+	words, rest := splitIntoShellTokens(dummyLine, url) // Doesn't really make sense
+
+	c.Check(words, check.DeepEquals, []string{
+		"http://registry.gimp.org/file/fix-ca.c?action=download",
+		"&",
+		"id=9884",
+		"&",
+		"file="})
+	c.Check(rest, equals, "")
+
+	words = mkline.ValueFields(url)
+
+	c.Check(words, check.DeepEquals, []string{url})
+
+	words = mkline.ValueFields("a b \"c  c  c\" d;;d;; \"e\"''`` 'rest")
+
+	c.Check(words, check.DeepEquals, []string{"a", "b", "\"c  c  c\"", "d;;d;;", "\"e\"''``"})
+	// TODO: c.Check(rest, equals, "'rest")
 }
 
 func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
