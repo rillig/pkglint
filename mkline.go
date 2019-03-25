@@ -756,6 +756,12 @@ func splitMkLine(text string) (main string, tokens []*MkToken, rest string, spac
 		mainWithSpaces := main
 		main = rtrimHspace(main)
 		spaceBeforeComment = mainWithSpaces[len(main):]
+	} else {
+		restWithoutSpace := strings.TrimRightFunc(rest, func(r rune) bool { return isHspace(byte(r)) })
+		if len(restWithoutSpace) < len(rest) {
+			spaceBeforeComment = rest[len(restWithoutSpace):]
+			rest = restWithoutSpace
+		}
 	}
 
 	return

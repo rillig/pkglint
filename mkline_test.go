@@ -1903,14 +1903,23 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		false,
 		"")
 
-	// When a parse error occurs, the comment is not parsed and the main text
-	// is not trimmed to the right, to keep as much original information as
-	// possible.
+	// Even if there is a parse error in the main part,
+	// the comment is extracted.
+	test("text before ${UNCLOSED# comment",
+		"text before ",
+		tokens(text("text before ")),
+		"${UNCLOSED",
+		"",
+		true,
+		" comment")
+
+	// Even in case of parse errors, the space before the comment is parsed
+	// correctly.
 	test("text before ${UNCLOSED # comment",
 		"text before ",
 		tokens(text("text before ")),
-		"${UNCLOSED ", // FIXME: put the space into spaceBeforeComment
-		"",            // FIXME: the space is missing here
+		"${UNCLOSED",
+		" ",
 		true,
 		" comment")
 
