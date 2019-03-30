@@ -379,6 +379,11 @@ func (cv *VartypeCheck) Dependency() {
 
 func (cv *VartypeCheck) DependencyWithPath() {
 	value := cv.Value
+	valueNoVar := cv.ValueNoVar
+
+	if valueNoVar == "" || valueNoVar == ":" {
+		return
+	}
 
 	if m, pattern, relpath, pkg := match3(value, `(.*):(\.\./\.\./[^/]+/([^/]+))$`); m {
 		if !containsVarRef(relpath) {

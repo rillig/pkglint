@@ -303,20 +303,14 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	vt.Values(
 		"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}",
 		"${PYPKGPREFIX}-sqlite3:../../databases/py-sqlite3",
-		// FIXME: Should not trigger a warning, but is not used in practice anyway.
 		"${DEPENDS.NetBSD}",
-		// FIXME: Should not trigger a warning, but is not used in practice anyway.
 		"${DEPENDENCY_PATTERN.py-sqlite3}:${DEPENDENCY_PATH.py-sqlite}")
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:21: "+
 			"Invalid dependency pattern with path \"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}\".",
 		"WARN: ~/category/package/filename.mk:22: "+
-			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		"WARN: ~/category/package/filename.mk:23: "+
-			"Invalid dependency pattern with path \"${DEPENDS.NetBSD}\".",
-		"WARN: ~/category/package/filename.mk:24: "+
-			"Invalid dependency pattern with path \"${DEPENDENCY_PATTERN.py-sqlite3}:${DEPENDENCY_PATH.py-sqlite}\".")
+			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
