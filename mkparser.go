@@ -603,7 +603,7 @@ func (p *MkParser) PkgbasePattern() string {
 	for {
 		if p.VarUse() != nil ||
 			lexer.SkipRegexp(G.res.Compile(`^[\w.*+,{}]+`)) ||
-			lexer.SkipRegexp(G.res.Compile(`^\[[\d-]+\]`)) {
+			lexer.SkipRegexp(G.res.Compile(`^\[[\w-]+\]`)) {
 			continue
 		}
 

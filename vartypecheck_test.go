@@ -218,9 +218,7 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"mysql*-{client,server}-[0-9]*",
 		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
 		"libao-[a-z]*-[0-9]*")
-	vt.Output(
-		// FIXME: It occurs rarely but is still valid and means "any libao package".
-		"WARN: filename.mk:34: Invalid dependency pattern \"libao-[a-z]*-[0-9]*\".")
+	vt.OutputEmpty()
 
 	// variables
 	vt.Values(
