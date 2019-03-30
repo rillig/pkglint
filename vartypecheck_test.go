@@ -397,7 +397,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	vt.Values(
 		"https://example.org/download.cgi?filename=filename&sha1=12341234")
 
-	t.CheckOutputEmpty()
+	vt.OutputEmpty()
 
 	vt.Values(
 		"http://example.org/distfiles/",
@@ -405,7 +405,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"http://example.org/download?filename=<distfile>;version=<version>")
 
 	vt.Output(
-		"WARN: filename.mk:8: \"http://example.org/download?filename=<distfile>;version=<version>\" is not a valid URL.")
+		"WARN: filename.mk:23: \"http://example.org/download?filename=<distfile>;version=<version>\" is not a valid URL.")
 }
 
 func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
@@ -517,7 +517,7 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 	// doesn't define MASTER_SITES, that variable cannot be expanded, which means
 	// the warning cannot refer to its value.
 	vt.Output(
-		"WARN: filename.mk:4: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+		"WARN: filename.mk:11: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
 	delete(G.Pkg.vars.firstDef, "MASTER_SITES")
 	delete(G.Pkg.vars.lastDef, "MASTER_SITES")
@@ -528,7 +528,7 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 		"${MASTER_SITES}")
 
 	vt.Output(
-		"WARN: filename.mk:5: HOMEPAGE should not be defined in terms of MASTER_SITEs. " +
+		"WARN: filename.mk:21: HOMEPAGE should not be defined in terms of MASTER_SITEs. " +
 			"Use https://cdn.NetBSD.org/pub/pkgsrc/distfiles/ directly.")
 
 	delete(G.Pkg.vars.firstDef, "MASTER_SITES")
@@ -542,7 +542,7 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 	// When MASTER_SITES itself makes use of another variable, pkglint doesn't
 	// resolve that variable and just outputs the simple variant of this warning.
 	vt.Output(
-		"WARN: filename.mk:6: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+		"WARN: filename.mk:31: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
 }
 
@@ -1469,10 +1469,12 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 // the same as the expectedLines.
 func (vt *VartypeCheckTester) Output(expectedLines ...string) {
 	vt.tester.CheckOutputLines(expectedLines...)
+	vt.nextSection()
 }
 
 func (vt *VartypeCheckTester) OutputEmpty() {
 	vt.tester.CheckOutputEmpty()
+	vt.nextSection()
 }
 
 func (vt *VartypeCheckTester) nextSection() {
