@@ -172,6 +172,7 @@ func (s *Suite) Test_VartypeCheck_ConfFiles(c *check.C) {
 		"WARN: filename.mk:5: The destination file \"/etc/bootrc\" should start with a variable reference.")
 }
 
+// See Test_MkParser_Dependency.
 func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Dependency)
 
@@ -222,9 +223,13 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 	vt.Values(
 		"postgresql8[0-35-9]-${module}-[0-9]*",
 		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}",
-		"${PYPKGPREFIX}-sqlite3")
+		"${PYPKGPREFIX}-sqlite3",
+		"${PYPKGPREFIX}-sqlite3-${VERSION}",
+		"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}",
+		"${PYPKGPREFIX}-sqlite3>=${PYSQLITE_REQD}")
 	vt.Output(
-		"WARN: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
+		"WARN: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
+		"WARN: filename.mk:45: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}\".")
 
 	// invalid dependency patterns
 	vt.Values(
