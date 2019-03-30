@@ -317,7 +317,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:1: Invalid dependency pattern with path \"Perl\".",
-		"WARN: ~/category/package/filename.mk:2: Dependencies should have the form \"../../category/package\".",
+		"ERROR: ~/category/package/filename.mk:2: Relative path \"../perl5\" does not exist.",
+		"WARN: ~/category/package/filename.mk:2: \"../perl5\" is not a valid relative package directory.",
+		"WARN: ~/category/package/filename.mk:2: Please use USE_TOOLS+=perl:run instead of this dependency.",
 		"ERROR: ~/category/package/filename.mk:3: Relative path \"../../lang/perl5\" does not exist.",
 		"ERROR: ~/category/package/filename.mk:3: There is no package in \"lang/perl5\".",
 		"WARN: ~/category/package/filename.mk:3: Please use USE_TOOLS+=perl:run instead of this dependency.",
@@ -343,15 +345,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:21: "+
-			"Invalid dependency pattern with path \"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}\".",
-		"WARN: ~/category/package/filename.mk:22: "+
 			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		// FIXME: This pattern is fine. The warning only appears because
-		//  VartypeCheck.DependencyWithPath uses regular expressions for
-		//  parsing structured data, which is not precise enough, as always.
-		"WARN: ~/category/package/filename.mk:27: "+
-			"Invalid dependency pattern with path \"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*"+
-			":../../www/${NETSCAPE_PREFERRED:C/:.*//}\".")
+		"WARN: ~/category/package/filename.mk:22: "+
+			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
