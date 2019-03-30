@@ -212,12 +212,15 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"WARN: filename.mk:26: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:27: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
 
-	// alternative patterns using braces
+	// alternative patterns, using braces or brackets
 	vt.Values(
 		"mpg123{,-esound,-nas}>=0.59.18",
 		"mysql*-{client,server}-[0-9]*",
-		"{ssh{,6}-[0-9]*,openssh-[0-9]*}")
-	vt.OutputEmpty()
+		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
+		"libao-[a-z]*-[0-9]*")
+	vt.Output(
+		// FIXME: It occurs rarely but is still valid and means "any libao package".
+		"WARN: filename.mk:34: Invalid dependency pattern \"libao-[a-z]*-[0-9]*\".")
 
 	// variables
 	vt.Values(
@@ -226,10 +229,29 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"${PYPKGPREFIX}-sqlite3",
 		"${PYPKGPREFIX}-sqlite3-${VERSION}",
 		"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}",
-		"${PYPKGPREFIX}-sqlite3>=${PYSQLITE_REQD}")
+		"${PYPKGPREFIX}-sqlite3>=${PYSQLITE_REQD}",
+		"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}",
+		"${PKGNAME_NOREV:S/jdk/jre/}*",
+		"dovecot>=${PKGVERSION_NOREV}{nb*,}",
+		"oxygen-icons>=${KF5VER}{,nb[0-9]*}",
+		// The following pattern should have "]*}" instead of "]}*".
+		"ja-vflib-lib-${VFLIB_VERSION}{,nb[0-9]}*",
+		// The following pattern uses both ">=" and "*", which doesn't make sense.
+		"${PYPKGPREFIX}-sphinx>=1.2.3nb1*",
+		"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*")
 	vt.Output(
 		"WARN: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		"WARN: filename.mk:45: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}\".")
+		// This pattern is invalid because the variable name doesn't contain "VER".
+		"WARN: filename.mk:45: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}\".",
+		// FIXME: This pattern is valid.
+		"WARN: filename.mk:47: Invalid dependency pattern \"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}\".",
+		// FIXME: This pattern should be considered valid, but use "-[0-9]*" instead of a bare "*".
+		"WARN: filename.mk:48: Invalid dependency pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
+		// FIXME: This pattern is valid.
+		"WARN: filename.mk:49: Invalid dependency pattern \"dovecot>=${PKGVERSION_NOREV}{nb*,}\".",
+		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
+		"WARN: filename.mk:51: Invalid dependency pattern \"ja-vflib-lib-${VFLIB_VERSION}{,nb[0-9]}*\".",
+		"WARN: filename.mk:52: Invalid dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1*\".")
 
 	// invalid dependency patterns
 	vt.Values(
@@ -238,17 +260,21 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"perl5-[5.10-5.22]*",
 		"package-1.0|garbage",
 		"package>=1.0:../../category/package",
-		"package-1.0>=1.0.3")
+		"package-1.0>=1.0.3",
+		// This should be regarded as invalid since the [a-z0-9] might either
+		// continue the PKGBASE or start the version number.
+		"${RUBY_PKGPREFIX}-theme-[a-z0-9]*")
 	vt.Output(
-		"WARN: filename.mk:51: Invalid dependency pattern \"Perl\".",
-		"WARN: filename.mk:52: Invalid dependency pattern \"py-docs\".",
-		"WARN: filename.mk:53: Only [0-9]* is allowed in the numeric part of a dependency.",
-		"WARN: filename.mk:53: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
-		"WARN: filename.mk:54: Invalid dependency pattern \"package-1.0|garbage\".",
+		"WARN: filename.mk:61: Invalid dependency pattern \"Perl\".",
+		"WARN: filename.mk:62: Invalid dependency pattern \"py-docs\".",
+		"WARN: filename.mk:63: Only [0-9]* is allowed in the numeric part of a dependency.",
+		"WARN: filename.mk:63: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
+		"WARN: filename.mk:64: Invalid dependency pattern \"package-1.0|garbage\".",
 		// TODO: Mention that the path should be removed.
-		"WARN: filename.mk:55: Invalid dependency pattern \"package>=1.0:../../category/package\".",
+		"WARN: filename.mk:65: Invalid dependency pattern \"package>=1.0:../../category/package\".",
 		// TODO: Mention that version numbers in a pkgbase must be appended directly, without hyphen.
-		"WARN: filename.mk:56: Invalid dependency pattern \"package-1.0>=1.0.3\".")
+		"WARN: filename.mk:66: Invalid dependency pattern \"package-1.0>=1.0.3\".",
+		"WARN: filename.mk:67: Invalid dependency pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
