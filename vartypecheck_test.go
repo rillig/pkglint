@@ -344,10 +344,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"WARN: ~/category/package/filename.mk:21: "+
 			"Invalid dependency pattern with path \"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}\".",
 		"WARN: ~/category/package/filename.mk:22: "+
-			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		// FIXME: This dependency is fine.
-		"WARN: ~/category/package/filename.mk:26: "+
-			"Invalid dependency pattern with path \"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}\".")
+			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
