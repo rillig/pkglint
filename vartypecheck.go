@@ -309,7 +309,7 @@ func (cv *VartypeCheck) Dependency() {
 			"For dependency patterns using the comparison operators,",
 			"this is not necessary.")
 
-	} else if deppat == nil && contains(value, "{") {
+	} else if deppat == nil && contains(cv.ValueNoVar, "{") {
 		// Don't warn about complicated patterns like "{ssh{,6}>=0,openssh>=0}"
 		// that pkglint doesn't understand as of January 2019.
 		return
