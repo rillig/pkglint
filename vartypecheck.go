@@ -379,12 +379,11 @@ func (cv *VartypeCheck) Dependency() {
 
 func (cv *VartypeCheck) DependencyWithPath() {
 	value := cv.Value
-	if value != cv.ValueNoVar {
-		return // It's probably not worth checking this.
-	}
 
 	if m, pattern, relpath, pkg := match3(value, `(.*):(\.\./\.\./[^/]+/([^/]+))$`); m {
-		MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath)
+		if !containsVarRef(relpath) {
+			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath)
+		}
 
 		switch pkg {
 		case "gettext":

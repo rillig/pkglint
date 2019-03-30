@@ -256,6 +256,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).DependencyWithPath)
 
 	t.CreateFileLines("category/package/Makefile")
+	t.CreateFileLines("databases/py-sqlite3/Makefile")
 	t.CreateFileLines("devel/gettext/Makefile")
 	t.CreateFileLines("devel/gmake/Makefile")
 	t.CreateFileLines("devel/py-module/Makefile")
@@ -298,6 +299,24 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"WARN: ~/category/package/filename.mk:11: Invalid dependency pattern \"broken>\".",
 		"WARN: ~/category/package/filename.mk:13: Please use USE_TOOLS+=msgfmt instead of this dependency.",
 		"WARN: ~/category/package/filename.mk:14: Please use USE_TOOLS+=gmake instead of this dependency.")
+
+	vt.Values(
+		"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}",
+		"${PYPKGPREFIX}-sqlite3:../../databases/py-sqlite3",
+		// FIXME: Should not trigger a warning, but is not used in practice anyway.
+		"${DEPENDS.NetBSD}",
+		// FIXME: Should not trigger a warning, but is not used in practice anyway.
+		"${DEPENDENCY_PATTERN.py-sqlite3}:${DEPENDENCY_PATH.py-sqlite}")
+
+	vt.Output(
+		"WARN: ~/category/package/filename.mk:21: "+
+			"Invalid dependency pattern with path \"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}\".",
+		"WARN: ~/category/package/filename.mk:22: "+
+			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
+		"WARN: ~/category/package/filename.mk:23: "+
+			"Invalid dependency pattern with path \"${DEPENDS.NetBSD}\".",
+		"WARN: ~/category/package/filename.mk:24: "+
+			"Invalid dependency pattern with path \"${DEPENDENCY_PATTERN.py-sqlite3}:${DEPENDENCY_PATH.py-sqlite}\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
