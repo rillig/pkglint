@@ -221,7 +221,9 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 	// variables
 	vt.Values(
 		"postgresql8[0-35-9]-${module}-[0-9]*",
-		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}")
+		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}",
+		// TODO: warn about missing version
+		"${PYPKGPREFIX}-sqlite3")
 	vt.OutputEmpty()
 
 	// invalid dependency patterns
