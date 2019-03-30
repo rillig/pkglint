@@ -230,24 +230,31 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 		"${PYPKGPREFIX}-sqlite3-${VERSION}",
 		"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}",
 		"${PYPKGPREFIX}-sqlite3>=${PYSQLITE_REQD}",
-		"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}",
+		"${EMACS_PACKAGE}>=${EMACS_MAJOR}",
+
+		// The "*" is ambiguous. It could either continue the PKGBASE or
+		// start the version number.
 		"${PKGNAME_NOREV:S/jdk/jre/}*",
+
+		// The canonical form is "{,nb*}" instead of "{nb*,}".
+		// Plus, mentioning nb* is not necessary when using >=.
 		"dovecot>=${PKGVERSION_NOREV}{nb*,}",
+
 		"oxygen-icons>=${KF5VER}{,nb[0-9]*}",
+
 		// The following pattern should have "]*}" instead of "]}*".
 		"ja-vflib-lib-${VFLIB_VERSION}{,nb[0-9]}*",
+
 		// The following pattern uses both ">=" and "*", which doesn't make sense.
 		"${PYPKGPREFIX}-sphinx>=1.2.3nb1*",
+
 		"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*")
+
 	vt.Output(
 		"WARN: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
 		// This pattern is invalid because the variable name doesn't contain "VER".
 		"WARN: filename.mk:45: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}\".",
-		// FIXME: This pattern is valid.
-		"WARN: filename.mk:47: Invalid dependency pattern \"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}\".",
-		// FIXME: This pattern should be considered valid, but use "-[0-9]*" instead of a bare "*".
 		"WARN: filename.mk:48: Invalid dependency pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
-		// FIXME: This pattern is valid.
 		"WARN: filename.mk:49: Invalid dependency pattern \"dovecot>=${PKGVERSION_NOREV}{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:51: Invalid dependency pattern \"ja-vflib-lib-${VFLIB_VERSION}{,nb[0-9]}*\".",
@@ -306,8 +313,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"broken>:../../x11/alacarte",
 		"gtk2+>=2.16:../../x11/alacarte",
 		"gettext-[0-9]*:../../devel/gettext",
-		"gmake-[0-9]*:../../devel/gmake",
-		"${PYPKGPREFIX}-module>=0:../../devel/py-module")
+		"gmake-[0-9]*:../../devel/gmake")
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:1: Invalid dependency pattern with path \"Perl\".",
@@ -330,13 +336,18 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}",
 		"${PYPKGPREFIX}-sqlite3:../../databases/py-sqlite3",
 		"${DEPENDS.NetBSD}",
-		"${DEPENDENCY_PATTERN.py-sqlite3}:${DEPENDENCY_PATH.py-sqlite}")
+		"${DEPENDENCY_PATTERN.py-sqlite3}:${DEPENDENCY_PATH.py-sqlite}",
+		"${PYPKGPREFIX}-module>=0:../../devel/py-module",
+		"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}")
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:21: "+
 			"Invalid dependency pattern with path \"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}\".",
 		"WARN: ~/category/package/filename.mk:22: "+
-			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
+			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
+		// FIXME: This dependency is fine.
+		"WARN: ~/category/package/filename.mk:26: "+
+			"Invalid dependency pattern with path \"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {

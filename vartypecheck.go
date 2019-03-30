@@ -300,7 +300,9 @@ func (cv *VartypeCheck) Dependency() {
 
 	parser := NewMkParser(nil, value, false)
 	deppat := parser.Dependency()
-	if deppat != nil && deppat.Wildcard == "" && (parser.Rest() == "{,nb*}" || parser.Rest() == "{,nb[0-9]*}") {
+	rest := parser.Rest()
+
+	if deppat != nil && deppat.Wildcard == "" && (rest == "{,nb*}" || rest == "{,nb[0-9]*}") {
 		cv.Warnf("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
 		G.Explain(
 			"The \"{,nb*}\" extension is only necessary for dependencies of the",
@@ -314,7 +316,7 @@ func (cv *VartypeCheck) Dependency() {
 		// that pkglint doesn't understand as of January 2019.
 		return
 
-	} else if deppat == nil || !parser.EOF() {
+	} else if deppat == nil || rest != "" {
 		cv.Warnf("Invalid dependency pattern %q.", value)
 		G.Explain(
 			"Typical dependencies have the following forms:",
