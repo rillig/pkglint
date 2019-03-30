@@ -177,50 +177,71 @@ func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
 
 	vt.Varname("CONFLICTS")
 	vt.Op(opAssignAppend)
+
+	// comparison operators
 	vt.Values(
-		"Perl",
 		"perl5>=5.22",
-		"perl5-*",
-		"perl5-5.22.*",
-		"perl5-[5.10-5.22]*",
-		"py-docs",
-		"perl5-5.22.*{,nb*}",
 		"libkipi>=0.1.5<4.0",
-		"gtk2+>=2.16",
-		"perl-5.22",
+		"gtk2+>=2.16")
+	vt.OutputEmpty()
+
+	// pattern matching
+	vt.Values(
 		"perl-5*",
-		"gtksourceview-sharp-2.0-[0-9]*",
+		"perl5-*",
+		"perl-5.22",
+		"perl5-5.22.*",
+		"gtksourceview-sharp-2.0-[0-9]*")
+	vt.Output(
+		"WARN: filename.mk:11: Please use \"5.*\" instead of \"5*\" as the version pattern.",
+		"WARN: filename.mk:12: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".",
+		"WARN: filename.mk:13: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
+		"WARN: filename.mk:15: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.")
+
+	// nb suffix
+	vt.Values(
+		"perl5-5.22.*{,nb*}",
 		"perl-5.22{,nb*}",
 		"perl-5.22{,nb[0-9]*}",
 		"mbrola-301h{,nb[0-9]*}",
+		"ncurses-${NC_VERS}{,nb*}",
+		"gnome-control-center>=2.20.1{,nb*}",
+		"gnome-control-center>=2.20.1{,nb[0-9]*}")
+	vt.Output(
+		"WARN: filename.mk:26: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
+		"WARN: filename.mk:27: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
+
+	// alternative patterns using braces
+	vt.Values(
 		"mpg123{,-esound,-nas}>=0.59.18",
 		"mysql*-{client,server}-[0-9]*",
+		"{ssh{,6}-[0-9]*,openssh-[0-9]*}")
+	vt.OutputEmpty()
+
+	// variables
+	vt.Values(
 		"postgresql8[0-35-9]-${module}-[0-9]*",
-		"ncurses-${NC_VERS}{,nb*}",
-		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
-		"gnome-control-center>=2.20.1{,nb*}",
-		"gnome-control-center>=2.20.1{,nb[0-9]*}",
+		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}")
+	vt.OutputEmpty()
+
+	// invalid dependency patterns
+	vt.Values(
+		"Perl",
+		"py-docs",
+		"perl5-[5.10-5.22]*",
 		"package-1.0|garbage",
-		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}",
 		"package>=1.0:../../category/package",
 		"package-1.0>=1.0.3")
-
 	vt.Output(
-		"WARN: filename.mk:1: Invalid dependency pattern \"Perl\".",
-		"WARN: filename.mk:3: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".",
-		"WARN: filename.mk:5: Only [0-9]* is allowed in the numeric part of a dependency.",
-		"WARN: filename.mk:5: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
-		"WARN: filename.mk:6: Invalid dependency pattern \"py-docs\".",
-		"WARN: filename.mk:10: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
-		"WARN: filename.mk:11: Please use \"5.*\" instead of \"5*\" as the version pattern.",
-		"WARN: filename.mk:12: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
-		"WARN: filename.mk:21: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
-		"WARN: filename.mk:22: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
-		"WARN: filename.mk:23: Invalid dependency pattern \"package-1.0|garbage\".",
+		"WARN: filename.mk:51: Invalid dependency pattern \"Perl\".",
+		"WARN: filename.mk:52: Invalid dependency pattern \"py-docs\".",
+		"WARN: filename.mk:53: Only [0-9]* is allowed in the numeric part of a dependency.",
+		"WARN: filename.mk:53: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
+		"WARN: filename.mk:54: Invalid dependency pattern \"package-1.0|garbage\".",
 		// TODO: Mention that the path should be removed.
-		"WARN: filename.mk:25: Invalid dependency pattern \"package>=1.0:../../category/package\".",
+		"WARN: filename.mk:55: Invalid dependency pattern \"package>=1.0:../../category/package\".",
 		// TODO: Mention that version numbers in a pkgbase must be appended directly, without hyphen.
-		"WARN: filename.mk:26: Invalid dependency pattern \"package-1.0>=1.0.3\".")
+		"WARN: filename.mk:56: Invalid dependency pattern \"package-1.0>=1.0.3\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
