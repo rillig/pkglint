@@ -338,13 +338,20 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"${DEPENDS.NetBSD}",
 		"${DEPENDENCY_PATTERN.py-sqlite3}:${DEPENDENCY_PATH.py-sqlite}",
 		"${PYPKGPREFIX}-module>=0:../../devel/py-module",
-		"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}")
+		"${EMACS_PACKAGE}>=${EMACS_MAJOR}:${EMACS_PKGDIR}",
+		"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*:../../www/${NETSCAPE_PREFERRED:C/:.*//}")
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:21: "+
 			"Invalid dependency pattern with path \"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}\".",
 		"WARN: ~/category/package/filename.mk:22: "+
-			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
+			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
+		// FIXME: This pattern is fine. The warning only appears because
+		//  VartypeCheck.DependencyWithPath uses regular expressions for
+		//  parsing structured data, which is not precise enough, as always.
+		"WARN: ~/category/package/filename.mk:27: "+
+			"Invalid dependency pattern with path \"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*"+
+			":../../www/${NETSCAPE_PREFERRED:C/:.*//}\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {

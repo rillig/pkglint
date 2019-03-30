@@ -387,6 +387,8 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		return
 	}
 
+	// FIXME: Properly split into MkTokens and analyse them, instead of using an
+	//  imprecise regular expression here. See the NETSCAPE_PREFERRED test case.
 	if m, pattern, relpath, pkg := match3(value, `(.*):(\.\./\.\./[^/]+/([^/]+)|\$\{.*\})$`); m {
 		if !containsVarRef(relpath) {
 			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath)
