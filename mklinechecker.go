@@ -777,6 +777,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 				fix.Explain(
 					seeGuide("Echoing a string exactly as-is", "echo-literal"))
 				fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
+				fix.Anyway()
 				fix.Apply()
 			} else {
 				mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+

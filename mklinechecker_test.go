@@ -308,7 +308,10 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("for.mk",
 		MkRcsID,
-		".for i in ${PATH:C,:, ,g}",
+		".for dir in ${PATH:C,:, ,g}",
+		".endfor",
+		"",
+		".for dir in ${PATH}",
 		".endfor")
 
 	mklines.Check()
@@ -317,7 +320,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 		// FIXME: PATH may actually be used at load time.
 		"WARN: for.mk:2: PATH should not be used at load time in any file.",
 		// FIXME: The :Q modifier is not appropriate here.
-		"WARN: for.mk:2: Please use ${PATH:C,:, ,g:Q} instead of ${PATH:C,:, ,g}.")
+		"WARN: for.mk:2: Please use ${PATH:C,:, ,g:Q} instead of ${PATH:C,:, ,g}.",
+		// This warning is correct since PATH is separated by colons, not by spaces.
+		"WARN: for.mk:5: Please use ${PATH:Q} instead of ${PATH}.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor__infrastructure(c *check.C) {
