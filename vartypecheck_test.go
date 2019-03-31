@@ -301,14 +301,6 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"Perl",
 		"perl5>=5.22:../perl5",
 		"perl5>=5.24:../../lang/perl5",
-		"broken0.12.1:../../x11/alacarte",
-		"broken[0-9]*:../../x11/alacarte",
-		"broken[0-9]*../../x11/alacarte",
-		"broken>=:../../x11/alacarte",
-		"broken=0:../../x11/alacarte",
-		"broken=:../../x11/alacarte",
-		"broken-:../../x11/alacarte",
-		"broken>:../../x11/alacarte",
 		"gtk2+>=2.16:../../x11/alacarte",
 		"gettext-[0-9]*:../../devel/gettext",
 		"gmake-[0-9]*:../../devel/gmake")
@@ -322,16 +314,28 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"ERROR: ~/category/package/filename.mk:3: Relative path \"../../lang/perl5\" does not exist.",
 		"ERROR: ~/category/package/filename.mk:3: There is no package in \"lang/perl5\".",
 		"WARN: ~/category/package/filename.mk:3: Please use USE_TOOLS+=perl:run instead of this dependency.",
-		"WARN: ~/category/package/filename.mk:4: Invalid dependency pattern \"broken0.12.1\".",
-		"WARN: ~/category/package/filename.mk:5: Invalid dependency pattern \"broken[0-9]*\".",
-		"WARN: ~/category/package/filename.mk:6: Invalid dependency pattern with path \"broken[0-9]*../../x11/alacarte\".",
-		"WARN: ~/category/package/filename.mk:7: Invalid dependency pattern \"broken>=\".",
-		"WARN: ~/category/package/filename.mk:8: Invalid dependency pattern \"broken=0\".",
-		"WARN: ~/category/package/filename.mk:9: Invalid dependency pattern \"broken=\".",
-		"WARN: ~/category/package/filename.mk:10: Invalid dependency pattern \"broken-\".",
-		"WARN: ~/category/package/filename.mk:11: Invalid dependency pattern \"broken>\".",
-		"WARN: ~/category/package/filename.mk:13: Please use USE_TOOLS+=msgfmt instead of this dependency.",
-		"WARN: ~/category/package/filename.mk:14: Please use USE_TOOLS+=gmake instead of this dependency.")
+		"WARN: ~/category/package/filename.mk:5: Please use USE_TOOLS+=msgfmt instead of this dependency.",
+		"WARN: ~/category/package/filename.mk:6: Please use USE_TOOLS+=gmake instead of this dependency.")
+
+	vt.Values(
+		"broken0.12.1:../../x11/alacarte", // missing version
+		"broken[0-9]*:../../x11/alacarte", // missing version
+		"broken[0-9]*../../x11/alacarte",  // missing colon
+		"broken>=:../../x11/alacarte",     // incomplete comparison
+		"broken=0:../../x11/alacarte",     // invalid comparison operator
+		"broken=:../../x11/alacarte",      // incomplete comparison
+		"broken-:../../x11/alacarte",      // incomplete pattern
+		"broken>:../../x11/alacarte")      // incomplete comparison
+
+	vt.Output(
+		"WARN: ~/category/package/filename.mk:11: Invalid dependency pattern \"broken0.12.1\".",
+		"WARN: ~/category/package/filename.mk:12: Invalid dependency pattern \"broken[0-9]*\".",
+		"WARN: ~/category/package/filename.mk:13: Invalid dependency pattern with path \"broken[0-9]*../../x11/alacarte\".",
+		"WARN: ~/category/package/filename.mk:14: Invalid dependency pattern \"broken>=\".",
+		"WARN: ~/category/package/filename.mk:15: Invalid dependency pattern \"broken=0\".",
+		"WARN: ~/category/package/filename.mk:16: Invalid dependency pattern \"broken=\".",
+		"WARN: ~/category/package/filename.mk:17: Invalid dependency pattern \"broken-\".",
+		"WARN: ~/category/package/filename.mk:18: Invalid dependency pattern \"broken>\".")
 
 	vt.Values(
 		"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}",
