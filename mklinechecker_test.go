@@ -11,8 +11,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 	mklines := t.NewMkLines("module.mk",
 		MkRcsID,
 		"_VARNAME=\tvalue")
+	// Only to prevent "defined but not used".
+	mklines.vars.Use("_VARNAME", mklines.mklines[1], vucTimeRun)
 
-	mklines.vars.Use("_VARNAME", mklines.mklines[1])
 	mklines.Check()
 
 	t.CheckOutputLines(
@@ -644,6 +645,72 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure
 	G.Check(t.File("mk/infra.mk"))
 
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignOpShell(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("uname", "UNAME", AfterPrefsMk)
+	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpPkgsrc()
+	t.SetUpPackage("category/package",
+		".include \"standalone.mk\"")
+	t.CreateFileLines("category/package/standalone.mk",
+		MkRcsID,
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"OPSYS_NAME!=\t${UNAME}",
+		".if ${OPSYS_NAME} == \"NetBSD\"",
+		".endif",
+		"",
+		"OS_NAME!=\t${UNAME}",
+		"",
+		"MUST_BE_EARLY!=\techo 123 # must be evaluated early",
+		"",
+		"show-package-vars: .PHONY",
+		"\techo OS_NAME=${OS_NAME:Q}",
+		"\techo MUST_BE_EARLY=${MUST_BE_EARLY:Q}")
+
+	G.Check(t.File("category/package/standalone.mk"))
+
+	// There is no warning about any variable since no package is currently
+	// being checked, therefore pkglint cannot decide whether the variable
+	// is used a load time.
+	t.CheckOutputEmpty()
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	G.Check(t.File("category/package"))
+
+	// There is no warning for OPSYS_NAME since that variable is used at
+	// load time. In such a case the command has to be executed anyway,
+	// and executing it exactly once is the best thing to do in this
+	// situation.
+	//
+	// There is no warning for MUST_BE_EARLY since the comment provides the
+	// reason that this command really has to be executed at load time.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/standalone.mk:9: Prefer :sh instead of != for \"${UNAME}\".",
+		"",
+		"\tFor variable assignments using the != operator, the shell command is",
+		"\trun every time the file is parsed.",
+		"",
+		"\tIn some cases this is too early, and the command may not yet be",
+		"\tinstalled.",
+		"",
+		"\tIn other cases the command is executed more often than necessary.",
+		"\tMost commands don't need to be executed for \"make clean\", for",
+		"\texample.",
+		"",
+		"\tThe :sh modifier defers execution until the variable value is",
+		"\tactually needed. On the other hand, this means the command is",
+		"\texecuted each time the variable is evaluated.",
+		"",
+		"\tTo prevent this warning, provide an explanation in a comment at the",
+		"\tend of the line, or force the variable to be evaluated at load time,",
+		"\tby using it at the right-hand side of the := operator, or in an .if",
+		"\tor .for directive.",
+		"")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignRightVaruse(c *check.C) {

@@ -74,10 +74,10 @@ func NewMkLines(lines Lines) MkLines {
 
 // UseVar remembers that the given variable is used in the given line.
 // This controls the "defined but not used" warning.
-func (mklines *MkLinesImpl) UseVar(mkline MkLine, varname string) {
-	mklines.vars.Use(varname, mkline)
+func (mklines *MkLinesImpl) UseVar(mkline MkLine, varname string, time vucTime) {
+	mklines.vars.Use(varname, mkline, time)
 	if G.Pkg != nil {
-		G.Pkg.vars.Use(varname, mkline)
+		G.Pkg.vars.Use(varname, mkline, time)
 	}
 }
 
@@ -270,16 +270,16 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 				}
 
 				if containsVarRef(id) {
-					mklines.UseVar(mkline, "PLIST.*")
+					mklines.UseVar(mkline, "PLIST.*", mkline.Op().Time())
 					mklines.plistVarSkip = true
 				} else {
-					mklines.UseVar(mkline, "PLIST."+id)
+					mklines.UseVar(mkline, "PLIST."+id, mkline.Op().Time())
 				}
 			}
 
 		case "SUBST_VARS.*":
 			for _, substVar := range mkline.Fields() {
-				mklines.UseVar(mkline, varnameCanon(substVar))
+				mklines.UseVar(mkline, varnameCanon(substVar), mkline.Op().Time())
 				if trace.Tracing {
 					trace.Step1("varuse %s", substVar)
 				}
@@ -287,7 +287,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 
 		case "OPSYSVARS":
 			for _, opsysVar := range mkline.Fields() {
-				mklines.UseVar(mkline, opsysVar+".*")
+				mklines.UseVar(mkline, opsysVar+".*", mkline.Op().Time())
 				mklines.defineVar(G.Pkg, mkline, opsysVar)
 			}
 		}
@@ -336,7 +336,7 @@ func (mklines *MkLinesImpl) collectElse() {
 func (mklines *MkLinesImpl) collectUsedVariables() {
 	for _, mkline := range mklines.mklines {
 		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
-			mklines.UseVar(mkline, varUse.varname)
+			mklines.UseVar(mkline, varUse.varname, time)
 		})
 	}
 
@@ -362,7 +362,7 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 		if commentLines >= 3 && relevant {
 			for varname, mkline := range scope.used {
 				mklines.vars.Define(varname, mkline)
-				mklines.vars.Use(varname, mkline)
+				mklines.vars.Use(varname, mkline, vucTimeRun)
 			}
 		}
 
@@ -398,7 +398,7 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 			varcanon := varnameCanon(varname)
 			if varcanon == strings.ToUpper(varcanon) && matches(varcanon, `[A-Z]`) && parser.EOF() {
 				scope.Define(varcanon, mkline)
-				scope.Use(varcanon, mkline)
+				scope.Use(varcanon, mkline, vucTimeRun)
 			}
 
 			if words[1] == "Copyright" {

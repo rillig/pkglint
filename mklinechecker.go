@@ -870,6 +870,7 @@ func (ck MkLineChecker) checkVarassignDecreasingVersions() {
 
 func (ck MkLineChecker) checkVarassign() {
 	ck.checkVarassignLeft()
+	ck.checkVarassignOp()
 	ck.checkVarassignRight()
 }
 
@@ -889,6 +890,49 @@ func (ck MkLineChecker) checkVarassignLeft() {
 		ck.MkLine.Varname(),
 		&Vartype{lkNone, BtVariableName, []ACLEntry{{"*", aclpAll}}, false},
 		vucTimeParse)
+}
+
+func (ck MkLineChecker) checkVarassignOp() {
+	ck.checkVarassignOpShell()
+}
+
+func (ck MkLineChecker) checkVarassignOpShell() {
+	mkline := ck.MkLine
+
+	switch {
+	case mkline.Op() != opAssignShell:
+		return
+
+	case mkline.VarassignComment() != "":
+		return
+
+	case mkline.Basename == "builtin.mk":
+		// These are typically USE_BUILTIN.* and BUILTIN_VERSION.*.
+		// Authors of builtin.mk files usually know what they're doing.
+		return
+
+	case G.Pkg == nil || G.Pkg.vars.UsedAtLoadTime(mkline.Varname()):
+		return
+	}
+
+	mkline.Warnf("Prefer :sh instead of != for %q.", mkline.Value())
+	mkline.Explain(
+		"For variable assignments using the != operator, the shell command",
+		"is run every time the file is parsed.",
+		"",
+		"In some cases this is too early, and the command may not yet be installed.",
+		"",
+		"In other cases the command is executed more often than necessary.",
+		"Most commands don't need to be executed for \"make clean\", for example.",
+		"",
+		"The :sh modifier defers execution until the variable value is actually needed.",
+		"On the other hand, this means the command is executed each time the variable",
+		"is evaluated.",
+		"",
+		"To prevent this warning, provide an explanation in a comment at the end",
+		"of the line, or force the variable to be evaluated at load time,",
+		"by using it at the right-hand side of the := operator, or in an .if",
+		"or .for directive.")
 }
 
 // checkVarassignLeft checks everything to the right of the assignment operator.
