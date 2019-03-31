@@ -908,37 +908,30 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varname string, 
 	return unknown
 }
 
-func (mkline *MkLineImpl) DetermineUsedVariables() []string {
-	// TODO: It would be good to have these variables as MkVarUse objects
-	//  including the context in which they are used.
+// ForEachUsed calls the action for each variable that is used in the line.
+func (mkline *MkLineImpl) ForEachUsed(action func(varUse *MkVarUse, time vucTime)) {
 
-	var varnames []string
+	var searchIn func(text string, time vucTime) // mutually recursive with searchInVarUse
 
-	add := func(varname string) {
-		varnames = append(varnames, varname)
-	}
-
-	var searchIn func(text string) // mutually recursive with searchInVarUse
-
-	searchInVarUse := func(varuse *MkVarUse) {
+	searchInVarUse := func(varuse *MkVarUse, time vucTime) {
 		varname := varuse.varname
 		if !varuse.IsExpression() {
-			add(varname)
+			action(varuse, time)
 		}
-		searchIn(varname)
+		searchIn(varname, time)
 		for _, mod := range varuse.modifiers {
-			searchIn(mod.Text)
+			searchIn(mod.Text, time)
 		}
 	}
 
-	searchIn = func(text string) {
+	searchIn = func(text string, time vucTime) {
 		if !contains(text, "$") {
 			return
 		}
 
 		for _, token := range NewMkParser(nil, text, false).MkTokens() {
 			if token.Varuse != nil {
-				searchInVarUse(token.Varuse)
+				searchInVarUse(token.Varuse, time)
 			}
 		}
 	}
@@ -946,27 +939,28 @@ func (mkline *MkLineImpl) DetermineUsedVariables() []string {
 	switch {
 
 	case mkline.IsVarassign():
-		searchIn(mkline.Varname())
-		searchIn(mkline.Value())
+		searchIn(mkline.Varname(), vucTimeParse)
+		searchIn(mkline.Value(), mkline.Op().Time())
 
 	case mkline.IsDirective() && mkline.Directive() == "for":
-		searchIn(mkline.Args())
+		searchIn(mkline.Args(), vucTimeParse)
 
 	case mkline.IsDirective() && mkline.Cond() != nil:
-		mkline.Cond().Walk(&MkCondCallback{VarUse: searchInVarUse})
+		mkline.Cond().Walk(&MkCondCallback{
+			VarUse: func(varuse *MkVarUse) {
+				searchInVarUse(varuse, vucTimeParse)
+			}})
 
 	case mkline.IsShellCommand():
-		searchIn(mkline.ShellCommand())
+		searchIn(mkline.ShellCommand(), vucTimeRun)
 
 	case mkline.IsDependency():
-		searchIn(mkline.Targets())
-		searchIn(mkline.Sources())
+		searchIn(mkline.Targets(), vucTimeParse)
+		searchIn(mkline.Sources(), vucTimeParse)
 
 	case mkline.IsInclude():
-		searchIn(mkline.IncludedFile())
+		searchIn(mkline.IncludedFile(), vucTimeParse)
 	}
-
-	return varnames
 }
 
 func (mkline *MkLineImpl) UnquoteShell(str string) string {
@@ -1040,6 +1034,15 @@ func NewMkOperator(op string) MkOperator {
 
 func (op MkOperator) String() string {
 	return [...]string{"=", "!=", ":=", "+=", "?=", "use", "use-loadtime", "use-match"}[op]
+}
+
+// Time returns the time at which the right-hand side of the assignment is
+// evaluated.
+func (op MkOperator) Time() vucTime {
+	if op == opAssignShell || op == opAssignEval {
+		return vucTimeParse
+	}
+	return vucTimeRun
 }
 
 // VarUseContext defines the context in which a variable is defined

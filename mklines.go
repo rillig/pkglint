@@ -335,9 +335,9 @@ func (mklines *MkLinesImpl) collectElse() {
 
 func (mklines *MkLinesImpl) collectUsedVariables() {
 	for _, mkline := range mklines.mklines {
-		for _, varname := range mkline.DetermineUsedVariables() {
-			mklines.UseVar(mkline, varname)
-		}
+		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+			mklines.UseVar(mkline, varUse.varname)
+		})
 	}
 
 	mklines.collectDocumentedVariables()

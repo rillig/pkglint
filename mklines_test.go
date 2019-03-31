@@ -95,11 +95,17 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 		"qore-version=\tqore --short-version | ${SED} -e s/-.*//",
 		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
 
-	vars2 := mklines.mklines[1].DetermineUsedVariables()
+	var vars2 []string
+	mklines.mklines[1].ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+		vars2 = append(vars2, varUse.varname)
+	})
 
 	c.Check(vars2, deepEquals, []string{"SED"})
 
-	vars3 := mklines.mklines[2].DetermineUsedVariables()
+	var vars3 []string
+	mklines.mklines[2].ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+		vars3 = append(vars3, varUse.varname)
+	})
 
 	// qore-version, despite its unusual name, is a pretty normal Make variable.
 	c.Check(vars3, deepEquals, []string{"qore-version"})

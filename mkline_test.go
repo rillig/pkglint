@@ -1520,7 +1520,7 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 			"(depending on OPSYS, OPSYS) and unconditionally in Makefile:20.")
 }
 
-func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
+func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -1541,30 +1541,32 @@ func (s *Suite) Test_MkLine_DetermineUsedVariables(c *check.C) {
 
 	var varnames []string
 	for _, mkline := range mklines.mklines {
-		varnames = append(varnames, mkline.DetermineUsedVariables()...)
+		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+			varnames = append(varnames, time.String()+" "+varUse.varname)
+		})
 	}
 
 	c.Check(varnames, deepEquals, []string{
-		"VALUE",
-		"OPSYS",
-		"endianness",
+		"run VALUE",
+		"parse OPSYS",
+		"parse endianness",
 		// "Hello" is not a variable name, the :L modifier makes it an expression.
-		"two",
-		"TARGETS",
-		"SOURCES",
-		"OTHER_FILE",
+		"parse two",
+		"parse TARGETS",
+		"parse SOURCES",
+		"parse OTHER_FILE",
 
-		"VAR.${param}",
-		"param",
-		"VAR",
-		"VAR2",
-		"VAR",
-		"pattern",
-		"ROUND_PARENTHESES",
+		"run VAR.${param}",
+		"run param",
+		"run VAR",
+		"run VAR2",
+		"run VAR",
+		"run pattern",
+		"run ROUND_PARENTHESES",
 		// Shell variables are ignored here.
-		"<",
-		"@",
-		"x"})
+		"run <",
+		"run @",
+		"run x"})
 }
 
 func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
