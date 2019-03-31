@@ -937,13 +937,11 @@ func (ck MkLineChecker) checkVarassignOpShell() {
 		return
 	}
 
-	mkline.Warnf("Prefer :sh instead of != for %q.", mkline.Value())
+	mkline.Notef("Consider the :sh modifier instead of != for %q.", mkline.Value())
 	mkline.Explain(
 		"For variable assignments using the != operator, the shell command",
 		"is run every time the file is parsed.",
-		"",
 		"In some cases this is too early, and the command may not yet be installed.",
-		"",
 		"In other cases the command is executed more often than necessary.",
 		"Most commands don't need to be executed for \"make clean\", for example.",
 		"",
@@ -951,7 +949,17 @@ func (ck MkLineChecker) checkVarassignOpShell() {
 		"On the other hand, this means the command is executed each time the variable",
 		"is evaluated.",
 		"",
-		"To prevent this warning, provide an explanation in a comment at the end",
+		"Example:",
+		"",
+		"\tEARLY_YEAR!=    date +%Y",
+		"",
+		"\tLATE_YEAR_CMD=  date +%Y",
+		"\tLATE_YEAR=      ${LATE_YEAR_CMD:sh}",
+		"",
+		"\t# or, in a single line:",
+		"\tLATE_YEAR=      ${date +%Y:L:sh}",
+		"",
+		"To suppress this note, provide an explanation in a comment at the end",
 		"of the line, or force the variable to be evaluated at load time,",
 		"by using it at the right-hand side of the := operator, or in an .if",
 		"or .for directive.")

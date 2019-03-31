@@ -684,29 +684,34 @@ func (s *Suite) Test_MkLineChecker_checkVarassignOpShell(c *check.C) {
 
 	// There is no warning for OPSYS_NAME since that variable is used at
 	// load time. In such a case the command has to be executed anyway,
-	// and executing it exactly once is the best thing to do in this
-	// situation.
+	// and executing it exactly once is the best thing to do.
 	//
 	// There is no warning for MUST_BE_EARLY since the comment provides the
 	// reason that this command really has to be executed at load time.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/standalone.mk:9: Prefer :sh instead of != for \"${UNAME}\".",
+		"NOTE: ~/category/package/standalone.mk:9: Consider the :sh modifier instead of != for \"${UNAME}\".",
 		"",
 		"\tFor variable assignments using the != operator, the shell command is",
-		"\trun every time the file is parsed.",
-		"",
-		"\tIn some cases this is too early, and the command may not yet be",
-		"\tinstalled.",
-		"",
-		"\tIn other cases the command is executed more often than necessary.",
-		"\tMost commands don't need to be executed for \"make clean\", for",
-		"\texample.",
+		"\trun every time the file is parsed. In some cases this is too early,",
+		"\tand the command may not yet be installed. In other cases the command",
+		"\tis executed more often than necessary. Most commands don't need to",
+		"\tbe executed for \"make clean\", for example.",
 		"",
 		"\tThe :sh modifier defers execution until the variable value is",
 		"\tactually needed. On the other hand, this means the command is",
 		"\texecuted each time the variable is evaluated.",
 		"",
-		"\tTo prevent this warning, provide an explanation in a comment at the",
+		"\tExample:",
+		"",
+		"\t\tEARLY_YEAR!=    date +%Y",
+		"",
+		"\t\tLATE_YEAR_CMD=  date +%Y",
+		"\t\tLATE_YEAR=      ${LATE_YEAR_CMD:sh}",
+		"",
+		"\t\t# or, in a single line:",
+		"\t\tLATE_YEAR=      ${date +%Y:L:sh}",
+		"",
+		"\tTo suppress this note, provide an explanation in a comment at the",
 		"\tend of the line, or force the variable to be evaluated at load time,",
 		"\tby using it at the right-hand side of the := operator, or in an .if",
 		"\tor .for directive.",
