@@ -28,8 +28,29 @@ func (list *MkShList) AddCommand(command *MkShCommand) *MkShList {
 	return list.AddAndOr(andOr)
 }
 
-// Ensures that ChangesWords cannot be called with an empty string as modifier.
 func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
+	t := s.Init(c)
+
+	test := func(modifier string, changes bool) {
+		mod := MkVarUseModifier{modifier}
+		t.Check(mod.ChangesWords(), equals, changes)
+	}
+
+	test("E", false)
+	test("R", false)
+	test("Mpattern", false)
+	test("Npattern", false)
+	test("S,from,to,", true)
+	test("C,from,to,", true)
+	test("tl", false)
+	test("tu", false)
+	test("sh", true)
+
+	test("unknown", true)
+}
+
+// Ensures that ChangesWords cannot be called with an empty string as modifier.
+func (s *Suite) Test_MkVarUseModifier_ChangesWords__empty(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 123, "\t${VAR:}")

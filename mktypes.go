@@ -165,8 +165,8 @@ func (m MkVarUseModifier) ChangesWords() bool {
 	}
 
 	// If in doubt, be pessimistic. As of March 2019, the only code that
-	// actually uses this function omits a possibly wrong warning in such
-	// a case.
+	// actually uses this function doesn't issue a possibly wrong warning
+	// in such a case.
 	return true
 }
 
