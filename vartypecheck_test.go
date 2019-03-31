@@ -315,6 +315,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 
 	vt.Output(
 		"WARN: ~/category/package/filename.mk:1: Invalid dependency pattern with path \"Perl\".",
+		"WARN: ~/category/package/filename.mk:2: Dependency paths should have the form \"../../category/package\".",
 		"ERROR: ~/category/package/filename.mk:2: Relative path \"../perl5\" does not exist.",
 		"WARN: ~/category/package/filename.mk:2: \"../perl5\" is not a valid relative package directory.",
 		"WARN: ~/category/package/filename.mk:2: Please use USE_TOOLS+=perl:run instead of this dependency.",
