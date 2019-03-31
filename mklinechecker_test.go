@@ -305,6 +305,24 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("for.mk",
+		MkRcsID,
+		".for i in ${PATH:C,:, ,g}",
+		".endfor")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: PATH may actually be used at load time.
+		"WARN: for.mk:2: PATH should not be used at load time in any file.",
+		// FIXME: The :Q modifier is not appropriate here.
+		"WARN: for.mk:2: Please use ${PATH:C,:, ,g:Q} instead of ${PATH:C,:, ,g}.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirectiveFor__infrastructure(c *check.C) {
+	t := s.Init(c)
+
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/file.mk",
 		MkRcsID,
@@ -316,7 +334,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 
 	G.Check(t.File("mk/file.mk"))
 
-	// Pkglint doesn't care about trivial syntax errors, bmake will already catch these.
+	// Pkglint doesn't care about trivial syntax errors like the "=" instead
+	// of "in" above; bmake will already catch these.
 	t.CheckOutputEmpty()
 }
 
