@@ -811,9 +811,9 @@ func matchMkDirective(text string) (m bool, indent, directive, args, comment str
 // This decision depends on many factors, such as whether the type of the context is
 // a list of things, whether the variable is a list, whether it can contain only
 // safe characters, and so on.
-func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
-		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
+		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
 	}
 
 	// TODO: Systematically test this function, each and every case, from top to bottom.
@@ -859,7 +859,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varname string, 
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if tool := G.ToolByVarname(mklines, varname); tool != nil {
+	if tool := G.ToolByVarname(mklines, varuse.varname); tool != nil {
 		switch vuc.quoting {
 		case VucQuotPlain:
 			if !vuc.IsWordPart {
@@ -893,6 +893,14 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varname string, 
 		if vucVartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
 			return no // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 		}
+
+		// .for dir in ${PATH:C,:, ,g}
+		for _, modifier := range varuse.modifiers {
+			if modifier.ChangesWords() {
+				return unknown
+			}
+		}
+
 		return yes
 	}
 
@@ -903,7 +911,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varname string, 
 	}
 
 	if trace.Tracing {
-		trace.Step1("Don't know whether :Q is needed for %q", varname)
+		trace.Step1("Don't know whether :Q is needed for %q", varuse.varname)
 	}
 	return unknown
 }

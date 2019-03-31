@@ -421,7 +421,7 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 		fix.Apply()
 	}
 
-	needsQuoting := mkline.VariableNeedsQuoting(ck.MkLines, varname, vartype, vuc)
+	needsQuoting := mkline.VariableNeedsQuoting(ck.MkLines, varuse, vartype, vuc)
 
 	if G.Opts.WarnQuoting && vuc.quoting != VucQuotUnknown && needsQuoting != unknown {
 		// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?

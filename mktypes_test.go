@@ -28,6 +28,25 @@ func (list *MkShList) AddCommand(command *MkShCommand) *MkShList {
 	return list.AddAndOr(andOr)
 }
 
+// Ensures that ChangesWords cannot be called with an empty string as modifier.
+func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "\t${VAR:}")
+
+	n := 0
+	mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+		n += 100
+		for _, mod := range varUse.modifiers {
+			mod.ChangesWords()
+			n++
+		}
+	})
+
+	t.CheckOutputEmpty()
+	t.Check(n, equals, 100)
+}
+
 func (s *Suite) Test_MkVarUseModifier_MatchSubst(c *check.C) {
 	mod := MkVarUseModifier{"S/from/to/1g"}
 

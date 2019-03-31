@@ -319,8 +319,11 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 	t.CheckOutputLines(
 		// FIXME: PATH may actually be used at load time.
 		"WARN: for.mk:2: PATH should not be used at load time in any file.",
-		// FIXME: The :Q modifier is not appropriate here.
-		"WARN: for.mk:2: Please use ${PATH:C,:, ,g:Q} instead of ${PATH:C,:, ,g}.",
+
+		// No warning about :Q in line 2 since the :C modifier converts the
+		// colon-separated list into a space-separated list, as required by
+		// the .for loop.
+
 		// This warning is correct since PATH is separated by colons, not by spaces.
 		"WARN: for.mk:5: Please use ${PATH:Q} instead of ${PATH}.")
 }
@@ -522,8 +525,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"TRACE: 1 2 + MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 3   No type definition found for \"VAR\".",
 		"TRACE: 1 2 - MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
-		"TRACE: 1 2 + (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false))",
-		"TRACE: 1 2 - (*MkLineImpl).VariableNeedsQuoting(\"VAR\", (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false), \"=>\", unknown)",
+		"TRACE: 1 2 + (*MkLineImpl).VariableNeedsQuoting(${VAR:Mpattern1:Mpattern2}, (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: 1 2 - (*MkLineImpl).VariableNeedsQuoting(${VAR:Mpattern1:Mpattern2}, (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false), \"=>\", unknown)",
 		"TRACE: 1 - MkLineChecker.CheckVaruse(filename.mk:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: - MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: + (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",

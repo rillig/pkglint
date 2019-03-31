@@ -362,7 +362,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	t.SetUpVartypes()
 
 	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), vucTimeParse, VucQuotUnknown, false}
-	nq := mkline.VariableNeedsQuoting(nil, "UNKNOWN", nil, &vuc)
+	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"UNKNOWN", nil}, nil, &vuc)
 
 	c.Check(nq, equals, unknown)
 }
@@ -375,7 +375,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	mkline := t.NewMkLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}")
 
 	vuc := VarUseContext{G.Pkgsrc.vartypes.Canon("MASTER_SITES"), vucTimeRun, VucQuotPlain, false}
-	nq := mkline.VariableNeedsQuoting(nil, "HOMEPAGE", G.Pkgsrc.vartypes.Canon("HOMEPAGE"), &vuc)
+	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"HOMEPAGE", nil}, G.Pkgsrc.vartypes.Canon("HOMEPAGE"), &vuc)
 
 	c.Check(nq, equals, no)
 
@@ -806,12 +806,6 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 		"",
 		"\tIf these rules seem to be incorrect, please ask on the",
 		"\ttech-pkg@NetBSD.org mailing list.",
-		"",
-		"WARN: ~/Makefile:4: Please use ${LINKER_RPATH_FLAG:S/-rpath/& /:Q} "+
-			"instead of ${LINKER_RPATH_FLAG:S/-rpath/& /}.",
-		"",
-		"\tSee the pkgsrc guide, section \"Echoing a string exactly as-is\":",
-		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#echo-literal",
 		"",
 		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be used at load time in any file.",
 		"",
