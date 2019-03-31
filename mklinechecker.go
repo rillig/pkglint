@@ -401,10 +401,18 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 
 	varname := varuse.varname
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
+
 	ck.checkVaruseUndefined(vartype, varname)
-
 	ck.checkVaruseModifiers(varuse, vartype)
+	ck.checkVarUseVarname(varuse)
+	ck.checkVarusePermissions(varname, vartype, vuc)
+	ck.checkVarUseQuoting(varuse, vartype, vuc)
+	ck.checkVarUseBuildDefs(varname)
+	ck.checkVaruseDeprecated(varuse)
+	ck.checkTextVarUse(varname, vartype, vuc.time)
+}
 
+func (ck MkLineChecker) checkVarUseVarname(varuse *MkVarUse) {
 	if varuse.varname == "@" {
 		ck.MkLine.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
 		G.Explain(
@@ -412,61 +420,75 @@ func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 			"of the same name.")
 	}
 
-	ck.checkVarusePermissions(varname, vartype, vuc)
-
-	if varname == "LOCALBASE" && !G.Infrastructure {
+	if varuse.varname == "LOCALBASE" && !G.Infrastructure {
 		fix := ck.MkLine.Autofix()
 		fix.Warnf("Please use PREFIX instead of LOCALBASE.")
 		fix.ReplaceRegex(`\$\{LOCALBASE\b`, "${PREFIX", 1)
 		fix.Apply()
 	}
+}
 
-	needsQuoting := mkline.VariableNeedsQuoting(ck.MkLines, varuse, vartype, vuc)
-
-	if G.Opts.WarnQuoting && vuc.quoting != VucQuotUnknown && needsQuoting != unknown {
-		// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?
-		//  It's for splitting the value into tokens, taking "double" and 'single' quotes into account.
-		ck.CheckVaruseShellword(varname, vartype, vuc, varuse.Mod(), needsQuoting == yes)
+func (ck MkLineChecker) checkVarUseBuildDefs(varname string) {
+	if !(G.Pkgsrc.UserDefinedVars.Defined(varname) && !G.Pkgsrc.IsBuildDef(varname)) {
+		return
 	}
 
-	if G.Pkgsrc.UserDefinedVars.Defined(varname) && !G.Pkgsrc.IsBuildDef(varname) {
-		if !ck.MkLines.buildDefs[varname] && ck.MkLines.FirstTimeSlice("BUILD_DEFS", varname) {
-			mkline.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
-			G.Explain(
-				"When a pkgsrc package is built, many things can be configured by the",
-				"pkgsrc user in the mk.conf file.",
-				"All these configurations should be recorded in the binary package",
-				"so the package can be reliably rebuilt.",
-				"The BUILD_DEFS variable contains a list of all these",
-				"user-settable variables, so please add your variable to it, too.")
-		}
+	if !(!ck.MkLines.buildDefs[varname] && ck.MkLines.FirstTimeSlice("BUILD_DEFS", varname)) {
+		return
 	}
 
-	ck.checkVaruseDeprecated(varuse)
+	ck.MkLine.Warnf("The user-defined variable %s is used but not added to BUILD_DEFS.", varname)
+	ck.MkLine.Explain(
+		"When a pkgsrc package is built, many things can be configured by the",
+		"pkgsrc user in the mk.conf file.",
+		"All these configurations should be recorded in the binary package",
+		"so the package can be reliably rebuilt.",
+		"The BUILD_DEFS variable contains a list of all these",
+		"user-settable variables, so please add your variable to it, too.")
+}
 
-	ck.checkTextVarUse(varname, vartype, vuc.time)
+func (ck MkLineChecker) checkVarUseQuoting(varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) {
+	if !G.Opts.WarnQuoting || vuc.quoting == VucQuotUnknown {
+		return
+	}
+
+	needsQuoting := ck.MkLine.VariableNeedsQuoting(ck.MkLines, varuse, vartype, vuc)
+	if needsQuoting == unknown {
+		return
+	}
+
+	// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?
+	//  It's for splitting the value into tokens, taking "double" and 'single' quotes into account.
+	ck.CheckVaruseShellword(varuse.varname, vartype, vuc, varuse.Mod(), needsQuoting == yes)
 }
 
 func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 	switch {
+
 	case !G.Opts.WarnExtra:
-		break
+		return
+
 	case vartype != nil && !vartype.guessed:
 		// Well-known variables are probably defined by the infrastructure.
-	case ck.MkLines != nil && (ck.MkLines.vars.DefinedSimilar(varname) || ck.MkLines.forVars[varname]):
-		break
-	case G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname):
-		break
-	case containsVarRef(varname):
-		break
-	case G.Pkgsrc.vartypes.DefinedCanon(varname):
-		break
-	case ck.MkLines == nil || !ck.MkLines.FirstTimeSlice("used but not defined: ", varname):
-		break
+		return
 
-	default:
-		ck.MkLine.Warnf("%s is used but not defined.", varname)
+	case ck.MkLines != nil && (ck.MkLines.vars.DefinedSimilar(varname) || ck.MkLines.forVars[varname]):
+		return
+
+	case G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname):
+		return
+
+	case containsVarRef(varname):
+		return
+
+	case G.Pkgsrc.vartypes.DefinedCanon(varname):
+		return
+
+	case ck.MkLines == nil || !ck.MkLines.FirstTimeSlice("used but not defined: ", varname):
+		return
 	}
+
+	ck.MkLine.Warnf("%s is used but not defined.", varname)
 }
 
 func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype) {
