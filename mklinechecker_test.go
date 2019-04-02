@@ -1509,7 +1509,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(
 		".endif")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -1532,7 +1532,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword(c *check.C) {
 		"WARN: ~/options.mk:4: The variable PATH should be quoted as part of a shell word.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__mstar(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall,no-space")
@@ -1556,7 +1556,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar(c *check.C) {
 		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__mstar_not_needed(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall,no-space")
@@ -1578,7 +1578,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__mstar_not_needed(c *che
 		"NOTE: ~/category/package/Makefile:21: The :M* modifier is not needed here.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__q_not_needed(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetUpPackage("category/package",

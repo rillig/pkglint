@@ -447,21 +447,6 @@ func (ck MkLineChecker) checkVarUseBuildDefs(varname string) {
 		"user-settable variables, so please add your variable to it, too.")
 }
 
-func (ck MkLineChecker) checkVarUseQuoting(varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) {
-	if !G.Opts.WarnQuoting || vuc.quoting == VucQuotUnknown {
-		return
-	}
-
-	needsQuoting := ck.MkLine.VariableNeedsQuoting(ck.MkLines, varuse, vartype, vuc)
-	if needsQuoting == unknown {
-		return
-	}
-
-	// FIXME: Why "Shellword" when there's no indication that this is actually a shell type?
-	//  It's for splitting the value into tokens, taking "double" and 'single' quotes into account.
-	ck.CheckVaruseShellword(varuse.varname, vartype, vuc, varuse.Mod(), needsQuoting == yes)
-}
-
 func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 	switch {
 
@@ -740,12 +725,20 @@ func (ck MkLineChecker) warnVaruseToolLoadTime(varname string, tool *Tool) {
 		"except in the package Makefile itself.")
 }
 
-// CheckVaruseShellword checks whether a variable use of the form ${VAR}
+// checkVarUseWords checks whether a variable use of the form ${VAR}
 // or ${VAR:modifiers} is allowed in a certain context.
-func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, vuc *VarUseContext, mod string, needsQuoting bool) {
-	if trace.Tracing {
-		defer trace.Call(varname, vartype, vuc, mod, needsQuoting)()
+func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, vuc *VarUseContext) {
+	if !G.Opts.WarnQuoting || vuc.quoting == VucQuotUnknown {
+		return
 	}
+
+	needsQuoting := ck.MkLine.VariableNeedsQuoting(ck.MkLines, varUse, vartype, vuc)
+	if needsQuoting == unknown {
+		return
+	}
+
+	varname := varUse.varname
+	mod := varUse.Mod()
 
 	// In GNU configure scripts, a few variables need to be passed through
 	// the :M* operator before they reach the configure scripts. Otherwise
@@ -760,7 +753,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 	if mod == ":M*:Q" && !needMstar {
 		mkline.Notef("The :M* modifier is not needed here.")
 
-	} else if needsQuoting {
+	} else if needsQuoting == yes {
 		modNoQ := strings.TrimSuffix(mod, ":Q")
 		modNoM := strings.TrimSuffix(modNoQ, ":M*")
 		correctMod := modNoM + ifelseStr(needMstar, ":M*:Q", ":Q")
@@ -833,7 +826,7 @@ func (ck MkLineChecker) CheckVaruseShellword(varname string, vartype *Vartype, v
 		}
 	}
 
-	if hasSuffix(mod, ":Q") && !needsQuoting {
+	if hasSuffix(mod, ":Q") && needsQuoting != yes {
 		bad := "${" + varname + mod + "}"
 		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
 
