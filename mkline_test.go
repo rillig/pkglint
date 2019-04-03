@@ -1315,12 +1315,25 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	test("VAR=value #comment", false, "VAR", "", "=", "VAR=", "value", " ", "#comment")
 	test("NFILES=${FILES:[#]}", false, "NFILES", "", "=", "NFILES=", "${FILES:[#]}", "", "")
 
+	// To humans, the base variable name seems to be SITES_, being parameterized
+	// with distfile-1.0.tar.gz. For pkglint though, the base variable name is
+	// SITES_distfile-1.
 	test("SITES_distfile-1.0.tar.gz=https://example.org/",
 		false,
 		"SITES_distfile-1.0.tar.gz",
 		"",
 		"=",
 		"SITES_distfile-1.0.tar.gz=",
+		"https://example.org/",
+		"",
+		"")
+
+	test("SITES_${distfile}=https://example.org/",
+		false,
+		"SITES_${distfile}",
+		"",
+		"=",
+		"SITES_${distfile}=",
 		"https://example.org/",
 		"",
 		"")
