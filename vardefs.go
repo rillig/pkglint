@@ -81,15 +81,12 @@ func (reg *VarTypeRegistry) Define(varname string, kindOfList KindOfList, basicT
 // TODO: To be implemented: when prefixed with "infra:", the entry only
 //  applies to files within the pkgsrc infrastructure. Without this prefix,
 //  the pattern only applies to files outside the pkgsrc infrastructure.
-//
-// FIXME: Force the permissions to always be in the same order:
-//  default, set, append, use, use-loadtime.
 func (reg *VarTypeRegistry) DefineParse(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
 	parsedEntries := reg.parseACLEntries(varname, aclEntries...)
 	reg.Define(varname, kindOfList, basicType, parsedEntries...)
 }
 
-// InitVartypes initializes the long list of predefined pkgsrc variables.
+// Init initializes the long list of predefined pkgsrc variables.
 // After this is done, PKGNAME, MAKE_ENV and all the other variables
 // can be used in Makefiles without triggering warnings about typos.
 func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
