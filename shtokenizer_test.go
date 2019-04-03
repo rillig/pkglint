@@ -576,71 +576,70 @@ func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
 func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("fuzzing.mk",
-		MkRcsID,
-		"",
-		"pre-configure:",
+	test := func(input string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			MkRcsID,
+			"\t"+input)
+		mklines.Check()
+		t.CheckOutput(diagnostics)
+	}
 
-		// Covers shAtomBacktDquot: return nil.
-		// These are nested backticks with double quotes,
-		// which should be avoided since POSIX marks them as unspecified.
-		"\t"+"`\"`",
+	// Covers shAtomBacktDquot: return nil.
+	// These are nested backticks with double quotes,
+	// which should be avoided since POSIX marks them as unspecified.
+	test(
+		"`\"`",
+		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"`\" (quoting=bd).",
+		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`\\\"`\"")
 
-		// Covers shAtomBacktSquot: return nil
-		"\t"+"`'$`",
+	// Covers shAtomBacktSquot: return nil
+	test(
+		"`'$`",
+		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"$`\" (quoting=bs).",
+		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`'$`\"",
+		"WARN: filename.mk:2: Internal pkglint error in MkLine.Tokenize at \"$`\".")
 
-		// Covers shAtomDquotBacktSquot: return nil
-		"\t"+"\"`'`y",
+	// Covers shAtomDquotBacktSquot: return nil
+	test(
+		"\"`'`y",
+		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`'`y\"")
 
-		// Covers shAtomDquotBackt: return nil
-		// FIXME: Pkglint must parse unescaped dollar in the same way, everywhere.
-		"\t"+"\"`$|",
+	// Covers shAtomDquotBackt: return nil
+	// FIXME: Pkglint must parse unescaped dollar in the same way, everywhere.
+	test(
+		"\"`$|",
+		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"$|\" (quoting=db).",
+		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`$|\"",
+		"WARN: filename.mk:2: Internal pkglint error in MkLine.Tokenize at \"$|\".")
 
-		// Covers shAtomDquotBacktDquot: return nil
-		// FIXME: Pkglint must support unlimited nesting.
-		"\t"+"\"`\"`",
+	// Covers shAtomDquotBacktDquot: return nil
+	// FIXME: Pkglint must support unlimited nesting.
+	test(
+		"\"`\"`",
+		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"`\" (quoting=dbd).",
+		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`\\\"`\"")
 
-		// Covers shAtomSubshDquot: return nil
-		"\t"+"$$(\"'",
+	// Covers shAtomSubshDquot: return nil
+	test(
+		"$$(\"'",
+		"WARN: filename.mk:2: Invoking subshells via $(...) is not portable enough.")
 
-		// Covers shAtomSubsh: case lexer.AdvanceStr("`")
-		"\t"+"$$(`",
+	// Covers shAtomSubsh: case lexer.AdvanceStr("`")
+	test(
+		"$$(`",
+		"WARN: filename.mk:2: Invoking subshells via $(...) is not portable enough.")
 
-		// Covers shAtomSubshSquot: return nil
-		"\t"+"$$('$)",
+	// Covers shAtomSubshSquot: return nil
+	test(
+		"$$('$)",
+		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"$)\" (quoting=Ss).",
+		"WARN: filename.mk:2: Invoking subshells via $(...) is not portable enough.",
+		"WARN: filename.mk:2: Internal pkglint error in MkLine.Tokenize at \"$)\".")
 
-		// Covers shAtomDquotBackt: case lexer.AdvanceRegexp("^#[^`]*")
-		"\t"+"\"`# comment")
-
-	mklines.Check()
-
-	// Just good that these redundant error messages don't occur every day.
-	t.CheckOutputLines(
-		"WARN: fuzzing.mk:4: Internal pkglint error in ShTokenizer.ShAtom at \"`\" (quoting=bd).",
-		"WARN: fuzzing.mk:4: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`\\\"`\"",
-
-		"WARN: fuzzing.mk:5: Internal pkglint error in ShTokenizer.ShAtom at \"$`\" (quoting=bs).",
-		"WARN: fuzzing.mk:5: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`'$`\"",
-		"WARN: fuzzing.mk:5: Internal pkglint error in MkLine.Tokenize at \"$`\".",
-
-		"WARN: fuzzing.mk:6: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`'`y\"",
-
-		"WARN: fuzzing.mk:7: Internal pkglint error in ShTokenizer.ShAtom at \"$|\" (quoting=db).",
-		"WARN: fuzzing.mk:7: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`$|\"",
-		"WARN: fuzzing.mk:7: Internal pkglint error in MkLine.Tokenize at \"$|\".",
-
-		"WARN: fuzzing.mk:8: Internal pkglint error in ShTokenizer.ShAtom at \"`\" (quoting=dbd).",
-		"WARN: fuzzing.mk:8: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`\\\"`\"",
-
-		"WARN: fuzzing.mk:9: Invoking subshells via $(...) is not portable enough.",
-
-		"WARN: fuzzing.mk:10: Invoking subshells via $(...) is not portable enough.",
-
-		"WARN: fuzzing.mk:11: Internal pkglint error in ShTokenizer.ShAtom at \"$)\" (quoting=Ss).",
-		"WARN: fuzzing.mk:11: Invoking subshells via $(...) is not portable enough.",
-		"WARN: fuzzing.mk:11: Internal pkglint error in MkLine.Tokenize at \"$)\".",
-
-		"WARN: fuzzing.mk:12: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`# comment\"")
+	// Covers shAtomDquotBackt: case lexer.AdvanceRegexp("^#[^`]*")
+	test(
+		"\"`# comment",
+		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`# comment\"")
 }
 
 // In order to get 100% code coverage for the shell tokenizer, a panic() statement has been
