@@ -1315,6 +1315,16 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	test("VAR=value #comment", false, "VAR", "", "=", "VAR=", "value", " ", "#comment")
 	test("NFILES=${FILES:[#]}", false, "NFILES", "", "=", "NFILES=", "${FILES:[#]}", "", "")
 
+	test("SITES_distfile-1.0.tar.gz=https://example.org/",
+		false,
+		"SITES_distfile-1.0.tar.gz",
+		"",
+		"=",
+		"SITES_distfile-1.0.tar.gz=",
+		"https://example.org/",
+		"",
+		"")
+
 	testInvalid("\tVAR=value")
 	testInvalid("?=value")
 	testInvalid("<=value")
