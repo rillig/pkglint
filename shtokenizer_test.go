@@ -12,16 +12,19 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	// atoms, and returns the remaining text.
 	testRest := func(s string, expectedAtoms []*ShAtom, expectedRest string) {
 		p := NewShTokenizer(dummyLine, s, false)
+
 		actualAtoms := p.ShAtoms()
+
+		t.Check(p.Rest(), equals, expectedRest)
 		c.Check(len(actualAtoms), equals, len(expectedAtoms))
+
 		for i, actualAtom := range actualAtoms {
 			if i < len(expectedAtoms) {
 				c.Check(actualAtom, deepEquals, expectedAtoms[i])
 			} else {
-				c.Check(actualAtom, deepEquals, "unexpected atom")
+				c.Check(actualAtom, deepEquals, nil)
 			}
 		}
-		t.Check(p.Rest(), equals, expectedRest)
 	}
 	atoms := func(atoms ...*ShAtom) []*ShAtom { return atoms }
 
@@ -70,6 +73,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	dquotBackt := q(shqDquotBackt)
 	subshDquot := q(shqSubshDquot)
 	subshSquot := q(shqSubshSquot)
+	subshBackt := q(shqSubshBackt)
 	dquotBacktDquot := q(shqDquotBacktDquot)
 	dquotBacktSquot := q(shqDquotBacktSquot)
 
@@ -77,7 +81,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	use := func(args ...interface{}) {}
 	use(testRest, test, atoms)
 	use(operator, comment, mkvar, text, whitespace)
-	use(space, semicolon, pipe, subshell)
+	use(space, semicolon, pipe, subshell, shvar)
 	use(backt, dquot, squot, subsh)
 	use(backtDquot, backtSquot, dquotBackt, subshDquot, subshSquot)
 	use(dquotBacktDquot, dquotBacktSquot)
@@ -402,11 +406,13 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subsh(subshell),
 		subsh(text("echo")),
 		subsh(space),
-		// FIXME: The backtick is missing
-		subsh(text("echo")),
-		subsh(space),
-		subsh(text("nested-subshell")),
-		subsh(operator(")")))
+		subshBackt(text("`")),
+		subshBackt(text("echo")),
+		subshBackt(space),
+		subshBackt(text("nested-subshell")),
+		subsh(operator("`")),
+		// FIXME: should be operator instead of text.
+		text(")"))
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
@@ -628,7 +634,6 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 
 		"WARN: fuzzing.mk:9: Invoking subshells via $(...) is not portable enough.",
 
-		"WARN: fuzzing.mk:10: Internal pkglint error in ShTokenizer.ShAtom at \"`\" (quoting=S).",
 		"WARN: fuzzing.mk:10: Invoking subshells via $(...) is not portable enough.",
 
 		"WARN: fuzzing.mk:11: Internal pkglint error in ShTokenizer.ShAtom at \"$)\" (quoting=Ss).",

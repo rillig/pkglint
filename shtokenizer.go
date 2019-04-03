@@ -53,6 +53,8 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 		atom = p.shAtomSubshDquot()
 	case shqSubshSquot:
 		atom = p.shAtomSubshSquot()
+	case shqSubshBackt:
+		atom = p.shAtomSubshBackt()
 	case shqDquotBacktDquot:
 		atom = p.shAtomDquotBacktDquot()
 	case shqDquotBacktSquot:
@@ -158,7 +160,7 @@ func (p *ShTokenizer) shAtomSubsh() *ShAtom {
 	case lexer.SkipByte('\''):
 		return &ShAtom{shtText, lexer.Since(mark), shqSubshSquot, nil}
 	case lexer.SkipByte('`'):
-		// FIXME: return &ShAtom{shtText, lexer.Since(mark), shqBackt, nil}
+		return &ShAtom{shtText, lexer.Since(mark), shqSubshBackt, nil}
 	case lexer.SkipRegexp(G.res.Compile(`^#[^)]*`)):
 		return &ShAtom{shtComment, lexer.Since(mark), q, nil}
 	case lexer.SkipByte(')'):
@@ -235,6 +237,19 @@ func (p *ShTokenizer) shAtomSubshSquot() *ShAtom {
 		return &ShAtom{shtText, lexer.Since(mark), shqSubsh, nil}
 	}
 	return p.shAtomInternal(q, false, true)
+}
+
+func (p *ShTokenizer) shAtomSubshBackt() *ShAtom {
+	const q = shqSubshBackt
+	lexer := p.parser.lexer
+	mark := lexer.Mark()
+	switch {
+	case lexer.SkipByte('`'):
+		return &ShAtom{shtOperator, lexer.Since(mark), shqSubsh, nil}
+	case lexer.SkipHspace():
+		return &ShAtom{shtSpace, lexer.Since(mark), q, nil}
+	}
+	return p.shAtomInternal(q, false, false)
 }
 
 func (p *ShTokenizer) shAtomDquotBacktDquot() *ShAtom {
