@@ -71,7 +71,7 @@ netbsd() {
   fi
 
   step_msg "Copying files to NetBSD VM"
-  rsync -a --delete --rsync-path=/home/rillig/pkg/bin/rsync \
+  rsync -a --delete --rsync-path=/usr/pkg/bin/rsync \
     --chmod=F0664 \
     --cvs-exclude \
     --exclude="qa-pkglint" \
