@@ -10,21 +10,21 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	// testRest ensures that the given string is parsed to the expected
 	// atoms, and returns the remaining text.
-	testRest := func(s string, expectedAtoms ...*ShAtom) string {
+	testRest := func(s string, expectedAtoms []*ShAtom, expectedRest string) {
 		p := NewShTokenizer(dummyLine, s, false)
 		q := shqPlain
 		for _, expectedAtom := range expectedAtoms {
 			c.Check(p.ShAtom(q), deepEquals, expectedAtom)
 			q = expectedAtom.Quoting
 		}
-		return p.Rest()
+		t.Check(p.Rest(), equals, expectedRest)
 	}
+	atoms := func(atoms ...*ShAtom) []*ShAtom { return atoms }
 
 	// test ensures that the given string is parsed to the expected
 	// atoms, and that the text is completely consumed by the parser.
 	test := func(str string, expected ...*ShAtom) {
-		rest := testRest(str, expected...)
-		c.Check(rest, equals, "")
+		testRest(str, expected, "")
 		t.CheckOutputEmpty()
 	}
 
@@ -52,31 +52,34 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	pipe := operator("|")
 	subshell := atom(shtSubshell, "$$(")
 
-	q := func(q ShQuoting, atom *ShAtom) *ShAtom {
-		return &ShAtom{atom.Type, atom.MkText, q, atom.data}
+	q := func(q ShQuoting) func(atom *ShAtom) *ShAtom {
+		return func(atom *ShAtom) *ShAtom {
+			return &ShAtom{atom.Type, atom.MkText, q, atom.data}
+		}
 	}
-	backt := func(atom *ShAtom) *ShAtom { return q(shqBackt, atom) }
-	dquot := func(atom *ShAtom) *ShAtom { return q(shqDquot, atom) }
-	squot := func(atom *ShAtom) *ShAtom { return q(shqSquot, atom) }
-	subsh := func(atom *ShAtom) *ShAtom { return q(shqSubsh, atom) }
-	backtDquot := func(atom *ShAtom) *ShAtom { return q(shqBacktDquot, atom) }
-	backtSquot := func(atom *ShAtom) *ShAtom { return q(shqBacktSquot, atom) }
-	dquotBackt := func(atom *ShAtom) *ShAtom { return q(shqDquotBackt, atom) }
-	subshDquot := func(atom *ShAtom) *ShAtom { return q(shqSubshDquot, atom) }
-	subshSquot := func(atom *ShAtom) *ShAtom { return q(shqSubshSquot, atom) }
-	dquotBacktDquot := func(atom *ShAtom) *ShAtom { return q(shqDquotBacktDquot, atom) }
-	dquotBacktSquot := func(atom *ShAtom) *ShAtom { return q(shqDquotBacktSquot, atom) }
+	backt := q(shqBackt)
+	dquot := q(shqDquot)
+	squot := q(shqSquot)
+	subsh := q(shqSubsh)
+	backtDquot := q(shqBacktDquot)
+	backtSquot := q(shqBacktSquot)
+	dquotBackt := q(shqDquotBackt)
+	subshDquot := q(shqSubshDquot)
+	subshSquot := q(shqSubshSquot)
+	dquotBacktDquot := q(shqDquotBacktDquot)
+	dquotBacktSquot := q(shqDquotBacktSquot)
 
 	// Ignore unused functions; useful for deleting some of the tests during debugging.
 	use := func(args ...interface{}) {}
-	use(testRest, test)
+	use(testRest, test, atoms)
 	use(operator, comment, mkvar, text, whitespace)
 	use(space, semicolon, pipe, subshell)
 	use(backt, dquot, squot, subsh)
 	use(backtDquot, backtSquot, dquotBackt, subshDquot, subshSquot)
 	use(dquotBacktDquot, dquotBacktSquot)
 
-	test("" /* none */)
+	test("",
+		nil...)
 
 	test("$$var",
 		shvar("$$var", "var"))
@@ -94,8 +97,9 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		squot(text("single-quoted")),
 		text("'"))
 
-	rest := testRest("\"" /* none */)
-	c.Check(rest, equals, "\"")
+	testRest("\"",
+		atoms(),
+		"\"")
 
 	test("$${file%.c}.o",
 		shvar("$${file%.c}", "file"),
@@ -279,15 +283,16 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		semicolon,
 		shvar("$$-", "-"))
 
-	rest = testRest("COMMENT=\t\\Make $$$$ fast\"",
-		text("COMMENT="),
-		whitespace("\t"),
-		text("\\Make"),
-		space,
-		shvar("$$$$", "$"),
-		space,
-		text("fast"))
-	c.Check(rest, equals, "\"")
+	testRest("COMMENT=\t\\Make $$$$ fast\"",
+		atoms(
+			text("COMMENT="),
+			whitespace("\t"),
+			text("\\Make"),
+			space,
+			shvar("$$$$", "$"),
+			space,
+			text("fast")),
+		"\"")
 
 	test("var=`echo;echo|echo&echo||echo&&echo>echo`",
 		text("var="),
@@ -389,6 +394,11 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subshSquot(text("second")),
 		subsh(text("'")),
 		text(")"))
+
+	// FIXME: Should be parsed properly
+	testRest("$$(echo `echo nested-subshell`)",
+		atoms(),
+		"$$(echo `echo nested-subshell`)")
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
