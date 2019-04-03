@@ -12,10 +12,14 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	// atoms, and returns the remaining text.
 	testRest := func(s string, expectedAtoms []*ShAtom, expectedRest string) {
 		p := NewShTokenizer(dummyLine, s, false)
-		q := shqPlain
-		for _, expectedAtom := range expectedAtoms {
-			c.Check(p.ShAtom(q), deepEquals, expectedAtom)
-			q = expectedAtom.Quoting
+		actualAtoms := p.ShAtoms()
+		c.Check(len(actualAtoms), equals, len(expectedAtoms))
+		for i, actualAtom := range actualAtoms {
+			if i < len(expectedAtoms) {
+				c.Check(actualAtom, deepEquals, expectedAtoms[i])
+			} else {
+				c.Check(actualAtom, deepEquals, "unexpected atom")
+			}
 		}
 		t.Check(p.Rest(), equals, expectedRest)
 	}
@@ -97,9 +101,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		squot(text("single-quoted")),
 		text("'"))
 
-	testRest("\"",
-		atoms(),
-		"\"")
+	test("\"",
+		dquot(text("\"")))
 
 	test("$${file%.c}.o",
 		shvar("$${file%.c}", "file"),
@@ -283,16 +286,16 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		semicolon,
 		shvar("$$-", "-"))
 
-	testRest("COMMENT=\t\\Make $$$$ fast\"",
-		atoms(
-			text("COMMENT="),
-			whitespace("\t"),
-			text("\\Make"),
-			space,
-			shvar("$$$$", "$"),
-			space,
-			text("fast")),
-		"\"")
+	test("COMMENT=\t\\Make $$$$ fast\"",
+
+		text("COMMENT="),
+		whitespace("\t"),
+		text("\\Make"),
+		space,
+		shvar("$$$$", "$"),
+		space,
+		text("fast"),
+		dquot(text("\"")))
 
 	test("var=`echo;echo|echo&echo||echo&&echo>echo`",
 		text("var="),
@@ -395,10 +398,15 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subsh(text("'")),
 		text(")"))
 
-	// FIXME: Should be parsed properly
-	testRest("$$(echo `echo nested-subshell`)",
-		atoms(),
-		"$$(echo `echo nested-subshell`)")
+	test("$$(echo `echo nested-subshell`)",
+		subsh(subshell),
+		subsh(text("echo")),
+		subsh(space),
+		// FIXME: The backtick is missing
+		subsh(text("echo")),
+		subsh(space),
+		subsh(text("nested-subshell")),
+		subsh(operator(")")))
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
