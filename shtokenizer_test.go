@@ -371,7 +371,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	test("$$(cat)",
 		subsh(subshell),
 		subsh(text("cat")),
-		text(")"))
+		operator(")"))
 
 	test("$$(cat 'file')",
 		subsh(subshell),
@@ -380,12 +380,12 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subshSquot(text("'")),
 		subshSquot(text("file")),
 		subsh(text("'")),
-		text(")"))
+		operator(")"))
 
 	test("$$(# comment) arg",
 		subsh(subshell),
 		subsh(comment("# comment")),
-		text(")"),
+		operator(")"),
 		space,
 		text("arg"))
 
@@ -400,7 +400,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subshSquot(text("'")),
 		subshSquot(text("second")),
 		subsh(text("'")),
-		text(")"))
+		operator(")"))
 
 	test("$$(echo `echo nested-subshell`)",
 		subsh(subshell),
@@ -411,8 +411,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subshBackt(space),
 		subshBackt(text("nested-subshell")),
 		subsh(operator("`")),
-		// FIXME: should be operator instead of text.
-		text(")"))
+		operator(")"))
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
@@ -511,6 +510,9 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 		"env",
 		"PATH=${PATH:Q}",
 		"true")
+
+	test("id=$$(id)",
+		"id=$$(id)")
 
 	test("id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)",
 		"id=$$(${AWK} '{print}' < ${WRKSRC}/idfile)")

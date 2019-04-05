@@ -990,39 +990,16 @@ func splitIntoShellTokens(line Line, text string) (tokens []string, rest string)
 	// TODO: Check whether this function is used correctly by all callers.
 	//  It may be better to use a proper shell parser instead of this tokenizer.
 
-	word := ""
-	rest = text
 	p := NewShTokenizer(line, text, false)
-	emit := func() {
-		if word != "" {
-			tokens = append(tokens, word)
-			word = ""
-		}
-		rest = p.parser.Rest()
-	}
-
-	q := shqPlain
-	var prevAtom *ShAtom
 	for {
-		atom := p.ShAtom(q)
-		if atom == nil {
-			if prevAtom == nil || prevAtom.Quoting == shqPlain {
-				emit()
-			}
+		token := p.ShToken()
+		if token == nil {
 			break
 		}
-
-		q = atom.Quoting
-		prevAtom = atom
-		if atom.Type == shtSpace && q == shqPlain {
-			emit()
-		} else if atom.Type.IsWord() || atom.Quoting != shqPlain {
-			word += atom.MkText
-		} else {
-			emit()
-			tokens = append(tokens, atom.MkText)
-		}
+		tokens = append(tokens, token.MkText)
 	}
+
+	rest = p.parser.Rest()
 
 	return
 }
