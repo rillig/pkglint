@@ -1242,23 +1242,29 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("other/package/Makefile")
-	// Must be in the filesystem because of directory references.
-	mklines := t.SetUpFileMkLines("category/package/Makefile",
-		"# dummy")
 
-	mklines.ForEach(func(mkline MkLine) {
-		ck := MkLineChecker{mklines, mkline}
+	test := func(relativePkgdir string, diagnostics ...string) {
+		// Must be in the filesystem because of directory references.
+		mklines := t.SetUpFileMkLines("category/package/Makefile",
+			"# dummy")
 
-		ck.CheckRelativePkgdir("../pkgbase")
-		ck.CheckRelativePkgdir("../../other/package")
-		ck.CheckRelativePkgdir("../../other/does-not-exist")
-	})
+		checkRelativePkgdir := func(mkline MkLine) {
+			MkLineChecker{mklines, mkline}.CheckRelativePkgdir(relativePkgdir)
+		}
 
-	// TODO: split into the usual test(...) function.
+		mklines.ForEach(checkRelativePkgdir)
 
-	t.CheckOutputLines(
+		t.CheckOutput(diagnostics)
+	}
+
+	test("../pkgbase",
 		"ERROR: ~/category/package/Makefile:1: Relative path \"../pkgbase/Makefile\" does not exist.",
-		"WARN: ~/category/package/Makefile:1: \"../pkgbase\" is not a valid relative package directory.",
+		"WARN: ~/category/package/Makefile:1: \"../pkgbase\" is not a valid relative package directory.")
+
+	test("../../other/package",
+		nil...)
+
+	test("../../other/does-not-exist",
 		"ERROR: ~/category/package/Makefile:1: Relative path \"../../other/does-not-exist/Makefile\" does not exist.")
 }
 
