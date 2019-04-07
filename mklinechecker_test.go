@@ -508,10 +508,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"NOTE: filename.mk:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
-		// FIXME: Indeed, indeed, the :M modifier ends at the colon.
-		//  Why doesn't pkglint complain loudly about the unknown "//*" modifier?
 		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",
-		"WARN: filename.mk:1: MASTER_SITES should not be used at load time in any file.")
+		"WARN: filename.mk:1: MASTER_SITES should not be used at load time in any file.",
+		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".")
 
 	// The only interesting line from the below tracing output is the one
 	// containing "checkCompareVarStr".

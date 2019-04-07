@@ -1211,9 +1211,9 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 	vt.Op(opUseMatch)
 	vt.Values(
 		"tool1",
-		"tool1:build",
-		"tool1:*",
-		"${t}:build")
+		"tool1\\:build",
+		"tool1\\:*",
+		"${t}\\:build")
 
 	vt.OutputEmpty()
 }
@@ -1487,7 +1487,9 @@ func (vt *VartypeCheckTester) Op(op MkOperator) {
 
 // Values feeds each of the values to the actual check.
 // Each value is interpreted as if it were written verbatim into a Makefile line.
-// That is, # starts a comment, and for the opUseMatch operator, all closing braces must be escaped.
+// That is, # starts a comment.
+//
+// For the opUseMatch operator, all colons and closing braces must be escaped.
 func (vt *VartypeCheckTester) Values(values ...string) {
 
 	toText := func(value string) string {

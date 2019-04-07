@@ -340,7 +340,7 @@ func (mkline *MkLineImpl) Args() string { return mkline.data.(mkLineDirective).a
 func (mkline *MkLineImpl) Cond() MkCond {
 	cond := mkline.data.(mkLineDirective).cond
 	if cond == nil {
-		cond = NewMkParser(nil, mkline.Args(), false).MkCond()
+		cond = NewMkParser(mkline.Line, mkline.Args(), true).MkCond()
 		mkline.data.(mkLineDirective).cond = cond
 	}
 	return cond
