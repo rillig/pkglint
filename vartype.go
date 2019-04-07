@@ -1,6 +1,9 @@
 package pkglint
 
-import "path"
+import (
+	"path"
+	"strings"
+)
 
 // Vartype is a combination of a data type and a permission specification.
 // See vardefs.go for examples, and vartypecheck.go for the implementation.
@@ -8,7 +11,7 @@ type Vartype struct {
 	kindOfList KindOfList
 	basicType  *BasicType
 	aclEntries []ACLEntry
-	guessed    bool
+	Options    VartypeOptions
 }
 
 type KindOfList uint8
@@ -23,6 +26,16 @@ const (
 	// These lists are used in the :M, :S modifiers, in .for loops,
 	// and as lists of arbitrary things.
 	lkShell
+)
+
+type VartypeOptions uint8
+
+const (
+	Guessed VartypeOptions = 1 << iota
+	PackageSettable
+	UserSettable
+	SystemProvided
+	NoVartypeOptions = 0
 )
 
 type ACLEntry struct {
@@ -73,6 +86,11 @@ func (perms ACLPermissions) HumanString() string {
 		ifelseStr(perms.Contains(aclpUseLoadtime), "used at load time", ""),
 		ifelseStr(perms.Contains(aclpUse), "used", ""))
 }
+
+func (vt *Vartype) Guessed() bool         { return vt.Options&Guessed != 0 }
+func (vt *Vartype) PackageSettable() bool { return vt.Options&PackageSettable != 0 }
+func (vt *Vartype) UserSettable() bool    { return vt.Options&UserSettable != 0 }
+func (vt *Vartype) SystemProvided() bool  { return vt.Options&SystemProvided != 0 }
 
 func (vt *Vartype) EffectivePermissions(basename string) ACLPermissions {
 	for _, aclEntry := range vt.aclEntries {
@@ -182,8 +200,26 @@ func (vt *Vartype) MayBeAppendedTo() bool {
 
 func (vt *Vartype) String() string {
 	listPrefix := [...]string{"", "List of "}[vt.kindOfList]
-	guessedSuffix := ifelseStr(vt.guessed, " (guessed)", "")
-	return listPrefix + vt.basicType.name + guessedSuffix
+	var opts []string
+	if vt.Guessed() {
+		opts = append(opts, "guessed")
+	}
+	if vt.PackageSettable() {
+		opts = append(opts, "package-settable")
+	}
+	if vt.UserSettable() {
+		opts = append(opts, "user-settable")
+	}
+	if vt.SystemProvided() {
+		opts = append(opts, "system-provided")
+	}
+
+	optsSuffix := ""
+	if len(opts) > 0 {
+		optsSuffix = " (" + strings.Join(opts, ", ") + ")"
+	}
+
+	return listPrefix + vt.basicType.name + optsSuffix
 }
 
 func (vt *Vartype) IsShell() bool {

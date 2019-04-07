@@ -344,7 +344,7 @@ func (src *Pkgsrc) loadTools() {
 func (src *Pkgsrc) loadUntypedVars() {
 
 	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
-	unknownType := Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, false}
+	unknownType := Vartype{lkNone, BtUnknown, []ACLEntry{{"*", aclpAll}}, NoVartypeOptions}
 
 	define := func(varcanon string, mkline MkLine) {
 		switch {
@@ -909,12 +909,12 @@ func (src *Pkgsrc) VariableType(mklines MkLines, varname string) (vartype *Varty
 		if tool.Validity == AfterPrefsMk && mklines.Tools.SeenPrefs {
 			perms |= aclpUseLoadtime
 		}
-		return &Vartype{lkNone, BtShellCommand, []ACLEntry{{"*", perms}}, false}
+		return &Vartype{lkNone, BtShellCommand, []ACLEntry{{"*", perms}}, NoVartypeOptions}
 	}
 
 	if m, toolVarname := match1(varname, `^TOOLS_(.*)`); m {
 		if tool := G.ToolByVarname(mklines, toolVarname); tool != nil {
-			return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, false}
+			return &Vartype{lkNone, BtPathname, []ACLEntry{{"*", aclpUse}}, NoVartypeOptions}
 		}
 	}
 
@@ -930,37 +930,37 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	var gtype *Vartype
 	switch {
 	case hasSuffix(varbase, "DIRS"):
-		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, Guessed}
 	case hasSuffix(varbase, "DIR") && !hasSuffix(varbase, "DESTDIR"), hasSuffix(varname, "_HOME"):
 		// TODO: hasSuffix(varbase, "BASE")
-		gtype = &Vartype{lkNone, BtPathname, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtPathname, allowRuntime, Guessed}
 	case hasSuffix(varbase, "FILES"):
-		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, Guessed}
 	case hasSuffix(varbase, "FILE"):
-		gtype = &Vartype{lkNone, BtPathname, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtPathname, allowRuntime, Guessed}
 	case hasSuffix(varbase, "PATH"):
-		gtype = &Vartype{lkNone, BtPathlist, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtPathlist, allowRuntime, Guessed}
 	case hasSuffix(varbase, "PATHS"):
-		gtype = &Vartype{lkShell, BtPathname, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtPathname, allowRuntime, Guessed}
 	case hasSuffix(varbase, "_USER"):
-		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, true}
+		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, Guessed}
 	case hasSuffix(varbase, "_GROUP"):
-		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, true}
+		gtype = &Vartype{lkNone, BtUserGroupName, allowAll, Guessed}
 	case hasSuffix(varbase, "_ENV"):
-		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, Guessed}
 	case hasSuffix(varbase, "_CMD"):
-		gtype = &Vartype{lkNone, BtShellCommand, allowRuntime, true}
+		gtype = &Vartype{lkNone, BtShellCommand, allowRuntime, Guessed}
 	case hasSuffix(varbase, "_ARGS"):
-		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtShellWord, allowRuntime, Guessed}
 	case hasSuffix(varbase, "_CFLAGS"), hasSuffix(varname, "_CPPFLAGS"), hasSuffix(varname, "_CXXFLAGS"):
-		gtype = &Vartype{lkShell, BtCFlag, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtCFlag, allowRuntime, Guessed}
 	case hasSuffix(varname, "_LDFLAGS"):
-		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtLdFlag, allowRuntime, Guessed}
 	case hasSuffix(varbase, "_MK"):
 		// TODO: Add BtGuard for inclusion guards, since these variables may only be checked using defined().
-		gtype = &Vartype{lkNone, BtUnknown, allowAll, true}
+		gtype = &Vartype{lkNone, BtUnknown, allowAll, Guessed}
 	case hasSuffix(varbase, "_SKIP"):
-		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, true}
+		gtype = &Vartype{lkShell, BtPathmask, allowRuntime, Guessed}
 	}
 
 	if gtype == nil {

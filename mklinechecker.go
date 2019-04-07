@@ -222,7 +222,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// The guessed flag could also be determined more correctly. As of November 2018,
 		// running pkglint over the whole pkgsrc tree did not produce any different result
 		// whether guessed was true or false.
-		forLoopType := Vartype{lkShell, btForLoop, []ACLEntry{{"*", aclpAllRead}}, false}
+		forLoopType := Vartype{lkShell, btForLoop, []ACLEntry{{"*", aclpAllRead}}, NoVartypeOptions}
 		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, VucQuotPlain, false}
 		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
 			ck.CheckVaruse(varUse, &forLoopContext)
@@ -455,7 +455,7 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 	case !G.Opts.WarnExtra:
 		return
 
-	case vartype != nil && !vartype.guessed:
+	case vartype != nil && !vartype.Guessed():
 		// Well-known variables are probably defined by the infrastructure.
 		return
 
@@ -572,7 +572,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	indirectly := !directly && vuc.vartype != nil &&
 		vuc.vartype.Union().Contains(aclpUseLoadtime)
 
-	if vartype.guessed {
+	if vartype.Guessed() {
 		return
 	}
 
@@ -905,7 +905,7 @@ func (ck MkLineChecker) checkVarassignLeft() {
 
 	ck.checkTextVarUse(
 		ck.MkLine.Varname(),
-		&Vartype{lkNone, BtVariableName, []ACLEntry{{"*", aclpAll}}, false},
+		&Vartype{lkNone, BtVariableName, []ACLEntry{{"*", aclpAll}}, NoVartypeOptions},
 		vucTimeParse)
 }
 
@@ -1220,7 +1220,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 		}
 
 	case vartype.kindOfList == lkNone:
-		ck.CheckVartypeBasic(varname, vartype.basicType, op, value, comment, vartype.guessed)
+		ck.CheckVartypeBasic(varname, vartype.basicType, op, value, comment, vartype.Guessed())
 
 	case value == "":
 		break
@@ -1228,7 +1228,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 	default:
 		words := mkline.ValueFields(value)
 		for _, word := range words {
-			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.guessed)
+			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.Guessed())
 		}
 	}
 }

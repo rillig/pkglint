@@ -383,7 +383,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 
 	c.Assert(vartype, check.NotNil)
 	c.Check(vartype.basicType.name, equals, "Comment")
-	c.Check(vartype.guessed, equals, false)
+	c.Check(vartype.Guessed(), equals, false)
 	c.Check(vartype.kindOfList, equals, lkNone)
 
 	mklines := t.NewMkLines("Makefile",
@@ -1650,7 +1650,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 			kindOfList: lkNone,
 			basicType:  BtPathname,
 			aclEntries: nil,
-			guessed:    true,
+			Options:    Guessed,
 		},
 		time:       vucTimeRun,
 		quoting:    VucQuotPlain,

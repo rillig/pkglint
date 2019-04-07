@@ -674,7 +674,7 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	mklines.Check()
 
 	vartype := G.Pkgsrc.VariableType(mklines, "MY_CHECK_SKIP")
-	t.Check(vartype.guessed, equals, true)
+	t.Check(vartype.Guessed(), equals, true)
 	t.Check(vartype.EffectivePermissions("filename.mk"), equals, aclpAllRuntime)
 
 	// The permissions for MY_CHECK_SKIP say aclpAllRuntime, which excludes

@@ -28,7 +28,7 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 	// test generates the files description for the "set" permission.
 	test := func(rules []string, alternatives string) {
 		aclEntries := (*VarTypeRegistry).parseACLEntries(nil, "", rules...)
-		vartype := Vartype{lkNone, BtYesNo, aclEntries, false}
+		vartype := Vartype{lkNone, BtYesNo, aclEntries, NoVartypeOptions}
 
 		alternativeFiles := vartype.AlternativeFiles(aclpSet)
 

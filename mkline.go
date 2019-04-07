@@ -880,7 +880,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 
 	if !vartype.basicType.NeedsQ() {
 		if vartype.kindOfList == lkNone {
-			if vartype.guessed {
+			if vartype.Guessed() {
 				return unknown
 			}
 			return no

@@ -60,7 +60,7 @@ func (reg *VarTypeRegistry) Define(varname string, kindOfList KindOfList, basicT
 	m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
 	G.Assertf(m, "invalid variable name")
 
-	vartype := Vartype{kindOfList, basicType, aclEntries, false}
+	vartype := Vartype{kindOfList, basicType, aclEntries, NoVartypeOptions}
 
 	if varparam == "" || varparam == "*" {
 		reg.types[varbase] = &vartype
