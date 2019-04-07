@@ -79,34 +79,8 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 			"Otherwise remove the leading whitespace.")
 	}
 
-	if m, a := MatchVarassign(text); m {
-		if a.spaceAfterVarname != "" {
-			varname := a.varname
-			op := a.op
-			switch {
-			case hasSuffix(varname, "+") && (op == opAssign || op == opAssignAppend):
-				break
-			case matches(varname, `^[a-z]`) && op == opAssignEval:
-				break
-			default:
-				// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
-				fix := line.Autofix()
-				fix.Notef("Unnecessary space after variable name %q.", varname)
-				fix.Replace(varname+a.spaceAfterVarname+op.String(), varname+op.String())
-				fix.Apply()
-			}
-		}
-
-		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
-		if a.comment != "" && a.value != "" && a.spaceAfterValue == "" {
-			line.Warnf("The # character starts a Makefile comment.")
-			G.Explain(
-				"In a variable assignment, an unescaped # starts a comment that",
-				"continues until the end of the line.",
-				"To escape the #, write \\#.")
-		}
-
-		return &MkLineImpl{line, a}
+	if mkline := p.parseVarassign(line); mkline != nil {
+		return mkline
 	}
 
 	if hasPrefix(text, "\t") {
@@ -158,6 +132,39 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 	// The %q is deliberate here since it shows possible strange characters.
 	line.Errorf("Unknown Makefile line format: %q.", text)
 	return &MkLineImpl{line, nil}
+}
+
+func (p MkLineParser) parseVarassign(line Line) *MkLineImpl {
+	m, a := MatchVarassign(line.Text)
+	if !m {
+		return nil
+	}
+
+	if a.spaceAfterVarname != "" {
+		varname := a.varname
+		op := a.op
+		switch {
+		case hasSuffix(varname, "+") && (op == opAssign || op == opAssignAppend):
+			break
+		case matches(varname, `^[a-z]`) && op == opAssignEval:
+			break
+		default:
+			fix := line.Autofix()
+			fix.Notef("Unnecessary space after variable name %q.", varname)
+			fix.Replace(varname+a.spaceAfterVarname+op.String(), varname+op.String())
+			fix.Apply()
+		}
+	}
+
+	if a.comment != "" && a.value != "" && a.spaceAfterValue == "" {
+		line.Warnf("The # character starts a Makefile comment.")
+		G.Explain(
+			"In a variable assignment, an unescaped # starts a comment that",
+			"continues until the end of the line.",
+			"To escape the #, write \\#.")
+	}
+
+	return &MkLineImpl{line, a}
 }
 
 // String returns the filename and line numbers.
