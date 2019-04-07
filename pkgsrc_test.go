@@ -657,7 +657,8 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:21: PKGSRC_UNKNOWN_ENV is defined but not used.",
 		"WARN: ~/category/package/Makefile:21: ABCPATH is used but not defined.",
-		"0 errors and 2 warnings found.")
+		"0 errors and 2 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)")
 }
 
 func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {

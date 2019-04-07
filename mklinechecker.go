@@ -1023,10 +1023,15 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	// FIXME: Explain how to fix this warning.
-	//  For files like module.mk that are used by other packages,
-	//  documenting the variable already makes the warning disappear.
 	ck.MkLine.Warnf("%s is defined but not used.", varname)
+	ck.MkLine.Explain(
+		"This might be a simple typo.",
+		"",
+		"If a package provides a file containing several related variables",
+		"(such as module.mk, app.mk, extension.mk), that file may define",
+		"variables that look unused since they are only used by other packages.",
+		"These variables should be documented at the head of the file;",
+		"see mk/subst.mk for an example of such a documentation comment.")
 }
 
 // checkVarassignRightVaruse checks that in a variable assignment,
