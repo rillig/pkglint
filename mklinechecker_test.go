@@ -1543,21 +1543,23 @@ func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__mstar(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("options.mk",
 		MkRcsID,
-		"CONFIGURE_ARGS+=        ${CFLAGS:Q}",
-		"CONFIGURE_ARGS+=        ${CFLAGS:M*:Q}",
-		"CONFIGURE_ARGS+=        ${ADA_FLAGS:Q}",
-		"CONFIGURE_ARGS+=        ${ADA_FLAGS:M*:Q}",
-		"CONFIGURE_ENV+=         ${CFLAGS:Q}",
-		"CONFIGURE_ENV+=         ${CFLAGS:M*:Q}",
-		"CONFIGURE_ENV+=         ${ADA_FLAGS:Q}",
-		"CONFIGURE_ENV+=         ${ADA_FLAGS:M*:Q}")
+		"CONFIGURE_ARGS+=        CFLAGS=${CFLAGS:Q}",
+		"CONFIGURE_ARGS+=        CFLAGS=${CFLAGS:M*:Q}",
+		"CONFIGURE_ARGS+=        ADA_FLAGS=${ADA_FLAGS:Q}",
+		"CONFIGURE_ARGS+=        ADA_FLAGS=${ADA_FLAGS:M*:Q}",
+		"CONFIGURE_ENV+=         CFLAGS=${CFLAGS:Q}",
+		"CONFIGURE_ENV+=         CFLAGS=${CFLAGS:M*:Q}",
+		"CONFIGURE_ENV+=         ADA_FLAGS=${ADA_FLAGS:Q}",
+		"CONFIGURE_ENV+=         ADA_FLAGS=${ADA_FLAGS:M*:Q}")
 
 	mklines.Check()
 
-	// FIXME: There should be some notes and warnings about missing :M*;
-	//  these are prevented by the PERL5 case in VariableNeedsQuoting.
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.")
+		"WARN: ~/options.mk:2: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		"WARN: ~/options.mk:2: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:6: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		"WARN: ~/options.mk:6: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__mstar_not_needed(c *check.C) {
