@@ -1425,16 +1425,10 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir string) {
 	}
 
 	mkline := ck.MkLine
-	ck.CheckRelativePath(pkgdir, true)
+	ck.CheckRelativePath(pkgdir+"/Makefile", true)
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir)
 
-	// XXX: Is the leading "./" realistic?
-	if m, otherpkgpath := match1(pkgdir, `^(?:\./)?\.\./\.\./([^/]+/[^/]+)$`); m {
-		if !fileExists(G.Pkgsrc.File(otherpkgpath + "/Makefile")) {
-			mkline.Errorf("There is no package in %q.", otherpkgpath)
-		}
-
-	} else if !containsVarRef(pkgdir) {
+	if !matches(pkgdir, `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsVarRef(pkgdir) {
 		mkline.Warnf("%q is not a valid relative package directory.", pkgdir)
 		mkline.Explain(
 			"A relative pathname always starts with \"../../\", followed",

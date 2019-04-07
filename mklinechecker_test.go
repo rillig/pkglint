@@ -1254,12 +1254,12 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 		ck.CheckRelativePkgdir("../../other/does-not-exist")
 	})
 
-	// FIXME: The diagnostics for does-not-exist are redundant.
+	// TODO: split into the usual test(...) function.
+
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/Makefile:1: Relative path \"../pkgbase\" does not exist.",
+		"ERROR: ~/category/package/Makefile:1: Relative path \"../pkgbase/Makefile\" does not exist.",
 		"WARN: ~/category/package/Makefile:1: \"../pkgbase\" is not a valid relative package directory.",
-		"ERROR: ~/category/package/Makefile:1: Relative path \"../../other/does-not-exist\" does not exist.",
-		"ERROR: ~/category/package/Makefile:1: There is no package in \"other/does-not-exist\".")
+		"ERROR: ~/category/package/Makefile:1: Relative path \"../../other/does-not-exist/Makefile\" does not exist.")
 }
 
 // PR pkg/46570, item 2
