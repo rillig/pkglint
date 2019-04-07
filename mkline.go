@@ -82,51 +82,26 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 	if mkline := p.parseVarassign(line); mkline != nil {
 		return mkline
 	}
-
-	if hasPrefix(text, "\t") {
-		shellcmd := text[1:]
-		return &MkLineImpl{line, mkLineShell{shellcmd}}
+	if mkline := p.parseShellcmd(line); mkline != nil {
+		return mkline
 	}
-
-	trimmedText := trimHspace(text)
-	if strings.HasPrefix(trimmedText, "#") {
-		return &MkLineImpl{line, mkLineComment{}}
+	if mkline := p.parseCommentOrEmpty(line); mkline != nil {
+		return mkline
 	}
-
-	if trimmedText == "" {
-		return &MkLineImpl{line, mkLineEmpty{}}
+	if mkline := p.parseDirective(line); mkline != nil {
+		return mkline
 	}
-
-	if m, indent, directive, args, comment := matchMkDirective(text); m {
-
-		// In .if and .endif lines the space surrounding the comment is irrelevant.
-		// Especially for checking that the .endif comment matches the .if condition,
-		// it must be trimmed.
-		trimmedComment := trimHspace(comment)
-
-		return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
+	if mkline := p.parseInclude(line); mkline != nil {
+		return mkline
 	}
-
-	if m, indent, directive, includedFile := MatchMkInclude(text); m {
-		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
+	if mkline := p.parseSysinclude(line); mkline != nil {
+		return mkline
 	}
-
-	if m, indent, directive, includedFile := match3(text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`); m {
-		return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
+	if mkline := p.parseDependency(line); mkline != nil {
+		return mkline
 	}
-
-	// XXX: Replace this regular expression with proper parsing.
-	// There might be a ${VAR:M*.c} in these variables, which the below regular expression cannot handle.
-	if m, targets, whitespace, sources := match3(text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`); m {
-		// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
-		if whitespace != "" {
-			line.Notef("Space before colon in dependency line.")
-		}
-		return &MkLineImpl{line, mkLineDependency{targets, sources}}
-	}
-
-	if matches(text, `^(<<<<<<<|=======|>>>>>>>)`) {
-		return &MkLineImpl{line, nil}
+	if mkline := p.parseMergeConflict(line); mkline != nil {
+		return mkline
 	}
 
 	// The %q is deliberate here since it shows possible strange characters.
@@ -134,7 +109,7 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 	return &MkLineImpl{line, nil}
 }
 
-func (p MkLineParser) parseVarassign(line Line) *MkLineImpl {
+func (p MkLineParser) parseVarassign(line Line) MkLine {
 	m, a := MatchVarassign(line.Text)
 	if !m {
 		return nil
@@ -165,6 +140,83 @@ func (p MkLineParser) parseVarassign(line Line) *MkLineImpl {
 	}
 
 	return &MkLineImpl{line, a}
+}
+
+func (p MkLineParser) parseShellcmd(line Line) MkLine {
+	lexer := textproc.NewLexer(line.Text)
+	if !lexer.SkipByte('\t') {
+		return nil
+	}
+
+	return &MkLineImpl{line, mkLineShell{lexer.Rest()}}
+}
+
+func (p MkLineParser) parseCommentOrEmpty(line Line) MkLine {
+	trimmedText := trimHspace(line.Text)
+
+	if strings.HasPrefix(trimmedText, "#") {
+		return &MkLineImpl{line, mkLineComment{}}
+	}
+
+	if trimmedText == "" {
+		return &MkLineImpl{line, mkLineEmpty{}}
+	}
+
+	return nil
+}
+
+func (p MkLineParser) parseDirective(line Line) MkLine {
+	m, indent, directive, args, comment := matchMkDirective(line.Text)
+	if !m {
+		return nil
+	}
+
+	// In .if and .endif lines the space surrounding the comment is irrelevant.
+	// Especially for checking that the .endif comment matches the .if condition,
+	// it must be trimmed.
+	trimmedComment := trimHspace(comment)
+
+	return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
+}
+
+func (p MkLineParser) parseInclude(line Line) MkLine {
+	m, indent, directive, includedFile := MatchMkInclude(line.Text)
+	if !m {
+		return nil
+	}
+
+	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
+}
+
+func (p MkLineParser) parseSysinclude(line Line) MkLine {
+	m, indent, directive, includedFile := match3(line.Text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`)
+	if !m {
+		return nil
+	}
+
+	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
+}
+
+func (p MkLineParser) parseDependency(line Line) MkLine {
+	// XXX: Replace this regular expression with proper parsing.
+	// There might be a ${VAR:M*.c} in these variables, which the below regular expression cannot handle.
+	m, targets, whitespace, sources := match3(line.Text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`)
+	if !m {
+		return nil
+	}
+
+	if whitespace != "" {
+		line.Notef("Space before colon in dependency line.")
+	}
+	return &MkLineImpl{line, mkLineDependency{targets, sources}}
+}
+
+func (p MkLineParser) parseMergeConflict(line Line) MkLine {
+	if !matches(line.Text, `^(<<<<<<<|=======|>>>>>>>)`) {
+		return nil
+	}
+
+	return &MkLineImpl{line, nil}
 }
 
 // String returns the filename and line numbers.
