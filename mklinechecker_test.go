@@ -626,12 +626,11 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license_defaul
 
 	mklines.Check()
 
-	// FIXME: LICENSE is a package-settable variable. Therefore bsd.prefs.mk
-	//  does not need to be included before setting a default for this
-	//  variable. Including bsd.prefs.mk is only necessary when setting a
-	//  default value for user-settable or system-defined variables.
-	t.CheckOutputLines(
-		"WARN: filename.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+	// LICENSE is a package-settable variable. Therefore bsd.prefs.mk
+	// does not need to be included before setting a default for this
+	// variable. Including bsd.prefs.mk is only necessary when setting a
+	// default value for user-settable or system-defined variables.
+	t.CheckOutputEmpty()
 }
 
 // Don't check the permissions for infrastructure files since they have their own rules.

@@ -1178,6 +1178,18 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 		return
 	}
 
+	// Package-settable variables may use the ?= operator before including
+	// bsd.prefs.mk in situations like the following:
+	//
+	//  Makefile:  LICENSE=       package-license
+	//             .include "module.mk"
+	//  module.mk: LICENSE?=      default-license
+	//
+	vartype := G.Pkgsrc.VariableType(nil, mkline.Varname())
+	if vartype != nil && vartype.PackageSettable() {
+		return
+	}
+
 	mkline.Warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 	mkline.Explain(
 		"The ?= operator is used to provide a default value to a variable.",
