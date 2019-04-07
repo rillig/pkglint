@@ -572,14 +572,14 @@ func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
 	t := s.Init(c)
 
 	varUse := NewMkVarUse
-	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
+	test := func(text string, varUse *MkVarUse, diagnostics ...string) {
 		mkline := t.NewMkLine("Makefile", 20, "\t"+text)
 		p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
 
 		actual := p.VarUse()
 
 		t.Check(actual, deepEquals, varUse)
-		t.Check(p.Rest(), equals, rest)
+		t.Check(p.Rest(), equals, "")
 		t.CheckOutput(diagnostics)
 	}
 
@@ -587,21 +587,23 @@ func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
 	// check whether the command is actually valid.
 	// At least not while parsing the modifier since at this point it might
 	// be still unknown which of the commands can be used and which cannot.
-	test("${VAR:!command!}", varUse("VAR", "!command!"), "")
+	test("${VAR:!command!}", varUse("VAR", "!command!"))
 
-	test("${VAR:!command}", varUse("VAR"), "",
+	test("${VAR:!command}", varUse("VAR"),
 		"WARN: Makefile:20: Invalid variable modifier \"!command\" for \"VAR\".")
 
-	test("${VAR:command!}", varUse("VAR"), "",
+	test("${VAR:command!}", varUse("VAR"),
 		"WARN: Makefile:20: Invalid variable modifier \"command!\" for \"VAR\".")
 
 	// The :L modifier makes the variable value "echo hello", and the :[1]
 	// modifier extracts the "echo".
-	test("${echo hello:L:[1]}", varUse("echo hello", "L", "[1]"), "")
+	test("${echo hello:L:[1]}", varUse("echo hello", "L", "[1]"))
 
 	// bmake ignores the :[3] modifier, and the :L modifier just returns the
 	// variable name, in this case BUILD_DIRS.
-	test("${BUILD_DIRS:[3]:L}", varUse("BUILD_DIRS", "[3]", "L"), "")
+	test("${BUILD_DIRS:[3]:L}", varUse("BUILD_DIRS", "[3]", "L"))
+
+	test("${PATH:ts::Q}", varUse("PATH", "ts:", "Q"))
 }
 
 func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {

@@ -223,7 +223,9 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 				// See devel/bmake/files/var.c:/case 't'
 				sep := p.varUseText(closing)
 				switch {
-				case len(sep) < 2:
+				case sep == "":
+					lexer.SkipString(":")
+				case len(sep) == 1:
 					break
 				case matches(sep, `^\\\d+`):
 					break

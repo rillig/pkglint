@@ -13,9 +13,17 @@ func NewMkVarUse(varname string, modifiers ...string) *MkVarUse {
 }
 
 func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
-	varuse := NewMkVarUse("varname", "Q")
+	t := s.Init(c)
 
-	c.Check(varuse.Mod(), equals, ":Q")
+	test := func(varUseText string, mod string) {
+		line := t.NewLine("filename.mk", 123, "")
+		varUse := NewMkParser(line, varUseText, true).VarUse()
+		t.CheckOutputEmpty()
+		c.Check(varUse.Mod(), equals, mod)
+	}
+
+	test("${varname:Q}", ":Q")
+	test("${PATH:ts::Q}", ":ts::Q")
 }
 
 // AddCommand adds a command directly to a list of commands,
