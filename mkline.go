@@ -74,7 +74,7 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 	// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
 	if hasPrefix(text, " ") && line.Basename != "bsd.buildlink3.mk" {
 		line.Warnf("Makefile lines should not start with space characters.")
-		G.Explain(
+		line.Explain(
 			"If this line should be a shell command connected to a target, use a tab character for indentation.",
 			"Otherwise remove the leading whitespace.")
 	}
@@ -133,7 +133,7 @@ func (p MkLineParser) parseVarassign(line Line) MkLine {
 
 	if a.comment != "" && a.value != "" && a.spaceAfterValue == "" {
 		line.Warnf("The # character starts a Makefile comment.")
-		G.Explain(
+		line.Explain(
 			"In a variable assignment, an unescaped # starts a comment that",
 			"continues until the end of the line.",
 			"To escape the #, write \\#.")
@@ -673,7 +673,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 }
 
 func (mkline *MkLineImpl) ExplainRelativeDirs() {
-	G.Explain(
+	mkline.Explain(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
 		"main pkgsrc repository.")

@@ -122,7 +122,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 		if pkgver.Compare(pkgversion, changeVersion) < 0 {
 			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.",
 				change.Version, mkline.Line.RefToLocation(change.Location), pkgversion)
-			G.Explain(
+			mkline.Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
 				"This is unusual, since packages are typically upgraded instead of",
@@ -761,7 +761,7 @@ func (pkg *Package) checkUpdate() {
 		case cmp < 0:
 			pkgnameLine.Warnf("This package should be updated to %s%s.",
 				sugg.Version, comment)
-			G.Explain(
+			pkgnameLine.Explain(
 				"The wishlist for package updates in doc/TODO mentions that a newer",
 				"version of this package is available.")
 
@@ -989,7 +989,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	//  except if they are helpful for locating the mistakes.
 	mkline := relevantLines[0]
 	mkline.Warnf("The canonical order of the variables is %s.", strings.Join(canonical, ", "))
-	G.Explain(
+	mkline.Explain(
 		"In simple package Makefiles, some common variables should be",
 		"arranged in a specific order.",
 		"",
@@ -1031,14 +1031,16 @@ func (pkg *Package) checkLocallyModified(filename string) {
 	}
 
 	if owner != "" {
-		NewLineWhole(filename).Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
-		G.Explain(
+		line := NewLineWhole(filename)
+		line.Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
+		line.Explain(
 			seeGuide("Package components, Makefile", "components.Makefile"))
 	}
 
 	if maintainer != "" {
-		NewLineWhole(filename).Notef("Please only commit changes that %s would approve.", maintainer)
-		G.Explain(
+		line := NewLineWhole(filename)
+		line.Notef("Please only commit changes that %s would approve.", maintainer)
+		line.Explain(
 			"See the pkgsrc guide, section \"Package components\",",
 			"keyword \"maintainer\", for more information.")
 	}

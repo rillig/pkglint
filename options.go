@@ -11,8 +11,9 @@ func CheckLinesOptionsMk(mklines MkLines) {
 	mlex.SkipWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
 
 	if mlex.EOF() || !(mlex.CurrentMkLine().IsVarassign() && mlex.CurrentMkLine().Varname() == "PKG_OPTIONS_VAR") {
-		mlex.CurrentLine().Warnf("Expected definition of PKG_OPTIONS_VAR.")
-		G.Explain(
+		line := mlex.CurrentLine()
+		line.Warnf("Expected definition of PKG_OPTIONS_VAR.")
+		line.Explain(
 			"The input variables in an options.mk file should always be",
 			"mentioned in the same order: PKG_OPTIONS_VAR,",
 			"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.",
@@ -55,8 +56,9 @@ loop:
 			}
 
 		default:
-			mlex.CurrentLine().Warnf("Expected inclusion of \"../../mk/bsd.options.mk\".")
-			G.Explain(
+			line := mlex.CurrentLine()
+			line.Warnf("Expected inclusion of \"../../mk/bsd.options.mk\".")
+			line.Explain(
 				"After defining the input variables (PKG_OPTIONS_VAR, etc.),",
 				"bsd.options.mk should be included to do the actual processing.",
 				"No other actions should take place in this part of the file",
@@ -94,7 +96,7 @@ loop:
 			//  .endif
 			if cond.Empty != nil && mkline.HasElseBranch() {
 				mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")
-				G.Explain(
+				mkline.Explain(
 					"For consistency among packages, the upper branch of this",
 					".if/.else statement should always handle the case where the",
 					"option is activated.",
@@ -117,13 +119,13 @@ loop:
 		switch {
 		case handled == nil:
 			declared.Warnf("Option %q should be handled below in an .if block.", option)
-			G.Explain(
+			declared.Explain(
 				"If an option is not processed in this file, it may either be a",
 				"typo, or the option does not have any effect.")
 
 		case declared == nil:
 			handled.Warnf("Option %q is handled but not added to PKG_SUPPORTED_OPTIONS.", option)
-			G.Explain(
+			handled.Explain(
 				"This block of code will never be run since PKG_OPTIONS cannot",
 				"contain this value.",
 				"This is most probably a typo.")

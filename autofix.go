@@ -299,7 +299,7 @@ func (fix *Autofix) Apply() {
 			line.showSource(G.out)
 		}
 		if logDiagnostic && len(fix.explanation) > 0 {
-			G.Explain(fix.explanation...)
+			line.Explain(fix.explanation...)
 		}
 		if G.Logger.Opts.ShowSource {
 			if !(G.Logger.Opts.Explain && logDiagnostic && len(fix.explanation) > 0) {
