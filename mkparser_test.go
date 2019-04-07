@@ -86,7 +86,7 @@ func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	t := s.Init(c)
 
-	testRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
+	testRest := func(input string, expectedTokens []*MkToken, expectedRest string, diagnostics ...string) {
 		line := t.NewLines("Test_MkParser_VarUse.mk", input).Lines[0]
 		p := NewMkParser(line, input, true)
 		actualTokens := p.MkTokens()
@@ -98,9 +98,10 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 			}
 		}
 		c.Check(p.Rest(), equals, expectedRest)
+		t.CheckOutput(diagnostics)
 	}
-	test := func(input string, expectedToken *MkToken) {
-		testRest(input, []*MkToken{expectedToken}, "")
+	test := func(input string, expectedToken *MkToken, diagnostics ...string) {
+		testRest(input, []*MkToken{expectedToken}, "", diagnostics...)
 	}
 	varuse := func(varname string, modifiers ...string) *MkToken {
 		text := "${" + varname
@@ -319,22 +320,24 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 		varuseText("$<", "<")) // Same as ${.IMPSRC}
 
 	test("$(GNUSTEP_USER_ROOT)",
-		varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"))
-
-	t.CheckOutputLines(
+		varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"),
 		"WARN: Test_MkParser_VarUse.mk:1: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
 
-	testRest("${VAR)", nil, "${VAR)") // Opening brace, closing parenthesis
-	testRest("$(VAR}", nil, "$(VAR}") // Opening parenthesis, closing brace
-	t.CheckOutputEmpty()              // Warnings are only printed for balanced expressions.
+	// Opening brace, closing parenthesis.
+	// Warnings are only printed for balanced expressions.
+	testRest("${VAR)",
+		nil, "${VAR)")
+
+	// Opening parenthesis, closing brace
+	// Warnings are only printed for balanced expressions.
+	testRest("$(VAR}",
+		nil, "$(VAR}")
 
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}",
 		varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
 
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}",
-		varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}")) // Missing @ at the end
-
-	t.CheckOutputLines(
+		varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}"),
 		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".")
 
 	// Unfinished variable use
