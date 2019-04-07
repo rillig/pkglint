@@ -66,109 +66,115 @@ func (p *MkParser) MkTokens() []*MkToken {
 }
 
 func (p *MkParser) VarUse() *MkVarUse {
+	rest := p.lexer.Rest()
+	if len(rest) < 2 || rest[0] != '$' {
+		return nil
+	}
+
+	switch rest[1] {
+	case '{', '(':
+		return p.varUseBrace(rest[1] == '(')
+
+	case '$':
+		// This is an escaped dollar character and not a variable use.
+		return nil
+
+	case '@', '<', ' ':
+		// These variable names are known to exist.
+		//
+		// Many others are also possible but not used in practice.
+		// In particular, when parsing the :C or :S modifier,
+		// the $ must not be interpreted as a variable name,
+		// even when it looks like $/ could refer to the "/" variable.
+		//
+		// TODO: Find out whether $" is a variable use when it appears in the :M modifier.
+		p.lexer.Skip(2)
+		return &MkVarUse{rest[1:2], nil}
+
+	default:
+		return p.varUseAlnum()
+	}
+}
+
+func (p *MkParser) varUseBrace(usingRoundParen bool) *MkVarUse {
 	lexer := p.lexer
 
-	if lexer.PeekByte() != '$' {
-		return nil
-	}
-
 	mark := lexer.Mark()
-	lexer.Skip(1)
+	lexer.Skip(2)
 
-	if lexer.SkipByte('{') || lexer.SkipByte('(') {
-		usingRoundParen := lexer.Since(mark)[1] == '('
+	closing := byte('}')
+	if usingRoundParen {
+		closing = ')'
+	}
 
-		closing := byte('}')
-		if usingRoundParen {
-			closing = ')'
+	varnameMark := lexer.Mark()
+	varname := p.Varname()
+
+	modifiers := p.VarUseModifiers(varname, closing)
+	if lexer.SkipByte(closing) {
+		if usingRoundParen && p.EmitWarnings {
+			parenVaruse := lexer.Since(mark)
+			edit := []byte(parenVaruse)
+			edit[1] = '{'
+			edit[len(edit)-1] = '}'
+			bracesVaruse := string(edit)
+
+			fix := p.Line.Autofix()
+			fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varname)
+			fix.Replace(parenVaruse, bracesVaruse)
+			fix.Apply()
 		}
 
-		varnameMark := lexer.Mark()
-		varname := p.Varname()
+		return &MkVarUse{varname, modifiers}
+	}
 
-		modifiers := p.VarUseModifiers(varname, closing)
+	// This code path parses ${arbitrary text :L} and ${expression :? true-branch : false-branch }.
+	// The text in front of the :L or :? modifier doesn't have to be a variable name.
+
+	re := G.res.Compile(regex.Pattern(ifelseStr(usingRoundParen, `^(?:[^$:)]|\$\$)+`, `^(?:[^$:}]|\$\$)+`)))
+	for p.VarUse() != nil || lexer.SkipRegexp(re) {
+	}
+
+	rest := p.Rest()
+	if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
+		varexpr := lexer.Since(varnameMark)
+		modifiers := p.VarUseModifiers(varexpr, closing)
 		if lexer.SkipByte(closing) {
-			if usingRoundParen && p.EmitWarnings {
-				parenVaruse := lexer.Since(mark)
-				edit := []byte(parenVaruse)
-				edit[1] = '{'
-				edit[len(edit)-1] = '}'
-				bracesVaruse := string(edit)
-
-				fix := p.Line.Autofix()
-				fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varname)
-				fix.Replace(parenVaruse, bracesVaruse)
-				fix.Apply()
-			}
-
-			return &MkVarUse{varname, modifiers}
-		}
-
-		// This code path parses ${arbitrary text :L} and ${expression :? true-branch : false-branch }.
-		// The text in front of the :L or :? modifier doesn't have to be a variable name.
-
-		re := G.res.Compile(regex.Pattern(ifelseStr(usingRoundParen, `^(?:[^$:)]|\$\$)+`, `^(?:[^$:}]|\$\$)+`)))
-		for p.VarUse() != nil || lexer.SkipRegexp(re) {
-		}
-
-		rest := p.Rest()
-		if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
-			varexpr := lexer.Since(varnameMark)
-			modifiers := p.VarUseModifiers(varexpr, closing)
-			if lexer.SkipByte(closing) {
-				return &MkVarUse{varexpr, modifiers}
-			}
-		}
-
-		lexer.Reset(mark)
-		return nil
-	}
-
-	varname := lexer.NextByteSet(textproc.AlnumU)
-	if varname != -1 {
-
-		if p.EmitWarnings {
-			varnameRest := lexer.Copy().NextBytesSet(textproc.AlnumU)
-			if varnameRest != "" {
-				p.Line.Errorf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.",
-					sprintf("%c%s", varname, varnameRest))
-				p.Line.Explain(
-					"Only the first letter after the dollar is the variable name.",
-					"Everything following it is normal text, even if it looks like a variable name to human readers.")
-			} else {
-				p.Line.Warnf("$%[1]c is ambiguous. Use ${%[1]c} if you mean a Make variable or $$%[1]c if you mean a shell variable.", varname)
-				p.Line.Explain(
-					"In its current form, this variable is parsed as a Make variable.",
-					"For human readers though, $x looks more like a shell variable than a Make variable,",
-					"since Make variables are usually written using braces (BSD-style) or parentheses (GNU-style).")
-			}
-		}
-
-		return &MkVarUse{sprintf("%c", varname), nil}
-	}
-
-	if !lexer.EOF() {
-		symbol := lexer.Rest()[:1]
-		switch symbol {
-		case "$":
-			// This is an escaped dollar character and not a variable use.
-
-		case "@", "<", " ":
-			// These variable names are known to exist.
-			//
-			// Many others are also possible but not used in practice.
-			// In particular, when parsing the :C or :S modifier,
-			// the $ must not be interpreted as a variable name,
-			// even when it looks like $/ could refer to the "/" variable.
-			//
-			// TODO: Find out whether $" is a variable use when it appears in the :M modifier.
-			lexer.Skip(1)
-			return &MkVarUse{symbol, nil}
+			return &MkVarUse{varexpr, modifiers}
 		}
 	}
 
 	lexer.Reset(mark)
 	return nil
+}
+
+func (p *MkParser) varUseAlnum() *MkVarUse {
+	lexer := p.lexer
+
+	apparentVarname := textproc.NewLexer(lexer.Rest()[1:]).NextBytesSet(textproc.AlnumU)
+	if apparentVarname == "" {
+		return nil
+	}
+
+	lexer.Skip(2)
+
+	if p.EmitWarnings {
+		if len(apparentVarname) > 1 {
+			p.Line.Errorf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.",
+				apparentVarname)
+			p.Line.Explain(
+				"Only the first letter after the dollar is the variable name.",
+				"Everything following it is normal text, even if it looks like a variable name to human readers.")
+		} else {
+			p.Line.Warnf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.", apparentVarname)
+			p.Line.Explain(
+				"In its current form, this variable is parsed as a Make variable.",
+				"For human readers though, $x looks more like a shell variable than a Make variable,",
+				"since Make variables are usually written using braces (BSD-style) or parentheses (GNU-style).")
+		}
+	}
+
+	return &MkVarUse{apparentVarname[:1], nil}
 }
 
 // VarUseModifiers parses the modifiers of a variable being used, such as :Q, :Mpattern.
