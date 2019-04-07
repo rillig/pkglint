@@ -879,7 +879,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 	}
 
 	if !vartype.basicType.NeedsQ() {
-		if vartype.kindOfList == lkNone {
+		if !vartype.List() {
 			if vartype.Guessed() {
 				return unknown
 			}
@@ -892,7 +892,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.IsWordPart && vuc.quoting == VucQuotPlain {
-		if vartype.kindOfList == lkNone && vartype.basicType == BtShellWord {
+		if !vartype.List() && vartype.basicType == BtShellWord {
 			return no
 		}
 	}

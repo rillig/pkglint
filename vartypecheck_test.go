@@ -1526,7 +1526,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 
 		// See MkLineChecker.checkVartype.
 		var lineValues []string
-		if vartype == nil || vartype.kindOfList == lkNone {
+		if vartype == nil || !vartype.List() {
 			lineValues = []string{effectiveValue}
 		} else {
 			lineValues = mkline.ValueFields(effectiveValue)

@@ -384,7 +384,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	c.Assert(vartype, check.NotNil)
 	c.Check(vartype.basicType.name, equals, "Comment")
 	c.Check(vartype.Guessed(), equals, false)
-	c.Check(vartype.kindOfList, equals, lkNone)
+	c.Check(vartype.List(), equals, false)
 
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
@@ -559,9 +559,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 
 	t.SetUpVartypes()
 	t.SetUpTool("awk", "AWK", AtRunTime)
-	G.Pkgsrc.vartypes.DefineParse("SET_ONLY", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("SET_ONLY", BtUnknown, NoVartypeOptions,
 		"options.mk: set")
-	G.Pkgsrc.vartypes.DefineParse("SET_ONLY_DEFAULT_ELSEWHERE", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("SET_ONLY_DEFAULT_ELSEWHERE", BtUnknown, NoVartypeOptions,
 		"options.mk: set",
 		"*.mk: default, set")
 	mklines := t.NewMkLines("options.mk",
@@ -869,9 +869,9 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_condition(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkShell, BtPathmask,
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathmask, List,
 		"special:filename.mk: use-loadtime")
-	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", lkShell, BtPathmask,
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathmask, List,
 		"special:filename.mk: use")
 
 	mklines := t.NewMkLines("filename.mk",
@@ -888,9 +888,9 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_conditio
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_for_loop(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkShell, BtPathmask,
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathmask, List,
 		"special:filename.mk: use-loadtime")
-	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", lkShell, BtPathmask,
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathmask, List,
 		"special:filename.mk: use")
 
 	mklines := t.NewMkLines("filename.mk",
@@ -936,16 +936,16 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_guessed(c *
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_run_time(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtUnknown, NoVartypeOptions,
 		"*.mk: use, use-loadtime")
-	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtUnknown, NoVartypeOptions,
 		"*.mk: use")
-	G.Pkgsrc.vartypes.DefineParse("WRITE_ONLY", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("WRITE_ONLY", BtUnknown, NoVartypeOptions,
 		"*.mk: set")
-	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME_ELSEWHERE", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME_ELSEWHERE", BtUnknown, NoVartypeOptions,
 		"Makefile: use-loadtime",
 		"*.mk: set")
-	G.Pkgsrc.vartypes.DefineParse("RUN_TIME_ELSEWHERE", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME_ELSEWHERE", BtUnknown, NoVartypeOptions,
 		"Makefile: use",
 		"*.mk: set")
 
@@ -1037,7 +1037,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__usable_only_at_loadtime_in_other_file(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtFileName,
+	G.Pkgsrc.vartypes.DefineParse("VAR", BtFileName, NoVartypeOptions,
 		"*: set, use-loadtime")
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
@@ -1056,9 +1056,9 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_infrastru
 
 	// This combination of BtUnknown and all permissions is typical for
 	// otherwise unknown variables from the pkgsrc infrastructure.
-	G.Pkgsrc.vartypes.Define("INFRA", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.Define("INFRA", BtUnknown, NoVartypeOptions,
 		ACLEntry{"*", aclpAll})
-	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("VAR", BtUnknown, NoVartypeOptions,
 		"buildlink3.mk: none",
 		"*: use")
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -1092,10 +1092,10 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__assigned_to_load_time
 	// to use its value in LOAD_TIME, as the latter might be evaluated later
 	// at load time, and at that point VAR would be evaluated as well.
 
-	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", lkNone, BtMessage,
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtMessage, NoVartypeOptions,
 		"buildlink3.mk: set",
 		"*.mk: use-loadtime")
-	G.Pkgsrc.vartypes.DefineParse("VAR", lkNone, BtUnknown,
+	G.Pkgsrc.vartypes.DefineParse("VAR", BtUnknown, NoVartypeOptions,
 		"buildlink3.mk: none",
 		"*.mk: use")
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -1647,10 +1647,9 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 
 	ck.CheckVaruse(NewMkVarUse("CPPPATH.SunOS"), &VarUseContext{
 		vartype: &Vartype{
-			kindOfList: lkNone,
 			basicType:  BtPathname,
+			options:    Guessed,
 			aclEntries: nil,
-			Options:    Guessed,
 		},
 		time:       vucTimeRun,
 		quoting:    VucQuotPlain,

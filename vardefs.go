@@ -56,11 +56,11 @@ func (reg *VarTypeRegistry) DefineType(varcanon string, vartype *Vartype) {
 	reg.types[varcanon] = vartype
 }
 
-func (reg *VarTypeRegistry) Define(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...ACLEntry) {
+func (reg *VarTypeRegistry) Define(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...ACLEntry) {
 	m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
 	G.Assertf(m, "invalid variable name")
 
-	vartype := Vartype{kindOfList, basicType, aclEntries, NoVartypeOptions}
+	vartype := Vartype{basicType, options, aclEntries}
 
 	if varparam == "" || varparam == "*" {
 		reg.types[varbase] = &vartype
@@ -81,9 +81,9 @@ func (reg *VarTypeRegistry) Define(varname string, kindOfList KindOfList, basicT
 // TODO: To be implemented: when prefixed with "infra:", the entry only
 //  applies to files within the pkgsrc infrastructure. Without this prefix,
 //  the pattern only applies to files outside the pkgsrc infrastructure.
-func (reg *VarTypeRegistry) DefineParse(varname string, kindOfList KindOfList, basicType *BasicType, aclEntries ...string) {
+func (reg *VarTypeRegistry) DefineParse(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
 	parsedEntries := reg.parseACLEntries(varname, aclEntries...)
-	reg.Define(varname, kindOfList, basicType, parsedEntries...)
+	reg.Define(varname, basicType, options, parsedEntries...)
 }
 
 // Init initializes the long list of predefined pkgsrc variables.
@@ -99,9 +99,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  - how this individual permission set differs
 	//  - why the predefined permission set is not good enough
 	//  - which packages need this custom permission set.
-	acl := func(varname string, basicType *BasicType, aclEntries ...string) {
-		reg.DefineParse(varname, lkNone, basicType, aclEntries...)
-	}
+	acl := reg.DefineParse
 
 	// acllist defines the permissions of a list variable by listing
 	// the permissions individually.
@@ -111,20 +109,22 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  - how this individual permission set differs
 	//  - why the predefined permission set is not good enough
 	//  - which packages need this custom permission set.
-	acllist := func(varname string, basicType *BasicType, aclEntries ...string) {
-		reg.DefineParse(varname, lkShell, basicType, aclEntries...)
+	acllist := func(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
+		reg.DefineParse(varname, basicType, options|List, aclEntries...)
 	}
 
 	// A package-settable variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
 	pkg := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
+			PackageSettable,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, use")
 	}
 
 	// pkgload is the same as pkg, except that the variable may be accessed at load time.
 	pkgload := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, lkNone, basicType,
+		reg.DefineParse(varname, basicType,
+			PackageSettable,
 			"buildlink3.mk: none",
 			"builtin.mk: use, use-loadtime",
 			"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
@@ -137,6 +137,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// catch it.
 	pkglist := func(varname string, basicType *BasicType) {
 		acllist(varname, basicType,
+			List|PackageSettable,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
@@ -154,11 +155,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// suffix.
 	pkgappend := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
+			PackageSettable,
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 	pkgappendbl3 := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
+			PackageSettable,
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 
@@ -166,13 +169,15 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// These variables are typically related to compiling and linking files
 	// from C and related languages.
 	pkgbl3 := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, lkNone, basicType,
+		reg.DefineParse(varname, basicType,
+			PackageSettable,
 			"Makefile, Makefile.*, *.mk: default, set, use")
 	}
 	// Some package-defined lists may also be modified in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
 	pkglistbl3 := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, lkShell, basicType,
+		reg.DefineParse(varname, basicType,
+			List|PackageSettable,
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 
@@ -187,17 +192,20 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  They can be made more precise.
 	sys := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
+			SystemProvided,
 			"buildlink3.mk: none",
 			"*: use")
 	}
 
 	sysbl3 := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
+			SystemProvided,
 			"*: use")
 	}
 
 	syslist := func(varname string, basicType *BasicType) {
 		acllist(varname, basicType,
+			List|SystemProvided,
 			"buildlink3.mk: none",
 			"*: use")
 	}
@@ -206,6 +214,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usr := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
 			// TODO: why is builtin.mk missing here?
+			UserSettable,
 			"buildlink3.mk: none",
 			"*: use, use-loadtime")
 	}
@@ -214,25 +223,29 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usrlist := func(varname string, basicType *BasicType) {
 		acllist(varname, basicType,
 			// TODO: why is builtin.mk missing here?
+			List|UserSettable,
 			"buildlink3.mk: none",
 			"*: use, use-loadtime")
 	}
 
 	// sysload declares a system-provided variable that may already be used at load time.
 	sysload := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, lkNone, basicType,
+		reg.DefineParse(varname, basicType,
+			SystemProvided,
 			"*: use, use-loadtime")
 	}
 
 	sysloadlist := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, lkShell, basicType,
+		reg.DefineParse(varname, basicType,
+			List|SystemProvided,
 			"*: use, use-loadtime")
 	}
 
 	// bl3list declares a list variable that is defined by buildlink3.mk and
 	// builtin.mk and can later be used by the package.
 	bl3list := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, lkShell, basicType,
+		reg.DefineParse(varname, basicType,
+			List, // not PackageSettable since the package uses it more than setting it.
 			"buildlink3.mk, builtin.mk: append",
 			"*: use")
 	}
@@ -240,7 +253,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// cmdline declares a variable that is defined on the command line. There
 	// are only few variables of this type, such as PKG_DEBUG_LEVEL.
 	cmdline := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, lkNone, basicType,
+		reg.DefineParse(varname, basicType,
+			CommandLineProvided,
 			"buildlink3.mk, builtin.mk: none",
 			"*: use, use-loadtime")
 	}
@@ -248,6 +262,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// Only for infrastructure files; see mk/misc/show.mk
 	infralist := func(varname string, basicType *BasicType) {
 		acllist(varname, basicType,
+			List,
 			"*: append")
 	}
 
@@ -416,8 +431,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// X11_TYPE and X11BASE may be used in buildlink3.mk as well, which the
 	// standard sysload doesn't allow.
 	acl("X11_TYPE", enum("modular native"),
+		UserSettable,
 		"*: use, use-loadtime")
 	acl("X11BASE", BtPathname,
+		UserSettable,
 		"*: use, use-loadtime")
 
 	usr("MOTIFBASE", BtPathname)
@@ -480,6 +497,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// TODO: parse all the below information directly from mk/defaults/mk.conf.
 	usrpkg := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
+			PackageSettable|UserSettable,
 			"Makefile: default, set, use, use-loadtime",
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile.*, *.mk: default, set, use, use-loadtime",
@@ -487,6 +505,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	}
 	usrpkglist := func(varname string, basicType *BasicType) {
 		acllist(varname, basicType,
+			List|PackageSettable|UserSettable,
 			"Makefile: default, set, use, use-loadtime",
 			"buildlink3.mk, builtin.mk: none",
 			"Makefile.*, *.mk: default, set, use, use-loadtime",
@@ -751,75 +770,99 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	syslist("BSD_MAKE_ENV", BtShellWord)
 	// TODO: Align the permissions of the various BUILDLINK_*.* variables with each other.
 	acllist("BUILDLINK_ABI_DEPENDS.*", BtDependency,
+		PackageSettable,
 		"buildlink3.mk, builtin.mk: append, use-loadtime",
 		"*: append")
 	acllist("BUILDLINK_API_DEPENDS.*", BtDependency,
+		PackageSettable,
 		"buildlink3.mk, builtin.mk: append, use-loadtime",
 		"*: append")
 	acl("BUILDLINK_AUTO_DIRS.*", BtYesNo,
+		PackageSettable,
 		"buildlink3.mk: append",
 		"Makefile: set")
 	syslist("BUILDLINK_CFLAGS", BtCFlag)
 	bl3list("BUILDLINK_CFLAGS.*", BtCFlag)
 	acl("BUILDLINK_CONTENTS_FILTER.*", BtShellCommand,
+		PackageSettable,
 		"buildlink3.mk: set")
 	syslist("BUILDLINK_CPPFLAGS", BtCFlag)
 	bl3list("BUILDLINK_CPPFLAGS.*", BtCFlag)
 	acllist("BUILDLINK_DEPENDS", BtIdentifier,
+		PackageSettable,
 		"buildlink3.mk: append")
 	acllist("BUILDLINK_DEPMETHOD.*", BtBuildlinkDepmethod,
+		PackageSettable,
 		"buildlink3.mk: default, append, use",
 		"Makefile, Makefile.*, *.mk: default, set, append")
 	acl("BUILDLINK_DIR", BtPathname,
+		PackageSettable,
 		"*: use")
 	bl3list("BUILDLINK_FILES.*", BtPathmask)
 	pkgbl3("BUILDLINK_FILES_CMD.*", BtShellCommand)
 	acllist("BUILDLINK_INCDIRS.*", BtPathname,
+		PackageSettable,
 		"buildlink3.mk: default, append",
 		"Makefile, Makefile.*, *.mk: use")
 	acl("BUILDLINK_JAVA_PREFIX.*", BtPathname,
+		PackageSettable,
 		"buildlink3.mk: set, use")
 	acllist("BUILDLINK_LDADD.*", BtLdFlag,
+		PackageSettable,
 		"builtin.mk: default, set, append, use",
 		"buildlink3.mk: append, use",
 		"Makefile, Makefile.*, *.mk: use")
 	acllist("BUILDLINK_LDFLAGS", BtLdFlag,
+		PackageSettable,
 		"*: use")
 	bl3list("BUILDLINK_LDFLAGS.*", BtLdFlag)
 	acllist("BUILDLINK_LIBDIRS.*", BtPathname,
+		PackageSettable,
 		"buildlink3.mk, builtin.mk: append",
 		"Makefile, Makefile.*, *.mk: use")
 	acllist("BUILDLINK_LIBS.*", BtLdFlag,
+		PackageSettable,
 		"buildlink3.mk: append",
 		"Makefile, Makefile.*, *.mk: set, append, use")
 	acllist("BUILDLINK_PASSTHRU_DIRS", BtPathname,
+		PackageSettable,
 		"Makefile, Makefile.*, *.mk: append")
 	acllist("BUILDLINK_PASSTHRU_RPATHDIRS", BtPathname,
+		PackageSettable,
 		"Makefile, Makefile.*, *.mk: append")
 	acl("BUILDLINK_PKGSRCDIR.*", BtRelativePkgDir,
+		PackageSettable,
 		"buildlink3.mk: default, use-loadtime")
 	acl("BUILDLINK_PREFIX.*", BtPathname,
+		PackageSettable,
 		"builtin.mk: set, use",
 		"Makefile, Makefile.*, *.mk: use")
 	acllist("BUILDLINK_RPATHDIRS.*", BtPathname,
+		PackageSettable,
 		"buildlink3.mk: append")
 	acllist("BUILDLINK_TARGETS", BtIdentifier,
+		PackageSettable,
 		"Makefile, Makefile.*, *.mk: append")
 	acl("BUILDLINK_FNAME_TRANSFORM.*", BtSedCommands,
+		PackageSettable,
 		"Makefile, buildlink3.mk, builtin.mk, hacks.mk, options.mk: append")
 	acllist("BUILDLINK_TRANSFORM", BtWrapperTransform,
+		PackageSettable,
 		"*: append")
 	acllist("BUILDLINK_TRANSFORM.*", BtWrapperTransform,
+		PackageSettable,
 		"*: append")
 	acllist("BUILDLINK_TREE", BtIdentifier,
+		PackageSettable,
 		"buildlink3.mk: append")
 	acl("BUILDLINK_X11_DIR", BtPathname,
+		PackageSettable,
 		"*: use")
 	acllist("BUILD_DEFS", BtVariableName,
+		PackageSettable,
 		"Makefile, Makefile.*, *.mk: append")
 	pkglist("BUILD_DEFS_EFFECTS", BtVariableName)
-	acllist("BUILD_DEPENDS", BtDependencyWithPath,
-		"Makefile, Makefile.*, *.mk: append")
+	pkglist("BUILD_DEPENDS", BtDependencyWithPath)
 	pkglist("BUILD_DIRS", BtWrksrcSubdirectory)
 	pkglist("BUILD_ENV", BtShellWord)
 	sys("BUILD_MAKE_CMD", BtShellCommand)
@@ -828,19 +871,25 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("BUILD_TARGET.*", BtIdentifier)
 	pkg("BUILD_USES_MSGFMT", BtYes)
 	acl("BUILTIN_PKG", BtIdentifier,
+		PackageSettable,
 		"builtin.mk: set, use, use-loadtime",
 		"Makefile, Makefile.*, *.mk: use, use-loadtime")
 	acl("BUILTIN_PKG.*", BtPkgName,
+		PackageSettable,
 		"builtin.mk: set, use, use-loadtime")
 	pkglistbl3("BUILTIN_FIND_FILES_VAR", BtVariableName)
 	pkglistbl3("BUILTIN_FIND_FILES.*", BtPathname)
 	acl("BUILTIN_FIND_GREP.*", BtUnknown,
+		PackageSettable,
 		"builtin.mk: set")
 	acllist("BUILTIN_FIND_HEADERS_VAR", BtVariableName,
+		PackageSettable,
 		"builtin.mk: set")
 	acllist("BUILTIN_FIND_HEADERS.*", BtPathname,
+		PackageSettable,
 		"builtin.mk: set")
 	acllist("BUILTIN_FIND_LIBS", BtPathname,
+		PackageSettable,
 		"builtin.mk: set")
 	sys("BUILTIN_X11_TYPE", BtUnknown)
 	sys("BUILTIN_X11_VERSION", BtUnknown)
@@ -850,9 +899,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglistbl3("CFLAGS", BtCFlag)   // may also be changed by the user
 	pkglistbl3("CFLAGS.*", BtCFlag) // may also be changed by the user
 	acl("CHECK_BUILTIN", BtYesNo,
+		PackageSettable,
 		"builtin.mk: default",
 		"Makefile: set")
 	acl("CHECK_BUILTIN.*", BtYesNo,
+		PackageSettable,
 		"Makefile, options.mk, buildlink3.mk: set",
 		"builtin.mk: default, use-loadtime",
 		"*: use-loadtime")
@@ -939,6 +990,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("DLOPEN_REQUIRE_PTHREADS", BtYesNo)
 	pkg("DL_AUTO_VARS", BtYes)
 	acllist("DL_LIBS", BtLdFlag,
+		PackageSettable,
 		"*: append, use")
 	sys("DOCOWN", BtUserGroupName)
 	sys("DOCGRP", BtUserGroupName)
@@ -1028,6 +1080,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// GNU_CONFIGURE needs to be tested in some buildlink3.mk files,
 	// such as lang/vala.
 	acl("GNU_CONFIGURE", BtYes,
+		PackageSettable,
 		"buildlink3.mk: none",
 		"builtin.mk: use, use-loadtime",
 		"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
@@ -1042,6 +1095,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("HOMEPAGE", BtHomepage)
 	pkg("ICON_THEMES", BtYes)
 	acl("IGNORE_PKG.*", BtYes,
+		PackageSettable,
 		"*: set, use-loadtime")
 	sys("IMAKE", BtShellCommand)
 	pkglistbl3("INCOMPAT_CURSES", BtMachinePlatformPattern)
@@ -1073,6 +1127,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkgload("INSTALL_UNSTRIPPED", BtYesNo)
 	pkglist("INTERACTIVE_STAGE", enum("fetch extract configure build test install"))
 	acl("IS_BUILTIN.*", BtYesNoIndirectly,
+		PackageSettable,
 		// These two differ from the standard,
 		// they are needed for devel/ncursesw.
 		"buildlink3.mk: use, use-loadtime",
@@ -1249,6 +1304,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("PERL5_USE_PACKLIST", BtYesNo)
 	sys("PGSQL_PREFIX", BtPathname)
 	acllist("PGSQL_VERSIONS_ACCEPTED", pgsqlVersions,
+		PackageSettable,
 		// The "set" is necessary for databases/postgresql-postgis2.
 		"Makefile, Makefile.*, *.mk: default, set, append, use")
 	usr("PGSQL_VERSION_DEFAULT", BtVersion)
@@ -1260,11 +1316,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usr("PHP_VERSION_REQD", BtVersion)
 	acl("PHP_PKG_PREFIX",
 		enumFromDirs("lang", `^php(\d+)$`, "php$1", "php56 php71 php72 php73"),
+		SystemProvided,
 		"special:phpversion.mk: set",
 		"*: use, use-loadtime")
 	sys("PKGBASE", BtIdentifier)
 	// Despite its name, this is actually a list of filenames.
 	acllist("PKGCONFIG_FILE.*", BtPathname,
+		PackageSettable,
 		"builtin.mk: set, append",
 		"special:pkgconfig-builtin.mk: use-loadtime")
 	pkglist("PKGCONFIG_OVERRIDE", BtPathmask)
@@ -1280,11 +1338,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// be set in a package Makefile.
 	// See VartypeCheck.PkgRevision for details.
 	acl("PKGREVISION", BtPkgRevision,
+		PackageSettable,
 		"Makefile: set")
 	sys("PKGSRCDIR", BtPathname)
 	// This definition is only valid in the top-level Makefile,
 	// not in category or package Makefiles.
 	acl("PKGSRCTOP", BtYes,
+		PackageSettable,
 		"Makefile: set")
 	sys("PKGSRC_SETENV", BtShellCommand)
 	syslist("PKGTOOLS_ENV", BtShellWord)
@@ -1319,6 +1379,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//
 	// TODO: Is it possible to include hacks.mk files from the dependencies?
 	acllist("PKG_HACKS", BtIdentifier,
+		PackageSettable,
 		"hacks.mk: append")
 	sys("PKG_INFO", BtShellCommand)
 	sys("PKG_JAVA_HOME", BtPathname)
@@ -1359,6 +1420,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// The special exception for buildlink3.mk is only here because
 	// of textproc/xmlcatmgr.
 	acl("PKG_SYSCONFDIR*", BtPathname,
+		PackageSettable,
 		"Makefile: set, use, use-loadtime",
 		"buildlink3.mk, builtin.mk: use-loadtime",
 		"Makefile.*, *.mk: default, set, use, use-loadtime")
@@ -1378,11 +1440,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglistbl3("PREPEND_PATH", BtPathname)
 
 	acl("PREFIX", BtPathname,
+		UserSettable,
 		"*: use")
 	// BtPathname instead of BtPkgPath since the original package doesn't exist anymore.
 	// It would be more precise to check for a PkgPath that doesn't exist anymore.
 	pkg("PREV_PKGPATH", BtPathname)
 	acl("PRINT_PLIST_AWK", BtAwkCommand,
+		PackageSettable,
 		"*: append")
 	pkglist("PRIVILEGED_STAGES", enum("build install package clean"))
 	pkgbl3("PTHREAD_AUTO_VARS", BtYesNo)
@@ -1394,6 +1458,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("PY_PATCHPLIST", BtYes)
 	acl("PYPKGPREFIX",
 		enumFromDirs("lang", `^python(\d+)$`, "py$1", "py27 py36"),
+		SystemProvided,
 		"special:pyversion.mk: set",
 		"*: use, use-loadtime")
 	// See lang/python/pyversion.mk
@@ -1443,11 +1508,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("RPMIGNOREPATH", BtPathmask)
 	acl("RUBY_BASE",
 		enumFromDirs("lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"),
+		SystemProvided,
 		"special:rubyversion.mk: set",
 		"*: use, use-loadtime")
 	usr("RUBY_VERSION_REQD", BtVersion)
 	acl("RUBY_PKGPREFIX",
 		enumFromDirs("lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"),
+		SystemProvided,
 		"special:rubyversion.mk: default, set, use",
 		"*: use, use-loadtime")
 	sys("RUN", BtShellCommand)
@@ -1476,8 +1543,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("SPECIAL_PERMS", BtPerms)
 	sys("STEP_MSG", BtShellCommand)
 	sys("STRIP", BtShellCommand) // see mk/tools/strip.mk
+
 	// Only valid in the top-level and the category Makefiles.
 	acllist("SUBDIR", BtFileName,
+		PackageSettable,
 		"Makefile: append")
 
 	pkglistbl3("SUBST_CLASSES", BtIdentifier)
@@ -1516,12 +1585,15 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("USERGROUP_PHASE", enum("configure build pre-install"))
 	usrlist("USER_ADDITIONAL_PKGS", BtPkgPath)
 	pkg("USE_BSD_MAKEFILE", BtYes)
+
 	// USE_BUILTIN.* is usually set by the builtin.mk file, after checking
 	// whether the package is available in the base system. To override
 	// this check, a package may set this variable before including the
 	// corresponding buildlink3.mk file.
 	acl("USE_BUILTIN.*", BtYesNoIndirectly,
+		PackageSettable,
 		"Makefile, Makefile.*, *.mk: set, use, use-loadtime")
+
 	pkg("USE_CMAKE", BtYes)
 	usr("USE_DESTDIR", BtYes)
 	pkglist("USE_FEATURES", BtIdentifier)
@@ -1558,11 +1630,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// The use-loadtime is only for devel/ncurses/Makefile.common, which
 	// removes tbl from USE_TOOLS.
 	acllist("USE_TOOLS", BtTool,
+		PackageSettable,
 		"special:Makefile.common: set, append, use, use-loadtime",
 		"buildlink3.mk: append",
 		"builtin.mk: append, use-loadtime",
 		"*: set, append, use")
 	acllist("USE_TOOLS.*", BtTool, // OPSYS-specific
+		PackageSettable,
 		"buildlink3.mk, builtin.mk: append",
 		"*: set, append, use")
 

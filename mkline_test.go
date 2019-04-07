@@ -281,7 +281,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 	vartype := G.Pkgsrc.VariableType(nil, "PKGNAME")
 	vuc := VarUseContext{vartype, vucTimeUnknown, VucQuotBackt, false}
 
-	c.Check(vuc.String(), equals, "(Pkgname time:unknown quoting:backt wordpart:false)")
+	c.Check(vuc.String(), equals, "(Pkgname (package-settable) time:unknown quoting:backt wordpart:false)")
 }
 
 // In variable assignments, a plain '#' introduces a line comment, unless

@@ -222,7 +222,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// The guessed flag could also be determined more correctly. As of November 2018,
 		// running pkglint over the whole pkgsrc tree did not produce any different result
 		// whether guessed was true or false.
-		forLoopType := Vartype{lkShell, btForLoop, []ACLEntry{{"*", aclpAllRead}}, NoVartypeOptions}
+		forLoopType := Vartype{btForLoop, List, []ACLEntry{{"*", aclpAllRead}}}
 		forLoopContext := VarUseContext{&forLoopType, vucTimeParse, VucQuotPlain, false}
 		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
 			ck.CheckVaruse(varUse, &forLoopContext)
@@ -905,7 +905,7 @@ func (ck MkLineChecker) checkVarassignLeft() {
 
 	ck.checkTextVarUse(
 		ck.MkLine.Varname(),
-		&Vartype{lkNone, BtVariableName, []ACLEntry{{"*", aclpAll}}, NoVartypeOptions},
+		&Vartype{BtVariableName, NoVartypeOptions, []ACLEntry{{"*", aclpAll}}},
 		vucTimeParse)
 }
 
@@ -1219,7 +1219,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 			trace.Step1("Unchecked use of !=: %q", value)
 		}
 
-	case vartype.kindOfList == lkNone:
+	case !vartype.List():
 		ck.CheckVartypeBasic(varname, vartype.basicType, op, value, comment, vartype.Guessed())
 
 	case value == "":
