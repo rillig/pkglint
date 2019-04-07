@@ -165,20 +165,6 @@ func (p MkLineParser) parseCommentOrEmpty(line Line) MkLine {
 	return nil
 }
 
-func (p MkLineParser) parseDirective(line Line) MkLine {
-	m, indent, directive, args, comment := p.matchMkDirective(line.Text)
-	if !m {
-		return nil
-	}
-
-	// In .if and .endif lines the space surrounding the comment is irrelevant.
-	// Especially for checking that the .endif comment matches the .if condition,
-	// it must be trimmed.
-	trimmedComment := trimHspace(comment)
-
-	return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
-}
-
 func (p MkLineParser) parseInclude(line Line) MkLine {
 	m, indent, directive, includedFile := MatchMkInclude(line.Text)
 	if !m {
@@ -828,20 +814,21 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 	return
 }
 
-func (p MkLineParser) matchMkDirective(text string) (m bool, indent, directive, args, comment string) {
+func (p MkLineParser) parseDirective(line Line) MkLine {
+	text := line.Text
 	if !hasPrefix(text, ".") {
-		return
+		return nil
 	}
 
-	main, _, rest, _, hasComment, trailingComment := p.split(text)
+	main, _, rest, _, _, trailingComment := p.split(text)
 	if rest != "" {
-		return
+		return nil
 	}
 
 	lexer := textproc.NewLexer(main[1:])
 
-	indent = lexer.NextHspace()
-	directive = lexer.NextBytesSet(LowerDash)
+	indent := lexer.NextHspace()
+	directive := lexer.NextBytesSet(LowerDash)
 	switch directive {
 	case "if", "else", "elif", "endif",
 		"ifdef", "ifndef",
@@ -851,19 +838,19 @@ func (p MkLineParser) matchMkDirective(text string) (m bool, indent, directive, 
 		break
 	default:
 		// Intentionally not supported are: ifmake ifnmake elifdef elifndef elifmake elifnmake.
-		return
+		return nil
 	}
 
 	lexer.SkipHspace()
 
-	args = lexer.Rest()
+	args := lexer.Rest()
 
-	if hasComment {
-		comment = trailingComment
-	}
+	// In .if and .endif lines the space surrounding the comment is irrelevant.
+	// Especially for checking that the .endif comment matches the .if condition,
+	// it must be trimmed.
+	trimmedComment := trimHspace(trailingComment)
 
-	m = true
-	return
+	return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
 }
 
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator

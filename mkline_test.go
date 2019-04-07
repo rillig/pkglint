@@ -1963,21 +1963,25 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"comment")
 }
 
-func (s *Suite) Test_MkLineParser_matchMkDirective(c *check.C) {
+func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
+	t := s.Init(c)
 
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string) {
-		m, indent, directive, args, comment := MkLineParser{}.matchMkDirective(input)
+		mkline := MkLineParser{}.parseDirective(t.NewLine("filename.mk", 123, input))
+		if !c.Check(mkline, check.NotNil) {
+			return
+		}
+
 		c.Check(
-			[]interface{}{m, indent, directive, args, comment},
+			[]interface{}{mkline.Indent(), mkline.Directive(), mkline.Args(), mkline.DirectiveComment()},
 			deepEquals,
-			[]interface{}{true, expectedIndent, expectedDirective, expectedArgs, expectedComment})
+			[]interface{}{expectedIndent, expectedDirective, expectedArgs, expectedComment})
 	}
 
 	testFail := func(input string) {
-		m, indent, directive, args, comment := MkLineParser{}.matchMkDirective(input)
-		if m {
-			c.Errorf("The line %q could be parsed as directive (%q, %q, %q, %q) but shouldn't.",
-				indent, directive, args, comment)
+		mkline := MkLineParser{}.parseDirective(t.NewLine("filename.mk", 123, input))
+		if mkline != nil {
+			c.Errorf("The line %q could be parsed as directive, but shouldn't.")
 		}
 	}
 
@@ -1985,7 +1989,7 @@ func (s *Suite) Test_MkLineParser_matchMkDirective(c *check.C) {
 		"", "if", "${VAR} == value", "")
 
 	test(".\tendif # comment",
-		"\t", "endif", "", " comment")
+		"\t", "endif", "", "comment")
 
 	test(".if ${VAR} == \"#\"",
 		"", "if", "${VAR} == \"", "\"")
