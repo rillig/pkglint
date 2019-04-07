@@ -1246,11 +1246,11 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.
 		"ERROR: ~/multimedia/totem/bla.mk:2: There is no package in \"multimedia/totem\".")
 }
 
-func (s *Suite) Test_MatchVarassign(c *check.C) {
+func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	s.Init(c)
 
 	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
-		m, actual := MatchVarassign(text)
+		m, actual := MkLineParser{}.MatchVarassign(text)
 		if !m {
 			c.Errorf("Text %q doesn't match variable assignment", text)
 			return
@@ -1275,7 +1275,7 @@ func (s *Suite) Test_MatchVarassign(c *check.C) {
 	}
 
 	testInvalid := func(text string) {
-		m, _ := MatchVarassign(text)
+		m, _ := MkLineParser{}.MatchVarassign(text)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
@@ -1718,7 +1718,7 @@ func (s *Suite) Test_unescapeMkComment(c *check.C) {
 		"#comment")
 }
 
-func (s *Suite) Test_splitMkLine(c *check.C) {
+func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	t := s.Init(c)
 
 	varuse := func(varname string, modifiers ...string) *MkToken {
@@ -1741,7 +1741,7 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 	_, _, _, _ = text, varuse, varuseText, tokens
 
 	test := func(text string, main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
-		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := splitMkLine(text)
+		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := MkLineParser{}.split(text)
 		t.Check(
 			[]interface{}{text, aTokens, aMain, aRest, aSpaceBeforeComment, aHasComment, aComment},
 			deepEquals,
@@ -1963,10 +1963,10 @@ func (s *Suite) Test_splitMkLine(c *check.C) {
 		"comment")
 }
 
-func (s *Suite) Test_matchMkDirective(c *check.C) {
+func (s *Suite) Test_MkLineParser_matchMkDirective(c *check.C) {
 
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string) {
-		m, indent, directive, args, comment := matchMkDirective(input)
+		m, indent, directive, args, comment := MkLineParser{}.matchMkDirective(input)
 		c.Check(
 			[]interface{}{m, indent, directive, args, comment},
 			deepEquals,
@@ -1974,7 +1974,7 @@ func (s *Suite) Test_matchMkDirective(c *check.C) {
 	}
 
 	testFail := func(input string) {
-		m, indent, directive, args, comment := matchMkDirective(input)
+		m, indent, directive, args, comment := MkLineParser{}.matchMkDirective(input)
 		if m {
 			c.Errorf("The line %q could be parsed as directive (%q, %q, %q, %q) but shouldn't.",
 				indent, directive, args, comment)
