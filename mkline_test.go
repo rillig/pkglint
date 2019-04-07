@@ -1755,6 +1755,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"",
 		false,
 		"")
+
 	test("text",
 		"text",
 		tokens(text("text")),
@@ -1762,6 +1763,44 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"",
 		false,
 		"")
+
+	// Leading space is always kept.
+	test(" text",
+		" text",
+		tokens(text(" text")),
+		"",
+		"",
+		false,
+		"")
+
+	// Trailing space does not end up in the tokens since it is usually
+	// ignored.
+	test("text\t",
+		"text",
+		tokens(text("text")),
+		"",
+		"\t",
+		false,
+		"")
+
+	test("text\t# intended comment",
+		"text",
+		tokens(text("text")),
+		"",
+		"\t",
+		true,
+		" intended comment")
+
+	// Trailing space is saved in a separate field to detect accidental
+	// unescaped # in the middle of a word, like the URL fragment in this
+	// example.
+	test("url#fragment",
+		"url",
+		tokens(text("url")),
+		"",
+		"",
+		true,
+		"fragment")
 
 	// The leading space from the comment is preserved to make parsing as exact
 	// as possible.
@@ -1808,7 +1847,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	test("${TARGET}: ${SOURCES} # comment",
 		"${TARGET}: ${SOURCES}",
-		tokens(varuse("TARGET"), text(": "), varuse("SOURCES"), text(" ")),
+		tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
 		"",
 		" ",
 		true,
@@ -1819,7 +1858,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// escaping the #.
 	test("VAR=\t${OTHER:[#]} # comment",
 		"VAR=\t${OTHER:[#]}",
-		tokens(text("VAR=\t"), varuse("OTHER", "[#]"), text(" ")),
+		tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
 		"",
 		" ",
 		true,
@@ -1839,7 +1878,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// Makefile, but that's an edge case anyway.
 	test("VAR0=\t#comment",
 		"VAR0=",
-		tokens(text("VAR0=\t")),
+		tokens(text("VAR0=")),
 		"",
 		// Later, when converting this result into a proper variable assignment,
 		// this "space before comment" is reclassified as "space before the value",

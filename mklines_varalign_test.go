@@ -1029,3 +1029,18 @@ func (s *Suite) Test_Varalign__mixed_indentation(c *check.C) {
 		"                 value2 continued")
 	vt.Run()
 }
+
+func (s *Suite) Test_Varalign__eol_comment(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR1=\tdefined",
+		"VAR2=\t# defined",
+		"VAR3=\t#empty")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VAR1=   defined",
+		"VAR2=   # defined",
+		"VAR3=   #empty")
+	vt.Run()
+}

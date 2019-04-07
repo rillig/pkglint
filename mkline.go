@@ -800,7 +800,14 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 	if rest == "" {
 		mainWithSpaces := main
 		main = rtrimHspace(main)
-		spaceBeforeComment = mainWithSpaces[len(main):]
+		spaceBeforeComment = ifelseStr(true, mainWithSpaces[len(main):], "")
+		if spaceBeforeComment != "" && len(tokens) > 0 {
+			tokenText := &tokens[len(tokens)-1].Text
+			*tokenText = rtrimHspace(*tokenText)
+			if *tokenText == "" {
+				tokens = tokens[:len(tokens)-1]
+			}
+		}
 	} else {
 		restWithoutSpace := strings.TrimRightFunc(rest, func(r rune) bool { return isHspace(byte(r)) })
 		if len(restWithoutSpace) < len(rest) {
@@ -1478,10 +1485,11 @@ func (p MkLineParser) MatchVarassign(text string) (m bool, assignment mkLineAssi
 	lexer.SkipHspace()
 
 	value := trimHspace(lexer.Rest() + rest)
+	valueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart)
 	if value == "" {
+		valueAlign += spaceBeforeComment
 		spaceBeforeComment = ""
 	}
-	valueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart)
 
 	return true, &mkLineAssignImpl{
 		commented:         commented,
