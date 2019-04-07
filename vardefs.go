@@ -862,7 +862,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		PackageSettable,
 		"Makefile, Makefile.*, *.mk: append")
 	pkglist("BUILD_DEFS_EFFECTS", BtVariableName)
-	pkglist("BUILD_DEPENDS", BtDependencyWithPath)
+	pkglistbl3("BUILD_DEPENDS", BtDependencyWithPath)
 	pkglist("BUILD_DIRS", BtWrksrcSubdirectory)
 	pkglist("BUILD_ENV", BtShellWord)
 	sys("BUILD_MAKE_CMD", BtShellCommand)
