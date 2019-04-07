@@ -79,10 +79,13 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 			"Otherwise remove the leading whitespace.")
 	}
 
-	if mkline := p.parseVarassign(line); mkline != nil {
-		return mkline
+	// Check for shell commands first because these cannot have comments
+	// at the end of the line.
+	if hasPrefix(text, "\t") {
+		return p.parseShellcmd(line)
 	}
-	if mkline := p.parseShellcmd(line); mkline != nil {
+
+	if mkline := p.parseVarassign(line); mkline != nil {
 		return mkline
 	}
 	if mkline := p.parseCommentOrEmpty(line); mkline != nil {
@@ -143,12 +146,7 @@ func (p MkLineParser) parseVarassign(line Line) MkLine {
 }
 
 func (p MkLineParser) parseShellcmd(line Line) MkLine {
-	lexer := textproc.NewLexer(line.Text)
-	if !lexer.SkipByte('\t') {
-		return nil
-	}
-
-	return &MkLineImpl{line, mkLineShell{lexer.Rest()}}
+	return &MkLineImpl{line, mkLineShell{line.Text[1:]}}
 }
 
 func (p MkLineParser) parseCommentOrEmpty(line Line) MkLine {
