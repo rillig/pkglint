@@ -448,11 +448,11 @@ func SaveAutofixChanges(lines Lines) (autofixed bool) {
 		G.fileCache.Evict(filename)
 		changedLines := changes[filename]
 		tmpName := filename + ".pkglint.tmp"
-		text := ""
+		var text strings.Builder
 		for _, changedLine := range changedLines {
-			text += changedLine
+			text.WriteString(changedLine)
 		}
-		err := ioutil.WriteFile(tmpName, []byte(text), 0666)
+		err := ioutil.WriteFile(tmpName, []byte(text.String()), 0666)
 		if err != nil {
 			G.Logf(Error, tmpName, "", "Cannot write: %s", "Cannot write: "+err.Error())
 			continue

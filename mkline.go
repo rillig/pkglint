@@ -497,23 +497,24 @@ func (mkline *MkLineImpl) ValueFields(value string) []string {
 		atoms = atoms[1:]
 	}
 
-	word := ""
+	var word strings.Builder
 	var words []string
 	for _, atom := range atoms {
 		if atom.Type == shtSpace && atom.Quoting == shqPlain {
-			words = append(words, word)
-			word = ""
+			words = append(words, word.String())
+			word.Reset()
 		} else {
-			word += atom.MkText
+			word.WriteString(atom.MkText)
 		}
 	}
-	if word != "" && atoms[len(atoms)-1].Quoting == shqPlain {
-		words = append(words, word)
-		word = ""
+	if word.Len() > 0 && atoms[len(atoms)-1].Quoting == shqPlain {
+		words = append(words, word.String())
+		word.Reset()
 	}
 
 	// TODO: Handle parse errors
-	rest := word + p.parser.Rest()
+	word.WriteString(p.parser.Rest())
+	rest := word.String()
 	_ = rest
 
 	return words
@@ -572,13 +573,13 @@ func (mkline *MkLineImpl) Fields() []string {
 }
 
 func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
-	valueNovar := ""
+	var valueNovar strings.Builder
 	for _, token := range NewMkParser(nil, value, false).MkTokens() {
 		if token.Varuse == nil {
-			valueNovar += token.Text
+			valueNovar.WriteString(token.Text)
 		}
 	}
-	return valueNovar
+	return valueNovar.String()
 }
 
 func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string {

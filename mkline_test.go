@@ -1,6 +1,9 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import (
+	"gopkg.in/check.v1"
+	"strings"
+)
 
 func (s *Suite) Test_MkLineParser_Parse__varassign(c *check.C) {
 	t := s.Init(c)
@@ -1722,12 +1725,15 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	t := s.Init(c)
 
 	varuse := func(varname string, modifiers ...string) *MkToken {
-		text := "${" + varname
+		var text strings.Builder
+		text.WriteString("${")
+		text.WriteString(varname)
 		for _, modifier := range modifiers {
-			text += ":" + modifier
+			text.WriteString(":")
+			text.WriteString(modifier)
 		}
-		text += "}"
-		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
+		text.WriteString("}")
+		return &MkToken{Text: text.String(), Varuse: NewMkVarUse(varname, modifiers...)}
 	}
 	varuseText := func(text, varname string, modifiers ...string) *MkToken {
 		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
