@@ -100,6 +100,7 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 		c.Check(p.Rest(), equals, expectedRest)
 		t.CheckOutput(diagnostics)
 	}
+	tokens := func(tokens ...*MkToken) []*MkToken { return tokens }
 	test := func(input string, expectedToken *MkToken, diagnostics ...string) {
 		testRest(input, []*MkToken{expectedToken}, "", diagnostics...)
 	}
@@ -114,6 +115,8 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	varuseText := func(text, varname string, modifiers ...string) *MkToken {
 		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
 	}
+
+	t.Use(testRest, tokens, test, varuse, varuseText)
 
 	test("${VARIABLE}",
 		varuse("VARIABLE"))
@@ -305,16 +308,22 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	test("${VAR:Sahara}",
 		varuse("VAR", "Sahara"))
 
+	// The separator character can be left out, which means empty.
 	test("${VAR:ts}",
-		varuse("VAR", "ts")) // The separator character can be left out, which means empty.
+		varuse("VAR", "ts"))
 
+	// The separator character can be a long octal number.
 	test("${VAR:ts\\000012}",
-		varuse("VAR", "ts\\000012")) // The separator character can be a long octal number.
+		varuse("VAR", "ts\\000012"))
 
+	// Or even decimal.
 	test("${VAR:ts\\124}",
-		varuse("VAR", "ts\\124")) // Or even decimal.
+		varuse("VAR", "ts\\124"))
 
-	testRest("${VAR:ts---}", nil, "${VAR:ts---}") // The :ts modifier only takes single-character separators.
+	// The :ts modifier only takes single-character separators.
+	test("${VAR:ts---}",
+		varuse("VAR", "ts---"),
+		"WARN: Test_MkParser_VarUse.mk:1: Invalid separator \"---\" for :ts modifier of \"VAR\".")
 
 	test("$<",
 		varuseText("$<", "<")) // Same as ${.IMPSRC}
@@ -325,13 +334,17 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 
 	// Opening brace, closing parenthesis.
 	// Warnings are only printed for balanced expressions.
-	testRest("${VAR)",
-		nil, "${VAR)")
+	test("${VAR)",
+		varuseText("${VAR)", "VAR)"),
+		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"VAR)\".",
+		"WARN: Test_MkParser_VarUse.mk:1: Invalid part \")\" after variable name \"VAR\".")
 
 	// Opening parenthesis, closing brace
 	// Warnings are only printed for balanced expressions.
-	testRest("$(VAR}",
-		nil, "$(VAR}")
+	test("$(VAR}",
+		varuseText("$(VAR}", "VAR}"),
+		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \")\" for \"VAR}\".",
+		"WARN: Test_MkParser_VarUse.mk:1: Invalid part \"}\" after variable name \"VAR\".")
 
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}",
 		varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
@@ -341,10 +354,15 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".")
 
 	// Unfinished variable use
-	testRest("${", nil, "${")
+	test("${",
+		varuseText("${", ""),
+		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"\".")
 
 	// Unfinished nested variable use
-	testRest("${${", nil, "${${")
+	test("${${",
+		varuseText("${${", "${"),
+		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"\".",
+		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"${\".")
 }
 
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
@@ -601,8 +619,9 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
-	test("${VAR:S", nil, "${VAR:S",
-		"WARN: Makefile:20: Invalid variable modifier \"S\" for \"VAR\".")
+	test("${VAR:S", varUse("VAR"), "",
+		"WARN: Makefile:20: Invalid variable modifier \"S\" for \"VAR\".",
+		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
 
 	test("${VAR:S}", varUse("VAR"), "",
 		"WARN: Makefile:20: Invalid variable modifier \"S\" for \"VAR\".")
@@ -641,8 +660,11 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
-	test("${VAR:@", nil, "${VAR:@",
-		"WARN: Makefile:20: Invalid variable modifier \"@\" for \"VAR\".")
+	test("${VAR:@",
+		varUse("VAR"),
+		"",
+		"WARN: Makefile:20: Invalid variable modifier \"@\" for \"VAR\".",
+		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
 
 	test("${VAR:@i@${i}}", varUse("VAR", "@i@${i}"), "",
 		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".")

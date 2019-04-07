@@ -1280,11 +1280,13 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
-		"WARN: Makefile:2: Unclosed Make variable starting at \"${EGDIR/apparmor.d $...\".",
-
-		// XXX: This warning is redundant because of the "Unclosed" warning above.
-		"WARN: Makefile:2: Internal pkglint error in MkLine.Tokenize at "+
-			"\"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".")
+		"WARN: Makefile:2: EGDIR/pam.d is used but not defined.",
+		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/pam.d\".",
+		"WARN: Makefile:2: Invalid part \"/pam.d\" after variable name \"EGDIR\".",
+		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: Makefile:2: Invalid part \"/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
+		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: Makefile:2: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
@@ -1305,13 +1307,10 @@ func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 	// In line 2 the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
 	// name of another variable, and that variable is not known. Only XKBBASE is known.
 	//
-	// FIXME: The below warnings are wrong because the MkParser does not recognize the
-	//  slash as part of a variable name. Because of that, parsing stops before the $.
-	//  The warning "Unclosed Make variable" wrongly assumes that any parse error from
-	//  a variable use is because of unclosed braces, which it isn't in this case.
+	// TODO: In line 2, warn about the invalid "/" as part of the variable name.
+	//  To enable that warning, p.EmitWarnings has to be true in MkParser.varUseBrace.
 	t.CheckOutputLines(
-		"WARN: x11/xkeyboard-config/Makefile:2: Unclosed Make variable starting at \"${${XKBBASE}/xkbcomp...\".",
-		"WARN: x11/xkeyboard-config/Makefile:2: Unclosed Make variable starting at \"${${XKBBASE}/xkbcomp...\".")
+		"WARN: x11/xkeyboard-config/Makefile:2: XKBBASE is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {

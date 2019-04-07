@@ -1122,25 +1122,41 @@ func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *che
 func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 	t := s.Init(c)
 
-	testTokens := func(value string, expected ...*MkToken) {
+	text := func(text string) *MkToken { return &MkToken{text, nil} }
+	varUseText := func(text string, varname string, modifiers ...string) *MkToken {
+		return &MkToken{text, NewMkVarUse(varname, modifiers...)}
+	}
+	tokens := func(tokens ...*MkToken) []*MkToken { return tokens }
+	test := func(value string, expected []*MkToken, diagnostics ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
-		tokens, _ := mkline.ValueTokens()
-		c.Check(tokens, deepEquals, expected)
+		actualTokens, _ := mkline.ValueTokens()
+		c.Check(actualTokens, deepEquals, expected)
+		t.CheckOutput(diagnostics)
 	}
 
-	testTokens("#empty",
-		[]*MkToken(nil)...)
+	t.Use(text, varUseText, tokens, test)
 
-	testTokens("value",
-		&MkToken{"value", nil})
+	test("#empty",
+		tokens())
 
-	testTokens("value ${VAR} rest",
-		&MkToken{"value ", nil},
-		&MkToken{"${VAR}", NewMkVarUse("VAR")},
-		&MkToken{" rest", nil})
+	test("value",
+		tokens(text("value")))
 
-	testTokens("value ${UNFINISHED",
-		&MkToken{"value ", nil})
+	test("value ${VAR} rest",
+		tokens(
+			text("value "),
+			varUseText("${VAR}", "VAR"),
+			text(" rest")))
+
+	test("value # comment",
+		tokens(
+			text("value")))
+
+	test("value ${UNFINISHED",
+		tokens(
+			text("value "),
+			varUseText("${UNFINISHED", "UNFINISHED")),
+		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
@@ -1149,13 +1165,16 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
 	tokens, rest := mkline.ValueTokens()
 
-	c.Check(tokens, deepEquals, []*MkToken{{"value ", nil}})
-	c.Check(rest, equals, "${UNFINISHED")
+	c.Check(tokens, deepEquals, []*MkToken{
+		{"value ", nil},
+		{"${UNFINISHED", NewMkVarUse("UNFINISHED")}})
+	c.Check(rest, equals, "")
+	t.CheckOutputLines(
+		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
 	tokens2, rest2 := mkline.ValueTokens() // This time the slice is taken from the cache.
 
-	// In Go, it's not possible to compare slices for reference equality.
-	c.Check(tokens2, deepEquals, tokens)
+	c.Check(&tokens2[0], equals, &tokens[0])
 	c.Check(rest2, equals, rest)
 }
 
@@ -1165,13 +1184,15 @@ func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
 	tokens, rest := mkline.ValueTokens()
 
-	c.Check(tokens, check.IsNil)
-	c.Check(rest, equals, "${UNFINISHED")
+	c.Check(tokens, deepEquals, []*MkToken{
+		{"${UNFINISHED", NewMkVarUse("UNFINISHED")}})
+	c.Check(rest, equals, "")
+	t.CheckOutputLines(
+		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
 	tokens2, rest2 := mkline.ValueTokens() // This time the slice is taken from the cache.
 
-	// In Go, it's not possible to compare slices for reference equality.
-	c.Check(tokens2, deepEquals, tokens)
+	c.Check(&tokens2[0], equals, &tokens[0])
 	c.Check(rest2, equals, rest)
 }
 
@@ -1746,12 +1767,14 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	}
 	_, _, _, _ = text, varuse, varuseText, tokens
 
-	test := func(text string, main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
+	test := func(text string, main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string, diagnostics ...string) {
 		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := MkLineParser{}.split(text)
+
+		t.CheckOutput(diagnostics)
 		t.Check(
-			[]interface{}{text, aTokens, aMain, aRest, aSpaceBeforeComment, aHasComment, aComment},
+			[]interface{}{text, aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment},
 			deepEquals,
-			[]interface{}{text, tokens, main, rest, spaceBeforeComment, hasComment, comment})
+			[]interface{}{text, main, tokens, rest, spaceBeforeComment, hasComment, comment})
 	}
 
 	test("",
@@ -1943,9 +1966,9 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	// Parse errors are recorded in the rest return value.
 	test("${UNCLOSED",
-		"",
-		tokens(),
 		"${UNCLOSED",
+		tokens(varuseText("${UNCLOSED", "UNCLOSED")),
+		"",
 		"",
 		false,
 		"")
@@ -1953,9 +1976,11 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// Even if there is a parse error in the main part,
 	// the comment is extracted.
 	test("text before ${UNCLOSED# comment",
-		"text before ",
-		tokens(text("text before ")),
-		"${UNCLOSED",
+		"text before ${UNCLOSED",
+		tokens(
+			text("text before "),
+			varuseText("${UNCLOSED", "UNCLOSED")),
+		"",
 		"",
 		true,
 		" comment")
@@ -1963,9 +1988,13 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// Even in case of parse errors, the space before the comment is parsed
 	// correctly.
 	test("text before ${UNCLOSED # comment",
-		"text before ",
-		tokens(text("text before ")),
-		"${UNCLOSED",
+		"text before ${UNCLOSED",
+		tokens(
+			text("text before "),
+			// It's a bit inconsistent that the varname includes the space
+			// but the text doesn't; anyway, it's an edge case.
+			varuseText("${UNCLOSED", "UNCLOSED ")),
+		"",
 		" ",
 		true,
 		" comment")
@@ -2023,13 +2052,6 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 			[]interface{}{expectedIndent, expectedDirective, expectedArgs, expectedComment})
 	}
 
-	testFail := func(input string) {
-		mkline := MkLineParser{}.parseDirective(t.NewLine("filename.mk", 123, input))
-		if mkline != nil {
-			c.Errorf("The line %q could be parsed as directive, but shouldn't.")
-		}
-	}
-
 	test(".if ${VAR} == value",
 		"", "if", "${VAR} == value", "")
 
@@ -2045,8 +2067,9 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 	test(".if ${VAR} == \\",
 		"", "if", "${VAR} == \\", "")
 
-	// Unclosed variable
-	testFail(".if ${VAR")
+	// TODO: warn about the unclosed variable
+	test(".if ${VAR",
+		"", "if", "${VAR", "")
 }
 
 func (s *Suite) Test_MatchMkInclude(c *check.C) {

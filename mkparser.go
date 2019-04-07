@@ -96,10 +96,16 @@ func (p *MkParser) VarUse() *MkVarUse {
 	}
 }
 
+// varUseBrace parses:
+//  ${VAR}
+//  ${arbitrary text:L}
+//  ${variable with invalid chars}
+//  $(PARENTHESES)
+//  ${VAR:Mpattern:C,:,colon,g:Q:Q:Q}
 func (p *MkParser) varUseBrace(usingRoundParen bool) *MkVarUse {
 	lexer := p.lexer
 
-	mark := lexer.Mark()
+	beforeDollar := lexer.Mark()
 	lexer.Skip(2)
 
 	closing := byte('}')
@@ -107,45 +113,39 @@ func (p *MkParser) varUseBrace(usingRoundParen bool) *MkVarUse {
 		closing = ')'
 	}
 
-	varnameMark := lexer.Mark()
+	beforeVarname := lexer.Mark()
 	varname := p.Varname()
+	p.varUseText(closing)
+	varExpr := lexer.Since(beforeVarname)
 
-	modifiers := p.VarUseModifiers(varname, closing)
-	if lexer.SkipByte(closing) {
-		if usingRoundParen && p.EmitWarnings {
-			parenVaruse := lexer.Since(mark)
+	modifiers := p.VarUseModifiers(varExpr, closing)
+
+	closed := lexer.SkipByte(closing)
+
+	if p.EmitWarnings {
+		if !closed {
+			p.Line.Warnf("Missing closing %q for %q.", string(rune(closing)), varExpr)
+		}
+
+		if usingRoundParen && closed {
+			parenVaruse := lexer.Since(beforeDollar)
 			edit := []byte(parenVaruse)
 			edit[1] = '{'
 			edit[len(edit)-1] = '}'
 			bracesVaruse := string(edit)
 
 			fix := p.Line.Autofix()
-			fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varname)
+			fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varExpr)
 			fix.Replace(parenVaruse, bracesVaruse)
 			fix.Apply()
 		}
 
-		return &MkVarUse{varname, modifiers}
-	}
-
-	// This code path parses ${arbitrary text :L} and ${expression :? true-branch : false-branch }.
-	// The text in front of the :L or :? modifier doesn't have to be a variable name.
-
-	re := G.res.Compile(regex.Pattern(ifelseStr(usingRoundParen, `^(?:[^$:)]|\$\$)+`, `^(?:[^$:}]|\$\$)+`)))
-	for p.VarUse() != nil || lexer.SkipRegexp(re) {
-	}
-
-	rest := p.Rest()
-	if hasPrefix(rest, ":L") || hasPrefix(rest, ":?") {
-		varexpr := lexer.Since(varnameMark)
-		modifiers := p.VarUseModifiers(varexpr, closing)
-		if lexer.SkipByte(closing) {
-			return &MkVarUse{varexpr, modifiers}
+		if len(varExpr) > len(varname) && !(&MkVarUse{varExpr, modifiers}).IsExpression() {
+			p.Line.Warnf("Invalid part %q after variable name %q.", varExpr[len(varname):], varname)
 		}
 	}
 
-	lexer.Reset(mark)
-	return nil
+	return &MkVarUse{varExpr, modifiers}
 }
 
 func (p *MkParser) varUseAlnum() *MkVarUse {
@@ -183,6 +183,8 @@ func (p *MkParser) varUseAlnum() *MkVarUse {
 func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModifier {
 	lexer := p.lexer
 
+	// TODO: Split into VarUseModifier for parsing a single modifier.
+
 	var modifiers []MkVarUseModifier
 	appendModifier := func(s string) { modifiers = append(modifiers, MkVarUseModifier{s}) }
 
@@ -219,16 +221,16 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 
 			case "ts":
 				// See devel/bmake/files/var.c:/case 't'
-				rest := lexer.Rest()
+				sep := p.varUseText(closing)
 				switch {
-				case len(rest) >= 2 && (rest[1] == closing || rest[1] == ':'):
-					lexer.Skip(1)
-				case len(rest) >= 1 && (rest[0] == closing || rest[0] == ':'):
+				case len(sep) < 2:
 					break
-				case lexer.SkipRegexp(G.res.Compile(`^\\\d+`)):
+				case matches(sep, `^\\\d+`):
 					break
 				default:
-					continue
+					if p.EmitWarnings {
+						p.Line.Warnf("Invalid separator %q for :ts modifier of %q.", sep, varname)
+					}
 				}
 				appendModifier(lexer.Since(modifierMark))
 				continue
@@ -264,12 +266,9 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 
 		case '?':
 			lexer.Skip(1)
-			re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:}]|\$\$)+`, `^([^$:)]|\$\$)+`)))
-			for p.VarUse() != nil || lexer.SkipRegexp(re) {
-			}
+			p.varUseText(closing)
 			if lexer.SkipByte(':') {
-				for p.VarUse() != nil || lexer.SkipRegexp(re) {
-				}
+				p.varUseText(closing)
 				appendModifier(lexer.Since(modifierMark))
 				continue
 			}
@@ -294,6 +293,21 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 
 	}
 	return modifiers
+}
+
+// varUseText parses any text up to the next colon or closing mark.
+// Nested variable uses are parsed as well.
+//
+// This is used for the :L and :? modifiers since they accept arbitrary
+// text as the "variable name" and effectively interpret it as the variable
+// value instead.
+func (p *MkParser) varUseText(closing byte) string {
+	lexer := p.lexer
+	start := lexer.Mark()
+	re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:}]|\$\$)+`, `^([^$:)]|\$\$)+`)))
+	for p.VarUse() != nil || lexer.SkipRegexp(re) {
+	}
+	return lexer.Since(start)
 }
 
 // varUseModifierSubst parses a :S,from,to, or a :C,from,to, modifier.

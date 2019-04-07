@@ -890,3 +890,11 @@ func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 
 	t.Check(detabbedLines, deepEquals, lines)
 }
+
+// Use marks all passed functions as used for the Go compiler.
+//
+// This means that the test cases that follow do not have to use each of them,
+// and this in turn allows uninteresting test cases to be deleted during
+// development.
+func (t *Tester) Use(functions ...interface{}) {
+}
