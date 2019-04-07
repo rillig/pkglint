@@ -321,12 +321,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: PATH may actually be used at load time.
-		"WARN: for.mk:2: PATH should not be used at load time in any file.",
-
-		// No warning about :Q in line 2 since the :C modifier converts the
-		// colon-separated list into a space-separated list, as required by
-		// the .for loop.
+		// No warning about a missing :Q in line 2 since the :C modifier
+		// converts the colon-separated list into a space-separated list,
+		// as required by the .for loop.
 
 		// This warning is correct since PATH is separated by colons, not by spaces.
 		"WARN: for.mk:5: Please use ${PATH:Q} instead of ${PATH}.",

@@ -1225,7 +1225,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("PATCH_DIST_STRIP*", BtShellWord)
 	pkglist("PATCH_SITES", BtFetchURL)
 	pkg("PATCH_STRIP", BtShellWord)
-	sys("PATH", BtPathlist)       // From the PATH environment variable.
+	sysload("PATH", BtPathlist)   // From the PATH environment variable.
 	sys("PAXCTL", BtShellCommand) // See mk/pax.mk.
 	pkglist("PERL5_PACKLIST", BtPerl5Packlist)
 	pkg("PERL5_PACKLIST_DIR", BtPathname)
