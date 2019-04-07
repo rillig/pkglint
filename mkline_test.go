@@ -1598,11 +1598,11 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	test("`", "`")
 }
 
-func (s *Suite) Test_unescapeMkComment(c *check.C) {
+func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, main, comment string) {
-		aMain, aComment := unescapeMkComment(text)
+		aMain, aComment := MkLineParser{}.unescapeComment(text)
 		t.Check(
 			[]interface{}{text, aMain, aComment},
 			deepEquals,

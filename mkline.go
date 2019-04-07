@@ -678,7 +678,7 @@ var (
 	unescapeMkCommentSafeChars = textproc.NewByteSet("\\#[$").Inverse()
 )
 
-// unescapeMkComment takes a Makefile line, as written in a file, and splits
+// unescapeComment takes a Makefile line, as written in a file, and splits
 // it into the main part and the comment.
 //
 // The comment starts at the first #. Except if it is preceded by an odd number
@@ -689,7 +689,7 @@ var (
 //
 // The comment is returned including the leading "#", if any. If the line has
 // no comment, it is an empty string.
-func unescapeMkComment(text string) (main, comment string) {
+func (p MkLineParser) unescapeComment(text string) (main, comment string) {
 	var sb strings.Builder
 
 	lexer := textproc.NewLexer(text)
@@ -727,7 +727,7 @@ again:
 			return main, lexer.Rest()
 		}
 
-		G.Assertf(lexer.EOF(), "unescapeMkComment(%q): sb = %q, rest = %q", text, main, lexer.Rest())
+		G.Assertf(lexer.EOF(), "unescapeComment(%q): sb = %q, rest = %q", text, main, lexer.Rest())
 		return main, ""
 	}
 
@@ -743,7 +743,7 @@ again:
 // have comments.
 func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
 
-	main, comment = unescapeMkComment(text)
+	main, comment = p.unescapeComment(text)
 
 	parser := NewMkParser(nil, main, false)
 	lexer := parser.lexer
