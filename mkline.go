@@ -62,11 +62,13 @@ type mkLineDependency struct {
 	sources string
 }
 
-// NewMkLine parses the text of a Makefile line to see what kind of line
+type MkLineParser struct{}
+
+// Parse parses the text of a Makefile line to see what kind of line
 // it is: variable assignment, include, comment, etc.
 //
 // See devel/bmake/parse.c:/^Parse_File/
-func NewMkLine(line Line) *MkLineImpl {
+func (p MkLineParser) Parse(line Line) *MkLineImpl {
 	text := line.Text
 
 	// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.

@@ -2,7 +2,7 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_NewMkLine__varassign(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__varassign(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -17,7 +17,7 @@ func (s *Suite) Test_NewMkLine__varassign(c *check.C) {
 	c.Check(mkline.VarassignComment(), equals, "# varassign comment")
 }
 
-func (s *Suite) Test_NewMkLine__varassign_space_around_operator(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__varassign_space_around_operator(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--show-autofix", "--source")
@@ -31,7 +31,7 @@ func (s *Suite) Test_NewMkLine__varassign_space_around_operator(c *check.C) {
 		"+\tpkgbase= package")
 }
 
-func (s *Suite) Test_NewMkLine__shellcmd(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__shellcmd(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -41,7 +41,7 @@ func (s *Suite) Test_NewMkLine__shellcmd(c *check.C) {
 	c.Check(mkline.ShellCommand(), equals, "shell command # shell comment")
 }
 
-func (s *Suite) Test_NewMkLine__comment(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__comment(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -50,7 +50,7 @@ func (s *Suite) Test_NewMkLine__comment(c *check.C) {
 	c.Check(mkline.IsComment(), equals, true)
 }
 
-func (s *Suite) Test_NewMkLine__empty(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__empty(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101, "")
@@ -58,7 +58,7 @@ func (s *Suite) Test_NewMkLine__empty(c *check.C) {
 	c.Check(mkline.IsEmpty(), equals, true)
 }
 
-func (s *Suite) Test_NewMkLine__directive(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__directive(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -71,7 +71,7 @@ func (s *Suite) Test_NewMkLine__directive(c *check.C) {
 	c.Check(mkline.DirectiveComment(), equals, "directive comment")
 }
 
-func (s *Suite) Test_NewMkLine__include(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__include(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -85,7 +85,7 @@ func (s *Suite) Test_NewMkLine__include(c *check.C) {
 	c.Check(mkline.IsSysinclude(), equals, false)
 }
 
-func (s *Suite) Test_NewMkLine__sysinclude(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__sysinclude(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -99,7 +99,7 @@ func (s *Suite) Test_NewMkLine__sysinclude(c *check.C) {
 	c.Check(mkline.IsInclude(), equals, false)
 }
 
-func (s *Suite) Test_NewMkLine__dependency(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__dependency(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -110,7 +110,7 @@ func (s *Suite) Test_NewMkLine__dependency(c *check.C) {
 	c.Check(mkline.Sources(), equals, "source1 source2")
 }
 
-func (s *Suite) Test_NewMkLine__dependency_space(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__dependency_space(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -122,7 +122,7 @@ func (s *Suite) Test_NewMkLine__dependency_space(c *check.C) {
 		"NOTE: test.mk:101: Space before colon in dependency line.")
 }
 
-func (s *Suite) Test_NewMkLine__varassign_append(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__varassign_append(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -134,7 +134,7 @@ func (s *Suite) Test_NewMkLine__varassign_append(c *check.C) {
 	c.Check(mkline.Varparam(), equals, "")
 }
 
-func (s *Suite) Test_NewMkLine__merge_conflict(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__merge_conflict(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("test.mk", 101,
@@ -151,7 +151,7 @@ func (s *Suite) Test_NewMkLine__merge_conflict(c *check.C) {
 	c.Check(mkline.IsSysinclude(), equals, false)
 }
 
-func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__autofix_space_after_varname(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wspace")
@@ -187,7 +187,7 @@ func (s *Suite) Test_NewMkLine__autofix_space_after_varname(c *check.C) {
 		"pkgbase := pkglint")
 }
 
-func (s *Suite) Test_NewMkLine__varname_with_hash(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__varname_with_hash(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("Makefile", 123, "VARNAME.#=\tvalue")
@@ -208,7 +208,7 @@ func (s *Suite) Test_NewMkLine__varname_with_hash(c *check.C) {
 //
 // To check that bmake parses them the same, set a breakpoint after the t.NewMkLines
 // and look in t.tmpdir for the location of the file. Then run bmake with that file.
-func (s *Suite) Test_NewMkLine__escaped_hash_in_value(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__escaped_hash_in_value(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -284,7 +284,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 // In variable assignments, a plain '#' introduces a line comment, unless
 // it is escaped by a backslash. In shell commands, on the other hand, it
 // is interpreted literally.
-func (s *Suite) Test_NewMkLine__number_sign(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__number_sign(c *check.C) {
 	t := s.Init(c)
 
 	mklineVarassignEscaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,\\#,hash,g'")
@@ -309,7 +309,7 @@ func (s *Suite) Test_NewMkLine__number_sign(c *check.C) {
 		"WARN: filename.mk:1: The # character starts a Makefile comment.")
 }
 
-func (s *Suite) Test_NewMkLine__varassign_leading_space(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__varassign_leading_space(c *check.C) {
 	t := s.Init(c)
 
 	_ = t.NewMkLine("rubyversion.mk", 427, " _RUBYVER=\t2.15")
@@ -327,7 +327,7 @@ func (s *Suite) Test_NewMkLine__varassign_leading_space(c *check.C) {
 // be able to parse and check the infrastructure files as well.
 //
 // See Pkgsrc.loadUntypedVars.
-func (s *Suite) Test_NewMkLine__infrastructure(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("infra.mk",

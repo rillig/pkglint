@@ -722,7 +722,7 @@ func (t *Tester) NewMkLine(filename string, lineno int, text string) MkLine {
 		hasSuffix(basename, ".mk") || basename == "Makefile" || hasPrefix(basename, "Makefile."),
 		"filename %q must be realistic, otherwise the variable permissions are wrong", filename)
 
-	return NewMkLine(t.NewLine(filename, lineno, text))
+	return MkLineParser{}.Parse(t.NewLine(filename, lineno, text))
 }
 
 func (t *Tester) NewShellLineChecker(mklines MkLines, filename string, lineno int, text string) *ShellLineChecker {

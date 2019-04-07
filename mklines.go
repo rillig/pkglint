@@ -28,7 +28,7 @@ type MkLinesImpl struct {
 func NewMkLines(lines Lines) MkLines {
 	mklines := make([]MkLine, lines.Len())
 	for i, line := range lines.Lines {
-		mklines[i] = NewMkLine(line)
+		mklines[i] = MkLineParser{}.Parse(line)
 	}
 
 	tools := NewTools()
@@ -459,7 +459,7 @@ func (mklines *MkLinesImpl) SaveAutofixChanges() {
 }
 
 func (mklines *MkLinesImpl) EOFLine() MkLine {
-	return NewMkLine(mklines.lines.EOFLine())
+	return MkLineParser{}.Parse(mklines.lines.EOFLine())
 }
 
 // VaralignBlock checks that all variable assignments from a paragraph
