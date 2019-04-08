@@ -470,16 +470,19 @@ func (p *MkParser) mkCondAtom() MkCond {
 		}
 
 		if lhs != nil {
-			if m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
+			lexer.SkipHspace()
+
+			if m := lexer.NextRegexp(G.res.Compile(`^(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
 				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
 			}
 
-			m := lexer.NextRegexp(G.res.Compile(`^[\t ]*(<|<=|==|!=|>=|>)[\t ]*`))
+			m := lexer.NextRegexp(G.res.Compile(`^(?:<|<=|==|!=|>=|>)`))
 			if m == nil {
 				return &mkCond{Var: lhs} // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
+			lexer.SkipHspace()
 
-			op := m[1]
+			op := m[0]
 			if op == "==" || op == "!=" {
 				if mrhs := lexer.NextRegexp(G.res.Compile(`^"([^"\$\\]*)"`)); mrhs != nil {
 					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}

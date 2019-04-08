@@ -396,6 +396,8 @@ func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 }
 
 func (s *Suite) Test_MkParser_MkCond(c *check.C) {
+	t := s.Init(c)
+
 	testRest := func(input string, expectedTree MkCond, expectedRest string) {
 		p := NewMkParser(nil, input, false)
 		actualTree := p.MkCond()
@@ -406,6 +408,8 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		testRest(input, expectedTree, "")
 	}
 	varuse := NewMkVarUse
+
+	t.Use(testRest, test, varuse)
 
 	test("${OPSYS:MNetBSD}",
 		&mkCond{Var: varuse("OPSYS", "MNetBSD")})
@@ -536,7 +540,15 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		nil,
 		"\"unfinished string literal")
 
-	// Not even the ${VAR} gets through here, although that can be expected. FIXME: Why?
+	// Parsing stops before the variable since the comparison between
+	// a variable and a string is one of the smallest building blocks.
+	// Letting the ${VAR} through and stopping at the == operator would
+	// be misleading.
+	//
+	// Another possibility would be to fix the unfinished string literal
+	// and continue parsing. As of April 2019, the error handling is not
+	// robust enough to support this approach; magically fixing parse
+	// errors might lead to wrong conclusions and warnings.
 	testRest("${VAR} == \"unfinished string literal",
 		nil,
 		"${VAR} == \"unfinished string literal")
