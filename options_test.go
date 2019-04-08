@@ -235,6 +235,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTI
 		"WARN: options.mk:5: Option \"two\" should be handled below in an .if block.")
 }
 
+// Up to April 2019, pkglint logged a wrong note saying that OTHER_VARIABLE
+// should have the positive branch first. That note was only ever intended
+// for PKG_OPTIONS.
 func (s *Suite) Test_OptionsLinesChecker_handleLowerCondition__foreign_variable(c *check.C) {
 	t := s.Init(c)
 
@@ -259,7 +262,5 @@ func (s *Suite) Test_OptionsLinesChecker_handleLowerCondition__foreign_variable(
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:8: OTHER_VARIABLE is used but not defined.",
-		// FIXME: This note only applies to PKG_OPTIONS.
-		"NOTE: ~/category/package/options.mk:8: The positive branch of the .if/.else should be the one where the option is set.",
 		"WARN: ~/category/package/options.mk:4: Option \"opt\" should be handled below in an .if block.")
 }

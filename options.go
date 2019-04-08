@@ -140,11 +140,7 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline MkLine, cond MkCond) 
 		Empty: recordUsedOption,
 		Var:   recordUsedOption})
 
-	// FIXME: Is this note also issued for the following lines?
-	//  .if empty(ANY_OTHER_VARIABLE)
-	//  .else
-	//  .endif
-	if cond.Empty != nil && mkline.HasElseBranch() {
+	if cond.Empty != nil && cond.Empty.varname == "PKG_OPTIONS" && mkline.HasElseBranch() {
 		mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")
 		mkline.Explain(
 			"For consistency among packages, the upper branch of this",
