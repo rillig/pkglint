@@ -85,7 +85,11 @@ func NewPackage(dir string) *Package {
 	pkg.vars.Fallback("PATCHDIR", "patches")
 	pkg.vars.Fallback("KRB5_TYPE", "heimdal")
 	pkg.vars.Fallback("PGSQL_VERSION", "95")
-	pkg.vars.Fallback(".CURDIR", ".") // FIXME: In reality, this is an absolute pathname.
+
+	// In reality, this is an absolute pathname. Since this variable is
+	// typically used in the form ${.CURDIR}/../../somewhere, this doesn't
+	// matter much.
+	pkg.vars.Fallback(".CURDIR", ".")
 
 	return &pkg
 }
