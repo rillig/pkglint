@@ -757,7 +757,7 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 		return s[:end]
 	}
 
-	parseToken := func() string {
+	parseOther := func() string {
 		var sb strings.Builder
 
 		for !lexer.EOF() {
@@ -783,8 +783,8 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 		if varUse := parser.VarUse(); varUse != nil {
 			tokens = append(tokens, &MkToken{lexer.Since(mark), varUse})
 
-		} else if token := parseToken(); token != "" {
-			tokens = append(tokens, &MkToken{token, nil})
+		} else if other := parseOther(); other != "" {
+			tokens = append(tokens, &MkToken{other, nil})
 
 		} else {
 			break
