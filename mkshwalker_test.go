@@ -4,24 +4,38 @@ import "gopkg.in/check.v1"
 
 func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 
-	test := func(program string, output ...string) {
+	pathFor := map[string]bool{}
 
+	outputPathFor := func(kinds ...string) {
+		for key := range pathFor {
+			pathFor[key] = false
+		}
+		for _, kind := range kinds {
+			pathFor[kind] = true
+		}
+	}
+
+	test := func(program string, output ...string) {
 		list, err := parseShellProgram(dummyLine, program)
 
 		if !c.Check(err, check.IsNil) || !c.Check(list, check.NotNil) {
 			return
 		}
 
+		walker := NewMkShWalker()
 		var commands []string
+
 		add := func(kind string, format string, args ...interface{}) {
 			if format != "" && !contains(format, "%") {
 				panic(format)
 			}
 			detail := sprintf(format, args...)
 			commands = append(commands, sprintf("%16s %s", kind, detail))
+			if pathFor[kind] {
+				commands = append(commands, sprintf("%16s %s", "Path", walker.Path()))
+			}
 		}
 
-		walker := NewMkShWalker()
 		callback := &walker.Callback
 		callback.List = func(list *MkShList) { add("List", "with %d andOrs", len(list.AndOrs)) }
 		callback.AndOr = func(andor *MkShAndOr) { add("AndOr", "with %d pipelines", len(andor.Pipes)) }
@@ -29,7 +43,6 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		callback.Command = func(command *MkShCommand) { add("Command", "") }
 		callback.SimpleCommand = func(command *MkShSimpleCommand) {
 			add("SimpleCommand", "%s", NewStrCommand(command).String())
-			add("Path", "%s", walker.Path())
 		}
 		callback.CompoundCommand = func(command *MkShCompoundCommand) { add("CompoundCommand", "") }
 		callback.Case = func(caseClause *MkShCase) { add("Case", "with %d items", len(caseClause.Cases)) }
@@ -65,6 +78,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		c.Check(walker.Parent(0), equals, nil)
 	}
 
+	outputPathFor("SimpleCommand")
 	test(""+
 		"if condition; then action; else case selector in pattern) case-item-action ;; esac; fi; "+
 		"set -e; "+
