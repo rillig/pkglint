@@ -35,7 +35,6 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.",
 		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
 
@@ -925,7 +924,6 @@ func (s *Suite) Test_MkLines_Check__shell_command_as_word_part_in_ENV_list(c *ch
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.",
 		"WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.")
 }
 

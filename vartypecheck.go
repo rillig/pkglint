@@ -1068,7 +1068,9 @@ func (cv *VartypeCheck) ShellCommands() {
 }
 
 func (cv *VartypeCheck) ShellWord() {
-	NewShellLineChecker(cv.MkLines, cv.MkLine).CheckWord(cv.Value, true, RunTime)
+	ck := NewShellLineChecker(cv.MkLines, cv.MkLine)
+	ck.checkVarUse = false
+	ck.CheckWord(cv.Value, true, RunTime)
 }
 
 func (cv *VartypeCheck) Stage() {

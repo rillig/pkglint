@@ -18,10 +18,14 @@ import (
 type ShellLineChecker struct {
 	MkLines MkLines
 	mkline  MkLine
+
+	// checkVarUse is set to false when checking a single shell word
+	// in order to skip duplicate warnings in variable assignments.
+	checkVarUse bool
 }
 
 func NewShellLineChecker(mklines MkLines, mkline MkLine) *ShellLineChecker {
-	return &ShellLineChecker{mklines, mkline}
+	return &ShellLineChecker{mklines, mkline, true}
 }
 
 func (ck *ShellLineChecker) Errorf(format string, args ...interface{}) {
@@ -193,8 +197,10 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 			"In most cases, it is more appropriate to remove the double quotes.")
 	}
 
-	vuc := VarUseContext{shellCommandsType, vucTimeUnknown, quoting.ToVarUseContext(), true}
-	MkLineChecker{ck.MkLines, ck.mkline}.CheckVaruse(varuse, &vuc)
+	if ck.checkVarUse {
+		vuc := VarUseContext{shellCommandsType, vucTimeUnknown, quoting.ToVarUseContext(), true}
+		MkLineChecker{ck.MkLines, ck.mkline}.CheckVaruse(varuse, &vuc)
+	}
 
 	return true
 }

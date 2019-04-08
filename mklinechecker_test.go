@@ -740,10 +740,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightVaruse(c *check.C) {
 
 	mklines.Check()
 
-	// TODO: Duplicate diagnostics mean twice the work being done.
 	t.CheckOutputLines(
-		"WARN: module.mk:2: Please use PREFIX instead of LOCALBASE.",
-		"NOTE: module.mk:2: The :Q operator isn't necessary for ${LOCALBASE} here.",
 		"WARN: module.mk:2: Please use PREFIX instead of LOCALBASE.",
 		"NOTE: module.mk:2: The :Q operator isn't necessary for ${LOCALBASE} here.")
 }
@@ -1565,9 +1562,7 @@ func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__mstar(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:2: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
-		"WARN: ~/options.mk:2: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
 		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:6: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
 		"WARN: ~/options.mk:6: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.")
 }
 
@@ -1584,11 +1579,8 @@ func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__mstar_not_needed(c *check
 	// Since the :M* hack is only needed for GNU_CONFIGURE, it is not necessary here.
 	G.Check(pkg)
 
-	// FIXME: Duplicate diagnostics.
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:20: The :M* modifier is not needed here.",
-		"NOTE: ~/category/package/Makefile:20: The :M* modifier is not needed here.",
-		"NOTE: ~/category/package/Makefile:21: The :M* modifier is not needed here.",
 		"NOTE: ~/category/package/Makefile:21: The :M* modifier is not needed here.")
 }
 
@@ -1928,10 +1920,8 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: Duplicate diagnostics.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
-		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.",
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }
 
