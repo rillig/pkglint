@@ -1766,7 +1766,6 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	tokens := func(tokens ...*MkToken) []*MkToken {
 		return tokens
 	}
-	_, _, _, _ = text, varuse, varuseText, tokens
 
 	test := func(text string, main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string, diagnostics ...string) {
 		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := MkLineParser{}.split(text)
@@ -1777,6 +1776,8 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 			deepEquals,
 			[]interface{}{text, main, tokens, rest, spaceBeforeComment, hasComment, comment})
 	}
+
+	t.Use(text, varuse, varuseText, tokens)
 
 	test("",
 		"",
@@ -2036,6 +2037,22 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"",
 		true,
 		"comment")
+
+	// At this stage, MkLine.split doesn't know that empty(...) takes
+	// a variable use. Instead it just sees ordinary characters and
+	// other uses of variables.
+	//
+	// FIXME: Pkglint doesn't know how to handle $/ at this point.
+	test(".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
+		".if empty(${VAR.${tool}}:C/\\:.*",
+		tokens(
+			text(".if empty("),
+			varuse("VAR.${tool}"),
+			text(":C/\\:.*")),
+		"$//:M${pattern})",
+		"",
+		false,
+		"")
 }
 
 func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
