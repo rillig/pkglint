@@ -49,34 +49,53 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	t := s.Init(c)
 
-	pkg := NewPackage(t.File("category/package"))
-	pkg.vars.Define("PKGNAME", t.NewMkLine("Makefile", 5, "PKGNAME=dummy"))
-
-	err := "#error"
-	test := func(pkgname, distname, expectedPkgname string) {
-		merged, ok := pkg.pkgnameFromDistname(pkgname, distname)
-		if !ok {
-			merged = err
+	var once Once
+	test := func(pkgname, distname, expectedPkgname string, diagnostics ...string) {
+		t.SetUpPackage("category/package",
+			"PKGNAME=\t"+pkgname,
+			"DISTNAME=\t"+distname)
+		if once.FirstTime("called") {
+			t.FinishSetUp()
 		}
-		c.Check(merged, equals, expectedPkgname)
+
+		pkg := NewPackage(t.File("category/package"))
+		pkg.loadPackageMakefile()
+		pkg.determineEffectivePkgVars()
+		t.Check(pkg.EffectivePkgname, equals, expectedPkgname)
+		t.CheckOutput(diagnostics)
 	}
 
 	test("pkgname-1.0", "whatever", "pkgname-1.0")
-	test("${DISTNAME}", "distname-1.0", "distname-1.0")
+
+	test("${DISTNAME}", "distname-1.0", "distname-1.0",
+		"NOTE: ~/category/package/Makefile:4: This assignment is probably redundant since PKGNAME is ${DISTNAME} by default.")
+
 	test("${DISTNAME:S/dist/pkg/}", "distname-1.0", "pkgname-1.0")
+
 	test("${DISTNAME:S|a|b|g}", "panama-0.13", "pbnbmb-0.13")
-	test("${DISTNAME:S|^lib||}", "libncurses", "ncurses")
-	test("${DISTNAME:S|^lib||}", "mylib", "mylib")
+
+	// The substitution succeeds, but the substituted value is missing
+	// the package version. Therefore it is discarded completely.
+	test("${DISTNAME:S|^lib||}", "libncurses", "")
+
+	// The substitution succeeds, but the substituted value is missing
+	// the package version. Therefore it is discarded completely.
+	test("${DISTNAME:S|^lib||}", "mylib", "")
+
 	test("${DISTNAME:tl:S/-/./g:S/he/-/1}", "SaxonHE9-5-0-1J", "saxon-9.5.0.1j")
+
 	test("${DISTNAME:C/beta/.0./}", "fspanel-0.8beta1", "fspanel-0.8.0.1")
+
 	test("${DISTNAME:C/Gtk2/p5-gtk2/}", "Gtk2-1.0", "p5-gtk2-1.0")
+
 	test("${DISTNAME:S/-0$/.0/1}", "aspell-af-0.50-0", "aspell-af-0.50.0")
-	test("${DISTNAME:M*.tar.gz:C,\\..*,,}", "aspell-af-0.50-0", err)
+
+	test("${DISTNAME:M*.tar.gz:C,\\..*,,}", "aspell-af-0.50-0", "")
 
 	// FIXME: Should produce a parse error since the :S modifier is malformed; see Test_MkParser_MkTokens.
 	test("${DISTNAME:S,a,b,c,d}", "aspell-af-0.50-0", "bspell-af-0.50-0")
 
-	test("${DISTFILE:C,\\..*,,}", "aspell-af-0.50-0", err)
+	test("${DISTFILE:C,\\..*,,}", "aspell-af-0.50-0", "")
 }
 
 func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
