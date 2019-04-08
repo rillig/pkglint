@@ -2010,12 +2010,13 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	//  variable name, mainly because the empty variable name is not visible
 	//  outside of the bmake debugging mode.
 	test("Lonely $ character $",
-		"Lonely $ character ",
+		"Lonely $ character $",
 		tokens(
 			text("Lonely "),
 			varuseText("$ " /* instead of "${ }" */, " "),
-			text("character ")),
-		"$",
+			text("character "),
+			text("$")),
+		"",
 		"",
 		false,
 		"")
@@ -2041,15 +2042,17 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// At this stage, MkLine.split doesn't know that empty(...) takes
 	// a variable use. Instead it just sees ordinary characters and
 	// other uses of variables.
-	//
-	// FIXME: Pkglint doesn't know how to handle $/ at this point.
 	test(".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
-		".if empty(${VAR.${tool}}:C/\\:.*",
+		".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
 		tokens(
 			text(".if empty("),
 			varuse("VAR.${tool}"),
-			text(":C/\\:.*")),
-		"$//:M${pattern})",
+			text(":C/\\:.*"),
+			text("$"),
+			text("//:M"),
+			varuse("pattern"),
+			text(")")),
+		"",
 		"",
 		false,
 		"")

@@ -786,6 +786,9 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 		} else if other := parseOther(); other != "" {
 			tokens = append(tokens, &MkToken{other, nil})
 
+		} else if lexer.SkipByte('$') {
+			tokens = append(tokens, &MkToken{"$", nil})
+
 		} else {
 			break
 		}
