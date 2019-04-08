@@ -330,7 +330,7 @@ func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
 	{
 		// Parsing the continuation marker as variable value is cheating but works well.
 		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
-		_, a := MkLineParser{}.MatchVarassign(text)
+		_, a := MkLineParser{}.MatchVarassign(mkline.Line, text)
 		if a.value != "\\" {
 			oldWidth = tabWidth(a.valueAlign)
 		}

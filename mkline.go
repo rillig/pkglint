@@ -113,7 +113,7 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 }
 
 func (p MkLineParser) parseVarassign(line Line) MkLine {
-	m, a := p.MatchVarassign(line.Text)
+	m, a := p.MatchVarassign(line, line.Text)
 	if !m {
 		return nil
 	}
@@ -742,7 +742,7 @@ again:
 // This applies to all line types except those starting with a tab, which
 // contain the shell commands to be associated with make targets. These cannot
 // have comments.
-func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
+func (p MkLineParser) split(line Line, text string) (main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
 
 	main, comment = p.unescapeComment(text)
 
@@ -819,7 +819,7 @@ func (p MkLineParser) parseDirective(line Line) MkLine {
 		return nil
 	}
 
-	main, _, rest, _, _, trailingComment := p.split(text)
+	main, _, rest, _, _, trailingComment := p.split(line, text)
 	G.Assertf(rest == "", "Parse error for %q.", text)
 
 	lexer := textproc.NewLexer(main[1:])
@@ -1427,14 +1427,14 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---.[")
 )
 
-func (p MkLineParser) MatchVarassign(text string) (m bool, assignment mkLineAssign) {
+func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment mkLineAssign) {
 	commented := hasPrefix(text, "#")
 	withoutLeadingComment := text
 	if commented {
 		withoutLeadingComment = withoutLeadingComment[1:]
 	}
 
-	main, tokens, rest, spaceBeforeComment, hasComment, comment := p.split(withoutLeadingComment)
+	main, tokens, rest, spaceBeforeComment, hasComment, comment := p.split(line, withoutLeadingComment)
 
 	lexer := NewMkTokensLexer(tokens)
 	mainStart := lexer.Mark()

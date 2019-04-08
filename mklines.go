@@ -531,7 +531,7 @@ func (va *VaralignBlock) processVarassign(mkline MkLine) {
 	if mkline.IsMultiline() {
 		// Parsing the continuation marker as variable value is cheating but works well.
 		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
-		m, a := MkLineParser{}.MatchVarassign(text)
+		m, a := MkLineParser{}.MatchVarassign(mkline.Line, text)
 		continuation = m && a.value == "\\"
 	}
 

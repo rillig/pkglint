@@ -1271,10 +1271,11 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.
 }
 
 func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
-	s.Init(c)
+	t := s.Init(c)
 
 	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
-		m, actual := MkLineParser{}.MatchVarassign(text)
+		line := t.NewLine("filename.mk", 123, text)
+		m, actual := MkLineParser{}.MatchVarassign(line, text)
 		if !m {
 			c.Errorf("Text %q doesn't match variable assignment", text)
 			return
@@ -1299,7 +1300,8 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	}
 
 	testInvalid := func(text string) {
-		m, _ := MkLineParser{}.MatchVarassign(text)
+		line := t.NewLine("filename.mk", 123, text)
+		m, _ := MkLineParser{}.MatchVarassign(line, text)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
@@ -1768,7 +1770,8 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	}
 
 	test := func(text string, main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string, diagnostics ...string) {
-		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := MkLineParser{}.split(text)
+		line := t.NewLine("filename.mk", 123, text)
+		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := MkLineParser{}.split(line, text)
 
 		t.CheckOutput(diagnostics)
 		t.Check(
