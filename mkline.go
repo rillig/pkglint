@@ -1428,7 +1428,17 @@ var (
 )
 
 func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment mkLineAssign) {
-	commented := hasPrefix(text, "#")
+
+	// A commented variable assignment does not have leading whitespace.
+	// Otherwise line 1 of almost every Makefile fragment would need to
+	// be scanned for a variable assignment even though it only contains
+	// the $NetBSD CVS Id.
+	clex := textproc.NewLexer(text)
+	commented := clex.SkipByte('#')
+	if commented && clex.SkipHspace() {
+		return false, nil
+	}
+
 	withoutLeadingComment := text
 	if commented {
 		withoutLeadingComment = withoutLeadingComment[1:]
