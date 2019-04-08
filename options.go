@@ -1,16 +1,33 @@
 package pkglint
 
 func CheckLinesOptionsMk(mklines MkLines) {
-	if trace.Tracing {
-		defer trace.Call1(mklines.lines.FileName)()
-	}
+	ck := OptionsLinesChecker{
+		mklines,
+		make(map[string]MkLine),
+		make(map[string]MkLine),
+		nil}
+
+	ck.Check()
+}
+
+// OptionsLinesChecker checks an options.mk file of a pkgsrc package.
+type OptionsLinesChecker struct {
+	mklines MkLines
+
+	declaredOptions           map[string]MkLine
+	handledOptions            map[string]MkLine
+	optionsInDeclarationOrder []string
+}
+
+func (ck *OptionsLinesChecker) Check() {
+	mklines := ck.mklines
 
 	mklines.Check()
 
 	mlex := NewMkLinesLexer(mklines)
 	mlex.SkipWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
 
-	if mlex.EOF() || !(mlex.CurrentMkLine().IsVarassign() && mlex.CurrentMkLine().Varname() == "PKG_OPTIONS_VAR") {
+	if mlex.EOF() || !mlex.CurrentMkLine().IsVarassign() || mlex.CurrentMkLine().Varname() != "PKG_OPTIONS_VAR" {
 		line := mlex.CurrentLine()
 		line.Warnf("Expected definition of PKG_OPTIONS_VAR.")
 		line.Explain(
@@ -22,99 +39,111 @@ func CheckLinesOptionsMk(mklines MkLines) {
 	}
 	mlex.Skip()
 
-	declaredOptions := make(map[string]MkLine)
-	handledOptions := make(map[string]MkLine)
-	var optionsInDeclarationOrder []string
-
-loop:
-	for ; !mlex.EOF(); mlex.Skip() {
-		mkline := mlex.CurrentMkLine()
-		switch {
-		case mkline.IsComment():
-			break
-		case mkline.IsEmpty():
-			break
-
-		case mkline.IsVarassign():
-			switch mkline.Varcanon() {
-			case "PKG_SUPPORTED_OPTIONS", "PKG_OPTIONS_GROUP.*", "PKG_OPTIONS_SET.*":
-				for _, option := range mkline.ValueFields(mkline.Value()) {
-					if !containsVarRef(option) {
-						declaredOptions[option] = mkline
-						optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
-					}
-				}
-			}
-
-		case mkline.IsDirective():
-			// The conditionals are typically for OPSYS and MACHINE_ARCH.
-
-		case mkline.IsInclude():
-			if mkline.IncludedFile() == "../../mk/bsd.options.mk" {
-				mlex.Skip()
-				break loop
-			}
-
-		default:
-			line := mlex.CurrentLine()
-			line.Warnf("Expected inclusion of \"../../mk/bsd.options.mk\".")
-			line.Explain(
-				"After defining the input variables (PKG_OPTIONS_VAR, etc.),",
-				"bsd.options.mk should be included to do the actual processing.",
-				"No other actions should take place in this part of the file",
-				"in order to have the same structure in all options.mk files.")
-			return
-		}
+	upper := true
+	for !mlex.EOF() && upper {
+		upper = ck.handleUpperLine(mlex.CurrentMkLine())
+		mlex.Skip()
 	}
 
 	for ; !mlex.EOF(); mlex.Skip() {
 		mkline := mlex.CurrentMkLine()
 		if mkline.IsDirective() && (mkline.Directive() == "if" || mkline.Directive() == "elif") {
-			cond := mkline.Cond()
-			if cond == nil {
-				continue
-			}
-
-			recordUsedOption := func(varuse *MkVarUse) {
-				if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {
-					if m, positive, pattern := varuse.modifiers[0].MatchMatch(); m && positive {
-						option := pattern
-						if !containsVarRef(option) {
-							handledOptions[option] = mkline
-							optionsInDeclarationOrder = append(optionsInDeclarationOrder, option)
-						}
-					}
-				}
-			}
-			cond.Walk(&MkCondCallback{
-				Empty: recordUsedOption,
-				Var:   recordUsedOption})
-
-			// FIXME: Is this note also issued for the following lines?
-			//  .if empty(ANY_OTHER_VARIABLE)
-			//  .else
-			//  .endif
-			if cond.Empty != nil && mkline.HasElseBranch() {
-				mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")
-				mkline.Explain(
-					"For consistency among packages, the upper branch of this",
-					".if/.else statement should always handle the case where the",
-					"option is activated.",
-					"A missing exclamation mark at this point can easily be overlooked.",
-					"",
-					"If that seems too much to type and the exclamation mark",
-					"seems wrong for a positive test, switch the blocks nevertheless",
-					"and write the condition like this, which has the same effect",
-					"as the !empty(...).",
-					"",
-					"\t.if ${PKG_OPTIONS.packagename:Moption}")
+			if cond := mkline.Cond(); cond != nil {
+				ck.handleLowerCondition(mkline, cond)
 			}
 		}
 	}
 
-	for _, option := range optionsInDeclarationOrder {
-		declared := declaredOptions[option]
-		handled := handledOptions[option]
+	ck.checkOptionsMismatch()
+
+	mklines.SaveAutofixChanges()
+}
+
+// checkLineUpper checks a line from the upper part of an options.mk file,
+// which is the part before bsd.options.mk is included.
+func (ck *OptionsLinesChecker) handleUpperLine(mkline MkLine) bool {
+	switch {
+	case mkline.IsComment():
+		break
+	case mkline.IsEmpty():
+		break
+
+	case mkline.IsVarassign():
+		switch mkline.Varcanon() {
+		case "PKG_SUPPORTED_OPTIONS", "PKG_OPTIONS_GROUP.*", "PKG_OPTIONS_SET.*":
+			for _, option := range mkline.ValueFields(mkline.Value()) {
+				if !containsVarRef(option) {
+					ck.declaredOptions[option] = mkline
+					ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
+				}
+			}
+		}
+
+	case mkline.IsDirective():
+		// The conditionals are typically for OPSYS and MACHINE_ARCH.
+
+	case mkline.IsInclude():
+		if mkline.IncludedFile() == "../../mk/bsd.options.mk" {
+			return false
+		}
+
+	default:
+		line := mkline
+		line.Warnf("Expected inclusion of \"../../mk/bsd.options.mk\".")
+		line.Explain(
+			"After defining the input variables (PKG_OPTIONS_VAR, etc.),",
+			"bsd.options.mk should be included to do the actual processing.",
+			"No other actions should take place in this part of the file",
+			"in order to have the same structure in all options.mk files.")
+		return false
+	}
+
+	return true
+}
+
+func (ck *OptionsLinesChecker) handleLowerCondition(mkline MkLine, cond MkCond) {
+
+	recordUsedOption := func(varuse *MkVarUse) {
+		if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {
+			if m, positive, pattern := varuse.modifiers[0].MatchMatch(); m && positive {
+				option := pattern
+				if !containsVarRef(option) {
+					ck.handledOptions[option] = mkline
+					ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
+				}
+			}
+		}
+	}
+
+	cond.Walk(&MkCondCallback{
+		Empty: recordUsedOption,
+		Var:   recordUsedOption})
+
+	// FIXME: Is this note also issued for the following lines?
+	//  .if empty(ANY_OTHER_VARIABLE)
+	//  .else
+	//  .endif
+	if cond.Empty != nil && mkline.HasElseBranch() {
+		mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")
+		mkline.Explain(
+			"For consistency among packages, the upper branch of this",
+			".if/.else statement should always handle the case where the",
+			"option is activated.",
+			"A missing exclamation mark at this point can easily be overlooked.",
+			"",
+			"If that seems too much to type and the exclamation mark",
+			"seems wrong for a positive test, switch the blocks nevertheless",
+			"and write the condition like this, which has the same effect",
+			"as the !empty(...).",
+			"",
+			"\t.if ${PKG_OPTIONS.packagename:Moption}")
+	}
+}
+
+func (ck *OptionsLinesChecker) checkOptionsMismatch() {
+	for _, option := range ck.optionsInDeclarationOrder {
+		declared := ck.declaredOptions[option]
+		handled := ck.handledOptions[option]
 
 		switch {
 		case handled == nil:
@@ -131,6 +160,4 @@ loop:
 				"This is most probably a typo.")
 		}
 	}
-
-	mklines.SaveAutofixChanges()
 }
