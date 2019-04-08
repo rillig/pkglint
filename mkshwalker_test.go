@@ -224,26 +224,19 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.ShToken",
 		"           Words with 1 words",
 		"            Word 'hello world'",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[1].ShToken[0]",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]ShToken[1].ShToken[0]",
 		"       Redirects with 3 redirects",
-		// FIXME: lonely dot
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection",
 		"        Redirect >",
-		// FIXME: lonely dot
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[0]",
 		"            Word /dev/null",
-		// FIXME: double dot
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand..ShToken[0]",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[0].ShToken[0]",
 		"        Redirect >&",
-		// FIXME: lonely dot
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[1]",
 		"            Word 1",
-		// FIXME: double dot
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand..ShToken[1]",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[1].ShToken[1]",
 		"        Redirect <",
-		// FIXME: lonely dot
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[2]",
 		"            Word /dev/random",
-		// FIXME: double dot
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand..ShToken[2]")
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[2].ShToken[2]")
 }
