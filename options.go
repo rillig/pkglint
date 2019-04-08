@@ -11,6 +11,8 @@ func CheckLinesOptionsMk(mklines MkLines) {
 }
 
 // OptionsLinesChecker checks an options.mk file of a pkgsrc package.
+//
+// See mk/bsd.options.mk for a detailed description.
 type OptionsLinesChecker struct {
 	mklines MkLines
 
@@ -27,14 +29,7 @@ func (ck *OptionsLinesChecker) Check() {
 	mlex := NewMkLinesLexer(mklines)
 	mlex.SkipWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
 
-	if mlex.EOF() || !mlex.CurrentMkLine().IsVarassign() || mlex.CurrentMkLine().Varname() != "PKG_OPTIONS_VAR" {
-		line := mlex.CurrentLine()
-		line.Warnf("Expected definition of PKG_OPTIONS_VAR.")
-		line.Explain(
-			"The input variables in an options.mk file should always be",
-			"mentioned in the same order: PKG_OPTIONS_VAR,",
-			"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.",
-			"This way, the options.mk files have the same structure and are easy to understand.")
+	if !ck.lookingAtPkgOptionsVar(mlex) {
 		return
 	}
 	mlex.Skip()
@@ -45,13 +40,9 @@ func (ck *OptionsLinesChecker) Check() {
 		mlex.Skip()
 	}
 
-	for ; !mlex.EOF(); mlex.Skip() {
-		mkline := mlex.CurrentMkLine()
-		if mkline.IsDirective() && (mkline.Directive() == "if" || mkline.Directive() == "elif") {
-			if cond := mkline.Cond(); cond != nil {
-				ck.handleLowerCondition(mkline, cond)
-			}
-		}
+	for !mlex.EOF() {
+		ck.handleLowerLine(mlex.CurrentMkLine())
+		mlex.Skip()
 	}
 
 	ck.checkOptionsMismatch()
@@ -59,8 +50,26 @@ func (ck *OptionsLinesChecker) Check() {
 	mklines.SaveAutofixChanges()
 }
 
+func (ck *OptionsLinesChecker) lookingAtPkgOptionsVar(mlex *MkLinesLexer) bool {
+	if !mlex.EOF() {
+		mkline := mlex.CurrentMkLine()
+		if mkline.IsVarassign() && mkline.Varname() == "PKG_OPTIONS_VAR" {
+			return true
+		}
+	}
+
+	line := mlex.CurrentLine()
+	line.Warnf("Expected definition of PKG_OPTIONS_VAR.")
+	line.Explain(
+		"The input variables in an options.mk file should always be",
+		"mentioned in the same order: PKG_OPTIONS_VAR,",
+		"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.",
+		"This way, the options.mk files have the same structure and are easy to understand.")
+	return false
+}
+
 // checkLineUpper checks a line from the upper part of an options.mk file,
-// which is the part before bsd.options.mk is included.
+// before bsd.options.mk is included.
 func (ck *OptionsLinesChecker) handleUpperLine(mkline MkLine) bool {
 	switch {
 	case mkline.IsComment():
@@ -99,6 +108,18 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline MkLine) bool {
 	}
 
 	return true
+}
+
+func (ck *OptionsLinesChecker) handleLowerLine(mkline MkLine) {
+	if mkline.IsDirective() {
+		directive := mkline.Directive()
+		if directive == "if" || directive == "elif" {
+			cond := mkline.Cond()
+			if cond != nil {
+				ck.handleLowerCondition(mkline, cond)
+			}
+		}
+	}
 }
 
 func (ck *OptionsLinesChecker) handleLowerCondition(mkline MkLine, cond MkCond) {
