@@ -1156,43 +1156,59 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 		tokens(
 			text("value "),
 			varUseText("${UNFINISHED", "UNFINISHED")),
+
+		// FIXME: duplicate diagnostic.
+		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".",
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
-	tokens, rest := mkline.ValueTokens()
+	tokens := func(tokens ...*MkToken) []*MkToken { return tokens }
 
-	c.Check(tokens, deepEquals, []*MkToken{
-		{"value ", nil},
-		{"${UNFINISHED", NewMkVarUse("UNFINISHED")}})
+	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
+	valueTokens, rest := mkline.ValueTokens()
+
+	c.Check(valueTokens, deepEquals,
+		tokens(
+			&MkToken{"value ", nil},
+			&MkToken{"${UNFINISHED", NewMkVarUse("UNFINISHED")}))
 	c.Check(rest, equals, "")
 	t.CheckOutputLines(
+		// FIXME: duplicate diagnostic.
+		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".",
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
-	tokens2, rest2 := mkline.ValueTokens() // This time the slice is taken from the cache.
+	// This time the slice is taken from the cache.
+	tokens2, rest2 := mkline.ValueTokens()
 
-	c.Check(&tokens2[0], equals, &tokens[0])
+	c.Check(&tokens2[0], equals, &valueTokens[0])
 	c.Check(rest2, equals, rest)
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
-	tokens, rest := mkline.ValueTokens()
+	tokens := func(tokens ...*MkToken) []*MkToken { return tokens }
+	varuseText := func(text, varname string, modifiers ...string) *MkToken {
+		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
+	}
 
-	c.Check(tokens, deepEquals, []*MkToken{
-		{"${UNFINISHED", NewMkVarUse("UNFINISHED")}})
+	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
+	valueTokens, rest := mkline.ValueTokens()
+
+	c.Check(valueTokens, deepEquals, tokens(varuseText("${UNFINISHED", "UNFINISHED")))
 	c.Check(rest, equals, "")
 	t.CheckOutputLines(
+		// FIXME: duplicate diagnostic.
+		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".",
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
-	tokens2, rest2 := mkline.ValueTokens() // This time the slice is taken from the cache.
+	// This time the slice is taken from the cache.
+	tokens2, rest2 := mkline.ValueTokens()
 
-	c.Check(&tokens2[0], equals, &tokens[0])
+	c.Check(&tokens2[0], equals, &valueTokens[0])
 	c.Check(rest2, equals, rest)
 }
 
@@ -1207,6 +1223,8 @@ func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
+		// FIXME: duplicate diagnostic.
+		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.",
 		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.")
 }
 
@@ -1273,7 +1291,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.
 func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	t := s.Init(c)
 
-	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string) {
+	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 		m, actual := MkLineParser{}.MatchVarassign(line, text)
 		if !m {
@@ -1297,14 +1315,16 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 			comment:           comment,
 		}
 		c.Check(*actual, deepEquals, expected)
+		t.CheckOutput(diagnostics)
 	}
 
-	testInvalid := func(text string) {
+	testInvalid := func(text string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 		m, _ := MkLineParser{}.MatchVarassign(line, text)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
+		t.CheckOutput(diagnostics)
 	}
 
 	test("C++=c11", false, "C+", "", "+=", "C++=", "c11", "", "")
@@ -1399,6 +1419,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"# none")
 
 	test("EGDIRS=\t${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
+
 		false,
 		"EGDIRS",
 		"",
@@ -1406,7 +1427,14 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"EGDIRS=\t",
 		"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
 		"",
-		"")
+		"",
+
+		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/pam.d\".",
+		"WARN: filename.mk:123: Invalid part \"/pam.d\" after variable name \"EGDIR\".",
+		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: filename.mk:123: Invalid part \"/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
+		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: filename.mk:123: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".")
 
 	test("VAR:=\t${VAR:M-*:[\\#]}",
 		false,
@@ -1790,6 +1818,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	t.Use(text, varuse, varuseText, tokens)
 
 	test("",
+
 		"",
 		tokens(),
 		"",
@@ -1798,6 +1827,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"")
 
 	test("text",
+
 		"text",
 		tokens(text("text")),
 		"",
@@ -1807,6 +1837,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	// Leading space is always kept.
 	test(" text",
+
 		" text",
 		tokens(text(" text")),
 		"",
@@ -1817,6 +1848,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// Trailing space does not end up in the tokens since it is usually
 	// ignored.
 	test("text\t",
+
 		"text",
 		tokens(text("text")),
 		"",
@@ -1825,6 +1857,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"")
 
 	test("text\t# intended comment",
+
 		"text",
 		tokens(text("text")),
 		"",
@@ -1836,6 +1869,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// unescaped # in the middle of a word, like the URL fragment in this
 	// example.
 	test("url#fragment",
+
 		"url",
 		tokens(text("url")),
 		"",
@@ -1849,20 +1883,25 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// The difference between "#defined" and "# defined" is relevant in a few
 	// cases, such as the API documentation of the infrastructure files.
 	test("# comment",
+
 		"",
 		tokens(),
 		"",
 		"",
 		true,
 		" comment")
+
 	test("#\tcomment",
+
 		"",
 		tokens(),
 		"",
 		"",
 		true,
 		"\tcomment")
+
 	test("#   comment",
+
 		"",
 		tokens(),
 		"",
@@ -1872,13 +1911,16 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	// Other than in the shell, # also starts a comment in the middle of a word.
 	test("COMMENT=\tThe C# compiler",
+
 		"COMMENT=\tThe C",
 		tokens(text("COMMENT=\tThe C")),
 		"",
 		"",
 		true,
 		" compiler")
+
 	test("COMMENT=\tThe C\\# compiler",
+
 		"COMMENT=\tThe C# compiler",
 		tokens(text("COMMENT=\tThe C# compiler")),
 		"",
@@ -1887,6 +1929,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"")
 
 	test("${TARGET}: ${SOURCES} # comment",
+
 		"${TARGET}: ${SOURCES}",
 		tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
 		"",
@@ -1898,6 +1941,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// This is done so that the length modifier :[#] can be written without
 	// escaping the #.
 	test("VAR=\t${OTHER:[#]} # comment",
+
 		"VAR=\t${OTHER:[#]}",
 		tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
 		"",
@@ -1907,6 +1951,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	// The # in the :[#] modifier may be escaped or not. Both forms are equivalent.
 	test("VAR:=\t${VAR:M-*:[\\#]}",
+
 		"VAR:=\t${VAR:M-*:[#]}",
 		tokens(text("VAR:=\t"), varuse("VAR", "M-*", "[#]")),
 		"",
@@ -1918,6 +1963,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// or something else. This makes it difficult to write a literal \# in a
 	// Makefile, but that's an edge case anyway.
 	test("VAR0=\t#comment",
+
 		"VAR0=",
 		tokens(text("VAR0=")),
 		"",
@@ -1927,6 +1973,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"\t",
 		true,
 		"comment")
+
 	test("VAR1=\t\\#no-comment",
 		"VAR1=\t#no-comment",
 		tokens(text("VAR1=\t#no-comment")),
@@ -1934,6 +1981,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"",
 		false,
 		"")
+
 	test("VAR2=\t\\\\#comment",
 		"VAR2=\t\\\\",
 		tokens(text("VAR2=\t\\\\")),
@@ -1946,29 +1994,41 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// In particular, it cannot be used to escape a dollar that starts a
 	// variable use.
 	test("VAR0=\t$T",
+
 		"VAR0=\t$T",
 		tokens(text("VAR0=\t"), varuseText("$T", "T")),
 		"",
 		"",
 		false,
-		"")
+		"",
+
+		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
+
 	test("VAR1=\t\\$T",
+
 		"VAR1=\t\\$T",
 		tokens(text("VAR1=\t\\"), varuseText("$T", "T")),
 		"",
 		"",
 		false,
-		"")
+		"",
+
+		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
+
 	test("VAR2=\t\\\\$T",
+
 		"VAR2=\t\\\\$T",
 		tokens(text("VAR2=\t\\\\"), varuseText("$T", "T")),
 		"",
 		"",
 		false,
-		"")
+		"",
+
+		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
 
 	// To escape a dollar, write it twice.
 	test("$$shellvar $${shellvar} \\${MKVAR} [] \\x",
+
 		"$$shellvar $${shellvar} \\${MKVAR} [] \\x",
 		tokens(text("$$shellvar $${shellvar} \\"), varuse("MKVAR"), text(" [] \\x")),
 		"",
@@ -1978,12 +2038,15 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	// Parse errors are recorded in the rest return value.
 	test("${UNCLOSED",
+
 		"${UNCLOSED",
 		tokens(varuseText("${UNCLOSED", "UNCLOSED")),
 		"",
 		"",
 		false,
-		"")
+		"",
+
+		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED\".")
 
 	// Even if there is a parse error in the main part,
 	// the comment is extracted.
@@ -1995,7 +2058,9 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"",
 		"",
 		true,
-		" comment")
+		" comment",
+
+		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED\".")
 
 	// Even in case of parse errors, the space before the comment is parsed
 	// correctly.
@@ -2009,7 +2074,10 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		"",
 		" ",
 		true,
-		" comment")
+		" comment",
+
+		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED \".",
+		"WARN: filename.mk:123: Invalid part \" \" after variable name \"UNCLOSED\".")
 
 	// The dollar-space refers to a normal Make variable named " ".
 	// The lonely dollar at the very end refers to the variable named "",

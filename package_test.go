@@ -92,8 +92,8 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 
 	test("${DISTNAME:M*.tar.gz:C,\\..*,,}", "aspell-af-0.50-0", "")
 
-	// FIXME: Should produce a parse error since the :S modifier is malformed; see Test_MkParser_MkTokens.
-	test("${DISTNAME:S,a,b,c,d}", "aspell-af-0.50-0", "bspell-af-0.50-0")
+	test("${DISTNAME:S,a,b,c,d}", "aspell-af-0.50-0", "bspell-af-0.50-0",
+		"WARN: ~/category/package/Makefile:4: Invalid variable modifier \"c,d\" for \"DISTNAME\".")
 
 	test("${DISTFILE:C,\\..*,,}", "aspell-af-0.50-0", "")
 }

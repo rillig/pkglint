@@ -746,7 +746,7 @@ func (p MkLineParser) split(line Line, text string) (main string, tokens []*MkTo
 
 	main, comment = p.unescapeComment(text)
 
-	parser := NewMkParser(nil, main, false)
+	parser := NewMkParser(line, main, true)
 	lexer := parser.lexer
 
 	rtrimHspace := func(s string) string {
@@ -1435,7 +1435,7 @@ func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment
 	// the $NetBSD CVS Id.
 	clex := textproc.NewLexer(text)
 	commented := clex.SkipByte('#')
-	if commented && clex.SkipHspace() {
+	if commented && clex.SkipHspace() || clex.EOF() {
 		return false, nil
 	}
 

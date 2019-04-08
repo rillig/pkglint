@@ -511,6 +511,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"NOTE: filename.mk:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
+		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
+		// FIXME: duplicate diagnostic.
+		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",
 		"WARN: filename.mk:1: MASTER_SITES should not be used at load time in any file.",
 		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".")
@@ -1285,6 +1288,13 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
+		// FIXME: duplicate diagnostic.
+		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/pam.d\".",
+		"WARN: Makefile:2: Invalid part \"/pam.d\" after variable name \"EGDIR\".",
+		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: Makefile:2: Invalid part \"/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
+		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: Makefile:2: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
 		"WARN: Makefile:2: EGDIR/pam.d is used but not defined.",
 		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/pam.d\".",
@@ -1313,9 +1323,10 @@ func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 	// In line 2 the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
 	// name of another variable, and that variable is not known. Only XKBBASE is known.
 	//
-	// TODO: In line 2, warn about the invalid "/" as part of the variable name.
-	//  To enable that warning, p.EmitWarnings has to be true in MkParser.varUseBrace.
+	// In line 2, warn about the invalid "/" as part of the variable name.
 	t.CheckOutputLines(
+		"WARN: x11/xkeyboard-config/Makefile:2: "+
+			"Invalid part \"/xkbcomp\" after variable name \"${XKBBASE}\".",
 		"WARN: x11/xkeyboard-config/Makefile:2: XKBBASE is used but not defined.")
 }
 
