@@ -211,6 +211,9 @@ func (vt *Vartype) String() string {
 	if vt.SystemProvided() {
 		opts = append(opts, "system-provided")
 	}
+	if vt.CommandLineProvided() {
+		opts = append(opts, "command-line-provided")
+	}
 
 	optsSuffix := ""
 	if len(opts) > 0 {

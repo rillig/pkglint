@@ -116,6 +116,15 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 		"builtin.mk, but not buildlink3.mk, Makefile or *.mk")
 }
 
+func (s *Suite) Test_Vartype_String(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	vartype := G.Pkgsrc.VariableType(nil, "PKG_DEBUG_LEVEL")
+	t.Check(vartype.String(), equals, "Integer (command-line-provided)")
+}
+
 func (s *Suite) Test_BasicType_HasEnum(c *check.C) {
 	vc := enum("start middle end")
 
