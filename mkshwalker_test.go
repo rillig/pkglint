@@ -210,4 +210,40 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"       Redirects with 1 redirects",
 		"        Redirect >&",
 		"            Word 2")
+
+	outputPathFor("Redirects", "Redirect", "Word")
+	test(""+
+		"echo 'hello world' 1>/dev/null 2>&1 0</dev/random",
+
+		"            List with 1 andOrs",
+		"           AndOr with 1 pipelines",
+		"        Pipeline with 1 commands",
+		"         Command ",
+		"   SimpleCommand echo 'hello world'",
+		"            Word echo",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.ShToken",
+		"           Words with 1 words",
+		"            Word 'hello world'",
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[1].ShToken[0]",
+		"       Redirects with 3 redirects",
+		// FIXME: lonely dot
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"        Redirect >",
+		// FIXME: lonely dot
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"            Word /dev/null",
+		// FIXME: double dot
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand..ShToken[0]",
+		"        Redirect >&",
+		// FIXME: lonely dot
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"            Word 1",
+		// FIXME: double dot
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand..ShToken[1]",
+		"        Redirect <",
+		// FIXME: lonely dot
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.",
+		"            Word /dev/random",
+		// FIXME: double dot
+		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand..ShToken[2]")
 }
