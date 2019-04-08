@@ -234,3 +234,32 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTI
 			"\"two\" is added to PLIST_VARS, but PLIST.two is not defined in this file.",
 		"WARN: options.mk:5: Option \"two\" should be handled below in an .if block.")
 }
+
+func (s *Suite) Test_OptionsLinesChecker_handleLowerCondition__foreign_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("opt", "")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkRcsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\topt",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if empty(OTHER_VARIABLE)",
+		".else",
+		".endif")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:8: OTHER_VARIABLE is used but not defined.",
+		// FIXME: This note only applies to PKG_OPTIONS.
+		"NOTE: ~/category/package/options.mk:8: The positive branch of the .if/.else should be the one where the option is set.",
+		"WARN: ~/category/package/options.mk:4: Option \"opt\" should be handled below in an .if block.")
+}
