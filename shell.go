@@ -56,7 +56,9 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 	// to the MkLineChecker. Examples for these are ${VAR:Mpattern} or $@.
 	p := NewMkParser(nil, token, false)
 	if varuse := p.VarUse(); varuse != nil && p.EOF() {
-		MkLineChecker{ck.MkLines, ck.mkline}.CheckVaruse(varuse, shellWordVuc)
+		if ck.checkVarUse {
+			MkLineChecker{ck.MkLines, ck.mkline}.CheckVaruse(varuse, shellWordVuc)
+		}
 		return
 	}
 

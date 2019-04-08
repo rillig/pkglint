@@ -1781,7 +1781,6 @@ func (s *Suite) Test_MkLineChecker_checkVaruseModifiersRange(c *check.C) {
 
 	MkLineChecker{nil, mkline}.Check()
 
-	// FIXME: The check is called two times, even though it only produces a single NOTE.
 	t.CheckOutputLines(
 		"NOTE: mk/compiler/gcc.mk:150: "+
 			"The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",

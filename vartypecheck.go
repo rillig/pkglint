@@ -1059,12 +1059,16 @@ func (cv *VartypeCheck) ShellCommand() {
 		return
 	}
 	setE := true
-	NewShellLineChecker(cv.MkLines, cv.MkLine).CheckShellCommand(cv.Value, &setE, RunTime)
+	ck := NewShellLineChecker(cv.MkLines, cv.MkLine)
+	ck.checkVarUse = false
+	ck.CheckShellCommand(cv.Value, &setE, RunTime)
 }
 
 // ShellCommands checks for zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
-	NewShellLineChecker(cv.MkLines, cv.MkLine).CheckShellCommands(cv.Value, RunTime)
+	ck := NewShellLineChecker(cv.MkLines, cv.MkLine)
+	ck.checkVarUse = false
+	ck.CheckShellCommands(cv.Value, RunTime)
 }
 
 func (cv *VartypeCheck) ShellWord() {
