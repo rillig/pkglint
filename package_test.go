@@ -356,6 +356,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
 	pkg := t.SetUpPackage("category/package",
 		"DISTNAME=\tdistname-1.0",
 		"PKGNAME=\tdistname-1.0")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -370,6 +371,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__simple_reference(c *chec
 	pkg := t.SetUpPackage("category/package",
 		"DISTNAME=\tdistname-1.0",
 		"PKGNAME=\t${DISTNAME}")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -383,6 +385,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *chec
 
 	pkg := t.SetUpPackage("category/package",
 		"DISTNAME=\tpkgname-version")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -397,9 +400,10 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__C_modifier(c *check.C) {
 	t.SetUpPackage("x11/p5-gtk2",
 		"DISTNAME=\tGtk2-1.0",
 		"PKGNAME=\t${DISTNAME:C:Gtk2:p5-gtk2:}")
+	t.FinishSetUp()
 	pkg := NewPackage(t.File("x11/p5-gtk2"))
-
 	files, mklines, allLines := pkg.load()
+
 	pkg.check(files, mklines, allLines)
 
 	t.Check(pkg.EffectivePkgname, equals, "p5-gtk2-1.0")
@@ -415,9 +419,10 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__ineffective_C_modifier(c
 	t.SetUpPackage("category/package",
 		"DISTNAME=\tdistname-1.0",
 		"PKGNAME=\t${DISTNAME:C:does_not_match:replacement:}")
+	t.FinishSetUp()
 	pkg := NewPackage(t.File("category/package"))
-
 	files, mklines, allLines := pkg.load()
+
 	pkg.check(files, mklines, allLines)
 
 	t.Check(pkg.EffectivePkgname, equals, "distname-1.0")
@@ -474,6 +479,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
 		"LICENSE=\t2-clause-bsd")
 	// TODO: There is no .include line at the end of the Makefile.
 	//  This should always be checked though.
+	t.FinishSetUp()
 
 	G.checkdirPackage(t.File("category/package"))
 
@@ -556,7 +562,8 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	t.SetUpCommandLine("-q", "-Wall,no-space")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
+
 	G.Check(t.File("category/pkgbase"))
 
 	t.CheckOutputLines(
@@ -608,7 +615,7 @@ func (s *Suite) Test_Package__relative_included_filenames_in_same_directory(c *c
 		"PKGNAME=\tpkgname-1.67",
 		"DISTNAME=\tdistfile_1_67",
 		".include \"../../category/package/other.mk\"")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -647,6 +654,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
 	pkg := t.SetUpPackage("category/package",
 		"PECL_VERSION=\t1.1.2",
 		".include \"../../lang/php/ext.mk\"")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 }
@@ -672,6 +680,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 		".endif",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"")
 	t.Chdir("category/package")
+	t.FinishSetUp()
 
 	G.checkdirPackage(".")
 
@@ -692,6 +701,7 @@ func (s *Suite) Test_Package__include_without_exists(c *check.C) {
 	t.SetUpVartypes()
 	t.SetUpPackage("category/package",
 		".include \"options.mk\"")
+	t.FinishSetUp()
 
 	G.checkdirPackage(t.File("category/package"))
 
@@ -708,6 +718,7 @@ func (s *Suite) Test_Package__include_after_exists(c *check.C) {
 		".if exists(options.mk)",
 		".  include \"options.mk\"",
 		".endif")
+	t.FinishSetUp()
 
 	G.checkdirPackage(t.File("category/package"))
 
@@ -724,6 +735,7 @@ func (s *Suite) Test_Package_readMakefile__include_other_after_exists(c *check.C
 		".if exists(options.mk)",
 		".  include \"another.mk\"",
 		".endif")
+	t.FinishSetUp()
 
 	G.checkdirPackage(t.File("category/package"))
 
@@ -755,7 +767,7 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 		"",
 		".include \"../../math/R/Makefile.extension\"",
 		".include \"../../mk/bsd.pkg.mk\"")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	// See Package.checkfilePackageMakefile
 	G.checkdirPackage(t.File("math/R-date"))
@@ -791,9 +803,9 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"\t"+"o package1-1.0",
 		"\t"+"o package2-2.0 [nice new features]",
 		"\t"+"o package3-3.0 [security update]")
-
 	t.Chdir(".")
-	G.Main("pkglint", "-Wall,no-space", "category/pkg1", "category/pkg2", "category/pkg3")
+
+	t.Main("-Wall,no-space", "category/pkg1", "category/pkg2", "category/pkg3")
 
 	t.CheckOutputLines(
 		"WARN: category/pkg1/../../doc/TODO:3: Invalid line format \"\".",
@@ -812,6 +824,7 @@ func (s *Suite) Test_NewPackage(c *check.C) {
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/Makefile",
 		MkRcsID)
+	t.FinishSetUp()
 
 	c.Check(
 		func() { NewPackage("category") },
@@ -844,6 +857,7 @@ func (s *Suite) Test__distinfo_from_other_package(c *check.C) {
 		RcsID,
 		"",
 		"SHA1 (patch-aa) = 1234")
+	t.FinishSetUp()
 
 	G.Check("x11/gst-x11")
 
@@ -861,6 +875,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C)
 	pkg := t.SetUpPackage("category/package",
 		"GNU_CONFIGURE=\tyes",
 		"USE_LANGUAGES=\t#")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -877,6 +892,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE_ok(c *check
 	pkg := t.SetUpPackage("category/package",
 		"GNU_CONFIGURE=\tyes",
 		"USE_LANGUAGES=\t# none, really")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -890,6 +906,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__REPLACE_PERL(c *check.C) 
 	pkg := t.SetUpPackage("category/package",
 		"REPLACE_PERL=\t*.pl",
 		"NO_CONFIGURE=\tyes")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -902,6 +919,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_distinf
 
 	pkg := t.SetUpPackage("category/package",
 		"META_PACKAGE=\tyes")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -916,6 +934,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *
 	pkg := t.SetUpPackage("category/package",
 		"USE_X11=\tyes",
 		"USE_IMAKE=\tyes")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -931,7 +950,7 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
 		"USE_LANGUAGES+=\tc++14",
 		"USE_LANGUAGES+=\tada",
 		"GNU_CONFIGURE=\tyes")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -955,7 +974,7 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__C_in_the_middle(c *c
 		"USE_LANGUAGES+=\tc99",
 		"USE_LANGUAGES+=\tada",
 		"GNU_CONFIGURE=\tyes")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -981,7 +1000,7 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_m
 		"USE_LANGUAGES?=\tc",
 		"USE_LANGUAGES+=\tc",
 		"USE_LANGUAGES+=\tc++")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -1012,7 +1031,7 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__only_GNU_CONFIGURE(c
 
 	t.SetUpPackage("category/package",
 		"GNU_CONFIGURE=\tyes")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -1025,7 +1044,7 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__ok(c *check.C) {
 	t.SetUpPackage("category/package",
 		"GNU_CONFIGURE=\tyes",
 		"USE_LANGUAGES=\tc++ objc")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -1040,7 +1059,7 @@ func (s *Suite) Test_Package__USE_LANGUAGES_too_late(c *check.C) {
 		"USE_LANGUAGES=\tc c99 fortran ada c++14")
 	t.CreateFileLines("mk/compiler.mk",
 		MkRcsID)
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -1054,6 +1073,7 @@ func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 	t.SetUpCommandLine("-Wall,no-space")
 	pkg := t.SetUpPackage("category/package",
 		".include \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\"")
+	t.FinishSetUp()
 
 	t.EnableTracingToLog()
 	G.Check(pkg)
@@ -1086,6 +1106,7 @@ func (s *Suite) Test_Package_readMakefile__not_found(c *check.C) {
 		".include \"../../devel/zlib/buildlink3.mk\"")
 	t.CreateFileLines("devel/zlib/buildlink3.mk",
 		".include \"../../enoent/enoent/buildlink3.mk\"")
+	t.FinishSetUp()
 
 	G.checkdirPackage(pkg)
 
@@ -1100,6 +1121,7 @@ func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
 		MkRcsID)
 	pkg := t.SetUpPackage("category/package",
 		".include \"../package/extra.mk\"")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -1127,10 +1149,12 @@ func (s *Suite) Test_Package_readMakefile__builtin_mk(c *check.C) {
 	t.CreateFileLines("category/lib1/builtin.mk",
 		MkRcsID,
 		"VAR_FROM_BUILTIN=\t# defined")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:23: Please use \"${ECHO}\" instead of \"echo\".",
 		"WARN: ~/category/package/Makefile:23: OTHER_VAR is used but not defined.")
 }
 
@@ -1151,6 +1175,7 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 		".include \"version.mk\"")
 	t.CreateFileLines("lang/language/version.mk",
 		MkRcsID)
+	t.FinishSetUp()
 	pkg := NewPackage(t.File("category/package"))
 
 	pkg.loadPackageMakefile()
@@ -1182,6 +1207,7 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 
 	pkg := t.SetUpPackage("category/package",
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -1248,6 +1274,7 @@ func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {
 		RcsID,
 		"",
 		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -1269,6 +1296,7 @@ func (s *Suite) Test_Package_AutofixDistinfo__missing_file(c *check.C) {
 
 	t.SetUpPkgsrc()
 	G.Pkg = NewPackage(t.File("category/package"))
+	t.FinishSetUp()
 
 	G.Pkg.AutofixDistinfo("old", "new")
 
@@ -1291,7 +1319,7 @@ func (s *Suite) Test_Package__using_common_Makefile_overriding_DISTINFO_FILE(c *
 		RcsID,
 		"",
 		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("security/pinentry"))
 
@@ -1317,7 +1345,7 @@ func (s *Suite) Test_Package__redundant_variable_in_unrelated_files(c *check.C) 
 	t.CreateFileLines("lang/python/egg.mk",
 		MkRcsID,
 		"PY_PATCHPLIST=\tyes")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("databases/py-trytond-ldap-authentication"))
 
@@ -1349,6 +1377,7 @@ func (s *Suite) Test_Package_readMakefile__include_infrastructure(c *check.C) {
 		".include \"pthread.builtin.mk\"")
 	t.CreateFileLines("mk/pthread.builtin.mk",
 		"# This should be included by pthread.buildlink3.mk")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 

@@ -19,6 +19,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__package(c *check.C) {
 
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		".include \"../../category/dependency2/buildlink3.mk\"")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -85,6 +86,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_incomplete(c 
 		".endif\t# HS_X11_BUILDLINK3_MK",
 		"",
 		"BUILDLINK_TREE+=\t-hs-X11")
+	t.FinishSetUp()
 
 	G.Check(".")
 
@@ -124,6 +126,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(c *c
 		".endif\t# HS_X11_BUILDLINK3_MK",
 		"",
 		"BUILDLINK_TREE+=\t-hs-X11")
+	t.FinishSetUp()
 
 	G.Check(".")
 
@@ -150,6 +153,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__Perl(c *check.C) {
 		".endif\t# P5_GTK2_BUILDLINK3_MK",
 		"",
 		"BUILDLINK_TREE+=\t-p5-gtk2")
+	t.FinishSetUp()
 
 	G.Check(t.File("x11/p5-gtk2"))
 
@@ -523,6 +527,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) 
 		".if ${X11_TYPE} == modular",
 		".else",
 		".endif")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -537,6 +542,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c 
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0:../../category/package",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=1.5:../../category/package")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -570,6 +576,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.
 		".endif # PACKAGE_BUILDLINK3_MK",
 		"",
 		"BUILDLINK_TREE+=\t-package")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -589,6 +596,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variable
 		"",
 		"ABI_VERSION=\t1.0",
 		"API_VERSION=\t1.5")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -606,6 +614,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_variable(c *chec
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=${API_VERSION}",
 		"",
 		"API_VERSION=\t1.5")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -621,6 +630,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage-1.*",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage-2.*")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -637,6 +647,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage-1.*")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -658,6 +669,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.
 		"BUILDLINK_DEPMETHOD.other+=\tbuild",
 		"",
 		"BUILDLINK_API_DEPENDS.other+=\tother>=3")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -674,6 +686,7 @@ func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
 	t.DisableTracing()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package/buildlink3.mk"))
 
@@ -687,6 +700,7 @@ func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *c
 		"DISTNAME=\t# empty",
 		"PKGNAME=\t# empty, to force mkbase to be empty")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 

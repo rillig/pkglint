@@ -703,9 +703,11 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 
 func (s *Suite) Test_VartypeCheck_License(c *check.C) {
 	t := s.Init(c)
-	t.SetUpPkgsrc() // Adds the gnu-gpl-v2 and 2-clause-bsd licenses
 
+	t.SetUpPkgsrc() // Adds the gnu-gpl-v2 and 2-clause-bsd licenses
 	t.SetUpPackage("category/package")
+	t.FinishSetUp()
+
 	G.Pkg = NewPackage(t.File("category/package"))
 
 	mklines := t.NewMkLines("perl5.mk",

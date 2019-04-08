@@ -120,6 +120,7 @@ func (s *Suite) Test_VarTypeRegistry_Init__LP64PLATFORMS(c *check.C) {
 
 	pkg := t.SetUpPackage("category/package",
 		"BROKEN_ON_PLATFORM=\t${LP64PLATFORMS}")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 

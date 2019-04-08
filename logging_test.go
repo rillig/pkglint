@@ -745,7 +745,7 @@ func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 	t.SetUpPackage("category/package2",
 		"PATCHDIR=\t../../category/dependency/patches")
 
-	G.Main("pkglint", "--source", "-Wall", t.File("category/package1"), t.File("category/package2"))
+	t.Main("--source", "-Wall", t.File("category/package1"), t.File("category/package2"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package1/distinfo: "+

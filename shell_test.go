@@ -1091,6 +1091,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 	t.CreateFileLines("category/package/extra.mk",
 		MkRcsID,
 		"PYTHON_BIN=\tmy_cmd")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 

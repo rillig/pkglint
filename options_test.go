@@ -221,6 +221,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTI
 		"PLIST.three=\tyes",
 		".endif")
 	t.Chdir("category/package")
+	t.FinishSetUp()
 
 	G.Check(".")
 

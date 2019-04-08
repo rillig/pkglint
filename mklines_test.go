@@ -312,7 +312,6 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"USE_TOOLS+=     autoconf autoconf213")
-	G.Pkgsrc.LoadInfrastructure()
 	mklines := t.NewMkLines("determine-defined-variables.mk",
 		MkRcsID,
 		"",
@@ -330,6 +329,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 		"pre-configure:",
 		"\t${RUN} autoreconf; autoheader-2.13",
 		"\t${ECHO} ${OSV:Q}")
+	t.FinishSetUp()
 
 	mklines.Check()
 
@@ -357,7 +357,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *
 		"",
 		".if ${H_XFT2:N__nonexistent__} && ${H_UNDEF:N__nonexistent__}",
 		".endif")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	mklines.Check()
 

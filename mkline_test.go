@@ -1533,6 +1533,7 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 		".    include \"../../category/other/buildlink3.mk\"",
 		".  endif",
 		".endif")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 

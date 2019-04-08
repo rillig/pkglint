@@ -13,7 +13,7 @@ import (
 func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 	t := s.Init(c)
 
-	exitCode := G.Main("pkglint", "-h")
+	exitCode := t.Main("-h")
 
 	c.Check(exitCode, equals, 0)
 	t.CheckOutputLines(
@@ -58,7 +58,7 @@ func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 func (s *Suite) Test_Pkglint_Main__version(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := G.Main("pkglint", "--version")
+	exitcode := t.Main("--version")
 
 	c.Check(exitcode, equals, 0)
 	t.CheckOutputLines(
@@ -68,7 +68,7 @@ func (s *Suite) Test_Pkglint_Main__version(c *check.C) {
 func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := G.Main("pkglint")
+	exitcode := t.Main()
 
 	// The "." from the error message is the implicit argument added in Pkglint.Main.
 	c.Check(exitcode, equals, 1)
@@ -76,7 +76,7 @@ func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
 		"FATAL: \".\" must be inside a pkgsrc tree.")
 }
 
-func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
+func (s *Suite) Test_Pkglint_ParseCommandLine__only(c *check.C) {
 	t := s.Init(c)
 
 	exitcode := G.ParseCommandLine([]string{"pkglint", "-Wall", "--only", ":Q", "--version"})
@@ -92,7 +92,7 @@ func (s *Suite) Test_Pkglint_Main__only(c *check.C) {
 func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 	t := s.Init(c)
 
-	exitcode := G.Main("pkglint", "--unknown-option")
+	exitcode := t.Main("--unknown-option")
 
 	c.Check(exitcode, equals, 1)
 	c.Check(t.Output(), check.Matches,
@@ -112,7 +112,7 @@ func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
 	G.out = nil // Force an error that cannot happen in practice.
 
 	c.Check(
-		func() { G.Main("pkglint", pkg) },
+		func() { t.Main(pkg) },
 		check.PanicMatches, `(?s).*\bnil pointer\b.*`)
 }
 
@@ -230,7 +230,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
 		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
 
-	G.Main("pkglint", "-Wall", "-Call", t.File("sysutils/checkperms"))
+	t.Main("-Wall", "-Call", t.File("sysutils/checkperms"))
 
 	t.CheckOutputLines(
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+
@@ -270,6 +270,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 //
 // See https://github.com/rillig/gobco for the tool to measure the branch coverage.
 func (s *Suite) Test_Pkglint__realistic(c *check.C) {
+	t := s.Init(c)
 
 	if cwd := os.Getenv("PKGLINT_TESTDIR"); cwd != "" {
 		err := os.Chdir(cwd)
@@ -281,7 +282,7 @@ func (s *Suite) Test_Pkglint__realistic(c *check.C) {
 		G.out = NewSeparatorWriter(os.Stdout)
 		G.err = NewSeparatorWriter(os.Stderr)
 		trace.Out = os.Stdout
-		G.Main(append([]string{"pkglint"}, strings.Fields(cmdline)...)...)
+		t.Main(strings.Fields(cmdline)...)
 	}
 }
 
@@ -308,6 +309,7 @@ func (s *Suite) Test_Pkglint_Check__empty_directory(c *check.C) {
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/CVS/Entries")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -320,6 +322,7 @@ func (s *Suite) Test_Pkglint_Check__files_directory(c *check.C) {
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/files/README.md")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package/files"))
 
@@ -333,6 +336,7 @@ func (s *Suite) Test_Pkglint_Check__patches_directory(c *check.C) {
 
 	t.SetUpPkgsrc()
 	t.CreateFileDummyPatch("category/package/patches/patch-README.md")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package/patches"))
 
@@ -348,6 +352,7 @@ func (s *Suite) Test_Pkglint_Check__manual_patch(c *check.C) {
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/patches/unknown-file")
 	t.CreateFileLines("category/package/patches/manual-configure")
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -361,6 +366,7 @@ func (s *Suite) Test_Pkglint_Check__doc_TODO(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
+	t.FinishSetUp()
 
 	G.Check(G.Pkgsrc.File("doc/TODO"))
 
@@ -569,7 +575,7 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 	lines := t.SetUpFileLines("category/package/ALTERNATIVES",
 		"bin/tar bin/gnu-tar")
 
-	G.Main("pkglint", lines.FileName)
+	t.Main(lines.FileName)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/ALTERNATIVES:1: Alternative implementation \"bin/gnu-tar\" must be an absolute path.",
@@ -583,7 +589,7 @@ func (s *Suite) Test_Pkglint__profiling(c *check.C) {
 	t.SetUpPkgsrc()
 	t.Chdir(".")
 
-	G.Main("pkglint", "--profiling")
+	t.Main("--profiling")
 
 	// Pkglint always writes the profiling data into the current directory.
 	// TODO: Make the location of the profiling log a mandatory parameter.
@@ -602,11 +608,10 @@ func (s *Suite) Test_Pkglint__profiling(c *check.C) {
 func (s *Suite) Test_Pkglint__profiling_error(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPkgsrc()
 	t.Chdir(".")
 	t.CreateFileLines("pkglint.pprof/file")
 
-	exitcode := G.Main("pkglint", "--profiling")
+	exitcode := t.Main("--profiling")
 
 	c.Check(exitcode, equals, 1)
 	c.Check(t.Output(), check.Matches,
@@ -620,7 +625,7 @@ func (s *Suite) Test_Pkglint_checkReg__in_current_working_directory(c *check.C) 
 	t.Chdir("category/package")
 	t.CreateFileLines("log")
 
-	G.Main("pkglint")
+	t.Main()
 
 	t.CheckOutputLines(
 		"WARN: log: Unexpected file found.",
@@ -750,6 +755,7 @@ func (s *Suite) Test_Pkglint_checkReg__other(c *check.C) {
 		"#! /bin/sh")
 	t.CreateFileLines("category/package/DEINSTALL",
 		"#! /bin/sh")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -765,6 +771,7 @@ func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 	t.CreateFileLines("category/package/Makefile~")
 	t.CreateFileLines("category/package/Makefile.orig")
 	t.CreateFileLines("category/package/Makefile.rej")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -782,7 +789,7 @@ func (s *Suite) Test_Pkglint_checkDirent__errors(c *check.C) {
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/files/subdir/file")
 	t.CreateFileLines("category/package/files/subdir/subsub/file")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.checkDirent(t.File("category/package/options.mk"), 0444)
 	G.checkDirent(t.File("category/package/files/subdir"), 0555|os.ModeDir)
@@ -805,7 +812,7 @@ func (s *Suite) Test_Pkglint_checkDirent__file_selection(c *check.C) {
 		MkRcsID)
 	t.CreateFileLines("category/package/unexpected.txt",
 		RcsID)
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.checkDirent(t.File("doc/CHANGES-2018"), 0444)
 	G.checkDirent(t.File("category/package/buildlink3.mk"), 0444)
@@ -861,10 +868,9 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	t.SetUpPkgsrc()
-	G.Pkgsrc.LoadInfrastructure()
 	t.Chdir(".")
 
-	G.Main("pkglint", "category/package", "wip/package")
+	t.Main("category/package", "wip/package")
 
 	t.CheckOutputLines(
 		"ERROR: category/package/README: Packages in main pkgsrc must not have a README file.",
@@ -875,7 +881,7 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	G.errors = 0
 	G.warnings = 0
 	G.logged = Once{}
-	G.Main("pkglint", "--import", "category/package", "wip/package")
+	t.Main("--import", "category/package", "wip/package")
 
 	t.CheckOutputLines(
 		"ERROR: category/package/README: Packages in main pkgsrc must not have a README file.",
@@ -983,6 +989,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 		"COMMENT=\tComment",
 		"LICENSE=\t2-clause-bsd",
 		"PKGDIR=\t\t../../other/package")
+	t.FinishSetUp()
 
 	// DISTINFO_FILE is resolved relative to PKGDIR,
 	// the other locations are resolved relative to the package base directory.
@@ -998,6 +1005,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C)
 	pkg := t.SetUpPackage("category/package")
 	t.CreateFileDummyPatch("category/package/patches/patch-aa")
 	t.Remove("category/package/distinfo")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -1041,6 +1049,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 		"",
 		"RUBY_PKGDIR=\t../../lang/ruby-${RUBY_VER}-base",
 		"DISTINFO_FILE=\t${RUBY_PKGDIR}/distinfo")
+	t.FinishSetUp()
 
 	// As of January 2019, pkglint cannot resolve the location of DISTINFO_FILE completely
 	// because the variable \"rv\" comes from a .for loop.
@@ -1059,6 +1068,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 	pkg := t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/ALTERNATIVES",
 		"bin/wrapper bin/wrapper-impl")
+	t.FinishSetUp()
 
 	G.Check(pkg)
 
@@ -1074,7 +1084,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(c *check
 
 	t.SetUpPackage("category/package",
 		"DISTINFO_FILE=\tnonexistent")
-	G.Pkgsrc.LoadInfrastructure()
+	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
@@ -1146,6 +1156,7 @@ func (s *Suite) Test_Main(c *check.C) {
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
+	t.FinishSetUp()
 
 	runMain := func(out *os.File, commandLine ...string) {
 		args := os.Args
