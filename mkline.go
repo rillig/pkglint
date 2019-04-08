@@ -813,11 +813,7 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 			}
 		}
 	} else {
-		restWithoutSpace := strings.TrimRightFunc(rest, func(r rune) bool { return isHspace(byte(r)) })
-		if len(restWithoutSpace) < len(rest) {
-			spaceBeforeComment = rest[len(restWithoutSpace):]
-			rest = restWithoutSpace
-		}
+		G.Assertf(rtrimHspace(rest) == rest, "Parse error for %q.", text)
 	}
 
 	return
@@ -830,9 +826,7 @@ func (p MkLineParser) parseDirective(line Line) MkLine {
 	}
 
 	main, _, rest, _, _, trailingComment := p.split(text)
-	if rest != "" {
-		return nil
-	}
+	G.Assertf(rest == "", "Parse error for %q.", text)
 
 	lexer := textproc.NewLexer(main[1:])
 
