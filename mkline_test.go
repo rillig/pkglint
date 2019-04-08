@@ -1417,6 +1417,13 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"${VAR:M-*:[#]}",
 		"",
 		"")
+
+	test("#VAR=value",
+		true, "VAR", "", "=", "#VAR=", "value", "", "")
+
+	testInvalid("# VAR=value")
+	testInvalid("#\tVAR=value")
+	testInvalid(MkRcsID)
 }
 
 func (s *Suite) Test_NewMkOperator(c *check.C) {
