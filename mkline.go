@@ -786,11 +786,9 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 		} else if other := parseOther(); other != "" {
 			tokens = append(tokens, &MkToken{other, nil})
 
-		} else if lexer.SkipByte('$') {
-			tokens = append(tokens, &MkToken{"$", nil})
-
 		} else {
-			break
+			G.Assertf(lexer.SkipByte('$'), "Parse error for %q.", text)
+			tokens = append(tokens, &MkToken{"$", nil})
 		}
 	}
 
@@ -799,21 +797,17 @@ func (p MkLineParser) split(text string) (main string, tokens []*MkToken, rest s
 		comment = comment[1:]
 	}
 	rest = lexer.Rest()
-	main = main[:len(main)-len(rest)]
+	G.Assertf(rest == "", "Parse error for %q.", text)
 
-	if rest == "" {
-		mainWithSpaces := main
-		main = rtrimHspace(main)
-		spaceBeforeComment = ifelseStr(true, mainWithSpaces[len(main):], "")
-		if spaceBeforeComment != "" && len(tokens) > 0 {
-			tokenText := &tokens[len(tokens)-1].Text
-			*tokenText = rtrimHspace(*tokenText)
-			if *tokenText == "" {
-				tokens = tokens[:len(tokens)-1]
-			}
+	mainWithSpaces := main
+	main = rtrimHspace(main)
+	spaceBeforeComment = ifelseStr(true, mainWithSpaces[len(main):], "")
+	if spaceBeforeComment != "" && len(tokens) > 0 {
+		tokenText := &tokens[len(tokens)-1].Text
+		*tokenText = rtrimHspace(*tokenText)
+		if *tokenText == "" {
+			tokens = tokens[:len(tokens)-1]
 		}
-	} else {
-		G.Assertf(rtrimHspace(rest) == rest, "Parse error for %q.", text)
 	}
 
 	return

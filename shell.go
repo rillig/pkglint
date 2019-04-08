@@ -28,9 +28,6 @@ func NewShellLineChecker(mklines MkLines, mkline MkLine) *ShellLineChecker {
 	return &ShellLineChecker{mklines, mkline, true}
 }
 
-func (ck *ShellLineChecker) Errorf(format string, args ...interface{}) {
-	ck.mkline.Errorf(format, args...)
-}
 func (ck *ShellLineChecker) Warnf(format string, args ...interface{}) {
 	ck.mkline.Warnf(format, args...)
 }
