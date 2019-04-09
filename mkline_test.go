@@ -1293,7 +1293,8 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 
 	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		m, actual := MkLineParser{}.MatchVarassign(line, text)
+		data := MkLineParser{}.split(line, text)
+		m, actual := MkLineParser{}.MatchVarassign(line, text, data)
 		if !m {
 			c.Errorf("Text %q doesn't match variable assignment", text)
 			return
@@ -1320,7 +1321,8 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 
 	testInvalid := func(text string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		m, _ := MkLineParser{}.MatchVarassign(line, text)
+		data := MkLineParser{}.split(nil, text)
+		m, _ := MkLineParser{}.MatchVarassign(line, text, data)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
@@ -1629,6 +1631,9 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 		"run <",
 		"run @",
 		"run x"})
+	t.CheckOutputLines(
+		"WARN: Makefile:12: Please use curly braces {} instead of round parentheses () for ROUND_PARENTHESES.",
+		"WARN: Makefile:14: $x is ambiguous. Use ${x} if you mean a Make variable or $$x if you mean a shell variable.")
 }
 
 func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
@@ -2088,7 +2093,9 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
-		mkline := MkLineParser{}.parseDirective(t.NewLine("filename.mk", 123, input))
+		line := t.NewLine("filename.mk", 123, input)
+		data := MkLineParser{}.split(line, input)
+		mkline := MkLineParser{}.parseDirective(line, data)
 		if !c.Check(mkline, check.NotNil) {
 			return
 		}

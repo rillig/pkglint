@@ -79,19 +79,21 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 			"Otherwise remove the leading whitespace.")
 	}
 
+	data := p.split(line, text)
+
 	// Check for shell commands first because these cannot have comments
 	// at the end of the line.
 	if hasPrefix(text, "\t") {
 		return p.parseShellcmd(line)
 	}
 
-	if mkline := p.parseVarassign(line); mkline != nil {
+	if mkline := p.parseVarassign(line, data); mkline != nil {
 		return mkline
 	}
 	if mkline := p.parseCommentOrEmpty(line); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseDirective(line); mkline != nil {
+	if mkline := p.parseDirective(line, data); mkline != nil {
 		return mkline
 	}
 	if mkline := p.parseInclude(line); mkline != nil {
@@ -112,8 +114,8 @@ func (p MkLineParser) Parse(line Line) *MkLineImpl {
 	return &MkLineImpl{line, nil}
 }
 
-func (p MkLineParser) parseVarassign(line Line) MkLine {
-	m, a := p.MatchVarassign(line, line.Text)
+func (p MkLineParser) parseVarassign(line Line, data mkLineSplitResult) MkLine {
+	m, a := p.MatchVarassign(line, line.Text, data)
 	if !m {
 		return nil
 	}
@@ -754,7 +756,7 @@ func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 
 	main, comment := p.unescapeComment(text)
 
-	parser := NewMkParser(line, main, true)
+	parser := NewMkParser(line, main, line != nil)
 	lexer := parser.lexer
 
 	rtrimHspace := func(s string) string {
@@ -822,13 +824,12 @@ func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 	return mkLineSplitResult{main, tokens, spaceBeforeComment, hasComment, comment}
 }
 
-func (p MkLineParser) parseDirective(line Line) MkLine {
+func (p MkLineParser) parseDirective(line Line, data mkLineSplitResult) MkLine {
 	text := line.Text
 	if !hasPrefix(text, ".") {
 		return nil
 	}
 
-	data := p.split(line, text)
 	lexer := textproc.NewLexer(data.main[1:])
 
 	indent := lexer.NextHspace()
@@ -1434,7 +1435,7 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---.[")
 )
 
-func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment mkLineAssign) {
+func (p MkLineParser) MatchVarassign(line Line, text string, asdfData mkLineSplitResult) (m bool, assignment mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
 	// Otherwise line 1 of almost every Makefile fragment would need to
@@ -1451,7 +1452,7 @@ func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment
 		withoutLeadingComment = withoutLeadingComment[1:]
 	}
 
-	data := p.split(line, withoutLeadingComment)
+	data := p.split(nil, withoutLeadingComment)
 
 	lexer := NewMkTokensLexer(data.tokens)
 	mainStart := lexer.Mark()

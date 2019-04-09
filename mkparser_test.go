@@ -370,8 +370,8 @@ func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 
 	t.SetUpCommandLine("--explain")
 
-	mkline := t.NewMkLine("module.mk", 123, "\t$Varname $X")
-	p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
+	line := t.NewLine("module.mk", 123, "\t$Varname $X")
+	p := NewMkParser(line, line.Text[1:], true)
 
 	tokens := p.MkTokens()
 	c.Check(tokens, deepEquals, []*MkToken{
@@ -602,9 +602,13 @@ func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
 	test("${VAR:!command!}", varUse("VAR", "!command!"))
 
 	test("${VAR:!command}", varUse("VAR"),
+		// FIXME: duplicate diagnostic
+		"WARN: Makefile:20: Invalid variable modifier \"!command\" for \"VAR\".",
 		"WARN: Makefile:20: Invalid variable modifier \"!command\" for \"VAR\".")
 
 	test("${VAR:command!}", varUse("VAR"),
+		// FIXME: duplicate diagnostic
+		"WARN: Makefile:20: Invalid variable modifier \"command!\" for \"VAR\".",
 		"WARN: Makefile:20: Invalid variable modifier \"command!\" for \"VAR\".")
 
 	// The :L modifier makes the variable value "echo hello", and the :[1]
@@ -623,8 +627,8 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 
 	varUse := NewMkVarUse
 	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
-		mkline := t.NewMkLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
+		line := t.NewLine("Makefile", 20, "\t"+text)
+		p := NewMkParser(line, text, true)
 
 		actual := p.VarUse()
 
@@ -664,8 +668,8 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 
 	varUse := NewMkVarUse
 	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
-		mkline := t.NewMkLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(mkline.Line, mkline.ShellCommand(), true)
+		line := t.NewLine("Makefile", 20, "\t"+text)
+		p := NewMkParser(line, text, true)
 
 		actual := p.VarUse()
 
