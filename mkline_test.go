@@ -2139,7 +2139,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string) {
+	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
 		mkline := MkLineParser{}.parseDirective(t.NewLine("filename.mk", 123, input))
 		if !c.Check(mkline, check.NotNil) {
 			return
@@ -2149,6 +2149,7 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 			[]interface{}{mkline.Indent(), mkline.Directive(), mkline.Args(), mkline.DirectiveComment()},
 			deepEquals,
 			[]interface{}{expectedIndent, expectedDirective, expectedArgs, expectedComment})
+		t.CheckOutput(diagnostics)
 	}
 
 	test(".if ${VAR} == value",
@@ -2166,9 +2167,9 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 	test(".if ${VAR} == \\",
 		"", "if", "${VAR} == \\", "")
 
-	// TODO: warn about the unclosed variable
 	test(".if ${VAR",
-		"", "if", "${VAR", "")
+		"", "if", "${VAR", "",
+		"WARN: filename.mk:123: Missing closing \"}\" for \"VAR\".")
 }
 
 func (s *Suite) Test_MatchMkInclude(c *check.C) {
