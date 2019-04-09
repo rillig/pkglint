@@ -1804,78 +1804,66 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		return tokens
 	}
 
-	test := func(text string, main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string, diagnostics ...string) {
+	test := func(text string, data mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment := MkLineParser{}.split(line, text)
+		actualData := MkLineParser{}.split(line, text)
 
 		t.CheckOutput(diagnostics)
-		t.Check(
-			[]interface{}{text, aMain, aTokens, aRest, aSpaceBeforeComment, aHasComment, aComment},
-			deepEquals,
-			[]interface{}{text, main, tokens, rest, spaceBeforeComment, hasComment, comment})
+		t.Check([]interface{}{text, actualData}, deepEquals, []interface{}{text, data})
 	}
 
 	t.Use(text, varuse, varuseText, tokens)
 
-	test("",
-
+	test(
 		"",
-		tokens(),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{})
 
-	test("text",
-
+	test(
 		"text",
-		tokens(text("text")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main:   "text",
+			tokens: tokens(text("text")),
+		})
 
 	// Leading space is always kept.
-	test(" text",
-
+	test(
 		" text",
-		tokens(text(" text")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main:   " text",
+			tokens: tokens(text(" text")),
+		})
 
 	// Trailing space does not end up in the tokens since it is usually
 	// ignored.
-	test("text\t",
+	test(
+		"text\t",
+		mkLineSplitResult{
+			main:               "text",
+			tokens:             tokens(text("text")),
+			spaceBeforeComment: "\t",
+		})
 
-		"text",
-		tokens(text("text")),
-		"",
-		"\t",
-		false,
-		"")
-
-	test("text\t# intended comment",
-
-		"text",
-		tokens(text("text")),
-		"",
-		"\t",
-		true,
-		" intended comment")
+	test(
+		"text\t# intended comment",
+		mkLineSplitResult{
+			main:               "text",
+			tokens:             tokens(text("text")),
+			spaceBeforeComment: "\t",
+			hasComment:         true,
+			comment:            " intended comment",
+		})
 
 	// Trailing space is saved in a separate field to detect accidental
 	// unescaped # in the middle of a word, like the URL fragment in this
 	// example.
-	test("url#fragment",
-
-		"url",
-		tokens(text("url")),
-		"",
-		"",
-		true,
-		"fragment")
+	test(
+		"url#fragment",
+		mkLineSplitResult{
+			main:       "url",
+			tokens:     tokens(text("url")),
+			hasComment: true,
+			comment:    "fragment",
+		})
 
 	// The leading space from the comment is preserved to make parsing as exact
 	// as possible.
@@ -1883,199 +1871,163 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	// The difference between "#defined" and "# defined" is relevant in a few
 	// cases, such as the API documentation of the infrastructure files.
 	test("# comment",
-
-		"",
-		tokens(),
-		"",
-		"",
-		true,
-		" comment")
+		mkLineSplitResult{
+			hasComment: true,
+			comment:    " comment",
+		})
 
 	test("#\tcomment",
-
-		"",
-		tokens(),
-		"",
-		"",
-		true,
-		"\tcomment")
+		mkLineSplitResult{
+			hasComment: true,
+			comment:    "\tcomment",
+		})
 
 	test("#   comment",
-
-		"",
-		tokens(),
-		"",
-		"",
-		true,
-		"   comment")
+		mkLineSplitResult{
+			hasComment: true,
+			comment:    "   comment",
+		})
 
 	// Other than in the shell, # also starts a comment in the middle of a word.
 	test("COMMENT=\tThe C# compiler",
-
-		"COMMENT=\tThe C",
-		tokens(text("COMMENT=\tThe C")),
-		"",
-		"",
-		true,
-		" compiler")
+		mkLineSplitResult{
+			main:       "COMMENT=\tThe C",
+			tokens:     tokens(text("COMMENT=\tThe C")),
+			hasComment: true,
+			comment:    " compiler",
+		})
 
 	test("COMMENT=\tThe C\\# compiler",
-
-		"COMMENT=\tThe C# compiler",
-		tokens(text("COMMENT=\tThe C# compiler")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main:       "COMMENT=\tThe C# compiler",
+			tokens:     tokens(text("COMMENT=\tThe C# compiler")),
+			hasComment: false,
+			comment:    "",
+		})
 
 	test("${TARGET}: ${SOURCES} # comment",
-
-		"${TARGET}: ${SOURCES}",
-		tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
-		"",
-		" ",
-		true,
-		" comment")
+		mkLineSplitResult{
+			main:               "${TARGET}: ${SOURCES}",
+			tokens:             tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
+			spaceBeforeComment: " ",
+			hasComment:         true,
+			comment:            " comment",
+		})
 
 	// A # starts a comment, except if it immediately follows a [.
 	// This is done so that the length modifier :[#] can be written without
 	// escaping the #.
 	test("VAR=\t${OTHER:[#]} # comment",
-
-		"VAR=\t${OTHER:[#]}",
-		tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
-		"",
-		" ",
-		true,
-		" comment")
+		mkLineSplitResult{
+			main:               "VAR=\t${OTHER:[#]}",
+			tokens:             tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
+			spaceBeforeComment: " ",
+			hasComment:         true,
+			comment:            " comment",
+		})
 
 	// The # in the :[#] modifier may be escaped or not. Both forms are equivalent.
 	test("VAR:=\t${VAR:M-*:[\\#]}",
-
-		"VAR:=\t${VAR:M-*:[#]}",
-		tokens(text("VAR:=\t"), varuse("VAR", "M-*", "[#]")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main:   "VAR:=\t${VAR:M-*:[#]}",
+			tokens: tokens(text("VAR:=\t"), varuse("VAR", "M-*", "[#]")),
+		})
 
 	// A backslash always escapes the next character, be it a # for a comment
 	// or something else. This makes it difficult to write a literal \# in a
 	// Makefile, but that's an edge case anyway.
 	test("VAR0=\t#comment",
-
-		"VAR0=",
-		tokens(text("VAR0=")),
-		"",
-		// Later, when converting this result into a proper variable assignment,
-		// this "space before comment" is reclassified as "space before the value",
-		// in order to align the "#comment" with the other variable values.
-		"\t",
-		true,
-		"comment")
+		mkLineSplitResult{
+			main:   "VAR0=",
+			tokens: tokens(text("VAR0=")),
+			// Later, when converting this result into a proper variable assignment,
+			// this "space before comment" is reclassified as "space before the value",
+			// in order to align the "#comment" with the other variable values.
+			spaceBeforeComment: "\t",
+			hasComment:         true,
+			comment:            "comment",
+		})
 
 	test("VAR1=\t\\#no-comment",
-		"VAR1=\t#no-comment",
-		tokens(text("VAR1=\t#no-comment")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main:   "VAR1=\t#no-comment",
+			tokens: tokens(text("VAR1=\t#no-comment")),
+		})
 
 	test("VAR2=\t\\\\#comment",
-		"VAR2=\t\\\\",
-		tokens(text("VAR2=\t\\\\")),
-		"",
-		"",
-		true,
-		"comment")
+		mkLineSplitResult{
+			main:       "VAR2=\t\\\\",
+			tokens:     tokens(text("VAR2=\t\\\\")),
+			hasComment: true,
+			comment:    "comment",
+		})
 
 	// The backslash is only removed when it escapes a comment.
 	// In particular, it cannot be used to escape a dollar that starts a
 	// variable use.
 	test("VAR0=\t$T",
-
-		"VAR0=\t$T",
-		tokens(text("VAR0=\t"), varuseText("$T", "T")),
-		"",
-		"",
-		false,
-		"",
-
+		mkLineSplitResult{
+			main:   "VAR0=\t$T",
+			tokens: tokens(text("VAR0=\t"), varuseText("$T", "T")),
+		},
 		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
 
 	test("VAR1=\t\\$T",
-
-		"VAR1=\t\\$T",
-		tokens(text("VAR1=\t\\"), varuseText("$T", "T")),
-		"",
-		"",
-		false,
-		"",
-
+		mkLineSplitResult{
+			main:   "VAR1=\t\\$T",
+			tokens: tokens(text("VAR1=\t\\"), varuseText("$T", "T")),
+		},
 		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
 
 	test("VAR2=\t\\\\$T",
-
-		"VAR2=\t\\\\$T",
-		tokens(text("VAR2=\t\\\\"), varuseText("$T", "T")),
-		"",
-		"",
-		false,
-		"",
-
+		mkLineSplitResult{
+			main:   "VAR2=\t\\\\$T",
+			tokens: tokens(text("VAR2=\t\\\\"), varuseText("$T", "T")),
+		},
 		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
 
 	// To escape a dollar, write it twice.
 	test("$$shellvar $${shellvar} \\${MKVAR} [] \\x",
-
-		"$$shellvar $${shellvar} \\${MKVAR} [] \\x",
-		tokens(text("$$shellvar $${shellvar} \\"), varuse("MKVAR"), text(" [] \\x")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main:   "$$shellvar $${shellvar} \\${MKVAR} [] \\x",
+			tokens: tokens(text("$$shellvar $${shellvar} \\"), varuse("MKVAR"), text(" [] \\x")),
+		})
 
 	// Parse errors are recorded in the rest return value.
 	test("${UNCLOSED",
-
-		"${UNCLOSED",
-		tokens(varuseText("${UNCLOSED", "UNCLOSED")),
-		"",
-		"",
-		false,
-		"",
-
+		mkLineSplitResult{
+			main:   "${UNCLOSED",
+			tokens: tokens(varuseText("${UNCLOSED", "UNCLOSED")),
+		},
 		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED\".")
 
 	// Even if there is a parse error in the main part,
 	// the comment is extracted.
 	test("text before ${UNCLOSED# comment",
-		"text before ${UNCLOSED",
-		tokens(
-			text("text before "),
-			varuseText("${UNCLOSED", "UNCLOSED")),
-		"",
-		"",
-		true,
-		" comment",
-
+		mkLineSplitResult{
+			main: "text before ${UNCLOSED",
+			tokens: tokens(
+				text("text before "),
+				varuseText("${UNCLOSED", "UNCLOSED")),
+			hasComment: true,
+			comment:    " comment",
+		},
 		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED\".")
 
 	// Even in case of parse errors, the space before the comment is parsed
 	// correctly.
 	test("text before ${UNCLOSED # comment",
-		"text before ${UNCLOSED",
-		tokens(
-			text("text before "),
-			// It's a bit inconsistent that the varname includes the space
-			// but the text doesn't; anyway, it's an edge case.
-			varuseText("${UNCLOSED", "UNCLOSED ")),
-		"",
-		" ",
-		true,
-		" comment",
-
+		mkLineSplitResult{
+			main: "text before ${UNCLOSED",
+			tokens: tokens(
+				text("text before "),
+				// It's a bit inconsistent that the varname includes the space
+				// but the text doesn't; anyway, it's an edge case.
+				varuseText("${UNCLOSED", "UNCLOSED ")),
+			spaceBeforeComment: " ",
+			hasComment:         true,
+			comment:            " comment",
+		},
 		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED \".",
 		"WARN: filename.mk:123: Invalid part \" \" after variable name \"UNCLOSED\".")
 
@@ -2088,52 +2040,48 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	//  variable name, mainly because the empty variable name is not visible
 	//  outside of the bmake debugging mode.
 	test("Lonely $ character $",
-		"Lonely $ character $",
-		tokens(
-			text("Lonely "),
-			varuseText("$ " /* instead of "${ }" */, " "),
-			text("character "),
-			text("$")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main: "Lonely $ character $",
+			tokens: tokens(
+				text("Lonely "),
+				varuseText("$ " /* instead of "${ }" */, " "),
+				text("character "),
+				text("$")),
+		})
 
 	// The character [ prevents the following # from starting a comment, even
 	// outside of variable modifiers.
 	test("COMMENT=\t[#] $$\\# $$# comment",
-		"COMMENT=\t[#] $$# $$",
-		tokens(text("COMMENT=\t[#] $$# $$")),
-		"",
-		"",
-		true,
-		" comment")
+		mkLineSplitResult{
+			main:       "COMMENT=\t[#] $$# $$",
+			tokens:     tokens(text("COMMENT=\t[#] $$# $$")),
+			hasComment: true,
+			comment:    " comment",
+		})
 
 	test("VAR2=\t\\\\#comment",
-		"VAR2=\t\\\\",
-		tokens(text("VAR2=\t\\\\")),
-		"",
-		"",
-		true,
-		"comment")
+		mkLineSplitResult{
+			main:       "VAR2=\t\\\\",
+			tokens:     tokens(text("VAR2=\t\\\\")),
+			hasComment: true,
+			comment:    "comment",
+		})
 
 	// At this stage, MkLine.split doesn't know that empty(...) takes
 	// a variable use. Instead it just sees ordinary characters and
 	// other uses of variables.
 	test(".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
-		".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
-		tokens(
-			text(".if empty("),
-			varuse("VAR.${tool}"),
-			text(":C/\\:.*"),
-			text("$"),
-			text("//:M"),
-			varuse("pattern"),
-			text(")")),
-		"",
-		"",
-		false,
-		"")
+		mkLineSplitResult{
+			main: ".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
+			tokens: tokens(
+				text(".if empty("),
+				varuse("VAR.${tool}"),
+				text(":C/\\:.*"),
+				text("$"),
+				text("//:M"),
+				varuse("pattern"),
+				text(")")),
+		})
 }
 
 func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {

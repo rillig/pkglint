@@ -735,6 +735,14 @@ again:
 	goto again
 }
 
+type mkLineSplitResult struct {
+	main               string
+	tokens             []*MkToken
+	spaceBeforeComment string
+	hasComment         bool
+	comment            string
+}
+
 // splitMkLine parses a logical line from a Makefile (that is, after joining
 // the lines that end in a backslash) into two parts: the main part and the
 // comment.
@@ -742,9 +750,9 @@ again:
 // This applies to all line types except those starting with a tab, which
 // contain the shell commands to be associated with make targets. These cannot
 // have comments.
-func (p MkLineParser) split(line Line, text string) (main string, tokens []*MkToken, rest string, spaceBeforeComment string, hasComment bool, comment string) {
+func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 
-	main, comment = p.unescapeComment(text)
+	main, comment := p.unescapeComment(text)
 
 	parser := NewMkParser(line, main, true)
 	lexer := parser.lexer
@@ -777,6 +785,7 @@ func (p MkLineParser) split(line Line, text string) (main string, tokens []*MkTo
 		return sb.String()
 	}
 
+	var tokens []*MkToken
 	for !lexer.EOF() {
 		mark := lexer.Mark()
 
@@ -792,16 +801,16 @@ func (p MkLineParser) split(line Line, text string) (main string, tokens []*MkTo
 		}
 	}
 
-	if comment != "" {
-		hasComment = true
+	hasComment := comment != ""
+	if hasComment {
 		comment = comment[1:]
 	}
-	rest = lexer.Rest()
-	G.Assertf(rest == "", "Parse error for %q.", text)
+
+	G.Assertf(lexer.Rest() == "", "Parse error for %q.", text)
 
 	mainWithSpaces := main
 	main = rtrimHspace(main)
-	spaceBeforeComment = ifelseStr(true, mainWithSpaces[len(main):], "")
+	spaceBeforeComment := ifelseStr(true, mainWithSpaces[len(main):], "")
 	if spaceBeforeComment != "" && len(tokens) > 0 {
 		tokenText := &tokens[len(tokens)-1].Text
 		*tokenText = rtrimHspace(*tokenText)
@@ -810,7 +819,7 @@ func (p MkLineParser) split(line Line, text string) (main string, tokens []*MkTo
 		}
 	}
 
-	return
+	return mkLineSplitResult{main, tokens, spaceBeforeComment, hasComment, comment}
 }
 
 func (p MkLineParser) parseDirective(line Line) MkLine {
@@ -819,10 +828,8 @@ func (p MkLineParser) parseDirective(line Line) MkLine {
 		return nil
 	}
 
-	main, _, rest, _, _, trailingComment := p.split(line, text)
-	G.Assertf(rest == "", "Parse error for %q.", text)
-
-	lexer := textproc.NewLexer(main[1:])
+	data := p.split(line, text)
+	lexer := textproc.NewLexer(data.main[1:])
 
 	indent := lexer.NextHspace()
 	directive := lexer.NextBytesSet(LowerDash)
@@ -845,7 +852,7 @@ func (p MkLineParser) parseDirective(line Line) MkLine {
 	// In .if and .endif lines the space surrounding the comment is irrelevant.
 	// Especially for checking that the .endif comment matches the .if condition,
 	// it must be trimmed.
-	trimmedComment := trimHspace(trailingComment)
+	trimmedComment := trimHspace(data.comment)
 
 	return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
 }
@@ -1444,9 +1451,9 @@ func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment
 		withoutLeadingComment = withoutLeadingComment[1:]
 	}
 
-	main, tokens, rest, spaceBeforeComment, hasComment, comment := p.split(line, withoutLeadingComment)
+	data := p.split(line, withoutLeadingComment)
 
-	lexer := NewMkTokensLexer(tokens)
+	lexer := NewMkTokensLexer(data.tokens)
 	mainStart := lexer.Mark()
 
 	for !commented && lexer.SkipByte(' ') {
@@ -1456,7 +1463,7 @@ func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment
 	// TODO: duplicated code in MkParser.Varname
 	for lexer.NextBytesSet(VarbaseBytes) != "" || lexer.NextVarUse() != nil {
 	}
-	if lexer.SkipByte('.') || hasPrefix(main, "SITES_") {
+	if lexer.SkipByte('.') || hasPrefix(data.main, "SITES_") {
 		for lexer.NextBytesSet(VarparamBytes) != "" || lexer.NextVarUse() != nil {
 		}
 	}
@@ -1486,8 +1493,9 @@ func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment
 
 	lexer.SkipHspace()
 
-	value := trimHspace(lexer.Rest() + rest)
+	value := trimHspace(lexer.Rest())
 	valueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart)
+	spaceBeforeComment := data.spaceBeforeComment
 	if value == "" {
 		valueAlign += spaceBeforeComment
 		spaceBeforeComment = ""
@@ -1506,7 +1514,7 @@ func (p MkLineParser) MatchVarassign(line Line, text string) (m bool, assignment
 		valueMkRest:       "",  // filled in lazily
 		fields:            nil, // filled in lazily
 		spaceAfterValue:   spaceBeforeComment,
-		comment:           ifelseStr(hasComment, "#", "") + comment,
+		comment:           ifelseStr(data.hasComment, "#", "") + data.comment,
 	}
 }
 
