@@ -1286,7 +1286,6 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: duplicate diagnostic.
 		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/pam.d\".",
 		"WARN: Makefile:2: Invalid part \"/pam.d\" after variable name \"EGDIR\".",
 		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
@@ -1294,13 +1293,7 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
 		"WARN: Makefile:2: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
-		"WARN: Makefile:2: EGDIR/pam.d is used but not defined.",
-		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/pam.d\".",
-		"WARN: Makefile:2: Invalid part \"/pam.d\" after variable name \"EGDIR\".",
-		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
-		"WARN: Makefile:2: Invalid part \"/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
-		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
-		"WARN: Makefile:2: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".")
+		"WARN: Makefile:2: EGDIR/pam.d is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {

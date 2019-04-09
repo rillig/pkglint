@@ -1157,8 +1157,6 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 			text("value "),
 			varUseText("${UNFINISHED", "UNFINISHED")),
 
-		// FIXME: duplicate diagnostic.
-		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".",
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 }
 
@@ -1176,8 +1174,6 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 			&MkToken{"${UNFINISHED", NewMkVarUse("UNFINISHED")}))
 	c.Check(rest, equals, "")
 	t.CheckOutputLines(
-		// FIXME: duplicate diagnostic.
-		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".",
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
 	// This time the slice is taken from the cache.
@@ -1201,8 +1197,6 @@ func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	c.Check(valueTokens, deepEquals, tokens(varuseText("${UNFINISHED", "UNFINISHED")))
 	c.Check(rest, equals, "")
 	t.CheckOutputLines(
-		// FIXME: duplicate diagnostic.
-		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".",
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
 	// This time the slice is taken from the cache.
@@ -1223,8 +1217,6 @@ func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: duplicate diagnostic.
-		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.",
 		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.")
 }
 

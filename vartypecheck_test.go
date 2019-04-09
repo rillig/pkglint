@@ -22,12 +22,7 @@ func (s *Suite) Test_VartypeCheck_AwkCommand(c *check.C) {
 	//  The warning should be adjusted to reflect this.
 
 	vt.Output(
-		// FIXME: duplicate diagnostic.
 		"WARN: filename.mk:1: $0 is ambiguous. "+
-			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.",
-		"WARN: filename.mk:1: $0 is ambiguous. "+
-			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.",
-		"WARN: filename.mk:3: $0 is ambiguous. "+
 			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.",
 		"WARN: filename.mk:3: $0 is ambiguous. "+
 			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.")

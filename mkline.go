@@ -533,7 +533,9 @@ func (mkline *MkLineImpl) ValueTokens() ([]*MkToken, string) {
 		return assign.valueMk, assign.valueMkRest
 	}
 
-	p := NewMkParser(mkline.Line, value, true)
+	// No error checking here since all this has already been done when the
+	// whole line was parsed in MkLineParser.Parse.
+	p := NewMkParser(nil, value, false)
 	assign.valueMk = p.MkTokens()
 	assign.valueMkRest = p.Rest()
 	return assign.valueMk, assign.valueMkRest
