@@ -25,7 +25,7 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org).
 
-> from [pkglint.go](pkglint.go#L107):
+> from [pkglint.go](pkglint.go#L106):
 
 ```go
 func Main() int {
@@ -41,15 +41,15 @@ func Main() int {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L119):
+> from [pkglint.go](pkglint.go#L118):
 
 ```go
 // Main runs the main program with the given arguments.
 // argv[0] is the program name.
 //
 // Note: during tests, calling this method disables tracing
-// because the command line option --debug sets trace.Tracing
-// back to false.
+// because the getopt parser resets all options before the actual parsing.
+// One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
 func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
@@ -166,7 +166,7 @@ Very similar code is used to set up the test and tear it down again:
 
 ```go
 func (s *Suite) SetUpTest(c *check.C) {
-	t := Tester{c: c}
+	t := Tester{c: c, testName: c.TestName()}
 	s.Tester = &t
 
 	G = NewPkglint()
@@ -203,7 +203,11 @@ func (s *Suite) TearDownTest(c *check.C) {
 	t.c = nil // No longer usable; see https://github.com/go-check/check/issues/22
 
 	if err := os.Chdir(t.prevdir); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Cannot chdir back to previous dir: %s", err)
+		t.Errorf("Cannot chdir back to previous dir: %s", err)
+	}
+
+	if t.seenSetupPkgsrc > 0 && !t.seenFinish && !t.seenMain {
+		t.Errorf("After t.SetupPkgsrc(), t.FinishSetUp() or t.Main() must be called.")
 	}
 
 	if out := t.Output(); out != "" {
@@ -244,7 +248,7 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L138):
+> from [pkglint.go](pkglint.go#L137):
 
 ```go
 	if exitcode := pkglint.ParseCommandLine(argv); exitcode != -1 {
@@ -259,7 +263,7 @@ The argument `DESCR` is saved in the `TODO` list.
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L180):
+> from [pkglint.go](pkglint.go#L179):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -280,7 +284,7 @@ In this example run, the first (and only) argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L187):
+> from [pkglint.go](pkglint.go#L186):
 
 ```go
 	firstDir := pkglint.Todo[0]
@@ -308,7 +312,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L211):
+> from [pkglint.go](pkglint.go#L210):
 
 ```go
 	for len(pkglint.Todo) > 0 {
@@ -320,7 +324,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L320):
+> from [pkglint.go](pkglint.go#L319):
 
 ```go
 	if isReg {
@@ -335,7 +339,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L650):
+> from [pkglint.go](pkglint.go#L573):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -439,7 +443,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L676):
+> from [pkglint.go](pkglint.go#L599):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -470,7 +474,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L554):
+> from [pkglint.go](pkglint.go#L476):
 
 ```go
 func CheckLinesDescr(lines Lines) {
@@ -486,7 +490,7 @@ func CheckLinesDescr(lines Lines) {
 
 		if contains(line.Text, "${") {
 			for _, token := range NewMkParser(nil, line.Text, false).MkTokens() {
-				if token.Varuse != nil && G.Pkgsrc.VariableType(token.Varuse.varname) != nil {
+				if token.Varuse != nil && G.Pkgsrc.VariableType(nil, token.Varuse.varname) != nil {
 					line.Notef("Variables are not expanded in the DESCR file.")
 				}
 			}
@@ -601,7 +605,7 @@ func (line *LineImpl) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L796):
+> from [mkline.go](mkline.go#L863):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator
@@ -610,9 +614,9 @@ If that was too easy, have a look at the complex cases here:
 // This decision depends on many factors, such as whether the type of the context is
 // a list of things, whether the variable is a list, whether it can contain only
 // safe characters, and so on.
-func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
-		defer trace.Call(varname, vartype, vuc, trace.Result(&needsQuoting))()
+		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
 	}
 
 	// TODO: Systematically test this function, each and every case, from top to bottom.
@@ -624,8 +628,8 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	}
 
 	if !vartype.basicType.NeedsQ() {
-		if vartype.kindOfList == lkNone {
-			if vartype.guessed {
+		if !vartype.List() {
+			if vartype.Guessed() {
 				return unknown
 			}
 			return no
@@ -637,7 +641,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.IsWordPart && vuc.quoting == VucQuotPlain {
-		if vartype.kindOfList == lkNone && vartype.basicType == BtShellWord {
+		if !vartype.List() && vartype.basicType == BtShellWord {
 			return no
 		}
 	}
@@ -658,7 +662,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if tool := G.ToolByVarname(varname); tool != nil {
+	if tool := G.ToolByVarname(mklines, varuse.varname); tool != nil {
 		switch vuc.quoting {
 		case VucQuotPlain:
 			if !vuc.IsWordPart {
@@ -692,6 +696,14 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 		if vucVartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
 			return no // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 		}
+
+		// .for dir in ${PATH:C,:, ,g}
+		for _, modifier := range varuse.modifiers {
+			if modifier.ChangesWords() {
+				return unknown
+			}
+		}
+
 		return yes
 	}
 
@@ -702,7 +714,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(varname string, vartype *Vartype,
 	}
 
 	if trace.Tracing {
-		trace.Step1("Don't know whether :Q is needed for %q", varname)
+		trace.Step1("Don't know whether :Q is needed for %q", varuse.varname)
 	}
 	return unknown
 }
@@ -764,13 +776,13 @@ In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
 
-> from [mkline.go](mkline.go#L17):
+> from [mkline.go](mkline.go#L15):
 
 ```go
 type MkLine = *MkLineImpl
 ```
 
-> from [mkline.go](mkline.go#L19):
+> from [mkline.go](mkline.go#L17):
 
 ```go
 type MkLineImpl struct {
@@ -783,18 +795,23 @@ type MkLineImpl struct {
 
 The instructions for building and installing packages are written in shell commands,
 which are embedded in Makefile fragments.
-The `ShellLine` type provides methods for checking shell commands and their individual parts.
+The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
 > from [shell.go](shell.go#L13):
 
 ```go
-// ShellLine is either a line from a Makefile starting with a tab,
+// ShellLineChecker is either a line from a Makefile starting with a tab,
 // thereby containing shell commands to be executed.
 //
 // Or it is a variable assignment line from a Makefile with a left-hand
 // side variable that is of some shell-like type; see Vartype.IsShell.
-type ShellLine struct {
-	mkline MkLine
+type ShellLineChecker struct {
+	MkLines MkLines
+	mkline  MkLine
+
+	// checkVarUse is set to false when checking a single shell word
+	// in order to skip duplicate warnings in variable assignments.
+	checkVarUse bool
 }
 ```
 
@@ -820,7 +837,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L119):
+> from [check_test.go](check_test.go#L123):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -828,12 +845,18 @@ for setting up tests and checking the results.
 // all the test methods, which makes it difficult to find
 // a method by auto-completion.
 type Tester struct {
+	c        *check.C // Only usable during the test method itself
+	testName string
+
 	stdout  bytes.Buffer
 	stderr  bytes.Buffer
 	tmpdir  string
-	c       *check.C // Only usable during the test method itself
-	prevdir string   // The current working directory before the test started
-	relCwd  string   // See Tester.Chdir
+	prevdir string // The current working directory before the test started
+	relCwd  string // See Tester.Chdir
+
+	seenSetupPkgsrc int
+	seenFinish      bool
+	seenMain        bool
 }
 ```
 
@@ -989,7 +1012,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
 		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
 
-	G.Main("pkglint", "-Wall", "-Call", t.File("sysutils/checkperms"))
+	t.Main("-Wall", "-Call", t.File("sysutils/checkperms"))
 
 	t.CheckOutputLines(
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+

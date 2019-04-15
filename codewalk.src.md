@@ -247,11 +247,11 @@ go:type MkLineImpl
 
 The instructions for building and installing packages are written in shell commands,
 which are embedded in Makefile fragments.
-The `ShellLine` type provides methods for checking shell commands and their individual parts.
+The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
 ```codewalk
 file     shell.go
-go:type  ShellLine
+go:type  ShellLineChecker
 ```
 
 ## Testing pkglint
