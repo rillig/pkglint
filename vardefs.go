@@ -360,6 +360,24 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		return enum(strings.Join(versions, " "))
 	}
 
+	// enumFromFiles reads the files from the given base directory,
+	// filtering it through the regular expression and the replacement.
+	//
+	// If no files are found, the allowed values are taken
+	// from defval. This should only happen in the pkglint tests.
+	enumFromFiles := func(basedir string, re regex.Pattern, repl string, defval string) *BasicType {
+		var relevant []string
+		for _, filename := range dirglob(G.Pkgsrc.File("mk/platform")) {
+			if matches(filename, re) {
+				relevant = append(relevant, filename)
+			}
+		}
+		if len(relevant) == 0 {
+			return enum(defval)
+		}
+		return enum(strings.Join(relevant, " "))
+	}
+
 	compilers := enumFrom(
 		"mk/compiler.mk",
 		"ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc",
@@ -1260,7 +1278,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("ONLY_FOR_COMPILER", compilers)
 	pkglist("ONLY_FOR_PLATFORM", BtMachinePlatformPattern)
 	pkg("ONLY_FOR_UNPRIVILEGED", BtYesNo)
-	sysload("OPSYS", BtIdentifier)
+	sysload("OPSYS", enumFromFiles("mk/platform", `(.*)\.mk$`, "$1",
+		"Cygwin DragonFly FreeBSD Linux NetBSD SunOS"))
 	pkglistbl3("OPSYSVARS", BtVariableName)
 	pkg("OSVERSION_SPECIFIC", BtYes)
 	sysload("OS_VERSION", BtVersion)
