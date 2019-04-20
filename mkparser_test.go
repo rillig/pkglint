@@ -695,6 +695,14 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".")
 
 	test("${VAR:@i@${i}@}", varUse("VAR", "@i@${i}@"), "")
+
+	test("${PKG_GROUPS:@g@${g:Q}:${PKG_GID.${g}:Q}@:C/:*$//g}",
+		varUse("PKG_GROUPS", "@g@${g:Q}", "C/:*$//g"),
+		"",
+		// FIXME
+		"WARN: Makefile:20: Modifier ${PKG_GROUPS:@g@...@} is missing the final \"@\".",
+		// FIXME
+		"WARN: Makefile:20: Invalid variable modifier \"${PKG_GID.${g}:Q}@\" for \"PKG_GROUPS\".")
 }
 
 func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
