@@ -1030,7 +1030,7 @@ func (pkg *Package) checkLocallyModified(filename string) {
 		return
 	}
 
-	if !isLocallyModified(filename) {
+	if !isLocallyModified(filename) || !fileExists(filename) {
 		return
 	}
 

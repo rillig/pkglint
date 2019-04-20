@@ -1299,12 +1299,8 @@ func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile: "+
-			"Please only commit changes that "+
-			"maintainer@example.org would approve.",
-		// FIXME: There must be no warning for directories.
-		"NOTE: ~/category/package/patches: "+
-			"Please only commit changes that "+
+		"NOTE: ~/category/package/Makefile: " +
+			"Please only commit changes that " +
 			"maintainer@example.org would approve.")
 }
 
