@@ -248,7 +248,7 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 			continue
 
 		case 'C', 'S':
-			if p.varUseModifierSubst(lexer, closing) {
+			if ok, _, _, _, _ := p.varUseModifierSubst(closing); ok {
 				appendModifier(lexer.Since(modifierMark))
 				mayOmitColon = true
 				continue
@@ -313,12 +313,14 @@ func (p *MkParser) varUseText(closing byte) string {
 }
 
 // varUseModifierSubst parses a :S,from,to, or a :C,from,to, modifier.
-func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool {
+func (p *MkParser) varUseModifierSubst(closing byte) (ok bool, regex bool, from string, to string, options string) {
+	lexer := p.lexer
+	regex = lexer.PeekByte() == 'C'
 	lexer.Skip(1 /* the initial S or C */)
 
 	sep := lexer.PeekByte() // bmake allows _any_ separator, even letters.
 	if sep == -1 || byte(sep) == closing {
-		return false
+		return
 	}
 
 	lexer.Skip(1)
@@ -336,23 +338,30 @@ func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool
 		}
 	}
 
+	fromStart := lexer.Mark()
 	lexer.SkipByte('^')
 	skipOther()
 	lexer.SkipByte('$')
+	from = lexer.Since(fromStart)
 
 	if !lexer.SkipByte(separator) {
-		return false
+		return
 	}
 
+	toStart := lexer.Mark()
 	skipOther()
+	to = lexer.Since(toStart)
 
 	if !lexer.SkipByte(separator) {
-		return false
+		return
 	}
 
+	optionsStart := lexer.Mark()
 	lexer.NextBytesFunc(func(b byte) bool { return b == '1' || b == 'g' || b == 'W' })
+	options = lexer.Since(optionsStart)
 
-	return true
+	ok = true
+	return
 }
 
 // varUseModifierAt parses a variable modifier like ":@v@echo ${v};@",
