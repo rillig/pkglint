@@ -662,13 +662,12 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 
 	test("${VAR:S,from,to,1gW}", varUse("VAR", "S,from,to,1gW"), "")
 
-	test("${VAR:C/^([[:alnum:]]{1}).*$/\\1/1}",
-		//FIXME: varUse("VAR", "C/^([[:alnum:]]{1}).*$/\\1/1"), "")
-		varUse("VAR"),
-		").*$/\\1/1}",
-		"WARN: Makefile:20: Invalid variable modifier \"C/^([[\" for \"VAR\".",
-		"WARN: Makefile:20: Invalid variable modifier \"alnum\" for \"VAR\".",
-		"WARN: Makefile:20: Invalid variable modifier \"]]{1\" for \"VAR\".")
+	// Inside the :S or :C modifiers, neither a colon nor the closing
+	// brace need to be escaped. Otherwise these patterns would become
+	// too difficult to read and write.
+	test("${VAR:C/[[:alnum:]]{2}/**/g}",
+		varUse("VAR", "C/[[:alnum:]]{2}/**/g"),
+		"")
 }
 
 func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {

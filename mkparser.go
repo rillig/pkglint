@@ -325,7 +325,7 @@ func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool
 	separator := byte(sep)
 
 	isOther := func(b byte) bool {
-		return b != separator && b != '$' && b != closing && b != '\\'
+		return b != separator && b != '$' && b != '\\'
 	}
 
 	skipOther := func() {
