@@ -141,7 +141,10 @@ func (p MkLineParser) parseVarassign(line Line, data mkLineSplitResult) MkLine {
 		line.Explain(
 			"In a variable assignment, an unescaped # starts a comment that",
 			"continues until the end of the line.",
-			"To escape the #, write \\#.")
+			"To escape the #, write \\#.",
+			"",
+			"If this # character intentionally starts a comment,",
+			"it should be preceded by a space in order to make it more visible.")
 	}
 
 	return &MkLineImpl{line, a}
