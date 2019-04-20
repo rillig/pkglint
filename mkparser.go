@@ -255,7 +255,7 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 			}
 
 		case '@':
-			if p.varUseModifierAt(lexer, closing, varname) {
+			if p.varUseModifierAt(lexer, varname) {
 				appendModifier(lexer.Since(modifierMark))
 				continue
 			}
@@ -357,7 +357,7 @@ func (p *MkParser) varUseModifierSubst(lexer *textproc.Lexer, closing byte) bool
 
 // varUseModifierAt parses a variable modifier like ":@v@echo ${v};@",
 // which expands the variable value in a loop.
-func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, closing byte, varname string) bool {
+func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, varname string) bool {
 	lexer.Skip(1 /* the initial @ */)
 
 	loopVar := lexer.NextBytesSet(AlnumDot)
@@ -365,7 +365,7 @@ func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, closing byte, varname
 		return false
 	}
 
-	re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:@}\\]|\\.)+`, `^([^$:@)\\]|\\.)+`)))
+	re := G.res.Compile(`^([^$@\\]|\\.)+`)
 	for p.VarUse() != nil || lexer.SkipString("$$") || lexer.SkipRegexp(re) {
 	}
 

@@ -350,8 +350,10 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 		varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
 
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}",
-		varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}"),
-		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".")
+		varuseText("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}",
+			"PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}}"),
+		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".",
+		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"PLIST_SUBST_VARS\".")
 
 	// Unfinished variable use
 	test("${",
@@ -691,18 +693,15 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 		"WARN: Makefile:20: Invalid variable modifier \"@\" for \"VAR\".",
 		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
 
-	test("${VAR:@i@${i}}", varUse("VAR", "@i@${i}"), "",
-		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".")
+	test("${VAR:@i@${i}}", varUse("VAR", "@i@${i}}"), "",
+		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".",
+		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
 
 	test("${VAR:@i@${i}@}", varUse("VAR", "@i@${i}@"), "")
 
 	test("${PKG_GROUPS:@g@${g:Q}:${PKG_GID.${g}:Q}@:C/:*$//g}",
-		varUse("PKG_GROUPS", "@g@${g:Q}", "C/:*$//g"),
-		"",
-		// FIXME
-		"WARN: Makefile:20: Modifier ${PKG_GROUPS:@g@...@} is missing the final \"@\".",
-		// FIXME
-		"WARN: Makefile:20: Invalid variable modifier \"${PKG_GID.${g}:Q}@\" for \"PKG_GROUPS\".")
+		varUse("PKG_GROUPS", "@g@${g:Q}:${PKG_GID.${g}:Q}@", "C/:*$//g"),
+		"")
 }
 
 func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
