@@ -46,13 +46,14 @@ func (m MkVarUseModifier) IsSuffixSubst() bool {
 	return hasPrefix(m.Text, "=")
 }
 
+// FIXME: duplicate of MkParser.varUseModifierSubst
 func (m MkVarUseModifier) MatchSubst() (ok bool, regex bool, from string, to string, options string) {
 	l := textproc.NewLexer(m.Text)
 	regex = l.PeekByte() == 'C'
 	if l.SkipByte('S') || l.SkipByte('C') {
 		separator := l.PeekByte()
 		l.Skip(1)
-		if unicode.IsPunct(rune(separator)) || separator == '|' {
+		if unicode.IsPunct(rune(separator)) || separator == '|' { // FIXME: why?
 			noSeparator := func(b byte) bool { return int(b) != separator && b != '\\' }
 			nextToken := func() string {
 				start := l.Mark()
@@ -60,6 +61,8 @@ func (m MkVarUseModifier) MatchSubst() (ok bool, regex bool, from string, to str
 					switch {
 					case l.NextBytesFunc(noSeparator) != "":
 						continue
+					case l.PeekByte() == separator:
+						return l.Since(start)
 					case l.PeekByte() == '\\' && len(l.Rest()) >= 2:
 						// TODO: Compare with devel/bmake for the exact behavior
 						l.Skip(2)

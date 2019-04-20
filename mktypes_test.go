@@ -100,6 +100,24 @@ func (s *Suite) Test_MkVarUseModifier_MatchSubst__backslash(c *check.C) {
 	c.Check(options, equals, "")
 }
 
+// Some pkgsrc users really explore the darkest corners of bmake by using
+// the backslash as the separator in the :S modifier. Sure, it works, it
+// just looks totally unexpected to the average pkgsrc reader.
+//
+// Using the backslash as separator means that it cannot be used for anything
+// else, not even for escaping other characters.
+func (s *Suite) Test_MkVarUseModifier_MatchSubst__backslash_as_separator(c *check.C) {
+	mod := MkVarUseModifier{"S\\.post1\\\\1"}
+
+	ok, regex, from, to, options := mod.MatchSubst()
+
+	c.Check(ok, equals, true)
+	c.Check(regex, equals, false)
+	c.Check(from, equals, ".post1")
+	c.Check(to, equals, "")
+	c.Check(options, equals, "1")
+}
+
 // As of 2019-03-24, pkglint doesn't know how to handle complicated
 // :C modifiers.
 func (s *Suite) Test_MkVarUseModifier_Subst__regexp(c *check.C) {

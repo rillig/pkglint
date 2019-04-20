@@ -670,6 +670,16 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 	test("${VAR:C/[[:alnum:]]{2}/**/g}",
 		varUse("VAR", "C/[[:alnum:]]{2}/**/g"),
 		"")
+
+	// Some pkgsrc users really explore the darkest corners of bmake by using
+	// the backslash as the separator in the :S modifier. Sure, it works, it
+	// just looks totally unexpected to the average pkgsrc reader.
+	//
+	// Using the backslash as separator means that it cannot be used for anything
+	// else, not even for escaping other characters.
+	test("${VAR:S\\.post1\\\\1}",
+		varUse("VAR", "S\\.post1\\\\1"),
+		"")
 }
 
 func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
