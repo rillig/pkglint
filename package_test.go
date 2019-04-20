@@ -1071,7 +1071,7 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__ok(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package__USE_LANGUAGES_too_late(c *check.C) {
+func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1083,8 +1083,32 @@ func (s *Suite) Test_Package__USE_LANGUAGES_too_late(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// FIXME: There must be a warning "USE_LANGUAGES must be added before including compiler.mk."
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:21: " +
+			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
+}
+
+func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__compiler_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"compiler.mk\"",
+		"USE_LANGUAGES=\tc c99 fortran ada c++14",
+		".include \"../../mk/compiler.mk\"",
+		"USE_LANGUAGES=\tc c99 fortran ada c++14")
+	t.CreateFileLines("category/package/compiler.mk",
+		MkRcsID)
+	t.CreateFileLines("mk/compiler.mk",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:23: "+
+			"Definition of USE_LANGUAGES is redundant because of line 21.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
 }
 
 func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {

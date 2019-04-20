@@ -571,6 +571,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 	scope := NewRedundantScope()
 	scope.Check(allLines) // Updates the variables in the scope
 	pkg.checkGnuConfigureUseLanguages(scope)
+	pkg.checkUseLanguagesCompilerMk(allLines)
 
 	pkg.determineEffectivePkgVars()
 	pkg.checkPossibleDowngrade()
@@ -1111,6 +1112,53 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 		}
 		lines.SaveAutofixChanges()
 	}
+}
+
+// checkUseLanguagesCompilerMk checks that after including mk/compiler.mk
+// or mk/endian.mk for the first time, there are no more changes to
+// USE_LANGUAGES, as these would be ignored by the pkgsrc infrastructure.
+func (pkg *Package) checkUseLanguagesCompilerMk(mklines MkLines) {
+
+	var seen Once
+
+	handleVarassign := func(mkline MkLine) {
+		if mkline.Varname() != "USE_LANGUAGES" {
+			return
+		}
+
+		if !seen.Seen("../../mk/compiler.mk") && !seen.Seen("../../mk/endian.mk") {
+			return
+		}
+
+		if mkline.Basename == "compiler.mk" {
+			if relpath(pkg.dir, mkline.Filename) == "../../mk/compiler.mk" {
+				return
+			}
+		}
+
+		mkline.Warnf("Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
+		mkline.Explain(
+			"The file compiler.mk guards itself against multiple inclusion.")
+	}
+
+	handleInclude := func(mkline MkLine) {
+		dirname, _ := path.Split(mkline.Filename)
+		dirname = cleanpath(dirname)
+		fullIncluded := dirname + "/" + mkline.IncludedFile()
+		relIncludedFile := relpath(pkg.dir, fullIncluded)
+
+		seen.FirstTime(relIncludedFile)
+	}
+
+	mklines.ForEach(func(mkline MkLine) {
+		switch {
+		case mkline.IsVarassign():
+			handleVarassign(mkline)
+
+		case mkline.IsInclude():
+			handleInclude(mkline)
+		}
+	})
 }
 
 type PlistContent struct {
