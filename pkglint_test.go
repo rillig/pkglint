@@ -878,10 +878,6 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"2 errors and 0 warnings found.")
 
-	// FIXME: Do this resetting properly
-	G.errors = 0
-	G.warnings = 0
-	G.logged = Once{}
 	t.Main("--import", "category/package", "wip/package")
 
 	t.CheckOutputLines(

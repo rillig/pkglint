@@ -653,6 +653,12 @@ func (t *Tester) Main(args ...string) int {
 	}
 
 	t.seenMain = true
+
+	// Reset the logger, for tests where t.Main is called multiple times.
+	G.errors = 0
+	G.warnings = 0
+	G.logged = Once{}
+
 	argv := append([]string{"pkglint"}, args...)
 	return G.Main(argv...)
 }
