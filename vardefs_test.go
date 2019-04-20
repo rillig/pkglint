@@ -77,6 +77,24 @@ func (s *Suite) Test_VarTypeRegistry_Init__enumFromDirs(c *check.C) {
 	test("PYPKGPREFIX", "enum: py28 py33  (system-provided)")
 }
 
+func (s *Suite) Test_VarTypeRegistry_Init__enumFromFiles(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/platform/NetBSD.mk")
+	t.CreateFileLines("mk/platform/README")
+	t.CreateFileLines("mk/platform/SunOS.mk")
+	t.CreateFileLines("mk/platform/SunOS.mk~")
+
+	t.SetUpVartypes()
+
+	test := func(varname, values string) {
+		vartype := G.Pkgsrc.VariableType(nil, varname).String()
+		c.Check(vartype, equals, values)
+	}
+
+	test("OPSYS", "enum: NetBSD SunOS  (system-provided)")
+}
+
 func (s *Suite) Test_VarTypeRegistry_parseACLEntries__invalid_arguments(c *check.C) {
 	t := s.Init(c)
 

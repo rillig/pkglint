@@ -367,9 +367,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// from defval. This should only happen in the pkglint tests.
 	enumFromFiles := func(basedir string, re regex.Pattern, repl string, defval string) *BasicType {
 		var relevant []string
-		for _, filename := range dirglob(G.Pkgsrc.File("mk/platform")) {
-			if matches(filename, re) {
-				relevant = append(relevant, filename)
+		for _, filename := range dirglob(G.Pkgsrc.File(basedir)) {
+			basename := path.Base(filename)
+			if matches(basename, re) {
+				relevant = append(relevant, replaceAll(basename, re, repl))
 			}
 		}
 		if len(relevant) == 0 {
