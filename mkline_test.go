@@ -416,7 +416,6 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	MkLineChecker{nil, mkline}.checkVarassign()
 
 	t.CheckOutputLines(
-		"WARN: builtin.mk:3: PKG_ADMIN should not be used at load time in any file.",
 		"NOTE: builtin.mk:3: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 

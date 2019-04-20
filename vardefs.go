@@ -1371,7 +1371,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("PKGVERSION", BtVersion)
 	sys("PKGVERSION_NOREV", BtVersion) // Without the nb* part.
 	sys("PKGWILDCARD", BtFileMask)
-	sys("PKG_ADMIN", BtShellCommand)
+	sysload("PKG_ADMIN", BtShellCommand)
 	sys("PKG_APACHE", enum("apache24"))
 	pkglist("PKG_APACHE_ACCEPTED", enum("apache24"))
 	usr("PKG_APACHE_DEFAULT", enum("apache24"))
