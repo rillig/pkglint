@@ -899,8 +899,8 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vucVartype.IsConsideredList()
-	haveList := vartype.IsConsideredList()
+	wantList := vucVartype.MayBeAppendedTo()
+	haveList := vartype.MayBeAppendedTo()
 	if trace.Tracing {
 		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
 	}

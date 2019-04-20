@@ -167,26 +167,16 @@ func (vt *Vartype) AlternativeFiles(perms ACLPermissions) string {
 	return positive + ", but not " + negative
 }
 
-// IsConsideredList returns whether the type is considered a list.
-//
-// FIXME: Explain why this method is necessary. IsList is clear, and MayBeAppendedTo also,
-//  but this in-between state needs a decent explanation.
-//  Probably MkLineChecker.checkVartype needs to be revisited completely.
-func (vt *Vartype) IsConsideredList() bool {
+func (vt *Vartype) MayBeAppendedTo() bool {
 	if vt.List() {
 		return true
 	}
+
 	switch vt.basicType {
 	case BtAwkCommand, BtSedCommands, BtShellCommand, BtShellCommands, BtConfFiles:
 		return true
 	}
-	return false
-}
 
-func (vt *Vartype) MayBeAppendedTo() bool {
-	if vt.List() || vt.IsConsideredList() {
-		return true
-	}
 	switch vt.basicType {
 	case BtComment, BtLicense:
 		return true

@@ -512,6 +512,8 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 			"it would be ok in Makefile, Makefile.* or *.mk, but not buildlink3.mk or builtin.mk.",
 		"WARN: buildlink3.mk:3: The variable LICENSE should be quoted as part of a shell word.",
 		"WARN: buildlink3.mk:8: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:8: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
 		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
 		"WARN: buildlink3.mk:13: The variable LICENSE should be quoted as part of a shell word.",
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string "+

@@ -160,13 +160,13 @@ func (s *Suite) Test_ACLPermissions_HumanString(c *check.C) {
 		equals, "set, given a default value, appended to, used at load time, or used")
 }
 
-func (s *Suite) Test_Vartype_IsConsideredList(c *check.C) {
+func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
 
-	c.Check(G.Pkgsrc.VariableType(nil, "COMMENT").IsConsideredList(), equals, false)
-	c.Check(G.Pkgsrc.VariableType(nil, "DEPENDS").IsConsideredList(), equals, true)
-	c.Check(G.Pkgsrc.VariableType(nil, "PKG_FAIL_REASON").IsConsideredList(), equals, true)
-	c.Check(G.Pkgsrc.VariableType(nil, "CONF_FILES").IsConsideredList(), equals, true)
+	c.Check(G.Pkgsrc.VariableType(nil, "COMMENT").MayBeAppendedTo(), equals, true)
+	c.Check(G.Pkgsrc.VariableType(nil, "DEPENDS").MayBeAppendedTo(), equals, true)
+	c.Check(G.Pkgsrc.VariableType(nil, "PKG_FAIL_REASON").MayBeAppendedTo(), equals, true)
+	c.Check(G.Pkgsrc.VariableType(nil, "CONF_FILES").MayBeAppendedTo(), equals, true)
 }
