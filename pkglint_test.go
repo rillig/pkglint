@@ -131,8 +131,6 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// This is typical of the pkglint tests.
 	t.SetUpPkgsrc()
 
-	// FIXME: pkglint should warn that the latest version in this file
-	// (1.10) doesn't match the current version in the package (1.11).
 	t.CreateFileLines("doc/CHANGES-2018",
 		RcsID,
 		"",
@@ -233,6 +231,9 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.Main("-Wall", "-Call", t.File("sysutils/checkperms"))
 
 	t.CheckOutputLines(
+		"NOTE: ~/sysutils/checkperms/Makefile:3: "+
+			"Package version \"1.11\" is greater than the latest \"1.10\" "+
+			"from ../../doc/CHANGES-2018:5.",
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+
 			"This package should be updated to 1.13 ([supports more file formats]).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",

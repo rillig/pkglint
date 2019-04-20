@@ -122,8 +122,11 @@ func (pkg *Package) checkPossibleDowngrade() {
 	}
 
 	if change.Action == "Updated" {
-		changeVersion := replaceAll(change.Version, `nb\d+$`, "")
-		if pkgver.Compare(pkgversion, changeVersion) < 0 {
+		pkgversionNorev := replaceAll(pkgversion, `nb\d+$`, "")
+		changeNorev := replaceAll(change.Version, `nb\d+$`, "")
+		cmp := pkgver.Compare(pkgversionNorev, changeNorev)
+		switch {
+		case cmp < 0:
 			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.",
 				change.Version, mkline.Line.RefToLocation(change.Location), pkgversion)
 			mkline.Explain(
@@ -132,7 +135,14 @@ func (pkg *Package) checkPossibleDowngrade() {
 				"This is unusual, since packages are typically upgraded instead of",
 				"downgraded.")
 
-			// TODO: Check whether the current version is mentioned in doc/CHANGES.
+		case cmp > 0:
+			mkline.Notef("Package version %q is greater than the latest %q from %s.",
+				pkgversion, change.Version, mkline.Line.RefToLocation(change.Location))
+			mkline.Explain(
+				"Each update to a package should be mentioned in the doc/CHANGES file.",
+				"To do this after updating a package, run",
+				sprintf("%q,", bmake("cce")),
+				"which is the abbreviation for commit-changes-entry.")
 		}
 	}
 }
