@@ -915,7 +915,6 @@ func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
 	vt.Values(
 		"anything")
 
-	// FIXME: Warn about the absolute pathname in line 4.
 	vt.Output(
 		"WARN: filename.mk:1: \"${PREFIX}/*\" is not a valid pathname.")
 }
