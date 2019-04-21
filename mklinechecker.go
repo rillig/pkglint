@@ -1429,7 +1429,7 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 
 				fix := ck.MkLine.Autofix()
 				fix.Notef("%s should be compared using %s instead of matching against %q.",
-					varname, ifelseStr(positive, "==", "!="), ":"+modifier.Text)
+					varname, ifelseStr(positive == notEmpty, "==", "!="), ":"+modifier.Text)
 				fix.Explain(
 					"This variable has a single value, not a list of values.",
 					"Therefore it feels strange to apply list operators like :M and :N onto it.",

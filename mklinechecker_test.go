@@ -1441,15 +1441,14 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		".if ${PKGPATH} == pattern")
 
 	test(".if empty(PKGPATH:Mpattern)",
-		// FIXME: Since this is actually a test for emptiness, the
-		//  diagnostics must be different from the !empty case.
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"empty(PKGPATH:Mpattern)\" with \"${PKGPATH} != pattern\".",
 		".if ${PKGPATH} != pattern")
 
 	test(".if !!empty(PKGPATH:Mpattern)",
-		// FIXME: Since this is actually a test for emptiness, the
-		//  diagnostics must be different from the !empty case.
+		// TODO: When taking all the ! into account, this is actually a
+		//  test for emptiness, therefore the diagnostics should suggest
+		//  the != operator instead of ==.
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!empty(PKGPATH:Mpattern)\" with \"(${PKGPATH} == pattern)\".",
 		// TODO: This condition could be simplified even more.
@@ -1468,7 +1467,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	test(
 		".if !${PKGPATH:Mpattern}",
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!${PKGPATH:Mpattern}\" with \"${PKGPATH} != pattern\".",
 		".if ${PKGPATH} != pattern")
 
