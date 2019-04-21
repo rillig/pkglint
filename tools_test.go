@@ -4,28 +4,28 @@ import "gopkg.in/check.v1"
 
 func (s *Suite) Test_Tool_UsableAtLoadTime(c *check.C) {
 
-	nowhere := Tool{"nowhere", "", false, Nowhere}
+	nowhere := Tool{"nowhere", "", false, Nowhere, nil}
 	c.Check(nowhere.UsableAtLoadTime(false), equals, false)
 	c.Check(nowhere.UsableAtLoadTime(true), equals, false)
 
-	load := Tool{"load", "", false, AfterPrefsMk}
+	load := Tool{"load", "", false, AfterPrefsMk, nil}
 	c.Check(load.UsableAtLoadTime(false), equals, false)
 	c.Check(load.UsableAtLoadTime(true), equals, true)
 
-	run := Tool{"run", "", false, AtRunTime}
+	run := Tool{"run", "", false, AtRunTime, nil}
 	c.Check(run.UsableAtLoadTime(false), equals, false)
 	c.Check(run.UsableAtLoadTime(true), equals, false)
 }
 
 func (s *Suite) Test_Tool_UsableAtRunTime(c *check.C) {
 
-	nowhere := Tool{"nowhere", "", false, Nowhere}
+	nowhere := Tool{"nowhere", "", false, Nowhere, nil}
 	c.Check(nowhere.UsableAtRunTime(), equals, false)
 
-	load := Tool{"load", "", false, AfterPrefsMk}
+	load := Tool{"load", "", false, AfterPrefsMk, nil}
 	c.Check(load.UsableAtRunTime(), equals, true)
 
-	run := Tool{"run", "", false, AtRunTime}
+	run := Tool{"run", "", false, AtRunTime, nil}
 	c.Check(run.UsableAtRunTime(), equals, true)
 }
 
@@ -462,6 +462,7 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	// This simulates a tool that is added to USE_TOOLS in bsd.prefs.mk.
 	gnu := NewTools()
 	gnu.def("gsed", "SED", false, AfterPrefsMk)
+	gnu.ByName("gsed").Aliases = []string{"sed"}
 
 	// This simulates a package that doesn't mention the sed tool at all.
 	// The call to .def() is therefore unrealistic.
@@ -493,6 +494,42 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	// FIXME: Must both be gsed:SED::AfterPrefsMk
 	c.Check(local1.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
 	c.Check(local2.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
+}
+
+func (s *Suite) Test_Tools__aliases(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("mk/tools/replace.mk",
+		MkRcsID,
+		"TOOLS_CREATE+=\tsed",
+		"TOOLS_PATH.sed=\t/bin/sed",
+		"",
+		"TOOLS_CREATE+=\tgsed",
+		"TOOLS_PATH.gsed=\t/bin/gnu-sed",
+		"TOOLS_ALIASES.gsed=\tsed ${tool}")
+
+	infraTools := NewTools()
+	mklines.ForEach(func(mkline MkLine) {
+		infraTools.ParseToolLine(mkline, false, false)
+	})
+
+	c.Check(infraTools.ByName("sed").String(), equals, "sed:::AtRunTime")
+	c.Check(infraTools.ByName("gsed").String(), equals, "gsed:::AtRunTime:sed")
+
+	pkgTools := NewTools()
+	pkgTools.Fallback(infraTools)
+
+	c.Check(pkgTools.ByName("sed").String(), equals, "sed:::AtRunTime")
+	// FIXME: The alias "sed" is missing at the end.
+	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AtRunTime")
+
+	mkline := t.NewMkLine("Makefile", 123, "USE_TOOLS+=\tgsed")
+	pkgTools.ParseToolLine(mkline, false, false)
+
+	// FIXME: Should be AfterPrefsMk since sed is an alias of gsed.
+	c.Check(pkgTools.ByName("sed").String(), equals, "sed:::AtRunTime")
+	// FIXME: The alias "sed" is missing at the end.
+	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AfterPrefsMk")
 }
 
 // The cmake tool is included conditionally. The condition is so simple that

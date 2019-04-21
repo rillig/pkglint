@@ -32,11 +32,19 @@ type Tool struct {
 	// (${ECHO}, ${TEST}).
 	MustUseVarForm bool
 	Validity       Validity
+	Aliases        []string
 }
 
 func (tool *Tool) String() string {
-	return sprintf("%s:%s:%s:%s",
-		tool.Name, tool.Varname, ifelseStr(tool.MustUseVarForm, "var", ""), tool.Validity)
+	aliases := ""
+	if len(tool.Aliases) > 0 {
+		aliases = ":" + strings.Join(tool.Aliases, ",")
+	}
+
+	varForm := ifelseStr(tool.MustUseVarForm, "var", "")
+
+	return sprintf("%s:%s:%s:%s%s",
+		tool.Name, tool.Varname, varForm, tool.Validity, aliases)
 }
 
 // UsableAtLoadTime means that the tool may be used by its variable
@@ -135,7 +143,7 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 }
 
 func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
-	fresh := Tool{name, varname, mustUseVarForm, validity}
+	fresh := Tool{name, varname, mustUseVarForm, validity, nil}
 
 	tool := tr.byName[name]
 	if tool == nil {
@@ -225,6 +233,13 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 		case "TOOLS_PATH.*", "_TOOLS_DEPMETHOD.*":
 			if !containsVarRef(varparam) {
 				tr.Define(varparam, "", mkline)
+			}
+
+		case "TOOLS_ALIASES.*":
+			for _, alias := range mkline.ValueFields(value) {
+				if !containsVarRef(alias) {
+					tr.byName[varparam].Aliases = append(tr.byName[varparam].Aliases, alias)
+				}
 			}
 
 		case "_TOOLS.*":
