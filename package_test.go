@@ -945,7 +945,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_distinf
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/distinfo: " +
-			"This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
+			"This file should not exist since NO_CHECKSUM or META_PACKAGE is set.")
 }
 
 func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *check.C) {

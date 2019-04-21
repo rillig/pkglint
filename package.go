@@ -543,7 +543,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 		vars.Defined("META_PACKAGE")) && isEmptyDir(pkg.File(pkg.Patchdir)) {
 
 		if distinfoFile := pkg.File(pkg.DistinfoFile); fileExists(distinfoFile) {
-			NewLineWhole(distinfoFile).Warnf("This file should not exist if NO_CHECKSUM or META_PACKAGE is set.")
+			NewLineWhole(distinfoFile).Warnf("This file should not exist since NO_CHECKSUM or META_PACKAGE is set.")
 		}
 	} else {
 		if distinfoFile := pkg.File(pkg.DistinfoFile); !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
