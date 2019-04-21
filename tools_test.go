@@ -453,12 +453,29 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realist
 //
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unrealistic(c *check.C) {
+
+	// This simulates a tool defined in the tools framework but not added
+	// to USE_TOOLS, neither by bsd.prefs.mk nor by bsd.pkg.mk.
 	nonGnu := NewTools()
 	nonGnu.def("sed", "SED", false, Nowhere)
 
+	// This simulates a tool that is added to USE_TOOLS in bsd.prefs.mk.
 	gnu := NewTools()
 	gnu.def("gsed", "SED", false, AfterPrefsMk)
 
+	// This simulates a package that doesn't mention the sed tool at all.
+	// The call to .def() is therefore unrealistic.
+	// Nevertheless, since the GNU tools define the gsed tool as well,
+	// it is available even though not explicitly mentioned in the package.
+	//
+	// FIXME: The tools framework handles this situation by defining
+	//  TOOLS_ALIASES.gsed=sed. As of April 2019, pkglint doesn't look
+	//  at that variable at all.
+	//  To properly handle this situation, pkglint needs to parse the
+	//  TOOLS_ALIASES blocks in mk/tools/replace.mk. Most of them are
+	//  simple, but the one for the grep commands uses a .for loop over
+	//  a constant list of 3 items. As of April 2019, pkglint has never
+	//  simulated this iteration over .for loops.
 	local1 := NewTools()
 	local1.def("sed", "SED", false, Nowhere)
 	local1.Fallback(gnu)
