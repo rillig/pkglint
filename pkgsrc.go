@@ -306,7 +306,7 @@ func (src *Pkgsrc) loadTools() {
 	for _, basename := range toolFiles {
 		mklines := src.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
 		mklines.ForEach(func(mkline MkLine) {
-			tools.ParseToolLine(mkline, true, !mklines.indentation.IsConditional())
+			tools.ParseToolLine(mklines, mkline, true, !mklines.indentation.IsConditional())
 		})
 	}
 
@@ -318,7 +318,7 @@ func (src *Pkgsrc) loadTools() {
 				varname := mkline.Varname()
 				switch varname {
 				case "USE_TOOLS":
-					tools.ParseToolLine(mkline, true, !mklines.indentation.IsConditional())
+					tools.ParseToolLine(mklines, mkline, true, !mklines.indentation.IsConditional())
 
 				case "_BUILD_DEFS":
 					// TODO: Compare with src.loadDefaultBuildDefs; is it redundant?

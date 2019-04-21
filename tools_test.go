@@ -130,9 +130,18 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 
 	tools := NewTools()
 
-	tools.ParseToolLine(t.NewMkLine("create.mk", 2, "TOOLS_CREATE+= load"), true, false)
-	tools.ParseToolLine(t.NewMkLine("create.mk", 3, "TOOLS_CREATE+= run"), true, false)
-	tools.ParseToolLine(t.NewMkLine("create.mk", 4, "TOOLS_CREATE+= nowhere"), true, false)
+	// Only used for variable lookup, which is irrelevant for this test.
+	dummyMklines := t.NewMkLines("dummy.mk")
+
+	createMklines := t.NewMkLines("create.mk",
+		MkRcsID,
+		"TOOLS_CREATE+= load",
+		"TOOLS_CREATE+= run",
+		"TOOLS_CREATE+= nowhere")
+
+	createMklines.ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(createMklines, mkline, true, false)
+	})
 
 	// The references to the tools are stable,
 	// the lookup methods always return the same objects.
@@ -147,9 +156,15 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	c.Check(nowhere.String(), equals, "nowhere:::AtRunTime")
 
 	// The variable name RUN is reserved by pkgsrc, therefore RUN_CMD.
-	tools.ParseToolLine(t.NewMkLine("varnames.mk", 2, "_TOOLS_VARNAME.load=    LOAD"), true, false)
-	tools.ParseToolLine(t.NewMkLine("varnames.mk", 3, "_TOOLS_VARNAME.run=     RUN_CMD"), true, false)
-	tools.ParseToolLine(t.NewMkLine("varnames.mk", 4, "_TOOLS_VARNAME.nowhere= NOWHERE"), true, false)
+	varnamesMklines := t.NewMkLines("varnames.mk",
+		MkRcsID,
+		"_TOOLS_VARNAME.load=    LOAD",
+		"_TOOLS_VARNAME.run=     RUN_CMD",
+		"_TOOLS_VARNAME.nowhere= NOWHERE")
+
+	varnamesMklines.ForEach(func(mkline MkLine) {
+		tools.ParseToolLine(varnamesMklines, mkline, true, false)
+	})
 
 	// At this point the tools can be found by their variable names, too.
 	// They still may not be used.
@@ -163,14 +178,14 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	c.Check(run.String(), equals, "run:RUN_CMD::AtRunTime")
 	c.Check(nowhere.String(), equals, "nowhere:NOWHERE::AtRunTime")
 
-	tools.ParseToolLine(t.NewMkLine("bsd.prefs.mk", 2, "USE_TOOLS+= load"), true, true)
+	tools.ParseToolLine(dummyMklines, t.NewMkLine("bsd.prefs.mk", 2, "USE_TOOLS+= load"), true, true)
 
 	// Tools that are added to USE_TOOLS in bsd.prefs.mk may be used afterwards.
 	// By variable name, they may be used both at load time as well as run time.
 	// By plain name, they may be used only in {pre,do,post}-* targets.
 	c.Check(load.String(), equals, "load:LOAD::AfterPrefsMk")
 
-	tools.ParseToolLine(t.NewMkLine("bsd.pkg.mk", 2, "USE_TOOLS+= run"), true, true)
+	tools.ParseToolLine(dummyMklines, t.NewMkLine("bsd.pkg.mk", 2, "USE_TOOLS+= run"), true, true)
 
 	// Tools that are added to USE_TOOLS in bsd.pkg.mk may be used afterwards at run time.
 	// The {pre,do,post}-* targets may use both forms (${CAT} and cat).
@@ -219,16 +234,19 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	// All other files must not use the tools at load time.
 	// For them, seenPrefs can be thought of as being true from the beginning.
 
-	tools.ParseToolLine(t.NewMkLine("Makefile", 2, "USE_TOOLS+=     pkg-before-prefs"), false, true)
+	// Only used for variable lookup, which is irrelevant for this test.
+	dummyMklines := t.NewMkLines("dummy.mk")
+
+	tools.ParseToolLine(dummyMklines, t.NewMkLine("Makefile", 2, "USE_TOOLS+=     pkg-before-prefs"), false, true)
 
 	c.Check(before.Validity, equals, AfterPrefsMk)
 	c.Check(tools.SeenPrefs, equals, false)
 
-	tools.ParseToolLine(t.NewMkLine("Makefile", 3, ".include \"../../mk/bsd.prefs.mk\""), false, true)
+	tools.ParseToolLine(dummyMklines, t.NewMkLine("Makefile", 3, ".include \"../../mk/bsd.prefs.mk\""), false, true)
 
 	c.Check(tools.SeenPrefs, equals, true)
 
-	tools.ParseToolLine(t.NewMkLine("Makefile", 4, "USE_TOOLS+=     pkg-after-prefs"), false, true)
+	tools.ParseToolLine(dummyMklines, t.NewMkLine("Makefile", 4, "USE_TOOLS+=     pkg-after-prefs"), false, true)
 
 	c.Check(after.Validity, equals, AtRunTime)
 }
@@ -468,13 +486,6 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	// The call to .def() is therefore unrealistic.
 	// Nevertheless, since the GNU tools define the gsed tool as well,
 	// it is available even though not explicitly mentioned in the package.
-	//
-	// FIXME: The tools framework handles this situation by defining
-	//  TOOLS_ALIASES.gsed=sed. To properly handle this situation, pkglint
-	//  needs to parse the TOOLS_ALIASES blocks in mk/tools/replace.mk.
-	//  Most of them are simple, but the one for the grep commands uses a
-	//  .for loop over a constant list of 3 items. As of April 2019, pkglint
-	//  has never simulated this iteration over .for loops.
 	local1 := NewTools()
 	local1.def("sed", "SED", false, Nowhere, nil)
 	local1.Fallback(gnu)
@@ -507,7 +518,7 @@ func (s *Suite) Test_Tools__aliases(c *check.C) {
 
 	infraTools := NewTools()
 	mklines.ForEach(func(mkline MkLine) {
-		infraTools.ParseToolLine(mkline, false, false)
+		infraTools.ParseToolLine(mklines, mkline, false, false)
 	})
 
 	c.Check(infraTools.ByName("sed").String(), equals, "sed:::AtRunTime")
@@ -520,7 +531,7 @@ func (s *Suite) Test_Tools__aliases(c *check.C) {
 	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AtRunTime:sed")
 
 	mkline := t.NewMkLine("Makefile", 123, "USE_TOOLS+=\tgsed")
-	pkgTools.ParseToolLine(mkline, false, false)
+	pkgTools.ParseToolLine(mklines, mkline, false, false)
 
 	// Since sed is an alias of gsed, it gets the same validity.
 	c.Check(pkgTools.ByName("sed").String(), equals, "sed:::AfterPrefsMk")
@@ -535,17 +546,13 @@ func (s *Suite) Test_Tools__aliases_in_for_loop(c *check.C) {
 		"_TOOLS_GREP=\tgrep egrep fgrep",
 		"TOOLS_CREATE+=\tgrep egrep fgrep ggrep",
 		".for t in ${_TOOLS_GREP}",
-		"TOOLS_ALIASES.grep+=\t${t}",
+		"TOOLS_ALIASES.ggrep+=\t${t}",
 		".endfor")
 
-	infraTools := NewTools()
-	mklines.ForEach(func(mkline MkLine) {
-		infraTools.ParseToolLine(mkline, false, false)
-	})
+	mklines.collectDefinedVariables() // calls ParseToolLine internally
 
-	c.Check(infraTools.ByName("ggrep").Aliases,
-		// TODO: deepEquals, []string{"grep", "egrep", "fgrep"})
-		check.IsNil)
+	c.Check(mklines.Tools.ByName("ggrep").Aliases,
+		deepEquals, []string{"grep", "egrep", "fgrep"})
 }
 
 // The cmake tool is included conditionally. The condition is so simple that

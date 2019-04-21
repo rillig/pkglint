@@ -222,7 +222,7 @@ func (tr *Tools) Trace() {
 //
 // If addToUseTools is true, a USE_TOOLS line makes a tool immediately
 // usable. This should only be done if the current line is unconditional.
-func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseTools bool) {
+func (tr *Tools) ParseToolLine(mklines MkLines, mkline MkLine, fromInfrastructure bool, addToUseTools bool) {
 	switch {
 
 	case mkline.IsVarassign():
@@ -248,10 +248,23 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 			}
 
 		case "TOOLS_ALIASES.*":
+			tool := tr.def(varparam, "", false, Nowhere, nil)
+
 			for _, alias := range mkline.ValueFields(value) {
 				if tr.IsValidToolName(alias) {
-					aliases := &tr.byName[varparam].Aliases
-					*aliases = append(*aliases, alias)
+					tr.addAlias(tool, alias)
+				} else {
+					// TODO: This pattern occurs so often that it warrants
+					//  a toVarUse() function.
+					p := NewMkParser(nil, alias, false)
+					varUse := p.VarUse()
+					if varUse != nil && p.EOF() {
+						for _, subAlias := range mklines.ExpandLoopVar(varUse.varname) {
+							if tr.IsValidToolName(subAlias) {
+								tr.addAlias(tool, subAlias)
+							}
+						}
+					}
 				}
 			}
 
@@ -272,6 +285,11 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 			tr.SeenPrefs = true
 		}
 	}
+}
+
+func (tr *Tools) addAlias(tool *Tool, alias string) {
+	tool.Aliases = append(tool.Aliases, alias)
+	tr.AliasOf[alias] = tool.Name
 }
 
 // parseUseTools interprets a "USE_TOOLS+=" line from a Makefile fragment.
