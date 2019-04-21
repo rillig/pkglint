@@ -1367,29 +1367,34 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mkline := t.NewMkLine("module.mk", 123, ".if ${PKGPATH} == \"category/package\"")
-	ck := MkLineChecker{nil, mkline}
 
-	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpattern"))
+	test := func(varUseText string, diagnostics ...string) {
+		mkline := t.NewMkLine("module.mk", 123, ".if "+varUseText)
+		ck := MkLineChecker{nil, mkline}
+		ck.checkDirectiveCondEmpty(mkline.Cond().Var)
+		t.CheckOutput(diagnostics)
+	}
+
+	test("${PKGPATH:Mpattern}",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".")
 
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
-	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpa*n"))
+	test("${PKGPATH:Mpa*n}",
+		nil...)
 
-	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "tl", "Mpattern"))
+	test("${PKGPATH:tl:Mpattern}",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".")
 
-	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Ncategory/package"))
+	test("${PKGPATH:Ncategory/package}",
+		"NOTE: module.mk:123: PKGPATH should be compared using != instead of matching against \":Ncategory/package\".")
 
 	// ${PKGPATH:None:Ntwo} is a short variant of ${PKGPATH} != "one" && ${PKGPATH} != "two",
 	// therefore no note is logged in this case.
-	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "None", "Ntwo"))
+	test("${PKGPATH:None:Ntwo}",
+		nil...)
 
 	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
-	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mone", "Mtwo"))
-
-	t.CheckOutputLines(
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
-		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
-		"NOTE: module.mk:123: PKGPATH should be compared using != instead of matching against \":Ncategory/package\".",
+	test("${PKGPATH:Mone:Mtwo}",
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mone\".",
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mtwo\".")
 }
