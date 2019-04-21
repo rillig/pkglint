@@ -113,6 +113,11 @@ type Tools struct {
 	// Adding a tool to USE_TOOLS _after_ bsd.prefs.mk has been included, on the other
 	// hand, only makes the tool available at run time.
 	SeenPrefs bool
+
+	// For example, "sed" is an alias of "gsed".
+	//
+	// This means when gsed is added to USE_TOOLS, sed is implicitly added as well.
+	AliasOf map[string]string
 }
 
 func NewTools() *Tools {
@@ -120,7 +125,8 @@ func NewTools() *Tools {
 		make(map[string]*Tool),
 		make(map[string]*Tool),
 		nil,
-		false}
+		false,
+		make(map[string]string)}
 }
 
 // Define registers the tool by its name and the corresponding
@@ -163,6 +169,10 @@ func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validit
 		if existing := tr.byVarname[varname]; existing == nil || len(existing.Name) > len(name) {
 			tr.byVarname[varname] = tool
 		}
+	}
+
+	for _, alias := range aliases {
+		tr.AliasOf[alias] = name
 	}
 
 	return tool
@@ -311,9 +321,10 @@ func (tr *Tools) ByName(name string) *Tool {
 	if tool == nil && tr.fallback != nil {
 		fallback := tr.fallback.ByName(name)
 		if fallback != nil {
-			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity, fallback.Aliases)
+			tool = tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity, fallback.Aliases)
 		}
 	}
+	tr.adjustValidity(tool)
 	return tool
 }
 
@@ -322,9 +333,10 @@ func (tr *Tools) ByVarname(varname string) *Tool {
 	if tool == nil && tr.fallback != nil {
 		fallback := tr.fallback.ByVarname(varname)
 		if fallback != nil {
-			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity, fallback.Aliases)
+			tool = tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity, fallback.Aliases)
 		}
 	}
+	tr.adjustValidity(tool)
 	return tool
 }
 
@@ -345,6 +357,22 @@ func (tr *Tools) Fallback(other *Tools) {
 
 func (tr *Tools) IsValidToolName(name string) bool {
 	return name == "[" || name == "echo -n" || matches(name, `^[-0-9a-z.]+$`)
+}
+
+func (tr *Tools) adjustValidity(tool *Tool) {
+	if tool == nil {
+		return
+	}
+
+	aliasName := tr.AliasOf[tool.Name]
+	if aliasName == "" {
+		return
+	}
+
+	alias := tr.ByName(tr.AliasOf[tool.Name])
+	if alias.Validity > tool.Validity {
+		tool.Validity = alias.Validity
+	}
 }
 
 type Validity uint8

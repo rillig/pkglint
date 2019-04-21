@@ -488,12 +488,11 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	local2.def("gsed", "SED", false, AfterPrefsMk, []string{"sed"})
 	local2.Fallback(nonGnu)
 
-	c.Check(local2.ByName("sed").Validity, equals, Nowhere)
+	c.Check(local2.ByName("sed").Validity, equals, AfterPrefsMk)
 	c.Check(local2.ByName("gsed").Validity, equals, AfterPrefsMk)
 
-	// FIXME: Must both be gsed:SED::AfterPrefsMk
-	c.Check(local1.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
-	c.Check(local2.ByVarname("SED").String(), equals, "sed:SED::Nowhere")
+	c.Check(local1.ByVarname("SED").String(), equals, "sed:SED::AfterPrefsMk")
+	c.Check(local2.ByVarname("SED").String(), equals, "sed:SED::AfterPrefsMk")
 }
 
 func (s *Suite) Test_Tools__aliases(c *check.C) {
@@ -525,8 +524,8 @@ func (s *Suite) Test_Tools__aliases(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 123, "USE_TOOLS+=\tgsed")
 	pkgTools.ParseToolLine(mkline, false, false)
 
-	// FIXME: Should be AfterPrefsMk since sed is an alias of gsed.
-	c.Check(pkgTools.ByName("sed").String(), equals, "sed:::AtRunTime")
+	// Since sed is an alias of gsed, it gets the same validity.
+	c.Check(pkgTools.ByName("sed").String(), equals, "sed:::AfterPrefsMk")
 	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AfterPrefsMk:sed")
 }
 
