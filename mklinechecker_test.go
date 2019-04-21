@@ -208,11 +208,28 @@ func (s *Suite) Test_MkLineChecker_checkInclude__hacks(c *check.C) {
 
 	G.checkdirPackage(t.File("category/package"))
 
-	// The purpose of this nonexistent diagnostic is only to show that
+	// The purpose of this "nonexistent" diagnostic is only to show that
 	// hacks.mk is indeed parsed and checked.
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/hacks.mk:2: " +
 			"Relative path \"../../category/package/nonexistent.mk\" does not exist.")
+}
+
+func (s *Suite) Test_MkLineChecker__permissions_in_hacks_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("hacks.mk",
+		MkRcsID,
+		"OPSYS=\t${PKGREVISION}")
+
+	mklines.Check()
+
+	// No matter how strange the definition or use of a variable sounds,
+	// in hacks.mk it is allowed. Special problems sometimes need solutions
+	// that violate all standards.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
@@ -1887,8 +1904,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__LOCALBASE_in_infrastructure(c *c
 	// There is no warning about DEFAULT_PREFIX being "defined but not used"
 	// since Pkgsrc.loadUntypedVars calls Pkgsrc.vartypes.DefineType, which
 	// registers that variable globally.
-	t.CheckOutputLines(
-		"WARN: ~/mk/infra.mk:2: PREFIX should not be used indirectly at load time (via LOCALBASE).")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_CheckVaruse__user_defined_variable_and_BUILD_DEFS(c *check.C) {

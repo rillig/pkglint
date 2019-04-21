@@ -291,7 +291,13 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 //
 // See checkVarusePermissions.
 func (ck MkLineChecker) checkVarassignLeftPermissions() {
-	if !G.Opts.WarnPerm || G.Infrastructure {
+	if !G.Opts.WarnPerm {
+		return
+	}
+	if G.Infrastructure {
+		// As long as vardefs.go doesn't explicitly define permissions for
+		// infrastructure files, skip the check completely. This avoids
+		// many wrong warnings.
 		return
 	}
 	if trace.Tracing {
@@ -299,6 +305,10 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 	}
 
 	mkline := ck.MkLine
+	if ck.MkLine.Basename == "hacks.mk" {
+		return
+	}
+
 	varname := mkline.Varname()
 	op := mkline.Op()
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
@@ -541,6 +551,12 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	if !G.Opts.WarnPerm {
 		return
 	}
+	if G.Infrastructure {
+		// As long as vardefs.go doesn't explicitly define permissions for
+		// infrastructure files, skip the check completely. This avoids
+		// many wrong warnings.
+		return
+	}
 	if trace.Tracing {
 		defer trace.Call(varname, vuc)()
 	}
@@ -557,6 +573,10 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	mkline := ck.MkLine
+	if mkline.Basename == "hacks.mk" {
+		return
+	}
+
 	effPerms := vartype.EffectivePermissions(mkline.Basename)
 	if effPerms.Contains(aclpUseLoadtime) {
 		// Skip any checks, assuming that if a variable may be used at
