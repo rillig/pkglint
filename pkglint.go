@@ -512,6 +512,15 @@ func CheckLinesMessage(lines Lines) {
 		defer trace.Call1(lines.FileName)()
 	}
 
+	// For now, skip all checks when the MESSAGE may be built from multiple
+	// files.
+	//
+	// If the need arises, some of the checks may be activated again, but
+	// that requires more sophisticated code.
+	if G.Pkg != nil && G.Pkg.vars.Defined("MESSAGE_SRC") {
+		return
+	}
+
 	explanation := func() []string {
 		return []string{
 			"A MESSAGE file should consist of a header line, having 75 \"=\"",

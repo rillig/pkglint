@@ -575,14 +575,7 @@ func (s *Suite) Test_CheckLinesMessage__common(c *check.C) {
 	t.Main("category/package")
 
 	t.CheckOutputLines(
-		// FIXME: It's not too short since MESSAGE.common is also part.
-		"WARN: ~/category/package/MESSAGE:1: File too short.",
-		// FIXME: Wrong since the trailing hline is in MESSAGE.
-		"WARN: ~/category/package/MESSAGE.common:3: Expected a line of exactly 75 \"=\" characters.",
-		"0 errors and 2 warnings found.",
-		"(Run \"pkglint -e\" to show explanations.)",
-		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
-		"(Run \"pkglint -F\" to automatically fix some issues.)")
+		"Looks fine.")
 }
 
 // Demonstrates that an ALTERNATIVES file can be tested individually,
