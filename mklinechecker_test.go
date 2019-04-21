@@ -194,6 +194,27 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile_exists(c *check.C) {
 		"ERROR: ~/category/package/Makefile:20: Cannot read \"../../other/existing/Makefile\".")
 }
 
+func (s *Suite) Test_MkLineChecker_checkInclude__hacks(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/hacks.mk",
+		MkRcsID,
+		".include \"../../category/package/nonexistent.mk\"",
+		".include \"../../category/package/builtin.mk\"")
+	t.CreateFileLines("category/package/builtin.mk",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.checkdirPackage(t.File("category/package"))
+
+	// The purpose of this nonexistent diagnostic is only to show that
+	// hacks.mk is indeed parsed and checked.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/hacks.mk:2: " +
+			"Relative path \"../../category/package/nonexistent.mk\" does not exist.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 	t := s.Init(c)
 

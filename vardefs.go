@@ -923,7 +923,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile: set")
 	acl("CHECK_BUILTIN.*", BtYesNo,
 		PackageSettable,
-		"Makefile, options.mk, buildlink3.mk: set",
+		"Makefile, options.mk, buildlink3.mk, hacks.mk: set",
 		"builtin.mk: default, use-loadtime",
 		"*: use-loadtime")
 	pkglist("CHECK_FILES_SKIP", BtBasicRegularExpression)
