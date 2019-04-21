@@ -1443,6 +1443,12 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		".if ${PKGPATH:Mpattern}")
 	// TODO: ".if ${PKGPATH} == pattern")
 
+	autofix(
+		".if !${PKGPATH:Mpattern}",
+		"NOTE: ~/module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		".if !${PKGPATH:Mpattern}")
+	// TODO: ".if ${PKGPATH} != pattern")
+
 	// This pattern with spaces doesn't make sense at all in the :M
 	// modifier since it can never match.
 	autofix(

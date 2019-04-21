@@ -1326,7 +1326,8 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		VarUse:        checkVarUse})
 }
 
-// checkDirectiveCondEmpty checks a condition of the form empty(...) in an .if directive.
+// checkDirectiveCondEmpty checks a condition of the form empty(VAR),
+// empty(VAR:Mpattern) or ${pattern} in an .if directive.
 func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
 	varname := varuse.varname
 	if matches(varname, `^\$.*:[MN]`) {
