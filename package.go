@@ -362,15 +362,6 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 			return unknown
 		}
 
-		if matches(includedFile, `^\.\./[^./][^/]*/[^/]+`) {
-			if G.Wip && contains(includedFile, "/mk/") {
-				mkline.Warnf("References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", not \"../mk\".")
-			} else {
-				mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
-			}
-			mkline.ExplainRelativeDirs()
-		}
-
 		pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
 
 		if trace.Tracing {

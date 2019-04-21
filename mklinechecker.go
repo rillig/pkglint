@@ -1470,15 +1470,23 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 	switch {
 	case !hasPrefix(relativePath, "../"):
 		break
+
 	case hasPrefix(relativePath, "../../mk/"):
 		// From a package to the infrastructure.
-	case matches(relativePath, `^\.\./\.\./[^/]+/[^/]`):
+
+	case matches(relativePath, `^\.\./\.\./[^./][^/]*/[^/]`):
 		// From a package to another package.
+
 	case hasPrefix(relativePath, "../mk/") && relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(".")) == "..":
 		// For category Makefiles.
 		// TODO: Or from a pkgsrc wip package to wip/mk.
-	default:
-		mkline.Warnf("Invalid relative path %q.", relativePath)
-		// TODO: Explain this warning.
+
+	case matches(relativePath, `^\.\./[^./][^/]*/[^/]`):
+		if G.Wip && contains(relativePath, "/mk/") {
+			mkline.Warnf("References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", not \"../mk\".")
+		} else {
+			mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
+		}
+		mkline.ExplainRelativeDirs()
 	}
 }

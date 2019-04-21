@@ -1982,8 +1982,8 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
-		// TODO: This warning is unspecific, there is also a pkglint warning "should be ../../category/package".
-		"WARN: ~/category/package/module.mk:11: Invalid relative path \"../package/module.mk\".")
+		"WARN: ~/category/package/module.mk:11: References to other packages should "+
+			"look like \"../../category/package\", not \"../package\".")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) {
@@ -2032,8 +2032,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
 	G.Check(t.File("wip/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/wip/package/Makefile:20: "+
-			"References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", "+
-			"not \"../mk\".",
-		"WARN: ~/wip/package/Makefile:20: Invalid relative path \"../mk/git-package.mk\".")
+		"WARN: ~/wip/package/Makefile:20: " +
+			"References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", " +
+			"not \"../mk\".")
 }
