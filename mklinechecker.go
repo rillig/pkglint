@@ -1325,26 +1325,26 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	checkNotEmpty := func(not MkCond) {
 		empty := not.Empty
 		if empty != nil {
-			ck.checkDirectiveCondEmpty(empty, true, not == cond.Not)
+			ck.checkDirectiveCondEmpty(empty, true, true, not == cond.Not)
 			done[empty] = true
 		}
 
 		varUse := not.Var
 		if varUse != nil {
-			ck.checkDirectiveCondEmpty(varUse, false, not == cond.Not)
+			ck.checkDirectiveCondEmpty(varUse, false, false, not == cond.Not)
 			done[varUse] = true
 		}
 	}
 
 	checkEmpty := func(empty *MkVarUse) {
 		if !done[empty] {
-			ck.checkDirectiveCondEmpty(empty, false, empty == cond.Empty)
+			ck.checkDirectiveCondEmpty(empty, true, false, empty == cond.Empty)
 		}
 	}
 
 	checkVar := func(varUse *MkVarUse) {
 		if !done[varUse] {
-			ck.checkDirectiveCondEmpty(varUse, true, varUse == cond.Var)
+			ck.checkDirectiveCondEmpty(varUse, false, true, varUse == cond.Var)
 		}
 	}
 
@@ -1358,7 +1358,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 // checkDirectiveCondEmpty checks a condition of the form empty(VAR),
 // empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
-func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, notEmpty bool, toplevel bool) {
+func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool, notEmpty bool, toplevel bool) {
 	varname := varuse.varname
 	if matches(varname, `^\$.*:[MN]`) {
 		ck.MkLine.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
@@ -1374,7 +1374,7 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, notEmpty bool,
 			"\t${VARNAME:Mpattern}")
 	}
 
-	ck.simplifyCondition(varuse, true, notEmpty, toplevel)
+	ck.simplifyCondition(varuse, fromEmpty, notEmpty, toplevel)
 }
 
 // simplifyCondition replaces an unnecessarily complex condition with
@@ -1397,7 +1397,13 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 	replace := func(varname string, m bool, pattern string) (string, string) {
 		op := ifelseStr(notEmpty == m, "==", "!=")
 
-		from := ifelseStr(notEmpty, "", "!") + "${" + varname + ifelseStr(m, ":M", ":N") + pattern + "}"
+		from := "" +
+			ifelseStr(notEmpty != fromEmpty, "", "!") +
+			ifelseStr(fromEmpty, "empty(", "${") +
+			varname +
+			ifelseStr(m, ":M", ":N") +
+			pattern +
+			ifelseStr(fromEmpty, ")", "}")
 
 		to := "${" + varname + "} " + op + " " + pattern
 

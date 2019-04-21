@@ -1435,27 +1435,26 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mtwo\".",
 		".if ${PKGPATH:Mone:Mtwo}")
 
-	// TODO: This can and should be autofixed.
 	test(".if !empty(PKGPATH:Mpattern)",
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
-		".if !empty(PKGPATH:Mpattern)")
+		"AUTOFIX: module.mk:2: Replacing \"!empty(PKGPATH:Mpattern)\" with \"${PKGPATH} == pattern\".",
+		".if ${PKGPATH} == pattern")
 
-	// FIXME: Since this is actually a test for emptiness, the
-	//  diagnostics must be different from the !empty case.
-	// TODO: This can and should be autofixed.
 	test(".if empty(PKGPATH:Mpattern)",
+		// FIXME: Since this is actually a test for emptiness, the
+		//  diagnostics must be different from the !empty case.
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
-		".if empty(PKGPATH:Mpattern)")
+		"AUTOFIX: module.mk:2: Replacing \"empty(PKGPATH:Mpattern)\" with \"${PKGPATH} != pattern\".",
+		".if ${PKGPATH} != pattern")
 
-	// FIXME: Since this is actually a test for emptiness, the
-	//  diagnostics must be different from the !empty case.
 	test(".if !!empty(PKGPATH:Mpattern)",
+		// FIXME: Since this is actually a test for emptiness, the
+		//  diagnostics must be different from the !empty case.
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
-		// TODO: This can and should be autofixed.
-		//  The resulting condition needs parentheses though: !(...).
-		//  It could be simplified even more.
+		"AUTOFIX: module.mk:2: Replacing \"!empty(PKGPATH:Mpattern)\" with \"(${PKGPATH} == pattern)\".",
+		// TODO: This condition could be simplified even more.
 		//  Luckily the !! pattern doesn't occur in practice.
-		".if !!empty(PKGPATH:Mpattern)")
+		".if !(${PKGPATH} == pattern)")
 
 	// No note in this case since there is no implicit !empty around the varUse.
 	test(".if ${PKGPATH:Mpattern} != ${OTHER}",
