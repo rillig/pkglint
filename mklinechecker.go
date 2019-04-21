@@ -1313,38 +1313,6 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		return
 	}
 
-	checkCompareVarStr := func(varuse *MkVarUse, op string, str string) {
-		varname := varuse.varname
-		varmods := varuse.modifiers
-		switch len(varmods) {
-		case 0:
-			ck.checkCompareVarStr(varname, op, str)
-
-		case 1:
-			if m, _, pattern := varmods[0].MatchMatch(); m {
-				ck.checkVartype(varname, opUseMatch, pattern, "")
-
-				// After applying the :M or :N modifier, every expression may end up empty,
-				// regardless of its data type. Therefore there's no point in type-checking that case.
-				if str != "" {
-					ck.checkVartype(varname, opUseCompare, str, "")
-				}
-			}
-
-		default:
-			// This case covers ${VAR:Mfilter:O:u} or similar uses in conditions.
-			// To check these properly, pkglint first needs to know the most common
-			// modifiers and how they interact.
-			// As of March 2019, the modifiers are not modeled.
-			// The following tracing statement makes it easy to discover these cases,
-			// in order to decide whether checking them is worthwhile.
-			if trace.Tracing {
-				trace.Stepf("checkCompareVarStr ${%s%s} %s %s",
-					varuse.varname, varuse.Mod(), op, str)
-			}
-		}
-	}
-
 	checkVarUse := func(varuse *MkVarUse) {
 		var vartype *Vartype // TODO: Insert a better type guess here.
 		vuc := VarUseContext{vartype, vucTimeParse, VucQuotPlain, false}
@@ -1354,7 +1322,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	cond.Walk(&MkCondCallback{
 		Empty:         ck.checkDirectiveCondEmpty,
 		Var:           ck.checkDirectiveCondEmpty,
-		CompareVarStr: checkCompareVarStr,
+		CompareVarStr: ck.checkDirectiveCondCompareVarStr,
 		VarUse:        checkVarUse})
 }
 
@@ -1409,6 +1377,38 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 		ck.MkLine.Explain(
 			"The PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache distcc clang\".",
 			"Therefore, comparing it using == or != leads to wrong results in these cases.")
+	}
+}
+
+func (ck MkLineChecker) checkDirectiveCondCompareVarStr(varuse *MkVarUse, op string, str string) {
+	varname := varuse.varname
+	varmods := varuse.modifiers
+	switch len(varmods) {
+	case 0:
+		ck.checkCompareVarStr(varname, op, str)
+
+	case 1:
+		if m, _, pattern := varmods[0].MatchMatch(); m {
+			ck.checkVartype(varname, opUseMatch, pattern, "")
+
+			// After applying the :M or :N modifier, every expression may end up empty,
+			// regardless of its data type. Therefore there's no point in type-checking that case.
+			if str != "" {
+				ck.checkVartype(varname, opUseCompare, str, "")
+			}
+		}
+
+	default:
+		// This case covers ${VAR:Mfilter:O:u} or similar uses in conditions.
+		// To check these properly, pkglint first needs to know the most common
+		// modifiers and how they interact.
+		// As of March 2019, the modifiers are not modeled.
+		// The following tracing statement makes it easy to discover these cases,
+		// in order to decide whether checking them is worthwhile.
+		if trace.Tracing {
+			trace.Stepf("checkCompareVarStr ${%s%s} %s %s",
+				varuse.varname, varuse.Mod(), op, str)
+		}
 	}
 }
 

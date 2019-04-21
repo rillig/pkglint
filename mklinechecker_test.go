@@ -1441,7 +1441,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		".if ${PKGPATH:Mpattern}",
 		"NOTE: ~/module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
 		".if ${PKGPATH:Mpattern}")
-	// TODO: ".if ${PKGPATH} != pattern")
+	// TODO: ".if ${PKGPATH} == pattern")
 
 	// This pattern with spaces doesn't make sense at all in the :M
 	// modifier since it can never match.
@@ -1449,19 +1449,19 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		".if ${PKGPATH:Mpattern with spaces}",
 		"",
 		".if ${PKGPATH:Mpattern with spaces}")
-	// TODO: ".if ${PKGPATH} != \"pattern with spaces\"")
+	// TODO: ".if ${PKGPATH} == \"pattern with spaces\"")
 
 	autofix(
 		".if ${PKGPATH:M'pattern with spaces'}",
 		"",
 		".if ${PKGPATH:M'pattern with spaces'}")
-	// TODO: ".if ${PKGPATH} != 'pattern with spaces'")
+	// TODO: ".if ${PKGPATH} == 'pattern with spaces'")
 
 	autofix(
 		".if ${PKGPATH:M&&}",
 		"",
 		".if ${PKGPATH:M&&}")
-	// TODO: ".if ${PKGPATH} != '&&'")
+	// TODO: ".if ${PKGPATH} == '&&'")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
