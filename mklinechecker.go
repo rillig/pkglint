@@ -1319,16 +1319,46 @@ func (ck MkLineChecker) checkDirectiveCond() {
 		ck.CheckVaruse(varuse, &vuc)
 	}
 
+	// Skip subconditions that have already been handled as part of the !(...).
+	done := make(map[interface{}]bool)
+
+	checkNotEmpty := func(not MkCond) {
+		empty := not.Empty
+		if empty != nil {
+			ck.checkDirectiveCondEmpty(empty, true, not == cond.Not)
+			done[empty] = true
+		}
+
+		varUse := not.Var
+		if varUse != nil {
+			ck.checkDirectiveCondEmpty(varUse, false, not == cond.Not)
+			done[varUse] = true
+		}
+	}
+
+	checkEmpty := func(empty *MkVarUse) {
+		if !done[empty] {
+			ck.checkDirectiveCondEmpty(empty, false, empty == cond.Empty)
+		}
+	}
+
+	checkVar := func(varUse *MkVarUse) {
+		if !done[varUse] {
+			ck.checkDirectiveCondEmpty(varUse, true, varUse == cond.Var)
+		}
+	}
+
 	cond.Walk(&MkCondCallback{
-		Empty:         ck.checkDirectiveCondEmpty,
-		Var:           ck.checkDirectiveCondEmpty,
+		Not:           checkNotEmpty,
+		Empty:         checkEmpty,
+		Var:           checkVar,
 		CompareVarStr: ck.checkDirectiveCondCompareVarStr,
 		VarUse:        checkVarUse})
 }
 
 // checkDirectiveCondEmpty checks a condition of the form empty(VAR),
-// empty(VAR:Mpattern) or ${pattern} in an .if directive.
-func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
+// empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
+func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, notEmpty bool, toplevel bool) {
 	varname := varuse.varname
 	if matches(varname, `^\$.*:[MN]`) {
 		ck.MkLine.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
@@ -1344,13 +1374,53 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
 			"\t${VARNAME:Mpattern}")
 	}
 
+	ck.simplifyCondition(varuse, true, notEmpty, toplevel)
+}
+
+// simplifyCondition replaces an unnecessarily complex condition with
+// a simpler condition that's still equivalent.
+//
+// * fromEmpty is true for the form empty(VAR...), and false for ${VAR...}.
+//
+// * notEmpty is true for the form !empty(VAR...), and false for empty(VAR...).
+// It also applies to the ${VAR} form.
+//
+// * toplevel is true for ${VAR...} and false for ${VAR...} && ${VAR2...}.
+func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notEmpty bool, toplevel bool) {
+
+	// replace constructs the state before and after the autofix.
+	// The before state is constructed to ensure that only very simple
+	// patterns get replaced automatically.
+	//
+	// Before putting any cases involving special characters into
+	// production, there need to be more tests for the edge cases.
+	replace := func(varname string, m bool, pattern string) (string, string) {
+		op := ifelseStr(notEmpty == m, "==", "!=")
+
+		from := ifelseStr(notEmpty, "", "!") + "${" + varname + ifelseStr(m, ":M", ":N") + pattern + "}"
+
+		to := "${" + varname + "} " + op + " " + pattern
+
+		// TODO: Check in more cases whether the parentheses are really necessary.
+		//  In a !!${VAR} expression, parentheses are necessary.
+		needParen := !toplevel
+		if needParen {
+			to = "(" + to + ")"
+		}
+
+		return from, to
+	}
+
+	varname := varuse.varname
 	modifiers := varuse.modifiers
+
 	for _, modifier := range modifiers {
 		if m, positive, pattern := modifier.MatchMatch(); m && (positive || len(modifiers) == 1) {
 			ck.checkVartype(varname, opUseMatch, pattern, "")
 
 			vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 			if matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.List() {
+
 				fix := ck.MkLine.Autofix()
 				fix.Notef("%s should be compared using %s instead of matching against %q.",
 					varname, ifelseStr(positive, "==", "!="), ":"+modifier.Text)
@@ -1361,13 +1431,12 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse) {
 					"",
 					"An entirely different case is when the pattern contains wildcards like ^, *, $.",
 					"In such a case, using the :M or :N modifiers is useful and preferred.")
-				// TODO: Replace if possible
+				fix.Replace(replace(varname, positive, pattern))
 				fix.Anyway()
 				fix.Apply()
 			}
 		}
 	}
-
 }
 
 func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {

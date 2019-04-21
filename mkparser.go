@@ -801,6 +801,7 @@ type MkCondCall struct {
 }
 
 type MkCondCallback struct {
+	Not           func(cond MkCond)
 	Defined       func(varname string)
 	Empty         func(empty *MkVarUse)
 	CompareVarNum func(varuse *MkVarUse, op string, num string)
@@ -830,6 +831,9 @@ func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
 		}
 
 	case cond.Not != nil:
+		if callback.Not != nil {
+			callback.Not(cond.Not)
+		}
 		w.Walk(cond.Not, callback)
 
 	case cond.Defined != "":
