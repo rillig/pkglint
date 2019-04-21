@@ -1371,8 +1371,30 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test := func(varUseText string, diagnostics ...string) {
 		mkline := t.NewMkLine("module.mk", 123, ".if "+varUseText)
 		ck := MkLineChecker{nil, mkline}
-		ck.checkDirectiveCondEmpty(mkline.Cond().Var)
+		ck.checkDirectiveCond()
 		t.CheckOutput(diagnostics)
+	}
+
+	autofix := func(before, diagnostic, after string) {
+		mklines := t.SetUpFileMkLines("module.mk",
+			MkRcsID,
+			before,
+			".endif")
+		mkline := mklines.mklines[1]
+		ck := MkLineChecker{nil, mkline}
+
+		ck.checkDirectiveCond()
+
+		mklines.SaveAutofixChanges()
+		afterMklines := t.LoadMkInclude("module.mk")
+
+		if diagnostic != "" {
+			t.CheckOutputLines(diagnostic)
+		} else {
+			t.CheckOutputEmpty()
+		}
+
+		t.Check(afterMklines.mklines[1].Text, equals, after)
 	}
 
 	test("${PKGPATH:Mpattern}",
@@ -1397,6 +1419,49 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test("${PKGPATH:Mone:Mtwo}",
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mone\".",
 		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mtwo\".")
+
+	test("!empty(PKGPATH:Mpattern)",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".")
+
+	// FIXME: Since this is actually a test for emptiness, the
+	//  diagnostics must be different from the !empty case.
+	test("empty(PKGPATH:Mpattern)",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".")
+
+	// FIXME: Since this is actually a test for emptiness, the
+	//  diagnostics must be different from the !empty case.
+	test("!!empty(PKGPATH:Mpattern)",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".")
+
+	// No note in this case since there is no implicit !empty around the varUse.
+	test("${PKGPATH:Mpattern} != ${OTHER}",
+		nil...)
+
+	autofix(
+		".if ${PKGPATH:Mpattern}",
+		"NOTE: ~/module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		".if ${PKGPATH:Mpattern}")
+	// TODO: ".if ${PKGPATH} != pattern")
+
+	// This pattern with spaces doesn't make sense at all in the :M
+	// modifier since it can never match.
+	autofix(
+		".if ${PKGPATH:Mpattern with spaces}",
+		"",
+		".if ${PKGPATH:Mpattern with spaces}")
+	// TODO: ".if ${PKGPATH} != \"pattern with spaces\"")
+
+	autofix(
+		".if ${PKGPATH:M'pattern with spaces'}",
+		"",
+		".if ${PKGPATH:M'pattern with spaces'}")
+	// TODO: ".if ${PKGPATH} != 'pattern with spaces'")
+
+	autofix(
+		".if ${PKGPATH:M&&}",
+		"",
+		".if ${PKGPATH:M&&}")
+	// TODO: ".if ${PKGPATH} != '&&'")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
