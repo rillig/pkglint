@@ -527,6 +527,27 @@ func (s *Suite) Test_Tools__aliases(c *check.C) {
 	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AfterPrefsMk:sed")
 }
 
+func (s *Suite) Test_Tools__aliases_in_for_loop(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("mk/tools/replace.mk",
+		MkRcsID,
+		"_TOOLS_GREP=\tgrep egrep fgrep",
+		"TOOLS_CREATE+=\tgrep egrep fgrep ggrep",
+		".for t in ${_TOOLS_GREP}",
+		"TOOLS_ALIASES.grep+=\t${t}",
+		".endfor")
+
+	infraTools := NewTools()
+	mklines.ForEach(func(mkline MkLine) {
+		infraTools.ParseToolLine(mkline, false, false)
+	})
+
+	c.Check(infraTools.ByName("ggrep").Aliases,
+		// TODO: deepEquals, []string{"grep", "egrep", "fgrep"})
+		check.IsNil)
+}
+
 // The cmake tool is included conditionally. The condition is so simple that
 // pkglint could parse it but it depends on the particular package.
 // This is something that pkglint cannot do right now, since the global tools

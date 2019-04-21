@@ -231,8 +231,10 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 
 		switch mkline.Varcanon() {
 		case "TOOLS_CREATE":
-			if tr.IsValidToolName(value) {
-				tr.def(value, "", false, AtRunTime, nil)
+			for _, name := range mkline.ValueFields(value) {
+				if tr.IsValidToolName(name) {
+					tr.def(name, "", false, AtRunTime, nil)
+				}
 			}
 
 		case "_TOOLS_VARNAME.*":
@@ -247,8 +249,9 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 
 		case "TOOLS_ALIASES.*":
 			for _, alias := range mkline.ValueFields(value) {
-				if !containsVarRef(alias) {
-					tr.byName[varparam].Aliases = append(tr.byName[varparam].Aliases, alias)
+				if tr.IsValidToolName(alias) {
+					aliases := &tr.byName[varparam].Aliases
+					*aliases = append(*aliases, alias)
 				}
 			}
 
