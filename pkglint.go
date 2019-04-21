@@ -740,8 +740,7 @@ func CheckLinesTrailingEmptyLines(lines Lines) {
 // to USE_TOOLS in the current scope (file or package).
 func (pkglint *Pkglint) Tool(mklines MkLines, command string, time ToolTime) (tool *Tool, usable bool) {
 	varname := ""
-	p := NewMkParser(nil, command, false)
-	if varUse := p.VarUse(); varUse != nil && p.EOF() {
+	if varUse := ToVarUse(command); varUse != nil {
 		varname = varUse.varname
 	}
 

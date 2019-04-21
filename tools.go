@@ -254,11 +254,8 @@ func (tr *Tools) ParseToolLine(mklines MkLines, mkline MkLine, fromInfrastructur
 				if tr.IsValidToolName(alias) {
 					tr.addAlias(tool, alias)
 				} else {
-					// TODO: This pattern occurs so often that it warrants
-					//  a toVarUse() function.
-					p := NewMkParser(nil, alias, false)
-					varUse := p.VarUse()
-					if varUse != nil && p.EOF() {
+					varUse := ToVarUse(alias)
+					if varUse != nil {
 						for _, subAlias := range mklines.ExpandLoopVar(varUse.varname) {
 							if tr.IsValidToolName(subAlias) {
 								tr.addAlias(tool, subAlias)
