@@ -966,7 +966,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
-		"WARN: distinfo: File not found. Please run \""+confMake+" makesum\" or define NO_CHECKSUM=yes in the package Makefile.",
+		"WARN: distinfo: A package that downloads files should have a distinfo file.",
 		"ERROR: Makefile: Each package must define its LICENSE.",
 		"WARN: Makefile: Each package should define a COMMENT.")
 }
@@ -1017,13 +1017,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C)
 
 	G.Check(pkg)
 
-	// FIXME: One of the below warnings is redundant.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/distinfo: File not found. "+
-			"Please run \""+confMake+" makesum\" "+
-			"or define NO_CHECKSUM=yes in the package Makefile.",
-		"WARN: ~/category/package/distinfo: File not found. "+
-			"Please run \""+confMake+" makepatchsum\".")
+		"WARN: ~/category/package/distinfo: A package that downloads files should have a distinfo file.",
+		"WARN: ~/category/package/distinfo: A package with patches should have a distinfo file.")
 }
 
 func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
@@ -1097,9 +1093,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(c *check
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/nonexistent: File not found. "+
-			"Please run \""+bmake("makesum")+"\" "+
-			"or define NO_CHECKSUM=yes in the package Makefile.",
+		"WARN: ~/category/package/nonexistent: A package that downloads files should have a distinfo file.",
 		"ERROR: ~/category/package/Makefile:20: Relative path \"nonexistent\" does not exist.")
 }
 

@@ -258,8 +258,11 @@ func (pkg *Package) check(files []string, mklines, allLines MkLines) {
 
 	if pkg.Pkgdir == "." {
 		if havePatches && !haveDistinfo {
-			// TODO: Add Line.RefTo to make the context clear.
-			NewLineWhole(pkg.File(pkg.DistinfoFile)).Warnf("File not found. Please run %q.", bmake("makepatchsum"))
+			line := NewLineWhole(pkg.File(pkg.DistinfoFile))
+			line.Warnf("A package with patches should have a distinfo file.")
+			line.Explain(
+				"To generate a distinfo file for the existing patches, run",
+				sprintf("%q.", bmake("makepatchsum")))
 		}
 	}
 }
@@ -542,13 +545,20 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 	if (vars.Defined("NO_CHECKSUM") ||
 		vars.Defined("META_PACKAGE")) && isEmptyDir(pkg.File(pkg.Patchdir)) {
 
-		if distinfoFile := pkg.File(pkg.DistinfoFile); fileExists(distinfoFile) {
+		distinfoFile := pkg.File(pkg.DistinfoFile)
+		if fileExists(distinfoFile) {
 			NewLineWhole(distinfoFile).Warnf("This file should not exist since NO_CHECKSUM or META_PACKAGE is set.")
 		}
 	} else {
-		if distinfoFile := pkg.File(pkg.DistinfoFile); !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
-			NewLineWhole(distinfoFile).Warnf(
-				"File not found. Please run %q or define NO_CHECKSUM=yes in the package Makefile.", bmake("makesum"))
+		distinfoFile := pkg.File(pkg.DistinfoFile)
+		if !containsVarRef(distinfoFile) && !fileExists(distinfoFile) {
+			line := NewLineWhole(distinfoFile)
+			line.Warnf("A package that downloads files should have a distinfo file.")
+			line.Explain(
+				sprintf("To generate the distinfo file, run %q.", bmake("makesum")),
+				"",
+				"To mark the package as not needing a distinfo file, set",
+				"NO_CHECKSUM=yes in the package Makefile.")
 		}
 	}
 
