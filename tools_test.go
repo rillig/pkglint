@@ -419,20 +419,20 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 // See also Pkglint.Tool.
 func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realistic(c *check.C) {
 	nonGnu := NewTools()
-	nonGnu.def("sed", "SED", false, AfterPrefsMk)
+	nonGnu.def("sed", "SED", false, AfterPrefsMk, nil)
 
 	gnu := NewTools()
-	gnu.def("gsed", "SED", false, Nowhere)
+	gnu.def("gsed", "SED", false, Nowhere, nil)
 
 	local1 := NewTools()
-	local1.def("sed", "SED", false, AfterPrefsMk)
+	local1.def("sed", "SED", false, AfterPrefsMk, nil)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, AfterPrefsMk)
 	c.Check(local1.ByName("gsed").Validity, equals, Nowhere)
 
 	local2 := NewTools()
-	local2.def("gsed", "SED", false, Nowhere)
+	local2.def("gsed", "SED", false, Nowhere, nil)
 	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, AfterPrefsMk)
@@ -457,11 +457,11 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	// This simulates a tool defined in the tools framework but not added
 	// to USE_TOOLS, neither by bsd.prefs.mk nor by bsd.pkg.mk.
 	nonGnu := NewTools()
-	nonGnu.def("sed", "SED", false, Nowhere)
+	nonGnu.def("sed", "SED", false, Nowhere, nil)
 
 	// This simulates a tool that is added to USE_TOOLS in bsd.prefs.mk.
 	gnu := NewTools()
-	gnu.def("gsed", "SED", false, AfterPrefsMk)
+	gnu.def("gsed", "SED", false, AfterPrefsMk, nil)
 	gnu.ByName("gsed").Aliases = []string{"sed"}
 
 	// This simulates a package that doesn't mention the sed tool at all.
@@ -478,14 +478,14 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	//  a constant list of 3 items. As of April 2019, pkglint has never
 	//  simulated this iteration over .for loops.
 	local1 := NewTools()
-	local1.def("sed", "SED", false, Nowhere)
+	local1.def("sed", "SED", false, Nowhere, nil)
 	local1.Fallback(gnu)
 
 	c.Check(local1.ByName("sed").Validity, equals, Nowhere)
 	c.Check(local1.ByName("gsed").Validity, equals, AfterPrefsMk)
 
 	local2 := NewTools()
-	local2.def("gsed", "SED", false, AfterPrefsMk)
+	local2.def("gsed", "SED", false, AfterPrefsMk, []string{"sed"})
 	local2.Fallback(nonGnu)
 
 	c.Check(local2.ByName("sed").Validity, equals, Nowhere)
@@ -520,16 +520,14 @@ func (s *Suite) Test_Tools__aliases(c *check.C) {
 	pkgTools.Fallback(infraTools)
 
 	c.Check(pkgTools.ByName("sed").String(), equals, "sed:::AtRunTime")
-	// FIXME: The alias "sed" is missing at the end.
-	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AtRunTime")
+	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AtRunTime:sed")
 
 	mkline := t.NewMkLine("Makefile", 123, "USE_TOOLS+=\tgsed")
 	pkgTools.ParseToolLine(mkline, false, false)
 
 	// FIXME: Should be AfterPrefsMk since sed is an alias of gsed.
 	c.Check(pkgTools.ByName("sed").String(), equals, "sed:::AtRunTime")
-	// FIXME: The alias "sed" is missing at the end.
-	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AfterPrefsMk")
+	c.Check(pkgTools.ByName("gsed").String(), equals, "gsed:::AfterPrefsMk:sed")
 }
 
 // The cmake tool is included conditionally. The condition is so simple that

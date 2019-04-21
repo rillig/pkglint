@@ -300,7 +300,7 @@ func (src *Pkgsrc) loadTools() {
 		{"true", "TRUE", AfterPrefsMk}}
 
 	for _, toolDef := range toolDefs {
-		tools.def(toolDef.Name, toolDef.Varname, true, toolDef.Validity)
+		tools.def(toolDef.Name, toolDef.Varname, true, toolDef.Validity, nil)
 	}
 
 	for _, basename := range toolFiles {

@@ -139,11 +139,11 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 	}
 
 	validity := tr.validity(mkline.Basename, false)
-	return tr.def(name, varname, false, validity)
+	return tr.def(name, varname, false, validity, nil)
 }
 
-func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validity) *Tool {
-	fresh := Tool{name, varname, mustUseVarForm, validity, nil}
+func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validity, aliases []string) *Tool {
+	fresh := Tool{name, varname, mustUseVarForm, validity, aliases}
 
 	tool := tr.byName[name]
 	if tool == nil {
@@ -222,7 +222,7 @@ func (tr *Tools) ParseToolLine(mkline MkLine, fromInfrastructure bool, addToUseT
 		switch mkline.Varcanon() {
 		case "TOOLS_CREATE":
 			if tr.IsValidToolName(value) {
-				tr.def(value, "", false, AtRunTime)
+				tr.def(value, "", false, AtRunTime, nil)
 			}
 
 		case "_TOOLS_VARNAME.*":
@@ -288,7 +288,7 @@ func (tr *Tools) parseUseTools(mkline MkLine, createIfAbsent bool, addToUseTools
 	for _, dep := range deps {
 		name := strings.Split(dep, ":")[0]
 		if createIfAbsent || tr.ByName(name) != nil {
-			tr.def(name, "", false, validity)
+			tr.def(name, "", false, validity, nil)
 		}
 	}
 }
@@ -311,7 +311,7 @@ func (tr *Tools) ByName(name string) *Tool {
 	if tool == nil && tr.fallback != nil {
 		fallback := tr.fallback.ByName(name)
 		if fallback != nil {
-			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
+			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity, fallback.Aliases)
 		}
 	}
 	return tool
@@ -322,7 +322,7 @@ func (tr *Tools) ByVarname(varname string) *Tool {
 	if tool == nil && tr.fallback != nil {
 		fallback := tr.fallback.ByVarname(varname)
 		if fallback != nil {
-			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity)
+			return tr.def(fallback.Name, fallback.Varname, fallback.MustUseVarForm, fallback.Validity, fallback.Aliases)
 		}
 	}
 	return tool

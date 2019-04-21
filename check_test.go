@@ -187,7 +187,7 @@ func (t *Tester) SetUpOption(name, description string) {
 }
 
 func (t *Tester) SetUpTool(name, varname string, validity Validity) *Tool {
-	return G.Pkgsrc.Tools.def(name, varname, false, validity)
+	return G.Pkgsrc.Tools.def(name, varname, false, validity, nil)
 }
 
 // SetUpFileLines creates a temporary file and writes the given lines to it.

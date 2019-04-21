@@ -293,8 +293,8 @@ func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
 
 	// See mk/tools/cmake.mk
 	if pkg.vars.Defined("USE_CMAKE") {
-		mainLines.Tools.def("cmake", "", false, AtRunTime)
-		mainLines.Tools.def("cpack", "", false, AtRunTime)
+		mainLines.Tools.def("cmake", "", false, AtRunTime, nil)
+		mainLines.Tools.def("cpack", "", false, AtRunTime, nil)
 	}
 
 	allLines.collectUsedVariables()
