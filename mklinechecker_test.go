@@ -1986,6 +1986,8 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
 		"WARN: ~/category/package/module.mk:11: References to other packages should "+
+			"look like \"../../category/package\", not \"../package\".",
+		"WARN: ~/category/package/module.mk:12: References to other packages should "+
 			"look like \"../../category/package\", not \"../package\".")
 }
 

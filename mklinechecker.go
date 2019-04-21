@@ -1468,21 +1468,21 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 	}
 
 	switch {
-	case !hasPrefix(relativePath, "../"):
+	case !hasPrefix(resolvedPath, "../"):
 		break
 
-	case hasPrefix(relativePath, "../../mk/"):
+	case hasPrefix(resolvedPath, "../../mk/"):
 		// From a package to the infrastructure.
 
-	case matches(relativePath, `^\.\./\.\./[^./][^/]*/[^/]`):
+	case matches(resolvedPath, `^\.\./\.\./[^./][^/]*/[^/]`):
 		// From a package to another package.
 
-	case hasPrefix(relativePath, "../mk/") && relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(".")) == "..":
+	case hasPrefix(resolvedPath, "../mk/") && relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(".")) == "..":
 		// For category Makefiles.
 		// TODO: Or from a pkgsrc wip package to wip/mk.
 
-	case matches(relativePath, `^\.\./[^./][^/]*/[^/]`):
-		if G.Wip && contains(relativePath, "/mk/") {
+	case matches(resolvedPath, `^\.\./[^./][^/]*/[^/]`):
+		if G.Wip && contains(resolvedPath, "/mk/") {
 			mkline.Warnf("References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", not \"../mk\".")
 		} else {
 			mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
