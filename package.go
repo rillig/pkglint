@@ -542,8 +542,8 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 		NewLineWhole(filename).Warnf("Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.")
 	}
 
-	if (vars.Defined("NO_CHECKSUM") ||
-		vars.Defined("META_PACKAGE")) && isEmptyDir(pkg.File(pkg.Patchdir)) {
+	if (vars.Defined("NO_CHECKSUM") || vars.Defined("META_PACKAGE")) &&
+		isEmptyDir(pkg.File(pkg.Patchdir)) {
 
 		distinfoFile := pkg.File(pkg.DistinfoFile)
 		if fileExists(distinfoFile) {
