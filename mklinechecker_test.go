@@ -1973,7 +1973,10 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 		".include \"module.mk\"",
 		".include \"../../category/../category/package/module.mk\"", // Oops
 		".include \"../../mk/bsd.prefs.mk\"",
-		".include \"../package/module.mk\"")
+		".include \"../package/module.mk\"",
+		// TODO: warn about this as well, since ${.CURDIR} is essentially
+		//  equivalent to ".".
+		".include \"${.CURDIR}/../package/module.mk\"")
 	t.FinishSetUp()
 
 	mklines.Check()
