@@ -99,7 +99,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  - how this individual permission set differs
 	//  - why the predefined permission set is not good enough
 	//  - which packages need this custom permission set.
-	acl := reg.DefineParse
+	acl := func(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
+		G.Assertf(!reg.DefinedExact(varname), "Variable %q must only be defined once.", varname)
+		reg.DefineParse(varname, basicType, options, aclEntries...)
+	}
 
 	// acllist defines the permissions of a list variable by listing
 	// the permissions individually.
@@ -110,7 +113,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  - why the predefined permission set is not good enough
 	//  - which packages need this custom permission set.
 	acllist := func(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
-		reg.DefineParse(varname, basicType, options|List, aclEntries...)
+		acl(varname, basicType, options|List, aclEntries...)
 	}
 
 	// A package-settable variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
@@ -123,7 +126,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
 	// pkgload is the same as pkg, except that the variable may be accessed at load time.
 	pkgload := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, basicType,
+		acl(varname, basicType,
 			PackageSettable,
 			"buildlink3.mk: none",
 			"builtin.mk: use, use-loadtime",
@@ -169,14 +172,14 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// These variables are typically related to compiling and linking files
 	// from C and related languages.
 	pkgbl3 := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, basicType,
+		acl(varname, basicType,
 			PackageSettable,
 			"Makefile, Makefile.*, *.mk: default, set, use")
 	}
 	// Some package-defined lists may also be modified in buildlink3.mk files,
 	// for example platform-specific CFLAGS and LDFLAGS.
 	pkglistbl3 := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, basicType,
+		acl(varname, basicType,
 			List|PackageSettable,
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
@@ -230,13 +233,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
 	// sysload declares a system-provided variable that may already be used at load time.
 	sysload := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, basicType,
+		acl(varname, basicType,
 			SystemProvided,
 			"*: use, use-loadtime")
 	}
 
 	sysloadlist := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, basicType,
+		acl(varname, basicType,
 			List|SystemProvided,
 			"*: use, use-loadtime")
 	}
@@ -244,7 +247,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// bl3list declares a list variable that is defined by buildlink3.mk and
 	// builtin.mk and can later be used by the package.
 	bl3list := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, basicType,
+		acl(varname, basicType,
 			List, // not PackageSettable since the package uses it more than setting it.
 			"buildlink3.mk, builtin.mk: append",
 			"*: use")
@@ -253,7 +256,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// cmdline declares a variable that is defined on the command line. There
 	// are only few variables of this type, such as PKG_DEBUG_LEVEL.
 	cmdline := func(varname string, basicType *BasicType) {
-		reg.DefineParse(varname, basicType,
+		acl(varname, basicType,
 			CommandLineProvided,
 			"buildlink3.mk, builtin.mk: none",
 			"*: use, use-loadtime")
@@ -467,10 +470,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usr("DEFAULT_VIEW", BtUnknown) // XXX: deprecate? pkgviews has been removed
 	usr("FETCH_CMD", BtShellCommand)
 	usr("FETCH_USING", enum("auto curl custom fetch ftp manual wget"))
-	usrlist("FETCH_BEFORE_ARGS", BtShellWord)
-	usrlist("FETCH_AFTER_ARGS", BtShellWord)
-	usrlist("FETCH_RESUME_ARGS", BtShellWord)
-	usrlist("FETCH_OUTPUT_ARGS", BtShellWord)
 	usr("FIX_SYSTEM_HEADERS", BtYes)
 	usr("LIBTOOLIZE_PLIST", BtYesNo)
 	usr("PKG_RESUME_TRANSFERS", BtYesNo)
@@ -486,12 +485,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usrlist("HOST_SPECIFIC_PKGS", BtPkgPath)
 	usrlist("GROUP_SPECIFIC_PKGS", BtPkgPath)
 	usrlist("USER_SPECIFIC_PKGS", BtPkgPath)
-	usr("EXTRACT_USING", enum("bsdtar gtar nbtar pax"))
 	usr("FAILOVER_FETCH", BtYes)
 	usrlist("MASTER_SORT", BtUnknown)
 	usrlist("MASTER_SORT_REGEX", BtUnknown)
 	usr("MASTER_SORT_RANDOM", BtYes)
-	usr("PATCH_DEBUG", BtYes)
 	usr("PKG_FC", BtShellCommand)
 	usrlist("IMAKEOPTS", BtShellWord)
 	usr("PRE_ROOT_CMD", BtShellCommand)
@@ -580,6 +577,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usrpkg("EMACS_TYPE", emacsVersions)
 	usrpkg("EXIM_GROUP", BtUserGroupName)
 	usrpkg("EXIM_USER", BtUserGroupName)
+	usrpkg("EXTRACT_USING", enum("bsdtar gtar nbtar pax"))
+	usrpkglist("FETCH_BEFORE_ARGS", BtShellWord)
+	usrpkglist("FETCH_AFTER_ARGS", BtShellWord)
+	usrpkglist("FETCH_RESUME_ARGS", BtShellWord)
+	usrpkglist("FETCH_OUTPUT_ARGS", BtShellWord)
 	usrpkg("FLUXBOX_USE_XINERAMA", enum("YES NO"))
 	usrpkg("FLUXBOX_USE_KDE", enum("YES NO"))
 	usrpkg("FLUXBOX_USE_GNOME", enum("YES NO"))
@@ -1029,7 +1031,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("EMACS_LISPPREFIX", BtPathname)
 	pkglistbl3("EMACS_MODULES", BtIdentifier)
 	sys("EMACS_PKGNAME_PREFIX", BtIdentifier) // Or the empty string.
-	sys("EMACS_TYPE", enum("emacs xemacs"))
 	pkglist("EMACS_VERSIONS_ACCEPTED", emacsVersions)
 	sys("EMACS_VERSION_MAJOR", BtInteger)
 	sys("EMACS_VERSION_MINOR", BtInteger)
@@ -1067,13 +1068,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("EXTRACT_OPTS_ZIP", BtShellWord)
 	pkglist("EXTRACT_OPTS_ZOO", BtShellWord)
 	pkg("EXTRACT_SUFX", BtDistSuffix)
-	pkg("EXTRACT_USING", enum("bsdtar gtar nbtar pax"))
 	sys("FAIL_MSG", BtShellCommand)
 	sys("FAMBASE", BtPathname)
 	pkglist("FAM_ACCEPTED", enum("fam gamin"))
 	usr("FAM_DEFAULT", enum("fam gamin"))
 	sys("FAM_TYPE", enum("fam gamin"))
-	pkglist("FETCH_BEFORE_ARGS", BtShellWord)
 	pkglist("FETCH_MESSAGE", BtShellWord)
 	pkgload("FILESDIR", BtRelativePkgPath)
 	pkglist("FILES_SUBST", BtShellWord)
@@ -1081,12 +1080,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("FIX_RPATH", BtVariableName)
 	pkglist("FLEX_REQD", BtVersion)
 	pkglist("FONTS_DIRS.*", BtPathname)
-	sys("GAMEDATAMODE", BtFileMode)
-	sys("GAMES_GROUP", BtUserGroupName)
 	syslist("GAMEDATA_PERMS", BtPerms)
 	syslist("GAMEDIR_PERMS", BtPerms)
-	sys("GAMEMODE", BtFileMode)
-	sys("GAMES_USER", BtUserGroupName)
 	pkglistbl3("GCC_REQD", BtGccReqd)
 	pkgappend("GENERATE_PLIST", BtShellCommands)
 	pkg("GITHUB_PROJECT", BtIdentifier)
@@ -1202,7 +1197,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("MAKE_FILE", BtPathname)
 	pkglist("MAKE_FLAGS", BtShellWord)
 	pkglist("MAKE_FLAGS.*", BtShellWord)
-	usr("MAKE_JOBS", BtInteger)
 	pkg("MAKE_JOBS_SAFE", BtYesNo)
 	pkg("MAKE_PROGRAM", BtShellCommand)
 	pkg("MANCOMPRESSED", BtYesNo)
@@ -1406,7 +1400,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("PKG_JAVA_HOME", BtPathname)
 	sys("PKG_JVM", jvms)
 	pkglist("PKG_JVMS_ACCEPTED", jvms)
-	usr("PKG_JVM_DEFAULT", jvms)
 	pkg("PKG_LIBTOOL", BtPathname)
 
 	// begin PKG_OPTIONS section
@@ -1484,7 +1477,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"*: use, use-loadtime")
 	// See lang/python/pyversion.mk
 	pkg("PYTHON_FOR_BUILD_ONLY", enum("yes no test tool YES"))
-	pkglist("REPLACE_PYTHON", BtPathmask)
 	pkglist("PYTHON_VERSIONS_ACCEPTED", BtVersion)
 	pkglist("PYTHON_VERSIONS_INCOMPATIBLE", BtVersion)
 	usr("PYTHON_VERSION_DEFAULT", BtVersion)
@@ -1673,7 +1665,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("WRKSRC", BtWrkdirSubdirectory)
 	pkglist("X11_LDFLAGS", BtLdFlag)
 	sys("X11_PKGSRCDIR.*", BtPathname)
-	usr("XAW_TYPE", enum("3d neXtaw standard xpm"))
 	pkglist("XMKMF_FLAGS", BtShellWord)
 	pkglist("_WRAP_EXTRA_ARGS.*", BtShellWord)
 

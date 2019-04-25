@@ -679,7 +679,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__no_tracing(c *
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__license_default(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.SetUpPkgsrc()
 	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
@@ -1833,7 +1832,6 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/sys-vars.mk",
 		MkRcsID,
@@ -1864,7 +1862,6 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_infrastructure(c *che
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
-	t.SetUpVartypes()
 	t.CreateFileLines("mk/deeply/nested/infra.mk",
 		MkRcsID,
 		"INFRA_VAR?=\tvalue")
@@ -2070,7 +2067,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc__multiple_inclusion_guards
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
-	t.SetUpVartypes()
 	t.CreateFileLines("filename.mk",
 		MkRcsID,
 		".if !defined(FILENAME_MK)",

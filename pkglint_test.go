@@ -974,7 +974,6 @@ func (s *Suite) Test_Pkglint_checkdirPackage(c *check.C) {
 func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/Makefile")
 	t.CreateFileLines("other/package/Makefile",

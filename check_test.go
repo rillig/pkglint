@@ -339,7 +339,6 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 	}
 
 	t.SetUpPkgsrc()
-	t.SetUpVartypes()
 	t.SetUpCategory(category)
 
 	t.CreateFileLines(pkgpath+"/DESCR",
