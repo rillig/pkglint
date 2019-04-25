@@ -924,6 +924,7 @@ func (ck MkLineChecker) checkVarassignLeft() {
 	ck.checkVarassignLeftDeprecated()
 	ck.checkVarassignLeftPermissions()
 	ck.checkVarassignLeftBsdPrefs()
+	ck.checkVarassignLeftUserDefined()
 
 	ck.checkTextVarUse(
 		ck.MkLine.Varname(),
@@ -1224,6 +1225,20 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 		"",
 		"The easiest way to include the mk.conf file is by including the",
 		"bsd.prefs.mk file, which will take care of everything.")
+}
+
+func (ck MkLineChecker) checkVarassignLeftUserDefined() {
+	mkline := ck.MkLine
+
+	value, found := G.Pkgsrc.UserDefinedVars.LastValueFound(mkline.Varname())
+	if !found {
+		return
+	}
+
+	if value != mkline.Value() {
+		mkline.Warnf("Package defines %q with different value than default value from mk/defaults/mk.conf.",
+			mkline.Varname())
+	}
 }
 
 func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comment string) {

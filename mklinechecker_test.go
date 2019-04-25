@@ -92,6 +92,25 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C
 		"WARN: ~/mk/infra.mk:2: _VARNAME is defined but not used.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserDefined(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"MYSQL_USER?=mysql-user",
+		"MYSQL_GROUP?=mysql")
+	t.CreateFileLines("mk/defaults/mk.conf",
+		MkRcsID,
+		"MYSQL_USER?=\tmysql",
+		"MYSQL_GROUP?=\tmysql")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: Package defines \"MYSQL_USER\" " +
+			"with different value than default value from mk/defaults/mk.conf.")
+}
+
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
 	t := s.Init(c)
 
