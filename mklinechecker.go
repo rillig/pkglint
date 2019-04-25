@@ -1229,15 +1229,27 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 
 func (ck MkLineChecker) checkVarassignLeftUserDefined() {
 	mkline := ck.MkLine
+	varname := mkline.Varname()
 
-	defaultValue, found := G.Pkgsrc.UserDefinedVars.LastValueFound(mkline.Varname())
+	defaultValue, found := G.Pkgsrc.UserDefinedVars.LastValueFound(varname)
 	if !found {
 		return
 	}
 
+	// Do not warn for variables that are both user-settable and
+	// package-settable, except if the package only defines the default
+	// value. These default definitions are intended to match the ones
+	// from mk/defaults/mk.conf.
+	vartype := G.Pkgsrc.VariableType(nil, varname)
+	if vartype != nil && vartype.PackageSettable() && mkline.Op() != opAssignDefault {
+		return
+	}
+
 	if defaultValue != mkline.Value() {
-		mkline.Warnf("Package defines %q with different value than default value %q from mk/defaults/mk.conf.",
-			mkline.Varname(), defaultValue)
+		mkline.Warnf(
+			"Package defines %q with different value "+
+				"than default value %q from mk/defaults/mk.conf.",
+			varname, defaultValue)
 	}
 }
 

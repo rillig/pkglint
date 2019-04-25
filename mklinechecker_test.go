@@ -96,18 +96,22 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserDefined(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
-		"MYSQL_USER?=mysql-user",
-		"MYSQL_GROUP?=mysql")
+		"AMANDA_USER=\tpkg-amanda",
+		"MYSQL_USER?=\tpkg-mysql",
+		"MYSQL_GROUP?=\tmysql")
 	t.CreateFileLines("mk/defaults/mk.conf",
 		MkRcsID,
+		"AMANDA_USER?=\tamanda",
 		"MYSQL_USER?=\tmysql",
 		"MYSQL_GROUP?=\tmysql")
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
+	// No warning for AMANDA_USER since it uses an operator different
+	// from ?=.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:20: Package defines \"MYSQL_USER\" " +
+		"WARN: ~/category/package/Makefile:21: Package defines \"MYSQL_USER\" " +
 			"with different value than default value \"mysql\" from mk/defaults/mk.conf.")
 }
 
