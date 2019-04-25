@@ -108,7 +108,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserDefined(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:20: Package defines \"MYSQL_USER\" " +
-			"with different value than default value from mk/defaults/mk.conf.")
+			"with different value than default value \"mysql\" from mk/defaults/mk.conf.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {

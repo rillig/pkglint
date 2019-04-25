@@ -1230,14 +1230,14 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 func (ck MkLineChecker) checkVarassignLeftUserDefined() {
 	mkline := ck.MkLine
 
-	value, found := G.Pkgsrc.UserDefinedVars.LastValueFound(mkline.Varname())
+	defaultValue, found := G.Pkgsrc.UserDefinedVars.LastValueFound(mkline.Varname())
 	if !found {
 		return
 	}
 
-	if value != mkline.Value() {
-		mkline.Warnf("Package defines %q with different value than default value from mk/defaults/mk.conf.",
-			mkline.Varname())
+	if defaultValue != mkline.Value() {
+		mkline.Warnf("Package defines %q with different value than default value %q from mk/defaults/mk.conf.",
+			mkline.Varname(), defaultValue)
 	}
 }
 
