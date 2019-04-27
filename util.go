@@ -519,8 +519,7 @@ func (s *Scope) Define(varname string, mkline MkLine) {
 		// Exceptions are comments from documentation sections, which still mark
 		// it as defined so that it doesn't produce the "used but not defined" warning;
 		// see MkLines.collectDocumentedVariables.
-		if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
-
+		if mkline.IsVarassign() {
 			switch mkline.Op() {
 			case opAssign, opAssignEval, opAssignShell:
 				s.value[name] = mkline.Value()
@@ -561,18 +560,25 @@ func (s *Scope) Use(varname string, line MkLine, time vucTime) {
 	use(varnameCanon(varname))
 }
 
+// Mentioned returns whether the variable is defined, or mentioned in a
+// commented variable assignment, or mentioned in a documentation comment.
+func (s *Scope) Mentioned(varname string) bool {
+	return s.firstDef[varname] != nil
+}
+
 // Defined tests whether the variable is defined.
 // It does NOT test the canonicalized variable name.
 //
 // Even if Defined returns true, FirstDefinition doesn't necessarily return true
 // since the latter ignores the default definitions from vardefs.go, keyword dummyVardefMkline.
 func (s *Scope) Defined(varname string) bool {
-	return s.firstDef[varname] != nil
+	mkline := s.firstDef[varname]
+	return mkline != nil && mkline.IsVarassign()
 }
 
 // DefinedSimilar tests whether the variable or its canonicalized form is defined.
 func (s *Scope) DefinedSimilar(varname string) bool {
-	if s.firstDef[varname] != nil {
+	if s.Defined(varname) {
 		if trace.Tracing {
 			trace.Step1("Variable %q is defined", varname)
 		}
@@ -580,7 +586,7 @@ func (s *Scope) DefinedSimilar(varname string) bool {
 	}
 
 	varcanon := varnameCanon(varname)
-	if s.firstDef[varcanon] != nil {
+	if s.Defined(varcanon) {
 		if trace.Tracing {
 			trace.Step2("Variable %q (similar to %q) is defined", varcanon, varname)
 		}

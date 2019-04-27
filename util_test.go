@@ -469,30 +469,52 @@ func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
 	scope := NewScope()
 	scope.Define("VAR", mkline)
 
-	// FIXME: should be false since it is not actually defined
-	t.Check(scope.Defined("VAR"), equals, true)
+	t.Check(scope.Defined("VAR"), equals, false)
 	t.Check(scope.FirstDefinition("VAR"), check.IsNil)
 	t.Check(scope.LastDefinition("VAR"), check.IsNil)
 
+	t.Check(scope.Mentioned("VAR"), equals, true)
 	t.Check(scope.Commented("VAR"), equals, mkline)
 
-	// FIXME: should return false since it is not actually defined
 	value, found := scope.LastValueFound("VAR")
-	t.Check(value, equals, "default")
-	t.Check(found, equals, true)
+	t.Check(value, equals, "")
+	t.Check(found, equals, false)
 }
 
 func (s *Suite) Test_Scope_Commented(c *check.C) {
 	t := s.Init(c)
 
+	assigned := t.NewMkLine("filename.mk", 3, "VAR=\tvalue")
 	commented := t.NewMkLine("filename.mk", 4, "#COMMENTED=\tvalue")
+	documented := t.NewMkLine("filename.mk", 5, "# DOCUMENTED is a variable.")
+
 	scope := NewScope()
-	scope.Define("VAR", t.NewMkLine("filename.mk", 3, "VAR=\tvalue"))
+	scope.Define("VAR", assigned)
 	scope.Define("COMMENTED", commented)
+	scope.Define("DOCUMENTED", documented)
 
 	t.Check(scope.Commented("VAR"), check.IsNil)
 	t.Check(scope.Commented("COMMENTED"), equals, commented)
+	t.Check(scope.Commented("DOCUMENTED"), check.IsNil)
 	t.Check(scope.Commented("UNKNOWN"), check.IsNil)
+}
+
+func (s *Suite) Test_Scope_Mentioned(c *check.C) {
+	t := s.Init(c)
+
+	assigned := t.NewMkLine("filename.mk", 3, "VAR=\tvalue")
+	commented := t.NewMkLine("filename.mk", 4, "#COMMENTED=\tvalue")
+	documented := t.NewMkLine("filename.mk", 5, "# DOCUMENTED is a variable.")
+
+	scope := NewScope()
+	scope.Define("VAR", assigned)
+	scope.Define("COMMENTED", commented)
+	scope.Define("DOCUMENTED", documented)
+
+	t.Check(scope.Mentioned("VAR"), equals, true)
+	t.Check(scope.Mentioned("COMMENTED"), equals, true)
+	t.Check(scope.Mentioned("DOCUMENTED"), equals, true)
+	t.Check(scope.Mentioned("UNKNOWN"), equals, false)
 }
 
 func (s *Suite) Test_naturalLess(c *check.C) {
