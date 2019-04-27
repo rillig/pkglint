@@ -2066,6 +2066,35 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *c
 		"WARN: net/uucp/Makefile:2: var is used but not defined.")
 }
 
+// Documented variables are declared as both defined and used since, as
+// of April 2019, pkglint doesn't yet interpret the "Package-settable
+// variables" comment.
+func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__documented(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("interpreter.mk",
+		MkRcsID,
+		"#",
+		"# Package-settable variables:",
+		"#",
+		"# REPLACE_INTERP",
+		"#\tThe list of files whose interpreter will be corrected.",
+		"",
+		"REPLACE_INTERPRETER+=\tinterp",
+		"REPLACE.interp.old=\t.*/interp",
+		"REPLACE.interp.new=\t${PREFIX}/bin/interp",
+		"REPLACE_FILES.interp=\t${REPLACE_INTERP}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: It does not have to be defined in this file since the
+		//  including file will define it.
+		"WARN: interpreter.mk:11: REPLACE_INTERP is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 	t := s.Init(c)
 
