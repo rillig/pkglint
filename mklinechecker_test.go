@@ -95,24 +95,48 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserDefined(c *check.C) {
 	t := s.Init(c)
 
+	// TODO: Allow CreateFileLines before SetUpPackage, since it matches
+	//  the expected reading order of human readers.
+
 	t.SetUpPackage("category/package",
-		"AMANDA_USER=\tpkg-amanda",
-		"MYSQL_USER?=\tpkg-mysql",
-		"MYSQL_GROUP?=\tmysql")
+		"ASSIGN_DIFF=\tpkg",         // assignment, differs from default value
+		"ASSIGN_SAME=\tdefault",     // assignment, same value as default
+		"DEFAULT_DIFF?=\tpkg",       // default, differs from default value
+		"DEFAULT_SAME?=\tdefault",   // same value as default
+		"FETCH_USING=\tcurl",        // both user-settable and package-settable
+		"APPEND_DIRS+=\tdir3",       // appending requires a separate diagnostic
+		"COMMENTED_SAME?=\tdefault", // commented default, same value as default
+		"COMMENTED_DIFF?=\tpkg")     // commented default, differs from default value
 	t.CreateFileLines("mk/defaults/mk.conf",
 		MkRcsID,
-		"AMANDA_USER?=\tamanda",
-		"MYSQL_USER?=\tmysql",
-		"MYSQL_GROUP?=\tmysql")
+		"ASSIGN_DIFF?=default",
+		"ASSIGN_SAME?=default",
+		"DEFAULT_DIFF?=\tdefault",
+		"DEFAULT_SAME?=\tdefault",
+		"FETCH_USING=\tauto",
+		"APPEND_DIRS=\tdefault",
+		"#COMMENTED_SAME?=\tdefault",
+		"#COMMENTED_DIFF?=\tdefault")
+	t.Chdir("category/package")
 	t.FinishSetUp()
 
-	G.Check(t.File("category/package"))
+	G.Check(".")
 
-	// No warning for AMANDA_USER since it uses an operator different
-	// from ?=.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:21: Package defines \"MYSQL_USER\" " +
-			"with different value than default value \"mysql\" from mk/defaults/mk.conf.")
+		"WARN: Makefile:20: Package defines \"ASSIGN_DIFF\" with different value "+
+			"than default value \"default\" from mk/defaults/mk.conf.",
+		// TODO: note for ASSIGN_SAME
+		"WARN: Makefile:22: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
+		"WARN: Makefile:22: Package defines \"DEFAULT_DIFF\" with different value "+
+			"than default value \"default\" from mk/defaults/mk.conf.",
+		// TODO: note for DEFAULT_SAME
+		// FIXME: nothing for FETCH_USING
+		"WARN: Makefile:24: The variable FETCH_USING should not be set by any package.",
+		"WARN: Makefile:24: Package defines \"FETCH_USING\" with different value than default value \"auto\" from mk/defaults/mk.conf.",
+		// FIXME: special warning for APPEND_DIRS
+		"WARN: Makefile:25: Package defines \"APPEND_DIRS\" with different value than default value \"default\" from mk/defaults/mk.conf.",
+		// TODO: warning for COMMENTED_DIFF
+	)
 }
 
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
