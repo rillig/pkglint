@@ -1245,10 +1245,6 @@ func (ck MkLineChecker) checkVarassignLeftUserSettable() bool {
 	if defaultMkline == nil {
 		return false
 	}
-
-	if !defaultMkline.IsVarassign() && !defaultMkline.IsCommentedVarassign() {
-		return false
-	}
 	defaultValue := defaultMkline.Value()
 
 	// A few of the user-settable variables can also be set by packages.
@@ -1260,6 +1256,10 @@ func (ck MkLineChecker) checkVarassignLeftUserSettable() bool {
 	}
 
 	switch {
+	case mkline.VarassignComment() != "":
+		// Assume that the comment contains a rationale for disabling
+		// this particular check.
+
 	case mkline.Op() == opAssignAppend:
 		mkline.Warnf("Packages should not append to user-settable %s.", varname)
 

@@ -99,17 +99,19 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable(c *check.C) {
 	//  the expected reading order of human readers.
 
 	t.SetUpPackage("category/package",
-		"ASSIGN_DIFF=\tpkg",         // assignment, differs from default value
-		"ASSIGN_SAME=\tdefault",     // assignment, same value as default
-		"DEFAULT_DIFF?=\tpkg",       // default, differs from default value
-		"DEFAULT_SAME?=\tdefault",   // same value as default
-		"FETCH_USING=\tcurl",        // both user-settable and package-settable
-		"APPEND_DIRS+=\tdir3",       // appending requires a separate diagnostic
-		"COMMENTED_SAME?=\tdefault", // commented default, same value as default
-		"COMMENTED_DIFF?=\tpkg")     // commented default, differs from default value
+		"ASSIGN_DIFF=\tpkg",          // assignment, differs from default value
+		"ASSIGN_DIFF2=\treally # ok", // ok because of the rationale in the comment
+		"ASSIGN_SAME=\tdefault",      // assignment, same value as default
+		"DEFAULT_DIFF?=\tpkg",        // default, differs from default value
+		"DEFAULT_SAME?=\tdefault",    // same value as default
+		"FETCH_USING=\tcurl",         // both user-settable and package-settable
+		"APPEND_DIRS+=\tdir3",        // appending requires a separate diagnostic
+		"COMMENTED_SAME?=\tdefault",  // commented default, same value as default
+		"COMMENTED_DIFF?=\tpkg")      // commented default, differs from default value
 	t.CreateFileLines("mk/defaults/mk.conf",
 		MkRcsID,
 		"ASSIGN_DIFF?=default",
+		"ASSIGN_DIFF2?=default",
 		"ASSIGN_SAME?=default",
 		"DEFAULT_DIFF?=\tdefault",
 		"DEFAULT_SAME?=\tdefault",
@@ -125,13 +127,13 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:20: Package sets user-defined \"ASSIGN_DIFF\" to \"pkg\", "+
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.",
-		"NOTE: Makefile:21: Redundant definition for ASSIGN_SAME from mk/defaults/mk.conf.",
-		"WARN: Makefile:22: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
-		"WARN: Makefile:22: Package sets user-defined \"DEFAULT_DIFF\" to \"pkg\", "+
+		"NOTE: Makefile:22: Redundant definition for ASSIGN_SAME from mk/defaults/mk.conf.",
+		"WARN: Makefile:23: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
+		"WARN: Makefile:23: Package sets user-defined \"DEFAULT_DIFF\" to \"pkg\", "+
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.",
-		"NOTE: Makefile:23: Redundant definition for DEFAULT_SAME from mk/defaults/mk.conf.",
-		"WARN: Makefile:25: Packages should not append to user-settable APPEND_DIRS.",
-		"WARN: Makefile:27: Package sets user-defined \"COMMENTED_DIFF\" to \"pkg\", "+
+		"NOTE: Makefile:24: Redundant definition for DEFAULT_SAME from mk/defaults/mk.conf.",
+		"WARN: Makefile:26: Packages should not append to user-settable APPEND_DIRS.",
+		"WARN: Makefile:28: Package sets user-defined \"COMMENTED_DIFF\" to \"pkg\", "+
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.")
 }
 
