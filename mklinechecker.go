@@ -471,7 +471,7 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 		// Well-known variables are probably defined by the infrastructure.
 		return
 
-	case ck.MkLines != nil && (ck.MkLines.vars.DefinedSimilar(varname) || ck.MkLines.forVars[varname]):
+	case ck.MkLines != nil && (ck.MkLines.vars.DefinedSimilar(varname) || ck.MkLines.forVars[varname] || ck.MkLines.vars.Mentioned(varname)):
 		return
 
 	case G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname):

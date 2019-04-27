@@ -2089,10 +2089,7 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__documented(c *check.C) 
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		// FIXME: It does not have to be defined in this file since the
-		//  including file will define it.
-		"WARN: interpreter.mk:11: REPLACE_INTERP is used but not defined.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
