@@ -2041,8 +2041,6 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: this warning should not appear.
-		"WARN: filename.mk:4: COMMENTED is used but not defined.",
 		"WARN: filename.mk:4: UNKNOWN is used but not defined.")
 }
 

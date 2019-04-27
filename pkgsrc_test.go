@@ -122,9 +122,7 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:4: INFRA_MK is used but not defined.",
 		"WARN: filename.mk:5: _UNTYPED is used but not defined.",
-		"WARN: filename.mk:6: INDIRECT_param is used but not defined.",
-		// FIXME
-		"WARN: filename.mk:7: COMMENTED is used but not defined.")
+		"WARN: filename.mk:6: INDIRECT_param is used but not defined.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
