@@ -162,7 +162,7 @@ Having only a single global variable makes it easy to reset the global state dur
 
 Very similar code is used to set up the test and tear it down again:
 
-> from [check_test.go](check_test.go#L58):
+> from [check_test.go](check_test.go#L59):
 
 ```go
 func (s *Suite) SetUpTest(c *check.C) {
@@ -195,7 +195,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 }
 ```
 
-> from [check_test.go](check_test.go#L87):
+> from [check_test.go](check_test.go#L88):
 
 ```go
 func (s *Suite) TearDownTest(c *check.C) {
@@ -339,7 +339,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L573):
+> from [pkglint.go](pkglint.go#L582):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -443,7 +443,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L599):
+> from [pkglint.go](pkglint.go#L608):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -605,7 +605,7 @@ func (line *LineImpl) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L863):
+> from [mkline.go](mkline.go#L866):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator
@@ -647,8 +647,8 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vucVartype.IsConsideredList()
-	haveList := vartype.IsConsideredList()
+	wantList := vucVartype.MayBeAppendedTo()
+	haveList := vartype.MayBeAppendedTo()
 	if trace.Tracing {
 		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
 	}
@@ -837,7 +837,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L123):
+> from [check_test.go](check_test.go#L124):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -913,8 +913,6 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// This is typical of the pkglint tests.
 	t.SetUpPkgsrc()
 
-	// FIXME: pkglint should warn that the latest version in this file
-	// (1.10) doesn't match the current version in the package (1.11).
 	t.CreateFileLines("doc/CHANGES-2018",
 		RcsID,
 		"",
@@ -1015,6 +1013,9 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.Main("-Wall", "-Call", t.File("sysutils/checkperms"))
 
 	t.CheckOutputLines(
+		"NOTE: ~/sysutils/checkperms/Makefile:3: "+
+			"Package version \"1.11\" is greater than the latest \"1.10\" "+
+			"from ../../doc/CHANGES-2018:5.",
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+
 			"This package should be updated to 1.13 ([supports more file formats]).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
