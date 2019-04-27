@@ -560,10 +560,12 @@ func (s *Scope) Use(varname string, line MkLine, time vucTime) {
 	use(varnameCanon(varname))
 }
 
-// Mentioned returns whether the variable is defined, or mentioned in a
-// commented variable assignment, or mentioned in a documentation comment.
-func (s *Scope) Mentioned(varname string) bool {
-	return s.firstDef[varname] != nil
+// Mentioned returns the first line in which the variable is either:
+//  - defined,
+//  - mentioned in a commented variable assignment,
+//  - mentioned in a documentation comment.
+func (s *Scope) Mentioned(varname string) MkLine {
+	return s.firstDef[varname]
 }
 
 // Defined tests whether the variable is defined.

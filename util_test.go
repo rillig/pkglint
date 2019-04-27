@@ -473,7 +473,7 @@ func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
 	t.Check(scope.FirstDefinition("VAR"), check.IsNil)
 	t.Check(scope.LastDefinition("VAR"), check.IsNil)
 
-	t.Check(scope.Mentioned("VAR"), equals, true)
+	t.Check(scope.Mentioned("VAR"), equals, mkline)
 	t.Check(scope.Commented("VAR"), equals, mkline)
 
 	value, found := scope.LastValueFound("VAR")
@@ -511,10 +511,10 @@ func (s *Suite) Test_Scope_Mentioned(c *check.C) {
 	scope.Define("COMMENTED", commented)
 	scope.Define("DOCUMENTED", documented)
 
-	t.Check(scope.Mentioned("VAR"), equals, true)
-	t.Check(scope.Mentioned("COMMENTED"), equals, true)
-	t.Check(scope.Mentioned("DOCUMENTED"), equals, true)
-	t.Check(scope.Mentioned("UNKNOWN"), equals, false)
+	t.Check(scope.Mentioned("VAR"), equals, assigned)
+	t.Check(scope.Mentioned("COMMENTED"), equals, commented)
+	t.Check(scope.Mentioned("DOCUMENTED"), equals, documented)
+	t.Check(scope.Mentioned("UNKNOWN"), check.IsNil)
 }
 
 func (s *Suite) Test_naturalLess(c *check.C) {
